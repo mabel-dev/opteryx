@@ -127,3 +127,25 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+**/_temp/**
+sample_data/**
+**.lzma
+**.
+.dccache
+scratch/**
+_scratch/**
+**DS_Store**
+.cloudstorage/**
+_batch/**
+.pypirc
+.vscode/settings.json
+temp
+publish.bat
+SNAPSHOTS/
+.mutmut-cache
+setup.cfg
+tests/data/mass/**
+tests/data/huge/**
+tests/data/half/**
+**/profile.txt

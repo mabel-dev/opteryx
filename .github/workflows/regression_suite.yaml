@@ -1,0 +1,82 @@
+name: Regression Suite
+
+on: [push, pull_request]
+
+jobs:
+  regression_tests:
+    name: Regression Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+  
+      - name: Set Up Environment
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8' 
+        
+      - name: Install Requirements
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r $GITHUB_WORKSPACE/requirements.txt
+          pip install -r $GITHUB_WORKSPACE/tests/requirements.txt
+
+      - name: Start MinIo Server
+        run: |
+          docker run -d -p 9000:9000 --name minio \
+                     -e "MINIO_ACCESS_KEY=minioadmin" \
+                     -e "MINIO_SECRET_KEY=minioadmin" \
+                     -v /tmp/data:/data \
+                     -v /tmp/config:/root/.minio \
+                     minio/minio server /data
+
+      - name: Start GCS Emulator
+        run: |
+          docker run -d --name \
+                     fake-gcs-server \
+                     -p 9090:4443 \
+                     fsouza/fake-gcs-server \
+                     -scheme http
+
+      - name: Start Azurite
+        run: |
+          docker run -d -p 10000:10000 \
+                     mcr.microsoft.com/azure-storage/azurite \
+                     azurite-blob \
+                     --blobHost 0.0.0.0
+
+      - name: Run Regression Tests
+        run: coverage run -m pytest 
+        env:
+          MINIO_END_POINT: 127.0.0.1:9000
+          MINIO_ACCESS_KEY: minioadmin
+          MINIO_SECRET_KEY: minioadmin
+          AZURE_STORAGE_CONNECTION_STRING: DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;QueueEndpoint=http://127.0.0.1:10001/devstoreaccount1;
+
+      - name: Check Coverage
+        run: coverage report --include=mabel* --fail-under=85 -m
+
+      - name: "Upload coverage to Codecov"
+        uses: codecov/codecov-action@v1
+        with:
+          fail_ci_if_error: false
+
+  mypy:
+    name: Type Checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+  
+      - name: Set Up Environment
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8' 
+
+      - name: Install Requirements
+        run: |
+          python -m pip install --upgrade pip mypy
+          pip install -r $GITHUB_WORKSPACE/tests/requirements.txt
+
+      - name: Execute Test
+        run: mypy --ignore-missing-imports mabel

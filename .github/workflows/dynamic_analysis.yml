@@ -1,0 +1,14 @@
+on:
+  schedule:
+    # Runs every day At 01:00.
+    - cron:  '0 1 * * *'
+
+jobs:
+  zap_scan:
+    runs-on: ubuntu-latest
+    name: Scan ZAP website
+    steps:
+      - name: ZAP Scan
+        uses: zaproxy/action-baseline@v0.3.0
+        with:
+          target: 'https://www.zaproxy.org/'

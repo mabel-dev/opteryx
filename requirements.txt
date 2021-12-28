@@ -1,0 +1,11 @@
+mabelbeta
+
+orjson
+bitarray
+zstandard
+lz4
+pydantic
+siphashc
+fastnumbers
+pysimdjson
+cython

@@ -1,0 +1,9 @@
+// Data Types:
+
+- INTEGER
+- FLOAT
+- LIST
+- BOOLEAN
+- STRING
+- TIMESTAMP
+- STRUCT
