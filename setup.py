@@ -3,7 +3,7 @@ from setuptools import find_packages
 from Cython.Build import cythonize
 
 
-with open("src/version.py", "r") as v:
+with open("waddles/version.py", "r") as v:
     vers = v.read()
 exec(vers)  # nosec
 
@@ -24,7 +24,7 @@ setup(
     author="joocer",
     author_email="justin.joyce@joocer.com",
     packages=find_packages(include=["waddles", "waddles.*"]),
-    url="https://github.com/mabel-dev/mabel-sql/",
+    url="https://github.com/mabel-dev/waddles/",
     install_requires=required,
     ext_modules=cythonize(
         [
