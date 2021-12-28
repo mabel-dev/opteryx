@@ -1,4 +1,4 @@
-<img align="centre" alt="overlapping arrows" height="92" src="icons/waddles.svg" />
+<img align="centre" alt="pig" height="92" src="waddles.png" />
 
 ## Distributed Query Engine for serverless environments.
 
