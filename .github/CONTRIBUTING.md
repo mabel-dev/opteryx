@@ -38,7 +38,7 @@ A note about comments:
 
 
 Check-ins should have prefixes:
-- `[MBL-nnn]` items relating to Jira tickets
+- `[#nnn]` items relating to tickets
 - `[FIX]` items fixing bugs
 - `[TEST]` improvements to testing
 - `[TIDY]` non-functional, commentary and cosmetic changes

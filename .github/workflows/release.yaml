@@ -2,7 +2,7 @@ name: release
 
 on:
   push:
-    branches: [ branch-0.5, branch-0.7 ]
+    branches: [ main ]
 
 jobs:
 
