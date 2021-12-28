@@ -10,7 +10,7 @@ This index is accessed using a binary search.
 """
 
 import io
-from siphashc import siphash
+from cityhash import CityHash32
 import struct
 from operator import itemgetter
 from typing import Iterable, Optional
@@ -20,7 +20,6 @@ from functools import lru_cache
 MAX_INDEX: int = 4294967295  # 2^32 - 1
 STRUCT_DEF: str = "I I"  # 4 byte unsigned int, 4 byte unsigned int
 RECORD_SIZE: int = struct.calcsize(STRUCT_DEF)  # this should be 8
-HASH_SEED: str = "MISAPPROPRIATION"
 
 """
 There are overlapping terms because we're traversing a dataset so we can traverse a
@@ -125,7 +124,7 @@ class Index:
 
     def _inner_search(self, search_term) -> Optional[int]:
         # hash the value and make fit in a four byte unsinged int
-        value = siphash(HASH_SEED, f"{search_term}") % MAX_INDEX
+        value = CityHash32(f"{search_term}") % MAX_INDEX
 
         # search for an instance of the value in the index
         location, found_entry = self._locate_record(value)
@@ -165,7 +164,7 @@ class IndexBuilder:
                 values = [values]
             for value in values:
                 entry = {
-                    "value": siphash(HASH_SEED, f"{value}") % MAX_INDEX,
+                    "value": CityHash32(f"{value}") % MAX_INDEX,
                     "position": position,
                 }
                 self.temporary_index.append(entry)

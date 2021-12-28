@@ -19,7 +19,6 @@ def zstd(stream, projection=None):
         yield from file.read().split(b"\n")[:-1]
 
 
-
 def parquet(stream, projection=None):
     """
     Read parquet formatted files
@@ -34,7 +33,7 @@ def parquet(stream, projection=None):
     for batch in table.to_batches():
         dict_batch = batch.to_pydict()
         for index in range(len(batch)):
-            yield tuple([v[index] for k, v in dict_batch.items()]) # yields a tuple
+            yield tuple([v[index] for k, v in dict_batch.items()])  # yields a tuple
 
 
 def orc(stream, projection=None):
@@ -54,7 +53,7 @@ def orc(stream, projection=None):
     for batch in data.to_batches():
         dict_batch = batch.to_pydict()
         for index in range(len(batch)):
-            yield tuple([v[index] for k, v in dict_batch.items()]) # yields a tuple
+            yield tuple([v[index] for k, v in dict_batch.items()])  # yields a tuple
 
 
 def lines(stream, projection=None):

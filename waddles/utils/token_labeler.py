@@ -10,10 +10,10 @@ import re
 import operator
 import fastnumbers
 
-from .text import like, not_like, matches
-from .dates import parse_iso
-from ..data.readers.internals.inline_functions import FUNCTIONS
-from ..data.internals.group_by import AGGREGATORS
+from mabel.text import like, not_like, matches
+from mabel.dates import parse_iso
+from waddles.internals.inline_functions import FUNCTIONS
+from waddles.internals.group_by import AGGREGATORS
 
 # These are the characters we should escape in our regex
 REGEX_CHARACTERS = {ch: "\\" + ch for ch in ".^$*+?{}[]|()\\"}

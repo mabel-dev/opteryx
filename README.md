@@ -1,12 +1,12 @@
-<img align="centre" alt="overlapping arrows" height="92" src="icons/mabel.svg" />
+<img align="centre" alt="overlapping arrows" height="92" src="icons/waddles.svg" />
 
-## Distributed Query Engine and Data platform for serverless environments.
+## Distributed Query Engine for serverless environments.
 
 **mabel** has no server component, **mabel** just runs when you need it making it ideal
 for deployments to platforms like Kubernetes, GCP Cloud Run, AWS Fargate and Knative.
 
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/mabel-dev/mabel/blob/master/LICENSE)
-[![Status](https://img.shields.io/badge/status-beta-yellowgreen)](https://github.com/mabel-dev/mabel)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/mabel-dev/waddles/blob/master/LICENSE)
+[![Status](https://img.shields.io/badge/status-alpha-yellowgreen)](https://github.com/mabel-dev/waddles)
 [![Regression Suite](https://github.com/mabel-dev/mabel/actions/workflows/regression_suite.yaml/badge.svg?style=flat-square)](https://github.com/mabel-dev/mabel/actions/workflows/regression_suite.yaml)
 [![codecov](https://codecov.io/gh/mabel-dev/mabel/branch/main/graph/badge.svg?token=CYD6E4PPKR&style=flat-square)](https://codecov.io/gh/mabl-dev/mabel)
 [![Static Analysis](https://github.com/mabel-dev/mabel/actions/workflows/static_analysis.yml/badge.svg?style=flat-square)](https://github.com/mabel-dev/mabel/actions/workflows/static_analysis.yml)
@@ -77,7 +77,7 @@ library version. Alpha versions are more likely to have functional issues.
 
 >-  **[orjson](https://github.com/ijl/orjson)** for JSON (de)serialization
 >-  **[bitarray](https://github.com/ilanschnell/bitarray)** for handling high density boolean data
->-  **[siphashc](https://github.com/WeblateOrg/siphashc)** for non-cryptographic hashing
+** >-  **[siphashc](https://github.com/WeblateOrg/siphashc)** for non-cryptographic hashing
 >-  **[pydantic](https://pydantic-docs.helpmanual.io/)** to define internal data models  
 >-  **[zstandard](https://github.com/indygreg/python-zstandard)** for real-time on disk compression
 >-  **[LZ4](https://github.com/python-lz4/python-lz4)** for real-time in memory compression

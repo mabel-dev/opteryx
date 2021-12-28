@@ -84,9 +84,7 @@ biasData = [
 # fmt:on
 
 import math
-from siphashc import siphash
 
-SIP_HASH_SEED = "HyperLogLog SEED"
 
 
 def get_treshold(p):
@@ -159,7 +157,7 @@ class HyperLogLog(object):
         This has been updated from the copied version to try to improve performance.
         """
 
-        x = siphash(SIP_HASH_SEED, f"{value}")
+        x = hash(f"{value}")
 
         j = x & (self.m - 1)
         w = x >> self.p

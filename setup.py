@@ -1,5 +1,6 @@
 from setuptools import setup
 from setuptools import find_packages
+from setuptools import Extension
 from Cython.Build import cythonize
 
 
@@ -36,6 +37,7 @@ setup(
             #    "mabel/data/internals/relation.py",
             #    "mabel/data/internals/bloom_filter.py",
             #    "mabel/utils/uintset/uintset.py"
+            "waddles/imports/accumulation_tree/accumulation_tree.pyx"
         ]
     ),
 )

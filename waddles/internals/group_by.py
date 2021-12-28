@@ -7,7 +7,7 @@ python setup.py build_ext --inplace
 """
 import cython
 import fastnumbers
-from siphashc import siphash
+from cityhash import CityHash32
 from collections import defaultdict
 
 
@@ -25,8 +25,14 @@ AGGREGATORS = {
     "MIN": min,
     "COUNT": lambda x, y: x + 1,
     "AVG": lambda x, y: 1,
-    "PERCENT": raise_not_implemented,
-    "APPROX_DISTINCT": raise_not_implemented,
+    "MODE": raise_not_implemented, # the mode of the values
+    "MEDIAN": raise_not_implemented, # the median of the values
+    "STDDEV_POP": raise_not_implemented,
+    "STDDEV": raise_not_implemented,
+    "PERCENT": raise_not_implemented, # each group has the relative portion calculated
+    "APPROX_DISTINCT": raise_not_implemented, # hyperloglog is used to estimate distinct values
+    "HISTOGRAM": raise_not_implemented, # returns a histogram of the values (100 buckets)
+    "APPROX_QUARTILES": raise_not_implemented, 
 }
 
 HASH_SEED = b"Anakin Skywalker"
@@ -76,13 +82,11 @@ class GroupBy:
 
         for record in self._dictset:
             try:
-                group_key: cython.ulong = siphash(
-                    HASH_SEED,
+                group_key: cython.ulong = CityHash32(
                     "".join([str(record[column]) for column in self._columns]),
                 )
             except KeyError:
-                group_key: cython.ulong = siphash(
-                    HASH_SEED,
+                group_key: cython.ulong = CityHash32(
                     "".join([f"{record.get(column, '')}" for column in self._columns]),
                 )
             if group_key not in self._group_keys.keys():

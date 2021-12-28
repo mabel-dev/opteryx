@@ -67,8 +67,6 @@ class PartitionReaderNode(BasePlanNode):
 
         # which reader to use
 
-
-
     def execute(self):
 
         stats = ReaderStatistics()
@@ -103,7 +101,6 @@ class PartitionReaderNode(BasePlanNode):
             # we're going to open this blob
             stats.data_blobs_read += 1
 
-
             # Read the blob from storage, it's just a stream of bytes at this point
             blob_bytes = self.reader.read_blob(blob_name)
             stats.data_bytes_read += len(blob_bytes)
@@ -113,7 +110,7 @@ class PartitionReaderNode(BasePlanNode):
             schema, record_iterator = decompressor(blob_bytes, projection)
 
             # we should know the number of entries
-            stats.data_rows_read += 1 # TODO
+            stats.data_rows_read += 1  # TODO
 
             # interpret the entries into records
             record_iterator = map(parser, record_iterator)

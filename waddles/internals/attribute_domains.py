@@ -1,5 +1,5 @@
 from enum import Enum
-from mabel.errors import UnsupportedTypeError
+from waddles.exceptions import UnsupportedTypeError
 import datetime
 
 
@@ -22,7 +22,7 @@ def coerce(var):
     )
 
 
-class MABEL_TYPES(str, Enum):
+class WADDLES_TYPES(str, Enum):
     BOOLEAN = "BOOLEAN"
     INTEGER = "INTEGER"
     DOUBLE = "DOUBLE"
@@ -34,26 +34,36 @@ class MABEL_TYPES(str, Enum):
 
 
 PYTHON_TYPES = {
-    "bool": MABEL_TYPES.BOOLEAN,
-    "datetime": MABEL_TYPES.TIMESTAMP,
-    "dict": MABEL_TYPES.STRUCT,
-    "int": MABEL_TYPES.INTEGER,
-    "float": MABEL_TYPES.DOUBLE,
-    "str": MABEL_TYPES.VARCHAR,
-    "tuple": MABEL_TYPES.LIST,
+    "bool": WADDLES_TYPES.BOOLEAN,
+    "datetime": WADDLES_TYPES.TIMESTAMP,
+    "dict": WADDLES_TYPES.STRUCT,
+    "int": WADDLES_TYPES.INTEGER,
+    "float": WADDLES_TYPES.DOUBLE,
+    "str": WADDLES_TYPES.VARCHAR,
+    "tuple": WADDLES_TYPES.LIST,
+}
+
+PARQUET_TYPES = {
+    "bool": WADDLES_TYPES.BOOLEAN,
+    "timestamp[ms]": WADDLES_TYPES.TIMESTAMP,
+    "dict": WADDLES_TYPES.STRUCT,
+    "int64": WADDLES_TYPES.INTEGER,
+    "double": WADDLES_TYPES.DOUBLE,
+    "string": WADDLES_TYPES.VARCHAR,
+    "tuple": WADDLES_TYPES.LIST,  
 }
 
 COERCABLE_PYTHON_TYPES = {
-    "bool": MABEL_TYPES.BOOLEAN,
-    "datetime": MABEL_TYPES.TIMESTAMP,
-    "date": MABEL_TYPES.TIMESTAMP,
-    "dict": MABEL_TYPES.STRUCT,
-    "int": MABEL_TYPES.INTEGER,
-    "float": MABEL_TYPES.DOUBLE,
-    "str": MABEL_TYPES.VARCHAR,
-    "tuple": MABEL_TYPES.LIST,
-    "set": MABEL_TYPES.LIST,
-    "list": MABEL_TYPES.LIST,
+    "bool": WADDLES_TYPES.BOOLEAN,
+    "datetime": WADDLES_TYPES.TIMESTAMP,
+    "date": WADDLES_TYPES.TIMESTAMP,
+    "dict": WADDLES_TYPES.STRUCT,
+    "int": WADDLES_TYPES.INTEGER,
+    "float": WADDLES_TYPES.DOUBLE,
+    "str": WADDLES_TYPES.VARCHAR,
+    "tuple": WADDLES_TYPES.LIST,
+    "set": WADDLES_TYPES.LIST,
+    "list": WADDLES_TYPES.LIST,
 }
 
 

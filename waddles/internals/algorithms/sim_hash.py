@@ -16,7 +16,6 @@ Implementation derived from from: https://github.com/1e0ng/simhash
 from __future__ import division, unicode_literals
 
 import collections
-from siphashc import siphash
 import logging
 import numbers
 import re
@@ -34,8 +33,8 @@ def bytes_to_int(b):
 
 
 def _hashfunc(x):
-    SIP_HASH_SEED = "HyperLogLog SEED"
-    return siphash(SIP_HASH_SEED, f"{x}").to_bytes("big")
+    from cityhash import CityHash32
+    return CityHash32(f"{x}").to_bytes("big")
     # return hashlib.md5(x).digest()
 
 

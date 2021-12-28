@@ -1,0 +1,43 @@
+{
+    "type": "record",
+    "name": "tweets",
+    "fields": [
+        { 
+            "name": "tweet",
+            "type": "string"
+        },
+        { 
+            "name": "country",
+            "type": "string"
+        },
+        { 
+            "name": "location",
+            "type": "string"
+        },
+        {
+            "name": "timestamp",
+            "type": "date",
+            "description": "Time of Tweet (Linux Epoch)"
+        },
+        {
+            "name": "userid",
+            "type": "numeric",
+            "description": "Globally unique User Identifier"
+        },
+        {
+            "name": "user_verified",
+            "type": "boolean",
+            "description": "Is the user verified (blue tick)"
+        },
+        {
+            "name": "username",
+            "type": "string",
+            "description": "Name of the user (not-static)"
+        },
+        {
+            "name": "followers",
+            "type": "numeric",
+            "description": "The number of followers the user had at the time of the Tweet"
+        }
+    ]
+}

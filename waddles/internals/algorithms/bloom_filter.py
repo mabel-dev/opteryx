@@ -26,8 +26,8 @@ limitations under the License.
 """
 from bitarray import bitarray  # type:ignore
 
-# siphash needs 16 character strings to use as it's hash seed
-SIP_HASH_SEEDS = [
+
+HASH_SEEDS = [
     "ANTHROPOMORPHISM",
     "BLOODYMINDEDNESS",
     "CONTEMPTUOUSNESS",
@@ -112,12 +112,12 @@ class BloomFilter:
         """
         Add a value to the index, returns true if the item is new, false if seen before
         """
-        from siphashc import siphash
+        from cityhash import CityHash32
 
         collision = True
 
         for i in range(self.hash_count):
-            h = siphash(SIP_HASH_SEEDS[i], f"{term}") % self.filter_size
+            h = CityHash32(f"{HASH_SEEDS[i]}{term}") % self.filter_size
             if not self.bits[h]:
                 self.bits[h] = 1
                 collision = False
@@ -125,10 +125,10 @@ class BloomFilter:
         return not collision
 
     def __contains__(self, term):
-        from siphashc import siphash
+        from cityhash import CityHash32
 
         for i in range(self.hash_count):
-            h = siphash(SIP_HASH_SEEDS[i], term) % self.filter_size
+            h = CityHash32(f"{HASH_SEEDS[i]}{term}") % self.filter_size
             if self.bits[h] == 0:
                 return False
         return True
