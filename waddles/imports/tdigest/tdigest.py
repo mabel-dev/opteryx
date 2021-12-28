@@ -101,7 +101,7 @@ class TDigest(object):
     def _threshold(self, q):
         return 4 * self.n * self.delta * q * (1 - q)
 
-    def update(self, x, w=1):
+    def add(self, x, w=1):
         """
         Update the t-digest with value x and weight w.
 

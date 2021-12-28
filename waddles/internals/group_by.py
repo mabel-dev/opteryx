@@ -25,17 +25,16 @@ AGGREGATORS = {
     "MIN": min,
     "COUNT": lambda x, y: x + 1,
     "AVG": lambda x, y: 1,
-    "MODE": raise_not_implemented, # the mode of the values
-    "MEDIAN": raise_not_implemented, # the median of the values
+    "RANGE": raise_not_implemented, # difference between min and max
     "STDDEV_POP": raise_not_implemented,
     "STDDEV": raise_not_implemented,
-    "PERCENT": raise_not_implemented, # each group has the relative portion calculated
-    "APPROX_DISTINCT": raise_not_implemented, # hyperloglog is used to estimate distinct values
     "HISTOGRAM": raise_not_implemented, # returns a histogram of the values (100 buckets)
+    "PERCENT": raise_not_implemented, # each group has the relative portion calculated
+    "APPROX_MODE": raise_not_implemented, # the mode of the values, use lossy counter
+    "APPROX_MEDIAN": raise_not_implemented, # the median of the values, use tdigest, 50% centile
+    "APPROX_DISTINCT": raise_not_implemented, # hyperloglog is used to estimate distinct values
     "APPROX_QUARTILES": raise_not_implemented, 
 }
-
-HASH_SEED = b"Anakin Skywalker"
 
 
 class TooManyGroups(Exception):
