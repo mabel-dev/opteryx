@@ -2,7 +2,7 @@
 
 ## Distributed Query Engine for serverless environments.
 
-**mabel** has no server component, **mabel** just runs when you need it making it ideal
+**opteryx** has no server component, **opteryx** just runs when you need it making it ideal
 for deployments to platforms like Kubernetes, GCP Cloud Run, AWS Fargate and Knative.
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/mabel-dev/opteryx/blob/master/LICENSE)
