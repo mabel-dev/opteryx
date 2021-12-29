@@ -222,6 +222,21 @@ class Relation():
 
         return list(_inner_fetch())
 
+    def collect_column(self, column):
+
+        def get_column(column):
+            for index, attribute in enumerate(self.header.keys()):
+                if attribute == column:
+                    return index
+            raise Exception("Column not found")
+
+        def _inner_fetch(column):
+            for index in range(len(self.data)):
+                yield self.data[index][column]
+
+        return list(_inner_fetch(get_column(column)))
+
+
     @staticmethod
     def deserialize(stream):
         """
@@ -270,7 +285,7 @@ if __name__ == "__main__":
     r.distinct()
     print(r.attributes())
     print(r.apply_projection(["user_verified"]).distinct().count())
-    print(r.fetchone(1000))
+    print(r.collect_column("username"))
     print(r.apply_projection(["user_verified"]).distinct().fetchmany())
     print(len(r.fetchall()))
 

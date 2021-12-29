@@ -21,8 +21,9 @@ Low Cardinality (a lot of duplication)
 """
 
 from __future__ import absolute_import
+from typing import List
 from opteryx.imports.accumulation_tree.abctree import ABCTree
-
+import cython
 
 __all__ = ['BinaryTree']
 
@@ -31,17 +32,17 @@ class Node(object):
     """Internal object, represents a tree node."""
     __slots__ = ('key', 'value', 'left', 'right')
 
-    def __init__(self, key, value):
-        self.key = key
-        self.value = value
-        self.left = None
-        self.right = None
+    def __init__(self, key:str, value:List[int]):
+        self.key:str = key
+        self.value:List[int] = value
+        self.left:Node = None
+        self.right:Node = None
 
-    def __getitem__(self, key):
+    def __getitem__(self, key:cython.int):
         """N.__getitem__(key) <==> x[key], where key is 0 (left) or 1 (right)."""
         return self.left if key == 0 else self.right
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key:cython.int, value):
         """N.__setitem__(key, value) <==> x[key]=value, where key is 0 (left) or 1 (right)."""
         if key == 0:
             self.left = value
@@ -65,7 +66,7 @@ class BinaryTree(ABCTree):
     see also abctree.ABCTree() class.
     """
 
-    def insert(self, key, value):
+    def insert(self, key:str, value:cython.int):
 
         # only index strings at the moment
         if type(key) != str:
@@ -78,9 +79,9 @@ class BinaryTree(ABCTree):
 
         else:
             parent = None
-            direction = 0
-            node = self._root
-            while True:
+            direction:cython.int = 0
+            node:Node = self._root
+            while 1:
                 if node is None:
                     parent[direction] = Node(key, [value])
                     self._count += 1
