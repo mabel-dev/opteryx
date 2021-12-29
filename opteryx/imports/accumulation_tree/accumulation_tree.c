@@ -5,7 +5,7 @@
     "distutils": {
         "name": "accumulation_tree.accumulation_tree",
         "sources": [
-            "waddles/imports/accumulation_tree/accumulation_tree.pyx"
+            "opteryx/imports/accumulation_tree/accumulation_tree.pyx"
         ]
     },
     "module_name": "accumulation_tree.accumulation_tree"
@@ -835,7 +835,7 @@ static const char *__pyx_filename;
 
 
 static const char *__pyx_f[] = {
-  "waddles/imports/accumulation_tree/accumulation_tree.pyx",
+  "opteryx/imports/accumulation_tree/accumulation_tree.pyx",
   "stringsource",
 };
 

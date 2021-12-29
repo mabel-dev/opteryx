@@ -3,7 +3,7 @@ from setuptools import find_packages
 from Cython.Build import cythonize
 
 
-with open("waddles/version.py", "r") as v:
+with open("opteryx/version.py", "r") as v:
     vers = v.read()
 exec(vers)  # nosec
 
@@ -15,7 +15,7 @@ with open("requirements.txt") as f:
 
 
 setup(
-    name="waddles",
+    name="opteryx",
     version=__version__,
     description="Distributed SQL Engine",
     long_description=long_description,
@@ -23,8 +23,8 @@ setup(
     maintainer="Joocer",
     author="joocer",
     author_email="justin.joyce@joocer.com",
-    packages=find_packages(include=["waddles", "waddles.*"]),
-    url="https://github.com/mabel-dev/waddles/",
+    packages=find_packages(include=["opteryx", "opteryx.*"]),
+    url="https://github.com/mabel-dev/opteryx/",
     install_requires=required,
     ext_modules=cythonize(
         [
@@ -36,7 +36,7 @@ setup(
             #    "mabel/data/internals/relation.py",
             #    "mabel/data/internals/bloom_filter.py",
             #    "mabel/utils/uintset/uintset.py"
-            "waddles/imports/accumulation_tree/accumulation_tree.pyx"
+            "opteryx/imports/accumulation_tree/accumulation_tree.pyx"
         ]
     ),
 )

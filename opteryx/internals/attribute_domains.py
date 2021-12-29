@@ -1,5 +1,5 @@
 from enum import Enum
-from waddles.exceptions import UnsupportedTypeError
+from opteryx.exceptions import UnsupportedTypeError
 import datetime
 
 
@@ -22,7 +22,7 @@ def coerce(var):
     )
 
 
-class WADDLES_TYPES(str, Enum):
+class opteryx_TYPES(str, Enum):
     BOOLEAN = "BOOLEAN"
     INTEGER = "INTEGER"
     DOUBLE = "DOUBLE"
@@ -34,36 +34,36 @@ class WADDLES_TYPES(str, Enum):
 
 
 PYTHON_TYPES = {
-    "bool": WADDLES_TYPES.BOOLEAN,
-    "datetime": WADDLES_TYPES.TIMESTAMP,
-    "dict": WADDLES_TYPES.STRUCT,
-    "int": WADDLES_TYPES.INTEGER,
-    "float": WADDLES_TYPES.DOUBLE,
-    "str": WADDLES_TYPES.VARCHAR,
-    "tuple": WADDLES_TYPES.LIST,
+    "bool": opteryx_TYPES.BOOLEAN,
+    "datetime": opteryx_TYPES.TIMESTAMP,
+    "dict": opteryx_TYPES.STRUCT,
+    "int": opteryx_TYPES.INTEGER,
+    "float": opteryx_TYPES.DOUBLE,
+    "str": opteryx_TYPES.VARCHAR,
+    "tuple": opteryx_TYPES.LIST,
 }
 
 PARQUET_TYPES = {
-    "bool": WADDLES_TYPES.BOOLEAN,
-    "timestamp[ms]": WADDLES_TYPES.TIMESTAMP,
-    "dict": WADDLES_TYPES.STRUCT,
-    "int64": WADDLES_TYPES.INTEGER,
-    "double": WADDLES_TYPES.DOUBLE,
-    "string": WADDLES_TYPES.VARCHAR,
-    "tuple": WADDLES_TYPES.LIST,  
+    "bool": opteryx_TYPES.BOOLEAN,
+    "timestamp[ms]": opteryx_TYPES.TIMESTAMP,
+    "dict": opteryx_TYPES.STRUCT,
+    "int64": opteryx_TYPES.INTEGER,
+    "double": opteryx_TYPES.DOUBLE,
+    "string": opteryx_TYPES.VARCHAR,
+    "tuple": opteryx_TYPES.LIST,  
 }
 
 COERCABLE_PYTHON_TYPES = {
-    "bool": WADDLES_TYPES.BOOLEAN,
-    "datetime": WADDLES_TYPES.TIMESTAMP,
-    "date": WADDLES_TYPES.TIMESTAMP,
-    "dict": WADDLES_TYPES.STRUCT,
-    "int": WADDLES_TYPES.INTEGER,
-    "float": WADDLES_TYPES.DOUBLE,
-    "str": WADDLES_TYPES.VARCHAR,
-    "tuple": WADDLES_TYPES.LIST,
-    "set": WADDLES_TYPES.LIST,
-    "list": WADDLES_TYPES.LIST,
+    "bool": opteryx_TYPES.BOOLEAN,
+    "datetime": opteryx_TYPES.TIMESTAMP,
+    "date": opteryx_TYPES.TIMESTAMP,
+    "dict": opteryx_TYPES.STRUCT,
+    "int": opteryx_TYPES.INTEGER,
+    "float": opteryx_TYPES.DOUBLE,
+    "str": opteryx_TYPES.VARCHAR,
+    "tuple": opteryx_TYPES.LIST,
+    "set": opteryx_TYPES.LIST,
+    "list": opteryx_TYPES.LIST,
 }
 
 

@@ -3,7 +3,7 @@ import sys
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 import pytest
-from waddles import InvalidSqlError, SqlParser
+from opteryx import InvalidSqlError, SqlParser
 from rich import traceback
 
 traceback.install()

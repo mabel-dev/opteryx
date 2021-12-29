@@ -2,8 +2,8 @@ from __future__ import print_function
 
 from random import choice
 from itertools import chain
-from waddles.imports.accumulation_tree import AccumulationTree
-from waddles.imports.pyudorandom import pyudorandom
+from opteryx.imports.accumulation_tree import AccumulationTree
+from opteryx.imports.pyudorandom import pyudorandom
 
 
 def _centroid_count(centroid):

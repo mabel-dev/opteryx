@@ -12,8 +12,8 @@ import fastnumbers
 
 from mabel.text import like, not_like, matches
 from mabel.dates import parse_iso
-from waddles.internals.inline_functions import FUNCTIONS
-from waddles.internals.group_by import AGGREGATORS
+from opteryx.internals.inline_functions import FUNCTIONS
+from opteryx.internals.group_by import AGGREGATORS
 
 # These are the characters we should escape in our regex
 REGEX_CHARACTERS = {ch: "\\" + ch for ch in ".^$*+?{}[]|()\\"}
@@ -195,7 +195,7 @@ def build_splitter():
 
 class Tokenizer:
 
-    slots = ("i", "tokens")
+    __slots__ = ("i", "tokens")
 
     def __init__(self, exp):
         self.i = 0

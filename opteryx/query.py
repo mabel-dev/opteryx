@@ -1,5 +1,5 @@
 
-from waddles.internals import Relation
+from opteryx.internals import Relation
 
 class Query(Relation):
 

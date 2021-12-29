@@ -223,6 +223,7 @@ FUNCTIONS = {
     "FROM_EPOCH": not_implemented, # timestamp from linux epoch formatted time
     "TO_EPOCH": not_implemented, # timestamp in linux epoch format
     "DATE_PART": not_implemented, # DATE_PART("YEAR", timestamp)
+    "TIMESTAMP": not_implemented, # parse input as a TIMESTAMP
     # STRINGS
     "UCASE": lambda x: str(x).upper(),
     "UPPER": lambda x: str(x).upper(),
@@ -231,6 +232,7 @@ FUNCTIONS = {
     "TRIM": lambda x: str(x).strip(),
     "LEN": len,
     "STRING": to_string,
+    "VARCHAR": to_string,
     "LEFT": lambda x, y: str(x)[: int(y)],
     "RIGHT": lambda x, y: str(x)[-int(y) :],
     "MID": lambda x, y, z: str(x)[int(y) :][: int(z)],
@@ -242,8 +244,8 @@ FUNCTIONS = {
     "ABS": abs,
     "ROUND": round,
     "TRUNC": parse_number(fastnumbers.real, truncate),
-    "INT": parse_number(fastnumbers.real, int),
-    "FLOAT": parse_number(fastnumbers.real, float),
+    "INTEGER": parse_number(fastnumbers.real, int),
+    "DOUBLE": parse_number(fastnumbers.real, float),
     # BOOLEAN
     "BOOLEAN": lambda x: str(x).upper() != "FALSE",
     "ISNONE": lambda x: x is None,
@@ -257,5 +259,5 @@ FUNCTIONS = {
     "TRY": attempt,
     "LEAST": min,
     "GREATEST": max,
-    "CAST": not_implemented, # CAST(value AS type)
+    "UUID": not_implemented, # cast value as UUID
 }

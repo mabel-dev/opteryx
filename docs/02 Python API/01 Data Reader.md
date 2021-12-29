@@ -1,5 +1,5 @@
-import waddles
-conn = waddles.connect(
+import opteryx
+conn = opteryx.connect(
     host='localhost',
     port=8080,
     user='the-user',

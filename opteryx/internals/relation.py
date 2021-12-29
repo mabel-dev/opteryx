@@ -40,8 +40,8 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 from typing import Iterable, Tuple
 from enum import Enum
-from waddles.internals.attribute_domains import WADDLES_TYPES, PARQUET_TYPES, coerce
-from waddles.exceptions import MissingDependencyError
+from opteryx.internals.attribute_domains import opteryx_TYPES, PARQUET_TYPES, coerce
+from opteryx.exceptions import MissingDependencyError
 
 
 class Relation():
@@ -167,12 +167,36 @@ class Relation():
         """
         Serialize to Parquet, this is used for communicating and saving the Relation.
         """
-        from pyarrow.orc import orc
-        import pyarrow.json
-        import io
+        try:
+            import pyarrow.parquet as pq
+            import pyarrow.json
+        except ImportError:  # pragma: no cover
+            raise MissingDependencyError(
+                "`pyarrow` is missing, please install or include in requirements.txt"
+            )
 
-        buffer = b'{"row":1}\n{"row":2}\n{"row":3}'
-        return pyarrow.json.read_json(io.BytesIO(buffer))
+        import io
+        
+        # load into pyarrow as a JSON dataset
+        in_pyarrow_buffer = pyarrow.json.read_json(io.BytesIO(self.to_json()))
+
+        # then we convert the pyarrow table to parquet
+        pq_temp_buffer = io.BytesIO()
+        pq.write_table(in_pyarrow_buffer, pq_temp_buffer, compression="ZSTD")
+
+        # the read out the parquet formatted data
+        pq_temp_buffer.seek(0, 0)
+        buffer = pq_temp_buffer.read()
+        pq_temp_buffer.close()
+
+        return buffer
+
+    def to_json(self):
+        """
+        Convert the relation to a JSONL byte string
+        """
+        import orjson
+        return b'\n'.join(map(orjson.dumps, self.fetchall()))
 
     def fetchone(self, offset:int=0):
         try:
@@ -211,7 +235,7 @@ class Relation():
             raise MissingDependencyError(
                 "`pyarrow` is missing, please install or include in requirements.txt"
             )
-        if not hasattr(stream, "read"):
+        if not hasattr(stream, "read") or isinstance(stream, bytes):
             import io
             stream = io.BytesIO(stream)
         table = pq.read_table(stream)
@@ -225,7 +249,7 @@ class Relation():
         def pq_schema_to_rel_schema(pq_schema):
             schema = {}
             for attribute in pq_schema:
-                schema[attribute.name] = { "type": PARQUET_TYPES.get(str(attribute.type), WADDLES_TYPES.OTHER).value }
+                schema[attribute.name] = { "type": PARQUET_TYPES.get(str(attribute.type), opteryx_TYPES.OTHER).value }
             return schema
 
         return Relation(_inner(table), header=pq_schema_to_rel_schema(table.schema))
@@ -248,3 +272,11 @@ if __name__ == "__main__":
     print(r.apply_projection(["user_verified"]).distinct().count())
     print(r.fetchone(1000))
     print(r.apply_projection(["user_verified"]).distinct().fetchmany())
+    print(len(r.fetchall()))
+
+    print(len(r.to_json()))
+
+    print(len(r.serialize()))
+
+    s = Relation.deserialize(r.serialize())
+    print(s.count())

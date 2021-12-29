@@ -404,7 +404,15 @@ if __name__ == "__main__":
 
     from numpy.random import random
 
-    for x in range(10):
+    for x in range(1000000):
         update(d, random())
+
+    print(histogram(d, 10)) 
+
+    from numpy.random import normal
+
+    digest = Distogram()
+    for i in normal(0.0, 1.0, 5000):
+        update(d, i)
 
     print(histogram(d, 10)) 

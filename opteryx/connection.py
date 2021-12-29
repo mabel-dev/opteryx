@@ -18,8 +18,8 @@ https://www.python.org/dev/peps/pep-0249/
 """
 
 from typing import Dict, Optional, List, Any
-from waddles import constants
-from waddles.query import Query
+from opteryx import constants
+from opteryx.query import Query
 
 
 class Connection:
@@ -79,7 +79,7 @@ class Cursor:
             return f"{param}"
 
         if isinstance(param, float):
-            return f'(DOUBLE "{param}")'
+            return f'DOUBLE("{param}")'
 
         if isinstance(param, str):
             delimited = param.replace('"', '""')
@@ -90,20 +90,19 @@ class Cursor:
 
         if isinstance(param, datetime.datetime):
             datetime_str = param.strftime("%Y-%m-%d %H:%M:%S.%f")
-            return f'(TIMESTAMP "{datetime_str}")'
+            return f'TIMESTAMP("{datetime_str}")'
 
         if isinstance(param, (list, tuple)):
             return "(%s)" % ','.join(map(self._format_prepared_param, param))
 
         if isinstance(param, dict):
             keys = list(param.keys())
-            if not all(type(k) == str for k in keys):
+            if any(type(k) != str for k in keys):
                 raise Exception("STRUCT keys must be strings")
-            return "{%s}" % ",".join(f'("{k}":{self._format_prepared_param(v)})' for k,v in param.items())
+            return "{%s}" % ",".join(f'"{k}":{self._format_prepared_param(v)}' for k,v in param.items())
             
-
         if isinstance(param, uuid.UUID):
-            return f"(UUID '{param}')"
+            return f"UUID('{param}')"
 
         raise Exception("Query parameter of type '%s' is not supported." % type(param))
 

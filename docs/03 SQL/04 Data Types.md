@@ -19,7 +19,7 @@ Columns of type BOOLEAN cannot be indexed.
 ## INTEGER
 ## DOUBLE
 
-Type Hint in Queries (DOUBLE "value")
+Type Hint in Queries DOUBLE("value")
 
 ## LIST
 
@@ -40,7 +40,7 @@ Mabel will implicitly interpret strings formatted as
 
 "YYYY-MM-DD" or "YYYY-MM-DD HH:MM" as TIMESTAMP
 
-Type Hint in Queries (TIMESTAMP "value")
+Type Hint in Queries TIMESTAMP("value")
 
 ## OTHER
 

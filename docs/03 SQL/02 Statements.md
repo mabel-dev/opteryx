@@ -1,4 +1,11 @@
-SELECT ...
+SELECT [DISTINCT] <select_expression>
+FROM <table_list>
+WHERE <where_expression>
+GROUP BY <group_by_expression>
+HAVING <having_expression>
+[LIMIT|SAMPLE] <n|ratio>
+ORDER BY <field_list> [ASC|DESC]
+
 -> row data
 
 ANALYZE dataset -> creates and/or returns profile information for a dataset

@@ -4,7 +4,7 @@ import sys
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 from mabel.data import STORAGE_CLASS
 from mabel.adapters.disk import DiskReader
-from waddles import SqlReader
+from opteryx import SqlReader
 from rich import traceback
 
 traceback.install()
