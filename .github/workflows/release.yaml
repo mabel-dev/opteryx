@@ -18,7 +18,7 @@ jobs:
           python-version: '3.9' 
 
       - name: Install build
-        run:  pip install build
+        run:  pip install --upgrade build cython
 
       - name: Build a binary wheel and a source tarball
         run:  python -m build --sdist --wheel --outdir dist/
