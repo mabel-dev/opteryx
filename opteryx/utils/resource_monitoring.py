@@ -14,7 +14,7 @@ except ImportError:
 
 class ResourceMonitor:
 
-    __slots__ = ("frequency")
+    __slots__ = "frequency"
 
     def __init__(self, frequency=1):
         self.frequency = frequency

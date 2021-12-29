@@ -14,7 +14,6 @@ def _centroid_count(centroid):
 
 
 class Centroid(object):
-
     def __init__(self, mean, count):
         self.mean = float(mean)
         self.count = float(count)
@@ -32,7 +31,6 @@ class Centroid(object):
 
 
 class TDigest(object):
-
     def __init__(self, delta=0.01, K=25):
 
         self.C = AccumulationTree(_centroid_count)
@@ -71,7 +69,7 @@ class TDigest(object):
     def _compute_centroid_quantile(self, centroid):
         denom = self.n
         cumulative_sum = self.C.get_left_accumulation(centroid.mean)
-        return (centroid.count / 2. + cumulative_sum) / denom
+        return (centroid.count / 2.0 + cumulative_sum) / denom
 
     def _update_centroid(self, centroid, x, w):
         self.C.pop(centroid.mean)
@@ -164,7 +162,7 @@ class TDigest(object):
         if not (0 <= p <= 100):
             raise ValueError("p must be between 0 and 100, inclusive.")
 
-        p = float(p)/100.
+        p = float(p) / 100.0
         p *= self.n
         c_i = None
         t = 0
@@ -178,7 +176,7 @@ class TDigest(object):
                 k = c_i_plus_one.count / 2
 
             else:
-                k = (c_i_plus_one.count + c_i.count) / 2.
+                k = (c_i_plus_one.count + c_i.count) / 2.0
                 if p <= t + k:
                     z1 = p - t
                     z2 = t + k - p
@@ -202,9 +200,9 @@ class TDigest(object):
         for i, key in enumerate(self.C.keys()):
             c_i = self.C[key]
             if i == len(self) - 1:
-                delta = (c_i.mean - self.C.prev_item(key)[1].mean) / 2.
+                delta = (c_i.mean - self.C.prev_item(key)[1].mean) / 2.0
             else:
-                delta = (self.C.succ_item(key)[1].mean - c_i.mean) / 2.
+                delta = (self.C.succ_item(key)[1].mean - c_i.mean) / 2.0
             z = max(-1, (x - c_i.mean) / delta)
 
             if z < 1:
@@ -222,8 +220,8 @@ class TDigest(object):
         if not (p1 < p2):
             raise ValueError("p1 must be between 0 and 100 and less than p2.")
 
-        min_count = p1 / 100. * self.n
-        max_count = p2 / 100. * self.n
+        min_count = p1 / 100.0 * self.n
+        max_count = p2 / 100.0 * self.n
 
         trimmed_sum = trimmed_count = curr_count = 0
         for i, c in enumerate(self.C.values()):
@@ -257,7 +255,7 @@ class TDigest(object):
         centroids = []
         for key in self.C.keys():
             tree_values = self.C.get_value(key)
-            centroids.append({'m':tree_values.mean, 'c':tree_values.count})
+            centroids.append({"m": tree_values.mean, "c": tree_values.count})
         return centroids
 
     def to_dict(self):
@@ -266,7 +264,12 @@ class TDigest(object):
         Or use centroids_to_list() for a list of only the Centroid values.
 
         """
-        return {'n':self.n, 'delta':self.delta, 'K':self.K, 'centroids':self.centroids_to_list()}
+        return {
+            "n": self.n,
+            "delta": self.delta,
+            "K": self.K,
+            "centroids": self.centroids_to_list(),
+        }
 
     def update_from_dict(self, dict_values):
         """
@@ -293,9 +296,9 @@ class TDigest(object):
         Alternative you can provide only a list of centroid values with update_centroids_from_list()
 
         """
-        self.delta = dict_values.get('delta', self.delta)
-        self.K = dict_values.get('K', self.K)
-        self.update_centroids_from_list(dict_values['centroids'])
+        self.delta = dict_values.get("delta", self.delta)
+        self.K = dict_values.get("K", self.K)
+        self.update_centroids_from_list(dict_values["centroids"])
         return self
 
     def update_centroids_from_list(self, list_values):
@@ -307,11 +310,11 @@ class TDigest(object):
             digest.update_centroids([{'c': 1.0, 'm': 1.0}, {'c': 1.0, 'm': 2.0}, {'c': 1.0, 'm': 3.0}])
 
         """
-        [self.update(value['m'], value['c']) for value in list_values]
+        [self.update(value["m"], value["c"]) for value in list_values]
         return self
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from numpy import random
 
     T1 = TDigest()
@@ -319,8 +322,8 @@ if __name__ == '__main__':
     T1.batch_update(x)
 
     print(abs(T1.percentile(50) - 0.5))
-    print(abs(T1.percentile(10) - .1))
+    print(abs(T1.percentile(10) - 0.1))
     print(abs(T1.percentile(90) - 0.9))
     print(abs(T1.percentile(1) - 0.01))
     print(abs(T1.percentile(0.1) - 0.001))
-    print(T1.trimmed_mean(0.5, 1.))
+    print(T1.trimmed_mean(0.5, 1.0))

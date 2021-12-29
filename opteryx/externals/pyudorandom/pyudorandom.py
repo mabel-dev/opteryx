@@ -1,4 +1,5 @@
 import random
+
 """
 Functions for generating the cyclic group [0,...n-1]. Use instead of
 random.shuffle() or similar.
@@ -8,6 +9,8 @@ Functions:
     bin_gcd(a, b) <- calculate the gcd of a and b fast
 
 """
+
+
 def items(ls):
     """
     Yields the elements of ls in a pseudorandom fashion.
@@ -15,9 +18,10 @@ def items(ls):
     """
     num = len(ls)
     if num == 0:
-        return 
+        return
     for i in indices(num):
         yield ls[i]
+
 
 def shuffle(ls):
     """
@@ -26,6 +30,7 @@ def shuffle(ls):
 
     """
     return list(items(ls))
+
 
 def indices(n):
     """
@@ -36,8 +41,9 @@ def indices(n):
     rand = find_gcd_one(n)
     i = 1
     while i <= n:
-        yield i*rand % n
+        yield i * rand % n
         i += 1
+
 
 def find_gcd_one(n):
     """
@@ -48,6 +54,7 @@ def find_gcd_one(n):
         rand = int(random.random() * n)
         if bin_gcd(rand, n) == 1:
             return rand
+
 
 def bin_gcd(a, b):
     """

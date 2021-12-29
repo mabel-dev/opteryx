@@ -40,20 +40,16 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 from typing import Iterable, Tuple
 from enum import Enum
-from opteryx.internals.attribute_domains import opteryx_TYPES, PARQUET_TYPES, coerce
+from opteryx.internals.attribute_types import OPTERYX_TYPES, PARQUET_TYPES, coerce_types
 from opteryx.exceptions import MissingDependencyError
 
 
-class Relation():
+class Relation:
 
     __slots__ = ("header", "data", "name")
 
     def __init__(
-        self,
-        data: Iterable[Tuple] = [],
-        *,
-        header: dict = {},
-        name: str = None
+        self, data: Iterable[Tuple] = [], *, header: dict = {}, name: str = None
     ):
         """
         Create a Relation.
@@ -129,27 +125,13 @@ class Relation():
 
         return Relation(do_dedupe(self.data), header=self.header)
 
-    def from_dictset(self, dictset):
-        """
-        Load a Relation from a DictSet.
-
-        In this case, the entire Relation is loaded into memory.
-        """
+    def from_dictionaries(self, dictset):
 
         self.header = {k: {"type": v} for k, v in dictset.types().items()}
         self.data = [
-            tuple([coerce(row.get(k)) for k in self.header.keys()])
+            tuple([coerce_types(row.get(k)) for k in self.header.keys()])
             for row in dictset.icollect_list()
         ]
-
-    def to_dictset(self):
-        """
-        Convert a Relation to a DictSet, this will fill every column so missing entries
-        will be populated with Nones.
-        """
-        from mabel import DictSet
-
-        return DictSet(self.fetchall())
 
     def attributes(self):
         return [k for k in self.header.keys()]
@@ -176,7 +158,7 @@ class Relation():
             )
 
         import io
-        
+
         # load into pyarrow as a JSON dataset
         in_pyarrow_buffer = pyarrow.json.read_json(io.BytesIO(self.to_json()))
 
@@ -196,26 +178,27 @@ class Relation():
         Convert the relation to a JSONL byte string
         """
         import orjson
-        return b'\n'.join(map(orjson.dumps, self.fetchall()))
 
-    def fetchone(self, offset:int=0):
+        return b"\n".join(map(orjson.dumps, self.fetchall()))
+
+    def fetchone(self, offset: int = 0):
         try:
             return dict(zip(self.header.keys(), self.data[offset]))
         except IndexError:
             return None
 
-    def fetchmany(self, size:int=100, offset:int=0):
+    def fetchmany(self, size: int = 100, offset: int = 0):
         keys = self.header.keys()
-        
+
         def _inner_fetch():
-            for index in range(offset, min(len(self.data), offset+size)):
+            for index in range(offset, min(len(self.data), offset + size)):
                 yield dict(zip(keys, self.data[index]))
 
         return list(_inner_fetch())
 
-    def fetchall(self, offset:int=0):
+    def fetchall(self, offset: int = 0):
         keys = self.header.keys()
-        
+
         def _inner_fetch():
             for index in range(offset, len(self.data)):
                 yield dict(zip(keys, self.data[index]))
@@ -223,7 +206,6 @@ class Relation():
         return list(_inner_fetch())
 
     def collect_column(self, column):
-
         def get_column(column):
             for index, attribute in enumerate(self.header.keys()):
                 if attribute == column:
@@ -235,7 +217,6 @@ class Relation():
                 yield self.data[index][column]
 
         return list(_inner_fetch(get_column(column)))
-
 
     @staticmethod
     def deserialize(stream):
@@ -252,6 +233,7 @@ class Relation():
             )
         if not hasattr(stream, "read") or isinstance(stream, bytes):
             import io
+
             stream = io.BytesIO(stream)
         table = pq.read_table(stream)
 
@@ -264,21 +246,27 @@ class Relation():
         def pq_schema_to_rel_schema(pq_schema):
             schema = {}
             for attribute in pq_schema:
-                schema[attribute.name] = { "type": PARQUET_TYPES.get(str(attribute.type), opteryx_TYPES.OTHER).value }
+                schema[attribute.name] = {
+                    "type": PARQUET_TYPES.get(
+                        str(attribute.type), OPTERYX_TYPES.OTHER
+                    ).value
+                }
             return schema
 
         return Relation(_inner(table), header=pq_schema_to_rel_schema(table.schema))
 
     @staticmethod
     def load(file):
-        with open(file, 'rb') as pq_file:
+        with open(file, "rb") as pq_file:
             return Relation.deserialize(pq_file)
-
 
 
 if __name__ == "__main__":
 
-    r = Relation.load('tests/data/parquet/tweets.parquet')
+    r = Relation.load("tests/data/parquet/tweets.parquet")
+
+    print(r.header)
+    print(r.data[10])
 
     print(r.count())
     print(r.attributes())

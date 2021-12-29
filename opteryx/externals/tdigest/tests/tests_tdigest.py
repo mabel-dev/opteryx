@@ -26,89 +26,149 @@ def empty_tdigest():
 
 @pytest.fixture()
 def example_positive_centroids():
-    return RBTree([
-        (0.5, Centroid(0.5, 1)),
-        (1.1, Centroid(1.1, 1)),
-        (1.5, Centroid(1.5, 1)),
-    ])
+    return RBTree(
+        [
+            (0.5, Centroid(0.5, 1)),
+            (1.1, Centroid(1.1, 1)),
+            (1.5, Centroid(1.5, 1)),
+        ]
+    )
 
 
 @pytest.fixture()
 def example_centroids():
-    return RBTree([
-        (-1.1, Centroid(-1.1, 1)),
-        (-0.5, Centroid(-0.5, 1)),
-        (0.1, Centroid(0.1, 1)),
-        (1.5, Centroid(1.5, 1)),
-    ])
+    return RBTree(
+        [
+            (-1.1, Centroid(-1.1, 1)),
+            (-0.5, Centroid(-0.5, 1)),
+            (0.1, Centroid(0.1, 1)),
+            (1.5, Centroid(1.5, 1)),
+        ]
+    )
 
 
 @pytest.fixture()
 def example_random_data():
     return random.randn(100)
 
+
 @pytest.fixture()
 def sample_dict():
-    return {'K': 25, 'delta': 0.01, 'centroids': [{'c': 1.0, 'm': 0.0}, {'c': 1.0, 'm': 1.0}, {'c': 1.0, 'm': 2.0}, {'c': 1.0, 'm': 3.0}], 'n': 4}
+    return {
+        "K": 25,
+        "delta": 0.01,
+        "centroids": [
+            {"c": 1.0, "m": 0.0},
+            {"c": 1.0, "m": 1.0},
+            {"c": 1.0, "m": 2.0},
+            {"c": 1.0, "m": 3.0},
+        ],
+        "n": 4,
+    }
+
 
 @pytest.fixture()
 def sample_centroid_list():
-    return [{'c': 1.0, 'm': 1.0}, {'c': 1.0, 'm': 2.0}, {'c': 1.0, 'm': 3.0}]
+    return [{"c": 1.0, "m": 1.0}, {"c": 1.0, "m": 2.0}, {"c": 1.0, "m": 3.0}]
 
 
-class TestTDigest():
-
+class TestTDigest:
     def test_add_centroid(self, empty_tdigest, example_positive_centroids):
         empty_tdigest.C = example_positive_centroids
         new_centroid = Centroid(0.9, 1)
         empty_tdigest._add_centroid(new_centroid)
-        assert (empty_tdigest.C - RBTree([
-            (0.5, Centroid(0.5, 1)),
-            (new_centroid.mean, new_centroid),
-            (1.1, Centroid(1.1, 1)),
-            (1.5, Centroid(1.5, 1)),
-        ])).is_empty()
+        assert (
+            empty_tdigest.C
+            - RBTree(
+                [
+                    (0.5, Centroid(0.5, 1)),
+                    (new_centroid.mean, new_centroid),
+                    (1.1, Centroid(1.1, 1)),
+                    (1.5, Centroid(1.5, 1)),
+                ]
+            )
+        ).is_empty()
 
-        last_centroid = Centroid(10., 1)
+        last_centroid = Centroid(10.0, 1)
         empty_tdigest._add_centroid(last_centroid)
-        assert (empty_tdigest.C - RBTree([
-            (0.5, Centroid(0.5, 1)),
-            (new_centroid.mean, new_centroid),
-            (1.1, Centroid(1.1, 1)),
-            (1.5, Centroid(1.5, 1)),
-            (last_centroid.mean, last_centroid),
-        ])).is_empty()
+        assert (
+            empty_tdigest.C
+            - RBTree(
+                [
+                    (0.5, Centroid(0.5, 1)),
+                    (new_centroid.mean, new_centroid),
+                    (1.1, Centroid(1.1, 1)),
+                    (1.5, Centroid(1.5, 1)),
+                    (last_centroid.mean, last_centroid),
+                ]
+            )
+        ).is_empty()
 
-    def test_add_centroid_if_key_already_present(self, empty_tdigest, example_positive_centroids):
+    def test_add_centroid_if_key_already_present(
+        self, empty_tdigest, example_positive_centroids
+    ):
         empty_tdigest.C = example_positive_centroids
         new_centroid = Centroid(1.1, 5)
         empty_tdigest._add_centroid(new_centroid)
-        assert (empty_tdigest.C - RBTree([
-            (0.5, Centroid(0.5, 1)),
-            (1.1, Centroid(1.1, 1 + 5)),
-            (1.5, Centroid(1.5, 1)),
-        ])).is_empty()
+        assert (
+            empty_tdigest.C
+            - RBTree(
+                [
+                    (0.5, Centroid(0.5, 1)),
+                    (1.1, Centroid(1.1, 1 + 5)),
+                    (1.5, Centroid(1.5, 1)),
+                ]
+            )
+        ).is_empty()
 
     def test_compute_centroid_quantile(self, empty_tdigest, example_centroids):
         empty_tdigest.C = example_centroids
         empty_tdigest.n = 4
 
-        assert empty_tdigest._compute_centroid_quantile(example_centroids[-1.1]) == (1 / 2. + 0) / 4
-        assert empty_tdigest._compute_centroid_quantile(example_centroids[-0.5]) == (1 / 2. + 1) / 4
-        assert empty_tdigest._compute_centroid_quantile(example_centroids[0.1]) == (1 / 2. + 2) / 4
-        assert empty_tdigest._compute_centroid_quantile(example_centroids[1.5]) == (1 / 2. + 3) / 4
+        assert (
+            empty_tdigest._compute_centroid_quantile(example_centroids[-1.1])
+            == (1 / 2.0 + 0) / 4
+        )
+        assert (
+            empty_tdigest._compute_centroid_quantile(example_centroids[-0.5])
+            == (1 / 2.0 + 1) / 4
+        )
+        assert (
+            empty_tdigest._compute_centroid_quantile(example_centroids[0.1])
+            == (1 / 2.0 + 2) / 4
+        )
+        assert (
+            empty_tdigest._compute_centroid_quantile(example_centroids[1.5])
+            == (1 / 2.0 + 3) / 4
+        )
 
-    def test_find_closest_centroids_works_with_positive_values(self, empty_tdigest, example_positive_centroids):
+    def test_find_closest_centroids_works_with_positive_values(
+        self, empty_tdigest, example_positive_centroids
+    ):
         empty_tdigest.C = example_positive_centroids
-        assert empty_tdigest._find_closest_centroids(0.0) == [example_positive_centroids[0.5]]
-        assert empty_tdigest._find_closest_centroids(2.0) == [example_positive_centroids[1.5]]
-        assert empty_tdigest._find_closest_centroids(1.1) == [example_positive_centroids[1.1]]
-        assert empty_tdigest._find_closest_centroids(1.2) == [example_positive_centroids[1.1]]
-        assert empty_tdigest._find_closest_centroids(1.4) == [example_positive_centroids[1.5]]
-        assert empty_tdigest._find_closest_centroids(1.3) == [example_positive_centroids[1.5],
-                                                              example_positive_centroids[1.1]]
+        assert empty_tdigest._find_closest_centroids(0.0) == [
+            example_positive_centroids[0.5]
+        ]
+        assert empty_tdigest._find_closest_centroids(2.0) == [
+            example_positive_centroids[1.5]
+        ]
+        assert empty_tdigest._find_closest_centroids(1.1) == [
+            example_positive_centroids[1.1]
+        ]
+        assert empty_tdigest._find_closest_centroids(1.2) == [
+            example_positive_centroids[1.1]
+        ]
+        assert empty_tdigest._find_closest_centroids(1.4) == [
+            example_positive_centroids[1.5]
+        ]
+        assert empty_tdigest._find_closest_centroids(1.3) == [
+            example_positive_centroids[1.5],
+            example_positive_centroids[1.1],
+        ]
 
-    def test_get_closest_centroids_works_with_negative_values(self, empty_tdigest, example_centroids):
+    def test_get_closest_centroids_works_with_negative_values(
+        self, empty_tdigest, example_centroids
+    ):
         empty_tdigest.C = example_centroids
         assert empty_tdigest._find_closest_centroids(0.0) == [example_centroids[0.1]]
         assert empty_tdigest._find_closest_centroids(-2.0) == [example_centroids[-1.1]]
@@ -138,7 +198,7 @@ class TestTDigest():
         t = TDigest()
         data = random.randn(10000)
         t.batch_update(data)
-        assert t.percentile(100.) == data.max()
+        assert t.percentile(100.0) == data.max()
         assert t.percentile(0) == data.min()
         assert t.percentile(0.1) > data.min()
         assert t.percentile(0.999) < data.max()
@@ -161,7 +221,9 @@ class TestTDigest():
         t.batch_update(data)
         assert t.percentile(40) == 32.5
 
-    def test_adding_centroid_with_existing_key_does_not_break_synchronicity(self, empty_tdigest, example_centroids):
+    def test_adding_centroid_with_existing_key_does_not_break_synchronicity(
+        self, empty_tdigest, example_centroids
+    ):
         td = empty_tdigest
         td.C = example_centroids
         assert -1.1 in td.C
@@ -199,17 +261,20 @@ class TestTDigest():
 
     def test_update_centroids_from_list(self, empty_tdigest, sample_centroid_list):
         td = empty_tdigest
-        assert td.update_centroids_from_list(sample_centroid_list).centroids_to_list() == sample_centroid_list
+        assert (
+            td.update_centroids_from_list(sample_centroid_list).centroids_to_list()
+            == sample_centroid_list
+        )
 
-class TestStatisticalTests():
 
+class TestStatisticalTests:
     def test_uniform(self):
         t = TDigest()
         x = random.random(size=10000)
         t.batch_update(x)
 
         assert abs(t.percentile(50) - 0.5) < 0.01
-        assert abs(t.percentile(10) - .1) < 0.01
+        assert abs(t.percentile(10) - 0.1) < 0.01
         assert abs(t.percentile(90) - 0.9) < 0.01
         assert abs(t.percentile(1) - 0.01) < 0.005
         assert abs(t.percentile(99) - 0.99) < 0.005
@@ -230,9 +295,11 @@ class TestStatisticalTests():
         t = TDigest()
         t.batch_update([1, 1, 2, 2, 3, 4, 4, 4, 5, 5])
         assert t.percentile(30) == 2
-        assert t.percentile(40)*3 == 8
+        assert t.percentile(40) * 3 == 8
 
-    @pytest.mark.parametrize("percentile_range", [[0, 7], [27, 47], [39, 66], [81, 99], [77, 100], [0, 100]])
+    @pytest.mark.parametrize(
+        "percentile_range", [[0, 7], [27, 47], [39, 66], [81, 99], [77, 100], [0, 100]]
+    )
     @pytest.mark.parametrize("data_size", [100, 1000, 5000])
     def test_trimmed_mean(self, percentile_range, data_size):
         p1 = percentile_range[0]
@@ -243,7 +310,9 @@ class TestStatisticalTests():
         t.batch_update(x)
 
         tm_actual = t.trimmed_mean(p1, p2)
-        tm_expected = x[bitwise_and(x >= percentile(x, p1), x <= percentile(x, p2))].mean()
+        tm_expected = x[
+            bitwise_and(x >= percentile(x, p1), x <= percentile(x, p2))
+        ].mean()
 
         testing.assert_allclose(tm_actual, tm_expected, rtol=0.01, atol=0.01)
 
@@ -267,13 +336,13 @@ class TestStatisticalTests():
             td.update(random.random())
 
         for i in range(10):
-            td.update(i*100)
+            td.update(i * 100)
 
         mean = td.trimmed_mean(1, 99)
         assert mean >= 0
 
-class TestCentroid():
 
+class TestCentroid:
     def test_update(self):
         c = Centroid(0, 0)
         value, weight = 1, 1
@@ -284,9 +353,9 @@ class TestCentroid():
         value, weight = 2, 1
         c.update(value, weight)
         assert c.count == 2
-        assert c.mean == (2 + 1.) / 2.
+        assert c.mean == (2 + 1.0) / 2.0
 
         value, weight = 1, 2
         c.update(value, weight)
         assert c.count == 4
-        assert c.mean == 1 * 1 / 4. + 2 * 1 / 4. + 1 * 2 / 4.
+        assert c.mean == 1 * 1 / 4.0 + 2 * 1 / 4.0 + 1 * 2 / 4.0

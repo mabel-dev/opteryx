@@ -1,3 +1,8 @@
-mabelbeta
 cython
 numpy
+zstandard
+pyarrow
+orjson
+fastnumbers
+pysimdjson
+cityhash

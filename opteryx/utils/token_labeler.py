@@ -10,8 +10,8 @@ import re
 import operator
 import fastnumbers
 
-from mabel.text import like, not_like, matches
-from mabel.dates import parse_iso
+from opteryx.text import like, not_like, matches
+from opteryx.dates import parse_iso
 from opteryx.internals.inline_functions import FUNCTIONS
 from opteryx.internals.group_by import AGGREGATORS
 

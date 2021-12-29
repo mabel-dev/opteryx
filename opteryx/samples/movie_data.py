@@ -1,25 +1,27 @@
 import sys
 import os
 
-sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
+sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
-from mabel.data.internals.relation import Relation
-
+from opteryx import Relation
+from opteryx.internals.attribute_types import OPTERYX_TYPES, OPTERYX_TYPE_NAMES
 
 ## SELECT * FROM :moviedata:
+
 
 class MovieData(Relation):
     def __init__(self):
         SCHEMA = {
-            "YEAR": {"type": "int"},
-            "MOVIE": {"type": "str"},
-            "GENRE": {"type": "str"},
-            "MPAA": {"type": "str"},
-            "RATING": {"type": "str"},
-            "DISTRIBUTOR": {"type": "str"},
-            "TOTAL FOR YEAR": {"type": "int"},
-            "TOTAL IN 2019 DOLLARS": {"type": "int"},
-            "TICKETS SOLD": {"type": "int"},
+            "YEAR": {"type": OPTERYX_TYPE_NAMES[OPTERYX_TYPES.INTEGER]},
+            "MOVIE": {"type": OPTERYX_TYPE_NAMES[OPTERYX_TYPES.VARCHAR]},
+            "GENRE": {"type": OPTERYX_TYPE_NAMES[OPTERYX_TYPES.VARCHAR]},
+            "RATING": {"type": OPTERYX_TYPE_NAMES[OPTERYX_TYPES.VARCHAR]},
+            "DISTRIBUTOR": {"type": OPTERYX_TYPE_NAMES[OPTERYX_TYPES.VARCHAR]},
+            "TOTAL FOR YEAR": {"type": OPTERYX_TYPE_NAMES[OPTERYX_TYPES.INTEGER]},
+            "TOTAL IN 2019 DOLLARS": {
+                "type": OPTERYX_TYPE_NAMES[OPTERYX_TYPES.INTEGER]
+            },
+            "TICKETS SOLD": {"type": OPTERYX_TYPE_NAMES[OPTERYX_TYPES.INTEGER]},
         }
 
         # fmt:off
@@ -61,8 +63,11 @@ if __name__ == "__main__":
 
     md = MovieData()
 
+    print(md.header)
+
     print(md.count())
     print(md.apply_selection(lambda r: r[4] == "Walt Disney").count())
     print(md.apply_projection("DISTRIBUTOR").distinct().count())
-    print(md.apply_projection("DISTRIBUTOR").distinct().materialize())
     print(md.apply_projection("DISTRIBUTOR").distinct().attributes())
+    print(md.collect_column("DISTRIBUTOR"))
+    print(md.apply_projection("DISTRIBUTOR").distinct().fetchall())

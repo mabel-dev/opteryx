@@ -4,7 +4,7 @@ Decompressors for the Relation based Readers.
 These return a tuple of ()
 """
 
-from mabel.errors import MissingDependencyError
+from opteryx.exceptions import MissingDependencyError
 
 
 def zstd(stream, projection=None):
@@ -13,7 +13,7 @@ def zstd(stream, projection=None):
 
     This assumes the underlying format is line separated records.
     """
-    import zstandard  # type:ignore
+    import zstandard
 
     with zstandard.open(stream, "rb") as file:  # type:ignore
         yield from file.read().split(b"\n")[:-1]

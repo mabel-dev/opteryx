@@ -34,6 +34,7 @@ def bytes_to_int(b):
 
 def _hashfunc(x):
     from cityhash import CityHash32
+
     return CityHash32(f"{x}").to_bytes("big")
     # return hashlib.md5(x).digest()
 

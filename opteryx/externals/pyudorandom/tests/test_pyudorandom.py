@@ -6,8 +6,8 @@ sys.path.insert(1, os.path.join(sys.path[0], ".."))
 import unittest
 from pyudorandom import indices, shuffle, items, bin_gcd
 
-class Tests(unittest.TestCase):
 
+class Tests(unittest.TestCase):
     def test_items(self):
         my_list = range(50)
         generated = list(items(my_list))
@@ -51,5 +51,6 @@ class Tests(unittest.TestCase):
     def test_bin_gcd_with_zero(self):
         self.assertEqual(bin_gcd(0, 2000), 2000)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

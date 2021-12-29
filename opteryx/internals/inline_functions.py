@@ -11,8 +11,8 @@ import fastnumbers
 from cityhash import CityHash32
 from functools import lru_cache
 
-from mabel.utils.text import levenshtein_distance
-from mabel.utils.dates import parse_iso
+from opteryx.utils.text import levenshtein_distance
+from opteryx.utils.dates import parse_iso
 
 
 def get_year(input):
@@ -196,34 +196,36 @@ def attempt(func):
     except:
         return None
 
+
 def not_implemented(*args):
     raise NotImplementedError()
+
 
 FUNCTIONS = {
     # DATES & TIMES
     "YEAR": get_year,
     "MONTH": get_month,
-    "MONTH_NAME": not_implemented, # the name of the month
+    "MONTH_NAME": not_implemented,  # the name of the month
     "DAY": get_day,
-    "DAY_NAME": not_implemented, # the name of the day
+    "DAY_NAME": not_implemented,  # the name of the day
     "DATE": get_date,
     "QUARTER_OF_YEAR": get_quarter,
     "WEEK_OF_YEAR": get_week,
-    "DAY_OF_YEAR": not_implemented, # get the day of the year
-    "DAY_OF_WEEK": not_implemented, # get the day of the week (Monday = 1)
+    "DAY_OF_YEAR": not_implemented,  # get the day of the year
+    "DAY_OF_WEEK": not_implemented,  # get the day of the week (Monday = 1)
     "HOUR": get_hour,
     "MINUTE": get_minute,
     "SECOND": get_second,
     "TIME": get_time,
     "CURRENT_DATE": datetime.date.today,
     "NOW": datetime.datetime.now,
-    "DATE_ADD": not_implemented, # date, number, part
-    "DATE_DIFF": not_implemented, # start, end, part 
-    "AGE": not_implemented, # 8 years, 3 months, 3 days
-    "FROM_EPOCH": not_implemented, # timestamp from linux epoch formatted time
-    "TO_EPOCH": not_implemented, # timestamp in linux epoch format
-    "DATE_PART": not_implemented, # DATE_PART("YEAR", timestamp)
-    "TIMESTAMP": not_implemented, # parse input as a TIMESTAMP
+    "DATE_ADD": not_implemented,  # date, number, part
+    "DATE_DIFF": not_implemented,  # start, end, part
+    "AGE": not_implemented,  # 8 years, 3 months, 3 days
+    "FROM_EPOCH": not_implemented,  # timestamp from linux epoch formatted time
+    "TO_EPOCH": not_implemented,  # timestamp in linux epoch format
+    "DATE_PART": not_implemented,  # DATE_PART("YEAR", timestamp)
+    "TIMESTAMP": not_implemented,  # parse input as a TIMESTAMP
     # STRINGS
     "UCASE": lambda x: str(x).upper(),
     "UPPER": lambda x: str(x).upper(),
@@ -238,8 +240,8 @@ FUNCTIONS = {
     "MID": lambda x, y, z: str(x)[int(y) :][: int(z)],
     "CONCAT": concat,
     "LEVENSHTEIN": levenshtein_distance,
-    "REGEXP_MATCH": not_implemented, # string, pattern -> boolean
-    "REPLACE": not_implemented, # string, pattern to find, pattern to replace -> string
+    "REGEXP_MATCH": not_implemented,  # string, pattern -> boolean
+    "REPLACE": not_implemented,  # string, pattern to find, pattern to replace -> string
     # NUMBERS
     "ABS": abs,
     "ROUND": round,
@@ -259,5 +261,5 @@ FUNCTIONS = {
     "TRY": attempt,
     "LEAST": min,
     "GREATEST": max,
-    "UUID": not_implemented, # cast value as UUID
+    "UUID": not_implemented,  # cast value as UUID
 }

@@ -86,7 +86,6 @@ biasData = [
 import math
 
 
-
 def get_treshold(p):
     return tresholdData[p - 4]
 

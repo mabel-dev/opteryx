@@ -1,8 +1,8 @@
 # https://github.com/maki-nage/distogram
 
 __author__ = """Romain Picard"""
-__email__ = 'romain.picard@oakbits.com'
-__version__ = '2.0.0'
+__email__ = "romain.picard@oakbits.com"
+__version__ = "2.0.0"
 
 import math
 from bisect import bisect_left
@@ -21,12 +21,12 @@ Bin = Tuple[float, int]
 
 # bins is a tuple of (cut point, count)
 class Distogram(object):
-    """ Compressed representation of a distribution.
-    """
-    __slots__ = 'bin_count', 'bins', 'min', 'max', 'diffs', 'min_diff', 'weighted_diff'
+    """Compressed representation of a distribution."""
+
+    __slots__ = "bin_count", "bins", "min", "max", "diffs", "min_diff", "weighted_diff"
 
     def __init__(self, bin_count: int = 100, weighted_diff: bool = False):
-        """ Creates a new Distogram object
+        """Creates a new Distogram object
 
         Args:
             bin_count: [Optional] the number of bins to use.
@@ -150,7 +150,7 @@ def _search_in_place_index(h: Distogram, new_value: float, index: int) -> int:
 
 
 def update(h: Distogram, value: float, count: int = 1) -> Distogram:
-    """ Adds a new element to the distribution.
+    """Adds a new element to the distribution.
 
     Args:
         h: A Distogram object.
@@ -207,7 +207,7 @@ def update(h: Distogram, value: float, count: int = 1) -> Distogram:
 
 
 def merge(h1: Distogram, h2: Distogram) -> Distogram:
-    """ Merges two Distogram objects
+    """Merges two Distogram objects
 
     Args:
         h1: First Distogram.
@@ -226,7 +226,7 @@ def merge(h1: Distogram, h2: Distogram) -> Distogram:
 
 
 def count_at(h: Distogram, value: float):
-    """ Counts the number of elements present in the distribution up to value.
+    """Counts the number of elements present in the distribution up to value.
 
     Args:
         h: A Distogram object.
@@ -268,7 +268,7 @@ def count_at(h: Distogram, value: float):
 
 
 def count(h: Distogram) -> float:
-    """ Counts the number of elements in the distribution.
+    """Counts the number of elements in the distribution.
 
     Args:
         h: A Distogram object.
@@ -280,7 +280,7 @@ def count(h: Distogram) -> float:
 
 
 def bounds(h: Distogram) -> Tuple[float, float]:
-    """ Returns the min and max values of the distribution.
+    """Returns the min and max values of the distribution.
 
     Args:
         h: A Distogram object.
@@ -292,7 +292,7 @@ def bounds(h: Distogram) -> Tuple[float, float]:
 
 
 def mean(h: Distogram) -> float:
-    """ Returns the mean of the distribution.
+    """Returns the mean of the distribution.
 
     Args:
         h: A Distogram object.
@@ -305,7 +305,7 @@ def mean(h: Distogram) -> float:
 
 
 def variance(h: Distogram) -> float:
-    """ Returns the variance of the distribution.
+    """Returns the variance of the distribution.
 
     Args:
         h: A Distogram object.
@@ -318,7 +318,7 @@ def variance(h: Distogram) -> float:
 
 
 def stddev(h: Distogram) -> float:
-    """ Returns the standard deviation of the distribution.
+    """Returns the standard deviation of the distribution.
 
     Args:
         h: A Distogram object.
@@ -331,7 +331,7 @@ def stddev(h: Distogram) -> float:
 
 
 def histogram(h: Distogram, bin_count: int = 100) -> List[Tuple[float, float]]:
-    """ Returns a histogram of the distribution
+    """Returns a histogram of the distribution
 
     Args:
         h: A Distogram object.
@@ -345,18 +345,17 @@ def histogram(h: Distogram, bin_count: int = 100) -> List[Tuple[float, float]]:
     if len(h.bins) < bin_count:
         return None
 
-    bin_bounds = _linspace(h.min, h.max, num=bin_count+2)
+    bin_bounds = _linspace(h.min, h.max, num=bin_count + 2)
     counts = [count_at(h, e) for e in bin_bounds[1:-1]]
     u = [
-        (b, new - last)
-        for b, new, last in zip(bin_bounds[1:], counts[1:], counts[:-1])
+        (b, new - last) for b, new, last in zip(bin_bounds[1:], counts[1:], counts[:-1])
     ]
 
     return u
 
 
 def quantile(h: Distogram, value: float) -> Optional[float]:
-    """ Returns a quantile of the distribution
+    """Returns a quantile of the distribution
 
     Args:
         h: A Distogram object.
@@ -407,7 +406,7 @@ if __name__ == "__main__":
     for x in range(1000000):
         update(d, random())
 
-    print(histogram(d, 10)) 
+    print(histogram(d, 10))
 
     from numpy.random import normal
 
@@ -415,4 +414,4 @@ if __name__ == "__main__":
     for i in normal(0.0, 1.0, 5000):
         update(d, i)
 
-    print(histogram(d, 10)) 
+    print(histogram(d, 10))
