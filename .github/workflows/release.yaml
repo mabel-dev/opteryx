@@ -15,10 +15,10 @@ jobs:
       - name: set up
         uses: actions/setup-python@v2
         with:
-          python-version: '3.9' 
+          python-version: '3.8' 
 
       - name: Install build
-        run:  pip install --upgrade build cython
+        run:  pip install --upgrade build cython wheel
 
       - name: Build a binary wheel and a source tarball
         run:  python -m build --sdist --wheel --outdir dist/
