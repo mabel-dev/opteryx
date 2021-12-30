@@ -1,3 +1,4 @@
+# SQL Data Types
 
 ## Types
 

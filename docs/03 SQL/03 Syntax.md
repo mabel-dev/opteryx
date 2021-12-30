@@ -1,3 +1,5 @@
+# SQL Syntax
+
 ## FROM
 
 ## WHERE

@@ -1,3 +1,5 @@
+# SQL Statements
+
 SELECT [DISTINCT] <select_expression>
 FROM <table_list>
 WHERE <where_expression>
