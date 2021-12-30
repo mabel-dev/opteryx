@@ -1,8 +1,8 @@
-<img align="centre" alt="pig" height="92" src="opteryx.png" />
+<img align="centre" alt="archaeopteryx" height="92" src="opteryx.png" />
 
-## Distributed Query Engine for serverless environments.
+## Distributed Query Engine.
 
-**opteryx** has no server component, **opteryx** just runs when you need it making it ideal
+**Opteryx** has no server component, **Opteryx** just runs when you need it making it ideal
 for deployments to platforms like Kubernetes, GCP Cloud Run, AWS Fargate and Knative.
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/mabel-dev/opteryx/blob/master/LICENSE)

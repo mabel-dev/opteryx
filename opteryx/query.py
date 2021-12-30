@@ -13,6 +13,6 @@
 from opteryx.engine import Relation
 
 
-class Query(Relation):
+class OpteryxQuery(Relation):
     def __init__(self, connection, operation):
         pass
