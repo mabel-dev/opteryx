@@ -1,6 +1,8 @@
-<img align="centre" alt="archaeopteryx" height="92" src="opteryx.png" />
+<img align="centre" alt="archaeopteryx" height="104" src="opteryx.png" />
 
-## Distributed Query Engine.
+## Opteryx is a distributed SQL query engine.
+
+[![Opteryx Documentation](https://img.shields.io/badge/get%20started-documentation-brightgreen.svg)](https://mabel-dev.github.io/opteryx/)
 
 **Opteryx** has no server component, **Opteryx** just runs when you need it making it ideal
 for deployments to platforms like Kubernetes, GCP Cloud Run, AWS Fargate and Knative.
@@ -16,12 +18,11 @@ for deployments to platforms like Kubernetes, GCP Cloud Run, AWS Fargate and Kna
 [![commit_freq](https://img.shields.io/github/commit-activity/m/mabel-dev/opteryx)](https://github.com/mabel-dev/opteryx/commits)
 [![last_commit](https://img.shields.io/github/last-commit/mabel-dev/opteryx)](https://github.com/mabel-dev/opteryx/commits)
 
-
-- **Documentation** [GitHub Wiki](https://github.com/mabel-dev/opteryx/wiki)  
+ 
 - **Bug Reports** [GitHub Issues](https://github.com/mabel-dev/opteryx/issues/new/choose)  
 - **Feature Requests** [GitHub Issues](https://github.com/mabel-dev/opteryx/issues/new/choose)  
 - **Source Code**  [GitHub](https://github.com/mabel-dev/opteryx)  
-- **Discussions** [GitHub Discussions](https://github.com/mabel-dev/opteryx/discussions)
+- **Discussions** [GitHub Discussions](https://github.com/mabel-dev/mabel/discussions)
 
 ## How Can I Contribute?
 
