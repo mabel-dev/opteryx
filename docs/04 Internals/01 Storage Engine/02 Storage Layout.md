@@ -1,3 +1,10 @@
+# Storage Layout
+
+Opinionated Mabel datasets.
+
+
+
+
 
 The 'raw' data is JSONL in 64Mb chunks with ZSTD compression. The database-engine MUST
 be able to support this format (and other 'raw' formats) to be broadly useful.
