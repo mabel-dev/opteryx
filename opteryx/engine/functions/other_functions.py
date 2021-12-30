@@ -9,18 +9,3 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-from .version import __version__
-from opteryx.engine.relation import Relation
-
-
-apilevel = "1.0"
-threadsafety = 0
-paramstyle = "format"
-
-from .connection import Connection
-
-def connect(*args, **kwargs):
-    return Connection(*args, **kwargs)
-
-

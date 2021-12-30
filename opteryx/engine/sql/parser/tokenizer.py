@@ -1,19 +1,35 @@
-# no-maintain-checks
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 """
-There are multiple usecases where we need to step over a set of tokens and apply
-a label to them. Doing this in a helper module means a) it only needs to be maintained
-in one place b) different parts of the system behave consistently.
+Tokenizer -> Lexer -> Planner
+
+Tokenizer deconstructs a string into it's parts
+Lexer Interprets the tokens
+Planner creates a naive plan for the query
+
 """
+
 
 from functools import lru_cache
 import re
-import operator
-import fastnumbers
 
-from opteryx.text import like, not_like, matches
-from opteryx.dates import parse_iso
-from opteryx.engine.inline_functions import FUNCTIONS
-from opteryx.engine.group_by import AGGREGATORS
+import fastnumbers
+from opteryx.exceptions import ProgrammingError
+
+from opteryx.utils.text import like, not_like, matches
+from opteryx.utils.dates import parse_iso
+from opteryx.engine.functions import FUNCTIONS
+from opteryx.engine.aggregators.aggregators import AGGREGATORS
+from opteryx.engine.sql.parser.constants import SQL_TOKENS, OPERATORS
 
 # These are the characters we should escape in our regex
 REGEX_CHARACTERS = {ch: "\\" + ch for ch in ".^$*+?{}[]|()\\"}
@@ -38,121 +54,6 @@ def interpret_value(value):
         pass
     value = value[1:-1]
     return parse_iso(value) or value
-
-
-def function_in(x, y):
-    candidates = [interpret_value(i) for i in y if str(i).strip() != ","]
-
-    return x in candidates
-
-
-def function_contains(x, y):
-    return y in x
-
-
-# the order of the operators affects the regex, e.g. <> needs to be defined before
-# < otherwise that will be matched and the > will be invalid syntax.
-OPERATORS = {
-    "<>": operator.ne,
-    ">=": operator.ge,
-    "<=": operator.le,
-    ">": operator.gt,
-    "<": operator.lt,
-    "==": operator.eq,
-    "!=": operator.ne,
-    "=": operator.eq,
-    "IS NOT": operator.is_not,
-    "IS": operator.is_,
-    "NOT LIKE": not_like,
-    "LIKE": like,
-    "MATCHES": matches,
-    "IN": function_in,
-    "CONTAINS": function_contains,
-}
-
-
-class TOKENS(int):
-    UNKNOWN = -1
-    INTEGER = 0
-    FLOAT = 1
-    LITERAL = 2
-    VARIABLE = 3
-    BOOLEAN = 4
-    DATE = 5
-    NULL = 6
-    LEFTPARENTHESES = 7
-    RIGHTPARENTHESES = 8
-    COMMA = 9
-    FUNCTION = 10
-    AGGREGATOR = 11
-    AS = 12
-    EVERYTHING = 13
-    OPERATOR = 14
-    AND = 15
-    OR = 16
-    NOT = 17
-    SUBQUERY = 18
-    EMPTY = 19
-    LIST = 20
-
-
-@lru_cache(64)
-def get_token_type(token):
-    """
-    Guess the token type.
-    """
-    token = str(token).strip()
-    token_upper = token.upper()
-    if len(token) == 0:
-        return TOKENS.EMPTY
-    if token[0] == token[-1] == "`":
-        # tokens in ` quotes are variables, this is how we supersede all other
-        # checks, e.g. if it looks like a number but is a variable.
-        return TOKENS.VARIABLE
-    if token == "*":  # nosec - not a password
-        return TOKENS.EVERYTHING
-    if token_upper in FUNCTIONS:
-        return TOKENS.FUNCTION
-    if token_upper in OPERATORS:
-        return TOKENS.OPERATOR
-    if token_upper in AGGREGATORS:
-        return TOKENS.AGGREGATOR
-    if token[0] == token[-1] == '"' or token[0] == token[-1] == "'":
-        # tokens in quotes are either dates or string literals, if we can
-        # parse to a date, it's a date
-        if parse_iso(token[1:-1]):
-            return TOKENS.DATE
-        else:
-            return TOKENS.LITERAL
-    if fastnumbers.isint(token):
-        return TOKENS.INTEGER
-    if fastnumbers.isfloat(token):
-        return TOKENS.FLOAT
-    if token in ("(", "["):
-        return TOKENS.LEFTPARENTHESES
-    if token in (")", "]"):
-        return TOKENS.RIGHTPARENTHESES
-    if re.search(r"^[^\d\W][\w\-\.]*", token):
-        if token_upper in ("TRUE", "FALSE"):
-            # 'true' and 'false' without quotes are booleans
-            return TOKENS.BOOLEAN
-        if token_upper in ("NULL", "NONE"):
-            # 'null' or 'none' without quotes are nulls
-            return TOKENS.NULL
-        if token_upper == "AND":  # nosec - not a password
-            return TOKENS.AND
-        if token_upper == "OR":  # nosec - not a password
-            return TOKENS.OR
-        if token_upper == "NOT":  # nosec - not a password
-            return TOKENS.NOT
-        if token_upper == "AS":  # nosec - not a password
-            return TOKENS.AS
-        # tokens starting with a letter, is made up of letters, numbers,
-        # hyphens, underscores and dots are probably variables. We do this
-        # last so we don't miss assign other items to be a variable
-        return TOKENS.VARIABLE
-    # at this point, we don't know what it is
-    return TOKENS.UNKNOWN
 
 
 @lru_cache(1)
@@ -182,6 +83,12 @@ def build_splitter():
         "ASC",
         "DESC",
         "IN",
+        "ANALYZE",
+        "EXPLAIN",
+        "NOOPT",
+        "CREATE",
+        "INDEX",
+        "ON",
     ]:
         keywords.append(r"\b" + item + r"\b")
     for item in ["(", ")", "[", "]", ",", "*"]:
@@ -204,6 +111,9 @@ class Tokenizer:
         else:
             self.tokens = exp
 
+    def token_at_index(self, index):
+        return self.tokens[index]
+
     def next(self):
         self.i += 1
         return self.tokens[self.i - 1]
@@ -213,9 +123,6 @@ class Tokenizer:
 
     def has_next(self):
         return self.i < len(self.tokens)
-
-    def next_token_type(self):
-        return get_token_type(self.tokens[self.i])
 
     def next_token_value(self):
         return self.tokens[self.i]
@@ -227,7 +134,6 @@ class Tokenizer:
         instance of that character to split on, so we join these quoted strings
         back together.
         """
-
         builder = ""
         looking_for_end_char = None
 
@@ -273,17 +179,6 @@ class Tokenizer:
                     "Unable to determine quoted token boundaries, you may be missing a closing quote."
                 )
 
-    def _case_correction(self, tokens):
-        for token in tokens:
-            if get_token_type(token) in (
-                TOKENS.LITERAL,
-                TOKENS.VARIABLE,
-                TOKENS.SUBQUERY,
-            ):
-                yield token
-            else:
-                yield token.upper()
-
     def clean_statement(self, string):
         """
         Remove carriage returns and all whitespace to single spaces
@@ -292,12 +187,12 @@ class Tokenizer:
         return whitespace_cleaner.sub(" ", string).strip()
 
     def tokenize(self, expression):
+
         expression = self.clean_statement(expression)
         tokens = build_splitter().split(expression)
         # characters like '*' in literals break the tokenizer, so we need to fix them
         tokens = list(self._fix_special_chars(tokens))
         tokens = [t.strip() for t in tokens if t.strip() != ""]
-        tokens = list(self._case_correction(tokens))
         return tokens
 
     def __str__(self):

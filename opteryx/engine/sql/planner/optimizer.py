@@ -10,17 +10,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .version import __version__
-from opteryx.engine.relation import Relation
+"""
+Query Optimizer
+---------------
 
+This is a heuristic-based query optimizer:
+    → Perform most restrictive selection early
+    → Perform all selections before joins
+    → Predicate/Limit/Projection pushdowns
+    → Join ordering based on cardinality
 
-apilevel = "1.0"
-threadsafety = 0
-paramstyle = "format"
-
-from .connection import Connection
-
-def connect(*args, **kwargs):
-    return Connection(*args, **kwargs)
-
-
+    -> Can we make a set of OR statement an IN statement
+"""

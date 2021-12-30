@@ -10,17 +10,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .version import __version__
-from opteryx.engine.relation import Relation
+pass_thru = lambda x: x
 
 
-apilevel = "1.0"
-threadsafety = 0
-paramstyle = "format"
+def json(ds):
+    import simdjson
 
-from .connection import Connection
-
-def connect(*args, **kwargs):
-    return Connection(*args, **kwargs)
-
-
+    """parse each line in the file to a dictionary"""
+    json_parser = simdjson.Parser()
+    return json_parser.parse(ds)

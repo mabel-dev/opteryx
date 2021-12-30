@@ -4,7 +4,7 @@ import os
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 from opteryx import Relation
-from opteryx.internals.attribute_types import OPTERYX_TYPES, OPTERYX_TYPE_NAMES
+from opteryx.engine.attribute_types import OPTERYX_TYPES, OPTERYX_TYPE_NAMES
 
 ## SELECT * FROM :moviedata:
 

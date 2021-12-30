@@ -1,11 +1,12 @@
+Opteryx implements a partial Python DBAPI (PEP-0249) interface.
+
+~~~python
 import opteryx
 conn = opteryx.connect(
-    host='localhost',
-    port=8080,
-    user='the-user',
-    catalog='the-catalog',
-    schema='the-schema',
+    project='',
+    auth=''
 )
 cur = conn.cursor()
-cur.execute('SELECT * FROM system.runtime.nodes')
+cur.execute('SELECT * FROM memory.movies')
 rows = cur.fetchall()
+~~~

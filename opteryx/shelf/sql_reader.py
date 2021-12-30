@@ -295,7 +295,7 @@ def SqlReader(sql_statement: str, **kwargs):
             t["type"] == TOKENS.AGGREGATOR for t in sql.select_evaluator.tokens
         ]  # type:ignore
     ):
-        from ..internals.group_by import GroupBy
+        from ..engine.group_by import GroupBy
 
         # convert the clause into something we can pass to GroupBy
         if sql.group_by:

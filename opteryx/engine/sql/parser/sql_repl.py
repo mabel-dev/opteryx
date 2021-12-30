@@ -9,18 +9,19 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""
+This in a REPL to interactively test the Query Parser, Planner and Optimizer.
+"""
+import sys
+import os
 
-from .version import __version__
-from opteryx.engine.relation import Relation
+sys.path.insert(1, os.path.join(sys.path[0], "../../../.."))
+from opteryx.engine.sql.parser.tokenizer import Tokenizer
 
+statement = None
 
-apilevel = "1.0"
-threadsafety = 0
-paramstyle = "format"
+while statement != "quit":
 
-from .connection import Connection
-
-def connect(*args, **kwargs):
-    return Connection(*args, **kwargs)
-
-
+    statement = input("Query: ")
+    tokenized = Tokenizer(statement)
+    print(tokenized.tokens)

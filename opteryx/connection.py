@@ -58,6 +58,7 @@ class Cursor:
     def __init__(self, connection):
         self._connection = connection
         self._query = None
+        self.arraysize = 1
 
     def _format_prepared_param(self, param):
         """
@@ -150,9 +151,10 @@ class Cursor:
         return self._query.fetchone()
 
     def fetchmany(self, size=None) -> List[Dict]:
+        fetch_size = self.arraysize if size is None else size
         if self._query is None:
             raise Exception("Cursor must be executed first")
-        return self._query.fetchmany(size)
+        return self._query.fetchmany(fetch_size)
 
     def fetchall(self) -> List[Dict]:
         if self._query is None:

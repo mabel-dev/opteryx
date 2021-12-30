@@ -10,7 +10,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from opteryx.internals import Relation
+from opteryx.engine import Relation
 
 
 class Query(Relation):
