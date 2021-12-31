@@ -80,6 +80,11 @@ class Cursor:
             return f'DOUBLE("{param}")'
 
         if isinstance(param, str):
+            # if I have no apostrophes, use them as the delimiter
+            if param.find("'") == -1:
+                delimited = param.replace('"', '""')
+                return f"'{delimited}'"
+            # otherwise use quotes
             delimited = param.replace('"', '""')
             return f'"{delimited}"'
 
@@ -133,7 +138,7 @@ class Cursor:
 
             print(operation)
 
-        self._query = Query(self._connection, operation)
+        self._query = OpteryxQuery(self._connection, operation)
 
     @property
     def rowcount(self):

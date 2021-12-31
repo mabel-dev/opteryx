@@ -13,7 +13,7 @@ The module has been updated from it's original form.
 This outperforms python dictionaries for data with a lot of duplication.
 """
 from typing import List
-from opteryx.externals.accumulation_tree.abctree import ABCTree
+from opteryx.third_party.accumulation_tree.abctree import ABCTree
 
 __all__ = ['BinaryTree']
 
@@ -92,7 +92,7 @@ cdef class _BinaryTree(object):
                 node = node[direction]
 
     def remove(self, key):
-        raise NotImplementedError("BinaryIndex is additive only, you cannot remove items.")
+        raise NotImplementedError("BinaryTree is additive only, you cannot remove items.")
 
 class BinaryTree(_BinaryTree, ABCTree):
     pass

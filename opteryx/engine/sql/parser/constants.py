@@ -11,6 +11,7 @@
 # limitations under the License.
 
 import operator
+from enum import Enum
 from opteryx.utils.text import not_like, like, matches
 
 
@@ -23,7 +24,7 @@ def function_contains(x, y):
     return y in x
 
 
-class SQL_TOKENS(int):
+class SQL_TOKENS(int, Enum):
     UNKNOWN = -1
     INTEGER = 0
     DOUBLE = 1

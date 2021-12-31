@@ -1,6 +1,6 @@
 <img align="centre" alt="archaeopteryx" height="104" src="opteryx.png" />
 
-## Opteryx is a distributed SQL query engine.
+## Opteryx is a embedable distributed SQL query engine.
 
 [![Opteryx Documentation](https://img.shields.io/badge/get%20started-documentation-brightgreen.svg)](https://mabel-dev.github.io/opteryx/)
 

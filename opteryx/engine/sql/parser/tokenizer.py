@@ -10,26 +10,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Tokenizer -> Lexer -> Planner
+This component is part of the SQL Query Engine for Opteryx.
 
-Tokenizer deconstructs a string into it's parts
-Lexer Interprets the tokens
-Planner creates a naive plan for the query
+Tokenizer -> Lexer -> Planner -> Optimizer -> Executer
 
+This is the Tokenizer, it is responsible for breaking a Query into lexemes/morphemes,
+that is into individual tokens (words) that can carry meaning. It is the Lexer's role
+to assign meaning.
+
+The Tokenizer does little more than split the Query by whitespace - accounting for
+word groups which have meaning together (e.g. "ORDER BY") and for string delimiters
+(e.g. tokens are created by putting quotes around text).
 """
-
-
 from functools import lru_cache
 import re
 
-import fastnumbers
-from opteryx.exceptions import ProgrammingError
-
-from opteryx.utils.text import like, not_like, matches
-from opteryx.utils.dates import parse_iso
 from opteryx.engine.functions import FUNCTIONS
 from opteryx.engine.aggregators.aggregators import AGGREGATORS
-from opteryx.engine.sql.parser.constants import SQL_TOKENS, OPERATORS
+from opteryx.engine.sql.parser.constants import OPERATORS
 
 # These are the characters we should escape in our regex
 REGEX_CHARACTERS = {ch: "\\" + ch for ch in ".^$*+?{}[]|()\\"}
@@ -37,23 +35,6 @@ REGEX_CHARACTERS = {ch: "\\" + ch for ch in ".^$*+?{}[]|()\\"}
 
 class TokenError(Exception):
     pass
-
-
-def interpret_value(value):
-    if not isinstance(value, str):
-        return value
-    if value.upper() in ("TRUE", "FALSE"):
-        return value.upper() == "TRUE"
-    try:
-        # there appears to be a race condition with this library
-        # so wrap in a SystemError
-        num = fastnumbers.fast_real(value)
-        if isinstance(num, (int, float)):
-            return num
-    except SystemError:
-        pass
-    value = value[1:-1]
-    return parse_iso(value) or value
 
 
 @lru_cache(1)
@@ -69,27 +50,16 @@ def build_splitter():
             keywords.append(r"\b" + item + r"\b")
         else:
             keywords.append("".join([REGEX_CHARACTERS.get(ch, ch) for ch in item]))
-    for item in [
-        "AND",
-        "OR",
-        "NOT",
-        "SELECT",
-        "FROM",
-        "WHERE",
-        "LIMIT",
+    for item in [  # reserved words with whitespace in them
         r"GROUP\sBY",
         r"ORDER\sBY",
-        "JOIN",
         r"INNER\sJOIN",
         r"OUTER\sJOIN",
-        "DISTINCT",
-        "ASC",
-        "DESC",
-        "IN",
-        "ANALYZE",
-        "EXPLAIN",
-        "NOOPT",
-        "CREATE\sINDEX\sON",
+        r"CREATE\sINDEX\sON",
+        r"USING\sSAMPLE",
+        r"IS\sNOT",
+        r"NOT\sLIKE",
+        r"NOT\sIN",
     ]:
         keywords.append(r"\b" + item + r"\b")
     for item in ("(", ")", "[", "]", ",", "*"):

@@ -16,15 +16,7 @@ Tokenizer deconstructs a string into it's parts
 Lexer Interprets the tokens
 Planner creates a naive plan for the query
 
-We can interpret the following:
 
-    *SELECT ...
-
-    *ANALYZE dataset
-
-    *EXPLAIN [NOOPT] query -> returns the plan for a query
-
-    *CREATE INDEX index_name ON dataset (attribute1)
 """
 import re
 import fastnumbers
@@ -34,21 +26,35 @@ from opteryx.engine.sql.parser.constants import SQL_TOKENS, OPERATORS
 from opteryx.engine.aggregators.aggregators import AGGREGATORS
 
 
-def _case_correction(tokens):
-    for token in tokens:
-        if get_token_type(token) in (
-            SQL_TOKENS.LITERAL,
-            SQL_TOKENS.VARIABLE,
-            SQL_TOKENS.SUBQUERY,
-        ):
-            yield token
-        else:
-            yield token.upper()
+def interpret_value(value):
+    if not isinstance(value, str):
+        return value
+    if value.upper() in ("TRUE", "FALSE"):
+        return value.upper() == "TRUE"
+    try:
+        # there appears to be a race condition with this library
+        # so wrap in a SystemError
+        num = fastnumbers.fast_real(value)
+        if isinstance(num, (int, float)):
+            return num
+    except SystemError:
+        pass
+    value = value[1:-1]
+    return parse_iso(value) or value
 
+
+def case_correction(token, part_of_query):
+    if part_of_query in (
+        SQL_TOKENS.LITERAL,
+        SQL_TOKENS.VARIABLE,
+        SQL_TOKENS.SUBQUERY,
+    ):
+        return token
+    return token.upper()
 
 def get_token_type(token):
     """
-    Guess the token type.
+    Determine the token type.
     """
     token = str(token).strip()
     token_upper = token.upper()
@@ -102,3 +108,18 @@ def get_token_type(token):
         return SQL_TOKENS.VARIABLE
     # at this point, we don't know what it is
     return SQL_TOKENS.UNKNOWN
+
+def analyze_tokens(tokens):
+    """
+    Go through a set of tokens:
+        1) Determine the Part of Query (Part of Speach) to each
+        2) Perform normalization, such as making keywords uppercase
+    """
+
+    def _inner_analysis(tokens):
+        for token in tokens:
+            poq = get_token_type(token)
+            token = case_correction(token, poq)
+            yield (token, poq)
+
+    return list(_inner_analysis(tokens))
