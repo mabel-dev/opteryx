@@ -22,4 +22,4 @@ ANALYZE dataset -> creates and/or returns profile information for a dataset
 
 EXPLAIN [NOOPT] query -> returns the plan for a query
 
-CREATE INDEX index_name ON dataset (attribute1) -> creates an index
+CREATE INDEX ON dataset (attribute1) -> creates an index

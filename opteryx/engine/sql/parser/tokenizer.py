@@ -79,6 +79,9 @@ def build_splitter():
         "LIMIT",
         r"GROUP\sBY",
         r"ORDER\sBY",
+        "JOIN",
+        r"INNER\sJOIN",
+        r"OUTER\sJOIN",
         "DISTINCT",
         "ASC",
         "DESC",
@@ -86,15 +89,13 @@ def build_splitter():
         "ANALYZE",
         "EXPLAIN",
         "NOOPT",
-        "CREATE",
-        "INDEX",
-        "ON",
+        "CREATE\sINDEX\sON",
     ]:
         keywords.append(r"\b" + item + r"\b")
-    for item in ["(", ")", "[", "]", ",", "*"]:
+    for item in ("(", ")", "[", "]", ",", "*"):
         keywords.append("".join([REGEX_CHARACTERS.get(ch, ch) for ch in item]))
     splitter = re.compile(
-        r"(" + r"|".join(keywords) + r")",
+        r"(" + r"|".join(keywords) + r"|\s)",
         re.IGNORECASE,
     )
     return splitter
@@ -139,7 +140,12 @@ class Tokenizer:
 
         for token in tokens:
             stripped_token = token.strip()
-            if len(stripped_token) == 0:
+
+            if token == " " and looking_for_end_char:
+                # we're building a token
+                builder += token
+
+            elif len(stripped_token) == 0:
                 # the splitter creates unwanted empty strings
                 pass
 
@@ -179,6 +185,22 @@ class Tokenizer:
                     "Unable to determine quoted token boundaries, you may be missing a closing quote."
                 )
 
+    def remove_comments(self, string):
+        pattern = r"(\".*?\"|\'.*?\')|(/\*.*?\*/|--[^\r\n]*$)"
+        # first group captures quoted strings (double or single)
+        # second group captures comments (//single-line or /* multi-line */)
+        regex = re.compile(pattern, re.MULTILINE | re.DOTALL)
+
+        def _replacer(match):
+            # if the 2nd group (capturing comments) is not None,
+            # it means we have captured a non-quoted (real) comment string.
+            if match.group(2) is not None:
+                return ""  # so we will return empty to remove the comment
+            else:  # otherwise, we will return the 1st group
+                return match.group(1)  # captured quoted-string
+
+        return regex.sub(_replacer, string)
+
     def clean_statement(self, string):
         """
         Remove carriage returns and all whitespace to single spaces
@@ -188,6 +210,7 @@ class Tokenizer:
 
     def tokenize(self, expression):
 
+        expression = self.remove_comments(expression)
         expression = self.clean_statement(expression)
         tokens = build_splitter().split(expression)
         # characters like '*' in literals break the tokenizer, so we need to fix them

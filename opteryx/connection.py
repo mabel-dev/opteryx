@@ -17,7 +17,7 @@ https://www.python.org/dev/peps/pep-0249/
 
 from typing import Dict, Optional, List, Any
 from opteryx import constants
-from opteryx.query import Query
+from opteryx.query import OpteryxQuery
 
 
 class Connection:
