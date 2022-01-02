@@ -84,6 +84,7 @@ biasData = [
 # fmt:on
 
 import math
+from cityhash import CityHash64
 
 
 def get_treshold(p):
@@ -149,14 +150,18 @@ class HyperLogLog(object):
         self.m = 1 << p
         self.M = [0 for i in range(self.m)]
 
-    def add(self, value):
+    def add(self, value, hash_func=CityHash64):
         """
         Adds the item to the HyperLogLog
 
         This has been updated from the copied version to try to improve performance.
+
+        We use a 64 bit hash to ensure we have the resolution. This is tested to be
+        within 1% of the expected result when error set to 0.005 for up to 
+        500 million randomly generated items.
         """
 
-        x = hash(f"{value}")
+        x = hash_func(f"{value}")
 
         j = x & (self.m - 1)
         w = x >> self.p
@@ -199,7 +204,7 @@ class HyperLogLog(object):
         Returns the estimate of the cardinality
         """
 
-        # count number or registers equal to 0
+        # count number of registers equal to 0
         V = self.M.count(0)
 
         if V > 0:

@@ -32,7 +32,7 @@ TOKENS = [
     ],
 # fmt:on
 )
-def test_get_token_type(token, expect):
+def test_individual_tokens(token, expect):
 
     received = get_token_type(token)
     assert received == expect, f"Lexer interpreted {token} as a {SQL_TOKENS(received).name}"

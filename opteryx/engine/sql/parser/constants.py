@@ -24,6 +24,26 @@ def function_contains(x, y):
     return y in x
 
 
+
+
+class SQL_KEYWORDS(str, Enum):
+    ANALYZE = "ANALYZE"
+    ASC = "ASC"
+    CREATE_INDEX = "CREATE INDEX ON"
+    DESC = "DESC"
+    DISTINCT = "DISTINCT"
+    EXPLAIN = "EXPLAIN"
+    FROM = "FROM"
+    GROUP_BY = "GROUP BY"
+    HAVING = "HAVING"
+    LIMIT = "LIMIT"
+    NOOPT = "NOOPT"
+    ORDER_BY = "ORDER BY"
+    SELECT = "SELECT"
+    SKIP = "SKIP"
+    WHERE = "WHERE"
+    WITH = "WITH"
+
 class SQL_TOKENS(int, Enum):
     UNKNOWN = -1
     INTEGER = 0
@@ -47,6 +67,8 @@ class SQL_TOKENS(int, Enum):
     SUBQUERY = 18
     EMPTY = 19
     LIST = 20
+    STRUCT = 21
+    KEYWORD = 22
 
 
 # the order of the operators affects the regex, e.g. <> needs to be defined before

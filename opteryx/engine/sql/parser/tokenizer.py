@@ -25,6 +25,7 @@ word groups which have meaning together (e.g. "ORDER BY") and for string delimit
 from functools import lru_cache
 import re
 
+from opteryx.exceptions import ProgrammingError
 from opteryx.engine.functions import FUNCTIONS
 from opteryx.engine.aggregators.aggregators import AGGREGATORS
 from opteryx.engine.sql.parser.constants import OPERATORS
@@ -62,7 +63,7 @@ def build_splitter():
         r"NOT\sIN",
     ]:
         keywords.append(r"\b" + item + r"\b")
-    for item in ("(", ")", "[", "]", ",", "*"):
+    for item in ("(", ")", "[", "]", ",", "*", ";"):
         keywords.append("".join([REGEX_CHARACTERS.get(ch, ch) for ch in item]))
     splitter = re.compile(
         r"(" + r"|".join(keywords) + r"|\s)",
@@ -155,6 +156,9 @@ class Tokenizer:
                     "Unable to determine quoted token boundaries, you may be missing a closing quote."
                 )
 
+        if builder:
+            raise ProgrammingError("Unable to parse Query, check for missing quotes.")
+
     def remove_comments(self, string):
         pattern = r"(\".*?\"|\'.*?\')|(/\*.*?\*/|--[^\r\n]*$)"
         # first group captures quoted strings (double or single)
@@ -186,6 +190,15 @@ class Tokenizer:
         # characters like '*' in literals break the tokenizer, so we need to fix them
         tokens = list(self._fix_special_chars(tokens))
         tokens = [t.strip() for t in tokens if t.strip() != ""]
+
+        # ; is used to terminate a SQL Statement
+        try:
+            end_token = tokens.index(";")
+            if end_token:
+                tokens = tokens[:end_token]
+        except ValueError:
+            pass
+
         return tokens
 
     def __str__(self):

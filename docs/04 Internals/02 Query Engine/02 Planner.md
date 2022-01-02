@@ -23,3 +23,12 @@ Define static rules that transform logical operators to a physical plan.
 → Perform all selections before joins
 → Predicate/Limit/Projection pushdowns
 → Join ordering based on cardinality
+
+
+-> if it's count(*)
+    if we can get the result from the zonemap - do that
+    otherwise - reduce the record to a hash only as early as possible
+
+
+-> if we have a group by with a lot of duplication (cardinality estimates), use the
+   index tree to build the groups.

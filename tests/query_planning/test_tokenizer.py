@@ -13,6 +13,8 @@ import sys
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import pytest
+
+from opteryx.exceptions import ProgrammingError
 from opteryx.engine.sql.parser.tokenizer import Tokenizer
 
 @pytest.mark.parametrize(
@@ -27,11 +29,11 @@ from opteryx.engine.sql.parser.tokenizer import Tokenizer
 
         # statements which are valid tokens in invalid combinations and orders
         ("SELECT EXPLAIN CREATE ANALYZE WHERE ORDER BY", ['SELECT', 'EXPLAIN', 'CREATE', 'ANALYZE', 'WHERE', 'ORDER BY']),
-        ("NOT LIKE LIKE CONTAINS INDEX ON < 42", ['NOT LIKE', 'LIKE', 'CONTAINS', 'INDEX', 'ON', '<', '42']),
+        ("NOT LIKE LIKE CONTAINS CREATE INDEX ON < 42", ['NOT LIKE', 'LIKE', 'CONTAINS', 'CREATE INDEX ON', '<', '42']),
         ("NOOPT \"NOOPT\" 'NOOPT' `NOOPT` ", ['NOOPT', '"NOOPT"', "'NOOPT'", '`NOOPT`']),
 
         # tokens we know nothing about
-        ("I'm sorry, Dave. I'm afraid I can't do that",["I'm", 'sorry', ',', 'Dave.', "I'm", 'afraid', 'I', "can't", 'do', 'that']),
+        ("I'm sorry, Dave. I'm afraid I can't do that", ["I'm", 'sorry', ',', 'Dave.', "I'm", 'afraid', 'I', "can't", 'do', 'that']),
 
         # statements which are supported
 
@@ -59,6 +61,10 @@ from opteryx.engine.sql.parser.tokenizer import Tokenizer
         # CREATE INDEX
         ("CREATE INDEX ON dataset (attribute1)", ['CREATE INDEX ON', 'dataset', '(', 'attribute1', ')']),
         ("CREATE\nINDEX\tON dataset (attribute1)", ['CREATE INDEX ON', 'dataset', '(', 'attribute1', ')']),
+
+        # END TOKEN
+        ("SELECT * FROM table;",['SELECT', '*', 'FROM', 'table']),
+        ("SELECT * FROM table; WHERE value = 22.2",['SELECT', '*', 'FROM', 'table']),
     ],
     # fmt:on
 )
@@ -66,3 +72,15 @@ def test_tokenizer(statement, want):
     tokenizer = Tokenizer(statement)
     assert tokenizer.tokens == want, f"{statement} => {tokenizer.tokens}"
 
+@pytest.mark.parametrize(
+    "statement",
+    # fmt:off
+    [
+        ("\""),
+        ("I don't close my 'open quote"),
+    ]
+)
+def test_untokenizable_strings(statement):
+    
+    with pytest.raises(ProgrammingError):
+        tokenizer = Tokenizer(statement)

@@ -19,10 +19,9 @@ Planner creates a naive plan for the query
 
 """
 import re
-import fastnumbers
 from opteryx.utils.dates import parse_iso
 from opteryx.engine.functions import FUNCTIONS
-from opteryx.engine.sql.parser.constants import SQL_TOKENS, OPERATORS
+from opteryx.engine.sql.parser.constants import SQL_TOKENS, OPERATORS, SQL_KEYWORDS
 from opteryx.engine.aggregators.aggregators import AGGREGATORS
 
 
@@ -52,6 +51,20 @@ def case_correction(token, part_of_query):
         return token
     return token.upper()
 
+def is_int(value):
+    try:
+        int_value = int(value)
+        return True
+    except ValueError:
+        return False
+
+def is_float(value):
+    try:
+        int_value = float(value)
+        return True
+    except ValueError:
+        return False
+
 def get_token_type(token):
     """
     Determine the token type.
@@ -62,8 +75,10 @@ def get_token_type(token):
         return SQL_TOKENS.EMPTY
     if token[0] == token[-1] == "`":
         # tokens in ` quotes are variables, this is how we supersede all other
-        # checks, e.g. if it looks like a number but is a variable.
+        # checks, e.g. if it looks like a keyword but is a variable.
         return SQL_TOKENS.VARIABLE
+    if token in list(SQL_KEYWORDS):
+        return SQL_TOKENS.KEYWORD
     if token == "*":  # nosec - not a password
         return SQL_TOKENS.EVERYTHING
     if token_upper in FUNCTIONS:
@@ -79,9 +94,9 @@ def get_token_type(token):
             return SQL_TOKENS.TIMESTAMP
         else:
             return SQL_TOKENS.LITERAL
-    if fastnumbers.isint(token):
+    if is_int(token):
         return SQL_TOKENS.INTEGER
-    if fastnumbers.isfloat(token):
+    if is_float(token):
         return SQL_TOKENS.DOUBLE
     if token in ("(", "["):
         return SQL_TOKENS.LEFTPARENTHESES
@@ -121,5 +136,7 @@ def analyze_tokens(tokens):
             poq = get_token_type(token)
             token = case_correction(token, poq)
             yield (token, poq)
+
+    # find lists and structs
 
     return list(_inner_analysis(tokens))

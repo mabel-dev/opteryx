@@ -3,7 +3,8 @@ import os
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
-from unittest import TestCase
+import pytest
+
 from hyperloglog import HyperLogLog, get_alpha
 from hyperloglog import biasData, tresholdData, rawEstimateData
 from hyperloglog import *
@@ -12,117 +13,98 @@ import os
 import pickle
 
 
-class HyperLogLogTestCase(TestCase):
-    def test_blobs(self):
-        self.assertEqual(len(tresholdData), 18 - 3)
 
-    def test_alpha(self):
-        alpha = [get_alpha(b) for b in range(4, 10)]
-        self.assertEqual(alpha, [0.673, 0.697, 0.709, 0.7152704932638152, 0.7182725932495458, 0.7197831133217303])
+def test_blobs():
+    assert len(tresholdData) == 18 - 3
 
-    def test_alpha_bad(self):
-        self.assertRaises(ValueError, get_alpha, 1)
-        self.assertRaises(ValueError, get_alpha, 17)
+def test_alpha():
+    alpha = [get_alpha(b) for b in range(4, 10)]
+    assert alpha == [0.673, 0.697, 0.709, 0.7152704932638152, 0.7182725932495458, 0.7197831133217303]
 
-#    def test_rho(self):
-#        self.assertEqual(get_rho(0, 32), 33)
-#        self.assertEqual(get_rho(1, 32), 32)
-#        self.assertEqual(get_rho(2, 32), 31)
-#        self.assertEqual(get_rho(3, 32), 31)
-#        self.assertEqual(get_rho(4, 32), 30)
-#        self.assertEqual(get_rho(5, 32), 30)
-#        self.assertEqual(get_rho(6, 32), 30)
-#        self.assertEqual(get_rho(7, 32), 30)
-#        self.assertEqual(get_rho(1 << 31, 32), 1)
-#        self.assertRaises(ValueError, get_rho, 1 << 32, 32)
+def test_alpha_bad():
 
-#    def test_rho_emu(self):
-#        from hyperloglog import hll
-#        old = hll.bit_length
-#        hll.bit_length = hll.bit_length_emu
-#        try:
-#            self.assertEqual(get_rho(0, 32), 33)
-#            self.assertEqual(get_rho(1, 32), 32)
-#            self.assertEqual(get_rho(2, 32), 31)
-#            self.assertEqual(get_rho(3, 32), 31)
-#            self.assertEqual(get_rho(4, 32), 30)
-#            self.assertEqual(get_rho(5, 32), 30)
-#            self.assertEqual(get_rho(6, 32), 30)
-#            self.assertEqual(get_rho(7, 32), 30)
-#            self.assertEqual(get_rho(1 << 31, 32), 1)
-#            self.assertRaises(ValueError, get_rho, 1 << 32, 32)
-#        finally:
-#            hll.bit_length = old
+    with pytest.raises(ValueError):
+        get_alpha(1)
 
-    def test_init(self):
-        s = HyperLogLog(0.05)
-        self.assertEqual(s.p, 9)
-        self.assertEqual(s.alpha, 0.7197831133217303)
-        self.assertEqual(s.m, 512)
-        self.assertEqual(len(s.M), 512)
-
-    def test_add(self):
-        s = HyperLogLog(0.05)
-
-        for i in range(10):
-            s.add(str(i))
-
-        M = [(i, v) for i, v in enumerate(s.M) if v > 0]
-
-        self.assertEqual(M, [(1, 1), (41, 1), (44, 1), (76, 3), (103, 4), (182, 1), (442, 2), (464, 5), (497, 1), (506, 1)])
-
-    def test_calc_cardinality(self):
-        clist = [1, 5, 10, 30, 60, 200, 1000, 10000, 60000]
-        n = 30
-        rel_err = 0.05
-
-        for card in clist:
-            s = 0.0
-            for c in range(n):
-                a = HyperLogLog(rel_err)
-
-                for i in range(card):
-                    a.add(os.urandom(20))
-
-                s += a.card()
-
-            z = (float(s) / n - card) / (rel_err * card / math.sqrt(n))
-            self.assertLess(-3, z)
-            self.assertGreater(3, z)
+    with pytest.raises(ValueError):
+        get_alpha(17)
 
 
-    def test_update(self):
-        a = HyperLogLog(0.05)
-        b = HyperLogLog(0.05)
-        c = HyperLogLog(0.05)
+def test_init():
+    s = HyperLogLog(0.05)
+    assert s.p == 9
+    assert s.alpha == 0.7197831133217303
+    assert s.m == 512
+    assert len(s.M) == 512
 
-        for i in range(2):
-            a.add(str(i))
-            c.add(str(i))
+def test_add():
 
-        for i in range(2, 4):
-            b.add(str(i))
-            c.add(str(i))
+    # We need a deterministic hash algo for testing, the default is to use hash()
+    # which is fast but not deterministic
+    from cityhash import CityHash32
 
-        a.update(b)
+    s = HyperLogLog(0.05)
 
-        self.assertNotEqual(a, b)
-        self.assertNotEqual(b, c)
-        self.assertEqual(a, c)
+    for i in range(10):
+        s.add(str(i), hash_func=CityHash32)
+
+    M = [(i, v) for i, v in enumerate(s.M) if v > 0]
+
+    assert M == [(78, 33), (107, 33), (205, 34), (237, 35), (290, 33), (327, 34), (363, 33), (415, 33), (429, 33), (439, 33)]
+
+def test_calc_cardinality():
+
+    clist = [1, 5, 10, 100, 1000, 5000, 10000, 50000, 100000]
+    n = 5
+    rel_err = 0.005
+
+    from cityhash import CityHash64
+
+    group = []
+
+    for card in clist:
+        group = []
+        # do this 25 times so we get an approximation
+        for c in range(n):
+            print(f"cycle {c} for {card}")
+            a = HyperLogLog(rel_err)
+
+            # add random values to the log
+            for i in range(card):
+                a.add(os.urandom(64))
+
+            group.append(a.card())
+            print(a.card())
+
+        # we average out the results to reduce outliers
+        res = sum(group) / len(group)
+
+        # we  should be within 1% of the actual answer
+        assert (res * 1.01) > card > (res * 0.99), f"{res} not within 1% of {card}"
+
+def test_update():
+    a = HyperLogLog(0.05)
+    b = HyperLogLog(0.05)
+    c = HyperLogLog(0.05)
+
+    for i in range(2):
+        a.add(str(i))
+        c.add(str(i))
+
+    for i in range(2, 4):
+        b.add(str(i))
+        c.add(str(i))
+
+    a.update(b)
+
+    assert a != b
+    assert b != c
+    assert a == c
 
 
-    def test_update_err(self):
-        a = HyperLogLog(0.05)
-        b = HyperLogLog(0.01)
+def test_update_err():
+    a = HyperLogLog(0.05)
+    b = HyperLogLog(0.01)
 
-        self.assertRaises(ValueError, a.update, b)
-
-    def test_pickle(self):
-        a = HyperLogLog(0.05)
-        for x in range(100):
-            a.add(str(x))
-        b = pickle.loads(pickle.dumps(a))
-        self.assertEqual(a.M, b.M)
-        self.assertEqual(a.alpha, b.alpha)
-        self.assertEqual(a.p, b.p)
-        self.assertEqual(a.m, b.m)
+    with pytest.raises(ValueError):
+        a.update (b)
