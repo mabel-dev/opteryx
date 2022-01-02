@@ -29,7 +29,7 @@ def test_count_at_normal():
     for i in normal:
         h = distogram.update(h, i)
 
-    assert distogram.count_at(h, 0) == approx(points/2, rel=0.05)
+    assert distogram.count_at(h, 0) == approx(points / 2, rel=0.05)
 
 
 def test_count_at_not_enough_elements():

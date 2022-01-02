@@ -2,16 +2,19 @@
 
 ## Query Plan
 
-- BlobScanNode (blobs)
-- Project (including renames)
-- Select
-- CrossJoin
-- Sort
-- Aggregate - MIN/MAX/AVG etc
+- PartitionReaderNode (read a partition, includes selection and projection pushdowns)
+- ProjectNode (remove unwanted columns including renames)
+- SelectionNode (find records matching a predicate)
+- JoinNode (currently only INNER JOIN)
+- SortNode (order a relation by given keys)
+- GroupNode (put a relation into groups - GROUP BY)
+- AggregateNode (group by MIN/MAX/AVG etc
+- CombineNode (combine sketches and aggregations)
 - Limit - Top N records
 - Distinct
-- Union - append sets to each other
-- Evaluate -
+- Merge - append sets to each other
+- Evaluate ()
+- Index (create an index, can be temporary or persisted)
 
 ## Query Plan Optimizer
 

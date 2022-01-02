@@ -157,7 +157,7 @@ class HyperLogLog(object):
         This has been updated from the copied version to try to improve performance.
 
         We use a 64 bit hash to ensure we have the resolution. This is tested to be
-        within 1% of the expected result when error set to 0.005 for up to 
+        within 1% of the expected result when error set to 0.005 for up to
         500 million randomly generated items.
 
         Paramters:

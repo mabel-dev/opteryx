@@ -16,7 +16,7 @@ Tokenizer -> Lexer -> AST -> Planner -> Optimizer -> Executer
 
 The Lexer is responsible for assigning a meaning to tokens, this is first done without
 context, for example we don't know if a token is in a SELECT, WHERE or HAVING
-statement, but we think it's an 
+statement, but we think it's an attribute, but really it could be a table name.
 """
 import re
 from opteryx.utils.dates import parse_iso
@@ -24,7 +24,7 @@ from opteryx.utils.numbers import is_int, is_float
 from opteryx.engine.functions import FUNCTIONS
 from opteryx.engine.sql.parser.constants import SQL_TOKENS, OPERATORS, SQL_KEYWORDS
 from opteryx.engine.aggregators.aggregators import AGGREGATORS
-    
+
 
 def _case_correction(token, part_of_query):
     if part_of_query in (
@@ -34,6 +34,7 @@ def _case_correction(token, part_of_query):
     ):
         return token
     return token.upper()
+
 
 def get_token_type(token):
     """
@@ -100,27 +101,20 @@ def get_token_type(token):
     # at this point, we don't know what it is
     return SQL_TOKENS.UNKNOWN
 
-def _naive_tag_part_of_query(tokens):
+
+def tag(tokens):
     """
     Go through a set of tokens:
         1) Determine the Part of Query (Part of Speach) to each token
         2) Perform normalization, such as making keywords uppercase
 
-    The POQ tagger is naive, it doesn't take context into account, this is because
-    this is a first-pass only. Once we have assigned POQ tags, we can pass again to
-    work out the context of the tokens.
+    The POQ tagger is naive, it doesn't take context into account.
     """
 
     def _inner_analysis(tokens):
         for token in tokens:
             poq = get_token_type(token)
-            token = case_correction(token, poq)
+            token = _case_correction(token, poq)
             yield (token, poq)
 
     return list(_inner_analysis(tokens))
-
-
-def tag(tokens):
-
-    tagged = _naive_tag_part_of_query(tokens)
-    return tagged

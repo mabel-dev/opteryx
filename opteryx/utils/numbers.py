@@ -1,10 +1,10 @@
-
 def is_int(value):
     try:
         int_value = int(value)
         return True
     except ValueError:
         return False
+
 
 def is_float(value):
     try:

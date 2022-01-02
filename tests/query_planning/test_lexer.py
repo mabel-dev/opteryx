@@ -74,7 +74,7 @@ from opteryx.engine.sql.parser.constants import SQL_TOKENS
         ("and", SQL_TOKENS.AND),
         ("NOT", SQL_TOKENS.NOT),
     ],
-# fmt:on
+    # fmt:on
 )
 def test_individual_tokens(token, expect):
     """
@@ -82,5 +82,6 @@ def test_individual_tokens(token, expect):
     """
 
     received = parser.get_token_type(token)
-    assert received == expect, f"Lexer interpreted {token} as a {SQL_TOKENS(received).name}"
-
+    assert (
+        received == expect
+    ), f"Lexer interpreted {token} as a {SQL_TOKENS(received).name}"

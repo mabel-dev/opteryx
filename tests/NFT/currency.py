@@ -1,7 +1,7 @@
 """
 bombast: python currency checker
 
-(C) 2021 Justin Joyce.
+(C) 2021-2022 Justin Joyce.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -75,8 +75,6 @@ def get_latest_version(package_name):
         url = "https://pypi.org/pypi/{}/json".format(package_name)
         resp = requests.get(url)
         data = resp.json()
-        print(data)
-        quit()
         return data.get("info").get("release_url").split("/")[-2]
     except KeyError:
         return "unknown"

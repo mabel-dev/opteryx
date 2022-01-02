@@ -36,6 +36,7 @@ def get_month(input):
         return input.month
     return None
 
+
 def get_day(input):
     """
     Convert input to a datetime object and extract the Day part
@@ -56,6 +57,7 @@ def get_date(input):
     if isinstance(input, (datetime.date, datetime.datetime)):
         return input.date()
     return None
+
 
 def get_time(input):
     """
@@ -78,6 +80,7 @@ def get_quarter(input):
         return ((input.month - 1) // 3) + 1
     return None
 
+
 def get_hour(input):
     """
     Convert input to a datetime object and extract the Hour part
@@ -99,6 +102,7 @@ def get_minute(input):
         return input.minute
     return None
 
+
 def get_second(input):
     """
     Convert input to a datetime object and extract the Seconds part
@@ -119,6 +123,7 @@ def get_week(input):
     if isinstance(input, (datetime.date, datetime.datetime)):
         return int(input.strftime("%V"))
     return None
+
 
 def add_days(start_date, day_count):
     if isinstance(start_date, str):

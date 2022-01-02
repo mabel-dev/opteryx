@@ -8,7 +8,7 @@
 # License: MIT License
 
 """
-The module has been updated from it's original form.
+The module has been updated from it's original form to improve performance.
 
 This outperforms python dictionaries for data with a lot of duplication.
 """
@@ -63,25 +63,25 @@ cdef class _BinaryTree(object):
 
     see also abctree.ABCTree() class.
     """
+    __slots__ = ("_root", "_count")
+
     cdef public Node _root
     cdef public int _count
 
-    cdef Node _new_node(self, key, value):
-        self._count += 1
-        return Node(key, [value])
-
     def insert(self, key, value):
         if self._root is None:
-            self._root = self._new_node(key, value)
+            self._count += 1
+            self._root = Node(key, [value])
             return
 
-        cdef Node parent = None  # parent
+        cdef Node parent = None
         cdef int direction = 0
 
         node = self._root
         while 1:
             if node is None:
-                parent[direction] = self._new_node(key, value)
+                self._count += 1
+                parent[direction] = Node(key, [value])
                 break
             if key == node.key:
                 node.value.extend([value])
@@ -93,6 +93,7 @@ cdef class _BinaryTree(object):
 
     def remove(self, key):
         raise NotImplementedError("BinaryTree is additive only, you cannot remove items.")
+
 
 class BinaryTree(_BinaryTree, ABCTree):
     pass

@@ -13,9 +13,18 @@ from hyperloglog import *
 def test_blobs():
     assert len(tresholdData) == 18 - 3
 
+
 def test_alpha():
     alpha = [get_alpha(b) for b in range(4, 10)]
-    assert alpha == [0.673, 0.697, 0.709, 0.7152704932638152, 0.7182725932495458, 0.7197831133217303]
+    assert alpha == [
+        0.673,
+        0.697,
+        0.709,
+        0.7152704932638152,
+        0.7182725932495458,
+        0.7197831133217303,
+    ]
+
 
 def test_alpha_bad():
 
@@ -33,6 +42,7 @@ def test_init():
     assert s.m == 512
     assert len(s.M) == 512
 
+
 def test_add():
 
     # We need a deterministic hash algo for testing, the default is to use hash()
@@ -46,7 +56,19 @@ def test_add():
 
     M = [(i, v) for i, v in enumerate(s.M) if v > 0]
 
-    assert M == [(78, 33), (107, 33), (205, 34), (237, 35), (290, 33), (327, 34), (363, 33), (415, 33), (429, 33), (439, 33)]
+    assert M == [
+        (78, 33),
+        (107, 33),
+        (205, 34),
+        (237, 35),
+        (290, 33),
+        (327, 34),
+        (363, 33),
+        (415, 33),
+        (429, 33),
+        (439, 33),
+    ]
+
 
 def test_calc_cardinality():
 
@@ -80,6 +102,7 @@ def test_calc_cardinality():
         # we  should be within 1% of the actual answer
         assert (res * 1.01) > card > (res * 0.99), f"{res} not within 1% of {card}"
 
+
 def test_update():
     a = HyperLogLog(0.05)
     b = HyperLogLog(0.05)
@@ -105,4 +128,4 @@ def test_update_err():
     b = HyperLogLog(0.01)
 
     with pytest.raises(ValueError):
-        a.update (b)
+        a.update(b)

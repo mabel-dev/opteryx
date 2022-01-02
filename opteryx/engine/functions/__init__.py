@@ -23,7 +23,6 @@ from opteryx.engine.functions.date_functions import *
 from opteryx.utils.text import levenshtein_distance
 
 
-
 def get_random():
     from opteryx.utils.entropy import random_range
 
@@ -52,9 +51,6 @@ def to_string(val):
         return "\\" + orjson.dumps(val).decode("UTF8") + "\\"
     else:
         return str(val)
-
-
-
 
 
 def parse_number(parser, coerce):

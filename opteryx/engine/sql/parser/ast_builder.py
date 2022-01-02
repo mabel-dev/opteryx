@@ -31,8 +31,7 @@ STATEMENT
 """
 
 
-class TokenNode():
-
+class TokenNode:
     def __init__(self, token, token_type):
         self.token = token
         self.token_type = token_type
@@ -46,19 +45,23 @@ class TokenNode():
         self.value = None
 
 
+def tag(tokens):
 
-    def token_at_index(self, index):
-        return self.tokens[index]
+    nodes = []
 
-    def next(self):
-        self.i += 1
-        return self.tokens[self.i - 1]
+    burner = ListBurner(_naive_tag_part_of_query(tokens))
 
-    def peek(self):
-        return self.tokens[self.i]
+    while burner.can_continue():
+        print(burner.current())
+        burner.next()
 
-    def has_next(self):
-        return self.i < len(self.tokens)
+    return nodes
 
-    def next_token_value(self):
-        return self.tokens[self.i]
+
+if __name__ == "__main__":
+    from opteryx.engine.sql import parser
+
+    tokens = parser.tokenize("SELECT * from table.name")
+    tokens = parser.tag(tokens)
+
+    print(tokens)

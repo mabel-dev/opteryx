@@ -24,8 +24,6 @@ def function_contains(x, y):
     return y in x
 
 
-
-
 class SQL_KEYWORDS(str, Enum):
     ANALYZE = "ANALYZE"
     ASC = "ASC"
@@ -43,6 +41,9 @@ class SQL_KEYWORDS(str, Enum):
     SKIP = "SKIP"
     WHERE = "WHERE"
     WITH = "WITH"
+    INNER_JOIN = "INNER JOIN"
+    JOIN = "JOIN"
+
 
 class SQL_TOKENS(int, Enum):
     UNKNOWN = -1

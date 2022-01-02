@@ -16,11 +16,11 @@ def test_histogram():
         h = distogram.update(h, i)
 
     np_values, np_edges = np.histogram(normal, 10)
-    d_edges, d_values  = zip(*distogram.histogram(h, 10))
+    d_edges, d_values = zip(*distogram.histogram(h, 10))
 
     # how to compare histograms?
-    #assert np_values == approx(d_values, abs=0.2)
-    #assert np_edges == approx(d_edges, abs=0.2)
+    # assert np_values == approx(d_values, abs=0.2)
+    # assert np_edges == approx(d_edges, abs=0.2)
 
 
 def test_histogram_on_too_small_distribution():

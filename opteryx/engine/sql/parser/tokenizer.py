@@ -34,11 +34,14 @@ __all__ = ["tokenize"]
 # These are the characters we should escape in our regex
 REGEX_CHARACTERS = {ch: "\\" + ch for ch in ".^$*+?{}[]|()\\"}
 
+
 class TokenError(Exception):
     """
     Custom Error Type
     """
+
     pass
+
 
 def _build_splitter():
     # build the regex by building a list of all of the keywords
@@ -133,6 +136,7 @@ def _fix_special_chars(tokens):
     if builder:
         raise ProgrammingError("Unable to parse Query, check for missing quotes.")
 
+
 def _remove_comments(string):
     pattern = r"(\".*?\"|\'.*?\')|(/\*.*?\*/|--[^\r\n]*$)"
     # first group captures quoted strings (double or single)
@@ -149,12 +153,14 @@ def _remove_comments(string):
 
     return regex.sub(_replacer, string)
 
+
 def _clean_statement(string):
     """
     Remove carriage returns and all whitespace to single spaces
     """
     whitespace_cleaner = re.compile(r"\s+")
     return whitespace_cleaner.sub(" ", string).strip()
+
 
 def tokenize(expression):
 

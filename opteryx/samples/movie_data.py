@@ -1,31 +1,53 @@
-import sys
-import os
+"""
+moviedata
+---------
 
-sys.path.insert(1, os.path.join(sys.path[0], "../.."))
+This is a sample dataset build into the engine, this simplifies a few things:
+
+- We can write test scripts using this data, knowing that it will always be available. 
+- We can write examples using this data, knowing the results will always match.
+
+This data was orignally from:
+https://www.kaggle.com/johnharshith/hollywood-theatrical-market-synopsis-1995-to-2021
+
+Licence @ 02-JAN-2022 when copied: CC BY-NC-SA 4.0
+
+To access this dataset you can either run a query against dataset :moviedata: or you
+can instantiate a MovieData() class and use it like a Relation.
+"""
+
+if __name__ == "__main__":
+    import sys
+    import os
+
+    sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 from opteryx import Relation
 from opteryx.engine.attribute_types import OPTERYX_TYPES, OPTERYX_TYPE_NAMES
 
-## SELECT * FROM :moviedata:
-
 
 class MovieData(Relation):
     def __init__(self):
-        SCHEMA = {
+
+        super().__init__()
+
+        self.name = ":moviedata:"
+
+        # fmt:off
+        self.header = {
             "YEAR": {"type": OPTERYX_TYPE_NAMES[OPTERYX_TYPES.INTEGER]},
             "MOVIE": {"type": OPTERYX_TYPE_NAMES[OPTERYX_TYPES.VARCHAR]},
             "GENRE": {"type": OPTERYX_TYPE_NAMES[OPTERYX_TYPES.VARCHAR]},
             "RATING": {"type": OPTERYX_TYPE_NAMES[OPTERYX_TYPES.VARCHAR]},
             "DISTRIBUTOR": {"type": OPTERYX_TYPE_NAMES[OPTERYX_TYPES.VARCHAR]},
             "TOTAL FOR YEAR": {"type": OPTERYX_TYPE_NAMES[OPTERYX_TYPES.INTEGER]},
-            "TOTAL IN 2019 DOLLARS": {
-                "type": OPTERYX_TYPE_NAMES[OPTERYX_TYPES.INTEGER]
-            },
+            "TOTAL IN 2019 DOLLARS": { "type": OPTERYX_TYPE_NAMES[OPTERYX_TYPES.INTEGER]},
             "TICKETS SOLD": {"type": OPTERYX_TYPE_NAMES[OPTERYX_TYPES.INTEGER]},
         }
+        # fmt:on
 
         # fmt:off
-        DATA = [
+        self.data = [
             (1995,"Batman Forever","Drama","PG-13","Warner Bros.",184031112,387522978,42306002,),
             (1996,"Independence Day","Adventure","PG-13","20th Century Fox",306169255,634504608,69269062,),
             (1997,"Men in Black","Adventure","PG-13","Sony Pictures",250650052,500207943,54607854,),
@@ -55,8 +77,6 @@ class MovieData(Relation):
             (2021,"Shang-Chi and the Legend of the Ten Rings",None,"PG-13","Walt Disney",224226704,224226704,24478897,),
         ]
         # fmt:on
-
-        super().__init__(DATA, header=SCHEMA, name="MovieData")
 
 
 if __name__ == "__main__":

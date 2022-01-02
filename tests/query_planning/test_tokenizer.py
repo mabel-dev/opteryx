@@ -17,6 +17,7 @@ import pytest
 from opteryx.exceptions import ProgrammingError
 from opteryx.engine.sql import parser
 
+
 @pytest.mark.parametrize(
     "statement, want",
     # fmt:off
@@ -75,6 +76,7 @@ def test_tokenizer(statement, want):
     tokens = parser.tokenize(statement)
     assert tokens == want, f"{statement} => {tokens}"
 
+
 @pytest.mark.parametrize(
     "statement",
     # fmt:off
@@ -84,6 +86,6 @@ def test_tokenizer(statement, want):
     ]
 )
 def test_untokenizable_strings(statement):
-    
+
     with pytest.raises(ProgrammingError):
         tokenizer = parser.tokenize(statement)
