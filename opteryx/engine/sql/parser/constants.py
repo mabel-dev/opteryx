@@ -49,7 +49,7 @@ class SQL_TOKENS(int, Enum):
     INTEGER = 0
     DOUBLE = 1
     LITERAL = 2
-    VARIABLE = 3
+    ATTRIBUTE = 3
     BOOLEAN = 4
     TIMESTAMP = 5
     NULL = 6
@@ -69,6 +69,8 @@ class SQL_TOKENS(int, Enum):
     LIST = 20
     STRUCT = 21
     KEYWORD = 22
+    RIGHTSTRUCT = 23
+    LEFTSTRUCT = 24
 
 
 # the order of the operators affects the regex, e.g. <> needs to be defined before

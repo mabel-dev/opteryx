@@ -3,6 +3,6 @@ numpy
 zstandard
 pyarrow
 orjson
-fastnumbers
+# fastnumbers <- affected by bug #https://github.com/SethMMorton/fastnumbers/issues/35
 pysimdjson
 cityhash

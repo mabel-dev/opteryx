@@ -15,9 +15,7 @@ These are a set of functions that can be applied to data.
 from os import truncate
 import orjson
 import datetime
-import fastnumbers
 from cityhash import CityHash32
-from functools import lru_cache
 
 from opteryx.engine.functions.date_functions import *
 
@@ -129,9 +127,9 @@ FUNCTIONS = {
     # NUMBERS
     "ABS": abs,
     "ROUND": round,
-    "TRUNC": parse_number(fastnumbers.real, truncate),
-    "INTEGER": parse_number(fastnumbers.real, int),
-    "DOUBLE": parse_number(fastnumbers.real, float),
+    "TRUNC": parse_number(float, truncate),
+    "INTEGER": parse_number(float, int),
+    "DOUBLE": parse_number(float, float),
     # BOOLEAN
     "BOOLEAN": lambda x: str(x).upper() != "FALSE",
     "ISNONE": lambda x: x is None,

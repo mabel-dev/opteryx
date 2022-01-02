@@ -1,7 +1,6 @@
 from functools import lru_cache
 import re
 import datetime
-from fastnumbers import fast_int
 from typing import Optional, Union
 
 TIMEDELTA_REGEX = (
@@ -67,7 +66,7 @@ def parse_iso(value):
             if len(value) == 10:
                 # YYYY-MM-DD
                 return datetime.datetime(
-                    *map(fast_int, [value[:4], value[5:7], value[8:10]])
+                    *map(int, [value[:4], value[5:7], value[8:10]])
                 )
             if len(value) >= 16:
                 if not value[10] in ("T", " ") or not value[13] in DATE_SEPARATORS:
@@ -76,7 +75,7 @@ def parse_iso(value):
                     # YYYY-MM-DDTHH:MM:SS
                     return datetime.datetime(
                         *map(  # type:ignore
-                            fast_int,
+                            int,
                             [
                                 value[:4],  # YYYY
                                 value[5:7],  # MM
@@ -91,7 +90,7 @@ def parse_iso(value):
                     # YYYY-MM-DDTHH:MM
                     return datetime.datetime(
                         *map(  # type:ignore
-                            fast_int,
+                            int,
                             [
                                 value[:4],
                                 value[5:7],

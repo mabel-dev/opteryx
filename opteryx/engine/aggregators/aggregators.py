@@ -1,5 +1,3 @@
-import fastnumbers
-
 
 def summer(x, y):
     return fastnumbers.real(x) + fastnumbers.real(y)

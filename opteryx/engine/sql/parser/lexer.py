@@ -10,60 +10,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Tokenizer -> Lexer -> Planner
+This component is part of the SQL Query Engine for Opteryx.
 
-Tokenizer deconstructs a string into it's parts
-Lexer Interprets the tokens
-Planner creates a naive plan for the query
+Tokenizer -> Lexer -> AST -> Planner -> Optimizer -> Executer
 
-
+The Lexer is responsible for assigning a meaning to tokens, this is first done without
+context, for example we don't know if a token is in a SELECT, WHERE or HAVING
+statement, but we think it's an 
 """
 import re
 from opteryx.utils.dates import parse_iso
+from opteryx.utils.numbers import is_int, is_float
 from opteryx.engine.functions import FUNCTIONS
 from opteryx.engine.sql.parser.constants import SQL_TOKENS, OPERATORS, SQL_KEYWORDS
 from opteryx.engine.aggregators.aggregators import AGGREGATORS
+    
 
-
-def interpret_value(value):
-    if not isinstance(value, str):
-        return value
-    if value.upper() in ("TRUE", "FALSE"):
-        return value.upper() == "TRUE"
-    try:
-        # there appears to be a race condition with this library
-        # so wrap in a SystemError
-        num = fastnumbers.fast_real(value)
-        if isinstance(num, (int, float)):
-            return num
-    except SystemError:
-        pass
-    value = value[1:-1]
-    return parse_iso(value) or value
-
-
-def case_correction(token, part_of_query):
+def _case_correction(token, part_of_query):
     if part_of_query in (
         SQL_TOKENS.LITERAL,
-        SQL_TOKENS.VARIABLE,
+        SQL_TOKENS.ATTRIBUTE,
         SQL_TOKENS.SUBQUERY,
     ):
         return token
     return token.upper()
-
-def is_int(value):
-    try:
-        int_value = int(value)
-        return True
-    except ValueError:
-        return False
-
-def is_float(value):
-    try:
-        int_value = float(value)
-        return True
-    except ValueError:
-        return False
 
 def get_token_type(token):
     """
@@ -74,10 +44,10 @@ def get_token_type(token):
     if len(token) == 0:
         return SQL_TOKENS.EMPTY
     if token[0] == token[-1] == "`":
-        # tokens in ` quotes are variables, this is how we supersede all other
-        # checks, e.g. if it looks like a keyword but is a variable.
-        return SQL_TOKENS.VARIABLE
-    if token in list(SQL_KEYWORDS):
+        # tokens in ` quotes are attributes, this is how we supersede all other checks,
+        # e.g. if it looks like a keyword but is a attributes.
+        return SQL_TOKENS.ATTRIBUTE
+    if token_upper in list(SQL_KEYWORDS):
         return SQL_TOKENS.KEYWORD
     if token == "*":  # nosec - not a password
         return SQL_TOKENS.EVERYTHING
@@ -102,6 +72,12 @@ def get_token_type(token):
         return SQL_TOKENS.LEFTPARENTHESES
     if token in (")", "]"):
         return SQL_TOKENS.RIGHTPARENTHESES
+    if token == "{":
+        return SQL_TOKENS.LEFTSTRUCT
+    if token in "}":
+        return SQL_TOKENS.RIGHTSTRUCT
+    if token == ",":
+        return SQL_TOKENS.COMMA
     if re.search(r"^[^\d\W][\w\-\.]*", token):
         if token_upper in ("TRUE", "FALSE"):
             # 'true' and 'false' without quotes are booleans
@@ -117,18 +93,22 @@ def get_token_type(token):
             return SQL_TOKENS.NOT
         if token_upper == "AS":  # nosec - not a password
             return SQL_TOKENS.AS
-        # tokens starting with a letter, is made up of letters, numbers,
-        # hyphens, underscores and dots are probably variables. We do this
-        # last so we don't miss assign other items to be a variable
-        return SQL_TOKENS.VARIABLE
+        # tokens starting with a letter, is made up of letters, numbers, hyphens,
+        # underscores and dots are probably attributes (columns). We do this last so
+        # we don't miss assign other items to be an attribute (column)
+        return SQL_TOKENS.ATTRIBUTE
     # at this point, we don't know what it is
     return SQL_TOKENS.UNKNOWN
 
-def analyze_tokens(tokens):
+def _naive_tag_part_of_query(tokens):
     """
     Go through a set of tokens:
-        1) Determine the Part of Query (Part of Speach) to each
+        1) Determine the Part of Query (Part of Speach) to each token
         2) Perform normalization, such as making keywords uppercase
+
+    The POQ tagger is naive, it doesn't take context into account, this is because
+    this is a first-pass only. Once we have assigned POQ tags, we can pass again to
+    work out the context of the tokens.
     """
 
     def _inner_analysis(tokens):
@@ -137,6 +117,10 @@ def analyze_tokens(tokens):
             token = case_correction(token, poq)
             yield (token, poq)
 
-    # find lists and structs
-
     return list(_inner_analysis(tokens))
+
+
+def tag(tokens):
+
+    tagged = _naive_tag_part_of_query(tokens)
+    return tagged

@@ -159,9 +159,16 @@ class HyperLogLog(object):
         We use a 64 bit hash to ensure we have the resolution. This is tested to be
         within 1% of the expected result when error set to 0.005 for up to 
         500 million randomly generated items.
+
+        Paramters:
+            value:  Any
+                The value to add to the counter
+            hash_func: Callable (optional)
+                The hashing algorithm to apply to the data, if the hash algorithm
+                is changed, we may not get the resolution required to count large sets.
         """
 
-        x = hash_func(f"{value}")
+        x = hash_func(value)
 
         j = x & (self.m - 1)
         w = x >> self.p

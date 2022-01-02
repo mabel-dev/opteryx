@@ -1,13 +1,17 @@
+# Data Sketches
 
-DISTINCT COUNTING
+## DISTINCT COUNTING
 
-- BloomFilter
-- HyperLogLog
+**BloomFilter**
 
-MOST FREQUENT
+**HyperLogLog**
 
-- LossyCounter
+This implementation tested up to 500m entries.
 
-QUANTILES & HISTOGRAMS
+## MOST FREQUENT
 
-- T-Digest
+**LossyCounter**
+
+## QUANTILES & HISTOGRAMS
+
+**T-Digest**

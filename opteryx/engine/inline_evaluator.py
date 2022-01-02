@@ -21,7 +21,6 @@ will perform the function LEFT on the NAME field from the dict and return AGE
 from the dict
 """
 import re
-import fastnumbers
 from opteryx.engine.functions.inline_functions import FUNCTIONS
 from opteryx.utils.dates import parse_iso
 from opteryx.utils.token_labeler import TOKENS, get_token_type
@@ -161,12 +160,12 @@ def evaluate_field(dict, token):
     if token_type == TOKENS.FLOAT:
         return (
             token["value"],
-            float(fastnumbers.real(token["value"])),
+            float(token["value"]),
         )
     if token_type == TOKENS.INTEGER:
         return (
             token["value"],
-            int(fastnumbers.real(token["value"])),
+            int(token["value"]),
         )
     if token_type == TOKENS.LITERAL:
         return (

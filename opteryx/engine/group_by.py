@@ -6,7 +6,6 @@ will be effective:
 python setup.py build_ext --inplace
 """
 import cython
-import fastnumbers
 from cityhash import CityHash32
 from collections import defaultdict
 from opteryx.engine.aggregators.aggregators import AGGREGATORS

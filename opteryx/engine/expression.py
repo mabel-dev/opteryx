@@ -15,7 +15,6 @@ expression tree as it's only doing boolean logic.
 
 Derived from: https://gist.github.com/leehsueh/1290686
 """
-import fastnumbers
 from ..readers.internals.inline_evaluator import *
 from ...utils.dates import parse_iso
 from ...utils.token_labeler import Tokenizer, TOKENS, OPERATORS
@@ -157,10 +156,10 @@ class Expression(object):
         if self.tokenizer.has_next():
             token_type = self.tokenizer.next_token_type()
             if token_type == TOKENS.INTEGER:
-                n = TreeNode(token_type, fastnumbers.fast_int(self.tokenizer.next()))
+                n = TreeNode(token_type, int(self.tokenizer.next()))
                 return n
             if token_type == TOKENS.FLOAT:
-                n = TreeNode(token_type, fastnumbers.fast_float(self.tokenizer.next()))
+                n = TreeNode(token_type, float(self.tokenizer.next()))
                 return n
             if token_type in (TOKENS.VARIABLE, TOKENS.NOT):
                 n = TreeNode(token_type, self.tokenizer.next())
@@ -200,14 +199,19 @@ class Expression(object):
             return value
         if value.upper() in ("TRUE", "FALSE"):
             return value.upper() == "TRUE"
+
         try:
-            # there appears to be a race condition with this library
-            # so wrap in a SystemError
-            num = fastnumbers.fast_real(value)
-            if isinstance(num, (int, float)):
-                return num
-        except SystemError:
+            num = int(value)
+            return num
+        except ValueError:
             pass
+
+        try:
+            num = float(value)
+            return num
+        except ValueError:
+            pass
+
         return parse_iso(value) or value
 
     def evaluate(self, variable_dict):

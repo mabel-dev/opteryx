@@ -15,7 +15,7 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 import pytest
 
 from opteryx.exceptions import ProgrammingError
-from opteryx.engine.sql.parser.tokenizer import Tokenizer
+from opteryx.engine.sql import parser
 
 @pytest.mark.parametrize(
     "statement, want",
@@ -50,6 +50,9 @@ from opteryx.engine.sql.parser.tokenizer import Tokenizer
         ("SELECT * FROM table WHERE query == 'SELECT * FROM table'", ['SELECT', '*', 'FROM', 'table', 'WHERE', 'query', '==', "'SELECT * FROM table'"]),
         ("SELECT * FROM table WHERE query == 'SELECT\n\t*\nFROM\n\ttable'", ['SELECT', '*', 'FROM', 'table', 'WHERE', 'query', '==', "'SELECT * FROM table'"]),
         ("SELECT DESCription FROM (SELECT * FROM TABLE)", ['SELECT', 'DESCription', 'FROM', '(', 'SELECT', '*', 'FROM', 'TABLE', ')']),
+        ("SELECT COUNT(*) FROM table",['SELECT', 'COUNT', '(', '*', ')', 'FROM', 'table']),
+        ("SELECT COUNT (*) FROM table", ['SELECT', 'COUNT', '(', '*', ')', 'FROM', 'table']),
+        ("SELECT COUNT(*),NAME FROM table", ['SELECT', 'COUNT', '(', '*', ')', ',', 'NAME', 'FROM', 'table']),
 
         # EXPLAIN
         ("EXPLAIN SELECT * FROM table",['EXPLAIN', 'SELECT', '*', 'FROM', 'table']),
@@ -69,8 +72,8 @@ from opteryx.engine.sql.parser.tokenizer import Tokenizer
     # fmt:on
 )
 def test_tokenizer(statement, want):
-    tokenizer = Tokenizer(statement)
-    assert tokenizer.tokens == want, f"{statement} => {tokenizer.tokens}"
+    tokens = parser.tokenize(statement)
+    assert tokens == want, f"{statement} => {tokens}"
 
 @pytest.mark.parametrize(
     "statement",
@@ -83,4 +86,4 @@ def test_tokenizer(statement, want):
 def test_untokenizable_strings(statement):
     
     with pytest.raises(ProgrammingError):
-        tokenizer = Tokenizer(statement)
+        tokenizer = parser.tokenize(statement)
