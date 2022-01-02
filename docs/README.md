@@ -27,3 +27,8 @@
     - 05.01 Workload Distribution
     - 05.02 Memcached
     - 05.03 Query Optimization
+
+
+Note that some documentation uses Mermaid, which does not render correctly on GitHub.
+There are browser plug-ins which enable this function, such as 
+[GitHub + Mermaid](https://chrome.google.com/webstore/detail/github-%2B-mermaid/goiiopgdnkogdbjmncgedmgpoajilohe/related)
