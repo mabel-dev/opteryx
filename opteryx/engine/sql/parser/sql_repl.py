@@ -16,12 +16,21 @@ import sys
 import os
 
 sys.path.insert(1, os.path.join(sys.path[0], "../../../.."))
-from opteryx.engine.sql.parser.tokenizer import Tokenizer
+
+from opteryx.engine.sql import parser
+
+def pretty_tags(tags):
+    print("TAGGED:")
+    for token, tag in tags:
+        print(f"         {token:16} {tag.name}")
 
 statement = None
 
 while statement != "quit":
 
     statement = input("Query: ")
-    tokenized = Tokenizer(statement)
-    print(tokenized.tokens)
+    tokenized_tokens = parser.tokenize(statement)
+    tagged_tokens = parser.tag(tokenized_tokens)
+
+    print("TOKENS: ", tokenized_tokens)
+    pretty_tags(tagged_tokens)

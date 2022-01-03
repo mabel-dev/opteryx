@@ -1,6 +1,6 @@
 """
 satellites
----------
+----------
 
 This is a sample dataset build into the engine, this simplifies a few things:
 
@@ -15,6 +15,8 @@ from NASA, which is Public Domain.
 
 To access this dataset you can either run a query against dataset :satellites: or you
 can instantiate a SatelliteData() class and use it like a Relation.
+
+This has a companion dataset, _planets, to help test joins.
 """
 
 if __name__ == "__main__":
@@ -32,8 +34,9 @@ class SatelliteData(Relation):
 
         super().__init__()
 
-        self.name = ":satellites:"
+        self.name = "_satellites"
 
+        # the dataset is serialized so it's about 1/3 the original size
         rel = Relation.deserialize(
             memoryview(
                 base64.b85decode(

@@ -31,7 +31,7 @@ class MovieData(Relation):
 
         super().__init__()
 
-        self.name = ":moviedata:"
+        self.name = "_moviedata"
 
         # fmt:off
         self.header = {

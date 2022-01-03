@@ -96,6 +96,8 @@ FUNCTIONS = {
     "SECOND": get_second,
     "TIME": get_time,
     "CURRENT_DATE": datetime.date.today,
+    "TODAY": not_implemented,
+    "YESTERDAY": not_implemented,
     "NOW": datetime.datetime.now,
     "DATE_ADD": not_implemented,  # date, number, part
     "DATE_DIFF": not_implemented,  # start, end, part

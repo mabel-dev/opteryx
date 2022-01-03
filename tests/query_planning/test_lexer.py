@@ -44,7 +44,7 @@ from opteryx.engine.sql.parser.constants import SQL_TOKENS
         ("CREATE", SQL_TOKENS.ATTRIBUTE), # <- it is a variable
         ("CREATE INDEX ON", SQL_TOKENS.KEYWORD),
         ("WHERE", SQL_TOKENS.KEYWORD),
-        ("EXPLAIN", SQL_TOKENS.KEYWORD),
+        ("EXPLAIN SELECT", SQL_TOKENS.KEYWORD),
         ("`SELECT`", SQL_TOKENS.ATTRIBUTE),
         
         # OPERATORS

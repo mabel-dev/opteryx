@@ -30,7 +30,7 @@ class SQL_KEYWORDS(str, Enum):
     CREATE_INDEX = "CREATE INDEX ON"
     DESC = "DESC"
     DISTINCT = "DISTINCT"
-    EXPLAIN = "EXPLAIN"
+    EXPLAIN = "EXPLAIN SELECT"
     FROM = "FROM"
     GROUP_BY = "GROUP BY"
     HAVING = "HAVING"
@@ -43,6 +43,7 @@ class SQL_KEYWORDS(str, Enum):
     WITH = "WITH"
     INNER_JOIN = "INNER JOIN"
     JOIN = "JOIN"
+    PARTITION = "_PARTITION"
 
 
 class SQL_TOKENS(int, Enum):
@@ -92,4 +93,5 @@ OPERATORS = {
     "MATCHES": matches,
     "IN": function_in,
     "CONTAINS": function_contains,
+    "BETWEEN": None,
 }

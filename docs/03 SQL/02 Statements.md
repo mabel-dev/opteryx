@@ -9,6 +9,7 @@ HAVING <having_expression>
 SKIP <n>
 ORDER BY <field_list> [ASC|DESC]
 
+
 -> row data
 
 ANALYZE dataset -> creates and/or returns profile information for a dataset
@@ -20,6 +21,6 @@ ANALYZE dataset -> creates and/or returns profile information for a dataset
     Bytes: Raw Byte Count
     Columns: List of columns and types
 
-EXPLAIN [NOOPT] query -> returns the plan for a query
+EXPLAIN query -> returns the plan for a query
 
 CREATE INDEX ON dataset (attribute1) -> creates an index

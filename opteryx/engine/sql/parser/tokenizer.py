@@ -65,6 +65,7 @@ def _build_splitter():
         r"IS\sNOT",
         r"NOT\sLIKE",
         r"NOT\sIN",
+        r"EXPLAIN\sSELECT",
     ]:
         keywords.append(r"\b" + item + r"\b")
     for item in ("(", ")", "[", "]", ",", "*", ";"):

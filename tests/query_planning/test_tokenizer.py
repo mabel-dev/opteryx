@@ -54,10 +54,10 @@ from opteryx.engine.sql import parser
         ("SELECT COUNT(*) FROM table",['SELECT', 'COUNT', '(', '*', ')', 'FROM', 'table']),
         ("SELECT COUNT (*) FROM table", ['SELECT', 'COUNT', '(', '*', ')', 'FROM', 'table']),
         ("SELECT COUNT(*),NAME FROM table", ['SELECT', 'COUNT', '(', '*', ')', ',', 'NAME', 'FROM', 'table']),
+        ("SELECT * FROM _table",['SELECT', '*', 'FROM', '_table']),
 
         # EXPLAIN
-        ("EXPLAIN SELECT * FROM table",['EXPLAIN', 'SELECT', '*', 'FROM', 'table']),
-        ("EXPLAIN NOOPT SELECT * FROM table",['EXPLAIN', 'NOOPT', 'SELECT', '*', 'FROM', 'table']),
+        ("EXPLAIN SELECT * FROM table",['EXPLAIN SELECT', '*', 'FROM', 'table']),
 
         # ANALYZE
         ("ANALYZE dataset", ['ANALYZE', 'dataset']),

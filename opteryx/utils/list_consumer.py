@@ -1,4 +1,4 @@
-class ListBurner:
+class ListConsumer:
 
     __slots__ = ("position", "list_data")
 
@@ -6,16 +6,16 @@ class ListBurner:
         self.position = 0
         self.list_data = list_data
 
-    def current(self):
+    def get(self):
         return self.list_data[self.position]
 
     def peek(self):
-        if not self.items_left():
+        if not self.has_more():
             return None
         return self.list_data[self.position + 1]
 
     def next(self):
         self.position += 1
 
-    def can_continue(self):
+    def has_more(self):
         return len(self.list_data) - self.position

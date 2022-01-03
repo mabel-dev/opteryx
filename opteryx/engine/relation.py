@@ -45,7 +45,12 @@ import os
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 from typing import Iterable, Tuple
-from opteryx.engine.attribute_types import OPTERYX_TYPES, PARQUET_TYPES, coerce_types
+from opteryx.engine.attribute_types import (
+    OPTERYX_TYPES,
+    PARQUET_TYPES,
+    PYTHON_TYPES,
+    coerce_types,
+)
 from opteryx.exceptions import MissingDependencyError
 
 
@@ -106,8 +111,19 @@ class Relation:
 
         return Relation(_inner_projection(), header=new_header)
 
+    def __getitem__(self, attributes):
+        """
+        Select the attributes from the Relation, alias for .apply_projection called
+        like this Relation["column"]
+        """
+        return self.apply_projection(attributes)
+
     def count(self):
         return len(self.data)
+
+    @property
+    def shape(self):
+        return (len(self.header), self.count())
 
     def distinct(self):
         """
@@ -124,12 +140,26 @@ class Relation:
 
         return Relation(do_dedupe(self.data), header=self.header)
 
-    def from_dictionaries(self, dictset):
+    def from_dictionaries(self, dictionaries, header=None):
 
-        self.header = {k: {"type": v} for k, v in dictset.types().items()}
+        from operator import itemgetter
+
+        def types(dictionaries):
+            response = {}
+            for row in dictionaries:
+                for k, v in row.items():
+                    value_type = PYTHON_TYPES.get(str(type(v)), OPTERYX_TYPES.OTHER)
+                    if k not in response:
+                        response[k] = {"type": value_type}
+                    elif response[k] != {"type": value_type}:
+                        response[k] = {"type": OPTERYX_TYPES.OTHER}
+            return response
+
+        if not header:
+            self.header = types(dictionaries)
         self.data = [
             tuple([coerce_types(row.get(k)) for k in self.header.keys()])
-            for row in dictset.icollect_list()
+            for row in dictionaries
         ]
 
     def attributes(self):

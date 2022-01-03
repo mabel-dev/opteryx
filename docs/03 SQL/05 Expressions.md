@@ -6,11 +6,12 @@ AND / OR / NOT
 
 ## Comparisons
 
-=, <>, >, <, LIKE, MATCHES
+=, <>, >, <, <=, >=, LIKE, MATCHES, BETWEEN
 
 ## Casting
 
-CAST(var AS type)  // not implemented
+INTEGER()
+
 
 ## Subqueries
 

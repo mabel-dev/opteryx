@@ -20,5 +20,5 @@ AGGREGATORS = {
     "APPROX_MODE": raise_not_implemented,  # the mode of the values, use lossy counter
     "APPROX_MEDIAN": raise_not_implemented,  # the median of the values, use tdigest, 50% centile
     "APPROX_DISTINCT": raise_not_implemented,  # hyperloglog is used to estimate distinct values
-    "APPROX_QUARTILES": raise_not_implemented,
+    "APPROX_IQR": raise_not_implemented,  # use tdigest
 }

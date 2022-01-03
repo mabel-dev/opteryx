@@ -56,3 +56,7 @@ class ProgrammingError(DatabaseError):
     """
 
     pass
+
+
+class SqlError(ProgrammingError):
+    pass
