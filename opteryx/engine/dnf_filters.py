@@ -39,7 +39,7 @@ OPERATORS = {
     "<=": operator.le,
     ">=": operator.ge,
     "like": like,
-    "matches": matches,
+    "similar to": matches,
     "in": _in,
     "!in": _nin,
     "not in": _nin,

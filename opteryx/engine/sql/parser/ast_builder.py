@@ -13,21 +13,6 @@
 This component is part of the SQL Query Engine for Opteryx.
 
 Tokenizer -> Lexer -> AST -> Planner -> Optimizer -> Executer
-
-STATEMENT
-    SELECT
-        ATTRIBUTE
-        AGGREGATION
-        FUNCTION
-    FROM
-        TABLE
-    WHERE
-        CONDITION
-            AND
-        CONDITION
-            OR
-        CONDITION
-
 """
 if __name__ == "__main__":
     import sys
@@ -55,6 +40,17 @@ class AstNode:
         self.value = None
         # node config
         self.config = {}
+
+    def __str__(self):
+        import json
+
+        def _inner(node, prefix=''):
+            repr = f"{prefix}{node.token} [ `{node.node_type}`{('AS ' + node.alias) if node.alias else ''} ]\n"
+            for child in node.children:
+                repr += _inner(child, prefix + '    ')
+            return repr
+
+        return _inner(self).rstrip("\n")
 
 
 def _aquire_expect(consumer, poq, error):

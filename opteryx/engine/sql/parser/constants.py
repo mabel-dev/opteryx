@@ -90,7 +90,7 @@ OPERATORS = {
     "IS": operator.is_,
     "NOT LIKE": not_like,
     "LIKE": like,
-    "MATCHES": matches,
+    "SIMILAR TO": matches,
     "IN": function_in,
     "CONTAINS": function_contains,
     "BETWEEN": None,

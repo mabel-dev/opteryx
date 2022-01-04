@@ -395,6 +395,25 @@ def quantile(h: Distogram, value: float) -> Optional[float]:
     return result
 
 
+def draw_ascii_hist(h):
+    BAR_CHARS = [r" ", r"▁", r"▂", r"▃", r"▄", r"▅", r"▆", r"▇", r"█"]
+
+    mx = max([freq for bin, freq in h])
+    bar_height = mx / 8
+    if bar_height == 0:
+        print(">" + " " * len(h) + "<")
+
+    hist = ""
+    for value in [freq for bin, freq in h]:
+        if value == 0:
+            hist += BAR_CHARS[0]
+        else:
+            height = int(value / bar_height)
+            hist += BAR_CHARS[height]
+
+    print(f">{hist}<")
+
+
 if __name__ == "__main__":
 
     d = Distogram()
@@ -404,12 +423,22 @@ if __name__ == "__main__":
     for x in range(1000000):
         update(d, random())
 
-    print(histogram(d, 10))
+    h = histogram(d, 8)
+    print(h)
+    draw_ascii_hist(h)
+
+    del d
 
     from numpy.random import normal
 
-    digest = Distogram()
-    for i in normal(0.0, 1.0, 5000):
-        update(d, i)
+    d = Distogram()
+    for i in normal(0.0, 1, 5000):
+        update(d, i / 10)
 
-    print(histogram(d, 10))
+    h = histogram(d, 8)
+    print(h)
+    draw_ascii_hist(h)
+
+    print(count(d))
+    print(mean(d))
+

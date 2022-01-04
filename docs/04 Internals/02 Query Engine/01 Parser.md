@@ -20,3 +20,14 @@ The Lexer assigns meaning to tokens, it does this in two passes. The first is a 
 tagger, which essentially looks for keywords, punctuation and variables.
 
 The second pass builds on this to correct the naive tagger.
+
+## AST Builder
+
+Bulds an Abstract Syntax Tree of the Query.
+
+Also does the following
+- Expands BETWEEN statements to a `X > n AND Y < m` condition
+    age BETWEEN 18 and 35 -> age > 18 AND age < 35
+- Collates any OR repeat checks against the same field to an IN statement
+    year = 2021 or year = 2022 -> year in (2021, 2022)
+- Converts literals into their data types (INT, FLOAT, LIST, STRUCT)
