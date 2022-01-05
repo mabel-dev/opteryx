@@ -24,6 +24,13 @@ from opteryx.engine.sql import parser
         ("ANALYZE table", "ROOT [ `ANALYZE` config: {\"dataset\": \"table\"} ]"),
         ("ANALYZE table;", "ROOT [ `ANALYZE` config: {\"dataset\": \"table\"} ]"),
         ("analyze table", "ROOT [ `ANALYZE` config: {\"dataset\": \"table\"} ]"),
+        ("analyze\ntable", "ROOT [ `ANALYZE` config: {\"dataset\": \"table\"} ]"),
+
+        # CREATE INDEX ON - again, pretty much no variation
+        ("CREATE INDEX ON table.name (name)", 'ROOT [ `CREATE INDEX ON` config: {"dataset": "table.name", "columns": ["name"]} ]'),
+        ("create index on table.name (name)", 'ROOT [ `CREATE INDEX ON` config: {"dataset": "table.name", "columns": ["name"]} ]'),
+        ("CREATE INDEX ON table.name (name);", 'ROOT [ `CREATE INDEX ON` config: {"dataset": "table.name", "columns": ["name"]} ]'),
+        ("CREATE INDEX ON table.name\n\t(select);", 'ROOT [ `CREATE INDEX ON` config: {"dataset": "table.name", "columns": ["select"]} ]'),
     ],
     # fmt:on
 )

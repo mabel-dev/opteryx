@@ -18,25 +18,44 @@ These return a tuple of ()
 
 from opteryx.exceptions import MissingDependencyError
 
+import simdjson
 
-def zstd(stream, projection=None):
+pass_thru = lambda x: x
+json_parser = simdjson.Parser()
+
+
+def _json_to_tuples(line):
+    """
+    Parse each line in the file to a dictionary.
+
+    We do some juggling so we can delete the object which is faster than creating a
+    new Parser for each record.
+    """
+    dic = json_parser.parse(line)
+    tup = tuple(dic.values())
+    del dic
+    return tup
+
+
+def zstd_reader(stream):
     """
     Read zstandard compressed files
 
-    This assumes the underlying format is line separated records.
+    This assumes the underlying format is line separated records and each record is
+    the same.
     """
     import zstandard
 
-    with zstandard.open(stream, "rb") as file:  # type:ignore
-        yield from file.read().split(b"\n")[:-1]
+    with zstandard.open(stream, "rb") as file:
+        yield from map(_json_to_tuples, file.read().split(b"\n")[:-1])
 
 
-def parquet(stream, projection=None):
+def parquet_reader(stream):
     """
     Read parquet formatted files
     """
     try:
-        import pyarrow.parquet as pq  # type:ignore
+        import pyarrow.parquet as pq
     except ImportError:  # pragma: no cover
         raise MissingDependencyError(
             "`pyarrow` is missing, please install or include in requirements.txt"
@@ -48,7 +67,7 @@ def parquet(stream, projection=None):
             yield tuple([v[index] for k, v in dict_batch.items()])  # yields a tuple
 
 
-def orc(stream, projection=None):
+def orc_reader(stream):
     """
     Read orc formatted files
     """
@@ -68,9 +87,9 @@ def orc(stream, projection=None):
             yield tuple([v[index] for k, v in dict_batch.items()])  # yields a tuple
 
 
-def lines(stream, projection=None):
+def jsonl_reader(stream):
     """
-    Default reader, assumes text format
+    Assumes a record by line
     """
     text = stream.read()  # type:ignore
-    yield from text.splitlines()
+    yield from map(_json_to_tuples, text.splitlines())

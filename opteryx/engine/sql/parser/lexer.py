@@ -26,16 +26,6 @@ from opteryx.engine.sql.parser.constants import SQL_TOKENS, OPERATORS, SQL_KEYWO
 from opteryx.engine.aggregators.aggregators import AGGREGATORS
 
 
-def _case_correction(token, part_of_query):
-    if part_of_query in (
-        SQL_TOKENS.LITERAL,
-        SQL_TOKENS.ATTRIBUTE,
-        SQL_TOKENS.SUBQUERY,
-    ):
-        return token
-    return token.upper()
-
-
 def get_token_type(token):
     """
     Determine the token type.
@@ -114,7 +104,6 @@ def tag(tokens):
     def _inner_analysis(tokens):
         for token in tokens:
             poq = get_token_type(token)
-            token = _case_correction(token, poq)
             yield (token, poq)
 
     return list(_inner_analysis(tokens))

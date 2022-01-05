@@ -16,7 +16,7 @@ ANALYZE dataset -> creates and/or returns profile information for a dataset
 ->
     Name: DataSet Name
     Format: File Type
-    Rows: Row Count
+    Rows: Row Count  <- from the BRIN
     Blobs: Blob Count
     Bytes: Raw Byte Count
     Columns: List of columns and types

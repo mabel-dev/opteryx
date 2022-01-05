@@ -51,6 +51,16 @@ class AstNode:
         return _inner(self).rstrip("\n")
 
 
+def _case_correction(token, part_of_query):
+    if part_of_query in (
+        SQL_TOKENS.LITERAL,
+        SQL_TOKENS.ATTRIBUTE,
+        SQL_TOKENS.SUBQUERY,
+    ):
+        return (token, part_of_query)
+    return (token.upper(), part_of_query)
+
+
 def _aquire_expect(consumer, poq, error):
     """
     This is a simple helper function to replace have to write code to get and test the
@@ -66,6 +76,7 @@ def _aquire_expect(consumer, poq, error):
 
 def _acquire_between_brackets(consumer):
     """
+    Consumes a list from an opening bracket to it's closing bracket
 
     Parameters:
         consumer
@@ -85,7 +96,7 @@ def _acquire_between_brackets(consumer):
     # step over the tokens, until we get to the matching closing parenthesis
     open_parentheses = 1
     collector = []
-    
+
     while open_parentheses > 0 and consumer.has_more():
         consumer.next()
         if consumer.get()[0] == closing_bracket:
@@ -124,7 +135,7 @@ def build_ast(tokens):
     consumer = ListConsumer(tokens)
 
     # get the first token, it defines the type of query
-    query_type, token_type = consumer.get()
+    query_type, token_type = _case_correction(*consumer.get())
     if query_type not in ("SELECT", "EXPLAIN SELECT", "CREATE INDEX ON", "ANALYZE"):
         raise SqlError(
             "Unable to interpret Query - Unable to determine the type of Query."
@@ -166,14 +177,18 @@ def build_ast(tokens):
             "Unable to interpret Query - Dataset name expected after CREATE INDEX ON (invalid name).",
         )
         if not consumer.has_more():
-            raise SqlError("Unable to interpret - Column names expected after Dataset name (missing).")
-        if not consumer.peek()[1] == SQL_TOKENS.LEFTPARENTHESES:
-            raise SqlError("Unable to interpret - Column names expected after Dataset name (parenthesis expected).")
+            raise SqlError(
+                "Unable to interpret - Column names expected after Dataset name (missing)."
+            )
+        if not consumer.get()[1] == SQL_TOKENS.LEFTPARENTHESES:
+            raise SqlError(
+                "Unable to interpret - Column names expected after Dataset name (parenthesis expected)."
+            )
         # the next set of tokens are columns
         columns = _acquire_between_brackets(consumer)
         if len(columns) != 1:
             raise SqlError("Unable to interpret - Indexes support one column only.")
-
+        root.config["columns"] = [col[0] for col in columns if col[0] != ","]
 
     # Syntax: EXPLAIN <query>
     if query_type in ("SELECT", "EXPLAIN SELECT"):
@@ -184,7 +199,7 @@ def build_ast(tokens):
                 consumer.next()
 
         while consumer.has_more():
-            #print(consumer.get())
+            # print(consumer.get())
 
             consumer.next()
 
@@ -199,14 +214,12 @@ if __name__ == "__main__":
     tokens = build_ast(tokens)
     print(tokens)
 
-
     tokens = parser.tokenize("analyze table.name")
     tokens = parser.tag(tokens)
     tokens = build_ast(tokens)
     print(tokens)
 
-
-    tokens = parser.tokenize("create index on table.name (column)")
+    tokens = parser.tokenize("create index on table.name (name)")
     tokens = parser.tag(tokens)
     tokens = build_ast(tokens)
     print(tokens)

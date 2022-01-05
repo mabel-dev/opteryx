@@ -58,5 +58,8 @@ class ProgrammingError(DatabaseError):
     pass
 
 
+# END PEP-0249
+
+
 class SqlError(ProgrammingError):
     pass
