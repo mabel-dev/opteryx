@@ -75,7 +75,7 @@ def parse_iso(value):
             if val_len >= 16:
                 if not (value[10] in ("T", " ") and value[13] in DATE_SEPARATORS):
                     return False
-                if val_len == 24 and value[16] in DATE_SEPARATORS and value[19] == '.':
+                if val_len == 24 and value[16] in DATE_SEPARATORS and value[19] == ".":
                     # YYYY-MM-DD HH:MM:SS.ssss
                     return datetime.datetime(
                         *map(  # type:ignore

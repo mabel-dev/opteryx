@@ -61,4 +61,3 @@ if __name__ == "__main__":
     print(md.apply_projection("name").distinct().attributes())
     print(md.collect_column("name"))
     print(md.fetchall())
-

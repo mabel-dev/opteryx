@@ -18,4 +18,4 @@ class ListConsumer:
         self.position += 1
 
     def has_more(self):
-        return len(self.list_data) - self.position
+        return (len(self.list_data) - self.position) > 0

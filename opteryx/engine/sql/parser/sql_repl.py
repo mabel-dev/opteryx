@@ -19,10 +19,12 @@ sys.path.insert(1, os.path.join(sys.path[0], "../../../.."))
 
 from opteryx.engine.sql import parser
 
+
 def pretty_tags(tags):
     print("TAGGED:")
     for token, tag in tags:
         print(f"         {token:16} {tag.name}")
+
 
 statement = None
 

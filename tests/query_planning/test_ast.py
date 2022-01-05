@@ -14,14 +14,16 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import pytest
 from opteryx.engine.sql import parser
-from opteryx.engine.sql.parser.constants import SQL_TOKENS
 
 
 @pytest.mark.parametrize(
     "statement, expect",
     # fmt:off
     [
-        ("ANALYZE table", "ROOT [ `ANALYZE` ]"),
+        # ANALYZE - there's not a lot of variation here
+        ("ANALYZE table", "ROOT [ `ANALYZE` config: {\"dataset\": \"table\"} ]"),
+        ("ANALYZE table;", "ROOT [ `ANALYZE` config: {\"dataset\": \"table\"} ]"),
+        ("analyze table", "ROOT [ `ANALYZE` config: {\"dataset\": \"table\"} ]"),
     ],
     # fmt:on
 )
@@ -35,4 +37,4 @@ def test_ast_builder(statement, expect):
 
     assert (
         str(tokens) == expect
-    ), f"AST interpreted \"\"{statement}\"\" as \"\"{str(tokens)}\"\""
+    ), f'AST interpreted ""{statement}"" as ""{str(tokens)}""'
