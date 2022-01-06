@@ -165,6 +165,9 @@ class Relation:
     def attributes(self):
         return [k for k in self.header.keys()]
 
+    def rename_attribute(self, current_name, new_name):
+        self.header[new_name] = self.header.pop(current_name)
+
     def __str__(self):
         return f"{self.name or 'Relation'} ({', '.join([k + ':' + v.get('type') for k,v in self.header.items()])})"
 

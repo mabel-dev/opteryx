@@ -14,7 +14,6 @@ from ....logging import get_logger
 
 
 class BaseInnerReader(abc.ABC):
-
     def __init__(self, *, dataset: str = None, partitioning=None, **kwargs):
         self.dataset = dataset
         if self.dataset is None:
