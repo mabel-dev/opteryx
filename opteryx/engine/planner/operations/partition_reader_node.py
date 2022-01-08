@@ -48,6 +48,7 @@ KNOWN_EXTENSIONS = {
 
 
 class PartitionReaderNode(BasePlanNode):
+    
     def __init__(self, **kwargs):
         """
         The Partition Reader Node is responsible for reading a complete partition
@@ -107,16 +108,13 @@ class PartitionReaderNode(BasePlanNode):
 
             # interpret the raw bytes into entries, these may not be records yet
             # push down the projection
-            schema, record_iterator = decompressor(blob_bytes, projection)
+            schema, record_iterator = decompressor(blob_bytes)
 
             # we should know the number of entries
             stats.data_rows_read += 1  # TODO
 
             # interpret the entries into records
             record_iterator = map(parser, record_iterator)
-
-            # if we weren't able to push down the projection, do it now
-            # TODO
 
             # if we don't have a min/max index, create one
             min_max_index = IndexMinMax().build(record_iterator)

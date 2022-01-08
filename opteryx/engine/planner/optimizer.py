@@ -22,3 +22,6 @@ This is a heuristic-based query optimizer:
 
     -> Can we make a set of OR statement an IN statement
 """
+
+# distinct and group by is illogical
+# 

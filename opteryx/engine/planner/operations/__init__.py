@@ -11,8 +11,7 @@ from .projection_node import ProjectionNode # remove unwanted columns including 
 #- SelectionNode (find records matching a predicate)
 #- JoinNode (currently only INNER JOIN)
 #- SortNode (order a relation by given keys)
-#- GroupNode (put a relation into groups - GROUP BY)
-#- AggregateNode (group by MIN/MAX/AVG etc
+#- AggregationNode (put a relation into groups - GROUP BY - also does aggregations)
 #- CombineNode (combine sketches and aggregations)
 #- Merge - append sets to each other
 #- Evaluate ()

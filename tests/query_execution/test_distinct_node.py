@@ -19,15 +19,15 @@ def test_dictinct_node():
     print(SatelliteData())
 
     # ensure we don't filter out when everything is unique
-    dn = DistinctNode()
+    dn = DistinctNode(True)
     assert dn.execute(relation=SatelliteData()).count() == 177
 
     # reduce to high duplicate attribute
-    dn = DistinctNode()
+    dn = DistinctNode(True)
     assert dn.execute(relation=SatelliteData()["planetId"]).count() == 7
 
     # another test
-    dn = DistinctNode()
+    dn = DistinctNode(True)
     assert dn.execute(relation=SatelliteData()["planetId","density"]).count() == 43
 
 

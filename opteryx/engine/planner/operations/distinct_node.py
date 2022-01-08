@@ -5,15 +5,16 @@ This is a SQL Query Execution Plan Node.
 
 This Node eliminates duplicate records.
 """
-from typing import Optional
 from opteryx.engine.relation import Relation
 from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
 
 
 class DistinctNode(BasePlanNode):
 
-    def __init__(self, **kwargs):
-        pass
+    def __init__(self, config):
+        self._distinct = config
 
-    def execute(self, relation:Relation) -> Optional[Relation]:
-        return relation.distinct()
+    def execute(self, relation:Relation) -> Relation:
+        if self._distinct:
+            return relation.distinct()
+        return relation

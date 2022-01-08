@@ -1,8 +1,9 @@
 cython
 numpy
 zstandard
-pyarrow
 orjson
 # fastnumbers <- affected by bug #https://github.com/SethMMorton/fastnumbers/issues/35
 pysimdjson
 cityhash
+sqloxide
+polars

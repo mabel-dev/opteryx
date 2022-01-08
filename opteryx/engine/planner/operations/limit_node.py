@@ -12,14 +12,16 @@ from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
 
 class LimitNode(BasePlanNode):
 
-    def __init__(self, **kwargs):
-        self._limit = kwargs.get('limit', -1)
+    def __init__(self, config):
+        self._limit = config
 
-    def execute(self, relation:Relation) -> Optional[Relation]:
+    def execute(self, relation:Relation) -> Relation:
+
+        if self._limit is None:
+            return relation
 
         # limit the number of records by slicing the underlying data array
-        if not isinstance(relation.data, list):
-            relation.data = list(relation.data)
+        relation.materialize()
 
         relation.data = relation.data[0:self._limit]
         return relation

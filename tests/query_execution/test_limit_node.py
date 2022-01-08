@@ -16,16 +16,20 @@ from opteryx.engine.planner.operations import LimitNode
 
 def test_limit_node():
 
-    ln = LimitNode(limit=1)
+    ln = LimitNode(1)
     assert ln.execute(relation=SatelliteData()).count() == 1
 
-    ln = LimitNode(limit=1000000)
+    ln = LimitNode(1000000)
     assert ln.execute(relation=SatelliteData()).count() == 177 # this is the number in the full dataset
 
-    ln = LimitNode(limit=0)
+    ln = LimitNode(None)
+    assert ln.execute(relation=SatelliteData()).count() == 177 # this is the number in the full dataset
+
+
+    ln = LimitNode(0)
     assert ln.execute(relation=SatelliteData()).count() == 0
 
-    ln = LimitNode(limit=177)
+    ln = LimitNode(177)
     assert ln.execute(relation=SatelliteData()).count() == 177
 
 

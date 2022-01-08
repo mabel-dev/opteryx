@@ -1,33 +1,9 @@
-# Query Parser
+# Parser
 
-The parser can be found in the parser folder. This is the starting point for any query
-being processed. 
+ANSI SQL compliant parser 
 
-Parsing is broadly split into two steps, one performed by the Tokenizer, the other by
-the Lexer.
+[sqloxide](https://github.com/wseaton/sqloxide)
 
-## Tokenizer
+Python bindings for
 
-The Tokenizer splits the query string into lexemes - these are units of meaning - which
-are generally each word in the query. There are some exceptions to this, such as where
-keywords are only valid with another keyword (e.g. `ORDER BY`) or where tokens have
-been put in quotes, which generally indicate that anything between those quotes should
-we interpretted together as a string literal.
-
-## Lexer
-
-The Lexer assigns meaning to tokens, it does this in two passes. The first is a naive
-tagger, which essentially looks for keywords, punctuation and variables.
-
-The second pass builds on this to correct the naive tagger.
-
-## AST Builder
-
-Bulds an Abstract Syntax Tree of the Query.
-
-Also does the following
-- Expands BETWEEN statements to a `X > n AND Y < m` condition
-    age BETWEEN 18 and 35 -> age > 18 AND age < 35
-- Collates any OR repeat checks against the same field to an IN statement
-    year = 2021 or year = 2022 -> year in (2021, 2022)
-- Converts literals into their data types (INT, FLOAT, LIST, STRUCT)
+[sqlparser-rs](https://github.com/sqlparser-rs/sqlparser-rs)

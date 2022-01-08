@@ -42,3 +42,6 @@ vulnerabilities.
 ## License
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/mabel-dev/opteryx/blob/master/LICENSE)
+
+
+**sqloxide** https://github.com/wseaton/sqloxide
