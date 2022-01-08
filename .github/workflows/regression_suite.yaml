@@ -60,23 +60,3 @@ jobs:
         uses: codecov/codecov-action@v1
         with:
           fail_ci_if_error: false
-
-  mypy:
-    name: Type Checks
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-  
-      - name: Set Up Environment
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.8' 
-
-      - name: Install Requirements
-        run: |
-          python -m pip install --upgrade pip mypy
-          pip install -r $GITHUB_WORKSPACE/tests/requirements.txt
-
-      - name: Execute Test
-        run: mypy --ignore-missing-imports mabel
