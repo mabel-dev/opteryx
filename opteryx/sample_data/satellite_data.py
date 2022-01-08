@@ -49,7 +49,7 @@ class SatelliteData(Relation):
         self.header = rel.header
 
 
-if __name__ == "__main__":
+if __name__ == "__main__": # pragma: no cover 
 
     md = SatelliteData()
 
