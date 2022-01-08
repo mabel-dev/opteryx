@@ -6,4 +6,4 @@ orjson
 pysimdjson
 cityhash
 sqloxide
-polars
+pyarrow
