@@ -27,7 +27,7 @@ import re
 from opteryx.exceptions import ProgrammingError
 from opteryx.engine.functions import FUNCTIONS
 from opteryx.engine.aggregators.aggregators import AGGREGATORS
-from opteryx.engine.sql.parser.constants import OPERATORS
+from opteryx.engine.parser.constants import OPERATORS
 
 __all__ = ["tokenize"]
 

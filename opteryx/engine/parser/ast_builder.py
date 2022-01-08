@@ -21,7 +21,7 @@ if __name__ == "__main__":
     sys.path.insert(1, os.path.join(sys.path[0], "../../../.."))
 
 
-from opteryx.engine.sql.parser.constants import SQL_TOKENS
+from opteryx.engine.parser.constants import SQL_TOKENS
 from opteryx.exceptions import SqlError
 from opteryx.utils.list_consumer import ListConsumer
 

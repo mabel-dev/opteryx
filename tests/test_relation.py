@@ -30,8 +30,12 @@ def test_relation_dimensions():
 
 
 def test_distinct():
+
     sd = SatelliteData()
+
     assert sd.distinct().count() == 177
+
+    assert sd.apply_projection("planetId").distinct().count() == 7
     assert sd["planetId"].distinct().count() == 7
 
 

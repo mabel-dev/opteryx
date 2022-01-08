@@ -12,8 +12,8 @@ import sys
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import pytest
-from opteryx.engine.sql import parser
-from opteryx.engine.sql.parser.constants import SQL_TOKENS
+from opteryx.engine import parser
+from opteryx.engine.parser.constants import SQL_TOKENS
 
 
 @pytest.mark.parametrize(

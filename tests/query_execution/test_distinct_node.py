@@ -11,7 +11,7 @@ import sys
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 from opteryx.sample_data import SatelliteData
-from opteryx.engine.sql.planner.operations import DistinctNode
+from opteryx.engine.planner.operations import DistinctNode
 
 
 def test_dictinct_node():

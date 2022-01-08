@@ -56,7 +56,7 @@ if __name__ == "__main__":
     print(md.header)
 
     print(md.count())
-    print(md.apply_selection(lambda r: r[1] == 3).fetchall())
+    print(md.apply_selection(lambda r: r[1] == 9).fetchall())
     print(md.apply_projection("planetId").distinct().count())
     print(md.apply_projection("planetId").distinct().attributes())
     print(md.collect_column("planetId"))

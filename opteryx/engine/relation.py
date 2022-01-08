@@ -76,9 +76,6 @@ class Relation:
         self.header = header
         self.name = name
 
-        # we may get passed a generator, we're going to make it a list
-        if not isinstance(self.data, list):
-            self.data = list(self.data)
 
     def apply_selection(self, predicate):
         """
@@ -118,7 +115,12 @@ class Relation:
         """
         return self.apply_projection(attributes)
 
+    def materialize(self):
+        if not isinstance(self.data, list):
+            self.data = list(self.data)
+
     def count(self):
+        self.materialize()
         return len(self.data)
 
     @property
@@ -130,6 +132,7 @@ class Relation:
         Return a new Relation with only unique values
         """
         hash_list = {}
+        self.materialize()
 
         def do_dedupe(data):
             for item in data:
@@ -214,6 +217,7 @@ class Relation:
         return b"\n".join(map(orjson.dumps, self.fetchall()))
 
     def fetchone(self, offset: int = 0):
+        self.materialize()
         try:
             return dict(zip(self.header.keys(), self.data[offset]))
         except IndexError:
@@ -221,6 +225,7 @@ class Relation:
 
     def fetchmany(self, size: int = 100, offset: int = 0):
         keys = self.header.keys()
+        self.materialize()
 
         def _inner_fetch():
             for index in range(offset, min(len(self.data), offset + size)):
@@ -230,6 +235,7 @@ class Relation:
 
     def fetchall(self, offset: int = 0):
         keys = self.header.keys()
+        self.materialize()
 
         def _inner_fetch():
             for index in range(offset, len(self.data)):
@@ -299,8 +305,9 @@ if __name__ == "__main__":
 
     with Timer("load"):
         r = Relation.load("tests/data/parquet/tweets.parquet")
+    r.materialize()
 
-    r.data = r.data * 10
+    r.data =r.data * 10
 
     print(r.header)
     print(r.data[10])

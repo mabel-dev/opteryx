@@ -22,7 +22,7 @@ import re
 from opteryx.utils.dates import parse_iso
 from opteryx.utils.numbers import is_int, is_float
 from opteryx.engine.functions import FUNCTIONS
-from opteryx.engine.sql.parser.constants import SQL_TOKENS, OPERATORS, SQL_KEYWORDS
+from opteryx.engine.parser.constants import SQL_TOKENS, OPERATORS, SQL_KEYWORDS
 from opteryx.engine.aggregators.aggregators import AGGREGATORS
 
 
