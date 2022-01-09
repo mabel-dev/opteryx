@@ -11,11 +11,10 @@ from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
 
 
 class LimitNode(BasePlanNode):
-
     def __init__(self, config):
         self._limit = config
 
-    def execute(self, relation:Relation) -> Relation:
+    def execute(self, relation: Relation) -> Relation:
 
         if self._limit is None:
             return relation
@@ -23,5 +22,5 @@ class LimitNode(BasePlanNode):
         # limit the number of records by slicing the underlying data array
         relation.materialize()
 
-        relation.data = relation.data[0:self._limit]
+        relation.data = relation.data[0 : self._limit]
         return relation

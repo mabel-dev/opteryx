@@ -20,11 +20,14 @@ def test_limit_node():
     assert ln.execute(relation=SatelliteData()).count() == 1
 
     ln = LimitNode(1000000)
-    assert ln.execute(relation=SatelliteData()).count() == 177 # this is the number in the full dataset
+    assert (
+        ln.execute(relation=SatelliteData()).count() == 177
+    )  # this is the number in the full dataset
 
     ln = LimitNode(None)
-    assert ln.execute(relation=SatelliteData()).count() == 177 # this is the number in the full dataset
-
+    assert (
+        ln.execute(relation=SatelliteData()).count() == 177
+    )  # this is the number in the full dataset
 
     ln = LimitNode(0)
     assert ln.execute(relation=SatelliteData()).count() == 0

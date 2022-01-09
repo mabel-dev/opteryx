@@ -49,7 +49,7 @@ class PlanetData(Relation):
         self.header = rel.header
 
 
-if __name__ == "__main__": # pragma: no cover 
+if __name__ == "__main__":  # pragma: no cover
 
     md = PlanetData()
 

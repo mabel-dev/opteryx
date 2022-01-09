@@ -7,13 +7,34 @@ Base Inner Reader - this is based on the BaseInnerReader in Mabel with some diff
 import io
 import abc
 import pathlib
+import datetime
 from io import IOBase
-from typing import Iterable
-from ....utils import paths, dates
-from ....logging import get_logger
+from opteryx import Relation
+from typing import Iterable, Union, List
 
 
-class BaseInnerReader(abc.ABC):
+
+class BaseStorageAdapter(abc.ABC):
+
+
+    def __init__(self):
+        pass
+
+    def get_partitions(
+        self,
+        dataset: str,
+        start_date: Union[datetime.datetime, datetime.date],
+        end_date: Union[datetime.datetime, datetime.date],
+    ) -> List:
+        pass
+
+    def read_partition(
+        self, dataset: str, data_date: Union[datetime.datetime, datetime.date]
+    ) -> Relation:
+        pass
+
+
+
     def __init__(self, *, dataset: str = None, partitioning=None, **kwargs):
         self.dataset = dataset
         if self.dataset is None:

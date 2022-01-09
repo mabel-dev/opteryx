@@ -32,9 +32,10 @@ def _json_to_tuples(line):
     new Parser for each record.
     """
     dic = json_parser.parse(line)
-    tup = tuple(dic.values())
+    keys = tuple(dic.keys())
+    values = tuple(dic.values())
     del dic
-    return tup
+    return keys, values
 
 
 def zstd_reader(stream):

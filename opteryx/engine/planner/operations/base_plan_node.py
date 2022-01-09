@@ -10,5 +10,5 @@ class BasePlanNode(abc.ABC):
         pass
 
     @abc.abstractclassmethod
-    def execute(self, relation:Relation=None) -> Optional[Relation]:
+    def execute(self, relation: Relation = None) -> Optional[Relation]:
         pass

@@ -12,7 +12,6 @@ from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
 
 
 class ProjectionNode(BasePlanNode):
-
     def __init__(self, **kwargs):
         """
         Attribute Projection, remove unwanted columns and performs column renames.
@@ -25,12 +24,12 @@ class ProjectionNode(BasePlanNode):
                     source_attribute 2 : projected_attribute 2
                 }
         """
-        self._projection = kwargs.get('projection', {"*":"*"})
+        self._projection = kwargs.get("projection", {"*": "*"})
 
-    def execute(self, relation:Relation) -> Optional[Relation]:
+    def execute(self, relation: Relation) -> Optional[Relation]:
 
         # if we have nothing to do, move along
-        if self._projection == {"*":"*"} or relation == None:
+        if self._projection == {"*": "*"} or relation == None:
             return relation
 
         # first we rename the attributes - we do this by manipulating the header

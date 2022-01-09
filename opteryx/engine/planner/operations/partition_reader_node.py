@@ -48,7 +48,6 @@ KNOWN_EXTENSIONS = {
 
 
 class PartitionReaderNode(BasePlanNode):
-    
     def __init__(self, **kwargs):
         """
         The Partition Reader Node is responsible for reading a complete partition

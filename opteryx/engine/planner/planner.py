@@ -19,14 +19,12 @@ This builds a DAG which describes a query.
 This doesn't attempt to do optimization, this just decomposes the query.
 """
 
-## expressions are split, ANDs are separate items, ORs are kept together
-
+from opteryx.engine.planner.operations import *
 from opteryx.exceptions import SqlError
 from typing import List
 
 
 class QueryPlan:
-
     def __init__(self, sql):
         """
         PLan represents Directed Acyclic Graphs which are used to describe data
@@ -37,15 +35,40 @@ class QueryPlan:
         self.nodes = {}
         self.edges = []
 
-        # Parse the SQL into a AST 
+        # Parse the SQL into a AST
         try:
-            self._ast = sqloxide.parse(sql, dialect='ansi')
+            self._ast = sqloxide.parse(sql, dialect="ansi")
         except ValueError as e:
             raise SqlError(e)
 
         # build a plan for the query
-        self._plan(self._ast)
+        self._naive_planner(self._ast)
 
+    def _naive_planner(self, ast):
+        """
+        The naive planner only works on single tables and puts operations in this
+        order.
+
+            FROM clause
+            WHERE clause
+            GROUP BY clause
+            HAVING clause
+            SELECT clause
+            ORDER BY clause
+            LIMIT clause
+
+        This is primary used to test core functionality and isn't intended to be
+        called by users.
+        """
+        query = ast[0]["Query"]["body"]
+
+        from_node = PartitionReaderNode(query["select"]["from"])
+        where_node = SelectionNode(ast["select"]["selection"])
+        group_node = GroupByNode(ast["select"]["group_by"])
+        having_node = SelectionNode(ast["select"]["having"])
+        select_node = ProjectionNode(ast["select"]["projection"])
+        order_node = OrderNode(ast["order_by"])
+        limit_node = LimitNode(ast["limit"])
 
     def add_operator(self, name, operator):
         """
@@ -154,10 +177,12 @@ class QueryPlan:
                 # i.e. space because last, └── , above so no more |
                 yield from self._tree(str(child_node), prefix=prefix + extension)
 
+
 """
 [
     {'Query': {
-        'with': None, 'body': {
+        'with': None, 
+        'body': {
             'Select': {
                 'distinct': False, 
                 'top': None, 

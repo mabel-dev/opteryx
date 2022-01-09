@@ -28,7 +28,7 @@ def test_dictinct_node():
 
     # another test
     dn = DistinctNode(True)
-    assert dn.execute(relation=SatelliteData()["planetId","density"]).count() == 43
+    assert dn.execute(relation=SatelliteData()["planetId", "density"]).count() == 43
 
 
 if __name__ == "__main__":

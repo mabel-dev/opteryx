@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 from random import choice
 from itertools import chain
 from opteryx.externals.accumulation_tree.accumulation_tree import AccumulationTree

@@ -23,7 +23,7 @@ from opteryx.engine import planner
 statement = None
 
 
-sqloxide.parse_sql(sql="SELECT * FROM t WHERE apple LIKE pear", dialect='ansi')
+sqloxide.parse_sql(sql="SELECT * FROM t WHERE apple LIKE pear", dialect="ansi")
 
 
 while 1:
@@ -33,6 +33,6 @@ while 1:
     if statement.lower().startswith("quit"):
         break
 
-    syntax_tree = sqloxide.parse_sql(sql=statement, dialect='ansi')
+    syntax_tree = sqloxide.parse_sql(sql=statement, dialect="ansi")
 
     print(syntax_tree)

@@ -76,7 +76,6 @@ class Relation:
         self.header = header
         self.name = name
 
-
     def apply_selection(self, predicate):
         """
         Apply a Selection operation to a Relation, this filters the data in the
@@ -307,7 +306,7 @@ if __name__ == "__main__":
         r = Relation.load("tests/data/parquet/tweets.parquet")
     r.materialize()
 
-    r.data =r.data * 10
+    r.data = r.data * 10
 
     print(r.header)
     print(r.data[10])

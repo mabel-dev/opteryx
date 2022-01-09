@@ -24,4 +24,4 @@ This is a heuristic-based query optimizer:
 """
 
 # distinct and group by is illogical
-# 
+#

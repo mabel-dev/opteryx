@@ -38,12 +38,10 @@ def test_ast_builder(statement, expect):
     """
     Test an assortment of statements
     """
-    ast = sqloxide.parse_sql(statement, dialect='ansi')
+    ast = sqloxide.parse_sql(statement, dialect="ansi")
 
-    assert (
-        ast == expect
-    ), f'AST interpreted ""{statement}"" as ""{str(ast)}""'
+    assert ast == expect, f'AST interpreted ""{statement}"" as ""{str(ast)}""'
 
 
 if __name__ == "__main__":
-    print(sqloxide.parse_sql("EXPLAIN SELECT * FROM dataset.name;", dialect='ansi'))
+    print(sqloxide.parse_sql("EXPLAIN SELECT * FROM dataset.name;", dialect="ansi"))

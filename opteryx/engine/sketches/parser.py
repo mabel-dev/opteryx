@@ -21,7 +21,7 @@ FROM employee
 WHERE a like b;
 """
 
-output = parse_sql(sql=sql, dialect='ansi')
+output = parse_sql(sql=sql, dialect="ansi")
 
 for k, v in output[0]["Query"]["body"]["Select"].items():
     print(k)

@@ -19,7 +19,7 @@ We're using a dictionary and moving items to the top of the dictionary
 when it's accessed. This relies on Python dictionaries being ordered.
 """
 
-from .base_buffer_cache import BaseBufferCache
+from opteryx.storage import BaseBufferCache
 
 
 class InMemoryCache(BaseBufferCache):
