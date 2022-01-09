@@ -18,6 +18,10 @@ This builds a DAG which describes a query.
 
 This doesn't attempt to do optimization, this just decomposes the query.
 """
+import sys
+import os
+
+sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
 
 from opteryx.engine.planner.operations import *
 from opteryx.exceptions import SqlError
@@ -62,13 +66,22 @@ class QueryPlan:
         """
         query = ast[0]["Query"]["body"]
 
-        from_node = PartitionReaderNode(query["select"]["from"])
-        where_node = SelectionNode(ast["select"]["selection"])
-        group_node = GroupByNode(ast["select"]["group_by"])
-        having_node = SelectionNode(ast["select"]["having"])
-        select_node = ProjectionNode(ast["select"]["projection"])
-        order_node = OrderNode(ast["order_by"])
-        limit_node = LimitNode(ast["limit"])
+        self.add_operator("from", PartitionReaderNode(query["select"]["from"]))
+        self.add_operator("union", UnionNode())
+        self.add_operator("where", SelectionNode(ast["select"]["selection"]))
+        self.add_operator("group", GroupByNode(ast["select"]["group_by"]))
+        self.add_operator("having", SelectionNode(ast["select"]["having"]))
+        self.add_operator("select", ProjectionNode(ast["select"]["projection"]))
+        self.add_operator("order", OrderNode(ast["order_by"]))
+        self.add_operator("limit", LimitNode(ast["limit"]))
+
+        self.link_operators("from", "union")
+        self.link_operators("union", "where")
+        self.link_operators("where", "group")
+        self.link_operators("group", "having")
+        self.link_operators("having", "select")
+        self.link_operators("select", "order")
+        self.link_operators("order", "limit")
 
     def add_operator(self, name, operator):
         """

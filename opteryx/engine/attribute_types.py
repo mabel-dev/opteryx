@@ -14,7 +14,6 @@ Helper routines for handling types between different dialects.
 """
 from enum import Enum
 from opteryx.exceptions import UnsupportedTypeError
-import datetime
 
 
 def coerce_types(value):
@@ -22,8 +21,11 @@ def coerce_types(value):
     Relations only support a subset of types, if we know how to translate a type
     into a supported type, do it.
     """
+    import datetime
+    import decimal
+
     t = type(value)
-    if t in (int, float, tuple, bool, str, datetime.datetime, dict):
+    if t in (int, float, tuple, bool, str, datetime.datetime, dict, decimal.Decimal):
         return value
     if t in (list, set):
         return tuple(value)
@@ -70,6 +72,7 @@ PYTHON_TYPES = {
     "dict": OPTERYX_TYPES.STRUCT,
     "int": OPTERYX_TYPES.INTEGER,
     "float": OPTERYX_TYPES.DOUBLE,
+    "Decimal": OPTERYX_TYPES.DOUBLE,
     "str": OPTERYX_TYPES.VARCHAR,
     "tuple": OPTERYX_TYPES.LIST,
 }
@@ -91,6 +94,7 @@ COERCABLE_PYTHON_TYPES = {
     "dict": OPTERYX_TYPES.STRUCT,
     "int": OPTERYX_TYPES.INTEGER,
     "float": OPTERYX_TYPES.DOUBLE,
+    "Decimal": OPTERYX_TYPES.DOUBLE,
     "str": OPTERYX_TYPES.VARCHAR,
     "tuple": OPTERYX_TYPES.LIST,
     "set": OPTERYX_TYPES.LIST,

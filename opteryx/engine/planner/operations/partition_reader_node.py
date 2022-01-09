@@ -3,23 +3,24 @@ Partition Reader Node
 
 This is a SQL Query Execution Plan Node.
 
-This Node reads and parses the data from a blob into a Relation.
+This Node reads and parses the data from a partition into a Relation.
 
-If relevant Indexes exist we will try to elininate rows from the read if a
-selection has been pushed down.
+We plan to do the following:
 
-We create BRIN (Min/Max) indexes for columns we're going to filter on - we won't
-perform full profiling as this is currently too slow for real-time use. 
+- Pass the columns needed by any other part of the query so we can apply a projection
+  at the point of reading.
+- Pass the columns used in selections, so we can pass along, any index information we
+  have.
+- Use BRIN and selections to filter out blobs from being read that don't contain
+  records which can match the selections. 
+- Pass along statistics about the read so it can be logged for analysis and debugging.
 """
 from enum import Enum
-from mabel import Relation
-from mabel.data.internals.data_containers import relation
-from mabel.data.readers.internals.reader_statistics import ReaderStatistics
-from mabel.data.readers.sql.planner.operations import BasePlanNode
-from mabel.data.readers.internals import decompressors, parsers
-from mabel.data.readers.internals.parallel_reader import empty_list
-from mabel.utils import paths
+from typing import Optional
 
+from opteryx import Relation
+from opteryx.engine.planner.operations import BasePlanNode
+from opteryx.storage import file_decoders
 
 class EXTENSION_TYPE(str, Enum):
     # labels for the file extentions
@@ -27,51 +28,39 @@ class EXTENSION_TYPE(str, Enum):
     CONTROL = "CONTROL"
     INDEX = "INDEX"
 
+do_nothing = lambda x: x
 
 KNOWN_EXTENSIONS = {
-    ".complete": (empty_list, empty_list, EXTENSION_TYPE.CONTROL),
-    ".csv": (decompressors.csv, parsers.pass_thru, EXTENSION_TYPE.DATA),
-    ".ignore": (empty_list, empty_list, EXTENSION_TYPE.CONTROL),
-    ".index": (empty_list, empty_list, EXTENSION_TYPE.INDEX),
-    ".json": (decompressors.block, parsers.json, EXTENSION_TYPE.DATA),
-    ".jsonl": (decompressors.lines, parsers.json, EXTENSION_TYPE.DATA),
-    ".lxml": (decompressors.lines, parsers.xml, EXTENSION_TYPE.DATA),
-    ".lzma": (decompressors.lzma, parsers.json, EXTENSION_TYPE.DATA),
-    ".metadata": (empty_list, empty_list, EXTENSION_TYPE.CONTROL),
-    ".orc": (decompressors.orc, parsers.pass_thru, EXTENSION_TYPE.DATA),
-    ".parquet": (decompressors.parquet, parsers.pass_thru, EXTENSION_TYPE.DATA),
-    ".txt": (decompressors.block, parsers.pass_thru, EXTENSION_TYPE.DATA),
-    ".xml": (decompressors.block, parsers.xml, EXTENSION_TYPE.DATA),
-    ".zip": (decompressors.unzip, parsers.pass_thru, EXTENSION_TYPE.DATA),
-    ".zstd": (decompressors.zstd, parsers.json, EXTENSION_TYPE.DATA),
+    ".complete": (do_nothing, EXTENSION_TYPE.CONTROL),
+    ".ignore": (do_nothing, EXTENSION_TYPE.CONTROL),
+    ".index": (do_nothing, EXTENSION_TYPE.INDEX),
+    ".jsonl": (file_decoders.jsonl_decoder, EXTENSION_TYPE.DATA),
+    ".metadata": (do_nothing, EXTENSION_TYPE.CONTROL),
+    ".orc": (file_decoders.orc_decoder, EXTENSION_TYPE.DATA),
+    ".parquet": (file_decoders.parquet_decoder, EXTENSION_TYPE.DATA),
+    ".zstd": (file_decoders.zstd_decoder, EXTENSION_TYPE.DATA),
 }
 
 
 class PartitionReaderNode(BasePlanNode):
-    def __init__(self, **kwargs):
+
+    def __init__(self, config):
         """
         The Partition Reader Node is responsible for reading a complete partition
         and returning a Relation.
-
-        Parameters:
-            partition: list or tuple
-                The files
-            projection: list or tuple
-                The list of columns to return
-            selection: list or tuple
-                DNF formatted query
         """
-        self.partition = kwargs.get("partition", [])  # string
-        self.projection = kwargs.get("projection", ["*"])  # tuple or list
-        self.selection = kwargs.get("selection", [])  # in DNF
 
-        # which reader to use
-
-    def execute(self):
+    def execute(self, relation: Relation = None) -> Optional[Relation]:
 
         stats = ReaderStatistics()
 
-        # if there's a zonemap, read it
+        # Get a list of all of the blobs in the partition.
+
+        # Work out which frame we should read.
+
+        # Filter the blob list to just the frame we're interested in
+
+        # If there's a zonemap, read it
         if any(blob.endswith("frame.metadata") for blob in self.partition):
             pass
             # read the zone map into a dictionary
@@ -82,7 +71,7 @@ class PartitionReaderNode(BasePlanNode):
         for blob_name in self.partition:
 
             # find out how to read this blob
-            decompressor, parser, file_type = KNOWN_EXTENSIONS.get(
+            decoder, file_type = KNOWN_EXTENSIONS.get(
                 extention, (None, None, None)
             )
             if file_type != EXTENSION_TYPE.DATA:

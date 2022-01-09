@@ -4,7 +4,10 @@
 
 **JSONL**
 
-Raw and zStandard compressed
+Raw and zStandard compressed.
+
+Files don't need an explicit schema, but each partition must have the same columns
+in the same order in every row of every file.
 
 **Parquet**
 

@@ -9,7 +9,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """
 Decompressors for the Relation based Readers.
 
@@ -17,14 +16,11 @@ These return a tuple of ()
 """
 
 from opteryx.exceptions import MissingDependencyError
-
 import simdjson
 
-pass_thru = lambda x: x
 json_parser = simdjson.Parser()
 
-
-def _json_to_tuples(line):
+def _json_to_tuples(line, expected_keys):
     """
     Parse each line in the file to a dictionary.
 
@@ -32,26 +28,24 @@ def _json_to_tuples(line):
     new Parser for each record.
     """
     dic = json_parser.parse(line)
-    keys = tuple(dic.keys())
+    if list(dic.keys()) != expected_keys:
+        raise Exception(list(dic.keys()))
     values = tuple(dic.values())
     del dic
-    return keys, values
+    return values
 
 
-def zstd_reader(stream):
+def zstd_decoder(stream, expected_keys):
     """
-    Read zstandard compressed files
-
-    This assumes the underlying format is line separated records and each record is
-    the same.
+    Read zstandard compressed JSONL files
     """
     import zstandard
 
     with zstandard.open(stream, "rb") as file:
-        yield from map(_json_to_tuples, file.read().split(b"\n")[:-1])
+        yield from jsonl_reader(file, expected_keys)
 
 
-def parquet_reader(stream):
+def parquet_decoder(stream, expected_keys):
     """
     Read parquet formatted files
     """
@@ -68,7 +62,7 @@ def parquet_reader(stream):
             yield tuple([v[index] for k, v in dict_batch.items()])  # yields a tuple
 
 
-def orc_reader(stream):
+def orc_decoder(stream, expected_keys):
     """
     Read orc formatted files
     """
@@ -88,9 +82,11 @@ def orc_reader(stream):
             yield tuple([v[index] for k, v in dict_batch.items()])  # yields a tuple
 
 
-def jsonl_reader(stream):
+def jsonl_decoder(stream, expected_keys):
     """
-    Assumes a record by line
+    
     """
-    text = stream.read()  # type:ignore
-    yield from map(_json_to_tuples, text.splitlines())
+    text = stream.read()
+    
+    for line in stream.read().split(b'\n')[:-1]:
+        yield _json_to_tuples(line, expected_keys)
