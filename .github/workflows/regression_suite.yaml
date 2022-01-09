@@ -38,13 +38,6 @@ jobs:
                      fsouza/fake-gcs-server \
                      -scheme http
 
-      - name: Start Azurite
-        run: |
-          docker run -d -p 10000:10000 \
-                     mcr.microsoft.com/azure-storage/azurite \
-                     azurite-blob \
-                     --blobHost 0.0.0.0
-
       - name: Run Regression Tests
         run: coverage run -m pytest 
         env:
@@ -54,29 +47,9 @@ jobs:
           AZURE_STORAGE_CONNECTION_STRING: DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;QueueEndpoint=http://127.0.0.1:10001/devstoreaccount1;
 
       - name: Check Coverage
-        run: coverage report --include=mabel* --fail-under=85 -m
+        run: coverage report --include=opteryx* --fail-under=75 -m
 
       - name: "Upload coverage to Codecov"
         uses: codecov/codecov-action@v1
         with:
           fail_ci_if_error: false
-
-  mypy:
-    name: Type Checks
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-  
-      - name: Set Up Environment
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.8' 
-
-      - name: Install Requirements
-        run: |
-          python -m pip install --upgrade pip mypy
-          pip install -r $GITHUB_WORKSPACE/tests/requirements.txt
-
-      - name: Execute Test
-        run: mypy --ignore-missing-imports mabel

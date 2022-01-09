@@ -13,13 +13,11 @@
 This module provides a PEP-249 familiar interface for interacting with mabel data
 stores, it is not compliant with the standard: 
 https://www.python.org/dev/peps/pep-0249/ 
-
-
 """
 
 from typing import Dict, Optional, List, Any
 from opteryx import constants
-from opteryx.query import Query
+from opteryx.query import OpteryxQuery
 
 
 class Connection:
@@ -57,10 +55,10 @@ class Connection:
 
 
 class Cursor:
-
     def __init__(self, connection):
         self._connection = connection
         self._query = None
+        self.arraysize = 1
 
     def _format_prepared_param(self, param):
         """
@@ -82,8 +80,13 @@ class Cursor:
             return f'DOUBLE("{param}")'
 
         if isinstance(param, str):
+            # if I have no apostrophes, use them as the delimiter
+            if param.find("'") == -1:
+                delimited = param.replace('"', '""')
+                return f"'{delimited}'"
+            # otherwise use quotes
             delimited = param.replace('"', '""')
-            return f'\"{delimited}\"'
+            return f'"{delimited}"'
 
         if isinstance(param, bytes):
             return "X'%s'" % param.hex()
@@ -93,14 +96,16 @@ class Cursor:
             return f'TIMESTAMP("{datetime_str}")'
 
         if isinstance(param, (list, tuple)):
-            return "(%s)" % ','.join(map(self._format_prepared_param, param))
+            return "(%s)" % ",".join(map(self._format_prepared_param, param))
 
         if isinstance(param, dict):
             keys = list(param.keys())
             if any(type(k) != str for k in keys):
                 raise Exception("STRUCT keys must be strings")
-            return "{%s}" % ",".join(f'"{k}":{self._format_prepared_param(v)}' for k,v in param.items())
-            
+            return "{%s}" % ",".join(
+                f'"{k}":{self._format_prepared_param(v)}' for k, v in param.items()
+            )
+
         if isinstance(param, uuid.UUID):
             return f"UUID('{param}')"
 
@@ -112,20 +117,28 @@ class Cursor:
 
         if params:
             if not isinstance(params, (list, tuple)):
-                raise Exception('params must be a list or tuple containing the query parameter values')
-            
+                raise Exception(
+                    "params must be a list or tuple containing the query parameter values"
+                )
+
             for param in params:
                 if operation.find("%s") == -1:
                     # we have too few placeholders
-                    raise Exception("Number of placeholders and number of parameters must match.")
-                operation = operation.replace("%s", self._format_prepared_param(param), 1)
+                    raise Exception(
+                        "Number of placeholders and number of parameters must match."
+                    )
+                operation = operation.replace(
+                    "%s", self._format_prepared_param(param), 1
+                )
             if operation.find("%s") != -1:
                 # we have too many placeholders
-                raise Exception("Number of placeholders and number of parameters must match.")
+                raise Exception(
+                    "Number of placeholders and number of parameters must match."
+                )
 
             print(operation)
 
-        self._query = Query(self._connection, operation)
+        self._query = OpteryxQuery(self._connection, operation)
 
     @property
     def rowcount(self):
@@ -143,9 +156,10 @@ class Cursor:
         return self._query.fetchone()
 
     def fetchmany(self, size=None) -> List[Dict]:
+        fetch_size = self.arraysize if size is None else size
         if self._query is None:
             raise Exception("Cursor must be executed first")
-        return self._query.fetchmany(size)
+        return self._query.fetchmany(fetch_size)
 
     def fetchall(self) -> List[Dict]:
         if self._query is None:

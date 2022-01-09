@@ -4,7 +4,7 @@ Functions to help with handling file paths
 import pathlib
 import datetime
 from sys import path
-from mabel.utils.entropy import random_string
+from opteryx.utils.entropy import random_string
 
 
 def get_parts(path_string: str):

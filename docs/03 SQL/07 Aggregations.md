@@ -1,3 +1,4 @@
+# SQL Aggregations
 
 ## SUM
 

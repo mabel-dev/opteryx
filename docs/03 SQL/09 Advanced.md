@@ -1,4 +1,6 @@
-# Common Table Expressions (CTEs)
+# Advanced SQL
+
+## Common Table Expressions (CTEs)
 
 ## Sub Queries
 ~~~sql
