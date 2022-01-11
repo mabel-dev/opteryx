@@ -1,4 +1,4 @@
-class QueryStatistics:
+class ReaderStatistics:
     def __init__(self):
         """
 

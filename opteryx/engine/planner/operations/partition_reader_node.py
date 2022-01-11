@@ -14,12 +14,14 @@ We plan to do the following:
 - Use BRIN and selections to filter out blobs from being read that don't contain
   records which can match the selections. 
 - Pass along statistics about the read so it can be logged for analysis and debugging.
+
 """
 from enum import Enum
 from typing import Optional
 
 from opteryx import Relation
 from opteryx.engine.planner.operations import BasePlanNode
+from opteryx.engine.reader_statistics import ReaderStatistics
 from opteryx.storage import file_decoders
 
 class EXTENSION_TYPE(str, Enum):
@@ -102,9 +104,9 @@ class PartitionReaderNode(BasePlanNode):
             stats.data_rows_read += 1  # TODO
 
             # interpret the entries into records
-            record_iterator = map(parser, record_iterator)
+        #    record_iterator = map(parser, record_iterator)
 
             # if we don't have a min/max index, create one
-            min_max_index = IndexMinMax().build(record_iterator)
+        #    min_max_index = IndexMinMax().build(record_iterator)
 
             return stats, schema, record_iterator
