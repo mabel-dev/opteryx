@@ -9,18 +9,23 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""
-Decompressors for the Relation based Readers.
 
-These return a tuple of ()
+"""
+Decompressors for the Readers.
+
+These yield a tuple of the schema and a tuple of the values for a row
 """
 
 from opteryx.exceptions import MissingDependencyError
 import simdjson
+from typing import Tuple, Any
 
 json_parser = simdjson.Parser()
 
-def _json_to_tuples(line, expected_keys):
+class PartitionFormatMismatch(Exception):
+    pass
+
+def _json_to_tuples(line, projection) -> Tuple[Any]:
     """
     Parse each line in the file to a dictionary.
 
@@ -28,24 +33,32 @@ def _json_to_tuples(line, expected_keys):
     new Parser for each record.
     """
     dic = json_parser.parse(line)
-    if list(dic.keys()) != expected_keys:
-        raise Exception(list(dic.keys()))
-    values = tuple(dic.values())
+    values = tuple([dic[attribute] for attribute in projection])
     del dic
     return values
 
+def _json_to_dicts(line, projection) -> dict:
+    """
+    Parse each line in the file to a dictionary.
 
-def zstd_decoder(stream, expected_keys):
+    This is slower than converting to Tuples because we're going to do more work even
+    though this routine has almost no code in it.
+    """
+    dict_parser = simdjson.Parser()
+    dic = dict_parser.parse(line)
+    return dic
+
+def zstd_decoder(stream, projection):
     """
     Read zstandard compressed JSONL files
     """
     import zstandard
 
     with zstandard.open(stream, "rb") as file:
-        yield from jsonl_reader(file, expected_keys)
+        yield from jsonl_decoder(file, projection)
 
 
-def parquet_decoder(stream, expected_keys):
+def parquet_decoder(stream, projection):
     """
     Read parquet formatted files
     """
@@ -55,14 +68,14 @@ def parquet_decoder(stream, expected_keys):
         raise MissingDependencyError(
             "`pyarrow` is missing, please install or include in requirements.txt"
         )
-    table = pq.read_table(stream)
+    table = pq.read_table(stream, columns=projection)
     for batch in table.to_batches():
         dict_batch = batch.to_pydict()
         for index in range(len(batch)):
-            yield tuple([v[index] for k, v in dict_batch.items()])  # yields a tuple
+            yield projection, tuple([v[index] for k, v in dict_batch.items()])  # yields a tuple
 
 
-def orc_decoder(stream, expected_keys):
+def orc_decoder(stream, projection):
     """
     Read orc formatted files
     """
@@ -74,19 +87,31 @@ def orc_decoder(stream, expected_keys):
         )
 
     orc_file = orc.ORCFile(stream)
-    data = orc_file.read()  # columns=[] to push down projection
-
-    for batch in data.to_batches():
+    table = orc_file.read(columns=projection)
+    for batch in table.to_batches():
         dict_batch = batch.to_pydict()
         for index in range(len(batch)):
-            yield tuple([v[index] for k, v in dict_batch.items()])  # yields a tuple
+            yield projection, tuple([v[index] for k, v in dict_batch.items()])
 
 
-def jsonl_decoder(stream, expected_keys):
+def jsonl_decoder(stream, projection):
     """
-    
+    The if we have a key
     """
-    text = stream.read()
-    
-    for line in stream.read().split(b'\n')[:-1]:
-        yield _json_to_tuples(line, expected_keys)
+    lines = stream.read().split(b'\n')[:-1]
+
+    if projection:    
+        for line in lines:
+            yield projection, _json_to_tuples(line, projection)
+    else:
+        # we're going to use pyarrow to read the file and extract the keys
+        # this is a little slower and will use more memory
+        import pyarrow.json
+        import io
+
+        table = pyarrow.json.read_json(io.BytesIO(lines))
+        table.projection(projection)
+        for batch in table.to_batches():
+            dict_batch = batch.to_pydict()
+            for index in range(len(batch)):
+                yield projection, tuple([v[index] for k, v in dict_batch.items()])

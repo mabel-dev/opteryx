@@ -2,11 +2,15 @@ from .base_plan_node import BasePlanNode
 
 from .distinct_node import DistinctNode  # remove duplicate records
 from .limit_node import LimitNode  # select the first N records
+
+from .partition_reader_node import PartitionReaderNode  # read partitions
+
 from .projection_node import ProjectionNode  # remove unwanted columns including renames
 
 
+
 # ANALYZE
-# - PartitionReaderNode (read a partition)
+
 # - SelectionNode (find records matching a predicate)
 # - JoinNode (currently only INNER JOIN)
 # - SortNode (order a relation by given keys)

@@ -23,6 +23,7 @@ from opteryx import Relation
 from opteryx.engine.planner.operations import BasePlanNode
 from opteryx.engine.reader_statistics import ReaderStatistics
 from opteryx.storage import file_decoders
+from opteryx.utils import paths
 
 class EXTENSION_TYPE(str, Enum):
     # labels for the file extentions
@@ -46,67 +47,75 @@ KNOWN_EXTENSIONS = {
 
 class PartitionReaderNode(BasePlanNode):
 
-    def __init__(self, config):
+    def __init__(self, **config):
         """
         The Partition Reader Node is responsible for reading a complete partition
         and returning a Relation.
         """
+        self._partition = config.get("partition")
+        self._reader = config.get("reader")
+
 
     def execute(self, relation: Relation = None) -> Optional[Relation]:
 
+        # Create a statistics object to record what happens
         stats = ReaderStatistics()
 
         # Get a list of all of the blobs in the partition.
+        pass
+        blob_list = [self._partition + "/tweets.jsonl"]
 
         # Work out which frame we should read.
-
-        # Filter the blob list to just the frame we're interested in
+        pass
 
         # If there's a zonemap, read it
-        if any(blob.endswith("frame.metadata") for blob in self.partition):
-            pass
+        if any(blob.endswith("frame.metadata") for blob in blob_list):
             # read the zone map into a dictionary
             zonemap = {}
         else:
+            # create an empty zone map
             zonemap = {}
+        
+        # what schema are we expecting
+        expected_schema = None
 
-        for blob_name in self.partition:
+        # Filter the blob list to just the frame we're interested in
+        pass
+
+        for blob_name in blob_list:
+
+            # work out the parts of the blob name
+            bucket, path, stem, extension = paths.get_parts(blob_name)
 
             # find out how to read this blob
             decoder, file_type = KNOWN_EXTENSIONS.get(
-                extention, (None, None, None)
+                extension, (None, None)
             )
+            # if it's not a known data file, skip reading it
             if file_type != EXTENSION_TYPE.DATA:
-                # if it's not a data file, skip reading it
                 continue
 
-            # we have a data blob, we may not actually read it
+            # we have a data blob, add it to the stats
             stats.total_data_blobs += 1
 
             # can we eliminate this blob using the BRIN?
-
-            # get the list of columns and types for this blob
-
-            bucket, path, stem, extention = paths.get_parts(blob_name)
+            pass
 
             # we're going to open this blob
             stats.data_blobs_read += 1
 
             # Read the blob from storage, it's just a stream of bytes at this point
-            blob_bytes = self.reader.read_blob(blob_name)
+            blob_bytes = self._reader.read_blob(blob_name)
+
+            # record the number of bytes we're reading
             stats.data_bytes_read += len(blob_bytes)
 
-            # interpret the raw bytes into entries, these may not be records yet
-            # push down the projection
-            schema, record_iterator = decompressor(blob_bytes)
+            # interpret the raw bytes into entries
+            schema, record_iterator = decoder(blob_bytes, expected_schema)
+
+#            # convert the partition to a relation
 
             # we should know the number of entries
             stats.data_rows_read += 1  # TODO
 
-            # interpret the entries into records
-        #    record_iterator = map(parser, record_iterator)
-
-            # if we don't have a min/max index, create one
-        #    min_max_index = IndexMinMax().build(record_iterator)
-
-            return stats, schema, record_iterator
+        return stats, schema, record_iterator

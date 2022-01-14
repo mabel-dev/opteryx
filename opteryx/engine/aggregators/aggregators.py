@@ -1,5 +1,6 @@
 def summer(x, y):
-    return fastnumbers.real(x) + fastnumbers.real(y)
+    import decimal
+    return decimal.Decimal(x) + decimal.Decimal(y)
 
 
 def raise_not_implemented():

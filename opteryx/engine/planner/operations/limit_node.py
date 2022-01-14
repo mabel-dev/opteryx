@@ -11,8 +11,8 @@ from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
 
 
 class LimitNode(BasePlanNode):
-    def __init__(self, config):
-        self._limit = config
+    def __init__(self, **config):
+        self._limit = config.get("limit")
 
     def execute(self, relation: Relation) -> Relation:
 

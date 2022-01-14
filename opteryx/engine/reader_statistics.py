@@ -14,9 +14,12 @@ class ReaderStatistics:
         execution_end:
             the end of the query execution
         """
-        self.blobs_read: int = 0
+        self.total_data_blobs: int = 0
+        self.data_blobs_read: int = 0
+        self.data_bytes_read: int = 0
+
         self.rows_read: int = 0
-        self.bytes_read: int = 0
+
         self.execution_start: int = 0
         self.execution_end: int = 0
 
