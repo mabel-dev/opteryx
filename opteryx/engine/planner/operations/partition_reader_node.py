@@ -17,6 +17,7 @@ We plan to do the following:
 
 """
 from enum import Enum
+from lib2to3 import pygram
 from typing import Optional
 
 from opteryx import Relation
@@ -108,14 +109,16 @@ class PartitionReaderNode(BasePlanNode):
             blob_bytes = self._reader.read_blob(blob_name)
 
             # record the number of bytes we're reading
-            stats.data_bytes_read += len(blob_bytes)
+            stats.data_bytes_read += blob_bytes.getbuffer().nbytes
 
             # interpret the raw bytes into entries
-            schema, record_iterator = decoder(blob_bytes, expected_schema)
-
-#            # convert the partition to a relation
+            pyarrow_table = decoder(blob_bytes, expected_schema)
 
             # we should know the number of entries
-            stats.data_rows_read += 1  # TODO
+            rows, cols = pyarrow_table.shape
+            stats.rows_read += rows
 
-        return stats, schema, record_iterator
+            #relation = Relation(data=record_iterator, header=schema)
+            return stats, pyarrow_table
+
+        return stats, None

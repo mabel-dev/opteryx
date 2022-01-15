@@ -69,7 +69,10 @@ def parquet_decoder(stream, projection):
             "`pyarrow` is missing, please install or include in requirements.txt"
         )
     table = pq.read_table(stream, columns=projection)
-    return table
+    for batch in table.to_batches():
+        dict_batch = batch.to_pydict()
+        for index in range(len(batch)):
+            yield projection, tuple([v[index] for k, v in dict_batch.items()])  # yields a tuple
 
 
 def orc_decoder(stream, projection):
@@ -85,14 +88,38 @@ def orc_decoder(stream, projection):
 
     orc_file = orc.ORCFile(stream)
     table = orc_file.read(columns=projection)
-    return table
+    for batch in table.to_batches():
+        dict_batch = batch.to_pydict()
+        for index in range(len(batch)):
+            yield projection, tuple([v[index] for k, v in dict_batch.items()])
 
 
 def jsonl_decoder(stream, projection):
     """
     The if we have a key
     """
-    import pyarrow.json
+    if projection:
 
-    table = pyarrow.json.read_json(stream)
-    return table
+        def _inner():
+            lines = stream.read().split(b'\n')[:-1]
+            for line in lines:
+                yield _json_to_tuples(line, projection)
+        return projection, _inner()
+
+    else:
+        # we're going to use pyarrow to read the file and extract the keys
+        # this is a little slower and will use more memory
+
+        def _inner():
+            import pyarrow.json
+
+            nonlocal projection
+
+            table = pyarrow.json.read_json(stream)
+            projection = table.columns
+            for batch in table.to_batches():
+                dict_batch = batch.to_pydict()
+                for index in range(len(batch)):
+                    yield tuple([v[index] for k, v in dict_batch.items()])
+        
+        return projection, _inner()

@@ -17,7 +17,6 @@ class ReaderStatistics:
         self.total_data_blobs: int = 0
         self.data_blobs_read: int = 0
         self.data_bytes_read: int = 0
-
         self.rows_read: int = 0
 
         self.execution_start: int = 0
@@ -25,3 +24,10 @@ class ReaderStatistics:
 
     def merge(self, stats):
         pass
+
+    def as_dict(self):
+        return {
+            "total_data_blobs": self.total_data_blobs,
+            "data_bytes_read": self.data_bytes_read,
+            "rows_read": self.rows_read
+        }
