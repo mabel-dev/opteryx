@@ -3,6 +3,7 @@ import os
 
 sys.path.insert(1, os.path.join(sys.path[0], "../../../.."))
 
+import io
 import datetime
 from opteryx import Relation
 from opteryx.utils import dates
@@ -47,6 +48,10 @@ class DiskStorage:
         self, dataset: str, data_date: Union[datetime.datetime, datetime.date]
     ) -> Relation:
         pass
+
+    def read_blob(self, blob_name):
+        with open(blob_name, "rb") as blob:
+            return io.BytesIO(blob.read())
 
 
 if __name__ == "__main__":
