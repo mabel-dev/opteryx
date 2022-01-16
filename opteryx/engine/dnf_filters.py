@@ -1,11 +1,13 @@
 """
 This is a filtering mechanism to be applied when reading data.
+
+This is row-orientated, the DNF filter in the SelectionNode is column-orientated.
 """
 import operator
 from typing import Optional, Iterable, List, Tuple, Union
 from opteryx.exceptions import InvalidSyntaxError
 from ...logging import get_logger
-from opteryx.utils.text import like, matches
+from opteryx.utils.text import like, similar_to
 
 
 def _in(x, y):
@@ -39,7 +41,7 @@ OPERATORS = {
     "<=": operator.le,
     ">=": operator.ge,
     "like": like,
-    "similar to": matches,
+    "similar to": similar_to,
     "in": _in,
     "!in": _nin,
     "not in": _nin,

@@ -12,41 +12,9 @@
 
 """
 Decompressors for the Readers.
-
-These yield a tuple of the schema and a tuple of the values for a row
 """
 
 from opteryx.exceptions import MissingDependencyError
-import simdjson
-from typing import Tuple, Any
-
-json_parser = simdjson.Parser()
-
-class PartitionFormatMismatch(Exception):
-    pass
-
-def _json_to_tuples(line, projection) -> Tuple[Any]:
-    """
-    Parse each line in the file to a dictionary.
-
-    We do some juggling so we can delete the object which is faster than creating a
-    new Parser for each record.
-    """
-    dic = json_parser.parse(line)
-    values = tuple([dic[attribute] for attribute in projection])
-    del dic
-    return values
-
-def _json_to_dicts(line, projection) -> dict:
-    """
-    Parse each line in the file to a dictionary.
-
-    This is slower than converting to Tuples because we're going to do more work even
-    though this routine has almost no code in it.
-    """
-    dict_parser = simdjson.Parser()
-    dic = dict_parser.parse(line)
-    return dic
 
 def zstd_decoder(stream, projection):
     """
@@ -55,7 +23,7 @@ def zstd_decoder(stream, projection):
     import zstandard
 
     with zstandard.open(stream, "rb") as file:
-        yield from jsonl_decoder(file, projection)
+        return jsonl_decoder(file, projection)
 
 
 def parquet_decoder(stream, projection):
@@ -89,10 +57,13 @@ def orc_decoder(stream, projection):
 
 
 def jsonl_decoder(stream, projection):
-    """
-    The if we have a key
-    """
+
     import pyarrow.json
 
     table = pyarrow.json.read_json(stream)
+    
+    # the read doesn't support projection, so do it now
+    if projection:
+        table = table.select(projection)
+    
     return table

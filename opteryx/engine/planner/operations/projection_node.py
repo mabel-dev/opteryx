@@ -7,7 +7,7 @@ This Node eliminates columns that are not needed in a Relation. This is also the
 that performs column renames.
 """
 from typing import Optional
-from opteryx.engine.relation import Relation
+from pyarrow import Table
 from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
 
 
@@ -24,17 +24,22 @@ class ProjectionNode(BasePlanNode):
                     source_attribute 2 : projected_attribute 2
                 }
         """
-        self._projection = kwargs.get("projection", {"*": "*"})
+        self._projection = kwargs.get("projection")
 
-    def execute(self, relation: Relation) -> Optional[Relation]:
+    def execute(self, relation: Table) -> Optional[Table]:
 
         # if we have nothing to do, move along
         if self._projection == {"*": "*"} or relation == None:
             return relation
 
-        # first we rename the attributes - we do this by manipulating the header
-        for source, target in self._projection.items():
-            relation.rename_attribute(source, target)
+        # we elminimate attributes we don't want
+        relation = relation.select(list(self._projection.keys()))
 
-        # then we order elminimate and order the resultant attributes
-        return relation.apply_projection(list(self._projection.values()))
+        # then we rename the attributes
+        if any([k != v for k,v in self._projection.items()]):
+            names = [self._projection[a] for a in relation.column_names if a in self._projection]
+            relation = relation.rename_columns(names)
+
+        return relation
+
+

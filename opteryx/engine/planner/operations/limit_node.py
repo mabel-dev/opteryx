@@ -5,8 +5,7 @@ This is a SQL Query Execution Plan Node.
 
 This Node returns up to a specified number of tuples.
 """
-from typing import Optional
-from opteryx.engine.relation import Relation
+from pyarrow import Table
 from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
 
 
@@ -14,13 +13,8 @@ class LimitNode(BasePlanNode):
     def __init__(self, **config):
         self._limit = config.get("limit")
 
-    def execute(self, relation: Relation) -> Relation:
+    def execute(self, relation: Table) -> Table:
 
-        if self._limit is None:
+        if self._limit is None or self._limit > relation.num_rows:
             return relation
-
-        # limit the number of records by slicing the underlying data array
-        relation.materialize()
-
-        relation.data = relation.data[0 : self._limit]
-        return relation
+        return relation.slice(0, self._limit)

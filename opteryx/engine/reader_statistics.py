@@ -1,33 +1,28 @@
 class ReaderStatistics:
     def __init__(self):
-        """
-
-
-        blobs_read:
-            The number of data blobs read (not indexes etc)
-        rows_read:
-            The total number of rows read from blobs
-        bytes_read:
-            The total number of data bytes read (not indexes etc)
-        execution_start:
-            The start of the query execution
-        execution_end:
-            the end of the query execution
-        """
-        self.total_data_blobs: int = 0
-        self.data_blobs_read: int = 0
-        self.data_bytes_read: int = 0
+        self.count_data_blobs_found: int = 0
+        self.count_data_blobs_read: int = 0
+        self.bytes_read_data: int = 0
         self.rows_read: int = 0
 
-        self.execution_start: int = 0
-        self.execution_end: int = 0
+        self.time_metadata: int = 0
+        self.time_data_read: int = 0
+
+        # time spent query planning
+        self.time_planning: int = 0
 
     def merge(self, stats):
         pass
 
     def as_dict(self):
         return {
-            "total_data_blobs": self.total_data_blobs,
-            "data_bytes_read": self.data_bytes_read,
-            "rows_read": self.rows_read
+            "count_data_blobs_found": self.count_data_blobs_found,
+            "count_data_blobs_read": self.count_data_blobs_read,
+            "bytes_read_data": self.bytes_read_data,
+            "rows_read": self.rows_read,
+
+            "time_data_read": self.time_data_read,
+            "time_metadata": self.time_metadata,
+
+            "time_planning": self.time_planning,
         }

@@ -17,8 +17,8 @@ We plan to do the following:
 
 """
 from enum import Enum
-from lib2to3 import pygram
 from typing import Optional
+from pyarrow import concat_tables
 
 from opteryx import Relation
 from opteryx.engine.planner.operations import BasePlanNode
@@ -56,29 +56,35 @@ class PartitionReaderNode(BasePlanNode):
         self._partition = config.get("partition")
         self._reader = config.get("reader")
 
+        # pushed down projection
+        self._projection = config.get("projection")
+        # pushed down selection
+        self._selection = config.get("selection")
+
 
     def execute(self, relation: Relation = None) -> Optional[Relation]:
 
         # Create a statistics object to record what happens
         stats = ReaderStatistics()
 
+        # Create the container for the resultant dataset
+        pyarrow_blobs = []
+
         # Get a list of all of the blobs in the partition.
         pass
-        blob_list = [self._partition + "/tweets.jsonl"]
+        import glob
+        blob_list = glob.glob(self._partition + "**", recursive=True)
 
         # Work out which frame we should read.
         pass
 
-        # If there's a zonemap, read it
+        # If there's a zonemap for the partition, read it
         if any(blob.endswith("frame.metadata") for blob in blob_list):
             # read the zone map into a dictionary
             zonemap = {}
         else:
             # create an empty zone map
             zonemap = {}
-        
-        # what schema are we expecting
-        expected_schema = None
 
         # Filter the blob list to just the frame we're interested in
         pass
@@ -97,28 +103,27 @@ class PartitionReaderNode(BasePlanNode):
                 continue
 
             # we have a data blob, add it to the stats
-            stats.total_data_blobs += 1
+            stats.count_data_blobs_found += 1
 
             # can we eliminate this blob using the BRIN?
             pass
 
             # we're going to open this blob
-            stats.data_blobs_read += 1
+            stats.count_data_blobs_read += 1
 
             # Read the blob from storage, it's just a stream of bytes at this point
             blob_bytes = self._reader.read_blob(blob_name)
 
             # record the number of bytes we're reading
-            stats.data_bytes_read += blob_bytes.getbuffer().nbytes
+            stats.bytes_read_data += blob_bytes.getbuffer().nbytes
 
             # interpret the raw bytes into entries
-            pyarrow_table = decoder(blob_bytes, expected_schema)
+            pyarrow_blob = decoder(blob_bytes, self._projection)
 
             # we should know the number of entries
-            rows, cols = pyarrow_table.shape
-            stats.rows_read += rows
+            stats.rows_read += pyarrow_blob.num_rows
 
-            #relation = Relation(data=record_iterator, header=schema)
-            return stats, pyarrow_table
+            # add this blob to the set to be returned
+            pyarrow_blobs.append(pyarrow_blob)
 
-        return stats, None
+        return stats, concat_tables(pyarrow_blobs)
