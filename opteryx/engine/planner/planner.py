@@ -331,4 +331,4 @@ if __name__ == "__main__":
     q = QueryPlan(SQL)
     print(q)
 
-    print(head(q.execute(), 5))
+    head(q.execute(), 5)
