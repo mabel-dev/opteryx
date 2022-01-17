@@ -17,7 +17,7 @@ from opteryx.engine.planner.operations import DistinctNode
 def test_dictinct_node():
 
     dn = DistinctNode()
-    
+
     # ensure we don't filter out when everything is unique
     satellite_data = SatelliteData().get()
     assert dn.execute(relation=satellite_data).num_rows == 177

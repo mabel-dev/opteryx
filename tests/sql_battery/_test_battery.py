@@ -58,5 +58,9 @@ def test_sql_battery(statement, rows, columns):
     res.materialize()
     actual_rows, actual_columns = res.shape
 
-    assert rows == actual_rows, f'Query returned {actual_rows} rows but {rows} were expected, {statement}'
-    assert columns == actual_columns, f'Query returned {actual_columns} cols but {columns} were expected, {statement}'
+    assert (
+        rows == actual_rows
+    ), f"Query returned {actual_rows} rows but {rows} were expected, {statement}"
+    assert (
+        columns == actual_columns
+    ), f"Query returned {actual_columns} cols but {columns} were expected, {statement}"

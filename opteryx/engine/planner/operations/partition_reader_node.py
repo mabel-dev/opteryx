@@ -26,11 +26,13 @@ from opteryx.engine.reader_statistics import ReaderStatistics
 from opteryx.storage import file_decoders
 from opteryx.utils import paths
 
+
 class EXTENSION_TYPE(str, Enum):
     # labels for the file extentions
     DATA = "DATA"
     CONTROL = "CONTROL"
     INDEX = "INDEX"
+
 
 do_nothing = lambda x: x
 
@@ -47,7 +49,6 @@ KNOWN_EXTENSIONS = {
 
 
 class PartitionReaderNode(BasePlanNode):
-
     def __init__(self, **config):
         """
         The Partition Reader Node is responsible for reading a complete partition
@@ -61,7 +62,6 @@ class PartitionReaderNode(BasePlanNode):
         # pushed down selection
         self._selection = config.get("selection")
 
-
     def execute(self, relation: Relation = None) -> Optional[Relation]:
 
         # Create a statistics object to record what happens
@@ -73,6 +73,7 @@ class PartitionReaderNode(BasePlanNode):
         # Get a list of all of the blobs in the partition.
         pass
         import glob
+
         blob_list = glob.glob(self._partition + "**", recursive=True)
 
         # Work out which frame we should read.
@@ -95,9 +96,7 @@ class PartitionReaderNode(BasePlanNode):
             bucket, path, stem, extension = paths.get_parts(blob_name)
 
             # find out how to read this blob
-            decoder, file_type = KNOWN_EXTENSIONS.get(
-                extension, (None, None)
-            )
+            decoder, file_type = KNOWN_EXTENSIONS.get(extension, (None, None))
             # if it's not a known data file, skip reading it
             if file_type != EXTENSION_TYPE.DATA:
                 continue

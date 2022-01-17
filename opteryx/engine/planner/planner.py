@@ -28,8 +28,34 @@ from opteryx.exceptions import SqlError
 from typing import List
 
 
+def _extract_relations(ast):
+    """
+    """
+    relations = ast[0]["Query"]["body"]["Select"]["from"][0]
+    relations = relations["relation"]["Table"]["name"][0]["value"]
+    return relations
+
+
+def _extract_projections(ast):
+    """
+    """
+#    projections = ast[0]["Query"]["body"]["Select"]["projection"]
+    return []
+    pass
+
+
+def _extract_selection(ast):
+    """
+    {'BinaryOp': {'left': {'BinaryOp': {'left': {'Identifier': {'value': 'apples', 'quote_style': None}}, 'op': 'Eq', 'right': {'Value': {'SingleQuotedString': 'blue'}}}}, 'op': 'Or', 'right': {'BinaryOp': {'left': {'Identifier': {'value': 'oranges', 'quote_style': None}}, 'op': 'Eq', 'right': {'Value': {'SingleQuotedString': 'green'}}}}}}
+    """
+    selections = ast[0]["Query"]["body"]["Select"]["selection"]
+    
+    print(selections)
+    pass
+
+
 class QueryPlan:
-    def __init__(self, sql):
+    def __init__(self, sql: str):
         """
         PLan represents Directed Acyclic Graphs which are used to describe data
         pipelines.
@@ -41,12 +67,13 @@ class QueryPlan:
 
         # Parse the SQL into a AST
         try:
-            self._ast = sqloxide.parse(sql, dialect="ansi")
+            self._ast = sqloxide.parse_sql(sql, dialect="ansi")
         except ValueError as e:
             raise SqlError(e)
 
         # build a plan for the query
         self._naive_planner(self._ast)
+
 
     def _naive_planner(self, ast):
         """
@@ -61,27 +88,24 @@ class QueryPlan:
             ORDER BY clause
             LIMIT clause
 
-        This is primary used to test core functionality and isn't intended to be
-        called by users.
+        This is phase one of the rewrite, to essentially mimick the existing
+        functionality.
         """
-        query = ast[0]["Query"]["body"]
-
-        self.add_operator("from", PartitionReaderNode(query["select"]["from"]))
-        self.add_operator("union", UnionNode())
-        self.add_operator("where", SelectionNode(ast["select"]["selection"]))
-        self.add_operator("group", GroupByNode(ast["select"]["group_by"]))
-        self.add_operator("having", SelectionNode(ast["select"]["having"]))
-        self.add_operator("select", ProjectionNode(ast["select"]["projection"]))
-        self.add_operator("order", OrderNode(ast["order_by"]))
+        self.add_operator("from", PartitionReaderNode(partition=_extract_relations(ast)))
+        self.add_operator("where", SelectionNode(filter=_extract_selection(ast)))
+        #self.add_operator("group", GroupByNode(ast["select"]["group_by"]))
+        #self.add_operator("having", SelectionNode(ast["select"]["having"]))
+        self.add_operator("select", ProjectionNode(projection=_extract_projections(ast)))
+        #self.add_operator("order", OrderNode(ast["order_by"]))
         self.add_operator("limit", LimitNode(ast["limit"]))
 
-        self.link_operators("from", "union")
-        self.link_operators("union", "where")
-        self.link_operators("where", "group")
-        self.link_operators("group", "having")
-        self.link_operators("having", "select")
-        self.link_operators("select", "order")
-        self.link_operators("order", "limit")
+        #self.link_operators("from", "union")
+        #self.link_operators("union", "where")
+        #self.link_operators("where", "group")
+        #self.link_operators("group", "having")
+        #self.link_operators("having", "select")
+        #self.link_operators("select", "order")
+        #self.link_operators("order", "limit")
 
     def add_operator(self, name, operator):
         """
@@ -191,62 +215,8 @@ class QueryPlan:
                 yield from self._tree(str(child_node), prefix=prefix + extension)
 
 
-"""
-[
-    {'Query': {
-        'with': None, 
-        'body': {
-            'Select': {
-                'distinct': False, 
-                'top': None, 
-                'projection': ['Wildcard'], 
-                'from': [
-                    {
-                        'relation': {
-                            'Table': {
-                                'name': [
-                                    {
-                                        'value': 't', 
-                                        'quote_style': None
-                                    }
-                                ], 
-                                'alias': None, 
-                                'args': [], 
-                                    'with_hints': []
-                                }
-                            }, 'joins': []
-                        }
-                    ], 
-                    'lateral_views': [], 
-                    'selection': {
-                        'BinaryOp': {
-                            'left': {
-                                'Identifier': {
-                                    'value': 'a', 
-                                    'quote_style': None
-                                }
-                            }, 
-                            'op': 'Eq', 
-                            'right': {
-                                'Identifier': {
-                                    'value': 'b', 
-                                    'quote_style': None
-                                }
-                            }
-                        }
-                    }, 
-                    'group_by': [], 
-                    'cluster_by': [], 
-                    'distribute_by': [], 
-                    'sort_by': [], 
-                    'having': None
-                }
-            }, 
-            'order_by': [],
-            'limit': None, 
-            'offset': None, 
-            'fetch': None
-        }
-    }
-]
-"""
+if __name__ == "__main__":
+
+    SQL = "SELECT * FROM data WHERE apples = 'blue' Or oranges = 'green'"
+
+    q = QueryPlan(SQL)

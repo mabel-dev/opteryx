@@ -8,12 +8,13 @@ DNF (Disjunctive Normal Form) interpretter.
 
 Predicates in the same list are joined with an AND (all must be True) and predicates
 in adjacent lists are joined with an OR (any can be True). This allows for non-trivial
-filters to be written with just _tuples_ and _lists_.
+filters to be written with just tuples and lists.
 
 The predicates are in _tuples_ in the form (`key`, `op`, `value`) where the `key`
 is the value looked up from the record, the `op` is the operator and the `value`
 is a literal.
 """
+from re import T
 from typing import Union
 from pyarrow import Table
 import pyarrow.compute as pc
@@ -32,12 +33,12 @@ NATIVE_OPERATORS = {
     "SIMILAR TO": pc.match_substring_regex,
 }
 
-CODED_OPERATORS = {
+CODED_OPERATORS = {}
 
-}
 
 class InvalidSyntaxError(Exception):
     pass
+
 
 def _evaluate(predicate: Union[tuple, list], table: Table) -> bool:
 
@@ -45,18 +46,18 @@ def _evaluate(predicate: Union[tuple, list], table: Table) -> bool:
     if isinstance(predicate, tuple):
         key, operator, value = predicate
         if operator in NATIVE_OPERATORS:
-            # returns a list of lists of booleans which creates a mask of the rows 
+            # returns a list of lists of booleans which creates a mask of the rows
             # that match the predicate
             mask = NATIVE_OPERATORS[operator](table[key], value)
-            mask = UintSet([i for i,v in enumerate(mask) if v.as_py()])
+            mask = UintSet([i for i, v in enumerate(mask) if v.as_py()])
             return mask
         elif operator in CODED_OPERATORS:
             raise NotImplementedError(f"Operator {operator} has not been implemented.")
         else:
             raise NotImplementedError(f"Operator {operator} has not been implemented.")
 
-    # If we have a list, we're going to recurse and call ourselves with the items in 
-    # the list 
+    # If we have a list, we're going to recurse and call ourselves with the items in
+    # the list
     if isinstance(predicate, list):
         # Are all of the entries tuples?
         # We AND them together
@@ -85,11 +86,15 @@ def _evaluate(predicate: Union[tuple, list], table: Table) -> bool:
     raise InvalidSyntaxError("Unable to evaluate Filter")  # pragma: no cover
 
 
-
 class SelectionNode(BasePlanNode):
     def __init__(self, **config):
         self._filter = config.get("filter")
 
     def execute(self, relation: Table) -> Table:
-        mask = _evaluate(self._filter, relation)
-        return relation.filter([mask[i] for i in range(relation.num_rows)])
+        from opteryx.third_party.pyarrow_ops import filters
+
+        return filters(relation, self._filter)
+
+
+#        mask = _evaluate(self._filter, relation)
+#        return relation.filter([mask[i] for i in range(relation.num_rows)])

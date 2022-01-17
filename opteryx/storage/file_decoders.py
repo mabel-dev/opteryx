@@ -16,6 +16,7 @@ Decompressors for the Readers.
 
 from opteryx.exceptions import MissingDependencyError
 
+
 def zstd_decoder(stream, projection):
     """
     Read zstandard compressed JSONL files
@@ -61,9 +62,9 @@ def jsonl_decoder(stream, projection):
     import pyarrow.json
 
     table = pyarrow.json.read_json(stream)
-    
+
     # the read doesn't support projection, so do it now
     if projection:
         table = table.select(projection)
-    
+
     return table

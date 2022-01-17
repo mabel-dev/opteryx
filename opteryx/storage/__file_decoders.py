@@ -22,8 +22,10 @@ from typing import Tuple, Any
 
 json_parser = simdjson.Parser()
 
+
 class PartitionFormatMismatch(Exception):
     pass
+
 
 def _json_to_tuples(line, projection) -> Tuple[Any]:
     """
@@ -37,6 +39,7 @@ def _json_to_tuples(line, projection) -> Tuple[Any]:
     del dic
     return values
 
+
 def _json_to_dicts(line, projection) -> dict:
     """
     Parse each line in the file to a dictionary.
@@ -47,6 +50,7 @@ def _json_to_dicts(line, projection) -> dict:
     dict_parser = simdjson.Parser()
     dic = dict_parser.parse(line)
     return dic
+
 
 def zstd_decoder(stream, projection):
     """
@@ -72,7 +76,9 @@ def parquet_decoder(stream, projection):
     for batch in table.to_batches():
         dict_batch = batch.to_pydict()
         for index in range(len(batch)):
-            yield projection, tuple([v[index] for k, v in dict_batch.items()])  # yields a tuple
+            yield projection, tuple(
+                [v[index] for k, v in dict_batch.items()]
+            )  # yields a tuple
 
 
 def orc_decoder(stream, projection):
@@ -101,9 +107,10 @@ def jsonl_decoder(stream, projection):
     if projection:
 
         def _inner():
-            lines = stream.read().split(b'\n')[:-1]
+            lines = stream.read().split(b"\n")[:-1]
             for line in lines:
                 yield _json_to_tuples(line, projection)
+
         return projection, _inner()
 
     else:
@@ -121,5 +128,5 @@ def jsonl_decoder(stream, projection):
                 dict_batch = batch.to_pydict()
                 for index in range(len(batch)):
                     yield tuple([v[index] for k, v in dict_batch.items()])
-        
+
         return projection, _inner()

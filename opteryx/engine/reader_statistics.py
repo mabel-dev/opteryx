@@ -20,9 +20,7 @@ class ReaderStatistics:
             "count_data_blobs_read": self.count_data_blobs_read,
             "bytes_read_data": self.bytes_read_data,
             "rows_read": self.rows_read,
-
             "time_data_read": self.time_data_read,
             "time_metadata": self.time_metadata,
-
             "time_planning": self.time_planning,
         }

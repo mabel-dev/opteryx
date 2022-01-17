@@ -31,25 +31,26 @@ def test_selection_node():
 
     # gravity < 1 AND name = Pluto
     # both are the same result
-    sn = SelectionNode(filter=[("gravity", "<", 1),("name","=","Pluto")])
+    sn = SelectionNode(filter=[("gravity", "<", 1), ("name", "=", "Pluto")])
     result = sn.execute(relation=planet_data)
     assert result.num_rows == 1, result.num_rows
 
     # gravity > 1 OR name = Pluto
     # should be all
-    sn = SelectionNode(filter=[[("gravity", ">", 1)],[("name","=","Pluto")]])
+    sn = SelectionNode(filter=[[("gravity", ">", 1)], [("name", "=", "Pluto")]])
     result = sn.execute(relation=planet_data)
     assert result.num_rows == 9, result.num_rows
 
     # lengthOfDay >= 24 AND lengthOfDay <= 25
-    sn = SelectionNode(filter=[("lengthOfDay", ">=", 24),("lengthOfDay","<=",25)])
+    sn = SelectionNode(filter=[("lengthOfDay", ">=", 24), ("lengthOfDay", "<=", 25)])
     result = sn.execute(relation=planet_data)
     assert result.num_rows == 2, result.num_rows
 
     # density > 5000 OR escapeVelocity < 2
-    sn = SelectionNode(filter=[[("density", ">", 5000)],[("escapeVelocity","<",2)]])
+    sn = SelectionNode(filter=[[("density", ">", 5000)], [("escapeVelocity", "<", 2)]])
     result = sn.execute(relation=planet_data)
     assert result.num_rows == 4, result.num_rows
+
 
 if __name__ == "__main__":
 
