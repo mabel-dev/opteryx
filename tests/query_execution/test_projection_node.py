@@ -17,17 +17,19 @@ from opteryx.engine.planner.operations import ProjectionNode
 
 def test_projection_node():
 
-    satellites = SatelliteData()
+    satellite_data = SatelliteData().get()
 
-    # test *:* does nothing to the attributes
+    # test None does nothing to the attributes
     pn = ProjectionNode(projection={"*": "*"})
-    assert pn.execute(relation=satellites).attributes() == satellites.attributes()
+    assert (
+        pn.execute(relation=satellite_data).column_names == satellite_data.column_names
+    )
 
     # test renames, reorder and elimination
     pn = ProjectionNode(
         projection={"name": "name", "id": "identifier", "gm": "gravity"}
     )
-    assert pn.execute(relation=satellites).attributes() == [
+    assert pn.execute(relation=satellite_data).column_names == [
         "name",
         "identifier",
         "gravity",

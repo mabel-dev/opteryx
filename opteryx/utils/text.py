@@ -47,7 +47,7 @@ def not_like(x, y):
     return not like(x, y)
 
 
-def matches(x, y):
+def similar_to(x, y):
     return re.compile(y).search(x) != None
 
 

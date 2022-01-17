@@ -124,6 +124,7 @@ class Relation:
 
     @property
     def shape(self):
+        self.materialize()
         return (len(self.header), self.count())
 
     def distinct(self):

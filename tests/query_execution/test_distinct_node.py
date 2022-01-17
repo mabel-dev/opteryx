@@ -16,19 +16,19 @@ from opteryx.engine.planner.operations import DistinctNode
 
 def test_dictinct_node():
 
-    print(SatelliteData())
+    dn = DistinctNode()
 
     # ensure we don't filter out when everything is unique
-    dn = DistinctNode(True)
-    assert dn.execute(relation=SatelliteData()).count() == 177
+    satellite_data = SatelliteData().get()
+    assert dn.execute(relation=satellite_data).num_rows == 177
 
     # reduce to high duplicate attribute
-    dn = DistinctNode(True)
-    assert dn.execute(relation=SatelliteData()["planetId"]).count() == 7
+    planets = satellite_data.select(["planetId"])
+    assert dn.execute(relation=planets).num_rows == 7
 
     # another test
-    dn = DistinctNode(True)
-    assert dn.execute(relation=SatelliteData()["planetId", "density"]).count() == 43
+    moons = satellite_data.select(["planetId", "density"])
+    assert dn.execute(relation=moons).num_rows == 43
 
 
 if __name__ == "__main__":

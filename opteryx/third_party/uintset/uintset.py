@@ -47,6 +47,9 @@ class UintSet:
             for e in elements:
                 self.add(e)
 
+    def __getitem__(self, index):
+        return get_bit(self._bits, index)
+
     def __len__(self):
         return count_ones(self._bits)
 

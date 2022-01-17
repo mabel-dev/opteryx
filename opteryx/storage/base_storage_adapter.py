@@ -13,10 +13,7 @@ from opteryx import Relation
 from typing import Iterable, Union, List
 
 
-
 class BaseStorageAdapter(abc.ABC):
-
-
     def __init__(self):
         pass
 
@@ -32,8 +29,6 @@ class BaseStorageAdapter(abc.ABC):
         self, dataset: str, data_date: Union[datetime.datetime, datetime.date]
     ) -> Relation:
         pass
-
-
 
     def __init__(self, *, dataset: str = None, partitioning=None, **kwargs):
         self.dataset = dataset

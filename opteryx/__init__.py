@@ -12,6 +12,7 @@
 
 from .version import __version__
 from opteryx.engine.relation import Relation
+from opteryx.query import OpteryxQuery
 
 
 apilevel = "1.0"

@@ -99,7 +99,7 @@ def ascii_table(dictset: Iterable[Dict[Any, Any]], limit: int = 5):
             return format_value(
                 "{ " + ", ".join([f'"{k}": {v}' for k, v in val.items()]) + " }"
             )
-        return val
+        return str(val)
 
     result = []
     columns: dict = {}
