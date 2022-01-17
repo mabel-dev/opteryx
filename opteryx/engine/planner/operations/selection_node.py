@@ -90,7 +90,14 @@ class SelectionNode(BasePlanNode):
     def __init__(self, **config):
         self._filter = config.get("filter")
 
+    def __repr__(self):
+        return str(self._filter)
+
     def execute(self, relation: Table) -> Table:
+
+        if self._filter is None:
+            return relation
+
         from opteryx.third_party.pyarrow_ops import filters
 
         return filters(relation, self._filter)

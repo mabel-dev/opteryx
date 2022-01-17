@@ -24,6 +24,7 @@ from opteryx import Relation
 from opteryx.engine.planner.operations import BasePlanNode
 from opteryx.engine.reader_statistics import ReaderStatistics
 from opteryx.storage import file_decoders
+from opteryx.storage.adapters.local.disk_store import DiskStorage
 from opteryx.utils import paths
 
 
@@ -54,13 +55,16 @@ class PartitionReaderNode(BasePlanNode):
         The Partition Reader Node is responsible for reading a complete partition
         and returning a Relation.
         """
-        self._partition = config.get("partition")
-        self._reader = config.get("reader")
+        self._partition = config.get("partition", "").replace(".", "/") + "/"
+        self._reader = config.get("reader", DiskStorage())
 
         # pushed down projection
         self._projection = config.get("projection")
         # pushed down selection
         self._selection = config.get("selection")
+
+    def __repr__(self):
+        return self._partition
 
     def execute(self, relation: Relation = None) -> Optional[Relation]:
 
@@ -125,4 +129,4 @@ class PartitionReaderNode(BasePlanNode):
             # add this blob to the set to be returned
             pyarrow_blobs.append(pyarrow_blob)
 
-        return stats, concat_tables(pyarrow_blobs)
+        return concat_tables(pyarrow_blobs)

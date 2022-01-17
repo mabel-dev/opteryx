@@ -26,6 +26,9 @@ class ProjectionNode(BasePlanNode):
         """
         self._projection = kwargs.get("projection")
 
+    def __repr__(self):
+        return str(self._projection)
+
     def execute(self, relation: Table) -> Optional[Table]:
 
         # allow simple projections using just the list of attributes

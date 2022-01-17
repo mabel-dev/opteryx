@@ -28,33 +28,117 @@ from opteryx.exceptions import SqlError
 from typing import List
 
 
+
+
+"""
+BinaryOperator::Plus => "+",
+BinaryOperator::Minus => "-",
+BinaryOperator::Multiply => "*",
+BinaryOperator::Divide => "/",
+BinaryOperator::Modulo => "%",
+BinaryOperator::StringConcat => "||",
+BinaryOperator::Gt => ">",
+BinaryOperator::Lt => "<",
+BinaryOperator::GtEq => ">=",
+BinaryOperator::LtEq => "<=",
+BinaryOperator::Spaceship => "<=>",
+BinaryOperator::Eq => "=",
+BinaryOperator::NotEq => "<>",
+BinaryOperator::And => "AND",
+BinaryOperator::Or => "OR",
+BinaryOperator::Xor => "XOR",
+BinaryOperator::Like => "LIKE",
+BinaryOperator::NotLike => "NOT LIKE",
+BinaryOperator::ILike => "ILIKE",
+BinaryOperator::NotILike => "NOT ILIKE",
+BinaryOperator::BitwiseOr => "|",
+BinaryOperator::BitwiseAnd => "&",
+BinaryOperator::BitwiseXor => "^",
+BinaryOperator::PGBitwiseXor => "#",
+BinaryOperator::PGBitwiseShiftLeft => "<<",
+BinaryOperator::PGBitwiseShiftRight => ">>",
+BinaryOperator::PGRegexMatch => "~",
+BinaryOperator::PGRegexIMatch => "~*",
+BinaryOperator::PGRegexNotMatch => "!~",
+BinaryOperator::PGRegexNotIMatch => "!~*",
+
+// there are others
+UnaryOperator::Not => "NOT",
+"""
+
+OPERATOR_XLAT = {
+    "Eq": "=",
+    "NotEq": "<>",
+    "Gt": ">",
+    "GtEq": ">=",
+    "Lt": "<",
+    "LtEq": "<=",
+    "Like": "LIKE",
+    "NotLike": "NOT LIKE"
+}
+
+def _build_dnf_filters(filters):
+    """
+    This is a basic version of the filter builder.
+    """
+    # None is None
+    if filters is None:
+        return None
+    
+    if "Identifier" in filters:
+        return filters['Identifier']["value"]
+    if "Value" in filters:
+        value = filters["Value"]
+        if "SingleQuotedString" in value:
+            return value["SingleQuotedString"]
+        if "Number" in value:
+            return value ["Number"][0]
+    if "BinaryOp" in filters:
+        left = _build_dnf_filters(filters["BinaryOp"]["left"])
+        operator = filters["BinaryOp"]["op"]
+        right = _build_dnf_filters(filters["BinaryOp"]["right"])
+
+        if operator in ("And"):
+            return [left, right]
+        if operator in ("Or"):
+            return [[left], [right]]
+
+        return (left, OPERATOR_XLAT[operator], right)
+
+
+
+
 def _extract_relations(ast):
     """
     """
     relations = ast[0]["Query"]["body"]["Select"]["from"][0]
-    relations = relations["relation"]["Table"]["name"][0]["value"]
+    relations = ".".join([part["value"] for part in relations["relation"]["Table"]["name"]])
     return relations
 
 
 def _extract_projections(ast):
     """
+    Projections are lists of attributes, the most obvious one is in the SELECT
+    statement but they can exist elsewhere to limit the amount of data
+    processed at each step.
     """
-#    projections = ast[0]["Query"]["body"]["Select"]["projection"]
-    return []
-    pass
+    projection = ast[0]["Query"]["body"]["Select"]["projection"]
+    if projection == ["Wildcard"]:
+        return {"*": "*"}
+    projection = [attribute['UnnamedExpr']['Identifier']["value"] for attribute in projection]
+    return projection
 
 
 def _extract_selection(ast):
     """
-    {'BinaryOp': {'left': {'BinaryOp': {'left': {'Identifier': {'value': 'apples', 'quote_style': None}}, 'op': 'Eq', 'right': {'Value': {'SingleQuotedString': 'blue'}}}}, 'op': 'Or', 'right': {'BinaryOp': {'left': {'Identifier': {'value': 'oranges', 'quote_style': None}}, 'op': 'Eq', 'right': {'Value': {'SingleQuotedString': 'green'}}}}}}
+    Although there is a SELECT statement in a SQL Query, Selection refers to the
+    filter or WHERE statement.
     """
     selections = ast[0]["Query"]["body"]["Select"]["selection"]
-    
-    print(selections)
-    pass
+    return _build_dnf_filters(selections)
 
 
-class QueryPlan:
+class QueryPlan(object):
     def __init__(self, sql: str):
         """
         PLan represents Directed Acyclic Graphs which are used to describe data
@@ -97,7 +181,7 @@ class QueryPlan:
         #self.add_operator("having", SelectionNode(ast["select"]["having"]))
         self.add_operator("select", ProjectionNode(projection=_extract_projections(ast)))
         #self.add_operator("order", OrderNode(ast["order_by"]))
-        self.add_operator("limit", LimitNode(ast["limit"]))
+        #self.add_operator("limit", LimitNode(ast["limit"]))
 
         #self.link_operators("from", "union")
         #self.link_operators("union", "where")
@@ -106,6 +190,9 @@ class QueryPlan:
         #self.link_operators("having", "select")
         #self.link_operators("select", "order")
         #self.link_operators("order", "limit")
+
+        self.link_operators("from", "where")
+        self.link_operators("where", "select")
 
     def add_operator(self, name, operator):
         """
@@ -183,16 +270,35 @@ class QueryPlan:
         self.edges = list(set(self.edges))
 
     def __repr__(self):
-        if not self.is_acyclic():
-            return "Flow: cannot represent cyclic flows"
         return "\n".join(list(self._draw()))
 
-    def __str__(self) -> str:
-        return self.get_entry_points().pop()
+    def _inner_execute(self, operator_name, relation):
+        print(f"***********{operator_name}***************")
+        operator = self.get_operator(operator_name)
+        out_going_links = self.get_outgoing_links(operator_name)
+
+        if relation:
+            print('before', relation.shape)
+        outcome = operator.execute(relation)
+        if relation:
+            print('after', relation.shape)
+
+        if out_going_links:
+            for next_operator_name in out_going_links:
+                return self._inner_execute(next_operator_name, outcome)
+        else:
+            return outcome
+
+    def execute(self):
+        entry_points = self.get_entry_points()
+        for entry_point in entry_points:
+            rel = self._inner_execute(entry_point, None)
+        return rel
 
     def _draw(self):
         for entry in self.get_entry_points():
-            yield (f"{str(entry)}")
+            node = self.get_operator(entry)
+            yield (f"{str(entry)} ({repr(node)})")
             t = self._tree(entry, "")
             yield ("\n".join(t))
 
@@ -207,7 +313,8 @@ class QueryPlan:
         # contents each get pointers that are ├── with a final └── :
         pointers = [tee] * (len(contents) - 1) + [last]
         for pointer, child_node in zip(pointers, contents):
-            yield prefix + pointer + str(child_node)
+            operator = self.get_operator(child_node)
+            yield prefix + pointer + str(child_node) + ' (' + repr(operator) + ")"
             if len(self.get_outgoing_links(node)) > 0:
                 # extend the prefix and recurse:
                 extension = branch if pointer == tee else space
@@ -217,6 +324,11 @@ class QueryPlan:
 
 if __name__ == "__main__":
 
-    SQL = "SELECT * FROM data WHERE apples = 'blue' Or oranges = 'green'"
+    from opteryx.third_party.pyarrow_ops import head
+
+    SQL = "SELECT * FROM tests.data.jsonl WHERE followers = 0"
 
     q = QueryPlan(SQL)
+    print(q)
+
+    print(head(q.execute(), 5))
