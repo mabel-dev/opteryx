@@ -100,7 +100,7 @@ jobs:
         architecture: x64
 
     - name: Install Python package dependencies
-      run: pip install cython wheel numpy
+      run: pip install --upgrade cython wheel numpy
 
     - name: Build binary wheel
       run: python setup.py bdist_wheel
@@ -134,7 +134,7 @@ jobs:
         architecture: x64
 
     - name: Install Python package dependencies
-      run: pip install cython wheel numpy
+      run: pip install --upgrade cython wheel numpy
 
     - name: Build binary wheel
       run: python setup.py bdist_wheel
