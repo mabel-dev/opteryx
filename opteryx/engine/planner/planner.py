@@ -28,8 +28,6 @@ from opteryx.exceptions import SqlError
 from typing import List
 
 
-
-
 """
 BinaryOperator::Plus => "+",
 BinaryOperator::Minus => "-",
@@ -74,8 +72,9 @@ OPERATOR_XLAT = {
     "Lt": "<",
     "LtEq": "<=",
     "Like": "LIKE",
-    "NotLike": "NOT LIKE"
+    "NotLike": "NOT LIKE",
 }
+
 
 def _build_dnf_filters(filters):
     """
@@ -84,15 +83,15 @@ def _build_dnf_filters(filters):
     # None is None
     if filters is None:
         return None
-    
+
     if "Identifier" in filters:
-        return filters['Identifier']["value"]
+        return filters["Identifier"]["value"]
     if "Value" in filters:
         value = filters["Value"]
         if "SingleQuotedString" in value:
             return value["SingleQuotedString"]
         if "Number" in value:
-            return value ["Number"][0]
+            return value["Number"][0]
     if "BinaryOp" in filters:
         left = _build_dnf_filters(filters["BinaryOp"]["left"])
         operator = filters["BinaryOp"]["op"]
@@ -106,13 +105,12 @@ def _build_dnf_filters(filters):
         return (left, OPERATOR_XLAT[operator], right)
 
 
-
-
 def _extract_relations(ast):
-    """
-    """
+    """ """
     relations = ast[0]["Query"]["body"]["Select"]["from"][0]
-    relations = ".".join([part["value"] for part in relations["relation"]["Table"]["name"]])
+    relations = ".".join(
+        [part["value"] for part in relations["relation"]["Table"]["name"]]
+    )
     return relations
 
 
@@ -125,7 +123,9 @@ def _extract_projections(ast):
     projection = ast[0]["Query"]["body"]["Select"]["projection"]
     if projection == ["Wildcard"]:
         return {"*": "*"}
-    projection = [attribute['UnnamedExpr']['Identifier']["value"] for attribute in projection]
+    projection = [
+        attribute["UnnamedExpr"]["Identifier"]["value"] for attribute in projection
+    ]
     return projection
 
 
@@ -158,7 +158,6 @@ class QueryPlan(object):
         # build a plan for the query
         self._naive_planner(self._ast)
 
-
     def _naive_planner(self, ast):
         """
         The naive planner only works on single tables and puts operations in this
@@ -175,21 +174,25 @@ class QueryPlan(object):
         This is phase one of the rewrite, to essentially mimick the existing
         functionality.
         """
-        self.add_operator("from", PartitionReaderNode(partition=_extract_relations(ast)))
+        self.add_operator(
+            "from", PartitionReaderNode(partition=_extract_relations(ast))
+        )
         self.add_operator("where", SelectionNode(filter=_extract_selection(ast)))
-        #self.add_operator("group", GroupByNode(ast["select"]["group_by"]))
-        #self.add_operator("having", SelectionNode(ast["select"]["having"]))
-        self.add_operator("select", ProjectionNode(projection=_extract_projections(ast)))
-        #self.add_operator("order", OrderNode(ast["order_by"]))
-        #self.add_operator("limit", LimitNode(ast["limit"]))
+        # self.add_operator("group", GroupByNode(ast["select"]["group_by"]))
+        # self.add_operator("having", SelectionNode(ast["select"]["having"]))
+        self.add_operator(
+            "select", ProjectionNode(projection=_extract_projections(ast))
+        )
+        # self.add_operator("order", OrderNode(ast["order_by"]))
+        # self.add_operator("limit", LimitNode(ast["limit"]))
 
-        #self.link_operators("from", "union")
-        #self.link_operators("union", "where")
-        #self.link_operators("where", "group")
-        #self.link_operators("group", "having")
-        #self.link_operators("having", "select")
-        #self.link_operators("select", "order")
-        #self.link_operators("order", "limit")
+        # self.link_operators("from", "union")
+        # self.link_operators("union", "where")
+        # self.link_operators("where", "group")
+        # self.link_operators("group", "having")
+        # self.link_operators("having", "select")
+        # self.link_operators("select", "order")
+        # self.link_operators("order", "limit")
 
         self.link_operators("from", "where")
         self.link_operators("where", "select")
@@ -278,10 +281,10 @@ class QueryPlan(object):
         out_going_links = self.get_outgoing_links(operator_name)
 
         if relation:
-            print('before', relation.shape)
+            print("before", relation.shape)
         outcome = operator.execute(relation)
         if relation:
-            print('after', relation.shape)
+            print("after", relation.shape)
 
         if out_going_links:
             for next_operator_name in out_going_links:
@@ -314,7 +317,7 @@ class QueryPlan(object):
         pointers = [tee] * (len(contents) - 1) + [last]
         for pointer, child_node in zip(pointers, contents):
             operator = self.get_operator(child_node)
-            yield prefix + pointer + str(child_node) + ' (' + repr(operator) + ")"
+            yield prefix + pointer + str(child_node) + " (" + repr(operator) + ")"
             if len(self.get_outgoing_links(node)) > 0:
                 # extend the prefix and recurse:
                 extension = branch if pointer == tee else space
