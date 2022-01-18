@@ -29,8 +29,8 @@ NATIVE_OPERATORS = {
     "<": pc.less,
     "<=": pc.less_equal,
     "<>": pc.not_equal,
-    "LIKE": pc.match_like,
-    "SIMILAR TO": pc.match_substring_regex,
+#    "LIKE": pc.match_like,
+#    "SIMILAR TO": pc.match_substring_regex,
 }
 
 CODED_OPERATORS = {}
