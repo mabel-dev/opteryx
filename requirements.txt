@@ -2,7 +2,6 @@ cython
 numpy
 zstandard
 orjson
-# fastnumbers <- affected by bug #https://github.com/SethMMorton/fastnumbers/issues/35
 pysimdjson
 cityhash
 sqloxide

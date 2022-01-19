@@ -45,3 +45,10 @@ vulnerabilities.
 
 
 **sqloxide** https://github.com/wseaton/sqloxide
+cython
+numpy
+zstandard
+orjson
+pysimdjson
+cityhash
+pyarrow
