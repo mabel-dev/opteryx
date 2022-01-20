@@ -1,4 +1,4 @@
-class ReaderStatistics:
+class QueryStatistics:
     def __init__(self):
         self.count_data_blobs_found: int = 0
         self.count_data_blobs_read: int = 0
@@ -10,6 +10,9 @@ class ReaderStatistics:
 
         # time spent query planning
         self.time_planning: int = 0
+
+        self.start_time: int = 0
+        self.end_time: int = 0
 
     def merge(self, stats):
         pass

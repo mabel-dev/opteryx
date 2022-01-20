@@ -18,12 +18,14 @@ This builds a DAG which describes a query.
 
 This doesn't attempt to do optimization, this just decomposes the query.
 """
+import statistics
 import sys
 import os
 
 sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
 
 from opteryx.engine.planner.operations import *
+from opteryx.engine.query_statistics import QueryStatistics
 from opteryx.exceptions import SqlError
 from opteryx.engine.attribute_types import OPTERYX_TYPES
 from typing import List
@@ -186,7 +188,7 @@ def _extract_selection(ast):
 
 
 class QueryPlan(object):
-    def __init__(self, sql: str):
+    def __init__(self, sql: str, statistics):
         """
         PLan represents Directed Acyclic Graphs which are used to describe data
         pipelines.
@@ -206,9 +208,9 @@ class QueryPlan(object):
             raise SqlError(e)
 
         # build a plan for the query
-        self._naive_planner(self._ast)
+        self._naive_planner(self._ast, statistics)
 
-    def _naive_planner(self, ast):
+    def _naive_planner(self, ast, statistics):
         """
         The naive planner only works on single tables and puts operations in this
         order.
@@ -225,13 +227,13 @@ class QueryPlan(object):
         functionality.
         """
         self.add_operator(
-            "from", PartitionReaderNode(partition=_extract_relations(ast))
+            "from", BlobReaderNode(statistics, partition=_extract_relations(ast))
         )
-        self.add_operator("where", SelectionNode(filter=_extract_selection(ast)))
+        self.add_operator("where", SelectionNode(statistics, filter=_extract_selection(ast)))
         # self.add_operator("group", GroupByNode(ast["select"]["group_by"]))
         # self.add_operator("having", SelectionNode(ast["select"]["having"]))
         self.add_operator(
-            "select", ProjectionNode(projection=_extract_projections(ast))
+            "select", ProjectionNode(statistics, projection=_extract_projections(ast))
         )
         # self.add_operator("order", OrderNode(ast["order_by"]))
         # self.add_operator("limit", LimitNode(ast["limit"]))
@@ -377,11 +379,15 @@ class QueryPlan(object):
 
 if __name__ == "__main__":
 
+    import time
     from opteryx.third_party.pyarrow_ops import head
 
-    SQL = "SELECT DECIMAL(AVG(12)) from _tests_data.rss where `a` = 'b' and _c = b"
+    SQL = "SELECT DECIMAL(AVG(12)) from _tests_data.rss where $a = 'b' and _c = b"
 
-    q = QueryPlan(SQL)
+    statistics = QueryStatistics()
+    statistics.start_time = time.time_ns()
+    q = QueryPlan(SQL, statistics)
     print(q)
+    print(statistics.as_dict())
 
 #    head(q.execute(), 100)

@@ -17,12 +17,10 @@ We plan to do the following:
 
 """
 from enum import Enum
-from typing import Optional
+from typing import Iterable
 from pyarrow import concat_tables
-
-from opteryx import Relation
 from opteryx.engine.planner.operations import BasePlanNode
-from opteryx.engine.reader_statistics import ReaderStatistics
+from opteryx.engine.query_statistics import QueryStatistics
 from opteryx.storage import file_decoders
 from opteryx.storage.adapters.local.disk_store import DiskStorage
 from opteryx.utils import paths
@@ -50,7 +48,7 @@ KNOWN_EXTENSIONS = {
 
 
 class PartitionReaderNode(BasePlanNode):
-    def __init__(self, **config):
+    def __init__(self, statistics:QueryStatistics, **config):
         """
         The Partition Reader Node is responsible for reading a complete partition
         and returning a Relation.
@@ -66,7 +64,7 @@ class PartitionReaderNode(BasePlanNode):
     def __repr__(self):
         return self._partition
 
-    def execute(self, relation: Relation = None) -> Optional[Relation]:
+    def execute(self, data_pages:Iterable) -> Iterable:
 
         # Create a statistics object to record what happens
         stats = ReaderStatistics()

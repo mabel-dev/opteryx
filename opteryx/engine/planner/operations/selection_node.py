@@ -14,11 +14,11 @@ The predicates are in _tuples_ in the form (`key`, `op`, `value`) where the `key
 is the value looked up from the record, the `op` is the operator and the `value`
 is a literal.
 """
-from re import T
-from typing import Union
+from typing import Union, Iterable
 from pyarrow import Table
 import pyarrow.compute as pc
 from opteryx.third_party.uintset import UintSet
+from opteryx.engine.query_statistics import QueryStatistics
 from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
 
 # pyArrow Operators: https://arrow.apache.org/docs/python/api/compute.html
@@ -87,21 +87,22 @@ def _evaluate(predicate: Union[tuple, list], table: Table) -> bool:
 
 
 class SelectionNode(BasePlanNode):
-    def __init__(self, **config):
+    def __init__(self, statistics:QueryStatistics, **config):
         self._filter = config.get("filter")
 
     def __repr__(self):
         return str(self._filter)
 
-    def execute(self, relation: Table) -> Table:
+    def execute(self, data_pages:Iterable) -> Iterable:
 
         if self._filter is None:
-            return relation
+            return data_pages
 
         from opteryx.third_party.pyarrow_ops import filters
 
-        return filters(relation, self._filter)
+        for page in data_pages:
+            yield filters(page, self._filter)
 
 
 #        mask = _evaluate(self._filter, relation)
-#        return relation.filter([mask[i] for i in range(relation.num_rows)])
+#        return relation.take([mask[i] for i in range(relation.num_rows)])

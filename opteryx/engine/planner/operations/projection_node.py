@@ -6,13 +6,13 @@ This is a SQL Query Execution Plan Node.
 This Node eliminates columns that are not needed in a Relation. This is also the Node
 that performs column renames.
 """
-from typing import Optional
-from pyarrow import Table
+from typing import Iterable
+from opteryx.engine.query_statistics import QueryStatistics
 from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
 
 
 class ProjectionNode(BasePlanNode):
-    def __init__(self, **kwargs):
+    def __init__(self, statistics:QueryStatistics, **config):
         """
         Attribute Projection, remove unwanted columns and performs column renames.
 
@@ -24,31 +24,33 @@ class ProjectionNode(BasePlanNode):
                     source_attribute 2 : projected_attribute 2
                 }
         """
-        self._projection = kwargs.get("projection")
+        self._projection = config.get("projection")
 
     def __repr__(self):
         return str(self._projection)
 
-    def execute(self, relation: Table) -> Optional[Table]:
+    def execute(self, data_pages:Iterable) -> Iterable:
 
-        # allow simple projections using just the list of attributes
-        if isinstance(self._projection, (list, tuple, set)):
-            return relation.select(list(self._projection))
+        for page in data_pages:
 
-        # if we have nothing to do, move along
-        if self._projection == {"*": "*"} or relation == None:
-            return relation
+            # allow simple projections using just the list of attributes
+            if isinstance(self._projection, (list, tuple, set)):
+                yield page.select(list(self._projection))
 
-        # we elminimate attributes we don't want
-        relation = relation.select(list(self._projection.keys()))
+            # if we have nothing to do, move along
+            if self._projection == {"*": "*"} or page == None:
+                yield page
 
-        # then we rename the attributes
-        if any([k != v for k, v in self._projection.items()]):
-            names = [
-                self._projection[a]
-                for a in relation.column_names
-                if a in self._projection
-            ]
-            relation = relation.rename_columns(names)
+            # we elminimate attributes we don't want
+            page = page.select(list(self._projection.keys()))
 
-        return relation
+            # then we rename the attributes
+            if any([k != v for k, v in self._projection.items()]):
+                names = [
+                    self._projection[a]
+                    for a in page.column_names
+                    if a in self._projection
+                ]
+                page = page.rename_columns(names)
+
+            yield page

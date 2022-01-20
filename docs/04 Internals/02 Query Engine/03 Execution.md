@@ -11,6 +11,9 @@ graph LR
     C --> D[FROM data_table]
 ~~~
 
+Note that the query plan order does not match the order that the query is written,
+instead it runs in the order required to respond to the query.
+
 The execution engine starts at the node at left of the tree (LIMIT 10) and requests
 records from the node below (SELECT *), which in turn requests records from the node
 to the right (WHERE Alive = TRUE).
