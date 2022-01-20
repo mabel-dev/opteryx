@@ -18,7 +18,6 @@ We plan to do the following:
 """
 from enum import Enum
 from typing import Iterable
-from pyarrow import concat_tables
 from opteryx.engine.planner.operations import BasePlanNode
 from opteryx.engine.query_statistics import QueryStatistics
 from opteryx.storage import file_decoders
@@ -56,6 +55,8 @@ class PartitionReaderNode(BasePlanNode):
         self._partition = config.get("partition", "").replace(".", "/") + "/"
         self._reader = config.get("reader", DiskStorage())
 
+        self._statistics = statistics
+
         # pushed down projection
         self._projection = config.get("projection")
         # pushed down selection
@@ -66,17 +67,14 @@ class PartitionReaderNode(BasePlanNode):
 
     def execute(self, data_pages:Iterable) -> Iterable:
 
-        # Create a statistics object to record what happens
-        stats = ReaderStatistics()
-
-        # Create the container for the resultant dataset
-        pyarrow_blobs = []
-
         # Get a list of all of the blobs in the partition.
         pass
         import glob
 
         blob_list = glob.glob(self._partition + "**", recursive=True)
+
+        # remove folders, end with '/'
+        pass
 
         # Work out which frame we should read.
         pass
@@ -104,27 +102,28 @@ class PartitionReaderNode(BasePlanNode):
                 continue
 
             # we have a data blob, add it to the stats
-            stats.count_data_blobs_found += 1
+            self._statistics.count_data_blobs_found += 1
 
             # can we eliminate this blob using the BRIN?
             pass
 
             # we're going to open this blob
-            stats.count_data_blobs_read += 1
+            self._statistics.count_data_blobs_read += 1
 
             # Read the blob from storage, it's just a stream of bytes at this point
             blob_bytes = self._reader.read_blob(blob_name)
 
             # record the number of bytes we're reading
-            stats.bytes_read_data += blob_bytes.getbuffer().nbytes
+            self._statistics.bytes_read_data += blob_bytes.getbuffer().nbytes
 
             # interpret the raw bytes into entries
             pyarrow_blob = decoder(blob_bytes, self._projection)
 
             # we should know the number of entries
-            stats.rows_read += pyarrow_blob.num_rows
+            self._statistics.rows_read += pyarrow_blob.num_rows
+            self._statistics.bytes_processed_data += pyarrow_blob.nbytes
 
-            # add this blob to the set to be returned
-            pyarrow_blobs.append(pyarrow_blob)
+            # yield this blob
+            print(f"reader yielding {blob_name} {pyarrow_blob.shape}")
+            yield pyarrow_blob
 
-        return concat_tables(pyarrow_blobs)

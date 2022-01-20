@@ -1,6 +1,5 @@
 from .base_plan_node import BasePlanNode
 
-from .blob_reader_node import BlobReaderNode # read blobs
 from .distinct_node import DistinctNode  # remove duplicate records
 from .limit_node import LimitNode  # select the first N records
 from .partition_reader_node import PartitionReaderNode  # read partitions

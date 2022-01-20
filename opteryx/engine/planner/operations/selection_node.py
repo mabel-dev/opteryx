@@ -96,12 +96,15 @@ class SelectionNode(BasePlanNode):
     def execute(self, data_pages:Iterable) -> Iterable:
 
         if self._filter is None:
-            return data_pages
+            yield data_pages
 
-        from opteryx.third_party.pyarrow_ops import filters
+        else:
 
-        for page in data_pages:
-            yield filters(page, self._filter)
+            from opteryx.third_party.pyarrow_ops import filters
+
+            for page in data_pages:
+                print(f"selector yielding {page.shape}")
+                yield filters(page, self._filter)
 
 
 #        mask = _evaluate(self._filter, relation)

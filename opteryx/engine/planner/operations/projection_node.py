@@ -35,22 +35,27 @@ class ProjectionNode(BasePlanNode):
 
             # allow simple projections using just the list of attributes
             if isinstance(self._projection, (list, tuple, set)):
+                print(f"projector yielding {page.shape}")
                 yield page.select(list(self._projection))
 
             # if we have nothing to do, move along
-            if self._projection == {"*": "*"} or page == None:
+            elif self._projection == {"*": "*"} or page == None:
+                print(f"projector yielding {page.shape}")
                 yield page
 
-            # we elminimate attributes we don't want
-            page = page.select(list(self._projection.keys()))
 
-            # then we rename the attributes
-            if any([k != v for k, v in self._projection.items()]):
-                names = [
-                    self._projection[a]
-                    for a in page.column_names
-                    if a in self._projection
-                ]
-                page = page.rename_columns(names)
+            else:
+                # we elminimate attributes we don't want
+                page = page.select(list(self._projection.keys()))
 
-            yield page
+                # then we rename the attributes
+                if any([k != v for k, v in self._projection.items()]):
+                    names = [
+                        self._projection[a]
+                        for a in page.column_names
+                        if a in self._projection
+                    ]
+                    page = page.rename_columns(names)
+
+                print(f"projector yielding {page.shape}")
+                yield page
