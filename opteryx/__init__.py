@@ -13,14 +13,33 @@
 from .version import __version__
 from opteryx.engine.relation import Relation
 from opteryx.query import OpteryxQuery
+from opteryx.connection import Connection
+from opteryx.engine.query_statistics import QueryStatistics
 
 
 apilevel = "1.0"
 threadsafety = 0
 paramstyle = "format"
 
-from .connection import Connection
+
 
 
 def connect(*args, **kwargs):
     return Connection(*args, **kwargs)
+
+
+try:
+    import dotenv  # type:ignore
+except ImportError:  # pragma: no cover
+    dotenv = None  # type:ignore
+
+from pathlib import Path
+
+env_path = Path(".") / ".env"
+
+#  deepcode ignore PythonSameEvalBinaryExpressiontrue: false +ve, values can be different
+if env_path.exists() and (dotenv is None):  # pragma: no cover  # nosemgrep
+    # using logger here will tie us in knots
+    print("`.env` file exists but `dotEnv` not installed.")
+elif dotenv is not None:  # pragma: no cover
+    dotenv.load_dotenv(dotenv_path=env_path)

@@ -15,12 +15,13 @@ def fetchmany(pages: Iterable, size: int = 5) -> List[dict]:
                     row[k] = v[0]
                 yield row
 
+    index = -1
     for index, row in enumerate(_inner_row_reader()):
         if index == size:
             return
         yield row
     
-    if index == 0:
+    if index < 0:
         yield {}
 
 

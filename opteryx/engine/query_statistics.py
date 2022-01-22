@@ -1,6 +1,6 @@
 class QueryStatistics:
     def __init__(self):
-        self.count_data_blobs_found: int = 0
+        self.count_blobs_found: int = 0
         self.count_data_blobs_read: int = 0
         self.bytes_read_data: int = 0
         self.bytes_processed_data: int = 0
@@ -20,7 +20,7 @@ class QueryStatistics:
 
     def as_dict(self):
         return {
-            "count_data_blobs_found": self.count_data_blobs_found,
+            "count_blobs_found": self.count_blobs_found,
             "count_data_blobs_read": self.count_data_blobs_read,
             "bytes_read_data": self.bytes_read_data,
             "bytes_processed_data": self.bytes_processed_data,

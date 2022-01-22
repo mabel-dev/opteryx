@@ -34,6 +34,24 @@ If you have a suggestion for an improvement or a bug,
 
 Want to help build mabel? See the [contribution guidance](https://github.com/mabel-dev/opteryx/blob/main/.github/CONTRIBUTING.md).
 
+## What Opteryx is
+
+## Why not use SQLite or DuckDB
+
+Opteryx is solving a different problem in the same space as these solutions. Opteryx
+avoids loading the dataset into memory unless there is no other option, as such it
+can query petabytes of data.
+
+This also means that queries are not as fast as solutions like SQLite or DuckDB.
+
+## Why not use MySQL or BigQuery
+
+Opteryx is an ad hoc database, if it can read the files, it can be used to query 
+the contents of them. This means it can leverage data files used by other systems.
+
+Opteryx is read-only, you can't update or delete data, and it also doesn't have or
+enforce indexes in your data.
+
 ## Security
 
 See the project [security policy](SECURITY.md) for information about reporting

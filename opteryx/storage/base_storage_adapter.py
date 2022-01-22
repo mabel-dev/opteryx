@@ -19,121 +19,46 @@ class BaseStorageAdapter(abc.ABC):
 
     def get_partitions(
         self,
+        *,
         dataset: str,
-        start_date: Union[datetime.datetime, datetime.date],
-        end_date: Union[datetime.datetime, datetime.date],
+        partitioning: Iterable = ("year_{yyyy}", "month_{mm}", "day_{dd}"),
+        start_date: Union[datetime.datetime, datetime.date, str] = datetime.date.today(),
+        end_date: Union[datetime.datetime, datetime.date, str] = datetime.date.today(),
     ) -> List:
-        pass
+        """
+        Get partitions doesn't confirm the partitions exist, it just creates a list
+        of candidate partitions.
+        """
 
-    def read_partition(
-        self, dataset: str, data_date: Union[datetime.datetime, datetime.date]
-    ) -> Relation:
-        pass
+        from opteryx.utils import dates, paths
 
-    def __init__(self, *, dataset: str = None, partitioning=None, **kwargs):
-        self.dataset = dataset
-        if self.dataset is None:
-            raise ValueError("Readers must have the `dataset` parameter set")
-        if not self.dataset.endswith("/"):
-            self.dataset += "/"
+        # apply the partitioning to the dataset name
+        if not dataset.endswith("/"):
+            dataset += "/"
         if partitioning:
-            self.dataset += "/".join(partitioning) + "/"
+            dataset += "/".join(partitioning) + "/"
 
-        self.start_date = dates.extract_date(kwargs.get("start_date"))
-        self.end_date = dates.extract_date(kwargs.get("end_date"))
+        # make sure we're dealing with dates
+        start_date = dates.parse_iso(start_date)
+        end_date = dates.parse_iso(end_date)
 
-    def _extract_as_at(self, path):
-        parts = path.split("/")
-        for part in parts:
-            if part.startswith("as_at_"):
-                return part
-        return ""
+        partitions = []
+        # we're going to iterate over the date range and get the name of the partition for 
+        # this dataset on this data - without knowing if the partition exists
+        for n in range(int((end_date - start_date).days) + 1):
+            import pathlib
+            working_date = start_date + datetime.timedelta(n)
+            partitions.append(pathlib.Path(paths.build_path(path=dataset, date=working_date)))
+            
+        return partitions
 
     @abc.abstractmethod
-    def get_blobs_at_path(self, prefix=None) -> Iterable:
+    def get_blob_list(self, prefix=None) -> Iterable:
         pass
 
     @abc.abstractmethod
-    def get_blob_bytes(self, blob: str) -> bytes:
+    def read_blob(self, blob: str) -> bytes:
         """
         Return a filelike object
         """
         pass
-
-    def read_blob(self, blob: str) -> IOBase:
-        """
-        Read-thru cache
-        """
-        cache_server = memcached_server()
-        # if cache isn't configured, read and get out of here
-        if not cache_server:
-            result = self.get_blob_bytes(blob)
-            return io.BytesIO(result)
-
-        # hash the blob name for the look up
-        from siphashc import siphash
-
-        blob_hash = str(siphash("RevengeOfTheBlob", blob))
-
-        # try to fetch the cached file
-        result = cache_server.get(blob_hash)
-
-        # if the item was a miss, get it from storage and add it to the cache
-        if result is None:
-            result = self.get_blob_bytes(blob)
-            cache_server.set(blob_hash, result)
-
-        return io.BytesIO(result)
-
-    def get_list_of_blobs(self):
-
-        blobs = []
-        # for each day in the range, get the blobs for us to read
-        for cycle_date in dates.date_range(self.start_date, self.end_date):
-            # build the path name
-            cycle_path = pathlib.Path(
-                paths.build_path(path=self.dataset, date=cycle_date)
-            )
-            cycle_blobs = list(self.get_blobs_at_path(path=cycle_path))
-
-            # remove any BACKOUT data
-            cycle_blobs = [blob for blob in cycle_blobs if "BACKOUT" not in blob]
-
-            # work out if there's an as_at part
-            as_ats = {
-                self._extract_as_at(blob) for blob in cycle_blobs if "as_at_" in blob
-            }
-            if as_ats:
-                as_ats = sorted(as_ats)
-                as_at = as_ats.pop()
-
-                is_complete = lambda blobs: any(
-                    [blob for blob in blobs if as_at + "/frame.complete" in blob]
-                )
-                is_invalid = lambda blobs: any(
-                    [blob for blob in blobs if (as_at + "/frame.ignore" in blob)]
-                )
-
-                while not is_complete(cycle_blobs) or is_invalid(cycle_blobs):
-                    if not is_complete(cycle_blobs):
-                        get_logger().debug(
-                            f"Frame `{as_at}` is not complete - `frame.complete` file is not present - skipping this frame."
-                        )
-                    if is_invalid(cycle_blobs):
-                        get_logger().debug(
-                            f"Frame `{as_at}` is invalid - `frame.ignore` file is present - skipping this frame."
-                        )
-                    if len(as_ats) > 0:
-                        as_at = as_ats.pop()
-                    else:
-                        return []
-                get_logger().debug(f"Reading from DataSet frame `{as_at}`")
-                cycle_blobs = [
-                    blob
-                    for blob in cycle_blobs
-                    if (as_at in blob) and ("/frame.complete" not in blob)
-                ]
-
-            blobs += cycle_blobs
-
-        return sorted(blobs)
