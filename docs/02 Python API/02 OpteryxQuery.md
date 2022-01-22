@@ -1,6 +1,0 @@
-# OpteryxQuery
-
-~~~python
-
-~~~
-
