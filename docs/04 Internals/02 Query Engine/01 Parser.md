@@ -1,6 +1,6 @@
 # Parser
 
-ANSI SQL compliant parser 
+MySQL flavoured parser
 
 [sqloxide](https://github.com/wseaton/sqloxide)
 

@@ -45,8 +45,7 @@ def coerce_values(value, value_type):
 
 class OPTERYX_TYPES(str, Enum):
     BOOLEAN = "BOOLEAN"
-    INTEGER = "INTEGER"
-    DOUBLE = "DOUBLE"
+    NUMERIC = "NUMERIC"
     LIST = "LIST"
     VARCHAR = "VARCHAR"
     STRUCT = "STRUCT"
@@ -56,8 +55,7 @@ class OPTERYX_TYPES(str, Enum):
 
 OPTERYX_TYPE_NAMES = {
     OPTERYX_TYPES.BOOLEAN: "BOOLEAN",
-    OPTERYX_TYPES.INTEGER: "INTEGER",
-    OPTERYX_TYPES.DOUBLE: "DOUBLE",
+    OPTERYX_TYPES.NUMERIC: "NUMERIC",
     OPTERYX_TYPES.LIST: "LIST",
     OPTERYX_TYPES.VARCHAR: "VARCHAR",
     OPTERYX_TYPES.STRUCT: "STRUCT",
@@ -69,40 +67,30 @@ OPTERYX_TYPE_NAMES = {
 PYTHON_TYPES = {
     "bool": OPTERYX_TYPES.BOOLEAN,
     "datetime": OPTERYX_TYPES.TIMESTAMP,
+    "date": OPTERYX_TYPES.TIMESTAMP,
     "dict": OPTERYX_TYPES.STRUCT,
-    "int": OPTERYX_TYPES.INTEGER,
-    "float": OPTERYX_TYPES.DOUBLE,
-    "Decimal": OPTERYX_TYPES.DOUBLE,
+    "int": OPTERYX_TYPES.NUMERIC,
+    "float": OPTERYX_TYPES.NUMERIC,
+    "Decimal": OPTERYX_TYPES.NUMERIC,
     "str": OPTERYX_TYPES.VARCHAR,
     "tuple": OPTERYX_TYPES.LIST,
+    "list": OPTERYX_TYPES.LIST,
+    "set": OPTERYX_TYPES.LIST
 }
 
 PARQUET_TYPES = {
     "bool": OPTERYX_TYPES.BOOLEAN,
     "timestamp[ms]": OPTERYX_TYPES.TIMESTAMP,
     "dict": OPTERYX_TYPES.STRUCT,
-    "int64": OPTERYX_TYPES.INTEGER,
-    "double": OPTERYX_TYPES.DOUBLE,
+    "int64": OPTERYX_TYPES.NUMERIC,
+    "double": OPTERYX_TYPES.NUMERIC,
     "string": OPTERYX_TYPES.VARCHAR,
     "tuple": OPTERYX_TYPES.LIST,
 }
 
-COERCABLE_PYTHON_TYPES = {
-    "bool": OPTERYX_TYPES.BOOLEAN,
-    "datetime": OPTERYX_TYPES.TIMESTAMP,
-    "date": OPTERYX_TYPES.TIMESTAMP,
-    "dict": OPTERYX_TYPES.STRUCT,
-    "int": OPTERYX_TYPES.INTEGER,
-    "float": OPTERYX_TYPES.DOUBLE,
-    "Decimal": OPTERYX_TYPES.DOUBLE,
-    "str": OPTERYX_TYPES.VARCHAR,
-    "tuple": OPTERYX_TYPES.LIST,
-    "set": OPTERYX_TYPES.LIST,
-    "list": OPTERYX_TYPES.LIST,
-}
 
 
 def get_coerced_type(python_type):
-    if python_type in COERCABLE_PYTHON_TYPES:
-        return COERCABLE_PYTHON_TYPES[python_type].name
+    if python_type in PYTHON_TYPES:
+        return PYTHON_TYPES[python_type].name
     return f"unknown ({python_type})"

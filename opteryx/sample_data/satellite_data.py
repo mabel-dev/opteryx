@@ -48,10 +48,4 @@ if __name__ == "__main__":  # pragma: no cover
     md = SatelliteData().get()
 
     print(md.schema)
-
     print(md.shape)
-#    print(md.apply_selection(lambda r: r[1] == 9).fetchall())
-#    print(md.apply_projection("planetId").distinct().count())
-#    print(md.apply_projection("planetId").distinct().attributes())
-#    print(md.collect_column("planetId"))
-#    print(md.apply_projection("planetId").distinct().fetchall())

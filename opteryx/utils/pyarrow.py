@@ -1,21 +1,33 @@
-from pyarrow import Table
-from typing import List
+import pyarrow
+from typing import Iterable, List
 
 
-def fetchmany(relation: Table, size: int = 5, offset: int = 0) -> List[dict]:
-    if relation.num_rows == 0 or offset > relation.num_rows:
-        return []
+def fetchmany(pages: Iterable, size: int = 5) -> List[dict]:
+    """
+    This is the fastest way I've found to do this, on my computer it's about
+    14,000 rows per second - fast enough for my use case.
+    """
+    def _inner_row_reader():
+        for page in pages:
+            for index in range(page.num_rows):
+                row = page.take([index]).to_pydict()
+                for k, v in row.items():
+                    row[k] = v[0]
+                yield row
 
-    def _inner(t):
-        for index in range(t.num_rows):
-            yield {k: v[index] for k, v in t.to_pydict().items()}
+    index = -1
+    for index, row in enumerate(_inner_row_reader()):
+        if index == size:
+            return
+        yield row
+    
+    if index < 0:
+        yield {}
 
-    return list(_inner(relation.slice(offset=offset, length=size)))
+
+def fetchone(pages: Iterable) -> dict:
+    return fetchmany(pages=pages, limit=1).pop()
 
 
-def fetchone(relation: Table, offset: int = 0) -> dict:
-    return fetchmany(relation=relation, offset=offset).pop()
-
-
-def fetchall(relation) -> List[dict]:
-    return fetchmany(relation=relation, size=relation.num_rows, offset=0)
+def fetchall(pages) -> List[dict]:
+    return fetchmany(pages=pages, size=-1)

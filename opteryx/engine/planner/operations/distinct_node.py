@@ -5,16 +5,18 @@ This is a SQL Query Execution Plan Node.
 
 This Node eliminates duplicate records.
 """
-from opteryx.engine.relation import Relation
+from typing import Iterable
+from pyarrow import concat_tables
+from opteryx.engine.query_statistics import QueryStatistics
 from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
 from opteryx.third_party.pyarrow_ops import drop_duplicates
 
 
 class DistinctNode(BasePlanNode):
-    def __init__(self, **config):
+    def __init__(self, statistics:QueryStatistics, **config):
         self._distinct = config.get("distinct", True)
 
-    def execute(self, relation: Relation) -> Relation:
+    def execute(self, data_pages:Iterable) -> Iterable:
         if self._distinct:
-            return drop_duplicates(relation)
-        return relation
+            yield drop_duplicates(concat_tables(data_pages))
+        yield from data_pages

@@ -4,11 +4,12 @@
 
 ## WHERE
 
-`_PARTITION` is a special term, allowing you to specify partitions in SQL, can be
-used in WHERE clauses like any other field.
+`$PARTITION` is a special term, allowing you to specify partitions in SQL, can be
+used in WHERE clauses like any other field. If used, it will replace any dates
+provided as parameters.
 
-`WHERE _PARTITION BETWEEN <start_date> AND <end_date>`
-`WHERE _PARTITION > "2021-01-02"`
+`WHERE $PARTITION BETWEEN <start_date> AND <end_date>`
+`WHERE $PARTITION > "2021-01-02"`
 
 
 ## GROUP BY

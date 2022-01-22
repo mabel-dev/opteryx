@@ -5,8 +5,7 @@
 Name      | Description
 --------- | ------------------------------------------
 BOOLEAN   | Logical boolean (True/False).
-INTEGER   | Arbitrary precision signed integers.
-DOUBLE    | Arbitrary precision floating point numbers.
+NUMERIC   | All numeric types
 LIST      | An ordered sequence of data values.
 VARCHAR   | Variable-length character string.
 STRUCT    | A dictionary of multiple named values, where each key is a string, but the value can be a different type for each key.
@@ -17,10 +16,9 @@ OTHER     | None of the above or multiple types in the same column.
 
 Columns of type BOOLEAN cannot be indexed. 
 
-## INTEGER
-## DOUBLE
+## NUMERIC
 
-Type Hint in Queries DOUBLE("value")
+Type Hint in Queries NUMERIC("value")
 
 ## LIST
 

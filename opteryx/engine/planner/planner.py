@@ -18,13 +18,16 @@ This builds a DAG which describes a query.
 
 This doesn't attempt to do optimization, this just decomposes the query.
 """
+import statistics
 import sys
 import os
 
 sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
 
 from opteryx.engine.planner.operations import *
+from opteryx.engine.query_statistics import QueryStatistics
 from opteryx.exceptions import SqlError
+from opteryx.engine.attribute_types import OPTERYX_TYPES
 from typing import List
 
 
@@ -73,6 +76,7 @@ OPERATOR_XLAT = {
     "LtEq": "<=",
     "Like": "LIKE",
     "NotLike": "NOT LIKE",
+    "InList": "IN"
 }
 
 
@@ -84,14 +88,25 @@ def _build_dnf_filters(filters):
     if filters is None:
         return None
 
+    print(filters)
     if "Identifier" in filters:
-        return filters["Identifier"]["value"]
+        quote_style = filters["Identifier"].get("quote_style")
+        if quote_style == "`" or quote_style is None:
+            return filters["Identifier"]["value"] # we're an identifier
+        if quote_style == "\"":
+            return (filters["Identifier"]["value"], OPTERYX_TYPES.VARCHAR) # we're a literal
     if "Value" in filters:
         value = filters["Value"]
         if "SingleQuotedString" in value:
-            return value["SingleQuotedString"]
+            return (value["SingleQuotedString"], OPTERYX_TYPES.VARCHAR)
         if "Number" in value:
-            return value["Number"][0]
+            return (value["Number"][0], OPTERYX_TYPES.NUMERIC)
+        if "list" in value:
+            # WHERE g in (1, 2, 3)
+            # {'InList': {'expr': {'Identifier': {'value': 'g', 'quote_style': None}}, 'list': [{'Value': {'Number': ('1', False)}}, {'Value': {'Number': ('2', False)}}, {'Value': {'Number': ('3', False)}}], 'negated': False}}
+            raise NotImplementedError("List values are not implemented.")
+        if "Boolean" in value:
+            return (value["Boolean"], OPTERYX_TYPES.BOOLEAN)
     if "BinaryOp" in filters:
         left = _build_dnf_filters(filters["BinaryOp"]["left"])
         operator = filters["BinaryOp"]["op"]
@@ -101,17 +116,40 @@ def _build_dnf_filters(filters):
             return [left, right]
         if operator in ("Or"):
             return [[left], [right]]
-
         return (left, OPERATOR_XLAT[operator], right)
-
+    if "UnaryOp" in filters:
+        if filters["UnaryOp"]["op"] == "Not":
+            left = _build_dnf_filters(filters["UnaryOp"]["expr"])
+            return (left, "<>", True)
+    if "Between" in filters:
+        # WHERE g BETWEEN 'a' AND 'b'
+        # {'Between': {'expr': {'Identifier': {'value': 'g', 'quote_style': None}}, 'negated': False, 'low': {'Value': {'SingleQuotedString': 'a'}}, 'high': {'Value': {'SingleQuotedString': 'b'}}}}
+        # WHERE g NOT BETWEEN 'a' AND 'b'
+        # {'Between': {'expr': {'Identifier': {'value': 'g', 'quote_style': None}}, 'negated': True, 'low': {'Value': {'SingleQuotedString': 'a'}}, 'high': {'Value': {'SingleQuotedString': 'b'}}}}
+        raise NotImplementedError("BETWEEN operator is not implemented.")
+    if "InSubquery" in filters:
+        # WHERE g in (select * from b)
+        # {'InSubquery': {'expr': {'Identifier': {'value': 'g', 'quote_style': None}}, 'subquery': {'with': None, 'body': {'Select': {'distinct': False, 'top': None, 'projection': ['Wildcard'], 'from': [{'relation': {'Table': {'name': [{'value': 'b', 'quote_style': None}], 'alias': None, 'args': [], 'with_hints': []}}, 'joins': []}], 'lateral_views': [], 'selection': None, 'group_by': [], 'cluster_by': [], 'distribute_by': [], 'sort_by': [], 'having': None}}, 'order_by': [], 'limit': None, 'offset': None, 'fetch': None}, 'negated': False}}
+        raise NotImplementedError("IN SUBQUERIES are not implemented.")
+    if "IsNull" in filters:
+        left = _build_dnf_filters(filters["IsNull"])
+        return (left, "=", None)
+    if "IsNotNull" in filters:
+        left = _build_dnf_filters(filters["IsNotNull"])
+        return (left, "<>", None)
 
 def _extract_relations(ast):
     """ """
     relations = ast[0]["Query"]["body"]["Select"]["from"][0]
-    relations = ".".join(
-        [part["value"] for part in relations["relation"]["Table"]["name"]]
-    )
-    return relations
+    if "Table" in relations["relation"]:
+        dataset = ".".join(
+            [part["value"] for part in relations["relation"]["Table"]["name"]]
+        )
+        return dataset
+    if "Derived" in relations["relation"]:
+        subquery = relations["relation"]["Derived"]["subquery"]["body"]
+        raise NotImplementedError("SUBQUERIES in FROM statements not supported")
+        # {'Select': {'distinct': False, 'top': None, 'projection': ['Wildcard'], 'from': [{'relation': {'Table': {'name': [{'value': 't', 'quote_style': None}], 'alias': None, 'args': [], 'with_hints': []}}, 'joins': []}], 'lateral_views': [], 'selection': None, 'group_by': [], 'cluster_by': [], 'distribute_by': [], 'sort_by': [], 'having': None}}
 
 
 def _extract_projections(ast):
@@ -121,11 +159,22 @@ def _extract_projections(ast):
     processed at each step.
     """
     projection = ast[0]["Query"]["body"]["Select"]["projection"]
+    print(projection)
     if projection == ["Wildcard"]:
         return {"*": "*"}
-    projection = [
-        attribute["UnnamedExpr"]["Identifier"]["value"] for attribute in projection
-    ]
+
+    def _inner(attribute):
+        if "UnnamedExpr" in attribute:
+            unnamed = attribute["UnnamedExpr"]
+            if "Identifier" in unnamed:
+                return unnamed["Identifier"]["value"]
+            if "Function" in attribute:
+                # {'Function': {'name': [{'value': 'APPROX_SIZE', 'quote_style': None}], 'args': [{'Unnamed': {'Identifier': {'value': 'name', 'quote_style': None}}}]  
+                raise NotImplementedError("functions are currently not suppored")
+        if "ExprWithAlias" in attribute:
+            # [{'ExprWithAlias': {'expr': {'Function': {'name': [{'value': 'APPROX_SIZE', 'quote_style': None}], 'args': [{'Unnamed': {'Identifier': {'value': 'name', 'quote_style': None}}}], 'over': None, 'distinct': False}}, 'alias': {'value': 'APPLE', 'quote_style': None}}}]
+            raise NotImplementedError("aliases aren't supported")
+    projection = [_inner(attribute) for attribute in projection]
     return projection
 
 
@@ -139,7 +188,7 @@ def _extract_selection(ast):
 
 
 class QueryPlan(object):
-    def __init__(self, sql: str):
+    def __init__(self, sql: str, statistics):
         """
         PLan represents Directed Acyclic Graphs which are used to describe data
         pipelines.
@@ -151,14 +200,17 @@ class QueryPlan(object):
 
         # Parse the SQL into a AST
         try:
-            self._ast = sqloxide.parse_sql(sql, dialect="ansi")
+            self._ast = sqloxide.parse_sql(sql, dialect="mysql")
+            # MySQL Dialect allows identifiers to be delimited with ` (backticks) and
+            # identifiers to start with _ (underscore) and $ (dollar sign)
+            # https://github.com/sqlparser-rs/sqlparser-rs/blob/main/src/dialect/mysql.rs
         except ValueError as e:
             raise SqlError(e)
 
         # build a plan for the query
-        self._naive_planner(self._ast)
+        self._naive_planner(self._ast, statistics)
 
-    def _naive_planner(self, ast):
+    def _naive_planner(self, ast, statistics):
         """
         The naive planner only works on single tables and puts operations in this
         order.
@@ -175,13 +227,13 @@ class QueryPlan(object):
         functionality.
         """
         self.add_operator(
-            "from", PartitionReaderNode(partition=_extract_relations(ast))
+            "from", BlobReaderNode(statistics, partition=_extract_relations(ast))
         )
-        self.add_operator("where", SelectionNode(filter=_extract_selection(ast)))
+        self.add_operator("where", SelectionNode(statistics, filter=_extract_selection(ast)))
         # self.add_operator("group", GroupByNode(ast["select"]["group_by"]))
         # self.add_operator("having", SelectionNode(ast["select"]["having"]))
         self.add_operator(
-            "select", ProjectionNode(projection=_extract_projections(ast))
+            "select", ProjectionNode(statistics, projection=_extract_projections(ast))
         )
         # self.add_operator("order", OrderNode(ast["order_by"]))
         # self.add_operator("limit", LimitNode(ast["limit"]))
@@ -327,11 +379,15 @@ class QueryPlan(object):
 
 if __name__ == "__main__":
 
+    import time
     from opteryx.third_party.pyarrow_ops import head
 
-    SQL = "SELECT * FROM tests.data.jsonl WHERE followers = 0"
+    SQL = "SELECT DECIMAL(AVG(12)) from _tests_data.rss where $a = 'b' and _c = b"
 
-    q = QueryPlan(SQL)
+    statistics = QueryStatistics()
+    statistics.start_time = time.time_ns()
+    q = QueryPlan(SQL, statistics)
     print(q)
+    print(statistics.as_dict())
 
-    head(q.execute(), 5)
+#    head(q.execute(), 100)

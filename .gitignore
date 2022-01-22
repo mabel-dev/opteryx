@@ -149,3 +149,5 @@ tests/data/mass/**
 tests/data/huge/**
 tests/data/half/**
 **/profile.txt
+shelf/**
+tests/data/zoned/**

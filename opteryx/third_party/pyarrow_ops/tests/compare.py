@@ -1,7 +1,7 @@
 import time
 import numpy as np
 import pyarrow as pa
-from . import groupby, join, head, drop_duplicates
+from .. import groupby, join, head, drop_duplicates
 
 # Generate ids
 left_size = int(1e4)

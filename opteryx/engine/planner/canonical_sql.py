@@ -9,23 +9,27 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 """
-This is the base class for nodes in the execution plan.
 
-The initializer accepts a QueryStatistics node which is populated by
-different nodes differently to record what happened during the query
-execution.
 """
-import abc
-from typing import Iterable
-from opteryx.engine.query_statistics import QueryStatistics
+import sys
+import os
+
+sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
 
 
-class BasePlanNode(abc.ABC):
-    @abc.abstractclassmethod
-    def __init__(self, statistics:QueryStatistics, **config):
-        pass
+def canonical_sql(ast, indent=False):
 
-    @abc.abstractclassmethod
-    def execute(self, data_pages:Iterable) -> Iterable:
-        pass
+    statement = ""
+
+    # SELECT
+    statement += ast[0]["Query"]["body"]["Select"]["projection"]
+    # FROM
+    # WHERE
+    # GROUP BY
+    # HAVING
+    # ORDER BY
+    # LIMIT
+
+    return statement
