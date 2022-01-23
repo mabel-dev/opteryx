@@ -19,7 +19,7 @@ class DiskStorage(BaseStorageAdapter):
     def get_blob_list(self, partition):
         import glob
 
-        return glob.glob(partition + "**", recursive=True)
+        return glob.glob(str(partition / "**"), recursive=True)
 
 
 if __name__ == "__main__":

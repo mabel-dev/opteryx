@@ -48,9 +48,7 @@ class DatasetReaderNode(BasePlanNode):
         """
         self._dataset = config.get("dataset", "").replace(".", "/") + "/"
         self._reader = config.get("reader", DiskStorage())
-        self._partition_scheme = config.get(
-            "partition_scheme", MabelPartitionScheme()
-        )
+        self._partition_scheme = config.get("partition_scheme", MabelPartitionScheme())
 
         self._statistics = statistics
 
@@ -65,7 +63,8 @@ class DatasetReaderNode(BasePlanNode):
     def execute(self, data_pages: Iterable) -> Iterable:
 
         partitions = self._reader.get_partitions(
-            dataset=self._dataset, partitioning=self._partition_scheme.partition_format()
+            dataset=self._dataset,
+            partitioning=self._partition_scheme.partition_format(),
         )
 
         for partition in partitions:

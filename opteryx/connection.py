@@ -149,7 +149,12 @@ class Cursor:
 
         statistics = QueryStatistics()
         statistics.start_time = time.time_ns()
-        self._query_plan = QueryPlan(operation, statistics, self._connection._reader, self._connection._partition_scheme)
+        self._query_plan = QueryPlan(
+            operation,
+            statistics,
+            self._connection._reader,
+            self._connection._partition_scheme,
+        )
         # optimize the plan
         statistics.planning_time = time.time_ns() - statistics.start_time
         # self._execute = QueryExecutor(QueryPlan)

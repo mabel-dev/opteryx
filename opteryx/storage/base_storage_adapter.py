@@ -37,8 +37,8 @@ class BaseStorageAdapter(abc.ABC):
             dataset += "/".join(partitioning) + "/"
 
         # make sure we're dealing with dates
-        start_date = dates.parse_iso(start_date)
-        end_date = dates.parse_iso(end_date)
+        start_date = dates.parse_iso(start_date) or datetime.date.today()
+        end_date = dates.parse_iso(end_date) or datetime.date.today()
 
         partitions = []
         # we're going to iterate over the date range and get the name of the partition for
