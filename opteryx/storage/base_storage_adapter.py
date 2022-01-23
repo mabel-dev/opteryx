@@ -33,6 +33,8 @@ class BaseStorageAdapter(abc.ABC):
         # apply the partitioning to the dataset name
         if not dataset.endswith("/"):
             dataset += "/"
+        if not isinstance(partitioning, (list, set, tuple)):
+            partitioning = [partitioning]
         if partitioning:
             dataset += "/".join(partitioning) + "/"
 

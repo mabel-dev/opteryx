@@ -12,7 +12,7 @@ def arr_op_to_idxs(arr, op, value):
 
     if op in ["=", "=="]:
         return np.where(arr == value)
-    elif op == "!=":
+    elif op == ["!=", "<>"]:
         return np.where(arr != value)
     elif op == "<":
         return np.where(arr < value)

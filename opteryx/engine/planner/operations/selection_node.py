@@ -45,6 +45,7 @@ def _evaluate(predicate: Union[tuple, list], table: Table) -> bool:
     # If we have a tuple extract out the key, operator and value and do the evaluation
     if isinstance(predicate, tuple):
         key, operator, value = predicate
+        value = value[0]
         if operator in NATIVE_OPERATORS:
             # returns a list of lists of booleans which creates a mask of the rows
             # that match the predicate
@@ -103,9 +104,9 @@ class SelectionNode(BasePlanNode):
             from opteryx.third_party.pyarrow_ops import filters
 
             for page in data_pages:
-                print(f"selector yielding {page.shape}")
-                yield filters(page, self._filter)
+                #                filtered = filters(page, self._filter)
+                #                print(f"selector yielding {filtered.shape}", self._filter)
+                #                yield filtered
 
-
-#        mask = _evaluate(self._filter, relation)
-#        return relation.take([mask[i] for i in range(relation.num_rows)])
+                mask = _evaluate(self._filter, page)
+                yield page.take(list(mask))

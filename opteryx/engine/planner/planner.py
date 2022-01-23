@@ -18,11 +18,12 @@ This builds a DAG which describes a query.
 
 This doesn't attempt to do optimization, this just decomposes the query.
 """
-import statistics
 import sys
 import os
 
 sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
+
+import decimal
 
 from opteryx.engine.planner.operations import *
 from opteryx.engine.query_statistics import QueryStatistics
@@ -103,7 +104,7 @@ def _build_dnf_filters(filters):
         if "SingleQuotedString" in value:
             return (value["SingleQuotedString"], OPTERYX_TYPES.VARCHAR)
         if "Number" in value:
-            return (value["Number"][0], OPTERYX_TYPES.NUMERIC)
+            return (decimal.Decimal(value["Number"][0]), OPTERYX_TYPES.NUMERIC)
         if "list" in value:
             # WHERE g in (1, 2, 3)
             # {'InList': {'expr': {'Identifier': {'value': 'g', 'quote_style': None}}, 'list': [{'Value': {'Number': ('1', False)}}, {'Value': {'Number': ('2', False)}}, {'Value': {'Number': ('3', False)}}], 'negated': False}}
@@ -240,7 +241,7 @@ class QueryPlan(object):
             "from",
             DatasetReaderNode(
                 statistics,
-                partition=_extract_relations(ast),
+                dataset=_extract_relations(ast),
                 reader=self._reader,
                 partition_scheme=self._partition_scheme,
             ),

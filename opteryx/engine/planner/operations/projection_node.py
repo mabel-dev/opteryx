@@ -31,17 +31,17 @@ class ProjectionNode(BasePlanNode):
 
     def execute(self, data_pages: Iterable) -> Iterable:
 
+        # if we have nothing to do, move along
+        if self._projection == {"*": "*"}:
+            print(f"projector yielding *")
+            yield from data_pages
+
         for page in data_pages:
 
             # allow simple projections using just the list of attributes
             if isinstance(self._projection, (list, tuple, set)):
                 print(f"projector yielding {page.shape}")
                 yield page.select(list(self._projection))
-
-            # if we have nothing to do, move along
-            elif self._projection == {"*": "*"} or page == None:
-                print(f"projector yielding {page.shape}")
-                yield page
 
             else:
                 # we elminimate attributes we don't want

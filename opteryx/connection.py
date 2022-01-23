@@ -41,7 +41,7 @@ class Connection:
 
         self._reader = reader
         if not reader:
-            reader = DiskStorage
+            reader = DiskStorage()
 
         self._partition_scheme = partition_scheme
         if isinstance(partition_scheme, (str, tuple, list, set)):
@@ -49,6 +49,8 @@ class Connection:
                 self._partition_scheme = MabelPartitionScheme()
             else:
                 self._partition_scheme = DefaultPartitionScheme(partition_scheme)
+        if partition_scheme is None:
+            self._partition_scheme = DefaultPartitionScheme("")
 
         self._cache = cache
 
@@ -66,6 +68,7 @@ class Cursor:
         self._connection = connection
         self._query = None
         self.arraysize = 1
+        self._stats = QueryStatistics()
 
     def _format_prepared_param(self, param):
         """
@@ -147,16 +150,15 @@ class Cursor:
 
         import time
 
-        statistics = QueryStatistics()
-        statistics.start_time = time.time_ns()
+        self._stats.start_time = time.time_ns()
         self._query_plan = QueryPlan(
             operation,
-            statistics,
+            self._stats,
             self._connection._reader,
             self._connection._partition_scheme,
         )
         # optimize the plan
-        statistics.planning_time = time.time_ns() - statistics.start_time
+        self._stats.planning_time = time.time_ns() - self._stats.start_time
         # self._execute = QueryExecutor(QueryPlan)
         self._results = self._query_plan.execute()
 
@@ -168,7 +170,7 @@ class Cursor:
 
     @property
     def stats(self):
-        pass
+        return self._stats.as_dict()
 
     def fetchone(self) -> Optional[Dict]:
         if self._results is None:

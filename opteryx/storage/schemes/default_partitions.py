@@ -10,7 +10,7 @@ class DefaultPartitionScheme(BasePartitionScheme):
             self._format = format
 
     def partition_format(self):
-        return "/".joint(self._format)
+        return "/".join(self._format)
 
     def filter_blobs(self, list_of_blobs):
         return list_of_blobs
