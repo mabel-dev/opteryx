@@ -1,3 +1,5 @@
+site_name: Opteryx
+
 theme:
   name: null
   custom_dir: mkdocs-material/material
