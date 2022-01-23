@@ -11,6 +11,9 @@ USE THE ZONEMAP:
 - Respond to simple aggregations using the zonemap, such as COUNT(*)
 - Use BRIN and selections to filter out blobs from being read that don't contain
   records which can match the selections.
+
+PARALLELIZE READING:
+- As one blob is read, the next is immediately cached for reading
 """
 from enum import Enum
 from typing import Iterable
@@ -32,8 +35,10 @@ do_nothing = lambda x: x
 KNOWN_EXTENSIONS = {
     "complete": (do_nothing, EXTENSION_TYPE.CONTROL),
     "ignore": (do_nothing, EXTENSION_TYPE.CONTROL),
-    "jsonl": (file_decoders.jsonl_decoder, EXTENSION_TYPE.DATA),
     "metadata": (do_nothing, EXTENSION_TYPE.CONTROL),
+
+    "arrow": (file_decoders.arrow_decoder, EXTENSION_TYPE.DATA),
+    "jsonl": (file_decoders.jsonl_decoder, EXTENSION_TYPE.DATA),
     "orc": (file_decoders.orc_decoder, EXTENSION_TYPE.DATA),
     "parquet": (file_decoders.parquet_decoder, EXTENSION_TYPE.DATA),
     "zstd": (file_decoders.zstd_decoder, EXTENSION_TYPE.DATA),
@@ -67,7 +72,11 @@ class DatasetReaderNode(BasePlanNode):
             partitioning=self._partition_scheme.partition_format(),
         )
 
+        self._statistics.partitions_found = len(partitions)
+
         for partition in partitions:
+
+            self._statistics.partitions_scanned += 1
 
             # Get a list of all of the blobs in the partition.
             blob_list = self._reader.get_blob_list(partition)
@@ -92,6 +101,9 @@ class DatasetReaderNode(BasePlanNode):
             #                zonemap = orjson.loads(self._reader.read_blob(zonemap_files[0]))
             #            except:
             #                pass
+
+            if len(blob_list) > 0:
+                self._statistics.partitions_read += 1
 
             for blob_name in blob_list:
 

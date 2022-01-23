@@ -31,14 +31,11 @@ class Connection:
     def __init__(
         self,
         *,
-        project: Optional[str] = None,
         reader: Optional[BaseStorageAdapter] = None,
         partition_scheme: Union[str, Tuple, BasePartitionScheme] = "mabel",
         cache: Optional[BaseBufferCache] = None,
         **kwargs,
     ):
-        self._project = project
-
         self._reader = reader
         if not reader:
             reader = DiskStorage()
@@ -83,11 +80,8 @@ class Cursor:
         if isinstance(param, bool):
             return "TRUE" if param else "FALSE"
 
-        if isinstance(param, int):
-            return f"{param}"
-
-        if isinstance(param, float):
-            return f'DOUBLE("{param}")'
+        if isinstance(param, (float, int)):
+            return f'DECIMAL("{param}")'
 
         if isinstance(param, str):
             # if I have no apostrophes, use them as the delimiter

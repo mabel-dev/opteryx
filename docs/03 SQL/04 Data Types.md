@@ -18,7 +18,7 @@ Columns of type BOOLEAN cannot be indexed.
 
 ## NUMERIC
 
-Type Hint in Queries NUMERIC("value")
+Type Hint in Queries NUMERIC('value')
 
 ## LIST
 
@@ -31,15 +31,13 @@ Formatted as (value1, value2, ...)
 
 Columns of type STRUCT cannot be indexed. 
 
-Formatted as {("key1": value1),("key2": value2),...}
-
 ## TIMESTAMP
 
 Mabel will implicitly interpret strings formatted as
 
-"YYYY-MM-DD" or "YYYY-MM-DD HH:MM" as TIMESTAMP
+'YYYY-MM-DD' or 'YYYY-MM-DD HH:MM' as TIMESTAMP
 
-Type Hint in Queries TIMESTAMP("value")
+Type Hint in Queries TIMESTAMP('value')
 
 ## OTHER
 

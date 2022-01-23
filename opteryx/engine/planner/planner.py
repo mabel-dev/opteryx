@@ -30,7 +30,7 @@ from opteryx.engine.query_statistics import QueryStatistics
 from opteryx.exceptions import SqlError
 from opteryx.engine.attribute_types import OPTERYX_TYPES
 from opteryx.storage.schemes import DefaultPartitionScheme
-
+from opteryx.storage.adapters.local.disk_store import DiskStorage
 
 """
 BinaryOperator::Plus => "+",
@@ -78,6 +78,7 @@ OPERATOR_XLAT = {
     "Like": "LIKE",
     "NotLike": "NOT LIKE",
     "InList": "IN",
+    "PGRegexMatch": "~"
 }
 
 
@@ -90,16 +91,9 @@ def _build_dnf_filters(filters):
         return None
 
     print(filters)
-    if "Identifier" in filters:
-        quote_style = filters["Identifier"].get("quote_style")
-        if quote_style == "`" or quote_style is None:
-            return filters["Identifier"]["value"]  # we're an identifier
-        if quote_style == '"':
-            return (
-                filters["Identifier"]["value"],
-                OPTERYX_TYPES.VARCHAR,
-            )  # we're a literal
-    if "Value" in filters:
+    if "Identifier" in filters:  # we're an identifier 
+        return filters["Identifier"]["value"]
+    if "Value" in filters:  # we're a literal 
         value = filters["Value"]
         if "SingleQuotedString" in value:
             return (value["SingleQuotedString"], OPTERYX_TYPES.VARCHAR)
@@ -395,12 +389,18 @@ if __name__ == "__main__":
     import time
     from opteryx.third_party.pyarrow_ops import head
 
-    SQL = "SELECT DECIMAL(AVG(12)) from _tests_data.rss where $a = 'b' and _c = b"
+    SQL = "SELECT * from `tests-data.zoned` where followers = \'name\'"
 
     statistics = QueryStatistics()
     statistics.start_time = time.time_ns()
-    q = QueryPlan(SQL, statistics)
+    q = QueryPlan(SQL, statistics, reader=DiskStorage(), partition_scheme=DefaultPartitionScheme(""))
     print(q)
-    print(statistics.as_dict())
 
-#    head(q.execute(), 100)
+    from opteryx.engine.display import ascii_table
+    from opteryx.utils.pyarrow import fetchmany, fetchall
+
+    # do this to go over the records
+    print([a for a in fetchall(q.execute())])
+
+    print(statistics.as_dict())
+    print((time.time_ns() - statistics.start_time) / 1e9)

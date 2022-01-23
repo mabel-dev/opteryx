@@ -29,8 +29,8 @@ NATIVE_OPERATORS = {
     "<": pc.less,
     "<=": pc.less_equal,
     "<>": pc.not_equal,
-    #    "LIKE": pc.match_like,
-    #    "SIMILAR TO": pc.match_substring_regex,
+    "LIKE": pc.match_like,
+    "~": pc.match_substring_regex,
 }
 
 CODED_OPERATORS = {}
@@ -104,9 +104,9 @@ class SelectionNode(BasePlanNode):
             from opteryx.third_party.pyarrow_ops import filters
 
             for page in data_pages:
-                #                filtered = filters(page, self._filter)
-                #                print(f"selector yielding {filtered.shape}", self._filter)
-                #                yield filtered
+                filtered = filters(page, self._filter)
+                print(f"selector yielding {filtered.shape}", self._filter)
+                yield filtered
 
-                mask = _evaluate(self._filter, page)
-                yield page.take(list(mask))
+#                mask = _evaluate(self._filter, page)
+#                yield page.take(list(mask))

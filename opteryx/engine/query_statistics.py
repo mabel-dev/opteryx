@@ -6,6 +6,10 @@ class QueryStatistics:
         self.bytes_processed_data: int = 0
         self.rows_read: int = 0
 
+        self.partitions_found: int = 0
+        self.partitions_scanned: int = 0
+        self.partitions_read: int = 0
+
         self.time_metadata: int = 0
         self.time_data_read: int = 0
 
@@ -28,4 +32,7 @@ class QueryStatistics:
             "time_data_read": self.time_data_read,
             "time_metadata": self.time_metadata,
             "time_planning": self.time_planning,
+            "partitions_found": self.partitions_found,
+            "partitions_scanned": self.partitions_scanned,
+            "partitions_read": self.partitions_read
         }
