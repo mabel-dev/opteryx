@@ -15,9 +15,12 @@ stores, it is not compliant with the standard:
 https://www.python.org/dev/peps/pep-0249/ 
 """
 
-from typing import Dict, Optional, List, Any
-from opteryx import constants
-from opteryx.query import OpteryxQuery
+from typing import Dict, Optional, List, Union, Tuple
+from opteryx.storage import BaseStorageAdapter, BaseBufferCache, BasePartitionScheme
+from opteryx.storage.adapters import DiskStorage
+from opteryx.engine import QueryStatistics, QueryPlan
+from opteryx.storage.schemes import DefaultPartitionScheme, MabelPartitionScheme
+from opteryx.utils.pyarrow import fetchmany, fetchall, fetchone
 
 
 class Connection:
@@ -27,25 +30,29 @@ class Connection:
 
     def __init__(
         self,
-        host,
-        port=constants.DEFAULT_PORT,
-        user=None,
-        source=constants.DEFAULT_SOURCE,
-        catalog=constants.DEFAULT_CATALOG,
-        schema=constants.DEFAULT_SCHEMA,
-        auth=constants.DEFAULT_AUTH,
-        max_attempts=constants.DEFAULT_MAX_ATTEMPTS,
-        request_timeout=constants.DEFAULT_REQUEST_TIMEOUT,
+        *,
+        project: Optional[str] = None,
+        reader: Optional[BaseStorageAdapter] = None,
+        partition_scheme: Union[str, Tuple, BasePartitionScheme] = "mabel",
+        cache: Optional[BaseBufferCache] = None,
+        **kwargs,
     ):
-        self.host = host
-        self.port = port
-        self.user = user
-        self.source = source
-        self.catalog = catalog
-        self.schema = schema
-        self.auth = auth
-        self.max_attempts = max_attempts
-        self.request_timeout = request_timeout
+        self._project = project
+
+        self._reader = reader
+        if not reader:
+            reader = DiskStorage
+
+        self._partition_scheme = partition_scheme
+        if isinstance(partition_scheme, (str, tuple, list, set)):
+            if str(partition_scheme).lower() == "mabel":
+                self._partition_scheme = MabelPartitionScheme()
+            else:
+                self._partition_scheme = DefaultPartitionScheme(partition_scheme)
+
+        self._cache = cache
+
+        self._kwargs = kwargs
 
     def cursor(self):
         return Cursor(self)
@@ -138,33 +145,41 @@ class Cursor:
 
             print(operation)
 
-        self._query = OpteryxQuery(self._connection, operation)
+        import time
+
+        statistics = QueryStatistics()
+        statistics.start_time = time.time_ns()
+        self._query_plan = QueryPlan(operation, statistics)
+        # optimize the plan
+        statistics.planning_time = time.time_ns() - statistics.start_time
+        # self._execute = QueryExecutor(QueryPlan)
+        self._results = self._query_plan.execute()
 
     @property
     def rowcount(self):
-        if self._query is None:
+        if self._results is None:
             raise Exception("Cursor must be executed first")
-        return self._query.count()
+        return self._results.count()
 
     @property
     def stats(self):
         pass
 
     def fetchone(self) -> Optional[Dict]:
-        if self._query is None:
+        if self._results is None:
             raise Exception("Cursor must be executed first")
-        return self._query.fetchone()
+        return fetchone(self._results)
 
     def fetchmany(self, size=None) -> List[Dict]:
         fetch_size = self.arraysize if size is None else size
-        if self._query is None:
+        if self._results is None:
             raise Exception("Cursor must be executed first")
-        return self._query.fetchmany(fetch_size)
+        return fetchmany(self._results, fetch_size)
 
     def fetchall(self) -> List[Dict]:
         if self._query is None:
             raise Exception("Cursor must be executed first")
-        return self._query.fetchall()
+        return fetchall(self._results)
 
     def close(self):
         self._connection.close()

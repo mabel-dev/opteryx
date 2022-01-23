@@ -12,7 +12,7 @@ from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
 
 
 class ProjectionNode(BasePlanNode):
-    def __init__(self, statistics:QueryStatistics, **config):
+    def __init__(self, statistics: QueryStatistics, **config):
         """
         Attribute Projection, remove unwanted columns and performs column renames.
 
@@ -29,7 +29,7 @@ class ProjectionNode(BasePlanNode):
     def __repr__(self):
         return str(self._projection)
 
-    def execute(self, data_pages:Iterable) -> Iterable:
+    def execute(self, data_pages: Iterable) -> Iterable:
 
         for page in data_pages:
 
@@ -42,7 +42,6 @@ class ProjectionNode(BasePlanNode):
             elif self._projection == {"*": "*"} or page == None:
                 print(f"projector yielding {page.shape}")
                 yield page
-
 
             else:
                 # we elminimate attributes we don't want

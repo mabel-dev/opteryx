@@ -3,12 +3,12 @@
 /* BEGIN: Cython Metadata
 {
     "distutils": {
-        "name": "accumulation_tree.accumulation_tree",
+        "name": "cythonize",
         "sources": [
             "opteryx/third_party/accumulation_tree/accumulation_tree.pyx"
         ]
     },
-    "module_name": "accumulation_tree.accumulation_tree"
+    "module_name": "cythonize"
 }
 END: Cython Metadata */
 
@@ -685,8 +685,8 @@ static CYTHON_INLINE float __PYX_NAN() {
   #endif
 #endif
 
-#define __PYX_HAVE__accumulation_tree__accumulation_tree
-#define __PYX_HAVE_API__accumulation_tree__accumulation_tree
+#define __PYX_HAVE__cythonize
+#define __PYX_HAVE_API__cythonize
 /* Early includes */
 #ifdef _OPENMP
 #include <omp.h>
@@ -902,66 +902,66 @@ static const char *__pyx_f[] = {
 };
 
 /*--- Type declarations ---*/
-struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node;
-struct __pyx_obj_17accumulation_tree_17accumulation_tree_NullKey;
-struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree;
-struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree;
+struct __pyx_obj_9cythonize_Node;
+struct __pyx_obj_9cythonize_NullKey;
+struct __pyx_obj_9cythonize__RBTree;
+struct __pyx_obj_9cythonize__AccumulationTree;
 
-/* "accumulation_tree/accumulation_tree.pyx":6
+/* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":6
  * import operator
  * 
  * cdef class Node:             # <<<<<<<<<<<<<<
  *     cdef readonly object key
  *     cdef readonly object value
  */
-struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node {
+struct __pyx_obj_9cythonize_Node {
   PyObject_HEAD
-  struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree_Node *__pyx_vtab;
+  struct __pyx_vtabstruct_9cythonize_Node *__pyx_vtab;
   PyObject *key;
   PyObject *value;
-  struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *left;
-  struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *right;
+  struct __pyx_obj_9cythonize_Node *left;
+  struct __pyx_obj_9cythonize_Node *right;
   PyObject *accumulation;
   int red;
 };
 
 
-/* "accumulation_tree/accumulation_tree.pyx":48
+/* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":48
  *         return False
  * 
  * cdef class NullKey:             # <<<<<<<<<<<<<<
  *     pass
  * 
  */
-struct __pyx_obj_17accumulation_tree_17accumulation_tree_NullKey {
+struct __pyx_obj_9cythonize_NullKey {
   PyObject_HEAD
 };
 
 
-/* "accumulation_tree/accumulation_tree.pyx":53
+/* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":53
  * cdef NullKey null_key = NullKey()
  * 
  * cdef class _RBTree(object):             # <<<<<<<<<<<<<<
  *     cdef public Node _root
  *     cdef public int _count
  */
-struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree {
+struct __pyx_obj_9cythonize__RBTree {
   PyObject_HEAD
-  struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree__RBTree *__pyx_vtab;
-  struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *_root;
+  struct __pyx_vtabstruct_9cythonize__RBTree *__pyx_vtab;
+  struct __pyx_obj_9cythonize_Node *_root;
   int _count;
 };
 
 
-/* "accumulation_tree/accumulation_tree.pyx":207
+/* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":207
  *     pass
  * 
  * cdef class _AccumulationTree(_RBTree):             # <<<<<<<<<<<<<<
  *     cdef object _zero
  *     cdef object _mapper
  */
-struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree {
-  struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree __pyx_base;
+struct __pyx_obj_9cythonize__AccumulationTree {
+  struct __pyx_obj_9cythonize__RBTree __pyx_base;
   PyObject *_zero;
   PyObject *_mapper;
   PyObject *_reducer;
@@ -970,7 +970,7 @@ struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree {
 
 
 
-/* "accumulation_tree/accumulation_tree.pyx":6
+/* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":6
  * import operator
  * 
  * cdef class Node:             # <<<<<<<<<<<<<<
@@ -978,14 +978,14 @@ struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree {
  *     cdef readonly object value
  */
 
-struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree_Node {
-  struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *(*get)(struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *, int);
-  void (*set)(struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *, int, struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *);
+struct __pyx_vtabstruct_9cythonize_Node {
+  struct __pyx_obj_9cythonize_Node *(*get)(struct __pyx_obj_9cythonize_Node *, int);
+  void (*set)(struct __pyx_obj_9cythonize_Node *, int, struct __pyx_obj_9cythonize_Node *);
 };
-static struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree_Node *__pyx_vtabptr_17accumulation_tree_17accumulation_tree_Node;
+static struct __pyx_vtabstruct_9cythonize_Node *__pyx_vtabptr_9cythonize_Node;
 
 
-/* "accumulation_tree/accumulation_tree.pyx":53
+/* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":53
  * cdef NullKey null_key = NullKey()
  * 
  * cdef class _RBTree(object):             # <<<<<<<<<<<<<<
@@ -993,16 +993,16 @@ static struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree_Node *__p
  *     cdef public int _count
  */
 
-struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree__RBTree {
-  struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *(*_new_node)(struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree *, PyObject *, PyObject *);
-  void (*set)(struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree *, struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *, int, struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *);
-  struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *(*jsw_single)(struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree *, struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *, int);
-  struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *(*jsw_double)(struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree *, struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *, int);
+struct __pyx_vtabstruct_9cythonize__RBTree {
+  struct __pyx_obj_9cythonize_Node *(*_new_node)(struct __pyx_obj_9cythonize__RBTree *, PyObject *, PyObject *);
+  void (*set)(struct __pyx_obj_9cythonize__RBTree *, struct __pyx_obj_9cythonize_Node *, int, struct __pyx_obj_9cythonize_Node *);
+  struct __pyx_obj_9cythonize_Node *(*jsw_single)(struct __pyx_obj_9cythonize__RBTree *, struct __pyx_obj_9cythonize_Node *, int);
+  struct __pyx_obj_9cythonize_Node *(*jsw_double)(struct __pyx_obj_9cythonize__RBTree *, struct __pyx_obj_9cythonize_Node *, int);
 };
-static struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree__RBTree *__pyx_vtabptr_17accumulation_tree_17accumulation_tree__RBTree;
+static struct __pyx_vtabstruct_9cythonize__RBTree *__pyx_vtabptr_9cythonize__RBTree;
 
 
-/* "accumulation_tree/accumulation_tree.pyx":207
+/* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":207
  *     pass
  * 
  * cdef class _AccumulationTree(_RBTree):             # <<<<<<<<<<<<<<
@@ -1010,15 +1010,15 @@ static struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree__RBTree *
  *     cdef object _mapper
  */
 
-struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree__AccumulationTree {
-  struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree__RBTree __pyx_base;
-  PyObject *(*_get_full_accumulation)(struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *, struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *);
-  PyObject *(*_get_right_accumulation)(struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *, struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *, PyObject *);
-  void (*_update_dirty_nodes)(struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *);
-  PyObject *(*_path_to_key)(struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *, PyObject *);
-  void (*_update_accumulation)(struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *, PyObject *);
+struct __pyx_vtabstruct_9cythonize__AccumulationTree {
+  struct __pyx_vtabstruct_9cythonize__RBTree __pyx_base;
+  PyObject *(*_get_full_accumulation)(struct __pyx_obj_9cythonize__AccumulationTree *, struct __pyx_obj_9cythonize_Node *);
+  PyObject *(*_get_right_accumulation)(struct __pyx_obj_9cythonize__AccumulationTree *, struct __pyx_obj_9cythonize_Node *, PyObject *);
+  void (*_update_dirty_nodes)(struct __pyx_obj_9cythonize__AccumulationTree *);
+  PyObject *(*_path_to_key)(struct __pyx_obj_9cythonize__AccumulationTree *, PyObject *);
+  void (*_update_accumulation)(struct __pyx_obj_9cythonize__AccumulationTree *, PyObject *);
 };
-static struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree__AccumulationTree *__pyx_vtabptr_17accumulation_tree_17accumulation_tree__AccumulationTree;
+static struct __pyx_vtabstruct_9cythonize__AccumulationTree *__pyx_vtabptr_9cythonize__AccumulationTree;
 
 /* --- Runtime support code (head) --- */
 /* Refnanny.proto */
@@ -1520,36 +1520,36 @@ static int __Pyx_check_binary_version(void);
 /* InitStrings.proto */
 static int __Pyx_InitStrings(__Pyx_StringTabEntry *t);
 
-static struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_f_17accumulation_tree_17accumulation_tree_4Node_get(struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_self, int __pyx_v_key); /* proto*/
-static void __pyx_f_17accumulation_tree_17accumulation_tree_4Node_set(struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_self, int __pyx_v_key, struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_value); /* proto*/
-static struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_f_17accumulation_tree_17accumulation_tree_7_RBTree__new_node(struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree *__pyx_v_self, PyObject *__pyx_v_key, PyObject *__pyx_v_value); /* proto*/
-static void __pyx_f_17accumulation_tree_17accumulation_tree_7_RBTree_set(CYTHON_UNUSED struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree *__pyx_v_self, struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_node, int __pyx_v_direction, struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_child_node); /* proto*/
-static struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_f_17accumulation_tree_17accumulation_tree_7_RBTree_jsw_single(struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree *__pyx_v_self, struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_root, int __pyx_v_direction); /* proto*/
-static struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_f_17accumulation_tree_17accumulation_tree_7_RBTree_jsw_double(struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree *__pyx_v_self, struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_root, int __pyx_v_direction); /* proto*/
-static struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_f_17accumulation_tree_17accumulation_tree_17_AccumulationTree__new_node(struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *__pyx_v_self, PyObject *__pyx_v_key, PyObject *__pyx_v_value); /* proto*/
-static void __pyx_f_17accumulation_tree_17accumulation_tree_17_AccumulationTree_set(struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *__pyx_v_self, struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_node, int __pyx_v_direction, struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_child_node); /* proto*/
-static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree_17_AccumulationTree__get_full_accumulation(struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *__pyx_v_self, struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_node); /* proto*/
-static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree_17_AccumulationTree__get_right_accumulation(struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *__pyx_v_self, struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_node, PyObject *__pyx_v_lower); /* proto*/
-static void __pyx_f_17accumulation_tree_17accumulation_tree_17_AccumulationTree__update_dirty_nodes(struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *__pyx_v_self); /* proto*/
-static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree_17_AccumulationTree__path_to_key(struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *__pyx_v_self, PyObject *__pyx_v_key); /* proto*/
-static void __pyx_f_17accumulation_tree_17accumulation_tree_17_AccumulationTree__update_accumulation(struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *__pyx_v_self, PyObject *__pyx_v_nodes); /* proto*/
+static struct __pyx_obj_9cythonize_Node *__pyx_f_9cythonize_4Node_get(struct __pyx_obj_9cythonize_Node *__pyx_v_self, int __pyx_v_key); /* proto*/
+static void __pyx_f_9cythonize_4Node_set(struct __pyx_obj_9cythonize_Node *__pyx_v_self, int __pyx_v_key, struct __pyx_obj_9cythonize_Node *__pyx_v_value); /* proto*/
+static struct __pyx_obj_9cythonize_Node *__pyx_f_9cythonize_7_RBTree__new_node(struct __pyx_obj_9cythonize__RBTree *__pyx_v_self, PyObject *__pyx_v_key, PyObject *__pyx_v_value); /* proto*/
+static void __pyx_f_9cythonize_7_RBTree_set(CYTHON_UNUSED struct __pyx_obj_9cythonize__RBTree *__pyx_v_self, struct __pyx_obj_9cythonize_Node *__pyx_v_node, int __pyx_v_direction, struct __pyx_obj_9cythonize_Node *__pyx_v_child_node); /* proto*/
+static struct __pyx_obj_9cythonize_Node *__pyx_f_9cythonize_7_RBTree_jsw_single(struct __pyx_obj_9cythonize__RBTree *__pyx_v_self, struct __pyx_obj_9cythonize_Node *__pyx_v_root, int __pyx_v_direction); /* proto*/
+static struct __pyx_obj_9cythonize_Node *__pyx_f_9cythonize_7_RBTree_jsw_double(struct __pyx_obj_9cythonize__RBTree *__pyx_v_self, struct __pyx_obj_9cythonize_Node *__pyx_v_root, int __pyx_v_direction); /* proto*/
+static struct __pyx_obj_9cythonize_Node *__pyx_f_9cythonize_17_AccumulationTree__new_node(struct __pyx_obj_9cythonize__AccumulationTree *__pyx_v_self, PyObject *__pyx_v_key, PyObject *__pyx_v_value); /* proto*/
+static void __pyx_f_9cythonize_17_AccumulationTree_set(struct __pyx_obj_9cythonize__AccumulationTree *__pyx_v_self, struct __pyx_obj_9cythonize_Node *__pyx_v_node, int __pyx_v_direction, struct __pyx_obj_9cythonize_Node *__pyx_v_child_node); /* proto*/
+static PyObject *__pyx_f_9cythonize_17_AccumulationTree__get_full_accumulation(struct __pyx_obj_9cythonize__AccumulationTree *__pyx_v_self, struct __pyx_obj_9cythonize_Node *__pyx_v_node); /* proto*/
+static PyObject *__pyx_f_9cythonize_17_AccumulationTree__get_right_accumulation(struct __pyx_obj_9cythonize__AccumulationTree *__pyx_v_self, struct __pyx_obj_9cythonize_Node *__pyx_v_node, PyObject *__pyx_v_lower); /* proto*/
+static void __pyx_f_9cythonize_17_AccumulationTree__update_dirty_nodes(struct __pyx_obj_9cythonize__AccumulationTree *__pyx_v_self); /* proto*/
+static PyObject *__pyx_f_9cythonize_17_AccumulationTree__path_to_key(struct __pyx_obj_9cythonize__AccumulationTree *__pyx_v_self, PyObject *__pyx_v_key); /* proto*/
+static void __pyx_f_9cythonize_17_AccumulationTree__update_accumulation(struct __pyx_obj_9cythonize__AccumulationTree *__pyx_v_self, PyObject *__pyx_v_nodes); /* proto*/
 
-/* Module declarations from 'accumulation_tree.accumulation_tree' */
-static PyTypeObject *__pyx_ptype_17accumulation_tree_17accumulation_tree_Node = 0;
-static PyTypeObject *__pyx_ptype_17accumulation_tree_17accumulation_tree_NullKey = 0;
-static PyTypeObject *__pyx_ptype_17accumulation_tree_17accumulation_tree__RBTree = 0;
-static PyTypeObject *__pyx_ptype_17accumulation_tree_17accumulation_tree__AccumulationTree = 0;
-static struct __pyx_obj_17accumulation_tree_17accumulation_tree_NullKey *__pyx_v_17accumulation_tree_17accumulation_tree_null_key = 0;
-static int __pyx_f_17accumulation_tree_17accumulation_tree_is_red(struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *); /*proto*/
-static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree___pyx_unpickle_Node__set_state(struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *, PyObject *); /*proto*/
-static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree___pyx_unpickle_NullKey__set_state(struct __pyx_obj_17accumulation_tree_17accumulation_tree_NullKey *, PyObject *); /*proto*/
-static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree___pyx_unpickle__RBTree__set_state(struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree *, PyObject *); /*proto*/
-static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree___pyx_unpickle__AccumulationTree__set_state(struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *, PyObject *); /*proto*/
-#define __Pyx_MODULE_NAME "accumulation_tree.accumulation_tree"
-extern int __pyx_module_is_main_accumulation_tree__accumulation_tree;
-int __pyx_module_is_main_accumulation_tree__accumulation_tree = 0;
+/* Module declarations from 'cythonize' */
+static PyTypeObject *__pyx_ptype_9cythonize_Node = 0;
+static PyTypeObject *__pyx_ptype_9cythonize_NullKey = 0;
+static PyTypeObject *__pyx_ptype_9cythonize__RBTree = 0;
+static PyTypeObject *__pyx_ptype_9cythonize__AccumulationTree = 0;
+static struct __pyx_obj_9cythonize_NullKey *__pyx_v_9cythonize_null_key = 0;
+static int __pyx_f_9cythonize_is_red(struct __pyx_obj_9cythonize_Node *); /*proto*/
+static PyObject *__pyx_f_9cythonize___pyx_unpickle_Node__set_state(struct __pyx_obj_9cythonize_Node *, PyObject *); /*proto*/
+static PyObject *__pyx_f_9cythonize___pyx_unpickle_NullKey__set_state(struct __pyx_obj_9cythonize_NullKey *, PyObject *); /*proto*/
+static PyObject *__pyx_f_9cythonize___pyx_unpickle__RBTree__set_state(struct __pyx_obj_9cythonize__RBTree *, PyObject *); /*proto*/
+static PyObject *__pyx_f_9cythonize___pyx_unpickle__AccumulationTree__set_state(struct __pyx_obj_9cythonize__AccumulationTree *, PyObject *); /*proto*/
+#define __Pyx_MODULE_NAME "cythonize"
+extern int __pyx_module_is_main_cythonize;
+int __pyx_module_is_main_cythonize = 0;
 
-/* Implementation of 'accumulation_tree.accumulation_tree' */
+/* Implementation of 'cythonize' */
 static PyObject *__pyx_builtin_KeyError;
 static PyObject *__pyx_builtin_reversed;
 static const char __pyx_k_add[] = "add";
@@ -1593,6 +1593,7 @@ static const char __pyx_k_pyx_type[] = "__pyx_type";
 static const char __pyx_k_qualname[] = "__qualname__";
 static const char __pyx_k_reversed[] = "reversed";
 static const char __pyx_k_setstate[] = "__setstate__";
+static const char __pyx_k_cythonize[] = "cythonize";
 static const char __pyx_k_metaclass[] = "__metaclass__";
 static const char __pyx_k_pyx_state[] = "__pyx_state";
 static const char __pyx_k_reduce_ex[] = "__reduce_ex__";
@@ -1617,7 +1618,6 @@ static const char __pyx_k_Incompatible_checksums_s_vs_0xab[] = "Incompatible che
 static const char __pyx_k_Incompatible_checksums_s_vs_0xd4[] = "Incompatible checksums (%s vs 0xd41d8cd = ())";
 static const char __pyx_k_Incompatible_checksums_s_vs_0xd8[] = "Incompatible checksums (%s vs 0xd8811bc = (_count, _root))";
 static const char __pyx_k_Incompatible_checksums_s_vs_0xe2[] = "Incompatible checksums (%s vs 0xe2cf0fa = (_count, _dirty_nodes, _mapper, _reducer, _root, _zero))";
-static const char __pyx_k_accumulation_tree_accumulation_t[] = "accumulation_tree.accumulation_tree";
 static PyObject *__pyx_n_s_ABCTree;
 static PyObject *__pyx_n_s_AccumulationTree;
 static PyObject *__pyx_n_s_AccumulationTree_2;
@@ -1632,9 +1632,9 @@ static PyObject *__pyx_n_s_PickleError;
 static PyObject *__pyx_n_s_RBTree;
 static PyObject *__pyx_n_s_RBTree_2;
 static PyObject *__pyx_n_s_abctree;
-static PyObject *__pyx_n_s_accumulation_tree_accumulation_t;
 static PyObject *__pyx_n_s_add;
 static PyObject *__pyx_n_s_cline_in_traceback;
+static PyObject *__pyx_n_s_cythonize;
 static PyObject *__pyx_n_s_dict;
 static PyObject *__pyx_n_s_doc;
 static PyObject *__pyx_n_s_free;
@@ -1687,50 +1687,50 @@ static PyObject *__pyx_n_s_upper;
 static PyObject *__pyx_n_s_value;
 static PyObject *__pyx_n_s_zero;
 static PyObject *__pyx_n_u_zero;
-static int __pyx_pf_17accumulation_tree_17accumulation_tree_4Node___init__(struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_self, PyObject *__pyx_v_key, PyObject *__pyx_v_value); /* proto */
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_4Node_2free(struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_self); /* proto */
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_4Node_4__getitem__(struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_self, PyObject *__pyx_v_key); /* proto */
-static int __pyx_pf_17accumulation_tree_17accumulation_tree_4Node_6__setitem__(struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_self, PyObject *__pyx_v_key, PyObject *__pyx_v_value); /* proto */
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_4Node_3key___get__(struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_self); /* proto */
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_4Node_5value___get__(struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_self); /* proto */
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_4Node_4left___get__(struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_self); /* proto */
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_4Node_5right___get__(struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_self); /* proto */
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_4Node_8__reduce_cython__(struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_self); /* proto */
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_4Node_10__setstate_cython__(struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_self, PyObject *__pyx_v___pyx_state); /* proto */
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7NullKey___reduce_cython__(struct __pyx_obj_17accumulation_tree_17accumulation_tree_NullKey *__pyx_v_self); /* proto */
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7NullKey_2__setstate_cython__(struct __pyx_obj_17accumulation_tree_17accumulation_tree_NullKey *__pyx_v_self, PyObject *__pyx_v___pyx_state); /* proto */
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_insert(struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree *__pyx_v_self, PyObject *__pyx_v_key, PyObject *__pyx_v_value); /* proto */
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_2remove(struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree *__pyx_v_self, PyObject *__pyx_v_key); /* proto */
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_4__getstate__(struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree *__pyx_v_self); /* proto */
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_6__setstate__(struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree *__pyx_v_self, PyObject *__pyx_v_state); /* proto */
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_5_root___get__(struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree *__pyx_v_self); /* proto */
-static int __pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_5_root_2__set__(struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree *__pyx_v_self, PyObject *__pyx_v_value); /* proto */
-static int __pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_5_root_4__del__(struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree *__pyx_v_self); /* proto */
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_6_count___get__(struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree *__pyx_v_self); /* proto */
-static int __pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_6_count_2__set__(struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree *__pyx_v_self, PyObject *__pyx_v_value); /* proto */
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_8__reduce_cython__(struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree *__pyx_v_self); /* proto */
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_10__setstate_cython__(struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree *__pyx_v_self, PyObject *__pyx_v___pyx_state); /* proto */
-static int __pyx_pf_17accumulation_tree_17accumulation_tree_17_AccumulationTree___init__(struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *__pyx_v_self, PyObject *__pyx_v_mapper, PyObject *__pyx_v_reducer, PyObject *__pyx_v_zero); /* proto */
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_AccumulationTree_2insert(struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *__pyx_v_self, PyObject *__pyx_v_key, PyObject *__pyx_v_value); /* proto */
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_AccumulationTree_4remove(struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *__pyx_v_self, PyObject *__pyx_v_key); /* proto */
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_AccumulationTree_6_get_left_accumulation(struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *__pyx_v_self, struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_node, PyObject *__pyx_v_upper); /* proto */
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_AccumulationTree_8_get_accumulation(struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *__pyx_v_self, struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_node, PyObject *__pyx_v_lower, PyObject *__pyx_v_upper); /* proto */
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_AccumulationTree_10get_accumulation(struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *__pyx_v_self, PyObject *__pyx_v_lower, PyObject *__pyx_v_upper); /* proto */
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_AccumulationTree_12get_left_accumulation(struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *__pyx_v_self, PyObject *__pyx_v_upper); /* proto */
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_AccumulationTree_14get_right_accumulation(struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *__pyx_v_self, PyObject *__pyx_v_lower); /* proto */
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_AccumulationTree_16get_full_accumulation(struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *__pyx_v_self); /* proto */
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_AccumulationTree_18__getstate__(struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *__pyx_v_self); /* proto */
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_AccumulationTree_20__setstate__(struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *__pyx_v_self, PyObject *__pyx_v_state); /* proto */
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_AccumulationTree_22__reduce_cython__(struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *__pyx_v_self); /* proto */
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_AccumulationTree_24__setstate_cython__(struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *__pyx_v_self, PyObject *__pyx_v___pyx_state); /* proto */
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree___pyx_unpickle_Node(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v___pyx_type, long __pyx_v___pyx_checksum, PyObject *__pyx_v___pyx_state); /* proto */
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_2__pyx_unpickle_NullKey(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v___pyx_type, long __pyx_v___pyx_checksum, PyObject *__pyx_v___pyx_state); /* proto */
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_4__pyx_unpickle__RBTree(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v___pyx_type, long __pyx_v___pyx_checksum, PyObject *__pyx_v___pyx_state); /* proto */
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_6__pyx_unpickle__AccumulationTree(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v___pyx_type, long __pyx_v___pyx_checksum, PyObject *__pyx_v___pyx_state); /* proto */
-static PyObject *__pyx_tp_new_17accumulation_tree_17accumulation_tree_Node(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
-static PyObject *__pyx_tp_new_17accumulation_tree_17accumulation_tree_NullKey(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
-static PyObject *__pyx_tp_new_17accumulation_tree_17accumulation_tree__RBTree(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
-static PyObject *__pyx_tp_new_17accumulation_tree_17accumulation_tree__AccumulationTree(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
+static int __pyx_pf_9cythonize_4Node___init__(struct __pyx_obj_9cythonize_Node *__pyx_v_self, PyObject *__pyx_v_key, PyObject *__pyx_v_value); /* proto */
+static PyObject *__pyx_pf_9cythonize_4Node_2free(struct __pyx_obj_9cythonize_Node *__pyx_v_self); /* proto */
+static PyObject *__pyx_pf_9cythonize_4Node_4__getitem__(struct __pyx_obj_9cythonize_Node *__pyx_v_self, PyObject *__pyx_v_key); /* proto */
+static int __pyx_pf_9cythonize_4Node_6__setitem__(struct __pyx_obj_9cythonize_Node *__pyx_v_self, PyObject *__pyx_v_key, PyObject *__pyx_v_value); /* proto */
+static PyObject *__pyx_pf_9cythonize_4Node_3key___get__(struct __pyx_obj_9cythonize_Node *__pyx_v_self); /* proto */
+static PyObject *__pyx_pf_9cythonize_4Node_5value___get__(struct __pyx_obj_9cythonize_Node *__pyx_v_self); /* proto */
+static PyObject *__pyx_pf_9cythonize_4Node_4left___get__(struct __pyx_obj_9cythonize_Node *__pyx_v_self); /* proto */
+static PyObject *__pyx_pf_9cythonize_4Node_5right___get__(struct __pyx_obj_9cythonize_Node *__pyx_v_self); /* proto */
+static PyObject *__pyx_pf_9cythonize_4Node_8__reduce_cython__(struct __pyx_obj_9cythonize_Node *__pyx_v_self); /* proto */
+static PyObject *__pyx_pf_9cythonize_4Node_10__setstate_cython__(struct __pyx_obj_9cythonize_Node *__pyx_v_self, PyObject *__pyx_v___pyx_state); /* proto */
+static PyObject *__pyx_pf_9cythonize_7NullKey___reduce_cython__(struct __pyx_obj_9cythonize_NullKey *__pyx_v_self); /* proto */
+static PyObject *__pyx_pf_9cythonize_7NullKey_2__setstate_cython__(struct __pyx_obj_9cythonize_NullKey *__pyx_v_self, PyObject *__pyx_v___pyx_state); /* proto */
+static PyObject *__pyx_pf_9cythonize_7_RBTree_insert(struct __pyx_obj_9cythonize__RBTree *__pyx_v_self, PyObject *__pyx_v_key, PyObject *__pyx_v_value); /* proto */
+static PyObject *__pyx_pf_9cythonize_7_RBTree_2remove(struct __pyx_obj_9cythonize__RBTree *__pyx_v_self, PyObject *__pyx_v_key); /* proto */
+static PyObject *__pyx_pf_9cythonize_7_RBTree_4__getstate__(struct __pyx_obj_9cythonize__RBTree *__pyx_v_self); /* proto */
+static PyObject *__pyx_pf_9cythonize_7_RBTree_6__setstate__(struct __pyx_obj_9cythonize__RBTree *__pyx_v_self, PyObject *__pyx_v_state); /* proto */
+static PyObject *__pyx_pf_9cythonize_7_RBTree_5_root___get__(struct __pyx_obj_9cythonize__RBTree *__pyx_v_self); /* proto */
+static int __pyx_pf_9cythonize_7_RBTree_5_root_2__set__(struct __pyx_obj_9cythonize__RBTree *__pyx_v_self, PyObject *__pyx_v_value); /* proto */
+static int __pyx_pf_9cythonize_7_RBTree_5_root_4__del__(struct __pyx_obj_9cythonize__RBTree *__pyx_v_self); /* proto */
+static PyObject *__pyx_pf_9cythonize_7_RBTree_6_count___get__(struct __pyx_obj_9cythonize__RBTree *__pyx_v_self); /* proto */
+static int __pyx_pf_9cythonize_7_RBTree_6_count_2__set__(struct __pyx_obj_9cythonize__RBTree *__pyx_v_self, PyObject *__pyx_v_value); /* proto */
+static PyObject *__pyx_pf_9cythonize_7_RBTree_8__reduce_cython__(struct __pyx_obj_9cythonize__RBTree *__pyx_v_self); /* proto */
+static PyObject *__pyx_pf_9cythonize_7_RBTree_10__setstate_cython__(struct __pyx_obj_9cythonize__RBTree *__pyx_v_self, PyObject *__pyx_v___pyx_state); /* proto */
+static int __pyx_pf_9cythonize_17_AccumulationTree___init__(struct __pyx_obj_9cythonize__AccumulationTree *__pyx_v_self, PyObject *__pyx_v_mapper, PyObject *__pyx_v_reducer, PyObject *__pyx_v_zero); /* proto */
+static PyObject *__pyx_pf_9cythonize_17_AccumulationTree_2insert(struct __pyx_obj_9cythonize__AccumulationTree *__pyx_v_self, PyObject *__pyx_v_key, PyObject *__pyx_v_value); /* proto */
+static PyObject *__pyx_pf_9cythonize_17_AccumulationTree_4remove(struct __pyx_obj_9cythonize__AccumulationTree *__pyx_v_self, PyObject *__pyx_v_key); /* proto */
+static PyObject *__pyx_pf_9cythonize_17_AccumulationTree_6_get_left_accumulation(struct __pyx_obj_9cythonize__AccumulationTree *__pyx_v_self, struct __pyx_obj_9cythonize_Node *__pyx_v_node, PyObject *__pyx_v_upper); /* proto */
+static PyObject *__pyx_pf_9cythonize_17_AccumulationTree_8_get_accumulation(struct __pyx_obj_9cythonize__AccumulationTree *__pyx_v_self, struct __pyx_obj_9cythonize_Node *__pyx_v_node, PyObject *__pyx_v_lower, PyObject *__pyx_v_upper); /* proto */
+static PyObject *__pyx_pf_9cythonize_17_AccumulationTree_10get_accumulation(struct __pyx_obj_9cythonize__AccumulationTree *__pyx_v_self, PyObject *__pyx_v_lower, PyObject *__pyx_v_upper); /* proto */
+static PyObject *__pyx_pf_9cythonize_17_AccumulationTree_12get_left_accumulation(struct __pyx_obj_9cythonize__AccumulationTree *__pyx_v_self, PyObject *__pyx_v_upper); /* proto */
+static PyObject *__pyx_pf_9cythonize_17_AccumulationTree_14get_right_accumulation(struct __pyx_obj_9cythonize__AccumulationTree *__pyx_v_self, PyObject *__pyx_v_lower); /* proto */
+static PyObject *__pyx_pf_9cythonize_17_AccumulationTree_16get_full_accumulation(struct __pyx_obj_9cythonize__AccumulationTree *__pyx_v_self); /* proto */
+static PyObject *__pyx_pf_9cythonize_17_AccumulationTree_18__getstate__(struct __pyx_obj_9cythonize__AccumulationTree *__pyx_v_self); /* proto */
+static PyObject *__pyx_pf_9cythonize_17_AccumulationTree_20__setstate__(struct __pyx_obj_9cythonize__AccumulationTree *__pyx_v_self, PyObject *__pyx_v_state); /* proto */
+static PyObject *__pyx_pf_9cythonize_17_AccumulationTree_22__reduce_cython__(struct __pyx_obj_9cythonize__AccumulationTree *__pyx_v_self); /* proto */
+static PyObject *__pyx_pf_9cythonize_17_AccumulationTree_24__setstate_cython__(struct __pyx_obj_9cythonize__AccumulationTree *__pyx_v_self, PyObject *__pyx_v___pyx_state); /* proto */
+static PyObject *__pyx_pf_9cythonize___pyx_unpickle_Node(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v___pyx_type, long __pyx_v___pyx_checksum, PyObject *__pyx_v___pyx_state); /* proto */
+static PyObject *__pyx_pf_9cythonize_2__pyx_unpickle_NullKey(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v___pyx_type, long __pyx_v___pyx_checksum, PyObject *__pyx_v___pyx_state); /* proto */
+static PyObject *__pyx_pf_9cythonize_4__pyx_unpickle__RBTree(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v___pyx_type, long __pyx_v___pyx_checksum, PyObject *__pyx_v___pyx_state); /* proto */
+static PyObject *__pyx_pf_9cythonize_6__pyx_unpickle__AccumulationTree(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v___pyx_type, long __pyx_v___pyx_checksum, PyObject *__pyx_v___pyx_state); /* proto */
+static PyObject *__pyx_tp_new_9cythonize_Node(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
+static PyObject *__pyx_tp_new_9cythonize_NullKey(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
+static PyObject *__pyx_tp_new_9cythonize__RBTree(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
+static PyObject *__pyx_tp_new_9cythonize__AccumulationTree(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
 static PyObject *__pyx_int_0;
 static PyObject *__pyx_int_1;
 static PyObject *__pyx_int_179954164;
@@ -1748,7 +1748,7 @@ static PyObject *__pyx_codeobj__7;
 static PyObject *__pyx_codeobj__9;
 /* Late includes */
 
-/* "accumulation_tree/accumulation_tree.pyx":13
+/* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":13
  *     cdef object accumulation
  *     cdef int red
  *     def __init__(self, key=None, value=None):             # <<<<<<<<<<<<<<
@@ -1757,8 +1757,8 @@ static PyObject *__pyx_codeobj__9;
  */
 
 /* Python wrapper */
-static int __pyx_pw_17accumulation_tree_17accumulation_tree_4Node_1__init__(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static int __pyx_pw_17accumulation_tree_17accumulation_tree_4Node_1__init__(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static int __pyx_pw_9cythonize_4Node_1__init__(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static int __pyx_pw_9cythonize_4Node_1__init__(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyObject *__pyx_v_key = 0;
   PyObject *__pyx_v_value = 0;
   int __pyx_lineno = 0;
@@ -1817,23 +1817,23 @@ static int __pyx_pw_17accumulation_tree_17accumulation_tree_4Node_1__init__(PyOb
   __pyx_L5_argtuple_error:;
   __Pyx_RaiseArgtupleInvalid("__init__", 0, 0, 2, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 13, __pyx_L3_error)
   __pyx_L3_error:;
-  __Pyx_AddTraceback("accumulation_tree.accumulation_tree.Node.__init__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("cythonize.Node.__init__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return -1;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_17accumulation_tree_17accumulation_tree_4Node___init__(((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_v_self), __pyx_v_key, __pyx_v_value);
+  __pyx_r = __pyx_pf_9cythonize_4Node___init__(((struct __pyx_obj_9cythonize_Node *)__pyx_v_self), __pyx_v_key, __pyx_v_value);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static int __pyx_pf_17accumulation_tree_17accumulation_tree_4Node___init__(struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_self, PyObject *__pyx_v_key, PyObject *__pyx_v_value) {
+static int __pyx_pf_9cythonize_4Node___init__(struct __pyx_obj_9cythonize_Node *__pyx_v_self, PyObject *__pyx_v_key, PyObject *__pyx_v_value) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__init__", 0);
 
-  /* "accumulation_tree/accumulation_tree.pyx":14
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":14
  *     cdef int red
  *     def __init__(self, key=None, value=None):
  *         self.key = key             # <<<<<<<<<<<<<<
@@ -1846,7 +1846,7 @@ static int __pyx_pf_17accumulation_tree_17accumulation_tree_4Node___init__(struc
   __Pyx_DECREF(__pyx_v_self->key);
   __pyx_v_self->key = __pyx_v_key;
 
-  /* "accumulation_tree/accumulation_tree.pyx":15
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":15
  *     def __init__(self, key=None, value=None):
  *         self.key = key
  *         self.value = value             # <<<<<<<<<<<<<<
@@ -1859,7 +1859,7 @@ static int __pyx_pf_17accumulation_tree_17accumulation_tree_4Node___init__(struc
   __Pyx_DECREF(__pyx_v_self->value);
   __pyx_v_self->value = __pyx_v_value;
 
-  /* "accumulation_tree/accumulation_tree.pyx":16
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":16
  *         self.key = key
  *         self.value = value
  *         self.red = True             # <<<<<<<<<<<<<<
@@ -1868,7 +1868,7 @@ static int __pyx_pf_17accumulation_tree_17accumulation_tree_4Node___init__(struc
  */
   __pyx_v_self->red = 1;
 
-  /* "accumulation_tree/accumulation_tree.pyx":17
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":17
  *         self.value = value
  *         self.red = True
  *         self.left = None             # <<<<<<<<<<<<<<
@@ -1879,9 +1879,9 @@ static int __pyx_pf_17accumulation_tree_17accumulation_tree_4Node___init__(struc
   __Pyx_GIVEREF(Py_None);
   __Pyx_GOTREF(__pyx_v_self->left);
   __Pyx_DECREF(((PyObject *)__pyx_v_self->left));
-  __pyx_v_self->left = ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)Py_None);
+  __pyx_v_self->left = ((struct __pyx_obj_9cythonize_Node *)Py_None);
 
-  /* "accumulation_tree/accumulation_tree.pyx":18
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":18
  *         self.red = True
  *         self.left = None
  *         self.right = None             # <<<<<<<<<<<<<<
@@ -1892,9 +1892,9 @@ static int __pyx_pf_17accumulation_tree_17accumulation_tree_4Node___init__(struc
   __Pyx_GIVEREF(Py_None);
   __Pyx_GOTREF(__pyx_v_self->right);
   __Pyx_DECREF(((PyObject *)__pyx_v_self->right));
-  __pyx_v_self->right = ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)Py_None);
+  __pyx_v_self->right = ((struct __pyx_obj_9cythonize_Node *)Py_None);
 
-  /* "accumulation_tree/accumulation_tree.pyx":13
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":13
  *     cdef object accumulation
  *     cdef int red
  *     def __init__(self, key=None, value=None):             # <<<<<<<<<<<<<<
@@ -1908,7 +1908,7 @@ static int __pyx_pf_17accumulation_tree_17accumulation_tree_4Node___init__(struc
   return __pyx_r;
 }
 
-/* "accumulation_tree/accumulation_tree.pyx":20
+/* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":20
  *         self.right = None
  * 
  *     def free(self):             # <<<<<<<<<<<<<<
@@ -1917,24 +1917,24 @@ static int __pyx_pf_17accumulation_tree_17accumulation_tree_4Node___init__(struc
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_4Node_3free(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused); /*proto*/
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_4Node_3free(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused) {
+static PyObject *__pyx_pw_9cythonize_4Node_3free(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused); /*proto*/
+static PyObject *__pyx_pw_9cythonize_4Node_3free(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("free (wrapper)", 0);
-  __pyx_r = __pyx_pf_17accumulation_tree_17accumulation_tree_4Node_2free(((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_v_self));
+  __pyx_r = __pyx_pf_9cythonize_4Node_2free(((struct __pyx_obj_9cythonize_Node *)__pyx_v_self));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_4Node_2free(struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_self) {
+static PyObject *__pyx_pf_9cythonize_4Node_2free(struct __pyx_obj_9cythonize_Node *__pyx_v_self) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("free", 0);
 
-  /* "accumulation_tree/accumulation_tree.pyx":21
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":21
  * 
  *     def free(self):
  *         self.left = None             # <<<<<<<<<<<<<<
@@ -1945,9 +1945,9 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_4Node_2free(st
   __Pyx_GIVEREF(Py_None);
   __Pyx_GOTREF(__pyx_v_self->left);
   __Pyx_DECREF(((PyObject *)__pyx_v_self->left));
-  __pyx_v_self->left = ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)Py_None);
+  __pyx_v_self->left = ((struct __pyx_obj_9cythonize_Node *)Py_None);
 
-  /* "accumulation_tree/accumulation_tree.pyx":22
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":22
  *     def free(self):
  *         self.left = None
  *         self.right = None             # <<<<<<<<<<<<<<
@@ -1958,9 +1958,9 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_4Node_2free(st
   __Pyx_GIVEREF(Py_None);
   __Pyx_GOTREF(__pyx_v_self->right);
   __Pyx_DECREF(((PyObject *)__pyx_v_self->right));
-  __pyx_v_self->right = ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)Py_None);
+  __pyx_v_self->right = ((struct __pyx_obj_9cythonize_Node *)Py_None);
 
-  /* "accumulation_tree/accumulation_tree.pyx":23
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":23
  *         self.left = None
  *         self.right = None
  *         self.key = None             # <<<<<<<<<<<<<<
@@ -1973,7 +1973,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_4Node_2free(st
   __Pyx_DECREF(__pyx_v_self->key);
   __pyx_v_self->key = Py_None;
 
-  /* "accumulation_tree/accumulation_tree.pyx":24
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":24
  *         self.right = None
  *         self.key = None
  *         self.value = None             # <<<<<<<<<<<<<<
@@ -1986,7 +1986,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_4Node_2free(st
   __Pyx_DECREF(__pyx_v_self->value);
   __pyx_v_self->value = Py_None;
 
-  /* "accumulation_tree/accumulation_tree.pyx":20
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":20
  *         self.right = None
  * 
  *     def free(self):             # <<<<<<<<<<<<<<
@@ -2001,7 +2001,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_4Node_2free(st
   return __pyx_r;
 }
 
-/* "accumulation_tree/accumulation_tree.pyx":26
+/* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":26
  *         self.value = None
  * 
  *     cdef Node get(self, int key):             # <<<<<<<<<<<<<<
@@ -2009,13 +2009,13 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_4Node_2free(st
  * 
  */
 
-static struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_f_17accumulation_tree_17accumulation_tree_4Node_get(struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_self, int __pyx_v_key) {
-  struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_r = NULL;
+static struct __pyx_obj_9cythonize_Node *__pyx_f_9cythonize_4Node_get(struct __pyx_obj_9cythonize_Node *__pyx_v_self, int __pyx_v_key) {
+  struct __pyx_obj_9cythonize_Node *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
   __Pyx_RefNannySetupContext("get", 0);
 
-  /* "accumulation_tree/accumulation_tree.pyx":27
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":27
  * 
  *     cdef Node get(self, int key):
  *         return self.left if key == 0 else self.right             # <<<<<<<<<<<<<<
@@ -2030,11 +2030,11 @@ static struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_f_17
     __Pyx_INCREF(((PyObject *)__pyx_v_self->right));
     __pyx_t_1 = ((PyObject *)__pyx_v_self->right);
   }
-  __pyx_r = ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_t_1);
+  __pyx_r = ((struct __pyx_obj_9cythonize_Node *)__pyx_t_1);
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "accumulation_tree/accumulation_tree.pyx":26
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":26
  *         self.value = None
  * 
  *     cdef Node get(self, int key):             # <<<<<<<<<<<<<<
@@ -2049,7 +2049,7 @@ static struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_f_17
   return __pyx_r;
 }
 
-/* "accumulation_tree/accumulation_tree.pyx":29
+/* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":29
  *         return self.left if key == 0 else self.right
  * 
  *     cdef void set(self, int key, Node value):             # <<<<<<<<<<<<<<
@@ -2057,12 +2057,12 @@ static struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_f_17
  *             self.left = value
  */
 
-static void __pyx_f_17accumulation_tree_17accumulation_tree_4Node_set(struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_self, int __pyx_v_key, struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_value) {
+static void __pyx_f_9cythonize_4Node_set(struct __pyx_obj_9cythonize_Node *__pyx_v_self, int __pyx_v_key, struct __pyx_obj_9cythonize_Node *__pyx_v_value) {
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
   __Pyx_RefNannySetupContext("set", 0);
 
-  /* "accumulation_tree/accumulation_tree.pyx":30
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":30
  * 
  *     cdef void set(self, int key, Node value):
  *         if key == 0:             # <<<<<<<<<<<<<<
@@ -2072,7 +2072,7 @@ static void __pyx_f_17accumulation_tree_17accumulation_tree_4Node_set(struct __p
   __pyx_t_1 = ((__pyx_v_key == 0) != 0);
   if (__pyx_t_1) {
 
-    /* "accumulation_tree/accumulation_tree.pyx":31
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":31
  *     cdef void set(self, int key, Node value):
  *         if key == 0:
  *             self.left = value             # <<<<<<<<<<<<<<
@@ -2085,7 +2085,7 @@ static void __pyx_f_17accumulation_tree_17accumulation_tree_4Node_set(struct __p
     __Pyx_DECREF(((PyObject *)__pyx_v_self->left));
     __pyx_v_self->left = __pyx_v_value;
 
-    /* "accumulation_tree/accumulation_tree.pyx":30
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":30
  * 
  *     cdef void set(self, int key, Node value):
  *         if key == 0:             # <<<<<<<<<<<<<<
@@ -2095,7 +2095,7 @@ static void __pyx_f_17accumulation_tree_17accumulation_tree_4Node_set(struct __p
     goto __pyx_L3;
   }
 
-  /* "accumulation_tree/accumulation_tree.pyx":33
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":33
  *             self.left = value
  *         else:
  *             self.right = value             # <<<<<<<<<<<<<<
@@ -2111,7 +2111,7 @@ static void __pyx_f_17accumulation_tree_17accumulation_tree_4Node_set(struct __p
   }
   __pyx_L3:;
 
-  /* "accumulation_tree/accumulation_tree.pyx":29
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":29
  *         return self.left if key == 0 else self.right
  * 
  *     cdef void set(self, int key, Node value):             # <<<<<<<<<<<<<<
@@ -2123,7 +2123,7 @@ static void __pyx_f_17accumulation_tree_17accumulation_tree_4Node_set(struct __p
   __Pyx_RefNannyFinishContext();
 }
 
-/* "accumulation_tree/accumulation_tree.pyx":35
+/* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":35
  *             self.right = value
  * 
  *     def __getitem__(self, key):             # <<<<<<<<<<<<<<
@@ -2132,19 +2132,19 @@ static void __pyx_f_17accumulation_tree_17accumulation_tree_4Node_set(struct __p
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_4Node_5__getitem__(PyObject *__pyx_v_self, PyObject *__pyx_v_key); /*proto*/
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_4Node_5__getitem__(PyObject *__pyx_v_self, PyObject *__pyx_v_key) {
+static PyObject *__pyx_pw_9cythonize_4Node_5__getitem__(PyObject *__pyx_v_self, PyObject *__pyx_v_key); /*proto*/
+static PyObject *__pyx_pw_9cythonize_4Node_5__getitem__(PyObject *__pyx_v_self, PyObject *__pyx_v_key) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__getitem__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_17accumulation_tree_17accumulation_tree_4Node_4__getitem__(((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_v_self), ((PyObject *)__pyx_v_key));
+  __pyx_r = __pyx_pf_9cythonize_4Node_4__getitem__(((struct __pyx_obj_9cythonize_Node *)__pyx_v_self), ((PyObject *)__pyx_v_key));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_4Node_4__getitem__(struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_self, PyObject *__pyx_v_key) {
+static PyObject *__pyx_pf_9cythonize_4Node_4__getitem__(struct __pyx_obj_9cythonize_Node *__pyx_v_self, PyObject *__pyx_v_key) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
@@ -2154,7 +2154,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_4Node_4__getit
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("__getitem__", 0);
 
-  /* "accumulation_tree/accumulation_tree.pyx":36
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":36
  * 
  *     def __getitem__(self, key):
  *         return self.get(key)             # <<<<<<<<<<<<<<
@@ -2163,13 +2163,13 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_4Node_4__getit
  */
   __Pyx_XDECREF(__pyx_r);
   __pyx_t_1 = __Pyx_PyInt_As_int(__pyx_v_key); if (unlikely((__pyx_t_1 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 36, __pyx_L1_error)
-  __pyx_t_2 = ((PyObject *)((struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree_Node *)__pyx_v_self->__pyx_vtab)->get(__pyx_v_self, __pyx_t_1)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 36, __pyx_L1_error)
+  __pyx_t_2 = ((PyObject *)((struct __pyx_vtabstruct_9cythonize_Node *)__pyx_v_self->__pyx_vtab)->get(__pyx_v_self, __pyx_t_1)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 36, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_r = __pyx_t_2;
   __pyx_t_2 = 0;
   goto __pyx_L0;
 
-  /* "accumulation_tree/accumulation_tree.pyx":35
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":35
  *             self.right = value
  * 
  *     def __getitem__(self, key):             # <<<<<<<<<<<<<<
@@ -2180,7 +2180,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_4Node_4__getit
   /* function exit code */
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_2);
-  __Pyx_AddTraceback("accumulation_tree.accumulation_tree.Node.__getitem__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("cythonize.Node.__getitem__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -2188,7 +2188,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_4Node_4__getit
   return __pyx_r;
 }
 
-/* "accumulation_tree/accumulation_tree.pyx":38
+/* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":38
  *         return self.get(key)
  * 
  *     def __setitem__(self, key, value):             # <<<<<<<<<<<<<<
@@ -2197,19 +2197,19 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_4Node_4__getit
  */
 
 /* Python wrapper */
-static int __pyx_pw_17accumulation_tree_17accumulation_tree_4Node_7__setitem__(PyObject *__pyx_v_self, PyObject *__pyx_v_key, PyObject *__pyx_v_value); /*proto*/
-static int __pyx_pw_17accumulation_tree_17accumulation_tree_4Node_7__setitem__(PyObject *__pyx_v_self, PyObject *__pyx_v_key, PyObject *__pyx_v_value) {
+static int __pyx_pw_9cythonize_4Node_7__setitem__(PyObject *__pyx_v_self, PyObject *__pyx_v_key, PyObject *__pyx_v_value); /*proto*/
+static int __pyx_pw_9cythonize_4Node_7__setitem__(PyObject *__pyx_v_self, PyObject *__pyx_v_key, PyObject *__pyx_v_value) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__setitem__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_17accumulation_tree_17accumulation_tree_4Node_6__setitem__(((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_v_self), ((PyObject *)__pyx_v_key), ((PyObject *)__pyx_v_value));
+  __pyx_r = __pyx_pf_9cythonize_4Node_6__setitem__(((struct __pyx_obj_9cythonize_Node *)__pyx_v_self), ((PyObject *)__pyx_v_key), ((PyObject *)__pyx_v_value));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static int __pyx_pf_17accumulation_tree_17accumulation_tree_4Node_6__setitem__(struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_self, PyObject *__pyx_v_key, PyObject *__pyx_v_value) {
+static int __pyx_pf_9cythonize_4Node_6__setitem__(struct __pyx_obj_9cythonize_Node *__pyx_v_self, PyObject *__pyx_v_key, PyObject *__pyx_v_value) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
@@ -2218,7 +2218,7 @@ static int __pyx_pf_17accumulation_tree_17accumulation_tree_4Node_6__setitem__(s
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("__setitem__", 0);
 
-  /* "accumulation_tree/accumulation_tree.pyx":39
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":39
  * 
  *     def __setitem__(self, key, value):
  *         self.set(key, value)             # <<<<<<<<<<<<<<
@@ -2226,10 +2226,10 @@ static int __pyx_pf_17accumulation_tree_17accumulation_tree_4Node_6__setitem__(s
  * 
  */
   __pyx_t_1 = __Pyx_PyInt_As_int(__pyx_v_key); if (unlikely((__pyx_t_1 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 39, __pyx_L1_error)
-  if (!(likely(((__pyx_v_value) == Py_None) || likely(__Pyx_TypeTest(__pyx_v_value, __pyx_ptype_17accumulation_tree_17accumulation_tree_Node))))) __PYX_ERR(0, 39, __pyx_L1_error)
-  ((struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree_Node *)__pyx_v_self->__pyx_vtab)->set(__pyx_v_self, __pyx_t_1, ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_v_value));
+  if (!(likely(((__pyx_v_value) == Py_None) || likely(__Pyx_TypeTest(__pyx_v_value, __pyx_ptype_9cythonize_Node))))) __PYX_ERR(0, 39, __pyx_L1_error)
+  ((struct __pyx_vtabstruct_9cythonize_Node *)__pyx_v_self->__pyx_vtab)->set(__pyx_v_self, __pyx_t_1, ((struct __pyx_obj_9cythonize_Node *)__pyx_v_value));
 
-  /* "accumulation_tree/accumulation_tree.pyx":38
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":38
  *         return self.get(key)
  * 
  *     def __setitem__(self, key, value):             # <<<<<<<<<<<<<<
@@ -2241,14 +2241,14 @@ static int __pyx_pf_17accumulation_tree_17accumulation_tree_4Node_6__setitem__(s
   __pyx_r = 0;
   goto __pyx_L0;
   __pyx_L1_error:;
-  __Pyx_AddTraceback("accumulation_tree.accumulation_tree.Node.__setitem__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("cythonize.Node.__setitem__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = -1;
   __pyx_L0:;
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-/* "accumulation_tree/accumulation_tree.pyx":7
+/* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":7
  * 
  * cdef class Node:
  *     cdef readonly object key             # <<<<<<<<<<<<<<
@@ -2257,19 +2257,19 @@ static int __pyx_pf_17accumulation_tree_17accumulation_tree_4Node_6__setitem__(s
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_4Node_3key_1__get__(PyObject *__pyx_v_self); /*proto*/
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_4Node_3key_1__get__(PyObject *__pyx_v_self) {
+static PyObject *__pyx_pw_9cythonize_4Node_3key_1__get__(PyObject *__pyx_v_self); /*proto*/
+static PyObject *__pyx_pw_9cythonize_4Node_3key_1__get__(PyObject *__pyx_v_self) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__get__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_17accumulation_tree_17accumulation_tree_4Node_3key___get__(((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_v_self));
+  __pyx_r = __pyx_pf_9cythonize_4Node_3key___get__(((struct __pyx_obj_9cythonize_Node *)__pyx_v_self));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_4Node_3key___get__(struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_self) {
+static PyObject *__pyx_pf_9cythonize_4Node_3key___get__(struct __pyx_obj_9cythonize_Node *__pyx_v_self) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__get__", 0);
@@ -2285,7 +2285,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_4Node_3key___g
   return __pyx_r;
 }
 
-/* "accumulation_tree/accumulation_tree.pyx":8
+/* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":8
  * cdef class Node:
  *     cdef readonly object key
  *     cdef readonly object value             # <<<<<<<<<<<<<<
@@ -2294,19 +2294,19 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_4Node_3key___g
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_4Node_5value_1__get__(PyObject *__pyx_v_self); /*proto*/
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_4Node_5value_1__get__(PyObject *__pyx_v_self) {
+static PyObject *__pyx_pw_9cythonize_4Node_5value_1__get__(PyObject *__pyx_v_self); /*proto*/
+static PyObject *__pyx_pw_9cythonize_4Node_5value_1__get__(PyObject *__pyx_v_self) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__get__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_17accumulation_tree_17accumulation_tree_4Node_5value___get__(((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_v_self));
+  __pyx_r = __pyx_pf_9cythonize_4Node_5value___get__(((struct __pyx_obj_9cythonize_Node *)__pyx_v_self));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_4Node_5value___get__(struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_self) {
+static PyObject *__pyx_pf_9cythonize_4Node_5value___get__(struct __pyx_obj_9cythonize_Node *__pyx_v_self) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__get__", 0);
@@ -2322,7 +2322,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_4Node_5value__
   return __pyx_r;
 }
 
-/* "accumulation_tree/accumulation_tree.pyx":9
+/* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":9
  *     cdef readonly object key
  *     cdef readonly object value
  *     cdef readonly Node left             # <<<<<<<<<<<<<<
@@ -2331,19 +2331,19 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_4Node_5value__
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_4Node_4left_1__get__(PyObject *__pyx_v_self); /*proto*/
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_4Node_4left_1__get__(PyObject *__pyx_v_self) {
+static PyObject *__pyx_pw_9cythonize_4Node_4left_1__get__(PyObject *__pyx_v_self); /*proto*/
+static PyObject *__pyx_pw_9cythonize_4Node_4left_1__get__(PyObject *__pyx_v_self) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__get__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_17accumulation_tree_17accumulation_tree_4Node_4left___get__(((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_v_self));
+  __pyx_r = __pyx_pf_9cythonize_4Node_4left___get__(((struct __pyx_obj_9cythonize_Node *)__pyx_v_self));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_4Node_4left___get__(struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_self) {
+static PyObject *__pyx_pf_9cythonize_4Node_4left___get__(struct __pyx_obj_9cythonize_Node *__pyx_v_self) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__get__", 0);
@@ -2359,7 +2359,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_4Node_4left___
   return __pyx_r;
 }
 
-/* "accumulation_tree/accumulation_tree.pyx":10
+/* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":10
  *     cdef readonly object value
  *     cdef readonly Node left
  *     cdef readonly Node right             # <<<<<<<<<<<<<<
@@ -2368,19 +2368,19 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_4Node_4left___
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_4Node_5right_1__get__(PyObject *__pyx_v_self); /*proto*/
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_4Node_5right_1__get__(PyObject *__pyx_v_self) {
+static PyObject *__pyx_pw_9cythonize_4Node_5right_1__get__(PyObject *__pyx_v_self); /*proto*/
+static PyObject *__pyx_pw_9cythonize_4Node_5right_1__get__(PyObject *__pyx_v_self) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__get__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_17accumulation_tree_17accumulation_tree_4Node_5right___get__(((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_v_self));
+  __pyx_r = __pyx_pf_9cythonize_4Node_5right___get__(((struct __pyx_obj_9cythonize_Node *)__pyx_v_self));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_4Node_5right___get__(struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_self) {
+static PyObject *__pyx_pf_9cythonize_4Node_5right___get__(struct __pyx_obj_9cythonize_Node *__pyx_v_self) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__get__", 0);
@@ -2403,19 +2403,19 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_4Node_5right__
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_4Node_9__reduce_cython__(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused); /*proto*/
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_4Node_9__reduce_cython__(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused) {
+static PyObject *__pyx_pw_9cythonize_4Node_9__reduce_cython__(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused); /*proto*/
+static PyObject *__pyx_pw_9cythonize_4Node_9__reduce_cython__(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__reduce_cython__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_17accumulation_tree_17accumulation_tree_4Node_8__reduce_cython__(((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_v_self));
+  __pyx_r = __pyx_pf_9cythonize_4Node_8__reduce_cython__(((struct __pyx_obj_9cythonize_Node *)__pyx_v_self));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_4Node_8__reduce_cython__(struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_self) {
+static PyObject *__pyx_pf_9cythonize_4Node_8__reduce_cython__(struct __pyx_obj_9cythonize_Node *__pyx_v_self) {
   PyObject *__pyx_v_state = 0;
   PyObject *__pyx_v__dict = 0;
   int __pyx_v_use_setstate;
@@ -2669,7 +2669,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_4Node_8__reduc
   __Pyx_XDECREF(__pyx_t_1);
   __Pyx_XDECREF(__pyx_t_2);
   __Pyx_XDECREF(__pyx_t_6);
-  __Pyx_AddTraceback("accumulation_tree.accumulation_tree.Node.__reduce_cython__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("cythonize.Node.__reduce_cython__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XDECREF(__pyx_v_state);
@@ -2687,19 +2687,19 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_4Node_8__reduc
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_4Node_11__setstate_cython__(PyObject *__pyx_v_self, PyObject *__pyx_v___pyx_state); /*proto*/
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_4Node_11__setstate_cython__(PyObject *__pyx_v_self, PyObject *__pyx_v___pyx_state) {
+static PyObject *__pyx_pw_9cythonize_4Node_11__setstate_cython__(PyObject *__pyx_v_self, PyObject *__pyx_v___pyx_state); /*proto*/
+static PyObject *__pyx_pw_9cythonize_4Node_11__setstate_cython__(PyObject *__pyx_v_self, PyObject *__pyx_v___pyx_state) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__setstate_cython__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_17accumulation_tree_17accumulation_tree_4Node_10__setstate_cython__(((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_v_self), ((PyObject *)__pyx_v___pyx_state));
+  __pyx_r = __pyx_pf_9cythonize_4Node_10__setstate_cython__(((struct __pyx_obj_9cythonize_Node *)__pyx_v_self), ((PyObject *)__pyx_v___pyx_state));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_4Node_10__setstate_cython__(struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_self, PyObject *__pyx_v___pyx_state) {
+static PyObject *__pyx_pf_9cythonize_4Node_10__setstate_cython__(struct __pyx_obj_9cythonize_Node *__pyx_v_self, PyObject *__pyx_v___pyx_state) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -2714,7 +2714,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_4Node_10__sets
  *     __pyx_unpickle_Node__set_state(self, __pyx_state)             # <<<<<<<<<<<<<<
  */
   if (!(likely(PyTuple_CheckExact(__pyx_v___pyx_state))||((__pyx_v___pyx_state) == Py_None)||(PyErr_Format(PyExc_TypeError, "Expected %.16s, got %.200s", "tuple", Py_TYPE(__pyx_v___pyx_state)->tp_name), 0))) __PYX_ERR(1, 17, __pyx_L1_error)
-  __pyx_t_1 = __pyx_f_17accumulation_tree_17accumulation_tree___pyx_unpickle_Node__set_state(__pyx_v_self, ((PyObject*)__pyx_v___pyx_state)); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 17, __pyx_L1_error)
+  __pyx_t_1 = __pyx_f_9cythonize___pyx_unpickle_Node__set_state(__pyx_v_self, ((PyObject*)__pyx_v___pyx_state)); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 17, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
@@ -2730,7 +2730,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_4Node_10__sets
   goto __pyx_L0;
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_1);
-  __Pyx_AddTraceback("accumulation_tree.accumulation_tree.Node.__setstate_cython__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("cythonize.Node.__setstate_cython__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -2738,7 +2738,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_4Node_10__sets
   return __pyx_r;
 }
 
-/* "accumulation_tree/accumulation_tree.pyx":42
+/* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":42
  * 
  * 
  * cdef int is_red(Node node):             # <<<<<<<<<<<<<<
@@ -2746,7 +2746,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_4Node_10__sets
  *         return True
  */
 
-static int __pyx_f_17accumulation_tree_17accumulation_tree_is_red(struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_node) {
+static int __pyx_f_9cythonize_is_red(struct __pyx_obj_9cythonize_Node *__pyx_v_node) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
@@ -2754,7 +2754,7 @@ static int __pyx_f_17accumulation_tree_17accumulation_tree_is_red(struct __pyx_o
   int __pyx_t_3;
   __Pyx_RefNannySetupContext("is_red", 0);
 
-  /* "accumulation_tree/accumulation_tree.pyx":43
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":43
  * 
  * cdef int is_red(Node node):
  *     if (node is not None) and node.red:             # <<<<<<<<<<<<<<
@@ -2773,7 +2773,7 @@ static int __pyx_f_17accumulation_tree_17accumulation_tree_is_red(struct __pyx_o
   __pyx_L4_bool_binop_done:;
   if (__pyx_t_1) {
 
-    /* "accumulation_tree/accumulation_tree.pyx":44
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":44
  * cdef int is_red(Node node):
  *     if (node is not None) and node.red:
  *         return True             # <<<<<<<<<<<<<<
@@ -2783,7 +2783,7 @@ static int __pyx_f_17accumulation_tree_17accumulation_tree_is_red(struct __pyx_o
     __pyx_r = 1;
     goto __pyx_L0;
 
-    /* "accumulation_tree/accumulation_tree.pyx":43
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":43
  * 
  * cdef int is_red(Node node):
  *     if (node is not None) and node.red:             # <<<<<<<<<<<<<<
@@ -2792,7 +2792,7 @@ static int __pyx_f_17accumulation_tree_17accumulation_tree_is_red(struct __pyx_o
  */
   }
 
-  /* "accumulation_tree/accumulation_tree.pyx":46
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":46
  *         return True
  *     else:
  *         return False             # <<<<<<<<<<<<<<
@@ -2804,7 +2804,7 @@ static int __pyx_f_17accumulation_tree_17accumulation_tree_is_red(struct __pyx_o
     goto __pyx_L0;
   }
 
-  /* "accumulation_tree/accumulation_tree.pyx":42
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":42
  * 
  * 
  * cdef int is_red(Node node):             # <<<<<<<<<<<<<<
@@ -2825,19 +2825,19 @@ static int __pyx_f_17accumulation_tree_17accumulation_tree_is_red(struct __pyx_o
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_7NullKey_1__reduce_cython__(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused); /*proto*/
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_7NullKey_1__reduce_cython__(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused) {
+static PyObject *__pyx_pw_9cythonize_7NullKey_1__reduce_cython__(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused); /*proto*/
+static PyObject *__pyx_pw_9cythonize_7NullKey_1__reduce_cython__(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__reduce_cython__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_17accumulation_tree_17accumulation_tree_7NullKey___reduce_cython__(((struct __pyx_obj_17accumulation_tree_17accumulation_tree_NullKey *)__pyx_v_self));
+  __pyx_r = __pyx_pf_9cythonize_7NullKey___reduce_cython__(((struct __pyx_obj_9cythonize_NullKey *)__pyx_v_self));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7NullKey___reduce_cython__(struct __pyx_obj_17accumulation_tree_17accumulation_tree_NullKey *__pyx_v_self) {
+static PyObject *__pyx_pf_9cythonize_7NullKey___reduce_cython__(struct __pyx_obj_9cythonize_NullKey *__pyx_v_self) {
   PyObject *__pyx_v_state = 0;
   PyObject *__pyx_v__dict = 0;
   int __pyx_v_use_setstate;
@@ -3036,7 +3036,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7NullKey___red
   __Pyx_XDECREF(__pyx_t_1);
   __Pyx_XDECREF(__pyx_t_4);
   __Pyx_XDECREF(__pyx_t_5);
-  __Pyx_AddTraceback("accumulation_tree.accumulation_tree.NullKey.__reduce_cython__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("cythonize.NullKey.__reduce_cython__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XDECREF(__pyx_v_state);
@@ -3054,19 +3054,19 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7NullKey___red
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_7NullKey_3__setstate_cython__(PyObject *__pyx_v_self, PyObject *__pyx_v___pyx_state); /*proto*/
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_7NullKey_3__setstate_cython__(PyObject *__pyx_v_self, PyObject *__pyx_v___pyx_state) {
+static PyObject *__pyx_pw_9cythonize_7NullKey_3__setstate_cython__(PyObject *__pyx_v_self, PyObject *__pyx_v___pyx_state); /*proto*/
+static PyObject *__pyx_pw_9cythonize_7NullKey_3__setstate_cython__(PyObject *__pyx_v_self, PyObject *__pyx_v___pyx_state) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__setstate_cython__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_17accumulation_tree_17accumulation_tree_7NullKey_2__setstate_cython__(((struct __pyx_obj_17accumulation_tree_17accumulation_tree_NullKey *)__pyx_v_self), ((PyObject *)__pyx_v___pyx_state));
+  __pyx_r = __pyx_pf_9cythonize_7NullKey_2__setstate_cython__(((struct __pyx_obj_9cythonize_NullKey *)__pyx_v_self), ((PyObject *)__pyx_v___pyx_state));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7NullKey_2__setstate_cython__(struct __pyx_obj_17accumulation_tree_17accumulation_tree_NullKey *__pyx_v_self, PyObject *__pyx_v___pyx_state) {
+static PyObject *__pyx_pf_9cythonize_7NullKey_2__setstate_cython__(struct __pyx_obj_9cythonize_NullKey *__pyx_v_self, PyObject *__pyx_v___pyx_state) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -3081,7 +3081,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7NullKey_2__se
  *     __pyx_unpickle_NullKey__set_state(self, __pyx_state)             # <<<<<<<<<<<<<<
  */
   if (!(likely(PyTuple_CheckExact(__pyx_v___pyx_state))||((__pyx_v___pyx_state) == Py_None)||(PyErr_Format(PyExc_TypeError, "Expected %.16s, got %.200s", "tuple", Py_TYPE(__pyx_v___pyx_state)->tp_name), 0))) __PYX_ERR(1, 17, __pyx_L1_error)
-  __pyx_t_1 = __pyx_f_17accumulation_tree_17accumulation_tree___pyx_unpickle_NullKey__set_state(__pyx_v_self, ((PyObject*)__pyx_v___pyx_state)); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 17, __pyx_L1_error)
+  __pyx_t_1 = __pyx_f_9cythonize___pyx_unpickle_NullKey__set_state(__pyx_v_self, ((PyObject*)__pyx_v___pyx_state)); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 17, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
@@ -3097,7 +3097,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7NullKey_2__se
   goto __pyx_L0;
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_1);
-  __Pyx_AddTraceback("accumulation_tree.accumulation_tree.NullKey.__setstate_cython__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("cythonize.NullKey.__setstate_cython__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -3105,7 +3105,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7NullKey_2__se
   return __pyx_r;
 }
 
-/* "accumulation_tree/accumulation_tree.pyx":56
+/* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":56
  *     cdef public Node _root
  *     cdef public int _count
  *     cdef Node _new_node(self, key, value):             # <<<<<<<<<<<<<<
@@ -3113,8 +3113,8 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7NullKey_2__se
  *         return Node(key, value)
  */
 
-static struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_f_17accumulation_tree_17accumulation_tree_7_RBTree__new_node(struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree *__pyx_v_self, PyObject *__pyx_v_key, PyObject *__pyx_v_value) {
-  struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_r = NULL;
+static struct __pyx_obj_9cythonize_Node *__pyx_f_9cythonize_7_RBTree__new_node(struct __pyx_obj_9cythonize__RBTree *__pyx_v_self, PyObject *__pyx_v_key, PyObject *__pyx_v_value) {
+  struct __pyx_obj_9cythonize_Node *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
   PyObject *__pyx_t_2 = NULL;
@@ -3123,7 +3123,7 @@ static struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_f_17
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("_new_node", 0);
 
-  /* "accumulation_tree/accumulation_tree.pyx":57
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":57
  *     cdef public int _count
  *     cdef Node _new_node(self, key, value):
  *         self._count += 1             # <<<<<<<<<<<<<<
@@ -3132,7 +3132,7 @@ static struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_f_17
  */
   __pyx_v_self->_count = (__pyx_v_self->_count + 1);
 
-  /* "accumulation_tree/accumulation_tree.pyx":58
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":58
  *     cdef Node _new_node(self, key, value):
  *         self._count += 1
  *         return Node(key, value)             # <<<<<<<<<<<<<<
@@ -3148,14 +3148,14 @@ static struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_f_17
   __Pyx_INCREF(__pyx_v_value);
   __Pyx_GIVEREF(__pyx_v_value);
   PyTuple_SET_ITEM(__pyx_t_1, 1, __pyx_v_value);
-  __pyx_t_2 = __Pyx_PyObject_Call(((PyObject *)__pyx_ptype_17accumulation_tree_17accumulation_tree_Node), __pyx_t_1, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 58, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_Call(((PyObject *)__pyx_ptype_9cythonize_Node), __pyx_t_1, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 58, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_r = ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_t_2);
+  __pyx_r = ((struct __pyx_obj_9cythonize_Node *)__pyx_t_2);
   __pyx_t_2 = 0;
   goto __pyx_L0;
 
-  /* "accumulation_tree/accumulation_tree.pyx":56
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":56
  *     cdef public Node _root
  *     cdef public int _count
  *     cdef Node _new_node(self, key, value):             # <<<<<<<<<<<<<<
@@ -3167,7 +3167,7 @@ static struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_f_17
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_1);
   __Pyx_XDECREF(__pyx_t_2);
-  __Pyx_AddTraceback("accumulation_tree.accumulation_tree._RBTree._new_node", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("cythonize._RBTree._new_node", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = 0;
   __pyx_L0:;
   __Pyx_XGIVEREF((PyObject *)__pyx_r);
@@ -3175,7 +3175,7 @@ static struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_f_17
   return __pyx_r;
 }
 
-/* "accumulation_tree/accumulation_tree.pyx":60
+/* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":60
  *         return Node(key, value)
  * 
  *     cdef void set(self, Node node, int direction, Node child_node):             # <<<<<<<<<<<<<<
@@ -3183,20 +3183,20 @@ static struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_f_17
  * 
  */
 
-static void __pyx_f_17accumulation_tree_17accumulation_tree_7_RBTree_set(CYTHON_UNUSED struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree *__pyx_v_self, struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_node, int __pyx_v_direction, struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_child_node) {
+static void __pyx_f_9cythonize_7_RBTree_set(CYTHON_UNUSED struct __pyx_obj_9cythonize__RBTree *__pyx_v_self, struct __pyx_obj_9cythonize_Node *__pyx_v_node, int __pyx_v_direction, struct __pyx_obj_9cythonize_Node *__pyx_v_child_node) {
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("set", 0);
 
-  /* "accumulation_tree/accumulation_tree.pyx":61
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":61
  * 
  *     cdef void set(self, Node node, int direction, Node child_node):
  *         node.set(direction, child_node)             # <<<<<<<<<<<<<<
  * 
  *     def insert(self, key, value):
  */
-  ((struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree_Node *)__pyx_v_node->__pyx_vtab)->set(__pyx_v_node, __pyx_v_direction, __pyx_v_child_node);
+  ((struct __pyx_vtabstruct_9cythonize_Node *)__pyx_v_node->__pyx_vtab)->set(__pyx_v_node, __pyx_v_direction, __pyx_v_child_node);
 
-  /* "accumulation_tree/accumulation_tree.pyx":60
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":60
  *         return Node(key, value)
  * 
  *     cdef void set(self, Node node, int direction, Node child_node):             # <<<<<<<<<<<<<<
@@ -3208,7 +3208,7 @@ static void __pyx_f_17accumulation_tree_17accumulation_tree_7_RBTree_set(CYTHON_
   __Pyx_RefNannyFinishContext();
 }
 
-/* "accumulation_tree/accumulation_tree.pyx":63
+/* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":63
  *         node.set(direction, child_node)
  * 
  *     def insert(self, key, value):             # <<<<<<<<<<<<<<
@@ -3217,8 +3217,8 @@ static void __pyx_f_17accumulation_tree_17accumulation_tree_7_RBTree_set(CYTHON_
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_7_RBTree_1insert(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_7_RBTree_1insert(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_9cythonize_7_RBTree_1insert(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static PyObject *__pyx_pw_9cythonize_7_RBTree_1insert(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyObject *__pyx_v_key = 0;
   PyObject *__pyx_v_value = 0;
   int __pyx_lineno = 0;
@@ -3269,25 +3269,25 @@ static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_7_RBTree_1inse
   __pyx_L5_argtuple_error:;
   __Pyx_RaiseArgtupleInvalid("insert", 1, 2, 2, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 63, __pyx_L3_error)
   __pyx_L3_error:;
-  __Pyx_AddTraceback("accumulation_tree.accumulation_tree._RBTree.insert", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("cythonize._RBTree.insert", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_insert(((struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree *)__pyx_v_self), __pyx_v_key, __pyx_v_value);
+  __pyx_r = __pyx_pf_9cythonize_7_RBTree_insert(((struct __pyx_obj_9cythonize__RBTree *)__pyx_v_self), __pyx_v_key, __pyx_v_value);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_insert(struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree *__pyx_v_self, PyObject *__pyx_v_key, PyObject *__pyx_v_value) {
-  struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_head = 0;
-  struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_grand_parent = 0;
-  struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_grand_grand_parent = 0;
-  struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_parent = 0;
+static PyObject *__pyx_pf_9cythonize_7_RBTree_insert(struct __pyx_obj_9cythonize__RBTree *__pyx_v_self, PyObject *__pyx_v_key, PyObject *__pyx_v_value) {
+  struct __pyx_obj_9cythonize_Node *__pyx_v_head = 0;
+  struct __pyx_obj_9cythonize_Node *__pyx_v_grand_parent = 0;
+  struct __pyx_obj_9cythonize_Node *__pyx_v_grand_grand_parent = 0;
+  struct __pyx_obj_9cythonize_Node *__pyx_v_parent = 0;
   int __pyx_v_direction;
   int __pyx_v_last;
-  struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_node = 0;
+  struct __pyx_obj_9cythonize_Node *__pyx_v_node = 0;
   long __pyx_v_direction2;
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
@@ -3302,7 +3302,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_inser
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("insert", 0);
 
-  /* "accumulation_tree/accumulation_tree.pyx":64
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":64
  * 
  *     def insert(self, key, value):
  *         if self._root is None:  # Empty tree case             # <<<<<<<<<<<<<<
@@ -3313,22 +3313,22 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_inser
   __pyx_t_2 = (__pyx_t_1 != 0);
   if (__pyx_t_2) {
 
-    /* "accumulation_tree/accumulation_tree.pyx":65
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":65
  *     def insert(self, key, value):
  *         if self._root is None:  # Empty tree case
  *             self._root = self._new_node(key, value)             # <<<<<<<<<<<<<<
  *             self._root.red = False  # make root black
  *             return
  */
-    __pyx_t_3 = ((PyObject *)((struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree__RBTree *)__pyx_v_self->__pyx_vtab)->_new_node(__pyx_v_self, __pyx_v_key, __pyx_v_value)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 65, __pyx_L1_error)
+    __pyx_t_3 = ((PyObject *)((struct __pyx_vtabstruct_9cythonize__RBTree *)__pyx_v_self->__pyx_vtab)->_new_node(__pyx_v_self, __pyx_v_key, __pyx_v_value)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 65, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_GIVEREF(__pyx_t_3);
     __Pyx_GOTREF(__pyx_v_self->_root);
     __Pyx_DECREF(((PyObject *)__pyx_v_self->_root));
-    __pyx_v_self->_root = ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_t_3);
+    __pyx_v_self->_root = ((struct __pyx_obj_9cythonize_Node *)__pyx_t_3);
     __pyx_t_3 = 0;
 
-    /* "accumulation_tree/accumulation_tree.pyx":66
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":66
  *         if self._root is None:  # Empty tree case
  *             self._root = self._new_node(key, value)
  *             self._root.red = False  # make root black             # <<<<<<<<<<<<<<
@@ -3337,7 +3337,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_inser
  */
     __pyx_v_self->_root->red = 0;
 
-    /* "accumulation_tree/accumulation_tree.pyx":67
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":67
  *             self._root = self._new_node(key, value)
  *             self._root.red = False  # make root black
  *             return             # <<<<<<<<<<<<<<
@@ -3348,7 +3348,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_inser
     __pyx_r = Py_None; __Pyx_INCREF(Py_None);
     goto __pyx_L0;
 
-    /* "accumulation_tree/accumulation_tree.pyx":64
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":64
  * 
  *     def insert(self, key, value):
  *         if self._root is None:  # Empty tree case             # <<<<<<<<<<<<<<
@@ -3357,7 +3357,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_inser
  */
   }
 
-  /* "accumulation_tree/accumulation_tree.pyx":69
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":69
  *             return
  * 
  *         cdef Node head = Node(key=null_key)  # False tree root             # <<<<<<<<<<<<<<
@@ -3366,14 +3366,14 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_inser
  */
   __pyx_t_3 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 69, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  if (PyDict_SetItem(__pyx_t_3, __pyx_n_s_key, ((PyObject *)__pyx_v_17accumulation_tree_17accumulation_tree_null_key)) < 0) __PYX_ERR(0, 69, __pyx_L1_error)
-  __pyx_t_4 = __Pyx_PyObject_Call(((PyObject *)__pyx_ptype_17accumulation_tree_17accumulation_tree_Node), __pyx_empty_tuple, __pyx_t_3); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 69, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_3, __pyx_n_s_key, ((PyObject *)__pyx_v_9cythonize_null_key)) < 0) __PYX_ERR(0, 69, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_Call(((PyObject *)__pyx_ptype_9cythonize_Node), __pyx_empty_tuple, __pyx_t_3); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 69, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_v_head = ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_t_4);
+  __pyx_v_head = ((struct __pyx_obj_9cythonize_Node *)__pyx_t_4);
   __pyx_t_4 = 0;
 
-  /* "accumulation_tree/accumulation_tree.pyx":70
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":70
  * 
  *         cdef Node head = Node(key=null_key)  # False tree root
  *         cdef Node grand_parent = None             # <<<<<<<<<<<<<<
@@ -3381,9 +3381,9 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_inser
  *         cdef Node parent = None  # parent
  */
   __Pyx_INCREF(Py_None);
-  __pyx_v_grand_parent = ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)Py_None);
+  __pyx_v_grand_parent = ((struct __pyx_obj_9cythonize_Node *)Py_None);
 
-  /* "accumulation_tree/accumulation_tree.pyx":71
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":71
  *         cdef Node head = Node(key=null_key)  # False tree root
  *         cdef Node grand_parent = None
  *         cdef Node grand_grand_parent = head             # <<<<<<<<<<<<<<
@@ -3393,7 +3393,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_inser
   __Pyx_INCREF(((PyObject *)__pyx_v_head));
   __pyx_v_grand_grand_parent = __pyx_v_head;
 
-  /* "accumulation_tree/accumulation_tree.pyx":72
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":72
  *         cdef Node grand_parent = None
  *         cdef Node grand_grand_parent = head
  *         cdef Node parent = None  # parent             # <<<<<<<<<<<<<<
@@ -3401,9 +3401,9 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_inser
  *         cdef int last = 0
  */
   __Pyx_INCREF(Py_None);
-  __pyx_v_parent = ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)Py_None);
+  __pyx_v_parent = ((struct __pyx_obj_9cythonize_Node *)Py_None);
 
-  /* "accumulation_tree/accumulation_tree.pyx":73
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":73
  *         cdef Node grand_grand_parent = head
  *         cdef Node parent = None  # parent
  *         cdef int direction = 0             # <<<<<<<<<<<<<<
@@ -3412,7 +3412,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_inser
  */
   __pyx_v_direction = 0;
 
-  /* "accumulation_tree/accumulation_tree.pyx":74
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":74
  *         cdef Node parent = None  # parent
  *         cdef int direction = 0
  *         cdef int last = 0             # <<<<<<<<<<<<<<
@@ -3421,7 +3421,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_inser
  */
   __pyx_v_last = 0;
 
-  /* "accumulation_tree/accumulation_tree.pyx":77
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":77
  * 
  *         # Set up helpers
  *         grand_grand_parent.right = self._root             # <<<<<<<<<<<<<<
@@ -3433,10 +3433,10 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_inser
   __Pyx_GIVEREF(__pyx_t_4);
   __Pyx_GOTREF(__pyx_v_grand_grand_parent->right);
   __Pyx_DECREF(((PyObject *)__pyx_v_grand_grand_parent->right));
-  __pyx_v_grand_grand_parent->right = ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_t_4);
+  __pyx_v_grand_grand_parent->right = ((struct __pyx_obj_9cythonize_Node *)__pyx_t_4);
   __pyx_t_4 = 0;
 
-  /* "accumulation_tree/accumulation_tree.pyx":78
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":78
  *         # Set up helpers
  *         grand_grand_parent.right = self._root
  *         cdef Node node = grand_grand_parent.right             # <<<<<<<<<<<<<<
@@ -3445,10 +3445,10 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_inser
  */
   __pyx_t_4 = ((PyObject *)__pyx_v_grand_grand_parent->right);
   __Pyx_INCREF(__pyx_t_4);
-  __pyx_v_node = ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_t_4);
+  __pyx_v_node = ((struct __pyx_obj_9cythonize_Node *)__pyx_t_4);
   __pyx_t_4 = 0;
 
-  /* "accumulation_tree/accumulation_tree.pyx":80
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":80
  *         cdef Node node = grand_grand_parent.right
  *         # Search down the tree
  *         while True:             # <<<<<<<<<<<<<<
@@ -3457,7 +3457,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_inser
  */
   while (1) {
 
-    /* "accumulation_tree/accumulation_tree.pyx":81
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":81
  *         # Search down the tree
  *         while True:
  *             if node is None:  # Insert new node at the bottom             # <<<<<<<<<<<<<<
@@ -3468,28 +3468,28 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_inser
     __pyx_t_1 = (__pyx_t_2 != 0);
     if (__pyx_t_1) {
 
-      /* "accumulation_tree/accumulation_tree.pyx":82
+      /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":82
  *         while True:
  *             if node is None:  # Insert new node at the bottom
  *                 node = self._new_node(key, value)             # <<<<<<<<<<<<<<
  *                 self.set(parent, direction, node)
  *             elif is_red(node.left) and is_red(node.right):  # Color flip
  */
-      __pyx_t_4 = ((PyObject *)((struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree__RBTree *)__pyx_v_self->__pyx_vtab)->_new_node(__pyx_v_self, __pyx_v_key, __pyx_v_value)); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 82, __pyx_L1_error)
+      __pyx_t_4 = ((PyObject *)((struct __pyx_vtabstruct_9cythonize__RBTree *)__pyx_v_self->__pyx_vtab)->_new_node(__pyx_v_self, __pyx_v_key, __pyx_v_value)); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 82, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_4);
-      __Pyx_DECREF_SET(__pyx_v_node, ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_t_4));
+      __Pyx_DECREF_SET(__pyx_v_node, ((struct __pyx_obj_9cythonize_Node *)__pyx_t_4));
       __pyx_t_4 = 0;
 
-      /* "accumulation_tree/accumulation_tree.pyx":83
+      /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":83
  *             if node is None:  # Insert new node at the bottom
  *                 node = self._new_node(key, value)
  *                 self.set(parent, direction, node)             # <<<<<<<<<<<<<<
  *             elif is_red(node.left) and is_red(node.right):  # Color flip
  *                 node.red = True
  */
-      ((struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree__RBTree *)__pyx_v_self->__pyx_vtab)->set(__pyx_v_self, __pyx_v_parent, __pyx_v_direction, __pyx_v_node);
+      ((struct __pyx_vtabstruct_9cythonize__RBTree *)__pyx_v_self->__pyx_vtab)->set(__pyx_v_self, __pyx_v_parent, __pyx_v_direction, __pyx_v_node);
 
-      /* "accumulation_tree/accumulation_tree.pyx":81
+      /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":81
  *         # Search down the tree
  *         while True:
  *             if node is None:  # Insert new node at the bottom             # <<<<<<<<<<<<<<
@@ -3499,7 +3499,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_inser
       goto __pyx_L6;
     }
 
-    /* "accumulation_tree/accumulation_tree.pyx":84
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":84
  *                 node = self._new_node(key, value)
  *                 self.set(parent, direction, node)
  *             elif is_red(node.left) and is_red(node.right):  # Color flip             # <<<<<<<<<<<<<<
@@ -3508,7 +3508,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_inser
  */
     __pyx_t_4 = ((PyObject *)__pyx_v_node->left);
     __Pyx_INCREF(__pyx_t_4);
-    __pyx_t_2 = (__pyx_f_17accumulation_tree_17accumulation_tree_is_red(((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_t_4)) != 0);
+    __pyx_t_2 = (__pyx_f_9cythonize_is_red(((struct __pyx_obj_9cythonize_Node *)__pyx_t_4)) != 0);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     if (__pyx_t_2) {
     } else {
@@ -3517,13 +3517,13 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_inser
     }
     __pyx_t_4 = ((PyObject *)__pyx_v_node->right);
     __Pyx_INCREF(__pyx_t_4);
-    __pyx_t_2 = (__pyx_f_17accumulation_tree_17accumulation_tree_is_red(((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_t_4)) != 0);
+    __pyx_t_2 = (__pyx_f_9cythonize_is_red(((struct __pyx_obj_9cythonize_Node *)__pyx_t_4)) != 0);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     __pyx_t_1 = __pyx_t_2;
     __pyx_L7_bool_binop_done:;
     if (__pyx_t_1) {
 
-      /* "accumulation_tree/accumulation_tree.pyx":85
+      /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":85
  *                 self.set(parent, direction, node)
  *             elif is_red(node.left) and is_red(node.right):  # Color flip
  *                 node.red = True             # <<<<<<<<<<<<<<
@@ -3532,7 +3532,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_inser
  */
       __pyx_v_node->red = 1;
 
-      /* "accumulation_tree/accumulation_tree.pyx":86
+      /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":86
  *             elif is_red(node.left) and is_red(node.right):  # Color flip
  *                 node.red = True
  *                 node.left.red = False             # <<<<<<<<<<<<<<
@@ -3541,7 +3541,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_inser
  */
       __pyx_v_node->left->red = 0;
 
-      /* "accumulation_tree/accumulation_tree.pyx":87
+      /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":87
  *                 node.red = True
  *                 node.left.red = False
  *                 node.right.red = False             # <<<<<<<<<<<<<<
@@ -3550,7 +3550,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_inser
  */
       __pyx_v_node->right->red = 0;
 
-      /* "accumulation_tree/accumulation_tree.pyx":84
+      /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":84
  *                 node = self._new_node(key, value)
  *                 self.set(parent, direction, node)
  *             elif is_red(node.left) and is_red(node.right):  # Color flip             # <<<<<<<<<<<<<<
@@ -3560,25 +3560,25 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_inser
     }
     __pyx_L6:;
 
-    /* "accumulation_tree/accumulation_tree.pyx":90
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":90
  * 
  *             # Fix red violation
  *             if is_red(node) and is_red(parent):             # <<<<<<<<<<<<<<
  *                 direction2 = 1 if grand_grand_parent.right is grand_parent else 0
  *                 if node is parent.get(last):
  */
-    __pyx_t_2 = (__pyx_f_17accumulation_tree_17accumulation_tree_is_red(__pyx_v_node) != 0);
+    __pyx_t_2 = (__pyx_f_9cythonize_is_red(__pyx_v_node) != 0);
     if (__pyx_t_2) {
     } else {
       __pyx_t_1 = __pyx_t_2;
       goto __pyx_L10_bool_binop_done;
     }
-    __pyx_t_2 = (__pyx_f_17accumulation_tree_17accumulation_tree_is_red(__pyx_v_parent) != 0);
+    __pyx_t_2 = (__pyx_f_9cythonize_is_red(__pyx_v_parent) != 0);
     __pyx_t_1 = __pyx_t_2;
     __pyx_L10_bool_binop_done:;
     if (__pyx_t_1) {
 
-      /* "accumulation_tree/accumulation_tree.pyx":91
+      /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":91
  *             # Fix red violation
  *             if is_red(node) and is_red(parent):
  *                 direction2 = 1 if grand_grand_parent.right is grand_parent else 0             # <<<<<<<<<<<<<<
@@ -3593,33 +3593,33 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_inser
       }
       __pyx_v_direction2 = __pyx_t_5;
 
-      /* "accumulation_tree/accumulation_tree.pyx":92
+      /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":92
  *             if is_red(node) and is_red(parent):
  *                 direction2 = 1 if grand_grand_parent.right is grand_parent else 0
  *                 if node is parent.get(last):             # <<<<<<<<<<<<<<
  *                     self.set(grand_grand_parent, direction2, self.jsw_single(grand_parent, 1 - last))
  *                 else:
  */
-      __pyx_t_4 = ((PyObject *)((struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree_Node *)__pyx_v_parent->__pyx_vtab)->get(__pyx_v_parent, __pyx_v_last)); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 92, __pyx_L1_error)
+      __pyx_t_4 = ((PyObject *)((struct __pyx_vtabstruct_9cythonize_Node *)__pyx_v_parent->__pyx_vtab)->get(__pyx_v_parent, __pyx_v_last)); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 92, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_4);
-      __pyx_t_1 = (__pyx_v_node == ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_t_4));
+      __pyx_t_1 = (__pyx_v_node == ((struct __pyx_obj_9cythonize_Node *)__pyx_t_4));
       __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
       __pyx_t_2 = (__pyx_t_1 != 0);
       if (__pyx_t_2) {
 
-        /* "accumulation_tree/accumulation_tree.pyx":93
+        /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":93
  *                 direction2 = 1 if grand_grand_parent.right is grand_parent else 0
  *                 if node is parent.get(last):
  *                     self.set(grand_grand_parent, direction2, self.jsw_single(grand_parent, 1 - last))             # <<<<<<<<<<<<<<
  *                 else:
  *                     self.set(grand_grand_parent, direction2, self.jsw_double(grand_parent, 1 - last))
  */
-        __pyx_t_4 = ((PyObject *)((struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree__RBTree *)__pyx_v_self->__pyx_vtab)->jsw_single(__pyx_v_self, __pyx_v_grand_parent, (1 - __pyx_v_last))); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 93, __pyx_L1_error)
+        __pyx_t_4 = ((PyObject *)((struct __pyx_vtabstruct_9cythonize__RBTree *)__pyx_v_self->__pyx_vtab)->jsw_single(__pyx_v_self, __pyx_v_grand_parent, (1 - __pyx_v_last))); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 93, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_4);
-        ((struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree__RBTree *)__pyx_v_self->__pyx_vtab)->set(__pyx_v_self, __pyx_v_grand_grand_parent, __pyx_v_direction2, ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_t_4));
+        ((struct __pyx_vtabstruct_9cythonize__RBTree *)__pyx_v_self->__pyx_vtab)->set(__pyx_v_self, __pyx_v_grand_grand_parent, __pyx_v_direction2, ((struct __pyx_obj_9cythonize_Node *)__pyx_t_4));
         __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
 
-        /* "accumulation_tree/accumulation_tree.pyx":92
+        /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":92
  *             if is_red(node) and is_red(parent):
  *                 direction2 = 1 if grand_grand_parent.right is grand_parent else 0
  *                 if node is parent.get(last):             # <<<<<<<<<<<<<<
@@ -3629,7 +3629,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_inser
         goto __pyx_L12;
       }
 
-      /* "accumulation_tree/accumulation_tree.pyx":95
+      /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":95
  *                     self.set(grand_grand_parent, direction2, self.jsw_single(grand_parent, 1 - last))
  *                 else:
  *                     self.set(grand_grand_parent, direction2, self.jsw_double(grand_parent, 1 - last))             # <<<<<<<<<<<<<<
@@ -3637,14 +3637,14 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_inser
  *             # Stop if found
  */
       /*else*/ {
-        __pyx_t_4 = ((PyObject *)((struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree__RBTree *)__pyx_v_self->__pyx_vtab)->jsw_double(__pyx_v_self, __pyx_v_grand_parent, (1 - __pyx_v_last))); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 95, __pyx_L1_error)
+        __pyx_t_4 = ((PyObject *)((struct __pyx_vtabstruct_9cythonize__RBTree *)__pyx_v_self->__pyx_vtab)->jsw_double(__pyx_v_self, __pyx_v_grand_parent, (1 - __pyx_v_last))); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 95, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_4);
-        ((struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree__RBTree *)__pyx_v_self->__pyx_vtab)->set(__pyx_v_self, __pyx_v_grand_grand_parent, __pyx_v_direction2, ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_t_4));
+        ((struct __pyx_vtabstruct_9cythonize__RBTree *)__pyx_v_self->__pyx_vtab)->set(__pyx_v_self, __pyx_v_grand_grand_parent, __pyx_v_direction2, ((struct __pyx_obj_9cythonize_Node *)__pyx_t_4));
         __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
       }
       __pyx_L12:;
 
-      /* "accumulation_tree/accumulation_tree.pyx":90
+      /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":90
  * 
  *             # Fix red violation
  *             if is_red(node) and is_red(parent):             # <<<<<<<<<<<<<<
@@ -3653,7 +3653,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_inser
  */
     }
 
-    /* "accumulation_tree/accumulation_tree.pyx":98
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":98
  * 
  *             # Stop if found
  *             if key == node.key:             # <<<<<<<<<<<<<<
@@ -3665,7 +3665,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_inser
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     if (__pyx_t_2) {
 
-      /* "accumulation_tree/accumulation_tree.pyx":99
+      /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":99
  *             # Stop if found
  *             if key == node.key:
  *                 node.value = value  # set new value for key             # <<<<<<<<<<<<<<
@@ -3678,7 +3678,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_inser
       __Pyx_DECREF(__pyx_v_node->value);
       __pyx_v_node->value = __pyx_v_value;
 
-      /* "accumulation_tree/accumulation_tree.pyx":100
+      /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":100
  *             if key == node.key:
  *                 node.value = value  # set new value for key
  *                 break             # <<<<<<<<<<<<<<
@@ -3687,7 +3687,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_inser
  */
       goto __pyx_L5_break;
 
-      /* "accumulation_tree/accumulation_tree.pyx":98
+      /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":98
  * 
  *             # Stop if found
  *             if key == node.key:             # <<<<<<<<<<<<<<
@@ -3696,7 +3696,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_inser
  */
     }
 
-    /* "accumulation_tree/accumulation_tree.pyx":102
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":102
  *                 break
  * 
  *             last = direction             # <<<<<<<<<<<<<<
@@ -3705,7 +3705,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_inser
  */
     __pyx_v_last = __pyx_v_direction;
 
-    /* "accumulation_tree/accumulation_tree.pyx":103
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":103
  * 
  *             last = direction
  *             direction = 0 if key < node.key else 1             # <<<<<<<<<<<<<<
@@ -3722,7 +3722,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_inser
     }
     __pyx_v_direction = __pyx_t_6;
 
-    /* "accumulation_tree/accumulation_tree.pyx":105
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":105
  *             direction = 0 if key < node.key else 1
  *             # Update helpers
  *             if grand_parent is not None:             # <<<<<<<<<<<<<<
@@ -3733,7 +3733,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_inser
     __pyx_t_1 = (__pyx_t_2 != 0);
     if (__pyx_t_1) {
 
-      /* "accumulation_tree/accumulation_tree.pyx":106
+      /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":106
  *             # Update helpers
  *             if grand_parent is not None:
  *                 grand_grand_parent = grand_parent             # <<<<<<<<<<<<<<
@@ -3743,7 +3743,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_inser
       __Pyx_INCREF(((PyObject *)__pyx_v_grand_parent));
       __Pyx_DECREF_SET(__pyx_v_grand_grand_parent, __pyx_v_grand_parent);
 
-      /* "accumulation_tree/accumulation_tree.pyx":105
+      /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":105
  *             direction = 0 if key < node.key else 1
  *             # Update helpers
  *             if grand_parent is not None:             # <<<<<<<<<<<<<<
@@ -3752,7 +3752,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_inser
  */
     }
 
-    /* "accumulation_tree/accumulation_tree.pyx":107
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":107
  *             if grand_parent is not None:
  *                 grand_grand_parent = grand_parent
  *             grand_parent = parent             # <<<<<<<<<<<<<<
@@ -3762,7 +3762,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_inser
     __Pyx_INCREF(((PyObject *)__pyx_v_parent));
     __Pyx_DECREF_SET(__pyx_v_grand_parent, __pyx_v_parent);
 
-    /* "accumulation_tree/accumulation_tree.pyx":108
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":108
  *                 grand_grand_parent = grand_parent
  *             grand_parent = parent
  *             parent = node             # <<<<<<<<<<<<<<
@@ -3772,21 +3772,21 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_inser
     __Pyx_INCREF(((PyObject *)__pyx_v_node));
     __Pyx_DECREF_SET(__pyx_v_parent, __pyx_v_node);
 
-    /* "accumulation_tree/accumulation_tree.pyx":109
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":109
  *             grand_parent = parent
  *             parent = node
  *             node = node.get(direction)             # <<<<<<<<<<<<<<
  * 
  *         self._root = head.right  # Update root
  */
-    __pyx_t_4 = ((PyObject *)((struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree_Node *)__pyx_v_node->__pyx_vtab)->get(__pyx_v_node, __pyx_v_direction)); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 109, __pyx_L1_error)
+    __pyx_t_4 = ((PyObject *)((struct __pyx_vtabstruct_9cythonize_Node *)__pyx_v_node->__pyx_vtab)->get(__pyx_v_node, __pyx_v_direction)); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 109, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
-    __Pyx_DECREF_SET(__pyx_v_node, ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_t_4));
+    __Pyx_DECREF_SET(__pyx_v_node, ((struct __pyx_obj_9cythonize_Node *)__pyx_t_4));
     __pyx_t_4 = 0;
   }
   __pyx_L5_break:;
 
-  /* "accumulation_tree/accumulation_tree.pyx":111
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":111
  *             node = node.get(direction)
  * 
  *         self._root = head.right  # Update root             # <<<<<<<<<<<<<<
@@ -3798,10 +3798,10 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_inser
   __Pyx_GIVEREF(__pyx_t_4);
   __Pyx_GOTREF(__pyx_v_self->_root);
   __Pyx_DECREF(((PyObject *)__pyx_v_self->_root));
-  __pyx_v_self->_root = ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_t_4);
+  __pyx_v_self->_root = ((struct __pyx_obj_9cythonize_Node *)__pyx_t_4);
   __pyx_t_4 = 0;
 
-  /* "accumulation_tree/accumulation_tree.pyx":112
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":112
  * 
  *         self._root = head.right  # Update root
  *         self._root.red = False   # make root black             # <<<<<<<<<<<<<<
@@ -3810,7 +3810,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_inser
  */
   __pyx_v_self->_root->red = 0;
 
-  /* "accumulation_tree/accumulation_tree.pyx":63
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":63
  *         node.set(direction, child_node)
  * 
  *     def insert(self, key, value):             # <<<<<<<<<<<<<<
@@ -3824,7 +3824,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_inser
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_3);
   __Pyx_XDECREF(__pyx_t_4);
-  __Pyx_AddTraceback("accumulation_tree.accumulation_tree._RBTree.insert", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("cythonize._RBTree.insert", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XDECREF((PyObject *)__pyx_v_head);
@@ -3837,7 +3837,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_inser
   return __pyx_r;
 }
 
-/* "accumulation_tree/accumulation_tree.pyx":114
+/* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":114
  *         self._root.red = False   # make root black
  * 
  *     def remove(self, key):             # <<<<<<<<<<<<<<
@@ -3846,27 +3846,27 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_inser
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_7_RBTree_3remove(PyObject *__pyx_v_self, PyObject *__pyx_v_key); /*proto*/
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_7_RBTree_3remove(PyObject *__pyx_v_self, PyObject *__pyx_v_key) {
+static PyObject *__pyx_pw_9cythonize_7_RBTree_3remove(PyObject *__pyx_v_self, PyObject *__pyx_v_key); /*proto*/
+static PyObject *__pyx_pw_9cythonize_7_RBTree_3remove(PyObject *__pyx_v_self, PyObject *__pyx_v_key) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("remove (wrapper)", 0);
-  __pyx_r = __pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_2remove(((struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree *)__pyx_v_self), ((PyObject *)__pyx_v_key));
+  __pyx_r = __pyx_pf_9cythonize_7_RBTree_2remove(((struct __pyx_obj_9cythonize__RBTree *)__pyx_v_self), ((PyObject *)__pyx_v_key));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_2remove(struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree *__pyx_v_self, PyObject *__pyx_v_key) {
-  struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_head = 0;
-  struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_node = 0;
-  struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_parent = 0;
-  struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_grand_parent = 0;
-  struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_found = 0;
+static PyObject *__pyx_pf_9cythonize_7_RBTree_2remove(struct __pyx_obj_9cythonize__RBTree *__pyx_v_self, PyObject *__pyx_v_key) {
+  struct __pyx_obj_9cythonize_Node *__pyx_v_head = 0;
+  struct __pyx_obj_9cythonize_Node *__pyx_v_node = 0;
+  struct __pyx_obj_9cythonize_Node *__pyx_v_parent = 0;
+  struct __pyx_obj_9cythonize_Node *__pyx_v_grand_parent = 0;
+  struct __pyx_obj_9cythonize_Node *__pyx_v_found = 0;
   int __pyx_v_direction;
   PyObject *__pyx_v_last = NULL;
-  struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_sibling = NULL;
+  struct __pyx_obj_9cythonize_Node *__pyx_v_sibling = NULL;
   long __pyx_v_direction2;
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
@@ -3882,7 +3882,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_2remo
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("remove", 0);
 
-  /* "accumulation_tree/accumulation_tree.pyx":115
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":115
  * 
  *     def remove(self, key):
  *         if self._root is None:             # <<<<<<<<<<<<<<
@@ -3893,7 +3893,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_2remo
   __pyx_t_2 = (__pyx_t_1 != 0);
   if (unlikely(__pyx_t_2)) {
 
-    /* "accumulation_tree/accumulation_tree.pyx":116
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":116
  *     def remove(self, key):
  *         if self._root is None:
  *             raise KeyError(str(key))             # <<<<<<<<<<<<<<
@@ -3909,7 +3909,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_2remo
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     __PYX_ERR(0, 116, __pyx_L1_error)
 
-    /* "accumulation_tree/accumulation_tree.pyx":115
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":115
  * 
  *     def remove(self, key):
  *         if self._root is None:             # <<<<<<<<<<<<<<
@@ -3918,7 +3918,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_2remo
  */
   }
 
-  /* "accumulation_tree/accumulation_tree.pyx":117
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":117
  *         if self._root is None:
  *             raise KeyError(str(key))
  *         cdef Node head = Node(key=null_key)  # False tree root             # <<<<<<<<<<<<<<
@@ -3927,14 +3927,14 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_2remo
  */
   __pyx_t_4 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 117, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_key, ((PyObject *)__pyx_v_17accumulation_tree_17accumulation_tree_null_key)) < 0) __PYX_ERR(0, 117, __pyx_L1_error)
-  __pyx_t_3 = __Pyx_PyObject_Call(((PyObject *)__pyx_ptype_17accumulation_tree_17accumulation_tree_Node), __pyx_empty_tuple, __pyx_t_4); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 117, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_4, __pyx_n_s_key, ((PyObject *)__pyx_v_9cythonize_null_key)) < 0) __PYX_ERR(0, 117, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_Call(((PyObject *)__pyx_ptype_9cythonize_Node), __pyx_empty_tuple, __pyx_t_4); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 117, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  __pyx_v_head = ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_t_3);
+  __pyx_v_head = ((struct __pyx_obj_9cythonize_Node *)__pyx_t_3);
   __pyx_t_3 = 0;
 
-  /* "accumulation_tree/accumulation_tree.pyx":118
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":118
  *             raise KeyError(str(key))
  *         cdef Node head = Node(key=null_key)  # False tree root
  *         cdef Node node = head             # <<<<<<<<<<<<<<
@@ -3944,7 +3944,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_2remo
   __Pyx_INCREF(((PyObject *)__pyx_v_head));
   __pyx_v_node = __pyx_v_head;
 
-  /* "accumulation_tree/accumulation_tree.pyx":119
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":119
  *         cdef Node head = Node(key=null_key)  # False tree root
  *         cdef Node node = head
  *         node.right = self._root             # <<<<<<<<<<<<<<
@@ -3956,10 +3956,10 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_2remo
   __Pyx_GIVEREF(__pyx_t_3);
   __Pyx_GOTREF(__pyx_v_node->right);
   __Pyx_DECREF(((PyObject *)__pyx_v_node->right));
-  __pyx_v_node->right = ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_t_3);
+  __pyx_v_node->right = ((struct __pyx_obj_9cythonize_Node *)__pyx_t_3);
   __pyx_t_3 = 0;
 
-  /* "accumulation_tree/accumulation_tree.pyx":120
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":120
  *         cdef Node node = head
  *         node.right = self._root
  *         cdef Node parent = None             # <<<<<<<<<<<<<<
@@ -3967,9 +3967,9 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_2remo
  *         cdef Node found = None  # Found item
  */
   __Pyx_INCREF(Py_None);
-  __pyx_v_parent = ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)Py_None);
+  __pyx_v_parent = ((struct __pyx_obj_9cythonize_Node *)Py_None);
 
-  /* "accumulation_tree/accumulation_tree.pyx":121
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":121
  *         node.right = self._root
  *         cdef Node parent = None
  *         cdef Node grand_parent = None             # <<<<<<<<<<<<<<
@@ -3977,9 +3977,9 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_2remo
  *         cdef int direction = 1
  */
   __Pyx_INCREF(Py_None);
-  __pyx_v_grand_parent = ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)Py_None);
+  __pyx_v_grand_parent = ((struct __pyx_obj_9cythonize_Node *)Py_None);
 
-  /* "accumulation_tree/accumulation_tree.pyx":122
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":122
  *         cdef Node parent = None
  *         cdef Node grand_parent = None
  *         cdef Node found = None  # Found item             # <<<<<<<<<<<<<<
@@ -3987,9 +3987,9 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_2remo
  * 
  */
   __Pyx_INCREF(Py_None);
-  __pyx_v_found = ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)Py_None);
+  __pyx_v_found = ((struct __pyx_obj_9cythonize_Node *)Py_None);
 
-  /* "accumulation_tree/accumulation_tree.pyx":123
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":123
  *         cdef Node grand_parent = None
  *         cdef Node found = None  # Found item
  *         cdef int direction = 1             # <<<<<<<<<<<<<<
@@ -3998,7 +3998,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_2remo
  */
   __pyx_v_direction = 1;
 
-  /* "accumulation_tree/accumulation_tree.pyx":126
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":126
  * 
  *         # Search and push a red down
  *         while node.get(direction) is not None:             # <<<<<<<<<<<<<<
@@ -4006,14 +4006,14 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_2remo
  * 
  */
   while (1) {
-    __pyx_t_3 = ((PyObject *)((struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree_Node *)__pyx_v_node->__pyx_vtab)->get(__pyx_v_node, __pyx_v_direction)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 126, __pyx_L1_error)
+    __pyx_t_3 = ((PyObject *)((struct __pyx_vtabstruct_9cythonize_Node *)__pyx_v_node->__pyx_vtab)->get(__pyx_v_node, __pyx_v_direction)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 126, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __pyx_t_2 = (__pyx_t_3 != Py_None);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     __pyx_t_1 = (__pyx_t_2 != 0);
     if (!__pyx_t_1) break;
 
-    /* "accumulation_tree/accumulation_tree.pyx":127
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":127
  *         # Search and push a red down
  *         while node.get(direction) is not None:
  *             last = direction             # <<<<<<<<<<<<<<
@@ -4025,7 +4025,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_2remo
     __Pyx_XDECREF_SET(__pyx_v_last, __pyx_t_3);
     __pyx_t_3 = 0;
 
-    /* "accumulation_tree/accumulation_tree.pyx":130
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":130
  * 
  *             # Update helpers
  *             grand_parent = parent             # <<<<<<<<<<<<<<
@@ -4035,7 +4035,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_2remo
     __Pyx_INCREF(((PyObject *)__pyx_v_parent));
     __Pyx_DECREF_SET(__pyx_v_grand_parent, __pyx_v_parent);
 
-    /* "accumulation_tree/accumulation_tree.pyx":131
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":131
  *             # Update helpers
  *             grand_parent = parent
  *             parent = node             # <<<<<<<<<<<<<<
@@ -4045,19 +4045,19 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_2remo
     __Pyx_INCREF(((PyObject *)__pyx_v_node));
     __Pyx_DECREF_SET(__pyx_v_parent, __pyx_v_node);
 
-    /* "accumulation_tree/accumulation_tree.pyx":132
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":132
  *             grand_parent = parent
  *             parent = node
  *             node = node.get(direction)             # <<<<<<<<<<<<<<
  * 
  *             direction = 1 if key > node.key else 0
  */
-    __pyx_t_3 = ((PyObject *)((struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree_Node *)__pyx_v_node->__pyx_vtab)->get(__pyx_v_node, __pyx_v_direction)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 132, __pyx_L1_error)
+    __pyx_t_3 = ((PyObject *)((struct __pyx_vtabstruct_9cythonize_Node *)__pyx_v_node->__pyx_vtab)->get(__pyx_v_node, __pyx_v_direction)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 132, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __Pyx_DECREF_SET(__pyx_v_node, ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_t_3));
+    __Pyx_DECREF_SET(__pyx_v_node, ((struct __pyx_obj_9cythonize_Node *)__pyx_t_3));
     __pyx_t_3 = 0;
 
-    /* "accumulation_tree/accumulation_tree.pyx":134
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":134
  *             node = node.get(direction)
  * 
  *             direction = 1 if key > node.key else 0             # <<<<<<<<<<<<<<
@@ -4074,7 +4074,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_2remo
     }
     __pyx_v_direction = __pyx_t_5;
 
-    /* "accumulation_tree/accumulation_tree.pyx":137
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":137
  * 
  *             # Save found node
  *             if key == node.key:             # <<<<<<<<<<<<<<
@@ -4086,7 +4086,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_2remo
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     if (__pyx_t_1) {
 
-      /* "accumulation_tree/accumulation_tree.pyx":138
+      /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":138
  *             # Save found node
  *             if key == node.key:
  *                 found = node             # <<<<<<<<<<<<<<
@@ -4096,7 +4096,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_2remo
       __Pyx_INCREF(((PyObject *)__pyx_v_node));
       __Pyx_DECREF_SET(__pyx_v_found, __pyx_v_node);
 
-      /* "accumulation_tree/accumulation_tree.pyx":137
+      /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":137
  * 
  *             # Save found node
  *             if key == node.key:             # <<<<<<<<<<<<<<
@@ -4105,41 +4105,41 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_2remo
  */
     }
 
-    /* "accumulation_tree/accumulation_tree.pyx":141
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":141
  * 
  *             # Push the red node down
  *             if not is_red(node) and not is_red(node.get(direction)):             # <<<<<<<<<<<<<<
  *                 if is_red(node.get(1 - direction)):
  *                     self.set(parent, last, self.jsw_single(node, direction))
  */
-    __pyx_t_2 = ((!(__pyx_f_17accumulation_tree_17accumulation_tree_is_red(__pyx_v_node) != 0)) != 0);
+    __pyx_t_2 = ((!(__pyx_f_9cythonize_is_red(__pyx_v_node) != 0)) != 0);
     if (__pyx_t_2) {
     } else {
       __pyx_t_1 = __pyx_t_2;
       goto __pyx_L8_bool_binop_done;
     }
-    __pyx_t_3 = ((PyObject *)((struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree_Node *)__pyx_v_node->__pyx_vtab)->get(__pyx_v_node, __pyx_v_direction)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 141, __pyx_L1_error)
+    __pyx_t_3 = ((PyObject *)((struct __pyx_vtabstruct_9cythonize_Node *)__pyx_v_node->__pyx_vtab)->get(__pyx_v_node, __pyx_v_direction)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 141, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_2 = ((!(__pyx_f_17accumulation_tree_17accumulation_tree_is_red(((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_t_3)) != 0)) != 0);
+    __pyx_t_2 = ((!(__pyx_f_9cythonize_is_red(((struct __pyx_obj_9cythonize_Node *)__pyx_t_3)) != 0)) != 0);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     __pyx_t_1 = __pyx_t_2;
     __pyx_L8_bool_binop_done:;
     if (__pyx_t_1) {
 
-      /* "accumulation_tree/accumulation_tree.pyx":142
+      /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":142
  *             # Push the red node down
  *             if not is_red(node) and not is_red(node.get(direction)):
  *                 if is_red(node.get(1 - direction)):             # <<<<<<<<<<<<<<
  *                     self.set(parent, last, self.jsw_single(node, direction))
  *                     parent = parent.get(last)
  */
-      __pyx_t_3 = ((PyObject *)((struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree_Node *)__pyx_v_node->__pyx_vtab)->get(__pyx_v_node, (1 - __pyx_v_direction))); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 142, __pyx_L1_error)
+      __pyx_t_3 = ((PyObject *)((struct __pyx_vtabstruct_9cythonize_Node *)__pyx_v_node->__pyx_vtab)->get(__pyx_v_node, (1 - __pyx_v_direction))); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 142, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_3);
-      __pyx_t_1 = (__pyx_f_17accumulation_tree_17accumulation_tree_is_red(((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_t_3)) != 0);
+      __pyx_t_1 = (__pyx_f_9cythonize_is_red(((struct __pyx_obj_9cythonize_Node *)__pyx_t_3)) != 0);
       __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
       if (__pyx_t_1) {
 
-        /* "accumulation_tree/accumulation_tree.pyx":143
+        /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":143
  *             if not is_red(node) and not is_red(node.get(direction)):
  *                 if is_red(node.get(1 - direction)):
  *                     self.set(parent, last, self.jsw_single(node, direction))             # <<<<<<<<<<<<<<
@@ -4147,12 +4147,12 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_2remo
  *                 elif not is_red(node.get(1 - direction)):
  */
         __pyx_t_5 = __Pyx_PyInt_As_int(__pyx_v_last); if (unlikely((__pyx_t_5 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 143, __pyx_L1_error)
-        __pyx_t_3 = ((PyObject *)((struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree__RBTree *)__pyx_v_self->__pyx_vtab)->jsw_single(__pyx_v_self, __pyx_v_node, __pyx_v_direction)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 143, __pyx_L1_error)
+        __pyx_t_3 = ((PyObject *)((struct __pyx_vtabstruct_9cythonize__RBTree *)__pyx_v_self->__pyx_vtab)->jsw_single(__pyx_v_self, __pyx_v_node, __pyx_v_direction)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 143, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_3);
-        ((struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree__RBTree *)__pyx_v_self->__pyx_vtab)->set(__pyx_v_self, __pyx_v_parent, __pyx_t_5, ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_t_3));
+        ((struct __pyx_vtabstruct_9cythonize__RBTree *)__pyx_v_self->__pyx_vtab)->set(__pyx_v_self, __pyx_v_parent, __pyx_t_5, ((struct __pyx_obj_9cythonize_Node *)__pyx_t_3));
         __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-        /* "accumulation_tree/accumulation_tree.pyx":144
+        /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":144
  *                 if is_red(node.get(1 - direction)):
  *                     self.set(parent, last, self.jsw_single(node, direction))
  *                     parent = parent.get(last)             # <<<<<<<<<<<<<<
@@ -4160,12 +4160,12 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_2remo
  *                     sibling = parent.get(1 - last)
  */
         __pyx_t_5 = __Pyx_PyInt_As_int(__pyx_v_last); if (unlikely((__pyx_t_5 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 144, __pyx_L1_error)
-        __pyx_t_3 = ((PyObject *)((struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree_Node *)__pyx_v_parent->__pyx_vtab)->get(__pyx_v_parent, __pyx_t_5)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 144, __pyx_L1_error)
+        __pyx_t_3 = ((PyObject *)((struct __pyx_vtabstruct_9cythonize_Node *)__pyx_v_parent->__pyx_vtab)->get(__pyx_v_parent, __pyx_t_5)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 144, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_3);
-        __Pyx_DECREF_SET(__pyx_v_parent, ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_t_3));
+        __Pyx_DECREF_SET(__pyx_v_parent, ((struct __pyx_obj_9cythonize_Node *)__pyx_t_3));
         __pyx_t_3 = 0;
 
-        /* "accumulation_tree/accumulation_tree.pyx":142
+        /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":142
  *             # Push the red node down
  *             if not is_red(node) and not is_red(node.get(direction)):
  *                 if is_red(node.get(1 - direction)):             # <<<<<<<<<<<<<<
@@ -4175,20 +4175,20 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_2remo
         goto __pyx_L10;
       }
 
-      /* "accumulation_tree/accumulation_tree.pyx":145
+      /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":145
  *                     self.set(parent, last, self.jsw_single(node, direction))
  *                     parent = parent.get(last)
  *                 elif not is_red(node.get(1 - direction)):             # <<<<<<<<<<<<<<
  *                     sibling = parent.get(1 - last)
  *                     if sibling is not None:
  */
-      __pyx_t_3 = ((PyObject *)((struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree_Node *)__pyx_v_node->__pyx_vtab)->get(__pyx_v_node, (1 - __pyx_v_direction))); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 145, __pyx_L1_error)
+      __pyx_t_3 = ((PyObject *)((struct __pyx_vtabstruct_9cythonize_Node *)__pyx_v_node->__pyx_vtab)->get(__pyx_v_node, (1 - __pyx_v_direction))); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 145, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_3);
-      __pyx_t_1 = ((!(__pyx_f_17accumulation_tree_17accumulation_tree_is_red(((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_t_3)) != 0)) != 0);
+      __pyx_t_1 = ((!(__pyx_f_9cythonize_is_red(((struct __pyx_obj_9cythonize_Node *)__pyx_t_3)) != 0)) != 0);
       __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
       if (__pyx_t_1) {
 
-        /* "accumulation_tree/accumulation_tree.pyx":146
+        /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":146
  *                     parent = parent.get(last)
  *                 elif not is_red(node.get(1 - direction)):
  *                     sibling = parent.get(1 - last)             # <<<<<<<<<<<<<<
@@ -4199,12 +4199,12 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_2remo
         __Pyx_GOTREF(__pyx_t_3);
         __pyx_t_5 = __Pyx_PyInt_As_int(__pyx_t_3); if (unlikely((__pyx_t_5 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 146, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-        __pyx_t_3 = ((PyObject *)((struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree_Node *)__pyx_v_parent->__pyx_vtab)->get(__pyx_v_parent, __pyx_t_5)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 146, __pyx_L1_error)
+        __pyx_t_3 = ((PyObject *)((struct __pyx_vtabstruct_9cythonize_Node *)__pyx_v_parent->__pyx_vtab)->get(__pyx_v_parent, __pyx_t_5)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 146, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_3);
-        __Pyx_XDECREF_SET(__pyx_v_sibling, ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_t_3));
+        __Pyx_XDECREF_SET(__pyx_v_sibling, ((struct __pyx_obj_9cythonize_Node *)__pyx_t_3));
         __pyx_t_3 = 0;
 
-        /* "accumulation_tree/accumulation_tree.pyx":147
+        /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":147
  *                 elif not is_red(node.get(1 - direction)):
  *                     sibling = parent.get(1 - last)
  *                     if sibling is not None:             # <<<<<<<<<<<<<<
@@ -4215,7 +4215,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_2remo
         __pyx_t_2 = (__pyx_t_1 != 0);
         if (__pyx_t_2) {
 
-          /* "accumulation_tree/accumulation_tree.pyx":148
+          /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":148
  *                     sibling = parent.get(1 - last)
  *                     if sibling is not None:
  *                         if (not is_red(sibling.get(1 - last))) and (not is_red(sibling.get(last))):             # <<<<<<<<<<<<<<
@@ -4226,9 +4226,9 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_2remo
           __Pyx_GOTREF(__pyx_t_3);
           __pyx_t_5 = __Pyx_PyInt_As_int(__pyx_t_3); if (unlikely((__pyx_t_5 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 148, __pyx_L1_error)
           __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-          __pyx_t_3 = ((PyObject *)((struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree_Node *)__pyx_v_sibling->__pyx_vtab)->get(__pyx_v_sibling, __pyx_t_5)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 148, __pyx_L1_error)
+          __pyx_t_3 = ((PyObject *)((struct __pyx_vtabstruct_9cythonize_Node *)__pyx_v_sibling->__pyx_vtab)->get(__pyx_v_sibling, __pyx_t_5)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 148, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_3);
-          __pyx_t_1 = ((!(__pyx_f_17accumulation_tree_17accumulation_tree_is_red(((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_t_3)) != 0)) != 0);
+          __pyx_t_1 = ((!(__pyx_f_9cythonize_is_red(((struct __pyx_obj_9cythonize_Node *)__pyx_t_3)) != 0)) != 0);
           __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
           if (__pyx_t_1) {
           } else {
@@ -4236,15 +4236,15 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_2remo
             goto __pyx_L13_bool_binop_done;
           }
           __pyx_t_5 = __Pyx_PyInt_As_int(__pyx_v_last); if (unlikely((__pyx_t_5 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 148, __pyx_L1_error)
-          __pyx_t_3 = ((PyObject *)((struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree_Node *)__pyx_v_sibling->__pyx_vtab)->get(__pyx_v_sibling, __pyx_t_5)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 148, __pyx_L1_error)
+          __pyx_t_3 = ((PyObject *)((struct __pyx_vtabstruct_9cythonize_Node *)__pyx_v_sibling->__pyx_vtab)->get(__pyx_v_sibling, __pyx_t_5)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 148, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_3);
-          __pyx_t_1 = ((!(__pyx_f_17accumulation_tree_17accumulation_tree_is_red(((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_t_3)) != 0)) != 0);
+          __pyx_t_1 = ((!(__pyx_f_9cythonize_is_red(((struct __pyx_obj_9cythonize_Node *)__pyx_t_3)) != 0)) != 0);
           __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
           __pyx_t_2 = __pyx_t_1;
           __pyx_L13_bool_binop_done:;
           if (__pyx_t_2) {
 
-            /* "accumulation_tree/accumulation_tree.pyx":150
+            /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":150
  *                         if (not is_red(sibling.get(1 - last))) and (not is_red(sibling.get(last))):
  *                             # Color flip
  *                             parent.red = False             # <<<<<<<<<<<<<<
@@ -4253,7 +4253,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_2remo
  */
             __pyx_v_parent->red = 0;
 
-            /* "accumulation_tree/accumulation_tree.pyx":151
+            /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":151
  *                             # Color flip
  *                             parent.red = False
  *                             sibling.red = True             # <<<<<<<<<<<<<<
@@ -4262,7 +4262,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_2remo
  */
             __pyx_v_sibling->red = 1;
 
-            /* "accumulation_tree/accumulation_tree.pyx":152
+            /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":152
  *                             parent.red = False
  *                             sibling.red = True
  *                             node.red = True             # <<<<<<<<<<<<<<
@@ -4271,7 +4271,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_2remo
  */
             __pyx_v_node->red = 1;
 
-            /* "accumulation_tree/accumulation_tree.pyx":148
+            /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":148
  *                     sibling = parent.get(1 - last)
  *                     if sibling is not None:
  *                         if (not is_red(sibling.get(1 - last))) and (not is_red(sibling.get(last))):             # <<<<<<<<<<<<<<
@@ -4281,7 +4281,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_2remo
             goto __pyx_L12;
           }
 
-          /* "accumulation_tree/accumulation_tree.pyx":154
+          /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":154
  *                             node.red = True
  *                         else:
  *                             direction2 = 1 if grand_parent.right is parent else 0             # <<<<<<<<<<<<<<
@@ -4297,7 +4297,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_2remo
             }
             __pyx_v_direction2 = __pyx_t_6;
 
-            /* "accumulation_tree/accumulation_tree.pyx":155
+            /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":155
  *                         else:
  *                             direction2 = 1 if grand_parent.right is parent else 0
  *                             if is_red(sibling.get(last)):             # <<<<<<<<<<<<<<
@@ -4305,13 +4305,13 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_2remo
  *                             elif is_red(sibling.get(1-last)):
  */
             __pyx_t_5 = __Pyx_PyInt_As_int(__pyx_v_last); if (unlikely((__pyx_t_5 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 155, __pyx_L1_error)
-            __pyx_t_3 = ((PyObject *)((struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree_Node *)__pyx_v_sibling->__pyx_vtab)->get(__pyx_v_sibling, __pyx_t_5)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 155, __pyx_L1_error)
+            __pyx_t_3 = ((PyObject *)((struct __pyx_vtabstruct_9cythonize_Node *)__pyx_v_sibling->__pyx_vtab)->get(__pyx_v_sibling, __pyx_t_5)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 155, __pyx_L1_error)
             __Pyx_GOTREF(__pyx_t_3);
-            __pyx_t_2 = (__pyx_f_17accumulation_tree_17accumulation_tree_is_red(((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_t_3)) != 0);
+            __pyx_t_2 = (__pyx_f_9cythonize_is_red(((struct __pyx_obj_9cythonize_Node *)__pyx_t_3)) != 0);
             __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
             if (__pyx_t_2) {
 
-              /* "accumulation_tree/accumulation_tree.pyx":156
+              /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":156
  *                             direction2 = 1 if grand_parent.right is parent else 0
  *                             if is_red(sibling.get(last)):
  *                                 self.set(grand_parent, direction2, self.jsw_double(parent, last))             # <<<<<<<<<<<<<<
@@ -4319,12 +4319,12 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_2remo
  *                                 self.set(grand_parent, direction2, self.jsw_single(parent, last))
  */
               __pyx_t_5 = __Pyx_PyInt_As_int(__pyx_v_last); if (unlikely((__pyx_t_5 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 156, __pyx_L1_error)
-              __pyx_t_3 = ((PyObject *)((struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree__RBTree *)__pyx_v_self->__pyx_vtab)->jsw_double(__pyx_v_self, __pyx_v_parent, __pyx_t_5)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 156, __pyx_L1_error)
+              __pyx_t_3 = ((PyObject *)((struct __pyx_vtabstruct_9cythonize__RBTree *)__pyx_v_self->__pyx_vtab)->jsw_double(__pyx_v_self, __pyx_v_parent, __pyx_t_5)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 156, __pyx_L1_error)
               __Pyx_GOTREF(__pyx_t_3);
-              ((struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree__RBTree *)__pyx_v_self->__pyx_vtab)->set(__pyx_v_self, __pyx_v_grand_parent, __pyx_v_direction2, ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_t_3));
+              ((struct __pyx_vtabstruct_9cythonize__RBTree *)__pyx_v_self->__pyx_vtab)->set(__pyx_v_self, __pyx_v_grand_parent, __pyx_v_direction2, ((struct __pyx_obj_9cythonize_Node *)__pyx_t_3));
               __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-              /* "accumulation_tree/accumulation_tree.pyx":155
+              /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":155
  *                         else:
  *                             direction2 = 1 if grand_parent.right is parent else 0
  *                             if is_red(sibling.get(last)):             # <<<<<<<<<<<<<<
@@ -4334,7 +4334,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_2remo
               goto __pyx_L15;
             }
 
-            /* "accumulation_tree/accumulation_tree.pyx":157
+            /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":157
  *                             if is_red(sibling.get(last)):
  *                                 self.set(grand_parent, direction2, self.jsw_double(parent, last))
  *                             elif is_red(sibling.get(1-last)):             # <<<<<<<<<<<<<<
@@ -4345,13 +4345,13 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_2remo
             __Pyx_GOTREF(__pyx_t_3);
             __pyx_t_5 = __Pyx_PyInt_As_int(__pyx_t_3); if (unlikely((__pyx_t_5 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 157, __pyx_L1_error)
             __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-            __pyx_t_3 = ((PyObject *)((struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree_Node *)__pyx_v_sibling->__pyx_vtab)->get(__pyx_v_sibling, __pyx_t_5)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 157, __pyx_L1_error)
+            __pyx_t_3 = ((PyObject *)((struct __pyx_vtabstruct_9cythonize_Node *)__pyx_v_sibling->__pyx_vtab)->get(__pyx_v_sibling, __pyx_t_5)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 157, __pyx_L1_error)
             __Pyx_GOTREF(__pyx_t_3);
-            __pyx_t_2 = (__pyx_f_17accumulation_tree_17accumulation_tree_is_red(((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_t_3)) != 0);
+            __pyx_t_2 = (__pyx_f_9cythonize_is_red(((struct __pyx_obj_9cythonize_Node *)__pyx_t_3)) != 0);
             __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
             if (__pyx_t_2) {
 
-              /* "accumulation_tree/accumulation_tree.pyx":158
+              /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":158
  *                                 self.set(grand_parent, direction2, self.jsw_double(parent, last))
  *                             elif is_red(sibling.get(1-last)):
  *                                 self.set(grand_parent, direction2, self.jsw_single(parent, last))             # <<<<<<<<<<<<<<
@@ -4359,12 +4359,12 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_2remo
  *                             grand_parent.get(direction2).red = True
  */
               __pyx_t_5 = __Pyx_PyInt_As_int(__pyx_v_last); if (unlikely((__pyx_t_5 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 158, __pyx_L1_error)
-              __pyx_t_3 = ((PyObject *)((struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree__RBTree *)__pyx_v_self->__pyx_vtab)->jsw_single(__pyx_v_self, __pyx_v_parent, __pyx_t_5)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 158, __pyx_L1_error)
+              __pyx_t_3 = ((PyObject *)((struct __pyx_vtabstruct_9cythonize__RBTree *)__pyx_v_self->__pyx_vtab)->jsw_single(__pyx_v_self, __pyx_v_parent, __pyx_t_5)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 158, __pyx_L1_error)
               __Pyx_GOTREF(__pyx_t_3);
-              ((struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree__RBTree *)__pyx_v_self->__pyx_vtab)->set(__pyx_v_self, __pyx_v_grand_parent, __pyx_v_direction2, ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_t_3));
+              ((struct __pyx_vtabstruct_9cythonize__RBTree *)__pyx_v_self->__pyx_vtab)->set(__pyx_v_self, __pyx_v_grand_parent, __pyx_v_direction2, ((struct __pyx_obj_9cythonize_Node *)__pyx_t_3));
               __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-              /* "accumulation_tree/accumulation_tree.pyx":157
+              /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":157
  *                             if is_red(sibling.get(last)):
  *                                 self.set(grand_parent, direction2, self.jsw_double(parent, last))
  *                             elif is_red(sibling.get(1-last)):             # <<<<<<<<<<<<<<
@@ -4374,19 +4374,19 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_2remo
             }
             __pyx_L15:;
 
-            /* "accumulation_tree/accumulation_tree.pyx":160
+            /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":160
  *                                 self.set(grand_parent, direction2, self.jsw_single(parent, last))
  *                             # Ensure correct coloring
  *                             grand_parent.get(direction2).red = True             # <<<<<<<<<<<<<<
  *                             node.red = True
  *                             grand_parent.get(direction2).left.red = False
  */
-            __pyx_t_3 = ((PyObject *)((struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree_Node *)__pyx_v_grand_parent->__pyx_vtab)->get(__pyx_v_grand_parent, __pyx_v_direction2)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 160, __pyx_L1_error)
+            __pyx_t_3 = ((PyObject *)((struct __pyx_vtabstruct_9cythonize_Node *)__pyx_v_grand_parent->__pyx_vtab)->get(__pyx_v_grand_parent, __pyx_v_direction2)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 160, __pyx_L1_error)
             __Pyx_GOTREF(__pyx_t_3);
-            ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_t_3)->red = 1;
+            ((struct __pyx_obj_9cythonize_Node *)__pyx_t_3)->red = 1;
             __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-            /* "accumulation_tree/accumulation_tree.pyx":161
+            /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":161
  *                             # Ensure correct coloring
  *                             grand_parent.get(direction2).red = True
  *                             node.red = True             # <<<<<<<<<<<<<<
@@ -4395,33 +4395,33 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_2remo
  */
             __pyx_v_node->red = 1;
 
-            /* "accumulation_tree/accumulation_tree.pyx":162
+            /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":162
  *                             grand_parent.get(direction2).red = True
  *                             node.red = True
  *                             grand_parent.get(direction2).left.red = False             # <<<<<<<<<<<<<<
  *                             grand_parent.get(direction2).right.red = False
  * 
  */
-            __pyx_t_3 = ((PyObject *)((struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree_Node *)__pyx_v_grand_parent->__pyx_vtab)->get(__pyx_v_grand_parent, __pyx_v_direction2)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 162, __pyx_L1_error)
+            __pyx_t_3 = ((PyObject *)((struct __pyx_vtabstruct_9cythonize_Node *)__pyx_v_grand_parent->__pyx_vtab)->get(__pyx_v_grand_parent, __pyx_v_direction2)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 162, __pyx_L1_error)
             __Pyx_GOTREF(__pyx_t_3);
-            ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_t_3)->left->red = 0;
+            ((struct __pyx_obj_9cythonize_Node *)__pyx_t_3)->left->red = 0;
             __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-            /* "accumulation_tree/accumulation_tree.pyx":163
+            /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":163
  *                             node.red = True
  *                             grand_parent.get(direction2).left.red = False
  *                             grand_parent.get(direction2).right.red = False             # <<<<<<<<<<<<<<
  * 
  *         # Replace and remove if found
  */
-            __pyx_t_3 = ((PyObject *)((struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree_Node *)__pyx_v_grand_parent->__pyx_vtab)->get(__pyx_v_grand_parent, __pyx_v_direction2)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 163, __pyx_L1_error)
+            __pyx_t_3 = ((PyObject *)((struct __pyx_vtabstruct_9cythonize_Node *)__pyx_v_grand_parent->__pyx_vtab)->get(__pyx_v_grand_parent, __pyx_v_direction2)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 163, __pyx_L1_error)
             __Pyx_GOTREF(__pyx_t_3);
-            ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_t_3)->right->red = 0;
+            ((struct __pyx_obj_9cythonize_Node *)__pyx_t_3)->right->red = 0;
             __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
           }
           __pyx_L12:;
 
-          /* "accumulation_tree/accumulation_tree.pyx":147
+          /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":147
  *                 elif not is_red(node.get(1 - direction)):
  *                     sibling = parent.get(1 - last)
  *                     if sibling is not None:             # <<<<<<<<<<<<<<
@@ -4430,7 +4430,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_2remo
  */
         }
 
-        /* "accumulation_tree/accumulation_tree.pyx":145
+        /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":145
  *                     self.set(parent, last, self.jsw_single(node, direction))
  *                     parent = parent.get(last)
  *                 elif not is_red(node.get(1 - direction)):             # <<<<<<<<<<<<<<
@@ -4440,7 +4440,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_2remo
       }
       __pyx_L10:;
 
-      /* "accumulation_tree/accumulation_tree.pyx":141
+      /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":141
  * 
  *             # Push the red node down
  *             if not is_red(node) and not is_red(node.get(direction)):             # <<<<<<<<<<<<<<
@@ -4450,7 +4450,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_2remo
     }
   }
 
-  /* "accumulation_tree/accumulation_tree.pyx":166
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":166
  * 
  *         # Replace and remove if found
  *         if found is not None:             # <<<<<<<<<<<<<<
@@ -4461,7 +4461,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_2remo
   __pyx_t_1 = (__pyx_t_2 != 0);
   if (__pyx_t_1) {
 
-    /* "accumulation_tree/accumulation_tree.pyx":167
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":167
  *         # Replace and remove if found
  *         if found is not None:
  *             found.key = node.key             # <<<<<<<<<<<<<<
@@ -4476,7 +4476,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_2remo
     __pyx_v_found->key = __pyx_t_3;
     __pyx_t_3 = 0;
 
-    /* "accumulation_tree/accumulation_tree.pyx":168
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":168
  *         if found is not None:
  *             found.key = node.key
  *             found.value = node.value             # <<<<<<<<<<<<<<
@@ -4491,7 +4491,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_2remo
     __pyx_v_found->value = __pyx_t_3;
     __pyx_t_3 = 0;
 
-    /* "accumulation_tree/accumulation_tree.pyx":169
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":169
  *             found.key = node.key
  *             found.value = node.value
  *             self.set(parent, int(parent.right is node), node.get(int(node.left is None)))             # <<<<<<<<<<<<<<
@@ -4500,12 +4500,12 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_2remo
  */
     __pyx_t_1 = (__pyx_v_parent->right == __pyx_v_node);
     __pyx_t_2 = (((PyObject *)__pyx_v_node->left) == Py_None);
-    __pyx_t_3 = ((PyObject *)((struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree_Node *)__pyx_v_node->__pyx_vtab)->get(__pyx_v_node, ((int)__pyx_t_2))); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 169, __pyx_L1_error)
+    __pyx_t_3 = ((PyObject *)((struct __pyx_vtabstruct_9cythonize_Node *)__pyx_v_node->__pyx_vtab)->get(__pyx_v_node, ((int)__pyx_t_2))); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 169, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    ((struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree__RBTree *)__pyx_v_self->__pyx_vtab)->set(__pyx_v_self, __pyx_v_parent, ((int)__pyx_t_1), ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_t_3));
+    ((struct __pyx_vtabstruct_9cythonize__RBTree *)__pyx_v_self->__pyx_vtab)->set(__pyx_v_self, __pyx_v_parent, ((int)__pyx_t_1), ((struct __pyx_obj_9cythonize_Node *)__pyx_t_3));
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-    /* "accumulation_tree/accumulation_tree.pyx":170
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":170
  *             found.value = node.value
  *             self.set(parent, int(parent.right is node), node.get(int(node.left is None)))
  *             node.free()             # <<<<<<<<<<<<<<
@@ -4531,7 +4531,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_2remo
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-    /* "accumulation_tree/accumulation_tree.pyx":171
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":171
  *             self.set(parent, int(parent.right is node), node.get(int(node.left is None)))
  *             node.free()
  *             self._count -= 1             # <<<<<<<<<<<<<<
@@ -4540,7 +4540,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_2remo
  */
     __pyx_v_self->_count = (__pyx_v_self->_count - 1);
 
-    /* "accumulation_tree/accumulation_tree.pyx":166
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":166
  * 
  *         # Replace and remove if found
  *         if found is not None:             # <<<<<<<<<<<<<<
@@ -4549,7 +4549,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_2remo
  */
   }
 
-  /* "accumulation_tree/accumulation_tree.pyx":174
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":174
  * 
  *         # Update root and make it black
  *         self._root = head.right             # <<<<<<<<<<<<<<
@@ -4561,10 +4561,10 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_2remo
   __Pyx_GIVEREF(__pyx_t_3);
   __Pyx_GOTREF(__pyx_v_self->_root);
   __Pyx_DECREF(((PyObject *)__pyx_v_self->_root));
-  __pyx_v_self->_root = ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_t_3);
+  __pyx_v_self->_root = ((struct __pyx_obj_9cythonize_Node *)__pyx_t_3);
   __pyx_t_3 = 0;
 
-  /* "accumulation_tree/accumulation_tree.pyx":175
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":175
  *         # Update root and make it black
  *         self._root = head.right
  *         if self._root is not None:             # <<<<<<<<<<<<<<
@@ -4575,7 +4575,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_2remo
   __pyx_t_2 = (__pyx_t_1 != 0);
   if (__pyx_t_2) {
 
-    /* "accumulation_tree/accumulation_tree.pyx":176
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":176
  *         self._root = head.right
  *         if self._root is not None:
  *             self._root.red = False             # <<<<<<<<<<<<<<
@@ -4584,7 +4584,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_2remo
  */
     __pyx_v_self->_root->red = 0;
 
-    /* "accumulation_tree/accumulation_tree.pyx":175
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":175
  *         # Update root and make it black
  *         self._root = head.right
  *         if self._root is not None:             # <<<<<<<<<<<<<<
@@ -4593,7 +4593,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_2remo
  */
   }
 
-  /* "accumulation_tree/accumulation_tree.pyx":177
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":177
  *         if self._root is not None:
  *             self._root.red = False
  *         if not found:             # <<<<<<<<<<<<<<
@@ -4604,7 +4604,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_2remo
   __pyx_t_1 = ((!__pyx_t_2) != 0);
   if (unlikely(__pyx_t_1)) {
 
-    /* "accumulation_tree/accumulation_tree.pyx":178
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":178
  *             self._root.red = False
  *         if not found:
  *             raise KeyError(str(key))             # <<<<<<<<<<<<<<
@@ -4620,7 +4620,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_2remo
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     __PYX_ERR(0, 178, __pyx_L1_error)
 
-    /* "accumulation_tree/accumulation_tree.pyx":177
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":177
  *         if self._root is not None:
  *             self._root.red = False
  *         if not found:             # <<<<<<<<<<<<<<
@@ -4629,7 +4629,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_2remo
  */
   }
 
-  /* "accumulation_tree/accumulation_tree.pyx":114
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":114
  *         self._root.red = False   # make root black
  * 
  *     def remove(self, key):             # <<<<<<<<<<<<<<
@@ -4644,7 +4644,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_2remo
   __Pyx_XDECREF(__pyx_t_3);
   __Pyx_XDECREF(__pyx_t_4);
   __Pyx_XDECREF(__pyx_t_7);
-  __Pyx_AddTraceback("accumulation_tree.accumulation_tree._RBTree.remove", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("cythonize._RBTree.remove", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XDECREF((PyObject *)__pyx_v_head);
@@ -4659,7 +4659,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_2remo
   return __pyx_r;
 }
 
-/* "accumulation_tree/accumulation_tree.pyx":180
+/* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":180
  *             raise KeyError(str(key))
  * 
  *     cdef Node jsw_single(self, Node root, int direction):             # <<<<<<<<<<<<<<
@@ -4667,10 +4667,10 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_2remo
  *         cdef Node save = root.get(other_side)
  */
 
-static struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_f_17accumulation_tree_17accumulation_tree_7_RBTree_jsw_single(struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree *__pyx_v_self, struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_root, int __pyx_v_direction) {
+static struct __pyx_obj_9cythonize_Node *__pyx_f_9cythonize_7_RBTree_jsw_single(struct __pyx_obj_9cythonize__RBTree *__pyx_v_self, struct __pyx_obj_9cythonize_Node *__pyx_v_root, int __pyx_v_direction) {
   int __pyx_v_other_side;
-  struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_save = 0;
-  struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_r = NULL;
+  struct __pyx_obj_9cythonize_Node *__pyx_v_save = 0;
+  struct __pyx_obj_9cythonize_Node *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
   int __pyx_lineno = 0;
@@ -4678,7 +4678,7 @@ static struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_f_17
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("jsw_single", 0);
 
-  /* "accumulation_tree/accumulation_tree.pyx":181
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":181
  * 
  *     cdef Node jsw_single(self, Node root, int direction):
  *         cdef int other_side = 1 - direction             # <<<<<<<<<<<<<<
@@ -4687,40 +4687,40 @@ static struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_f_17
  */
   __pyx_v_other_side = (1 - __pyx_v_direction);
 
-  /* "accumulation_tree/accumulation_tree.pyx":182
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":182
  *     cdef Node jsw_single(self, Node root, int direction):
  *         cdef int other_side = 1 - direction
  *         cdef Node save = root.get(other_side)             # <<<<<<<<<<<<<<
  *         self.set(root, other_side, save.get(direction))
  *         self.set(save, direction, root)
  */
-  __pyx_t_1 = ((PyObject *)((struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree_Node *)__pyx_v_root->__pyx_vtab)->get(__pyx_v_root, __pyx_v_other_side)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 182, __pyx_L1_error)
+  __pyx_t_1 = ((PyObject *)((struct __pyx_vtabstruct_9cythonize_Node *)__pyx_v_root->__pyx_vtab)->get(__pyx_v_root, __pyx_v_other_side)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 182, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_v_save = ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_t_1);
+  __pyx_v_save = ((struct __pyx_obj_9cythonize_Node *)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "accumulation_tree/accumulation_tree.pyx":183
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":183
  *         cdef int other_side = 1 - direction
  *         cdef Node save = root.get(other_side)
  *         self.set(root, other_side, save.get(direction))             # <<<<<<<<<<<<<<
  *         self.set(save, direction, root)
  *         root.red = True
  */
-  __pyx_t_1 = ((PyObject *)((struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree_Node *)__pyx_v_save->__pyx_vtab)->get(__pyx_v_save, __pyx_v_direction)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 183, __pyx_L1_error)
+  __pyx_t_1 = ((PyObject *)((struct __pyx_vtabstruct_9cythonize_Node *)__pyx_v_save->__pyx_vtab)->get(__pyx_v_save, __pyx_v_direction)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 183, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  ((struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree__RBTree *)__pyx_v_self->__pyx_vtab)->set(__pyx_v_self, __pyx_v_root, __pyx_v_other_side, ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_t_1));
+  ((struct __pyx_vtabstruct_9cythonize__RBTree *)__pyx_v_self->__pyx_vtab)->set(__pyx_v_self, __pyx_v_root, __pyx_v_other_side, ((struct __pyx_obj_9cythonize_Node *)__pyx_t_1));
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "accumulation_tree/accumulation_tree.pyx":184
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":184
  *         cdef Node save = root.get(other_side)
  *         self.set(root, other_side, save.get(direction))
  *         self.set(save, direction, root)             # <<<<<<<<<<<<<<
  *         root.red = True
  *         save.red = False
  */
-  ((struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree__RBTree *)__pyx_v_self->__pyx_vtab)->set(__pyx_v_self, __pyx_v_save, __pyx_v_direction, __pyx_v_root);
+  ((struct __pyx_vtabstruct_9cythonize__RBTree *)__pyx_v_self->__pyx_vtab)->set(__pyx_v_self, __pyx_v_save, __pyx_v_direction, __pyx_v_root);
 
-  /* "accumulation_tree/accumulation_tree.pyx":185
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":185
  *         self.set(root, other_side, save.get(direction))
  *         self.set(save, direction, root)
  *         root.red = True             # <<<<<<<<<<<<<<
@@ -4729,7 +4729,7 @@ static struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_f_17
  */
   __pyx_v_root->red = 1;
 
-  /* "accumulation_tree/accumulation_tree.pyx":186
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":186
  *         self.set(save, direction, root)
  *         root.red = True
  *         save.red = False             # <<<<<<<<<<<<<<
@@ -4738,7 +4738,7 @@ static struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_f_17
  */
   __pyx_v_save->red = 0;
 
-  /* "accumulation_tree/accumulation_tree.pyx":187
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":187
  *         root.red = True
  *         save.red = False
  *         return save             # <<<<<<<<<<<<<<
@@ -4750,7 +4750,7 @@ static struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_f_17
   __pyx_r = __pyx_v_save;
   goto __pyx_L0;
 
-  /* "accumulation_tree/accumulation_tree.pyx":180
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":180
  *             raise KeyError(str(key))
  * 
  *     cdef Node jsw_single(self, Node root, int direction):             # <<<<<<<<<<<<<<
@@ -4761,7 +4761,7 @@ static struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_f_17
   /* function exit code */
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_1);
-  __Pyx_AddTraceback("accumulation_tree.accumulation_tree._RBTree.jsw_single", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("cythonize._RBTree.jsw_single", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = 0;
   __pyx_L0:;
   __Pyx_XDECREF((PyObject *)__pyx_v_save);
@@ -4770,7 +4770,7 @@ static struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_f_17
   return __pyx_r;
 }
 
-/* "accumulation_tree/accumulation_tree.pyx":190
+/* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":190
  * 
  * 
  *     cdef Node jsw_double(self, Node root, int direction):             # <<<<<<<<<<<<<<
@@ -4778,9 +4778,9 @@ static struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_f_17
  *         self.set(root, other_side, self.jsw_single(root.get(other_side), other_side))
  */
 
-static struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_f_17accumulation_tree_17accumulation_tree_7_RBTree_jsw_double(struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree *__pyx_v_self, struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_root, int __pyx_v_direction) {
+static struct __pyx_obj_9cythonize_Node *__pyx_f_9cythonize_7_RBTree_jsw_double(struct __pyx_obj_9cythonize__RBTree *__pyx_v_self, struct __pyx_obj_9cythonize_Node *__pyx_v_root, int __pyx_v_direction) {
   long __pyx_v_other_side;
-  struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_r = NULL;
+  struct __pyx_obj_9cythonize_Node *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
   PyObject *__pyx_t_2 = NULL;
@@ -4789,7 +4789,7 @@ static struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_f_17
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("jsw_double", 0);
 
-  /* "accumulation_tree/accumulation_tree.pyx":191
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":191
  * 
  *     cdef Node jsw_double(self, Node root, int direction):
  *         other_side = 1 - direction             # <<<<<<<<<<<<<<
@@ -4798,22 +4798,22 @@ static struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_f_17
  */
   __pyx_v_other_side = (1 - __pyx_v_direction);
 
-  /* "accumulation_tree/accumulation_tree.pyx":192
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":192
  *     cdef Node jsw_double(self, Node root, int direction):
  *         other_side = 1 - direction
  *         self.set(root, other_side, self.jsw_single(root.get(other_side), other_side))             # <<<<<<<<<<<<<<
  *         return self.jsw_single(root, direction)
  * 
  */
-  __pyx_t_1 = ((PyObject *)((struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree_Node *)__pyx_v_root->__pyx_vtab)->get(__pyx_v_root, __pyx_v_other_side)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 192, __pyx_L1_error)
+  __pyx_t_1 = ((PyObject *)((struct __pyx_vtabstruct_9cythonize_Node *)__pyx_v_root->__pyx_vtab)->get(__pyx_v_root, __pyx_v_other_side)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 192, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = ((PyObject *)((struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree__RBTree *)__pyx_v_self->__pyx_vtab)->jsw_single(__pyx_v_self, ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_t_1), __pyx_v_other_side)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 192, __pyx_L1_error)
+  __pyx_t_2 = ((PyObject *)((struct __pyx_vtabstruct_9cythonize__RBTree *)__pyx_v_self->__pyx_vtab)->jsw_single(__pyx_v_self, ((struct __pyx_obj_9cythonize_Node *)__pyx_t_1), __pyx_v_other_side)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 192, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  ((struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree__RBTree *)__pyx_v_self->__pyx_vtab)->set(__pyx_v_self, __pyx_v_root, __pyx_v_other_side, ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_t_2));
+  ((struct __pyx_vtabstruct_9cythonize__RBTree *)__pyx_v_self->__pyx_vtab)->set(__pyx_v_self, __pyx_v_root, __pyx_v_other_side, ((struct __pyx_obj_9cythonize_Node *)__pyx_t_2));
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "accumulation_tree/accumulation_tree.pyx":193
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":193
  *         other_side = 1 - direction
  *         self.set(root, other_side, self.jsw_single(root.get(other_side), other_side))
  *         return self.jsw_single(root, direction)             # <<<<<<<<<<<<<<
@@ -4821,13 +4821,13 @@ static struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_f_17
  *     def __getstate__(self):
  */
   __Pyx_XDECREF(((PyObject *)__pyx_r));
-  __pyx_t_2 = ((PyObject *)((struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree__RBTree *)__pyx_v_self->__pyx_vtab)->jsw_single(__pyx_v_self, __pyx_v_root, __pyx_v_direction)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 193, __pyx_L1_error)
+  __pyx_t_2 = ((PyObject *)((struct __pyx_vtabstruct_9cythonize__RBTree *)__pyx_v_self->__pyx_vtab)->jsw_single(__pyx_v_self, __pyx_v_root, __pyx_v_direction)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 193, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_r = ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_t_2);
+  __pyx_r = ((struct __pyx_obj_9cythonize_Node *)__pyx_t_2);
   __pyx_t_2 = 0;
   goto __pyx_L0;
 
-  /* "accumulation_tree/accumulation_tree.pyx":190
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":190
  * 
  * 
  *     cdef Node jsw_double(self, Node root, int direction):             # <<<<<<<<<<<<<<
@@ -4839,7 +4839,7 @@ static struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_f_17
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_1);
   __Pyx_XDECREF(__pyx_t_2);
-  __Pyx_AddTraceback("accumulation_tree.accumulation_tree._RBTree.jsw_double", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("cythonize._RBTree.jsw_double", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = 0;
   __pyx_L0:;
   __Pyx_XGIVEREF((PyObject *)__pyx_r);
@@ -4847,7 +4847,7 @@ static struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_f_17
   return __pyx_r;
 }
 
-/* "accumulation_tree/accumulation_tree.pyx":195
+/* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":195
  *         return self.jsw_single(root, direction)
  * 
  *     def __getstate__(self):             # <<<<<<<<<<<<<<
@@ -4856,19 +4856,19 @@ static struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_f_17
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_7_RBTree_5__getstate__(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused); /*proto*/
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_7_RBTree_5__getstate__(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused) {
+static PyObject *__pyx_pw_9cythonize_7_RBTree_5__getstate__(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused); /*proto*/
+static PyObject *__pyx_pw_9cythonize_7_RBTree_5__getstate__(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__getstate__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_4__getstate__(((struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree *)__pyx_v_self));
+  __pyx_r = __pyx_pf_9cythonize_7_RBTree_4__getstate__(((struct __pyx_obj_9cythonize__RBTree *)__pyx_v_self));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_4__getstate__(struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree *__pyx_v_self) {
+static PyObject *__pyx_pf_9cythonize_7_RBTree_4__getstate__(struct __pyx_obj_9cythonize__RBTree *__pyx_v_self) {
   PyObject *__pyx_7genexpr__pyx_v_k = NULL;
   PyObject *__pyx_7genexpr__pyx_v_v = NULL;
   PyObject *__pyx_r = NULL;
@@ -4887,7 +4887,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_4__ge
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("__getstate__", 0);
 
-  /* "accumulation_tree/accumulation_tree.pyx":196
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":196
  * 
  *     def __getstate__(self):
  *         return { 'payload': {k: v for k, v in self.items()} }             # <<<<<<<<<<<<<<
@@ -4938,7 +4938,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_4__ge
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "accumulation_tree/accumulation_tree.pyx":195
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":195
  *         return self.jsw_single(root, direction)
  * 
  *     def __getstate__(self):             # <<<<<<<<<<<<<<
@@ -4953,7 +4953,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_4__ge
   __Pyx_XDECREF(__pyx_t_3);
   __Pyx_XDECREF(__pyx_t_7);
   __Pyx_XDECREF(__pyx_t_8);
-  __Pyx_AddTraceback("accumulation_tree.accumulation_tree._RBTree.__getstate__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("cythonize._RBTree.__getstate__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XDECREF(__pyx_7genexpr__pyx_v_k);
@@ -4963,7 +4963,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_4__ge
   return __pyx_r;
 }
 
-/* "accumulation_tree/accumulation_tree.pyx":198
+/* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":198
  *         return { 'payload': {k: v for k, v in self.items()} }
  * 
  *     def __setstate__(self, state):             # <<<<<<<<<<<<<<
@@ -4972,19 +4972,19 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_4__ge
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_7_RBTree_7__setstate__(PyObject *__pyx_v_self, PyObject *__pyx_v_state); /*proto*/
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_7_RBTree_7__setstate__(PyObject *__pyx_v_self, PyObject *__pyx_v_state) {
+static PyObject *__pyx_pw_9cythonize_7_RBTree_7__setstate__(PyObject *__pyx_v_self, PyObject *__pyx_v_state); /*proto*/
+static PyObject *__pyx_pw_9cythonize_7_RBTree_7__setstate__(PyObject *__pyx_v_self, PyObject *__pyx_v_state) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__setstate__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_6__setstate__(((struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree *)__pyx_v_self), ((PyObject *)__pyx_v_state));
+  __pyx_r = __pyx_pf_9cythonize_7_RBTree_6__setstate__(((struct __pyx_obj_9cythonize__RBTree *)__pyx_v_self), ((PyObject *)__pyx_v_state));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_6__setstate__(struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree *__pyx_v_self, PyObject *__pyx_v_state) {
+static PyObject *__pyx_pf_9cythonize_7_RBTree_6__setstate__(struct __pyx_obj_9cythonize__RBTree *__pyx_v_self, PyObject *__pyx_v_state) {
   PyObject *__pyx_v_k = NULL;
   PyObject *__pyx_v_v = NULL;
   PyObject *__pyx_r = NULL;
@@ -5003,7 +5003,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_6__se
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("__setstate__", 0);
 
-  /* "accumulation_tree/accumulation_tree.pyx":199
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":199
  * 
  *     def __setstate__(self, state):
  *         self._count = 0             # <<<<<<<<<<<<<<
@@ -5012,7 +5012,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_6__se
  */
   __pyx_v_self->_count = 0;
 
-  /* "accumulation_tree/accumulation_tree.pyx":200
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":200
  *     def __setstate__(self, state):
  *         self._count = 0
  *         self._root = None             # <<<<<<<<<<<<<<
@@ -5023,9 +5023,9 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_6__se
   __Pyx_GIVEREF(Py_None);
   __Pyx_GOTREF(__pyx_v_self->_root);
   __Pyx_DECREF(((PyObject *)__pyx_v_self->_root));
-  __pyx_v_self->_root = ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)Py_None);
+  __pyx_v_self->_root = ((struct __pyx_obj_9cythonize_Node *)Py_None);
 
-  /* "accumulation_tree/accumulation_tree.pyx":201
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":201
  *         self._count = 0
  *         self._root = None
  *         for k, v in state['payload'].items():             # <<<<<<<<<<<<<<
@@ -5056,7 +5056,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_6__se
     __Pyx_XDECREF_SET(__pyx_v_v, __pyx_t_5);
     __pyx_t_5 = 0;
 
-    /* "accumulation_tree/accumulation_tree.pyx":202
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":202
  *         self._root = None
  *         for k, v in state['payload'].items():
  *             self.insert(k, v)             # <<<<<<<<<<<<<<
@@ -5114,7 +5114,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_6__se
   }
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "accumulation_tree/accumulation_tree.pyx":198
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":198
  *         return { 'payload': {k: v for k, v in self.items()} }
  * 
  *     def __setstate__(self, state):             # <<<<<<<<<<<<<<
@@ -5131,7 +5131,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_6__se
   __Pyx_XDECREF(__pyx_t_6);
   __Pyx_XDECREF(__pyx_t_8);
   __Pyx_XDECREF(__pyx_t_9);
-  __Pyx_AddTraceback("accumulation_tree.accumulation_tree._RBTree.__setstate__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("cythonize._RBTree.__setstate__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XDECREF(__pyx_v_k);
@@ -5141,7 +5141,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_6__se
   return __pyx_r;
 }
 
-/* "accumulation_tree/accumulation_tree.pyx":54
+/* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":54
  * 
  * cdef class _RBTree(object):
  *     cdef public Node _root             # <<<<<<<<<<<<<<
@@ -5150,19 +5150,19 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_6__se
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_7_RBTree_5_root_1__get__(PyObject *__pyx_v_self); /*proto*/
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_7_RBTree_5_root_1__get__(PyObject *__pyx_v_self) {
+static PyObject *__pyx_pw_9cythonize_7_RBTree_5_root_1__get__(PyObject *__pyx_v_self); /*proto*/
+static PyObject *__pyx_pw_9cythonize_7_RBTree_5_root_1__get__(PyObject *__pyx_v_self) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__get__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_5_root___get__(((struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree *)__pyx_v_self));
+  __pyx_r = __pyx_pf_9cythonize_7_RBTree_5_root___get__(((struct __pyx_obj_9cythonize__RBTree *)__pyx_v_self));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_5_root___get__(struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree *__pyx_v_self) {
+static PyObject *__pyx_pf_9cythonize_7_RBTree_5_root___get__(struct __pyx_obj_9cythonize__RBTree *__pyx_v_self) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__get__", 0);
@@ -5179,19 +5179,19 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_5_roo
 }
 
 /* Python wrapper */
-static int __pyx_pw_17accumulation_tree_17accumulation_tree_7_RBTree_5_root_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value); /*proto*/
-static int __pyx_pw_17accumulation_tree_17accumulation_tree_7_RBTree_5_root_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value) {
+static int __pyx_pw_9cythonize_7_RBTree_5_root_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value); /*proto*/
+static int __pyx_pw_9cythonize_7_RBTree_5_root_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__set__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_5_root_2__set__(((struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree *)__pyx_v_self), ((PyObject *)__pyx_v_value));
+  __pyx_r = __pyx_pf_9cythonize_7_RBTree_5_root_2__set__(((struct __pyx_obj_9cythonize__RBTree *)__pyx_v_self), ((PyObject *)__pyx_v_value));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static int __pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_5_root_2__set__(struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree *__pyx_v_self, PyObject *__pyx_v_value) {
+static int __pyx_pf_9cythonize_7_RBTree_5_root_2__set__(struct __pyx_obj_9cythonize__RBTree *__pyx_v_self, PyObject *__pyx_v_value) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -5199,13 +5199,13 @@ static int __pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_5_root_2__s
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("__set__", 0);
-  if (!(likely(((__pyx_v_value) == Py_None) || likely(__Pyx_TypeTest(__pyx_v_value, __pyx_ptype_17accumulation_tree_17accumulation_tree_Node))))) __PYX_ERR(0, 54, __pyx_L1_error)
+  if (!(likely(((__pyx_v_value) == Py_None) || likely(__Pyx_TypeTest(__pyx_v_value, __pyx_ptype_9cythonize_Node))))) __PYX_ERR(0, 54, __pyx_L1_error)
   __pyx_t_1 = __pyx_v_value;
   __Pyx_INCREF(__pyx_t_1);
   __Pyx_GIVEREF(__pyx_t_1);
   __Pyx_GOTREF(__pyx_v_self->_root);
   __Pyx_DECREF(((PyObject *)__pyx_v_self->_root));
-  __pyx_v_self->_root = ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_t_1);
+  __pyx_v_self->_root = ((struct __pyx_obj_9cythonize_Node *)__pyx_t_1);
   __pyx_t_1 = 0;
 
   /* function exit code */
@@ -5213,7 +5213,7 @@ static int __pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_5_root_2__s
   goto __pyx_L0;
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_1);
-  __Pyx_AddTraceback("accumulation_tree.accumulation_tree._RBTree._root.__set__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("cythonize._RBTree._root.__set__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = -1;
   __pyx_L0:;
   __Pyx_RefNannyFinishContext();
@@ -5221,19 +5221,19 @@ static int __pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_5_root_2__s
 }
 
 /* Python wrapper */
-static int __pyx_pw_17accumulation_tree_17accumulation_tree_7_RBTree_5_root_5__del__(PyObject *__pyx_v_self); /*proto*/
-static int __pyx_pw_17accumulation_tree_17accumulation_tree_7_RBTree_5_root_5__del__(PyObject *__pyx_v_self) {
+static int __pyx_pw_9cythonize_7_RBTree_5_root_5__del__(PyObject *__pyx_v_self); /*proto*/
+static int __pyx_pw_9cythonize_7_RBTree_5_root_5__del__(PyObject *__pyx_v_self) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__del__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_5_root_4__del__(((struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree *)__pyx_v_self));
+  __pyx_r = __pyx_pf_9cythonize_7_RBTree_5_root_4__del__(((struct __pyx_obj_9cythonize__RBTree *)__pyx_v_self));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static int __pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_5_root_4__del__(struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree *__pyx_v_self) {
+static int __pyx_pf_9cythonize_7_RBTree_5_root_4__del__(struct __pyx_obj_9cythonize__RBTree *__pyx_v_self) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__del__", 0);
@@ -5241,7 +5241,7 @@ static int __pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_5_root_4__d
   __Pyx_GIVEREF(Py_None);
   __Pyx_GOTREF(__pyx_v_self->_root);
   __Pyx_DECREF(((PyObject *)__pyx_v_self->_root));
-  __pyx_v_self->_root = ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)Py_None);
+  __pyx_v_self->_root = ((struct __pyx_obj_9cythonize_Node *)Py_None);
 
   /* function exit code */
   __pyx_r = 0;
@@ -5249,7 +5249,7 @@ static int __pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_5_root_4__d
   return __pyx_r;
 }
 
-/* "accumulation_tree/accumulation_tree.pyx":55
+/* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":55
  * cdef class _RBTree(object):
  *     cdef public Node _root
  *     cdef public int _count             # <<<<<<<<<<<<<<
@@ -5258,19 +5258,19 @@ static int __pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_5_root_4__d
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_7_RBTree_6_count_1__get__(PyObject *__pyx_v_self); /*proto*/
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_7_RBTree_6_count_1__get__(PyObject *__pyx_v_self) {
+static PyObject *__pyx_pw_9cythonize_7_RBTree_6_count_1__get__(PyObject *__pyx_v_self); /*proto*/
+static PyObject *__pyx_pw_9cythonize_7_RBTree_6_count_1__get__(PyObject *__pyx_v_self) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__get__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_6_count___get__(((struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree *)__pyx_v_self));
+  __pyx_r = __pyx_pf_9cythonize_7_RBTree_6_count___get__(((struct __pyx_obj_9cythonize__RBTree *)__pyx_v_self));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_6_count___get__(struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree *__pyx_v_self) {
+static PyObject *__pyx_pf_9cythonize_7_RBTree_6_count___get__(struct __pyx_obj_9cythonize__RBTree *__pyx_v_self) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -5288,7 +5288,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_6_cou
   /* function exit code */
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_1);
-  __Pyx_AddTraceback("accumulation_tree.accumulation_tree._RBTree._count.__get__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("cythonize._RBTree._count.__get__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -5297,19 +5297,19 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_6_cou
 }
 
 /* Python wrapper */
-static int __pyx_pw_17accumulation_tree_17accumulation_tree_7_RBTree_6_count_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value); /*proto*/
-static int __pyx_pw_17accumulation_tree_17accumulation_tree_7_RBTree_6_count_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value) {
+static int __pyx_pw_9cythonize_7_RBTree_6_count_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value); /*proto*/
+static int __pyx_pw_9cythonize_7_RBTree_6_count_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__set__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_6_count_2__set__(((struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree *)__pyx_v_self), ((PyObject *)__pyx_v_value));
+  __pyx_r = __pyx_pf_9cythonize_7_RBTree_6_count_2__set__(((struct __pyx_obj_9cythonize__RBTree *)__pyx_v_self), ((PyObject *)__pyx_v_value));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static int __pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_6_count_2__set__(struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree *__pyx_v_self, PyObject *__pyx_v_value) {
+static int __pyx_pf_9cythonize_7_RBTree_6_count_2__set__(struct __pyx_obj_9cythonize__RBTree *__pyx_v_self, PyObject *__pyx_v_value) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
@@ -5324,7 +5324,7 @@ static int __pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_6_count_2__
   __pyx_r = 0;
   goto __pyx_L0;
   __pyx_L1_error:;
-  __Pyx_AddTraceback("accumulation_tree.accumulation_tree._RBTree._count.__set__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("cythonize._RBTree._count.__set__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = -1;
   __pyx_L0:;
   __Pyx_RefNannyFinishContext();
@@ -5338,19 +5338,19 @@ static int __pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_6_count_2__
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_7_RBTree_9__reduce_cython__(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused); /*proto*/
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_7_RBTree_9__reduce_cython__(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused) {
+static PyObject *__pyx_pw_9cythonize_7_RBTree_9__reduce_cython__(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused); /*proto*/
+static PyObject *__pyx_pw_9cythonize_7_RBTree_9__reduce_cython__(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__reduce_cython__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_8__reduce_cython__(((struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree *)__pyx_v_self));
+  __pyx_r = __pyx_pf_9cythonize_7_RBTree_8__reduce_cython__(((struct __pyx_obj_9cythonize__RBTree *)__pyx_v_self));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_8__reduce_cython__(struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree *__pyx_v_self) {
+static PyObject *__pyx_pf_9cythonize_7_RBTree_8__reduce_cython__(struct __pyx_obj_9cythonize__RBTree *__pyx_v_self) {
   PyObject *__pyx_v_state = 0;
   PyObject *__pyx_v__dict = 0;
   int __pyx_v_use_setstate;
@@ -5560,7 +5560,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_8__re
   __Pyx_XDECREF(__pyx_t_1);
   __Pyx_XDECREF(__pyx_t_2);
   __Pyx_XDECREF(__pyx_t_5);
-  __Pyx_AddTraceback("accumulation_tree.accumulation_tree._RBTree.__reduce_cython__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("cythonize._RBTree.__reduce_cython__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XDECREF(__pyx_v_state);
@@ -5578,19 +5578,19 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_8__re
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_7_RBTree_11__setstate_cython__(PyObject *__pyx_v_self, PyObject *__pyx_v___pyx_state); /*proto*/
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_7_RBTree_11__setstate_cython__(PyObject *__pyx_v_self, PyObject *__pyx_v___pyx_state) {
+static PyObject *__pyx_pw_9cythonize_7_RBTree_11__setstate_cython__(PyObject *__pyx_v_self, PyObject *__pyx_v___pyx_state); /*proto*/
+static PyObject *__pyx_pw_9cythonize_7_RBTree_11__setstate_cython__(PyObject *__pyx_v_self, PyObject *__pyx_v___pyx_state) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__setstate_cython__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_10__setstate_cython__(((struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree *)__pyx_v_self), ((PyObject *)__pyx_v___pyx_state));
+  __pyx_r = __pyx_pf_9cythonize_7_RBTree_10__setstate_cython__(((struct __pyx_obj_9cythonize__RBTree *)__pyx_v_self), ((PyObject *)__pyx_v___pyx_state));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_10__setstate_cython__(struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree *__pyx_v_self, PyObject *__pyx_v___pyx_state) {
+static PyObject *__pyx_pf_9cythonize_7_RBTree_10__setstate_cython__(struct __pyx_obj_9cythonize__RBTree *__pyx_v_self, PyObject *__pyx_v___pyx_state) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -5605,7 +5605,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_10__s
  *     __pyx_unpickle__RBTree__set_state(self, __pyx_state)             # <<<<<<<<<<<<<<
  */
   if (!(likely(PyTuple_CheckExact(__pyx_v___pyx_state))||((__pyx_v___pyx_state) == Py_None)||(PyErr_Format(PyExc_TypeError, "Expected %.16s, got %.200s", "tuple", Py_TYPE(__pyx_v___pyx_state)->tp_name), 0))) __PYX_ERR(1, 17, __pyx_L1_error)
-  __pyx_t_1 = __pyx_f_17accumulation_tree_17accumulation_tree___pyx_unpickle__RBTree__set_state(__pyx_v_self, ((PyObject*)__pyx_v___pyx_state)); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 17, __pyx_L1_error)
+  __pyx_t_1 = __pyx_f_9cythonize___pyx_unpickle__RBTree__set_state(__pyx_v_self, ((PyObject*)__pyx_v___pyx_state)); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 17, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
@@ -5621,7 +5621,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_10__s
   goto __pyx_L0;
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_1);
-  __Pyx_AddTraceback("accumulation_tree.accumulation_tree._RBTree.__setstate_cython__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("cythonize._RBTree.__setstate_cython__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -5629,7 +5629,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_10__s
   return __pyx_r;
 }
 
-/* "accumulation_tree/accumulation_tree.pyx":213
+/* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":213
  *     cdef set _dirty_nodes
  * 
  *     def __init__(self, mapper, reducer=operator.add, zero=0):             # <<<<<<<<<<<<<<
@@ -5638,8 +5638,8 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_7_RBTree_10__s
  */
 
 /* Python wrapper */
-static int __pyx_pw_17accumulation_tree_17accumulation_tree_17_AccumulationTree_1__init__(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static int __pyx_pw_17accumulation_tree_17accumulation_tree_17_AccumulationTree_1__init__(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static int __pyx_pw_9cythonize_17_AccumulationTree_1__init__(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static int __pyx_pw_9cythonize_17_AccumulationTree_1__init__(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyObject *__pyx_v_mapper = 0;
   PyObject *__pyx_v_reducer = 0;
   PyObject *__pyx_v_zero = 0;
@@ -5707,18 +5707,18 @@ static int __pyx_pw_17accumulation_tree_17accumulation_tree_17_AccumulationTree_
   __pyx_L5_argtuple_error:;
   __Pyx_RaiseArgtupleInvalid("__init__", 0, 1, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 213, __pyx_L3_error)
   __pyx_L3_error:;
-  __Pyx_AddTraceback("accumulation_tree.accumulation_tree._AccumulationTree.__init__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("cythonize._AccumulationTree.__init__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return -1;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_17accumulation_tree_17accumulation_tree_17_AccumulationTree___init__(((struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *)__pyx_v_self), __pyx_v_mapper, __pyx_v_reducer, __pyx_v_zero);
+  __pyx_r = __pyx_pf_9cythonize_17_AccumulationTree___init__(((struct __pyx_obj_9cythonize__AccumulationTree *)__pyx_v_self), __pyx_v_mapper, __pyx_v_reducer, __pyx_v_zero);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static int __pyx_pf_17accumulation_tree_17accumulation_tree_17_AccumulationTree___init__(struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *__pyx_v_self, PyObject *__pyx_v_mapper, PyObject *__pyx_v_reducer, PyObject *__pyx_v_zero) {
+static int __pyx_pf_9cythonize_17_AccumulationTree___init__(struct __pyx_obj_9cythonize__AccumulationTree *__pyx_v_self, PyObject *__pyx_v_mapper, PyObject *__pyx_v_reducer, PyObject *__pyx_v_zero) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -5729,14 +5729,14 @@ static int __pyx_pf_17accumulation_tree_17accumulation_tree_17_AccumulationTree_
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("__init__", 0);
 
-  /* "accumulation_tree/accumulation_tree.pyx":214
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":214
  * 
  *     def __init__(self, mapper, reducer=operator.add, zero=0):
  *         _RBTree.__init__(self)             # <<<<<<<<<<<<<<
  *         self._zero = zero
  *         self._mapper = mapper
  */
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_ptype_17accumulation_tree_17accumulation_tree__RBTree), __pyx_n_s_init); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 214, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_ptype_9cythonize__RBTree), __pyx_n_s_init); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 214, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_t_3 = NULL;
   if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_2))) {
@@ -5755,7 +5755,7 @@ static int __pyx_pf_17accumulation_tree_17accumulation_tree_17_AccumulationTree_
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "accumulation_tree/accumulation_tree.pyx":215
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":215
  *     def __init__(self, mapper, reducer=operator.add, zero=0):
  *         _RBTree.__init__(self)
  *         self._zero = zero             # <<<<<<<<<<<<<<
@@ -5768,7 +5768,7 @@ static int __pyx_pf_17accumulation_tree_17accumulation_tree_17_AccumulationTree_
   __Pyx_DECREF(__pyx_v_self->_zero);
   __pyx_v_self->_zero = __pyx_v_zero;
 
-  /* "accumulation_tree/accumulation_tree.pyx":216
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":216
  *         _RBTree.__init__(self)
  *         self._zero = zero
  *         self._mapper = mapper             # <<<<<<<<<<<<<<
@@ -5781,7 +5781,7 @@ static int __pyx_pf_17accumulation_tree_17accumulation_tree_17_AccumulationTree_
   __Pyx_DECREF(__pyx_v_self->_mapper);
   __pyx_v_self->_mapper = __pyx_v_mapper;
 
-  /* "accumulation_tree/accumulation_tree.pyx":217
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":217
  *         self._zero = zero
  *         self._mapper = mapper
  *         self._reducer = reducer             # <<<<<<<<<<<<<<
@@ -5794,7 +5794,7 @@ static int __pyx_pf_17accumulation_tree_17accumulation_tree_17_AccumulationTree_
   __Pyx_DECREF(__pyx_v_self->_reducer);
   __pyx_v_self->_reducer = __pyx_v_reducer;
 
-  /* "accumulation_tree/accumulation_tree.pyx":218
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":218
  *         self._mapper = mapper
  *         self._reducer = reducer
  *         self._dirty_nodes = set()             # <<<<<<<<<<<<<<
@@ -5809,7 +5809,7 @@ static int __pyx_pf_17accumulation_tree_17accumulation_tree_17_AccumulationTree_
   __pyx_v_self->_dirty_nodes = ((PyObject*)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "accumulation_tree/accumulation_tree.pyx":213
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":213
  *     cdef set _dirty_nodes
  * 
  *     def __init__(self, mapper, reducer=operator.add, zero=0):             # <<<<<<<<<<<<<<
@@ -5824,14 +5824,14 @@ static int __pyx_pf_17accumulation_tree_17accumulation_tree_17_AccumulationTree_
   __Pyx_XDECREF(__pyx_t_1);
   __Pyx_XDECREF(__pyx_t_2);
   __Pyx_XDECREF(__pyx_t_3);
-  __Pyx_AddTraceback("accumulation_tree.accumulation_tree._AccumulationTree.__init__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("cythonize._AccumulationTree.__init__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = -1;
   __pyx_L0:;
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-/* "accumulation_tree/accumulation_tree.pyx":220
+/* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":220
  *         self._dirty_nodes = set()
  * 
  *     cdef Node _new_node(self, key, value):             # <<<<<<<<<<<<<<
@@ -5839,9 +5839,9 @@ static int __pyx_pf_17accumulation_tree_17accumulation_tree_17_AccumulationTree_
  *         cdef Node node = _RBTree._new_node(self, key, value)
  */
 
-static struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_f_17accumulation_tree_17accumulation_tree_17_AccumulationTree__new_node(struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *__pyx_v_self, PyObject *__pyx_v_key, PyObject *__pyx_v_value) {
-  struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_node = 0;
-  struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_r = NULL;
+static struct __pyx_obj_9cythonize_Node *__pyx_f_9cythonize_17_AccumulationTree__new_node(struct __pyx_obj_9cythonize__AccumulationTree *__pyx_v_self, PyObject *__pyx_v_key, PyObject *__pyx_v_value) {
+  struct __pyx_obj_9cythonize_Node *__pyx_v_node = 0;
+  struct __pyx_obj_9cythonize_Node *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
   PyObject *__pyx_t_2 = NULL;
@@ -5851,19 +5851,19 @@ static struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_f_17
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("_new_node", 0);
 
-  /* "accumulation_tree/accumulation_tree.pyx":222
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":222
  *     cdef Node _new_node(self, key, value):
  *         """Create a new tree node."""
  *         cdef Node node = _RBTree._new_node(self, key, value)             # <<<<<<<<<<<<<<
  *         node.accumulation = self._mapper(value)
  *         return node
  */
-  __pyx_t_1 = ((PyObject *)__pyx_f_17accumulation_tree_17accumulation_tree_7_RBTree__new_node(((struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree *)__pyx_v_self), __pyx_v_key, __pyx_v_value)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 222, __pyx_L1_error)
+  __pyx_t_1 = ((PyObject *)__pyx_f_9cythonize_7_RBTree__new_node(((struct __pyx_obj_9cythonize__RBTree *)__pyx_v_self), __pyx_v_key, __pyx_v_value)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 222, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_v_node = ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_t_1);
+  __pyx_v_node = ((struct __pyx_obj_9cythonize_Node *)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "accumulation_tree/accumulation_tree.pyx":223
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":223
  *         """Create a new tree node."""
  *         cdef Node node = _RBTree._new_node(self, key, value)
  *         node.accumulation = self._mapper(value)             # <<<<<<<<<<<<<<
@@ -5892,7 +5892,7 @@ static struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_f_17
   __pyx_v_node->accumulation = __pyx_t_1;
   __pyx_t_1 = 0;
 
-  /* "accumulation_tree/accumulation_tree.pyx":224
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":224
  *         cdef Node node = _RBTree._new_node(self, key, value)
  *         node.accumulation = self._mapper(value)
  *         return node             # <<<<<<<<<<<<<<
@@ -5904,7 +5904,7 @@ static struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_f_17
   __pyx_r = __pyx_v_node;
   goto __pyx_L0;
 
-  /* "accumulation_tree/accumulation_tree.pyx":220
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":220
  *         self._dirty_nodes = set()
  * 
  *     cdef Node _new_node(self, key, value):             # <<<<<<<<<<<<<<
@@ -5917,7 +5917,7 @@ static struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_f_17
   __Pyx_XDECREF(__pyx_t_1);
   __Pyx_XDECREF(__pyx_t_2);
   __Pyx_XDECREF(__pyx_t_3);
-  __Pyx_AddTraceback("accumulation_tree.accumulation_tree._AccumulationTree._new_node", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("cythonize._AccumulationTree._new_node", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = 0;
   __pyx_L0:;
   __Pyx_XDECREF((PyObject *)__pyx_v_node);
@@ -5926,7 +5926,7 @@ static struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_f_17
   return __pyx_r;
 }
 
-/* "accumulation_tree/accumulation_tree.pyx":226
+/* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":226
  *         return node
  * 
  *     cdef void set(self, Node node, int direction, Node child_node):             # <<<<<<<<<<<<<<
@@ -5934,7 +5934,7 @@ static struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_f_17
  *             self._dirty_nodes.add(node.key)
  */
 
-static void __pyx_f_17accumulation_tree_17accumulation_tree_17_AccumulationTree_set(struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *__pyx_v_self, struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_node, int __pyx_v_direction, struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_child_node) {
+static void __pyx_f_9cythonize_17_AccumulationTree_set(struct __pyx_obj_9cythonize__AccumulationTree *__pyx_v_self, struct __pyx_obj_9cythonize_Node *__pyx_v_node, int __pyx_v_direction, struct __pyx_obj_9cythonize_Node *__pyx_v_child_node) {
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
   int __pyx_t_2;
@@ -5945,18 +5945,18 @@ static void __pyx_f_17accumulation_tree_17accumulation_tree_17_AccumulationTree_
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("set", 0);
 
-  /* "accumulation_tree/accumulation_tree.pyx":227
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":227
  * 
  *     cdef void set(self, Node node, int direction, Node child_node):
  *         if(node.key is not null_key):             # <<<<<<<<<<<<<<
  *             self._dirty_nodes.add(node.key)
  *         node.set(direction, child_node)
  */
-  __pyx_t_1 = (__pyx_v_node->key != ((PyObject *)__pyx_v_17accumulation_tree_17accumulation_tree_null_key));
+  __pyx_t_1 = (__pyx_v_node->key != ((PyObject *)__pyx_v_9cythonize_null_key));
   __pyx_t_2 = (__pyx_t_1 != 0);
   if (__pyx_t_2) {
 
-    /* "accumulation_tree/accumulation_tree.pyx":228
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":228
  *     cdef void set(self, Node node, int direction, Node child_node):
  *         if(node.key is not null_key):
  *             self._dirty_nodes.add(node.key)             # <<<<<<<<<<<<<<
@@ -5972,7 +5972,7 @@ static void __pyx_f_17accumulation_tree_17accumulation_tree_17_AccumulationTree_
     __pyx_t_4 = PySet_Add(__pyx_v_self->_dirty_nodes, __pyx_t_3); if (unlikely(__pyx_t_4 == ((int)-1))) __PYX_ERR(0, 228, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-    /* "accumulation_tree/accumulation_tree.pyx":227
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":227
  * 
  *     cdef void set(self, Node node, int direction, Node child_node):
  *         if(node.key is not null_key):             # <<<<<<<<<<<<<<
@@ -5981,16 +5981,16 @@ static void __pyx_f_17accumulation_tree_17accumulation_tree_17_AccumulationTree_
  */
   }
 
-  /* "accumulation_tree/accumulation_tree.pyx":229
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":229
  *         if(node.key is not null_key):
  *             self._dirty_nodes.add(node.key)
  *         node.set(direction, child_node)             # <<<<<<<<<<<<<<
  * 
  *     def insert(self, key, value):
  */
-  ((struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree_Node *)__pyx_v_node->__pyx_vtab)->set(__pyx_v_node, __pyx_v_direction, __pyx_v_child_node);
+  ((struct __pyx_vtabstruct_9cythonize_Node *)__pyx_v_node->__pyx_vtab)->set(__pyx_v_node, __pyx_v_direction, __pyx_v_child_node);
 
-  /* "accumulation_tree/accumulation_tree.pyx":226
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":226
  *         return node
  * 
  *     cdef void set(self, Node node, int direction, Node child_node):             # <<<<<<<<<<<<<<
@@ -6002,12 +6002,12 @@ static void __pyx_f_17accumulation_tree_17accumulation_tree_17_AccumulationTree_
   goto __pyx_L0;
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_3);
-  __Pyx_WriteUnraisable("accumulation_tree.accumulation_tree._AccumulationTree.set", __pyx_clineno, __pyx_lineno, __pyx_filename, 1, 0);
+  __Pyx_WriteUnraisable("cythonize._AccumulationTree.set", __pyx_clineno, __pyx_lineno, __pyx_filename, 1, 0);
   __pyx_L0:;
   __Pyx_RefNannyFinishContext();
 }
 
-/* "accumulation_tree/accumulation_tree.pyx":231
+/* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":231
  *         node.set(direction, child_node)
  * 
  *     def insert(self, key, value):             # <<<<<<<<<<<<<<
@@ -6016,8 +6016,8 @@ static void __pyx_f_17accumulation_tree_17accumulation_tree_17_AccumulationTree_
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_17_AccumulationTree_3insert(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_17_AccumulationTree_3insert(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_9cythonize_17_AccumulationTree_3insert(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static PyObject *__pyx_pw_9cythonize_17_AccumulationTree_3insert(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyObject *__pyx_v_key = 0;
   PyObject *__pyx_v_value = 0;
   int __pyx_lineno = 0;
@@ -6068,18 +6068,18 @@ static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_17_Accumulatio
   __pyx_L5_argtuple_error:;
   __Pyx_RaiseArgtupleInvalid("insert", 1, 2, 2, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 231, __pyx_L3_error)
   __pyx_L3_error:;
-  __Pyx_AddTraceback("accumulation_tree.accumulation_tree._AccumulationTree.insert", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("cythonize._AccumulationTree.insert", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_17accumulation_tree_17accumulation_tree_17_AccumulationTree_2insert(((struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *)__pyx_v_self), __pyx_v_key, __pyx_v_value);
+  __pyx_r = __pyx_pf_9cythonize_17_AccumulationTree_2insert(((struct __pyx_obj_9cythonize__AccumulationTree *)__pyx_v_self), __pyx_v_key, __pyx_v_value);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_AccumulationTree_2insert(struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *__pyx_v_self, PyObject *__pyx_v_key, PyObject *__pyx_v_value) {
+static PyObject *__pyx_pf_9cythonize_17_AccumulationTree_2insert(struct __pyx_obj_9cythonize__AccumulationTree *__pyx_v_self, PyObject *__pyx_v_key, PyObject *__pyx_v_value) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
@@ -6101,7 +6101,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("insert", 0);
 
-  /* "accumulation_tree/accumulation_tree.pyx":232
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":232
  * 
  *     def insert(self, key, value):
  *         try:             # <<<<<<<<<<<<<<
@@ -6110,7 +6110,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
  */
   /*try:*/ {
 
-    /* "accumulation_tree/accumulation_tree.pyx":233
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":233
  *     def insert(self, key, value):
  *         try:
  *             self._dirty_nodes.add(key)             # <<<<<<<<<<<<<<
@@ -6123,7 +6123,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
     }
     __pyx_t_1 = PySet_Add(__pyx_v_self->_dirty_nodes, __pyx_v_key); if (unlikely(__pyx_t_1 == ((int)-1))) __PYX_ERR(0, 233, __pyx_L4_error)
 
-    /* "accumulation_tree/accumulation_tree.pyx":234
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":234
  *         try:
  *             self._dirty_nodes.add(key)
  *             RBTree.insert(self, key, value)             # <<<<<<<<<<<<<<
@@ -6186,7 +6186,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   }
 
-  /* "accumulation_tree/accumulation_tree.pyx":236
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":236
  *             RBTree.insert(self, key, value)
  *         finally:
  *             self._update_dirty_nodes()             # <<<<<<<<<<<<<<
@@ -6195,7 +6195,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
  */
   /*finally:*/ {
     /*normal exit:*/{
-      ((struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree__AccumulationTree *)__pyx_v_self->__pyx_base.__pyx_vtab)->_update_dirty_nodes(__pyx_v_self);
+      ((struct __pyx_vtabstruct_9cythonize__AccumulationTree *)__pyx_v_self->__pyx_base.__pyx_vtab)->_update_dirty_nodes(__pyx_v_self);
       goto __pyx_L5;
     }
     __pyx_L4_error:;
@@ -6217,7 +6217,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
       __Pyx_XGOTREF(__pyx_t_14);
       __pyx_t_5 = __pyx_lineno; __pyx_t_7 = __pyx_clineno; __pyx_t_8 = __pyx_filename;
       {
-        ((struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree__AccumulationTree *)__pyx_v_self->__pyx_base.__pyx_vtab)->_update_dirty_nodes(__pyx_v_self);
+        ((struct __pyx_vtabstruct_9cythonize__AccumulationTree *)__pyx_v_self->__pyx_base.__pyx_vtab)->_update_dirty_nodes(__pyx_v_self);
       }
       if (PY_MAJOR_VERSION >= 3) {
         __Pyx_XGIVEREF(__pyx_t_12);
@@ -6236,7 +6236,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
     __pyx_L5:;
   }
 
-  /* "accumulation_tree/accumulation_tree.pyx":231
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":231
  *         node.set(direction, child_node)
  * 
  *     def insert(self, key, value):             # <<<<<<<<<<<<<<
@@ -6252,7 +6252,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
   __Pyx_XDECREF(__pyx_t_3);
   __Pyx_XDECREF(__pyx_t_4);
   __Pyx_XDECREF(__pyx_t_6);
-  __Pyx_AddTraceback("accumulation_tree.accumulation_tree._AccumulationTree.insert", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("cythonize._AccumulationTree.insert", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -6260,7 +6260,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
   return __pyx_r;
 }
 
-/* "accumulation_tree/accumulation_tree.pyx":238
+/* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":238
  *             self._update_dirty_nodes()
  * 
  *     def remove(self, key):             # <<<<<<<<<<<<<<
@@ -6269,19 +6269,19 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_17_AccumulationTree_5remove(PyObject *__pyx_v_self, PyObject *__pyx_v_key); /*proto*/
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_17_AccumulationTree_5remove(PyObject *__pyx_v_self, PyObject *__pyx_v_key) {
+static PyObject *__pyx_pw_9cythonize_17_AccumulationTree_5remove(PyObject *__pyx_v_self, PyObject *__pyx_v_key); /*proto*/
+static PyObject *__pyx_pw_9cythonize_17_AccumulationTree_5remove(PyObject *__pyx_v_self, PyObject *__pyx_v_key) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("remove (wrapper)", 0);
-  __pyx_r = __pyx_pf_17accumulation_tree_17accumulation_tree_17_AccumulationTree_4remove(((struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *)__pyx_v_self), ((PyObject *)__pyx_v_key));
+  __pyx_r = __pyx_pf_9cythonize_17_AccumulationTree_4remove(((struct __pyx_obj_9cythonize__AccumulationTree *)__pyx_v_self), ((PyObject *)__pyx_v_key));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_AccumulationTree_4remove(struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *__pyx_v_self, PyObject *__pyx_v_key) {
+static PyObject *__pyx_pf_9cythonize_17_AccumulationTree_4remove(struct __pyx_obj_9cythonize__AccumulationTree *__pyx_v_self, PyObject *__pyx_v_key) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -6302,7 +6302,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("remove", 0);
 
-  /* "accumulation_tree/accumulation_tree.pyx":239
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":239
  * 
  *     def remove(self, key):
  *         try:             # <<<<<<<<<<<<<<
@@ -6311,7 +6311,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
  */
   /*try:*/ {
 
-    /* "accumulation_tree/accumulation_tree.pyx":240
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":240
  *     def remove(self, key):
  *         try:
  *             RBTree.remove(self, key)             # <<<<<<<<<<<<<<
@@ -6371,7 +6371,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   }
 
-  /* "accumulation_tree/accumulation_tree.pyx":242
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":242
  *             RBTree.remove(self, key)
  *         finally:
  *             self._update_dirty_nodes()             # <<<<<<<<<<<<<<
@@ -6380,7 +6380,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
  */
   /*finally:*/ {
     /*normal exit:*/{
-      ((struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree__AccumulationTree *)__pyx_v_self->__pyx_base.__pyx_vtab)->_update_dirty_nodes(__pyx_v_self);
+      ((struct __pyx_vtabstruct_9cythonize__AccumulationTree *)__pyx_v_self->__pyx_base.__pyx_vtab)->_update_dirty_nodes(__pyx_v_self);
       goto __pyx_L5;
     }
     __pyx_L4_error:;
@@ -6402,7 +6402,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
       __Pyx_XGOTREF(__pyx_t_13);
       __pyx_t_4 = __pyx_lineno; __pyx_t_6 = __pyx_clineno; __pyx_t_7 = __pyx_filename;
       {
-        ((struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree__AccumulationTree *)__pyx_v_self->__pyx_base.__pyx_vtab)->_update_dirty_nodes(__pyx_v_self);
+        ((struct __pyx_vtabstruct_9cythonize__AccumulationTree *)__pyx_v_self->__pyx_base.__pyx_vtab)->_update_dirty_nodes(__pyx_v_self);
       }
       if (PY_MAJOR_VERSION >= 3) {
         __Pyx_XGIVEREF(__pyx_t_11);
@@ -6421,7 +6421,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
     __pyx_L5:;
   }
 
-  /* "accumulation_tree/accumulation_tree.pyx":238
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":238
  *             self._update_dirty_nodes()
  * 
  *     def remove(self, key):             # <<<<<<<<<<<<<<
@@ -6437,7 +6437,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
   __Pyx_XDECREF(__pyx_t_2);
   __Pyx_XDECREF(__pyx_t_3);
   __Pyx_XDECREF(__pyx_t_5);
-  __Pyx_AddTraceback("accumulation_tree.accumulation_tree._AccumulationTree.remove", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("cythonize._AccumulationTree.remove", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -6445,7 +6445,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
   return __pyx_r;
 }
 
-/* "accumulation_tree/accumulation_tree.pyx":244
+/* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":244
  *             self._update_dirty_nodes()
  * 
  *     cdef _get_full_accumulation(self, Node node):             # <<<<<<<<<<<<<<
@@ -6453,14 +6453,14 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
  *             return self._zero
  */
 
-static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree_17_AccumulationTree__get_full_accumulation(struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *__pyx_v_self, struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_node) {
+static PyObject *__pyx_f_9cythonize_17_AccumulationTree__get_full_accumulation(struct __pyx_obj_9cythonize__AccumulationTree *__pyx_v_self, struct __pyx_obj_9cythonize_Node *__pyx_v_node) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
   int __pyx_t_2;
   __Pyx_RefNannySetupContext("_get_full_accumulation", 0);
 
-  /* "accumulation_tree/accumulation_tree.pyx":245
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":245
  * 
  *     cdef _get_full_accumulation(self, Node node):
  *         if node is None:             # <<<<<<<<<<<<<<
@@ -6471,7 +6471,7 @@ static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree_17_Accumulation
   __pyx_t_2 = (__pyx_t_1 != 0);
   if (__pyx_t_2) {
 
-    /* "accumulation_tree/accumulation_tree.pyx":246
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":246
  *     cdef _get_full_accumulation(self, Node node):
  *         if node is None:
  *             return self._zero             # <<<<<<<<<<<<<<
@@ -6483,7 +6483,7 @@ static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree_17_Accumulation
     __pyx_r = __pyx_v_self->_zero;
     goto __pyx_L0;
 
-    /* "accumulation_tree/accumulation_tree.pyx":245
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":245
  * 
  *     cdef _get_full_accumulation(self, Node node):
  *         if node is None:             # <<<<<<<<<<<<<<
@@ -6492,7 +6492,7 @@ static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree_17_Accumulation
  */
   }
 
-  /* "accumulation_tree/accumulation_tree.pyx":248
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":248
  *             return self._zero
  *         else:
  *             return node.accumulation             # <<<<<<<<<<<<<<
@@ -6506,7 +6506,7 @@ static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree_17_Accumulation
     goto __pyx_L0;
   }
 
-  /* "accumulation_tree/accumulation_tree.pyx":244
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":244
  *             self._update_dirty_nodes()
  * 
  *     cdef _get_full_accumulation(self, Node node):             # <<<<<<<<<<<<<<
@@ -6521,7 +6521,7 @@ static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree_17_Accumulation
   return __pyx_r;
 }
 
-/* "accumulation_tree/accumulation_tree.pyx":250
+/* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":250
  *             return node.accumulation
  * 
  *     cdef _get_right_accumulation(self, Node node, lower):             # <<<<<<<<<<<<<<
@@ -6529,7 +6529,7 @@ static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree_17_Accumulation
  *             return self._zero
  */
 
-static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree_17_AccumulationTree__get_right_accumulation(struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *__pyx_v_self, struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_node, PyObject *__pyx_v_lower) {
+static PyObject *__pyx_f_9cythonize_17_AccumulationTree__get_right_accumulation(struct __pyx_obj_9cythonize__AccumulationTree *__pyx_v_self, struct __pyx_obj_9cythonize_Node *__pyx_v_node, PyObject *__pyx_v_lower) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
@@ -6547,7 +6547,7 @@ static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree_17_Accumulation
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("_get_right_accumulation", 0);
 
-  /* "accumulation_tree/accumulation_tree.pyx":251
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":251
  * 
  *     cdef _get_right_accumulation(self, Node node, lower):
  *         if node is None:             # <<<<<<<<<<<<<<
@@ -6558,7 +6558,7 @@ static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree_17_Accumulation
   __pyx_t_2 = (__pyx_t_1 != 0);
   if (__pyx_t_2) {
 
-    /* "accumulation_tree/accumulation_tree.pyx":252
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":252
  *     cdef _get_right_accumulation(self, Node node, lower):
  *         if node is None:
  *             return self._zero             # <<<<<<<<<<<<<<
@@ -6570,7 +6570,7 @@ static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree_17_Accumulation
     __pyx_r = __pyx_v_self->_zero;
     goto __pyx_L0;
 
-    /* "accumulation_tree/accumulation_tree.pyx":251
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":251
  * 
  *     cdef _get_right_accumulation(self, Node node, lower):
  *         if node is None:             # <<<<<<<<<<<<<<
@@ -6579,7 +6579,7 @@ static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree_17_Accumulation
  */
   }
 
-  /* "accumulation_tree/accumulation_tree.pyx":253
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":253
  *         if node is None:
  *             return self._zero
  *         if(lower <= node.key):             # <<<<<<<<<<<<<<
@@ -6591,7 +6591,7 @@ static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree_17_Accumulation
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   if (__pyx_t_2) {
 
-    /* "accumulation_tree/accumulation_tree.pyx":254
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":254
  *             return self._zero
  *         if(lower <= node.key):
  *             return self._reducer(             # <<<<<<<<<<<<<<
@@ -6600,7 +6600,7 @@ static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree_17_Accumulation
  */
     __Pyx_XDECREF(__pyx_r);
 
-    /* "accumulation_tree/accumulation_tree.pyx":256
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":256
  *             return self._reducer(
  *                 self._reducer(
  *                     self._get_right_accumulation(node.left, lower),             # <<<<<<<<<<<<<<
@@ -6609,11 +6609,11 @@ static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree_17_Accumulation
  */
     __pyx_t_5 = ((PyObject *)__pyx_v_node->left);
     __Pyx_INCREF(__pyx_t_5);
-    __pyx_t_6 = ((struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree__AccumulationTree *)__pyx_v_self->__pyx_base.__pyx_vtab)->_get_right_accumulation(__pyx_v_self, ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_t_5), __pyx_v_lower); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 256, __pyx_L1_error)
+    __pyx_t_6 = ((struct __pyx_vtabstruct_9cythonize__AccumulationTree *)__pyx_v_self->__pyx_base.__pyx_vtab)->_get_right_accumulation(__pyx_v_self, ((struct __pyx_obj_9cythonize_Node *)__pyx_t_5), __pyx_v_lower); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 256, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
 
-    /* "accumulation_tree/accumulation_tree.pyx":257
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":257
  *                 self._reducer(
  *                     self._get_right_accumulation(node.left, lower),
  *                     self._get_full_accumulation(node.right),             # <<<<<<<<<<<<<<
@@ -6622,7 +6622,7 @@ static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree_17_Accumulation
  */
     __pyx_t_5 = ((PyObject *)__pyx_v_node->right);
     __Pyx_INCREF(__pyx_t_5);
-    __pyx_t_7 = ((struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree__AccumulationTree *)__pyx_v_self->__pyx_base.__pyx_vtab)->_get_full_accumulation(__pyx_v_self, ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_t_5)); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 257, __pyx_L1_error)
+    __pyx_t_7 = ((struct __pyx_vtabstruct_9cythonize__AccumulationTree *)__pyx_v_self->__pyx_base.__pyx_vtab)->_get_full_accumulation(__pyx_v_self, ((struct __pyx_obj_9cythonize_Node *)__pyx_t_5)); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 257, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_7);
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
     __Pyx_INCREF(__pyx_v_self->_reducer);
@@ -6676,7 +6676,7 @@ static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree_17_Accumulation
     }
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
 
-    /* "accumulation_tree/accumulation_tree.pyx":259
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":259
  *                     self._get_full_accumulation(node.right),
  *                 ),
  *                 self._mapper(node.value),             # <<<<<<<<<<<<<<
@@ -6753,7 +6753,7 @@ static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree_17_Accumulation
     __pyx_t_3 = 0;
     goto __pyx_L0;
 
-    /* "accumulation_tree/accumulation_tree.pyx":253
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":253
  *         if node is None:
  *             return self._zero
  *         if(lower <= node.key):             # <<<<<<<<<<<<<<
@@ -6762,7 +6762,7 @@ static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree_17_Accumulation
  */
   }
 
-  /* "accumulation_tree/accumulation_tree.pyx":262
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":262
  *             )
  *         else:
  *             return self._get_right_accumulation(node.right, lower)             # <<<<<<<<<<<<<<
@@ -6773,7 +6773,7 @@ static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree_17_Accumulation
     __Pyx_XDECREF(__pyx_r);
     __pyx_t_3 = ((PyObject *)__pyx_v_node->right);
     __Pyx_INCREF(__pyx_t_3);
-    __pyx_t_10 = ((struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree__AccumulationTree *)__pyx_v_self->__pyx_base.__pyx_vtab)->_get_right_accumulation(__pyx_v_self, ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_t_3), __pyx_v_lower); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 262, __pyx_L1_error)
+    __pyx_t_10 = ((struct __pyx_vtabstruct_9cythonize__AccumulationTree *)__pyx_v_self->__pyx_base.__pyx_vtab)->_get_right_accumulation(__pyx_v_self, ((struct __pyx_obj_9cythonize_Node *)__pyx_t_3), __pyx_v_lower); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 262, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_10);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     __pyx_r = __pyx_t_10;
@@ -6781,7 +6781,7 @@ static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree_17_Accumulation
     goto __pyx_L0;
   }
 
-  /* "accumulation_tree/accumulation_tree.pyx":250
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":250
  *             return node.accumulation
  * 
  *     cdef _get_right_accumulation(self, Node node, lower):             # <<<<<<<<<<<<<<
@@ -6798,7 +6798,7 @@ static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree_17_Accumulation
   __Pyx_XDECREF(__pyx_t_7);
   __Pyx_XDECREF(__pyx_t_8);
   __Pyx_XDECREF(__pyx_t_10);
-  __Pyx_AddTraceback("accumulation_tree.accumulation_tree._AccumulationTree._get_right_accumulation", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("cythonize._AccumulationTree._get_right_accumulation", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = 0;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -6806,7 +6806,7 @@ static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree_17_Accumulation
   return __pyx_r;
 }
 
-/* "accumulation_tree/accumulation_tree.pyx":264
+/* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":264
  *             return self._get_right_accumulation(node.right, lower)
  * 
  *     def _get_left_accumulation(self, Node node, upper):             # <<<<<<<<<<<<<<
@@ -6815,9 +6815,9 @@ static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree_17_Accumulation
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_17_AccumulationTree_7_get_left_accumulation(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_17_AccumulationTree_7_get_left_accumulation(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
-  struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_node = 0;
+static PyObject *__pyx_pw_9cythonize_17_AccumulationTree_7_get_left_accumulation(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static PyObject *__pyx_pw_9cythonize_17_AccumulationTree_7_get_left_accumulation(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+  struct __pyx_obj_9cythonize_Node *__pyx_v_node = 0;
   PyObject *__pyx_v_upper = 0;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
@@ -6860,19 +6860,19 @@ static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_17_Accumulatio
       values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
       values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
     }
-    __pyx_v_node = ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)values[0]);
+    __pyx_v_node = ((struct __pyx_obj_9cythonize_Node *)values[0]);
     __pyx_v_upper = values[1];
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
   __Pyx_RaiseArgtupleInvalid("_get_left_accumulation", 1, 2, 2, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 264, __pyx_L3_error)
   __pyx_L3_error:;
-  __Pyx_AddTraceback("accumulation_tree.accumulation_tree._AccumulationTree._get_left_accumulation", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("cythonize._AccumulationTree._get_left_accumulation", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_node), __pyx_ptype_17accumulation_tree_17accumulation_tree_Node, 1, "node", 0))) __PYX_ERR(0, 264, __pyx_L1_error)
-  __pyx_r = __pyx_pf_17accumulation_tree_17accumulation_tree_17_AccumulationTree_6_get_left_accumulation(((struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *)__pyx_v_self), __pyx_v_node, __pyx_v_upper);
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_node), __pyx_ptype_9cythonize_Node, 1, "node", 0))) __PYX_ERR(0, 264, __pyx_L1_error)
+  __pyx_r = __pyx_pf_9cythonize_17_AccumulationTree_6_get_left_accumulation(((struct __pyx_obj_9cythonize__AccumulationTree *)__pyx_v_self), __pyx_v_node, __pyx_v_upper);
 
   /* function exit code */
   goto __pyx_L0;
@@ -6883,7 +6883,7 @@ static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_17_Accumulatio
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_AccumulationTree_6_get_left_accumulation(struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *__pyx_v_self, struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_node, PyObject *__pyx_v_upper) {
+static PyObject *__pyx_pf_9cythonize_17_AccumulationTree_6_get_left_accumulation(struct __pyx_obj_9cythonize__AccumulationTree *__pyx_v_self, struct __pyx_obj_9cythonize_Node *__pyx_v_node, PyObject *__pyx_v_upper) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
@@ -6901,7 +6901,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("_get_left_accumulation", 0);
 
-  /* "accumulation_tree/accumulation_tree.pyx":265
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":265
  * 
  *     def _get_left_accumulation(self, Node node, upper):
  *         if node is None:             # <<<<<<<<<<<<<<
@@ -6912,7 +6912,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
   __pyx_t_2 = (__pyx_t_1 != 0);
   if (__pyx_t_2) {
 
-    /* "accumulation_tree/accumulation_tree.pyx":266
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":266
  *     def _get_left_accumulation(self, Node node, upper):
  *         if node is None:
  *             return self._zero             # <<<<<<<<<<<<<<
@@ -6924,7 +6924,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
     __pyx_r = __pyx_v_self->_zero;
     goto __pyx_L0;
 
-    /* "accumulation_tree/accumulation_tree.pyx":265
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":265
  * 
  *     def _get_left_accumulation(self, Node node, upper):
  *         if node is None:             # <<<<<<<<<<<<<<
@@ -6933,7 +6933,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
  */
   }
 
-  /* "accumulation_tree/accumulation_tree.pyx":267
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":267
  *         if node is None:
  *             return self._zero
  *         if(upper > node.key):             # <<<<<<<<<<<<<<
@@ -6945,7 +6945,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   if (__pyx_t_2) {
 
-    /* "accumulation_tree/accumulation_tree.pyx":268
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":268
  *             return self._zero
  *         if(upper > node.key):
  *             return self._reducer(             # <<<<<<<<<<<<<<
@@ -6954,7 +6954,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
  */
     __Pyx_XDECREF(__pyx_r);
 
-    /* "accumulation_tree/accumulation_tree.pyx":270
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":270
  *             return self._reducer(
  *                 self._reducer(
  *                     self._get_full_accumulation(node.left),             # <<<<<<<<<<<<<<
@@ -6963,11 +6963,11 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
  */
     __pyx_t_5 = ((PyObject *)__pyx_v_node->left);
     __Pyx_INCREF(__pyx_t_5);
-    __pyx_t_6 = ((struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree__AccumulationTree *)__pyx_v_self->__pyx_base.__pyx_vtab)->_get_full_accumulation(__pyx_v_self, ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_t_5)); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 270, __pyx_L1_error)
+    __pyx_t_6 = ((struct __pyx_vtabstruct_9cythonize__AccumulationTree *)__pyx_v_self->__pyx_base.__pyx_vtab)->_get_full_accumulation(__pyx_v_self, ((struct __pyx_obj_9cythonize_Node *)__pyx_t_5)); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 270, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
 
-    /* "accumulation_tree/accumulation_tree.pyx":271
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":271
  *                 self._reducer(
  *                     self._get_full_accumulation(node.left),
  *                     self._get_left_accumulation(node.right, upper),             # <<<<<<<<<<<<<<
@@ -7072,7 +7072,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
     }
     __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
 
-    /* "accumulation_tree/accumulation_tree.pyx":273
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":273
  *                     self._get_left_accumulation(node.right, upper),
  *                 ),
  *                 self._mapper(node.value),             # <<<<<<<<<<<<<<
@@ -7149,7 +7149,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
     __pyx_t_3 = 0;
     goto __pyx_L0;
 
-    /* "accumulation_tree/accumulation_tree.pyx":267
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":267
  *         if node is None:
  *             return self._zero
  *         if(upper > node.key):             # <<<<<<<<<<<<<<
@@ -7158,7 +7158,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
  */
   }
 
-  /* "accumulation_tree/accumulation_tree.pyx":276
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":276
  *             )
  *         else:
  *             return self._get_left_accumulation(node.left, upper)             # <<<<<<<<<<<<<<
@@ -7219,7 +7219,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
     goto __pyx_L0;
   }
 
-  /* "accumulation_tree/accumulation_tree.pyx":264
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":264
  *             return self._get_right_accumulation(node.right, lower)
  * 
  *     def _get_left_accumulation(self, Node node, upper):             # <<<<<<<<<<<<<<
@@ -7236,7 +7236,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
   __Pyx_XDECREF(__pyx_t_7);
   __Pyx_XDECREF(__pyx_t_8);
   __Pyx_XDECREF(__pyx_t_10);
-  __Pyx_AddTraceback("accumulation_tree.accumulation_tree._AccumulationTree._get_left_accumulation", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("cythonize._AccumulationTree._get_left_accumulation", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -7244,7 +7244,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
   return __pyx_r;
 }
 
-/* "accumulation_tree/accumulation_tree.pyx":278
+/* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":278
  *             return self._get_left_accumulation(node.left, upper)
  * 
  *     def _get_accumulation(self, Node node, lower, upper):             # <<<<<<<<<<<<<<
@@ -7253,9 +7253,9 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_17_AccumulationTree_9_get_accumulation(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_17_AccumulationTree_9_get_accumulation(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
-  struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_node = 0;
+static PyObject *__pyx_pw_9cythonize_17_AccumulationTree_9_get_accumulation(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static PyObject *__pyx_pw_9cythonize_17_AccumulationTree_9_get_accumulation(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+  struct __pyx_obj_9cythonize_Node *__pyx_v_node = 0;
   PyObject *__pyx_v_lower = 0;
   PyObject *__pyx_v_upper = 0;
   int __pyx_lineno = 0;
@@ -7308,7 +7308,7 @@ static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_17_Accumulatio
       values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
       values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
     }
-    __pyx_v_node = ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)values[0]);
+    __pyx_v_node = ((struct __pyx_obj_9cythonize_Node *)values[0]);
     __pyx_v_lower = values[1];
     __pyx_v_upper = values[2];
   }
@@ -7316,12 +7316,12 @@ static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_17_Accumulatio
   __pyx_L5_argtuple_error:;
   __Pyx_RaiseArgtupleInvalid("_get_accumulation", 1, 3, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 278, __pyx_L3_error)
   __pyx_L3_error:;
-  __Pyx_AddTraceback("accumulation_tree.accumulation_tree._AccumulationTree._get_accumulation", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("cythonize._AccumulationTree._get_accumulation", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_node), __pyx_ptype_17accumulation_tree_17accumulation_tree_Node, 1, "node", 0))) __PYX_ERR(0, 278, __pyx_L1_error)
-  __pyx_r = __pyx_pf_17accumulation_tree_17accumulation_tree_17_AccumulationTree_8_get_accumulation(((struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *)__pyx_v_self), __pyx_v_node, __pyx_v_lower, __pyx_v_upper);
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_node), __pyx_ptype_9cythonize_Node, 1, "node", 0))) __PYX_ERR(0, 278, __pyx_L1_error)
+  __pyx_r = __pyx_pf_9cythonize_17_AccumulationTree_8_get_accumulation(((struct __pyx_obj_9cythonize__AccumulationTree *)__pyx_v_self), __pyx_v_node, __pyx_v_lower, __pyx_v_upper);
 
   /* function exit code */
   goto __pyx_L0;
@@ -7332,7 +7332,7 @@ static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_17_Accumulatio
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_AccumulationTree_8_get_accumulation(struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *__pyx_v_self, struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_node, PyObject *__pyx_v_lower, PyObject *__pyx_v_upper) {
+static PyObject *__pyx_pf_9cythonize_17_AccumulationTree_8_get_accumulation(struct __pyx_obj_9cythonize__AccumulationTree *__pyx_v_self, struct __pyx_obj_9cythonize_Node *__pyx_v_node, PyObject *__pyx_v_lower, PyObject *__pyx_v_upper) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
@@ -7351,7 +7351,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("_get_accumulation", 0);
 
-  /* "accumulation_tree/accumulation_tree.pyx":279
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":279
  * 
  *     def _get_accumulation(self, Node node, lower, upper):
  *         if node is None or lower >= upper:             # <<<<<<<<<<<<<<
@@ -7372,7 +7372,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
   __pyx_L4_bool_binop_done:;
   if (__pyx_t_1) {
 
-    /* "accumulation_tree/accumulation_tree.pyx":280
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":280
  *     def _get_accumulation(self, Node node, lower, upper):
  *         if node is None or lower >= upper:
  *             return self._zero             # <<<<<<<<<<<<<<
@@ -7384,7 +7384,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
     __pyx_r = __pyx_v_self->_zero;
     goto __pyx_L0;
 
-    /* "accumulation_tree/accumulation_tree.pyx":279
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":279
  * 
  *     def _get_accumulation(self, Node node, lower, upper):
  *         if node is None or lower >= upper:             # <<<<<<<<<<<<<<
@@ -7393,7 +7393,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
  */
   }
 
-  /* "accumulation_tree/accumulation_tree.pyx":281
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":281
  *         if node is None or lower >= upper:
  *             return self._zero
  *         if node.key < lower:             # <<<<<<<<<<<<<<
@@ -7405,7 +7405,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   if (__pyx_t_1) {
 
-    /* "accumulation_tree/accumulation_tree.pyx":282
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":282
  *             return self._zero
  *         if node.key < lower:
  *             return self._get_accumulation(node.right, lower, upper)             # <<<<<<<<<<<<<<
@@ -7467,7 +7467,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
     __pyx_t_4 = 0;
     goto __pyx_L0;
 
-    /* "accumulation_tree/accumulation_tree.pyx":281
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":281
  *         if node is None or lower >= upper:
  *             return self._zero
  *         if node.key < lower:             # <<<<<<<<<<<<<<
@@ -7476,7 +7476,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
  */
   }
 
-  /* "accumulation_tree/accumulation_tree.pyx":283
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":283
  *         if node.key < lower:
  *             return self._get_accumulation(node.right, lower, upper)
  *         if node.key >= upper:             # <<<<<<<<<<<<<<
@@ -7488,7 +7488,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   if (__pyx_t_1) {
 
-    /* "accumulation_tree/accumulation_tree.pyx":284
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":284
  *             return self._get_accumulation(node.right, lower, upper)
  *         if node.key >= upper:
  *             return self._get_accumulation(node.left, lower, upper)             # <<<<<<<<<<<<<<
@@ -7550,7 +7550,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
     __pyx_t_4 = 0;
     goto __pyx_L0;
 
-    /* "accumulation_tree/accumulation_tree.pyx":283
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":283
  *         if node.key < lower:
  *             return self._get_accumulation(node.right, lower, upper)
  *         if node.key >= upper:             # <<<<<<<<<<<<<<
@@ -7559,7 +7559,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
  */
   }
 
-  /* "accumulation_tree/accumulation_tree.pyx":285
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":285
  *         if node.key >= upper:
  *             return self._get_accumulation(node.left, lower, upper)
  *         return self._reducer(             # <<<<<<<<<<<<<<
@@ -7568,7 +7568,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
  */
   __Pyx_XDECREF(__pyx_r);
 
-  /* "accumulation_tree/accumulation_tree.pyx":287
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":287
  *         return self._reducer(
  *             self._reducer(
  *                 self._get_right_accumulation(node.left, lower),             # <<<<<<<<<<<<<<
@@ -7577,11 +7577,11 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
  */
   __pyx_t_6 = ((PyObject *)__pyx_v_node->left);
   __Pyx_INCREF(__pyx_t_6);
-  __pyx_t_8 = ((struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree__AccumulationTree *)__pyx_v_self->__pyx_base.__pyx_vtab)->_get_right_accumulation(__pyx_v_self, ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_t_6), __pyx_v_lower); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 287, __pyx_L1_error)
+  __pyx_t_8 = ((struct __pyx_vtabstruct_9cythonize__AccumulationTree *)__pyx_v_self->__pyx_base.__pyx_vtab)->_get_right_accumulation(__pyx_v_self, ((struct __pyx_obj_9cythonize_Node *)__pyx_t_6), __pyx_v_lower); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 287, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_8);
   __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
 
-  /* "accumulation_tree/accumulation_tree.pyx":288
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":288
  *             self._reducer(
  *                 self._get_right_accumulation(node.left, lower),
  *                 self._get_left_accumulation(node.right, upper),             # <<<<<<<<<<<<<<
@@ -7686,7 +7686,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
   }
   __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
 
-  /* "accumulation_tree/accumulation_tree.pyx":290
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":290
  *                 self._get_left_accumulation(node.right, upper),
  *             ),
  *             self._mapper(node.value),             # <<<<<<<<<<<<<<
@@ -7763,7 +7763,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
   __pyx_t_4 = 0;
   goto __pyx_L0;
 
-  /* "accumulation_tree/accumulation_tree.pyx":278
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":278
  *             return self._get_left_accumulation(node.left, upper)
  * 
  *     def _get_accumulation(self, Node node, lower, upper):             # <<<<<<<<<<<<<<
@@ -7780,7 +7780,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
   __Pyx_XDECREF(__pyx_t_9);
   __Pyx_XDECREF(__pyx_t_10);
   __Pyx_XDECREF(__pyx_t_11);
-  __Pyx_AddTraceback("accumulation_tree.accumulation_tree._AccumulationTree._get_accumulation", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("cythonize._AccumulationTree._get_accumulation", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -7788,7 +7788,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
   return __pyx_r;
 }
 
-/* "accumulation_tree/accumulation_tree.pyx":293
+/* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":293
  *         )
  * 
  *     def get_accumulation(self, lower, upper):             # <<<<<<<<<<<<<<
@@ -7797,8 +7797,8 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_17_AccumulationTree_11get_accumulation(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_17_AccumulationTree_11get_accumulation(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_9cythonize_17_AccumulationTree_11get_accumulation(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static PyObject *__pyx_pw_9cythonize_17_AccumulationTree_11get_accumulation(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyObject *__pyx_v_lower = 0;
   PyObject *__pyx_v_upper = 0;
   int __pyx_lineno = 0;
@@ -7849,18 +7849,18 @@ static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_17_Accumulatio
   __pyx_L5_argtuple_error:;
   __Pyx_RaiseArgtupleInvalid("get_accumulation", 1, 2, 2, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 293, __pyx_L3_error)
   __pyx_L3_error:;
-  __Pyx_AddTraceback("accumulation_tree.accumulation_tree._AccumulationTree.get_accumulation", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("cythonize._AccumulationTree.get_accumulation", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_17accumulation_tree_17accumulation_tree_17_AccumulationTree_10get_accumulation(((struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *)__pyx_v_self), __pyx_v_lower, __pyx_v_upper);
+  __pyx_r = __pyx_pf_9cythonize_17_AccumulationTree_10get_accumulation(((struct __pyx_obj_9cythonize__AccumulationTree *)__pyx_v_self), __pyx_v_lower, __pyx_v_upper);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_AccumulationTree_10get_accumulation(struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *__pyx_v_self, PyObject *__pyx_v_lower, PyObject *__pyx_v_upper) {
+static PyObject *__pyx_pf_9cythonize_17_AccumulationTree_10get_accumulation(struct __pyx_obj_9cythonize__AccumulationTree *__pyx_v_self, PyObject *__pyx_v_lower, PyObject *__pyx_v_upper) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -7873,7 +7873,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("get_accumulation", 0);
 
-  /* "accumulation_tree/accumulation_tree.pyx":294
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":294
  * 
  *     def get_accumulation(self, lower, upper):
  *         return self._get_accumulation(self._root, lower, upper)             # <<<<<<<<<<<<<<
@@ -7935,7 +7935,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "accumulation_tree/accumulation_tree.pyx":293
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":293
  *         )
  * 
  *     def get_accumulation(self, lower, upper):             # <<<<<<<<<<<<<<
@@ -7949,7 +7949,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
   __Pyx_XDECREF(__pyx_t_2);
   __Pyx_XDECREF(__pyx_t_3);
   __Pyx_XDECREF(__pyx_t_5);
-  __Pyx_AddTraceback("accumulation_tree.accumulation_tree._AccumulationTree.get_accumulation", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("cythonize._AccumulationTree.get_accumulation", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -7957,7 +7957,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
   return __pyx_r;
 }
 
-/* "accumulation_tree/accumulation_tree.pyx":296
+/* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":296
  *         return self._get_accumulation(self._root, lower, upper)
  * 
  *     def get_left_accumulation(self, upper):             # <<<<<<<<<<<<<<
@@ -7966,19 +7966,19 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_17_AccumulationTree_13get_left_accumulation(PyObject *__pyx_v_self, PyObject *__pyx_v_upper); /*proto*/
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_17_AccumulationTree_13get_left_accumulation(PyObject *__pyx_v_self, PyObject *__pyx_v_upper) {
+static PyObject *__pyx_pw_9cythonize_17_AccumulationTree_13get_left_accumulation(PyObject *__pyx_v_self, PyObject *__pyx_v_upper); /*proto*/
+static PyObject *__pyx_pw_9cythonize_17_AccumulationTree_13get_left_accumulation(PyObject *__pyx_v_self, PyObject *__pyx_v_upper) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("get_left_accumulation (wrapper)", 0);
-  __pyx_r = __pyx_pf_17accumulation_tree_17accumulation_tree_17_AccumulationTree_12get_left_accumulation(((struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *)__pyx_v_self), ((PyObject *)__pyx_v_upper));
+  __pyx_r = __pyx_pf_9cythonize_17_AccumulationTree_12get_left_accumulation(((struct __pyx_obj_9cythonize__AccumulationTree *)__pyx_v_self), ((PyObject *)__pyx_v_upper));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_AccumulationTree_12get_left_accumulation(struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *__pyx_v_self, PyObject *__pyx_v_upper) {
+static PyObject *__pyx_pf_9cythonize_17_AccumulationTree_12get_left_accumulation(struct __pyx_obj_9cythonize__AccumulationTree *__pyx_v_self, PyObject *__pyx_v_upper) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -7991,7 +7991,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("get_left_accumulation", 0);
 
-  /* "accumulation_tree/accumulation_tree.pyx":297
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":297
  * 
  *     def get_left_accumulation(self, upper):
  *         return self._get_left_accumulation(self._root, upper)             # <<<<<<<<<<<<<<
@@ -8050,7 +8050,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "accumulation_tree/accumulation_tree.pyx":296
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":296
  *         return self._get_accumulation(self._root, lower, upper)
  * 
  *     def get_left_accumulation(self, upper):             # <<<<<<<<<<<<<<
@@ -8064,7 +8064,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
   __Pyx_XDECREF(__pyx_t_2);
   __Pyx_XDECREF(__pyx_t_3);
   __Pyx_XDECREF(__pyx_t_5);
-  __Pyx_AddTraceback("accumulation_tree.accumulation_tree._AccumulationTree.get_left_accumulation", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("cythonize._AccumulationTree.get_left_accumulation", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -8072,7 +8072,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
   return __pyx_r;
 }
 
-/* "accumulation_tree/accumulation_tree.pyx":299
+/* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":299
  *         return self._get_left_accumulation(self._root, upper)
  * 
  *     def get_right_accumulation(self, lower):             # <<<<<<<<<<<<<<
@@ -8081,19 +8081,19 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_17_AccumulationTree_15get_right_accumulation(PyObject *__pyx_v_self, PyObject *__pyx_v_lower); /*proto*/
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_17_AccumulationTree_15get_right_accumulation(PyObject *__pyx_v_self, PyObject *__pyx_v_lower) {
+static PyObject *__pyx_pw_9cythonize_17_AccumulationTree_15get_right_accumulation(PyObject *__pyx_v_self, PyObject *__pyx_v_lower); /*proto*/
+static PyObject *__pyx_pw_9cythonize_17_AccumulationTree_15get_right_accumulation(PyObject *__pyx_v_self, PyObject *__pyx_v_lower) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("get_right_accumulation (wrapper)", 0);
-  __pyx_r = __pyx_pf_17accumulation_tree_17accumulation_tree_17_AccumulationTree_14get_right_accumulation(((struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *)__pyx_v_self), ((PyObject *)__pyx_v_lower));
+  __pyx_r = __pyx_pf_9cythonize_17_AccumulationTree_14get_right_accumulation(((struct __pyx_obj_9cythonize__AccumulationTree *)__pyx_v_self), ((PyObject *)__pyx_v_lower));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_AccumulationTree_14get_right_accumulation(struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *__pyx_v_self, PyObject *__pyx_v_lower) {
+static PyObject *__pyx_pf_9cythonize_17_AccumulationTree_14get_right_accumulation(struct __pyx_obj_9cythonize__AccumulationTree *__pyx_v_self, PyObject *__pyx_v_lower) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -8103,7 +8103,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("get_right_accumulation", 0);
 
-  /* "accumulation_tree/accumulation_tree.pyx":300
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":300
  * 
  *     def get_right_accumulation(self, lower):
  *         return self._get_right_accumulation(self._root, lower)             # <<<<<<<<<<<<<<
@@ -8113,14 +8113,14 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
   __Pyx_XDECREF(__pyx_r);
   __pyx_t_1 = ((PyObject *)__pyx_v_self->__pyx_base._root);
   __Pyx_INCREF(__pyx_t_1);
-  __pyx_t_2 = ((struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree__AccumulationTree *)__pyx_v_self->__pyx_base.__pyx_vtab)->_get_right_accumulation(__pyx_v_self, ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_t_1), __pyx_v_lower); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 300, __pyx_L1_error)
+  __pyx_t_2 = ((struct __pyx_vtabstruct_9cythonize__AccumulationTree *)__pyx_v_self->__pyx_base.__pyx_vtab)->_get_right_accumulation(__pyx_v_self, ((struct __pyx_obj_9cythonize_Node *)__pyx_t_1), __pyx_v_lower); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 300, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_r = __pyx_t_2;
   __pyx_t_2 = 0;
   goto __pyx_L0;
 
-  /* "accumulation_tree/accumulation_tree.pyx":299
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":299
  *         return self._get_left_accumulation(self._root, upper)
  * 
  *     def get_right_accumulation(self, lower):             # <<<<<<<<<<<<<<
@@ -8132,7 +8132,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_1);
   __Pyx_XDECREF(__pyx_t_2);
-  __Pyx_AddTraceback("accumulation_tree.accumulation_tree._AccumulationTree.get_right_accumulation", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("cythonize._AccumulationTree.get_right_accumulation", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -8140,7 +8140,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
   return __pyx_r;
 }
 
-/* "accumulation_tree/accumulation_tree.pyx":302
+/* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":302
  *         return self._get_right_accumulation(self._root, lower)
  * 
  *     def get_full_accumulation(self):             # <<<<<<<<<<<<<<
@@ -8149,19 +8149,19 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_17_AccumulationTree_17get_full_accumulation(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused); /*proto*/
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_17_AccumulationTree_17get_full_accumulation(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused) {
+static PyObject *__pyx_pw_9cythonize_17_AccumulationTree_17get_full_accumulation(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused); /*proto*/
+static PyObject *__pyx_pw_9cythonize_17_AccumulationTree_17get_full_accumulation(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("get_full_accumulation (wrapper)", 0);
-  __pyx_r = __pyx_pf_17accumulation_tree_17accumulation_tree_17_AccumulationTree_16get_full_accumulation(((struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *)__pyx_v_self));
+  __pyx_r = __pyx_pf_9cythonize_17_AccumulationTree_16get_full_accumulation(((struct __pyx_obj_9cythonize__AccumulationTree *)__pyx_v_self));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_AccumulationTree_16get_full_accumulation(struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *__pyx_v_self) {
+static PyObject *__pyx_pf_9cythonize_17_AccumulationTree_16get_full_accumulation(struct __pyx_obj_9cythonize__AccumulationTree *__pyx_v_self) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -8171,7 +8171,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("get_full_accumulation", 0);
 
-  /* "accumulation_tree/accumulation_tree.pyx":303
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":303
  * 
  *     def get_full_accumulation(self):
  *         return self._get_full_accumulation(self._root)             # <<<<<<<<<<<<<<
@@ -8181,14 +8181,14 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
   __Pyx_XDECREF(__pyx_r);
   __pyx_t_1 = ((PyObject *)__pyx_v_self->__pyx_base._root);
   __Pyx_INCREF(__pyx_t_1);
-  __pyx_t_2 = ((struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree__AccumulationTree *)__pyx_v_self->__pyx_base.__pyx_vtab)->_get_full_accumulation(__pyx_v_self, ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_t_1)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 303, __pyx_L1_error)
+  __pyx_t_2 = ((struct __pyx_vtabstruct_9cythonize__AccumulationTree *)__pyx_v_self->__pyx_base.__pyx_vtab)->_get_full_accumulation(__pyx_v_self, ((struct __pyx_obj_9cythonize_Node *)__pyx_t_1)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 303, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_r = __pyx_t_2;
   __pyx_t_2 = 0;
   goto __pyx_L0;
 
-  /* "accumulation_tree/accumulation_tree.pyx":302
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":302
  *         return self._get_right_accumulation(self._root, lower)
  * 
  *     def get_full_accumulation(self):             # <<<<<<<<<<<<<<
@@ -8200,7 +8200,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_1);
   __Pyx_XDECREF(__pyx_t_2);
-  __Pyx_AddTraceback("accumulation_tree.accumulation_tree._AccumulationTree.get_full_accumulation", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("cythonize._AccumulationTree.get_full_accumulation", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -8208,7 +8208,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
   return __pyx_r;
 }
 
-/* "accumulation_tree/accumulation_tree.pyx":305
+/* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":305
  *         return self._get_full_accumulation(self._root)
  * 
  *     cdef void _update_dirty_nodes(self):             # <<<<<<<<<<<<<<
@@ -8216,7 +8216,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
  *             path = self._path_to_key(key)
  */
 
-static void __pyx_f_17accumulation_tree_17accumulation_tree_17_AccumulationTree__update_dirty_nodes(struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *__pyx_v_self) {
+static void __pyx_f_9cythonize_17_AccumulationTree__update_dirty_nodes(struct __pyx_obj_9cythonize__AccumulationTree *__pyx_v_self) {
   PyObject *__pyx_v_key = NULL;
   PyObject *__pyx_v_path = NULL;
   __Pyx_RefNannyDeclarations
@@ -8232,7 +8232,7 @@ static void __pyx_f_17accumulation_tree_17accumulation_tree_17_AccumulationTree_
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("_update_dirty_nodes", 0);
 
-  /* "accumulation_tree/accumulation_tree.pyx":306
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":306
  * 
  *     cdef void _update_dirty_nodes(self):
  *         for key in self._dirty_nodes:             # <<<<<<<<<<<<<<
@@ -8253,30 +8253,30 @@ static void __pyx_f_17accumulation_tree_17accumulation_tree_17_AccumulationTree_
     __Pyx_XDECREF_SET(__pyx_v_key, __pyx_t_5);
     __pyx_t_5 = 0;
 
-    /* "accumulation_tree/accumulation_tree.pyx":307
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":307
  *     cdef void _update_dirty_nodes(self):
  *         for key in self._dirty_nodes:
  *             path = self._path_to_key(key)             # <<<<<<<<<<<<<<
  *             self._update_accumulation(path)
  *         self._dirty_nodes.clear()
  */
-    __pyx_t_5 = ((struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree__AccumulationTree *)__pyx_v_self->__pyx_base.__pyx_vtab)->_path_to_key(__pyx_v_self, __pyx_v_key); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 307, __pyx_L1_error)
+    __pyx_t_5 = ((struct __pyx_vtabstruct_9cythonize__AccumulationTree *)__pyx_v_self->__pyx_base.__pyx_vtab)->_path_to_key(__pyx_v_self, __pyx_v_key); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 307, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_XDECREF_SET(__pyx_v_path, ((PyObject*)__pyx_t_5));
     __pyx_t_5 = 0;
 
-    /* "accumulation_tree/accumulation_tree.pyx":308
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":308
  *         for key in self._dirty_nodes:
  *             path = self._path_to_key(key)
  *             self._update_accumulation(path)             # <<<<<<<<<<<<<<
  *         self._dirty_nodes.clear()
  * 
  */
-    ((struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree__AccumulationTree *)__pyx_v_self->__pyx_base.__pyx_vtab)->_update_accumulation(__pyx_v_self, __pyx_v_path);
+    ((struct __pyx_vtabstruct_9cythonize__AccumulationTree *)__pyx_v_self->__pyx_base.__pyx_vtab)->_update_accumulation(__pyx_v_self, __pyx_v_path);
   }
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "accumulation_tree/accumulation_tree.pyx":309
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":309
  *             path = self._path_to_key(key)
  *             self._update_accumulation(path)
  *         self._dirty_nodes.clear()             # <<<<<<<<<<<<<<
@@ -8289,7 +8289,7 @@ static void __pyx_f_17accumulation_tree_17accumulation_tree_17_AccumulationTree_
   }
   __pyx_t_7 = PySet_Clear(__pyx_v_self->_dirty_nodes); if (unlikely(__pyx_t_7 == ((int)-1))) __PYX_ERR(0, 309, __pyx_L1_error)
 
-  /* "accumulation_tree/accumulation_tree.pyx":305
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":305
  *         return self._get_full_accumulation(self._root)
  * 
  *     cdef void _update_dirty_nodes(self):             # <<<<<<<<<<<<<<
@@ -8302,14 +8302,14 @@ static void __pyx_f_17accumulation_tree_17accumulation_tree_17_AccumulationTree_
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_1);
   __Pyx_XDECREF(__pyx_t_5);
-  __Pyx_WriteUnraisable("accumulation_tree.accumulation_tree._AccumulationTree._update_dirty_nodes", __pyx_clineno, __pyx_lineno, __pyx_filename, 1, 0);
+  __Pyx_WriteUnraisable("cythonize._AccumulationTree._update_dirty_nodes", __pyx_clineno, __pyx_lineno, __pyx_filename, 1, 0);
   __pyx_L0:;
   __Pyx_XDECREF(__pyx_v_key);
   __Pyx_XDECREF(__pyx_v_path);
   __Pyx_RefNannyFinishContext();
 }
 
-/* "accumulation_tree/accumulation_tree.pyx":311
+/* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":311
  *         self._dirty_nodes.clear()
  * 
  *     cdef list _path_to_key(self, key):             # <<<<<<<<<<<<<<
@@ -8317,9 +8317,9 @@ static void __pyx_f_17accumulation_tree_17accumulation_tree_17_AccumulationTree_
  *         cdef Node node = self._root
  */
 
-static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree_17_AccumulationTree__path_to_key(struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *__pyx_v_self, PyObject *__pyx_v_key) {
+static PyObject *__pyx_f_9cythonize_17_AccumulationTree__path_to_key(struct __pyx_obj_9cythonize__AccumulationTree *__pyx_v_self, PyObject *__pyx_v_key) {
   PyObject *__pyx_v_path = NULL;
-  struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_node = 0;
+  struct __pyx_obj_9cythonize_Node *__pyx_v_node = 0;
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -8331,7 +8331,7 @@ static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree_17_Accumulation
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("_path_to_key", 0);
 
-  /* "accumulation_tree/accumulation_tree.pyx":312
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":312
  * 
  *     cdef list _path_to_key(self, key):
  *         path = []             # <<<<<<<<<<<<<<
@@ -8343,7 +8343,7 @@ static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree_17_Accumulation
   __pyx_v_path = ((PyObject*)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "accumulation_tree/accumulation_tree.pyx":313
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":313
  *     cdef list _path_to_key(self, key):
  *         path = []
  *         cdef Node node = self._root             # <<<<<<<<<<<<<<
@@ -8352,10 +8352,10 @@ static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree_17_Accumulation
  */
   __pyx_t_1 = ((PyObject *)__pyx_v_self->__pyx_base._root);
   __Pyx_INCREF(__pyx_t_1);
-  __pyx_v_node = ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_t_1);
+  __pyx_v_node = ((struct __pyx_obj_9cythonize_Node *)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "accumulation_tree/accumulation_tree.pyx":314
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":314
  *         path = []
  *         cdef Node node = self._root
  *         while True:             # <<<<<<<<<<<<<<
@@ -8364,7 +8364,7 @@ static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree_17_Accumulation
  */
   while (1) {
 
-    /* "accumulation_tree/accumulation_tree.pyx":315
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":315
  *         cdef Node node = self._root
  *         while True:
  *             if node is None:             # <<<<<<<<<<<<<<
@@ -8375,7 +8375,7 @@ static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree_17_Accumulation
     __pyx_t_3 = (__pyx_t_2 != 0);
     if (__pyx_t_3) {
 
-      /* "accumulation_tree/accumulation_tree.pyx":316
+      /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":316
  *         while True:
  *             if node is None:
  *                 break             # <<<<<<<<<<<<<<
@@ -8384,7 +8384,7 @@ static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree_17_Accumulation
  */
       goto __pyx_L4_break;
 
-      /* "accumulation_tree/accumulation_tree.pyx":315
+      /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":315
  *         cdef Node node = self._root
  *         while True:
  *             if node is None:             # <<<<<<<<<<<<<<
@@ -8393,7 +8393,7 @@ static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree_17_Accumulation
  */
     }
 
-    /* "accumulation_tree/accumulation_tree.pyx":317
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":317
  *             if node is None:
  *                 break
  *             path.append(node)             # <<<<<<<<<<<<<<
@@ -8402,7 +8402,7 @@ static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree_17_Accumulation
  */
     __pyx_t_4 = __Pyx_PyList_Append(__pyx_v_path, ((PyObject *)__pyx_v_node)); if (unlikely(__pyx_t_4 == ((int)-1))) __PYX_ERR(0, 317, __pyx_L1_error)
 
-    /* "accumulation_tree/accumulation_tree.pyx":318
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":318
  *                 break
  *             path.append(node)
  *             if node.key == key:             # <<<<<<<<<<<<<<
@@ -8414,7 +8414,7 @@ static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree_17_Accumulation
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     if (__pyx_t_3) {
 
-      /* "accumulation_tree/accumulation_tree.pyx":319
+      /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":319
  *             path.append(node)
  *             if node.key == key:
  *                 break             # <<<<<<<<<<<<<<
@@ -8423,7 +8423,7 @@ static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree_17_Accumulation
  */
       goto __pyx_L4_break;
 
-      /* "accumulation_tree/accumulation_tree.pyx":318
+      /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":318
  *                 break
  *             path.append(node)
  *             if node.key == key:             # <<<<<<<<<<<<<<
@@ -8432,7 +8432,7 @@ static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree_17_Accumulation
  */
     }
 
-    /* "accumulation_tree/accumulation_tree.pyx":320
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":320
  *             if node.key == key:
  *                 break
  *             elif node.key < key:             # <<<<<<<<<<<<<<
@@ -8444,7 +8444,7 @@ static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree_17_Accumulation
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     if (__pyx_t_3) {
 
-      /* "accumulation_tree/accumulation_tree.pyx":321
+      /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":321
  *                 break
  *             elif node.key < key:
  *                 node = node.right             # <<<<<<<<<<<<<<
@@ -8453,10 +8453,10 @@ static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree_17_Accumulation
  */
       __pyx_t_1 = ((PyObject *)__pyx_v_node->right);
       __Pyx_INCREF(__pyx_t_1);
-      __Pyx_DECREF_SET(__pyx_v_node, ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_t_1));
+      __Pyx_DECREF_SET(__pyx_v_node, ((struct __pyx_obj_9cythonize_Node *)__pyx_t_1));
       __pyx_t_1 = 0;
 
-      /* "accumulation_tree/accumulation_tree.pyx":320
+      /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":320
  *             if node.key == key:
  *                 break
  *             elif node.key < key:             # <<<<<<<<<<<<<<
@@ -8466,7 +8466,7 @@ static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree_17_Accumulation
       goto __pyx_L6;
     }
 
-    /* "accumulation_tree/accumulation_tree.pyx":323
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":323
  *                 node = node.right
  *             else:
  *                 node = node.left             # <<<<<<<<<<<<<<
@@ -8476,14 +8476,14 @@ static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree_17_Accumulation
     /*else*/ {
       __pyx_t_1 = ((PyObject *)__pyx_v_node->left);
       __Pyx_INCREF(__pyx_t_1);
-      __Pyx_DECREF_SET(__pyx_v_node, ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_t_1));
+      __Pyx_DECREF_SET(__pyx_v_node, ((struct __pyx_obj_9cythonize_Node *)__pyx_t_1));
       __pyx_t_1 = 0;
     }
     __pyx_L6:;
   }
   __pyx_L4_break:;
 
-  /* "accumulation_tree/accumulation_tree.pyx":324
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":324
  *             else:
  *                 node = node.left
  *         return path             # <<<<<<<<<<<<<<
@@ -8495,7 +8495,7 @@ static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree_17_Accumulation
   __pyx_r = __pyx_v_path;
   goto __pyx_L0;
 
-  /* "accumulation_tree/accumulation_tree.pyx":311
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":311
  *         self._dirty_nodes.clear()
  * 
  *     cdef list _path_to_key(self, key):             # <<<<<<<<<<<<<<
@@ -8506,7 +8506,7 @@ static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree_17_Accumulation
   /* function exit code */
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_1);
-  __Pyx_AddTraceback("accumulation_tree.accumulation_tree._AccumulationTree._path_to_key", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("cythonize._AccumulationTree._path_to_key", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = 0;
   __pyx_L0:;
   __Pyx_XDECREF(__pyx_v_path);
@@ -8516,7 +8516,7 @@ static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree_17_Accumulation
   return __pyx_r;
 }
 
-/* "accumulation_tree/accumulation_tree.pyx":326
+/* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":326
  *         return path
  * 
  *     cdef void _update_accumulation(self, nodes):             # <<<<<<<<<<<<<<
@@ -8524,8 +8524,8 @@ static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree_17_Accumulation
  *         for node in reversed(nodes):
  */
 
-static void __pyx_f_17accumulation_tree_17accumulation_tree_17_AccumulationTree__update_accumulation(struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *__pyx_v_self, PyObject *__pyx_v_nodes) {
-  struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v_x = 0;
+static void __pyx_f_9cythonize_17_AccumulationTree__update_accumulation(struct __pyx_obj_9cythonize__AccumulationTree *__pyx_v_self, PyObject *__pyx_v_nodes) {
+  struct __pyx_obj_9cythonize_Node *__pyx_v_x = 0;
   PyObject *__pyx_v_node = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -8546,7 +8546,7 @@ static void __pyx_f_17accumulation_tree_17accumulation_tree_17_AccumulationTree_
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("_update_accumulation", 0);
 
-  /* "accumulation_tree/accumulation_tree.pyx":328
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":328
  *     cdef void _update_accumulation(self, nodes):
  *         cdef Node x
  *         for node in reversed(nodes):             # <<<<<<<<<<<<<<
@@ -8598,7 +8598,7 @@ static void __pyx_f_17accumulation_tree_17accumulation_tree_17_AccumulationTree_
     __Pyx_XDECREF_SET(__pyx_v_node, __pyx_t_1);
     __pyx_t_1 = 0;
 
-    /* "accumulation_tree/accumulation_tree.pyx":329
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":329
  *         cdef Node x
  *         for node in reversed(nodes):
  *             x = <Node>node             # <<<<<<<<<<<<<<
@@ -8607,10 +8607,10 @@ static void __pyx_f_17accumulation_tree_17accumulation_tree_17_AccumulationTree_
  */
     __pyx_t_1 = __pyx_v_node;
     __Pyx_INCREF(__pyx_t_1);
-    __Pyx_XDECREF_SET(__pyx_v_x, ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_t_1));
+    __Pyx_XDECREF_SET(__pyx_v_x, ((struct __pyx_obj_9cythonize_Node *)__pyx_t_1));
     __pyx_t_1 = 0;
 
-    /* "accumulation_tree/accumulation_tree.pyx":330
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":330
  *         for node in reversed(nodes):
  *             x = <Node>node
  *             if x.left is not None and x.right is not None:             # <<<<<<<<<<<<<<
@@ -8630,7 +8630,7 @@ static void __pyx_f_17accumulation_tree_17accumulation_tree_17_AccumulationTree_
     __pyx_L6_bool_binop_done:;
     if (__pyx_t_5) {
 
-      /* "accumulation_tree/accumulation_tree.pyx":334
+      /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":334
  *                     self._reducer(
  *                         x.left.accumulation,
  *                         x.right.accumulation,             # <<<<<<<<<<<<<<
@@ -8684,7 +8684,7 @@ static void __pyx_f_17accumulation_tree_17accumulation_tree_17_AccumulationTree_
       }
       __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
 
-      /* "accumulation_tree/accumulation_tree.pyx":336
+      /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":336
  *                         x.right.accumulation,
  *                     ),
  *                     self._mapper(x.value),             # <<<<<<<<<<<<<<
@@ -8758,7 +8758,7 @@ static void __pyx_f_17accumulation_tree_17accumulation_tree_17_AccumulationTree_
       }
       __Pyx_DECREF(__pyx_t_12); __pyx_t_12 = 0;
 
-      /* "accumulation_tree/accumulation_tree.pyx":331
+      /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":331
  *             x = <Node>node
  *             if x.left is not None and x.right is not None:
  *                 x.accumulation = self._reducer(             # <<<<<<<<<<<<<<
@@ -8771,7 +8771,7 @@ static void __pyx_f_17accumulation_tree_17accumulation_tree_17_AccumulationTree_
       __pyx_v_x->accumulation = __pyx_t_1;
       __pyx_t_1 = 0;
 
-      /* "accumulation_tree/accumulation_tree.pyx":330
+      /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":330
  *         for node in reversed(nodes):
  *             x = <Node>node
  *             if x.left is not None and x.right is not None:             # <<<<<<<<<<<<<<
@@ -8781,7 +8781,7 @@ static void __pyx_f_17accumulation_tree_17accumulation_tree_17_AccumulationTree_
       goto __pyx_L5;
     }
 
-    /* "accumulation_tree/accumulation_tree.pyx":338
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":338
  *                     self._mapper(x.value),
  *                 )
  *             elif x.left is not None:             # <<<<<<<<<<<<<<
@@ -8792,7 +8792,7 @@ static void __pyx_f_17accumulation_tree_17accumulation_tree_17_AccumulationTree_
     __pyx_t_6 = (__pyx_t_5 != 0);
     if (__pyx_t_6) {
 
-      /* "accumulation_tree/accumulation_tree.pyx":341
+      /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":341
  *                 x.accumulation = self._reducer(
  *                     x.left.accumulation,
  *                     self._mapper(x.value),             # <<<<<<<<<<<<<<
@@ -8864,7 +8864,7 @@ static void __pyx_f_17accumulation_tree_17accumulation_tree_17_AccumulationTree_
       }
       __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
 
-      /* "accumulation_tree/accumulation_tree.pyx":339
+      /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":339
  *                 )
  *             elif x.left is not None:
  *                 x.accumulation = self._reducer(             # <<<<<<<<<<<<<<
@@ -8877,7 +8877,7 @@ static void __pyx_f_17accumulation_tree_17accumulation_tree_17_AccumulationTree_
       __pyx_v_x->accumulation = __pyx_t_1;
       __pyx_t_1 = 0;
 
-      /* "accumulation_tree/accumulation_tree.pyx":338
+      /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":338
  *                     self._mapper(x.value),
  *                 )
  *             elif x.left is not None:             # <<<<<<<<<<<<<<
@@ -8887,7 +8887,7 @@ static void __pyx_f_17accumulation_tree_17accumulation_tree_17_AccumulationTree_
       goto __pyx_L5;
     }
 
-    /* "accumulation_tree/accumulation_tree.pyx":343
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":343
  *                     self._mapper(x.value),
  *                 )
  *             elif x.right is not None:             # <<<<<<<<<<<<<<
@@ -8898,7 +8898,7 @@ static void __pyx_f_17accumulation_tree_17accumulation_tree_17_AccumulationTree_
     __pyx_t_5 = (__pyx_t_6 != 0);
     if (__pyx_t_5) {
 
-      /* "accumulation_tree/accumulation_tree.pyx":346
+      /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":346
  *                 x.accumulation = self._reducer(
  *                     x.right.accumulation,
  *                     self._mapper(x.value),             # <<<<<<<<<<<<<<
@@ -8970,7 +8970,7 @@ static void __pyx_f_17accumulation_tree_17accumulation_tree_17_AccumulationTree_
       }
       __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
 
-      /* "accumulation_tree/accumulation_tree.pyx":344
+      /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":344
  *                 )
  *             elif x.right is not None:
  *                 x.accumulation = self._reducer(             # <<<<<<<<<<<<<<
@@ -8983,7 +8983,7 @@ static void __pyx_f_17accumulation_tree_17accumulation_tree_17_AccumulationTree_
       __pyx_v_x->accumulation = __pyx_t_1;
       __pyx_t_1 = 0;
 
-      /* "accumulation_tree/accumulation_tree.pyx":343
+      /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":343
  *                     self._mapper(x.value),
  *                 )
  *             elif x.right is not None:             # <<<<<<<<<<<<<<
@@ -8993,7 +8993,7 @@ static void __pyx_f_17accumulation_tree_17accumulation_tree_17_AccumulationTree_
       goto __pyx_L5;
     }
 
-    /* "accumulation_tree/accumulation_tree.pyx":349
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":349
  *                 )
  *             else:
  *                 x.accumulation = self._mapper(x.value)             # <<<<<<<<<<<<<<
@@ -9025,7 +9025,7 @@ static void __pyx_f_17accumulation_tree_17accumulation_tree_17_AccumulationTree_
     }
     __pyx_L5:;
 
-    /* "accumulation_tree/accumulation_tree.pyx":328
+    /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":328
  *     cdef void _update_accumulation(self, nodes):
  *         cdef Node x
  *         for node in reversed(nodes):             # <<<<<<<<<<<<<<
@@ -9035,7 +9035,7 @@ static void __pyx_f_17accumulation_tree_17accumulation_tree_17_AccumulationTree_
   }
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "accumulation_tree/accumulation_tree.pyx":326
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":326
  *         return path
  * 
  *     cdef void _update_accumulation(self, nodes):             # <<<<<<<<<<<<<<
@@ -9053,14 +9053,14 @@ static void __pyx_f_17accumulation_tree_17accumulation_tree_17_AccumulationTree_
   __Pyx_XDECREF(__pyx_t_10);
   __Pyx_XDECREF(__pyx_t_12);
   __Pyx_XDECREF(__pyx_t_13);
-  __Pyx_WriteUnraisable("accumulation_tree.accumulation_tree._AccumulationTree._update_accumulation", __pyx_clineno, __pyx_lineno, __pyx_filename, 1, 0);
+  __Pyx_WriteUnraisable("cythonize._AccumulationTree._update_accumulation", __pyx_clineno, __pyx_lineno, __pyx_filename, 1, 0);
   __pyx_L0:;
   __Pyx_XDECREF((PyObject *)__pyx_v_x);
   __Pyx_XDECREF(__pyx_v_node);
   __Pyx_RefNannyFinishContext();
 }
 
-/* "accumulation_tree/accumulation_tree.pyx":351
+/* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":351
  *                 x.accumulation = self._mapper(x.value)
  * 
  *     def __getstate__(self):             # <<<<<<<<<<<<<<
@@ -9069,19 +9069,19 @@ static void __pyx_f_17accumulation_tree_17accumulation_tree_17_AccumulationTree_
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_17_AccumulationTree_19__getstate__(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused); /*proto*/
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_17_AccumulationTree_19__getstate__(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused) {
+static PyObject *__pyx_pw_9cythonize_17_AccumulationTree_19__getstate__(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused); /*proto*/
+static PyObject *__pyx_pw_9cythonize_17_AccumulationTree_19__getstate__(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__getstate__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_17accumulation_tree_17accumulation_tree_17_AccumulationTree_18__getstate__(((struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *)__pyx_v_self));
+  __pyx_r = __pyx_pf_9cythonize_17_AccumulationTree_18__getstate__(((struct __pyx_obj_9cythonize__AccumulationTree *)__pyx_v_self));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_AccumulationTree_18__getstate__(struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *__pyx_v_self) {
+static PyObject *__pyx_pf_9cythonize_17_AccumulationTree_18__getstate__(struct __pyx_obj_9cythonize__AccumulationTree *__pyx_v_self) {
   PyObject *__pyx_v_state = NULL;
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
@@ -9093,14 +9093,14 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("__getstate__", 0);
 
-  /* "accumulation_tree/accumulation_tree.pyx":352
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":352
  * 
  *     def __getstate__(self):
  *         state = _RBTree.__getstate__(self)             # <<<<<<<<<<<<<<
  *         state['mapper'] = self._mapper
  *         state['reducer'] = self._reducer
  */
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_ptype_17accumulation_tree_17accumulation_tree__RBTree), __pyx_n_s_getstate); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 352, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_ptype_9cythonize__RBTree), __pyx_n_s_getstate); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 352, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_t_3 = NULL;
   if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_2))) {
@@ -9120,7 +9120,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
   __pyx_v_state = __pyx_t_1;
   __pyx_t_1 = 0;
 
-  /* "accumulation_tree/accumulation_tree.pyx":353
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":353
  *     def __getstate__(self):
  *         state = _RBTree.__getstate__(self)
  *         state['mapper'] = self._mapper             # <<<<<<<<<<<<<<
@@ -9132,7 +9132,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
   if (unlikely(PyObject_SetItem(__pyx_v_state, __pyx_n_u_mapper, __pyx_t_1) < 0)) __PYX_ERR(0, 353, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "accumulation_tree/accumulation_tree.pyx":354
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":354
  *         state = _RBTree.__getstate__(self)
  *         state['mapper'] = self._mapper
  *         state['reducer'] = self._reducer             # <<<<<<<<<<<<<<
@@ -9144,7 +9144,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
   if (unlikely(PyObject_SetItem(__pyx_v_state, __pyx_n_u_reducer, __pyx_t_1) < 0)) __PYX_ERR(0, 354, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "accumulation_tree/accumulation_tree.pyx":355
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":355
  *         state['mapper'] = self._mapper
  *         state['reducer'] = self._reducer
  *         state['zero'] = self._zero             # <<<<<<<<<<<<<<
@@ -9156,7 +9156,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
   if (unlikely(PyObject_SetItem(__pyx_v_state, __pyx_n_u_zero, __pyx_t_1) < 0)) __PYX_ERR(0, 355, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "accumulation_tree/accumulation_tree.pyx":356
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":356
  *         state['reducer'] = self._reducer
  *         state['zero'] = self._zero
  *         return state             # <<<<<<<<<<<<<<
@@ -9168,7 +9168,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
   __pyx_r = __pyx_v_state;
   goto __pyx_L0;
 
-  /* "accumulation_tree/accumulation_tree.pyx":351
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":351
  *                 x.accumulation = self._mapper(x.value)
  * 
  *     def __getstate__(self):             # <<<<<<<<<<<<<<
@@ -9181,7 +9181,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
   __Pyx_XDECREF(__pyx_t_1);
   __Pyx_XDECREF(__pyx_t_2);
   __Pyx_XDECREF(__pyx_t_3);
-  __Pyx_AddTraceback("accumulation_tree.accumulation_tree._AccumulationTree.__getstate__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("cythonize._AccumulationTree.__getstate__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XDECREF(__pyx_v_state);
@@ -9190,7 +9190,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
   return __pyx_r;
 }
 
-/* "accumulation_tree/accumulation_tree.pyx":358
+/* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":358
  *         return state
  * 
  *     def __setstate__(self, state):             # <<<<<<<<<<<<<<
@@ -9199,19 +9199,19 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_17_AccumulationTree_21__setstate__(PyObject *__pyx_v_self, PyObject *__pyx_v_state); /*proto*/
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_17_AccumulationTree_21__setstate__(PyObject *__pyx_v_self, PyObject *__pyx_v_state) {
+static PyObject *__pyx_pw_9cythonize_17_AccumulationTree_21__setstate__(PyObject *__pyx_v_self, PyObject *__pyx_v_state); /*proto*/
+static PyObject *__pyx_pw_9cythonize_17_AccumulationTree_21__setstate__(PyObject *__pyx_v_self, PyObject *__pyx_v_state) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__setstate__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_17accumulation_tree_17accumulation_tree_17_AccumulationTree_20__setstate__(((struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *)__pyx_v_self), ((PyObject *)__pyx_v_state));
+  __pyx_r = __pyx_pf_9cythonize_17_AccumulationTree_20__setstate__(((struct __pyx_obj_9cythonize__AccumulationTree *)__pyx_v_self), ((PyObject *)__pyx_v_state));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_AccumulationTree_20__setstate__(struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *__pyx_v_self, PyObject *__pyx_v_state) {
+static PyObject *__pyx_pf_9cythonize_17_AccumulationTree_20__setstate__(struct __pyx_obj_9cythonize__AccumulationTree *__pyx_v_self, PyObject *__pyx_v_state) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -9224,7 +9224,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("__setstate__", 0);
 
-  /* "accumulation_tree/accumulation_tree.pyx":359
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":359
  * 
  *     def __setstate__(self, state):
  *         self._dirty_nodes = set()             # <<<<<<<<<<<<<<
@@ -9239,7 +9239,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
   __pyx_v_self->_dirty_nodes = ((PyObject*)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "accumulation_tree/accumulation_tree.pyx":360
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":360
  *     def __setstate__(self, state):
  *         self._dirty_nodes = set()
  *         self._mapper = state.pop('mapper')             # <<<<<<<<<<<<<<
@@ -9269,7 +9269,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
   __pyx_v_self->_mapper = __pyx_t_1;
   __pyx_t_1 = 0;
 
-  /* "accumulation_tree/accumulation_tree.pyx":361
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":361
  *         self._dirty_nodes = set()
  *         self._mapper = state.pop('mapper')
  *         self._reducer = state.pop('reducer')             # <<<<<<<<<<<<<<
@@ -9299,7 +9299,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
   __pyx_v_self->_reducer = __pyx_t_1;
   __pyx_t_1 = 0;
 
-  /* "accumulation_tree/accumulation_tree.pyx":362
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":362
  *         self._mapper = state.pop('mapper')
  *         self._reducer = state.pop('reducer')
  *         self._zero = state.pop('zero')             # <<<<<<<<<<<<<<
@@ -9329,14 +9329,14 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
   __pyx_v_self->_zero = __pyx_t_1;
   __pyx_t_1 = 0;
 
-  /* "accumulation_tree/accumulation_tree.pyx":363
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":363
  *         self._reducer = state.pop('reducer')
  *         self._zero = state.pop('zero')
  *         _RBTree.__setstate__(self, state)             # <<<<<<<<<<<<<<
  * 
  * class AccumulationTree(_AccumulationTree, ABCTree):
  */
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_ptype_17accumulation_tree_17accumulation_tree__RBTree), __pyx_n_s_setstate); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 363, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_ptype_9cythonize__RBTree), __pyx_n_s_setstate); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 363, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_t_3 = NULL;
   __pyx_t_4 = 0;
@@ -9385,7 +9385,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "accumulation_tree/accumulation_tree.pyx":358
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":358
  *         return state
  * 
  *     def __setstate__(self, state):             # <<<<<<<<<<<<<<
@@ -9401,7 +9401,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
   __Pyx_XDECREF(__pyx_t_2);
   __Pyx_XDECREF(__pyx_t_3);
   __Pyx_XDECREF(__pyx_t_5);
-  __Pyx_AddTraceback("accumulation_tree.accumulation_tree._AccumulationTree.__setstate__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("cythonize._AccumulationTree.__setstate__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -9416,19 +9416,19 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_17_AccumulationTree_23__reduce_cython__(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused); /*proto*/
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_17_AccumulationTree_23__reduce_cython__(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused) {
+static PyObject *__pyx_pw_9cythonize_17_AccumulationTree_23__reduce_cython__(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused); /*proto*/
+static PyObject *__pyx_pw_9cythonize_17_AccumulationTree_23__reduce_cython__(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__reduce_cython__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_17accumulation_tree_17accumulation_tree_17_AccumulationTree_22__reduce_cython__(((struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *)__pyx_v_self));
+  __pyx_r = __pyx_pf_9cythonize_17_AccumulationTree_22__reduce_cython__(((struct __pyx_obj_9cythonize__AccumulationTree *)__pyx_v_self));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_AccumulationTree_22__reduce_cython__(struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *__pyx_v_self) {
+static PyObject *__pyx_pf_9cythonize_17_AccumulationTree_22__reduce_cython__(struct __pyx_obj_9cythonize__AccumulationTree *__pyx_v_self) {
   PyObject *__pyx_v_state = 0;
   PyObject *__pyx_v__dict = 0;
   int __pyx_v_use_setstate;
@@ -9682,7 +9682,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
   __Pyx_XDECREF(__pyx_t_1);
   __Pyx_XDECREF(__pyx_t_2);
   __Pyx_XDECREF(__pyx_t_6);
-  __Pyx_AddTraceback("accumulation_tree.accumulation_tree._AccumulationTree.__reduce_cython__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("cythonize._AccumulationTree.__reduce_cython__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XDECREF(__pyx_v_state);
@@ -9700,19 +9700,19 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_17_AccumulationTree_25__setstate_cython__(PyObject *__pyx_v_self, PyObject *__pyx_v___pyx_state); /*proto*/
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_17_AccumulationTree_25__setstate_cython__(PyObject *__pyx_v_self, PyObject *__pyx_v___pyx_state) {
+static PyObject *__pyx_pw_9cythonize_17_AccumulationTree_25__setstate_cython__(PyObject *__pyx_v_self, PyObject *__pyx_v___pyx_state); /*proto*/
+static PyObject *__pyx_pw_9cythonize_17_AccumulationTree_25__setstate_cython__(PyObject *__pyx_v_self, PyObject *__pyx_v___pyx_state) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__setstate_cython__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_17accumulation_tree_17accumulation_tree_17_AccumulationTree_24__setstate_cython__(((struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *)__pyx_v_self), ((PyObject *)__pyx_v___pyx_state));
+  __pyx_r = __pyx_pf_9cythonize_17_AccumulationTree_24__setstate_cython__(((struct __pyx_obj_9cythonize__AccumulationTree *)__pyx_v_self), ((PyObject *)__pyx_v___pyx_state));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_AccumulationTree_24__setstate_cython__(struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *__pyx_v_self, PyObject *__pyx_v___pyx_state) {
+static PyObject *__pyx_pf_9cythonize_17_AccumulationTree_24__setstate_cython__(struct __pyx_obj_9cythonize__AccumulationTree *__pyx_v_self, PyObject *__pyx_v___pyx_state) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -9727,7 +9727,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
  *     __pyx_unpickle__AccumulationTree__set_state(self, __pyx_state)             # <<<<<<<<<<<<<<
  */
   if (!(likely(PyTuple_CheckExact(__pyx_v___pyx_state))||((__pyx_v___pyx_state) == Py_None)||(PyErr_Format(PyExc_TypeError, "Expected %.16s, got %.200s", "tuple", Py_TYPE(__pyx_v___pyx_state)->tp_name), 0))) __PYX_ERR(1, 17, __pyx_L1_error)
-  __pyx_t_1 = __pyx_f_17accumulation_tree_17accumulation_tree___pyx_unpickle__AccumulationTree__set_state(__pyx_v_self, ((PyObject*)__pyx_v___pyx_state)); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 17, __pyx_L1_error)
+  __pyx_t_1 = __pyx_f_9cythonize___pyx_unpickle__AccumulationTree__set_state(__pyx_v_self, ((PyObject*)__pyx_v___pyx_state)); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 17, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
@@ -9743,7 +9743,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
   goto __pyx_L0;
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_1);
-  __Pyx_AddTraceback("accumulation_tree.accumulation_tree._AccumulationTree.__setstate_cython__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("cythonize._AccumulationTree.__setstate_cython__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -9758,9 +9758,9 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_17_Accumulatio
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_1__pyx_unpickle_Node(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static PyMethodDef __pyx_mdef_17accumulation_tree_17accumulation_tree_1__pyx_unpickle_Node = {"__pyx_unpickle_Node", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_17accumulation_tree_17accumulation_tree_1__pyx_unpickle_Node, METH_VARARGS|METH_KEYWORDS, 0};
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_1__pyx_unpickle_Node(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_9cythonize_1__pyx_unpickle_Node(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static PyMethodDef __pyx_mdef_9cythonize_1__pyx_unpickle_Node = {"__pyx_unpickle_Node", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_9cythonize_1__pyx_unpickle_Node, METH_VARARGS|METH_KEYWORDS, 0};
+static PyObject *__pyx_pw_9cythonize_1__pyx_unpickle_Node(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyObject *__pyx_v___pyx_type = 0;
   long __pyx_v___pyx_checksum;
   PyObject *__pyx_v___pyx_state = 0;
@@ -9822,18 +9822,18 @@ static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_1__pyx_unpickl
   __pyx_L5_argtuple_error:;
   __Pyx_RaiseArgtupleInvalid("__pyx_unpickle_Node", 1, 3, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(1, 1, __pyx_L3_error)
   __pyx_L3_error:;
-  __Pyx_AddTraceback("accumulation_tree.accumulation_tree.__pyx_unpickle_Node", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("cythonize.__pyx_unpickle_Node", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_17accumulation_tree_17accumulation_tree___pyx_unpickle_Node(__pyx_self, __pyx_v___pyx_type, __pyx_v___pyx_checksum, __pyx_v___pyx_state);
+  __pyx_r = __pyx_pf_9cythonize___pyx_unpickle_Node(__pyx_self, __pyx_v___pyx_type, __pyx_v___pyx_checksum, __pyx_v___pyx_state);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree___pyx_unpickle_Node(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v___pyx_type, long __pyx_v___pyx_checksum, PyObject *__pyx_v___pyx_state) {
+static PyObject *__pyx_pf_9cythonize___pyx_unpickle_Node(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v___pyx_type, long __pyx_v___pyx_checksum, PyObject *__pyx_v___pyx_state) {
   PyObject *__pyx_v___pyx_PickleError = 0;
   PyObject *__pyx_v___pyx_result = 0;
   PyObject *__pyx_r = NULL;
@@ -9930,7 +9930,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree___pyx_unpickle
  *     if __pyx_state is not None:
  *         __pyx_unpickle_Node__set_state(<Node> __pyx_result, __pyx_state)
  */
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_ptype_17accumulation_tree_17accumulation_tree_Node), __pyx_n_s_new); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 7, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_ptype_9cythonize_Node), __pyx_n_s_new); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 7, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_t_4 = NULL;
   if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_2))) {
@@ -9969,7 +9969,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree___pyx_unpickle
  * cdef __pyx_unpickle_Node__set_state(Node __pyx_result, tuple __pyx_state):
  */
     if (!(likely(PyTuple_CheckExact(__pyx_v___pyx_state))||((__pyx_v___pyx_state) == Py_None)||(PyErr_Format(PyExc_TypeError, "Expected %.16s, got %.200s", "tuple", Py_TYPE(__pyx_v___pyx_state)->tp_name), 0))) __PYX_ERR(1, 9, __pyx_L1_error)
-    __pyx_t_3 = __pyx_f_17accumulation_tree_17accumulation_tree___pyx_unpickle_Node__set_state(((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_v___pyx_result), ((PyObject*)__pyx_v___pyx_state)); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 9, __pyx_L1_error)
+    __pyx_t_3 = __pyx_f_9cythonize___pyx_unpickle_Node__set_state(((struct __pyx_obj_9cythonize_Node *)__pyx_v___pyx_result), ((PyObject*)__pyx_v___pyx_state)); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 9, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
@@ -10006,7 +10006,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree___pyx_unpickle
   __Pyx_XDECREF(__pyx_t_3);
   __Pyx_XDECREF(__pyx_t_4);
   __Pyx_XDECREF(__pyx_t_5);
-  __Pyx_AddTraceback("accumulation_tree.accumulation_tree.__pyx_unpickle_Node", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("cythonize.__pyx_unpickle_Node", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XDECREF(__pyx_v___pyx_PickleError);
@@ -10024,7 +10024,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree___pyx_unpickle
  *     if len(__pyx_state) > 6 and hasattr(__pyx_result, '__dict__'):
  */
 
-static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree___pyx_unpickle_Node__set_state(struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *__pyx_v___pyx_result, PyObject *__pyx_v___pyx_state) {
+static PyObject *__pyx_f_9cythonize___pyx_unpickle_Node__set_state(struct __pyx_obj_9cythonize_Node *__pyx_v___pyx_result, PyObject *__pyx_v___pyx_state) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -10076,11 +10076,11 @@ static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree___pyx_unpickle_
   }
   __pyx_t_1 = __Pyx_GetItemInt_Tuple(__pyx_v___pyx_state, 2, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 12, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  if (!(likely(((__pyx_t_1) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_1, __pyx_ptype_17accumulation_tree_17accumulation_tree_Node))))) __PYX_ERR(1, 12, __pyx_L1_error)
+  if (!(likely(((__pyx_t_1) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_1, __pyx_ptype_9cythonize_Node))))) __PYX_ERR(1, 12, __pyx_L1_error)
   __Pyx_GIVEREF(__pyx_t_1);
   __Pyx_GOTREF(__pyx_v___pyx_result->left);
   __Pyx_DECREF(((PyObject *)__pyx_v___pyx_result->left));
-  __pyx_v___pyx_result->left = ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_t_1);
+  __pyx_v___pyx_result->left = ((struct __pyx_obj_9cythonize_Node *)__pyx_t_1);
   __pyx_t_1 = 0;
   if (unlikely(__pyx_v___pyx_state == Py_None)) {
     PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
@@ -10097,11 +10097,11 @@ static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree___pyx_unpickle_
   }
   __pyx_t_1 = __Pyx_GetItemInt_Tuple(__pyx_v___pyx_state, 4, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 12, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  if (!(likely(((__pyx_t_1) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_1, __pyx_ptype_17accumulation_tree_17accumulation_tree_Node))))) __PYX_ERR(1, 12, __pyx_L1_error)
+  if (!(likely(((__pyx_t_1) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_1, __pyx_ptype_9cythonize_Node))))) __PYX_ERR(1, 12, __pyx_L1_error)
   __Pyx_GIVEREF(__pyx_t_1);
   __Pyx_GOTREF(__pyx_v___pyx_result->right);
   __Pyx_DECREF(((PyObject *)__pyx_v___pyx_result->right));
-  __pyx_v___pyx_result->right = ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_t_1);
+  __pyx_v___pyx_result->right = ((struct __pyx_obj_9cythonize_Node *)__pyx_t_1);
   __pyx_t_1 = 0;
   if (unlikely(__pyx_v___pyx_state == Py_None)) {
     PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
@@ -10196,7 +10196,7 @@ static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree___pyx_unpickle_
   __Pyx_XDECREF(__pyx_t_7);
   __Pyx_XDECREF(__pyx_t_8);
   __Pyx_XDECREF(__pyx_t_9);
-  __Pyx_AddTraceback("accumulation_tree.accumulation_tree.__pyx_unpickle_Node__set_state", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("cythonize.__pyx_unpickle_Node__set_state", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = 0;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -10211,9 +10211,9 @@ static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree___pyx_unpickle_
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_3__pyx_unpickle_NullKey(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static PyMethodDef __pyx_mdef_17accumulation_tree_17accumulation_tree_3__pyx_unpickle_NullKey = {"__pyx_unpickle_NullKey", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_17accumulation_tree_17accumulation_tree_3__pyx_unpickle_NullKey, METH_VARARGS|METH_KEYWORDS, 0};
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_3__pyx_unpickle_NullKey(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_9cythonize_3__pyx_unpickle_NullKey(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static PyMethodDef __pyx_mdef_9cythonize_3__pyx_unpickle_NullKey = {"__pyx_unpickle_NullKey", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_9cythonize_3__pyx_unpickle_NullKey, METH_VARARGS|METH_KEYWORDS, 0};
+static PyObject *__pyx_pw_9cythonize_3__pyx_unpickle_NullKey(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyObject *__pyx_v___pyx_type = 0;
   long __pyx_v___pyx_checksum;
   PyObject *__pyx_v___pyx_state = 0;
@@ -10275,18 +10275,18 @@ static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_3__pyx_unpickl
   __pyx_L5_argtuple_error:;
   __Pyx_RaiseArgtupleInvalid("__pyx_unpickle_NullKey", 1, 3, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(1, 1, __pyx_L3_error)
   __pyx_L3_error:;
-  __Pyx_AddTraceback("accumulation_tree.accumulation_tree.__pyx_unpickle_NullKey", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("cythonize.__pyx_unpickle_NullKey", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_17accumulation_tree_17accumulation_tree_2__pyx_unpickle_NullKey(__pyx_self, __pyx_v___pyx_type, __pyx_v___pyx_checksum, __pyx_v___pyx_state);
+  __pyx_r = __pyx_pf_9cythonize_2__pyx_unpickle_NullKey(__pyx_self, __pyx_v___pyx_type, __pyx_v___pyx_checksum, __pyx_v___pyx_state);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_2__pyx_unpickle_NullKey(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v___pyx_type, long __pyx_v___pyx_checksum, PyObject *__pyx_v___pyx_state) {
+static PyObject *__pyx_pf_9cythonize_2__pyx_unpickle_NullKey(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v___pyx_type, long __pyx_v___pyx_checksum, PyObject *__pyx_v___pyx_state) {
   PyObject *__pyx_v___pyx_PickleError = 0;
   PyObject *__pyx_v___pyx_result = 0;
   PyObject *__pyx_r = NULL;
@@ -10383,7 +10383,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_2__pyx_unpickl
  *     if __pyx_state is not None:
  *         __pyx_unpickle_NullKey__set_state(<NullKey> __pyx_result, __pyx_state)
  */
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_ptype_17accumulation_tree_17accumulation_tree_NullKey), __pyx_n_s_new); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 7, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_ptype_9cythonize_NullKey), __pyx_n_s_new); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 7, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_t_4 = NULL;
   if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_2))) {
@@ -10422,7 +10422,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_2__pyx_unpickl
  * cdef __pyx_unpickle_NullKey__set_state(NullKey __pyx_result, tuple __pyx_state):
  */
     if (!(likely(PyTuple_CheckExact(__pyx_v___pyx_state))||((__pyx_v___pyx_state) == Py_None)||(PyErr_Format(PyExc_TypeError, "Expected %.16s, got %.200s", "tuple", Py_TYPE(__pyx_v___pyx_state)->tp_name), 0))) __PYX_ERR(1, 9, __pyx_L1_error)
-    __pyx_t_3 = __pyx_f_17accumulation_tree_17accumulation_tree___pyx_unpickle_NullKey__set_state(((struct __pyx_obj_17accumulation_tree_17accumulation_tree_NullKey *)__pyx_v___pyx_result), ((PyObject*)__pyx_v___pyx_state)); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 9, __pyx_L1_error)
+    __pyx_t_3 = __pyx_f_9cythonize___pyx_unpickle_NullKey__set_state(((struct __pyx_obj_9cythonize_NullKey *)__pyx_v___pyx_result), ((PyObject*)__pyx_v___pyx_state)); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 9, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
@@ -10459,7 +10459,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_2__pyx_unpickl
   __Pyx_XDECREF(__pyx_t_3);
   __Pyx_XDECREF(__pyx_t_4);
   __Pyx_XDECREF(__pyx_t_5);
-  __Pyx_AddTraceback("accumulation_tree.accumulation_tree.__pyx_unpickle_NullKey", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("cythonize.__pyx_unpickle_NullKey", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XDECREF(__pyx_v___pyx_PickleError);
@@ -10477,7 +10477,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_2__pyx_unpickl
  *         __pyx_result.__dict__.update(__pyx_state[0])
  */
 
-static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree___pyx_unpickle_NullKey__set_state(struct __pyx_obj_17accumulation_tree_17accumulation_tree_NullKey *__pyx_v___pyx_result, PyObject *__pyx_v___pyx_state) {
+static PyObject *__pyx_f_9cythonize___pyx_unpickle_NullKey__set_state(struct __pyx_obj_9cythonize_NullKey *__pyx_v___pyx_result, PyObject *__pyx_v___pyx_state) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
@@ -10574,7 +10574,7 @@ static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree___pyx_unpickle_
   __Pyx_XDECREF(__pyx_t_6);
   __Pyx_XDECREF(__pyx_t_7);
   __Pyx_XDECREF(__pyx_t_8);
-  __Pyx_AddTraceback("accumulation_tree.accumulation_tree.__pyx_unpickle_NullKey__set_state", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("cythonize.__pyx_unpickle_NullKey__set_state", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = 0;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -10589,9 +10589,9 @@ static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree___pyx_unpickle_
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_5__pyx_unpickle__RBTree(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static PyMethodDef __pyx_mdef_17accumulation_tree_17accumulation_tree_5__pyx_unpickle__RBTree = {"__pyx_unpickle__RBTree", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_17accumulation_tree_17accumulation_tree_5__pyx_unpickle__RBTree, METH_VARARGS|METH_KEYWORDS, 0};
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_5__pyx_unpickle__RBTree(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_9cythonize_5__pyx_unpickle__RBTree(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static PyMethodDef __pyx_mdef_9cythonize_5__pyx_unpickle__RBTree = {"__pyx_unpickle__RBTree", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_9cythonize_5__pyx_unpickle__RBTree, METH_VARARGS|METH_KEYWORDS, 0};
+static PyObject *__pyx_pw_9cythonize_5__pyx_unpickle__RBTree(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyObject *__pyx_v___pyx_type = 0;
   long __pyx_v___pyx_checksum;
   PyObject *__pyx_v___pyx_state = 0;
@@ -10653,18 +10653,18 @@ static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_5__pyx_unpickl
   __pyx_L5_argtuple_error:;
   __Pyx_RaiseArgtupleInvalid("__pyx_unpickle__RBTree", 1, 3, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(1, 1, __pyx_L3_error)
   __pyx_L3_error:;
-  __Pyx_AddTraceback("accumulation_tree.accumulation_tree.__pyx_unpickle__RBTree", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("cythonize.__pyx_unpickle__RBTree", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_17accumulation_tree_17accumulation_tree_4__pyx_unpickle__RBTree(__pyx_self, __pyx_v___pyx_type, __pyx_v___pyx_checksum, __pyx_v___pyx_state);
+  __pyx_r = __pyx_pf_9cythonize_4__pyx_unpickle__RBTree(__pyx_self, __pyx_v___pyx_type, __pyx_v___pyx_checksum, __pyx_v___pyx_state);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_4__pyx_unpickle__RBTree(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v___pyx_type, long __pyx_v___pyx_checksum, PyObject *__pyx_v___pyx_state) {
+static PyObject *__pyx_pf_9cythonize_4__pyx_unpickle__RBTree(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v___pyx_type, long __pyx_v___pyx_checksum, PyObject *__pyx_v___pyx_state) {
   PyObject *__pyx_v___pyx_PickleError = 0;
   PyObject *__pyx_v___pyx_result = 0;
   PyObject *__pyx_r = NULL;
@@ -10761,7 +10761,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_4__pyx_unpickl
  *     if __pyx_state is not None:
  *         __pyx_unpickle__RBTree__set_state(<_RBTree> __pyx_result, __pyx_state)
  */
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_ptype_17accumulation_tree_17accumulation_tree__RBTree), __pyx_n_s_new); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 7, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_ptype_9cythonize__RBTree), __pyx_n_s_new); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 7, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_t_4 = NULL;
   if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_2))) {
@@ -10800,7 +10800,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_4__pyx_unpickl
  * cdef __pyx_unpickle__RBTree__set_state(_RBTree __pyx_result, tuple __pyx_state):
  */
     if (!(likely(PyTuple_CheckExact(__pyx_v___pyx_state))||((__pyx_v___pyx_state) == Py_None)||(PyErr_Format(PyExc_TypeError, "Expected %.16s, got %.200s", "tuple", Py_TYPE(__pyx_v___pyx_state)->tp_name), 0))) __PYX_ERR(1, 9, __pyx_L1_error)
-    __pyx_t_3 = __pyx_f_17accumulation_tree_17accumulation_tree___pyx_unpickle__RBTree__set_state(((struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree *)__pyx_v___pyx_result), ((PyObject*)__pyx_v___pyx_state)); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 9, __pyx_L1_error)
+    __pyx_t_3 = __pyx_f_9cythonize___pyx_unpickle__RBTree__set_state(((struct __pyx_obj_9cythonize__RBTree *)__pyx_v___pyx_result), ((PyObject*)__pyx_v___pyx_state)); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 9, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
@@ -10837,7 +10837,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_4__pyx_unpickl
   __Pyx_XDECREF(__pyx_t_3);
   __Pyx_XDECREF(__pyx_t_4);
   __Pyx_XDECREF(__pyx_t_5);
-  __Pyx_AddTraceback("accumulation_tree.accumulation_tree.__pyx_unpickle__RBTree", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("cythonize.__pyx_unpickle__RBTree", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XDECREF(__pyx_v___pyx_PickleError);
@@ -10855,7 +10855,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_4__pyx_unpickl
  *     if len(__pyx_state) > 2 and hasattr(__pyx_result, '__dict__'):
  */
 
-static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree___pyx_unpickle__RBTree__set_state(struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree *__pyx_v___pyx_result, PyObject *__pyx_v___pyx_state) {
+static PyObject *__pyx_f_9cythonize___pyx_unpickle__RBTree__set_state(struct __pyx_obj_9cythonize__RBTree *__pyx_v___pyx_result, PyObject *__pyx_v___pyx_state) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -10894,11 +10894,11 @@ static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree___pyx_unpickle_
   }
   __pyx_t_1 = __Pyx_GetItemInt_Tuple(__pyx_v___pyx_state, 1, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 12, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  if (!(likely(((__pyx_t_1) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_1, __pyx_ptype_17accumulation_tree_17accumulation_tree_Node))))) __PYX_ERR(1, 12, __pyx_L1_error)
+  if (!(likely(((__pyx_t_1) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_1, __pyx_ptype_9cythonize_Node))))) __PYX_ERR(1, 12, __pyx_L1_error)
   __Pyx_GIVEREF(__pyx_t_1);
   __Pyx_GOTREF(__pyx_v___pyx_result->_root);
   __Pyx_DECREF(((PyObject *)__pyx_v___pyx_result->_root));
-  __pyx_v___pyx_result->_root = ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_t_1);
+  __pyx_v___pyx_result->_root = ((struct __pyx_obj_9cythonize_Node *)__pyx_t_1);
   __pyx_t_1 = 0;
 
   /* "(tree fragment)":13
@@ -10982,7 +10982,7 @@ static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree___pyx_unpickle_
   __Pyx_XDECREF(__pyx_t_7);
   __Pyx_XDECREF(__pyx_t_8);
   __Pyx_XDECREF(__pyx_t_9);
-  __Pyx_AddTraceback("accumulation_tree.accumulation_tree.__pyx_unpickle__RBTree__set_state", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("cythonize.__pyx_unpickle__RBTree__set_state", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = 0;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -10997,9 +10997,9 @@ static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree___pyx_unpickle_
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_7__pyx_unpickle__AccumulationTree(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static PyMethodDef __pyx_mdef_17accumulation_tree_17accumulation_tree_7__pyx_unpickle__AccumulationTree = {"__pyx_unpickle__AccumulationTree", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_17accumulation_tree_17accumulation_tree_7__pyx_unpickle__AccumulationTree, METH_VARARGS|METH_KEYWORDS, 0};
-static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_7__pyx_unpickle__AccumulationTree(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_9cythonize_7__pyx_unpickle__AccumulationTree(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static PyMethodDef __pyx_mdef_9cythonize_7__pyx_unpickle__AccumulationTree = {"__pyx_unpickle__AccumulationTree", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_9cythonize_7__pyx_unpickle__AccumulationTree, METH_VARARGS|METH_KEYWORDS, 0};
+static PyObject *__pyx_pw_9cythonize_7__pyx_unpickle__AccumulationTree(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyObject *__pyx_v___pyx_type = 0;
   long __pyx_v___pyx_checksum;
   PyObject *__pyx_v___pyx_state = 0;
@@ -11061,18 +11061,18 @@ static PyObject *__pyx_pw_17accumulation_tree_17accumulation_tree_7__pyx_unpickl
   __pyx_L5_argtuple_error:;
   __Pyx_RaiseArgtupleInvalid("__pyx_unpickle__AccumulationTree", 1, 3, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(1, 1, __pyx_L3_error)
   __pyx_L3_error:;
-  __Pyx_AddTraceback("accumulation_tree.accumulation_tree.__pyx_unpickle__AccumulationTree", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("cythonize.__pyx_unpickle__AccumulationTree", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_17accumulation_tree_17accumulation_tree_6__pyx_unpickle__AccumulationTree(__pyx_self, __pyx_v___pyx_type, __pyx_v___pyx_checksum, __pyx_v___pyx_state);
+  __pyx_r = __pyx_pf_9cythonize_6__pyx_unpickle__AccumulationTree(__pyx_self, __pyx_v___pyx_type, __pyx_v___pyx_checksum, __pyx_v___pyx_state);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_6__pyx_unpickle__AccumulationTree(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v___pyx_type, long __pyx_v___pyx_checksum, PyObject *__pyx_v___pyx_state) {
+static PyObject *__pyx_pf_9cythonize_6__pyx_unpickle__AccumulationTree(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v___pyx_type, long __pyx_v___pyx_checksum, PyObject *__pyx_v___pyx_state) {
   PyObject *__pyx_v___pyx_PickleError = 0;
   PyObject *__pyx_v___pyx_result = 0;
   PyObject *__pyx_r = NULL;
@@ -11169,7 +11169,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_6__pyx_unpickl
  *     if __pyx_state is not None:
  *         __pyx_unpickle__AccumulationTree__set_state(<_AccumulationTree> __pyx_result, __pyx_state)
  */
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_ptype_17accumulation_tree_17accumulation_tree__AccumulationTree), __pyx_n_s_new); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 7, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_ptype_9cythonize__AccumulationTree), __pyx_n_s_new); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 7, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_t_4 = NULL;
   if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_2))) {
@@ -11208,7 +11208,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_6__pyx_unpickl
  * cdef __pyx_unpickle__AccumulationTree__set_state(_AccumulationTree __pyx_result, tuple __pyx_state):
  */
     if (!(likely(PyTuple_CheckExact(__pyx_v___pyx_state))||((__pyx_v___pyx_state) == Py_None)||(PyErr_Format(PyExc_TypeError, "Expected %.16s, got %.200s", "tuple", Py_TYPE(__pyx_v___pyx_state)->tp_name), 0))) __PYX_ERR(1, 9, __pyx_L1_error)
-    __pyx_t_3 = __pyx_f_17accumulation_tree_17accumulation_tree___pyx_unpickle__AccumulationTree__set_state(((struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *)__pyx_v___pyx_result), ((PyObject*)__pyx_v___pyx_state)); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 9, __pyx_L1_error)
+    __pyx_t_3 = __pyx_f_9cythonize___pyx_unpickle__AccumulationTree__set_state(((struct __pyx_obj_9cythonize__AccumulationTree *)__pyx_v___pyx_result), ((PyObject*)__pyx_v___pyx_state)); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 9, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
@@ -11245,7 +11245,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_6__pyx_unpickl
   __Pyx_XDECREF(__pyx_t_3);
   __Pyx_XDECREF(__pyx_t_4);
   __Pyx_XDECREF(__pyx_t_5);
-  __Pyx_AddTraceback("accumulation_tree.accumulation_tree.__pyx_unpickle__AccumulationTree", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("cythonize.__pyx_unpickle__AccumulationTree", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XDECREF(__pyx_v___pyx_PickleError);
@@ -11263,7 +11263,7 @@ static PyObject *__pyx_pf_17accumulation_tree_17accumulation_tree_6__pyx_unpickl
  *     if len(__pyx_state) > 6 and hasattr(__pyx_result, '__dict__'):
  */
 
-static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree___pyx_unpickle__AccumulationTree__set_state(struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *__pyx_v___pyx_result, PyObject *__pyx_v___pyx_state) {
+static PyObject *__pyx_f_9cythonize___pyx_unpickle__AccumulationTree__set_state(struct __pyx_obj_9cythonize__AccumulationTree *__pyx_v___pyx_result, PyObject *__pyx_v___pyx_state) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -11336,11 +11336,11 @@ static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree___pyx_unpickle_
   }
   __pyx_t_1 = __Pyx_GetItemInt_Tuple(__pyx_v___pyx_state, 4, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 12, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  if (!(likely(((__pyx_t_1) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_1, __pyx_ptype_17accumulation_tree_17accumulation_tree_Node))))) __PYX_ERR(1, 12, __pyx_L1_error)
+  if (!(likely(((__pyx_t_1) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_1, __pyx_ptype_9cythonize_Node))))) __PYX_ERR(1, 12, __pyx_L1_error)
   __Pyx_GIVEREF(__pyx_t_1);
   __Pyx_GOTREF(__pyx_v___pyx_result->__pyx_base._root);
   __Pyx_DECREF(((PyObject *)__pyx_v___pyx_result->__pyx_base._root));
-  __pyx_v___pyx_result->__pyx_base._root = ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)__pyx_t_1);
+  __pyx_v___pyx_result->__pyx_base._root = ((struct __pyx_obj_9cythonize_Node *)__pyx_t_1);
   __pyx_t_1 = 0;
   if (unlikely(__pyx_v___pyx_state == Py_None)) {
     PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
@@ -11435,17 +11435,17 @@ static PyObject *__pyx_f_17accumulation_tree_17accumulation_tree___pyx_unpickle_
   __Pyx_XDECREF(__pyx_t_7);
   __Pyx_XDECREF(__pyx_t_8);
   __Pyx_XDECREF(__pyx_t_9);
-  __Pyx_AddTraceback("accumulation_tree.accumulation_tree.__pyx_unpickle__AccumulationTree__set_state", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("cythonize.__pyx_unpickle__AccumulationTree__set_state", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = 0;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
-static struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree_Node __pyx_vtable_17accumulation_tree_17accumulation_tree_Node;
+static struct __pyx_vtabstruct_9cythonize_Node __pyx_vtable_9cythonize_Node;
 
-static PyObject *__pyx_tp_new_17accumulation_tree_17accumulation_tree_Node(PyTypeObject *t, CYTHON_UNUSED PyObject *a, CYTHON_UNUSED PyObject *k) {
-  struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *p;
+static PyObject *__pyx_tp_new_9cythonize_Node(PyTypeObject *t, CYTHON_UNUSED PyObject *a, CYTHON_UNUSED PyObject *k) {
+  struct __pyx_obj_9cythonize_Node *p;
   PyObject *o;
   if (likely((t->tp_flags & Py_TPFLAGS_IS_ABSTRACT) == 0)) {
     o = (*t->tp_alloc)(t, 0);
@@ -11453,18 +11453,18 @@ static PyObject *__pyx_tp_new_17accumulation_tree_17accumulation_tree_Node(PyTyp
     o = (PyObject *) PyBaseObject_Type.tp_new(t, __pyx_empty_tuple, 0);
   }
   if (unlikely(!o)) return 0;
-  p = ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)o);
-  p->__pyx_vtab = __pyx_vtabptr_17accumulation_tree_17accumulation_tree_Node;
+  p = ((struct __pyx_obj_9cythonize_Node *)o);
+  p->__pyx_vtab = __pyx_vtabptr_9cythonize_Node;
   p->key = Py_None; Py_INCREF(Py_None);
   p->value = Py_None; Py_INCREF(Py_None);
-  p->left = ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)Py_None); Py_INCREF(Py_None);
-  p->right = ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)Py_None); Py_INCREF(Py_None);
+  p->left = ((struct __pyx_obj_9cythonize_Node *)Py_None); Py_INCREF(Py_None);
+  p->right = ((struct __pyx_obj_9cythonize_Node *)Py_None); Py_INCREF(Py_None);
   p->accumulation = Py_None; Py_INCREF(Py_None);
   return o;
 }
 
-static void __pyx_tp_dealloc_17accumulation_tree_17accumulation_tree_Node(PyObject *o) {
-  struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *p = (struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)o;
+static void __pyx_tp_dealloc_9cythonize_Node(PyObject *o) {
+  struct __pyx_obj_9cythonize_Node *p = (struct __pyx_obj_9cythonize_Node *)o;
   #if CYTHON_USE_TP_FINALIZE
   if (unlikely(PyType_HasFeature(Py_TYPE(o), Py_TPFLAGS_HAVE_FINALIZE) && Py_TYPE(o)->tp_finalize) && !_PyGC_FINALIZED(o)) {
     if (PyObject_CallFinalizerFromDealloc(o)) return;
@@ -11479,9 +11479,9 @@ static void __pyx_tp_dealloc_17accumulation_tree_17accumulation_tree_Node(PyObje
   (*Py_TYPE(o)->tp_free)(o);
 }
 
-static int __pyx_tp_traverse_17accumulation_tree_17accumulation_tree_Node(PyObject *o, visitproc v, void *a) {
+static int __pyx_tp_traverse_9cythonize_Node(PyObject *o, visitproc v, void *a) {
   int e;
-  struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *p = (struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)o;
+  struct __pyx_obj_9cythonize_Node *p = (struct __pyx_obj_9cythonize_Node *)o;
   if (p->key) {
     e = (*v)(p->key, a); if (e) return e;
   }
@@ -11500,9 +11500,9 @@ static int __pyx_tp_traverse_17accumulation_tree_17accumulation_tree_Node(PyObje
   return 0;
 }
 
-static int __pyx_tp_clear_17accumulation_tree_17accumulation_tree_Node(PyObject *o) {
+static int __pyx_tp_clear_9cythonize_Node(PyObject *o) {
   PyObject* tmp;
-  struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *p = (struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)o;
+  struct __pyx_obj_9cythonize_Node *p = (struct __pyx_obj_9cythonize_Node *)o;
   tmp = ((PyObject*)p->key);
   p->key = Py_None; Py_INCREF(Py_None);
   Py_XDECREF(tmp);
@@ -11510,17 +11510,17 @@ static int __pyx_tp_clear_17accumulation_tree_17accumulation_tree_Node(PyObject 
   p->value = Py_None; Py_INCREF(Py_None);
   Py_XDECREF(tmp);
   tmp = ((PyObject*)p->left);
-  p->left = ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)Py_None); Py_INCREF(Py_None);
+  p->left = ((struct __pyx_obj_9cythonize_Node *)Py_None); Py_INCREF(Py_None);
   Py_XDECREF(tmp);
   tmp = ((PyObject*)p->right);
-  p->right = ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)Py_None); Py_INCREF(Py_None);
+  p->right = ((struct __pyx_obj_9cythonize_Node *)Py_None); Py_INCREF(Py_None);
   Py_XDECREF(tmp);
   tmp = ((PyObject*)p->accumulation);
   p->accumulation = Py_None; Py_INCREF(Py_None);
   Py_XDECREF(tmp);
   return 0;
 }
-static PyObject *__pyx_sq_item_17accumulation_tree_17accumulation_tree_Node(PyObject *o, Py_ssize_t i) {
+static PyObject *__pyx_sq_item_9cythonize_Node(PyObject *o, Py_ssize_t i) {
   PyObject *r;
   PyObject *x = PyInt_FromSsize_t(i); if(!x) return 0;
   r = Py_TYPE(o)->tp_as_mapping->mp_subscript(o, x);
@@ -11528,9 +11528,9 @@ static PyObject *__pyx_sq_item_17accumulation_tree_17accumulation_tree_Node(PyOb
   return r;
 }
 
-static int __pyx_mp_ass_subscript_17accumulation_tree_17accumulation_tree_Node(PyObject *o, PyObject *i, PyObject *v) {
+static int __pyx_mp_ass_subscript_9cythonize_Node(PyObject *o, PyObject *i, PyObject *v) {
   if (v) {
-    return __pyx_pw_17accumulation_tree_17accumulation_tree_4Node_7__setitem__(o, i, v);
+    return __pyx_pw_9cythonize_4Node_7__setitem__(o, i, v);
   }
   else {
     PyErr_Format(PyExc_NotImplementedError,
@@ -11539,34 +11539,34 @@ static int __pyx_mp_ass_subscript_17accumulation_tree_17accumulation_tree_Node(P
   }
 }
 
-static PyObject *__pyx_getprop_17accumulation_tree_17accumulation_tree_4Node_key(PyObject *o, CYTHON_UNUSED void *x) {
-  return __pyx_pw_17accumulation_tree_17accumulation_tree_4Node_3key_1__get__(o);
+static PyObject *__pyx_getprop_9cythonize_4Node_key(PyObject *o, CYTHON_UNUSED void *x) {
+  return __pyx_pw_9cythonize_4Node_3key_1__get__(o);
 }
 
-static PyObject *__pyx_getprop_17accumulation_tree_17accumulation_tree_4Node_value(PyObject *o, CYTHON_UNUSED void *x) {
-  return __pyx_pw_17accumulation_tree_17accumulation_tree_4Node_5value_1__get__(o);
+static PyObject *__pyx_getprop_9cythonize_4Node_value(PyObject *o, CYTHON_UNUSED void *x) {
+  return __pyx_pw_9cythonize_4Node_5value_1__get__(o);
 }
 
-static PyObject *__pyx_getprop_17accumulation_tree_17accumulation_tree_4Node_left(PyObject *o, CYTHON_UNUSED void *x) {
-  return __pyx_pw_17accumulation_tree_17accumulation_tree_4Node_4left_1__get__(o);
+static PyObject *__pyx_getprop_9cythonize_4Node_left(PyObject *o, CYTHON_UNUSED void *x) {
+  return __pyx_pw_9cythonize_4Node_4left_1__get__(o);
 }
 
-static PyObject *__pyx_getprop_17accumulation_tree_17accumulation_tree_4Node_right(PyObject *o, CYTHON_UNUSED void *x) {
-  return __pyx_pw_17accumulation_tree_17accumulation_tree_4Node_5right_1__get__(o);
+static PyObject *__pyx_getprop_9cythonize_4Node_right(PyObject *o, CYTHON_UNUSED void *x) {
+  return __pyx_pw_9cythonize_4Node_5right_1__get__(o);
 }
 
-static PyMethodDef __pyx_methods_17accumulation_tree_17accumulation_tree_Node[] = {
-  {"free", (PyCFunction)__pyx_pw_17accumulation_tree_17accumulation_tree_4Node_3free, METH_NOARGS, 0},
-  {"__reduce_cython__", (PyCFunction)__pyx_pw_17accumulation_tree_17accumulation_tree_4Node_9__reduce_cython__, METH_NOARGS, 0},
-  {"__setstate_cython__", (PyCFunction)__pyx_pw_17accumulation_tree_17accumulation_tree_4Node_11__setstate_cython__, METH_O, 0},
+static PyMethodDef __pyx_methods_9cythonize_Node[] = {
+  {"free", (PyCFunction)__pyx_pw_9cythonize_4Node_3free, METH_NOARGS, 0},
+  {"__reduce_cython__", (PyCFunction)__pyx_pw_9cythonize_4Node_9__reduce_cython__, METH_NOARGS, 0},
+  {"__setstate_cython__", (PyCFunction)__pyx_pw_9cythonize_4Node_11__setstate_cython__, METH_O, 0},
   {0, 0, 0, 0}
 };
 
-static struct PyGetSetDef __pyx_getsets_17accumulation_tree_17accumulation_tree_Node[] = {
-  {(char *)"key", __pyx_getprop_17accumulation_tree_17accumulation_tree_4Node_key, 0, (char *)0, 0},
-  {(char *)"value", __pyx_getprop_17accumulation_tree_17accumulation_tree_4Node_value, 0, (char *)0, 0},
-  {(char *)"left", __pyx_getprop_17accumulation_tree_17accumulation_tree_4Node_left, 0, (char *)0, 0},
-  {(char *)"right", __pyx_getprop_17accumulation_tree_17accumulation_tree_4Node_right, 0, (char *)0, 0},
+static struct PyGetSetDef __pyx_getsets_9cythonize_Node[] = {
+  {(char *)"key", __pyx_getprop_9cythonize_4Node_key, 0, (char *)0, 0},
+  {(char *)"value", __pyx_getprop_9cythonize_4Node_value, 0, (char *)0, 0},
+  {(char *)"left", __pyx_getprop_9cythonize_4Node_left, 0, (char *)0, 0},
+  {(char *)"right", __pyx_getprop_9cythonize_4Node_right, 0, (char *)0, 0},
   {0, 0, 0, 0, 0}
 };
 
@@ -11574,7 +11574,7 @@ static PySequenceMethods __pyx_tp_as_sequence_Node = {
   0, /*sq_length*/
   0, /*sq_concat*/
   0, /*sq_repeat*/
-  __pyx_sq_item_17accumulation_tree_17accumulation_tree_Node, /*sq_item*/
+  __pyx_sq_item_9cythonize_Node, /*sq_item*/
   0, /*sq_slice*/
   0, /*sq_ass_item*/
   0, /*sq_ass_slice*/
@@ -11585,16 +11585,16 @@ static PySequenceMethods __pyx_tp_as_sequence_Node = {
 
 static PyMappingMethods __pyx_tp_as_mapping_Node = {
   0, /*mp_length*/
-  __pyx_pw_17accumulation_tree_17accumulation_tree_4Node_5__getitem__, /*mp_subscript*/
-  __pyx_mp_ass_subscript_17accumulation_tree_17accumulation_tree_Node, /*mp_ass_subscript*/
+  __pyx_pw_9cythonize_4Node_5__getitem__, /*mp_subscript*/
+  __pyx_mp_ass_subscript_9cythonize_Node, /*mp_ass_subscript*/
 };
 
-static PyTypeObject __pyx_type_17accumulation_tree_17accumulation_tree_Node = {
+static PyTypeObject __pyx_type_9cythonize_Node = {
   PyVarObject_HEAD_INIT(0, 0)
-  "accumulation_tree.accumulation_tree.Node", /*tp_name*/
-  sizeof(struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node), /*tp_basicsize*/
+  "cythonize.Node", /*tp_name*/
+  sizeof(struct __pyx_obj_9cythonize_Node), /*tp_basicsize*/
   0, /*tp_itemsize*/
-  __pyx_tp_dealloc_17accumulation_tree_17accumulation_tree_Node, /*tp_dealloc*/
+  __pyx_tp_dealloc_9cythonize_Node, /*tp_dealloc*/
   #if PY_VERSION_HEX < 0x030800b4
   0, /*tp_print*/
   #endif
@@ -11621,23 +11621,23 @@ static PyTypeObject __pyx_type_17accumulation_tree_17accumulation_tree_Node = {
   0, /*tp_as_buffer*/
   Py_TPFLAGS_DEFAULT|Py_TPFLAGS_HAVE_VERSION_TAG|Py_TPFLAGS_CHECKTYPES|Py_TPFLAGS_HAVE_NEWBUFFER|Py_TPFLAGS_BASETYPE|Py_TPFLAGS_HAVE_GC, /*tp_flags*/
   0, /*tp_doc*/
-  __pyx_tp_traverse_17accumulation_tree_17accumulation_tree_Node, /*tp_traverse*/
-  __pyx_tp_clear_17accumulation_tree_17accumulation_tree_Node, /*tp_clear*/
+  __pyx_tp_traverse_9cythonize_Node, /*tp_traverse*/
+  __pyx_tp_clear_9cythonize_Node, /*tp_clear*/
   0, /*tp_richcompare*/
   0, /*tp_weaklistoffset*/
   0, /*tp_iter*/
   0, /*tp_iternext*/
-  __pyx_methods_17accumulation_tree_17accumulation_tree_Node, /*tp_methods*/
+  __pyx_methods_9cythonize_Node, /*tp_methods*/
   0, /*tp_members*/
-  __pyx_getsets_17accumulation_tree_17accumulation_tree_Node, /*tp_getset*/
+  __pyx_getsets_9cythonize_Node, /*tp_getset*/
   0, /*tp_base*/
   0, /*tp_dict*/
   0, /*tp_descr_get*/
   0, /*tp_descr_set*/
   0, /*tp_dictoffset*/
-  __pyx_pw_17accumulation_tree_17accumulation_tree_4Node_1__init__, /*tp_init*/
+  __pyx_pw_9cythonize_4Node_1__init__, /*tp_init*/
   0, /*tp_alloc*/
-  __pyx_tp_new_17accumulation_tree_17accumulation_tree_Node, /*tp_new*/
+  __pyx_tp_new_9cythonize_Node, /*tp_new*/
   0, /*tp_free*/
   0, /*tp_is_gc*/
   0, /*tp_bases*/
@@ -11661,7 +11661,7 @@ static PyTypeObject __pyx_type_17accumulation_tree_17accumulation_tree_Node = {
   #endif
 };
 
-static PyObject *__pyx_tp_new_17accumulation_tree_17accumulation_tree_NullKey(PyTypeObject *t, CYTHON_UNUSED PyObject *a, CYTHON_UNUSED PyObject *k) {
+static PyObject *__pyx_tp_new_9cythonize_NullKey(PyTypeObject *t, CYTHON_UNUSED PyObject *a, CYTHON_UNUSED PyObject *k) {
   PyObject *o;
   if (likely((t->tp_flags & Py_TPFLAGS_IS_ABSTRACT) == 0)) {
     o = (*t->tp_alloc)(t, 0);
@@ -11672,7 +11672,7 @@ static PyObject *__pyx_tp_new_17accumulation_tree_17accumulation_tree_NullKey(Py
   return o;
 }
 
-static void __pyx_tp_dealloc_17accumulation_tree_17accumulation_tree_NullKey(PyObject *o) {
+static void __pyx_tp_dealloc_9cythonize_NullKey(PyObject *o) {
   #if CYTHON_USE_TP_FINALIZE
   if (unlikely(PyType_HasFeature(Py_TYPE(o), Py_TPFLAGS_HAVE_FINALIZE) && Py_TYPE(o)->tp_finalize) && (!PyType_IS_GC(Py_TYPE(o)) || !_PyGC_FINALIZED(o))) {
     if (PyObject_CallFinalizerFromDealloc(o)) return;
@@ -11681,18 +11681,18 @@ static void __pyx_tp_dealloc_17accumulation_tree_17accumulation_tree_NullKey(PyO
   (*Py_TYPE(o)->tp_free)(o);
 }
 
-static PyMethodDef __pyx_methods_17accumulation_tree_17accumulation_tree_NullKey[] = {
-  {"__reduce_cython__", (PyCFunction)__pyx_pw_17accumulation_tree_17accumulation_tree_7NullKey_1__reduce_cython__, METH_NOARGS, 0},
-  {"__setstate_cython__", (PyCFunction)__pyx_pw_17accumulation_tree_17accumulation_tree_7NullKey_3__setstate_cython__, METH_O, 0},
+static PyMethodDef __pyx_methods_9cythonize_NullKey[] = {
+  {"__reduce_cython__", (PyCFunction)__pyx_pw_9cythonize_7NullKey_1__reduce_cython__, METH_NOARGS, 0},
+  {"__setstate_cython__", (PyCFunction)__pyx_pw_9cythonize_7NullKey_3__setstate_cython__, METH_O, 0},
   {0, 0, 0, 0}
 };
 
-static PyTypeObject __pyx_type_17accumulation_tree_17accumulation_tree_NullKey = {
+static PyTypeObject __pyx_type_9cythonize_NullKey = {
   PyVarObject_HEAD_INIT(0, 0)
-  "accumulation_tree.accumulation_tree.NullKey", /*tp_name*/
-  sizeof(struct __pyx_obj_17accumulation_tree_17accumulation_tree_NullKey), /*tp_basicsize*/
+  "cythonize.NullKey", /*tp_name*/
+  sizeof(struct __pyx_obj_9cythonize_NullKey), /*tp_basicsize*/
   0, /*tp_itemsize*/
-  __pyx_tp_dealloc_17accumulation_tree_17accumulation_tree_NullKey, /*tp_dealloc*/
+  __pyx_tp_dealloc_9cythonize_NullKey, /*tp_dealloc*/
   #if PY_VERSION_HEX < 0x030800b4
   0, /*tp_print*/
   #endif
@@ -11725,7 +11725,7 @@ static PyTypeObject __pyx_type_17accumulation_tree_17accumulation_tree_NullKey =
   0, /*tp_weaklistoffset*/
   0, /*tp_iter*/
   0, /*tp_iternext*/
-  __pyx_methods_17accumulation_tree_17accumulation_tree_NullKey, /*tp_methods*/
+  __pyx_methods_9cythonize_NullKey, /*tp_methods*/
   0, /*tp_members*/
   0, /*tp_getset*/
   0, /*tp_base*/
@@ -11735,7 +11735,7 @@ static PyTypeObject __pyx_type_17accumulation_tree_17accumulation_tree_NullKey =
   0, /*tp_dictoffset*/
   0, /*tp_init*/
   0, /*tp_alloc*/
-  __pyx_tp_new_17accumulation_tree_17accumulation_tree_NullKey, /*tp_new*/
+  __pyx_tp_new_9cythonize_NullKey, /*tp_new*/
   0, /*tp_free*/
   0, /*tp_is_gc*/
   0, /*tp_bases*/
@@ -11758,10 +11758,10 @@ static PyTypeObject __pyx_type_17accumulation_tree_17accumulation_tree_NullKey =
   0, /*tp_pypy_flags*/
   #endif
 };
-static struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree__RBTree __pyx_vtable_17accumulation_tree_17accumulation_tree__RBTree;
+static struct __pyx_vtabstruct_9cythonize__RBTree __pyx_vtable_9cythonize__RBTree;
 
-static PyObject *__pyx_tp_new_17accumulation_tree_17accumulation_tree__RBTree(PyTypeObject *t, CYTHON_UNUSED PyObject *a, CYTHON_UNUSED PyObject *k) {
-  struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree *p;
+static PyObject *__pyx_tp_new_9cythonize__RBTree(PyTypeObject *t, CYTHON_UNUSED PyObject *a, CYTHON_UNUSED PyObject *k) {
+  struct __pyx_obj_9cythonize__RBTree *p;
   PyObject *o;
   if (likely((t->tp_flags & Py_TPFLAGS_IS_ABSTRACT) == 0)) {
     o = (*t->tp_alloc)(t, 0);
@@ -11769,14 +11769,14 @@ static PyObject *__pyx_tp_new_17accumulation_tree_17accumulation_tree__RBTree(Py
     o = (PyObject *) PyBaseObject_Type.tp_new(t, __pyx_empty_tuple, 0);
   }
   if (unlikely(!o)) return 0;
-  p = ((struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree *)o);
-  p->__pyx_vtab = __pyx_vtabptr_17accumulation_tree_17accumulation_tree__RBTree;
-  p->_root = ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)Py_None); Py_INCREF(Py_None);
+  p = ((struct __pyx_obj_9cythonize__RBTree *)o);
+  p->__pyx_vtab = __pyx_vtabptr_9cythonize__RBTree;
+  p->_root = ((struct __pyx_obj_9cythonize_Node *)Py_None); Py_INCREF(Py_None);
   return o;
 }
 
-static void __pyx_tp_dealloc_17accumulation_tree_17accumulation_tree__RBTree(PyObject *o) {
-  struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree *p = (struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree *)o;
+static void __pyx_tp_dealloc_9cythonize__RBTree(PyObject *o) {
+  struct __pyx_obj_9cythonize__RBTree *p = (struct __pyx_obj_9cythonize__RBTree *)o;
   #if CYTHON_USE_TP_FINALIZE
   if (unlikely(PyType_HasFeature(Py_TYPE(o), Py_TPFLAGS_HAVE_FINALIZE) && Py_TYPE(o)->tp_finalize) && !_PyGC_FINALIZED(o)) {
     if (PyObject_CallFinalizerFromDealloc(o)) return;
@@ -11787,44 +11787,44 @@ static void __pyx_tp_dealloc_17accumulation_tree_17accumulation_tree__RBTree(PyO
   (*Py_TYPE(o)->tp_free)(o);
 }
 
-static int __pyx_tp_traverse_17accumulation_tree_17accumulation_tree__RBTree(PyObject *o, visitproc v, void *a) {
+static int __pyx_tp_traverse_9cythonize__RBTree(PyObject *o, visitproc v, void *a) {
   int e;
-  struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree *p = (struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree *)o;
+  struct __pyx_obj_9cythonize__RBTree *p = (struct __pyx_obj_9cythonize__RBTree *)o;
   if (p->_root) {
     e = (*v)(((PyObject *)p->_root), a); if (e) return e;
   }
   return 0;
 }
 
-static int __pyx_tp_clear_17accumulation_tree_17accumulation_tree__RBTree(PyObject *o) {
+static int __pyx_tp_clear_9cythonize__RBTree(PyObject *o) {
   PyObject* tmp;
-  struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree *p = (struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree *)o;
+  struct __pyx_obj_9cythonize__RBTree *p = (struct __pyx_obj_9cythonize__RBTree *)o;
   tmp = ((PyObject*)p->_root);
-  p->_root = ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *)Py_None); Py_INCREF(Py_None);
+  p->_root = ((struct __pyx_obj_9cythonize_Node *)Py_None); Py_INCREF(Py_None);
   Py_XDECREF(tmp);
   return 0;
 }
 
-static PyObject *__pyx_getprop_17accumulation_tree_17accumulation_tree_7_RBTree__root(PyObject *o, CYTHON_UNUSED void *x) {
-  return __pyx_pw_17accumulation_tree_17accumulation_tree_7_RBTree_5_root_1__get__(o);
+static PyObject *__pyx_getprop_9cythonize_7_RBTree__root(PyObject *o, CYTHON_UNUSED void *x) {
+  return __pyx_pw_9cythonize_7_RBTree_5_root_1__get__(o);
 }
 
-static int __pyx_setprop_17accumulation_tree_17accumulation_tree_7_RBTree__root(PyObject *o, PyObject *v, CYTHON_UNUSED void *x) {
+static int __pyx_setprop_9cythonize_7_RBTree__root(PyObject *o, PyObject *v, CYTHON_UNUSED void *x) {
   if (v) {
-    return __pyx_pw_17accumulation_tree_17accumulation_tree_7_RBTree_5_root_3__set__(o, v);
+    return __pyx_pw_9cythonize_7_RBTree_5_root_3__set__(o, v);
   }
   else {
-    return __pyx_pw_17accumulation_tree_17accumulation_tree_7_RBTree_5_root_5__del__(o);
+    return __pyx_pw_9cythonize_7_RBTree_5_root_5__del__(o);
   }
 }
 
-static PyObject *__pyx_getprop_17accumulation_tree_17accumulation_tree_7_RBTree__count(PyObject *o, CYTHON_UNUSED void *x) {
-  return __pyx_pw_17accumulation_tree_17accumulation_tree_7_RBTree_6_count_1__get__(o);
+static PyObject *__pyx_getprop_9cythonize_7_RBTree__count(PyObject *o, CYTHON_UNUSED void *x) {
+  return __pyx_pw_9cythonize_7_RBTree_6_count_1__get__(o);
 }
 
-static int __pyx_setprop_17accumulation_tree_17accumulation_tree_7_RBTree__count(PyObject *o, PyObject *v, CYTHON_UNUSED void *x) {
+static int __pyx_setprop_9cythonize_7_RBTree__count(PyObject *o, PyObject *v, CYTHON_UNUSED void *x) {
   if (v) {
-    return __pyx_pw_17accumulation_tree_17accumulation_tree_7_RBTree_6_count_3__set__(o, v);
+    return __pyx_pw_9cythonize_7_RBTree_6_count_3__set__(o, v);
   }
   else {
     PyErr_SetString(PyExc_NotImplementedError, "__del__");
@@ -11832,28 +11832,28 @@ static int __pyx_setprop_17accumulation_tree_17accumulation_tree_7_RBTree__count
   }
 }
 
-static PyMethodDef __pyx_methods_17accumulation_tree_17accumulation_tree__RBTree[] = {
-  {"insert", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_17accumulation_tree_17accumulation_tree_7_RBTree_1insert, METH_VARARGS|METH_KEYWORDS, 0},
-  {"remove", (PyCFunction)__pyx_pw_17accumulation_tree_17accumulation_tree_7_RBTree_3remove, METH_O, 0},
-  {"__getstate__", (PyCFunction)__pyx_pw_17accumulation_tree_17accumulation_tree_7_RBTree_5__getstate__, METH_NOARGS, 0},
-  {"__setstate__", (PyCFunction)__pyx_pw_17accumulation_tree_17accumulation_tree_7_RBTree_7__setstate__, METH_O, 0},
-  {"__reduce_cython__", (PyCFunction)__pyx_pw_17accumulation_tree_17accumulation_tree_7_RBTree_9__reduce_cython__, METH_NOARGS, 0},
-  {"__setstate_cython__", (PyCFunction)__pyx_pw_17accumulation_tree_17accumulation_tree_7_RBTree_11__setstate_cython__, METH_O, 0},
+static PyMethodDef __pyx_methods_9cythonize__RBTree[] = {
+  {"insert", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_9cythonize_7_RBTree_1insert, METH_VARARGS|METH_KEYWORDS, 0},
+  {"remove", (PyCFunction)__pyx_pw_9cythonize_7_RBTree_3remove, METH_O, 0},
+  {"__getstate__", (PyCFunction)__pyx_pw_9cythonize_7_RBTree_5__getstate__, METH_NOARGS, 0},
+  {"__setstate__", (PyCFunction)__pyx_pw_9cythonize_7_RBTree_7__setstate__, METH_O, 0},
+  {"__reduce_cython__", (PyCFunction)__pyx_pw_9cythonize_7_RBTree_9__reduce_cython__, METH_NOARGS, 0},
+  {"__setstate_cython__", (PyCFunction)__pyx_pw_9cythonize_7_RBTree_11__setstate_cython__, METH_O, 0},
   {0, 0, 0, 0}
 };
 
-static struct PyGetSetDef __pyx_getsets_17accumulation_tree_17accumulation_tree__RBTree[] = {
-  {(char *)"_root", __pyx_getprop_17accumulation_tree_17accumulation_tree_7_RBTree__root, __pyx_setprop_17accumulation_tree_17accumulation_tree_7_RBTree__root, (char *)0, 0},
-  {(char *)"_count", __pyx_getprop_17accumulation_tree_17accumulation_tree_7_RBTree__count, __pyx_setprop_17accumulation_tree_17accumulation_tree_7_RBTree__count, (char *)0, 0},
+static struct PyGetSetDef __pyx_getsets_9cythonize__RBTree[] = {
+  {(char *)"_root", __pyx_getprop_9cythonize_7_RBTree__root, __pyx_setprop_9cythonize_7_RBTree__root, (char *)0, 0},
+  {(char *)"_count", __pyx_getprop_9cythonize_7_RBTree__count, __pyx_setprop_9cythonize_7_RBTree__count, (char *)0, 0},
   {0, 0, 0, 0, 0}
 };
 
-static PyTypeObject __pyx_type_17accumulation_tree_17accumulation_tree__RBTree = {
+static PyTypeObject __pyx_type_9cythonize__RBTree = {
   PyVarObject_HEAD_INIT(0, 0)
-  "accumulation_tree.accumulation_tree._RBTree", /*tp_name*/
-  sizeof(struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree), /*tp_basicsize*/
+  "cythonize._RBTree", /*tp_name*/
+  sizeof(struct __pyx_obj_9cythonize__RBTree), /*tp_basicsize*/
   0, /*tp_itemsize*/
-  __pyx_tp_dealloc_17accumulation_tree_17accumulation_tree__RBTree, /*tp_dealloc*/
+  __pyx_tp_dealloc_9cythonize__RBTree, /*tp_dealloc*/
   #if PY_VERSION_HEX < 0x030800b4
   0, /*tp_print*/
   #endif
@@ -11880,15 +11880,15 @@ static PyTypeObject __pyx_type_17accumulation_tree_17accumulation_tree__RBTree =
   0, /*tp_as_buffer*/
   Py_TPFLAGS_DEFAULT|Py_TPFLAGS_HAVE_VERSION_TAG|Py_TPFLAGS_CHECKTYPES|Py_TPFLAGS_HAVE_NEWBUFFER|Py_TPFLAGS_BASETYPE|Py_TPFLAGS_HAVE_GC, /*tp_flags*/
   0, /*tp_doc*/
-  __pyx_tp_traverse_17accumulation_tree_17accumulation_tree__RBTree, /*tp_traverse*/
-  __pyx_tp_clear_17accumulation_tree_17accumulation_tree__RBTree, /*tp_clear*/
+  __pyx_tp_traverse_9cythonize__RBTree, /*tp_traverse*/
+  __pyx_tp_clear_9cythonize__RBTree, /*tp_clear*/
   0, /*tp_richcompare*/
   0, /*tp_weaklistoffset*/
   0, /*tp_iter*/
   0, /*tp_iternext*/
-  __pyx_methods_17accumulation_tree_17accumulation_tree__RBTree, /*tp_methods*/
+  __pyx_methods_9cythonize__RBTree, /*tp_methods*/
   0, /*tp_members*/
-  __pyx_getsets_17accumulation_tree_17accumulation_tree__RBTree, /*tp_getset*/
+  __pyx_getsets_9cythonize__RBTree, /*tp_getset*/
   0, /*tp_base*/
   0, /*tp_dict*/
   0, /*tp_descr_get*/
@@ -11896,7 +11896,7 @@ static PyTypeObject __pyx_type_17accumulation_tree_17accumulation_tree__RBTree =
   0, /*tp_dictoffset*/
   0, /*tp_init*/
   0, /*tp_alloc*/
-  __pyx_tp_new_17accumulation_tree_17accumulation_tree__RBTree, /*tp_new*/
+  __pyx_tp_new_9cythonize__RBTree, /*tp_new*/
   0, /*tp_free*/
   0, /*tp_is_gc*/
   0, /*tp_bases*/
@@ -11919,14 +11919,14 @@ static PyTypeObject __pyx_type_17accumulation_tree_17accumulation_tree__RBTree =
   0, /*tp_pypy_flags*/
   #endif
 };
-static struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree__AccumulationTree __pyx_vtable_17accumulation_tree_17accumulation_tree__AccumulationTree;
+static struct __pyx_vtabstruct_9cythonize__AccumulationTree __pyx_vtable_9cythonize__AccumulationTree;
 
-static PyObject *__pyx_tp_new_17accumulation_tree_17accumulation_tree__AccumulationTree(PyTypeObject *t, PyObject *a, PyObject *k) {
-  struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *p;
-  PyObject *o = __pyx_tp_new_17accumulation_tree_17accumulation_tree__RBTree(t, a, k);
+static PyObject *__pyx_tp_new_9cythonize__AccumulationTree(PyTypeObject *t, PyObject *a, PyObject *k) {
+  struct __pyx_obj_9cythonize__AccumulationTree *p;
+  PyObject *o = __pyx_tp_new_9cythonize__RBTree(t, a, k);
   if (unlikely(!o)) return 0;
-  p = ((struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *)o);
-  p->__pyx_base.__pyx_vtab = (struct __pyx_vtabstruct_17accumulation_tree_17accumulation_tree__RBTree*)__pyx_vtabptr_17accumulation_tree_17accumulation_tree__AccumulationTree;
+  p = ((struct __pyx_obj_9cythonize__AccumulationTree *)o);
+  p->__pyx_base.__pyx_vtab = (struct __pyx_vtabstruct_9cythonize__RBTree*)__pyx_vtabptr_9cythonize__AccumulationTree;
   p->_zero = Py_None; Py_INCREF(Py_None);
   p->_mapper = Py_None; Py_INCREF(Py_None);
   p->_reducer = Py_None; Py_INCREF(Py_None);
@@ -11934,8 +11934,8 @@ static PyObject *__pyx_tp_new_17accumulation_tree_17accumulation_tree__Accumulat
   return o;
 }
 
-static void __pyx_tp_dealloc_17accumulation_tree_17accumulation_tree__AccumulationTree(PyObject *o) {
-  struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *p = (struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *)o;
+static void __pyx_tp_dealloc_9cythonize__AccumulationTree(PyObject *o) {
+  struct __pyx_obj_9cythonize__AccumulationTree *p = (struct __pyx_obj_9cythonize__AccumulationTree *)o;
   #if CYTHON_USE_TP_FINALIZE
   if (unlikely(PyType_HasFeature(Py_TYPE(o), Py_TPFLAGS_HAVE_FINALIZE) && Py_TYPE(o)->tp_finalize) && !_PyGC_FINALIZED(o)) {
     if (PyObject_CallFinalizerFromDealloc(o)) return;
@@ -11947,13 +11947,13 @@ static void __pyx_tp_dealloc_17accumulation_tree_17accumulation_tree__Accumulati
   Py_CLEAR(p->_reducer);
   Py_CLEAR(p->_dirty_nodes);
   PyObject_GC_Track(o);
-  __pyx_tp_dealloc_17accumulation_tree_17accumulation_tree__RBTree(o);
+  __pyx_tp_dealloc_9cythonize__RBTree(o);
 }
 
-static int __pyx_tp_traverse_17accumulation_tree_17accumulation_tree__AccumulationTree(PyObject *o, visitproc v, void *a) {
+static int __pyx_tp_traverse_9cythonize__AccumulationTree(PyObject *o, visitproc v, void *a) {
   int e;
-  struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *p = (struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *)o;
-  e = __pyx_tp_traverse_17accumulation_tree_17accumulation_tree__RBTree(o, v, a); if (e) return e;
+  struct __pyx_obj_9cythonize__AccumulationTree *p = (struct __pyx_obj_9cythonize__AccumulationTree *)o;
+  e = __pyx_tp_traverse_9cythonize__RBTree(o, v, a); if (e) return e;
   if (p->_zero) {
     e = (*v)(p->_zero, a); if (e) return e;
   }
@@ -11969,10 +11969,10 @@ static int __pyx_tp_traverse_17accumulation_tree_17accumulation_tree__Accumulati
   return 0;
 }
 
-static int __pyx_tp_clear_17accumulation_tree_17accumulation_tree__AccumulationTree(PyObject *o) {
+static int __pyx_tp_clear_9cythonize__AccumulationTree(PyObject *o) {
   PyObject* tmp;
-  struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *p = (struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *)o;
-  __pyx_tp_clear_17accumulation_tree_17accumulation_tree__RBTree(o);
+  struct __pyx_obj_9cythonize__AccumulationTree *p = (struct __pyx_obj_9cythonize__AccumulationTree *)o;
+  __pyx_tp_clear_9cythonize__RBTree(o);
   tmp = ((PyObject*)p->_zero);
   p->_zero = Py_None; Py_INCREF(Py_None);
   Py_XDECREF(tmp);
@@ -11988,28 +11988,28 @@ static int __pyx_tp_clear_17accumulation_tree_17accumulation_tree__AccumulationT
   return 0;
 }
 
-static PyMethodDef __pyx_methods_17accumulation_tree_17accumulation_tree__AccumulationTree[] = {
-  {"insert", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_17accumulation_tree_17accumulation_tree_17_AccumulationTree_3insert, METH_VARARGS|METH_KEYWORDS, 0},
-  {"remove", (PyCFunction)__pyx_pw_17accumulation_tree_17accumulation_tree_17_AccumulationTree_5remove, METH_O, 0},
-  {"_get_left_accumulation", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_17accumulation_tree_17accumulation_tree_17_AccumulationTree_7_get_left_accumulation, METH_VARARGS|METH_KEYWORDS, 0},
-  {"_get_accumulation", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_17accumulation_tree_17accumulation_tree_17_AccumulationTree_9_get_accumulation, METH_VARARGS|METH_KEYWORDS, 0},
-  {"get_accumulation", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_17accumulation_tree_17accumulation_tree_17_AccumulationTree_11get_accumulation, METH_VARARGS|METH_KEYWORDS, 0},
-  {"get_left_accumulation", (PyCFunction)__pyx_pw_17accumulation_tree_17accumulation_tree_17_AccumulationTree_13get_left_accumulation, METH_O, 0},
-  {"get_right_accumulation", (PyCFunction)__pyx_pw_17accumulation_tree_17accumulation_tree_17_AccumulationTree_15get_right_accumulation, METH_O, 0},
-  {"get_full_accumulation", (PyCFunction)__pyx_pw_17accumulation_tree_17accumulation_tree_17_AccumulationTree_17get_full_accumulation, METH_NOARGS, 0},
-  {"__getstate__", (PyCFunction)__pyx_pw_17accumulation_tree_17accumulation_tree_17_AccumulationTree_19__getstate__, METH_NOARGS, 0},
-  {"__setstate__", (PyCFunction)__pyx_pw_17accumulation_tree_17accumulation_tree_17_AccumulationTree_21__setstate__, METH_O, 0},
-  {"__reduce_cython__", (PyCFunction)__pyx_pw_17accumulation_tree_17accumulation_tree_17_AccumulationTree_23__reduce_cython__, METH_NOARGS, 0},
-  {"__setstate_cython__", (PyCFunction)__pyx_pw_17accumulation_tree_17accumulation_tree_17_AccumulationTree_25__setstate_cython__, METH_O, 0},
+static PyMethodDef __pyx_methods_9cythonize__AccumulationTree[] = {
+  {"insert", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_9cythonize_17_AccumulationTree_3insert, METH_VARARGS|METH_KEYWORDS, 0},
+  {"remove", (PyCFunction)__pyx_pw_9cythonize_17_AccumulationTree_5remove, METH_O, 0},
+  {"_get_left_accumulation", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_9cythonize_17_AccumulationTree_7_get_left_accumulation, METH_VARARGS|METH_KEYWORDS, 0},
+  {"_get_accumulation", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_9cythonize_17_AccumulationTree_9_get_accumulation, METH_VARARGS|METH_KEYWORDS, 0},
+  {"get_accumulation", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_9cythonize_17_AccumulationTree_11get_accumulation, METH_VARARGS|METH_KEYWORDS, 0},
+  {"get_left_accumulation", (PyCFunction)__pyx_pw_9cythonize_17_AccumulationTree_13get_left_accumulation, METH_O, 0},
+  {"get_right_accumulation", (PyCFunction)__pyx_pw_9cythonize_17_AccumulationTree_15get_right_accumulation, METH_O, 0},
+  {"get_full_accumulation", (PyCFunction)__pyx_pw_9cythonize_17_AccumulationTree_17get_full_accumulation, METH_NOARGS, 0},
+  {"__getstate__", (PyCFunction)__pyx_pw_9cythonize_17_AccumulationTree_19__getstate__, METH_NOARGS, 0},
+  {"__setstate__", (PyCFunction)__pyx_pw_9cythonize_17_AccumulationTree_21__setstate__, METH_O, 0},
+  {"__reduce_cython__", (PyCFunction)__pyx_pw_9cythonize_17_AccumulationTree_23__reduce_cython__, METH_NOARGS, 0},
+  {"__setstate_cython__", (PyCFunction)__pyx_pw_9cythonize_17_AccumulationTree_25__setstate_cython__, METH_O, 0},
   {0, 0, 0, 0}
 };
 
-static PyTypeObject __pyx_type_17accumulation_tree_17accumulation_tree__AccumulationTree = {
+static PyTypeObject __pyx_type_9cythonize__AccumulationTree = {
   PyVarObject_HEAD_INIT(0, 0)
-  "accumulation_tree.accumulation_tree._AccumulationTree", /*tp_name*/
-  sizeof(struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree), /*tp_basicsize*/
+  "cythonize._AccumulationTree", /*tp_name*/
+  sizeof(struct __pyx_obj_9cythonize__AccumulationTree), /*tp_basicsize*/
   0, /*tp_itemsize*/
-  __pyx_tp_dealloc_17accumulation_tree_17accumulation_tree__AccumulationTree, /*tp_dealloc*/
+  __pyx_tp_dealloc_9cythonize__AccumulationTree, /*tp_dealloc*/
   #if PY_VERSION_HEX < 0x030800b4
   0, /*tp_print*/
   #endif
@@ -12036,13 +12036,13 @@ static PyTypeObject __pyx_type_17accumulation_tree_17accumulation_tree__Accumula
   0, /*tp_as_buffer*/
   Py_TPFLAGS_DEFAULT|Py_TPFLAGS_HAVE_VERSION_TAG|Py_TPFLAGS_CHECKTYPES|Py_TPFLAGS_HAVE_NEWBUFFER|Py_TPFLAGS_BASETYPE|Py_TPFLAGS_HAVE_GC, /*tp_flags*/
   0, /*tp_doc*/
-  __pyx_tp_traverse_17accumulation_tree_17accumulation_tree__AccumulationTree, /*tp_traverse*/
-  __pyx_tp_clear_17accumulation_tree_17accumulation_tree__AccumulationTree, /*tp_clear*/
+  __pyx_tp_traverse_9cythonize__AccumulationTree, /*tp_traverse*/
+  __pyx_tp_clear_9cythonize__AccumulationTree, /*tp_clear*/
   0, /*tp_richcompare*/
   0, /*tp_weaklistoffset*/
   0, /*tp_iter*/
   0, /*tp_iternext*/
-  __pyx_methods_17accumulation_tree_17accumulation_tree__AccumulationTree, /*tp_methods*/
+  __pyx_methods_9cythonize__AccumulationTree, /*tp_methods*/
   0, /*tp_members*/
   0, /*tp_getset*/
   0, /*tp_base*/
@@ -12050,9 +12050,9 @@ static PyTypeObject __pyx_type_17accumulation_tree_17accumulation_tree__Accumula
   0, /*tp_descr_get*/
   0, /*tp_descr_set*/
   0, /*tp_dictoffset*/
-  __pyx_pw_17accumulation_tree_17accumulation_tree_17_AccumulationTree_1__init__, /*tp_init*/
+  __pyx_pw_9cythonize_17_AccumulationTree_1__init__, /*tp_init*/
   0, /*tp_alloc*/
-  __pyx_tp_new_17accumulation_tree_17accumulation_tree__AccumulationTree, /*tp_new*/
+  __pyx_tp_new_9cythonize__AccumulationTree, /*tp_new*/
   0, /*tp_free*/
   0, /*tp_is_gc*/
   0, /*tp_bases*/
@@ -12083,17 +12083,17 @@ static PyMethodDef __pyx_methods[] = {
 #if PY_MAJOR_VERSION >= 3
 #if CYTHON_PEP489_MULTI_PHASE_INIT
 static PyObject* __pyx_pymod_create(PyObject *spec, PyModuleDef *def); /*proto*/
-static int __pyx_pymod_exec_accumulation_tree(PyObject* module); /*proto*/
+static int __pyx_pymod_exec_cythonize(PyObject* module); /*proto*/
 static PyModuleDef_Slot __pyx_moduledef_slots[] = {
   {Py_mod_create, (void*)__pyx_pymod_create},
-  {Py_mod_exec, (void*)__pyx_pymod_exec_accumulation_tree},
+  {Py_mod_exec, (void*)__pyx_pymod_exec_cythonize},
   {0, NULL}
 };
 #endif
 
 static struct PyModuleDef __pyx_moduledef = {
     PyModuleDef_HEAD_INIT,
-    "accumulation_tree",
+    "cythonize",
     0, /* m_doc */
   #if CYTHON_PEP489_MULTI_PHASE_INIT
     0, /* m_size */
@@ -12136,9 +12136,9 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_RBTree, __pyx_k_RBTree, sizeof(__pyx_k_RBTree), 0, 0, 1, 1},
   {&__pyx_n_s_RBTree_2, __pyx_k_RBTree_2, sizeof(__pyx_k_RBTree_2), 0, 0, 1, 1},
   {&__pyx_n_s_abctree, __pyx_k_abctree, sizeof(__pyx_k_abctree), 0, 0, 1, 1},
-  {&__pyx_n_s_accumulation_tree_accumulation_t, __pyx_k_accumulation_tree_accumulation_t, sizeof(__pyx_k_accumulation_tree_accumulation_t), 0, 0, 1, 1},
   {&__pyx_n_s_add, __pyx_k_add, sizeof(__pyx_k_add), 0, 0, 1, 1},
   {&__pyx_n_s_cline_in_traceback, __pyx_k_cline_in_traceback, sizeof(__pyx_k_cline_in_traceback), 0, 0, 1, 1},
+  {&__pyx_n_s_cythonize, __pyx_k_cythonize, sizeof(__pyx_k_cythonize), 0, 0, 1, 1},
   {&__pyx_n_s_dict, __pyx_k_dict, sizeof(__pyx_k_dict), 0, 0, 1, 1},
   {&__pyx_n_s_doc, __pyx_k_doc, sizeof(__pyx_k_doc), 0, 0, 1, 1},
   {&__pyx_n_s_free, __pyx_k_free, sizeof(__pyx_k_free), 0, 0, 1, 1},
@@ -12258,7 +12258,7 @@ static int __Pyx_modinit_global_init_code(void) {
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__Pyx_modinit_global_init_code", 0);
   /*--- Global init code ---*/
-  __pyx_v_17accumulation_tree_17accumulation_tree_null_key = ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_NullKey *)Py_None); Py_INCREF(Py_None);
+  __pyx_v_9cythonize_null_key = ((struct __pyx_obj_9cythonize_NullKey *)Py_None); Py_INCREF(Py_None);
   __Pyx_RefNannyFinishContext();
   return 0;
 }
@@ -12286,67 +12286,67 @@ static int __Pyx_modinit_type_init_code(void) {
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("__Pyx_modinit_type_init_code", 0);
   /*--- Type init code ---*/
-  __pyx_vtabptr_17accumulation_tree_17accumulation_tree_Node = &__pyx_vtable_17accumulation_tree_17accumulation_tree_Node;
-  __pyx_vtable_17accumulation_tree_17accumulation_tree_Node.get = (struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *(*)(struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *, int))__pyx_f_17accumulation_tree_17accumulation_tree_4Node_get;
-  __pyx_vtable_17accumulation_tree_17accumulation_tree_Node.set = (void (*)(struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *, int, struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *))__pyx_f_17accumulation_tree_17accumulation_tree_4Node_set;
-  if (PyType_Ready(&__pyx_type_17accumulation_tree_17accumulation_tree_Node) < 0) __PYX_ERR(0, 6, __pyx_L1_error)
+  __pyx_vtabptr_9cythonize_Node = &__pyx_vtable_9cythonize_Node;
+  __pyx_vtable_9cythonize_Node.get = (struct __pyx_obj_9cythonize_Node *(*)(struct __pyx_obj_9cythonize_Node *, int))__pyx_f_9cythonize_4Node_get;
+  __pyx_vtable_9cythonize_Node.set = (void (*)(struct __pyx_obj_9cythonize_Node *, int, struct __pyx_obj_9cythonize_Node *))__pyx_f_9cythonize_4Node_set;
+  if (PyType_Ready(&__pyx_type_9cythonize_Node) < 0) __PYX_ERR(0, 6, __pyx_L1_error)
   #if PY_VERSION_HEX < 0x030800B1
-  __pyx_type_17accumulation_tree_17accumulation_tree_Node.tp_print = 0;
+  __pyx_type_9cythonize_Node.tp_print = 0;
   #endif
-  if ((CYTHON_USE_TYPE_SLOTS && CYTHON_USE_PYTYPE_LOOKUP) && likely(!__pyx_type_17accumulation_tree_17accumulation_tree_Node.tp_dictoffset && __pyx_type_17accumulation_tree_17accumulation_tree_Node.tp_getattro == PyObject_GenericGetAttr)) {
-    __pyx_type_17accumulation_tree_17accumulation_tree_Node.tp_getattro = __Pyx_PyObject_GenericGetAttr;
+  if ((CYTHON_USE_TYPE_SLOTS && CYTHON_USE_PYTYPE_LOOKUP) && likely(!__pyx_type_9cythonize_Node.tp_dictoffset && __pyx_type_9cythonize_Node.tp_getattro == PyObject_GenericGetAttr)) {
+    __pyx_type_9cythonize_Node.tp_getattro = __Pyx_PyObject_GenericGetAttr;
   }
-  if (__Pyx_SetVtable(__pyx_type_17accumulation_tree_17accumulation_tree_Node.tp_dict, __pyx_vtabptr_17accumulation_tree_17accumulation_tree_Node) < 0) __PYX_ERR(0, 6, __pyx_L1_error)
-  if (PyObject_SetAttr(__pyx_m, __pyx_n_s_Node, (PyObject *)&__pyx_type_17accumulation_tree_17accumulation_tree_Node) < 0) __PYX_ERR(0, 6, __pyx_L1_error)
-  if (__Pyx_setup_reduce((PyObject*)&__pyx_type_17accumulation_tree_17accumulation_tree_Node) < 0) __PYX_ERR(0, 6, __pyx_L1_error)
-  __pyx_ptype_17accumulation_tree_17accumulation_tree_Node = &__pyx_type_17accumulation_tree_17accumulation_tree_Node;
-  if (PyType_Ready(&__pyx_type_17accumulation_tree_17accumulation_tree_NullKey) < 0) __PYX_ERR(0, 48, __pyx_L1_error)
+  if (__Pyx_SetVtable(__pyx_type_9cythonize_Node.tp_dict, __pyx_vtabptr_9cythonize_Node) < 0) __PYX_ERR(0, 6, __pyx_L1_error)
+  if (PyObject_SetAttr(__pyx_m, __pyx_n_s_Node, (PyObject *)&__pyx_type_9cythonize_Node) < 0) __PYX_ERR(0, 6, __pyx_L1_error)
+  if (__Pyx_setup_reduce((PyObject*)&__pyx_type_9cythonize_Node) < 0) __PYX_ERR(0, 6, __pyx_L1_error)
+  __pyx_ptype_9cythonize_Node = &__pyx_type_9cythonize_Node;
+  if (PyType_Ready(&__pyx_type_9cythonize_NullKey) < 0) __PYX_ERR(0, 48, __pyx_L1_error)
   #if PY_VERSION_HEX < 0x030800B1
-  __pyx_type_17accumulation_tree_17accumulation_tree_NullKey.tp_print = 0;
+  __pyx_type_9cythonize_NullKey.tp_print = 0;
   #endif
-  if ((CYTHON_USE_TYPE_SLOTS && CYTHON_USE_PYTYPE_LOOKUP) && likely(!__pyx_type_17accumulation_tree_17accumulation_tree_NullKey.tp_dictoffset && __pyx_type_17accumulation_tree_17accumulation_tree_NullKey.tp_getattro == PyObject_GenericGetAttr)) {
-    __pyx_type_17accumulation_tree_17accumulation_tree_NullKey.tp_getattro = __Pyx_PyObject_GenericGetAttr;
+  if ((CYTHON_USE_TYPE_SLOTS && CYTHON_USE_PYTYPE_LOOKUP) && likely(!__pyx_type_9cythonize_NullKey.tp_dictoffset && __pyx_type_9cythonize_NullKey.tp_getattro == PyObject_GenericGetAttr)) {
+    __pyx_type_9cythonize_NullKey.tp_getattro = __Pyx_PyObject_GenericGetAttr;
   }
-  if (PyObject_SetAttr(__pyx_m, __pyx_n_s_NullKey, (PyObject *)&__pyx_type_17accumulation_tree_17accumulation_tree_NullKey) < 0) __PYX_ERR(0, 48, __pyx_L1_error)
-  if (__Pyx_setup_reduce((PyObject*)&__pyx_type_17accumulation_tree_17accumulation_tree_NullKey) < 0) __PYX_ERR(0, 48, __pyx_L1_error)
-  __pyx_ptype_17accumulation_tree_17accumulation_tree_NullKey = &__pyx_type_17accumulation_tree_17accumulation_tree_NullKey;
-  __pyx_vtabptr_17accumulation_tree_17accumulation_tree__RBTree = &__pyx_vtable_17accumulation_tree_17accumulation_tree__RBTree;
-  __pyx_vtable_17accumulation_tree_17accumulation_tree__RBTree._new_node = (struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *(*)(struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree *, PyObject *, PyObject *))__pyx_f_17accumulation_tree_17accumulation_tree_7_RBTree__new_node;
-  __pyx_vtable_17accumulation_tree_17accumulation_tree__RBTree.set = (void (*)(struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree *, struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *, int, struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *))__pyx_f_17accumulation_tree_17accumulation_tree_7_RBTree_set;
-  __pyx_vtable_17accumulation_tree_17accumulation_tree__RBTree.jsw_single = (struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *(*)(struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree *, struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *, int))__pyx_f_17accumulation_tree_17accumulation_tree_7_RBTree_jsw_single;
-  __pyx_vtable_17accumulation_tree_17accumulation_tree__RBTree.jsw_double = (struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *(*)(struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree *, struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *, int))__pyx_f_17accumulation_tree_17accumulation_tree_7_RBTree_jsw_double;
-  if (PyType_Ready(&__pyx_type_17accumulation_tree_17accumulation_tree__RBTree) < 0) __PYX_ERR(0, 53, __pyx_L1_error)
+  if (PyObject_SetAttr(__pyx_m, __pyx_n_s_NullKey, (PyObject *)&__pyx_type_9cythonize_NullKey) < 0) __PYX_ERR(0, 48, __pyx_L1_error)
+  if (__Pyx_setup_reduce((PyObject*)&__pyx_type_9cythonize_NullKey) < 0) __PYX_ERR(0, 48, __pyx_L1_error)
+  __pyx_ptype_9cythonize_NullKey = &__pyx_type_9cythonize_NullKey;
+  __pyx_vtabptr_9cythonize__RBTree = &__pyx_vtable_9cythonize__RBTree;
+  __pyx_vtable_9cythonize__RBTree._new_node = (struct __pyx_obj_9cythonize_Node *(*)(struct __pyx_obj_9cythonize__RBTree *, PyObject *, PyObject *))__pyx_f_9cythonize_7_RBTree__new_node;
+  __pyx_vtable_9cythonize__RBTree.set = (void (*)(struct __pyx_obj_9cythonize__RBTree *, struct __pyx_obj_9cythonize_Node *, int, struct __pyx_obj_9cythonize_Node *))__pyx_f_9cythonize_7_RBTree_set;
+  __pyx_vtable_9cythonize__RBTree.jsw_single = (struct __pyx_obj_9cythonize_Node *(*)(struct __pyx_obj_9cythonize__RBTree *, struct __pyx_obj_9cythonize_Node *, int))__pyx_f_9cythonize_7_RBTree_jsw_single;
+  __pyx_vtable_9cythonize__RBTree.jsw_double = (struct __pyx_obj_9cythonize_Node *(*)(struct __pyx_obj_9cythonize__RBTree *, struct __pyx_obj_9cythonize_Node *, int))__pyx_f_9cythonize_7_RBTree_jsw_double;
+  if (PyType_Ready(&__pyx_type_9cythonize__RBTree) < 0) __PYX_ERR(0, 53, __pyx_L1_error)
   #if PY_VERSION_HEX < 0x030800B1
-  __pyx_type_17accumulation_tree_17accumulation_tree__RBTree.tp_print = 0;
+  __pyx_type_9cythonize__RBTree.tp_print = 0;
   #endif
-  if ((CYTHON_USE_TYPE_SLOTS && CYTHON_USE_PYTYPE_LOOKUP) && likely(!__pyx_type_17accumulation_tree_17accumulation_tree__RBTree.tp_dictoffset && __pyx_type_17accumulation_tree_17accumulation_tree__RBTree.tp_getattro == PyObject_GenericGetAttr)) {
-    __pyx_type_17accumulation_tree_17accumulation_tree__RBTree.tp_getattro = __Pyx_PyObject_GenericGetAttr;
+  if ((CYTHON_USE_TYPE_SLOTS && CYTHON_USE_PYTYPE_LOOKUP) && likely(!__pyx_type_9cythonize__RBTree.tp_dictoffset && __pyx_type_9cythonize__RBTree.tp_getattro == PyObject_GenericGetAttr)) {
+    __pyx_type_9cythonize__RBTree.tp_getattro = __Pyx_PyObject_GenericGetAttr;
   }
-  if (__Pyx_SetVtable(__pyx_type_17accumulation_tree_17accumulation_tree__RBTree.tp_dict, __pyx_vtabptr_17accumulation_tree_17accumulation_tree__RBTree) < 0) __PYX_ERR(0, 53, __pyx_L1_error)
-  if (PyObject_SetAttr(__pyx_m, __pyx_n_s_RBTree_2, (PyObject *)&__pyx_type_17accumulation_tree_17accumulation_tree__RBTree) < 0) __PYX_ERR(0, 53, __pyx_L1_error)
-  if (__Pyx_setup_reduce((PyObject*)&__pyx_type_17accumulation_tree_17accumulation_tree__RBTree) < 0) __PYX_ERR(0, 53, __pyx_L1_error)
-  __pyx_ptype_17accumulation_tree_17accumulation_tree__RBTree = &__pyx_type_17accumulation_tree_17accumulation_tree__RBTree;
-  __pyx_vtabptr_17accumulation_tree_17accumulation_tree__AccumulationTree = &__pyx_vtable_17accumulation_tree_17accumulation_tree__AccumulationTree;
-  __pyx_vtable_17accumulation_tree_17accumulation_tree__AccumulationTree.__pyx_base = *__pyx_vtabptr_17accumulation_tree_17accumulation_tree__RBTree;
-  __pyx_vtable_17accumulation_tree_17accumulation_tree__AccumulationTree.__pyx_base._new_node = (struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *(*)(struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree *, PyObject *, PyObject *))__pyx_f_17accumulation_tree_17accumulation_tree_17_AccumulationTree__new_node;
-  __pyx_vtable_17accumulation_tree_17accumulation_tree__AccumulationTree.__pyx_base.set = (void (*)(struct __pyx_obj_17accumulation_tree_17accumulation_tree__RBTree *, struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *, int, struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *))__pyx_f_17accumulation_tree_17accumulation_tree_17_AccumulationTree_set;
-  __pyx_vtable_17accumulation_tree_17accumulation_tree__AccumulationTree._get_full_accumulation = (PyObject *(*)(struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *, struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *))__pyx_f_17accumulation_tree_17accumulation_tree_17_AccumulationTree__get_full_accumulation;
-  __pyx_vtable_17accumulation_tree_17accumulation_tree__AccumulationTree._get_right_accumulation = (PyObject *(*)(struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *, struct __pyx_obj_17accumulation_tree_17accumulation_tree_Node *, PyObject *))__pyx_f_17accumulation_tree_17accumulation_tree_17_AccumulationTree__get_right_accumulation;
-  __pyx_vtable_17accumulation_tree_17accumulation_tree__AccumulationTree._update_dirty_nodes = (void (*)(struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *))__pyx_f_17accumulation_tree_17accumulation_tree_17_AccumulationTree__update_dirty_nodes;
-  __pyx_vtable_17accumulation_tree_17accumulation_tree__AccumulationTree._path_to_key = (PyObject *(*)(struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *, PyObject *))__pyx_f_17accumulation_tree_17accumulation_tree_17_AccumulationTree__path_to_key;
-  __pyx_vtable_17accumulation_tree_17accumulation_tree__AccumulationTree._update_accumulation = (void (*)(struct __pyx_obj_17accumulation_tree_17accumulation_tree__AccumulationTree *, PyObject *))__pyx_f_17accumulation_tree_17accumulation_tree_17_AccumulationTree__update_accumulation;
-  __pyx_type_17accumulation_tree_17accumulation_tree__AccumulationTree.tp_base = __pyx_ptype_17accumulation_tree_17accumulation_tree__RBTree;
-  if (PyType_Ready(&__pyx_type_17accumulation_tree_17accumulation_tree__AccumulationTree) < 0) __PYX_ERR(0, 207, __pyx_L1_error)
+  if (__Pyx_SetVtable(__pyx_type_9cythonize__RBTree.tp_dict, __pyx_vtabptr_9cythonize__RBTree) < 0) __PYX_ERR(0, 53, __pyx_L1_error)
+  if (PyObject_SetAttr(__pyx_m, __pyx_n_s_RBTree_2, (PyObject *)&__pyx_type_9cythonize__RBTree) < 0) __PYX_ERR(0, 53, __pyx_L1_error)
+  if (__Pyx_setup_reduce((PyObject*)&__pyx_type_9cythonize__RBTree) < 0) __PYX_ERR(0, 53, __pyx_L1_error)
+  __pyx_ptype_9cythonize__RBTree = &__pyx_type_9cythonize__RBTree;
+  __pyx_vtabptr_9cythonize__AccumulationTree = &__pyx_vtable_9cythonize__AccumulationTree;
+  __pyx_vtable_9cythonize__AccumulationTree.__pyx_base = *__pyx_vtabptr_9cythonize__RBTree;
+  __pyx_vtable_9cythonize__AccumulationTree.__pyx_base._new_node = (struct __pyx_obj_9cythonize_Node *(*)(struct __pyx_obj_9cythonize__RBTree *, PyObject *, PyObject *))__pyx_f_9cythonize_17_AccumulationTree__new_node;
+  __pyx_vtable_9cythonize__AccumulationTree.__pyx_base.set = (void (*)(struct __pyx_obj_9cythonize__RBTree *, struct __pyx_obj_9cythonize_Node *, int, struct __pyx_obj_9cythonize_Node *))__pyx_f_9cythonize_17_AccumulationTree_set;
+  __pyx_vtable_9cythonize__AccumulationTree._get_full_accumulation = (PyObject *(*)(struct __pyx_obj_9cythonize__AccumulationTree *, struct __pyx_obj_9cythonize_Node *))__pyx_f_9cythonize_17_AccumulationTree__get_full_accumulation;
+  __pyx_vtable_9cythonize__AccumulationTree._get_right_accumulation = (PyObject *(*)(struct __pyx_obj_9cythonize__AccumulationTree *, struct __pyx_obj_9cythonize_Node *, PyObject *))__pyx_f_9cythonize_17_AccumulationTree__get_right_accumulation;
+  __pyx_vtable_9cythonize__AccumulationTree._update_dirty_nodes = (void (*)(struct __pyx_obj_9cythonize__AccumulationTree *))__pyx_f_9cythonize_17_AccumulationTree__update_dirty_nodes;
+  __pyx_vtable_9cythonize__AccumulationTree._path_to_key = (PyObject *(*)(struct __pyx_obj_9cythonize__AccumulationTree *, PyObject *))__pyx_f_9cythonize_17_AccumulationTree__path_to_key;
+  __pyx_vtable_9cythonize__AccumulationTree._update_accumulation = (void (*)(struct __pyx_obj_9cythonize__AccumulationTree *, PyObject *))__pyx_f_9cythonize_17_AccumulationTree__update_accumulation;
+  __pyx_type_9cythonize__AccumulationTree.tp_base = __pyx_ptype_9cythonize__RBTree;
+  if (PyType_Ready(&__pyx_type_9cythonize__AccumulationTree) < 0) __PYX_ERR(0, 207, __pyx_L1_error)
   #if PY_VERSION_HEX < 0x030800B1
-  __pyx_type_17accumulation_tree_17accumulation_tree__AccumulationTree.tp_print = 0;
+  __pyx_type_9cythonize__AccumulationTree.tp_print = 0;
   #endif
-  if ((CYTHON_USE_TYPE_SLOTS && CYTHON_USE_PYTYPE_LOOKUP) && likely(!__pyx_type_17accumulation_tree_17accumulation_tree__AccumulationTree.tp_dictoffset && __pyx_type_17accumulation_tree_17accumulation_tree__AccumulationTree.tp_getattro == PyObject_GenericGetAttr)) {
-    __pyx_type_17accumulation_tree_17accumulation_tree__AccumulationTree.tp_getattro = __Pyx_PyObject_GenericGetAttr;
+  if ((CYTHON_USE_TYPE_SLOTS && CYTHON_USE_PYTYPE_LOOKUP) && likely(!__pyx_type_9cythonize__AccumulationTree.tp_dictoffset && __pyx_type_9cythonize__AccumulationTree.tp_getattro == PyObject_GenericGetAttr)) {
+    __pyx_type_9cythonize__AccumulationTree.tp_getattro = __Pyx_PyObject_GenericGetAttr;
   }
-  if (__Pyx_SetVtable(__pyx_type_17accumulation_tree_17accumulation_tree__AccumulationTree.tp_dict, __pyx_vtabptr_17accumulation_tree_17accumulation_tree__AccumulationTree) < 0) __PYX_ERR(0, 207, __pyx_L1_error)
-  if (PyObject_SetAttr(__pyx_m, __pyx_n_s_AccumulationTree, (PyObject *)&__pyx_type_17accumulation_tree_17accumulation_tree__AccumulationTree) < 0) __PYX_ERR(0, 207, __pyx_L1_error)
-  if (__Pyx_setup_reduce((PyObject*)&__pyx_type_17accumulation_tree_17accumulation_tree__AccumulationTree) < 0) __PYX_ERR(0, 207, __pyx_L1_error)
-  __pyx_ptype_17accumulation_tree_17accumulation_tree__AccumulationTree = &__pyx_type_17accumulation_tree_17accumulation_tree__AccumulationTree;
+  if (__Pyx_SetVtable(__pyx_type_9cythonize__AccumulationTree.tp_dict, __pyx_vtabptr_9cythonize__AccumulationTree) < 0) __PYX_ERR(0, 207, __pyx_L1_error)
+  if (PyObject_SetAttr(__pyx_m, __pyx_n_s_AccumulationTree, (PyObject *)&__pyx_type_9cythonize__AccumulationTree) < 0) __PYX_ERR(0, 207, __pyx_L1_error)
+  if (__Pyx_setup_reduce((PyObject*)&__pyx_type_9cythonize__AccumulationTree) < 0) __PYX_ERR(0, 207, __pyx_L1_error)
+  __pyx_ptype_9cythonize__AccumulationTree = &__pyx_type_9cythonize__AccumulationTree;
   __Pyx_RefNannyFinishContext();
   return 0;
   __pyx_L1_error:;
@@ -12397,11 +12397,11 @@ static int __Pyx_modinit_function_import_code(void) {
 
 
 #if PY_MAJOR_VERSION < 3
-__Pyx_PyMODINIT_FUNC initaccumulation_tree(void) CYTHON_SMALL_CODE; /*proto*/
-__Pyx_PyMODINIT_FUNC initaccumulation_tree(void)
+__Pyx_PyMODINIT_FUNC initcythonize(void) CYTHON_SMALL_CODE; /*proto*/
+__Pyx_PyMODINIT_FUNC initcythonize(void)
 #else
-__Pyx_PyMODINIT_FUNC PyInit_accumulation_tree(void) CYTHON_SMALL_CODE; /*proto*/
-__Pyx_PyMODINIT_FUNC PyInit_accumulation_tree(void)
+__Pyx_PyMODINIT_FUNC PyInit_cythonize(void) CYTHON_SMALL_CODE; /*proto*/
+__Pyx_PyMODINIT_FUNC PyInit_cythonize(void)
 #if CYTHON_PEP489_MULTI_PHASE_INIT
 {
   return PyModuleDef_Init(&__pyx_moduledef);
@@ -12468,7 +12468,7 @@ bad:
 }
 
 
-static CYTHON_SMALL_CODE int __pyx_pymod_exec_accumulation_tree(PyObject *__pyx_pyinit_module)
+static CYTHON_SMALL_CODE int __pyx_pymod_exec_cythonize(PyObject *__pyx_pyinit_module)
 #endif
 #endif
 {
@@ -12483,7 +12483,7 @@ static CYTHON_SMALL_CODE int __pyx_pymod_exec_accumulation_tree(PyObject *__pyx_
   #if CYTHON_PEP489_MULTI_PHASE_INIT
   if (__pyx_m) {
     if (__pyx_m == __pyx_pyinit_module) return 0;
-    PyErr_SetString(PyExc_RuntimeError, "Module 'accumulation_tree' has already been imported. Re-initialisation is not supported.");
+    PyErr_SetString(PyExc_RuntimeError, "Module 'cythonize' has already been imported. Re-initialisation is not supported.");
     return -1;
   }
   #elif PY_MAJOR_VERSION >= 3
@@ -12498,7 +12498,7 @@ if (!__Pyx_RefNanny) {
       Py_FatalError("failed to import 'refnanny' module");
 }
 #endif
-  __Pyx_RefNannySetupContext("__Pyx_PyMODINIT_FUNC PyInit_accumulation_tree(void)", 0);
+  __Pyx_RefNannySetupContext("__Pyx_PyMODINIT_FUNC PyInit_cythonize(void)", 0);
   if (__Pyx_check_binary_version() < 0) __PYX_ERR(0, 1, __pyx_L1_error)
   #ifdef __Pxy_PyFrame_Initialize_Offsets
   __Pxy_PyFrame_Initialize_Offsets();
@@ -12535,7 +12535,7 @@ if (!__Pyx_RefNanny) {
   Py_INCREF(__pyx_m);
   #else
   #if PY_MAJOR_VERSION < 3
-  __pyx_m = Py_InitModule4("accumulation_tree", __pyx_methods, 0, 0, PYTHON_API_VERSION); Py_XINCREF(__pyx_m);
+  __pyx_m = Py_InitModule4("cythonize", __pyx_methods, 0, 0, PYTHON_API_VERSION); Py_XINCREF(__pyx_m);
   #else
   __pyx_m = PyModule_Create(&__pyx_moduledef);
   #endif
@@ -12553,14 +12553,14 @@ if (!__Pyx_RefNanny) {
   #if PY_MAJOR_VERSION < 3 && (__PYX_DEFAULT_STRING_ENCODING_IS_ASCII || __PYX_DEFAULT_STRING_ENCODING_IS_DEFAULT)
   if (__Pyx_init_sys_getdefaultencoding_params() < 0) __PYX_ERR(0, 1, __pyx_L1_error)
   #endif
-  if (__pyx_module_is_main_accumulation_tree__accumulation_tree) {
+  if (__pyx_module_is_main_cythonize) {
     if (PyObject_SetAttr(__pyx_m, __pyx_n_s_name, __pyx_n_s_main) < 0) __PYX_ERR(0, 1, __pyx_L1_error)
   }
   #if PY_MAJOR_VERSION >= 3
   {
     PyObject *modules = PyImport_GetModuleDict(); if (unlikely(!modules)) __PYX_ERR(0, 1, __pyx_L1_error)
-    if (!PyDict_GetItemString(modules, "accumulation_tree.accumulation_tree")) {
-      if (unlikely(PyDict_SetItemString(modules, "accumulation_tree.accumulation_tree", __pyx_m) < 0)) __PYX_ERR(0, 1, __pyx_L1_error)
+    if (!PyDict_GetItemString(modules, "cythonize")) {
+      if (unlikely(PyDict_SetItemString(modules, "cythonize", __pyx_m) < 0)) __PYX_ERR(0, 1, __pyx_L1_error)
     }
   }
   #endif
@@ -12581,7 +12581,7 @@ if (!__Pyx_RefNanny) {
   if (__Pyx_patch_abc() < 0) __PYX_ERR(0, 1, __pyx_L1_error)
   #endif
 
-  /* "accumulation_tree/accumulation_tree.pyx":3
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":3
  * # cython: language_level=3
  * from __future__ import absolute_import
  * from .abctree import ABCTree             # <<<<<<<<<<<<<<
@@ -12602,7 +12602,7 @@ if (!__Pyx_RefNanny) {
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "accumulation_tree/accumulation_tree.pyx":4
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":4
  * from __future__ import absolute_import
  * from .abctree import ABCTree
  * import operator             # <<<<<<<<<<<<<<
@@ -12614,21 +12614,21 @@ if (!__Pyx_RefNanny) {
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_operator, __pyx_t_2) < 0) __PYX_ERR(0, 4, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "accumulation_tree/accumulation_tree.pyx":51
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":51
  *     pass
  * 
  * cdef NullKey null_key = NullKey()             # <<<<<<<<<<<<<<
  * 
  * cdef class _RBTree(object):
  */
-  __pyx_t_2 = __Pyx_PyObject_CallNoArg(((PyObject *)__pyx_ptype_17accumulation_tree_17accumulation_tree_NullKey)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 51, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_CallNoArg(((PyObject *)__pyx_ptype_9cythonize_NullKey)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 51, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __Pyx_XGOTREF(((PyObject *)__pyx_v_17accumulation_tree_17accumulation_tree_null_key));
-  __Pyx_DECREF_SET(__pyx_v_17accumulation_tree_17accumulation_tree_null_key, ((struct __pyx_obj_17accumulation_tree_17accumulation_tree_NullKey *)__pyx_t_2));
+  __Pyx_XGOTREF(((PyObject *)__pyx_v_9cythonize_null_key));
+  __Pyx_DECREF_SET(__pyx_v_9cythonize_null_key, ((struct __pyx_obj_9cythonize_NullKey *)__pyx_t_2));
   __Pyx_GIVEREF(__pyx_t_2);
   __pyx_t_2 = 0;
 
-  /* "accumulation_tree/accumulation_tree.pyx":204
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":204
  *             self.insert(k, v)
  * 
  * class RBTree(_RBTree, ABCTree):             # <<<<<<<<<<<<<<
@@ -12639,15 +12639,15 @@ if (!__Pyx_RefNanny) {
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_t_1 = PyTuple_New(2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 204, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __Pyx_INCREF(((PyObject *)__pyx_ptype_17accumulation_tree_17accumulation_tree__RBTree));
-  __Pyx_GIVEREF(((PyObject *)__pyx_ptype_17accumulation_tree_17accumulation_tree__RBTree));
-  PyTuple_SET_ITEM(__pyx_t_1, 0, ((PyObject *)__pyx_ptype_17accumulation_tree_17accumulation_tree__RBTree));
+  __Pyx_INCREF(((PyObject *)__pyx_ptype_9cythonize__RBTree));
+  __Pyx_GIVEREF(((PyObject *)__pyx_ptype_9cythonize__RBTree));
+  PyTuple_SET_ITEM(__pyx_t_1, 0, ((PyObject *)__pyx_ptype_9cythonize__RBTree));
   __Pyx_GIVEREF(__pyx_t_2);
   PyTuple_SET_ITEM(__pyx_t_1, 1, __pyx_t_2);
   __pyx_t_2 = 0;
   __pyx_t_2 = __Pyx_CalculateMetaclass(NULL, __pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 204, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = __Pyx_Py3MetaclassPrepare(__pyx_t_2, __pyx_t_1, __pyx_n_s_RBTree, __pyx_n_s_RBTree, (PyObject *) NULL, __pyx_n_s_accumulation_tree_accumulation_t, (PyObject *) NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 204, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_Py3MetaclassPrepare(__pyx_t_2, __pyx_t_1, __pyx_n_s_RBTree, __pyx_n_s_RBTree, (PyObject *) NULL, __pyx_n_s_cythonize, (PyObject *) NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 204, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __pyx_t_4 = __Pyx_Py3ClassCreate(__pyx_t_2, __pyx_n_s_RBTree, __pyx_t_1, __pyx_t_3, NULL, 0, 0); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 204, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
@@ -12657,7 +12657,7 @@ if (!__Pyx_RefNanny) {
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "accumulation_tree/accumulation_tree.pyx":213
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":213
  *     cdef set _dirty_nodes
  * 
  *     def __init__(self, mapper, reducer=operator.add, zero=0):             # <<<<<<<<<<<<<<
@@ -12673,7 +12673,7 @@ if (!__Pyx_RefNanny) {
   __Pyx_GIVEREF(__pyx_t_2);
   __pyx_t_2 = 0;
 
-  /* "accumulation_tree/accumulation_tree.pyx":365
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":365
  *         _RBTree.__setstate__(self, state)
  * 
  * class AccumulationTree(_AccumulationTree, ABCTree):             # <<<<<<<<<<<<<<
@@ -12683,15 +12683,15 @@ if (!__Pyx_RefNanny) {
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_t_1 = PyTuple_New(2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 365, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __Pyx_INCREF(((PyObject *)__pyx_ptype_17accumulation_tree_17accumulation_tree__AccumulationTree));
-  __Pyx_GIVEREF(((PyObject *)__pyx_ptype_17accumulation_tree_17accumulation_tree__AccumulationTree));
-  PyTuple_SET_ITEM(__pyx_t_1, 0, ((PyObject *)__pyx_ptype_17accumulation_tree_17accumulation_tree__AccumulationTree));
+  __Pyx_INCREF(((PyObject *)__pyx_ptype_9cythonize__AccumulationTree));
+  __Pyx_GIVEREF(((PyObject *)__pyx_ptype_9cythonize__AccumulationTree));
+  PyTuple_SET_ITEM(__pyx_t_1, 0, ((PyObject *)__pyx_ptype_9cythonize__AccumulationTree));
   __Pyx_GIVEREF(__pyx_t_2);
   PyTuple_SET_ITEM(__pyx_t_1, 1, __pyx_t_2);
   __pyx_t_2 = 0;
   __pyx_t_2 = __Pyx_CalculateMetaclass(NULL, __pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 365, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = __Pyx_Py3MetaclassPrepare(__pyx_t_2, __pyx_t_1, __pyx_n_s_AccumulationTree_2, __pyx_n_s_AccumulationTree_2, (PyObject *) NULL, __pyx_n_s_accumulation_tree_accumulation_t, (PyObject *) NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 365, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_Py3MetaclassPrepare(__pyx_t_2, __pyx_t_1, __pyx_n_s_AccumulationTree_2, __pyx_n_s_AccumulationTree_2, (PyObject *) NULL, __pyx_n_s_cythonize, (PyObject *) NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 365, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __pyx_t_4 = __Pyx_Py3ClassCreate(__pyx_t_2, __pyx_n_s_AccumulationTree_2, __pyx_t_1, __pyx_t_3, NULL, 0, 0); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 365, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
@@ -12706,7 +12706,7 @@ if (!__Pyx_RefNanny) {
  *     cdef object __pyx_PickleError
  *     cdef object __pyx_result
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_17accumulation_tree_17accumulation_tree_1__pyx_unpickle_Node, NULL, __pyx_n_s_accumulation_tree_accumulation_t); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 1, __pyx_L1_error)
+  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_9cythonize_1__pyx_unpickle_Node, NULL, __pyx_n_s_cythonize); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 1, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_pyx_unpickle_Node, __pyx_t_1) < 0) __PYX_ERR(1, 1, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
@@ -12718,7 +12718,7 @@ if (!__Pyx_RefNanny) {
  *     __pyx_result.accumulation = __pyx_state[0]; __pyx_result.key = __pyx_state[1]; __pyx_result.left = __pyx_state[2]; __pyx_result.red = __pyx_state[3]; __pyx_result.right = __pyx_state[4]; __pyx_result.value = __pyx_state[5]
  *     if len(__pyx_state) > 6 and hasattr(__pyx_result, '__dict__'):
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_17accumulation_tree_17accumulation_tree_3__pyx_unpickle_NullKey, NULL, __pyx_n_s_accumulation_tree_accumulation_t); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 1, __pyx_L1_error)
+  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_9cythonize_3__pyx_unpickle_NullKey, NULL, __pyx_n_s_cythonize); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 1, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_pyx_unpickle_NullKey, __pyx_t_1) < 0) __PYX_ERR(1, 1, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
@@ -12728,7 +12728,7 @@ if (!__Pyx_RefNanny) {
  *     cdef object __pyx_PickleError
  *     cdef object __pyx_result
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_17accumulation_tree_17accumulation_tree_5__pyx_unpickle__RBTree, NULL, __pyx_n_s_accumulation_tree_accumulation_t); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 1, __pyx_L1_error)
+  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_9cythonize_5__pyx_unpickle__RBTree, NULL, __pyx_n_s_cythonize); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 1, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_pyx_unpickle__RBTree, __pyx_t_1) < 0) __PYX_ERR(1, 1, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
@@ -12740,12 +12740,12 @@ if (!__Pyx_RefNanny) {
  *     __pyx_result._count = __pyx_state[0]; __pyx_result._root = __pyx_state[1]
  *     if len(__pyx_state) > 2 and hasattr(__pyx_result, '__dict__'):
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_17accumulation_tree_17accumulation_tree_7__pyx_unpickle__AccumulationTree, NULL, __pyx_n_s_accumulation_tree_accumulation_t); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 1, __pyx_L1_error)
+  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_9cythonize_7__pyx_unpickle__AccumulationTree, NULL, __pyx_n_s_cythonize); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 1, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_pyx_unpickle__AccumulationTree, __pyx_t_1) < 0) __PYX_ERR(1, 1, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "accumulation_tree/accumulation_tree.pyx":1
+  /* "opteryx/third_party/accumulation_tree/accumulation_tree.pyx":1
  * # cython: language_level=3             # <<<<<<<<<<<<<<
  * from __future__ import absolute_import
  * from .abctree import ABCTree
@@ -12765,11 +12765,11 @@ if (!__Pyx_RefNanny) {
   __Pyx_XDECREF(__pyx_t_4);
   if (__pyx_m) {
     if (__pyx_d) {
-      __Pyx_AddTraceback("init accumulation_tree.accumulation_tree", __pyx_clineno, __pyx_lineno, __pyx_filename);
+      __Pyx_AddTraceback("init cythonize", __pyx_clineno, __pyx_lineno, __pyx_filename);
     }
     Py_CLEAR(__pyx_m);
   } else if (!PyErr_Occurred()) {
-    PyErr_SetString(PyExc_ImportError, "init accumulation_tree.accumulation_tree");
+    PyErr_SetString(PyExc_ImportError, "init cythonize");
   }
   __pyx_L0:;
   __Pyx_RefNannyFinishContext();

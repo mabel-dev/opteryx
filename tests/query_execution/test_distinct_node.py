@@ -17,7 +17,9 @@ from opteryx.engine.planner.operations import DistinctNode
 
 def size(d):
     from opteryx.utils.pyarrow import fetchall
+
     return len(list(fetchall(d)))
+
 
 def test_dictinct_node():
 
@@ -25,7 +27,9 @@ def test_dictinct_node():
 
     # ensure we don't filter out when everything is unique
     satellite_data = SatelliteData().get()
-    assert size(dn.execute(data_pages=[satellite_data])) == 177, size(dn.execute(data_pages=[satellite_data]))
+    assert size(dn.execute(data_pages=[satellite_data])) == 177, size(
+        dn.execute(data_pages=[satellite_data])
+    )
 
     # reduce to high duplicate attribute
     planets = satellite_data.select(["planetId"])

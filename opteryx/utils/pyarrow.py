@@ -7,6 +7,7 @@ def fetchmany(pages: Iterable, size: int = 5) -> List[dict]:
     This is the fastest way I've found to do this, on my computer it's about
     14,000 rows per second - fast enough for my use case.
     """
+
     def _inner_row_reader():
         for page in pages:
             for index in range(page.num_rows):
@@ -20,7 +21,7 @@ def fetchmany(pages: Iterable, size: int = 5) -> List[dict]:
         if index == size:
             return
         yield row
-    
+
     if index < 0:
         yield {}
 

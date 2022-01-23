@@ -29,8 +29,8 @@ NATIVE_OPERATORS = {
     "<": pc.less,
     "<=": pc.less_equal,
     "<>": pc.not_equal,
-#    "LIKE": pc.match_like,
-#    "SIMILAR TO": pc.match_substring_regex,
+    #    "LIKE": pc.match_like,
+    #    "SIMILAR TO": pc.match_substring_regex,
 }
 
 CODED_OPERATORS = {}
@@ -87,13 +87,13 @@ def _evaluate(predicate: Union[tuple, list], table: Table) -> bool:
 
 
 class SelectionNode(BasePlanNode):
-    def __init__(self, statistics:QueryStatistics, **config):
+    def __init__(self, statistics: QueryStatistics, **config):
         self._filter = config.get("filter")
 
     def __repr__(self):
         return str(self._filter)
 
-    def execute(self, data_pages:Iterable) -> Iterable:
+    def execute(self, data_pages: Iterable) -> Iterable:
 
         if self._filter is None:
             yield data_pages

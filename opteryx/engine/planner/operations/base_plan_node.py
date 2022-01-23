@@ -23,9 +23,9 @@ from opteryx.engine.query_statistics import QueryStatistics
 
 class BasePlanNode(abc.ABC):
     @abc.abstractclassmethod
-    def __init__(self, statistics:QueryStatistics, **config):
+    def __init__(self, statistics: QueryStatistics, **config):
         pass
 
     @abc.abstractclassmethod
-    def execute(self, data_pages:Iterable) -> Iterable:
+    def execute(self, data_pages: Iterable) -> Iterable:
         pass

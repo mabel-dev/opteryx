@@ -13,10 +13,10 @@ from opteryx.third_party.pyarrow_ops import drop_duplicates
 
 
 class DistinctNode(BasePlanNode):
-    def __init__(self, statistics:QueryStatistics, **config):
+    def __init__(self, statistics: QueryStatistics, **config):
         self._distinct = config.get("distinct", True)
 
-    def execute(self, data_pages:Iterable) -> Iterable:
+    def execute(self, data_pages: Iterable) -> Iterable:
         if self._distinct:
             yield drop_duplicates(concat_tables(data_pages))
         yield from data_pages

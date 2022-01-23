@@ -11,17 +11,12 @@
 # limitations under the License.
 
 from .version import __version__
-from opteryx.engine.relation import Relation
-from opteryx.query import OpteryxQuery
 from opteryx.connection import Connection
-from opteryx.engine.query_statistics import QueryStatistics
 
 
 apilevel = "1.0"
 threadsafety = 0
 paramstyle = "format"
-
-
 
 
 def connect(*args, **kwargs):

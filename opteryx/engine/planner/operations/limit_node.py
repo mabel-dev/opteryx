@@ -12,10 +12,10 @@ from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
 
 
 class LimitNode(BasePlanNode):
-    def __init__(self, statistics:QueryStatistics, **config):
+    def __init__(self, statistics: QueryStatistics, **config):
         self._limit = config.get("limit")
 
-    def execute(self, data_pages:Iterable) -> Iterable:
+    def execute(self, data_pages: Iterable) -> Iterable:
 
         result_set = []
         row_count = 0
@@ -25,5 +25,5 @@ class LimitNode(BasePlanNode):
             result_set.append(page)
             if row_count > self._limit:
                 break
-        
+
         yield concat_tables(result_set).slice(0, self._limit)

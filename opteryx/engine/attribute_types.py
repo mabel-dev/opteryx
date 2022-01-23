@@ -75,7 +75,7 @@ PYTHON_TYPES = {
     "str": OPTERYX_TYPES.VARCHAR,
     "tuple": OPTERYX_TYPES.LIST,
     "list": OPTERYX_TYPES.LIST,
-    "set": OPTERYX_TYPES.LIST
+    "set": OPTERYX_TYPES.LIST,
 }
 
 PARQUET_TYPES = {
@@ -87,7 +87,6 @@ PARQUET_TYPES = {
     "string": OPTERYX_TYPES.VARCHAR,
     "tuple": OPTERYX_TYPES.LIST,
 }
-
 
 
 def get_coerced_type(python_type):

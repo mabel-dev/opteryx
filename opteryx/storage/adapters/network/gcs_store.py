@@ -15,21 +15,21 @@ try:
 except ImportError:  # pragma: no cover
     google_cloud_storage_installed = False
 
-class GcsStorage(BaseStorageAdapter):
 
+class GcsStorage(BaseStorageAdapter):
     def __init__(self, project: str, credentials=None, **kwargs):
         if not google_cloud_storage_installed:  # pragma: no cover
             raise MissingDependencyError(
                 "`google-cloud-storage` is missing, please install or include in requirements.txt"
             )
 
-#        super().__init__(**kwargs)
+        #        super().__init__(**kwargs)
         self.project = project
         self.credentials = credentials
 
     def read_blob(self, blob_name):
         import io
-        
+
         bucket, object_path, name, extension = paths.get_parts(blob_name)
         blob = get_blob(
             project=self.project,
@@ -76,8 +76,11 @@ def get_blob(project: str, bucket: str, blob_name: str):
     blob = gcs_bucket.get_blob(blob_name)
     return blob
 
+
 if __name__ == "__main__":
 
     ds = GcsStorage(project="local")
 
-    ds.get_partitions(dataset="test/data/partitioned", start_date="2000-01-01", end_date="2000-01-05")
+    ds.get_partitions(
+        dataset="test/data/partitioned", start_date="2000-01-01", end_date="2000-01-05"
+    )

@@ -4,19 +4,19 @@ from .helpers import combine_column, columns_to_array, groupify_array
 
 # Grouping / groupby methods
 agg_methods = {
-    'sum': np.sum,
-    'max': np.max,
-    'min': np.min,
-    'mean': np.mean,
-    'median': np.median,
-    'count': np.size,
-    'distinct_count': lambda a: np.unique(a).size,
-    'distinct_sets': lambda a: len(set(a)),
-    'prod': np.prod,
-    'std': np.std,
-    'var': np.var,
-    'first': lambda a: a[0],
-    'last': lambda a: a[-1],
+    "sum": np.sum,
+    "max": np.max,
+    "min": np.min,
+    "mean": np.mean,
+    "median": np.median,
+    "count": np.size,
+    "distinct_count": lambda a: np.unique(a).size,
+    "distinct_sets": lambda a: len(set(a)),
+    "prod": np.prod,
+    "std": np.std,
+    "var": np.var,
+    "first": lambda a: a[0],
+    "last": lambda a: a[-1],
 }
 
 
