@@ -96,7 +96,7 @@ class SelectionNode(BasePlanNode):
     def execute(self, data_pages: Iterable) -> Iterable:
 
         if self._filter is None:
-            yield data_pages
+            yield from data_pages
 
         else:
 

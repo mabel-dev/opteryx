@@ -28,7 +28,7 @@ from opteryx.engine.planner.operations import *
 from opteryx.engine.query_statistics import QueryStatistics
 from opteryx.exceptions import SqlError
 from opteryx.engine.attribute_types import OPTERYX_TYPES
-from typing import List
+from opteryx.storage.schemes import DefaultPartitionScheme
 
 
 """
@@ -150,6 +150,7 @@ def _extract_relations(ast):
             [part["value"] for part in relations["relation"]["Table"]["name"]]
         )
         return dataset
+
     if "Derived" in relations["relation"]:
         subquery = relations["relation"]["Derived"]["subquery"]["body"]
         raise NotImplementedError("SUBQUERIES in FROM statements not supported")
@@ -193,7 +194,7 @@ def _extract_selection(ast):
 
 
 class QueryPlan(object):
-    def __init__(self, sql: str, statistics):
+    def __init__(self, sql: str, statistics, reader, partition_scheme):
         """
         PLan represents Directed Acyclic Graphs which are used to describe data
         pipelines.
@@ -202,6 +203,9 @@ class QueryPlan(object):
 
         self.nodes = {}
         self.edges = []
+
+        self._reader = reader
+        self._partition_scheme = partition_scheme
 
         # Parse the SQL into a AST
         try:
@@ -233,7 +237,13 @@ class QueryPlan(object):
         functionality.
         """
         self.add_operator(
-            "from", PartitionReaderNode(statistics, partition=_extract_relations(ast))
+            "from",
+            DatasetReaderNode(
+                statistics,
+                partition=_extract_relations(ast),
+                reader=self._reader,
+                partition_scheme=self._partition_scheme,
+            ),
         )
         self.add_operator(
             "where", SelectionNode(statistics, filter=_extract_selection(ast))
