@@ -10,7 +10,6 @@ class QueryStatistics:
         self.partitions_scanned: int = 0
         self.partitions_read: int = 0
 
-        self.time_metadata: int = 0
         self.time_data_read: int = 0
 
         # time spent query planning
@@ -29,10 +28,10 @@ class QueryStatistics:
             "bytes_read_data": self.bytes_read_data,
             "bytes_processed_data": self.bytes_processed_data,
             "rows_read": self.rows_read,
-            "time_data_read": self.time_data_read,
-            "time_metadata": self.time_metadata,
+            "time_data_read": 0 if self.time_data_read == 0 else (self.time_data_read / 1e9),
+            "time_total": self.end_time - self.start_time / 1e9,
             "time_planning": self.time_planning,
             "partitions_found": self.partitions_found,
             "partitions_scanned": self.partitions_scanned,
-            "partitions_read": self.partitions_read
+            "partitions_read": self.partitions_read,
         }

@@ -15,6 +15,7 @@ USE THE ZONEMAP:
 PARALLELIZE READING:
 - As one blob is read, the next is immediately cached for reading
 """
+import time
 from enum import Enum
 from typing import Iterable
 from opteryx.engine.planner.operations import BasePlanNode
@@ -36,7 +37,6 @@ KNOWN_EXTENSIONS = {
     "complete": (do_nothing, EXTENSION_TYPE.CONTROL),
     "ignore": (do_nothing, EXTENSION_TYPE.CONTROL),
     "metadata": (do_nothing, EXTENSION_TYPE.CONTROL),
-
     "arrow": (file_decoders.arrow_decoder, EXTENSION_TYPE.DATA),
     "jsonl": (file_decoders.jsonl_decoder, EXTENSION_TYPE.DATA),
     "orc": (file_decoders.orc_decoder, EXTENSION_TYPE.DATA),
@@ -122,6 +122,8 @@ class DatasetReaderNode(BasePlanNode):
                 # we're going to open this blob
                 self._statistics.count_data_blobs_read += 1
 
+                start_read = time.time_ns()
+
                 # Read the blob from storage, it's just a stream of bytes at this point
                 blob_bytes = self._reader.read_blob(blob_name)
 
@@ -130,6 +132,8 @@ class DatasetReaderNode(BasePlanNode):
 
                 # interpret the raw bytes into entries
                 pyarrow_blob = decoder(blob_bytes, self._projection)
+
+                self._statistics.time_data_read += time.time_ns() - start_read
 
                 # we should know the number of entries
                 self._statistics.rows_read += pyarrow_blob.num_rows

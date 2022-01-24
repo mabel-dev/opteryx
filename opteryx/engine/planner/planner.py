@@ -28,7 +28,7 @@ import decimal
 from opteryx.engine.planner.operations import *
 from opteryx.engine.query_statistics import QueryStatistics
 from opteryx.exceptions import SqlError
-from opteryx.engine.attribute_types import OPTERYX_TYPES
+from opteryx.engine.attribute_types import TOKEN_TYPES
 from opteryx.storage.schemes import DefaultPartitionScheme
 from opteryx.storage.adapters.local.disk_store import DiskStorage
 
@@ -39,33 +39,19 @@ BinaryOperator::Multiply => "*",
 BinaryOperator::Divide => "/",
 BinaryOperator::Modulo => "%",
 BinaryOperator::StringConcat => "||",
-BinaryOperator::Gt => ">",
-BinaryOperator::Lt => "<",
-BinaryOperator::GtEq => ">=",
-BinaryOperator::LtEq => "<=",
 BinaryOperator::Spaceship => "<=>",
-BinaryOperator::Eq => "=",
-BinaryOperator::NotEq => "<>",
 BinaryOperator::And => "AND",
 BinaryOperator::Or => "OR",
 BinaryOperator::Xor => "XOR",
-BinaryOperator::Like => "LIKE",
-BinaryOperator::NotLike => "NOT LIKE",
-BinaryOperator::ILike => "ILIKE",
-BinaryOperator::NotILike => "NOT ILIKE",
 BinaryOperator::BitwiseOr => "|",
 BinaryOperator::BitwiseAnd => "&",
 BinaryOperator::BitwiseXor => "^",
 BinaryOperator::PGBitwiseXor => "#",
 BinaryOperator::PGBitwiseShiftLeft => "<<",
 BinaryOperator::PGBitwiseShiftRight => ">>",
-BinaryOperator::PGRegexMatch => "~",
 BinaryOperator::PGRegexIMatch => "~*",
 BinaryOperator::PGRegexNotMatch => "!~",
 BinaryOperator::PGRegexNotIMatch => "!~*",
-
-// there are others
-UnaryOperator::Not => "NOT",
 """
 
 OPERATOR_XLAT = {
@@ -75,10 +61,12 @@ OPERATOR_XLAT = {
     "GtEq": ">=",
     "Lt": "<",
     "LtEq": "<=",
-    "Like": "LIKE",
-    "NotLike": "NOT LIKE",
-    "InList": "IN",
-    "PGRegexMatch": "~"
+    "Like": "like",
+    "ILike": "ilike",
+    "NotLike": "not like",
+    "NotILike": "not ilike",
+    "InList": "in",
+    "PGRegexMatch": "~",
 }
 
 
@@ -91,20 +79,16 @@ def _build_dnf_filters(filters):
         return None
 
     print(filters)
-    if "Identifier" in filters:  # we're an identifier 
-        return filters["Identifier"]["value"]
-    if "Value" in filters:  # we're a literal 
+    if "Identifier" in filters:  # we're an identifier
+        return (filters["Identifier"]["value"], TOKEN_TYPES.IDENTIFIER)
+    if "Value" in filters:  # we're a literal
         value = filters["Value"]
         if "SingleQuotedString" in value:
-            return (value["SingleQuotedString"], OPTERYX_TYPES.VARCHAR)
+            return (value["SingleQuotedString"], TOKEN_TYPES.VARCHAR)
         if "Number" in value:
-            return (decimal.Decimal(value["Number"][0]), OPTERYX_TYPES.NUMERIC)
-        if "list" in value:
-            # WHERE g in (1, 2, 3)
-            # {'InList': {'expr': {'Identifier': {'value': 'g', 'quote_style': None}}, 'list': [{'Value': {'Number': ('1', False)}}, {'Value': {'Number': ('2', False)}}, {'Value': {'Number': ('3', False)}}], 'negated': False}}
-            raise NotImplementedError("List values are not implemented.")
+            return (decimal.Decimal(value["Number"][0]), TOKEN_TYPES.NUMERIC)
         if "Boolean" in value:
-            return (value["Boolean"], OPTERYX_TYPES.BOOLEAN)
+            return (value["Boolean"], TOKEN_TYPES.BOOLEAN)
     if "BinaryOp" in filters:
         left = _build_dnf_filters(filters["BinaryOp"]["left"])
         operator = filters["BinaryOp"]["op"]
@@ -135,6 +119,11 @@ def _build_dnf_filters(filters):
     if "IsNotNull" in filters:
         left = _build_dnf_filters(filters["IsNotNull"])
         return (left, "<>", None)
+    if "InList" in filters:
+        left = _build_dnf_filters(filters["InList"]["expr"])
+        right = ([_build_dnf_filters(v)[0] for v in filters["InList"]["list"]], TOKEN_TYPES.LIST,)
+        operator = "not in" if filters["InList"]["negated"] else "in"
+        return (left, operator, right)
 
 
 def _extract_relations(ast):
@@ -389,11 +378,16 @@ if __name__ == "__main__":
     import time
     from opteryx.third_party.pyarrow_ops import head
 
-    SQL = "SELECT * from `tests-data.zoned` where followers = \'name\'"
+    SQL = "SELECT * from `tests-data.zoned` where followers = 'name'"
 
     statistics = QueryStatistics()
     statistics.start_time = time.time_ns()
-    q = QueryPlan(SQL, statistics, reader=DiskStorage(), partition_scheme=DefaultPartitionScheme(""))
+    q = QueryPlan(
+        SQL,
+        statistics,
+        reader=DiskStorage(),
+        partition_scheme=DefaultPartitionScheme(""),
+    )
     print(q)
 
     from opteryx.engine.display import ascii_table

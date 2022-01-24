@@ -30,6 +30,7 @@ def parquet_decoder(stream, projection):
     Read parquet formatted files
     """
     import pyarrow.parquet as pq
+
     table = pq.read_table(stream, columns=projection)
     return table
 
@@ -57,8 +58,10 @@ def jsonl_decoder(stream, projection):
 
     return table
 
+
 def arrow_decoder(stream, projection):
 
     import pyarrow.feather as pf
+
     table = pf.read_table(stream, columns=projection)
     return table

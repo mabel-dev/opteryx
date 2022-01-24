@@ -91,6 +91,8 @@ class SelectionNode(BasePlanNode):
     def __init__(self, statistics: QueryStatistics, **config):
         self._filter = config.get("filter")
 
+        print(self._filter)
+
     def __repr__(self):
         return str(self._filter)
 
@@ -107,6 +109,7 @@ class SelectionNode(BasePlanNode):
                 filtered = filters(page, self._filter)
                 print(f"selector yielding {filtered.shape}", self._filter)
                 yield filtered
+
 
 #                mask = _evaluate(self._filter, page)
 #                yield page.take(list(mask))

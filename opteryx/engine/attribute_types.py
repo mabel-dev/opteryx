@@ -13,6 +13,7 @@
 Helper routines for handling types between different dialects.
 """
 from enum import Enum
+from logging.config import IDENTIFIER
 from opteryx.exceptions import UnsupportedTypeError
 
 
@@ -52,6 +53,17 @@ class OPTERYX_TYPES(str, Enum):
     TIMESTAMP = "TIMESTAMP"
     OTHER = "OTHER"
 
+
+class TOKEN_TYPES(str, Enum):
+    BOOLEAN = "BOOLEAN"
+    NUMERIC = "NUMERIC"
+    LIST = "LIST"
+    VARCHAR = "VARCHAR"
+    STRUCT = "STRUCT"
+    TIMESTAMP = "TIMESTAMP"
+    OTHER = "OTHER"
+
+    IDENTIFIER = "IDENTIFIER"
 
 OPTERYX_TYPE_NAMES = {
     OPTERYX_TYPES.BOOLEAN: "BOOLEAN",

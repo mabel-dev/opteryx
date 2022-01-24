@@ -1,18 +1,20 @@
 import numpy as np
-import pyarrow as pa
+import pyarrow.compute as pc
+
+from opteryx.engine.attribute_types import TOKEN_TYPES
 from .helpers import columns_to_array, groupify_array
 
 # Filter functionality
 def arr_op_to_idxs(arr, op, value):
     # Cast value to type arr
-    try:
-        value = np.array(value, dtype=arr.dtype)
-    except:
-        raise Exception("Cannot downcast {} to data type {}".format(value, arr.dtype))
+ #   try:
+ #       value = np.array(value, dtype=arr.dtype)
+ #   except:
+ #       raise Exception("Cannot downcast {} to data type {}".format(value, arr.dtype))
 
     if op in ["=", "=="]:
         return np.where(arr == value)
-    elif op == ["!=", "<>"]:
+    elif op in ["!=", "<>"]:
         return np.where(arr != value)
     elif op == "<":
         return np.where(arr < value)
@@ -28,17 +30,41 @@ def arr_op_to_idxs(arr, op, value):
     elif op == "not in":
         mask = np.invert(np.isin(arr, value))
         return np.arange(len(arr))[mask]
+    # MODIFIED FOR OPTERYX
+    elif op == "like":
+        return pc.match_like(arr, value)
+    elif op == "not like":
+        return np.invert(pc.match_like(arr, value))
+    elif op == "ilike":
+        return pc.match_like(arr, value, ignore_case=True)
+    elif op == "not ilike":
+        return np.invert(pc.match_like(arr, value, ignore_case=True))
+    elif op == "~":
+        return pc.match_substring_regex(arr, value)
     else:
         raise Exception("Operand {} is not implemented!".format(op))
+
+def _get_values(table, operand):
+    """
+    MODIFIED FOR OPTERYX
+    This allows us to use two identifiers rather than the original implementation which
+    forced <identifier> <op> <literal>
+    """
+    if operand[1] == TOKEN_TYPES.IDENTIFIER:
+        return table.column(operand[0]).to_numpy()
+    else:
+        return operand[0]
 
 
 def filters(table, filters):
     filters = [filters] if isinstance(filters, tuple) else filters
     # Filter is a list of (col, op, value) tuples
     idxs = np.arange(table.num_rows)
-    for (col, op, value) in filters:  # = or ==, !=, <, >, <=, >=, in and not in
-        arr = table.column(col).to_numpy()
-        f_idxs = arr_op_to_idxs(arr[idxs], op, value)
+    for (left_op, op, right_op) in filters:  # =, <>, <, >, <=, >=, in and not in
+        # MODIFIED FOR OPTERYX
+        f_idxs = arr_op_to_idxs(
+            _get_values(table, left_op), op, _get_values(table, right_op)
+        )
         idxs = idxs[f_idxs]
     return table.take(idxs)
 

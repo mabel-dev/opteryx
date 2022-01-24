@@ -14,7 +14,7 @@ This module provides a PEP-249 familiar interface for interacting with mabel dat
 stores, it is not compliant with the standard: 
 https://www.python.org/dev/peps/pep-0249/ 
 """
-
+import time
 from typing import Dict, Optional, List, Union, Tuple
 from opteryx.storage import BaseStorageAdapter, BaseBufferCache, BasePartitionScheme
 from opteryx.storage.adapters import DiskStorage
@@ -37,8 +37,8 @@ class Connection:
         **kwargs,
     ):
         self._reader = reader
-        if not reader:
-            reader = DiskStorage()
+        if reader is None:
+            self._reader = DiskStorage()
 
         self._partition_scheme = partition_scheme
         if isinstance(partition_scheme, (str, tuple, list, set)):
@@ -119,6 +119,8 @@ class Cursor:
         if self._query is not None:
             raise Exception("Cursor can only be executed once")
 
+        self._stats.start_time = time.time_ns()
+
         if params:
             if not isinstance(params, (list, tuple)):
                 raise Exception(
@@ -142,9 +144,6 @@ class Cursor:
 
             print(operation)
 
-        import time
-
-        self._stats.start_time = time.time_ns()
         self._query_plan = QueryPlan(
             operation,
             self._stats,
@@ -152,6 +151,8 @@ class Cursor:
             self._connection._partition_scheme,
         )
         # optimize the plan
+
+        # how long have we spent planning
         self._stats.planning_time = time.time_ns() - self._stats.start_time
         # self._execute = QueryExecutor(QueryPlan)
         self._results = self._query_plan.execute()
@@ -164,6 +165,7 @@ class Cursor:
 
     @property
     def stats(self):
+        self._stats.end_time = time.time_ns()
         return self._stats.as_dict()
 
     def fetchone(self) -> Optional[Dict]:
