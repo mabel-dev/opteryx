@@ -22,6 +22,7 @@ Operator     | Description                    | Example | Result
 `NOT ILIKE`  | inverse of `ILIKE`             |         |
 `~`          | regular expression match       |         | 
 
+* BETWEEN
 
 ## Casting
 

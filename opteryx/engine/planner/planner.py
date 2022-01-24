@@ -104,11 +104,17 @@ def _build_dnf_filters(filters):
             left = _build_dnf_filters(filters["UnaryOp"]["expr"])
             return (left, "<>", True)
     if "Between" in filters:
-        # WHERE g BETWEEN 'a' AND 'b'
-        # {'Between': {'expr': {'Identifier': {'value': 'g', 'quote_style': None}}, 'negated': False, 'low': {'Value': {'SingleQuotedString': 'a'}}, 'high': {'Value': {'SingleQuotedString': 'b'}}}}
-        # WHERE g NOT BETWEEN 'a' AND 'b'
-        # {'Between': {'expr': {'Identifier': {'value': 'g', 'quote_style': None}}, 'negated': True, 'low': {'Value': {'SingleQuotedString': 'a'}}, 'high': {'Value': {'SingleQuotedString': 'b'}}}}
-        raise NotImplementedError("BETWEEN operator is not implemented.")
+        left = _build_dnf_filters(filters["Between"]["expr"])
+        low = _build_dnf_filters(filters["Between"]['low'])
+        high = _build_dnf_filters(filters["Between"]['high'])
+        inverted = filters["Between"]["negated"]
+
+        if inverted:
+            # LEFT <= LOW AND LEFT >= HIGH (not between)
+            return ([(left, "<=", low), (left, ">=", high)]) 
+        else:
+            # LEFT > LOW and LEFT < HIGH (between)
+            return ([(left, ">", low), (left, "<", high)])
     if "InSubquery" in filters:
         # WHERE g in (select * from b)
         # {'InSubquery': {'expr': {'Identifier': {'value': 'g', 'quote_style': None}}, 'subquery': {'with': None, 'body': {'Select': {'distinct': False, 'top': None, 'projection': ['Wildcard'], 'from': [{'relation': {'Table': {'name': [{'value': 'b', 'quote_style': None}], 'alias': None, 'args': [], 'with_hints': []}}, 'joins': []}], 'lateral_views': [], 'selection': None, 'group_by': [], 'cluster_by': [], 'distribute_by': [], 'sort_by': [], 'having': None}}, 'order_by': [], 'limit': None, 'offset': None, 'fetch': None}, 'negated': False}}
