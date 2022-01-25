@@ -26,6 +26,7 @@ conn = opteryx.connect(reader=DiskStorage(), partition_scheme=None)
 
 while 1:
 
+    print()
     statement = input("Query: ")
 
     if statement.lower().startswith("quit"):

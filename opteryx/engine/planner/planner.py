@@ -103,6 +103,9 @@ def _build_dnf_filters(filters):
         if filters["UnaryOp"]["op"] == "Not":
             left = _build_dnf_filters(filters["UnaryOp"]["expr"])
             return (left, "<>", True)
+        if filters["UnaryOp"]["op"] == "Minus":
+            number = 0 - decimal.Decimal(filters["UnaryOp"]["expr"]["Value"]["Number"][0])
+            return (number, TOKEN_TYPES.NUMERIC) 
     if "Between" in filters:
         left = _build_dnf_filters(filters["Between"]["expr"])
         low = _build_dnf_filters(filters["Between"]['low'])
@@ -111,7 +114,7 @@ def _build_dnf_filters(filters):
 
         if inverted:
             # LEFT <= LOW AND LEFT >= HIGH (not between)
-            return ([(left, "<=", low), (left, ">=", high)]) 
+            return ([[(left, "<=", low)], [(left, ">=", high)]]) 
         else:
             # LEFT > LOW and LEFT < HIGH (between)
             return ([(left, ">", low), (left, "<", high)])

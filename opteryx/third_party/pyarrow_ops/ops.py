@@ -69,6 +69,20 @@ def filters(table, filters):
     return table.take(idxs)
 
 
+def ifilters(table, filters):
+    # ADDED FOR OPTERYX
+    # return the indices so we can do unions (OR) and intersections (AND) on the lists
+    # of indices to do complex filters
+    filters = [filters] if isinstance(filters, tuple) else filters
+    # Filter is a list of (col, op, value) tuples
+    idxs = np.arange(table.num_rows)
+    for (left_op, op, right_op) in filters:
+        f_idxs = arr_op_to_idxs(
+            _get_values(table, left_op), op, _get_values(table, right_op)
+        )
+        idxs = idxs[f_idxs]
+    return idxs
+
 # Drop duplicates
 def drop_duplicates(table, on=[], keep="first"):
     # Gather columns to arr
