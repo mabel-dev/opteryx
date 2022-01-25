@@ -2,9 +2,20 @@
 
 ## Logical
 
-* AND / OR / NOT
+* NOT <- to be implemented
 
-## Comparisons
+The following logical operators are available: `AND` and `OR`.
+
+a     | b     | a AND b | a OR b
+----- | ----- | ------- | -------
+TRUE  | TRUE  | TRUE    | TRUE
+TRUE  | FALSE | FALSE   | TRUE
+FALSE | FALSE | FALSE   | FALSE
+
+The operators `AND` and `OR` are commutative, that is, you can switch the left and
+right operand without affecting the result.
+
+## Comparison Operators
 
 Operator     | Description                    | Example | Result
 ------------ | ------------------------------ | ------- | ------
@@ -22,7 +33,12 @@ Operator     | Description                    | Example | Result
 `NOT ILIKE`  | inverse of `ILIKE`             |         |
 `~`          | regular expression match       |         | 
 
-* BETWEEN
+## Other Comparisons
+
+Predicate               | Description
+----------------------- | ---------------------------------
+`a BETWEEN x AND y`     | equivalent to `a >= x AND a <= y`
+`a NOT BETWEEN x AND y` | equivalent to `a < x OR a > y`
 
 ## Casting
 
