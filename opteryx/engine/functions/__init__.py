@@ -144,3 +144,7 @@ FUNCTIONS = {
     "UUID": not_implemented,  # cast value as UUID
     "GET": not_implemented,  # GET(LIST, index) => LIST[index] or GET(STRUCT, accessor) => STRUCT[accessor]
 }
+
+
+def is_function(name):
+    return name.upper() in FUNCTIONS

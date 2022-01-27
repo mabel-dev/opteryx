@@ -1,5 +1,8 @@
 from .base_plan_node import BasePlanNode
 
+#from .aggregate_node import AggregateNode  # aggregate data
+from .group_node import GroupNode  # perform group by
+
 from .distinct_node import DistinctNode  # remove duplicate records
 from .dataset_reader_node import DatasetReaderNode  # read datasets
 from .limit_node import LimitNode  # select the first N records

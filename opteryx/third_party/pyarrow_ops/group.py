@@ -4,12 +4,12 @@ from .helpers import combine_column, columns_to_array, groupify_array
 
 # Grouping / groupby methods
 agg_methods = {
-    "sum": np.sum,
-    "max": np.max,
-    "min": np.min,
-    "mean": np.mean,
-    "median": np.median,
+    "avg": np.mean,
     "count": np.size,
+    "min": np.min,
+    "max": np.max,
+    "sum": np.sum,
+    "median": np.median,
     "distinct_count": lambda a: np.unique(a).size,
     "distinct_sets": lambda a: len(set(a)),
     "prod": np.prod,
@@ -17,6 +17,8 @@ agg_methods = {
     "var": np.var,
     "first": lambda a: a[0],
     "last": lambda a: a[-1],
+    # range - difference between min and max
+    # percent - each group has the relative portion calculated
 }
 
 

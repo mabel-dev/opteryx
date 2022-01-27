@@ -28,7 +28,9 @@ class QueryStatistics:
             "bytes_read_data": self.bytes_read_data,
             "bytes_processed_data": self.bytes_processed_data,
             "rows_read": self.rows_read,
-            "time_data_read": 0 if self.time_data_read == 0 else (self.time_data_read / 1e9),
+            "time_data_read": 0
+            if self.time_data_read == 0
+            else (self.time_data_read / 1e9),
             "time_total": self.end_time - self.start_time / 1e9,
             "time_planning": self.time_planning,
             "partitions_found": self.partitions_found,

@@ -30,7 +30,8 @@ from opteryx.engine.query_statistics import QueryStatistics
 from opteryx.exceptions import SqlError
 from opteryx.engine.attribute_types import TOKEN_TYPES
 from opteryx.storage.schemes import DefaultPartitionScheme
-from opteryx.storage.adapters.local.disk_store import DiskStorage
+from opteryx.storage.adapters import DiskStorage
+from opteryx.engine.functions import is_function
 
 """
 BinaryOperator::Plus => "+",
@@ -104,20 +105,22 @@ def _build_dnf_filters(filters):
             left = _build_dnf_filters(filters["UnaryOp"]["expr"])
             return (left, "<>", True)
         if filters["UnaryOp"]["op"] == "Minus":
-            number = 0 - decimal.Decimal(filters["UnaryOp"]["expr"]["Value"]["Number"][0])
-            return (number, TOKEN_TYPES.NUMERIC) 
+            number = 0 - decimal.Decimal(
+                filters["UnaryOp"]["expr"]["Value"]["Number"][0]
+            )
+            return (number, TOKEN_TYPES.NUMERIC)
     if "Between" in filters:
         left = _build_dnf_filters(filters["Between"]["expr"])
-        low = _build_dnf_filters(filters["Between"]['low'])
-        high = _build_dnf_filters(filters["Between"]['high'])
+        low = _build_dnf_filters(filters["Between"]["low"])
+        high = _build_dnf_filters(filters["Between"]["high"])
         inverted = filters["Between"]["negated"]
 
         if inverted:
             # LEFT <= LOW AND LEFT >= HIGH (not between)
-            return ([[(left, "<", low)], [(left, ">", high)]]) 
+            return [[(left, "<", low)], [(left, ">", high)]]
         else:
             # LEFT > LOW and LEFT < HIGH (between)
-            return ([(left, ">=", low), (left, "<=", high)])
+            return [(left, ">=", low), (left, "<=", high)]
     if "InSubquery" in filters:
         # WHERE g in (select * from b)
         # {'InSubquery': {'expr': {'Identifier': {'value': 'g', 'quote_style': None}}, 'subquery': {'with': None, 'body': {'Select': {'distinct': False, 'top': None, 'projection': ['Wildcard'], 'from': [{'relation': {'Table': {'name': [{'value': 'b', 'quote_style': None}], 'alias': None, 'args': [], 'with_hints': []}}, 'joins': []}], 'lateral_views': [], 'selection': None, 'group_by': [], 'cluster_by': [], 'distribute_by': [], 'sort_by': [], 'having': None}}, 'order_by': [], 'limit': None, 'offset': None, 'fetch': None}, 'negated': False}}
@@ -130,7 +133,10 @@ def _build_dnf_filters(filters):
         return (left, "<>", None)
     if "InList" in filters:
         left = _build_dnf_filters(filters["InList"]["expr"])
-        right = ([_build_dnf_filters(v)[0] for v in filters["InList"]["list"]], TOKEN_TYPES.LIST,)
+        right = (
+            [_build_dnf_filters(v)[0] for v in filters["InList"]["list"]],
+            TOKEN_TYPES.LIST,
+        )
         operator = "not in" if filters["InList"]["negated"] else "in"
         return (left, operator, right)
 
@@ -161,14 +167,26 @@ def _extract_projections(ast):
     if projection == ["Wildcard"]:
         return {"*": "*"}
 
+    print(projection)
+
     def _inner(attribute):
         if "UnnamedExpr" in attribute:
             unnamed = attribute["UnnamedExpr"]
             if "Identifier" in unnamed:
                 return unnamed["Identifier"]["value"]
-            if "Function" in attribute:
-                # {'Function': {'name': [{'value': 'APPROX_SIZE', 'quote_style': None}], 'args': [{'Unnamed': {'Identifier': {'value': 'name', 'quote_style': None}}}]
-                raise NotImplementedError("functions are currently not suppored")
+            if "Function" in unnamed:
+                func = unnamed["Function"]["name"][0]["value"]
+                args = [_build_dnf_filters(a['Unnamed']) for a in unnamed["Function"]["args"]]
+                if is_function(func):
+                    return {
+                        "function": func,
+                        "args": args,
+                    }
+                else:
+                    return {
+                        "aggregate": func,
+                        "args": args,
+                    }
         if "ExprWithAlias" in attribute:
             # [{'ExprWithAlias': {'expr': {'Function': {'name': [{'value': 'APPROX_SIZE', 'quote_style': None}], 'args': [{'Unnamed': {'Identifier': {'value': 'name', 'quote_style': None}}}], 'over': None, 'distinct': False}}, 'alias': {'value': 'APPLE', 'quote_style': None}}}]
             raise NotImplementedError("aliases aren't supported")
@@ -184,6 +202,11 @@ def _extract_selection(ast):
     """
     selections = ast[0]["Query"]["body"]["Select"]["selection"]
     return _build_dnf_filters(selections)
+
+
+def _extract_groups(ast):
+    groups = ast[0]["Query"]["body"]["Select"]["group_by"]
+    return [g["Identifier"]["value"] for g in groups]
 
 
 class QueryPlan(object):
@@ -242,10 +265,13 @@ class QueryPlan(object):
             "where", SelectionNode(statistics, filter=_extract_selection(ast))
         )
         # self.add_operator("group", GroupByNode(ast["select"]["group_by"]))
+        # self.add_operator("", )
+
         # self.add_operator("having", SelectionNode(ast["select"]["having"]))
         self.add_operator(
             "select", ProjectionNode(statistics, projection=_extract_projections(ast))
         )
+
         # self.add_operator("order", OrderNode(ast["order_by"]))
         # self.add_operator("limit", LimitNode(ast["limit"]))
 
@@ -382,7 +408,7 @@ class QueryPlan(object):
                 yield from self._tree(str(child_node), prefix=prefix + extension)
 
 
-if __name__ == "__main__":
+if __name__ == "__1main__":
 
     import time
     from opteryx.third_party.pyarrow_ops import head
@@ -407,3 +433,23 @@ if __name__ == "__main__":
 
     print(statistics.as_dict())
     print((time.time_ns() - statistics.start_time) / 1e9)
+
+
+if __name__ == "__main__":
+
+    import sqloxide
+    from opteryx.sample_data import SatelliteData
+
+    sat = SatelliteData.get()
+
+    SQL = "SELECT COUNT(*) FROM satellites"
+    ast = sqloxide.parse_sql(SQL, dialect="mysql")
+
+    groups = _extract_groups(ast)
+    proj = _extract_projections(ast)
+
+    print(groups)
+    print(proj)
+
+    gn = GroupNode(None, group=groups)
+    print([a for a in gn.execute(sat)])

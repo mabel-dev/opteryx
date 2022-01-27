@@ -62,11 +62,13 @@ vulnerabilities.
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/mabel-dev/opteryx/blob/master/LICENSE)
 
 
-**sqloxide** https://github.com/wseaton/sqloxide
-cython
-numpy
-zstandard
-orjson
-pysimdjson
-cityhash
-pyarrow
+- **sqloxide** https://github.com/wseaton/sqloxide
+- cython
+- numpy
+- zstandard
+- orjson
+- pysimdjson
+- cityhash
+- pyarrow
+
+https://github.dev/mabel-dev/opteryx
