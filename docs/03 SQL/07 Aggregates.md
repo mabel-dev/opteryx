@@ -1,4 +1,4 @@
-# SQL Aggregate Functions
+# Aggregates
 
 Aggregates are functions that combine multiple rows into a single value. Aggregates can only be used in the SELECT and HAVING clauses of a SQL query.
 
