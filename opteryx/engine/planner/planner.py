@@ -79,7 +79,8 @@ def _build_dnf_filters(filters):
     if filters is None:
         return None
 
-    print(filters)
+    # print(filters)
+
     if "Identifier" in filters:  # we're an identifier
         return (filters["Identifier"]["value"], TOKEN_TYPES.IDENTIFIER)
     if "Value" in filters:  # we're a literal
@@ -139,6 +140,8 @@ def _build_dnf_filters(filters):
         )
         operator = "not in" if filters["InList"]["negated"] else "in"
         return (left, operator, right)
+    if filters == "Wildcard":
+        return ("Wildcard", TOKEN_TYPES.WILDCARD)
 
 
 def _extract_relations(ast):
@@ -167,7 +170,7 @@ def _extract_projections(ast):
     if projection == ["Wildcard"]:
         return {"*": "*"}
 
-    print(projection)
+    # print(projection)
 
     def _inner(attribute):
         if "UnnamedExpr" in attribute:
@@ -176,7 +179,10 @@ def _extract_projections(ast):
                 return unnamed["Identifier"]["value"]
             if "Function" in unnamed:
                 func = unnamed["Function"]["name"][0]["value"]
-                args = [_build_dnf_filters(a['Unnamed']) for a in unnamed["Function"]["args"]]
+                args = [
+                    _build_dnf_filters(a["Unnamed"])
+                    for a in unnamed["Function"]["args"]
+                ]
                 if is_function(func):
                     return {
                         "function": func,
@@ -439,10 +445,11 @@ if __name__ == "__main__":
 
     import sqloxide
     from opteryx.sample_data import SatelliteData
+    from opteryx.engine.planner.operations import AggregateNode
 
     sat = SatelliteData.get()
 
-    SQL = "SELECT COUNT(*) FROM satellites"
+    SQL = "SELECT SUM(planetId) FROM satellites GROUP BY planetId"
     ast = sqloxide.parse_sql(SQL, dialect="mysql")
 
     groups = _extract_groups(ast)
@@ -451,5 +458,7 @@ if __name__ == "__main__":
     print(groups)
     print(proj)
 
-    gn = GroupNode(None, group=groups)
-    print([a for a in gn.execute(sat)])
+    gn = GroupNode(None, groups=groups)
+    ag = AggregateNode(None, aggregates=proj)
+
+    gs = ag.execute(gn.execute([sat, sat, sat, sat, sat]))

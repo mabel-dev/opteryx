@@ -29,3 +29,7 @@ class BasePlanNode(abc.ABC):
     @abc.abstractclassmethod
     def execute(self, data_pages: Iterable) -> Iterable:
         pass
+
+    @property
+    def greedy(self):
+        return False
