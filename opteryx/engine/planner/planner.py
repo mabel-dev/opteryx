@@ -178,7 +178,7 @@ def _extract_projections(ast):
             if "Identifier" in unnamed:
                 return unnamed["Identifier"]["value"]
             if "Function" in unnamed:
-                func = unnamed["Function"]["name"][0]["value"]
+                func = unnamed["Function"]["name"][0]["value"].upper()
                 args = [
                     _build_dnf_filters(a["Unnamed"])
                     for a in unnamed["Function"]["args"]
@@ -267,30 +267,42 @@ class QueryPlan(object):
                 partition_scheme=self._partition_scheme,
             ),
         )
-        self.add_operator(
-            "where", SelectionNode(statistics, filter=_extract_selection(ast))
-        )
-        # self.add_operator("group", GroupByNode(ast["select"]["group_by"]))
-        # self.add_operator("", )
 
-        # self.add_operator("having", SelectionNode(ast["select"]["having"]))
-        self.add_operator(
-            "select", ProjectionNode(statistics, projection=_extract_projections(ast))
-        )
+        last_node = "from"
 
-        # self.add_operator("order", OrderNode(ast["order_by"]))
-        # self.add_operator("limit", LimitNode(ast["limit"]))
+        _selection = _extract_selection(ast)
+        if _selection:
+            self.add_operator(
+                "where", SelectionNode(statistics, filter=_extract_selection(ast))
+            )
+            self.link_operators(last_node, "where")
+            last_node = "where"
 
-        # self.link_operators("from", "union")
-        # self.link_operators("union", "where")
-        # self.link_operators("where", "group")
-        # self.link_operators("group", "having")
-        # self.link_operators("having", "select")
-        # self.link_operators("select", "order")
-        # self.link_operators("order", "limit")
+        _groups = _extract_groups(ast)
+        if _groups:
+            self.add_operator(
+                "group", GroupNode(statistics, groupby=_groups)
+            )
+            self.link_operators(last_node, "group")
+            last_node = "group"
+    
+        _aggs = _extract_projections(ast)
+        if any(["aggregate" in a for a in _aggs]):
+            self.add_operator(
+                "agg", AggregateNode(statistics, aggregates=_aggs)
+            )
+            self.link_operators(last_node, "agg")
+            last_node = "agg"
 
-        self.link_operators("from", "where")
-        self.link_operators("where", "select")
+        _projection = _extract_projections(ast)
+        if _projection:
+            self.add_operator(
+                "select", ProjectionNode(statistics, projection=_extract_projections(ast))
+            )
+            self.link_operators(last_node, "select")
+            last_node = "select"
+
+
 
     def add_operator(self, name, operator):
         """
@@ -414,12 +426,14 @@ class QueryPlan(object):
                 yield from self._tree(str(child_node), prefix=prefix + extension)
 
 
-if __name__ == "__1main__":
+if __name__ == "__main__":
 
     import time
     from opteryx.third_party.pyarrow_ops import head
 
-    SQL = "SELECT * from `tests-data.zoned` where followers = 'name'"
+    #SQL = "SELECT count(*) from `tests.data.zoned` where followers < 10 group by followers"
+    SQL = "SELECT count(*) from `tests.data.tweets` where username = 'BBCNews' group by sentiment"
+
 
     statistics = QueryStatistics()
     statistics.start_time = time.time_ns()
@@ -435,30 +449,7 @@ if __name__ == "__1main__":
     from opteryx.utils.pyarrow import fetchmany, fetchall
 
     # do this to go over the records
-    print([a for a in fetchall(q.execute())])
+    print([a for a in fetchmany(q.execute(), 10)])
 
     print(statistics.as_dict())
     print((time.time_ns() - statistics.start_time) / 1e9)
-
-
-if __name__ == "__main__":
-
-    import sqloxide
-    from opteryx.sample_data import SatelliteData
-    from opteryx.engine.planner.operations import AggregateNode
-
-    sat = SatelliteData.get()
-
-    SQL = "SELECT SUM(planetId) FROM satellites GROUP BY planetId"
-    ast = sqloxide.parse_sql(SQL, dialect="mysql")
-
-    groups = _extract_groups(ast)
-    proj = _extract_projections(ast)
-
-    print(groups)
-    print(proj)
-
-    gn = GroupNode(None, groups=groups)
-    ag = AggregateNode(None, aggregates=proj)
-
-    gs = ag.execute(gn.execute([sat, sat, sat, sat, sat]))

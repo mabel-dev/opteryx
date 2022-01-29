@@ -31,16 +31,22 @@ class ProjectionNode(BasePlanNode):
 
     def execute(self, data_pages: Iterable) -> Iterable:
 
+        from opteryx.third_party.pyarrow_ops.group import Grouping
+
         # if we have nothing to do, move along
         if self._projection == {"*": "*"}:
             print(f"projector yielding *")
             yield from data_pages
 
+        # 
+        #if not isinstance(data_pages, Grouping):
+        #    data_pages = [data_pages]
+
         for page in data_pages:
 
             # allow simple projections using just the list of attributes
             if isinstance(self._projection, (list, tuple, set)):
-                print(f"projector yielding {page.shape}")
+                #print(f"projector yielding {page.shape}")
                 yield page.select(list(self._projection))
 
             else:

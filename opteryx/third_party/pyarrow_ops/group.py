@@ -75,6 +75,10 @@ class Grouping:
         methods = {col: agg_methods[m] for col, m in methods.items()}
         return self.aggregate(methods=methods)
 
+    @property
+    def num_rows(self):
+        return len(self.bgn_idxs)
+
 
 def groupby(table, by):
     return Grouping(table, by)

@@ -11,7 +11,7 @@ processed.
 
 ## 2. Prune Early
 
-Using date selectors (or the `$PARTITION` filters) to limit the date range over will
+Using date selectors (or the `$DATE` filters) to limit the date range over will
 limit the number of partitions that need need to be read.
 
 Not reading the record is faster than reading and working out if it needs to be
