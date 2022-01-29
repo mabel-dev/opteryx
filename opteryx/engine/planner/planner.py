@@ -281,7 +281,7 @@ class QueryPlan(object):
         _groups = _extract_groups(ast)
         if _groups:
             self.add_operator(
-                "group", GroupNode(statistics, groupby=_groups)
+                "group", GroupNode(statistics, groups=_groups)
             )
             self.link_operators(last_node, "group")
             last_node = "group"
@@ -432,7 +432,7 @@ if __name__ == "__main__":
     from opteryx.third_party.pyarrow_ops import head
 
     #SQL = "SELECT count(*) from `tests.data.zoned` where followers < 10 group by followers"
-    SQL = "SELECT count(*) from `tests.data.tweets` where username = 'BBCNews' group by sentiment"
+    SQL = "SELECT COUNT(*) from `tests.data.tweets`"
 
 
     statistics = QueryStatistics()
@@ -449,7 +449,7 @@ if __name__ == "__main__":
     from opteryx.utils.pyarrow import fetchmany, fetchall
 
     # do this to go over the records
-    print([a for a in fetchmany(q.execute(), 10)])
+    print(ascii_table(fetchmany(q.execute())))
 
     print(statistics.as_dict())
     print((time.time_ns() - statistics.start_time) / 1e9)

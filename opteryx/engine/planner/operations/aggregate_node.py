@@ -68,8 +68,14 @@ def _serializer(obj):
 class AggregateNode(BasePlanNode):
     def __init__(self, statistics: QueryStatistics, **config):
         from collections import defaultdict
-        self._aggregates = config.get("aggregates")
+        self._aggregates = []
         self._collector = defaultdict(dict)
+
+        aggregates = config.get("aggregates", [])
+        print(aggregates)
+        for attribute in aggregates:
+            if "aggregate" in attribute:
+                self._aggregates.append(attribute)
 
     def __repr__(self):
         return str(self._aggregates)
@@ -85,9 +91,11 @@ class AggregateNode(BasePlanNode):
 
         for page in groups:
             for group in page:
-                keys = {}
+                keys = {}  # <- should be set to the (function, arg)
                 if isinstance(group, tuple):
                     keys, group = group
+                else:
+                    keys = {}
 
                 # We build the key value for the group collector
                 group_identifier = tuple([(k, v) for k, v in keys.items()])
@@ -125,4 +133,5 @@ class AggregateNode(BasePlanNode):
                 record[k] = v
             buffer.extend(orjson.dumps(record, default=_serializer))
 
+        print(buffer)
         yield pyarrow.json.read_json(io.BytesIO(buffer))

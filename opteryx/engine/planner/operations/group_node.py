@@ -15,7 +15,10 @@ class GroupNode(BasePlanNode):
     def __init__(self, statistics: QueryStatistics, **config):
         self._groups = config.get("groups", [])
 
+    def __repr__(self):
+        return str(self._groups)
+
     def execute(self, data_pages: Iterable) -> Iterable:
 
         for page in data_pages:
-            yield groupby(page, self._groups)
+            yield from groupby(page, self._groups)
