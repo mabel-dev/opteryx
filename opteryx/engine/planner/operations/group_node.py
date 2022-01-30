@@ -8,7 +8,7 @@ This performs the grouping, but not the aggregations.
 from typing import Iterable
 from opteryx.engine import QueryStatistics
 from opteryx.engine.planner.operations import BasePlanNode
-from opteryx.third_party.pyarrow_ops import groupby
+from opteryx.utils.pyarrow import groupby
 
 
 class GroupNode(BasePlanNode):

@@ -11,10 +11,12 @@ from opteryx.engine.attribute_types import TOKEN_TYPES
 from opteryx.engine.query_statistics import QueryStatistics
 from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
 
+
 def replace_wildcards(arg):
     if arg[1] == TOKEN_TYPES.WILDCARD:
         return "*"
     return arg[0]
+
 
 class ProjectionNode(BasePlanNode):
     def __init__(self, statistics: QueryStatistics, **config):
@@ -23,13 +25,17 @@ class ProjectionNode(BasePlanNode):
         """
         self._projection = []
 
-        projection = config.get("projection", ['*'])
-        print(projection)
+        projection = config.get("projection", {"*": "*"})
+        print("projection:", projection)
         for attribute in projection:
             if "aggregate" in attribute:
-                self._projection.append(f"{attribute['aggregate']}({','.join([replace_wildcards(a) for a in attribute['args']])})")
+                self._projection.append(
+                    f"{attribute['aggregate']}({','.join([replace_wildcards(a) for a in attribute['args']])})"
+                )
             elif "function" in attribute:
-                self._projection.append(f"{attribute['function']}({','.join([replace_wildcards(a) for a in attribute['args']])})")
+                self._projection.append(
+                    f"{attribute['function']}({','.join([replace_wildcards(a) for a in attribute['args']])})"
+                )
             else:
                 self._projection.append(attribute)
 
@@ -41,19 +47,15 @@ class ProjectionNode(BasePlanNode):
         from opteryx.third_party.pyarrow_ops.group import Grouping
 
         # if we have nothing to do, move along
-        if self._projection == {"*": "*"}:
+        if self._projection == ["*"]:
             print(f"projector yielding *")
             yield from data_pages
-
-        # 
-        #if not isinstance(data_pages, Grouping):
-        #    data_pages = [data_pages]
 
         for page in data_pages:
 
             # allow simple projections using just the list of attributes
             if isinstance(self._projection, (list, tuple, set)):
-                #print(f"projector yielding {page.shape}")
+                # print(f"projector yielding {page.shape}")
                 try:
                     yield page.select(list(self._projection))
                 except KeyError as e:

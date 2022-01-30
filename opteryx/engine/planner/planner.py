@@ -170,8 +170,6 @@ def _extract_projections(ast):
     if projection == ["Wildcard"]:
         return {"*": "*"}
 
-    # print(projection)
-
     def _inner(attribute):
         if "UnnamedExpr" in attribute:
             unnamed = attribute["UnnamedExpr"]
@@ -267,7 +265,6 @@ class QueryPlan(object):
                 partition_scheme=self._partition_scheme,
             ),
         )
-
         last_node = "from"
 
         _selection = _extract_selection(ast)
@@ -280,29 +277,22 @@ class QueryPlan(object):
 
         _groups = _extract_groups(ast)
         if _groups:
-            self.add_operator(
-                "group", GroupNode(statistics, groups=_groups)
-            )
+            self.add_operator("group", GroupNode(statistics, groups=_groups))
             self.link_operators(last_node, "group")
             last_node = "group"
-    
+
         _aggs = _extract_projections(ast)
         if any(["aggregate" in a for a in _aggs]):
             self.add_operator(
-                "agg", AggregateNode(statistics, aggregates=_aggs)
+                "agg", AggregateNode(statistics, aggregates=_aggs, groups=_groups)
             )
             self.link_operators(last_node, "agg")
             last_node = "agg"
 
         _projection = _extract_projections(ast)
-        if _projection:
-            self.add_operator(
-                "select", ProjectionNode(statistics, projection=_extract_projections(ast))
-            )
-            self.link_operators(last_node, "select")
-            last_node = "select"
-
-
+        self.add_operator("select", ProjectionNode(statistics, projection=_projection))
+        self.link_operators(last_node, "select")
+        last_node = "select"
 
     def add_operator(self, name, operator):
         """
@@ -426,14 +416,22 @@ class QueryPlan(object):
                 yield from self._tree(str(child_node), prefix=prefix + extension)
 
 
-if __name__ == "__main__":
+def test():
+
+    from mabel.utils import timer
 
     import time
     from opteryx.third_party.pyarrow_ops import head
 
-    #SQL = "SELECT count(*) from `tests.data.zoned` where followers < 10 group by followers"
-    SQL = "SELECT COUNT(*) from `tests.data.tweets`"
+    # SQL = "SELECT count(*) from `tests.data.zoned` where followers < 10 group by followers"
+    # SQL = "SELECT username, count(*) from `tests.data.tweets` group by username"
+    SQL = "SELECT COUNT(*) FROM tests.data.zoned WHERE followers between 100 AND 150 GROUP BY user_name"
 
+    SQL = """
+    SELECT user_verified, MIN(followers), MAX(followers), COUNT(*)  
+      FROM tests.data.huge
+     GROUP BY user_verified
+     """
 
     statistics = QueryStatistics()
     statistics.start_time = time.time_ns()
@@ -443,13 +441,30 @@ if __name__ == "__main__":
         reader=DiskStorage(),
         partition_scheme=DefaultPartitionScheme(""),
     )
+    statistics.time_planning = time.time_ns() - statistics.start_time
     print(q)
 
     from opteryx.engine.display import ascii_table
     from opteryx.utils.pyarrow import fetchmany, fetchall
 
-    # do this to go over the records
-    print(ascii_table(fetchmany(q.execute())))
+    with timer.Timer():
+        # do this to go over the records
+        print(ascii_table(fetchmany(q.execute())))
 
-    print(statistics.as_dict())
-    print((time.time_ns() - statistics.start_time) / 1e9)
+        statistics.end_time = time.time_ns()
+        print(statistics.as_dict())
+        print((time.time_ns() - statistics.start_time) / 1e9)
+
+
+if __name__ == "__main__":
+    import cProfile
+
+    with cProfile.Profile(subcalls=False) as pr:
+        test()
+
+    pr.dump_stats("perf")
+
+    import pstats
+
+    p = pstats.Stats("perf")
+    p.sort_stats("tottime").print_stats(10)

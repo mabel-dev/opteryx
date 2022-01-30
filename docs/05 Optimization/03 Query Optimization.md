@@ -16,3 +16,12 @@ limit the number of partitions that need need to be read.
 
 Not reading the record is faster than reading and working out if it needs to be
 filtered out of the result set.
+
+## 3. GROUP BY
+
+**strings**
+Grouping by string columns is slower than grouping by numeric columns, if you have an option of grouping by a username or a numeric user id, prefer the user id.
+
+**cardinality**
+Grouping by columns with high cardinality (mostly unique) is much slower than grouping where there is a lot of duplication in the groups.
+
