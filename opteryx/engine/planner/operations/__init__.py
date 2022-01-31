@@ -11,6 +11,7 @@ from .dataset_reader_node import DatasetReaderNode  # read datasets
 from .limit_node import LimitNode  # select the first N records
 
 # - Merge - append sets to each other
+from .offset_node import OffsetNode # skip a number of records
 from .projection_node import ProjectionNode  # remove unwanted columns including renames
 from .selection_node import SelectionNode  # filter unwanted rows
 

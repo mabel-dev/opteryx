@@ -16,6 +16,12 @@ class DistinctNode(BasePlanNode):
     def __init__(self, statistics: QueryStatistics, **config):
         self._distinct = config.get("distinct", True)
 
+    def __repr__(self) -> str:
+        return ""
+
+    def greedy(self):
+        return True
+
     def execute(self, data_pages: Iterable) -> Iterable:
         if self._distinct:
             yield drop_duplicates(concat_tables(data_pages))

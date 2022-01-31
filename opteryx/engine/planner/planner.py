@@ -207,6 +207,20 @@ def _extract_selection(ast):
     selections = ast[0]["Query"]["body"]["Select"]["selection"]
     return _build_dnf_filters(selections)
 
+def _extract_distinct(ast):
+    return ast[0]["Query"]["body"]["Select"]["distinct"]
+
+def _extract_limit(ast):
+    limit = ast[0]["Query"]["limit"]
+    if limit is not None:
+        return int(limit["Value"]["Number"][0])
+    return None
+
+def _extract_offset(ast):
+    limit = ast[0]["Query"]
+    if "offset" in limit:
+        return int(limit["offset"]["value"]["Value"]["Number"][0])
+    return None
 
 def _extract_groups(ast):
     groups = ast[0]["Query"]["body"]["Select"]["group_by"]
@@ -237,6 +251,8 @@ class QueryPlan(object):
             print(sql)
             raise SqlError(e)
 
+        print(self._ast)
+
         # build a plan for the query
         self._naive_planner(self._ast, statistics)
 
@@ -252,6 +268,7 @@ class QueryPlan(object):
             SELECT clause
             ORDER BY clause
             LIMIT clause
+            OFFSET clause
 
         This is phase one of the rewrite, to essentially mimick the existing
         functionality.
@@ -293,6 +310,26 @@ class QueryPlan(object):
         self.add_operator("select", ProjectionNode(statistics, projection=_projection))
         self.link_operators(last_node, "select")
         last_node = "select"
+
+        _distinct = _extract_distinct(ast)
+        if _distinct:
+            self.add_operator(
+                "distinct", DistinctNode(statistics)
+            )
+            self.link_operators(last_node, "distinct")
+            last_node = "distinct"
+
+        _offset = _extract_offset(ast)
+        if _offset:
+            self.add_operator("offset", OffsetNode(statistics, offset=_offset))
+            self.link_operators(last_node, "offset")
+            last_node = "offset"
+
+        _limit = _extract_limit(ast)
+        if _limit:
+            self.add_operator("limit", LimitNode(statistics, limit=_limit))
+            self.link_operators(last_node, "limit")
+            last_node = "limit"
 
     def add_operator(self, name, operator):
         """
@@ -427,11 +464,13 @@ def test():
     # SQL = "SELECT username, count(*) from `tests.data.tweets` group by username"
     SQL = "SELECT COUNT(*) FROM tests.data.zoned WHERE followers between 100 AND 150 GROUP BY user_name"
 
-    SQL = """
-    SELECT user_verified, MIN(followers), MAX(followers), COUNT(*)  
-      FROM tests.data.huge
-     GROUP BY user_verified
-     """
+    #SQL = """
+    #SELECT DISTINCT user_verified, MIN(followers), MAX(followers), COUNT(*)  
+    #  FROM tests.data.huge
+    # GROUP BY user_verified
+    # """
+
+    SQL = "SELECT username from `tests.data.tweets` LIMIT 2 OFFSET 2"
 
     statistics = QueryStatistics()
     statistics.start_time = time.time_ns()
@@ -449,7 +488,7 @@ def test():
 
     with timer.Timer():
         # do this to go over the records
-        print(ascii_table(fetchmany(q.execute())))
+        print(ascii_table(fetchmany(q.execute()), limit=10))
 
         statistics.end_time = time.time_ns()
         print(statistics.as_dict())
@@ -459,12 +498,12 @@ def test():
 if __name__ == "__main__":
     import cProfile
 
-    with cProfile.Profile(subcalls=False) as pr:
-        test()
+    #with cProfile.Profile(subcalls=False) as pr:
+    test()
 
-    pr.dump_stats("perf")
+    #pr.dump_stats("perf")
 
-    import pstats
+    #import pstats
 
-    p = pstats.Stats("perf")
-    p.sort_stats("tottime").print_stats(10)
+    #p = pstats.Stats("perf")
+    #p.sort_stats("tottime").print_stats(10)
