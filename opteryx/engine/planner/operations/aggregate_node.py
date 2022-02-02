@@ -3,9 +3,17 @@ Grouping Node
 
 This is a SQL Query Execution Plan Node.
 
-This performs aggregations.
+This performs aggregations, both of grouped and non-grouped data. 
 
 This is a greedy operator - it consumes all the data before responding.
+
+This algorithm is a balance of performance, it is much slower than a groupby based on
+the pyarrow_ops library for datasets with a high number of duplicate values (e.g.
+grouping by a boolean column) - on a 10m record set, timings are 10:1 (removing raw
+read time - e.g. 30s:21s where 20s is the read time).
+
+But, on high cardinality data (nearly unique columns), the performance is much faster,
+on a 10m record set, timings are 1:400 (50s:1220s where 20s is the read time).
 """
 import io
 import orjson
@@ -61,16 +69,29 @@ def _incremental_seed(x, function):
         return INCREMENTAL_AGGREGATES_SEEDS[function](x)
     return x
 
+JSON_TYPES = {
+    np.bool_: bool,
+    np.int64: int,
+}
 
 def _serializer(obj):
-    if isinstance(obj, np.int64):
-        return int(obj)
+    return JSON_TYPES[type(obj)](obj)
+
+def groupby(table, collect_columns):
+    arr = [c.to_numpy() for c in table.select(list(collect_columns))]
+
+    for row_index in range(len(arr[0])):
+        ret = []
+        for column_index, column_name in enumerate(collect_columns):
+            ret.append((column_name, arr[column_index][row_index]))
+        yield tuple(ret)
 
 
 class AggregateNode(BasePlanNode):
     def __init__(self, statistics: QueryStatistics, **config):
         self._aggregates = []
-        self._project = config.get("groups", [])
+        self._groups = config.get("groups", [])
+        self._project = self._groups.copy()
         aggregates = config.get("aggregates", [])
         print(aggregates)
         for attribute in aggregates:
@@ -93,16 +114,9 @@ class AggregateNode(BasePlanNode):
 
         collector = defaultdict(dict)
 
-        # if we're not running this after a Group By, we need to add a layer
-        if not isinstance(groups, Grouping):
-            groups = [groups]
-
         for page in groups:
-            for group in page:
-                # We build the key value for the group collector
-                group_identifier = tuple(
-                    [(col, group[col][0]) for col in self._project]
-                )
+
+            for group in groupby(page, self._groups):
 
                 for aggregrator in self._aggregates:
 
@@ -110,13 +124,15 @@ class AggregateNode(BasePlanNode):
                     function = aggregrator["aggregate"]
                     column_name = f"{function}({attribute})"
 
-                    group_collector = collector[group_identifier]
+                    group_collector = collector[group]
 
                     # Add the responses to the collector
-                    # if it's COUNT(*) - we have a shortcut
+                    # if it's COUNT(*) 
                     if column_name == "COUNT(Wildcard)":
-                        count = group_collector.get("COUNT(*)", 0)
-                        group_collector["COUNT(*)"] = count + group.num_rows
+                        if "COUNT(*)" in group_collector:
+                            group_collector["COUNT(*)"] += 1
+                        else:
+                            group_collector["COUNT(*)"] = 0
                     # if we have some information collected for this group,
                     # incremental update
                     elif column_name in group_collector:
@@ -131,7 +147,7 @@ class AggregateNode(BasePlanNode):
                             group[attribute], function
                         )
 
-                    collector[group_identifier] = group_collector
+                    collector[group] = group_collector
                 # TODO: if we're going to cap the number of groups we collect, do it here
 
         # TODO: do any whole aggregate functions
@@ -142,7 +158,7 @@ class AggregateNode(BasePlanNode):
         t = time.time_ns()
         for collected, record in collector.items():
             # we can't load huge json docs into pyarrow, so we chunk it
-            if len(buffer) > (1024 * 1024) :  # 1Mb - the default page size in mabel
+            if len(buffer) > (1024 * 1024):  # 1Mb - the default page size in mabel
                 table = pyarrow.json.read_json(io.BytesIO(buffer))
                 yield table
                 buffer = bytearray()

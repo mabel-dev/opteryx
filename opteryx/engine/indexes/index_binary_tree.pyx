@@ -17,17 +17,16 @@ from opteryx.third_party.accumulation_tree.abctree import ABCTree
 
 __all__ = ['BinaryTree']
 
-
 cdef class Node:
     """Internal object, represents a tree node."""
-    __slots__ = ('key', 'value', 'left', 'right')
+    __slots__ = ['key', 'value', 'left', 'right']
 
     cdef readonly object key
     cdef readonly object value
     cdef readonly Node left
     cdef readonly Node right
 
-    def __init__(self, key, value):
+    def __cinit__(self, key, value):
         self.key = key
         self.value = value
         self.left = None
@@ -63,7 +62,7 @@ cdef class _BinaryTree(object):
 
     see also abctree.ABCTree() class.
     """
-    __slots__ = ("_root", "_count")
+    __slots__ = ["_root", "_count"]
 
     cdef public Node _root
     cdef public int _count
@@ -71,7 +70,7 @@ cdef class _BinaryTree(object):
     def insert(self, key, value):
         if self._root is None:
             self._count += 1
-            self._root = Node(key, [value])
+            self._root = Node.__new__(Node, key, [value])
             return
 
         cdef Node parent = None
@@ -81,7 +80,7 @@ cdef class _BinaryTree(object):
         while 1:
             if node is None:
                 self._count += 1
-                parent[direction] = Node(key, [value])
+                parent[direction] = Node.__new__(Node, key, [value])
                 break
             if key == node.key:
                 node.value.extend([value])

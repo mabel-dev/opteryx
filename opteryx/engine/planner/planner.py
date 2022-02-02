@@ -207,8 +207,10 @@ def _extract_selection(ast):
     selections = ast[0]["Query"]["body"]["Select"]["selection"]
     return _build_dnf_filters(selections)
 
+
 def _extract_distinct(ast):
     return ast[0]["Query"]["body"]["Select"]["distinct"]
+
 
 def _extract_limit(ast):
     limit = ast[0]["Query"]["limit"]
@@ -216,11 +218,13 @@ def _extract_limit(ast):
         return int(limit["Value"]["Number"][0])
     return None
 
+
 def _extract_offset(ast):
-    limit = ast[0]["Query"]
-    if "offset" in limit:
-        return int(limit["offset"]["value"]["Value"]["Number"][0])
+    offset = ast[0]["Query"]["offset"]
+    if offset is not None:
+        return int(offset["value"]["Value"]["Number"][0])
     return None
+
 
 def _extract_groups(ast):
     groups = ast[0]["Query"]["body"]["Select"]["group_by"]
@@ -293,10 +297,10 @@ class QueryPlan(object):
             last_node = "where"
 
         _groups = _extract_groups(ast)
-        if _groups:
-            self.add_operator("group", GroupNode(statistics, groups=_groups))
-            self.link_operators(last_node, "group")
-            last_node = "group"
+#        if _groups:
+#            self.add_operator("group", GroupNode(statistics, groups=_groups))
+#            self.link_operators(last_node, "group")
+#            last_node = "group"
 
         _aggs = _extract_projections(ast)
         if any(["aggregate" in a for a in _aggs]):
@@ -313,9 +317,7 @@ class QueryPlan(object):
 
         _distinct = _extract_distinct(ast)
         if _distinct:
-            self.add_operator(
-                "distinct", DistinctNode(statistics)
-            )
+            self.add_operator("distinct", DistinctNode(statistics))
             self.link_operators(last_node, "distinct")
             last_node = "distinct"
 
@@ -462,15 +464,15 @@ def test():
 
     # SQL = "SELECT count(*) from `tests.data.zoned` where followers < 10 group by followers"
     # SQL = "SELECT username, count(*) from `tests.data.tweets` group by username"
-    SQL = "SELECT COUNT(*) FROM tests.data.zoned WHERE followers between 100 AND 150 GROUP BY user_name"
+    SQL = "SELECT COUNT(*), user_verified FROM tests.data.set GROUP BY user_verified"
 
-    #SQL = """
-    #SELECT DISTINCT user_verified, MIN(followers), MAX(followers), COUNT(*)  
+    # SQL = """
+    # SELECT DISTINCT user_verified, MIN(followers), MAX(followers), COUNT(*)
     #  FROM tests.data.huge
     # GROUP BY user_verified
     # """
 
-    SQL = "SELECT username from `tests.data.tweets` LIMIT 2 OFFSET 2"
+    #SQL = "SELECT username from `tests.data.tweets`"
 
     statistics = QueryStatistics()
     statistics.start_time = time.time_ns()
@@ -488,7 +490,10 @@ def test():
 
     with timer.Timer():
         # do this to go over the records
-        print(ascii_table(fetchmany(q.execute()), limit=10))
+        r = q.execute()
+        print(ascii_table(fetchmany(r), limit=10))
+
+        [a for a in fetchall(r)]
 
         statistics.end_time = time.time_ns()
         print(statistics.as_dict())
@@ -498,8 +503,8 @@ def test():
 if __name__ == "__main__":
     import cProfile
 
-    #with cProfile.Profile(subcalls=False) as pr:
-    test()
+    with cProfile.Profile(subcalls=False) as pr:
+        test()
 
     #pr.dump_stats("perf")
 
