@@ -297,20 +297,14 @@ class QueryPlan(object):
             last_node = "where"
 
         _groups = _extract_groups(ast)
-#        if _groups:
-#            self.add_operator("group", GroupNode(statistics, groups=_groups))
-#            self.link_operators(last_node, "group")
-#            last_node = "group"
-
-        _aggs = _extract_projections(ast)
-        if any(["aggregate" in a for a in _aggs]):
+        _projection = _extract_projections(ast)
+        if any(["aggregate" in a for a in _projection]):
             self.add_operator(
-                "agg", AggregateNode(statistics, aggregates=_aggs, groups=_groups)
+                "agg", AggregateNode(statistics, aggregates=_projection, groups=_groups)
             )
             self.link_operators(last_node, "agg")
             last_node = "agg"
 
-        _projection = _extract_projections(ast)
         self.add_operator("select", ProjectionNode(statistics, projection=_projection))
         self.link_operators(last_node, "select")
         last_node = "select"
@@ -455,24 +449,12 @@ class QueryPlan(object):
                 yield from self._tree(str(child_node), prefix=prefix + extension)
 
 
-def test():
+def test(SQL):
 
     from mabel.utils import timer
 
     import time
     from opteryx.third_party.pyarrow_ops import head
-
-    # SQL = "SELECT count(*) from `tests.data.zoned` where followers < 10 group by followers"
-    # SQL = "SELECT username, count(*) from `tests.data.tweets` group by username"
-    SQL = "SELECT COUNT(*), user_verified FROM tests.data.set GROUP BY user_verified"
-
-    # SQL = """
-    # SELECT DISTINCT user_verified, MIN(followers), MAX(followers), COUNT(*)
-    #  FROM tests.data.huge
-    # GROUP BY user_verified
-    # """
-
-    #SQL = "SELECT username from `tests.data.tweets`"
 
     statistics = QueryStatistics()
     statistics.start_time = time.time_ns()
@@ -501,10 +483,23 @@ def test():
 
 
 if __name__ == "__main__":
+
+    # SQL = "SELECT count(*) from `tests.data.zoned` where followers < 10 group by followers"
+    # SQL = "SELECT username, count(*) from `tests.data.tweets` group by username"
+    SQL = "SELECT COUNT(user_verified) FROM tests.data.set"
+
+    # SQL = """
+    # SELECT DISTINCT user_verified, MIN(followers), MAX(followers), COUNT(*)
+    #  FROM tests.data.huge
+    # GROUP BY user_verified
+    # """
+
+    #SQL = "SELECT username from `tests.data.tweets`"
+
     import cProfile
 
     with cProfile.Profile(subcalls=False) as pr:
-        test()
+        test(SQL)
 
     #pr.dump_stats("perf")
 

@@ -77,7 +77,7 @@ JSON_TYPES = {
 def _serializer(obj):
     return JSON_TYPES[type(obj)](obj)
 
-def groupby(table, collect_columns):
+def _map(table, collect_columns):
     arr = [c.to_numpy() for c in table.select(list(collect_columns))]
 
     for row_index in range(len(arr[0])):
@@ -93,14 +93,16 @@ class AggregateNode(BasePlanNode):
         self._groups = config.get("groups", [])
         self._project = self._groups.copy()
         aggregates = config.get("aggregates", [])
-        print(aggregates)
         for attribute in aggregates:
             if "aggregate" in attribute:
                 self._aggregates.append(attribute)
+                self._project.append(attribute["args"][0][0])
             else:
                 self._project.append(attribute)
 
         self._project = list(set(self._project))
+        print("AGG PROJ", self._project)
+
 
     def __repr__(self):
         return str(self._aggregates)
@@ -116,7 +118,7 @@ class AggregateNode(BasePlanNode):
 
         for page in groups:
 
-            for group in groupby(page, self._groups):
+            for group in _map(page, self._project):
 
                 for aggregrator in self._aggregates:
 
@@ -124,7 +126,11 @@ class AggregateNode(BasePlanNode):
                     function = aggregrator["aggregate"]
                     column_name = f"{function}({attribute})"
 
-                    group_collector = collector[group]
+                    # this is needed for situations where the select column isn't selecting
+                    # the columns in the group by
+                    collection = tuple([(k,v,) for k,v in group if k[0] in self._groups])
+
+                    group_collector = collector[collection]
 
                     # Add the responses to the collector
                     # if it's COUNT(*) 
@@ -137,29 +143,32 @@ class AggregateNode(BasePlanNode):
                     # incremental update
                     elif column_name in group_collector:
                         group_collector[column_name] = _incremental(
-                            group[attribute],
+                            group[0],
                             group_collector[column_name],
                             function,
                         )
                     # otherwise, it's new, so seed the collection
                     else:
                         group_collector[column_name] = _incremental_seed(
-                            group[attribute], function
+                            group[0], function
                         )
 
-                    collector[group] = group_collector
+                    collector[collection] = group_collector
                 # TODO: if we're going to cap the number of groups we collect, do it here
 
         # TODO: do any whole aggregate functions
 
         import time
 
+        from pyarrow.json import ReadOptions
+        ro = ReadOptions(block_size = 3 * 1024 * 1024)
+
         buffer = bytearray()
         t = time.time_ns()
         for collected, record in collector.items():
             # we can't load huge json docs into pyarrow, so we chunk it
-            if len(buffer) > (1024 * 1024):  # 1Mb - the default page size in mabel
-                table = pyarrow.json.read_json(io.BytesIO(buffer))
+            if len(buffer) > (2 * 1024 * 1024):  # 4Mb
+                table = pyarrow.json.read_json(io.BytesIO(buffer), read_options=ro)
                 yield table
                 buffer = bytearray()
             for k, v in collected:
@@ -172,4 +181,5 @@ class AggregateNode(BasePlanNode):
             table = pyarrow.json.read_json(io.BytesIO(buffer))
             yield table
 
+        # timing over a yield is pointless
         print("building group table", (time.time_ns() - t) / 1e9)
