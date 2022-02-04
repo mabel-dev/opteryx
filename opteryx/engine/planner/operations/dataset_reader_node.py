@@ -67,6 +67,15 @@ class DatasetReaderNode(BasePlanNode):
 
     def execute(self, data_pages: Iterable) -> Iterable:
 
+        if self._dataset.lower() == "$satellites/":
+            from opteryx import samples
+            yield samples.satellites()
+            return
+        if self._dataset.lower() == "$planets/":
+            from opteryx import samples
+            yield samples.planets()
+            return
+
         partitions = self._reader.get_partitions(
             dataset=self._dataset,
             partitioning=self._partition_scheme.partition_format(),

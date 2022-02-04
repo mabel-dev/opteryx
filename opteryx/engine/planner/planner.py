@@ -496,6 +496,8 @@ if __name__ == "__main__":
 
     #SQL = "SELECT username from `tests.data.tweets`"
 
+    SQL = "SELECT * FROM $satellites"
+
     import cProfile
 
     with cProfile.Profile(subcalls=False) as pr:
