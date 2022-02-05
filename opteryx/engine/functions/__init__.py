@@ -15,6 +15,8 @@ These are a set of functions that can be applied to data.
 from os import truncate
 import orjson
 import datetime
+import numpy
+from pyarrow import compute
 from cityhash import CityHash32
 
 from opteryx.engine.functions.date_functions import *
@@ -68,25 +70,54 @@ def get_md5(item):
     return hashlib.md5(str(item).encode()).hexdigest()  # nosec - meant to be MD5
 
 
+
 def attempt(func):
     try:
         return func()
     except:
         return None
 
-
 def not_implemented(*args):
     raise NotImplementedError()
 
 
+def _vectorize_single_parameter(func):
+    def _inner(array):
+        for a in array:
+            yield func(a) 
+    return _inner
+
+def _vectorize_double_parameter(func):
+    def _inner(array, p1):
+        for a in array:
+            yield func(a, p1) 
+    return _inner 
+
+
 FUNCTIONS = {
+
+    # STRINGS
+    # VECTORIZED
+    "LENGTH": compute.utf8_length, # LENGTH(str) -> int
+    "UPPER": compute.utf8_upper, # UPPER(str) -> str
+    "LOWER": compute.utf8_lower, # LOWER(str) -> str
+    "TRIM": compute.utf8_trim_whitespace, # TRIM(str) -> str
+
+    # STRINGS
+    # LOOPED FUNCTIONS
+    "LEFT": _vectorize_double_parameter(lambda x, y: str(x)[: int(y)]),
+    "RIGHT": _vectorize_double_parameter(lambda x, y: str(x)[-int(y) :]),
+
+    # NOT CONVERTED YET
+
+
     # DATES & TIMES
     "YEAR": get_year,
     "MONTH": get_month,
     "MONTH_NAME": not_implemented,  # the name of the month
     "DAY": get_day,
     "DAY_NAME": not_implemented,  # the name of the day
-    "DATE": get_date,
+    "DATE": numpy.datetime64, # this should be vectorized
     "QUARTER_OF_YEAR": get_quarter,
     "WEEK_OF_YEAR": get_week,
     "DAY_OF_YEAR": not_implemented,  # get the day of the year
@@ -106,17 +137,10 @@ FUNCTIONS = {
     "TO_EPOCH": not_implemented,  # timestamp in linux epoch format
     "DATE_PART": not_implemented,  # DATE_PART("YEAR", timestamp)
     "TIMESTAMP": not_implemented,  # parse input as a TIMESTAMP
-    # STRINGS
-    "UCASE": lambda x: str(x).upper(),
-    "UPPER": lambda x: str(x).upper(),
-    "LCASE": lambda x: str(x).lower(),
-    "LOWER": lambda x: str(x).lower(),
-    "TRIM": lambda x: str(x).strip(),
-    "LEN": len,
+
+    
     "STRING": to_string,
     "VARCHAR": to_string,
-    "LEFT": lambda x, y: str(x)[: int(y)],
-    "RIGHT": lambda x, y: str(x)[-int(y) :],
     "MID": lambda x, y, z: str(x)[int(y) :][: int(z)],
     "CONCAT": concat,
     "LEVENSHTEIN": levenshtein_distance,

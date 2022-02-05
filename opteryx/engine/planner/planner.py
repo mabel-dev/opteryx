@@ -188,31 +188,38 @@ def _extract_projections(ast):
         return {"*": "*"}
 
     def _inner(attribute):
+        function = None
+        alias = None
         if "UnnamedExpr" in attribute:
-            unnamed = attribute["UnnamedExpr"]
-            if "Identifier" in unnamed:
-                return unnamed["Identifier"]["value"]
-            if "Function" in unnamed:
-                func = unnamed["Function"]["name"][0]["value"].upper()
+            function = attribute["UnnamedExpr"]
+        if "ExprWithAlias" in attribute:
+            function = attribute["ExprWithAlias"]['expr']
+            alias = attribute["ExprWithAlias"]["alias"]["value"]
+
+        if function:     
+            if "Identifier" in function:
+                return function["Identifier"]["value"]
+            if "Function" in function:
+                func = function["Function"]["name"][0]["value"].upper()
                 args = [
                     _build_dnf_filters(a["Unnamed"])
-                    for a in unnamed["Function"]["args"]
+                    for a in function["Function"]["args"]
                 ]
                 if is_function(func):
                     return {
-                        "function": func,
+                        "function": func.upper(),
                         "args": args,
+                        "alias": alias
                     }
                 else:
                     return {
-                        "aggregate": func,
+                        "aggregate": func.upper(),
                         "args": args,
+                        "alias": alias
                     }
-        if "ExprWithAlias" in attribute:
-            # [{'ExprWithAlias': {'expr': {'Function': {'name': [{'value': 'APPROX_SIZE', 'quote_style': None}], 'args': [{'Unnamed': {'Identifier': {'value': 'name', 'quote_style': None}}}], 'over': None, 'distinct': False}}, 'alias': {'value': 'APPLE', 'quote_style': None}}}]
-            raise NotImplementedError("aliases aren't supported")
 
     projection = [_inner(attribute) for attribute in projection]
+    print(projection)
     return projection
 
 
@@ -501,6 +508,8 @@ def test(SQL):
 
 if __name__ == "__main__":
 
+    import sqloxide
+
     # SQL = "SELECT count(*) from `tests.data.zoned` where followers < 10 group by followers"
     # SQL = "SELECT username, count(*) from `tests.data.tweets` group by username"
     SQL = "SELECT COUNT(user_verified) FROM tests.data.set"
@@ -516,12 +525,25 @@ if __name__ == "__main__":
     SQL = "SELECT * FROM $satellites"
     SQL = "SELECT COUNT(*) FROM $satellites"
     SQL = "SELECT MAX(planetId), MIN(planetId), SUM(gm), count(*) FROM $satellites group by planetId"
-    SQL = "SELECT * FROM $satellites WHERE magnitude = 5.29"
+    SQL = "SELECT upper(name), lower(name) as ln FROM $satellites WHERE magnitude = 5.29"
 
-    import cProfile
+    ast = sqloxide.parse_sql(SQL, dialect="mysql")
 
-    with cProfile.Profile(subcalls=False) as pr:
-        test(SQL)
+    _projection = _extract_projections(ast)
+    print(_projection)
+
+    import opteryx.samples
+    from opteryx.third_party.pyarrow_ops import head
+
+    p = opteryx.samples.planets()
+
+    en = EvaluationNode(None, projection=_projection)
+
+    head(en.execute(p))
+    #import cProfile
+
+    #with cProfile.Profile(subcalls=False) as pr:
+    #    test(SQL)
 
     # pr.dump_stats("perf")
 
