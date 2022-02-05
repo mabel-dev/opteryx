@@ -5,13 +5,13 @@ We have two in-memory tables, one of natural satellite data and one of planet da
 These are both small to allow us to test the SQL engine quickly and is guaranteed to
 be available whereever the tests are run.
 
-These tests only test the shape of the response, more specific tests wil test values,
-the point of these tests is that we can throw many variations of queries, such as
-different whitespace and capitalization and ensure we get a sane response.
+These tests only test the shape of the response, more specific tests wil test values.
+The point of these tests is that we can throw many variations of queries, such as
+different whitespace and capitalization and ensure we get a sensible looking response.
 
 We test the shape in this battery because if the shape isn't right, the response isn't
-going to be right, and testing shape is quick, we can test 100s of queries in a few 
-seconds.
+going to be right, and testing shape of an in-memory dataset is quick, we can test 100s
+of queries in a few seconds.
 """
 import os
 import sys
@@ -63,7 +63,9 @@ STATEMENTS = [
         ("SELECT COUNT(name) FROM $satellites", 1, 1),
         ("SELECT COUNT(*) FROM $satellites GROUP BY name", 177, 1),
         ("SELECT COUNT(*) FROM $satellites GROUP BY planetId", 7, 1),
-        ("SELECT COUNT(*), planetId FROM $satellites", 1, 2),
+        ("SELECT COUNT(*) FROM $satellites GROUP\nBY planetId", 7, 1),
+        ("SELECT COUNT(*) FROM $satellites GROUP     BY planetId", 7, 1),
+        ("SELECT COUNT(*), planetId FROM $satellites GROUP BY planetId", 7, 2),
                 
         
         
@@ -79,7 +81,6 @@ STATEMENTS = [
 #        ("SELECT * FROM $satellites ORDER BY user_name", 10000, 8), # ORDER BY is 10000 record limited
 #        ("SELECT * FROM $satellites ORDER BY user_name ASC", 10000, 8), # ORDER BY is 10000 record limited
 #        ("SELECT * FROM $satellites ORDER BY user_name DESC", 10000, 8), # ORDER BY is 10000 record limited
-#        ("SELECT COUNT(user_id) FROM $satellites", 1, 8),
 #        ("SELECT * FROM $satellites WHERE user_id > 1000000", 65475, 8),
 #        ("SELECT * FROM $satellites WHERE followers > 100.0", 49601, 8),
 #        ("SELECT COUNT(*), user_verified, user_id FROM $satellites GROUP BY user_verified, user_id", 60724, 8),

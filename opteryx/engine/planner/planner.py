@@ -497,6 +497,7 @@ if __name__ == "__main__":
     #SQL = "SELECT username from `tests.data.tweets`"
 
     SQL = "SELECT * FROM $satellites"
+    SQL = "SELECT COUNT(*) FROM $satellites"
 
     import cProfile
 

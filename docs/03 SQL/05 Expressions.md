@@ -12,8 +12,7 @@ TRUE  | TRUE  | TRUE    | TRUE
 TRUE  | FALSE | FALSE   | TRUE
 FALSE | FALSE | FALSE   | FALSE
 
-The operators `AND` and `OR` are commutative, that is, you can switch the left and
-right operand without affecting the result.
+The operators `AND` and `OR` are commutative, that is, you can switch the left and right operand without affecting the result.
 
 ## Comparison Operators
 
