@@ -6,3 +6,6 @@
 
 - JOINS
 - Query Optimizer
+
+
+Asyncio reading of data

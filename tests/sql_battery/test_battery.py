@@ -26,6 +26,8 @@ import pyarrow
 # fmt:off
 STATEMENTS = [
         ("SELECT * FROM $satellites", 177, 8),
+        ("SELECT * FROM $satellites;", 177, 8),
+        ("SELECT * FROM $satellites\n;", 177, 8),
         ("select * from $satellites", 177, 8),
         ("Select * From $satellites", 177, 8),
         ("SELECT   *   FROM   $satellites", 177, 8),
@@ -55,6 +57,7 @@ STATEMENTS = [
         ("SELECT * FROM $satellites WHERE id IN (5,6,7,8)", 4, 8),
         ("SELECT * FROM $satellites WHERE id IN (5,6,7,8) AND name = 'Europa'", 1, 8),
         ("SELECT * FROM $satellites WHERE id IN (5,6,7,8) OR name = 'Moon'", 5, 8),
+        ("SELECT * FROM $satellites WHERE planetId = id", 1, 8),
 
         ("SELECT COUNT(*) FROM $satellites", 1, 1),
         ("SELECT count(*) FROM $satellites", 1, 1),
@@ -66,28 +69,23 @@ STATEMENTS = [
         ("SELECT COUNT(*) FROM $satellites GROUP\nBY planetId", 7, 1),
         ("SELECT COUNT(*) FROM $satellites GROUP     BY planetId", 7, 1),
         ("SELECT COUNT(*), planetId FROM $satellites GROUP BY planetId", 7, 2),
-                
+        ("SELECT COUNT(*), planetId FROM $satellites WHERE planetId < 6 GROUP BY planetId", 3, 2),                
+        ("SELECT COUNT(*), planetId FROM $satellites WHERE planetId <= 6 GROUP BY planetId", 4, 2),      
+        ("SELECT COUNT(*), planetId FROM $satellites WHERE name LIKE 'Cal%' GROUP BY planetId", 3, 2),
         
-        
-#        ("SELECT COUNT(*) FROM $satellites  WHERE user_name = 'Dave Jamieson' AND user_verified = True", 1, 8),
-#        ("SELECT count(*) FROM $satellites GROUP BY user_verified", 2, 8),
-#        ("SELECT COUNT (*) FROM $satellites GROUP BY user_verified", 2, 8),
-#        ("SELECT Count(*) FROM $satellites GROUP BY user_verified", 2, 8),
-#        ("SELECT COUNT(*), user_verified FROM $satellites GROUP BY user_verified", 2, 8),
-#        ("SELECT * FROM $satellites WHERE hash_tags contains 'Georgia'", 50, 8),
-#        ("SELECT COUNT(*) FROM (SELECT user_name FROM $satellites GROUP BY user_name)", 1, 8),
-#        ("SELECT MAX(user_name) FROM $satellites", 1, 8),
-#        ("SELECT AVG(followers) FROM $satellites", 1, 8),
-#        ("SELECT * FROM $satellites ORDER BY user_name", 10000, 8), # ORDER BY is 10000 record limited
-#        ("SELECT * FROM $satellites ORDER BY user_name ASC", 10000, 8), # ORDER BY is 10000 record limited
-#        ("SELECT * FROM $satellites ORDER BY user_name DESC", 10000, 8), # ORDER BY is 10000 record limited
-#        ("SELECT * FROM $satellites WHERE user_id > 1000000", 65475, 8),
-#        ("SELECT * FROM $satellites WHERE followers > 100.0", 49601, 8),
-#        ("SELECT COUNT(*), user_verified, user_id FROM $satellites GROUP BY user_verified, user_id", 60724, 8),
-#        ("SELECT * FROM $satellites WHERE user_name IN ('Steve Strong', 'noel')", 3, 8),
-#        ("SELECT `followers` FROM $satellites", 65499, 8),
-#        ("SELECT `user name` FROM tests.data.gaps", 25, 8),
-#        ("SELECT `user name` FROM tests.data.gaps WHERE `user name` = 'NBCNews'", 21, 8),
+        ("SELECT DISTINCT planetId FROM $satellites", 7, 1),
+        ("SELECT * FROM $satellites LIMIT 50", 50, 8),
+        ("SELECT * FROM $satellites OFFSET 150", 27, 8),
+        ("SELECT * FROM $satellites LIMIT 50 OFFSET 150", 27, 8),
+        ("SELECT * FROM $satellites LIMIT 50 OFFSET 170", 7, 8),
+        ("SELECT * FROM $satellites ORDER BY name", 177, 8),
+
+        ("SELECT MAX(planetId) FROM $satellites", 1, 1),
+        ("SELECT MIN(planetId) FROM $satellites", 1, 1),
+        ("SELECT SUM(planetId) FROM $satellites", 1, 1),
+        ("SELECT MAX(id), planetId FROM $satellites GROUP BY planetId", 1, 2),
+        ("SELECT MIN(id), planetId FROM $satellites GROUP BY planetId", 1, 2),
+        ("SELECT SUM(id), planetId FROM $satellites GROUP BY planetId", 1, 2),
     ]
     # fmt:on
 
@@ -110,7 +108,7 @@ def test_sql_battery(statement, rows, columns):
     ), f"Query returned {actual_rows} rows but {rows} were expected, {statement}, {head(result)}"
     assert (
         columns == actual_columns
-    ), f"Query returned {actual_columns} cols but {columns} were expected, {statement}"
+    ), f"Query returned {actual_columns} cols but {columns} were expected, {statement}, {head(result)}"
 
 
 if __name__ == "__main__":

@@ -165,7 +165,7 @@ class Cursor:
     def shape(self):
         if self._results is None:
             raise Exception("Cursor must be executed first")
-        return self._results.shape     
+        return self._results.shape
 
     @property
     def stats(self):

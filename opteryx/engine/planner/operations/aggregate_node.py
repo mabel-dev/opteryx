@@ -20,7 +20,6 @@ import orjson
 import pyarrow.json
 import numpy as np
 from typing import Iterable
-from opteryx.third_party.pyarrow_ops.group import Grouping
 from opteryx.engine import QueryStatistics
 from opteryx.engine.planner.operations import BasePlanNode
 
@@ -69,26 +68,51 @@ def _incremental_seed(x, function):
         return INCREMENTAL_AGGREGATES_SEEDS[function](x)
     return x
 
+
 JSON_TYPES = {
     np.bool_: bool,
     np.int64: int,
 }
 
+
 def _serializer(obj):
     return JSON_TYPES[type(obj)](obj)
 
+
 def _map(table, collect_columns):
-    arr = [c.to_numpy() for c in table.select(list(collect_columns))]
+
+    """
+    This should be returning data in this form:
+
+    ["column": [values]]
+
+    not 
+    [["column":"value"],["column":"value"]]
+    """
+
+    # if we're aggregating on * we don't care about the data, just the number of
+    # records
+    if collect_columns == ["*"]:
+        for i in range(table.num_rows):
+            yield (("*", "*"),)
+        return
+
+    if "*" in collect_columns:
+        collect_columns = [c for c in collect_columns if c != "*"]
+    arr = [c.to_numpy() for c in table.select(collect_columns)]
 
     for row_index in range(len(arr[0])):
         ret = []
         for column_index, column_name in enumerate(collect_columns):
             ret.append((column_name, arr[column_index][row_index]))
-        yield tuple(ret)
+        yield ret
 
 
 class AggregateNode(BasePlanNode):
     def __init__(self, statistics: QueryStatistics, **config):
+
+        from opteryx.engine.attribute_types import TOKEN_TYPES
+
         self._aggregates = []
         self._groups = config.get("groups", [])
         self._project = self._groups.copy()
@@ -96,13 +120,15 @@ class AggregateNode(BasePlanNode):
         for attribute in aggregates:
             if "aggregate" in attribute:
                 self._aggregates.append(attribute)
-                self._project.append(attribute["args"][0][0])
+                argument = attribute["args"][0]
+                column = argument[0]
+                if argument[1] == TOKEN_TYPES.WILDCARD:
+                    column = "*"
+                self._project.append(column)
             else:
                 self._project.append(attribute)
 
         self._project = list(set(self._project))
-        print("AGG PROJ", self._project)
-
 
     def __repr__(self):
         return str(self._aggregates)
@@ -128,17 +154,26 @@ class AggregateNode(BasePlanNode):
 
                     # this is needed for situations where the select column isn't selecting
                     # the columns in the group by
-                    collection = tuple([(k,v,) for k,v in group if k[0] in self._groups])
+                    collection = tuple(
+                        [
+                            (
+                                k,
+                                v,
+                            )
+                            for k, v in group
+                            if k in self._groups
+                        ]
+                    )
 
                     group_collector = collector[collection]
 
                     # Add the responses to the collector
-                    # if it's COUNT(*) 
+                    # if it's COUNT(*)
                     if column_name == "COUNT(Wildcard)":
                         if "COUNT(*)" in group_collector:
                             group_collector["COUNT(*)"] += 1
                         else:
-                            group_collector["COUNT(*)"] = 0
+                            group_collector["COUNT(*)"] = 1
                     # if we have some information collected for this group,
                     # incremental update
                     elif column_name in group_collector:
@@ -161,7 +196,8 @@ class AggregateNode(BasePlanNode):
         import time
 
         from pyarrow.json import ReadOptions
-        ro = ReadOptions(block_size = 3 * 1024 * 1024)
+
+        ro = ReadOptions(block_size=3 * 1024 * 1024)
 
         buffer = bytearray()
         t = time.time_ns()
@@ -182,4 +218,4 @@ class AggregateNode(BasePlanNode):
             yield table
 
         # timing over a yield is pointless
-        print("building group table", (time.time_ns() - t) / 1e9)
+        # print("building group table", (time.time_ns() - t) / 1e9)
