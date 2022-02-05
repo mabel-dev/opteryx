@@ -3,6 +3,7 @@ Evaluation Node
 
 This is a SQL Query Execution Plan Node.
 
+This performs aliases and calculations.
 """
 from typing import Iterable
 from opteryx.engine.query_statistics import QueryStatistics
@@ -11,7 +12,8 @@ from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
 
 class EvaluationNode(BasePlanNode):
     def __init__(self, statistics: QueryStatistics, **config):
-        self._distinct = config.get("distinct", True)
+        #self._distinct = config.get("distinct", True)
+        pass
 
     def execute(self, data_pages: Iterable) -> Iterable:
 

@@ -10,7 +10,7 @@ Most aggregates require all of the data in the result set in order to complete, 
 
 The table below shows the available general aggregate functions.
 
-Function   | Description
+Function   | Description 
 ---------- | ----------------------------------------------------------------
 `COUNT(a)` | Calculates the number of non None values in column 'a'
 `MAX(a)`   | Returns the maximum value in column 'a'

@@ -35,15 +35,35 @@ STATEMENTS = [
         ("\n\n\n\tSELECT * FROM $satellites", 177, 8),
         ("SELECT * FROM $satellites WHERE name = 'Calypso'", 1, 8),
         ("SELECT * FROM $satellites WHERE `name` = 'Calypso'", 1, 8),
-        #("SELECT * FROM $satellites WHERE \"name\" = 'Calypso'", 1, 8),
         ("select * from $satellites where name = 'Calypso'", 1, 8),
-        #("SELECT * FROM \"$satellites\" WHERE name = 'Calypso'", 1, 8),
-        #("SELECT * FROM \"$satellites\" WHERE \"name\" = 'Calypso'", 1, 8),        
         ("SELECT * FROM $satellites WHERE name <> 'Calypso'", 176, 8),
         ("SELECT * FROM $satellites WHERE name = '********'", 0, 8),
         ("SELECT * FROM $satellites WHERE name LIKE '_a_y_s_'", 1, 8),
         ("SELECT * FROM $satellites WHERE name LIKE 'Cal%'", 4, 8),
         ("SELECT * FROM $satellites WHERE name like 'Cal%'", 4, 8),
+        # Unknown problems with keywords in double quotes
+        #("SELECT * FROM $satellites WHERE \"name\" = 'Calypso'", 1, 8),
+        #("SELECT * FROM \"$satellites\" WHERE name = 'Calypso'", 1, 8),
+        #("SELECT * FROM \"$satellites\" WHERE \"name\" = 'Calypso'", 1, 8),  
+        ("SELECT * FROM $satellites WHERE `name` = 'Calypso'", 1, 8),
+        ("SELECT * FROM `$satellites` WHERE name = 'Calypso'", 1, 8),
+        ("SELECT * FROM `$satellites` WHERE `name` = 'Calypso'", 1, 8),  
+
+        ("SELECT name, id, planetId FROM $satellites", 177, 3), 
+        ("SELECT name, name FROM $satellites", 177, 2),
+        ("SELECT name, id, name, id FROM $satellites", 177, 4),
+
+        # Field aliases aren't supported
+        #("SELECT name as Name FROM $satellites", 177, 3), 
+        #("SELECT name as Name, id as Identifier FROM $satellites", 177, 3), 
+        #("SELECT name as NAME FROM $satellites WHERE NAME = 'Calypso'", 177, 3), 
+        #("SELECT name as NAME FROM $satellites GROUP BY NAME", 177, 3), 
+
+        # functions aren't currently supported - more tests will be needed
+        #("SELECT upper(name) as NAME, id as Identifier FROM $satellites", 177, 1), 
+
+        # Joins aren't supported
+        #("SELECT upper(name) as NAME, id as Identifier FROM $satellites", 177, 1),  
 
         ("SELECT * FROM $satellites WHERE id = 5", 1, 8), 
         ("SELECT * FROM $satellites WHERE magnitude = 5.29", 1, 8),
@@ -53,12 +73,17 @@ STATEMENTS = [
         ("SELECT * FROM $satellites WHERE id = 5 OR name = 'Europa'", 1, 8),
         ("SELECT * FROM $satellites WHERE id = 5 OR name = 'Moon'", 2, 8),
         ("SELECT * FROM $satellites WHERE id BETWEEN 5 AND 8", 4, 8),
-        #("SELECT * FROM $satellites WHERE id BETWEEN 5 AND 8 AND name = 'Eurpoa'", 1, 8),
+#       There appears to be a problem evaluating filters with a BETWEEN and an AND
+#        ("SELECT * FROM $satellites WHERE name = 'Eurpoa' AND id BETWEEN 5 AND 8", 1, 8),
         ("SELECT * FROM $satellites WHERE id BETWEEN 5 AND 8 OR name = 'Moon'", 5, 8),
         ("SELECT * FROM $satellites WHERE id IN (5,6,7,8)", 4, 8),
         ("SELECT * FROM $satellites WHERE id IN (5,6,7,8) AND name = 'Europa'", 1, 8),
         ("SELECT * FROM $satellites WHERE id IN (5,6,7,8) OR name = 'Moon'", 5, 8),
         ("SELECT * FROM $satellites WHERE planetId = id", 1, 8),
+        ("SELECT * FROM $satellites WHERE planetId > 8", 5, 8),
+        ("SELECT * FROM $satellites WHERE planetId >= 8", 19, 8),
+        ("SELECT * FROM $satellites WHERE planetId < 5", 3, 8),
+        ("SELECT * FROM $satellites WHERE planetId <= 5", 70, 8),
 
         ("SELECT COUNT(*) FROM $satellites", 1, 1),
         ("SELECT count(*) FROM $satellites", 1, 1),

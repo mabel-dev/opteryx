@@ -17,6 +17,23 @@ Query Planner
 This builds a DAG which describes a query.
 
 This doesn't attempt to do optimization, this just decomposes the query.
+
+The effective order of operations must be:
+    01. FROM
+    02. JOIN
+    03. WHERE
+    04. < expressions and aliases
+    05. GROUP BY
+    06. HAVING
+    07. SELECT
+    08. DISTINCT
+    09. ORDER BT
+    10. OFFSET
+    11. LIMIT
+
+However, this doesn't preclude the order being different to achieve optimizations, as
+long as the functional outcode would be the same. Expressions and aliases technically
+should not be evaluated until the SELECT statement.
 """
 import sys
 import os
