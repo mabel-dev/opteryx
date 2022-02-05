@@ -83,9 +83,10 @@ STATEMENTS = [
         ("SELECT MAX(planetId) FROM $satellites", 1, 1),
         ("SELECT MIN(planetId) FROM $satellites", 1, 1),
         ("SELECT SUM(planetId) FROM $satellites", 1, 1),
-        ("SELECT MAX(id), planetId FROM $satellites GROUP BY planetId", 1, 2),
-        ("SELECT MIN(id), planetId FROM $satellites GROUP BY planetId", 1, 2),
-        ("SELECT SUM(id), planetId FROM $satellites GROUP BY planetId", 1, 2),
+        ("SELECT MAX(id), planetId FROM $satellites GROUP BY planetId", 7, 2),
+        ("SELECT MIN(id), planetId FROM $satellites GROUP BY planetId", 7, 2),
+        ("SELECT SUM(id), planetId FROM $satellites GROUP BY planetId", 7, 2),
+        ("SELECT MIN(id), MAX(id), SUM(planetId), planetId FROM $satellites GROUP BY planetId", 7, 4),
     ]
     # fmt:on
 

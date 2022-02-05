@@ -16,6 +16,7 @@ But, on high cardinality data (nearly unique columns), the performance is much f
 on a 10m record set, timings are 1:400 (50s:1220s where 20s is the read time).
 """
 import io
+from decimal import Decimal
 import orjson
 import pyarrow.json
 import numpy as np
@@ -25,19 +26,11 @@ from opteryx.engine.planner.operations import BasePlanNode
 
 # these functions can be applied to each group
 INCREMENTAL_AGGREGATES = {
-    "MIN": lambda x, y: min(np.min(x), y),
-    "MAX": lambda x, y: max(np.max(x), y),
-    "SUM": lambda x, y: np.sum(x) + y,
-    "COUNT": lambda x, y: np.size(x) + y,
+    "MIN": lambda x, y: min(x, y),
+    "MAX": lambda x, y: max(x, y),
+    "SUM": lambda x, y: x + y,
 }
 
-# incremental updates usually need a suitable start
-INCREMENTAL_AGGREGATES_SEEDS = {
-    "MIN": np.min,
-    "MAX": np.max,
-    "SUM": np.sum,
-    "COUNT": np.size,
-}
 
 # these functions need the whole dataset
 WHOLE_AGGREGATES = {
@@ -63,15 +56,11 @@ def _incremental(x, y, function):
     return np.concatenate(x, y)
 
 
-def _incremental_seed(x, function):
-    if function in INCREMENTAL_AGGREGATES_SEEDS:
-        return INCREMENTAL_AGGREGATES_SEEDS[function](x)
-    return x
-
 
 JSON_TYPES = {
     np.bool_: bool,
     np.int64: int,
+    np.float64: float
 }
 
 
@@ -80,16 +69,6 @@ def _serializer(obj):
 
 
 def _map(table, collect_columns):
-
-    """
-    This should be returning data in this form:
-
-    ["column": [values]]
-
-    not 
-    [["column":"value"],["column":"value"]]
-    """
-
     # if we're aggregating on * we don't care about the data, just the number of
     # records
     if collect_columns == ["*"]:
@@ -151,6 +130,9 @@ class AggregateNode(BasePlanNode):
                     attribute = aggregrator["args"][0][0]
                     function = aggregrator["aggregate"]
                     column_name = f"{function}({attribute})"
+                    value = [v for k,v in group if k == attribute]
+                    if len(value) == 1:
+                        value = value[0]
 
                     # this is needed for situations where the select column isn't selecting
                     # the columns in the group by
@@ -174,19 +156,23 @@ class AggregateNode(BasePlanNode):
                             group_collector["COUNT(*)"] += 1
                         else:
                             group_collector["COUNT(*)"] = 1
+                    elif function == "COUNT":
+                        if value:
+                            if column_name in group_collector:
+                                group_collector[column_name] += 1
+                            else:
+                                group_collector[column_name] = 1
                     # if we have some information collected for this group,
                     # incremental update
                     elif column_name in group_collector:
                         group_collector[column_name] = _incremental(
-                            group[0],
+                            value,
                             group_collector[column_name],
                             function,
                         )
-                    # otherwise, it's new, so seed the collection
+                    # otherwise, it's new, so seed the collection with the initial value
                     else:
-                        group_collector[column_name] = _incremental_seed(
-                            group[0], function
-                        )
+                        group_collector[column_name] = value
 
                     collector[collection] = group_collector
                 # TODO: if we're going to cap the number of groups we collect, do it here

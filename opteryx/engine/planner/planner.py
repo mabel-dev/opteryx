@@ -498,7 +498,7 @@ if __name__ == "__main__":
 
     SQL = "SELECT * FROM $satellites"
     SQL = "SELECT COUNT(*) FROM $satellites"
-    SQL = "SELECT MAX(planetId) FROM $satellites"
+    SQL = "SELECT MAX(planetId), MIN(planetId), SUM(gm), count(*) FROM $satellites group by planetId"
 
     import cProfile
 
