@@ -26,7 +26,7 @@ class ProjectionNode(BasePlanNode):
         self._projection = []
 
         projection = config.get("projection", {"*": "*"})
-        print("projection:", projection)
+        #print("projection:", projection)
         for attribute in projection:
             if "aggregate" in attribute:
                 self._projection.append(
@@ -48,7 +48,7 @@ class ProjectionNode(BasePlanNode):
 
         # if we have nothing to do, move along
         if self._projection == ["*"]:
-            print(f"projector yielding *")
+            #print(f"projector yielding *")
             yield from data_pages
 
         for page in data_pages:
@@ -59,7 +59,7 @@ class ProjectionNode(BasePlanNode):
                 try:
                     yield page.select(list(self._projection))
                 except KeyError as e:
-                    print(f"Available columns: {page.column_names}")
+                    #print(f"Available columns: {page.column_names}")
                     raise e
 
             else:
@@ -75,5 +75,5 @@ class ProjectionNode(BasePlanNode):
                     ]
                     page = page.rename_columns(names)
 
-                print(f"projector yielding {page.shape}")
+                #print(f"projector yielding {page.shape}")
                 yield page

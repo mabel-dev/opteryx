@@ -142,8 +142,6 @@ class Cursor:
                     "Number of placeholders and number of parameters must match."
                 )
 
-            print(operation)
-
         self._query_plan = QueryPlan(
             operation,
             self._stats,
@@ -162,6 +160,12 @@ class Cursor:
         if self._results is None:
             raise Exception("Cursor must be executed first")
         return self._results.count()
+
+    @property
+    def shape(self):
+        if self._results is None:
+            raise Exception("Cursor must be executed first")
+        return self._results.shape     
 
     @property
     def stats(self):

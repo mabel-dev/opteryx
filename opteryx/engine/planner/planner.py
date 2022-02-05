@@ -166,7 +166,7 @@ def _extract_projections(ast):
     processed at each step.
     """
     projection = ast[0]["Query"]["body"]["Select"]["projection"]
-    print(projection)
+    #print(projection)
     if projection == ["Wildcard"]:
         return {"*": "*"}
 
@@ -252,10 +252,10 @@ class QueryPlan(object):
             # identifiers to start with _ (underscore) and $ (dollar sign)
             # https://github.com/sqlparser-rs/sqlparser-rs/blob/main/src/dialect/mysql.rs
         except ValueError as e:
-            print(sql)
+            #print(sql)
             raise SqlError(e)
 
-        print(self._ast)
+        #print(self._ast)
 
         # build a plan for the query
         self._naive_planner(self._ast, statistics)
@@ -406,7 +406,7 @@ class QueryPlan(object):
         return "\n".join(list(self._draw()))
 
     def _inner_execute(self, operator_name, relation):
-        print(f"***********{operator_name}***************")
+        #print(f"***********{operator_name}***************")
         operator = self.get_operator(operator_name)
         out_going_links = self.get_outgoing_links(operator_name)
         outcome = operator.execute(relation)
@@ -465,7 +465,7 @@ def test(SQL):
         partition_scheme=DefaultPartitionScheme(""),
     )
     statistics.time_planning = time.time_ns() - statistics.start_time
-    print(q)
+    #print(q)
 
     from opteryx.engine.display import ascii_table
     from opteryx.utils.pyarrow import fetchmany, fetchall
