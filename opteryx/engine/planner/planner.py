@@ -23,7 +23,7 @@ import os
 
 sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
 
-import decimal
+import numpy
 
 from opteryx.engine.planner.operations import *
 from opteryx.engine.query_statistics import QueryStatistics
@@ -88,7 +88,7 @@ def _build_dnf_filters(filters):
         if "SingleQuotedString" in value:
             return (value["SingleQuotedString"], TOKEN_TYPES.VARCHAR)
         if "Number" in value:
-            return (decimal.Decimal(value["Number"][0]), TOKEN_TYPES.NUMERIC)
+            return (numpy.longdouble(value["Number"][0]), TOKEN_TYPES.NUMERIC)
         if "Boolean" in value:
             return (value["Boolean"], TOKEN_TYPES.BOOLEAN)
     if "BinaryOp" in filters:
@@ -106,7 +106,7 @@ def _build_dnf_filters(filters):
             left = _build_dnf_filters(filters["UnaryOp"]["expr"])
             return (left, "<>", True)
         if filters["UnaryOp"]["op"] == "Minus":
-            number = 0 - decimal.Decimal(
+            number = 0 - numpy.longdouble(
                 filters["UnaryOp"]["expr"]["Value"]["Number"][0]
             )
             return (number, TOKEN_TYPES.NUMERIC)
@@ -499,6 +499,7 @@ if __name__ == "__main__":
     SQL = "SELECT * FROM $satellites"
     SQL = "SELECT COUNT(*) FROM $satellites"
     SQL = "SELECT MAX(planetId), MIN(planetId), SUM(gm), count(*) FROM $satellites group by planetId"
+    SQL = "SELECT * FROM $satellites WHERE magnitude = 5.29"
 
     import cProfile
 

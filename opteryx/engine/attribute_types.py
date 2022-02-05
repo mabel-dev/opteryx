@@ -23,10 +23,10 @@ def coerce_types(value):
     into a supported type, do it.
     """
     import datetime
-    import decimal
+    import numpy
 
     t = type(value)
-    if t in (int, float, tuple, bool, str, datetime.datetime, dict, decimal.Decimal):
+    if t in (int, float, tuple, bool, str, datetime.datetime, dict, numpy.longdouble):
         return value
     if t in (list, set):
         return tuple(value)

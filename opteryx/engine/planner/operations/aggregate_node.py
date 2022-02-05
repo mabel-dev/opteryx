@@ -16,7 +16,6 @@ But, on high cardinality data (nearly unique columns), the performance is much f
 on a 10m record set, timings are 1:400 (50s:1220s where 20s is the read time).
 """
 import io
-from decimal import Decimal
 import orjson
 import pyarrow.json
 import numpy as np
