@@ -8,7 +8,7 @@ This Node eliminates duplicate records.
 from typing import Iterable
 from pyarrow import concat_tables
 from opteryx.engine.query_statistics import QueryStatistics
-from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
+from opteryx.engine.planner.operations import BasePlanNode
 from opteryx.third_party.pyarrow_ops import drop_duplicates
 
 

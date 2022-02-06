@@ -312,6 +312,14 @@ class QueryPlan(object):
         )
         last_node = "from"
 
+        _projection = _extract_projections(ast)
+        if any(["function" in a for a in _projection]):
+            self.add_operator(
+                "eval", EvaluationNode(statistics, projection=_projection)
+            )
+            self.link_operators(last_node, "eval")
+            last_node = "eval"
+
         _selection = _extract_selection(ast)
         if _selection:
             self.add_operator(
@@ -321,7 +329,6 @@ class QueryPlan(object):
             last_node = "where"
 
         _groups = _extract_groups(ast)
-        _projection = _extract_projections(ast)
         if any(["aggregate" in a for a in _projection]):
             self.add_operator(
                 "agg", AggregateNode(statistics, aggregates=_projection, groups=_groups)
@@ -525,25 +532,26 @@ if __name__ == "__main__":
     SQL = "SELECT * FROM $satellites"
     SQL = "SELECT COUNT(*) FROM $satellites"
     SQL = "SELECT MAX(planetId), MIN(planetId), SUM(gm), count(*) FROM $satellites group by planetId"
-    SQL = "SELECT upper(name), lower(name) as ln FROM $satellites WHERE magnitude = 5.29"
+    SQL = "SELECT upper(name), length(name) FROM $satellites WHERE magnitude = 5.29"
 
-    ast = sqloxide.parse_sql(SQL, dialect="mysql")
+    #ast = sqloxide.parse_sql(SQL, dialect="mysql")
 
-    _projection = _extract_projections(ast)
-    print(_projection)
+    #_projection = _extract_projections(ast)
+    #print(_projection)
 
+    import pyarrow
     import opteryx.samples
     from opteryx.third_party.pyarrow_ops import head
 
-    p = opteryx.samples.planets()
+    #p = opteryx.samples.planets().select(["name"])
 
-    en = EvaluationNode(None, projection=_projection)
+    #en = EvaluationNode(None, projection=_projection)
 
-    head(en.execute(p))
-    #import cProfile
+    #head(pyarrow.concat_tables(en.execute([p])))
+    import cProfile
 
-    #with cProfile.Profile(subcalls=False) as pr:
-    #    test(SQL)
+    with cProfile.Profile(subcalls=False) as pr:
+        test(SQL)
 
     # pr.dump_stats("perf")
 
