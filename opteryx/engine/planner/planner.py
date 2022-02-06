@@ -504,7 +504,7 @@ def test(SQL):
     with timer.Timer():
         # do this to go over the records
         r = q.execute()
-        print(ascii_table(fetchmany(r), limit=10))
+        print(ascii_table(fetchmany(r, size=10), limit=10))
 
         [a for a in fetchall(r)]
 
@@ -534,7 +534,7 @@ if __name__ == "__main__":
     SQL = "SELECT MAX(planetId), MIN(planetId), SUM(gm), count(*) FROM $satellites group by planetId"
     SQL = "SELECT upper(name), length(name) FROM $satellites WHERE magnitude = 5.29"
 
-    SQL = "SELECT * FROM $satellites"
+    SQL = "SELECT * FROM $planets"
 
     #ast = sqloxide.parse_sql(SQL, dialect="mysql")
 

@@ -1,15 +1,16 @@
 # SQL Examples
 
-Opteryx has a set on built-in datasets for demonstration and testing.
+Opteryx has two built-in datasets for demonstration and testing.
 
-- $satellites
-- $planets
+- `$satellites` (8 columns, 177 rows)
+- `$planets` (20 columns, 9 rows) #plutoisaplanet
+
+Both datasets where acquired from [this source](https://github.com/devstronomy/nasa-data-scraper/tree/f610e541a053f05e26573570604aed50b358cc43/data/json).
 
 ~~~sql
 SELECT *
   FROM $satellites
 ~~~
-
 ~~~
 ┌----┬----------┬--------┬----------┬--------┬---------┬-----------┬--------┐
 │ id │ planetId │  name  │    gm    │ radius │ density │ magnitude │ albedo │
