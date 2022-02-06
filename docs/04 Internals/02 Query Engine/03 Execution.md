@@ -27,3 +27,9 @@ will emit it's result when it has 10 records, it may have recieved 1000 records.
 These batches are the data frames with broadly align to the database concept of
 data pages.
 
+## Execution Optimization
+
+Two optimizations are used to improve execution performance:
+
+- Processing of data is done by page-by-page
+- Vectorization of aggregation and function calculations

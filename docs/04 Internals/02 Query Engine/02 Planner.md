@@ -1,8 +1,6 @@
 # Query Planner
 
-The Opteryx Query Planner is 
-
-## Query Plan
+## Query Plan Steps
 
 Query Plans can contain the following steps:
 
