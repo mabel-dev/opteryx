@@ -2,7 +2,10 @@
 
 ## A query engine for your data, no database required
 
-[![Opteryx Documentation](https://img.shields.io/badge/get%20started-documentation-brightgreen.svg)](https://mabel-dev.github.io/opteryx/)
+[Documentation](https://mabel-dev.github.io/opteryx/) |
+[Examples](notebooks) |
+[Contributing](.github/CONTRIBUTING.md) |
+Blog
 
 ----
 
