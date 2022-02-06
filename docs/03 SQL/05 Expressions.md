@@ -38,13 +38,3 @@ Predicate               | Description
 ----------------------- | ---------------------------------
 `a BETWEEN x AND y`     | equivalent to `a >= x AND a <= y`
 `a NOT BETWEEN x AND y` | equivalent to `a < x OR a > y`
-
-## Casting
-
-* CAST(<value/attribute> AS <type>)
-
-* DECIMAL()
-
-## Subqueries
-
-* NOT IMPLEMENTED

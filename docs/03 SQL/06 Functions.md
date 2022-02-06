@@ -2,6 +2,8 @@
 
 ## Numeric Functions
 
+None currently implemented
+
 ## Text Functions
 
 Functions for examining and manipulating string values. 
@@ -16,3 +18,5 @@ Function        | Description                                       | Example
 `UPPER(str)`    | Convert string to upper case                      | UPPER('Hello') -> 'HELLO'
 
 ## Date Functions
+
+None currently implemented
