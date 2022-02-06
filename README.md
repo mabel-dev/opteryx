@@ -1,12 +1,13 @@
 <img align="centre" alt="archaeopteryx" height="104" src="opteryx.png" />
 
-## Opteryx is a embedable distributed SQL query engine.
+## A query engine for your data, no database required
 
 [![Opteryx Documentation](https://img.shields.io/badge/get%20started-documentation-brightgreen.svg)](https://mabel-dev.github.io/opteryx/)
 
 ----
 
-NOTE: Opteryx is an alpha product. Alpha means different things to different people, to us, being alpha means:
+**NOTE**
+!Opteryx is an alpha product. Alpha means different things to different people, to us, being alpha means:
 
 - Some features you may expect from a Query Engine may not be available
 - Some features may have undetected bugs in them
