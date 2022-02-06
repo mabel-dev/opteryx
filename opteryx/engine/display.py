@@ -120,7 +120,7 @@ def ascii_table(dictset: Iterable[Dict[Any, Any]], limit: int = 5):
     # draw table
     bars = []
     for header, width in columns.items():
-        bars.append("─" * (width + 2))
+        bars.append("-" * (width + 2))
 
     # display headers
     result.append("┌" + "┬".join(bars) + "┐")
