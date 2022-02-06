@@ -534,6 +534,8 @@ if __name__ == "__main__":
     SQL = "SELECT MAX(planetId), MIN(planetId), SUM(gm), count(*) FROM $satellites group by planetId"
     SQL = "SELECT upper(name), length(name) FROM $satellites WHERE magnitude = 5.29"
 
+    SQL = "SELECT * FROM $satellites"
+
     #ast = sqloxide.parse_sql(SQL, dialect="mysql")
 
     #_projection = _extract_projections(ast)
