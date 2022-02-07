@@ -15,7 +15,7 @@ This in a REPL to interactively test the Query Parser, Planner and Optimizer.
 import sys
 import os
 
-from opteryx.engine.display import ascii_table
+from opteryx.utils.display import ascii_table
 
 sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
 

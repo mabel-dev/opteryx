@@ -15,7 +15,7 @@ from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
 def replace_wildcards(arg):
     if arg[1] == TOKEN_TYPES.WILDCARD:
         return "*"
-    return arg[0]
+    return str(arg[0])
 
 
 class ProjectionNode(BasePlanNode):

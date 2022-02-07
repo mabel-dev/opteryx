@@ -12,12 +12,12 @@
 """
 These are a set of functions that can be applied to data.
 """
-from os import truncate
 import orjson
 import datetime
 import numpy
+import pyarrow
 from pyarrow import compute
-from cityhash import CityHash32
+from cityhash import CityHash64
 
 from opteryx.engine.functions.date_functions import *
 
@@ -65,11 +65,9 @@ def parse_number(parser, coerce):
 
 
 def get_md5(item):
+    # this is slow but expected to not have a lot of use
     import hashlib
-
     return hashlib.md5(str(item).encode()).hexdigest()  # nosec - meant to be MD5
-
-
 
 def attempt(func):
     try:
@@ -84,13 +82,13 @@ def not_implemented(*args):
 def _vectorize_single_parameter(func):
     def _inner(array):
         for a in array:
-            yield func(a) 
+            yield [func(a)] 
     return _inner
 
 def _vectorize_double_parameter(func):
     def _inner(array, p1):
         for a in array:
-            yield func(a, p1) 
+            yield [func(a, p1)]
     return _inner 
 
 
@@ -108,8 +106,25 @@ FUNCTIONS = {
     "LEFT": _vectorize_double_parameter(lambda x, y: str(x)[: int(y)]),
     "RIGHT": _vectorize_double_parameter(lambda x, y: str(x)[-int(y) :]),
 
+    # HASHING & ENCODING
+    "HASH": _vectorize_single_parameter(lambda x: format(CityHash64(str(x)), "X")),
+    "MD5": _vectorize_single_parameter(get_md5),
+
+    # NUMERIC
+    "ROUND": compute.round,
+    "FLOOR": compute.floor,
+    "CEIL": compute.ceil,
+    "ABS": compute.abs,
+    "TRUNC": compute.trunc,
+
     # NOT CONVERTED YET
 
+
+
+
+
+
+    "RANDOM": get_random,  # return a random number 0-99
 
     # DATES & TIMES
     "YEAR": get_year,
@@ -147,20 +162,14 @@ FUNCTIONS = {
     "REGEXP_MATCH": not_implemented,  # string, pattern -> boolean
     "REPLACE": not_implemented,  # string, pattern to find, pattern to replace -> string
     # NUMBERS
-    "ABS": abs,
-    "ROUND": round,
-    "TRUNC": parse_number(float, truncate),
     "INTEGER": parse_number(float, int),
     "DOUBLE": parse_number(float, float),
     # BOOLEAN
     "BOOLEAN": lambda x: str(x).upper() != "FALSE",
     "ISNONE": lambda x: x is None,
-    # HASHING & ENCODING
-    "HASH": lambda x: format(CityHash32(str(x)), "X"),
-    "MD5": get_md5,
-    "RANDOM": get_random,  # return a random number 0-99
+
     # OTHER
-    "BETWEEN": lambda val, low, high: low < val < high,
+
     "SORT": sorted,
     "TRY": attempt,
     "LEAST": min,

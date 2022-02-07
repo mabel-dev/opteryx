@@ -2,7 +2,13 @@
 
 ## Numeric Functions
 
-None currently implemented
+Function        | Description                                       | Example
+--------------- | ------------------------------------------------- | ---------------------------
+`ABS(n)`        | The absolute value on n                           | ABS(-8) -> 8   
+`CEIL(n)`       | Round the number up                               | CEIL(2.3) -> 3            
+`FLOOR(n)`      | Round the number down                             | FLOOR(3.9) -> 3 
+`ROUND(n)`      | Round to nearest whole number                     | ROUND(0.2) -> 0
+`TRUNC(n)`      | Remove the fractional parts                       | TRUNC(5.5) -> 5
 
 ## Text Functions
 
@@ -20,3 +26,10 @@ Function        | Description                                       | Example
 ## Date Functions
 
 None currently implemented
+
+## Other Functions
+
+Function        | Description                                       | Example
+--------------- | ------------------------------------------------- | ---------------------------
+`HASH(str)`     | Calculate the CityHash of a value                 | HASH('')
+`MD5(str)`      | Calculate the MD5 hash of a value                 | MD5('')

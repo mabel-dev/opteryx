@@ -30,7 +30,7 @@ class EvaluationNode(BasePlanNode):
             if function.get('alias'):
                 column_name = function["alias"]
             else:
-                column_name = f"{function['function']}({','.join(a[0] for a in function['args'])})"
+                column_name = f"{function['function']}({','.join(str(a[0]) for a in function['args'])})"
             function["column_name"] = column_name
 
     def execute(self, data_pages: Iterable) -> Iterable:
@@ -50,8 +50,8 @@ class EvaluationNode(BasePlanNode):
                         # it's a literal, just add it
                         arg_list.append(arg[0])
                         
-                
-                page = pyarrow.Table.append_column(page, function["column_name"], FUNCTIONS[function["function"]](*arg_list))
+                calculated_values = FUNCTIONS[function["function"]](*arg_list)
+                page = pyarrow.Table.append_column(page, function["column_name"], calculated_values)
 
 
             # for alias, add aliased column, do this after the functions because they
