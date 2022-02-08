@@ -219,7 +219,7 @@ def _extract_projections(ast):
                     }
 
     projection = [_inner(attribute) for attribute in projection]
-    print(projection)
+    #print(projection)
     return projection
 
 

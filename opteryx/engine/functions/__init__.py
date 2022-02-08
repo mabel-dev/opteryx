@@ -12,6 +12,7 @@
 """
 These are a set of functions that can be applied to data.
 """
+import string
 import orjson
 import datetime
 import numpy
@@ -20,9 +21,10 @@ from pyarrow import compute
 from cityhash import CityHash64
 
 from opteryx.engine.functions.date_functions import *
-
+from opteryx.exceptions import SqlError
 
 from opteryx.utils.text import levenshtein_distance
+from opteryx.utils.dates import parse_iso
 
 
 def get_random():
@@ -44,25 +46,6 @@ def concat(*items):
     return sep.join(map(str, items))
 
 
-def to_string(val):
-    if isinstance(val, (list, tuple, set)):
-        return concat(val)
-    if hasattr(val, "mini"):
-        return "\\" + val.mini.decode("UTF8") + "\\"
-    if isinstance(val, dict):
-        return "\\" + orjson.dumps(val).decode("UTF8") + "\\"
-    else:
-        return str(val)
-
-
-def parse_number(parser, coerce):
-    def inner(val):
-        if val is None:
-            return None
-        return coerce(parser(val))
-
-    return inner
-
 
 def get_md5(item):
     # this is slow but expected to not have a lot of use
@@ -77,6 +60,36 @@ def attempt(func):
 
 def not_implemented(*args):
     raise NotImplementedError()
+
+def _get(value, item):
+    try:
+        if isinstance(value, dict):
+            return value.get(item)
+        return value[int(item)]
+    except (KeyError, IndexError):
+        return None
+
+
+VECTORIZED_CASTERS = {
+    "BOOLEAN": "bool",
+    "NUMERIC": "float64",
+    "VARCHAR": "string",
+}
+
+ITERATIVE_CASTERS = {
+    "TIMESTAMP": parse_iso,
+}
+
+def cast(type):
+    if type in VECTORIZED_CASTERS:
+        return lambda a: compute.cast(a, VECTORIZED_CASTERS[type])
+    if type in ITERATIVE_CASTERS:
+        def _inner(arr):
+            caster = ITERATIVE_CASTERS[type]
+            for i in arr:
+                yield [caster(i)]
+        return _inner
+    raise SqlError(f"Unable to cast to type {type}")
 
 
 def _vectorize_single_parameter(func):
@@ -94,15 +107,21 @@ def _vectorize_double_parameter(func):
 
 FUNCTIONS = {
 
-    # STRINGS
-    # VECTORIZED
+    # TYPE CONVERSION
+    #"CAST": cast_as,
+    "TIMESTAMP": cast("TIMESTAMP"),
+    "BOOLEAN": cast("BOOLEAN"),
+    "NUMERIC": cast("NUMERIC"),
+    "VARCHAR": cast("VARCHAR"),
+    "STRING": cast("VARCHAR"),  # alias for VARCHAR
+
+    # STRINGS - VECTORIZED
     "LENGTH": compute.utf8_length, # LENGTH(str) -> int
     "UPPER": compute.utf8_upper, # UPPER(str) -> str
     "LOWER": compute.utf8_lower, # LOWER(str) -> str
     "TRIM": compute.utf8_trim_whitespace, # TRIM(str) -> str
 
-    # STRINGS
-    # LOOPED FUNCTIONS
+    # STRINGS - LOOPED FUNCTIONS
     "LEFT": _vectorize_double_parameter(lambda x, y: str(x)[: int(y)]),
     "RIGHT": _vectorize_double_parameter(lambda x, y: str(x)[-int(y) :]),
 
@@ -110,7 +129,10 @@ FUNCTIONS = {
     "HASH": _vectorize_single_parameter(lambda x: format(CityHash64(str(x)), "X")),
     "MD5": _vectorize_single_parameter(get_md5),
 
-    # NUMERIC
+    # OTHER
+    "GET": _vectorize_double_parameter(_get),  # GET(LIST, index) => LIST[index] or GET(STRUCT, accessor) => STRUCT[accessor]
+
+    # NUMERIC - VECTORIZED
     "ROUND": compute.round,
     "FLOOR": compute.floor,
     "CEIL": compute.ceil,
@@ -151,21 +173,18 @@ FUNCTIONS = {
     "FROM_EPOCH": not_implemented,  # timestamp from linux epoch formatted time
     "TO_EPOCH": not_implemented,  # timestamp in linux epoch format
     "DATE_PART": not_implemented,  # DATE_PART("YEAR", timestamp)
-    "TIMESTAMP": not_implemented,  # parse input as a TIMESTAMP
 
     
-    "STRING": to_string,
-    "VARCHAR": to_string,
+
     "MID": lambda x, y, z: str(x)[int(y) :][: int(z)],
     "CONCAT": concat,
     "LEVENSHTEIN": levenshtein_distance,
     "REGEXP_MATCH": not_implemented,  # string, pattern -> boolean
     "REPLACE": not_implemented,  # string, pattern to find, pattern to replace -> string
     # NUMBERS
-    "INTEGER": parse_number(float, int),
-    "DOUBLE": parse_number(float, float),
+    "INTEGER": not_implemented,
+    "DOUBLE": not_implemented,
     # BOOLEAN
-    "BOOLEAN": lambda x: str(x).upper() != "FALSE",
     "ISNONE": lambda x: x is None,
 
     # OTHER
@@ -175,7 +194,6 @@ FUNCTIONS = {
     "LEAST": min,
     "GREATEST": max,
     "UUID": not_implemented,  # cast value as UUID
-    "GET": not_implemented,  # GET(LIST, index) => LIST[index] or GET(STRUCT, accessor) => STRUCT[accessor]
 }
 
 

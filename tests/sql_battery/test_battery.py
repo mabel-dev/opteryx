@@ -113,6 +113,13 @@ STATEMENTS = [
         ("SELECT MIN(id), planetId FROM $satellites GROUP BY planetId", 7, 2),
         ("SELECT SUM(id), planetId FROM $satellites GROUP BY planetId", 7, 2),
         ("SELECT MIN(id), MAX(id), SUM(planetId), planetId FROM $satellites GROUP BY planetId", 7, 4),
+
+        ("SELECT BOOLEAN(planetId) FROM $satellites GROUP BY planetId", 177, 1),
+        ("SELECT VARCHAR(planetId) FROM $satellites GROUP BY planetId", 177, 1),
+        ("SELECT TIMESTAMP(planetId) FROM $satellites GROUP BY planetId", 177, 1),
+        ("SELECT NUMERIC(planetId) FROM $satellites GROUP BY planetId", 177, 1),
+        ("SELECT GET(name, 1) FROM $satellites GROUP BY planetId", 177, 1),
+
     ]
     # fmt:on
 
