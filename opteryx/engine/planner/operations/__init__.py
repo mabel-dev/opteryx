@@ -8,4 +8,4 @@ from .limit_node import LimitNode  # select the first N records
 from .offset_node import OffsetNode  # skip a number of records
 from .projection_node import ProjectionNode  # remove unwanted columns including renames
 from .selection_node import SelectionNode  # filter unwanted rows
-# - SortNode (order a relation by given keys)
+from .sort_node import SortNode  # order by selected columns

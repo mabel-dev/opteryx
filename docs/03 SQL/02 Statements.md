@@ -9,5 +9,5 @@ GROUP BY <group_by_expression>
 HAVING <having_expression>
 LIMIT <n>
 OFFSET <n>
-** ORDER BY <field_list> [ASC|DESC]  <- not implemented yet
+ORDER BY <field_list> [ASC|DESC]
 ~~~

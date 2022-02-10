@@ -53,7 +53,7 @@ STATEMENTS = [
         ("SELECT name, name FROM $satellites", 177, 2),
         ("SELECT name, id, name, id FROM $satellites", 177, 4),
 
-        # Field aliases aren't supported
+        # Field aliases aren't supported yet
         #("SELECT name as Name FROM $satellites", 177, 3), 
         #("SELECT name as Name, id as Identifier FROM $satellites", 177, 3), 
         #("SELECT name as NAME FROM $satellites WHERE NAME = 'Calypso'", 177, 3), 
@@ -63,7 +63,7 @@ STATEMENTS = [
         #("SELECT upper(name) as NAME, id as Identifier FROM $satellites", 177, 1), 
 
         # Joins aren't supported
-        #("SELECT upper(name) as NAME, id as Identifier FROM $satellites", 177, 1),  
+        #("SELECT * FROM $satellites, $planets WHERE $planets.planetId = $satellites.planetId", 177, 1),  
 
         ("SELECT * FROM $satellites WHERE id = 5", 1, 8), 
         ("SELECT * FROM $satellites WHERE magnitude = 5.29", 1, 8),
@@ -121,6 +121,11 @@ STATEMENTS = [
         ("SELECT GET(name, 1) FROM $satellites GROUP BY planetId", 177, 1),
 
         ("SELECT planetId, Count(*) FROM $satellites group by planetId having count(*) > 5", 4, 2),
+
+        ("SELECT * FROM $satellites order by name", 177, 8),
+        ("SELECT * FROM $satellites order by name desc", 177, 8),
+        ("SELECT name FROM $satellites order by name", 177, 1),
+        ("SELECT * FROM $satellites order by magnitude, name", 177, 8)
 
     ]
     # fmt:on

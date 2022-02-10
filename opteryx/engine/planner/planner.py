@@ -257,6 +257,13 @@ def _extract_offset(ast):
         return int(offset["value"]["Value"]["Number"][0])
     return None
 
+def _extract_order(ast):
+    order = ast[0]["Query"]["order_by"]
+    if order is not None:
+        orders = []
+        for col in order:
+            orders.append((col["expr"]["Identifier"]["value"], "descending" if str(col["asc"]) == "False" else "ascending"),)
+        return orders
 
 def _extract_groups(ast):
     groups = ast[0]["Query"]["body"]["Select"]["group_by"]
@@ -364,6 +371,12 @@ class QueryPlan(object):
             self.add_operator("distinct", DistinctNode(statistics))
             self.link_operators(last_node, "distinct")
             last_node = "distinct"
+
+        _order = _extract_order(ast)
+        if _order:
+            self.add_operator("order", SortNode(statistics, order=_order))
+            self.link_operators(last_node, "order")
+            last_node = "order"
 
         _offset = _extract_offset(ast)
         if _offset:
@@ -554,8 +567,14 @@ if __name__ == "__main__":
     SQL = "SELECT upper(name), length(name) FROM $satellites WHERE magnitude = 5.29"
 
     SQL = "SELECT planetId, Count(*) FROM $satellites group by planetId having count(*) > 5"
+    SQL = "SELECT * FROM $satellites order by magnitude, name"
 
-    #ast = sqloxide.parse_sql(SQL, dialect="mysql")
+    ast = sqloxide.parse_sql(SQL, dialect="mysql")
+    print(ast)
+
+    print()
+    print(_extract_order(ast))
+
 
     #_projection = _extract_projections(ast)
     #print(_projection)
