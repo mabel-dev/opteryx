@@ -21,8 +21,8 @@ This doesn't attempt to do optimization, this just decomposes the query.
 The effective order of operations must be:
     01. FROM
     02. JOIN
-    03. WHERE
-    04. < expressions and aliases
+    03. < expressions and aliases
+    04. WHERE
     05. GROUP BY
     06. HAVING
     07. SELECT
@@ -159,7 +159,15 @@ def _build_dnf_filters(filters):
         return (left, operator, right)
     if filters == "Wildcard":
         return ("Wildcard", TOKEN_TYPES.WILDCARD)
-
+    if "Function" in filters:
+        func = filters["Function"]["name"][0]["value"].upper()
+        args = [
+                    _build_dnf_filters(a["Unnamed"])
+                    for a in filters["Function"]["args"]
+                ]
+        args = [(str(a[0]) if a[0] != "Wildcard" else "*") for a in args]
+        column_name = f"{func}({','.join(args)})"
+        return (column_name, TOKEN_TYPES.IDENTIFIER)
 
 def _extract_relations(ast):
     """ """
@@ -254,6 +262,9 @@ def _extract_groups(ast):
     groups = ast[0]["Query"]["body"]["Select"]["group_by"]
     return [g["Identifier"]["value"] for g in groups]
 
+def _extract_having(ast):
+    having = ast[0]["Query"]["body"]["Select"]["having"]
+    return _build_dnf_filters(having)
 
 class QueryPlan(object):
     def __init__(self, sql: str, statistics, reader, partition_scheme):
@@ -272,6 +283,7 @@ class QueryPlan(object):
         # Parse the SQL into a AST
         try:
             self._ast = sqloxide.parse_sql(sql, dialect="mysql")
+            print(self._ast)
             # MySQL Dialect allows identifiers to be delimited with ` (backticks) and
             # identifiers to start with _ (underscore) and $ (dollar sign)
             # https://github.com/sqlparser-rs/sqlparser-rs/blob/main/src/dialect/mysql.rs
@@ -323,7 +335,7 @@ class QueryPlan(object):
         _selection = _extract_selection(ast)
         if _selection:
             self.add_operator(
-                "where", SelectionNode(statistics, filter=_extract_selection(ast))
+                "where", SelectionNode(statistics, filter=_selection)
             )
             self.link_operators(last_node, "where")
             last_node = "where"
@@ -335,6 +347,14 @@ class QueryPlan(object):
             )
             self.link_operators(last_node, "agg")
             last_node = "agg"
+
+        _having = _extract_having(ast)
+        if _having:
+            self.add_operator(
+                "having", SelectionNode(statistics, filter=_having)
+            )
+            self.link_operators(last_node, "having")
+            last_node = "having"  
 
         self.add_operator("select", ProjectionNode(statistics, projection=_projection))
         self.link_operators(last_node, "select")
@@ -498,7 +518,7 @@ def test(SQL):
     statistics.time_planning = time.time_ns() - statistics.start_time
     # print(q)
 
-    from opteryx.engine.display import ascii_table
+    from opteryx.utils.display import ascii_table
     from opteryx.utils.pyarrow import fetchmany, fetchall
 
     with timer.Timer():
@@ -534,7 +554,7 @@ if __name__ == "__main__":
     SQL = "SELECT MAX(planetId), MIN(planetId), SUM(gm), count(*) FROM $satellites group by planetId"
     SQL = "SELECT upper(name), length(name) FROM $satellites WHERE magnitude = 5.29"
 
-    SQL = "SELECT * FROM $planets"
+    SQL = "SELECT planetId, Count(*) FROM $satellites group by planetId having count(*) > 5"
 
     #ast = sqloxide.parse_sql(SQL, dialect="mysql")
 
