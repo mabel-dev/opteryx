@@ -120,6 +120,8 @@ STATEMENTS = [
         ("SELECT NUMERIC(planetId) FROM $satellites GROUP BY planetId", 177, 1),
         ("SELECT GET(name, 1) FROM $satellites GROUP BY planetId", 177, 1),
 
+        ("SELECT planetId, Count(*) FROM $satellites group by planetId having count(*) > 5", 4, 2),
+
     ]
     # fmt:on
 

@@ -283,7 +283,6 @@ class QueryPlan(object):
         # Parse the SQL into a AST
         try:
             self._ast = sqloxide.parse_sql(sql, dialect="mysql")
-            print(self._ast)
             # MySQL Dialect allows identifiers to be delimited with ` (backticks) and
             # identifiers to start with _ (underscore) and $ (dollar sign)
             # https://github.com/sqlparser-rs/sqlparser-rs/blob/main/src/dialect/mysql.rs
