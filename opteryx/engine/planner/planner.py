@@ -569,6 +569,8 @@ if __name__ == "__main__":
     SQL = "SELECT planetId, Count(*) FROM $satellites group by planetId having count(*) > 5"
     SQL = "SELECT * FROM $satellites order by magnitude, name"
 
+    SQL = "SELECT AVG(planetId) from $satellites"
+
     ast = sqloxide.parse_sql(SQL, dialect="mysql")
     print(ast)
 

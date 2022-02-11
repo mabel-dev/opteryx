@@ -148,8 +148,7 @@ class AggregateNode(BasePlanNode):
 
                     group_collector = collector[collection]
 
-                    # Add the responses to the collector
-                    # if it's COUNT(*)
+                    # Add the responses to the collector if it's COUNT(*)
                     if column_name == "COUNT(Wildcard)":
                         if "COUNT(*)" in group_collector:
                             group_collector["COUNT(*)"] += 1
@@ -161,22 +160,28 @@ class AggregateNode(BasePlanNode):
                                 group_collector[column_name] += 1
                             else:
                                 group_collector[column_name] = 1
-                    # if we have some information collected for this group,
-                    # incremental update
-                    elif column_name in group_collector:
-                        group_collector[column_name] = _incremental(
-                            value,
-                            group_collector[column_name],
-                            function,
-                        )
-                    # otherwise, it's new, so seed the collection with the initial value
-                    else:
-                        group_collector[column_name] = value
+                    # if this is one of the functions we do an incremental aggregate
+                    elif function in INCREMENTAL_AGGREGATES:
+                        # if we have information about this collection
+                        if column_name in group_collector:
+                            group_collector[column_name] = _incremental(
+                                value,
+                                group_collector[column_name],
+                                function,
+                            )
+                        # otherwise, it's new, so seed the collection with the initial value
+                        else:
+                            group_collector[column_name] = value
+                    if function in WHOLE_AGGREGATES:
+                        if column_name in group_collector:
+                            group_collector[column_name].append(value)
+                        else:
+                            group_collector[column_name] = [value]
 
                     collector[collection] = group_collector
-                # TODO: if we're going to cap the number of groups we collect, do it here
 
-        # TODO: do any whole aggregate functions
+        if function in WHOLE_AGGREGATES:
+            group_collector[column_name] = WHOLE_AGGREGATES[function](group_collector[column_name])
 
         import time
 
