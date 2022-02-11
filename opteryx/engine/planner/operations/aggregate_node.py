@@ -173,15 +173,12 @@ class AggregateNode(BasePlanNode):
                         else:
                             group_collector[column_name] = value
                     if function in WHOLE_AGGREGATES:
-                        if column_name in group_collector:
-                            group_collector[column_name].append(value)
+                        if (function, column_name) in group_collector:
+                            group_collector[(function, column_name)].append(value)
                         else:
-                            group_collector[column_name] = [value]
+                            group_collector[(function, column_name)] = [value]
 
                     collector[collection] = group_collector
-
-        if function in WHOLE_AGGREGATES:
-            group_collector[column_name] = WHOLE_AGGREGATES[function](group_collector[column_name])
 
         import time
 
@@ -197,10 +194,16 @@ class AggregateNode(BasePlanNode):
                 table = pyarrow.json.read_json(io.BytesIO(buffer), read_options=ro)
                 yield table
                 buffer = bytearray()
-            for k, v in collected:
-                if hasattr(v, "as_py"):
-                    v = v.as_py()
-                record[k] = v
+            for field, value in collected:
+                if hasattr(value, "as_py"):
+                    value = value.as_py()
+                for agg in list(record.keys()):
+                    if isinstance(agg, tuple):
+                        func, col = agg
+                        if func in WHOLE_AGGREGATES:
+                            record[col] = WHOLE_AGGREGATES[func](record.pop(agg))
+                    else:
+                        record[field] = value
             buffer.extend(orjson.dumps(record, default=_serializer))
 
         if len(buffer) > 0:
