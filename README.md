@@ -5,7 +5,7 @@
 [Documentation](https://mabel-dev.github.io/opteryx/) |
 [Examples](notebooks) |
 [Contributing](.github/CONTRIBUTING.md) |
-Blog
+[Blog](https://medium.com/opteryx)
 
 ----
 
