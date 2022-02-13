@@ -52,4 +52,4 @@ jobs:
           pip install -r $GITHUB_WORKSPACE/tests/requirements.txt
 
       - name: Execute Test
-        run: mypy --ignore-missing-imports mabel
+        run: mypy --ignore-missing-imports opteryx
