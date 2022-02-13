@@ -34,7 +34,7 @@ for deployments to platforms like Kubernetes, GCP Cloud Run, AWS Fargate and Kna
  
 - **Bug Reports** [GitHub Issues](https://github.com/mabel-dev/opteryx/issues/new/choose)  
 - **Feature Requests** [GitHub Issues](https://github.com/mabel-dev/opteryx/issues/new/choose)  
-- **Source Code**  [GitHub](https://github.com/mabel-dev/opteryx)  
+- **Source Code**  [GitHub](https://github.dev/mabel-dev/opteryx)  
 - **Discussions** [GitHub Discussions](https://github.com/mabel-dev/opteryx/discussions)
 
 ## How Can I Contribute?
@@ -93,10 +93,6 @@ vulnerabilities.
 - **sqloxide** https://github.com/wseaton/sqloxide
 - cython
 - numpy
-- zstandard
 - orjson
-- pysimdjson
 - cityhash
 - pyarrow
-
-https://github.dev/mabel-dev/opteryx
