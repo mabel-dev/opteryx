@@ -145,7 +145,7 @@ class BuildExt(build_ext):
         "msvc": ["/EHsc"],
         "unix": [],
     }
-    l_opts = {
+    l_opts: dict = {
         "msvc": [],
         "unix": [],
     }

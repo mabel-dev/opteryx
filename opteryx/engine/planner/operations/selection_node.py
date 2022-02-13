@@ -47,7 +47,7 @@ def _evaluate(predicate: Union[tuple, list], table: Table) -> bool:
                     mask = _evaluate(p, table)
                 else:
                     mask = numpy.intersect1d(mask, _evaluate(p, table))
-            return mask
+            return mask  # type:ignore
 
         # Are all of the entries lists?
         # We OR them together
@@ -58,8 +58,8 @@ def _evaluate(predicate: Union[tuple, list], table: Table) -> bool:
                     # values, or we initialize the mask beforehand to all empty.
                     mask = _evaluate(p, table)
                 else:
-                    mask = numpy.union1d(mask, _evaluate(p, table))
-            return mask
+                    mask = numpy.union1d(mask, _evaluate(p, table))  # type:ignore
+            return mask  # type:ignore
 
         # if we're here the structure of the filter is wrong
         raise InvalidSyntaxError("Unable to evaluate Filter")  # pragma: no cover

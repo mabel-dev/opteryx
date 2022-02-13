@@ -28,4 +28,6 @@ from opteryx.utils import dates
 )
 def test_date_parser(string, expect):
 
-    assert dates.parse_iso(string) == expect, f"{string}  {dates.parse_iso(string)}  {expect}"
+    assert (
+        dates.parse_iso(string) == expect
+    ), f"{string}  {dates.parse_iso(string)}  {expect}"

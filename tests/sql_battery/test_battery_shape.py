@@ -131,11 +131,10 @@ STATEMENTS = [
         ("SELECT planetId, min(magnitude) FROM $satellites group by planetId having min(magnitude) > 5 limit 2 offset 1", 2, 2),
 
     ]
-    # fmt:on
+# fmt:on
 
-@pytest.mark.parametrize(
-    "statement, rows, columns", STATEMENTS    
-)
+
+@pytest.mark.parametrize("statement, rows, columns", STATEMENTS)
 def test_sql_battery(statement, rows, columns):
     """
     Test an assortment of statements

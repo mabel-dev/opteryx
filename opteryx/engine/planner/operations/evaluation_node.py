@@ -14,20 +14,21 @@ from opteryx.engine.functions import FUNCTIONS
 from opteryx.exceptions import SqlError
 
 
-
 class EvaluationNode(BasePlanNode):
     def __init__(self, statistics: QueryStatistics, **config):
         projection = config.get("projection", [])
         self.functions = [c for c in projection if "function" in c]
-        self.aliases = []
+        self.aliases: list = []
 
         # work out what the columns are called
-        for function in  self.functions:
+        for function in self.functions:
 
             if function["function"] not in FUNCTIONS:
-                raise SqlError(f"Function not known or not supported - {function['function']}")
+                raise SqlError(
+                    f"Function not known or not supported - {function['function']}"
+                )
 
-            if function.get('alias'):
+            if function.get("alias"):
                 column_name = function["alias"]
             else:
                 column_name = f"{function['function']}({','.join(str(a[0]) for a in function['args'])})"
@@ -49,10 +50,11 @@ class EvaluationNode(BasePlanNode):
                     else:
                         # it's a literal, just add it
                         arg_list.append(arg[0])
-                        
-                calculated_values = FUNCTIONS[function["function"]](*arg_list)
-                page = pyarrow.Table.append_column(page, function["column_name"], calculated_values)
 
+                calculated_values = FUNCTIONS[function["function"]](*arg_list)
+                page = pyarrow.Table.append_column(
+                    page, function["column_name"], calculated_values
+                )
 
             # for alias, add aliased column, do this after the functions because they
             # could have aliases

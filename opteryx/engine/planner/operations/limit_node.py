@@ -23,7 +23,7 @@ class LimitNode(BasePlanNode):
         for page in data_pages:
             row_count += page.num_rows
             result_set.append(page)
-            if row_count > self._limit:
+            if row_count > self._limit:  # type:ignore
                 break
 
         yield concat_tables(result_set).slice(0, self._limit)

@@ -1,3 +1,6 @@
+from functools import lru_cache
+
+
 @lru_cache(1)
 def memcached_server():
     import os

@@ -21,7 +21,9 @@ class OffsetNode(BasePlanNode):
 
         for page in data_pages:
             if (row_count + page.num_rows) > self._offset:
-                page = page.slice(self._offset - row_count, page.num_rows)
+                page = page.slice(
+                    self._offset - row_count, page.num_rows  # type:ignore
+                )
                 yield page
                 break
             else:

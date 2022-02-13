@@ -55,12 +55,7 @@ def _incremental(x, y, function):
     return np.concatenate(x, y)
 
 
-
-JSON_TYPES = {
-    np.bool_: bool,
-    np.int64: int,
-    np.float64: float
-}
+JSON_TYPES = {np.bool_: bool, np.int64: int, np.float64: float}
 
 
 def _serializer(obj):
@@ -118,7 +113,7 @@ class AggregateNode(BasePlanNode):
 
         from collections import defaultdict
 
-        collector = defaultdict(dict)
+        collector: dict = defaultdict(dict)
 
         for page in groups:
 
@@ -129,7 +124,7 @@ class AggregateNode(BasePlanNode):
                     attribute = aggregrator["args"][0][0]
                     function = aggregrator["aggregate"]
                     column_name = f"{function}({attribute})"
-                    value = [v for k,v in group if k == attribute]
+                    value = [v for k, v in group if k == attribute]
                     if len(value) == 1:
                         value = value[0]
 
@@ -196,12 +191,14 @@ class AggregateNode(BasePlanNode):
                 buffer = bytearray()
             for field, value in collected:
                 if hasattr(value, "as_py"):
-                    value = value.as_py()
+                    value = value.as_py()  # type:ignore
                 for agg in list(record.keys()):
                     if isinstance(agg, tuple):
                         func, col = agg
                         if func in WHOLE_AGGREGATES:
-                            record[col] = WHOLE_AGGREGATES[func](record.pop(agg))
+                            record[col] = WHOLE_AGGREGATES[func](
+                                record.pop(agg)
+                            )  # type:ignore
                     else:
                         record[field] = value
             buffer.extend(orjson.dumps(record, default=_serializer))

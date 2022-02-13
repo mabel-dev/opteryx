@@ -26,4 +26,6 @@ if __name__ == "__main__":
 
     ds = DiskStorage()
 
-    ds.get_partitions("test/data/partitioned", "2000-01-01", "2000-01-05")
+    ds.get_partitions(
+        dataset="test/data/partitioned", start_date="2000-01-01", end_date="2000-01-05"
+    )

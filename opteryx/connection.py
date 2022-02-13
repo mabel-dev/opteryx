@@ -191,15 +191,14 @@ class Cursor:
     def close(self):
         self._connection.close()
 
-
     def __repr__(self):  # pragma: no cover
 
         try:
             from IPython import get_ipython
+
             i_am_in_a_notebook = get_ipython() is not None
         except Exception:
             i_am_in_a_notebook = False
-
 
         if i_am_in_a_notebook():
             from IPython.display import HTML, display
@@ -210,4 +209,5 @@ class Cursor:
             return ""  # __repr__ must return something
         else:
             from opteryx.utils import display
+
             return display.ascii_table(iter(self._iterator), 10)

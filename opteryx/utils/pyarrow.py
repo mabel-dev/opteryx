@@ -1,8 +1,8 @@
 import pyarrow
-from typing import Iterable, List
+from typing import Iterable, Iterator, List, Union, Generator
 
 
-def fetchmany(pages: Iterable, size: int = 5) -> List[dict]:
+def fetchmany(pages: Iterable, size: int = 5) -> List[dict]:  # type:ignore
     """
     This is the fastest way I've found to do this, on my computer it's about
     14,000 rows per second - fast enough for my use case.
@@ -27,7 +27,7 @@ def fetchmany(pages: Iterable, size: int = 5) -> List[dict]:
 
 
 def fetchone(pages: Iterable) -> dict:
-    return fetchmany(pages=pages, limit=1).pop()
+    return fetchmany(pages=pages, size=1).pop()
 
 
 def fetchall(pages) -> List[dict]:

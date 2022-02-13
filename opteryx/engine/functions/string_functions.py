@@ -14,16 +14,13 @@ from pyarrow import compute
 import datetime
 import numpy
 
- 
 
 FUNCTIONS = {
-
     # VECTORIZED FUNCTIONS
-    "LENGTH": compute.utf8_length, # LENGTH(str) -> int
-    "UPPER": compute.utf8_upper, # UPPER(str) -> str
-    "LOWER": compute.utf8_lower, # LOWER(str) -> str
-    "TRIM": compute.utf8_trim_whitespace, # TRIM(str) -> str
-
+    "LENGTH": compute.utf8_length,  # LENGTH(str) -> int
+    "UPPER": compute.utf8_upper,  # UPPER(str) -> str
+    "LOWER": compute.utf8_lower,  # LOWER(str) -> str
+    "TRIM": compute.utf8_trim_whitespace,  # TRIM(str) -> str
 }
 
 if __name__ == "__main__":
@@ -41,10 +38,10 @@ if __name__ == "__main__":
 
     p = planets()
 
-    #print(p["name"])
+    # print(p["name"])
 
-    #print(FUNCTIONS["UPPER"](p["name"]))
-    #print(list(FUNCTIONS["LEFT"](p["name"], 3)))
-    #print(list(FUNCTIONS["LEFT"](FUNCTIONS["RIGHT"](p["name"], 4), 2)))
+    # print(FUNCTIONS["UPPER"](p["name"]))
+    # print(list(FUNCTIONS["LEFT"](p["name"], 3)))
+    # print(list(FUNCTIONS["LEFT"](FUNCTIONS["RIGHT"](p["name"], 4), 2)))
 
-    print(compute.year(numpy.datetime64('2021-01-01').astype(datetime.datetime)))
+    print(compute.year(numpy.datetime64("2021-01-01").astype(datetime.datetime)))

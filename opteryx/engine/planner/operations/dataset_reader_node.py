@@ -142,7 +142,7 @@ class DatasetReaderNode(BasePlanNode):
                 self._statistics.bytes_read_data += blob_bytes.getbuffer().nbytes
 
                 # interpret the raw bytes into entries
-                pyarrow_blob = decoder(blob_bytes, self._projection)
+                pyarrow_blob = decoder(blob_bytes, self._projection)  # type:ignore
 
                 self._statistics.time_data_read += time.time_ns() - start_read
 

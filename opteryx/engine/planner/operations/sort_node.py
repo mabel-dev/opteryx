@@ -24,6 +24,7 @@ class SortNode(BasePlanNode):
 
         yield table.sort_by(self._order)
 
+
 """
 sort_by(self, sorting)
 Sort the table by one or multiple columns.

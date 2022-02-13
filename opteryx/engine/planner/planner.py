@@ -161,10 +161,7 @@ def _build_dnf_filters(filters):
         return ("Wildcard", TOKEN_TYPES.WILDCARD)
     if "Function" in filters:
         func = filters["Function"]["name"][0]["value"].upper()
-        args = [
-                    _build_dnf_filters(a["Unnamed"])
-                    for a in filters["Function"]["args"]
-                ]
+        args = [_build_dnf_filters(a["Unnamed"]) for a in filters["Function"]["args"]]
         args = [(str(a[0]) if a[0] != "Wildcard" else "*") for a in args]
         column_name = f"{func}({','.join(args)})"
         return (column_name, TOKEN_TYPES.IDENTIFIER)
@@ -172,6 +169,7 @@ def _build_dnf_filters(filters):
         return _build_dnf_filters(filters["Unnamed"])
     if "Expr" in filters:
         return _build_dnf_filters(filters["Expr"])
+
 
 def _extract_relations(ast):
     """ """
@@ -205,33 +203,22 @@ def _extract_projections(ast):
         if "UnnamedExpr" in attribute:
             function = attribute["UnnamedExpr"]
         if "ExprWithAlias" in attribute:
-            function = attribute["ExprWithAlias"]['expr']
+            function = attribute["ExprWithAlias"]["expr"]
             alias = attribute["ExprWithAlias"]["alias"]["value"]
 
-        if function:     
+        if function:
             if "Identifier" in function:
                 return function["Identifier"]["value"]
             if "Function" in function:
                 func = function["Function"]["name"][0]["value"].upper()
-                args = [
-                    _build_dnf_filters(a)
-                    for a in function["Function"]["args"]
-                ]
+                args = [_build_dnf_filters(a) for a in function["Function"]["args"]]
                 if is_function(func):
-                    return {
-                        "function": func.upper(),
-                        "args": args,
-                        "alias": alias
-                    }
+                    return {"function": func.upper(), "args": args, "alias": alias}
                 else:
-                    return {
-                        "aggregate": func.upper(),
-                        "args": args,
-                        "alias": alias
-                    }
+                    return {"aggregate": func.upper(), "args": args, "alias": alias}
 
     projection = [_inner(attribute) for attribute in projection]
-    #print(projection)
+    # print(projection)
     return projection
 
 
@@ -261,21 +248,30 @@ def _extract_offset(ast):
         return int(offset["value"]["Value"]["Number"][0])
     return None
 
+
 def _extract_order(ast):
     order = ast[0]["Query"]["order_by"]
     if order is not None:
         orders = []
         for col in order:
-            orders.append((col["expr"]["Identifier"]["value"], "descending" if str(col["asc"]) == "False" else "ascending"),)
+            orders.append(
+                (
+                    col["expr"]["Identifier"]["value"],
+                    "descending" if str(col["asc"]) == "False" else "ascending",
+                ),
+            )
         return orders
+
 
 def _extract_groups(ast):
     groups = ast[0]["Query"]["body"]["Select"]["group_by"]
     return [g["Identifier"]["value"] for g in groups]
 
+
 def _extract_having(ast):
     having = ast[0]["Query"]["body"]["Select"]["having"]
     return _build_dnf_filters(having)
+
 
 class QueryPlan(object):
     def __init__(self, sql: str, statistics, reader, partition_scheme):
@@ -285,8 +281,8 @@ class QueryPlan(object):
         """
         import sqloxide
 
-        self.nodes = {}
-        self.edges = []
+        self.nodes: dict = {}
+        self.edges: list = []
 
         self._reader = reader
         self._partition_scheme = partition_scheme
@@ -344,9 +340,7 @@ class QueryPlan(object):
 
         _selection = _extract_selection(ast)
         if _selection:
-            self.add_operator(
-                "where", SelectionNode(statistics, filter=_selection)
-            )
+            self.add_operator("where", SelectionNode(statistics, filter=_selection))
             self.link_operators(last_node, "where")
             last_node = "where"
 
@@ -360,11 +354,9 @@ class QueryPlan(object):
 
         _having = _extract_having(ast)
         if _having:
-            self.add_operator(
-                "having", SelectionNode(statistics, filter=_having)
-            )
+            self.add_operator("having", SelectionNode(statistics, filter=_having))
             self.link_operators(last_node, "having")
-            last_node = "having"  
+            last_node = "having"
 
         self.add_operator("select", ProjectionNode(statistics, projection=_projection))
         self.link_operators(last_node, "select")
@@ -583,19 +575,18 @@ if __name__ == "__main__":
     print()
     print(_extract_order(ast))
 
-
-    #_projection = _extract_projections(ast)
-    #print(_projection)
+    # _projection = _extract_projections(ast)
+    # print(_projection)
 
     import pyarrow
     import opteryx.samples
     from opteryx.third_party.pyarrow_ops import head
 
-    #p = opteryx.samples.planets().select(["name"])
+    # p = opteryx.samples.planets().select(["name"])
 
-    #en = EvaluationNode(None, projection=_projection)
+    # en = EvaluationNode(None, projection=_projection)
 
-    #head(pyarrow.concat_tables(en.execute([p])))
+    # head(pyarrow.concat_tables(en.execute([p])))
     import cProfile
 
     with cProfile.Profile(subcalls=False) as pr:

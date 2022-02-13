@@ -64,14 +64,14 @@ class ProjectionNode(BasePlanNode):
 
             else:
                 # we elminimate attributes we don't want
-                page = page.select(list(self._projection.keys()))
+                page = page.select(list(self._projection.keys()))  # type:ignore
 
                 # then we rename the attributes
-                if any([k != v for k, v in self._projection.items()]):
+                if any([k != v for k, v in self._projection.items()]):  # type:ignore
                     names = [
-                        self._projection[a]
+                        self._projection[a]  # type:ignore
                         for a in page.column_names
-                        if a in self._projection
+                        if a in self._projection  # type:ignore
                     ]
                     page = page.rename_columns(names)
 
