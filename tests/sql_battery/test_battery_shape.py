@@ -121,7 +121,7 @@ STATEMENTS = [
         ("SELECT GET(name, 1) FROM $satellites GROUP BY planetId", 177, 1),
 
         ("SELECT planetId, Count(*) FROM $satellites group by planetId having count(*) > 5", 4, 2),
-        ("SELECT planetId, min(magnitude) FROM $satellites group by planetId having magnitude(*) > 5", 4, 2),
+        ("SELECT planetId, min(magnitude) FROM $satellites group by planetId having min(magnitude) > 5", 5, 2),
 
         ("SELECT * FROM $satellites order by name", 177, 8),
         ("SELECT * FROM $satellites order by name desc", 177, 8),

@@ -168,6 +168,10 @@ def _build_dnf_filters(filters):
         args = [(str(a[0]) if a[0] != "Wildcard" else "*") for a in args]
         column_name = f"{func}({','.join(args)})"
         return (column_name, TOKEN_TYPES.IDENTIFIER)
+    if "Unnamed" in filters:
+        return _build_dnf_filters(filters["Unnamed"])
+    if "Expr" in filters:
+        return _build_dnf_filters(filters["Expr"])
 
 def _extract_relations(ast):
     """ """
@@ -210,7 +214,7 @@ def _extract_projections(ast):
             if "Function" in function:
                 func = function["Function"]["name"][0]["value"].upper()
                 args = [
-                    _build_dnf_filters(a["Unnamed"])
+                    _build_dnf_filters(a)
                     for a in function["Function"]["args"]
                 ]
                 if is_function(func):
@@ -570,6 +574,8 @@ if __name__ == "__main__":
     SQL = "SELECT * FROM $satellites order by magnitude, name"
 
     SQL = "SELECT AVG(gm), MIN(gm), MAX(gm), FIRST(gm), COUNT(*) FROM $satellites GROUP BY planetId"
+
+    SQL = "SELECT COUNT(name) FROM $satellites;"
 
     ast = sqloxide.parse_sql(SQL, dialect="mysql")
     print(ast)
