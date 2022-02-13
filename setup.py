@@ -26,13 +26,6 @@ extensions = [
         sources=["opteryx/third_party/accumulation_tree/accumulation_tree.pyx"],
     )
     #    "mabel/data/internals/group_by.py",
-    #    "mabel/data/internals/dictset.py",
-    #    "mabel/data/internals/expression.py",
-    #    "mabel/data/readers/internals/inline_evaluator.py",
-    #    "mabel/data/readers/internals/parallel_reader.py",
-    #    "mabel/data/internals/relation.py",
-    #    "mabel/data/internals/bloom_filter.py",
-    #    "mabel/utils/uintset/uintset.py"
 ]
 
 setup(
