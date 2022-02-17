@@ -50,8 +50,8 @@ STATEMENTS = [
         ("SELECT * FROM `$satellites` WHERE `name` = 'Calypso'", 1, 8),  
 
         ("SELECT name, id, planetId FROM $satellites", 177, 3), 
-        ("SELECT name, name FROM $satellites", 177, 2),
-        ("SELECT name, id, name, id FROM $satellites", 177, 4),
+        ("SELECT name, name FROM $satellites", 177, 1),
+        ("SELECT name, id, name, id FROM $satellites", 177, 2),
 
         # Field aliases aren't supported yet
         #("SELECT name as Name FROM $satellites", 177, 3), 
@@ -119,6 +119,9 @@ STATEMENTS = [
         ("SELECT TIMESTAMP(planetId) FROM $satellites GROUP BY planetId", 177, 1),
         ("SELECT NUMERIC(planetId) FROM $satellites GROUP BY planetId", 177, 1),
         ("SELECT GET(name, 1) FROM $satellites GROUP BY planetId", 177, 1),
+        ("SELECT COUNT(*), ROUND(magnitude) FROM $satellites group by ROUND(magnitude)", 27, 2),
+        ("SELECT ROUND(magnitude) FROM $satellites group by ROUND(magnitude)", 2, 2),
+        ("SELECT round(magnitude) FROM $satellites group by round(magnitude)", 2, 2),
 
         ("SELECT planetId, Count(*) FROM $satellites group by planetId having count(*) > 5", 4, 2),
         ("SELECT planetId, min(magnitude) FROM $satellites group by planetId having min(magnitude) > 5", 5, 2),
@@ -129,6 +132,12 @@ STATEMENTS = [
         ("SELECT * FROM $satellites order by magnitude, name", 177, 8),
 
         ("SELECT planetId, min(magnitude) FROM $satellites group by planetId having min(magnitude) > 5 limit 2 offset 1", 2, 2),
+
+        ("SELECT planetId as pid FROM $satellites", 177, 1),
+        ("SELECT planetId as pid, min(magnitude) FROM $satellites", 177, 2),
+        ("SELECT planetId as pid, min(magnitude) as minmag FROM $satellites", 177, 2),
+        ("SELECT planetId as pid, round(magnitude) as roundmag FROM $satellites", 177, 2),
+
 
     ]
 # fmt:on

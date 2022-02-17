@@ -208,7 +208,7 @@ def _extract_projections(ast):
 
         if function:
             if "Identifier" in function:
-                return function["Identifier"]["value"]
+                return {"identifier": function["Identifier"]["value"], "alias": alias}
             if "Function" in function:
                 func = function["Function"]["name"][0]["value"].upper()
                 args = [_build_dnf_filters(a) for a in function["Function"]["args"]]
@@ -221,6 +221,31 @@ def _extract_projections(ast):
     # print(projection)
     return projection
 
+def _extract_columns(ast):
+    """
+    This is the result of projections
+    """
+    projection = ast[0]["Query"]["body"]["Select"]["projection"]
+    # print(projection)
+    if projection == ["Wildcard"]:
+        return "*"
+
+    def _inner(attribute):
+        function = None
+        if "UnnamedExpr" in attribute:
+            function = attribute["UnnamedExpr"]
+        if "ExprWithAlias" in attribute:
+            return attribute["ExprWithAlias"]["alias"]["value"]
+
+        if function:
+            if "Identifier" in function:
+                return function["Identifier"]["value"]
+            if "Function" in function:
+                func = function["Function"]["name"][0]["value"].upper()
+                args = [_build_dnf_filters(a) for a in function["Function"]["args"]]
+                return f"{func.upper()}({','.join(args)}"
+
+    return [_inner(attribute) for attribute in projection]
 
 def _extract_selection(ast):
     """
@@ -264,8 +289,18 @@ def _extract_order(ast):
 
 
 def _extract_groups(ast):
+
+    def _inner(element):
+        if element:
+            if "Identifier" in element:
+                return element["Identifier"]["value"]
+            if "Function" in element:
+                func = element["Function"]["name"][0]["value"].upper()
+                args = [_build_dnf_filters(a) for a in element["Function"]["args"]]
+                return f"{func.upper()}({','.join([a[0] for a in args])})"
+
     groups = ast[0]["Query"]["body"]["Select"]["group_by"]
-    return [g["Identifier"]["value"] for g in groups]
+    return [_inner(g) for g in groups]
 
 
 def _extract_having(ast):
@@ -345,9 +380,13 @@ class QueryPlan(object):
             last_node = "where"
 
         _groups = _extract_groups(ast)
-        if any(["aggregate" in a for a in _projection]):
+#        _columns = _extract_columns(ast)
+        if _groups or any(["aggregate" in a for a in _projection]):
+            _aggregates = _projection.copy()
+            if not any(["aggregate" in a for a in _aggregates]):
+                _aggregates.append({'aggregate': 'COUNT', 'args': [('Wildcard', TOKEN_TYPES.WILDCARD)], 'alias': None})
             self.add_operator(
-                "agg", AggregateNode(statistics, aggregates=_projection, groups=_groups)
+                "agg", AggregateNode(statistics, aggregates=_aggregates, groups=_groups)
             )
             self.link_operators(last_node, "agg")
             last_node = "agg"
@@ -561,13 +600,16 @@ if __name__ == "__main__":
     SQL = "SELECT COUNT(*) FROM $satellites"
     SQL = "SELECT MAX(planetId), MIN(planetId), SUM(gm), count(*) FROM $satellites group by planetId"
     SQL = "SELECT upper(name), length(name) FROM $satellites WHERE magnitude = 5.29"
-
     SQL = "SELECT planetId, Count(*) FROM $satellites group by planetId having count(*) > 5"
     SQL = "SELECT * FROM $satellites order by magnitude, name"
-
     SQL = "SELECT AVG(gm), MIN(gm), MAX(gm), FIRST(gm), COUNT(*) FROM $satellites GROUP BY planetId"
-
     SQL = "SELECT COUNT(name) FROM $satellites;"
+
+    SQL = "SELECT name as what_it_known_as FROM $satellites"
+    SQL = "SELECT name, id, planetId FROM $satellites"
+    SQL = "SELECT COUNT(*), planetId FROM $satellites GROUP BY planetId"
+    SQL = "SELECT ROUND(magnitude) FROM $satellites group by ROUND(magnitude)"
+    SQL = "SELECT COUNT(*) FROM $satellites"
 
     ast = sqloxide.parse_sql(SQL, dialect="mysql")
     print(ast)

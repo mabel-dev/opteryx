@@ -98,10 +98,12 @@ class AggregateNode(BasePlanNode):
                 if argument[1] == TOKEN_TYPES.WILDCARD:
                     column = "*"
                 self._project.append(column)
+            elif "column_name" in attribute:
+                self._project.append(attribute["column_name"])
             else:
-                self._project.append(attribute)
+                self._project.append(attribute["identifier"])
 
-        self._project = list(set(self._project))
+        self._project = list(self._project)
 
     def __repr__(self):
         return str(self._aggregates)

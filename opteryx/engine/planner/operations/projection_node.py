@@ -23,57 +23,49 @@ class ProjectionNode(BasePlanNode):
         """
         Attribute Projection, remove unwanted columns and performs column renames.
         """
-        self._projection = []
+        self._projection = {}
 
         projection = config.get("projection", {"*": "*"})
         # print("projection:", projection)
         for attribute in projection:
             if "aggregate" in attribute:
-                self._projection.append(
+                self._projection[
                     f"{attribute['aggregate']}({','.join([replace_wildcards(a) for a in attribute['args']])})"
-                )
+                ] = attribute["alias"]
+
             elif "function" in attribute:
-                self._projection.append(
+                self._projection[
                     f"{attribute['function']}({','.join([replace_wildcards(a) for a in attribute['args']])})"
-                )
+                ] = attribute["alias"]
+
+            elif "identifier" in attribute:
+                self._projection[attribute["identifier"]] = attribute["alias"]
             else:
-                self._projection.append(attribute)
+                self._projection[attribute] = None
 
     def __repr__(self):
         return str(self._projection)
 
     def execute(self, data_pages: Iterable) -> Iterable:
 
-        from opteryx.third_party.pyarrow_ops.group import Grouping
-
         # if we have nothing to do, move along
-        if self._projection == ["*"]:
+        if self._projection == {"*": None}:
             # print(f"projector yielding *")
             yield from data_pages
+            return
 
         for page in data_pages:
 
-            # allow simple projections using just the list of attributes
-            if isinstance(self._projection, (list, tuple, set)):
-                # print(f"projector yielding {page.shape}")
-                try:
-                    yield page.select(list(self._projection))
-                except KeyError as e:
-                    # print(f"Available columns: {page.column_names}")
-                    raise e
+            # we elminimate attributes we don't want
+            page = page.select(self._projection.keys())  # type:ignore
 
-            else:
-                # we elminimate attributes we don't want
-                page = page.select(list(self._projection.keys()))  # type:ignore
+            # then we rename the attributes
+            if any([v is not None for k, v in self._projection.items()]):  # type:ignore
+                names = [
+                    self._projection[a] or a  # type:ignore
+                    for a in page.column_names
+                    if a in self._projection  # type:ignore
+                ]
+                page = page.rename_columns(names)
 
-                # then we rename the attributes
-                if any([k != v for k, v in self._projection.items()]):  # type:ignore
-                    names = [
-                        self._projection[a]  # type:ignore
-                        for a in page.column_names
-                        if a in self._projection  # type:ignore
-                    ]
-                    page = page.rename_columns(names)
-
-                # print(f"projector yielding {page.shape}")
-                yield page
+            yield page
