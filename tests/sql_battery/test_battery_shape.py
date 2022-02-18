@@ -53,11 +53,10 @@ STATEMENTS = [
         ("SELECT name, name FROM $satellites", 177, 1),
         ("SELECT name, id, name, id FROM $satellites", 177, 2),
 
-        # Field aliases aren't supported yet
-        #("SELECT name as Name FROM $satellites", 177, 3), 
-        #("SELECT name as Name, id as Identifier FROM $satellites", 177, 3), 
-        #("SELECT name as NAME FROM $satellites WHERE NAME = 'Calypso'", 177, 3), 
-        #("SELECT name as NAME FROM $satellites GROUP BY NAME", 177, 3), 
+        ("SELECT name as Name FROM $satellites", 177, 1), 
+        ("SELECT name as Name, id as Identifier FROM $satellites", 177, 2), 
+        ("SELECT name as NAME FROM $satellites WHERE name = 'Calypso'", 1, 1), 
+        ("SELECT name as NAME FROM $satellites GROUP BY name", 177, 1), 
 
         # functions aren't currently supported - more tests will be needed
         #("SELECT upper(name) as NAME, id as Identifier FROM $satellites", 177, 1), 
