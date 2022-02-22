@@ -139,6 +139,10 @@ STATEMENTS = [
         ("SELECT planetId as pid, round(magnitude) as minmag FROM $satellites", 177, 2),
         ("SELECT planetId as pid, round(magnitude) as roundmag FROM $satellites", 177, 2),
 
+        ("SELECT GET(Birth_Place, 'town') FROM $astronauts", 357, 1),
+        ("SELECT GET(Missions, 0) FROM $astronauts", 357, 1),
+        ("SELECT GET(Birth_Place, 'town') FROM $astronauts WHERE GET(Birth_Place, 'town') = 'Warsaw'", 1, 1),
+        ("SELECT COUNT(*), GET(Birth_Place, 'town') FROM $astronauts GROUP BY GET(Birth_Place, 'town')", 264, 2),
 
     ]
 # fmt:on
