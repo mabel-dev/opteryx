@@ -28,9 +28,10 @@ class EvaluationNode(BasePlanNode):
                     f"Function not known or not supported - {function['function']}"
                 )
 
-            if function.get("alias"):
-                column_name = function["alias"]
-            else:
+            #if function.get("alias"):
+            #    column_name = function["alias"]
+            #else:
+            if True:
                 column_name = f"{function['function']}({','.join(str(a[0]) for a in function['args'])})"
             function["column_name"] = column_name
 

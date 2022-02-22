@@ -169,6 +169,8 @@ def _build_dnf_filters(filters):
         return _build_dnf_filters(filters["Unnamed"])
     if "Expr" in filters:
         return _build_dnf_filters(filters["Expr"])
+    if "Nested" in filters:
+        return (_build_dnf_filters(filters["Nested"]),)
 
 
 def _extract_relations(ast):
@@ -297,7 +299,7 @@ def _extract_groups(ast):
             if "Function" in element:
                 func = element["Function"]["name"][0]["value"].upper()
                 args = [_build_dnf_filters(a) for a in element["Function"]["args"]]
-                return f"{func.upper()}({','.join([a[0] for a in args])})"
+                return f"{func.upper()}({','.join([str(a[0]) for a in args])})"
 
     groups = ast[0]["Query"]["body"]["Select"]["group_by"]
     return [_inner(g) for g in groups]
@@ -610,6 +612,9 @@ if __name__ == "__main__":
     SQL = "SELECT COUNT(*), planetId FROM $satellites GROUP BY planetId"
     SQL = "SELECT ROUND(magnitude) FROM $satellites group by ROUND(magnitude)"
     SQL = "SELECT COUNT(*) FROM $satellites"
+    SQL = "SELECT * FROM $satellites WHERE (id = 6 OR id = 7 OR id = 8) OR name = 'Europa'"
+    SQL = "SELECT BOOLEAN(planetId) FROM $satellites GROUP BY planetId, BOOLEAN(planetId)"
+    SQL = "SELECT planetId as pid, round(magnitude) as minmag FROM $satellites"
 
     ast = sqloxide.parse_sql(SQL, dialect="mysql")
     print(ast)

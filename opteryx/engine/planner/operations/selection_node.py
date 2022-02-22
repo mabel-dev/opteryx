@@ -30,6 +30,9 @@ def _evaluate(predicate: Union[tuple, list], table: Table) -> bool:
 
     # If we have a tuple extract out the key, operator and value and do the evaluation
     if isinstance(predicate, tuple):
+        if not isinstance(predicate[0], tuple):
+            return _evaluate(predicate[0], table)
+
         # filters from pyarrow_ops only filters on a single predicate
         return ifilters(table, predicate)
 

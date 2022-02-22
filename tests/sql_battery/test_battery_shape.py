@@ -58,9 +58,6 @@ STATEMENTS = [
         ("SELECT name as NAME FROM $satellites WHERE name = 'Calypso'", 1, 1), 
         ("SELECT name as NAME FROM $satellites GROUP BY name", 177, 1), 
 
-        # functions aren't currently supported - more tests will be needed
-        #("SELECT upper(name) as NAME, id as Identifier FROM $satellites", 177, 1), 
-
         # Joins aren't supported
         #("SELECT * FROM $satellites, $planets WHERE $planets.planetId = $satellites.planetId", 177, 1),  
 
@@ -78,6 +75,9 @@ STATEMENTS = [
         ("SELECT * FROM $satellites WHERE id IN (5,6,7,8)", 4, 8),
         ("SELECT * FROM $satellites WHERE id IN (5,6,7,8) AND name = 'Europa'", 1, 8),
         ("SELECT * FROM $satellites WHERE id IN (5,6,7,8) OR name = 'Moon'", 5, 8),
+        ("SELECT * FROM $satellites WHERE (id = 5 OR id = 6 OR id = 7 OR id = 8) AND name = 'Europa'", 1, 8),
+        ("SELECT * FROM $satellites WHERE (id = 6 OR id = 7 OR id = 8) OR name = 'Europa'", 4, 8),
+        ("SELECT * FROM $satellites WHERE id = 5 OR id = 6 OR id = 7 OR id = 8 OR name = 'Moon'", 5, 8),
         ("SELECT * FROM $satellites WHERE planetId = id", 1, 8),
         ("SELECT * FROM $satellites WHERE planetId > 8", 5, 8),
         ("SELECT * FROM $satellites WHERE planetId >= 8", 19, 8),
@@ -113,14 +113,16 @@ STATEMENTS = [
         ("SELECT SUM(id), planetId FROM $satellites GROUP BY planetId", 7, 2),
         ("SELECT MIN(id), MAX(id), SUM(planetId), planetId FROM $satellites GROUP BY planetId", 7, 4),
 
-        ("SELECT BOOLEAN(planetId) FROM $satellites GROUP BY planetId", 177, 1),
-        ("SELECT VARCHAR(planetId) FROM $satellites GROUP BY planetId", 177, 1),
-        ("SELECT TIMESTAMP(planetId) FROM $satellites GROUP BY planetId", 177, 1),
-        ("SELECT NUMERIC(planetId) FROM $satellites GROUP BY planetId", 177, 1),
-        ("SELECT GET(name, 1) FROM $satellites GROUP BY planetId", 177, 1),
+        ("SELECT BOOLEAN(planetId) FROM $satellites GROUP BY planetId, BOOLEAN(planetId)", 7, 1),
+        ("SELECT VARCHAR(planetId) FROM $satellites GROUP BY planetId, VARCHAR(planetId)", 7, 1),
+        ("SELECT TIMESTAMP(planetId) FROM $satellites GROUP BY planetId, TIMESTAMP(planetId)", 7, 1),
+        ("SELECT NUMERIC(planetId) FROM $satellites GROUP BY planetId, NUMERIC(planetId)", 7, 1),
+        ("SELECT GET(name, 1) FROM $satellites GROUP BY planetId, GET(name, 1)", 56, 1),
         ("SELECT COUNT(*), ROUND(magnitude) FROM $satellites group by ROUND(magnitude)", 27, 2),
-        ("SELECT ROUND(magnitude) FROM $satellites group by ROUND(magnitude)", 2, 2),
-        ("SELECT round(magnitude) FROM $satellites group by round(magnitude)", 2, 2),
+        ("SELECT ROUND(magnitude) FROM $satellites group by ROUND(magnitude)", 27, 1),
+        ("SELECT round(magnitude) FROM $satellites group by round(magnitude)", 27, 1),
+        ("SELECT upper(name) as NAME, id as Identifier FROM $satellites", 177, 2), 
+        ("SELECT upper(name), lower(name), id as Identifier FROM $satellites", 177, 3), 
 
         ("SELECT planetId, Count(*) FROM $satellites group by planetId having count(*) > 5", 4, 2),
         ("SELECT planetId, min(magnitude) FROM $satellites group by planetId having min(magnitude) > 5", 5, 2),
@@ -133,8 +135,8 @@ STATEMENTS = [
         ("SELECT planetId, min(magnitude) FROM $satellites group by planetId having min(magnitude) > 5 limit 2 offset 1", 2, 2),
 
         ("SELECT planetId as pid FROM $satellites", 177, 1),
-        ("SELECT planetId as pid, min(magnitude) FROM $satellites", 177, 2),
-        ("SELECT planetId as pid, min(magnitude) as minmag FROM $satellites", 177, 2),
+        ("SELECT planetId as pid, round(magnitude) FROM $satellites", 177, 2),
+        ("SELECT planetId as pid, round(magnitude) as minmag FROM $satellites", 177, 2),
         ("SELECT planetId as pid, round(magnitude) as roundmag FROM $satellites", 177, 2),
 
 

@@ -10,6 +10,7 @@ from typing import Iterable
 from opteryx.engine.attribute_types import TOKEN_TYPES
 from opteryx.engine.query_statistics import QueryStatistics
 from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
+from opteryx.exceptions import SqlError
 
 
 def replace_wildcards(arg):
@@ -57,7 +58,11 @@ class ProjectionNode(BasePlanNode):
         for page in data_pages:
 
             # we elminimate attributes we don't want
-            page = page.select(self._projection.keys())  # type:ignore
+            try:
+                page = page.select(self._projection.keys())  # type:ignore
+            except KeyError as e:
+                field = str(e).split('"')[1]
+                raise SqlError(f"Column not found `{field}` - the column may not exist, or need to be added to the GROUP BY clause. ({', '.join(page.column_names)})")
 
             # then we rename the attributes
             if any([v is not None for k, v in self._projection.items()]):  # type:ignore
