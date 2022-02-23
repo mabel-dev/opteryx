@@ -28,11 +28,7 @@ class EvaluationNode(BasePlanNode):
                     f"Function not known or not supported - {function['function']}"
                 )
 
-            #if function.get("alias"):
-            #    column_name = function["alias"]
-            #else:
-            if True:
-                column_name = f"{function['function']}({','.join(str(a[0]) for a in function['args'])})"
+            column_name = f"{function['function']}({','.join(str(a[0]) for a in function['args'])})"
             function["column_name"] = column_name
 
     def execute(self, data_pages: Iterable) -> Iterable:
@@ -51,6 +47,9 @@ class EvaluationNode(BasePlanNode):
                     else:
                         # it's a literal, just add it
                         arg_list.append(arg[0])
+
+                if len(arg_list) == 0:
+                    arg_list = [page.num_rows]
 
                 calculated_values = FUNCTIONS[function["function"]](*arg_list)
                 page = pyarrow.Table.append_column(

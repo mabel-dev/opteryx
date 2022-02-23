@@ -12,11 +12,8 @@
 """
 These are a set of functions that can be applied to data.
 """
-import string
-import orjson
 import datetime
 import numpy
-import pyarrow
 from pyarrow import compute
 from cityhash import CityHash64
 
@@ -98,6 +95,14 @@ def cast(type):
     raise SqlError(f"Unable to cast to type {type}")
 
 
+def _vectorize_no_parameters(func):
+    def _inner(items):
+        for i in range(items):
+            yield [func()]
+
+    return _inner
+
+
 def _vectorize_single_parameter(func):
     def _inner(array):
         for a in array:
@@ -113,7 +118,7 @@ def _vectorize_double_parameter(func):
 
     return _inner
 
-
+# fmt:off
 FUNCTIONS = {
     # TYPE CONVERSION
     # "CAST": cast_as,
@@ -122,7 +127,7 @@ FUNCTIONS = {
     "NUMERIC": cast("NUMERIC"),
     "VARCHAR": cast("VARCHAR"),
     "STRING": cast("VARCHAR"),  # alias for VARCHAR
-    # STRINGS - VECTORIZED
+    # STRINGS
     "LENGTH": compute.utf8_length,  # LENGTH(str) -> int
     "UPPER": compute.utf8_upper,  # UPPER(str) -> str
     "LOWER": compute.utf8_lower,  # LOWER(str) -> str
@@ -133,23 +138,27 @@ FUNCTIONS = {
     # HASHING & ENCODING
     "HASH": _vectorize_single_parameter(lambda x: format(CityHash64(str(x)), "X")),
     "MD5": _vectorize_single_parameter(get_md5),
+    "RANDOM": _vectorize_no_parameters(get_random),  # return a random number 0-0.999
     # OTHER
-    "GET": _vectorize_double_parameter(
-        _get
-    ),  # GET(LIST, index) => LIST[index] or GET(STRUCT, accessor) => STRUCT[accessor]
-    # NUMERIC - VECTORIZED
+    "GET": _vectorize_double_parameter(_get),  # GET(LIST, index) => LIST[index] or GET(STRUCT, accessor) => STRUCT[accessor]
+    # NUMERIC
     "ROUND": compute.round,
     "FLOOR": compute.floor,
     "CEIL": compute.ceil,
     "ABS": compute.abs,
     "TRUNC": compute.trunc,
-    # NOT CONVERTED YET
-    "RANDOM": get_random,  # return a random number 0-99
     # DATES & TIMES
-    "YEAR": get_year,
-    "MONTH": get_month,
+    "NOW": _vectorize_no_parameters(datetime.datetime.now),
+    "TODAY": _vectorize_no_parameters(datetime.date.today),
+    "YEAR": compute.year,
+    "MONTH": compute.month,
+    "DAY": compute.day,
+    "WEEK": compute.iso_week,
+
+    # NOT CONVERTED YET
+
+    # DATES & TIMES
     "MONTH_NAME": not_implemented,  # the name of the month
-    "DAY": get_day,
     "DAY_NAME": not_implemented,  # the name of the day
     "DATE": numpy.datetime64,  # this should be vectorized
     "QUARTER_OF_YEAR": get_quarter,
@@ -161,9 +170,7 @@ FUNCTIONS = {
     "SECOND": get_second,
     "TIME": get_time,
     "CURRENT_DATE": datetime.date.today,
-    "TODAY": not_implemented,
     "YESTERDAY": not_implemented,
-    "NOW": datetime.datetime.now,
     "DATE_ADD": not_implemented,  # date, number, part
     "DATE_DIFF": not_implemented,  # start, end, part
     "AGE": not_implemented,  # 8 years, 3 months, 3 days
@@ -187,6 +194,7 @@ FUNCTIONS = {
     "GREATEST": max,
     "UUID": not_implemented,  # cast value as UUID
 }
+# fmt:on
 
 
 def is_function(name):

@@ -31,8 +31,14 @@ Functions for examining and manipulating date values.
 
 Function        | Description                                       | Example
 --------------- | ------------------------------------------------- | ---------------------------
+`DAY(date)`     | Extract day number                                | DAY(2022-02-06) -> 6
+`MONTH(date)`   | Extract month number                              | MONTH(2022-02-06) -> 2
+`NOW()`         | Current Timestamp                                 | NOW() -> '2022-02-23 12:37'
 `TIMESTAMP(str)` | Convert an [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format string to a timestamp | TIMESTAMP('2000-01-01') -> 1 Jan 2000
 `TIMESTAMP(n)`  | Interpret n as seconds since unix epoch           | TIMESTAMP(946684800) -> 1 Jan 2000
+`TODAY()`       | Current Date                                      | TODAY() -> '2022-02-23'
+`WEEK(date)`    | Extract ISO week of year number                   | WEEK(2022-02-06) -> 5
+`YEAR(date)`    | Extract year number                               | YEAR(202-02-06) -> 2022
 
 
 ## Other Functions
@@ -43,5 +49,6 @@ Function         | Description                                       | Example
 `GET(struct, a)` | Gets the element called 'a' from a struct         | GET(dict, 'key') -> 'value
 `GET(list, n)`   | Gets the nth element in a list                    | GET(names, 2) -> 'Joe'
 `GET(str, n)`    | Gets the nth element in a string                  | GET('hello', 2) -> 'e'
+`RANDOM()`       | Random number between 0.000 and 0.999             | RANDOM() -> 0.234
 `HASH(str)`      | Calculate the [CityHash](https://opensource.googleblog.com/2011/04/introducing-cityhash.html) (64 bit) of a value  | HASH('')
 `MD5(str)`       | Calculate the MD5 hash of a value                 | MD5('')

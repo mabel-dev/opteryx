@@ -144,6 +144,12 @@ STATEMENTS = [
         ("SELECT GET(Birth_Place, 'town') FROM $astronauts WHERE GET(Birth_Place, 'town') = 'Warsaw'", 1, 1),
         ("SELECT COUNT(*), GET(Birth_Place, 'town') FROM $astronauts GROUP BY GET(Birth_Place, 'town')", 264, 2),
 
+        ("SELECT Birth_Date FROM $astronauts", 357, 1),
+
+        ("SELECT RANDOM() FROM $planets", 9, 1),
+        ("SELECT NOW() FROM $planets", 9, 1),
+        ("SELECT TODAY() FROM $planets", 9, 1),
+
     ]
 # fmt:on
 

@@ -615,6 +615,8 @@ if __name__ == "__main__":
     SQL = "SELECT * FROM $satellites WHERE (id = 6 OR id = 7 OR id = 8) OR name = 'Europa'"
     SQL = "SELECT BOOLEAN(planetId) FROM $satellites GROUP BY planetId, BOOLEAN(planetId)"
     SQL = "SELECT planetId as pid, round(magnitude) as minmag FROM $satellites"
+    SQL = "SELECT RANDOM() FROM $planets"
+    SQL = "SELECT RANDOM() FROM $planets"
 
     ast = sqloxide.parse_sql(SQL, dialect="mysql")
     print(ast)
