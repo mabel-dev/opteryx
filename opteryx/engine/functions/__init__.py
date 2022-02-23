@@ -159,8 +159,10 @@ FUNCTIONS = {
     "HOUR": compute.hour,
     "MINUTE": compute.minute,
     "SECOND": compute.second,
-    # NOT CONVERTED YET
 
+
+
+    # NOT CONVERTED YET
     # DATES & TIMES
     "MONTH_NAME": not_implemented,  # the name of the month
     "DAY_NAME": not_implemented,  # the name of the day
