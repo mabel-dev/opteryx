@@ -15,38 +15,6 @@ import datetime
 from opteryx.utils.dates import parse_iso
 
 
-def get_year(input):
-    """
-    Convert input to a datetime object and extract the Year part
-    """
-    if isinstance(input, str):
-        input = parse_iso(input)
-    if isinstance(input, (datetime.date, datetime.datetime)):
-        return input.year
-    return None  #
-
-
-def get_month(input):
-    """
-    Convert input to a datetime object and extract the Month part
-    """
-    if isinstance(input, str):
-        input = parse_iso(input)
-    if isinstance(input, (datetime.date, datetime.datetime)):
-        return input.month
-    return None
-
-
-def get_day(input):
-    """
-    Convert input to a datetime object and extract the Day part
-    """
-    if isinstance(input, str):
-        input = parse_iso(input)
-    if isinstance(input, (datetime.date, datetime.datetime)):
-        return input.day
-    return None
-
 
 def get_date(input):
     """
@@ -114,15 +82,6 @@ def get_second(input):
     return None
 
 
-def get_week(input):
-    """
-    Convert input to a datetime object and extract the ISO8601 Week
-    """
-    if isinstance(input, str):
-        input = parse_iso(input)
-    if isinstance(input, (datetime.date, datetime.datetime)):
-        return int(input.strftime("%V"))
-    return None
 
 
 def add_days(start_date, day_count):

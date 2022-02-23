@@ -617,6 +617,7 @@ if __name__ == "__main__":
     SQL = "SELECT planetId as pid, round(magnitude) as minmag FROM $satellites"
     SQL = "SELECT RANDOM() FROM $planets"
     SQL = "SELECT RANDOM() FROM $planets"
+    SQL = "SELECT TIME() FROM $planets"
 
     ast = sqloxide.parse_sql(SQL, dialect="mysql")
     print(ast)

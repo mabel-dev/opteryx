@@ -13,6 +13,7 @@
 These are a set of functions that can be applied to data.
 """
 import datetime
+import time
 import numpy
 from pyarrow import compute
 from cityhash import CityHash64
@@ -150,11 +151,14 @@ FUNCTIONS = {
     # DATES & TIMES
     "NOW": _vectorize_no_parameters(datetime.datetime.now),
     "TODAY": _vectorize_no_parameters(datetime.date.today),
+    "TIME": _vectorize_no_parameters(datetime.datetime.utcnow().time),
     "YEAR": compute.year,
     "MONTH": compute.month,
     "DAY": compute.day,
     "WEEK": compute.iso_week,
-
+    "HOUR": compute.hour,
+    "MINUTE": compute.minute,
+    "SECOND": compute.second,
     # NOT CONVERTED YET
 
     # DATES & TIMES
@@ -162,19 +166,12 @@ FUNCTIONS = {
     "DAY_NAME": not_implemented,  # the name of the day
     "DATE": numpy.datetime64,  # this should be vectorized
     "QUARTER_OF_YEAR": get_quarter,
-    "WEEK_OF_YEAR": get_week,
     "DAY_OF_YEAR": not_implemented,  # get the day of the year
     "DAY_OF_WEEK": not_implemented,  # get the day of the week (Monday = 1)
-    "HOUR": get_hour,
-    "MINUTE": get_minute,
-    "SECOND": get_second,
-    "TIME": get_time,
-    "CURRENT_DATE": datetime.date.today,
     "YESTERDAY": not_implemented,
     "DATE_ADD": not_implemented,  # date, number, part
     "DATE_DIFF": not_implemented,  # start, end, part
     "AGE": not_implemented,  # 8 years, 3 months, 3 days
-    "FROM_EPOCH": not_implemented,  # timestamp from linux epoch formatted time
     "TO_EPOCH": not_implemented,  # timestamp in linux epoch format
     "DATE_PART": not_implemented,  # DATE_PART("YEAR", timestamp)
     "MID": lambda x, y, z: str(x)[int(y) :][: int(z)],

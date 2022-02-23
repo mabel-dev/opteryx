@@ -149,6 +149,8 @@ STATEMENTS = [
         ("SELECT RANDOM() FROM $planets", 9, 1),
         ("SELECT NOW() FROM $planets", 9, 1),
         ("SELECT TODAY() FROM $planets", 9, 1),
+        ("SELECT YEAR(Birth_Date), COUNT(*) FROM $astronauts GROUP BY YEAR(Birth_Date)", 54, 2),
+        ("SELECT MONTH(Birth_Date), COUNT(*) FROM $astronauts GROUP BY MONTH(Birth_Date)", 12, 2),
 
     ]
 # fmt:on
