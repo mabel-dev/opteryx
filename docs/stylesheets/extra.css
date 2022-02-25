@@ -1,21 +1,21 @@
 table {
     width: 100% !important;
     font-family: 'Roboto Condensed', Arial, Helvetica, sans-serif;
-    font-size: 1.3em;
+    font-size: 1.3em !important;
     line-height: 1.6em;
 }
 
 th {
-    padding: 0.35em 0.8em !important;
+    padding: 0.5em 1em !important;
     font-weight: 500;
 }
 
 td {
-    padding: 0.35em 0.8em !important;
+    padding: 0.5em 1em !important;
 }
 
 code {
     font-family: 'Courier New', Courier, monospace;
-    font-size: 1.5em !important;
+    font-size: 1.3em !important;
     color: #a42ea2 !important;
 }
