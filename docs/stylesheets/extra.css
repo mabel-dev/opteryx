@@ -1,17 +1,17 @@
 table {
-    width: 100%;
+    width: 100% !important;
     font-family: 'Roboto Condensed', Arial, Helvetica, sans-serif;
     font-size: 1.1em;
     line-height: 1.25em;
 }
 
 th {
-    padding: 0px !important;
-    font-weight: bold;
+    padding: 0.35em 0.8em !important;
+    font-weight: 500;
 }
 
 td {
-    padding: 0px !important;
+    padding: 0.35em 0.8em !important;
 }
 
 code {
