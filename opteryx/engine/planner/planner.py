@@ -175,7 +175,10 @@ def _build_dnf_filters(filters):
 
 def _extract_relations(ast):
     """ """
-    relations = ast[0]["Query"]["body"]["Select"]["from"][0]
+    try:
+        relations = ast[0]["Query"]["body"]["Select"]["from"][0]
+    except IndexError:
+        return "$no_table"
     if "Table" in relations["relation"]:
         dataset = ".".join(
             [part["value"] for part in relations["relation"]["Table"]["name"]]
@@ -617,7 +620,9 @@ if __name__ == "__main__":
     SQL = "SELECT planetId as pid, round(magnitude) as minmag FROM $satellites"
     SQL = "SELECT RANDOM() FROM $planets"
     SQL = "SELECT RANDOM() FROM $planets"
-    SQL = "SELECT TIME() FROM $planets"
+    SQL = "SELECT TIME()"
+    SQL = "SELECT LOWER('NAME')"
+    SQL = "SELECT HASH('NAME')"
 
     ast = sqloxide.parse_sql(SQL, dialect="mysql")
     print(ast)

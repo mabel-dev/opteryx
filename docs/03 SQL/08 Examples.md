@@ -1,6 +1,6 @@
 # SQL Examples
 
-Opteryx has two built-in datasets for demonstration and testing.
+Opteryx has three built-in datasets for demonstration and testing.
 
 - `$satellites` (8 columns, 177 rows)
 - `$planets` (20 columns, 9 rows) #plutoisaplanet
@@ -24,3 +24,5 @@ SELECT *
  5  │    5     │ Europa │ 3202.739 │ 1560.8 │  3.013  │    5.29   │  0.67  
  .. │    ...   │ ...    │ ...      │ ...    │  ...    │    ...    │  ...   
 ~~~
+
+Note that `$no_table` is used internally to represent no table has been specified.

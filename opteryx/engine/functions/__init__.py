@@ -17,6 +17,7 @@ import time
 import numpy
 from pyarrow import compute
 from cityhash import CityHash64
+import opteryx
 
 from opteryx.engine.functions.date_functions import *
 from opteryx.exceptions import SqlError
@@ -50,6 +51,8 @@ def get_md5(item):
 
     return hashlib.md5(str(item).encode()).hexdigest()  # nosec - meant to be MD5
 
+def get_version():
+    return opteryx.__version__
 
 def attempt(func):
     try:
@@ -106,6 +109,8 @@ def _vectorize_no_parameters(func):
 
 def _vectorize_single_parameter(func):
     def _inner(array):
+        if isinstance(array, str):
+            array = [array]
         for a in array:
             yield [func(a)]
 
@@ -114,6 +119,8 @@ def _vectorize_single_parameter(func):
 
 def _vectorize_double_parameter(func):
     def _inner(array, p1):
+        if isinstance(array, str):
+            array = [array]
         for a in array:
             yield [func(a, p1)]
 
@@ -121,6 +128,7 @@ def _vectorize_double_parameter(func):
 
 # fmt:off
 FUNCTIONS = {
+    "VERSION": _vectorize_no_parameters(get_version),
     # TYPE CONVERSION
     # "CAST": cast_as,
     "TIMESTAMP": cast("TIMESTAMP"),
@@ -149,9 +157,10 @@ FUNCTIONS = {
     "ABS": compute.abs,
     "TRUNC": compute.trunc,
     # DATES & TIMES
-    "NOW": _vectorize_no_parameters(datetime.datetime.now),
+    "NOW": _vectorize_no_parameters(datetime.datetime.utcnow),
     "TODAY": _vectorize_no_parameters(datetime.date.today),
-    "TIME": _vectorize_no_parameters(datetime.datetime.utcnow().time),
+    "TIME": _vectorize_no_parameters(get_time),
+    "YESTERDAY": _vectorize_no_parameters(get_yesterday),
     "YEAR": compute.year,
     "MONTH": compute.month,
     "DAY": compute.day,
@@ -159,23 +168,19 @@ FUNCTIONS = {
     "HOUR": compute.hour,
     "MINUTE": compute.minute,
     "SECOND": compute.second,
-
+    "QUARTER": compute.quarter,
 
 
     # NOT CONVERTED YET
     # DATES & TIMES
     "MONTH_NAME": not_implemented,  # the name of the month
     "DAY_NAME": not_implemented,  # the name of the day
-    "DATE": numpy.datetime64,  # this should be vectorized
-    "QUARTER_OF_YEAR": get_quarter,
+
     "DAY_OF_YEAR": not_implemented,  # get the day of the year
     "DAY_OF_WEEK": not_implemented,  # get the day of the week (Monday = 1)
-    "YESTERDAY": not_implemented,
     "DATE_ADD": not_implemented,  # date, number, part
     "DATE_DIFF": not_implemented,  # start, end, part
     "AGE": not_implemented,  # 8 years, 3 months, 3 days
-    "TO_EPOCH": not_implemented,  # timestamp in linux epoch format
-    "DATE_PART": not_implemented,  # DATE_PART("YEAR", timestamp)
     "MID": lambda x, y, z: str(x)[int(y) :][: int(z)],
     "CONCAT": concat,
     "LEVENSHTEIN": levenshtein_distance,

@@ -79,6 +79,10 @@ class DatasetReaderNode(BasePlanNode):
             from opteryx import samples
             yield samples.astronauts()
             return
+        if self._dataset.lower() == "$no_table/":
+            from opteryx import samples
+            yield samples.no_table()
+            return
 
         partitions = self._reader.get_partitions(
             dataset=self._dataset,

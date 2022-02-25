@@ -9,7 +9,14 @@ def planets():
 
     return PlanetData().get()
 
+
 def astronauts():
     from .astronaut_data import AstronautData
 
     return AstronautData().get()
+
+
+def no_table():
+    from .no_table_data import NoTable
+
+    return NoTable().get()

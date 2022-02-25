@@ -152,6 +152,13 @@ STATEMENTS = [
         ("SELECT YEAR(Birth_Date), COUNT(*) FROM $astronauts GROUP BY YEAR(Birth_Date)", 54, 2),
         ("SELECT MONTH(Birth_Date), COUNT(*) FROM $astronauts GROUP BY MONTH(Birth_Date)", 12, 2),
 
+        ("SELECT RANDOM()", 1, 1),
+        ("SELECT NOW()", 1, 1),
+        ("SELECT TODAY()", 1, 1),
+        ("SELECT HASH('hello')", 1, 1),
+        ("SELECT MD5('hello')", 1, 1),
+        ("SELECT UPPER('upper'), LOWER('lower')", 1, 2),
+
     ]
 # fmt:on
 

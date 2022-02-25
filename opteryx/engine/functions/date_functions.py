@@ -14,6 +14,16 @@
 import datetime
 from opteryx.utils.dates import parse_iso
 
+def get_time():
+    # doing this inline means the utcnow() function is called once and time is then
+    # called for each row - meaning it's not 'now', it's 'when did you start'
+    return datetime.datetime.utcnow().time()
+
+def get_yesterday():
+    return datetime.date.today() - datetime.timedelta(days=1)
+
+
+
 
 
 def get_date(input):
@@ -27,15 +37,8 @@ def get_date(input):
     return None
 
 
-def get_time(input):
-    """
-    Convert input to a datetime object and extract the Time part
-    """
-    if isinstance(input, str):
-        input = parse_iso(input)
-    if isinstance(input, (datetime.date, datetime.datetime)):
-        return input.time()
-    return None
+
+
 
 
 def get_quarter(input):
@@ -46,39 +49,6 @@ def get_quarter(input):
         input = parse_iso(input)
     if isinstance(input, (datetime.date, datetime.datetime)):
         return ((input.month - 1) // 3) + 1
-    return None
-
-
-def get_hour(input):
-    """
-    Convert input to a datetime object and extract the Hour part
-    """
-    if isinstance(input, str):
-        input = parse_iso(input)
-    if isinstance(input, (datetime.date, datetime.datetime)):
-        return input.hour
-    return None
-
-
-def get_minute(input):
-    """
-    Convert input to a datetime object and extract the Minute part
-    """
-    if isinstance(input, str):
-        input = parse_iso(input)
-    if isinstance(input, (datetime.date, datetime.datetime)):
-        return input.minute
-    return None
-
-
-def get_second(input):
-    """
-    Convert input to a datetime object and extract the Seconds part
-    """
-    if isinstance(input, str):
-        input = parse_iso(input)
-    if isinstance(input, (datetime.date, datetime.datetime)):
-        return input.second
     return None
 
 

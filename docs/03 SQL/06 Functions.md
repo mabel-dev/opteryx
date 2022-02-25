@@ -36,6 +36,7 @@ Function        | Description                                       | Example
 `MINUTE(time)`  | Extract minute from timestamp                     | MINUTE(5:32:43) -> 32
 `MONTH(date)`   | Extract month number                              | MONTH(2022-02-06) -> 2
 `NOW()`         | Current Timestamp                                 | NOW() -> '2022-02-23 12:37'
+`QUARTER(date)` | Extract quarter of the year                       | QUARTER(2022-02-06) -> 2
 `TIME()`        | Current Time (UTC)                                | TIME() -> '12:34:23.2123'
 `SECOND(time)`  | Extract second                                    | SECOND(5:32:43) -> 43
 `TIMESTAMP(str)` | Convert an [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format string to a timestamp | TIMESTAMP('2000-01-01') -> 1 Jan 2000
@@ -54,5 +55,6 @@ Function         | Description                                       | Example
 `GET(list, n)`   | Gets the nth element in a list                    | GET(names, 2) -> 'Joe'
 `GET(str, n)`    | Gets the nth element in a string                  | GET('hello', 2) -> 'e'
 `RANDOM()`       | Random number between 0.000 and 0.999             | RANDOM() -> 0.234
-`HASH(str)`      | Calculate the [CityHash](https://opensource.googleblog.com/2011/04/introducing-cityhash.html) (64 bit) of a value  | HASH('') ->
-`MD5(str)`       | Calculate the MD5 hash of a value                 | MD5('') ->
+`HASH(str)`      | Calculate the [CityHash](https://opensource.googleblog.com/2011/04/introducing-cityhash.html) (64 bit) of a value  | HASH('hello') -> 'B48BE5A931380CE8'
+`MD5(str)`       | Calculate the MD5 hash of a value                 | MD5('hello') -> '5d41402abc4b2a76b9719d911017c592'
+`VERSION()`      | Return the version of Opteryx                     | VERSION() -> 0.1.0

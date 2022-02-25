@@ -52,6 +52,8 @@ class EvaluationNode(BasePlanNode):
                     arg_list = [page.num_rows]
 
                 calculated_values = FUNCTIONS[function["function"]](*arg_list)
+                if isinstance(calculated_values, (pyarrow.lib.StringScalar)):
+                    calculated_values = [[calculated_values.as_py()]]
                 page = pyarrow.Table.append_column(
                     page, function["column_name"], calculated_values
                 )
