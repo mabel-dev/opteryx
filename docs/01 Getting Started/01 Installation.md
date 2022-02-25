@@ -4,6 +4,6 @@
 
 Install via pip (recommended)
 
-~~~
-pip install opteryx
+~~~bash
+pip install --upgrade opteryx
 ~~~

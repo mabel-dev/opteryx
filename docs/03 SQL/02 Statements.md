@@ -1,6 +1,6 @@
 # SQL Statements
 
-~~~
+~~~sql
 SELECT [DISTINCT] <select_expression>
 FROM <table_list>
 ** JOIN ON <expressioin>   <- not implemented

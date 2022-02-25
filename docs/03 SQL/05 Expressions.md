@@ -16,21 +16,21 @@ The operators `AND` and `OR` are commutative, that is, you can switch the left a
 
 ## Comparison Operators
 
-Operator     | Description                    | Example | Result
------------- | ------------------------------ | ------- | ------
-`<`          | less than                      | 2 < 3   | TRUE
-`>`          | greater than                   | 2 > 3   | FALSE
-`<=`         | less than or equal to          | 2 <= 3  | TRUE
-`>=`         | greater than or equal to       | 4 >= 8  | TRUE
-`=`          | equal to                       | 3 = 4   | FALSE
-`<>`         | not equal to                   | 2 <> 2  | FALSE
-`IN`         | value in list                  |         |
-`NOT IN`     | value not in list              |         |
-`LIKE`       | pattern match                  |         |
-`NOT LIKE`   | inverse of `LIKE`              |         |
-`ILIKE`      | case-insensitive pattern match |         |
-`NOT ILIKE`  | inverse of `ILIKE`             |         |
-`~`          | regular expression match       |         | 
+Operator     | Description                   
+------------ | ------------------------------
+`<`          | less than                     
+`>`          | greater than                
+`<=`         | less than or equal to        
+`>=`         | greater than or equal to   
+`=`          | equal to               
+`<>`         | not equal to                 
+`IN`         | value in list              
+`NOT IN`     | value not in list            
+`LIKE`       | pattern match           
+`NOT LIKE`   | inverse of `LIKE`         
+`ILIKE`      | case-insensitive pattern match 
+`NOT ILIKE`  | inverse of `ILIKE`     
+`~`          | regular expression match      
 
 ## Other Comparisons
 

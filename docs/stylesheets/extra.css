@@ -8,6 +8,8 @@ table {
 th {
     padding: 0.4em 0.9em !important;
     font-weight: 500;
+    color: #fff;
+    background-color: #666;
 }
 
 td {
@@ -18,4 +20,5 @@ code {
     font-family: 'Courier New', Courier, monospace;
     font-size: 1em !important;
     color: #a42ea2 !important;
+    font-weight: 500;
 }

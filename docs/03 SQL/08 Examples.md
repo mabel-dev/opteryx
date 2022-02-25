@@ -8,7 +8,7 @@ Opteryx has three built-in datasets for demonstration and testing.
 
 Satellite and Planet datasets where acquired from [this source](https://github.com/devstronomy/nasa-data-scraper/tree/f610e541a053f05e26573570604aed50b358cc43/data/json).
 
-Astronaut dataset acquired from [Kaggle](https://www.kaggle.com/nasa/astronaut-yearbook)
+Astronaut dataset acquired from [Kaggle](https://www.kaggle.com/nasa/astronaut-yearbook).
 
 ~~~sql
 SELECT *
