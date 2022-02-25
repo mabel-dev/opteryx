@@ -6,10 +6,16 @@ table {
 }
 
 th {
-    padding: 0;
+    padding: 0px !important;
     font-weight: bold;
 }
 
 td {
-    padding: 0;
+    padding: 0px !important;
+}
+
+code {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 1.1em;
+    line-height: 1.25em;
 }
