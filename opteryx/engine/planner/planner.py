@@ -99,6 +99,18 @@ def _build_dnf_filters(filters):
     # print(filters)
 
     if "Identifier" in filters:  # we're an identifier
+        if filters["Identifier"]["value"][:2] == "$$":
+            try:
+                from opteryx.engine.functions import PLACEHOLDERS
+
+                return (
+                    PLACEHOLDERS[filters["Identifier"]["value"].upper()](),
+                    TOKEN_TYPES.LIST,
+                )
+            except KeyError:
+                raise SqlError(
+                    f"Unknown placeholder `{filters['Identifier']['value']}`."
+                )
         return (filters["Identifier"]["value"], TOKEN_TYPES.IDENTIFIER)
     if "Value" in filters:  # we're a literal
         value = filters["Value"]
@@ -226,6 +238,7 @@ def _extract_projections(ast):
     # print(projection)
     return projection
 
+
 def _extract_columns(ast):
     """
     This is the result of projections
@@ -251,6 +264,7 @@ def _extract_columns(ast):
                 return f"{func.upper()}({','.join(args)}"
 
     return [_inner(attribute) for attribute in projection]
+
 
 def _extract_selection(ast):
     """
@@ -294,7 +308,6 @@ def _extract_order(ast):
 
 
 def _extract_groups(ast):
-
     def _inner(element):
         if element:
             if "Identifier" in element:
@@ -385,11 +398,17 @@ class QueryPlan(object):
             last_node = "where"
 
         _groups = _extract_groups(ast)
-#        _columns = _extract_columns(ast)
+        #        _columns = _extract_columns(ast)
         if _groups or any(["aggregate" in a for a in _projection]):
             _aggregates = _projection.copy()
             if not any(["aggregate" in a for a in _aggregates]):
-                _aggregates.append({'aggregate': 'COUNT', 'args': [('Wildcard', TOKEN_TYPES.WILDCARD)], 'alias': None})
+                _aggregates.append(
+                    {
+                        "aggregate": "COUNT",
+                        "args": [("Wildcard", TOKEN_TYPES.WILDCARD)],
+                        "alias": None,
+                    }
+                )
             self.add_operator(
                 "agg", AggregateNode(statistics, aggregates=_aggregates, groups=_groups)
             )
@@ -616,19 +635,22 @@ if __name__ == "__main__":
     SQL = "SELECT ROUND(magnitude) FROM $satellites group by ROUND(magnitude)"
     SQL = "SELECT COUNT(*) FROM $satellites"
     SQL = "SELECT * FROM $satellites WHERE (id = 6 OR id = 7 OR id = 8) OR name = 'Europa'"
-    SQL = "SELECT BOOLEAN(planetId) FROM $satellites GROUP BY planetId, BOOLEAN(planetId)"
+    SQL = (
+        "SELECT BOOLEAN(planetId) FROM $satellites GROUP BY planetId, BOOLEAN(planetId)"
+    )
     SQL = "SELECT planetId as pid, round(magnitude) as minmag FROM $satellites"
     SQL = "SELECT RANDOM() FROM $planets"
     SQL = "SELECT RANDOM() FROM $planets"
     SQL = "SELECT TIME()"
     SQL = "SELECT LOWER('NAME')"
     SQL = "SELECT HASH('NAME')"
+    SQL = "SELECT * FROM tests.data.partitioned WHERE timestamp IN ($$PREVIOUS_MONTH)"
 
     ast = sqloxide.parse_sql(SQL, dialect="mysql")
     print(ast)
 
     print()
-    print(_extract_order(ast))
+    print(_extract_selection(ast))
 
     # _projection = _extract_projections(ast)
     # print(_projection)

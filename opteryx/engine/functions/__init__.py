@@ -51,8 +51,10 @@ def get_md5(item):
 
     return hashlib.md5(str(item).encode()).hexdigest()  # nosec - meant to be MD5
 
+
 def get_version():
     return opteryx.__version__
+
 
 def attempt(func):
     try:
@@ -125,6 +127,7 @@ def _vectorize_double_parameter(func):
             yield [func(a, p1)]
 
     return _inner
+
 
 # fmt:off
 FUNCTIONS = {
@@ -199,6 +202,10 @@ FUNCTIONS = {
     "UUID": not_implemented,  # cast value as UUID
 }
 # fmt:on
+
+PLACEHOLDERS = {
+    "$$PREVIOUS_MONTH": get_previous_month,
+}
 
 
 def is_function(name):

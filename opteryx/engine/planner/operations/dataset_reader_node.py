@@ -69,18 +69,22 @@ class DatasetReaderNode(BasePlanNode):
 
         if self._dataset.lower() == "$satellites/":
             from opteryx import samples
+
             yield samples.satellites()
             return
         if self._dataset.lower() == "$planets/":
             from opteryx import samples
+
             yield samples.planets()
             return
         if self._dataset.lower() == "$astronauts/":
             from opteryx import samples
+
             yield samples.astronauts()
             return
         if self._dataset.lower() == "$no_table/":
             from opteryx import samples
+
             yield samples.no_table()
             return
 

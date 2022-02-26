@@ -14,16 +14,27 @@
 import datetime
 from opteryx.utils.dates import parse_iso
 
+
 def get_time():
     # doing this inline means the utcnow() function is called once and time is then
     # called for each row - meaning it's not 'now', it's 'when did you start'
     return datetime.datetime.utcnow().time()
 
+
 def get_yesterday():
     return datetime.date.today() - datetime.timedelta(days=1)
 
 
+def get_previous_month():
+    from opteryx.utils.dates import date_range
 
+    end_of_previous_month = datetime.date.today().replace(day=1) - datetime.timedelta(
+        days=1
+    )
+    start_of_previous_month = end_of_previous_month.replace(day=1)
+    return list(
+        date_range(start_date=start_of_previous_month, end_date=end_of_previous_month)
+    )
 
 
 def get_date(input):
@@ -35,23 +46,6 @@ def get_date(input):
     if isinstance(input, (datetime.date, datetime.datetime)):
         return input.date()
     return None
-
-
-
-
-
-
-def get_quarter(input):
-    """
-    Convert input to a datetime object and calculate the Quarter of the Year
-    """
-    if isinstance(input, str):
-        input = parse_iso(input)
-    if isinstance(input, (datetime.date, datetime.datetime)):
-        return ((input.month - 1) // 3) + 1
-    return None
-
-
 
 
 def add_days(start_date, day_count):

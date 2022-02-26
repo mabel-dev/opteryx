@@ -62,7 +62,9 @@ class ProjectionNode(BasePlanNode):
                 page = page.select(self._projection.keys())  # type:ignore
             except KeyError as e:
                 field = str(e).split('"')[1]
-                raise SqlError(f"Column not found `{field}` - the column may not exist, or need to be added to the GROUP BY clause. ({', '.join(page.column_names)})")
+                raise SqlError(
+                    f"Column not found `{field}` - the column may not exist, or need to be added to the GROUP BY clause. ({', '.join(page.column_names)})"
+                )
 
             # then we rename the attributes
             if any([v is not None for k, v in self._projection.items()]):  # type:ignore
