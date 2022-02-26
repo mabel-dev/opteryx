@@ -50,27 +50,6 @@ from opteryx.storage.schemes import DefaultPartitionScheme
 from opteryx.storage.adapters import DiskStorage
 from opteryx.engine.functions import is_function
 
-"""
-BinaryOperator::Plus => "+",
-BinaryOperator::Minus => "-",
-BinaryOperator::Multiply => "*",
-BinaryOperator::Divide => "/",
-BinaryOperator::Modulo => "%",
-BinaryOperator::StringConcat => "||",
-BinaryOperator::Spaceship => "<=>",
-BinaryOperator::And => "AND",
-BinaryOperator::Or => "OR",
-BinaryOperator::Xor => "XOR",
-BinaryOperator::BitwiseOr => "|",
-BinaryOperator::BitwiseAnd => "&",
-BinaryOperator::BitwiseXor => "^",
-BinaryOperator::PGBitwiseXor => "#",
-BinaryOperator::PGBitwiseShiftLeft => "<<",
-BinaryOperator::PGBitwiseShiftRight => ">>",
-BinaryOperator::PGRegexIMatch => "~*",
-BinaryOperator::PGRegexNotMatch => "!~",
-BinaryOperator::PGRegexNotIMatch => "!~*",
-"""
 
 OPERATOR_XLAT = {
     "Eq": "=",
@@ -85,6 +64,8 @@ OPERATOR_XLAT = {
     "NotILike": "not ilike",
     "InList": "in",
     "PGRegexMatch": "~",
+    "Plus": "+",
+    "Minus": "-",
 }
 
 
@@ -233,6 +214,8 @@ def _extract_projections(ast):
                     return {"function": func.upper(), "args": args, "alias": alias}
                 else:
                     return {"aggregate": func.upper(), "args": args, "alias": alias}
+            if "BinaryOp" in function:
+                return {"operation": _build_dnf_filters(function)}
 
     projection = [_inner(attribute) for attribute in projection]
     # print(projection)
@@ -644,13 +627,14 @@ if __name__ == "__main__":
     SQL = "SELECT TIME()"
     SQL = "SELECT LOWER('NAME')"
     SQL = "SELECT HASH('NAME')"
-    SQL = "SELECT * FROM tests.data.partitioned WHERE timestamp IN ($$PREVIOUS_MONTH)"
+    SQL = "SELECT id - 1, name, mass FROM $planets"
+    #    SQL = "SELECT * FROM tests.data.partitioned WHERE $DATE IN ($$PREVIOUS_MONTH)"
 
     ast = sqloxide.parse_sql(SQL, dialect="mysql")
     print(ast)
 
     print()
-    print(_extract_selection(ast))
+    print(_extract_projections(ast))
 
     # _projection = _extract_projections(ast)
     # print(_projection)

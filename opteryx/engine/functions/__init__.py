@@ -133,7 +133,6 @@ def _vectorize_double_parameter(func):
 FUNCTIONS = {
     "VERSION": _vectorize_no_parameters(get_version),
     # TYPE CONVERSION
-    # "CAST": cast_as,
     "TIMESTAMP": cast("TIMESTAMP"),
     "BOOLEAN": cast("BOOLEAN"),
     "NUMERIC": cast("NUMERIC"),
@@ -144,7 +143,6 @@ FUNCTIONS = {
     "UPPER": compute.utf8_upper,  # UPPER(str) -> str
     "LOWER": compute.utf8_lower,  # LOWER(str) -> str
     "TRIM": compute.utf8_trim_whitespace,  # TRIM(str) -> str
-    # STRINGS - LOOPED FUNCTIONS
     "LEFT": _vectorize_double_parameter(lambda x, y: str(x)[: int(y)]),
     "RIGHT": _vectorize_double_parameter(lambda x, y: str(x)[-int(y) :]),
     # HASHING & ENCODING
@@ -187,11 +185,7 @@ FUNCTIONS = {
     "MID": lambda x, y, z: str(x)[int(y) :][: int(z)],
     "CONCAT": concat,
     "LEVENSHTEIN": levenshtein_distance,
-    "REGEXP_MATCH": not_implemented,  # string, pattern -> boolean
     "REPLACE": not_implemented,  # string, pattern to find, pattern to replace -> string
-    # NUMBERS
-    "INTEGER": not_implemented,
-    "DOUBLE": not_implemented,
     # BOOLEAN
     "ISNONE": lambda x: x is None,
     # OTHER

@@ -9,6 +9,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 """
 This module provides a PEP-249 familiar interface for interacting with mabel data
 stores, it is not compliant with the standard: 
@@ -16,6 +17,7 @@ https://www.python.org/dev/peps/pep-0249/
 """
 import time
 from typing import Dict, Optional, List, Union, Tuple
+from decimal import Decimal
 from opteryx.storage import BaseStorageAdapter, BaseBufferCache, BasePartitionScheme
 from opteryx.storage.adapters import DiskStorage
 from opteryx.engine import QueryStatistics, QueryPlan
@@ -80,8 +82,8 @@ class Cursor:
         if isinstance(param, bool):
             return "TRUE" if param else "FALSE"
 
-        if isinstance(param, (float, int)):
-            return f'DECIMAL("{param}")'
+        if isinstance(param, (float, int, Decimal)):
+            return f'NUMERIC("{param}")'
 
         if isinstance(param, str):
             # if I have no apostrophes, use them as the delimiter
@@ -99,7 +101,7 @@ class Cursor:
             datetime_str = param.strftime("%Y-%m-%d %H:%M:%S.%f")
             return f'TIMESTAMP("{datetime_str}")'
 
-        if isinstance(param, (list, tuple)):
+        if isinstance(param, (list, tuple, set)):
             return "(%s)" % ",".join(map(self._format_prepared_param, param))
 
         if isinstance(param, dict):
@@ -109,9 +111,6 @@ class Cursor:
             return "{%s}" % ",".join(
                 f'"{k}":{self._format_prepared_param(v)}' for k, v in param.items()
             )
-
-        if isinstance(param, uuid.UUID):
-            return f"UUID('{param}')"
 
         raise Exception("Query parameter of type '%s' is not supported." % type(param))
 

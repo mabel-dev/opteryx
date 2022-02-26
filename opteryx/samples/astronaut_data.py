@@ -1,6 +1,6 @@
 """
 astronauts
----------
+----------
 
 This is a sample dataset build into the engine, this simplifies a few things:
 
@@ -12,8 +12,11 @@ https://www.kaggle.com/nasa/astronaut-yearbook
 
 Licence @ 22-FEB-2022 when copied - CC0: Public Domain.
 
-To access this dataset you can either run a query against dataset $astronats or you
-can instantiate a AstronautData() class and use it like a Relation.
+To access this dataset you can either run a query against dataset $astronats 
+
+`SELECT * FROM $astronauts`
+
+or you can instantiate a AstronautData() class and use it like a pyarrow Table.
 
 """
 
@@ -23,15 +26,15 @@ if __name__ == "__main__":
 
     sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
-import io
-import base64
-import pyarrow.parquet as pq  # type:ignore
-
 
 class AstronautData:
     @staticmethod
     def get():
+        import io
+        import base64
+        import pyarrow.parquet as pq
 
+        # The table is saved parquet table, base85 encoded.
         return pq.read_table(
             io.BytesIO(
                 base64.b85decode(

@@ -3,6 +3,8 @@ no table
 ---------
 
 This is used to prepresent no table.
+
+It actually is a table, with one row and one column.
 """
 
 if __name__ == "__main__":
@@ -11,14 +13,13 @@ if __name__ == "__main__":
 
     sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
-import io
-import base64
-import pyarrow.parquet as pq  # type:ignore
-
 
 class NoTable:
     @staticmethod
     def get():
+        import io
+        import base64
+        import pyarrow.parquet as pq
 
         return pq.read_table(
             io.BytesIO(

@@ -37,6 +37,9 @@ def get_previous_month():
     )
 
 
+### not used yet
+
+
 def get_date(input):
     """
     Convert input to a datetime object and extract the Date part

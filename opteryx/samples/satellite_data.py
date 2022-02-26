@@ -25,14 +25,14 @@ if __name__ == "__main__":
 
     sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
-import io
-import base64
-import pyarrow.parquet as pq  # type:ignore
-
 
 class SatelliteData:
     @staticmethod
     def get():
+
+        import io
+        import base64
+        import pyarrow.parquet as pq
 
         return pq.read_table(
             io.BytesIO(

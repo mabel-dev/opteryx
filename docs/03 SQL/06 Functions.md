@@ -21,6 +21,7 @@ Function        | Description                                       | Example
 `LENGTH(str)`   | Number of characters in string                    | `LENGTH('hello') -> 5`
 `LOWER(str)`    | Convert string to lower case                      | `LOWER('Hello') -> 'hello'`
 `RIGHT(str, n)` | Extract the right-most n characters               | `RIGHT('hello', 2) -> 'lo'`
+`STRING(any)`   | Alias for `VARCHAR()`                             | `STRING(22) -> '22'`
 `TRIM(str)`     | Removes any spaces from either side of the string | `TRIM('  hello  ') -> 'hello'`
 `UPPER(str)`    | Convert string to upper case                      | `UPPER('Hello') -> 'HELLO'`
 `VARCHAR(any)`  | Convert value to a string                         | `VARCHAR(22) -> '22'`
