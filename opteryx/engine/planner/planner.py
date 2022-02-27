@@ -51,6 +51,12 @@ from opteryx.storage.adapters import DiskStorage
 from opteryx.engine.functions import is_function
 
 
+JSON_TYPES = {numpy.bool_: bool, numpy.int64: int, numpy.float64: float}
+
+def _serializer(obj):
+    return JSON_TYPES[type(obj)](obj)
+
+
 OPERATOR_XLAT = {
     "Eq": "=",
     "NotEq": "<>",
@@ -68,16 +74,20 @@ OPERATOR_XLAT = {
     "Minus": "-",
 }
 
+def _extract_value(value):
+    if "SingleQuotedString" in value:
+        return (value["SingleQuotedString"], TOKEN_TYPES.VARCHAR)
+    if "Number" in value:
+        return (numpy.float64(value["Number"][0]), TOKEN_TYPES.NUMERIC)
+    if "Boolean" in value:
+        return (value["Boolean"], TOKEN_TYPES.BOOLEAN)
+
 
 def _build_dnf_filters(filters):
-    """
-    This is a basic version of the filter builder.
-    """
+
     # None is None
     if filters is None:
         return None
-
-    # print(filters)
 
     if "Identifier" in filters:  # we're an identifier
         if filters["Identifier"]["value"][:2] == "$$":
@@ -94,13 +104,7 @@ def _build_dnf_filters(filters):
                 )
         return (filters["Identifier"]["value"], TOKEN_TYPES.IDENTIFIER)
     if "Value" in filters:  # we're a literal
-        value = filters["Value"]
-        if "SingleQuotedString" in value:
-            return (value["SingleQuotedString"], TOKEN_TYPES.VARCHAR)
-        if "Number" in value:
-            return (numpy.longdouble(value["Number"][0]), TOKEN_TYPES.NUMERIC)
-        if "Boolean" in value:
-            return (value["Boolean"], TOKEN_TYPES.BOOLEAN)
+        return _extract_value(filters["Value"])
     if "BinaryOp" in filters:
         left = _build_dnf_filters(filters["BinaryOp"]["left"])
         operator = filters["BinaryOp"]["op"]
@@ -116,7 +120,7 @@ def _build_dnf_filters(filters):
             left = _build_dnf_filters(filters["UnaryOp"]["expr"])
             return (left, "<>", True)
         if filters["UnaryOp"]["op"] == "Minus":
-            number = 0 - numpy.longdouble(
+            number = 0 - numpy.float64(
                 filters["UnaryOp"]["expr"]["Value"]["Number"][0]
             )
             return (number, TOKEN_TYPES.NUMERIC)
@@ -165,6 +169,8 @@ def _build_dnf_filters(filters):
     if "Nested" in filters:
         return (_build_dnf_filters(filters["Nested"]),)
 
+#def _extract_date_filters(ast):
+
 
 def _extract_relations(ast):
     """ """
@@ -180,8 +186,21 @@ def _extract_relations(ast):
 
     if "Derived" in relations["relation"]:
         subquery = relations["relation"]["Derived"]["subquery"]["body"]
-        raise NotImplementedError("SUBQUERIES in FROM statements not supported")
-        # {'Select': {'distinct': False, 'top': None, 'projection': ['Wildcard'], 'from': [{'relation': {'Table': {'name': [{'value': 't', 'quote_style': None}], 'alias': None, 'args': [], 'with_hints': []}}, 'joins': []}], 'lateral_views': [], 'selection': None, 'group_by': [], 'cluster_by': [], 'distribute_by': [], 'sort_by': [], 'having': None}}
+        try:
+            alias = relations["relation"]["Derived"]["alias"]["name"]["value"]
+        except KeyError:
+            alias = None
+        if "Select" in subquery:
+            raise NotImplementedError("SUBQUERIES in FROM statements not supported")
+            # {'Select': {'distinct': False, 'top': None, 'projection': ['Wildcard'], 'from': [{'relation': {'Table': {'name': [{'value': 't', 'quote_style': None}], 'alias': None, 'args': [], 'with_hints': []}}, 'joins': []}], 'lateral_views': [], 'selection': None, 'group_by': [], 'cluster_by': [], 'distribute_by': [], 'sort_by': [], 'having': None}}
+        if "Values" in subquery:
+            import orjson
+            body = bytearray()
+            headers = [h["value"] for h in relations["relation"]["Derived"]["alias"]["columns"]]
+            for value_set in subquery["Values"]:
+                values = [_extract_value(v["Value"])[0] for v in value_set]
+                body.extend(orjson.dumps(dict(zip(headers, values)), default=_serializer))
+            return (alias, body) # <- a literal table
 
 
 def _extract_projections(ast):
@@ -215,6 +234,7 @@ def _extract_projections(ast):
                 else:
                     return {"aggregate": func.upper(), "args": args, "alias": alias}
             if "BinaryOp" in function:
+                raise NotImplementedError("Operations in the SELECT clause are not supported")
                 return {"operation": _build_dnf_filters(function)}
 
     projection = [_inner(attribute) for attribute in projection]
@@ -627,8 +647,10 @@ if __name__ == "__main__":
     SQL = "SELECT TIME()"
     SQL = "SELECT LOWER('NAME')"
     SQL = "SELECT HASH('NAME')"
-    SQL = "SELECT id - 1, name, mass FROM $planets"
-    #    SQL = "SELECT * FROM tests.data.partitioned WHERE $DATE IN ($$PREVIOUS_MONTH)"
+    #SQL = "SELECT id - 1, name, mass FROM $planets"
+    #SQL = "SELECT * FROM tests.data.partitioned WHERE $DATE IN ($$PREVIOUS_MONTH)"
+
+    SQL = "SELECT * FROM (VALUES (1,2),(3,4),(340,455)) AS t(a,b)"
 
     ast = sqloxide.parse_sql(SQL, dialect="mysql")
     print(ast)

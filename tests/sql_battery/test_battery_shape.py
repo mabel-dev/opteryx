@@ -1,9 +1,9 @@
 """
 The best way to test a SQL engine is to throw queries at it.
 
-We have two in-memory tables, one of natural satellite data and one of planet data.
-These are both small to allow us to test the SQL engine quickly and is guaranteed to
-be available whereever the tests are run.
+We have three in-memory tables, one of natural satellite data, one of planet data and
+one of astronaut data. These are both small to allow us to test the SQL engine quickly
+and is guaranteed to be available whereever the tests are run.
 
 These tests only test the shape of the response, more specific tests wil test values.
 The point of these tests is that we can throw many variations of queries, such as
@@ -12,6 +12,9 @@ different whitespace and capitalization and ensure we get a sensible looking res
 We test the shape in this battery because if the shape isn't right, the response isn't
 going to be right, and testing shape of an in-memory dataset is quick, we can test 100s
 of queries in a few seconds.
+
+Testing the shape doesn't mean the response is right though, so another battery is
+required to test values.
 """
 import os
 import sys
@@ -149,6 +152,8 @@ STATEMENTS = [
         ("SELECT COUNT(*), GET(Birth_Place, 'town') FROM $astronauts GROUP BY GET(Birth_Place, 'town')", 264, 2),
 
         ("SELECT Birth_Date FROM $astronauts", 357, 1),
+        ("SELECT YEAR(Birth_Date) FROM $astronauts", 357, 1),
+        ("SELECT YEAR(Birth_Date) FROM $astronauts WHERE YEAR(Birth_Date) < 1930", 14, 1),
 
         ("SELECT RANDOM() FROM $planets", 9, 1),
         ("SELECT NOW() FROM $planets", 9, 1),
@@ -161,7 +166,9 @@ STATEMENTS = [
         ("SELECT TODAY()", 1, 1),
         ("SELECT HASH('hello')", 1, 1),
         ("SELECT MD5('hello')", 1, 1),
-        ("SELECT UPPER('upper'), LOWER('lower')", 1, 2),
+        ("SELECT UPPER('upper'), LOWER('LOWER')", 1, 2),
+
+        ("SELECT * FROM (VALUES ('High', 3),('Medium', 2),('Low', 1)) AS ratings(name, rating)", 3, 2),
 
     ]
 # fmt:on

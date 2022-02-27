@@ -35,6 +35,7 @@ from opteryx.engine import QueryStatistics
 from opteryx.storage import file_decoders
 from opteryx.storage.adapters import DiskStorage
 from opteryx.storage.schemes import MabelPartitionScheme
+from opteryx.utils import pyarrow
 
 
 class EXTENSION_TYPE(str, Enum):
@@ -63,11 +64,15 @@ class DatasetReaderNode(BasePlanNode):
         The Dataset Reader Node is responsible for reading the relevant blobs
         and returning a Table/Relation.
         """
+        self._statistics = statistics
+
+        if isinstance(config.get("dataset"), tuple):
+            self._dataset = config.get("dataset")
+            return
+
         self._dataset = config.get("dataset", "").replace(".", "/") + "/"
         self._reader = config.get("reader", DiskStorage())
         self._partition_scheme = config.get("partition_scheme", MabelPartitionScheme())
-
-        self._statistics = statistics
 
         # pushed down projection
         self._projection = config.get("projection")
@@ -79,6 +84,17 @@ class DatasetReaderNode(BasePlanNode):
 
     def execute(self, data_pages: Iterable) -> Iterable:
 
+        # literal datasets
+        # e.g. 
+        # SELECT *
+        #   FROM (VALUES (1,2),(3,4),(340,455)) AS t(a,b)
+        if isinstance(self._dataset, tuple):
+            import io
+            import pyarrow.json
+            yield pyarrow.json.read_json(io.BytesIO(self._dataset[1]))
+            return
+
+        # sample datasets
         if self._dataset.lower() == "$satellites/":
             from opteryx import samples
 
@@ -100,6 +116,7 @@ class DatasetReaderNode(BasePlanNode):
             yield samples.no_table()
             return
 
+        # datasets from disk
         partitions = self._reader.get_partitions(
             dataset=self._dataset,
             partitioning=self._partition_scheme.partition_format(),
