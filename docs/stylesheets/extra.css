@@ -16,8 +16,9 @@ td {
 }
 
 code {
-    font-family: 'Courier New', Courier, monospace;
+    font-family: var(--bs-font-monospace);
     font-size: 1em !important;
-    color: #a42ea2 !important;
+    color: #D63384 !important;
     font-weight: 500;
+    word-wrap: break-word;
 }
