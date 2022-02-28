@@ -307,9 +307,17 @@ def _extract_order(ast):
     if order is not None:
         orders = []
         for col in order:
+            column = col["expr"]
+            if "Identifier" in column:
+                column = column["Identifier"]["value"]
+            if "Function" in column:
+                func = column["Function"]["name"][0]["value"].upper()
+                args = [_build_dnf_filters(a)[0] for a in column["Function"]["args"]]
+                args = ["*" if i == "Wildcard" else i for i in args]
+                column = f"{func}({','.join(args)})"
             orders.append(
                 (
-                    col["expr"]["Identifier"]["value"],
+                    column,
                     "descending" if str(col["asc"]) == "False" else "ascending",
                 ),
             )
@@ -685,7 +693,7 @@ AS employees (EMPNO, ENAME, JOB, MGR, HIREDATE, SAL, COMM, DEPTNO);
   FOR ALL;
       """
     SQL = "SELECT CAST(planetId AS varchar) FROM $satellites"
-
+    SQL = "SELECT planetId, count(*) FROM $satellites group by planetId order by count(*) desc"
 
 
     ast = sqloxide.parse_sql(SQL, dialect="mysql")

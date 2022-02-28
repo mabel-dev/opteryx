@@ -124,10 +124,10 @@ STATEMENTS = [
         ("SELECT VARCHAR(planetId) FROM $satellites GROUP BY planetId, VARCHAR(planetId)", 7, 1),
         ("SELECT TIMESTAMP(planetId) FROM $satellites GROUP BY planetId, TIMESTAMP(planetId)", 7, 1),
         ("SELECT NUMERIC(planetId) FROM $satellites GROUP BY planetId, NUMERIC(planetId)", 7, 1),
-        ("SELECT CAST(planetId AS BOOLEAN) FROM $satellites GROUP BY planetId, CAST(planetId AS BOOLEAN)", 7, 1),
-        ("SELECT CAST(planetId AS VARCHAR) FROM $satellites GROUP BY planetId, CAST(planetId AS VARCHAR)", 7, 1),
-        ("SELECT CAST(planetId AS TIMESTAMP) FROM $satellites GROUP BY planetId, CAST(planetId AS TIMESTAMP)", 7, 1),
-        ("SELECT CAST(planetId AS NUMERIC) FROM $satellites GROUP BY planetId, CAST(planetId AS NUMERIC)", 7, 1),
+        ("SELECT CAST(planetId AS BOOLEAN) FROM $satellites", 177, 1),
+        ("SELECT CAST(planetId AS VARCHAR) FROM $satellites", 177, 1),
+        ("SELECT CAST(planetId AS TIMESTAMP) FROM $satellites", 177, 1),
+        ("SELECT CAST(planetId AS NUMERIC) FROM $satellites", 177, 1),
 
         ("SELECT GET(name, 1) FROM $satellites GROUP BY planetId, GET(name, 1)", 56, 1),
         ("SELECT COUNT(*), ROUND(magnitude) FROM $satellites group by ROUND(magnitude)", 27, 2),
@@ -138,13 +138,16 @@ STATEMENTS = [
 
         ("SELECT planetId, Count(*) FROM $satellites group by planetId having count(*) > 5", 4, 2),
         ("SELECT planetId, min(magnitude) FROM $satellites group by planetId having min(magnitude) > 5", 5, 2),
+        ("SELECT planetId, min(magnitude) FROM $satellites group by planetId having min(magnitude) > 5 limit 2 offset 1", 2, 2),
+        ("SELECT planetId, count(*) FROM $satellites group by planetId order by count(*) desc", 7, 2),
+        ("SELECT planetId, count(*) FROM $satellites group by planetId order by planetId desc", 7, 2),
+        ("SELECT planetId, count(*) FROM $satellites group by planetId order by planetId, count(*) desc", 7, 2),
+        ("SELECT planetId, count(*) FROM $satellites group by planetId order by count(*), planetId desc", 7, 2),
 
         ("SELECT * FROM $satellites order by name", 177, 8),
         ("SELECT * FROM $satellites order by name desc", 177, 8),
         ("SELECT name FROM $satellites order by name", 177, 1),
         ("SELECT * FROM $satellites order by magnitude, name", 177, 8),
-
-        ("SELECT planetId, min(magnitude) FROM $satellites group by planetId having min(magnitude) > 5 limit 2 offset 1", 2, 2),
 
         ("SELECT planetId as pid FROM $satellites", 177, 1),
         ("SELECT planetId as pid, round(magnitude) FROM $satellites", 177, 2),
