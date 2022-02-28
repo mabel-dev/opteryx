@@ -8,7 +8,11 @@
 
 ## GROUP BY
 
-Can GROUP BY functions in the SELECT clause but not by aliases
+**Limitations**
+
+Can `GROUP BY` functions in the `SELECT` clause but not by aliases.
+
+Can't `GROUP BY` the result of the `CAST` function, can can `GROUP BY` individual type cast functions like `NUMERIC`, `VARCHAR` and `BOOLEAN`.
 
 ## HAVING
 
@@ -17,3 +21,5 @@ Can GROUP BY functions in the SELECT clause but not by aliases
 ## LIMIT
 
 ## OFFSET
+
+## VALUES

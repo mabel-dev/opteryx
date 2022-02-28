@@ -70,11 +70,14 @@ OPERATOR_XLAT = {
     "NotILike": "not ilike",
     "InList": "in",
     "PGRegexMatch": "~",
-    "Plus": "+",
-    "Minus": "-",
+    #"Plus": "+",
+    #"Minus": "-",
+    # : "||"  # <- concatenate
 }
 
 def _extract_value(value):
+    if value is None:
+        return (None, None)
     if "SingleQuotedString" in value:
         return (value["SingleQuotedString"], TOKEN_TYPES.VARCHAR)
     if "Number" in value:
@@ -170,10 +173,24 @@ def _build_dnf_filters(filters):
         return (_build_dnf_filters(filters["Nested"]),)
 
 #def _extract_date_filters(ast):
-
+#
+#    def _inner():
+#        filters = _build_dnf_filters(ast[0]["Query"]["body"]["Select"]["selection"])
+#        for filter in [filters]:
+#            if filter[0] == "$DATE":
+#                yield filter
+#
+#    return list(_inner())
 
 def _extract_relations(ast):
     """ """
+
+    def _safe_get(l, i):
+        try:
+            return l[i]
+        except:
+            return None
+
     try:
         relations = ast[0]["Query"]["body"]["Select"]["from"][0]
     except IndexError:
@@ -198,7 +215,7 @@ def _extract_relations(ast):
             body = bytearray()
             headers = [h["value"] for h in relations["relation"]["Derived"]["alias"]["columns"]]
             for value_set in subquery["Values"]:
-                values = [_extract_value(v["Value"])[0] for v in value_set]
+                values = [_safe_get(_extract_value(v["Value"]), 0) for v in value_set]
                 body.extend(orjson.dumps(dict(zip(headers, values)), default=_serializer))
             return (alias, body) # <- a literal table
 
@@ -236,37 +253,26 @@ def _extract_projections(ast):
             if "BinaryOp" in function:
                 raise NotImplementedError("Operations in the SELECT clause are not supported")
                 return {"operation": _build_dnf_filters(function)}
+            if "Cast" in function:
+                # CAST(<var> AS <type>) - convert to the form <type>(var), e.g. BOOLEAN(on)
+                args = [_build_dnf_filters(function["Cast"]["expr"])]
+                data_type = function["Cast"]["data_type"]
+                if data_type == "Timestamp":
+                    data_type = "TIMESTAMP"
+                elif "Varchar" in data_type:
+                    data_type = "VARCHAR"
+                elif "Decimal" in data_type:
+                    data_type = "NUMERIC"
+                elif "Boolean" in data_type:
+                    data_type = "BOOLEAN"
+                else:
+                    raise SqlError("Unsupported CAST function")
+
+                return {"function": data_type, "args": args, "alias": alias }
 
     projection = [_inner(attribute) for attribute in projection]
     # print(projection)
     return projection
-
-
-def _extract_columns(ast):
-    """
-    This is the result of projections
-    """
-    projection = ast[0]["Query"]["body"]["Select"]["projection"]
-    # print(projection)
-    if projection == ["Wildcard"]:
-        return "*"
-
-    def _inner(attribute):
-        function = None
-        if "UnnamedExpr" in attribute:
-            function = attribute["UnnamedExpr"]
-        if "ExprWithAlias" in attribute:
-            return attribute["ExprWithAlias"]["alias"]["value"]
-
-        if function:
-            if "Identifier" in function:
-                return function["Identifier"]["value"]
-            if "Function" in function:
-                func = function["Function"]["name"][0]["value"].upper()
-                args = [_build_dnf_filters(a) for a in function["Function"]["args"]]
-                return f"{func.upper()}({','.join(args)}"
-
-    return [_inner(attribute) for attribute in projection]
 
 
 def _extract_selection(ast):
@@ -647,16 +653,46 @@ if __name__ == "__main__":
     SQL = "SELECT TIME()"
     SQL = "SELECT LOWER('NAME')"
     SQL = "SELECT HASH('NAME')"
-    #SQL = "SELECT id - 1, name, mass FROM $planets"
-    #SQL = "SELECT * FROM tests.data.partitioned WHERE $DATE IN ($$PREVIOUS_MONTH)"
-
     SQL = "SELECT * FROM (VALUES (1,2),(3,4),(340,455)) AS t(a,b)"
+    #SQL = "SELECT id - 1, name, mass FROM $planets"
+    SQL = "SELECT * FROM tests.data.partitioned WHERE $DATE IN ($$PREVIOUS_MONTH)"
+    SQL = """
+SELECT * FROM (VALUES 
+(7369, 'SMITH', 'CLERK', 7902, '02-MAR-1970', 8000, NULL, 20),
+(7499, 'ALLEN', 'SALESMAN', 7698, '20-MAR-1971', 1600, 3000, 30),
+(7521, 'WARD', 'SALESMAN', 7698, '07-FEB-1983', 1250, 5000, 30),
+(7566, 'JONES', 'MANAGER', 7839, '02-JUN-1961', 2975, 50000, 20),
+(7654, 'MARTIN', 'SALESMAN', 7698, '28-FEB-1971', 1250, 14000, 30),
+(7698, 'BLAKE', 'MANAGER', 7839, '01-JAN-1988', 2850, 12000, 30),
+(7782, 'CLARK', 'MANAGER', 7839, '09-APR-1971', 2450, 13000, 10),
+(7788, 'SCOTT', 'ANALYST', 7566, '09-DEC-1982', 3000, 1200, 20),
+(7839, 'KING', 'PRESIDENT', NULL, '17-JUL-1971', 5000, 1456, 10),
+(7844, 'TURNER', 'SALESMAN', 7698, '08-AUG-1971', 1500, 0, 30),
+(7876, 'ADAMS', 'CLERK', 7788, '12-MAR-1973', 1100, 0, 20),
+(7900, 'JAMES', 'CLERK', 7698, '03-NOV-1971', 950, 0, 30),
+(7902, 'FORD', 'ANALYST', 7566, '04-MAR-1961', 3000, 0, 20),
+(7934, 'MILLER', 'CLERK', 7782, '21-JAN-1972', 1300, 0, 10))
+AS employees (EMPNO, ENAME, JOB, MGR, HIREDATE, SAL, COMM, DEPTNO);
+    """
+    SQL = """
+    SELECT * FROM Employee
+  FOR DATE
+    BETWEEN '2014-01-01 00:00:00.0000000' AND '2015-01-01 00:00:00.0000000'
+      WHERE EmployeeID = 1000 ORDER BY ValidFrom;
+      """
+    SQL = """
+    SELECT * FROM Employee
+  FOR ALL;
+      """
+    SQL = "SELECT CAST(planetId AS varchar) FROM $satellites"
+
+
 
     ast = sqloxide.parse_sql(SQL, dialect="mysql")
     print(ast)
 
     print()
-    print(_extract_projections(ast))
+#    print(_extract_date_filters(ast))
 
     # _projection = _extract_projections(ast)
     # print(_projection)

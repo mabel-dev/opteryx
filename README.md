@@ -90,6 +90,10 @@ vulnerabilities.
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/mabel-dev/opteryx/blob/master/LICENSE)
 
 
+
+The foundational technologies in Opteryx are:
+
+- Apache Arrow memory model and compute kernels for efficient processing of data
 - **sqloxide** https://github.com/wseaton/sqloxide
 - cython
 - numpy

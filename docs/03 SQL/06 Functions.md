@@ -5,7 +5,7 @@
 Function        | Description                                       | Example
 --------------- | ------------------------------------------------- | ---------------------------
 `ABS(n)`        | The absolute value on n                           | `ABS(-8) -> 8`   
-`CEIL(n)`       | Round the number up                               | `CEIL(2.3) -> 3`            
+`CEIL(n)`       | Round the number up                               | `CEIL(2.3) -> 3`        
 `FLOOR(n)`      | Round the number down                             | `FLOOR(3.9) -> 3` 
 `NUMERIC(n)`    | Convert n to a floating point number              | `NUMERIC('2') -> 2.0`
 `ROUND(n)`      | Round to nearest whole number                     | `ROUND(0.2) -> 0`
@@ -21,7 +21,7 @@ Function        | Description                                       | Example
 `LENGTH(str)`   | Number of characters in string                    | `LENGTH('hello') -> 5`
 `LOWER(str)`    | Convert string to lower case                      | `LOWER('Hello') -> 'hello'`
 `RIGHT(str, n)` | Extract the right-most n characters               | `RIGHT('hello', 2) -> 'lo'`
-`STRING(any)`   | Alias for `VARCHAR()`                             | `STRING(22) -> '22'`
+`STRING(any)`   | Alias of `VARCHAR()`                              | `STRING(22) -> '22'`
 `TRIM(str)`     | Removes any spaces from either side of the string | `TRIM('  hello  ') -> 'hello'`
 `UPPER(str)`    | Convert string to upper case                      | `UPPER('Hello') -> 'HELLO'`
 `VARCHAR(any)`  | Convert value to a string                         | `VARCHAR(22) -> '22'`
@@ -49,13 +49,14 @@ Function        | Description                                       | Example
 
 ## Other Functions
 
-Function         | Description                                       | Example
----------------- | ------------------------------------------------- | ---------------------------
-`BOOLEAN(str)`   | Convert input to a Boolean                        | `BOOLEAN('true') -> True`
-`GET(struct, a)` | Gets the element called 'a' from a struct         | `GET(dict, 'key') -> 'value'`
-`GET(list, n)`   | Gets the nth element in a list                    | `GET(names, 2) -> 'Joe'`
-`GET(str, n)`    | Gets the nth element in a string                  | `GET('hello', 2) -> 'e'`
-`RANDOM()`       | Random number between 0.000 and 0.999             | `RANDOM() -> 0.234`
-`HASH(str)`      | Calculate the [CityHash](https://opensource.googleblog.com/2011/04/introducing-cityhash.html) (64 bit) of a value  | `HASH('hello') -> 'B48BE5A931380CE8'`
-`MD5(str)`       | Calculate the MD5 hash of a value                 | `MD5('hello') -> '5d41402abc4b2a76b9719d911017c592'`
-`VERSION()`      | Return the version of Opteryx                     | `VERSION() -> 0.1.0`
+Function            | Description                                       | Example
+------------------- | ------------------------------------------------- | ---------------------------
+`BOOLEAN(str)`      | Convert input to a Boolean                        | `BOOLEAN('true') -> True`
+`CAST(any AS type)` | Cast any to type, calls `type(any)`               | `CAST(state AS BOOLEAN) -> False`
+`GET(struct, a)`    | Gets the element called 'a' from a struct         | `GET(dict, 'key') -> 'value'`
+`GET(list, n)`      | Gets the nth element in a list                    | `GET(names, 2) -> 'Joe'`
+`GET(str, n)`       | Gets the nth element in a string                  | `GET('hello', 2) -> 'e'`
+`RANDOM()`          | Random number between 0.000 and 0.999             | `RANDOM() -> 0.234`
+`HASH(str)`         | Calculate the [CityHash](https://opensource.googleblog.com/2011/04/introducing-cityhash.html) (64 bit) of a value  | `HASH('hello') -> 'B48BE5A931380CE8'`
+`MD5(str)`          | Calculate the MD5 hash of a value                 | `MD5('hello') -> '5d41402abc4b2a76b9719d911017c592'`
+`VERSION()`         | Return the version of Opteryx                     | `VERSION() -> 0.1.0`

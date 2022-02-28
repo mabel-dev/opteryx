@@ -124,6 +124,11 @@ STATEMENTS = [
         ("SELECT VARCHAR(planetId) FROM $satellites GROUP BY planetId, VARCHAR(planetId)", 7, 1),
         ("SELECT TIMESTAMP(planetId) FROM $satellites GROUP BY planetId, TIMESTAMP(planetId)", 7, 1),
         ("SELECT NUMERIC(planetId) FROM $satellites GROUP BY planetId, NUMERIC(planetId)", 7, 1),
+        ("SELECT CAST(planetId AS BOOLEAN) FROM $satellites GROUP BY planetId, CAST(planetId AS BOOLEAN)", 7, 1),
+        ("SELECT CAST(planetId AS VARCHAR) FROM $satellites GROUP BY planetId, CAST(planetId AS VARCHAR)", 7, 1),
+        ("SELECT CAST(planetId AS TIMESTAMP) FROM $satellites GROUP BY planetId, CAST(planetId AS TIMESTAMP)", 7, 1),
+        ("SELECT CAST(planetId AS NUMERIC) FROM $satellites GROUP BY planetId, CAST(planetId AS NUMERIC)", 7, 1),
+
         ("SELECT GET(name, 1) FROM $satellites GROUP BY planetId, GET(name, 1)", 56, 1),
         ("SELECT COUNT(*), ROUND(magnitude) FROM $satellites group by ROUND(magnitude)", 27, 2),
         ("SELECT ROUND(magnitude) FROM $satellites group by ROUND(magnitude)", 27, 1),
@@ -170,7 +175,6 @@ STATEMENTS = [
 
         ("SELECT * FROM (VALUES ('High', 3),('Medium', 2),('Low', 1)) AS ratings(name, rating)", 3, 2),
         ("SELECT * FROM (VALUES ('High', 3),('Medium', 2),('Low', 1)) AS ratings(name, rating) WHERE rating = 3", 1, 2),
-
     ]
 # fmt:on
 

@@ -115,7 +115,7 @@ class AggregateNode(BasePlanNode):
             else:
                 self._project.append(attribute["identifier"])
 
-        self._project = list(self._project)
+        self._project = [p for p in self._project if p is not None]
 
     def __repr__(self):
         return str(self._aggregates)
