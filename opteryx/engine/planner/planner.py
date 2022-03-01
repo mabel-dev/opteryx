@@ -49,6 +49,7 @@ from opteryx.engine.attribute_types import TOKEN_TYPES
 from opteryx.storage.schemes import DefaultPartitionScheme
 from opteryx.storage.adapters import DiskStorage
 from opteryx.engine.functions import is_function
+from opteryx.engine.planner.temporal import extract_temporal_filters
 
 
 JSON_TYPES = {numpy.bool_: bool, numpy.int64: int, numpy.float64: float}
@@ -172,15 +173,6 @@ def _build_dnf_filters(filters):
     if "Nested" in filters:
         return (_build_dnf_filters(filters["Nested"]),)
 
-#def _extract_date_filters(ast):
-#
-#    def _inner():
-#        filters = _build_dnf_filters(ast[0]["Query"]["body"]["Select"]["selection"])
-#        for filter in [filters]:
-#            if filter[0] == "$DATE":
-#                yield filter
-#
-#    return list(_inner())
 
 def _extract_relations(ast):
     """ """
@@ -357,6 +349,9 @@ class QueryPlan(object):
         self._reader = reader
         self._partition_scheme = partition_scheme
 
+        # extract temporal filters, this isn't supported by sqloxide
+        self._start_date, self._end_date, sql = extract_temporal_filters(sql)
+
         # Parse the SQL into a AST
         try:
             self._ast = sqloxide.parse_sql(sql, dialect="mysql")
@@ -396,6 +391,8 @@ class QueryPlan(object):
                 dataset=_extract_relations(ast),
                 reader=self._reader,
                 partition_scheme=self._partition_scheme,
+                start_date=self._start_date,
+                end_date=self._end_date
             ),
         )
         last_node = "from"

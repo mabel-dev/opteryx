@@ -28,6 +28,7 @@ PARALLELIZE READING:
 - As one blob is read, the next is immediately cached for reading
 """
 import time
+import datetime
 from enum import Enum
 from typing import Iterable
 from opteryx.engine.planner.operations import BasePlanNode
@@ -64,6 +65,8 @@ class DatasetReaderNode(BasePlanNode):
         The Dataset Reader Node is responsible for reading the relevant blobs
         and returning a Table/Relation.
         """
+        TODAY = datetime.date.today()
+
         self._statistics = statistics
 
         if isinstance(config.get("dataset"), tuple):
@@ -73,6 +76,9 @@ class DatasetReaderNode(BasePlanNode):
         self._dataset = config.get("dataset", "").replace(".", "/") + "/"
         self._reader = config.get("reader", DiskStorage())
         self._partition_scheme = config.get("partition_scheme", MabelPartitionScheme())
+
+        self._start_date = config.get("start_date", TODAY)
+        self._end_date = config.get("end_date", TODAY)
 
         # pushed down projection
         self._projection = config.get("projection")
@@ -120,6 +126,8 @@ class DatasetReaderNode(BasePlanNode):
         partitions = self._reader.get_partitions(
             dataset=self._dataset,
             partitioning=self._partition_scheme.partition_format(),
+            start_date=self._start_date,
+            end_date=self._end_date
         )
 
         self._statistics.partitions_found = len(partitions)

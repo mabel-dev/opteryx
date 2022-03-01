@@ -6,6 +6,20 @@
 
 ## WHERE
 
+## FOR
+
+`FOR DATES BETWEEN A AND B`
+
+`FOR DATES AS OF timestamp`
+
+`FOR TODAY`
+
+`FOR YESTERDAY`
+
+**limitations**
+
+`FOR` clauses cannot contain comments or reference column values or aliases
+
 ## GROUP BY
 
 **Limitations**
