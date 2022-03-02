@@ -20,16 +20,17 @@ This doesn't attempt to do optimization, this just decomposes the query.
 
 The effective order of operations must be:
     01. FROM
-    02. JOIN
-    03. < expressions and aliases
-    04. WHERE
-    05. GROUP BY
-    06. HAVING
-    07. SELECT
-    08. DISTINCT
-    09. ORDER BT
-    10. OFFSET
-    11. LIMIT
+    02. < temporal filters
+    03. JOIN
+    04. < expressions and aliases
+    05. WHERE
+    06. GROUP BY
+    07. HAVING
+    08. SELECT
+    09. DISTINCT
+    10. ORDER BT
+    11. OFFSET
+    12. LIMIT
 
 However, this doesn't preclude the order being different to achieve optimizations, as
 long as the functional outcode would be the same. Expressions and aliases technically
@@ -46,13 +47,14 @@ from opteryx.engine.planner.operations import *
 from opteryx.engine.query_statistics import QueryStatistics
 from opteryx.exceptions import SqlError
 from opteryx.engine.attribute_types import TOKEN_TYPES
-from opteryx.storage.schemes import DefaultPartitionScheme
+from opteryx.storage.schemes import DefaultPartitionScheme, MabelPartitionScheme
 from opteryx.storage.adapters import DiskStorage
 from opteryx.engine.functions import is_function
 from opteryx.engine.planner.temporal import extract_temporal_filters
 
 
 JSON_TYPES = {numpy.bool_: bool, numpy.int64: int, numpy.float64: float}
+
 
 def _serializer(obj):
     return JSON_TYPES[type(obj)](obj)
@@ -71,10 +73,11 @@ OPERATOR_XLAT = {
     "NotILike": "not ilike",
     "InList": "in",
     "PGRegexMatch": "~",
-    #"Plus": "+",
-    #"Minus": "-",
+    # "Plus": "+",
+    # "Minus": "-",
     # : "||"  # <- concatenate
 }
+
 
 def _extract_value(value):
     if value is None:
@@ -85,6 +88,8 @@ def _extract_value(value):
         return (numpy.float64(value["Number"][0]), TOKEN_TYPES.NUMERIC)
     if "Boolean" in value:
         return (value["Boolean"], TOKEN_TYPES.BOOLEAN)
+    if "Tuple" in value:
+        return [_extract_value(t["Value"])[0] for t in value["Tuple"]]
 
 
 def _build_dnf_filters(filters):
@@ -124,9 +129,7 @@ def _build_dnf_filters(filters):
             left = _build_dnf_filters(filters["UnaryOp"]["expr"])
             return (left, "<>", True)
         if filters["UnaryOp"]["op"] == "Minus":
-            number = 0 - numpy.float64(
-                filters["UnaryOp"]["expr"]["Value"]["Number"][0]
-            )
+            number = 0 - numpy.float64(filters["UnaryOp"]["expr"]["Value"]["Number"][0])
             return (number, TOKEN_TYPES.NUMERIC)
     if "Between" in filters:
         left = _build_dnf_filters(filters["Between"]["expr"])
@@ -188,6 +191,18 @@ def _extract_relations(ast):
     except IndexError:
         return "$no_table"
     if "Table" in relations["relation"]:
+        if relations["relation"]["Table"]["name"][0]["value"].upper() == "UNNEST":
+            # This is toy functionality, the value will be in CROSS JOINing on UNNESTed columns
+            import orjson
+
+            alias = relations["relation"]["Table"]["alias"]["name"]["value"]
+            values = _extract_value(
+                relations["relation"]["Table"]["args"][0]["Unnamed"]["Expr"]
+            )
+            body = bytearray()
+            for v in values:
+                body.extend(orjson.dumps({alias: v}, default=_serializer))
+            return (alias, body)  # <- a literal table
         dataset = ".".join(
             [part["value"] for part in relations["relation"]["Table"]["name"]]
         )
@@ -204,12 +219,17 @@ def _extract_relations(ast):
             # {'Select': {'distinct': False, 'top': None, 'projection': ['Wildcard'], 'from': [{'relation': {'Table': {'name': [{'value': 't', 'quote_style': None}], 'alias': None, 'args': [], 'with_hints': []}}, 'joins': []}], 'lateral_views': [], 'selection': None, 'group_by': [], 'cluster_by': [], 'distribute_by': [], 'sort_by': [], 'having': None}}
         if "Values" in subquery:
             import orjson
+
             body = bytearray()
-            headers = [h["value"] for h in relations["relation"]["Derived"]["alias"]["columns"]]
+            headers = [
+                h["value"] for h in relations["relation"]["Derived"]["alias"]["columns"]
+            ]
             for value_set in subquery["Values"]:
                 values = [_safe_get(_extract_value(v["Value"]), 0) for v in value_set]
-                body.extend(orjson.dumps(dict(zip(headers, values)), default=_serializer))
-            return (alias, body) # <- a literal table
+                body.extend(
+                    orjson.dumps(dict(zip(headers, values)), default=_serializer)
+                )
+            return (alias, body)  # <- a literal table
 
 
 def _extract_projections(ast):
@@ -243,7 +263,9 @@ def _extract_projections(ast):
                 else:
                     return {"aggregate": func.upper(), "args": args, "alias": alias}
             if "BinaryOp" in function:
-                raise NotImplementedError("Operations in the SELECT clause are not supported")
+                raise NotImplementedError(
+                    "Operations in the SELECT clause are not supported"
+                )
                 return {"operation": _build_dnf_filters(function)}
             if "Cast" in function:
                 # CAST(<var> AS <type>) - convert to the form <type>(var), e.g. BOOLEAN(on)
@@ -260,7 +282,7 @@ def _extract_projections(ast):
                 else:
                     raise SqlError("Unsupported CAST function")
 
-                return {"function": data_type, "args": args, "alias": alias }
+                return {"function": data_type, "args": args, "alias": alias}
 
     projection = [_inner(attribute) for attribute in projection]
     # print(projection)
@@ -392,7 +414,7 @@ class QueryPlan(object):
                 reader=self._reader,
                 partition_scheme=self._partition_scheme,
                 start_date=self._start_date,
-                end_date=self._end_date
+                end_date=self._end_date,
             ),
         )
         last_node = "from"
@@ -598,7 +620,8 @@ def test(SQL):
         SQL,
         statistics,
         reader=DiskStorage(),
-        partition_scheme=DefaultPartitionScheme(""),
+        #partition_scheme=DefaultPartitionScheme(""),
+        partition_scheme=MabelPartitionScheme()
     )
     statistics.time_planning = time.time_ns() - statistics.start_time
     # print(q)
@@ -659,7 +682,7 @@ if __name__ == "__main__":
     SQL = "SELECT LOWER('NAME')"
     SQL = "SELECT HASH('NAME')"
     SQL = "SELECT * FROM (VALUES (1,2),(3,4),(340,455)) AS t(a,b)"
-    #SQL = "SELECT id - 1, name, mass FROM $planets"
+    # SQL = "SELECT id - 1, name, mass FROM $planets"
     SQL = "SELECT * FROM tests.data.partitioned WHERE $DATE IN ($$PREVIOUS_MONTH)"
     SQL = """
 SELECT * FROM (VALUES 
@@ -680,24 +703,14 @@ SELECT * FROM (VALUES
 AS employees (EMPNO, ENAME, JOB, MGR, HIREDATE, SAL, COMM, DEPTNO);
     """
     SQL = """
-    SELECT * FROM Employee
-  FOR DATE
-    BETWEEN '2014-01-01 00:00:00.0000000' AND '2015-01-01 00:00:00.0000000'
-      WHERE EmployeeID = 1000 ORDER BY ValidFrom;
+    SELECT * FROM tests.data.dated
+  FOR DATES BETWEEN '2022-02-03' AND '2022-02-03';
       """
-    SQL = """
-    SELECT * FROM Employee
-  FOR ALL;
-      """
-    SQL = "SELECT CAST(planetId AS varchar) FROM $satellites"
-    SQL = "SELECT planetId, count(*) FROM $satellites group by planetId order by count(*) desc"
-
-
-    ast = sqloxide.parse_sql(SQL, dialect="mysql")
-    print(ast)
+    #    ast = sqloxide.parse_sql(SQL, dialect="mysql")
+    #    print(ast)
 
     print()
-#    print(_extract_date_filters(ast))
+    #    print(_extract_date_filters(ast))
 
     # _projection = _extract_projections(ast)
     # print(_projection)

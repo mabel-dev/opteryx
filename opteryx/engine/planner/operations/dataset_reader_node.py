@@ -91,12 +91,10 @@ class DatasetReaderNode(BasePlanNode):
     def execute(self, data_pages: Iterable) -> Iterable:
 
         # literal datasets
-        # e.g. 
-        # SELECT *
-        #   FROM (VALUES (1,2),(3,4),(340,455)) AS t(a,b)
         if isinstance(self._dataset, tuple):
             import io
             import pyarrow.json
+
             yield pyarrow.json.read_json(io.BytesIO(self._dataset[1]))
             return
 
@@ -127,7 +125,7 @@ class DatasetReaderNode(BasePlanNode):
             dataset=self._dataset,
             partitioning=self._partition_scheme.partition_format(),
             start_date=self._start_date,
-            end_date=self._end_date
+            end_date=self._end_date,
         )
 
         self._statistics.partitions_found = len(partitions)

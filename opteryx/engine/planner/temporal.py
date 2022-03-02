@@ -8,7 +8,7 @@ This supports the following syntaxes
 
 - FOR TODAY
 - FOR YESTERDAY
-- FOR DATES AS OF <timestamp>
+- FOR DATE <timestamp>
 - FOR DATES BETWEEN <timestamp> AND <timestamp>
 
 """
@@ -25,7 +25,7 @@ SQL_PARTS = [
     r"HAVING",
     r"ORDER BY",
     r"LIMIT",
-    r"OFFSET"
+    r"OFFSET",
 ]
 
 
@@ -36,18 +36,20 @@ def clean_statement(string):
     _RE_COMBINE_WHITESPACE = re.compile(r"\s+")
     return _RE_COMBINE_WHITESPACE.sub(" ", string).strip().upper()
 
+
 def sql_parts(string):
     """
     Split a SQL statement into clauses
     """
     reg = re.compile(
-        r"(\(|\)|,|"
+        r"(\(|\)|,|;|"
         + r"|".join([r"\b" + i.replace(r" ", r"\s") + r"\b" for i in SQL_PARTS])
         + r")",
         re.IGNORECASE,
     )
     parts = reg.split(string)
     return [part.strip() for part in parts if part.strip() != ""]
+
 
 def remove_comments(string):
     """
@@ -78,8 +80,8 @@ def extract_temporal_filters(sql):
 
     TODAY = datetime.date.today()
     clearing_regex = None
-    start_date = None
-    end_date = None
+    start_date = TODAY
+    end_date = TODAY
 
     try:
         pos = parts.index("FOR")
@@ -87,28 +89,34 @@ def extract_temporal_filters(sql):
         if for_dates == "TODAY":
             start_date = TODAY
             end_date = TODAY
-            clearing_regex = r"(\bFOR\sTODAY\b)"
+            clearing_regex = r"(\bFOR[\n\r\s]+TODAY\b)"
         elif for_dates == "YESTERDAY":
             start_date = TODAY - datetime.timedelta(days=1)
             end_date = TODAY - datetime.timedelta(days=1)
-            clearing_regex = r"(\bFOR\sYESTERDAY\b)"
+            clearing_regex = r"(\bFOR[\n\r\s]+YESTERDAY\b)"
         # previous_month
         # previous_cycle
         # this_cycle
-        elif for_dates.startswith("DATES AS OF"):
-            date_string = for_dates[12:]
-            start_date = dates.parse_iso(date_string[1:-1])
-            end_date = start_date
-            clearing_regex = r"(FOR\sDATES\sAS\sOF\s" + date_string + r")"
         elif for_dates.startswith("DATES BETWEEN "):
-            between = for_dates.split(' ')
-            start_date = dates.parse_iso(between[2][1:-1])
-            end_date = dates.parse_iso(between[4][1:-1])
-            clearing_regex = r"(FOR\sDATES\sBETWEEN\s" + between[2] + r"\sAND\s" + between[4] + r")"
+            parts = for_dates.split(" ")
+            start_date = dates.parse_iso(parts[2][1:-1])
+            end_date = dates.parse_iso(parts[4][1:-1])
+            clearing_regex = (
+                r"(FOR[\n\r\s]+DATES[\n\r\s]+BETWEEN[\n\r\s]+"
+                + parts[2]
+                + r"[\n\r\s]+AND[\n\r\s]+"
+                + parts[4]
+                + r")"
+            )
+        elif for_dates.startswith("DATE "):
+            parts = for_dates.split(" ")
+            start_date = dates.parse_iso(parts[1][1:-1])
+            end_date = start_date
+            clearing_regex = r"(FOR\sDATE\s" + parts[1] + r")"
 
         if clearing_regex:
             regex = re.compile(clearing_regex, re.MULTILINE | re.DOTALL)
-            sql = regex.sub("-- FOR STATEMENT\n", sql)
+            sql = regex.sub("-- FOR STATEMENT REMOVED\n", sql)
 
         # swap the order if we need to
         if start_date > end_date:
@@ -116,4 +124,5 @@ def extract_temporal_filters(sql):
     except:
         pass
 
+    print(start_date, end_date, sql)
     return start_date, end_date, sql

@@ -59,4 +59,5 @@ Function            | Description                                       | Exampl
 `RANDOM()`          | Random number between 0.000 and 0.999             | `RANDOM() -> 0.234`
 `HASH(str)`         | Calculate the [CityHash](https://opensource.googleblog.com/2011/04/introducing-cityhash.html) (64 bit) of a value  | `HASH('hello') -> 'B48BE5A931380CE8'`
 `MD5(str)`          | Calculate the MD5 hash of a value                 | `MD5('hello') -> '5d41402abc4b2a76b9719d911017c592'`
+`UNNEST(list)`      | Create a virtual table with a row for each element in the LIST | `UNNEST((TRUE,FALSE)) AS Booleans` 
 `VERSION()`         | Return the version of Opteryx                     | `VERSION() -> 0.1.0`

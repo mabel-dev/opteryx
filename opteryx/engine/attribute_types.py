@@ -27,7 +27,17 @@ def coerce_types(value):
     import numpy
 
     t = type(value)
-    if t in (int, float, tuple, bool, str, datetime.datetime, dict, numpy.int64, numpy.float64):
+    if t in (
+        int,
+        float,
+        tuple,
+        bool,
+        str,
+        datetime.datetime,
+        dict,
+        numpy.int64,
+        numpy.float64,
+    ):
         return value
     if t in (list, set):
         return tuple(value)
