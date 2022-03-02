@@ -13,7 +13,7 @@ This supports the following syntaxes
 
 """
 import re
-from mabel.utils import dates
+from opteryx.utils import dates
 import datetime
 
 SQL_PARTS = [
@@ -124,5 +124,4 @@ def extract_temporal_filters(sql):
     except:
         pass
 
-    print(start_date, end_date, sql)
     return start_date, end_date, sql

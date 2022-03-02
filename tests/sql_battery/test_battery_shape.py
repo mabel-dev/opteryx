@@ -181,6 +181,15 @@ STATEMENTS = [
 
         ("SELECT * FROM UNNEST(('foo', 'bar', 'baz', 'qux', 'corge', 'garply', 'waldo', 'fred')) AS element", 8, 1),
         ("SELECT * FROM UNNEST(('foo', 'bar', 'baz', 'qux', 'corge', 'garply', 'waldo', 'fred')) AS element WHERE element LIKE '%e%'", 2, 1),
+
+        ("SELECT * FROM tests.data.dated FOR DATE '2020-02-03'", 25, 8),
+        ("SELECT * FROM tests.data.dated FOR DATE '2020-02-04'", 25, 8),
+        ("SELECT * FROM tests.data.dated FOR DATE '2020-02-05'", 0, 0),
+        ("SELECT * FROM tests.data.dated FOR DATES BETWEEN '2020-02-01' AND '2020-02-28'", 50, 8),
+        ("SELECT * FROM tests.data.dated FOR TODAY", 0, 0),
+        ("SELECT * FROM tests.data.dated FOR YESTERDAY", 0, 0),
+
+
     ]
 # fmt:on
 
@@ -190,12 +199,17 @@ def test_sql_battery(statement, rows, columns):
     """
     Test an assortment of statements
     """
-    conn = opteryx.connect(reader=DiskStorage(), partition_scheme=None)
+    conn = opteryx.connect(reader=DiskStorage(), partition_scheme="mabel")
     cursor = conn.cursor()
     cursor.execute(statement)
 
-    result = pyarrow.concat_tables(cursor._results)
-    actual_rows, actual_columns = result.shape
+    cursor._results = list(cursor._results)
+    if cursor._results:
+        result = pyarrow.concat_tables(cursor._results)
+        actual_rows, actual_columns = result.shape
+    else:
+        result = None
+        actual_rows, actual_columns = 0, 0
 
     assert (
         rows == actual_rows
