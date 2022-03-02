@@ -189,7 +189,13 @@ STATEMENTS = [
         ("SELECT * FROM tests.data.dated FOR TODAY", 0, 0),
         ("SELECT * FROM tests.data.dated FOR YESTERDAY", 0, 0),
 
-
+        # These are queries which have been found to return the wrong result or not run
+        # correctly which suggests their implementation is somewhat complex and
+        # therefore brittle.
+        # We have added these to the battery to ensure these queries don't break when
+        # we make updates to the engine.
+        ("SELECT * FROM $satellites FOR YESTERDAY ORDER BY planetId OFFSET 10", 167, 8),
+        ("SELECT * FROM $astronauts FOR TODAY WHERE DATE(Birth_Date) < '1930-01-01'", 4, 30)
     ]
 # fmt:on
 
@@ -225,3 +231,4 @@ if __name__ == "__main__":
     for statement, rows, cols in STATEMENTS:
         print(statement)
         test_sql_battery(statement, rows, cols)
+    print("okay")
