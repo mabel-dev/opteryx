@@ -1,6 +1,6 @@
-# Temporality
+# SQL Temporality
 
-Temporal queries allow you to view data from a different time by using a `FOR` clause in the SQL statement. `FOR` clauses state the date, or date range, a query should retrieve results for.
+Partition schemes that supports temporal queries allow you to view data from a different time by using a `FOR` clause in the SQL statement. `FOR` clauses state the date, or date range, a query should retrieve results for.
 
 If not temporal clause is provided, `FOR TODAY` is assumed.
 
@@ -17,6 +17,6 @@ Clause             | Description                           | Example
 
 ## Limitations
 
-`FOR` clauses cannot contain comments or reference column values or aliases
-
-Dates can not include times and must be in the format 'YYYY-MM-DD'
+- `FOR` clauses cannot contain comments or reference column values or aliases
+- Dates can not include times and must be in the format 'YYYY-MM-DD'
+- The default partition scheme does not support Temporal queries
