@@ -32,6 +32,7 @@ Functions for examining and manipulating date values.
 
 Function        | Description                                       | Example
 --------------- | ------------------------------------------------- | ---------------------------
+`DATE(date)`    | Extract the date part                             | `DAY(2022-02-06 11:37) -> '2022-02-06 00:00'`
 `DAY(date)`     | Extract day number                                | `DAY(2022-02-06) -> 6`
 `HOUR(time)`    | Extract hour from timestamp                       | `HOUR(5:32:43) -> 5`
 `MINUTE(time)`  | Extract minute from timestamp                     | `MINUTE(5:32:43) -> 32`

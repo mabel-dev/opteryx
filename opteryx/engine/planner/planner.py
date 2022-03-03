@@ -43,6 +43,7 @@ sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
 
 import numpy
 
+from opteryx.utils import dates
 from opteryx.engine.planner.operations import *
 from opteryx.engine.query_statistics import QueryStatistics
 from opteryx.exceptions import SqlError
@@ -83,6 +84,11 @@ def _extract_value(value):
     if value is None:
         return (None, None)
     if "SingleQuotedString" in value:
+        str_value = value["SingleQuotedString"]
+        dte_value = dates.parse_iso(str_value)
+        if dte_value:
+            return (dte_value, TOKEN_TYPES.TIMESTAMP)
+        return (str_value, TOKEN_TYPES.VARCHAR)
         return (value["SingleQuotedString"], TOKEN_TYPES.VARCHAR)
     if "Number" in value:
         return (numpy.float64(value["Number"][0]), TOKEN_TYPES.NUMERIC)

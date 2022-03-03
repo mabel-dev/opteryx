@@ -195,7 +195,7 @@ STATEMENTS = [
         # We have added these to the battery to ensure these queries don't break when
         # we make updates to the engine.
         ("SELECT * FROM $satellites FOR YESTERDAY ORDER BY planetId OFFSET 10", 167, 8),
-        ("SELECT * FROM $astronauts FOR TODAY WHERE DATE(Birth_Date) < '1930-01-01'", 4, 30)
+        ("SELECT DATE(Birth_Date) FROM $astronauts FOR TODAY WHERE DATE(Birth_Date) < '1930-01-01'", 14, 1)
     ]
 # fmt:on
 

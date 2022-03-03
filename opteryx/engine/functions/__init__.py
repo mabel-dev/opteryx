@@ -162,6 +162,7 @@ FUNCTIONS = {
     "TODAY": _vectorize_no_parameters(datetime.date.today),
     "TIME": _vectorize_no_parameters(get_time),
     "YESTERDAY": _vectorize_no_parameters(get_yesterday),
+    "DATE": _vectorize_single_parameter(get_date),
     "YEAR": compute.year,
     "MONTH": compute.month,
     "DAY": compute.day,
@@ -176,7 +177,6 @@ FUNCTIONS = {
     # DATES & TIMES
     "MONTH_NAME": not_implemented,  # the name of the month
     "DAY_NAME": not_implemented,  # the name of the day
-
     "DAY_OF_YEAR": not_implemented,  # get the day of the year
     "DAY_OF_WEEK": not_implemented,  # get the day of the week (Monday = 1)
     "DATE_ADD": not_implemented,  # date, number, part
@@ -196,10 +196,6 @@ FUNCTIONS = {
     "UUID": not_implemented,  # cast value as UUID
 }
 # fmt:on
-
-PLACEHOLDERS = {
-    "$$PREVIOUS_MONTH": get_previous_month,
-}
 
 
 def is_function(name):

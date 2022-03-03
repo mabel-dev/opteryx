@@ -12,6 +12,8 @@
 
 
 import datetime
+
+import numpy
 from opteryx.utils.dates import parse_iso
 
 
@@ -37,18 +39,28 @@ def get_previous_month():
     )
 
 
-### not used yet
-
-
 def get_date(input):
     """
     Convert input to a datetime object and extract the Date part
     """
+    # if it's a string, parse it (to a datetime)
     if isinstance(input, str):
         input = parse_iso(input)
-    if isinstance(input, (datetime.date, datetime.datetime)):
-        return input.date()
+    # if it's a numpy datetime, convert it to a date
+    if isinstance(input, (numpy.datetime64)):
+        input = input.astype('M8[D]').astype('O')
+    # if it's a datetime, convert it to a date
+    if isinstance(input, datetime.datetime):
+        input = input.date()
+    # set it to midnight that day to make it a datetime
+    if isinstance(input, datetime.date):
+        return datetime.datetime.combine(input, datetime.datetime.min.time())
     return None
+
+### not used yet
+
+
+
 
 
 def add_days(start_date, day_count):
