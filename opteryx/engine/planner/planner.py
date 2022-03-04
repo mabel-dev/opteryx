@@ -45,17 +45,13 @@ import numpy
 
 from opteryx.utils import dates
 from opteryx.engine.planner.operations import *
-from opteryx.engine.query_statistics import QueryStatistics
 from opteryx.exceptions import SqlError
 from opteryx.engine.attribute_types import TOKEN_TYPES
-from opteryx.storage.schemes import DefaultPartitionScheme, MabelPartitionScheme
-from opteryx.storage.adapters import DiskStorage
 from opteryx.engine.functions import is_function
 from opteryx.engine.planner.temporal import extract_temporal_filters
 
 
 JSON_TYPES = {numpy.bool_: bool, numpy.int64: int, numpy.float64: float}
-
 
 def _serializer(obj):
     return JSON_TYPES[type(obj)](obj)
@@ -84,13 +80,14 @@ def _extract_value(value):
     if value is None:
         return (None, None)
     if "SingleQuotedString" in value:
+        # quoted strings are either VARCHAR or TIMESTAMP
         str_value = value["SingleQuotedString"]
         dte_value = dates.parse_iso(str_value)
         if dte_value:
             return (dte_value, TOKEN_TYPES.TIMESTAMP)
         return (str_value, TOKEN_TYPES.VARCHAR)
-        return (value["SingleQuotedString"], TOKEN_TYPES.VARCHAR)
     if "Number" in value:
+        # we have one internal numeric type
         return (numpy.float64(value["Number"][0]), TOKEN_TYPES.NUMERIC)
     if "Boolean" in value:
         return (value["Boolean"], TOKEN_TYPES.BOOLEAN)
@@ -105,18 +102,6 @@ def _build_dnf_filters(filters):
         return None
 
     if "Identifier" in filters:  # we're an identifier
-        if filters["Identifier"]["value"][:2] == "$$":
-            try:
-                from opteryx.engine.functions import PLACEHOLDERS
-
-                return (
-                    PLACEHOLDERS[filters["Identifier"]["value"].upper()](),
-                    TOKEN_TYPES.LIST,
-                )
-            except KeyError:
-                raise SqlError(
-                    f"Unknown placeholder `{filters['Identifier']['value']}`."
-                )
         return (filters["Identifier"]["value"], TOKEN_TYPES.IDENTIFIER)
     if "Value" in filters:  # we're a literal
         return _extract_value(filters["Value"])
@@ -193,49 +178,55 @@ def _extract_relations(ast):
             return None
 
     try:
-        relations = ast[0]["Query"]["body"]["Select"]["from"][0]
+        relations = ast[0]["Query"]["body"]["Select"]["from"]
     except IndexError:
         return "$no_table"
-    if "Table" in relations["relation"]:
-        if relations["relation"]["Table"]["name"][0]["value"].upper() == "UNNEST":
-            # This is toy functionality, the value will be in CROSS JOINing on UNNESTed columns
-            import orjson
 
-            alias = relations["relation"]["Table"]["alias"]["name"]["value"]
-            values = _extract_value(
-                relations["relation"]["Table"]["args"][0]["Unnamed"]["Expr"]
-            )
-            body = bytearray()
-            for v in values:
-                body.extend(orjson.dumps({alias: v}, default=_serializer))
-            return (alias, body)  # <- a literal table
-        dataset = ".".join(
-            [part["value"] for part in relations["relation"]["Table"]["name"]]
-        )
-        return dataset
+    for relation in relations:
+        if "Table" in relation["relation"]:
+            if relation["relation"]["Table"]["name"][0]["value"].upper() == "UNNEST":
+                # This is toy functionality, the value will be in CROSS JOINing on UNNESTed columns
+                import orjson
 
-    if "Derived" in relations["relation"]:
-        subquery = relations["relation"]["Derived"]["subquery"]["body"]
-        try:
-            alias = relations["relation"]["Derived"]["alias"]["name"]["value"]
-        except KeyError:
-            alias = None
-        if "Select" in subquery:
-            raise NotImplementedError("SUBQUERIES in FROM statements not supported")
-            # {'Select': {'distinct': False, 'top': None, 'projection': ['Wildcard'], 'from': [{'relation': {'Table': {'name': [{'value': 't', 'quote_style': None}], 'alias': None, 'args': [], 'with_hints': []}}, 'joins': []}], 'lateral_views': [], 'selection': None, 'group_by': [], 'cluster_by': [], 'distribute_by': [], 'sort_by': [], 'having': None}}
-        if "Values" in subquery:
-            import orjson
-
-            body = bytearray()
-            headers = [
-                h["value"] for h in relations["relation"]["Derived"]["alias"]["columns"]
-            ]
-            for value_set in subquery["Values"]:
-                values = [_safe_get(_extract_value(v["Value"]), 0) for v in value_set]
-                body.extend(
-                    orjson.dumps(dict(zip(headers, values)), default=_serializer)
+                alias = relation["relation"]["Table"]["alias"]["name"]["value"]
+                values = _extract_value(
+                    relation["relation"]["Table"]["args"][0]["Unnamed"]["Expr"]
                 )
-            return (alias, body)  # <- a literal table
+                body = bytearray()
+                for v in values:
+                    body.extend(orjson.dumps({alias: v}, default=_serializer))
+                yield (alias, body)  # <- a literal table
+            else:
+                alias = None
+                if relation["relation"]["Table"]["alias"] is not None:
+                    alias = relation["relation"]["Table"]["alias"]["name"]["value"]
+                dataset = ".".join(
+                    [part["value"] for part in relation["relation"]["Table"]["name"]]
+                )
+                yield (alias, dataset)
+
+        if "Derived" in relation["relation"]:
+            subquery = relation["relation"]["Derived"]["subquery"]["body"]
+            try:
+                alias = relation["relation"]["Derived"]["alias"]["name"]["value"]
+            except KeyError:
+                alias = None
+            if "Select" in subquery:
+                raise NotImplementedError("SUBQUERIES in FROM statements not supported")
+                # {'Select': {'distinct': False, 'top': None, 'projection': ['Wildcard'], 'from': [{'relation': {'Table': {'name': [{'value': 't', 'quote_style': None}], 'alias': None, 'args': [], 'with_hints': []}}, 'joins': []}], 'lateral_views': [], 'selection': None, 'group_by': [], 'cluster_by': [], 'distribute_by': [], 'sort_by': [], 'having': None}}
+            if "Values" in subquery:
+                import orjson
+
+                body = bytearray()
+                headers = [
+                    h["value"] for h in relation["relation"]["Derived"]["alias"]["columns"]
+                ]
+                for value_set in subquery["Values"]:
+                    values = [_safe_get(_extract_value(v["Value"]), 0) for v in value_set]
+                    body.extend(
+                        orjson.dumps(dict(zip(headers, values)), default=_serializer)
+                    )
+                yield (alias, body)  # <- a literal table
 
 
 def _extract_projections(ast):
@@ -412,18 +403,29 @@ class QueryPlan(object):
         This is phase one of the rewrite, to essentially mimick the existing
         functionality.
         """
-        self.add_operator(
-            "from",
-            DatasetReaderNode(
-                statistics,
-                dataset=_extract_relations(ast),
-                reader=self._reader,
-                partition_scheme=self._partition_scheme,
-                start_date=self._start_date,
-                end_date=self._end_date,
-            ),
-        )
-        last_node = "from"
+        _relations = [r for r in _extract_relations(ast)]
+        if len(_relations) == 0:
+            _relations = [(None, "$no_table")]
+
+        if len(_relations) == 1:
+            self.add_operator(
+                "from",
+                DatasetReaderNode(
+                    statistics,
+                    dataset=_relations[0],
+                    reader=self._reader,
+                    partition_scheme=self._partition_scheme,
+                    start_date=self._start_date,
+                    end_date=self._end_date,
+                ),
+            )
+            last_node = "from"
+
+        if len(_relations) == 2:
+            pass
+
+        if len(_relations) > 2:
+            raise SqlError("Queries are currently limited to two tables.")
 
         _projection = _extract_projections(ast)
         if any(["function" in a for a in _projection]):
@@ -611,133 +613,3 @@ class QueryPlan(object):
                 extension = branch if pointer == tee else space
                 # i.e. space because last, └── , above so no more |
                 yield from self._tree(str(child_node), prefix=prefix + extension)
-
-
-def test(SQL):
-
-    from mabel.utils import timer
-
-    import time
-    from opteryx.third_party.pyarrow_ops import head
-
-    statistics = QueryStatistics()
-    statistics.start_time = time.time_ns()
-    q = QueryPlan(
-        SQL,
-        statistics,
-        reader=DiskStorage(),
-        #partition_scheme=DefaultPartitionScheme(""),
-        partition_scheme=MabelPartitionScheme()
-    )
-    statistics.time_planning = time.time_ns() - statistics.start_time
-    # print(q)
-
-    from opteryx.utils.display import ascii_table
-    from opteryx.utils.pyarrow import fetchmany, fetchall
-
-    with timer.Timer():
-        # do this to go over the records
-        r = q.execute()
-        print(ascii_table(fetchmany(r, size=10), limit=10))
-
-        [a for a in fetchall(r)]
-
-        statistics.end_time = time.time_ns()
-        print(statistics.as_dict())
-        print((time.time_ns() - statistics.start_time) / 1e9)
-
-
-if __name__ == "__main__":
-
-    import sqloxide
-
-    # SQL = "SELECT count(*) from `tests.data.zoned` where followers < 10 group by followers"
-    # SQL = "SELECT username, count(*) from `tests.data.tweets` group by username"
-    SQL = "SELECT COUNT(user_verified) FROM tests.data.set"
-
-    # SQL = """
-    # SELECT DISTINCT user_verified, MIN(followers), MAX(followers), COUNT(*)
-    #  FROM tests.data.huge
-    # GROUP BY user_verified
-    # """
-
-    # SQL = "SELECT username from `tests.data.tweets`"
-
-    SQL = "SELECT * FROM $satellites"
-    SQL = "SELECT COUNT(*) FROM $satellites"
-    SQL = "SELECT MAX(planetId), MIN(planetId), SUM(gm), count(*) FROM $satellites group by planetId"
-    SQL = "SELECT upper(name), length(name) FROM $satellites WHERE magnitude = 5.29"
-    SQL = "SELECT planetId, Count(*) FROM $satellites group by planetId having count(*) > 5"
-    SQL = "SELECT * FROM $satellites order by magnitude, name"
-    SQL = "SELECT AVG(gm), MIN(gm), MAX(gm), FIRST(gm), COUNT(*) FROM $satellites GROUP BY planetId"
-    SQL = "SELECT COUNT(name) FROM $satellites;"
-
-    SQL = "SELECT name as what_it_known_as FROM $satellites"
-    SQL = "SELECT name, id, planetId FROM $satellites"
-    SQL = "SELECT COUNT(*), planetId FROM $satellites GROUP BY planetId"
-    SQL = "SELECT ROUND(magnitude) FROM $satellites group by ROUND(magnitude)"
-    SQL = "SELECT COUNT(*) FROM $satellites"
-    SQL = "SELECT * FROM $satellites WHERE (id = 6 OR id = 7 OR id = 8) OR name = 'Europa'"
-    SQL = (
-        "SELECT BOOLEAN(planetId) FROM $satellites GROUP BY planetId, BOOLEAN(planetId)"
-    )
-    SQL = "SELECT planetId as pid, round(magnitude) as minmag FROM $satellites"
-    SQL = "SELECT RANDOM() FROM $planets"
-    SQL = "SELECT RANDOM() FROM $planets"
-    SQL = "SELECT TIME()"
-    SQL = "SELECT LOWER('NAME')"
-    SQL = "SELECT HASH('NAME')"
-    SQL = "SELECT * FROM (VALUES (1,2),(3,4),(340,455)) AS t(a,b)"
-    # SQL = "SELECT id - 1, name, mass FROM $planets"
-    SQL = "SELECT * FROM tests.data.partitioned WHERE $DATE IN ($$PREVIOUS_MONTH)"
-    SQL = """
-SELECT * FROM (VALUES 
-(7369, 'SMITH', 'CLERK', 7902, '02-MAR-1970', 8000, NULL, 20),
-(7499, 'ALLEN', 'SALESMAN', 7698, '20-MAR-1971', 1600, 3000, 30),
-(7521, 'WARD', 'SALESMAN', 7698, '07-FEB-1983', 1250, 5000, 30),
-(7566, 'JONES', 'MANAGER', 7839, '02-JUN-1961', 2975, 50000, 20),
-(7654, 'MARTIN', 'SALESMAN', 7698, '28-FEB-1971', 1250, 14000, 30),
-(7698, 'BLAKE', 'MANAGER', 7839, '01-JAN-1988', 2850, 12000, 30),
-(7782, 'CLARK', 'MANAGER', 7839, '09-APR-1971', 2450, 13000, 10),
-(7788, 'SCOTT', 'ANALYST', 7566, '09-DEC-1982', 3000, 1200, 20),
-(7839, 'KING', 'PRESIDENT', NULL, '17-JUL-1971', 5000, 1456, 10),
-(7844, 'TURNER', 'SALESMAN', 7698, '08-AUG-1971', 1500, 0, 30),
-(7876, 'ADAMS', 'CLERK', 7788, '12-MAR-1973', 1100, 0, 20),
-(7900, 'JAMES', 'CLERK', 7698, '03-NOV-1971', 950, 0, 30),
-(7902, 'FORD', 'ANALYST', 7566, '04-MAR-1961', 3000, 0, 20),
-(7934, 'MILLER', 'CLERK', 7782, '21-JAN-1972', 1300, 0, 10))
-AS employees (EMPNO, ENAME, JOB, MGR, HIREDATE, SAL, COMM, DEPTNO);
-    """
-    SQL = """
-    SELECT * FROM tests.data.dated
-  FOR DATES BETWEEN '2022-02-03' AND '2022-02-03';
-      """
-    #    ast = sqloxide.parse_sql(SQL, dialect="mysql")
-    #    print(ast)
-
-    print()
-    #    print(_extract_date_filters(ast))
-
-    # _projection = _extract_projections(ast)
-    # print(_projection)
-
-    import pyarrow
-    import opteryx.samples
-    from opteryx.third_party.pyarrow_ops import head
-
-    # p = opteryx.samples.planets().select(["name"])
-
-    # en = EvaluationNode(None, projection=_projection)
-
-    # head(pyarrow.concat_tables(en.execute([p])))
-    import cProfile
-
-    with cProfile.Profile(subcalls=False) as pr:
-        test(SQL)
-
-    # pr.dump_stats("perf")
-
-    # import pstats
-
-    # p = pstats.Stats("perf")
-    # p.sort_stats("tottime").print_stats(10)

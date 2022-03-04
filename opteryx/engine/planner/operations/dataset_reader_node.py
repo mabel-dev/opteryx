@@ -68,12 +68,12 @@ class DatasetReaderNode(BasePlanNode):
         TODAY = datetime.date.today()
 
         self._statistics = statistics
+        self._alias, self._dataset = config.get("dataset")
 
-        if isinstance(config.get("dataset"), tuple):
-            self._dataset = config.get("dataset")
+        if isinstance(self._dataset, bytearray):
             return
 
-        self._dataset = config.get("dataset", "").replace(".", "/") + "/"
+        self._dataset = self._dataset.replace(".", "/") + "/"
         self._reader = config.get("reader", DiskStorage())
         self._partition_scheme = config.get("partition_scheme", MabelPartitionScheme())
 
@@ -91,11 +91,11 @@ class DatasetReaderNode(BasePlanNode):
     def execute(self, data_pages: Iterable) -> Iterable:
 
         # literal datasets
-        if isinstance(self._dataset, tuple):
+        if isinstance(self._dataset, bytearray):
             import io
             import pyarrow.json
 
-            yield pyarrow.json.read_json(io.BytesIO(self._dataset[1]))
+            yield pyarrow.json.read_json(io.BytesIO(self._dataset))
             return
 
         # sample datasets

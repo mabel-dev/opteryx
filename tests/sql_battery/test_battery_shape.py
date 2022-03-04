@@ -13,7 +13,7 @@ We test the shape in this battery because if the shape isn't right, the response
 going to be right, and testing shape of an in-memory dataset is quick, we can test 100s
 of queries in a few seconds.
 
-Testing the shape doesn't mean the response is right though, so another battery is
+Testing the shape doesn't mean the response is right though, so another battery will be
 required to test values.
 """
 import os
