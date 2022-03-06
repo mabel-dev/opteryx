@@ -68,7 +68,7 @@ class DatasetReaderNode(BasePlanNode):
         TODAY = datetime.date.today()
 
         self._statistics = statistics
-        self._alias, self._dataset = config.get("dataset")
+        self._alias, self._dataset = config.get("dataset", [None, None])
 
         if isinstance(self._dataset, bytearray):
             return
