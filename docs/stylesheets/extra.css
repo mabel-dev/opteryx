@@ -5,14 +5,14 @@ table {
 }
 
 th {
-    padding: 0.4em 0.8em !important;
-    font-weight: 500;
+    padding: 0.4em 0.4em !important;
+    font-weight: 300;
     color: #fff;
     background-color: #666;
 }
 
 td {
-    padding: 0.4em 0.8em !important;
+    padding: 0.4em 0.4em !important;
 }
 
 code {
