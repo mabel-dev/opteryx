@@ -54,11 +54,12 @@ Function            | Description                                       | Exampl
 ------------------- | ------------------------------------------------- | ---------------------------
 `BOOLEAN(str)`      | Convert input to a Boolean                        | `BOOLEAN('true') -> True`
 `CAST(any AS type)` | Cast any to type, calls `type(any)`               | `CAST(state AS BOOLEAN) -> False`
-`GET(struct, a)`    | Gets the element called 'a' from a struct         | `GET(dict, 'key') -> 'value'`
-`GET(list, n)`      | Gets the nth element in a list                    | `GET(names, 2) -> 'Joe'`
-`GET(str, n)`       | Gets the nth element in a string                  | `GET('hello', 2) -> 'e'`
-`RANDOM()`          | Random number between 0.000 and 0.999             | `RANDOM() -> 0.234`
+`GET(struct, a)`    | Gets the element called 'a' from a struct, also `struct[a]` | `GET(dict, 'key') -> 'value'`
+`GET(list, n)`      | Gets the nth element in a list, also `list[n]`    | `GET(names, 2) -> 'Joe'`
+`GET(str, n)`       | Gets the nth element in a string, also `str[n]`   | `GET('hello', 2) -> 'e'`
 `HASH(str)`         | Calculate the [CityHash](https://opensource.googleblog.com/2011/04/introducing-cityhash.html) (64 bit) of a value  | `HASH('hello') -> 'B48BE5A931380CE8'`
 `MD5(str)`          | Calculate the MD5 hash of a value                 | `MD5('hello') -> '5d41402abc4b2a76b9719d911017c592'`
+`RANDOM()`          | Random number between 0.000 and 0.999             | `RANDOM() -> 0.234`
 `UNNEST(list)`      | Create a virtual table with a row for each element in the LIST | `UNNEST((TRUE,FALSE)) AS Booleans` 
 `VERSION()`         | Return the version of Opteryx                     | `VERSION() -> 0.1.0`
+

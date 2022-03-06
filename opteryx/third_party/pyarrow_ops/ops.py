@@ -51,11 +51,13 @@ def _get_values(table, operand):
     This allows us to use two identifiers rather than the original implementation which
     forced <identifier> <op> <literal>
     """
-    if operand[1] == TOKEN_TYPES.IDENTIFIER:
-        return table.column(operand[0]).to_numpy()
-    else:
-        return operand[0]
-
+    try:
+        if operand[1] == TOKEN_TYPES.IDENTIFIER:
+            return table.column(operand[0]).to_numpy()
+        else:
+            return operand[0]
+    except:
+        print(table.column_names)
 
 def filters(table, filters):
     filters = [filters] if isinstance(filters, tuple) else filters

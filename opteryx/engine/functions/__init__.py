@@ -139,7 +139,7 @@ FUNCTIONS = {
     "VARCHAR": cast("VARCHAR"),
     "STRING": cast("VARCHAR"),  # alias for VARCHAR
     # STRINGS
-    "LENGTH": compute.utf8_length,  # LENGTH(str) -> int
+    "LENGTH": _vectorize_single_parameter(len),  # LENGTH(str) -> int
     "UPPER": compute.utf8_upper,  # UPPER(str) -> str
     "LOWER": compute.utf8_lower,  # LOWER(str) -> str
     "TRIM": compute.utf8_trim_whitespace,  # TRIM(str) -> str

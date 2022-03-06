@@ -12,11 +12,11 @@ In Opteryx a list is an ordered collection of zero or more values of the same da
 
 ## Finding Lengths
 
-`LENGTH()`
+`LENGTH(list)`
 
 ## Converting Lists to Tables
 
-`UNNEST`
+`UNNEST(list) AS column_name`
 
 ## Using Lists
 

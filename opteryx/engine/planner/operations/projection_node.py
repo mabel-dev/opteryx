@@ -71,7 +71,14 @@ class ProjectionNode(BasePlanNode):
 
             # we elminimate attributes we don't want
             try:
-                page = page.select(self._projection.keys())  # type:ignore
+                projection = []
+                existing_columns = page.column_names
+                for k,v in self._projection.items():
+                    if k in existing_columns:
+                        projection.append(k)
+                    elif v in existing_columns:
+                        projection.append(v)
+                page = page.select(projection)  # type:ignore
             except KeyError as e:
                 field = str(e).split('"')[1]
                 raise SqlError(
@@ -80,11 +87,13 @@ class ProjectionNode(BasePlanNode):
 
             # then we rename the attributes
             if any([v is not None for k, v in self._projection.items()]):  # type:ignore
-                names = [
-                    self._projection[a] or a  # type:ignore
-                    for a in page.column_names
-                    if a in self._projection  # type:ignore
-                ]
+                names = []
+                existing_columns = page.column_names
+                for k, v in self._projection.items():
+                    if v and v in existing_columns:
+                        names.append(v)
+                    elif k in existing_columns:
+                        names.append(k)
                 page = page.rename_columns(names)
 
             yield page

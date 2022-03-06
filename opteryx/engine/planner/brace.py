@@ -113,7 +113,12 @@ AS employees (EMPNO, ENAME, JOB, MGR, HIREDATE, SAL, COMM, DEPTNO);
       FROM $astronaut, UNNEST(Missions) AS Mission
      WHERE Mission = 'Apollo 8'
     """
-    SQL = "SELECT * FROM $satellites"
+    SQL = """
+    SELECT Birth_Place['town']
+      FROM $astronauts
+        """
+    SQL = "SELECT Birth_Place['town'] FROM $astronauts WHERE Birth_Place['town'] = 'Warsaw'"
+    SQL = "SELECT BOOLEAN(planetId) FROM $satellites GROUP BY planetId, BOOLEAN(planetId)"
     ast = sqloxide.parse_sql(SQL, dialect="mysql")
     print(json.dumps(ast, indent=2))
 

@@ -94,9 +94,10 @@ def extract_temporal_filters(sql):
             start_date = TODAY - datetime.timedelta(days=1)
             end_date = TODAY - datetime.timedelta(days=1)
             clearing_regex = r"(\bFOR[\n\r\s]+YESTERDAY\b)"
-        # previous_month
-        # previous_cycle
-        # this_cycle
+        # PREVIOUS MONTH
+        # PREVIOUS CYCLE
+        # THIS MONTH
+        # THIS CYCLE
         elif for_dates.startswith("DATES BETWEEN "):
             parts = for_dates.split(" ")
             start_date = dates.parse_iso(parts[2][1:-1])
@@ -108,11 +109,11 @@ def extract_temporal_filters(sql):
                 + parts[4]
                 + r")"
             )
-        elif for_dates.startswith("DATE "):
+        elif for_dates.startswith("DATES "):
             parts = for_dates.split(" ")
             start_date = dates.parse_iso(parts[1][1:-1])
             end_date = start_date
-            clearing_regex = r"(FOR\sDATE\s" + parts[1] + r")"
+            clearing_regex = r"(FOR\sDATES\s" + parts[1] + r")"
 
         if clearing_regex:
             regex = re.compile(clearing_regex, re.MULTILINE | re.DOTALL)

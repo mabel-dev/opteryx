@@ -166,7 +166,14 @@ def _build_dnf_filters(filters):
         return _build_dnf_filters(filters["Expr"])
     if "Nested" in filters:
         return (_build_dnf_filters(filters["Nested"]),)
-
+    if "MapAccess" in filters:
+        identifier = filters["MapAccess"]["column"]["Identifier"]["value"]
+        key_dict = filters["MapAccess"]["keys"][0]["Value"]
+        if "SingleQuotedString" in key_dict:
+            key = f"'{key_dict['SingleQuotedString']}'"
+        if "Number" in key_dict:
+            key = key_dict['Number'][0]
+        return (f"{identifier}[{key}]", TOKEN_TYPES.IDENTIFIER)
 
 def _extract_relations(ast):
     """ """
@@ -279,7 +286,26 @@ def _extract_projections(ast):
                 else:
                     raise SqlError("Unsupported CAST function")
 
+                if alias is None:
+                    alias = f"CAST({args[0][0]} AS {data_type})"
+
                 return {"function": data_type, "args": args, "alias": alias}
+            if "MapAccess" in function:
+                # Identifier[key] -> GET(Identifier, key) -> alias of I[k] or alias
+                identifier = function["MapAccess"]["column"]["Identifier"]["value"]
+                key_dict = function["MapAccess"]["keys"][0]["Value"]
+                if "SingleQuotedString" in key_dict:
+                    key_value = (key_dict['SingleQuotedString'], TOKEN_TYPES.VARCHAR,)
+                    key = f"'{key_dict['SingleQuotedString']}'"
+                if "Number" in key_dict:
+                    key_value = (int(key_dict['Number'][0]), TOKEN_TYPES.NUMERIC,)
+                    key = key_dict['Number'][0]
+                if alias is None:
+                    alias = f"{identifier}[{key}]"
+
+                return {"function": "GET", "args": [(identifier,TOKEN_TYPES.IDENTIFIER), key_value], "alias": alias}
+
+
 
     projection = [_inner(attribute) for attribute in projection]
     # print(projection)
