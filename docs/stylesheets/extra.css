@@ -19,8 +19,13 @@ code {
     font-family: 'JetBrains Mono';
     font-size: 1em !important;
     color: #D63384 !important;
-    font-weight: 500;
+    font-weight: 200;
     word-wrap: break-word;
 }
 
+body {
+    font-family: "IBM Plex Sans";
+}
+
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@200&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300&display=swap');
