@@ -16,7 +16,6 @@
 
 `FOR YESTERDAY`
 
-
 ## GROUP BY
 
 **Limitations**

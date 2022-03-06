@@ -16,9 +16,11 @@ td {
 }
 
 code {
-    font-family: var(--bs-font-monospace);
+    font-family: 'JetBrains Mono';
     font-size: 1em !important;
     color: #D63384 !important;
     font-weight: 500;
     word-wrap: break-word;
 }
+
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@200&display=swap');
