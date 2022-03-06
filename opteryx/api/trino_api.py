@@ -12,12 +12,12 @@ async def read_main(request: Request):
         "id": 1,
         "stats": {},
         "infoUri": "",
-        "columns": ["name", "age"],
+        "columns": ["fruit", "color"],
         "data": [
-            ['Justin', 42],
-            ['Bec', 41],
-            ['Lucie', 13],
-            ['Alice', 11]
+            ['Apple', 'green'],
+            ['Banana', 'yellow'],
+            ['Orange', 'orange'],
+            ['Strawberry', 'red']
         ]
     }
 
