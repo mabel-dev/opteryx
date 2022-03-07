@@ -197,6 +197,11 @@ STATEMENTS = [
         ("SELECT * FROM tests.data.dated FOR TODAY", 0, 0),
         ("SELECT * FROM tests.data.dated FOR YESTERDAY", 0, 0),
 
+        ("SELECT Missions FROM $astronauts WHERE LIST_CONTAINS(Missions, 'Apollo 8')", 3, 1),
+        ("SELECT Missions FROM $astronauts WHERE LIST_CONTAINS_ANY(Missions, ('Apollo 8', 'Apollo 13'))", 5, 1),
+        ("SELECT Missions FROM $astronauts WHERE LIST_CONTAINS_ALL(Missions, ('Apollo 8', 'Gemini 7'))", 2, 1),
+        ("SELECT Missions FROM $astronauts WHERE LIST_CONTAINS_ALL(Missions, ('Gemini 7', 'Apollo 8'))", 2, 1),
+
         # These are queries which have been found to return the wrong result or not run
         # correctly which suggests their implementation is somewhat complex and
         # therefore brittle.

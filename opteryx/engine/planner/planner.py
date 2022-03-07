@@ -92,7 +92,7 @@ def _extract_value(value):
     if "Boolean" in value:
         return (value["Boolean"], TOKEN_TYPES.BOOLEAN)
     if "Tuple" in value:
-        return [_extract_value(t["Value"])[0] for t in value["Tuple"]]
+        return ([_extract_value(t["Value"])[0] for t in value["Tuple"]], TOKEN_TYPES.LIST)
 
 
 def _build_dnf_filters(filters):
@@ -157,9 +157,11 @@ def _build_dnf_filters(filters):
     if "Function" in filters:
         func = filters["Function"]["name"][0]["value"].upper()
         args = [_build_dnf_filters(a["Unnamed"]) for a in filters["Function"]["args"]]
-        args = [(str(a[0]) if a[0] != "Wildcard" else "*") for a in args]
-        column_name = f"{func}({','.join(args)})"
-        return (column_name, TOKEN_TYPES.IDENTIFIER)
+        select_args = [(str(a[0]) if a[0] != "Wildcard" else "*") for a in args]
+        select_args = [((f"({','.join(a[0])})",) if isinstance(a[0], list) else a) for a in select_args]
+        column_name = f"{func}({','.join(select_args)})"
+        # we pass the function definition so if needed we can execute the function
+        return (column_name, TOKEN_TYPES.IDENTIFIER, { "function": func, "args": args })
     if "Unnamed" in filters:
         return _build_dnf_filters(filters["Unnamed"])
     if "Expr" in filters:
@@ -174,6 +176,8 @@ def _build_dnf_filters(filters):
         if "Number" in key_dict:
             key = key_dict['Number'][0]
         return (f"{identifier}[{key}]", TOKEN_TYPES.IDENTIFIER)
+    if "Tuple" in filters:
+        return ([_extract_value(t["Value"])[0] for t in filters["Tuple"]], TOKEN_TYPES.LIST)
 
 def _extract_relations(ast):
     """ """
@@ -200,7 +204,7 @@ def _extract_relations(ast):
                     relation["relation"]["Table"]["args"][0]["Unnamed"]["Expr"]
                 )
                 body = bytearray()
-                for v in values:
+                for v in values[0]:
                     body.extend(orjson.dumps({alias: v}, default=_serializer))
                 yield (alias, body)  # <- a literal table
             else:
@@ -263,9 +267,9 @@ def _extract_projections(ast):
                 func = function["Function"]["name"][0]["value"].upper()
                 args = [_build_dnf_filters(a) for a in function["Function"]["args"]]
                 if is_function(func):
-                    return {"function": func.upper(), "args": args, "alias": alias}
+                    return {"function": func, "args": args, "alias": alias}
                 else:
-                    return {"aggregate": func.upper(), "args": args, "alias": alias}
+                    return {"aggregate": func, "args": args, "alias": alias}
             if "BinaryOp" in function:
                 raise NotImplementedError(
                     "Operations in the SELECT clause are not supported"
@@ -304,8 +308,6 @@ def _extract_projections(ast):
                     alias = f"{identifier}[{key}]"
 
                 return {"function": "GET", "args": [(identifier,TOKEN_TYPES.IDENTIFIER), key_value], "alias": alias}
-
-
 
     projection = [_inner(attribute) for attribute in projection]
     # print(projection)
@@ -351,6 +353,7 @@ def _extract_order(ast):
                 func = column["Function"]["name"][0]["value"].upper()
                 args = [_build_dnf_filters(a)[0] for a in column["Function"]["args"]]
                 args = ["*" if i == "Wildcard" else i for i in args]
+                args = [((f"({','.join(a[0])})",) if isinstance(a[0], list) else a) for a in args]
                 column = f"{func}({','.join(args)})"
             orders.append(
                 (
@@ -369,6 +372,7 @@ def _extract_groups(ast):
             if "Function" in element:
                 func = element["Function"]["name"][0]["value"].upper()
                 args = [_build_dnf_filters(a) for a in element["Function"]["args"]]
+                args = [((f"({','.join(a[0])})",) if isinstance(a[0], list) else a) for a in args]
                 return f"{func.upper()}({','.join([str(a[0]) for a in args])})"
 
     groups = ast[0]["Query"]["body"]["Select"]["group_by"]
@@ -414,14 +418,16 @@ class QueryPlan(object):
 
     def _naive_planner(self, ast, statistics):
         """
-        The naive planner only works on single tables and puts operations in this
-        order.
+        The naive planner only works on single tables and always puts operations in
+        this order.
 
             FROM clause
+            EVALUATE
             WHERE clause
-            GROUP BY clause
+            AGGREGATE (GROUP BY clause)
             HAVING clause
             SELECT clause
+            DISTINCT
             ORDER BY clause
             LIMIT clause
             OFFSET clause
@@ -446,12 +452,8 @@ class QueryPlan(object):
                 ),
             )
             last_node = "from"
-
-        if len(_relations) == 2:
-            pass
-
-        if len(_relations) > 2:
-            raise SqlError("Queries are currently limited to two tables.")
+        else:
+            raise SqlError("Queries are currently limited to single tables.")
 
         _projection = _extract_projections(ast)
         if any(["function" in a for a in _projection]):

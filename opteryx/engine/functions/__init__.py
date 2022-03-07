@@ -19,7 +19,7 @@ from pyarrow import compute
 from cityhash import CityHash64
 import opteryx
 
-from opteryx.engine.functions.date_functions import *
+from opteryx.engine.functions import date_functions, other_functions
 from opteryx.exceptions import SqlError
 
 from opteryx.utils.text import levenshtein_distance
@@ -151,6 +151,9 @@ FUNCTIONS = {
     "RANDOM": _vectorize_no_parameters(get_random),  # return a random number 0-0.999
     # OTHER
     "GET": _vectorize_double_parameter(_get),  # GET(LIST, index) => LIST[index] or GET(STRUCT, accessor) => STRUCT[accessor]
+    "LIST_CONTAINS": _vectorize_double_parameter(other_functions._list_contains),
+    "LIST_CONTAINS_ANY": _vectorize_double_parameter(other_functions._list_contains_any),
+    "LIST_CONTAINS_ALL": _vectorize_double_parameter(other_functions._list_contains_all),
     # NUMERIC
     "ROUND": compute.round,
     "FLOOR": compute.floor,
@@ -160,9 +163,9 @@ FUNCTIONS = {
     # DATES & TIMES
     "NOW": _vectorize_no_parameters(datetime.datetime.utcnow),
     "TODAY": _vectorize_no_parameters(datetime.date.today),
-    "TIME": _vectorize_no_parameters(get_time),
-    "YESTERDAY": _vectorize_no_parameters(get_yesterday),
-    "DATE": _vectorize_single_parameter(get_date),
+    "TIME": _vectorize_no_parameters(date_functions.get_time),
+    "YESTERDAY": _vectorize_no_parameters(date_functions.get_yesterday),
+    "DATE": _vectorize_single_parameter(date_functions.get_date),
     "YEAR": compute.year,
     "MONTH": compute.month,
     "DAY": compute.day,

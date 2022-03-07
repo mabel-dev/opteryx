@@ -9,3 +9,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+
+def _list_contains(array, item):
+    return item in array
+
+def _list_contains_any(array, items):
+    return set(array).intersection(items) != set()
+
+def _list_contains_all(array, items):
+    return set(array).issuperset(items)

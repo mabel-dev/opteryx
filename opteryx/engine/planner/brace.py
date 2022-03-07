@@ -35,7 +35,7 @@ def test(SQL):
         r = q.execute()
         print(ascii_table(fetchmany(r, size=10), limit=10))
 
-        [a for a in fetchall(r)]
+    #    [a for a in fetchall(r)]
 
         statistics.end_time = time.time_ns()
         print(statistics.as_dict())
@@ -119,6 +119,11 @@ AS employees (EMPNO, ENAME, JOB, MGR, HIREDATE, SAL, COMM, DEPTNO);
         """
     SQL = "SELECT Birth_Place['town'] FROM $astronauts WHERE Birth_Place['town'] = 'Warsaw'"
     SQL = "SELECT BOOLEAN(planetId) FROM $satellites GROUP BY planetId, BOOLEAN(planetId)"
+
+    SQL = """
+    SELECT Missions,  LIST_CONTAINS_ANY(Missions, ('Apollo 13', 'Apollo 8', 'Apollo 11'))
+      FROM $astronauts
+    """
     ast = sqloxide.parse_sql(SQL, dialect="mysql")
     print(json.dumps(ast, indent=2))
 

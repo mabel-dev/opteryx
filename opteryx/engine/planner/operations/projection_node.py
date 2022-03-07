@@ -47,8 +47,9 @@ class ProjectionNode(BasePlanNode):
                 ] = attribute["alias"]
 
             elif "function" in attribute:
+                args = [((f"({','.join(a[0])})",None) if isinstance(a[0], list) else a) for a in attribute["args"]]
                 self._projection[
-                    f"{attribute['function']}({','.join([replace_wildcards(a) for a in attribute['args']])})"
+                    f"{attribute['function']}({','.join([replace_wildcards(a) for a in args])})"
                 ] = attribute["alias"]
 
             elif "identifier" in attribute:

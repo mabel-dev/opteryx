@@ -10,9 +10,9 @@ async def read_main(request: Request):
     print(request)
     return {
         "id": 1,
-        "stats": {},
+        "stats": {"byes_read":2000},
         "infoUri": "",
-        "columns": ["fruit", "color"],
+        "columns": [{"name":"fruit","type":"varchar"}, {"name":"color","type":"varchar"}],
         "data": [
             ['Apple', 'green'],
             ['Banana', 'yellow'],

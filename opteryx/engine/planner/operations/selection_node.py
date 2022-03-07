@@ -26,9 +26,11 @@ The predicates are in _tuples_ in the form (`key`, `op`, `value`) where the `key
 is the value looked up from the record, the `op` is the operator and the `value`
 is a literal.
 """
+from logging.config import IDENTIFIER
 import numpy
 from typing import Union, Iterable
 from pyarrow import Table
+from opteryx.engine.attribute_types import TOKEN_TYPES
 from opteryx.engine.query_statistics import QueryStatistics
 from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
 from opteryx.third_party.pyarrow_ops import ifilters
@@ -42,6 +44,42 @@ def _evaluate(predicate: Union[tuple, list], table: Table) -> bool:
 
     # If we have a tuple extract out the key, operator and value and do the evaluation
     if isinstance(predicate, tuple):
+
+        # this is a function in the selection
+        if len(predicate) == 3 and isinstance(predicate[2], dict):
+            # this has already been evaluated
+            if predicate[0] in table.column_names:
+                predicate = ((predicate[0], TOKEN_TYPES.IDENTIFIER), '=', (True, TOKEN_TYPES.BOOLEAN))
+            # this has not already been evaluated
+            else:
+                ## TODO: push this to the evaluation node
+                from opteryx.engine.functions import FUNCTIONS
+                import pyarrow
+
+                function = predicate[2]
+
+                arg_list = []
+                # go through the arguments and build arrays of the values
+                for arg in function["args"]:
+                    if arg[1] == TOKEN_TYPES.IDENTIFIER:
+                        # get the column from the dataset
+                        arg_list.append(table[arg[0]].to_numpy())
+                    else:
+                        # it's a literal, just add it
+                        arg_list.append(arg[0])
+
+                if len(arg_list) == 0:
+                    arg_list = [table.num_rows]
+
+                calculated_values = FUNCTIONS[function["function"]](*arg_list)
+                if isinstance(calculated_values, (pyarrow.lib.StringScalar)):
+                    calculated_values = [[calculated_values.as_py()]]
+                table = pyarrow.Table.append_column(
+                    table, predicate[0], calculated_values
+                )
+
+                predicate = ((predicate[0], TOKEN_TYPES.IDENTIFIER), '=', (True, TOKEN_TYPES.BOOLEAN))
+
         if not isinstance(predicate[0], tuple):
             return _evaluate(predicate[0], table)
 

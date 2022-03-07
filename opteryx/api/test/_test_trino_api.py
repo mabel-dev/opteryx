@@ -14,3 +14,7 @@ cur.execute("SELECT * FROM system.runtime.nodes")
 
 print(cur.fetchone())
 print(cur.fetchone())
+
+print('rc', cur.rowcount)
+print('s', cur.stats)
+print('d', cur.description)
