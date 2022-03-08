@@ -190,10 +190,13 @@ STATEMENTS = [
         ("SELECT * FROM UNNEST(('foo', 'bar', 'baz', 'qux', 'corge', 'garply', 'waldo', 'fred')) AS element", 8, 1),
         ("SELECT * FROM UNNEST(('foo', 'bar', 'baz', 'qux', 'corge', 'garply', 'waldo', 'fred')) AS element WHERE element LIKE '%e%'", 2, 1),
 
-        ("SELECT * FROM tests.data.dated FOR DATES '2020-02-03'", 25, 8),
-        ("SELECT * FROM tests.data.dated FOR DATES '2020-02-04'", 25, 8),
-        ("SELECT * FROM tests.data.dated FOR DATES '2020-02-05'", 0, 0),
+        ("SELECT * FROM tests.data.dated FOR '2020-02-03'", 25, 8),
+        ("SELECT * FROM tests.data.dated FOR '2020-02-04'", 25, 8),
+        ("SELECT * FROM tests.data.dated FOR '2020-02-05'", 0, 0),
         ("SELECT * FROM tests.data.dated FOR DATES BETWEEN '2020-02-01' AND '2020-02-28'", 50, 8),
+        ("SELECT * FROM tests.data.dated FOR DATES BETWEEN '2020-02-01' AND today", 50, 8),
+        ("SELECT * FROM tests.data.dated FOR DATES BETWEEN '2020-02-01' AND Today", 50, 8),
+        ("SELECT * FROM tests.data.dated FOR DATES BETWEEN '2020-02-01' AND YESTERDAY", 50, 8),
         ("SELECT * FROM tests.data.dated FOR TODAY", 0, 0),
         ("SELECT * FROM tests.data.dated FOR YESTERDAY", 0, 0),
 

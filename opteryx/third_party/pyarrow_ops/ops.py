@@ -107,6 +107,10 @@ def drop_duplicates(table, on=[], keep="first"):
 
 # Show for easier printing
 def head(table, n=5, max_width=100):
+    if table is None:
+        print("No data in table")
+        return
+
     if table.num_rows == 0:
         print("No data in table")
         return

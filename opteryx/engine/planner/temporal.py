@@ -70,6 +70,35 @@ def remove_comments(string):
 
     return regex.sub(_replacer, string)
 
+def parse_range(range):
+    range = range.upper()
+    TODAY = datetime.date.today()
+
+    if range == "PREVIOUS_MONTH":
+        pass
+    if range == "THIS_MONTH":
+        pass
+    if range == "MONTH(YEAR, MONTH)":
+        pass
+    if range == "PREVIOUS_CYCLE(ROLL_OVER)":
+        pass
+    if range == "CYCLE(YEAR, MONTH, ROLL_OVER)":
+        pass
+
+def parse_date(date):
+
+    date = date.upper()
+    TODAY = datetime.date.today()
+
+    if date == "TODAY":
+        return TODAY
+    if date == "YESTERDAY":
+        return TODAY - datetime.timedelta(days=1)
+    
+    parsed_date = dates.parse_iso(date[1:-1])
+    if parsed_date:
+        return parsed_date.date()
+
 
 def extract_temporal_filters(sql):
 
@@ -85,39 +114,34 @@ def extract_temporal_filters(sql):
 
     try:
         pos = parts.index("FOR")
-        for_dates = parts[pos + 1]
-        if for_dates == "TODAY":
-            start_date = TODAY
-            end_date = TODAY
-            clearing_regex = r"(\bFOR[\n\r\s]+TODAY\b)"
-        elif for_dates == "YESTERDAY":
-            start_date = TODAY - datetime.timedelta(days=1)
-            end_date = TODAY - datetime.timedelta(days=1)
-            clearing_regex = r"(\bFOR[\n\r\s]+YESTERDAY\b)"
-        # PREVIOUS MONTH
-        # PREVIOUS CYCLE
-        # THIS MONTH
-        # THIS CYCLE
-        elif for_dates.startswith("DATES BETWEEN "):
-            parts = for_dates.split(" ")
-            start_date = dates.parse_iso(parts[2][1:-1])
-            end_date = dates.parse_iso(parts[4][1:-1])
+        for_date_string = parts[pos + 1]
+        for_date = parse_date(for_date_string)
+
+        if for_date:
+            start_date = for_date
+            end_date = for_date
+            clearing_regex = r"(\bFOR[\n\r\s]+" + for_date_string.replace("'", r"\'") + r"(?!\S))"
+        elif for_date_string.startswith("DATES BETWEEN "):
+            parts = for_date_string.split(" ")
+            start_date = parse_date(parts[2])
+            end_date = parse_date(parts[4])
             clearing_regex = (
                 r"(FOR[\n\r\s]+DATES[\n\r\s]+BETWEEN[\n\r\s]+"
                 + parts[2]
                 + r"[\n\r\s]+AND[\n\r\s]+"
                 + parts[4]
-                + r")"
+                + r"(?!\S))"
             )
-        elif for_dates.startswith("DATES "):
-            parts = for_dates.split(" ")
-            start_date = dates.parse_iso(parts[1][1:-1])
-            end_date = start_date
-            clearing_regex = r"(FOR\sDATES\s" + parts[1] + r")"
+        elif for_date_string.startswith("DATES IN "):
+            raise NotImplementedError("FOR DATES IN not implemented")
+            # PREVIOUS MONTH
+            # PREVIOUS CYCLE
+            # THIS MONTH
+            # THIS CYCLE
 
         if clearing_regex:
-            regex = re.compile(clearing_regex, re.MULTILINE | re.DOTALL)
-            sql = regex.sub("-- FOR STATEMENT REMOVED\n", sql)
+            regex = re.compile(clearing_regex, re.MULTILINE | re.DOTALL | re.IGNORECASE)
+            sql = regex.sub("\n-- FOR STATEMENT REMOVED\n", sql)
 
         # swap the order if we need to
         if start_date > end_date:
