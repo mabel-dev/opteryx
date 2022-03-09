@@ -205,7 +205,7 @@ STATEMENTS = [
         ("SELECT Missions FROM $astronauts WHERE LIST_CONTAINS_ALL(Missions, ('Gemini 7', 'Apollo 8'))", 2, 1),
 
         ("SELECT * FROM $satellites WHERE planetId IN (SELECT id FROM $planets WHERE name = 'Earth')", 1, 8),
-        ("SELECT * FROM $planets WHERE id NOT IN (SELECT DISTINCT planetId FROM $satellites)", 1, 8),
+        ("SELECT * FROM $planets WHERE id NOT IN (SELECT DISTINCT planetId FROM $satellites)", 2, 20),
         ("SELECT name FROM $planets WHERE id IN (SELECT * FROM UNNEST((1,2,3)) as id)", 3, 1),
 
         # These are queries which have been found to return the wrong result or not run
