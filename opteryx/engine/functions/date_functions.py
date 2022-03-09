@@ -48,7 +48,7 @@ def get_date(input):
         input = parse_iso(input)
     # if it's a numpy datetime, convert it to a date
     if isinstance(input, (numpy.datetime64)):
-        input = input.astype('M8[D]').astype('O')
+        input = input.astype("M8[D]").astype("O")
     # if it's a datetime, convert it to a date
     if isinstance(input, datetime.datetime):
         input = input.date()
@@ -57,10 +57,8 @@ def get_date(input):
         return datetime.datetime.combine(input, datetime.datetime.min.time())
     return None
 
+
 ### not used yet
-
-
-
 
 
 def add_days(start_date, day_count):

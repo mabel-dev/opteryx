@@ -1,2 +1,2 @@
 from .query_statistics import QueryStatistics
-from .planner.planner import QueryPlan
+from .planner.planner import QueryPlanner

@@ -33,6 +33,7 @@ from pyarrow import Table
 from opteryx.engine.attribute_types import TOKEN_TYPES
 from opteryx.engine.query_statistics import QueryStatistics
 from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
+from opteryx.exceptions import SqlError
 from opteryx.third_party.pyarrow_ops import ifilters
 
 
@@ -49,7 +50,11 @@ def _evaluate(predicate: Union[tuple, list], table: Table) -> bool:
         if len(predicate) == 3 and isinstance(predicate[2], dict):
             # this has already been evaluated
             if predicate[0] in table.column_names:
-                predicate = ((predicate[0], TOKEN_TYPES.IDENTIFIER), '=', (True, TOKEN_TYPES.BOOLEAN))
+                predicate = (
+                    (predicate[0], TOKEN_TYPES.IDENTIFIER),
+                    "=",
+                    (True, TOKEN_TYPES.BOOLEAN),
+                )
             # this has not already been evaluated
             else:
                 ## TODO: push this to the evaluation node
@@ -78,7 +83,11 @@ def _evaluate(predicate: Union[tuple, list], table: Table) -> bool:
                     table, predicate[0], calculated_values
                 )
 
-                predicate = ((predicate[0], TOKEN_TYPES.IDENTIFIER), '=', (True, TOKEN_TYPES.BOOLEAN))
+                predicate = (
+                    (predicate[0], TOKEN_TYPES.IDENTIFIER),
+                    "=",
+                    (True, TOKEN_TYPES.BOOLEAN),
+                )
 
         if not isinstance(predicate[0], tuple):
             return _evaluate(predicate[0], table)
@@ -120,6 +129,22 @@ def _evaluate(predicate: Union[tuple, list], table: Table) -> bool:
     raise InvalidSyntaxError("Unable to evaluate Filter")  # pragma: no cover
 
 
+def _evaluate_subqueries(predicate):
+    if isinstance(predicate, tuple) and len(predicate) == 2 and predicate[1] == TOKEN_TYPES.QUERY_PLAN:
+        import pyarrow
+        table_result = pyarrow.concat_tables(predicate[0].execute())
+        if len(table_result) == 0:
+            SqlError("Subquery in WHERE clause - column not found")
+        if len(table_result.columns) != 1:
+            raise SqlError("Subquery in WHERE clause - returned more than one column")
+        value_list = table_result.column(0).to_numpy()
+        return (value_list, TOKEN_TYPES.LIST)
+    elif isinstance(predicate, tuple):
+        return tuple([_evaluate_subqueries(p) for p in predicate])
+    elif isinstance(predicate, list):
+        return [_evaluate_subqueries(p) for p in predicate]
+    return predicate
+
 class SelectionNode(BasePlanNode):
     def __init__(self, statistics: QueryStatistics, **config):
         self._filter = config.get("filter")
@@ -129,10 +154,15 @@ class SelectionNode(BasePlanNode):
 
     def execute(self, data_pages: Iterable) -> Iterable:
 
+        # we should always have a filter - but harm checking
         if self._filter is None:
             yield from data_pages
 
         else:
+            # if any values in the filters are subqueries, we have to execute them
+            # before we can continue.
+            self._unfurled_filter = _evaluate_subqueries(self._filter)
+
             for page in data_pages:
-                mask = _evaluate(self._filter, page)
+                mask = _evaluate(self._unfurled_filter, page)
                 yield page.take(mask)

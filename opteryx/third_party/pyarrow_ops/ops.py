@@ -59,6 +59,7 @@ def _get_values(table, operand):
     except:
         print(table.column_names)
 
+
 def filters(table, filters):
     filters = [filters] if isinstance(filters, tuple) else filters
     # Filter is a list of (col, op, value) tuples

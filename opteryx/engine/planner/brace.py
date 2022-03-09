@@ -4,9 +4,10 @@ import os
 sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
 
 from opteryx.engine.query_statistics import QueryStatistics
-from opteryx.engine.planner.planner import QueryPlan
+from opteryx.engine.planner.planner import QueryPlanner
 from opteryx.storage.schemes import DefaultPartitionScheme, MabelPartitionScheme
 from opteryx.storage.adapters import DiskStorage
+
 
 def test(SQL):
 
@@ -17,13 +18,13 @@ def test(SQL):
 
     statistics = QueryStatistics()
     statistics.start_time = time.time_ns()
-    q = QueryPlan(
-        SQL,
+    plan = QueryPlanner(
         statistics,
         reader=DiskStorage(),
         partition_scheme=DefaultPartitionScheme(""),
-        #partition_scheme=MabelPartitionScheme()
+        # partition_scheme=MabelPartitionScheme()
     )
+    plan.create_plan(sql=SQL)
     statistics.time_planning = time.time_ns() - statistics.start_time
     # print(q)
 
@@ -32,10 +33,10 @@ def test(SQL):
 
     with timer.Timer():
         # do this to go over the records
-        r = q.execute()
+        r = plan.execute()
         print(ascii_table(fetchmany(r, size=10), limit=10))
 
-    #    [a for a in fetchall(r)]
+        #    [a for a in fetchall(r)]
 
         statistics.end_time = time.time_ns()
         print(statistics.as_dict())
@@ -118,11 +119,12 @@ AS employees (EMPNO, ENAME, JOB, MGR, HIREDATE, SAL, COMM, DEPTNO);
       FROM $astronauts
         """
     SQL = "SELECT Birth_Place['town'] FROM $astronauts WHERE Birth_Place['town'] = 'Warsaw'"
-    SQL = "SELECT BOOLEAN(planetId) FROM $satellites GROUP BY planetId, BOOLEAN(planetId)"
+    SQL = (
+        "SELECT BOOLEAN(planetId) FROM $satellites GROUP BY planetId, BOOLEAN(planetId)"
+    )
 
     SQL = """
-    SELECT Missions,  LIST_CONTAINS_ANY(Missions, ('Apollo 13', 'Apollo 8', 'Apollo 11'))
-      FROM $astronauts
+    SELECT name FROM $planets WHERE id IN (SELECT * FROM UNNEST((1,2,3)) as id)
     """
     ast = sqloxide.parse_sql(SQL, dialect="mysql")
     print(json.dumps(ast, indent=2))

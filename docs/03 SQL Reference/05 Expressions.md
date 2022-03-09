@@ -2,8 +2,6 @@
 
 ## Logical
 
-* NOT <- to be implemented
-
 The following logical operators are available: `AND` and `OR`.
 
 a     | b     | a AND b | a OR b
@@ -38,3 +36,19 @@ Predicate               | Description
 ----------------------- | ---------------------------------
 `a BETWEEN x AND y`     | equivalent to `a >= x AND a <= y`
 `a NOT BETWEEN x AND y` | equivalent to `a < x OR a > y`
+
+Using `BETWEEN` with other predicates, especially when used with an `AND` conjunction, can cause the query parser to fail. 
+
+## Subqueries
+
+The `IN` operator can reference a subquery, this subquery cannot include a temporal clause (`FOR`), but otherwise the full syntax for `SELECT` queries are supported.
+
+For example to find the planets without any satellites.
+~~~sql
+SELECT name
+  FROM $planets
+ WHERE id NOT IN (
+     SELECT DISTINCT planetId
+       FROM $satellites
+    )
+~~~

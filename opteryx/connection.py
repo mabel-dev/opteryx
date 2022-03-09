@@ -20,7 +20,7 @@ from typing import Dict, Optional, List, Union, Tuple
 from decimal import Decimal
 from opteryx.storage import BaseStorageAdapter, BaseBufferCache, BasePartitionScheme
 from opteryx.storage.adapters import DiskStorage
-from opteryx.engine import QueryStatistics, QueryPlan
+from opteryx.engine import QueryStatistics, QueryPlanner
 from opteryx.storage.schemes import DefaultPartitionScheme, MabelPartitionScheme
 from opteryx.utils.pyarrow import fetchmany, fetchall, fetchone
 
@@ -141,12 +141,12 @@ class Cursor:
                     "Number of placeholders and number of parameters must match."
                 )
 
-        self._query_plan = QueryPlan(
-            operation,
+        self._query_plan = QueryPlanner(
             self._stats,
             self._connection._reader,
             self._connection._partition_scheme,
         )
+        self._query_plan.create_plan(sql=operation)
         # optimize the plan
 
         # how long have we spent planning

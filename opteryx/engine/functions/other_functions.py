@@ -14,8 +14,10 @@
 def _list_contains(array, item):
     return item in array
 
+
 def _list_contains_any(array, items):
     return set(array).intersection(items) != set()
+
 
 def _list_contains_all(array, items):
     return set(array).issuperset(items)

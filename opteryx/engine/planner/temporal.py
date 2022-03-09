@@ -70,6 +70,7 @@ def remove_comments(string):
 
     return regex.sub(_replacer, string)
 
+
 def parse_range(range):
     range = range.upper()
     TODAY = datetime.date.today()
@@ -85,6 +86,7 @@ def parse_range(range):
     if range == "CYCLE(YEAR, MONTH, ROLL_OVER)":
         pass
 
+
 def parse_date(date):
 
     date = date.upper()
@@ -94,7 +96,7 @@ def parse_date(date):
         return TODAY
     if date == "YESTERDAY":
         return TODAY - datetime.timedelta(days=1)
-    
+
     parsed_date = dates.parse_iso(date[1:-1])
     if parsed_date:
         return parsed_date.date()
@@ -120,7 +122,9 @@ def extract_temporal_filters(sql):
         if for_date:
             start_date = for_date
             end_date = for_date
-            clearing_regex = r"(\bFOR[\n\r\s]+" + for_date_string.replace("'", r"\'") + r"(?!\S))"
+            clearing_regex = (
+                r"(\bFOR[\n\r\s]+" + for_date_string.replace("'", r"\'") + r"(?!\S))"
+            )
         elif for_date_string.startswith("DATES BETWEEN "):
             parts = for_date_string.split(" ")
             start_date = parse_date(parts[2])

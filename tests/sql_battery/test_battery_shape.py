@@ -68,8 +68,7 @@ STATEMENTS = [
         ("SELECT * FROM $satellites WHERE id = 5 OR name = 'Europa'", 1, 8),
         ("SELECT * FROM $satellites WHERE id = 5 OR name = 'Moon'", 2, 8),
         ("SELECT * FROM $satellites WHERE id BETWEEN 5 AND 8", 4, 8),
-#       There appears to be a problem evaluating filters with a BETWEEN and an AND
-#        ("SELECT * FROM $satellites WHERE name = 'Eurpoa' AND id BETWEEN 5 AND 8", 1, 8),
+        ("SELECT * FROM $satellites WHERE ((id BETWEEN 5 AND 10) AND (id BETWEEN 10 AND 12)) OR name = 'Moon'", 2, 8),
         ("SELECT * FROM $satellites WHERE id BETWEEN 5 AND 8 OR name = 'Moon'", 5, 8),
         ("SELECT * FROM $satellites WHERE id IN (5,6,7,8)", 4, 8),
         ("SELECT * FROM $satellites WHERE id IN (5,6,7,8) AND name = 'Europa'", 1, 8),
@@ -204,6 +203,10 @@ STATEMENTS = [
         ("SELECT Missions FROM $astronauts WHERE LIST_CONTAINS_ANY(Missions, ('Apollo 8', 'Apollo 13'))", 5, 1),
         ("SELECT Missions FROM $astronauts WHERE LIST_CONTAINS_ALL(Missions, ('Apollo 8', 'Gemini 7'))", 2, 1),
         ("SELECT Missions FROM $astronauts WHERE LIST_CONTAINS_ALL(Missions, ('Gemini 7', 'Apollo 8'))", 2, 1),
+
+        ("SELECT * FROM $satellites WHERE planetId IN (SELECT id FROM $planets WHERE name = 'Earth')", 1, 8),
+        ("SELECT * FROM $planets WHERE id NOT IN (SELECT DISTINCT planetId FROM $satellites)", 1, 8),
+        ("SELECT name FROM $planets WHERE id IN (SELECT * FROM UNNEST((1,2,3)) as id)", 3, 1),
 
         # These are queries which have been found to return the wrong result or not run
         # correctly which suggests their implementation is somewhat complex and

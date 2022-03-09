@@ -35,6 +35,10 @@ The effective order of operations must be:
 However, this doesn't preclude the order being different to achieve optimizations, as
 long as the functional outcode would be the same. Expressions and aliases technically
 should not be evaluated until the SELECT statement.
+
+note: This module does not handle temporal filters, those as part of the FOR clause, 
+these are not supported by SqlOxide and so are in a different module which strips
+temporal aspects out of the query.
 """
 import sys
 import os
@@ -52,6 +56,7 @@ from opteryx.engine.planner.temporal import extract_temporal_filters
 
 
 JSON_TYPES = {numpy.bool_: bool, numpy.int64: int, numpy.float64: float}
+
 
 def _serializer(obj):
     return JSON_TYPES[type(obj)](obj)
@@ -76,345 +81,415 @@ OPERATOR_XLAT = {
 }
 
 
-def _extract_value(value):
-    if value is None:
-        return (None, None)
-    if "SingleQuotedString" in value:
-        # quoted strings are either VARCHAR or TIMESTAMP
-        str_value = value["SingleQuotedString"]
-        dte_value = dates.parse_iso(str_value)
-        if dte_value:
-            return (dte_value, TOKEN_TYPES.TIMESTAMP)
-        return (str_value, TOKEN_TYPES.VARCHAR)
-    if "Number" in value:
-        # we have one internal numeric type
-        return (numpy.float64(value["Number"][0]), TOKEN_TYPES.NUMERIC)
-    if "Boolean" in value:
-        return (value["Boolean"], TOKEN_TYPES.BOOLEAN)
-    if "Tuple" in value:
-        return ([_extract_value(t["Value"])[0] for t in value["Tuple"]], TOKEN_TYPES.LIST)
-
-
-def _build_dnf_filters(filters):
-
-    # None is None
-    if filters is None:
-        return None
-
-    if "Identifier" in filters:  # we're an identifier
-        return (filters["Identifier"]["value"], TOKEN_TYPES.IDENTIFIER)
-    if "Value" in filters:  # we're a literal
-        return _extract_value(filters["Value"])
-    if "BinaryOp" in filters:
-        left = _build_dnf_filters(filters["BinaryOp"]["left"])
-        operator = filters["BinaryOp"]["op"]
-        right = _build_dnf_filters(filters["BinaryOp"]["right"])
-
-        if operator in ("And"):
-            return [left, right]
-        if operator in ("Or"):
-            return [[left], [right]]
-        return (left, OPERATOR_XLAT[operator], right)
-    if "UnaryOp" in filters:
-        if filters["UnaryOp"]["op"] == "Not":
-            left = _build_dnf_filters(filters["UnaryOp"]["expr"])
-            return (left, "<>", True)
-        if filters["UnaryOp"]["op"] == "Minus":
-            number = 0 - numpy.float64(filters["UnaryOp"]["expr"]["Value"]["Number"][0])
-            return (number, TOKEN_TYPES.NUMERIC)
-    if "Between" in filters:
-        left = _build_dnf_filters(filters["Between"]["expr"])
-        low = _build_dnf_filters(filters["Between"]["low"])
-        high = _build_dnf_filters(filters["Between"]["high"])
-        inverted = filters["Between"]["negated"]
-
-        if inverted:
-            # LEFT <= LOW AND LEFT >= HIGH (not between)
-            return [[(left, "<", low)], [(left, ">", high)]]
-        else:
-            # LEFT > LOW and LEFT < HIGH (between)
-            return [(left, ">=", low), (left, "<=", high)]
-    if "InSubquery" in filters:
-        # WHERE g in (select * from b)
-        # {'InSubquery': {'expr': {'Identifier': {'value': 'g', 'quote_style': None}}, 'subquery': {'with': None, 'body': {'Select': {'distinct': False, 'top': None, 'projection': ['Wildcard'], 'from': [{'relation': {'Table': {'name': [{'value': 'b', 'quote_style': None}], 'alias': None, 'args': [], 'with_hints': []}}, 'joins': []}], 'lateral_views': [], 'selection': None, 'group_by': [], 'cluster_by': [], 'distribute_by': [], 'sort_by': [], 'having': None}}, 'order_by': [], 'limit': None, 'offset': None, 'fetch': None}, 'negated': False}}
-        raise NotImplementedError("IN SUBQUERIES are not implemented.")
-    if "IsNull" in filters:
-        left = _build_dnf_filters(filters["IsNull"])
-        return (left, "=", None)
-    if "IsNotNull" in filters:
-        left = _build_dnf_filters(filters["IsNotNull"])
-        return (left, "<>", None)
-    if "InList" in filters:
-        left = _build_dnf_filters(filters["InList"]["expr"])
-        right = (
-            [_build_dnf_filters(v)[0] for v in filters["InList"]["list"]],
-            TOKEN_TYPES.LIST,
-        )
-        operator = "not in" if filters["InList"]["negated"] else "in"
-        return (left, operator, right)
-    if filters == "Wildcard":
-        return ("Wildcard", TOKEN_TYPES.WILDCARD)
-    if "Function" in filters:
-        func = filters["Function"]["name"][0]["value"].upper()
-        args = [_build_dnf_filters(a["Unnamed"]) for a in filters["Function"]["args"]]
-        select_args = [(str(a[0]) if a[0] != "Wildcard" else "*") for a in args]
-        select_args = [((f"({','.join(a[0])})",) if isinstance(a[0], list) else a) for a in select_args]
-        column_name = f"{func}({','.join(select_args)})"
-        # we pass the function definition so if needed we can execute the function
-        return (column_name, TOKEN_TYPES.IDENTIFIER, { "function": func, "args": args })
-    if "Unnamed" in filters:
-        return _build_dnf_filters(filters["Unnamed"])
-    if "Expr" in filters:
-        return _build_dnf_filters(filters["Expr"])
-    if "Nested" in filters:
-        return (_build_dnf_filters(filters["Nested"]),)
-    if "MapAccess" in filters:
-        identifier = filters["MapAccess"]["column"]["Identifier"]["value"]
-        key_dict = filters["MapAccess"]["keys"][0]["Value"]
-        if "SingleQuotedString" in key_dict:
-            key = f"'{key_dict['SingleQuotedString']}'"
-        if "Number" in key_dict:
-            key = key_dict['Number'][0]
-        return (f"{identifier}[{key}]", TOKEN_TYPES.IDENTIFIER)
-    if "Tuple" in filters:
-        return ([_extract_value(t["Value"])[0] for t in filters["Tuple"]], TOKEN_TYPES.LIST)
-
-def _extract_relations(ast):
-    """ """
-
-    def _safe_get(l, i):
-        try:
-            return l[i]
-        except:
-            return None
-
-    try:
-        relations = ast[0]["Query"]["body"]["Select"]["from"]
-    except IndexError:
-        return "$no_table"
-
-    for relation in relations:
-        if "Table" in relation["relation"]:
-            if relation["relation"]["Table"]["name"][0]["value"].upper() == "UNNEST":
-                # This is toy functionality, the value will be in CROSS JOINing on UNNESTed columns
-                import orjson
-
-                alias = relation["relation"]["Table"]["alias"]["name"]["value"]
-                values = _extract_value(
-                    relation["relation"]["Table"]["args"][0]["Unnamed"]["Expr"]
-                )
-                body = bytearray()
-                for v in values[0]:
-                    body.extend(orjson.dumps({alias: v}, default=_serializer))
-                yield (alias, body)  # <- a literal table
-            else:
-                alias = None
-                if relation["relation"]["Table"]["alias"] is not None:
-                    alias = relation["relation"]["Table"]["alias"]["name"]["value"]
-                dataset = ".".join(
-                    [part["value"] for part in relation["relation"]["Table"]["name"]]
-                )
-                yield (alias, dataset)
-
-        if "Derived" in relation["relation"]:
-            subquery = relation["relation"]["Derived"]["subquery"]["body"]
-            try:
-                alias = relation["relation"]["Derived"]["alias"]["name"]["value"]
-            except KeyError:
-                alias = None
-            if "Select" in subquery:
-                raise NotImplementedError("SUBQUERIES in FROM statements not supported")
-                # {'Select': {'distinct': False, 'top': None, 'projection': ['Wildcard'], 'from': [{'relation': {'Table': {'name': [{'value': 't', 'quote_style': None}], 'alias': None, 'args': [], 'with_hints': []}}, 'joins': []}], 'lateral_views': [], 'selection': None, 'group_by': [], 'cluster_by': [], 'distribute_by': [], 'sort_by': [], 'having': None}}
-            if "Values" in subquery:
-                import orjson
-
-                body = bytearray()
-                headers = [
-                    h["value"] for h in relation["relation"]["Derived"]["alias"]["columns"]
-                ]
-                for value_set in subquery["Values"]:
-                    values = [_safe_get(_extract_value(v["Value"]), 0) for v in value_set]
-                    body.extend(
-                        orjson.dumps(dict(zip(headers, values)), default=_serializer)
-                    )
-                yield (alias, body)  # <- a literal table
-
-
-def _extract_projections(ast):
-    """
-    Projections are lists of attributes, the most obvious one is in the SELECT
-    statement but they can exist elsewhere to limit the amount of data
-    processed at each step.
-    """
-    projection = ast[0]["Query"]["body"]["Select"]["projection"]
-    # print(projection)
-    if projection == ["Wildcard"]:
-        return {"*": "*"}
-
-    def _inner(attribute):
-        function = None
-        alias = None
-        if "UnnamedExpr" in attribute:
-            function = attribute["UnnamedExpr"]
-        if "ExprWithAlias" in attribute:
-            function = attribute["ExprWithAlias"]["expr"]
-            alias = attribute["ExprWithAlias"]["alias"]["value"]
-
-        if function:
-            if "Identifier" in function:
-                return {"identifier": function["Identifier"]["value"], "alias": alias}
-            if "Function" in function:
-                func = function["Function"]["name"][0]["value"].upper()
-                args = [_build_dnf_filters(a) for a in function["Function"]["args"]]
-                if is_function(func):
-                    return {"function": func, "args": args, "alias": alias}
-                else:
-                    return {"aggregate": func, "args": args, "alias": alias}
-            if "BinaryOp" in function:
-                raise NotImplementedError(
-                    "Operations in the SELECT clause are not supported"
-                )
-                return {"operation": _build_dnf_filters(function)}
-            if "Cast" in function:
-                # CAST(<var> AS <type>) - convert to the form <type>(var), e.g. BOOLEAN(on)
-                args = [_build_dnf_filters(function["Cast"]["expr"])]
-                data_type = function["Cast"]["data_type"]
-                if data_type == "Timestamp":
-                    data_type = "TIMESTAMP"
-                elif "Varchar" in data_type:
-                    data_type = "VARCHAR"
-                elif "Decimal" in data_type:
-                    data_type = "NUMERIC"
-                elif "Boolean" in data_type:
-                    data_type = "BOOLEAN"
-                else:
-                    raise SqlError("Unsupported CAST function")
-
-                if alias is None:
-                    alias = f"CAST({args[0][0]} AS {data_type})"
-
-                return {"function": data_type, "args": args, "alias": alias}
-            if "MapAccess" in function:
-                # Identifier[key] -> GET(Identifier, key) -> alias of I[k] or alias
-                identifier = function["MapAccess"]["column"]["Identifier"]["value"]
-                key_dict = function["MapAccess"]["keys"][0]["Value"]
-                if "SingleQuotedString" in key_dict:
-                    key_value = (key_dict['SingleQuotedString'], TOKEN_TYPES.VARCHAR,)
-                    key = f"'{key_dict['SingleQuotedString']}'"
-                if "Number" in key_dict:
-                    key_value = (int(key_dict['Number'][0]), TOKEN_TYPES.NUMERIC,)
-                    key = key_dict['Number'][0]
-                if alias is None:
-                    alias = f"{identifier}[{key}]"
-
-                return {"function": "GET", "args": [(identifier,TOKEN_TYPES.IDENTIFIER), key_value], "alias": alias}
-
-    projection = [_inner(attribute) for attribute in projection]
-    # print(projection)
-    return projection
-
-
-def _extract_selection(ast):
-    """
-    Although there is a SELECT statement in a SQL Query, Selection refers to the
-    filter or WHERE statement.
-    """
-    selections = ast[0]["Query"]["body"]["Select"]["selection"]
-    return _build_dnf_filters(selections)
-
-
-def _extract_distinct(ast):
-    return ast[0]["Query"]["body"]["Select"]["distinct"]
-
-
-def _extract_limit(ast):
-    limit = ast[0]["Query"]["limit"]
-    if limit is not None:
-        return int(limit["Value"]["Number"][0])
-    return None
-
-
-def _extract_offset(ast):
-    offset = ast[0]["Query"]["offset"]
-    if offset is not None:
-        return int(offset["value"]["Value"]["Number"][0])
-    return None
-
-
-def _extract_order(ast):
-    order = ast[0]["Query"]["order_by"]
-    if order is not None:
-        orders = []
-        for col in order:
-            column = col["expr"]
-            if "Identifier" in column:
-                column = column["Identifier"]["value"]
-            if "Function" in column:
-                func = column["Function"]["name"][0]["value"].upper()
-                args = [_build_dnf_filters(a)[0] for a in column["Function"]["args"]]
-                args = ["*" if i == "Wildcard" else i for i in args]
-                args = [((f"({','.join(a[0])})",) if isinstance(a[0], list) else a) for a in args]
-                column = f"{func}({','.join(args)})"
-            orders.append(
-                (
-                    column,
-                    "descending" if str(col["asc"]) == "False" else "ascending",
-                ),
-            )
-        return orders
-
-
-def _extract_groups(ast):
-    def _inner(element):
-        if element:
-            if "Identifier" in element:
-                return element["Identifier"]["value"]
-            if "Function" in element:
-                func = element["Function"]["name"][0]["value"].upper()
-                args = [_build_dnf_filters(a) for a in element["Function"]["args"]]
-                args = [((f"({','.join(a[0])})",) if isinstance(a[0], list) else a) for a in args]
-                return f"{func.upper()}({','.join([str(a[0]) for a in args])})"
-
-    groups = ast[0]["Query"]["body"]["Select"]["group_by"]
-    return [_inner(g) for g in groups]
-
-
-def _extract_having(ast):
-    having = ast[0]["Query"]["body"]["Select"]["having"]
-    return _build_dnf_filters(having)
-
-
-class QueryPlan(object):
-    def __init__(self, sql: str, statistics, reader, partition_scheme):
+class QueryPlanner(object):
+    def __init__(self, statistics, reader, partition_scheme):
         """
         PLan represents Directed Acyclic Graphs which are used to describe data
         pipelines.
         """
-        import sqloxide
+        import datetime
 
         self.nodes: dict = {}
         self.edges: list = []
 
+        self._statistics = statistics
         self._reader = reader
         self._partition_scheme = partition_scheme
 
-        # extract temporal filters, this isn't supported by sqloxide
-        self._start_date, self._end_date, sql = extract_temporal_filters(sql)
+        self._start_date = datetime.datetime.today()
+        self._end_date = datetime.datetime.today()
 
-        # Parse the SQL into a AST
-        try:
-            self._ast = sqloxide.parse_sql(sql, dialect="mysql")
-            # MySQL Dialect allows identifiers to be delimited with ` (backticks) and
-            # identifiers to start with _ (underscore) and $ (dollar sign)
-            # https://github.com/sqlparser-rs/sqlparser-rs/blob/main/src/dialect/mysql.rs
-        except ValueError as e:
-            # print(sql)
-            raise SqlError(e)
+    def copy(self):
+        qp = QueryPlanner(self._statistics, self._reader, self._partition_scheme)
+        qp._start_date = self._start_date
+        qp._end_date = self._end_date
+        return qp
 
-        # print(self._ast)
+    def create_plan(self, sql: str = None, ast: dict = None):
+
+        if sql:
+            import sqloxide
+
+            # extract temporal filters, this isn't supported by sqloxide
+            self._start_date, self._end_date, sql = extract_temporal_filters(sql)
+            # Parse the SQL into a AST
+            try:
+                self._ast = sqloxide.parse_sql(sql, dialect="mysql")
+                # MySQL Dialect allows identifiers to be delimited with ` (backticks) and
+                # identifiers to start with _ (underscore) and $ (dollar sign)
+                # https://github.com/sqlparser-rs/sqlparser-rs/blob/main/src/dialect/mysql.rs
+            except ValueError as e:
+                # print(sql)
+                raise SqlError(e)
+        else:
+            self._ast = ast
 
         # build a plan for the query
-        self._naive_planner(self._ast, statistics)
+        self._naive_planner(self._ast, self._statistics)
+
+    def _extract_value(self, value):
+        """
+        extract values from a value node
+        """
+        if value is None:
+            return (None, None)
+        if "SingleQuotedString" in value:
+            # quoted strings are either VARCHAR or TIMESTAMP
+            str_value = value["SingleQuotedString"]
+            dte_value = dates.parse_iso(str_value)
+            if dte_value:
+                return (dte_value, TOKEN_TYPES.TIMESTAMP)
+            return (str_value, TOKEN_TYPES.VARCHAR)
+        if "Number" in value:
+            # we have one internal numeric type
+            return (numpy.float64(value["Number"][0]), TOKEN_TYPES.NUMERIC)
+        if "Boolean" in value:
+            return (value["Boolean"], TOKEN_TYPES.BOOLEAN)
+        if "Tuple" in value:
+            return (
+                [self._extract_value(t["Value"])[0] for t in value["Tuple"]],
+                TOKEN_TYPES.LIST,
+            )
+
+    def _build_dnf_filters(self, filters):
+
+        # None is None
+        if filters is None:
+            return None
+
+        if "Identifier" in filters:  # we're an identifier
+            return (filters["Identifier"]["value"], TOKEN_TYPES.IDENTIFIER)
+        if "Value" in filters:  # we're a literal
+            return self._extract_value(filters["Value"])
+        if "BinaryOp" in filters:
+            left = self._build_dnf_filters(filters["BinaryOp"]["left"])
+            operator = filters["BinaryOp"]["op"]
+            right = self._build_dnf_filters(filters["BinaryOp"]["right"])
+
+            if operator in ("And"):
+                return [left, right]
+            if operator in ("Or"):
+                return [[left], [right]]
+            return (left, OPERATOR_XLAT[operator], right)
+        if "UnaryOp" in filters:
+            if filters["UnaryOp"]["op"] == "Not":
+                left = self._build_dnf_filters(filters["UnaryOp"]["expr"])
+                return (left, "<>", True)
+            if filters["UnaryOp"]["op"] == "Minus":
+                number = 0 - numpy.float64(
+                    filters["UnaryOp"]["expr"]["Value"]["Number"][0]
+                )
+                return (number, TOKEN_TYPES.NUMERIC)
+        if "Between" in filters:
+            left = self._build_dnf_filters(filters["Between"]["expr"])
+            low = self._build_dnf_filters(filters["Between"]["low"])
+            high = self._build_dnf_filters(filters["Between"]["high"])
+            inverted = filters["Between"]["negated"]
+
+            if inverted:
+                # LEFT <= LOW AND LEFT >= HIGH (not between)
+                return [[(left, "<", low)], [(left, ">", high)]]
+            else:
+                # LEFT > LOW and LEFT < HIGH (between)
+                return [(left, ">=", low), (left, "<=", high)]
+        if "InSubquery" in filters:
+            # if it's a sub-query we create a plan for it
+            left = self._build_dnf_filters(filters["InSubquery"]["expr"])
+            ast = {}
+            ast["Query"] = filters["InSubquery"]["subquery"]
+            subquery_plan = self.copy()
+            subquery_plan.create_plan(ast=[ast])
+            operator = "not in" if filters["InSubquery"]["negated"] else "in"
+            return (left, operator, (subquery_plan, TOKEN_TYPES.QUERY_PLAN))
+        if "IsNull" in filters:
+            left = self._build_dnf_filters(filters["IsNull"])
+            return (left, "=", None)
+        if "IsNotNull" in filters:
+            left = self._build_dnf_filters(filters["IsNotNull"])
+            return (left, "<>", None)
+        if "InList" in filters:
+            left = self._build_dnf_filters(filters["InList"]["expr"])
+            right = (
+                [self._build_dnf_filters(v)[0] for v in filters["InList"]["list"]],
+                TOKEN_TYPES.LIST,
+            )
+            operator = "not in" if filters["InList"]["negated"] else "in"
+            return (left, operator, right)
+        if filters == "Wildcard":
+            return ("Wildcard", TOKEN_TYPES.WILDCARD)
+        if "Function" in filters:
+            func = filters["Function"]["name"][0]["value"].upper()
+            args = [
+                self._build_dnf_filters(a["Unnamed"])
+                for a in filters["Function"]["args"]
+            ]
+            select_args = [(str(a[0]) if a[0] != "Wildcard" else "*") for a in args]
+            select_args = [
+                ((f"({','.join(a[0])})",) if isinstance(a[0], list) else a)
+                for a in select_args
+            ]
+            column_name = f"{func}({','.join(select_args)})"
+            # we pass the function definition so if needed we can execute the function
+            return (
+                column_name,
+                TOKEN_TYPES.IDENTIFIER,
+                {"function": func, "args": args},
+            )
+        if "Unnamed" in filters:
+            return self._build_dnf_filters(filters["Unnamed"])
+        if "Expr" in filters:
+            return self._build_dnf_filters(filters["Expr"])
+        if "Nested" in filters:
+            return (self._build_dnf_filters(filters["Nested"]),)
+        if "MapAccess" in filters:
+            identifier = filters["MapAccess"]["column"]["Identifier"]["value"]
+            key_dict = filters["MapAccess"]["keys"][0]["Value"]
+            if "SingleQuotedString" in key_dict:
+                key = f"'{key_dict['SingleQuotedString']}'"
+            if "Number" in key_dict:
+                key = key_dict["Number"][0]
+            return (f"{identifier}[{key}]", TOKEN_TYPES.IDENTIFIER)
+        if "Tuple" in filters:
+            return (
+                [self._extract_value(t["Value"])[0] for t in filters["Tuple"]],
+                TOKEN_TYPES.LIST,
+            )
+
+    def _extract_relations(self, ast):
+        """ """
+
+        def _safe_get(l, i):
+            try:
+                return l[i]
+            except:
+                return None
+
+        try:
+            relations = ast[0]["Query"]["body"]["Select"]["from"]
+        except IndexError:
+            return "$no_table"
+
+        for relation in relations:
+            if "Table" in relation["relation"]:
+                if (
+                    relation["relation"]["Table"]["name"][0]["value"].upper()
+                    == "UNNEST"
+                ):
+                    # This is toy functionality, the value will be in CROSS JOINing on UNNESTed columns
+                    import orjson
+
+                    alias = relation["relation"]["Table"]["alias"]["name"]["value"]
+                    values = self._extract_value(
+                        relation["relation"]["Table"]["args"][0]["Unnamed"]["Expr"]
+                    )
+                    body = bytearray()
+                    for v in values[0]:
+                        body.extend(orjson.dumps({alias: v}, default=_serializer))
+                    yield (alias, body)  # <- a literal table
+                else:
+                    alias = None
+                    if relation["relation"]["Table"]["alias"] is not None:
+                        alias = relation["relation"]["Table"]["alias"]["name"]["value"]
+                    dataset = ".".join(
+                        [
+                            part["value"]
+                            for part in relation["relation"]["Table"]["name"]
+                        ]
+                    )
+                    yield (alias, dataset)
+
+            if "Derived" in relation["relation"]:
+                subquery = relation["relation"]["Derived"]["subquery"]["body"]
+                try:
+                    alias = relation["relation"]["Derived"]["alias"]["name"]["value"]
+                except KeyError:
+                    alias = None
+                if "Select" in subquery:
+                    raise NotImplementedError(
+                        "SUBQUERIES in FROM statements not supported"
+                    )
+                    # {'Select': {'distinct': False, 'top': None, 'projection': ['Wildcard'], 'from': [{'relation': {'Table': {'name': [{'value': 't', 'quote_style': None}], 'alias': None, 'args': [], 'with_hints': []}}, 'joins': []}], 'lateral_views': [], 'selection': None, 'group_by': [], 'cluster_by': [], 'distribute_by': [], 'sort_by': [], 'having': None}}
+                if "Values" in subquery:
+                    import orjson
+
+                    body = bytearray()
+                    headers = [
+                        h["value"]
+                        for h in relation["relation"]["Derived"]["alias"]["columns"]
+                    ]
+                    for value_set in subquery["Values"]:
+                        values = [
+                            _safe_get(self._extract_value(v["Value"]), 0)
+                            for v in value_set
+                        ]
+                        body.extend(
+                            orjson.dumps(
+                                dict(zip(headers, values)), default=_serializer
+                            )
+                        )
+                    yield (alias, body)  # <- a literal table
+
+    def _extract_projections(self, ast):
+        """
+        Projections are lists of attributes, the most obvious one is in the SELECT
+        statement but they can exist elsewhere to limit the amount of data
+        processed at each step.
+        """
+        projection = ast[0]["Query"]["body"]["Select"]["projection"]
+        # print(projection)
+        if projection == ["Wildcard"]:
+            return {"*": "*"}
+
+        def _inner(attribute):
+            function = None
+            alias = None
+            if "UnnamedExpr" in attribute:
+                function = attribute["UnnamedExpr"]
+            if "ExprWithAlias" in attribute:
+                function = attribute["ExprWithAlias"]["expr"]
+                alias = attribute["ExprWithAlias"]["alias"]["value"]
+
+            if function:
+                if "Identifier" in function:
+                    return {
+                        "identifier": function["Identifier"]["value"],
+                        "alias": alias,
+                    }
+                if "Function" in function:
+                    func = function["Function"]["name"][0]["value"].upper()
+                    args = [
+                        self._build_dnf_filters(a) for a in function["Function"]["args"]
+                    ]
+                    if is_function(func):
+                        return {"function": func, "args": args, "alias": alias}
+                    else:
+                        return {"aggregate": func, "args": args, "alias": alias}
+                if "BinaryOp" in function:
+                    raise NotImplementedError(
+                        "Operations in the SELECT clause are not supported"
+                    )
+                    return {"operation": _build_dnf_filters(function)}
+                if "Cast" in function:
+                    # CAST(<var> AS <type>) - convert to the form <type>(var), e.g. BOOLEAN(on)
+                    args = [self._build_dnf_filters(function["Cast"]["expr"])]
+                    data_type = function["Cast"]["data_type"]
+                    if data_type == "Timestamp":
+                        data_type = "TIMESTAMP"
+                    elif "Varchar" in data_type:
+                        data_type = "VARCHAR"
+                    elif "Decimal" in data_type:
+                        data_type = "NUMERIC"
+                    elif "Boolean" in data_type:
+                        data_type = "BOOLEAN"
+                    else:
+                        raise SqlError("Unsupported CAST function")
+
+                    if alias is None:
+                        alias = f"CAST({args[0][0]} AS {data_type})"
+
+                    return {"function": data_type, "args": args, "alias": alias}
+                if "MapAccess" in function:
+                    # Identifier[key] -> GET(Identifier, key) -> alias of I[k] or alias
+                    identifier = function["MapAccess"]["column"]["Identifier"]["value"]
+                    key_dict = function["MapAccess"]["keys"][0]["Value"]
+                    if "SingleQuotedString" in key_dict:
+                        key_value = (
+                            key_dict["SingleQuotedString"],
+                            TOKEN_TYPES.VARCHAR,
+                        )
+                        key = f"'{key_dict['SingleQuotedString']}'"
+                    if "Number" in key_dict:
+                        key_value = (
+                            int(key_dict["Number"][0]),
+                            TOKEN_TYPES.NUMERIC,
+                        )
+                        key = key_dict["Number"][0]
+                    if alias is None:
+                        alias = f"{identifier}[{key}]"
+
+                    return {
+                        "function": "GET",
+                        "args": [(identifier, TOKEN_TYPES.IDENTIFIER), key_value],
+                        "alias": alias,
+                    }
+
+        projection = [_inner(attribute) for attribute in projection]
+        # print(projection)
+        return projection
+
+    def _extract_selection(self, ast):
+        """
+        Although there is a SELECT statement in a SQL Query, Selection refers to the
+        filter or WHERE statement.
+        """
+        selections = ast[0]["Query"]["body"]["Select"]["selection"]
+        return self._build_dnf_filters(selections)
+
+    def _extract_distinct(self, ast):
+        return ast[0]["Query"]["body"]["Select"]["distinct"]
+
+    def _extract_limit(self, ast):
+        limit = ast[0]["Query"]["limit"]
+        if limit is not None:
+            return int(limit["Value"]["Number"][0])
+        return None
+
+    def _extract_offset(self, ast):
+        offset = ast[0]["Query"]["offset"]
+        if offset is not None:
+            return int(offset["value"]["Value"]["Number"][0])
+        return None
+
+    def _extract_order(self, ast):
+        order = ast[0]["Query"]["order_by"]
+        if order is not None:
+            orders = []
+            for col in order:
+                column = col["expr"]
+                if "Identifier" in column:
+                    column = column["Identifier"]["value"]
+                if "Function" in column:
+                    func = column["Function"]["name"][0]["value"].upper()
+                    args = [
+                        self._build_dnf_filters(a)[0]
+                        for a in column["Function"]["args"]
+                    ]
+                    args = ["*" if i == "Wildcard" else i for i in args]
+                    args = [
+                        ((f"({','.join(a[0])})",) if isinstance(a[0], list) else a)
+                        for a in args
+                    ]
+                    column = f"{func}({','.join(args)})"
+                orders.append(
+                    (
+                        column,
+                        "descending" if str(col["asc"]) == "False" else "ascending",
+                    ),
+                )
+            return orders
+
+    def _extract_groups(self, ast):
+        def _inner(element):
+            if element:
+                if "Identifier" in element:
+                    return element["Identifier"]["value"]
+                if "Function" in element:
+                    func = element["Function"]["name"][0]["value"].upper()
+                    args = [
+                        self._build_dnf_filters(a) for a in element["Function"]["args"]
+                    ]
+                    args = [
+                        ((f"({','.join(a[0])})",) if isinstance(a[0], list) else a)
+                        for a in args
+                    ]
+                    return f"{func.upper()}({','.join([str(a[0]) for a in args])})"
+
+        groups = ast[0]["Query"]["body"]["Select"]["group_by"]
+        return [_inner(g) for g in groups]
+
+    def _extract_having(self, ast):
+        having = ast[0]["Query"]["body"]["Select"]["having"]
+        return self._build_dnf_filters(having)
 
     def _naive_planner(self, ast, statistics):
         """
@@ -435,7 +510,7 @@ class QueryPlan(object):
         This is phase one of the rewrite, to essentially mimick the existing
         functionality.
         """
-        _relations = [r for r in _extract_relations(ast)]
+        _relations = [r for r in self._extract_relations(ast)]
         if len(_relations) == 0:
             _relations = [(None, "$no_table")]
 
@@ -455,7 +530,7 @@ class QueryPlan(object):
         else:
             raise SqlError("Queries are currently limited to single tables.")
 
-        _projection = _extract_projections(ast)
+        _projection = self._extract_projections(ast)
         if any(["function" in a for a in _projection]):
             self.add_operator(
                 "eval", EvaluationNode(statistics, projection=_projection)
@@ -463,13 +538,13 @@ class QueryPlan(object):
             self.link_operators(last_node, "eval")
             last_node = "eval"
 
-        _selection = _extract_selection(ast)
+        _selection = self._extract_selection(ast)
         if _selection:
             self.add_operator("where", SelectionNode(statistics, filter=_selection))
             self.link_operators(last_node, "where")
             last_node = "where"
 
-        _groups = _extract_groups(ast)
+        _groups = self._extract_groups(ast)
         #        _columns = _extract_columns(ast)
         if _groups or any(["aggregate" in a for a in _projection]):
             _aggregates = _projection.copy()
@@ -487,7 +562,7 @@ class QueryPlan(object):
             self.link_operators(last_node, "agg")
             last_node = "agg"
 
-        _having = _extract_having(ast)
+        _having = self._extract_having(ast)
         if _having:
             self.add_operator("having", SelectionNode(statistics, filter=_having))
             self.link_operators(last_node, "having")
@@ -497,25 +572,25 @@ class QueryPlan(object):
         self.link_operators(last_node, "select")
         last_node = "select"
 
-        _distinct = _extract_distinct(ast)
+        _distinct = self._extract_distinct(ast)
         if _distinct:
             self.add_operator("distinct", DistinctNode(statistics))
             self.link_operators(last_node, "distinct")
             last_node = "distinct"
 
-        _order = _extract_order(ast)
+        _order = self._extract_order(ast)
         if _order:
             self.add_operator("order", SortNode(statistics, order=_order))
             self.link_operators(last_node, "order")
             last_node = "order"
 
-        _offset = _extract_offset(ast)
+        _offset = self._extract_offset(ast)
         if _offset:
             self.add_operator("offset", OffsetNode(statistics, offset=_offset))
             self.link_operators(last_node, "offset")
             last_node = "offset"
 
-        _limit = _extract_limit(ast)
+        _limit = self._extract_limit(ast)
         if _limit:
             self.add_operator("limit", LimitNode(statistics, limit=_limit))
             self.link_operators(last_node, "limit")

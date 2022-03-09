@@ -1,13 +1,12 @@
-
 from trino.dbapi import connect
 
 
 conn = connect(
     host="localhost",
     port=8080,
-#    user="<username>",
-#    catalog="<catalog>",
-#    schema="<schema>",
+    #    user="<username>",
+    #    catalog="<catalog>",
+    #    schema="<schema>",
 )
 cur = conn.cursor()
 cur.execute("SELECT * FROM system.runtime.nodes")
@@ -15,6 +14,6 @@ cur.execute("SELECT * FROM system.runtime.nodes")
 print(cur.fetchone())
 print(cur.fetchone())
 
-print('rc', cur.rowcount)
-print('s', cur.stats)
-print('d', cur.description)
+print("rc", cur.rowcount)
+print("s", cur.stats)
+print("d", cur.description)

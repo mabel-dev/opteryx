@@ -47,7 +47,10 @@ class ProjectionNode(BasePlanNode):
                 ] = attribute["alias"]
 
             elif "function" in attribute:
-                args = [((f"({','.join(a[0])})",None) if isinstance(a[0], list) else a) for a in attribute["args"]]
+                args = [
+                    ((f"({','.join(a[0])})", None) if isinstance(a[0], list) else a)
+                    for a in attribute["args"]
+                ]
                 self._projection[
                     f"{attribute['function']}({','.join([replace_wildcards(a) for a in args])})"
                 ] = attribute["alias"]
@@ -74,7 +77,7 @@ class ProjectionNode(BasePlanNode):
             try:
                 projection = []
                 existing_columns = page.column_names
-                for k,v in self._projection.items():
+                for k, v in self._projection.items():
                     if k in existing_columns:
                         projection.append(k)
                     elif v in existing_columns:

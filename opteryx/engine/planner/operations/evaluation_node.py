@@ -40,7 +40,10 @@ class EvaluationNode(BasePlanNode):
                     f"Function not known or not supported - {function['function']}"
                 )
 
-            args = [((f"({','.join(a[0])})",) if isinstance(a[0], list) else a) for a in function['args']]
+            args = [
+                ((f"({','.join(a[0])})",) if isinstance(a[0], list) else a)
+                for a in function["args"]
+            ]
             column_name = f"{function['function']}({','.join(str(a[0]) for a in args)})"
             function["column_name"] = column_name
 
