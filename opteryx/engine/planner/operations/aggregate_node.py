@@ -69,7 +69,6 @@ def _incremental(x, y, function):
 
 JSON_TYPES = {np.bool_: bool, np.int64: int, np.float64: float}
 
-
 def _serializer(obj):
     return JSON_TYPES[type(obj)](obj)
 
@@ -199,7 +198,7 @@ class AggregateNode(BasePlanNode):
         t = time.time_ns()
         for collected, record in collector.items():
             # we can't load huge json docs into pyarrow, so we chunk it
-            if len(buffer) > (2 * 1024 * 1024):  # 4Mb
+            if len(buffer) > (2 * 1024 * 1024):  # 2Mb
                 table = pyarrow.json.read_json(io.BytesIO(buffer), read_options=ro)
                 yield table
                 buffer = bytearray()

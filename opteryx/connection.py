@@ -150,7 +150,7 @@ class Cursor:
         # optimize the plan
 
         # how long have we spent planning
-        self._stats.planning_time = time.time_ns() - self._stats.start_time
+        self._stats.time_planning = time.time_ns() - self._stats.start_time
         # self._execute = QueryExecutor(QueryPlan)
         self._results = self._query_plan.execute()
 

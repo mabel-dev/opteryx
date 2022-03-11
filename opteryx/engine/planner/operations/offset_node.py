@@ -18,7 +18,6 @@ This is a SQL Query Execution Plan Node.
 This Node skips over tuples.
 """
 from typing import Iterable
-from pyarrow import concat_tables
 from opteryx.engine.query_statistics import QueryStatistics
 from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
 

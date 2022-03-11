@@ -302,13 +302,15 @@ class QueryPlanner(object):
                 subquery = relation["relation"]["Derived"]["subquery"]["body"]
                 try:
                     alias = relation["relation"]["Derived"]["alias"]["name"]["value"]
-                except KeyError:
+                except (KeyError, TypeError):
                     alias = None
                 if "Select" in subquery:
-                    raise NotImplementedError(
-                        "SUBQUERIES in FROM statements not supported"
-                    )
-                    # {'Select': {'distinct': False, 'top': None, 'projection': ['Wildcard'], 'from': [{'relation': {'Table': {'name': [{'value': 't', 'quote_style': None}], 'alias': None, 'args': [], 'with_hints': []}}, 'joins': []}], 'lateral_views': [], 'selection': None, 'group_by': [], 'cluster_by': [], 'distribute_by': [], 'sort_by': [], 'having': None}}
+                    ast = {}
+                    ast["Query"] = relation["relation"]["Derived"]["subquery"]
+                    subquery_plan = self.copy()
+                    subquery_plan.create_plan(ast=[ast])
+                    
+                    yield (alias, subquery_plan)
                 if "Values" in subquery:
                     import orjson
 
@@ -429,19 +431,19 @@ class QueryPlanner(object):
         return ast[0]["Query"]["body"]["Select"]["distinct"]
 
     def _extract_limit(self, ast):
-        limit = ast[0]["Query"]["limit"]
+        limit = ast[0]["Query"].get("limit")
         if limit is not None:
             return int(limit["Value"]["Number"][0])
         return None
 
     def _extract_offset(self, ast):
-        offset = ast[0]["Query"]["offset"]
+        offset = ast[0]["Query"].get("offset")
         if offset is not None:
             return int(offset["value"]["Value"]["Number"][0])
         return None
 
     def _extract_order(self, ast):
-        order = ast[0]["Query"]["order_by"]
+        order = ast[0]["Query"].get("order_by")
         if order is not None:
             orders = []
             for col in order:

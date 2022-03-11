@@ -6,12 +6,6 @@ from .helpers import columns_to_array, groupify_array
 
 # Filter functionality
 def arr_op_to_idxs(arr, op, value):
-    # Cast value to type arr
-    #   try:
-    #       value = np.array(value, dtype=arr.dtype)
-    #   except:
-    #       raise Exception("Cannot downcast {} to data type {}".format(value, arr.dtype))
-
     if op in ["=", "=="]:
         return np.where(arr == value)
     elif op in ["!=", "<>"]:
@@ -25,24 +19,19 @@ def arr_op_to_idxs(arr, op, value):
     elif op == ">=":
         return np.where(arr >= value)
     elif op == "in":
-
+    # MODIFIED FOR OPTERYX
+    # some of the lists are saved as sets, which are faster than searching numpy
+    # arrays, even with numpy's native functionality. 
         mask = []
         for a in arr:
             mask.append(a in value)
-
         return np.array(mask)
-#        mask = np.isin(arr, value)
-#        return np.arange(len(arr))[mask]
     elif op == "not in":
-
+    # MODIFIED FOR OPTERYX - see comment above
         mask = []
         for a in arr:
             mask.append(a not in value)
-
         return np.array(mask)
-#        mask = np.invert(np.isin(arr, value))
-#        return np.arange(len(arr))[mask]
-    # MODIFIED FOR OPTERYX
     elif op == "like":
         return pc.match_like(arr, value)
     elif op == "not like":

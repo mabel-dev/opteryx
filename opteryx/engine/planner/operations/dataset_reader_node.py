@@ -31,12 +31,12 @@ import time
 import datetime
 from enum import Enum
 from typing import Iterable
+from opteryx.exceptions import DatabaseError
 from opteryx.engine.planner.operations import BasePlanNode
 from opteryx.engine import QueryStatistics
 from opteryx.storage import file_decoders
 from opteryx.storage.adapters import DiskStorage
 from opteryx.storage.schemes import MabelPartitionScheme
-from opteryx.utils import pyarrow
 
 
 class EXTENSION_TYPE(str, Enum):
@@ -58,6 +58,21 @@ KNOWN_EXTENSIONS = {
     "zstd": (file_decoders.zstd_decoder, EXTENSION_TYPE.DATA),
 }
 
+def get_sample_dataset(dataset):
+    # we do this like this so the datasets are not loaded into memory unless
+    # they are going to be used
+    from opteryx import samples
+    SAMPLE_DATASETS = {
+        "$satellites/": samples.satellites(),
+        "$planets/": samples.planets(),
+        "$astronauts/": samples.astronauts(),
+        "$no_table/": samples.no_table()
+    }
+    dataset = dataset.lower()
+    if dataset in SAMPLE_DATASETS:
+        return SAMPLE_DATASETS[dataset]
+    raise DatabaseError(f"Dataset not found `{dataset}`.")
+
 
 class DatasetReaderNode(BasePlanNode):
     def __init__(self, statistics: QueryStatistics, **config):
@@ -65,12 +80,14 @@ class DatasetReaderNode(BasePlanNode):
         The Dataset Reader Node is responsible for reading the relevant blobs
         and returning a Table/Relation.
         """
+        from opteryx.engine.planner.planner import QueryPlanner
+
         TODAY = datetime.date.today()
 
         self._statistics = statistics
         self._alias, self._dataset = config.get("dataset", [None, None])
 
-        if isinstance(self._dataset, bytearray):
+        if isinstance(self._dataset, (bytearray, QueryPlanner)):
             return
 
         self._dataset = self._dataset.replace(".", "/") + "/"
@@ -90,6 +107,8 @@ class DatasetReaderNode(BasePlanNode):
 
     def execute(self, data_pages: Iterable) -> Iterable:
 
+        from opteryx.engine.planner.planner import QueryPlanner
+
         # literal datasets
         if isinstance(self._dataset, bytearray):
             import io
@@ -98,29 +117,17 @@ class DatasetReaderNode(BasePlanNode):
             yield pyarrow.json.read_json(io.BytesIO(self._dataset))
             return
 
+        # query plans
+        if isinstance(self._dataset, QueryPlanner):
+            yield from self._dataset.execute()
+            return
+
         # sample datasets
-        if str(self._dataset).lower() == "$satellites/":
-            from opteryx import samples
-
-            yield samples.satellites()
-            return
-        if str(self._dataset).lower() == "$planets/":
-            from opteryx import samples
-
-            yield samples.planets()
-            return
-        if str(self._dataset).lower() == "$astronauts/":
-            from opteryx import samples
-
-            yield samples.astronauts()
-            return
-        if str(self._dataset).lower() == "$no_table/":
-            from opteryx import samples
-
-            yield samples.no_table()
+        if self._dataset[0] == "$":
+            yield get_sample_dataset(self._dataset)
             return
 
-        # datasets from disk
+        # datasets from storage
         partitions = self._reader.get_partitions(
             dataset=self._dataset,
             partitioning=self._partition_scheme.partition_format(),
@@ -147,17 +154,6 @@ class DatasetReaderNode(BasePlanNode):
             if self._partition_scheme is not None:
                 blob_list = self._partition_scheme.filter_blobs(blob_list)
 
-            # If there's a zonemap for the partition, read it
-            #        zonemap = {}
-            #        zonemap_files = [blob for blob in blob_list if blob.endswith("/frame.metadata")]
-            #        if len(zonemap_files) == 1:
-            #            # read the zone map into a dictionary
-            #            try:
-            #                import orjson
-            #                zonemap = orjson.loads(self._reader.read_blob(zonemap_files[0]))
-            #            except:
-            #                pass
-
             if len(blob_list) > 0:
                 self._statistics.partitions_read += 1
 
@@ -171,9 +167,6 @@ class DatasetReaderNode(BasePlanNode):
                 # if it's not a known data file, skip reading it
                 if file_type != EXTENSION_TYPE.DATA:
                     continue
-
-                # can we eliminate this blob using the BRIN?
-                #            pass
 
                 # we're going to open this blob
                 self._statistics.count_data_blobs_read += 1

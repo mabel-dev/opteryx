@@ -1,6 +1,8 @@
 import sys
 import os
 
+from joblib import parallel_backend
+
 sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
 
 from opteryx.engine.query_statistics import QueryStatistics
@@ -16,31 +18,25 @@ def test(SQL):
     import time
     from opteryx.third_party.pyarrow_ops import head
 
-    statistics = QueryStatistics()
-    statistics.start_time = time.time_ns()
-    plan = QueryPlanner(
-        statistics,
+    import opteryx
+    from opteryx.storage.adapters import DiskStorage
+
+    conn = opteryx.connect(
         reader=DiskStorage(),
-        partition_scheme=DefaultPartitionScheme(""),
-        # partition_scheme=MabelPartitionScheme()
+        partition_scheme=None
     )
-    plan.create_plan(sql=SQL)
-    statistics.time_planning = time.time_ns() - statistics.start_time
+    cur = conn.cursor()
+
     # print(q)
 
     from opteryx.utils.display import ascii_table
-    from opteryx.utils.pyarrow import fetchmany, fetchall
 
     with timer.Timer():
         # do this to go over the records
-        r = plan.execute()
-        print(ascii_table(fetchmany(r, size=10), limit=10))
-
-        #    [a for a in fetchall(r)]
-
-        statistics.end_time = time.time_ns()
-        print(statistics.as_dict())
-        print((time.time_ns() - statistics.start_time) / 1e9)
+        cur.execute(SQL)
+        print(ascii_table(cur.fetchmany(size=10), limit=10))
+        [a for a in cur.fetchmany(1000)]
+        print(cur.stats)
 
 
 if __name__ == "__main__":
@@ -126,7 +122,7 @@ AS employees (EMPNO, ENAME, JOB, MGR, HIREDATE, SAL, COMM, DEPTNO);
     SQL = """
     SELECT name FROM $planets WHERE id IN (SELECT * FROM UNNEST((1,2,3)) as id)
     """
-    SQL = "SELECT * FROM $planets WHERE id NOT IN (SELECT DISTINCT planetId FROM $satellites)"
+    SQL = "SELECT COUNT(*) FROM (SELECT planetId FROM $satellites WHERE planetId < 7) GROUP BY planetId"
     ast = sqloxide.parse_sql(SQL, dialect="mysql")
     print(json.dumps(ast, indent=2))
 
