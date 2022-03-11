@@ -101,7 +101,7 @@ def cast(type):
     raise SqlError(f"Unable to cast to type {type}")
 
 
-def _vectorize_no_parameters(func):
+def _iterate_no_parameters(func):
     def _inner(items):
         for i in range(items):
             yield [func()]
@@ -109,7 +109,7 @@ def _vectorize_no_parameters(func):
     return _inner
 
 
-def _vectorize_single_parameter(func):
+def _iterate_single_parameter(func):
     def _inner(array):
         if isinstance(array, str):
             array = [array]
@@ -119,7 +119,7 @@ def _vectorize_single_parameter(func):
     return _inner
 
 
-def _vectorize_double_parameter(func):
+def _iterate_double_parameter(func):
     def _inner(array, p1):
         if isinstance(array, str):
             array = [array]
@@ -131,7 +131,7 @@ def _vectorize_double_parameter(func):
 
 # fmt:off
 FUNCTIONS = {
-    "VERSION": _vectorize_no_parameters(get_version),
+    "VERSION": _iterate_no_parameters(get_version),
     # TYPE CONVERSION
     "TIMESTAMP": cast("TIMESTAMP"),
     "BOOLEAN": cast("BOOLEAN"),
@@ -139,21 +139,21 @@ FUNCTIONS = {
     "VARCHAR": cast("VARCHAR"),
     "STRING": cast("VARCHAR"),  # alias for VARCHAR
     # STRINGS
-    "LENGTH": _vectorize_single_parameter(len),  # LENGTH(str) -> int
+    "LENGTH": _iterate_single_parameter(len),  # LENGTH(str) -> int
     "UPPER": compute.utf8_upper,  # UPPER(str) -> str
     "LOWER": compute.utf8_lower,  # LOWER(str) -> str
     "TRIM": compute.utf8_trim_whitespace,  # TRIM(str) -> str
-    "LEFT": _vectorize_double_parameter(lambda x, y: str(x)[: int(y)]),
-    "RIGHT": _vectorize_double_parameter(lambda x, y: str(x)[-int(y) :]),
+    "LEFT": _iterate_double_parameter(lambda x, y: str(x)[: int(y)]),
+    "RIGHT": _iterate_double_parameter(lambda x, y: str(x)[-int(y) :]),
     # HASHING & ENCODING
-    "HASH": _vectorize_single_parameter(lambda x: format(CityHash64(str(x)), "X")),
-    "MD5": _vectorize_single_parameter(get_md5),
-    "RANDOM": _vectorize_no_parameters(get_random),  # return a random number 0-0.999
+    "HASH": _iterate_single_parameter(lambda x: format(CityHash64(str(x)), "X")),
+    "MD5": _iterate_single_parameter(get_md5),
+    "RANDOM": _iterate_no_parameters(get_random),  # return a random number 0-0.999
     # OTHER
-    "GET": _vectorize_double_parameter(_get),  # GET(LIST, index) => LIST[index] or GET(STRUCT, accessor) => STRUCT[accessor]
-    "LIST_CONTAINS": _vectorize_double_parameter(other_functions._list_contains),
-    "LIST_CONTAINS_ANY": _vectorize_double_parameter(other_functions._list_contains_any),
-    "LIST_CONTAINS_ALL": _vectorize_double_parameter(other_functions._list_contains_all),
+    "GET": _iterate_double_parameter(_get),  # GET(LIST, index) => LIST[index] or GET(STRUCT, accessor) => STRUCT[accessor]
+    "LIST_CONTAINS": _iterate_double_parameter(other_functions._list_contains),
+    "LIST_CONTAINS_ANY": _iterate_double_parameter(other_functions._list_contains_any),
+    "LIST_CONTAINS_ALL": _iterate_double_parameter(other_functions._list_contains_all),
     # NUMERIC
     "ROUND": compute.round,
     "FLOOR": compute.floor,
@@ -161,11 +161,11 @@ FUNCTIONS = {
     "ABS": compute.abs,
     "TRUNC": compute.trunc,
     # DATES & TIMES
-    "NOW": _vectorize_no_parameters(datetime.datetime.utcnow),
-    "TODAY": _vectorize_no_parameters(datetime.date.today),
-    "TIME": _vectorize_no_parameters(date_functions.get_time),
-    "YESTERDAY": _vectorize_no_parameters(date_functions.get_yesterday),
-    "DATE": _vectorize_single_parameter(date_functions.get_date),
+    "NOW": _iterate_no_parameters(datetime.datetime.utcnow),
+    "TODAY": _iterate_no_parameters(datetime.date.today),
+    "TIME": _iterate_no_parameters(date_functions.get_time),
+    "YESTERDAY": _iterate_no_parameters(date_functions.get_yesterday),
+    "DATE": _iterate_single_parameter(date_functions.get_date),
     "YEAR": compute.year,
     "MONTH": compute.month,
     "DAY": compute.day,

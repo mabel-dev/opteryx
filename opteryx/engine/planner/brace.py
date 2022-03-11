@@ -126,6 +126,7 @@ AS employees (EMPNO, ENAME, JOB, MGR, HIREDATE, SAL, COMM, DEPTNO);
     SQL = """
     SELECT name FROM $planets WHERE id IN (SELECT * FROM UNNEST((1,2,3)) as id)
     """
+    SQL = "SELECT * FROM $planets WHERE id NOT IN (SELECT DISTINCT planetId FROM $satellites)"
     ast = sqloxide.parse_sql(SQL, dialect="mysql")
     print(json.dumps(ast, indent=2))
 

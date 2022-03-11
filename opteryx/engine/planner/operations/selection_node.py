@@ -138,6 +138,8 @@ def _evaluate_subqueries(predicate):
         if len(table_result.columns) != 1:
             raise SqlError("Subquery in WHERE clause - returned more than one column")
         value_list = table_result.column(0).to_numpy()
+        # set should be faster than numpy arrays
+        value_list = set(value_list)
         return (value_list, TOKEN_TYPES.LIST)
     elif isinstance(predicate, tuple):
         return tuple([_evaluate_subqueries(p) for p in predicate])

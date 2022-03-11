@@ -25,11 +25,23 @@ def arr_op_to_idxs(arr, op, value):
     elif op == ">=":
         return np.where(arr >= value)
     elif op == "in":
-        mask = np.isin(arr, value)
-        return np.arange(len(arr))[mask]
+
+        mask = []
+        for a in arr:
+            mask.append(a in value)
+
+        return np.array(mask)
+#        mask = np.isin(arr, value)
+#        return np.arange(len(arr))[mask]
     elif op == "not in":
-        mask = np.invert(np.isin(arr, value))
-        return np.arange(len(arr))[mask]
+
+        mask = []
+        for a in arr:
+            mask.append(a not in value)
+
+        return np.array(mask)
+#        mask = np.invert(np.isin(arr, value))
+#        return np.arange(len(arr))[mask]
     # MODIFIED FOR OPTERYX
     elif op == "like":
         return pc.match_like(arr, value)
