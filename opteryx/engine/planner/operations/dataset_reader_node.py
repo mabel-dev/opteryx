@@ -135,7 +135,7 @@ class DatasetReaderNode(BasePlanNode):
             end_date=self._end_date,
         )
 
-        self._statistics.partitions_found = len(partitions)
+        self._statistics.partitions_found += len(partitions)
 
         for partition in partitions:
 
@@ -148,11 +148,13 @@ class DatasetReaderNode(BasePlanNode):
             blob_list = [blob for blob in blob_list if not blob.endswith("/")]
 
             # Track how many blobs we found
-            self._statistics.count_blobs_found += len(blob_list)
+            count_blobs_found = len(blob_list)
+            self._statistics.count_blobs_found += count_blobs_found
 
             # Filter the blob list to just the frame we're interested in
             if self._partition_scheme is not None:
                 blob_list = self._partition_scheme.filter_blobs(blob_list)
+                self._statistics.count_blobs_ignored_frames += count_blobs_found - len(blob_list)
 
             if len(blob_list) > 0:
                 self._statistics.partitions_read += 1
@@ -166,6 +168,7 @@ class DatasetReaderNode(BasePlanNode):
                 decoder, file_type = KNOWN_EXTENSIONS.get(extension, (None, None))
                 # if it's not a known data file, skip reading it
                 if file_type != EXTENSION_TYPE.DATA:
+                    self._statistics.count_non_data_blobs_read += 1
                     continue
 
                 # we're going to open this blob

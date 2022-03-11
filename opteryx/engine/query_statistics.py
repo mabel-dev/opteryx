@@ -15,8 +15,10 @@ class QueryStatistics:
     def __init__(self):
         self.count_blobs_found: int = 0
         self.count_data_blobs_read: int = 0
+        self.count_non_data_blobs_read: int = 0
         self.bytes_read_data: int = 0
         self.bytes_processed_data: int = 0
+        self.count_blobs_ignored_frames: int = 0
         self.rows_read: int = 0
 
         self.partitions_found: int = 0
@@ -38,6 +40,8 @@ class QueryStatistics:
         return {
             "count_blobs_found": self.count_blobs_found,
             "count_data_blobs_read": self.count_data_blobs_read,
+            "count_non_data_blobs_read": self.count_non_data_blobs_read,
+            "count_blobs_ignored_frames": self.count_blobs_ignored_frames, 
             "bytes_read_data": self.bytes_read_data,
             "bytes_processed_data": self.bytes_processed_data,
             "rows_read": self.rows_read,
