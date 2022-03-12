@@ -21,10 +21,7 @@ def test(SQL):
     import opteryx
     from opteryx.storage.adapters import DiskStorage
 
-    conn = opteryx.connect(
-        reader=DiskStorage(),
-        partition_scheme=None
-    )
+    conn = opteryx.connect(reader=DiskStorage(), partition_scheme=None)
     cur = conn.cursor()
 
     # print(q)
@@ -122,7 +119,8 @@ AS employees (EMPNO, ENAME, JOB, MGR, HIREDATE, SAL, COMM, DEPTNO);
     SQL = """
     SELECT name FROM $planets WHERE id IN (SELECT * FROM UNNEST((1,2,3)) as id)
     """
-    SQL = "SELECT COUNT(*) FROM (SELECT planetId FROM $satellites WHERE planetId < 7) GROUP BY planetId"
+    SQL = "SELECT sum(1) FROM $planets;"
+    SQL = "SELECT * FROM table_1 JOIN table_2 USING (key_A, key_B)"
     ast = sqloxide.parse_sql(SQL, dialect="mysql")
     print(json.dumps(ast, indent=2))
 

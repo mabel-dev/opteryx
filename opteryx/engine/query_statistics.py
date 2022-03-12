@@ -41,7 +41,7 @@ class QueryStatistics:
             "count_blobs_found": self.count_blobs_found,
             "count_data_blobs_read": self.count_data_blobs_read,
             "count_non_data_blobs_read": self.count_non_data_blobs_read,
-            "count_blobs_ignored_frames": self.count_blobs_ignored_frames, 
+            "count_blobs_ignored_frames": self.count_blobs_ignored_frames,
             "bytes_read_data": self.bytes_read_data,
             "bytes_processed_data": self.bytes_processed_data,
             "rows_read": self.rows_read,

@@ -34,6 +34,7 @@ import numpy as np
 from typing import Iterable
 from opteryx.engine import QueryStatistics
 from opteryx.engine.planner.operations import BasePlanNode
+from opteryx.exceptions import SqlError
 
 # these functions can be applied to each group
 INCREMENTAL_AGGREGATES = {
@@ -68,6 +69,7 @@ def _incremental(x, y, function):
 
 
 JSON_TYPES = {np.bool_: bool, np.int64: int, np.float64: float}
+
 
 def _serializer(obj):
     return JSON_TYPES[type(obj)](obj)
@@ -108,7 +110,10 @@ class AggregateNode(BasePlanNode):
                 column = argument[0]
                 if argument[1] == TOKEN_TYPES.WILDCARD:
                     column = "*"
-                self._project.append(column)
+                if argument[1] == TOKEN_TYPES.IDENTIFIER or column == "*":
+                    self._project.append(column)
+                else:
+                    raise SqlError("Can only aggregate on fields in the dataset.")
             elif "column_name" in attribute:
                 self._project.append(attribute["column_name"])
             else:

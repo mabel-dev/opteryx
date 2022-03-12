@@ -309,7 +309,7 @@ class QueryPlanner(object):
                     ast["Query"] = relation["relation"]["Derived"]["subquery"]
                     subquery_plan = self.copy()
                     subquery_plan.create_plan(ast=[ast])
-                    
+
                     yield (alias, subquery_plan)
                 if "Values" in subquery:
                     import orjson

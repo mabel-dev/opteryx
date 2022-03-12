@@ -19,15 +19,15 @@ def arr_op_to_idxs(arr, op, value):
     elif op == ">=":
         return np.where(arr >= value)
     elif op == "in":
-    # MODIFIED FOR OPTERYX
-    # some of the lists are saved as sets, which are faster than searching numpy
-    # arrays, even with numpy's native functionality. 
+        # MODIFIED FOR OPTERYX
+        # some of the lists are saved as sets, which are faster than searching numpy
+        # arrays, even with numpy's native functionality.
         mask = []
         for a in arr:
             mask.append(a in value)
         return np.array(mask)
     elif op == "not in":
-    # MODIFIED FOR OPTERYX - see comment above
+        # MODIFIED FOR OPTERYX - see comment above
         mask = []
         for a in arr:
             mask.append(a not in value)

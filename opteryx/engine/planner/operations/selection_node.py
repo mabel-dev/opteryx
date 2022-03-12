@@ -130,8 +130,13 @@ def _evaluate(predicate: Union[tuple, list], table: Table) -> bool:
 
 
 def _evaluate_subqueries(predicate):
-    if isinstance(predicate, tuple) and len(predicate) == 2 and predicate[1] == TOKEN_TYPES.QUERY_PLAN:
+    if (
+        isinstance(predicate, tuple)
+        and len(predicate) == 2
+        and predicate[1] == TOKEN_TYPES.QUERY_PLAN
+    ):
         import pyarrow
+
         table_result = pyarrow.concat_tables(predicate[0].execute())
         if len(table_result) == 0:
             SqlError("Subquery in WHERE clause - column not found")
@@ -146,6 +151,7 @@ def _evaluate_subqueries(predicate):
     elif isinstance(predicate, list):
         return [_evaluate_subqueries(p) for p in predicate]
     return predicate
+
 
 class SelectionNode(BasePlanNode):
     def __init__(self, statistics: QueryStatistics, **config):

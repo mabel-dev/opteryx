@@ -58,15 +58,17 @@ KNOWN_EXTENSIONS = {
     "zstd": (file_decoders.zstd_decoder, EXTENSION_TYPE.DATA),
 }
 
+
 def get_sample_dataset(dataset):
     # we do this like this so the datasets are not loaded into memory unless
     # they are going to be used
     from opteryx import samples
+
     SAMPLE_DATASETS = {
         "$satellites/": samples.satellites(),
         "$planets/": samples.planets(),
         "$astronauts/": samples.astronauts(),
-        "$no_table/": samples.no_table()
+        "$no_table/": samples.no_table(),
     }
     dataset = dataset.lower()
     if dataset in SAMPLE_DATASETS:
@@ -154,7 +156,9 @@ class DatasetReaderNode(BasePlanNode):
             # Filter the blob list to just the frame we're interested in
             if self._partition_scheme is not None:
                 blob_list = self._partition_scheme.filter_blobs(blob_list)
-                self._statistics.count_blobs_ignored_frames += count_blobs_found - len(blob_list)
+                self._statistics.count_blobs_ignored_frames += count_blobs_found - len(
+                    blob_list
+                )
 
             if len(blob_list) > 0:
                 self._statistics.partitions_read += 1
