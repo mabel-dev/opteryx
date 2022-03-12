@@ -120,7 +120,7 @@ AS employees (EMPNO, ENAME, JOB, MGR, HIREDATE, SAL, COMM, DEPTNO);
     SELECT name FROM $planets WHERE id IN (SELECT * FROM UNNEST((1,2,3)) as id)
     """
     SQL = "SELECT sum(1) FROM $planets;"
-    SQL = "SELECT * FROM table_1 JOIN table_2 USING (key_A, key_B)"
+    SQL = "SELECT * FROM table_1 FOR SYSTEM_TIME AS OF '2022-02-02'"
     ast = sqloxide.parse_sql(SQL, dialect="mysql")
     print(json.dumps(ast, indent=2))
 

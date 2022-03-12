@@ -1,5 +1,5 @@
 # SQL Introduction
 
-## Concepts
+## Overview
 
-Opteryx is able to read files to provide SQL query capability.
+Opteryx SQL is dialect of SQL which includes support for Data Query Language (DQL) close to the ANSI standard.
