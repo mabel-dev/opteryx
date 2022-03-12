@@ -26,7 +26,6 @@ The predicates are in _tuples_ in the form (`key`, `op`, `value`) where the `key
 is the value looked up from the record, the `op` is the operator and the `value`
 is a literal.
 """
-from logging.config import IDENTIFIER
 import numpy
 from typing import Union, Iterable
 from pyarrow import Table
@@ -48,14 +47,17 @@ def _evaluate(predicate: Union[tuple, list], table: Table) -> bool:
 
         # this is a function in the selection
         if len(predicate) == 3 and isinstance(predicate[2], dict):
-            # this has already been evaluated
+            # The function has already been evaluated, so we can use the existing
+            # results
             if predicate[0] in table.column_names:
                 predicate = (
                     (predicate[0], TOKEN_TYPES.IDENTIFIER),
                     "=",
                     (True, TOKEN_TYPES.BOOLEAN),
                 )
-            # this has not already been evaluated
+            # The function has not already been evaluated, so we need to do this.
+            # The evaluation SHOULD be done as part of the evaluation node, but
+            # presently it only evaluates in the SELECT clause.
             else:
                 ## TODO: push this to the evaluation node
                 from opteryx.engine.functions import FUNCTIONS
@@ -130,6 +132,11 @@ def _evaluate(predicate: Union[tuple, list], table: Table) -> bool:
 
 
 def _evaluate_subqueries(predicate):
+    """
+    Traverse the filters looking for where we have query execution plans, these
+    are subqueries as part of IN and NOT IN conditions which we need to resolve
+    in order to evaluate the predicate.
+    """
     if (
         isinstance(predicate, tuple)
         and len(predicate) == 2
@@ -143,7 +150,7 @@ def _evaluate_subqueries(predicate):
         if len(table_result.columns) != 1:
             raise SqlError("Subquery in WHERE clause - returned more than one column")
         value_list = table_result.column(0).to_numpy()
-        # set should be faster than numpy arrays
+        # performing IN with a set is much faster than numpy arrays
         value_list = set(value_list)
         return (value_list, TOKEN_TYPES.LIST)
     elif isinstance(predicate, tuple):

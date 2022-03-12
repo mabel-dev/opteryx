@@ -196,5 +196,4 @@ class DatasetReaderNode(BasePlanNode):
                 self._statistics.bytes_processed_data += pyarrow_blob.nbytes
 
                 # yield this blob
-                print(f"reader yielding {blob_name} {pyarrow_blob.shape}")
                 yield pyarrow_blob
