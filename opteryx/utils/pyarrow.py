@@ -4,9 +4,9 @@ from typing import Iterable, List
 
 def fetchmany(pages: Iterable, size: int = 5) -> List[dict]:  # type:ignore
     """
-    This is the fastest way I've found to do this.
-
-    The limitation code slows it down a little, but that's to be expected.
+    This is the fastest way I've found to do this - it just beats Google's
+    implementation in their python BigQuery SDK - which is cleaner but lacks
+    the ability to limit the number of records returned.
     """
     DEFAULT_CHUNK_SIZE = 100
     chunk_size = min(size, DEFAULT_CHUNK_SIZE)

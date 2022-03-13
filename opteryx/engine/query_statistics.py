@@ -21,6 +21,10 @@ class QueryStatistics:
         self.count_blobs_ignored_frames: int = 0
         self.rows_read: int = 0
 
+        self.count_unknown_blob_type_found: int = 0
+        self.count_control_blobs_read: int = 0
+        self.bytes_read_control: int = 0
+
         self.partitions_found: int = 0
         self.partitions_scanned: int = 0
         self.partitions_read: int = 0
@@ -42,6 +46,9 @@ class QueryStatistics:
             "count_data_blobs_read": self.count_data_blobs_read,
             "count_non_data_blobs_read": self.count_non_data_blobs_read,
             "count_blobs_ignored_frames": self.count_blobs_ignored_frames,
+            "count_unknown_blob_type_found": self.count_unknown_blob_type_found,
+            "count_control_blobs_read": self.count_control_blobs_read,
+            "bytes_read_control": self.bytes_read_control,
             "bytes_read_data": self.bytes_read_data,
             "bytes_processed_data": self.bytes_processed_data,
             "rows_read": self.rows_read,

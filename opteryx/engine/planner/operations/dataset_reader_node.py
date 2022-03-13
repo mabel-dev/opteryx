@@ -31,6 +31,8 @@ import time
 import datetime
 from enum import Enum
 from typing import Iterable
+
+import orjson
 from opteryx.exceptions import DatabaseError
 from opteryx.engine.planner.operations import BasePlanNode
 from opteryx.engine import QueryStatistics
@@ -50,12 +52,11 @@ do_nothing = lambda x: x
 KNOWN_EXTENSIONS = {
     "complete": (do_nothing, EXTENSION_TYPE.CONTROL),
     "ignore": (do_nothing, EXTENSION_TYPE.CONTROL),
-    "metadata": (do_nothing, EXTENSION_TYPE.CONTROL),
-    "arrow": (file_decoders.arrow_decoder, EXTENSION_TYPE.DATA),
+    "arrow": (file_decoders.arrow_decoder, EXTENSION_TYPE.DATA),  # feather
     "jsonl": (file_decoders.jsonl_decoder, EXTENSION_TYPE.DATA),
     "orc": (file_decoders.orc_decoder, EXTENSION_TYPE.DATA),
     "parquet": (file_decoders.parquet_decoder, EXTENSION_TYPE.DATA),
-    "zstd": (file_decoders.zstd_decoder, EXTENSION_TYPE.DATA),
+    "zstd": (file_decoders.zstd_decoder, EXTENSION_TYPE.DATA),  # jsonl/zstd
 }
 
 
@@ -110,6 +111,7 @@ class DatasetReaderNode(BasePlanNode):
     def execute(self, data_pages: Iterable) -> Iterable:
 
         from opteryx.engine.planner.planner import QueryPlanner
+        from opteryx.utils.pyarrow import set_metadata
 
         # literal datasets
         if isinstance(self._dataset, bytearray):
@@ -139,14 +141,21 @@ class DatasetReaderNode(BasePlanNode):
 
         self._statistics.partitions_found += len(partitions)
 
+        partition_structure = {}
+        expected_rows = 0
+
+        # Build the list of blobs we're going to read and collect summary statistics
+        # so we can use them for decisions later.
         for partition in partitions:
 
+            partition_structure[partition] = {}
+            partition_structure[partition]["blob_list"] = []
             self._statistics.partitions_scanned += 1
 
             # Get a list of all of the blobs in the partition.
             blob_list = self._reader.get_blob_list(partition)
 
-            # remove folders, end with '/'
+            # remove folders, that's items ending with '/'
             blob_list = [blob for blob in blob_list if not blob.endswith("/")]
 
             # Track how many blobs we found
@@ -160,9 +169,6 @@ class DatasetReaderNode(BasePlanNode):
                     blob_list
                 )
 
-            if len(blob_list) > 0:
-                self._statistics.partitions_read += 1
-
             for blob_name in blob_list:
 
                 # the the blob filename extension
@@ -170,10 +176,34 @@ class DatasetReaderNode(BasePlanNode):
 
                 # find out how to read this blob
                 decoder, file_type = KNOWN_EXTENSIONS.get(extension, (None, None))
+                #
+                if file_type == EXTENSION_TYPE.CONTROL:
+                    self._statistics.count_control_blobs_read += 1
+                    # read the control blob
+                    control_blob = self._reader.read_blob(blob_name)
+                    # record the number of bytes we're reading
+                    self._statistics.bytes_read_control += control_blob.getbuffer().nbytes
+                    try:
+                        control_dict = {}
+                        control_dict = orjson.loads(control_blob.read())
+                        expected_rows += control_dict.get("records", 0)
+                    except (ValueError, TypeError):
+                        pass
                 # if it's not a known data file, skip reading it
-                if file_type != EXTENSION_TYPE.DATA:
-                    self._statistics.count_non_data_blobs_read += 1
+                elif file_type != EXTENSION_TYPE.DATA:
+                    self._statistics.count_unknown_blob_type_found += 1
                     continue
+                else:
+                    partition_structure[partition]["blob_list"].append(blob_name)
+        
+
+        for partition in partitions:
+
+            # we're reading this partition now
+            if len(blob_list) > 0:
+                self._statistics.partitions_read += 1
+
+            for blob_name in partition_structure[partition]["blob_list"]:
 
                 # we're going to open this blob
                 self._statistics.count_data_blobs_read += 1
@@ -194,6 +224,14 @@ class DatasetReaderNode(BasePlanNode):
                 # we should know the number of entries
                 self._statistics.rows_read += pyarrow_blob.num_rows
                 self._statistics.bytes_processed_data += pyarrow_blob.nbytes
+
+                # write dataset information to the metadata
+                metadata = {
+                    "expected_rows": expected_rows,
+                    "name": self._dataset.replace("/", ".")[:-1],
+                    "alias": "not set"
+                }
+                pyarrow_blob = set_metadata(pyarrow_blob, {}, metadata)
 
                 # yield this blob
                 yield pyarrow_blob

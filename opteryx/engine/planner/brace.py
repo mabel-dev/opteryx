@@ -1,14 +1,12 @@
 import sys
 import os
 
-from joblib import parallel_backend
+import pyarrow
 
 sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
 
-from opteryx.engine.query_statistics import QueryStatistics
-from opteryx.engine.planner.planner import QueryPlanner
-from opteryx.storage.schemes import DefaultPartitionScheme, MabelPartitionScheme
-from opteryx.storage.adapters import DiskStorage
+from opteryx.engine.planner.temporal import extract_temporal_filters
+from opteryx.utils.pyarrow import get_metadata
 
 
 def test(SQL):
@@ -31,9 +29,11 @@ def test(SQL):
     with timer.Timer():
         # do this to go over the records
         cur.execute(SQL)
-        print(ascii_table(cur.fetchmany(size=10), limit=10))
-        [a for a in cur.fetchmany(1000)]
-        print(cur.stats)
+        cur._results = pyarrow.concat_tables(cur._results)
+        print("METADATA:", get_metadata(cur._results))
+#        print(ascii_table(cur.fetchmany(size=10), limit=10))
+#        [a for a in cur.fetchmany(1000)]
+        print(json.dumps(cur.stats, indent=2))
 
 
 if __name__ == "__main__":
@@ -121,32 +121,16 @@ AS employees (EMPNO, ENAME, JOB, MGR, HIREDATE, SAL, COMM, DEPTNO);
     """
     SQL = "SELECT sum(1) FROM $planets;"
     SQL = "SELECT * FROM table_1 FOR SYSTEM_TIME AS OF '2022-02-02'"
+    SQL = "SELECT * FROM tests.data.dated"
+
+    _, _, SQL = extract_temporal_filters(SQL)  
     ast = sqloxide.parse_sql(SQL, dialect="mysql")
     print(json.dumps(ast, indent=2))
 
     print()
-    #    print(_extract_date_filters(ast))
 
-    # _projection = _extract_projections(ast)
-    # print(_projection)
-
-    import pyarrow
-    import opteryx.samples
-    from opteryx.third_party.pyarrow_ops import head
-
-    # p = opteryx.samples.planets().select(["name"])
-
-    # en = EvaluationNode(None, projection=_projection)
-
-    # head(pyarrow.concat_tables(en.execute([p])))
     import cProfile
 
     with cProfile.Profile(subcalls=False) as pr:
         test(SQL)
 
-    # pr.dump_stats("perf")
-
-    # import pstats
-
-    # p = pstats.Stats("perf")
-    # p.sort_stats("tottime").print_stats(10)
