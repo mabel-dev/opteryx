@@ -30,6 +30,10 @@ class SortNode(BasePlanNode):
     def greedy(self):
         return True
 
+    @property
+    def name(self):
+        return "Sort"
+
     def execute(self, data_pages: Iterable) -> Iterable:
 
         table = concat_tables(data_pages)

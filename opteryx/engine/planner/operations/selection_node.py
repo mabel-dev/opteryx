@@ -167,6 +167,10 @@ class SelectionNode(BasePlanNode):
     def __repr__(self):
         return str(self._filter)
 
+    @property
+    def name(self):
+        return "Projection"
+
     def execute(self, data_pages: Iterable) -> Iterable:
 
         # we should always have a filter - but harm checking

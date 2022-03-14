@@ -27,6 +27,10 @@ class LimitNode(BasePlanNode):
     def __init__(self, statistics: QueryStatistics, **config):
         self._limit = config.get("limit")
 
+    @property
+    def name(self):
+        return "Limitation"
+
     def execute(self, data_pages: Iterable) -> Iterable:
 
         result_set = []

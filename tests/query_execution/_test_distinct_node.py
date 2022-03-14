@@ -16,7 +16,7 @@ from opteryx.engine.planner.operations import DistinctNode
 
 
 def size(d):
-    from opteryx.utils.pyarrow import fetchall
+    from opteryx.utils.arrow import fetchall
 
     return len(list(fetchall(d)))
 

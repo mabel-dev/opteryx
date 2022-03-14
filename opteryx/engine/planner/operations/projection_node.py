@@ -63,6 +63,10 @@ class ProjectionNode(BasePlanNode):
     def __repr__(self):
         return str(self._projection)
 
+    @property
+    def name(self):
+        return "Projection"
+
     def execute(self, data_pages: Iterable) -> Iterable:
 
         # if we have nothing to do, move along

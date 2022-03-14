@@ -26,6 +26,10 @@ class OffsetNode(BasePlanNode):
     def __init__(self, statistics: QueryStatistics, **config):
         self._offset = config.get("offset")
 
+    @property
+    def name(self):
+        return "Offset"
+
     def execute(self, data_pages: Iterable) -> Iterable:
 
         row_count = 0

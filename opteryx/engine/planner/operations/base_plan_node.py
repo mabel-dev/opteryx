@@ -34,3 +34,7 @@ class BasePlanNode(abc.ABC):
     @property
     def greedy(self):
         return False
+
+    @property
+    def name(self):
+        return "no name"

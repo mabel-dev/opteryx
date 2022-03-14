@@ -127,9 +127,14 @@ class AggregateNode(BasePlanNode):
     def greedy(self):
         return True
 
+    @property
+    def name(self):
+        return "Aggregation"
+
     def execute(self, groups: Iterable) -> Iterable:
 
         from collections import defaultdict
+        from opteryx.utils import arrow
 
         collector: dict = defaultdict(dict)
 
@@ -193,6 +198,16 @@ class AggregateNode(BasePlanNode):
 
                     collector[collection] = group_collector
 
+
+        # create table metadata for this newly created table
+        metadata = arrow.create_table_metadata(
+            [],
+            len(collector),
+            "",
+            [None]
+        )
+
+
         import time
 
         from pyarrow.json import ReadOptions
@@ -205,6 +220,7 @@ class AggregateNode(BasePlanNode):
             # we can't load huge json docs into pyarrow, so we chunk it
             if len(buffer) > (2 * 1024 * 1024):  # 2Mb
                 table = pyarrow.json.read_json(io.BytesIO(buffer), read_options=ro)
+                table = arrow.set_metadata(table, metadata)
                 yield table
                 buffer = bytearray()
             for field, value in collected:
@@ -223,6 +239,7 @@ class AggregateNode(BasePlanNode):
 
         if len(buffer) > 0:
             table = pyarrow.json.read_json(io.BytesIO(buffer))
+            table = arrow.set_metadata(table, metadata)
             yield table
 
         # timing over a yield is pointless

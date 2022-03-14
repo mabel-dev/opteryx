@@ -598,6 +598,34 @@ class QueryPlanner(object):
             self.link_operators(last_node, "limit")
             last_node = "limit"
 
+    def explain(self):
+
+        import orjson
+        import pyarrow
+        import io
+
+        def _inner_explain(operator_name, depth):
+            depth += 1
+            print('explain to ', operator_name)
+            operator = self.get_operator(operator_name)
+            yield {"operator": operator.name, "config": repr(operator), "depth": depth}
+            out_going_links = self.get_outgoing_links(operator_name)
+            if out_going_links:
+                for next_operator_name in out_going_links:
+                    yield from _inner_explain(next_operator_name, depth)               
+
+        entry_points = self.get_entry_points()
+        nodes = []
+        for entry_point in entry_points:
+            nodes += [n for n in _inner_explain(entry_point, 0)]
+
+        buffer = bytearray()
+        for node in nodes:
+            print(node)
+            buffer.extend(orjson.dumps(node))
+        table = pyarrow.json.read_json(io.BytesIO(buffer))
+        return table 
+
     def add_operator(self, name, operator):
         """
         Add a step to the DAG

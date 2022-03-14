@@ -6,7 +6,7 @@ import pyarrow
 sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
 
 from opteryx.engine.planner.temporal import extract_temporal_filters
-from opteryx.utils.pyarrow import get_metadata
+from opteryx.utils.arrow import get_metadata
 
 
 def test(SQL):
@@ -22,13 +22,10 @@ def test(SQL):
     conn = opteryx.connect(reader=DiskStorage(), partition_scheme=None)
     cur = conn.cursor()
 
-    # print(q)
-
-    from opteryx.utils.display import ascii_table
-
     with timer.Timer():
         # do this to go over the records
         cur.execute(SQL)
+        print(head(cur._query_plan.explain()))
         cur._results = pyarrow.concat_tables(cur._results)
         print("METADATA:", get_metadata(cur._results))
 #        print(ascii_table(cur.fetchmany(size=10), limit=10))
@@ -43,7 +40,7 @@ if __name__ == "__main__":
 
     # SQL = "SELECT count(*) from `tests.data.zoned` where followers < 10 group by followers"
     # SQL = "SELECT username, count(*) from `tests.data.tweets` group by username"
-    SQL = "SELECT COUNT(user_verified) FROM tests.data.set"
+    SQL = "SELECT COUNT(user_verified) FROM tests.data.set as ds"
 
     # SQL = """
     # SELECT DISTINCT user_verified, MIN(followers), MAX(followers), COUNT(*)
@@ -121,7 +118,7 @@ AS employees (EMPNO, ENAME, JOB, MGR, HIREDATE, SAL, COMM, DEPTNO);
     """
     SQL = "SELECT sum(1) FROM $planets;"
     SQL = "SELECT * FROM table_1 FOR SYSTEM_TIME AS OF '2022-02-02'"
-    SQL = "SELECT * FROM tests.data.dated"
+    SQL = "SELECT count(*) FROM tests.data.dated as d group by tweet"
 
     _, _, SQL = extract_temporal_filters(SQL)  
     ast = sqloxide.parse_sql(SQL, dialect="mysql")

@@ -47,6 +47,10 @@ class EvaluationNode(BasePlanNode):
             column_name = f"{function['function']}({','.join(str(a[0]) for a in args)})"
             function["column_name"] = column_name
 
+    @property
+    def name(self):
+        return "Evaluation"
+
     def execute(self, data_pages: Iterable) -> Iterable:
 
         for page in data_pages:

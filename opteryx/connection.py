@@ -22,7 +22,7 @@ from opteryx.storage import BaseStorageAdapter, BaseBufferCache, BasePartitionSc
 from opteryx.storage.adapters import DiskStorage
 from opteryx.engine import QueryStatistics, QueryPlanner
 from opteryx.storage.schemes import DefaultPartitionScheme, MabelPartitionScheme
-from opteryx.utils import pyarrow
+from opteryx.utils import arrow
 
 
 class Connection:
@@ -174,18 +174,18 @@ class Cursor:
     def fetchone(self) -> Optional[Dict]:
         if self._results is None:
             raise Exception("Cursor must be executed first")
-        return pyarrow.fetchone(self._results)
+        return arrow.fetchone(self._results)
 
     def fetchmany(self, size=None) -> List[Dict]:
         fetch_size = self.arraysize if size is None else size
         if self._results is None:
             raise Exception("Cursor must be executed first")
-        return pyarrow.fetchmany(self._results, fetch_size)
+        return arrow.fetchmany(self._results, fetch_size)
 
     def fetchall(self) -> List[Dict]:
         if self._query is None:
             raise Exception("Cursor must be executed first")
-        return pyarrow.fetchall(self._results)
+        return arrow.fetchall(self._results)
 
     def close(self):
         self._connection.close()

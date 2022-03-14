@@ -46,7 +46,6 @@ class EXTENSION_TYPE(str, Enum):
     DATA = "DATA"
     CONTROL = "CONTROL"
 
-
 do_nothing = lambda x: x
 
 KNOWN_EXTENSIONS = {
@@ -60,7 +59,7 @@ KNOWN_EXTENSIONS = {
 }
 
 
-def get_sample_dataset(dataset):
+def _get_sample_dataset(dataset):
     # we do this like this so the datasets are not loaded into memory unless
     # they are going to be used
     from opteryx import samples
@@ -75,7 +74,6 @@ def get_sample_dataset(dataset):
     if dataset in SAMPLE_DATASETS:
         return SAMPLE_DATASETS[dataset]
     raise DatabaseError(f"Dataset not found `{dataset}`.")
-
 
 class DatasetReaderNode(BasePlanNode):
     def __init__(self, statistics: QueryStatistics, **config):
@@ -108,10 +106,14 @@ class DatasetReaderNode(BasePlanNode):
     def __repr__(self):
         return self._dataset
 
+    @property
+    def name(self):
+        return "Reader"
+
     def execute(self, data_pages: Iterable) -> Iterable:
 
         from opteryx.engine.planner.planner import QueryPlanner
-        from opteryx.utils.pyarrow import set_metadata
+        from opteryx.utils.arrow import set_metadata, create_table_metadata
 
         # literal datasets
         if isinstance(self._dataset, bytearray):
@@ -128,7 +130,7 @@ class DatasetReaderNode(BasePlanNode):
 
         # sample datasets
         if self._dataset[0] == "$":
-            yield get_sample_dataset(self._dataset)
+            yield _get_sample_dataset(self._dataset)
             return
 
         # datasets from storage
@@ -226,12 +228,13 @@ class DatasetReaderNode(BasePlanNode):
                 self._statistics.bytes_processed_data += pyarrow_blob.nbytes
 
                 # write dataset information to the metadata
-                metadata = {
-                    "expected_rows": expected_rows,
-                    "name": self._dataset.replace("/", ".")[:-1],
-                    "alias": "not set"
-                }
-                pyarrow_blob = set_metadata(pyarrow_blob, {}, metadata)
+                metadata = create_table_metadata(
+                    pyarrow_blob.column_names,
+                    expected_rows,
+                    self._dataset.replace("/", ".")[:-1],
+                    [self._alias]
+                )
+                pyarrow_blob = set_metadata(pyarrow_blob, metadata)
 
                 # yield this blob
                 yield pyarrow_blob

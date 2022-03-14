@@ -11,34 +11,29 @@
 # limitations under the License.
 
 """
-Distinct Node
+Explain Node
 
 This is a SQL Query Execution Plan Node.
 
-This Node eliminates duplicate records.
+This writes out a query plan
 """
 from typing import Iterable
 from pyarrow import concat_tables
 from opteryx.engine.query_statistics import QueryStatistics
-from opteryx.engine.planner.operations import BasePlanNode
-from opteryx.third_party.pyarrow_ops import drop_duplicates
+from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
 
 
-class DistinctNode(BasePlanNode):
+class SortNode(BasePlanNode):
     def __init__(self, statistics: QueryStatistics, **config):
-        self._distinct = config.get("distinct", True)
-
-    def __repr__(self) -> str:
-        return ""
+        self._order = config.get("order")
 
     def greedy(self):
         return True
 
     @property
     def name(self):
-        return "Distinction"
+        return "Explain"
 
     def execute(self, data_pages: Iterable) -> Iterable:
-        if self._distinct:
-            yield drop_duplicates(concat_tables(data_pages))
-        yield from data_pages
+
+        pass
