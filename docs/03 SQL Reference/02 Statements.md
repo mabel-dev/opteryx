@@ -20,3 +20,10 @@ SELECT
 - *temporal_expression* a date partition limit expression
 - *condition* a logical expression to filter returned data
 - *row_count* a number representing a number of rows
+
+~~~sql
+EXPLAIN
+      { SELECT statement }
+~~~
+
+Outputs a summary of the execution plan for the query in the `SELECT` statement.

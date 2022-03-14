@@ -30,6 +30,9 @@ class OffsetNode(BasePlanNode):
     def name(self):
         return "Offset"
 
+    def __repr__(self) -> str:
+        return str(self._offset)
+
     def execute(self, data_pages: Iterable) -> Iterable:
 
         row_count = 0

@@ -104,6 +104,8 @@ class DatasetReaderNode(BasePlanNode):
         self._selection = config.get("selection")
 
     def __repr__(self):
+        if self._alias:
+            return f"{self._dataset} => {self._alias}"
         return self._dataset
 
     @property

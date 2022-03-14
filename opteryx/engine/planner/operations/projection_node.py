@@ -69,13 +69,32 @@ class ProjectionNode(BasePlanNode):
 
     def execute(self, data_pages: Iterable) -> Iterable:
 
+        from opteryx.utils import arrow
+
         # if we have nothing to do, move along
         if self._projection == {"*": None}:
             # print(f"projector yielding *")
             yield from data_pages
             return
 
+        # we can't do much with this until we have a chunk to read the metadata from
+        metadata = None
+
         for page in data_pages:
+
+            # first time round we're going to set the metadata
+            if metadata is None:
+
+                original_metadata = arrow.get_metadata(page)
+
+                # build all the aliases, then elinimate collisions
+                # in the event that the collision hits an active column name, rename it to the shortest alias
+
+                # where we have an explicit alias that no longer exists, replace it with the shortest alias
+                # that ends with the explicit alias
+
+
+
 
             # we elminimate attributes we don't want
             try:

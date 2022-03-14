@@ -30,6 +30,9 @@ class SortNode(BasePlanNode):
     def greedy(self):
         return True
 
+    def __repr__(self) -> str:
+        return ','.join([str(i) for i in self._order])
+
     @property
     def name(self):
         return "Sort"

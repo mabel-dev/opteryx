@@ -18,22 +18,17 @@ This is a SQL Query Execution Plan Node.
 This writes out a query plan
 """
 from typing import Iterable
-from pyarrow import concat_tables
 from opteryx.engine.query_statistics import QueryStatistics
 from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
 
 
-class SortNode(BasePlanNode):
+class ExplainNode(BasePlanNode):
     def __init__(self, statistics: QueryStatistics, **config):
-        self._order = config.get("order")
-
-    def greedy(self):
-        return True
+        self._query_plan = config.get("query_plan")
 
     @property
     def name(self):
         return "Explain"
 
     def execute(self, data_pages: Iterable) -> Iterable:
-
-        pass
+        yield from self._query_plan.explain()

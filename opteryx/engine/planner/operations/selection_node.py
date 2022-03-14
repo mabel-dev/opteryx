@@ -169,7 +169,7 @@ class SelectionNode(BasePlanNode):
 
     @property
     def name(self):
-        return "Projection"
+        return "Selection"
 
     def execute(self, data_pages: Iterable) -> Iterable:
 

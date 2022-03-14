@@ -31,6 +31,9 @@ class LimitNode(BasePlanNode):
     def name(self):
         return "Limitation"
 
+    def __repr__(self) -> str:
+        return str(self._limit)
+
     def execute(self, data_pages: Iterable) -> Iterable:
 
         result_set = []

@@ -40,8 +40,12 @@ note: This module does not handle temporal filters, those as part of the FOR cla
 these are not supported by SqlOxide and so are in a different module which strips
 temporal aspects out of the query.
 """
+from operator import contains
+import statistics
 import sys
 import os
+
+from opteryx.engine.planner.operations.explain_node import ExplainNode
 
 sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
 
@@ -125,7 +129,10 @@ class QueryPlanner(object):
             self._ast = ast
 
         # build a plan for the query
-        self._naive_planner(self._ast, self._statistics)
+        if "Query" in self._ast[0]:
+            self._naive_select_planner(self._ast, self._statistics)
+        elif "Explain" in self._ast[0]:
+            self._explain_planner(self._ast, self._statistics)
 
     def _extract_value(self, value):
         """
@@ -159,6 +166,8 @@ class QueryPlanner(object):
 
         if "Identifier" in filters:  # we're an identifier
             return (filters["Identifier"]["value"], TOKEN_TYPES.IDENTIFIER)
+        if "CompoundIdentifier" in filters:
+            return (".".join([i["value"] for i in filters["CompoundIdentifier"]]), TOKEN_TYPES.IDENTIFIER)
         if "Value" in filters:  # we're a literal
             return self._extract_value(filters["Value"])
         if "BinaryOp" in filters:
@@ -493,7 +502,15 @@ class QueryPlanner(object):
         having = ast[0]["Query"]["body"]["Select"]["having"]
         return self._build_dnf_filters(having)
 
-    def _naive_planner(self, ast, statistics):
+
+    def _explain_planner(self, ast, statistics):
+        explain_plan = self.copy()
+        explain_plan.create_plan(ast=[ast[0]["Explain"]["statement"]])
+        explain_node = ExplainNode(statistics, query_plan=explain_plan)
+        self.add_operator("explain", explain_node)
+
+
+    def _naive_select_planner(self, ast, statistics):
         """
         The naive planner only works on single tables and always puts operations in
         this order.
@@ -550,6 +567,8 @@ class QueryPlanner(object):
         #        _columns = _extract_columns(ast)
         if _groups or any(["aggregate" in a for a in _projection]):
             _aggregates = _projection.copy()
+            if isinstance(_aggregates, dict):
+                raise SqlError("GROUP BY cannot be used with SELECT *")
             if not any(["aggregate" in a for a in _aggregates]):
                 _aggregates.append(
                     {
@@ -606,7 +625,6 @@ class QueryPlanner(object):
 
         def _inner_explain(operator_name, depth):
             depth += 1
-            print('explain to ', operator_name)
             operator = self.get_operator(operator_name)
             yield {"operator": operator.name, "config": repr(operator), "depth": depth}
             out_going_links = self.get_outgoing_links(operator_name)
@@ -621,10 +639,9 @@ class QueryPlanner(object):
 
         buffer = bytearray()
         for node in nodes:
-            print(node)
             buffer.extend(orjson.dumps(node))
         table = pyarrow.json.read_json(io.BytesIO(buffer))
-        return table 
+        yield table 
 
     def add_operator(self, name, operator):
         """
@@ -675,6 +692,8 @@ class QueryPlanner(object):
         """
         Get steps in the flow with no incoming steps.
         """
+        if len(self.nodes) == 1:
+            return list(self.nodes.keys())
         targets = {target for source, target in self.edges}
         retval = {source for source, target in self.edges if source not in targets}
         return sorted(retval)
@@ -717,6 +736,7 @@ class QueryPlanner(object):
 
     def execute(self):
         entry_points = self.get_entry_points()
+        rel = None
         for entry_point in entry_points:
             rel = self._inner_execute(entry_point, None)
         return rel

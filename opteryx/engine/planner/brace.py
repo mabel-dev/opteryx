@@ -1,7 +1,6 @@
 import sys
 import os
 
-import pyarrow
 
 sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
 
@@ -12,10 +11,7 @@ from opteryx.utils.arrow import get_metadata
 def test(SQL):
 
     from mabel.utils import timer
-
-    import time
-    from opteryx.third_party.pyarrow_ops import head
-
+    from opteryx.utils.display import ascii_table
     import opteryx
     from opteryx.storage.adapters import DiskStorage
 
@@ -25,11 +21,10 @@ def test(SQL):
     with timer.Timer():
         # do this to go over the records
         cur.execute(SQL)
-        print(head(cur._query_plan.explain()))
-        cur._results = pyarrow.concat_tables(cur._results)
-        print("METADATA:", get_metadata(cur._results))
-#        print(ascii_table(cur.fetchmany(size=10), limit=10))
-#        [a for a in cur.fetchmany(1000)]
+        #cur._results = [pyarrow.concat_tables(cur._results)]
+        #print("METADATA:", get_metadata(cur._results))
+        print(ascii_table(cur.fetchmany(size=10), limit=10))
+        [a for a in cur.fetchmany(1000)]
         print(json.dumps(cur.stats, indent=2))
 
 
@@ -118,7 +113,8 @@ AS employees (EMPNO, ENAME, JOB, MGR, HIREDATE, SAL, COMM, DEPTNO);
     """
     SQL = "SELECT sum(1) FROM $planets;"
     SQL = "SELECT * FROM table_1 FOR SYSTEM_TIME AS OF '2022-02-02'"
-    SQL = "SELECT count(*) FROM tests.data.dated as d group by tweet"
+    SQL = "SELECT count(*) as c FROM tests.data.dated as d"
+    SQL = "SELECT COUNT(*) FROM $astronauts WHERE $astronauts.a = $astronauts.b"
 
     _, _, SQL = extract_temporal_filters(SQL)  
     ast = sqloxide.parse_sql(SQL, dialect="mysql")

@@ -210,6 +210,9 @@ STATEMENTS = [
         ("SELECT count(planetId) FROM (SELECT DISTINCT planetId FROM $satellites)", 1, 1),
         ("SELECT COUNT(*) FROM (SELECT planetId FROM $satellites WHERE planetId < 7) GROUP BY planetId", 4, 1),
 
+        ("EXPLAIN SELECT * FROM $satellites", 2, 3),
+        ("EXPLAIN SELECT * FROM $satellites WHERE id = 8", 3, 3),
+
         # These are queries which have been found to return the wrong result or not run
         # correctly which suggests their implementation is somewhat complex and
         # therefore brittle.
