@@ -52,7 +52,7 @@ def join(left, right, on):
         rbic.astype(np.int64),
     )
 
-    # print("Join took:", time.time() - t4, t4 - t3 , t2 - t1, t1 - t0)
+    print("Join took:", time.time() - t4, t4 - t3 , t2 - t1, t1 - t0)
     return align_tables(left, right, left_align, right_align)
 
 

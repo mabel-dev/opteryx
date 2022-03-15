@@ -40,12 +40,8 @@ note: This module does not handle temporal filters, those as part of the FOR cla
 these are not supported by SqlOxide and so are in a different module which strips
 temporal aspects out of the query.
 """
-from operator import contains
-import statistics
 import sys
 import os
-
-from opteryx.engine.planner.operations.explain_node import ExplainNode
 
 sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
 
@@ -133,6 +129,8 @@ class QueryPlanner(object):
             self._naive_select_planner(self._ast, self._statistics)
         elif "Explain" in self._ast[0]:
             self._explain_planner(self._ast, self._statistics)
+        else:
+            raise SqlError("Unknown or unsupported Query type.")
 
     def _extract_value(self, value):
         """
@@ -339,6 +337,24 @@ class QueryPlanner(object):
                             )
                         )
                     yield (alias, body)  # <- a literal table
+
+    def _extract_joins(self, ast):
+        try:
+            joins = ast[0]["Query"]["body"]["Select"]["from"][0]["joins"][0]
+        except IndexError:
+            return None
+        joins = joins["joins"][0]
+        mode = joins["join_operator"]
+        alias = None
+        if joins["relation"]["Table"]["alias"] is not None:
+            alias = joins["relation"]["Table"]["alias"]["name"]["value"]
+        dataset = ".".join(
+            [
+                part["value"]
+                for part in joins["relation"]["Table"]["name"]
+            ]
+        )
+        return (mode, (alias, dataset))
 
     def _extract_projections(self, ast):
         """
@@ -548,6 +564,21 @@ class QueryPlanner(object):
             last_node = "from"
         else:
             raise SqlError("Queries are currently limited to single tables.")
+
+        _join = self._extract_joins(ast)
+        if _join:
+            right = DatasetReaderNode(
+                statistics,
+                dataset=_join[1],
+                reader=self._reader,
+                partition_scheme=self._partition_scheme,
+                start_date=self._start_date,
+                end_date=self._end_date,
+            )
+            self.add_operator("join", JoinNode(statistics, right_table=right, join_type=_join[0], on=None))
+            self.link_operators(last_node, "join")
+            last_node = "join"
+
 
         _projection = self._extract_projections(ast)
         if any(["function" in a for a in _projection]):

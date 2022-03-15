@@ -115,6 +115,7 @@ AS employees (EMPNO, ENAME, JOB, MGR, HIREDATE, SAL, COMM, DEPTNO);
     SQL = "SELECT * FROM table_1 FOR SYSTEM_TIME AS OF '2022-02-02'"
     SQL = "SELECT count(*) as c FROM tests.data.dated as d"
     SQL = "SELECT COUNT(*) FROM $astronauts WHERE $astronauts.a = $astronauts.b"
+    SQL = "SELECT * FROM $satellites CROSS JOIN $planets"
 
     _, _, SQL = extract_temporal_filters(SQL)  
     ast = sqloxide.parse_sql(SQL, dialect="mysql")

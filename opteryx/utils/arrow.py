@@ -10,6 +10,8 @@ def fetchmany(pages: Iterable, size: int = 5) -> List[dict]:  # type:ignore
     """
     DEFAULT_CHUNK_SIZE = 100
     chunk_size = min(size, DEFAULT_CHUNK_SIZE)
+    if chunk_size < 1:
+        chunk_size = DEFAULT_CHUNK_SIZE
 
     def _inner_row_reader():
         for page in pages:
