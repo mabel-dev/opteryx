@@ -214,6 +214,11 @@ class AggregateNode(BasePlanNode):
 
         ro = ReadOptions(block_size=3 * 1024 * 1024)
 
+        # count should return 0
+        if len(collector) == 0 and len(self._aggregates) == 1:
+            if self._aggregates[0]["aggregate"] == "COUNT":
+                collector = { (): {"COUNT(*)":0 }}
+
         buffer = bytearray()
         t = time.time_ns()
         for collected, record in collector.items():

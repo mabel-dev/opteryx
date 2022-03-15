@@ -23,10 +23,8 @@ Function        | Description
 `SUM(a)` +      | The cumulative sum value for all values in column 'a'
 `VAR_POP(a)`    | The population variance for values in column 'a'
 
-## Limitations
+## Constraints
 
-`GROUP BY` can be used with functions in the `SELECT` clause, but not by aliases.
-
-`GROUP BY` can't be used by the result of the `CAST` function, but be used for specific type cast functions like `NUMERIC`, `VARCHAR` and `BOOLEAN`.
-
-`GROUP BY` can't be used with map expressions (e.g. `struct[key]`).
+- `GROUP BY` can be used with functions in the `SELECT` clause, but not by aliases.
+- `GROUP BY` can't be used by the result of the `CAST` function, but be used for specific type cast functions like `NUMERIC`, `VARCHAR` and `BOOLEAN`.
+- `GROUP BY` can't be used with map expressions (e.g. `struct[key]`).

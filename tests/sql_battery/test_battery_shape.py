@@ -95,6 +95,7 @@ STATEMENTS = [
         ("SELECT COUNT (*) FROM $satellites", 1, 1),
         ("SELECT\nCOUNT\n(*)\nFROM\n$satellites", 1, 1),
         ("SELECT Count(*) FROM $satellites", 1, 1),
+        ("SELECT Count(*) FROM $satellites WHERE name = 'sputnik'", 1, 1),
         ("SELECT COUNT(name) FROM $satellites", 1, 1),
         ("SELECT COUNT(*) FROM $satellites GROUP BY name", 177, 1),
         ("SELECT COUNT(*) FROM $satellites GROUP BY planetId", 7, 1),

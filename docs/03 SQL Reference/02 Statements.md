@@ -16,10 +16,15 @@ SELECT
 
 - *column* a column name from one of the tables in the `FROM` clause.
 - *expression* a function or aggregate 
-- *table_references* names of datasets, dataset alias or virtual dataset definitions
+- *table_references* names of datasets, dataset alias, subqueries or virtual dataset definitions
 - *temporal_expression* a date partition limit expression
 - *condition* a logical expression to filter returned data
 - *row_count* a number representing a number of rows
+
+Note the following constraints:
+
+- column_alias can not be used in a `WHERE` clause.
+- `ORDER BY` must reference columns as they appear in the `SELECT` clause.
 
 ~~~sql
 EXPLAIN

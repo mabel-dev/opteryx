@@ -20,7 +20,7 @@ Date values in `FOR` clauses must either be in 'YYYY-MM-DD' format or a recognis
 
 for example: `FOR DATES BETWEEN '2000-01-01' AND TODAY`
 
-## Limitations
+## Constraints
 
 - `FOR` clauses cannot contain comments or reference column values or aliases
 - Dates can not include times and must be in the format 'YYYY-MM-DD'
