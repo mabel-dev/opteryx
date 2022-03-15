@@ -46,7 +46,7 @@ class EXTENSION_TYPE(str, Enum):
     DATA = "DATA"
     CONTROL = "CONTROL"
 
-do_nothing = lambda x: x
+do_nothing = lambda x, y: x
 
 KNOWN_EXTENSIONS = {
     "complete": (do_nothing, EXTENSION_TYPE.CONTROL),
@@ -145,7 +145,7 @@ class DatasetReaderNode(BasePlanNode):
 
         self._statistics.partitions_found += len(partitions)
 
-        partition_structure = {}
+        partition_structure:dict = {}
         expected_rows = 0
 
         # Build the list of blobs we're going to read and collect summary statistics

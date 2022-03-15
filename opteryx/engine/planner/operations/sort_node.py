@@ -25,7 +25,7 @@ from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
 
 class SortNode(BasePlanNode):
     def __init__(self, statistics: QueryStatistics, **config):
-        self._order = config.get("order")
+        self._order = config.get("order", [])
 
     def greedy(self):
         return True
