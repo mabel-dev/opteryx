@@ -178,11 +178,11 @@ class DatasetReaderNode(BasePlanNode):
                 # the the blob filename extension
                 extension = blob_name.split(".")[-1]
 
-                print(extension)
-
                 # find out how to read this blob
                 decoder, file_type = KNOWN_EXTENSIONS.get(extension, (None, None))
-                #
+
+                print(extension, file_type)
+
                 if file_type == EXTENSION_TYPE.CONTROL:
                     self._statistics.count_control_blobs_read += 1
                     # read the control blob
