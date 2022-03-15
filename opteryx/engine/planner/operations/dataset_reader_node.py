@@ -193,13 +193,10 @@ class DatasetReaderNode(BasePlanNode):
                         expected_rows += control_dict.get("records", 0)
                     except (ValueError, TypeError):
                         pass
-                # if it's not a known data file, skip reading it
-                elif file_type != EXTENSION_TYPE.DATA:
-                    self._statistics.count_unknown_blob_type_found += 1
-                    continue
-                else:
+                elif file_type == EXTENSION_TYPE.DATA:
                     partition_structure[partition]["blob_list"].append(blob_name)
-        
+                else:
+                    self._statistics.count_unknown_blob_type_found += 1 
 
         for partition in partitions:
 
@@ -208,6 +205,8 @@ class DatasetReaderNode(BasePlanNode):
                 self._statistics.partitions_read += 1
 
             for blob_name in partition_structure[partition]["blob_list"]:
+
+                print(blob_name, decoder)
 
                 # we're going to open this blob
                 self._statistics.count_data_blobs_read += 1
