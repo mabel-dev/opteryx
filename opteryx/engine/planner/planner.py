@@ -343,7 +343,6 @@ class QueryPlanner(object):
             joins = ast[0]["Query"]["body"]["Select"]["from"][0]["joins"][0]
         except IndexError:
             return None
-        joins = joins["joins"][0]
         mode = joins["join_operator"]
         alias = None
         if joins["relation"]["Table"]["alias"] is not None:

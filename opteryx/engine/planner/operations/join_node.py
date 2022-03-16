@@ -61,7 +61,7 @@ def _cross_join(left, right):
     right_metadata = get_metadata(right) or {}
 
     right_columns = right.column_names
-    right_columns = [f"{right_metadata.get('_name', 'right')}.{name}" for name in right_columns]
+    right_columns = [f"{right_metadata.get('_name', 'r')}.{name}" for name in right_columns]
     right = right.rename_columns(right_columns)
 
     for page in left:
@@ -107,7 +107,7 @@ class JoinNode(BasePlanNode):
     def execute(self, data_pages: Iterable) -> Iterable:
         
         if not isinstance(self._right_table, pyarrow.Table):
-            self._right_table = pyarrow.concat_tables(self._right_table.execute(None))
+            self._right_table = pyarrow.concat_tables(self._right_table.execute(None))  # type:ignore
 
         if self._join_type == "CrossJoin":
           yield from _cross_join(data_pages, self._right_table)
