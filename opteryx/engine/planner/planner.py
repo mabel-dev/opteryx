@@ -343,7 +343,9 @@ class QueryPlanner(object):
             joins = ast[0]["Query"]["body"]["Select"]["from"][0]["joins"][0]
         except IndexError:
             return None
-        mode = joins["join_operator"]
+        mode = list(joins["join_operator"].keys())[0]
+        using = [v["value"] for v in joins["join_operator"][mode].get("Using", [])]
+        on = None
         alias = None
         if joins["relation"]["Table"]["alias"] is not None:
             alias = joins["relation"]["Table"]["alias"]["name"]["value"]
@@ -353,7 +355,7 @@ class QueryPlanner(object):
                 for part in joins["relation"]["Table"]["name"]
             ]
         )
-        return (mode, (alias, dataset))
+        return (mode, (alias, dataset), on, using)
 
     def _extract_projections(self, ast):
         """
@@ -574,7 +576,12 @@ class QueryPlanner(object):
                 start_date=self._start_date,
                 end_date=self._end_date,
             )
-            self.add_operator("join", JoinNode(statistics, right_table=right, join_type=_join[0], on=None))
+            self.add_operator("join", 
+                JoinNode(statistics, 
+                right_table=right, 
+                join_type=_join[0], 
+                join_on=_join[2],
+                join_using=_join[3]))
             self.link_operators(last_node, "join")
             last_node = "join"
 

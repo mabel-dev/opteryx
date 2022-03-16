@@ -91,6 +91,7 @@ class JoinNode(BasePlanNode):
         self._right_table = config.get("right_table")
         self._join_type = config.get("join_type", "CrossJoin")
         self._on = config.get("join_on")
+        self._using = config.get("join_using")
 
     @property
     def name(self):
@@ -107,9 +108,10 @@ class JoinNode(BasePlanNode):
         if self._join_type == "CrossJoin":
           yield from _cross_join(data_pages, self._right_table)
 
-        elif self._join_type == "InnerUsing":
-            for page in data_pages:
-                yield pyarrow_ops.join(self._right_table, page, self._on)
+        elif self._join_type == "Inner":
+            if self._using:
+                for page in data_pages:
+                    yield pyarrow_ops.join(self._right_table, page, self._using)
 
 
 if __name__ == "__main__":
