@@ -4,6 +4,7 @@ import os
 
 sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
 
+import pyarrow
 from opteryx.engine.planner.temporal import extract_temporal_filters
 from opteryx.utils.arrow import get_metadata
 
@@ -23,6 +24,9 @@ def test(SQL):
         cur.execute(SQL)
         #cur._results = [pyarrow.concat_tables(cur._results)]
         #print("METADATA:", get_metadata(cur._results))
+
+        #print(pyarrow.concat_tables(cur._results))
+
         print(ascii_table(cur.fetchmany(size=10), limit=10))
         [a for a in cur.fetchmany(1000)]
         print(json.dumps(cur.stats, indent=2))
@@ -115,7 +119,11 @@ AS employees (EMPNO, ENAME, JOB, MGR, HIREDATE, SAL, COMM, DEPTNO);
     SQL = "SELECT * FROM table_1 FOR SYSTEM_TIME AS OF '2022-02-02'"
     SQL = "SELECT count(*) as c FROM tests.data.dated as d"
     SQL = "SELECT COUNT(*) FROM $astronauts WHERE $astronauts.a = $astronauts.b"
-    SQL = "SELECT * FROM $satellites CROSS JOIN $planets"
+#    SQL = "SELECT * FROM $satellites CROSS JOIN $astronauts"
+    SQL = "SELECT * FROM $satellites INNER JOIN $astronauts USING(id)"
+#    SQL = (
+#        "SELECT planetId FROM $satellites GROUP BY planetId"
+#    )
 
     _, _, SQL = extract_temporal_filters(SQL)  
     ast = sqloxide.parse_sql(SQL, dialect="mysql")

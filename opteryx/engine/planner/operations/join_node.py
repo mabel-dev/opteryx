@@ -51,9 +51,7 @@ def _cross_join(left, right):
     needed so we're going to step the left table. 
     """
     
-    buffer = bytearray()
-    from pyarrow.json import ReadOptions
-    ro = ReadOptions(block_size=3 * 1024 * 1024)
+    pylist = []
 
     # if there's collisions, rename the fields
     # start with a naive rename
@@ -69,23 +67,20 @@ def _cross_join(left, right):
         #if left_metadata is None:
         #    left_metadata = get_metadata(left)
 
-        for batch in page.to_batches(max_chunksize=1000):
-            dict_batch = batch.to_pydict()
-            for index in range(len(batch)):
-                left_row =  {k: v[index] for k, v in dict_batch.items()}
+        for batch in page.to_batches(max_chunksize=100):
+            for left_row in batch.to_pylist():
                 for right_row in fetchall([right]):
                     new_row = {**left_row, **right_row}
-
-                    if len(buffer) > (2 * 1024 * 1024):  # 2Mb
-                        table = pyarrow.json.read_json(io.BytesIO(buffer), read_options=ro)
+                    if len(pylist) > 5000:
+                        table = pyarrow.Table.from_pylist(pylist)
                         #table = arrow.set_metadata(table, metadata)
                         yield table
-                        buffer = bytearray()
+                        pylist = []
 
-                    buffer.extend(orjson.dumps(new_row, default=_serializer))
+                    pylist.append(new_row)
 
-    if len(buffer) > 0:
-        table = pyarrow.json.read_json(io.BytesIO(buffer))
+    if len(pylist) > 1000:
+        table = pyarrow.Table.from_pylist(pylist)
         #table = arrow.set_metadata(table, metadata)
         yield table
 
@@ -112,7 +107,7 @@ class JoinNode(BasePlanNode):
         if self._join_type == "CrossJoin":
           yield from _cross_join(data_pages, self._right_table)
 
-        elif self._join_type == "INNER":
+        elif self._join_type == "InnerUsing":
             for page in data_pages:
                 yield pyarrow_ops.join(self._right_table, page, self._on)
 
@@ -129,14 +124,27 @@ if __name__ == "__main__":
     from opteryx.utils.display import ascii_table
     from opteryx.utils.arrow import fetchmany
 
-    planets = samples.planets()
+    planets = samples.astronauts()
     satellites = samples.satellites()
 
-    print(planets.column_names)
+#    print(planets.column_names)
+#    print(planets.to_string(preview_cols=10))
 #    planets.rename_columns(['id', 'planet_name', 'mass', 'diameter', 'density', 'gravity', 'escapeVelocity', 'rotationPeriod', 'lengthOfDay', 'distanceFromSun', 'perihelion', 'aphelion', 'orbitalPeriod', 'orbitalVelocity', 'orbitalInclination', 'orbitalEccentricity', 'obliquityToOrbit', 'meanTemperature', 'surfacePressure', 'numberOfMoons'])
 
-    joint = pyarrow.concat_tables(_cross_join([planets], satellites))
+    joint = _cross_join([planets], satellites)
 
-    print(ascii_table(fetchmany([joint], size=10), limit=10))
+    #right_columns = planets.column_names
+    #right_columns = [f"planets.{name}" for name in right_columns]
+    #planets = planets.rename_columns(right_columns)
 
-    print(joint.column_names)
+    from opteryx.third_party.pyarrow_ops import join
+
+    print('---')
+
+#    joint = join(planets, satellites, on=["id"])
+
+#    print(joint.to_string())
+
+    print(ascii_table(fetchmany(joint, limit=10), limit=10))
+
+    #print(joint.column_names)

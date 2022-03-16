@@ -2,40 +2,32 @@
 from typing import Iterable, List
 
 
-def fetchmany(pages: Iterable, size: int = 5) -> List[dict]:  # type:ignore
-    """
-    This is the fastest way I've found to do this - it just beats Google's
-    implementation in their python BigQuery SDK - which is cleaner but lacks
-    the ability to limit the number of records returned.
-    """
-    DEFAULT_CHUNK_SIZE = 100
-    chunk_size = min(size, DEFAULT_CHUNK_SIZE)
-    if chunk_size < 1:
+def fetchmany(pages, limit: int = 1000):
+    DEFAULT_CHUNK_SIZE = 1000
+    chunk_size = min(limit, DEFAULT_CHUNK_SIZE)
+    if chunk_size < 0:
         chunk_size = DEFAULT_CHUNK_SIZE
 
     def _inner_row_reader():
         for page in pages:
             for batch in page.to_batches(max_chunksize=chunk_size):
-                dict_batch = batch.to_pydict()
-                for index in range(len(batch)):
-                    yield {k: v[index] for k, v in dict_batch.items()}
+                yield from batch.to_pylist()
 
     index = -1
     for index, row in enumerate(_inner_row_reader()):
-        if index == size:
+        if index == limit:
             return
         yield row
 
     if index < 0:
         yield {}
 
-
 def fetchone(pages: Iterable) -> dict:
-    return fetchmany(pages=pages, size=1).pop()
+    return fetchmany(pages=pages, limit=1).pop()
 
 
 def fetchall(pages) -> List[dict]:
-    return fetchmany(pages=pages, size=-1)
+    return fetchmany(pages=pages, limit=-1)
 
 
 """

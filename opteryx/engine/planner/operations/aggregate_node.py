@@ -27,6 +27,12 @@ read time - e.g. 30s:21s where 20s is the read time).
 But, on high cardinality data (nearly unique columns), the performance is much faster,
 on a 10m record set, timings are 1:400 (50s:1220s where 20s is the read time).
 """
+
+import sys
+import os
+
+sys.path.insert(1, os.path.join(sys.path[0], "../../../.."))
+
 import io
 import orjson
 import pyarrow.json
@@ -35,6 +41,7 @@ from typing import Iterable
 from opteryx.engine import QueryStatistics
 from opteryx.engine.planner.operations import BasePlanNode
 from opteryx.exceptions import SqlError
+from opteryx.samples import satellite_data
 
 # these functions can be applied to each group
 INCREMENTAL_AGGREGATES = {
@@ -249,3 +256,22 @@ class AggregateNode(BasePlanNode):
 
         # timing over a yield is pointless
         # print("building group table", (time.time_ns() - t) / 1e9)
+
+if __name__ == "__main__":
+
+    import sys
+    import os
+
+    sys.path.insert(1, os.path.join(sys.path[0], "../../../../.."))
+
+    from opteryx import samples
+    from opteryx.utils.display import ascii_table
+    from opteryx.utils.arrow import fetchmany
+
+    s = samples.satellites()
+
+    # count, min, max, sum, mean, count_distinct, min_max
+    # https://arrow.apache.org/docs/python/api/compute.html#aggregations
+    g = s.group_by("planetId").aggregate([("id", "count_distinct")])
+
+    print(ascii_table(fetchmany([g], limit=10), limit=10))
