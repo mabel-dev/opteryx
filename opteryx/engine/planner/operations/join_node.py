@@ -18,72 +18,51 @@ This is a SQL Query Execution Plan Node.
 This performs a JOIN
 """
 
+from pickletools import int4
 import sys
 import os
 
 sys.path.insert(1, os.path.join(sys.path[0], "../../../.."))
 
-import io
-import numpy as np
-import orjson
+import numpy 
 import pyarrow
 from typing import Iterable
-from opteryx.utils.arrow import fetchall, get_metadata
+from opteryx.utils.arrow import get_metadata
 from opteryx.engine.query_statistics import QueryStatistics
 from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
 from opteryx.third_party import pyarrow_ops
 
 JOIN_TYPES = ('CrossJoin', 'INNER', 'LEFT') 
 
-JSON_TYPES = {np.bool_: bool, np.int64: int, np.float64: float}
-
-
-def _serializer(obj):
-    return JSON_TYPES[type(obj)](obj)
 
 def _cross_join(left, right):
-    """
-    cross joins are the cartesian product of two tables, that is, the returned dataset
-    is a full copy of the right dataset for every row in the left dataset - resulting
-    in len(left) x len(right) number of records. It's the simplest to do.
+    from opteryx.third_party.pyarrow_ops import align_tables
 
-    For all joins, we assume the right table is in memory and can be reiterated as
-    needed so we're going to step the left table. 
-    """
-    
-    pylist = []
-
-    # if there's collisions, rename the fields
-    # start with a naive rename
-    left_metadata = None
     right_metadata = get_metadata(right) or {}
 
     right_columns = right.column_names
     right_columns = [f"{right_metadata.get('_name', 'r')}.{name}" for name in right_columns]
     right = right.rename_columns(right_columns)
 
-    for page in left:
+    def cartesian_product(*arrays):
+        la = len(arrays)
+        dtype = numpy.result_type(*arrays)
+        arr = numpy.empty([len(a) for a in arrays] + [la], dtype=dtype)
+        for i, a in enumerate(numpy.ix_(*arrays)):
+            arr[...,i] = a
+        return numpy.hsplit(arr.reshape(-1, la), la)
 
-        #if left_metadata is None:
-        #    left_metadata = get_metadata(left)
+    if isinstance(left, pyarrow.Table):
+        left = [left]
 
-        for batch in page.to_batches(max_chunksize=100):
-            for left_row in batch.to_pylist():
-                for right_row in fetchall([right]):
-                    new_row = {**left_row, **right_row}
-                    if len(pylist) > 5000:
-                        table = pyarrow.Table.from_pylist(pylist)
-                        #table = arrow.set_metadata(table, metadata)
-                        yield table
-                        pylist = []
+    for left_page in left:
 
-                    pylist.append(new_row)
+        left_array = numpy.arange(left_page.num_rows, dtype=numpy.int64)
+        right_array = numpy.arange(right.num_rows, dtype=numpy.int64)
 
-    if len(pylist) > 1000:
-        table = pyarrow.Table.from_pylist(pylist)
-        #table = arrow.set_metadata(table, metadata)
-        yield table
+        left_align, right_align = cartesian_product(left_array, right_array)
 
+        yield align_tables(left_page, right, left_align.flatten(), right_align.flatten())
 
 
 class JoinNode(BasePlanNode):
@@ -125,6 +104,7 @@ if __name__ == "__main__":
     from opteryx.third_party import pyarrow_ops
     from opteryx.utils.display import ascii_table
     from opteryx.utils.arrow import fetchmany
+    from mabel.utils.timer import Timer
 
     planets = samples.astronauts()
     satellites = samples.satellites()
@@ -133,7 +113,12 @@ if __name__ == "__main__":
 #    print(planets.to_string(preview_cols=10))
 #    planets.rename_columns(['id', 'planet_name', 'mass', 'diameter', 'density', 'gravity', 'escapeVelocity', 'rotationPeriod', 'lengthOfDay', 'distanceFromSun', 'perihelion', 'aphelion', 'orbitalPeriod', 'orbitalVelocity', 'orbitalInclination', 'orbitalEccentricity', 'obliquityToOrbit', 'meanTemperature', 'surfacePressure', 'numberOfMoons'])
 
-    joint = _cross_join([planets], satellites)
+    with Timer():
+        joint = _cross_join([planets], satellites)  # 0.39 seconds - 63189
+        c = 0
+        for e, j in enumerate(joint):
+            c += j.num_rows
+        print(e, c)
 
     #right_columns = planets.column_names
     #right_columns = [f"planets.{name}" for name in right_columns]
@@ -146,7 +131,7 @@ if __name__ == "__main__":
 #    joint = join(planets, satellites, on=["id"])
 
 #    print(joint.to_string())
-
+    joint = _cross_join([planets], satellites)
     print(ascii_table(fetchmany(joint, limit=10), limit=10))
 
     #print(joint.column_names)

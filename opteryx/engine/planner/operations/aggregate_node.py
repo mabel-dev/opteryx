@@ -41,7 +41,6 @@ from typing import Iterable
 from opteryx.engine import QueryStatistics
 from opteryx.engine.planner.operations import BasePlanNode
 from opteryx.exceptions import SqlError
-from opteryx.samples import satellite_data
 
 # these functions can be applied to each group
 INCREMENTAL_AGGREGATES = {

@@ -1,3 +1,4 @@
+from enum import unique
 import time
 import numpy as np
 import pyarrow as pa
@@ -15,44 +16,58 @@ def align_tables(t1, t2, l1, l2):
 
 
 def join(left, right, on):
-    # Gather join columns
+    # Gather join columns - create arrays of the hashes of the values in the column
     t0 = time.time()
-    l_arr, r_arr = columns_to_array(left, on), columns_to_array(right, on)
+    l_array, r_array = columns_to_array(left, on), columns_to_array(right, on)
 
-    # Groupify the join array
+    # Groupify the join array, this generates a set of data about the array
+    # including the unique values in the array, and the sort order for the array.
     t1 = time.time()
-    ld, lc, lidxs, lbi = groupify_array(l_arr)
-    rd, rc, ridxs, rbi = groupify_array(r_arr)
+    l_distinct, lc, l_sort_idxs, lbi = groupify_array(l_array)
+    r_distinct, rc, r_sort_idxs, rbi = groupify_array(r_array)
 
-    # Find both dicts
+    # Create the list of unique values combining the column from the left and the right
+    # tables
     t2 = time.time()
-    bd, inv = np.unique(np.concatenate([ld, rd]), return_inverse=True)
+    unique, inv = np.unique(np.concatenate([l_distinct, r_distinct]), return_inverse=True)
 
     # Align Left side
     t3 = time.time()
-    linv = inv[: ld.shape[0]]
-    lcc, lbic = np.zeros_like(bd), np.zeros_like(bd)
+    # the inv array the positions in the unique list of the combined left and right list,
+    # because we build this using np.concat, we know the first set of records is from the
+    # left list.
+    linv = inv[: l_distinct.shape[0]]
+    # this creates empty masks
+    lcc, lbic = np.zeros_like(unique), np.zeros_like(unique)
+    # this sets the values at the positions in linv to the count values from groupify above
     lcc[linv] = lc
+    # this sets the values at the positions in linv to the begin indexes of the groups
     lbic[linv] = lbi
 
     # Align right side
-    rinv = inv[ld.shape[0] :]
-    rcc, rbic = np.zeros_like(bd), np.zeros_like(bd)
+    # the inv array the positions in the unique list of the combined left and right list,
+    # because we build this using np.concat, we know the end set of records is from the
+    # right list.
+    rinv = inv[l_distinct.shape[0] :]
+    # this creates empty masks
+    rcc, rbic = np.zeros_like(unique), np.zeros_like(unique)
+    # this sets the values at the positions in rinv to the count values from groupify above
     rcc[rinv] = rc
+    # this sets the values at the positions in rinv to the begin indexes of the groups
     rbic[rinv] = rbi
 
     # Perform cjoin
     t4 = time.time()
     left_align, right_align = inner_join(
-        lidxs.astype(np.int64),
-        ridxs.astype(np.int64),
+        l_sort_idxs.astype(np.int64),
+        r_sort_idxs.astype(np.int64),
         lcc.astype(np.int64),
         rcc.astype(np.int64),
         lbic.astype(np.int64),
         rbic.astype(np.int64),
     )
 
-    print("Join took:", time.time() - t4, t4 - t3 , t2 - t1, t1 - t0)
+    #print("Join took:", time.time() - t4, t4 - t3 , t2 - t1, t1 - t0)
     return align_tables(left, right, left_align, right_align)
 
 

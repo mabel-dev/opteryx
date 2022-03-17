@@ -214,6 +214,9 @@ STATEMENTS = [
         ("EXPLAIN SELECT * FROM $satellites", 2, 3),
         ("EXPLAIN SELECT * FROM $satellites WHERE id = 8", 3, 3),
 
+        ("SELECT * FROM $satellites CROSS JOIN $astronauts", 63189, 27),
+        ("SELECT * FROM $satellites INNER JOIN $planets USING(id)", 9, 25),
+
         # These are queries which have been found to return the wrong result or not run
         # correctly which suggests their implementation is somewhat complex and
         # therefore brittle.

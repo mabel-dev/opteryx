@@ -343,10 +343,13 @@ class QueryPlanner(object):
             joins = ast[0]["Query"]["body"]["Select"]["from"][0]["joins"][0]
         except IndexError:
             return None
-        mode = list(joins["join_operator"].keys())[0]
-        using = [v["value"] for v in joins["join_operator"][mode].get("Using", [])]
+        using = None
         on = None
         alias = None
+        mode = joins["join_operator"]
+        if isinstance(mode, dict):
+            mode = list(joins["join_operator"].keys())[0]
+            using = [v["value"] for v in joins["join_operator"][mode].get("Using", [])]
         if joins["relation"]["Table"]["alias"] is not None:
             alias = joins["relation"]["Table"]["alias"]["name"]["value"]
         dataset = ".".join(

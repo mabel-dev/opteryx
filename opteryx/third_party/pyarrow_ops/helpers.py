@@ -5,8 +5,8 @@ def groupify_array(arr):
     # Input: Pyarrow/Numpy array
     # Output:
     #   - 1. Unique values
-    #   - 2. Sort index
-    #   - 3. Count per unique
+    #   - 2. Count per unique
+    #   - 3. Sort index
     #   - 4. Begin index per unique
     dic, counts = np.unique(arr, return_counts=True)
     sort_idx = np.argsort(arr)
