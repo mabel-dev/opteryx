@@ -94,9 +94,9 @@ vulnerabilities.
 The foundational technologies in Opteryx are:
 
 - Apache Arrow memory model and compute kernels for efficient processing of data
-- **sqloxide** https://github.com/wseaton/sqloxide
+- Parts of [PyArrow_Ops by Tom Scheffers](https://github.com/TomScheffers/pyarrow_ops/blob/main/LICENSE) has been integrated into the codebase to support handling Arrow structured data
+- [sqloxide](https://github.com/wseaton/sqloxide) is used to parse SQL queries to syntax trees
 - cython
 - numpy
 - orjson
-- cityhash
-- pyarrow
+- [cityhash] is used for non-cryptographic hashing

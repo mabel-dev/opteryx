@@ -18,7 +18,7 @@ This is a SQL Query Execution Plan Node.
 This node orders a dataset
 """
 from typing import Iterable
-from pyarrow import concat_tables
+from pyarrow import concat_tables, Table
 from opteryx.engine.query_statistics import QueryStatistics
 from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
 
@@ -38,6 +38,9 @@ class SortNode(BasePlanNode):
         return "Sort"
 
     def execute(self, data_pages: Iterable) -> Iterable:
+
+        if isinstance(data_pages, Table):
+            data_pages = [data_pages]
 
         table = concat_tables(data_pages)
 

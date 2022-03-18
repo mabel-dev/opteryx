@@ -53,6 +53,9 @@ class EvaluationNode(BasePlanNode):
 
     def execute(self, data_pages: Iterable) -> Iterable:
 
+        if isinstance(data_pages, pyarrow.Table):
+            data_pages = [data_pages]
+
         for page in data_pages:
 
             # for function, calculate and add the column

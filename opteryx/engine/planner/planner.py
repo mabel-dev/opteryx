@@ -349,7 +349,10 @@ class QueryPlanner(object):
         mode = joins["join_operator"]
         if isinstance(mode, dict):
             mode = list(joins["join_operator"].keys())[0]
-            using = [v["value"] for v in joins["join_operator"][mode].get("Using", [])]
+            if "Using" in joins["join_operator"][mode]:
+                using = [v["value"] for v in joins["join_operator"][mode].get("Using", [])]
+            if "On" in joins["join_operator"][mode]:
+                on = self._build_dnf_filters(joins["join_operator"][mode]["On"])
         if joins["relation"]["Table"]["alias"] is not None:
             alias = joins["relation"]["Table"]["alias"]["name"]["value"]
         dataset = ".".join(

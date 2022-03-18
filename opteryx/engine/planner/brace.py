@@ -120,7 +120,8 @@ AS employees (EMPNO, ENAME, JOB, MGR, HIREDATE, SAL, COMM, DEPTNO);
     SQL = "SELECT count(*) as c FROM tests.data.dated as d"
     SQL = "SELECT COUNT(*) FROM $astronauts WHERE $astronauts.a = $astronauts.b"
     SQL = "SELECT * FROM $satellites CROSS JOIN $astronauts"
-#    SQL = "SELECT * FROM $satellites INNER JOIN $planets USING(id)"
+    SQL = "SELECT * FROM $satellites JOIN $planets USING(id) WHERE id = 1"
+    SQL = "SELECT * FROM $satellites JOIN $planets ON $satellites.id = $planets.id"
 #    SQL = (
 #        "SELECT planetId FROM $satellites GROUP BY planetId"
 #    )

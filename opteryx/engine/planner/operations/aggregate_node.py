@@ -137,14 +137,17 @@ class AggregateNode(BasePlanNode):
     def name(self):
         return "Aggregation"
 
-    def execute(self, groups: Iterable) -> Iterable:
+    def execute(self, data_pages: Iterable) -> Iterable:
 
         from collections import defaultdict
         from opteryx.utils import arrow
 
         collector: dict = defaultdict(dict)
 
-        for page in groups:
+        if isinstance(data_pages, pyarrow.Table):
+            data_pages = [data_pages]
+
+        for page in data_pages:
 
             for group in _map(page, self._project):
 

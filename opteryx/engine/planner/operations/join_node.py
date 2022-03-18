@@ -32,10 +32,12 @@ from opteryx.engine.query_statistics import QueryStatistics
 from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
 from opteryx.third_party import pyarrow_ops
 
-JOIN_TYPES = ('CrossJoin', 'INNER', 'LEFT') 
-
 
 def _cross_join(left, right):
+    """
+    A cross join is the cartesian product of two tables - this usually isn't very 
+    useful, but it does allow you to the theta joins (non-equi joins)
+    """
     from opteryx.third_party.pyarrow_ops import align_tables
 
     right_metadata = get_metadata(right) or {}
@@ -60,13 +62,17 @@ def _cross_join(left, right):
         # we break this into small chunks, each cycle will have 100 * rows in the right table
         for left_block in left_page.to_batches(max_chunksize=100):
 
+            # we blocks don't have column_names, so we need to wrap in a table
             left_block = pyarrow.Table.from_batches([left_block], schema=left_page.schema)
 
+            # build two lists, 0 to num_rows for each table
             left_array = numpy.arange(left_block.num_rows, dtype=numpy.int64)
             right_array = numpy.arange(right.num_rows, dtype=numpy.int64)
 
+            # build the cartesian product of the two lists
             left_align, right_align = cartesian_product(left_array, right_array)
 
+            # now build the resultant table
             yield align_tables(left_block, right, left_align.flatten(), right_align.flatten())
 
 
@@ -136,7 +142,7 @@ if __name__ == "__main__":
 #    joint = join(planets, satellites, on=["id"])
 
 #    print(joint.to_string())
-    joint = _cross_join([planets], satellites)
+    joint = _cross_join(planets, satellites)
     print(ascii_table(fetchmany(joint, limit=10), limit=10))
 
     #print(joint.column_names)

@@ -19,6 +19,7 @@ This Node eliminates columns that are not needed in a Relation. This is also the
 that performs column renames.
 """
 from typing import Iterable
+import pyarrow
 from opteryx.engine.attribute_types import TOKEN_TYPES
 from opteryx.engine.query_statistics import QueryStatistics
 from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
@@ -70,6 +71,9 @@ class ProjectionNode(BasePlanNode):
     def execute(self, data_pages: Iterable) -> Iterable:
 
         from opteryx.utils import arrow
+
+        if isinstance(data_pages, pyarrow.Table):
+            data_pages = [data_pages]
 
         # if we have nothing to do, move along
         if self._projection == {"*": None}:

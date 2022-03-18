@@ -173,6 +173,9 @@ class SelectionNode(BasePlanNode):
 
     def execute(self, data_pages: Iterable) -> Iterable:
 
+        if isinstance(data_pages, Table):
+            data_pages = [data_pages]
+
         # we should always have a filter - but harm checking
         if self._filter is None:
             yield from data_pages

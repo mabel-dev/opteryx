@@ -4,8 +4,10 @@
 SELECT
       [DISTINCT]
       { column | expression } [, { column | expression } ...]
-      [FROM table_references
-        [FOR temporal_expression]]
+      [FROM table_reference
+        [[CROSS JOIN table_reference]
+        [[INNER] JOIN] table_reference USING (column[, column, ...])]
+      [FOR temporal_expression]
       [WHERE condition]
       [GROUP BY { column | expression }
         [HAVING condition]]

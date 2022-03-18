@@ -18,7 +18,7 @@ This is a SQL Query Execution Plan Node.
 This Node returns up to a specified number of tuples.
 """
 from typing import Iterable
-from pyarrow import concat_tables
+from pyarrow import concat_tables, Table
 from opteryx.engine.query_statistics import QueryStatistics
 from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
 
@@ -38,6 +38,9 @@ class LimitNode(BasePlanNode):
 
         result_set = []
         row_count = 0
+
+        if isinstance(data_pages, Table):
+            data_pages = [data_pages]
 
         for page in data_pages:
             row_count += page.num_rows
