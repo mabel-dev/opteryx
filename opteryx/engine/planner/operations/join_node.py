@@ -57,12 +57,17 @@ def _cross_join(left, right):
 
     for left_page in left:
 
-        left_array = numpy.arange(left_page.num_rows, dtype=numpy.int64)
-        right_array = numpy.arange(right.num_rows, dtype=numpy.int64)
+        # we break this into small chunks, each cycle will have 100 * rows in the right table
+        for left_block in left_page.to_batches(max_chunksize=100):
 
-        left_align, right_align = cartesian_product(left_array, right_array)
+            left_block = pyarrow.Table.from_batches([left_block], schema=left_page.schema)
 
-        yield align_tables(left_page, right, left_align.flatten(), right_align.flatten())
+            left_array = numpy.arange(left_block.num_rows, dtype=numpy.int64)
+            right_array = numpy.arange(right.num_rows, dtype=numpy.int64)
+
+            left_align, right_align = cartesian_product(left_array, right_array)
+
+            yield align_tables(left_block, right, left_align.flatten(), right_align.flatten())
 
 
 class JoinNode(BasePlanNode):
