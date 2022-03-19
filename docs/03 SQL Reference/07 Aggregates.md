@@ -12,16 +12,17 @@ The table below shows the available general aggregate functions. (+) indicates a
 
 Function        | Description 
 --------------- | ----------------------------------------------------------------
-`AVG(a)`        | The average value for all values in column 'a'
-`COUNT(a)` +    | The number of values in column 'a'
-`FIRST(a)`      | The first value in column 'a' (includes NONE)
-`LAST(a)`       | The last value in column 'a', (includes NONE)
-`MAX(a)` +      | The maximum value in column 'a'
-`MEDIAN(a)`     | The middle value for values in column 'a'
-`MIN(a)` +      | The minimum value in column 'a'
-`STDDEV_POP(a)` | The population standard deviation of values in column 'a'
-`SUM(a)` +      | The cumulative sum value for all values in column 'a'
-`VAR_POP(a)`    | The population variance for values in column 'a'
+`AGG_LIST(a)`   | Values in column 'a' returned as a list
+`AVG(a)`        | Average value for all values in column 'a'
+`COUNT(a)` +    | Number of values in column 'a'
+`FIRST(a)`      | First value in column 'a' (includes NONE)
+`LAST(a)`       | Last value in column 'a', (includes NONE)
+`MAX(a)` +      | Maximum value in column 'a'
+`MEDIAN(a)`     | Middle value for values in column 'a'
+`MIN(a)` +      | Minimum value in column 'a'
+`STDDEV_POP(a)` | Population standard deviation of values in column 'a'
+`SUM(a)` +      | Cumulative sum value for all values in column 'a'
+`VAR_POP(a)`    | Population variance for values in column 'a'
 
 ## Constraints
 

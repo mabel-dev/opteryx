@@ -120,6 +120,7 @@ STATEMENTS = [
         ("SELECT MIN(id), planetId FROM $satellites GROUP BY planetId", 7, 2),
         ("SELECT SUM(id), planetId FROM $satellites GROUP BY planetId", 7, 2),
         ("SELECT MIN(id), MAX(id), SUM(planetId), planetId FROM $satellites GROUP BY planetId", 7, 4),
+        ("SELECT planetId, AGG_LIST(name) FROM $satellites GROUP BY planetId", 7, 2),
 
         ("SELECT BOOLEAN(planetId) FROM $satellites GROUP BY planetId, BOOLEAN(planetId)", 7, 1),
         ("SELECT VARCHAR(planetId) FROM $satellites GROUP BY planetId, VARCHAR(planetId)", 7, 1),
@@ -217,6 +218,7 @@ STATEMENTS = [
         ("SELECT * FROM $satellites CROSS JOIN $astronauts", 63189, 27),
         ("SELECT * FROM $satellites INNER JOIN $planets USING(id)", 9, 25),
         ("SELECT * FROM $satellites JOIN $planets USING(id)", 9, 25),
+        ("SELECT * FROM $astronauts CROSS JOIN UNNEST(Missions) AS Mission WHERE Mission = 'Apollo 11'", 3, 20),
 
         # These are queries which have been found to return the wrong result or not run
         # correctly which suggests their implementation is somewhat complex and

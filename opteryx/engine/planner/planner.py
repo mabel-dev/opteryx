@@ -363,6 +363,17 @@ class QueryPlanner(object):
         dataset = ".".join(
             [part["value"] for part in joins["relation"]["Table"]["name"]]
         )
+        # if we have args, we're probably calling UNNEST
+        if "args" in joins["relation"]["Table"]:
+            args = [
+                self._build_dnf_filters(a) for a in joins["relation"]["Table"]["args"]
+            ]
+            # CROSS JOINT _ UNNEST() needs specifically handling because the UNNEST is
+            # probably a function of the data in the left table, which means we can't
+            # use the table join code
+            if len(args) > 0 and dataset == "UNNEST" and mode == "CrossJoin":
+                mode = "CrossJoinUnnest"
+                dataset = (dataset, args)
         return (mode, (alias, dataset), on, using)
 
     def _extract_projections(self, ast):
@@ -565,32 +576,34 @@ class QueryPlanner(object):
         if len(_relations) == 0:
             _relations = [(None, "$no_table")]
 
-        if len(_relations) == 1:
-            self.add_operator(
-                "from",
-                DatasetReaderNode(
-                    statistics,
-                    dataset=_relations[0],
-                    reader=self._reader,
-                    partition_scheme=self._partition_scheme,
-                    start_date=self._start_date,
-                    end_date=self._end_date,
-                ),
-            )
-            last_node = "from"
-        else:
-            raise SqlError("Queries are currently limited to single tables.")
-
-        _join = self._extract_joins(ast)
-        if _join:
-            right = DatasetReaderNode(
+        # We always have a data source - even if it's 'no table'
+        self.add_operator(
+            "from",
+            DatasetReaderNode(
                 statistics,
-                dataset=_join[1],
+                dataset=_relations[0],
                 reader=self._reader,
                 partition_scheme=self._partition_scheme,
                 start_date=self._start_date,
                 end_date=self._end_date,
-            )
+            ),
+        )
+        last_node = "from"
+
+        _join = self._extract_joins(ast)
+        if _join:
+            if _join[0] == "CrossJoinUnnest":
+                # we're not a table, we're the UNNEST function
+                right = _join[1]
+            else:
+                right = DatasetReaderNode(
+                    statistics,
+                    dataset=_join[1],
+                    reader=self._reader,
+                    partition_scheme=self._partition_scheme,
+                    start_date=self._start_date,
+                    end_date=self._end_date,
+                )
             self.add_operator(
                 "join",
                 JoinNode(
@@ -619,7 +632,6 @@ class QueryPlanner(object):
             last_node = "where"
 
         _groups = self._extract_groups(ast)
-        #        _columns = _extract_columns(ast)
         if _groups or any(["aggregate" in a for a in _projection]):
             _aggregates = _projection.copy()
             if isinstance(_aggregates, dict):
