@@ -31,7 +31,7 @@ class SortNode(BasePlanNode):
         return True
 
     def __repr__(self) -> str:
-        return ','.join([str(i) for i in self._order])
+        return ",".join([str(i) for i in self._order])
 
     @property
     def name(self):

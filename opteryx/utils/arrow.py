@@ -1,4 +1,3 @@
-
 from typing import Iterable, List
 
 
@@ -22,6 +21,7 @@ def fetchmany(pages, limit: int = 1000):
     if index < 0:
         yield {}
 
+
 def fetchone(pages: Iterable) -> dict:
     return fetchmany(pages=pages, limit=1).pop()
 
@@ -35,17 +35,21 @@ Adapted from:
 https://stackoverflow.com/questions/55546027/how-to-assign-arbitrary-metadata-to-pyarrow-table-parquet-columns
 """
 
-def create_table_metadata(column_names, expected_rows, name, aliases):
+
+def create_table_metadata(table, expected_rows, name, aliases):
+    if not isinstance(aliases, list):
+        aliases = [aliases]
     retval = {
         "_expected_rows": expected_rows,
         "_name": name,
         "_aliases": [a for a in set(aliases + [name]) if a],
     }
-    for column in column_names:
-        retval[column] = {"_aliases":[column]}
+    for column in table.column_names:
+        retval[column] = {"_aliases": [column]}
         for a in retval["_aliases"]:
-            retval[column]['_aliases'].append(f"{a}.{column}")
+            retval[column]["_aliases"].append(f"{a}.{column}")
     return retval
+
 
 def set_metadata(tbl, tbl_meta=None):
     """
@@ -59,6 +63,7 @@ def set_metadata(tbl, tbl_meta=None):
     """
     import pyarrow as pa
     import orjson
+
     # Create updated column fields with new metadata
     if tbl_meta:
 
@@ -81,6 +86,7 @@ def set_metadata(tbl, tbl_meta=None):
 
     return tbl
 
+
 def _decode_metadata(metadata):
     """
     Arrow stores metadata keys and values as bytes. We store "arbitrary" data as
@@ -94,7 +100,7 @@ def _decode_metadata(metadata):
 
     decoded = {}
     for k, v in metadata.items():
-        key = k.decode('utf-8')
+        key = k.decode("utf-8")
         val = orjson.loads(v)
         decoded[key] = val
     return decoded

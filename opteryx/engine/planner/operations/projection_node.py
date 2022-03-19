@@ -97,9 +97,6 @@ class ProjectionNode(BasePlanNode):
                 # where we have an explicit alias that no longer exists, replace it with the shortest alias
                 # that ends with the explicit alias
 
-
-
-
             # we elminimate attributes we don't want
             try:
                 projection = []
@@ -121,7 +118,7 @@ class ProjectionNode(BasePlanNode):
                 names = []
                 existing_columns = page.column_names
                 for k, v in self._projection.items():
-                    if v and v in existing_columns:
+                    if v and v not in existing_columns:
                         names.append(v)
                     elif k in existing_columns:
                         names.append(k)

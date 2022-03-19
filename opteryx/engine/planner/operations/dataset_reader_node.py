@@ -39,12 +39,14 @@ from opteryx.engine import QueryStatistics
 from opteryx.storage import file_decoders
 from opteryx.storage.adapters import DiskStorage
 from opteryx.storage.schemes import MabelPartitionScheme
+from opteryx.utils.arrow import set_metadata, create_table_metadata
 
 
 class EXTENSION_TYPE(str, Enum):
     # labels for the file extentions
     DATA = "DATA"
     CONTROL = "CONTROL"
+
 
 do_nothing = lambda x, y: x
 
@@ -59,7 +61,7 @@ KNOWN_EXTENSIONS = {
 }
 
 
-def _get_sample_dataset(dataset):
+def _get_sample_dataset(dataset, alias):
     # we do this like this so the datasets are not loaded into memory unless
     # they are going to be used
     from opteryx import samples
@@ -72,8 +74,17 @@ def _get_sample_dataset(dataset):
     }
     dataset = dataset.lower()
     if dataset in SAMPLE_DATASETS:
-        return SAMPLE_DATASETS[dataset]
+        table = SAMPLE_DATASETS[dataset]
+        metadata = create_table_metadata(
+            table=table,
+            expected_rows=table.num_rows,
+            name=dataset[:-1],
+            aliases=[alias],
+        )
+        table = set_metadata(table, metadata)
+        return table
     raise DatabaseError(f"Dataset not found `{dataset}`.")
+
 
 class DatasetReaderNode(BasePlanNode):
     def __init__(self, statistics: QueryStatistics, **config):
@@ -115,7 +126,6 @@ class DatasetReaderNode(BasePlanNode):
     def execute(self, data_pages: Iterable) -> Iterable:
 
         from opteryx.engine.planner.planner import QueryPlanner
-        from opteryx.utils.arrow import set_metadata, create_table_metadata
 
         # literal datasets
         if isinstance(self._dataset, bytearray):
@@ -132,7 +142,7 @@ class DatasetReaderNode(BasePlanNode):
 
         # sample datasets
         if self._dataset[0] == "$":
-            yield _get_sample_dataset(self._dataset)
+            yield _get_sample_dataset(self._dataset, self._alias)
             return
 
         # datasets from storage
@@ -145,7 +155,7 @@ class DatasetReaderNode(BasePlanNode):
 
         self._statistics.partitions_found += len(partitions)
 
-        partition_structure:dict = {}
+        partition_structure: dict = {}
         expected_rows = 0
 
         # Build the list of blobs we're going to read and collect summary statistics
@@ -186,7 +196,9 @@ class DatasetReaderNode(BasePlanNode):
                     # read the control blob
                     control_blob = self._reader.read_blob(blob_name)
                     # record the number of bytes we're reading
-                    self._statistics.bytes_read_control += control_blob.getbuffer().nbytes
+                    self._statistics.bytes_read_control += (
+                        control_blob.getbuffer().nbytes
+                    )
                     try:
                         control_dict = {}
                         control_dict = orjson.loads(control_blob.read())
@@ -194,9 +206,14 @@ class DatasetReaderNode(BasePlanNode):
                     except (ValueError, TypeError):
                         pass
                 elif file_type == EXTENSION_TYPE.DATA:
-                    partition_structure[partition]["blob_list"].append((blob_name, decoder,))
+                    partition_structure[partition]["blob_list"].append(
+                        (
+                            blob_name,
+                            decoder,
+                        )
+                    )
                 else:
-                    self._statistics.count_unknown_blob_type_found += 1 
+                    self._statistics.count_unknown_blob_type_found += 1
 
         for partition in partitions:
 
@@ -228,10 +245,10 @@ class DatasetReaderNode(BasePlanNode):
 
                 # write dataset information to the metadata
                 metadata = create_table_metadata(
-                    pyarrow_blob.column_names,
-                    expected_rows,
-                    self._dataset.replace("/", ".")[:-1],
-                    [self._alias]
+                    table=pyarrow_blob,
+                    expected_rows=expected_rows,
+                    name=self._dataset.replace("/", ".")[:-1],
+                    aliases=[self._alias],
                 )
                 pyarrow_blob = set_metadata(pyarrow_blob, metadata)
 

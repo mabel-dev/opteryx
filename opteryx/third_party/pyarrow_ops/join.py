@@ -29,7 +29,9 @@ def join(left, right, on):
     # Create the list of unique values combining the column from the left and the right
     # tables
     t2 = time.time()
-    unique, inv = np.unique(np.concatenate([l_distinct, r_distinct]), return_inverse=True)
+    unique, inv = np.unique(
+        np.concatenate([l_distinct, r_distinct]), return_inverse=True
+    )
 
     # Align Left side
     t3 = time.time()
@@ -67,7 +69,7 @@ def join(left, right, on):
         rbic.astype(np.int64),
     )
 
-    #print("Join took:", time.time() - t4, t4 - t3 , t2 - t1, t1 - t0)
+    # print("Join took:", time.time() - t4, t4 - t3 , t2 - t1, t1 - t0)
     return align_tables(left, right, left_align, right_align)
 
 

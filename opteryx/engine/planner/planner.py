@@ -165,7 +165,10 @@ class QueryPlanner(object):
         if "Identifier" in filters:  # we're an identifier
             return (filters["Identifier"]["value"], TOKEN_TYPES.IDENTIFIER)
         if "CompoundIdentifier" in filters:
-            return (".".join([i["value"] for i in filters["CompoundIdentifier"]]), TOKEN_TYPES.IDENTIFIER)
+            return (
+                ".".join([i["value"] for i in filters["CompoundIdentifier"]]),
+                TOKEN_TYPES.IDENTIFIER,
+            )
         if "Value" in filters:  # we're a literal
             return self._extract_value(filters["Value"])
         if "BinaryOp" in filters:
@@ -350,16 +353,15 @@ class QueryPlanner(object):
         if isinstance(mode, dict):
             mode = list(joins["join_operator"].keys())[0]
             if "Using" in joins["join_operator"][mode]:
-                using = [v["value"] for v in joins["join_operator"][mode].get("Using", [])]
+                using = [
+                    v["value"] for v in joins["join_operator"][mode].get("Using", [])
+                ]
             if "On" in joins["join_operator"][mode]:
                 on = self._build_dnf_filters(joins["join_operator"][mode]["On"])
         if joins["relation"]["Table"]["alias"] is not None:
             alias = joins["relation"]["Table"]["alias"]["name"]["value"]
         dataset = ".".join(
-            [
-                part["value"]
-                for part in joins["relation"]["Table"]["name"]
-            ]
+            [part["value"] for part in joins["relation"]["Table"]["name"]]
         )
         return (mode, (alias, dataset), on, using)
 
@@ -388,6 +390,15 @@ class QueryPlanner(object):
                     return {
                         "identifier": function["Identifier"]["value"],
                         "alias": alias,
+                    }
+                if "CompoundIdentifier" in function:
+                    return {
+                        "identifier": [
+                            p["value"] for p in function["CompoundIdentifier"]
+                        ].pop(),
+                        "alias": ".".join(
+                            [p["value"] for p in function["CompoundIdentifier"]]
+                        ),
                     }
                 if "Function" in function:
                     func = function["Function"]["name"][0]["value"].upper()
@@ -525,13 +536,11 @@ class QueryPlanner(object):
         having = ast[0]["Query"]["body"]["Select"]["having"]
         return self._build_dnf_filters(having)
 
-
     def _explain_planner(self, ast, statistics):
         explain_plan = self.copy()
         explain_plan.create_plan(ast=[ast[0]["Explain"]["statement"]])
         explain_node = ExplainNode(statistics, query_plan=explain_plan)
         self.add_operator("explain", explain_node)
-
 
     def _naive_select_planner(self, ast, statistics):
         """
@@ -582,15 +591,18 @@ class QueryPlanner(object):
                 start_date=self._start_date,
                 end_date=self._end_date,
             )
-            self.add_operator("join", 
-                JoinNode(statistics, 
-                right_table=right, 
-                join_type=_join[0], 
-                join_on=_join[2],
-                join_using=_join[3]))
+            self.add_operator(
+                "join",
+                JoinNode(
+                    statistics,
+                    right_table=right,
+                    join_type=_join[0],
+                    join_on=_join[2],
+                    join_using=_join[3],
+                ),
+            )
             self.link_operators(last_node, "join")
             last_node = "join"
-
 
         _projection = self._extract_projections(ast)
         if any(["function" in a for a in _projection]):
@@ -673,7 +685,7 @@ class QueryPlanner(object):
             out_going_links = self.get_outgoing_links(operator_name)
             if out_going_links:
                 for next_operator_name in out_going_links:
-                    yield from _inner_explain(next_operator_name, depth)               
+                    yield from _inner_explain(next_operator_name, depth)
 
         entry_points = self.get_entry_points()
         nodes = []
@@ -684,7 +696,7 @@ class QueryPlanner(object):
         for node in nodes:
             buffer.extend(orjson.dumps(node))
         table = pyarrow.json.read_json(io.BytesIO(buffer))
-        yield table 
+        yield table
 
     def add_operator(self, name, operator):
         """

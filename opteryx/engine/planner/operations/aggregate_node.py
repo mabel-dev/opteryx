@@ -31,6 +31,8 @@ on a 10m record set, timings are 1:400 (50s:1220s where 20s is the read time).
 import sys
 import os
 
+from opteryx.utils.arrow import get_metadata
+
 sys.path.insert(1, os.path.join(sys.path[0], "../../../.."))
 
 import io
@@ -143,11 +145,15 @@ class AggregateNode(BasePlanNode):
         from opteryx.utils import arrow
 
         collector: dict = defaultdict(dict)
+        original_metadata = {}
 
         if isinstance(data_pages, pyarrow.Table):
             data_pages = [data_pages]
 
         for page in data_pages:
+
+            if original_metadata == {}:
+                original_metadata = get_metadata(page)
 
             for group in _map(page, self._project):
 
@@ -162,18 +168,10 @@ class AggregateNode(BasePlanNode):
 
                     # this is needed for situations where the select column isn't selecting
                     # the columns in the group by
-                    collection = tuple(
-                        [
-                            (
-                                k,
-                                v,
-                            )
-                            for k, v in group
-                            if k in self._groups
-                        ]
-                    )
-
+                    # fmt:off
+                    collection = tuple([(k,v,) for k, v in group if k in self._groups])
                     group_collector = collector[collection]
+                    # fmt:on
 
                     # Add the responses to the collector if it's COUNT(*)
                     if column_name == "COUNT(Wildcard)":
@@ -207,36 +205,31 @@ class AggregateNode(BasePlanNode):
 
                     collector[collection] = group_collector
 
-
         # create table metadata for this newly created table
-        metadata = arrow.create_table_metadata(
-            [],
-            len(collector),
-            "",
-            [None]
-        )
-
+        metadata = None
 
         import time
 
-        from pyarrow.json import ReadOptions
-
-        ro = ReadOptions(block_size=3 * 1024 * 1024)
-
-        # count should return 0
+        # count should return 0 rather than nothing
         if len(collector) == 0 and len(self._aggregates) == 1:
             if self._aggregates[0]["aggregate"] == "COUNT":
-                collector = { (): {"COUNT(*)":0 }}
+                collector = {(): {"COUNT(*)": 0}}
 
-        buffer = bytearray()
+        buffer = []
         t = time.time_ns()
         for collected, record in collector.items():
-            # we can't load huge json docs into pyarrow, so we chunk it
-            if len(buffer) > (2 * 1024 * 1024):  # 2Mb
-                table = pyarrow.json.read_json(io.BytesIO(buffer), read_options=ro)
+            if len(buffer) > 1000:
+                table = pyarrow.Table.from_pylist(buffer)
+                if metadata is None:
+                    metadata = arrow.create_table_metadata(
+                        table=table,
+                        expected_rows=len(collector),
+                        name=original_metadata.get("_name"),
+                        aliases=original_metadata.get("_aliases"),
+                    )
                 table = arrow.set_metadata(table, metadata)
                 yield table
-                buffer = bytearray()
+                buffer = []
             for field, value in collected:
                 if hasattr(value, "as_py"):
                     value = value.as_py()  # type:ignore
@@ -249,15 +242,23 @@ class AggregateNode(BasePlanNode):
                             )  # type:ignore
                     else:
                         record[field] = value
-            buffer.extend(orjson.dumps(record, default=_serializer))
+            buffer.append(record)
 
         if len(buffer) > 0:
-            table = pyarrow.json.read_json(io.BytesIO(buffer))
+            table = pyarrow.Table.from_pylist(buffer)
+            if metadata is None:
+                metadata = arrow.create_table_metadata(
+                    table=table,
+                    expected_rows=len(collector),
+                    name=original_metadata.get("_name"),
+                    aliases=original_metadata.get("_aliases"),
+                )
             table = arrow.set_metadata(table, metadata)
             yield table
 
         # timing over a yield is pointless
         # print("building group table", (time.time_ns() - t) / 1e9)
+
 
 if __name__ == "__main__":
 

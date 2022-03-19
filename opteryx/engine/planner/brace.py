@@ -4,9 +4,7 @@ import os
 
 sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
 
-import pyarrow
 from opteryx.engine.planner.temporal import extract_temporal_filters
-from opteryx.utils.arrow import get_metadata
 
 
 def test(SQL):
@@ -22,10 +20,10 @@ def test(SQL):
     with timer.Timer():
         # do this to go over the records
         cur.execute(SQL)
-        #cur._results = [pyarrow.concat_tables(cur._results)]
-        #print("METADATA:", get_metadata(cur._results))
+        # cur._results = [pyarrow.concat_tables(cur._results)]
+        # print("METADATA:", get_metadata(cur._results))
 
-        #print(pyarrow.concat_tables(cur._results))
+        # print(pyarrow.concat_tables(cur._results))
 
         print(ascii_table(cur.fetchmany(size=10), limit=10))
         [a for a in cur.fetchmany(1000)]
@@ -121,12 +119,10 @@ AS employees (EMPNO, ENAME, JOB, MGR, HIREDATE, SAL, COMM, DEPTNO);
     SQL = "SELECT COUNT(*) FROM $astronauts WHERE $astronauts.a = $astronauts.b"
     SQL = "SELECT * FROM $satellites CROSS JOIN $astronauts"
     SQL = "SELECT * FROM $satellites JOIN $planets USING(id) WHERE id = 1"
-    SQL = "SELECT * FROM $satellites JOIN $planets ON $satellites.id = $planets.id"
-#    SQL = (
-#        "SELECT planetId FROM $satellites GROUP BY planetId"
-#    )
+    #    SQL = "SELECT * FROM $satellites JOIN $planets ON $satellites.id = $planets.id"
+    SQL = "SELECT s.planetId AS pid FROM $satellites AS s GROUP BY planetId"
 
-    _, _, SQL = extract_temporal_filters(SQL)  
+    _, _, SQL = extract_temporal_filters(SQL)
     ast = sqloxide.parse_sql(SQL, dialect="mysql")
     print(json.dumps(ast, indent=2))
 
@@ -136,4 +132,3 @@ AS employees (EMPNO, ENAME, JOB, MGR, HIREDATE, SAL, COMM, DEPTNO);
 
     with cProfile.Profile(subcalls=False) as pr:
         test(SQL)
-

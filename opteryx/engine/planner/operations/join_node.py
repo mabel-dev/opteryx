@@ -24,7 +24,7 @@ import os
 
 sys.path.insert(1, os.path.join(sys.path[0], "../../../.."))
 
-import numpy 
+import numpy
 import pyarrow
 from typing import Iterable
 from opteryx.utils.arrow import get_metadata
@@ -33,9 +33,18 @@ from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
 from opteryx.third_party import pyarrow_ops
 
 
+def cartesian_product(*arrays):
+    la = len(arrays)
+    dtype = numpy.result_type(*arrays)
+    arr = numpy.empty([len(a) for a in arrays] + [la], dtype=dtype)
+    for i, a in enumerate(numpy.ix_(*arrays)):
+        arr[..., i] = a
+    return numpy.hsplit(arr.reshape(-1, la), la)
+
+
 def _cross_join(left, right):
     """
-    A cross join is the cartesian product of two tables - this usually isn't very 
+    A cross join is the cartesian product of two tables - this usually isn't very
     useful, but it does allow you to the theta joins (non-equi joins)
     """
     from opteryx.third_party.pyarrow_ops import align_tables
@@ -43,16 +52,10 @@ def _cross_join(left, right):
     right_metadata = get_metadata(right) or {}
 
     right_columns = right.column_names
-    right_columns = [f"{right_metadata.get('_name', 'r')}.{name}" for name in right_columns]
+    right_columns = [
+        f"{right_metadata.get('_name', 'r')}.{name}" for name in right_columns
+    ]
     right = right.rename_columns(right_columns)
-
-    def cartesian_product(*arrays):
-        la = len(arrays)
-        dtype = numpy.result_type(*arrays)
-        arr = numpy.empty([len(a) for a in arrays] + [la], dtype=dtype)
-        for i, a in enumerate(numpy.ix_(*arrays)):
-            arr[...,i] = a
-        return numpy.hsplit(arr.reshape(-1, la), la)
 
     if isinstance(left, pyarrow.Table):
         left = [left]
@@ -63,7 +66,9 @@ def _cross_join(left, right):
         for left_block in left_page.to_batches(max_chunksize=100):
 
             # we blocks don't have column_names, so we need to wrap in a table
-            left_block = pyarrow.Table.from_batches([left_block], schema=left_page.schema)
+            left_block = pyarrow.Table.from_batches(
+                [left_block], schema=left_page.schema
+            )
 
             # build two lists, 0 to num_rows for each table
             left_array = numpy.arange(left_block.num_rows, dtype=numpy.int64)
@@ -73,7 +78,9 @@ def _cross_join(left, right):
             left_align, right_align = cartesian_product(left_array, right_array)
 
             # now build the resultant table
-            yield align_tables(left_block, right, left_align.flatten(), right_align.flatten())
+            yield align_tables(
+                left_block, right, left_align.flatten(), right_align.flatten()
+            )
 
 
 class JoinNode(BasePlanNode):
@@ -91,12 +98,14 @@ class JoinNode(BasePlanNode):
         return ""
 
     def execute(self, data_pages: Iterable) -> Iterable:
-        
+
         if not isinstance(self._right_table, pyarrow.Table):
-            self._right_table = pyarrow.concat_tables(self._right_table.execute(None))  # type:ignore
+            self._right_table = pyarrow.concat_tables(
+                self._right_table.execute(None)
+            )  # type:ignore
 
         if self._join_type == "CrossJoin":
-          yield from _cross_join(data_pages, self._right_table)
+            yield from _cross_join(data_pages, self._right_table)
 
         elif self._join_type == "Inner":
             if self._using:
@@ -120,9 +129,9 @@ if __name__ == "__main__":
     planets = samples.astronauts()
     satellites = samples.satellites()
 
-#    print(planets.column_names)
-#    print(planets.to_string(preview_cols=10))
-#    planets.rename_columns(['id', 'planet_name', 'mass', 'diameter', 'density', 'gravity', 'escapeVelocity', 'rotationPeriod', 'lengthOfDay', 'distanceFromSun', 'perihelion', 'aphelion', 'orbitalPeriod', 'orbitalVelocity', 'orbitalInclination', 'orbitalEccentricity', 'obliquityToOrbit', 'meanTemperature', 'surfacePressure', 'numberOfMoons'])
+    #    print(planets.column_names)
+    #    print(planets.to_string(preview_cols=10))
+    #    planets.rename_columns(['id', 'planet_name', 'mass', 'diameter', 'density', 'gravity', 'escapeVelocity', 'rotationPeriod', 'lengthOfDay', 'distanceFromSun', 'perihelion', 'aphelion', 'orbitalPeriod', 'orbitalVelocity', 'orbitalInclination', 'orbitalEccentricity', 'obliquityToOrbit', 'meanTemperature', 'surfacePressure', 'numberOfMoons'])
 
     with Timer():
         joint = _cross_join([planets], satellites)  # 0.39 seconds - 63189
@@ -131,18 +140,18 @@ if __name__ == "__main__":
             c += j.num_rows
         print(e, c)
 
-    #right_columns = planets.column_names
-    #right_columns = [f"planets.{name}" for name in right_columns]
-    #planets = planets.rename_columns(right_columns)
+    # right_columns = planets.column_names
+    # right_columns = [f"planets.{name}" for name in right_columns]
+    # planets = planets.rename_columns(right_columns)
 
     from opteryx.third_party.pyarrow_ops import join
 
-    print('---')
+    print("---")
 
-#    joint = join(planets, satellites, on=["id"])
+    #    joint = join(planets, satellites, on=["id"])
 
-#    print(joint.to_string())
+    #    print(joint.to_string())
     joint = _cross_join(planets, satellites)
     print(ascii_table(fetchmany(joint, limit=10), limit=10))
 
-    #print(joint.column_names)
+    # print(joint.column_names)
