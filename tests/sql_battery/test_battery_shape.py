@@ -57,9 +57,6 @@ STATEMENTS = [
         ("SELECT name as NAME FROM $satellites WHERE name = 'Calypso'", 1, 1), 
         ("SELECT name as NAME FROM $satellites GROUP BY name", 177, 1), 
 
-        # Joins aren't supported
-        #("SELECT * FROM $satellites, $planets WHERE $planets.planetId = $satellites.planetId", 177, 1),  
-
         ("SELECT * FROM $satellites WHERE id = 5", 1, 8), 
         ("SELECT * FROM $satellites WHERE magnitude = 5.29", 1, 8),
         ("SELECT * FROM $satellites WHERE id = 5 AND magnitude = 5.29", 1, 8),
@@ -162,7 +159,7 @@ STATEMENTS = [
         ("SELECT COUNT(*), GET(Birth_Place, 'town') FROM $astronauts GROUP BY GET(Birth_Place, 'town')", 264, 2),
         ("SELECT Birth_Place['town'] FROM $astronauts", 357, 1),
         ("SELECT Missions[0] FROM $astronauts", 357, 1),
-# Maps are not supported for selections or aggregations
+# Maps are currently not supported for selections or aggregations
 #        ("SELECT Birth_Place['town'] FROM $astronauts WHERE Birth_Place['town'] = 'Warsaw'", 1, 1),
 #        ("SELECT COUNT(*), Birth_Place['town'] FROM $astronauts GROUP BY Birth_Place['town']", 264, 2),
         ('SELECT LENGTH(Missions) FROM $astronauts', 357, 1),
@@ -190,6 +187,9 @@ STATEMENTS = [
 
         ("SELECT * FROM UNNEST(('foo', 'bar', 'baz', 'qux', 'corge', 'garply', 'waldo', 'fred')) AS element", 8, 1),
         ("SELECT * FROM UNNEST(('foo', 'bar', 'baz', 'qux', 'corge', 'garply', 'waldo', 'fred')) AS element WHERE element LIKE '%e%'", 2, 1),
+        
+        # this should return a single column table of all of the values in the missions columns
+#        ("SELECT UNNEST(Missions) FROM $astronauts", 800, 1),
 
         ("SELECT * FROM tests.data.dated FOR '2020-02-03'", 25, 8),
         ("SELECT * FROM tests.data.dated FOR '2020-02-04'", 25, 8),
@@ -221,10 +221,7 @@ STATEMENTS = [
         ("SELECT * FROM $astronauts CROSS JOIN UNNEST(Missions) AS Mission WHERE Mission = 'Apollo 11'", 3, 20),
 
         # These are queries which have been found to return the wrong result or not run
-        # correctly which suggests their implementation is somewhat complex and
-        # therefore brittle.
-        # We have added these to the battery to ensure these queries don't break when
-        # we make updates to the engine.
+        # correctly
         ("SELECT * FROM $satellites FOR YESTERDAY ORDER BY planetId OFFSET 10", 167, 8),
         ("SELECT DATE(Birth_Date) FROM $astronauts FOR TODAY WHERE DATE(Birth_Date) < '1930-01-01'", 14, 1)
     ]
