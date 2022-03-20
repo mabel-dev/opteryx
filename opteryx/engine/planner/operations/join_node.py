@@ -100,9 +100,10 @@ def _cross_join_unnest(left, column, alias):
     """
     This is a specific instance the CROSS JOIN, where instead of joining on another
     table, we're joining on a field in the current row.
-    """
-    from opteryx.third_party.pyarrow_ops import align_tables
 
+    This means we need to read a row, create the dataset to join with, do the join
+    repeat.
+    """
     if isinstance(left, pyarrow.Table):
         left = [left]
 

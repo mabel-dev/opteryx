@@ -21,17 +21,12 @@ def arr_op_to_idxs(arr, op, value):
     elif op == "in":
         # MODIFIED FOR OPTERYX
         # some of the lists are saved as sets, which are faster than searching numpy
-        # arrays, even with numpy's native functionality.
-        mask = []
-        for a in arr:
-            mask.append(a in value)
-        return np.array(mask)
+        # arrays, even with numpy's native functionality - choosing the right algo
+        # is almost always faster than choosing a fast language.
+        return np.array([a in value for a in arr], np.bool8)
     elif op == "not in":
         # MODIFIED FOR OPTERYX - see comment above
-        mask = []
-        for a in arr:
-            mask.append(a not in value)
-        return np.array(mask)
+        return np.array([a not in value for a in arr], np.bool8)
     elif op == "like":
         return pc.match_like(arr, value)
     elif op == "not like":

@@ -122,6 +122,8 @@ AS employees (EMPNO, ENAME, JOB, MGR, HIREDATE, SAL, COMM, DEPTNO);
     #    SQL = "SELECT * FROM $satellites JOIN $planets ON $satellites.id = $planets.id"
     # SQL = "SELECT s.planetId AS pid FROM $satellites AS s GROUP BY planetId"
     # SQL = "SELECT * FROM $astronauts CROSS JOIN UNNEST(Missions) AS Mission WHERE Mission = 'Apollo 11'"
+    SQL = "SELECT * FROM $satellites AS s WHERE $satellites.id = 5 OR s.name = 'Europa'"
+    SQL = "SELECT * FROM $satellites WHERE id IN (5,6,7,8) -- AND name = 'Europa'"
 
     _, _, SQL = extract_temporal_filters(SQL)
     ast = sqloxide.parse_sql(SQL, dialect="mysql")

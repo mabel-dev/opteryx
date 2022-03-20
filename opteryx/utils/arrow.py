@@ -109,3 +109,24 @@ def _decode_metadata(metadata):
 def get_metadata(tbl):
     """Get table metadata as dict."""
     return _decode_metadata(tbl.schema.metadata)
+
+
+def get_columns_from_aliases(tbl, aliases):
+    metadata = get_metadata(tbl)
+    if not metadata:
+        return None
+
+    columns = []
+
+    for alias in aliases:
+        for column, alias_set in [
+            (col, al["_aliases"])
+            for col, al in metadata.items()
+            if col[0] != "_" and "_aliases" in al
+        ]:
+            if alias in alias_set:
+                columns.append((alias, column,))
+            else:
+                columns.append((column, column,))
+
+    return columns

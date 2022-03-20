@@ -183,7 +183,7 @@ class Cursor:
         return arrow.fetchmany(self._results, fetch_size)
 
     def fetchall(self) -> List[Dict]:
-        if self._query is None:
+        if self._results is None:
             raise Exception("Cursor must be executed first")
         return arrow.fetchall(self._results)
 

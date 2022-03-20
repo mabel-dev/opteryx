@@ -33,7 +33,7 @@ from opteryx.engine.attribute_types import TOKEN_TYPES
 from opteryx.engine.query_statistics import QueryStatistics
 from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
 from opteryx.exceptions import SqlError
-from opteryx.third_party.pyarrow_ops import ifilters
+from opteryx.utils.arrow import get_columns_from_aliases
 
 
 class InvalidSyntaxError(Exception):
@@ -41,6 +41,15 @@ class InvalidSyntaxError(Exception):
 
 
 def _evaluate(predicate: Union[tuple, list], table: Table) -> bool:
+    """
+    Evaluate a table against a DNF selection.
+
+    This is done by creating a mask for the values to return - we evaluate the page
+    against a predicate (including resolving child predicates) and then AND or OR the
+    masks together to return the rows that match the predicate.
+    """
+
+    from opteryx.third_party.pyarrow_ops import ifilters
 
     # If we have a tuple extract out the key, operator and value and do the evaluation
     if isinstance(predicate, tuple):
@@ -104,25 +113,19 @@ def _evaluate(predicate: Union[tuple, list], table: Table) -> bool:
         # We AND them together
         mask = None
         if all([isinstance(p, tuple) for p in predicate]):
+            # default to all selected
+            mask = numpy.arange(table.num_rows, dtype=numpy.int8)
             for p in predicate:
-                if mask is None:
-                    # The first time round we either set the mask to the first set of
-                    # values, or we initialize the mask beforehand to all True.
-                    mask = _evaluate(p, table)
-                else:
-                    mask = numpy.intersect1d(mask, _evaluate(p, table))
+                mask = numpy.intersect1d(mask, _evaluate(p, table))
             return mask  # type:ignore
 
         # Are all of the entries lists?
         # We OR them together
         if all([isinstance(p, list) for p in predicate]):
+            # default to none selected
+            mask = numpy.zeros(0, dtype=numpy.int8)
             for p in predicate:
-                if mask is None:
-                    # The first time round we either set the mask to the first set of
-                    # values, or we initialize the mask beforehand to all empty.
-                    mask = _evaluate(p, table)
-                else:
-                    mask = numpy.union1d(mask, _evaluate(p, table))  # type:ignore
+                mask = numpy.union1d(mask, _evaluate(p, table))  # type:ignore
             return mask  # type:ignore
 
         # if we're here the structure of the filter is wrong
@@ -186,5 +189,11 @@ class SelectionNode(BasePlanNode):
             self._unfurled_filter = _evaluate_subqueries(self._filter)
 
             for page in data_pages:
+
+                # what we want to do is rewrite the filters to refer to the column names
+                # NOT rewrite the column names to match the filters
+                #print(page.column_names)
+                #print(get_columns_from_aliases(page, ["s.id", "$satellites.gm"]))
+
                 mask = _evaluate(self._unfurled_filter, page)
                 yield page.take(mask)
