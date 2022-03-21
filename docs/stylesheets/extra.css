@@ -16,7 +16,7 @@ td {
 }
 
 code {
-    font-family: 'JetBrains Mono';
+    font-family: Menlo, 'Robot Mono', 'JetBrains Mono';
     font-size: 1em !important;
     color: #D63384 !important;
     font-weight: 300;
@@ -25,7 +25,35 @@ code {
 
 body {
     font-family: 'IBM Plex Sans', sans-serif;
-    font-weight: 300;
+    font-weight: 400;
+}
+
+h1 {
+    font-family: "IBM Plex Sans", Georgia, 'Times New Roman', Times, serif;
+    font-weight: 600;
+    font-size: 38px;
+    margin-bottom: 0.7em;
+}
+
+h2 {
+    font-family: "IBM Plex Sans", Georgia, 'Times New Roman', Times, serif;
+    font-weight: 600;
+    font-size: 30px;
+    margin-bottom: 0.7em;
+}
+
+h3 {
+    font-family: "IBM Plex Sans", Georgia, 'Times New Roman', Times, serif;
+    font-weight: 600;
+    font-size: 24px;
+    margin-bottom: 0.7em;
+}
+
+h4 {
+    font-family: "IBM Plex Sans", Georgia, 'Times New Roman', Times, serif;
+    font-weight: 600;
+    font-size: 20px;
+    margin-bottom: 0.7em;
 }
 
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300&display=swap');
