@@ -20,3 +20,7 @@ Grouping by string columns is slower than grouping by numeric columns, if you ha
 **cardinality**
 Grouping by columns with high cardinality (mostly unique) is much slower than grouping where there is a lot of duplication in the groups.
 
+## 4. AVOID `CROSS JOIN`
+
+Cross join will very likely create a lot of records that are not required - if you then filter these records from the two source tables using a `WHERE` clause, it's likely you should use an `INNER JOIN` instead.
+
