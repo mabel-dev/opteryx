@@ -12,8 +12,12 @@ exec(vers)  # nosec
 with open("README.md", "r") as rm:
     long_description = rm.read()
 
-with open("requirements.txt") as f:
-    required = f.read().splitlines()
+try:
+    with open("requirements.txt") as f:
+        required = f.read().splitlines()
+except FileNotFoundError:
+    # this sometimes fails - so put them here, but this needs to be maintained manually
+    required = ['cython', 'numpy', 'orjson', 'cityhash', 'sqloxide', 'pyarrow']    
 
 extensions = [
     Extension(

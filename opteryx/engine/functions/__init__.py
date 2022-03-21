@@ -13,8 +13,6 @@
 These are a set of functions that can be applied to data.
 """
 import datetime
-import time
-import numpy
 from pyarrow import compute
 from cityhash import CityHash64
 import opteryx
