@@ -18,11 +18,8 @@ This is a SQL Query Execution Plan Node.
 This performs a JOIN
 """
 
-from pickletools import int4
 import sys
 import os
-
-from opteryx.engine.attribute_types import TOKEN_TYPES
 
 sys.path.insert(1, os.path.join(sys.path[0], "../../../.."))
 
@@ -32,7 +29,7 @@ from typing import Iterable
 from opteryx.engine.query_statistics import QueryStatistics
 from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
 from opteryx.third_party import pyarrow_ops
-
+from opteryx.engine.attribute_types import TOKEN_TYPES
 
 def cartesian_product(*arrays):
     la = len(arrays)
@@ -66,9 +63,17 @@ def _cross_join(left, right):
     if isinstance(left, pyarrow.Table):
         left = [left]
 
+    # hackish, but it'll do for now
+    from opteryx.utils.arrow import get_metadata
+    right_metadata = get_metadata(right) or {}
+    right_columns = right.column_names
+    right_columns = [f"{right_metadata.get('_name', 'r')}.{name}" for name in right_columns]
+    right = right.rename_columns(right_columns)
+
+
     for left_page in left:
 
-        # rename columns
+        # rename columns - propperly
         # if _columns_renames_tbd:
         #    left_columns, right_columns = rename_columns(left_page, right)
         #    right = right.rename_columns(right_columns)
