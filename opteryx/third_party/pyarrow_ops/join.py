@@ -15,10 +15,11 @@ def align_tables(t1, t2, l1, l2):
     return table
 
 
-def join(left, right, on):
+def join(left, right, left_on, right_on):
     # Gather join columns - create arrays of the hashes of the values in the column
+    # updated for Opteryx
     t0 = time.time()
-    l_array, r_array = columns_to_array(left, on), columns_to_array(right, on)
+    l_array, r_array = columns_to_array(left, left_on), columns_to_array(right, right_on)
 
     # Groupify the join array, this generates a set of data about the array
     # including the unique values in the array, and the sort order for the array.

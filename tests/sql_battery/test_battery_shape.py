@@ -200,6 +200,10 @@ STATEMENTS = [
         ("SELECT * FROM tests.data.dated FOR DATES BETWEEN '2020-02-01' AND YESTERDAY", 50, 8),
         ("SELECT * FROM tests.data.dated FOR TODAY", 0, 0),
         ("SELECT * FROM tests.data.dated FOR YESTERDAY", 0, 0),
+        ("SELECT * FROM tests.data.dated FOR '2020-02-03' OFFSET 1", 24, 8),
+        ("SELECT * FROM tests.data.dated FOR DATES BETWEEN '2020-02-01' AND '2020-02-28' OFFSET 1", 49, 8),
+        ("SELECT * FROM tests.data.dated FOR DATES BETWEEN '2020-02-01' AND today OFFSET 1", 49, 8),
+        ("SELECT * FROM tests.data.dated FOR YESTERDAY OFFSET 1", 0, 0),
 
         ("SELECT Missions FROM $astronauts WHERE LIST_CONTAINS(Missions, 'Apollo 8')", 3, 1),
         ("SELECT Missions FROM $astronauts WHERE LIST_CONTAINS_ANY(Missions, ('Apollo 8', 'Apollo 13'))", 5, 1),
@@ -231,7 +235,7 @@ STATEMENTS = [
 @pytest.mark.parametrize("statement, rows, columns", STATEMENTS)
 def test_sql_battery(statement, rows, columns):
     """
-    Test an assortment of statements
+    Test an battery of statements
     """
     conn = opteryx.connect(reader=DiskStorage(), partition_scheme="mabel")
     cursor = conn.cursor()

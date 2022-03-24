@@ -6,11 +6,11 @@ This page provides an overview of how to perform simple operations in SQL. This 
 
 ## Concepts
 
-Opteryx is a system for querying ad hoc data stored in [relations](https://en.wikipedia.org/wiki/Relation_(database)). A relation is mathematical term for a table.
+Opteryx is a system for querying ad hoc data stored in files as [relations](https://en.wikipedia.org/wiki/Relation_(database)). A relation is mathematical term for a data table.
 
-Each relation is a named collection of rows, organized in columns, each column should be a common datatype. 
+Each table is a named collection of rows, organized in columns, each column should be a common datatype. 
 
-As an ad hoc query engine, the tables and their schema do not need to be predefined, they are determined at the time the query is run. For this reason, Opteryx is not a database engine.
+As an ad hoc query engine, the tables and their schema do not need to be predefined, they are determined at the time the query is run. For this reason, Opteryx cannot be considered a RDBMS (relational database management system), even though it can be used to query data using SQL.
 
 ## Querying Tables
 
@@ -105,24 +105,37 @@ SELECT name,
  ORDER BY name;
 ~~~
 
-
------------------------------------
-
-
 You can request that duplicate rows be removed from the result of a query:
 
-SELECT DISTINCT city
-    FROM weather;
-     city
----------------
- Hayward
- San Francisco
-(2 rows)
-Here again, the result row ordering might vary. You can ensure consistent results by using DISTINCT and ORDER BY together:
+~~~sql
+SELECT DISTINCT planetId
+  FROM $satellites;
+~~~
 
-SELECT DISTINCT city
-    FROM weather
-    ORDER BY city;
+Result:
+
+~~~
+planetId
+--------
+       3
+       4
+       5
+       6
+       7
+       8
+       9
+~~~
+
+Here again, the result row ordering might vary. You can ensure consistent results by using `DISTINCT` and `ORDER BY` together:
+
+~~~sql
+SELECT DISTINCT planetId
+  FROM $satellites
+ ORDER BY planetId;
+~~~
+
+-----
+
 Joins Between Tables
 Thus far, our queries have only accessed one table at a time. Queries can access multiple tables at once, or access the same table in such a way that multiple rows of the table are being processed at the same time. A query that accesses multiple rows of the same or different tables at one time is called a join query. As an example, say you wish to list all the weather records together with the location of the associated city. To do that, we need to compare the city column of each row of the weather table with the name column of all rows in the cities table, and select the pairs of rows where these values match.
 

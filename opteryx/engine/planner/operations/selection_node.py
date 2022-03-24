@@ -33,7 +33,6 @@ from opteryx.engine.attribute_types import TOKEN_TYPES
 from opteryx.engine.query_statistics import QueryStatistics
 from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
 from opteryx.exceptions import SqlError
-from opteryx.utils.arrow import get_columns_from_aliases
 
 
 class InvalidSyntaxError(Exception):

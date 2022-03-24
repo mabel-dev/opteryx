@@ -27,6 +27,7 @@ USE THE ZONEMAP:
 PARALLELIZE READING:
 - As one blob is read, the next is immediately cached for reading
 """
+from ast import alias
 import time
 import datetime
 from enum import Enum
@@ -67,14 +68,14 @@ def _get_sample_dataset(dataset, alias):
     from opteryx import samples
 
     SAMPLE_DATASETS = {
-        "$satellites/": samples.satellites(),
-        "$planets/": samples.planets(),
-        "$astronauts/": samples.astronauts(),
-        "$no_table/": samples.no_table(),
+        "$satellites/": samples.satellites,
+        "$planets/": samples.planets,
+        "$astronauts/": samples.astronauts,
+        "$no_table/": samples.no_table,
     }
     dataset = dataset.lower()
     if dataset in SAMPLE_DATASETS:
-        table = SAMPLE_DATASETS[dataset]
+        table = SAMPLE_DATASETS[dataset]()
         metadata = create_table_metadata(
             table=table,
             expected_rows=table.num_rows,
@@ -82,6 +83,7 @@ def _get_sample_dataset(dataset, alias):
             aliases=[alias],
         )
         table = set_metadata(table, metadata)
+
         return table
     raise DatabaseError(f"Dataset not found `{dataset}`.")
 
@@ -251,6 +253,11 @@ class DatasetReaderNode(BasePlanNode):
                     aliases=[self._alias],
                 )
                 pyarrow_blob = set_metadata(pyarrow_blob, metadata)
+
+                # if we have a table alias, rename the columns
+                if self._alias:
+                    columns = [f"{alias}.{name}" for name in pyarrow_blob.column_names]
+                    pyarrow_blob = pyarrow_blob.rename_columns(columns)
 
                 # yield this blob
                 yield pyarrow_blob

@@ -17,7 +17,6 @@ https://www.python.org/dev/peps/pep-0249/
 """
 import time
 from typing import Dict, Optional, List, Union, Tuple
-from decimal import Decimal
 from opteryx.storage import BaseStorageAdapter, BaseBufferCache, BasePartitionScheme
 from opteryx.storage.adapters import DiskStorage
 from opteryx.engine import QueryStatistics, QueryPlanner
@@ -75,6 +74,7 @@ class Cursor:
         """
         import uuid
         import datetime
+        from decimal import Decimal
 
         if param is None:
             return "NULL"

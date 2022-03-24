@@ -8,10 +8,8 @@ import pytest
 from opteryx.utils import dates
 
 
-@pytest.mark.parametrize(
-    "string, expect",
-    # fmt:off
-    [
+# fmt:off
+DATE_TESTS = [
         ("2021001011", None),
         ("2021-02-21", datetime.datetime(2021,2,21)),
         ("2021-02-21T", None),
@@ -27,11 +25,21 @@ from opteryx.utils import dates
         ("1999-12-31T23:59:59.9999Z", datetime.datetime(1999,12,31,23,59,59)),
         ("1999-12-31T23:59:59.999999", datetime.datetime(1999,12,31,23,59,59)),
         ("1999-12-31T23:59:59.99999999", datetime.datetime(1999,12,31,23,59,59))
-    ],
-    # fmt:on
-)
+    ]
+# fmt:on
+
+@pytest.mark.parametrize("string, expect", DATE_TESTS)
 def test_date_parser(string, expect):
 
     assert (
         dates.parse_iso(string) == expect
     ), f"{string}  {dates.parse_iso(string)}  {expect}"
+
+
+if __name__ == "__main__":
+
+    print(f"RUNNING BATTERY OF {len(DATE_TESTS)} TESTS")
+    for date_string, date_date in DATE_TESTS:
+        print(date_string)
+        test_date_parser(date_string, date_date)
+    print("okay")

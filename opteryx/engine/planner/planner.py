@@ -46,7 +46,6 @@ import os
 sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
 
 import numpy
-
 from opteryx.utils import dates
 from opteryx.engine.planner.operations import *
 from opteryx.exceptions import SqlError

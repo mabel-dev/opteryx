@@ -30,8 +30,12 @@ from opteryx.engine.query_statistics import QueryStatistics
 from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
 from opteryx.third_party import pyarrow_ops
 from opteryx.engine.attribute_types import TOKEN_TYPES
+from opteryx.utils.arrow import get_metadata
 
 def cartesian_product(*arrays):
+    """
+    Cartesian product of arrays creates every combination of the elements in the arrays
+    """
     la = len(arrays)
     dtype = numpy.result_type(*arrays)
     arr = numpy.empty([len(a) for a in arrays] + [la], dtype=dtype)
@@ -42,13 +46,36 @@ def cartesian_product(*arrays):
 
 def rename_columns(left, right):
 
-    # where there's collisions, replace with the shortest alias
-    def _inner_rename_columns(left_columns, right_columns):
+    # get the names of the columns in both tables
+    left_columns = left.column_names
+    right_columns = right.column_names
+
+    # get a list of colliding column names 
+    collisions = set(left_columns).intersection(set(right_columns))
+
+    # if there's no collisions - we don't need to rename any columns
+    if len(collisions) == 0:
         return left_columns, right_columns
 
-    # raise NotImplementedError("")
+    # get the metadata for the tables, this includes column aliases
+    left_metadata = get_metadata(left)
+    right_metadata = get_metadata(right)
 
-    return _inner_rename_columns(left.column_names, right.column_names)
+    # for each column that exists in both tables
+    for column in collisions:
+        # get the shortest alias longer than the current name
+        new_name_left = "*" * 100
+        for k, v in {k:v for k,v in left_metadata.items() if k[0] != "_"}:
+            for alias in k.get("_aliases", []):
+               if len(alias) > len(column) and len(alias) < len(new_name_left):
+                    new_name_left = alias
+
+        new_name_right = "*" * 100
+        for k, v in {k:v for k,v in right_metadata.items() if k[0] != "_"}:
+            for alias in k.get("_aliases", []):
+                pass
+            
+
 
 
 def _cross_join(left, right):
@@ -63,22 +90,7 @@ def _cross_join(left, right):
     if isinstance(left, pyarrow.Table):
         left = [left]
 
-    # hackish, but it'll do for now
-    from opteryx.utils.arrow import get_metadata
-    right_metadata = get_metadata(right) or {}
-    right_columns = right.column_names
-    right_columns = [f"{right_metadata.get('_name', 'r')}.{name}" for name in right_columns]
-    right = right.rename_columns(right_columns)
-
-
     for left_page in left:
-
-        # rename columns - propperly
-        # if _columns_renames_tbd:
-        #    left_columns, right_columns = rename_columns(left_page, right)
-        #    right = right.rename_columns(right_columns)
-        #    _columns_renames_tbd = False
-        # left = left.rename_columns(right_columns)
 
         # we break this into small chunks, each cycle will have 100 * rows in the right table
         for left_block in left_page.to_batches(max_chunksize=100):
@@ -152,6 +164,7 @@ class JoinNode(BasePlanNode):
     def execute(self, data_pages: Iterable) -> Iterable:
 
         from opteryx.engine.planner.operations import DatasetReaderNode
+        from opteryx.utils.arrow import get_column_from_alias
 
         if isinstance(self._right_table, DatasetReaderNode):
             self._right_table = pyarrow.concat_tables(
@@ -169,9 +182,14 @@ class JoinNode(BasePlanNode):
             )
 
         elif self._join_type == "Inner":
+
+            right_columns = [get_column_from_alias(self._right_table, c) for c in self._using]
+
             if self._using:
                 for page in data_pages:
-                    yield pyarrow_ops.join(self._right_table, page, self._using)
+
+                    left_columns = [get_column_from_alias(self.page, c) for c in self._using]
+                    yield pyarrow_ops.join(self._right_table, page, right_columns, left_columns)
 
 
 if __name__ == "__main__":
