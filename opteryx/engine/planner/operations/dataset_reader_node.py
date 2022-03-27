@@ -28,6 +28,7 @@ PARALLELIZE READING:
 - As one blob is read, the next is immediately cached for reading
 """
 from ast import alias
+from curses import meta
 import time
 import datetime
 from enum import Enum
@@ -40,7 +41,7 @@ from opteryx.engine import QueryStatistics
 from opteryx.storage import file_decoders
 from opteryx.storage.adapters import DiskStorage
 from opteryx.storage.schemes import MabelPartitionScheme
-from opteryx.utils.arrow import set_metadata, create_table_metadata
+from opteryx.utils.columns import Columns
 
 
 class EXTENSION_TYPE(str, Enum):
@@ -76,14 +77,12 @@ def _get_sample_dataset(dataset, alias):
     dataset = dataset.lower()
     if dataset in SAMPLE_DATASETS:
         table = SAMPLE_DATASETS[dataset]()
-        metadata = create_table_metadata(
+        table = Columns.create_table_metadata(
             table=table,
             expected_rows=table.num_rows,
             name=dataset[:-1],
-            aliases=[alias],
+            table_aliases=[alias],
         )
-        table = set_metadata(table, metadata)
-
         return table
     raise DatabaseError(f"Dataset not found `{dataset}`.")
 
@@ -101,7 +100,7 @@ class DatasetReaderNode(BasePlanNode):
         self._statistics = statistics
         self._alias, self._dataset = config.get("dataset", [None, None])
 
-        if isinstance(self._dataset, (bytearray, QueryPlanner)):
+        if isinstance(self._dataset, (list, QueryPlanner)):
             return
 
         self._dataset = self._dataset.replace(".", "/") + "/"
@@ -130,11 +129,18 @@ class DatasetReaderNode(BasePlanNode):
         from opteryx.engine.planner.planner import QueryPlanner
 
         # literal datasets
-        if isinstance(self._dataset, bytearray):
-            import io
-            import pyarrow.json
+        if isinstance(self._dataset, list):
+            import pyarrow
 
-            yield pyarrow.json.read_json(io.BytesIO(self._dataset))
+            table = pyarrow.Table.from_pylist(self._dataset)
+            table = Columns.create_table_metadata(
+                table=table,
+                expected_rows=table.num_rows,
+                name=self._alias,
+                table_aliases=[self._alias],
+            )
+
+            yield table
             return
 
         # query plans
@@ -217,6 +223,8 @@ class DatasetReaderNode(BasePlanNode):
                 else:
                     self._statistics.count_unknown_blob_type_found += 1
 
+        metadata = None
+
         for partition in partitions:
 
             # we're reading this partition now
@@ -245,19 +253,16 @@ class DatasetReaderNode(BasePlanNode):
                 self._statistics.rows_read += pyarrow_blob.num_rows
                 self._statistics.bytes_processed_data += pyarrow_blob.nbytes
 
-                # write dataset information to the metadata
-                metadata = create_table_metadata(
-                    table=pyarrow_blob,
-                    expected_rows=expected_rows,
-                    name=self._dataset.replace("/", ".")[:-1],
-                    aliases=[self._alias],
-                )
-                pyarrow_blob = set_metadata(pyarrow_blob, metadata)
-
-                # if we have a table alias, rename the columns
-                if self._alias:
-                    columns = [f"{alias}.{name}" for name in pyarrow_blob.column_names]
-                    pyarrow_blob = pyarrow_blob.rename_columns(columns)
+                if metadata is None:
+                    pyarrow_blob = Columns.create_table_metadata(
+                        table=pyarrow_blob,
+                        expected_rows=expected_rows,
+                        name=self._dataset.replace("/", ".")[:-1],
+                        table_aliases=[self._alias],
+                    )
+                    metadata = Columns(pyarrow_blob)
+                else:
+                    pyarrow_blob = metadata.apply(pyarrow_blob)
 
                 # yield this blob
                 yield pyarrow_blob

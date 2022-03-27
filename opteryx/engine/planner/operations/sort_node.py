@@ -21,7 +21,7 @@ from typing import Iterable
 from pyarrow import concat_tables, Table
 from opteryx.engine.query_statistics import QueryStatistics
 from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
-
+from opteryx.utils.columns import Columns
 
 class SortNode(BasePlanNode):
     def __init__(self, statistics: QueryStatistics, **config):
@@ -43,5 +43,10 @@ class SortNode(BasePlanNode):
             data_pages = [data_pages]
 
         table = concat_tables(data_pages)
+        columns = Columns(table)
 
-        yield table.sort_by(self._order)
+        self._mapped_order = []
+        for column, direction in self._order:
+            self._mapped_order.append((columns.get_column_from_alias(column, only_one=True), direction,))
+
+        yield table.sort_by(self._mapped_order)

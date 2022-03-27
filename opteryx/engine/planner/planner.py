@@ -285,15 +285,13 @@ class QueryPlanner(object):
                     == "UNNEST"
                 ):
                     # This is toy functionality, the value will be in CROSS JOINing on UNNESTed columns
-                    import orjson
-
                     alias = relation["relation"]["Table"]["alias"]["name"]["value"]
                     values = self._extract_value(
                         relation["relation"]["Table"]["args"][0]["Unnamed"]["Expr"]
                     )
-                    body = bytearray()
+                    body = []
                     for v in values[0]:
-                        body.extend(orjson.dumps({alias: v}, default=_serializer))
+                        body.append({alias: v})
                     yield (alias, body)  # <- a literal table
                 else:
                     alias = None
@@ -321,9 +319,7 @@ class QueryPlanner(object):
 
                     yield (alias, subquery_plan)
                 if "Values" in subquery:
-                    import orjson
-
-                    body = bytearray()
+                    body = []
                     headers = [
                         h["value"]
                         for h in relation["relation"]["Derived"]["alias"]["columns"]
@@ -333,11 +329,7 @@ class QueryPlanner(object):
                             _safe_get(self._extract_value(v["Value"]), 0)
                             for v in value_set
                         ]
-                        body.extend(
-                            orjson.dumps(
-                                dict(zip(headers, values)), default=_serializer
-                            )
-                        )
+                        body.append(dict(zip(headers, values)))
                     yield (alias, body)  # <- a literal table
 
     def _extract_joins(self, ast):
@@ -685,10 +677,9 @@ class QueryPlanner(object):
 
     def explain(self):
 
-        import orjson
+        from opteryx.utils.columns import Columns
         import pyarrow
-        import io
-
+ 
         def _inner_explain(operator_name, depth):
             depth += 1
             operator = self.get_operator(operator_name)
@@ -703,10 +694,8 @@ class QueryPlanner(object):
         for entry_point in entry_points:
             nodes += [n for n in _inner_explain(entry_point, 0)]
 
-        buffer = bytearray()
-        for node in nodes:
-            buffer.extend(orjson.dumps(node))
-        table = pyarrow.json.read_json(io.BytesIO(buffer))
+        table = pyarrow.Table.from_pylist(nodes)
+        table = Columns.create_table_metadata(table, table.num_rows, "plan", None)
         yield table
 
     def add_operator(self, name, operator):

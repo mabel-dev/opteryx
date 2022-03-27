@@ -2,17 +2,10 @@
 
 - The reader will perform a scan of directory prefixes to determine which partitions
   need to be read.
-- Each partition is self-contained and contains all of the information to process it,
-  the reader will distribute the work to read partitions, there are three options:
-  1) Inline - this is the simplest but the slowest, all reads are performed 
-     sequentionally in the one process.
-  2) Multi-process - this is usually faster than Inline, reads are distributed between
-     multiple processes running on the same computer.
-  3) Distributed - this isn't written yet.
+- Each partition is self-contained and contains all of the information to process it
 - The reader will collect a list of the files in the partition, these will be:
-    - data files
-    - metedata files (frame.metadata)
-    - index files (*.index)
+    - data (parquet or jsonl)
+    - metadata files (frame.complete)
     - directives (frame.invalid / frame.complete)
 
 - The reader has the following steps:

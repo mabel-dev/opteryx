@@ -7,12 +7,14 @@ Query Plans can contain the following steps:
 Step       | Description
 ---------- | -------------
 Aggregate  | Perform aggregations such as COUNT and MAX
-Evaluation | Evaluate functions
 Distinct   | Remove duplicate records
-Reader     | Read datasets
+Evaluation | Evaluate functions
+Explain    | Plan Explainer
+Join       | Join Relations
 Limit      | Return up to a stated number of records
 Offset     | Skip a number of records
 Projection | Remove unwanted columns
+Reader     | Read datasets
 Selection  | Remove unwanted rows
 
 ## Query Plan Optimizer

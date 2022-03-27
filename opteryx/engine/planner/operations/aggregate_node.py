@@ -31,18 +31,16 @@ on a 10m record set, timings are 1:400 (50s:1220s where 20s is the read time).
 import sys
 import os
 
-from opteryx.utils.arrow import get_metadata
-
 sys.path.insert(1, os.path.join(sys.path[0], "../../../.."))
 
-import io
-import orjson
 import pyarrow.json
 import numpy as np
 from typing import Iterable
 from opteryx.engine import QueryStatistics
 from opteryx.engine.planner.operations import BasePlanNode
 from opteryx.exceptions import SqlError
+from opteryx.utils.arrow import get_metadata
+from opteryx.utils.columns import Columns
 
 # these functions can be applied to each group
 INCREMENTAL_AGGREGATES = {
@@ -75,13 +73,6 @@ def _incremental(x, y, function):
     if function in INCREMENTAL_AGGREGATES:
         return INCREMENTAL_AGGREGATES[function](x, y)
     return np.concatenate(x, y)
-
-
-JSON_TYPES = {np.bool_: bool, np.int64: int, np.float64: float}
-
-
-def _serializer(obj):
-    return JSON_TYPES[type(obj)](obj)
 
 
 def _map(table, collect_columns):
@@ -143,34 +134,50 @@ class AggregateNode(BasePlanNode):
     def execute(self, data_pages: Iterable) -> Iterable:
 
         from collections import defaultdict
-        from opteryx.utils import arrow
 
         collector: dict = defaultdict(dict)
-        original_metadata = {}
+        columns = None
+        self._mapped_project = []
 
         if isinstance(data_pages, pyarrow.Table):
             data_pages = [data_pages]
 
         for page in data_pages:
 
-            if original_metadata == {}:
-                original_metadata = get_metadata(page)
+            if columns is None:
+                columns = Columns(page)
 
-            for group in _map(page, self._project):
+                for key in self._project:
+                    if key != "*":
+                        column = columns.get_column_from_alias(key, only_one=True)
+                        if column not in self._mapped_project:
+                            self._mapped_project.append(column)
+                    else:
+                        self._mapped_project.append("*")
+
+                self._mapped_groups = []
+                for group in self._groups:
+                    self._mapped_groups.append(columns.get_column_from_alias(group, only_one=True))
+
+            for group in _map(page, self._mapped_project):
 
                 for aggregrator in self._aggregates:
 
                     attribute = aggregrator["args"][0][0]
+                    if attribute == "Wildcard":
+                        mapped_attribute = "*"
+                    else:
+                        mapped_attribute = columns.get_column_from_alias(attribute, only_one=True)
                     function = aggregrator["aggregate"]
                     column_name = f"{function}({attribute})"
-                    value = [v for k, v in group if k == attribute]
+                    value = [v for k, v in group if k == mapped_attribute]
                     if len(value) == 1:
                         value = value[0]
 
                     # this is needed for situations where the select column isn't selecting
                     # the columns in the group by
                     # fmt:off
-                    collection = tuple([(k,v,) for k, v in group if k in self._groups])
+                    collection = tuple([(k,v,) for k, v in group if k in self._mapped_groups])
                     group_collector = collector[collection]
                     # fmt:on
 
@@ -206,32 +213,25 @@ class AggregateNode(BasePlanNode):
 
                     collector[collection] = group_collector
 
-        # create table metadata for this newly created table
-        metadata = None
-
-        import time
-
         # count should return 0 rather than nothing
         if len(collector) == 0 and len(self._aggregates) == 1:
             if self._aggregates[0]["aggregate"] == "COUNT":
                 collector = {(): {"COUNT(*)": 0}}
 
         buffer = []
-        t = time.time_ns()
         for collected, record in collector.items():
             if len(buffer) > 1000:
                 table = pyarrow.Table.from_pylist(buffer)
-                if metadata is None:
-                    metadata = arrow.create_table_metadata(
-                        table=table,
-                        expected_rows=len(collector),
-                        name=original_metadata.get("_name"),
-                        aliases=original_metadata.get("_aliases"),
-                    )
-                table = arrow.set_metadata(table, metadata)
+                table = Columns.create_table_metadata(
+                    table=table, 
+                    expected_rows=len(collector),
+                    name=columns.table_name,
+                    table_aliases=[],
+                )
                 yield table
                 buffer = []
             for field, value in collected:
+                mapped_field = columns.get_preferred_name(field)
                 if hasattr(value, "as_py"):
                     value = value.as_py()  # type:ignore
                 for agg in list(record.keys()):
@@ -241,24 +241,18 @@ class AggregateNode(BasePlanNode):
                             record[col] = WHOLE_AGGREGATES[func](
                                 record.pop(agg)
                             )  # type:ignore
-                    else:
-                        record[field] = value
+                record[mapped_field] = value
             buffer.append(record)
 
         if len(buffer) > 0:
             table = pyarrow.Table.from_pylist(buffer)
-            if metadata is None:
-                metadata = arrow.create_table_metadata(
-                    table=table,
-                    expected_rows=len(collector),
-                    name=original_metadata.get("_name"),
-                    aliases=original_metadata.get("_aliases"),
-                )
-            table = arrow.set_metadata(table, metadata)
+            table = Columns.create_table_metadata(
+                table=table, 
+                expected_rows=len(collector),
+                name=columns.table_name,
+                table_aliases=[],
+            )
             yield table
-
-        # timing over a yield is pointless
-        # print("building group table", (time.time_ns() - t) / 1e9)
 
 
 if __name__ == "__main__":

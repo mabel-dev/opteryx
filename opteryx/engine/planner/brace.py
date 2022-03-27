@@ -124,6 +124,7 @@ AS employees (EMPNO, ENAME, JOB, MGR, HIREDATE, SAL, COMM, DEPTNO);
     # SQL = "SELECT * FROM $astronauts CROSS JOIN UNNEST(Missions) AS Mission WHERE Mission = 'Apollo 11'"
     SQL = "SELECT * FROM $satellites AS s WHERE $satellites.id = 5 OR s.name = 'Europa'"
     SQL = "SELECT * FROM $satellites as s JOIN $planets USING (id)"
+    SQL = "EXPLAIN SELECT * FROM $satellites"
 
     _, _, SQL = extract_temporal_filters(SQL)
     ast = sqloxide.parse_sql(SQL, dialect="mysql")

@@ -1,0 +1,156 @@
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+"""
+Columns provides a set of helpers for dealing with column names and aliases.
+
+This allows operators to not have to worry about actual column names, for example if
+a column is given as it's name or an alias:
+
+WHERE table.column = 'one'
+    or
+WHERE column = 'one'
+
+The selection operator should focus on the selection not on working out which column
+is actually being referred to.
+"""
+
+import os
+import sys
+
+sys.path.insert(1, os.path.join(sys.path[0], "../../"))
+
+from opteryx.utils import arrow
+from opteryx.exceptions import SqlError
+
+class Columns(object):
+
+    def __init__(self, table):
+        self._table_metadata = arrow.table_metadata(table)
+        self._column_metadata = arrow.column_metadata(table)
+
+
+    @property
+    def preferred_column_names(self):
+        return [(c, v.get("preferred_name", None)) for c, v in self._column_metadata.items()]
+
+    def get_preferred_name(self, column):
+        return self._column_metadata[column]["preferred_name"]
+
+    @property
+    def table_name(self):
+        return self._table_metadata.get("name")
+
+    def set_preferred_name(self, column, preferred_name):
+        self._column_metadata[column]["preferred_name"] = preferred_name
+
+    def add_alias(self, column, alias):
+        self._column_metadata[column]["aliases"].append(alias)
+
+    def remove_alias(self, column, alias):
+        self._column_metadata[column]["aliases"].remove(alias)
+
+    def add_column(self, column):
+        new_column = {"preferred_name": column, "aliases": [column]}
+        self._column_metadata[column] = new_column
+
+    def apply(self, table):
+        table = table.rename_columns(self._column_metadata.keys())
+        return arrow.set_metadata(table, table_metadata=self._table_metadata, column_metadata=self._column_metadata)
+
+
+    def get_column_from_alias(self, column, only_one:bool = False):
+        """
+        For a given alias, return all of the matching columns (usually one)
+
+        If we're expecting only_one match, we fail if that's not what we find.
+        """
+        matches = []
+        for k,v in self._column_metadata.items():
+            matches.extend([k for alias in v.get("aliases", []) if alias == column])
+        if only_one:
+            if len(matches) == 0:
+                raise SqlError(f"Field {column} is not known.")
+            if len(matches) > 1:
+                raise SqlError(f"Field {column} is ambiguous.")
+            return matches[0]
+        return matches
+
+    def flatten_columns(self, columns):
+        def _inner():
+            for col in columns:
+                if isinstance(col, list) and len(col) > 0:
+                    yield col[0]
+        return list(_inner())
+
+    @staticmethod
+    def create_table_metadata(table, expected_rows, name, table_aliases):
+        
+        # we're going to replace the column names with random strings
+        def random_string(length: int = 32) -> str:
+            import os
+            import base64
+            # we're creating a series of random bytes, 3/4 the length
+            # of the string we want, base64 encoding it (which makes 
+            # it longer) and then returning the length of string
+            # requested.
+            b = os.urandom(-((length * -3)//4))
+            return base64.b64encode(b).decode("utf8")[:length]
+
+
+        if not isinstance(table_aliases, list):
+            table_aliases = [table_aliases]
+
+        # create the table information we're going to track
+        table_metadata = {
+            "expected_rows": expected_rows,
+            "name": name,
+            "aliases": [a for a in set(table_aliases + [name]) if a]
+        }
+
+        # column information includes all the aliases a column is known by
+        column_metadata = {}
+        for column in table.column_names:
+            # we're going to rename the columns
+            new_column = random_string(32)
+            # the column is know aliased by it's previous name 
+            column_metadata[new_column] = {"aliases": [column]}
+            # the column prefers it's current name
+            column_metadata[new_column]["preferred_name"] = column
+            # for every alias the table has, the column is also know by that
+            for a in table_metadata["aliases"]:
+                column_metadata[new_column]["aliases"].append(f"{a}.{column}")
+        
+        # rename the columns
+        table = table.rename_columns(list(column_metadata.keys()))
+        # add the metadata
+        return arrow.set_metadata(table, table_metadata=table_metadata, column_metadata=column_metadata)
+
+
+if __name__ == "__main__":
+
+    import os
+    import sys
+
+    sys.path.insert(1, os.path.join(sys.path[0], "../../"))
+
+    from opteryx.samples import planets
+
+    p = planets()
+    p = Columns.create_table_metadata(p, 9, "planets", "p")
+
+    c = Columns(p)
+
+    print(c.preferred_column_names)
+    print(c.get_column_from_alias("p.name"))
+    print(c.get_column_from_alias("name"))
+    print(c.get_column_from_alias("planets.name"))

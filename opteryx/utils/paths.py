@@ -3,8 +3,6 @@ Functions to help with handling file paths
 """
 import pathlib
 import datetime
-from sys import path
-from opteryx.utils.entropy import random_string
 
 
 def get_parts(path_string: str):
@@ -31,7 +29,6 @@ def get_parts(path_string: str):
 
     return str(bucket), str(parts) + "/", stem, suffix
 
-
 def build_path(path: str, date: datetime.date = None):
 
     if not path:
@@ -45,7 +42,7 @@ def build_path(path: str, date: datetime.date = None):
     else:
         path_string = path
 
-    return date_format(path_string, date).replace("{stem}", str(random_string(32)))
+    return date_format(path_string, date)
 
 
 def date_format(path_string: str, date: datetime.date = None):

@@ -30,7 +30,7 @@ from opteryx.engine.query_statistics import QueryStatistics
 from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
 from opteryx.third_party import pyarrow_ops
 from opteryx.engine.attribute_types import TOKEN_TYPES
-from opteryx.utils.arrow import get_metadata
+from opteryx.utils.columns import Columns
 
 def cartesian_product(*arrays):
     """
@@ -84,8 +84,6 @@ def _cross_join(left, right):
     useful, but it does allow you to the theta joins (non-equi joins)
     """
     from opteryx.third_party.pyarrow_ops import align_tables
-
-    _columns_renames_tbd = True
 
     if isinstance(left, pyarrow.Table):
         left = [left]
@@ -184,12 +182,31 @@ class JoinNode(BasePlanNode):
         elif self._join_type == "Inner":
 
             right_columns = [get_column_from_alias(self._right_table, c) for c in self._using]
+            right_columns = flatten_columns(right_columns)
+            left_columns = None
+
+            metadata = column_metadata(self._right_table)
+            left_metadata = None
 
             if self._using:
                 for page in data_pages:
 
-                    left_columns = [get_column_from_alias(self.page, c) for c in self._using]
-                    yield pyarrow_ops.join(self._right_table, page, right_columns, left_columns)
+                    if left_columns is None:
+                        left_columns = [get_column_from_alias(page, c) for c in self._using]
+                        left_columns = flatten_columns(left_columns)
+
+                    new_page = pyarrow_ops.inner_join(self._right_table, page, right_columns, left_columns)
+
+                    if left_metadata is None:
+                        left_metadata = column_metadata(page)
+                        for column in left_metadata:
+                            if column in metadata:
+                                metadata[column]["aliases"].extend(left_metadata[column]["aliases"])
+                            else:
+                                metadata[column] = left_metadata[column]
+
+                    yield set_metadata(new_page, None, metadata)
+
 
 
 if __name__ == "__main__":

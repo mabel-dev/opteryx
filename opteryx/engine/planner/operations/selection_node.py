@@ -33,6 +33,7 @@ from opteryx.engine.attribute_types import TOKEN_TYPES
 from opteryx.engine.query_statistics import QueryStatistics
 from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
 from opteryx.exceptions import SqlError
+from opteryx.utils.columns import Columns
 
 
 class InvalidSyntaxError(Exception):
@@ -49,6 +50,8 @@ def _evaluate(predicate: Union[tuple, list], table: Table) -> bool:
     """
 
     from opteryx.third_party.pyarrow_ops import ifilters
+
+    columns = Columns(table)
 
     # If we have a tuple extract out the key, operator and value and do the evaluation
     if isinstance(predicate, tuple):
@@ -78,7 +81,8 @@ def _evaluate(predicate: Union[tuple, list], table: Table) -> bool:
                 for arg in function["args"]:
                     if arg[1] == TOKEN_TYPES.IDENTIFIER:
                         # get the column from the dataset
-                        arg_list.append(table[arg[0]].to_numpy())
+                        mapped_column = columns.get_column_from_alias(arg[0], only_one=True)
+                        arg_list.append(table[mapped_column].to_numpy())
                     else:
                         # it's a literal, just add it
                         arg_list.append(arg[0])
@@ -162,6 +166,22 @@ def _evaluate_subqueries(predicate):
     return predicate
 
 
+def _map_columns(predicate, columns):
+    """
+    This rewrites the filters to refer to the internal column names.
+    """
+    if isinstance(predicate, tuple):
+        if len(predicate) > 1 and predicate[1] == TOKEN_TYPES.IDENTIFIER:
+            identifier =  columns.get_column_from_alias(predicate[0])
+            if len(identifier) == 1:
+                return (identifier[0], TOKEN_TYPES.IDENTIFIER,)
+            else:
+                return predicate
+        return tuple([_map_columns(p, columns) for p in predicate])
+    elif isinstance(predicate, list):
+        return [_map_columns(p, columns) for p in predicate]
+    return predicate
+
 class SelectionNode(BasePlanNode):
     def __init__(self, statistics: QueryStatistics, **config):
         self._filter = config.get("filter")
@@ -186,13 +206,18 @@ class SelectionNode(BasePlanNode):
             # if any values in the filters are subqueries, we have to execute them
             # before we can continue.
             self._unfurled_filter = _evaluate_subqueries(self._filter)
+            self._mapped_filter = None
 
             for page in data_pages:
 
                 # what we want to do is rewrite the filters to refer to the column names
                 # NOT rewrite the column names to match the filters
+                if self._mapped_filter is None:
+                    columns = Columns(page)
+                    self._mapped_filter = _map_columns(self._unfurled_filter, columns)
+
                 #print(page.column_names)
                 #print(get_columns_from_aliases(page, ["s.id", "$satellites.gm"]))
 
-                mask = _evaluate(self._unfurled_filter, page)
+                mask = _evaluate(self._mapped_filter, page)
                 yield page.take(mask)

@@ -24,6 +24,7 @@ from opteryx.engine.query_statistics import QueryStatistics
 from opteryx.engine.planner.operations import BasePlanNode
 from opteryx.engine.functions import FUNCTIONS
 from opteryx.exceptions import SqlError
+from opteryx.utils.columns import Columns
 
 
 class EvaluationNode(BasePlanNode):
@@ -56,7 +57,12 @@ class EvaluationNode(BasePlanNode):
         if isinstance(data_pages, pyarrow.Table):
             data_pages = [data_pages]
 
+        columns = None
+
         for page in data_pages:
+
+            if columns is None:
+                columns = Columns(page)
 
             # for function, calculate and add the column
             for function in self.functions:
@@ -66,7 +72,8 @@ class EvaluationNode(BasePlanNode):
                     # TODO: do we need to account for functions calling functions?
                     if arg[1] == TOKEN_TYPES.IDENTIFIER:
                         # get the column from the dataset
-                        arg_list.append(page[arg[0]].to_numpy())
+                        mapped_column = columns.get_column_from_alias(arg[0], only_one=True)
+                        arg_list.append(page[mapped_column].to_numpy())
                     else:
                         # it's a literal, just add it
                         arg_list.append(arg[0])
@@ -80,6 +87,8 @@ class EvaluationNode(BasePlanNode):
                 page = pyarrow.Table.append_column(
                     page, function["column_name"], calculated_values
                 )
+                columns.add_column(function["column_name"])
+                page = columns.apply(page)
 
             # for alias, add aliased column, do this after the functions because they
             # could have aliases

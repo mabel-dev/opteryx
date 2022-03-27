@@ -24,6 +24,7 @@ from opteryx.engine.attribute_types import TOKEN_TYPES
 from opteryx.engine.query_statistics import QueryStatistics
 from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
 from opteryx.exceptions import SqlError
+from opteryx.utils.columns import Columns
 
 
 def replace_wildcards(arg):
@@ -82,36 +83,20 @@ class ProjectionNode(BasePlanNode):
             return
 
         # we can't do much with this until we have a chunk to read the metadata from
-        metadata = None
+        columns = None
 
         for page in data_pages:
 
-            # first time round we're going to set the metadata
-            if metadata is None:
+            # first time round we're going work out what we need from the metadata
+            if columns is None:
 
-                original_metadata = arrow.get_metadata(page)
-
-                # build all the aliases, then elinimate collisions
-                # in the event that the collision hits an active column name, rename it to the shortest alias
-
-                # where we have an explicit alias that no longer exists, replace it with the shortest alias
-                # that ends with the explicit alias
-
-            # we elminimate attributes we don't want
-            try:
                 projection = []
-                existing_columns = page.column_names
-                for k, v in self._projection.items():
-                    if k in existing_columns:
-                        projection.append(k)
-                    elif v in existing_columns:
-                        projection.append(v)
-                page = page.select(projection)  # type:ignore
-            except KeyError as e:
-                field = str(e).split('"')[1]
-                raise SqlError(
-                    f"Column not found `{field}` - the column may not exist, or need to be added to the GROUP BY clause. ({', '.join(page.column_names)})"
-                )
+                columns = Columns(page)
+                for key in self._projection:
+                    projection.append(columns.get_column_from_alias(key, only_one=True))
+
+            page = page.select(projection)  # type:ignore
+
 
             # then we rename the attributes
             if any([v is not None for k, v in self._projection.items()]):  # type:ignore

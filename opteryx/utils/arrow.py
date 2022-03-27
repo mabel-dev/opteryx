@@ -1,14 +1,39 @@
+from itertools import chain
+from re import T
 from typing import Iterable, List
+
+from opteryx.utils.columns import Columns
 
 
 def fetchmany(pages, limit: int = 1000):
+
+    from pyarrow import Table
+
+    if isinstance(pages, Table):
+        pages = [pages]
+
     DEFAULT_CHUNK_SIZE = 1000
     chunk_size = min(limit, DEFAULT_CHUNK_SIZE)
     if chunk_size < 0:
         chunk_size = DEFAULT_CHUNK_SIZE
 
     def _inner_row_reader():
+
+        column_names = None
+
         for page in pages:
+
+            if column_names is None:
+                columns = Columns(page)
+                preferred_names = columns.preferred_column_names
+                column_names = []
+                for col in page.column_names:
+                    column_names.append([c for a,c in preferred_names if a == col])
+
+                column_names = [c for c in chain.from_iterable(column_names)]
+
+            page = page.rename_columns(column_names)
+
             for batch in page.to_batches(max_chunksize=chunk_size):
                 yield from batch.to_pylist()
 
@@ -34,68 +59,6 @@ def fetchall(pages) -> List[dict]:
 Adapted from:
 https://stackoverflow.com/questions/55546027/how-to-assign-arbitrary-metadata-to-pyarrow-table-parquet-columns
 """
-
-## get_column_name(alias)
-##  read the column metadata
-##  return matching columns
-
-
-
-def create_table_metadata(table, expected_rows, name, table_aliases):
-    
-    # we're going to replace the column names with random strings
-    def random_string(length: int = 32) -> str:
-        import os
-        import base64
-        # we're creating a series of random bytes, 3/4 the length
-        # of the string we want, base64 encoding it (which makes 
-        # it longer) and then returning the length of string
-        # requested.
-        b = os.urandom(-((length * -3)//4))
-        return base64.b64encode(b).decode("utf8")[:length]
-
-
-    if not isinstance(table_aliases, list):
-        table_aliases = [table_aliases]
-
-    # create the table information we're going to track
-    table_metadata = {
-        "expected_rows": expected_rows,
-        "name": name,
-        "aliases": [a for a in set(table_aliases + [name]) if a]
-    }
-
-    # column information includes all the aliases a column is known by
-    column_metadata = {}
-    for column in table.column_names:
-        # we're going to rename the columns
-        new_column = random_string(32)
-        # the column is know aliased by it's previous name 
-        column_metadata[new_column] = {"aliases": [column]}
-        # the column prefers it's current name
-        column_metadata[new_column]["preferred_name"] = column
-        # for every alias the table has, the column is also know by that
-        for a in table_metadata["aliases"]:
-            column_metadata[new_column]["aliases"].append(f"{a}.{column}")
-    
-    # rename the columns
-    table = table.rename_columns(list(column_metadata.keys()))
-    # add the metadata
-    return set_metadata(table, table_metadata=table_metadata, column_metadata=column_metadata)
-
-def get_preferred_column_names(table):
-    metadata = column_metadata(table)
-    return [(c, v.get("preferred_name", None)) for c, v in metadata.items()]
-
-def get_column_from_alias(table, column):
-    """
-    For a given alias, return all of the matching columns (usually one)
-    """
-    matches = []
-    metadata = column_metadata(table)
-    for k,v in metadata.items():
-        matches.extend([k for alias in v.get("aliases", []) if alias == column])
-    return matches
 
 def set_metadata(table, table_metadata=None, column_metadata=None):
     """
@@ -180,21 +143,3 @@ def column_metadata(tbl):
 def get_metadata(tbl):
     """Get column and table metadata as dicts."""
     return column_metadata(tbl), table_metadata(tbl)
-
-
-if __name__ == "__main__":
-
-    import os
-    import sys
-
-    sys.path.insert(1, os.path.join(sys.path[0], "../../"))
-
-    from opteryx.samples import planets
-
-    p = planets()
-    p = create_table_metadata(p, 9, "planets", "p")
-
-    print(get_preferred_column_names(p))
-    print(get_column_from_alias(p, "p.name"))
-    print(get_column_from_alias(p, "name"))
-    print(get_column_from_alias(p, "planets.name"))
