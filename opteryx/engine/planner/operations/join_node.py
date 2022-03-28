@@ -18,6 +18,7 @@ This is a SQL Query Execution Plan Node.
 This performs a JOIN
 """
 
+from importlib.metadata import metadata
 import sys
 import os
 
@@ -37,45 +38,10 @@ def cartesian_product(*arrays):
     Cartesian product of arrays creates every combination of the elements in the arrays
     """
     la = len(arrays)
-    dtype = numpy.result_type(*arrays)
-    arr = numpy.empty([len(a) for a in arrays] + [la], dtype=dtype)
+    arr = numpy.empty([len(a) for a in arrays] + [la], dtype=numpy.int64)
     for i, a in enumerate(numpy.ix_(*arrays)):
         arr[..., i] = a
     return numpy.hsplit(arr.reshape(-1, la), la)
-
-
-def rename_columns(left, right):
-
-    # get the names of the columns in both tables
-    left_columns = left.column_names
-    right_columns = right.column_names
-
-    # get a list of colliding column names 
-    collisions = set(left_columns).intersection(set(right_columns))
-
-    # if there's no collisions - we don't need to rename any columns
-    if len(collisions) == 0:
-        return left_columns, right_columns
-
-    # get the metadata for the tables, this includes column aliases
-    left_metadata = get_metadata(left)
-    right_metadata = get_metadata(right)
-
-    # for each column that exists in both tables
-    for column in collisions:
-        # get the shortest alias longer than the current name
-        new_name_left = "*" * 100
-        for k, v in {k:v for k,v in left_metadata.items() if k[0] != "_"}:
-            for alias in k.get("_aliases", []):
-               if len(alias) > len(column) and len(alias) < len(new_name_left):
-                    new_name_left = alias
-
-        new_name_right = "*" * 100
-        for k, v in {k:v for k,v in right_metadata.items() if k[0] != "_"}:
-            for alias in k.get("_aliases", []):
-                pass
-            
-
 
 
 def _cross_join(left, right):
@@ -88,7 +54,14 @@ def _cross_join(left, right):
     if isinstance(left, pyarrow.Table):
         left = [left]
 
+    right_columns = Columns(right)
+    left_columns = None
+
     for left_page in left:
+
+        if left_columns is None:
+            left_columns = Columns(left_page)
+            new_columns = left_columns + right_columns
 
         # we break this into small chunks, each cycle will have 100 * rows in the right table
         for left_block in left_page.to_batches(max_chunksize=100):
@@ -106,9 +79,10 @@ def _cross_join(left, right):
             left_align, right_align = cartesian_product(left_array, right_array)
 
             # now build the resultant table
-            yield align_tables(
+            table = align_tables(
                 left_block, right, left_align.flatten(), right_align.flatten()
             )
+            yield new_columns.apply(table)
 
 
 def _cross_join_unnest(left, column, alias):
@@ -119,19 +93,27 @@ def _cross_join_unnest(left, column, alias):
     This means we need to read a row, create the dataset to join with, do the join
     repeat.
     """
+    if column[1] != TOKEN_TYPES.IDENTIFIER:
+        raise NotImplementedError("Can only CROSS JOIN UNNEST on a field")
+
     if isinstance(left, pyarrow.Table):
         left = [left]
 
+    metadata = None
+
     for left_page in left:
 
+        if metadata is None:
+            metadata = Columns(left_page)
+            metadata.add_column(alias)
+            unnest_column = metadata.get_column_from_alias(column[0], only_one=True)
+        
         buffer = []
         # we break this into small chunks otherwise we very quickly run into memory issues
         for left_block in left_page.to_batches(max_chunksize=100):
-            if column[1] != TOKEN_TYPES.IDENTIFIER:
-                raise NotImplementedError("Can only CROSS JOIN UNNEST on a field")
 
             for row in left_block.to_pylist():
-                right_values = row.get(column[0])
+                right_values = row.get(unnest_column)
 
                 if isinstance(right_values, list):
                     for value in right_values:
@@ -141,7 +123,9 @@ def _cross_join_unnest(left, column, alias):
                     row[alias] = None
                     buffer.append(row.copy())
 
-        yield pyarrow.Table.from_pylist(buffer)
+        table = pyarrow.Table.from_pylist(buffer)
+        table = metadata.apply(table)
+        yield table
         buffer = []
 
 
@@ -162,7 +146,7 @@ class JoinNode(BasePlanNode):
     def execute(self, data_pages: Iterable) -> Iterable:
 
         from opteryx.engine.planner.operations import DatasetReaderNode
-        from opteryx.utils.arrow import get_column_from_alias
+        from opteryx.utils.columns import Columns
 
         if isinstance(self._right_table, DatasetReaderNode):
             self._right_table = pyarrow.concat_tables(
@@ -181,33 +165,21 @@ class JoinNode(BasePlanNode):
 
         elif self._join_type == "Inner":
 
-            right_columns = [get_column_from_alias(self._right_table, c) for c in self._using]
-            right_columns = flatten_columns(right_columns)
+            right_columns = Columns(self._right_table)
             left_columns = None
-
-            metadata = column_metadata(self._right_table)
-            left_metadata = None
+            right_join_columns = [right_columns.get_column_from_alias(col, only_one=True) for col in self._using]
 
             if self._using:
                 for page in data_pages:
 
                     if left_columns is None:
-                        left_columns = [get_column_from_alias(page, c) for c in self._using]
-                        left_columns = flatten_columns(left_columns)
+                        left_columns = Columns(page)
+                        left_join_columns = [left_columns.get_column_from_alias(col, only_one=True) for col in self._using]
+                        new_metadata = left_columns + right_columns
 
-                    new_page = pyarrow_ops.inner_join(self._right_table, page, right_columns, left_columns)
-
-                    if left_metadata is None:
-                        left_metadata = column_metadata(page)
-                        for column in left_metadata:
-                            if column in metadata:
-                                metadata[column]["aliases"].extend(left_metadata[column]["aliases"])
-                            else:
-                                metadata[column] = left_metadata[column]
-
-                    yield set_metadata(new_page, None, metadata)
-
-
+                    new_page = pyarrow_ops.inner_join(self._right_table, page, right_join_columns, left_join_columns)
+                    new_page = new_metadata.apply(new_page)
+                    yield new_page
 
 if __name__ == "__main__":
 

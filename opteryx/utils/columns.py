@@ -35,9 +35,15 @@ from opteryx.exceptions import SqlError
 class Columns(object):
 
     def __init__(self, table):
-        self._table_metadata = arrow.table_metadata(table)
-        self._column_metadata = arrow.column_metadata(table)
+        if table is not None:
+            self._table_metadata = arrow.table_metadata(table)
+            self._column_metadata = arrow.column_metadata(table)
 
+    def __add__(self, columns):
+        retval = Columns(None)
+        retval._table_metadata = self._table_metadata
+        retval._column_metadata = { **self._column_metadata, **columns._column_metadata }
+        return retval
 
     @property
     def preferred_column_names(self):
