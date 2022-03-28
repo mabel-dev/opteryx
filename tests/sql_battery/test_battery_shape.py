@@ -223,6 +223,7 @@ STATEMENTS = [
         ("SELECT * FROM $satellites INNER JOIN $planets USING(id)", 9, 28),
         ("SELECT * FROM $satellites JOIN $planets USING(id)", 9, 28),
         ("SELECT * FROM $astronauts CROSS JOIN UNNEST(Missions) AS Mission WHERE Mission = 'Apollo 11'", 3, 20),
+        ("SELECT * FROM $planets INNER JOIN $satellites ON $planets.id = $satellites.planetId", 177, 28),
 
         # These are queries which have been found to return the wrong result or not run
         # correctly

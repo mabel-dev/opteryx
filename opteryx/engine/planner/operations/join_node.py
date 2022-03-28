@@ -165,11 +165,12 @@ class JoinNode(BasePlanNode):
 
         elif self._join_type == "Inner":
 
-            right_columns = Columns(self._right_table)
-            left_columns = None
-            right_join_columns = [right_columns.get_column_from_alias(col, only_one=True) for col in self._using]
-
             if self._using:
+
+                right_columns = Columns(self._right_table)
+                left_columns = None
+                right_join_columns = [right_columns.get_column_from_alias(col, only_one=True) for col in self._using]
+
                 for page in data_pages:
 
                     if left_columns is None:
@@ -178,6 +179,23 @@ class JoinNode(BasePlanNode):
                         new_metadata = left_columns + right_columns
 
                     new_page = pyarrow_ops.inner_join(self._right_table, page, right_join_columns, left_join_columns)
+                    new_page = new_metadata.apply(new_page)
+                    yield new_page
+
+            elif self._on:
+
+                right_columns = Columns(self._right_table)
+                left_columns = None
+                right_join_column = right_columns.get_column_from_alias(self._on[2][0], only_one=True)
+
+                for page in data_pages:
+
+                    if left_columns is None:
+                        left_columns = Columns(page)
+                        left_join_column = left_columns.get_column_from_alias(self._on[0][0], only_one=True)
+                        new_metadata = right_columns + left_columns
+
+                    new_page = pyarrow_ops.inner_join(self._right_table, page, right_join_column, left_join_column)
                     new_page = new_metadata.apply(new_page)
                     yield new_page
 

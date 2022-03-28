@@ -24,6 +24,7 @@ The selection operator should focus on the selection not on working out which co
 is actually being referred to.
 """
 
+import enum
 import os
 import sys
 
@@ -42,12 +43,20 @@ class Columns(object):
     def __add__(self, columns):
         retval = Columns(None)
         retval._table_metadata = self._table_metadata
-        retval._column_metadata = { **self._column_metadata, **columns._column_metadata }
+        retval._column_metadata = { **self._column_metadata, **columns._column_metadata }.copy()
         return retval
 
     @property
     def preferred_column_names(self):
-        return [(c, v.get("preferred_name", None)) for c, v in self._column_metadata.items()]
+        columns, preferences = zip(*[(c, v.get("preferred_name", None)) for c, v in self._column_metadata.items()])
+        preferences = list(preferences)
+        for number, name in enumerate(preferences):
+            instances = [i for i, x in enumerate(preferences) if x == name]
+            if len(instances) > 1:
+                for instance in instances:
+                    fqn = self._column_metadata[columns[instance]]["source"] + "." + name
+                    preferences[instance] = fqn
+        return list(zip(list(columns), list(preferences)))
 
     def get_preferred_name(self, column):
         return self._column_metadata[column]["preferred_name"]
@@ -66,7 +75,7 @@ class Columns(object):
         self._column_metadata[column]["aliases"].remove(alias)
 
     def add_column(self, column):
-        new_column = {"preferred_name": column, "aliases": [column]}
+        new_column = {"preferred_name": column, "aliases": [column], "source": ""}
         self._column_metadata[column] = new_column
 
     def apply(self, table):
@@ -130,6 +139,8 @@ class Columns(object):
             new_column = random_string(32)
             # the column is know aliased by it's previous name 
             column_metadata[new_column] = {"aliases": [column]}
+            # record the source table
+            column_metadata[new_column]["source"] = name
             # the column prefers it's current name
             column_metadata[new_column]["preferred_name"] = column
             # for every alias the table has, the column is also know by that

@@ -1,4 +1,5 @@
 from itertools import chain
+import itertools
 from re import T
 from typing import Iterable, List
 
@@ -28,9 +29,7 @@ def fetchmany(pages, limit: int = 1000):
                 preferred_names = columns.preferred_column_names
                 column_names = []
                 for col in page.column_names:
-                    column_names.append([c for a,c in preferred_names if a == col])
-
-                column_names = [c for c in chain.from_iterable(column_names)]
+                    column_names.append([c for a,c in preferred_names if a == col][0])
 
             page = page.rename_columns(column_names)
 
