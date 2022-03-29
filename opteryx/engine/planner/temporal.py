@@ -21,11 +21,14 @@ SQL_PARTS = [
     r"FROM",
     r"FOR",
     r"WHERE",
-    r"GROUP BY",
+    r"GROUP\sBY",
     r"HAVING",
-    r"ORDER BY",
+    r"ORDER\sBY",
     r"LIMIT",
     r"OFFSET",
+    r"INNER\sJOIN",
+    r"CROSS\sJOIN",
+    r"JOIN"
 ]
 
 
