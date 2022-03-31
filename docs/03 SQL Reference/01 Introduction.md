@@ -4,6 +4,8 @@
 
 This page provides an overview of how to perform simple operations in SQL. This tutorial is only intended to give you an introduction and is not a complete tutorial on SQL. This tutorial is reworked from the [DuckDB](https://duckdb.org/docs/sql/introduction) tutorial.
 
+All queries in the online documentation for Opteryx use the internal sample NASA datasets, so will work regardless of what data your installation and set up has access to.
+
 ## Concepts
 
 Opteryx is a system for querying ad hoc data stored in files as [relations](https://en.wikipedia.org/wiki/Relation_(database)). A relation is mathematical term for a data table.

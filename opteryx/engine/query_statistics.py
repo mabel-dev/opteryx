@@ -31,6 +31,9 @@ class QueryStatistics:
 
         self.time_data_read: int = 0
 
+        self.cache_hits: int = 0
+        self.cache_misses: int = 0
+
         # time spent query planning
         self.time_planning: int = 0
 
@@ -60,4 +63,6 @@ class QueryStatistics:
             "partitions_found": self.partitions_found,
             "partitions_scanned": self.partitions_scanned,
             "partitions_read": self.partitions_read,
+            "cache_hits": self.cache_hits,
+            "cache_misses": self.cache_misses
         }
