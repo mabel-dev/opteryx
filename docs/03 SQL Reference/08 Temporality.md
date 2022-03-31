@@ -10,8 +10,8 @@ Where multiple dates are provided, they have an implicit `UNION` applied to them
 
 Clause             | Description                           | Example
 ------------------ | ------------------------------------- | ---------------------------
-`FOR 'date'`       | Data as at a specific date            | `FOR DATE '2022-09-16'`
-`FOR DATES BETWEEN 'date' AND 'date'` | Data between two specific dates | `FOR BETWEEN DATES '2000-01-01' AND '2000-12-31'`  
+`FOR 'date'`       | Data as at a specific date            | `FOR '2022-09-16'`
+`FOR DATES BETWEEN 'date' AND 'date'` | Data between two specific dates | `FOR DATES BETWEEN '2000-01-01' AND '2000-12-31'`  
 
 Date values in `FOR` clauses must either be in 'YYYY-MM-DD' format or a recognised date placeholder:
 

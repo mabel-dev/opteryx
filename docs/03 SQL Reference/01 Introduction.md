@@ -54,7 +54,7 @@ This should give:
 ~~~
  id	| uppercase_name
 ----+----------------
-  3	|          EARTH
+  3	| EARTH
 ~~~
 
 Notice how the `AS` clause is used to relabel the output column. (The `AS` clause is optional.)
@@ -154,11 +154,11 @@ SELECT *
 ~~~
 $satellites.id | planetId | $satellites.name | ...
 ---------------+----------+------------------+----
-             1 |        3 |             Moon |
-             2 |        4 |           Phobos |
-             3 |        4 |           Deimos |
-             4 |        5 |               Io |
-             5 |        5 |           Europa |
+             1 |        3 | Moon             |
+             2 |        4 | Phobos           |
+             3 |        4 | Deimos           |
+             4 |        5 | Io               |
+             5 |        5 | Europa           |
 
 (more rows and columns)
 ~~~
