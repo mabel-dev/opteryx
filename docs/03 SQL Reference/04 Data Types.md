@@ -12,7 +12,8 @@ Name        | Description
 `TIMESTAMP` | Combination of date and time.
 `OTHER`     | None of the above or multiple types in the same column. 
 
-> Note<br />OTHER is not a type, it is a catch-all when a type cannot be determined.
+!!! note
+    OTHER is not a type, it is a catch-all when a type cannot be determined.
 
 ## Casting
 
