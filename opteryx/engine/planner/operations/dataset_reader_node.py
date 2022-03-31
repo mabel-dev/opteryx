@@ -32,7 +32,7 @@ from curses import meta
 import time
 import datetime
 from enum import Enum
-from typing import Iterable
+from typing import Iterable, Optional
 
 import orjson
 from opteryx.exceptions import DatabaseError
@@ -124,7 +124,7 @@ class DatasetReaderNode(BasePlanNode):
     def name(self):
         return "Reader"
 
-    def execute(self, data_pages: Iterable) -> Iterable:
+    def execute(self, data_pages: Optional[Iterable]) -> Iterable:
 
         from opteryx.engine.planner.planner import QueryPlanner
 

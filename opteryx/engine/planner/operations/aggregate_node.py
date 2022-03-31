@@ -35,7 +35,7 @@ sys.path.insert(1, os.path.join(sys.path[0], "../../../.."))
 
 import pyarrow.json
 import numpy as np
-from typing import Iterable
+from typing import Iterable, List
 from opteryx.engine import QueryStatistics
 from opteryx.engine.planner.operations import BasePlanNode
 from opteryx.exceptions import SqlError
@@ -137,7 +137,7 @@ class AggregateNode(BasePlanNode):
 
         collector: dict = defaultdict(dict)
         columns = None
-        self._mapped_project = []
+        self._mapped_project:List = []
 
         if isinstance(data_pages, pyarrow.Table):
             data_pages = [data_pages]
@@ -218,7 +218,7 @@ class AggregateNode(BasePlanNode):
             if self._aggregates[0]["aggregate"] == "COUNT":
                 collector = {(): {"COUNT(*)": 0}}
 
-        buffer = []
+        buffer:List = []
         for collected, record in collector.items():
             if len(buffer) > 1000:
                 table = pyarrow.Table.from_pylist(buffer)
