@@ -138,22 +138,37 @@ SELECT DISTINCT planetId
 
 -----
 
-Joins Between Tables
-Thus far, our queries have only accessed one table at a time. Queries can access multiple tables at once, or access the same table in such a way that multiple rows of the table are being processed at the same time. A query that accesses multiple rows of the same or different tables at one time is called a join query. As an example, say you wish to list all the weather records together with the location of the associated city. To do that, we need to compare the city column of each row of the weather table with the name column of all rows in the cities table, and select the pairs of rows where these values match.
+## Joins Between Tables
+So far our queries have only accessed one table at a time. Queries can access multiple tables at once, or access the same table in such a way that multiple rows of the table are being processed at the same time. A query that accesses multiple rows of the same or different tables at one time is called a join query. 
+
+As an example, say you wish to list all the satellite records together with the planet they orbit. To do that, we need to compare the planetId of each row of the $satellites table with the id column of all rows in the $planets table, and select the pairs of rows where these values match.
 
 This would be accomplished by the following query:
 
+~~~sql
 SELECT *
-    FROM weather, cities
-    WHERE city = name;
-     city      | temp_lo | temp_hi | prcp |    date    |     name      | lon | lat
----------------+---------+---------+------+------------+---------------+-----+----
- San Francisco |      46 |      50 | 0.25 | 1994-11-27 | San Francisco | -194|  53
- San Francisco |      43 |      57 |    0 | 1994-11-29 | San Francisco | -194|  53
-(2 rows)
+  FROM $satellites, $planets
+ WHERE planetId = $planets.id;
+~~~
+
+~~~
+$satellites.id | planetId | $satellites.name | ...
+---------------+----------+------------------+----
+             1 |        3 |             Moon |
+             2 |        4 |           Phobos |
+             3 |        4 |           Deimos |
+             4 |        5 |               Io |
+             5 |        5 |           Europa |
+
+(more rows and columns)
+~~~
+
 Observe two things about the result set:
 
-There is no result row for the city of Hayward. This is because there is no matching entry in the cities table for Hayward, so the join ignores the unmatched rows in the weather table. We will see shortly how this can be fixed.
+There are no result row for the planets of Mercury or Venus (planetIds 1 and 2). This is because there is no matching entry in the $satellites table for these planets, so the join ignores the unmatched rows in the $planets table.
+
+-----
+
 There are two columns containing the city name. This is correct because the lists of columns from the weather and cities tables are concatenated. In practice this is undesirable, though, so you will probably want to list the output columns explicitly rather than using *:
 SELECT city, temp_lo, temp_hi, prcp, date, lon, lat
   FROM weather, cities

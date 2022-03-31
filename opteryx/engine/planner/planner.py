@@ -582,7 +582,9 @@ class QueryPlanner(object):
         last_node = "from"
 
         _join = self._extract_joins(ast)
-        if _join:
+        if _join or len(_relations) == 2:
+            if len(_relations) == 2:
+                _join = ("CrossJoin", _relations[1], None, None)
             if _join[0] == "CrossJoinUnnest":
                 # we're not a table, we're the UNNEST function
                 right = _join[1]
