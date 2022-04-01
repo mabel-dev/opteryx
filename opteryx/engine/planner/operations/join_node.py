@@ -123,10 +123,9 @@ def _cross_join_unnest(left, column, alias):
             if len(new_column) > 0 and isinstance(new_column[0], (pyarrow.lib.StringScalar)):
                 new_column = [[v.as_py() for v in new_column]]
 
-            new_block = left_block.take(indexes)
-            new_block = pyarrow.Table.from_batches([new_block])
+            new_block = pyarrow.Table.from_batches([left_block])
+            new_block = new_block.take(indexes)
             new_block = pyarrow.Table.append_column(new_block, alias, new_column)
-
             new_block = metadata.apply(new_block)
             yield new_block
 
