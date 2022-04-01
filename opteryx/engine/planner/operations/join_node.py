@@ -117,14 +117,15 @@ def _cross_join_unnest(left, column, alias):
 
             indexes = []
             for i, value in enumerate(column_data):
-                indexes.extend([i] * len(value))
+                if len(value) > 0:
+                    indexes.extend([i] * len(value))
 
             new_column =  [item for sublist in column_data for item in sublist]
             if len(new_column) > 0 and isinstance(new_column[0], (pyarrow.lib.StringScalar)):
                 new_column = [[v.as_py() for v in new_column]]
 
-            new_block = pyarrow.Table.from_batches([left_block])
-            new_block = new_block.take(indexes)
+            new_block = left_block.take(indexes)
+            new_block = pyarrow.Table.from_batches([new_block])
             new_block = pyarrow.Table.append_column(new_block, alias, new_column)
             new_block = metadata.apply(new_block)
             yield new_block
