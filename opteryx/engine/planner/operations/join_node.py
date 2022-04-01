@@ -93,6 +93,8 @@ def _cross_join_unnest(left, column, alias):
     This means we need to read a row, create the dataset to join with, do the join
     repeat.
     """
+    import time
+    t1 = time.time_ns()
     if column[1] != TOKEN_TYPES.IDENTIFIER:
         raise NotImplementedError("Can only CROSS JOIN UNNEST on a field")
 
@@ -108,25 +110,28 @@ def _cross_join_unnest(left, column, alias):
             metadata.add_column(alias)
             unnest_column = metadata.get_column_from_alias(column[0], only_one=True)
         
-        buffer = []
         # we break this into small chunks otherwise we very quickly run into memory issues
         for left_block in left_page.to_batches(max_chunksize=100):
 
-            for row in left_block.to_pylist():
-                right_values = row.get(unnest_column)
+            column_data = left_block[unnest_column]
 
-                if isinstance(right_values, list):
-                    for value in right_values:
-                        row[alias] = value
-                        buffer.append(row.copy())
-                else:
-                    row[alias] = None
-                    buffer.append(row.copy())
+            indexes = []
+            for i, value in enumerate(column_data):
+                indexes.extend([i] * len(value))
 
-        table = pyarrow.Table.from_pylist(buffer)
-        table = metadata.apply(table)
-        yield table
-        buffer = []
+            new_column =  [item for sublist in column_data for item in sublist]
+            if len(new_column) > 0 and isinstance(new_column[0], (pyarrow.lib.StringScalar)):
+                new_column = [[v.as_py() for v in new_column]]
+
+            new_block = left_block.take(indexes)
+            new_block = pyarrow.Table.from_batches([new_block])
+            new_block = pyarrow.Table.append_column(new_block, alias, new_column)
+
+            new_block = metadata.apply(new_block)
+            yield new_block
+
+
+    print('n', time.time_ns() - t1)
 
 
 class JoinNode(BasePlanNode):
