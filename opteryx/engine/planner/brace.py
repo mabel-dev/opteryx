@@ -126,6 +126,7 @@ AS employees (EMPNO, ENAME, JOB, MGR, HIREDATE, SAL, COMM, DEPTNO);
     SQL = "SELECT * FROM $planets FOR '2022-03-03' INNER JOIN $satellites ON $planets.id = $satellites.planetId"
     SQL = "SELECT * FROM tests.data.jsonl JOIN tests.data.tweets USING (user_verified)"
     SQL = "SELECT * FROM $astronauts CROSS JOIN UNNEST(Missions) AS Mission WHERE Mission = 'Apollo 11'"
+    SQL = "SELECT * FROM $satellites FOR SYSTEM_TIME (TODAY, YESTERDAY)"
 
     _, _, SQL = extract_temporal_filters(SQL)
     ast = sqloxide.parse_sql(SQL, dialect="mysql")
