@@ -168,7 +168,7 @@ Observe two things about the result set:
 There are no result row for the planets of Mercury or Venus (planetIds 1 and 2). This is because there is no matching entry in the $satellites table for these planets, so the join ignores the unmatched rows in the $planets table.
 
 -----
-
+<!---
 There are two columns containing the city name. This is correct because the lists of columns from the weather and cities tables are concatenated. In practice this is undesirable, though, so you will probably want to list the output columns explicitly rather than using *:
 SELECT city, temp_lo, temp_hi, prcp, date, lon, lat
   FROM weather, cities
@@ -254,3 +254,4 @@ More information about the LIKE operator can be found here.
 It is important to understand the interaction between aggregates and SQL’s WHERE and HAVING clauses. The fundamental difference between WHERE and HAVING is this: WHERE selects input rows before groups and aggregates are computed (thus, it controls which rows go into the aggregate computation), whereas HAVING selects group rows after groups and aggregates are computed. Thus, the WHERE clause must not contain aggregate functions; it makes no sense to try to use an aggregate to determine which rows will be inputs to the aggregates. On the other hand, the HAVING clause always contains aggregate functions.
 
 In the previous example, we can apply the city name restriction in WHERE, since it needs no aggregate. This is more efficient than adding the restriction to HAVING, because we avoid doing the grouping and aggregate calculations for all rows that fail the WHERE check.
+--->
