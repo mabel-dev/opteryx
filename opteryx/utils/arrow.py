@@ -1,6 +1,4 @@
 from itertools import chain
-import itertools
-from re import T
 from typing import Iterable, List
 
 from opteryx.utils.columns import Columns

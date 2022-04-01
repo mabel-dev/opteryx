@@ -42,19 +42,20 @@ class Columns(object):
 
     def __add__(self, columns):
         retval = Columns(None)
-        retval._table_metadata = self._table_metadata
+        retval._table_metadata = self._table_metadata.copy()
         retval._column_metadata = { **self._column_metadata, **columns._column_metadata }.copy()
         return retval
 
     @property
     def preferred_column_names(self):
-        columns, preferences = zip(*[(c, v.get("preferred_name", None)) for c, v in self._column_metadata.items()])
+        _column_metadata = self._column_metadata.copy()
+        columns, preferences = zip(*[(c, v.get("preferred_name", None)) for c, v in _column_metadata.items()])
         preferences = list(preferences)
-        for number, name in enumerate(preferences):
+        for name in preferences:
             instances = [i for i, x in enumerate(preferences) if x == name]
             if len(instances) > 1:
                 for instance in instances:
-                    fqn = self._column_metadata[columns[instance]]["source"] + "." + name
+                    fqn = _column_metadata[columns[instance]]["source"] + "." + name
                     preferences[instance] = fqn
         return list(zip(list(columns), list(preferences)))
 
@@ -78,8 +79,12 @@ class Columns(object):
         new_column = {"preferred_name": column, "aliases": [column], "source": ""}
         self._column_metadata[column] = new_column
 
+
     def apply(self, table):
-        table = table.rename_columns(self._column_metadata.keys())
+        column_names = [self.get_column_from_alias(c) or [c] for c in table.column_names]
+        column_names = [item for sublist in column_names for item in sublist]
+
+        table = table.rename_columns(column_names)
         return arrow.set_metadata(table, table_metadata=self._table_metadata, column_metadata=self._column_metadata)
 
 
