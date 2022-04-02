@@ -1,6 +1,8 @@
-# Installation
+# Getting Started
 
-## opteryx
+## Installation
+
+### opteryx
 
 Install via pip (recommended)
 

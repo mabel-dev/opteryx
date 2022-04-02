@@ -10,10 +10,11 @@
 ----
 
 **NOTE**
-!Opteryx is an alpha product. Alpha means different things to different people, to us, being alpha means:
+Opteryx is an alpha product. Alpha means different things to different people, to us, being alpha means:
 
 - Some features you may expect from a Query Engine may not be available
 - Some features may have undetected bugs in them
+- Some features may not be tuned for performance
 - Some previously working features may break
 
 ----
