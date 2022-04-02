@@ -1,4 +1,6 @@
-# Python DBAPI
+# Python Client
+
+## Python DBAPI
 
 Opteryx implements a partial Python DBAPI (PEP-0249) interface.
 

@@ -4,3 +4,4 @@ orjson
 cityhash
 sqloxide
 pyarrow
+python-dotenv

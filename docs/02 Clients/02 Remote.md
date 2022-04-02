@@ -1,3 +1,3 @@
-# Trino HTTP API
+# HTTP API
 
 Support pending.

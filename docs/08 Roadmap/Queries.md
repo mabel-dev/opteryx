@@ -1,6 +1,5 @@
 
 
-- JOINS
 - CTEs
 - Query Optimizer
 - use data partitions for groups and selections

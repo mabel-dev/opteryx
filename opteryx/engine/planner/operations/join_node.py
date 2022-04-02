@@ -17,8 +17,6 @@ This is a SQL Query Execution Plan Node.
 
 This performs a JOIN
 """
-
-from importlib.metadata import metadata
 import sys
 import os
 
@@ -32,6 +30,7 @@ from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
 from opteryx.third_party import pyarrow_ops
 from opteryx.engine.attribute_types import TOKEN_TYPES
 from opteryx.utils.columns import Columns
+from opteryx import config
 
 def cartesian_product(*arrays):
     """
@@ -64,7 +63,7 @@ def _cross_join(left, right):
             new_columns = left_columns + right_columns
 
         # we break this into small chunks, each cycle will have 100 * rows in the right table
-        for left_block in left_page.to_batches(max_chunksize=100):
+        for left_block in left_page.to_batches(max_chunksize=config.INTERNAL_BATCH_SIZE):
 
             # blocks don't have column_names, so we need to wrap in a table
             left_block = pyarrow.Table.from_batches(
@@ -92,9 +91,13 @@ def _cross_join_unnest(left, column, alias):
 
     This means we need to read a row, create the dataset to join with, do the join
     repeat.
+
+    This is done by collecting the values together and creating them into a new column.
+
+    This column-based approach benchmarked roughly 33% faster than the row-based
+    approach, where each row was read as a dictionary, new dictionaries created for
+    each UNNESTed value and the dictionaries combined to a table.
     """
-    import time
-    t1 = time.time_ns()
     if column[1] != TOKEN_TYPES.IDENTIFIER:
         raise NotImplementedError("Can only CROSS JOIN UNNEST on a field")
 
@@ -111,27 +114,34 @@ def _cross_join_unnest(left, column, alias):
             unnest_column = metadata.get_column_from_alias(column[0], only_one=True)
         
         # we break this into small chunks otherwise we very quickly run into memory issues
-        for left_block in left_page.to_batches(max_chunksize=100):
+        for left_block in left_page.to_batches(max_chunksize=config.INTERNAL_BATCH_SIZE):
 
+            # Get the column we're going to UNNEST
             column_data = left_block[unnest_column]
 
+            # Create a list of indexes, this will look something like this:
+            # [1,1,1,2,2,2,3,3,3] 
+            # Where the number of times a number is repeated, is the length of the list
+            # we're going to UNNEST for that row
             indexes = []
             for i, value in enumerate(column_data):
-                if len(value) > 0:
-                    indexes.extend([i] * len(value))
+                indexes.extend([i] * len(value))
 
+            # Create the new column by converting a list of lists, into one list
             new_column =  [item for sublist in column_data for item in sublist]
+            # Strings need special treatment to avoid them being coerced into a list
+            # of characters
             if len(new_column) > 0 and isinstance(new_column[0], (pyarrow.lib.StringScalar)):
                 new_column = [[v.as_py() for v in new_column]]
 
+            # Using the indexes above, repeat the rows of the source data
             new_block = left_block.take(indexes)
+            # We can't append columns to batches, so we need to convert to a table
             new_block = pyarrow.Table.from_batches([new_block])
+            # Append the column we created above, to the table with the repeated rows
             new_block = pyarrow.Table.append_column(new_block, alias, new_column)
             new_block = metadata.apply(new_block)
             yield new_block
-
-
-    print('n', time.time_ns() - t1)
 
 
 class JoinNode(BasePlanNode):

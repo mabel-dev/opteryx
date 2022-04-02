@@ -30,28 +30,28 @@ body {
 
 h1 {
     font-family: "IBM Plex Sans", Georgia, 'Times New Roman', Times, serif;
-    font-weight: 600;
+    font-weight: 600 !important;
     font-size: 38px;
     margin-bottom: 0.7em;
 }
 
 h2 {
     font-family: "IBM Plex Sans", Georgia, 'Times New Roman', Times, serif;
-    font-weight: 600;
+    font-weight: 600 !important;
     font-size: 30px;
     margin-bottom: 0.7em;
 }
 
 h3 {
     font-family: "IBM Plex Sans", Georgia, 'Times New Roman', Times, serif;
-    font-weight: 600;
+    font-weight: 600 !important;
     font-size: 24px;
     margin-bottom: 0.7em;
 }
 
 h4 {
     font-family: "IBM Plex Sans", Georgia, 'Times New Roman', Times, serif;
-    font-weight: 600;
+    font-weight: 600 !important;
     font-size: 20px;
     margin-bottom: 0.7em;
 }
