@@ -2,15 +2,26 @@
 
 Opteryx aims to be a ANSI SQL compliant query engine. This standard compliance allows Opteryx users to quickly understand how to query data and enables easier porting of SQL between query engines and databases.
 
+## EXPLAIN
+
+Show the logical execution plan of a statement.
+
+~~~sql
+EXPLAIN
+SELECT statement
+~~~
+
+The `EXPLAIN` clause outputs a summary of the execution plan for the query in the `SELECT` statement.
+
 ## SELECT
 
-Retrieve rows from zero or more tables.
+Retrieve rows from zero or more relations.
 
 ~~~sql
 SELECT select_list
-FROM table
-  INNER JOIN table
-  CROSS JOIN table
+FROM relation
+  INNER JOIN relation
+  CROSS JOIN relation
 FOR statement
 WHERE condition
 GROUP BY groups
@@ -22,11 +33,19 @@ LIMIT n
 
 ### SELECT clause
 
+~~~
+SELECT [ DISTINCT ] select_expression [, ...]
+~~~
+
 The `SELECT` clause specifies the list of columns that will be returned by the query. While it appears first in the clause, logically the expressions here are executed only at the end. The `SELECT` clause can contain arbitrary expressions that transform the output, as well as aggregate functions.
+
+The `DISTINCT` quantifier is specified, only unique rows are included in the result set. In this case, each output column must be of a type that allows comparison.
 
 ### FROM / JOIN clauses
 
-The `FROM` clause specifies the source of the data on which the remainder of the query should operate. Logically, the `FROM` clause is where the query starts execution. The `FROM` clause can contain a single table, a combination of multiple tables that are joined together, or another `SELECT` query inside a subquery node.
+The `FROM` clause specifies the source of the data on which the remainder of the query should operate. Logically, the `FROM` clause is where the query starts execution. The `FROM` clause can contain a single relation, a combination of multiple relations that are joined together, or another `SELECT` query inside a subquery node.
+
+`JOIN` clauses allow you to combine data from multiple relations.
 
 ### FOR clause
 
@@ -42,25 +61,24 @@ The `GROUP BY` clause specifies which grouping columns should be used to perform
 
 ### ORDER BY / LIMIT / OFFSET clauses
 
-`ORDER BY`, `LIMIT` and `OFFSET` are output modifiers. Logically they are applied at the very end of the query. The `OFFSET` clause discards initial rows from the returned set, the `LIMIT` clause restricts the amount of rows fetched, and the `ORDER BY` clause sorts the rows on the sorting criteria in either ascending or descending order.
-
-## EXPLAIN
-
-Show the logical execution plan of a statement.
-
-~~~sql
-EXPLAIN
-SELECT statement
+~~~
+ORDER BY expression [ ASC | DESC ] [, ...]
+~~~
+~~~
+OFFSET count
+~~~
+~~~
+LIMIT count
 ~~~
 
-The `EXPLAIN` clause outputs a summary of the execution plan for the query in the `SELECT` statement.
+`ORDER BY`, `LIMIT` and `OFFSET` are output modifiers. Logically they are applied at the very end of the query. The `OFFSET` clause discards initial rows from the returned set, the `LIMIT` clause restricts the amount of rows fetched, and the `ORDER BY` clause sorts the rows on the sorting criteria in either ascending or descending order.
 
 ## SHOW COLUMNS
 
-List the columns in a table along with their data type.
+List the columns in a relation along with their data type.
 
 ~~~sql
-SHOW COLUMNS FROM table
+SHOW COLUMNS FROM relation
 LIKE pattern
 WHERE condition
 ~~~
