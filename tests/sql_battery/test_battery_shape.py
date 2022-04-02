@@ -219,6 +219,10 @@ STATEMENTS = [
         ("EXPLAIN SELECT * FROM $satellites", 2, 3),
         ("EXPLAIN SELECT * FROM $satellites WHERE id = 8", 3, 3),
 
+        ("SHOW COLUMNS FROM $satellites", 8, 2),
+        ("SHOW COLUMNS FROM $satellites WHERE column_name ILIKE '%id'", 2, 2),
+        ("SHOW COLUMNS FROM $satellites LIKE '%id'", 1, 2),
+
         ("SELECT * FROM $satellites CROSS JOIN $astronauts", 63189, 27),
         ("SELECT * FROM $satellites, $planets", 1593, 28),
         ("SELECT * FROM $satellites INNER JOIN $planets USING(id)", 9, 28),

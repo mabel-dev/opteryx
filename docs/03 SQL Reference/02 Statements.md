@@ -1,11 +1,17 @@
 # SQL Statements
 
+Opteryx aims to be a ANSI SQL compliant query engine. This standard compliance allows Opteryx users to quickly understand how to query data and enables easier porting of SQL between query engines and databases.
+
 ## SELECT
+
+Retrieve rows from zero or more tables.
+
 ~~~sql
 SELECT select_list
 FROM table
   INNER JOIN table
   CROSS JOIN table
+FOR statement
 WHERE condition
 GROUP BY groups
   HAVING group_filter
@@ -22,6 +28,10 @@ The `SELECT` clause specifies the list of columns that will be returned by the q
 
 The `FROM` clause specifies the source of the data on which the remainder of the query should operate. Logically, the `FROM` clause is where the query starts execution. The `FROM` clause can contain a single table, a combination of multiple tables that are joined together, or another `SELECT` query inside a subquery node.
 
+### FOR clause
+
+The `FOR` clause is a non ANSI SQL extention which filters data by the date it was recorded for.
+
 ### WHERE clause
 
 The `WHERE` clause specifies any filters to apply to the data. This allows you to select only a subset of the data in which you are interested. Logically the `WHERE` clause is applied immediately after the `FROM` clause.
@@ -36,9 +46,32 @@ The `GROUP BY` clause specifies which grouping columns should be used to perform
 
 ## EXPLAIN
 
+Show the logical execution plan of a statement.
+
 ~~~sql
 EXPLAIN
 SELECT statement
 ~~~
 
 The `EXPLAIN` clause outputs a summary of the execution plan for the query in the `SELECT` statement.
+
+## SHOW COLUMNS
+
+List the columns in a table along with their data type.
+
+~~~sql
+SHOW COLUMNS FROM table
+LIKE pattern
+WHERE condition
+~~~
+
+### LIKE clause
+
+Specify a pattern in the optional `LIKE` clause to filter the results to the desired subset by the column name.
+
+### WHERE clause
+
+The `WHERE` clause specifies any filters to apply to the data. This allows you to select only a subset of the data in which you are interested.
+
+!!! note
+    Only one of `LIKE` and `WHERE` can be used in the same statement.

@@ -43,6 +43,8 @@ temporal aspects out of the query.
 import sys
 import os
 
+from opteryx.engine.planner.operations.show_columns import ShowColumnsNode
+
 sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
 
 import numpy
@@ -128,6 +130,8 @@ class QueryPlanner(object):
             self._naive_select_planner(self._ast, self._statistics)
         elif "Explain" in self._ast[0]:
             self._explain_planner(self._ast, self._statistics)
+        elif "ShowColumns" in self._ast[0]:
+            self._show_columns_planner(self._ast, self._statistics)
         else:
             raise SqlError("Unknown or unsupported Query type.")
 
@@ -472,6 +476,17 @@ class QueryPlanner(object):
         selections = ast[0]["Query"]["body"]["Select"]["selection"]
         return self._build_dnf_filters(selections)
 
+    def _extract_filter(self, ast):
+        """
+        """
+        filters = ast[0]["ShowColumns"]["filter"]
+        if filters is None:
+            return None
+        if "Where" in filters:
+            return self._build_dnf_filters(filters["Where"])
+        if "Like" in filters:
+            return (("column_name", TOKEN_TYPES.IDENTIFIER,), "like", (filters["Like"], TOKEN_TYPES.VARCHAR),)
+            
     def _extract_distinct(self, ast):
         return ast[0]["Query"]["body"]["Select"]["distinct"]
 
@@ -543,6 +558,38 @@ class QueryPlanner(object):
         explain_plan.create_plan(ast=[ast[0]["Explain"]["statement"]])
         explain_node = ExplainNode(statistics, query_plan=explain_plan)
         self.add_operator("explain", explain_node)
+
+    def _show_columns_planner(self, ast, statistics):
+
+        relation = ast[0]["ShowColumns"]["table_name"][0]["value"]
+
+        self.add_operator(
+            "reader",
+            DatasetReaderNode(
+                statistics,
+                dataset=(None, relation),
+                reader=self._reader,
+                partition_scheme=self._partition_scheme,
+                start_date=self._start_date,
+                end_date=self._end_date,
+            ),
+        )
+        self.add_operator(
+            "columns",
+            ShowColumnsNode(
+                statistics
+            )
+        )
+        self.link_operators("reader", "columns")
+
+        filters = self._extract_filter(ast)
+        if filters:
+            self.add_operator("filter", SelectionNode(
+                statistics=statistics,
+                filter=filters
+            ))
+            self.link_operators("columns", "filter")
+
 
     def _naive_select_planner(self, ast, statistics):
         """
