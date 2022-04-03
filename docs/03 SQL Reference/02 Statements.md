@@ -8,7 +8,7 @@ Show the logical execution plan of a statement.
 
 ~~~sql
 EXPLAIN
-SELECT statement
+select statement
 ~~~
 
 The `EXPLAIN` clause outputs a summary of the execution plan for the query in the `SELECT` statement.
@@ -22,7 +22,7 @@ SELECT select_list
 FROM relation
   INNER JOIN relation
   CROSS JOIN relation
-FOR statement
+FOR period
 WHERE condition
 GROUP BY groups
   HAVING group_filter
@@ -34,7 +34,7 @@ LIMIT n
 ### SELECT clause
 
 ~~~
-SELECT [ DISTINCT ] select_expression [, ...]
+SELECT [ DISTINCT ] expression [, ...]
 ~~~
 
 The `SELECT` clause specifies the list of columns that will be returned by the query. While it appears first in the clause, logically the expressions here are executed only at the end. The `SELECT` clause can contain arbitrary expressions that transform the output, as well as aggregate functions.
@@ -53,11 +53,22 @@ The `FOR` clause is a non ANSI SQL extention which filters data by the date it w
 
 ### WHERE clause
 
+~~~
+WHERE condition
+~~~
+
 The `WHERE` clause specifies any filters to apply to the data. This allows you to select only a subset of the data in which you are interested. Logically the `WHERE` clause is applied immediately after the `FROM` clause.
 
 ### GROUP BY / HAVING clauses
 
-The `GROUP BY` clause specifies which grouping columns should be used to perform any aggregations in the `SELECT` clause. If the `GROUP BY` clause is specified, the query is always an aggregate query, even if no aggregations are present in the `SELECT` clause. The `HAVING` clause specifies filters to apply to aggregated data.
+~~~
+GROUP BY expression [, ...]
+~~~
+~~~
+HAVING group_filter
+~~~
+
+The `GROUP BY` clause specifies which grouping columns should be used to perform any aggregations in the `SELECT` clause. If the `GROUP BY` clause is specified, the query is always an aggregate query, even if no aggregations are present in the `SELECT` clause. The `HAVING` clause specifies filters to apply to aggregated data, `HAVING` clauses require a `GROUP BY` clause.
 
 ### ORDER BY / LIMIT / OFFSET clauses
 

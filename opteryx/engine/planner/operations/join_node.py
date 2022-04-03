@@ -31,6 +31,7 @@ from opteryx.third_party import pyarrow_ops
 from opteryx.engine.attribute_types import TOKEN_TYPES
 from opteryx.utils.columns import Columns
 from opteryx import config
+from opteryx.exceptions import SqlError
 
 def cartesian_product(*arrays):
     """
@@ -213,6 +214,26 @@ class JoinNode(BasePlanNode):
                     new_page = pyarrow_ops.inner_join(self._right_table, page, right_join_column, left_join_column)
                     new_page = new_metadata.apply(new_page)
                     yield new_page
+
+        elif self._join_type == "LeftOuter":
+
+                right_columns = Columns(self._right_table)
+                left_columns = None
+                right_join_column = right_columns.get_column_from_alias(self._on[2][0], only_one=True)
+
+                for page in data_pages:
+
+                    if left_columns is None:
+                        left_columns = Columns(page)
+                        left_join_column = left_columns.get_column_from_alias(self._on[0][0], only_one=True)
+                        new_metadata = right_columns + left_columns
+
+                    new_page = pyarrow_ops.left_join(self._right_table, page, right_join_column, left_join_column)
+                    new_page = new_metadata.apply(new_page)
+                    yield new_page
+
+        else:
+            raise SqlError(f"Unsupported Join type, {self._join.type}")
 
 if __name__ == "__main__":
 
