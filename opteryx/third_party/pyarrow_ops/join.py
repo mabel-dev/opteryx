@@ -105,8 +105,19 @@ def left_join(left, right, left_on, right_on):
     # this sets the values at the positions in rinv to the begin indexes of the groups
     rbic[rinv] = rbi
 
-    # Perform cjoin
-    left_align = []
-    right_align = []
+    rows = len(l_array) * len(r_array)
+    left_align, right_align = np.empty(rows, dtype=np.int64), np.empty(rows, dtype=np.int64)
+
+    li = 0
+    ri = 0
+    p = 0
+
+    while p < len(l_distinct):
+
+        l_val = l_distinct[p]
+        if l_val not in r_distinct:
+            left_align[p] = 
+
+        p += 1
 
     return align_tables(left, right, left_align, right_align)
