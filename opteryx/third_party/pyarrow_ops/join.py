@@ -1,6 +1,7 @@
 import numpy as np
 from .helpers import columns_to_array, groupify_array
 from cjoin import inner_join as cinner_join
+from cjoin import left_join as cleft_join
 
 
 def align_tables(t1, t2, l1, l2):
@@ -108,16 +109,14 @@ def left_join(left, right, left_on, right_on):
     rows = len(l_array) * len(r_array)
     left_align, right_align = np.empty(rows, dtype=np.int64), np.empty(rows, dtype=np.int64)
 
-    li = 0
-    ri = 0
-    p = 0
-
-    while p < len(l_distinct):
-
-        l_val = l_distinct[p]
-        if l_val not in r_distinct:
-            left_align[p] = 
-
-        p += 1
+    # Perform cjoin
+    left_align, right_align = cleft_join(
+        l_sort_idxs.astype(np.int64),
+        r_sort_idxs.astype(np.int64),
+        lcc.astype(np.int64),
+        rcc.astype(np.int64),
+        lbic.astype(np.int64),
+        rbic.astype(np.int64),
+    )
 
     return align_tables(left, right, left_align, right_align)

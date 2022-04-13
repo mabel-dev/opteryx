@@ -6,5 +6,5 @@ env_path = Path(".") / ".env"
 dotenv.load_dotenv(dotenv_path=env_path)
 
 
-INTERNAL_BATCH_SIZE: int = int(os.environ.get("INTERNAL_BATCH_SIZE", 100))
+INTERNAL_BATCH_SIZE: int = int(os.environ.get("INTERNAL_BATCH_SIZE", 500))
 

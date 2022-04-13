@@ -66,7 +66,7 @@ def filters(table, filters):
             _get_values(table, left_op), op, _get_values(table, right_op)
         )
         idxs = idxs[f_idxs]
-    return table.take(idxs)
+    return table.take(idxs, boundscheck=False)
 
 
 def ifilters(table, filters):
