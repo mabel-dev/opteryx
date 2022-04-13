@@ -21,12 +21,12 @@ SELECT *
 
 This technique is well suited to viewing snapshotted datasets from a previoud point in time. 
 
-Mercury was discovered in 1886 and Pluto was discovered in 1924, we could use the `FOR` clause to query the $planets relation from before that date like this
+Uranus was discovered in 1846 and Pluto was discovered in 1930, we could use the `FOR` clause to query the $planets relation from before that date like this
 
 ~~~sql
 SELECT name
   FROM $planets
-   FOR '1924-01-01';
+   FOR '1846-11-12';
 ~~~
 
 Which would return
@@ -40,9 +40,7 @@ Earth
 Mars
 Jupiter
 Saturn
-Uranus
 Neptune
-Pluto
 ~~~
 
 !!! note
