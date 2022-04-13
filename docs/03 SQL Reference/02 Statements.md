@@ -1,6 +1,6 @@
 # SQL Statements
 
-Opteryx aims to be a ANSI SQL compliant query engine. This standard compliance allows Opteryx users to quickly understand how to query data and enables easier porting of SQL between query engines and databases.
+Opteryx targets ANSI SQL compliant syntax. This standard alignment allows Opteryx users to quickly understand how to query data and enables easier porting of SQL between query engines and databases.
 
 ## EXPLAIN
 
@@ -37,15 +37,22 @@ LIMIT n
 SELECT [ DISTINCT ] expression [, ...]
 ~~~
 
-The `SELECT` clause specifies the list of columns that will be returned by the query. While it appears first in the clause, logically the expressions here are executed only at the end. The `SELECT` clause can contain arbitrary expressions that transform the output, as well as aggregate functions.
+The `SELECT` clause specifies the list of columns that will be returned by the query. While it appears first in the clause, logically the expressions here are executed after most other clauses. The `SELECT` clause can contain arbitrary expressions that transform the output, as well as aggregate functions.
 
 The `DISTINCT` quantifier is specified, only unique rows are included in the result set. In this case, each output column must be of a type that allows comparison.
 
 ### FROM / JOIN clauses
 
+~~~
+FROM relation [, ...]
+~~~
+~~~
+FROM relation [ INNER | CROSS | LEFT [ OUTER ] ] JOIN relation [ USING (column) | ON condition ]
+~~~ 
+
 The `FROM` clause specifies the source of the data on which the remainder of the query should operate. Logically, the `FROM` clause is where the query starts execution. The `FROM` clause can contain a single relation, a combination of multiple relations that are joined together, or another `SELECT` query inside a subquery node.
 
-`JOIN` clauses allow you to combine data from multiple relations.
+`JOIN` clauses allow you to combine data from multiple relations. If no `JOIN` qualifier is provided, `INNER` will be used. `JOIN` qualifiers are mutually exclusive. `ON` and `USING` clauses are also mutually exclusive and can only be used with `INNER` and `LEFT` joins.
 
 ### FOR clause
 
@@ -89,7 +96,8 @@ LIMIT count
 List the columns in a relation along with their data type.
 
 ~~~sql
-SHOW COLUMNS FROM relation
+SHOW COLUMNS
+FROM relation
 LIKE pattern
 WHERE condition
 ~~~
@@ -100,7 +108,4 @@ Specify a pattern in the optional `LIKE` clause to filter the results to the des
 
 ### WHERE clause
 
-The `WHERE` clause specifies any filters to apply to the data. This allows you to select only a subset of the data in which you are interested.
-
-!!! note
-    Only one of `LIKE` and `WHERE` can be used in the same statement.
+The `WHERE` clause specifies any filters to apply to the data. This allows you to select only a subset of the data in which you are interested. Only one of `LIKE` and `WHERE` can be used in the same statement.

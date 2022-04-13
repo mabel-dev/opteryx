@@ -1,8 +1,8 @@
-# Working with Virtual Tables
+# Virtual Relations
 
-## Creating Virtual Tables
+## Creating Virtual Relations
 
-### Creating with `VALUES`
+### Using `VALUES`
 
 `VALUES` allows you to create a multicolumn table.
 
@@ -16,7 +16,7 @@ SELECT *
     ) AS ratings (name, rating)
 ~~~
 
-### Creating with `UNNEST`
+### Using `UNNEST`
 
 `UNNEST` allows you to create a single column table either as a list of literals, or from a column of LIST type in a dataset.
 
@@ -24,6 +24,3 @@ SELECT *
 SELECT * 
   FROM UNNEST((True, False)) AS Booleans
 ~~~
-
-## Querying Virtual Tables
-

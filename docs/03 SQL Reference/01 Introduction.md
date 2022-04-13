@@ -4,19 +4,19 @@
 
 This page provides an overview of how to perform simple operations in SQL. This tutorial is only intended to give you an introduction and is not a complete tutorial on SQL. This tutorial is reworked from the [DuckDB](https://duckdb.org/docs/sql/introduction) tutorial.
 
-All queries in the online documentation for Opteryx use the internal sample NASA datasets, so will work regardless of what data your installation and set up has access to.
+All queries use the internal sample NASA datasets and should work regardless of the data your installation and set up has access to.
 
 ## Concepts
 
 Opteryx is a system for querying ad hoc data stored in files as [relations](https://en.wikipedia.org/wiki/Relation_(database)). A relation is mathematical term for a data table.
 
-Each table is a named collection of rows, organized in columns, each column should be a common datatype. 
+Each relation is a named collection of rows, organized in columns, each column should be a common datatype. 
 
-As an ad hoc query engine, the tables and their schema do not need to be predefined, they are determined at the time the query is run. For this reason, Opteryx cannot be considered a RDBMS (relational database management system), even though it can be used to query data using SQL.
+As an ad hoc query engine, the relations and their schema do not need to be predefined, they are determined at the time the query is run. This is one of the reasons Opteryx cannot be considered a RDBMS (relational database management system), even though it can be used to query data using SQL.
 
-## Querying Tables
+## Querying Relations
 
-To retrieve data from a table, the table is queried using a SQL `SELECT` statement. Basic statements are made of three parts; the list of columns to be returned and the list of tables to retreive data from, and an optional part to filter the data that is returned.
+To retrieve data from a relation, the relation is queried using a SQL `SELECT` statement. Basic statements are made of three parts; the list of columns to be returned and the list of relations to retreive data from, and optional clauses to shape and filter the data that is returned.
 
 ~~~sql
 SELECT *
@@ -71,15 +71,15 @@ SELECT *
 Result:
 
 ~~~
-name	| lengthOfDay | numberOfMoons
+name  	| lengthOfDay | numberOfMoons
 --------+-------------+---------------
 Mercury	|      4222.6 |             0
-Venus	|        2802 |             0
-Mars	|        24.7 |             2
-Pluto	|       153.3 |             5
+Venus 	|        2802 |             0
+Mars  	|        24.7 |             2
+Pluto 	|       153.3 |             5
 ~~~
 
-The order of results are not guarnanteed, if you request the results of the below query, you might get the Mercury or Venus in either order:
+The order of results are not guarnanteed and should not be relied upon. If you request the results of the below query, you might get the Mercury or Venus in either order, although the same query in the same version of Opteryx will likely to return results in the same order. In other words, don't expect to test this by rerunning the query millions of times and looking for differences.
 
 ~~~sql
 SELECT name,
@@ -91,10 +91,10 @@ SELECT name,
 Result:
 
 ~~~
-name	| lengthOfDay | numberOfMoons
+name  	| lengthOfDay | numberOfMoons
 --------+-------------+---------------
 Mercury	|      4222.6 |             0
-Venus	|        2802 |             0
+Venus   |        2802 |             0
 ~~~
 
 But you’d always get the results shown above if you do:
@@ -136,12 +136,11 @@ SELECT DISTINCT planetId
  ORDER BY planetId;
 ~~~
 
------
+## Joins Between Relations
 
-## Joins Between Tables
-So far our queries have only accessed one table at a time. Queries can access multiple tables at once, or access the same table in such a way that multiple rows of the table are being processed at the same time. A query that accesses multiple rows of the same or different tables at one time is called a join query. 
+So far our queries have only accessed one relation at a time. Queries can access multiple relations at once, or access the same relation in such a way that multiple rows of the relation are being processed at the same time. A query that accesses multiple rows of the same or different relations at one time is called a join query. 
 
-As an example, say you wish to list all the satellite records together with the planet they orbit. To do that, we need to compare the planetId of each row of the $satellites table with the id column of all rows in the $planets table, and select the pairs of rows where these values match.
+As an example, say you wish to list all the $satellite records together with the planet they orbit. To do that, we need to compare the planetId of each row of the $satellites relation with the id column of all rows in the $planets relation, and select the pairs of rows where these values match.
 
 This would be accomplished by the following query:
 
@@ -165,39 +164,59 @@ $satellites.id | planetId | $satellites.name | ...
 
 Observe two things about the result set:
 
-There are no result row for the planets of Mercury or Venus (planetIds 1 and 2). This is because there is no matching entry in the $satellites table for these planets, so the join ignores the unmatched rows in the $planets table.
+There are no result row for the planets of Mercury or Venus (planetIds 1 and 2). This is because there is no matching entry in the $satellites relation for these planets, so the join ignores the unmatched rows in the $planets relation.
 
------
-<!---
-There are two columns containing the city name. This is correct because the lists of columns from the weather and cities tables are concatenated. In practice this is undesirable, though, so you will probably want to list the output columns explicitly rather than using *:
-SELECT city, temp_lo, temp_hi, prcp, date, lon, lat
-  FROM weather, cities
-  WHERE city = name;
-Since the columns all had different names, the parser automatically found which table they belong to. If there were duplicate column names in the two tables you’d need to qualify the column names to show which one you meant, as in:
+Each of the relations being joined have an 'id' and a 'name' column, tp ensure it is clear which relation the value being displayed is from, columns with clashing names are qualified with the relation name.
 
-SELECT weather.city, weather.temp_lo, weather.temp_hi,
-       weather.prcp, weather.date, cities.lon, cities.lat
-    FROM weather, cities
-    WHERE cities.name = weather.city;
-It is widely considered good style to qualify all column names in a join query, so that the query won’t fail if a duplicate column name is later added to one of the tables.
+To avoid abiguity and problems in the future if new columns are added to relations, it is good practice to qualify column names in join conditions:
+
+~~~sql
+SELECT *
+  FROM $satellites, $planets
+ WHERE $satellites.planetId = $planets.id;
+~~~
+
+Will return the same result as above, but be more resistant to future failure.
 
 Join queries of the kind seen thus far can also be written in this alternative form:
 
+~~~sql
 SELECT *
-    FROM weather INNER JOIN cities ON (weather.city = cities.name);
-This syntax is not as commonly used as the one above, but we show it here to help you understand the following topics.
+  FROM $satellites 
+ INNER JOIN $planets 
+         ON $satellites.planetId = $planets.id;
+~~~
 
-Now we will figure out how we can get the Hayward records back in. What we want the query to do is to scan the weather table and for each row to find the matching cities row(s). If no matching row is found we want some “empty values” to be substituted for the cities table’s columns. This kind of query is called an outer join. (The joins we have seen so far are inner joins.) The command looks like this:
+The Opteryx planner currently uses a different execution strategy for these two similar queriesd the explicit `INNER JOIN` style generally executes faster.
 
+Now we will figure out how we can get the Mercury and Venus records back in. What we want the query to do is to scan the $planets relation and for each row to find the matching $satellites row(s). If no matching row is found we want some “empty values” to be substituted for the $satellites relations columns. This kind of query is called an outer join. (The joins we have seen so far are inner joins and cross joins.) The command looks like this:
+
+~~~sql
 SELECT *
-    FROM weather LEFT OUTER JOIN cities ON (weather.city = cities.name);
-     city      | temp_lo | temp_hi | prcp |    date    |     name      | lon | lat
----------------+---------+---------+------+------------+---------------+-----+----
- San Francisco |      46 |      50 | 0.25 | 1994-11-27 | San Francisco | -194| 53
- San Francisco |      43 |      57 |    0 | 1994-11-29 | San Francisco | -194| 53
- Hayward       |      37 |      54 |      | 1994-11-29 |               |     |
-(3 rows)
-This query is called a left outer join because the table mentioned on the left of the join operator will have each of its rows in the output at least once, whereas the table on the right will only have those rows output that match some row of the left table. When outputting a left-table row for which there is no right-table match, empty (null) values are substituted for the right-table columns.
+  FROM $satellites 
+ LEFT OUTER JOIN $planets 
+         ON $satellites.planetId = $planets.id;
+~~~
+  
+~~~
+$satellites.id | planetId | $satellites.name | ...
+---------------+----------+------------------+----
+               |        1 |                  |
+               |        2 |                  |
+             1 |        3 | Moon             |
+             2 |        4 | Phobos           |
+             3 |        4 | Deimos           |
+             4 |        5 | Io               |
+             5 |        5 | Europa           |
+
+(more rows and columns)
+~~~
+
+This query is called a left outer join because the relation mentioned on the left of the join operator will have each of its rows in the output at least once, whereas the relation on the right will only have those rows output that match some row of the left relation. When outputting a left-relation row for which there is no right-relation match, empty (null) values are substituted for the right-relation columns. Note that how null values are displayed may be different between different systes.
+
+
+<!---
+
 
 Aggregate Functions
 Like most other relational database products, DuckDB supports aggregate functions. An aggregate function computes a single result from multiple input rows. For example, there are aggregates to compute the count, sum, avg (average), max (maximum) and min (minimum) over a set of rows.

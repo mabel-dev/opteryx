@@ -1,5 +1,7 @@
 # SQL Data Types
 
+Opteryx uses a reduced set of types compared to full RDBMS platforms.
+
 ## Types
 
 Name        | Description
@@ -21,4 +23,4 @@ Values can be cast using the `CAST` function, its form is `CAST(any AS type)`.
 
 ## Coercion
 
-Literal values in quotes may in interpretted as a `TIMESTAMP` when they match a valid date in ISO1806 format (e.g. `YYYY-MM-DD` and `YYYY-MM-DD HH:MM`).
+Literal values in quotes may be in interpretted as a `TIMESTAMP` when they match a valid date in ISO 8601 format (e.g. `YYYY-MM-DD` and `YYYY-MM-DD HH:MM`).

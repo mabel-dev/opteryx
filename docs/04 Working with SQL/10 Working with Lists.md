@@ -5,18 +5,20 @@ In Opteryx a list is an ordered collection of zero or more values of the same da
 ## Accessing List Elements
 
 `list[index]`
+`MAP(list, index)`
 
-## Testing Lists
+## List Containment
+
+### Operators
 
 `IN`
 
-## Finding Lengths
+### Functions
 
-`LENGTH(list)`
+`LIST_CONTAINS`
+`LIST_CONTAINS_ANY`
+`LIST_CONTAINS_ALL`
 
-## Converting Lists to Tables
+## Converting Lists to Relations
 
 `UNNEST(list) AS column_name`
-
-## Using Lists
-

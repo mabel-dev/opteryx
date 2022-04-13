@@ -27,8 +27,6 @@ USE THE ZONEMAP:
 PARALLELIZE READING:
 - As one blob is read, the next is immediately cached for reading
 """
-from ast import alias
-from curses import meta
 import time
 import datetime
 from enum import Enum
