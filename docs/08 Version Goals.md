@@ -9,7 +9,7 @@ Work to do before release:
 - [ ] [General] Improvements to error messages
 - [ ] [Caching] Memcached buffer pool (read-aside caching), this should include hit/miss statistics
 - [ ] [Planner] Reader should support mabel `by_` segments (basic support)
-- [ ] [Operations] `LEFT JOIN`
+- [X] [Operations] `LEFT JOIN`
 - [ ] [Bug] `AS` clauses should be respected
 - [ ] [Bug] `FOR` syntax should align to T-SQL
 
