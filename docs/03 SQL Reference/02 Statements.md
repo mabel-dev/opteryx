@@ -22,6 +22,9 @@ SELECT select_list
 FROM relation
   INNER JOIN relation
   CROSS JOIN relation
+  LEFT OUTER JOIN relation
+    ON condition
+    USING (column)
 FOR period
 WHERE condition
 GROUP BY groups
