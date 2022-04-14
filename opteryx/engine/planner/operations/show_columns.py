@@ -40,7 +40,7 @@ class ShowColumnsNode(BasePlanNode):
     def execute(self, data_pages: Iterable) -> Iterable:
         
         if not isinstance(data_pages, Table):
-            data_pages = next(data_pages, None)
+            data_pages = next(data_pages, None)  # type:ignore
 
         if data_pages is None:
             return None

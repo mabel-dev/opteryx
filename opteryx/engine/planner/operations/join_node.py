@@ -233,7 +233,7 @@ class JoinNode(BasePlanNode):
                 yield new_page
 
         else:
-            raise SqlError(f"Unsupported Join type, {self._join.type}")
+            raise SqlError(f"Unsupported Join type, {self._join_type}")
 
 if __name__ == "__main__":
 
