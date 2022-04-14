@@ -33,7 +33,7 @@ h1 {
     font-weight: 500 !important;
     font-size: 38px !important;
     margin-bottom: 0.7em !important;
-    color: #0000008A !important;
+    color: #333 !important;
 }
 
 h2 {
@@ -42,7 +42,7 @@ h2 {
     font-size: 30px !important;
     margin-bottom: 0.7em !important;
     margin-top: 0.5em !important;
-    color: #0000008A !important;
+    color: #333 !important;
 }
 
 h3 {
@@ -51,7 +51,7 @@ h3 {
     font-size: 22px !important;
     margin-bottom: 0.7em !important;
     margin-top: 0.5em !important;
-    color: #0000008A !important;
+    color: #333 !important;
 }
 
 h4 {
@@ -60,5 +60,5 @@ h4 {
     font-size: 20px !important;
     margin-bottom: 0.7em !important;
     margin-top: 0.5em !important;
-    color: #0000008A !important;
+    color: #333 !important;
 }
