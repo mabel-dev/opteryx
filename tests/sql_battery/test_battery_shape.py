@@ -23,7 +23,8 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 import opteryx
 import pytest
 from opteryx.storage.adapters import DiskStorage
-from opteryx.third_party.pyarrow_ops import head
+from opteryx.utils.arrow import fetchmany
+from opteryx.utils.display import ascii_table
 import pyarrow
 
 # fmt:off
@@ -233,6 +234,10 @@ STATEMENTS = [
         ("SELECT DISTINCT planetId FROM $satellites LEFT JOIN $planets ON $satellites.planetId = $planets.id", 8, 1),
         ("SELECT planetId FROM $satellites LEFT JOIN $planets ON $satellites.planetId = $planets.id", 179, 1),
 
+        ("SELECT pid FROM ( SELECT id AS pid FROM $planets) WHERE pid > 5", 4, 1),
+        ("SELECT * FROM ( SELECT id AS pid FROM $planets) WHERE pid > 5", 4, 1),
+        ("SELECT * FROM ( SELECT COUNT(planetId) AS moons, planetId FROM $satellites GROUP BY planetId) WHERE moons > 10", 4, 2),
+
         # These are queries which have been found to return the wrong result or not run
         # correctly
         ("SELECT * FROM $satellites FOR YESTERDAY ORDER BY planetId OFFSET 10", 167, 8),
@@ -261,10 +266,10 @@ def test_sql_battery(statement, rows, columns):
 
     assert (
         rows == actual_rows
-    ), f"Query returned {actual_rows} rows but {rows} were expected, {statement}, {head(result)}"
+    ), f"Query returned {actual_rows} rows but {rows} were expected, {statement}\n{ascii_table(fetchmany(result, limit=10))}"
     assert (
         columns == actual_columns
-    ), f"Query returned {actual_columns} cols but {columns} were expected, {statement}, {head(result)}"
+    ), f"Query returned {actual_columns} cols but {columns} were expected, {statement}\n{ascii_table(fetchmany(result, limit=10))}"
 
 
 if __name__ == "__main__":

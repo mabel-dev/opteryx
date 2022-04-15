@@ -130,6 +130,7 @@ AS employees (EMPNO, ENAME, JOB, MGR, HIREDATE, SAL, COMM, DEPTNO);
     SQL = "show columns from $satellites LIKE '%id' WHERE column_name = 'id'"
     SQL = " SELECT DISTINCT planetId FROM $satellites LEFT OUTER JOIN $planets ON $satellites.planetId = $planets.id"
 #    SQL = "SELECT distinct planetId FROM $planets left JOIN $satellites ON $planets.id = $satellites.planetId"
+    SQL = "SELECT name as nom from $planets"
 
     _, _, SQL = extract_temporal_filters(SQL)
     ast = sqloxide.parse_sql(SQL, dialect="mysql")

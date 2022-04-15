@@ -71,8 +71,6 @@ class ProjectionNode(BasePlanNode):
 
     def execute(self, data_pages: Iterable) -> Iterable:
 
-        from opteryx.utils import arrow
-
         if isinstance(data_pages, pyarrow.Table):
             data_pages = [data_pages]
 
@@ -97,16 +95,13 @@ class ProjectionNode(BasePlanNode):
 
             page = page.select(projection)  # type:ignore
 
-
             # then we rename the attributes
             if any([v is not None for k, v in self._projection.items()]):  # type:ignore
-                names = []
                 existing_columns = page.column_names
                 for k, v in self._projection.items():
                     if v and v not in existing_columns:
-                        names.append(v)
-                    elif k in existing_columns:
-                        names.append(k)
-                page = page.rename_columns(names)
+                        column_name = columns.get_column_from_alias(k, only_one=True)
+                        columns.set_preferred_name(column_name, v)
+                page = columns.apply(page)
 
             yield page

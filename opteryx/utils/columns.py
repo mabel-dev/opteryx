@@ -68,6 +68,8 @@ class Columns(object):
 
     def set_preferred_name(self, column, preferred_name):
         self._column_metadata[column]["preferred_name"] = preferred_name
+        if preferred_name not in self._column_metadata[column]["aliases"]:
+            self._column_metadata[column]["aliases"].append(preferred_name)
 
     def add_alias(self, column, alias):
         self._column_metadata[column]["aliases"].append(alias)
@@ -83,6 +85,8 @@ class Columns(object):
     def apply(self, table):
         column_names = [self.get_column_from_alias(c) or [c] for c in table.column_names]
         column_names = [item for sublist in column_names for item in sublist]
+
+        self._column_metadata = { c:m for c,m in self._column_metadata.items() if c in column_names }
 
         table = table.rename_columns(column_names)
         return arrow.set_metadata(table, table_metadata=self._table_metadata, column_metadata=self._column_metadata)

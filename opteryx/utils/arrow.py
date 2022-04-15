@@ -1,6 +1,4 @@
-from itertools import chain
 from typing import Iterable, List
-
 from opteryx.utils.columns import Columns
 
 
@@ -88,6 +86,8 @@ def set_metadata(table, table_metadata=None, column_metadata=None):
                 # Get updated column metadata
                 metadata = col.metadata or {}
                 for k, v in column_metadata[name].items():
+                    if isinstance(k, str):
+                        k = k.encode()
                     metadata[k] = orjson.dumps(v)
                 # Update field with updated metadata
                 fields.append(col.with_metadata(metadata))
