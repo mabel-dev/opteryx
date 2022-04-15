@@ -236,7 +236,7 @@ STATEMENTS = [
 
         ("SELECT pid FROM ( SELECT id AS pid FROM $planets) WHERE pid > 5", 4, 1),
         ("SELECT * FROM ( SELECT id AS pid FROM $planets) WHERE pid > 5", 4, 1),
-        ("SELECT * FROM ( SELECT COUNT(planetId) AS moons, planetId FROM $satellites GROUP BY planetId) WHERE moons > 10", 4, 2),
+        ("SELECT * FROM ( SELECT COUNT(planetId) AS moons, planetId FROM $satellites GROUP BY planetId ) WHERE moons > 10", 4, 2),
 
         # These are queries which have been found to return the wrong result or not run
         # correctly
