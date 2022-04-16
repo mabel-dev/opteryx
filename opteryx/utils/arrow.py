@@ -6,6 +6,9 @@ def fetchmany(pages, limit: int = 1000):
 
     from pyarrow import Table
 
+    if pages is None:
+        return []
+
     if isinstance(pages, Table):
         pages = [pages]
 
@@ -120,7 +123,7 @@ def _decode_metadata(metadata):
 
     if not metadata:
         # None or {} are not decoded
-        return metadata
+        return {}
 
     decoded = {}
     for k, v in metadata.items():

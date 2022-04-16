@@ -21,6 +21,7 @@ from typing import Iterable
 from pyarrow import concat_tables, Table
 from opteryx.engine.query_statistics import QueryStatistics
 from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
+from opteryx.exceptions import SqlError
 from opteryx.utils.columns import Columns
 
 class SortNode(BasePlanNode):
@@ -44,9 +45,41 @@ class SortNode(BasePlanNode):
 
         table = concat_tables(data_pages)
         columns = Columns(table)
+        need_to_remove_random = False
 
         self._mapped_order = []
         for column, direction in self._order:
-            self._mapped_order.append((columns.get_column_from_alias(column, only_one=True), direction,))
 
-        yield table.sort_by(self._mapped_order)
+            # function references aere recorded as dictionaries
+            if isinstance(column, dict):
+
+                # we only have special handling for RANDOM at the moment
+                if column["alias"] != "RANDOM()":
+                    if len(columns.get_column_from_alias(column["alias"])) == 0:
+                        raise SqlError("ORDER BY can only reference functions used in the SELECT clause, or RANDOM()")
+                    
+                    self._mapped_order.append((columns.get_column_from_alias(column["alias"], only_one=True), direction,))
+                else:
+                    from opteryx.engine.functions import FUNCTIONS
+                    import pyarrow
+
+                    # this currently only supports zero parameter functions
+                    calculated_values = FUNCTIONS[column["function"]](*[table.num_rows])
+
+                    table = pyarrow.Table.append_column(
+                        table, column["alias"], calculated_values
+                    )
+                    # we add it to sort, but it's not in the SELECT so we shouldn't return it
+                    need_to_remove_random = True
+
+                    self._mapped_order.append((column["alias"], direction,))
+
+            else:
+                self._mapped_order.append((columns.get_column_from_alias(column, only_one=True), direction,))
+
+        table = table.sort_by(self._mapped_order)
+
+        if need_to_remove_random:
+            table = table.drop(["RANDOM()"])
+
+        yield table

@@ -27,9 +27,12 @@ from opteryx.utils.dates import parse_iso
 def get_random():
     import os
 
-    min, max = 0, 999
+    min, max = 0, 1000
     random_int = int.from_bytes(os.urandom(2), "big")
-    return (random_int % ((max + 1) - min)) + min
+    try:
+        return ((random_int % ((max + 1) - min)) + min) / 1000
+    except:
+        return 0
 
 
 def concat(*items):

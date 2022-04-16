@@ -216,8 +216,5 @@ class SelectionNode(BasePlanNode):
                     columns = Columns(page)
                     self._mapped_filter = _map_columns(self._unfurled_filter, columns)
 
-                #print(page.column_names)
-                #print(get_columns_from_aliases(page, ["s.id", "$satellites.gm"]))
-
                 mask = _evaluate(self._mapped_filter, page)
                 yield page.take(mask)

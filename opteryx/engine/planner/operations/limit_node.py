@@ -48,4 +48,4 @@ class LimitNode(BasePlanNode):
             if row_count > self._limit:  # type:ignore
                 break
 
-        yield concat_tables(result_set).slice(0, self._limit)
+        yield concat_tables(result_set).slice(offset=0, length=self._limit)

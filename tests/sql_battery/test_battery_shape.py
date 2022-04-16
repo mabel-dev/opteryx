@@ -106,10 +106,12 @@ STATEMENTS = [
         
         ("SELECT DISTINCT planetId FROM $satellites", 7, 1),
         ("SELECT * FROM $satellites LIMIT 50", 50, 8),
+        ("SELECT * FROM $satellites LIMIT 0", 0, 8),
         ("SELECT * FROM $satellites OFFSET 150", 27, 8),
         ("SELECT * FROM $satellites LIMIT 50 OFFSET 150", 27, 8),
         ("SELECT * FROM $satellites LIMIT 50 OFFSET 170", 7, 8),
         ("SELECT * FROM $satellites ORDER BY name", 177, 8),
+        ("SELECT * FROM $satellites ORDER BY RANDOM()", 177, 8),
 
         ("SELECT MAX(planetId) FROM $satellites", 1, 1),
         ("SELECT MIN(planetId) FROM $satellites", 1, 1),
@@ -238,8 +240,7 @@ STATEMENTS = [
         ("SELECT * FROM ( SELECT id AS pid FROM $planets) WHERE pid > 5", 4, 1),
         ("SELECT * FROM ( SELECT COUNT(planetId) AS moons, planetId FROM $satellites GROUP BY planetId ) WHERE moons > 10", 4, 2),
 
-        # These are queries which have been found to return the wrong result or not run
-        # correctly
+        # These are queries which have been found to return the wrong result or not run correctly
         ("SELECT * FROM $satellites FOR YESTERDAY ORDER BY planetId OFFSET 10", 167, 8),
         ("SELECT DATE(Birth_Date) FROM $astronauts FOR TODAY WHERE DATE(Birth_Date) < '1930-01-01'", 14, 1),
         ("SELECT * FROM $planets FOR '2022-03-03' INNER JOIN $satellites ON $planets.id = $satellites.planetId", 177, 28),

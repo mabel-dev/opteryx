@@ -521,7 +521,8 @@ class QueryPlanner(object):
                         ((f"({','.join(a[0])})",) if isinstance(a[0], list) else a)
                         for a in args
                     ]
-                    column = f"{func}({','.join(args)})"
+                    alias = f"{func.upper()}({','.join([str(a[0]) for a in args])})"
+                    column = {"function": func, "args": args, "alias": alias}
                 orders.append(
                     (
                         column,
@@ -719,7 +720,8 @@ class QueryPlanner(object):
             last_node = "offset"
 
         _limit = self._extract_limit(ast)
-        if _limit:
+        # 0 limit is valid
+        if _limit is not None:
             self.add_operator("limit", LimitNode(statistics, limit=_limit))
             self.link_operators(last_node, "limit")
             last_node = "limit"
