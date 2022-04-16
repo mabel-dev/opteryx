@@ -132,6 +132,7 @@ AS employees (EMPNO, ENAME, JOB, MGR, HIREDATE, SAL, COMM, DEPTNO);
 #    SQL = "SELECT distinct planetId FROM $planets left JOIN $satellites ON $planets.id = $satellites.planetId"
     SQL = "SELECT name as nom from $planets"
     SQL = "SELECT a,b,round(a) FROM (VALUES (1,2),(3,4),(340,455)) AS t(a,b) limit 0"
+    SQL = "SELECT * FROM $astronauts WHERE Group = '10'"
 
     _, _, SQL = extract_temporal_filters(SQL)
     ast = sqloxide.parse_sql(SQL, dialect="mysql")
