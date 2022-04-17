@@ -76,9 +76,6 @@ OPERATOR_XLAT = {
     "NotILike": "not ilike",
     "InList": "in",
     "PGRegexMatch": "~",
-    # "Plus": "+",
-    # "Minus": "-",
-    # : "||"  # <- concatenate
 }
 
 

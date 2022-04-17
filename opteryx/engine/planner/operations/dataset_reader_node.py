@@ -260,7 +260,16 @@ class DatasetReaderNode(BasePlanNode):
                     )
                     metadata = Columns(pyarrow_blob)
                 else:
-                    pyarrow_blob = metadata.apply(pyarrow_blob)
+                    try:
+                        pyarrow_blob = metadata.apply(pyarrow_blob)
+                    except:
+
+                        self._statistics.read_errors += 1
+
+                        import pyarrow
+
+                        pyarrow_blob = pyarrow.Table.from_pydict(pyarrow_blob.to_pydict())
+                        pyarrow_blob = metadata.apply(pyarrow_blob)
 
                 # yield this blob
                 yield pyarrow_blob

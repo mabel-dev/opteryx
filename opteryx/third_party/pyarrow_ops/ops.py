@@ -16,7 +16,7 @@ def arr_op_to_idxs(arr, op, value):
         parquet_type = _get_type(arr)
         python_type = _get_type(value)
         if parquet_type != python_type:
-            raise TypeError(f"Type mismatch, unable to compare {parquet_type} ({arr.dtype}) with {python_type} ({type(value).__name__})")
+            raise TypeError(f"Type mismatch, unable to compare {parquet_type} with {python_type}")
         return np.where(arr == value)
     elif op in ["!=", "<>"]:
         return np.where(arr != value)
