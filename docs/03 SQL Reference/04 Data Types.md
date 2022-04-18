@@ -1,4 +1,4 @@
-# SQL Data Types
+# Data Types
 
 Opteryx uses a reduced set of types compared to full RDBMS platforms.
 

@@ -1,4 +1,4 @@
-# SQL Statements
+# Statements
 
 Opteryx targets ANSI SQL compliant syntax. This standard alignment allows Opteryx users to quickly understand how to query data and enables easier porting of SQL between query engines and databases.
 
