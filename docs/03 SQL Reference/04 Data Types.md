@@ -23,4 +23,10 @@ Values can be cast using the `CAST` function, its form is `CAST(any AS type)`.
 
 ## Coercion
 
+### Timestamps
+
 Literal values in quotes may be in interpretted as a `TIMESTAMP` when they match a valid date in ISO 8601 format (e.g. `YYYY-MM-DD` and `YYYY-MM-DD HH:MM`).
+
+### Numbers
+
+All numeric values are coerced to 64bit Floats.

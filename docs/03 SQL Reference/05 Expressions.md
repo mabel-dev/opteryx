@@ -1,4 +1,4 @@
-# SQL Expressions
+# Expressions
 
 ## Logical
 
@@ -50,5 +50,5 @@ SELECT name
  WHERE id NOT IN (
      SELECT DISTINCT planetId
        FROM $satellites
-    )
+    );
 ~~~

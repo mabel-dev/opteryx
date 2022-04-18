@@ -1,4 +1,4 @@
-# SQL Functions
+# Functions
 
 ## Numeric Functions
 

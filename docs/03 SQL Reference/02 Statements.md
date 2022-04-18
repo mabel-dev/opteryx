@@ -59,6 +59,13 @@ The `FROM` clause specifies the source of the data on which the remainder of the
 
 ### FOR clause
 
+~~~
+FOR date
+~~~
+~~~
+FOR DATES BETWEEN date and date
+~~~
+
 The `FOR` clause is a non ANSI SQL extention which filters data by the date it was recorded for.
 
 ### WHERE clause

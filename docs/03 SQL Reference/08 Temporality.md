@@ -1,4 +1,4 @@
-# SQL Temporality
+# Temporality
 
 Partition schemes that supports temporal queries allow you to view data from a different time by using a `FOR` clause in the SQL statement. `FOR` clauses state the date, or date range, a query should retrieve results for.
 
