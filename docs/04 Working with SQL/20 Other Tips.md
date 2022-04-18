@@ -7,5 +7,5 @@ Order by `RANDOM`
 ~~~sql
 SELECT *
   FROM $planets
- ORDER BY RANDOM()
+ ORDER BY RANDOM();
 ~~~

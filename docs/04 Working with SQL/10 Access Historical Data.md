@@ -16,7 +16,7 @@ You can query dates or date ranges using a `FOR` clause in your query. For examp
 ~~~sql
 SELECT *
   FROM $planets
-   FOR YESTERDAY
+   FOR YESTERDAY;
 ~~~
 
 This technique is well suited to viewing snapshotted datasets from a previoud point in time. 

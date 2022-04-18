@@ -13,7 +13,7 @@ SELECT *
       VALUES ('High', 3),
              ('Medium', 2),
              ('Low', 1)
-    ) AS ratings (name, rating)
+    ) AS ratings (name, rating);
 ~~~
 
 ### Using `UNNEST`
@@ -22,5 +22,5 @@ SELECT *
 
 ~~~sql
 SELECT * 
-  FROM UNNEST((True, False)) AS Booleans
+  FROM UNNEST((True, False)) AS Booleans;
 ~~~
