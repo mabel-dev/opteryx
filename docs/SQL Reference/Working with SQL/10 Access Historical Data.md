@@ -1,4 +1,4 @@
-# Access Historical Data
+# Accessing Historical Data
 
 Opteryx lets you access Mabel partitioned data as at date or date range in the past.
 
