@@ -21,9 +21,9 @@ SELECT *
 Result:
 
 ~~~
- name	  | rating
+ name   | rating
 --------+--------
- High	  |      3
+ High   |      3
  Medium |      2
  Low    |      1
 ~~~
