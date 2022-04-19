@@ -13,12 +13,12 @@ def _get_type(var):
 # Filter functionality
 def arr_op_to_idxs(arr, op, value):
     if op in ["=", "=="]:
-        if value is None:
+        parquet_type = _get_type(arr)
+        if value is None and parquet_type == TOKEN_TYPES.NUMERIC:
             # Nones are stored as NaNs, so perform a different test
             return numpy.where(numpy.isnan(arr))
-        parquet_type = _get_type(arr)
         python_type = _get_type(value)
-        if parquet_type != python_type:
+        if parquet_type != python_type and value is not None:
             raise TypeError(f"Type mismatch, unable to compare {parquet_type} with {python_type}")
         return numpy.where(arr == value)
     elif op in ["!=", "<>"]:

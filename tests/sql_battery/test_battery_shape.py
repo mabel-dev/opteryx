@@ -249,6 +249,7 @@ STATEMENTS = [
         ("SELECT * FROM $planets WHERE id = -1 ORDER BY id", 0, 20),
         ("SELECT * FROM $planets WHERE id = -1 LIMIT 10", 0, 20),
         ("SELECT * FROM $satellites LEFT JOIN $planets ON $satellites.planetId = $planets.id WHERE planetId = NONE", 2, 28),
+        ("SELECT * FROM $satellites LEFT JOIN $planets ON $satellites.planetId = $planets.id WHERE $satellites.name = NONE", 2, 28),
     ]
 # fmt:on
 

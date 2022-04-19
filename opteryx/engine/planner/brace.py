@@ -133,7 +133,7 @@ AS employees (EMPNO, ENAME, JOB, MGR, HIREDATE, SAL, COMM, DEPTNO);
     SQL = "SELECT name as nom from $planets"
     SQL = "SELECT a,b,round(a) FROM (VALUES (1,2),(3,4),(340,455)) AS t(a,b) limit 0"
     SQL = "SELECT * FROM $satellites PIVOT( COUNT(planetId) FOR planetId IN (1,2,3,4) )"
-    SQL = "SELECT * FROM $satellites LEFT JOIN $planets ON $satellites.planetId = $planets.id WHERE planetId = NONE"
+    SQL = "SELECT * FROM $satellites LEFT JOIN $planets ON $satellites.planetId = $planets.id WHERE $satellites.name = NONE"
 
     _, _, SQL = extract_temporal_filters(SQL)
     ast = sqloxide.parse_sql(SQL, dialect="mysql")

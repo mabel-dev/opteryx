@@ -120,7 +120,7 @@ class Columns(object):
     def create_table_metadata(table, expected_rows, name, table_aliases):
         
         # we're going to replace the column names with random strings
-        def random_string(length: int = 32) -> str:
+        def random_string(length: int = 16) -> str:
             import os
             import base64
             # we're creating a series of random bytes, 3/4 the length
