@@ -240,10 +240,14 @@ STATEMENTS = [
         ("SELECT * FROM ( SELECT id AS pid FROM $planets) WHERE pid > 5", 4, 1),
         ("SELECT * FROM ( SELECT COUNT(planetId) AS moons, planetId FROM $satellites GROUP BY planetId ) WHERE moons > 10", 4, 2),
 
+        ("SELECT * FROM $planets WHERE id = -1", 0, 20),
+
         # These are queries which have been found to return the wrong result or not run correctly
         ("SELECT * FROM $satellites FOR YESTERDAY ORDER BY planetId OFFSET 10", 167, 8),
         ("SELECT DATE(Birth_Date) FROM $astronauts FOR TODAY WHERE DATE(Birth_Date) < '1930-01-01'", 14, 1),
         ("SELECT * FROM $planets FOR '2022-03-03' INNER JOIN $satellites ON $planets.id = $satellites.planetId", 177, 28),
+        ("SELECT * FROM $planets WHERE id = -1 ORDER BY id", 0, 20),
+        ("SELECT * FROM $planets WHERE id = -1 LIMIT 10", 0, 20),
     ]
 # fmt:on
 

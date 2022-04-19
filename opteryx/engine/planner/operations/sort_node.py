@@ -43,6 +43,12 @@ class SortNode(BasePlanNode):
         if isinstance(data_pages, Table):
             data_pages = [data_pages]
 
+        data_pages = list(data_pages)
+
+        if len([page for page in data_pages if page.num_rows > 0]):
+            yield data_pages[0]
+            return
+
         table = concat_tables(data_pages)
         columns = Columns(table)
         need_to_remove_random = False
