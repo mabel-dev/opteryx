@@ -45,7 +45,7 @@ class SortNode(BasePlanNode):
 
         data_pages = list(data_pages)
 
-        if len([page for page in data_pages if page.num_rows > 0]):
+        if len([page for page in data_pages if page.num_rows == 0]):
             yield data_pages[0]
             return
 

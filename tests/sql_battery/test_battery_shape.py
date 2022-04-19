@@ -207,6 +207,7 @@ STATEMENTS = [
         ("SELECT * FROM tests.data.dated FOR DATES BETWEEN '2020-02-01' AND '2020-02-28' OFFSET 1", 49, 8),
         ("SELECT * FROM tests.data.dated FOR DATES BETWEEN '2020-02-01' AND today OFFSET 1", 49, 8),
         ("SELECT * FROM tests.data.dated FOR YESTERDAY OFFSET 1", 0, 0),
+        ("SELECT * FROM $satellites FOR YESTERDAY ORDER BY planetId OFFSET 10", 167, 8),
 
         ("SELECT Missions FROM $astronauts WHERE LIST_CONTAINS(Missions, 'Apollo 8')", 3, 1),
         ("SELECT Missions FROM $astronauts WHERE LIST_CONTAINS_ANY(Missions, ('Apollo 8', 'Apollo 13'))", 5, 1),
@@ -243,13 +244,18 @@ STATEMENTS = [
         ("SELECT * FROM $planets WHERE id = -1", 0, 20),
 
         # These are queries which have been found to return the wrong result or not run correctly
-        ("SELECT * FROM $satellites FOR YESTERDAY ORDER BY planetId OFFSET 10", 167, 8),
+        # FILTERING ON FUNCTIONS
         ("SELECT DATE(Birth_Date) FROM $astronauts FOR TODAY WHERE DATE(Birth_Date) < '1930-01-01'", 14, 1),
+        # ORDER OF CLAUSES
         ("SELECT * FROM $planets FOR '2022-03-03' INNER JOIN $satellites ON $planets.id = $satellites.planetId", 177, 28),
+        # ZERO RECORD RESULT SETS
         ("SELECT * FROM $planets WHERE id = -1 ORDER BY id", 0, 20),
         ("SELECT * FROM $planets WHERE id = -1 LIMIT 10", 0, 20),
+        # LEFT JOIN ON NULLS
         ("SELECT * FROM $satellites LEFT JOIN $planets ON $satellites.planetId = $planets.id WHERE planetId = NONE", 2, 28),
         ("SELECT * FROM $satellites LEFT JOIN $planets ON $satellites.planetId = $planets.id WHERE $satellites.name = NONE", 2, 28),
+        # SORT BROKEN
+        ("SELECT * FROM (SELECT * FROM $planets ORDER BY id DESC LIMIT 5) WHERE id > 7", 2, 20),
     ]
 # fmt:on
 
