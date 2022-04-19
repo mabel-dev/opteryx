@@ -12,7 +12,7 @@ Astronaut dataset acquired from [Kaggle](https://www.kaggle.com/nasa/astronaut-y
 
 ~~~sql
 SELECT *
-  FROM $planets
+  FROM $planets;
 ~~~
 
 Note that `$no_table` is used internally to represent no table has been specified.

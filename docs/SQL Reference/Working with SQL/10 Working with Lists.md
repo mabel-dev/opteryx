@@ -21,4 +21,12 @@ In Opteryx a list is an ordered collection of zero or more values of the same da
 
 ## Converting Lists to Relations
 
-`UNNEST(list) AS column_name`
+### Using `UNNEST`
+
+`UNNEST` allows you to create a single column table either as a list of literals, or from a column of LIST type in a dataset.
+
+~~~sql
+SELECT * 
+  FROM UNNEST((True, False)) AS Booleans;
+~~~
+
