@@ -1,11 +1,11 @@
-import numpy as np
+import numpy
 import pyarrow.compute as pc
 
-from opteryx.engine.attribute_types import TOKEN_TYPES, PARQUET_TYPES, PYTHON_TYPES
+from opteryx.engine.attribute_types import OPTERYX_TYPES, TOKEN_TYPES, PARQUET_TYPES, PYTHON_TYPES
 from .helpers import columns_to_array, groupify_array
 
 def _get_type(var):
-    if isinstance(var, np.ndarray):
+    if isinstance(var, numpy.ndarray):
         return PARQUET_TYPES.get(str(var.dtype), f"UNSUPPORTED ({str(var.dtype)})")
     t = type(var).__name__
     return PYTHON_TYPES.get(t, f"OTHER ({t})")
@@ -13,38 +13,41 @@ def _get_type(var):
 # Filter functionality
 def arr_op_to_idxs(arr, op, value):
     if op in ["=", "=="]:
+        if value is None:
+            # Nones are stored as NaNs, so perform a different test
+            return numpy.where(numpy.isnan(arr))
         parquet_type = _get_type(arr)
         python_type = _get_type(value)
         if parquet_type != python_type:
             raise TypeError(f"Type mismatch, unable to compare {parquet_type} with {python_type}")
-        return np.where(arr == value)
+        return numpy.where(arr == value)
     elif op in ["!=", "<>"]:
-        return np.where(arr != value)
+        return numpy.where(arr != value)
     elif op == "<":
-        return np.where(arr < value)
+        return numpy.where(arr < value)
     elif op == ">":
-        return np.where(arr > value)
+        return numpy.where(arr > value)
     elif op == "<=":
-        return np.where(arr <= value)
+        return numpy.where(arr <= value)
     elif op == ">=":
-        return np.where(arr >= value)
+        return numpy.where(arr >= value)
     elif op == "in":
         # MODIFIED FOR OPTERYX
         # some of the lists are saved as sets, which are faster than searching numpy
         # arrays, even with numpy's native functionality - choosing the right algo
         # is almost always faster than choosing a fast language.
-        return np.array([a in value for a in arr], dtype=np.bool8)
+        return numpy.array([a in value for a in arr], dtype=numpy.bool8)
     elif op == "not in":
         # MODIFIED FOR OPTERYX - see comment above
-        return np.array([a not in value for a in arr], dtype=np.bool8)
+        return numpy.array([a not in value for a in arr], dtype=numpy.bool8)
     elif op == "like":
         return pc.match_like(arr, value)
     elif op == "not like":
-        return np.invert(pc.match_like(arr, value))
+        return numpy.invert(pc.match_like(arr, value))
     elif op == "ilike":
         return pc.match_like(arr, value, ignore_case=True)
     elif op == "not ilike":
-        return np.invert(pc.match_like(arr, value, ignore_case=True))
+        return numpy.invert(pc.match_like(arr, value, ignore_case=True))
     elif op == "~":
         return pc.match_substring_regex(arr, value)
     else:
@@ -63,13 +66,14 @@ def _get_values(table, operand):
         else:
             return operand[0]
     except:
-        print(table.column_names)
+        pass
+        #print(table.column_names)
 
 
 def filters(table, filters):
     filters = [filters] if isinstance(filters, tuple) else filters
     # Filter is a list of (col, op, value) tuples
-    idxs = np.arange(table.num_rows)
+    idxs = numpy.arange(table.num_rows)
     for (left_op, op, right_op) in filters:  # =, <>, <, >, <=, >=, in and not in
         # MODIFIED FOR OPTERYX
         f_idxs = arr_op_to_idxs(
@@ -85,7 +89,7 @@ def ifilters(table, filters):
     # of indices to do complex filters
     filters = [filters] if isinstance(filters, tuple) else filters
     # Filter is a list of (col, op, value) tuples
-    idxs = np.arange(table.num_rows)
+    idxs = numpy.arange(table.num_rows)
     for (left_op, op, right_op) in filters:
         f_idxs = arr_op_to_idxs(
             _get_values(table, left_op), op, _get_values(table, right_op)
@@ -104,7 +108,7 @@ def drop_duplicates(table, on=[], keep="first"):
 
     # Gather idxs
     if keep == "last":
-        idxs = (np.array(bgn_idxs) - 1)[1:].tolist() + [len(sort_idxs) - 1]
+        idxs = (numpy.array(bgn_idxs) - 1)[1:].tolist() + [len(sort_idxs) - 1]
     elif keep == "first":
         idxs = bgn_idxs
     elif keep == "drop":

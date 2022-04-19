@@ -248,6 +248,7 @@ STATEMENTS = [
         ("SELECT * FROM $planets FOR '2022-03-03' INNER JOIN $satellites ON $planets.id = $satellites.planetId", 177, 28),
         ("SELECT * FROM $planets WHERE id = -1 ORDER BY id", 0, 20),
         ("SELECT * FROM $planets WHERE id = -1 LIMIT 10", 0, 20),
+        ("SELECT * FROM $satellites LEFT JOIN $planets ON $satellites.planetId = $planets.id WHERE planetId = NONE", 2, 28),
     ]
 # fmt:on
 

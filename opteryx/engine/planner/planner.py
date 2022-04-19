@@ -43,8 +43,6 @@ temporal aspects out of the query.
 import sys
 import os
 
-from opteryx.engine.planner.operations.show_columns import ShowColumnsNode
-
 sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
 
 import numpy
@@ -55,13 +53,7 @@ from opteryx.engine.attribute_types import TOKEN_TYPES
 from opteryx.engine.functions import is_function
 from opteryx.engine.planner.temporal import extract_temporal_filters
 
-
 JSON_TYPES = {numpy.bool_: bool, numpy.int64: int, numpy.float64: float}
-
-
-def _serializer(obj):
-    return JSON_TYPES[type(obj)](obj)
-
 
 OPERATOR_XLAT = {
     "Eq": "=",
@@ -827,7 +819,7 @@ class QueryPlanner(object):
         return "\n".join(list(self._draw()))
 
     def _inner_execute(self, operator_name, relation):
-        # print(f"***********{operator_name}***************")
+        #print(f"***********{operator_name}***************")
         operator = self.get_operator(operator_name)
         out_going_links = self.get_outgoing_links(operator_name)
         outcome = operator.execute(relation)

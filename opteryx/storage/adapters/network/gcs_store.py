@@ -46,7 +46,7 @@ class GcsStorage(BaseStorageAdapter):
         bucket, object_path, name, extension = paths.get_parts(partition)
         bucket = bucket.replace("_", "-")
 
-        print(bucket, object_path, name, extension)
+        #print(bucket, object_path, name, extension)
 
         # this means we're not actually going to GCP
         if os.environ.get("STORAGE_EMULATOR_HOST") is not None:
