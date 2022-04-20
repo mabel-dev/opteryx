@@ -6,8 +6,6 @@ backgroundColor: #fff
 backgroundImage: url('https://marp.app/assets/hero-background.svg')
 ---
 
-![bg left:40% 80%](https://marp.app/assets/marp.svg)
-
 # **Introduction to Query Engines**
 
 ---
@@ -20,31 +18,29 @@ Will cover generic aspects of implementation, but will include detail relating t
 
 ----
 
-## Query Language Interpretation
+# Key Steps
 
-## Query Planning and Optimization
+**Query Language Interpretation**
 
-## Execution Engine
+**Query Planning and Optimization**
 
-## Files / Storage
+**Execution Engine**
+
+**Files / Storage**
 
 ----
 
-SQL
+# Key Steps
 
-## Query Language Interpretation
+SQL -> **Query Language Interpretation**
 
-Abstract Syntax Tree
+Abstract Syntax Tree -> **Query Planning and Optimization**
 
-## Query Planning and Optimization
+Query Plan -> **Execution Engine**
 
-Query Plan
+Resource Access -> **Files / Storage**
 
-## Execution Engine
-
-Resource Access
-
-## Files / Storage
+Result Creation
 
 ----
 
@@ -58,47 +54,69 @@ Resource Access
 
 ----
 
-# Planner Steps
+# Fixed Query Plan
 
-Reader
-Selection 
-Projection
-Join
-Distinct
+Based on Relational Algrebra.
+
+This is the order items are processed before optimizations.
+
+Has implications, e.g. can’t `GROUP BY` aliases defined in the `SELECT` clause.
 
 ----
 
-# Fixed Query Plan
+# Naive Plan Order
 
-The order items are processed before optimizations.
-Has implications, e.g. can’t GROUP BY aliases in the SELECT clause.
-Optimizations have to create the same result.
-
-FROM
-JOIN
-WHERE
-GROUP BY
-HAVING
-SELECT
-DISTINCT
-ORDER BY
-OFFSET
-LIMIT
+SELECT (5) [project] 
+DISTINCT (6) [distinct]
+FROM (1)
+WHERE (2) [select]
+GROUP BY (3) [aggregate]
+HAVING (4) [select]
+ORDER BY (7) [sort]
+OFFSET (8)
+LIMIT (9)
 
 ----
 
 # Plan Optimization
 
+Optimized plan has to create the same result as naive plan.
+
 Get rid of data (rows and columns) as quickly as possible
-Selection and Projection Push-Downs
-Selection to eliminate records quickly
-Use HASH or SORT MERGE JOINS
+
+- Selection (`WHERE`) and Projection (`SELECT`) push-downs
+- `LIMIT` push-downs
+
+Algorithm Decisions
+
+- Choose `JOIN` order and algorithm (HASH or SORT MERGE)
 
 ----
 
 # Execution Models
 
-Row Processing (Volcano) Mabel
-Block Processing Opteryx
-Column Processing (Vectorized) Opteryx
+- Row Processing (Volcano) **Mabel**
+- Block/Column Processing (Vectorized) **Opteryx**
+
+----
+
+# Volcano Model
+
+1) The step at the end of our plan tries to return a record
+1) It asks the previous step, which asks the previous step
+1) Until we get to the files, which we read line-by-line
+
+All calculations are done on each line, one at a time
+
+----
+
+# Block/Column Processing
+
+1) The step at the end of our plan tries to return a block
+1) It asks the previous step, which asks the previous step
+1) Util we get to the files, which we read an entire file/block
+
+All calculations are done block at a time.
+
+----
 
