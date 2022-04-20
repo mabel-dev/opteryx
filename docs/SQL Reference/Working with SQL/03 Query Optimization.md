@@ -24,3 +24,6 @@ Grouping by columns with high cardinality (mostly unique) is much slower than gr
 
 Cross join will very likely create a lot of records that are not required - if you then filter these records from the two source tables using a `WHERE` clause, it's likely you should use an `INNER JOIN` instead.
 
+## 5. `JOIN` ORDERING
+
+Most `JOIN`s require iterating over two tables, the _left_ table, which is the one in the `FROM` clause, and the _right_ table which is the one in the `JOIN` clause. It is generally faster to put the smaller table to the _left_.

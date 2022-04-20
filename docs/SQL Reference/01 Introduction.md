@@ -79,7 +79,10 @@ Mars  	|        24.7 |             2
 Pluto 	|       153.3 |             5
 ~~~
 
-The order of results are not guarnanteed and should not be relied upon. If you request the results of the below query, you might get the Mercury or Venus in either order, although the same query in the same version of Opteryx will likely to return results in the same order. In other words, don't expect to test this by rerunning the query millions of times and looking for differences.
+The order of results are not guarnanteed and should not be relied upon. If you request the results of the below query, you might get the Mercury or Venus in either order. 
+
+!!! note
+    The same query, of the same data in the same version of Opteryx will likely to return results in the same order, so don't expect to test result order non-derterminism by rerunning the query millions of times and looking for differences. These differences may manifest over different versions, or from subtle differences to the query statement or data.
 
 ~~~sql
 SELECT name,
@@ -140,7 +143,7 @@ SELECT DISTINCT planetId
 
 So far our queries have only accessed one relation at a time. Queries can access multiple relations at once, or access the same relation in such a way that multiple rows of the relation are being processed at the same time. A query that accesses multiple rows of the same or different relations at one time is called a join query. 
 
-As an example, say you wish to list all the $satellite records together with the planet they orbit. To do that, we need to compare the planetId of each row of the $satellites relation with the id column of all rows in the $planets relation, and select the pairs of rows where these values match.
+As an example, say you wish to list all the _$satellites_ records together with the planet they orbit. To do that, we need to compare the _planetId_ of each row of the _$satellites_ relation with the _id_ column of all rows in the _$planets_ relation, and return the pairs of rows where these values match.
 
 This would be accomplished by the following query:
 
@@ -164,9 +167,9 @@ $satellites.id | planetId | $satellites.name | ...
 
 Observe two things about the result set:
 
-There are no result row for the planets of Mercury or Venus (planetIds 1 and 2). This is because there is no matching entry in the $satellites relation for these planets, so the join ignores the unmatched rows in the $planets relation.
+There are no result row for the planets of Mercury or Venus (_planetIds_ 1 and 2). This is because there is no matching entry in the _$satellites_ relation for these planets, so the join ignores the unmatched rows in the $planets relation.
 
-Each of the relations being joined have an 'id' and a 'name' column, tp ensure it is clear which relation the value being displayed is from, columns with clashing names are qualified with the relation name.
+Each of the relations being joined have an _id_ and a _name_ column, to ensure it is clear which relation the value being displayed is from, columns with clashing names are qualified with the relation name.
 
 To avoid abiguity and problems in the future if new columns are added to relations, it is good practice to qualify column names in join conditions:
 
@@ -189,7 +192,7 @@ SELECT *
 
 The Opteryx planner currently uses a different execution strategy for these two similar queriesd the explicit `INNER JOIN` style generally executes faster.
 
-Now we will figure out how we can get the Mercury and Venus records back in. What we want the query to do is to scan the $planets relation and for each row to find the matching $satellites row(s). If no matching row is found we want some “empty values” to be substituted for the $satellites relations columns. This kind of query is called an outer join. (The joins we have seen so far are inner joins and cross joins.) The command looks like this:
+Now we will figure out how we can get the Mercury and Venus records back in. What we want the query to do is to scan the $planets relation and for each row to find the matching _$satellites_ row(s). If no matching row is found we want some “empty values” to be substituted for the _$satellites_ relations columns. This kind of query is called an outer join. (The joins we have seen so far are inner joins and cross joins.) The command looks like this:
 
 ~~~sql
 SELECT *
@@ -212,15 +215,13 @@ $satellites.id | planetId | $satellites.name | ...
 (more rows and columns)
 ~~~
 
-This query is called a left outer join because the relation mentioned on the left of the join operator will have each of its rows in the output at least once, whereas the relation on the right will only have those rows output that match some row of the left relation. When outputting a left-relation row for which there is no right-relation match, empty (null) values are substituted for the right-relation columns. Note that how null values are displayed may be different between different systes.
+This query is called a left outer join because the relation mentioned on the left of the join operator will have each of its rows in the output at least once, whereas the relation on the right will only have those rows output that match some row of the left relation. When outputting a left-relation row for which there is no right-relation match, empty (null) values are substituted for the right-relation columns. Note that how null values are displayed may be different between different systems.
 
+## Aggregate Functions
+
+Like most query engines and databases, Opteryx supports aggregate functions. An aggregate function computes a single result from multiple input rows. For example, there are aggregates to compute the count, sum, avg (average), max (maximum) and min (minimum) over a set of rows.
 
 <!---
-
-
-Aggregate Functions
-Like most other relational database products, DuckDB supports aggregate functions. An aggregate function computes a single result from multiple input rows. For example, there are aggregates to compute the count, sum, avg (average), max (maximum) and min (minimum) over a set of rows.
-
 As an example, we can find the highest low-temperature reading anywhere with:
 
 SELECT max(temp_lo) FROM weather;

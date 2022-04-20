@@ -125,16 +125,19 @@ def _cross_join_unnest(left, column, alias):
             # Where the number of times a number is repeated, is the length of the list
             # we're going to UNNEST for that row
             indexes = []
+            new_column = []
             for i, value in enumerate(column_data):
-                # if the value isn't a list, we can't UNNEST it
-                if isinstance(value, pyarrow.lib.ListScalar):
+                # if the value isn't valid, we can't UNNEST it
+                if value.is_valid:
                     indexes.extend([i] * len(value))
+                    new_column.extend(value)
 
-            # Create the new column by converting a list of lists, into one list
-            new_column =  [item for sublist in column_data for item in sublist]
+            if len(indexes) == 0:
+                continue
+
             # Strings need special treatment to avoid them being coerced into a list
             # of characters
-            if len(new_column) > 0 and isinstance(new_column[0], (pyarrow.lib.StringScalar)):
+            if isinstance(new_column[0], (pyarrow.lib.StringScalar)):
                 new_column = [[v.as_py() for v in new_column]]
 
             # Using the indexes above, repeat the rows of the source data
@@ -204,14 +207,20 @@ class JoinNode(BasePlanNode):
 
                 right_columns = Columns(self._right_table)
                 left_columns = None
-                right_join_column = right_columns.get_column_from_alias(self._on[2][0], only_one=True)
 
                 for page in data_pages:
 
                     if left_columns is None:
                         left_columns = Columns(page)
-                        left_join_column = left_columns.get_column_from_alias(self._on[0][0], only_one=True)
                         new_metadata = right_columns + left_columns
+
+                    try:
+                        right_join_column = right_columns.get_column_from_alias(self._on[2][0], only_one=True)
+                        left_join_column = left_columns.get_column_from_alias(self._on[0][0], only_one=True)
+                    except:
+                        # the ON condition may not always be in the order of the tables
+                        right_join_column = right_columns.get_column_from_alias(self._on[0][0], only_one=True)
+                        left_join_column = left_columns.get_column_from_alias(self._on[2][0], only_one=True)                
 
                     new_page = pyarrow_ops.inner_join(self._right_table, page, right_join_column, left_join_column)
                     new_page = new_metadata.apply(new_page)

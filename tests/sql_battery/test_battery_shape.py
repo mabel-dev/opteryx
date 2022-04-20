@@ -257,6 +257,8 @@ STATEMENTS = [
         ("SELECT * FROM $satellites LEFT JOIN $planets ON $satellites.planetId = $planets.id WHERE $satellites.name = NONE", 2, 28),
         # SORT BROKEN
         ("SELECT * FROM (SELECT * FROM $planets ORDER BY id DESC LIMIT 5) WHERE id > 7", 2, 20),
+        # ORDER OF JOIN CONDITION
+        ("SELECT * FROM $planets INNER JOIN $satellites ON $satellites.planetId = $planets.id", 177, 28),
     ]
 # fmt:on
 
