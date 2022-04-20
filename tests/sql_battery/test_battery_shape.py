@@ -242,6 +242,7 @@ STATEMENTS = [
         ("SELECT * FROM ( SELECT COUNT(planetId) AS moons, planetId FROM $satellites GROUP BY planetId ) WHERE moons > 10", 4, 2),
 
         ("SELECT * FROM $planets WHERE id = -1", 0, 20),
+        ("SELECT COUNT(*) FROM (SELECT DISTINCT a FROM $astronauts CROSS JOIN UNNEST(Alma_Mater) AS a ORDER BY a)", 1, 1),
 
         # These are queries which have been found to return the wrong result or not run correctly
         # FILTERING ON FUNCTIONS
@@ -251,7 +252,7 @@ STATEMENTS = [
         # ZERO RECORD RESULT SETS
         ("SELECT * FROM $planets WHERE id = -1 ORDER BY id", 0, 20),
         ("SELECT * FROM $planets WHERE id = -1 LIMIT 10", 0, 20),
-        # LEFT JOIN ON NULLS
+        # LEFT JOIN THEN FILTER ON NULLS
         ("SELECT * FROM $satellites LEFT JOIN $planets ON $satellites.planetId = $planets.id WHERE planetId = NONE", 2, 28),
         ("SELECT * FROM $satellites LEFT JOIN $planets ON $satellites.planetId = $planets.id WHERE $satellites.name = NONE", 2, 28),
         # SORT BROKEN

@@ -126,7 +126,9 @@ def _cross_join_unnest(left, column, alias):
             # we're going to UNNEST for that row
             indexes = []
             for i, value in enumerate(column_data):
-                indexes.extend([i] * len(value))
+                # if the value isn't a list, we can't UNNEST it
+                if isinstance(value, pyarrow.lib.ListScalar):
+                    indexes.extend([i] * len(value))
 
             # Create the new column by converting a list of lists, into one list
             new_column =  [item for sublist in column_data for item in sublist]
