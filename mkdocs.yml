@@ -6,6 +6,7 @@ theme:
     text: IBM Plex Sans
     code: JetBrains Mono
 
+repo_url: https://github.com/mabel-dev/opteryx
 
 markdown_extensions:
   - pymdownx.highlight:
