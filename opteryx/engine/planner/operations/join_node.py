@@ -49,6 +49,13 @@ def _cross_join(left, right):
     A cross join is the cartesian product of two tables - this usually isn't very
     useful, but it does allow you to the theta joins (non-equi joins)
     """
+
+    def _chunker(seq_1, seq_2, size):
+        """
+        Chunk two equal length interables into size sized chunks
+        """
+        return ( (seq_1[pos:pos + size], seq_2[pos:pos+size] ) for pos in range(0, len(seq_1), size))
+
     from opteryx.third_party.pyarrow_ops import align_tables
 
     if isinstance(left, pyarrow.Table):
@@ -78,11 +85,15 @@ def _cross_join(left, right):
             # build the cartesian product of the two lists
             left_align, right_align = cartesian_product(left_array, right_array)
 
-            # now build the resultant table
-            table = align_tables(
-                left_block, right, left_align.flatten(), right_align.flatten()
-            )
-            yield new_columns.apply(table)
+            # CROSS JOINs can create huge tables quickly, this is used to limit the
+            # number of records we hold in memory at any time
+            for left_chunk, right_chunk in _chunker(left_align, right_align, config.MAX_JOIN_SIZE):
+
+                # now build the resultant table
+                table = align_tables(
+                    left_block, right, left_chunk.flatten(), right_chunk.flatten()
+                )
+                yield new_columns.apply(table)
 
 
 def _cross_join_unnest(left, column, alias):
@@ -99,6 +110,7 @@ def _cross_join_unnest(left, column, alias):
     approach, where each row was read as a dictionary, new dictionaries created for
     each UNNESTed value and the dictionaries combined to a table.
     """
+
     if column[1] != TOKEN_TYPES.IDENTIFIER:
         raise NotImplementedError("Can only CROSS JOIN UNNEST on a field")
 
