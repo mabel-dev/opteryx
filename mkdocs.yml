@@ -2,6 +2,7 @@ site_name: Opteryx
 
 theme:
   name: material
+  logo: opteryx-mini.png
   font:
     text: IBM Plex Sans
     code: JetBrains Mono
