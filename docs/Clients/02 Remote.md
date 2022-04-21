@@ -1,11 +1,11 @@
 # HTTP API
 
 !!! warning
-    This is not supported
+    This is not currently not available
 
 ## Submit a Query
 
-This API submits a SQL query
+This API submits a SQL query.
 
 **End Point**
 
@@ -38,5 +38,39 @@ Returns a Job ID for the query. Monitoring of the job status and fetching result
 ~~~
 
 ## Job Status
+
+This API retrieves information about a job.
+
+**End Point**
+
+~~~
+[GET] /api/v1/job/{id}
+~~~
+
+**Parameters**
+
+Parameter | Type   | Description
+--------- | ------ | ------------------------------------------
+id        | String | The reference for the Job to retrieve the status for.
+
+**Response**
+
+Returns a Job ID for the query. Monitoring of the job status and fetching results needs to be completed using the Jobs endpoint.
+
+~~~json
+{
+  "id": String
+}
+~~~
+
+**Response Fields**
+
+Parameter | Type   | Description
+--------- | ------ | ------------------------------------------
+id        | String | The reference for the Job to retrieve the status for.
+jobState  | 
+startedAt |
+endedAt   |
+
 
 ## Get Job Result
