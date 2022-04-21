@@ -1,12 +1,12 @@
 import os
-import dotenv 
+import dotenv
 from pathlib import Path
 
 try:
     env_path = Path(".") / ".env"
     dotenv.load_dotenv(dotenv_path=env_path)
 except:
-    pass # fail quietly
+    pass  # fail quietly
 
 # The maximum input frame size for JOINs
 INTERNAL_BATCH_SIZE: int = int(os.environ.get("INTERNAL_BATCH_SIZE", 500))

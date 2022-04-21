@@ -29,6 +29,7 @@ def get_parts(path_string: str):
 
     return str(bucket), str(parts) + "/", stem, suffix
 
+
 def build_path(path: str, date: datetime.date = None):
 
     if not path:

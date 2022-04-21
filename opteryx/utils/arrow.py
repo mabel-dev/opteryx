@@ -28,7 +28,7 @@ def fetchmany(pages, limit: int = 1000):
                 preferred_names = columns.preferred_column_names
                 column_names = []
                 for col in page.column_names:
-                    column_names.append([c for a,c in preferred_names if a == col][0])
+                    column_names.append([c for a, c in preferred_names if a == col][0])
 
             page = page.rename_columns(column_names)
 
@@ -57,6 +57,7 @@ def fetchall(pages) -> List[dict]:
 Adapted from:
 https://stackoverflow.com/questions/55546027/how-to-assign-arbitrary-metadata-to-pyarrow-table-parquet-columns
 """
+
 
 def set_metadata(table, table_metadata=None, column_metadata=None):
     """
@@ -132,13 +133,16 @@ def _decode_metadata(metadata):
         decoded[key] = val
     return decoded
 
+
 def table_metadata(tbl):
     """Get table metadata as dict."""
     return _decode_metadata(tbl.schema.metadata)
 
+
 def column_metadata(tbl):
     """Get column metadata as dict."""
     return {col: _decode_metadata(tbl.field(col).metadata) for col in tbl.schema.names}
+
 
 def get_metadata(tbl):
     """Get column and table metadata as dicts."""

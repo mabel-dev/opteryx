@@ -26,7 +26,6 @@ from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
 
 
 class ShowColumnsNode(BasePlanNode):
-
     def __init__(self, statistics: QueryStatistics, **config):
         pass
 
@@ -38,7 +37,7 @@ class ShowColumnsNode(BasePlanNode):
         return ""
 
     def execute(self, data_pages: Iterable) -> Iterable:
-        
+
         if not isinstance(data_pages, Table):
             data_pages = next(data_pages, None)  # type:ignore
 
@@ -52,15 +51,15 @@ class ShowColumnsNode(BasePlanNode):
             column_data = data_pages.column(column)
             new_row = {
                 "column_name": source_metadata.get_preferred_name(column),
-                "type": PARQUET_TYPES.get(str(column_data.type), "OTHER")
+                "type": PARQUET_TYPES.get(str(column_data.type), "OTHER"),
             }
             buffer.append(new_row)
-        
+
         table = Table.from_pylist(buffer)
         table = Columns.create_table_metadata(
-                table=table, 
-                expected_rows=len(buffer),
-                name="show_columns",
-                table_aliases=[],
-            )
+            table=table,
+            expected_rows=len(buffer),
+            name="show_columns",
+            table_aliases=[],
+        )
         yield table

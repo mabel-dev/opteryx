@@ -466,16 +466,22 @@ class QueryPlanner(object):
         return self._build_dnf_filters(selections)
 
     def _extract_filter(self, ast):
-        """
-        """
+        """ """
         filters = ast[0]["ShowColumns"]["filter"]
         if filters is None:
             return None
         if "Where" in filters:
             return self._build_dnf_filters(filters["Where"])
         if "Like" in filters:
-            return (("column_name", TOKEN_TYPES.IDENTIFIER,), "like", (filters["Like"], TOKEN_TYPES.VARCHAR),)
-            
+            return (
+                (
+                    "column_name",
+                    TOKEN_TYPES.IDENTIFIER,
+                ),
+                "like",
+                (filters["Like"], TOKEN_TYPES.VARCHAR),
+            )
+
     def _extract_distinct(self, ast):
         return ast[0]["Query"]["body"]["Select"]["distinct"]
 
@@ -564,22 +570,15 @@ class QueryPlanner(object):
                 end_date=self._end_date,
             ),
         )
-        self.add_operator(
-            "columns",
-            ShowColumnsNode(
-                statistics
-            )
-        )
+        self.add_operator("columns", ShowColumnsNode(statistics))
         self.link_operators("reader", "columns")
 
         filters = self._extract_filter(ast)
         if filters:
-            self.add_operator("filter", SelectionNode(
-                statistics=statistics,
-                filter=filters
-            ))
+            self.add_operator(
+                "filter", SelectionNode(statistics=statistics, filter=filters)
+            )
             self.link_operators("columns", "filter")
-
 
     def _naive_select_planner(self, ast, statistics):
         """
@@ -719,7 +718,7 @@ class QueryPlanner(object):
 
         from opteryx.utils.columns import Columns
         import pyarrow
- 
+
         def _inner_explain(operator_name, depth):
             depth += 1
             operator = self.get_operator(operator_name)
@@ -819,7 +818,7 @@ class QueryPlanner(object):
         return "\n".join(list(self._draw()))
 
     def _inner_execute(self, operator_name, relation):
-        #print(f"***********{operator_name}***************")
+        # print(f"***********{operator_name}***************")
         operator = self.get_operator(operator_name)
         out_going_links = self.get_outgoing_links(operator_name)
         outcome = operator.execute(relation)

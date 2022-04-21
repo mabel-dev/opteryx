@@ -137,7 +137,7 @@ class AggregateNode(BasePlanNode):
 
         collector: dict = defaultdict(dict)
         columns = None
-        self._mapped_project:List = []
+        self._mapped_project: List = []
 
         if isinstance(data_pages, pyarrow.Table):
             data_pages = [data_pages]
@@ -157,7 +157,9 @@ class AggregateNode(BasePlanNode):
 
                 self._mapped_groups = []
                 for group in self._groups:
-                    self._mapped_groups.append(columns.get_column_from_alias(group, only_one=True))
+                    self._mapped_groups.append(
+                        columns.get_column_from_alias(group, only_one=True)
+                    )
 
             for group in _map(page, self._mapped_project):
 
@@ -167,7 +169,9 @@ class AggregateNode(BasePlanNode):
                     if attribute == "Wildcard":
                         mapped_attribute = "*"
                     else:
-                        mapped_attribute = columns.get_column_from_alias(attribute, only_one=True)
+                        mapped_attribute = columns.get_column_from_alias(
+                            attribute, only_one=True
+                        )
                     function = aggregrator["aggregate"]
                     column_name = f"{function}({attribute})"
                     value = [v for k, v in group if k == mapped_attribute]
@@ -218,12 +222,12 @@ class AggregateNode(BasePlanNode):
             if self._aggregates[0]["aggregate"] == "COUNT":
                 collector = {(): {"COUNT(*)": 0}}
 
-        buffer:List = []
+        buffer: List = []
         for collected, record in collector.items():
             if len(buffer) > 1000:
                 table = pyarrow.Table.from_pylist(buffer)
                 table = Columns.create_table_metadata(
-                    table=table, 
+                    table=table,
                     expected_rows=len(collector),
                     name=columns.table_name,
                     table_aliases=[],
@@ -247,7 +251,7 @@ class AggregateNode(BasePlanNode):
         if len(buffer) > 0:
             table = pyarrow.Table.from_pylist(buffer)
             table = Columns.create_table_metadata(
-                table=table, 
+                table=table,
                 expected_rows=len(collector),
                 name=columns.table_name,
                 table_aliases=[],

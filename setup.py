@@ -17,7 +17,7 @@ try:
         required = f.read().splitlines()
 except FileNotFoundError:
     # this sometimes fails - so put them here, but this needs to be maintained manually
-    required = ['cython', 'numpy', 'orjson', 'cityhash', 'sqloxide', 'pyarrow']    
+    required = ["cython", "numpy", "orjson", "cityhash", "sqloxide", "pyarrow"]
 
 extensions = [
     Extension(

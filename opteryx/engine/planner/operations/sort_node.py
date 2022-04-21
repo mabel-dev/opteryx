@@ -24,6 +24,7 @@ from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
 from opteryx.exceptions import SqlError
 from opteryx.utils.columns import Columns
 
+
 class SortNode(BasePlanNode):
     def __init__(self, statistics: QueryStatistics, **config):
         self._order = config.get("order", [])
@@ -62,9 +63,18 @@ class SortNode(BasePlanNode):
                 # we only have special handling for RANDOM at the moment
                 if column["alias"] != "RANDOM()":
                     if len(columns.get_column_from_alias(column["alias"])) == 0:
-                        raise SqlError("ORDER BY can only reference functions used in the SELECT clause, or RANDOM()")
-                    
-                    self._mapped_order.append((columns.get_column_from_alias(column["alias"], only_one=True), direction,))
+                        raise SqlError(
+                            "ORDER BY can only reference functions used in the SELECT clause, or RANDOM()"
+                        )
+
+                    self._mapped_order.append(
+                        (
+                            columns.get_column_from_alias(
+                                column["alias"], only_one=True
+                            ),
+                            direction,
+                        )
+                    )
                 else:
                     from opteryx.engine.functions import FUNCTIONS
                     import pyarrow
@@ -78,10 +88,20 @@ class SortNode(BasePlanNode):
                     # we add it to sort, but it's not in the SELECT so we shouldn't return it
                     need_to_remove_random = True
 
-                    self._mapped_order.append((column["alias"], direction,))
+                    self._mapped_order.append(
+                        (
+                            column["alias"],
+                            direction,
+                        )
+                    )
 
             else:
-                self._mapped_order.append((columns.get_column_from_alias(column, only_one=True), direction,))
+                self._mapped_order.append(
+                    (
+                        columns.get_column_from_alias(column, only_one=True),
+                        direction,
+                    )
+                )
 
         table = table.sort_by(self._mapped_order)
 

@@ -28,7 +28,7 @@ SQL_PARTS = [
     r"OFFSET",
     r"INNER\sJOIN",
     r"CROSS\sJOIN",
-    r"JOIN"
+    r"JOIN",
 ]
 
 

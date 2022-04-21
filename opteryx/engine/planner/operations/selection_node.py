@@ -81,7 +81,9 @@ def _evaluate(predicate: Union[tuple, list], table: Table) -> bool:
                 for arg in function["args"]:
                     if arg[1] == TOKEN_TYPES.IDENTIFIER:
                         # get the column from the dataset
-                        mapped_column = columns.get_column_from_alias(arg[0], only_one=True)
+                        mapped_column = columns.get_column_from_alias(
+                            arg[0], only_one=True
+                        )
                         arg_list.append(table[mapped_column].to_numpy())
                     else:
                         # it's a literal, just add it
@@ -102,6 +104,14 @@ def _evaluate(predicate: Union[tuple, list], table: Table) -> bool:
                     "=",
                     (True, TOKEN_TYPES.BOOLEAN),
                 )
+
+        if (
+            len(predicate) == 3
+            and len(predicate[0]) == 2
+            and predicate[0][1] == TOKEN_TYPES.IDENTIFIER
+            and (predicate[0][0] not in table.column_names)
+        ):
+            raise SqlError(f"Field `{predicate[0][0]}` does not exist.")
 
         if not isinstance(predicate[0], tuple):
             return _evaluate(predicate[0], table)
@@ -172,15 +182,18 @@ def _map_columns(predicate, columns):
     """
     if isinstance(predicate, tuple):
         if len(predicate) > 1 and predicate[1] == TOKEN_TYPES.IDENTIFIER:
-            identifier =  columns.get_column_from_alias(predicate[0])
+            identifier = columns.get_column_from_alias(predicate[0])
             if len(identifier) == 1:
-                return (identifier[0], TOKEN_TYPES.IDENTIFIER,)
-            else:
-                return predicate
+                return (
+                    identifier[0],
+                    TOKEN_TYPES.IDENTIFIER,
+                )
+            return predicate
         return tuple([_map_columns(p, columns) for p in predicate])
     elif isinstance(predicate, list):
         return [_map_columns(p, columns) for p in predicate]
     return predicate
+
 
 class SelectionNode(BasePlanNode):
     def __init__(self, statistics: QueryStatistics, **config):

@@ -16,7 +16,9 @@ def align_tables(t1, t2, l1, l2):
 def inner_join(left, right, left_on, right_on):
     # Gather join columns - create arrays of the hashes of the values in the column
     # updated for Opteryx
-    l_array, r_array = columns_to_array(left, left_on), columns_to_array(right, right_on)
+    l_array, r_array = columns_to_array(left, left_on), columns_to_array(
+        right, right_on
+    )
 
     # Groupify the join array, this generates a set of data about the array
     # including the unique values in the array, and the sort order for the array.
@@ -69,7 +71,9 @@ def inner_join(left, right, left_on, right_on):
 def left_join(left, right, left_on, right_on):
     # Gather join columns - create arrays of the hashes of the values in the column
     # updated for Opteryx
-    l_array, r_array = columns_to_array(left, left_on), columns_to_array(right, right_on)
+    l_array, r_array = columns_to_array(left, left_on), columns_to_array(
+        right, right_on
+    )
 
     # Groupify the join array, this generates a set of data about the array
     # including the unique values in the array, and the sort order for the array.
@@ -107,7 +111,9 @@ def left_join(left, right, left_on, right_on):
     rbic[rinv] = rbi
 
     rows = len(l_array) * len(r_array)
-    left_align, right_align = np.empty(rows, dtype=np.int64), np.empty(rows, dtype=np.int64)
+    left_align, right_align = np.empty(rows, dtype=np.int64), np.empty(
+        rows, dtype=np.int64
+    )
 
     # Perform cjoin
     left_align, right_align = cleft_join(

@@ -72,7 +72,9 @@ class EvaluationNode(BasePlanNode):
                     # TODO: do we need to account for functions calling functions?
                     if arg[1] == TOKEN_TYPES.IDENTIFIER:
                         # get the column from the dataset
-                        mapped_column = columns.get_column_from_alias(arg[0], only_one=True)
+                        mapped_column = columns.get_column_from_alias(
+                            arg[0], only_one=True
+                        )
                         arg_list.append(page[mapped_column].to_numpy())
                     else:
                         # it's a literal, just add it

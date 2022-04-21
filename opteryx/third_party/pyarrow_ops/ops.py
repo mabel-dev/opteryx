@@ -1,14 +1,21 @@
 import numpy
 import pyarrow.compute as pc
 
-from opteryx.engine.attribute_types import OPTERYX_TYPES, TOKEN_TYPES, PARQUET_TYPES, PYTHON_TYPES
+from opteryx.engine.attribute_types import (
+    OPTERYX_TYPES,
+    TOKEN_TYPES,
+    PARQUET_TYPES,
+    PYTHON_TYPES,
+)
 from .helpers import columns_to_array, groupify_array
+
 
 def _get_type(var):
     if isinstance(var, numpy.ndarray):
         return PARQUET_TYPES.get(str(var.dtype), f"UNSUPPORTED ({str(var.dtype)})")
     t = type(var).__name__
     return PYTHON_TYPES.get(t, f"OTHER ({t})")
+
 
 # Filter functionality
 def arr_op_to_idxs(arr, op, value):
@@ -19,7 +26,9 @@ def arr_op_to_idxs(arr, op, value):
             return numpy.where(numpy.isnan(arr))
         python_type = _get_type(value)
         if parquet_type != python_type and value is not None:
-            raise TypeError(f"Type mismatch, unable to compare {parquet_type} with {python_type}")
+            raise TypeError(
+                f"Type mismatch, unable to compare {parquet_type} with {python_type}"
+            )
         return numpy.where(arr == value)
     elif op in ["!=", "<>"]:
         return numpy.where(arr != value)
@@ -67,7 +76,7 @@ def _get_values(table, operand):
             return operand[0]
     except:
         pass
-        #print(table.column_names)
+        # print(table.column_names)
 
 
 def filters(table, filters):

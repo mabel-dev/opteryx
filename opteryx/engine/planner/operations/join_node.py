@@ -33,6 +33,7 @@ from opteryx.utils.columns import Columns
 from opteryx import config
 from opteryx.exceptions import SqlError
 
+
 def cartesian_product(*arrays):
     """
     Cartesian product of arrays creates every combination of the elements in the arrays
@@ -54,7 +55,10 @@ def _cross_join(left, right):
         """
         Chunk two equal length interables into size sized chunks
         """
-        return ( (seq_1[pos:pos + size], seq_2[pos:pos+size] ) for pos in range(0, len(seq_1), size))
+        return (
+            (seq_1[pos : pos + size], seq_2[pos : pos + size])
+            for pos in range(0, len(seq_1), size)
+        )
 
     from opteryx.third_party.pyarrow_ops import align_tables
 
@@ -71,7 +75,9 @@ def _cross_join(left, right):
             new_columns = left_columns + right_columns
 
         # we break this into small chunks, each cycle will have 100 * rows in the right table
-        for left_block in left_page.to_batches(max_chunksize=config.INTERNAL_BATCH_SIZE):
+        for left_block in left_page.to_batches(
+            max_chunksize=config.INTERNAL_BATCH_SIZE
+        ):
 
             # blocks don't have column_names, so we need to wrap in a table
             left_block = pyarrow.Table.from_batches(
@@ -87,7 +93,9 @@ def _cross_join(left, right):
 
             # CROSS JOINs can create huge tables quickly, this is used to limit the
             # number of records we hold in memory at any time
-            for left_chunk, right_chunk in _chunker(left_align, right_align, config.MAX_JOIN_SIZE):
+            for left_chunk, right_chunk in _chunker(
+                left_align, right_align, config.MAX_JOIN_SIZE
+            ):
 
                 # now build the resultant table
                 table = align_tables(
@@ -125,15 +133,17 @@ def _cross_join_unnest(left, column, alias):
             metadata = Columns(left_page)
             metadata.add_column(alias)
             unnest_column = metadata.get_column_from_alias(column[0], only_one=True)
-        
+
         # we break this into small chunks otherwise we very quickly run into memory issues
-        for left_block in left_page.to_batches(max_chunksize=config.INTERNAL_BATCH_SIZE):
+        for left_block in left_page.to_batches(
+            max_chunksize=config.INTERNAL_BATCH_SIZE
+        ):
 
             # Get the column we're going to UNNEST
             column_data = left_block[unnest_column]
 
             # Create a list of indexes, this will look something like this:
-            # [1,1,1,2,2,2,3,3,3] 
+            # [1,1,1,2,2,2,3,3,3]
             # Where the number of times a number is repeated, is the length of the list
             # we're going to UNNEST for that row
             indexes = []
@@ -202,16 +212,24 @@ class JoinNode(BasePlanNode):
 
                 right_columns = Columns(self._right_table)
                 left_columns = None
-                right_join_columns = [right_columns.get_column_from_alias(col, only_one=True) for col in self._using]
+                right_join_columns = [
+                    right_columns.get_column_from_alias(col, only_one=True)
+                    for col in self._using
+                ]
 
                 for page in data_pages:
 
                     if left_columns is None:
                         left_columns = Columns(page)
-                        left_join_columns = [left_columns.get_column_from_alias(col, only_one=True) for col in self._using]
+                        left_join_columns = [
+                            left_columns.get_column_from_alias(col, only_one=True)
+                            for col in self._using
+                        ]
                         new_metadata = left_columns + right_columns
 
-                    new_page = pyarrow_ops.inner_join(self._right_table, page, right_join_columns, left_join_columns)
+                    new_page = pyarrow_ops.inner_join(
+                        self._right_table, page, right_join_columns, left_join_columns
+                    )
                     new_page = new_metadata.apply(new_page)
                     yield new_page
 
@@ -227,14 +245,24 @@ class JoinNode(BasePlanNode):
                         new_metadata = right_columns + left_columns
 
                     try:
-                        right_join_column = right_columns.get_column_from_alias(self._on[2][0], only_one=True)
-                        left_join_column = left_columns.get_column_from_alias(self._on[0][0], only_one=True)
+                        right_join_column = right_columns.get_column_from_alias(
+                            self._on[2][0], only_one=True
+                        )
+                        left_join_column = left_columns.get_column_from_alias(
+                            self._on[0][0], only_one=True
+                        )
                     except:
                         # the ON condition may not always be in the order of the tables
-                        right_join_column = right_columns.get_column_from_alias(self._on[0][0], only_one=True)
-                        left_join_column = left_columns.get_column_from_alias(self._on[2][0], only_one=True)                
+                        right_join_column = right_columns.get_column_from_alias(
+                            self._on[0][0], only_one=True
+                        )
+                        left_join_column = left_columns.get_column_from_alias(
+                            self._on[2][0], only_one=True
+                        )
 
-                    new_page = pyarrow_ops.inner_join(self._right_table, page, right_join_column, left_join_column)
+                    new_page = pyarrow_ops.inner_join(
+                        self._right_table, page, right_join_column, left_join_column
+                    )
                     new_page = new_metadata.apply(new_page)
                     yield new_page
 
@@ -242,21 +270,28 @@ class JoinNode(BasePlanNode):
 
             right_columns = Columns(self._right_table)
             left_columns = None
-            right_join_column = right_columns.get_column_from_alias(self._on[2][0], only_one=True)
+            right_join_column = right_columns.get_column_from_alias(
+                self._on[2][0], only_one=True
+            )
 
             for page in data_pages:
 
                 if left_columns is None:
                     left_columns = Columns(page)
-                    left_join_column = left_columns.get_column_from_alias(self._on[0][0], only_one=True)
+                    left_join_column = left_columns.get_column_from_alias(
+                        self._on[0][0], only_one=True
+                    )
                     new_metadata = right_columns + left_columns
 
-                new_page = pyarrow_ops.left_join(self._right_table, page, right_join_column, left_join_column)
+                new_page = pyarrow_ops.left_join(
+                    self._right_table, page, right_join_column, left_join_column
+                )
                 new_page = new_metadata.apply(new_page)
                 yield new_page
 
         else:
             raise SqlError(f"Unsupported Join type, {self._join_type}")
+
 
 if __name__ == "__main__":
 

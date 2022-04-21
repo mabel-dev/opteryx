@@ -33,8 +33,8 @@ sys.path.insert(1, os.path.join(sys.path[0], "../../"))
 from opteryx.utils import arrow
 from opteryx.exceptions import SqlError
 
-class Columns(object):
 
+class Columns(object):
     def __init__(self, table):
         if table is not None:
             self._table_metadata = arrow.table_metadata(table)
@@ -43,13 +43,18 @@ class Columns(object):
     def __add__(self, columns):
         retval = Columns(None)
         retval._table_metadata = self._table_metadata.copy()
-        retval._column_metadata = { **self._column_metadata, **columns._column_metadata }.copy()
+        retval._column_metadata = {
+            **self._column_metadata,
+            **columns._column_metadata,
+        }.copy()
         return retval
 
     @property
     def preferred_column_names(self):
         _column_metadata = self._column_metadata.copy()
-        columns, preferences = zip(*[(c, v.get("preferred_name", None)) for c, v in _column_metadata.items()])
+        columns, preferences = zip(
+            *[(c, v.get("preferred_name", None)) for c, v in _column_metadata.items()]
+        )
         preferences = list(preferences)
         for name in preferences:
             instances = [i for i, x in enumerate(preferences) if x == name]
@@ -81,31 +86,39 @@ class Columns(object):
         new_column = {"preferred_name": column, "aliases": [column], "source": ""}
         self._column_metadata[column] = new_column
 
-
     def apply(self, table):
-        column_names = [self.get_column_from_alias(c) or [c] for c in table.column_names]
+        column_names = [
+            self.get_column_from_alias(c) or [c] for c in table.column_names
+        ]
         column_names = [item for sublist in column_names for item in sublist]
 
-        self._column_metadata = { c:m for c,m in self._column_metadata.items() if c in column_names }
+        self._column_metadata = {
+            c: m for c, m in self._column_metadata.items() if c in column_names
+        }
 
         table = table.rename_columns(column_names)
-        return arrow.set_metadata(table, table_metadata=self._table_metadata, column_metadata=self._column_metadata)
+        return arrow.set_metadata(
+            table,
+            table_metadata=self._table_metadata,
+            column_metadata=self._column_metadata,
+        )
 
-
-    def get_column_from_alias(self, column, only_one:bool = False):
+    def get_column_from_alias(self, column, only_one: bool = False):
         """
         For a given alias, return all of the matching columns (usually one)
 
         If we're expecting only_one match, we fail if that's not what we find.
         """
         matches = []
-        for k,v in self._column_metadata.items():
+        for k, v in self._column_metadata.items():
             matches.extend([k for alias in v.get("aliases", []) if alias == column])
         if only_one:
             if len(matches) == 0:
-                raise SqlError(f"Field {column} is not known.")
+                raise SqlError(f"Field `{column}` does not exist.")
             if len(matches) > 1:
-                raise SqlError(f"Field {column} is ambiguous.")
+                raise SqlError(
+                    f"Field `{column}` is ambiguous, try qualifying the field name."
+                )
             return matches[0]
         return matches
 
@@ -114,22 +127,23 @@ class Columns(object):
             for col in columns:
                 if isinstance(col, list) and len(col) > 0:
                     yield col[0]
+
         return list(_inner())
 
     @staticmethod
     def create_table_metadata(table, expected_rows, name, table_aliases):
-        
+
         # we're going to replace the column names with random strings
         def random_string(length: int = 16) -> str:
             import os
             import base64
+
             # we're creating a series of random bytes, 3/4 the length
-            # of the string we want, base64 encoding it (which makes 
+            # of the string we want, base64 encoding it (which makes
             # it longer) and then returning the length of string
             # requested.
-            b = os.urandom(-((length * -3)//4))
+            b = os.urandom(-((length * -3) // 4))
             return base64.b64encode(b).decode("utf8")[:length]
-
 
         if not isinstance(table_aliases, list):
             table_aliases = [table_aliases]
@@ -138,7 +152,7 @@ class Columns(object):
         table_metadata = {
             "expected_rows": expected_rows,
             "name": name,
-            "aliases": [a for a in set(table_aliases + [name]) if a]
+            "aliases": [a for a in set(table_aliases + [name]) if a],
         }
 
         # column information includes all the aliases a column is known by
@@ -146,7 +160,7 @@ class Columns(object):
         for column in table.column_names:
             # we're going to rename the columns
             new_column = random_string(32)
-            # the column is know aliased by it's previous name 
+            # the column is know aliased by it's previous name
             column_metadata[new_column] = {"aliases": [column]}
             # record the source table
             column_metadata[new_column]["source"] = name
@@ -155,11 +169,13 @@ class Columns(object):
             # for every alias the table has, the column is also know by that
             for a in table_metadata["aliases"]:
                 column_metadata[new_column]["aliases"].append(f"{a}.{column}")
-        
+
         # rename the columns
         table = table.rename_columns(list(column_metadata.keys()))
         # add the metadata
-        return arrow.set_metadata(table, table_metadata=table_metadata, column_metadata=column_metadata)
+        return arrow.set_metadata(
+            table, table_metadata=table_metadata, column_metadata=column_metadata
+        )
 
 
 if __name__ == "__main__":

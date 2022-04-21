@@ -268,7 +268,9 @@ class DatasetReaderNode(BasePlanNode):
 
                         import pyarrow
 
-                        pyarrow_blob = pyarrow.Table.from_pydict(pyarrow_blob.to_pydict())
+                        pyarrow_blob = pyarrow.Table.from_pydict(
+                            pyarrow_blob.to_pydict()
+                        )
                         pyarrow_blob = metadata.apply(pyarrow_blob)
 
                 # yield this blob

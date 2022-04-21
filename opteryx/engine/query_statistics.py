@@ -67,5 +67,5 @@ class QueryStatistics:
             "partitions_scanned": self.partitions_scanned,
             "partitions_read": self.partitions_read,
             "cache_hits": self.cache_hits,
-            "cache_misses": self.cache_misses
+            "cache_misses": self.cache_misses,
         }

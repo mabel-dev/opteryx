@@ -28,6 +28,7 @@ DATE_TESTS = [
     ]
 # fmt:on
 
+
 @pytest.mark.parametrize("string, expect", DATE_TESTS)
 def test_date_parser(string, expect):
 

@@ -129,7 +129,7 @@ AS employees (EMPNO, ENAME, JOB, MGR, HIREDATE, SAL, COMM, DEPTNO);
     SQL = "show columns from $satellites LIKE '%id'"
     SQL = "show columns from $satellites LIKE '%id' WHERE column_name = 'id'"
     SQL = " SELECT DISTINCT planetId FROM $satellites LEFT OUTER JOIN $planets ON $satellites.planetId = $planets.id"
-#    SQL = "SELECT distinct planetId FROM $planets left JOIN $satellites ON $planets.id = $satellites.planetId"
+    #    SQL = "SELECT distinct planetId FROM $planets left JOIN $satellites ON $planets.id = $satellites.planetId"
     SQL = "SELECT name as nom from $planets"
     SQL = "SELECT a,b,round(a) FROM (VALUES (1,2),(3,4),(340,455)) AS t(a,b) limit 0"
     SQL = "SELECT * FROM $satellites PIVOT( COUNT(planetId) FOR planetId IN (1,2,3,4) )"
@@ -137,6 +137,10 @@ AS employees (EMPNO, ENAME, JOB, MGR, HIREDATE, SAL, COMM, DEPTNO);
 
     SQL = "SELECT * FROM $astronauts CROSS JOIN UNNEST(Alma_Mater)"
     SQL = "SELECT Mission FROM $astronauts CROSS JOIN UNNEST(Missions) as Mission WHERE Mission = 'Apollo 11'"
+    SQL = "SELECT * FROM $satellites WHERE size = 1"
+    #    SQL = "SELECT Missions FROM $astronauts WHERE LIST_CONTAINS(Missions, 'Apollo 8')"
+    #    SQL = "SELECT * FROM $satellites LEFT JOIN $planets ON $satellites.planetId = $planets.id WHERE planetId = NONE"
+    #SQL = "SELECT * FROM $satellites WHERE name = 'Calypso'"
 
     _, _, SQL = extract_temporal_filters(SQL)
     ast = sqloxide.parse_sql(SQL, dialect="mysql")
