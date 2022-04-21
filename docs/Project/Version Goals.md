@@ -8,7 +8,6 @@ Work to do before release:
 
 - 🔲 **General** Improvements to error messages
 - 🔲 **Caching** Memcached buffer pool (cache-aside), this should include hit/miss statistics
-- 🔲 **Planner** Planner should plan the reads rather than the Reader
 - 🔲 **Planner** Reader should support mabel `by_` segments (basic support)
 - ⬛ **Execution** Support `LEFT JOIN`
 
@@ -21,6 +20,7 @@ Beta 0.2 is primarily about optimizations, either internal to the engine or to t
 - 🔲 **Execution** Reads should be cached so that identical reads (segments, pushdowns) can be read from 'results' cache
 - 🔲 **Planner** Planner should use cost and range information (BRIN) in sidecar metadata files 
 - 🔲 **Planner** Planner should use cost estimates to pick a `by_` segment
+- 🔲 **Planner** Planner should plan the reads rather than the Reader
 - 🔲 **Execution** Functions using the result of functions (e.g. LENGTH(AGG_LIST(field)))
 - 🔲 **Execution** Inline operators (e.g. firstname || surname)
 - 🔲 **Execution** all `JOIN` operators use Cython (or native pyarrow if available)
@@ -29,7 +29,7 @@ Beta 0.2 is primarily about optimizations, either internal to the engine or to t
  
 ## Version 1.0
 
-Version 1 aims to be feature complete for current known use cases
+Version 1.0 aims to be feature complete for current known use cases
 
 Version 1.0 goals may be delivered in other beta versions building toward v1.0
 
