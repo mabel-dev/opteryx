@@ -4,15 +4,15 @@ Opteryx uses a reduced set of types compared to full RDBMS platforms.
 
 ## Types
 
-Name        | Description
------------ | ------------------------------------------
-`BOOLEAN`   | Logical boolean (True/False).
-`NUMERIC`   | All numeric types
-`LIST`      | An ordered sequence of data values.
-`VARCHAR`   | Variable-length character string.
-`STRUCT`    | A dictionary of multiple named values, where each key is a string, but the value can be a different type for each key.
-`TIMESTAMP` | Combination of date and time.
-`OTHER`     | None of the above or multiple types in the same column. 
+Name        | Icon                         | Description
+----------- | ---------------------------- | --------------
+`BOOLEAN`   | :fontawesome-solid-check:    | Logical boolean (True/False).
+`NUMERIC`   | :fontawesome-solid-hashtag:  | All numeric types
+`LIST`      | :fontawesome-solid-bars:     | An ordered sequence of data values.
+`VARCHAR`   | :fontawesome-solid-a:        | Variable-length character string.
+`STRUCT`    | :fontawesome-solid-box:      | A dictionary of multiple named values, where each key is a string, but the value can be a different type for each key.
+`TIMESTAMP` | :fontawesome-regular-clock:  | Combination of date and time.
+`OTHER`     | :fontawesome-solid-question: | None of the above or multiple types in the same column. 
 
 !!! note
     OTHER is not a type, it is a catch-all when a type cannot be determined.
