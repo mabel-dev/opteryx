@@ -183,7 +183,8 @@ class JoinNode(BasePlanNode):
     def name(self):
         return f"({self._join_type}) Join"
 
-    def __repr__(self):
+    @property
+    def config(self):
         return ""
 
     def execute(self, data_pages: Iterable) -> Iterable:

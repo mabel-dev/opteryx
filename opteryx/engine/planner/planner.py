@@ -89,6 +89,9 @@ class QueryPlanner(object):
         self._start_date = datetime.datetime.today()
         self._end_date = datetime.datetime.today()
 
+    def __repr__(self):
+        return "QueryPlanner"
+
     def copy(self):
         qp = QueryPlanner(self._statistics, self._reader, self._partition_scheme)
         qp._start_date = self._start_date
@@ -722,7 +725,7 @@ class QueryPlanner(object):
         def _inner_explain(operator_name, depth):
             depth += 1
             operator = self.get_operator(operator_name)
-            yield {"operator": operator.name, "config": repr(operator), "depth": depth}
+            yield {"operator": operator.name, "config": operator.config, "depth": depth}
             out_going_links = self.get_outgoing_links(operator_name)
             if out_going_links:
                 for next_operator_name in out_going_links:
@@ -814,8 +817,8 @@ class QueryPlanner(object):
         self.edges += assimilatee.edges
         self.edges = list(set(self.edges))
 
-    def __repr__(self):
-        return "\n".join(list(self._draw()))
+#    def __repr__(self):
+#        return "\n".join(list(self._draw()))
 
     def _inner_execute(self, operator_name, relation):
         # print(f"***********{operator_name}***************")

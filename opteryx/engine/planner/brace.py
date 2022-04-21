@@ -139,8 +139,9 @@ AS employees (EMPNO, ENAME, JOB, MGR, HIREDATE, SAL, COMM, DEPTNO);
     SQL = "SELECT Mission FROM $astronauts CROSS JOIN UNNEST(Missions) as Mission WHERE Mission = 'Apollo 11'"
     SQL = "SELECT * FROM $satellites WHERE size = 1"
     #    SQL = "SELECT Missions FROM $astronauts WHERE LIST_CONTAINS(Missions, 'Apollo 8')"
-    #    SQL = "SELECT * FROM $satellites LEFT JOIN $planets ON $satellites.planetId = $planets.id WHERE planetId = NONE"
+    #SQL = "EXPLAIN SELECT * FROM $satellites LEFT JOIN $planets ON $satellites.planetId = $planets.id WHERE planetId = NONE"
     #SQL = "SELECT * FROM $satellites WHERE name = 'Calypso'"
+    SQL = "explain SELECT * FROM ( SELECT COUNT(*) FROM $planets )"
 
     _, _, SQL = extract_temporal_filters(SQL)
     ast = sqloxide.parse_sql(SQL, dialect="mysql")

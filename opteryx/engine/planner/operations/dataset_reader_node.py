@@ -113,10 +113,13 @@ class DatasetReaderNode(BasePlanNode):
         # pushed down selection
         self._selection = config.get("selection")
 
-    def __repr__(self):
+    @property
+    def config(self):
         if self._alias:
             return f"{self._dataset} => {self._alias}"
-        return self._dataset
+        if isinstance(self._dataset, str):
+            return self._dataset
+        return "<complex dataset>"
 
     @property
     def name(self):

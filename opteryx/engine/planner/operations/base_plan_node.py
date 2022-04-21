@@ -38,3 +38,7 @@ class BasePlanNode(abc.ABC):
     @property
     def name(self):
         return "no name"
+
+    @property
+    def config(self):
+        return "<not set>"

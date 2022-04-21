@@ -30,7 +30,8 @@ class ExplainNode(BasePlanNode):
     def name(self):
         return "Explain"
 
-    def __repr__(self):
+    @property
+    def config(self):
         return ""
 
     def execute(self, data_pages: Iterable) -> Iterable:

@@ -199,7 +199,8 @@ class SelectionNode(BasePlanNode):
     def __init__(self, statistics: QueryStatistics, **config):
         self._filter = config.get("filter")
 
-    def __repr__(self):
+    @property
+    def config(self):
         return str(self._filter)
 
     @property

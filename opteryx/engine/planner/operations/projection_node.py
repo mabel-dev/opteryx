@@ -62,7 +62,8 @@ class ProjectionNode(BasePlanNode):
             else:
                 self._projection[attribute] = None
 
-    def __repr__(self):
+    @property
+    def config(self):
         return str(self._projection)
 
     @property

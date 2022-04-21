@@ -52,6 +52,10 @@ class EvaluationNode(BasePlanNode):
     def name(self):
         return "Evaluation"
 
+    @property
+    def config(self):
+        return f"{self.functions}"
+
     def execute(self, data_pages: Iterable) -> Iterable:
 
         if isinstance(data_pages, pyarrow.Table):

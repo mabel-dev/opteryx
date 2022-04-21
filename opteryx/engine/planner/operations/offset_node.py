@@ -31,7 +31,8 @@ class OffsetNode(BasePlanNode):
     def name(self):
         return "Offset"
 
-    def __repr__(self) -> str:
+    @property
+    def config(self):
         return str(self._offset)
 
     def execute(self, data_pages: Iterable) -> Iterable:

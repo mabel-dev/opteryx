@@ -28,7 +28,8 @@ class DistinctNode(BasePlanNode):
     def __init__(self, statistics: QueryStatistics, **config):
         self._distinct = config.get("distinct", True)
 
-    def __repr__(self) -> str:
+    @property
+    def config(self):
         return ""
 
     def greedy(self):

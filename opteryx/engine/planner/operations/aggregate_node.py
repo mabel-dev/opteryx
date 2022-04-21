@@ -121,7 +121,8 @@ class AggregateNode(BasePlanNode):
 
         self._project = [p for p in self._project if p is not None]
 
-    def __repr__(self):
+    @property
+    def config(self):
         return str(self._aggregates)
 
     def greedy(self):
