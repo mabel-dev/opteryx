@@ -25,6 +25,6 @@ Function        | Description
 `VAR_POP(a)`    | Population variance for values in column 'a'
 
 !!! note
-    - `GROUP BY` can be used with functions in the `SELECT` clause, but not by aliases.
+    - `GROUP BY` can be used with functions in the `SELECT` clause, but not with aliases.
     - `GROUP BY` can't be used by the result of the `CAST` function, but be used for specific type cast functions like `NUMERIC`, `VARCHAR` and `BOOLEAN`.
     - `GROUP BY` can't be used with map expressions (e.g. `struct[key]`).
