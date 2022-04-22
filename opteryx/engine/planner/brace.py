@@ -13,8 +13,10 @@ def test(SQL):
     from opteryx.utils.display import ascii_table
     import opteryx
     from opteryx.storage.adapters import DiskStorage
+    from opteryx.storage.cache.memory_cache import InMemoryCache
+    from opteryx.storage.cache.memcached_cache import MemcachedCache
 
-    conn = opteryx.connect(reader=DiskStorage(), partition_scheme=None)
+    conn = opteryx.connect(reader=DiskStorage(), cache=MemcachedCache(server="127.0.0.1:11211"), partition_scheme=None)
     cur = conn.cursor()
 
     with timer.Timer():
@@ -141,7 +143,8 @@ AS employees (EMPNO, ENAME, JOB, MGR, HIREDATE, SAL, COMM, DEPTNO);
     #    SQL = "SELECT Missions FROM $astronauts WHERE LIST_CONTAINS(Missions, 'Apollo 8')"
     #SQL = "EXPLAIN SELECT * FROM $satellites LEFT JOIN $planets ON $satellites.planetId = $planets.id WHERE planetId = NONE"
     #SQL = "SELECT * FROM $satellites WHERE name = 'Calypso'"
-    SQL = "explain SELECT * FROM ( SELECT COUNT(*) FROM $planets )"
+    SQL = "SELECT * FROM ( SELECT COUNT(*) FROM $planets )"
+    SQL = "SELECT * FROM tests.data.dated FOR DATES BETWEEN '2020-02-01' AND '2020-02-28'"
 
     _, _, SQL = extract_temporal_filters(SQL)
     ast = sqloxide.parse_sql(SQL, dialect="mysql")

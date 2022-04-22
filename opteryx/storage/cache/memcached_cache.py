@@ -1,12 +1,27 @@
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+"""
+This implements an interface to Memcached
+"""
+
+import io
 from functools import lru_cache
 
-
 @lru_cache(1)
-def memcached_server():
+def _memcached_server(**kwargs):
     import os
 
     # the server must be set in the environment
-    memcached_config = os.environ.get("MEMCACHED_SERVER", None)
+    memcached_config = kwargs.get("server", os.environ.get("MEMCACHED_SERVER"))
     if memcached_config is None:
         return None
 
@@ -34,3 +49,22 @@ def memcached_server():
         connect_timeout=1,
         timeout=1,
     )
+
+
+from opteryx.storage import BaseBufferCache
+
+
+class MemcachedCache(BaseBufferCache):
+    def __init__(self, **kwargs):
+        self._server = _memcached_server(**kwargs)
+
+    def get(self, key):
+        if self._server:
+            response = self._server.get(key)
+            if response:
+                return io.BytesIO(response)
+
+    def set(self, key, value):
+        if self._server:
+            self._server.set(key, value.read())
+            value.seek(0)

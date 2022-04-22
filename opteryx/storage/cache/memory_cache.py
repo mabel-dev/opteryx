@@ -26,10 +26,10 @@ class InMemoryCache(BaseBufferCache):
     def __init__(self, **kwargs):
         """
         Parameters:
-            cache_size: int (optional)
+            size: int (optional)
                 The maximim number of items maintained in the cache.
         """
-        self._cache_size = int(kwargs.get("cache_size", 50))
+        self._size = int(kwargs.get("size", 50))
         self._cache = {}
 
     def get(self, key):
@@ -46,7 +46,7 @@ class InMemoryCache(BaseBufferCache):
         self._cache[key] = value
 
         # if we're  full, we want to remove the oldest item from the cache
-        if len(self._cache) == self.size:
+        if len(self._cache) == self._size:
             # we want to remove the first item in the dict, we could convert to a list,
             # but then we need to create a list, this is faster and uses less memory
             self._cache.pop(next(iter(self._cache)))

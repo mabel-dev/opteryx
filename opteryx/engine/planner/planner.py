@@ -72,7 +72,7 @@ OPERATOR_XLAT = {
 
 
 class QueryPlanner(object):
-    def __init__(self, statistics, reader, partition_scheme):
+    def __init__(self, statistics, reader, cache, partition_scheme):
         """
         PLan represents Directed Acyclic Graphs which are used to describe data
         pipelines.
@@ -84,6 +84,7 @@ class QueryPlanner(object):
 
         self._statistics = statistics
         self._reader = reader
+        self._cache = cache
         self._partition_scheme = partition_scheme
 
         self._start_date = datetime.datetime.today()
@@ -93,7 +94,11 @@ class QueryPlanner(object):
         return "QueryPlanner"
 
     def copy(self):
-        qp = QueryPlanner(self._statistics, self._reader, self._partition_scheme)
+        qp = QueryPlanner(
+            statistics=self._statistics,
+            reader=self._reader,
+            cache=self._cache,
+            partition_scheme=self._partition_scheme)
         qp._start_date = self._start_date
         qp._end_date = self._end_date
         return qp
@@ -568,6 +573,7 @@ class QueryPlanner(object):
                 statistics,
                 dataset=(None, relation),
                 reader=self._reader,
+                cache=self._cache,
                 partition_scheme=self._partition_scheme,
                 start_date=self._start_date,
                 end_date=self._end_date,
@@ -613,6 +619,7 @@ class QueryPlanner(object):
                 statistics,
                 dataset=_relations[0],
                 reader=self._reader,
+                cache=self._cache,
                 partition_scheme=self._partition_scheme,
                 start_date=self._start_date,
                 end_date=self._end_date,
@@ -632,6 +639,7 @@ class QueryPlanner(object):
                     statistics,
                     dataset=_join[1],
                     reader=self._reader,
+                    cache=self._cache,
                     partition_scheme=self._partition_scheme,
                     start_date=self._start_date,
                     end_date=self._end_date,

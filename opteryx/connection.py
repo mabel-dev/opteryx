@@ -72,7 +72,6 @@ class Cursor:
         """
         Formats parameters to be passed to a Query.
         """
-        import uuid
         import datetime
         from decimal import Decimal
 
@@ -142,16 +141,17 @@ class Cursor:
                 )
 
         self._query_plan = QueryPlanner(
-            self._stats,
-            self._connection._reader,
-            self._connection._partition_scheme,
+            statistics=self._stats,
+            reader=self._connection._reader,
+            cache=self._connection._cache,
+            partition_scheme=self._connection._partition_scheme,
         )
         self._query_plan.create_plan(sql=operation)
-        # optimize the plan
+        
+        # TODO:run optimizer
 
         # how long have we spent planning
         self._stats.time_planning = time.time_ns() - self._stats.start_time
-        # self._execute = QueryExecutor(QueryPlan)
         self._results = self._query_plan.execute()
 
     @property

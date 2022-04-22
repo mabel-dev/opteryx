@@ -33,6 +33,7 @@ from enum import Enum
 from typing import Iterable, Optional
 
 import orjson
+from cityhash import CityHash64
 from opteryx.exceptions import DatabaseError
 from opteryx.engine.planner.operations import BasePlanNode
 from opteryx.engine import QueryStatistics
@@ -103,6 +104,7 @@ class DatasetReaderNode(BasePlanNode):
 
         self._dataset = self._dataset.replace(".", "/") + "/"
         self._reader = config.get("reader", DiskStorage())
+        self._cache = config.get("cache")
         self._partition_scheme = config.get("partition_scheme", MabelPartitionScheme())
 
         self._start_date = config.get("start_date", TODAY)
@@ -240,7 +242,23 @@ class DatasetReaderNode(BasePlanNode):
                 start_read = time.time_ns()
 
                 # Read the blob from storage, it's just a stream of bytes at this point
-                blob_bytes = self._reader.read_blob(blob_name)
+                
+                # if we have a cache set
+                if self._cache:
+                    # hash the blob name for the look up
+                    blob_hash = format(CityHash64(blob_name), "X")
+                    # try to read the cache
+                    blob_bytes = self._cache.get(blob_hash)
+
+                    # if the item was a miss, get it from storage and add it to the cache
+                    if blob_bytes is None:
+                        self._statistics.cache_misses += 1
+                        blob_bytes = self._reader.read_blob(blob_name)
+                        self._cache.set(blob_hash, blob_bytes)
+                    else:
+                        self._statistics.cache_hits += 1
+                else:
+                    blob_bytes = self._reader.read_blob(blob_name)
 
                 # record the number of bytes we're reading
                 self._statistics.bytes_read_data += blob_bytes.getbuffer().nbytes
