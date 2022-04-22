@@ -20,7 +20,7 @@ when it's accessed. This relies on Python dictionaries being ordered.
 """
 
 from opteryx.storage import BaseBufferCache
-
+import io
 
 class InMemoryCache(BaseBufferCache):
     def __init__(self, **kwargs):
@@ -39,11 +39,12 @@ class InMemoryCache(BaseBufferCache):
         value = self._cache.pop(key, None)
         if value:
             self._cache[key] = value
-        return value
+            return io.BytesIO(value)
 
     def set(self, key, value):
         # add the new item to the top of the dict
-        self._cache[key] = value
+        self._cache[key] = value.read()
+        value.seek(0)
 
         # if we're  full, we want to remove the oldest item from the cache
         if len(self._cache) == self._size:

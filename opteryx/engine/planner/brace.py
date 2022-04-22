@@ -6,6 +6,11 @@ sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
 
 from opteryx.engine.planner.temporal import extract_temporal_filters
 
+from opteryx.storage.cache.memory_cache import InMemoryCache
+from opteryx.storage.cache.memcached_cache import MemcachedCache
+
+cache = InMemoryCache(size=100)
+# cache = MemcachedCache(server="127.0.0.1:11211")
 
 def test(SQL):
 
@@ -13,10 +18,8 @@ def test(SQL):
     from opteryx.utils.display import ascii_table
     import opteryx
     from opteryx.storage.adapters import DiskStorage
-    from opteryx.storage.cache.memory_cache import InMemoryCache
-    from opteryx.storage.cache.memcached_cache import MemcachedCache
 
-    conn = opteryx.connect(reader=DiskStorage(), cache=MemcachedCache(server="127.0.0.1:11211"), partition_scheme=None)
+    conn = opteryx.connect(reader=DiskStorage(), cache=cache, partition_scheme=None)
     cur = conn.cursor()
 
     with timer.Timer():
@@ -155,4 +158,5 @@ AS employees (EMPNO, ENAME, JOB, MGR, HIREDATE, SAL, COMM, DEPTNO);
     import cProfile
 
     with cProfile.Profile(subcalls=False) as pr:
+        test(SQL)
         test(SQL)
