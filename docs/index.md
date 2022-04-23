@@ -1,6 +1,6 @@
 # Overview
 
-Opteryx is a distributed SQL query engine to query large data sets designed to run in low-cost serverless environments.
+Opteryx is a SQL query engine to query large data sets designed to run in low-cost serverless environments.
 
 ## Use Cases
 

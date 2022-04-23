@@ -114,7 +114,7 @@ class Columns(object):
             matches.extend([k for alias in v.get("aliases", []) if alias == column])
         if only_one:
             if len(matches) == 0:
-                raise SqlError(f"Field `{column}` does not exist.")
+                raise SqlError(f"Field `{column}` cannot be found.")
             if len(matches) > 1:
                 raise SqlError(
                     f"Field `{column}` is ambiguous, try qualifying the field name."

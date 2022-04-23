@@ -121,6 +121,11 @@ class AggregateNode(BasePlanNode):
 
         self._project = [p for p in self._project if p is not None]
 
+        # are we projecting by something not being grouped by?
+        if not set(self._groups).issubset(self._project):
+            raise SqlError("All items in SELECT clause must be aggregates or included in the GROUP BY clause.")
+
+
     @property
     def config(self):
         return str(self._aggregates)

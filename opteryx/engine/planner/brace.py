@@ -148,6 +148,8 @@ AS employees (EMPNO, ENAME, JOB, MGR, HIREDATE, SAL, COMM, DEPTNO);
     #SQL = "SELECT * FROM $satellites WHERE name = 'Calypso'"
     SQL = "SELECT * FROM ( SELECT COUNT(*) FROM $planets )"
     SQL = "SELECT * FROM tests.data.dated FOR DATES BETWEEN '2020-02-01' AND '2020-02-28'"
+    SQL = "SELECT Name, COUNT(*) AS N FROM $astronauts"
+#    SQL = "SELECT COUNT(name) FROM $satellites"
 
     _, _, SQL = extract_temporal_filters(SQL)
     ast = sqloxide.parse_sql(SQL, dialect="mysql")
@@ -158,5 +160,4 @@ AS employees (EMPNO, ENAME, JOB, MGR, HIREDATE, SAL, COMM, DEPTNO);
     import cProfile
 
     with cProfile.Profile(subcalls=False) as pr:
-        test(SQL)
         test(SQL)
