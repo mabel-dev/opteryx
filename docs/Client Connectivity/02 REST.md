@@ -15,7 +15,7 @@ This API submits a SQL query and receives a Job reference in return.
 
 **Request Body**
 
-~~~json
+~~~
 {
     "sql": String
 }
@@ -37,7 +37,7 @@ Returns a Job ID for the query. Monitoring of the job status and fetching result
 }
 ~~~
 
-## Submit a Query (synchronos)
+## Run a Query (synchronos)
 
 This API submits a SQL query and waits for the result before returning.
 
@@ -49,7 +49,7 @@ This API submits a SQL query and waits for the result before returning.
 
 **Request Body**
 
-~~~json
+~~~
 {
     "sql": String
 }
@@ -101,6 +101,7 @@ startedAt | IS0 8601 date (example: `2022-04-21T18:49:13Z`) representing the dat
 statusAt  | IS0 8601 date (example: `2022-04-21T18:49:13Z`) representing the datetime the current status was active from.
 
 **Job Statuses**
+
 State       | Meaning
 ----------- | -----------------------------------
 `PENDING`   | Job has not been run yet
