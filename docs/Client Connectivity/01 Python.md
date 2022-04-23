@@ -1,4 +1,4 @@
-# Python Client
+# Python Library
 
 ## Python DBAPI
 

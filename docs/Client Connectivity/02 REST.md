@@ -3,7 +3,7 @@
 !!! warning
     This is not currently not available
 
-## Submit a Query (asynchronos)
+## Submit a Query (asynchronous)
 
 This API submits a SQL query and receives a Job reference in return.
 
@@ -37,7 +37,7 @@ Returns a Job ID for the query. Monitoring of the job status and fetching result
 }
 ~~~
 
-## Run a Query (synchronos)
+## Run a Query (synchronous)
 
 This API submits a SQL query and waits for the result before returning.
 
@@ -118,7 +118,7 @@ Code  | Meaning
 `403` | The User does not have permisson to this Job
 `404` | The Job could not be found
 
-## Get Job Result
+## Job Result
 
 This API retrieves the results of a Job.
 
