@@ -3,14 +3,14 @@
 !!! warning
     This is not currently not available
 
-## Submit a Query
+## Submit a Query (asynchronos)
 
-This API submits a SQL query.
+This API submits a SQL query and receives a Job reference in return.
 
 **End Point**
 
 ~~~
-[POST] /api/v1/submit
+[POST] /api/v1/job
 ~~~
 
 **Request Body**
@@ -37,6 +37,31 @@ Returns a Job ID for the query. Monitoring of the job status and fetching result
 }
 ~~~
 
+## Submit a Query (synchronos)
+
+This API submits a SQL query and waits for the result before returning.
+
+**End Point**
+
+~~~
+[POST] /api/v1/query
+~~~
+
+**Request Body**
+
+~~~json
+{
+    "sql": String
+}
+~~~
+
+**Parameters**
+
+Parameter | Type   | Description
+--------- | ------ | ------------------------------------------
+sql       | String | Represents the SQL query you want to run.
+
+
 ## Job Status
 
 This API retrieves information about a job.
@@ -60,7 +85,7 @@ Returns a Job ID for the query. Monitoring of the job status and fetching result
 ~~~
 {
   "id": string,
-  "jobState": string [PENDING, RUNNING, FAILED, COMPLETED],
+  "jobState": string [PENDING, RUNNING, FAILED, PARTIAL, COMPLETED],
   "startedAt": string (ISO 8601 timestamp),
   "statusAt": string (ISO 8601 timestamp)
 }
@@ -71,17 +96,26 @@ Returns a Job ID for the query. Monitoring of the job status and fetching result
 Parameter | Description
 --------- | -------------------------------------------------------------------
 id        | The reference for the Job to retrieve the status for.
-jobState  | The current state of the Job, either `PENDING`, `RUNNING`, `FAILED` or `COMPLETED`
+jobState  | The current state of the Job, either `PENDING`, `RUNNING`, `FAILED`, `PARTIAL` or `COMPLETED`
 startedAt | IS0 8601 date (example: `2022-04-21T18:49:13Z`) representing the datetime the query was started.
 statusAt  | IS0 8601 date (example: `2022-04-21T18:49:13Z`) representing the datetime the current status was active from.
 
-**Response Codes**
+**Job Statuses**
+State       | Meaning
+----------- | -----------------------------------
+`PENDING`   | Job has not been run yet
+`RUNNING`   | Job is currently running
+`FAILED`    | Job has failed to complete
+`PARTIAL`   | Job has completed at least one page of results
+`COMPLETED` | Job has completed
 
-Code | Meaning
----- | ------------------------------------
-200  | Successful
-403  | The User does not have permisson to this Job
-404  | The Job could not be found
+**HTTP Response Codes**
+
+Code  | Meaning
+----- | ------------------------------------
+`200` | Successful
+`403` | The User does not have permisson to this Job
+`404` | The Job could not be found
 
 ## Get Job Result
 
@@ -120,11 +154,11 @@ Parameter | Description
 --------- | -------------------------------------------------------------------
 
 
-**Response Codes**
+**HTTP Response Codes**
 
-Code | Meaning
----- | ------------------------------------
-200  | Successful
-403  | The User does not have permisson to this Job
-404  | The Job could not be found
-409  | The Job is not in a `COMPLETED` state
+Code  | Meaning
+----- | ------------------------------------
+`200` | Successful
+`403` | The User does not have permisson to this Job
+`404` | The Job could not be found
+`409` | The Job is not in a `COMPLETED` state
