@@ -162,9 +162,10 @@ STATEMENTS = [
         ("SELECT COUNT(*), GET(Birth_Place, 'town') FROM $astronauts GROUP BY GET(Birth_Place, 'town')", 264, 2),
         ("SELECT Birth_Place['town'] FROM $astronauts", 357, 1),
         ("SELECT Missions[0] FROM $astronauts", 357, 1),
-# Maps are currently not supported for selections or aggregations
-#        ("SELECT Birth_Place['town'] FROM $astronauts WHERE Birth_Place['town'] = 'Warsaw'", 1, 1),
-#        ("SELECT COUNT(*), Birth_Place['town'] FROM $astronauts GROUP BY Birth_Place['town']", 264, 2),
+
+        ("SELECT Birth_Place['town'] FROM $astronauts WHERE Birth_Place['town'] = 'Warsaw'", 1, 1),
+        ("SELECT Birth_Place['town'] AS TOWN FROM $astronauts WHERE Birth_Place['town'] = 'Warsaw'", 1, 1),
+        ("SELECT COUNT(*), Birth_Place['town'] FROM $astronauts GROUP BY Birth_Place['town']", 264, 2),
         ('SELECT LENGTH(Missions) FROM $astronauts', 357, 1),
         ('SELECT LENGTH(Missions) FROM $astronauts WHERE LENGTH(Missions) > 6', 2, 1),
 
@@ -177,6 +178,9 @@ STATEMENTS = [
         ("SELECT TODAY() FROM $planets", 9, 1),
         ("SELECT YEAR(Birth_Date), COUNT(*) FROM $astronauts GROUP BY YEAR(Birth_Date)", 54, 2),
         ("SELECT MONTH(Birth_Date), COUNT(*) FROM $astronauts GROUP BY MONTH(Birth_Date)", 12, 2),
+
+        ("SELECT count(*), VARCHAR(Year) FROM $astronauts GROUP BY VARCHAR(Year)", 21, 2),
+        ("SELECT count(*), CAST(Year AS VARCHAR) FROM $astronauts GROUP BY CAST(Year AS VARCHAR)", 21, 2),
 
         ("SELECT RANDOM()", 1, 1),
         ("SELECT NOW()", 1, 1),

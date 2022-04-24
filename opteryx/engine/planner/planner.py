@@ -381,12 +381,12 @@ class QueryPlanner(object):
 
         def _inner(attribute):
             function = None
-            alias = None
+            alias = []
             if "UnnamedExpr" in attribute:
                 function = attribute["UnnamedExpr"]
             if "ExprWithAlias" in attribute:
                 function = attribute["ExprWithAlias"]["expr"]
-                alias = attribute["ExprWithAlias"]["alias"]["value"]
+                alias = [attribute["ExprWithAlias"]["alias"]["value"]]
 
             if function:
                 if "Identifier" in function:
@@ -399,9 +399,7 @@ class QueryPlanner(object):
                         "identifier": [
                             p["value"] for p in function["CompoundIdentifier"]
                         ].pop(),
-                        "alias": ".".join(
-                            [p["value"] for p in function["CompoundIdentifier"]]
-                        ),
+                        "alias": [".".join([p["value"] for p in function["CompoundIdentifier"]])],
                     }
                 if "Function" in function:
                     func = function["Function"]["name"][0]["value"].upper()
@@ -432,8 +430,7 @@ class QueryPlanner(object):
                     else:
                         raise SqlError("Unsupported CAST function")
 
-                    if alias is None:
-                        alias = f"CAST({args[0][0]} AS {data_type})"
+                    alias.append(f"CAST({args[0][0]} AS {data_type})")
 
                     return {"function": data_type, "args": args, "alias": alias}
                 if "MapAccess" in function:
@@ -452,8 +449,7 @@ class QueryPlanner(object):
                             TOKEN_TYPES.NUMERIC,
                         )
                         key = key_dict["Number"][0]
-                    if alias is None:
-                        alias = f"{identifier}[{key}]"
+                    alias.append(f"{identifier}[{key}]")
 
                     return {
                         "function": "GET",
@@ -549,7 +545,18 @@ class QueryPlanner(object):
                         for a in args
                     ]
                     return f"{func.upper()}({','.join([str(a[0]) for a in args])})"
-
+                if "Cast" in element:
+                    args = [self._build_dnf_filters(element["Cast"]["expr"])]
+                    data_type = list(element["Cast"]["data_type"].keys())[0]
+                    return f"CAST({args[0][0]} AS {str(data_type).upper()})"
+                if "MapAccess" in element:
+                    identifier = element["MapAccess"]["column"]["Identifier"]["value"]
+                    key_dict = element["MapAccess"]["keys"][0]["Value"]
+                    if "SingleQuotedString" in key_dict:
+                        key = f"'{key_dict['SingleQuotedString']}'"
+                    if "Number" in key_dict:
+                        key = key_dict["Number"][0]
+                    return f"{identifier}[{key}]"
         groups = ast[0]["Query"]["body"]["Select"]["group_by"]
         return [_inner(g) for g in groups]
 

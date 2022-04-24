@@ -94,6 +94,8 @@ class EvaluationNode(BasePlanNode):
                     page, function["column_name"], calculated_values
                 )
                 columns.add_column(function["column_name"])
+                for alias in function.get("alias", []):
+                    columns.add_alias(function["column_name"], alias)
                 page = columns.apply(page)
 
             # for alias, add aliased column, do this after the functions because they

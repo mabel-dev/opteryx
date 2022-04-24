@@ -7,7 +7,7 @@ The initial beta release will have at least all of the functionality of the SQL 
 Work to do before release:
 
 - 🔲 **General** Improvements to error messages
-- 🔲 **Caching** Memcached buffer pool (cache-aside), this should include hit/miss statistics
+- ⬛ **Caching** Memcached buffer pool (cache-aside), this should include hit/miss statistics
 - 🔲 **Planner** Reader should support mabel `by_` segments (basic support)
 - ⬛ **Execution** Support `LEFT JOIN`
 

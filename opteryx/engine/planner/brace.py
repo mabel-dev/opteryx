@@ -149,7 +149,12 @@ AS employees (EMPNO, ENAME, JOB, MGR, HIREDATE, SAL, COMM, DEPTNO);
     SQL = "SELECT * FROM ( SELECT COUNT(*) FROM $planets )"
     SQL = "SELECT * FROM tests.data.dated FOR DATES BETWEEN '2020-02-01' AND '2020-02-28'"
     SQL = "SELECT Name, COUNT(*) AS N FROM $astronauts"
-#    SQL = "SELECT COUNT(name) FROM $satellites"
+    SQL = "SELECT count(*), VARCHAR(Year) FROM $astronauts GROUP BY VARCHAR(Year)"
+    SQL = "SELECT COUNT(*), Birth_Place['town'] FROM $astronauts GROUP BY Birth_Place['town']"
+    SQL = "SELECT Birth_Place['town'] AS TOWN FROM $astronauts WHERE Birth_Place['town'] = 'Warsaw'"
+    SQL = "SELECT name, id, planetId FROM $satellites"
+    SQL = "SELECT CAST(Year AS VARCHAR) FROM $astronauts GROUP BY CAST(Year AS VARCHAR)"
+    SQL = "SELECT Name as N, COUNT(*) FROM $astronauts GROUP BY N"
 
     _, _, SQL = extract_temporal_filters(SQL)
     ast = sqloxide.parse_sql(SQL, dialect="mysql")

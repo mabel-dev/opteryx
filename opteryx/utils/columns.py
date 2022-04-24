@@ -23,8 +23,6 @@ WHERE column = 'one'
 The selection operator should focus on the selection not on working out which column
 is actually being referred to.
 """
-
-import enum
 import os
 import sys
 
@@ -134,7 +132,7 @@ class Columns(object):
     def create_table_metadata(table, expected_rows, name, table_aliases):
 
         # we're going to replace the column names with random strings
-        def random_string(length: int = 16) -> str:
+        def random_string(length: int = 12) -> str:
             import os
             import base64
 

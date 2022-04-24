@@ -100,6 +100,8 @@ class ProjectionNode(BasePlanNode):
             if any([v is not None for k, v in self._projection.items()]):  # type:ignore
                 existing_columns = page.column_names
                 for k, v in self._projection.items():
+                    if isinstance(v, list) and len(v) != 0:
+                        v = v[0]
                     if v and v not in existing_columns:
                         column_name = columns.get_column_from_alias(k, only_one=True)
                         columns.set_preferred_name(column_name, v)
