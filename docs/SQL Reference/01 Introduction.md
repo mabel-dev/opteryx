@@ -167,7 +167,7 @@ $satellites.id | planetId | $satellites.name | ...
 
 Observe two things about the result set:
 
-There are no result row for the planets of Mercury or Venus (_planetIds_ 1 and 2). This is because there is no matching entry in the _$satellites_ relation for these planets, so the join ignores the unmatched rows in the $planets relation.
+There are no result row for the planets of Mercury or Venus (_planetIds_ 1 and 2). This is because there is no matching entry in the _$satellites_ relation for these planets, so the join ignores the unmatched rows in the _$planets_ relation.
 
 Each of the relations being joined have an _id_ and a _name_ column, to ensure it is clear which relation the value being displayed is from, columns with clashing names are qualified with the relation name.
 
