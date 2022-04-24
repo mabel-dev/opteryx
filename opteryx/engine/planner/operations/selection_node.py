@@ -113,6 +113,9 @@ def _evaluate(predicate: Union[tuple, list], table: Table) -> bool:
         ):
             raise SqlError(f"Field `{predicate[0][0]}` does not exist.")
 
+        if len(predicate[0]) == 3 and isinstance(predicate[0][2], dict):
+            raise SqlError("WHERE clauses cannot contain function calls as part of an expression.")
+
         if not isinstance(predicate[0], tuple):
             return _evaluate(predicate[0], table)
 
