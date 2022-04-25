@@ -15,3 +15,5 @@ Do not take this as true for all situations, do test for your specific circumsta
 Files don't need an explicit schema, but each partition must have the same columns in the same order in every row of every file.
 
 Data types are inferred from the records, where data types are not consistent, the read will fail.
+
+Opteryx supports zStandard Compressed JSONL files as created by Mabel.
