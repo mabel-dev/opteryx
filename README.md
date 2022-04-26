@@ -4,23 +4,15 @@
 
 [Documentation](https://mabel-dev.github.io/opteryx/) |
 [Examples](notebooks) |
-[Contributing](.github/CONTRIBUTING.md) |
-[Blog](https://medium.com/opteryx)
+[Contributing](.github/CONTRIBUTING.md)
 
-----
-
-**NOTE**
-Opteryx is an alpha product. Alpha means different things to different people, to us, being alpha means:
-
-- Some features you may expect from a Query Engine may not be available
-- Some features may have undetected bugs in them
-- Some features may not be tuned for performance
-- Some previously working features may break
-
-----
-
-**Opteryx** has no server component, **Opteryx** just runs when you need it making it ideal
-for deployments to platforms like Kubernetes, GCP Cloud Run, AWS Fargate and Knative.
+> **NOTE**  
+> Opteryx is an alpha product. Alpha means different things to different people, to us, being alpha means:
+>
+> - Some features you may expect from a Query Engine may not be available
+> - Some features may have undetected bugs in them
+> - Some features may not be tuned for performance
+> - Some previously working features may break
 
 [![Status](https://img.shields.io/badge/status-alpha-yellowgreen)](https://github.com/mabel-dev/opteryx)
 [![Regression Suite](https://github.com/mabel-dev/opteryx/actions/workflows/regression_suite.yaml/badge.svg)](https://github.com/mabel-dev/opteryx/actions/workflows/regression_suite.yaml)
@@ -32,72 +24,29 @@ for deployments to platforms like Kubernetes, GCP Cloud Run, AWS Fargate and Kna
 [![commit_freq](https://img.shields.io/github/commit-activity/m/mabel-dev/opteryx)](https://github.com/mabel-dev/opteryx/commits)
 [![last_commit](https://img.shields.io/github/last-commit/mabel-dev/opteryx)](https://github.com/mabel-dev/opteryx/commits)
 
- 
-- **Bug Reports** [GitHub Issues](https://github.com/mabel-dev/opteryx/issues/new/choose)  
-- **Feature Requests** [GitHub Issues](https://github.com/mabel-dev/opteryx/issues/new/choose)  
-- **Source Code**  [GitHub](https://github.dev/mabel-dev/opteryx)  
-- **Discussions** [GitHub Discussions](https://github.com/mabel-dev/opteryx/discussions)
-
-## How Can I Contribute?
-
-All contributions, bug reports, bug fixes, documentation improvements, enhancements, and ideas are welcome.
-
-If you have a suggestion for an improvement or a bug, 
-[raise a ticket](https://github.com/mabel-dev/opteryx/issues/new/choose) or start a
-[discussion](https://github.com/mabel-dev/opteryx/discussions).
-
-Want to help build mabel? See the [contribution guidance](https://github.com/mabel-dev/opteryx/blob/main/.github/CONTRIBUTING.md).
+**Opteryx** has no server component, **Opteryx** just runs when you need it making it ideal for deployments to platforms like Kubernetes, GCP Cloud Run, AWS Fargate and Knative.
 
 ## What Opteryx is
 
-#### How is it different to SQLite or DuckDB?
+Opteryx is a SQL Engine for serverless environments.
 
-Opteryx is solving a different problem in the same space as these solutions. Opteryx
-avoids loading the dataset into memory unless there is no other option, as such it
-can query petabytes of data on a single, modest sized node.
+- Time Travel (Temporal Queries)
+- Isolated Execution
+- Native Python Library
+- Query files held on object storage (GCS, S3)
 
-This also means that queries are not as fast as solutions like SQLite or DuckDB.
+## How Can I Contribute?
 
-#### How is it different to MySQL or BigQuery?
+All contributions, [bug reports](https://github.com/mabel-dev/opteryx/issues/new/choose), bug fixes, documentation improvements, enhancements, and [ideas](https://github.com/mabel-dev/opteryx/issues/new/choose) are welcome.
 
-Opteryx is an ad hoc database, if it can read the files, it can be used to query 
-the contents of them. This means it can leverage data files used by other systems.
+If you have a suggestion for an improvement or a bug, [raise a ticket](https://github.com/mabel-dev/opteryx/issues/new/choose) or start a [discussion](https://github.com/mabel-dev/opteryx/discussions).
 
-Opteryx is read-only, you can't update or delete data, and it also doesn't have or
-enforce indexes in your data.
-
-#### How is it differnt to Trino?
-
-Opteryx is designed to run in a serverless environment where there is no persistent
-state. There is no server or coordinator for Opteryx, the Engine is only running when
-it is serving queries.
-
-When you are not running queries, your cost to run Opteryx is nil (+). This is
-particularly useful if you have a small team accessing data.
-
-This also means the Query Engine can scale quickly to respond to demand, running
-Opteryx in an environment like Cloud Run on GCP, you can scale from 0 to 1000
-concurrent queries within seconds - back to 0 almost as quickly.
-
-(+) depending on specifics of your hosting arrangement.
+Want to help build Opteryx? See the [contribution guidance](https://github.com/mabel-dev/opteryx/blob/main/.github/CONTRIBUTING.md).
 
 ## Security
 
-See the project [security policy](SECURITY.md) for information about reporting
-vulnerabilities.
+See the project [security policy](SECURITY.md) for information about reporting vulnerabilities.
 
 ## License
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/mabel-dev/opteryx/blob/master/LICENSE)
-
-
-
-The foundational technologies in Opteryx are:
-
-- Apache Arrow memory model and compute kernels for efficient processing of data
-- Parts of [PyArrow_Ops by Tom Scheffers](https://github.com/TomScheffers/pyarrow_ops/blob/main/LICENSE) has been integrated into the codebase to support handling Arrow structured data
-- [sqloxide](https://github.com/wseaton/sqloxide) is used to parse SQL queries to syntax trees
-- cython
-- numpy
-- orjson
-- [cityhash] is used for non-cryptographic hashing

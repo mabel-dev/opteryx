@@ -1,6 +1,6 @@
 # Configuration
 
-Configuration values are set in the operating system environment or in a `.env` file.
+Configuration values are set in the operating system environment.
 
 ## Properties
 
