@@ -259,7 +259,7 @@ class AggregateNode(BasePlanNode):
             table = Columns.create_table_metadata(
                 table=table,
                 expected_rows=len(collector),
-                name=columns.table_name,
+                name="groupby",
                 table_aliases=[],
             )
             yield table

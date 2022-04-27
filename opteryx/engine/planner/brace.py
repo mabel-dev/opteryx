@@ -19,7 +19,7 @@ def test(SQL):
     import opteryx
     from opteryx.storage.adapters import DiskStorage
 
-    conn = opteryx.connect(reader=DiskStorage(), cache=cache, partition_scheme=None)
+    conn = opteryx.connect(reader=DiskStorage(), cache=cache, partition_scheme="mabel")
     cur = conn.cursor()
 
     with timer.Timer():
@@ -156,10 +156,11 @@ AS employees (EMPNO, ENAME, JOB, MGR, HIREDATE, SAL, COMM, DEPTNO);
     SQL = "SELECT CAST(Year AS VARCHAR) FROM $astronauts GROUP BY CAST(Year AS VARCHAR)"
     SQL = "SELECT Name as N, COUNT(*) FROM $astronauts GROUP BY N"
     SQL = "SELECT * FROM $astronauts WHERE VARCHAR(Group) = '10'"
+    SQL = "SELECT COUNT(*) FROM tests.data.segmented FOR '2020-02-03'"
 
-    _, _, SQL = extract_temporal_filters(SQL)
-    ast = sqloxide.parse_sql(SQL, dialect="mysql")
-    print(json.dumps(ast, indent=2))
+    #_, _, SQL = extract_temporal_filters(SQL)
+    #ast = sqloxide.parse_sql(SQL, dialect="mysql")
+    #print(json.dumps(ast, indent=2))
 
     print()
 
