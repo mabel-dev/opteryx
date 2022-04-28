@@ -166,7 +166,7 @@ def extract_temporal_filters(sql):
     end_date = TODAY
 
     try:
-        pos = parts.index("FOR")
+        pos = parts.index("FOR") # this fails when there is no temporal clause
         for_date_string = parts[pos + 1]
         for_date = parse_date(for_date_string)
 
@@ -206,7 +206,6 @@ def extract_temporal_filters(sql):
         if start_date > end_date:
             start_date, end_date = end_date, start_date
     except Exception as e:
-        print(e)
         pass
 
     return start_date, end_date, sql

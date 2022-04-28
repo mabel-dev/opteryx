@@ -213,6 +213,8 @@ STATEMENTS = [
         ("SELECT * FROM tests.data.dated FOR YESTERDAY OFFSET 1", 0, 0),
         ("SELECT * FROM $satellites FOR YESTERDAY ORDER BY planetId OFFSET 10", 167, 8),
 
+        ("SELECT * FROM tests.data.segmented FOR '2020-02-03'", 25, 8),
+
         ("SELECT * FROM $satellites FOR DATES IN LAST_MONTH ORDER BY planetId OFFSET 10", 167, 8),
         ("SELECT * FROM $satellites FOR DATES IN LAST_CYCLE ORDER BY planetId OFFSET 10", 167, 8),
         ("SELECT * FROM $satellites FOR DATES IN THIS_MONTH ORDER BY planetId OFFSET 10", 167, 8),
