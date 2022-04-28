@@ -8,11 +8,13 @@ This supports the following syntaxes
 
 - FOR TODAY
 - FOR YESTERDAY
-- FOR DATE <timestamp>
+- FOR <timestamp>
 - FOR DATES BETWEEN <timestamp> AND <timestamp>
+- FOR DATES IN <range>
 
 """
 import re
+from opteryx.exceptions import SqlError
 from opteryx.utils import dates
 import datetime
 
@@ -28,6 +30,8 @@ SQL_PARTS = [
     r"OFFSET",
     r"INNER\sJOIN",
     r"CROSS\sJOIN",
+    r"LEFT\sJOIN",
+    r"LEFT\sOUTER\sJOIN",
     r"JOIN",
 ]
 
@@ -74,20 +78,64 @@ def remove_comments(string):
     return regex.sub(_replacer, string)
 
 
+def _subtract_one_month(in_date):
+    input_day = in_date.day
+    start_of_month = in_date.replace(day=1)
+    end_of_previous_month = start_of_month - datetime.timedelta(days=1)
+    done = False
+    delta = 0
+    while not done:
+        try:
+            out_date = end_of_previous_month.replace(day=input_day + delta)
+            done = True
+        except:
+            delta -= 1
+    return out_date
+
+
 def parse_range(range):
     range = range.upper()
     TODAY = datetime.date.today()
 
-    if range == "PREVIOUS_MONTH":
-        pass
-    if range == "THIS_MONTH":
-        pass
-    if range == "MONTH(YEAR, MONTH)":
-        pass
-    if range == "PREVIOUS_CYCLE(ROLL_OVER)":
-        pass
-    if range == "CYCLE(YEAR, MONTH, ROLL_OVER)":
-        pass
+    if range in ("PREVIOUS_MONTH", "LAST_MONTH"):
+        # end the day before the first of this month
+        end = TODAY.replace(day=1) - datetime.timedelta(days=1)
+        # start the first day of that month
+        start = end.replace(day=1)
+    elif range == "THIS_MONTH":
+        # start the first day of this month
+        start = TODAY.replace(day=1)
+        # end today
+        end = TODAY
+    elif range in ("PREVIOUS_CYCLE", "LAST_CYCLE"):
+        # if we're before the 21st
+        if TODAY.day < 22:
+            # end the 21st of last month
+            end = _subtract_one_month(TODAY).replace(day=21)
+            # start the 22nd of the month before
+            start = _subtract_one_month(end).replace(day=22)
+        else:
+            # end the 21st of this month
+            end = TODAY.replace(day=21)
+            # start the 22nd of the month before
+            start = _subtract_one_month(end).replace(day=22)
+    elif range == "THIS_CYCLE":
+        # if we're before the 21st
+        if TODAY.day < 22:
+            # end today
+            end = TODAY
+            # start the 22nd of last month
+            start = _subtract_one_month(TODAY).replace(day=22)
+        else:
+            # end the today
+            end = TODAY
+            # start the 22nd of this month
+            start = TODAY.replace(day=22)
+
+    else:
+        raise SqlError(f"Unknown temporal range `{range}`")
+
+    return start, end
 
 
 def parse_date(date):
@@ -132,6 +180,7 @@ def extract_temporal_filters(sql):
             parts = for_date_string.split(" ")
             start_date = parse_date(parts[2])
             end_date = parse_date(parts[4])
+
             clearing_regex = (
                 r"(FOR[\n\r\s]+DATES[\n\r\s]+BETWEEN[\n\r\s]+"
                 + parts[2]
@@ -140,11 +189,14 @@ def extract_temporal_filters(sql):
                 + r"(?!\S))"
             )
         elif for_date_string.startswith("DATES IN "):
-            raise NotImplementedError("FOR DATES IN not implemented")
-            # PREVIOUS MONTH
-            # PREVIOUS CYCLE
-            # THIS MONTH
-            # THIS CYCLE
+            parts = for_date_string.split(" ")
+            start_date, end_date = parse_range(parts[2])
+
+            clearing_regex = (
+                r"(FOR[\n\r\s]+DATES[\n\r\s]+IN[\n\r\s]+"
+                + parts[2]
+                + r"(?!\S))"
+            )
 
         if clearing_regex:
             regex = re.compile(clearing_regex, re.MULTILINE | re.DOTALL | re.IGNORECASE)
@@ -153,7 +205,29 @@ def extract_temporal_filters(sql):
         # swap the order if we need to
         if start_date > end_date:
             start_date, end_date = end_date, start_date
-    except:
+    except Exception as e:
+        print(e)
         pass
 
     return start_date, end_date, sql
+
+
+if __name__ == "__main__":
+
+    def date_range(
+        start_date,
+        end_date,
+    ):
+
+        if end_date < start_date:  # type:ignore
+            raise ValueError(
+                "date_range: end_date must be the same or later than the start_date "
+            )
+
+        for n in range(int((end_date - start_date).days) + 1):  # type:ignore
+            yield start_date + datetime.timedelta(n)  # type:ignore
+
+    s = datetime.date.today().replace(day=1, month=1)
+    e = s.replace(year=s.year+1)
+    for d in date_range(s, e):
+        print(d, _subtract_one_month(d))

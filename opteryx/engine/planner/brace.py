@@ -157,6 +157,7 @@ AS employees (EMPNO, ENAME, JOB, MGR, HIREDATE, SAL, COMM, DEPTNO);
     SQL = "SELECT Name as N, COUNT(*) FROM $astronauts GROUP BY N"
     SQL = "SELECT * FROM $astronauts WHERE VARCHAR(Group) = '10'"
     SQL = "SELECT COUNT(*) FROM tests.data.segmented FOR '2020-02-03'"
+    SQL = "SELECT * FROM $satellites FOR DATES IN PREVIOUS_MONTH ORDER BY planetId OFFSET 10"
 
     #_, _, SQL = extract_temporal_filters(SQL)
     #ast = sqloxide.parse_sql(SQL, dialect="mysql")

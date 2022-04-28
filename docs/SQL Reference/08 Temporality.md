@@ -6,10 +6,11 @@ Where a date range is provided, the datasets for each day have an implicit `UNIO
 
 ## Valid Clauses
 
-Clause             | Description                           | Example
------------------- | ------------------------------------- | ---------------------------
-`FOR 'date'`       | Data as at a specific date            | `FOR '2022-09-16'`
+Clause               | Description                           | Example
+-------------------- | ------------------------------------- | ---------------------------
+`FOR 'date'`         | Data as at a specific date            | `FOR '2022-09-16'`
 `FOR DATES BETWEEN 'date' AND 'date'` | Data between two specific dates | `FOR DATES BETWEEN '2000-01-01' AND '2000-12-31'`  
+`FOR DATES IN range` | Data between a defined range          | `FOR DATES IN LAST_MONTH`
 
 Date values in `FOR` clauses must either be in 'YYYY-MM-DD' format or a recognised date placeholder:
 
@@ -17,6 +18,11 @@ Date values in `FOR` clauses must either be in 'YYYY-MM-DD' format or a recognis
 - `YESTERDAY`
 
 for example: `FOR DATES BETWEEN '2000-01-01' AND TODAY`
+
+Supported range values are:
+
+- `THIS_MONTH` = since the first of the current month
+- `LAST_MONTH` = the previous calendar month (also `PREVIOUS_MONTH`)
 
 !!! note
     If no temporal clause is provided, `FOR TODAY` is assumed.

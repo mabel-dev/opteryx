@@ -213,6 +213,12 @@ STATEMENTS = [
         ("SELECT * FROM tests.data.dated FOR YESTERDAY OFFSET 1", 0, 0),
         ("SELECT * FROM $satellites FOR YESTERDAY ORDER BY planetId OFFSET 10", 167, 8),
 
+        ("SELECT * FROM $satellites FOR DATES IN LAST_MONTH ORDER BY planetId OFFSET 10", 167, 8),
+        ("SELECT * FROM $satellites FOR DATES IN LAST_CYCLE ORDER BY planetId OFFSET 10", 167, 8),
+        ("SELECT * FROM $satellites FOR DATES IN THIS_MONTH ORDER BY planetId OFFSET 10", 167, 8),
+        ("SELECT * FROM $satellites FOR DATES IN THIS_CYCLE ORDER BY planetId OFFSET 10", 167, 8),
+
+
         ("SELECT Missions FROM $astronauts WHERE LIST_CONTAINS(Missions, 'Apollo 8')", 3, 1),
         ("SELECT Missions FROM $astronauts WHERE LIST_CONTAINS_ANY(Missions, ('Apollo 8', 'Apollo 13'))", 5, 1),
         ("SELECT Missions FROM $astronauts WHERE LIST_CONTAINS_ALL(Missions, ('Apollo 8', 'Gemini 7'))", 2, 1),
