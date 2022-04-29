@@ -17,14 +17,9 @@ This is a SQL Query Execution Plan Node.
 
 This performs a JOIN
 """
-import sys
-import os
-
-sys.path.insert(1, os.path.join(sys.path[0], "../../../.."))
-
+from typing import Iterable
 import numpy
 import pyarrow
-from typing import Iterable
 from opteryx.engine.query_statistics import QueryStatistics
 from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
 from opteryx.third_party import pyarrow_ops

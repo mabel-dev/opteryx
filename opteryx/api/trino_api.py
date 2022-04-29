@@ -3,10 +3,10 @@ from fastapi.responses import ORJSONResponse
 import os
 import uvicorn
 
-trino = FastAPI()
+api = FastAPI()
 
 
-@trino.post("/v1/statement", response_class=ORJSONResponse)
+@api.post("/v1/statement", response_class=ORJSONResponse)
 async def read_main(request: Request):
     print(request)
     return {
@@ -29,7 +29,7 @@ async def read_main(request: Request):
 # tell the server to start
 if __name__ == "__main__":
     uvicorn.run(
-        "trino_api:trino",
+        "rest_api:api",
         host="0.0.0.0",
         port=int(os.environ.get("PORT", 8080)),
         lifespan="on",

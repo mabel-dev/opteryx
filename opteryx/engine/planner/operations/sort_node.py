@@ -23,12 +23,15 @@ from opteryx.engine.query_statistics import QueryStatistics
 from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
 from opteryx.exceptions import SqlError
 from opteryx.utils.columns import Columns
+from opteryx.engine.functions import FUNCTIONS
 
 
 class SortNode(BasePlanNode):
     def __init__(self, statistics: QueryStatistics, **config):
         self._order = config.get("order", [])
+        self._mapped_order = []
 
+    @property
     def greedy(self):
         return True
 
@@ -43,9 +46,9 @@ class SortNode(BasePlanNode):
     def execute(self, data_pages: Iterable) -> Iterable:
 
         if isinstance(data_pages, Table):
-            data_pages = [data_pages]
+            data_pages = (data_pages,)
 
-        data_pages = list(data_pages)
+        data_pages = tuple(data_pages)
 
         if len([page for page in data_pages if page.num_rows == 0]):
             yield data_pages[0]
@@ -55,7 +58,6 @@ class SortNode(BasePlanNode):
         columns = Columns(table)
         need_to_remove_random = False
 
-        self._mapped_order = []
         for column, direction in self._order:
 
             # function references aere recorded as dictionaries
@@ -77,13 +79,10 @@ class SortNode(BasePlanNode):
                         )
                     )
                 else:
-                    from opteryx.engine.functions import FUNCTIONS
-                    import pyarrow
-
                     # this currently only supports zero parameter functions
                     calculated_values = FUNCTIONS[column["function"]](*[table.num_rows])
 
-                    table = pyarrow.Table.append_column(
+                    table = Table.append_column(
                         table, column["alias"], calculated_values
                     )
                     # we add it to sort, but it's not in the SELECT so we shouldn't return it

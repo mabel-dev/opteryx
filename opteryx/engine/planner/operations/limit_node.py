@@ -41,7 +41,9 @@ class LimitNode(BasePlanNode):
         row_count = 0
 
         if isinstance(data_pages, Table):
-            data_pages = [data_pages]
+            data_pages = (data_pages,)
+
+        page = None
 
         for page in data_pages:
             if page.num_rows > 0:

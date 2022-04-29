@@ -10,7 +10,7 @@ def fetchmany(pages, limit: int = 1000):
         return []
 
     if isinstance(pages, Table):
-        pages = pages
+        pages = (pages,)
 
     DEFAULT_CHUNK_SIZE = 1000
     chunk_size = min(limit, DEFAULT_CHUNK_SIZE)

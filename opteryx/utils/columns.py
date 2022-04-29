@@ -133,7 +133,6 @@ class Columns:
 
         # we're going to replace the column names with random strings
         def random_string(length: int = 12) -> str:
-            import os
             import base64
 
             # we're creating a series of random bytes, 3/4 the length

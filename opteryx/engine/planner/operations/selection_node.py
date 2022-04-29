@@ -16,7 +16,7 @@ Selection Node
 This is a SQL Query Execution Plan Node.
 
 This Node eliminates elminiates records which do not match a predicate using a
-DNF (Disjunctive Normal Form) interpretter. 
+DNF (Disjunctive Normal Form) interpretter.
 
 Predicates in the same list are joined with an AND/Intersection (all must be True)
 and predicates in adjacent lists are joined with an OR/Union (any can be True).
@@ -90,7 +90,7 @@ def _evaluate(predicate: Union[tuple, list], table: Table) -> bool:
                         arg_list.append(arg[0])
 
                 if len(arg_list) == 0:
-                    arg_list = [table.num_rows]
+                    arg_list = (table.num_rows,)
 
                 calculated_values = FUNCTIONS[function["function"]](*arg_list)
                 if isinstance(calculated_values, (pyarrow.lib.StringScalar)):
@@ -174,9 +174,9 @@ def _evaluate_subqueries(predicate):
         # performing IN with a set is much faster than numpy arrays
         value_list = set(value_list)
         return (value_list, TOKEN_TYPES.LIST)
-    elif isinstance(predicate, tuple):
+    if isinstance(predicate, tuple):
         return tuple([_evaluate_subqueries(p) for p in predicate])
-    elif isinstance(predicate, list):
+    if isinstance(predicate, list):
         return [_evaluate_subqueries(p) for p in predicate]
     return predicate
 
@@ -195,7 +195,7 @@ def _map_columns(predicate, columns):
                 )
             return predicate
         return tuple([_map_columns(p, columns) for p in predicate])
-    elif isinstance(predicate, list):
+    if isinstance(predicate, list):
         return [_map_columns(p, columns) for p in predicate]
     return predicate
 
@@ -215,7 +215,7 @@ class SelectionNode(BasePlanNode):
     def execute(self, data_pages: Iterable) -> Iterable:
 
         if isinstance(data_pages, Table):
-            data_pages = [data_pages]
+            data_pages = (data_pages,)
 
         # we should always have a filter - but harm checking
         if self._filter is None:

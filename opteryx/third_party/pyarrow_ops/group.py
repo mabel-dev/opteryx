@@ -64,9 +64,11 @@ class Grouping:
         # Create index columns
         table = self.table.select(self.columns).take(self.sort_idxs[self.bgn_idxs])
 
+        vectorize = np.vectorize
+
         data = {k: self.table.column(k).to_numpy() for k in methods.keys()}
         for col, f in methods.items():
-            vf = np.vectorize(f, otypes=[object])
+            vf = vectorize(f, otypes=[object])
             agg_arr = vf(np.split(data[col][self.sort_idxs], self.bgn_idxs[1:]))
             table = table.append_column(col, pa.array(agg_arr))
         return table
