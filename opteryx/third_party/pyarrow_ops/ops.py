@@ -2,7 +2,6 @@ import numpy
 import pyarrow.compute as pc
 
 from opteryx.engine.attribute_types import (
-    OPTERYX_TYPES,
     TOKEN_TYPES,
     PARQUET_TYPES,
     PYTHON_TYPES,

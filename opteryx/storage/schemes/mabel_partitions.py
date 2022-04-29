@@ -2,11 +2,9 @@ from opteryx.storage import BasePartitionScheme
 
 
 class MabelPartitionScheme(BasePartitionScheme):
-    def __init__(self):
-        """
-        Handle reading data using the Mabel partition scheme.
-        """
-        pass
+    """
+    Handle reading data using the Mabel partition scheme.
+    """
 
     def partition_format(self):
         return "year_{yyyy}/month_{mm}/day_{dd}"

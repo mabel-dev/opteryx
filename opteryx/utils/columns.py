@@ -32,7 +32,7 @@ from opteryx.utils import arrow
 from opteryx.exceptions import SqlError
 
 
-class Columns(object):
+class Columns():
     def __init__(self, table):
         if table is not None:
             self._table_metadata = arrow.table_metadata(table)
@@ -174,23 +174,3 @@ class Columns(object):
         return arrow.set_metadata(
             table, table_metadata=table_metadata, column_metadata=column_metadata
         )
-
-
-if __name__ == "__main__":
-
-    import os
-    import sys
-
-    sys.path.insert(1, os.path.join(sys.path[0], "../../"))
-
-    from opteryx.samples import planets
-
-    p = planets()
-    p = Columns.create_table_metadata(p, 9, "planets", "p")
-
-    c = Columns(p)
-
-    print(c.preferred_column_names)
-    print(c.get_column_from_alias("p.name"))
-    print(c.get_column_from_alias("name"))
-    print(c.get_column_from_alias("planets.name"))

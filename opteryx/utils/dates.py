@@ -95,7 +95,7 @@ def parse_iso(value):
                             ],
                         )
                     )
-                elif val_len == 16:
+                if val_len == 16:
                     # YYYY-MM-DD HH:MM
                     return datetime.datetime(
                         *map(  # type:ignore

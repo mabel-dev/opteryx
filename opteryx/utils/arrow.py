@@ -10,7 +10,7 @@ def fetchmany(pages, limit: int = 1000):
         return []
 
     if isinstance(pages, Table):
-        pages = [pages]
+        pages = (pages)
 
     DEFAULT_CHUNK_SIZE = 1000
     chunk_size = min(limit, DEFAULT_CHUNK_SIZE)
@@ -46,7 +46,7 @@ def fetchmany(pages, limit: int = 1000):
 
 
 def fetchone(pages: Iterable) -> dict:
-    return fetchmany(pages=pages, limit=1).pop()
+    return next(fetchmany(pages=pages, limit=1), None)
 
 
 def fetchall(pages) -> List[dict]:
@@ -78,7 +78,7 @@ def set_metadata(table, table_metadata=None, column_metadata=None):
             A json-serializable dictionary with table-level metadata.
     """
     import pyarrow as pa
-    import orjson
+    from orjson import dumps
 
     # Create updated column fields with new metadata
     if table_metadata or column_metadata:
@@ -92,7 +92,7 @@ def set_metadata(table, table_metadata=None, column_metadata=None):
                 for k, v in column_metadata[name].items():
                     if isinstance(k, str):
                         k = k.encode()
-                    metadata[k] = orjson.dumps(v)
+                    metadata[k] = dumps(v)
                 # Update field with updated metadata
                 fields.append(col.with_metadata(metadata))
             else:
@@ -105,7 +105,7 @@ def set_metadata(table, table_metadata=None, column_metadata=None):
                 if isinstance(v, bytes):
                     tbl_metadata[k] = v
                 else:
-                    tbl_metadata[k] = orjson.dumps(v)
+                    tbl_metadata[k] = dumps(v)
 
         # Create new schema with updated table metadata
         schema = pa.schema(fields, metadata=tbl_metadata)
@@ -120,16 +120,16 @@ def _decode_metadata(metadata):
     Arrow stores metadata keys and values as bytes. We store "arbitrary" data as
     json-encoded strings (utf-8), which are here decoded into normal dict.
     """
-    import orjson
+    from orjson import loads
 
     if not metadata:
         # None or {} are not decoded
         return {}
 
     decoded = {}
-    for k, v in metadata.items():
-        key = k.decode("utf-8")
-        val = orjson.loads(v)
+    for key, value in metadata.items():
+        key = key.decode("utf-8")
+        val = loads(value)
         decoded[key] = val
     return decoded
 

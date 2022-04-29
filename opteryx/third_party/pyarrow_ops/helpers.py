@@ -42,10 +42,10 @@ def split_array(arr):
     if len(dic) < 1000:
         # This method is much faster for small amount of categories, but slower for large ones
         return {v: (ind == i).nonzero()[0] for i, v in enumerate(dic)}
-    else:
-        idxs = [[] for _ in dic]
-        [idxs[v].append(i) for i, v in enumerate(ind)]
-        return dict(zip(dic, idxs))
+
+    idxs = [[] for _ in dic]
+    [idxs[v].append(i) for i, v in enumerate(ind)]
+    return dict(zip(dic, idxs))
 
 
 def split(table, columns, group=(), idx=None):
@@ -59,5 +59,4 @@ def split(table, columns, group=(), idx=None):
             for v, i in val_idxs.items()
             for s in split(table, columns[1:], group + (v,), idx[i])
         ]
-    else:
-        return [(group + (v,), i) for v, i in val_idxs.items()]
+    return [(group + (v,), i) for v, i in val_idxs.items()]

@@ -53,3 +53,22 @@ jobs:
 
       - name: Execute Test
         run: mypy --ignore-missing-imports --python-version 3.9 --no-strict-optional opteryx
+
+  perflint:
+    name: PyLint and PerfLint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+  
+      - name: Set Up Environment
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9' 
+
+      - name: Install Requirements
+        run: |
+          python -m pip install --upgrade pip pylint perflint
+
+      - name: Execute Test
+        run: pylint --load-plugins perflint opteryx

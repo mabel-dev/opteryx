@@ -1,6 +1,6 @@
 import numpy as np
 import pyarrow as pa
-from .helpers import combine_column, columns_to_array, groupify_array
+from .helpers import columns_to_array, groupify_array
 
 # Grouping / groupby methods
 agg_methods = {
