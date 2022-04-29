@@ -16,6 +16,7 @@ This implements an interface to Memcached
 import io
 from functools import lru_cache
 
+
 @lru_cache(1)
 def _memcached_server(**kwargs):
     import os

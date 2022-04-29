@@ -98,7 +98,8 @@ class QueryPlanner(object):
             statistics=self._statistics,
             reader=self._reader,
             cache=self._cache,
-            partition_scheme=self._partition_scheme)
+            partition_scheme=self._partition_scheme,
+        )
         qp._start_date = self._start_date
         qp._end_date = self._end_date
         return qp
@@ -399,7 +400,11 @@ class QueryPlanner(object):
                         "identifier": [
                             p["value"] for p in function["CompoundIdentifier"]
                         ].pop(),
-                        "alias": [".".join([p["value"] for p in function["CompoundIdentifier"]])],
+                        "alias": [
+                            ".".join(
+                                [p["value"] for p in function["CompoundIdentifier"]]
+                            )
+                        ],
                     }
                 if "Function" in function:
                     func = function["Function"]["name"][0]["value"].upper()
@@ -557,6 +562,7 @@ class QueryPlanner(object):
                     if "Number" in key_dict:
                         key = key_dict["Number"][0]
                     return f"{identifier}[{key}]"
+
         groups = ast[0]["Query"]["body"]["Select"]["group_by"]
         return [_inner(g) for g in groups]
 
@@ -832,8 +838,8 @@ class QueryPlanner(object):
         self.edges += assimilatee.edges
         self.edges = list(set(self.edges))
 
-#    def __repr__(self):
-#        return "\n".join(list(self._draw()))
+    #    def __repr__(self):
+    #        return "\n".join(list(self._draw()))
 
     def _inner_execute(self, operator_name, relation):
         # print(f"***********{operator_name}***************")

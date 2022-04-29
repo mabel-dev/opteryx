@@ -23,12 +23,11 @@ from opteryx.engine.query_statistics import QueryStatistics
 
 
 class BasePlanNode(abc.ABC):
-
     def __init__(self, statistics: QueryStatistics, **config):
         pass
 
     def execute(self, data_pages: Iterable) -> Iterable:
-        raise NotImplementedError("\"execute\" method must be overridden")
+        raise NotImplementedError('"execute" method must be overridden')
 
     @property
     def greedy(self):

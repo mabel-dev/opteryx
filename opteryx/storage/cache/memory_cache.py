@@ -22,6 +22,7 @@ when it's accessed. This relies on Python dictionaries being ordered.
 from opteryx.storage import BaseBufferCache
 import io
 
+
 class InMemoryCache(BaseBufferCache):
     def __init__(self, **kwargs):
         """

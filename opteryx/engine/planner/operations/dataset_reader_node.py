@@ -242,7 +242,7 @@ class DatasetReaderNode(BasePlanNode):
                 start_read = time.time_ns()
 
                 # Read the blob from storage, it's just a stream of bytes at this point
-                
+
                 # if we have a cache set
                 if self._cache:
                     # hash the blob name for the look up

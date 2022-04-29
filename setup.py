@@ -25,10 +25,10 @@ extensions = [
         sources=["opteryx/third_party/pyarrow_ops/cjoin.pyx"],
         include_dirs=[np.get_include()],
     ),
-    Extension(
-        name="cythonize",
-        sources=["opteryx/third_party/accumulation_tree/accumulation_tree.pyx"],
-    )
+    #    Extension(
+    #        name="cythonize",
+    #        sources=["opteryx/third_party/accumulation_tree/accumulation_tree.pyx"],
+    #    )
     #    "mabel/data/internals/group_by.py",
 ]
 

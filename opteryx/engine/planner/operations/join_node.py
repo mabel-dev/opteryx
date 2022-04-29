@@ -190,7 +190,6 @@ class JoinNode(BasePlanNode):
     def execute(self, data_pages: Iterable) -> Iterable:
 
         from opteryx.engine.planner.operations import DatasetReaderNode
-        from opteryx.utils.columns import Columns
 
         if isinstance(self._right_table, DatasetReaderNode):
             self._right_table = pyarrow.concat_tables(
@@ -292,47 +291,3 @@ class JoinNode(BasePlanNode):
 
         else:
             raise SqlError(f"Unsupported Join type, {self._join_type}")
-
-
-if __name__ == "__main__":
-
-    import sys
-    import os
-
-    sys.path.insert(1, os.path.join(sys.path[0], "../../../../.."))
-
-    from opteryx import samples
-    from opteryx.third_party import pyarrow_ops
-    from opteryx.utils.display import ascii_table
-    from opteryx.utils.arrow import fetchmany
-    from mabel.utils.timer import Timer
-
-    planets = samples.astronauts()
-    satellites = samples.satellites()
-
-    #    print(planets.column_names)
-    #    print(planets.to_string(preview_cols=10))
-    #    planets.rename_columns(['id', 'planet_name', 'mass', 'diameter', 'density', 'gravity', 'escapeVelocity', 'rotationPeriod', 'lengthOfDay', 'distanceFromSun', 'perihelion', 'aphelion', 'orbitalPeriod', 'orbitalVelocity', 'orbitalInclination', 'orbitalEccentricity', 'obliquityToOrbit', 'meanTemperature', 'surfacePressure', 'numberOfMoons'])
-
-    with Timer():
-        joint = _cross_join([planets], satellites)  # 0.39 seconds - 63189
-        c = 0
-        for e, j in enumerate(joint):
-            c += j.num_rows
-        print(e, c)
-
-    # right_columns = planets.column_names
-    # right_columns = [f"planets.{name}" for name in right_columns]
-    # planets = planets.rename_columns(right_columns)
-
-    from opteryx.third_party.pyarrow_ops import join
-
-    print("---")
-
-    #    joint = join(planets, satellites, on=["id"])
-
-    #    print(joint.to_string())
-    joint = _cross_join(planets, satellites)
-    print(ascii_table(fetchmany(joint, limit=10), limit=10))
-
-    # print(joint.column_names)

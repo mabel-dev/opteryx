@@ -10,7 +10,6 @@ class MabelPartitionScheme(BasePartitionScheme):
         return "year_{yyyy}/month_{mm}/day_{dd}"
 
     def filter_blobs(self, list_of_blobs):
-
         def _extract_by(path):
             parts = path.split("/")
             for part in parts:

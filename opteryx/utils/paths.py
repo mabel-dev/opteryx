@@ -6,6 +6,7 @@ import datetime
 import os
 import errno
 
+
 def get_parts(path_string: str):
     if not path_string:
         raise ValueError("get_parts: path_string must have a value")
@@ -66,6 +67,7 @@ def date_format(path_string: str, date: datetime.date = None):
     path_string = path_string.replace("{SS}", f"{date.second:02d}")
 
     return path_string
+
 
 def silent_remove(filename):
     try:

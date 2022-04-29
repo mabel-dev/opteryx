@@ -147,7 +147,7 @@ class Cursor:
             partition_scheme=self._connection._partition_scheme,
         )
         self._query_plan.create_plan(sql=operation)
-        
+
         # TODO:run optimizer
 
         # how long have we spent planning

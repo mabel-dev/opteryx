@@ -32,7 +32,7 @@ from opteryx.utils import arrow
 from opteryx.exceptions import SqlError
 
 
-class Columns():
+class Columns:
     def __init__(self, table):
         if table is not None:
             self._table_metadata = arrow.table_metadata(table)

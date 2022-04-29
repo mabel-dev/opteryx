@@ -12,6 +12,7 @@ from opteryx.storage.cache.memcached_cache import MemcachedCache
 cache = InMemoryCache(size=100)
 # cache = MemcachedCache(server="127.0.0.1:11211")
 
+
 def test(SQL):
 
     from mabel.utils import timer
@@ -144,10 +145,12 @@ AS employees (EMPNO, ENAME, JOB, MGR, HIREDATE, SAL, COMM, DEPTNO);
     SQL = "SELECT Mission FROM $astronauts CROSS JOIN UNNEST(Missions) as Mission WHERE Mission = 'Apollo 11'"
     SQL = "SELECT * FROM $satellites WHERE size = 1"
     #    SQL = "SELECT Missions FROM $astronauts WHERE LIST_CONTAINS(Missions, 'Apollo 8')"
-    #SQL = "EXPLAIN SELECT * FROM $satellites LEFT JOIN $planets ON $satellites.planetId = $planets.id WHERE planetId = NONE"
-    #SQL = "SELECT * FROM $satellites WHERE name = 'Calypso'"
+    # SQL = "EXPLAIN SELECT * FROM $satellites LEFT JOIN $planets ON $satellites.planetId = $planets.id WHERE planetId = NONE"
+    # SQL = "SELECT * FROM $satellites WHERE name = 'Calypso'"
     SQL = "SELECT * FROM ( SELECT COUNT(*) FROM $planets )"
-    SQL = "SELECT * FROM tests.data.dated FOR DATES BETWEEN '2020-02-01' AND '2020-02-28'"
+    SQL = (
+        "SELECT * FROM tests.data.dated FOR DATES BETWEEN '2020-02-01' AND '2020-02-28'"
+    )
     SQL = "SELECT Name, COUNT(*) AS N FROM $astronauts"
     SQL = "SELECT count(*), VARCHAR(Year) FROM $astronauts GROUP BY VARCHAR(Year)"
     SQL = "SELECT COUNT(*), Birth_Place['town'] FROM $astronauts GROUP BY Birth_Place['town']"
@@ -159,9 +162,9 @@ AS employees (EMPNO, ENAME, JOB, MGR, HIREDATE, SAL, COMM, DEPTNO);
     SQL = "SELECT COUNT(*) FROM tests.data.segmented FOR '2020-02-03'"
     SQL = "SELECT * FROM $satellites FOR DATES IN PREVIOUS_MONTH ORDER BY planetId OFFSET 10"
 
-    #_, _, SQL = extract_temporal_filters(SQL)
-    #ast = sqloxide.parse_sql(SQL, dialect="mysql")
-    #print(json.dumps(ast, indent=2))
+    # _, _, SQL = extract_temporal_filters(SQL)
+    # ast = sqloxide.parse_sql(SQL, dialect="mysql")
+    # print(json.dumps(ast, indent=2))
 
     print()
 
