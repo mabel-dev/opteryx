@@ -1,20 +1,20 @@
 <img align="centre" alt="archaeopteryx" height="104" src="opteryx.png" />
 
-## A query engine for your data, no database required
+## Query your data, no database required
 
 [Documentation](https://mabel-dev.github.io/opteryx/) |
 [Examples](notebooks) |
 [Contributing](.github/CONTRIBUTING.md)
 
 > **NOTE**  
-> Opteryx is an alpha product. Alpha means different things to different people, to us, being alpha means:
+> Opteryx is an beta product. Beta means different things to different people, to us, being beta means:
 >
-> - Some features you may expect from a Query Engine may not be available
-> - Some features may have undetected bugs in them
-> - Some features may not be tuned for performance
-> - Some previously working features may break
+> - Functionality is stable and any updates should be to address bugs and performance
+> - Core functionality has test cases to ensure stability
+> - Some edge cases may have undetected bugs
+> - Performance tuning may be incomplete
 
-[![Status](https://img.shields.io/badge/status-alpha-yellowgreen)](https://github.com/mabel-dev/opteryx)
+[![Status](https://img.shields.io/badge/status-beta-blue)](https://github.com/mabel-dev/opteryx)
 [![Regression Suite](https://github.com/mabel-dev/opteryx/actions/workflows/regression_suite.yaml/badge.svg)](https://github.com/mabel-dev/opteryx/actions/workflows/regression_suite.yaml)
 [![Static Analysis](https://github.com/mabel-dev/opteryx/actions/workflows/static_analysis.yml/badge.svg)](https://github.com/mabel-dev/opteryx/actions/workflows/static_analysis.yml)
 [![PyPI Latest Release](https://img.shields.io/pypi/v/opteryx.svg)](https://pypi.org/project/opteryx/)
