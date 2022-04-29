@@ -79,18 +79,15 @@ def remove_comments(string):
 
 
 def _subtract_one_month(in_date):
-    input_day = in_date.day
-    start_of_month = in_date.replace(day=1)
-    end_of_previous_month = start_of_month - datetime.timedelta(days=1)
-    done = False
-    delta = 0
-    while not done:
+    day = in_date.day
+    end_of_previous_month = in_date.replace(day=1) - datetime.timedelta(days=1)
+    while True:
         try:
-            out_date = end_of_previous_month.replace(day=input_day + delta)
-            done = True
+            return end_of_previous_month.replace(day=day)
         except:
-            delta -= 1
-    return out_date
+            day -= 1
+            if day < 0:
+                raise ValueError("Unable to determine previous month")
 
 
 def parse_range(range):
