@@ -16,7 +16,7 @@ Selection Node
 This is a SQL Query Execution Plan Node.
 
 This Node eliminates elminiates records which do not match a predicate using a
-DNF (Disjunctive Normal Form) interpretter. 
+DNF (Disjunctive Normal Form) interpretter.
 
 Predicates in the same list are joined with an AND/Intersection (all must be True)
 and predicates in adjacent lists are joined with an OR/Union (any can be True).
@@ -26,12 +26,14 @@ The predicates are in _tuples_ in the form (`key`, `op`, `value`) where the `key
 is the value looked up from the record, the `op` is the operator and the `value`
 is a literal.
 """
+from typing import Iterable, Union
+
 import numpy
-from typing import Union, Iterable
 from pyarrow import Table
+
 from opteryx.engine.attribute_types import TOKEN_TYPES
-from opteryx.engine.query_statistics import QueryStatistics
 from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
+from opteryx.engine.query_statistics import QueryStatistics
 from opteryx.exceptions import SqlError
 from opteryx.utils.columns import Columns
 
@@ -71,8 +73,9 @@ def _evaluate(predicate: Union[tuple, list], table: Table) -> bool:
             # presently it only evaluates in the SELECT clause.
             else:
                 ## TODO: push this to the evaluation node
-                from opteryx.engine.functions import FUNCTIONS
                 import pyarrow
+
+                from opteryx.engine.functions import FUNCTIONS
 
                 function = predicate[2]
 
@@ -90,7 +93,9 @@ def _evaluate(predicate: Union[tuple, list], table: Table) -> bool:
                         arg_list.append(arg[0])
 
                 if len(arg_list) == 0:
-                    arg_list = [table.num_rows]
+                    arg_list = [
+                        table.num_rows,
+                    ]
 
                 calculated_values = FUNCTIONS[function["function"]](*arg_list)
                 if isinstance(calculated_values, (pyarrow.lib.StringScalar)):
@@ -114,7 +119,9 @@ def _evaluate(predicate: Union[tuple, list], table: Table) -> bool:
             raise SqlError(f"Field `{predicate[0][0]}` does not exist.")
 
         if len(predicate[0]) == 3 and isinstance(predicate[0][2], dict):
-            raise SqlError("WHERE clauses cannot contain function calls as part of an expression.")
+            raise SqlError(
+                "WHERE clauses cannot contain function calls as part of an expression."
+            )
 
         if not isinstance(predicate[0], tuple):
             return _evaluate(predicate[0], table)
@@ -172,9 +179,9 @@ def _evaluate_subqueries(predicate):
         # performing IN with a set is much faster than numpy arrays
         value_list = set(value_list)
         return (value_list, TOKEN_TYPES.LIST)
-    elif isinstance(predicate, tuple):
+    if isinstance(predicate, tuple):
         return tuple([_evaluate_subqueries(p) for p in predicate])
-    elif isinstance(predicate, list):
+    if isinstance(predicate, list):
         return [_evaluate_subqueries(p) for p in predicate]
     return predicate
 
@@ -193,7 +200,7 @@ def _map_columns(predicate, columns):
                 )
             return predicate
         return tuple([_map_columns(p, columns) for p in predicate])
-    elif isinstance(predicate, list):
+    if isinstance(predicate, list):
         return [_map_columns(p, columns) for p in predicate]
     return predicate
 
@@ -213,7 +220,7 @@ class SelectionNode(BasePlanNode):
     def execute(self, data_pages: Iterable) -> Iterable:
 
         if isinstance(data_pages, Table):
-            data_pages = [data_pages]
+            data_pages = (data_pages,)
 
         # we should always have a filter - but harm checking
         if self._filter is None:

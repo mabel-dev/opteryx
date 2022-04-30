@@ -1,12 +1,11 @@
+"""
+Original code modified for Opteryx.
+"""
 import numpy
 import pyarrow.compute as pc
 
-from opteryx.engine.attribute_types import (
-    OPTERYX_TYPES,
-    TOKEN_TYPES,
-    PARQUET_TYPES,
-    PYTHON_TYPES,
-)
+from opteryx.engine.attribute_types import PARQUET_TYPES, PYTHON_TYPES, TOKEN_TYPES
+
 from .helpers import columns_to_array, groupify_array
 
 
@@ -20,6 +19,7 @@ def _get_type(var):
 # Filter functionality
 def arr_op_to_idxs(arr, op, value):
     if op in ["=", "=="]:
+        # type checking added for Opteryx
         parquet_type = _get_type(arr)
         if value is None and parquet_type == TOKEN_TYPES.NUMERIC:
             # Nones are stored as NaNs, so perform a different test
@@ -60,7 +60,7 @@ def arr_op_to_idxs(arr, op, value):
     elif op == "~":
         return pc.match_substring_regex(arr, value)
     else:
-        raise Exception("Operand {} is not implemented!".format(op))
+        raise Exception(f"Operand {op} is not implemented!")
 
 
 def _get_values(table, operand):
@@ -79,19 +79,6 @@ def _get_values(table, operand):
         # print(table.column_names)
 
 
-def filters(table, filters):
-    filters = [filters] if isinstance(filters, tuple) else filters
-    # Filter is a list of (col, op, value) tuples
-    idxs = numpy.arange(table.num_rows)
-    for (left_op, op, right_op) in filters:  # =, <>, <, >, <=, >=, in and not in
-        # MODIFIED FOR OPTERYX
-        f_idxs = arr_op_to_idxs(
-            _get_values(table, left_op), op, _get_values(table, right_op)
-        )
-        idxs = idxs[f_idxs]
-    return table.take(idxs, boundscheck=False)
-
-
 def ifilters(table, filters):
     # ADDED FOR OPTERYX
     # return the indices so we can do unions (OR) and intersections (AND) on the lists
@@ -108,51 +95,11 @@ def ifilters(table, filters):
 
 
 # Drop duplicates
-def drop_duplicates(table, on=[], keep="first"):
+def drop_duplicates(table, on=[]):
+    """
+    drops duplicates, keeps the first of the set
+    """
     # Gather columns to arr
     arr = columns_to_array(table, (on if on else table.column_names))
-
-    # Groupify
     dic, counts, sort_idxs, bgn_idxs = groupify_array(arr)
-
-    # Gather idxs
-    if keep == "last":
-        idxs = (numpy.array(bgn_idxs) - 1)[1:].tolist() + [len(sort_idxs) - 1]
-    elif keep == "first":
-        idxs = bgn_idxs
-    elif keep == "drop":
-        idxs = [i for i, c in zip(bgn_idxs, counts) if c == 1]
-    return table.take(sort_idxs[idxs])
-
-
-# Show for easier printing
-def head(table, n=5, max_width=100):
-    if table is None:
-        print("No data in table")
-        return
-
-    if table.num_rows == 0:
-        print("No data in table")
-        return
-
-    # Extract head data
-    t = table.slice(length=n)
-    head = {k: list(map(str, v)) for k, v in t.to_pydict().items()}
-
-    # Calculate width
-    col_width = list(map(len, head.keys()))
-    data_width = [max(map(len, h)) for h in head.values()]
-
-    # Print data
-    data = [list(head.keys())] + [
-        [head[c][i] for c in head.keys()] for i in range(t.num_rows)
-    ]
-    for i in range(len(data)):
-        adjust = [
-            w.ljust(max(cw, dw) + 2)
-            for w, cw, dw in zip(data[i], col_width, data_width)
-        ]
-        print(
-            ("Row  " if i == 0 else str(i - 1).ljust(5)) + "".join(adjust)[:max_width]
-        )
-    print("\n")
+    return table.take(sort_idxs[bgn_idxs])

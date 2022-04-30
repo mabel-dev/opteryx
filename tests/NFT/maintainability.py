@@ -11,9 +11,10 @@ add a flag to the file to exclude specific files.
 Radon itself will A grade for maintainability for scores 100 to 20, this
 script sets the bar at 50.
 """
-import radon.metrics  # type:ignore
-import logging
 import glob
+import logging
+
+import radon.metrics  # type:ignore
 
 logger = logging.getLogger("measures")
 

@@ -6,7 +6,7 @@ Base Inner Reader - this is based on the BaseInnerReader in Mabel with some diff
 """
 import abc
 import datetime
-from typing import Iterable, Union, List
+from typing import Iterable, List, Union
 
 
 class BaseStorageAdapter(abc.ABC):

@@ -24,15 +24,11 @@ The selection operator should focus on the selection not on working out which co
 is actually being referred to.
 """
 import os
-import sys
-
-sys.path.insert(1, os.path.join(sys.path[0], "../../"))
-
-from opteryx.utils import arrow
 from opteryx.exceptions import SqlError
+from opteryx.utils import arrow
 
 
-class Columns(object):
+class Columns:
     def __init__(self, table):
         if table is not None:
             self._table_metadata = arrow.table_metadata(table)
@@ -133,7 +129,6 @@ class Columns(object):
 
         # we're going to replace the column names with random strings
         def random_string(length: int = 12) -> str:
-            import os
             import base64
 
             # we're creating a series of random bytes, 3/4 the length
@@ -174,23 +169,3 @@ class Columns(object):
         return arrow.set_metadata(
             table, table_metadata=table_metadata, column_metadata=column_metadata
         )
-
-
-if __name__ == "__main__":
-
-    import os
-    import sys
-
-    sys.path.insert(1, os.path.join(sys.path[0], "../../"))
-
-    from opteryx.samples import planets
-
-    p = planets()
-    p = Columns.create_table_metadata(p, 9, "planets", "p")
-
-    c = Columns(p)
-
-    print(c.preferred_column_names)
-    print(c.get_column_from_alias("p.name"))
-    print(c.get_column_from_alias("name"))
-    print(c.get_column_from_alias("planets.name"))

@@ -1,12 +1,13 @@
-import sys
 import os
+import sys
 
 sys.path.insert(1, os.path.join(sys.path[0], "../../../.."))
 
 from typing import Optional
-from opteryx.utils import paths
+
 from opteryx.exceptions import MissingDependencyError
 from opteryx.storage import BaseStorageAdapter
+from opteryx.utils import paths
 
 try:
     from google.auth.credentials import AnonymousCredentials

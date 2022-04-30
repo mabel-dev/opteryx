@@ -14,13 +14,3 @@ Component                                                  | Licence
 
 !!! note
     Licence information was correct as at 2022-04-24
-
-<!---
-[accumulation_tree](https://github.com/tkluck/accumulation_tree)  |
-[distogram](https://github.com/maki-nage/distogram)               |
-[hyperloglog](https://github.com/svpcom/hyperloglog)              |
-[pyudorandom](https://github.com/mewwts/pyudorandom)              |
-[sketch](https://github.com/dnbaker/sketch)                       |
-[tdigest](https://github.com/CamDavidsonPilon/tdigest)            |
-[uintset](https://github.com/standupdev/uintset/)                 |
---->

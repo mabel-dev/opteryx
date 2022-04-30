@@ -1,8 +1,17 @@
-import pyximport
+from functools import lru_cache
 
-pyximport.install()
 
-from .ipython import is_running_from_ipython
+@lru_cache(1)
+def is_running_from_ipython():
+    """
+    True when running in Jupyter
+    """
+    try:
+        from IPython import get_ipython  # type:ignore
+
+        return get_ipython() is not None
+    except:
+        return False
 
 
 def safe_field_name(field_name):

@@ -8,8 +8,8 @@ It actually is a table, with one row and one column.
 """
 
 if __name__ == "__main__":
-    import sys
     import os
+    import sys
 
     sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
@@ -17,8 +17,9 @@ if __name__ == "__main__":
 class NoTable:
     @staticmethod
     def get():
-        import io
         import base64
+        import io
+
         import pyarrow.parquet as pq
 
         return pq.read_table(

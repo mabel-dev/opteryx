@@ -2,17 +2,14 @@ from opteryx.storage import BasePartitionScheme
 
 
 class MabelPartitionScheme(BasePartitionScheme):
-    def __init__(self):
-        """
-        Handle reading data using the Mabel partition scheme.
-        """
-        pass
+    """
+    Handle reading data using the Mabel partition scheme.
+    """
 
     def partition_format(self):
         return "year_{yyyy}/month_{mm}/day_{dd}"
 
     def filter_blobs(self, list_of_blobs):
-
         def _extract_by(path):
             parts = path.split("/")
             for part in parts:

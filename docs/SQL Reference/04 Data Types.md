@@ -4,7 +4,7 @@ Opteryx uses a reduced set of types compared to full RDBMS platforms.
 
 ## Types
 
-Name        | Icon                         | Description
+Name        | Symbol                       | Description
 ----------- | ---------------------------- | --------------
 `BOOLEAN`   | :fontawesome-solid-check:    | Logical boolean (True/False).
 `NUMERIC`   | :fontawesome-solid-hashtag:  | All numeric types

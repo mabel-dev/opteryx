@@ -18,11 +18,13 @@ This is a SQL Query Execution Plan Node.
 Gives information about a dataset's columns
 """
 from typing import Iterable
+
 from pyarrow import Table
+
+from opteryx.engine.query_statistics import QueryStatistics
 from opteryx.engine.attribute_types import PARQUET_TYPES
-from opteryx.utils.columns import Columns
-from opteryx.engine import QueryStatistics
 from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
+from opteryx.utils.columns import Columns
 
 
 class ShowColumnsNode(BasePlanNode):

@@ -1,7 +1,2 @@
-import pyximport
-
-pyximport.install()
-
-from .ops import head, filters, drop_duplicates, ifilters
-from .group import groupby
-from .join import inner_join, align_tables, left_join
+from .join import align_tables, inner_join, left_join
+from .ops import drop_duplicates, ifilters

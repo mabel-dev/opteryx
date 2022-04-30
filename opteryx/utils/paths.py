@@ -3,6 +3,8 @@ Functions to help with handling file paths
 """
 import pathlib
 import datetime
+import os
+import errno
 
 
 def get_parts(path_string: str):
@@ -65,14 +67,3 @@ def date_format(path_string: str, date: datetime.date = None):
     path_string = path_string.replace("{SS}", f"{date.second:02d}")
 
     return path_string
-
-
-import os, errno
-
-
-def silent_remove(filename):
-    try:
-        os.remove(filename)
-    except OSError as e:  # this would be "except OSError, e:" before Python 2.6
-        if e.errno != errno.ENOENT:  # errno.ENOENT = no such file or directory
-            raise  # re-raise exception if a different error occurred

@@ -1,9 +1,6 @@
 import numpy as np
-from setuptools import setup
-from setuptools import find_packages
-from setuptools import Extension
 from Cython.Build import cythonize
-
+from setuptools import Extension, find_packages, setup
 
 with open("opteryx/version.py", "r") as v:
     vers = v.read()
@@ -25,10 +22,10 @@ extensions = [
         sources=["opteryx/third_party/pyarrow_ops/cjoin.pyx"],
         include_dirs=[np.get_include()],
     ),
-    Extension(
-        name="cythonize",
-        sources=["opteryx/third_party/accumulation_tree/accumulation_tree.pyx"],
-    )
+    #    Extension(
+    #        name="cythonize",
+    #        sources=["opteryx/third_party/accumulation_tree/accumulation_tree.pyx"],
+    #    )
     #    "mabel/data/internals/group_by.py",
 ]
 

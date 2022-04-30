@@ -1,5 +1,6 @@
+from typing import Tuple, Union
+
 from opteryx.storage import BasePartitionScheme
-from typing import Union, Tuple
 
 
 class DefaultPartitionScheme(BasePartitionScheme):

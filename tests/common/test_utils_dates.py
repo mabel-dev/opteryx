@@ -4,9 +4,10 @@ import sys
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import datetime
-import pytest
-from opteryx.utils import dates
 
+import pytest
+
+from opteryx.utils import dates
 
 # fmt:off
 DATE_TESTS = [

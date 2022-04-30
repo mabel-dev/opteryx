@@ -17,32 +17,31 @@ This is a SQL Query Execution Plan Node.
 
 This performs a JOIN
 """
-import sys
-import os
-
-sys.path.insert(1, os.path.join(sys.path[0], "../../../.."))
+from typing import Iterable
 
 import numpy
 import pyarrow
-from typing import Iterable
-from opteryx.engine.query_statistics import QueryStatistics
-from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
-from opteryx.third_party import pyarrow_ops
-from opteryx.engine.attribute_types import TOKEN_TYPES
-from opteryx.utils.columns import Columns
+
 from opteryx import config
+from opteryx.engine.attribute_types import TOKEN_TYPES
+from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
+from opteryx.engine.query_statistics import QueryStatistics
 from opteryx.exceptions import SqlError
+from opteryx.third_party import pyarrow_ops
+from opteryx.utils.columns import Columns
 
 
 def cartesian_product(*arrays):
     """
     Cartesian product of arrays creates every combination of the elements in the arrays
     """
-    la = len(arrays)
-    arr = numpy.empty([len(a) for a in arrays] + [la], dtype=numpy.int64)
-    for i, a in enumerate(numpy.ix_(*arrays)):
-        arr[..., i] = a
-    return numpy.hsplit(arr.reshape(-1, la), la)
+    array_count = len(arrays)
+    arr = numpy.empty(
+        [len(array) for array in arrays] + [array_count], dtype=numpy.int64
+    )
+    for i, array in enumerate(numpy.ix_(*arrays)):
+        arr[..., i] = array
+    return numpy.hsplit(arr.reshape(-1, array_count), array_count)
 
 
 def _cross_join(left, right):
@@ -134,10 +133,9 @@ def _cross_join_unnest(left, column, alias):
             metadata.add_column(alias)
             unnest_column = metadata.get_column_from_alias(column[0], only_one=True)
 
+        batch_size = config.INTERNAL_BATCH_SIZE
         # we break this into small chunks otherwise we very quickly run into memory issues
-        for left_block in left_page.to_batches(
-            max_chunksize=config.INTERNAL_BATCH_SIZE
-        ):
+        for left_block in left_page.to_batches(max_chunksize=batch_size):
 
             # Get the column we're going to UNNEST
             column_data = left_block[unnest_column]
@@ -190,7 +188,6 @@ class JoinNode(BasePlanNode):
     def execute(self, data_pages: Iterable) -> Iterable:
 
         from opteryx.engine.planner.operations import DatasetReaderNode
-        from opteryx.utils.columns import Columns
 
         if isinstance(self._right_table, DatasetReaderNode):
             self._right_table = pyarrow.concat_tables(
@@ -292,47 +289,3 @@ class JoinNode(BasePlanNode):
 
         else:
             raise SqlError(f"Unsupported Join type, {self._join_type}")
-
-
-if __name__ == "__main__":
-
-    import sys
-    import os
-
-    sys.path.insert(1, os.path.join(sys.path[0], "../../../../.."))
-
-    from opteryx import samples
-    from opteryx.third_party import pyarrow_ops
-    from opteryx.utils.display import ascii_table
-    from opteryx.utils.arrow import fetchmany
-    from mabel.utils.timer import Timer
-
-    planets = samples.astronauts()
-    satellites = samples.satellites()
-
-    #    print(planets.column_names)
-    #    print(planets.to_string(preview_cols=10))
-    #    planets.rename_columns(['id', 'planet_name', 'mass', 'diameter', 'density', 'gravity', 'escapeVelocity', 'rotationPeriod', 'lengthOfDay', 'distanceFromSun', 'perihelion', 'aphelion', 'orbitalPeriod', 'orbitalVelocity', 'orbitalInclination', 'orbitalEccentricity', 'obliquityToOrbit', 'meanTemperature', 'surfacePressure', 'numberOfMoons'])
-
-    with Timer():
-        joint = _cross_join([planets], satellites)  # 0.39 seconds - 63189
-        c = 0
-        for e, j in enumerate(joint):
-            c += j.num_rows
-        print(e, c)
-
-    # right_columns = planets.column_names
-    # right_columns = [f"planets.{name}" for name in right_columns]
-    # planets = planets.rename_columns(right_columns)
-
-    from opteryx.third_party.pyarrow_ops import join
-
-    print("---")
-
-    #    joint = join(planets, satellites, on=["id"])
-
-    #    print(joint.to_string())
-    joint = _cross_join(planets, satellites)
-    print(ascii_table(fetchmany(joint, limit=10), limit=10))
-
-    # print(joint.column_names)

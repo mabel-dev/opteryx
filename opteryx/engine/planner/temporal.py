@@ -13,10 +13,11 @@ This supports the following syntaxes
 - FOR DATES IN <range>
 
 """
+import datetime
 import re
+
 from opteryx.exceptions import SqlError
 from opteryx.utils import dates
-import datetime
 
 SQL_PARTS = [
     r"SELECT",
@@ -163,7 +164,7 @@ def extract_temporal_filters(sql):
     end_date = TODAY
 
     try:
-        pos = parts.index("FOR") # this fails when there is no temporal clause
+        pos = parts.index("FOR")  # this fails when there is no temporal clause
         for_date_string = parts[pos + 1]
         for_date = parse_date(for_date_string)
 
@@ -190,9 +191,7 @@ def extract_temporal_filters(sql):
             start_date, end_date = parse_range(parts[2])
 
             clearing_regex = (
-                r"(FOR[\n\r\s]+DATES[\n\r\s]+IN[\n\r\s]+"
-                + parts[2]
-                + r"(?!\S))"
+                r"(FOR[\n\r\s]+DATES[\n\r\s]+IN[\n\r\s]+" + parts[2] + r"(?!\S))"
             )
 
         if clearing_regex:
@@ -224,6 +223,6 @@ if __name__ == "__main__":
             yield start_date + datetime.timedelta(n)  # type:ignore
 
     s = datetime.date.today().replace(day=1, month=1)
-    e = s.replace(year=s.year+1)
+    e = s.replace(year=s.year + 1)
     for d in date_range(s, e):
         print(d, _subtract_one_month(d))

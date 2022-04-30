@@ -1,7 +1,9 @@
 import numpy as np
+
+from cjoin import cython_inner_join
+from cjoin import cython_left_join
+
 from .helpers import columns_to_array, groupify_array
-from cjoin import inner_join as cinner_join
-from cjoin import left_join as cleft_join
 
 
 def align_tables(t1, t2, l1, l2):
@@ -56,7 +58,7 @@ def inner_join(left, right, left_on, right_on):
     rbic[rinv] = rbi
 
     # Perform cjoin
-    left_align, right_align = cinner_join(
+    left_align, right_align = cython_inner_join(
         l_sort_idxs.astype(np.int64),
         r_sort_idxs.astype(np.int64),
         lcc.astype(np.int64),
@@ -70,7 +72,7 @@ def inner_join(left, right, left_on, right_on):
 
 def left_join(left, right, left_on, right_on):
     # Gather join columns - create arrays of the hashes of the values in the column
-    # updated for Opteryx
+    # new for Opteryx
     l_array, r_array = columns_to_array(left, left_on), columns_to_array(
         right, right_on
     )
@@ -116,7 +118,7 @@ def left_join(left, right, left_on, right_on):
     )
 
     # Perform cjoin
-    left_align, right_align = cleft_join(
+    left_align, right_align = cython_left_join(
         l_sort_idxs.astype(np.int64),
         r_sort_idxs.astype(np.int64),
         lcc.astype(np.int64),

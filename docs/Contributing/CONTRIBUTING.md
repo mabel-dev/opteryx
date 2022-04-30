@@ -1,15 +1,20 @@
 # Contribution Guide
 
-We'd love to accept your patches and contributions to this project. There are
-just a few small guidelines you need to follow.
+We'd love to accept your patches and contributions to this project. There are just a few small guidelines you need to follow.
 
-All submissions, including submissions by project members, require review. We
-use GitHub pull requests for this purpose. Consult 
-[GitHub Help](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/about-pull-requests)
-for more information on using pull requests.
+## We Develop with GitHub
 
-We have included a number of tests which run automatically when code is
-submitted, these tests should pass.
+All submissions, including submissions by core project members, require review. We use GitHub pull requests for this purpose. Consult [GitHub Help](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/about-pull-requests) for more information on using pull requests.
+
+## All Change must meet Quality Bars
+
+We have included a number of tests which run automatically when code is submitted, these tests should pass before it is elligible to be merged.
+
+## All contributions will be under Apache 2.0 Licence
+
+The project is licenced under Apache 2.0, your submissions will be under this same licence.
+
+## Format and Style Guidance
 
 For consistent style, code should look like:
 
@@ -27,7 +32,6 @@ Code should have:
 - Attributed external sources - even if there is no explicit license
   requirement
 
-
 A note about comments:
 - Computers will interpret anything, humans need help interpreting code
 - Prefer readable code over verbose comments
@@ -36,13 +40,10 @@ A note about comments:
 - Comments should be more than just the code in other words
 - Good variable names and well-written code doesn't need comments
 
-
 Check-ins should have prefixes:
-- `[#nnn]` items relating to tickets
-- `[FIX]` items fixing bugs
-- `[TEST]` improvements to testing
-- `[TIDY]` non-functional, commentary and cosmetic changes
-
+- `FIX\#nn` merges which fixing GitHub issues (#nn represents the issue number)
+- `[DOCS]` improvements to documentation
+- `[CI]` merges which address CI test failures
 
 Docstrings should look like:
 ~~~python

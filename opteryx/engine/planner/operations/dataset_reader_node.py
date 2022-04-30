@@ -27,23 +27,24 @@ USE THE ZONEMAP:
 PARALLELIZE READING:
 - As one blob is read, the next is immediately cached for reading
 """
-import time
 import datetime
+import time
 from enum import Enum
 from typing import Iterable, Optional
 
-import orjson
 from cityhash import CityHash64
-from opteryx.exceptions import DatabaseError
+from orjson import loads
+
+from opteryx.engine.query_statistics import QueryStatistics
 from opteryx.engine.planner.operations import BasePlanNode
-from opteryx.engine import QueryStatistics
+from opteryx.exceptions import DatabaseError
 from opteryx.storage import file_decoders
 from opteryx.storage.adapters import DiskStorage
 from opteryx.storage.schemes import MabelPartitionScheme
 from opteryx.utils.columns import Columns
 
 
-class EXTENSION_TYPE(str, Enum):
+class ExtentionType(str, Enum):
     # labels for the file extentions
     DATA = "DATA"
     CONTROL = "CONTROL"
@@ -52,13 +53,13 @@ class EXTENSION_TYPE(str, Enum):
 do_nothing = lambda x, y: x
 
 KNOWN_EXTENSIONS = {
-    "complete": (do_nothing, EXTENSION_TYPE.CONTROL),
-    "ignore": (do_nothing, EXTENSION_TYPE.CONTROL),
-    "arrow": (file_decoders.arrow_decoder, EXTENSION_TYPE.DATA),  # feather
-    "jsonl": (file_decoders.jsonl_decoder, EXTENSION_TYPE.DATA),
-    "orc": (file_decoders.orc_decoder, EXTENSION_TYPE.DATA),
-    "parquet": (file_decoders.parquet_decoder, EXTENSION_TYPE.DATA),
-    "zstd": (file_decoders.zstd_decoder, EXTENSION_TYPE.DATA),  # jsonl/zstd
+    "complete": (do_nothing, ExtentionType.CONTROL),
+    "ignore": (do_nothing, ExtentionType.CONTROL),
+    "arrow": (file_decoders.arrow_decoder, ExtentionType.DATA),  # feather
+    "jsonl": (file_decoders.jsonl_decoder, ExtentionType.DATA),
+    "orc": (file_decoders.orc_decoder, ExtentionType.DATA),
+    "parquet": (file_decoders.parquet_decoder, ExtentionType.DATA),
+    "zstd": (file_decoders.zstd_decoder, ExtentionType.DATA),  # jsonl/zstd
 }
 
 
@@ -67,15 +68,15 @@ def _get_sample_dataset(dataset, alias):
     # they are going to be used
     from opteryx import samples
 
-    SAMPLE_DATASETS = {
+    sample_datasets = {
         "$satellites/": samples.satellites,
         "$planets/": samples.planets,
         "$astronauts/": samples.astronauts,
         "$no_table/": samples.no_table,
     }
     dataset = dataset.lower()
-    if dataset in SAMPLE_DATASETS:
-        table = SAMPLE_DATASETS[dataset]()
+    if dataset in sample_datasets:
+        table = sample_datasets[dataset]()
         table = Columns.create_table_metadata(
             table=table,
             expected_rows=table.num_rows,
@@ -92,9 +93,11 @@ class DatasetReaderNode(BasePlanNode):
         The Dataset Reader Node is responsible for reading the relevant blobs
         and returning a Table/Relation.
         """
+        super().__init__(statistics=statistics, **config)
+
         from opteryx.engine.planner.planner import QueryPlanner
 
-        TODAY = datetime.date.today()
+        today = datetime.date.today()
 
         self._statistics = statistics
         self._alias, self._dataset = config.get("dataset", [None, None])
@@ -107,8 +110,8 @@ class DatasetReaderNode(BasePlanNode):
         self._cache = config.get("cache")
         self._partition_scheme = config.get("partition_scheme", MabelPartitionScheme())
 
-        self._start_date = config.get("start_date", TODAY)
-        self._end_date = config.get("end_date", TODAY)
+        self._start_date = config.get("start_date", today)
+        self._end_date = config.get("end_date", today)
 
         # pushed down projection
         self._projection = config.get("projection")
@@ -202,7 +205,7 @@ class DatasetReaderNode(BasePlanNode):
                 # find out how to read this blob
                 decoder, file_type = KNOWN_EXTENSIONS.get(extension, (None, None))
 
-                if file_type == EXTENSION_TYPE.CONTROL:
+                if file_type == ExtentionType.CONTROL:
                     self._statistics.count_control_blobs_read += 1
                     # read the control blob
                     control_blob = self._reader.read_blob(blob_name)
@@ -212,11 +215,11 @@ class DatasetReaderNode(BasePlanNode):
                     )
                     try:
                         control_dict = {}
-                        control_dict = orjson.loads(control_blob.read())
+                        control_dict = loads(control_blob.read())
                         expected_rows += control_dict.get("records", 0)
                     except (ValueError, TypeError):
                         pass
-                elif file_type == EXTENSION_TYPE.DATA:
+                elif file_type == ExtentionType.DATA:
                     partition_structure[partition]["blob_list"].append(
                         (
                             blob_name,
@@ -242,7 +245,7 @@ class DatasetReaderNode(BasePlanNode):
                 start_read = time.time_ns()
 
                 # Read the blob from storage, it's just a stream of bytes at this point
-                
+
                 # if we have a cache set
                 if self._cache:
                     # hash the blob name for the look up

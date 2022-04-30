@@ -18,13 +18,16 @@ This is a SQL Query Execution Plan Node.
 This Node skips over tuples.
 """
 from typing import Iterable
+
 import pyarrow
-from opteryx.engine.query_statistics import QueryStatistics
+
 from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
+from opteryx.engine.query_statistics import QueryStatistics
 
 
 class OffsetNode(BasePlanNode):
     def __init__(self, statistics: QueryStatistics, **config):
+        super().__init__(statistics=statistics, **config)
         self._offset = config.get("offset")
 
     @property
@@ -49,7 +52,6 @@ class OffsetNode(BasePlanNode):
                 )
                 yield page
                 break
-            else:
-                row_count += page.num_rows
+            row_count += page.num_rows
 
         yield from data_pages

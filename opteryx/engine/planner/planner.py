@@ -40,18 +40,14 @@ note: This module does not handle temporal filters, those as part of the FOR cla
 these are not supported by SqlOxide and so are in a different module which strips
 temporal aspects out of the query.
 """
-import sys
-import os
-
-sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
-
 import numpy
-from opteryx.utils import dates
-from opteryx.engine.planner.operations import *
-from opteryx.exceptions import SqlError
+
 from opteryx.engine.attribute_types import TOKEN_TYPES
 from opteryx.engine.functions import is_function
+from opteryx.engine.planner.operations import *
 from opteryx.engine.planner.temporal import extract_temporal_filters
+from opteryx.exceptions import SqlError
+from opteryx.utils import dates
 
 JSON_TYPES = {numpy.bool_: bool, numpy.int64: int, numpy.float64: float}
 
@@ -98,7 +94,8 @@ class QueryPlanner(object):
             statistics=self._statistics,
             reader=self._reader,
             cache=self._cache,
-            partition_scheme=self._partition_scheme)
+            partition_scheme=self._partition_scheme,
+        )
         qp._start_date = self._start_date
         qp._end_date = self._end_date
         return qp
@@ -116,8 +113,7 @@ class QueryPlanner(object):
                 # MySQL Dialect allows identifiers to be delimited with ` (backticks) and
                 # identifiers to start with _ (underscore) and $ (dollar sign)
                 # https://github.com/sqlparser-rs/sqlparser-rs/blob/main/src/dialect/mysql.rs
-            except ValueError as e:
-                # print(sql)
+            except ValueError as e:  # pragma: no cover
                 raise SqlError(e)
         else:
             self._ast = ast
@@ -129,7 +125,7 @@ class QueryPlanner(object):
             self._explain_planner(self._ast, self._statistics)
         elif "ShowColumns" in self._ast[0]:
             self._show_columns_planner(self._ast, self._statistics)
-        else:
+        else:  # pragma: no cover
             raise SqlError("Unknown or unsupported Query type.")
 
     def _extract_value(self, value):
@@ -399,7 +395,11 @@ class QueryPlanner(object):
                         "identifier": [
                             p["value"] for p in function["CompoundIdentifier"]
                         ].pop(),
-                        "alias": [".".join([p["value"] for p in function["CompoundIdentifier"]])],
+                        "alias": [
+                            ".".join(
+                                [p["value"] for p in function["CompoundIdentifier"]]
+                            )
+                        ],
                     }
                 if "Function" in function:
                     func = function["Function"]["name"][0]["value"].upper()
@@ -557,6 +557,7 @@ class QueryPlanner(object):
                     if "Number" in key_dict:
                         key = key_dict["Number"][0]
                     return f"{identifier}[{key}]"
+
         groups = ast[0]["Query"]["body"]["Select"]["group_by"]
         return [_inner(g) for g in groups]
 
@@ -734,8 +735,9 @@ class QueryPlanner(object):
 
     def explain(self):
 
-        from opteryx.utils.columns import Columns
         import pyarrow
+
+        from opteryx.utils.columns import Columns
 
         def _inner_explain(operator_name, depth):
             depth += 1
@@ -832,8 +834,8 @@ class QueryPlanner(object):
         self.edges += assimilatee.edges
         self.edges = list(set(self.edges))
 
-#    def __repr__(self):
-#        return "\n".join(list(self._draw()))
+    #    def __repr__(self):
+    #        return "\n".join(list(self._draw()))
 
     def _inner_execute(self, operator_name, relation):
         # print(f"***********{operator_name}***************")
@@ -852,29 +854,3 @@ class QueryPlanner(object):
         for entry_point in entry_points:
             rel = self._inner_execute(entry_point, None)
         return rel
-
-    def _draw(self):
-        for entry in self.get_entry_points():
-            node = self.get_operator(entry)
-            yield (f"{str(entry)} ({repr(node)})")
-            t = self._tree(entry, "")
-            yield ("\n".join(t))
-
-    def _tree(self, node, prefix=""):
-
-        space = "    "
-        branch = " │  "
-        tee = " ├─ "
-        last = " └─ "
-
-        contents = self.get_outgoing_links(node)
-        # contents each get pointers that are ├── with a final └── :
-        pointers = [tee] * (len(contents) - 1) + [last]
-        for pointer, child_node in zip(pointers, contents):
-            operator = self.get_operator(child_node)
-            yield prefix + pointer + str(child_node) + " (" + repr(operator) + ")"
-            if len(self.get_outgoing_links(node)) > 0:
-                # extend the prefix and recurse:
-                extension = branch if pointer == tee else space
-                # i.e. space because last, └── , above so no more |
-                yield from self._tree(str(child_node), prefix=prefix + extension)

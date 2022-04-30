@@ -1,14 +1,15 @@
 # cython: language_level=3
 import cython
-from cython import Py_ssize_t
 import numpy as np
+from cython import Py_ssize_t
 
 cimport numpy as cnp
-from numpy cimport ndarray, int64_t
+from numpy cimport int64_t, ndarray
+
 cnp.import_array()
 
 @cython.boundscheck(False)
-def inner_join(
+def cython_inner_join(
         const int64_t[:] left_idxs, const int64_t[:] right_idxs, 
         const int64_t[:] left_counts, const int64_t[:] right_counts, 
         const int64_t[:] left_bidxs, const int64_t[:] right_bidxs):
@@ -46,7 +47,7 @@ def inner_join(
                             
 
 @cython.boundscheck(False)
-def left_join(
+def cython_left_join(
         const int64_t[:] left_idxs, const int64_t[:] right_idxs, 
         const int64_t[:] left_counts, const int64_t[:] right_counts, 
         const int64_t[:] left_bidxs, const int64_t[:] right_bidxs):
