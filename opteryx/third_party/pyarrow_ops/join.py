@@ -72,7 +72,7 @@ def inner_join(left, right, left_on, right_on):
 
 def left_join(left, right, left_on, right_on):
     # Gather join columns - create arrays of the hashes of the values in the column
-    # updated for Opteryx
+    # new for Opteryx
     l_array, r_array = columns_to_array(left, left_on), columns_to_array(
         right, right_on
     )

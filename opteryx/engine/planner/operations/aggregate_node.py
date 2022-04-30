@@ -123,7 +123,7 @@ class AggregateNode(BasePlanNode):
             )
 
         self._mapped_project: List = []
-        self._mapped_groups = []
+        self._mapped_groups: List = []
 
     @property
     def config(self):
