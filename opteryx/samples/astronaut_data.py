@@ -4,7 +4,7 @@ astronauts
 
 This is a sample dataset build into the engine, this simplifies a few things:
 
-- We can write test scripts using this data, knowing that it will always be available. 
+- We can write test scripts using this data, knowing that it will always be available.
 - We can write examples using this data, knowing the results will always match.
 
 This data was obtained from:
@@ -21,8 +21,8 @@ or you can instantiate a AstronautData() class and use it like a pyarrow Table.
 """
 
 if __name__ == "__main__":
-    import sys
     import os
+    import sys
 
     sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
@@ -30,8 +30,9 @@ if __name__ == "__main__":
 class AstronautData:
     @staticmethod
     def get():
-        import io
         import base64
+        import io
+
         import pyarrow.parquet as pq
 
         # The table is saved parquet table, base85 encoded.

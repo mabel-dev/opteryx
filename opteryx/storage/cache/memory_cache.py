@@ -19,8 +19,9 @@ We're using a dictionary and moving items to the top of the dictionary
 when it's accessed. This relies on Python dictionaries being ordered.
 """
 
-from opteryx.storage import BaseBufferCache
 import io
+
+from opteryx.storage import BaseBufferCache
 
 
 class InMemoryCache(BaseBufferCache):

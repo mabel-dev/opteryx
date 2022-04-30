@@ -13,10 +13,11 @@ This supports the following syntaxes
 - FOR DATES IN <range>
 
 """
+import datetime
 import re
+
 from opteryx.exceptions import SqlError
 from opteryx.utils import dates
-import datetime
 
 SQL_PARTS = [
     r"SELECT",

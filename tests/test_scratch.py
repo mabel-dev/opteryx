@@ -1,6 +1,6 @@
 def random_string(length: int = 32) -> str:
-    import os
     import base64
+    import os
 
     # we're creating a series of random bytes, 3/4 the length
     # of the string we want, base64 encoding it (which makes

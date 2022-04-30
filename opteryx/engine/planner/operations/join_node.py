@@ -18,26 +18,30 @@ This is a SQL Query Execution Plan Node.
 This performs a JOIN
 """
 from typing import Iterable
+
 import numpy
 import pyarrow
-from opteryx.engine.query_statistics import QueryStatistics
-from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
-from opteryx.third_party import pyarrow_ops
-from opteryx.engine.attribute_types import TOKEN_TYPES
-from opteryx.utils.columns import Columns
+
 from opteryx import config
+from opteryx.engine.attribute_types import TOKEN_TYPES
+from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
+from opteryx.engine.query_statistics import QueryStatistics
 from opteryx.exceptions import SqlError
+from opteryx.third_party import pyarrow_ops
+from opteryx.utils.columns import Columns
 
 
 def cartesian_product(*arrays):
     """
     Cartesian product of arrays creates every combination of the elements in the arrays
     """
-    la = len(arrays)
-    arr = numpy.empty([len(a) for a in arrays] + [la], dtype=numpy.int64)
-    for i, a in enumerate(numpy.ix_(*arrays)):
-        arr[..., i] = a
-    return numpy.hsplit(arr.reshape(-1, la), la)
+    array_count = len(arrays)
+    arr = numpy.empty(
+        [len(array) for array in arrays] + [array_count], dtype=numpy.int64
+    )
+    for i, array in enumerate(numpy.ix_(*arrays)):
+        arr[..., i] = array
+    return numpy.hsplit(arr.reshape(-1, array_count), array_count)
 
 
 def _cross_join(left, right):
@@ -129,10 +133,9 @@ def _cross_join_unnest(left, column, alias):
             metadata.add_column(alias)
             unnest_column = metadata.get_column_from_alias(column[0], only_one=True)
 
+        batch_size = config.INTERNAL_BATCH_SIZE
         # we break this into small chunks otherwise we very quickly run into memory issues
-        for left_block in left_page.to_batches(
-            max_chunksize=config.INTERNAL_BATCH_SIZE
-        ):
+        for left_block in left_page.to_batches(max_chunksize=batch_size):
 
             # Get the column we're going to UNNEST
             column_data = left_block[unnest_column]

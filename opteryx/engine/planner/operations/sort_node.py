@@ -18,12 +18,14 @@ This is a SQL Query Execution Plan Node.
 This node orders a dataset
 """
 from typing import Iterable
-from pyarrow import concat_tables, Table
-from opteryx.engine.query_statistics import QueryStatistics
+
+from pyarrow import Table, concat_tables
+
+from opteryx.engine.functions import FUNCTIONS
 from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
+from opteryx.engine.query_statistics import QueryStatistics
 from opteryx.exceptions import SqlError
 from opteryx.utils.columns import Columns
-from opteryx.engine.functions import FUNCTIONS
 
 
 class SortNode(BasePlanNode):

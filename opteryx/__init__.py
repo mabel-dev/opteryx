@@ -10,8 +10,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from opteryx.connection import Connection
 from pathlib import Path
+
+from opteryx.connection import Connection
+
 from .version import __version__
 
 try:

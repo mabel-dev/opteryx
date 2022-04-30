@@ -1,9 +1,6 @@
 import numpy as np
-from setuptools import setup
-from setuptools import find_packages
-from setuptools import Extension
 from Cython.Build import cythonize
-
+from setuptools import Extension, find_packages, setup
 
 with open("opteryx/version.py", "r") as v:
     vers = v.read()

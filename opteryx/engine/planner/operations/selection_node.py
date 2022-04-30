@@ -26,12 +26,14 @@ The predicates are in _tuples_ in the form (`key`, `op`, `value`) where the `key
 is the value looked up from the record, the `op` is the operator and the `value`
 is a literal.
 """
+from typing import Iterable, Union
+
 import numpy
-from typing import Union, Iterable
 from pyarrow import Table
+
 from opteryx.engine.attribute_types import TOKEN_TYPES
-from opteryx.engine.query_statistics import QueryStatistics
 from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
+from opteryx.engine.query_statistics import QueryStatistics
 from opteryx.exceptions import SqlError
 from opteryx.utils.columns import Columns
 
@@ -71,8 +73,9 @@ def _evaluate(predicate: Union[tuple, list], table: Table) -> bool:
             # presently it only evaluates in the SELECT clause.
             else:
                 ## TODO: push this to the evaluation node
-                from opteryx.engine.functions import FUNCTIONS
                 import pyarrow
+
+                from opteryx.engine.functions import FUNCTIONS
 
                 function = predicate[2]
 

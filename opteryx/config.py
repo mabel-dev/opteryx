@@ -1,6 +1,7 @@
 import os
-import dotenv
 from pathlib import Path
+
+import dotenv
 
 try:
     env_path = Path(".") / ".env"

@@ -28,8 +28,8 @@ import sys
 
 sys.path.insert(1, os.path.join(sys.path[0], "../../"))
 
-from opteryx.utils import arrow
 from opteryx.exceptions import SqlError
+from opteryx.utils import arrow
 
 
 class Columns:

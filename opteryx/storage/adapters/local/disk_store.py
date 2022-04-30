@@ -1,8 +1,4 @@
-import sys
 import os
-
-sys.path.insert(1, os.path.join(sys.path[0], "../../../.."))
-
 from opteryx.storage import BaseStorageAdapter
 
 
@@ -21,12 +17,3 @@ class DiskStorage(BaseStorageAdapter):
 
         files = glob.glob(str(partition / "**"), recursive=True)
         return [f for f in files if os.path.isfile(f)]
-
-
-if __name__ == "__main__":
-
-    ds = DiskStorage()
-
-    ds.get_partitions(
-        dataset="test/data/partitioned", start_date="2000-01-01", end_date="2000-01-05"
-    )

@@ -23,10 +23,11 @@ from pyup.
 """
 
 import json
-import requests  # type:ignore
 import logging
 import operator
+
 import pkg_resources  # type:ignore
+import requests  # type:ignore
 from pkg_resources import parse_version  # type:ignore
 
 logger = logging.getLogger("measures")

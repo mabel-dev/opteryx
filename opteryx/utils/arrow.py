@@ -1,10 +1,11 @@
 from typing import Iterable, List
-from opteryx.utils.columns import Columns
 
 
 def fetchmany(pages, limit: int = 1000):
 
     from pyarrow import Table
+
+    from opteryx.utils.columns import Columns
 
     if pages is None:
         return []

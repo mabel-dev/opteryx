@@ -17,12 +17,14 @@ This is a SQL Query Execution Plan Node.
 
 This performs aliases and resolves function calls.
 """
-import pyarrow
 from typing import Iterable
+
+import pyarrow
+
 from opteryx.engine.attribute_types import TOKEN_TYPES
-from opteryx.engine.query_statistics import QueryStatistics
-from opteryx.engine.planner.operations import BasePlanNode
 from opteryx.engine.functions import FUNCTIONS
+from opteryx.engine.planner.operations import BasePlanNode
+from opteryx.engine.query_statistics import QueryStatistics
 from opteryx.exceptions import SqlError
 from opteryx.utils.columns import Columns
 

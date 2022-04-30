@@ -1,6 +1,10 @@
-from functools import lru_cache
+"""
+Date Utilities
+"""
+
 import re
-import datetime
+from datetime import date, datetime, time, timedelta
+from functools import lru_cache
 from typing import Optional, Union
 
 TIMEDELTA_REGEX = (
@@ -15,14 +19,14 @@ TIMEDELTA_PATTERN = re.compile(TIMEDELTA_REGEX, re.IGNORECASE)
 def extract_date(value):
     if isinstance(value, str):
         value = parse_iso(value)
-    if isinstance(value, (datetime.date, datetime.datetime)):
-        return datetime.date(value.year, value.month, value.day)
-    return datetime.date.today()
+    if isinstance(value, (date, datetime)):
+        return date(value.year, value.month, value.day)
+    return date.today()
 
 
 # based on:
 # https://gist.github.com/santiagobasulto/698f0ff660968200f873a2f9d1c4113c#file-parse_timedeltas-py
-def parse_delta(delta: str) -> datetime.timedelta:
+def parse_delta(delta: str) -> timedelta:
     """
     Parses a human readable timedelta (3d5h19m) into a datetime.timedelta.
 
@@ -37,8 +41,8 @@ def parse_delta(delta: str) -> datetime.timedelta:
     match = TIMEDELTA_PATTERN.match(delta)
     if match:
         parts = {k: int(v) for k, v in match.groupdict().items() if v}
-        return datetime.timedelta(**parts)
-    return datetime.timedelta(seconds=0)
+        return timedelta(**parts)
+    return timedelta(seconds=0)
 
 
 @lru_cache(128)
@@ -62,10 +66,10 @@ def parse_iso(value):
 
         input_type = type(value)
 
-        if input_type in (datetime.datetime, datetime.date, datetime.time):
+        if input_type in (datetime, date, time):
             return value
         if input_type in (int, float):
-            return datetime.datetime.fromtimestamp(value)
+            return datetime.fromtimestamp(value)
         if input_type == str and 10 <= len(value) <= 28:
             if value[-1] == "Z":
                 value = value[:-1]
@@ -74,15 +78,13 @@ def parse_iso(value):
                 return None
             if val_len == 10:
                 # YYYY-MM-DD
-                return datetime.datetime(
-                    *map(int, [value[:4], value[5:7], value[8:10]])
-                )
+                return datetime(*map(int, [value[:4], value[5:7], value[8:10]]))
             if val_len >= 16:
                 if not (value[10] in ("T", " ") and value[13] in DATE_SEPARATORS):
                     return False
                 if val_len >= 19 and value[16] in DATE_SEPARATORS:
                     # YYYY-MM-DD HH:MM:SS
-                    return datetime.datetime(
+                    return datetime(
                         *map(  # type:ignore
                             int,
                             [
@@ -97,7 +99,7 @@ def parse_iso(value):
                     )
                 if val_len == 16:
                     # YYYY-MM-DD HH:MM
-                    return datetime.datetime(
+                    return datetime(
                         *map(  # type:ignore
                             int,
                             [
@@ -115,8 +117,8 @@ def parse_iso(value):
 
 
 def date_range(
-    start_date: Optional[Union[str, datetime.date]],
-    end_date: Optional[Union[str, datetime.date]],
+    start_date: Optional[Union[str, date]],
+    end_date: Optional[Union[str, date]],
 ):
     """
     An interator over a range of dates
@@ -130,5 +132,5 @@ def date_range(
             "date_range: end_date must be the same or later than the start_date "
         )
 
-    for n in range(int((end_date - start_date).days) + 1):  # type:ignore
-        yield start_date + datetime.timedelta(n)  # type:ignore
+    for delta in range(int((end_date - start_date).days) + 1):  # type:ignore
+        yield start_date + timedelta(delta)  # type:ignore

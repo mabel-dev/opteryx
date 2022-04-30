@@ -13,14 +13,13 @@
 These are a set of functions that can be applied to data.
 """
 import datetime
-from pyarrow import compute
-from cityhash import CityHash64
-import opteryx
 
+from cityhash import CityHash64
+from pyarrow import compute
+
+import opteryx
 from opteryx.engine.functions import date_functions, other_functions
 from opteryx.exceptions import SqlError
-
-from opteryx.utils.text import levenshtein_distance
 from opteryx.utils.dates import parse_iso
 
 
@@ -178,28 +177,6 @@ FUNCTIONS = {
     "SECOND": compute.second,
     "QUARTER": compute.quarter,
 
-
-    # NOT CONVERTED YET
-    # DATES & TIMES
-    "MONTH_NAME": not_implemented,  # the name of the month
-    "DAY_NAME": not_implemented,  # the name of the day
-    "DAY_OF_YEAR": not_implemented,  # get the day of the year
-    "DAY_OF_WEEK": not_implemented,  # get the day of the week (Monday = 1)
-    "DATE_ADD": not_implemented,  # date, number, part
-    "DATE_DIFF": not_implemented,  # start, end, part
-    "AGE": not_implemented,  # 8 years, 3 months, 3 days
-    "MID": lambda x, y, z: str(x)[int(y) :][: int(z)],
-    "CONCAT": concat,
-    "LEVENSHTEIN": levenshtein_distance,
-    "REPLACE": not_implemented,  # string, pattern to find, pattern to replace -> string
-    # BOOLEAN
-    "ISNONE": lambda x: x is None,
-    # OTHER
-    "SORT": sorted,
-    "TRY": attempt,
-    "LEAST": min,
-    "GREATEST": max,
-    "UUID": not_implemented,  # cast value as UUID
 }
 # fmt:on
 

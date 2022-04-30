@@ -1,4 +1,4 @@
-from typing import Iterable, Dict, Any
+from typing import Any, Dict, Iterable
 
 
 def html_table(dictset: Iterable[dict], limit: int = 5):

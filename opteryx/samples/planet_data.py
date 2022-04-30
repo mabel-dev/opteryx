@@ -20,8 +20,8 @@ This has a companion dataset, $satellites, to help test joins.
 """
 
 if __name__ == "__main__":
-    import sys
     import os
+    import sys
 
     sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
@@ -30,8 +30,9 @@ class PlanetData:
     @staticmethod
     def get():
 
-        import io
         import base64
+        import io
+
         import pyarrow.parquet as pq
 
         return pq.read_table(

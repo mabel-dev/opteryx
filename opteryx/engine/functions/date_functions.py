@@ -14,6 +14,7 @@
 import datetime
 
 import numpy
+
 from opteryx.utils.dates import parse_iso
 
 

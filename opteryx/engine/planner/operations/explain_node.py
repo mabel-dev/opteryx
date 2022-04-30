@@ -18,8 +18,9 @@ This is a SQL Query Execution Plan Node.
 This writes out a query plan
 """
 from typing import Iterable
-from opteryx.engine.query_statistics import QueryStatistics
+
 from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
+from opteryx.engine.query_statistics import QueryStatistics
 
 
 class ExplainNode(BasePlanNode):

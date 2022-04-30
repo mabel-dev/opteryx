@@ -1,11 +1,8 @@
 import numpy
 import pyarrow.compute as pc
 
-from opteryx.engine.attribute_types import (
-    TOKEN_TYPES,
-    PARQUET_TYPES,
-    PYTHON_TYPES,
-)
+from opteryx.engine.attribute_types import PARQUET_TYPES, PYTHON_TYPES, TOKEN_TYPES
+
 from .helpers import columns_to_array, groupify_array
 
 

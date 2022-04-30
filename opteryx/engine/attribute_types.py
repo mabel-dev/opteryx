@@ -15,6 +15,7 @@ Helper routines for handling types between different dialects.
 """
 from enum import Enum
 from logging.config import IDENTIFIER
+
 from opteryx.exceptions import UnsupportedTypeError
 
 
@@ -24,6 +25,7 @@ def coerce_types(value):
     into a supported type, do it.
     """
     import datetime
+
     import numpy
 
     t = type(value)

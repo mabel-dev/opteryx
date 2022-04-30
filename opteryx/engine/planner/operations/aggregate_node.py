@@ -27,19 +27,14 @@ read time - e.g. 30s:21s where 20s is the read time).
 But, on high cardinality data (nearly unique columns), the performance is much faster,
 on a 10m record set, timings are 1:400 (50s:1220s where 20s is the read time).
 """
-
-import sys
-import os
-
-sys.path.insert(1, os.path.join(sys.path[0], "../../../.."))
-
-import pyarrow.json
-import numpy as np
 from typing import Iterable, List
-from opteryx.engine import QueryStatistics
+
+import numpy as np
+import pyarrow.json
+
+from opteryx.engine.query_statistics import QueryStatistics
 from opteryx.engine.planner.operations import BasePlanNode
 from opteryx.exceptions import SqlError
-from opteryx.utils.arrow import get_metadata
 from opteryx.utils.columns import Columns
 
 # these functions can be applied to each group
@@ -127,6 +122,9 @@ class AggregateNode(BasePlanNode):
                 "All items in SELECT clause must be aggregates or included in the GROUP BY clause."
             )
 
+        self._mapped_project: List = []
+        self._mapped_groups = []
+
     @property
     def config(self):
         return str(self._aggregates)
@@ -144,7 +142,6 @@ class AggregateNode(BasePlanNode):
 
         collector: dict = defaultdict(dict)
         columns = None
-        self._mapped_project: List = []
 
         if isinstance(data_pages, pyarrow.Table):
             data_pages = [data_pages]
@@ -162,7 +159,6 @@ class AggregateNode(BasePlanNode):
                     else:
                         self._mapped_project.append("*")
 
-                self._mapped_groups = []
                 for group in self._groups:
                     self._mapped_groups.append(
                         columns.get_column_from_alias(group, only_one=True)
@@ -264,23 +260,3 @@ class AggregateNode(BasePlanNode):
                 table_aliases=[],
             )
             yield table
-
-
-if __name__ == "__main__":
-
-    import sys
-    import os
-
-    sys.path.insert(1, os.path.join(sys.path[0], "../../../../.."))
-
-    from opteryx import samples
-    from opteryx.utils.display import ascii_table
-    from opteryx.utils.arrow import fetchmany
-
-    s = samples.satellites()
-
-    # count, min, max, sum, mean, count_distinct, min_max
-    # https://arrow.apache.org/docs/python/api/compute.html#aggregations
-    g = s.group_by("planetId").aggregate([("id", "count_distinct")])
-
-    print(ascii_table(fetchmany([g], limit=10), limit=10))

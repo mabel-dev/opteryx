@@ -40,18 +40,14 @@ note: This module does not handle temporal filters, those as part of the FOR cla
 these are not supported by SqlOxide and so are in a different module which strips
 temporal aspects out of the query.
 """
-import sys
-import os
-
-sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
-
 import numpy
-from opteryx.utils import dates
-from opteryx.engine.planner.operations import *
-from opteryx.exceptions import SqlError
+
 from opteryx.engine.attribute_types import TOKEN_TYPES
 from opteryx.engine.functions import is_function
+from opteryx.engine.planner.operations import *
 from opteryx.engine.planner.temporal import extract_temporal_filters
+from opteryx.exceptions import SqlError
+from opteryx.utils import dates
 
 JSON_TYPES = {numpy.bool_: bool, numpy.int64: int, numpy.float64: float}
 
@@ -740,8 +736,9 @@ class QueryPlanner(object):
 
     def explain(self):
 
-        from opteryx.utils.columns import Columns
         import pyarrow
+
+        from opteryx.utils.columns import Columns
 
         def _inner_explain(operator_name, depth):
             depth += 1

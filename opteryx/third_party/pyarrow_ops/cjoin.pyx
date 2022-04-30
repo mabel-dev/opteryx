@@ -1,10 +1,11 @@
 # cython: language_level=3
 import cython
-from cython import Py_ssize_t
 import numpy as np
+from cython import Py_ssize_t
 
 cimport numpy as cnp
-from numpy cimport ndarray, int64_t
+from numpy cimport int64_t, ndarray
+
 cnp.import_array()
 
 @cython.boundscheck(False)

@@ -16,10 +16,12 @@ stores, it is not compliant with the standard:
 https://www.python.org/dev/peps/pep-0249/ 
 """
 import time
-from typing import Dict, Optional, List, Union, Tuple
-from opteryx.storage import BaseStorageAdapter, BaseBufferCache, BasePartitionScheme
+from typing import Dict, List, Optional, Tuple, Union
+
+from opteryx.engine import QueryPlanner
+from opteryx.engine.query_statistics import QueryStatistics
+from opteryx.storage import BaseBufferCache, BasePartitionScheme, BaseStorageAdapter
 from opteryx.storage.adapters import DiskStorage
-from opteryx.engine import QueryStatistics, QueryPlanner
 from opteryx.storage.schemes import DefaultPartitionScheme, MabelPartitionScheme
 from opteryx.utils import arrow
 
@@ -201,6 +203,7 @@ class Cursor:
 
         if i_am_in_a_notebook():
             from IPython.display import HTML, display
+
             from opteryx.utils import display
 
             html = display.html_table(iter(self._iterator), 10)

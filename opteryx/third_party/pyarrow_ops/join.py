@@ -1,7 +1,9 @@
 import numpy as np
-from .helpers import columns_to_array, groupify_array
+
 from cjoin import inner_join as cinner_join
 from cjoin import left_join as cleft_join
+
+from .helpers import columns_to_array, groupify_array
 
 
 def align_tables(t1, t2, l1, l2):

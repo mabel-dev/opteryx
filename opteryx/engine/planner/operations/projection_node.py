@@ -19,10 +19,12 @@ This Node eliminates columns that are not needed in a Relation. This is also the
 that performs column renames.
 """
 from typing import Iterable
+
 import pyarrow
+
 from opteryx.engine.attribute_types import TOKEN_TYPES
-from opteryx.engine.query_statistics import QueryStatistics
 from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
+from opteryx.engine.query_statistics import QueryStatistics
 from opteryx.utils.columns import Columns
 
 

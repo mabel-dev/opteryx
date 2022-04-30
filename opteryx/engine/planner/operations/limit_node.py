@@ -18,9 +18,11 @@ This is a SQL Query Execution Plan Node.
 This Node returns up to a specified number of tuples.
 """
 from typing import Iterable
-from pyarrow import concat_tables, Table
-from opteryx.engine.query_statistics import QueryStatistics
+
+from pyarrow import Table, concat_tables
+
 from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
+from opteryx.engine.query_statistics import QueryStatistics
 
 
 class LimitNode(BasePlanNode):

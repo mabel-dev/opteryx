@@ -71,4 +71,4 @@ jobs:
           python -m pip install --upgrade pip pylint perflint
 
       - name: Execute Test
-        run: pylint --load-plugins perflint opteryx
+        run: pylint --fail-under=8 --load-plugins perflint opteryx
