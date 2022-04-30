@@ -60,17 +60,6 @@ def get_version():
     return opteryx.__version__
 
 
-def attempt(func):
-    try:
-        return func()
-    except:
-        return None
-
-
-def not_implemented(*args):
-    raise NotImplementedError()
-
-
 def _get(value, item):
     try:
         if isinstance(value, dict):
