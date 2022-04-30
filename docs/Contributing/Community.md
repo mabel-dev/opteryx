@@ -1,5 +1,9 @@
 # Community
 
+## GitHub
+
+We use [GitHub] to host the code, perform testing, report bugs and maintain documentation.
+
 ## Slack
 
 [Join us on Slack](https://join.slack.com/t/mabel-corp/shared_invite/zt-1845skqgm-SEQMgvrPyJO~DLhSsNJovQ)
