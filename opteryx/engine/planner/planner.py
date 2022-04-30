@@ -113,8 +113,7 @@ class QueryPlanner(object):
                 # MySQL Dialect allows identifiers to be delimited with ` (backticks) and
                 # identifiers to start with _ (underscore) and $ (dollar sign)
                 # https://github.com/sqlparser-rs/sqlparser-rs/blob/main/src/dialect/mysql.rs
-            except ValueError as e:
-                # print(sql)
+            except ValueError as e:  # pragma: no cover
                 raise SqlError(e)
         else:
             self._ast = ast
@@ -126,7 +125,7 @@ class QueryPlanner(object):
             self._explain_planner(self._ast, self._statistics)
         elif "ShowColumns" in self._ast[0]:
             self._show_columns_planner(self._ast, self._statistics)
-        else:
+        else:  # pragma: no cover
             raise SqlError("Unknown or unsupported Query type.")
 
     def _extract_value(self, value):
@@ -855,29 +854,3 @@ class QueryPlanner(object):
         for entry_point in entry_points:
             rel = self._inner_execute(entry_point, None)
         return rel
-
-    def _draw(self):
-        for entry in self.get_entry_points():
-            node = self.get_operator(entry)
-            yield (f"{str(entry)} ({repr(node)})")
-            t = self._tree(entry, "")
-            yield ("\n".join(t))
-
-    def _tree(self, node, prefix=""):
-
-        space = "    "
-        branch = " │  "
-        tee = " ├─ "
-        last = " └─ "
-
-        contents = self.get_outgoing_links(node)
-        # contents each get pointers that are ├── with a final └── :
-        pointers = [tee] * (len(contents) - 1) + [last]
-        for pointer, child_node in zip(pointers, contents):
-            operator = self.get_operator(child_node)
-            yield prefix + pointer + str(child_node) + " (" + repr(operator) + ")"
-            if len(self.get_outgoing_links(node)) > 0:
-                # extend the prefix and recurse:
-                extension = branch if pointer == tee else space
-                # i.e. space because last, └── , above so no more |
-                yield from self._tree(str(child_node), prefix=prefix + extension)

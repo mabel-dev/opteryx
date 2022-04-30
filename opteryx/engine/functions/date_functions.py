@@ -57,26 +57,3 @@ def get_date(input):
     if isinstance(input, datetime.date):
         return datetime.datetime.combine(input, datetime.datetime.min.time())
     return None
-
-
-### not used yet
-
-
-def add_days(start_date, day_count):
-    if isinstance(start_date, str):
-        start_date = parse_iso(start_date)
-    if isinstance(start_date, (datetime.date, datetime.datetime)):
-        return start_date + datetime.timedelta(days=day_count)
-    return None
-
-
-def diff_days(start_date, end_date):
-    if isinstance(start_date, str):
-        start_date = parse_iso(start_date)
-    if isinstance(end_date, str):
-        end_date = parse_iso(end_date)
-    if isinstance(start_date, (datetime.date, datetime.datetime)) and isinstance(
-        end_date, (datetime.date, datetime.datetime)
-    ):
-        return (end_date - start_date).days
-    return None

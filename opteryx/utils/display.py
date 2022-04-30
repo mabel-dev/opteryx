@@ -1,7 +1,7 @@
 from typing import Any, Dict, Iterable
 
 
-def html_table(dictset: Iterable[dict], limit: int = 5):
+def html_table(dictset: Iterable[dict], limit: int = 5):  # pragma: no cover
     """
     Render the dictset as a HTML table.
 
@@ -75,7 +75,7 @@ def html_table(dictset: Iterable[dict], limit: int = 5):
     return "".join(_to_html_table(rows, columns)) + footer
 
 
-def ascii_table(dictset: Iterable[Dict[Any, Any]], limit: int = 5):
+def ascii_table(dictset: Iterable[Dict[Any, Any]], limit: int = 5):  # pragma: no cover
     """
     Render the dictset as a ASCII table.
 

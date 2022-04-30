@@ -28,6 +28,7 @@ from opteryx.third_party.pyarrow_ops import drop_duplicates
 
 class DistinctNode(BasePlanNode):
     def __init__(self, statistics: QueryStatistics, **config):
+        super().__init__(statistics=statistics, **config)
         self._distinct = config.get("distinct", True)
 
     @property
@@ -48,4 +49,5 @@ class DistinctNode(BasePlanNode):
 
         if self._distinct:
             yield drop_duplicates(concat_tables(data_pages))
+            return
         yield from data_pages

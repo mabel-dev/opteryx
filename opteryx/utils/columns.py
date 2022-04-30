@@ -24,10 +24,6 @@ The selection operator should focus on the selection not on working out which co
 is actually being referred to.
 """
 import os
-import sys
-
-sys.path.insert(1, os.path.join(sys.path[0], "../../"))
-
 from opteryx.exceptions import SqlError
 from opteryx.utils import arrow
 

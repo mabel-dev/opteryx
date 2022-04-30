@@ -13,10 +13,10 @@ def fetchmany(pages, limit: int = 1000):
     if isinstance(pages, Table):
         pages = (pages,)
 
-    DEFAULT_CHUNK_SIZE = 1000
-    chunk_size = min(limit, DEFAULT_CHUNK_SIZE)
+    default_chunk_size = 1000
+    chunk_size = min(limit, default_chunk_size)
     if chunk_size < 0:
-        chunk_size = DEFAULT_CHUNK_SIZE
+        chunk_size = default_chunk_size
 
     def _inner_row_reader():
 
@@ -54,10 +54,8 @@ def fetchall(pages) -> List[dict]:
     return fetchmany(pages=pages, limit=-1)
 
 
-"""
-Adapted from:
-https://stackoverflow.com/questions/55546027/how-to-assign-arbitrary-metadata-to-pyarrow-table-parquet-columns
-"""
+# Adapted from:
+# https://stackoverflow.com/questions/55546027/how-to-assign-arbitrary-metadata-to-pyarrow-table-parquet-columns
 
 
 def set_metadata(table, table_metadata=None, column_metadata=None):
