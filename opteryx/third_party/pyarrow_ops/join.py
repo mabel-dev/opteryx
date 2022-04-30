@@ -1,7 +1,7 @@
 import numpy as np
 
-from cjoin import inner_join as cinner_join
-from cjoin import left_join as cleft_join
+from cjoin import cython_inner_join
+from cjoin import cython_left_join
 
 from .helpers import columns_to_array, groupify_array
 
@@ -58,7 +58,7 @@ def inner_join(left, right, left_on, right_on):
     rbic[rinv] = rbi
 
     # Perform cjoin
-    left_align, right_align = cinner_join(
+    left_align, right_align = cython_inner_join(
         l_sort_idxs.astype(np.int64),
         r_sort_idxs.astype(np.int64),
         lcc.astype(np.int64),
@@ -118,7 +118,7 @@ def left_join(left, right, left_on, right_on):
     )
 
     # Perform cjoin
-    left_align, right_align = cleft_join(
+    left_align, right_align = cython_left_join(
         l_sort_idxs.astype(np.int64),
         r_sort_idxs.astype(np.int64),
         lcc.astype(np.int64),

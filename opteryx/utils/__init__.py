@@ -1,7 +1,3 @@
-import pyximport
-
-pyximport.install()
-
 from functools import lru_cache
 
 
