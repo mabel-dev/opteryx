@@ -12,7 +12,6 @@ def is_running_from_ipython():
     """
     try:
         from IPython import get_ipython  # type:ignore
-
         return get_ipython() is not None
     except Exception:
         return False

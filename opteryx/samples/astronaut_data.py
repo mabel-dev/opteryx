@@ -12,7 +12,7 @@ https://www.kaggle.com/nasa/astronaut-yearbook
 
 Licence @ 22-FEB-2022 when copied - CC0: Public Domain.
 
-To access this dataset you can either run a query against dataset $astronats 
+To access this dataset you can either run a query against dataset $astronats
 
 `SELECT * FROM $astronauts`
 
