@@ -26,10 +26,10 @@ from opteryx.utils.dates import parse_iso
 def get_random():
     import os
 
-    min, max = 0, 1000
+    range_min, range_max = 0, 1000
     random_int = int.from_bytes(os.urandom(2), "big")
     try:
-        return ((random_int % ((max + 1) - min)) + min) / 1000
+        return ((random_int % ((range_max + 1) - range_min)) + range_min) / 1000
     except:
         return 0
 
@@ -48,6 +48,7 @@ def concat(*items):
 
 
 def get_md5(item):
+    """calculate MD5 hash of a value"""
     # this is slow but expected to not have a lot of use
     import hashlib
 
@@ -55,6 +56,7 @@ def get_md5(item):
 
 
 def get_version():
+    """return opteryx version"""
     return opteryx.__version__
 
 

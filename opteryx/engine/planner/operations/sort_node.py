@@ -31,7 +31,7 @@ from opteryx.utils.columns import Columns
 class SortNode(BasePlanNode):
     def __init__(self, statistics: QueryStatistics, **config):
         self._order = config.get("order", [])
-        self._mapped_order:List = []
+        self._mapped_order: List = []
 
     @property
     def greedy(self):
