@@ -8,6 +8,10 @@
 
 ### 2) Install pip   
 
+~~~bash
+python -m ensurepip --upgrade
+~~~
+
 ### 3) Install Git   
 
 ~~~bash
@@ -24,13 +28,13 @@ sudo apt-get install git
 git clone https://github.com/mabel-dev/opteryx
 ~~~
 
-1) Install Dependencies   
+### 5) Install Dependencies   
 
 ~~~bash
 python -m pip install --upgrade -r requirements.txt
 ~~~
 
-1) Build Binaries   
+### 6) Build Binaries   
 
 ~~~bash
 python setup.py build_ext --inplace
@@ -39,6 +43,7 @@ python setup.py build_ext --inplace
 ## Running Tests
 
 To run the regression and unit tests:
+
 ~~~
 python -m pytest
 ~~~
