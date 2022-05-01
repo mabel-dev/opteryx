@@ -8,13 +8,17 @@ All submissions, including submissions by core project members, require review. 
 
 ## All Change must meet Quality Bars
 
-We have included a number of tests which run automatically when code is submitted, these tests should pass before it is elligible to be merged.
+We have included a number of tests which run automatically when code is submitted using GitHub Actions. These tests must pass before a change is elligible to be merged.
+
+These tests include a regression test suite, security tests and other quality checks.
 
 ## All contributions will be under Apache 2.0 Licence
 
-The project is licenced under Apache 2.0, your submissions will be under this same licence.
+The project is licenced under [Apache 2.0](https://github.com/mabel-dev/opteryx/blob/main/LICENSE), your submissions will be under this same licence.
 
 ## Format and Style Guidance
+
+### Code Style
 
 For consistent style, code should look like:
 
@@ -23,24 +27,22 @@ For consistent style, code should look like:
 - Classes should be in `PascalCase`
 - Constants should be in `UPPER_CASE`
 - Methods with docstrings
-- Black formatted
+- [Black](https://github.com/psf/black) formatted
 - Self-explanatory method, class and variable names
-
+- Type hints, especially in function definitions
 
 Code should have:
 - Corresponding unit/regression tests
-- Attributed external sources - even if there is no explicit license
-  requirement
+- Attributed external sources - even if there is no explicit license requirement
 
 A note about comments:
 - Computers will interpret anything, humans need help interpreting code
 - Prefer readable code over verbose comments
-- Humans struggle with threading, recursion, parallelization, variables
-  called `x` and more than 10... of anything
-- Comments should be more than just the code in other words
-- Good variable names and well-written code doesn't need comments
+- Humans struggle with threading, recursion, parallelization, variables called `x` and more than 10... of anything
+- Comments should usually be more than just the code in other words
+- Good variable names and well-written code doesn't always need comments
 
-Check-ins should have prefixes:
+Code pushes should have prefixes:
 - `FIX\#nn` merges which fixing GitHub issues (#nn represents the issue number)
 - `[DOCS]` improvements to documentation
 - `[CI]` merges which address CI test failures

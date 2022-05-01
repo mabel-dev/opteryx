@@ -2,7 +2,7 @@
 
 ## GitHub
 
-We use [GitHub] to host the code, perform testing, report bugs and maintain documentation.
+We use [GitHub](https://github.com/mabel-dev/opteryx) to host the code, perform testing, report bugs and maintain documentation.
 
 ## Slack
 

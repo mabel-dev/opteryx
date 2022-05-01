@@ -23,6 +23,7 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![commit_freq](https://img.shields.io/github/commit-activity/m/mabel-dev/opteryx)](https://github.com/mabel-dev/opteryx/commits)
 [![last_commit](https://img.shields.io/github/last-commit/mabel-dev/opteryx)](https://github.com/mabel-dev/opteryx/commits)
+[![codecov](https://codecov.io/gh/mabel-dev/opteryx/branch/master/graph/badge.svg?token=sIgKpzzd95)](https://codecov.io/gh/mabel-dev/opteryx)
 
 **Opteryx** has no server component, **Opteryx** just runs when you need it making it ideal for deployments to platforms like Kubernetes, GCP Cloud Run, AWS Fargate and Knative.
 
