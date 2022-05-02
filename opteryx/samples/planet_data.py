@@ -19,12 +19,6 @@ can instantiate a PlanetData() class and use it like a Relation.
 This has a companion dataset, $satellites, to help test joins.
 """
 
-if __name__ == "__main__":
-    import os
-    import sys
-
-    sys.path.insert(1, os.path.join(sys.path[0], "../.."))
-
 
 class PlanetData:
     @staticmethod
@@ -42,11 +36,3 @@ class PlanetData:
                 )
             )
         )
-
-
-if __name__ == "__main__":  # pragma: no cover
-
-    md = PlanetData().get()
-
-    print(md.schema)
-    print(md.shape)

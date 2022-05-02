@@ -38,9 +38,9 @@ def test_date_parser(string, expect):
     ), f"{string}  {dates.parse_iso(string)}  {expect}"
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
 
-    print(f"RUNNING BATTERY OF {len(DATE_TESTS)} TESTS")
+    print(f"RUNNING BATTERY OF {len(DATE_TESTS)} DATE TESTS")
     for date_string, date_date in DATE_TESTS:
         print(date_string)
         test_date_parser(date_string, date_date)

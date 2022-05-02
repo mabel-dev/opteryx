@@ -20,12 +20,6 @@ or you can instantiate a AstronautData() class and use it like a pyarrow Table.
 
 """
 
-if __name__ == "__main__":
-    import os
-    import sys
-
-    sys.path.insert(1, os.path.join(sys.path[0], "../.."))
-
 
 class AstronautData:
     @staticmethod
@@ -43,11 +37,3 @@ class AstronautData:
                 )
             )
         )
-
-
-if __name__ == "__main__":  # pragma: no cover
-
-    md = AstronautData().get()
-
-    print(md.schema)
-    print(md.shape)

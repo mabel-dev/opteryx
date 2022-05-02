@@ -17,8 +17,11 @@ def _get_type(var):
 
 
 # Filter functionality
-def arr_op_to_idxs(arr, op, value):
-    if op in ["=", "=="]:
+def arr_op_to_idxs(arr, operator, value):
+    if operator in (
+        "=",
+        "==",
+    ):
         # type checking added for Opteryx
         parquet_type = _get_type(arr)
         if value is None and parquet_type == TOKEN_TYPES.NUMERIC:
@@ -30,37 +33,40 @@ def arr_op_to_idxs(arr, op, value):
                 f"Type mismatch, unable to compare {parquet_type} with {python_type}"
             )
         return numpy.where(arr == value)
-    elif op in ["!=", "<>"]:
+    elif operator in (
+        "!=",
+        "<>",
+    ):
         return numpy.where(arr != value)
-    elif op == "<":
+    elif operator == "<":
         return numpy.where(arr < value)
-    elif op == ">":
+    elif operator == ">":
         return numpy.where(arr > value)
-    elif op == "<=":
+    elif operator == "<=":
         return numpy.where(arr <= value)
-    elif op == ">=":
+    elif operator == ">=":
         return numpy.where(arr >= value)
-    elif op == "in":
+    elif operator == "in":
         # MODIFIED FOR OPTERYX
         # some of the lists are saved as sets, which are faster than searching numpy
         # arrays, even with numpy's native functionality - choosing the right algo
         # is almost always faster than choosing a fast language.
         return numpy.array([a in value for a in arr], dtype=numpy.bool8)
-    elif op == "not in":
+    elif operator == "not in":
         # MODIFIED FOR OPTERYX - see comment above
         return numpy.array([a not in value for a in arr], dtype=numpy.bool8)
-    elif op == "like":
+    elif operator == "like":
         return pc.match_like(arr, value)
-    elif op == "not like":
+    elif operator == "not like":
         return numpy.invert(pc.match_like(arr, value))
-    elif op == "ilike":
+    elif operator == "ilike":
         return pc.match_like(arr, value, ignore_case=True)
-    elif op == "not ilike":
+    elif operator == "not ilike":
         return numpy.invert(pc.match_like(arr, value, ignore_case=True))
-    elif op == "~":
+    elif operator == "~":
         return pc.match_substring_regex(arr, value)
     else:
-        raise Exception(f"Operand {op} is not implemented!")
+        raise Exception(f"Operator {operator} is not implemented!")
 
 
 def _get_values(table, operand):
@@ -76,22 +82,26 @@ def _get_values(table, operand):
             return operand[0]
     except:
         pass
-        # print(table.column_names)
 
 
 def ifilters(table, filters):
-    # ADDED FOR OPTERYX
-    # return the indices so we can do unions (OR) and intersections (AND) on the lists
-    # of indices to do complex filters
+    """
+    ADDED FOR OPTERYX
+    return the indices so we can do unions (OR) and intersections (AND) on the lists
+    of indices to do complex filters
+    """
     filters = [filters] if isinstance(filters, tuple) else filters
     # Filter is a list of (col, op, value) tuples
-    idxs = numpy.arange(table.num_rows)
-    for (left_op, op, right_op) in filters:
+    indices = numpy.arange(table.num_rows)
+    for (left_operand, operator, right_operand) in filters:
         f_idxs = arr_op_to_idxs(
-            _get_values(table, left_op), op, _get_values(table, right_op)
+            _get_values(table, left_operand),
+            operator,
+            _get_values(table, right_operand),
         )
-        idxs = idxs[f_idxs]
-    return idxs
+        indices = indices[f_idxs]
+
+    return indices
 
 
 # Drop duplicates

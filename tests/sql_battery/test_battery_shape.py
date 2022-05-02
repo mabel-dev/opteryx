@@ -39,6 +39,9 @@ STATEMENTS = [
         ("SELECT\n\t*\n  FROM\n\t$satellites", 177, 8),
         ("\n\n\n\tSELECT * FROM $satellites", 177, 8),
         ("SELECT * FROM $satellites WHERE name = 'Calypso'", 1, 8),
+        ("SELECT * FROM $satellites WHERE (name = 'Calypso')", 1, 8),
+        ("SELECT * FROM $satellites WHERE NOT name = 'Calypso'", 176, 8),
+        ("SELECT * FROM $satellites WHERE NOT (name = 'Calypso')", 176, 8),
         ("SELECT * FROM $satellites WHERE `name` = 'Calypso'", 1, 8),
         ("select * from $satellites where name = 'Calypso'", 1, 8),
         ("SELECT * FROM $satellites WHERE name <> 'Calypso'", 176, 8),
@@ -48,29 +51,33 @@ STATEMENTS = [
         ("SELECT * FROM $satellites WHERE name like 'Cal%'", 4, 8),
         ("SELECT * FROM $satellites WHERE `name` = 'Calypso'", 1, 8),
         ("SELECT * FROM `$satellites` WHERE name = 'Calypso'", 1, 8),
-        ("SELECT * FROM `$satellites` WHERE `name` = 'Calypso'", 1, 8),  
+        ("SELECT * FROM `$satellites` WHERE `name` = 'Calypso'", 1, 8),
 
-        ("SELECT name, id, planetId FROM $satellites", 177, 3), 
+        ("SELECT name, id, planetId FROM $satellites", 177, 3),
         ("SELECT name, name FROM $satellites", 177, 1),
         ("SELECT name, id, name, id FROM $satellites", 177, 2),
 
-        ("SELECT name as Name FROM $satellites", 177, 1), 
-        ("SELECT name as Name, id as Identifier FROM $satellites", 177, 2), 
-        ("SELECT name as NAME FROM $satellites WHERE name = 'Calypso'", 1, 1), 
-        ("SELECT name as NAME FROM $satellites GROUP BY name", 177, 1), 
+        ("SELECT name as Name FROM $satellites", 177, 1),
+        ("SELECT name as Name, id as Identifier FROM $satellites", 177, 2),
+        ("SELECT name as NAME FROM $satellites WHERE name = 'Calypso'", 1, 1),
+        ("SELECT name as NAME FROM $satellites GROUP BY name", 177, 1),
 
-        ("SELECT * FROM $satellites WHERE id = 5", 1, 8), 
+        ("SELECT * FROM $satellites WHERE id = 5", 1, 8),
         ("SELECT * FROM $satellites WHERE magnitude = 5.29", 1, 8),
         ("SELECT * FROM $satellites WHERE id = 5 AND magnitude = 5.29", 1, 8),
         ("SELECT * FROM $satellites WHERE id = 5 AND magnitude = 1", 0, 8),
         ("SELECT * FROM $satellites WHERE id = 5 AND name = 'Europa'", 1, 8),
+        ("SELECT * FROM $satellites WHERE (id = 5) AND (name = 'Europa')", 1, 8),
         ("SELECT * FROM $satellites WHERE id = 5 OR name = 'Europa'", 1, 8),
         ("SELECT * FROM $satellites WHERE id = 5 OR name = 'Moon'", 2, 8),
+        ("SELECT * FROM $satellites WHERE id < 3 AND (name = 'Europa' OR name = 'Moon')", 1, 8),
         ("SELECT * FROM $satellites WHERE id BETWEEN 5 AND 8", 4, 8),
         ("SELECT * FROM $satellites WHERE ((id BETWEEN 5 AND 10) AND (id BETWEEN 10 AND 12)) OR name = 'Moon'", 2, 8),
         ("SELECT * FROM $satellites WHERE id BETWEEN 5 AND 8 OR name = 'Moon'", 5, 8),
         ("SELECT * FROM $satellites WHERE id IN (5,6,7,8)", 4, 8),
         ("SELECT * FROM $satellites WHERE id IN (5,6,7,8) AND name = 'Europa'", 1, 8),
+        ("SELECT * FROM $satellites WHERE (id IN (5,6,7,8)) AND name = 'Europa'", 1, 8),
+        ("SELECT * FROM $satellites WHERE (id IN (5,6,7,8) AND name = 'Europa')", 1, 8),
         ("SELECT * FROM $satellites WHERE id IN (5,6,7,8) OR name = 'Moon'", 5, 8),
         ("SELECT * FROM $satellites WHERE (id = 5 OR id = 6 OR id = 7 OR id = 8) AND name = 'Europa'", 1, 8),
         ("SELECT * FROM $satellites WHERE (id = 6 OR id = 7 OR id = 8) OR name = 'Europa'", 4, 8),
@@ -101,8 +108,8 @@ STATEMENTS = [
         ("SELECT COUNT(*) FROM $satellites GROUP\nBY planetId", 7, 1),
         ("SELECT COUNT(*) FROM $satellites GROUP     BY planetId", 7, 1),
         ("SELECT COUNT(*), planetId FROM $satellites GROUP BY planetId", 7, 2),
-        ("SELECT COUNT(*), planetId FROM $satellites WHERE planetId < 6 GROUP BY planetId", 3, 2),                
-        ("SELECT COUNT(*), planetId FROM $satellites WHERE planetId <= 6 GROUP BY planetId", 4, 2),      
+        ("SELECT COUNT(*), planetId FROM $satellites WHERE planetId < 6 GROUP BY planetId", 3, 2),        
+        ("SELECT COUNT(*), planetId FROM $satellites WHERE planetId <= 6 GROUP BY planetId", 4, 2),
         ("SELECT COUNT(*), planetId FROM $satellites WHERE name LIKE 'Cal%' GROUP BY planetId", 3, 2),
         
         ("SELECT DISTINCT planetId FROM $satellites", 7, 1),
@@ -136,8 +143,8 @@ STATEMENTS = [
         ("SELECT COUNT(*), ROUND(magnitude) FROM $satellites group by ROUND(magnitude)", 27, 2),
         ("SELECT ROUND(magnitude) FROM $satellites group by ROUND(magnitude)", 27, 1),
         ("SELECT round(magnitude) FROM $satellites group by round(magnitude)", 27, 1),
-        ("SELECT upper(name) as NAME, id as Identifier FROM $satellites", 177, 2), 
-        ("SELECT upper(name), lower(name), id as Identifier FROM $satellites", 177, 3), 
+        ("SELECT upper(name) as NAME, id as Identifier FROM $satellites", 177, 2),
+        ("SELECT upper(name), lower(name), id as Identifier FROM $satellites", 177, 3),
 
         ("SELECT planetId, Count(*) FROM $satellites group by planetId having count(*) > 5", 4, 2),
         ("SELECT planetId, min(magnitude) FROM $satellites group by planetId having min(magnitude) > 5", 5, 2),
@@ -195,9 +202,6 @@ STATEMENTS = [
 
         ("SELECT * FROM UNNEST(('foo', 'bar', 'baz', 'qux', 'corge', 'garply', 'waldo', 'fred')) AS element", 8, 1),
         ("SELECT * FROM UNNEST(('foo', 'bar', 'baz', 'qux', 'corge', 'garply', 'waldo', 'fred')) AS element WHERE element LIKE '%e%'", 2, 1),
-        
-        # this should return a single column table of all of the values in the missions columns
-#        ("SELECT UNNEST(Missions) FROM $astronauts", 800, 1),
 
         ("SELECT * FROM tests.data.dated FOR '2020-02-03'", 25, 8),
         ("SELECT * FROM tests.data.dated FOR '2020-02-04'", 25, 8),
@@ -220,7 +224,6 @@ STATEMENTS = [
         ("SELECT * FROM $satellites FOR DATES IN LAST_CYCLE ORDER BY planetId OFFSET 10", 167, 8),
         ("SELECT * FROM $satellites FOR DATES IN THIS_MONTH ORDER BY planetId OFFSET 10", 167, 8),
         ("SELECT * FROM $satellites FOR DATES IN THIS_CYCLE ORDER BY planetId OFFSET 10", 167, 8),
-
 
         ("SELECT Missions FROM $astronauts WHERE LIST_CONTAINS(Missions, 'Apollo 8')", 3, 1),
         ("SELECT Missions FROM $astronauts WHERE LIST_CONTAINS_ANY(Missions, ('Apollo 8', 'Apollo 13'))", 5, 1),
@@ -289,7 +292,7 @@ def test_sql_battery(statement, rows, columns):
     if cursor._results:
         result = pyarrow.concat_tables(cursor._results)
         actual_rows, actual_columns = result.shape
-    else:
+    else:  # pragma: no cover
         result = None
         actual_rows, actual_columns = 0, 0
 
@@ -301,7 +304,7 @@ def test_sql_battery(statement, rows, columns):
     ), f"Query returned {actual_columns} cols but {columns} were expected, {statement}\n{ascii_table(fetchmany(result, limit=10))}"
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
 
     print(f"RUNNING BATTERY OF {len(STATEMENTS)} SHAPE TESTS")
     for statement, rows, cols in STATEMENTS:

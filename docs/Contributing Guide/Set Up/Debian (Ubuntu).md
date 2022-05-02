@@ -1,4 +1,4 @@
-# Debian/Ubuntu Setup Guide
+# Debian/Ubuntu
 
 ## Setting Up
 

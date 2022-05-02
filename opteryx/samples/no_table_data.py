@@ -7,12 +7,6 @@ This is used to prepresent no table.
 It actually is a table, with one row and one column.
 """
 
-if __name__ == "__main__":
-    import os
-    import sys
-
-    sys.path.insert(1, os.path.join(sys.path[0], "../.."))
-
 
 class NoTable:
     @staticmethod
@@ -29,11 +23,3 @@ class NoTable:
                 )
             )
         )
-
-
-if __name__ == "__main__":  # pragma: no cover
-
-    md = NoTable().get()
-
-    print(md.schema)
-    print(md.shape)

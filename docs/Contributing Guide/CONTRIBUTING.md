@@ -31,18 +31,21 @@ For consistent style, code should look like:
 - Self-explanatory method, class and variable names
 - Type hints, especially in function definitions
 
-Code should have:
+Code should have:  
+
 - Corresponding unit/regression tests
 - Attributed external sources - even if there is no explicit license requirement
 
-A note about comments:
+A note about comments:  
+
 - Computers will interpret anything, humans need help interpreting code
 - Prefer readable code over verbose comments
 - Humans struggle with threading, recursion, parallelization, variables called `x` and more than 10... of anything
 - Comments should usually be more than just the code in other words
 - Good variable names and well-written code doesn't always need comments
 
-Code pushes should have prefixes:
+Code pushes should have prefixes:  
+
 - `FIX\#nn` merges which fixing GitHub issues (#nn represents the issue number)
 - `[DOCS]` improvements to documentation
 - `[CI]` merges which address CI test failures

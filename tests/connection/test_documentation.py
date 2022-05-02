@@ -22,6 +22,6 @@ def test_documentation_connect_example():
     conn.close()
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
 
     test_documentation_connect_example()

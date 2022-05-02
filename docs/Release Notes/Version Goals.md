@@ -8,7 +8,7 @@ Work to do before release:
 
 - ⬛ **General** Improvements to error messages
 - ⬛ **Caching** Memcached buffer pool (cache-aside), this should include hit/miss statistics
-- 🔲 **Planner** Reader should support mabel `by_` segments (basic support)
+- ⬛ **Planner** Reader should support mabel `by_` segments (basic support)
 - ⬛ **Execution** Support `LEFT JOIN`
 
 ## Beta Version 0.2

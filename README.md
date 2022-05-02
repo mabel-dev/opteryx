@@ -4,7 +4,7 @@
 
 [Documentation](https://mabel-dev.github.io/opteryx/) |
 [Examples](notebooks) |
-[Contributing](.github/CONTRIBUTING.md)
+[Contributing](https://mabel-dev.github.io/opteryx/Contributing%20Guide/CONTRIBUTING/)
 
 > **NOTE**  
 > Opteryx is an beta product. Beta means different things to different people, to us, being beta means:
@@ -63,7 +63,7 @@ All contributions, [bug reports](https://github.com/mabel-dev/opteryx/issues/new
 
 If you have a suggestion for an improvement or a bug, [raise a ticket](https://github.com/mabel-dev/opteryx/issues/new/choose) or start a [discussion](https://github.com/mabel-dev/opteryx/discussions).
 
-Want to help build Opteryx? See the [Contribution Guide](https://mabel-dev.github.io/opteryx/).
+Want to help build Opteryx? See the [Contribution Guide](https://mabel-dev.github.io/opteryx/Contributing%20Guide/CONTRIBUTING/).
 
 ## Security
 

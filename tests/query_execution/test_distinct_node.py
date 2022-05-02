@@ -54,7 +54,7 @@ def test_dictinct_node_multicolumn():
     assert moons.num_rows == 43
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
 
     test_dictinct_node_multicolumn()
     test_dictinct_node_nonunique()
