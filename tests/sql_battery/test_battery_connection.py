@@ -23,6 +23,7 @@ STATEMENTS = [
         ("SELECT * FROM $planets WHERE name LIKE %s", ['%t%'], 5, 20),
         ("SELECT * FROM $planets WHERE name LIKE %s AND id > %s", ['%t%', 4], 4, 20),
         ("SELECT * FROM $planets WHERE id > %s AND name LIKE %s", [4, '%t%'], 4, 20),
+        ("SELECT * FROM $planets WHERE id IN %s", [(1,2,3,)], 3, 20), 
     ]
 # fmt:on
 

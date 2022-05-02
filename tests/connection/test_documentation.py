@@ -18,6 +18,7 @@ def test_documentation_connect_example():
     # below here is not in the documentation
     rows = list(rows)
     assert len(rows) == 9
+    conn.close()
 
 
 if __name__ == "__main__":
