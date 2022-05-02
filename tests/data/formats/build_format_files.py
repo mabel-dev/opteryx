@@ -24,7 +24,6 @@ def compress_zstandard(records):  # pragma: no cover
 
     return buffer
 
-
 if __name__ == "__main__":  # pragma: no cover
 
     # READ (JSONL)
