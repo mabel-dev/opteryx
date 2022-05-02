@@ -9,6 +9,7 @@ import pyarrow.feather
 import pyarrow.orc
 import pyarrow.parquet
 
+
 def compress_zstandard(records):
 
     buffer = bytearray()
@@ -21,12 +22,15 @@ def compress_zstandard(records):
 
     return buffer
 
+
 # READ (JSONL)
 with open("tests/data/formats/jsonl/tweets.jsonl", "rb") as stream:
     source = pyarrow.json.read_json(stream)
 
 # ARROW (feather)
-pyarrow.feather.write_feather(source, "tests/data/formats/arrow/tweets.arrow", compression="zstd")
+pyarrow.feather.write_feather(
+    source, "tests/data/formats/arrow/tweets.arrow", compression="zstd"
+)
 
 # AVRO
 
@@ -34,7 +38,9 @@ pyarrow.feather.write_feather(source, "tests/data/formats/arrow/tweets.arrow", c
 pyarrow.orc.write_table(source, "tests/data/formats/orc/tweets.orc", compression="ZSTD")
 
 # PARQUET
-pyarrow.parquet.write_table(source, "tests/data/formats/parquet/tweets.parquet", compression="zstd")
+pyarrow.parquet.write_table(
+    source, "tests/data/formats/parquet/tweets.parquet", compression="zstd"
+)
 
 # ZSTD
 zstd = compress_zstandard(source.to_pylist())
