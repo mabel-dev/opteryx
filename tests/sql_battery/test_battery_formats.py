@@ -56,7 +56,7 @@ def test_sql_battery(statement, rows, columns):
     if cursor._results:
         result = pyarrow.concat_tables(cursor._results)
         actual_rows, actual_columns = result.shape
-    else:
+    else:  # pragma: no cover
         result = None
         actual_rows, actual_columns = 0, 0
 
@@ -68,7 +68,7 @@ def test_sql_battery(statement, rows, columns):
     ), f"Query returned {actual_columns} cols but {columns} were expected, {statement}\n{ascii_table(fetchmany(result, limit=10))}"
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
 
     print(f"RUNNING BATTERY OF {len(STATEMENTS)} FORMAT TESTS")
     for statement, rows, cols in STATEMENTS:

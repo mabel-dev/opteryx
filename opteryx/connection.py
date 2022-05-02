@@ -84,7 +84,7 @@ class Cursor:
             return "TRUE" if param else "FALSE"
 
         if isinstance(param, (float, int, Decimal)):
-            return f'{param}'
+            return f"{param}"
 
         if isinstance(param, str):
             # if I have no apostrophes, use them as the delimiter

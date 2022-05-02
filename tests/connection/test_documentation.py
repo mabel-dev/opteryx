@@ -10,9 +10,10 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 def test_documentation_connect_example():
 
     import opteryx
+
     conn = opteryx.connect()
     cur = conn.cursor()
-    cur.execute('SELECT * FROM $planets')
+    cur.execute("SELECT * FROM $planets")
     rows = cur.fetchall()
 
     # below here is not in the documentation
@@ -21,6 +22,6 @@ def test_documentation_connect_example():
     conn.close()
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
 
     test_documentation_connect_example()

@@ -195,9 +195,6 @@ STATEMENTS = [
 
         ("SELECT * FROM UNNEST(('foo', 'bar', 'baz', 'qux', 'corge', 'garply', 'waldo', 'fred')) AS element", 8, 1),
         ("SELECT * FROM UNNEST(('foo', 'bar', 'baz', 'qux', 'corge', 'garply', 'waldo', 'fred')) AS element WHERE element LIKE '%e%'", 2, 1),
-        
-        # this should return a single column table of all of the values in the missions columns
-#        ("SELECT UNNEST(Missions) FROM $astronauts", 800, 1),
 
         ("SELECT * FROM tests.data.dated FOR '2020-02-03'", 25, 8),
         ("SELECT * FROM tests.data.dated FOR '2020-02-04'", 25, 8),
@@ -220,7 +217,6 @@ STATEMENTS = [
         ("SELECT * FROM $satellites FOR DATES IN LAST_CYCLE ORDER BY planetId OFFSET 10", 167, 8),
         ("SELECT * FROM $satellites FOR DATES IN THIS_MONTH ORDER BY planetId OFFSET 10", 167, 8),
         ("SELECT * FROM $satellites FOR DATES IN THIS_CYCLE ORDER BY planetId OFFSET 10", 167, 8),
-
 
         ("SELECT Missions FROM $astronauts WHERE LIST_CONTAINS(Missions, 'Apollo 8')", 3, 1),
         ("SELECT Missions FROM $astronauts WHERE LIST_CONTAINS_ANY(Missions, ('Apollo 8', 'Apollo 13'))", 5, 1),
@@ -289,7 +285,7 @@ def test_sql_battery(statement, rows, columns):
     if cursor._results:
         result = pyarrow.concat_tables(cursor._results)
         actual_rows, actual_columns = result.shape
-    else:
+    else:  # pragma: no cover
         result = None
         actual_rows, actual_columns = 0, 0
 
@@ -301,7 +297,7 @@ def test_sql_battery(statement, rows, columns):
     ), f"Query returned {actual_columns} cols but {columns} were expected, {statement}\n{ascii_table(fetchmany(result, limit=10))}"
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
 
     print(f"RUNNING BATTERY OF {len(STATEMENTS)} SHAPE TESTS")
     for statement, rows, cols in STATEMENTS:
