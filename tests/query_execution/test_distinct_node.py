@@ -27,6 +27,7 @@ def test_dictinct_node_unique():
     satellite_data = pyarrow.concat_tables(satellite_data)
     assert satellite_data.num_rows == 177, satellite_data.num_rows
 
+
 def test_dictinct_node_nonunique():
 
     dn = DistinctNode(QueryStatistics())
@@ -38,6 +39,7 @@ def test_dictinct_node_nonunique():
     planets = dn.execute(data_pages=[planets])
     planets = pyarrow.concat_tables(planets)
     assert planets.num_rows == 7
+
 
 def test_dictinct_node_multicolumn():
 

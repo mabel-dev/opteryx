@@ -45,7 +45,8 @@ from opteryx.utils.columns import Columns
 
 
 class ExtentionType(str, Enum):
-    """ labels for the file extentions """
+    """labels for the file extentions"""
+
     DATA = "DATA"
     CONTROL = "CONTROL"
 
