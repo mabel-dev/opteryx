@@ -1,5 +1,7 @@
 """
 The best way to test a SQL engine is to throw queries at it.
+
+This tests the various format readers.
 """
 import os
 import sys
@@ -15,23 +17,28 @@ from opteryx.utils.display import ascii_table
 
 # fmt:off
 STATEMENTS = [
-        # arrow (feather)
-#        ("SELECT * FROM tests.data.formats.arrow", 100000, 13),
+        # Two tests, one to test the file can be opened and read, one to test the
+        # values that have been read.
 
-        # avro
-#        ("SELECT * FROM tests.data.formats.avro", 100000, 13),
+        # arrow (feather)
+        ("SELECT * FROM tests.data.formats.arrow", 100000, 13),
+        ("SELECT user_name, user_verified FROM tests.data.formats.arrow WHERE user_name ILIKE '%news%'", 122, 2),
 
         # jsonl
         ("SELECT * FROM tests.data.formats.jsonl", 100000, 13),
+        ("SELECT user_name, user_verified FROM tests.data.formats.jsonl WHERE user_name ILIKE '%news%'", 122, 2),
 
         # orc
-#        ("SELECT * FROM tests.data.formats.orc", 100000, 13),
+        ("SELECT * FROM tests.data.formats.orc", 100000, 13),
+        ("SELECT user_name, user_verified FROM tests.data.formats.orc WHERE user_name ILIKE '%news%'", 122, 2),
 
         # parquet
-#        ("SELECT * FROM tests.data.formats.parquet", 100000, 13),
+        ("SELECT * FROM tests.data.formats.parquet", 100000, 13),
+        ("SELECT user_name, user_verified FROM tests.data.formats.parquet WHERE user_name ILIKE '%news%'", 122, 2),
 
         # zstandard jsonl
-#        ("SELECT * FROM tests.data.formats.zstd", 100000, 13),
+        ("SELECT * FROM tests.data.formats.zstd", 100000, 13),
+        ("SELECT user_name, user_verified FROM tests.data.formats.zstd WHERE user_name ILIKE '%news%'", 122, 2),
     ]
 # fmt:on
 

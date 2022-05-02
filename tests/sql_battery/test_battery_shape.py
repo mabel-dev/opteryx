@@ -303,7 +303,7 @@ def test_sql_battery(statement, rows, columns):
 
 if __name__ == "__main__":
 
-    print(f"RUNNING BATTERY OF {len(STATEMENTS)} TESTS")
+    print(f"RUNNING BATTERY OF {len(STATEMENTS)} SHAPE TESTS")
     for statement, rows, cols in STATEMENTS:
         print(statement)
         test_sql_battery(statement, rows, cols)
