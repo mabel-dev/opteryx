@@ -39,6 +39,7 @@ class Connection:
         cache: Optional[BaseBufferCache] = None,
         **kwargs,
     ):
+        self._results = None
         self._reader = reader
         if reader is None:
             self._reader = DiskStorage()
