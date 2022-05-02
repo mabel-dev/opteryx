@@ -28,7 +28,6 @@ def test_in_memory_cache():
     assert stats["cache_misses"] == 2
     conn.close()
 
-
     # read the data a second time, this should hit the cache
     conn = opteryx.connect(reader=DiskStorage(), cache=cache, partition_scheme=None)
     cur = conn.cursor()
@@ -40,7 +39,6 @@ def test_in_memory_cache():
     assert stats["cache_hits"] == 2
     assert stats["cache_misses"] == 0
     conn.close()
-
 
 
 if __name__ == "__main__":  # pragma: no cover

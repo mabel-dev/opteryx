@@ -18,7 +18,10 @@ def _get_type(var):
 
 # Filter functionality
 def arr_op_to_idxs(arr, operator, value):
-    if operator in ("=", "==",):
+    if operator in (
+        "=",
+        "==",
+    ):
         # type checking added for Opteryx
         parquet_type = _get_type(arr)
         if value is None and parquet_type == TOKEN_TYPES.NUMERIC:
@@ -30,7 +33,10 @@ def arr_op_to_idxs(arr, operator, value):
                 f"Type mismatch, unable to compare {parquet_type} with {python_type}"
             )
         return numpy.where(arr == value)
-    elif operator in ("!=", "<>",):
+    elif operator in (
+        "!=",
+        "<>",
+    ):
         return numpy.where(arr != value)
     elif operator == "<":
         return numpy.where(arr < value)
@@ -89,7 +95,9 @@ def ifilters(table, filters):
     indices = numpy.arange(table.num_rows)
     for (left_operand, operator, right_operand) in filters:
         f_idxs = arr_op_to_idxs(
-            _get_values(table, left_operand), operator, _get_values(table, right_operand)
+            _get_values(table, left_operand),
+            operator,
+            _get_values(table, right_operand),
         )
         indices = indices[f_idxs]
 

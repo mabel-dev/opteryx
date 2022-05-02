@@ -42,6 +42,7 @@ class InvalidSyntaxError(Exception):
     """
     Unable to interpret the Condition
     """
+
     pass
 
 
@@ -69,7 +70,7 @@ def _evaluate(predicate: Union[tuple, list], table: Table) -> bool:
         if len(predicate) == 2 and predicate[0] == "NOT":
             # calculate the answer of the non-negated condition (positive)
             positive_result = _evaluate(predicate=predicate[1], table=table)
-            # negate it by removing the values in the positive results from 
+            # negate it by removing the values in the positive results from
             # all of the possible values (mask)
             mask = numpy.arange(table.num_rows, dtype=numpy.int32)
             return numpy.setdiff1d(mask, positive_result, assume_unique=True)
