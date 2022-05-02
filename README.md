@@ -63,7 +63,7 @@ All contributions, [bug reports](https://github.com/mabel-dev/opteryx/issues/new
 
 If you have a suggestion for an improvement or a bug, [raise a ticket](https://github.com/mabel-dev/opteryx/issues/new/choose) or start a [discussion](https://github.com/mabel-dev/opteryx/discussions).
 
-Want to help build Opteryx? See the [contribution guidance](https://github.com/mabel-dev/opteryx/blob/main/.github/CONTRIBUTING.md).
+Want to help build Opteryx? See the [Contribution Guide](https://mabel-dev.github.io/opteryx/).
 
 ## Security
 
