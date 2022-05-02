@@ -78,6 +78,8 @@ class QueryPlanner(object):
         self.nodes: dict = {}
         self.edges: list = []
 
+        self._ast = None
+
         self._statistics = statistics
         self._reader = reader
         self._cache = cache
@@ -90,15 +92,15 @@ class QueryPlanner(object):
         return "QueryPlanner"
 
     def copy(self):
-        qp = QueryPlanner(
+        planner = QueryPlanner(
             statistics=self._statistics,
             reader=self._reader,
             cache=self._cache,
             partition_scheme=self._partition_scheme,
         )
-        qp._start_date = self._start_date
-        qp._end_date = self._end_date
-        return qp
+        planner._start_date = self._start_date
+        planner._end_date = self._end_date
+        return planner
 
     def create_plan(self, sql: str = None, ast: dict = None):
 
@@ -113,8 +115,8 @@ class QueryPlanner(object):
                 # MySQL Dialect allows identifiers to be delimited with ` (backticks) and
                 # identifiers to start with _ (underscore) and $ (dollar sign)
                 # https://github.com/sqlparser-rs/sqlparser-rs/blob/main/src/dialect/mysql.rs
-            except ValueError as e:  # pragma: no cover
-                raise SqlError(e)
+            except ValueError as exception:  # pragma: no cover
+                raise SqlError(exception)
         else:
             self._ast = ast
 
@@ -179,8 +181,8 @@ class QueryPlanner(object):
             return (left, OPERATOR_XLAT[operator], right)
         if "UnaryOp" in filters:
             if filters["UnaryOp"]["op"] == "Not":
-                left = self._build_dnf_filters(filters["UnaryOp"]["expr"])
-                return (left, "<>", True)
+                right = self._build_dnf_filters(filters["UnaryOp"]["expr"])
+                return ("NOT", right)
             if filters["UnaryOp"]["op"] == "Minus":
                 number = 0 - numpy.float64(
                     filters["UnaryOp"]["expr"]["Value"]["Number"][0]
@@ -195,9 +197,8 @@ class QueryPlanner(object):
             if inverted:
                 # LEFT <= LOW AND LEFT >= HIGH (not between)
                 return [[(left, "<", low)], [(left, ">", high)]]
-            else:
-                # LEFT > LOW and LEFT < HIGH (between)
-                return [(left, ">=", low), (left, "<=", high)]
+            # LEFT > LOW and LEFT < HIGH (between)
+            return [(left, ">=", low), (left, "<=", high)]
         if "InSubquery" in filters:
             # if it's a sub-query we create a plan for it
             left = self._build_dnf_filters(filters["InSubquery"]["expr"])
@@ -281,14 +282,15 @@ class QueryPlanner(object):
                     relation["relation"]["Table"]["name"][0]["value"].upper()
                     == "UNNEST"
                 ):
-                    # This is toy functionality, the value will be in CROSS JOINing on UNNESTed columns
+                    # This is toy functionality, the value will be in CROSS JOINing
+                    # on UNNESTed columns
                     alias = relation["relation"]["Table"]["alias"]["name"]["value"]
                     values = self._extract_value(
                         relation["relation"]["Table"]["args"][0]["Unnamed"]["Expr"]
                     )
                     body = []
-                    for v in values[0]:
-                        body.append({alias: v})
+                    for value in values[0]:
+                        body.append({alias: value})
                     yield (alias, body)  # <- a literal table
                 else:
                     alias = None
@@ -335,7 +337,7 @@ class QueryPlanner(object):
         except IndexError:
             return None
         using = None
-        on = None
+        join_on = None
         alias = None
         mode = joins["join_operator"]
         if isinstance(mode, dict):
@@ -345,7 +347,7 @@ class QueryPlanner(object):
                     v["value"] for v in joins["join_operator"][mode].get("Using", [])
                 ]
             if "On" in joins["join_operator"][mode]:
-                on = self._build_dnf_filters(joins["join_operator"][mode]["On"])
+                join_on = self._build_dnf_filters(joins["join_operator"][mode]["On"])
         if joins["relation"]["Table"]["alias"] is not None:
             alias = joins["relation"]["Table"]["alias"]["name"]["value"]
         dataset = ".".join(
@@ -362,7 +364,7 @@ class QueryPlanner(object):
             if len(args) > 0 and dataset == "UNNEST" and mode == "CrossJoin":
                 mode = "CrossJoinUnnest"
                 dataset = (dataset, args)
-        return (mode, (alias, dataset), on, using)
+        return (mode, (alias, dataset), join_on, using)
 
     def _extract_projections(self, ast):
         """
@@ -408,13 +410,11 @@ class QueryPlanner(object):
                     ]
                     if is_function(func):
                         return {"function": func, "args": args, "alias": alias}
-                    else:
-                        return {"aggregate": func, "args": args, "alias": alias}
+                    return {"aggregate": func, "args": args, "alias": alias}
                 if "BinaryOp" in function:
                     raise NotImplementedError(
                         "Operations in the SELECT clause are not supported"
                     )
-                    return {"operation": _build_dnf_filters(function)}
                 if "Cast" in function:
                     # CAST(<var> AS <type>) - convert to the form <type>(var), e.g. BOOLEAN(on)
                     args = [self._build_dnf_filters(function["Cast"]["expr"])]
@@ -751,7 +751,7 @@ class QueryPlanner(object):
         entry_points = self.get_entry_points()
         nodes = []
         for entry_point in entry_points:
-            nodes += [n for n in _inner_explain(entry_point, 0)]
+            nodes += list(_inner_explain(entry_point, 0))
 
         table = pyarrow.Table.from_pylist(nodes)
         table = Columns.create_table_metadata(table, table.num_rows, "plan", None)

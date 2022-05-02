@@ -39,6 +39,9 @@ from opteryx.utils.columns import Columns
 
 
 class InvalidSyntaxError(Exception):
+    """
+    Unable to interpret the Condition
+    """
     pass
 
 
@@ -57,6 +60,19 @@ def _evaluate(predicate: Union[tuple, list], table: Table) -> bool:
 
     # If we have a tuple extract out the key, operator and value and do the evaluation
     if isinstance(predicate, tuple):
+
+        # if we're pointlessly nested, break out
+        if len(predicate) == 1:
+            return _evaluate(predicate=predicate[0], table=table)
+
+        # handle NOT statements
+        if len(predicate) == 2 and predicate[0] == "NOT":
+            # calculate the answer of the non-negated condition (positive)
+            positive_result = _evaluate(predicate=predicate[1], table=table)
+            # negate it by removing the values in the positive results from 
+            # all of the possible values (mask)
+            mask = numpy.arange(table.num_rows, dtype=numpy.int32)
+            return numpy.setdiff1d(mask, positive_result, assume_unique=True)
 
         # this is a function in the selection
         if len(predicate) == 3 and isinstance(predicate[2], dict):
@@ -135,20 +151,20 @@ def _evaluate(predicate: Union[tuple, list], table: Table) -> bool:
         # Are all of the entries tuples?
         # We AND them together
         mask = None
-        if all([isinstance(p, tuple) for p in predicate]):
+        if all(isinstance(p, tuple) for p in predicate):
             # default to all selected
-            mask = numpy.arange(table.num_rows, dtype=numpy.int8)
-            for p in predicate:
-                mask = numpy.intersect1d(mask, _evaluate(p, table))
+            mask = numpy.arange(table.num_rows, dtype=numpy.int32)
+            for part in predicate:
+                mask = numpy.intersect1d(mask, _evaluate(part, table))
             return mask  # type:ignore
 
         # Are all of the entries lists?
         # We OR them together
-        if all([isinstance(p, list) for p in predicate]):
+        if all(isinstance(p, list) for p in predicate):
             # default to none selected
-            mask = numpy.zeros(0, dtype=numpy.int8)
-            for p in predicate:
-                mask = numpy.union1d(mask, _evaluate(p, table))  # type:ignore
+            mask = numpy.zeros(0, dtype=numpy.int32)
+            for part in predicate:
+                mask = numpy.union1d(mask, _evaluate(part, table))  # type:ignore
             return mask  # type:ignore
 
         # if we're here the structure of the filter is wrong
@@ -180,9 +196,9 @@ def _evaluate_subqueries(predicate):
         value_list = set(value_list)
         return (value_list, TOKEN_TYPES.LIST)
     if isinstance(predicate, tuple):
-        return tuple([_evaluate_subqueries(p) for p in predicate])
+        return tuple(_evaluate_subqueries(p) for p in predicate)
     if isinstance(predicate, list):
-        return [_evaluate_subqueries(p) for p in predicate]
+        return list(_evaluate_subqueries(p) for p in predicate)
     return predicate
 
 
@@ -199,15 +215,17 @@ def _map_columns(predicate, columns):
                     TOKEN_TYPES.IDENTIFIER,
                 )
             return predicate
-        return tuple([_map_columns(p, columns) for p in predicate])
+        return tuple(_map_columns(p, columns) for p in predicate)
     if isinstance(predicate, list):
-        return [_map_columns(p, columns) for p in predicate]
+        return list(_map_columns(p, columns) for p in predicate)
     return predicate
 
 
 class SelectionNode(BasePlanNode):
     def __init__(self, statistics: QueryStatistics, **config):
         self._filter = config.get("filter")
+        self._unfurled_filter = None
+        self._mapped_filter = None
 
     @property
     def config(self):
@@ -230,7 +248,6 @@ class SelectionNode(BasePlanNode):
             # if any values in the filters are subqueries, we have to execute them
             # before we can continue.
             self._unfurled_filter = _evaluate_subqueries(self._filter)
-            self._mapped_filter = None
 
             for page in data_pages:
 

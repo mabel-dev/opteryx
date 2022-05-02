@@ -116,14 +116,6 @@ class Columns:
             return matches[0]
         return matches
 
-    def flatten_columns(self, columns):
-        def _inner():
-            for col in columns:
-                if isinstance(col, list) and len(col) > 0:
-                    yield col[0]
-
-        return list(_inner())
-
     @staticmethod
     def create_table_metadata(table, expected_rows, name, table_aliases):
 
