@@ -23,17 +23,39 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![commit_freq](https://img.shields.io/github/commit-activity/m/mabel-dev/opteryx)](https://github.com/mabel-dev/opteryx/commits)
 [![last_commit](https://img.shields.io/github/last-commit/mabel-dev/opteryx)](https://github.com/mabel-dev/opteryx/commits)
+[![codecov](https://codecov.io/gh/mabel-dev/opteryx/branch/master/graph/badge.svg?token=sIgKpzzd95)](https://codecov.io/gh/mabel-dev/opteryx)
 
-**Opteryx** has no server component, **Opteryx** just runs when you need it making it ideal for deployments to platforms like Kubernetes, GCP Cloud Run, AWS Fargate and Knative.
+## What is Opteryx
 
-## What Opteryx is
+Opteryx is a distributed SQL Engine designed for cloud-native environments.
 
-Opteryx is a SQL Engine for serverless environments.
+**Scalable**
 
-- Time Travel (Temporal Queries)
-- Isolated Execution
-- Native Python Library
-- Query files held on object storage (GCS, S3)
+Designed to run in Knative and similar environments like Google Cloud Run, Opteryx can scale down to zero, or scale up to respond to thousands of concurrent queries within seconds.
+
+**High Availability**
+
+Each query can run in a separate container instance, meaning it's nearly impossible for a rogue query to affect any other users.
+
+No matter if a cluster, region or datacentre goes down, Opteryx can keep responding to queries.  
+_(inflight queries may not be recovered)_
+
+**Bring your own Files**
+
+Opteryx supports many popular data formats, including Parquet and JSONL, stored on local disk or on Cloud Storage. You can mix and match formats, one dataset can be Parquet and another JSONL, and Opteryx will be able to JOIN across these datasets.
+
+**Consumption-Based Billing**
+
+Opteryx is designed for deployments to environments which are pay-as-you-use, like Google Cloud Run. Great for situations where you low-volume usage, or many environments, where the costs of a traditional database deployment would quickly compound.
+
+**Python Native**
+
+Opteryx is an Open Source Python library, it quickly and easily integrates into Python code, you can start querying your data within a few minutes.
+
+**Time Travel**
+
+Designed for data analytics in environments where decisions need to be replayable, Opteryx allows you to query data as at a point in time in the past to replay decision algorithms against facts as they were known in the past.  
+_(data must be structured to enable temporal queries)_
 
 ## How Can I Contribute?
 
@@ -41,7 +63,7 @@ All contributions, [bug reports](https://github.com/mabel-dev/opteryx/issues/new
 
 If you have a suggestion for an improvement or a bug, [raise a ticket](https://github.com/mabel-dev/opteryx/issues/new/choose) or start a [discussion](https://github.com/mabel-dev/opteryx/discussions).
 
-Want to help build Opteryx? See the [contribution guidance](https://github.com/mabel-dev/opteryx/blob/main/.github/CONTRIBUTING.md).
+Want to help build Opteryx? See the [Contribution Guide](https://mabel-dev.github.io/opteryx/).
 
 ## Security
 

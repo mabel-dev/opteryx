@@ -84,7 +84,7 @@ class Cursor:
             return "TRUE" if param else "FALSE"
 
         if isinstance(param, (float, int, Decimal)):
-            return f'NUMERIC("{param}")'
+            return f"{param}"
 
         if isinstance(param, str):
             # if I have no apostrophes, use them as the delimiter
@@ -95,25 +95,14 @@ class Cursor:
             delimited = param.replace('"', '""')
             return f'"{delimited}"'
 
-        if isinstance(param, bytes):
-            return "X'%s'" % param.hex()
-
         if isinstance(param, datetime.datetime):
             datetime_str = param.strftime("%Y-%m-%d %H:%M:%S.%f")
-            return f'TIMESTAMP("{datetime_str}")'
+            return f'"{datetime_str}"'
 
         if isinstance(param, (list, tuple, set)):
-            return "(%s)" % ",".join(map(self._format_prepared_param, param))
+            return f"({','.join(map(self._format_prepared_param, param))})"
 
-        if isinstance(param, dict):
-            keys = list(param.keys())
-            if any(type(k) != str for k in keys):
-                raise Exception("STRUCT keys must be strings")
-            return "{%s}" % ",".join(
-                f'"{k}":{self._format_prepared_param(v)}' for k, v in param.items()
-            )
-
-        raise Exception("Query parameter of type '%s' is not supported." % type(param))
+        raise Exception(f"Query parameter of type '{type(param)}' is not supported.")
 
     def execute(self, operation, params=None):
         if self._query is not None:

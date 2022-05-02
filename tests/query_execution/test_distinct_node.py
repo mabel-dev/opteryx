@@ -16,7 +16,7 @@ from opteryx.samples import satellites
 import pyarrow
 
 
-def test_dictinct_node():
+def test_dictinct_node_unique():
 
     dn = DistinctNode(QueryStatistics())
 
@@ -27,11 +27,25 @@ def test_dictinct_node():
     satellite_data = pyarrow.concat_tables(satellite_data)
     assert satellite_data.num_rows == 177, satellite_data.num_rows
 
+
+def test_dictinct_node_nonunique():
+
+    dn = DistinctNode(QueryStatistics())
+
+    satellite_list = satellites()
+
     # test with a column with duplicates
     planets = satellite_list.select(["planetId"])
     planets = dn.execute(data_pages=[planets])
     planets = pyarrow.concat_tables(planets)
     assert planets.num_rows == 7
+
+
+def test_dictinct_node_multicolumn():
+
+    dn = DistinctNode(QueryStatistics())
+
+    satellite_list = satellites()
 
     # test with a compound column
     moons = satellite_list.select(["planetId", "density"])
@@ -42,4 +56,6 @@ def test_dictinct_node():
 
 if __name__ == "__main__":
 
-    test_dictinct_node()
+    test_dictinct_node_multicolumn()
+    test_dictinct_node_nonunique()
+    test_dictinct_node_unique()
