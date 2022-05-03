@@ -24,7 +24,7 @@ class QueryStatistics:
         self.read_errors: int = 0
 
         self.count_unknown_blob_type_found: int = 0
-        self.count_control_blobs_read: int = 0
+        self.count_control_blobs_found: int = 0
         self.bytes_read_control: int = 0
 
         self.partitions_found: int = 0
@@ -32,7 +32,6 @@ class QueryStatistics:
         self.partitions_read: int = 0
 
         self.time_data_read: int = 0
-        self.time_control_read: int = 0
 
         self.cache_hits: int = 0
         self.cache_misses: int = 0
@@ -43,9 +42,6 @@ class QueryStatistics:
         self.start_time: int = 0
         self.end_time: int = 0
 
-    def merge(self, stats):
-        pass
-
     def as_dict(self):
         return {
             "count_blobs_found": self.count_blobs_found,
@@ -53,7 +49,7 @@ class QueryStatistics:
             "count_non_data_blobs_read": self.count_non_data_blobs_read,
             "count_blobs_ignored_frames": self.count_blobs_ignored_frames,
             "count_unknown_blob_type_found": self.count_unknown_blob_type_found,
-            "count_control_blobs_read": self.count_control_blobs_read,
+            "count_control_blobs_found": self.count_control_blobs_found,
             "read_errors": self.read_errors,
             "bytes_read_control": self.bytes_read_control,
             "bytes_read_data": self.bytes_read_data,
@@ -62,9 +58,6 @@ class QueryStatistics:
             "time_data_read": 0
             if self.time_data_read == 0
             else (self.time_data_read / 1e9),
-            "time_control_read": 0
-            if self.time_control_read == 0
-            else (self.time_control_read / 1e9),
             "time_total": (self.end_time - self.start_time) / 1e9,
             "time_planning": self.time_planning / 1e9,
             "partitions_found": self.partitions_found,

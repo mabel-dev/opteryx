@@ -206,33 +206,15 @@ class DatasetReaderNode(BasePlanNode):
                 # find out how to read this blob
                 decoder, file_type = KNOWN_EXTENSIONS.get(extension, (None, None))
 
-                if file_type == ExtentionType.CONTROL:
-
-                    self._statistics.count_control_blobs_read += 1
-                    # read the control blob
-                    control_read_start = time.time_ns()
-                    control_blob = self._reader.read_blob(blob_name)
-                    # record the number of bytes we're reading
-                    self._statistics.bytes_read_control += (
-                        control_blob.getbuffer().nbytes
-                    )
-                    try:
-                        control_dict = {}
-                        control_dict = loads(control_blob.read())
-                        expected_rows += control_dict.get("records", 0)
-                    except (ValueError, TypeError):
-                        pass
-                    finally:
-                        self._statistics.time_control_read += (
-                            time.time_ns() - control_read_start
-                        )
-                elif file_type == ExtentionType.DATA:
+                if file_type == ExtentionType.DATA:
                     partition_structure[partition]["blob_list"].append(
                         (
                             blob_name,
                             decoder,
                         )
                     )
+                elif file_type == ExtentionType.CONTROL:
+                    self._statistics.count_control_blobs_found += 1
                 else:
                     self._statistics.count_unknown_blob_type_found += 1
 
