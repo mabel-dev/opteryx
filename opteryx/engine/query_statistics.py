@@ -32,6 +32,7 @@ class QueryStatistics:
         self.partitions_read: int = 0
 
         self.time_data_read: int = 0
+        self.time_control_read: int = 0
 
         self.cache_hits: int = 0
         self.cache_misses: int = 0
@@ -61,6 +62,7 @@ class QueryStatistics:
             "time_data_read": 0
             if self.time_data_read == 0
             else (self.time_data_read / 1e9),
+            "time_control_read": 0 if self.time_control_read == 0 else (self.time_control_read / 1e9),
             "time_total": (self.end_time - self.start_time) / 1e9,
             "time_planning": self.time_planning / 1e9,
             "partitions_found": self.partitions_found,

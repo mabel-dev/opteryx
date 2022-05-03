@@ -28,6 +28,7 @@ PARALLELIZE READING:
 - As one blob is read, the next is immediately cached for reading
 """
 import datetime
+import statistics
 import time
 from enum import Enum
 from typing import Iterable, Optional
@@ -207,8 +208,10 @@ class DatasetReaderNode(BasePlanNode):
                 decoder, file_type = KNOWN_EXTENSIONS.get(extension, (None, None))
 
                 if file_type == ExtentionType.CONTROL:
+
                     self._statistics.count_control_blobs_read += 1
                     # read the control blob
+                    control_read_start = time.time_ns()
                     control_blob = self._reader.read_blob(blob_name)
                     # record the number of bytes we're reading
                     self._statistics.bytes_read_control += (
@@ -220,6 +223,8 @@ class DatasetReaderNode(BasePlanNode):
                         expected_rows += control_dict.get("records", 0)
                     except (ValueError, TypeError):
                         pass
+                    finally:
+                        statistics.time_control_read += time.time_ns() - control_read_start
                 elif file_type == ExtentionType.DATA:
                     partition_structure[partition]["blob_list"].append(
                         (
