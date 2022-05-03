@@ -223,7 +223,9 @@ class DatasetReaderNode(BasePlanNode):
                     except (ValueError, TypeError):
                         pass
                     finally:
-                        self._statistics.time_control_read += time.time_ns() - control_read_start
+                        self._statistics.time_control_read += (
+                            time.time_ns() - control_read_start
+                        )
                 elif file_type == ExtentionType.DATA:
                     partition_structure[partition]["blob_list"].append(
                         (
