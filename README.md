@@ -29,6 +29,8 @@
 
 Opteryx is a distributed SQL Engine designed for cloud-native environments.
 
+<img align="centre" alt="system overview diagram" height="104" src="how_it_works.png" />
+
 **Scalable**
 
 Designed to run in Knative and similar environments like Google Cloud Run, Opteryx can scale down to zero, or scale up to respond to thousands of concurrent queries within seconds.
@@ -37,8 +39,7 @@ Designed to run in Knative and similar environments like Google Cloud Run, Opter
 
 Each query can run in a separate container instance, meaning it's nearly impossible for a rogue query to affect any other users.
 
-No matter if a cluster, region or datacentre goes down, Opteryx can keep responding to queries.  
-_(inflight queries may not be recovered)_
+If a cluster, region or datacentre goes down, Opteryx can keep responding to queries. _(inflight queries may not be recovered)_
 
 **Bring your own Files**
 
@@ -54,8 +55,7 @@ Opteryx is an Open Source Python library, it quickly and easily integrates into 
 
 **Time Travel**
 
-Designed for data analytics in environments where decisions need to be replayable, Opteryx allows you to query data as at a point in time in the past to replay decision algorithms against facts as they were known in the past.  
-_(data must be structured to enable temporal queries)_
+Designed for data analytics in environments where decisions need to be replayable, Opteryx allows you to query data as at a point in time in the past to replay decision algorithms against facts as they were known in the past. _(data must be structured to enable temporal queries)_
 
 ## How Can I Contribute?
 
