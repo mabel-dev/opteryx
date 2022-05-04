@@ -1,7 +1,9 @@
+types-orjson
+
 pytest
 coverage
 rich
-types-orjson
 zstandard
 pymemcache
 mypy
+google-cloud-storage
