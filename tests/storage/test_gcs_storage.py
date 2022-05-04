@@ -19,10 +19,10 @@ def populate_gcs():
         project="testing",
     )
     bucket = client.bucket(BUCKET_NAME)
-    #try:
-    bucket.delete(force=True)
-    #except:  # pragma: no cover
-    #    pass
+    try:
+        bucket.delete(force=True)
+    except:  # pragma: no cover
+        pass
     bucket = client.create_bucket(BUCKET_NAME)
 
     data = open("tests/data/tweets/tweets-0000.jsonl", mode="rb").read()
