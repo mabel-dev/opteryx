@@ -16,46 +16,6 @@ Helper routines for handling types between different dialects.
 from enum import Enum
 from logging.config import IDENTIFIER
 
-from opteryx.exceptions import UnsupportedTypeError
-
-
-def coerce_types(value):
-    """
-    Relations only support a subset of types, if we know how to translate a type
-    into a supported type, do it.
-    """
-    import datetime
-
-    import numpy
-
-    t = type(value)
-    if t in (
-        int,
-        float,
-        tuple,
-        bool,
-        str,
-        datetime.datetime,
-        dict,
-        numpy.int64,
-        numpy.float64,
-    ):
-        return value
-    if t in (list, set):
-        return tuple(value)
-    if t in (datetime.date,):
-        return datetime.datetime(t.year, t.month, t.day)
-    if value is None:
-        return value
-    raise UnsupportedTypeError(
-        f"Attributes of type `{t}` are not supported - the value was `{value}`"
-    )
-
-
-def coerce_values(value, value_type):
-    #
-    pass
-
 
 class OPTERYX_TYPES(str, Enum):
     BOOLEAN = "BOOLEAN"
@@ -119,9 +79,3 @@ PARQUET_TYPES = {
     "tuple": OPTERYX_TYPES.LIST,
     "object": OPTERYX_TYPES.VARCHAR,
 }
-
-
-def get_coerced_type(python_type):
-    if python_type in PYTHON_TYPES:
-        return PYTHON_TYPES[python_type].name
-    return f"unknown ({python_type})"

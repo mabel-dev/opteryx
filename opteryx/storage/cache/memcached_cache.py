@@ -14,13 +14,16 @@ This implements an interface to Memcached
 """
 
 import io
+import os
 from functools import lru_cache
-
+from opteryx.exceptions import MissingDependencyError
+from opteryx.storage import BaseBufferCache
 
 @lru_cache(1)
 def _memcached_server(**kwargs):
-    import os
-
+    """
+    Handling connecting to Memcached
+    """
     # the server must be set in the environment
     memcached_config = kwargs.get("server", os.environ.get("MEMCACHED_SERVER"))
     if memcached_config is None:
@@ -39,7 +42,7 @@ def _memcached_server(**kwargs):
     try:
         from pymemcache.client import base
     except ImportError:
-        return None
+        raise MissingDependencyError("`pymemcache` not installed, include in your requirements.txt file.")
 
     # wait 1 second to try to connect, it's not worthwhile as a cache if it's slow
     return base.Client(
@@ -52,11 +55,17 @@ def _memcached_server(**kwargs):
     )
 
 
-from opteryx.storage import BaseBufferCache
-
-
 class MemcachedCache(BaseBufferCache):
+    """
+    Cache object
+    """
     def __init__(self, **kwargs):
+        """
+        Parameters:
+            server: string (optional)
+                Sets the memcached server and port (server:port). If not provided
+                the value will be obtained from the OS environment.
+        """
         self._server = _memcached_server(**kwargs)
 
     def get(self, key):
@@ -64,6 +73,7 @@ class MemcachedCache(BaseBufferCache):
             response = self._server.get(key)
             if response:
                 return io.BytesIO(response)
+        return None
 
     def set(self, key, value):
         if self._server:

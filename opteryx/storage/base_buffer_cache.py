@@ -20,20 +20,19 @@ from typing import Optional
 
 
 class BaseBufferCache(abc.ABC):
-    def __init__(self, **kwargs):
-        pass
+    """
+    Base class for cache objects
+    """
 
-    @abc.abstractclassmethod
-    def get(sef, key: bytes) -> Optional[bytes]:
+    def get(self, key: bytes) -> Optional[bytes]:
         """
         Overwrite this method to retrieve a value from the cache, or None if the
         value is not in the cache.
         """
-        pass
+        raise NotImplementedError("`get` method on cache object not overridden.")
 
-    @abc.abstractclassmethod
     def set(self, key: bytes, value: bytes):
         """
         Overwrite this method to place a value in the cache.
         """
-        pass
+        raise NotImplementedError("`set` method on cache object not overridden.")
