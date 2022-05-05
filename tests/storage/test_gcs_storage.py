@@ -8,11 +8,12 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 BUCKET_NAME = "OPTERYX"
 
+
 def populate_gcs():
 
     from google.auth.credentials import AnonymousCredentials
     from google.cloud import storage
-    
+
     os.environ["STORAGE_EMULATOR_HOST"] = "http://localhost:9090"
     client = storage.Client(
         credentials=AnonymousCredentials(),
@@ -55,6 +56,7 @@ def test_gcs_storage():
     assert len(rows) == 2
 
     conn.close()
+
 
 if __name__ == "__main__":
     test_gcs_storage()

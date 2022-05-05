@@ -20,8 +20,8 @@ from opteryx.storage.cache.memory_cache import InMemoryCache
 
 import time
 
-class Timer(object):
 
+class Timer(object):
     def __init__(self, name="test"):
         self.name = name
 
@@ -33,7 +33,8 @@ class Timer(object):
             "{} took {} seconds".format(self.name, (time.time_ns() - self.start) / 1e9)
         )
 
-FORMATS = ('arrow', 'jsonl', 'orc', 'parquet', 'zstd')
+
+FORMATS = ("arrow", "jsonl", "orc", "parquet", "zstd")
 cache = InMemoryCache(size=100)
 
 if __name__ == "__main__":

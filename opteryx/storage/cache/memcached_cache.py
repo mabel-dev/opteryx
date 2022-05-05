@@ -19,6 +19,7 @@ from functools import lru_cache
 from opteryx.exceptions import MissingDependencyError
 from opteryx.storage import BaseBufferCache
 
+
 @lru_cache(1)
 def _memcached_server(**kwargs):
     """
@@ -42,7 +43,9 @@ def _memcached_server(**kwargs):
     try:
         from pymemcache.client import base
     except ImportError:
-        raise MissingDependencyError("`pymemcache` not installed, include in your requirements.txt file.")
+        raise MissingDependencyError(
+            "`pymemcache` not installed, include in your requirements.txt file."
+        )
 
     # wait 1 second to try to connect, it's not worthwhile as a cache if it's slow
     return base.Client(
@@ -59,6 +62,7 @@ class MemcachedCache(BaseBufferCache):
     """
     Cache object
     """
+
     def __init__(self, **kwargs):
         """
         Parameters:
