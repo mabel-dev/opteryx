@@ -1,7 +1,4 @@
 import os
-import sys
-
-sys.path.insert(1, os.path.join(sys.path[0], "../../../.."))
 
 from typing import Optional
 
@@ -80,12 +77,3 @@ def get_blob(project: str, bucket: str, blob_name: str):
     gcs_bucket = client.get_bucket(bucket)
     blob = gcs_bucket.get_blob(blob_name)
     return blob
-
-
-if __name__ == "__main__":
-
-    ds = GcsStorage()
-
-    ds.get_partitions(
-        dataset="test/data/partitioned", start_date="2000-01-01", end_date="2000-01-05"
-    )

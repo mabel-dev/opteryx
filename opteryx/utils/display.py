@@ -68,7 +68,6 @@ def html_table(dictset: Iterable[dict], limit: int = 5):  # pragma: no cover
     footer = ""
     if isinstance(dictset, types.GeneratorType):
         footer = f"\n<p>top {i+1} rows x {len(columns)} columns</p>"
-        footer += "\nNOTE: the displayed records may have been spent"
     elif hasattr(dictset, "__len__"):
         footer = f"\n<p>{len(dictset)} rows x {len(columns)} columns</p>"  # type:ignore
 

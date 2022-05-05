@@ -56,11 +56,11 @@ This is the default structure created by [Mabel](https://github.com/mabel-dev/ma
 
 ## File Types
 
-Opteryx is primarily designed for the use of [Parquet](https://parquet.apache.org/) to store data, Parquet is fast to process and offers optimizations not available for other formats.
+Opteryx is primarily designed for use with [Parquet](https://parquet.apache.org/) to store data, Parquet is fast to process and offers optimizations not available for other formats, however, in some benchmarks [ORC](https://orc.apache.org/) out performs Parquet.
 
 Opteryx also supports [JSONL](https://jsonlines.org/) files, and JSONL files which have been [Zstandard](http://facebook.github.io/zstd/) compressed (`.zstd`). `.jsonl` and `.zstd` format files are the default storage for [Mabel](https://github.com/mabel-dev/mabel).
 
-Opteryx also has limited support for [ORC](https://orc.apache.org/) files.
+Opteryx also has support for Feather (Arrow) files.
 
 ## File Sizes
 
