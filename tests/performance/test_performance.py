@@ -12,7 +12,7 @@ def simple_query():
 
     # SELECT EVERYTHING
     cur = conn.cursor()
-    cur.execute(f"SELECT * FROM tests.data.formats.jsonl WHERE userid = 762916610478747648")
+    cur.execute(f"SELECT * FROM tests.data.formats.jsonl WHERE user_id = 762916610478747648")
     [a for a in cur.fetchall()]
 
 
