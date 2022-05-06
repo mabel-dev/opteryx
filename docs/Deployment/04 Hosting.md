@@ -4,10 +4,7 @@
 
 Python version 3.9 on Linux (Debian/Ubuntu) is the recommended hosting environment for Opteryx.
 
-Opteryx has builds for Python 3.8, 3.9 and 3.10, and regression tests are run against Python 3.9 on the following operating systems:
-
-- Windows
-- Linux (Debian/Ubuntu)
+Opteryx has builds for Python 3.8, 3.9 and 3.10 on Windows, MacOS and Linux and the full regession suite is run against Python 3.9 on Linux (Debian/Ubuntu).
 
 ### Docker
 
