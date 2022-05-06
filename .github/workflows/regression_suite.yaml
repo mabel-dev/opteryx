@@ -28,28 +28,15 @@ jobs:
 
       - name: Start MinIo Server
         run: |
-          docker run -d -p 9000:9000 --name minio \
-                     -e "MINIO_ACCESS_KEY=minioadmin" \
-                     -e "MINIO_SECRET_KEY=minioadmin" \
-                     -v /tmp/data:/data \
-                     -v /tmp/config:/root/.minio \
-                     minio/minio server /data
+          docker run -d -p 9000:9000 --name minio -e "MINIO_ACCESS_KEY=minioadmin" -e "MINIO_SECRET_KEY=minioadmin" -v /tmp/data:/data -v /tmp/config:/root/.minio minio/minio server /data
 
       - name: Start GCS Emulator
         run: |
-          docker run -d --name \
-                     fake-gcs-server \
-                     -p 9090:4443 \
-                     fsouza/fake-gcs-server \
-                     -scheme http
+          docker run -d --name fake-gcs-server -p 9090:4443 fsouza/fake-gcs-server -scheme http
 
       - name: Start Memcached Instance
         run: |
-          docker run -d --name \
-                     my-memcached \
-                     -p 11211:11211 \
-                     memcached \
-                     -m 16
+          docker run -d --name my-memcached -p 11211:11211 memcached -m 16
 
       - name: Run Regression Tests
         run: coverage run -m pytest 
