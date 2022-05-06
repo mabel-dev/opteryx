@@ -3,9 +3,12 @@ name: Regression Suite
 on: [push, pull_request]
 
 jobs:
-  regression_tests:
-    name: Regression Tests
-    runs-on: ubuntu-latest
+  regression_matrix:
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+      max-parallel: 3
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
