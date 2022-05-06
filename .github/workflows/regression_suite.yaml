@@ -6,7 +6,8 @@ jobs:
   regression_matrix:
     strategy:
       matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
+        # windows can't run linux docker images and macos doesn't have docker installed
+        os: [ubuntu-latest]
       max-parallel: 3
     runs-on: ${{ matrix.os }}
     steps:
