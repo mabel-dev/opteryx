@@ -6,7 +6,7 @@ jobs:
   regression_matrix:
     strategy:
       matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
+        os: [windows-latest, ubuntu-latest]
       max-parallel: 3
     runs-on: ${{ matrix.os }}
     steps:
