@@ -30,7 +30,7 @@ class GcsStorage(BaseStorageAdapter):
         import io
 
         bucket, object_path, name, extension = paths.get_parts(blob_name)
-        bucket = bucket.replace("_", "-")
+        bucket = bucket.replace("_data", "-data")
 
         blob = get_blob(
             project=self.project,
