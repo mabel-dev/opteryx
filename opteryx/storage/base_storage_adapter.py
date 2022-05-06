@@ -45,23 +45,24 @@ class BaseStorageAdapter(abc.ABC):
         partitions = []
         # we're going to iterate over the date range and get the name of the partition for
         # this dataset on this data - without knowing if the partition exists
-        for n in range(int((end_date - start_date).days) + 1):
+        for delta in range(int((end_date - start_date).days) + 1):
             import pathlib
 
-            working_date = start_date + datetime.timedelta(n)
+            working_date = start_date + datetime.timedelta(delta)
             partitions.append(
                 pathlib.Path(paths.build_path(path=dataset, date=working_date))
             )
 
         return partitions
 
-    @abc.abstractmethod
     def get_blob_list(self, prefix=None) -> Iterable:
-        pass
+        """
+        Return an interable of blobs/files
+        """
+        raise NotImplementedError("get_blob_list not implemented")
 
-    @abc.abstractmethod
     def read_blob(self, blob: str) -> bytes:
         """
         Return a filelike object
         """
-        pass
+        raise NotImplementedError("read_blob not implemented")

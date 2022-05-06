@@ -4,4 +4,4 @@ Store the version here so:
 2) we can import it in setup.py for the same reason
 """
 
-__version__ = "0.0.0b8"
+__version__ = "0.0.0b9"
