@@ -8,7 +8,6 @@
 [Examples](notebooks) |
 [Contributing](https://mabel-dev.github.io/opteryx/Contributing%20Guide/CONTRIBUTING/)
 
-[![Status](https://img.shields.io/badge/status-beta-blue)](https://github.com/mabel-dev/opteryx)
 [![Regression Suite](https://github.com/mabel-dev/opteryx/actions/workflows/regression_suite.yaml/badge.svg)](https://github.com/mabel-dev/opteryx/actions/workflows/regression_suite.yaml)
 [![Static Analysis](https://github.com/mabel-dev/opteryx/actions/workflows/static_analysis.yml/badge.svg)](https://github.com/mabel-dev/opteryx/actions/workflows/static_analysis.yml)
 [![PyPI Latest Release](https://img.shields.io/pypi/v/opteryx.svg)](https://pypi.org/project/opteryx/)
@@ -18,7 +17,7 @@
 [![commit_freq](https://img.shields.io/github/commit-activity/m/mabel-dev/opteryx)](https://github.com/mabel-dev/opteryx/commits)
 [![last_commit](https://img.shields.io/github/last-commit/mabel-dev/opteryx)](https://github.com/mabel-dev/opteryx/commits)
 [![codecov](https://codecov.io/gh/mabel-dev/opteryx/branch/main/graph/badge.svg?token=sIgKpzzd95)](https://codecov.io/gh/mabel-dev/opteryx)
-[![PyPI Latest Release](https://img.shields.io/badge/Python-3.8%20%7C%203.9%20%7C%203.10-FFC11D)](https://pypi.org/project/opteryx/)
+[![PyPI Latest Release](https://img.shields.io/badge/Python-3.8%20%7C%203.9%20%7C%203.10-orange)](https://pypi.org/project/opteryx/)
 [![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=mabel-dev_opteryx&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=mabel-dev_opteryx)
 [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=mabel-dev_opteryx&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=mabel-dev_opteryx)
 
@@ -64,9 +63,13 @@ See the project [security policy](SECURITY.md) for information about reporting v
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/mabel-dev/opteryx/blob/master/LICENSE)
 
-> Opteryx is in beta. Beta means different things to different people, to us, being beta means:
->
-> - Functionality is stable and any updates should be to address bugs and performance
-> - Core functionality has test cases to ensure stability
-> - Some edge cases may have undetected bugs
-> - Performance tuning may be incomplete
+## Status
+
+[![Status](https://img.shields.io/badge/status-beta-orange)](https://github.com/mabel-dev/opteryx)
+
+Opteryx is in beta. Beta means different things to different people, to us, being beta means:
+
+- Functionality is stable and any updates should be to address bugs and performance
+- Core functionality has test cases to ensure stability
+- Some edge cases may have undetected bugs
+- Performance tuning may be incomplete
