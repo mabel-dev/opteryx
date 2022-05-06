@@ -3,11 +3,11 @@ Performance tests are not intended to be ran as part of the regression set.
 
 This tests the relative performance of different storage formats.
 
-60 cycles of arrow took 57.517561689 seconds
-60 cycles of jsonl took 60.022933532 seconds
-60 cycles of orc took 54.458555462 seconds
-60 cycles of parquet took 58.751262451 seconds
-60 cycles of zstd took 67.272617175 seconds
+100 cycles of arrow took 78.264939371 seconds
+100 cycles of jsonl took 90.697849402 seconds
+100 cycles of orc took 79.319735311 seconds
+100 cycles of parquet took 84.210948929 seconds
+100 cycles of zstd took 92.060245531 seconds
 """
 import os
 import sys
