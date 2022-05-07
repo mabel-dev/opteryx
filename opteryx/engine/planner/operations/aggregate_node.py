@@ -164,7 +164,6 @@ class AggregateNode(BasePlanNode):
         )
         yield table
 
-
     def execute(self, data_pages: Iterable) -> Iterable:
 
         if isinstance(data_pages, pyarrow.Table):
