@@ -44,7 +44,7 @@ class QueryStatistics:
         self.end_time: int = 0
 
     def _ns_to_s(self, nano_seconds):
-        """ convert elapsed ns to s """
+        """convert elapsed ns to s"""
         if nano_seconds == 0:
             return 0
         return nano_seconds / 1e9
