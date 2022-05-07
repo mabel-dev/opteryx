@@ -63,9 +63,9 @@ def remove_comments(string):
     """
     Remove comments from the string
     """
-    pattern = r"(\".*?\"|\'.*?\')|(/\*.*?\*/|--[^\r\n]*$)"
-    # first group captures quoted strings (double or single)
+    # first group captures quoted strings (double, single or back tick)
     # second group captures comments (//single-line or /* multi-line */)
+    pattern = r"(\"[^\"]\"|\'[^\']\'|\`[^\`]\`)|(/\*[^\*/]*\*/|--[^\r\n]*$)"
     regex = re.compile(pattern, re.MULTILINE | re.DOTALL)
 
     def _replacer(match):
@@ -91,21 +91,21 @@ def _subtract_one_month(in_date):
                 raise ValueError("Unable to determine previous month")
 
 
-def parse_range(range):
-    range = range.upper()
+def parse_range(fixed_range):
+    fixed_range = fixed_range.upper()
     TODAY = datetime.date.today()
 
-    if range in ("PREVIOUS_MONTH", "LAST_MONTH"):
+    if fixed_range in ("PREVIOUS_MONTH", "LAST_MONTH"):
         # end the day before the first of this month
         end = TODAY.replace(day=1) - datetime.timedelta(days=1)
         # start the first day of that month
         start = end.replace(day=1)
-    elif range == "THIS_MONTH":
+    elif fixed_range == "THIS_MONTH":
         # start the first day of this month
         start = TODAY.replace(day=1)
         # end today
         end = TODAY
-    elif range in ("PREVIOUS_CYCLE", "LAST_CYCLE"):
+    elif fixed_range in ("PREVIOUS_CYCLE", "LAST_CYCLE"):
         # if we're before the 21st
         if TODAY.day < 22:
             # end the 21st of last month
@@ -117,7 +117,7 @@ def parse_range(range):
             end = TODAY.replace(day=21)
             # start the 22nd of the month before
             start = _subtract_one_month(end).replace(day=22)
-    elif range == "THIS_CYCLE":
+    elif fixed_range == "THIS_CYCLE":
         # if we're before the 21st
         if TODAY.day < 22:
             # end today
@@ -131,7 +131,7 @@ def parse_range(range):
             start = TODAY.replace(day=22)
 
     else:
-        raise SqlError(f"Unknown temporal range `{range}`")
+        raise SqlError(f"Unknown temporal range `{fixed_range}`")
 
     return start, end
 

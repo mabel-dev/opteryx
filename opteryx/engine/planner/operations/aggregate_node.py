@@ -32,6 +32,7 @@ from typing import Iterable, List
 import numpy as np
 import pyarrow.json
 
+from opteryx.engine.attribute_types import TOKEN_TYPES
 from opteryx.engine.query_statistics import QueryStatistics
 from opteryx.engine.planner.operations import BasePlanNode
 from opteryx.exceptions import SqlError
@@ -136,15 +137,46 @@ class AggregateNode(BasePlanNode):
     def name(self):
         return "Aggregation"
 
+    def _is_count_star(self, aggregates, groups):
+        """
+        Is the SELECT clause `SELECT COUNT(*)` with no GROUP BY
+        """
+        if len(groups) != 0:
+            return False
+        if len(aggregates) != 1:
+            return False
+        if aggregates[0]["aggregate"] != "COUNT":
+            return False
+        if aggregates[0]["args"] != [("Wildcard", TOKEN_TYPES.WILDCARD)]:
+            return False
+        return True
+
+    def _count_star(self, data_pages):
+        count = 0
+        for page in data_pages:
+            count += page.num_rows
+        table = pyarrow.Table.from_pylist([{"COUNT(*)": count}])
+        table = Columns.create_table_metadata(
+            table=table,
+            expected_rows=1,
+            name="groupby",
+            table_aliases=[],
+        )
+        yield table
+
     def execute(self, data_pages: Iterable) -> Iterable:
+
+        if isinstance(data_pages, pyarrow.Table):
+            data_pages = [data_pages]
+
+        if self._is_count_star(self._aggregates, self._groups):
+            yield from self._count_star(data_pages)
+            return
 
         from collections import defaultdict
 
         collector: dict = defaultdict(dict)
         columns = None
-
-        if isinstance(data_pages, pyarrow.Table):
-            data_pages = [data_pages]
 
         for page in data_pages:
 
