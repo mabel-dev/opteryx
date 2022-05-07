@@ -53,6 +53,18 @@ STATEMENTS = [
         ("SELECT * FROM `$satellites` WHERE name = 'Calypso'", 1, 8),
         ("SELECT * FROM `$satellites` WHERE `name` = 'Calypso'", 1, 8),
 
+        ("/* comment */ SELECT * FROM $satellites WHERE name = 'Calypso'", 1, 8),
+        ("SELECT * FROM $satellites /* comment */ WHERE name = 'Calypso'", 1, 8),
+        ("SELECT * FROM $satellites /* WHERE name = 'Calypso' */", 177, 8),
+        ("SELECT * FROM $satellites -- WHERE name = 'Calypso'", 177, 8),
+        ("SELECT * FROM $satellites -- WHERE name = 'Calypso' \n WHERE id = 1", 1, 8),
+        ("-- comment\nSELECT * --comment\n FROM $satellites -- WHERE name = 'Calypso' \n WHERE id = 1", 1, 8),
+        ("/* comment */ SELECT * FROM $satellites /* comment */  WHERE name = 'Calypso'", 1, 8),
+        ("/* comment */ SELECT * FROM $satellites /* comment */  WHERE name = 'Calypso'  /* comment */ ", 1, 8),
+        ("/* comment --inner */ SELECT * FROM $satellites WHERE name = 'Calypso'", 1, 8),
+        ("SELECT * FROM $satellites -- comment\n FOR TODAY", 177, 8),
+        ("SELECT * FROM $satellites /* comment */ FOR TODAY /* comment */", 177, 8),
+
         ("SELECT name, id, planetId FROM $satellites", 177, 3),
         ("SELECT name, name FROM $satellites", 177, 1),
         ("SELECT name, id, name, id FROM $satellites", 177, 2),
