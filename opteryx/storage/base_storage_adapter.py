@@ -55,7 +55,7 @@ class BaseStorageAdapter(abc.ABC):
 
         return partitions
 
-    def get_blob_list(self, prefix=None) -> Iterable:
+    def get_blob_list(self, partition=None) -> Iterable:
         """
         Return an interable of blobs/files
         """

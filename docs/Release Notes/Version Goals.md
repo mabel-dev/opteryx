@@ -1,6 +1,6 @@
 # Version Goals
 
-## Initial Beta Release (0.1)
+## Initial Release (0.1)
 
 The initial beta release will have at least all of the functionality of the SQL Reader Mabel 0.5, implementation and syntax may vary.
 
@@ -11,7 +11,7 @@ Work to do before release:
 - ⬛ **Planner** Reader should support mabel `by_` segments (basic support)
 - ⬛ **Execution** Support `LEFT JOIN`
 
-## Beta Version 0.2
+## Version 0.2
 
 Beta 0.2 is primarily about optimizations, either internal to the engine or to the user workflow.
 

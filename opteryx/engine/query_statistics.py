@@ -30,6 +30,7 @@ class QueryStatistics:
         self.partitions_found: int = 0
         self.partitions_scanned: int = 0
         self.partitions_read: int = 0
+        self.time_scanning_partitions: int = 0
 
         self.time_data_read: int = 0
 
@@ -42,7 +43,16 @@ class QueryStatistics:
         self.start_time: int = 0
         self.end_time: int = 0
 
+    def _ns_to_s(self, nano_seconds):
+        """ convert elapsed ns to s """
+        if nano_seconds == 0:
+            return 0
+        return nano_seconds / 1e9
+
     def as_dict(self):
+        """
+        Return statistics as a dictionary
+        """
         return {
             "count_blobs_found": self.count_blobs_found,
             "count_data_blobs_read": self.count_data_blobs_read,
@@ -55,11 +65,10 @@ class QueryStatistics:
             "bytes_read_data": self.bytes_read_data,
             "bytes_processed_data": self.bytes_processed_data,
             "rows_read": self.rows_read,
-            "time_data_read": 0
-            if self.time_data_read == 0
-            else (self.time_data_read / 1e9),
-            "time_total": (self.end_time - self.start_time) / 1e9,
-            "time_planning": self.time_planning / 1e9,
+            "time_data_read": self._ns_to_s(self.time_data_read),
+            "time_total": self._ns_to_s(self.end_time - self.start_time),
+            "time_planning": self._ns_to_s(self.time_planning),
+            "time_scanning_partitions": self._ns_to_s(self.time_scanning_partitions),
             "partitions_found": self.partitions_found,
             "partitions_scanned": self.partitions_scanned,
             "partitions_read": self.partitions_read,

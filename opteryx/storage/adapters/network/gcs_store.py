@@ -10,14 +10,14 @@ try:
     from google.auth.credentials import AnonymousCredentials
     from google.cloud import storage
 
-    google_cloud_storage_installed = True
+    GOOGLE_CLOUD_STORAGE_INSTALLED = True
 except ImportError:  # pragma: no cover
-    google_cloud_storage_installed = False
+    GOOGLE_CLOUD_STORAGE_INSTALLED = False
 
 
 class GcsStorage(BaseStorageAdapter):
     def __init__(self, project: Optional[str] = None, credentials=None, **kwargs):
-        if not google_cloud_storage_installed:  # pragma: no cover
+        if not GOOGLE_CLOUD_STORAGE_INSTALLED:  # pragma: no cover
             raise MissingDependencyError(
                 "`google-cloud-storage` is missing, please install or include in requirements.txt"
             )
@@ -42,7 +42,7 @@ class GcsStorage(BaseStorageAdapter):
 
     def get_blob_list(self, partition):
         bucket, object_path, name, extension = paths.get_parts(partition)
-        bucket = bucket.replace("_", "-")
+        bucket = bucket.replace("_data", "-data")
 
         # print(bucket, object_path, name, extension)
 
