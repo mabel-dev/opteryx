@@ -63,11 +63,9 @@ def remove_comments(string):
     """
     Remove comments from the string
     """
-    # The first part ignores comments in strings wrapped in ", ' or `
-    # The second is in two parts, the first looks for /* and */, the second -- \n
-    pattern = r"(\"[^\"]\"|\'[^\']\'|\`[^\`]\`)|(/\*[^\*/]*\*/|--[^\r\n]*$)"
-    # first group captures quoted strings (double or single)
+    # first group captures quoted strings (double, single or back tick)
     # second group captures comments (//single-line or /* multi-line */)
+    pattern = r"(\"[^\"]\"|\'[^\']\'|\`[^\`]\`)|(/\*[^\*/]*\*/|--[^\r\n]*$)"
     regex = re.compile(pattern, re.MULTILINE | re.DOTALL)
 
     def _replacer(match):
