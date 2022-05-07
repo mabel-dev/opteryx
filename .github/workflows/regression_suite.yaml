@@ -4,20 +4,21 @@ on: [push, pull_request]
 
 jobs:
   regression_matrix:
+    runs-on: ubuntu-latest
     strategy:
+      max-parallel: 4
       matrix:
-        # windows can't run linux docker images and macos doesn't have docker installed
-        os: [ubuntu-latest]
-      max-parallel: 3
-    runs-on: ${{ matrix.os }}
+        python-version: ['3.7', '3.8', '3.9', '3.10']
+      max-parallel: 4
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
   
-      - name: Set Up Environment
-        uses: actions/setup-python@v2
+      - name: Set up Python ${{ matrix.python-version }} x64
+        uses: actions/setup-python@v1
         with:
-          python-version: '3.9' 
+          python-version: ${{ matrix.python-version }}
+          architecture: x64
         
       - name: Install Requirements
         run: |
