@@ -182,7 +182,11 @@ class DatasetReaderNode(BasePlanNode):
             self._statistics.partitions_scanned += 1
 
             # Get a list of all of the blobs in the partition.
+            time_scanning_partitions = time.time_ns()
             blob_list = self._reader.get_blob_list(partition)
+            self._statistics.time_scanning_partitions = (
+                time.time_ns() - time_scanning_partitions
+            )
 
             # remove folders, that's items ending with '/'
             blob_list = [blob for blob in blob_list if not blob.endswith("/")]
