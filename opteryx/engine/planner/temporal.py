@@ -33,6 +33,10 @@ SQL_PARTS = [
     r"CROSS\sJOIN",
     r"LEFT\sJOIN",
     r"LEFT\sOUTER\sJOIN",
+    r"RIGHT\sJOIN",
+    r"RIGHT\sOUTER\sJOIN",
+    r"FULL\sJOIN",
+    r"FULL\sOUTER\sJOIN",
     r"JOIN",
 ]
 
@@ -73,8 +77,8 @@ def remove_comments(string):
         # it means we have captured a non-quoted (real) comment string.
         if match.group(2) is not None:
             return ""  # so we will return empty to remove the comment
-        else:  # otherwise, we will return the 1st group
-            return match.group(1)  # captured quoted-string
+        # otherwise, we will return the 1st group
+        return match.group(1)  # captured quoted-string
 
     return regex.sub(_replacer, string)
 

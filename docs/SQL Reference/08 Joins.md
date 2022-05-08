@@ -21,9 +21,9 @@ SELECT *
 
 The nation table contains 25 rows and the region table contains 5 rows, so a cross join between the two tables produces 125 rows.
 
-
-
 ## INNER JOIN
+
+<img src="../diagrams/inner-join.svg">
 
 ## LEFT JOIN
 
