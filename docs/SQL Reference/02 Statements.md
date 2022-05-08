@@ -23,6 +23,8 @@ FROM relation
   INNER JOIN relation
   CROSS JOIN relation
   LEFT OUTER JOIN relation
+  RIGHT OUTER JOIN relation
+  FULL OUTER JOIN relation
     ON condition
     USING (column)
 FOR period
