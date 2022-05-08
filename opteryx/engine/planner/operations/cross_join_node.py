@@ -175,6 +175,7 @@ class CrossJoinNode(BasePlanNode):
     """
     Implements a SQL CROSS JOIN and CROSS JOIN UNNEST
     """
+
     def __init__(self, statistics: QueryStatistics, **config):
         self._right_table = config.get("right_table")
         self._join_type = config.get("join_type", "CrossJoin")

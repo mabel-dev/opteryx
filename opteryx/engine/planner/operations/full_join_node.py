@@ -55,17 +55,7 @@ class FullJoinNode(BasePlanNode):
                 self._right_table.execute(None)
             )  # type:ignore
 
-        if self._join_type == "CrossJoin":
-            yield from _cross_join(data_pages, self._right_table)
-
-        elif self._join_type == "CrossJoinUnnest":
-            yield from _cross_join_unnest(
-                left=data_pages,
-                column=self._right_table[1][1][0],
-                alias=self._right_table[0],
-            )
-
-        elif self._join_type == "Inner":
+        if self._join_type == "Inner":
 
             if self._using:
 
