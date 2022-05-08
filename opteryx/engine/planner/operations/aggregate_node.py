@@ -259,7 +259,7 @@ class AggregateNode(BasePlanNode):
 
         buffer: List = []
         for collected, record in collector.items():
-            if len(buffer) > 1000:
+            if len(buffer) > 1000:  # pragma: no cover
                 table = pyarrow.Table.from_pylist(buffer)
                 table = Columns.create_table_metadata(
                     table=table,
