@@ -6,7 +6,7 @@ Joins allow you to combine data from multiple relations.
 
 A cross join returns the Cartesian product (all combinations) of two relations. Cross joins can either be specified using the explit `CROSS JOIN` syntax or by specifying multiple relations in the `FROM` clause.
 
-<img src="../diagrams/cross-join.svg">
+<img src="../diagrams/cross-join.svg" width="400px">
 
 Both of the following queries are equivalent:
 
@@ -25,15 +25,12 @@ The nation table contains 25 rows and the region table contains 5 rows, so a cro
 
 ## INNER JOIN
 
-<img src="../diagrams/inner-join.svg">
+<img src="../diagrams/inner-join.svg" width="400px">
 
 ## LEFT JOIN
 
-<img src="../diagrams/left-join.svg">
-
-## RIGHT JOIN
+<img src="../diagrams/left-join.svg" width="400px">
 
 ## FULL JOIN
 
-
-https://github.com/amartinson193/SQL_Checkered_Flag_Join_Diagrams
+<img src="../diagrams/full-join.svg" width="400px">
