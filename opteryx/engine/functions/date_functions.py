@@ -28,18 +28,6 @@ def get_yesterday():
     return datetime.date.today() - datetime.timedelta(days=1)
 
 
-def get_previous_month():
-    from opteryx.utils.dates import date_range
-
-    end_of_previous_month = datetime.date.today().replace(day=1) - datetime.timedelta(
-        days=1
-    )
-    start_of_previous_month = end_of_previous_month.replace(day=1)
-    return list(
-        date_range(start_date=start_of_previous_month, end_date=end_of_previous_month)
-    )
-
-
 def get_date(input):
     """
     Convert input to a datetime object and extract the Date part
