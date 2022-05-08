@@ -51,11 +51,11 @@ class EvaluationNode(BasePlanNode):
             function["column_name"] = column_name
 
     @property
-    def name(self):
+    def name(self):  # pragma: no cover
         return "Evaluation"
 
     @property
-    def config(self):
+    def config(self):  # pragma: no cover
         return f"{self.functions}"
 
     def execute(self, data_pages: Iterable) -> Iterable:

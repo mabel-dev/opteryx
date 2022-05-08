@@ -39,11 +39,11 @@ class FullJoinNode(BasePlanNode):
         self._using = config.get("join_using")
 
     @property
-    def name(self):
+    def name(self):  # pragma: no cover
         return f"Full Join"
 
     @property
-    def config(self):
+    def config(self):  # pragma: no cover
         return ""
 
     def execute(self, data_pages: Iterable) -> Iterable:

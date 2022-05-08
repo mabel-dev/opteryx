@@ -28,10 +28,10 @@ class ExplainNode(BasePlanNode):
         self._query_plan = config.get("query_plan")
 
     @property
-    def name(self):
+    def name(self):  # pragma: no cover
         return "Explain"
 
-    @property
+    @property  # pragma: no cover
     def config(self):
         return ""
 

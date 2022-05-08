@@ -120,7 +120,7 @@ class DatasetReaderNode(BasePlanNode):
         self._selection = config.get("selection")
 
     @property
-    def config(self):
+    def config(self):  # pragma: no cover
         if self._alias:
             return f"{self._dataset} => {self._alias}"
         if isinstance(self._dataset, str):
@@ -128,7 +128,7 @@ class DatasetReaderNode(BasePlanNode):
         return "<complex dataset>"
 
     @property
-    def name(self):
+    def name(self):  # pragma: no cover
         return "Reader"
 
     def execute(self, data_pages: Optional[Iterable]) -> Iterable:

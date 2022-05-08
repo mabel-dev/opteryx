@@ -32,14 +32,14 @@ class DistinctNode(BasePlanNode):
         self._distinct = config.get("distinct", True)
 
     @property
-    def config(self):
+    def config(self):  # pragma: no cover
         return ""
 
-    def greedy(self):
+    def greedy(self):  # pragma: no cover
         return True
 
     @property
-    def name(self):
+    def name(self):  # pragma: no cover
         return "Distinction"
 
     def execute(self, data_pages: Iterable) -> Iterable:

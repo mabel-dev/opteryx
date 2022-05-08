@@ -31,11 +31,11 @@ class OffsetNode(BasePlanNode):
         self._offset = config.get("offset")
 
     @property
-    def name(self):
+    def name(self):  # pragma: no cover
         return "Offset"
 
     @property
-    def config(self):
+    def config(self):  # pragma: no cover
         return str(self._offset)
 
     def execute(self, data_pages: Iterable) -> Iterable:

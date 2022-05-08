@@ -181,11 +181,11 @@ class CrossJoinNode(BasePlanNode):
         self._join_type = config.get("join_type", "CrossJoin")
 
     @property
-    def name(self):
+    def name(self):  # pragma: no cover
         return "Cross Join"
 
     @property
-    def config(self):
+    def config(self):  # pragma: no cover
         return ""
 
     def execute(self, data_pages: Iterable) -> Iterable:

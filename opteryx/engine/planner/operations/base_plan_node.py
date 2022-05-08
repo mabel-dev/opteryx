@@ -32,21 +32,21 @@ class BasePlanNode(abc.ABC):
         raise NotImplementedError('"execute" method must be overridden')
 
     @property
-    def greedy(self):
+    def greedy(self):  # pragma: no cover
         """
         Returns True if this node needs all of the data before it can return
         """
         return False
 
     @property
-    def name(self):
+    def name(self):  # pragma: no cover
         """
         Friendly Name of this node
         """
         return "no name"
 
     @property
-    def config(self):
+    def config(self):  # pragma: no cover
         """
         Configuration for this node, used when showing execution plans
         """

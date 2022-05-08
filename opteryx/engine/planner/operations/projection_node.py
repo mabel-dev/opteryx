@@ -64,11 +64,11 @@ class ProjectionNode(BasePlanNode):
                 self._projection[attribute] = None
 
     @property
-    def config(self):
+    def config(self):  # pragma: no cover
         return str(self._projection)
 
     @property
-    def name(self):
+    def name(self):  # pragma: no cover
         return "Projection"
 
     def execute(self, data_pages: Iterable) -> Iterable:
