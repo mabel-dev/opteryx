@@ -99,7 +99,9 @@ class ProjectionNode(BasePlanNode):
             page = page.select(projection)  # type:ignore
 
             if len(projection) != len(set(projection)):
-                raise SqlError("SELECT statement contains multiple references to the same column, perhaps as aliases or with qualifiers.")
+                raise SqlError(
+                    "SELECT statement contains multiple references to the same column, perhaps as aliases or with qualifiers."
+                )
 
             # then we rename the attributes
             if any([v is not None for k, v in self._projection.items()]):  # type:ignore

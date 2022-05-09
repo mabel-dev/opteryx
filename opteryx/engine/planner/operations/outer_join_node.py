@@ -33,7 +33,7 @@ from opteryx.utils.columns import Columns
 OUTER_JOINS = {
     "FullOuter": "Full Outer",
     "LeftOuter": "Left Outer",
-    "RightOuter": "Right Outer"
+    "RightOuter": "Right Outer",
 }
 
 
@@ -90,10 +90,14 @@ class OuterJoinNode(BasePlanNode):
                 new_metadata = right_columns + left_columns
 
                 # rename the column we're joining on
-                page = left_columns.rename_column(page, left_join_column, right_join_column)
+                page = left_columns.rename_column(
+                    page, left_join_column, right_join_column
+                )
                 # do the join
                 new_page = page.join(
-                    self._right_table, keys=[right_join_column], join_type=self._join_type.lower()
+                    self._right_table,
+                    keys=[right_join_column],
+                    join_type=self._join_type.lower(),
                 )
                 # update the metadata
                 new_page = new_metadata.apply(new_page)
