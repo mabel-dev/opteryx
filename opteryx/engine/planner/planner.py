@@ -662,10 +662,10 @@ class QueryPlanner(object):
             join_nodes = {
                 "CrossJoin": CrossJoinNode,
                 "CrossJoinUnnest": CrossJoinNode,
-                "FullOuter": FullJoinNode,
+                "FullOuter": OuterJoinNode,
                 "Inner": InnerJoinNode,
-                "LeftOuter": LeftJoinNode,
-                "RightOuter": RightJoinNode,
+                "LeftOuter": OuterJoinNode,
+                "RightOuter": OuterJoinNode,
             }
 
             join_node = join_nodes.get(_join[0])

@@ -19,6 +19,7 @@ This Node eliminates columns that are not needed in a Relation. This is also the
 that performs column renames.
 """
 from typing import Iterable
+from opteryx.exceptions import SqlError
 
 import pyarrow
 
@@ -96,6 +97,9 @@ class ProjectionNode(BasePlanNode):
                     projection.append(columns.get_column_from_alias(key, only_one=True))
 
             page = page.select(projection)  # type:ignore
+
+            if len(projection) != len(set(projection)):
+                raise SqlError("SELECT statement contains multiple references to the same column, perhaps as aliases or with qualifiers.")
 
             # then we rename the attributes
             if any([v is not None for k, v in self._projection.items()]):  # type:ignore

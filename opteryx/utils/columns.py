@@ -45,6 +45,9 @@ class Columns:
 
     @property
     def preferred_column_names(self):
+        """
+        get a list of preferred column names for the table - in table column order
+        """
         _column_metadata = self._column_metadata.copy()
         columns, preferences = zip(
             *[(c, v.get("preferred_name", None)) for c, v in _column_metadata.items()]
@@ -59,28 +62,52 @@ class Columns:
         return list(zip(list(columns), list(preferences)))
 
     def get_preferred_name(self, column):
+        """get the preferred name for a given column"""
         return self._column_metadata[column]["preferred_name"]
 
     @property
     def table_name(self):
+        """the name of the table these columns are in"""
         return self._table_metadata.get("name")
 
     def set_preferred_name(self, column, preferred_name):
+        """change the preferred name for a column"""
         self._column_metadata[column]["preferred_name"] = preferred_name
         if preferred_name not in self._column_metadata[column]["aliases"]:
             self._column_metadata[column]["aliases"].append(preferred_name)
 
     def add_alias(self, column, alias):
-        self._column_metadata[column]["aliases"].append(alias)
+        """add aliases to a column"""
+        if not isinstance(alias, (list, tuple)):
+            alias = [alias]
+        self._column_metadata[column]["aliases"].extend(alias)
 
     def remove_alias(self, column, alias):
+        """remove an alias"""
         self._column_metadata[column]["aliases"].remove(alias)
 
     def add_column(self, column):
+        """add a reference to a new physical column"""
         new_column = {"preferred_name": column, "aliases": [column], "source": ""}
         self._column_metadata[column] = new_column
 
+    def rename_column(self, table, current_name, new_name):
+        """rename a physical column"""
+        table = table.rename_columns(
+            [
+                new_name if column == current_name else column
+                for column in table.column_names
+            ]
+        )
+        self._column_metadata[new_name] = self._column_metadata.pop(current_name)
+        return table
+
+    def all_column_names(self, column):
+        """get all known names for a column"""
+        return self._column_metadata[column]["aliases"]
+
     def apply(self, table):
+        """apply this metadata to a new table"""
         column_names = [
             self.get_column_from_alias(c) or [c] for c in table.column_names
         ]
@@ -120,15 +147,15 @@ class Columns:
     def create_table_metadata(table, expected_rows, name, table_aliases):
 
         # we're going to replace the column names with random strings
-        def random_string(length: int = 12) -> str:
+        def _random_string(length: int = 8) -> str:
             import base64
 
             # we're creating a series of random bytes, 3/4 the length
             # of the string we want, base64 encoding it (which makes
             # it longer) and then returning the length of string
             # requested.
-            b = os.urandom(-((length * -3) // 4))
-            return base64.b64encode(b).decode("utf8")[:length]
+            byte = os.urandom(-((length * -3) // 4))
+            return base64.b64encode(byte).decode("utf8")[:length]
 
         if not isinstance(table_aliases, list):
             table_aliases = [table_aliases]
@@ -144,7 +171,7 @@ class Columns:
         column_metadata = {}
         for column in table.column_names:
             # we're going to rename the columns
-            new_column = random_string(32)
+            new_column = _random_string(12)
             # the column is know aliased by it's previous name
             column_metadata[new_column] = {"aliases": [column]}
             # record the source table
@@ -152,8 +179,8 @@ class Columns:
             # the column prefers it's current name
             column_metadata[new_column]["preferred_name"] = column
             # for every alias the table has, the column is also know by that
-            for a in table_metadata["aliases"]:
-                column_metadata[new_column]["aliases"].append(f"{a}.{column}")
+            for alias in table_metadata["aliases"]:
+                column_metadata[new_column]["aliases"].append(f"{alias}.{column}")
 
         # rename the columns
         table = table.rename_columns(list(column_metadata.keys()))
