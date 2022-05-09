@@ -229,11 +229,11 @@ class SelectionNode(BasePlanNode):
         self._mapped_filter = None
 
     @property
-    def config(self):
+    def config(self):  # pragma: no cover
         return str(self._filter)
 
     @property
-    def name(self):
+    def name(self):  # pragma: no cover
         return "Selection"
 
     def execute(self, data_pages: Iterable) -> Iterable:

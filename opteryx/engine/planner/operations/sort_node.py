@@ -34,15 +34,15 @@ class SortNode(BasePlanNode):
         self._mapped_order: List = []
 
     @property
-    def greedy(self):
+    def greedy(self):  # pragma: no cover
         return True
 
     @property
-    def config(self):
+    def config(self):  # pragma: no cover
         return ",".join([str(i) for i in self._order])
 
     @property
-    def name(self):
+    def name(self):  # pragma: no cover
         return "Sort"
 
     def execute(self, data_pages: Iterable) -> Iterable:

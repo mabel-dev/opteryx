@@ -127,14 +127,14 @@ class AggregateNode(BasePlanNode):
         self._mapped_groups: List = []
 
     @property
-    def config(self):
+    def config(self):  # pragma: no cover
         return str(self._aggregates)
 
-    def greedy(self):
+    def greedy(self):  # pragma: no cover
         return True
 
     @property
-    def name(self):
+    def name(self):  # pragma: no cover
         return "Aggregation"
 
     def _is_count_star(self, aggregates, groups):
@@ -217,7 +217,10 @@ class AggregateNode(BasePlanNode):
                     # the columns in the group by
                     # fmt:off
                     collection = tuple([(k,v,) for k, v in group if k in self._mapped_groups])
-                    group_collector = collector[collection]
+                    try:
+                        group_collector = collector[collection]
+                    except TypeError:
+                        raise SqlError("GROUP BY contains one or more columns which is a list or struct, cannot GROUP BY lists or structs.")
                     # fmt:on
 
                     # Add the responses to the collector if it's COUNT(*)
@@ -259,7 +262,7 @@ class AggregateNode(BasePlanNode):
 
         buffer: List = []
         for collected, record in collector.items():
-            if len(buffer) > 1000:
+            if len(buffer) > 1000:  # pragma: no cover
                 table = pyarrow.Table.from_pylist(buffer)
                 table = Columns.create_table_metadata(
                     table=table,

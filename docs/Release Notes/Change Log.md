@@ -1,13 +1,20 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] - 
+## [0.0.1] - 2022-05-09
 
 ### Added
-- Additional statistics recording the time taken to scan partitions
+- Additional statistics recording the time taken to scan partitions ([@joocer](https://github.com/joocer]))
+- `FULL JOIN` and `RIGHT JOIN` ([@joocer](https://github.com/joocer]))
+
+### Changed
+- Use PyArrow implementation for `INNER JOIN` and `LEFT JOIN` ([@joocer](https://github.com/joocer]))
+
+### Fixed
+- [#99](https://github.com/mabel-dev/opteryx/issues/99) Grouping by a list gives an unhelpful error message  ([@joocer](https://github.com/joocer]))
+- [#100](https://github.com/mabel-dev/opteryx/issues/100) Projection ignores field qualifications ([@joocer](https://github.com/joocer]))
 
 ## [0.0.0]
 

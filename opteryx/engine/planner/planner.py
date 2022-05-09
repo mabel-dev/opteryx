@@ -44,7 +44,9 @@ import numpy
 
 from opteryx.engine.attribute_types import TOKEN_TYPES
 from opteryx.engine.functions import is_function
+from opteryx.engine.planner import operations
 from opteryx.engine.planner.operations import *
+from opteryx.engine.planner.operations.inner_join_node import InnerJoinNode
 from opteryx.engine.planner.temporal import extract_temporal_filters
 from opteryx.exceptions import SqlError
 from opteryx.utils import dates
@@ -282,8 +284,6 @@ class QueryPlanner(object):
                     relation["relation"]["Table"]["name"][0]["value"].upper()
                     == "UNNEST"
                 ):
-                    # This is toy functionality, the value will be in CROSS JOINing
-                    # on UNNESTed columns
                     alias = relation["relation"]["Table"]["alias"]["name"]["value"]
                     values = self._extract_value(
                         relation["relation"]["Table"]["args"][0]["Unnamed"]["Expr"]
@@ -395,7 +395,9 @@ class QueryPlanner(object):
                 if "CompoundIdentifier" in function:
                     return {
                         "identifier": [
-                            p["value"] for p in function["CompoundIdentifier"]
+                            ".".join(
+                                [p["value"] for p in function["CompoundIdentifier"]]
+                            )
                         ].pop(),
                         "alias": [
                             ".".join(
@@ -638,11 +640,14 @@ class QueryPlanner(object):
         _join = self._extract_joins(ast)
         if _join or len(_relations) == 2:
             if len(_relations) == 2:
+                # If there's no stated JOIN but the query has two relations, we
+                # use a CROSS JOIN
                 _join = ("CrossJoin", _relations[1], None, None)
             if _join[0] == "CrossJoinUnnest":
-                # we're not a table, we're the UNNEST function
+                # If we're doing a CROSS JOIN UNNEST, the right table is an UNNEST function
                 right = _join[1]
             else:
+                # Otherwise, the right table needs to come from the Reader
                 right = DatasetReaderNode(
                     statistics,
                     dataset=_join[1],
@@ -652,9 +657,24 @@ class QueryPlanner(object):
                     start_date=self._start_date,
                     end_date=self._end_date,
                 )
+
+            # map join types to their implementations
+            join_nodes = {
+                "CrossJoin": CrossJoinNode,
+                "CrossJoinUnnest": CrossJoinNode,
+                "FullOuter": OuterJoinNode,
+                "Inner": InnerJoinNode,
+                "LeftOuter": OuterJoinNode,
+                "RightOuter": OuterJoinNode,
+            }
+
+            join_node = join_nodes.get(_join[0])
+            if join_node is None:
+                raise SqlError(f"Join type not supported - `{_join[0]}`")
+
             self.add_operator(
                 "join",
-                JoinNode(
+                join_node(
                     statistics,
                     right_table=right,
                     join_type=_join[0],

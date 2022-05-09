@@ -2,7 +2,7 @@
 
 ## Setting Up
 
-### 1) Install Python (3.9 recommended)   
+### 1) Install Python (3.10 recommended)   
 
 [Python Documentation](https://docs.python-guide.org/starting/install3/linux/)
 

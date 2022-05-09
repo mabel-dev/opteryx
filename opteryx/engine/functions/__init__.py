@@ -34,19 +34,6 @@ def get_random():
         return 0
 
 
-def concat(*items):
-    """
-    Turn each item to a string and concatenate the strings together
-    """
-    sep = ""
-    if len(items) == 1 and (
-        isinstance(items[0], (list, tuple, set)) or hasattr(items[0], "as_list")
-    ):
-        items = items[0]
-        sep = ", "
-    return sep.join(map(str, items))
-
-
 def get_md5(item):
     """calculate MD5 hash of a value"""
     # this is slow but expected to not have a lot of use

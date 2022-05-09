@@ -30,11 +30,11 @@ class LimitNode(BasePlanNode):
         self._limit = config.get("limit")
 
     @property
-    def name(self):
+    def name(self):  # pragma: no cover
         return "Limitation"
 
     @property
-    def config(self):
+    def config(self):  # pragma: no cover
         return str(self._limit)
 
     def execute(self, data_pages: Iterable) -> Iterable:

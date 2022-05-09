@@ -17,14 +17,14 @@ def combine_column(table, name):
     return table.column(name).combine_chunks()
 
 
-f = np.vectorize(hash)
-
-
 def columns_to_array(table, columns):
+    """modified for Opteryx"""
     columns = [columns] if isinstance(columns, str) else list(set(columns))
     if len(columns) == 1:
-        # return combine_column(table, columns[0]).to_numpy(zero_copy_only=False)
-        return f(combine_column(table, columns[0]).to_numpy(zero_copy_only=False))
-    else:
-        values = [c.to_numpy() for c in table.select(columns).itercolumns()]
-        return np.array(list(map(hash, zip(*values))))
+        # FIX https://github.com/mabel-dev/opteryx/issues/98
+        # hashing NULL doesn't result in the same value each time
+        return combine_column(table, columns[0]).to_numpy(zero_copy_only=False)
+    #        f = np.vectorize(hash)
+    #        return f(combine_column(table, columns[0]).to_numpy(zero_copy_only=False))
+    values = [c.to_numpy() for c in table.select(columns).itercolumns()]
+    return np.array(list(map(hash, zip(*values))))
