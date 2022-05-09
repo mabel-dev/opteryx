@@ -295,6 +295,9 @@ STATEMENTS = [
         ("SELECT * FROM (SELECT * FROM $planets ORDER BY id DESC LIMIT 5) WHERE id > 7", 2, 20),
         # ORDER OF JOIN CONDITION
         ("SELECT * FROM $planets INNER JOIN $satellites ON $satellites.planetId = $planets.id", 177, 28),
+        # FIELD QUALIFICATION IGNORED
+        ("SELECT DISTINCT planetId, $planets.id FROM $satellites LEFT JOIN $planets ON $satellites.planetId = $planets.id", 9, 2),
+
     ]
 # fmt:on
 

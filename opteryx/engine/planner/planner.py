@@ -395,7 +395,9 @@ class QueryPlanner(object):
                 if "CompoundIdentifier" in function:
                     return {
                         "identifier": [
-                            p["value"] for p in function["CompoundIdentifier"]
+                            ".".join(
+                                [p["value"] for p in function["CompoundIdentifier"]]
+                            )
                         ].pop(),
                         "alias": [
                             ".".join(
