@@ -217,7 +217,10 @@ class AggregateNode(BasePlanNode):
                     # the columns in the group by
                     # fmt:off
                     collection = tuple([(k,v,) for k, v in group if k in self._mapped_groups])
-                    group_collector = collector[collection]
+                    try:
+                        group_collector = collector[collection]
+                    except TypeError:
+                        raise SqlError("GROUP BY contains one or more columns which is a list or struct, cannot GROUP BY lists or structs.")
                     # fmt:on
 
                     # Add the responses to the collector if it's COUNT(*)
