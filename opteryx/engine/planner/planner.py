@@ -511,6 +511,8 @@ class QueryPlanner(object):
                 column = col["expr"]
                 if "Identifier" in column:
                     column = column["Identifier"]["value"]
+                if "CompoundIdentifier" in column:
+                    column = ".".join([i["value"] for i in column["CompoundIdentifier"]])
                 if "Function" in column:
                     func = column["Function"]["name"][0]["value"].upper()
                     args = [

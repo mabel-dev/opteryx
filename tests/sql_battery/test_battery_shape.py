@@ -219,14 +219,19 @@ STATEMENTS = [
         ("SELECT * FROM tests.data.dated FOR '2020-02-04'", 25, 8),
         ("SELECT * FROM tests.data.dated FOR '2020-02-05'", 0, 0),
         ("SELECT * FROM tests.data.dated FOR DATES BETWEEN '2020-02-01' AND '2020-02-28'", 50, 8),
-        ("SELECT * FROM tests.data.dated FOR DATES BETWEEN '2020-02-01' AND today", 50, 8),
-        ("SELECT * FROM tests.data.dated FOR DATES BETWEEN '2020-02-01' AND Today", 50, 8),
-        ("SELECT * FROM tests.data.dated FOR DATES BETWEEN '2020-02-01' AND YESTERDAY", 50, 8),
+        ("SELECT * FROM tests.data.dated FOR DATES BETWEEN YESTERDAY AND TODAY", 0, 0),
         ("SELECT * FROM tests.data.dated FOR TODAY", 0, 0),
+        ("SELECT * FROM tests.data.dated FOR Today", 0, 0),
+        ("SELECT * FROM tests.data.dated FOR today", 0, 0),
+        ("SELECT * FROM tests.data.dated FOR   TODAY", 0, 0),
+        ("SELECT * FROM tests.data.dated FOR\nTODAY", 0, 0),
+        ("SELECT * FROM tests.data.dated FOR\tTODAY", 0, 0),
         ("SELECT * FROM tests.data.dated FOR YESTERDAY", 0, 0),
         ("SELECT * FROM tests.data.dated FOR '2020-02-03' OFFSET 1", 24, 8),
         ("SELECT * FROM tests.data.dated FOR DATES BETWEEN '2020-02-01' AND '2020-02-28' OFFSET 1", 49, 8),
-        ("SELECT * FROM tests.data.dated FOR DATES BETWEEN '2020-02-01' AND today OFFSET 1", 49, 8),
+        ("SELECT * FROM tests.data.dated FOR DATES IN LAST_MONTH", 0, 0),
+        ("SELECT * FROM tests.data.dated FOR DATES IN THIS_MONTH", 0, 0),
+        ("SELECT * FROM tests.data.dated FOR DATES IN PREVIOUS_MONTH", 0, 0),
         ("SELECT * FROM tests.data.dated FOR YESTERDAY OFFSET 1", 0, 0),
         ("SELECT * FROM $satellites FOR YESTERDAY ORDER BY planetId OFFSET 10", 167, 8),
 
@@ -297,6 +302,8 @@ STATEMENTS = [
         ("SELECT * FROM (SELECT * FROM $planets ORDER BY id DESC LIMIT 5) WHERE id > 7", 2, 20),
         # ORDER OF JOIN CONDITION
         ("SELECT * FROM $planets INNER JOIN $satellites ON $satellites.planetId = $planets.id", 177, 27),
+        # ORDER BY QUALIFIED IDENTIFIER
+        ("SELECT * FROM $planets LEFT JOIN $satellites ON $satellites.planetId = $planets.id ORDER BY $planets.name", 179, 27)
     ]
 # fmt:on
 
