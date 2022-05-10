@@ -113,7 +113,7 @@ class InnerJoinNode(BasePlanNode):
                     keys=[left_join_column],
                     right_keys=[right_join_column],
                     join_type="inner",
-                    coalesce_keys=False
+                    coalesce_keys=False,
                 )
                 # update the metadata
                 new_page = new_metadata.apply(new_page)
