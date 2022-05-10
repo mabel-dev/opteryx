@@ -12,7 +12,7 @@ The table below shows the available general aggregate functions. (+) indicates a
 
 Function        | Description 
 --------------- | ----------------------------------------------------------------
-`AGG_LIST(a)`   | Values in column 'a' returned as a list
+`LIST(a)`   | Values in column 'a' returned as a list
 `AVG(a)`        | Average value for all values in column 'a'
 `COUNT(a)` +    | Number of values in column 'a'
 `FIRST(a)`      | First value in column 'a' (includes NONE)

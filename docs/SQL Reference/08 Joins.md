@@ -1,10 +1,8 @@
 # Joins
 
-Joins allow you to combine data from multiple relations.
+Joins allow you to combine data from multiple relations into a single relation.
 
 ## CROSS JOIN
-
-A `CROSS JOIN` returns the Cartesian product (all combinations) of two relations. Cross joins can either be specified using the explicit `CROSS JOIN` syntax or by specifying multiple relations in the `FROM` clause.
 
 ~~~
 FROM left_table CROSS JOIN right_table
@@ -13,26 +11,28 @@ FROM left_table CROSS JOIN right_table
 FROM left_table, right_table
 ~~~
 
+A `CROSS JOIN` returns the Cartesian product (all combinations) of two relations. Cross joins can either be specified using the explicit `CROSS JOIN` syntax or by specifying multiple relations in the `FROM` clause.
+
 ~~~sql
 SELECT *
   FROM left_table
  CROSS JOIN right_table;
 ~~~
 
-<img src="../diagrams/cross-join.svg" width="400px">
+<img src="../diagrams/cross-join.svg" width="420px">
 
 The size of the resultant dataset when using `CROSS JOIN` is length of the two datasets multiplied together (2 x 3 = 6, in the pictural example), which can easily result in extremely large datasets. When an alternate join approach is possible, it will almost always perform better than a `CROSS JOIN`.
 
 ## INNER JOIN
 
-An `INNER JOIN` selects records that have matching values in both relations. Inner joins can either be specified using the full `INNER JOIN` syntax or the shorter `JOIN` syntax.
+~~~
+FROM left_table INNER JOIN right_table [ ON condition | USING (column) ]
+~~~
+~~~
+FROM left_table JOIN right_table [ ON condition | USING (column) ]
+~~~
 
-~~~
-FROM left_table INNER JOIN right_table [ ON | USING ]
-~~~
-~~~
-FROM left_table JOIN right_table [ ON | USING ]
-~~~
+An `INNER JOIN` returns rows from both relations where the value in the joining column of one relation matches the value in the joining column of the other relation. Inner joins can either be specified using the full `INNER JOIN` syntax or the shorter `JOIN` syntax, and the joining column specified using `ON condition` or `USING(column)` syntax.
 
 ~~~sql
 SELECT *
@@ -41,7 +41,9 @@ SELECT *
     ON left_table.column_name = right_table.column_name;
 ~~~
 
-<img src="../diagrams/inner-join.svg" width="400px">
+<img src="../diagrams/inner-join.svg" width="420px">
+
+In this example, the blue column is used as the joining column in both relations. Only the value `1` occurs in both tables so the resultant relation is the combination of the row with `1` in _right_table_ and the row with `1` in _left_table_.
 
 ## LEFT JOIN
 
@@ -61,7 +63,7 @@ SELECT *
     ON left_table.column_name = right_table.column_name;
 ~~~
 
-<img src="../diagrams/left-join.svg" width="400px">
+<img src="../diagrams/left-join.svg" width="420px">
 
 ## FULL JOIN
 
@@ -81,4 +83,4 @@ SELECT *
     ON left_table.column_name = right_table.column_name;
 ~~~
 
-<img src="../diagrams/full-join.svg" width="400px">
+<img src="../diagrams/full-join.svg" width="420px">
