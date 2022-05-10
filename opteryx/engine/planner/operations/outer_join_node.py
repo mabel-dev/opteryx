@@ -84,20 +84,15 @@ class OuterJoinNode(BasePlanNode):
                             self._on[2][0], only_one=True
                         )
 
-                right_columns.add_alias(
-                    right_join_column, left_columns.all_column_names(left_join_column)
-                )
                 new_metadata = right_columns + left_columns
 
-                # rename the column we're joining on
-                page = left_columns.rename_column(
-                    page, left_join_column, right_join_column
-                )
                 # do the join
                 new_page = page.join(
                     self._right_table,
-                    keys=[right_join_column],
+                    keys=[left_join_column],
+                    right_keys=[right_join_column],
                     join_type=self._join_type.lower(),
+                    coalesce_keys=False
                 )
                 # update the metadata
                 new_page = new_metadata.apply(new_page)
