@@ -35,6 +35,7 @@ class DistinctNode(BasePlanNode):
     def config(self):  # pragma: no cover
         return ""
 
+    @property
     def greedy(self):  # pragma: no cover
         return True
 
