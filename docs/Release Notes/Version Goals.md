@@ -1,6 +1,6 @@
 # Version Goals
 
-## Initial Release (0.1)
+## Initial Beta Release (0.1)
 
 The initial beta release will have at least all of the functionality of the SQL Reader Mabel 0.5, implementation and syntax may vary.
 
@@ -21,10 +21,9 @@ Beta 0.2 is primarily about optimizations, either internal to the engine or to t
 - 🔲 **Planner** Planner should use cost and range information (BRIN) in sidecar metadata files 
 - 🔲 **Planner** Planner should use cost estimates to pick a `by_` segment
 - 🔲 **Planner** Planner should plan the reads rather than the Reader
-- 🔲 **Execution** Functions using the result of functions (e.g. LENGTH(AGG_LIST(field)))
+- 🔲 **Execution** Functions using the result of functions (e.g. LENGTH(LIST(field)))
 - 🔲 **Execution** Inline operators (e.g. firstname || surname)
-- 🔲 **Execution** all `JOIN` operators use Cython (or native pyarrow if available)
-- 🔲 **Execution** `JOIN` batch size based on sizes of input files (e.g. thin right tables have more rows in a batch than wide tables)
+- ⬛ **Execution** all `JOIN` operators use Cython (or native pyarrow if available)
 - 🔲 **Execution** Grouping and aggregation to use native pyarrow functionality if available
  
 ## Version 1.0

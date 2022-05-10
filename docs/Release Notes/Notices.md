@@ -1,6 +1,6 @@
 # Notices
 
-Opteryx uses the following libraries and components
+Opteryx uses the following libraries and components:
 
 Component                                                  | Licence
 ---------------------------------------------------------- | -------

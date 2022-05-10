@@ -5,9 +5,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### [Unreleased]
 
-### Fixed
+#### Fixed
 
 - [#106](https://github.com/mabel-dev/opteryx/issues/106) `ORDER BY` on qualified fields fails ([@joocer](https://github.com/joocer]))
+- [#103](https://github.com/mabel-dev/opteryx/issues/103) `ORDER BY` after `JOIN` errors ([@joocer](https://github.com/joocer]))
 
 ### [0.0.1] - 2022-05-09
 
@@ -25,10 +26,3 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### [0.0.0]
 
 - Initial Version
-
-<!---
-## [0.0.1] - 
-
-### Added
-- Initial Version
---->

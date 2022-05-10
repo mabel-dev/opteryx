@@ -52,8 +52,14 @@ The `DISTINCT` quantifier is specified, only unique rows are included in the res
 FROM relation [, ...]
 ~~~
 ~~~
-FROM relation [ INNER | CROSS | LEFT [ OUTER ] ] JOIN relation [ USING (column) | ON condition ]
+FROM relation [ INNER ] JOIN relation < USING (column) | ON condition >
 ~~~ 
+~~~
+FROM relation < LEFT | RIGHT | FULL > [OUTER] JOIN relation
+~~~
+~~~
+FROM relation CROSS JOIN < relation | UNNEST(column) >
+~~~
 
 The `FROM` clause specifies the source of the data on which the remainder of the query should operate. Logically, the `FROM` clause is where the query starts execution. The `FROM` clause can contain a single relation, a combination of multiple relations that are joined together, or another `SELECT` query inside a subquery node.
 
@@ -66,6 +72,9 @@ FOR date
 ~~~
 ~~~
 FOR DATES BETWEEN date and date
+~~~
+~~~
+FOR DATES IN date_range
 ~~~
 
 The `FOR` clause is a non ANSI SQL extention which filters data by the date it was recorded for.
