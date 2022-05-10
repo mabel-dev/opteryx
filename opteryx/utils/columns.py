@@ -91,21 +91,6 @@ class Columns:
         new_column = {"preferred_name": column, "aliases": [column], "source": ""}
         self._column_metadata[column] = new_column
 
-    def rename_column(self, table, current_name, new_name):
-        """rename a physical column"""
-        table = table.rename_columns(
-            [
-                new_name if column == current_name else column
-                for column in table.column_names
-            ]
-        )
-        self._column_metadata[new_name] = self._column_metadata.pop(current_name)
-        return table
-
-    def all_column_names(self, column):
-        """get all known names for a column"""
-        return self._column_metadata[column]["aliases"]
-
     def apply(self, table):
         """apply this metadata to a new table"""
         column_names = [

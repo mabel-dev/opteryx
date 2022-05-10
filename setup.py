@@ -32,7 +32,7 @@ extensions = [
 setup(
     name="opteryx",
     version=__version__,
-    description="Distributed SQL Engine",
+    description="Serverless SQL Engine",
     long_description=long_description,
     long_description_content_type="text/markdown",
     maintainer="Joocer",
