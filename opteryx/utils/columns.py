@@ -71,10 +71,12 @@ class Columns:
         return self._table_metadata.get("name")
 
     def rename_table(self, new_name):
-        """ rename a table """
+        """rename a table"""
         self._table_metadata["name"] = new_name
         for column, attribs in self._column_metadata.items():
-            self._column_metadata[column]["aliases"].append(f"{new_name}.{attribs['preferred_name']}")
+            self._column_metadata[column]["aliases"].append(
+                f"{new_name}.{attribs['preferred_name']}"
+            )
 
     def set_preferred_name(self, column, preferred_name):
         """change the preferred name for a column"""
