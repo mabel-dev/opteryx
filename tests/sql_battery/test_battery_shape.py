@@ -303,7 +303,9 @@ STATEMENTS = [
         # ORDER OF JOIN CONDITION
         ("SELECT * FROM $planets INNER JOIN $satellites ON $satellites.planetId = $planets.id", 177, 28),
         # ORDER BY QUALIFIED IDENTIFIER
-        ("SELECT * FROM $planets LEFT JOIN $satellites ON $satellites.planetId = $planets.id ORDER BY $planets.name", 179, 28)
+        ("SELECT * FROM $planets LEFT JOIN $satellites ON $satellites.planetId = $planets.id ORDER BY $planets.name", 179, 28),
+        # NAMED SUBQUERIES
+        ("SELECT P.name FROM ( SELECT * FROM $planets ) AS P", 9, 1),
     ]
 # fmt:on
 
