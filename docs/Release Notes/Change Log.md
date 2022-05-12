@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 - [#106](https://github.com/mabel-dev/opteryx/issues/106) `ORDER BY` on qualified fields fails ([@joocer](https://github.com/joocer]))
 - [#103](https://github.com/mabel-dev/opteryx/issues/103) `ORDER BY` after `JOIN` errors ([@joocer](https://github.com/joocer]))
+- [#110](https://github.com/mabel-dev/opteryx/issues/110) SubQueries `AS` statement ignored ([@joocer](https://github.com/joocer]))
 - [#112](https://github.com/mabel-dev/opteryx/issues/112) `SHOW COLUMNS` doesn't work for non sample datasets ([@joocer](https://github.com/joocer]))
 
 ### [0.0.1] - 2022-05-09

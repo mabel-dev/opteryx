@@ -152,7 +152,15 @@ class DatasetReaderNode(BasePlanNode):
 
         # query plans
         if isinstance(self._dataset, QueryPlanner):
-            yield from self._dataset.execute()
+            metadata = None
+
+            for table in self._dataset.execute():
+                if metadata is None:
+                    metadata = Columns(table)
+                    metadata.rename_table(self._alias)
+                table = metadata.apply(table)
+                yield table
+
             return
 
         # sample datasets
