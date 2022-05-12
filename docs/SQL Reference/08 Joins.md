@@ -43,11 +43,9 @@ SELECT *
 
 <img src="../diagrams/inner-join.svg" width="420px">
 
-In this example, the blue column is used as the joining column in both relations. Only the value `1` occurs in both tables so the resultant relation is the combination of the row with `1` in _right_table_ and the row with `1` in _left_table_.
+In this example, the blue column is used as the joining column in both relations. Only the value `1` occurs in both relations so the resultant dataset is the combination of the row with `1` in _right_table_ and the row with `1` in _left_table_.
 
 ## LEFT JOIN
-
-A `LEFT JOIN` selects all records from the left table (table1), and the matching records from the right table (table2). The result is 0 records from the right side, if there is no match.
 
 ~~~
 FROM left_table LEFT JOIN right_table ON condition
@@ -55,6 +53,8 @@ FROM left_table LEFT JOIN right_table ON condition
 ~~~
 FROM left_table LEFT OUTER JOIN right_table ON condition
 ~~~
+
+A `LEFT JOIN` returns all rows from the left relation, and rows from the right relation where there is a matching row, otherwise the fields for the right relation are populated with `NULL`.
 
 ~~~sql
 SELECT *
@@ -74,7 +74,7 @@ FROM left_table FULL JOIN right_table ON condition
 FROM left_table FULL OUTER JOIN right_table ON condition
 ~~~
 
-The `FULL JOIN` keyword returns all records when there is a match in left (table1) or right (table2) table records.
+The `FULL JOIN` keyword returns all rows from the left relation, and all rows from the right relation. Where they have a matching value in the joining column, the rows will be aligned, otherwise the fields will be populated with `NULL`.
 
 ~~~sql
 SELECT *
