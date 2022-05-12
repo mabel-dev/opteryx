@@ -44,7 +44,6 @@ import numpy
 
 from opteryx.engine.attribute_types import TOKEN_TYPES
 from opteryx.engine.functions import is_function
-from opteryx.engine.planner import operations
 from opteryx.engine.planner.operations import *
 from opteryx.engine.planner.operations.inner_join_node import InnerJoinNode
 from opteryx.engine.planner.temporal import extract_temporal_filters
@@ -579,7 +578,9 @@ class QueryPlanner(object):
 
     def _show_columns_planner(self, ast, statistics):
 
-        relation = ast[0]["ShowColumns"]["table_name"][0]["value"]
+#        relation = ast[0]["ShowColumns"]["table_name"][0]["value"]
+
+        relation = ".".join([part["value"] for part in ast[0]["ShowColumns"]["table_name"]])
 
         self.add_operator(
             "reader",

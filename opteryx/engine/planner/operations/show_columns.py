@@ -55,6 +55,7 @@ class ShowColumnsNode(BasePlanNode):
             new_row = {
                 "column_name": source_metadata.get_preferred_name(column),
                 "type": PARQUET_TYPES.get(str(column_data.type), "OTHER"),
+                "nulls": (column_data.null_count) > 0
             }
             buffer.append(new_row)
 
