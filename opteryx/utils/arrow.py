@@ -18,7 +18,7 @@ from typing import Iterable, List
 
 
 def fetchmany(pages, limit: int = 1000):
-    """ fetch records from a Table as Python Dicts """
+    """fetch records from a Table as Python Dicts"""
 
     from pyarrow import Table
     from opteryx.utils.columns import Columns

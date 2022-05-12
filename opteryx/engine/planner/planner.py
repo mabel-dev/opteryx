@@ -578,9 +578,11 @@ class QueryPlanner(object):
 
     def _show_columns_planner(self, ast, statistics):
 
-#        relation = ast[0]["ShowColumns"]["table_name"][0]["value"]
+        #        relation = ast[0]["ShowColumns"]["table_name"][0]["value"]
 
-        relation = ".".join([part["value"] for part in ast[0]["ShowColumns"]["table_name"]])
+        relation = ".".join(
+            [part["value"] for part in ast[0]["ShowColumns"]["table_name"]]
+        )
 
         self.add_operator(
             "reader",

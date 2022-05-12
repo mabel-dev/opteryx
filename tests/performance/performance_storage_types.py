@@ -34,7 +34,17 @@ class Timer(object):
         )
 
 
-FORMATS = ("arrow", "arrow_lz4", "jsonl", "orc", "orc_snappy", "parquet", "parquet_snappy", "parquet_lz4", "zstd")
+FORMATS = (
+    "arrow",
+    "arrow_lz4",
+    "jsonl",
+    "orc",
+    "orc_snappy",
+    "parquet",
+    "parquet_snappy",
+    "parquet_lz4",
+    "zstd",
+)
 cache = InMemoryCache(size=100)
 
 if __name__ == "__main__":
@@ -48,5 +58,5 @@ if __name__ == "__main__":
             for round in range(CYCLES):
                 cur = conn.cursor()
                 cur.execute(f"SELECT * FROM tests.data.formats.{format};")
-#                [a for a in cur._results]
+                #                [a for a in cur._results]
                 [a for a in cur.fetchall()]
