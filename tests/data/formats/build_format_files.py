@@ -36,14 +36,34 @@ if __name__ == "__main__":  # pragma: no cover
         source, "tests/data/formats/arrow/tweets.arrow", compression="zstd"
     )
 
+    # ARROW (feather)
+    pyarrow.feather.write_feather(
+        source, "tests/data/formats/arrow_lz4/tweets.arrow", compression="lz4"
+    )
+
     # ORC
     pyarrow.orc.write_table(
         source, "tests/data/formats/orc/tweets.orc", compression="ZSTD"
     )
 
+    # ORC
+    pyarrow.orc.write_table(
+        source, "tests/data/formats/orc_snappy/tweets.orc", compression="snappy"
+    )
+
     # PARQUET
     pyarrow.parquet.write_table(
         source, "tests/data/formats/parquet/tweets.parquet", compression="zstd"
+    )
+
+    # PARQUET
+    pyarrow.parquet.write_table(
+        source, "tests/data/formats/parquet_snappy/tweets.parquet", compression="snappy"
+    )
+
+    # PARQUET
+    pyarrow.parquet.write_table(
+        source, "tests/data/formats/parquet_lz4/tweets.parquet", compression="lz4"
     )
 
     # ZSTD

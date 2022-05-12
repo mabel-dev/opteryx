@@ -114,7 +114,7 @@ LIMIT count
 
 ## SHOW COLUMNS
 
-List the columns in a relation along with their data type.
+List the columns in a relation along with their data type and an indication if nulls have been found in the first page of records.
 
 ~~~sql
 SHOW COLUMNS

@@ -1,10 +1,26 @@
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+"""
+This module contains support functions for working with PyArrow
+"""
+
 from typing import Iterable, List
 
 
 def fetchmany(pages, limit: int = 1000):
+    """fetch records from a Table as Python Dicts"""
 
     from pyarrow import Table
-
     from opteryx.utils.columns import Columns
 
     if pages is None:
@@ -13,7 +29,7 @@ def fetchmany(pages, limit: int = 1000):
     if isinstance(pages, Table):
         pages = (pages,)
 
-    default_chunk_size = 1000
+    default_chunk_size = 5000
     chunk_size = min(limit, default_chunk_size)
     if chunk_size < 0:
         chunk_size = default_chunk_size

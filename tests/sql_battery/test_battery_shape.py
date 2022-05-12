@@ -256,15 +256,17 @@ STATEMENTS = [
         ("EXPLAIN SELECT * FROM $satellites", 2, 3),
         ("EXPLAIN SELECT * FROM $satellites WHERE id = 8", 3, 3),
 
-        ("SHOW COLUMNS FROM $satellites", 8, 2),
-        ("SHOW COLUMNS FROM $satellites WHERE column_name ILIKE '%id'", 2, 2),
-        ("SHOW COLUMNS FROM $satellites LIKE '%id'", 1, 2),
+        ("SHOW COLUMNS FROM $satellites", 8, 3),
+        ("SHOW COLUMNS FROM $satellites WHERE column_name ILIKE '%id'", 2, 3),
+        ("SHOW COLUMNS FROM $satellites LIKE '%id'", 1, 3),
+        ("SHOW COLUMNS FROM tests.data.dated FOR '2020-02-03'", 8, 3),
 
         ("SELECT * FROM $satellites CROSS JOIN $astronauts", 63189, 27),
         ("SELECT * FROM $satellites, $planets", 1593, 28),
         ("SELECT * FROM $satellites INNER JOIN $planets USING (id)", 9, 28),
         ("SELECT * FROM $satellites JOIN $planets USING (id)", 9, 28),
         ("SELECT * FROM $astronauts CROSS JOIN UNNEST(Missions) AS Mission WHERE Mission = 'Apollo 11'", 3, 20),
+#        ("SELECT * FROM $astronauts CROSS JOIN UNNEST(Missions)", 0, 0),
         ("SELECT * FROM $planets INNER JOIN $satellites ON $planets.id = $satellites.planetId", 177, 28),
         ("SELECT DISTINCT planetId FROM $satellites LEFT OUTER JOIN $planets ON $satellites.planetId = $planets.id", 7, 1),
         ("SELECT DISTINCT planetId FROM $satellites LEFT JOIN $planets ON $satellites.planetId = $planets.id", 7, 1),
@@ -278,7 +280,6 @@ STATEMENTS = [
         ("SELECT DISTINCT planetId FROM $satellites FULL OUTER JOIN $planets ON $satellites.planetId = $planets.id", 8, 1),
         ("SELECT DISTINCT planetId FROM $satellites FULL JOIN $planets ON $satellites.planetId = $planets.id", 8, 1),
         ("SELECT planetId FROM $satellites FULL JOIN $planets ON $satellites.planetId = $planets.id", 179, 1),
-
 
         ("SELECT pid FROM ( SELECT id AS pid FROM $planets) WHERE pid > 5", 4, 1),
         ("SELECT * FROM ( SELECT id AS pid FROM $planets) WHERE pid > 5", 4, 1),
