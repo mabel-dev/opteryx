@@ -12,12 +12,18 @@
 
 
 def _list_contains(array, item):
+    if array is None:
+        return False
     return item in array
 
 
 def _list_contains_any(array, items):
+    if array is None:
+        return False
     return set(array).intersection(items) != set()
 
 
 def _list_contains_all(array, items):
+    if array is None:
+        return False
     return set(array).issuperset(items)

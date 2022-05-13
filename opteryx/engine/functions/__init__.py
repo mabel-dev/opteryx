@@ -53,7 +53,7 @@ def _get(value, item):
         if isinstance(value, dict):
             return value.get(item)
         return value[int(item)]
-    except (KeyError, IndexError):
+    except (KeyError, IndexError, TypeError):
         return None
 
 
@@ -110,6 +110,13 @@ def _iterate_double_parameter(func):
     return _inner
 
 
+def get_len(obj):
+    """len, but nullsafe"""
+    if hasattr(obj, "__len__"):
+        return len(obj)
+    return None
+
+
 # fmt:off
 FUNCTIONS = {
     "VERSION": _iterate_no_parameters(get_version),
@@ -120,7 +127,7 @@ FUNCTIONS = {
     "VARCHAR": cast("VARCHAR"),
     "STRING": cast("VARCHAR"),  # alias for VARCHAR
     # STRINGS
-    "LENGTH": _iterate_single_parameter(len),  # LENGTH(str) -> int
+    "LENGTH": _iterate_single_parameter(get_len),  # LENGTH(str) -> int
     "UPPER": compute.utf8_upper,  # UPPER(str) -> str
     "LOWER": compute.utf8_lower,  # LOWER(str) -> str
     "TRIM": compute.utf8_trim_whitespace,  # TRIM(str) -> str
