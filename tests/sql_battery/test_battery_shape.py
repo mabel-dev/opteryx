@@ -176,31 +176,31 @@ STATEMENTS = [
         ("SELECT planetId as pid, round(magnitude) as minmag FROM $satellites", 177, 2),
         ("SELECT planetId as pid, round(magnitude) as roundmag FROM $satellites", 177, 2),
 
-        ("SELECT GET(Birth_Place, 'town') FROM $astronauts", 357, 1),
-        ("SELECT GET(Missions, 0) FROM $astronauts", 357, 1),
-        ("SELECT GET(Birth_Place, 'town') FROM $astronauts WHERE GET(Birth_Place, 'town') = 'Warsaw'", 1, 1),
-        ("SELECT COUNT(*), GET(Birth_Place, 'town') FROM $astronauts GROUP BY GET(Birth_Place, 'town')", 264, 2),
-        ("SELECT Birth_Place['town'] FROM $astronauts", 357, 1),
-        ("SELECT Missions[0] FROM $astronauts", 357, 1),
+        ("SELECT GET(birth_place, 'town') FROM $astronauts", 357, 1),
+        ("SELECT GET(missions, 0) FROM $astronauts", 357, 1),
+        ("SELECT GET(birth_place, 'town') FROM $astronauts WHERE GET(birth_place, 'town') = 'Warsaw'", 1, 1),
+        ("SELECT COUNT(*), GET(birth_place, 'town') FROM $astronauts GROUP BY GET(birth_place, 'town')", 264, 2),
+        ("SELECT birth_place['town'] FROM $astronauts", 357, 1),
+        ("SELECT missions[0] FROM $astronauts", 357, 1),
 
-        ("SELECT Birth_Place['town'] FROM $astronauts WHERE Birth_Place['town'] = 'Warsaw'", 1, 1),
-        ("SELECT Birth_Place['town'] AS TOWN FROM $astronauts WHERE Birth_Place['town'] = 'Warsaw'", 1, 1),
-        ("SELECT COUNT(*), Birth_Place['town'] FROM $astronauts GROUP BY Birth_Place['town']", 264, 2),
-        ('SELECT LENGTH(Missions) FROM $astronauts', 357, 1),
-        ('SELECT LENGTH(Missions) FROM $astronauts WHERE LENGTH(Missions) > 6', 2, 1),
+        ("SELECT birth_place['town'] FROM $astronauts WHERE birth_place['town'] = 'Warsaw'", 1, 1),
+        ("SELECT birth_place['town'] AS TOWN FROM $astronauts WHERE birth_place['town'] = 'Warsaw'", 1, 1),
+        ("SELECT COUNT(*), birth_place['town'] FROM $astronauts GROUP BY birth_place['town']", 264, 2),
+        ('SELECT LENGTH(missions) FROM $astronauts', 357, 1),
+        ('SELECT LENGTH(missions) FROM $astronauts WHERE LENGTH(missions) > 6', 2, 1),
 
-        ("SELECT Birth_Date FROM $astronauts", 357, 1),
-        ("SELECT YEAR(Birth_Date) FROM $astronauts", 357, 1),
-        ("SELECT YEAR(Birth_Date) FROM $astronauts WHERE YEAR(Birth_Date) < 1930", 14, 1),
+        ("SELECT birth_date FROM $astronauts", 357, 1),
+        ("SELECT YEAR(birth_date) FROM $astronauts", 357, 1),
+        ("SELECT YEAR(birth_date) FROM $astronauts WHERE YEAR(birth_date) < 1930", 14, 1),
 
         ("SELECT RANDOM() FROM $planets", 9, 1),
         ("SELECT NOW() FROM $planets", 9, 1),
         ("SELECT TODAY() FROM $planets", 9, 1),
-        ("SELECT YEAR(Birth_Date), COUNT(*) FROM $astronauts GROUP BY YEAR(Birth_Date)", 54, 2),
-        ("SELECT MONTH(Birth_Date), COUNT(*) FROM $astronauts GROUP BY MONTH(Birth_Date)", 12, 2),
+        ("SELECT YEAR(birth_date), COUNT(*) FROM $astronauts GROUP BY YEAR(birth_date)", 54, 2),
+        ("SELECT MONTH(birth_date), COUNT(*) FROM $astronauts GROUP BY MONTH(birth_date)", 12, 2),
 
-        ("SELECT count(*), VARCHAR(Year) FROM $astronauts GROUP BY VARCHAR(Year)", 21, 2),
-        ("SELECT count(*), CAST(Year AS VARCHAR) FROM $astronauts GROUP BY CAST(Year AS VARCHAR)", 21, 2),
+        ("SELECT count(*), VARCHAR(year) FROM $astronauts GROUP BY VARCHAR(year)", 21, 2),
+        ("SELECT count(*), CAST(year AS VARCHAR) FROM $astronauts GROUP BY CAST(year AS VARCHAR)", 21, 2),
 
         ("SELECT RANDOM()", 1, 1),
         ("SELECT NOW()", 1, 1),
@@ -242,10 +242,10 @@ STATEMENTS = [
         ("SELECT * FROM $satellites FOR DATES IN THIS_MONTH ORDER BY planetId OFFSET 10", 167, 8),
         ("SELECT * FROM $satellites FOR DATES IN THIS_CYCLE ORDER BY planetId OFFSET 10", 167, 8),
 
-        ("SELECT Missions FROM $astronauts WHERE LIST_CONTAINS(Missions, 'Apollo 8')", 3, 1),
-        ("SELECT Missions FROM $astronauts WHERE LIST_CONTAINS_ANY(Missions, ('Apollo 8', 'Apollo 13'))", 5, 1),
-        ("SELECT Missions FROM $astronauts WHERE LIST_CONTAINS_ALL(Missions, ('Apollo 8', 'Gemini 7'))", 2, 1),
-        ("SELECT Missions FROM $astronauts WHERE LIST_CONTAINS_ALL(Missions, ('Gemini 7', 'Apollo 8'))", 2, 1),
+        ("SELECT missions FROM $astronauts WHERE LIST_CONTAINS(missions, 'Apollo 8')", 3, 1),
+        ("SELECT missions FROM $astronauts WHERE LIST_CONTAINS_ANY(missions, ('Apollo 8', 'Apollo 13'))", 5, 1),
+        ("SELECT missions FROM $astronauts WHERE LIST_CONTAINS_ALL(missions, ('Apollo 8', 'Gemini 7'))", 2, 1),
+        ("SELECT missions FROM $astronauts WHERE LIST_CONTAINS_ALL(missions, ('Gemini 7', 'Apollo 8'))", 2, 1),
 
         ("SELECT * FROM $satellites WHERE planetId IN (SELECT id FROM $planets WHERE name = 'Earth')", 1, 8),
         ("SELECT * FROM $planets WHERE id NOT IN (SELECT DISTINCT planetId FROM $satellites)", 2, 20),
@@ -265,7 +265,7 @@ STATEMENTS = [
         ("SELECT * FROM $satellites, $planets", 1593, 28),
         ("SELECT * FROM $satellites INNER JOIN $planets USING (id)", 9, 28),
         ("SELECT * FROM $satellites JOIN $planets USING (id)", 9, 28),
-        ("SELECT * FROM $astronauts CROSS JOIN UNNEST(Missions) AS Mission WHERE Mission = 'Apollo 11'", 3, 20),
+        ("SELECT * FROM $astronauts CROSS JOIN UNNEST(missions) AS mission WHERE mission = 'Apollo 11'", 3, 20),
 #        ("SELECT * FROM $astronauts CROSS JOIN UNNEST(Missions)", 0, 0),
         ("SELECT * FROM $planets INNER JOIN $satellites ON $planets.id = $satellites.planetId", 177, 28),
         ("SELECT DISTINCT planetId FROM $satellites LEFT OUTER JOIN $planets ON $satellites.planetId = $planets.id", 7, 1),
@@ -286,11 +286,11 @@ STATEMENTS = [
         ("SELECT * FROM ( SELECT COUNT(planetId) AS moons, planetId FROM $satellites GROUP BY planetId ) WHERE moons > 10", 4, 2),
 
         ("SELECT * FROM $planets WHERE id = -1", 0, 20),
-        ("SELECT COUNT(*) FROM (SELECT DISTINCT a FROM $astronauts CROSS JOIN UNNEST(Alma_Mater) AS a ORDER BY a)", 1, 1),
+        ("SELECT COUNT(*) FROM (SELECT DISTINCT a FROM $astronauts CROSS JOIN UNNEST(alma_mater) AS a ORDER BY a)", 1, 1),
 
         # These are queries which have been found to return the wrong result or not run correctly
         # FILTERING ON FUNCTIONS
-        ("SELECT DATE(Birth_Date) FROM $astronauts FOR TODAY WHERE DATE(Birth_Date) < '1930-01-01'", 14, 1),
+        ("SELECT DATE(birth_date) FROM $astronauts FOR TODAY WHERE DATE(birth_date) < '1930-01-01'", 14, 1),
         # ORDER OF CLAUSES
         ("SELECT * FROM $planets FOR '2022-03-03' INNER JOIN $satellites ON $planets.id = $satellites.planetId", 177, 28),
         # ZERO RECORD RESULT SETS

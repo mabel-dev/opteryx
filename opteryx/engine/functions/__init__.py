@@ -53,7 +53,7 @@ def _get(value, item):
         if isinstance(value, dict):
             return value.get(item)
         return value[int(item)]
-    except (KeyError, IndexError):
+    except (KeyError, IndexError, TypeError):
         return None
 
 
