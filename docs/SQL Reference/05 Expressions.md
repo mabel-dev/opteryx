@@ -2,9 +2,9 @@
 
 ## Logical
 
-The following logical operators are available: `AND` and `OR`.
+The following logical operators are available: `NOT`, `AND` and `OR`.
 
-a     | b     | a AND b | a OR b
+a     | b     | a `AND` b | a `OR` b
 ----- | ----- | ------- | -------
 TRUE  | TRUE  | TRUE    | TRUE
 TRUE  | FALSE | FALSE   | TRUE
@@ -39,11 +39,11 @@ Predicate               | Description
 
 Using `BETWEEN` with other predicates, especially when used with an `AND` conjunction, can cause the query parser to fail. 
 
-## Subqueries
+## Sub Queries
 
-The `IN` operator can reference a subquery, this subquery cannot include a temporal clause (`FOR`), but otherwise the full syntax for `SELECT` queries are supported.
+The `IN` operator can reference a sub query, this sub query cannot include a temporal clause (`FOR`), but otherwise the full syntax for `SELECT` queries are supported.
 
-For example to find the planets without any satellites.
+For example, to find the planets without any satellites.
 ~~~sql
 SELECT name
   FROM $planets

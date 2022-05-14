@@ -1,6 +1,6 @@
 # Data Types
 
-Opteryx uses a reduced set of types compared to full RDBMS platforms.
+[Opteryx](https://github.com/mabel-dev/opteryx) uses a reduced set of types compared to full RDBMS platforms.
 
 ## Types
 
@@ -25,8 +25,8 @@ Values can be cast using the `CAST` function, its form is `CAST(any AS type)`.
 
 ### Timestamps
 
-Literal values in quotes may be in interpretted as a `TIMESTAMP` when they match a valid date in ISO 8601 format (e.g. `YYYY-MM-DD` and `YYYY-MM-DD HH:MM`).
+Literal values in quotes may be in interpreted as a `TIMESTAMP` when they match a valid date in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html)  format (e.g. `YYYY-MM-DD` and `YYYY-MM-DD HH:MM`).
 
 ### Numbers
 
-All numeric values are coerced to 64bit Floats.
+All numeric values included in SQL statements are coerced to 64bit Floats.

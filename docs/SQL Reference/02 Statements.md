@@ -1,6 +1,6 @@
 # Statements
 
-Opteryx targets ANSI SQL compliant syntax. This standard alignment allows Opteryx users to quickly understand how to query data and enables easier porting of SQL between query engines and databases.
+[Opteryx](https://github.com/mabel-dev/opteryx) targets ANSI SQL compliant syntax. This standard alignment allows Opteryx users to quickly understand how to query data and enables easier porting of SQL between query engines and databases.
 
 ## EXPLAIN
 
@@ -65,6 +65,8 @@ The `FROM` clause specifies the source of the data on which the remainder of the
 
 `JOIN` clauses allow you to combine data from multiple relations. If no `JOIN` qualifier is provided, `INNER` will be used. `JOIN` qualifiers are mutually exclusive. `ON` and `USING` clauses are also mutually exclusive and can only be used with `INNER` and `LEFT` joins.
 
+See [Joins](https://mabel-dev.github.io/opteryx/SQL%20Reference/08%20Joins/) for more information on `JOIN` syntax and functionality.
+
 ### FOR clause
 
 ~~~
@@ -77,7 +79,9 @@ FOR DATES BETWEEN date and date
 FOR DATES IN date_range
 ~~~
 
-The `FOR` clause is a non ANSI SQL extention which filters data by the date it was recorded for.
+The `FOR` clause is a non ANSI SQL extension which filters data by the date it was recorded for.
+
+See [Temporality](https://mabel-dev.github.io/opteryx/SQL%20Reference/09%20Temporality/) for more information on `FOR` syntax and functionality.
 
 ### WHERE clause
 
@@ -121,6 +125,7 @@ SHOW COLUMNS
 FROM relation
 LIKE pattern
 WHERE condition
+FOR period
 ~~~
 
 ### LIKE clause
@@ -130,3 +135,7 @@ Specify a pattern in the optional `LIKE` clause to filter the results to the des
 ### WHERE clause
 
 The `WHERE` clause specifies any filters to apply to the data. This allows you to select only a subset of the data in which you are interested. Only one of `LIKE` and `WHERE` can be used in the same statement.
+
+### FOR clause
+
+The `FOR` clause specifies the date to review data for. Although this supports the full syntax as per the `SELECT` statements, only one page of data is read in order to respond to `SHOW COLUMNS` statements.

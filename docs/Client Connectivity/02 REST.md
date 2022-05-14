@@ -1,7 +1,7 @@
 # REST API
 
 !!! warning
-    This is not currently not available
+    REST API functionality is not available in any release versions.
 
 ## Submit a Query (asynchronous)
 

@@ -8,7 +8,7 @@ All queries use the internal sample NASA datasets and should work regardless of 
 
 ## Concepts
 
-Opteryx is a system for querying ad hoc data stored in files as [relations](https://en.wikipedia.org/wiki/Relation_(database)). A relation is mathematical term for a data table.
+[Opteryx](https://github.com/mabel-dev/opteryx) is a system for querying ad hoc data stored in files as [relations](https://en.wikipedia.org/wiki/Relation_(database)). A relation is mathematical term for a data table.
 
 Each relation is a named collection of rows, organized in columns, each column should be a common datatype. 
 
@@ -16,7 +16,7 @@ As an ad hoc query engine, the relations and their schema do not need to be pred
 
 ## Querying Relations
 
-To retrieve data from a relation, the relation is queried using a SQL `SELECT` statement. Basic statements are made of three parts; the list of columns to be returned and the list of relations to retreive data from, and optional clauses to shape and filter the data that is returned.
+To retrieve data from a relation, the relation is queried using a SQL `SELECT` statement. Basic statements are made of three parts; the list of columns to be returned and the list of relations to retrieve data from, and optional clauses to shape and filter the data that is returned.
 
 ~~~sql
 SELECT *
@@ -40,7 +40,7 @@ The output of the above query should be
   3	| Earth
 ~~~
 
-You can write functions, not just simple column references, in the select list. For example, you can do:
+You can write functions, not just simple column references, in the select list. For example, you can write:
 
 ~~~sql
 SELECT id, 
@@ -79,10 +79,10 @@ Mars  	|        24.7 |             2
 Pluto 	|       153.3 |             5
 ~~~
 
-The order of results are not guarnanteed and should not be relied upon. If you request the results of the below query, you might get the Mercury or Venus in either order. 
+The order of results are not guaranteed and should not be relied upon. If you request the results of the below query, you might get the Mercury or Venus in either order. 
 
 !!! note
-    The same query, of the same data in the same version of Opteryx will likely to return results in the same order, so don't expect to test result order non-derterminism by rerunning the query millions of times and looking for differences. These differences may manifest over different versions, or from subtle differences to the query statement or data.
+    The same query, of the same data in the same version of Opteryx will likely to return results in the same order, don't expect to test result order non-determinism by rerunning the query millions of times and looking for differences. These differences may manifest over different versions, or from subtle differences to the query statement or data.
 
 ~~~sql
 SELECT name,
@@ -190,9 +190,9 @@ SELECT *
          ON $satellites.planetId = $planets.id;
 ~~~
 
-The Opteryx planner currently uses a different execution strategy for these two similar queriesd the explicit `INNER JOIN` style generally executes faster.
+The Opteryx planner currently uses a different execution strategy for these two similar queries, the explicit `INNER JOIN` style generally executes faster.
 
-Now we will figure out how we can get the Mercury and Venus records back in. What we want the query to do is to scan the $planets relation and for each row to find the matching _$satellites_ row(s). If no matching row is found we want some “empty values” to be substituted for the _$satellites_ relations columns. This kind of query is called an outer join. (The joins we have seen so far are inner joins and cross joins.) The command looks like this:
+Now we will figure out how we can get the Mercury and Venus records back in. What we want the query to do is to scan the _$planets_ relation and for each row to find the matching _$satellites_ row(s). If no matching row is found we want some “empty values” to be substituted for the _$satellites_ relations columns. This kind of query is called an outer join. (The joins we have seen so far are inner joins and cross joins.) The command looks like this:
 
 ~~~sql
 SELECT *
@@ -215,11 +215,14 @@ $satellites.id | planetId | $satellites.name | ...
 (more rows and columns)
 ~~~
 
-This query is called a left outer join because the relation mentioned on the left of the join operator will have each of its rows in the output at least once, whereas the relation on the right will only have those rows output that match some row of the left relation. When outputting a left-relation row for which there is no right-relation match, empty (null) values are substituted for the right-relation columns. Note that how null values are displayed may be different between different systems.
+Using the `LEFT OUTER JOIN` will mean the relation mentioned on the left of the join operator will have each of its rows in the output at least once, whereas the relation on the right will only have those rows output that match some row of the left relation. When outputting a left-relation row for which there is no right-relation match, empty (null) values are substituted for the right-relation columns. 
+
+!!! note
+    How null values are displayed may be different between different systems, common approaches are to display an empty cell or display 'none' or 'null' in an alternate format (e.g. italics or different font color). This is not controlled by Opteryx.
 
 ## Aggregate Functions
 
-Like most query engines and databases, Opteryx supports aggregate functions. An aggregate function computes a single result from multiple input rows. For example, there are aggregates to compute the count, sum, avg (average), max (maximum) and min (minimum) over a set of rows.
+Like most query engines and databases, Opteryx supports aggregate functions. An aggregate function computes a single result from multiple input rows. For example, there are aggregates to compute the `COUNT`, `SUM`, `AVG` (average), `MAX` (maximum) and `MIN` (minimum) over a set of rows.
 
 <!---
 As an example, we can find the highest low-temperature reading anywhere with:
