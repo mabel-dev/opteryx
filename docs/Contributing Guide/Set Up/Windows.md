@@ -1,4 +1,6 @@
-# Debian/Ubuntu
+# Windows
+
+For WSL, see the Debian/Ubuntu set up guide.
 
 ## Setting Up
 

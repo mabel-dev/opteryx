@@ -13,4 +13,4 @@ Component                                                  | Licence
 [pyarrow_ops](https://github.com/TomScheffers/pyarrow_ops) | [Apache 2.0](https://github.com/TomScheffers/pyarrow_ops/blob/main/LICENSE)
 
 !!! note
-    Licence information was correct as at 2022-04-24
+    License information was correct as at 2022-04-24

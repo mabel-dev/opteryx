@@ -6,17 +6,21 @@ Opteryx offers two modes of operation, as a Python library which is available to
 
 ## Installation
 
-<!---
-For both modes of operation, the recommended installation method is via pip.
---->
+**Install from PyPI (recommended)**
 
-Install via pip (recommended)
+This will install the latest release version.
 
 ~~~bash
 pip install --upgrade opteryx
 ~~~
 
+**Install from GitHub**
 
+This will install the latest version, including prerelease versions.
+
+~~~bash
+pip install https://mabel-dev.github.io/opteryx/
+~~~
 
 <!--- 
 ### Local Usage

@@ -69,7 +69,7 @@ See the project [security policy](SECURITY.md) for information about reporting v
 
 Opteryx is in beta. Beta means different things to different people, to us, being beta means:
 
-- Functionality is stable and any updates should be to address bugs and performance
 - Core functionality has test cases to ensure stability
 - Some edge cases may have undetected bugs
 - Performance tuning may be incomplete
+- Changes are focused on bugs, performance and security

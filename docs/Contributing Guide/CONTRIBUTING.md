@@ -14,7 +14,7 @@ These tests include a regression test suite, security tests and other quality ch
 
 ## All contributions will be under Apache 2.0 Licence
 
-The project is licenced under [Apache 2.0](https://github.com/mabel-dev/opteryx/blob/main/LICENSE), your submissions will be under this same licence.
+The project is licensed under [Apache 2.0](https://github.com/mabel-dev/opteryx/blob/main/LICENSE), your submissions will be under this same licence.
 
 ## Format and Style Guidance
 
@@ -26,7 +26,7 @@ For consistent style, code should look like:
 - Variables should be in `snake_case`
 - Classes should be in `PascalCase`
 - Constants should be in `UPPER_CASE`
-- Methods with docstrings
+- Methods have docstrings
 - [Black](https://github.com/psf/black) formatted
 - Self-explanatory method, class and variable names
 - Type hints, especially in function definitions
@@ -46,11 +46,11 @@ A note about comments:
 
 Code pushes should have prefixes:  
 
-- `FIX\#nn` merges which fixing GitHub issues (#nn represents the issue number)
+- `FIX\#nn` merges which fix [GitHub issues](https://github.com/mabel-dev/opteryx/issues) (#nn represents the GitHub issue number)
+- `FEATURE\#nn` merges which implement [GitHub feature requests](https://github.com/mabel-dev/opteryx/issues) (#nn represents the GitHub issue number) 
 - `[DOCS]` improvements to documentation
-- `[CI]` merges which address CI test failures
 
-Docstrings should look like:
+Docstrings should look like this for non-trivial methods:
 ~~~python
 def sample_method(
         param_1: str,

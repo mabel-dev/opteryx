@@ -1,4 +1,4 @@
-# Debian/Ubuntu
+# MacOS
 
 ## Setting Up
 
