@@ -31,7 +31,7 @@ body {
 h1 {
     font-family: "IBM Plex Sans", Georgia, 'Times New Roman', Times, serif;
     font-weight: 500 !important;
-    font-size: 38px !important;
+    font-size: 1.6em !important;
     margin-bottom: 0.7em !important;
     color: #333 !important;
 }
@@ -39,7 +39,7 @@ h1 {
 h2 {
     font-family: "IBM Plex Sans", Georgia, 'Times New Roman', Times, serif;
     font-weight: 500 !important;
-    font-size: 30px !important;
+    font-size: 1.4em !important;
     margin-bottom: 0.7em !important;
     margin-top: 0.5em !important;
     color: #333 !important;
@@ -48,7 +48,7 @@ h2 {
 h3 {
     font-family: "IBM Plex Sans", Georgia, 'Times New Roman', Times, serif;
     font-weight: 500 !important;
-    font-size: 22px !important;
+    font-size: 1.2em !important;
     margin-bottom: 0.7em !important;
     margin-top: 0.5em !important;
     color: #333 !important;
@@ -57,7 +57,7 @@ h3 {
 h4 {
     font-family: "IBM Plex Sans", Georgia, 'Times New Roman', Times, serif;
     font-weight: 300 !important;
-    font-size: 20px !important;
+    font-size: 1em !important;
     margin-bottom: 0.7em !important;
     margin-top: 0.5em !important;
     color: #333 !important;
