@@ -307,6 +307,8 @@ STATEMENTS = [
         ("SELECT * FROM $planets LEFT JOIN $satellites ON $satellites.planetId = $planets.id ORDER BY $planets.name", 179, 28),
         # NAMED SUBQUERIES
         ("SELECT P.name FROM ( SELECT * FROM $planets ) AS P", 9, 1),
+        # UNNEST
+        ("SELECT * FROM tests.data.unnest_test CROSS JOIN UNNEST (values) AS value FOR '2000-01-01'", 15, 3),
     ]
 # fmt:on
 

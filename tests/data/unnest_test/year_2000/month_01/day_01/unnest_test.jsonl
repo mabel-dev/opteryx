@@ -1,0 +1,10 @@
+{ "id": 0, "values": [""] }
+{ "id": 1, "values": [] }
+{ "id": 2, "values": [null] }
+{ "id": 3, "values": null }
+{ "id": 4, "values": [] }
+{ "id": 5, "values": ["value", null] }
+{ "id": 6, "values": [null, "value"] }
+{ "id": 7, "values": ["value1", "value2", "value3"] }
+{ "id": 8, "values": [null, null] }
+{ "id": 9 }

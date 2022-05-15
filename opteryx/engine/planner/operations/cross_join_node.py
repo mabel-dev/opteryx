@@ -127,6 +127,9 @@ def _cross_join_unnest(left, column, alias):
 
     metadata = None
 
+    if alias is None:
+        alias = f"UNNEST({column[0]})"
+
     for left_page in left:
 
         if metadata is None:
@@ -149,7 +152,7 @@ def _cross_join_unnest(left, column, alias):
             new_column = []
             for i, value in enumerate(column_data):
                 # if the value isn't valid, we can't UNNEST it
-                if value.is_valid:
+                if value.is_valid and len(value.values) != 0:
                     indexes.extend([i] * len(value))
                     new_column.extend(value)
                 else:
