@@ -1,9 +1,5 @@
 # Getting Started
 
-<!---
-Opteryx offers two modes of operation, as a Python library which is available to issue queries to on a local system, or as a platform.
---->
-
 ## Installation
 
 **Install from PyPI (recommended)**
