@@ -33,7 +33,6 @@ from enum import Enum
 from typing import Iterable, Optional
 
 from cityhash import CityHash64
-from orjson import loads
 
 from opteryx.engine.query_statistics import QueryStatistics
 from opteryx.engine.planner.operations import BasePlanNode
