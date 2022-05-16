@@ -164,8 +164,7 @@ def _cross_join_unnest(left, column, alias):
 
             # Strings need special treatment to avoid them being coerced into a list
             # of characters
-            if isinstance(new_column[0], (pyarrow.lib.StringScalar)):
-                new_column = [[None if v is None else v.as_py() for v in new_column]]
+            new_column = [(v.as_py() if hasattr(v, "as_py") else v for v in new_column)]
 
             # Using the indexes above, repeat the rows of the source data
             new_block = left_block.take(indexes)
