@@ -151,3 +151,4 @@ tests/data/half/**
 **/profile.txt
 shelf/**
 tests/data/zoned/**
+tests/data/parquet/**

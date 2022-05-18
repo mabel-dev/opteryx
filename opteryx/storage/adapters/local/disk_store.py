@@ -22,6 +22,7 @@ class DiskStorage(BaseStorageAdapter):
         import io
 
         with open(blob_name, "rb") as blob:
+            # wrap in a BytesIO so we can close the file
             return io.BytesIO(blob.read())
 
     def get_blob_list(self, partition):

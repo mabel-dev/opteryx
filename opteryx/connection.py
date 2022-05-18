@@ -17,6 +17,7 @@ https://www.python.org/dev/peps/pep-0249/
 """
 import time
 from typing import Dict, List, Optional, Tuple, Union
+import opteryx
 
 from opteryx.engine import QueryPlanner
 from opteryx.engine.query_statistics import QueryStatistics
@@ -144,6 +145,7 @@ class Cursor:
 
         # how long have we spent planning
         self._stats.time_planning = time.time_ns() - self._stats.start_time
+
         self._results = self._query_plan.execute()
 
     @property

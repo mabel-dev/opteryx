@@ -233,71 +233,71 @@ class DatasetReaderNode(BasePlanNode):
 
         metadata = None
 
+        for partition in partitions:
 
-        import pyarrow.plasma as plasma
-        from opteryx.storage import multiprocessor
+            # we're reading this partition now
+            if len(blob_list) > 0:
+                self._statistics.partitions_read += 1
 
-        MEMORY_PER_CPU = 100000000
+            for blob_name, decoder in partition_structure[partition]["blob_list"]:
 
+                # we're going to open this blob
+                self._statistics.count_data_blobs_read += 1
 
-        with plasma.start_plasma_store(MEMORY_PER_CPU * multiprocessor.CPUS) as plasma_store:
-            plasma_channel = plasma_store[0]
+                start_read = time.time_ns()
 
+                # Read the blob from storage, it's just a stream of bytes at this point
 
-            for partition in partitions:
+                # if we have a cache set
+                if self._cache:
+                    # hash the blob name for the look up
+                    blob_hash = format(CityHash64(blob_name), "X")
+                    # try to read the cache
+                    blob_bytes = self._cache.get(blob_hash)
 
-                # we're reading this partition now
-                if len(blob_list) > 0:
-                    self._statistics.partitions_read += 1
+                    # if the item was a miss, get it from storage and add it to the cache
+                    if blob_bytes is None:
+                        self._statistics.cache_misses += 1
+                        blob_bytes = self._reader.read_blob(blob_name)
+                        self._cache.set(blob_hash, blob_bytes)
+                    else:
+                        self._statistics.cache_hits += 1
+                else:
+                    blob_bytes = self._reader.read_blob(blob_name)
 
-                def _read_and_parse(input):
-                    path, reader, parser = input
-                    return parser(reader(path), None)
+                # record the number of bytes we're reading
+                self._statistics.bytes_read_data += blob_bytes.getbuffer().nbytes
 
-                for pyarrow_blob in multiprocessor.processed_reader(
-                    _read_and_parse,
-                    [
-                        (path, self._reader.read_blob, parser)
-                        for path, parser in partition_structure[partition]["blob_list"]
-                    ],
-                    plasma_channel,
-                ):
+                # interpret the raw bytes into entries
+                pyarrow_blob = decoder(blob_bytes, self._projection)  # type:ignore
 
-                        # we're going to open this blob
-                        self._statistics.count_data_blobs_read += 1
+                self._statistics.time_data_read += time.time_ns() - start_read
 
-                        start_read = time.time_ns()
+                # we should know the number of entries
+                self._statistics.rows_read += pyarrow_blob.num_rows
+                self._statistics.bytes_processed_data += pyarrow_blob.nbytes
 
-                        # record the number of bytes we're reading
-                        # self._statistics.bytes_read_data += blob_bytes.getbuffer().nbytes
+                if metadata is None:
+                    pyarrow_blob = Columns.create_table_metadata(
+                        table=pyarrow_blob,
+                        expected_rows=expected_rows,
+                        name=self._dataset.replace("/", ".")[:-1],
+                        table_aliases=[self._alias],
+                    )
+                    metadata = Columns(pyarrow_blob)
+                else:
+                    try:
+                        pyarrow_blob = metadata.apply(pyarrow_blob)
+                    except:
 
-                        self._statistics.time_data_read += time.time_ns() - start_read
+                        self._statistics.read_errors += 1
 
-                        # we should know the number of entries
-                        self._statistics.rows_read += pyarrow_blob.num_rows
-                        self._statistics.bytes_processed_data += pyarrow_blob.nbytes
+                        import pyarrow
 
-                        if metadata is None:
-                            pyarrow_blob = Columns.create_table_metadata(
-                                table=pyarrow_blob,
-                                expected_rows=expected_rows,
-                                name=self._dataset.replace("/", ".")[:-1],
-                                table_aliases=[self._alias],
-                            )
-                            metadata = Columns(pyarrow_blob)
-                        else:
-                            try:
-                                pyarrow_blob = metadata.apply(pyarrow_blob)
-                            except:
+                        pyarrow_blob = pyarrow.Table.from_pydict(
+                            pyarrow_blob.to_pydict()
+                        )
+                        pyarrow_blob = metadata.apply(pyarrow_blob)
 
-                                self._statistics.read_errors += 1
-
-                                import pyarrow
-
-                                pyarrow_blob = pyarrow.Table.from_pydict(
-                                    pyarrow_blob.to_pydict()
-                                )
-                                pyarrow_blob = metadata.apply(pyarrow_blob)
-
-                        # yield this blob
-                        yield pyarrow_blob
+                # yield this blob
+                yield pyarrow_blob

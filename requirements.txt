@@ -5,3 +5,6 @@ cityhash
 sqloxide
 pyarrow
 python-dotenv
+
+
+psutil
