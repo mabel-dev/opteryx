@@ -1,32 +1,55 @@
-"""
-Multiprocessing is not faster in benchmarks, this is being retained but will need
-to be manually enabled.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-When a reliable use case for multiprocessing is identified it may be included into the
-automatic running of the data accesses.
 """
+Handler for reading data using Python multiprocessing. This creates multiple instances
+of the application to run to get around the Python GIL.
+
+This implementation uses Plasma, from PyArrow, as the medium for communicating data
+between processes, as putting data on queues generally results in poor performance,
+this uses queues to communicate the location of the data in Plasma.
+
+Reading from local storage on a computer with 4 physical CPUs (8 logical), the read
+performance is about 15% faster using multiprocessing. This hasn't been tested using
+remote storage, which is expected to be significantly faster due to increased IO
+wait times associated with remote storage.
+"""
+from queue import Empty
+
 import os
 import time
 import logging
-import psutil
-from queue import Empty
 import multiprocessing
+import psutil
+
+TERMINATE_SIGNAL = time.time_ns()
+MAXIMUM_SECONDS_PROCESSES_CAN_RUN: int = 60  # 60 * 60 # 1 hour
+CPUS: int = psutil.cpu_count(logical=False)
+MEMORY_PER_CPU: int = 1000 * 1000 * 100  # 100Mb per CPU
 
 
-TERMINATE_SIGNAL = -1
-MAXIMUM_SECONDS_PROCESSES_CAN_RUN = 3600
-CPUS = psutil.cpu_count(logical=False)
-
-
-def _inner_process(func, source_queue, reply_queue, channel):  # pragma: no cover
+def _inner_process(func, source_queue, reply_queue, plasma_channel):  # pragma: no cover
     """perform the threaded read"""
+
+    import pyarrow.plasma as plasma
 
     try:
         source = source_queue.get()
     except Empty:  # pragma: no cover
         source = TERMINATE_SIGNAL
 
-    plasma_client = plasma.connect(channel)
+    # the plasma client isn't able to be shared, but the plasma store is
+    # so we pass the name of the store and create a client per process.
+    plasma_client = plasma.connect(plasma_channel)
 
     while source != TERMINATE_SIGNAL:
 
@@ -52,12 +75,16 @@ def _inner_process(func, source_queue, reply_queue, channel):  # pragma: no cove
                 source = None
 
 
-def processed_reader(func, items_to_read, channel):  # pragma: no cover
-
+def processed_reader(function, items_to_read, plasma_channel):  # pragma: no cover
+    """
+    This is the wrapper around the reader function
+    """
     if os.name == "nt":  # pragma: no cover
         raise NotImplementedError(
             "Reader Multi Processing not available on Windows platforms"
         )
+
+    import pyarrow.plasma as plasma
 
     process_pool = []
 
@@ -79,7 +106,7 @@ def processed_reader(func, items_to_read, channel):  # pragma: no cover
     for count in range(slots):
         process = multiprocessing.Process(
             target=_inner_process,
-            args=(func, send_queue, reply_queue, channel),
+            args=(function, send_queue, reply_queue, plasma_channel),
         )
         process.daemon = True
         process.start()
@@ -88,7 +115,8 @@ def processed_reader(func, items_to_read, channel):  # pragma: no cover
     process_start_time = time.time()
     item_index = slots
 
-    plasma_client = plasma.connect(channel)
+    # connect to plasma
+    plasma_client = plasma.connect(plasma_channel)
 
     while (
         any({p.is_alive() for p in process_pool})
@@ -107,6 +135,7 @@ def processed_reader(func, items_to_read, channel):  # pragma: no cover
                 send_queue.put(TERMINATE_SIGNAL)
 
         except Empty:  # nosec
+            # kill long-running processes - they may have a problem
             if time.time() - process_start_time > MAXIMUM_SECONDS_PROCESSES_CAN_RUN:
                 logging.error(
                     f"Sending TERMINATE to long running multi-processed processes after {MAXIMUM_SECONDS_PROCESSES_CAN_RUN} seconds total run time"
@@ -114,6 +143,7 @@ def processed_reader(func, items_to_read, channel):  # pragma: no cover
                 break
         except GeneratorExit:
             logging.error("GENERATOR EXIT DETECTED")
+            process_start_time = 0
             break
 
     reply_queue.close()
@@ -222,7 +252,7 @@ if __name__ == "__main__":
     ]
     import pyarrow.plasma as plasma
 
-    with plasma.start_plasma_store(70000000 * CPUS) as ps:
+    with plasma.start_plasma_store(MEMORY_PER_CPU * CPUS) as ps:
         channel = ps[0]
 
         for i in range(1):
@@ -233,4 +263,4 @@ if __name__ == "__main__":
     print((time.time_ns() - start) / 1e9)
 
 ## 9666288 in ~ 6.7 seconds <- no threading
-## 9666288 in ~ 5.3 seconds <- multiprocessing
+## 9666288 in ~ 4.5 seconds <- multiprocessing

@@ -239,63 +239,65 @@ class DatasetReaderNode(BasePlanNode):
             if len(blob_list) > 0:
                 self._statistics.partitions_read += 1
 
-            def _read_and_parse(input):
-                path, reader, parser = input
-                return parser(reader(path), None)
+            for blob_name, decoder in partition_structure[partition]["blob_list"]:
 
-            import pyarrow.plasma as plasma
+                # we're going to open this blob
+                self._statistics.count_data_blobs_read += 1
 
-            MEMORY_PER_CPU = 100000000
+                start_read = time.time_ns()
 
-            with plasma.start_plasma_store(
-                MEMORY_PER_CPU * multiprocessor.CPUS
-            ) as plasma_store:
-                channel = plasma_store[0]
+                # Read the blob from storage, it's just a stream of bytes at this point
 
-                for pyarrow_blob in multiprocessor.processed_reader(
-                    _read_and_parse,
-                    [
-                        (path, self._reader.read_blob, parser)
-                        for path, parser in partition_structure[partition]["blob_list"]
-                    ],
-                    channel,
-                ):
+                # if we have a cache set
+                if self._cache:
+                    # hash the blob name for the look up
+                    blob_hash = format(CityHash64(blob_name), "X")
+                    # try to read the cache
+                    blob_bytes = self._cache.get(blob_hash)
 
-                    # we're going to open this blob
-                    self._statistics.count_data_blobs_read += 1
-
-                    start_read = time.time_ns()
-
-                    # record the number of bytes we're reading
-                    # self._statistics.bytes_read_data += blob_bytes.getbuffer().nbytes
-
-                    self._statistics.time_data_read += time.time_ns() - start_read
-
-                    # we should know the number of entries
-                    self._statistics.rows_read += pyarrow_blob.num_rows
-                    self._statistics.bytes_processed_data += pyarrow_blob.nbytes
-
-                    if metadata is None:
-                        pyarrow_blob = Columns.create_table_metadata(
-                            table=pyarrow_blob,
-                            expected_rows=expected_rows,
-                            name=self._dataset.replace("/", ".")[:-1],
-                            table_aliases=[self._alias],
-                        )
-                        metadata = Columns(pyarrow_blob)
+                    # if the item was a miss, get it from storage and add it to the cache
+                    if blob_bytes is None:
+                        self._statistics.cache_misses += 1
+                        blob_bytes = self._reader.read_blob(blob_name)
+                        self._cache.set(blob_hash, blob_bytes)
                     else:
-                        try:
-                            pyarrow_blob = metadata.apply(pyarrow_blob)
-                        except:
+                        self._statistics.cache_hits += 1
+                else:
+                    blob_bytes = self._reader.read_blob(blob_name)
 
-                            self._statistics.read_errors += 1
+                # record the number of bytes we're reading
+                self._statistics.bytes_read_data += blob_bytes.getbuffer().nbytes
 
-                            import pyarrow
+                # interpret the raw bytes into entries
+                pyarrow_blob = decoder(blob_bytes, self._projection)  # type:ignore
 
-                            pyarrow_blob = pyarrow.Table.from_pydict(
-                                pyarrow_blob.to_pydict()
-                            )
-                            pyarrow_blob = metadata.apply(pyarrow_blob)
+                self._statistics.time_data_read += time.time_ns() - start_read
 
-                    # yield this blob
-                    yield pyarrow_blob
+                # we should know the number of entries
+                self._statistics.rows_read += pyarrow_blob.num_rows
+                self._statistics.bytes_processed_data += pyarrow_blob.nbytes
+
+                if metadata is None:
+                    pyarrow_blob = Columns.create_table_metadata(
+                        table=pyarrow_blob,
+                        expected_rows=expected_rows,
+                        name=self._dataset.replace("/", ".")[:-1],
+                        table_aliases=[self._alias],
+                    )
+                    metadata = Columns(pyarrow_blob)
+                else:
+                    try:
+                        pyarrow_blob = metadata.apply(pyarrow_blob)
+                    except:
+
+                        self._statistics.read_errors += 1
+
+                        import pyarrow
+
+                        pyarrow_blob = pyarrow.Table.from_pydict(
+                            pyarrow_blob.to_pydict()
+                        )
+                        pyarrow_blob = metadata.apply(pyarrow_blob)
+
+                # yield this blob
+                yield pyarrow_blob

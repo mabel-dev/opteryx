@@ -14,7 +14,6 @@
 Helper routines for handling types between different dialects.
 """
 from enum import Enum
-from logging.config import IDENTIFIER
 
 
 class OPTERYX_TYPES(str, Enum):
