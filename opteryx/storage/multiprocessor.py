@@ -88,6 +88,11 @@ def processed_reader(function, items_to_read, plasma_channel):  # pragma: no cov
 
     process_pool = []
 
+    if len(items_to_read) < 10:
+        for item in items_to_read:
+            yield function(item)
+        return
+
     # determine the number of slots we're going to make available:
     # - less than or equal to the number of files to read
     # - one less than the physical CPUs we have
