@@ -33,7 +33,7 @@ import psutil
 
 TERMINATE_SIGNAL = time.time_ns()
 MAXIMUM_SECONDS_PROCESSES_CAN_RUN: int = 60  # 60 * 60 # 1 hour
-CPUS: int = psutil.cpu_count(logical=False)
+CPUS: int = psutil.cpu_count(logical=False)  # physical CPUs, not logical
 MEMORY_PER_CPU: int = 1000 * 1000 * 100  # 100Mb per CPU
 
 

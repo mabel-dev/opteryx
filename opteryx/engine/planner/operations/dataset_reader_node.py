@@ -42,8 +42,6 @@ from opteryx.storage.adapters import DiskStorage
 from opteryx.storage.schemes import MabelPartitionScheme
 from opteryx.utils.columns import Columns
 
-from opteryx.storage import multiprocessor
-
 
 class ExtentionType(str, Enum):
     """labels for the file extentions"""
@@ -237,12 +235,8 @@ class DatasetReaderNode(BasePlanNode):
         import pyarrow.plasma as plasma
         from opteryx.storage import multiprocessor
 
-        MEMORY_PER_CPU = 100000000
-
-
-        with plasma.start_plasma_store(MEMORY_PER_CPU * multiprocessor.CPUS) as plasma_store:
+        with plasma.start_plasma_store(multiprocessor.MEMORY_PER_CPU * multiprocessor.CPUS) as plasma_store:
             plasma_channel = plasma_store[0]
-
 
             for partition in partitions:
 
@@ -250,11 +244,17 @@ class DatasetReaderNode(BasePlanNode):
                 if len(blob_list) > 0:
                     self._statistics.partitions_read += 1
 
-                def _read_and_parse(input):
-                    path, reader, parser = input
-                    return parser(reader(path), None)
+                def _read_and_parse(config):
+                    start_read = time.time_ns()
 
-                for pyarrow_blob in multiprocessor.processed_reader(
+                    path, reader, parser = config
+                    blob_bytes = reader(path)
+                    table = parser(blob_bytes, None)
+
+                    time_to_read = time.time_ns() - start_read
+                    return time_to_read, blob_bytes.getbuffer().nbytes, table
+
+                for time_to_read, blob_bytes, pyarrow_blob in multiprocessor.processed_reader(
                     _read_and_parse,
                     [
                         (path, self._reader.read_blob, parser)
@@ -266,12 +266,9 @@ class DatasetReaderNode(BasePlanNode):
                         # we're going to open this blob
                         self._statistics.count_data_blobs_read += 1
 
-                        start_read = time.time_ns()
-
-                        # record the number of bytes we're reading
-                        # self._statistics.bytes_read_data += blob_bytes.getbuffer().nbytes
-
-                        self._statistics.time_data_read += time.time_ns() - start_read
+                        # extract stats from reader
+                        self._statistics.bytes_read_data += blob_bytes
+                        self._statistics.time_data_read += time_to_read
 
                         # we should know the number of entries
                         self._statistics.rows_read += pyarrow_blob.num_rows
