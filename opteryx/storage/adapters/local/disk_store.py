@@ -29,4 +29,4 @@ class DiskStorage(BaseStorageAdapter):
         import glob
 
         files = glob.glob(str(partition / "**"), recursive=True)
-        return [f for f in files if os.path.isfile(f)]
+        return (f for f in files if os.path.isfile(f))

@@ -29,12 +29,10 @@ import os
 import time
 import logging
 import multiprocessing
-import psutil
+
+from opteryx import config
 
 TERMINATE_SIGNAL = time.time_ns()
-MAXIMUM_SECONDS_PROCESSES_CAN_RUN: int = 60  # 60 * 60 # 1 hour
-CPUS: int = psutil.cpu_count(logical=False)  # physical CPUs, not logical
-MEMORY_PER_CPU: int = 1000 * 1000 * 100  # 100Mb per CPU
 
 
 def _inner_process(func, source_queue, reply_queue, plasma_channel):  # pragma: no cover
@@ -98,7 +96,7 @@ def processed_reader(function, items_to_read, plasma_channel):  # pragma: no cov
     # - one less than the physical CPUs we have
     # - must have at least two processes
 
-    slots = max(min(len(items_to_read), CPUS - 1), 2)
+    slots = max(min(len(items_to_read), config.MAX_SUB_PROCESSES), 2)
     reply_queue = multiprocessing.Queue(maxsize=slots)
 
     send_queue = multiprocessing.SimpleQueue()
@@ -141,9 +139,9 @@ def processed_reader(function, items_to_read, plasma_channel):  # pragma: no cov
 
         except Empty:  # nosec
             # kill long-running processes - they may have a problem
-            if time.time() - process_start_time > MAXIMUM_SECONDS_PROCESSES_CAN_RUN:
+            if time.time() - process_start_time > config.MAXIMUM_SECONDS_SUB_PROCESSES_CAN_RUN:
                 logging.error(
-                    f"Sending TERMINATE to long running multi-processed processes after {MAXIMUM_SECONDS_PROCESSES_CAN_RUN} seconds total run time"
+                    f"Sending TERMINATE to long running multi-processed processes after {config.MAXIMUM_SECONDS_SUB_PROCESSES_CAN_RUN} seconds total run time"
                 )
                 break
         except GeneratorExit:
