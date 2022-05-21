@@ -248,14 +248,18 @@ class DatasetReaderNode(BasePlanNode):
                 def _read_and_parse(config):
                     path, reader, parser = config
 
+                    # print(f"start {path}")
+
                     start_read = time.time_ns()
                     blob_bytes = reader(path)
                     table = parser(blob_bytes, None)
 
-                    time_to_read = time.time_ns() - start_read
-                    return time_to_read, blob_bytes.getbuffer().nbytes, table
+                    # print(f"read  {path} - {(time.time_ns() - start_read) / 1e9}")
 
-                for time_to_read, blob_bytes, pyarrow_blob in multiprocessor.processed_reader(
+                    time_to_read = time.time_ns() - start_read
+                    return time_to_read, blob_bytes.getbuffer().nbytes, table, path
+
+                for time_to_read, blob_bytes, pyarrow_blob, path in multiprocessor.processed_reader(
                     _read_and_parse,
                     [
                         (path, self._reader.read_blob, parser)
@@ -285,7 +289,7 @@ class DatasetReaderNode(BasePlanNode):
                             metadata = Columns(pyarrow_blob)
                         else:
                             try:
-                                pyarrow_blob = metadata.apply(pyarrow_blob)
+                                pyarrow_blob = metadata.apply(pyarrow_blob, source=path)
                             except:
 
                                 self._statistics.read_errors += 1
