@@ -141,7 +141,10 @@ def processed_reader(function, items_to_read, plasma_channel):  # pragma: no cov
 
         except Empty:  # nosec
             # kill long-running processes - they may have a problem
-            if time.time() - process_start_time > config.MAXIMUM_SECONDS_SUB_PROCESSES_CAN_RUN:
+            if (
+                time.time() - process_start_time
+                > config.MAXIMUM_SECONDS_SUB_PROCESSES_CAN_RUN
+            ):
                 logging.error(
                     f"Sending TERMINATE to long running multi-processed processes after {config.MAXIMUM_SECONDS_SUB_PROCESSES_CAN_RUN} seconds total run time"
                 )

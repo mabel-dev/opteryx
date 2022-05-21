@@ -22,15 +22,19 @@ try:
     print(f"loaded config from {_config_path}")
 except Exception as exception:  # it doesn't matter why - just use the defaults
     print(f"config file {_config_path} not used - {exception}")
-    _config = { }
+    _config = {}
 
 # The maximum input frame size for JOINs
 INTERNAL_BATCH_SIZE: int = int(_config.get("INTERNAL_BATCH_SIZE", 500))
 # The maximum number of records to create in a CROSS JOIN frame
 MAX_JOIN_SIZE: int = int(_config.get("MAX_JOIN_SIZE", 1000000))
 # The maximum number of processors to use for multi processing
-MAX_SUB_PROCESSES: int = int(_config.get("MAX_SUB_PROCESSES", psutil.cpu_count(logical=False)))
+MAX_SUB_PROCESSES: int = int(
+    _config.get("MAX_SUB_PROCESSES", psutil.cpu_count(logical=False))
+)
 # The number of bytes to allocate for each processor
 BUFFER_PER_SUB_PROCESS: int = int(_config.get("BUFFER_PER_SUB_PROCESS", 100000000))
 # The number of seconds before forcably killing processes
-MAXIMUM_SECONDS_SUB_PROCESSES_CAN_RUN: int = int(_config.get("MAXIMUM_SECONDS_SUB_PROCESSES_CAN_RUN", 3600))
+MAXIMUM_SECONDS_SUB_PROCESSES_CAN_RUN: int = int(
+    _config.get("MAXIMUM_SECONDS_SUB_PROCESSES_CAN_RUN", 3600)
+)

@@ -231,12 +231,13 @@ class DatasetReaderNode(BasePlanNode):
 
         metadata = None
 
-
         import pyarrow.plasma as plasma
         from opteryx.storage import multiprocessor
         from opteryx import config
 
-        with plasma.start_plasma_store(config.BUFFER_PER_SUB_PROCESS * config.MAX_SUB_PROCESSES) as plasma_store:
+        with plasma.start_plasma_store(
+            config.BUFFER_PER_SUB_PROCESS * config.MAX_SUB_PROCESSES
+        ) as plasma_store:
             plasma_channel = plasma_store[0]
 
             for partition in partitions:
@@ -259,7 +260,12 @@ class DatasetReaderNode(BasePlanNode):
                     time_to_read = time.time_ns() - start_read
                     return time_to_read, blob_bytes.getbuffer().nbytes, table, path
 
-                for time_to_read, blob_bytes, pyarrow_blob, path in multiprocessor.processed_reader(
+                for (
+                    time_to_read,
+                    blob_bytes,
+                    pyarrow_blob,
+                    path,
+                ) in multiprocessor.processed_reader(
                     _read_and_parse,
                     [
                         (path, self._reader.read_blob, parser)
@@ -268,38 +274,38 @@ class DatasetReaderNode(BasePlanNode):
                     plasma_channel,
                 ):
 
-                        # we're going to open this blob
-                        self._statistics.count_data_blobs_read += 1
+                    # we're going to open this blob
+                    self._statistics.count_data_blobs_read += 1
 
-                        # extract stats from reader
-                        self._statistics.bytes_read_data += blob_bytes
-                        self._statistics.time_data_read += time_to_read
+                    # extract stats from reader
+                    self._statistics.bytes_read_data += blob_bytes
+                    self._statistics.time_data_read += time_to_read
 
-                        # we should know the number of entries
-                        self._statistics.rows_read += pyarrow_blob.num_rows
-                        self._statistics.bytes_processed_data += pyarrow_blob.nbytes
+                    # we should know the number of entries
+                    self._statistics.rows_read += pyarrow_blob.num_rows
+                    self._statistics.bytes_processed_data += pyarrow_blob.nbytes
 
-                        if metadata is None:
-                            pyarrow_blob = Columns.create_table_metadata(
-                                table=pyarrow_blob,
-                                expected_rows=expected_rows,
-                                name=self._dataset.replace("/", ".")[:-1],
-                                table_aliases=[self._alias],
+                    if metadata is None:
+                        pyarrow_blob = Columns.create_table_metadata(
+                            table=pyarrow_blob,
+                            expected_rows=expected_rows,
+                            name=self._dataset.replace("/", ".")[:-1],
+                            table_aliases=[self._alias],
+                        )
+                        metadata = Columns(pyarrow_blob)
+                    else:
+                        try:
+                            pyarrow_blob = metadata.apply(pyarrow_blob, source=path)
+                        except:
+
+                            self._statistics.read_errors += 1
+
+                            import pyarrow
+
+                            pyarrow_blob = pyarrow.Table.from_pydict(
+                                pyarrow_blob.to_pydict()
                             )
-                            metadata = Columns(pyarrow_blob)
-                        else:
-                            try:
-                                pyarrow_blob = metadata.apply(pyarrow_blob, source=path)
-                            except:
+                            pyarrow_blob = metadata.apply(pyarrow_blob)
 
-                                self._statistics.read_errors += 1
-
-                                import pyarrow
-
-                                pyarrow_blob = pyarrow.Table.from_pydict(
-                                    pyarrow_blob.to_pydict()
-                                )
-                                pyarrow_blob = metadata.apply(pyarrow_blob)
-
-                        # yield this blob
-                        yield pyarrow_blob
+                    # yield this blob
+                    yield pyarrow_blob
