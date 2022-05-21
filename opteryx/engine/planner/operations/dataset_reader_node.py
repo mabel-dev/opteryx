@@ -234,8 +234,9 @@ class DatasetReaderNode(BasePlanNode):
 
         import pyarrow.plasma as plasma
         from opteryx.storage import multiprocessor
+        from opteryx import config
 
-        with plasma.start_plasma_store(multiprocessor.MEMORY_PER_CPU * multiprocessor.CPUS) as plasma_store:
+        with plasma.start_plasma_store(config.BUFFER_PER_SUB_PROCESS * config.MAX_SUB_PROCESSES) as plasma_store:
             plasma_channel = plasma_store[0]
 
             for partition in partitions:
@@ -245,9 +246,9 @@ class DatasetReaderNode(BasePlanNode):
                     self._statistics.partitions_read += 1
 
                 def _read_and_parse(config):
-                    start_read = time.time_ns()
-
                     path, reader, parser = config
+
+                    start_read = time.time_ns()
                     blob_bytes = reader(path)
                     table = parser(blob_bytes, None)
 
