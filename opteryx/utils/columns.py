@@ -99,7 +99,7 @@ class Columns:
         new_column = {"preferred_name": column, "aliases": [column], "source": ""}
         self._column_metadata[column] = new_column
 
-    def apply(self, table):
+    def apply(self, table, **additional):
         """apply this metadata to a new table"""
         column_names = [
             self.get_column_from_alias(c) or [c] for c in table.column_names
@@ -113,7 +113,7 @@ class Columns:
         table = table.rename_columns(column_names)
         return arrow.set_metadata(
             table,
-            table_metadata=self._table_metadata,
+            table_metadata={**self._table_metadata, **additional},
             column_metadata=self._column_metadata,
         )
 

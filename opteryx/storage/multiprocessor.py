@@ -53,7 +53,7 @@ def _inner_process(func, source_queue, reply_queue, plasma_channel):  # pragma: 
 
         # read the page and put it in plasma, save the id
         page = func(source)
-        page_id = plasma_client.put(page)
+        page_id = plasma_client.put(page, memcopy_threads=2)
 
         # non blocking wait - this isn't thread aware in that it can trivially have
         # race conditions, which themselves won't be fatat. We apply a simple back-off
@@ -86,7 +86,9 @@ def processed_reader(function, items_to_read, plasma_channel):  # pragma: no cov
 
     process_pool = []
 
-    if len(items_to_read) < 10:
+    # we've effectively turned this feature off
+    # https://github.com/mabel-dev/opteryx/issues/134
+    if len(items_to_read) > 0:
         for item in items_to_read:
             yield function(item)
         return
