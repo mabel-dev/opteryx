@@ -21,6 +21,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - [#119](https://github.com/mabel-dev/opteryx/issues/119) 'NoneType' object is not iterable error on `UNNEST` ([@joocer](https://github.com/joocer]))
 - [#127](https://github.com/mabel-dev/opteryx/issues/127) Reading from segments appears to only read the first segment ([@joocer](https://github.com/joocer]))
 - [#132](https://github.com/mabel-dev/opteryx/issues/132) Multiprocessing regressed Caching functionality ([@joocer](https://github.com/joocer]))
+- [#140](https://github.com/mabel-dev/opteryx/issues/140) Appears to have read both frames rather than the latest frame ([@joocer](https://github.com/joocer]))
 
 ### [0.0.1] - 2022-05-09
 

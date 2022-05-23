@@ -47,7 +47,7 @@ class MabelPartitionScheme(BasePartitionScheme):
         list_of_segments = {
             _extract_by(blob) for blob in list_of_blobs if "/by_" in blob
         }
-        chosen_segment = None
+        chosen_segment = ""
 
         # If we have multiple 'by_' segments, pick one - pick the first one until
         # we start making cost-based decisions
@@ -69,7 +69,7 @@ class MabelPartitionScheme(BasePartitionScheme):
 
         # build a list of the segments we're going to read, for example, if we have
         # data which are segmented by hour, this will be the hour=00 part
-        if chosen_segment is None:
+        if chosen_segment is "":
             segmented_folders = {""}
         else:
             segmented_folders = {

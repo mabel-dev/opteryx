@@ -309,6 +309,13 @@ STATEMENTS = [
         ("SELECT P.name FROM ( SELECT * FROM $planets ) AS P", 9, 1),
         # UNNEST
         ("SELECT * FROM tests.data.unnest_test CROSS JOIN UNNEST (values) AS value FOR '2000-01-01'", 15, 3),
+        # FRAME HANDLING
+        ("SELECT * FROM tests.data.framed FOR '2021-03-28'", 100000, 1),
+        ("SELECT * FROM tests.data.framed FOR '2021-03-29'", 100000, 1),
+        ("SELECT * FROM tests.data.framed FOR '2021-03-30'", 0, 0),
+        ("SELECT * FROM tests.data.framed FOR DATES BETWEEN '2021-03-28' AND '2021-03-29", 200000, 1),
+        ("SELECT * FROM tests.data.framed FOR DATES BETWEEN '2021-03-29' AND '2021-03-30", 100000, 1),
+        ("SELECT * FROM tests.data.framed FOR DATES BETWEEN '2021-03-28' AND '2021-03-30", 200000, 1)
     ]
 # fmt:on
 
