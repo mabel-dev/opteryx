@@ -204,7 +204,9 @@ class DatasetReaderNode(BasePlanNode):
 
             # Filter the blob list to just the frame we're interested in
             if self._partition_scheme is not None:
-                blob_list = self._partition_scheme.filter_blobs(blob_list)
+                blob_list = self._partition_scheme.filter_blobs(
+                    blob_list, self._statistics
+                )
                 self._statistics.count_blobs_ignored_frames += count_blobs_found - len(
                     blob_list
                 )
