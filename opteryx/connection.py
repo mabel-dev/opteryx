@@ -17,7 +17,6 @@ https://www.python.org/dev/peps/pep-0249/
 """
 import time
 from typing import Dict, List, Optional, Tuple, Union
-import opteryx
 
 from opteryx.engine import QueryPlanner
 from opteryx.engine.query_statistics import QueryStatistics

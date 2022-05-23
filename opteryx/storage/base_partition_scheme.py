@@ -16,3 +16,6 @@ import abc
 class BasePartitionScheme(abc.ABC):
     def __init__(self):
         pass
+
+    def filter_blobs(self, list_of_blobs, statistics):
+        raise NotImplementedError()

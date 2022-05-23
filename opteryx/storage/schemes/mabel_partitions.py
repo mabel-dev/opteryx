@@ -21,7 +21,7 @@ class MabelPartitionScheme(BasePartitionScheme):
     def partition_format(self):
         return "year_{yyyy}/month_{mm}/day_{dd}"
 
-    def _inner_filter_blobs(self, list_of_blobs):
+    def _inner_filter_blobs(self, list_of_blobs, statistics):
         def _extract_by(path):
             parts = path.split("/")
             for part in parts:
@@ -64,7 +64,7 @@ class MabelPartitionScheme(BasePartitionScheme):
             try:
                 index = lst.index(item)
                 return lst[index + 1]
-            except:
+            except IndexError:
                 return None
 
         # build a list of the segments we're going to read, for example, if we have
@@ -76,6 +76,9 @@ class MabelPartitionScheme(BasePartitionScheme):
                 _safe_get_next_element(blob.split("/"), chosen_segment)
                 for blob in list_of_blobs
             }
+
+        # count the segments we're planning to read
+        statistics.segments_scanned += len(segmented_folders)
 
         # go through the list of segments, getting the active frame for each
         for segment_folder in segmented_folders:
@@ -110,7 +113,5 @@ class MabelPartitionScheme(BasePartitionScheme):
             else:
                 yield from list_of_blobs
 
-    def filter_blobs(self, list_of_blobs):
-        l = list(self._inner_filter_blobs(list_of_blobs))
-        return l
-        # return list(self._inner_filter_blobs(list_of_blobs))License, Version 2.0 (the "License");
+    def filter_blobs(self, list_of_blobs, statistics):
+        return list(self._inner_filter_blobs(list_of_blobs, statistics))
