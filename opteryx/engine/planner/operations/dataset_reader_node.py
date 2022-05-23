@@ -247,12 +247,29 @@ class DatasetReaderNode(BasePlanNode):
                     self._statistics.partitions_read += 1
 
                 def _read_and_parse(config):
-                    path, reader, parser = config
+                    path, reader, parser, cache = config
 
                     # print(f"start {path}")
 
                     start_read = time.time_ns()
-                    blob_bytes = reader(path)
+
+                    # if we have a cache set
+                    if cache:
+                        # hash the blob name for the look up
+                        blob_hash = format(CityHash64(path), "X")
+                        # try to read the cache
+                        blob_bytes = cache.get(blob_hash)
+
+                        # if the item was a miss, get it from storage and add it to the cache
+                        if blob_bytes is None:
+                            self._statistics.cache_misses += 1
+                            blob_bytes = reader(path)
+                            cache.set(blob_hash, blob_bytes)
+                        else:
+                            self._statistics.cache_hits += 1
+                    else:
+                        blob_bytes = reader(path)
+
                     table = parser(blob_bytes, None)
 
                     # print(f"read  {path} - {(time.time_ns() - start_read) / 1e9}")
@@ -268,7 +285,7 @@ class DatasetReaderNode(BasePlanNode):
                 ) in multiprocessor.processed_reader(
                     _read_and_parse,
                     [
-                        (path, self._reader.read_blob, parser)
+                        (path, self._reader.read_blob, parser, self._cache)
                         for path, parser in partition_structure[partition]["blob_list"]
                     ],
                     plasma_channel,
