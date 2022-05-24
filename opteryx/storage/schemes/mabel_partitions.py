@@ -21,16 +21,19 @@ def _safe_get_next_element(lst, item):
     except IndexError:
         return None
 
+
 def _extract_as_at(path):
     for part in path.split("/"):
         if part.startswith("as_at_"):
             return part
     return ""
 
+
 def _extract_by(path):
     for part in path.split("/"):
         if part.startswith("by_"):
             return part
+
 
 _is_complete = lambda blobs, as_at: any(
     blob for blob in blobs if as_at + "/frame.complete" in blob
@@ -39,10 +42,12 @@ _is_invalid = lambda blobs, as_at: any(
     blob for blob in blobs if (as_at + "/frame.ignore" in blob)
 )
 
+
 class MabelPartitionScheme(BasePartitionScheme):
     """
     Handle reading data using the Mabel partition scheme.
     """
+
     def partition_format(self):
         return "year_{yyyy}/month_{mm}/day_{dd}"
 
