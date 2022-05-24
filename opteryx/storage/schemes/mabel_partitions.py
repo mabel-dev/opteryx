@@ -13,34 +13,40 @@
 from opteryx.storage import BasePartitionScheme
 
 
+def _safe_get_next_element(lst, item):
+    """get the element from a list which follows a given element"""
+    try:
+        index = lst.index(item)
+        return lst[index + 1]
+    except IndexError:
+        return None
+
+def _extract_as_at(path):
+    for part in path.split("/"):
+        if part.startswith("as_at_"):
+            return part
+    return ""
+
+def _extract_by(path):
+    for part in path.split("/"):
+        if part.startswith("by_"):
+            return part
+
+_is_complete = lambda blobs, as_at: any(
+    blob for blob in blobs if as_at + "/frame.complete" in blob
+)
+_is_invalid = lambda blobs, as_at: any(
+    blob for blob in blobs if (as_at + "/frame.ignore" in blob)
+)
+
 class MabelPartitionScheme(BasePartitionScheme):
     """
     Handle reading data using the Mabel partition scheme.
     """
-
     def partition_format(self):
         return "year_{yyyy}/month_{mm}/day_{dd}"
 
     def _inner_filter_blobs(self, list_of_blobs, statistics):
-        def _extract_by(path):
-            parts = path.split("/")
-            for part in parts:
-                if part.startswith("by_"):
-                    return part
-
-        def _extract_as_at(path):
-            parts = path.split("/")
-            for part in parts:
-                if part.startswith("as_at_"):
-                    return part
-            return ""
-
-        is_complete = lambda blobs, as_at: any(
-            blob for blob in blobs if as_at + "/frame.complete" in blob
-        )
-        is_invalid = lambda blobs, as_at: any(
-            blob for blob in blobs if (as_at + "/frame.ignore" in blob)
-        )
 
         # The segments are stored in folders with the prefix 'by_', as in,
         # segments **by** field name
@@ -59,17 +65,9 @@ class MabelPartitionScheme(BasePartitionScheme):
                 blob for blob in list_of_blobs if f"/{chosen_segment}/" in blob
             ]
 
-        def _safe_get_next_element(lst, item):
-            """get the element from a list which follows a given element"""
-            try:
-                index = lst.index(item)
-                return lst[index + 1]
-            except IndexError:
-                return None
-
         # build a list of the segments we're going to read, for example, if we have
         # data which are segmented by hour, this will be the hour=00 part
-        if chosen_segment is "":
+        if chosen_segment == "":
             segmented_folders = {""}
         else:
             segmented_folders = {
@@ -99,7 +97,7 @@ class MabelPartitionScheme(BasePartitionScheme):
                 as_ats = sorted(as_ats)
                 as_at = as_ats.pop()
 
-                while not is_complete(segment_blobs, as_at) or is_invalid(
+                while not _is_complete(segment_blobs, as_at) or _is_invalid(
                     segment_blobs, as_at
                 ):
                     if len(as_ats) > 0:
