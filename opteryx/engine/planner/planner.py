@@ -357,7 +357,8 @@ class QueryPlanner(object):
             # if we have args, we're probably calling UNNEST
             if "args" in join["relation"]["Table"]:
                 args = [
-                    self._build_dnf_filters(a) for a in join["relation"]["Table"]["args"]
+                    self._build_dnf_filters(a)
+                    for a in join["relation"]["Table"]["args"]
                 ]
                 # CROSS JOINT _ UNNEST() needs specifically handling because the UNNEST is
                 # probably a function of the data in the left table, which means we can't
