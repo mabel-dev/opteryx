@@ -269,7 +269,7 @@ class QueryPlanner(object):
         def _safe_get(l, i):
             try:
                 return l[i]
-            except:
+            except IndexError:
                 return None
 
         try:
@@ -332,38 +332,40 @@ class QueryPlanner(object):
 
     def _extract_joins(self, ast):
         try:
-            joins = ast[0]["Query"]["body"]["Select"]["from"][0]["joins"][0]
+            joins = ast[0]["Query"]["body"]["Select"]["from"][0]["joins"]
         except IndexError:
             return None
-        using = None
-        join_on = None
-        alias = None
-        mode = joins["join_operator"]
-        if isinstance(mode, dict):
-            mode = list(joins["join_operator"].keys())[0]
-            if "Using" in joins["join_operator"][mode]:
-                using = [
-                    v["value"] for v in joins["join_operator"][mode].get("Using", [])
+
+        for join in joins:
+            using = None
+            join_on = None
+            alias = None
+            mode = join["join_operator"]
+            if isinstance(mode, dict):
+                mode = list(join["join_operator"].keys())[0]
+                if "Using" in join["join_operator"][mode]:
+                    using = [
+                        v["value"] for v in join["join_operator"][mode].get("Using", [])
+                    ]
+                if "On" in join["join_operator"][mode]:
+                    join_on = self._build_dnf_filters(join["join_operator"][mode]["On"])
+            if join["relation"]["Table"]["alias"] is not None:
+                alias = join["relation"]["Table"]["alias"]["name"]["value"]
+            dataset = ".".join(
+                [part["value"] for part in join["relation"]["Table"]["name"]]
+            )
+            # if we have args, we're probably calling UNNEST
+            if "args" in join["relation"]["Table"]:
+                args = [
+                    self._build_dnf_filters(a) for a in join["relation"]["Table"]["args"]
                 ]
-            if "On" in joins["join_operator"][mode]:
-                join_on = self._build_dnf_filters(joins["join_operator"][mode]["On"])
-        if joins["relation"]["Table"]["alias"] is not None:
-            alias = joins["relation"]["Table"]["alias"]["name"]["value"]
-        dataset = ".".join(
-            [part["value"] for part in joins["relation"]["Table"]["name"]]
-        )
-        # if we have args, we're probably calling UNNEST
-        if "args" in joins["relation"]["Table"]:
-            args = [
-                self._build_dnf_filters(a) for a in joins["relation"]["Table"]["args"]
-            ]
-            # CROSS JOINT _ UNNEST() needs specifically handling because the UNNEST is
-            # probably a function of the data in the left table, which means we can't
-            # use the table join code
-            if len(args) > 0 and dataset == "UNNEST" and mode == "CrossJoin":
-                mode = "CrossJoinUnnest"
-                dataset = (dataset, args)
-        return (mode, (alias, dataset), join_on, using)
+                # CROSS JOINT _ UNNEST() needs specifically handling because the UNNEST is
+                # probably a function of the data in the left table, which means we can't
+                # use the table join code
+                if len(args) > 0 and dataset == "UNNEST" and mode == "CrossJoin":
+                    mode = "CrossJoinUnnest"
+                    dataset = (dataset, args)
+            yield (mode, (alias, dataset), join_on, using)
 
     def _extract_projections(self, ast):
         """
@@ -644,53 +646,54 @@ class QueryPlanner(object):
         )
         last_node = "from"
 
-        _join = self._extract_joins(ast)
-        if _join or len(_relations) == 2:
-            if len(_relations) == 2:
-                # If there's no stated JOIN but the query has two relations, we
-                # use a CROSS JOIN
-                _join = ("CrossJoin", _relations[1], None, None)
-            if _join[0] == "CrossJoinUnnest":
-                # If we're doing a CROSS JOIN UNNEST, the right table is an UNNEST function
-                right = _join[1]
-            else:
-                # Otherwise, the right table needs to come from the Reader
-                right = DatasetReaderNode(
-                    statistics,
-                    dataset=_join[1],
-                    reader=self._reader,
-                    cache=self._cache,
-                    partition_scheme=self._partition_scheme,
-                    start_date=self._start_date,
-                    end_date=self._end_date,
+        _joins = list(self._extract_joins(ast))
+        if len(_joins) == 0 and len(_relations) == 2:
+            # If there's no stated JOIN but the query has two relations, we
+            # use a CROSS JOIN
+            _joins = [("CrossJoin", _relations[1], None, None)]
+        for join_id, _join in enumerate(_joins):
+            if _join or len(_relations) == 2:
+                if _join[0] == "CrossJoinUnnest":
+                    # If we're doing a CROSS JOIN UNNEST, the right table is an UNNEST function
+                    right = _join[1]
+                else:
+                    # Otherwise, the right table needs to come from the Reader
+                    right = DatasetReaderNode(
+                        statistics,
+                        dataset=_join[1],
+                        reader=self._reader,
+                        cache=self._cache,
+                        partition_scheme=self._partition_scheme,
+                        start_date=self._start_date,
+                        end_date=self._end_date,
+                    )
+
+                # map join types to their implementations
+                join_nodes = {
+                    "CrossJoin": CrossJoinNode,
+                    "CrossJoinUnnest": CrossJoinNode,
+                    "FullOuter": OuterJoinNode,
+                    "Inner": InnerJoinNode,
+                    "LeftOuter": OuterJoinNode,
+                    "RightOuter": OuterJoinNode,
+                }
+
+                join_node = join_nodes.get(_join[0])
+                if join_node is None:
+                    raise SqlError(f"Join type not supported - `{_join[0]}`")
+
+                self.add_operator(
+                    f"join-{join_id}",
+                    join_node(
+                        statistics,
+                        right_table=right,
+                        join_type=_join[0],
+                        join_on=_join[2],
+                        join_using=_join[3],
+                    ),
                 )
-
-            # map join types to their implementations
-            join_nodes = {
-                "CrossJoin": CrossJoinNode,
-                "CrossJoinUnnest": CrossJoinNode,
-                "FullOuter": OuterJoinNode,
-                "Inner": InnerJoinNode,
-                "LeftOuter": OuterJoinNode,
-                "RightOuter": OuterJoinNode,
-            }
-
-            join_node = join_nodes.get(_join[0])
-            if join_node is None:
-                raise SqlError(f"Join type not supported - `{_join[0]}`")
-
-            self.add_operator(
-                "join",
-                join_node(
-                    statistics,
-                    right_table=right,
-                    join_type=_join[0],
-                    join_on=_join[2],
-                    join_using=_join[3],
-                ),
-            )
-            self.link_operators(last_node, "join")
-            last_node = "join"
+                self.link_operators(last_node, f"join-{join_id}")
+                last_node = f"join-{join_id}"
 
         _projection = self._extract_projections(ast)
         if any(["function" in a for a in _projection]):
