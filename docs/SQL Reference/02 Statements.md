@@ -73,10 +73,10 @@ See [Joins](https://mabel-dev.github.io/opteryx/SQL%20Reference/08%20Joins/) for
 FOR date
 ~~~
 ~~~
-FOR DATES BETWEEN date and date
+FOR DATES BETWEEN start AND end
 ~~~
 ~~~
-FOR DATES IN date_range
+FOR DATES IN range
 ~~~
 
 The `FOR` clause is a non ANSI SQL extension which filters data by the date it was recorded for.
@@ -139,3 +139,5 @@ The `WHERE` clause specifies any filters to apply to the data. This allows you t
 ### FOR clause
 
 The `FOR` clause specifies the date to review data for. Although this supports the full syntax as per the `SELECT` statements, only one page of data is read in order to respond to `SHOW COLUMNS` statements.
+
+See [Temporality](https://mabel-dev.github.io/opteryx/SQL%20Reference/09%20Temporality/) for more information on `FOR` syntax and functionality.
