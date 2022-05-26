@@ -17,12 +17,16 @@ Date values in `FOR` clauses must either be in 'YYYY-MM-DD' format or a recognis
 - `TODAY`
 - `YESTERDAY`
 
-for example: `FOR DATES BETWEEN '2000-01-01' AND TODAY`
+for example: `FOR DATES BETWEEN '2000-01-01' AND TODAY` or `FOR TODAY`
 
-Supported range values are:
+Date Values in `FOR IN` clauses must use month range values:
+
+Supported range values with `FOR IN` are:
 
 - `THIS_MONTH` = since the first of the current month
 - `LAST_MONTH` = the previous calendar month (also `PREVIOUS_MONTH`)
+
+for example : `FOR DATES IN THIS MONTH`
 
 !!! note
     If no temporal clause is provided, `FOR TODAY` is assumed.
