@@ -62,3 +62,7 @@ h4 {
     margin-top: 0.5em !important;
     color: #333 !important;
 }
+
+.admonition {
+    font-size: 1.25em !important;
+}
