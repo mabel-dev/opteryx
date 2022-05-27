@@ -54,7 +54,6 @@ class Columns:
                 local_preferences[index] = f"{source_alias}.{preferences[index]}"
         return local_preferences
 
-
     @property
     def preferred_column_names(self):
         """
@@ -77,7 +76,9 @@ class Columns:
                 # get the indices of the colliding columns
                 instances = [i for i, x in enumerate(preferences) if x == name]
                 # try renaming collisions to table_alias.column_name/alias
-                preferences = self._rename_columns_to_table_alias(preferences, _column_metadata, instances)
+                preferences = self._rename_columns_to_table_alias(
+                    preferences, _column_metadata, instances
+                )
 
         return list(zip(list(columns), list(preferences)))
 
