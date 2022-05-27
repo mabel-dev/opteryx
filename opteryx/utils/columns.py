@@ -24,6 +24,7 @@ The selection operator should focus on the selection not on working out which co
 is actually being referred to.
 """
 import os
+from threading import local
 from opteryx.exceptions import SqlError
 from opteryx.utils import arrow
 
@@ -43,22 +44,41 @@ class Columns:
         }.copy()
         return retval
 
+    def _rename_columns_to_table_alias(self, preferences, column_metadata, indicies):
+        local_preferences = preferences.copy()
+        keys = list(column_metadata.keys())
+        for index in indicies:
+            column = column_metadata[keys[index]]
+            if column.get("source_aliases"):
+                source_alias = column["source_aliases"][0]
+                local_preferences[index] = f"{source_alias}.{preferences[index]}"
+        return local_preferences
+
+
     @property
     def preferred_column_names(self):
         """
-        get a list of preferred column names for the table - in table column order
+        Get a list of preferred column names for the table - in table column order
+
+        Preferences are in this order:
+        - column_name/alias
+        - table_alias.column_name/alias
         """
         _column_metadata = self._column_metadata.copy()
+        # we start by collecting the column_name/alias for each column
         columns, preferences = zip(
             *[(c, v.get("preferred_name", None)) for c, v in _column_metadata.items()]
         )
         preferences = list(preferences)
+        # go through each of the collected names, if there's collisions we need to work
+        # out how to deconflict
         for name in preferences:
-            instances = [i for i, x in enumerate(preferences) if x == name]
-            if len(instances) > 1:
-                for instance in instances:
-                    fqn = _column_metadata[columns[instance]]["source"] + "." + name
-                    preferences[instance] = fqn
+            if preferences.count(name) > 1:
+                # get the indices of the colliding columns
+                instances = [i for i, x in enumerate(preferences) if x == name]
+                # try renaming collisions to table_alias.column_name/alias
+                preferences = self._rename_columns_to_table_alias(preferences, _column_metadata, instances)
+
         return list(zip(list(columns), list(preferences)))
 
     def get_preferred_name(self, column):
@@ -169,6 +189,7 @@ class Columns:
             column_metadata[new_column] = {"aliases": [column]}
             # record the source table
             column_metadata[new_column]["source"] = name
+            column_metadata[new_column]["source_aliases"] = table_aliases
             # the column prefers it's current name
             column_metadata[new_column]["preferred_name"] = column
             # for every alias the table has, the column is also know by that
