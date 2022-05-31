@@ -387,8 +387,11 @@ class QueryPlanner(object):
             if "ExprWithAlias" in attribute:
                 function = attribute["ExprWithAlias"]["expr"]
                 alias = [attribute["ExprWithAlias"]["alias"]["value"]]
+            if "QualifiedWildcard" in attribute:
+                return {"*": attribute["QualifiedWildcard"][0]["value"]}
 
             if function:
+
                 if "Identifier" in function:
                     return {
                         "identifier": function["Identifier"]["value"],

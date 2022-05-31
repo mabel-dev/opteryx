@@ -44,6 +44,14 @@ class Columns:
         }.copy()
         return retval
 
+    def get_columns_from_source(self, source):
+        """find all of the columns from a given source table"""
+        return [
+            col
+            for col, attr in self._column_metadata.items()
+            if (source in attr.get("source_aliases"))
+        ]
+
     def _rename_columns_to_table_alias(self, preferences, column_metadata, indicies):
         local_preferences = preferences.copy()
         keys = list(column_metadata.keys())
@@ -173,6 +181,7 @@ class Columns:
 
         if not isinstance(table_aliases, list):
             table_aliases = [table_aliases]
+        table_aliases.append(name)
 
         # create the table information we're going to track
         table_metadata = {

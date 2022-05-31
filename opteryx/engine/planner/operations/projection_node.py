@@ -45,7 +45,12 @@ class ProjectionNode(BasePlanNode):
         projection = config.get("projection", {"*": "*"})
         # print("projection:", projection)
         for attribute in projection:
-            if "aggregate" in attribute:
+            if projection == {"*": "*"}:
+                self._projection[attribute] = None
+            elif "*" in attribute:
+                # qualified wildcard, e.g. table.*
+                self._projection[(attribute["*"],)] = None
+            elif "aggregate" in attribute:
                 self._projection[
                     f"{attribute['aggregate']}({','.join([replace_wildcards(a) for a in attribute['args']])})"
                 ] = attribute["alias"]
@@ -94,7 +99,13 @@ class ProjectionNode(BasePlanNode):
                 projection = []
                 columns = Columns(page)
                 for key in self._projection:
-                    projection.append(columns.get_column_from_alias(key, only_one=True))
+                    if isinstance(key, tuple):
+                        relation = key[0]
+                        projection.extend(columns.get_columns_from_source(relation))
+                    else:
+                        projection.append(
+                            columns.get_column_from_alias(key, only_one=True)
+                        )
 
             page = page.select(projection)  # type:ignore
 

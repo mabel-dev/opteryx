@@ -38,6 +38,8 @@ STATEMENTS = [
         ("SELECT   *   FROM   $satellites", 177, 8),
         ("SELECT\n\t*\n  FROM\n\t$satellites", 177, 8),
         ("\n\n\n\tSELECT * FROM $satellites", 177, 8),
+        ("SELECT $satellites.* FROM $satellites", 177, 8),
+        ("SELECT s.* FROM $satellites AS s", 177, 8),
         ("SELECT * FROM $satellites WHERE name = 'Calypso'", 1, 8),
         ("SELECT * FROM $satellites WHERE (name = 'Calypso')", 1, 8),
         ("SELECT * FROM $satellites WHERE NOT name = 'Calypso'", 176, 8),
@@ -290,6 +292,15 @@ STATEMENTS = [
 
         ("SELECT a.id, b.id, c.id FROM $planets AS a INNER JOIN $planets AS b ON a.id = b.id INNER JOIN $planets AS c ON c.id = b.id", 9, 3),
         ("SELECT * FROM $planets AS a INNER JOIN $planets AS b ON a.id = b.id RIGHT OUTER JOIN $satellites AS c ON c.planetId = b.id", 177, 48),
+
+        ("SELECT $planets.* FROM $satellites INNER JOIN $planets USING (id)", 9, 20),
+        ("SELECT $satellites.* FROM $satellites INNER JOIN $planets USING (id)", 9, 8),
+        ("SELECT $planets.* FROM $satellites INNER JOIN $planets AS p USING (id)", 9, 20),
+        ("SELECT p.* FROM $satellites INNER JOIN $planets AS p USING (id)", 9, 20),
+        ("SELECT s.* FROM $satellites AS s INNER JOIN $planets USING (id)", 9, 8),
+        ("SELECT $satellites.* FROM $satellites AS s INNER JOIN $planets USING (id)", 9, 8),
+        ("SELECT $satellites.* FROM $satellites AS s INNER JOIN $planets AS p USING (id)", 9, 8),
+        ("SELECT s.* FROM $satellites AS s INNER JOIN $planets AS p USING (id)", 9, 8),
 
         # These are queries which have been found to return the wrong result or not run correctly
         # FILTERING ON FUNCTIONS
