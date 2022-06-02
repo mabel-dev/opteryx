@@ -28,7 +28,6 @@ TIMEDELTA_REGEX = (
 )
 
 TIMEDELTA_PATTERN = re.compile(TIMEDELTA_REGEX, re.IGNORECASE)
-print(TIMEDELTA_REGEX)
 
 
 def add_months(date, months):
