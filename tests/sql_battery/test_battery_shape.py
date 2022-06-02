@@ -216,6 +216,13 @@ STATEMENTS = [
 
         ("SELECT * FROM UNNEST(('foo', 'bar', 'baz', 'qux', 'corge', 'garply', 'waldo', 'fred')) AS element", 8, 1),
         ("SELECT * FROM UNNEST(('foo', 'bar', 'baz', 'qux', 'corge', 'garply', 'waldo', 'fred')) AS element WHERE element LIKE '%e%'", 2, 1),
+        ("SELECT * FROM UNNEST(('foo', 'bar', 'baz', 'qux', 'corge', 'garply', 'waldo', 'fred'))", 8, 1),
+        ("SELECT * FROM UNNEST(('foo', 'bar', 'baz', 'qux', 'corge', 'garply', 'waldo', 'fred')) WHERE unnest LIKE '%e%'", 2, 1),
+
+        ("SELECT * FROM generate_series(2,11,2)", 5, 1),
+        ("SELECT * FROM generate_series(2,11,2) AS nums", 5, 1),
+        ("SELECT * FROM generate_series(2,11,2) WHERE generate_series > 5", 3, 1),
+        ("SELECT * FROM generate_series(2,11,2) AS nums WHERE nums < 5", 2, 1),
 
         ("SELECT * FROM tests.data.dated FOR '2020-02-03'", 25, 8),
         ("SELECT * FROM tests.data.dated FOR '2020-02-04'", 25, 8),

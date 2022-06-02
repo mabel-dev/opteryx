@@ -279,18 +279,17 @@ class QueryPlanner(object):
 
         for relation in relations:
             if "Table" in relation["relation"]:
-                if (
-                    relation["relation"]["Table"]["name"][0]["value"].upper()
-                    == "UNNEST"
-                ):
-                    alias = relation["relation"]["Table"]["alias"]["name"]["value"]
-                    values = self._extract_value(
-                        relation["relation"]["Table"]["args"][0]["Unnamed"]["Expr"]
-                    )
-                    body = []
-                    for value in values[0]:
-                        body.append({alias: value})
-                    yield (alias, body)  # <- a literal table
+                # is the relation a builder function
+                if len(relation["relation"]["Table"]["args"]) > 0:
+                    function = relation["relation"]["Table"]["name"][0]["value"].lower()
+                    alias = function
+                    if relation["relation"]["Table"]["alias"] is not None:
+                        alias = relation["relation"]["Table"]["alias"]["name"]["value"]
+                    args = [
+                        self._build_dnf_filters(a["Unnamed"])
+                        for a in relation["relation"]["Table"]["args"]
+                    ]
+                    yield (alias, {"function": function, "args": args})  # <- function
                 else:
                     alias = None
                     if relation["relation"]["Table"]["alias"] is not None:
