@@ -33,7 +33,6 @@ from enum import Enum
 from typing import Iterable, Optional
 from cityhash import CityHash64
 
-import numpy
 import time
 
 from opteryx.engine.attribute_types import TOKEN_TYPES
@@ -55,7 +54,11 @@ class ExtentionType(str, Enum):
 
 do_nothing = lambda x, y: x
 
+
+
 def _generate_series(alias, *args):
+
+    from opteryx.utils import intervals, dates
 
     arg_len = len(args)
     arg_vals = [i[0] for i in args]
@@ -65,13 +68,12 @@ def _generate_series(alias, *args):
     if first_arg_type == TOKEN_TYPES.NUMERIC:
         if arg_len not in (1,2,3):
             raise SqlError("generate_series for numbers takes 1,2 or 3 parameters.")
-        return [{alias: i}  for i in numpy.arange(*arg_vals)]
+        return [{alias: i}  for i in intervals.generate_range(*arg_vals)]
 
     if first_arg_type == TOKEN_TYPES.TIMESTAMP:
         if arg_len != 3:
             raise SqlError("generate_series for dates needs start, end, and interval parameters")
-        interval = arg_vals[2]
-        raise NotImplementedError("generate_series with dates is not implemented")
+        return [{alias: i} for i in dates.date_range(*arg_vals)]
         
 def _unnest(alias, *args):
     """ unnest converts an list into rows """
