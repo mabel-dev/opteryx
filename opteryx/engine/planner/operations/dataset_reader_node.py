@@ -28,15 +28,17 @@ PARALLELIZE READING:
 - As one blob is read, the next is immediately cached for reading
 """
 import datetime
-import time
+
 from enum import Enum
 from typing import Iterable, Optional
-
 from cityhash import CityHash64
 
+import time
+
+from opteryx.engine.attribute_types import TOKEN_TYPES
 from opteryx.engine.query_statistics import QueryStatistics
 from opteryx.engine.planner.operations import BasePlanNode
-from opteryx.exceptions import DatabaseError
+from opteryx.exceptions import DatabaseError, SqlError
 from opteryx.storage import file_decoders
 from opteryx.storage.adapters import DiskStorage
 from opteryx.storage.schemes import MabelPartitionScheme
@@ -52,6 +54,34 @@ class ExtentionType(str, Enum):
 
 do_nothing = lambda x, y: x
 
+
+def _generate_series(alias, *args):
+
+    from opteryx.utils import intervals, dates
+
+    arg_len = len(args)
+    arg_vals = [i[0] for i in args]
+    first_arg_type = args[0][1]
+
+    # if the parameters are numbers, generate series is an alias for range
+    if first_arg_type == TOKEN_TYPES.NUMERIC:
+        if arg_len not in (1, 2, 3):
+            raise SqlError("generate_series for numbers takes 1,2 or 3 parameters.")
+        return [{alias: i} for i in intervals.generate_range(*arg_vals)]
+
+    if first_arg_type == TOKEN_TYPES.TIMESTAMP:
+        if arg_len != 3:
+            raise SqlError(
+                "generate_series for dates needs start, end, and interval parameters"
+            )
+        return [{alias: i} for i in dates.date_range(*arg_vals)]
+
+
+def _unnest(alias, *args):
+    """unnest converts an list into rows"""
+    return [{alias: value} for value in args[0][0]]
+
+
 KNOWN_EXTENSIONS = {
     "complete": (do_nothing, ExtentionType.CONTROL),
     "ignore": (do_nothing, ExtentionType.CONTROL),
@@ -60,6 +90,11 @@ KNOWN_EXTENSIONS = {
     "orc": (file_decoders.orc_decoder, ExtentionType.DATA),
     "parquet": (file_decoders.parquet_decoder, ExtentionType.DATA),
     "zstd": (file_decoders.zstd_decoder, ExtentionType.DATA),  # jsonl/zstd
+}
+
+FUNCTIONS = {
+    "generate_series": _generate_series,
+    "unnest": _unnest,
 }
 
 
@@ -87,6 +122,25 @@ def _get_sample_dataset(dataset, alias):
     raise DatabaseError(f"Dataset not found `{dataset}`.")
 
 
+def _function_dataset(definition, alias):
+
+    function = definition.get("function", "")
+    args = definition.get("args", [])
+
+    data = FUNCTIONS[function](alias, *args)
+
+    import pyarrow
+
+    table = pyarrow.Table.from_pylist(data)
+    table = Columns.create_table_metadata(
+        table=table,
+        expected_rows=table.num_rows,
+        name=function,
+        table_aliases=[alias],
+    )
+    return table
+
+
 class DatasetReaderNode(BasePlanNode):
     def __init__(self, statistics: QueryStatistics, **config):
         """
@@ -97,12 +151,12 @@ class DatasetReaderNode(BasePlanNode):
 
         from opteryx.engine.planner.planner import QueryPlanner
 
-        today = datetime.date.today()
+        today = datetime.datetime.utcnow().date()
 
         self._statistics = statistics
         self._alias, self._dataset = config.get("dataset", [None, None])
 
-        if isinstance(self._dataset, (list, QueryPlanner)):
+        if isinstance(self._dataset, (list, QueryPlanner, dict)):
             return
 
         self._dataset = self._dataset.replace(".", "/") + "/"
@@ -160,6 +214,11 @@ class DatasetReaderNode(BasePlanNode):
                 table = metadata.apply(table)
                 yield table
 
+            return
+
+        # functions
+        if isinstance(self._dataset, dict):
+            yield _function_dataset(self._dataset, self._alias)
             return
 
         # sample datasets

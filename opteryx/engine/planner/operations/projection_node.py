@@ -40,7 +40,7 @@ class ProjectionNode(BasePlanNode):
         """
         Attribute Projection, remove unwanted columns and performs column renames.
         """
-        self._projection = {}
+        self._projection: dict = {}
 
         projection = config.get("projection", {"*": "*"})
         # print("projection:", projection)

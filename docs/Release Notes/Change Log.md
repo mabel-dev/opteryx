@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - [#72](https://github.com/mabel-dev/opteryx/issues/72) Configuration is now read from `opteryx.yaml` rather than the environment. ([@joocer](https://github.com/joocer]))
 - [#139](https://github.com/mabel-dev/opteryx/issues/139) Gather statistics on planning reading of segements. ([@joocer](https://github.com/joocer]))
 - [#151](https://github.com/mabel-dev/opteryx/issues/151) Implement `SELECT table.*`. ([@joocer](https://github.com/joocer]))
+- [#137](https://github.com/mabel-dev/opteryx/issues/137) `GENERATE_SERIES` function. ([@joocer](https://github.com/joocer]))
 
 #### Fixed
 

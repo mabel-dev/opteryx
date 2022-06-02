@@ -12,8 +12,93 @@
 """
 Date Utilities
 """
-from datetime import date, datetime, time
+import datetime
 from functools import lru_cache
+from typing import Union
+import re
+
+TIMEDELTA_REGEX = (
+    r"((?P<years>\d+)\s?(?:ys?|yrs?|years?))?\s*"
+    r"((?P<months>\d+)\s?(?:mons?|mths?|months?))?\s*"
+    r"((?P<weeks>\d+)\s?(?:w|wks?|weeks?))?\s*"
+    r"((?P<days>\d+)\s?(?:d|days?))?\s*"
+    r"((?P<hours>\d+)\s?(?:h|hrs?|hours?))?\s*"
+    r"((?P<minutes>\d+)\s?(?:m|mins?|minutes?))?\s*"
+    r"((?P<seconds>\d+)\s?(?:s|secs?|seconds?))?\s*"
+)
+
+TIMEDELTA_PATTERN = re.compile(TIMEDELTA_REGEX, re.IGNORECASE)
+
+
+def add_months(date, months):
+    """
+    Adding months is non-trivial, this makes one key assumption:
+    > If the 'current' date is the end of the month, when we add or subtract months
+    > we want to land at the end of that month. For example 28-FEB + 1 month should
+    > be 31-MAR not 28-MAR.
+    If this assumption isn't true - you'll need a different a different algo.
+    """
+    new_month = (((date.month - 1) + months) % 12) + 1
+    new_year = int(date.year + (((date.month - 1) + months) / 12))
+    new_day = date.day
+
+    # if adding one day puts us in a new month, jump to the end of the month
+    if (date + datetime.timedelta(days=1)).month != date.month:
+        new_day = 31
+
+    # not all months have 31 days so walk backwards to the end of the month
+    while new_day > 0:
+        try:
+            new_date = datetime.datetime(year=new_year, month=new_month, day=new_day)
+            return new_date
+        except ValueError:
+            new_day -= 1
+
+    # we should never be here - but just return a value
+    return None
+
+
+def add_interval(
+    current_date: Union[datetime.date, datetime.datetime], interval: str
+) -> Union[datetime.date, datetime.datetime]:
+    """
+    Parses a human readable timedelta (3d5h19m) into a datetime.timedelta.
+    """
+    match = TIMEDELTA_PATTERN.match(interval)
+    if match:
+        parts = {k: int(v) for k, v in match.groupdict().items() if v}
+        print(parts)
+        # time delta doesn't include weeks, months or years
+        if "weeks" in parts:
+            weeks = parts.pop("weeks")
+            current_date = current_date + datetime.timedelta(days=weeks * 7)
+        if "months" in parts:
+            months = parts.pop("months")
+            current_date = add_months(current_date, months)
+        if "years" in parts:
+            # need to avoid 29th Feb problems, so can't just say year - year
+            years = parts.pop("years")
+            current_date = add_months(current_date, 12 * years)
+        if parts:
+            return current_date + datetime.timedelta(**parts)
+        return current_date
+    raise ValueError(f"Unable to interpret interval - {interval}")
+
+
+def date_range(start, end, interval: str):
+    """ """
+    start = parse_iso(start)
+    end = parse_iso(end)
+
+    if start is end or start == end or start > end:
+        raise ValueError(
+            "Cannot create an series with the provided start and end dates"
+        )
+
+    cursor = start
+    while cursor <= end:
+        yield cursor
+        cursor = add_interval(cursor, interval)
 
 
 @lru_cache(128)
@@ -37,10 +122,10 @@ def parse_iso(value):
 
         input_type = type(value)
 
-        if input_type in (datetime, date, time):
+        if input_type in (datetime.datetime, datetime.date, datetime.time):
             return value
         if input_type in (int, float):
-            return datetime.fromtimestamp(value)
+            return datetime.datetime.fromtimestamp(value)
         if input_type == str and 10 <= len(value) <= 28:
             if value[-1] == "Z":
                 value = value[:-1]
@@ -49,13 +134,15 @@ def parse_iso(value):
                 return None
             if val_len == 10:
                 # YYYY-MM-DD
-                return datetime(*map(int, [value[:4], value[5:7], value[8:10]]))
+                return datetime.datetime(
+                    *map(int, [value[:4], value[5:7], value[8:10]])
+                )
             if val_len >= 16:
                 if not (value[10] in ("T", " ") and value[13] in DATE_SEPARATORS):
                     return False
                 if val_len >= 19 and value[16] in DATE_SEPARATORS:
                     # YYYY-MM-DD HH:MM:SS
-                    return datetime(
+                    return datetime.datetime(
                         *map(  # type:ignore
                             int,
                             [
@@ -70,7 +157,7 @@ def parse_iso(value):
                     )
                 if val_len == 16:
                     # YYYY-MM-DD HH:MM
-                    return datetime(
+                    return datetime.datetime(
                         *map(  # type:ignore
                             int,
                             [

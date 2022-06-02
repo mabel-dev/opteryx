@@ -19,15 +19,13 @@ This performs a INNER JOIN
 """
 from typing import Iterable
 
-import numpy
 import pyarrow
 
-from opteryx import config
-from opteryx.engine.attribute_types import TOKEN_TYPES
-from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
+from opteryx.engine.planner.operations import BasePlanNode
 from opteryx.engine.query_statistics import QueryStatistics
 from opteryx.exceptions import SqlError
 from opteryx.third_party import pyarrow_ops
+from opteryx.utils import arrow
 from opteryx.utils.columns import Columns
 
 
@@ -106,6 +104,13 @@ class InnerJoinNode(BasePlanNode):
                         )
 
                     new_metadata = right_columns + left_columns
+
+                    # ensure the types are compatible for joining by coercing numerics
+                    self._right_table = arrow.coerce_column(
+                        self._right_table, right_join_column
+                    )
+
+                page = arrow.coerce_column(page, left_join_column)
 
                 # do the join
                 new_page = page.join(

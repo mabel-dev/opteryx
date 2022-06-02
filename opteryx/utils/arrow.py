@@ -162,3 +162,21 @@ def column_metadata(tbl):
 def get_metadata(tbl):
     """Get column and table metadata as dicts."""
     return column_metadata(tbl), table_metadata(tbl)
+
+
+def coerce_column(table, column_name):
+    """convert numeric types to a common type to allow comparisons"""
+    import pyarrow
+
+    # get the column we're coercing
+    my_schema = table.schema
+    index = table.column_names.index(column_name)
+    column = my_schema.field(column_name)
+
+    # if it's numeric, and not already the type we want, convert it
+    if str(column.type) in ("int64", "double"):
+        column = column.with_type(pyarrow.float64())
+        my_schema = my_schema.set(index, pyarrow.field(column_name, pyarrow.float64()))
+        return table.cast(target_schema=my_schema)
+
+    return table
