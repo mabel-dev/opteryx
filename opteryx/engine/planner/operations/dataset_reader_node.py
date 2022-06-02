@@ -55,7 +55,6 @@ class ExtentionType(str, Enum):
 do_nothing = lambda x, y: x
 
 
-
 def _generate_series(alias, *args):
 
     from opteryx.utils import intervals, dates
@@ -66,17 +65,20 @@ def _generate_series(alias, *args):
 
     # if the parameters are numbers, generate series is an alias for range
     if first_arg_type == TOKEN_TYPES.NUMERIC:
-        if arg_len not in (1,2,3):
+        if arg_len not in (1, 2, 3):
             raise SqlError("generate_series for numbers takes 1,2 or 3 parameters.")
-        return [{alias: i}  for i in intervals.generate_range(*arg_vals)]
+        return [{alias: i} for i in intervals.generate_range(*arg_vals)]
 
     if first_arg_type == TOKEN_TYPES.TIMESTAMP:
         if arg_len != 3:
-            raise SqlError("generate_series for dates needs start, end, and interval parameters")
+            raise SqlError(
+                "generate_series for dates needs start, end, and interval parameters"
+            )
         return [{alias: i} for i in dates.date_range(*arg_vals)]
-        
+
+
 def _unnest(alias, *args):
-    """ unnest converts an list into rows """
+    """unnest converts an list into rows"""
     return [{alias: value} for value in args[0][0]]
 
 

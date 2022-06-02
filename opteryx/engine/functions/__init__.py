@@ -25,7 +25,7 @@ from opteryx.utils.dates import parse_iso
 
 
 def get_random():
-    """ get a random number between 0 and 1, three decimal places """
+    """get a random number between 0 and 1, three decimal places"""
     import os
 
     range_min, range_max = 0, 1000
@@ -70,7 +70,7 @@ ITERATIVE_CASTERS = {
 
 
 def cast(type):
-    """ cast a column to a specified type """
+    """cast a column to a specified type"""
     if type in VECTORIZED_CASTERS:
         return lambda a: compute.cast(a, VECTORIZED_CASTERS[type])
     if type in ITERATIVE_CASTERS:

@@ -19,7 +19,7 @@ import re
 
 TIMEDELTA_REGEX = (
     r"((?P<years>\d+)\s?(?:ys?|yrs?|years?))?\s*"
-    r'((?P<months>\d+)\s?(?:mons?|mths?|months?))?\s*'
+    r"((?P<months>\d+)\s?(?:mons?|mths?|months?))?\s*"
     r"((?P<weeks>\d+)\s?(?:w|wks?|weeks?))?\s*"
     r"((?P<days>\d+)\s?(?:d|days?))?\s*"
     r"((?P<hours>\d+)\s?(?:h|hrs?|hours?))?\s*"
@@ -29,6 +29,7 @@ TIMEDELTA_REGEX = (
 
 TIMEDELTA_PATTERN = re.compile(TIMEDELTA_REGEX, re.IGNORECASE)
 print(TIMEDELTA_REGEX)
+
 
 def add_months(date, months):
     """
@@ -57,6 +58,7 @@ def add_months(date, months):
     # we should never be here - but just return a value
     return None
 
+
 def add_interval(
     current_date: Union[datetime.date, datetime.datetime], interval: str
 ) -> Union[datetime.date, datetime.datetime]:
@@ -70,7 +72,7 @@ def add_interval(
         # time delta doesn't include weeks, months or years
         if "weeks" in parts:
             weeks = parts.pop("weeks")
-            current_date = current_date + datetime.timedelta(days=weeks*7)
+            current_date = current_date + datetime.timedelta(days=weeks * 7)
         if "months" in parts:
             months = parts.pop("months")
             current_date = add_months(current_date, months)
@@ -83,14 +85,16 @@ def add_interval(
         return current_date
     raise ValueError(f"Unable to interpret interval - {interval}")
 
+
 def date_range(start, end, interval: str):
-    """
-    """
+    """ """
     start = parse_iso(start)
     end = parse_iso(end)
 
     if start is end or start == end or start > end:
-        raise ValueError("Cannot create an series with the provided start and end dates")
+        raise ValueError(
+            "Cannot create an series with the provided start and end dates"
+        )
 
     cursor = start
     while cursor <= end:
@@ -131,7 +135,9 @@ def parse_iso(value):
                 return None
             if val_len == 10:
                 # YYYY-MM-DD
-                return datetime.datetime(*map(int, [value[:4], value[5:7], value[8:10]]))
+                return datetime.datetime(
+                    *map(int, [value[:4], value[5:7], value[8:10]])
+                )
             if val_len >= 16:
                 if not (value[10] in ("T", " ") and value[13] in DATE_SEPARATORS):
                     return False
