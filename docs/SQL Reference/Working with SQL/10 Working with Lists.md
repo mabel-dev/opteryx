@@ -4,7 +4,7 @@ In Opteryx a list is an ordered collection of zero or more values of the same da
 
 ## Accessing List Elements
 
-`list[index]`
+`list[index]`   
 `MAP(list, index)`
 
 ## List Containment
@@ -15,8 +15,8 @@ In Opteryx a list is an ordered collection of zero or more values of the same da
 
 ### Functions
 
-`LIST_CONTAINS`
-`LIST_CONTAINS_ANY`
+`LIST_CONTAINS`   
+`LIST_CONTAINS_ANY`   
 `LIST_CONTAINS_ALL`
 
 ## Converting Lists to Relations
