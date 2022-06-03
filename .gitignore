@@ -152,3 +152,4 @@ tests/data/half/**
 shelf/**
 tests/data/zoned/**
 tests/data/parquet/**
+opteryx.yaml

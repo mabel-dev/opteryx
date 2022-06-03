@@ -28,21 +28,21 @@ PARALLELIZE READING:
 - As one blob is read, the next is immediately cached for reading
 """
 import datetime
-import time
+
 from enum import Enum
 from typing import Iterable, Optional
-
 from cityhash import CityHash64
 
+import time
+
+from opteryx.engine.attribute_types import TOKEN_TYPES
 from opteryx.engine.query_statistics import QueryStatistics
 from opteryx.engine.planner.operations import BasePlanNode
-from opteryx.exceptions import DatabaseError
+from opteryx.exceptions import DatabaseError, SqlError
 from opteryx.storage import file_decoders
 from opteryx.storage.adapters import DiskStorage
 from opteryx.storage.schemes import MabelPartitionScheme
 from opteryx.utils.columns import Columns
-
-from opteryx.storage import multiprocessor
 
 
 class ExtentionType(str, Enum):
@@ -54,6 +54,34 @@ class ExtentionType(str, Enum):
 
 do_nothing = lambda x, y: x
 
+
+def _generate_series(alias, *args):
+
+    from opteryx.utils import intervals, dates
+
+    arg_len = len(args)
+    arg_vals = [i[0] for i in args]
+    first_arg_type = args[0][1]
+
+    # if the parameters are numbers, generate series is an alias for range
+    if first_arg_type == TOKEN_TYPES.NUMERIC:
+        if arg_len not in (1, 2, 3):
+            raise SqlError("generate_series for numbers takes 1,2 or 3 parameters.")
+        return [{alias: i} for i in intervals.generate_range(*arg_vals)]
+
+    if first_arg_type == TOKEN_TYPES.TIMESTAMP:
+        if arg_len != 3:
+            raise SqlError(
+                "generate_series for dates needs start, end, and interval parameters"
+            )
+        return [{alias: i} for i in dates.date_range(*arg_vals)]
+
+
+def _unnest(alias, *args):
+    """unnest converts an list into rows"""
+    return [{alias: value} for value in args[0][0]]
+
+
 KNOWN_EXTENSIONS = {
     "complete": (do_nothing, ExtentionType.CONTROL),
     "ignore": (do_nothing, ExtentionType.CONTROL),
@@ -62,6 +90,11 @@ KNOWN_EXTENSIONS = {
     "orc": (file_decoders.orc_decoder, ExtentionType.DATA),
     "parquet": (file_decoders.parquet_decoder, ExtentionType.DATA),
     "zstd": (file_decoders.zstd_decoder, ExtentionType.DATA),  # jsonl/zstd
+}
+
+FUNCTIONS = {
+    "generate_series": _generate_series,
+    "unnest": _unnest,
 }
 
 
@@ -89,6 +122,25 @@ def _get_sample_dataset(dataset, alias):
     raise DatabaseError(f"Dataset not found `{dataset}`.")
 
 
+def _function_dataset(definition, alias):
+
+    function = definition.get("function", "")
+    args = definition.get("args", [])
+
+    data = FUNCTIONS[function](alias, *args)
+
+    import pyarrow
+
+    table = pyarrow.Table.from_pylist(data)
+    table = Columns.create_table_metadata(
+        table=table,
+        expected_rows=table.num_rows,
+        name=function,
+        table_aliases=[alias],
+    )
+    return table
+
+
 class DatasetReaderNode(BasePlanNode):
     def __init__(self, statistics: QueryStatistics, **config):
         """
@@ -99,12 +151,12 @@ class DatasetReaderNode(BasePlanNode):
 
         from opteryx.engine.planner.planner import QueryPlanner
 
-        today = datetime.date.today()
+        today = datetime.datetime.utcnow().date()
 
         self._statistics = statistics
         self._alias, self._dataset = config.get("dataset", [None, None])
 
-        if isinstance(self._dataset, (list, QueryPlanner)):
+        if isinstance(self._dataset, (list, QueryPlanner, dict)):
             return
 
         self._dataset = self._dataset.replace(".", "/") + "/"
@@ -164,6 +216,11 @@ class DatasetReaderNode(BasePlanNode):
 
             return
 
+        # functions
+        if isinstance(self._dataset, dict):
+            yield _function_dataset(self._dataset, self._alias)
+            return
+
         # sample datasets
         if self._dataset[0] == "$":
             yield _get_sample_dataset(self._dataset, self._alias)
@@ -206,7 +263,9 @@ class DatasetReaderNode(BasePlanNode):
 
             # Filter the blob list to just the frame we're interested in
             if self._partition_scheme is not None:
-                blob_list = self._partition_scheme.filter_blobs(blob_list)
+                blob_list = self._partition_scheme.filter_blobs(
+                    blob_list, self._statistics
+                )
                 self._statistics.count_blobs_ignored_frames += count_blobs_found - len(
                     blob_list
                 )
@@ -233,16 +292,14 @@ class DatasetReaderNode(BasePlanNode):
 
         metadata = None
 
-
         import pyarrow.plasma as plasma
         from opteryx.storage import multiprocessor
+        from opteryx import config
 
-        MEMORY_PER_CPU = 100000000
-
-
-        with plasma.start_plasma_store(MEMORY_PER_CPU * multiprocessor.CPUS) as plasma_store:
+        with plasma.start_plasma_store(
+            config.BUFFER_PER_SUB_PROCESS * config.MAX_SUB_PROCESSES
+        ) as plasma_store:
             plasma_channel = plasma_store[0]
-
 
             for partition in partitions:
 
@@ -250,54 +307,83 @@ class DatasetReaderNode(BasePlanNode):
                 if len(blob_list) > 0:
                     self._statistics.partitions_read += 1
 
-                def _read_and_parse(input):
-                    path, reader, parser = input
-                    return parser(reader(path), None)
+                def _read_and_parse(config):
+                    path, reader, parser, cache = config
 
-                for pyarrow_blob in multiprocessor.processed_reader(
+                    # print(f"start {path}")
+
+                    start_read = time.time_ns()
+
+                    # if we have a cache set
+                    if cache:
+                        # hash the blob name for the look up
+                        blob_hash = format(CityHash64(path), "X")
+                        # try to read the cache
+                        blob_bytes = cache.get(blob_hash)
+
+                        # if the item was a miss, get it from storage and add it to the cache
+                        if blob_bytes is None:
+                            self._statistics.cache_misses += 1
+                            blob_bytes = reader(path)
+                            cache.set(blob_hash, blob_bytes)
+                        else:
+                            self._statistics.cache_hits += 1
+                    else:
+                        blob_bytes = reader(path)
+
+                    table = parser(blob_bytes, None)
+
+                    # print(f"read  {path} - {(time.time_ns() - start_read) / 1e9}")
+
+                    time_to_read = time.time_ns() - start_read
+                    return time_to_read, blob_bytes.getbuffer().nbytes, table, path
+
+                for (
+                    time_to_read,
+                    blob_bytes,
+                    pyarrow_blob,
+                    path,
+                ) in multiprocessor.processed_reader(
                     _read_and_parse,
                     [
-                        (path, self._reader.read_blob, parser)
+                        (path, self._reader.read_blob, parser, self._cache)
                         for path, parser in partition_structure[partition]["blob_list"]
                     ],
                     plasma_channel,
                 ):
 
-                        # we're going to open this blob
-                        self._statistics.count_data_blobs_read += 1
+                    # we're going to open this blob
+                    self._statistics.count_data_blobs_read += 1
 
-                        start_read = time.time_ns()
+                    # extract stats from reader
+                    self._statistics.bytes_read_data += blob_bytes
+                    self._statistics.time_data_read += time_to_read
 
-                        # record the number of bytes we're reading
-                        # self._statistics.bytes_read_data += blob_bytes.getbuffer().nbytes
+                    # we should know the number of entries
+                    self._statistics.rows_read += pyarrow_blob.num_rows
+                    self._statistics.bytes_processed_data += pyarrow_blob.nbytes
 
-                        self._statistics.time_data_read += time.time_ns() - start_read
+                    if metadata is None:
+                        pyarrow_blob = Columns.create_table_metadata(
+                            table=pyarrow_blob,
+                            expected_rows=expected_rows,
+                            name=self._dataset.replace("/", ".")[:-1],
+                            table_aliases=[self._alias],
+                        )
+                        metadata = Columns(pyarrow_blob)
+                    else:
+                        try:
+                            pyarrow_blob = metadata.apply(pyarrow_blob, source=path)
+                        except:
 
-                        # we should know the number of entries
-                        self._statistics.rows_read += pyarrow_blob.num_rows
-                        self._statistics.bytes_processed_data += pyarrow_blob.nbytes
+                            self._statistics.read_errors += 1
 
-                        if metadata is None:
-                            pyarrow_blob = Columns.create_table_metadata(
-                                table=pyarrow_blob,
-                                expected_rows=expected_rows,
-                                name=self._dataset.replace("/", ".")[:-1],
-                                table_aliases=[self._alias],
+                            import pyarrow
+
+                            pyarrow_blob = pyarrow.Table.from_pydict(
+                                pyarrow_blob.to_pydict()
                             )
-                            metadata = Columns(pyarrow_blob)
-                        else:
-                            try:
-                                pyarrow_blob = metadata.apply(pyarrow_blob)
-                            except:
+                            pyarrow_blob = metadata.apply(pyarrow_blob)
 
-                                self._statistics.read_errors += 1
-
-                                import pyarrow
-
-                                pyarrow_blob = pyarrow.Table.from_pydict(
-                                    pyarrow_blob.to_pydict()
-                                )
-                                pyarrow_blob = metadata.apply(pyarrow_blob)
-
-                        # yield this blob
-                        yield pyarrow_blob
+                    # yield this blob
+                    yield pyarrow_blob

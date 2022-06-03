@@ -25,5 +25,5 @@ class DefaultPartitionScheme(BasePartitionScheme):
     def partition_format(self):
         return "/".join(self._format)
 
-    def filter_blobs(self, list_of_blobs):
+    def filter_blobs(self, list_of_blobs, statistics):
         return list_of_blobs

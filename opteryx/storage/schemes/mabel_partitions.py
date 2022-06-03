@@ -13,6 +13,36 @@
 from opteryx.storage import BasePartitionScheme
 
 
+def _safe_get_next_element(lst, item):
+    """get the element from a list which follows a given element"""
+    try:
+        index = lst.index(item)
+        return lst[index + 1]
+    except IndexError:
+        return None
+
+
+def _extract_as_at(path):
+    for part in path.split("/"):
+        if part.startswith("as_at_"):
+            return part
+    return ""
+
+
+def _extract_by(path):
+    for part in path.split("/"):
+        if part.startswith("by_"):
+            return part
+
+
+_is_complete = lambda blobs, as_at: any(
+    blob for blob in blobs if as_at + "/frame.complete" in blob
+)
+_is_invalid = lambda blobs, as_at: any(
+    blob for blob in blobs if (as_at + "/frame.ignore" in blob)
+)
+
+
 class MabelPartitionScheme(BasePartitionScheme):
     """
     Handle reading data using the Mabel partition scheme.
@@ -21,19 +51,7 @@ class MabelPartitionScheme(BasePartitionScheme):
     def partition_format(self):
         return "year_{yyyy}/month_{mm}/day_{dd}"
 
-    def filter_blobs(self, list_of_blobs):
-        def _extract_by(path):
-            parts = path.split("/")
-            for part in parts:
-                if part.startswith("by_"):
-                    return part
-
-        def _extract_as_at(path):
-            parts = path.split("/")
-            for part in parts:
-                if part.startswith("as_at_"):
-                    return part
-            return ""
+    def _inner_filter_blobs(self, list_of_blobs, statistics):
 
         # The segments are stored in folders with the prefix 'by_', as in,
         # segments **by** field name
@@ -52,28 +70,51 @@ class MabelPartitionScheme(BasePartitionScheme):
                 blob for blob in list_of_blobs if f"/{chosen_segment}/" in blob
             ]
 
-        # work out if there's an as_at part
-        as_ats = {_extract_as_at(blob) for blob in list_of_blobs if "as_at_" in blob}
-        if as_ats:
-            as_ats = sorted(as_ats)
-            as_at = as_ats.pop()
+        # build a list of the segments we're going to read, for example, if we have
+        # data which are segmented by hour, this will be the hour=00 part
+        if chosen_segment == "":
+            segmented_folders = {""}
+        else:
+            segmented_folders = {
+                _safe_get_next_element(blob.split("/"), chosen_segment)
+                for blob in list_of_blobs
+            }
 
-            is_complete = lambda blobs, as_at: any(
-                [blob for blob in blobs if as_at + "/frame.complete" in blob]
-            )
-            is_invalid = lambda blobs, as_at: any(
-                [blob for blob in blobs if (as_at + "/frame.ignore" in blob)]
-            )
+        # count the segments we're planning to read
+        statistics.segments_scanned += len(segmented_folders)
 
-            while not is_complete(list_of_blobs, as_at) or is_invalid(
-                list_of_blobs, as_at
-            ):
-                if len(as_ats) > 0:
-                    as_at = as_ats.pop()
-                else:
-                    return []
+        # go through the list of segments, getting the active frame for each
+        for segment_folder in segmented_folders:
 
-            # get_logger().debug(f"Reading Frame `{as_at}`")
-            return [blob for blob in list_of_blobs if (as_at in blob)]
+            # we get the blobs for this segment by looking for the path to contain
+            # a combination of the segment and the segmented folder
+            segment_blobs = [
+                blob
+                for blob in list_of_blobs
+                if f"{chosen_segment}/{segment_folder}" in blob
+            ]
 
-        return list_of_blobs
+            # work out if there's an as_at part
+            as_ats = {
+                _extract_as_at(blob) for blob in segment_blobs if "as_at_" in blob
+            }
+            if as_ats:
+                as_ats = sorted(as_ats)
+                as_at = as_ats.pop()
+
+                while not _is_complete(segment_blobs, as_at) or _is_invalid(
+                    segment_blobs, as_at
+                ):
+                    if len(as_ats) > 0:
+                        as_at = as_ats.pop()
+                    else:
+                        return []
+
+                # get_logger().debug(f"Reading Frame `{as_at}`")
+                yield from (blob for blob in segment_blobs if (as_at in blob))
+
+            else:
+                yield from list_of_blobs
+
+    def filter_blobs(self, list_of_blobs, statistics):
+        return list(self._inner_filter_blobs(list_of_blobs, statistics))

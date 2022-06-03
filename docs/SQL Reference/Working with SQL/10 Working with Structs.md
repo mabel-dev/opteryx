@@ -4,5 +4,5 @@ In Opteryx a struct is a collection of zero or more key, value pairs. Keys must 
 
 ## Accessing Elements
 
-`struct[key]`
+`struct[key]`   
 `MAP(struct, key)`

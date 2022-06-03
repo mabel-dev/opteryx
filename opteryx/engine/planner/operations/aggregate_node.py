@@ -40,8 +40,8 @@ from opteryx.utils.columns import Columns
 
 # these functions can be applied to each group
 INCREMENTAL_AGGREGATES = {
-    "MIN": lambda x, y: min(x, y),
-    "MAX": lambda x, y: max(x, y),
+    "MIN": min,
+    "MAX": max,
     "SUM": lambda x, y: x + y,
 }
 
@@ -55,7 +55,7 @@ WHOLE_AGGREGATES = {
     "VAR_POP": np.var,
     "FIRST": lambda a: a[0],
     "LAST": lambda a: a[-1],
-    "LIST": lambda a: list(a),  # all of the values in a column as a list
+    "LIST": list,  # all of the values in a column as a list
     # range - difference between min and max
     # percent - each group has the relative portion calculated
     # list - return a list of the items in the list

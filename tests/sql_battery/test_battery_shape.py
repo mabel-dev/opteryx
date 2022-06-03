@@ -38,6 +38,8 @@ STATEMENTS = [
         ("SELECT   *   FROM   $satellites", 177, 8),
         ("SELECT\n\t*\n  FROM\n\t$satellites", 177, 8),
         ("\n\n\n\tSELECT * FROM $satellites", 177, 8),
+        ("SELECT $satellites.* FROM $satellites", 177, 8),
+        ("SELECT s.* FROM $satellites AS s", 177, 8),
         ("SELECT * FROM $satellites WHERE name = 'Calypso'", 1, 8),
         ("SELECT * FROM $satellites WHERE (name = 'Calypso')", 1, 8),
         ("SELECT * FROM $satellites WHERE NOT name = 'Calypso'", 176, 8),
@@ -214,6 +216,32 @@ STATEMENTS = [
 
         ("SELECT * FROM UNNEST(('foo', 'bar', 'baz', 'qux', 'corge', 'garply', 'waldo', 'fred')) AS element", 8, 1),
         ("SELECT * FROM UNNEST(('foo', 'bar', 'baz', 'qux', 'corge', 'garply', 'waldo', 'fred')) AS element WHERE element LIKE '%e%'", 2, 1),
+        ("SELECT * FROM UNNEST(('foo', 'bar', 'baz', 'qux', 'corge', 'garply', 'waldo', 'fred'))", 8, 1),
+        ("SELECT * FROM UNNEST(('foo', 'bar', 'baz', 'qux', 'corge', 'garply', 'waldo', 'fred')) WHERE unnest LIKE '%e%'", 2, 1),
+
+        ("SELECT * FROM generate_series(10)", 10, 1),
+        ("SELECT * FROM generate_series(-10,10)", 21, 1),
+        ("SELECT * FROM generate_series(2,10,2)", 5, 1),
+        ("SELECT * FROM generate_series(0.5,10,0.5)", 20, 1),
+        ("SELECT * FROM generate_series(2,11,2)", 5, 1),
+        ("SELECT * FROM generate_series(2,10,2) AS nums", 5, 1),
+        ("SELECT * FROM generate_series(2,10,2) WHERE generate_series > 5", 3, 1),
+        ("SELECT * FROM generate_series(2,10,2) AS nums WHERE nums < 5", 2, 1),
+
+        ("SELECT * FROM generate_series('2022-01-01', '2022-12-31', '1 month')", 12, 1),
+        ("SELECT * FROM generate_series('2022-01-01', '2022-12-31', '1 mon')", 12, 1),
+        ("SELECT * FROM generate_series('2022-01-01', '2022-12-31', '1mon')", 12, 1),
+        ("SELECT * FROM generate_series('2022-01-01', '2022-12-31', '1 day')", 365, 1),
+        ("SELECT * FROM generate_series('2020-01-01', '2020-12-31', '1day')", 366, 1),
+        ("SELECT * FROM generate_series('2022-01-01', '2022-12-31', '7 days')", 53, 1),
+        ("SELECT * FROM generate_series('2022-01-01', '2022-01-02', '1 hour')", 25, 1),
+        ("SELECT * FROM generate_series('2022-01-01', '2022-01-01 23:59', '1 hour')", 24, 1),
+        ("SELECT * FROM generate_series('2022-01-01 12:00', '2022-01-01 23:59', '1 hour')", 12, 1),
+        ("SELECT * FROM generate_series('2022-01-01 12:00', '2022-01-01 12:15', '1 minute')", 16, 1),
+        ("SELECT * FROM generate_series('2022-01-01 12:00', '2022-01-01 12:15', '1m30s')", 11, 1),
+        ("SELECT * FROM generate_series(1,10) LEFT JOIN $planets ON id = generate_series", 10, 21),
+        ("SELECT * FROM generate_series(1,5) JOIN $planets ON id = generate_series", 5, 21),
+        ("SELECT * FROM (SELECT * FROM generate_series(1,10,2) AS gs) INNER JOIN $planets on gs = id", 5, 21),
 
         ("SELECT * FROM tests.data.dated FOR '2020-02-03'", 25, 8),
         ("SELECT * FROM tests.data.dated FOR '2020-02-04'", 25, 8),
@@ -288,6 +316,18 @@ STATEMENTS = [
         ("SELECT * FROM $planets WHERE id = -1", 0, 20),
         ("SELECT COUNT(*) FROM (SELECT DISTINCT a FROM $astronauts CROSS JOIN UNNEST(alma_mater) AS a ORDER BY a)", 1, 1),
 
+        ("SELECT a.id, b.id, c.id FROM $planets AS a INNER JOIN $planets AS b ON a.id = b.id INNER JOIN $planets AS c ON c.id = b.id", 9, 3),
+        ("SELECT * FROM $planets AS a INNER JOIN $planets AS b ON a.id = b.id RIGHT OUTER JOIN $satellites AS c ON c.planetId = b.id", 177, 48),
+
+        ("SELECT $planets.* FROM $satellites INNER JOIN $planets USING (id)", 9, 20),
+        ("SELECT $satellites.* FROM $satellites INNER JOIN $planets USING (id)", 9, 8),
+        ("SELECT $planets.* FROM $satellites INNER JOIN $planets AS p USING (id)", 9, 20),
+        ("SELECT p.* FROM $satellites INNER JOIN $planets AS p USING (id)", 9, 20),
+        ("SELECT s.* FROM $satellites AS s INNER JOIN $planets USING (id)", 9, 8),
+        ("SELECT $satellites.* FROM $satellites AS s INNER JOIN $planets USING (id)", 9, 8),
+        ("SELECT $satellites.* FROM $satellites AS s INNER JOIN $planets AS p USING (id)", 9, 8),
+        ("SELECT s.* FROM $satellites AS s INNER JOIN $planets AS p USING (id)", 9, 8),
+
         # These are queries which have been found to return the wrong result or not run correctly
         # FILTERING ON FUNCTIONS
         ("SELECT DATE(birth_date) FROM $astronauts FOR TODAY WHERE DATE(birth_date) < '1930-01-01'", 14, 1),
@@ -309,6 +349,13 @@ STATEMENTS = [
         ("SELECT P.name FROM ( SELECT * FROM $planets ) AS P", 9, 1),
         # UNNEST
         ("SELECT * FROM tests.data.unnest_test CROSS JOIN UNNEST (values) AS value FOR '2000-01-01'", 15, 3),
+        # FRAME HANDLING
+        ("SELECT * FROM tests.data.framed FOR '2021-03-28'", 100000, 1),
+        ("SELECT * FROM tests.data.framed FOR '2021-03-29'", 100000, 1),
+        ("SELECT * FROM tests.data.framed FOR '2021-03-30'", 0, 0),
+        ("SELECT * FROM tests.data.framed FOR DATES BETWEEN '2021-03-28' AND '2021-03-29", 200000, 1),
+        ("SELECT * FROM tests.data.framed FOR DATES BETWEEN '2021-03-29' AND '2021-03-30", 100000, 1),
+        ("SELECT * FROM tests.data.framed FOR DATES BETWEEN '2021-03-28' AND '2021-03-30", 200000, 1)
     ]
 # fmt:on
 

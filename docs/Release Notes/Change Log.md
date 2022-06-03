@@ -3,7 +3,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-### [Unreleased]
+### [0.0.2] - 2022-06-03
+
+#### Added
+
+- [#72](https://github.com/mabel-dev/opteryx/issues/72) Configuration is now read from `opteryx.yaml` rather than the environment. ([@joocer](https://github.com/joocer]))
+- [#139](https://github.com/mabel-dev/opteryx/issues/139) Gather statistics on planning reading of segements. ([@joocer](https://github.com/joocer]))
+- [#151](https://github.com/mabel-dev/opteryx/issues/151) Implement `SELECT table.*`. ([@joocer](https://github.com/joocer]))
+- [#137](https://github.com/mabel-dev/opteryx/issues/137) `GENERATE_SERIES` function. ([@joocer](https://github.com/joocer]))
 
 #### Fixed
 
@@ -14,7 +21,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - [#113](https://github.com/mabel-dev/opteryx/issues/113) Sample data has NaN as a string, rather than the value ([@joocer](https://github.com/joocer]))
 - [#111](https://github.com/mabel-dev/opteryx/issues/111) `CROSS JOIN UNNEST` should return a `NONE` when the list is empty (or `NONE`) ([@joocer](https://github.com/joocer]))
 - [#119](https://github.com/mabel-dev/opteryx/issues/119) 'NoneType' object is not iterable error on `UNNEST` ([@joocer](https://github.com/joocer]))
-
+- [#127](https://github.com/mabel-dev/opteryx/issues/127) Reading from segments appears to only read the first segment ([@joocer](https://github.com/joocer]))
+- [#132](https://github.com/mabel-dev/opteryx/issues/132) Multiprocessing regressed Caching functionality ([@joocer](https://github.com/joocer]))
+- [#140](https://github.com/mabel-dev/opteryx/issues/140) Appears to have read both frames rather than the latest frame ([@joocer](https://github.com/joocer]))
+- [#144](https://github.com/mabel-dev/opteryx/issues/144) Multiple `JOINS` in one query aren't recognized ([@joocer](https://github.com/joocer]))
 
 ### [0.0.1] - 2022-05-09
 
