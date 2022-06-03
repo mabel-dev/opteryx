@@ -2,7 +2,9 @@ name: release
 
 on:
   push:
-    branches: [ main, beta ]
+    branches: [ main ]
+  release:
+    types: [ published ]
 
 jobs:
 
