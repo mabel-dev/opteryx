@@ -11,6 +11,8 @@ Component                                                  | Licence
 [orjson](https://github.com/ijl/orjson)                    | [Apache 2.0](https://github.com/ijl/orjson/blob/master/LICENSE-APACHE)
 [cityhash](https://github.com/escherba/python-cityhash)    | [Bespoke](https://github.com/escherba/python-cityhash/blob/master/LICENSE)
 [pyarrow_ops](https://github.com/TomScheffers/pyarrow_ops) | [Apache 2.0](https://github.com/TomScheffers/pyarrow_ops/blob/main/LICENSE)
+[psutil](https://github.com/giampaolo/psutil)              | [BSD-3](https://github.com/giampaolo/psutil/blob/master/LICENSE)
+[pyyaml](https://pyyaml.org/)                              | [MIT](https://github.com/yaml/pyyaml/blob/master/LICENSE)
 
 !!! note
-    License information was correct as at 2022-04-24
+    License information was correct as at 2022-06-03

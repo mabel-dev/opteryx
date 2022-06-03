@@ -65,6 +65,10 @@ SELECT *
 
 <img src="../diagrams/left-join.svg" width="420px">
 
+## RIGHT JOIN
+
+A `RIGHT JOIN` is the same as a `LEFT JOIN` with the relations swapped.
+
 ## FULL JOIN
 
 ~~~

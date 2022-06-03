@@ -33,7 +33,7 @@ class ShowColumnsNode(BasePlanNode):
 
     @property
     def name(self):  # pragma: no cover
-        return "ShowColumns"
+        return "Show Columns"
 
     @property
     def config(self):  # pragma: no cover

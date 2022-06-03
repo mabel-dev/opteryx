@@ -17,5 +17,5 @@ SELECT *
   FROM $planets;
 ~~~
 
-  !!! note
-  A dataset called `$no_table` is used internally to represent no table has been specified, it has no know practical uses for users and may not exist in future releases.
+!!! note
+    A dataset called `$no_table` is used internally to represent no table has been specified, it has no know practical uses for users and may not exist in future releases.

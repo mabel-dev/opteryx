@@ -1,6 +1,6 @@
 # Temporality
 
-Temporality, or the ability to view things as they were at a different point in time, can be a difficult concept to understand and use.
+Temporality is the ability to view things as they were at a different point in time.
 
 Partition schemes that supports temporal queries allow you to view data from a different date by using a `FOR` clause in the SQL statement. `FOR` clauses state the date, or date range, a query should retrieve results for.
 
