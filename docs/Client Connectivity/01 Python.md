@@ -2,7 +2,7 @@
 
 ## Python DBAPI
 
-[Opteryx](https://mabel-dev.github.io/opteryx/) implements a partial Python DBAPI (PEP-0249) interface.
+[Opteryx](https://github.com/mabel-dev/opteryx) implements a partial Python DBAPI (PEP-0249) interface.
 
 ~~~python
 import opteryx
