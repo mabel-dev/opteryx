@@ -35,7 +35,7 @@ def populate_gcs():
 def test_gcs_storage():
 
     import opteryx
-    from opteryx.storage.adapters.network.gcs_store import GcsStorage
+    from opteryx.storage.adapters import GcsStorage
 
     populate_gcs()
 
@@ -51,7 +51,6 @@ def test_gcs_storage():
     # PROCESS THE DATA IN SOME WAY
     cur = conn.cursor()
     cur.execute(f"SELECT COUNT(*) FROM {BUCKET_NAME}.data.tweets GROUP BY userid;")
-    rows = cur.fetchall()
     rows = list(cur.fetchall())
     assert len(rows) == 2
 

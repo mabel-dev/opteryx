@@ -13,7 +13,7 @@ def test_memcached_cache():
 
     import opteryx
     from opteryx.storage.cache.memcached_cache import MemcachedCache
-    from opteryx.storage.adapters.local import DiskStorage
+    from opteryx.storage.adapters import DiskStorage
 
     cache = MemcachedCache(server="localhost:11211")
 

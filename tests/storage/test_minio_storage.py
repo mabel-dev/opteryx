@@ -49,7 +49,6 @@ def test_minio_storage():
     # PROCESS THE DATA IN SOME WAY
     cur = conn.cursor()
     cur.execute(f"SELECT COUNT(*) FROM {BUCKET_NAME}.data.tweets GROUP BY userid;")
-    rows = cur.fetchall()
     rows = list(cur.fetchall())
     assert len(rows) == 2
 
