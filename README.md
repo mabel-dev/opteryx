@@ -72,4 +72,4 @@ Opteryx is in beta. Beta means different things to different people, to us, bein
 - Core functionality has test cases to ensure stability
 - Some edge cases may have undetected bugs
 - Performance tuning may be incomplete
-- Changes are focused on bugs, performance and security
+- Changes are focused on feature completion, bugs, performance, reducing debt, and security
