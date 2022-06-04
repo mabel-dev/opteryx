@@ -11,3 +11,5 @@
 # limitations under the License.
 
 from .disk_store import DiskStorage
+from .gcs_store import GcsStorage
+from .minio_store import MinIoStorage

@@ -264,9 +264,9 @@ class QueryPlanner(ExecutionTree):
     def _extract_relations(self, ast):
         """ """
 
-        def _safe_get(l, i):
+        def _safe_get(iterable, index):
             try:
-                return l[i]
+                return iterable[index]
             except IndexError:
                 return None
 

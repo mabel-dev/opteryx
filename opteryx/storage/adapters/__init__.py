@@ -10,5 +10,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from opteryx.storage.adapters.local.disk_store import DiskStorage
-from opteryx.storage.adapters.network.gcs_store import GcsStorage
+from opteryx.storage.adapters.blob.disk_store import DiskStorage
+from opteryx.storage.adapters.blob.gcs_store import GcsStorage
+from opteryx.storage.adapters.blob.minio_store import MinIoStorage

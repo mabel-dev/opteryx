@@ -22,7 +22,7 @@ from typing import Iterable, List, Union
 
 
 class BaseStorageAdapter(abc.ABC):
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         pass
 
     def get_partitions(
