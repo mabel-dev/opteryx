@@ -18,7 +18,7 @@ from .dataset_reader_node import DatasetReaderNode  # read datasets
 from .distinct_node import DistinctNode  # remove duplicate records
 from .evaluation_node import EvaluationNode  # aliases and evaluations
 from .explain_node import ExplainNode  # EXPLAIN queries
-from .inner_join_node import InnerJoinNode # INNER JOIN
+from .inner_join_node import InnerJoinNode  # INNER JOIN
 from .limit_node import LimitNode  # select the first N records
 from .offset_node import OffsetNode  # skip a number of records
 from .outer_join_node import OuterJoinNode  # LEFT/RIGHT/FULL OUTER JOIN
