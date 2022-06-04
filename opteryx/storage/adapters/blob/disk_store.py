@@ -15,7 +15,6 @@ from opteryx.storage import BaseStorageAdapter
 
 
 class DiskStorage(BaseStorageAdapter):
-
     def read_blob(self, blob_name):
         import io
 
