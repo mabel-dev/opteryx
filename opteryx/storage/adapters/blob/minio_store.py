@@ -14,7 +14,6 @@ except ImportError:  # pragma: no cover
 
 
 class MinIoStorage(BaseStorageAdapter):
-
     def __init__(self, end_point: str, access_key: str, secret_key: str, **kwargs):
 
         if not minio_installed:  # pragma: no cover
@@ -39,6 +38,7 @@ class MinIoStorage(BaseStorageAdapter):
 
     def read_blob(self, blob_name):
         import io
+
         try:
             bucket, object_path, name, extension = paths.get_parts(blob_name)
             stream = self.minio.get_object(bucket, object_path + name + extension)

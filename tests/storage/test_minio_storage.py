@@ -35,7 +35,9 @@ def test_minio_storage():
 
     populate_minio()
 
-    storage = MinIoStorage(end_point=END_POINT, access_key=SECRETS, secret_key=SECRETS, secure=False)
+    storage = MinIoStorage(
+        end_point=END_POINT, access_key=SECRETS, secret_key=SECRETS, secure=False
+    )
     conn = opteryx.connect(reader=storage, partition_scheme=None)
 
     # SELECT EVERYTHING
