@@ -8,3 +8,4 @@ zstandard
 pymemcache
 mypy
 google-cloud-storage
+minio

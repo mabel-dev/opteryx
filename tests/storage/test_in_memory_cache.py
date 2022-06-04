@@ -12,7 +12,7 @@ def test_in_memory_cache():
 
     import opteryx
     from opteryx.storage.cache.memory_cache import InMemoryCache
-    from opteryx.storage.adapters.local import DiskStorage
+    from opteryx.storage.adapters import DiskStorage
 
     cache = InMemoryCache(size=5)
 
