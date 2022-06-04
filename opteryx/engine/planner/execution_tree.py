@@ -16,9 +16,9 @@ class ExecutionTree:
     The execution tree is defined separately to the planner to simplify the
     complex code which is the planner from the tree that describes the plan.
     """
-    
+
     def __init__(self):
-        """ create empty plan """
+        """create empty plan"""
         self._nodes: dict = {}
         self._edges: list = []
 
@@ -62,11 +62,7 @@ class ExecutionTree:
             name: string
                 The name of the step to search from
         """
-        retval = {
-            target
-            for source, target, direction in self._edges
-            if source == nid
-        }
+        retval = {target for source, target, direction in self._edges if source == nid}
         return sorted(retval)
 
     def get_incoming_links(self, nid):
@@ -92,7 +88,9 @@ class ExecutionTree:
         Get steps in the flow with no outgoing steps.
         """
         sources = {source for source, target, direction in self._edges}
-        retval = (target for source, target, direction in self._edges if target not in sources)
+        retval = (
+            target for source, target, direction in self._edges if target not in sources
+        )
         return sorted(retval)
 
     def get_entry_points(self):
@@ -102,7 +100,9 @@ class ExecutionTree:
         if len(self._nodes) == 1:
             return list(self._nodes.keys())
         targets = {target for source, target, direction in self._edges}
-        retval = (source for source, target, direction in self._edges if source not in targets)
+        retval = (
+            source for source, target, direction in self._edges if source not in targets
+        )
         return sorted(retval)
 
     def get_operator(self, nid):
@@ -126,15 +126,20 @@ class ExecutionTree:
         while len(my_edges) > 0:
             # find all of the exits
             sources = {source for source, target, direction in my_edges}
-            exits = {target for source, target, direction in my_edges if target not in sources}
+            exits = {
+                target
+                for source, target, direction in my_edges
+                if target not in sources
+            }
 
             if len(exits) == 0:
                 return False
 
             # remove the exits
             new_edges = [
-                (source, target, direction) for source, target, direction in my_edges if target not in exits
+                (source, target, direction)
+                for source, target, direction in my_edges
+                if target not in exits
             ]
             my_edges = new_edges
         return True
-    

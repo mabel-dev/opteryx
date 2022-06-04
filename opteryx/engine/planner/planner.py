@@ -47,7 +47,6 @@ from opteryx.engine.attribute_types import TOKEN_TYPES
 from opteryx.engine.functions import is_function
 from opteryx.engine.planner.execution_tree import ExecutionTree
 from opteryx.engine.planner.operations import *
-from opteryx.engine.planner.operations.inner_join_node import InnerJoinNode
 from opteryx.engine.planner.temporal import extract_temporal_filters
 from opteryx.exceptions import SqlError
 from opteryx.utils import dates
