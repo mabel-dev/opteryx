@@ -40,10 +40,12 @@ note: This module does not handle temporal filters, those as part of the FOR cla
 these are not supported by SqlOxide and so are in a different module which strips
 temporal aspects out of the query.
 """
+import datetime
 import numpy
 
 from opteryx.engine.attribute_types import TOKEN_TYPES
 from opteryx.engine.functions import is_function
+from opteryx.engine.planner.execution_tree import ExecutionTree
 from opteryx.engine.planner.operations import *
 from opteryx.engine.planner.operations.inner_join_node import InnerJoinNode
 from opteryx.engine.planner.temporal import extract_temporal_filters
@@ -68,16 +70,13 @@ OPERATOR_XLAT = {
 }
 
 
-class QueryPlanner(object):
+class QueryPlanner(ExecutionTree):
     def __init__(self, statistics, reader, cache, partition_scheme):
         """
-        PLan represents Directed Acyclic Graphs which are used to describe data
-        pipelines.
+        Planner creates a plan (Execution Tree or DAG) which presents the plan to
+        respond to the query.
         """
-        import datetime
-
-        self.nodes: dict = {}
-        self.edges: list = []
+        super().__init__()
 
         self._ast = None
 
@@ -86,8 +85,8 @@ class QueryPlanner(object):
         self._cache = cache
         self._partition_scheme = partition_scheme
 
-        self._start_date = datetime.datetime.today()
-        self._end_date = datetime.datetime.today()
+        self._start_date = datetime.datetime.utcnow().date()
+        self._end_date = datetime.datetime.utcnow().date()
 
     def __repr__(self):
         return "QueryPlanner"
@@ -789,83 +788,6 @@ class QueryPlanner(object):
         table = pyarrow.Table.from_pylist(nodes)
         table = Columns.create_table_metadata(table, table.num_rows, "plan", None)
         yield table
-
-    def add_operator(self, name, operator):
-        """
-        Add a step to the DAG
-
-        Parameters:
-            name: string
-                The name of the step, must be unique
-            Operator: BaseOperator
-                The Operator
-        """
-        self.nodes[name] = operator
-
-    def link_operators(self, source_operator, target_operator):
-        """
-        Link steps in a flow.
-
-        Parameters:
-            source_operator: string
-                The name of the source step
-            target_operator: string
-                The name of the target step
-        """
-        edge = (source_operator, target_operator)
-        if edge not in self.edges:
-            self.edges.append((source_operator, target_operator))
-
-    def get_outgoing_links(self, name):
-        """
-        Get the names of outgoing links from a given step.
-
-        Paramters:
-            name: string
-                The name of the step to search from
-        """
-        retval = {target for source, target in self.edges if source == name}
-        return sorted(retval)
-
-    def get_exit_points(self):
-        """
-        Get steps in the flow with no outgoing steps.
-        """
-        sources = {source for source, target in self.edges}
-        retval = {target for source, target in self.edges if target not in sources}
-        return sorted(retval)
-
-    def get_entry_points(self):
-        """
-        Get steps in the flow with no incoming steps.
-        """
-        if len(self.nodes) == 1:
-            return list(self.nodes.keys())
-        targets = {target for source, target in self.edges}
-        retval = {source for source, target in self.edges if source not in targets}
-        return sorted(retval)
-
-    def get_operator(self, name):
-        """
-        Get the Operator class by name.
-
-        Parameters:
-            name: string
-                The name of the step
-        """
-        return self.nodes.get(name)
-
-    def merge(self, assimilatee):
-        """
-        Merge a flow into the current flow.
-
-        Parameters:
-            assimilatee: Flow
-                The flow to assimilate into the current flows
-        """
-        self.nodes = {**self.nodes, **assimilatee.nodes}
-        self.edges += assimilatee.edges
-        self.edges = list(set(self.edges))
 
     #    def __repr__(self):
     #        return "\n".join(list(self._draw()))
