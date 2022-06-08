@@ -44,14 +44,17 @@ class InnerJoinNode(BasePlanNode):
     def config(self):  # pragma: no cover
         return ""
 
-    def execute(self, data_pages: Iterable) -> Iterable:
+    def execute(self) -> Iterable:
 
-        from opteryx.engine.planner.operations import DatasetReaderNode
+        if len(self._producers) != 2:
+            raise SqlError(f"{self.name} expects two producers")
 
-        if isinstance(self._right_table, DatasetReaderNode):
-            self._right_table = pyarrow.concat_tables(
-                self._right_table.execute(None)
-            )  # type:ignore
+        left_node = self._producers[0]
+        right_node = self._producers[1]
+
+        self._right_table = pyarrow.concat_tables(
+            right_node.execute()
+        )  # type:ignore
 
         if self._using:
 
@@ -62,7 +65,7 @@ class InnerJoinNode(BasePlanNode):
                 for col in self._using
             ]
 
-            for page in data_pages:
+            for page in left_node.execute():
 
                 if left_columns is None:
                     left_columns = Columns(page)
@@ -83,7 +86,7 @@ class InnerJoinNode(BasePlanNode):
             right_columns = Columns(self._right_table)
             left_columns = None
 
-            for page in data_pages:
+            for page in left_node.execute():
 
                 if left_columns is None:
                     left_columns = Columns(page)

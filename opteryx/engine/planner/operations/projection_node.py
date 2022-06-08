@@ -77,21 +77,25 @@ class ProjectionNode(BasePlanNode):
     def name(self):  # pragma: no cover
         return "Projection"
 
-    def execute(self, data_pages: Iterable) -> Iterable:
+    def execute(self) -> Iterable:
 
+        if len(self._producers) != 1:
+            raise SqlError(f"{self.name} on expects a single producer")
+
+        data_pages = self._producers[0]
         if isinstance(data_pages, pyarrow.Table):
             data_pages = (data_pages,)
 
         # if we have nothing to do, move along
         if self._projection == {"*": None}:
             # print(f"projector yielding *")
-            yield from data_pages
+            yield from data_pages.execute()
             return
 
         # we can't do much with this until we have a chunk to read the metadata from
         columns = None
 
-        for page in data_pages:
+        for page in data_pages.execute():
 
             # first time round we're going work out what we need from the metadata
             if columns is None:

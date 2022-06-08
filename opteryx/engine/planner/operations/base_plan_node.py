@@ -18,6 +18,9 @@ from opteryx.engine.query_statistics import QueryStatistics
 
 
 class BasePlanNode(abc.ABC):
+
+    _producers = None
+
     def __init__(self, statistics: QueryStatistics, **config):
         """
         This is the base class for nodes in the execution plan.
@@ -28,8 +31,11 @@ class BasePlanNode(abc.ABC):
         """
         pass
 
-    def execute(self, data_pages: Iterable) -> Iterable:
-        raise NotImplementedError('"execute" method must be overridden')
+    def __call__(self):
+        return self.execute()
+
+    def set_producers(self, producers):
+        self._producers = producers
 
     @property
     def greedy(self):  # pragma: no cover

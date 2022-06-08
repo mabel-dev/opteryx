@@ -34,7 +34,7 @@ class ExecutionTree:
         """
         self._nodes[nid] = operator
 
-    def link_operators(self, source_operator, target_operator, direction=None):
+    def link_operators(self, source_operator, target_operator, connection_name=None):
         """
         Link steps in a flow.
 
@@ -43,13 +43,13 @@ class ExecutionTree:
                 The id of the source step
             target_operator: string
                 The id of the target step
-            direction: string (optional)
-                Left/Right/None, the direction of the incoming node
+            connection_name: string (optional)
+                The name of the connection, for joins this will be Left/Right
         """
         edge = (
             source_operator,
             target_operator,
-            direction,
+            connection_name,
         )
         if edge not in self._edges:
             self._edges.append(edge)
@@ -62,7 +62,9 @@ class ExecutionTree:
             name: string
                 The name of the step to search from
         """
-        retval = {target for source, target, direction in self._edges if source == nid}
+        retval = {
+            target for source, target, connection_name in self._edges if source == nid
+        }
         return sorted(retval)
 
     def get_incoming_links(self, nid):
@@ -76,9 +78,9 @@ class ExecutionTree:
         retval = {
             (
                 source,
-                direction,
+                connection_name,
             )
-            for source, target, direction in self._edges
+            for source, target, connection_name in self._edges
             if target == nid
         }
         return sorted(retval)
@@ -87,9 +89,13 @@ class ExecutionTree:
         """
         Get steps in the flow with no outgoing steps.
         """
-        sources = {source for source, target, direction in self._edges}
+        if len(self._nodes) == 1:
+            return list(self._nodes.keys())
+        sources = {source for source, target, connection_name in self._edges}
         retval = (
-            target for source, target, direction in self._edges if target not in sources
+            target
+            for source, target, connection_name in self._edges
+            if target not in sources
         )
         return sorted(retval)
 
@@ -99,9 +105,11 @@ class ExecutionTree:
         """
         if len(self._nodes) == 1:
             return list(self._nodes.keys())
-        targets = {target for source, target, direction in self._edges}
+        targets = {target for source, target, connection_name in self._edges}
         retval = (
-            source for source, target, direction in self._edges if source not in targets
+            source
+            for source, target, connection_name in self._edges
+            if source not in targets
         )
         return sorted(retval)
 
@@ -125,10 +133,10 @@ class ExecutionTree:
 
         while len(my_edges) > 0:
             # find all of the exits
-            sources = {source for source, target, direction in my_edges}
+            sources = {source for source, target, connection_name in my_edges}
             exits = {
                 target
-                for source, target, direction in my_edges
+                for source, target, connection_name in my_edges
                 if target not in sources
             }
 
@@ -137,8 +145,8 @@ class ExecutionTree:
 
             # remove the exits
             new_edges = [
-                (source, target, direction)
-                for source, target, direction in my_edges
+                (source, target, connection_name)
+                for source, target, connection_name in my_edges
                 if target not in exits
             ]
             my_edges = new_edges

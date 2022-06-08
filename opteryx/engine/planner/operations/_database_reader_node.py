@@ -11,137 +11,27 @@
 # limitations under the License.
 
 """
-Dataset Reader Node
+Database Reader Node
 
 This is a SQL Query Execution Plan Node.
 
-This Node reads and parses the data from a dataset into a Table.
-
-We plan to do the following:
-
-USE THE ZONEMAP:
-- Respond to simple aggregations using the zonemap, such as COUNT(*)
-- Use BRIN and selections to filter out blobs from being read that don't contain
-  records which can match the selections.
-
-PARALLELIZE READING:
-- As one blob is read, the next is immediately cached for reading
+This Node reads and parses the data from a database into a Table.
 """
 import datetime
 
-from enum import Enum
 from typing import Iterable, Optional
-from cityhash import CityHash64
+
 
 import time
 
-from opteryx.engine.attribute_types import TOKEN_TYPES
 from opteryx.engine.query_statistics import QueryStatistics
 from opteryx.engine.planner.operations import BasePlanNode
-from opteryx.exceptions import DatabaseError, SqlError
-from opteryx.storage import file_decoders
 from opteryx.storage.adapters import DiskStorage
 from opteryx.storage.schemes import MabelPartitionScheme
 from opteryx.utils.columns import Columns
 
 
-class ExtentionType(str, Enum):
-    """labels for the file extentions"""
-
-    DATA = "DATA"
-    CONTROL = "CONTROL"
-
-
-do_nothing = lambda x, y: x
-
-
-def _generate_series(alias, *args):
-
-    from opteryx.utils import intervals, dates
-
-    arg_len = len(args)
-    arg_vals = [i[0] for i in args]
-    first_arg_type = args[0][1]
-
-    # if the parameters are numbers, generate series is an alias for range
-    if first_arg_type == TOKEN_TYPES.NUMERIC:
-        if arg_len not in (1, 2, 3):
-            raise SqlError("generate_series for numbers takes 1,2 or 3 parameters.")
-        return [{alias: i} for i in intervals.generate_range(*arg_vals)]
-
-    if first_arg_type == TOKEN_TYPES.TIMESTAMP:
-        if arg_len != 3:
-            raise SqlError(
-                "generate_series for dates needs start, end, and interval parameters"
-            )
-        return [{alias: i} for i in dates.date_range(*arg_vals)]
-
-
-def _unnest(alias, *args):
-    """unnest converts an list into rows"""
-    return [{alias: value} for value in args[0][0]]
-
-
-KNOWN_EXTENSIONS = {
-    "complete": (do_nothing, ExtentionType.CONTROL),
-    "ignore": (do_nothing, ExtentionType.CONTROL),
-    "arrow": (file_decoders.arrow_decoder, ExtentionType.DATA),  # feather
-    "jsonl": (file_decoders.jsonl_decoder, ExtentionType.DATA),
-    "orc": (file_decoders.orc_decoder, ExtentionType.DATA),
-    "parquet": (file_decoders.parquet_decoder, ExtentionType.DATA),
-    "zstd": (file_decoders.zstd_decoder, ExtentionType.DATA),  # jsonl/zstd
-}
-
-FUNCTIONS = {
-    "generate_series": _generate_series,
-    "unnest": _unnest,
-}
-
-
-def _get_sample_dataset(dataset, alias):
-    # we do this like this so the datasets are not loaded into memory unless
-    # they are going to be used
-    from opteryx import samples
-
-    sample_datasets = {
-        "$satellites/": samples.satellites,
-        "$planets/": samples.planets,
-        "$astronauts/": samples.astronauts,
-        "$no_table/": samples.no_table,
-    }
-    dataset = dataset.lower()
-    if dataset in sample_datasets:
-        table = sample_datasets[dataset]()
-        table = Columns.create_table_metadata(
-            table=table,
-            expected_rows=table.num_rows,
-            name=dataset[:-1],
-            table_aliases=[alias],
-        )
-        return table
-    raise DatabaseError(f"Dataset not found `{dataset}`.")
-
-
-def _function_dataset(definition, alias):
-
-    function = definition.get("function", "")
-    args = definition.get("args", [])
-
-    data = FUNCTIONS[function](alias, *args)
-
-    import pyarrow
-
-    table = pyarrow.Table.from_pylist(data)
-    table = Columns.create_table_metadata(
-        table=table,
-        expected_rows=table.num_rows,
-        name=function,
-        table_aliases=[alias],
-    )
-    return table
-
-
-class DatasetReaderNode(BasePlanNode):
+class DatabaseReaderNode(BasePlanNode):
     def __init__(self, statistics: QueryStatistics, **config):
         """
         The Dataset Reader Node is responsible for reading the relevant blobs
@@ -154,8 +44,7 @@ class DatasetReaderNode(BasePlanNode):
         today = datetime.datetime.utcnow().date()
 
         self._statistics = statistics
-        self._dataset = config.get("dataset", None)
-        self._alias = config.get("alias", None)
+        self._alias, self._dataset = config.get("dataset", [None, None])
 
         if isinstance(self._dataset, (list, QueryPlanner, dict)):
             return
@@ -183,9 +72,9 @@ class DatasetReaderNode(BasePlanNode):
 
     @property
     def name(self):  # pragma: no cover
-        return "Reader"
+        return "Database Dataset Reader"
 
-    def execute(self) -> Iterable:
+    def execute(self, data_pages: Optional[Iterable]) -> Iterable:
 
         from opteryx.engine.planner.planner import QueryPlanner
 

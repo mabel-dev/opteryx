@@ -67,7 +67,6 @@ def add_interval(
     match = TIMEDELTA_PATTERN.match(interval)
     if match:
         parts = {k: int(v) for k, v in match.groupdict().items() if v}
-        print(parts)
         # time delta doesn't include weeks, months or years
         if "weeks" in parts:
             weeks = parts.pop("weeks")

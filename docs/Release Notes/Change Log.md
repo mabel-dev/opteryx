@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 **Changed**
 
 - (non-breaking) Blob-based readers (disk & GCS) moved from 'local' and 'network' paths to a new 'blob' path. ([@joocer](https://github.com/joocer]))
+- (non-breaking) Query Execution rewritten. ([@joocer](https://github.com/joocer]))
 
 ### [0.0.2] - 2022-06-03
 
