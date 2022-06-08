@@ -90,7 +90,7 @@ class FunctionDatasetNode(BasePlanNode):
 
     def execute(self) -> Iterable:
 
-        data = FUNCTIONS[self._function](self._alias, *self._args)
+        data = FUNCTIONS[self._function](self._alias, *self._args)  # type:ignore
 
         table = pyarrow.Table.from_pylist(data)
         table = Columns.create_table_metadata(

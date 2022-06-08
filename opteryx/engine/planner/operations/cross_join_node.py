@@ -195,8 +195,8 @@ class CrossJoinNode(BasePlanNode):
         if len(self._producers) != 2:
             raise SqlError(f"{self.name} expects two producers")
 
-        left_node = self._producers[0]
-        right_node = self._producers[1]
+        left_node = self._producers[0]  # type:ignore
+        right_node = self._producers[1]  # type:ignore
 
         if self._join_type == "CrossJoin":
 

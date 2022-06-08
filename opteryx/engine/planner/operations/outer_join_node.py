@@ -53,8 +53,8 @@ class OuterJoinNode(BasePlanNode):
         if len(self._producers) != 2:
             raise SqlError(f"{self.name} expects two producers")
 
-        left_node = self._producers[0]
-        right_node = self._producers[1]
+        left_node = self._producers[0]  # type:ignore
+        right_node = self._producers[1]  # type:ignore
 
         self._right_table = pyarrow.concat_tables(right_node.execute())  # type:ignore
 
