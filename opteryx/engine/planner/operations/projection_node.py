@@ -82,7 +82,7 @@ class ProjectionNode(BasePlanNode):
         if len(self._producers) != 1:
             raise SqlError(f"{self.name} on expects a single producer")
 
-        data_pages = self._producers[0]
+        data_pages = self._producers[0]  # type:ignore
         if isinstance(data_pages, pyarrow.Table):
             data_pages = (data_pages,)
 
