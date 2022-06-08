@@ -780,16 +780,24 @@ class QueryPlanner(ExecutionTree):
         def _inner_explain(node, depth):
             if depth == 1:
                 operator = self.get_operator(node)
-                yield {"operator": operator.name, "config": operator.config, "depth": depth - 1}
+                yield {
+                    "operator": operator.name,
+                    "config": operator.config,
+                    "depth": depth - 1,
+                }
             incoming_operators = self.get_incoming_links(node)
             for operator_name in incoming_operators:
                 operator = self.get_operator(operator_name[0])
                 if isinstance(operator, BasePlanNode):
-                    yield {"operator": operator.name, "config": operator.config, "depth": depth}
+                    yield {
+                        "operator": operator.name,
+                        "config": operator.config,
+                        "depth": depth,
+                    }
                 yield from _inner_explain(operator_name[0], depth + 1)
 
         head = self.get_exit_points()
-        #print(head, self._edges)
+        # print(head, self._edges)
         if len(head) != 1:
             raise SqlError(f"Problem with the plan - it has {len(head)} heads.")
         plan = list(_inner_explain(head[0], 1))
@@ -805,7 +813,7 @@ class QueryPlanner(ExecutionTree):
         for node in nodes:
             producers = self.get_incoming_links(node)
 
-            #print(node, producers)
+            # print(node, producers)
             operator = self.get_operator(node)
             if producers:
                 operator.set_producers([self.get_operator(i[0]) for i in producers])
@@ -814,7 +822,7 @@ class QueryPlanner(ExecutionTree):
     def execute(self):
         # we get the tail of the query - the first steps
         head = self.get_exit_points()
-        #print(head, self._edges)
+        # print(head, self._edges)
         if len(head) != 1:
             raise SqlError(f"Problem with the plan - it has {len(head)} heads.")
         self._inner(head)
