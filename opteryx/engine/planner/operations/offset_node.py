@@ -23,6 +23,7 @@ import pyarrow
 
 from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
 from opteryx.engine.query_statistics import QueryStatistics
+from opteryx.exceptions import SqlError
 
 
 class OffsetNode(BasePlanNode):
@@ -38,14 +39,20 @@ class OffsetNode(BasePlanNode):
     def config(self):  # pragma: no cover
         return str(self._offset)
 
-    def execute(self, data_pages: Iterable) -> Iterable:
+    def execute(self) -> Iterable:
+
+        if len(self._producers) != 1:
+            raise SqlError(f"{self.name} on expects a single producer")
+
+        data_pages = self._producers[0]  # type:ignore
+        if isinstance(data_pages, pyarrow.Table):
+            data_pages = (data_pages,)
 
         row_count = 0
 
-        if isinstance(data_pages, pyarrow.Table):
-            data_pages = [data_pages]
+        iterator = data_pages.execute()
 
-        for page in data_pages:
+        for page in iterator:
             if (row_count + page.num_rows) > self._offset:
                 page = page.slice(
                     self._offset - row_count, page.num_rows  # type:ignore
@@ -54,4 +61,4 @@ class OffsetNode(BasePlanNode):
                 break
             row_count += page.num_rows
 
-        yield from data_pages
+        yield from iterator

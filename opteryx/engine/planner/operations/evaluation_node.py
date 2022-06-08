@@ -58,14 +58,18 @@ class EvaluationNode(BasePlanNode):
     def config(self):  # pragma: no cover
         return f"{self.functions}"
 
-    def execute(self, data_pages: Iterable) -> Iterable:
+    def execute(self) -> Iterable:
 
+        if len(self._producers) != 1:
+            raise SqlError(f"{self.name} on expects a single producer")
+
+        data_pages = self._producers[0]  # type:ignore
         if isinstance(data_pages, pyarrow.Table):
-            data_pages = [data_pages]
+            data_pages = (data_pages,)
 
         columns = None
 
-        for page in data_pages:
+        for page in data_pages.execute():
 
             if columns is None:
                 columns = Columns(page)

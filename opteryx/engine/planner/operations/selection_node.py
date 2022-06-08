@@ -230,14 +230,31 @@ class SelectionNode(BasePlanNode):
 
     @property
     def config(self):  # pragma: no cover
-        return str(self._filter)
+        def _inner_config(predicate):
+            if isinstance(predicate, tuple):
+                if len(predicate) > 1 and predicate[1] == TOKEN_TYPES.IDENTIFIER:
+                    return f"`{predicate[0]}`"
+                if len(predicate) > 1 and predicate[1] == TOKEN_TYPES.VARCHAR:
+                    return f'"{predicate[0]}"'
+                if len(predicate) == 2:
+                    return f"{predicate[0]}"
+                return "(" + " ".join(_inner_config(p) for p in predicate) + ")"
+            if isinstance(predicate, list):
+                return "[" + ",".join(_inner_config(p) for p in predicate) + "]"
+            return f"{predicate}"
+
+        return _inner_config(self._filter)
 
     @property
     def name(self):  # pragma: no cover
         return "Selection"
 
-    def execute(self, data_pages: Iterable) -> Iterable:
+    def execute(self) -> Iterable:
 
+        if len(self._producers) != 1:
+            raise SqlError(f"{self.name} on expects a single producer")
+
+        data_pages = self._producers[0]  # type:ignore
         if isinstance(data_pages, Table):
             data_pages = (data_pages,)
 
@@ -250,7 +267,7 @@ class SelectionNode(BasePlanNode):
             # before we can continue.
             self._unfurled_filter = _evaluate_subqueries(self._filter)
 
-            for page in data_pages:
+            for page in data_pages.execute():
 
                 # what we want to do is rewrite the filters to refer to the column names
                 # NOT rewrite the column names to match the filters

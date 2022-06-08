@@ -24,6 +24,7 @@ from pyarrow import Table
 from opteryx.engine.query_statistics import QueryStatistics
 from opteryx.engine.attribute_types import PARQUET_TYPES
 from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
+from opteryx.exceptions import SqlError
 from opteryx.utils.columns import Columns
 
 
@@ -39,31 +40,38 @@ class ShowColumnsNode(BasePlanNode):
     def config(self):  # pragma: no cover
         return ""
 
-    def execute(self, data_pages: Iterable) -> Iterable:
+    def execute(self) -> Iterable:
 
-        if not isinstance(data_pages, Table):
-            data_pages = next(data_pages, None)  # type:ignore
+        if len(self._producers) != 1:
+            raise SqlError(f"{self.name} on expects a single producer")
+
+        data_pages = self._producers[0]  # type:ignore
+        if isinstance(data_pages, Table):
+            data_pages = (data_pages,)
 
         if data_pages is None:
             return None
 
-        source_metadata = Columns(data_pages)
+        for page in data_pages.execute():
 
-        buffer = []
-        for column in data_pages.column_names:
-            column_data = data_pages.column(column)
-            new_row = {
-                "column_name": source_metadata.get_preferred_name(column),
-                "type": PARQUET_TYPES.get(str(column_data.type), "OTHER"),
-                "nulls": (column_data.null_count) > 0,
-            }
-            buffer.append(new_row)
+            source_metadata = Columns(page)
 
-        table = Table.from_pylist(buffer)
-        table = Columns.create_table_metadata(
-            table=table,
-            expected_rows=len(buffer),
-            name="show_columns",
-            table_aliases=[],
-        )
-        yield table
+            buffer = []
+            for column in page.column_names:
+                column_data = page.column(column)
+                new_row = {
+                    "column_name": source_metadata.get_preferred_name(column),
+                    "type": PARQUET_TYPES.get(str(column_data.type), "OTHER"),
+                    "nulls": (column_data.null_count) > 0,
+                }
+                buffer.append(new_row)
+
+            table = Table.from_pylist(buffer)
+            table = Columns.create_table_metadata(
+                table=table,
+                expected_rows=len(buffer),
+                name="show_columns",
+                table_aliases=[],
+            )
+            yield table
+            return

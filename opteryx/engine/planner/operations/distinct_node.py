@@ -23,6 +23,7 @@ from pyarrow import Table, concat_tables
 
 from opteryx.engine.planner.operations import BasePlanNode
 from opteryx.engine.query_statistics import QueryStatistics
+from opteryx.exceptions import SqlError
 from opteryx.third_party.pyarrow_ops import drop_duplicates
 
 
@@ -43,12 +44,16 @@ class DistinctNode(BasePlanNode):
     def name(self):  # pragma: no cover
         return "Distinction"
 
-    def execute(self, data_pages: Iterable) -> Iterable:
+    def execute(self) -> Iterable:
 
+        if len(self._producers) != 1:
+            raise SqlError(f"{self.name} on expects a single producer")
+
+        data_pages = self._producers[0]  # type:ignore
         if isinstance(data_pages, Table):
-            data_pages = [data_pages]
+            data_pages = (data_pages,)
 
         if self._distinct:
-            yield drop_duplicates(concat_tables(data_pages))
+            yield drop_duplicates(concat_tables(data_pages.execute()))
             return
         yield from data_pages

@@ -27,6 +27,7 @@ from opteryx import config
 from opteryx.engine.attribute_types import TOKEN_TYPES
 from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
 from opteryx.engine.query_statistics import QueryStatistics
+from opteryx.exceptions import SqlError
 from opteryx.utils.columns import Columns
 
 
@@ -62,13 +63,10 @@ def _cross_join(left, right):
 
     from opteryx.third_party.pyarrow_ops import align_tables
 
-    if isinstance(left, pyarrow.Table):
-        left = [left]
-
     right_columns = Columns(right)
     left_columns = None
 
-    for left_page in left:
+    for left_page in left.execute():
 
         if left_columns is None:
             left_columns = Columns(left_page)
@@ -122,15 +120,12 @@ def _cross_join_unnest(left, column, alias):
     if column[1] != TOKEN_TYPES.IDENTIFIER:
         raise NotImplementedError("Can only CROSS JOIN UNNEST on a field")
 
-    if isinstance(left, pyarrow.Table):
-        left = [left]
-
     metadata = None
 
     if alias is None:
         alias = f"UNNEST({column[0]})"
 
-    for left_page in left:
+    for left_page in left.execute():
 
         if metadata is None:
             metadata = Columns(left_page)
@@ -191,23 +186,33 @@ class CrossJoinNode(BasePlanNode):
 
     @property
     def config(self):  # pragma: no cover
+        if self._join_type == "CrossJoinUnnest":
+            return f"UNNEST()"
         return ""
 
-    def execute(self, data_pages: Iterable) -> Iterable:
+    def execute(self) -> Iterable:
 
-        from opteryx.engine.planner.operations import DatasetReaderNode
+        if len(self._producers) != 2:
+            raise SqlError(f"{self.name} expects two producers")
 
-        if isinstance(self._right_table, DatasetReaderNode):
-            self._right_table = pyarrow.concat_tables(
-                self._right_table.execute(None)
-            )  # type:ignore
+        left_node = self._producers[0]  # type:ignore
+        right_node = self._producers[1]  # type:ignore
 
         if self._join_type == "CrossJoin":
-            yield from _cross_join(data_pages, self._right_table)
+
+            self._right_table = pyarrow.concat_tables(
+                right_node.execute()
+            )  # type:ignore
+
+            yield from _cross_join(left_node, self._right_table)
 
         elif self._join_type == "CrossJoinUnnest":
+
+            alias, function = right_node
+            function, column = function
+
             yield from _cross_join_unnest(
-                left=data_pages,
-                column=self._right_table[1][1][0],
-                alias=self._right_table[0],
+                left=left_node,
+                column=column[0],
+                alias=alias,
             )

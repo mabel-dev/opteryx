@@ -36,7 +36,6 @@ OUTER_JOINS = {
 
 class OuterJoinNode(BasePlanNode):
     def __init__(self, statistics: QueryStatistics, **config):
-        self._right_table = config.get("right_table")
         self._join_type = OUTER_JOINS[config.get("join_type")]
         self._on = config.get("join_on")
         self._using = config.get("join_using")
@@ -49,55 +48,56 @@ class OuterJoinNode(BasePlanNode):
     def config(self):  # pragma: no cover
         return ""
 
-    def execute(self, data_pages: Iterable) -> Iterable:
+    def execute(self) -> Iterable:
 
-        from opteryx.engine.planner.operations import DatasetReaderNode
+        if len(self._producers) != 2:
+            raise SqlError(f"{self.name} expects two producers")
 
-        if isinstance(self._right_table, DatasetReaderNode):
-            self._right_table = pyarrow.concat_tables(
-                self._right_table.execute(None)
-            )  # type:ignore
+        left_node = self._producers[0]  # type:ignore
+        right_node = self._producers[1]  # type:ignore
 
-            right_columns = Columns(self._right_table)
-            left_columns = None
+        self._right_table = pyarrow.concat_tables(right_node.execute())  # type:ignore
 
-            for page in data_pages:
+        right_columns = Columns(self._right_table)
+        left_columns = None
 
-                if left_columns is None:
-                    left_columns = Columns(page)
-                    try:
-                        right_join_column = right_columns.get_column_from_alias(
-                            self._on[2][0], only_one=True
-                        )
-                        left_join_column = left_columns.get_column_from_alias(
-                            self._on[0][0], only_one=True
-                        )
-                    except SqlError:
-                        # the ON condition may not always be in the order of the tables
-                        right_join_column = right_columns.get_column_from_alias(
-                            self._on[0][0], only_one=True
-                        )
-                        left_join_column = left_columns.get_column_from_alias(
-                            self._on[2][0], only_one=True
-                        )
+        for page in left_node.execute():
 
-                    # ensure the types are compatible for joining by coercing numerics
-                    self._right_table = arrow.coerce_column(
-                        self._right_table, right_join_column
+            if left_columns is None:
+                left_columns = Columns(page)
+                try:
+                    right_join_column = right_columns.get_column_from_alias(
+                        self._on[2][0], only_one=True
+                    )
+                    left_join_column = left_columns.get_column_from_alias(
+                        self._on[0][0], only_one=True
+                    )
+                except SqlError:
+                    # the ON condition may not always be in the order of the tables
+                    right_join_column = right_columns.get_column_from_alias(
+                        self._on[0][0], only_one=True
+                    )
+                    left_join_column = left_columns.get_column_from_alias(
+                        self._on[2][0], only_one=True
                     )
 
-                new_metadata = right_columns + left_columns
-
-                page = arrow.coerce_column(page, left_join_column)
-
-                # do the join
-                new_page = page.join(
-                    self._right_table,
-                    keys=[left_join_column],
-                    right_keys=[right_join_column],
-                    join_type=self._join_type.lower(),
-                    coalesce_keys=False,
+                # ensure the types are compatible for joining by coercing numerics
+                self._right_table = arrow.coerce_column(
+                    self._right_table, right_join_column
                 )
-                # update the metadata
-                new_page = new_metadata.apply(new_page)
-                yield new_page
+
+            new_metadata = right_columns + left_columns
+
+            page = arrow.coerce_column(page, left_join_column)
+
+            # do the join
+            new_page = page.join(
+                self._right_table,
+                keys=[left_join_column],
+                right_keys=[right_join_column],
+                join_type=self._join_type.lower(),
+                coalesce_keys=False,
+            )
+            # update the metadata
+            new_page = new_metadata.apply(new_page)
+            yield new_page

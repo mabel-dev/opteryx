@@ -363,7 +363,7 @@ class QueryPlanner(ExecutionTree):
                 if len(args) > 0 and dataset == "UNNEST" and mode == "CrossJoin":
                     mode = "CrossJoinUnnest"
                     dataset = (dataset, args)
-            yield (mode, (alias, dataset), join_on, using)
+            yield (mode, alias, dataset, join_on, using)
 
     def _extract_projections(self, ast):
         """
@@ -591,7 +591,7 @@ class QueryPlanner(ExecutionTree):
             "reader",
             DatasetReaderNode(
                 statistics,
-                dataset=(None, relation),
+                dataset=relation,
                 reader=self._reader,
                 cache=self._cache,
                 partition_scheme=self._partition_scheme,
@@ -633,11 +633,13 @@ class QueryPlanner(ExecutionTree):
             _relations = [(None, "$no_table")]
 
         # We always have a data source - even if it's 'no table'
+        alias, dataset = _relations[0]
         self.add_operator(
             "from",
             DatasetReaderNode(
-                statistics,
-                dataset=_relations[0],
+                statistics=statistics,
+                alias=alias,
+                dataset=dataset,
                 reader=self._reader,
                 cache=self._cache,
                 partition_scheme=self._partition_scheme,
@@ -651,17 +653,19 @@ class QueryPlanner(ExecutionTree):
         if len(_joins) == 0 and len(_relations) == 2:
             # If there's no stated JOIN but the query has two relations, we
             # use a CROSS JOIN
-            _joins = [("CrossJoin", _relations[1], None, None)]
+            _joins = [("CrossJoin", _relations[1][0], _relations[1][1], None, None)]
         for join_id, _join in enumerate(_joins):
             if _join or len(_relations) == 2:
-                if _join[0] == "CrossJoinUnnest":
+                mode, alias, dataset, join_on, join_using = _join
+                if mode == "CrossJoinUnnest":
                     # If we're doing a CROSS JOIN UNNEST, the right table is an UNNEST function
-                    right = _join[1]
+                    right = (alias, dataset)
                 else:
                     # Otherwise, the right table needs to come from the Reader
                     right = DatasetReaderNode(
-                        statistics,
-                        dataset=_join[1],
+                        statistics=statistics,
+                        dataset=dataset,
+                        alias=alias,
                         reader=self._reader,
                         cache=self._cache,
                         partition_scheme=self._partition_scheme,
@@ -679,7 +683,7 @@ class QueryPlanner(ExecutionTree):
                     "RightOuter": OuterJoinNode,
                 }
 
-                join_node = join_nodes.get(_join[0])
+                join_node = join_nodes.get(mode)
                 if join_node is None:
                     raise SqlError(f"Join type not supported - `{_join[0]}`")
 
@@ -688,12 +692,16 @@ class QueryPlanner(ExecutionTree):
                     join_node(
                         statistics,
                         right_table=right,
-                        join_type=_join[0],
-                        join_on=_join[2],
-                        join_using=_join[3],
+                        join_type=mode,
+                        join_on=join_on,
+                        join_using=join_using,
                     ),
                 )
                 self.link_operators(last_node, f"join-{join_id}")
+
+                self.add_operator(f"join-{join_id}-right", right)
+                self.link_operators(f"join-{join_id}-right", f"join-{join_id}", "right")
+
                 last_node = f"join-{join_id}"
 
         _projection = self._extract_projections(ast)
@@ -767,44 +775,57 @@ class QueryPlanner(ExecutionTree):
     def explain(self):
 
         import pyarrow
-
         from opteryx.utils.columns import Columns
 
-        def _inner_explain(operator_name, depth):
-            depth += 1
-            operator = self.get_operator(operator_name)
-            yield {"operator": operator.name, "config": operator.config, "depth": depth}
-            out_going_links = self.get_outgoing_links(operator_name)
-            if out_going_links:
-                for next_operator_name in out_going_links:
-                    yield from _inner_explain(next_operator_name, depth)
+        def _inner_explain(node, depth):
+            if depth == 1:
+                operator = self.get_operator(node)
+                yield {
+                    "operator": operator.name,
+                    "config": operator.config,
+                    "depth": depth - 1,
+                }
+            incoming_operators = self.get_incoming_links(node)
+            for operator_name in incoming_operators:
+                operator = self.get_operator(operator_name[0])
+                if isinstance(operator, BasePlanNode):
+                    yield {
+                        "operator": operator.name,
+                        "config": operator.config,
+                        "depth": depth,
+                    }
+                yield from _inner_explain(operator_name[0], depth + 1)
 
-        entry_points = self.get_entry_points()
-        nodes = []
-        for entry_point in entry_points:
-            nodes += list(_inner_explain(entry_point, 0))
+        head = self.get_exit_points()
+        # print(head, self._edges)
+        if len(head) != 1:
+            raise SqlError(f"Problem with the plan - it has {len(head)} heads.")
+        plan = list(_inner_explain(head[0], 1))
 
-        table = pyarrow.Table.from_pylist(nodes)
+        table = pyarrow.Table.from_pylist(plan)
         table = Columns.create_table_metadata(table, table.num_rows, "plan", None)
         yield table
 
     #    def __repr__(self):
     #        return "\n".join(list(self._draw()))
 
-    def _inner_execute(self, operator_name, relation):
-        # print(f"***********{operator_name}***************")
-        operator = self.get_operator(operator_name)
-        out_going_links = self.get_outgoing_links(operator_name)
-        outcome = operator.execute(relation)
-        if out_going_links:
-            for next_operator_name in out_going_links:
-                return self._inner_execute(next_operator_name, outcome)
-        else:
-            return outcome
+    def _inner(self, nodes):
+        for node in nodes:
+            producers = self.get_incoming_links(node)
+
+            # print(node, producers)
+            operator = self.get_operator(node)
+            if producers:
+                operator.set_producers([self.get_operator(i[0]) for i in producers])
+                self._inner(i[0] for i in producers)
 
     def execute(self):
-        entry_points = self.get_entry_points()
-        rel = None
-        for entry_point in entry_points:
-            rel = self._inner_execute(entry_point, None)
-        return rel
+        # we get the tail of the query - the first steps
+        head = self.get_exit_points()
+        # print(head, self._edges)
+        if len(head) != 1:
+            raise SqlError(f"Problem with the plan - it has {len(head)} heads.")
+        self._inner(head)
+
+        operator = self.get_operator(head[0])
+        yield from operator.execute()

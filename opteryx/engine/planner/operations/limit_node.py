@@ -23,6 +23,7 @@ from pyarrow import Table, concat_tables
 
 from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
 from opteryx.engine.query_statistics import QueryStatistics
+from opteryx.exceptions import SqlError
 
 
 class LimitNode(BasePlanNode):
@@ -37,17 +38,20 @@ class LimitNode(BasePlanNode):
     def config(self):  # pragma: no cover
         return str(self._limit)
 
-    def execute(self, data_pages: Iterable) -> Iterable:
+    def execute(self) -> Iterable:
 
-        result_set = []
-        row_count = 0
+        if len(self._producers) != 1:
+            raise SqlError(f"{self.name} on expects a single producer")
 
+        data_pages = self._producers[0]  # type:ignore
         if isinstance(data_pages, Table):
             data_pages = (data_pages,)
 
+        result_set = []
+        row_count = 0
         page = None
 
-        for page in data_pages:
+        for page in data_pages.execute():
             if page.num_rows > 0:
                 row_count += page.num_rows
                 result_set.append(page)

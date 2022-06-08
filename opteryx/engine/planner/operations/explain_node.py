@@ -35,6 +35,6 @@ class ExplainNode(BasePlanNode):
     def config(self):
         return ""
 
-    def execute(self, data_pages: Iterable) -> Iterable:
+    def execute(self) -> Iterable:
         if self._query_plan:
             yield from self._query_plan.explain()
