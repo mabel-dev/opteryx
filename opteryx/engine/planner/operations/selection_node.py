@@ -89,7 +89,7 @@ def _evaluate(predicate: Union[tuple, list], table: Table) -> bool:
             # The evaluation SHOULD be done as part of the evaluation node, but
             # presently it only evaluates in the SELECT clause.
             else:
-                ## TODO: push this to the evaluation node
+                # TODO: push this to the evaluation node
                 import pyarrow
 
                 from opteryx.engine.functions import FUNCTIONS
