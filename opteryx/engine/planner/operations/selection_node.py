@@ -240,6 +240,8 @@ class SelectionNode(BasePlanNode):
                     return f"{predicate[0]}"
                 return "(" + " ".join(_inner_config(p) for p in predicate) + ")"
             if isinstance(predicate, list):
+                if len(predicate) == 1:
+                    return _inner_config(predicate[0])
                 return "[" + ",".join(_inner_config(p) for p in predicate) + "]"
             return f"{predicate}"
 
