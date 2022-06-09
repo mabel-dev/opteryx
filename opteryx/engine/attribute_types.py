@@ -77,5 +77,6 @@ PARQUET_TYPES = {
     "double": OPTERYX_TYPES.NUMERIC,
     "string": OPTERYX_TYPES.VARCHAR,
     "tuple": OPTERYX_TYPES.LIST,
+    "array": OPTERYX_TYPES.LIST,
     "object": OPTERYX_TYPES.VARCHAR,
 }

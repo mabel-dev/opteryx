@@ -1,36 +1,49 @@
 """
 Original code modified for Opteryx.
 """
+from multiprocessing.sharedctypes import Value
 import numpy
 import pyarrow.compute as pc
 
-from opteryx.engine.attribute_types import PARQUET_TYPES, PYTHON_TYPES, TOKEN_TYPES
+from opteryx.engine.attribute_types import (
+    PARQUET_TYPES,
+    PYTHON_TYPES,
+    TOKEN_TYPES,
+    OPTERYX_TYPES,
+)
 
 from .helpers import columns_to_array, groupify_array
 
 
 def _get_type(var):
     if isinstance(var, numpy.ndarray):
+        if isinstance(var[0], numpy.ndarray):
+            return "LIST"
         return PARQUET_TYPES.get(str(var.dtype), f"UNSUPPORTED ({str(var.dtype)})")
-    t = type(var).__name__
-    return PYTHON_TYPES.get(t, f"OTHER ({t})")
+    type_name = type(var).__name__
+    return PYTHON_TYPES.get(type_name, f"OTHER ({type_name})")
+
+
+def _check_type(operation, type, valid_types):
+    if type not in valid_types:
+        raise TypeError(f"Cannot perform {operation} on a {type} field.")
 
 
 # Filter functionality
 def arr_op_to_idxs(arr, operator, value):
+    identifier_type = _get_type(arr)
+    literal_type = _get_type(value)
     if operator in (
         "=",
         "==",
     ):
         # type checking added for Opteryx
-        parquet_type = _get_type(arr)
-        if value is None and parquet_type == TOKEN_TYPES.NUMERIC:
+        if value is None and identifier_type == TOKEN_TYPES.NUMERIC:
             # Nones are stored as NaNs, so perform a different test
             return numpy.where(numpy.isnan(arr))
-        python_type = _get_type(value)
-        if parquet_type != python_type and value is not None:
+        if identifier_type != literal_type and value is not None:
             raise TypeError(
-                f"Type mismatch, unable to compare {parquet_type} with {python_type}"
+                f"Type mismatch, unable to compare {identifier_type} with {literal_type}"
             )
         return numpy.where(arr == value)
     elif operator in (
@@ -56,14 +69,19 @@ def arr_op_to_idxs(arr, operator, value):
         # MODIFIED FOR OPTERYX - see comment above
         return numpy.array([a not in value for a in arr], dtype=numpy.bool8)
     elif operator == "like":
+        _check_type("LIKE", identifier_type, (TOKEN_TYPES.VARCHAR))
         return pc.match_like(arr, value)
     elif operator == "not like":
+        _check_type("NOT LIKE", identifier_type, (TOKEN_TYPES.VARCHAR))
         return numpy.invert(pc.match_like(arr, value))
     elif operator == "ilike":
+        _check_type("ILIKE", identifier_type, (TOKEN_TYPES.VARCHAR))
         return pc.match_like(arr, value, ignore_case=True)
     elif operator == "not ilike":
+        _check_type("NOT ILIKE", identifier_type, (TOKEN_TYPES.VARCHAR))
         return numpy.invert(pc.match_like(arr, value, ignore_case=True))
     elif operator == "~":
+        _check_type("~", identifier_type, (TOKEN_TYPES.VARCHAR))
         return pc.match_substring_regex(arr, value)
     else:
         raise Exception(f"Operator {operator} is not implemented!")

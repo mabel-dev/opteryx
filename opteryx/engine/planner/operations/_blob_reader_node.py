@@ -26,10 +26,8 @@ from cityhash import CityHash64
 
 import time
 
-from opteryx.engine.attribute_types import TOKEN_TYPES
 from opteryx.engine.query_statistics import QueryStatistics
 from opteryx.engine.planner.operations import BasePlanNode
-from opteryx.exceptions import DatabaseError, SqlError
 from opteryx.storage import file_decoders
 from opteryx.storage.adapters import DiskStorage
 from opteryx.storage.schemes import MabelPartitionScheme
