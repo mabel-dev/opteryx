@@ -355,7 +355,9 @@ STATEMENTS = [
         ("SELECT * FROM tests.data.framed FOR '2021-03-30'", 0, 0),
         ("SELECT * FROM tests.data.framed FOR DATES BETWEEN '2021-03-28' AND '2021-03-29", 200000, 1),
         ("SELECT * FROM tests.data.framed FOR DATES BETWEEN '2021-03-29' AND '2021-03-30", 100000, 1),
-        ("SELECT * FROM tests.data.framed FOR DATES BETWEEN '2021-03-28' AND '2021-03-30", 200000, 1)
+        ("SELECT * FROM tests.data.framed FOR DATES BETWEEN '2021-03-28' AND '2021-03-30", 200000, 1),
+        # DOESN'T WORK WITH LARGE DATASETS
+        ("SELECT * FROM (SELECT COUNT(*), column_1 FROM FAKE(5000,2) GROUP BY column_1 ORDER BY COUNT(*)) LIMIT 5", 5, 2),
     ]
 # fmt:on
 

@@ -138,3 +138,24 @@ Minutes | m
 Seconds | s
 
 Where required, periods can be combined to define more complex intervals, for example `1h30m` represents one hour and 30 minutes.
+
+## Using `FAKE`
+
+`FAKE` creates a table of random integers from provided row and column counts. This functionality has limited application outside of creating datasets for testing.
+
+A simple example is as follows:
+
+~~~sql
+SELECT * 
+  FROM FAKE(3, 2);
+~~~
+
+Result:
+
+~~~
+   column_0 │   column_1 
+------------┼------------
+      32981 │      50883
+       5037 │      42087
+      51741 │      49456
+~~~

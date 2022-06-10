@@ -63,8 +63,6 @@ class BlobReaderNode(BasePlanNode):
         """
         super().__init__(statistics=statistics, **config)
 
-        from opteryx.engine.planner.planner import QueryPlanner
-
         today = datetime.datetime.utcnow().date()
 
         self._statistics = statistics
