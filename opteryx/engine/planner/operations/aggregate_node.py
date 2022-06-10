@@ -265,15 +265,20 @@ class AggregateNode(BasePlanNode):
                 collector = {(): {"COUNT(*)": 0}}
 
         buffer: List = []
+        metadata = None
         for collected, record in collector.items():
             if len(buffer) > 1000:  # pragma: no cover
                 table = pyarrow.Table.from_pylist(buffer)
-                table = Columns.create_table_metadata(
-                    table=table,
-                    expected_rows=len(collector),
-                    name=columns.table_name,
-                    table_aliases=[],
-                )
+                if metadata is None:
+                    table = Columns.create_table_metadata(
+                        table=table,
+                        expected_rows=len(collector),
+                        name=columns.table_name,
+                        table_aliases=[],
+                    )
+                    metadata = Columns(table)
+                else:
+                    table = metadata.apply(table)
                 yield table
                 buffer = []
             for field, value in collected:
@@ -292,10 +297,14 @@ class AggregateNode(BasePlanNode):
 
         if len(buffer) > 0:
             table = pyarrow.Table.from_pylist(buffer)
-            table = Columns.create_table_metadata(
-                table=table,
-                expected_rows=len(collector),
-                name="groupby",
-                table_aliases=[],
-            )
+            if metadata is None:
+                table = Columns.create_table_metadata(
+                    table=table,
+                    expected_rows=len(collector),
+                    name=columns.table_name,
+                    table_aliases=[],
+                )
+                metadata = Columns(table)
+            else:
+                table = metadata.apply(table)
             yield table

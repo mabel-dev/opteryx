@@ -35,6 +35,8 @@ from cityhash import CityHash64
 
 import time
 
+from pyparsing import col
+
 from opteryx.engine.attribute_types import TOKEN_TYPES
 from opteryx.engine.query_statistics import QueryStatistics
 from opteryx.engine.planner.operations import BasePlanNode
@@ -82,6 +84,25 @@ def _unnest(alias, *args):
     return [{alias: value} for value in args[0][0]]
 
 
+def _fake_data(alias, *args):
+
+    import os
+    import sys
+
+    def _inner(rows, columns):
+        dataset = []
+        for row in range(rows):
+            yield {
+                f"column_{col}": int.from_bytes(os.urandom(2), sys.byteorder)
+                for col in range(columns)
+            }
+
+    rows, columns = args[0][0], args[1][0]
+    rows = int(rows)
+    columns = int(columns)
+    return list(_inner(rows, columns))
+
+
 KNOWN_EXTENSIONS = {
     "complete": (do_nothing, ExtentionType.CONTROL),
     "ignore": (do_nothing, ExtentionType.CONTROL),
@@ -93,6 +114,7 @@ KNOWN_EXTENSIONS = {
 }
 
 FUNCTIONS = {
+    "fake": _fake_data,
     "generate_series": _generate_series,
     "unnest": _unnest,
 }
