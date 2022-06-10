@@ -30,12 +30,11 @@ PARALLELIZE READING:
 import datetime
 
 from enum import Enum
-from typing import Iterable, Optional
+from typing import Iterable
 from cityhash import CityHash64
 
 import time
 
-from pyparsing import col
 
 from opteryx.engine.attribute_types import TOKEN_TYPES
 from opteryx.engine.query_statistics import QueryStatistics
