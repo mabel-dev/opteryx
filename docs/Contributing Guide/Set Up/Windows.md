@@ -6,7 +6,7 @@ For WSL, see the Debian/Ubuntu set up guide.
 
 ### 1) Install Python (3.10 recommended)   
 
-Refer to the Python documentation for how to install Python in your environment [Python Documentation](https://docs.python-guide.org/starting/install3/linux/)
+We recommmend using [pyenv](https://github.com/pyenv/pyenv) to install and manage Python environments, particularly in development and test environments.
 
 ### 2) Install pip   
 

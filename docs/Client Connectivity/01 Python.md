@@ -1,4 +1,4 @@
-# Python Library
+# Python Embedded
 
 ## Python DBAPI
 
