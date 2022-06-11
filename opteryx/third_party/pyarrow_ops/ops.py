@@ -1,16 +1,13 @@
 """
 Original code modified for Opteryx.
 """
-from multiprocessing.sharedctypes import Value
 import numpy
 import pyarrow.compute as pc
 
-from opteryx.engine.attribute_types import (
-    PARQUET_TYPES,
-    PYTHON_TYPES,
-    TOKEN_TYPES,
-    OPTERYX_TYPES,
-)
+from opteryx.engine.attribute_types import PARQUET_TYPES
+from opteryx.engine.attribute_types import PYTHON_TYPES
+from opteryx.engine.attribute_types import TOKEN_TYPES
+
 
 from .helpers import columns_to_array, groupify_array
 
@@ -24,9 +21,11 @@ def _get_type(var):
     return PYTHON_TYPES.get(type_name, f"OTHER ({type_name})")
 
 
-def _check_type(operation, type, valid_types):
-    if type not in valid_types:
-        raise TypeError(f"Cannot perform {operation} on a {type} field.")
+def _check_type(operation, provided_type, valid_types):
+    if provided_type not in valid_types:
+        raise TypeError(
+            f"Cannot use the {operation} operation on a {provided_type} column, a {valid_types} column is required."
+        )
 
 
 # Filter functionality
@@ -123,11 +122,11 @@ def ifilters(table, filters):
 
 
 # Drop duplicates
-def drop_duplicates(table, on=[]):
+def drop_duplicates(table, columns=None):
     """
     drops duplicates, keeps the first of the set
     """
     # Gather columns to arr
-    arr = columns_to_array(table, (on if on else table.column_names))
+    arr = columns_to_array(table, (columns if columns else table.column_names))
     dic, counts, sort_idxs, bgn_idxs = groupify_array(arr)
     return table.take(sort_idxs[bgn_idxs])

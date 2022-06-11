@@ -174,6 +174,12 @@ class QueryPlanner(ExecutionTree):
             right = self._build_dnf_filters(filters["BinaryOp"]["right"])
 
             if operator in ("And"):
+                if isinstance(left, list):
+                    left.append(right)
+                    return left
+                if isinstance(right, list):
+                    right.append(left)
+                    return right
                 return [left, right]
             if operator in ("Or"):
                 return [[left], [right]]
