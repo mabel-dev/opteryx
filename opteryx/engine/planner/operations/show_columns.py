@@ -22,10 +22,11 @@ from typing import Iterable
 from pyarrow import Table
 
 from opteryx.engine.query_statistics import QueryStatistics
-from opteryx.engine.attribute_types import PARQUET_TYPES
+from opteryx.engine.attribute_types import determine_type
 from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
 from opteryx.exceptions import SqlError
 from opteryx.utils.columns import Columns
+
 
 
 class ShowColumnsNode(BasePlanNode):
@@ -39,6 +40,7 @@ class ShowColumnsNode(BasePlanNode):
     @property
     def config(self):  # pragma: no cover
         return ""
+
 
     def execute(self) -> Iterable:
 
@@ -61,7 +63,7 @@ class ShowColumnsNode(BasePlanNode):
                 column_data = page.column(column)
                 new_row = {
                     "column_name": source_metadata.get_preferred_name(column),
-                    "type": PARQUET_TYPES.get(str(column_data.type), "OTHER"),
+                    "type": determine_type(str(column_data.type)),
                     "nulls": (column_data.null_count) > 0,
                 }
                 buffer.append(new_row)
