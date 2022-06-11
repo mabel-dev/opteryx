@@ -237,6 +237,8 @@ class SelectionNode(BasePlanNode):
                 if len(predicate) > 1 and predicate[1] == TOKEN_TYPES.VARCHAR:
                     return f'"{predicate[0]}"'
                 if len(predicate) == 2:
+                    if predicate[0] == "NOT":
+                        return f"NOT {_inner_config(predicate[1])}"
                     return f"{predicate[0]}"
                 return "(" + " ".join(_inner_config(p) for p in predicate) + ")"
             if isinstance(predicate, list):

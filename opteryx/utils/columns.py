@@ -24,7 +24,6 @@ The selection operator should focus on the selection not on working out which co
 is actually being referred to.
 """
 import os
-from threading import local
 from opteryx.exceptions import SqlError
 from opteryx.utils import arrow
 
