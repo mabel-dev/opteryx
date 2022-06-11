@@ -39,7 +39,7 @@ Code should have:
 A note about comments:  
 
 - Computers will interpret anything, humans need help interpreting code
-- Prefer readable code over verbose comments
+- Spend time writing readable code rather than verbose comments
 - Humans struggle with threading, recursion, parallelization, variables called `x` and more than 10... of anything
 - Comments should usually be more than just the code in other words
 - Good variable names and well-written code doesn't always need comments

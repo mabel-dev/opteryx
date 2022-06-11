@@ -2,14 +2,14 @@
 
 ## Setting Up
 
-### 1) Install Python (3.10 recommended)   
+### 1) Install Python (3.10 recommended) 
 
-Refer to the Python documentation for how to install Python in your environment [Python Documentation](https://docs.python-guide.org/starting/install3/linux/)
+We recommmend using [pyenv](https://github.com/pyenv/pyenv) to install and manage Python environments, particularly in development and test environments.
 
 ### 2) Install pip   
 
 ~~~bash
-python -m ensurepip --upgrade
+python3 -m ensurepip --upgrade
 ~~~
 
 ### 3) Install Git   
@@ -31,13 +31,13 @@ git clone https://github.com/mabel-dev/opteryx
 ### 5) Install Dependencies   
 
 ~~~bash
-python -m pip install --upgrade -r requirements.txt
+python3 -m pip install --upgrade -r requirements.txt
 ~~~
 
 ### 6) Build Binaries   
 
 ~~~bash
-python setup.py build_ext --inplace
+python3 setup.py build_ext --inplace
 ~~~
 
 ## Running Tests
@@ -45,5 +45,5 @@ python setup.py build_ext --inplace
 To run the regression and unit tests:
 
 ~~~
-python -m pytest
+python3 -m pytest
 ~~~
