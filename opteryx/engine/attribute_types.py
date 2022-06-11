@@ -82,6 +82,7 @@ PARQUET_TYPES = {
     "object": OPTERYX_TYPES.VARCHAR,
 }
 
+
 def determine_type(_type):
     """
     Determine the type

@@ -28,7 +28,6 @@ from opteryx.exceptions import SqlError
 from opteryx.utils.columns import Columns
 
 
-
 class ShowColumnsNode(BasePlanNode):
     def __init__(self, statistics: QueryStatistics, **config):
         pass
@@ -40,7 +39,6 @@ class ShowColumnsNode(BasePlanNode):
     @property
     def config(self):  # pragma: no cover
         return ""
-
 
     def execute(self) -> Iterable:
 
