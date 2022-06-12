@@ -121,12 +121,20 @@ LIMIT count
 List the columns in a relation along with their data type and an indication if nulls have been found in the first page of records.
 
 ~~~sql
-SHOW COLUMNS
+SHOW [EXTENDED] [FULL] COLUMNS
 FROM relation
 LIKE pattern
 WHERE condition
 FOR period
 ~~~
+
+### EXTENDED modifier
+
+Inclusion of the `EXTENDED` modifier includes summary statistics about the columns which take longer and more memory to create than the standard summary information without the modifier.
+
+### FULL modifier
+
+Inclusion of the `FULL` modifier uses the entire dataset in order to return complete column information, rather than just the first page from the dataset.
 
 ### LIKE clause
 

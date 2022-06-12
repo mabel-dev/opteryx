@@ -51,8 +51,6 @@ from opteryx.engine.planner.temporal import extract_temporal_filters
 from opteryx.exceptions import SqlError
 from opteryx.utils import dates
 
-JSON_TYPES = {numpy.bool_: bool, numpy.int64: int, numpy.float64: float}
-
 OPERATOR_XLAT = {
     "Eq": "=",
     "NotEq": "<>",
@@ -596,16 +594,23 @@ class QueryPlanner(ExecutionTree):
         self.add_operator(
             "reader",
             DatasetReaderNode(
-                statistics,
+                statistics=statistics,
                 dataset=relation,
                 reader=self._reader,
-                cache=self._cache,
+                cache=None,  # never read from cache
                 partition_scheme=self._partition_scheme,
                 start_date=self._start_date,
                 end_date=self._end_date,
             ),
         )
-        self.add_operator("columns", ShowColumnsNode(statistics))
+        self.add_operator(
+            "columns",
+            ShowColumnsNode(
+                statistics=statistics,
+                full=ast[0]["ShowColumns"]["full"],
+                extended=ast[0]["ShowColumns"]["extended"],
+            ),
+        )
         self.link_operators("reader", "columns")
 
         filters = self._extract_filter(ast)
