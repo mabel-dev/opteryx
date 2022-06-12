@@ -39,7 +39,7 @@ import time
 from opteryx.engine.attribute_types import TOKEN_TYPES
 from opteryx.engine.query_statistics import QueryStatistics
 from opteryx.engine.planner.operations import BasePlanNode
-from opteryx.exceptions import DatabaseError, SqlError
+from opteryx.exceptions import DatabaseError, SqlError, DatasetNotFoundError
 from opteryx.storage import file_decoders
 from opteryx.storage.adapters import DiskStorage
 from opteryx.storage.schemes import MabelPartitionScheme
@@ -281,6 +281,10 @@ class DatasetReaderNode(BasePlanNode):
 
         # Build the list of blobs we're going to read and collect summary statistics
         # so we can use them for decisions later.
+
+        if len(partitions) == 0:
+            raise DatasetNotFoundError("Dataset was not found.")
+
         for partition in partitions:
 
             partition_structure[partition] = {}
@@ -335,7 +339,8 @@ class DatasetReaderNode(BasePlanNode):
 
         #        import pyarrow.plasma as plasma
         from opteryx.storage import multiprocessor
-        from opteryx import config
+
+        # from opteryx import config
 
         #        with plasma.start_plasma_store(
         #            config.BUFFER_PER_SUB_PROCESS * config.MAX_SUB_PROCESSES
