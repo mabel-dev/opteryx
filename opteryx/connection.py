@@ -12,8 +12,8 @@
 
 """
 This module provides a PEP-249 familiar interface for interacting with mabel data
-stores, it is not compliant with the standard: 
-https://www.python.org/dev/peps/pep-0249/ 
+stores, it is not compliant with the standard:
+https://www.python.org/dev/peps/pep-0249/
 """
 import time
 from typing import Dict, List, Optional, Tuple, Union
@@ -70,6 +70,8 @@ class Cursor:
         self._query = None
         self.arraysize = 1
         self._stats = QueryStatistics()
+
+        self._query_plan = None
 
     def _format_prepared_param(self, param):
         """
@@ -163,6 +165,9 @@ class Cursor:
     def stats(self):
         self._stats.end_time = time.time_ns()
         return self._stats.as_dict()
+
+    def warnings(self):
+        return self._stats._warnings
 
     def fetchone(self) -> Optional[Dict]:
         if self._results is None:
