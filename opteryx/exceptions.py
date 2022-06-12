@@ -64,3 +64,7 @@ class ProgrammingError(DatabaseError):
 
 class SqlError(ProgrammingError):
     pass
+
+
+class DatasetNotFoundError(SqlError):
+    pass

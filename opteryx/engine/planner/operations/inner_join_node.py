@@ -21,6 +21,7 @@ from typing import Iterable
 
 import pyarrow
 
+from opteryx import config
 from opteryx.engine.planner.operations import BasePlanNode
 from opteryx.engine.query_statistics import QueryStatistics
 from opteryx.exceptions import SqlError
@@ -38,7 +39,7 @@ class InnerJoinNode(BasePlanNode):
 
     @property
     def name(self):  # pragma: no cover
-        return f"Inner Join"
+        return "Inner Join"
 
     @property
     def config(self):  # pragma: no cover
@@ -63,6 +64,8 @@ class InnerJoinNode(BasePlanNode):
                 for col in self._using
             ]
 
+            batch_size = config.INTERNAL_BATCH_SIZE
+
             for page in left_node.execute():
 
                 if left_columns is None:
@@ -73,11 +76,17 @@ class InnerJoinNode(BasePlanNode):
                     ]
                     new_metadata = left_columns + right_columns
 
-                new_page = pyarrow_ops.inner_join(
-                    self._right_table, page, right_join_columns, left_join_columns
-                )
-                new_page = new_metadata.apply(new_page)
-                yield new_page
+                # we break this into small chunks otherwise we very quickly run into memory issues
+                for batch in page.to_batches(max_chunksize=batch_size):
+
+                    # blocks don't have column_names, so we need to wrap in a table
+                    batch = pyarrow.Table.from_batches([batch], schema=page.schema)
+
+                    new_page = pyarrow_ops.inner_join(
+                        self._right_table, batch, right_join_columns, left_join_columns
+                    )
+                    new_page = new_metadata.apply(new_page)
+                    yield new_page
 
         elif self._on:
 
