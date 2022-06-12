@@ -211,3 +211,25 @@ class Columns:
         return arrow.set_metadata(
             table, table_metadata=table_metadata, column_metadata=column_metadata
         )
+
+    @staticmethod
+    def remove_null_columns(table):
+
+        removed = []
+        kept = []
+        for column in table.column_names:
+            column_data = table.column(column)
+            if str(column_data.type) == "null":
+                removed.append(column)
+            else:
+                kept.append(column)
+
+        return removed, table.select(kept)
+
+    @staticmethod
+    def restore_null_columns(removed, table):
+        import pyarrow
+
+        for column in removed:
+            table = table.append_column(column, pyarrow.array([None] * table.num_rows))
+        return table

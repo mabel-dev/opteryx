@@ -82,6 +82,11 @@ class InnerJoinNode(BasePlanNode):
         elif self._on:
 
             right_columns = Columns(self._right_table)
+
+            right_null_columns, self._right_table = Columns.remove_null_columns(
+                self._right_table
+            )
+
             left_columns = None
 
             for page in left_node.execute():
@@ -104,6 +109,7 @@ class InnerJoinNode(BasePlanNode):
                             self._on[2][0], only_one=True
                         )
 
+                    left_null_columns, page = Columns.remove_null_columns(page)
                     new_metadata = right_columns + left_columns
 
                     # ensure the types are compatible for joining by coercing numerics
@@ -121,6 +127,11 @@ class InnerJoinNode(BasePlanNode):
                     join_type="inner",
                     coalesce_keys=False,
                 )
+
                 # update the metadata
+                new_page = Columns.restore_null_columns(
+                    left_null_columns + right_null_columns, new_page
+                )
+
                 new_page = new_metadata.apply(new_page)
                 yield new_page

@@ -356,8 +356,10 @@ STATEMENTS = [
         ("SELECT * FROM tests.data.framed FOR DATES BETWEEN '2021-03-28' AND '2021-03-29", 200000, 1),
         ("SELECT * FROM tests.data.framed FOR DATES BETWEEN '2021-03-29' AND '2021-03-30", 100000, 1),
         ("SELECT * FROM tests.data.framed FOR DATES BETWEEN '2021-03-28' AND '2021-03-30", 200000, 1),
-        # DOESN'T WORK WITH LARGE DATASETS
+        # DOESN'T WORK WITH LARGE DATASETS (#179)
         ("SELECT * FROM (SELECT COUNT(*), column_1 FROM FAKE(5000,2) GROUP BY column_1 ORDER BY COUNT(*)) LIMIT 5", 5, 2),
+        # FILTER CREATION FOR 3 OR MORE ANDED PREDICATES FAILS (#182)
+        ("SELECT * FROM $astronauts WHERE name LIKE '%o%' AND `year` > 1900 AND gender ILIKE '%ale%' AND group IN (1,2,3,4,5,6)", 41, 19),
     ]
 # fmt:on
 

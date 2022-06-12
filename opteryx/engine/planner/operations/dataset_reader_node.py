@@ -89,12 +89,12 @@ def _fake_data(alias, *args):
     import sys
 
     def _inner(rows, columns):
-        dataset = []
         for row in range(rows):
-            yield {
+            record = {
                 f"column_{col}": int.from_bytes(os.urandom(2), sys.byteorder)
                 for col in range(columns)
             }
+            yield {**record, "null": None}
 
     rows, columns = args[0][0], args[1][0]
     rows = int(rows)
@@ -160,6 +160,24 @@ def _function_dataset(definition, alias):
         table_aliases=[alias],
     )
     return table
+
+
+def _normalize_to_schema(table, schema, statistics):
+    """
+    Ensure all of the collected pages match the same schema, because of the way we read
+    data, this is to match the first page. We ensure they match by adding empty columns
+    when columns are missing, or removing excess columns.
+    """
+    # if we've never run before, collect the schema and return
+    if schema is None:
+        schema = table.schema
+        return table, schema
+
+    # add missing columns
+    # remove unwanted columns
+    # cast null columns
+
+    return table, schema
 
 
 class DatasetReaderNode(BasePlanNode):
@@ -313,15 +331,18 @@ class DatasetReaderNode(BasePlanNode):
                     self._statistics.count_unknown_blob_type_found += 1
 
         metadata = None
+        schema = None
 
-        import pyarrow.plasma as plasma
+        #        import pyarrow.plasma as plasma
         from opteryx.storage import multiprocessor
         from opteryx import config
 
-        with plasma.start_plasma_store(
-            config.BUFFER_PER_SUB_PROCESS * config.MAX_SUB_PROCESSES
-        ) as plasma_store:
-            plasma_channel = plasma_store[0]
+        #        with plasma.start_plasma_store(
+        #            config.BUFFER_PER_SUB_PROCESS * config.MAX_SUB_PROCESSES
+        #        ) as plasma_store:
+        #            plasma_channel = plasma_store[0]
+        if not metadata:
+            plasma_channel = None
 
             for partition in partitions:
 
@@ -406,6 +427,10 @@ class DatasetReaderNode(BasePlanNode):
                                 pyarrow_blob.to_pydict()
                             )
                             pyarrow_blob = metadata.apply(pyarrow_blob)
+
+                    pyarrow_blob, schema = _normalize_to_schema(
+                        pyarrow_blob, schema, self._statistics
+                    )
 
                     # yield this blob
                     yield pyarrow_blob

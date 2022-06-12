@@ -12,7 +12,14 @@
 
 
 class QueryStatistics:
+    """
+    Data object to collect information during query execution
+    """
+
     def __init__(self):
+
+        self._warnings = []
+
         self.count_blobs_found: int = 0
         self.count_data_blobs_read: int = 0
         self.count_non_data_blobs_read: int = 0
@@ -50,6 +57,11 @@ class QueryStatistics:
         if nano_seconds == 0:
             return 0
         return nano_seconds / 1e9
+
+    def warn(self, warning_text: str):
+        """collect warnings"""
+        if warning_text not in self._warnings:
+            self._warnings.append(warning_text)
 
     def as_dict(self):
         """
