@@ -130,7 +130,7 @@ FOR period
 
 ### EXTENDED modifier
 
-Inclusion of the `EXTENDED` modifier includes summary statistics about the columns which take longer and more memory to create than the standard summary information without the modifier.
+Inclusion of the `EXTENDED` modifier includes summary statistics about the columns which take longer and more memory to create than the standard summary information without the modifier. The summary information varies between column types and values.
 
 ### FULL modifier
 

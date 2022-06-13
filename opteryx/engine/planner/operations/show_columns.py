@@ -38,6 +38,8 @@ def myhash(any):
         return reduce(lambda x, y: x ^ y, hashed, 0)
     if isinstance(any, dict):
         return CityHash64("".join([f"{k}:{any[k]}" for k in sorted(any.keys())]))
+    if isinstance(any, bool):
+        return int(any)
     return CityHash64(str(any))
 
 
@@ -65,10 +67,14 @@ class ShowColumnsNode(BasePlanNode):
         if data_pages is None:
             return None
 
+        print("loading")
+
         if self._full:
             dataset = pyarrow.concat_tables(data_pages.execute())
         else:
             dataset = next(data_pages.execute())
+
+        print("loaded")
 
         source_metadata = Columns(dataset)
 
@@ -94,9 +100,32 @@ class ShowColumnsNode(BasePlanNode):
                     "histogram": None,
                     "unique": -1,
                     "missing": -1,
-                    "most_frequent": None
+                    "most_frequent_values": None,
+                    "most_frequent_counts": None
                 }
 
+                print(source_metadata.get_preferred_name(column))
+                continue
+
+                # Basic counting statistics
+                new_row["count"] = len(column_data)
+                new_row["missing"] = reduce(
+                    lambda x, y: x + 1,
+                    (i for i in column_data if i in (None, numpy.nan)),
+                    0,
+                )
+                # Number of unique items in the column)
+                # We use hashes because some types don't play nicely
+                values = numpy.unique([hash(i) for i in column_data if i not in (None, numpy.nan)])
+                unique_values = len(values)
+                new_row["unique"] = unique_values
+                del values
+
+                # LISTS and STRUCTS are complex, don't profile them
+                if _type in (OPTERYX_TYPES.LIST, OPTERYX_TYPES.STRUCT):
+                    continue
+
+                # convert TIMESTAMP into a NUMERIC (seconds after Linux Epoch)
                 if _type == OPTERYX_TYPES.TIMESTAMP:
                     import datetime
 
@@ -107,39 +136,50 @@ class ShowColumnsNode(BasePlanNode):
                             x.as_py().isoformat()
                         ).timestamp()
                     )
-                    #column_data = [to_linux_epoch(i) for i in column_data]
-                    
+                    column_data = (to_linux_epoch(i) for i in column_data)
+                else:
+                    column_data = (i.as_py() for i in column_data)
 
-                if not _type in (
-                    OPTERYX_TYPES.VARCHAR,
-                    OPTERYX_TYPES.LIST,
-                    OPTERYX_TYPES.STRUCT,
+                # remove empty values
+                column_data = numpy.array([i for i in column_data if i not in (None, numpy.nan)])
+
+                # don't work with long strings
+                if _type == OPTERYX_TYPES.VARCHAR:
+                    if max(len(i) for i in column_data) > 32:
+                        continue
+
+                # For NUMERIC and TIMESTAMPS (now NUMERIC), get min, max, mean,
+                # quantiles and distribution
+                if _type in (
+                    OPTERYX_TYPES.NUMERIC,
                     OPTERYX_TYPES.TIMESTAMP,
                 ):
-                    new_row["min"] = numpy.nanmin(column_data)
-                    new_row["max"] = numpy.nanmax(column_data)
-                    new_row["mean"] = numpy.nanmean(column_data)
-                    new_row["quantiles"] = numpy.nanpercentile(column_data, [25, 50, 75])
-                #    new_row["histogram"], _ = numpy.histogram(column_data[~numpy.isnan(column_data)], 10)
-                    hashes = column_data
-                else:
-                    hashes = [myhash(i) for i in column_data]
+                    new_row["min"] = numpy.min(column_data)
+                    new_row["max"] = numpy.max(column_data)
 
-                new_row["missing"] = reduce(
-                    lambda x, y: x + 1,
-                    (i for i in column_data if i in (None, numpy.nan)),
-                    0,
-                )
-                new_row["count"] = len(column_data)
+                    # Python has no practical limits on numbers, but Arrow does
+                    if new_row["min"] < -9007199254740992 or new_row["max"] > 9007199254740992:
+                        new_row["min"] = None
+                        new_row["max"] = None
+                    else:
+                        new_row["mean"] = numpy.mean(column_data)
+                        new_row["quantiles"] = numpy.percentile(column_data, [25, 50, 75])
+                        new_row["histogram"], boundaries = numpy.histogram(column_data, min(unique_values, 10))
+                        del boundaries
 
-                # most common
-                values, counts = numpy.unique(hashes, return_counts=True)
-                new_row["unique"] = len(values)
+                # Don't work out frequencies for TIMESTAMPS
+                if _type not in (OPTERYX_TYPES.TIMESTAMP) and unique_values < 10:
+                    column_data, counts = numpy.unique(column_data, return_counts=True)
+                    # skip if everything occurs the same number of times
+                    if  max(counts) != min(counts):
+                        top_counts = sorted(counts, reverse=True)[0:5]
+                        most_frequent = {str(v):c for v,c in zip(column_data, counts) if c in top_counts}
+                        new_row["most_frequent_values"] = list(most_frequent.keys())
+                        new_row["most_frequent_counts"] = most_frequent.values()
+                        del most_frequent
+                    del counts
 
-    #            if _type not in (OPTERYX_TYPES.LIST, OPTERYX_TYPES.STRUCT) and max(counts) > 1:
-    #                print(
-    #                    [{values[index]:count} for index, count in enumerate(counts) if count in sorted(counts)[0:3]]
-    #                )
+                del column_data
 
             buffer.append(new_row)
 
