@@ -285,6 +285,10 @@ STATEMENTS = [
         ("EXPLAIN SELECT * FROM $satellites WHERE id = 8", 3, 3),
 
         ("SHOW COLUMNS FROM $satellites", 8, 3),
+        ("SHOW FULL COLUMNS FROM $satellites", 8, 3),
+        ("SHOW EXTENDED COLUMNS FROM $satellites", 8, 13),
+        ("SHOW EXTENDED COLUMNS FROM $planets", 20, 13),
+        ("SHOW EXTENDED COLUMNS FROM $astronauts", 14, 13),
         ("SHOW COLUMNS FROM $satellites WHERE column_name ILIKE '%id'", 2, 3),
         ("SHOW COLUMNS FROM $satellites LIKE '%id'", 1, 3),
         ("SHOW COLUMNS FROM tests.data.dated FOR '2020-02-03'", 8, 3),
