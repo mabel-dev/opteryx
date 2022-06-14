@@ -41,7 +41,9 @@ from opteryx.utils.columns import Columns
 # these functions can be applied to each group
 INCREMENTAL_AGGREGATES = {
     "MIN": min,
+    "MINIMUM": min,
     "MAX": max,
+    "MAXIMUM": max,
     "SUM": lambda x, y: x + y,
 }
 
@@ -49,6 +51,7 @@ INCREMENTAL_AGGREGATES = {
 # these functions need the whole dataset
 WHOLE_AGGREGATES = {
     "AVG": np.mean,
+    "AVERAGE": np.mean,
     "MEDIAN": np.median,
     "PRODUCT": np.prod,
     "STDDEV_POP": np.std,
