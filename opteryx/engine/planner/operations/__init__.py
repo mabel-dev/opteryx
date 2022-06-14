@@ -20,6 +20,7 @@ from .evaluation_node import EvaluationNode  # aliases and evaluations
 from .explain_node import ExplainNode  # EXPLAIN queries
 from .function_dataset_node import FunctionDatasetNode  # Dataset Constructors
 from .inner_join_node import InnerJoinNode  # INNER JOIN
+from .internal_dataset_node import InternalDatasetNode  # Sample datasets
 from .limit_node import LimitNode  # select the first N records
 from .offset_node import OffsetNode  # skip a number of records
 from .outer_join_node import OuterJoinNode  # LEFT/RIGHT/FULL OUTER JOIN
@@ -27,3 +28,30 @@ from .projection_node import ProjectionNode  # remove unwanted columns including
 from .selection_node import SelectionNode  # filter unwanted rows
 from .show_columns import ShowColumnsNode  # column details
 from .sort_node import SortNode  # order by selected columns
+
+
+# map join types to their implementations
+_join_nodes = {
+    "CrossJoin": CrossJoinNode,
+    "CrossJoinUnnest": CrossJoinNode,
+    "FullOuter": OuterJoinNode,
+    "Inner": InnerJoinNode,
+    "LeftOuter": OuterJoinNode,
+    "RightOuter": OuterJoinNode,
+}
+
+# map reader types to their implementation
+_reader_nodes = {
+    "External": DatasetReaderNode,  # BlobReaderNode,
+    "Function": FunctionDatasetNode,
+    "Internal": InternalDatasetNode,
+    "SubQuery": DatasetReaderNode,  # ??
+}
+
+
+def join_factory(mode):
+    return _join_nodes[mode]
+
+
+def reader_factory(mode):
+    return _reader_nodes[mode]

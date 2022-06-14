@@ -15,11 +15,11 @@ Blob Reader Node
 
 This is a SQL Query Execution Plan Node.
 
-This Node reads and parses the data from one of the sample datasets.
+This Node creates datasets based on function calls like VALUES and UNNEST.
 """
 import pyarrow
 
-from typing import Iterable, Optional
+from typing import Iterable
 
 from opteryx.engine.attribute_types import TOKEN_TYPES
 from opteryx.engine.query_statistics import QueryStatistics
@@ -55,11 +55,31 @@ def _unnest(alias, *args):
     return [{alias: value} for value in args[0][0]]
 
 
-def _values(alias, values):
+def _values(alias, *values):
     return values
 
 
+def _fake_data(alias, *args):
+
+    import os
+    import sys
+
+    def _inner(rows, columns):
+        for row in range(rows):
+            record = {
+                f"column_{col}": int.from_bytes(os.urandom(2), sys.byteorder)
+                for col in range(columns)
+            }
+            yield record
+
+    rows, columns = args[0][0], args[1][0]
+    rows = int(rows)
+    columns = int(columns)
+    return list(_inner(rows, columns))
+
+
 FUNCTIONS = {
+    "fake": _fake_data,
     "generate_series": _generate_series,
     "unnest": _unnest,
     "values": _values,
@@ -74,9 +94,9 @@ class FunctionDatasetNode(BasePlanNode):
         """
         super().__init__(statistics=statistics, **config)
         self._statistics = statistics
-        self._alias = config.get("alias")
-        self._function = config.get("function").lower()
-        self._args = config.get("args", [])
+        self._alias = config["alias"]
+        self._function = config["dataset"]["function"]
+        self._args = config["dataset"]["args"]
 
     @property
     def config(self):  # pragma: no cover
