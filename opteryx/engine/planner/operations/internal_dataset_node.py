@@ -72,4 +72,3 @@ class InternalDatasetNode(BasePlanNode):
 
     def execute(self, data_pages: Optional[Iterable] = None) -> Iterable:
         yield _get_sample_dataset(self._dataset, self._alias)
-        return
