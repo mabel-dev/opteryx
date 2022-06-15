@@ -13,13 +13,13 @@ The table below shows the available general aggregate functions. (+) indicates a
 Function        | Description 
 --------------- | ----------------------------------------------------------------
 `LIST(a)`       | Values in column 'a' returned as a list
-`AVG(a)`        | Average value for all values in column 'a'
+`AVG(a)`        | Average value for all values in column 'a', also `AVERAGE`
 `COUNT(a)`      | Number of values in column 'a'
 `FIRST(a)`      | First value in column 'a' (includes `NULL`)
 `LAST(a)`       | Last value in column 'a', (includes `NULL`)
-`MAX(a)`        | Maximum value in column 'a'
+`MAX(a)`        | Maximum value in column 'a', also `MAXIMUM`
 `MEDIAN(a)`     | Middle value for values in column 'a'
-`MIN(a)`        | Minimum value in column 'a'
+`MIN(a)`        | Minimum value in column 'a', also `MINIMUM`
 `STDDEV_POP(a)` | Population standard deviation of values in column 'a'
 `SUM(a)`        | Cumulative sum value for all values in column 'a'
 `VAR_POP(a)`    | Population variance for values in column 'a'

@@ -129,6 +129,7 @@ FUNCTIONS = {
     "VARCHAR": cast("VARCHAR"),
     "STRING": cast("VARCHAR"),  # alias for VARCHAR
     # STRINGS
+    "LEN": _iterate_single_parameter(get_len),  # LENGTH(str) -> int
     "LENGTH": _iterate_single_parameter(get_len),  # LENGTH(str) -> int
     "UPPER": compute.utf8_upper,  # UPPER(str) -> str
     "LOWER": compute.utf8_lower,  # LOWER(str) -> str
@@ -148,8 +149,11 @@ FUNCTIONS = {
     "ROUND": compute.round,
     "FLOOR": compute.floor,
     "CEIL": compute.ceil,
+    "CEILING": compute.ceil,
     "ABS": compute.abs,
+    "ABSOLUTE": compute.abs,
     "TRUNC": compute.trunc,
+    "TRUNCATE": compute.trunc,
     # DATES & TIMES
     "NOW": _iterate_no_parameters(datetime.datetime.utcnow),
     "TODAY": _iterate_no_parameters(datetime.date.today),

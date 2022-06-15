@@ -4,12 +4,12 @@
 
 Function        | Description                                       | Example
 --------------- | ------------------------------------------------- | ---------------------------
-`ABS(n)`        | The absolute value on n                           | `ABS(-8) -> 8`   
-`CEIL(n)`       | Round the number up                               | `CEIL(2.3) -> 3`        
+`ABS(n)`        | The absolute value on n, also `ABSOLUTE`          | `ABS(-8) -> 8`   
+`CEIL(n)`       | Round the number up, also `CEILING`               | `CEIL(2.3) -> 3`        
 `FLOOR(n)`      | Round the number down                             | `FLOOR(3.9) -> 3` 
 `NUMERIC(n)`    | Convert n to a floating point number              | `NUMERIC('2') -> 2.0`
 `ROUND(n)`      | Round to nearest whole number                     | `ROUND(0.2) -> 0`
-`TRUNC(n)`      | Remove the fractional parts                       | `TRUNC(5.5) -> 5`
+`TRUNC(n)`      | Remove the fractional parts, also `TRUNCATE`      | `TRUNC(5.5) -> 5`
 
 ## Text Functions
 
@@ -18,7 +18,7 @@ Functions for examining and manipulating string values.
 Function        | Description                                       | Example
 --------------- | ------------------------------------------------- | ---------------------------
 `LEFT(str, n)`  | Extract the left-most n characters                | `LEFT('hello', 2) -> 'he'`
-`LENGTH(str)`   | Number of characters in string                    | `LENGTH('hello') -> 5`
+`LEN(str)`      | Number of characters in string, also `LENGTH`     | `LEN('hello') -> 5`
 `LOWER(str)`    | Convert string to lower case                      | `LOWER('Hello') -> 'hello'`
 `RIGHT(str, n)` | Extract the right-most n characters               | `RIGHT('hello', 2) -> 'lo'`
 `STRING(any)`   | Alias of `VARCHAR()`                              | `STRING(22) -> '22'`
