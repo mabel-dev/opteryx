@@ -30,10 +30,10 @@ def _get_sample_dataset(dataset, alias):
     # we do this like this so the datasets are not loaded into memory unless
     # they are going to be used
     sample_datasets = {
-        "$satellites/": samples.satellites,
-        "$planets/": samples.planets,
-        "$astronauts/": samples.astronauts,
-        "$no_table/": samples.no_table,
+        "$satellites": samples.satellites,
+        "$planets": samples.planets,
+        "$astronauts": samples.astronauts,
+        "$no_table": samples.no_table,
     }
     dataset = dataset.lower()
     if dataset in sample_datasets:
@@ -41,14 +41,14 @@ def _get_sample_dataset(dataset, alias):
         table = Columns.create_table_metadata(
             table=table,
             expected_rows=table.num_rows,
-            name=dataset[:-1],
+            name=dataset,
             table_aliases=[alias],
         )
         return table
     raise DatabaseError(f"Dataset not found `{dataset}`.")
 
 
-class VirtualDatesetNode(BasePlanNode):
+class InternalDatasetNode(BasePlanNode):
     def __init__(self, statistics: QueryStatistics, **config):
         """
         The Blob Reader Node is responsible for reading the relevant blobs
@@ -57,7 +57,8 @@ class VirtualDatesetNode(BasePlanNode):
         super().__init__(statistics=statistics, **config)
 
         self._statistics = statistics
-        self._alias, self._dataset = config.get("dataset", [None, None])
+        self._alias = config["alias"]
+        self._dataset = config["dataset"]
 
     @property
     def config(self):  # pragma: no cover
@@ -69,6 +70,5 @@ class VirtualDatesetNode(BasePlanNode):
     def name(self):  # pragma: no cover
         return "Sample Dataset Reader"
 
-    def execute(self, data_pages: Optional[Iterable]) -> Iterable:
+    def execute(self, data_pages: Optional[Iterable] = None) -> Iterable:
         yield _get_sample_dataset(self._dataset, self._alias)
-        return

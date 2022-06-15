@@ -265,7 +265,7 @@ class QueryPlanner(ExecutionTree):
                 TOKEN_TYPES.LIST,
             )
 
-    def _extract_relations(self, ast):
+    def _extract_relations(self, ast, default_path: bool = True):
         """ """
 
         def _safe_get(iterable, index):
@@ -274,10 +274,12 @@ class QueryPlanner(ExecutionTree):
             except IndexError:
                 return None
 
-        try:
-            relations = ast[0]["Query"]["body"]["Select"]["from"]
-        except IndexError:
-            return "$no_table"
+        relations = ast
+        if default_path:
+            try:
+                relations = ast[0]["Query"]["body"]["Select"]["from"]
+            except IndexError:
+                return "$no_table"
 
         for relation in relations:
             if "Table" in relation["relation"]:
@@ -291,7 +293,7 @@ class QueryPlanner(ExecutionTree):
                         self._build_dnf_filters(a["Unnamed"])
                         for a in relation["relation"]["Table"]["args"]
                     ]
-                    yield (alias, {"function": function, "args": args})  # <- function
+                    yield (alias, {"function": function, "args": args}, "Function")
                 else:
                     alias = None
                     if relation["relation"]["Table"]["alias"] is not None:
@@ -302,7 +304,10 @@ class QueryPlanner(ExecutionTree):
                             for part in relation["relation"]["Table"]["name"]
                         ]
                     )
-                    yield (alias, dataset)
+                    if dataset[0:1] == "$":
+                        yield (alias, dataset, "Internal")
+                    else:
+                        yield (alias, dataset, "External")
 
             if "Derived" in relation["relation"]:
                 subquery = relation["relation"]["Derived"]["subquery"]["body"]
@@ -316,7 +321,7 @@ class QueryPlanner(ExecutionTree):
                     subquery_plan = self.copy()
                     subquery_plan.create_plan(ast=[ast])
 
-                    yield (alias, subquery_plan)
+                    yield (alias, subquery_plan, "SubQuery")
                 if "Values" in subquery:
                     body = []
                     headers = [
@@ -329,7 +334,7 @@ class QueryPlanner(ExecutionTree):
                             for v in value_set
                         ]
                         body.append(dict(zip(headers, values)))
-                    yield (alias, body)  # <- a literal table
+                    yield (alias, {"function": "values", "args": body}, "Function")
 
     def _extract_joins(self, ast):
         try:
@@ -338,36 +343,42 @@ class QueryPlanner(ExecutionTree):
             return None
 
         for join in joins:
-            using = None
+            join_using = None
             join_on = None
-            alias = None
-            mode = join["join_operator"]
-            if isinstance(mode, dict):
-                mode = list(join["join_operator"].keys())[0]
-                if "Using" in join["join_operator"][mode]:
-                    using = [
-                        v["value"] for v in join["join_operator"][mode].get("Using", [])
+            join_mode = join["join_operator"]
+            if isinstance(join_mode, dict):
+                join_mode = list(join["join_operator"].keys())[0]
+                if "Using" in join["join_operator"][join_mode]:
+                    join_using = [
+                        v["value"]
+                        for v in join["join_operator"][join_mode].get("Using", [])
                     ]
-                if "On" in join["join_operator"][mode]:
-                    join_on = self._build_dnf_filters(join["join_operator"][mode]["On"])
-            if join["relation"]["Table"]["alias"] is not None:
-                alias = join["relation"]["Table"]["alias"]["name"]["value"]
-            dataset = ".".join(
-                [part["value"] for part in join["relation"]["Table"]["name"]]
-            )
-            # if we have args, we're probably calling UNNEST
-            if "args" in join["relation"]["Table"]:
-                args = [
-                    self._build_dnf_filters(a)
-                    for a in join["relation"]["Table"]["args"]
-                ]
-                # CROSS JOINT _ UNNEST() needs specifically handling because the UNNEST is
-                # probably a function of the data in the left table, which means we can't
-                # use the table join code
-                if len(args) > 0 and dataset == "UNNEST" and mode == "CrossJoin":
-                    mode = "CrossJoinUnnest"
-                    dataset = (dataset, args)
-            yield (mode, alias, dataset, join_on, using)
+                if "On" in join["join_operator"][join_mode]:
+                    join_on = self._build_dnf_filters(
+                        join["join_operator"][join_mode]["On"]
+                    )
+
+            right = next(self._extract_relations([join], default_path=False))
+            yield (join_mode, right, join_on, join_using)
+
+    #            if join["relation"]["Table"]["alias"] is not None:
+    #                alias = join["relation"]["Table"]["alias"]["name"]["value"]
+    #            dataset = ".".join(
+    #                [part["value"] for part in join["relation"]["Table"]["name"]]
+    #            )
+    #            # if we have args, we're probably calling UNNEST
+    #            if "args" in join["relation"]["Table"]:
+    #                args = [
+    #                    self._build_dnf_filters(a)
+    #                    for a in join["relation"]["Table"]["args"]
+    #                ]
+    # CROSS JOINT _ UNNEST() needs specifically handling because the UNNEST is
+    # probably a function of the data in the left table, which means we can't
+    # use the table join code
+    #                if len(args) > 0 and dataset == "UNNEST" and mode == "CrossJoin":
+    #                    mode = "CrossJoinUnnest"
+    #                    dataset = (dataset, args)
+    #            yield (mode, alias, dataset, join_on, using)
 
     def _extract_projections(self, ast):
         """
@@ -587,15 +598,21 @@ class QueryPlanner(ExecutionTree):
 
         #        relation = ast[0]["ShowColumns"]["table_name"][0]["value"]
 
-        relation = ".".join(
+        dataset = ".".join(
             [part["value"] for part in ast[0]["ShowColumns"]["table_name"]]
         )
 
+        if dataset[0:1] == "$":
+            mode = "Internal"
+        else:
+            mode = "External"
+
         self.add_operator(
             "reader",
-            DatasetReaderNode(
+            reader_factory(mode)(
                 statistics=statistics,
-                dataset=relation,
+                dataset=dataset,
+                alias=None,
                 reader=self._reader,
                 cache=None,  # never read from cache
                 partition_scheme=self._partition_scheme,
@@ -603,6 +620,8 @@ class QueryPlanner(ExecutionTree):
                 end_date=self._end_date,
             ),
         )
+        last_node = "reader"
+
         self.add_operator(
             "columns",
             ShowColumnsNode(
@@ -611,14 +630,16 @@ class QueryPlanner(ExecutionTree):
                 extended=ast[0]["ShowColumns"]["extended"],
             ),
         )
-        self.link_operators("reader", "columns")
+        self.link_operators(last_node, "columns")
+        last_node = "columns"
 
         filters = self._extract_filter(ast)
         if filters:
             self.add_operator(
                 "filter", SelectionNode(statistics=statistics, filter=filters)
             )
-            self.link_operators("columns", "filter")
+            self.link_operators(last_node, "filter")
+            last_node = "filter"
 
     def _naive_select_planner(self, ast, statistics):
         """
@@ -641,13 +662,13 @@ class QueryPlanner(ExecutionTree):
         """
         _relations = [r for r in self._extract_relations(ast)]
         if len(_relations) == 0:
-            _relations = [(None, "$no_table")]
+            _relations = [(None, "$no_table", "Internal")]
 
         # We always have a data source - even if it's 'no table'
-        alias, dataset = _relations[0]
+        alias, dataset, mode = _relations[0]
         self.add_operator(
             "from",
-            DatasetReaderNode(
+            reader_factory(mode)(
                 statistics=statistics,
                 alias=alias,
                 dataset=dataset,
@@ -662,21 +683,20 @@ class QueryPlanner(ExecutionTree):
 
         _joins = list(self._extract_joins(ast))
         if len(_joins) == 0 and len(_relations) == 2:
-            # If there's no stated JOIN but the query has two relations, we
+            # If there's no explicit JOIN but the query has two relations, we
             # use a CROSS JOIN
-            _joins = [("CrossJoin", _relations[1][0], _relations[1][1], None, None)]
+            _joins = [("CrossJoin", _relations[1], None, None)]
         for join_id, _join in enumerate(_joins):
-            if _join or len(_relations) == 2:
-                mode, alias, dataset, join_on, join_using = _join
-                if mode == "CrossJoinUnnest":
-                    # If we're doing a CROSS JOIN UNNEST, the right table is an UNNEST function
-                    right = (alias, dataset)
+            if _join:
+                join_type, right, join_on, join_using = _join
+                if join_type == "CrossJoin" and right[2] == "Function":
+                    join_type = "CrossJoinUnnest"
                 else:
                     # Otherwise, the right table needs to come from the Reader
-                    right = DatasetReaderNode(
+                    right = reader_factory(right[2])(
                         statistics=statistics,
-                        dataset=dataset,
-                        alias=alias,
+                        dataset=right[1],
+                        alias=right[0],
                         reader=self._reader,
                         cache=self._cache,
                         partition_scheme=self._partition_scheme,
@@ -684,17 +704,7 @@ class QueryPlanner(ExecutionTree):
                         end_date=self._end_date,
                     )
 
-                # map join types to their implementations
-                join_nodes = {
-                    "CrossJoin": CrossJoinNode,
-                    "CrossJoinUnnest": CrossJoinNode,
-                    "FullOuter": OuterJoinNode,
-                    "Inner": InnerJoinNode,
-                    "LeftOuter": OuterJoinNode,
-                    "RightOuter": OuterJoinNode,
-                }
-
-                join_node = join_nodes.get(mode)
+                join_node = join_factory(join_type)
                 if join_node is None:
                     raise SqlError(f"Join type not supported - `{_join[0]}`")
 
@@ -702,8 +712,7 @@ class QueryPlanner(ExecutionTree):
                     f"join-{join_id}",
                     join_node(
                         statistics,
-                        right_table=right,
-                        join_type=mode,
+                        join_type=join_type,
                         join_on=join_on,
                         join_using=join_using,
                     ),
@@ -835,7 +844,9 @@ class QueryPlanner(ExecutionTree):
         head = self.get_exit_points()
         # print(head, self._edges)
         if len(head) != 1:
-            raise SqlError(f"Problem with the plan - it has {len(head)} heads.")
+            raise SqlError(
+                f"Problem with the plan - it has {len(head)} heads, this is quite unexpected."
+            )
         self._inner(head)
 
         operator = self.get_operator(head[0])

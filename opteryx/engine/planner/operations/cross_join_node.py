@@ -208,11 +208,15 @@ class CrossJoinNode(BasePlanNode):
 
         elif self._join_type == "CrossJoinUnnest":
 
-            alias, function = right_node
-            function, column = function
+            alias, dataset, source = right_node
+            function = dataset["function"]
+            args = dataset["args"]
+
+            if function != "unnest":
+                raise SqlError(f"I was expecting 'UNNEST' but I got `{function}`")
 
             yield from _cross_join_unnest(
                 left=left_node,
-                column=column[0],
+                column=args[0],
                 alias=alias,
             )

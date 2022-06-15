@@ -18,15 +18,15 @@ The `EXPLAIN` clause outputs a summary of the execution plan for the query in th
 Retrieve rows from zero or more relations.
 
 ~~~sql
-SELECT select_list
+SELECT [ DISTINCT ] select_list
 FROM relation
-  INNER JOIN relation
-  CROSS JOIN relation
-  LEFT OUTER JOIN relation
-  RIGHT OUTER JOIN relation
-  FULL OUTER JOIN relation
-    ON condition
+  [ INNER ] JOIN relation
     USING (column)
+  CROSS JOIN relation
+  LEFT [ OUTER ] JOIN relation
+  RIGHT [ OUTER ] JOIN relation
+  FULL [ OUTER ] JOIN relation
+    ON condition
 FOR period
 WHERE condition
 GROUP BY groups
@@ -44,7 +44,7 @@ SELECT [ DISTINCT ] expression [, ...]
 
 The `SELECT` clause specifies the list of columns that will be returned by the query. While it appears first in the clause, logically the expressions here are executed after most other clauses. The `SELECT` clause can contain arbitrary expressions that transform the output, as well as aggregate functions.
 
-The `DISTINCT` quantifier is specified, only unique rows are included in the result set. In this case, each output column must be of a type that allows comparison.
+The `DISTINCT` modifier is specified, only unique rows are included in the result set. In this case, each output column must be of a type that allows comparison.
 
 ### FROM / JOIN clauses
 
