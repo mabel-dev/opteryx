@@ -265,7 +265,7 @@ class QueryPlanner(ExecutionTree):
                 TOKEN_TYPES.LIST,
             )
 
-    def _extract_relations(self, ast, default_path:bool = True):
+    def _extract_relations(self, ast, default_path: bool = True):
         """ """
 
         def _safe_get(iterable, index):
@@ -350,32 +350,35 @@ class QueryPlanner(ExecutionTree):
                 join_mode = list(join["join_operator"].keys())[0]
                 if "Using" in join["join_operator"][join_mode]:
                     join_using = [
-                        v["value"] for v in join["join_operator"][join_mode].get("Using", [])
+                        v["value"]
+                        for v in join["join_operator"][join_mode].get("Using", [])
                     ]
                 if "On" in join["join_operator"][join_mode]:
-                    join_on = self._build_dnf_filters(join["join_operator"][join_mode]["On"])
+                    join_on = self._build_dnf_filters(
+                        join["join_operator"][join_mode]["On"]
+                    )
 
             right = next(self._extract_relations([join], default_path=False))
             yield (join_mode, right, join_on, join_using)
 
-#            if join["relation"]["Table"]["alias"] is not None:
-#                alias = join["relation"]["Table"]["alias"]["name"]["value"]
-#            dataset = ".".join(
-#                [part["value"] for part in join["relation"]["Table"]["name"]]
-#            )
-#            # if we have args, we're probably calling UNNEST
-#            if "args" in join["relation"]["Table"]:
-#                args = [
-#                    self._build_dnf_filters(a)
-#                    for a in join["relation"]["Table"]["args"]
-#                ]
-                # CROSS JOINT _ UNNEST() needs specifically handling because the UNNEST is
-                # probably a function of the data in the left table, which means we can't
-                # use the table join code
-#                if len(args) > 0 and dataset == "UNNEST" and mode == "CrossJoin":
-#                    mode = "CrossJoinUnnest"
-#                    dataset = (dataset, args)
-#            yield (mode, alias, dataset, join_on, using)
+    #            if join["relation"]["Table"]["alias"] is not None:
+    #                alias = join["relation"]["Table"]["alias"]["name"]["value"]
+    #            dataset = ".".join(
+    #                [part["value"] for part in join["relation"]["Table"]["name"]]
+    #            )
+    #            # if we have args, we're probably calling UNNEST
+    #            if "args" in join["relation"]["Table"]:
+    #                args = [
+    #                    self._build_dnf_filters(a)
+    #                    for a in join["relation"]["Table"]["args"]
+    #                ]
+    # CROSS JOINT _ UNNEST() needs specifically handling because the UNNEST is
+    # probably a function of the data in the left table, which means we can't
+    # use the table join code
+    #                if len(args) > 0 and dataset == "UNNEST" and mode == "CrossJoin":
+    #                    mode = "CrossJoinUnnest"
+    #                    dataset = (dataset, args)
+    #            yield (mode, alias, dataset, join_on, using)
 
     def _extract_projections(self, ast):
         """
@@ -841,7 +844,9 @@ class QueryPlanner(ExecutionTree):
         head = self.get_exit_points()
         # print(head, self._edges)
         if len(head) != 1:
-            raise SqlError(f"Problem with the plan - it has {len(head)} heads, this is quite unexpected.")
+            raise SqlError(
+                f"Problem with the plan - it has {len(head)} heads, this is quite unexpected."
+            )
         self._inner(head)
 
         operator = self.get_operator(head[0])

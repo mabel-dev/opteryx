@@ -65,6 +65,7 @@ KNOWN_EXTENSIONS = {
     "zstd": (file_decoders.zstd_decoder, ExtentionType.DATA),  # jsonl/zstd
 }
 
+
 def _normalize_to_schema(table, schema, statistics):
     """
     Ensure all of the collected pages match the same schema, because of the way we read
