@@ -22,11 +22,9 @@ extensions = [
         sources=["opteryx/third_party/pyarrow_ops/cjoin.pyx"],
         include_dirs=[np.get_include()],
     ),
-    #    Extension(
-    #        name="cythonize",
-    #        sources=["opteryx/third_party/accumulation_tree/accumulation_tree.pyx"],
-    #    )
-    #    "mabel/data/internals/group_by.py",
+    Extension(
+        name="counting_tree",
+        sources=["opteryx/sketches/counting_tree.pyx"],
 ]
 
 setup(
