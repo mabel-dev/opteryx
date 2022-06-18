@@ -518,7 +518,7 @@ def _multi_tree_get(trees, key):
     raise KeyError(key)
 
 
-class CPYTHON_ABCTree(_ABCTree):
+class ABCTree(_ABCTree):
     """Base class for the Python implementation of trees.
 
     T has to implement following methods
@@ -829,41 +829,3 @@ class CPYTHON_ABCTree(_ABCTree):
                 return lambda x: x >= start_key
             else:
                 return lambda x: start_key <= x < end_key
-
-
-class PYPY_ABCTree(CPYTHON_ABCTree):
-    def iter_items(self, start_key=None, end_key=None, reverse=False):
-        """Iterates over the (key, value) items of the associated tree,
-        in ascending order if reverse is True, iterate in descending order,
-        reverse defaults to False"""
-        # optimized for pypy, but slower on CPython
-        if self.is_empty():
-            return
-        direction = 1 if reverse else 0
-        other = 1 - direction
-        go_down = True
-        stack = []
-        node = self._root
-        in_range = self._get_in_range_func(start_key, end_key)
-
-        while True:
-            if node[direction] is not None and go_down:
-                stack.append(node)
-                node = node[direction]
-            else:
-                if in_range(node.key):
-                    yield node.key, node.value
-                if node[other] is not None:
-                    node = node[other]
-                    go_down = True
-                else:
-                    if not len(stack):
-                        return  # all done
-                    node = stack.pop()
-                    go_down = False
-
-
-if PYPY:
-    ABCTree = PYPY_ABCTree
-else:
-    ABCTree = CPYTHON_ABCTree
