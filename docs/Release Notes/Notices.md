@@ -4,6 +4,7 @@ Opteryx uses the following libraries and components:
 
 Component                                                  | Licence
 ---------------------------------------------------------- | -------
+[distogram](https://github.com/maki-nage/distogram)        | [MIT](https://github.com/maki-nage/distogram/blob/master/LICENSE.txt)
 [pyarrow](https://github.com/apache/arrow/)                | [Apache 2.0](https://github.com/apache/arrow/blob/master/LICENSE.txt)
 [sqloxide](https://github.com/wseaton/sqloxide)            | [MIT](https://github.com/wseaton/sqloxide/blob/master/LICENSE)
 [cython](https://github.com/cython/cython)                 | [Apache 2.0](https://github.com/cython/cython/blob/master/LICENSE.txt)

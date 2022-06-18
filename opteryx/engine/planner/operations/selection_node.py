@@ -46,7 +46,7 @@ class InvalidSyntaxError(Exception):
     pass
 
 
-def _evaluate(predicate: Union[tuple, list], table: Table) -> bool:
+def _evaluate(predicate: Union[tuple, list], table: Table):
     """
     Evaluate a table against a DNF selection.
 
