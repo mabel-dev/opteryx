@@ -28,7 +28,7 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
-class TreeSlice(object):
+class TreeSlice(object):  # pragma: no cover
     __slots__ = ["_tree", "_start", "_stop"]
 
     def __init__(self, tree, start, stop):

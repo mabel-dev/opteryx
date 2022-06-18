@@ -505,11 +505,11 @@ class _ABCTree(object):
     isdisjoint = is_disjoint  # for compatibility to set()
 
 
-def _build_sets(trees):
+def _build_sets(trees):  # pragma: no cover
     return [frozenset(tree.keys()) for tree in trees]
 
 
-def _multi_tree_get(trees, key):
+def _multi_tree_get(trees, key):  # pragma: no cover
     for tree in trees:
         try:
             return tree[key]
@@ -518,7 +518,7 @@ def _multi_tree_get(trees, key):
     raise KeyError(key)
 
 
-class ABCTree(_ABCTree):
+class ABCTree(_ABCTree):  # pragma: no cover
     """Base class for the Python implementation of trees.
 
     T has to implement following methods

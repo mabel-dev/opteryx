@@ -11,7 +11,7 @@ import struct
 _bit_length = lambda bits: bits.bit_length()
 
 
-class HyperLogLog(object):
+class HyperLogLog(object):  # pragma: no cover
     """
     The HyperLogLog data sketch for estimating
     cardinality of very large dataset in a single pass.
@@ -311,7 +311,7 @@ class HyperLogLog(object):
             )
 
 
-class HyperLogLogPlusPlus(HyperLogLog):
+class HyperLogLogPlusPlus(HyperLogLog):  # pragma: no cover
     """
     HyperLogLog++ is an enhanced HyperLogLog `from Google
     <http://research.google.com/pubs/pub40671.html>`_.
