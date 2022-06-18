@@ -32,6 +32,7 @@ from opteryx.utils.columns import Columns
 
 MAX_COLLECTOR: int = 17
 
+
 def myhash(any):
     from cityhash import CityHash64
 
@@ -205,21 +206,34 @@ def _extended_collector(pages):
                 [i for i in column_data if i not in (None, numpy.nan)]
             )
 
-            if _type in (OPTERYX_TYPES.VARCHAR, OPTERYX_TYPES.NUMERIC, OPTERYX_TYPES.TIMESTAMP):                
+            if _type in (
+                OPTERYX_TYPES.VARCHAR,
+                OPTERYX_TYPES.NUMERIC,
+                OPTERYX_TYPES.TIMESTAMP,
+            ):
                 # hyperloglog estimates cardinality/uniqueness
                 hll = profile.get("hyperloglog")
                 if hll is None:
                     hll = hyperloglog.HyperLogLogPlusPlus(p=16)
                 [hll.update(value) for value in column_data]
                 profile["hyperloglog"] = hll
-                
-            if _type in (OPTERYX_TYPES.BOOLEAN, OPTERYX_TYPES.VARCHAR, OPTERYX_TYPES.NUMERIC, OPTERYX_TYPES.TIMESTAMP):
+
+            if _type in (
+                OPTERYX_TYPES.BOOLEAN,
+                OPTERYX_TYPES.VARCHAR,
+                OPTERYX_TYPES.NUMERIC,
+                OPTERYX_TYPES.TIMESTAMP,
+            ):
                 # counter is used to collect and count unique values
                 counter = profile.get("counter")
                 if counter is None:
                     counter = CountingTree()
                 if len(counter) < MAX_COLLECTOR:
-                    [counter.insert(value) for value in column_data if len(counter) < MAX_COLLECTOR]
+                    [
+                        counter.insert(value)
+                        for value in column_data
+                        if len(counter) < MAX_COLLECTOR
+                    ]
                 profile["counter"] = counter
 
             if _type in (OPTERYX_TYPES.NUMERIC, OPTERYX_TYPES.TIMESTAMP):

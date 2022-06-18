@@ -6,6 +6,7 @@ import numpy as np
 
 import sys
 import os
+
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 from hyperloglog import HyperLogLog, HyperLogLogPlusPlus
 
@@ -124,9 +125,6 @@ class TestHyperLogLog(unittest.TestCase):
         h2 = h1.copy()
         self.assertEqual(h1, h2)
         self.assertEqual(h1.hashfunc, h2.hashfunc)
-
-
-
 
 
 class TestHyperLogLogPlusPlus(TestHyperLogLog):

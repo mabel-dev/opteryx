@@ -283,7 +283,8 @@ class HyperLogLog(object):
             )
         except TypeError:
             h.reg = numpy.array(
-                struct.unpack_from("%dB" % h.m, bytearray(buf), offset), dtype=numpy.int8
+                struct.unpack_from("%dB" % h.m, bytearray(buf), offset),
+                dtype=numpy.int8,
             )
         return h
 
@@ -306,7 +307,8 @@ class HyperLogLog(object):
             )
         except TypeError:
             self.reg = numpy.array(
-                struct.unpack_from("%dB" % self.m, bytearray(buf), offset), dtype=numpy.int8
+                struct.unpack_from("%dB" % self.m, bytearray(buf), offset),
+                dtype=numpy.int8,
             )
 
 
@@ -338,9 +340,7 @@ class HyperLogLogPlusPlus(HyperLogLog):
     _hash_range_byte = 8
 
     def __init__(self, p=8, reg=None, hashfunc=CityHash64):
-        super(HyperLogLogPlusPlus, self).__init__(
-            p=p, reg=reg, hashfunc=hashfunc
-        )
+        super(HyperLogLogPlusPlus, self).__init__(p=p, reg=reg, hashfunc=hashfunc)
 
     def _get_threshold(self, p):
         return _thresholds[p - 4]
