@@ -25,6 +25,7 @@ extensions = [
     Extension(
         name="counting_tree",
         sources=["opteryx/sketches/counting_tree.pyx"],
+    ),
 ]
 
 setup(
