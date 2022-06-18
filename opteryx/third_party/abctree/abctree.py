@@ -36,7 +36,7 @@ from .treeslice import TreeSlice
 from operator import attrgetter
 
 
-class _ABCTree(object): # pragma: no cover
+class _ABCTree(object):  # pragma: no cover
     """
     Abstract-Base-Class for ABCTree and Cython trees.
 
