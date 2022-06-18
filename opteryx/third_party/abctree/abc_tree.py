@@ -28,10 +28,6 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-import sys
-
-PYPY = hasattr(sys, "pypy_version_info")
-
 from .treeslice import TreeSlice
 from operator import attrgetter
 

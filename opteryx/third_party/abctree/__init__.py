@@ -2,4 +2,4 @@ import pyximport
 
 pyximport.install()
 
-from .abctree import ABCTree
+from .abc_tree import ABCTree
