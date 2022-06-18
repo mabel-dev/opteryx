@@ -70,7 +70,9 @@ def inner_join(left, right, left_on, right_on):
     return align_tables(left, right, left_align, right_align)
 
 
-def left_join(left, right, left_on, right_on):
+def left_join(
+    left, right, left_on, right_on
+):  # pragma: no cover - currently not called
     # Gather join columns - create arrays of the hashes of the values in the column
     # new for Opteryx
     l_array, r_array = columns_to_array(left, left_on), columns_to_array(

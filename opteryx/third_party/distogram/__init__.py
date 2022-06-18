@@ -17,7 +17,7 @@ Bin = Tuple[float, int]
 
 
 # bins is a tuple of (cut point, count)
-class Distogram(object):
+class Distogram(object):  # pragma: no cover
     """Compressed representation of a distribution."""
 
     __slots__ = "bin_count", "bins", "min", "max", "diffs", "min_diff", "weighted_diff"
@@ -41,7 +41,7 @@ class Distogram(object):
         self.weighted_diff: bool = weighted_diff
 
 
-def _linspace(start: float, stop: float, num: int) -> List[float]:
+def _linspace(start: float, stop: float, num: int) -> List[float]:  # pragma: no cover
     if num == 1:
         return [start, stop]
     step = (stop - start) / float(num)
@@ -50,19 +50,21 @@ def _linspace(start: float, stop: float, num: int) -> List[float]:
     return values
 
 
-def _moment(x: List[float], counts: List[float], c: float, n: int) -> float:
+def _moment(
+    x: List[float], counts: List[float], c: float, n: int
+) -> float:  # pragma: no cover
     m = (ci * (v - c) ** n for i, (ci, v) in enumerate(zip(counts, x)))
     return sum(m) / sum(counts)
 
 
-def _weighted_diff(h: Distogram, left: Bin, right: Bin):
+def _weighted_diff(h: Distogram, left: Bin, right: Bin):  # pragma: no cover
     diff = left[0] - right[0]
     if h.weighted_diff is True:
         diff *= math.log(EPSILON + min(left[1], right[1]))
     return diff
 
 
-def _update_diffs(h: Distogram, i: int) -> None:
+def _update_diffs(h: Distogram, i: int) -> None:  # pragma: no cover
     if h.diffs is not None:
         update_min = False
 
@@ -88,7 +90,7 @@ def _update_diffs(h: Distogram, i: int) -> None:
     return
 
 
-def _trim(h: Distogram) -> Distogram:
+def _trim(h: Distogram) -> Distogram:  # pragma: no cover
     while len(h.bins) > h.bin_count:
         if h.diffs is not None:
             i = h.diffs.index(h.min_diff)
@@ -112,14 +114,14 @@ def _trim(h: Distogram) -> Distogram:
     return h
 
 
-def _trim_in_place(h: Distogram, value: float, c: int, i: int):
+def _trim_in_place(h: Distogram, value: float, c: int, i: int):  # pragma: no cover
     v, f = h.bins[i]
     h.bins[i] = (v * f + value * c) / (f + c), f + c
     _update_diffs(h, i)
     return h
 
 
-def _compute_diffs(h: Distogram) -> List[float]:
+def _compute_diffs(h: Distogram) -> List[float]:  # pragma: no cover
     if h.weighted_diff is True:
         diffs = [
             (v2 - v1) * math.log(EPSILON + min(f1, f2))
@@ -132,7 +134,9 @@ def _compute_diffs(h: Distogram) -> List[float]:
     return diffs
 
 
-def _search_in_place_index(h: Distogram, new_value: float, index: int) -> int:
+def _search_in_place_index(
+    h: Distogram, new_value: float, index: int
+) -> int:  # pragma: no cover
     if h.diffs is None:
         h.diffs = _compute_diffs(h)
 
@@ -147,7 +151,7 @@ def _search_in_place_index(h: Distogram, new_value: float, index: int) -> int:
     return -1
 
 
-def update(h: Distogram, value: float, count: int = 1) -> Distogram:
+def update(h: Distogram, value: float, count: int = 1) -> Distogram:  # pragma: no cover
     """Adds a new element to the distribution.
 
     Args:
@@ -204,7 +208,7 @@ def update(h: Distogram, value: float, count: int = 1) -> Distogram:
     return _trim(h)
 
 
-def merge(h1: Distogram, h2: Distogram) -> Distogram:
+def merge(h1: Distogram, h2: Distogram) -> Distogram:  # pragma: no cover
     """Merges two Distogram objects
 
     Args:
@@ -223,7 +227,7 @@ def merge(h1: Distogram, h2: Distogram) -> Distogram:
     return h
 
 
-def count_at(h: Distogram, value: float):
+def count_at(h: Distogram, value: float):  # pragma: no cover
     """Counts the number of elements present in the distribution up to value.
 
     Args:
@@ -271,7 +275,7 @@ def count_at(h: Distogram, value: float):
     return result
 
 
-def count(h: Distogram) -> float:
+def count(h: Distogram) -> float:  # pragma: no cover
     """Counts the number of elements in the distribution.
 
     Args:
@@ -283,7 +287,7 @@ def count(h: Distogram) -> float:
     return sum((f for _, f in h.bins))
 
 
-def bounds(h: Distogram) -> Tuple[float, float]:
+def bounds(h: Distogram) -> Tuple[float, float]:  # pragma: no cover
     """Returns the min and max values of the distribution.
 
     Args:
@@ -295,7 +299,7 @@ def bounds(h: Distogram) -> Tuple[float, float]:
     return h.min, h.max
 
 
-def mean(h: Distogram) -> float:
+def mean(h: Distogram) -> float:  # pragma: no cover
     """Returns the mean of the distribution.
 
     Args:
@@ -308,7 +312,7 @@ def mean(h: Distogram) -> float:
     return _moment(p, m, 0, 1)
 
 
-def variance(h: Distogram) -> float:
+def variance(h: Distogram) -> float:  # pragma: no cover
     """Returns the variance of the distribution.
 
     Args:
@@ -321,7 +325,7 @@ def variance(h: Distogram) -> float:
     return _moment(p, m, mean(h), 2)
 
 
-def stddev(h: Distogram) -> float:
+def stddev(h: Distogram) -> float:  # pragma: no cover
     """Returns the standard deviation of the distribution.
 
     Args:
@@ -334,7 +338,9 @@ def stddev(h: Distogram) -> float:
     return math.sqrt(variance(h))
 
 
-def histogram(h: Distogram, bin_count: int = 100) -> Tuple[List[float], List[float]]:
+def histogram(
+    h: Distogram, bin_count: int = 100
+) -> Tuple[List[float], List[float]]:  # pragma: no cover
     """Returns a histogram of the distribution in numpy format.
 
     Args:
@@ -355,7 +361,9 @@ def histogram(h: Distogram, bin_count: int = 100) -> Tuple[List[float], List[flo
     return u
 
 
-def frequency_density_distribution(h: Distogram) -> Tuple[List[float], List[float]]:
+def frequency_density_distribution(
+    h: Distogram,
+) -> Tuple[List[float], List[float]]:  # pragma: no cover
     """Returns a histogram of the distribution
 
     Args:
@@ -382,7 +390,7 @@ def frequency_density_distribution(h: Distogram) -> Tuple[List[float], List[floa
     return (densities, bin_bounds)
 
 
-def quantile(h: Distogram, value: float) -> Optional[float]:
+def quantile(h: Distogram, value: float) -> Optional[float]:  # pragma: no cover
     """Returns a quantile of the distribution
 
     Args:
