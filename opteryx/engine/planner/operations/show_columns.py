@@ -28,9 +28,9 @@ from opteryx.engine.query_statistics import QueryStatistics
 from opteryx.engine.attribute_types import OPTERYX_TYPES, determine_type
 from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
 from opteryx.exceptions import SqlError
-from opteryx.third_party import distogram
 from opteryx.utils.columns import Columns
 
+MAX_COLLECTOR: int = 17
 
 def myhash(any):
     from cityhash import CityHash64
@@ -135,6 +135,9 @@ def _extended_collector(pages):
     """
     Collect summary statistics about each column
     """
+    from opteryx.sketches.counting_tree import CountingTree
+    from opteryx.third_party import distogram
+    from opteryx.third_party import hyperloglog
 
     EMPTY_PROFILE = orjson.dumps(
         {
@@ -147,7 +150,7 @@ def _extended_collector(pages):
             "mean": None,
             "quantiles": None,
             "histogram": None,
-            "unique": 0,
+            "unique": None,
             "most_frequent_values": None,
             "most_frequent_counts": None,
             "distogram": None,
@@ -202,11 +205,25 @@ def _extended_collector(pages):
                 [i for i in column_data if i not in (None, numpy.nan)]
             )
 
-            if _type in (OPTERYX_TYPES.BOOLEAN, OPTERYX_TYPES.VARCHAR):
-                if profile[""]
+            if _type in (OPTERYX_TYPES.VARCHAR, OPTERYX_TYPES.NUMERIC, OPTERYX_TYPES.TIMESTAMP):                
+                # hyperloglog estimates cardinality/uniqueness
+                hll = profile.get("hyperloglog")
+                if hll is None:
+                    hll = hyperloglog.HyperLogLogPlusPlus(p=16)
+                [hll.update(value) for value in column_data]
+                profile["hyperloglog"] = hll
+                
+            if _type in (OPTERYX_TYPES.BOOLEAN, OPTERYX_TYPES.VARCHAR, OPTERYX_TYPES.NUMERIC, OPTERYX_TYPES.TIMESTAMP):
+                # counter is used to collect and count unique values
+                counter = profile.get("counter")
+                if counter is None:
+                    counter = CountingTree()
+                if len(counter) < MAX_COLLECTOR:
+                    [counter.insert(value) for value in column_data if len(counter) < MAX_COLLECTOR]
+                profile["counter"] = counter
 
             if _type in (OPTERYX_TYPES.NUMERIC, OPTERYX_TYPES.TIMESTAMP):
-                # populate the distogram
+                # populate the distogram, this is used for distribution statistics
                 if profile["distogram"] is None:
                     dgram = distogram.Distogram(10)
                 else:
@@ -223,7 +240,7 @@ def _extended_collector(pages):
     for column, profile in profile_collector.items():
         profile["column_name"] = columns.get_preferred_name(column)
         profile["type"] = ", ".join(profile["type"])
-        dgram = profile.pop("distogram")
+        dgram = profile.pop("distogram", None)
         if dgram:
             profile["min"], profile["max"] = distogram.bounds(dgram)
             profile["mean"] = distogram.mean(dgram)
@@ -237,7 +254,19 @@ def _extended_collector(pages):
                 distogram.quantile(dgram, value=0.5),
                 distogram.quantile(dgram, value=0.75),
             )
+        hll = profile.pop("hyperloglog", None)
+        if hll:
+            profile["unique"] = hll.count()
         buffer.append(profile)
+
+        counter = profile.pop("counter", None)
+        if counter:
+            if len(counter) < MAX_COLLECTOR:
+                profile["unique"] = len(counter)
+                counts = list(counter.values())
+                if min(counts) != max(counts):
+                    profile["most_frequent_values"] = [str(k) for k in counter.keys()]
+                    profile["most_frequent_counts"] = counts
 
     table = pyarrow.Table.from_pylist(buffer)
     table = Columns.create_table_metadata(
