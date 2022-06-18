@@ -136,7 +136,7 @@ def _extended_collector(pages):
     """
     Collect summary statistics about each column
     """
-    from opteryx.sketches.counting_tree import CountingTree
+    from opteryx.sketches import CountingTree
     from opteryx.third_party import distogram
     from opteryx.third_party import hyperloglog
 
