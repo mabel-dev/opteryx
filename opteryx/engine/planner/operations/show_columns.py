@@ -167,7 +167,6 @@ def _extended_collector(pages):
             "unique": None,
             "most_frequent_values": None,
             "most_frequent_counts": None,
-            "distogram": None,
         }
     )
 
@@ -214,10 +213,10 @@ def _extended_collector(pages):
                     continue
 
                 # to prevent problems, we set some limits
-                if column_data.nbytes > 1024 * 1024 * 1024:
+                if column_data.nbytes > 100 * 1024 * 1024:
                     if column not in uncollected_columns:
                         uncollected_columns.append(column)
-                        continue
+                    continue
 
                 # don't collect columns we can't analyse
                 if _type in (
@@ -225,7 +224,6 @@ def _extended_collector(pages):
                     OPTERYX_TYPES.STRUCT,
                     OPTERYX_TYPES.OTHER,
                 ):
-                    profile_collector[column] = profile
                     continue
 
                 # long strings are meaningless
@@ -292,10 +290,9 @@ def _extended_collector(pages):
 
                 if _type in (OPTERYX_TYPES.NUMERIC, OPTERYX_TYPES.TIMESTAMP):
                     # populate the distogram, this is used for distribution statistics
-                    if profile["distogram"] is None:
+                    dgram = profile.get("distogram")
+                    if dgram is None:
                         dgram = distogram.Distogram(10)
-                    else:
-                        dgram = profile["distogram"]
                     values, counts = numpy.unique(column_data, return_counts=True)
                     for index, value in enumerate(values):
                         dgram = distogram.update(
@@ -342,7 +339,7 @@ def _extended_collector(pages):
                         profile["most_frequent_counts"] = counts
 
         # remove collectors
-        profile.pop("histogram", None)
+        profile.pop("distogram", None)
         profile.pop("hyperloglog", None)
         profile.pop("counter", None)
 
