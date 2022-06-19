@@ -103,7 +103,14 @@ def _full_collector(pages):
                 profile["type"].append(_type)
 
             profile["count"] += len(column_data)
-            profile["missing"] += column_data.null_count
+
+            # calculate the missing count more robustly
+            missing = reduce(
+                lambda x, y: x + 1,
+                (i for i in column_data if i in (None, numpy.nan) or not i.is_valid),
+                0,
+            )
+            profile["missing"] += missing
 
             if _type == OPTERYX_TYPES.NUMERIC:
                 if profile["min"]:
@@ -164,129 +171,177 @@ def _extended_collector(pages):
         }
     )
 
+    uncollected_columns = []
+
     columns = None
     profile_collector = {}
 
     for page in pages:
+
         if columns is None:
             columns = Columns(page)
 
-        for column in page.column_names:
-            column_data = page.column(column)
-            profile = profile_collector.get(column, orjson.loads(EMPTY_PROFILE))
-            _type = determine_type(str(column_data.type))
-            if _type not in profile["type"]:
-                profile["type"].append(_type)
+        for block in page.to_batches(1000):
 
-            profile["count"] += len(column_data)
+            for column in page.column_names:
 
-            # calculate the missing count more robustly
-            missing = reduce(
-                lambda x, y: x + 1,
-                (i for i in column_data if i in (None, numpy.nan)),
-                0,
-            )
-            profile["missing"] += missing
+                column_data = block.column(column)
 
-            if _type in (OPTERYX_TYPES.LIST, OPTERYX_TYPES.STRUCT, OPTERYX_TYPES.OTHER):
-                profile_collector[column] = profile
-                continue
+                profile = profile_collector.get(column, orjson.loads(EMPTY_PROFILE))
+                _type = determine_type(str(column_data.type))
+                if _type not in profile["type"]:
+                    profile["type"].append(_type)
 
-            # convert TIMESTAMP into a NUMERIC (seconds after Linux Epoch)
-            if _type == OPTERYX_TYPES.TIMESTAMP:
-                import datetime
+                profile["count"] += len(column_data)
 
-                to_linux_epoch = (
-                    lambda x: numpy.nan
-                    if x.as_py() is None
-                    else datetime.datetime.fromisoformat(
-                        x.as_py().isoformat()
-                    ).timestamp()
+                # calculate the missing count more robustly
+                missing = reduce(
+                    lambda x, y: x + 1,
+                    (
+                        i
+                        for i in column_data
+                        if i in (None, numpy.nan) or not i.is_valid
+                    ),
+                    0,
                 )
-                column_data = (to_linux_epoch(i) for i in column_data)
-            else:
-                column_data = (i.as_py() for i in column_data)
+                profile["missing"] += missing
 
-            # remove empty values
-            column_data = numpy.array(
-                [i for i in column_data if i not in (None, numpy.nan)]
-            )
+                # interim save
+                profile_collector[column] = profile
 
-            if _type in (
-                OPTERYX_TYPES.VARCHAR,
-                OPTERYX_TYPES.NUMERIC,
-                OPTERYX_TYPES.TIMESTAMP,
-            ):
-                # hyperloglog estimates cardinality/uniqueness
-                hll = profile.get("hyperloglog")
-                if hll is None:
-                    hll = hyperloglog.HyperLogLogPlusPlus(p=16)
-                [hll.update(value) for value in column_data]
-                profile["hyperloglog"] = hll
+                # don't collect problematic columns
+                if column in uncollected_columns:
+                    continue
 
-            if _type in (
-                OPTERYX_TYPES.BOOLEAN,
-                OPTERYX_TYPES.VARCHAR,
-                OPTERYX_TYPES.NUMERIC,
-                OPTERYX_TYPES.TIMESTAMP,
-            ):
-                # counter is used to collect and count unique values
-                counter = profile.get("counter")
-                if counter is None:
-                    counter = {}
-                if len(counter) < MAX_COLLECTOR:
-                    [
-                        increment(counter, value)
-                        for value in column_data
-                        if len(counter) < MAX_COLLECTOR
-                    ]
-                profile["counter"] = counter
+                # to prevent problems, we set some limits
+                if column_data.nbytes > 1024 * 1024 * 1024:
+                    if column not in uncollected_columns:
+                        uncollected_columns.append(column)
+                        continue
 
-            if _type in (OPTERYX_TYPES.NUMERIC, OPTERYX_TYPES.TIMESTAMP):
-                # populate the distogram, this is used for distribution statistics
-                if profile["distogram"] is None:
-                    dgram = distogram.Distogram(10)
+                # don't collect columns we can't analyse
+                if _type in (
+                    OPTERYX_TYPES.LIST,
+                    OPTERYX_TYPES.STRUCT,
+                    OPTERYX_TYPES.OTHER,
+                ):
+                    profile_collector[column] = profile
+                    continue
+
+                # long strings are meaningless
+                if _type in (OPTERYX_TYPES.VARCHAR):
+                    max_len = reduce(
+                        lambda x, y: max(len(y), x),
+                        (v.as_py() for v in column_data if v.is_valid),
+                        0,
+                    )
+                    if max_len > 32:
+                        if column not in uncollected_columns:
+                            uncollected_columns.append(column)
+                        continue
+
+                # convert TIMESTAMP into a NUMERIC (seconds after Linux Epoch)
+                if _type == OPTERYX_TYPES.TIMESTAMP:
+                    import datetime
+
+                    to_linux_epoch = (
+                        lambda x: numpy.nan
+                        if x.as_py() is None
+                        else datetime.datetime.fromisoformat(
+                            x.as_py().isoformat()
+                        ).timestamp()
+                    )
+                    column_data = (to_linux_epoch(i) for i in column_data)
                 else:
-                    dgram = profile["distogram"]
-                values, counts = numpy.unique(column_data, return_counts=True)
-                for index, value in enumerate(values):
-                    dgram = distogram.update(dgram, value=value, count=counts[index])
-                profile["distogram"] = dgram
+                    column_data = (i.as_py() for i in column_data)
 
-            profile_collector[column] = profile
+                # remove empty values
+                column_data = numpy.array(
+                    [i for i in column_data if i not in (None, numpy.nan)]
+                )
+
+                if _type in (
+                    OPTERYX_TYPES.VARCHAR,
+                    OPTERYX_TYPES.NUMERIC,
+                    OPTERYX_TYPES.TIMESTAMP,
+                ):
+                    # hyperloglog estimates cardinality/uniqueness
+                    hll = profile.get("hyperloglog")
+                    if hll is None:
+                        hll = hyperloglog.HyperLogLogPlusPlus(p=16)
+                    [hll.update(value) for value in column_data]
+                    profile["hyperloglog"] = hll
+
+                if _type in (
+                    OPTERYX_TYPES.BOOLEAN,
+                    OPTERYX_TYPES.VARCHAR,
+                    OPTERYX_TYPES.NUMERIC,
+                    OPTERYX_TYPES.TIMESTAMP,
+                ):
+                    # counter is used to collect and count unique values
+                    counter = profile.get("counter")
+                    if counter is None:
+                        counter = {}
+                    if len(counter) < MAX_COLLECTOR:
+                        [
+                            increment(counter, value)
+                            for value in column_data
+                            if len(counter) < MAX_COLLECTOR
+                        ]
+                    profile["counter"] = counter
+
+                if _type in (OPTERYX_TYPES.NUMERIC, OPTERYX_TYPES.TIMESTAMP):
+                    # populate the distogram, this is used for distribution statistics
+                    if profile["distogram"] is None:
+                        dgram = distogram.Distogram(10)
+                    else:
+                        dgram = profile["distogram"]
+                    values, counts = numpy.unique(column_data, return_counts=True)
+                    for index, value in enumerate(values):
+                        dgram = distogram.update(
+                            dgram, value=value, count=counts[index]
+                        )
+                    profile["distogram"] = dgram
+
+                profile_collector[column] = profile
 
     buffer = []
 
     for column, profile in profile_collector.items():
         profile["column_name"] = columns.get_preferred_name(column)
         profile["type"] = ", ".join(profile["type"])
-        dgram = profile.pop("distogram", None)
-        if dgram:
-            profile["min"], profile["max"] = distogram.bounds(dgram)
-            profile["mean"] = distogram.mean(dgram)
 
-            histogram = distogram.histogram(dgram, bin_count=10)
-            if histogram:
-                profile["histogram"] = histogram[0]
+        if column not in uncollected_columns:
+            dgram = profile.pop("distogram", None)
+            if dgram:
+                profile["min"], profile["max"] = distogram.bounds(dgram)
+                profile["mean"] = distogram.mean(dgram)
 
-            profile["quantiles"] = (
-                distogram.quantile(dgram, value=0.25),
-                distogram.quantile(dgram, value=0.5),
-                distogram.quantile(dgram, value=0.75),
-            )
-        hll = profile.pop("hyperloglog", None)
-        if hll:
-            profile["unique"] = hll.count()
+                histogram = distogram.histogram(dgram, bin_count=10)
+                if histogram:
+                    profile["histogram"] = histogram[0]
+
+                profile["quantiles"] = (
+                    distogram.quantile(dgram, value=0.25),
+                    distogram.quantile(dgram, value=0.5),
+                    distogram.quantile(dgram, value=0.75),
+                )
+            hll = profile.pop("hyperloglog", None)
+            if hll:
+                profile["unique"] = hll.count()
+
+            counter = profile.pop("counter", None)
+            if counter:
+                if len(counter) < MAX_COLLECTOR:
+                    profile["unique"] = len(counter)
+                    counts = list(counter.values())
+                    if min(counts) != max(counts):
+                        profile["most_frequent_values"] = [
+                            str(k) for k in counter.keys()
+                        ]
+                        profile["most_frequent_counts"] = counts
+
         buffer.append(profile)
-
-        counter = profile.pop("counter", None)
-        if counter:
-            if len(counter) < MAX_COLLECTOR:
-                profile["unique"] = len(counter)
-                counts = list(counter.values())
-                if min(counts) != max(counts):
-                    profile["most_frequent_values"] = [str(k) for k in counter.keys()]
-                    profile["most_frequent_counts"] = counts
 
     table = pyarrow.Table.from_pylist(buffer)
     table = Columns.create_table_metadata(
