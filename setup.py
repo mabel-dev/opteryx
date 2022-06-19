@@ -9,12 +9,8 @@ exec(vers)  # nosec
 with open("README.md", "r") as rm:
     long_description = rm.read()
 
-try:
-    with open("requirements.txt") as f:
-        required = f.read().splitlines()
-except FileNotFoundError:
-    # this sometimes fails - so put them here, but this needs to be maintained manually
-    required = ["cython", "numpy", "orjson", "cityhash", "sqloxide", "pyarrow"]
+with open("requirements.txt") as f:
+    required = f.read().splitlines()
 
 extensions = [
     Extension(
@@ -32,13 +28,14 @@ extensions = [
 setup(
     name="opteryx",
     version=__version__,
-    description="Serverless SQL Engine",
+    description="Python SQL Query Engine for Serverless Environments",
     long_description=long_description,
     long_description_content_type="text/markdown",
     maintainer="Joocer",
     author="joocer",
     author_email="justin.joyce@joocer.com",
     packages=find_packages(include=["opteryx", "opteryx.*"]),
+    package_data={"opteryx.sketches": ["counting_tree.pyx"]}
     url="https://github.com/mabel-dev/opteryx/",
     install_requires=required,
     ext_modules=cythonize(extensions),

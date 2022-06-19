@@ -4,6 +4,5 @@ orjson
 cityhash
 sqloxide
 pyarrow
-python-dotenv
 psutil
 pyyaml
