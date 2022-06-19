@@ -131,7 +131,8 @@ def _full_collector(pages):
     )
     return table
 
-def increment(dic:dict, value):
+
+def increment(dic: dict, value):
     if value in dic:
         dic[value] += 1
     else:
@@ -234,7 +235,11 @@ def _extended_collector(pages):
                 if counter is None:
                     counter = {}
                 if len(counter) < MAX_COLLECTOR:
-                    [increment(counter, value) for value in column_data if len(counter) < MAX_COLLECTOR]
+                    [
+                        increment(counter, value)
+                        for value in column_data
+                        if len(counter) < MAX_COLLECTOR
+                    ]
                 profile["counter"] = counter
 
             if _type in (OPTERYX_TYPES.NUMERIC, OPTERYX_TYPES.TIMESTAMP):
