@@ -1,0 +1,47 @@
+"""
+The best way to test a SQL engine is to throw queries at it.
+
+This tests that features of the parser still aren't implemented, rather than having
+to remember to check the parser for them regularly.
+"""
+import os
+import sys
+
+sys.path.insert(1, os.path.join(sys.path[0], "../.."))
+
+import pytest
+import opteryx
+
+
+# fmt:off
+STATEMENTS = [
+
+        # SIMILAR TO isn't supported
+        ("SELECT * FROM $planets WHERE name SIMILAR TO 'Earth'"),
+
+        # DECLARE isn't supported
+        ("DELARE @variable AS NUMERIC = 3 SELECT * FROM $planets WHERE ID = @variable"),
+
+    ]
+# fmt:on
+
+
+@pytest.mark.parametrize("statement", STATEMENTS)
+def test_sql_battery(statement):
+    """
+    Test an battery of statements
+    """
+    conn = opteryx.connect(partition_scheme=None)
+    cursor = conn.cursor()
+    with pytest.raises(Exception):
+        cursor.execute(statement)
+        cursor._results = list(cursor._results)
+
+
+if __name__ == "__main__":  # pragma: no cover
+
+    print(f"RUNNING BATTERY OF {len(STATEMENTS)} TESTS WHICH SHOULD FAIL")
+    for statement in STATEMENTS:
+        print(statement)
+        test_sql_battery(statement)
+    print("okay")

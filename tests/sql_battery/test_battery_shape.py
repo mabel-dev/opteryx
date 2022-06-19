@@ -243,6 +243,8 @@ STATEMENTS = [
         ("SELECT * FROM generate_series(1,5) JOIN $planets ON id = generate_series", 5, 21),
         ("SELECT * FROM (SELECT * FROM generate_series(1,10,2) AS gs) INNER JOIN $planets on gs = id", 5, 21),
 
+        ("SELECT * FROM generate_series('192.168.1.0/28')", 16, 1),
+
         ("SELECT * FROM tests.data.dated FOR '2020-02-03'", 25, 8),
         ("SELECT * FROM tests.data.dated FOR '2020-02-04'", 25, 8),
         ("SELECT * FROM tests.data.dated FOR '2020-02-05'", 0, 0),
