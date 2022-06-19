@@ -35,7 +35,7 @@ setup(
     author="joocer",
     author_email="justin.joyce@joocer.com",
     packages=find_packages(include=["opteryx", "opteryx.*"]),
-    package_data={"opteryx.sketches": ["counting_tree.pyx"]}
+    package_data={"opteryx.sketches": ["counting_tree.pyx"]},
     url="https://github.com/mabel-dev/opteryx/",
     install_requires=required,
     ext_modules=cythonize(extensions),
