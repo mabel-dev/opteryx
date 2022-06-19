@@ -18,11 +18,6 @@ extensions = [
         sources=["opteryx/third_party/pyarrow_ops/cjoin.pyx"],
         include_dirs=[np.get_include()],
     ),
-    Extension(
-        name="counting_tree",
-        sources=["opteryx/sketches/counting_tree.pyx"],
-        include_dirs=["opteryx/sketches"],
-    ),
 ]
 
 setup(
@@ -35,7 +30,6 @@ setup(
     author="joocer",
     author_email="justin.joyce@joocer.com",
     packages=find_packages(include=["opteryx", "opteryx.*"]),
-    package_data={"opteryx.sketches": ["counting_tree.pyx"]},
     url="https://github.com/mabel-dev/opteryx/",
     install_requires=required,
     ext_modules=cythonize(extensions),
