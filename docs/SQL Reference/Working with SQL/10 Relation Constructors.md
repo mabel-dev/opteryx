@@ -63,8 +63,9 @@ Form                                 | Types   | Description
 `generate_series(start, stop)`       | NUMERIC, NUMERIC | Generate a NUMERIC series between 'start' and 'stop', with a step of 1
 `generate_series(start, stop, step)` | NUMERIC, NUMERIC, NUMERIC | Generate a NUMERIC series between 'start' and 'stop', with an explicit step size
 `generate_series(start, stop, interval)` | TIMESTAMP, TIMESTAMP, INTERVAL | Generate a TIMESTAMP series between 'start' and 'stop', with a given interval
+`generate_series(cidr)` | VARCHAR | Generate set of IP addresses from a given CIDR (e.g. `192.168.0.0/24`)
 
-Single Parameter Example:
+Single Parameter Example (NUMERIC):
 
 ~~~sql
 SELECT *
@@ -76,6 +77,21 @@ SELECT *
                1
                2
                3
+~~~
+
+Single Parameter Example (VARCHAR):
+
+~~~sql
+SELECT *
+  FROM generate_series('192.168.1.0/30')
+~~~
+~~~
+ generate_series 
+----------------
+ 192.168.1.0
+ 192.168.1.1
+ 192.168.1.2
+ 192.168.1.3
 ~~~
 
 Two parameter Example:

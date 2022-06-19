@@ -180,7 +180,7 @@ def _extended_collector(pages):
         if columns is None:
             columns = Columns(page)
 
-        for block in page.to_batches(1000):
+        for block in page.to_batches(5000):
 
             for column in page.column_names:
 

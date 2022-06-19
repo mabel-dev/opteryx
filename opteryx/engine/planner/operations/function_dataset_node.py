@@ -42,6 +42,7 @@ def _generate_series(alias, *args):
             raise SqlError("generate_series for numbers takes 1,2 or 3 parameters.")
         return [{alias: i} for i in intervals.generate_range(*arg_vals)]
 
+    # if the params are timestamps, we create time intervals
     if first_arg_type == TOKEN_TYPES.TIMESTAMP:
         if arg_len != 3:
             raise SqlError(
@@ -49,6 +50,15 @@ def _generate_series(alias, *args):
             )
         return [{alias: i} for i in dates.date_range(*arg_vals)]
 
+    # if the param is a CIDR, we create network ranges
+    if first_arg_type == TOKEN_TYPES.VARCHAR:
+        if arg_len not in (1,):
+            raise SqlError("generate_series for strings takes 1 CIDR parameter.")
+
+        import ipaddress
+
+        ips = ipaddress.ip_network(arg_vals[0])
+        return ([{alias: str(ip)} for ip in ips])
 
 def _unnest(alias, *args):
     """unnest converts an list into rows"""
