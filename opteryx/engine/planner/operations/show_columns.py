@@ -341,6 +341,11 @@ def _extended_collector(pages):
                         ]
                         profile["most_frequent_counts"] = counts
 
+        # remove collectors
+        profile.pop("histogram", None)
+        profile.pop("hyperloglog", None)
+        profile.pop("counter", None)
+    
         buffer.append(profile)
 
     table = pyarrow.Table.from_pylist(buffer)
