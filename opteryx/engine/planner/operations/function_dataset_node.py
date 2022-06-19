@@ -58,7 +58,8 @@ def _generate_series(alias, *args):
         import ipaddress
 
         ips = ipaddress.ip_network(arg_vals[0])
-        return ([{alias: str(ip)} for ip in ips])
+        return [{alias: str(ip)} for ip in ips]
+
 
 def _unnest(alias, *args):
     """unnest converts an list into rows"""

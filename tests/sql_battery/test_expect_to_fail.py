@@ -13,7 +13,6 @@ import pytest
 import opteryx
 
 
-
 # fmt:off
 STATEMENTS = [
 
@@ -37,6 +36,7 @@ def test_sql_battery(statement):
     with pytest.raises(Exception):
         cursor.execute(statement)
         cursor._results = list(cursor._results)
+
 
 if __name__ == "__main__":  # pragma: no cover
 
