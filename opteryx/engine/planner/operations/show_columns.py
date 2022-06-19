@@ -131,12 +131,17 @@ def _full_collector(pages):
     )
     return table
 
+def increment(dic:dict, value):
+    if value in dic:
+        dic[value] += 1
+    else:
+        dic[value] = 1
+
 
 def _extended_collector(pages):
     """
     Collect summary statistics about each column
     """
-    from opteryx.sketches import CountingTree
     from opteryx.third_party import distogram
     from opteryx.third_party import hyperloglog
 
@@ -227,13 +232,9 @@ def _extended_collector(pages):
                 # counter is used to collect and count unique values
                 counter = profile.get("counter")
                 if counter is None:
-                    counter = CountingTree()
+                    counter = {}
                 if len(counter) < MAX_COLLECTOR:
-                    [
-                        counter.insert(value)
-                        for value in column_data
-                        if len(counter) < MAX_COLLECTOR
-                    ]
+                    [increment(counter, value) for value in column_data if len(counter) < MAX_COLLECTOR]
                 profile["counter"] = counter
 
             if _type in (OPTERYX_TYPES.NUMERIC, OPTERYX_TYPES.TIMESTAMP):

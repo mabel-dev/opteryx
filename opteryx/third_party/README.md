@@ -5,8 +5,8 @@ These are third-party modules which we include into the Opteryx codebase.
 - [**distogram**](https://github.com/maki-nage/distogram)
 - [**hyperloglog**](https://github.com/ekzhu/datasketch)
 - [**pyarrow_ops**](https://github.com/TomScheffers/pyarrow_ops)
-- [**bintrees**](https://github.com/mozman/bintrees)
 
+- [**bintrees**](https://github.com/mozman/bintrees)
 - [**accumulation_tree**](https://github.com/tkluck/accumulation_tree)
 - [**pyudorandom**](https://github.com/mewwts/pyudorandom)
 - [**sketch**](https://github.com/dnbaker/sketch)
