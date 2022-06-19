@@ -197,10 +197,17 @@ def _extended_collector(pages):
                 # calculate the missing count more robustly
                 missing = reduce(
                     lambda x, y: x + 1,
-                    (i for i in column_data if i in (None, numpy.nan) or not i.is_valid),
+                    (
+                        i
+                        for i in column_data
+                        if i in (None, numpy.nan) or not i.is_valid
+                    ),
                     0,
                 )
                 profile["missing"] += missing
+
+                # interim save
+                profile_collector[column] = profile
 
                 # don't collect problematic columns
                 if column in uncollected_columns:
@@ -223,7 +230,11 @@ def _extended_collector(pages):
 
                 # long strings are meaningless
                 if _type in (OPTERYX_TYPES.VARCHAR):
-                    max_len = reduce(lambda x, y: max(len(y), x), (v.as_py() for v in column_data if v.is_valid), 0)
+                    max_len = reduce(
+                        lambda x, y: max(len(y), x),
+                        (v.as_py() for v in column_data if v.is_valid),
+                        0,
+                    )
                     if max_len > 32:
                         if column not in uncollected_columns:
                             uncollected_columns.append(column)
@@ -325,7 +336,9 @@ def _extended_collector(pages):
                     profile["unique"] = len(counter)
                     counts = list(counter.values())
                     if min(counts) != max(counts):
-                        profile["most_frequent_values"] = [str(k) for k in counter.keys()]
+                        profile["most_frequent_values"] = [
+                            str(k) for k in counter.keys()
+                        ]
                         profile["most_frequent_counts"] = counts
 
         buffer.append(profile)
