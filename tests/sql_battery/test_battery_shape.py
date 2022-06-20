@@ -54,6 +54,7 @@ STATEMENTS = [
         ("SELECT * FROM $satellites WHERE `name` = 'Calypso'", 1, 8),
         ("SELECT * FROM `$satellites` WHERE name = 'Calypso'", 1, 8),
         ("SELECT * FROM `$satellites` WHERE `name` = 'Calypso'", 1, 8),
+        ("SELECT * FROM $satellites WITH (NOCACHE)", 177, 8),
 
         ("/* comment */ SELECT * FROM $satellites WHERE name = 'Calypso'", 1, 8),
         ("SELECT * FROM $satellites /* comment */ WHERE name = 'Calypso'", 1, 8),
@@ -227,6 +228,7 @@ STATEMENTS = [
         ("SELECT * FROM generate_series(2,10,2) AS nums", 5, 1),
         ("SELECT * FROM generate_series(2,10,2) WHERE generate_series > 5", 3, 1),
         ("SELECT * FROM generate_series(2,10,2) AS nums WHERE nums < 5", 2, 1),
+        ("SELECT * FROM generate_series(2) WITH (NOCACHE)", 2, 1),
 
         ("SELECT * FROM generate_series('2022-01-01', '2022-12-31', '1 month')", 12, 1),
         ("SELECT * FROM generate_series('2022-01-01', '2022-12-31', '1 mon')", 12, 1),
@@ -245,6 +247,7 @@ STATEMENTS = [
 
         ("SELECT * FROM generate_series('192.168.1.0/28')", 16, 1),
 
+        ("SELECT * FROM tests.data.dated WITH (NOCACHE) FOR '2020-02-03'", 25, 8),
         ("SELECT * FROM tests.data.dated FOR '2020-02-03'", 25, 8),
         ("SELECT * FROM tests.data.dated FOR '2020-02-04'", 25, 8),
         ("SELECT * FROM tests.data.dated FOR '2020-02-05'", 0, 0),
@@ -296,8 +299,12 @@ STATEMENTS = [
         ("SHOW COLUMNS FROM tests.data.dated FOR '2020-02-03'", 8, 2),
 
         ("SELECT * FROM $satellites CROSS JOIN $astronauts", 63189, 27),
+        ("SELECT * FROM $satellites WITH (NOCACHE) CROSS JOIN $astronauts WITH (NOCACHE)", 63189, 27),
         ("SELECT * FROM $satellites, $planets", 1593, 28),
         ("SELECT * FROM $satellites INNER JOIN $planets USING (id)", 9, 28),
+        ("SELECT * FROM $satellites WITH (NOCACHE) INNER JOIN $planets USING (id)", 9, 28),
+        ("SELECT * FROM $satellites WITH (NOCACHE) INNER JOIN $planets WITH (NOCACHE) USING (id)", 9, 28),
+        ("SELECT * FROM $satellites INNER JOIN $planets WITH (NOCACHE) USING (id)", 9, 28),
         ("SELECT * FROM $satellites JOIN $planets USING (id)", 9, 28),
         ("SELECT * FROM $astronauts CROSS JOIN UNNEST(missions) AS mission WHERE mission = 'Apollo 11'", 3, 20),
 #        ("SELECT * FROM $astronauts CROSS JOIN UNNEST(Missions)", 0, 0),

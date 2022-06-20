@@ -50,6 +50,7 @@ SQL_PARTS = [
     r"FULL\sJOIN",
     r"FULL\sOUTER\sJOIN",
     r"JOIN",
+    r"WITH",
 ]
 
 

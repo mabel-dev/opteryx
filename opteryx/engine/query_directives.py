@@ -10,5 +10,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .query_directives import QueryDirectives
-from .query_statistics import QueryStatistics
+
+class QueryDirectives:
+    """
+    Hints and directives to use when executing queries.
+    """
+
+    def __init__(self):
+
+        self.disable_cache: bool = False

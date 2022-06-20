@@ -48,6 +48,7 @@ from opteryx.engine.functions import is_function
 from opteryx.engine.planner.execution_tree import ExecutionTree
 from opteryx.engine.planner.operations import *
 from opteryx.engine.planner.temporal import extract_temporal_filters
+from opteryx.engine.query_directives import QueryDirectives
 from opteryx.exceptions import SqlError
 from opteryx.utils import dates
 
@@ -78,6 +79,7 @@ class QueryPlanner(ExecutionTree):
         self._ast = None
 
         self._statistics = statistics
+        self._directives = QueryDirectives()
         self._reader = reader
         self._cache = cache
         self._partition_scheme = partition_scheme
@@ -293,11 +295,17 @@ class QueryPlanner(ExecutionTree):
                         self._build_dnf_filters(a["Unnamed"])
                         for a in relation["relation"]["Table"]["args"]
                     ]
-                    yield (alias, {"function": function, "args": args}, "Function")
+                    yield (alias, {"function": function, "args": args}, "Function", [])
                 else:
                     alias = None
                     if relation["relation"]["Table"]["alias"] is not None:
                         alias = relation["relation"]["Table"]["alias"]["name"]["value"]
+                    hints = []
+                    if relation["relation"]["Table"]["with_hints"] is not None:
+                        hints = [
+                            hint["Identifier"]["value"]
+                            for hint in relation["relation"]["Table"]["with_hints"]
+                        ]
                     dataset = ".".join(
                         [
                             part["value"]
@@ -305,9 +313,9 @@ class QueryPlanner(ExecutionTree):
                         ]
                     )
                     if dataset[0:1] == "$":
-                        yield (alias, dataset, "Internal")
+                        yield (alias, dataset, "Internal", hints)
                     else:
-                        yield (alias, dataset, "External")
+                        yield (alias, dataset, "External", hints)
 
             if "Derived" in relation["relation"]:
                 subquery = relation["relation"]["Derived"]["subquery"]["body"]
@@ -321,7 +329,7 @@ class QueryPlanner(ExecutionTree):
                     subquery_plan = self.copy()
                     subquery_plan.create_plan(ast=[ast])
 
-                    yield (alias, subquery_plan, "SubQuery")
+                    yield (alias, subquery_plan, "SubQuery", [])
                 if "Values" in subquery:
                     body = []
                     headers = [
@@ -334,7 +342,7 @@ class QueryPlanner(ExecutionTree):
                             for v in value_set
                         ]
                         body.append(dict(zip(headers, values)))
-                    yield (alias, {"function": "values", "args": body}, "Function")
+                    yield (alias, {"function": "values", "args": body}, "Function", [])
 
     def _extract_joins(self, ast):
         try:
@@ -360,25 +368,6 @@ class QueryPlanner(ExecutionTree):
 
             right = next(self._extract_relations([join], default_path=False))
             yield (join_mode, right, join_on, join_using)
-
-    #            if join["relation"]["Table"]["alias"] is not None:
-    #                alias = join["relation"]["Table"]["alias"]["name"]["value"]
-    #            dataset = ".".join(
-    #                [part["value"] for part in join["relation"]["Table"]["name"]]
-    #            )
-    #            # if we have args, we're probably calling UNNEST
-    #            if "args" in join["relation"]["Table"]:
-    #                args = [
-    #                    self._build_dnf_filters(a)
-    #                    for a in join["relation"]["Table"]["args"]
-    #                ]
-    # CROSS JOINT _ UNNEST() needs specifically handling because the UNNEST is
-    # probably a function of the data in the left table, which means we can't
-    # use the table join code
-    #                if len(args) > 0 and dataset == "UNNEST" and mode == "CrossJoin":
-    #                    mode = "CrossJoinUnnest"
-    #                    dataset = (dataset, args)
-    #            yield (mode, alias, dataset, join_on, using)
 
     def _extract_projections(self, ast):
         """
@@ -588,15 +577,19 @@ class QueryPlanner(ExecutionTree):
         having = ast[0]["Query"]["body"]["Select"]["having"]
         return self._build_dnf_filters(having)
 
+    def _extract_directives(self, ast):
+        return QueryDirectives()
+
     def _explain_planner(self, ast, statistics):
+        directives = self._extract_directives(ast)
         explain_plan = self.copy()
         explain_plan.create_plan(ast=[ast[0]["Explain"]["statement"]])
-        explain_node = ExplainNode(statistics, query_plan=explain_plan)
+        explain_node = ExplainNode(directives, statistics, query_plan=explain_plan)
         self.add_operator("explain", explain_node)
 
     def _show_columns_planner(self, ast, statistics):
 
-        #        relation = ast[0]["ShowColumns"]["table_name"][0]["value"]
+        directives = self._extract_directives(ast)
 
         dataset = ".".join(
             [part["value"] for part in ast[0]["ShowColumns"]["table_name"]]
@@ -610,6 +603,7 @@ class QueryPlanner(ExecutionTree):
         self.add_operator(
             "reader",
             reader_factory(mode)(
+                directives=directives,
                 statistics=statistics,
                 dataset=dataset,
                 alias=None,
@@ -625,6 +619,7 @@ class QueryPlanner(ExecutionTree):
         self.add_operator(
             "columns",
             ShowColumnsNode(
+                directives=directives,
                 statistics=statistics,
                 full=ast[0]["ShowColumns"]["full"],
                 extended=ast[0]["ShowColumns"]["extended"],
@@ -636,7 +631,10 @@ class QueryPlanner(ExecutionTree):
         filters = self._extract_filter(ast)
         if filters:
             self.add_operator(
-                "filter", SelectionNode(statistics=statistics, filter=filters)
+                "filter",
+                SelectionNode(
+                    directives=directives, statistics=statistics, filter=filters
+                ),
             )
             self.link_operators(last_node, "filter")
             last_node = "filter"
@@ -660,15 +658,18 @@ class QueryPlanner(ExecutionTree):
         This is phase one of the rewrite, to essentially mimick the existing
         functionality.
         """
+        directives = self._extract_directives(ast)
+
         _relations = [r for r in self._extract_relations(ast)]
         if len(_relations) == 0:
-            _relations = [(None, "$no_table", "Internal")]
+            _relations = [(None, "$no_table", "Internal", [])]
 
         # We always have a data source - even if it's 'no table'
-        alias, dataset, mode = _relations[0]
+        alias, dataset, mode, hints = _relations[0]
         self.add_operator(
             "from",
             reader_factory(mode)(
+                directives=directives,
                 statistics=statistics,
                 alias=alias,
                 dataset=dataset,
@@ -677,6 +678,7 @@ class QueryPlanner(ExecutionTree):
                 partition_scheme=self._partition_scheme,
                 start_date=self._start_date,
                 end_date=self._end_date,
+                hints=hints,
             ),
         )
         last_node = "from"
@@ -694,6 +696,7 @@ class QueryPlanner(ExecutionTree):
                 else:
                     # Otherwise, the right table needs to come from the Reader
                     right = reader_factory(right[2])(
+                        directives=directives,
                         statistics=statistics,
                         dataset=right[1],
                         alias=right[0],
@@ -702,6 +705,7 @@ class QueryPlanner(ExecutionTree):
                         partition_scheme=self._partition_scheme,
                         start_date=self._start_date,
                         end_date=self._end_date,
+                        hints=right[3],
                     )
 
                 join_node = join_factory(join_type)
@@ -711,7 +715,8 @@ class QueryPlanner(ExecutionTree):
                 self.add_operator(
                     f"join-{join_id}",
                     join_node(
-                        statistics,
+                        directives=directives,
+                        statistics=statistics,
                         join_type=join_type,
                         join_on=join_on,
                         join_using=join_using,
@@ -727,14 +732,16 @@ class QueryPlanner(ExecutionTree):
         _projection = self._extract_projections(ast)
         if any(["function" in a for a in _projection]):
             self.add_operator(
-                "eval", EvaluationNode(statistics, projection=_projection)
+                "eval", EvaluationNode(directives, statistics, projection=_projection)
             )
             self.link_operators(last_node, "eval")
             last_node = "eval"
 
         _selection = self._extract_selection(ast)
         if _selection:
-            self.add_operator("where", SelectionNode(statistics, filter=_selection))
+            self.add_operator(
+                "where", SelectionNode(directives, statistics, filter=_selection)
+            )
             self.link_operators(last_node, "where")
             last_node = "where"
 
@@ -752,43 +759,52 @@ class QueryPlanner(ExecutionTree):
                     }
                 )
             self.add_operator(
-                "agg", AggregateNode(statistics, aggregates=_aggregates, groups=_groups)
+                "agg",
+                AggregateNode(
+                    directives, statistics, aggregates=_aggregates, groups=_groups
+                ),
             )
             self.link_operators(last_node, "agg")
             last_node = "agg"
 
         _having = self._extract_having(ast)
         if _having:
-            self.add_operator("having", SelectionNode(statistics, filter=_having))
+            self.add_operator(
+                "having", SelectionNode(directives, statistics, filter=_having)
+            )
             self.link_operators(last_node, "having")
             last_node = "having"
 
-        self.add_operator("select", ProjectionNode(statistics, projection=_projection))
+        self.add_operator(
+            "select", ProjectionNode(directives, statistics, projection=_projection)
+        )
         self.link_operators(last_node, "select")
         last_node = "select"
 
         _distinct = self._extract_distinct(ast)
         if _distinct:
-            self.add_operator("distinct", DistinctNode(statistics))
+            self.add_operator("distinct", DistinctNode(directives, statistics))
             self.link_operators(last_node, "distinct")
             last_node = "distinct"
 
         _order = self._extract_order(ast)
         if _order:
-            self.add_operator("order", SortNode(statistics, order=_order))
+            self.add_operator("order", SortNode(directives, statistics, order=_order))
             self.link_operators(last_node, "order")
             last_node = "order"
 
         _offset = self._extract_offset(ast)
         if _offset:
-            self.add_operator("offset", OffsetNode(statistics, offset=_offset))
+            self.add_operator(
+                "offset", OffsetNode(directives, statistics, offset=_offset)
+            )
             self.link_operators(last_node, "offset")
             last_node = "offset"
 
         _limit = self._extract_limit(ast)
         # 0 limit is valid
         if _limit is not None:
-            self.add_operator("limit", LimitNode(statistics, limit=_limit))
+            self.add_operator("limit", LimitNode(directives, statistics, limit=_limit))
             self.link_operators(last_node, "limit")
             last_node = "limit"
 

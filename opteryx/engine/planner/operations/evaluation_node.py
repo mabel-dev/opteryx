@@ -24,13 +24,15 @@ import pyarrow
 from opteryx.engine.attribute_types import TOKEN_TYPES
 from opteryx.engine.functions import FUNCTIONS
 from opteryx.engine.planner.operations import BasePlanNode
-from opteryx.engine.query_statistics import QueryStatistics
+from opteryx.engine import QueryDirectives, QueryStatistics
 from opteryx.exceptions import SqlError
 from opteryx.utils.columns import Columns
 
 
 class EvaluationNode(BasePlanNode):
-    def __init__(self, statistics: QueryStatistics, **config):
+    def __init__(
+        self, directives: QueryDirectives, statistics: QueryStatistics, **config
+    ):
         projection = config.get("projection", [])
         self.functions = [c for c in projection if "function" in c]
         self.aliases: list = []

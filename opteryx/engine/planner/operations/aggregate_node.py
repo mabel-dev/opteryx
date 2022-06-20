@@ -33,7 +33,7 @@ import numpy as np
 import pyarrow.json
 
 from opteryx.engine.attribute_types import TOKEN_TYPES
-from opteryx.engine.query_statistics import QueryStatistics
+from opteryx.engine import QueryDirectives, QueryStatistics
 from opteryx.engine.planner.operations import BasePlanNode
 from opteryx.exceptions import SqlError
 from opteryx.utils.columns import Columns
@@ -94,7 +94,9 @@ def _map(table, collect_columns):
 
 
 class AggregateNode(BasePlanNode):
-    def __init__(self, statistics: QueryStatistics, **config):
+    def __init__(
+        self, directives: QueryDirectives, statistics: QueryStatistics, **config
+    ):
 
         from opteryx.engine.attribute_types import TOKEN_TYPES
 

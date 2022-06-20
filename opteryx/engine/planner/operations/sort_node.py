@@ -23,13 +23,15 @@ from pyarrow import Table, concat_tables
 
 from opteryx.engine.functions import FUNCTIONS
 from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
-from opteryx.engine.query_statistics import QueryStatistics
+from opteryx.engine import QueryDirectives, QueryStatistics
 from opteryx.exceptions import SqlError
 from opteryx.utils.columns import Columns
 
 
 class SortNode(BasePlanNode):
-    def __init__(self, statistics: QueryStatistics, **config):
+    def __init__(
+        self, directives: QueryDirectives, statistics: QueryStatistics, **config
+    ):
         self._order = config.get("order", [])
         self._mapped_order: List = []
 
