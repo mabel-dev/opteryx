@@ -361,25 +361,6 @@ class QueryPlanner(ExecutionTree):
             right = next(self._extract_relations([join], default_path=False))
             yield (join_mode, right, join_on, join_using)
 
-    #            if join["relation"]["Table"]["alias"] is not None:
-    #                alias = join["relation"]["Table"]["alias"]["name"]["value"]
-    #            dataset = ".".join(
-    #                [part["value"] for part in join["relation"]["Table"]["name"]]
-    #            )
-    #            # if we have args, we're probably calling UNNEST
-    #            if "args" in join["relation"]["Table"]:
-    #                args = [
-    #                    self._build_dnf_filters(a)
-    #                    for a in join["relation"]["Table"]["args"]
-    #                ]
-    # CROSS JOINT _ UNNEST() needs specifically handling because the UNNEST is
-    # probably a function of the data in the left table, which means we can't
-    # use the table join code
-    #                if len(args) > 0 and dataset == "UNNEST" and mode == "CrossJoin":
-    #                    mode = "CrossJoinUnnest"
-    #                    dataset = (dataset, args)
-    #            yield (mode, alias, dataset, join_on, using)
-
     def _extract_projections(self, ast):
         """
         Projections are lists of attributes, the most obvious one is in the SELECT
@@ -431,9 +412,17 @@ class QueryPlanner(ExecutionTree):
                         return {"function": func, "args": args, "alias": alias}
                     return {"aggregate": func, "args": args, "alias": alias}
                 if "BinaryOp" in function:
-                    raise NotImplementedError(
-                        "Operations in the SELECT clause are not supported"
-                    )
+                    left = self._build_dnf_filters(function["BinaryOp"]["left"])
+                    operator = function["BinaryOp"]["op"]
+                    right = self._build_dnf_filters(function["BinaryOp"]["right"])
+
+                    opmap = {"Plus": "+"}
+
+                    return {
+                        "function": operator.upper(),
+                        "args": [left, right],
+                        "alias": f"`{left[0]} {opmap.get(operator, '?')} {right[0]}`",
+                    }
                 if "Cast" in function:
                     # CAST(<var> AS <type>) - convert to the form <type>(var), e.g. BOOLEAN(on)
                     args = [self._build_dnf_filters(function["Cast"]["expr"])]
