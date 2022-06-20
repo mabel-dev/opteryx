@@ -19,7 +19,7 @@ Retrieve rows from zero or more relations.
 
 ~~~sql
 SELECT [ DISTINCT ] select_list
-FROM relation
+FROM relation [WITH (NOCACHE)]
   [ INNER ] JOIN relation
     USING (column)
   CROSS JOIN relation
@@ -49,7 +49,7 @@ The `DISTINCT` modifier is specified, only unique rows are included in the resul
 ### FROM / JOIN clauses
 
 ~~~
-FROM relation [, ...]
+FROM relation [, ...] [WITH (NOCACHE)]
 ~~~
 ~~~
 FROM relation [ INNER ] JOIN relation < USING (column) | ON condition >
@@ -66,6 +66,15 @@ The `FROM` clause specifies the source of the data on which the remainder of the
 `JOIN` clauses allow you to combine data from multiple relations. If no `JOIN` qualifier is provided, `INNER` will be used. `JOIN` qualifiers are mutually exclusive. `ON` and `USING` clauses are also mutually exclusive and can only be used with `INNER` and `LEFT` joins.
 
 See [Joins](https://mabel-dev.github.io/opteryx/SQL%20Reference/08%20Joins/) for more information on `JOIN` syntax and functionality.
+
+Hints can be provided as part of the statement to direct the query planner and executor to make decisions. Relation hints are declared as `WITH` statements following a relation in the `FROM` and `JOIN` clauses, for example `FROM $astronauts WITH (NOCACHE)`. Reconised hints are:
+
+Hint    | Effect                         
+------- | -------------------------------
+NOCACHE | Ignores any cache configuration 
+
+!!! note
+    Hints are not guaranteed to be followed, the query planner and executor may ignore hints in specific circumstances.
 
 ### FOR clause
 

@@ -40,6 +40,18 @@ def test_in_memory_cache():
     assert stats["cache_misses"] == 0
     conn.close()
 
+    # read the data with the no cache directive
+    conn = opteryx.connect(reader=DiskStorage(), cache=cache, partition_scheme=None)
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM tests.data.tweets WITH (NOCACHE);")
+    for record in cur.fetchall():
+        # we just want to make sure we consume the data
+        pass
+    stats = cur.stats
+    assert stats["cache_hits"] == 0
+    assert stats["cache_misses"] == 0
+    conn.close()
+
 
 if __name__ == "__main__":  # pragma: no cover
 

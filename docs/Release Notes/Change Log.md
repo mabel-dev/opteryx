@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - [[#177](https://github.com/mabel-dev/opteryx/issues/177)] Support `SHOW FULL COLUMNS` to read entire datasets rather than just the first blob. ([@joocer](https://github.com/joocer))
 - [[#194](https://github.com/mabel-dev/opteryx/issues/194)] Functions that are abbreviations, should have the full name as an alias. ([@joocer](https://github.com/joocer))
 - [[#201](https://github.com/mabel-dev/opteryx/issues/201)] `generate_series` supports CIDR expansion. ([@joocer](https://github.com/joocer))
+- [[#175](https://github.com/mabel-dev/opteryx/issues/175)] Support `WITH (NOCACHE)` hint to disable using cache. ([@joocer](https://github.com/joocer))
 
 **Changed**
 

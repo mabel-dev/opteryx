@@ -22,7 +22,7 @@ import pyarrow
 from typing import Iterable
 
 from opteryx.engine.attribute_types import TOKEN_TYPES
-from opteryx.engine.query_statistics import QueryStatistics
+from opteryx.engine import QueryDirectives, QueryStatistics
 from opteryx.engine.planner.operations import BasePlanNode
 from opteryx.exceptions import SqlError
 from opteryx.utils.columns import Columns
@@ -98,12 +98,13 @@ FUNCTIONS = {
 
 
 class FunctionDatasetNode(BasePlanNode):
-    def __init__(self, statistics: QueryStatistics, **config):
+    def __init__(
+        self, directives: QueryDirectives, statistics: QueryStatistics, **config
+    ):
         """
         The Blob Reader Node is responsible for reading the relevant blobs
         and returning a Table/Relation.
         """
-        super().__init__(statistics=statistics, **config)
         self._statistics = statistics
         self._alias = config["alias"]
         self._function = config["dataset"]["function"]

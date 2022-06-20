@@ -20,7 +20,7 @@ This Node reads and parses the data from one of the sample datasets.
 from typing import Iterable, Optional
 
 from opteryx import samples
-from opteryx.engine.query_statistics import QueryStatistics
+from opteryx.engine import QueryDirectives, QueryStatistics
 from opteryx.engine.planner.operations import BasePlanNode
 from opteryx.exceptions import DatabaseError
 from opteryx.utils.columns import Columns
@@ -49,12 +49,14 @@ def _get_sample_dataset(dataset, alias):
 
 
 class InternalDatasetNode(BasePlanNode):
-    def __init__(self, statistics: QueryStatistics, **config):
+    def __init__(
+        self, directives: QueryDirectives, statistics: QueryStatistics, **config
+    ):
         """
         The Blob Reader Node is responsible for reading the relevant blobs
         and returning a Table/Relation.
         """
-        super().__init__(statistics=statistics, **config)
+        super().__init__(directives=directives, statistics=statistics, **config)
 
         self._statistics = statistics
         self._alias = config["alias"]

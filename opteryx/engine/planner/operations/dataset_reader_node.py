@@ -35,10 +35,9 @@ from cityhash import CityHash64
 
 import time
 
-
-from opteryx.engine.query_statistics import QueryStatistics
+from opteryx.engine import QueryDirectives, QueryStatistics
 from opteryx.engine.planner.operations import BasePlanNode
-from opteryx.exceptions import DatabaseError, DatasetNotFoundError
+from opteryx.exceptions import DatasetNotFoundError
 from opteryx.storage import file_decoders
 from opteryx.storage.adapters import DiskStorage
 from opteryx.storage.schemes import MabelPartitionScheme
@@ -85,18 +84,19 @@ def _normalize_to_schema(table, schema, statistics):
 
 
 class DatasetReaderNode(BasePlanNode):
-    def __init__(self, statistics: QueryStatistics, **config):
+    def __init__(
+        self, directives: QueryDirectives, statistics: QueryStatistics, **config
+    ):
         """
         The Dataset Reader Node is responsible for reading the relevant blobs
         and returning a Table/Relation.
         """
-        super().__init__(statistics=statistics, **config)
+        super().__init__(directives=directives, statistics=statistics, **config)
 
         from opteryx.engine.planner.planner import QueryPlanner
 
         today = datetime.datetime.utcnow().date()
 
-        self._statistics = statistics
         self._dataset = config.get("dataset", None)
         self._alias = config.get("alias", None)
 
@@ -105,7 +105,12 @@ class DatasetReaderNode(BasePlanNode):
 
         self._dataset = self._dataset.replace(".", "/") + "/"
         self._reader = config.get("reader", DiskStorage())
-        self._cache = config.get("cache")
+
+        self._no_cache = "NOCACHE" in config.get("hints", [])
+        if self._no_cache:
+            self._cache = None
+        else:
+            self._cache = config.get("cache")
         self._partition_scheme = config.get("partition_scheme", MabelPartitionScheme())
 
         self._start_date = config.get("start_date", today)
@@ -118,10 +123,13 @@ class DatasetReaderNode(BasePlanNode):
 
     @property
     def config(self):  # pragma: no cover
+        use_cache = ""
+        if self._no_cache:
+            use_cache = " (NOCACHE)"
         if self._alias:
-            return f"{self._dataset} => {self._alias}"
+            return f"{self._dataset} => {self._alias}{use_cache}"
         if isinstance(self._dataset, str):
-            return self._dataset
+            return f"{self._dataset}{use_cache}"
         return "<complex dataset>"
 
     @property

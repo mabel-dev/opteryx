@@ -26,7 +26,7 @@ import pyarrow
 from opteryx import config
 from opteryx.engine.attribute_types import TOKEN_TYPES
 from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
-from opteryx.engine.query_statistics import QueryStatistics
+from opteryx.engine import QueryDirectives, QueryStatistics
 from opteryx.exceptions import SqlError
 from opteryx.utils.columns import Columns
 
@@ -176,7 +176,9 @@ class CrossJoinNode(BasePlanNode):
     Implements a SQL CROSS JOIN and CROSS JOIN UNNEST
     """
 
-    def __init__(self, statistics: QueryStatistics, **config):
+    def __init__(
+        self, directives: QueryDirectives, statistics: QueryStatistics, **config
+    ):
         self._right_table = config.get("right_table")
         self._join_type = config.get("join_type", "CrossJoin")
 
@@ -208,7 +210,7 @@ class CrossJoinNode(BasePlanNode):
 
         elif self._join_type == "CrossJoinUnnest":
 
-            alias, dataset, source = right_node
+            alias, dataset, source, hints = right_node
             function = dataset["function"]
             args = dataset["args"]
 

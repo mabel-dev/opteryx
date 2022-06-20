@@ -25,7 +25,7 @@ import pyarrow
 
 from opteryx.engine.attribute_types import TOKEN_TYPES
 from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
-from opteryx.engine.query_statistics import QueryStatistics
+from opteryx.engine import QueryDirectives, QueryStatistics
 from opteryx.utils.columns import Columns
 
 
@@ -36,7 +36,9 @@ def replace_wildcards(arg):
 
 
 class ProjectionNode(BasePlanNode):
-    def __init__(self, statistics: QueryStatistics, **config):
+    def __init__(
+        self, directives: QueryDirectives, statistics: QueryStatistics, **config
+    ):
         """
         Attribute Projection, remove unwanted columns and performs column renames.
         """

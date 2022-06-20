@@ -18,8 +18,8 @@ https://www.python.org/dev/peps/pep-0249/
 import time
 from typing import Dict, List, Optional, Tuple, Union
 
-from opteryx.engine import QueryPlanner
-from opteryx.engine.query_statistics import QueryStatistics
+from opteryx.engine.planner import QueryPlanner
+from opteryx.engine import QueryStatistics
 from opteryx.storage import BaseBufferCache, BasePartitionScheme, BaseStorageAdapter
 from opteryx.storage.adapters import DiskStorage
 from opteryx.storage.schemes import DefaultPartitionScheme, MabelPartitionScheme

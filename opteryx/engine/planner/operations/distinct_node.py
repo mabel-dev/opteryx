@@ -22,14 +22,15 @@ from typing import Iterable
 from pyarrow import Table, concat_tables
 
 from opteryx.engine.planner.operations import BasePlanNode
-from opteryx.engine.query_statistics import QueryStatistics
+from opteryx.engine import QueryDirectives, QueryStatistics
 from opteryx.exceptions import SqlError
 from opteryx.third_party.pyarrow_ops import drop_duplicates
 
 
 class DistinctNode(BasePlanNode):
-    def __init__(self, statistics: QueryStatistics, **config):
-        super().__init__(statistics=statistics, **config)
+    def __init__(
+        self, directives: QueryDirectives, statistics: QueryStatistics, **config
+    ):
         self._distinct = config.get("distinct", True)
 
     @property

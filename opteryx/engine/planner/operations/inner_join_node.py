@@ -23,7 +23,7 @@ import pyarrow
 
 from opteryx import config
 from opteryx.engine.planner.operations import BasePlanNode
-from opteryx.engine.query_statistics import QueryStatistics
+from opteryx.engine import QueryDirectives, QueryStatistics
 from opteryx.exceptions import SqlError
 from opteryx.third_party import pyarrow_ops
 from opteryx.utils import arrow
@@ -31,7 +31,9 @@ from opteryx.utils.columns import Columns
 
 
 class InnerJoinNode(BasePlanNode):
-    def __init__(self, statistics: QueryStatistics, **config):
+    def __init__(
+        self, directives: QueryDirectives, statistics: QueryStatistics, **config
+    ):
         self._right_table = config.get("right_table")
         self._join_type = config.get("join_type", "CrossJoin")
         self._on = config.get("join_on")

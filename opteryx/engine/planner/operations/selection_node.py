@@ -33,7 +33,7 @@ from pyarrow import Table
 
 from opteryx.engine.attribute_types import TOKEN_TYPES
 from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
-from opteryx.engine.query_statistics import QueryStatistics
+from opteryx.engine import QueryDirectives, QueryStatistics
 from opteryx.exceptions import SqlError
 from opteryx.utils.columns import Columns
 
@@ -223,7 +223,9 @@ def _map_columns(predicate, columns):
 
 
 class SelectionNode(BasePlanNode):
-    def __init__(self, statistics: QueryStatistics, **config):
+    def __init__(
+        self, directives: QueryDirectives, statistics: QueryStatistics, **config
+    ):
         self._filter = config.get("filter")
         self._unfurled_filter = None
         self._mapped_filter = None

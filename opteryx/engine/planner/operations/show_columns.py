@@ -24,7 +24,7 @@ import numpy
 import orjson
 import pyarrow
 
-from opteryx.engine.query_statistics import QueryStatistics
+from opteryx.engine import QueryDirectives, QueryStatistics
 from opteryx.engine.attribute_types import OPTERYX_TYPES, determine_type
 from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
 from opteryx.exceptions import SqlError
@@ -356,10 +356,11 @@ def _extended_collector(pages):
 
 
 class ShowColumnsNode(BasePlanNode):
-    def __init__(self, statistics: QueryStatistics, **config):
+    def __init__(
+        self, directives: QueryDirectives, statistics: QueryStatistics, **config
+    ):
         self._full = config.get("full")
         self._extended = config.get("extended")
-        pass
 
     @property
     def name(self):  # pragma: no cover
