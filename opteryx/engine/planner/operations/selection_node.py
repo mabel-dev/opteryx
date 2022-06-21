@@ -133,7 +133,13 @@ def _evaluate(predicate: Union[tuple, list], table: Table):
             and predicate[0][1] == TOKEN_TYPES.IDENTIFIER
             and (predicate[0][0] not in table.column_names)
         ):
-            raise SqlError(f"Field `{predicate[0][0]}` does not exist.")
+            best_match = columns.fuzzy_search(predicate[0][0])
+            if best_match:
+                raise SqlError(
+                    f"Field `{predicate[0][0]}` does not exist, did you mean `{best_match}`."
+                )
+            else:
+                raise SqlError(f"Field `{predicate[0][0]}` does not exist.")
 
         if len(predicate[0]) == 3 and isinstance(predicate[0][2], dict):
             raise SqlError(
