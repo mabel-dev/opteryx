@@ -156,13 +156,38 @@ class Columns:
             matches.extend([k for alias in v.get("aliases", []) if alias == column])
         if only_one:
             if len(matches) == 0:
-                raise SqlError(f"Field `{column}` cannot be found.")
+
+                best_match = self.fuzzy_search(column)
+                if best_match:
+                    raise SqlError(
+                        f"Field `{column}` does not exist, did you mean `{best_match}`."
+                    )
+                else:
+                    raise SqlError(f"Field `{column}` does not exist.")
             if len(matches) > 1:
                 raise SqlError(
                     f"Field `{column}` is ambiguous, try qualifying the field name."
                 )
             return matches[0]
         return matches
+
+    def fuzzy_search(self, column_name):
+        """
+        Find best match for a column name, using a Levenshtein Distance variation
+        """
+        from opteryx.utils.mblevel import compare
+
+        best_match_column = None
+        best_match_score = 100
+
+        for k, v in self._column_metadata.items():
+            for alias in v.get("aliases"):
+                my_dist = compare(column_name, alias)
+                if my_dist > 0 and my_dist < best_match_score:
+                    best_match_score = my_dist
+                    best_match_column = alias
+
+        return best_match_column
 
     @staticmethod
     def create_table_metadata(table, expected_rows, name, table_aliases):
