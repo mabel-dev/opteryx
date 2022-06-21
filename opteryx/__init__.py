@@ -11,6 +11,7 @@
 # limitations under the License.
 
 import pyximport
+
 pyximport.install()
 
 from opteryx.connection import Connection

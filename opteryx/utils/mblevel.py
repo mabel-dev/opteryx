@@ -12,25 +12,18 @@
 #
 # Constants
 
-REPLACE = 'r'
-INSERT = 'i'
-DELETE = 'd'
-TRANSPOSE = 't'
+REPLACE = "r"
+INSERT = "i"
+DELETE = "d"
+TRANSPOSE = "t"
 
-MATRIX = [
-    ['id', 'di', 'rr'],
-    ['dr', 'rd'],
-    ['dd']
-]
+MATRIX = [["id", "di", "rr"], ["dr", "rd"], ["dd"]]
 
-MATRIX_T = [
-    ['id', 'di', 'rr', 'tt', 'tr', 'rt'],
-    ['dr', 'rd', 'dt', 'td'],
-    ['dd']
-]
+MATRIX_T = [["id", "di", "rr", "tt", "tr", "rt"], ["dr", "rd", "dt", "td"], ["dd"]]
 
 #
 # Library API
+
 
 def compare(str1, str2, transpose=False):
     len1, len2 = len(str1), len(str2)
@@ -43,9 +36,9 @@ def compare(str1, str2, transpose=False):
         return -1
 
     if transpose:
-        models = MATRIX_T[len1-len2]
+        models = MATRIX_T[len1 - len2]
     else:
-        models = MATRIX[len1-len2]
+        models = MATRIX[len1 - len2]
 
     res = 3
     for model in models:
@@ -70,7 +63,7 @@ def check_model(str1, str2, len1, len2, model):
             if 2 < cost:
                 return cost
 
-            option = model[cost-1]
+            option = model[cost - 1]
             if option == DELETE:
                 idx1 += 1
             elif option == INSERT:
@@ -80,7 +73,7 @@ def check_model(str1, str2, len1, len2, model):
                 idx2 += 1
                 pad = 0
             elif option == TRANSPOSE:
-                if (idx2 + 1) < len2 and str1[idx1] == str2[idx2+1]:
+                if (idx2 + 1) < len2 and str1[idx1] == str2[idx2 + 1]:
                     idx1 += 1
                     idx2 += 1
                     pad = 1
