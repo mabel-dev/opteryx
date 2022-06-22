@@ -1,3 +1,4 @@
+# cython: language_level=3
 # Public domain
 #
 # I hereby place my work 'mbleven' into the public domain.
@@ -9,23 +10,42 @@
 
 """An implementation of mbleven algorithm"""
 
+# This has been modified for Opteryx for performance.
+# This is roughly twice as fast as the original implementation.
+# 
+# This file maintains the Public Domain Licence, this does not change the licence
+# of any other files in this project.
+
 #
 # Constants
 
-REPLACE = "r"
-INSERT = "i"
-DELETE = "d"
-TRANSPOSE = "t"
+REPLACE:int = 1
+INSERT:int = 2
+DELETE:int = 4
+TRANSPOSE:int = 8
 
-MATRIX = [["id", "di", "rr"], ["dr", "rd"], ["dd"]]
-
-MATRIX_T = [["id", "di", "rr", "tt", "tr", "rt"], ["dr", "rd", "dt", "td"], ["dd"]]
+# fmt:off
+MATRIX = (
+    (
+        (INSERT, DELETE, ),
+        (DELETE, INSERT, ),
+        (REPLACE, REPLACE, ), 
+    ),
+    (
+        (DELETE, REPLACE, ),
+        (REPLACE, DELETE, ), 
+    ),
+    (
+        (DELETE, DELETE, ), 
+    )
+)
+# fmt:on
 
 #
 # Library API
 
 
-def compare(str1, str2, transpose=False):
+def compare(str1:str, str2:str) -> int:
     len1, len2 = len(str1), len(str2)
 
     if len1 < len2:
@@ -35,10 +55,7 @@ def compare(str1, str2, transpose=False):
     if len1 - len2 > 2:
         return -1
 
-    if transpose:
-        models = MATRIX_T[len1 - len2]
-    else:
-        models = MATRIX[len1 - len2]
+    models = MATRIX[len1 - len2]
 
     res = 3
     for model in models:
@@ -52,7 +69,7 @@ def compare(str1, str2, transpose=False):
     return res
 
 
-def check_model(str1, str2, len1, len2, model):
+def check_model(str1:str, str2:str, len1:int, len2:int, model) -> int:
     """Check if the model can transform str1 into str2"""
 
     idx1, idx2 = 0, 0
