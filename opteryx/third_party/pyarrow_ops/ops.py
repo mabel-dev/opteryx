@@ -69,19 +69,32 @@ def arr_op_to_idxs(arr, operator, value):
         return numpy.array([a not in value for a in arr], dtype=numpy.bool8)
     elif operator == "like":
         _check_type("LIKE", identifier_type, (TOKEN_TYPES.VARCHAR))
-        return pc.match_like(arr, value)
+        # null input emits null output, which should be false/0
+        matches = pc.match_like(arr, value)
+        return pc.fill_null(matches, False)
     elif operator == "not like":
         _check_type("NOT LIKE", identifier_type, (TOKEN_TYPES.VARCHAR))
-        return numpy.invert(pc.match_like(arr, value))
+        matches = pc.match_like(arr, value)
+        matches = pc.fill_null(matches, True)
+        return numpy.invert(matches)
     elif operator == "ilike":
         _check_type("ILIKE", identifier_type, (TOKEN_TYPES.VARCHAR))
-        return pc.match_like(arr, value, ignore_case=True)
+        matches = pc.match_like(arr, value, ignore_case=True)
+        return pc.fill_null(matches, False)
     elif operator == "not ilike":
         _check_type("NOT ILIKE", identifier_type, (TOKEN_TYPES.VARCHAR))
-        return numpy.invert(pc.match_like(arr, value, ignore_case=True))
+        matches = pc.match_like(arr, value, ignore_case=True)
+        matches = pc.fill_null(matches, True)
+        return numpy.invert(matches)
     elif operator == "~":
         _check_type("~", identifier_type, (TOKEN_TYPES.VARCHAR))
-        return pc.match_substring_regex(arr, value)
+        matches = pc.match_substring_regex(arr, value)
+        return pc.fill_null(matches, False)
+    elif operator == "!~":
+        _check_type("~", identifier_type, (TOKEN_TYPES.VARCHAR))
+        matches = pc.match_substring_regex(arr, value)
+        matches = pc.fill_null(matches, True)
+        return numpy.invert(matches)
     else:
         raise Exception(f"Operator {operator} is not implemented!")
 

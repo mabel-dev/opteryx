@@ -65,6 +65,7 @@ OPERATOR_XLAT = {
     "NotILike": "not ilike",
     "InList": "in",
     "PGRegexMatch": "~",
+    "PGRegexNotMatch": "!~",
 }
 
 
