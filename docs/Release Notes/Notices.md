@@ -9,7 +9,7 @@ Component                                                  | Disposition | Licen
 [sqloxide](https://github.com/wseaton/sqloxide)            | Installed   | [MIT](https://github.com/wseaton/sqloxide/blob/master/LICENSE)
 [sqlparser-rs](https://github.com/sqlparser-rs/sqlparser-rs) | Transitive | [Apache 2.0](https://github.com/sqlparser-rs/sqlparser-rs/blob/main/LICENSE.TXT)
 [cython](https://github.com/cython/cython)                 | Installed   | [Apache 2.0](https://github.com/cython/cython/blob/master/LICENSE.txt)
-[mblevel](https://github.com/fujimotos/mbleven)            | Integrated  | [Public Domain](https://github.com/fujimotos/mbleven/blob/master/LICENSE)
+[mbleven](https://github.com/fujimotos/mbleven)            | Integrated  | [Public Domain](https://github.com/fujimotos/mbleven/blob/master/LICENSE)
 [numpy](https://github.com/numpy/numpy)                    | Installed   | [BSD-3](https://github.com/numpy/numpy/blob/main/LICENSE.txt)
 [orjson](https://github.com/ijl/orjson)                    | Installed   | [Apache 2.0](https://github.com/ijl/orjson/blob/master/LICENSE-APACHE)
 [cityhash](https://github.com/escherba/python-cityhash)    | Installed   | [Bespoke](https://github.com/escherba/python-cityhash/blob/master/LICENSE)

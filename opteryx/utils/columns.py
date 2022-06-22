@@ -175,7 +175,7 @@ class Columns:
         """
         Find best match for a column name, using a Levenshtein Distance variation
         """
-        from opteryx.utils.mblevel import compare
+        from opteryx.utils.mbleven import compare
 
         best_match_column = None
         best_match_score = 100
