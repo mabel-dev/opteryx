@@ -28,7 +28,11 @@ Operator     | Description
 `NOT LIKE`   | inverse of `LIKE`         
 `ILIKE`      | case-insensitive pattern match 
 `NOT ILIKE`  | inverse of `ILIKE`     
-`~`          | regular expression match      
+`~`          | regular expression match     
+`!~`         | inverse of `~`
+
+!!! note
+    When handling `null` and `none` values, infix inversions (e.g. `x NOT LIKE y`) behave differently to prefix inversions (`NOT x LIKE y`).
 
 ## Other Comparisons
 

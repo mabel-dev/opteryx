@@ -110,6 +110,7 @@ STATEMENTS = [
         ("SELECT * FROM $satellites WHERE name NOT LIKE '%c%'", 166, 8),
         ("SELECT * FROM $satellites WHERE name NOT ILIKE '%c%'", 154, 8),
         ("SELECT * FROM $satellites WHERE name ~ '^C.'", 12, 8),
+        ("SELECT * FROM $satellites WHERE name !~ '^C.'", 165, 8),
 
         ("SELECT COUNT(*) FROM $satellites", 1, 1),
         ("SELECT count(*) FROM $satellites", 1, 1),
@@ -373,6 +374,13 @@ STATEMENTS = [
         ("SELECT * FROM (SELECT COUNT(*), column_1 FROM FAKE(5000,2) GROUP BY column_1 ORDER BY COUNT(*)) LIMIT 5", 5, 2),
         # FILTER CREATION FOR 3 OR MORE ANDED PREDICATES FAILS (#182)
         ("SELECT * FROM $astronauts WHERE name LIKE '%o%' AND `year` > 1900 AND gender ILIKE '%ale%' AND group IN (1,2,3,4,5,6)", 41, 19),
+        # LIKE-ING NULL
+        ("SELECT * FROM tests.data.nulls WHERE username LIKE 'BBC%' FOR '2000-01-01'", 3, 8),
+        ("SELECT * FROM tests.data.nulls WHERE username ILIKE 'BBC%' FOR '2000-01-01'", 3, 8),
+        ("SELECT * FROM tests.data.nulls WHERE username NOT LIKE 'BBC%' FOR '2000-01-01'", 21, 8),
+        ("SELECT * FROM tests.data.nulls WHERE NOT username LIKE 'BBC%' FOR '2000-01-01'", 22, 8),
+        ("SELECT * FROM tests.data.nulls WHERE username NOT ILIKE 'BBC%' FOR '2000-01-01'", 21, 8),
+        ("SELECT * FROM tests.data.nulls WHERE username ~ 'BBC.+' FOR '2000-01-01'", 3, 8),
     ]
 # fmt:on
 
