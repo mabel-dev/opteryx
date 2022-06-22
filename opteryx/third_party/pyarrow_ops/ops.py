@@ -2,17 +2,18 @@
 Original code modified for Opteryx.
 """
 import numpy
-import pyarrow.compute as pc
+
+from pyarrow import compute
 
 from opteryx.engine.attribute_types import PARQUET_TYPES
 from opteryx.engine.attribute_types import PYTHON_TYPES
 from opteryx.engine.attribute_types import TOKEN_TYPES
 
-
 from .helpers import columns_to_array, groupify_array
 
 
 def _get_type(var):
+    # added for Opteryx
     if isinstance(var, numpy.ndarray):
         if isinstance(var[0], numpy.ndarray):
             return "LIST"
@@ -22,6 +23,7 @@ def _get_type(var):
 
 
 def _check_type(operation, provided_type, valid_types):
+    # added for Opteryx
     if provided_type not in valid_types:
         raise TypeError(
             f"Cannot use the {operation} operation on a {provided_type} column, a {valid_types} column is required."
@@ -30,6 +32,11 @@ def _check_type(operation, provided_type, valid_types):
 
 # Filter functionality
 def arr_op_to_idxs(arr, operator, value):
+
+    # ADDED FOR OPTERYX - if all of the values are null, shortcut
+    if compute.is_null(arr, nan_is_null=True).false_count == 0:
+        return numpy.array([False] * arr.size, dtype=numpy.bool8)
+
     identifier_type = _get_type(arr)
     literal_type = _get_type(value)
     if operator in (
@@ -68,32 +75,38 @@ def arr_op_to_idxs(arr, operator, value):
         # MODIFIED FOR OPTERYX - see comment above
         return numpy.array([a not in value for a in arr], dtype=numpy.bool8)
     elif operator == "like":
-        _check_type("LIKE", identifier_type, (TOKEN_TYPES.VARCHAR))
+        # MODIFIED FOR OPTERYX
         # null input emits null output, which should be false/0
-        matches = pc.match_like(arr, value)
-        return pc.fill_null(matches, False)
+        _check_type("LIKE", identifier_type, (TOKEN_TYPES.VARCHAR))
+        matches = compute.match_like(arr, value)
+        return compute.fill_null(matches, False)
     elif operator == "not like":
+        # MODIFIED FOR OPTERYX - see comment above
         _check_type("NOT LIKE", identifier_type, (TOKEN_TYPES.VARCHAR))
-        matches = pc.match_like(arr, value)
-        matches = pc.fill_null(matches, True)
+        matches = compute.match_like(arr, value)
+        matches = compute.fill_null(matches, True)
         return numpy.invert(matches)
     elif operator == "ilike":
+        # MODIFIED FOR OPTERYX - see comment above
         _check_type("ILIKE", identifier_type, (TOKEN_TYPES.VARCHAR))
-        matches = pc.match_like(arr, value, ignore_case=True)
-        return pc.fill_null(matches, False)
+        matches = compute.match_like(arr, value, ignore_case=True)
+        return compute.fill_null(matches, False)
     elif operator == "not ilike":
+        # MODIFIED FOR OPTERYX - see comment above
         _check_type("NOT ILIKE", identifier_type, (TOKEN_TYPES.VARCHAR))
-        matches = pc.match_like(arr, value, ignore_case=True)
-        matches = pc.fill_null(matches, True)
+        matches = compute.match_like(arr, value, ignore_case=True)
+        matches = compute.fill_null(matches, True)
         return numpy.invert(matches)
     elif operator == "~":
+        # MODIFIED FOR OPTERYX - see comment above
         _check_type("~", identifier_type, (TOKEN_TYPES.VARCHAR))
-        matches = pc.match_substring_regex(arr, value)
-        return pc.fill_null(matches, False)
+        matches = compute.match_substring_regex(arr, value)
+        return compute.fill_null(matches, False)
     elif operator == "!~":
+        # MODIFIED FOR OPTERYX - see comment above
         _check_type("~", identifier_type, (TOKEN_TYPES.VARCHAR))
-        matches = pc.match_substring_regex(arr, value)
-        matches = pc.fill_null(matches, True)
+        matches = compute.match_substring_regex(arr, value)
+        matches = compute.fill_null(matches, True)
         return numpy.invert(matches)
     else:
         raise Exception(f"Operator {operator} is not implemented!")

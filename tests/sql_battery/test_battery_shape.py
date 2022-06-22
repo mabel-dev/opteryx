@@ -375,12 +375,13 @@ STATEMENTS = [
         # FILTER CREATION FOR 3 OR MORE ANDED PREDICATES FAILS (#182)
         ("SELECT * FROM $astronauts WHERE name LIKE '%o%' AND `year` > 1900 AND gender ILIKE '%ale%' AND group IN (1,2,3,4,5,6)", 41, 19),
         # LIKE-ING NULL
-        ("SELECT * FROM tests.data.nulls WHERE username LIKE 'BBC%' FOR '2000-01-01'", 3, 8),
-        ("SELECT * FROM tests.data.nulls WHERE username ILIKE 'BBC%' FOR '2000-01-01'", 3, 8),
-        ("SELECT * FROM tests.data.nulls WHERE username NOT LIKE 'BBC%' FOR '2000-01-01'", 21, 8),
-        ("SELECT * FROM tests.data.nulls WHERE NOT username LIKE 'BBC%' FOR '2000-01-01'", 22, 8),
-        ("SELECT * FROM tests.data.nulls WHERE username NOT ILIKE 'BBC%' FOR '2000-01-01'", 21, 8),
-        ("SELECT * FROM tests.data.nulls WHERE username ~ 'BBC.+' FOR '2000-01-01'", 3, 8),
+        ("SELECT * FROM tests.data.nulls WHERE username LIKE 'BBC%' FOR '2000-01-01'", 3, 5),
+        ("SELECT * FROM tests.data.nulls WHERE username ILIKE 'BBC%' FOR '2000-01-01'", 3, 5),
+        ("SELECT * FROM tests.data.nulls WHERE username NOT LIKE 'BBC%' FOR '2000-01-01'", 21, 5),
+        ("SELECT * FROM tests.data.nulls WHERE NOT username LIKE 'BBC%' FOR '2000-01-01'", 22, 5),
+        ("SELECT * FROM tests.data.nulls WHERE username NOT ILIKE 'BBC%' FOR '2000-01-01'", 21, 5),
+        ("SELECT * FROM tests.data.nulls WHERE username ~ 'BBC.+' FOR '2000-01-01'", 3, 5),
+        ("SELECT * FROM tests.data.nulls WHERE tweet ILIKE '%Trump%' FOR '2000-01-01'", 0, 5),
     ]
 # fmt:on
 
