@@ -1,15 +1,10 @@
-"""
-The best way to test a SQL engine is to throw queries at it.
-
-This tests the various format readers.
-"""
 import os
 import sys
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import pytest
-from opteryx.utils.mbleven import compare
+from opteryx.third_party.mbleven import compare
 
 # fmt:off
 TESTS = [

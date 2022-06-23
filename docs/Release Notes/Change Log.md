@@ -15,7 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - [[#175](https://github.com/mabel-dev/opteryx/issues/175)] Support `WITH (NOCACHE)` hint to disable using cache. ([@joocer](https://github.com/joocer))
 - [[#203](https://github.com/mabel-dev/opteryx/issues/203)] When reporting that a column doesn't exist, it should suggest likely correct columns. ([@joocer](https://github.com/joocer))
 - Not Regular Expression match operator, `!~` added to supported set of operators. ([@joocer](https://github.com/joocer))
-
+- [[#226](https://github.com/mabel-dev/opteryx/issues/226)] Implement `DATE_TRUNC` function. ([@joocer](https://github.com/joocer))
 
 **Changed**
 

@@ -342,6 +342,10 @@ STATEMENTS = [
         ("SELECT $satellites.* FROM $satellites AS s INNER JOIN $planets AS p USING (id)", 9, 8),
         ("SELECT s.* FROM $satellites AS s INNER JOIN $planets AS p USING (id)", 9, 8),
 
+        ("SELECT DATE_TRUNC('month', birth_date) FROM $astronauts", 357, 1),
+        ("SELECT DISTINCT * FROM (SELECT DATE_TRUNC('year', birth_date) AS BIRTH_YEAR FROM $astronauts)", 54, 1),
+        ("SELECT DISTINCT * FROM (SELECT DATE_TRUNC('month', birth_date) AS BIRTH_YEAR_MONTH FROM $astronauts)", 247, 1),
+
         # These are queries which have been found to return the wrong result or not run correctly
         # FILTERING ON FUNCTIONS
         ("SELECT DATE(birth_date) FROM $astronauts FOR TODAY WHERE DATE(birth_date) < '1930-01-01'", 14, 1),
