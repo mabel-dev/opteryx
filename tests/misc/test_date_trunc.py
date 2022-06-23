@@ -93,18 +93,3 @@ class TestDatetimeTruncate(unittest.TestCase):
                 month=10, day=1, hour=0, minute=0, second=0, microsecond=0
             ),
         )
-
-    def test_truncat_to_half_year(self):
-        self.assertEqual(
-            date_trunc("half_year", self.default_dt.replace(month=6)),
-            self.default_dt.replace(
-                month=1, day=1, hour=0, minute=0, second=0, microsecond=0
-            ),
-        )
-
-        self.assertEqual(
-            date_trunc("half_year", self.default_dt),
-            self.default_dt.replace(
-                month=7, day=1, hour=0, minute=0, second=0, microsecond=0
-            ),
-        )
