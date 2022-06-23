@@ -33,7 +33,7 @@ Functions for examining and manipulating date values.
 Function        | Description                                       | Example
 --------------- | ------------------------------------------------- | ---------------------------
 `DATE(date)`    | Extract the date part                             | `DATE(2022-02-06 11:37) -> '2022-02-06 00:00'`
-`DATE_TRUNC(period, field)` | Remove parts from a timestamp         | `DATE_TRUNC('year', 2022-06-23) -> '2022-01-01'` 
+`DATE_TRUNC(period, date)` | Remove parts from a timestamp         | `DATE_TRUNC('year', 2022-06-23) -> '2022-01-01'` 
 `DAY(date)`     | Extract day number                                | `DAY(2022-02-06) -> 6`
 `HOUR(time)`    | Extract hour from timestamp                       | `HOUR(5:32:43) -> 5`
 `MINUTE(time)`  | Extract minute from timestamp                     | `MINUTE(5:32:43) -> 32`
