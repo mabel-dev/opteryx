@@ -13,9 +13,12 @@
 Date Utilities
 """
 import datetime
+import numpy
+import re
+
 from functools import lru_cache
 from typing import Union
-import re
+
 
 TIMEDELTA_REGEX = (
     r"((?P<years>\d+)\s?(?:ys?|yrs?|years?))?\s*"
@@ -121,8 +124,15 @@ def parse_iso(value):
 
         input_type = type(value)
 
-        if input_type in (datetime.datetime, datetime.date, datetime.time):
+        if input_type == numpy.datetime64:
+            # this can create dates rather than datetimes, so don't return yet
+            value = value.astype(datetime.datetime)
+            input_type = type(value)
+
+        if input_type == datetime.datetime:
             return value
+        if input_type == datetime.date:
+            return datetime.datetime.combine(value, datetime.time.min)
         if input_type in (int, float):
             return datetime.datetime.fromtimestamp(value)
         if input_type == str and 10 <= len(value) <= 28:

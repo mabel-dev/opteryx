@@ -19,8 +19,9 @@ from cityhash import CityHash64
 from pyarrow import compute
 
 import opteryx
-from opteryx.engine.functions import date_functions, other_functions
+from opteryx.engine.functions import other_functions, date_functions
 from opteryx.exceptions import SqlError
+from opteryx.third_party.date_trunc import date_trunc
 from opteryx.utils.dates import parse_iso
 
 
@@ -112,6 +113,20 @@ def _iterate_double_parameter(func):
     return _inner
 
 
+def _iterate_double_parameter_field_second(func):
+    """
+    for functions called FUNCTION(LITERAL, FIELD)
+    """
+
+    def _inner(literal, array):
+        if isinstance(array, str):
+            array = [array]
+        for item in array:
+            yield [func(literal, item)]
+
+    return _inner
+
+
 def get_len(obj):
     """len, but nullsafe"""
     if hasattr(obj, "__len__"):
@@ -155,6 +170,7 @@ FUNCTIONS = {
     "TRUNC": compute.trunc,
     "TRUNCATE": compute.trunc,
     # DATES & TIMES
+    "DATE_TRUNC": _iterate_double_parameter_field_second(date_trunc),
     "NOW": _iterate_no_parameters(datetime.datetime.utcnow),
     "TODAY": _iterate_no_parameters(datetime.date.today),
     "TIME": _iterate_no_parameters(date_functions.get_time),

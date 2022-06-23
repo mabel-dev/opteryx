@@ -33,6 +33,7 @@ Functions for examining and manipulating date values.
 Function        | Description                                       | Example
 --------------- | ------------------------------------------------- | ---------------------------
 `DATE(date)`    | Extract the date part                             | `DATE(2022-02-06 11:37) -> '2022-02-06 00:00'`
+`DATE_TRUNC(period, field)` | Remove parts from a timestamp         | `DATE_TRUNC('year', 2022-06-23) -> '2022-01-01'` 
 `DAY(date)`     | Extract day number                                | `DAY(2022-02-06) -> 6`
 `HOUR(time)`    | Extract hour from timestamp                       | `HOUR(5:32:43) -> 5`
 `MINUTE(time)`  | Extract minute from timestamp                     | `MINUTE(5:32:43) -> 32`
@@ -47,6 +48,17 @@ Function        | Description                                       | Example
 `WEEK(date)`    | Extract ISO week of year number                   | `WEEK(2022-02-06) -> 5`
 `YEAR(date)`    | Extract year number                               | `YEAR(202-02-06) -> 2022`
 
+
+Recognized periods for use with the `DATE_TRUNC` function are: 
+
+- second
+- minute
+- hour
+- day
+- week (iso week i.e. to monday)
+- month
+- quarter
+- year
 
 ## Other Functions
 
