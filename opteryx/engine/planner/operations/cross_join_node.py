@@ -121,6 +121,7 @@ def _cross_join_unnest(left, column, alias):
         raise NotImplementedError("Can only CROSS JOIN UNNEST on a field")
 
     metadata = None
+    column_type = None
 
     if alias is None:
         alias = f"UNNEST({column[0]})"
@@ -138,6 +139,8 @@ def _cross_join_unnest(left, column, alias):
 
             # Get the column we're going to UNNEST
             column_data = left_block[unnest_column]
+            if column_type is None:
+                column_type = column_data.type.value_type
 
             # Create a list of indexes, this will look something like this:
             # [1,1,1,2,2,2,3,3,3]
@@ -167,6 +170,15 @@ def _cross_join_unnest(left, column, alias):
             new_block = pyarrow.Table.from_batches([new_block])
             # Append the column we created above, to the table with the repeated rows
             new_block = pyarrow.Table.append_column(new_block, alias, new_column)
+
+            # if the entire page is nulls, the schema won't match
+            column_index = new_block.column_names.index(alias)
+            schema = new_block.schema
+            column = schema.field(column_index)
+            if column.type != column_type:
+                schema = schema.set(column_index, pyarrow.field(alias, column_type))
+                new_block = new_block.cast(target_schema=schema)
+
             new_block = metadata.apply(new_block)
             yield new_block
 
