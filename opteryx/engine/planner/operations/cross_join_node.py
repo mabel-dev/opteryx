@@ -176,8 +176,8 @@ def _cross_join_unnest(left, column, alias):
             schema = new_block.schema
             column = schema.field(column_index)
             if column.type != column_type:
-               my_schema = my_schema.set(column_index, pyarrow.field(new_block, column_type))
-               new_block = new_block.cast(target_schema=my_schema)
+                schema = schema.set(column_index, pyarrow.field(alias, column_type))
+                new_block = new_block.cast(target_schema=schema)
 
             new_block = metadata.apply(new_block)
             yield new_block
