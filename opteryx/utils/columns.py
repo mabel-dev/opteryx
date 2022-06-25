@@ -183,6 +183,7 @@ class Columns:
         for k, v in self._column_metadata.items():
             for alias in v.get("aliases"):
                 my_dist = compare(column_name, alias)
+                print(alias)
                 if my_dist > 0 and my_dist < best_match_score:
                     best_match_score = my_dist
                     best_match_column = alias

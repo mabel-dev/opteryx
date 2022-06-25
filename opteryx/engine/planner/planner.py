@@ -535,6 +535,8 @@ class QueryPlanner(ExecutionTree):
                     ]
                     alias = f"{func.upper()}({','.join([str(a[0]) for a in args])})"
                     column = {"function": func, "args": args, "alias": alias}
+                if "Value" in column:
+                    column = int(column["Value"]["Number"][0])
                 orders.append(
                     (
                         column,
@@ -570,6 +572,8 @@ class QueryPlanner(ExecutionTree):
                     if "Number" in key_dict:
                         key = key_dict["Number"][0]
                     return f"{identifier}[{key}]"
+                if "Value" in element:
+                    return int(element["Value"]["Number"][0])
 
         groups = ast[0]["Query"]["body"]["Select"]["group_by"]
         return [_inner(g) for g in groups]
