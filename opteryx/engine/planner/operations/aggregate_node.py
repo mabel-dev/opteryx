@@ -27,6 +27,7 @@ read time - e.g. 30s:21s where 20s is the read time).
 But, on high cardinality data (nearly unique columns), the performance is much faster,
 on a 10m record set, timings are 1:400 (50s:1220s where 20s is the read time).
 """
+from asyncio import create_subprocess_shell
 from typing import Iterable, List
 
 import numpy as np
@@ -100,6 +101,7 @@ class AggregateNode(BasePlanNode):
 
         from opteryx.engine.attribute_types import TOKEN_TYPES
 
+        self._positions = []
         self._aggregates = []
         self._groups = config.get("groups", [])
         self._project = self._groups.copy()
@@ -115,10 +117,16 @@ class AggregateNode(BasePlanNode):
                     self._project.append(column)
                 else:
                     raise SqlError("Can only aggregate on fields in the dataset.")
+                self._positions.append(column)
             elif "column_name" in attribute:
                 self._project.append(attribute["column_name"])
+                if attribute["alias"]:
+                    self._positions.append(attribute["alias"][0])
+                else:
+                    self._positions.append(attribute["column_name"])
             else:
                 self._project.append(attribute["identifier"])
+                self._positions.append(attribute["identifier"])
 
         self._project = [p for p in self._project if p is not None]
 
@@ -194,16 +202,23 @@ class AggregateNode(BasePlanNode):
 
                 for key in self._project:
                     if key != "*":
-                        column = columns.get_column_from_alias(key, only_one=True)
+                        if isinstance(key, int):
+                            column = self._positions[key - 1]
+                        else:
+                            column = columns.get_column_from_alias(key, only_one=True)
                         if column not in self._mapped_project:
                             self._mapped_project.append(column)
                     else:
                         self._mapped_project.append("*")
 
                 for group in self._groups:
-                    self._mapped_groups.append(
-                        columns.get_column_from_alias(group, only_one=True)
-                    )
+                    # if we have a number, use it as an column offset
+                    if isinstance(group, int):
+                        self._mapped_groups.append(page.column_names[group - 1])   
+                    else:
+                        self._mapped_groups.append(
+                            columns.get_column_from_alias(group, only_one=True)
+                        )
 
             for group in _map(page, self._mapped_project):
 

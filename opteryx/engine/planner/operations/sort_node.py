@@ -104,6 +104,12 @@ class SortNode(BasePlanNode):
                         )
                     )
 
+            # we have an index rather than a column name, it's a natural number but the
+            # list of column names is zero-based, so we subtract one
+            elif isinstance(column, int):
+                column_name = table.column_names[column - 1]
+                self._mapped_order.append((column_name, direction,))
+
             else:
                 self._mapped_order.append(
                     (
