@@ -203,9 +203,8 @@ class AggregateNode(BasePlanNode):
                 for key in self._project:
                     if key != "*":
                         if isinstance(key, int):
-                            column = self._positions[key - 1]
-                        else:
-                            column = columns.get_column_from_alias(key, only_one=True)
+                            key = self._positions[key - 1]
+                        column = columns.get_column_from_alias(key, only_one=True)
                         if column not in self._mapped_project:
                             self._mapped_project.append(column)
                     else:
@@ -214,11 +213,10 @@ class AggregateNode(BasePlanNode):
                 for group in self._groups:
                     # if we have a number, use it as an column offset
                     if isinstance(group, int):
-                        self._mapped_groups.append(page.column_names[group - 1])   
-                    else:
-                        self._mapped_groups.append(
-                            columns.get_column_from_alias(group, only_one=True)
-                        )
+                        group = self._positions[group - 1]
+                    self._mapped_groups.append(
+                        columns.get_column_from_alias(group, only_one=True)
+                    )
 
             for group in _map(page, self._mapped_project):
 

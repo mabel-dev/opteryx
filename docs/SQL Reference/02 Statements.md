@@ -111,6 +111,8 @@ HAVING group_filter
 
 The `GROUP BY` clause specifies which grouping columns should be used to perform any aggregations in the `SELECT` clause. If the `GROUP BY` clause is specified, the query is always an aggregate query, even if no aggregations are present in the `SELECT` clause. The `HAVING` clause specifies filters to apply to aggregated data, `HAVING` clauses require a `GROUP BY` clause.
 
+`GROUP BY` expressions may use column numbers, however, this is not recommended for statements intended for reuse. 
+
 ### ORDER BY / LIMIT / OFFSET clauses
 
 ~~~
@@ -124,6 +126,8 @@ LIMIT count
 ~~~
 
 `ORDER BY`, `LIMIT` and `OFFSET` are output modifiers. Logically they are applied at the very end of the query. The `OFFSET` clause discards initial rows from the returned set, the `LIMIT` clause restricts the amount of rows fetched, and the `ORDER BY` clause sorts the rows on the sorting criteria in either ascending or descending order.
+
+`ORDER BY` expressions may use column numbers, however, this is not recommended for statements intended for reuse.
 
 ## SHOW COLUMNS
 
