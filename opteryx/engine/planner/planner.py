@@ -574,7 +574,6 @@ class QueryPlanner(ExecutionTree):
                     return f"{identifier}[{key}]"
                 if "Value" in element:
                     return int(element["Value"]["Number"][0])
-                    
 
         groups = ast[0]["Query"]["body"]["Select"]["group_by"]
         return [_inner(g) for g in groups]
