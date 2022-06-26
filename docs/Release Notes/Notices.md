@@ -13,7 +13,6 @@ Component | Disposition | Copyright | Licence
 [orjson](https://github.com/ijl/orjson)                    | Installed   | . | [Apache 2.0](https://github.com/ijl/orjson/blob/master/LICENSE-APACHE)
 [pyarrow](https://github.com/apache/arrow/)                | Installed   | . | [Apache 2.0](https://github.com/apache/arrow/blob/master/LICENSE.txt)
 [pyarrow_ops](https://github.com/TomScheffers/pyarrow_ops) | Integrated  | TomScheffers (assumed) | [Apache 2.0](https://github.com/TomScheffers/pyarrow_ops/blob/main/LICENSE)
-[psutil](https://github.com/giampaolo/psutil)              | Installed   | . | [BSD-3](https://github.com/giampaolo/psutil/blob/master/LICENSE)
 [pyyaml](https://pyyaml.org/)                              | Installed   | . | [MIT](https://github.com/yaml/pyyaml/blob/master/LICENSE)
 [sqloxide](https://github.com/wseaton/sqloxide)            | Installed   | . | [MIT](https://github.com/wseaton/sqloxide/blob/master/LICENSE)
 [sqlparser-rs](https://github.com/sqlparser-rs/sqlparser-rs) | Transitive | . | [Apache 2.0](https://github.com/sqlparser-rs/sqlparser-rs/blob/main/LICENSE.TXT)

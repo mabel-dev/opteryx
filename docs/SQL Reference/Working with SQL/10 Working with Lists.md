@@ -15,6 +15,7 @@ In Opteryx a list is an ordered collection of zero or more values of the same da
 
 ### Functions
 
+`SEARCH`
 `LIST_CONTAINS`   
 `LIST_CONTAINS_ANY`   
 `LIST_CONTAINS_ALL`

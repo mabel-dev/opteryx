@@ -14,6 +14,7 @@
 These are a set of functions that can be applied to data.
 """
 import datetime
+import os
 
 from cityhash import CityHash64
 from pyarrow import compute
@@ -27,8 +28,6 @@ from opteryx.utils.dates import parse_iso
 
 def get_random():
     """get a random number between 0 and 1, three decimal places"""
-    import os
-
     range_min, range_max = 0, 1000
     random_int = int.from_bytes(os.urandom(2), "big")
     try:
@@ -40,7 +39,7 @@ def get_random():
 def get_md5(item):
     """calculate MD5 hash of a value"""
     # this is slow but expected to not have a lot of use
-    import hashlib
+    import hashlib  # delay the import - it's rarely needed
 
     return hashlib.md5(str(item).encode()).hexdigest()  # nosec - meant to be MD5
 
@@ -70,19 +69,19 @@ ITERATIVE_CASTERS = {
 }
 
 
-def cast(type):
+def cast(_type):
     """cast a column to a specified type"""
-    if type in VECTORIZED_CASTERS:
-        return lambda a: compute.cast(a, VECTORIZED_CASTERS[type])
-    if type in ITERATIVE_CASTERS:
+    if _type in VECTORIZED_CASTERS:
+        return lambda a: compute.cast(a, VECTORIZED_CASTERS[_type])
+    if _type in ITERATIVE_CASTERS:
 
         def _inner(arr):
-            caster = ITERATIVE_CASTERS[type]
+            caster = ITERATIVE_CASTERS[_type]
             for i in arr:
                 yield [caster(i)]
 
         return _inner
-    raise SqlError(f"Unable to cast to type {type}")
+    raise SqlError(f"Unable to cast values in column to `{_type}`")
 
 
 def _iterate_no_parameters(func):
@@ -160,6 +159,7 @@ FUNCTIONS = {
     "LIST_CONTAINS": _iterate_double_parameter(other_functions._list_contains),
     "LIST_CONTAINS_ANY": _iterate_double_parameter(other_functions._list_contains_any),
     "LIST_CONTAINS_ALL": _iterate_double_parameter(other_functions._list_contains_all),
+    "SEARCH": other_functions._search,
     # NUMERIC
     "ROUND": compute.round,
     "FLOOR": compute.floor,

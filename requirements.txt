@@ -4,5 +4,4 @@ orjson
 cityhash
 sqloxide
 pyarrow
-psutil
 pyyaml
