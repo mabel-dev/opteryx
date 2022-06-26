@@ -15,6 +15,7 @@ import pyarrow
 
 from pyarrow import compute
 
+
 def _list_contains(array, item):
     if array is None:
         return False
@@ -31,6 +32,7 @@ def _list_contains_all(array, items):
     if array is None:
         return False
     return set(array).issuperset(items)
+
 
 def _search(array, item):
     """
@@ -49,5 +51,10 @@ def _search(array, item):
     if array_type == numpy.ndarray:
         return ([False] if record is None else [item in record] for record in array)
     if array_type == dict:
-        return ([False] if record is None else [item in record.keys() or item in record.values()] for record in array)
+        return (
+            [False]
+            if record is None
+            else [item in record.keys() or item in record.values()]
+            for record in array
+        )
     return [False] * array.shape[0]
