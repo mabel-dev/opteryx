@@ -79,7 +79,7 @@ def _coalesce(*args):
     def inner_coalesce(iterable):
         for element in iterable:
             print(element)
-            if (element is not None) and (element == element):
+            if (element is not None) and (element == element):  # nosemgrep
                 return element
         return None
 
