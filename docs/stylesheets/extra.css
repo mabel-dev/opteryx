@@ -66,3 +66,11 @@ h4 {
 .admonition {
     font-size: 1em !important;
 }
+
+.md-main__inner {
+    margin-top: 0px !important;
+}
+
+.md-grid {
+    max-width: 100rem !important;
+}
