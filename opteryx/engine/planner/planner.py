@@ -85,8 +85,8 @@ class QueryPlanner(ExecutionTree):
         self._cache = cache
         self._partition_scheme = partition_scheme
 
-        self._start_date = datetime.datetime.utcnow().date()
-        self._end_date = datetime.datetime.utcnow().date()
+        self.start_date = datetime.datetime.utcnow().date()
+        self.end_date = datetime.datetime.utcnow().date()
 
     def __repr__(self):
         return "QueryPlanner"
@@ -98,8 +98,8 @@ class QueryPlanner(ExecutionTree):
             cache=self._cache,
             partition_scheme=self._partition_scheme,
         )
-        planner._start_date = self._start_date
-        planner._end_date = self._end_date
+        planner.start_date = self.start_date
+        planner.end_date = self.end_date
         return planner
 
     def create_plan(self, sql: str = None, ast: dict = None):
@@ -108,7 +108,7 @@ class QueryPlanner(ExecutionTree):
             import sqloxide
 
             # extract temporal filters, this isn't supported by sqloxide
-            self._start_date, self._end_date, sql = extract_temporal_filters(sql)
+            self.start_date, self.end_date, sql = extract_temporal_filters(sql)
             # Parse the SQL into a AST
             try:
                 self._ast = sqloxide.parse_sql(sql, dialect="mysql")
@@ -134,7 +134,7 @@ class QueryPlanner(ExecutionTree):
         """
         extract values from a value node
         """
-        if value is None:
+        if value is None or value in ('None', 'Null'):
             return (None, None)
         if "SingleQuotedString" in value:
             # quoted strings are either VARCHAR or TIMESTAMP
@@ -153,6 +153,10 @@ class QueryPlanner(ExecutionTree):
                 [self._extract_value(t["Value"])[0] for t in value["Tuple"]],
                 TOKEN_TYPES.LIST,
             )
+        if "Value" in value:
+            if value["Value"] == "Null":
+                return (None, TOKEN_TYPES.OTHER)
+            return (value["Value"], TOKEN_TYPES.OTHER)
 
     def _build_dnf_filters(self, filters):
 
@@ -615,8 +619,8 @@ class QueryPlanner(ExecutionTree):
                 reader=self._reader,
                 cache=None,  # never read from cache
                 partition_scheme=self._partition_scheme,
-                start_date=self._start_date,
-                end_date=self._end_date,
+                start_date=self.start_date,
+                end_date=self.end_date,
             ),
         )
         last_node = "reader"
@@ -681,8 +685,8 @@ class QueryPlanner(ExecutionTree):
                 reader=self._reader,
                 cache=self._cache,
                 partition_scheme=self._partition_scheme,
-                start_date=self._start_date,
-                end_date=self._end_date,
+                start_date=self.start_date,
+                end_date=self.end_date,
                 hints=hints,
             ),
         )
@@ -708,8 +712,8 @@ class QueryPlanner(ExecutionTree):
                         reader=self._reader,
                         cache=self._cache,
                         partition_scheme=self._partition_scheme,
-                        start_date=self._start_date,
-                        end_date=self._end_date,
+                        start_date=self.start_date,
+                        end_date=self.end_date,
                         hints=right[3],
                     )
 

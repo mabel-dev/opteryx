@@ -222,24 +222,4 @@ def extract_temporal_filters(sql):
         pass
 
     return start_date, end_date, sql
-
-
-if __name__ == "__main__":
-
-    def date_range(
-        start_date,
-        end_date,
-    ):
-
-        if end_date < start_date:  # type:ignore
-            raise ValueError(
-                "date_range: end_date must be the same or later than the start_date "
-            )
-
-        for n in range(int((end_date - start_date).days) + 1):  # type:ignore
-            yield start_date + datetime.timedelta(n)  # type:ignore
-
-    s = datetime.date.today().replace(day=1, month=1)
-    e = s.replace(year=s.year + 1)
-    for d in date_range(s, e):
-        print(d, _subtract_one_month(d))
+    

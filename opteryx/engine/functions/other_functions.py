@@ -11,9 +11,9 @@
 # limitations under the License.
 
 import numpy
-import pyarrow
 
 from pyarrow import compute
+
 
 
 def _list_contains(array, item):
@@ -45,6 +45,8 @@ def _search(array, item):
         return None
     if array_type == str:
         # return True if the value is in the string
+        # find_substring returns -1 or an index, we need to convert this to a boolean
+        # and then to a list of lists for pyarrow
         res = compute.find_substring(array, pattern=item, ignore_case=True)
         res = ~(res.to_numpy() < 0)
         return ([r] for r in res)
@@ -58,3 +60,30 @@ def _search(array, item):
             for record in array
         )
     return [False] * array.shape[0]
+
+
+def _coalesce(*args):
+
+    def _make_list(arr, length):
+        if not isinstance(arr, numpy.ndarray):
+            return [arr] * length
+
+    cycles = max([0] + [len(a) for a in args if isinstance(a, numpy.ndarray)])
+    if cycles == 0:
+        raise Exception("something has gone wrong")
+
+    my_args = list(args)
+
+    for i in range(len(args)):
+        if not isinstance(args[i], numpy.ndarray):
+            my_args[i] = _make_list(args[i], cycles)
+
+    def inner_coalesce(iterable):
+        for element in iterable:
+            print(element)
+            if (element is not None) and (element == element):
+                return element
+        return None
+
+    for row in zip(*my_args):
+        yield [inner_coalesce(row)]

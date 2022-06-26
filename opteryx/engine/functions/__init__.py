@@ -160,6 +160,7 @@ FUNCTIONS = {
     "LIST_CONTAINS_ANY": _iterate_double_parameter(other_functions._list_contains_any),
     "LIST_CONTAINS_ALL": _iterate_double_parameter(other_functions._list_contains_all),
     "SEARCH": other_functions._search,
+    "COALESCE": other_functions._coalesce,
     # NUMERIC
     "ROUND": compute.round,
     "FLOOR": compute.floor,
