@@ -35,7 +35,7 @@ If a cluster, region or datacentre is unavailable, if you have instances able to
 
 Opteryx supports many popular data formats, including Parquet, ORC, Feather and JSONL, stored on local disk or on Cloud Storage. You can mix-and-match formats, so one dataset can be Parquet and another JSONL, and Opteryx will be able to JOIN across them.
 
-**Consumption-Based Billing**
+**Consumption-Based Billing Friendly**
 
 Opteryx is perfect for deployments to environments which are pay-as-you-use, like Google Cloud Run. Great for situations where you low-volume usage, or many environments, where the costs of many traditional database deployment can quickly add up.
 
@@ -46,6 +46,10 @@ Opteryx is an Open Source Python library, it quickly and easily integrates into 
 **Time Travel**
 
 Designed for data analytics in environments where decisions need to be replayable, Opteryx allows you to query data as at a point in time in the past to replay decision algorithms against facts as they were known in the past. _(data must be structured to enable temporal queries)_
+
+**Schema Evolution**
+
+Changes to schemas and paritioning can be made without requiring any existing data to be updated. _(data types can only be changed to compatitble types)_
 
 ## How Can I Contribute?
 

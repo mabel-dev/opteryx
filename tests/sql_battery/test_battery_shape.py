@@ -354,6 +354,15 @@ STATEMENTS = [
         ("SELECT DISTINCT * FROM (SELECT DATE_TRUNC('year', birth_date) AS BIRTH_YEAR FROM $astronauts)", 54, 1),
         ("SELECT DISTINCT * FROM (SELECT DATE_TRUNC('month', birth_date) AS BIRTH_YEAR_MONTH FROM $astronauts)", 247, 1),
 
+        ("SELECT SEARCH(name, 'al'), name FROM $satellites", 177, 2),
+        ("SELECT name FROM $satellites WHERE SEARCH(name, 'al')", 18, 1),
+        ("SELECT SEARCH(missions, 'Apollo 11'), missions FROM $astronauts", 357, 2),
+        ("SELECT name FROM $astronauts WHERE SEARCH(missions, 'Apollo 11')", 3, 1),
+        ("SELECT name, SEARCH(birth_place, 'Italy') FROM $astronauts", 357, 2),
+        ("SELECT name, birth_place FROM $astronauts WHERE SEARCH(birth_place, 'Italy')", 1, 2),
+        ("SELECT name, birth_place FROM $astronauts WHERE SEARCH(birth_place, 'Rome')", 1, 2),
+        ("SELECT name, birth_place FROM $astronauts WHERE SEARCH(birth_place, 'town')", 357, 2),
+
         # These are queries which have been found to return the wrong result or not run correctly
         # FILTERING ON FUNCTIONS
         ("SELECT DATE(birth_date) FROM $astronauts FOR TODAY WHERE DATE(birth_date) < '1930-01-01'", 14, 1),
