@@ -134,7 +134,7 @@ class QueryPlanner(ExecutionTree):
         """
         extract values from a value node
         """
-        if value is None or value in ('None', 'Null'):
+        if value is None or value in ("None", "Null"):
             return (None, None)
         if "SingleQuotedString" in value:
             # quoted strings are either VARCHAR or TIMESTAMP

@@ -15,7 +15,6 @@ import numpy
 from pyarrow import compute
 
 
-
 def _list_contains(array, item):
     if array is None:
         return False
@@ -63,7 +62,6 @@ def _search(array, item):
 
 
 def _coalesce(*args):
-
     def _make_list(arr, length):
         if not isinstance(arr, numpy.ndarray):
             return [arr] * length

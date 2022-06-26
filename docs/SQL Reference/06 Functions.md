@@ -71,6 +71,7 @@ Function            | Description                                       | Exampl
 ------------------- | ------------------------------------------------- | ---------------------------
 `BOOLEAN(str)`      | Convert input to a Boolean                        | `BOOLEAN('true') -> True`
 `CAST(any AS type)` | Cast any to type, calls `type(any)`               | `CAST(state AS BOOLEAN) -> False`
+`COALESCE(args)`    | Return the first item from args which is not None | `CAST(university, high_school) -> 'Olympia High'`  
 `GET(list, n)` :fontawesome-solid-asterisk: | Gets the nth element in a list, also `list[n]`    | `GET(names, 2) -> 'Joe'`
 `GET(struct, a)` :fontawesome-solid-asterisk: | Gets the element called 'a' from a struct, also `struct[a]` | `GET(dict, 'key') -> 'value'`
 `HASH(str)`         | Calculate the [CityHash](https://opensource.googleblog.com/2011/04/introducing-cityhash.html) (64 bit) of a value  | `HASH('hello') -> 'B48BE5A931380CE8'`

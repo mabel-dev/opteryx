@@ -222,4 +222,3 @@ def extract_temporal_filters(sql):
         pass
 
     return start_date, end_date, sql
-    
