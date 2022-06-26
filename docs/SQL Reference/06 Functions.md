@@ -1,5 +1,8 @@
 # Functions
 
+!!! note
+    :fontawesome-solid-asterisk: indicates a function has more than one entry on this page.
+
 ## Numeric Functions
 
 Function        | Description                                       | Example
@@ -17,10 +20,12 @@ Functions for examining and manipulating string values.
 
 Function        | Description                                       | Example
 --------------- | ------------------------------------------------- | ---------------------------
+`GET(str, n)` :fontawesome-solid-asterisk:  | Gets the nth element in a string, also `str[n]`   | `GET('hello', 2) -> 'e'`
 `LEFT(str, n)`  | Extract the left-most n characters                | `LEFT('hello', 2) -> 'he'`
 `LEN(str)`      | Number of characters in string, also `LENGTH`     | `LEN('hello') -> 5`
 `LOWER(str)`    | Convert string to lower case                      | `LOWER('Hello') -> 'hello'`
 `RIGHT(str, n)` | Extract the right-most n characters               | `RIGHT('hello', 2) -> 'lo'`
+`SEARCH(str, val)` :fontawesome-solid-asterisk: | Return True if str contains val                | `SEARCH('hello', 'lo') -> TRUE`
 `STRING(any)`   | Alias of `VARCHAR()`                              | `STRING(22) -> '22'`
 `TRIM(str)`     | Removes any spaces from either side of the string | `TRIM('  hello  ') -> 'hello'`
 `UPPER(str)`    | Convert string to upper case                      | `UPPER('Hello') -> 'HELLO'`
@@ -66,15 +71,16 @@ Function            | Description                                       | Exampl
 ------------------- | ------------------------------------------------- | ---------------------------
 `BOOLEAN(str)`      | Convert input to a Boolean                        | `BOOLEAN('true') -> True`
 `CAST(any AS type)` | Cast any to type, calls `type(any)`               | `CAST(state AS BOOLEAN) -> False`
-`GET(struct, a)`    | Gets the element called 'a' from a struct, also `struct[a]` | `GET(dict, 'key') -> 'value'`
-`GET(list, n)`      | Gets the nth element in a list, also `list[n]`    | `GET(names, 2) -> 'Joe'`
-`GET(str, n)`       | Gets the nth element in a string, also `str[n]`   | `GET('hello', 2) -> 'e'`
+`GET(list, n)` :fontawesome-solid-asterisk: | Gets the nth element in a list, also `list[n]`    | `GET(names, 2) -> 'Joe'`
+`GET(struct, a)` :fontawesome-solid-asterisk: | Gets the element called 'a' from a struct, also `struct[a]` | `GET(dict, 'key') -> 'value'`
 `HASH(str)`         | Calculate the [CityHash](https://opensource.googleblog.com/2011/04/introducing-cityhash.html) (64 bit) of a value  | `HASH('hello') -> 'B48BE5A931380CE8'`
 `LIST_CONTAINS(list, val)`      | Test if a list field contains a value | `LIST_CONTAINS(letters, '1') -> false`
 `LIST_CONTAINS_ANY(list, vals)` | Test if a list field contains any of a list of values | `LIST_CONTAINS_ANY(letters, ('1', 'a')) -> true`
 `LIST_CONTAINS_ALL(list, vals)` | Test is a list field contains all of a list of values | `LIST_CONTAINS_ALL(letters, ('1', 'a')) -> false`
 `MD5(str)`          | Calculate the MD5 hash of a value                 | `MD5('hello') -> '5d41402abc4b2a76b9719d911017c592'`
 `RANDOM()`          | Random number between 0.000 and 0.999             | `RANDOM() -> 0.234`
+`SEARCH(list, val)` :fontawesome-solid-asterisk: | Return True if val is an item in list             | `SEARCH(names, 'John') -> TRUE`
+`SEARCH(struct, val)` :fontawesome-solid-asterisk: | Return True if any of the keys or values in struct is val | `SEARCH(dict, 'key') -> TRUE`
 `UNNEST(list)`      | Create a virtual table with a row for each element in the LIST | `UNNEST((TRUE,FALSE)) AS Booleans` 
 `VERSION()`         | Return the version of Opteryx                     | `VERSION() -> 0.1.0`
 
