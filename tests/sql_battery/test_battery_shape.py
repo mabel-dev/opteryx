@@ -354,6 +354,9 @@ STATEMENTS = [
         ("SELECT DISTINCT * FROM (SELECT DATE_TRUNC('year', birth_date) AS BIRTH_YEAR FROM $astronauts)", 54, 1),
         ("SELECT DISTINCT * FROM (SELECT DATE_TRUNC('month', birth_date) AS BIRTH_YEAR_MONTH FROM $astronauts)", 247, 1),
 
+        ("SELECT COALESCE(graduate_major, undergraduate_major, 'high school') as ed FROM $astronauts WHERE ed = 'high school'", 4, 1),
+        ("SELECT COALESCE(graduate_major, undergraduate_major) AS ed, graduate_major, undergraduate_major FROM $astronauts WHERE ed = 'Aeronautical Engineering'", 41, 3),
+
         ("SELECT SEARCH(name, 'al'), name FROM $satellites", 177, 2),
         ("SELECT name FROM $satellites WHERE SEARCH(name, 'al')", 18, 1),
         ("SELECT SEARCH(missions, 'Apollo 11'), missions FROM $astronauts", 357, 2),
