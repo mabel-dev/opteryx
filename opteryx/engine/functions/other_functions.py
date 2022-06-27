@@ -77,7 +77,7 @@ def _coalesce(*args):
 
     def inner_coalesce(iterable):
         for element in iterable:
-            if element is not None and (element == element):
+            if element is not None and (element == element):  # nosemgrep
                 if isinstance(element, numpy.datetime64):
                     element = dates.parse_iso(element)
                 print(f"returning {element}, {type(element)}, {iterable}")
