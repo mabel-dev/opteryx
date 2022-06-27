@@ -14,6 +14,8 @@ import numpy
 
 from pyarrow import compute
 
+from opteryx.utils import dates
+
 
 def _list_contains(array, item):
     if array is None:
@@ -53,10 +55,7 @@ def _search(array, item):
         return ([False] if record is None else [item in record] for record in array)
     if array_type == dict:
         return (
-            [False]
-            if record is None
-            else [item in record.keys() or item in record.values()]
-            for record in array
+            [False] if record is None else [item in record.values()] for record in array
         )
     return [False] * array.shape[0]
 
@@ -78,8 +77,10 @@ def _coalesce(*args):
 
     def inner_coalesce(iterable):
         for element in iterable:
-            print(element)
-            if (element is not None) and (element == element):  # nosemgrep
+            if element is not None and (element == element):
+                if isinstance(element, numpy.datetime64):
+                    element = dates.parse_iso(element)
+                print(f"returning {element}, {type(element)}, {iterable}")
                 return element
         return None
 

@@ -142,6 +142,9 @@ class QueryPlanner(ExecutionTree):
             dte_value = dates.parse_iso(str_value)
             if dte_value:
                 return (dte_value, TOKEN_TYPES.TIMESTAMP)
+            #            ISO_8601 = r"^\d{4}(-\d\d(-\d\d([T\W]\d\d:\d\d(:\d\d)?(\.\d+)?(([+-]\d\d:\d\d)|Z)?)?)?)?$"
+            #            if re.match(ISO_8601, str_value):
+            #                return (numpy.datetime64(str_value), TOKEN_TYPES.TIMESTAMP)
             return (str_value, TOKEN_TYPES.VARCHAR)
         if "Number" in value:
             # we have one internal numeric type

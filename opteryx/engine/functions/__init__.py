@@ -14,6 +14,7 @@
 These are a set of functions that can be applied to data.
 """
 import datetime
+import numpy
 import os
 
 from cityhash import CityHash64
@@ -65,7 +66,9 @@ VECTORIZED_CASTERS = {
 }
 
 ITERATIVE_CASTERS = {
-    "TIMESTAMP": parse_iso,
+    "TIMESTAMP": lambda x: numpy.datetime64(int(x), "s")
+    if isinstance(x, numpy.int64)
+    else numpy.datetime64(x),
 }
 
 

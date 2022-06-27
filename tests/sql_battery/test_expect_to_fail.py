@@ -25,6 +25,9 @@ STATEMENTS = [
         # SELECT EXCEPT isn't supported
         # https://towardsdatascience.com/4-bigquery-sql-shortcuts-that-can-simplify-your-queries-30f94666a046
         ("SELECT * EXCEPT id FROM $satellites"),
+
+        # TEMPORAL QUERIES aren't part of the AST
+        ("SELECT * FROM CUSTOMERS FOR SYSTEM_TIME ('2022-01-01', '2022-12-31')")
     ]
 # fmt:on
 
