@@ -255,6 +255,7 @@ STATEMENTS = [
         ("SELECT * FROM (SELECT * FROM generate_series(1,10,2) AS gs) INNER JOIN $planets on gs = id", 5, 21),
 
         ("SELECT * FROM generate_series('192.168.1.0/28')", 16, 1),
+        ("SELECT * FROM generate_series('192.168.1.100/29')", 8, 1),
 
         ("SELECT * FROM tests.data.dated WITH (NOCACHE) FOR '2020-02-03'", 25, 8),
         ("SELECT * FROM tests.data.dated FOR '2020-02-03'", 25, 8),
@@ -356,6 +357,7 @@ STATEMENTS = [
 
         ("SELECT COALESCE(graduate_major, undergraduate_major, 'high school') as ed FROM $astronauts WHERE ed = 'high school'", 4, 1),
         ("SELECT COALESCE(graduate_major, undergraduate_major) AS ed, graduate_major, undergraduate_major FROM $astronauts WHERE ed = 'Aeronautical Engineering'", 41, 3),
+        ("SELECT COALESCE(death_date, '2030-01-01') FROM $astronauts", 357, 1),
 
         ("SELECT SEARCH(name, 'al'), name FROM $satellites", 177, 2),
         ("SELECT name FROM $satellites WHERE SEARCH(name, 'al')", 18, 1),
@@ -364,7 +366,6 @@ STATEMENTS = [
         ("SELECT name, SEARCH(birth_place, 'Italy') FROM $astronauts", 357, 2),
         ("SELECT name, birth_place FROM $astronauts WHERE SEARCH(birth_place, 'Italy')", 1, 2),
         ("SELECT name, birth_place FROM $astronauts WHERE SEARCH(birth_place, 'Rome')", 1, 2),
-        ("SELECT name, birth_place FROM $astronauts WHERE SEARCH(birth_place, 'town')", 357, 2),
 
         # These are queries which have been found to return the wrong result or not run correctly
         # FILTERING ON FUNCTIONS

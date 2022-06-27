@@ -57,7 +57,7 @@ def _generate_series(alias, *args):
 
         import ipaddress
 
-        ips = ipaddress.ip_network(arg_vals[0])
+        ips = ipaddress.ip_network(arg_vals[0], strict=False)
         return [{alias: str(ip)} for ip in ips]
 
 

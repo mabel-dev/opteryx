@@ -17,7 +17,7 @@ Component | Disposition | Copyright | Licence
 [sqloxide](https://github.com/wseaton/sqloxide)            | Installed   | . | [MIT](https://github.com/wseaton/sqloxide/blob/master/LICENSE)
 [sqlparser-rs](https://github.com/sqlparser-rs/sqlparser-rs) | Transitive | . | [Apache 2.0](https://github.com/sqlparser-rs/sqlparser-rs/blob/main/LICENSE.TXT)
 
-- **Installed** components are installed by PyPI
+- **Installed** components are installed from PyPI
 - **Integrated** components have their source code included in the Opteryx codebase
 - **Transitive** components are key components installed by other components - this is not intended to be a complete list
 

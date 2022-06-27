@@ -12,17 +12,17 @@
 
 # This has been modified for Opteryx for performance.
 # This is roughly twice as fast as the original implementation.
-# 
+#
 # This file maintains the Public Domain Licence, this does not change the licence
 # of any other files in this project.
 
 #
 # Constants
 
-REPLACE:int = 1
-INSERT:int = 2
-DELETE:int = 4
-TRANSPOSE:int = 8
+REPLACE: int = 1
+INSERT: int = 2
+DELETE: int = 4
+TRANSPOSE: int = 8
 
 # fmt:off
 MATRIX = (
@@ -45,7 +45,7 @@ MATRIX = (
 # Library API
 
 
-def compare(str1:str, str2:str) -> int:
+def compare(str1: str, str2: str) -> int:
     len1, len2 = len(str1), len(str2)
 
     if len1 < len2:
@@ -69,7 +69,7 @@ def compare(str1:str, str2:str) -> int:
     return res
 
 
-def check_model(str1:str, str2:str, len1:int, len2:int, model) -> int:
+def check_model(str1: str, str2: str, len1: int, len2: int, model) -> int:
     """Check if the model can transform str1 into str2"""
 
     idx1, idx2 = 0, 0

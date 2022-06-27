@@ -160,7 +160,7 @@ class Columns:
                 best_match = self.fuzzy_search(column)
                 if best_match:
                     raise SqlError(
-                        f"Field `{column}` does not exist, did you mean `{best_match}`."
+                        f"Field `{column}` does not exist, did you mean `{best_match}`?"
                     )
                 else:
                     raise SqlError(f"Field `{column}` does not exist.")
