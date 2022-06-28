@@ -230,7 +230,7 @@ class QueryPlanner(ExecutionTree):
         if "InList" in filters:
             left = self._build_dnf_filters(filters["InList"]["expr"])
             right = (
-                [self._build_dnf_filters(v)[0] for v in filters["InList"]["list"]],
+                {self._build_dnf_filters(v)[0] for v in filters["InList"]["list"]},
                 TOKEN_TYPES.LIST,
             )
             operator = "not in" if filters["InList"]["negated"] else "in"
