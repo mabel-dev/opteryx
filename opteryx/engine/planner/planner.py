@@ -449,6 +449,28 @@ class QueryPlanner(ExecutionTree):
                     alias.append(f"CAST({args[0][0]} AS {data_type})")
 
                     return {"function": data_type, "args": args, "alias": alias}
+
+                if "Extract" in function:
+                    # EXTRACT(part FROM timestamp)
+
+                    datepart = (
+                        function["Extract"]["field"],
+                        TOKEN_TYPES.INTERVAL,
+                    )
+                    value = self._build_dnf_filters(function["Extract"]["expr"])
+
+                    alias.append(f"EXTRACT({datepart[0]} FROM {value[0]})")
+                    alias.append(f"DATEPART({datepart[0]}, {value[0]}")
+
+                    return {
+                        "function": "DATEPART",
+                        "args": (
+                            datepart,
+                            value,
+                        ),
+                        "alias": alias,
+                    }
+
                 if "MapAccess" in function:
                     # Identifier[key] -> GET(Identifier, key) -> alias of I[k] or alias
                     identifier = function["MapAccess"]["column"]["Identifier"]["value"]

@@ -16,6 +16,4 @@ Store the version here so:
 2) we can import it in setup.py for the same reason
 """
 
-__version__ = "0.1.0"
-
-# __version__ = "0.1.1-beta.1
+__version__ = "0.1.1-beta.1"

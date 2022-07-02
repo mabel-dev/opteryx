@@ -38,32 +38,42 @@ Functions for examining and manipulating date values.
 Function        | Description                                       | Example
 --------------- | ------------------------------------------------- | ---------------------------
 `DATE(date)`    | Extract the date part                             | `DATE(2022-02-06 11:37) -> '2022-02-06 00:00'`
-`DATE_TRUNC(period, date)` | Remove parts from a timestamp         | `DATE_TRUNC('year', 2022-06-23) -> '2022-01-01'` 
+`DATE_TRUNC(period, date)` | Remove parts from a timestamp          | `DATE_TRUNC('year', 2022-06-23) -> '2022-01-01'` 
+`DATEPART(part, date)` | Functional representation of `EXTRACT`     | `DATEPART('year', 2022-01-01) -> 2022`
+`EXTRACT(part FROM date)` | Extract a part of a timestamp           | `EXTRACT(year FROM 2022-01-01) -> 2022`
+`NOW()`         | Current Timestamp                                 | `NOW() -> '2022-02-23 12:37'`
+`TIME()`        | Current Time (UTC)                                | `TIME() -> '12:34:23.2123'`
+`TIMESTAMP(str)` :fontawesome-solid-asterisk: | Convert an [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format string to a timestamp | `TIMESTAMP('2000-01-01') -> 1 Jan 2000`
+`TIMESTAMP(n)` :fontawesome-solid-asterisk: | Interpret n as seconds since unix epoch           | `TIMESTAMP(946684800) -> 1 Jan 2000`
+`TODAY()`       | Current Date                                      | `TODAY() -> '2022-02-23'`
+
+Recognized date parts and periods and support across various functions:
+
+Part     | `DATE_TRUNC`              | `EXTRACT`                 | Notes
+-------- | ------------------------- | ------------------------- | -------------
+second   | :fontawesome-solid-check: | :fontawesome-solid-check: |
+minute   | :fontawesome-solid-check: | :fontawesome-solid-check: |
+hour     | :fontawesome-solid-check: | :fontawesome-solid-check: |
+day      | :fontawesome-solid-check: | :fontawesome-solid-check: |
+dow      | :fontawesome-solid-xmark: | :fontawesome-solid-check: | day of week
+week     | :fontawesome-solid-check: | :fontawesome-solid-check: | iso week i.e. to monday
+month    | :fontawesome-solid-check: | :fontawesome-solid-check: |
+quarter  | :fontawesome-solid-check: | :fontawesome-solid-check: |
+doy      | :fontawesome-solid-xmark: | :fontawesome-solid-check: | day of year
+year     | :fontawesome-solid-check: | :fontawesome-solid-check: |
+
+The following functions exist, however use of `EXTRACT` is recommended.
+
+Function        | Description                                       | Example
+--------------- | ------------------------------------------------- | ---------------------------
 `DAY(date)`     | Extract day number                                | `DAY(2022-02-06) -> 6`
 `HOUR(time)`    | Extract hour from timestamp                       | `HOUR(5:32:43) -> 5`
 `MINUTE(time)`  | Extract minute from timestamp                     | `MINUTE(5:32:43) -> 32`
 `MONTH(date)`   | Extract month number                              | `MONTH(2022-02-06) -> 2`
-`NOW()`         | Current Timestamp                                 | `NOW() -> '2022-02-23 12:37'`
 `QUARTER(date)` | Extract quarter of the year                       | `QUARTER(2022-02-06) -> 2`
-`TIME()`        | Current Time (UTC)                                | `TIME() -> '12:34:23.2123'`
 `SECOND(time)`  | Extract second                                    | `SECOND(5:32:43) -> 43`
-`TIMESTAMP(str)` | Convert an [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format string to a timestamp | `TIMESTAMP('2000-01-01') -> 1 Jan 2000`
-`TIMESTAMP(n)`  | Interpret n as seconds since unix epoch           | `TIMESTAMP(946684800) -> 1 Jan 2000`
-`TODAY()`       | Current Date                                      | `TODAY() -> '2022-02-23'`
 `WEEK(date)`    | Extract ISO week of year number                   | `WEEK(2022-02-06) -> 5`
 `YEAR(date)`    | Extract year number                               | `YEAR(202-02-06) -> 2022`
-
-
-Recognized periods for use with the `DATE_TRUNC` function are: 
-
-- second
-- minute
-- hour
-- day
-- week (iso week i.e. to monday)
-- month
-- quarter
-- year
 
 ## Other Functions
 
