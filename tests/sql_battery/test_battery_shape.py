@@ -13,8 +13,7 @@ We test the shape in this battery because if the shape isn't right, the response
 going to be right, and testing shape of an in-memory dataset is quick, we can test 100s
 of queries in a few seconds.
 
-Testing the shape doesn't mean the response is right though, so another battery will be
-required to test values.
+Testing the shape doesn't mean the response is right though.
 """
 import os
 import sys
@@ -366,6 +365,15 @@ STATEMENTS = [
         ("SELECT name, SEARCH(birth_place, 'Italy') FROM $astronauts", 357, 2),
         ("SELECT name, birth_place FROM $astronauts WHERE SEARCH(birth_place, 'Italy')", 1, 2),
         ("SELECT name, birth_place FROM $astronauts WHERE SEARCH(birth_place, 'Rome')", 1, 2),
+
+        ("SELECT EXTRACT(year FROM birth_date) AS birth_year FROM $astronauts WHERE birth_year < 1930;", 14, 1),
+        ("SELECT EXTRACT(month FROM birth_date) FROM $astronauts", 357, 1),
+        ("SELECT EXTRACT(day FROM birth_date) FROM $astronauts", 357, 1),
+        ("SELECT DATEPART('year', birth_date) AS birth_year FROM $astronauts WHERE birth_year < 1930;", 14, 1),
+        ("SELECT EXTRACT(doy FROM birth_date) FROM $astronauts", 357, 1),
+        ("SELECT EXTRACT(DOY FROM birth_date) FROM $astronauts", 357, 1),
+        ("SELECT EXTRACT(dow FROM birth_date) FROM $astronauts", 357, 1),
+        ("SELECT EXTRACT(DOW FROM birth_date) FROM $astronauts", 357, 1),
 
         # These are queries which have been found to return the wrong result or not run correctly
         # FILTERING ON FUNCTIONS

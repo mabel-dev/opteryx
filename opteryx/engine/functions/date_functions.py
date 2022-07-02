@@ -10,10 +10,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from pyarrow import compute
 
 import datetime
-
 import numpy
+from opteryx.exceptions import SqlError
 
 from opteryx.utils.dates import parse_iso
 
@@ -45,3 +46,26 @@ def get_date(input):
     if isinstance(input, datetime.date):
         return datetime.datetime.combine(input, datetime.datetime.min.time())
     return None
+
+
+def date_part(interval, arr):
+
+    EXTRACTOR = {
+        "microsecond": compute.microsecond,
+        "second": compute.second,
+        "minute": compute.minute,
+        "hour": compute.hour,
+        "day": compute.day,
+        "dow": compute.day_of_week,
+        "week": compute.iso_week,
+        "month": compute.month,
+        "quarter": compute.quarter,
+        "doy": compute.day_of_year,
+        "year": compute.year,
+    }
+
+    interval = interval.lower()
+    if interval in EXTRACTOR:
+        return EXTRACTOR[interval](arr)
+
+    raise SqlError(f"Unsupported date part `{interval}`")

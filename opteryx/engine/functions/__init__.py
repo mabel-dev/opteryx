@@ -175,6 +175,7 @@ FUNCTIONS = {
     "TRUNCATE": compute.trunc,
     # DATES & TIMES
     "DATE_TRUNC": _iterate_double_parameter_field_second(date_trunc),
+    "DATEPART": date_functions.date_part,
     "NOW": _iterate_no_parameters(datetime.datetime.utcnow),
     "TODAY": _iterate_no_parameters(datetime.date.today),
     "TIME": _iterate_no_parameters(date_functions.get_time),
