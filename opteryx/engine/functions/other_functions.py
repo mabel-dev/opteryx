@@ -20,7 +20,7 @@ from opteryx.utils import dates
 def _list_contains(array, item):
     if array is None:
         return False
-    return item in array
+    return item in set(array)
 
 
 def _list_contains_any(array, items):
@@ -43,7 +43,7 @@ def _search(array, item):
     if len(array) > 0:
         array_type = type(array[0])
     else:
-        return None
+        return [None]
     if array_type == str:
         # return True if the value is in the string
         # find_substring returns -1 or an index, we need to convert this to a boolean
@@ -52,12 +52,12 @@ def _search(array, item):
         res = ~(res.to_numpy() < 0)
         return ([r] for r in res)
     if array_type == numpy.ndarray:
-        return ([False] if record is None else [item in record] for record in array)
+        return ([False] if record is None else [item in set(record)] for record in array)
     if array_type == dict:
         return (
             [False] if record is None else [item in record.values()] for record in array
         )
-    return [False] * array.shape[0]
+    return [[False] * array.shape[0]]
 
 
 def _coalesce(*args):
@@ -80,7 +80,7 @@ def _coalesce(*args):
             if element is not None and (element == element):  # nosemgrep
                 if isinstance(element, numpy.datetime64):
                     element = dates.parse_iso(element)
-                print(f"returning {element}, {type(element)}, {iterable}")
+                #print(f"returning {element}, {type(element)}, {iterable}")
                 return element
         return None
 
