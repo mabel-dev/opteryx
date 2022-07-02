@@ -52,7 +52,9 @@ def _search(array, item):
         res = ~(res.to_numpy() < 0)
         return ([r] for r in res)
     if array_type == numpy.ndarray:
-        return ([False] if record is None else [item in set(record)] for record in array)
+        return (
+            [False] if record is None else [item in set(record)] for record in array
+        )
     if array_type == dict:
         return (
             [False] if record is None else [item in record.values()] for record in array
@@ -80,7 +82,7 @@ def _coalesce(*args):
             if element is not None and (element == element):  # nosemgrep
                 if isinstance(element, numpy.datetime64):
                     element = dates.parse_iso(element)
-                #print(f"returning {element}, {type(element)}, {iterable}")
+                # print(f"returning {element}, {type(element)}, {iterable}")
                 return element
         return None
 
