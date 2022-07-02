@@ -71,6 +71,7 @@ PARQUET_TYPES = {
     "bool": OPTERYX_TYPES.BOOLEAN,
     "timestamp[ms]": OPTERYX_TYPES.TIMESTAMP,
     "timestamp[s]": OPTERYX_TYPES.TIMESTAMP,
+    "timestamp[us]": OPTERYX_TYPES.TIMESTAMP,
     "date32[day]": OPTERYX_TYPES.TIMESTAMP,
     "dict": OPTERYX_TYPES.STRUCT,
     "int64": OPTERYX_TYPES.NUMERIC,
