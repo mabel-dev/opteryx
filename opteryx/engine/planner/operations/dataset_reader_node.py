@@ -28,16 +28,15 @@ PARALLELIZE READING:
 - As one blob is read, the next is immediately cached for reading
 """
 import datetime
+import time
 
 from enum import Enum
 from typing import Iterable
 from cityhash import CityHash64
 
-import time
-
 from opteryx.engine import QueryDirectives, QueryStatistics
 from opteryx.engine.planner.operations import BasePlanNode
-from opteryx.exceptions import DatasetNotFoundError
+from opteryx.exceptions import DatabaseError
 from opteryx.storage import file_decoders
 from opteryx.storage.adapters import DiskStorage
 from opteryx.storage.schemes import MabelPartitionScheme
@@ -116,10 +115,11 @@ class DatasetReaderNode(BasePlanNode):
         self._start_date = config.get("start_date", today)
         self._end_date = config.get("end_date", today)
 
-        # pushed down projection
-        self._projection = config.get("projection")
         # pushed down selection
         self._selection = config.get("selection")
+
+        # scan
+        self._reading_list = self._scanner()
 
     @property
     def config(self):  # pragma: no cover
@@ -153,6 +153,112 @@ class DatasetReaderNode(BasePlanNode):
 
             return
 
+        metadata = None
+        schema = None
+
+        #        import pyarrow.plasma as plasma
+        from opteryx.storage import multiprocessor
+
+        # from opteryx import config
+
+        #        with plasma.start_plasma_store(
+        #            config.BUFFER_PER_SUB_PROCESS * config.MAX_SUB_PROCESSES
+        #        ) as plasma_store:
+        #            plasma_channel = plasma_store[0]
+        if not metadata:
+            plasma_channel = None
+
+            for partition in self._reading_list.values():
+
+                # we're reading this partition now
+                self._statistics.partitions_read += 1
+
+                for (
+                    time_to_read,
+                    blob_bytes,
+                    pyarrow_blob,
+                    path,
+                ) in multiprocessor.processed_reader(
+                    self._read_and_parse,
+                    [
+                        (path, self._reader.read_blob, parser, self._cache)
+                        for path, parser in partition["blob_list"]
+                    ],
+                    plasma_channel,
+                ):
+
+                    # we're going to open this blob
+                    self._statistics.count_data_blobs_read += 1
+
+                    # extract stats from reader
+                    self._statistics.bytes_read_data += blob_bytes
+                    self._statistics.time_data_read += time_to_read
+
+                    # we should know the number of entries
+                    self._statistics.rows_read += pyarrow_blob.num_rows
+                    self._statistics.bytes_processed_data += pyarrow_blob.nbytes
+
+                    if metadata is None:
+                        pyarrow_blob = Columns.create_table_metadata(
+                            table=pyarrow_blob,
+                            expected_rows=0,
+                            name=self._dataset.replace("/", ".")[:-1],
+                            table_aliases=[self._alias],
+                        )
+                        metadata = Columns(pyarrow_blob)
+                    else:
+                        try:
+                            pyarrow_blob = metadata.apply(pyarrow_blob, source=path)
+                        except:
+
+                            self._statistics.read_errors += 1
+
+                            import pyarrow
+
+                            pyarrow_blob = pyarrow.Table.from_pydict(
+                                pyarrow_blob.to_pydict()
+                            )
+                            pyarrow_blob = metadata.apply(pyarrow_blob)
+
+                    pyarrow_blob, schema = _normalize_to_schema(
+                        pyarrow_blob, schema, self._statistics
+                    )
+
+                    # yield this blob
+                    yield pyarrow_blob
+
+    def _read_and_parse(self, config):
+        path, reader, parser, cache = config
+        start_read = time.time_ns()
+
+        # if we have a cache set
+        if cache:
+            # hash the blob name for the look up
+            blob_hash = format(CityHash64(path), "X")
+            # try to read the cache
+            blob_bytes = cache.get(blob_hash)
+
+            # if the item was a miss, get it from storage and add it to the cache
+            if blob_bytes is None:
+                self._statistics.cache_misses += 1
+                blob_bytes = reader(path)
+                cache.set(blob_hash, blob_bytes)
+            else:
+                self._statistics.cache_hits += 1
+        else:
+            blob_bytes = reader(path)
+
+        table = parser(blob_bytes, None)
+
+        # print(f"read  {path} - {(time.time_ns() - start_read) / 1e9}")
+
+        time_to_read = time.time_ns() - start_read
+        return time_to_read, blob_bytes.getbuffer().nbytes, table, path
+
+    def _scanner(self):
+        """
+        The scanner works out what blobs/files should be read
+        """
         # datasets from storage
         partitions = self._reader.get_partitions(
             dataset=self._dataset,
@@ -164,13 +270,9 @@ class DatasetReaderNode(BasePlanNode):
         self._statistics.partitions_found += len(partitions)
 
         partition_structure: dict = {}
-        expected_rows = 0
 
         # Build the list of blobs we're going to read and collect summary statistics
         # so we can use them for decisions later.
-
-        if len(partitions) == 0:
-            raise DatasetNotFoundError("Dataset was not found.")
 
         for partition in partitions:
 
@@ -221,108 +323,10 @@ class DatasetReaderNode(BasePlanNode):
                 else:
                     self._statistics.count_unknown_blob_type_found += 1
 
-        metadata = None
-        schema = None
+            if len(partition_structure[partition]["blob_list"]) == 0:
+                partition_structure.pop(partition)
 
-        #        import pyarrow.plasma as plasma
-        from opteryx.storage import multiprocessor
+        if len(partition_structure) == 0:
+            raise DatabaseError("No blobs found that match the requested dataset.")
 
-        # from opteryx import config
-
-        #        with plasma.start_plasma_store(
-        #            config.BUFFER_PER_SUB_PROCESS * config.MAX_SUB_PROCESSES
-        #        ) as plasma_store:
-        #            plasma_channel = plasma_store[0]
-        if not metadata:
-            plasma_channel = None
-
-            for partition in partitions:
-
-                # we're reading this partition now
-                if len(blob_list) > 0:
-                    self._statistics.partitions_read += 1
-
-                def _read_and_parse(config):
-                    path, reader, parser, cache = config
-
-                    # print(f"start {path}")
-
-                    start_read = time.time_ns()
-
-                    # if we have a cache set
-                    if cache:
-                        # hash the blob name for the look up
-                        blob_hash = format(CityHash64(path), "X")
-                        # try to read the cache
-                        blob_bytes = cache.get(blob_hash)
-
-                        # if the item was a miss, get it from storage and add it to the cache
-                        if blob_bytes is None:
-                            self._statistics.cache_misses += 1
-                            blob_bytes = reader(path)
-                            cache.set(blob_hash, blob_bytes)
-                        else:
-                            self._statistics.cache_hits += 1
-                    else:
-                        blob_bytes = reader(path)
-
-                    table = parser(blob_bytes, None)
-
-                    # print(f"read  {path} - {(time.time_ns() - start_read) / 1e9}")
-
-                    time_to_read = time.time_ns() - start_read
-                    return time_to_read, blob_bytes.getbuffer().nbytes, table, path
-
-                for (
-                    time_to_read,
-                    blob_bytes,
-                    pyarrow_blob,
-                    path,
-                ) in multiprocessor.processed_reader(
-                    _read_and_parse,
-                    [
-                        (path, self._reader.read_blob, parser, self._cache)
-                        for path, parser in partition_structure[partition]["blob_list"]
-                    ],
-                    plasma_channel,
-                ):
-
-                    # we're going to open this blob
-                    self._statistics.count_data_blobs_read += 1
-
-                    # extract stats from reader
-                    self._statistics.bytes_read_data += blob_bytes
-                    self._statistics.time_data_read += time_to_read
-
-                    # we should know the number of entries
-                    self._statistics.rows_read += pyarrow_blob.num_rows
-                    self._statistics.bytes_processed_data += pyarrow_blob.nbytes
-
-                    if metadata is None:
-                        pyarrow_blob = Columns.create_table_metadata(
-                            table=pyarrow_blob,
-                            expected_rows=expected_rows,
-                            name=self._dataset.replace("/", ".")[:-1],
-                            table_aliases=[self._alias],
-                        )
-                        metadata = Columns(pyarrow_blob)
-                    else:
-                        try:
-                            pyarrow_blob = metadata.apply(pyarrow_blob, source=path)
-                        except:
-
-                            self._statistics.read_errors += 1
-
-                            import pyarrow
-
-                            pyarrow_blob = pyarrow.Table.from_pydict(
-                                pyarrow_blob.to_pydict()
-                            )
-                            pyarrow_blob = metadata.apply(pyarrow_blob)
-
-                    pyarrow_blob, schema = _normalize_to_schema(
-                        pyarrow_blob, schema, self._statistics
-                    )
-
-                    # yield this blob
-                    yield pyarrow_blob
+        return partition_structure
