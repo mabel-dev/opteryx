@@ -16,16 +16,6 @@ Dataset Reader Node
 This is a SQL Query Execution Plan Node.
 
 This Node reads and parses the data from a dataset into a Table.
-
-We plan to do the following:
-
-USE THE ZONEMAP:
-- Respond to simple aggregations using the zonemap, such as COUNT(*)
-- Use BRIN and selections to filter out blobs from being read that don't contain
-  records which can match the selections.
-
-PARALLELIZE READING:
-- As one blob is read, the next is immediately cached for reading
 """
 import datetime
 import time
@@ -115,11 +105,14 @@ class DatasetReaderNode(BasePlanNode):
         self._start_date = config.get("start_date", today)
         self._end_date = config.get("end_date", today)
 
-        # pushed down selection
+        # pushed down selection/filter
         self._selection = config.get("selection")
 
         # scan
         self._reading_list = self._scanner()
+
+        # row count estimate
+        self._row_count = None
 
     @property
     def config(self):  # pragma: no cover
@@ -198,10 +191,20 @@ class DatasetReaderNode(BasePlanNode):
                     self._statistics.rows_read += pyarrow_blob.num_rows
                     self._statistics.bytes_processed_data += pyarrow_blob.nbytes
 
+                    if self._row_count is None:
+                        # This is really rough - it assumes all of the blobs have about
+                        # the same number of records, which is right rarely.
+                        self._row_count = pyarrow_blob.num_rows * (
+                            self._statistics.count_blobs_found
+                            - self._statistics.count_blobs_ignored_frames
+                            - self._statistics.count_control_blobs_found
+                            - self._statistics.count_unknown_blob_type_found
+                        )
+
                     if metadata is None:
                         pyarrow_blob = Columns.create_table_metadata(
                             table=pyarrow_blob,
-                            expected_rows=0,
+                            expected_rows=self._row_count,
                             name=self._dataset.replace("/", ".")[:-1],
                             table_aliases=[self._alias],
                         )
