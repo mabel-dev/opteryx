@@ -21,6 +21,7 @@ STATEMENTS = [
 ]
 # fmt:on
 
+
 @pytest.mark.parametrize("statement, error", STATEMENTS)
 def test_no_data_errors(statement, error):
 
@@ -30,8 +31,8 @@ def test_no_data_errors(statement, error):
     ex = None
     value = None
     try:
-        cursor.execute(statement)   # some errors thrown in planning
-        value = cursor.fetchone()   # some errors thrown in execution
+        cursor.execute(statement)  # some errors thrown in planning
+        value = cursor.fetchone()  # some errors thrown in execution
     except Exception as exception:
         ex = exception
     finally:

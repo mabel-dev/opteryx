@@ -81,6 +81,7 @@ def _normalize_to_schema(table, schema, statistics):
 
     return table, schema
 
+
 class DatasetReaderNode(BasePlanNode):
     def __init__(
         self, directives: QueryDirectives, statistics: QueryStatistics, **config
@@ -226,7 +227,6 @@ class DatasetReaderNode(BasePlanNode):
                     # yield this blob
                     yield pyarrow_blob
 
-
     def _read_and_parse(self, config):
         path, reader, parser, cache = config
         start_read = time.time_ns()
@@ -254,7 +254,6 @@ class DatasetReaderNode(BasePlanNode):
 
         time_to_read = time.time_ns() - start_read
         return time_to_read, blob_bytes.getbuffer().nbytes, table, path
-
 
     def _scanner(self):
         """

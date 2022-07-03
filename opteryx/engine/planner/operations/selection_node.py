@@ -112,7 +112,7 @@ def _evaluate(predicate: Union[tuple, list], table: Table):
                         arg_list.append(arg[0])
 
                 if len(arg_list) == 0:
-                    arg_list = (table.num_rows,)
+                    arg_list = (table.num_rows,)  # type: ignore
 
                 calculated_values = FUNCTIONS[function["function"]](*arg_list)
                 if isinstance(calculated_values, (pyarrow.lib.StringScalar)):

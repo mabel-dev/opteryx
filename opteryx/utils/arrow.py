@@ -17,9 +17,10 @@ This module contains support functions for working with PyArrow
 from typing import Iterable, List
 from pyarrow import Table
 
+
 def fetchmany(pages, limit: int = 1000):
     """fetch records from a Table as Python Dicts"""
-    from opteryx.utils.columns import Columns # circulat imports
+    from opteryx.utils.columns import Columns  # circulat imports
 
     if pages is None:
         return []
