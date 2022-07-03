@@ -259,22 +259,9 @@ STATEMENTS = [
         ("SELECT * FROM tests.data.dated WITH (NOCACHE) FOR '2020-02-03'", 25, 8),
         ("SELECT * FROM tests.data.dated FOR '2020-02-03'", 25, 8),
         ("SELECT * FROM tests.data.dated FOR '2020-02-04'", 25, 8),
-        ("SELECT * FROM tests.data.dated FOR '2020-02-05'", 0, 0),
         ("SELECT * FROM tests.data.dated FOR DATES BETWEEN '2020-02-01' AND '2020-02-28'", 50, 8),
-        ("SELECT * FROM tests.data.dated FOR DATES BETWEEN YESTERDAY AND TODAY", 0, 0),
-        ("SELECT * FROM tests.data.dated FOR TODAY", 0, 0),
-        ("SELECT * FROM tests.data.dated FOR Today", 0, 0),
-        ("SELECT * FROM tests.data.dated FOR today", 0, 0),
-        ("SELECT * FROM tests.data.dated FOR   TODAY", 0, 0),
-        ("SELECT * FROM tests.data.dated FOR\nTODAY", 0, 0),
-        ("SELECT * FROM tests.data.dated FOR\tTODAY", 0, 0),
-        ("SELECT * FROM tests.data.dated FOR YESTERDAY", 0, 0),
         ("SELECT * FROM tests.data.dated FOR '2020-02-03' OFFSET 1", 24, 8),
         ("SELECT * FROM tests.data.dated FOR DATES BETWEEN '2020-02-01' AND '2020-02-28' OFFSET 1", 49, 8),
-        ("SELECT * FROM tests.data.dated FOR DATES IN LAST_MONTH", 0, 0),
-        ("SELECT * FROM tests.data.dated FOR DATES IN THIS_MONTH", 0, 0),
-        ("SELECT * FROM tests.data.dated FOR DATES IN PREVIOUS_MONTH", 0, 0),
-        ("SELECT * FROM tests.data.dated FOR YESTERDAY OFFSET 1", 0, 0),
         ("SELECT * FROM $satellites FOR YESTERDAY ORDER BY planetId OFFSET 10", 167, 8),
 
         ("SELECT * FROM tests.data.segmented FOR '2020-02-03'", 25, 8),
@@ -374,6 +361,7 @@ STATEMENTS = [
         ("SELECT EXTRACT(DOY FROM birth_date) FROM $astronauts", 357, 1),
         ("SELECT EXTRACT(dow FROM birth_date) FROM $astronauts", 357, 1),
         ("SELECT EXTRACT(DOW FROM birth_date) FROM $astronauts", 357, 1),
+        ("SELECT EXTRACT(YEAR FROM '2022-02-02')", 1, 1),
 
         # These are queries which have been found to return the wrong result or not run correctly
         # FILTERING ON FUNCTIONS
@@ -399,7 +387,6 @@ STATEMENTS = [
         # FRAME HANDLING
         ("SELECT * FROM tests.data.framed FOR '2021-03-28'", 100000, 1),
         ("SELECT * FROM tests.data.framed FOR '2021-03-29'", 100000, 1),
-        ("SELECT * FROM tests.data.framed FOR '2021-03-30'", 0, 0),
         ("SELECT * FROM tests.data.framed FOR DATES BETWEEN '2021-03-28' AND '2021-03-29", 200000, 1),
         ("SELECT * FROM tests.data.framed FOR DATES BETWEEN '2021-03-29' AND '2021-03-30", 100000, 1),
         ("SELECT * FROM tests.data.framed FOR DATES BETWEEN '2021-03-28' AND '2021-03-30", 200000, 1),

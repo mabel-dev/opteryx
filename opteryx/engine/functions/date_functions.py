@@ -71,6 +71,10 @@ def date_part(interval, arr):
         "year": compute.year,
     }
 
+    # if we get a date literal
+    if not hasattr(arr, "__iter__"):
+        arr = numpy.array([arr])
+
     interval = interval.lower()
     if interval in extractors:
         return extractors[interval](arr)
