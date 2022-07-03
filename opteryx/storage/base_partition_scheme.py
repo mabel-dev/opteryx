@@ -15,6 +15,7 @@ import abc
 
 class BasePartitionScheme(abc.ABC):
     def __init__(self):
+        """empty to allow super calls, but nothing needs to be done"""
         pass
 
     def filter_blobs(self, list_of_blobs, statistics):

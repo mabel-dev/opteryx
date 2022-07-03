@@ -68,3 +68,7 @@ class SqlError(ProgrammingError):
 
 class DatasetNotFoundError(SqlError):
     pass
+
+
+class CursorInvalidStateError(ProgrammingError):
+    pass
