@@ -177,7 +177,7 @@ FUNCTIONS = {
     "DATE_TRUNC": _iterate_double_parameter_field_second(date_trunc),
     "DATEPART": date_functions.date_part,
     "NOW": _iterate_no_parameters(datetime.datetime.utcnow),
-    "TODAY": _iterate_no_parameters(datetime.date.today),
+    "TODAY": _iterate_no_parameters(datetime.datetime.utcnow().date),
     "TIME": _iterate_no_parameters(date_functions.get_time),
     "YESTERDAY": _iterate_no_parameters(date_functions.get_yesterday),
     "DATE": _iterate_single_parameter(date_functions.get_date),

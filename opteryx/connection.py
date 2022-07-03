@@ -15,15 +15,19 @@ This module provides a PEP-249 familiar interface for interacting with mabel dat
 stores, it is not compliant with the standard:
 https://www.python.org/dev/peps/pep-0249/
 """
+import datetime
 import time
 from typing import Dict, List, Optional, Tuple, Union
 
 from opteryx.engine.planner import QueryPlanner
 from opteryx.engine import QueryStatistics
+from opteryx.exceptions import CursorInvalidStateError, ProgrammingError, SqlError
 from opteryx.storage import BaseBufferCache, BasePartitionScheme, BaseStorageAdapter
 from opteryx.storage.adapters import DiskStorage
 from opteryx.storage.schemes import DefaultPartitionScheme, MabelPartitionScheme
 from opteryx.utils import arrow
+
+CURSOR_NOT_RUN = "Cursor must be in an executed state"
 
 
 class Connection:
@@ -58,9 +62,11 @@ class Connection:
         self._kwargs = kwargs
 
     def cursor(self):
+        """return a cursor object"""
         return Cursor(self)
 
     def close(self):
+        """exists for interface compatibility only"""
         pass
 
 
@@ -77,7 +83,6 @@ class Cursor:
         """
         Formats parameters to be passed to a Query.
         """
-        import datetime
         from decimal import Decimal
 
         if param is None:
@@ -105,24 +110,24 @@ class Cursor:
         if isinstance(param, (list, tuple, set)):
             return f"({','.join(map(self._format_prepared_param, param))})"
 
-        raise Exception(f"Query parameter of type '{type(param)}' is not supported.")
+        raise SqlError(f"Query parameter of type '{type(param)}' is not supported.")
 
     def execute(self, operation, params=None):
         if self._query is not None:
-            raise Exception("Cursor can only be executed once")
+            raise CursorInvalidStateError("Cursor can only be executed once")
 
         self._stats.start_time = time.time_ns()
 
         if params:
             if not isinstance(params, (list, tuple)):
-                raise Exception(
+                raise ProgrammingError(
                     "params must be a list or tuple containing the query parameter values"
                 )
 
             for param in params:
                 if operation.find("%s") == -1:
                     # we have too few placeholders
-                    raise Exception(
+                    raise ProgrammingError(
                         "Number of placeholders and number of parameters must match."
                     )
                 operation = operation.replace(
@@ -130,7 +135,7 @@ class Cursor:
                 )
             if operation.find("%s") != -1:
                 # we have too many placeholders
-                raise Exception(
+                raise ProgrammingError(
                     "Number of placeholders and number of parameters must match."
                 )
 
@@ -152,40 +157,46 @@ class Cursor:
     @property
     def rowcount(self):
         if self._results is None:
-            raise Exception("Cursor must be executed first")
+            raise CursorInvalidStateError(CURSOR_NOT_RUN)
         return self._results.count()
 
     @property
     def shape(self):
         if self._results is None:
-            raise Exception("Cursor must be executed first")
+            raise CursorInvalidStateError(CURSOR_NOT_RUN)
         return self._results.shape
 
     @property
     def stats(self):
+        """execution statistics"""
         self._stats.end_time = time.time_ns()
         return self._stats.as_dict()
 
     def warnings(self):
+        """list of run-time warnings"""
         return self._stats._warnings
 
     def fetchone(self) -> Optional[Dict]:
+        """fetch one record only"""
         if self._results is None:
-            raise Exception("Cursor must be executed first")
+            raise CursorInvalidStateError(CURSOR_NOT_RUN)
         return arrow.fetchone(self._results)
 
     def fetchmany(self, size=None) -> List[Dict]:
+        """fetch a given number of records"""
         fetch_size = self.arraysize if size is None else size
         if self._results is None:
-            raise Exception("Cursor must be executed first")
+            raise CursorInvalidStateError(CURSOR_NOT_RUN)
         return arrow.fetchmany(self._results, fetch_size)
 
     def fetchall(self) -> List[Dict]:
+        """fetch all matching records"""
         if self._results is None:
-            raise Exception("Cursor must be executed first")
+            raise CursorInvalidStateError(CURSOR_NOT_RUN)
         return arrow.fetchall(self._results)
 
     def close(self):
+        """close the connection"""
         self._connection.close()
 
     def __repr__(self):  # pragma: no cover

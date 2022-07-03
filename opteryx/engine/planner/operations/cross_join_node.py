@@ -191,6 +191,7 @@ class CrossJoinNode(BasePlanNode):
     def __init__(
         self, directives: QueryDirectives, statistics: QueryStatistics, **config
     ):
+        super().__init__(directives=directives, statistics=statistics)
         self._right_table = config.get("right_table")
         self._join_type = config.get("join_type", "CrossJoin")
 

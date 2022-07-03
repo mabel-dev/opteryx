@@ -38,6 +38,7 @@ class OuterJoinNode(BasePlanNode):
     def __init__(
         self, directives: QueryDirectives, statistics: QueryStatistics, **config
     ):
+        super().__init__(directives=directives, statistics=statistics)
         self._join_type = OUTER_JOINS[config.get("join_type")]
         self._on = config.get("join_on")
         self._using = config.get("join_using")

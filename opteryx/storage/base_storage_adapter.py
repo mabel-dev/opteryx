@@ -23,6 +23,7 @@ from typing import Iterable, List, Union
 
 class BaseStorageAdapter(abc.ABC):
     def __init__(self, *args, **kwargs):
+        """empty to allow super calls but nothing needs to be done"""
         pass
 
     def get_partitions(

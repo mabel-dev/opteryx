@@ -27,7 +27,6 @@ read time - e.g. 30s:21s where 20s is the read time).
 But, on high cardinality data (nearly unique columns), the performance is much faster,
 on a 10m record set, timings are 1:400 (50s:1220s where 20s is the read time).
 """
-from asyncio import create_subprocess_shell
 from typing import Iterable, List
 
 import numpy as np
@@ -38,6 +37,8 @@ from opteryx.engine import QueryDirectives, QueryStatistics
 from opteryx.engine.planner.operations import BasePlanNode
 from opteryx.exceptions import SqlError
 from opteryx.utils.columns import Columns
+
+COUNT_STAR: str = "COUNT(*)"
 
 # these functions can be applied to each group
 INCREMENTAL_AGGREGATES = {
@@ -98,8 +99,7 @@ class AggregateNode(BasePlanNode):
     def __init__(
         self, directives: QueryDirectives, statistics: QueryStatistics, **config
     ):
-
-        from opteryx.engine.attribute_types import TOKEN_TYPES
+        super().__init__(directives=directives, statistics=statistics)
 
         self._positions = []
         self._aggregates = []
@@ -168,7 +168,7 @@ class AggregateNode(BasePlanNode):
         count = 0
         for page in data_pages.execute():
             count += page.num_rows
-        table = pyarrow.Table.from_pylist([{"COUNT(*)": count}])
+        table = pyarrow.Table.from_pylist([{COUNT_STAR: count}])
         table = Columns.create_table_metadata(
             table=table,
             expected_rows=1,
@@ -247,10 +247,10 @@ class AggregateNode(BasePlanNode):
 
                     # Add the responses to the collector if it's COUNT(*)
                     if column_name == "COUNT(Wildcard)":
-                        if "COUNT(*)" in group_collector:
-                            group_collector["COUNT(*)"] += 1
+                        if COUNT_STAR in group_collector:
+                            group_collector[COUNT_STAR] += 1
                         else:
-                            group_collector["COUNT(*)"] = 1
+                            group_collector[COUNT_STAR] = 1
                     elif function == "COUNT":
                         if value:
                             if column_name in group_collector:
@@ -280,7 +280,7 @@ class AggregateNode(BasePlanNode):
         # count should return 0 rather than nothing
         if len(collector) == 0 and len(self._aggregates) == 1:
             if self._aggregates[0]["aggregate"] == "COUNT":
-                collector = {(): {"COUNT(*)": 0}}
+                collector = {(): {COUNT_STAR: 0}}
 
         buffer: List = []
         metadata = None

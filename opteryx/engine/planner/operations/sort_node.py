@@ -32,6 +32,7 @@ class SortNode(BasePlanNode):
     def __init__(
         self, directives: QueryDirectives, statistics: QueryStatistics, **config
     ):
+        super().__init__(directives=directives, statistics=statistics)
         self._order = config.get("order", [])
         self._mapped_order: List = []
 
@@ -59,7 +60,7 @@ class SortNode(BasePlanNode):
         data_pages = data_pages.execute()
         data_pages = tuple(data_pages)
 
-        if len([page for page in data_pages if page.num_rows == 0]):
+        if len([page for page in data_pages if page.num_rows == 0]) > 0:
             yield data_pages[0]
             return
 

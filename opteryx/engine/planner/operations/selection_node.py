@@ -27,9 +27,11 @@ is the value looked up from the record, the `op` is the operator and the `value`
 is a literal.
 """
 from typing import Iterable, Union
+from pyarrow import Table
+from numpy import union1d, intersect1d
 
 import numpy
-from pyarrow import Table
+import pyarrow
 
 from opteryx.engine.attribute_types import TOKEN_TYPES
 from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
@@ -110,9 +112,7 @@ def _evaluate(predicate: Union[tuple, list], table: Table):
                         arg_list.append(arg[0])
 
                 if len(arg_list) == 0:
-                    arg_list = [
-                        table.num_rows,
-                    ]
+                    arg_list = (table.num_rows,)
 
                 calculated_values = FUNCTIONS[function["function"]](*arg_list)
                 if isinstance(calculated_values, (pyarrow.lib.StringScalar)):
@@ -162,7 +162,7 @@ def _evaluate(predicate: Union[tuple, list], table: Table):
             # default to all selected
             mask = numpy.arange(table.num_rows, dtype=numpy.int32)
             for part in predicate:
-                mask = numpy.intersect1d(mask, _evaluate(part, table))
+                mask = intersect1d(mask, _evaluate(part, table))
             return mask  # type:ignore
 
         # Are all of the entries lists?
@@ -171,7 +171,7 @@ def _evaluate(predicate: Union[tuple, list], table: Table):
             # default to none selected
             mask = numpy.zeros(0, dtype=numpy.int32)
             for part in predicate:
-                mask = numpy.union1d(mask, _evaluate(part, table))  # type:ignore
+                mask = union1d(mask, _evaluate(part, table))  # type:ignore
             return mask  # type:ignore
 
         # if we're here the structure of the filter is wrong
@@ -191,8 +191,6 @@ def _evaluate_subqueries(predicate):
         and len(predicate) == 2
         and predicate[1] == TOKEN_TYPES.QUERY_PLAN
     ):
-        import pyarrow
-
         table_result = pyarrow.concat_tables(predicate[0].execute())
         if len(table_result) == 0:
             SqlError("Subquery in WHERE clause - column not found")
@@ -232,6 +230,7 @@ class SelectionNode(BasePlanNode):
     def __init__(
         self, directives: QueryDirectives, statistics: QueryStatistics, **config
     ):
+        super().__init__(directives=directives, statistics=statistics)
         self._filter = config.get("filter")
         self._unfurled_filter = None
         self._mapped_filter = None

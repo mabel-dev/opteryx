@@ -33,6 +33,7 @@ class EvaluationNode(BasePlanNode):
     def __init__(
         self, directives: QueryDirectives, statistics: QueryStatistics, **config
     ):
+        super().__init__(directives=directives, statistics=statistics)
         projection = config.get("projection", [])
         self.functions = [c for c in projection if "function" in c]
         self.aliases: list = []
