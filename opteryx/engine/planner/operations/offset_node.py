@@ -30,6 +30,7 @@ class OffsetNode(BasePlanNode):
     def __init__(
         self, directives: QueryDirectives, statistics: QueryStatistics, **config
     ):
+        super().__init__(directives=directives, statistics=statistics)
         self._offset = config.get("offset")
 
     @property

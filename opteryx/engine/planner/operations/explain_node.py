@@ -27,6 +27,7 @@ class ExplainNode(BasePlanNode):
     def __init__(
         self, directives: QueryDirectives, statistics: QueryStatistics, **config
     ):
+        super().__init__(directives=directives, statistics=statistics)
         self._query_plan = config.get("query_plan")
 
     @property

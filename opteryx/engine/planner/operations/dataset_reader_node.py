@@ -91,7 +91,7 @@ class DatasetReaderNode(BasePlanNode):
         The Dataset Reader Node is responsible for reading the relevant blobs
         and returning a Table/Relation.
         """
-        super().__init__(directives=directives, statistics=statistics, **config)
+        super().__init__(directives=directives, statistics=statistics)
 
         from opteryx.engine.planner.planner import QueryPlanner
 

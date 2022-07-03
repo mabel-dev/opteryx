@@ -27,7 +27,6 @@ read time - e.g. 30s:21s where 20s is the read time).
 But, on high cardinality data (nearly unique columns), the performance is much faster,
 on a 10m record set, timings are 1:400 (50s:1220s where 20s is the read time).
 """
-from asyncio import create_subprocess_shell
 from typing import Iterable, List
 
 import numpy as np
@@ -98,8 +97,7 @@ class AggregateNode(BasePlanNode):
     def __init__(
         self, directives: QueryDirectives, statistics: QueryStatistics, **config
     ):
-
-        from opteryx.engine.attribute_types import TOKEN_TYPES
+        super().__init__(directives=directives, statistics=statistics)
 
         self._positions = []
         self._aggregates = []

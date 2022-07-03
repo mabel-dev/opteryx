@@ -42,6 +42,7 @@ class ProjectionNode(BasePlanNode):
         """
         Attribute Projection, remove unwanted columns and performs column renames.
         """
+        super().__init__(directives=directives, statistics=statistics)
         self._projection: dict = {}
 
         projection = config.get("projection", {"*": "*"})

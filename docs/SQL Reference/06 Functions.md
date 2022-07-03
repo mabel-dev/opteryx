@@ -49,7 +49,7 @@ Function        | Description                                       | Example
 
 Recognized date parts and periods and support across various functions:
 
-Part     | `DATE_TRUNC`              | `EXTRACT`                 | Notes
+Part     | DATE_TRUNC                | EXTRACT                   | Notes
 -------- | ------------------------- | ------------------------- | -------------
 second   | :fontawesome-solid-check: | :fontawesome-solid-check: |
 minute   | :fontawesome-solid-check: | :fontawesome-solid-check: |

@@ -19,6 +19,7 @@ Gives information about a dataset's columns
 """
 from functools import reduce
 from typing import Iterable
+from numpy import nan, nanmin, nanmax
 
 import numpy
 import orjson
@@ -107,18 +108,18 @@ def _full_collector(pages):
             # calculate the missing count more robustly
             missing = reduce(
                 lambda x, y: x + 1,
-                (i for i in column_data if i in (None, numpy.nan) or not i.is_valid),
+                (i for i in column_data if i in (None, nan) or not i.is_valid),
                 0,
             )
             profile["missing"] += missing
 
             if _type == OPTERYX_TYPES.NUMERIC:
                 if profile["min"]:
-                    profile["min"] = min(profile["min"], numpy.nanmin(column_data))
-                    profile["max"] = max(profile["max"], numpy.nanmax(column_data))
+                    profile["min"] = min(profile["min"], nanmin(column_data))
+                    profile["max"] = max(profile["max"], nanmax(column_data))
                 else:
-                    profile["min"] = numpy.nanmin(column_data)
-                    profile["max"] = numpy.nanmax(column_data)
+                    profile["min"] = nanmin(column_data)
+                    profile["max"] = nanmax(column_data)
 
             profile_collector[column] = profile
 
@@ -359,6 +360,7 @@ class ShowColumnsNode(BasePlanNode):
     def __init__(
         self, directives: QueryDirectives, statistics: QueryStatistics, **config
     ):
+        super().__init__(directives=directives, statistics=statistics)
         self._full = config.get("full")
         self._extended = config.get("extended")
 

@@ -12,24 +12,28 @@
 
 
 def satellites():
-    from .satellite_data import SatelliteData
+    """load the satellite sample data"""
+    from .satellite_data import load
 
-    return SatelliteData().get()
+    return load()
 
 
 def planets():
-    from .planet_data import PlanetData
+    """load the planets sample data"""
+    from .planet_data import load
 
-    return PlanetData().get()
+    return load()
 
 
 def astronauts():
-    from .astronaut_data import AstronautData
+    """load the astronaut sample data"""
+    from .astronaut_data import load
 
-    return AstronautData().get()
+    return load()
 
 
 def no_table():
-    from .no_table_data import NoTable
+    """load the null data table"""
+    from .no_table_data import load
 
-    return NoTable().get()
+    return load()
