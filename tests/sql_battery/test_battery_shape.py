@@ -402,6 +402,8 @@ STATEMENTS = [
         ("SELECT * FROM tests.data.nulls WHERE username NOT ILIKE 'BBC%' FOR '2000-01-01'", 21, 5),
         ("SELECT * FROM tests.data.nulls WHERE username ~ 'BBC.+' FOR '2000-01-01'", 3, 5),
         ("SELECT * FROM tests.data.nulls WHERE tweet ILIKE '%Trump%' FOR '2000-01-01'", 0, 5),
+        # BYTE-ARRAY FAILS #252
+        (b"SELECT * FROM $satellites", 177, 8),
     ]
 # fmt:on
 

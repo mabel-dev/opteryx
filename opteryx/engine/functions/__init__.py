@@ -21,7 +21,7 @@ from cityhash import CityHash64
 from pyarrow import compute
 
 import opteryx
-from opteryx.engine.functions import other_functions, date_functions
+from opteryx.engine.functions import other_functions, date_functions, string_functions
 from opteryx.exceptions import SqlError
 from opteryx.third_party.date_trunc import date_trunc
 from opteryx.utils.dates import parse_iso
@@ -151,7 +151,7 @@ FUNCTIONS = {
     "UPPER": compute.utf8_upper,  # UPPER(str) -> str
     "LOWER": compute.utf8_lower,  # LOWER(str) -> str
     "TRIM": compute.utf8_trim_whitespace,  # TRIM(str) -> str
-    "LEFT": _iterate_double_parameter(lambda x, y: str(x)[: int(y)]),
+    "LEFT": string_functions._string_slicer_left,
     "RIGHT": _iterate_double_parameter(lambda x, y: str(x)[-int(y) :]),
     # HASHING & ENCODING
     "HASH": _iterate_single_parameter(lambda x: format(CityHash64(str(x)), "X")),
