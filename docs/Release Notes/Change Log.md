@@ -15,6 +15,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - [[#35](https://github.com/mabel-dev/opteryx/issues/35)] Table scan planning done during query planning. ([@joocer](https://github.com/joocer))   
 - [[#173](https://github.com/mabel-dev/opteryx/issues/173)] Data not found raises different errors under different scenarios. ([@joocer](https://github.com/joocer))
 
+**Fixed**
+
+- [[#252](https://github.com/mabel-dev/opteryx/issues/252)] Planner should gracefully convert byte strings to ascii strings. ([@joocer](https://github.com/joocer))
 
 ### [0.1.0] - 2022-07-02
 

@@ -9,3 +9,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+import numpy
+
+def _string_slicer_left(arr, length):
+    length = int(length)  # it's probably a float64
+    arr = arr.astype(str)  # it's probably an array of objects
+    interim = arr.view((str,1)).reshape(len(arr),-1)[:,0:length]
+    return [numpy.array(interim).view((str,length)).flatten()]

@@ -105,6 +105,11 @@ class QueryPlanner(ExecutionTree):
     def create_plan(self, sql: str = None, ast: dict = None):
 
         if sql:
+
+            # if it's a byte string, convert to an ascii string
+            if isinstance(sql, bytes):
+                sql = sql.decode()
+
             import sqloxide
 
             # extract temporal filters, this isn't supported by sqloxide
@@ -116,7 +121,7 @@ class QueryPlanner(ExecutionTree):
                 # identifiers to start with _ (underscore) and $ (dollar sign)
                 # https://github.com/sqlparser-rs/sqlparser-rs/blob/main/src/dialect/mysql.rs
             except ValueError as exception:  # pragma: no cover
-                raise SqlError(exception)
+                raise SqlError from exception
         else:
             self._ast = ast
 
