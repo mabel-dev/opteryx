@@ -82,11 +82,11 @@ Function            | Description                                       | Exampl
 `BOOLEAN(str)`      | Convert input to a Boolean                        | `BOOLEAN('true') -> True`
 `CAST(any AS type)` | Cast any to type, calls `type(any)`               | `CAST(state AS BOOLEAN) -> False`
 `COALESCE(args)`    | Return the first item from args which is not None | `CAST(university, high_school) -> 'Olympia High'`  
-`GENERATE_SERIES(stop)`              | `NUMERIC` series between 1 and 'stop', with a step of 1                  | `GENERATE_SERIES(2) -> (1,2)`   
-`GENERATE_SERIES(start, stop)`       | `NUMERIC` series between 'start' and 'stop', with a step of 1            | `GENERATE_SERIES(2,4) -> (2,3,4)`
-`GENERATE_SERIES(start, stop, step)` | `NUMERIC` series between 'start' and 'stop', with an explicit step size  | `GENERATE_SERIES(2, 6, 2) -> (2,4,6)`
-`GENERATE_SERIES(start, stop, interval)` | `TIMESTAMP` series between 'start' and 'stop', with a given interval | `GENERATE_SERIES('2022-01-01', '2023-12-31, '1y') -> ('2022-01-01')`
-`GENERATE_SERIES(cidr)`              | Set of IP addresses from a given CIDR | `GENERATE_SERIES('192.168.1.1/32') -> ('192.168.1.1')`
+`GENERATE_SERIES(stop)` :fontawesome-solid-asterisk: | `NUMERIC` series between 1 and 'stop', with a step of 1                  | `GENERATE_SERIES(2) -> (1,2)`   
+`GENERATE_SERIES(start, stop)` :fontawesome-solid-asterisk: | `NUMERIC` series between 'start' and 'stop', with a step of 1            | `GENERATE_SERIES(2,4) -> (2,3,4)`
+`GENERATE_SERIES(start, stop, step)` :fontawesome-solid-asterisk: | `NUMERIC` series between 'start' and 'stop', with an explicit step size  | `GENERATE_SERIES(2, 6, 2) -> (2,4,6)`
+`GENERATE_SERIES(start, stop, interval)` :fontawesome-solid-asterisk: | `TIMESTAMP` series between 'start' and 'stop', with a given interval | `GENERATE_SERIES('2022-01-01', '2023-12-31, '1y') -> ('2022-01-01')`
+`GENERATE_SERIES(cidr)` :fontawesome-solid-asterisk:             | Set of IP addresses from a given CIDR | `GENERATE_SERIES('192.168.1.1/32') -> ('192.168.1.1')`
 `GET(list, n)` :fontawesome-solid-asterisk: | Gets the nth element in a list, also `list[n]`    | `GET(names, 2) -> 'Joe'`
 `GET(struct, a)` :fontawesome-solid-asterisk: | Gets the element called 'a' from a struct, also `struct[a]` | `GET(dict, 'key') -> 'value'`
 `HASH(str)`         | Calculate the [CityHash](https://opensource.googleblog.com/2011/04/introducing-cityhash.html) (64 bit) of a value  | `HASH('hello') -> 'B48BE5A931380CE8'`
