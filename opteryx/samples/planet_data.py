@@ -16,7 +16,7 @@ planets
 
 This is a sample dataset build into the engine, this simplifies a few things:
 
-- We can write test scripts using this data, knowing that it will always be available. 
+- We can write test scripts using this data, knowing that it will always be available.
 - We can write examples using this data, knowing the results will always match.
 
 This data was obtained from:

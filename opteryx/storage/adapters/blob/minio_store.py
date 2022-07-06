@@ -8,15 +8,15 @@ from opteryx.utils import paths
 try:
     from minio import Minio  # type:ignore
 
-    minio_installed = True
+    MINIO_INSTALLED = True
 except ImportError:  # pragma: no cover
-    minio_installed = False
+    MINIO_INSTALLED = False
 
 
 class MinIoStorage(BaseStorageAdapter):
     def __init__(self, end_point: str, access_key: str, secret_key: str, **kwargs):
 
-        if not minio_installed:  # pragma: no cover
+        if not MINIO_INSTALLED:  # pragma: no cover
             raise MissingDependencyError(
                 "`minio` is missing, please install or include in requirements.txt"
             )

@@ -88,9 +88,18 @@ def cast(_type):
 
 
 def _iterate_no_parameters(func):
+    # call the function for each row, this is primarily to support "RANDOM"
     def _inner(items):
         for i in range(items):
             yield [func()]
+
+    return _inner
+
+
+def _repeat_no_parameters(func):
+    # call once and repeat
+    def _inner(items):
+        return [[func()] * items]
 
     return _inner
 
@@ -99,18 +108,22 @@ def _iterate_single_parameter(func):
     def _inner(array):
         if isinstance(array, str):
             array = [array]
-        for a in array:
-            yield [func(a)]
+        for item in array:
+            yield [func(item)]
 
     return _inner
 
 
 def _iterate_double_parameter(func):
-    def _inner(array, p1):
+    """
+    for functions called FUNCTION(field, literal)
+    """
+
+    def _inner(array, literal):
         if isinstance(array, str):
             array = [array]
-        for a in array:
-            yield [func(a, p1)]
+        for item in array:
+            yield [func(item, literal)]
 
     return _inner
 
@@ -136,9 +149,13 @@ def get_len(obj):
     return None
 
 
+def _raise_exception(text):
+    raise SqlError(text)
+
+
 # fmt:off
 FUNCTIONS = {
-    "VERSION": _iterate_no_parameters(get_version),
+    "VERSION": _repeat_no_parameters(get_version),
     # TYPE CONVERSION
     "TIMESTAMP": cast("TIMESTAMP"),
     "BOOLEAN": cast("BOOLEAN"),
@@ -151,7 +168,7 @@ FUNCTIONS = {
     "UPPER": compute.utf8_upper,  # UPPER(str) -> str
     "LOWER": compute.utf8_lower,  # LOWER(str) -> str
     "TRIM": compute.utf8_trim_whitespace,  # TRIM(str) -> str
-    "LEFT": string_functions._string_slicer_left,
+    "LEFT": string_functions.string_slicer_left,
     "RIGHT": _iterate_double_parameter(lambda x, y: str(x)[-int(y) :]),
     # HASHING & ENCODING
     "HASH": _iterate_single_parameter(lambda x: format(CityHash64(str(x)), "X")),
@@ -159,11 +176,11 @@ FUNCTIONS = {
     "RANDOM": _iterate_no_parameters(get_random),  # return a random number 0-0.999
     # OTHER
     "GET": _iterate_double_parameter(_get),  # GET(LIST, index) => LIST[index] or GET(STRUCT, accessor) => STRUCT[accessor]
-    "LIST_CONTAINS": _iterate_double_parameter(other_functions._list_contains),
-    "LIST_CONTAINS_ANY": _iterate_double_parameter(other_functions._list_contains_any),
-    "LIST_CONTAINS_ALL": _iterate_double_parameter(other_functions._list_contains_all),
-    "SEARCH": other_functions._search,
-    "COALESCE": other_functions._coalesce,
+    "LIST_CONTAINS": _iterate_double_parameter(other_functions.list_contains),
+    "LIST_CONTAINS_ANY": _iterate_double_parameter(other_functions.list_contains_any),
+    "LIST_CONTAINS_ALL": _iterate_double_parameter(other_functions.list_contains_all),
+    "SEARCH": other_functions.search,
+    "COALESCE": other_functions.coalesce,
     # NUMERIC
     "ROUND": compute.round,
     "FLOOR": compute.floor,
@@ -176,10 +193,10 @@ FUNCTIONS = {
     # DATES & TIMES
     "DATE_TRUNC": _iterate_double_parameter_field_second(date_trunc),
     "DATEPART": date_functions.date_part,
-    "NOW": _iterate_no_parameters(datetime.datetime.utcnow),
-    "TODAY": _iterate_no_parameters(datetime.datetime.utcnow().date),
-    "TIME": _iterate_no_parameters(date_functions.get_time),
-    "YESTERDAY": _iterate_no_parameters(date_functions.get_yesterday),
+    "NOW": _repeat_no_parameters(datetime.datetime.utcnow),
+    "TODAY": _repeat_no_parameters(datetime.datetime.utcnow().date),
+    "TIME": _repeat_no_parameters(date_functions.get_time),
+    "YESTERDAY": _repeat_no_parameters(date_functions.get_yesterday),
     "DATE": _iterate_single_parameter(date_functions.get_date),
     "YEAR": compute.year,
     "MONTH": compute.month,
@@ -190,9 +207,14 @@ FUNCTIONS = {
     "SECOND": compute.second,
     "QUARTER": compute.quarter,
 
+    "ON": lambda x: _raise_exception("`DISTINCT ON` is not supported")
+
 }
 # fmt:on
 
 
 def is_function(name):
+    """
+    sugar
+    """
     return name.upper() in FUNCTIONS

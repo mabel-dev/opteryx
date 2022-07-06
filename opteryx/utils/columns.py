@@ -115,7 +115,7 @@ class Columns:
     def add_alias(self, column, alias):
         """add aliases to a column"""
         if not isinstance(alias, (list, tuple)):
-            alias = [alias]
+            alias = (alias,)
         self._column_metadata[column]["aliases"].extend(alias)
 
     def remove_alias(self, column, alias):
@@ -152,8 +152,8 @@ class Columns:
         If we're expecting only_one match, we fail if that's not what we find.
         """
         matches = []
-        for k, v in self._column_metadata.items():
-            matches.extend([k for alias in v.get("aliases", []) if alias == column])
+        for col, att in self._column_metadata.items():
+            matches.extend([col for alias in att.get("aliases", []) if alias == column])
         if only_one:
             if len(matches) == 0:
 
@@ -162,8 +162,7 @@ class Columns:
                     raise SqlError(
                         f"Field `{column}` does not exist, did you mean `{best_match}`?"
                     )
-                else:
-                    raise SqlError(f"Field `{column}` does not exist.")
+                raise SqlError(f"Field `{column}` does not exist.")
             if len(matches) > 1:
                 raise SqlError(
                     f"Field `{column}` is ambiguous, try qualifying the field name."

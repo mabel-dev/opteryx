@@ -27,7 +27,10 @@ STATEMENTS = [
         ("SELECT * EXCEPT id FROM $satellites"),
 
         # TEMPORAL QUERIES aren't part of the AST
-        ("SELECT * FROM CUSTOMERS FOR SYSTEM_TIME ('2022-01-01', '2022-12-31')")
+        ("SELECT * FROM CUSTOMERS FOR SYSTEM_TIME ('2022-01-01', '2022-12-31')"),
+
+        # DISTINCT ON detects as a function call for function ON
+        ("SELECT DISTINCT ON (name) FROM $astronauts ORDER BY 1"),
     ]
 # fmt:on
 

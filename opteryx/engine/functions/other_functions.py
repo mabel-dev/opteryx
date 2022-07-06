@@ -17,25 +17,34 @@ from pyarrow import compute
 from opteryx.utils import dates
 
 
-def _list_contains(array, item):
+def list_contains(array, item):
+    """
+    does array contain item
+    """
     if array is None:
         return False
     return item in set(array)
 
 
-def _list_contains_any(array, items):
+def list_contains_any(array, items):
+    """
+    does array contain any of the items in items
+    """
     if array is None:
         return False
     return set(array).intersection(items) != set()
 
 
-def _list_contains_all(array, items):
+def list_contains_all(array, items):
+    """
+    does array contain all of the items in items
+    """
     if array is None:
         return False
     return set(array).issuperset(items)
 
 
-def _search(array, item):
+def search(array, item):
     """
     `search` provides a way to look for values across different field types, rather
     than doing a LIKE on a string, IN on a list, `search` adapts to the field type.
@@ -62,29 +71,34 @@ def _search(array, item):
     return [[False] * array.shape[0]]
 
 
-def _coalesce(*args):
-    def _make_list(arr, length):
-        if not isinstance(arr, numpy.ndarray):
-            return [arr] * length
+def _inner_coalesce(iterable):
+    for element in iterable:
+        if element is not None and (element == element):  # nosemgrep
+            if isinstance(element, numpy.datetime64):
+                element = dates.parse_iso(element)
+            # print(f"returning {element}, {type(element)}, {iterable}")
+            return element
+    return None
 
+
+def _make_list(arr, length):
+    if not isinstance(arr, numpy.ndarray):
+        return [arr] * length
+
+
+def coalesce(*args):
+    """
+    Iterate each of the args and return the first non-null value
+    """
     cycles = max([0] + [len(a) for a in args if isinstance(a, numpy.ndarray)])
     if cycles == 0:
         raise Exception("something has gone wrong")
 
     my_args = list(args)
 
-    for i in range(len(args)):
-        if not isinstance(args[i], numpy.ndarray):
-            my_args[i] = _make_list(args[i], cycles)
-
-    def inner_coalesce(iterable):
-        for element in iterable:
-            if element is not None and (element == element):  # nosemgrep
-                if isinstance(element, numpy.datetime64):
-                    element = dates.parse_iso(element)
-                # print(f"returning {element}, {type(element)}, {iterable}")
-                return element
-        return None
+    for i, val in enumerate(args):
+        if not isinstance(val, numpy.ndarray):
+            my_args[i] = _make_list(val, cycles)
 
     for row in zip(*my_args):
-        yield [inner_coalesce(row)]
+        yield [_inner_coalesce(row)]

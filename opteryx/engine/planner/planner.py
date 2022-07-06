@@ -42,6 +42,7 @@ temporal aspects out of the query.
 """
 import datetime
 import numpy
+import pyarrow
 
 from opteryx.engine.attribute_types import TOKEN_TYPES
 from opteryx.engine.functions import is_function
@@ -51,6 +52,8 @@ from opteryx.engine.planner.temporal import extract_temporal_filters
 from opteryx.engine.query_directives import QueryDirectives
 from opteryx.exceptions import SqlError
 from opteryx.utils import dates
+from opteryx.utils.columns import Columns
+
 
 OPERATOR_XLAT = {
     "Eq": "=",
@@ -92,6 +95,7 @@ class QueryPlanner(ExecutionTree):
         return "QueryPlanner"
 
     def copy(self):
+        """copy a plan"""
         planner = QueryPlanner(
             statistics=self._statistics,
             reader=self._reader,
@@ -848,10 +852,6 @@ class QueryPlanner(ExecutionTree):
             last_node = "limit"
 
     def explain(self):
-
-        import pyarrow
-        from opteryx.utils.columns import Columns
-
         def _inner_explain(node, depth):
             if depth == 1:
                 operator = self.get_operator(node)

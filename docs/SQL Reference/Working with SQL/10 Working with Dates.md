@@ -1,5 +1,49 @@
-# Working with Dates
+# Working with Dates and Timestamps
 
+## Actions
+<!---
+### Add/Subtract
 
-- EXTRACT is usually faster than DATE_TRUNC but DATE_TRUNC is more functionally rich
-- EXTRACT is preferred over the individual extractors (YEAR, MONTH, DAY etc)
+### Construct
+--->
+### Extract
+
+~~~
+EXTRACT(part FROM timestamp)
+~~~
+~~~
+DATE()
+~~~
+
+<!---
+### Format
+--->
+### Parse
+
+~~~
+CAST(field AS TIMESTAMP)
+~~~
+~~~
+TIMESTAMP(field)
+~~~
+
+### Truncate
+
+~~~
+DATE_TRUNC()
+~~~
+
+### Generate
+
+~~~
+NOW()
+~~~
+~~~
+TODAY()
+~~~
+~~~
+YESTERDAY()
+~~~
+~~~
+TIME()
+~~~
