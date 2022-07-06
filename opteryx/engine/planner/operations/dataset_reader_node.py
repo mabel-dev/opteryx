@@ -198,7 +198,7 @@ class DatasetReaderNode(BasePlanNode):
                     self._read_and_parse,
                     [
                         (path, self._reader.read_blob, parser, self._cache)
-                        for path, parser in partition["blob_list"]
+                        for path, parser in sorted(partition["blob_list"])
                     ],
                     plasma_channel,
                 ):
