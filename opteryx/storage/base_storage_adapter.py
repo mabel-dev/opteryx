@@ -74,7 +74,7 @@ class BaseStorageAdapter(abc.ABC):
         """
         raise NotImplementedError("get_blob_list not implemented")
 
-    def read_blob(self, blob: str) -> bytes:
+    def read_blob(self, blob_name: str) -> bytes:
         """
         Return a filelike object
         """

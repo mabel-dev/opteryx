@@ -215,6 +215,7 @@ STATEMENTS = [
 
         ("SELECT RANDOM()", 1, 1),
         ("SELECT NOW()", 1, 1),
+        ("SELECT NOW() from $planets", 9, 1),
         ("SELECT TODAY()", 1, 1),
         ("SELECT HASH('hello')", 1, 1),
         ("SELECT MD5('hello')", 1, 1),
@@ -362,6 +363,8 @@ STATEMENTS = [
         ("SELECT EXTRACT(dow FROM birth_date) FROM $astronauts", 357, 1),
         ("SELECT EXTRACT(DOW FROM birth_date) FROM $astronauts", 357, 1),
         ("SELECT EXTRACT(YEAR FROM '2022-02-02')", 1, 1),
+
+        ("SELECT * FROM tests.data.schema WITH(NO_PARTITION) ORDER BY 1", 2, 4),
 
         # These are queries which have been found to return the wrong result or not run correctly
         # FILTERING ON FUNCTIONS

@@ -19,7 +19,7 @@ Retrieve rows from zero or more relations.
 
 ~~~sql
 SELECT [ DISTINCT ] select_list
-FROM relation [WITH (NOCACHE)]
+FROM relation [WITH (NO_CACHE,NO_PARTITION)]
   [ INNER ] JOIN relation
     USING (column)
   CROSS JOIN relation

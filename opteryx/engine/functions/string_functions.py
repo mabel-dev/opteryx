@@ -13,7 +13,14 @@
 import numpy
 
 
-def _string_slicer_left(arr, length):
+def string_slicer_left(arr, length):
+    """
+    slice a list of strings from the left
+    """
+    if len(arr) == 0:
+        return [[]]
+    if length == 0:
+        return [[""] * len(arr)]
     length = int(length)  # it's probably a float64
     arr = arr.astype(str)  # it's probably an array of objects
     interim = arr.view((str, 1)).reshape(len(arr), -1)[:, 0:length]

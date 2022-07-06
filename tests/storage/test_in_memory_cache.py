@@ -43,7 +43,7 @@ def test_in_memory_cache():
     # read the data with the no cache directive
     conn = opteryx.connect(reader=DiskStorage(), cache=cache, partition_scheme=None)
     cur = conn.cursor()
-    cur.execute("SELECT * FROM tests.data.tweets WITH (NOCACHE);")
+    cur.execute("SELECT * FROM tests.data.tweets WITH (NO_CACHE);")
     for record in cur.fetchall():
         # we just want to make sure we consume the data
         pass

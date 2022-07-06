@@ -18,6 +18,7 @@ This is a SQL Query Execution Plan Node.
 This Node reads and parses the data from a dataset into a Table.
 """
 import datetime
+import pyarrow
 import time
 
 from enum import Enum
@@ -30,6 +31,7 @@ from opteryx.exceptions import DatabaseError
 from opteryx.storage import file_decoders
 from opteryx.storage.adapters import DiskStorage
 from opteryx.storage.schemes import MabelPartitionScheme
+from opteryx.storage.schemes import DefaultPartitionScheme
 from opteryx.utils.columns import Columns
 
 
@@ -65,9 +67,25 @@ def _normalize_to_schema(table, schema, statistics):
         schema = table.schema
         return table, schema
 
-    # add missing columns
     # remove unwanted columns
-    # cast null columns
+    table = table.select([name for name in schema.names if name in table.schema.names])
+
+    # add missing columns
+    for column in [name for name in schema.names if name not in table.schema.names]:
+        table = table.append_column(column, [[None] * table.num_rows])
+
+    # cast mismtched columns
+    # the orders may be different - so build hash tables for comparing
+    first_types = dict(zip(schema.names, schema.types))
+    this_types = dict(zip(table.schema.names, table.schema.types))
+
+    for column in schema.names:
+        if first_types[column] != this_types[column]:
+            index = table.column_names.index(column)
+            my_schema = table.schema.set(
+                index, pyarrow.field(column, first_types[column])
+            )
+            table = table.cast(target_schema=my_schema)
 
     return table, schema
 
@@ -95,12 +113,17 @@ class DatasetReaderNode(BasePlanNode):
         self._dataset = self._dataset.replace(".", "/") + "/"
         self._reader = config.get("reader", DiskStorage())
 
-        self._no_cache = "NOCACHE" in config.get("hints", [])
+        self._no_cache = "NO_CACHE" in config.get("hints", [])
         if self._no_cache:
             self._cache = None
         else:
             self._cache = config.get("cache")
-        self._partition_scheme = config.get("partition_scheme", MabelPartitionScheme())
+        if "NO_PARTITION" in config.get("hints", []):
+            self._partition_scheme = DefaultPartitionScheme("")
+        else:
+            self._partition_scheme = config.get(
+                "partition_scheme", MabelPartitionScheme()
+            )
 
         self._start_date = config.get("start_date", today)
         self._end_date = config.get("end_date", today)
@@ -175,7 +198,7 @@ class DatasetReaderNode(BasePlanNode):
                     self._read_and_parse,
                     [
                         (path, self._reader.read_blob, parser, self._cache)
-                        for path, parser in partition["blob_list"]
+                        for path, parser in sorted(partition["blob_list"])
                     ],
                     plasma_channel,
                 ):
