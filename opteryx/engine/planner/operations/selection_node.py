@@ -114,9 +114,14 @@ def _evaluate(predicate: Union[tuple, list], table: Table):
                 if len(arg_list) == 0:
                     arg_list = (table.num_rows,)  # type: ignore
 
-                calculated_values = FUNCTIONS[function["function"]](*arg_list)
+                return_type, executor = FUNCTIONS[function["function"]]
+                calculated_values = executor(*arg_list)
                 if isinstance(calculated_values, (pyarrow.lib.StringScalar)):
                     calculated_values = [[calculated_values.as_py()]]
+                if return_type:
+                    calculated_values = pyarrow.array(
+                        calculated_values, type=return_type
+                    )
                 table = pyarrow.Table.append_column(
                     table, predicate[0], calculated_values
                 )

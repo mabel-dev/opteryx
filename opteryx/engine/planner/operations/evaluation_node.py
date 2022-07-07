@@ -19,6 +19,7 @@ This performs aliases and resolves function calls.
 """
 from typing import Iterable
 
+import numpy
 import pyarrow
 
 from opteryx.engine.attribute_types import TOKEN_TYPES
@@ -96,9 +97,14 @@ class EvaluationNode(BasePlanNode):
                 if len(arg_list) == 0:
                     arg_list = [page.num_rows]
 
-                calculated_values = FUNCTIONS[function["function"]](*arg_list)
+                return_type, executor = FUNCTIONS[function["function"]]
+                calculated_values = executor(*arg_list)
                 if isinstance(calculated_values, (pyarrow.lib.StringScalar)):
                     calculated_values = [[calculated_values.as_py()]]
+                if return_type:
+                    calculated_values = pyarrow.array(
+                        calculated_values, type=return_type
+                    )
                 page = pyarrow.Table.append_column(
                     page, function["column_name"], calculated_values
                 )

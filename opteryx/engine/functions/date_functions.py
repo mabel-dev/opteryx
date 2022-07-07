@@ -11,6 +11,7 @@
 # limitations under the License.
 import datetime
 import numpy
+import pyarrow
 
 from pyarrow import compute
 
@@ -52,7 +53,7 @@ def get_date(timestamp):
     return None
 
 
-def date_part(interval, arr):
+def date_part(part, arr):
     """
     Also the EXTRACT function - we extract a given part from an array of dates
     """
@@ -75,8 +76,51 @@ def date_part(interval, arr):
     if not hasattr(arr, "__iter__"):
         arr = numpy.array([arr])
 
-    interval = interval.lower()
-    if interval in extractors:
-        return extractors[interval](arr)
+    part = part.lower()
+    if part in extractors:
+        return extractors[part](arr)
 
-    raise SqlError(f"Unsupported date part `{interval}`")  # pragma: no cover
+    raise SqlError(f"Date part `{part}` unsupported for EXTRACT")  # pragma: no cover
+
+
+def date_diff(part, start, end):
+    """calculate the difference between timestamps"""
+
+    extractors = {
+        "days": compute.days_between,
+        "hours": compute.hours_between,
+        "microseconds": compute.microseconds_between,
+        "minutes": compute.minutes_between,
+        "months": compute.month_interval_between,  # this one doesn't work
+        "quarters": compute.quarters_between,
+        "seconds": compute.seconds_between,
+        "weeks": compute.weeks_between,
+        "years": compute.years_between,
+    }
+
+    # if we get date literals
+    if isinstance(start, str):
+        if not isinstance(end, (str, datetime.datetime)):
+            start = pyarrow.array(
+                [parse_iso(start)] * len(end), type=pyarrow.timestamp("us")
+            )
+        else:
+            start = pyarrow.array([parse_iso(start)], type=pyarrow.timestamp("us"))
+    if isinstance(end, str):
+        if not isinstance(start, (str, datetime.datetime)):
+            end = pyarrow.array(
+                [parse_iso(end)] * len(start), type=pyarrow.timestamp("us")
+            )
+        else:
+            end = pyarrow.array([parse_iso(end)], type=pyarrow.timestamp("us"))
+
+    part = part.lower()
+    if part[-1] != "s":
+        part += "s"
+    if part in extractors:
+        diff = extractors[part](start, end)
+        if not hasattr(diff, "__iter__"):
+            diff = numpy.array([diff])
+        return [i.as_py() for i in diff]
+
+    raise SqlError(f"Date part '{part}' unsupported for DATEDIFF")

@@ -1,9 +1,13 @@
-# Working with Dates and Timestamps
+# Working with Timestamps
 
 ## Actions
-<!---
+
 ### Add/Subtract
 
+~~~
+DATEDIFF(part, start, end)
+~~~
+<!---
 ### Construct
 --->
 ### Extract
@@ -12,7 +16,7 @@
 EXTRACT(part FROM timestamp)
 ~~~
 ~~~
-DATE()
+DATE(timestamp)
 ~~~
 
 <!---
@@ -30,7 +34,7 @@ TIMESTAMP(field)
 ### Truncate
 
 ~~~
-DATE_TRUNC()
+DATE_TRUNC(part, timestamp)
 ~~~
 
 ### Generate

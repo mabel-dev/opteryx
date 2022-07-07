@@ -14,9 +14,8 @@ import abc
 
 
 class BasePartitionScheme(abc.ABC):
-    def __init__(self):
-        """empty to allow super calls, but nothing needs to be done"""
-        pass
+    """Implement a partition scheme"""
 
     def filter_blobs(self, list_of_blobs, statistics):
+        """filter the blobs acording to the chosen scheme"""
         raise NotImplementedError()

@@ -164,7 +164,9 @@ STATEMENTS = [
         ("SELECT ROUND(magnitude) FROM $satellites group by ROUND(magnitude)", 27, 1),
         ("SELECT VARCHAR(planetId), COUNT(*) FROM $satellites GROUP BY 1", 7, 2),
         ("SELECT LEFT(name, 1), COUNT(*) FROM $satellites GROUP BY 1 ORDER BY 2 DESC", 21, 2),
-        ("SELECT LEFT(name, 1) as le, COUNT(*) FROM $satellites GROUP BY 1 ORDER BY 2 DESC", 21, 2),
+        ("SELECT LEFT(name, 2) as le, COUNT(*) FROM $satellites GROUP BY 1 ORDER BY 2 DESC", 87, 2),
+        ("SELECT RIGHT(name, 10), COUNT(*) FROM $satellites GROUP BY 1 ORDER BY 2 DESC", 177, 2),
+        ("SELECT RIGHT(name, 2) as le, COUNT(*) FROM $satellites GROUP BY 1 ORDER BY 2 DESC", 30, 2),
         ("SELECT round(magnitude) FROM $satellites group by round(magnitude)", 27, 1),
         ("SELECT upper(name) as NAME, id as Identifier FROM $satellites", 177, 2),
         ("SELECT upper(name), lower(name), id as Identifier FROM $satellites", 177, 3),
@@ -363,6 +365,10 @@ STATEMENTS = [
         ("SELECT EXTRACT(dow FROM birth_date) FROM $astronauts", 357, 1),
         ("SELECT EXTRACT(DOW FROM birth_date) FROM $astronauts", 357, 1),
         ("SELECT EXTRACT(YEAR FROM '2022-02-02')", 1, 1),
+
+        ("SELECT DATEDIFF('year', '2017-08-25', '2011-08-25') AS DateDiff;", 1, 1),
+        ("SELECT DATEDIFF('days', '2022-07-07', birth_date) FROM $astronauts", 357, 1),
+        ("SELECT DATEDIFF('minutes', birth_date, '2022-07-07') FROM $astronauts", 357, 1),
 
         ("SELECT * FROM tests.data.schema WITH(NO_PARTITION) ORDER BY 1", 2, 4),
 

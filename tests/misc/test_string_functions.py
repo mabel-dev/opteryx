@@ -1,3 +1,7 @@
+"""
+slice left is fast but that speed is because the safety has been disabled. These tests
+help to ensure that slice left still does what it should safely and correctly.
+"""
 import os
 import sys
 import numpy
@@ -35,3 +39,7 @@ if __name__ == "__main__":  # pragma: no cover
 
     test_slice_left()
     print("okay")
+
+    import string
+
+    print(string_functions.string_slicer_right(numpy.array([string.ascii_letters]), 8))

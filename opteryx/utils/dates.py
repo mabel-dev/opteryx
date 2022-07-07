@@ -106,7 +106,7 @@ def date_range(start, end, interval: str):
 @lru_cache(128)
 def parse_iso(value):
 
-    DATE_SEPARATORS = {"-", ":"}
+    date_separators = ("-", ":")
     # date validation at speed is hard, dateutil is great but really slow, this is fast
     # but error-prone. It assumes it is a date or it really nothing like a date.
     # Making that assumption - and accepting the consequences - we can convert upto
@@ -140,7 +140,7 @@ def parse_iso(value):
             if value[-1] == "Z":
                 value = value[:-1]
             val_len = len(value)
-            if not value[4] in DATE_SEPARATORS or not value[7] in DATE_SEPARATORS:
+            if not value[4] in date_separators or not value[7] in date_separators:
                 return None
             if val_len == 10:
                 # YYYY-MM-DD
@@ -148,9 +148,9 @@ def parse_iso(value):
                     *map(int, [value[:4], value[5:7], value[8:10]])
                 )
             if val_len >= 16:
-                if not (value[10] in ("T", " ") and value[13] in DATE_SEPARATORS):
+                if not (value[10] in ("T", " ") and value[13] in date_separators):
                     return False
-                if val_len >= 19 and value[16] in DATE_SEPARATORS:
+                if val_len >= 19 and value[16] in date_separators:
                     # YYYY-MM-DD HH:MM:SS
                     return datetime.datetime(
                         *map(  # type:ignore
