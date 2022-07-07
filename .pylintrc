@@ -10,4 +10,4 @@ ignore=third_party
 # can either give multiple identifiers separated by comma (,) or put this
 # option multiple times (only on the command line, not in the configuration
 # file where it should appear only once).
-Disable=wrong-import-position, no-name-in-module, line-too-long, no-member
+Disable=wrong-import-position, no-name-in-module, line-too-long, no-member, missing-module-docstring, missing-function-docstring, missing-class-docstring

@@ -31,6 +31,12 @@ STATEMENTS = [
 
         # DISTINCT ON detects as a function call for function ON
         ("SELECT DISTINCT ON (name) FROM $astronauts ORDER BY 1"),
+
+        # YEAR isn't recognized as a non-identifier (or MONTH, DAY etc)
+        ("SELECT DATEDIFF(YEAR, '2017/08/25', '2011/08/25') AS DateDiff;"),
+
+        # MONTH has a bug
+        ("SELECT DATEDIFF('months', birth_date, '2022-07-07') FROM $astronauts"),
     ]
 # fmt:on
 

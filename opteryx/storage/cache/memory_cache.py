@@ -42,6 +42,7 @@ class InMemoryCache(BaseBufferCache):
         if value:
             self._cache[key] = value
             return io.BytesIO(value)
+        return None
 
     def set(self, key, value):
         # add the new item to the top of the dict

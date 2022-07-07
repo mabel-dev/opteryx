@@ -16,11 +16,11 @@ from opteryx.storage import BasePartitionScheme
 
 
 class DefaultPartitionScheme(BasePartitionScheme):
-    def __init__(self, format: Union[Tuple, str]):
-        if not isinstance(format, (list, set, tuple)):
-            self._format = [format]
+    def __init__(self, _format: Union[Tuple, str]):
+        if not isinstance(_format, (list, set, tuple)):
+            self._format = [_format]
         else:
-            self._format = format  # type:ignore
+            self._format = _format  # type:ignore
 
     def partition_format(self):
         return "/".join(self._format)

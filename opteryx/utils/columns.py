@@ -180,7 +180,7 @@ class Columns:
         best_match_score = 100
 
         for attributes in self._column_metadata.values():
-            for alias in attributes.get("aliases"):
+            for alias in attributes.get("aliases") or []:
                 my_dist = compare(column_name, alias)
                 if my_dist > 0 and my_dist < best_match_score:
                     best_match_score = my_dist

@@ -26,10 +26,9 @@ Function        | Description                                       | Example
 `LOWER(str)`    | Convert string to lower case                      | `LOWER('Hello') -> 'hello'`
 `RIGHT(str, n)` | Extract the right-most n characters               | `RIGHT('hello', 2) -> 'lo'`
 `SEARCH(str, val)` :fontawesome-solid-asterisk: | Return True if str contains val                | `SEARCH('hello', 'lo') -> TRUE`
-`STRING(any)`   | Alias of `VARCHAR()`                              | `STRING(22) -> '22'`
 `TRIM(str)`     | Removes any spaces from either side of the string | `TRIM('  hello  ') -> 'hello'`
 `UPPER(str)`    | Convert string to upper case                      | `UPPER('Hello') -> 'HELLO'`
-`VARCHAR(any)`  | Convert value to a string                         | `VARCHAR(22) -> '22'`
+`VARCHAR(any)`  | Convert value to a string, also `STRING`          | `VARCHAR(22) -> '22'`
 
 ## Date Functions
 
@@ -39,6 +38,7 @@ Function        | Description                                       | Example
 --------------- | ------------------------------------------------- | ---------------------------
 `DATE(date)`    | Extract the date part                             | `DATE(2022-02-06 11:37) -> '2022-02-06 00:00'`
 `DATE_TRUNC(period, date)` | Remove parts from a timestamp          | `DATE_TRUNC('year', 2022-06-23) -> '2022-01-01'` 
+`DATEDIFF(part, start, end)` | Calculate the difference between dates in a given unit | `DATEDIFF('hours', '1969-07-16 13:32', '1969-07-24 16:50') -> 195`
 `DATEPART(part, date)` | Functional representation of `EXTRACT`     | `DATEPART('year', 2022-01-01) -> 2022`
 `EXTRACT(part FROM date)` | Extract a part of a timestamp           | `EXTRACT(year FROM 2022-01-01) -> 2022`
 `NOW()`         | Current Timestamp                                 | `NOW() -> '2022-02-23 12:37'`
@@ -49,20 +49,20 @@ Function        | Description                                       | Example
 
 Recognized date parts and periods and support across various functions:
 
-Part     | DATE_TRUNC                | EXTRACT                   | Notes
--------- | ------------------------- | ------------------------- | -------------
-second   | :fontawesome-solid-check: | :fontawesome-solid-check: |
-minute   | :fontawesome-solid-check: | :fontawesome-solid-check: |
-hour     | :fontawesome-solid-check: | :fontawesome-solid-check: |
-day      | :fontawesome-solid-check: | :fontawesome-solid-check: |
-dow      | :fontawesome-solid-xmark: | :fontawesome-solid-check: | day of week
-week     | :fontawesome-solid-check: | :fontawesome-solid-check: | iso week i.e. to monday
-month    | :fontawesome-solid-check: | :fontawesome-solid-check: |
-quarter  | :fontawesome-solid-check: | :fontawesome-solid-check: |
-doy      | :fontawesome-solid-xmark: | :fontawesome-solid-check: | day of year
-year     | :fontawesome-solid-check: | :fontawesome-solid-check: |
+Part     | DATE_TRUNC                | EXTRACT                   | DATEDIFF                  | Notes
+-------- | ------------------------- | ------------------------- | ------------------------- | ----
+second   | :fontawesome-solid-check: | :fontawesome-solid-check: | :fontawesome-solid-check: |
+minute   | :fontawesome-solid-check: | :fontawesome-solid-check: | :fontawesome-solid-check: |
+hour     | :fontawesome-solid-check: | :fontawesome-solid-check: | :fontawesome-solid-check: |
+day      | :fontawesome-solid-check: | :fontawesome-solid-check: | :fontawesome-solid-check: |
+dow      | :fontawesome-solid-xmark: | :fontawesome-solid-check: | :fontawesome-solid-xmark: | day of week
+week     | :fontawesome-solid-check: | :fontawesome-solid-check: | :fontawesome-solid-check: | iso week i.e. to monday
+month    | :fontawesome-solid-check: | :fontawesome-solid-check: | :fontawesome-solid-check: | DATEFIFF unreliable calculating months
+quarter  | :fontawesome-solid-check: | :fontawesome-solid-check: | :fontawesome-solid-check: |
+doy      | :fontawesome-solid-xmark: | :fontawesome-solid-check: | :fontawesome-solid-xmark: | day of year
+year     | :fontawesome-solid-check: | :fontawesome-solid-check: | :fontawesome-solid-check: |
 
-The following functions exist, however use of `EXTRACT` is recommended.
+The following functions also exist, however use of `EXTRACT` is recommended.
 
 Function        | Description                                       | Example
 --------------- | ------------------------------------------------- | ---------------------------
@@ -74,6 +74,9 @@ Function        | Description                                       | Example
 `SECOND(time)`  | Extract second                                    | `SECOND(5:32:43) -> 43`
 `WEEK(date)`    | Extract ISO week of year number                   | `WEEK(2022-02-06) -> 5`
 `YEAR(date)`    | Extract year number                               | `YEAR(202-02-06) -> 2022`
+
+!!! note
+    Date functions presently require a TIMESTAMP column or a TIMESTAMP literal and cannot be used with the outputs of function calls, for example `DATEDIFF('year', birth_date, TODAY())` will return an error.
 
 ## Other Functions
 

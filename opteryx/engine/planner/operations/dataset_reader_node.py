@@ -90,6 +90,24 @@ def _normalize_to_schema(table, schema, statistics):
     return table, schema
 
 
+def _normalize_to_types(table):
+    """
+    Normalize types e.g. all numbers are float64 and dates
+    """
+    schema = table.schema
+
+    for index, column_name in enumerate(schema.names):
+        type_name = str(schema.types[index])
+        #        if type_name in ("int16", "int32", "int64", "int8", "float16", "float32"):
+        #            schema = schema.set(index, pyarrow.field(column_name, pyarrow.float64()))
+        if type_name in ("date32[day]", "date64", "timestamp"):
+            schema = schema.set(
+                index, pyarrow.field(column_name, pyarrow.timestamp("us"))
+            )
+
+    return table.cast(target_schema=schema), schema
+
+
 class DatasetReaderNode(BasePlanNode):
     def __init__(
         self, directives: QueryDirectives, statistics: QueryStatistics, **config
@@ -249,6 +267,7 @@ class DatasetReaderNode(BasePlanNode):
                     pyarrow_blob, schema = _normalize_to_schema(
                         pyarrow_blob, schema, self._statistics
                     )
+                    pyarrow_blob, schema = _normalize_to_types(pyarrow_blob)
 
                     # yield this blob
                     yield pyarrow_blob

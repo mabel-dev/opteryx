@@ -16,15 +16,20 @@ In Opteryx a list is an ordered collection of zero or more values of the same da
 `value IN list`
 ~~~
 
-## Searching
+### Searching
 
 ~~~
 `SEARCH(list, value)`
 ~~~
-
+~~~
 `LIST_CONTAINS`   
+~~~
+~~~
 `LIST_CONTAINS_ANY`   
+~~~
+~~~
 `LIST_CONTAINS_ALL`
+~~~
 
 ## Converting Lists to Relations
 

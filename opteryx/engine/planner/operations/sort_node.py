@@ -90,7 +90,8 @@ class SortNode(BasePlanNode):
                     )
                 else:
                     # this currently only supports zero parameter functions
-                    calculated_values = FUNCTIONS[column["function"]](*[table.num_rows])
+                    return_type, executor = FUNCTIONS[column["function"]]
+                    calculated_values = executor(*[table.num_rows])
 
                     table = Table.append_column(
                         table, column["alias"], calculated_values
