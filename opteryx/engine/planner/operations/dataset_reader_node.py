@@ -80,7 +80,10 @@ def _normalize_to_schema(table, schema, statistics):
     this_types = dict(zip(table.schema.names, table.schema.types))
 
     for column in schema.names:
-        if first_types[column] != this_types[column]:
+        if (
+            first_types[column] != this_types[column]
+            and first_types[column] != pyarrow.null()
+        ):
             index = table.column_names.index(column)
             my_schema = table.schema.set(
                 index, pyarrow.field(column, first_types[column])
