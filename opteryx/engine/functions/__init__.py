@@ -155,13 +155,11 @@ def _raise_exception(text):
 
 
 # fmt:off
+# Function definitions optionally include the type and the function.
+# The type is needed particularly when returning Python objects that
+# the first entry is NONE.
 FUNCTIONS = {
-    """
-    Function definitions optionally include the type and the function.
-    The type is needed particularly when returning Python objects that
-    the first entry is NONE.
-    """
-    "VERSION": (pyarrow.string(), _repeat_no_parameters(get_version),),
+    "VERSION": (None, _repeat_no_parameters(get_version),),
     # TYPE CONVERSION
     "TIMESTAMP": (None, cast("TIMESTAMP"),),
     "BOOLEAN": (None, cast("BOOLEAN"),),
