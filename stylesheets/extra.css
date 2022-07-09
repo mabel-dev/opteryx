@@ -1,0 +1,76 @@
+table {
+    width: 100% !important;
+    font-size: 0.9em !important;
+    line-height: 1.3em;
+}
+
+th {
+    padding: 0.4em 0.4em !important;
+    font-weight: 300;
+    color: #fff;
+    background-color: #666;
+}
+
+td {
+    padding: 0.4em 0.4em !important;
+}
+
+code {
+    font-family: Menlo, 'Robot Mono', 'JetBrains Mono';
+    font-size: 1em !important;
+    color: #D63384 !important;
+    font-weight: 300;
+    word-wrap: break-word;
+}
+
+body {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-weight: 400;
+}
+
+h1 {
+    font-family: "IBM Plex Sans", Georgia, 'Times New Roman', Times, serif;
+    font-weight: 500 !important;
+    font-size: 1.8em !important;
+    margin-bottom: 0.7em !important;
+    color: #333 !important;
+}
+
+h2 {
+    font-family: "IBM Plex Sans", Georgia, 'Times New Roman', Times, serif;
+    font-weight: 500 !important;
+    font-size: 1.4em !important;
+    margin-bottom: 0.7em !important;
+    margin-top: 0.5em !important;
+    color: #333 !important;
+}
+
+h3 {
+    font-family: "IBM Plex Sans", Georgia, 'Times New Roman', Times, serif;
+    font-weight: 500 !important;
+    font-size: 1.2em !important;
+    margin-bottom: 0.7em !important;
+    margin-top: 0.5em !important;
+    color: #333 !important;
+}
+
+h4 {
+    font-family: "IBM Plex Sans", Georgia, 'Times New Roman', Times, serif;
+    font-weight: 300 !important;
+    font-size: 1em !important;
+    margin-bottom: 0.7em !important;
+    margin-top: 0.5em !important;
+    color: #333 !important;
+}
+
+.admonition {
+    font-size: 1em !important;
+}
+
+.md-main__inner {
+    margin-top: 0px !important;
+}
+
+.md-grid {
+    max-width: 70rem !important;
+}
