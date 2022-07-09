@@ -159,9 +159,11 @@ STATEMENTS = [
         ("SELECT CAST(planetId AS TIMESTAMP) FROM $satellites", 177, 1),
         ("SELECT CAST(planetId AS NUMERIC) FROM $satellites", 177, 1),
 
+        ("SELECT PI()", 1, 1),
         ("SELECT GET(name, 1) FROM $satellites GROUP BY planetId, GET(name, 1)", 56, 1),
         ("SELECT COUNT(*), ROUND(magnitude) FROM $satellites group by ROUND(magnitude)", 27, 2),
         ("SELECT ROUND(magnitude) FROM $satellites group by ROUND(magnitude)", 27, 1),
+        ("SELECT ROUND(magnitude, 1) FROM $satellites group by ROUND(magnitude, 1)", 93, 1),
         ("SELECT VARCHAR(planetId), COUNT(*) FROM $satellites GROUP BY 1", 7, 2),
         ("SELECT LEFT(name, 1), COUNT(*) FROM $satellites GROUP BY 1 ORDER BY 2 DESC", 21, 2),
         ("SELECT LEFT(name, 2) as le, COUNT(*) FROM $satellites GROUP BY 1 ORDER BY 2 DESC", 87, 2),
@@ -209,8 +211,16 @@ STATEMENTS = [
         ("SELECT RANDOM() FROM $planets", 9, 1),
         ("SELECT NOW() FROM $planets", 9, 1),
         ("SELECT TODAY() FROM $planets", 9, 1),
+        ("SELECT CURRENT_DATE", 1, 1),
+        ("SELECT CURRENT_DATE()", 1, 1),
+        ("SELECT CURRENT_TIME", 1, 1),
+        ("SELECT CURRENT_TIME()", 1, 1),
         ("SELECT YEAR(birth_date), COUNT(*) FROM $astronauts GROUP BY YEAR(birth_date)", 54, 2),
         ("SELECT MONTH(birth_date), COUNT(*) FROM $astronauts GROUP BY MONTH(birth_date)", 12, 2),
+
+        ("SELECT DATE_FORMAT(birth_date, '%d-%Y') FROM $astronauts", 357, 1),
+        ("SELECT DATE_FORMAT(birth_date, 'dddd') FROM $astronauts", 357, 1),
+        ("SELECT DATE_FORMAT(death_date, '%Y') FROM $astronauts", 357, 1),
 
         ("SELECT count(*), VARCHAR(year) FROM $astronauts GROUP BY VARCHAR(year)", 21, 2),
         ("SELECT count(*), CAST(year AS VARCHAR) FROM $astronauts GROUP BY CAST(year AS VARCHAR)", 21, 2),

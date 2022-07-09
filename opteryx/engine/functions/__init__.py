@@ -22,7 +22,10 @@ from cityhash import CityHash64
 from pyarrow import compute
 
 import opteryx
-from opteryx.engine.functions import other_functions, date_functions, string_functions
+from opteryx.engine.functions import date_functions
+from opteryx.engine.functions import number_functions
+from opteryx.engine.functions import other_functions
+from opteryx.engine.functions import string_functions
 from opteryx.exceptions import SqlError
 from opteryx.third_party.date_trunc import date_trunc
 from opteryx.utils.dates import parse_iso
@@ -194,11 +197,15 @@ FUNCTIONS = {
     "ABSOLUTE": (None, compute.abs,),
     "TRUNC": (None, compute.trunc,),
     "TRUNCATE": (None, compute.trunc,),
+    "PI": (None, _repeat_no_parameters(number_functions.pi)),
     # DATES & TIMES
     "DATE_TRUNC": (None, _iterate_double_parameter_field_second(date_trunc),),
     "DATEDIFF": (pyarrow.float64(), date_functions.date_diff,),
     "DATEPART": (None, date_functions.date_part,),
+    "DATE_FORMAT": (None, compute.strftime),
+    "CURRENT_TIME": (None, _repeat_no_parameters(datetime.datetime.utcnow),),
     "NOW": (None, _repeat_no_parameters(datetime.datetime.utcnow),),
+    "CURRENT_DATE": (None, _repeat_no_parameters(datetime.datetime.utcnow().date),),
     "TODAY": (None, _repeat_no_parameters(datetime.datetime.utcnow().date),),
     "TIME": (None, _repeat_no_parameters(date_functions.get_time),),
     "YESTERDAY": (None, _repeat_no_parameters(date_functions.get_yesterday),),

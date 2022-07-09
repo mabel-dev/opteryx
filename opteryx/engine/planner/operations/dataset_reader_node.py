@@ -18,12 +18,13 @@ This is a SQL Query Execution Plan Node.
 This Node reads and parses the data from a dataset into a Table.
 """
 import datetime
-import pyarrow
 import time
 
-from enum import Enum
 from typing import Iterable
+from enum import Enum
 from cityhash import CityHash64
+
+import pyarrow
 
 from opteryx.engine import QueryDirectives, QueryStatistics
 from opteryx.engine.planner.operations import BasePlanNode
@@ -33,6 +34,8 @@ from opteryx.storage.adapters import DiskStorage
 from opteryx.storage.schemes import MabelPartitionScheme
 from opteryx.storage.schemes import DefaultPartitionScheme
 from opteryx.utils.columns import Columns
+
+MAX_SIZE_SINGLE_CACHE_ITEM: int = 1024 * 1024
 
 
 class ExtentionType(str, Enum):
@@ -56,7 +59,7 @@ KNOWN_EXTENSIONS = {
 }
 
 
-def _normalize_to_schema(table, schema, statistics):
+def _normalize_to_schema(table, schema):
     """
     Ensure all of the collected pages match the same schema, because of the way we read
     data, this is to match the first page. We ensure they match by adding empty columns
@@ -121,12 +124,13 @@ class DatasetReaderNode(BasePlanNode):
         """
         super().__init__(directives=directives, statistics=statistics)
 
-        from opteryx.engine.planner.planner import QueryPlanner
-
         today = datetime.datetime.utcnow().date()
 
         self._dataset = config.get("dataset", None)
         self._alias = config.get("alias", None)
+
+        # circular imports
+        from opteryx.engine.planner.planner import QueryPlanner
 
         if isinstance(self._dataset, (list, QueryPlanner, dict)):
             return
@@ -175,9 +179,9 @@ class DatasetReaderNode(BasePlanNode):
 
     def execute(self) -> Iterable:
 
+        # circular imports
         from opteryx.engine.planner.planner import QueryPlanner
 
-        # query plans
         if isinstance(self._dataset, QueryPlanner):
             metadata = None
 
@@ -267,9 +271,7 @@ class DatasetReaderNode(BasePlanNode):
                             )
                             pyarrow_blob = metadata.apply(pyarrow_blob)
 
-                    pyarrow_blob, schema = _normalize_to_schema(
-                        pyarrow_blob, schema, self._statistics
-                    )
+                    pyarrow_blob, schema = _normalize_to_schema(pyarrow_blob, schema)
                     pyarrow_blob, schema = _normalize_to_types(pyarrow_blob)
 
                     # yield this blob
@@ -286,7 +288,7 @@ class DatasetReaderNode(BasePlanNode):
             # try to read the cache
             try:
                 blob_bytes = cache.get(blob_hash)
-            except:  # nosec - all problems are handled the same way
+            except Exception:  # pragma: no cover
                 cache = None
                 blob_bytes = None
 
@@ -294,7 +296,7 @@ class DatasetReaderNode(BasePlanNode):
             if blob_bytes is None:
                 self._statistics.cache_misses += 1
                 blob_bytes = reader(path)
-                if cache:
+                if cache and blob_bytes.getbuffer().nbytes < MAX_SIZE_SINGLE_CACHE_ITEM:
                     cache.set(blob_hash, blob_bytes)
             else:
                 self._statistics.cache_hits += 1

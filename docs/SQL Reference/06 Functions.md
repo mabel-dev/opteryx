@@ -1,51 +1,104 @@
 # Functions
 
-!!! note
-    :fontawesome-solid-asterisk: indicates a function has more than one entry on this page.
-
 ## Numeric Functions
 
-Function        | Description                                       | Example
---------------- | ------------------------------------------------- | ---------------------------
-`ABS(n)`        | The absolute value on n, also `ABSOLUTE`          | `ABS(-8) -> 8`   
-`CEIL(n)`       | Round the number up, also `CEILING`               | `CEIL(2.3) -> 3`        
-`FLOOR(n)`      | Round the number down                             | `FLOOR(3.9) -> 3` 
-`NUMERIC(n)`    | Convert n to a floating point number              | `NUMERIC('2') -> 2.0`
-`ROUND(n)`      | Round to nearest whole number                     | `ROUND(0.2) -> 0`
-`TRUNC(n)`      | Remove the fractional parts, also `TRUNCATE`      | `TRUNC(5.5) -> 5`
+`ABS` (**x**: _numeric_) → _numeric_  
+&emsp;Returns the absolute value of **x**.    
+&emsp;Alias of `ABSOLUTE`(_numeric_).  
+
+`CEIL` (**x**: _numeric_) → _numeric_   
+&emsp;Returns **x** rounded up to the nearest integer.    
+&emsp;Alias of `CEILING`(_numeric_).  
+
+`FLOOR` (**x**: _numeric_) → _numeric_   
+&emsp;Returns **x** rounded down to the nearest integer.   
+
+`PI` () → _numeric_   
+&emsp;Returns the constant Pi.  
+
+`ROUND` (**x**: _numeric_) → _numeric_     
+&emsp;Returns **x** rounded to the nearest integer. 
+
+`ROUND` (**x**: _numeric_, **places**: _numeric_) → _numeric_     
+&emsp;Returns **x** rounded to **places** decimal places.
+
+`TRUNC` (**x**: _numeric_) → _numeric_    
+&emsp;Returns **x** rounded to integer by dropping digits after decimal point.    
+&emsp;Alias of `TRUNCATE`(_numeric_).  
 
 ## Text Functions
 
 Functions for examining and manipulating string values. 
 
-Function        | Description                                       | Example
---------------- | ------------------------------------------------- | ---------------------------
-`GET(str, n)` :fontawesome-solid-asterisk:  | Gets the nth element in a string, also `str[n]`   | `GET('hello', 2) -> 'e'`
-`LEFT(str, n)`  | Extract the left-most n characters                | `LEFT('hello', 2) -> 'he'`
-`LEN(str)`      | Number of characters in string, also `LENGTH`     | `LEN('hello') -> 5`
-`LOWER(str)`    | Convert string to lower case                      | `LOWER('Hello') -> 'hello'`
-`RIGHT(str, n)` | Extract the right-most n characters               | `RIGHT('hello', 2) -> 'lo'`
-`SEARCH(str, val)` :fontawesome-solid-asterisk: | Return True if str contains val                | `SEARCH('hello', 'lo') -> TRUE`
-`TRIM(str)`     | Removes any spaces from either side of the string | `TRIM('  hello  ') -> 'hello'`
-`UPPER(str)`    | Convert string to upper case                      | `UPPER('Hello') -> 'HELLO'`
-`VARCHAR(any)`  | Convert value to a string, also `STRING`          | `VARCHAR(22) -> '22'`
+`GET` (**str**: _varchar_, **index**: _numeric_) → _varchar_   
+&emsp;Return the **index**th character from **str**.   
+
+`LEFT` (**str**: _varchar_, **n**: _numeric_) → _varchar_    
+&emsp;Extract the left-most **n** characters of **str**.  
+
+`LEN` (**str**: _varchar_) → _numeric_   
+&emsp;Returns the length of **str** in characters.    
+&emsp;Alias of `LENGTH`(_varchar_)
+
+`LOWER` (**str**: _varchar_) → _varchar_   
+&emsp;Converts **str** to lowercase.
+
+`RIGHT` (**str**: _varchar_, **n**: _numeric_) → _varchar_    
+&emsp;Extract the right-most **n** characters of **str**.   
+
+`SEARCH` (_varchar_, **value**: _varchar_) → _boolean_    
+&emsp;Return True if the string contains value.   
+&emsp;`SEARCH('hello', 'lo') -> TRUE`
+
+`TRIM` (**str**: _varchar_) → _varchar_   
+&emsp;Removes leading and trailing whitespace from **str**.  
+
+`UPPER` (**str**: _varchar_) → _varchar_   
+&emsp;Converts str to uppercase.  
 
 ## Date Functions
 
 Functions for examining and manipulating date values. 
 
-Function        | Description                                       | Example
---------------- | ------------------------------------------------- | ---------------------------
-`DATE(date)`    | Extract the date part                             | `DATE(2022-02-06 11:37) -> '2022-02-06 00:00'`
-`DATE_TRUNC(period, date)` | Remove parts from a timestamp          | `DATE_TRUNC('year', 2022-06-23) -> '2022-01-01'` 
-`DATEDIFF(part, start, end)` | Calculate the difference between dates in a given unit | `DATEDIFF('hours', '1969-07-16 13:32', '1969-07-24 16:50') -> 195`
-`DATEPART(part, date)` | Functional representation of `EXTRACT`     | `DATEPART('year', 2022-01-01) -> 2022`
-`EXTRACT(part FROM date)` | Extract a part of a timestamp           | `EXTRACT(year FROM 2022-01-01) -> 2022`
-`NOW()`         | Current Timestamp                                 | `NOW() -> '2022-02-23 12:37'`
-`TIME()`        | Current Time (UTC)                                | `TIME() -> '12:34:23.2123'`
-`TIMESTAMP(str)` :fontawesome-solid-asterisk: | Convert an [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format string to a timestamp | `TIMESTAMP('2000-01-01') -> 1 Jan 2000`
-`TIMESTAMP(n)` :fontawesome-solid-asterisk: | Interpret n as seconds since unix epoch           | `TIMESTAMP(946684800) -> 1 Jan 2000`
-`TODAY()`       | Current Date                                      | `TODAY() -> '2022-02-23'`
+`current_date` → _timestamp_      
+&emsp;Current Date, also `TODAY`(). Note `current_date` does not require parenthesis.  
+&emsp;`CURRENT_DATE -> '2022-02-23'`
+
+`current_time` → _timestamp_      
+&emsp;Current Timestamp, also `NOW`(). Note `current_time` does not require parenthesis.  
+&emsp;`CURRENT_TIME -> '2022-02-23 12:37'`
+
+`DATE` (_timestamp_) → _timestamp_      
+&emsp;Extract the date part of a timestamp.   
+&emsp;`DATE(2022-02-06 11:37) -> '2022-02-06 00:00'`
+
+`DATE_FORMAT` (_timestamp_, **format**: _varchar_) → _varchar_      
+&emsp;Formats `timestamp` as a string using `format`.   
+&emsp;`DATE_FORMAT('2022-07-07', '%Y') -> '2022'`    
+
+`DATE_TRUNC` (**part**: _varchar_, _timestamp_) → _varchar_      
+&emsp;Remove parts from a timestamp.  
+&emsp;`DATE_TRUNC('year', 2022-06-23) -> '2022-01-01'`
+
+`DATEDIFF` (**part**: _varchar_, **start**: _timestamp_, **end**: _timestamp_) → _numeric_      
+&emsp;Calculate the difference between the start and end timestamps in a given unit  
+&emsp;`DATEDIFF('hours', '1969-07-16 13:32', '1969-07-24 16:50') -> 195`
+
+`EXTRACT` (_part_ FROM _timestamp_) → _numeric_     
+&emsp;Extract a part of a timestamp, also `DATE_PART`(part: _varchar_, _timestamp_)  
+&emsp;`EXTRACT(year FROM 2022-01-01) -> 2022`
+
+`TIME` () → _timestamp_     
+&emsp;Current Time (UTC).   
+&emsp;`TIME() -> '12:34:23.2123'`
+
+`TIMESTAMP` (_varchar_) → _timestamp_        
+&emsp;Convert an [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format string to a timestamp.  
+&emsp;`TIMESTAMP('2000-01-01') -> 1 Jan 2000`
+
+`TIMESTAMP` (_numeric_) → _timestamp_     
+&emsp;Interpret n as seconds since unix epoch.   
+&emsp;`TIMESTAMP(946684800) -> 1 Jan 2000`
 
 Recognized date parts and periods and support across various functions:
 
@@ -80,28 +133,85 @@ Function        | Description                                       | Example
 
 ## Other Functions
 
-Function            | Description                                       | Example
-------------------- | ------------------------------------------------- | ---------------------------
-`BOOLEAN(str)`      | Convert input to a Boolean                        | `BOOLEAN('true') -> True`
-`CAST(any AS type)` | Cast any to type, calls `type(any)`               | `CAST(state AS BOOLEAN) -> False`
-`COALESCE(args)`    | Return the first item from args which is not None | `CAST(university, high_school) -> 'Olympia High'`  
-`GENERATE_SERIES(stop)` :fontawesome-solid-asterisk: | `NUMERIC` series between 1 and 'stop', with a step of 1                  | `GENERATE_SERIES(2) -> (1,2)`   
-`GENERATE_SERIES(start, stop)` :fontawesome-solid-asterisk: | `NUMERIC` series between 'start' and 'stop', with a step of 1            | `GENERATE_SERIES(2,4) -> (2,3,4)`
-`GENERATE_SERIES(start, stop, step)` :fontawesome-solid-asterisk: | `NUMERIC` series between 'start' and 'stop', with an explicit step size  | `GENERATE_SERIES(2, 6, 2) -> (2,4,6)`
-`GENERATE_SERIES(start, stop, interval)` :fontawesome-solid-asterisk: | `TIMESTAMP` series between 'start' and 'stop', with a given interval | `GENERATE_SERIES('2022-01-01', '2023-12-31, '1y') -> ('2022-01-01')`
-`GENERATE_SERIES(cidr)` :fontawesome-solid-asterisk:             | Set of IP addresses from a given CIDR | `GENERATE_SERIES('192.168.1.1/32') -> ('192.168.1.1')`
-`GET(list, n)` :fontawesome-solid-asterisk: | Gets the nth element in a list, also `list[n]`    | `GET(names, 2) -> 'Joe'`
-`GET(struct, a)` :fontawesome-solid-asterisk: | Gets the element called 'a' from a struct, also `struct[a]` | `GET(dict, 'key') -> 'value'`
-`HASH(str)`         | Calculate the [CityHash](https://opensource.googleblog.com/2011/04/introducing-cityhash.html) (64 bit) of a value  | `HASH('hello') -> 'B48BE5A931380CE8'`
-`LIST_CONTAINS(list, val)`      | Test if a list field contains a value | `LIST_CONTAINS(letters, '1') -> False`
-`LIST_CONTAINS_ANY(list, vals)` | Test if a list field contains any of a list of values | `LIST_CONTAINS_ANY(letters, ('1', 'a')) -> True`
-`LIST_CONTAINS_ALL(list, vals)` | Test is a list field contains all of a list of values | `LIST_CONTAINS_ALL(letters, ('1', 'a')) -> False`
-`MD5(str)`          | Calculate the MD5 hash of a value                 | `MD5('hello') -> '5d41402abc4b2a76b9719d911017c592'`
-`RANDOM()`          | Random number between 0.000 and 0.999             | `RANDOM() -> 0.234`
-`SEARCH(list, val)` :fontawesome-solid-asterisk: | Return True if val is an item in list             | `SEARCH(names, 'John') -> True`
-`SEARCH(struct, val)` :fontawesome-solid-asterisk: | Return True if any of the values in struct is val | `SEARCH(dict, 'key') -> True`
-`UNNEST(list)`      | Create a virtual table with a row for each element in the LIST | `UNNEST((TRUE,FALSE)) AS Booleans` 
-`VERSION()`         | Return the version of Opteryx                     | `VERSION() -> 0.1.0`
+`BOOLEAN` (_any_) → _boolean_        
+&emsp;Convert input to a Boolean   
+&emsp;`BOOLEAN('true') -> True`
+
+`CAST` (_any_ AS _type_) → _type_   
+&emsp;Cast a value to type, calls `type(any)`    
+&emsp;`CAST(state AS BOOLEAN) -> False`
+
+`COALESCE` (_args_) → _input type_   
+&emsp;Return the first item from args which is not None   
+&emsp;`CAST(university, high_school) -> 'Olympia High'`  
+
+`GENERATE_SERIES` (**stop**: _numeric_) → _list_<_numeric_>       
+&emsp;Generate a series between 1 and 'stop', with a step of 1    
+&emsp;`GENERATE_SERIES(2) -> (1,2)`   
+
+`GENERATE_SERIES` (**start**: _numeric_, **stop**: _numeric_) → _list_<_numeric_>       
+&emsp;`NUMERIC` series between 'start' and 'stop', with a step of 1
+&emsp;`GENERATE_SERIES(2,4) -> (2,3,4)`
+
+`GENERATE_SERIES` (**start**: _numeric_, **stop**: _numeric_, **step**: _numeric_) → _list_<_numeric_>       
+&emsp;`NUMERIC` series between 'start' and 'stop', with an explicit step size.
+&emsp;`GENERATE_SERIES(2, 6, 2) -> (2,4,6)`
+
+`GENERATE_SERIES` (**start**: _timestamp_, **stop**: _timestamp_, _interval_) → _list_<_timestamp_>       
+&emsp;`TIMESTAMP` series between 'start' and 'stop', with a given interval    
+&emsp;`GENERATE_SERIES('2022-01-01', '2023-12-31, '1y') -> ('2022-01-01')`
+
+`GENERATE_SERIES` (**cidr**: _varchar_) → _list_<_varchar_>       
+&emsp;Set of IP addresses from a given CIDR   
+&emsp;`GENERATE_SERIES('192.168.1.1/32') -> ('192.168.1.1')`
+
+`GET(list, n)`
+&emsp;Gets the nth element in a list, also `list[n]`
+&emsp;`GET(names, 2) -> 'Joe'`
+
+`GET(struct, a)`
+&emsp;Gets the element called 'a' from a struct, also `struct[a]`
+&emsp;`GET(dict, 'key') -> 'value'`
+
+`HASH(str)`
+&emsp;Calculate the [CityHash](https://opensource.googleblog.com/2011/04/introducing-cityhash.html) (64 bit) of a value
+&emsp;`HASH('hello') -> 'B48BE5A931380CE8'`
+
+`LIST_CONTAINS(list, val)`
+&emsp;Test if a list field contains a value
+&emsp;`LIST_CONTAINS(letters, '1') -> False`
+
+`LIST_CONTAINS_ANY(list, vals)`
+&emsp;Test if a list field contains any of a list of values
+&emsp;`LIST_CONTAINS_ANY(letters, ('1', 'a')) -> True`
+
+`LIST_CONTAINS_ALL(list, vals)`
+&emsp;Test is a list field contains all of a list of values
+&emsp;`LIST_CONTAINS_ALL(letters, ('1', 'a')) -> False`
+
+`MD5(str)`
+&emsp;Calculate the MD5 hash of a value
+&emsp;`MD5('hello') -> '5d41402abc4b2a76b9719d911017c592'`
+
+`RANDOM()`
+&emsp;Random number between 0.000 and 0.999
+&emsp;`RANDOM() -> 0.234`
+
+`SEARCH(list, val)`
+&emsp;Return True if val is an item in list
+&emsp;`SEARCH(names, 'John') -> True`
+
+`SEARCH(struct, val)`
+&emsp;Return True if any of the values in struct is val
+&emsp;`SEARCH(dict, 'key') -> True`
+
+`UNNEST(list)`
+&emsp;Create a virtual table with a row for each element in the LIST
+&emsp;`UNNEST((TRUE,FALSE)) AS Booleans` 
+
+`VERSION()`
+&emsp;Return the version of Opteryx
+&emsp;`VERSION() -> 0.1.0`
 
 Recognized interval parts for the `GENERATE_SERIES` function are:
 
@@ -114,3 +224,14 @@ Days    | d
 Hours   | h
 Minutes | m
 Seconds | s
+
+
+
+
+`NUMERIC` (_numeric_) → _numeric_      
+&emsp;Convert input to a floating point number. 
+
+
+`VARCHAR` (_any_) → _varchar_   
+&emsp;Convert value to a string, also `STRING` (_any_).   
+&emsp;`VARCHAR(22) -> '22'`
