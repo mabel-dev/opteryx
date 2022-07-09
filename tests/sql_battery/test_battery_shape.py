@@ -209,8 +209,16 @@ STATEMENTS = [
         ("SELECT RANDOM() FROM $planets", 9, 1),
         ("SELECT NOW() FROM $planets", 9, 1),
         ("SELECT TODAY() FROM $planets", 9, 1),
+        ("SELECT CURRENT_DATE", 1, 1),
+        ("SELECT CURRENT_DATE()", 1, 1),
+        ("SELECT CURRENT_TIME", 1, 1),
+        ("SELECT CURRENT_TIME()", 1, 1),
         ("SELECT YEAR(birth_date), COUNT(*) FROM $astronauts GROUP BY YEAR(birth_date)", 54, 2),
         ("SELECT MONTH(birth_date), COUNT(*) FROM $astronauts GROUP BY MONTH(birth_date)", 12, 2),
+
+        ("SELECT DATE_FORMAT(birth_date, '%d-%Y') FROM $astronauts", 357, 1),
+        ("SELECT DATE_FORMAT(birth_date, 'dddd') FROM $astronauts", 357, 1),
+        ("SELECT DATE_FORMAT(death_date, '%Y') FROM $astronauts", 357, 1),
 
         ("SELECT count(*), VARCHAR(year) FROM $astronauts GROUP BY VARCHAR(year)", 21, 2),
         ("SELECT count(*), CAST(year AS VARCHAR) FROM $astronauts GROUP BY CAST(year AS VARCHAR)", 21, 2),

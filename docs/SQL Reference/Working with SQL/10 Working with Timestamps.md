@@ -19,9 +19,12 @@ EXTRACT(part FROM timestamp)
 DATE(timestamp)
 ~~~
 
-<!---
-### Format
---->
+### FORMAT
+
+~~~
+DATE_FORMAT(timestamp, format)
+~~~
+
 ### Parse
 
 ~~~
@@ -40,10 +43,10 @@ DATE_TRUNC(part, timestamp)
 ### Generate
 
 ~~~
-NOW()
+current_date
 ~~~
 ~~~
-TODAY()
+current_time
 ~~~
 ~~~
 YESTERDAY()
@@ -51,3 +54,5 @@ YESTERDAY()
 ~~~
 TIME()
 ~~~
+
+Note that `current_date` and `current_time` support being called without parenthesis.
