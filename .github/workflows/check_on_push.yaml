@@ -17,9 +17,9 @@ jobs:
     uses: ./.github/workflows/secrets.yaml
 
   static-analysis:
-    ses: ./.github/workflows/static_analysis.yaml
+    uses: ./.github/workflows/static_analysis.yaml
 
   static-analysis:
-    ses: ./.github/workflows/formatter.yaml
+    uses: ./.github/workflows/formatter.yaml
 
   
