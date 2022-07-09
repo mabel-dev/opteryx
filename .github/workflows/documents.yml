@@ -1,9 +1,6 @@
 name: Documentation
 on:
-  release:
-    types: [ published ]
-  push:
-    branches: [ main ]
+  workflow_call
 jobs:
   deploy:
     runs-on: ubuntu-latest

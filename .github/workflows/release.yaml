@@ -1,8 +1,7 @@
-name: release
+name: Release to PyPI
 
 on:
-  push:
-    branches: [ main ]
+  workflow_call
 
 jobs:
 
