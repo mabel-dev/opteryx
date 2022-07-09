@@ -19,7 +19,7 @@ jobs:
   static-analysis:
     uses: ./.github/workflows/static_analysis.yaml
 
-  static-analysis:
+  code-form:
     uses: ./.github/workflows/formatter.yaml
 
   
