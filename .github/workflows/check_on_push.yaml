@@ -1,0 +1,14 @@
+#
+# These checks run on every commit
+#
+
+name: Check on Every Push
+on:
+  push:
+    branches-ignore:
+      - main
+
+jobs:
+
+  regressions-tests:
+    uses: regression_suite.yaml
