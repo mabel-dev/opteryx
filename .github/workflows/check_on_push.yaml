@@ -14,12 +14,12 @@ jobs:
     uses: ./.github/workflows/regression_suite.yaml
 
   secrets-scanning:
-    uses: ./.github/workflows/secrets.yaml
+    uses: ./.github/workflows/secrets_scanning.yaml
 
   static-analysis:
     uses: ./.github/workflows/static_analysis.yaml
 
   code-form:
-    uses: ./.github/workflows/formatter.yaml
+    uses: ./.github/workflows/code_form.yaml
 
   
