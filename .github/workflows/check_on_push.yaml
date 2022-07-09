@@ -11,4 +11,4 @@ on:
 jobs:
 
   regressions-tests:
-    uses: regression_suite.yaml
+    uses: regression_suite.yaml@main
