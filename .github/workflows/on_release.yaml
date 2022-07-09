@@ -11,7 +11,7 @@ on:
 
 jobs:
 
-  regressions-tests:
+  regression-tests:
     uses: ./.github/workflows/regression_suite.yaml
 
   secrets-scanning:
