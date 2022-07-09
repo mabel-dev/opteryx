@@ -1,8 +1,4 @@
-#
-# These checks run on every commit
-#
-
-name: Check on Every Push
+name: Release New Version
 on:
   release:
     types: [published]
