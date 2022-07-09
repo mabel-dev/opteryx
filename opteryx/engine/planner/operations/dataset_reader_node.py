@@ -287,13 +287,15 @@ class DatasetReaderNode(BasePlanNode):
             try:
                 blob_bytes = cache.get(blob_hash)
             except:  # nosec - all problems are handled the same way
+                cache = None
                 blob_bytes = None
 
             # if the item was a miss, get it from storage and add it to the cache
             if blob_bytes is None:
                 self._statistics.cache_misses += 1
                 blob_bytes = reader(path)
-                cache.set(blob_hash, blob_bytes)
+                if cache:
+                    cache.set(blob_hash, blob_bytes)
             else:
                 self._statistics.cache_hits += 1
         else:
