@@ -28,7 +28,6 @@ import pyarrow
 
 from opteryx.engine import QueryDirectives, QueryStatistics
 from opteryx.engine.planner.operations import BasePlanNode
-from opteryx.engine.planner.planner import QueryPlanner
 from opteryx.exceptions import DatabaseError
 from opteryx.storage import file_decoders
 from opteryx.storage.adapters import DiskStorage
@@ -130,6 +129,8 @@ class DatasetReaderNode(BasePlanNode):
         self._dataset = config.get("dataset", None)
         self._alias = config.get("alias", None)
 
+        # circular imports
+        from opteryx.engine.planner.planner import QueryPlanner
         if isinstance(self._dataset, (list, QueryPlanner, dict)):
             return
 
@@ -177,7 +178,8 @@ class DatasetReaderNode(BasePlanNode):
 
     def execute(self) -> Iterable:
 
-        # query plans
+        # circular imports
+        from opteryx.engine.planner.planner import QueryPlanner
         if isinstance(self._dataset, QueryPlanner):
             metadata = None
 
