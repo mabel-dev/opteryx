@@ -131,6 +131,7 @@ class DatasetReaderNode(BasePlanNode):
 
         # circular imports
         from opteryx.engine.planner.planner import QueryPlanner
+
         if isinstance(self._dataset, (list, QueryPlanner, dict)):
             return
 
@@ -180,6 +181,7 @@ class DatasetReaderNode(BasePlanNode):
 
         # circular imports
         from opteryx.engine.planner.planner import QueryPlanner
+
         if isinstance(self._dataset, QueryPlanner):
             metadata = None
 
