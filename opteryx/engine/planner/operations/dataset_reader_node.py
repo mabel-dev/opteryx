@@ -162,7 +162,7 @@ class DatasetReaderNode(BasePlanNode):
     def config(self):  # pragma: no cover
         use_cache = ""
         if self._no_cache:
-            use_cache = " (NOCACHE)"
+            use_cache = " (NO_CACHE)"
         if self._alias:
             return f"{self._dataset} => {self._alias}{use_cache}"
         if isinstance(self._dataset, str):
@@ -284,7 +284,10 @@ class DatasetReaderNode(BasePlanNode):
             # hash the blob name for the look up
             blob_hash = format(CityHash64(path), "X")
             # try to read the cache
-            blob_bytes = cache.get(blob_hash)
+            try:
+                blob_bytes = cache.get(blob_hash)
+            except:  # nosec - all problems are handled the same way
+                blob_bytes = None
 
             # if the item was a miss, get it from storage and add it to the cache
             if blob_bytes is None:
