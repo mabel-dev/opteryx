@@ -18,6 +18,7 @@ This is a SQL Query Execution Plan Node.
 This Node reads and parses the data from a dataset into a Table.
 """
 import datetime
+from urllib.parse import MAX_CACHE_SIZE
 import pyarrow
 import time
 
@@ -34,6 +35,7 @@ from opteryx.storage.schemes import MabelPartitionScheme
 from opteryx.storage.schemes import DefaultPartitionScheme
 from opteryx.utils.columns import Columns
 
+MAX_SIZE_SINGLE_CACHE_ITEM: int = 1024 * 1024
 
 class ExtentionType(str, Enum):
     """labels for the file extentions"""
@@ -286,7 +288,7 @@ class DatasetReaderNode(BasePlanNode):
             # try to read the cache
             try:
                 blob_bytes = cache.get(blob_hash)
-            except:  # nosec - all problems are handled the same way
+            except Exception:  # pragma: no cover
                 cache = None
                 blob_bytes = None
 
@@ -294,7 +296,7 @@ class DatasetReaderNode(BasePlanNode):
             if blob_bytes is None:
                 self._statistics.cache_misses += 1
                 blob_bytes = reader(path)
-                if cache:
+                if cache and len(blob_bytes) < MAX_SIZE_SINGLE_CACHE_ITEM:
                     cache.set(blob_hash, blob_bytes)
             else:
                 self._statistics.cache_hits += 1
