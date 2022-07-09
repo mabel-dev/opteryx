@@ -4,7 +4,8 @@
 # https://github.com/cclauss/autoblack
 
 name: blacken
-on: [pull_request, push]
+on:
+  workflow_call
 jobs:
   build:
     name: Auto Format

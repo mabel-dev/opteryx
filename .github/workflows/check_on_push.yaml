@@ -12,3 +12,14 @@ jobs:
 
   regressions-tests:
     uses: ./.github/workflows/regression_suite.yaml
+
+  secrets-scanning:
+    uses: ./.github/workflows/secrets.yaml
+
+  static-analysis:
+    ses: ./.github/workflows/static_analysis.yaml
+
+  static-analysis:
+    ses: ./.github/workflows/formatter.yaml
+
+  
