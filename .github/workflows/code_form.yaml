@@ -4,10 +4,11 @@
 # https://github.com/cclauss/autoblack
 
 name: blacken
-on: [pull_request, push]
+on:
+  workflow_call
 jobs:
   build:
-    name: Auto Format
+    name: Check Format
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1

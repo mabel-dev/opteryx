@@ -1,0 +1,25 @@
+#
+# These checks run on every commit
+#
+
+name: Check on Every Push
+on:
+  push:
+    branches-ignore:
+      - main
+
+jobs:
+
+  regressions-tests:
+    uses: ./.github/workflows/regression_suite.yaml
+
+  secrets-scanning:
+    uses: ./.github/workflows/secrets_scanning.yaml
+
+  static-analysis:
+    uses: ./.github/workflows/static_analysis.yaml
+
+  code-form:
+    uses: ./.github/workflows/code_form.yaml
+
+  
