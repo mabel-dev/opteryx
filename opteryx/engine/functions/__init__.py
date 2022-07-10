@@ -187,7 +187,8 @@ FUNCTIONS = {
     "LIST_CONTAINS_ANY": (None, _iterate_double_parameter(other_functions.list_contains_any),),
     "LIST_CONTAINS_ALL": (None, _iterate_double_parameter(other_functions.list_contains_all),),
     "SEARCH": (None, other_functions.search,),
-    "COALESCE": (None, other_functions.coalesce,),
+    "COALESCE": (None, compute.coalesce,),
+
     # NUMERIC
     "ROUND": (None, compute.round,),
     "FLOOR": (None, compute.floor,),
