@@ -77,6 +77,7 @@ ITERATIVE_CASTERS = {
     else numpy.datetime64(x),
 }
 
+
 def cast(_type):
     """cast a column to a specified type"""
     if _type in VECTORIZED_CASTERS:
@@ -91,15 +92,17 @@ def cast(_type):
         return _inner
     raise SqlError(f"Unable to cast values in column to `{_type}`")
 
+
 def try_cast(_type):
     """cast a column to a specified type"""
     casters = {
         "BOOLEAN": bool,
         "NUMERIC": float,
         "VARCHAR": str,
-        "TIMESTAMP": dates.parse_iso
+        "TIMESTAMP": dates.parse_iso,
     }
     if _type in casters:
+
         def _inner(arr):
             caster = casters[_type]
             for i in arr:
@@ -110,7 +113,6 @@ def try_cast(_type):
 
         return _inner
     raise SqlError(f"Unable to cast values in column to `{_type}`")
-
 
 
 def _iterate_no_parameters(func):

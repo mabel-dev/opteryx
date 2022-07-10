@@ -476,7 +476,11 @@ class QueryPlanner(ExecutionTree):
 
                     alias.append(f"TRY_CAST({args[0][0]} AS {data_type})")
 
-                    return {"function": f"TRY_{data_type}", "args": args, "alias": alias}
+                    return {
+                        "function": f"TRY_{data_type}",
+                        "args": args,
+                        "alias": alias,
+                    }
 
                 if "Extract" in function:
                     # EXTRACT(part FROM timestamp)
