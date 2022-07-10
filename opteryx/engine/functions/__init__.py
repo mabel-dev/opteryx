@@ -14,21 +14,23 @@
 These are a set of functions that can be applied to data.
 """
 import datetime
-import numpy
 import os
+import numpy
 import pyarrow
 
 from cityhash import CityHash64
 from pyarrow import compute
+from pyarrow import ArrowNotImplementedError
 
 import opteryx
+
 from opteryx.engine.functions import date_functions
 from opteryx.engine.functions import number_functions
 from opteryx.engine.functions import other_functions
 from opteryx.engine.functions import string_functions
 from opteryx.exceptions import SqlError
 from opteryx.third_party.date_trunc import date_trunc
-from opteryx.utils.dates import parse_iso
+from opteryx.utils import dates
 
 
 def get_random():
@@ -75,7 +77,6 @@ ITERATIVE_CASTERS = {
     else numpy.datetime64(x),
 }
 
-
 def cast(_type):
     """cast a column to a specified type"""
     if _type in VECTORIZED_CASTERS:
@@ -89,6 +90,27 @@ def cast(_type):
 
         return _inner
     raise SqlError(f"Unable to cast values in column to `{_type}`")
+
+def try_cast(_type):
+    """cast a column to a specified type"""
+    casters = {
+        "BOOLEAN": bool,
+        "NUMERIC": float,
+        "VARCHAR": str,
+        "TIMESTAMP": dates.parse_iso
+    }
+    if _type in casters:
+        def _inner(arr):
+            caster = casters[_type]
+            for i in arr:
+                try:
+                    yield [caster(i)]
+                except (ValueError, TypeError, ArrowNotImplementedError):
+                    yield [None]
+
+        return _inner
+    raise SqlError(f"Unable to cast values in column to `{_type}`")
+
 
 
 def _iterate_no_parameters(func):
@@ -169,6 +191,11 @@ FUNCTIONS = {
     "NUMERIC": (None, cast("NUMERIC"),),
     "VARCHAR": (None, cast("VARCHAR"),),
     "STRING": (None, cast("VARCHAR"),),  # alias for VARCHAR
+    "TRY_TIMESTAMP": (None, try_cast("TIMESTAMP"),),
+    "TRY_BOOLEAN": (None, try_cast("BOOLEAN"),),
+    "TRY_NUMERIC": (None, try_cast("NUMERIC"),),
+    "TRY_VARCHAR": (None, try_cast("VARCHAR"),),
+    "TRY_STRING": (None, try_cast("VARCHAR"),),  # alias for VARCHAR
     # STRINGS
     "LEN": (None, _iterate_single_parameter(get_len),),  # LENGTH(str) -> int
     "LENGTH": (None, _iterate_single_parameter(get_len),),  # LENGTH(str) -> int

@@ -143,6 +143,8 @@ SELECT *
 
 Intervals are defined quantifying one or more periods which make up the interval, supported periods and their notation are:
 
+Recognized interval parts for the `GENERATE_SERIES` function are:
+
 Period  | Symbol
 ------- | -----:
 Years   | y

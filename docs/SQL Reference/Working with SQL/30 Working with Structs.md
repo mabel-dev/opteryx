@@ -7,7 +7,7 @@ In Opteryx a struct is a collection of zero or more key, value pairs. Keys must 
 ### Reading
 
 ~~~
-`struct[key]`
+struct[key]
 ~~~
 
 Values within structs can be accessed by key using map notation, putting the key in square brackets following the struct.

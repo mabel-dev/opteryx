@@ -7,28 +7,28 @@ In Opteryx a list is an ordered collection of zero or more values of the same da
 ### Accessing
 
 ~~~
-`list[index]`
+list[index]
 ~~~
 
 ### Testing
 
 ~~~
-`value IN list`
+value IN list
 ~~~
 
 ### Searching
 
 ~~~
-`SEARCH(list, value)`
+SEARCH(list, value)
 ~~~
 ~~~
-`LIST_CONTAINS`   
+LIST_CONTAINS   
 ~~~
 ~~~
-`LIST_CONTAINS_ANY`   
+LIST_CONTAINS_ANY   
 ~~~
 ~~~
-`LIST_CONTAINS_ALL`
+LIST_CONTAINS_ALL
 ~~~
 
 ## Converting Lists to Relations

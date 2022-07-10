@@ -94,6 +94,7 @@ class EvaluationNode(BasePlanNode):
                         # it's a literal, just add it
                         arg_list.append(arg[0])
 
+                # if there are no parameters, we pass the number of rows
                 if len(arg_list) == 0:
                     arg_list = [page.num_rows]
 

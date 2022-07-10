@@ -2,6 +2,9 @@
 
 Definitions noted with a ♫ accept different input arguments.
 
+!!! note
+    Functions presently cannot be used with the outputs of function calls, for example `DATEDIFF('year', birth_date, TODAY())` will return an error.
+
 ## List Functions
 
 For more details, see [Working with Lists](https://mabel-dev.github.io/opteryx/SQL%20Reference/Working%20with%20SQL/20%20Working%20with%20Lists/).
@@ -112,7 +115,7 @@ For more details, see [Working with Timestamps](https://mabel-dev.github.io/opte
 `DATE_FORMAT` (**ts**: _timestamp_, **format**: _varchar_) → _varchar_      
 &emsp;Formats **ts** as a string using **format**.   
 
-`DATE_PART`(**unit**: _varchar_, **ts**: _timestamp_) → _numeric_      
+`DATEPART`(**unit**: _varchar_, **ts**: _timestamp_) → _numeric_      
 &emsp;Alias of `EXTRACT`(**unit** FROM **ts**).
 
 `DATE_TRUNC` (**unit**: _varchar_, **ts**: _timestamp_) → _varchar_      
@@ -121,8 +124,12 @@ For more details, see [Working with Timestamps](https://mabel-dev.github.io/opte
 `DATEDIFF` (**unit**: _varchar_, **start**: _timestamp_, **end**: _timestamp_) → _numeric_      
 &emsp;Calculate the difference between the start and end timestamps in a given **unit**.  
 
+`DAY` (_timestamp_) → _numeric_  
+&emsp;Extract day number from a timestamp. See `EXTRACT`.
+
 `EXTRACT` (**unit** FROM _timestamp_) → _numeric_     
 &emsp;Extract **unit** of a timestamp.
+&emsp;Also implemented as individual extraction functions.
 
 `NOW` () → _timestamp_   
 &emsp;Alias for `current_time`.
@@ -133,59 +140,64 @@ For more details, see [Working with Timestamps](https://mabel-dev.github.io/opte
 `TODAY` () → _timestamp_   
 &emsp;Alias for `current_date`.
 
-Recognized date parts and periods and support across various functions:
+`HOUR` (**ts**: _timestamp_) → _numeric_  
+&emsp;Returns the hour of the day from **ts**. The value ranges from `0` to `23`.  
+&emsp;Alias for `EXTRACT`(hour FROM **ts**).
 
-Part     | DATE_TRUNC | EXTRACT | DATEDIFF | Notes
--------- | :--------: | :-----: | :------: | ----
-second   | ✓ | ✓ | ✓ |
-minute   | ✓ | ✓ | ✓ |
-hour     | ✓ | ✓ | ✓ |
-day      | ✓ | ✓ | ✓ |
-dow      | ✘ | ✓ | ✘ | day of week
-week     | ✓ | ✓ | ✓ | iso week i.e. to monday
-month    | ✓ | ✓ | ▲ | DATEFIFF unreliable calculating months
-quarter  | ✓ | ✓ | ✓ |
-doy      | ✘ | ✓ | ✘ | day of year
-year     | ✓ | ✓ | ✓ |
+`MINUTE` (**ts**: _timestamp_) → _numeric_  
+&emsp;Returns the minute of the hour from **ts**. The value ranges from `0` to `59`.  
+&emsp;Alias for `EXTRACT`(minute FROM **ts**)
 
-The following convenience extraction functions also exist, however use of `EXTRACT` is recommended.
+`MONTH` (**ts**: _timestamp_) → _numeric_  
+&emsp;Returns the month of the year from **ts**. The value ranges from `1` to `12`.  
+&emsp;Alias for `EXTRACT`(month FROM **ts**)
 
-Function        | Description                                       | Example
---------------- | ------------------------------------------------- | ---------------------------
-`DAY(date)`     | Extract day number                                | `DAY(2022-02-06) -> 6`
-`HOUR(time)`    | Extract hour from timestamp                       | `HOUR(5:32:43) -> 5`
-`MINUTE(time)`  | Extract minute from timestamp                     | `MINUTE(5:32:43) -> 32`
-`MONTH(date)`   | Extract month number                              | `MONTH(2022-02-06) -> 2`
-`QUARTER(date)` | Extract quarter of the year                       | `QUARTER(2022-02-06) -> 2`
-`SECOND(time)`  | Extract second                                    | `SECOND(5:32:43) -> 43`
-`WEEK(date)`    | Extract ISO week of year number                   | `WEEK(2022-02-06) -> 5`
-`YEAR(date)`    | Extract year number                               | `YEAR(202-02-06) -> 2022`
+`QUARTER` (**ts**: _timestamp_) → _numeric_  
+&emsp;Returns the quarter of the year from **ts**. The value ranges from `1` to `4`.  
+&emsp;Alias for `EXTRACT`(quarter FROM **ts**)
 
-!!! note
-    Date functions presently require a TIMESTAMP column or a TIMESTAMP literal and cannot be used with the outputs of function calls, for example `DATEDIFF('year', birth_date, TODAY())` will return an error.
+`SECOND` (**ts**: _timestamp_) → _numeric_  
+&emsp;Returns the second of the minute from **ts**. The value ranges from `0` to `59`.  
+&emsp;Alias for `EXTRACT`(second FROM **ts**)
 
-## Conversion
+`WEEK` (**ts**: _timestamp_) → _numeric_  
+&emsp;Returns the week of the year from **ts**. The value ranges from `1` to `53`.  
+&emsp;Alias for `EXTRACT`(week FROM **ts**)
+
+`YEAR` (**ts**: _timestamp_) → _numeric_  
+&emsp;Returns the year from **ts**.  
+&emsp;Alias for `EXTRACT`(year FROM **ts**)
+
+## Conversion Functions
+
+`BOOLEAN` (**any**: _any_) → _boolean_        
+&emsp;Cast **any** to a `boolean`.   
+&emsp;Alias for `CAST`(**any** AS BOOLEAN).   
 
 `CAST` (**any**: _any_ AS **type**) → _[type]_   
 &emsp;Cast **any** to **type**.   
+&emsp;Also implemented as individual cast functions.
 
-`NUMERIC` (_any_) → _numeric_      
-&emsp;Convert **any** to a floating point number. 
+`NUMERIC` (**any**: _any_) → _numeric_      
+&emsp;Cast **any** to a floating point number.   
+&emsp;Alias for `CAST`(**any** AS NUMERIC).   
 
-`VARCHAR` (_any_) → _varchar_   
-&emsp;Convert **any** to a string.
+`STRING` (**any**: _any_) → _varchar_   
+&emsp;Alias of `VARCHAR`(**any**) and `CAST`(**any** AS VARCHAR)
 
-`STRING` (_any_) → _varchar_   
-&emsp;Alias of `VARCHAR`(_any_)
-
-`BOOLEAN` (_any_) → _boolean_        
-&emsp;Convert input to a Boolean   
-
-`TIMESTAMP` (_varchar_) → _timestamp_ ♫        
-&emsp;Convert an [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format string to a timestamp.  
+`TIMESTAMP` (**iso8601**: _varchar_) → _timestamp_ ♫        
+&emsp;Cast an [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format string to a timestamp.  
+&emsp;Alias for `CAST`(**iso8601** AS TIMESTAMP).   
 
 `TIMESTAMP` (**seconds**: _numeric_) → _timestamp_ ♫     
 &emsp;Return timestamp of **seconds** seconds since the Unix Epoch. 
+
+`TRY_CAST` (**any**: _any_ AS **type**) → _[type]_   
+&emsp;Cast **any** to **type**, failures return `null`.   
+
+`VARCHAR` (_any_) → _varchar_   
+&emsp;Cast **any** to a string.  
+&emsp;Alias for `CAST`(**any** AS VARCHAR).
 
 ## Struct Functions
 
@@ -236,16 +248,3 @@ For more details, see [Working with Structs](https://mabel-dev.github.io/opteryx
 
 `UNNEST` (**array**: _list_) → _relation_       
 &emsp;Create a virtual relation with a row for each element in **array**.
-
-Recognized interval parts for the `GENERATE_SERIES` function are:
-
-Period  | Symbol
-------- | -----:
-Years   | y
-Months  | mo
-Weeks   | w
-Days    | d
-Hours   | h
-Minutes | m
-Seconds | s
-

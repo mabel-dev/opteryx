@@ -459,6 +459,25 @@ class QueryPlanner(ExecutionTree):
 
                     return {"function": data_type, "args": args, "alias": alias}
 
+                if "TryCast" in function:
+                    # CAST(<var> AS <type>) - convert to the form <type>(var), e.g. BOOLEAN(on)
+                    args = [self._build_dnf_filters(function["TryCast"]["expr"])]
+                    data_type = function["TryCast"]["data_type"]
+                    if data_type == "Timestamp":
+                        data_type = "TIMESTAMP"
+                    elif "Varchar" in data_type:
+                        data_type = "VARCHAR"
+                    elif "Decimal" in data_type:
+                        data_type = "NUMERIC"
+                    elif "Boolean" in data_type:
+                        data_type = "BOOLEAN"
+                    else:
+                        raise SqlError("Unsupported CAST function")
+
+                    alias.append(f"TRY_CAST({args[0][0]} AS {data_type})")
+
+                    return {"function": f"TRY_{data_type}", "args": args, "alias": alias}
+
                 if "Extract" in function:
                     # EXTRACT(part FROM timestamp)
 
