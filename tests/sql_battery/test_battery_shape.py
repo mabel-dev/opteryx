@@ -158,6 +158,10 @@ STATEMENTS = [
         ("SELECT CAST(planetId AS VARCHAR) FROM $satellites", 177, 1),
         ("SELECT CAST(planetId AS TIMESTAMP) FROM $satellites", 177, 1),
         ("SELECT CAST(planetId AS NUMERIC) FROM $satellites", 177, 1),
+        ("SELECT TRY_CAST(planetId AS BOOLEAN) FROM $satellites", 177, 1),
+        ("SELECT TRY_CAST(planetId AS VARCHAR) FROM $satellites", 177, 1),
+        ("SELECT TRY_CAST(planetId AS TIMESTAMP) FROM $satellites", 177, 1),
+        ("SELECT TRY_CAST(planetId AS NUMERIC) FROM $satellites", 177, 1),
 
         ("SELECT PI()", 1, 1),
         ("SELECT GET(name, 1) FROM $satellites GROUP BY planetId, GET(name, 1)", 56, 1),
@@ -232,6 +236,11 @@ STATEMENTS = [
         ("SELECT HASH('hello')", 1, 1),
         ("SELECT MD5('hello')", 1, 1),
         ("SELECT UPPER('upper'), LOWER('LOWER')", 1, 2),
+
+        ("SELECT HASH(name), name from $astronauts", 357, 2),
+        ("SELECT HASH(death_date), death_date from $astronauts", 357, 2),
+        ("SELECT HASH(birth_place), birth_place from $astronauts", 357, 2),
+        ("SELECT HASH(missions), missions from $astronauts", 357, 2),
 
         ("SELECT * FROM (VALUES ('High', 3),('Medium', 2),('Low', 1)) AS ratings(name, rating)", 3, 2),
         ("SELECT * FROM (VALUES ('High', 3),('Medium', 2),('Low', 1)) AS ratings(name, rating) WHERE rating = 3", 1, 2),
@@ -375,12 +384,14 @@ STATEMENTS = [
         ("SELECT EXTRACT(dow FROM birth_date) FROM $astronauts", 357, 1),
         ("SELECT EXTRACT(DOW FROM birth_date) FROM $astronauts", 357, 1),
         ("SELECT EXTRACT(YEAR FROM '2022-02-02')", 1, 1),
-
+        ("SELECT DATE_FORMAT(birth_date, '%m-%y') FROM $astronauts", 357, 1),
         ("SELECT DATEDIFF('year', '2017-08-25', '2011-08-25') AS DateDiff;", 1, 1),
         ("SELECT DATEDIFF('days', '2022-07-07', birth_date) FROM $astronauts", 357, 1),
         ("SELECT DATEDIFF('minutes', birth_date, '2022-07-07') FROM $astronauts", 357, 1),
 
         ("SELECT * FROM tests.data.schema WITH(NO_PARTITION) ORDER BY 1", 2, 4),
+
+        ("SELECT COALESCE(death_date, '1900-01-01') FROM $astronauts", 357, 1),
 
         # These are queries which have been found to return the wrong result or not run correctly
         # FILTERING ON FUNCTIONS

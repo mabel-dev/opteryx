@@ -69,36 +69,3 @@ def search(array, item):
             [False] if record is None else [item in record.values()] for record in array
         )
     return [[False] * array.shape[0]]
-
-
-def _inner_coalesce(iterable):
-    for element in iterable:
-        if element is not None and (element == element):  # nosemgrep
-            if isinstance(element, numpy.datetime64):
-                element = dates.parse_iso(element)
-            # print(f"returning {element}, {type(element)}, {iterable}")
-            return element
-    return None
-
-
-def _make_list(arr, length):
-    if not isinstance(arr, numpy.ndarray):
-        return [arr] * length
-
-
-def coalesce(*args):
-    """
-    Iterate each of the args and return the first non-null value
-    """
-    cycles = max([0] + [len(a) for a in args if isinstance(a, numpy.ndarray)])
-    if cycles == 0:
-        raise Exception("something has gone wrong")
-
-    my_args = list(args)
-
-    for i, val in enumerate(args):
-        if not isinstance(val, numpy.ndarray):
-            my_args[i] = _make_list(val, cycles)
-
-    for row in zip(*my_args):
-        yield [_inner_coalesce(row)]

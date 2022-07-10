@@ -1,14 +1,51 @@
 # Functions
 
+Definitions noted with a ♫ accept different input arguments.
+
+!!! note
+    Functions presently cannot be used with the outputs of function calls, for example `DATEDIFF('year', birth_date, TODAY())` will return an error.
+
+## List Functions
+
+For more details, see [Working with Lists](https://mabel-dev.github.io/opteryx/SQL%20Reference/Working%20with%20SQL/20%20Working%20with%20Lists/).
+
+**array**: _list_`[`**index**: _numeric_`]` → **value** ♫  
+&emsp;Return the **index**th element from **array**. 
+
+`GET` (**array**: _list_, **index**: _numeric_) → **value** ♫   
+&emsp;Alias of **array**`[`**index**`]`.  
+
+`LEN` (**array**: _list_) → _numeric_ ♫   
+&emsp;Alias of `LENGTH`(**array**).
+
+`LENGTH` (**array**: _list_) → _numeric_ ♫   
+&emsp;Returns the number of elements in **array**.
+
+`LIST_CONTAINS` (**array**: _list_, **value**) → _boolean_     
+&emsp;Return `true` if **array** contains **value**. See also `SEARCH`(**array**, **value**).
+
+`LIST_CONTAINS_ANY` (**array**: _list_, **values**: _list_) → _boolean_       
+&emsp;Return `true` if **array** contains any elements in **values**.
+
+`LIST_CONTAINS_ALL` (**array**: _list_, **values**: _list_) → _boolean_            
+&emsp;Return `true` if **array** contains all of elements in **values**.
+
+`SEARCH` (**array**: _list_, **value**) → _boolean_ ♫  
+&emsp;Return `true` if **array** contains **value**. 
+
 ## Numeric Functions
 
-`ABS` (**x**: _numeric_) → _numeric_  
-&emsp;Returns the absolute value of **x**.    
-&emsp;Alias of `ABSOLUTE`(_numeric_).  
+`ABS` (**x**: _numeric_) → _numeric_   
+&emsp;Alias of `ABSOLUTE`(**x**).  
 
-`CEIL` (**x**: _numeric_) → _numeric_   
+`ABSOLUTE` (**x**: _numeric_) → _numeric_   
+&emsp;Returns the absolute value of **x**.   
+
+`CEIL` (**x**: _numeric_) → _numeric_      
+&emsp;Alias of `CEILING`(**x**).  
+
+`CEILING` (**x**: _numeric_) → _numeric_   
 &emsp;Returns **x** rounded up to the nearest integer.    
-&emsp;Alias of `CEILING`(_numeric_).  
 
 `FLOOR` (**x**: _numeric_) → _numeric_   
 &emsp;Returns **x** rounded down to the nearest integer.   
@@ -16,29 +53,36 @@
 `PI` () → _numeric_   
 &emsp;Returns the constant Pi.  
 
-`ROUND` (**x**: _numeric_) → _numeric_     
+`ROUND` (**x**: _numeric_) → _numeric_ ♫     
 &emsp;Returns **x** rounded to the nearest integer. 
 
-`ROUND` (**x**: _numeric_, **places**: _numeric_) → _numeric_     
+`ROUND` (**x**: _numeric_, **places**: _numeric_) → _numeric_ ♫     
 &emsp;Returns **x** rounded to **places** decimal places.
 
-`TRUNC` (**x**: _numeric_) → _numeric_    
+`TRUNC` (**x**: _numeric_) → _numeric_     
+&emsp;Alias of `TRUNCATE`(**x**).  
+
+`TRUNCATE` (**x**: _numeric_) → _numeric_    
 &emsp;Returns **x** rounded to integer by dropping digits after decimal point.    
-&emsp;Alias of `TRUNCATE`(_numeric_).  
 
 ## Text Functions
 
 Functions for examining and manipulating string values. 
 
-`GET` (**str**: _varchar_, **index**: _numeric_) → _varchar_   
-&emsp;Return the **index**th character from **str**.   
+**str**: _varchar_`[`**index**: _numeric_`]` → _varchar_ ♫  
+&emsp;Return the **index**th character from **str**. 
+
+`GET` (**str**: _varchar_, **index**: _numeric_) → _varchar_ ♫   
+&emsp;Alias of **str**`[`**index**`]`.   
 
 `LEFT` (**str**: _varchar_, **n**: _numeric_) → _varchar_    
 &emsp;Extract the left-most **n** characters of **str**.  
 
-`LEN` (**str**: _varchar_) → _numeric_   
+`LEN` (**str**: _varchar_) → _numeric_ ♫   
+&emsp;Alias of `LENGTH`(**str**)
+
+`LENGTH` (**str**: _varchar_) → _numeric_ ♫   
 &emsp;Returns the length of **str** in characters.    
-&emsp;Alias of `LENGTH`(_varchar_)
 
 `LOWER` (**str**: _varchar_) → _varchar_   
 &emsp;Converts **str** to lowercase.
@@ -46,192 +90,161 @@ Functions for examining and manipulating string values.
 `RIGHT` (**str**: _varchar_, **n**: _numeric_) → _varchar_    
 &emsp;Extract the right-most **n** characters of **str**.   
 
-`SEARCH` (_varchar_, **value**: _varchar_) → _boolean_    
-&emsp;Return True if the string contains value.   
-&emsp;`SEARCH('hello', 'lo') -> TRUE`
+`SEARCH` (**str**: _varchar_, **value**: _varchar_) → _boolean_ ♫    
+&emsp;Return True if **str** contains **value**.   
 
 `TRIM` (**str**: _varchar_) → _varchar_   
 &emsp;Removes leading and trailing whitespace from **str**.  
 
 `UPPER` (**str**: _varchar_) → _varchar_   
-&emsp;Converts str to uppercase.  
+&emsp;Converts **str** to uppercase.  
 
-## Date Functions
+## Date and Time Functions
 
-Functions for examining and manipulating date values. 
+For more details, see [Working with Timestamps](https://mabel-dev.github.io/opteryx/SQL%20Reference/Working%20with%20SQL/10%20Working%20with%20Timestamps/).
 
 `current_date` → _timestamp_      
-&emsp;Current Date, also `TODAY`(). Note `current_date` does not require parenthesis.  
-&emsp;`CURRENT_DATE -> '2022-02-23'`
+&emsp;Return the current date, in UTC. Note `current_date` does not require parenthesis.  
 
 `current_time` → _timestamp_      
-&emsp;Current Timestamp, also `NOW`(). Note `current_time` does not require parenthesis.  
-&emsp;`CURRENT_TIME -> '2022-02-23 12:37'`
+&emsp;Return the current date and time, in UTC. Note `current_time` does not require parenthesis.  
 
-`DATE` (_timestamp_) → _timestamp_      
-&emsp;Extract the date part of a timestamp.   
-&emsp;`DATE(2022-02-06 11:37) -> '2022-02-06 00:00'`
+`DATE` (**ts**: _timestamp_) → _timestamp_      
+&emsp;Remove any time information, leaving just the date part of **ts**.   
 
-`DATE_FORMAT` (_timestamp_, **format**: _varchar_) → _varchar_      
-&emsp;Formats `timestamp` as a string using `format`.   
-&emsp;`DATE_FORMAT('2022-07-07', '%Y') -> '2022'`    
+`DATE_FORMAT` (**ts**: _timestamp_, **format**: _varchar_) → _varchar_      
+&emsp;Formats **ts** as a string using **format**.   
 
-`DATE_TRUNC` (**part**: _varchar_, _timestamp_) → _varchar_      
-&emsp;Remove parts from a timestamp.  
-&emsp;`DATE_TRUNC('year', 2022-06-23) -> '2022-01-01'`
+`DATEPART`(**unit**: _varchar_, **ts**: _timestamp_) → _numeric_      
+&emsp;Alias of `EXTRACT`(**unit** FROM **ts**).
 
-`DATEDIFF` (**part**: _varchar_, **start**: _timestamp_, **end**: _timestamp_) → _numeric_      
-&emsp;Calculate the difference between the start and end timestamps in a given unit  
-&emsp;`DATEDIFF('hours', '1969-07-16 13:32', '1969-07-24 16:50') -> 195`
+`DATE_TRUNC` (**unit**: _varchar_, **ts**: _timestamp_) → _varchar_      
+&emsp;Returns **ts** truncated to **unit**.  
 
-`EXTRACT` (_part_ FROM _timestamp_) → _numeric_     
-&emsp;Extract a part of a timestamp, also `DATE_PART`(part: _varchar_, _timestamp_)  
-&emsp;`EXTRACT(year FROM 2022-01-01) -> 2022`
+`DATEDIFF` (**unit**: _varchar_, **start**: _timestamp_, **end**: _timestamp_) → _numeric_      
+&emsp;Calculate the difference between the start and end timestamps in a given **unit**.  
 
-`TIME` () → _timestamp_     
-&emsp;Current Time (UTC).   
-&emsp;`TIME() -> '12:34:23.2123'`
+`DAY` (_timestamp_) → _numeric_  
+&emsp;Extract day number from a timestamp. See `EXTRACT`.
 
-`TIMESTAMP` (_varchar_) → _timestamp_        
-&emsp;Convert an [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format string to a timestamp.  
-&emsp;`TIMESTAMP('2000-01-01') -> 1 Jan 2000`
+`EXTRACT` (**unit** FROM _timestamp_) → _numeric_     
+&emsp;Extract **unit** of a timestamp.
+&emsp;Also implemented as individual extraction functions.
 
-`TIMESTAMP` (_numeric_) → _timestamp_     
-&emsp;Interpret n as seconds since unix epoch.   
-&emsp;`TIMESTAMP(946684800) -> 1 Jan 2000`
+`NOW` () → _timestamp_   
+&emsp;Alias for `current_time`.
 
-Recognized date parts and periods and support across various functions:
+`TIME` () → _timestamp_      
+&emsp;Current Time (UTC).     
 
-Part     | DATE_TRUNC                | EXTRACT                   | DATEDIFF                  | Notes
--------- | ------------------------- | ------------------------- | ------------------------- | ----
-second   | :fontawesome-solid-check: | :fontawesome-solid-check: | :fontawesome-solid-check: |
-minute   | :fontawesome-solid-check: | :fontawesome-solid-check: | :fontawesome-solid-check: |
-hour     | :fontawesome-solid-check: | :fontawesome-solid-check: | :fontawesome-solid-check: |
-day      | :fontawesome-solid-check: | :fontawesome-solid-check: | :fontawesome-solid-check: |
-dow      | :fontawesome-solid-xmark: | :fontawesome-solid-check: | :fontawesome-solid-xmark: | day of week
-week     | :fontawesome-solid-check: | :fontawesome-solid-check: | :fontawesome-solid-check: | iso week i.e. to monday
-month    | :fontawesome-solid-check: | :fontawesome-solid-check: | :fontawesome-solid-check: | DATEFIFF unreliable calculating months
-quarter  | :fontawesome-solid-check: | :fontawesome-solid-check: | :fontawesome-solid-check: |
-doy      | :fontawesome-solid-xmark: | :fontawesome-solid-check: | :fontawesome-solid-xmark: | day of year
-year     | :fontawesome-solid-check: | :fontawesome-solid-check: | :fontawesome-solid-check: |
+`TODAY` () → _timestamp_   
+&emsp;Alias for `current_date`.
 
-The following functions also exist, however use of `EXTRACT` is recommended.
+`HOUR` (**ts**: _timestamp_) → _numeric_  
+&emsp;Returns the hour of the day from **ts**. The value ranges from `0` to `23`.  
+&emsp;Alias for `EXTRACT`(hour FROM **ts**).
 
-Function        | Description                                       | Example
---------------- | ------------------------------------------------- | ---------------------------
-`DAY(date)`     | Extract day number                                | `DAY(2022-02-06) -> 6`
-`HOUR(time)`    | Extract hour from timestamp                       | `HOUR(5:32:43) -> 5`
-`MINUTE(time)`  | Extract minute from timestamp                     | `MINUTE(5:32:43) -> 32`
-`MONTH(date)`   | Extract month number                              | `MONTH(2022-02-06) -> 2`
-`QUARTER(date)` | Extract quarter of the year                       | `QUARTER(2022-02-06) -> 2`
-`SECOND(time)`  | Extract second                                    | `SECOND(5:32:43) -> 43`
-`WEEK(date)`    | Extract ISO week of year number                   | `WEEK(2022-02-06) -> 5`
-`YEAR(date)`    | Extract year number                               | `YEAR(202-02-06) -> 2022`
+`MINUTE` (**ts**: _timestamp_) → _numeric_  
+&emsp;Returns the minute of the hour from **ts**. The value ranges from `0` to `59`.  
+&emsp;Alias for `EXTRACT`(minute FROM **ts**)
 
-!!! note
-    Date functions presently require a TIMESTAMP column or a TIMESTAMP literal and cannot be used with the outputs of function calls, for example `DATEDIFF('year', birth_date, TODAY())` will return an error.
+`MONTH` (**ts**: _timestamp_) → _numeric_  
+&emsp;Returns the month of the year from **ts**. The value ranges from `1` to `12`.  
+&emsp;Alias for `EXTRACT`(month FROM **ts**)
+
+`QUARTER` (**ts**: _timestamp_) → _numeric_  
+&emsp;Returns the quarter of the year from **ts**. The value ranges from `1` to `4`.  
+&emsp;Alias for `EXTRACT`(quarter FROM **ts**)
+
+`SECOND` (**ts**: _timestamp_) → _numeric_  
+&emsp;Returns the second of the minute from **ts**. The value ranges from `0` to `59`.  
+&emsp;Alias for `EXTRACT`(second FROM **ts**)
+
+`WEEK` (**ts**: _timestamp_) → _numeric_  
+&emsp;Returns the week of the year from **ts**. The value ranges from `1` to `53`.  
+&emsp;Alias for `EXTRACT`(week FROM **ts**)
+
+`YEAR` (**ts**: _timestamp_) → _numeric_  
+&emsp;Returns the year from **ts**.  
+&emsp;Alias for `EXTRACT`(year FROM **ts**)
+
+## Conversion Functions
+
+`BOOLEAN` (**any**: _any_) → _boolean_        
+&emsp;Cast **any** to a `boolean`.   
+&emsp;Alias for `CAST`(**any** AS BOOLEAN).   
+
+`CAST` (**any**: _any_ AS **type**) → _[type]_   
+&emsp;Cast **any** to **type**.   
+&emsp;Also implemented as individual cast functions.
+
+`NUMERIC` (**any**: _any_) → _numeric_      
+&emsp;Cast **any** to a floating point number.   
+&emsp;Alias for `CAST`(**any** AS NUMERIC).   
+
+`STRING` (**any**: _any_) → _varchar_   
+&emsp;Alias of `VARCHAR`(**any**) and `CAST`(**any** AS VARCHAR)
+
+`TIMESTAMP` (**iso8601**: _varchar_) → _timestamp_ ♫        
+&emsp;Cast an [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format string to a timestamp.  
+&emsp;Alias for `CAST`(**iso8601** AS TIMESTAMP).   
+
+`TIMESTAMP` (**seconds**: _numeric_) → _timestamp_ ♫     
+&emsp;Return timestamp of **seconds** seconds since the Unix Epoch. 
+
+`TRY_CAST` (**any**: _any_ AS **type**) → _[type]_   
+&emsp;Cast **any** to **type**, failures return `null`.   
+
+`VARCHAR` (_any_) → _varchar_   
+&emsp;Cast **any** to a string.  
+&emsp;Alias for `CAST`(**any** AS VARCHAR).
+
+## Struct Functions
+
+For more details, see [Working with Structs](https://mabel-dev.github.io/opteryx/SQL%20Reference/Working%20with%20SQL/30%20Working%20with%20Structs/).
+
+**object**: _struct_`[`**key**: _varchar_`]` → **value** ♫  
+&emsp;Return the value for **key** from **object**. 
+
+`GET` (**object**: _struct_, **key**: _varchar_) → **value** ♫   
+&emsp;Alias of **object**`[`**key**`]`.  
+
+`SEARCH` (**object**: _struct_, **value**: _varchar_) → **boolean** ♫  
+&emsp;Return `true` if any of the values in **object** is **value**.
+
+## System Functions
+
+`VERSION` () → _varchar_        
+&emsp;Return the version of Opteryx.
 
 ## Other Functions
 
-`BOOLEAN` (_any_) → _boolean_        
-&emsp;Convert input to a Boolean   
-&emsp;`BOOLEAN('true') -> True`
+`COALESCE` (**arg1**, **arg2**, ...) → _[input type]_   
+&emsp;Return the first item from args which is not `null`.   
 
-`CAST` (_any_ AS _type_) → _type_   
-&emsp;Cast a value to type, calls `type(any)`    
-&emsp;`CAST(state AS BOOLEAN) -> False`
+`GENERATE_SERIES` (**stop**: _numeric_) → _list_<_numeric_> ♫       
+&emsp;Return a numeric list between 1 and **stop**, with a step of 1.    
 
-`COALESCE` (_args_) → _input type_   
-&emsp;Return the first item from args which is not None   
-&emsp;`CAST(university, high_school) -> 'Olympia High'`  
+`GENERATE_SERIES` (**start**: _numeric_, **stop**: _numeric_) → _list_<_numeric_> ♫       
+&emsp;Return a numeric list between **start** and **stop**, with a step of 1.
 
-`GENERATE_SERIES` (**stop**: _numeric_) → _list_<_numeric_>       
-&emsp;Generate a series between 1 and 'stop', with a step of 1    
-&emsp;`GENERATE_SERIES(2) -> (1,2)`   
+`GENERATE_SERIES` (**start**: _numeric_, **stop**: _numeric_, **step**: _numeric_) → _list_<_numeric_> ♫       
+&emsp;Return a numeric list between **start** and **stop**, with an increment of **step**.
 
-`GENERATE_SERIES` (**start**: _numeric_, **stop**: _numeric_) → _list_<_numeric_>       
-&emsp;`NUMERIC` series between 'start' and 'stop', with a step of 1
-&emsp;`GENERATE_SERIES(2,4) -> (2,3,4)`
+`GENERATE_SERIES` (**start**: _timestamp_, **stop**: _timestamp_, _interval_) → _list_<_timestamp_> ♫       
+&emsp;Return a timestamp list between **start** and **stop**, with a interval of **step**.    
 
-`GENERATE_SERIES` (**start**: _numeric_, **stop**: _numeric_, **step**: _numeric_) → _list_<_numeric_>       
-&emsp;`NUMERIC` series between 'start' and 'stop', with an explicit step size.
-&emsp;`GENERATE_SERIES(2, 6, 2) -> (2,4,6)`
+`GENERATE_SERIES` (**cidr**: _varchar_) → _list_<_varchar_> ♫       
+&emsp;Return a list of IP addresses from a given **cidr**.   
 
-`GENERATE_SERIES` (**start**: _timestamp_, **stop**: _timestamp_, _interval_) → _list_<_timestamp_>       
-&emsp;`TIMESTAMP` series between 'start' and 'stop', with a given interval    
-&emsp;`GENERATE_SERIES('2022-01-01', '2023-12-31, '1y') -> ('2022-01-01')`
+`HASH` (**any**) → _varchar_           
+&emsp;Calculate the [CityHash](https://opensource.googleblog.com/2011/04/introducing-cityhash.html) (64 bit).
 
-`GENERATE_SERIES` (**cidr**: _varchar_) → _list_<_varchar_>       
-&emsp;Set of IP addresses from a given CIDR   
-&emsp;`GENERATE_SERIES('192.168.1.1/32') -> ('192.168.1.1')`
+`MD5` (**any**) → _varchar_     
+&emsp;Calculate the MD5 hash.
 
-`GET(list, n)`
-&emsp;Gets the nth element in a list, also `list[n]`
-&emsp;`GET(names, 2) -> 'Joe'`
+`RANDOM` () → _numeric_       
+&emsp;Random number between 0.000 and 0.999.
 
-`GET(struct, a)`
-&emsp;Gets the element called 'a' from a struct, also `struct[a]`
-&emsp;`GET(dict, 'key') -> 'value'`
-
-`HASH(str)`
-&emsp;Calculate the [CityHash](https://opensource.googleblog.com/2011/04/introducing-cityhash.html) (64 bit) of a value
-&emsp;`HASH('hello') -> 'B48BE5A931380CE8'`
-
-`LIST_CONTAINS(list, val)`
-&emsp;Test if a list field contains a value
-&emsp;`LIST_CONTAINS(letters, '1') -> False`
-
-`LIST_CONTAINS_ANY(list, vals)`
-&emsp;Test if a list field contains any of a list of values
-&emsp;`LIST_CONTAINS_ANY(letters, ('1', 'a')) -> True`
-
-`LIST_CONTAINS_ALL(list, vals)`
-&emsp;Test is a list field contains all of a list of values
-&emsp;`LIST_CONTAINS_ALL(letters, ('1', 'a')) -> False`
-
-`MD5(str)`
-&emsp;Calculate the MD5 hash of a value
-&emsp;`MD5('hello') -> '5d41402abc4b2a76b9719d911017c592'`
-
-`RANDOM()`
-&emsp;Random number between 0.000 and 0.999
-&emsp;`RANDOM() -> 0.234`
-
-`SEARCH(list, val)`
-&emsp;Return True if val is an item in list
-&emsp;`SEARCH(names, 'John') -> True`
-
-`SEARCH(struct, val)`
-&emsp;Return True if any of the values in struct is val
-&emsp;`SEARCH(dict, 'key') -> True`
-
-`UNNEST(list)`
-&emsp;Create a virtual table with a row for each element in the LIST
-&emsp;`UNNEST((TRUE,FALSE)) AS Booleans` 
-
-`VERSION()`
-&emsp;Return the version of Opteryx
-&emsp;`VERSION() -> 0.1.0`
-
-Recognized interval parts for the `GENERATE_SERIES` function are:
-
-Period  | Symbol
-------- | -----:
-Years   | y
-Months  | mo
-Weeks   | w
-Days    | d
-Hours   | h
-Minutes | m
-Seconds | s
-
-
-
-
-`NUMERIC` (_numeric_) → _numeric_      
-&emsp;Convert input to a floating point number. 
-
-
-`VARCHAR` (_any_) → _varchar_   
-&emsp;Convert value to a string, also `STRING` (_any_).   
-&emsp;`VARCHAR(22) -> '22'`
+`UNNEST` (**array**: _list_) → _relation_       
+&emsp;Create a virtual relation with a row for each element in **array**.
