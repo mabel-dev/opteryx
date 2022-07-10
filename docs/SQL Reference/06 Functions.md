@@ -1,15 +1,15 @@
 # Functions
 
-Definitions noted with a ✝ accept different input arguments.
+Definitions noted with a ♫ accept different input arguments.
 
 ## List Functions
 
 For more details, see [Working with Lists](https://mabel-dev.github.io/opteryx/SQL%20Reference/Working%20with%20SQL/20%20Working%20with%20Lists/).
 
-**array**: _list_`[`**index**: _numeric_`]` → **value** ✝  
+**array**: _list_`[`**index**: _numeric_`]` → **value** ♫  
 &emsp;Return the **index**th character from **array**. 
 
-`GET` (**array**: _list_, **index**: _numeric_) → **value** ✝   
+`GET` (**array**: _list_, **index**: _numeric_) → **value** ♫   
 &emsp;Alias of **array**`[`**index**`]`.  
 
 `LEN` (**array**: _list_) → _numeric_   
@@ -27,7 +27,7 @@ For more details, see [Working with Lists](https://mabel-dev.github.io/opteryx/S
 `LIST_CONTAINS_ALL(list, vals)`  
 &emsp;Test is a list field contains all of a list of values
 
-`SEARCH(list, val)` ✝  
+`SEARCH(list, val)` ♫  
 &emsp;Return True if val is an item in list
 
 `UNNEST(list)`  
@@ -69,10 +69,10 @@ For more details, see [Working with Lists](https://mabel-dev.github.io/opteryx/S
 
 Functions for examining and manipulating string values. 
 
-**str**: _varchar_`[`**index**: _numeric_`]` → _varchar_ ✝  
+**str**: _varchar_`[`**index**: _numeric_`]` → _varchar_ ♫  
 &emsp;Return the **index**th character from **str**. 
 
-`GET` (**str**: _varchar_, **index**: _numeric_) → _varchar_ ✝   
+`GET` (**str**: _varchar_, **index**: _numeric_) → _varchar_ ♫   
 &emsp;Alias of **str**`[`**index**`]`.   
 
 `LEFT` (**str**: _varchar_, **n**: _numeric_) → _varchar_    
@@ -143,16 +143,16 @@ Recognized date parts and periods and support across various functions:
 
 Part     | DATE_TRUNC | EXTRACT | DATEDIFF | Notes
 -------- | :--------: | :-----: | :------: | ----
-second   | ✔ | ✔ | ✔ |
-minute   | ✔ | ✔ | ✔ |
-hour     | ✔ | ✔ | ✔ |
-day      | ✔ | ✔ | ✔ |
-dow      | ✘ | ✔ | ✘ | day of week
-week     | ✔ | ✔ | ✔ | iso week i.e. to monday
-month    | ✔ | ✔ | ▲ | DATEFIFF unreliable calculating months
-quarter  | ✔ | ✔ | ✔ |
-doy      | ✘ | ✔ | ✘ | day of year
-year     | ✔ | ✔ | ✔ |
+second   | ✓ | ✓ | ✓ |
+minute   | ✓ | ✓ | ✓ |
+hour     | ✓ | ✓ | ✓ |
+day      | ✓ | ✓ | ✓ |
+dow      | ✘ | ✓ | ✘ | day of week
+week     | ✓ | ✓ | ✓ | iso week i.e. to monday
+month    | ✓ | ✓ | ▲ | DATEFIFF unreliable calculating months
+quarter  | ✓ | ✓ | ✓ |
+doy      | ✘ | ✓ | ✘ | day of year
+year     | ✓ | ✓ | ✓ |
 
 The following convenience extraction functions also exist, however use of `EXTRACT` is recommended.
 
@@ -186,10 +186,10 @@ Function        | Description                                       | Example
 
 ## Struct Functions
 
-`GET(struct, a)` ✝  
+`GET(struct, a)` ♫  
 &emsp;Gets the element called 'a' from a struct, also `struct[a]`
 
-`SEARCH(struct, val)` ✝  
+`SEARCH(struct, val)` ♫  
 &emsp;Return True if any of the values in struct is val
 
 ## System Functions
