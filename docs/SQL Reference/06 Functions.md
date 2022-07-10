@@ -1,11 +1,22 @@
 # Functions
 
+Definitions noted with a ✝ accept different input arguments.
+
 ## List Functions
 
-For more information on handling list data, see [Working with Lists](https://mabel-dev.github.io/opteryx/SQL%20Reference/Working%20with%20SQL/20%20Working%20with%20Lists/).
+For more details, see [Working with Lists](https://mabel-dev.github.io/opteryx/SQL%20Reference/Working%20with%20SQL/20%20Working%20with%20Lists/).
 
-`GET(list, n)`  
-&emsp;Gets the nth element in a list, also `list[n]`
+**array**: _list_`[`**index**: _numeric_`]` → **value** ✝  
+&emsp;Return the **index**th character from **array**. 
+
+`GET` (**array**: _list_, **index**: _numeric_) → **value** ✝   
+&emsp;Alias of **array**`[`**index**`]`.  
+
+`LEN` (**array**: _list_) → _numeric_   
+&emsp;Alias of `LENGTH`(**array**)
+
+`LENGTH` (**array**: _list_) → _numeric_   
+&emsp;Returns the number of items in **array**.
 
 `LIST_CONTAINS(list, val)`  
 &emsp;Test if a list field contains a value
@@ -16,7 +27,7 @@ For more information on handling list data, see [Working with Lists](https://mab
 `LIST_CONTAINS_ALL(list, vals)`  
 &emsp;Test is a list field contains all of a list of values
 
-`SEARCH(list, val)`  
+`SEARCH(list, val)` ✝  
 &emsp;Return True if val is an item in list
 
 `UNNEST(list)`  
@@ -58,10 +69,10 @@ For more information on handling list data, see [Working with Lists](https://mab
 
 Functions for examining and manipulating string values. 
 
-**str**: _varchar_`[`**index**: _numeric_`]` → _varchar_  
+**str**: _varchar_`[`**index**: _numeric_`]` → _varchar_ ✝  
 &emsp;Return the **index**th character from **str**. 
 
-`GET` (**str**: _varchar_, **index**: _numeric_) → _varchar_   
+`GET` (**str**: _varchar_, **index**: _numeric_) → _varchar_ ✝   
 &emsp;Alias of **str**`[`**index**`]`.   
 
 `LEFT` (**str**: _varchar_, **n**: _numeric_) → _varchar_    
@@ -88,9 +99,9 @@ Functions for examining and manipulating string values.
 `UPPER` (**str**: _varchar_) → _varchar_   
 &emsp;Converts **str** to uppercase.  
 
-## Date Functions
+## Date and Time Functions
 
-Functions for examining and manipulating date values. 
+For more details, see [Working with Timestamps](https://mabel-dev.github.io/opteryx/SQL%20Reference/Working%20with%20SQL/10%20Working%20with%20Timestamps/).
 
 `current_date` → _timestamp_      
 &emsp;Return the current date, in UTC. Note `current_date` does not require parenthesis.  
@@ -161,10 +172,10 @@ Function        | Description                                       | Example
 
 ## Conversion
 
-`CAST` (**any** AS **type**) → _[type]_   
+`CAST` (**any**: _any_ AS **type**) → _[type]_   
 &emsp;Cast a value to type, calls `type(any)`   
 
-`NUMERIC` (_numeric_) → _numeric_      
+`NUMERIC` (_any_) → _numeric_      
 &emsp;Convert input to a floating point number. 
 
 `VARCHAR` (_any_) → _varchar_   
@@ -172,6 +183,14 @@ Function        | Description                                       | Example
 
 `BOOLEAN` (_any_) → _boolean_        
 &emsp;Convert input to a Boolean   
+
+## Struct Functions
+
+`GET(struct, a)` ✝  
+&emsp;Gets the element called 'a' from a struct, also `struct[a]`
+
+`SEARCH(struct, val)` ✝  
+&emsp;Return True if any of the values in struct is val
 
 ## System Functions
 
@@ -198,9 +217,6 @@ Function        | Description                                       | Example
 `GENERATE_SERIES` (**cidr**: _varchar_) → _list_<_varchar_>       
 &emsp;Return a list of IP addresses from a given **cidr**.   
 
-`GET(struct, a)`  
-&emsp;Gets the element called 'a' from a struct, also `struct[a]`
-
 `HASH` (**any**)  
 &emsp;Calculate the [CityHash](https://opensource.googleblog.com/2011/04/introducing-cityhash.html) (64 bit) of a value
 
@@ -210,8 +226,6 @@ Function        | Description                                       | Example
 `RANDOM()`  
 &emsp;Random number between 0.000 and 0.999
 
-`SEARCH(struct, val)`  
-&emsp;Return True if any of the values in struct is val
 
 Recognized interval parts for the `GENERATE_SERIES` function are:
 
