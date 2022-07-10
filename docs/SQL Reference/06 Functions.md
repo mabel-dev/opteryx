@@ -7,31 +7,28 @@ Definitions noted with a ♫ accept different input arguments.
 For more details, see [Working with Lists](https://mabel-dev.github.io/opteryx/SQL%20Reference/Working%20with%20SQL/20%20Working%20with%20Lists/).
 
 **array**: _list_`[`**index**: _numeric_`]` → **value** ♫  
-&emsp;Return the **index**th character from **array**. 
+&emsp;Return the **index**th element from **array**. 
 
 `GET` (**array**: _list_, **index**: _numeric_) → **value** ♫   
 &emsp;Alias of **array**`[`**index**`]`.  
 
-`LEN` (**array**: _list_) → _numeric_   
+`LEN` (**array**: _list_) → _numeric_ ♫   
 &emsp;Alias of `LENGTH`(**array**)
 
-`LENGTH` (**array**: _list_) → _numeric_   
-&emsp;Returns the number of items in **array**.
+`LENGTH` (**array**: _list_) → _numeric_ ♫   
+&emsp;Returns the number of elements in **array**.
 
-`LIST_CONTAINS(list, val)`  
-&emsp;Test if a list field contains a value
+`LIST_CONTAINS` (**array**: _list_, **value**) → _boolean_     
+&emsp;Return `true` if **array** contains **value**. See also `SEARCH`(**array**, **value**).
 
-`LIST_CONTAINS_ANY(list, vals)`  
-&emsp;Test if a list field contains any of a list of values
+`LIST_CONTAINS_ANY` (**array**: _list_, **values**: _list_) → _boolean_       
+&emsp;Return `true` if **array** contains any elements in **values**.
 
-`LIST_CONTAINS_ALL(list, vals)`  
-&emsp;Test is a list field contains all of a list of values
+`LIST_CONTAINS_ALL` (**array**: _list_, **values**: _list_) → _boolean_            
+&emsp;Return `true` if **array** contains all of elements in **values**.
 
-`SEARCH(list, val)` ♫  
-&emsp;Return True if val is an item in list
-
-`UNNEST(list)`  
-&emsp;Create a virtual table with a row for each element in the LIST
+`SEARCH` (**array**: _list_, **value**) → _boolean_ ♫  
+&emsp;Return `true` if **array** contains **value**. 
 
 ## Numeric Functions
 
@@ -78,10 +75,10 @@ Functions for examining and manipulating string values.
 `LEFT` (**str**: _varchar_, **n**: _numeric_) → _varchar_    
 &emsp;Extract the left-most **n** characters of **str**.  
 
-`LEN` (**str**: _varchar_) → _numeric_   
+`LEN` (**str**: _varchar_) → _numeric_ ♫   
 &emsp;Alias of `LENGTH`(_varchar_)
 
-`LENGTH` (**str**: _varchar_) → _numeric_   
+`LENGTH` (**str**: _varchar_) → _numeric_ ♫   
 &emsp;Returns the length of **str** in characters.    
 
 `LOWER` (**str**: _varchar_) → _varchar_   
@@ -90,7 +87,7 @@ Functions for examining and manipulating string values.
 `RIGHT` (**str**: _varchar_, **n**: _numeric_) → _varchar_    
 &emsp;Extract the right-most **n** characters of **str**.   
 
-`SEARCH` (**str**: _varchar_, **value**: _varchar_) → _boolean_    
+`SEARCH` (**str**: _varchar_, **value**: _varchar_) → _boolean_ ♫    
 &emsp;Return True if **str** contains **value**.   
 
 `TRIM` (**str**: _varchar_) → _varchar_   
@@ -128,13 +125,7 @@ For more details, see [Working with Timestamps](https://mabel-dev.github.io/opte
 &emsp;Alias for `current_time` (UTC).
 
 `TIME` () → _timestamp_      
-&emsp;Current Time (UTC).   
-
-`TIMESTAMP` (_varchar_) → _timestamp_        
-&emsp;Convert an [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format string to a timestamp.  
-
-`TIMESTAMP` (_numeric_) → _timestamp_     
-&emsp;Interpret n as seconds since unix epoch.   
+&emsp;Current Time (UTC).     
 
 `TODAY` () → _timestamp_   
 &emsp;Alias for `current_date`.
@@ -173,59 +164,75 @@ Function        | Description                                       | Example
 ## Conversion
 
 `CAST` (**any**: _any_ AS **type**) → _[type]_   
-&emsp;Cast a value to type, calls `type(any)`   
+&emsp;Cast **any** to **type**.   
 
 `NUMERIC` (_any_) → _numeric_      
-&emsp;Convert input to a floating point number. 
+&emsp;Convert **any** to a floating point number. 
 
 `VARCHAR` (_any_) → _varchar_   
-&emsp;Convert value to a string, also `STRING` (_any_).   
+&emsp;Convert **any** to a string.
+
+`STRING` (_any_) → _varchar_   
+&emsp;Alias of `VARCHAR`(_any_)
 
 `BOOLEAN` (_any_) → _boolean_        
 &emsp;Convert input to a Boolean   
 
+`TIMESTAMP` (_varchar_) → _timestamp_ ♫        
+&emsp;Convert an [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format string to a timestamp.  
+
+`TIMESTAMP` (**seconds**: _numeric_) → _timestamp_ ♫     
+&emsp;Return timestamp of **seconds** seconds since the Unix Epoch. 
+
 ## Struct Functions
 
-`GET(struct, a)` ♫  
-&emsp;Gets the element called 'a' from a struct, also `struct[a]`
+For more details, see [Working with Structs](https://mabel-dev.github.io/opteryx/SQL%20Reference/Working%20with%20SQL/30%20Working%20with%20Structs/).
 
-`SEARCH(struct, val)` ♫  
-&emsp;Return True if any of the values in struct is val
+**object**: _struct_`[`**key**: _varchar_`]` → **value** ♫  
+&emsp;Return the value for **key** from **object**. 
+
+`GET` (**object**: _struct_, **key**: _varchar_) → **value** ♫   
+&emsp;Alias of **object**`[`**key**`]`.  
+
+`SEARCH` (**object**: _struct_, **value**: _varchar_) → **boolean** ♫  
+&emsp;Return `true` if any of the values in **object** is **value**.
 
 ## System Functions
 
-`VERSION` ()   
-&emsp;Return the version of Opteryx
+`VERSION` () → _varchar_        
+&emsp;Return the version of Opteryx.
 
 ## Other Functions
 
 `COALESCE` (**arg1**, **arg2**, ...) → _[input type]_   
 &emsp;Return the first item from args which is not `null`.   
 
-`GENERATE_SERIES` (**stop**: _numeric_) → _list_<_numeric_>       
+`GENERATE_SERIES` (**stop**: _numeric_) → _list_<_numeric_> ♫       
 &emsp;Return a numeric list between 1 and **stop**, with a step of 1.    
 
-`GENERATE_SERIES` (**start**: _numeric_, **stop**: _numeric_) → _list_<_numeric_>       
+`GENERATE_SERIES` (**start**: _numeric_, **stop**: _numeric_) → _list_<_numeric_> ♫       
 &emsp;Return a numeric list between **start** and **stop**, with a step of 1.
 
-`GENERATE_SERIES` (**start**: _numeric_, **stop**: _numeric_, **step**: _numeric_) → _list_<_numeric_>       
+`GENERATE_SERIES` (**start**: _numeric_, **stop**: _numeric_, **step**: _numeric_) → _list_<_numeric_> ♫       
 &emsp;Return a numeric list between **start** and **stop**, with an increment of **step**.
 
-`GENERATE_SERIES` (**start**: _timestamp_, **stop**: _timestamp_, _interval_) → _list_<_timestamp_>       
+`GENERATE_SERIES` (**start**: _timestamp_, **stop**: _timestamp_, _interval_) → _list_<_timestamp_> ♫       
 &emsp;Return a timestamp list between **start** and **stop**, with a interval of **step**.    
 
-`GENERATE_SERIES` (**cidr**: _varchar_) → _list_<_varchar_>       
+`GENERATE_SERIES` (**cidr**: _varchar_) → _list_<_varchar_> ♫       
 &emsp;Return a list of IP addresses from a given **cidr**.   
 
-`HASH` (**any**)  
-&emsp;Calculate the [CityHash](https://opensource.googleblog.com/2011/04/introducing-cityhash.html) (64 bit) of a value
+`HASH` (**any**) → _varchar_           
+&emsp;Calculate the [CityHash](https://opensource.googleblog.com/2011/04/introducing-cityhash.html) (64 bit).
 
-`MD5(str)`  
-&emsp;Calculate the MD5 hash of a value
+`MD5` (**any**) → _varchar_     
+&emsp;Calculate the MD5 hash.
 
-`RANDOM()`  
-&emsp;Random number between 0.000 and 0.999
+`RANDOM` () → _numeric_       
+&emsp;Random number between 0.000 and 0.999.
 
+`UNNEST` (**array**: _list_) → _relation_       
+&emsp;Create a virtual relation with a row for each element in **array**.
 
 Recognized interval parts for the `GENERATE_SERIES` function are:
 

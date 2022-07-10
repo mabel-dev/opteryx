@@ -233,6 +233,11 @@ STATEMENTS = [
         ("SELECT MD5('hello')", 1, 1),
         ("SELECT UPPER('upper'), LOWER('LOWER')", 1, 2),
 
+        ("SELECT HASH(name), name from $astronauts", 357, 2),
+        ("SELECT HASH(death_date), death_date from $astronauts", 357, 2),
+        ("SELECT HASH(birth_place), birth_place from $astronauts", 357, 2),
+        ("SELECT HASH(missions), missions from $astronauts", 357, 2),
+
         ("SELECT * FROM (VALUES ('High', 3),('Medium', 2),('Low', 1)) AS ratings(name, rating)", 3, 2),
         ("SELECT * FROM (VALUES ('High', 3),('Medium', 2),('Low', 1)) AS ratings(name, rating) WHERE rating = 3", 1, 2),
 
