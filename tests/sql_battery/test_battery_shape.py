@@ -158,6 +158,10 @@ STATEMENTS = [
         ("SELECT CAST(planetId AS VARCHAR) FROM $satellites", 177, 1),
         ("SELECT CAST(planetId AS TIMESTAMP) FROM $satellites", 177, 1),
         ("SELECT CAST(planetId AS NUMERIC) FROM $satellites", 177, 1),
+        ("SELECT TRY_CAST(planetId AS BOOLEAN) FROM $satellites", 177, 1),
+        ("SELECT TRY_CAST(planetId AS VARCHAR) FROM $satellites", 177, 1),
+        ("SELECT TRY_CAST(planetId AS TIMESTAMP) FROM $satellites", 177, 1),
+        ("SELECT TRY_CAST(planetId AS NUMERIC) FROM $satellites", 177, 1),
 
         ("SELECT PI()", 1, 1),
         ("SELECT GET(name, 1) FROM $satellites GROUP BY planetId, GET(name, 1)", 56, 1),
@@ -380,7 +384,7 @@ STATEMENTS = [
         ("SELECT EXTRACT(dow FROM birth_date) FROM $astronauts", 357, 1),
         ("SELECT EXTRACT(DOW FROM birth_date) FROM $astronauts", 357, 1),
         ("SELECT EXTRACT(YEAR FROM '2022-02-02')", 1, 1),
-
+        ("SELECT DATE_FORMAT(birth_date, '%m-%y') FROM $astronauts", 357, 1),
         ("SELECT DATEDIFF('year', '2017-08-25', '2011-08-25') AS DateDiff;", 1, 1),
         ("SELECT DATEDIFF('days', '2022-07-07', birth_date) FROM $astronauts", 357, 1),
         ("SELECT DATEDIFF('minutes', birth_date, '2022-07-07') FROM $astronauts", 357, 1),
