@@ -13,7 +13,7 @@ For more details, see [Working with Lists](https://mabel-dev.github.io/opteryx/S
 &emsp;Alias of **array**`[`**index**`]`.  
 
 `LEN` (**array**: _list_) → _numeric_ ♫   
-&emsp;Alias of `LENGTH`(**array**)
+&emsp;Alias of `LENGTH`(**array**).
 
 `LENGTH` (**array**: _list_) → _numeric_ ♫   
 &emsp;Returns the number of elements in **array**.
@@ -33,13 +33,13 @@ For more details, see [Working with Lists](https://mabel-dev.github.io/opteryx/S
 ## Numeric Functions
 
 `ABS` (**x**: _numeric_) → _numeric_   
-&emsp;Alias of `ABSOLUTE`(_numeric_).  
+&emsp;Alias of `ABSOLUTE`(**x**).  
 
 `ABSOLUTE` (**x**: _numeric_) → _numeric_   
 &emsp;Returns the absolute value of **x**.   
 
 `CEIL` (**x**: _numeric_) → _numeric_      
-&emsp;Alias of `CEILING`(_numeric_).  
+&emsp;Alias of `CEILING`(**x**).  
 
 `CEILING` (**x**: _numeric_) → _numeric_   
 &emsp;Returns **x** rounded up to the nearest integer.    
@@ -50,14 +50,14 @@ For more details, see [Working with Lists](https://mabel-dev.github.io/opteryx/S
 `PI` () → _numeric_   
 &emsp;Returns the constant Pi.  
 
-`ROUND` (**x**: _numeric_) → _numeric_     
+`ROUND` (**x**: _numeric_) → _numeric_ ♫     
 &emsp;Returns **x** rounded to the nearest integer. 
 
-`ROUND` (**x**: _numeric_, **places**: _numeric_) → _numeric_     
+`ROUND` (**x**: _numeric_, **places**: _numeric_) → _numeric_ ♫     
 &emsp;Returns **x** rounded to **places** decimal places.
 
 `TRUNC` (**x**: _numeric_) → _numeric_     
-&emsp;Alias of `TRUNCATE`(_numeric_).  
+&emsp;Alias of `TRUNCATE`(**x**).  
 
 `TRUNCATE` (**x**: _numeric_) → _numeric_    
 &emsp;Returns **x** rounded to integer by dropping digits after decimal point.    
@@ -76,7 +76,7 @@ Functions for examining and manipulating string values.
 &emsp;Extract the left-most **n** characters of **str**.  
 
 `LEN` (**str**: _varchar_) → _numeric_ ♫   
-&emsp;Alias of `LENGTH`(_varchar_)
+&emsp;Alias of `LENGTH`(**str**)
 
 `LENGTH` (**str**: _varchar_) → _numeric_ ♫   
 &emsp;Returns the length of **str** in characters.    
@@ -110,19 +110,22 @@ For more details, see [Working with Timestamps](https://mabel-dev.github.io/opte
 &emsp;Remove any time information, leaving just the date part of **ts**.   
 
 `DATE_FORMAT` (**ts**: _timestamp_, **format**: _varchar_) → _varchar_      
-&emsp;Formats **ts** as a string using **format**.      
+&emsp;Formats **ts** as a string using **format**.   
 
-`DATE_TRUNC` (**part**: _varchar_, _timestamp_) → _varchar_      
-&emsp;Remove parts from a timestamp.  
+`DATE_PART`(**unit**: _varchar_, **ts**: _timestamp_) → _numeric_      
+&emsp;Alias of `EXTRACT`(**unit** FROM **ts**).
 
-`DATEDIFF` (**part**: _varchar_, **start**: _timestamp_, **end**: _timestamp_) → _numeric_      
-&emsp;Calculate the difference between the start and end timestamps in a given unit  
+`DATE_TRUNC` (**unit**: _varchar_, **ts**: _timestamp_) → _varchar_      
+&emsp;Returns **ts** truncated to **unit**.  
 
-`EXTRACT` (**part** FROM _timestamp_) → _numeric_     
-&emsp;Extract a part of a timestamp, also `DATE_PART`(part: _varchar_, _timestamp_)  
+`DATEDIFF` (**unit**: _varchar_, **start**: _timestamp_, **end**: _timestamp_) → _numeric_      
+&emsp;Calculate the difference between the start and end timestamps in a given **unit**.  
+
+`EXTRACT` (**unit** FROM _timestamp_) → _numeric_     
+&emsp;Extract **unit** of a timestamp.
 
 `NOW` () → _timestamp_   
-&emsp;Alias for `current_time` (UTC).
+&emsp;Alias for `current_time`.
 
 `TIME` () → _timestamp_      
 &emsp;Current Time (UTC).     
