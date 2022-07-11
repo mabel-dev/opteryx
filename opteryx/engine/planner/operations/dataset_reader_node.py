@@ -108,7 +108,12 @@ def _normalize_to_types(table):
         #            schema = schema.set(index, pyarrow.field(column_name, pyarrow.float64()))
         if type_name in ("date32[day]", "date64", "timestamp"):
             schema = schema.set(
-                index, pyarrow.field(column_name, pyarrow.timestamp("us"))
+                index,
+                pyarrow.field(
+                    name=column_name,
+                    type=pyarrow.timestamp("us"),
+                    metadata=table.field(column_name).metadata,
+                ),
             )
 
     return table.cast(target_schema=schema), schema
