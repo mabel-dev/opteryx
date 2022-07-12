@@ -10,13 +10,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import io
 import os
-from opteryx.storage import BaseStorageAdapter
+from opteryx.storage.adapters.blob import BaseBlobStorageAdapter
 
 
-class DiskStorage(BaseStorageAdapter):
+class DiskStorage(BaseBlobStorageAdapter):
     def read_blob(self, blob_name):
-        import io
+
 
         with open(blob_name, "rb") as blob:
             # wrap in a BytesIO so we can close the file

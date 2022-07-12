@@ -10,8 +10,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .base_blob_storage_adapter import BaseBlobStorageAdapter
+"""
+Base Inner Reader for nosql document stores
+"""
+import abc
+from typing import Iterable
 
-from .disk_store import DiskStorage
-from .gcs_store import GcsStorage
-from .minio_store import MinIoStorage
+
+class BaseDocumentStorageAdapter(abc.ABC):
+
+    def get_document_list(self, collection) -> Iterable:
+        """
+        Return an interable of blobs/files
+        """
+        raise NotImplementedError("get_document_list not implemented")
+
+    def read_document(self, collection, document) -> bytes:
+        """
+        Return a filelike object
+        """
+        raise NotImplementedError("read_document not implemented")

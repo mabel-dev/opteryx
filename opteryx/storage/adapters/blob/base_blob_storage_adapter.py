@@ -11,20 +11,16 @@
 # limitations under the License.
 
 """
-Base Inner Reader - this is based on the BaseInnerReader in Mabel with some differences:
-
-- removes any capability to 'read back days'
-- caching is implemented as an injectable dependency
+Base Inner Reader for blob and file stores
 """
 import abc
 import datetime
 from typing import Iterable, List, Union
+from opteryx.utils import dates
+from opteryx.utils import paths
 
 
-class BaseStorageAdapter(abc.ABC):
-    def __init__(self, *args, **kwargs):
-        """empty to allow super calls but nothing needs to be done"""
-        pass
+class BaseBlobStorageAdapter(abc.ABC):
 
     def get_partitions(
         self,
@@ -40,9 +36,6 @@ class BaseStorageAdapter(abc.ABC):
         Get partitions doesn't confirm the partitions exist, it just creates a list
         of candidate partitions.
         """
-
-        from opteryx.utils import dates, paths
-
         # apply the partitioning to the dataset name
         if not dataset.endswith("/"):
             dataset += "/"

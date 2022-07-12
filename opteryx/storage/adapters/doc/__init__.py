@@ -10,8 +10,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .base_blob_storage_adapter import BaseBlobStorageAdapter
+from .base_document_storage_adapter import BaseDocumentStorageAdapter
 
-from .disk_store import DiskStorage
-from .gcs_store import GcsStorage
-from .minio_store import MinIoStorage
+from .gcp_firestore import FireStoreStorage

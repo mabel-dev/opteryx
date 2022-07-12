@@ -37,4 +37,6 @@ BUFFER_PER_SUB_PROCESS: int = int(_config.get("BUFFER_PER_SUB_PROCESS", 10000000
 # The number of seconds before forcably killing processes
 MAXIMUM_SECONDS_SUB_PROCESSES_CAN_RUN: int = int(_config.get("MAXIMUM_SECONDS_SUB_PROCESSES_CAN_RUN", 3600))
 
+
+GCP_PROJECT_ID: str = _config.get("GCP_PROJECT_ID")
 # fmt:on

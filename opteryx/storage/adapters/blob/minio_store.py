@@ -1,8 +1,10 @@
 """
 MinIo Reader - also works with AWS
 """
+import io
+
 from opteryx.exceptions import MissingDependencyError
-from opteryx.storage import BaseStorageAdapter
+from opteryx.storage.adapters.blob import BaseBlobStorageAdapter
 from opteryx.utils import paths
 
 try:
@@ -13,7 +15,7 @@ except ImportError:  # pragma: no cover
     MINIO_INSTALLED = False
 
 
-class MinIoStorage(BaseStorageAdapter):
+class MinIoStorage(BaseBlobStorageAdapter):
     def __init__(self, end_point: str, access_key: str, secret_key: str, **kwargs):
 
         if not MINIO_INSTALLED:  # pragma: no cover
@@ -37,8 +39,6 @@ class MinIoStorage(BaseStorageAdapter):
         )
 
     def read_blob(self, blob_name):
-        import io
-
         try:
             bucket, object_path, name, extension = paths.get_parts(blob_name)
             stream = self.minio.get_object(bucket, object_path + name + extension)

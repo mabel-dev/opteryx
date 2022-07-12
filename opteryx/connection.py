@@ -22,7 +22,7 @@ from typing import Dict, List, Optional, Tuple, Union
 from opteryx.engine.planner import QueryPlanner
 from opteryx.engine import QueryStatistics
 from opteryx.exceptions import CursorInvalidStateError, ProgrammingError, SqlError
-from opteryx.storage import BaseBufferCache, BasePartitionScheme, BaseStorageAdapter
+from opteryx.storage import BaseBufferCache, BasePartitionScheme
 from opteryx.storage.adapters import DiskStorage
 from opteryx.storage.schemes import DefaultPartitionScheme, MabelPartitionScheme
 from opteryx.utils import arrow
@@ -38,7 +38,7 @@ class Connection:
     def __init__(
         self,
         *,
-        reader: Optional[BaseStorageAdapter] = None,
+        reader: Optional[object] = None,
         partition_scheme: Union[str, Tuple, BasePartitionScheme] = "mabel",
         cache: Optional[BaseBufferCache] = None,
         **kwargs,
