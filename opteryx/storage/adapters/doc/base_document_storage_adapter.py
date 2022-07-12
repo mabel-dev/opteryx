@@ -18,7 +18,6 @@ from typing import Iterable
 
 
 class BaseDocumentStorageAdapter(abc.ABC):
-
     def get_document_list(self, collection) -> Iterable:
         """
         Return an interable of blobs/files

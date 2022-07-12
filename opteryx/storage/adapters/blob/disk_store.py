@@ -18,7 +18,6 @@ from opteryx.storage.adapters.blob import BaseBlobStorageAdapter
 class DiskStorage(BaseBlobStorageAdapter):
     def read_blob(self, blob_name):
 
-
         with open(blob_name, "rb") as blob:
             # wrap in a BytesIO so we can close the file
             return io.BytesIO(blob.read())
