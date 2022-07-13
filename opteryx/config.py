@@ -40,4 +40,8 @@ MAXIMUM_SECONDS_SUB_PROCESSES_CAN_RUN: int = int(_config.get("MAXIMUM_SECONDS_SU
 GCP_PROJECT_ID: str = _config.get("GCP_PROJECT_ID")
 # Mapping prefixes to readers - the default is to use disk
 DATASET_PREFIX_MAPPING: dict = _config.get("DATASET_PREFIX_MAPPING", {"_":"disk"})
+# Data Partitioning
+PARTITION_SCHEME: str = _config.get("PARTITION_SCHEME", "mabel")
+# Maximum size for items saved to the buffer cache
+MAX_SIZE_SINGLE_CACHE_ITEM: int = _config.get("MAX_SIZE_SINGLE_CACHE_ITEM", 1048576)
 # fmt:on

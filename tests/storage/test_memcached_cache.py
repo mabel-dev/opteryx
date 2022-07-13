@@ -18,9 +18,9 @@ def test_memcached_cache():
     cache = MemcachedCache(server="localhost:11211")
 
     # read the data once, this should populate the cache if it hasn't already
-    conn = opteryx.connect(reader=DiskStorage(), cache=cache, partition_scheme=None)
+    conn = opteryx.connect(cache=cache)
     cur = conn.cursor()
-    cur.execute("SELECT * FROM tests.data.tweets;")
+    cur.execute("SELECT * FROM tests.data.tweets WITH(NO_PARTITION);")
     for record in cur.fetchall():
         # we just want to make sure we consume the data
         pass
@@ -32,9 +32,9 @@ def test_memcached_cache():
     conn.close()
 
     # read the data a second time, this should hit the cache
-    conn = opteryx.connect(reader=DiskStorage(), cache=cache, partition_scheme=None)
+    conn = opteryx.connect(cache=cache)
     cur = conn.cursor()
-    cur.execute("SELECT * FROM tests.data.tweets;")
+    cur.execute("SELECT * FROM tests.data.tweets WITH(NO_PARTITION);")
     for record in cur.fetchall():
         # we just want to make sure we consume the data
         pass

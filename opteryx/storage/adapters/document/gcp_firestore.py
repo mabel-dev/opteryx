@@ -15,7 +15,7 @@ from opteryx import config
 
 from opteryx.exceptions import MissingDependencyError
 from opteryx.exceptions import UnmetRequirementError
-from opteryx.storage.adapters.doc import BaseDocumentStorageAdapter
+from opteryx.storage.adapters.document import BaseDocumentStorageAdapter
 
 try:
     import firebase_admin
@@ -23,28 +23,33 @@ try:
     from firebase_admin import firestore
 
     HAS_FIREBASE = True
-except ImportError
+except ImportError:
     HAS_FIREBASE = False
 
-class FireStoreStorage(BaseDocumentStorageAdapter):
+GCP_PROJECT_ID = config.GCP_PROJECT_ID
 
+
+class FireStoreStorage(BaseDocumentStorageAdapter):
     def _initialize():
         if not HAS_FIREBASE:
-            raise MissingDependencyError("`firebase-admin` missing, please install or add to requirements.txt")
+            raise MissingDependencyError(
+                "`firebase-admin` missing, please install or add to requirements.txt"
+            )
         if not firebase_admin._apps:
-            project_id = config.GCP_PROJECT_ID
-            if project_id is None:
-                raise UnmetRequirementError("Firestore requires `GCP_PROJECT_ID` set in config")
+            if GCP_PROJECT_ID is None:
+                raise UnmetRequirementError(
+                    "Firestore requires `GCP_PROJECT_ID` set in config"
+                )
             creds = credentials.ApplicationDefault()
-            firebase_admin.initialize_app(creds, {"projectId": project_id})
+            firebase_admin.initialize_app(creds, {"projectId": GCP_PROJECT_ID})
 
-    def get_document_list(self, collection) -> Iterable:
+    def get_document_count(self, collection) -> Iterable:
         """
         Return an interable of blobs/files
         """
         raise NotImplementedError("get_document_list not implemented")
 
-    def read_document(self, collection, document) -> bytes:
+    def read_documents(self, collection, batch_size: int = 1000) -> bytes:
         """
         Return a filelike object
         """

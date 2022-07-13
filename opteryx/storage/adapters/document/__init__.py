@@ -13,3 +13,4 @@
 from .base_document_storage_adapter import BaseDocumentStorageAdapter
 
 from .gcp_firestore import FireStoreStorage
+from .mongodb_store import MongoDbStore

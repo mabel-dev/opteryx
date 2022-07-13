@@ -6,7 +6,12 @@ import sys
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
-BUCKET_NAME = "OPTERYX"
+import opteryx
+
+from opteryx.storage import register_prefix
+from opteryx.storage.adapters import GcsStorage
+
+BUCKET_NAME = "opteryx"
 
 
 def populate_gcs():
@@ -31,26 +36,26 @@ def populate_gcs():
     blob = bucket.blob("data/tweets/data.jsonl")
     blob.upload_from_string(data, content_type="application/octet-stream")
 
+    register_prefix(BUCKET_NAME, GcsStorage)
+
 
 def test_gcs_storage():
 
-    import opteryx
-    from opteryx.storage.adapters import GcsStorage
-
     populate_gcs()
 
-    storage = GcsStorage()
-    conn = opteryx.connect(reader=storage, partition_scheme=None)
+    conn = opteryx.connect()
 
     # SELECT EVERYTHING
     cur = conn.cursor()
-    cur.execute(f"SELECT * FROM {BUCKET_NAME}.data.tweets;")
+    cur.execute(f"SELECT * FROM {BUCKET_NAME}.data.tweets WITH(NO_PARTITION);")
     rows = list(cur.fetchall())
     assert len(rows) == 25
 
     # PROCESS THE DATA IN SOME WAY
     cur = conn.cursor()
-    cur.execute(f"SELECT COUNT(*) FROM {BUCKET_NAME}.data.tweets GROUP BY userid;")
+    cur.execute(
+        f"SELECT COUNT(*) FROM {BUCKET_NAME}.data.tweets WITH(NO_PARTITION) GROUP BY userid;"
+    )
     rows = list(cur.fetchall())
     assert len(rows) == 2
 

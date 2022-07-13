@@ -17,14 +17,13 @@ https://www.python.org/dev/peps/pep-0249/
 """
 import datetime
 import time
-from typing import Dict, List, Optional, Tuple, Union
+
+from typing import Dict, List, Optional
 
 from opteryx.engine.planner import QueryPlanner
 from opteryx.engine import QueryStatistics
 from opteryx.exceptions import CursorInvalidStateError, ProgrammingError, SqlError
-from opteryx.storage import BaseBufferCache, BasePartitionScheme
-from opteryx.storage.adapters import DiskStorage
-from opteryx.storage.schemes import DefaultPartitionScheme, MabelPartitionScheme
+from opteryx.storage import BaseBufferCache
 from opteryx.utils import arrow
 
 CURSOR_NOT_RUN = "Cursor must be in an executed state"
@@ -38,27 +37,11 @@ class Connection:
     def __init__(
         self,
         *,
-        reader: Optional[object] = None,
-        partition_scheme: Union[str, Tuple, BasePartitionScheme] = "mabel",
         cache: Optional[BaseBufferCache] = None,
         **kwargs,
     ):
         self._results = None
-        self._reader = reader
-        if reader is None:
-            self._reader = DiskStorage()
-
-        self._partition_scheme = partition_scheme
-        if isinstance(partition_scheme, (str, tuple, list, set)):
-            if str(partition_scheme).lower() == "mabel":
-                self._partition_scheme = MabelPartitionScheme()
-            else:
-                self._partition_scheme = DefaultPartitionScheme(partition_scheme)
-        if partition_scheme is None:
-            self._partition_scheme = DefaultPartitionScheme("")
-
         self._cache = cache
-
         self._kwargs = kwargs
 
     def cursor(self):
@@ -141,13 +124,9 @@ class Cursor:
 
         self._query_plan = QueryPlanner(
             statistics=self._stats,
-            reader=self._connection._reader,
             cache=self._connection._cache,
-            partition_scheme=self._connection._partition_scheme,
         )
         self._query_plan.create_plan(sql=operation)
-
-        # TODO:run optimizer
 
         # how long have we spent planning
         self._stats.time_planning = time.time_ns() - self._stats.start_time
@@ -172,9 +151,15 @@ class Cursor:
         self._stats.end_time = time.time_ns()
         return self._stats.as_dict()
 
+    @property
+    def has_warnings(self):
+        """do I have warnings"""
+        return self._stats.has_warnings
+
+    @property
     def warnings(self):
         """list of run-time warnings"""
-        return self._stats._warnings
+        return self._stats.warnings
 
     def fetchone(self) -> Optional[Dict]:
         """fetch one record only"""
@@ -201,6 +186,8 @@ class Cursor:
 
     def __repr__(self):  # pragma: no cover
 
+        from opteryx.utils.display import html_table, ascii_table
+
         try:
             from IPython import get_ipython
 
@@ -211,12 +198,8 @@ class Cursor:
         if i_am_in_a_notebook():
             from IPython.display import HTML, display
 
-            from opteryx.utils import display
-
-            html = display.html_table(iter(self._iterator), 10)
+            html = html_table(iter(self._iterator), 10)
             display(HTML(html))
             return ""  # __repr__ must return something
         else:
-            from opteryx.utils import display
-
-            return display.ascii_table(iter(self._iterator), 10)
+            return ascii_table(iter(self._iterator), 10)

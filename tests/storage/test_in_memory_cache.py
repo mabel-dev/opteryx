@@ -7,21 +7,21 @@ import sys
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
+import opteryx
+from opteryx.storage.cache.memory_cache import InMemoryCache
+
 
 def test_in_memory_cache():
-
-    import opteryx
-    from opteryx.storage.cache.memory_cache import InMemoryCache
-    from opteryx.storage.adapters import DiskStorage
 
     cache = InMemoryCache(size=5)
 
     # read the data once, this should populate the cache
-    conn = opteryx.connect(reader=DiskStorage(), cache=cache, partition_scheme=None)
+    conn = opteryx.connect(cache=cache)
     cur = conn.cursor()
-    cur.execute("SELECT * FROM tests.data.tweets;")
+    cur.execute("SELECT * FROM tests.data.tweets WITH(NO_PARTITION);")
     for record in cur.fetchall():
-        # we just want to make sure we consume the data
+        # we just want to make sure we consume the data, doing it like this doesn't
+        # waste memory as much
         pass
     stats = cur.stats
     assert stats["cache_hits"] == 0
@@ -29,9 +29,9 @@ def test_in_memory_cache():
     conn.close()
 
     # read the data a second time, this should hit the cache
-    conn = opteryx.connect(reader=DiskStorage(), cache=cache, partition_scheme=None)
+    conn = opteryx.connect(cache=cache)
     cur = conn.cursor()
-    cur.execute("SELECT * FROM tests.data.tweets;")
+    cur.execute("SELECT * FROM tests.data.tweets WITH(NO_PARTITION);")
     for record in cur.fetchall():
         # we just want to make sure we consume the data
         pass
@@ -41,9 +41,9 @@ def test_in_memory_cache():
     conn.close()
 
     # read the data with the no cache directive
-    conn = opteryx.connect(reader=DiskStorage(), cache=cache, partition_scheme=None)
+    conn = opteryx.connect(cache=cache)
     cur = conn.cursor()
-    cur.execute("SELECT * FROM tests.data.tweets WITH (NO_CACHE);")
+    cur.execute("SELECT * FROM tests.data.tweets WITH (NO_CACHE, NO_PARTITION);")
     for record in cur.fetchall():
         # we just want to make sure we consume the data
         pass

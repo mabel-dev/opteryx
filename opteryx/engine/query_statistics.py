@@ -45,6 +45,7 @@ class QueryStatistics:
 
         self.cache_hits: int = 0
         self.cache_misses: int = 0
+        self.cache_oversize: int = 0
 
         # time spent query planning
         self.time_planning: int = 0
@@ -62,6 +63,14 @@ class QueryStatistics:
         """collect warnings"""
         if warning_text not in self._warnings:
             self._warnings.append(warning_text)
+
+    @property
+    def has_warnings(self):
+        return len(self._warnings) > 0
+
+    @property
+    def warnings(self):
+        return self._warnings
 
     def as_dict(self):
         """
@@ -89,4 +98,5 @@ class QueryStatistics:
             "segments_scanned": self.segments_scanned,
             "cache_hits": self.cache_hits,
             "cache_misses": self.cache_misses,
+            "cache_oversize": self.cache_oversize,
         }

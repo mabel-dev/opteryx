@@ -51,6 +51,7 @@ from opteryx.engine.planner.operations import *
 from opteryx.engine.planner.temporal import extract_temporal_filters
 from opteryx.engine.query_directives import QueryDirectives
 from opteryx.exceptions import SqlError
+from opteryx.storage import get_adapter
 from opteryx.utils import dates
 from opteryx.utils.columns import Columns
 
@@ -73,7 +74,7 @@ OPERATOR_XLAT = {
 
 
 class QueryPlanner(ExecutionTree):
-    def __init__(self, statistics, reader, cache, partition_scheme):
+    def __init__(self, statistics, cache=None):
         """
         Planner creates a plan (Execution Tree or DAG) which presents the plan to
         respond to the query.
@@ -84,9 +85,7 @@ class QueryPlanner(ExecutionTree):
 
         self._statistics = statistics
         self._directives = QueryDirectives()
-        self._reader = reader
         self._cache = cache
-        self._partition_scheme = partition_scheme
 
         self.start_date = datetime.datetime.utcnow().date()
         self.end_date = datetime.datetime.utcnow().date()
@@ -98,9 +97,7 @@ class QueryPlanner(ExecutionTree):
         """copy a plan"""
         planner = QueryPlanner(
             statistics=self._statistics,
-            reader=self._reader,
             cache=self._cache,
-            partition_scheme=self._partition_scheme,
         )
         planner.start_date = self.start_date
         planner.end_date = self.end_date
@@ -284,6 +281,33 @@ class QueryPlanner(ExecutionTree):
                 TOKEN_TYPES.LIST,
             )
 
+    def _check_hints(self, hints):
+
+        from opteryx.third_party.mbleven import compare
+
+        WELL_KNOWN_HINTS = (
+            "NO_CACHE",
+            "NO_PARTITION",
+        )
+
+        for hint in hints:
+            if not hint in WELL_KNOWN_HINTS:
+                best_match_hint = None
+                best_match_score = 100
+
+                for known_hint in WELL_KNOWN_HINTS:
+                    my_dist = compare(hint, known_hint)
+                    if my_dist > 0 and my_dist < best_match_score:
+                        best_match_score = my_dist
+                        best_match_hint = known_hint
+
+                if best_match_hint:
+                    self._statistics.warn(
+                        f"Hint `{hint}` is not recognized, did you mean `{best_match_hint}`?"
+                    )
+                else:
+                    self._statistics.warn(f"Hint `{hint}` is not recognized.")
+
     def _extract_relations(self, ast, default_path: bool = True):
         """ """
 
@@ -323,6 +347,8 @@ class QueryPlanner(ExecutionTree):
                             hint["Identifier"]["value"]
                             for hint in relation["relation"]["Table"]["with_hints"]
                         ]
+                        # hint checks
+                        self._check_hints(hints)
                     dataset = ".".join(
                         [
                             part["value"]
@@ -663,8 +689,10 @@ class QueryPlanner(ExecutionTree):
 
         if dataset[0:1] == "$":
             mode = "Internal"
+            reader = None
         else:
-            mode = "External"
+            reader = get_adapter(dataset)
+            mode = reader.__mode__
 
         self.add_operator(
             "reader",
@@ -673,9 +701,8 @@ class QueryPlanner(ExecutionTree):
                 statistics=statistics,
                 dataset=dataset,
                 alias=None,
-                reader=self._reader,
+                reader=reader,
                 cache=None,  # never read from cache
-                partition_scheme=self._partition_scheme,
                 start_date=self.start_date,
                 end_date=self.end_date,
             ),
@@ -732,6 +759,13 @@ class QueryPlanner(ExecutionTree):
 
         # We always have a data source - even if it's 'no table'
         alias, dataset, mode, hints = _relations[0]
+
+        # external comes in different flavours
+        reader = None
+        if mode == "External":
+            reader = get_adapter(dataset)
+            mode = reader.__mode__
+
         self.add_operator(
             "from",
             reader_factory(mode)(
@@ -739,9 +773,8 @@ class QueryPlanner(ExecutionTree):
                 statistics=statistics,
                 alias=alias,
                 dataset=dataset,
-                reader=self._reader,
+                reader=reader,
                 cache=self._cache,
-                partition_scheme=self._partition_scheme,
                 start_date=self.start_date,
                 end_date=self.end_date,
                 hints=hints,
@@ -760,15 +793,23 @@ class QueryPlanner(ExecutionTree):
                 if join_type == "CrossJoin" and right[2] == "Function":
                     join_type = "CrossJoinUnnest"
                 else:
+
+                    dataset = right[1]
+                    if dataset[0:1] == "$":
+                        mode = "Internal"
+                        reader = None
+                    else:
+                        reader = get_adapter(dataset)
+                        mode = reader.__mode__
+
                     # Otherwise, the right table needs to come from the Reader
-                    right = reader_factory(right[2])(
+                    right = reader_factory(mode)(
                         directives=directives,
                         statistics=statistics,
-                        dataset=right[1],
+                        dataset=dataset,
                         alias=right[0],
-                        reader=self._reader,
+                        reader=reader,
                         cache=self._cache,
-                        partition_scheme=self._partition_scheme,
                         start_date=self.start_date,
                         end_date=self.end_date,
                         hints=right[3],
@@ -796,7 +837,7 @@ class QueryPlanner(ExecutionTree):
                 last_node = f"join-{join_id}"
 
         _projection = self._extract_projections(ast)
-        if any(["function" in a for a in _projection]):
+        if any("function" in a for a in _projection):
             self.add_operator(
                 "eval", EvaluationNode(directives, statistics, projection=_projection)
             )

@@ -18,14 +18,17 @@ from typing import Iterable
 
 
 class BaseDocumentStorageAdapter(abc.ABC):
-    def get_document_list(self, collection) -> Iterable:
+
+    __mode__ = "Collection"
+
+    def get_document_count(self, collection) -> Iterable:
         """
-        Return an interable of blobs/files
+        Return the count, or an estimate of, the number of documents
         """
         raise NotImplementedError("get_document_list not implemented")
 
-    def read_document(self, collection, document) -> bytes:
+    def read_documents(self, collection, page_size: int = 1000) -> bytes:
         """
-        Return a filelike object
+        Return a page of documents
         """
         raise NotImplementedError("read_document not implemented")

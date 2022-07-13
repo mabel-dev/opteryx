@@ -21,6 +21,9 @@ from opteryx.utils import paths
 
 
 class BaseBlobStorageAdapter(abc.ABC):
+
+    __mode__ = "Blob"
+
     def get_partitions(
         self,
         *,
@@ -35,6 +38,8 @@ class BaseBlobStorageAdapter(abc.ABC):
         Get partitions doesn't confirm the partitions exist, it just creates a list
         of candidate partitions.
         """
+        import pathlib
+
         # apply the partitioning to the dataset name
         if not dataset.endswith("/"):
             dataset += "/"
@@ -51,8 +56,6 @@ class BaseBlobStorageAdapter(abc.ABC):
         # we're going to iterate over the date range and get the name of the partition for
         # this dataset on this data - without knowing if the partition exists
         for delta in range(int((end_date - start_date).days) + 1):
-            import pathlib
-
             working_date = start_date + datetime.timedelta(delta)
             partitions.append(
                 pathlib.Path(paths.build_path(path=dataset, date=working_date))

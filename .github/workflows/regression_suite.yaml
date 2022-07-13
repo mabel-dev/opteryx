@@ -53,6 +53,10 @@ jobs:
                      memcached \
                      -m 16
 
+      - name: Start MongoDB Instance
+        run: |
+          docker run -d mongo:latest
+
       - name: Run Regression Tests
         run: coverage run -m pytest 
         env:

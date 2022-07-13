@@ -26,6 +26,7 @@ from cityhash import CityHash64
 
 import pyarrow
 
+from opteryx import config
 from opteryx.engine import QueryDirectives, QueryStatistics
 from opteryx.engine.planner.operations import BasePlanNode
 from opteryx.exceptions import DatabaseError
@@ -34,8 +35,6 @@ from opteryx.storage.adapters import DiskStorage
 from opteryx.storage.schemes import MabelPartitionScheme
 from opteryx.storage.schemes import DefaultPartitionScheme
 from opteryx.utils.columns import Columns
-
-MAX_SIZE_SINGLE_CACHE_ITEM: int = 1024 * 1024
 
 
 class ExtentionType(str, Enum):
@@ -46,6 +45,9 @@ class ExtentionType(str, Enum):
 
 
 do_nothing = lambda x, y: x
+
+MAX_SIZE_SINGLE_CACHE_ITEM = config.MAX_SIZE_SINGLE_CACHE_ITEM
+PARTITION_SCHEME = config.PARTITION_SCHEME
 
 
 KNOWN_EXTENSIONS = {
@@ -119,12 +121,12 @@ def _normalize_to_types(table):
     return table.cast(target_schema=schema), schema
 
 
-class DatasetReaderNode(BasePlanNode):
+class BlobReaderNode(BasePlanNode):
     def __init__(
         self, directives: QueryDirectives, statistics: QueryStatistics, **config
     ):
         """
-        The Dataset Reader Node is responsible for reading the relevant blobs
+        The Blob Reader Node is responsible for reading the relevant blobs
         and returning a Table/Relation.
         """
         super().__init__(directives=directives, statistics=statistics)
@@ -141,19 +143,22 @@ class DatasetReaderNode(BasePlanNode):
             return
 
         self._dataset = self._dataset.replace(".", "/") + "/"
-        self._reader = config.get("reader", DiskStorage())
+        self._reader = config.get("reader")()
 
+        # WITH hint can turn off caching
         self._no_cache = "NO_CACHE" in config.get("hints", [])
         if self._no_cache:
             self._cache = None
         else:
             self._cache = config.get("cache")
-        if "NO_PARTITION" in config.get("hints", []):
+
+        # WITH hint can turn off partitioning, oatherwise get it from config
+        if "NO_PARTITION" in config.get("hints", []) or PARTITION_SCHEME is None:
             self._partition_scheme = DefaultPartitionScheme("")
+        elif PARTITION_SCHEME != "mabel":
+            self._partition_scheme = DefaultPartitionScheme(PARTITION_SCHEME)
         else:
-            self._partition_scheme = config.get(
-                "partition_scheme", MabelPartitionScheme()
-            )
+            self._partition_scheme = MabelPartitionScheme()
 
         self._start_date = config.get("start_date", today)
         self._end_date = config.get("end_date", today)
@@ -180,7 +185,7 @@ class DatasetReaderNode(BasePlanNode):
 
     @property
     def name(self):  # pragma: no cover
-        return "Reader"
+        return "Blob Reader"
 
     def execute(self) -> Iterable:
 
@@ -303,6 +308,8 @@ class DatasetReaderNode(BasePlanNode):
                 blob_bytes = reader(path)
                 if cache and blob_bytes.getbuffer().nbytes < MAX_SIZE_SINGLE_CACHE_ITEM:
                     cache.set(blob_hash, blob_bytes)
+                else:
+                    self._statistics.cache_oversize += 1
             else:
                 self._statistics.cache_hits += 1
         else:

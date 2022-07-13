@@ -2,8 +2,9 @@
 MinIo Reader - also works with AWS
 """
 import io
+import os
 
-from opteryx.exceptions import MissingDependencyError
+from opteryx.exceptions import MissingDependencyError, UnmetRequirementError
 from opteryx.storage.adapters.blob import BaseBlobStorageAdapter
 from opteryx.utils import paths
 
@@ -16,7 +17,7 @@ except ImportError:  # pragma: no cover
 
 
 class MinIoStorage(BaseBlobStorageAdapter):
-    def __init__(self, end_point: str, access_key: str, secret_key: str, **kwargs):
+    def __init__(self, **kwargs):
 
         if not MINIO_INSTALLED:  # pragma: no cover
             raise MissingDependencyError(
@@ -24,7 +25,19 @@ class MinIoStorage(BaseBlobStorageAdapter):
             )
 
         super().__init__(**kwargs)
-        secure = kwargs.get("secure", True)
+
+        end_point = os.environ.get("MINIO_END_POINT")
+        access_key = os.environ.get("MINIO_ACCESS_KEY")
+        secret_key = os.environ.get("MINIO_SECRET_KEY")
+        secure = str(os.environ.get("MINIO_SECURE", "TRUE")).lower() == "true"
+
+        if (
+            end_point is None or access_key is None or secret_key is None
+        ):  # pragma: no cover
+            raise UnmetRequirementError(
+                "MinIo (S3) adapter requires MINIO_END_POINT, MINIO_ACCESS_KEY and MINIO_SECRET_KEY set in environment variables."
+            )
+
         self.minio = Minio(end_point, access_key, secret_key, secure=secure)
 
     def get_blob_list(self, partition):
