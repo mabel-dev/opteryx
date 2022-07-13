@@ -55,7 +55,7 @@ jobs:
 
       - name: Start MongoDB Instance
         run: |
-          docker run -d mongo:latest
+          docker run -d -p 27017:27017 --name test-mongo mongo:latest
 
       - name: Run Regression Tests
         run: coverage run -m pytest 
