@@ -14,20 +14,19 @@
 Base Inner Reader for nosql document stores
 """
 import abc
-from typing import Iterable
 
 
 class BaseDocumentStorageAdapter(abc.ABC):
 
     __mode__ = "Collection"
 
-    def get_document_count(self, collection) -> Iterable:
+    def get_document_count(self, collection) -> int:
         """
         Return the count, or an estimate of, the number of documents
         """
         raise NotImplementedError("get_document_list not implemented")
 
-    def read_documents(self, collection, page_size: int = 1000) -> bytes:
+    def read_documents(self, collection, page_size: int = 500):
         """
         Return a page of documents
         """

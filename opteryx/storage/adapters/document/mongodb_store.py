@@ -22,6 +22,7 @@ import os
 
 from typing import Iterable
 
+from opteryx import config
 from opteryx.storage.adapters.document import BaseDocumentStorageAdapter
 
 try:
@@ -29,6 +30,7 @@ try:
 except ImportError:  # pragma: no cover
     pass
 
+BATCH_SIZE = config.INTERNAL_BATCH_SIZE
 
 def page_dictset(dictset: Iterable[dict], page_size: int):
     """
@@ -67,7 +69,7 @@ class MongoDbStore(BaseDocumentStorageAdapter):
         """
         return self._database[collection].estimated_document_count()
 
-    def read_documents(self, collection, page_size: int = 1000):
+    def read_documents(self, collection, page_size: int = BATCH_SIZE):
         """
         Return a page of documents
         """

@@ -158,7 +158,7 @@ class BlobReaderNode(BasePlanNode):
         elif PARTITION_SCHEME != "mabel":
             self._partition_scheme = DefaultPartitionScheme(PARTITION_SCHEME)
         else:
-            self._partition_scheme = MabelPartitionScheme()
+            self._partition_scheme = MabelPartitionScheme()  # type:ignore
 
         self._start_date = config.get("start_date", today)
         self._end_date = config.get("end_date", today)

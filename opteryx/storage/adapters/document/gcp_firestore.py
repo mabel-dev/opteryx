@@ -27,29 +27,31 @@ except ImportError:
     HAS_FIREBASE = False
 
 GCP_PROJECT_ID = config.GCP_PROJECT_ID
+BATCH_SIZE = config.INTERNAL_BATCH_SIZE
+
+def _initialize():
+    if not HAS_FIREBASE:
+        raise MissingDependencyError(
+            "`firebase-admin` missing, please install or add to requirements.txt"
+        )
+    if not firebase_admin._apps:
+        if GCP_PROJECT_ID is None:
+            raise UnmetRequirementError(
+                "Firestore requires `GCP_PROJECT_ID` set in config"
+            )
+        creds = credentials.ApplicationDefault()
+        firebase_admin.initialize_app(creds, {"projectId": GCP_PROJECT_ID})
 
 
 class FireStoreStorage(BaseDocumentStorageAdapter):
-    def _initialize():
-        if not HAS_FIREBASE:
-            raise MissingDependencyError(
-                "`firebase-admin` missing, please install or add to requirements.txt"
-            )
-        if not firebase_admin._apps:
-            if GCP_PROJECT_ID is None:
-                raise UnmetRequirementError(
-                    "Firestore requires `GCP_PROJECT_ID` set in config"
-                )
-            creds = credentials.ApplicationDefault()
-            firebase_admin.initialize_app(creds, {"projectId": GCP_PROJECT_ID})
 
-    def get_document_count(self, collection) -> Iterable:
+    def get_document_count(self, collection) -> int:
         """
         Return an interable of blobs/files
         """
         raise NotImplementedError("get_document_list not implemented")
 
-    def read_documents(self, collection, batch_size: int = 1000) -> bytes:
+    def read_documents(self, collection, batch_size: int = BATCH_SIZE):
         """
         Return a filelike object
         """
