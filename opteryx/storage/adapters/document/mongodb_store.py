@@ -23,6 +23,7 @@ import os
 from typing import Iterable
 
 from opteryx import config
+from opteryx.exceptions import UnmetRequirementError
 from opteryx.storage.adapters.document import BaseDocumentStorageAdapter
 
 try:
@@ -60,6 +61,11 @@ class MongoDbStore(BaseDocumentStorageAdapter):
         """establish the connection to mongodb"""
         mongo_connection = os.environ.get("MONGO_CONNECTION")
         mongo_database = os.environ.get("MONGO_DATABASE")
+
+        if mongo_connection is None or mongo_database is None:  # pragma: no cover
+            raise UnmetRequirementError(
+                "MongoDB adapter requires MONGO_CONNECTION and MONGO_DATABASE set in environment variables."
+            )
 
         client = pymongo.MongoClient(mongo_connection)
         self._database = client[mongo_database]
