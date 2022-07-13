@@ -1,80 +1,83 @@
-name: Regression Suite
-
-on:
-  workflow_call
-
-jobs:
-  regression_matrix:
+--- 
+jobs: 
+  regression_matrix: 
     runs-on: ubuntu-latest
-    strategy:
-      max-parallel: 4
-      matrix:
-        python-version: ['3.7', '3.8', '3.9', '3.10']
-    steps:
-      - name: Checkout code
+    steps: 
+      - 
+        name: "Checkout code"
         uses: actions/checkout@v2
-  
-      - name: Set up Python ${{ matrix.python-version }} x64
+      - 
+        name: "Set up Python ${{ matrix.python-version }} x64"
         uses: actions/setup-python@v1
-        with:
-          python-version: ${{ matrix.python-version }}
+        with: 
           architecture: x64
-        
-      - name: Install Requirements
+          python-version: "${{ matrix.python-version }}"
+      - 
+        name: "Install Requirements"
         run: |
-          python -m pip install --upgrade pip
-          python -m pip install --upgrade numpy cython
-          pip install -r $GITHUB_WORKSPACE/requirements.txt
-          pip install -r $GITHUB_WORKSPACE/tests/requirements.txt
-          python setup.py build_ext --inplace
-
-      - name: Start MinIo Server
+            python -m pip install --upgrade pip
+            python -m pip install --upgrade numpy cython
+            pip install -r $GITHUB_WORKSPACE/requirements.txt
+            pip install -r $GITHUB_WORKSPACE/tests/requirements.txt
+            python setup.py build_ext --inplace
+      - 
+        name: "Start MinIo Server"
         run: |
-          docker run -d -p 9000:9000 --name minio \
-                     -e "MINIO_ACCESS_KEY=minioadmin" \
-                     -e "MINIO_SECRET_KEY=minioadmin" \
-                     -v /tmp/data:/data \
-                     -v /tmp/config:/root/.minio \
-                     minio/minio server /data
-
-      - name: Start GCS Emulator
+            docker run -d -p 9000:9000 --name minio \
+                       -e "MINIO_ACCESS_KEY=minioadmin" \
+                       -e "MINIO_SECRET_KEY=minioadmin" \
+                       -v /tmp/data:/data \
+                       -v /tmp/config:/root/.minio \
+                       minio/minio server /data
+      - 
+        name: "Start GCS Emulator"
         run: |
-          docker run -d --name \
-                     fake-gcs-server \
-                     -p 9090:4443 \
-                     fsouza/fake-gcs-server \
-                     -scheme http
-
-      - name: Start Memcached Instance
+            docker run -d --name \
+                       fake-gcs-server \
+                       -p 9090:4443 \
+                       fsouza/fake-gcs-server \
+                       -scheme http
+      - 
+        name: "Start Memcached Instance"
         run: |
-          docker run -d --name my-memcached \
-                     -p 11211:11211 \
-                     memcached \
-                     -m 16
-
-      - name: Start MongoDB Instance
+            docker run -d --name my-memcached \
+                       -p 11211:11211 \
+                       memcached \
+                       -m 16
+      - 
+        name: "Start MongoDB Instance"
         run: |
-          docker run -d --name test-mongo \
-                     -p 27017:27017 \
-	                   -e MONGO_INITDB_ROOT_USERNAME=mongoadmin \
-	                   -e MONGO_INITDB_ROOT_PASSWORD=secret \
-	                   mongo:latest
-
-      - name: Run Regression Tests
-        run: coverage run -m pytest 
-        env:
-          MINIO_END_POINT: 127.0.0.1:9000
+            docker run -d --name test-mongo \
+                       -p 27017:27017 \
+                       -e MONGO_INITDB_ROOT_USERNAME=mongoadmin \
+                       -e MONGO_INITDB_ROOT_PASSWORD=secret \
+                       mongo:latest
+      - 
+        env: 
+          AZURE_STORAGE_CONNECTION_STRING: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;QueueEndpoint=http://127.0.0.1:10001/devstoreaccount1;"
           MINIO_ACCESS_KEY: minioadmin
+          MINIO_END_POINT: "127.0.0.1:9000"
           MINIO_SECRET_KEY: minioadmin
           MINIO_SECURE: false
-          MONGO_CONNECTION: mongodb://mongoadmin:secret@localhost:27017
+          MONGO_CONNECTION: "mongodb://mongoadmin:secret@localhost:27017"
           MONGO_DATABASE: opteryx
-          AZURE_STORAGE_CONNECTION_STRING: DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;QueueEndpoint=http://127.0.0.1:10001/devstoreaccount1;
-
-      - name: Check Coverage
-        run: coverage report --include=opteryx* --fail-under=90 -m
-
-      - name: "Upload coverage to Codecov"
+        name: "Run Regression Tests"
+        run: "coverage run -m pytest"
+      - 
+        name: "Check Coverage"
+        run: "coverage report --include=opteryx* --fail-under=90 -m"
+      - 
+        name: "Upload coverage to Codecov"
         uses: codecov/codecov-action@v1
-        with:
+        with: 
           fail_ci_if_error: false
+    strategy: 
+      matrix: 
+        python-version: 
+          - "3.7"
+          - "3.8"
+          - "3.9"
+          - "3.10"
+      max-parallel: 4
+name: "Regression Suite"
+true: workflow_call
