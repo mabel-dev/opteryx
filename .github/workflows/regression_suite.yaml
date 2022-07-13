@@ -47,15 +47,17 @@ jobs:
 
       - name: Start Memcached Instance
         run: |
-          docker run -d --name \
-                     my-memcached \
+          docker run -d --name my-memcached \
                      -p 11211:11211 \
                      memcached \
                      -m 16
 
       - name: Start MongoDB Instance
         run: |
-          docker run -d -p 27017:27017 --name test-mongo mongo:latest
+          docker run -d -p 27017:27017 --name test-mongo \
+	                   -e MONGO_INITDB_ROOT_USERNAME=mongoadmin \
+	                   -e MONGO_INITDB_ROOT_PASSWORD=secret \
+	                   mongo:latest
 
       - name: Run Regression Tests
         run: coverage run -m pytest 
@@ -64,7 +66,7 @@ jobs:
           MINIO_ACCESS_KEY: minioadmin
           MINIO_SECRET_KEY: minioadmin
           MINIO_SECURE: false
-          MONGO_CONNECTION: mongodb://docker:mongopw@localhost:27017
+          MONGO_CONNECTION: mongodb://mongoadmin:secret@localhost:27017
           MONGO_DATABASE: opteryx
           AZURE_STORAGE_CONNECTION_STRING: DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;QueueEndpoint=http://127.0.0.1:10001/devstoreaccount1;
 
