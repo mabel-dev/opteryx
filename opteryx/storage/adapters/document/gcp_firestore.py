@@ -10,7 +10,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Iterable
 from opteryx import config
 
 from opteryx.exceptions import MissingDependencyError
@@ -30,7 +29,7 @@ GCP_PROJECT_ID = config.GCP_PROJECT_ID
 BATCH_SIZE = config.INTERNAL_BATCH_SIZE
 
 
-def _initialize():
+def _initialize():  # pragma: no cover
     if not HAS_FIREBASE:
         raise MissingDependencyError(
             "`firebase-admin` missing, please install or add to requirements.txt"
@@ -44,15 +43,22 @@ def _initialize():
         firebase_admin.initialize_app(creds, {"projectId": GCP_PROJECT_ID})
 
 
-class FireStoreStorage(BaseDocumentStorageAdapter):
+class FireStoreStorage(BaseDocumentStorageAdapter):  # pragma: no cover - no emulator
     def get_document_count(self, collection) -> int:
         """
         Return an interable of blobs/files
-        """
-        raise NotImplementedError("get_document_list not implemented")
 
-    def read_documents(self, collection, batch_size: int = BATCH_SIZE):
+        FireStore currently doesn't support this
+        """
+        return -1
+
+    def read_documents(self, collection, page_size: int = BATCH_SIZE):
         """
         Return a filelike object
         """
-        raise NotImplementedError("read_document not implemented")
+        _initialize()
+        database = firestore.client()
+        documents = database.collection(collection).stream()
+
+        for page in self.page_dictset((doc.to_dict() for doc in documents), page_size):
+            yield page

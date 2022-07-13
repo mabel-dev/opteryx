@@ -34,28 +34,6 @@ except ImportError:  # pragma: no cover
 BATCH_SIZE = config.INTERNAL_BATCH_SIZE
 
 
-def page_dictset(dictset: Iterable[dict], page_size: int):
-    """
-    Enables paging through a dictset by returning a page of records at a time.
-    Parameters:
-        dictset: iterable of dictionaries:
-            The dictset to process
-        page_size: integer:
-            The number of records per page
-    """
-    index = -1
-    chunk: list = [{}] * page_size
-    for index, record in enumerate(dictset):
-        record.pop("_id", None)  # this column type isn't supported
-        if index > 0 and index % page_size == 0:
-            yield chunk
-            chunk = [{}] * page_size
-            chunk[0] = record
-        else:
-            chunk[index % page_size] = record
-    yield chunk[: (index + 1) % page_size]
-
-
 class MongoDbStore(BaseDocumentStorageAdapter):
     def __init__(self):
         """establish the connection to mongodb"""
@@ -81,5 +59,5 @@ class MongoDbStore(BaseDocumentStorageAdapter):
         Return a page of documents
         """
         documents = self._database[collection].find()
-        for page in page_dictset(documents, page_size):
+        for page in self.page_dictset(documents, page_size):
             yield page
