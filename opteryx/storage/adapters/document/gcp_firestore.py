@@ -29,6 +29,7 @@ except ImportError:
 GCP_PROJECT_ID = config.GCP_PROJECT_ID
 BATCH_SIZE = config.INTERNAL_BATCH_SIZE
 
+
 def _initialize():
     if not HAS_FIREBASE:
         raise MissingDependencyError(
@@ -44,7 +45,6 @@ def _initialize():
 
 
 class FireStoreStorage(BaseDocumentStorageAdapter):
-
     def get_document_count(self, collection) -> int:
         """
         Return an interable of blobs/files

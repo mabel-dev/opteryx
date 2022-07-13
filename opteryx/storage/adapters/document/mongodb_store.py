@@ -32,6 +32,7 @@ except ImportError:  # pragma: no cover
 
 BATCH_SIZE = config.INTERNAL_BATCH_SIZE
 
+
 def page_dictset(dictset: Iterable[dict], page_size: int):
     """
     Enables paging through a dictset by returning a page of records at a time.
