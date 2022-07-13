@@ -54,7 +54,8 @@ jobs:
 
       - name: Start MongoDB Instance
         run: |
-          docker run -d -p 27017:27017 --name test-mongo \
+          docker run -d --name test-mongo \
+                     -p 27017:27017 \
 	                   -e MONGO_INITDB_ROOT_USERNAME=mongoadmin \
 	                   -e MONGO_INITDB_ROOT_PASSWORD=secret \
 	                   mongo:latest
