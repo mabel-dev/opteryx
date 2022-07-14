@@ -43,6 +43,7 @@ class GcsStorage(BaseBlobStorageAdapter):
 
         bucket, object_path, name, extension = paths.get_parts(blob_name)
         bucket = bucket.replace("_data", "-data")
+        bucket = bucket.replace("data_", "data-")
 
         blob = get_blob(
             project=self.project,
@@ -55,6 +56,7 @@ class GcsStorage(BaseBlobStorageAdapter):
     def get_blob_list(self, partition=None):
         bucket, object_path, name, extension = paths.get_parts(partition)
         bucket = bucket.replace("_data", "-data")
+        bucket = bucket.replace("data_", "data-")
 
         # print(bucket, object_path, name, extension)
 
