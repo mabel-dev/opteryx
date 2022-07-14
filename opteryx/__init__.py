@@ -12,11 +12,12 @@
 
 import pyximport
 
-pyximport.install()
+pyximport.install()  # build any pyx files
 
 from opteryx.connection import Connection
+from opteryx.version import __version__
 
-from .version import __version__
+from pathlib import Path
 
 
 apilevel = "1.0"  # pylint: disable=C0103
@@ -25,4 +26,22 @@ paramstyle = "format"  # pylint: disable=C0103
 
 
 def connect(*args, **kwargs):
+    """define the opteryx.connect function"""
     return Connection(*args, **kwargs)
+
+
+# python-dotenv allows us to create an environment file to store secrets. If
+# there is no .env it will fail gracefully.
+try:
+    import dotenv  # type:ignore
+except ImportError:  # pragma: no cover
+    dotenv = None  # type:ignore
+
+env_path = Path(".") / ".env"
+
+#  deepcode ignore PythonSameEvalBinaryExpressiontrue: false +ve, values can be different
+if env_path.exists() and (dotenv is None):  # pragma: no cover  # nosemgrep
+    # using a logger here will tie us in knots
+    print("`.env` file exists but `dotEnv` not installed.")
+elif dotenv is not None:  # pragma: no cover
+    dotenv.load_dotenv(dotenv_path=env_path)

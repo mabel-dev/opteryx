@@ -29,6 +29,8 @@ from opteryx.third_party import pyarrow_ops
 from opteryx.utils import arrow
 from opteryx.utils.columns import Columns
 
+INTERNAL_BATCH_SIZE = config.INTERNAL_BATCH_SIZE
+
 
 class InnerJoinNode(BasePlanNode):
     def __init__(
@@ -67,8 +69,6 @@ class InnerJoinNode(BasePlanNode):
                 for col in self._using
             ]
 
-            batch_size = config.INTERNAL_BATCH_SIZE
-
             for page in left_node.execute():
 
                 if left_columns is None:
@@ -80,7 +80,7 @@ class InnerJoinNode(BasePlanNode):
                     new_metadata = left_columns + right_columns
 
                 # we break this into small chunks otherwise we very quickly run into memory issues
-                for batch in page.to_batches(max_chunksize=batch_size):
+                for batch in page.to_batches(max_chunksize=INTERNAL_BATCH_SIZE):
 
                     # blocks don't have column_names, so we need to wrap in a table
                     batch = pyarrow.Table.from_batches([batch], schema=page.schema)

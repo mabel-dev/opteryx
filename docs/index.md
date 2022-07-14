@@ -4,6 +4,8 @@
 
 ## Use Cases
 
+Including data from mulitple systems into a single query.
+
 Great for use in cost-optimized environments, where a traditional data solution like Hadoop is out of reach.
 
 Querying ad hoc data stores, where data is collected by logging systems and output to storage.

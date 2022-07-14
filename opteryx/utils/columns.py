@@ -24,6 +24,8 @@ The selection operator should focus on the selection not on working out which co
 is actually being referred to.
 """
 import os
+import pyarrow
+
 from opteryx.exceptions import SqlError
 from opteryx.utils import arrow
 
@@ -252,8 +254,6 @@ class Columns:
 
     @staticmethod
     def restore_null_columns(removed, table):
-        import pyarrow
-
         for column in removed:
             table = table.append_column(column, pyarrow.array([None] * table.num_rows))
         return table

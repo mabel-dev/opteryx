@@ -23,6 +23,10 @@ class MissingDependencyError(Exception):
     pass
 
 
+class UnmetRequirementError(Exception):
+    pass
+
+
 # PEP-0249
 
 

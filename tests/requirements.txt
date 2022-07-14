@@ -1,5 +1,6 @@
 types-orjson
 types-PyYAML
+types-requests
 
 pytest
 coverage
@@ -7,5 +8,8 @@ rich
 zstandard
 pymemcache
 mypy
+
+# different storage providers
 google-cloud-storage
 minio
+pymongo

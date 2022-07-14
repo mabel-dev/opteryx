@@ -30,6 +30,8 @@ from opteryx.engine import QueryDirectives, QueryStatistics
 from opteryx.exceptions import SqlError
 from opteryx.utils.columns import Columns
 
+INTERNAL_BATCH_SIZE = config.INTERNAL_BATCH_SIZE
+
 
 def _cartesian_product(*arrays):
     """
@@ -73,9 +75,7 @@ def _cross_join(left, right):
             new_columns = left_columns + right_columns
 
         # we break this into small chunks, each cycle will have 100 * rows in the right table
-        for left_block in left_page.to_batches(
-            max_chunksize=config.INTERNAL_BATCH_SIZE
-        ):
+        for left_block in left_page.to_batches(max_chunksize=INTERNAL_BATCH_SIZE):
 
             # blocks don't have column_names, so we need to wrap in a table
             left_block = pyarrow.Table.from_batches(
@@ -133,9 +133,8 @@ def _cross_join_unnest(left, column, alias):
             metadata.add_column(alias)
             unnest_column = metadata.get_column_from_alias(column[0], only_one=True)
 
-        batch_size = config.INTERNAL_BATCH_SIZE
         # we break this into small chunks otherwise we very quickly run into memory issues
-        for left_block in left_page.to_batches(max_chunksize=batch_size):
+        for left_block in left_page.to_batches(max_chunksize=INTERNAL_BATCH_SIZE):
 
             # Get the column we're going to UNNEST
             column_data = left_block[unnest_column]

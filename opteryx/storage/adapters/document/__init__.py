@@ -10,10 +10,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-Store the version here so:
-1) we don't load dependencies by storing it in __init__.py
-2) we can import it in setup.py for the same reason
-"""
+from .base_document_storage_adapter import BaseDocumentStorageAdapter
 
-__version__ = "0.2.0-beta.1"
+from .gcp_firestore import FireStoreStorage
+from .mongodb_store import MongoDbStore

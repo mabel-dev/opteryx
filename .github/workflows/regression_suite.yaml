@@ -37,29 +37,39 @@ jobs:
                      -v /tmp/config:/root/.minio \
                      minio/minio server /data
 
-      - name: Start GCS Emulator
+      - name: "Start GCS Emulator"
         run: |
-          docker run -d --name \
-                     fake-gcs-server \
-                     -p 9090:4443 \
-                     fsouza/fake-gcs-server \
-                     -scheme http
+            docker run -d --name \
+                       fake-gcs-server \
+                       -p 9090:4443 \
+                       fsouza/fake-gcs-server \
+                       -scheme http
 
-      - name: Start Memcached Instance
+      - name: "Start Memcached Instance"
         run: |
-          docker run -d --name \
-                     my-memcached \
-                     -p 11211:11211 \
-                     memcached \
-                     -m 16
+            docker run -d --name my-memcached \
+                       -p 11211:11211 \
+                       memcached \
+                       -m 16
+
+      - name: "Start MongoDB Instance"
+        run: |
+            docker run -d --name test-mongo \
+                       -p 27017:27017 \
+                       -e MONGO_INITDB_ROOT_USERNAME=mongoadmin \
+                       -e MONGO_INITDB_ROOT_PASSWORD=secret \
+                       mongo:latest
 
       - name: Run Regression Tests
         run: coverage run -m pytest 
         env:
-          MINIO_END_POINT: 127.0.0.1:9000
+          AZURE_STORAGE_CONNECTION_STRING: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;QueueEndpoint=http://127.0.0.1:10001/devstoreaccount1;"
           MINIO_ACCESS_KEY: minioadmin
+          MINIO_END_POINT: "127.0.0.1:9000"
           MINIO_SECRET_KEY: minioadmin
-          AZURE_STORAGE_CONNECTION_STRING: DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;QueueEndpoint=http://127.0.0.1:10001/devstoreaccount1;
+          MINIO_SECURE: false
+          MONGO_CONNECTION: "mongodb://mongoadmin:secret@localhost:27017"
+          MONGO_DATABASE: opteryx
 
       - name: Check Coverage
         run: coverage report --include=opteryx* --fail-under=90 -m

@@ -23,9 +23,11 @@ import pyarrow
 import pytest
 
 import opteryx
+from opteryx import config
 from opteryx.storage.adapters import DiskStorage
 from opteryx.utils.arrow import fetchmany
 from opteryx.utils.display import ascii_table
+
 
 # fmt:off
 STATEMENTS = [
@@ -443,7 +445,10 @@ def test_sql_battery(statement, rows, columns):
     """
     Test an battery of statements
     """
-    conn = opteryx.connect(reader=DiskStorage(), partition_scheme="mabel")
+
+    opteryx.storage.register_prefix("tests", DiskStorage)
+
+    conn = opteryx.connect()
     cursor = conn.cursor()
     cursor.execute(statement)
 
