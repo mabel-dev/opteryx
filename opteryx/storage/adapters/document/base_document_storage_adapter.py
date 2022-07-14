@@ -15,6 +15,8 @@ Base Inner Reader for nosql document stores
 """
 import abc
 
+from typing import Iterable
+
 
 class BaseDocumentStorageAdapter(abc.ABC):
 

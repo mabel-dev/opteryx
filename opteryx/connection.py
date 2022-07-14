@@ -195,11 +195,11 @@ class Cursor:
         except Exception:
             i_am_in_a_notebook = False
 
-        if i_am_in_a_notebook():
+        if i_am_in_a_notebook:
             from IPython.display import HTML, display
 
-            html = html_table(iter(self._iterator), 10)
+            html = html_table(iter(self.fetchmany(10)), 10)
             display(HTML(html))
             return ""  # __repr__ must return something
         else:
-            return ascii_table(iter(self._iterator), 10)
+            return ascii_table(iter(self.fetchmany(10)), 10)

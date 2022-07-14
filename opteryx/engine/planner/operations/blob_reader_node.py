@@ -122,6 +122,9 @@ def _normalize_to_types(table):
 
 
 class BlobReaderNode(BasePlanNode):
+
+    _disable_cache = False
+
     def __init__(
         self, directives: QueryDirectives, statistics: QueryStatistics, **config
     ):
@@ -146,8 +149,8 @@ class BlobReaderNode(BasePlanNode):
         self._reader = config.get("reader")()
 
         # WITH hint can turn off caching
-        self._no_cache = "NO_CACHE" in config.get("hints", [])
-        if self._no_cache:
+        self._disable_cache = "NO_CACHE" in config.get("hints", [])
+        if self._disable_cache:
             self._cache = None
         else:
             self._cache = config.get("cache")
@@ -175,7 +178,7 @@ class BlobReaderNode(BasePlanNode):
     @property
     def config(self):  # pragma: no cover
         use_cache = ""
-        if self._no_cache:
+        if self._disable_cache:
             use_cache = " (NO_CACHE)"
         if self._alias:
             return f"{self._dataset} => {self._alias}{use_cache}"
