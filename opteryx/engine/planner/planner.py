@@ -291,7 +291,7 @@ class QueryPlanner(ExecutionTree):
         )
 
         for hint in hints:
-            if not hint in WELL_KNOWN_HINTS:
+            if hint not in WELL_KNOWN_HINTS:
                 best_match_hint = None
                 best_match_score = 100
 
