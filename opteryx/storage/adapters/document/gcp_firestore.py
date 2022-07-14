@@ -28,17 +28,28 @@ except ImportError:
 GCP_PROJECT_ID = config.GCP_PROJECT_ID
 BATCH_SIZE = config.INTERNAL_BATCH_SIZE
 
+def _get_project_id():
+    """ Fetch the ID from GCP """
+    import requests
+    
+    response = requests.get(
+            'http://metadata.google.internal/computeMetadata/v1/project/project-id',
+            headers={
+                'Metadata-Flavor': 'Google'
+            })
+    response.raise_for_status()
+    return response.text
 
 def _initialize():  # pragma: no cover
+    """ Create the connection to Firebase """
     if not HAS_FIREBASE:
         raise MissingDependencyError(
             "`firebase-admin` missing, please install or add to requirements.txt"
         )
     if not firebase_admin._apps:
+        # if we've not been given the ID, fetch it
         if GCP_PROJECT_ID is None:
-            raise UnmetRequirementError(
-                "Firestore requires `GCP_PROJECT_ID` set in config"
-            )
+            GCP_PROJECT_ID = _get_project_id()
         creds = credentials.ApplicationDefault()
         firebase_admin.initialize_app(creds, {"projectId": GCP_PROJECT_ID})
 
@@ -54,7 +65,7 @@ class FireStoreStorage(BaseDocumentStorageAdapter):  # pragma: no cover - no emu
 
     def read_documents(self, collection, page_size: int = BATCH_SIZE):
         """
-        Return a filelike object
+        Return a page of documents
         """
         _initialize()
         database = firestore.client()
