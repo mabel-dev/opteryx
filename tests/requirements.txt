@@ -1,5 +1,6 @@
 types-orjson
 types-PyYAML
+types-requests
 
 pytest
 coverage

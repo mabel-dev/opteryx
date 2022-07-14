@@ -10,6 +10,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from time import time
 from opteryx import config
 
 from opteryx.exceptions import MissingDependencyError
@@ -30,13 +31,15 @@ BATCH_SIZE = config.INTERNAL_BATCH_SIZE
 
 def _get_project_id():
     """ Fetch the ID from GCP """
-    import requests
+    try:
+        import requests
+    except ImportError:
+        raise UnmetRequirementError("Firestore requires 'GCP_PROJECT_ID` to be set in config, or `requests` to be installed.")
     
     response = requests.get(
             'http://metadata.google.internal/computeMetadata/v1/project/project-id',
-            headers={
-                'Metadata-Flavor': 'Google'
-            })
+            headers={'Metadata-Flavor': 'Google'},
+            timeout=10)
     response.raise_for_status()
     return response.text
 
@@ -48,10 +51,11 @@ def _initialize():  # pragma: no cover
         )
     if not firebase_admin._apps:
         # if we've not been given the ID, fetch it
-        if GCP_PROJECT_ID is None:
-            GCP_PROJECT_ID = _get_project_id()
+        project_id = GCP_PROJECT_ID
+        if project_id is None:
+            project_id = _get_project_id()
         creds = credentials.ApplicationDefault()
-        firebase_admin.initialize_app(creds, {"projectId": GCP_PROJECT_ID})
+        firebase_admin.initialize_app(creds, {"projectId": project_id})
 
 
 class FireStoreStorage(BaseDocumentStorageAdapter):  # pragma: no cover - no emulator
