@@ -29,22 +29,27 @@ except ImportError:
 GCP_PROJECT_ID = config.GCP_PROJECT_ID
 BATCH_SIZE = config.INTERNAL_BATCH_SIZE
 
+
 def _get_project_id():
-    """ Fetch the ID from GCP """
+    """Fetch the ID from GCP"""
     try:
         import requests
     except ImportError:
-        raise UnmetRequirementError("Firestore requires 'GCP_PROJECT_ID` to be set in config, or `requests` to be installed.")
-    
+        raise UnmetRequirementError(
+            "Firestore requires 'GCP_PROJECT_ID` to be set in config, or `requests` to be installed."
+        )
+
     response = requests.get(
-            'http://metadata.google.internal/computeMetadata/v1/project/project-id',
-            headers={'Metadata-Flavor': 'Google'},
-            timeout=10)
+        "http://metadata.google.internal/computeMetadata/v1/project/project-id",
+        headers={"Metadata-Flavor": "Google"},
+        timeout=10,
+    )
     response.raise_for_status()
     return response.text
 
+
 def _initialize():  # pragma: no cover
-    """ Create the connection to Firebase """
+    """Create the connection to Firebase"""
     if not HAS_FIREBASE:
         raise MissingDependencyError(
             "`firebase-admin` missing, please install or add to requirements.txt"
