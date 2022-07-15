@@ -72,7 +72,7 @@ class CollectionReaderNode(BasePlanNode):
 
             start_read = time.time_ns()
             pyarrow_page = pyarrow.Table.from_pylist(page)
-            
+
             self._statistics.time_data_read += time.time_ns() - start_read
             self._statistics.rows_read += pyarrow_page.num_rows
             self._statistics.bytes_processed_data += pyarrow_page.nbytes

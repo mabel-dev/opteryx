@@ -105,5 +105,5 @@ class QueryStatistics:
             "cache_oversize": self.cache_oversize,
             "cache_errors": self.cache_errors,
             "collections_read": self.collections_read,
-            "document_pages": self.document_pages
+            "document_pages": self.document_pages,
         }
