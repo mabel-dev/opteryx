@@ -14,8 +14,14 @@
 This module contains support functions for working with PyArrow
 """
 
+import pyarrow
+
 from typing import Iterable, List
 from pyarrow import Table
+
+from opteryx import config
+
+INTERNAL_BATCH_SIZE = config.INTERNAL_BATCH_SIZE
 
 
 def fetchmany(pages, limit: int = 1000):
@@ -28,10 +34,9 @@ def fetchmany(pages, limit: int = 1000):
     if isinstance(pages, Table):
         pages = (pages,)
 
-    default_chunk_size = 5000
-    chunk_size = min(limit, default_chunk_size)
+    chunk_size = min(limit, INTERNAL_BATCH_SIZE)
     if chunk_size < 0:
-        chunk_size = default_chunk_size
+        chunk_size = INTERNAL_BATCH_SIZE
 
     def _inner_row_reader():
 
@@ -91,7 +96,6 @@ def set_metadata(table, table_metadata=None, column_metadata=None):
         tbl_meta: dict
             A json-serializable dictionary with table-level metadata.
     """
-    import pyarrow as pa
     from orjson import dumps
 
     # Create updated column fields with new metadata
@@ -122,7 +126,7 @@ def set_metadata(table, table_metadata=None, column_metadata=None):
                     tbl_metadata[k] = dumps(v)
 
         # Create new schema with updated table metadata
-        schema = pa.schema(fields, metadata=tbl_metadata)
+        schema = pyarrow.schema(fields, metadata=tbl_metadata)
         # With updated schema build new table (shouldn't copy data)
         table = table.cast(schema)
 

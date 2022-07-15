@@ -59,6 +59,7 @@ class Cursor:
         self._query = None
         self.arraysize = 1
         self._stats = QueryStatistics()
+        self._results = None
 
         self._query_plan = None
 
@@ -201,5 +202,5 @@ class Cursor:
             html = html_table(iter(self.fetchmany(10)), 10)
             display(HTML(html))
             return ""  # __repr__ must return something
-        else:
-            return ascii_table(iter(self.fetchmany(10)), 10)
+
+        return ascii_table(iter(self.fetchmany(10)), 10)
