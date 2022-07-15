@@ -314,8 +314,10 @@ class BlobReaderNode(BasePlanNode):
                         cache.set(blob_hash, blob_bytes)
                     except ConnectionResetError:  # pragma: no-cover
                         self._statistics.cache_errors += 1
-                else:  # pragma: no-cover
+                elif cache:  # pragma: no-cover
                     self._statistics.cache_oversize += 1
+                else:  # pragma: no-cover
+                    self._statistics.cache_errors += 1
             else:
                 self._statistics.cache_hits += 1
         else:
