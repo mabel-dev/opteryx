@@ -10,7 +10,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from time import time
 from opteryx import config
 
 from opteryx.exceptions import MissingDependencyError
@@ -34,10 +33,11 @@ def _get_project_id():
     """Fetch the ID from GCP"""
     try:
         import requests
-    except ImportError:
+    except ImportError as exception:
         raise UnmetRequirementError(
-            "Firestore requires 'GCP_PROJECT_ID` to be set in config, or `requests` to be installed."
-        )
+            "Firestore requires 'GCP_PROJECT_ID` to be set in config, or "
+            "`requests` to be installed."
+        ) from exception
 
     response = requests.get(
         "http://metadata.google.internal/computeMetadata/v1/project/project-id",
@@ -78,6 +78,8 @@ class FireStoreStorage(BaseDocumentStorageAdapter):  # pragma: no cover - no emu
         """
         _initialize()
         database = firestore.client()
+
+        print([doc.to_dict() for doc in database.collection(collection).stream()])
         documents = database.collection(collection).stream()
 
         for page in self.page_dictset((doc.to_dict() for doc in documents), page_size):
