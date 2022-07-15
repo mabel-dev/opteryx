@@ -13,7 +13,6 @@ def test_memcached_cache():
 
     import opteryx
     from opteryx.storage.cache.memcached_cache import MemcachedCache
-    from opteryx.storage.adapters import DiskStorage
 
     cache = MemcachedCache(server="localhost:11211")
 
@@ -39,8 +38,8 @@ def test_memcached_cache():
         # we just want to make sure we consume the data
         pass
     stats = cur.stats
-    assert stats["cache_hits"] == 2
-    assert stats["cache_misses"] == 0
+    assert stats["cache_hits"] == 2, stats
+    assert stats["cache_misses"] == 0, stats
     conn.close()
 
 
