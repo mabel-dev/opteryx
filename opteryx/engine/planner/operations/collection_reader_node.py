@@ -18,13 +18,12 @@ This is a SQL Query Execution Plan Node.
 This Node primarily is used for reading NoSQL sources like MongoDB and Firestore.
 """
 import pyarrow
+import time
 
 from typing import Iterable, Optional
 
-from opteryx import samples
 from opteryx.engine import QueryDirectives, QueryStatistics
 from opteryx.engine.planner.operations import BasePlanNode
-from opteryx.exceptions import DatabaseError
 from opteryx.utils.columns import Columns
 
 
@@ -71,7 +70,13 @@ class CollectionReaderNode(BasePlanNode):
 
         for page in self._reader.read_documents(collection):
 
+            start_read = time.time_ns()
             pyarrow_page = pyarrow.Table.from_pylist(page)
+
+            self._statistics.time_data_read += time.time_ns() - start_read
+            self._statistics.rows_read += pyarrow_page.num_rows
+            self._statistics.bytes_processed_data += pyarrow_page.nbytes
+            self._statistics.document_pages += 1
 
             if metadata is None:
                 pyarrow_page = Columns.create_table_metadata(
@@ -81,6 +86,7 @@ class CollectionReaderNode(BasePlanNode):
                     table_aliases=[self._alias],
                 )
                 metadata = Columns(pyarrow_page)
+                self._statistics.collections_read += 1
             else:
                 pyarrow_page = metadata.apply(pyarrow_page)
 

@@ -325,8 +325,6 @@ class BlobReaderNode(BasePlanNode):
 
         table = parser(blob_bytes, None)
 
-        # print(f"read  {path} - {(time.time_ns() - start_read) / 1e9}")
-
         time_to_read = time.time_ns() - start_read
         return time_to_read, blob_bytes.getbuffer().nbytes, table, path
 

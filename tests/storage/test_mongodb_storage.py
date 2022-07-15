@@ -35,7 +35,7 @@ def populate_mongo():
     collection.insert_many(map(orjson.loads, data.split(b"\n")[:-1]))
 
 
-def test_minio_storage():
+def test_mongo_storage():
 
     register_prefix(COLLECTION_NAME, MongoDbStore)
 
@@ -61,4 +61,4 @@ def test_minio_storage():
 
 
 if __name__ == "__main__":
-    test_minio_storage()
+    test_mongo_storage()

@@ -41,6 +41,9 @@ class QueryStatistics:
 
         self.segments_scanned: int = 0
 
+        self.collections_read: int = 0
+        self.document_pages: int = 0
+
         self.time_data_read: int = 0
 
         self.cache_hits: int = 0
@@ -101,4 +104,6 @@ class QueryStatistics:
             "cache_misses": self.cache_misses,
             "cache_oversize": self.cache_oversize,
             "cache_errors": self.cache_errors,
+            "collections_read": self.collections_read,
+            "document_pages": self.document_pages,
         }
