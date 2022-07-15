@@ -310,17 +310,20 @@ class BlobReaderNode(BasePlanNode):
                 self._statistics.cache_misses += 1
                 blob_bytes = reader(path)
                 if cache and blob_bytes.getbuffer().nbytes < MAX_SIZE_SINGLE_CACHE_ITEM:
-                    cache.set(blob_hash, blob_bytes)
-                else:
+                    try:
+                        cache.set(blob_hash, blob_bytes)
+                    except (ConnectionResetError, BrokenPipeError):  # pragma: no-cover
+                        self._statistics.cache_errors += 1
+                elif cache:  # pragma: no-cover
                     self._statistics.cache_oversize += 1
+                else:  # pragma: no-cover
+                    self._statistics.cache_errors += 1
             else:
                 self._statistics.cache_hits += 1
         else:
             blob_bytes = reader(path)
 
         table = parser(blob_bytes, None)
-
-        # print(f"read  {path} - {(time.time_ns() - start_read) / 1e9}")
 
         time_to_read = time.time_ns() - start_read
         return time_to_read, blob_bytes.getbuffer().nbytes, table, path

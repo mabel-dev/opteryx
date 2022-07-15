@@ -94,4 +94,7 @@ class InternalDatasetNode(BasePlanNode):
         return "Sample Dataset Reader"
 
     def execute(self, data_pages: Optional[Iterable] = None) -> Iterable:
-        yield _get_sample_dataset(self._dataset, self._alias)
+        pyarrow_page = _get_sample_dataset(self._dataset, self._alias)
+        self._statistics.rows_read += pyarrow_page.num_rows
+        self._statistics.bytes_processed_data += pyarrow_page.nbytes
+        yield pyarrow_page
