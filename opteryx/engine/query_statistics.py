@@ -46,6 +46,7 @@ class QueryStatistics:
         self.cache_hits: int = 0
         self.cache_misses: int = 0
         self.cache_oversize: int = 0
+        self.cache_errors: int = 0
 
         # time spent query planning
         self.time_planning: int = 0
@@ -99,4 +100,5 @@ class QueryStatistics:
             "cache_hits": self.cache_hits,
             "cache_misses": self.cache_misses,
             "cache_oversize": self.cache_oversize,
+            "cache_errors": self.cache_errors,
         }
