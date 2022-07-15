@@ -63,12 +63,9 @@ class CollectionReaderNode(BasePlanNode):
 
         metadata = None
 
-        collection = self._collection
-        collection = collection.replace("_", "-")
+        row_count = self._reader.get_document_count(self._collection)
 
-        row_count = self._reader.get_document_count(collection)
-
-        for page in self._reader.read_documents(collection):
+        for page in self._reader.read_documents(self._collection):
 
             start_read = time.time_ns()
             pyarrow_page = pyarrow.Table.from_pylist(page)
