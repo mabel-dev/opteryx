@@ -436,6 +436,8 @@ STATEMENTS = [
         ("SELECT * FROM tests.data.nulls WHERE tweet ILIKE '%Trump%' FOR '2000-01-01'", 0, 5),
         # BYTE-ARRAY FAILS #252
         (b"SELECT * FROM $satellites", 177, 8),
+        # DISTINCT on null values #285
+        ("SELECT distinct name FROM (VALUES (null),(null),('apple')) AS booleans (name)", 2, 1),
     ]
 # fmt:on
 
