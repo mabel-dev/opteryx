@@ -20,7 +20,7 @@ def combine_column(table, name):
 def _hash(val):
     # EDGE CASE FOR https://github.com/mabel-dev/opteryx/issues/98
     # hashing NULL doesn't result in the same value each time
-    if all(v != v for v in val):
+    if all(v != v for v in val):  # nosemgrep
         return numpy.nan
     return hash(val)
 
@@ -34,7 +34,7 @@ def columns_to_array(table, columns):
         # FIX https://github.com/mabel-dev/opteryx/issues/285
         # null isn't able to be sorted - replace with nan
         return [
-            numpy.nan if el != el else hash(el)
+            numpy.nan if el != el else hash(el)  # nosemgrep
             for el in combine_column(table, columns[0]).to_numpy(zero_copy_only=False)
         ]
     values = [c.to_numpy() for c in table.select(columns).itercolumns()]
