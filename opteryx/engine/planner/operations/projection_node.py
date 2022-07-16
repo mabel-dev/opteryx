@@ -19,13 +19,14 @@ This Node eliminates columns that are not needed in a Relation. This is also the
 that performs column renames.
 """
 from typing import Iterable
-from opteryx.exceptions import SqlError
 
 import pyarrow
 
 from opteryx.engine.attribute_types import TOKEN_TYPES
 from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
 from opteryx.engine import QueryDirectives, QueryStatistics
+from opteryx.exceptions import SqlError
+from opteryx.utils.arrow import consolidate_pages
 from opteryx.utils.columns import Columns
 
 
@@ -98,7 +99,7 @@ class ProjectionNode(BasePlanNode):
         # we can't do much with this until we have a chunk to read the metadata from
         columns = None
 
-        for page in data_pages.execute():
+        for page in consolidate_pages(data_pages.execute()):
 
             # first time round we're going work out what we need from the metadata
             if columns is None:

@@ -13,15 +13,60 @@
 """
 This module contains support functions for working with PyArrow
 """
-
-import pyarrow
-
 from typing import Iterable, List
 from pyarrow import Table
+
+import pyarrow
 
 from opteryx import config
 
 INTERNAL_BATCH_SIZE = config.INTERNAL_BATCH_SIZE
+PAGE_SIZE = config.PAGE_SIZE
+
+
+def consolidate_pages(pages):
+    """
+    orignally implemented to test if datasets have any records as they pass through
+    the DAG, normalizes the number of bytes per page
+    """
+    if isinstance(pages, Table):
+        pages = (pages,)
+
+    row_counter = 0
+    collected_rows = None
+    for page in pages:
+        if page.num_rows > 0:
+
+            # add what we've collected before to the table
+            if collected_rows:
+                page = pyarrow.concat_tables([collected_rows, page])
+                collected_rows = None
+
+            # work out some stats about what we have
+            page_bytes = page.nbytes
+            page_records = page.num_rows
+
+            # if we're more than 10% over the target size, let's do somethingW
+            if page_bytes > (PAGE_SIZE * 1.1):
+                average_record_size = page_bytes / page_records
+                new_row_count = int(PAGE_SIZE / average_record_size)
+                row_counter += new_row_count
+                yield page.slice(offset=0, length=new_row_count)
+                collected_rows = page.slice(offset=new_row_count)
+            # if we're less that 60% of the page size, go collect the next page
+            elif page_bytes < (PAGE_SIZE * 0.6):
+                collected_rows = page
+            # otherwise, emit the current page
+            else:
+                row_counter += page_records
+                yield page
+    else:
+        if collected_rows:
+            row_counter += collected_rows.num_rows
+            yield collected_rows
+
+    if row_counter == 0:
+        raise Exception("No Records")
 
 
 def fetchmany(pages, limit: int = 1000):
@@ -42,7 +87,7 @@ def fetchmany(pages, limit: int = 1000):
 
         column_names = None
 
-        for page in pages:
+        for page in consolidate_pages(pages):
 
             if column_names is None:
                 columns = Columns(page)

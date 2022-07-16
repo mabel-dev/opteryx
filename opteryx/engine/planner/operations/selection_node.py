@@ -33,11 +33,13 @@ from numpy import union1d, intersect1d
 import numpy
 import pyarrow
 
-from opteryx.engine.attribute_types import TOKEN_TYPES
-from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
 from opteryx.engine import QueryDirectives, QueryStatistics
+from opteryx.engine.attribute_types import TOKEN_TYPES
+from opteryx.engine.functions import FUNCTIONS
+from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
 from opteryx.exceptions import SqlError
 from opteryx.utils.columns import Columns
+from opteryx.utils.arrow import consolidate_pages
 
 
 class InvalidSyntaxError(Exception):
@@ -92,9 +94,6 @@ def _evaluate(predicate: Union[tuple, list], table: Table):
             # presently it only evaluates in the SELECT clause.
             else:
                 # TODO: push this to the evaluation node
-                import pyarrow
-
-                from opteryx.engine.functions import FUNCTIONS
 
                 function = predicate[2]
 
@@ -283,7 +282,7 @@ class SelectionNode(BasePlanNode):
             # before we can continue.
             self._unfurled_filter = _evaluate_subqueries(self._filter)
 
-            for page in data_pages.execute():
+            for page in consolidate_pages(data_pages.execute()):
 
                 # what we want to do is rewrite the filters to refer to the column names
                 # NOT rewrite the column names to match the filters

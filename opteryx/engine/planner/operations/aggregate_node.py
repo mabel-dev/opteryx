@@ -280,7 +280,9 @@ class AggregateNode(BasePlanNode):
         # count should return 0 rather than nothing
         if len(collector) == 0 and len(self._aggregates) == 1:
             if self._aggregates[0]["aggregate"] == "COUNT":
-                collector = {(): {COUNT_STAR: 0}}
+                collector = {
+                    tuple((g, None) for g in self._mapped_groups): {COUNT_STAR: 0}
+                }
 
         buffer: List = []
         metadata = None
