@@ -447,6 +447,9 @@ STATEMENTS = [
         (b"SELECT * FROM $satellites", 177, 8),
         # DISTINCT on null values #285
         ("SELECT DISTINCT name FROM (VALUES (null),(null),('apple')) AS booleans (name)", 2, 1),
+        # empty aggregates with other columns, loose the other columns #281
+        ("SELECT name, COUNT(*) FROM $astronauts WHERE name = 'Jim' GROUP BY name", 1, 2),
+
     ]
 # fmt:on
 
