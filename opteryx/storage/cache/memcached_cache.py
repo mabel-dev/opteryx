@@ -15,12 +15,12 @@ This implements an interface to Memcached
 
 import io
 import os
-from functools import lru_cache
+from functools import cache
 from opteryx.exceptions import MissingDependencyError
 from opteryx.storage import BaseBufferCache
 
 
-@lru_cache(1)
+@cache
 def _memcached_server(**kwargs):
     """
     Handling connecting to Memcached

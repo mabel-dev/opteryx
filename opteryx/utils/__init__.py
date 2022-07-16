@@ -1,8 +1,8 @@
-from functools import lru_cache
+from functools import cache
 import itertools
 
 
-@lru_cache(1)
+@cache
 def is_running_from_ipython():
     """
     True when running in Jupyter
