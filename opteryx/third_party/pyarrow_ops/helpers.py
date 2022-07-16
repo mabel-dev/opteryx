@@ -1,3 +1,4 @@
+import sys
 import numpy
 
 
@@ -8,7 +9,13 @@ def groupify_array(arr):
     #   - 2. Count per unique
     #   - 3. Sort index
     #   - 4. Begin index per unique
-    dic, counts = numpy.unique(arr, return_counts=True, equal_nan=True)
+
+    # ADDED FOR OPTERYX
+    # Python 3.7 doesn't support equal_nan
+    if sys.version_info <= (3, 7):
+        dic, counts = numpy.unique(arr, return_counts=True)
+    else:
+        dic, counts = numpy.unique(arr, return_counts=True, equal_nan=True)
     sort_idx = numpy.argsort(arr)
     return dic, counts, sort_idx, [0] + numpy.cumsum(counts)[:-1].tolist()
 
@@ -38,8 +45,11 @@ def columns_to_array(table, columns):
         )
         # not sure why - but this cannot be a generator
         return numpy.array(
-            [numpy.nan if (el != el) or (el is None) else el for el in column_values]
-        )  # nosemgrep
+            [
+                numpy.nan if (el != el) or (el is None) else el  # nosemgrep
+                for el in column_values
+            ]
+        )
 
     values = (c.to_numpy() for c in table.select(columns).itercolumns())
     return numpy.array(list(map(_hash, zip(*values))))
