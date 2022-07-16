@@ -12,7 +12,7 @@ def groupify_array(arr):
 
     # ADDED FOR OPTERYX
     # Python 3.7 doesn't support equal_nan
-    if sys.version_info <= (3, 7):
+    if (sys.version_info.major, sys.version_info.minor) <= (3, 7):
         dic, counts = numpy.unique(arr, return_counts=True)
     else:
         dic, counts = numpy.unique(arr, return_counts=True, equal_nan=True)
