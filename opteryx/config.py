@@ -43,7 +43,7 @@ DATASET_PREFIX_MAPPING: dict = _config.get("DATASET_PREFIX_MAPPING", {"_":"disk"
 # Data Partitioning
 PARTITION_SCHEME: str = _config.get("PARTITION_SCHEME", "mabel")
 # Maximum size for items saved to the buffer cache
-MAX_SIZE_SINGLE_CACHE_ITEM: int = _config.get("MAX_SIZE_SINGLE_CACHE_ITEM", 1048576)
+MAX_SIZE_SINGLE_CACHE_ITEM: int = _config.get("MAX_SIZE_SINGLE_CACHE_ITEM", 1024 * 1024)
 # Approximate Page Size
-PAGE_SIZE: int = _config.get("PAGE_SIZE", 1048576)
+PAGE_SIZE: int = _config.get("PAGE_SIZE", 64 * 1024 * 1024)
 # fmt:on
