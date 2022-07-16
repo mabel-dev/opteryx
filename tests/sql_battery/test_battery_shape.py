@@ -73,6 +73,9 @@ STATEMENTS = [
         ("SELECT name, name FROM $satellites", 177, 1),
         ("SELECT name, id, name, id FROM $satellites", 177, 2),
 
+        ("SELECT DISTINCT name FROM $planets", 9, 1),
+        ("SELECT DISTINCT * FROM $planets", 9, 20),
+
         ("SELECT name as Name FROM $satellites", 177, 1),
         ("SELECT name as Name, id as Identifier FROM $satellites", 177, 2),
         ("SELECT name as NAME FROM $satellites WHERE name = 'Calypso'", 1, 1),
@@ -436,6 +439,8 @@ STATEMENTS = [
         ("SELECT * FROM tests.data.nulls WHERE tweet ILIKE '%Trump%' FOR '2000-01-01'", 0, 5),
         # BYTE-ARRAY FAILS #252
         (b"SELECT * FROM $satellites", 177, 8),
+        # DISTINCT on null values #285
+        ("SELECT DISTINCT name FROM (VALUES (null),(null),('apple')) AS booleans (name)", 2, 1),
     ]
 # fmt:on
 
