@@ -1,5 +1,12 @@
-from functools import cache
 import itertools
+
+try:
+    # added 3.9
+    from functools import cache
+except ImportError:
+    from functools import lru_cache
+
+    cache = lru_cache(1)
 
 
 @cache

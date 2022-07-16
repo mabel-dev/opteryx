@@ -15,9 +15,16 @@ This implements an interface to Memcached
 
 import io
 import os
-from functools import cache
 from opteryx.exceptions import MissingDependencyError
 from opteryx.storage import BaseBufferCache
+
+try:
+    # added 3.9
+    from functools import cache
+except ImportError:
+    from functools import lru_cache
+
+    cache = lru_cache(1)
 
 
 @cache
