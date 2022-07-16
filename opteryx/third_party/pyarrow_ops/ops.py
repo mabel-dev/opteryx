@@ -151,8 +151,11 @@ def ifilters(table, filters):
 def drop_duplicates(table, columns=None):
     """
     drops duplicates, keeps the first of the set
+
+    MODIFIED FOR OPTERYX
     """
     # Gather columns to arr
     arr = columns_to_array(table, (columns if columns else table.column_names))
-    dic, counts, sort_idxs, bgn_idxs = groupify_array(arr)
-    return table.take(sort_idxs[bgn_idxs])
+    values, indices = numpy.unique(arr, return_index=True)
+    del values
+    return table.take(indices)

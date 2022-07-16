@@ -33,9 +33,13 @@ def columns_to_array(table, columns):
         # hashing NULL doesn't result in the same value each time
         # FIX https://github.com/mabel-dev/opteryx/issues/285
         # null isn't able to be sorted - replace with nan
-        return [
-            numpy.nan if el != el else hash(el)  # nosemgrep
-            for el in combine_column(table, columns[0]).to_numpy(zero_copy_only=False)
-        ]
-    values = [c.to_numpy() for c in table.select(columns).itercolumns()]
+        column_values = (
+            table.column(columns[0]).combine_chunks().to_numpy(zero_copy_only=False)
+        )
+        # not sure why - but this cannot be a generator
+        return numpy.array(
+            [numpy.nan if (el != el) or (el is None) else el for el in column_values]
+        )
+
+    values = (c.to_numpy() for c in table.select(columns).itercolumns())
     return numpy.array(list(map(_hash, zip(*values))))
