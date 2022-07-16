@@ -39,7 +39,7 @@ def columns_to_array(table, columns):
         # not sure why - but this cannot be a generator
         return numpy.array(
             [numpy.nan if (el != el) or (el is None) else el for el in column_values]
-        )
+        )  # nosemgrep
 
     values = (c.to_numpy() for c in table.select(columns).itercolumns())
     return numpy.array(list(map(_hash, zip(*values))))
