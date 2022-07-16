@@ -9,7 +9,7 @@ from opteryx.engine.attribute_types import PARQUET_TYPES
 from opteryx.engine.attribute_types import PYTHON_TYPES
 from opteryx.engine.attribute_types import TOKEN_TYPES
 
-from .helpers import columns_to_array, groupify_array
+from .helpers import columns_to_array
 
 
 def _get_type(var):
