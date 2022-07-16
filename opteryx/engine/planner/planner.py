@@ -327,7 +327,7 @@ class QueryPlanner(ExecutionTree):
         for relation in relations:
             if "Table" in relation["relation"]:
                 # is the relation a builder function
-                if len(relation["relation"]["Table"]["args"]) > 0:
+                if relation["relation"]["Table"]["args"] is not None:
                     function = relation["relation"]["Table"]["name"][0]["value"].lower()
                     alias = function
                     if relation["relation"]["Table"]["alias"] is not None:
