@@ -37,6 +37,9 @@ STATEMENTS = [
 
         # MONTH has a bug
         ("SELECT DATEDIFF('months', birth_date, '2022-07-07') FROM $astronauts"),
+
+        # JOIN hints aren't supported
+        ("SELECT * FROM $satellites INNER HASH JOIN $planets USING (id)"),
     ]
 # fmt:on
 

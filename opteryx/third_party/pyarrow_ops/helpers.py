@@ -13,12 +13,8 @@ def groupify_array(arr):
     #   - 3. Sort index
     #   - 4. Begin index per unique
 
-    # ADDED FOR OPTERYX
-    # Python 3.7 doesn't support equal_nan
-    if (sys.version_info.major, sys.version_info.minor) <= (3, 7):
-        dic, counts = numpy.unique(arr, return_counts=True)
-    else:
-        dic, counts = numpy.unique(arr, return_counts=True, equal_nan=True)
+    # UPDATED FOR OPTERYX
+    dic, counts = numpy.unique(arr, return_counts=True, equal_nan=True)
     sort_idx = numpy.argsort(arr)
     return dic, counts, sort_idx, [0] + numpy.cumsum(counts)[:-1].tolist()
 

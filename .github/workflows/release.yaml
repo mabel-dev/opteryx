@@ -5,31 +5,6 @@ on:
 
 jobs:
 
-  build-linux-cp37:
-    runs-on: ubuntu-latest
-    container: quay.io/pypa/manylinux2014_x86_64
-
-    steps:
-    - uses: actions/checkout@master
-
-    - name: Install Python package dependencies
-      run: /opt/python/cp37-cp37m/bin/python -m pip install cython wheel numpy
-
-    - name: Build binary wheel
-      run: /opt/python/cp37-cp37m/bin/python setup.py bdist_wheel
-
-    - name: Apply auditwheel
-      run: auditwheel repair -w dist dist/*
-
-    - name: Remove linux wheel
-      run: rm dist/*-linux_x86_64.whl
-
-    - name: Archive dist artifacts
-      uses: actions/upload-artifact@v1
-      with:
-        name: dist-linux-3.7
-        path: dist
-
   build-linux-cp38:
     runs-on: ubuntu-latest
     container: quay.io/pypa/manylinux2014_x86_64
@@ -169,7 +144,7 @@ jobs:
         path: dist
 
   upload:
-    needs: [build-linux-cp37, build-linux-cp38, build-linux-cp39, build-linux-cp310, build-macos, build-windows]
+    needs: [build-linux-cp38, build-linux-cp39, build-linux-cp310, build-macos, build-windows]
     runs-on: ubuntu-latest
 
     steps:
@@ -187,12 +162,6 @@ jobs:
 
     - name: Create source dist
       run: python setup.py sdist
-
-    - name: Stage linux 3.7
-      uses: actions/download-artifact@v1
-      with:
-        name: dist-linux-3.7
-    - run: mv -v dist-linux-3.7/* dist/
 
     - name: Stage linux 3.8
       uses: actions/download-artifact@v1
