@@ -1,8 +1,15 @@
-from functools import lru_cache
 import itertools
 
+try:
+    # added 3.9
+    from functools import cache
+except ImportError:
+    from functools import lru_cache
 
-@lru_cache(1)
+    cache = lru_cache(1)
+
+
+@cache
 def is_running_from_ipython():
     """
     True when running in Jupyter

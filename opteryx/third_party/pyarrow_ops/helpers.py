@@ -1,5 +1,8 @@
-import sys
+import functools
 import numpy
+import sys
+
+APOLLO_11_DURATION: int = 703115  # we need a constant to use as a seed
 
 
 def groupify_array(arr):
@@ -24,11 +27,19 @@ def combine_column(table, name):
     return table.column(name).combine_chunks()
 
 
-def _hash(val):
-    # EDGE CASE FOR https://github.com/mabel-dev/opteryx/issues/98
-    # hashing NULL doesn't result in the same value each time
-    if all(v != v for v in val):  # nosemgrep
-        return numpy.nan
+def _hash_value(val, nan=numpy.nan):
+
+    # Added for Opteryx - Original code had bugs relating to distinct and nulls
+    if isinstance(val, dict):
+        return _hash_value(tuple(val.values()))
+    if isinstance(val, (list, numpy.ndarray, tuple)):
+        # XOR is faster however, x ^ x == y ^ y but x != y, so we don't use it
+        return functools.reduce(
+            lambda x, y: _hash_value(f"{y}:{x}", 0), val, APOLLO_11_DURATION
+        )
+    if val != val or val is None:  # nosemgrep
+        # nan is a float, but hash is an int, sometimes we need this to be an int
+        return nan
     return hash(val)
 
 
@@ -40,16 +51,8 @@ def columns_to_array(table, columns):
         # hashing NULL doesn't result in the same value each time
         # FIX https://github.com/mabel-dev/opteryx/issues/285
         # null isn't able to be sorted - replace with nan
-        column_values = (
-            table.column(columns[0]).combine_chunks().to_numpy(zero_copy_only=False)
-        )
-        # not sure why - but this cannot be a generator
-        return numpy.array(
-            [
-                numpy.nan if (el != el) or (el is None) else el  # nosemgrep
-                for el in column_values
-            ]
-        )
+        column_values = table.column(columns[0]).to_numpy()
+        return numpy.array([_hash_value(el) for el in column_values])
 
     values = (c.to_numpy() for c in table.select(columns).itercolumns())
-    return numpy.array(list(map(_hash, zip(*values))))
+    return numpy.array([_hash_value(x) for x in zip(*values)])

@@ -73,8 +73,14 @@ STATEMENTS = [
         ("SELECT name, name FROM $satellites", 177, 1),
         ("SELECT name, id, name, id FROM $satellites", 177, 2),
 
-        ("SELECT DISTINCT name FROM $planets", 9, 1),
-        ("SELECT DISTINCT * FROM $planets", 9, 20),
+        ("SELECT DISTINCT name FROM $astronauts", 357, 1),
+        ("SELECT DISTINCT * FROM $astronauts", 357, 19),
+        ("SELECT DISTINCT birth_date FROM $astronauts", 348, 1),
+        ("SELECT DISTINCT birth_place FROM $astronauts", 272, 1),
+        ("SELECT DISTINCT death_date FROM $astronauts", 39, 1),
+        ("SELECT DISTINCT missions FROM $astronauts", 305, 1),
+        ("SELECT DISTINCT group FROM $astronauts", 21, 1),
+        ("SELECT DISTINCT name, birth_date, missions, birth_place, group FROM $astronauts", 357, 5),
 
         ("SELECT name as Name FROM $satellites", 177, 1),
         ("SELECT name as Name, id as Identifier FROM $satellites", 177, 2),
@@ -334,8 +340,8 @@ STATEMENTS = [
         ("SELECT * FROM $planets INNER JOIN $satellites ON $planets.id = $satellites.planetId", 177, 28),
         ("SELECT DISTINCT planetId FROM $satellites LEFT OUTER JOIN $planets ON $satellites.planetId = $planets.id", 7, 1),
         ("SELECT DISTINCT planetId FROM $satellites LEFT JOIN $planets ON $satellites.planetId = $planets.id", 7, 1),
-        ("SELECT DISTINCT planetId, $satellites.id FROM $planets LEFT OUTER JOIN $satellites ON $satellites.planetId = $planets.id", 178, 2),
-        ("SELECT DISTINCT planetId, $satellites.id FROM $planets LEFT JOIN $satellites ON $satellites.planetId = $planets.id", 178, 2),
+        ("SELECT DISTINCT $planets.id, $satellites.id FROM $planets LEFT OUTER JOIN $satellites ON $satellites.planetId = $planets.id", 179, 2),
+        ("SELECT DISTINCT $planets.id, $satellites.id FROM $planets LEFT JOIN $satellites ON $satellites.planetId = $planets.id", 179, 2),
         ("SELECT planetId FROM $satellites LEFT JOIN $planets ON $satellites.planetId = $planets.id", 177, 1),
 
         ("SELECT DISTINCT planetId FROM $satellites RIGHT OUTER JOIN $planets ON $satellites.planetId = $planets.id", 8, 1),
