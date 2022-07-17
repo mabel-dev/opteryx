@@ -27,7 +27,18 @@ PAGE_SIZE = config.PAGE_SIZE
 def consolidate_pages(pages, statistics):
     """
     orignally implemented to test if datasets have any records as they pass through
-    the DAG, normalizes the number of bytes per page
+    the DAG, normalizes the number of bytes per page.
+
+    This is to balance two competing demands:
+        - operate in a low memory environment, if the pages are too large they may
+          cause the process to fail.
+        - operate quickly, if we spend our time doing SIMD on pages with 5 records
+          we're not working as fast as we can.
+
+    The low-water mark is 60% of the target size, less than this we look to merge
+    pages together.
+
+    The high-water mark is 110% of the target size, more than this we split the page.
     """
     if isinstance(pages, Table):
         pages = (pages,)
@@ -216,8 +227,6 @@ def get_metadata(tbl):
 
 def coerce_column(table, column_name):
     """convert numeric types to a common type to allow comparisons"""
-    import pyarrow
-
     # get the column we're coercing
     my_schema = table.schema
     index = table.column_names.index(column_name)

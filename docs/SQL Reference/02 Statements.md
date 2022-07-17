@@ -8,10 +8,13 @@ Show the logical execution plan of a statement.
 
 ~~~sql
 EXPLAIN
-select statement
+statement
 ~~~
 
 The `EXPLAIN` clause outputs a summary of the execution plan for the query in the `SELECT` statement.
+
+!!! warning
+    The data returned by the `EXPLAIN` statement is intended for interactive usage only and the output format may change between releases. Applications should not depend on the output of the `EXPLAIN` statement.
 
 ## SELECT
 

@@ -46,8 +46,8 @@ import pyarrow
 
 from opteryx.engine.attribute_types import TOKEN_TYPES
 from opteryx.engine.functions import is_function
+from opteryx.engine.planner import operations
 from opteryx.engine.planner.execution_tree import ExecutionTree
-from opteryx.engine.planner.operations import *
 from opteryx.engine.planner.temporal import extract_temporal_filters
 from opteryx.engine.query_directives import QueryDirectives
 from opteryx.exceptions import SqlError
@@ -285,17 +285,17 @@ class QueryPlanner(ExecutionTree):
 
         from opteryx.third_party.mbleven import compare
 
-        WELL_KNOWN_HINTS = (
+        well_known_hints = (
             "NO_CACHE",
             "NO_PARTITION",
         )
 
         for hint in hints:
-            if hint not in WELL_KNOWN_HINTS:
+            if hint not in well_known_hints:
                 best_match_hint = None
                 best_match_score = 100
 
-                for known_hint in WELL_KNOWN_HINTS:
+                for known_hint in well_known_hints:
                     my_dist = compare(hint, known_hint)
                     if my_dist > 0 and my_dist < best_match_score:
                         best_match_score = my_dist
@@ -676,7 +676,9 @@ class QueryPlanner(ExecutionTree):
         directives = self._extract_directives(ast)
         explain_plan = self.copy()
         explain_plan.create_plan(ast=[ast[0]["Explain"]["statement"]])
-        explain_node = ExplainNode(directives, statistics, query_plan=explain_plan)
+        explain_node = operations.ExplainNode(
+            directives, statistics, query_plan=explain_plan
+        )
         self.add_operator("explain", explain_node)
 
     def _show_columns_planner(self, ast, statistics):
@@ -696,7 +698,7 @@ class QueryPlanner(ExecutionTree):
 
         self.add_operator(
             "reader",
-            reader_factory(mode)(
+            operations.reader_factory(mode)(
                 directives=directives,
                 statistics=statistics,
                 dataset=dataset,
@@ -709,9 +711,20 @@ class QueryPlanner(ExecutionTree):
         )
         last_node = "reader"
 
+        filters = self._extract_filter(ast)
+        if filters:
+            self.add_operator(
+                "filter",
+                operations.ColumnSelectionNode(
+                    directives=directives, statistics=statistics, filter=filters
+                ),
+            )
+            self.link_operators(last_node, "filter")
+            last_node = "filter"
+
         self.add_operator(
             "columns",
-            ShowColumnsNode(
+            operations.ShowColumnsNode(
                 directives=directives,
                 statistics=statistics,
                 full=ast[0]["ShowColumns"]["full"],
@@ -720,17 +733,6 @@ class QueryPlanner(ExecutionTree):
         )
         self.link_operators(last_node, "columns")
         last_node = "columns"
-
-        filters = self._extract_filter(ast)
-        if filters:
-            self.add_operator(
-                "filter",
-                SelectionNode(
-                    directives=directives, statistics=statistics, filter=filters
-                ),
-            )
-            self.link_operators(last_node, "filter")
-            last_node = "filter"
 
     def _naive_select_planner(self, ast, statistics):
         """
@@ -768,7 +770,7 @@ class QueryPlanner(ExecutionTree):
 
         self.add_operator(
             "from",
-            reader_factory(mode)(
+            operations.reader_factory(mode)(
                 directives=directives,
                 statistics=statistics,
                 alias=alias,
@@ -806,7 +808,7 @@ class QueryPlanner(ExecutionTree):
                         mode = reader.__mode__
 
                     # Otherwise, the right table needs to come from the Reader
-                    right = reader_factory(mode)(
+                    right = operations.reader_factory(mode)(
                         directives=directives,
                         statistics=statistics,
                         dataset=dataset,
@@ -818,7 +820,7 @@ class QueryPlanner(ExecutionTree):
                         hints=right[3],
                     )
 
-                join_node = join_factory(join_type)
+                join_node = operations.join_factory(join_type)
                 if join_node is None:
                     raise SqlError(f"Join type not supported - `{_join[0]}`")
 
@@ -842,7 +844,10 @@ class QueryPlanner(ExecutionTree):
         _projection = self._extract_projections(ast)
         if any("function" in a for a in _projection):
             self.add_operator(
-                "eval", EvaluationNode(directives, statistics, projection=_projection)
+                "eval",
+                operations.EvaluationNode(
+                    directives, statistics, projection=_projection
+                ),
             )
             self.link_operators(last_node, "eval")
             last_node = "eval"
@@ -850,7 +855,8 @@ class QueryPlanner(ExecutionTree):
         _selection = self._extract_selection(ast)
         if _selection:
             self.add_operator(
-                "where", SelectionNode(directives, statistics, filter=_selection)
+                "where",
+                operations.SelectionNode(directives, statistics, filter=_selection),
             )
             self.link_operators(last_node, "where")
             last_node = "where"
@@ -870,7 +876,7 @@ class QueryPlanner(ExecutionTree):
                 )
             self.add_operator(
                 "agg",
-                AggregateNode(
+                operations.AggregateNode(
                     directives, statistics, aggregates=_aggregates, groups=_groups
                 ),
             )
@@ -880,33 +886,42 @@ class QueryPlanner(ExecutionTree):
         _having = self._extract_having(ast)
         if _having:
             self.add_operator(
-                "having", SelectionNode(directives, statistics, filter=_having)
+                "having",
+                operations.SelectionNode(directives, statistics, filter=_having),
             )
             self.link_operators(last_node, "having")
             last_node = "having"
 
-        self.add_operator(
-            "select", ProjectionNode(directives, statistics, projection=_projection)
-        )
-        self.link_operators(last_node, "select")
-        last_node = "select"
+        if _projection != {"*": "*"}:
+            self.add_operator(
+                "select",
+                operations.ProjectionNode(
+                    directives, statistics, projection=_projection
+                ),
+            )
+            self.link_operators(last_node, "select")
+            last_node = "select"
 
         _distinct = self._extract_distinct(ast)
         if _distinct:
-            self.add_operator("distinct", DistinctNode(directives, statistics))
+            self.add_operator(
+                "distinct", operations.DistinctNode(directives, statistics)
+            )
             self.link_operators(last_node, "distinct")
             last_node = "distinct"
 
         _order = self._extract_order(ast)
         if _order:
-            self.add_operator("order", SortNode(directives, statistics, order=_order))
+            self.add_operator(
+                "order", operations.SortNode(directives, statistics, order=_order)
+            )
             self.link_operators(last_node, "order")
             last_node = "order"
 
         _offset = self._extract_offset(ast)
         if _offset:
             self.add_operator(
-                "offset", OffsetNode(directives, statistics, offset=_offset)
+                "offset", operations.OffsetNode(directives, statistics, offset=_offset)
             )
             self.link_operators(last_node, "offset")
             last_node = "offset"
@@ -914,7 +929,9 @@ class QueryPlanner(ExecutionTree):
         _limit = self._extract_limit(ast)
         # 0 limit is valid
         if _limit is not None:
-            self.add_operator("limit", LimitNode(directives, statistics, limit=_limit))
+            self.add_operator(
+                "limit", operations.LimitNode(directives, statistics, limit=_limit)
+            )
             self.link_operators(last_node, "limit")
             last_node = "limit"
 
@@ -930,7 +947,7 @@ class QueryPlanner(ExecutionTree):
             incoming_operators = self.get_incoming_links(node)
             for operator_name in incoming_operators:
                 operator = self.get_operator(operator_name[0])
-                if isinstance(operator, BasePlanNode):
+                if isinstance(operator, operations.BasePlanNode):
                     yield {
                         "operator": operator.name,
                         "config": operator.config,
@@ -963,7 +980,7 @@ class QueryPlanner(ExecutionTree):
 
     def execute(self):
         # we get the tail of the query - the first steps
-        head = self.get_exit_points()
+        head = list(set(self.get_exit_points()))
         # print(head, self._edges)
         if len(head) != 1:
             raise SqlError(
