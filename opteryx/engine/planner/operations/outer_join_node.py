@@ -64,7 +64,7 @@ class OuterJoinNode(BasePlanNode):
         right_columns = Columns(self._right_table)
         left_columns = None
 
-        for page in left_node.execute():
+        for page in arrow.consolidate_pages(left_node.execute()):
 
             if left_columns is None:
                 left_columns = Columns(page)

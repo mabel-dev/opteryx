@@ -795,7 +795,10 @@ class QueryPlanner(ExecutionTree):
                 else:
 
                     dataset = right[1]
-                    if dataset[0:1] == "$":
+                    if isinstance(dataset, QueryPlanner):
+                        mode = "Blob"  # this is still here until it's moved
+                        reader = None
+                    elif dataset[0:1] == "$":
                         mode = "Internal"
                         reader = None
                     else:
