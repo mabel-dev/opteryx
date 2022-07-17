@@ -55,7 +55,7 @@ STATEMENTS = [
         ("SELECT * FROM $satellites WHERE `name` = 'Calypso'", 1, 8),
         ("SELECT * FROM `$satellites` WHERE name = 'Calypso'", 1, 8),
         ("SELECT * FROM `$satellites` WHERE `name` = 'Calypso'", 1, 8),
-        ("SELECT * FROM $satellites WITH (NOCACHE)", 177, 8),
+        ("SELECT * FROM $satellites WITH (NO_CACHE)", 177, 8),
 
         ("/* comment */ SELECT * FROM $satellites WHERE name = 'Calypso'", 1, 8),
         ("SELECT * FROM $satellites /* comment */ WHERE name = 'Calypso'", 1, 8),
@@ -315,8 +315,8 @@ STATEMENTS = [
         ("SELECT count(planetId) FROM (SELECT DISTINCT planetId FROM $satellites)", 1, 1),
         ("SELECT COUNT(*) FROM (SELECT planetId FROM $satellites WHERE planetId < 7) GROUP BY planetId", 4, 1),
 
-        ("EXPLAIN SELECT * FROM $satellites", 2, 3),
-        ("EXPLAIN SELECT * FROM $satellites WHERE id = 8", 3, 3),
+        ("EXPLAIN SELECT * FROM $satellites", 1, 3),
+        ("EXPLAIN SELECT * FROM $satellites WHERE id = 8", 2, 3),
 
         ("SHOW COLUMNS FROM $satellites", 8, 2),
         ("SHOW FULL COLUMNS FROM $satellites", 8, 6),
@@ -336,7 +336,7 @@ STATEMENTS = [
         ("SELECT * FROM $satellites INNER JOIN $planets WITH (NOCACHE) USING (id)", 9, 28),
         ("SELECT * FROM $satellites JOIN $planets USING (id)", 9, 28),
         ("SELECT * FROM $astronauts CROSS JOIN UNNEST(missions) AS mission WHERE mission = 'Apollo 11'", 3, 20),
-#        ("SELECT * FROM $astronauts CROSS JOIN UNNEST(Missions)", 0, 0),
+        ("SELECT * FROM $astronauts CROSS JOIN UNNEST(missions)", 869, 20),
         ("SELECT * FROM $planets INNER JOIN $satellites ON $planets.id = $satellites.planetId", 177, 28),
         ("SELECT DISTINCT planetId FROM $satellites LEFT OUTER JOIN $planets ON $satellites.planetId = $planets.id", 7, 1),
         ("SELECT DISTINCT planetId FROM $satellites LEFT JOIN $planets ON $satellites.planetId = $planets.id", 7, 1),
@@ -449,7 +449,7 @@ STATEMENTS = [
         ("SELECT DISTINCT name FROM (VALUES (null),(null),('apple')) AS booleans (name)", 2, 1),
         # empty aggregates with other columns, loose the other columns #281
         ("SELECT name, COUNT(*) FROM $astronauts WHERE name = 'Jim' GROUP BY name", 1, 2),
-        # JOIN from subquery regressed
+        # JOIN from subquery regressed #291
         ("SELECT * FROM (SELECT id from $planets) AS ONE LEFT JOIN (SELECT id from $planets) AS TWO ON id = id", 9, 2),
 
     ]
