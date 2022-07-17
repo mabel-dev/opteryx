@@ -9,7 +9,7 @@
 [Contributing](https://mabel-dev.github.io/opteryx/Contributing%20Guide/CONTRIBUTING/)
 
 [![Regression Suite](https://github.com/mabel-dev/opteryx/actions/workflows/regression_suite.yaml/badge.svg)](https://github.com/mabel-dev/opteryx/actions/workflows/regression_suite.yaml)
-[![Static Analysis](https://github.com/mabel-dev/opteryx/actions/workflows/static_analysis.yml/badge.svg)](https://github.com/mabel-dev/opteryx/actions/workflows/static_analysis.yml)
+[![Static Analysis](https://github.com/mabel-dev/opteryx/actions/workflows/static_analysis.yaml/badge.svg)](https://github.com/mabel-dev/opteryx/actions/workflows/static_analysis.yml)
 [![PyPI Latest Release](https://img.shields.io/pypi/v/opteryx.svg)](https://pypi.org/project/opteryx/)
 [![opteryx](https://snyk.io/advisor/python/opteryx/badge.svg?style=flat-square)](https://snyk.io/advisor/python/opteryx)
 [![Downloads](https://pepy.tech/badge/opteryx)](https://pepy.tech/project/opteryx)
@@ -31,6 +31,10 @@ Designed to run in Knative and similar environments like Google Cloud Run, Opter
 Shared nothing design means each query can run in a separate container instance making it nearly impossible for a rogue query to affect any other users.
 
 If a cluster, region or datacentre is unavailable, if you have instances able to run in another location, Opteryx will keep responding to queries. _(inflight queries may not be recovered)_
+
+**Query In Place**
+
+With Opteryx, you don't need to migrate data to a common data platform to be able to query it. You can store some of your data in parquet files on disk or cloud storage, and some in MongoDB or Firestore and access all of these in the same query.
 
 **Bring your own Files**
 

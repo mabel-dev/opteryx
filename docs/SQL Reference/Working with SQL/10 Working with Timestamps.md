@@ -54,6 +54,9 @@ YESTERDAY()
 ~~~
 TIME()
 ~~~
+~~~
+generate_series()
+~~~
 
 Note that `current_date` and `current_time` support being called without parenthesis.
 
@@ -74,3 +77,11 @@ doy      | ✘ | ✓ | ✘ | day of year
 year     | ✓ | ✓ | ✓ |
 
 The following convenience extraction functions also exist, however use of `EXTRACT` is recommended.
+
+## Implicit Casting
+
+In many situation where a timestamp is expected, if an ISO1806 formatted string is provided, Opteryx will interpret as a timestamp.
+
+## Timezones
+
+Opteryx is opinionated to run in UTC - all instances where the system time is requested, UTC is used.
