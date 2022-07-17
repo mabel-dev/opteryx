@@ -19,7 +19,6 @@ This performs aliases and resolves function calls.
 """
 from typing import Iterable
 
-import numpy
 import pyarrow
 
 from opteryx.engine.attribute_types import TOKEN_TYPES

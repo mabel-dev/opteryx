@@ -2,6 +2,7 @@
 Original code modified for Opteryx.
 """
 import numpy
+import pyarrow
 
 from pyarrow import compute
 
@@ -14,10 +15,12 @@ from .helpers import columns_to_array
 
 def _get_type(var):
     # added for Opteryx
-    if isinstance(var, numpy.ndarray):
+    if isinstance(var, (numpy.ndarray)):
         if isinstance(var[0], numpy.ndarray):
             return "LIST"
         return PARQUET_TYPES.get(str(var.dtype), f"UNSUPPORTED ({str(var.dtype)})")
+    if isinstance(var, (pyarrow.Array)):
+        return PARQUET_TYPES.get(str(var.type), f"UNSUPPORTED ({str(var.type)})")
     type_name = type(var).__name__
     return PYTHON_TYPES.get(type_name, f"OTHER ({type_name})")
 

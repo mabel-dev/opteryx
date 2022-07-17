@@ -15,6 +15,7 @@ from .base_plan_node import BasePlanNode
 from .aggregate_node import AggregateNode  # aggregate data
 from .blob_reader_node import BlobReaderNode  # read file/blob datasets
 from .collection_reader_node import CollectionReaderNode  # reader NoSQL datsets
+from .column_selection_node import ColumnSelectionNode  # filter for SHOW COLUMNS
 from .cross_join_node import CrossJoinNode  # CROSS JOIN
 from .distinct_node import DistinctNode  # remove duplicate records
 from .evaluation_node import EvaluationNode  # aliases and evaluations
