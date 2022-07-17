@@ -24,7 +24,7 @@ INTERNAL_BATCH_SIZE = config.INTERNAL_BATCH_SIZE
 PAGE_SIZE = config.PAGE_SIZE
 
 
-def consolidate_pages(pages):
+def consolidate_pages(pages, statistics):
     """
     orignally implemented to test if datasets have any records as they pass through
     the DAG, normalizes the number of bytes per page
@@ -39,6 +39,7 @@ def consolidate_pages(pages):
 
             # add what we've collected before to the table
             if collected_rows:
+                statistics.page_merges += 1
                 page = pyarrow.concat_tables([collected_rows, page])
                 collected_rows = None
 
@@ -46,11 +47,12 @@ def consolidate_pages(pages):
             page_bytes = page.nbytes
             page_records = page.num_rows
 
-            # if we're more than 10% over the target size, let's do somethingW
+            # if we're more than 10% over the target size, let's do something
             if page_bytes > (PAGE_SIZE * 1.1):
                 average_record_size = page_bytes / page_records
                 new_row_count = int(PAGE_SIZE / average_record_size)
                 row_counter += new_row_count
+                statistics.page_splits += 1
                 yield page.slice(offset=0, length=new_row_count)
                 collected_rows = page.slice(offset=new_row_count)
             # if we're less that 60% of the page size, go collect the next page
@@ -60,10 +62,10 @@ def consolidate_pages(pages):
             else:
                 row_counter += page_records
                 yield page
-    else:
-        if collected_rows:
-            row_counter += collected_rows.num_rows
-            yield collected_rows
+
+    if collected_rows:
+        row_counter += collected_rows.num_rows
+        yield collected_rows
 
     if row_counter == 0:
         raise Exception("No Records")
@@ -87,7 +89,7 @@ def fetchmany(pages, limit: int = 1000):
 
         column_names = None
 
-        for page in consolidate_pages(pages):
+        for page in pages:
 
             if column_names is None:
                 columns = Columns(page)

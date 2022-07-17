@@ -282,7 +282,7 @@ class SelectionNode(BasePlanNode):
             # before we can continue.
             self._unfurled_filter = _evaluate_subqueries(self._filter)
 
-            for page in consolidate_pages(data_pages.execute()):
+            for page in consolidate_pages(data_pages.execute(), self._statistics):
 
                 # what we want to do is rewrite the filters to refer to the column names
                 # NOT rewrite the column names to match the filters

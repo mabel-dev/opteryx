@@ -69,7 +69,7 @@ class InnerJoinNode(BasePlanNode):
                 for col in self._using
             ]
 
-            for page in left_node.execute():
+            for page in arrow.consolidate_pages(left_node.execute(), self._statistics):
 
                 if left_columns is None:
                     left_columns = Columns(page)
@@ -101,7 +101,7 @@ class InnerJoinNode(BasePlanNode):
 
             left_columns = None
 
-            for page in left_node.execute():
+            for page in arrow.consolidate_pages(left_node.execute(), self._statistics):
 
                 if left_columns is None:
                     left_columns = Columns(page)

@@ -57,6 +57,9 @@ class QueryStatistics:
         self.start_time: int = 0
         self.end_time: int = 0
 
+        self.page_splits: int = 0
+        self.page_merges: int = 0
+
     def _ns_to_s(self, nano_seconds):
         """convert elapsed ns to s"""
         if nano_seconds == 0:
@@ -106,4 +109,6 @@ class QueryStatistics:
             "cache_errors": self.cache_errors,
             "collections_read": self.collections_read,
             "document_pages": self.document_pages,
+            "page_splits": self.page_splits,
+            "page_merges": self.page_merges,
         }
