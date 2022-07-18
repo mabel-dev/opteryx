@@ -173,6 +173,12 @@ class QueryPlanner(ExecutionTree):
         if filters is None:
             return None
 
+        if filters == "Wildcard":
+            return ("Wildcard", TOKEN_TYPES.WILDCARD)
+
+        if not isinstance(filters, dict):
+            return filters
+
         if "Identifier" in filters:  # we're an identifier
             return (filters["Identifier"]["value"], TOKEN_TYPES.IDENTIFIER)
         if "CompoundIdentifier" in filters:
@@ -201,7 +207,7 @@ class QueryPlanner(ExecutionTree):
         if "UnaryOp" in filters:
             if filters["UnaryOp"]["op"] == "Not":
                 right = self._build_dnf_filters(filters["UnaryOp"]["expr"])
-                return ("NOT", right)
+                return ("Not", right)
             if filters["UnaryOp"]["op"] == "Minus":
                 number = 0 - numpy.float64(
                     filters["UnaryOp"]["expr"]["Value"]["Number"][0]
@@ -227,12 +233,10 @@ class QueryPlanner(ExecutionTree):
             subquery_plan.create_plan(ast=[ast])
             operator = "not in" if filters["InSubquery"]["negated"] else "in"
             return (left, operator, (subquery_plan, TOKEN_TYPES.QUERY_PLAN))
-        if "IsNull" in filters:
-            left = self._build_dnf_filters(filters["IsNull"])
-            return (left, "=", None)
-        if "IsNotNull" in filters:
-            left = self._build_dnf_filters(filters["IsNotNull"])
-            return (left, "<>", None)
+        try_unary_filter = list(filters.keys())[0]
+        if try_unary_filter in ("IsTrue", "IsFalse", "IsNull", "IsNotNull"):
+            right = self._build_dnf_filters(filters[try_unary_filter])
+            return (try_unary_filter, right)
         if "InList" in filters:
             left = self._build_dnf_filters(filters["InList"]["expr"])
             right = (
@@ -241,8 +245,6 @@ class QueryPlanner(ExecutionTree):
             )
             operator = "not in" if filters["InList"]["negated"] else "in"
             return (left, operator, right)
-        if filters == "Wildcard":
-            return ("Wildcard", TOKEN_TYPES.WILDCARD)
         if "Function" in filters:
             func = filters["Function"]["name"][0]["value"].upper()
             args = [
