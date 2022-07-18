@@ -184,11 +184,35 @@ class Columns:
         for attributes in self._column_metadata.values():
             for alias in attributes.get("aliases") or []:
                 my_dist = compare(column_name, alias)
-                if my_dist > 0 and my_dist < best_match_score:
+                if 0 < my_dist < best_match_score:
                     best_match_score = my_dist
                     best_match_column = alias
 
         return best_match_column
+
+    def filter(self, _filter):
+        """
+        accept a filter and return matching columnsd
+        """
+        from opteryx.third_party import pyarrow_ops
+
+        # first, get all of the aliases in a list and make it a pyarrow array
+        all_aliases = [
+            attribute.get("aliases", []) + [attribute["preferred_name"]]
+            for attribute in self._column_metadata.values()
+        ]
+        all_aliases = [a for l in all_aliases for a in l]
+        all_aliases = pyarrow.array(all_aliases).unique()
+
+        # use the comparison code for the general filters to find matches
+        filtered = pyarrow_ops.ops.arr_op_to_idxs(
+            all_aliases, _filter[1], _filter[2][0]
+        )
+        filtered = all_aliases.filter(filtered)
+
+        # return a list of matching columns (some physical columns may be referenced
+        # multiple times)
+        return [self.get_column_from_alias(alias.as_py(), True) for alias in filtered]
 
     @staticmethod
     def create_table_metadata(table, expected_rows, name, table_aliases):

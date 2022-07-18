@@ -227,8 +227,6 @@ def get_metadata(tbl):
 
 def coerce_column(table, column_name):
     """convert numeric types to a common type to allow comparisons"""
-    import pyarrow
-
     # get the column we're coercing
     my_schema = table.schema
     index = table.column_names.index(column_name)

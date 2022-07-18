@@ -717,7 +717,7 @@ class QueryPlanner(ExecutionTree):
         if filters:
             self.add_operator(
                 "filter",
-                operations.SelectionNode(
+                operations.ColumnSelectionNode(
                     directives=directives, statistics=statistics, filter=filters
                 ),
             )
