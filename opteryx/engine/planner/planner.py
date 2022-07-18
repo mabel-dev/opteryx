@@ -678,7 +678,9 @@ class QueryPlanner(ExecutionTree):
         directives = self._extract_directives(ast)
         explain_plan = self.copy()
         explain_plan.create_plan(ast=[ast[0]["Explain"]["statement"]])
-        explain_node = operations.ExplainNode(directives, statistics, query_plan=explain_plan)
+        explain_node = operations.ExplainNode(
+            directives, statistics, query_plan=explain_plan
+        )
         self.add_operator("explain", explain_node)
 
     def _show_columns_planner(self, ast, statistics):
@@ -844,7 +846,10 @@ class QueryPlanner(ExecutionTree):
         _projection = self._extract_projections(ast)
         if any("function" in a for a in _projection):
             self.add_operator(
-                "eval", operations.EvaluationNode(directives, statistics, projection=_projection)
+                "eval",
+                operations.EvaluationNode(
+                    directives, statistics, projection=_projection
+                ),
             )
             self.link_operators(last_node, "eval")
             last_node = "eval"
@@ -852,7 +857,8 @@ class QueryPlanner(ExecutionTree):
         _selection = self._extract_selection(ast)
         if _selection:
             self.add_operator(
-                "where", operations.SelectionNode(directives, statistics, filter=_selection)
+                "where",
+                operations.SelectionNode(directives, statistics, filter=_selection),
             )
             self.link_operators(last_node, "where")
             last_node = "where"
@@ -882,27 +888,35 @@ class QueryPlanner(ExecutionTree):
         _having = self._extract_having(ast)
         if _having:
             self.add_operator(
-                "having", operations.SelectionNode(directives, statistics, filter=_having)
+                "having",
+                operations.SelectionNode(directives, statistics, filter=_having),
             )
             self.link_operators(last_node, "having")
             last_node = "having"
 
-        if _projection != {'*': '*'}:
+        if _projection != {"*": "*"}:
             self.add_operator(
-                "select", operations.ProjectionNode(directives, statistics, projection=_projection)
+                "select",
+                operations.ProjectionNode(
+                    directives, statistics, projection=_projection
+                ),
             )
             self.link_operators(last_node, "select")
             last_node = "select"
 
         _distinct = self._extract_distinct(ast)
         if _distinct:
-            self.add_operator("distinct", operations.DistinctNode(directives, statistics))
+            self.add_operator(
+                "distinct", operations.DistinctNode(directives, statistics)
+            )
             self.link_operators(last_node, "distinct")
             last_node = "distinct"
 
         _order = self._extract_order(ast)
         if _order:
-            self.add_operator("order", operations.SortNode(directives, statistics, order=_order))
+            self.add_operator(
+                "order", operations.SortNode(directives, statistics, order=_order)
+            )
             self.link_operators(last_node, "order")
             last_node = "order"
 
@@ -917,7 +931,9 @@ class QueryPlanner(ExecutionTree):
         _limit = self._extract_limit(ast)
         # 0 limit is valid
         if _limit is not None:
-            self.add_operator("limit", operations.LimitNode(directives, statistics, limit=_limit))
+            self.add_operator(
+                "limit", operations.LimitNode(directives, statistics, limit=_limit)
+            )
             self.link_operators(last_node, "limit")
             last_node = "limit"
 

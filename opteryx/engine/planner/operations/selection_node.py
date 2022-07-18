@@ -50,6 +50,7 @@ class InvalidSyntaxError(Exception):
 
     pass
 
+
 def _evaluate(predicate: Union[tuple, list], table: Table):
     """
     Evaluate a table against a DNF selection.
@@ -71,8 +72,15 @@ def _evaluate(predicate: Union[tuple, list], table: Table):
             return _evaluate(predicate=predicate[0], table=table)
 
         # handle IS and NOT statements
+        if len(predicate) == 2 and predicate[0] == "Not":
+            # calculate the answer of the non-negated condition (positive)
+            positive_result = _evaluate(predicate=predicate[1], table=table)
+            # negate it by removing the values in the positive results from
+            # all of the possible values (mask)
+            mask = numpy.arange(table.num_rows, dtype=numpy.int32)
+            return numpy.setdiff1d(mask, positive_result, assume_unique=True)
         if len(predicate) == 2 and predicate[0] in UNARY_OPERATIONS:
-            return UNARY_OPERATIONS[predicate[0]](table, predicate[1], _evaluate)
+            return UNARY_OPERATIONS[predicate[0]](table, predicate[1])
 
         # this is a function in the selection
         if len(predicate) == 3 and isinstance(predicate[2], dict):
