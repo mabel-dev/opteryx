@@ -39,3 +39,10 @@ Most `JOIN`s require iterating over two tables, the _left_ table, which is the o
 ## 9. Use `LIMIT`
 
 ## 10. Use `WHERE` to filter before `GROUP BY`
+
+## 11. `IS` filters are generally faster than `=`
+
+IS NONE
+IS NOT NONE
+IS TRUE
+IS FALSE

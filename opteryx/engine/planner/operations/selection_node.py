@@ -36,6 +36,7 @@ import pyarrow
 from opteryx.engine import QueryDirectives, QueryStatistics
 from opteryx.engine.attribute_types import TOKEN_TYPES
 from opteryx.engine.functions import FUNCTIONS
+from opteryx.engine.functions.unary_operations import UNARY_OPERATIONS
 from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
 from opteryx.exceptions import SqlError
 from opteryx.utils.columns import Columns
@@ -48,7 +49,6 @@ class InvalidSyntaxError(Exception):
     """
 
     pass
-
 
 def _evaluate(predicate: Union[tuple, list], table: Table):
     """
@@ -70,14 +70,9 @@ def _evaluate(predicate: Union[tuple, list], table: Table):
         if len(predicate) == 1:
             return _evaluate(predicate=predicate[0], table=table)
 
-        # handle NOT statements
-        if len(predicate) == 2 and predicate[0] == "NOT":
-            # calculate the answer of the non-negated condition (positive)
-            positive_result = _evaluate(predicate=predicate[1], table=table)
-            # negate it by removing the values in the positive results from
-            # all of the possible values (mask)
-            mask = numpy.arange(table.num_rows, dtype=numpy.int32)
-            return numpy.setdiff1d(mask, positive_result, assume_unique=True)
+        # handle IS and NOT statements
+        if len(predicate) == 2 and predicate[0] in UNARY_OPERATIONS:
+            return UNARY_OPERATIONS[predicate[0]](table, predicate[1], _evaluate)
 
         # this is a function in the selection
         if len(predicate) == 3 and isinstance(predicate[2], dict):
@@ -248,7 +243,7 @@ class SelectionNode(BasePlanNode):
                 if len(predicate) > 1 and predicate[1] == TOKEN_TYPES.VARCHAR:
                     return f'"{predicate[0]}"'
                 if len(predicate) == 2:
-                    if predicate[0] == "NOT":
+                    if predicate[0] == "Not":
                         return f"NOT {_inner_config(predicate[1])}"
                     return f"{predicate[0]}"
                 return "(" + " ".join(_inner_config(p) for p in predicate) + ")"

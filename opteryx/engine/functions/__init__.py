@@ -33,6 +33,8 @@ from opteryx.third_party.date_trunc import date_trunc
 from opteryx.utils import dates
 
 
+
+
 def get_random():
     """get a random number between 0 and 1, three decimal places"""
     range_min, range_max = 0, 1000

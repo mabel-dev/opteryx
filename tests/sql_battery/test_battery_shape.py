@@ -299,6 +299,11 @@ STATEMENTS = [
 
         ("SELECT * FROM tests.data.segmented FOR '2020-02-03'", 25, 8),
 
+        ("SELECT * FROM $astronauts WHERE death_date IS NULL", 305, 19),
+        ("SELECT * FROM $astronauts WHERE death_date IS NOT NULL", 52, 19),
+        ("SELECT * FROM tests.data.formats.parquet WITH(NO_PARTITION) WHERE user_verified IS TRUE", 711, 13),
+        ("SELECT * FROM tests.data.formats.parquet WITH(NO_PARTITION) WHERE user_verified IS FALSE", 99289, 13),
+
         ("SELECT * FROM $satellites FOR DATES IN LAST_MONTH ORDER BY planetId OFFSET 10", 167, 8),
         ("SELECT * FROM $satellites FOR DATES IN LAST_CYCLE ORDER BY planetId OFFSET 10", 167, 8),
         ("SELECT * FROM $satellites FOR DATES IN THIS_MONTH ORDER BY planetId OFFSET 10", 167, 8),
