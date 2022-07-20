@@ -16,7 +16,7 @@ Selection Node
 This is a SQL Query Execution Plan Node.
 
 This Node eliminates elminiates records which do not match a predicate using a
-DNF (Disjunctive Normal Form) interpretter.
+DNF-like (Disjunctive Normal Form) interpretter (note this is not strict DNF).
 
 Predicates in the same list are joined with an AND/Intersection (all must be True)
 and predicates in adjacent lists are joined with an OR/Union (any can be True).
@@ -26,6 +26,8 @@ The predicates are in _tuples_ in the form (`key`, `op`, `value`) where the `key
 is the value looked up from the record, the `op` is the operator and the `value`
 is a literal.
 """
+import time
+
 from typing import Iterable, Union
 from pyarrow import Table
 from numpy import union1d, intersect1d
@@ -293,5 +295,7 @@ class SelectionNode(BasePlanNode):
                     columns = Columns(page)
                     self._mapped_filter = _map_columns(self._unfurled_filter, columns)
 
+                start_selection = time.time_ns()
                 mask = _evaluate(self._mapped_filter, page)
+                self._statistics.time_selecting += time.time_ns() - start_selection
                 yield page.take(mask)
