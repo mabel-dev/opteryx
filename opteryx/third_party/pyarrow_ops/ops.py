@@ -38,7 +38,7 @@ def arr_op_to_idxs(arr, operator, value):
 
     # ADDED FOR OPTERYX - if all of the values are null, shortcut
     if compute.is_null(arr, nan_is_null=True).false_count == 0:
-        return numpy.array([False] * arr.size, dtype=numpy.bool8)
+        return numpy.full(arr.size, False)
 
     identifier_type = _get_type(arr)
     literal_type = _get_type(value)
@@ -48,7 +48,8 @@ def arr_op_to_idxs(arr, operator, value):
     ):
         # type checking added for Opteryx
         if value is None and identifier_type == TOKEN_TYPES.NUMERIC:
-            # Nones are stored as NaNs, so perform a different test
+            # Nones are stored as NaNs, so perform a different test.
+            # Tests against None should be IS NONE, not = NONE, this code is for = only
             return numpy.where(numpy.isnan(arr))
         if identifier_type != literal_type and value is not None:
             raise TypeError(

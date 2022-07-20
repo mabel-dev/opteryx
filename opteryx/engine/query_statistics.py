@@ -51,8 +51,9 @@ class QueryStatistics:
         self.cache_oversize: int = 0
         self.cache_errors: int = 0
 
-        # time spent query planning
+        # time spent on various steps
         self.time_planning: int = 0
+        self.time_selecting: float = 0
 
         self.start_time: int = 0
         self.end_time: int = 0
@@ -99,6 +100,7 @@ class QueryStatistics:
             "time_total": self._ns_to_s(self.end_time - self.start_time),
             "time_planning": self._ns_to_s(self.time_planning),
             "time_scanning_partitions": self._ns_to_s(self.time_scanning_partitions),
+            "time_selecting": self._ns_to_s(self.time_selecting),
             "partitions_found": self.partitions_found,
             "partitions_scanned": self.partitions_scanned,
             "partitions_read": self.partitions_read,

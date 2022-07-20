@@ -19,14 +19,15 @@ import os
 import sys
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
+
+import opteryx
+
 import pyarrow
 import pytest
 
-import opteryx
-from opteryx import config
-from opteryx.storage.adapters import DiskStorage
 from opteryx.utils.arrow import fetchmany
 from opteryx.utils.display import ascii_table
+from opteryx.storage.adapters import DiskStorage
 
 
 # fmt:off

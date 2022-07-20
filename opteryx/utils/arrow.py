@@ -23,6 +23,9 @@ from opteryx import config
 INTERNAL_BATCH_SIZE = config.INTERNAL_BATCH_SIZE
 PAGE_SIZE = config.PAGE_SIZE
 
+HIGH_WATER: float = 1.20  # Split pages over 120% of PAGE_SIZE
+LOW_WATER: float = 0.6  # Merge pages under 60% of PAGE_SIZE
+
 
 def consolidate_pages(pages, statistics):
     """
@@ -38,7 +41,7 @@ def consolidate_pages(pages, statistics):
     The low-water mark is 60% of the target size, less than this we look to merge
     pages together.
 
-    The high-water mark is 110% of the target size, more than this we split the page.
+    The high-water mark is 120% of the target size, more than this we split the page.
     """
     if isinstance(pages, Table):
         pages = (pages,)
@@ -58,8 +61,8 @@ def consolidate_pages(pages, statistics):
             page_bytes = page.nbytes
             page_records = page.num_rows
 
-            # if we're more than 10% over the target size, let's do something
-            if page_bytes > (PAGE_SIZE * 1.1):
+            # if we're more than 20% over the target size, let's do something
+            if page_bytes > (PAGE_SIZE * HIGH_WATER):
                 average_record_size = page_bytes / page_records
                 new_row_count = int(PAGE_SIZE / average_record_size)
                 row_counter += new_row_count
@@ -67,7 +70,7 @@ def consolidate_pages(pages, statistics):
                 yield page.slice(offset=0, length=new_row_count)
                 collected_rows = page.slice(offset=new_row_count)
             # if we're less that 60% of the page size, go collect the next page
-            elif page_bytes < (PAGE_SIZE * 0.6):
+            elif page_bytes < (PAGE_SIZE * LOW_WATER):
                 collected_rows = page
             # otherwise, emit the current page
             else:
