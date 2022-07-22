@@ -17,10 +17,11 @@ This is a SQL Query Execution Plan Node.
 
 This Node primarily is used for reading NoSQL sources like MongoDB and Firestore.
 """
-import pyarrow
 import time
 
 from typing import Iterable, Optional
+
+import pyarrow
 
 from opteryx.engine import QueryDirectives, QueryStatistics
 from opteryx.engine.planner.operations import BasePlanNode
