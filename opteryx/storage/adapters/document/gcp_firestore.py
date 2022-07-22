@@ -9,6 +9,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import os
 
 from opteryx import config
 
@@ -39,6 +40,12 @@ def _get_project_id():
             "`requests` to be installed."
         ) from exception
 
+    # if it's set in the environ, use that
+    project_id = os.environ.get("GCP_PROJECT_ID")
+    if project_id:
+        return project_id
+
+    # otherwise try to get it from GCP
     response = requests.get(
         "http://metadata.google.internal/computeMetadata/v1/project/project-id",
         headers={"Metadata-Flavor": "Google"},
