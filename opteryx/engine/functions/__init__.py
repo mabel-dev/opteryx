@@ -230,6 +230,7 @@ FUNCTIONS = {
     "PI": (None, _repeat_no_parameters(number_functions.pi)),
     # DATES & TIMES
     "DATE_TRUNC": (None, _iterate_double_parameter_field_second(date_trunc),),
+    "TIME_BUCKET": (None, compute.floor_temporal),
     "DATEDIFF": (pyarrow.float64(), date_functions.date_diff,),
     "DATEPART": (None, date_functions.date_part,),
     "DATE_FORMAT": (None, compute.strftime),
