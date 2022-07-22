@@ -137,6 +137,9 @@ For more details, see [Working with Timestamps](https://mabel-dev.github.io/opte
 `TIME` () → _timestamp_      
 &emsp;Current Time (UTC).     
 
+`TIME_BUCKET` (_timestamp_, **multiple**: _numeric_, **unit**: _varchar_) → _timestamp_   
+&emsp;Floor timestamps into fixed time interval buckets. **unit** is optional and will be `day` if not provided.
+
 `TODAY` () → _timestamp_   
 &emsp;Alias for `current_date`.
 

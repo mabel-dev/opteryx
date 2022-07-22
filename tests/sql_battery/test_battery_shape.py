@@ -379,7 +379,9 @@ STATEMENTS = [
         ("SELECT DATE_TRUNC('month', birth_date) FROM $astronauts", 357, 1),
         ("SELECT DISTINCT * FROM (SELECT DATE_TRUNC('year', birth_date) AS BIRTH_YEAR FROM $astronauts)", 54, 1),
         ("SELECT DISTINCT * FROM (SELECT DATE_TRUNC('month', birth_date) AS BIRTH_YEAR_MONTH FROM $astronauts)", 247, 1),
-
+        ("SELECT time_bucket(birth_date, 10, 'year') AS decade, count(*) from $astronauts GROUP BY decade", 6, 2),
+        ("SELECT time_bucket(birth_date, 6, 'month') AS half, count(*) from $astronauts GROUP BY half", 97, 2),
+    
         ("SELECT COALESCE(graduate_major, undergraduate_major, 'high school') as ed FROM $astronauts WHERE ed = 'high school'", 4, 1),
         ("SELECT COALESCE(graduate_major, undergraduate_major) AS ed, graduate_major, undergraduate_major FROM $astronauts WHERE ed = 'Aeronautical Engineering'", 41, 3),
         ("SELECT COALESCE(death_date, '2030-01-01') FROM $astronauts", 357, 1),
