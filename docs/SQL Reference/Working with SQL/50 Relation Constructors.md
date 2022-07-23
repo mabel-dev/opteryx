@@ -145,15 +145,15 @@ Intervals are defined quantifying one or more periods which make up the interval
 
 Recognized interval parts for the `GENERATE_SERIES` function are:
 
-Period  | Symbol
-------- | -----:
-Years   | y
-Months  | mo
-Weeks   | w
-Days    | d
-Hours   | h
-Minutes | m
-Seconds | s
+Period  | Symbol                   | Aliases
+------- | :----------------------- | ----
+Years   | **year** / **years**     | y / yr / yrs
+Months  | **month** / **months**   | mo / mon / mons / mth / mths
+Weeks   | **week** / **weeks**     | w / wk / wks
+Days    | **day** / **days**       | d
+Hours   | **hour** / **hours**     | h / hr / hrs
+Minutes | **minute** / **minutes** | m / min / mins 
+Seconds | **second** / **seconds** | s / sec / secs
 
 Where required, periods can be combined to define more complex intervals, for example `1h30m` represents one hour and 30 minutes.
 
