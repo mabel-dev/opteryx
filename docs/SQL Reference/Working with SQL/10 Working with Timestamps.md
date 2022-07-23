@@ -79,8 +79,6 @@ quarter  | ✓          | ✓       | ✓        | ✓           |
 doy      | ✘          | ✓       | ✘        | ✘           | day of year
 year     | ✓          | ✓       | ✓        | ✓           |
 
-The following convenience extraction functions also exist, however use of `EXTRACT` is recommended.
-
 ## Implicit Casting
 
 In many situation where a timestamp is expected, if an ISO1806 formatted string is provided, Opteryx will interpret as a timestamp.

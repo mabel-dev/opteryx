@@ -14,8 +14,6 @@ import numpy
 
 from pyarrow import compute
 
-from opteryx.utils import dates
-
 
 def list_contains(array, item):
     """
@@ -55,12 +53,10 @@ def search(array, item):
         return [None]
     if array_type == str:
         # return True if the value is in the string
-        # find_substring returns -1 or an index, we need to convert this to a boolean
-        # and then to a list of lists for pyarrow
-        res = compute.find_substring(array, pattern=item, ignore_case=True)
-        res = ~(res.to_numpy() < 0)
-        return ([r] for r in res)
+        return compute.match_substring(array, pattern=item, ignore_case=True)
     if array_type == numpy.ndarray:
+        # converting to a set is faster for a handful of items which is what we're
+        # almost definitely working with here - note compute.index is about 50x slower
         return (
             [False] if record is None else [item in set(record)] for record in array
         )
