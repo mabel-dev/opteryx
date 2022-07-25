@@ -13,7 +13,7 @@
 """
 This compensates for missing temporal table support in the SQL parser.
 
-For information on temporal tables see: 
+For information on temporal tables see:
 https://blog.devgenius.io/a-query-in-time-introduction-to-sql-server-temporal-tables-145ddb1355d9
 
 This supports the following syntaxes
@@ -53,13 +53,14 @@ SQL_PARTS = [
     r"WITH",
 ]
 
+COMBINE_WHITESPACE_REGEX = re.compile(r"\s+")
+
 
 def clean_statement(string):
     """
     Remove carriage returns and all whitespace to single spaces
     """
-    _RE_COMBINE_WHITESPACE = re.compile(r"\s+")
-    return _RE_COMBINE_WHITESPACE.sub(" ", string).strip().upper()
+    return COMBINE_WHITESPACE_REGEX.sub(" ", string).strip().upper()
 
 
 def sql_parts(string):
@@ -110,42 +111,42 @@ def _subtract_one_month(in_date):
 
 def parse_range(fixed_range):
     fixed_range = fixed_range.upper()
-    TODAY = datetime.date.today()
+    today = datetime.datetime.utcnow().date()
 
     if fixed_range in ("PREVIOUS_MONTH", "LAST_MONTH"):
         # end the day before the first of this month
-        end = TODAY.replace(day=1) - datetime.timedelta(days=1)
+        end = today.replace(day=1) - datetime.timedelta(days=1)
         # start the first day of that month
         start = end.replace(day=1)
     elif fixed_range == "THIS_MONTH":
         # start the first day of this month
-        start = TODAY.replace(day=1)
+        start = today.replace(day=1)
         # end today
-        end = TODAY
+        end = today
     elif fixed_range in ("PREVIOUS_CYCLE", "LAST_CYCLE"):
         # if we're before the 21st
-        if TODAY.day < 22:
+        if today.day < 22:
             # end the 21st of last month
-            end = _subtract_one_month(TODAY).replace(day=21)
+            end = _subtract_one_month(today).replace(day=21)
             # start the 22nd of the month before
             start = _subtract_one_month(end).replace(day=22)
         else:
             # end the 21st of this month
-            end = TODAY.replace(day=21)
+            end = today.replace(day=21)
             # start the 22nd of the month before
             start = _subtract_one_month(end).replace(day=22)
     elif fixed_range == "THIS_CYCLE":
         # if we're before the 21st
-        if TODAY.day < 22:
+        if today.day < 22:
             # end today
-            end = TODAY
+            end = today
             # start the 22nd of last month
-            start = _subtract_one_month(TODAY).replace(day=22)
+            start = _subtract_one_month(today).replace(day=22)
         else:
             # end the today
-            end = TODAY
+            end = today
             # start the 22nd of this month
-            start = TODAY.replace(day=22)
+            start = today.replace(day=22)
 
     else:
         raise SqlError(f"Unknown temporal range `{fixed_range}`")
@@ -156,12 +157,12 @@ def parse_range(fixed_range):
 def parse_date(date):
 
     date = date.upper()
-    TODAY = datetime.date.today()
+    today = datetime.datetime.utcnow().date()
 
     if date == "TODAY":
-        return TODAY
+        return today
     if date == "YESTERDAY":
-        return TODAY - datetime.timedelta(days=1)
+        return today - datetime.timedelta(days=1)
 
     parsed_date = dates.parse_iso(date[1:-1])
     if parsed_date:
@@ -175,10 +176,10 @@ def extract_temporal_filters(sql):
     clean_sql = clean_statement(clean_sql)
     parts = sql_parts(clean_sql)
 
-    TODAY = datetime.date.today()
+    today = datetime.datetime.utcnow().date()
     clearing_regex = None
-    start_date = TODAY
-    end_date = TODAY
+    start_date = today
+    end_date = today
 
     try:
         pos = parts.index("FOR")  # this fails when there is no temporal clause
@@ -195,6 +196,13 @@ def extract_temporal_filters(sql):
             parts = for_date_string.split(" ")
             start_date = parse_date(parts[2])
             end_date = parse_date(parts[4])
+
+            if start_date is None or end_date is None:
+                raise SqlError("Unrecognized temporal range values.")
+            if start_date > end_date:
+                raise SqlError(
+                    "Invalid temporal range, start of range is after end of range."
+                )
 
             clearing_regex = (
                 r"(FOR[\n\r\s]+DATES[\n\r\s]+BETWEEN[\n\r\s]+"
@@ -215,9 +223,8 @@ def extract_temporal_filters(sql):
             regex = re.compile(clearing_regex, re.MULTILINE | re.DOTALL | re.IGNORECASE)
             sql = regex.sub("\n-- FOR STATEMENT REMOVED\n", sql)
 
-        # swap the order if we need to
-        if start_date > end_date:
-            start_date, end_date = end_date, start_date
+    except SqlError as sql_error:
+        raise sql_error
     except Exception as e:
         pass
 
