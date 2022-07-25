@@ -40,6 +40,13 @@ STATEMENTS = [
 
         # JOIN hints aren't supported
         ("SELECT * FROM $satellites INNER HASH JOIN $planets USING (id)"),
+
+        # Invalid temporal ranges
+        ("SELECT * FROM t FOR 2022-01-01"),
+        ("SELECT * FROM t FOR DATES IN 2022"),
+        ("SELECT * FROM t FOR DATES BETWEEN 2022-01-01 AND TODAY"),
+        ("SELECT * FROM t FOR DATES BETWEEN today AND yesterday"),
+
     ]
 # fmt:on
 
