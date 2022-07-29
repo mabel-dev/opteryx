@@ -17,6 +17,8 @@ This is a SQL Query Execution Plan Node.
 
 Gives information about a dataset's columns
 """
+import datetime
+
 from functools import reduce
 from typing import Iterable
 from numpy import nan, nanmin, nanmax
@@ -32,19 +34,26 @@ from opteryx.exceptions import SqlError
 from opteryx.utils.columns import Columns
 
 MAX_COLLECTOR: int = 17
+MAX_VARCHAR_SIZE: int = 64  # long strings tend to lose meaning
+MAX_DATA_SIZE: int = 100 * 1024 * 1024 
 
+def _to_linux_epoch(date):
+    if date.as_py() is None:
+        return numpy.nan
+    else:
+        datetime.datetime.fromisoformat(date.as_py().isoformat()).timestamp()
 
-def myhash(any):
+def myhash(anything):
     from cityhash import CityHash64
 
-    if isinstance(any, list):
-        hashed = map(myhash, any)
+    if isinstance(anything, list):
+        hashed = map(myhash, anything)
         return reduce(lambda x, y: x ^ y, hashed, 0)
-    if isinstance(any, dict):
-        return CityHash64("".join([f"{k}:{any[k]}" for k in sorted(any.keys())]))
-    if isinstance(any, bool):
-        return int(any)
-    return CityHash64(str(any))
+    if isinstance(anything, dict):
+        return CityHash64("".join([f"{k}:{anything[k]}" for k in sorted(anything.keys())]))
+    if isinstance(anything, bool):
+        return int(anything)
+    return CityHash64(str(anything))
 
 
 def _simple_collector(page):
@@ -214,7 +223,7 @@ def _extended_collector(pages):
                     continue
 
                 # to prevent problems, we set some limits
-                if column_data.nbytes > 100 * 1024 * 1024:
+                if column_data.nbytes > MAX_DATA_SIZE:
                     if column not in uncollected_columns:
                         uncollected_columns.append(column)
                     continue
@@ -234,23 +243,14 @@ def _extended_collector(pages):
                         (v.as_py() for v in column_data if v.is_valid),
                         0,
                     )
-                    if max_len > 32:
+                    if max_len > MAX_VARCHAR_SIZE:
                         if column not in uncollected_columns:
                             uncollected_columns.append(column)
                         continue
 
                 # convert TIMESTAMP into a NUMERIC (seconds after Linux Epoch)
                 if _type == OPTERYX_TYPES.TIMESTAMP:
-                    import datetime
-
-                    to_linux_epoch = (
-                        lambda x: numpy.nan
-                        if x.as_py() is None
-                        else datetime.datetime.fromisoformat(
-                            x.as_py().isoformat()
-                        ).timestamp()
-                    )
-                    column_data = (to_linux_epoch(i) for i in column_data)
+                    column_data = (_to_linux_epoch(i) for i in column_data)
                 else:
                     column_data = (i.as_py() for i in column_data)
 
