@@ -35,13 +35,14 @@ from opteryx.utils.columns import Columns
 
 MAX_COLLECTOR: int = 17
 MAX_VARCHAR_SIZE: int = 64  # long strings tend to lose meaning
-MAX_DATA_SIZE: int = 100 * 1024 * 1024 
+MAX_DATA_SIZE: int = 100 * 1024 * 1024
+
 
 def _to_linux_epoch(date):
     if date.as_py() is None:
         return numpy.nan
-    else:
-        datetime.datetime.fromisoformat(date.as_py().isoformat()).timestamp()
+    return datetime.datetime.fromisoformat(date.as_py().isoformat()).timestamp()
+
 
 def myhash(anything):
     from cityhash import CityHash64
@@ -50,7 +51,9 @@ def myhash(anything):
         hashed = map(myhash, anything)
         return reduce(lambda x, y: x ^ y, hashed, 0)
     if isinstance(anything, dict):
-        return CityHash64("".join([f"{k}:{anything[k]}" for k in sorted(anything.keys())]))
+        return CityHash64(
+            "".join([f"{k}:{anything[k]}" for k in sorted(anything.keys())])
+        )
     if isinstance(anything, bool):
         return int(anything)
     return CityHash64(str(anything))
@@ -310,6 +313,7 @@ def _extended_collector(pages):
         profile["type"] = ", ".join(profile["type"])
 
         if column not in uncollected_columns:
+
             dgram = profile.pop("distogram", None)
             if dgram:
                 profile["min"], profile["max"] = distogram.bounds(dgram)

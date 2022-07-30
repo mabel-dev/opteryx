@@ -92,7 +92,7 @@ def _normalize_to_schema(table, schema):
             my_schema = table.schema.set(
                 index, pyarrow.field(column, first_types[column])
             )
-            
+
             table = table.cast(target_schema=my_schema)
 
     return table, schema

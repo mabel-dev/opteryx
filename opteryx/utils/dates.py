@@ -182,4 +182,3 @@ def parse_iso(value):
         return None
     except (ValueError, TypeError):
         return None
-                    

@@ -19,6 +19,7 @@ from opteryx.version import __version__
 
 from pathlib import Path
 
+__author__: str = "@joocer"
 
 apilevel = "1.0"  # pylint: disable=C0103
 threadsafety = 0  # pylint: disable=C0103
