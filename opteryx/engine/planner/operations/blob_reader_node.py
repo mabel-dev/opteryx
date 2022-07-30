@@ -31,7 +31,6 @@ from opteryx.engine import QueryDirectives, QueryStatistics
 from opteryx.engine.planner.operations import BasePlanNode
 from opteryx.exceptions import DatabaseError
 from opteryx.storage import file_decoders
-from opteryx.storage.adapters import DiskStorage
 from opteryx.storage.schemes import MabelPartitionScheme
 from opteryx.storage.schemes import DefaultPartitionScheme
 from opteryx.utils.columns import Columns
@@ -93,6 +92,7 @@ def _normalize_to_schema(table, schema):
             my_schema = table.schema.set(
                 index, pyarrow.field(column, first_types[column])
             )
+
             table = table.cast(target_schema=my_schema)
 
     return table, schema
