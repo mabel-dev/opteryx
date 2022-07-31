@@ -22,7 +22,3 @@ jobs:
   publish-docs:
     needs: [regression-tests, secrets-scanning, static-analysis, code-form]
     uses: ./.github/workflows/documents.yaml
-    
-  release-to-pypi:
-    needs: [publish-docs]
-    uses: ./.github/workflows/release.yaml
