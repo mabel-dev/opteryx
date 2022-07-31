@@ -1,7 +1,10 @@
 name: Release to PyPI
 
 on:
-  workflow_call
+  release:
+    types: [published]
+    branches:
+      - 'main'
 
 jobs:
 
