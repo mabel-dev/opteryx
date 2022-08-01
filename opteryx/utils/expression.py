@@ -29,7 +29,8 @@ class Expression:
 
 
 class NodeType(int, Enum):
-    """ The types of Nodes we will see """
+    """The types of Nodes we will see"""
+
     ROOT: int = 0
     AND: int = 1
     OR: int = 2
