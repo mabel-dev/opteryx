@@ -465,9 +465,17 @@ class QueryPlanner(ExecutionTree):
                         return {"function": func, "args": args, "alias": alias}
                     return {"aggregate": func, "args": args, "alias": alias}
                 if "BinaryOp" in function:
-                    raise NotImplementedError(
-                        "Operations in the SELECT clause are not supported"
-                    )
+                    left = self._build_dnf_filters(function["BinaryOp"]["left"])
+                    operator = function["BinaryOp"]["op"]
+                    right = self._build_dnf_filters(function["BinaryOp"]["right"])
+
+                    opmap = {"Plus": "+"}
+
+                    return {
+                        "function": operator.upper(),
+                        "args": [left, right],
+                        "alias": f"`{left[0]} {opmap.get(operator, '?')} {right[0]}`",
+                    }
                 if "Cast" in function:
                     # CAST(<var> AS <type>) - convert to the form <type>(var), e.g. BOOLEAN(on)
                     args = [self._build_dnf_filters(function["Cast"]["expr"])]
