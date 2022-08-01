@@ -23,6 +23,10 @@ class MissingDependencyError(Exception):
     pass
 
 
+class UnmetRequirementError(Exception):
+    pass
+
+
 # PEP-0249
 
 
@@ -67,4 +71,8 @@ class SqlError(ProgrammingError):
 
 
 class DatasetNotFoundError(SqlError):
+    pass
+
+
+class CursorInvalidStateError(ProgrammingError):
     pass

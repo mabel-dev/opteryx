@@ -10,20 +10,58 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import numpy
 
-def _list_contains(array, item):
+from pyarrow import compute
+
+
+def list_contains(array, item):
+    """
+    does array contain item
+    """
     if array is None:
         return False
-    return item in array
+    return item in set(array)
 
 
-def _list_contains_any(array, items):
+def list_contains_any(array, items):
+    """
+    does array contain any of the items in items
+    """
     if array is None:
         return False
     return set(array).intersection(items) != set()
 
 
-def _list_contains_all(array, items):
+def list_contains_all(array, items):
+    """
+    does array contain all of the items in items
+    """
     if array is None:
         return False
     return set(array).issuperset(items)
+
+
+def search(array, item):
+    """
+    `search` provides a way to look for values across different field types, rather
+    than doing a LIKE on a string, IN on a list, `search` adapts to the field type.
+    """
+    if len(array) > 0:
+        array_type = type(array[0])
+    else:
+        return [None]
+    if array_type == str:
+        # return True if the value is in the string
+        return compute.match_substring(array, pattern=item, ignore_case=True)
+    if array_type == numpy.ndarray:
+        # converting to a set is faster for a handful of items which is what we're
+        # almost definitely working with here - note compute.index is about 50x slower
+        return (
+            [False] if record is None else [item in set(record)] for record in array
+        )
+    if array_type == dict:
+        return (
+            [False] if record is None else [item in record.values()] for record in array
+        )
+    return [[False] * array.shape[0]]

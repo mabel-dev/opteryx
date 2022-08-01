@@ -23,15 +23,20 @@ import pyarrow
 
 from opteryx import config
 from opteryx.engine.planner.operations import BasePlanNode
-from opteryx.engine.query_statistics import QueryStatistics
+from opteryx.engine import QueryDirectives, QueryStatistics
 from opteryx.exceptions import SqlError
 from opteryx.third_party import pyarrow_ops
 from opteryx.utils import arrow
 from opteryx.utils.columns import Columns
 
+INTERNAL_BATCH_SIZE = config.INTERNAL_BATCH_SIZE
+
 
 class InnerJoinNode(BasePlanNode):
-    def __init__(self, statistics: QueryStatistics, **config):
+    def __init__(
+        self, directives: QueryDirectives, statistics: QueryStatistics, **config
+    ):
+        super().__init__(directives=directives, statistics=statistics)
         self._right_table = config.get("right_table")
         self._join_type = config.get("join_type", "CrossJoin")
         self._on = config.get("join_on")
@@ -64,9 +69,7 @@ class InnerJoinNode(BasePlanNode):
                 for col in self._using
             ]
 
-            batch_size = config.INTERNAL_BATCH_SIZE
-
-            for page in left_node.execute():
+            for page in arrow.consolidate_pages(left_node.execute(), self._statistics):
 
                 if left_columns is None:
                     left_columns = Columns(page)
@@ -77,7 +80,7 @@ class InnerJoinNode(BasePlanNode):
                     new_metadata = left_columns + right_columns
 
                 # we break this into small chunks otherwise we very quickly run into memory issues
-                for batch in page.to_batches(max_chunksize=batch_size):
+                for batch in page.to_batches(max_chunksize=INTERNAL_BATCH_SIZE):
 
                     # blocks don't have column_names, so we need to wrap in a table
                     batch = pyarrow.Table.from_batches([batch], schema=page.schema)
@@ -98,7 +101,7 @@ class InnerJoinNode(BasePlanNode):
 
             left_columns = None
 
-            for page in left_node.execute():
+            for page in arrow.consolidate_pages(left_node.execute(), self._statistics):
 
                 if left_columns is None:
                     left_columns = Columns(page)

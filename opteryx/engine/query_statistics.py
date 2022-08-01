@@ -41,16 +41,25 @@ class QueryStatistics:
 
         self.segments_scanned: int = 0
 
+        self.collections_read: int = 0
+        self.document_pages: int = 0
+
         self.time_data_read: int = 0
 
         self.cache_hits: int = 0
         self.cache_misses: int = 0
+        self.cache_oversize: int = 0
+        self.cache_errors: int = 0
 
-        # time spent query planning
+        # time spent on various steps
         self.time_planning: int = 0
+        self.time_selecting: float = 0
 
         self.start_time: int = 0
         self.end_time: int = 0
+
+        self.page_splits: int = 0
+        self.page_merges: int = 0
 
     def _ns_to_s(self, nano_seconds):
         """convert elapsed ns to s"""
@@ -62,6 +71,14 @@ class QueryStatistics:
         """collect warnings"""
         if warning_text not in self._warnings:
             self._warnings.append(warning_text)
+
+    @property
+    def has_warnings(self):
+        return len(self._warnings) > 0
+
+    @property
+    def warnings(self):
+        return self._warnings
 
     def as_dict(self):
         """
@@ -83,10 +100,17 @@ class QueryStatistics:
             "time_total": self._ns_to_s(self.end_time - self.start_time),
             "time_planning": self._ns_to_s(self.time_planning),
             "time_scanning_partitions": self._ns_to_s(self.time_scanning_partitions),
+            "time_selecting": self._ns_to_s(self.time_selecting),
             "partitions_found": self.partitions_found,
             "partitions_scanned": self.partitions_scanned,
             "partitions_read": self.partitions_read,
             "segments_scanned": self.segments_scanned,
             "cache_hits": self.cache_hits,
             "cache_misses": self.cache_misses,
+            "cache_oversize": self.cache_oversize,
+            "cache_errors": self.cache_errors,
+            "collections_read": self.collections_read,
+            "document_pages": self.document_pages,
+            "page_splits": self.page_splits,
+            "page_merges": self.page_merges,
         }

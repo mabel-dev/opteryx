@@ -10,7 +10,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import psutil
+import pyarrow
 import yaml
 
 from pathlib import Path
@@ -31,10 +31,19 @@ INTERNAL_BATCH_SIZE: int = int(_config.get("INTERNAL_BATCH_SIZE", 500))
 # The maximum number of records to create in a CROSS JOIN frame
 MAX_JOIN_SIZE: int = int(_config.get("MAX_JOIN_SIZE", 1000000))
 # The maximum number of processors to use for multi processing
-MAX_SUB_PROCESSES: int = int(_config.get("MAX_SUB_PROCESSES", psutil.cpu_count(logical=False)))
+MAX_SUB_PROCESSES: int = int(_config.get("MAX_SUB_PROCESSES", pyarrow.io_thread_count()))
 # The number of bytes to allocate for each processor
 BUFFER_PER_SUB_PROCESS: int = int(_config.get("BUFFER_PER_SUB_PROCESS", 100000000))
 # The number of seconds before forcably killing processes
 MAXIMUM_SECONDS_SUB_PROCESSES_CAN_RUN: int = int(_config.get("MAXIMUM_SECONDS_SUB_PROCESSES_CAN_RUN", 3600))
-
+# GCP project ID - for Google Cloud Data
+GCP_PROJECT_ID: str = _config.get("GCP_PROJECT_ID")
+# Mapping prefixes to readers - the default is to use disk
+DATASET_PREFIX_MAPPING: dict = _config.get("DATASET_PREFIX_MAPPING", {"_":"disk"})
+# Data Partitioning
+PARTITION_SCHEME: str = _config.get("PARTITION_SCHEME", "mabel")
+# Maximum size for items saved to the buffer cache
+MAX_SIZE_SINGLE_CACHE_ITEM: int = _config.get("MAX_SIZE_SINGLE_CACHE_ITEM", 1024 * 1024)
+# Approximate Page Size
+PAGE_SIZE: int = _config.get("PAGE_SIZE", 64 * 1024 * 1024)
 # fmt:on

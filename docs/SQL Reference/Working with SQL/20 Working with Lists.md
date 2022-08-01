@@ -2,22 +2,34 @@
 
 In Opteryx a list is an ordered collection of zero or more values of the same data type.
 
-## Accessing List Elements
+## Actions
 
-`list[index]`   
-`MAP(list, index)`
+### Accessing
 
-## List Containment
+~~~
+list[index]
+~~~
 
-### Operators
+### Testing
 
-`IN`
+~~~
+value IN list
+~~~
 
-### Functions
+### Searching
 
-`LIST_CONTAINS`   
-`LIST_CONTAINS_ANY`   
-`LIST_CONTAINS_ALL`
+~~~
+SEARCH(list, value)
+~~~
+~~~
+LIST_CONTAINS   
+~~~
+~~~
+LIST_CONTAINS_ANY   
+~~~
+~~~
+LIST_CONTAINS_ALL
+~~~
 
 ## Converting Lists to Relations
 
@@ -29,4 +41,3 @@ In Opteryx a list is an ordered collection of zero or more values of the same da
 SELECT * 
   FROM UNNEST((True, False)) AS Booleans;
 ~~~
-

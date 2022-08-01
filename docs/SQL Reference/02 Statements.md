@@ -8,10 +8,13 @@ Show the logical execution plan of a statement.
 
 ~~~sql
 EXPLAIN
-select statement
+statement
 ~~~
 
 The `EXPLAIN` clause outputs a summary of the execution plan for the query in the `SELECT` statement.
+
+!!! warning
+    The data returned by the `EXPLAIN` statement is intended for interactive usage only and the output format may change between releases. Applications should not depend on the output of the `EXPLAIN` statement.
 
 ## SELECT
 
@@ -19,7 +22,7 @@ Retrieve rows from zero or more relations.
 
 ~~~sql
 SELECT [ DISTINCT ] select_list
-FROM relation
+FROM relation [WITH (NO_CACHE,NO_PARTITION)]
   [ INNER ] JOIN relation
     USING (column)
   CROSS JOIN relation
@@ -49,7 +52,7 @@ The `DISTINCT` modifier is specified, only unique rows are included in the resul
 ### FROM / JOIN clauses
 
 ~~~
-FROM relation [, ...]
+FROM relation [, ...] [WITH (NOCACHE)]
 ~~~
 ~~~
 FROM relation [ INNER ] JOIN relation < USING (column) | ON condition >
@@ -66,6 +69,15 @@ The `FROM` clause specifies the source of the data on which the remainder of the
 `JOIN` clauses allow you to combine data from multiple relations. If no `JOIN` qualifier is provided, `INNER` will be used. `JOIN` qualifiers are mutually exclusive. `ON` and `USING` clauses are also mutually exclusive and can only be used with `INNER` and `LEFT` joins.
 
 See [Joins](https://mabel-dev.github.io/opteryx/SQL%20Reference/08%20Joins/) for more information on `JOIN` syntax and functionality.
+
+Hints can be provided as part of the statement to direct the query planner and executor to make decisions. Relation hints are declared as `WITH` statements following a relation in the `FROM` and `JOIN` clauses, for example `FROM $astronauts WITH (NOCACHE)`. Reconised hints are:
+
+Hint    | Effect                         
+------- | -------------------------------
+NOCACHE | Ignores any cache configuration 
+
+!!! note
+    Hints are not guaranteed to be followed, the query planner and executor may ignore hints in specific circumstances.
 
 ### FOR clause
 
@@ -102,6 +114,8 @@ HAVING group_filter
 
 The `GROUP BY` clause specifies which grouping columns should be used to perform any aggregations in the `SELECT` clause. If the `GROUP BY` clause is specified, the query is always an aggregate query, even if no aggregations are present in the `SELECT` clause. The `HAVING` clause specifies filters to apply to aggregated data, `HAVING` clauses require a `GROUP BY` clause.
 
+`GROUP BY` expressions may use column numbers, however, this is not recommended for statements intended for reuse. 
+
 ### ORDER BY / LIMIT / OFFSET clauses
 
 ~~~
@@ -115,6 +129,8 @@ LIMIT count
 ~~~
 
 `ORDER BY`, `LIMIT` and `OFFSET` are output modifiers. Logically they are applied at the very end of the query. The `OFFSET` clause discards initial rows from the returned set, the `LIMIT` clause restricts the amount of rows fetched, and the `ORDER BY` clause sorts the rows on the sorting criteria in either ascending or descending order.
+
+`ORDER BY` expressions may use column numbers, however, this is not recommended for statements intended for reuse.
 
 ## SHOW COLUMNS
 

@@ -26,9 +26,11 @@ import pyarrow
 from opteryx import config
 from opteryx.engine.attribute_types import TOKEN_TYPES
 from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
-from opteryx.engine.query_statistics import QueryStatistics
+from opteryx.engine import QueryDirectives, QueryStatistics
 from opteryx.exceptions import SqlError
 from opteryx.utils.columns import Columns
+
+INTERNAL_BATCH_SIZE = config.INTERNAL_BATCH_SIZE
 
 
 def _cartesian_product(*arrays):
@@ -73,9 +75,7 @@ def _cross_join(left, right):
             new_columns = left_columns + right_columns
 
         # we break this into small chunks, each cycle will have 100 * rows in the right table
-        for left_block in left_page.to_batches(
-            max_chunksize=config.INTERNAL_BATCH_SIZE
-        ):
+        for left_block in left_page.to_batches(max_chunksize=INTERNAL_BATCH_SIZE):
 
             # blocks don't have column_names, so we need to wrap in a table
             left_block = pyarrow.Table.from_batches(
@@ -121,6 +121,7 @@ def _cross_join_unnest(left, column, alias):
         raise NotImplementedError("Can only CROSS JOIN UNNEST on a field")
 
     metadata = None
+    column_type = None
 
     if alias is None:
         alias = f"UNNEST({column[0]})"
@@ -132,12 +133,13 @@ def _cross_join_unnest(left, column, alias):
             metadata.add_column(alias)
             unnest_column = metadata.get_column_from_alias(column[0], only_one=True)
 
-        batch_size = config.INTERNAL_BATCH_SIZE
         # we break this into small chunks otherwise we very quickly run into memory issues
-        for left_block in left_page.to_batches(max_chunksize=batch_size):
+        for left_block in left_page.to_batches(max_chunksize=INTERNAL_BATCH_SIZE):
 
             # Get the column we're going to UNNEST
             column_data = left_block[unnest_column]
+            if column_type is None:
+                column_type = column_data.type.value_type
 
             # Create a list of indexes, this will look something like this:
             # [1,1,1,2,2,2,3,3,3]
@@ -167,6 +169,15 @@ def _cross_join_unnest(left, column, alias):
             new_block = pyarrow.Table.from_batches([new_block])
             # Append the column we created above, to the table with the repeated rows
             new_block = pyarrow.Table.append_column(new_block, alias, new_column)
+
+            # if the entire page is nulls, the schema won't match
+            column_index = new_block.column_names.index(alias)
+            schema = new_block.schema
+            column = schema.field(column_index)
+            if column.type != column_type:
+                schema = schema.set(column_index, pyarrow.field(alias, column_type))
+                new_block = new_block.cast(target_schema=schema)
+
             new_block = metadata.apply(new_block)
             yield new_block
 
@@ -176,7 +187,10 @@ class CrossJoinNode(BasePlanNode):
     Implements a SQL CROSS JOIN and CROSS JOIN UNNEST
     """
 
-    def __init__(self, statistics: QueryStatistics, **config):
+    def __init__(
+        self, directives: QueryDirectives, statistics: QueryStatistics, **config
+    ):
+        super().__init__(directives=directives, statistics=statistics)
         self._right_table = config.get("right_table")
         self._join_type = config.get("join_type", "CrossJoin")
 
@@ -208,7 +222,7 @@ class CrossJoinNode(BasePlanNode):
 
         elif self._join_type == "CrossJoinUnnest":
 
-            alias, dataset, source = right_node
+            alias, dataset, source, hints = right_node
             function = dataset["function"]
             args = dataset["args"]
 

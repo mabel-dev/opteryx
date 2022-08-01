@@ -11,19 +11,18 @@
 # limitations under the License.
 
 """
-Base Inner Reader - this is based on the BaseInnerReader in Mabel with some differences:
-
-- removes any capability to 'read back days'
-- caching is implemented as an injectable dependency
+Base Inner Reader for blob and file stores
 """
 import abc
 import datetime
 from typing import Iterable, List, Union
+from opteryx.utils import dates
+from opteryx.utils import paths
 
 
-class BaseStorageAdapter(abc.ABC):
-    def __init__(self, *args, **kwargs):
-        pass
+class BaseBlobStorageAdapter(abc.ABC):
+
+    __mode__ = "Blob"
 
     def get_partitions(
         self,
@@ -39,8 +38,7 @@ class BaseStorageAdapter(abc.ABC):
         Get partitions doesn't confirm the partitions exist, it just creates a list
         of candidate partitions.
         """
-
-        from opteryx.utils import dates, paths
+        import pathlib
 
         # apply the partitioning to the dataset name
         if not dataset.endswith("/"):
@@ -51,15 +49,13 @@ class BaseStorageAdapter(abc.ABC):
             dataset += "/".join(partitioning) + "/"
 
         # make sure we're dealing with dates
-        start_date = dates.parse_iso(start_date) or datetime.date.today()
-        end_date = dates.parse_iso(end_date) or datetime.date.today()
+        start_date = dates.parse_iso(start_date) or datetime.datetime.utcnow()
+        end_date = dates.parse_iso(end_date) or datetime.datetime.utcnow()
 
         partitions = []
         # we're going to iterate over the date range and get the name of the partition for
         # this dataset on this data - without knowing if the partition exists
         for delta in range(int((end_date - start_date).days) + 1):
-            import pathlib
-
             working_date = start_date + datetime.timedelta(delta)
             partitions.append(
                 pathlib.Path(paths.build_path(path=dataset, date=working_date))
@@ -73,7 +69,7 @@ class BaseStorageAdapter(abc.ABC):
         """
         raise NotImplementedError("get_blob_list not implemented")
 
-    def read_blob(self, blob: str) -> bytes:
+    def read_blob(self, blob_name: str) -> bytes:
         """
         Return a filelike object
         """

@@ -15,15 +15,18 @@ This module provides a PEP-249 familiar interface for interacting with mabel dat
 stores, it is not compliant with the standard:
 https://www.python.org/dev/peps/pep-0249/
 """
+import datetime
 import time
-from typing import Dict, List, Optional, Tuple, Union
 
-from opteryx.engine import QueryPlanner
-from opteryx.engine.query_statistics import QueryStatistics
-from opteryx.storage import BaseBufferCache, BasePartitionScheme, BaseStorageAdapter
-from opteryx.storage.adapters import DiskStorage
-from opteryx.storage.schemes import DefaultPartitionScheme, MabelPartitionScheme
+from typing import Dict, List, Optional
+
+from opteryx.engine.planner import QueryPlanner
+from opteryx.engine import QueryStatistics
+from opteryx.exceptions import CursorInvalidStateError, ProgrammingError, SqlError
+from opteryx.storage import BaseBufferCache
 from opteryx.utils import arrow
+
+CURSOR_NOT_RUN = "Cursor must be in an executed state"
 
 
 class Connection:
@@ -34,33 +37,19 @@ class Connection:
     def __init__(
         self,
         *,
-        reader: Optional[BaseStorageAdapter] = None,
-        partition_scheme: Union[str, Tuple, BasePartitionScheme] = "mabel",
         cache: Optional[BaseBufferCache] = None,
         **kwargs,
     ):
         self._results = None
-        self._reader = reader
-        if reader is None:
-            self._reader = DiskStorage()
-
-        self._partition_scheme = partition_scheme
-        if isinstance(partition_scheme, (str, tuple, list, set)):
-            if str(partition_scheme).lower() == "mabel":
-                self._partition_scheme = MabelPartitionScheme()
-            else:
-                self._partition_scheme = DefaultPartitionScheme(partition_scheme)
-        if partition_scheme is None:
-            self._partition_scheme = DefaultPartitionScheme("")
-
         self._cache = cache
-
         self._kwargs = kwargs
 
     def cursor(self):
+        """return a cursor object"""
         return Cursor(self)
 
     def close(self):
+        """exists for interface compatibility only"""
         pass
 
 
@@ -70,6 +59,7 @@ class Cursor:
         self._query = None
         self.arraysize = 1
         self._stats = QueryStatistics()
+        self._results = None
 
         self._query_plan = None
 
@@ -77,7 +67,6 @@ class Cursor:
         """
         Formats parameters to be passed to a Query.
         """
-        import datetime
         from decimal import Decimal
 
         if param is None:
@@ -105,24 +94,24 @@ class Cursor:
         if isinstance(param, (list, tuple, set)):
             return f"({','.join(map(self._format_prepared_param, param))})"
 
-        raise Exception(f"Query parameter of type '{type(param)}' is not supported.")
+        raise SqlError(f"Query parameter of type '{type(param)}' is not supported.")
 
     def execute(self, operation, params=None):
         if self._query is not None:
-            raise Exception("Cursor can only be executed once")
+            raise CursorInvalidStateError("Cursor can only be executed once")
 
         self._stats.start_time = time.time_ns()
 
         if params:
             if not isinstance(params, (list, tuple)):
-                raise Exception(
+                raise ProgrammingError(
                     "params must be a list or tuple containing the query parameter values"
                 )
 
             for param in params:
                 if operation.find("%s") == -1:
                     # we have too few placeholders
-                    raise Exception(
+                    raise ProgrammingError(
                         "Number of placeholders and number of parameters must match."
                     )
                 operation = operation.replace(
@@ -130,19 +119,15 @@ class Cursor:
                 )
             if operation.find("%s") != -1:
                 # we have too many placeholders
-                raise Exception(
+                raise ProgrammingError(
                     "Number of placeholders and number of parameters must match."
                 )
 
         self._query_plan = QueryPlanner(
             statistics=self._stats,
-            reader=self._connection._reader,
             cache=self._connection._cache,
-            partition_scheme=self._connection._partition_scheme,
         )
         self._query_plan.create_plan(sql=operation)
-
-        # TODO:run optimizer
 
         # how long have we spent planning
         self._stats.time_planning = time.time_ns() - self._stats.start_time
@@ -152,43 +137,57 @@ class Cursor:
     @property
     def rowcount(self):
         if self._results is None:
-            raise Exception("Cursor must be executed first")
+            raise CursorInvalidStateError(CURSOR_NOT_RUN)
         return self._results.count()
 
     @property
     def shape(self):
         if self._results is None:
-            raise Exception("Cursor must be executed first")
+            raise CursorInvalidStateError(CURSOR_NOT_RUN)
         return self._results.shape
 
     @property
     def stats(self):
+        """execution statistics"""
         self._stats.end_time = time.time_ns()
         return self._stats.as_dict()
 
+    @property
+    def has_warnings(self):
+        """do I have warnings"""
+        return self._stats.has_warnings
+
+    @property
     def warnings(self):
-        return self._stats._warnings
+        """list of run-time warnings"""
+        return self._stats.warnings
 
     def fetchone(self) -> Optional[Dict]:
+        """fetch one record only"""
         if self._results is None:
-            raise Exception("Cursor must be executed first")
+            raise CursorInvalidStateError(CURSOR_NOT_RUN)
         return arrow.fetchone(self._results)
 
     def fetchmany(self, size=None) -> List[Dict]:
+        """fetch a given number of records"""
         fetch_size = self.arraysize if size is None else size
         if self._results is None:
-            raise Exception("Cursor must be executed first")
+            raise CursorInvalidStateError(CURSOR_NOT_RUN)
         return arrow.fetchmany(self._results, fetch_size)
 
     def fetchall(self) -> List[Dict]:
+        """fetch all matching records"""
         if self._results is None:
-            raise Exception("Cursor must be executed first")
+            raise CursorInvalidStateError(CURSOR_NOT_RUN)
         return arrow.fetchall(self._results)
 
     def close(self):
+        """close the connection"""
         self._connection.close()
 
     def __repr__(self):  # pragma: no cover
+
+        from opteryx.utils.display import html_table, ascii_table
 
         try:
             from IPython import get_ipython
@@ -197,15 +196,11 @@ class Cursor:
         except Exception:
             i_am_in_a_notebook = False
 
-        if i_am_in_a_notebook():
+        if i_am_in_a_notebook:
             from IPython.display import HTML, display
 
-            from opteryx.utils import display
-
-            html = display.html_table(iter(self._iterator), 10)
+            html = html_table(iter(self.fetchmany(10)), 10)
             display(HTML(html))
             return ""  # __repr__ must return something
-        else:
-            from opteryx.utils import display
 
-            return display.ascii_table(iter(self._iterator), 10)
+        return ascii_table(iter(self.fetchmany(10)), 10)

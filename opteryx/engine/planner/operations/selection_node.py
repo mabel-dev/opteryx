@@ -16,7 +16,7 @@ Selection Node
 This is a SQL Query Execution Plan Node.
 
 This Node eliminates elminiates records which do not match a predicate using a
-DNF (Disjunctive Normal Form) interpretter.
+DNF-like (Disjunctive Normal Form) interpretter (note this is not strict DNF).
 
 Predicates in the same list are joined with an AND/Intersection (all must be True)
 and predicates in adjacent lists are joined with an OR/Union (any can be True).
@@ -26,16 +26,23 @@ The predicates are in _tuples_ in the form (`key`, `op`, `value`) where the `key
 is the value looked up from the record, the `op` is the operator and the `value`
 is a literal.
 """
+import time
+
 from typing import Iterable, Union
+from pyarrow import Table
+from numpy import union1d, intersect1d
 
 import numpy
-from pyarrow import Table
+import pyarrow
 
+from opteryx.engine import QueryDirectives, QueryStatistics
 from opteryx.engine.attribute_types import TOKEN_TYPES
+from opteryx.engine.functions import FUNCTIONS
+from opteryx.engine.functions.unary_operations import UNARY_OPERATIONS
 from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
-from opteryx.engine.query_statistics import QueryStatistics
 from opteryx.exceptions import SqlError
 from opteryx.utils.columns import Columns
+from opteryx.utils.arrow import consolidate_pages
 
 
 class InvalidSyntaxError(Exception):
@@ -66,14 +73,16 @@ def _evaluate(predicate: Union[tuple, list], table: Table):
         if len(predicate) == 1:
             return _evaluate(predicate=predicate[0], table=table)
 
-        # handle NOT statements
-        if len(predicate) == 2 and predicate[0] == "NOT":
+        # handle IS and NOT statements
+        if len(predicate) == 2 and predicate[0] == "Not":
             # calculate the answer of the non-negated condition (positive)
             positive_result = _evaluate(predicate=predicate[1], table=table)
             # negate it by removing the values in the positive results from
             # all of the possible values (mask)
             mask = numpy.arange(table.num_rows, dtype=numpy.int32)
             return numpy.setdiff1d(mask, positive_result, assume_unique=True)
+        if len(predicate) == 2 and predicate[0] in UNARY_OPERATIONS:
+            return UNARY_OPERATIONS[predicate[0]](table, predicate[1])
 
         # this is a function in the selection
         if len(predicate) == 3 and isinstance(predicate[2], dict):
@@ -90,9 +99,6 @@ def _evaluate(predicate: Union[tuple, list], table: Table):
             # presently it only evaluates in the SELECT clause.
             else:
                 # TODO: push this to the evaluation node
-                import pyarrow
-
-                from opteryx.engine.functions import FUNCTIONS
 
                 function = predicate[2]
 
@@ -110,13 +116,16 @@ def _evaluate(predicate: Union[tuple, list], table: Table):
                         arg_list.append(arg[0])
 
                 if len(arg_list) == 0:
-                    arg_list = [
-                        table.num_rows,
-                    ]
+                    arg_list = (table.num_rows,)  # type: ignore
 
-                calculated_values = FUNCTIONS[function["function"]](*arg_list)
+                return_type, executor = FUNCTIONS[function["function"]]
+                calculated_values = executor(*arg_list)
                 if isinstance(calculated_values, (pyarrow.lib.StringScalar)):
                     calculated_values = [[calculated_values.as_py()]]
+                if return_type:
+                    calculated_values = pyarrow.array(
+                        calculated_values, type=return_type
+                    )
                 table = pyarrow.Table.append_column(
                     table, predicate[0], calculated_values
                 )
@@ -133,7 +142,13 @@ def _evaluate(predicate: Union[tuple, list], table: Table):
             and predicate[0][1] == TOKEN_TYPES.IDENTIFIER
             and (predicate[0][0] not in table.column_names)
         ):
-            raise SqlError(f"Field `{predicate[0][0]}` does not exist.")
+            best_match = columns.fuzzy_search(predicate[0][0])
+            if best_match:
+                raise SqlError(
+                    f"Field `{predicate[0][0]}` does not exist, did you mean `{best_match}`."
+                )
+            else:
+                raise SqlError(f"Field `{predicate[0][0]}` does not exist.")
 
         if len(predicate[0]) == 3 and isinstance(predicate[0][2], dict):
             raise SqlError(
@@ -156,7 +171,7 @@ def _evaluate(predicate: Union[tuple, list], table: Table):
             # default to all selected
             mask = numpy.arange(table.num_rows, dtype=numpy.int32)
             for part in predicate:
-                mask = numpy.intersect1d(mask, _evaluate(part, table))
+                mask = intersect1d(mask, _evaluate(part, table))
             return mask  # type:ignore
 
         # Are all of the entries lists?
@@ -165,7 +180,7 @@ def _evaluate(predicate: Union[tuple, list], table: Table):
             # default to none selected
             mask = numpy.zeros(0, dtype=numpy.int32)
             for part in predicate:
-                mask = numpy.union1d(mask, _evaluate(part, table))  # type:ignore
+                mask = union1d(mask, _evaluate(part, table))  # type:ignore
             return mask  # type:ignore
 
         # if we're here the structure of the filter is wrong
@@ -185,8 +200,6 @@ def _evaluate_subqueries(predicate):
         and len(predicate) == 2
         and predicate[1] == TOKEN_TYPES.QUERY_PLAN
     ):
-        import pyarrow
-
         table_result = pyarrow.concat_tables(predicate[0].execute())
         if len(table_result) == 0:
             SqlError("Subquery in WHERE clause - column not found")
@@ -223,7 +236,10 @@ def _map_columns(predicate, columns):
 
 
 class SelectionNode(BasePlanNode):
-    def __init__(self, statistics: QueryStatistics, **config):
+    def __init__(
+        self, directives: QueryDirectives, statistics: QueryStatistics, **config
+    ):
+        super().__init__(directives=directives, statistics=statistics)
         self._filter = config.get("filter")
         self._unfurled_filter = None
         self._mapped_filter = None
@@ -237,7 +253,7 @@ class SelectionNode(BasePlanNode):
                 if len(predicate) > 1 and predicate[1] == TOKEN_TYPES.VARCHAR:
                     return f'"{predicate[0]}"'
                 if len(predicate) == 2:
-                    if predicate[0] == "NOT":
+                    if predicate[0] == "Not":
                         return f"NOT {_inner_config(predicate[1])}"
                     return f"{predicate[0]}"
                 return "(" + " ".join(_inner_config(p) for p in predicate) + ")"
@@ -271,7 +287,7 @@ class SelectionNode(BasePlanNode):
             # before we can continue.
             self._unfurled_filter = _evaluate_subqueries(self._filter)
 
-            for page in data_pages.execute():
+            for page in consolidate_pages(data_pages.execute(), self._statistics):
 
                 # what we want to do is rewrite the filters to refer to the column names
                 # NOT rewrite the column names to match the filters
@@ -279,5 +295,7 @@ class SelectionNode(BasePlanNode):
                     columns = Columns(page)
                     self._mapped_filter = _map_columns(self._unfurled_filter, columns)
 
+                start_selection = time.time_ns()
                 mask = _evaluate(self._mapped_filter, page)
+                self._statistics.time_selecting += time.time_ns() - start_selection
                 yield page.take(mask)

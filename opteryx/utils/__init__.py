@@ -10,10 +10,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import itertools
+
 from functools import lru_cache
 
+try:
+    # added 3.9
+    from functools import cache
+except ImportError:
+    from functools import lru_cache
 
-@lru_cache(1)
+    cache = lru_cache(1)
+
+
+@cache
 def is_running_from_ipython():
     """
     True when running in Jupyter
@@ -26,9 +36,13 @@ def is_running_from_ipython():
         return False
 
 
-def safe_field_name(field_name):
-    """strip all the non-alphanums from a field name"""
-    import re
-
-    pattern = re.compile(r"[^a-zA-Z0-9\_\-]+")
-    return pattern.sub("", field_name)
+def peak(generator):
+    """
+    peak an item off a generator, this may have undesirable consequences so
+    only use if you also wrote the generator
+    """
+    try:
+        item = next(generator)
+    except StopIteration:
+        return None
+    return item, itertools.chain(item, generator)

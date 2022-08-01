@@ -21,24 +21,24 @@ STATEMENTS = [
         # values that have been read.
 
         # arrow (feather)
-        ("SELECT * FROM tests.data.formats.arrow", 100000, 13),
-        ("SELECT user_name, user_verified FROM tests.data.formats.arrow WHERE user_name ILIKE '%news%'", 122, 2),
+        ("SELECT * FROM tests.data.formats.arrow WITH(NO_PARTITION)", 100000, 13),
+        ("SELECT user_name, user_verified FROM tests.data.formats.arrow WITH(NO_PARTITION) WHERE user_name ILIKE '%news%'", 122, 2),
 
         # jsonl
-        ("SELECT * FROM tests.data.formats.jsonl", 100000, 13),
-        ("SELECT user_name, user_verified FROM tests.data.formats.jsonl WHERE user_name ILIKE '%news%'", 122, 2),
+        ("SELECT * FROM tests.data.formats.jsonl WITH(NO_PARTITION)", 100000, 13),
+        ("SELECT user_name, user_verified FROM tests.data.formats.jsonl WITH(NO_PARTITION) WHERE user_name ILIKE '%news%'", 122, 2),
 
         # orc
-        ("SELECT * FROM tests.data.formats.orc", 100000, 13),
-        ("SELECT user_name, user_verified FROM tests.data.formats.orc WHERE user_name ILIKE '%news%'", 122, 2),
+        ("SELECT * FROM tests.data.formats.orc WITH(NO_PARTITION)", 100000, 13),
+        ("SELECT user_name, user_verified FROM tests.data.formats.orc WITH(NO_PARTITION) WHERE user_name ILIKE '%news%'", 122, 2),
 
         # parquet
-        ("SELECT * FROM tests.data.formats.parquet", 100000, 13),
-        ("SELECT user_name, user_verified FROM tests.data.formats.parquet WHERE user_name ILIKE '%news%'", 122, 2),
+        ("SELECT * FROM tests.data.formats.parquet WITH(NO_PARTITION)", 100000, 13),
+        ("SELECT user_name, user_verified FROM tests.data.formats.parquet WITH(NO_PARTITION) WHERE user_name ILIKE '%news%'", 122, 2),
 
         # zstandard jsonl
-        ("SELECT * FROM tests.data.formats.zstd", 100000, 13),
-        ("SELECT user_name, user_verified FROM tests.data.formats.zstd WHERE user_name ILIKE '%news%'", 122, 2),
+        ("SELECT * FROM tests.data.formats.zstd WITH(NO_PARTITION)", 100000, 13),
+        ("SELECT user_name, user_verified FROM tests.data.formats.zstd WITH(NO_PARTITION) WHERE user_name ILIKE '%news%'", 122, 2),
     ]
 # fmt:on
 
@@ -48,7 +48,9 @@ def test_sql_battery(statement, rows, columns):
     """
     Test an battery of statements
     """
-    conn = opteryx.connect(reader=DiskStorage(), partition_scheme=None)
+    opteryx.storage.register_prefix("tests", DiskStorage)
+
+    conn = opteryx.connect()
     cursor = conn.cursor()
     cursor.execute(statement)
 

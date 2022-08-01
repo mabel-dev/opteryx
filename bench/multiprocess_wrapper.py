@@ -8,14 +8,14 @@ automatic running of the data accesses.
 import os
 import time
 import logging
-import psutil
+import pyarrow
 from queue import Empty
 import multiprocessing
 
 
 TERMINATE_SIGNAL = -1
 MAXIMUM_SECONDS_PROCESSES_CAN_RUN = 3600
-CPUS = psutil.cpu_count(logical=False)
+CPUS = pyarrow.io_thread_count()
 
 
 def _inner_process(func, source_queue, reply_queue, channel):  # pragma: no cover

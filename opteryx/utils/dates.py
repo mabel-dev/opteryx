@@ -13,13 +13,16 @@
 Date Utilities
 """
 import datetime
+import numpy
+import re
+
 from functools import lru_cache
 from typing import Union
-import re
+
 
 TIMEDELTA_REGEX = (
     r"((?P<years>\d+)\s?(?:ys?|yrs?|years?))?\s*"
-    r"((?P<months>\d+)\s?(?:mons?|mths?|months?))?\s*"
+    r"((?P<months>\d+)\s?(?:mo|mons?|mths?|months?))?\s*"
     r"((?P<weeks>\d+)\s?(?:w|wks?|weeks?))?\s*"
     r"((?P<days>\d+)\s?(?:d|days?))?\s*"
     r"((?P<hours>\d+)\s?(?:h|hrs?|hours?))?\s*"
@@ -102,7 +105,8 @@ def date_range(start, end, interval: str):
 
 @lru_cache(128)
 def parse_iso(value):
-    DATE_SEPARATORS = {"-", ":"}
+
+    date_separators = ("-", ":")
     # date validation at speed is hard, dateutil is great but really slow, this is fast
     # but error-prone. It assumes it is a date or it really nothing like a date.
     # Making that assumption - and accepting the consequences - we can convert upto
@@ -121,15 +125,22 @@ def parse_iso(value):
 
         input_type = type(value)
 
-        if input_type in (datetime.datetime, datetime.date, datetime.time):
+        if input_type == numpy.datetime64:
+            # this can create dates rather than datetimes, so don't return yet
+            value = value.astype(datetime.datetime)
+            input_type = type(value)
+
+        if input_type == datetime.datetime:
             return value
+        if input_type == datetime.date:
+            return datetime.datetime.combine(value, datetime.time.min)
         if input_type in (int, float):
             return datetime.datetime.fromtimestamp(value)
         if input_type == str and 10 <= len(value) <= 28:
             if value[-1] == "Z":
                 value = value[:-1]
             val_len = len(value)
-            if not value[4] in DATE_SEPARATORS or not value[7] in DATE_SEPARATORS:
+            if not value[4] in date_separators or not value[7] in date_separators:
                 return None
             if val_len == 10:
                 # YYYY-MM-DD
@@ -137,9 +148,9 @@ def parse_iso(value):
                     *map(int, [value[:4], value[5:7], value[8:10]])
                 )
             if val_len >= 16:
-                if not (value[10] in ("T", " ") and value[13] in DATE_SEPARATORS):
+                if not (value[10] in ("T", " ") and value[13] in date_separators):
                     return False
-                if val_len >= 19 and value[16] in DATE_SEPARATORS:
+                if val_len >= 19 and value[16] in date_separators:
                     # YYYY-MM-DD HH:MM:SS
                     return datetime.datetime(
                         *map(  # type:ignore

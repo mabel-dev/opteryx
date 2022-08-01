@@ -17,33 +17,46 @@ This is a SQL Query Execution Plan Node.
 
 Gives information about a dataset's columns
 """
+import datetime
+
 from functools import reduce
 from typing import Iterable
+from numpy import nan, nanmin, nanmax
 
 import numpy
 import orjson
 import pyarrow
 
-from opteryx.engine.query_statistics import QueryStatistics
+from opteryx.engine import QueryDirectives, QueryStatistics
 from opteryx.engine.attribute_types import OPTERYX_TYPES, determine_type
 from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
 from opteryx.exceptions import SqlError
 from opteryx.utils.columns import Columns
 
 MAX_COLLECTOR: int = 17
+MAX_VARCHAR_SIZE: int = 64  # long strings tend to lose meaning
+MAX_DATA_SIZE: int = 100 * 1024 * 1024
 
 
-def myhash(any):
+def _to_linux_epoch(date):
+    if date.as_py() is None:
+        return numpy.nan
+    return datetime.datetime.fromisoformat(date.as_py().isoformat()).timestamp()
+
+
+def myhash(anything):
     from cityhash import CityHash64
 
-    if isinstance(any, list):
-        hashed = map(myhash, any)
+    if isinstance(anything, list):
+        hashed = map(myhash, anything)
         return reduce(lambda x, y: x ^ y, hashed, 0)
-    if isinstance(any, dict):
-        return CityHash64("".join([f"{k}:{any[k]}" for k in sorted(any.keys())]))
-    if isinstance(any, bool):
-        return int(any)
-    return CityHash64(str(any))
+    if isinstance(anything, dict):
+        return CityHash64(
+            "".join([f"{k}:{anything[k]}" for k in sorted(anything.keys())])
+        )
+    if isinstance(anything, bool):
+        return int(anything)
+    return CityHash64(str(anything))
 
 
 def _simple_collector(page):
@@ -107,18 +120,18 @@ def _full_collector(pages):
             # calculate the missing count more robustly
             missing = reduce(
                 lambda x, y: x + 1,
-                (i for i in column_data if i in (None, numpy.nan) or not i.is_valid),
+                (i for i in column_data if i in (None, nan) or not i.is_valid),
                 0,
             )
             profile["missing"] += missing
 
             if _type == OPTERYX_TYPES.NUMERIC:
                 if profile["min"]:
-                    profile["min"] = min(profile["min"], numpy.nanmin(column_data))
-                    profile["max"] = max(profile["max"], numpy.nanmax(column_data))
+                    profile["min"] = min(profile["min"], nanmin(column_data))
+                    profile["max"] = max(profile["max"], nanmax(column_data))
                 else:
-                    profile["min"] = numpy.nanmin(column_data)
-                    profile["max"] = numpy.nanmax(column_data)
+                    profile["min"] = nanmin(column_data)
+                    profile["max"] = nanmax(column_data)
 
             profile_collector[column] = profile
 
@@ -213,7 +226,7 @@ def _extended_collector(pages):
                     continue
 
                 # to prevent problems, we set some limits
-                if column_data.nbytes > 100 * 1024 * 1024:
+                if column_data.nbytes > MAX_DATA_SIZE:
                     if column not in uncollected_columns:
                         uncollected_columns.append(column)
                     continue
@@ -233,23 +246,14 @@ def _extended_collector(pages):
                         (v.as_py() for v in column_data if v.is_valid),
                         0,
                     )
-                    if max_len > 32:
+                    if max_len > MAX_VARCHAR_SIZE:
                         if column not in uncollected_columns:
                             uncollected_columns.append(column)
                         continue
 
                 # convert TIMESTAMP into a NUMERIC (seconds after Linux Epoch)
                 if _type == OPTERYX_TYPES.TIMESTAMP:
-                    import datetime
-
-                    to_linux_epoch = (
-                        lambda x: numpy.nan
-                        if x.as_py() is None
-                        else datetime.datetime.fromisoformat(
-                            x.as_py().isoformat()
-                        ).timestamp()
-                    )
-                    column_data = (to_linux_epoch(i) for i in column_data)
+                    column_data = (_to_linux_epoch(i) for i in column_data)
                 else:
                     column_data = (i.as_py() for i in column_data)
 
@@ -309,6 +313,7 @@ def _extended_collector(pages):
         profile["type"] = ", ".join(profile["type"])
 
         if column not in uncollected_columns:
+
             dgram = profile.pop("distogram", None)
             if dgram:
                 profile["min"], profile["max"] = distogram.bounds(dgram)
@@ -356,10 +361,12 @@ def _extended_collector(pages):
 
 
 class ShowColumnsNode(BasePlanNode):
-    def __init__(self, statistics: QueryStatistics, **config):
+    def __init__(
+        self, directives: QueryDirectives, statistics: QueryStatistics, **config
+    ):
+        super().__init__(directives=directives, statistics=statistics)
         self._full = config.get("full")
         self._extended = config.get("extended")
-        pass
 
     @property
     def name(self):  # pragma: no cover

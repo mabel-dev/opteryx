@@ -33,10 +33,12 @@ import numpy as np
 import pyarrow.json
 
 from opteryx.engine.attribute_types import TOKEN_TYPES
-from opteryx.engine.query_statistics import QueryStatistics
+from opteryx.engine import QueryDirectives, QueryStatistics
 from opteryx.engine.planner.operations import BasePlanNode
 from opteryx.exceptions import SqlError
 from opteryx.utils.columns import Columns
+
+COUNT_STAR: str = "COUNT(*)"
 
 # these functions can be applied to each group
 INCREMENTAL_AGGREGATES = {
@@ -94,10 +96,12 @@ def _map(table, collect_columns):
 
 
 class AggregateNode(BasePlanNode):
-    def __init__(self, statistics: QueryStatistics, **config):
+    def __init__(
+        self, directives: QueryDirectives, statistics: QueryStatistics, **config
+    ):
+        super().__init__(directives=directives, statistics=statistics)
 
-        from opteryx.engine.attribute_types import TOKEN_TYPES
-
+        self._positions = []
         self._aggregates = []
         self._groups = config.get("groups", [])
         self._project = self._groups.copy()
@@ -113,10 +117,16 @@ class AggregateNode(BasePlanNode):
                     self._project.append(column)
                 else:
                     raise SqlError("Can only aggregate on fields in the dataset.")
+                self._positions.append(column)
             elif "column_name" in attribute:
                 self._project.append(attribute["column_name"])
+                if attribute["alias"]:
+                    self._positions.append(attribute["alias"][0])
+                else:
+                    self._positions.append(attribute["column_name"])
             else:
                 self._project.append(attribute["identifier"])
+                self._positions.append(attribute["identifier"])
 
         self._project = [p for p in self._project if p is not None]
 
@@ -158,7 +168,7 @@ class AggregateNode(BasePlanNode):
         count = 0
         for page in data_pages.execute():
             count += page.num_rows
-        table = pyarrow.Table.from_pylist([{"COUNT(*)": count}])
+        table = pyarrow.Table.from_pylist([{COUNT_STAR: count}])
         table = Columns.create_table_metadata(
             table=table,
             expected_rows=1,
@@ -192,6 +202,8 @@ class AggregateNode(BasePlanNode):
 
                 for key in self._project:
                     if key != "*":
+                        if isinstance(key, int):
+                            key = self._positions[key - 1]
                         column = columns.get_column_from_alias(key, only_one=True)
                         if column not in self._mapped_project:
                             self._mapped_project.append(column)
@@ -199,6 +211,9 @@ class AggregateNode(BasePlanNode):
                         self._mapped_project.append("*")
 
                 for group in self._groups:
+                    # if we have a number, use it as an column offset
+                    if isinstance(group, int):
+                        group = self._positions[group - 1]
                     self._mapped_groups.append(
                         columns.get_column_from_alias(group, only_one=True)
                     )
@@ -232,10 +247,10 @@ class AggregateNode(BasePlanNode):
 
                     # Add the responses to the collector if it's COUNT(*)
                     if column_name == "COUNT(Wildcard)":
-                        if "COUNT(*)" in group_collector:
-                            group_collector["COUNT(*)"] += 1
+                        if COUNT_STAR in group_collector:
+                            group_collector[COUNT_STAR] += 1
                         else:
-                            group_collector["COUNT(*)"] = 1
+                            group_collector[COUNT_STAR] = 1
                     elif function == "COUNT":
                         if value:
                             if column_name in group_collector:
@@ -265,7 +280,9 @@ class AggregateNode(BasePlanNode):
         # count should return 0 rather than nothing
         if len(collector) == 0 and len(self._aggregates) == 1:
             if self._aggregates[0]["aggregate"] == "COUNT":
-                collector = {(): {"COUNT(*)": 0}}
+                collector = {
+                    tuple((g, None) for g in self._mapped_groups): {COUNT_STAR: 0}
+                }
 
         buffer: List = []
         metadata = None

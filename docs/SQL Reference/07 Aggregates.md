@@ -23,6 +23,3 @@ Function        | Description
 `STDDEV_POP(a)` | Population standard deviation of values in column 'a'
 `SUM(a)`        | Cumulative sum value for all values in column 'a'
 `VAR_POP(a)`    | Population variance for values in column 'a'
-
-!!! note
-    - `GROUP BY` can be used with functions in the `SELECT` clause, but not with aliases.

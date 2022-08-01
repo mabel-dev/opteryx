@@ -10,6 +10,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from .base_blob_storage_adapter import BaseBlobStorageAdapter
+
 from .disk_store import DiskStorage
 from .gcs_store import GcsStorage
 from .minio_store import MinIoStorage

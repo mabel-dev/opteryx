@@ -17,13 +17,33 @@ This is a SQL Query Execution Plan Node.
 
 This Node reads and parses the data from one of the sample datasets.
 """
+import pyarrow
+
 from typing import Iterable, Optional
 
 from opteryx import samples
-from opteryx.engine.query_statistics import QueryStatistics
+from opteryx.engine import QueryDirectives, QueryStatistics
 from opteryx.engine.planner.operations import BasePlanNode
 from opteryx.exceptions import DatabaseError
 from opteryx.utils.columns import Columns
+
+
+def _normalize_to_types(table):
+    """
+    Normalize types e.g. all numbers are float64 and dates
+    """
+    schema = table.schema
+
+    for index, column_name in enumerate(schema.names):
+        type_name = str(schema.types[index])
+        #        if type_name in ("int16", "int32", "int64", "int8", "float16", "float32"):
+        #            schema = schema.set(index, pyarrow.field(column_name, pyarrow.float64()))
+        if type_name in ("date32[day]", "date64", "timestamp"):
+            schema = schema.set(
+                index, pyarrow.field(column_name, pyarrow.timestamp("us"))
+            )
+
+    return table.cast(target_schema=schema)
 
 
 def _get_sample_dataset(dataset, alias):
@@ -38,6 +58,7 @@ def _get_sample_dataset(dataset, alias):
     dataset = dataset.lower()
     if dataset in sample_datasets:
         table = sample_datasets[dataset]()
+        table = _normalize_to_types(table)
         table = Columns.create_table_metadata(
             table=table,
             expected_rows=table.num_rows,
@@ -49,12 +70,14 @@ def _get_sample_dataset(dataset, alias):
 
 
 class InternalDatasetNode(BasePlanNode):
-    def __init__(self, statistics: QueryStatistics, **config):
+    def __init__(
+        self, directives: QueryDirectives, statistics: QueryStatistics, **config
+    ):
         """
         The Blob Reader Node is responsible for reading the relevant blobs
         and returning a Table/Relation.
         """
-        super().__init__(statistics=statistics, **config)
+        super().__init__(directives=directives, statistics=statistics)
 
         self._statistics = statistics
         self._alias = config["alias"]
@@ -71,4 +94,7 @@ class InternalDatasetNode(BasePlanNode):
         return "Sample Dataset Reader"
 
     def execute(self, data_pages: Optional[Iterable] = None) -> Iterable:
-        yield _get_sample_dataset(self._dataset, self._alias)
+        pyarrow_page = _get_sample_dataset(self._dataset, self._alias)
+        self._statistics.rows_read += pyarrow_page.num_rows
+        self._statistics.bytes_processed_data += pyarrow_page.nbytes
+        yield pyarrow_page

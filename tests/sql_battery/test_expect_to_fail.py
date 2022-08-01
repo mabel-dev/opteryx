@@ -22,6 +22,31 @@ STATEMENTS = [
         # DECLARE isn't supported
         ("DELARE @variable AS NUMERIC = 3 SELECT * FROM $planets WHERE ID = @variable"),
 
+        # SELECT EXCEPT isn't supported
+        # https://towardsdatascience.com/4-bigquery-sql-shortcuts-that-can-simplify-your-queries-30f94666a046
+        ("SELECT * EXCEPT id FROM $satellites"),
+
+        # TEMPORAL QUERIES aren't part of the AST
+        ("SELECT * FROM CUSTOMERS FOR SYSTEM_TIME ('2022-01-01', '2022-12-31')"),
+
+        # DISTINCT ON detects as a function call for function ON
+        ("SELECT DISTINCT ON (name) FROM $astronauts ORDER BY 1"),
+
+        # YEAR isn't recognized as a non-identifier (or MONTH, DAY etc)
+        ("SELECT DATEDIFF(YEAR, '2017/08/25', '2011/08/25') AS DateDiff;"),
+
+        # MONTH has a bug
+        ("SELECT DATEDIFF('months', birth_date, '2022-07-07') FROM $astronauts"),
+
+        # JOIN hints aren't supported
+        ("SELECT * FROM $satellites INNER HASH JOIN $planets USING (id)"),
+
+        # Invalid temporal ranges
+        ("SELECT * FROM $planets FOR 2022-01-01"),
+        ("SELECT * FROM $planets FOR DATES IN 2022"),
+        ("SELECT * FROM $planets FOR DATES BETWEEN 2022-01-01 AND TODAY"),
+        ("SELECT * FROM $planets FOR DATES BETWEEN today AND yesterday"),
+
     ]
 # fmt:on
 

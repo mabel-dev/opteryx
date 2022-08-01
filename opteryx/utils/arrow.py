@@ -13,15 +13,81 @@
 """
 This module contains support functions for working with PyArrow
 """
-
 from typing import Iterable, List
+from pyarrow import Table
+
+import pyarrow
+
+from opteryx import config
+
+INTERNAL_BATCH_SIZE = config.INTERNAL_BATCH_SIZE
+PAGE_SIZE = config.PAGE_SIZE
+
+HIGH_WATER: float = 1.20  # Split pages over 120% of PAGE_SIZE
+LOW_WATER: float = 0.6  # Merge pages under 60% of PAGE_SIZE
+
+
+def consolidate_pages(pages, statistics):
+    """
+    orignally implemented to test if datasets have any records as they pass through
+    the DAG, normalizes the number of bytes per page.
+
+    This is to balance two competing demands:
+        - operate in a low memory environment, if the pages are too large they may
+          cause the process to fail.
+        - operate quickly, if we spend our time doing SIMD on pages with 5 records
+          we're not working as fast as we can.
+
+    The low-water mark is 60% of the target size, less than this we look to merge
+    pages together.
+
+    The high-water mark is 120% of the target size, more than this we split the page.
+    """
+    if isinstance(pages, Table):
+        pages = (pages,)
+
+    row_counter = 0
+    collected_rows = None
+    for page in pages:
+        if page.num_rows > 0:
+
+            # add what we've collected before to the table
+            if collected_rows:
+                statistics.page_merges += 1
+                page = pyarrow.concat_tables([collected_rows, page])
+                collected_rows = None
+
+            # work out some stats about what we have
+            page_bytes = page.nbytes
+            page_records = page.num_rows
+
+            # if we're more than 20% over the target size, let's do something
+            if page_bytes > (PAGE_SIZE * HIGH_WATER):
+                average_record_size = page_bytes / page_records
+                new_row_count = int(PAGE_SIZE / average_record_size)
+                row_counter += new_row_count
+                statistics.page_splits += 1
+                yield page.slice(offset=0, length=new_row_count)
+                collected_rows = page.slice(offset=new_row_count)
+            # if we're less that 60% of the page size, go collect the next page
+            elif page_bytes < (PAGE_SIZE * LOW_WATER):
+                collected_rows = page
+            # otherwise, emit the current page
+            else:
+                row_counter += page_records
+                yield page
+
+    if collected_rows:
+        row_counter += collected_rows.num_rows
+        yield collected_rows
+
+    if row_counter == 0:
+        raise Exception("No Records")
 
 
 def fetchmany(pages, limit: int = 1000):
     """fetch records from a Table as Python Dicts"""
-
-    from pyarrow import Table
-    from opteryx.utils.columns import Columns
+    from opteryx.utils.columns import Columns  # circular imports
 
     if pages is None:
         return []
@@ -29,10 +95,9 @@ def fetchmany(pages, limit: int = 1000):
     if isinstance(pages, Table):
         pages = (pages,)
 
-    default_chunk_size = 5000
-    chunk_size = min(limit, default_chunk_size)
+    chunk_size = min(limit, INTERNAL_BATCH_SIZE)
     if chunk_size < 0:
-        chunk_size = default_chunk_size
+        chunk_size = INTERNAL_BATCH_SIZE
 
     def _inner_row_reader():
 
@@ -92,7 +157,6 @@ def set_metadata(table, table_metadata=None, column_metadata=None):
         tbl_meta: dict
             A json-serializable dictionary with table-level metadata.
     """
-    import pyarrow as pa
     from orjson import dumps
 
     # Create updated column fields with new metadata
@@ -123,7 +187,7 @@ def set_metadata(table, table_metadata=None, column_metadata=None):
                     tbl_metadata[k] = dumps(v)
 
         # Create new schema with updated table metadata
-        schema = pa.schema(fields, metadata=tbl_metadata)
+        schema = pyarrow.schema(fields, metadata=tbl_metadata)
         # With updated schema build new table (shouldn't copy data)
         table = table.cast(schema)
 
@@ -166,8 +230,6 @@ def get_metadata(tbl):
 
 def coerce_column(table, column_name):
     """convert numeric types to a common type to allow comparisons"""
-    import pyarrow
-
     # get the column we're coercing
     my_schema = table.schema
     index = table.column_names.index(column_name)

@@ -19,13 +19,13 @@ This Node eliminates columns that are not needed in a Relation. This is also the
 that performs column renames.
 """
 from typing import Iterable
-from opteryx.exceptions import SqlError
 
 import pyarrow
 
 from opteryx.engine.attribute_types import TOKEN_TYPES
 from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
-from opteryx.engine.query_statistics import QueryStatistics
+from opteryx.engine import QueryDirectives, QueryStatistics
+from opteryx.exceptions import SqlError
 from opteryx.utils.columns import Columns
 
 
@@ -36,10 +36,13 @@ def replace_wildcards(arg):
 
 
 class ProjectionNode(BasePlanNode):
-    def __init__(self, statistics: QueryStatistics, **config):
+    def __init__(
+        self, directives: QueryDirectives, statistics: QueryStatistics, **config
+    ):
         """
         Attribute Projection, remove unwanted columns and performs column renames.
         """
+        super().__init__(directives=directives, statistics=statistics)
         self._projection: dict = {}
 
         projection = config.get("projection", {"*": "*"})

@@ -24,6 +24,8 @@ The selection operator should focus on the selection not on working out which co
 is actually being referred to.
 """
 import os
+import pyarrow
+
 from opteryx.exceptions import SqlError
 from opteryx.utils import arrow
 
@@ -115,7 +117,7 @@ class Columns:
     def add_alias(self, column, alias):
         """add aliases to a column"""
         if not isinstance(alias, (list, tuple)):
-            alias = [alias]
+            alias = (alias,)
         self._column_metadata[column]["aliases"].extend(alias)
 
     def remove_alias(self, column, alias):
@@ -152,17 +154,65 @@ class Columns:
         If we're expecting only_one match, we fail if that's not what we find.
         """
         matches = []
-        for k, v in self._column_metadata.items():
-            matches.extend([k for alias in v.get("aliases", []) if alias == column])
+        for col, att in self._column_metadata.items():
+            matches.extend([col for alias in att.get("aliases", []) if alias == column])
         if only_one:
             if len(matches) == 0:
-                raise SqlError(f"Field `{column}` cannot be found.")
+
+                best_match = self.fuzzy_search(column)
+                if best_match:
+                    raise SqlError(
+                        f"Field `{column}` does not exist, did you mean `{best_match}`?"
+                    )
+                raise SqlError(f"Field `{column}` does not exist.")
             if len(matches) > 1:
                 raise SqlError(
                     f"Field `{column}` is ambiguous, try qualifying the field name."
                 )
             return matches[0]
         return matches
+
+    def fuzzy_search(self, column_name):
+        """
+        Find best match for a column name, using a Levenshtein Distance variation
+        """
+        from opteryx.third_party.mbleven import compare
+
+        best_match_column = None
+        best_match_score = 100
+
+        for attributes in self._column_metadata.values():
+            for alias in attributes.get("aliases") or []:
+                my_dist = compare(column_name, alias)
+                if 0 < my_dist < best_match_score:
+                    best_match_score = my_dist
+                    best_match_column = alias
+
+        return best_match_column
+
+    def filter(self, _filter):
+        """
+        accept a filter and return matching columnsd
+        """
+        from opteryx.third_party import pyarrow_ops
+
+        # first, get all of the aliases in a list and make it a pyarrow array
+        all_aliases = [
+            attribute.get("aliases", []) + [attribute["preferred_name"]]
+            for attribute in self._column_metadata.values()
+        ]
+        all_aliases = [a for l in all_aliases for a in l]
+        all_aliases = pyarrow.array(all_aliases).unique()
+
+        # use the comparison code for the general filters to find matches
+        filtered = pyarrow_ops.ops.arr_op_to_idxs(
+            all_aliases, _filter[1], _filter[2][0]
+        )
+        filtered = all_aliases.filter(filtered)
+
+        # return a list of matching columns (some physical columns may be referenced
+        # multiple times)
+        return [self.get_column_from_alias(alias.as_py(), True) for alias in filtered]
 
     @staticmethod
     def create_table_metadata(table, expected_rows, name, table_aliases):
@@ -228,8 +278,6 @@ class Columns:
 
     @staticmethod
     def restore_null_columns(removed, table):
-        import pyarrow
-
         for column in removed:
             table = table.append_column(column, pyarrow.array([None] * table.num_rows))
         return table

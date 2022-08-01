@@ -10,12 +10,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import io
 import os
 
 from typing import Optional
 
 from opteryx.exceptions import MissingDependencyError
-from opteryx.storage import BaseStorageAdapter
+from opteryx.storage.adapters.blob import BaseBlobStorageAdapter
 from opteryx.utils import paths
 
 try:
@@ -27,7 +28,7 @@ except ImportError:  # pragma: no cover
     GOOGLE_CLOUD_STORAGE_INSTALLED = False
 
 
-class GcsStorage(BaseStorageAdapter):
+class GcsStorage(BaseBlobStorageAdapter):
     def __init__(self, project: Optional[str] = None, credentials=None, **kwargs):
         if not GOOGLE_CLOUD_STORAGE_INSTALLED:  # pragma: no cover
             raise MissingDependencyError(
@@ -39,10 +40,10 @@ class GcsStorage(BaseStorageAdapter):
         self.credentials = credentials
 
     def read_blob(self, blob_name):
-        import io
 
         bucket, object_path, name, extension = paths.get_parts(blob_name)
         bucket = bucket.replace("_data", "-data")
+        bucket = bucket.replace("data_", "data-")
 
         blob = get_blob(
             project=self.project,
@@ -52,9 +53,10 @@ class GcsStorage(BaseStorageAdapter):
         stream = blob.download_as_bytes()
         return io.BytesIO(stream)
 
-    def get_blob_list(self, partition):
+    def get_blob_list(self, partition=None):
         bucket, object_path, name, extension = paths.get_parts(partition)
         bucket = bucket.replace("_data", "-data")
+        bucket = bucket.replace("data_", "data-")
 
         # print(bucket, object_path, name, extension)
 

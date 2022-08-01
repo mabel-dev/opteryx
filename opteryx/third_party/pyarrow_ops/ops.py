@@ -2,26 +2,31 @@
 Original code modified for Opteryx.
 """
 import numpy
-import pyarrow.compute as pc
+import pyarrow
+
+from pyarrow import compute
 
 from opteryx.engine.attribute_types import PARQUET_TYPES
 from opteryx.engine.attribute_types import PYTHON_TYPES
 from opteryx.engine.attribute_types import TOKEN_TYPES
 
-
-from .helpers import columns_to_array, groupify_array
+from .helpers import columns_to_array
 
 
 def _get_type(var):
-    if isinstance(var, numpy.ndarray):
+    # added for Opteryx
+    if isinstance(var, (numpy.ndarray)):
         if isinstance(var[0], numpy.ndarray):
             return "LIST"
         return PARQUET_TYPES.get(str(var.dtype), f"UNSUPPORTED ({str(var.dtype)})")
+    if isinstance(var, (pyarrow.Array)):
+        return PARQUET_TYPES.get(str(var.type), f"UNSUPPORTED ({str(var.type)})")
     type_name = type(var).__name__
     return PYTHON_TYPES.get(type_name, f"OTHER ({type_name})")
 
 
 def _check_type(operation, provided_type, valid_types):
+    # added for Opteryx
     if provided_type not in valid_types:
         raise TypeError(
             f"Cannot use the {operation} operation on a {provided_type} column, a {valid_types} column is required."
@@ -30,6 +35,11 @@ def _check_type(operation, provided_type, valid_types):
 
 # Filter functionality
 def arr_op_to_idxs(arr, operator, value):
+
+    # ADDED FOR OPTERYX - if all of the values are null, shortcut
+    if compute.is_null(arr, nan_is_null=True).false_count == 0:
+        return numpy.full(arr.size, False)
+
     identifier_type = _get_type(arr)
     literal_type = _get_type(value)
     if operator in (
@@ -38,7 +48,8 @@ def arr_op_to_idxs(arr, operator, value):
     ):
         # type checking added for Opteryx
         if value is None and identifier_type == TOKEN_TYPES.NUMERIC:
-            # Nones are stored as NaNs, so perform a different test
+            # Nones are stored as NaNs, so perform a different test.
+            # Tests against None should be IS NONE, not = NONE, this code is for = only
             return numpy.where(numpy.isnan(arr))
         if identifier_type != literal_type and value is not None:
             raise TypeError(
@@ -68,20 +79,39 @@ def arr_op_to_idxs(arr, operator, value):
         # MODIFIED FOR OPTERYX - see comment above
         return numpy.array([a not in value for a in arr], dtype=numpy.bool8)
     elif operator == "like":
+        # MODIFIED FOR OPTERYX
+        # null input emits null output, which should be false/0
         _check_type("LIKE", identifier_type, (TOKEN_TYPES.VARCHAR))
-        return pc.match_like(arr, value)
+        matches = compute.match_like(arr, value)
+        return compute.fill_null(matches, False)
     elif operator == "not like":
+        # MODIFIED FOR OPTERYX - see comment above
         _check_type("NOT LIKE", identifier_type, (TOKEN_TYPES.VARCHAR))
-        return numpy.invert(pc.match_like(arr, value))
+        matches = compute.match_like(arr, value)
+        matches = compute.fill_null(matches, True)
+        return numpy.invert(matches)
     elif operator == "ilike":
+        # MODIFIED FOR OPTERYX - see comment above
         _check_type("ILIKE", identifier_type, (TOKEN_TYPES.VARCHAR))
-        return pc.match_like(arr, value, ignore_case=True)
+        matches = compute.match_like(arr, value, ignore_case=True)
+        return compute.fill_null(matches, False)
     elif operator == "not ilike":
+        # MODIFIED FOR OPTERYX - see comment above
         _check_type("NOT ILIKE", identifier_type, (TOKEN_TYPES.VARCHAR))
-        return numpy.invert(pc.match_like(arr, value, ignore_case=True))
+        matches = compute.match_like(arr, value, ignore_case=True)
+        matches = compute.fill_null(matches, True)
+        return numpy.invert(matches)
     elif operator == "~":
+        # MODIFIED FOR OPTERYX - see comment above
         _check_type("~", identifier_type, (TOKEN_TYPES.VARCHAR))
-        return pc.match_substring_regex(arr, value)
+        matches = compute.match_substring_regex(arr, value)
+        return compute.fill_null(matches, False)
+    elif operator == "!~":
+        # MODIFIED FOR OPTERYX - see comment above
+        _check_type("~", identifier_type, (TOKEN_TYPES.VARCHAR))
+        matches = compute.match_substring_regex(arr, value)
+        matches = compute.fill_null(matches, True)
+        return numpy.invert(matches)
     else:
         raise Exception(f"Operator {operator} is not implemented!")
 
@@ -125,8 +155,11 @@ def ifilters(table, filters):
 def drop_duplicates(table, columns=None):
     """
     drops duplicates, keeps the first of the set
+
+    MODIFIED FOR OPTERYX
     """
     # Gather columns to arr
     arr = columns_to_array(table, (columns if columns else table.column_names))
-    dic, counts, sort_idxs, bgn_idxs = groupify_array(arr)
-    return table.take(sort_idxs[bgn_idxs])
+    values, indices = numpy.unique(arr, return_index=True)
+    del values
+    return table.take(indices)

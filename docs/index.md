@@ -1,8 +1,10 @@
 # Overview
 
-[Opteryx](https://mabel-dev.github.io/opteryx/) is a SQL query engine to query large data sets designed to run in low-cost serverless environments.
+[Opteryx](https://github.com/mabel-dev/opteryx) is a SQL query engine to query large data sets designed to run in low-cost serverless environments.
 
 ## Use Cases
+
+Referencing data from mulitple data platforms into a single query.
 
 Great for use in cost-optimized environments, where a traditional data solution like Hadoop is out of reach.
 

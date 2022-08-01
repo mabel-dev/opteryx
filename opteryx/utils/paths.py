@@ -15,8 +15,6 @@ Functions to help with handling file paths
 """
 import pathlib
 import datetime
-import os
-import errno
 
 
 def get_parts(path_string: str):
