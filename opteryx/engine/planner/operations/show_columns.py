@@ -19,6 +19,7 @@ Gives information about a dataset's columns
 """
 import datetime
 
+from cityhash import CityHash64
 from functools import reduce
 from typing import Iterable
 from numpy import nan, nanmin, nanmax
@@ -45,8 +46,6 @@ def _to_linux_epoch(date):
 
 
 def myhash(anything):
-    from cityhash import CityHash64
-
     if isinstance(anything, list):
         hashed = map(myhash, anything)
         return reduce(lambda x, y: x ^ y, hashed, 0)
@@ -90,7 +89,7 @@ def _full_collector(pages):
     dataset.
     """
 
-    EMPTY_PROFILE = orjson.dumps(
+    empty_profile = orjson.dumps(
         {
             "column_name": None,
             "type": [],
@@ -110,7 +109,7 @@ def _full_collector(pages):
 
         for column in page.column_names:
             column_data = page.column(column)
-            profile = profile_collector.get(column, orjson.loads(EMPTY_PROFILE))
+            profile = profile_collector.get(column, orjson.loads(empty_profile))
             _type = determine_type(str(column_data.type))
             if _type not in profile["type"]:
                 profile["type"].append(_type)
@@ -166,7 +165,7 @@ def _extended_collector(pages):
     from opteryx.third_party import distogram
     from opteryx.third_party import hyperloglog
 
-    EMPTY_PROFILE = orjson.dumps(
+    empty_profile = orjson.dumps(
         {
             "column_name": None,
             "type": [],
@@ -199,7 +198,7 @@ def _extended_collector(pages):
 
                 column_data = block.column(column)
 
-                profile = profile_collector.get(column, orjson.loads(EMPTY_PROFILE))
+                profile = profile_collector.get(column, orjson.loads(empty_profile))
                 _type = determine_type(str(column_data.type))
                 if _type not in profile["type"]:
                     profile["type"].append(_type)
