@@ -19,79 +19,98 @@ from enum import Enum
 
 import numpy
 
+from pyarrow import Table
 
-class Expression:
-    def __init__(self):
-        pass
-
-    def parse(self, ast):
-        pass
+import opteryx
 
 
 class NodeType(int, Enum):
-    """The types of Nodes we will see"""
+    """
+    The types of Nodes we will see.
 
+    The second nibble (4 bits) is a category marker
+    """
+
+    # 00000000
     UNKNOWN: int = 0
 
-    AND: int = 1
-    OR: int = 2
-    XOR: int = 4
-    NOT: int = 8
+    # BOOLEAN OPERATORS
+    # nnnn0001
+    AND: int = 17
+    OR: int = 33
+    XOR: int = 49
+    NOT: int = 65
 
-    WILDCARD: int = 16
-    OPERATOR: int = 32
-    FUNCTION: int = 64
-    IDENTIFIER: int = 128
+    # INTERAL IDENTIFIERS
+    # nnnn0010
+    WILDCARD: int = 18
+    OPERATOR: int = 34
+    FUNCTION: int = 50
+    IDENTIFIER: int = 66
 
-    LITERAL_NUMERIC: int = 256
-    LITERAL_VARCHAR: int = 512
-    LITERAL_BOOLEAN: int = 1024
-    LITERAL_INTERVAL: int = 2048
-    LITERAL_LIST: int = 4096
-    LITERAL_STRUCT: int = 8192
-    LITERAL_TIMESTAMP: int = 16384
-    LITERAL_NONE: int = 22
-    LITERAL_TRUE: int = 23
-    LITERAL_FALSE: int = 24
+    # LITERAL TYPES
+    # nnnn0100
+    LITERAL_NUMERIC: int = 20
+    LITERAL_VARCHAR: int = 36
+    LITERAL_BOOLEAN: int = 52
+    LITERAL_INTERVAL: int = 68
+    LITERAL_LIST: int = 84
+    LITERAL_STRUCT: int = 100
+    LITERAL_TIMESTAMP: int = 116
+    LITERAL_NONE: int = 132
 
+
+NUMPY_TYPES = {
+    NodeType.LITERAL_NUMERIC : numpy.dtype('float64'),
+    NodeType.LITERAL_VARCHAR : numpy.str_,
+    NodeType.LITERAL_BOOLEAN : numpy.dtype('?'),
+    NodeType.LITERAL_INTERVAL : numpy.dtype('m'),
+    NodeType.LITERAL_LIST : numpy.dtype('O'),
+    NodeType.LITERAL_STRUCT : numpy.dtype('O'),
+    NodeType.LITERAL_TIMESTAMP : "datetime64[s]"
+}
 
 class ExpressionTreeNode:
     __slots__ = (
-        "_token_type",
-        "_value",
-        "_left",
-        "_right",
-        "_centre",
-        "_parameters",
+        "token_type",
+        "value",
+        "left",
+        "right",
+        "centre",
+        "parameters",
     )
 
-    def __init__(self, token_type, *, value = None, left_node = None, right_node = None, centre_node = None, parameters = None):
-        self._token_type: NodeType = token_type
-        self._value = value
-        self._left = left_node
-        self._right = right_node
-        self._centre = centre_node
-        self._parameters = parameters
+    def __init__(
+        self,
+        token_type,
+        *,
+        value=None,
+        left_node=None,
+        right_node=None,
+        centre_node=None,
+        parameters=None,
+    ):
+        self.token_type: NodeType = token_type
+        self.value = value
+        self.left = left_node
+        self.right = right_node
+        self.centre = centre_node
+        self.parameters = parameters
 
-        if self._token_type == NodeType.UNKNOWN:
-            raise ValueError(f"ExpressionNode of unknown type in plan. {self._value}")
-
-    @property
-    def value(self):
-        return self._value
+        if self.token_type == NodeType.UNKNOWN:
+            raise ValueError(f"ExpressionNode of unknown type in plan. {self.value}")
 
     def _inner_print(self, node, prefix):
         ret = prefix + node.value + "\n"
         prefix += " |"
-        if node._left:
-            ret += self._inner_print(node._left, prefix=prefix+"- ")
-        if node._right:
-            ret += self._inner_print(node._right, prefix=prefix+"- ")
+        if node.left:
+            ret += self._inner_print(node.left, prefix=prefix + "- ")
+        if node.right:
+            ret += self._inner_print(node.right, prefix=prefix + "- ")
         return ret
 
     def __str__(self):
         return self._inner_print(self, "")
-
 
 
 OPERATORS: dict = {
@@ -102,3 +121,24 @@ OPERATORS: dict = {
     "plus": numpy.add,
     "stringconcat": NotImplementedError,
 }
+
+
+def _inner_evaluate(root: ExpressionTreeNode, table: Table):
+
+    node_type = root.token_type
+
+    if node_type & 1 == 1:
+        print('boolean')
+    if node_type & 2 == 2:
+        print('internal')
+    if node_type & 4 == 4:
+        # if it's a literal value, return it once for every value in the table
+        if node_type == NodeType.LITERAL_LIST:
+            return numpy.array([root.value] * table.num_rows)
+        return numpy.full(table.num_rows, root.value, dtype=NUMPY_TYPES[node_type])
+
+
+def evaluate(expression: ExpressionTreeNode, table: Table):
+    
+    return _inner_evaluate(root=expression, table=table)
+
