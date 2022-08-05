@@ -76,7 +76,6 @@ PARQUET_TYPES = {
 }
 
 
-
 def determine_type(_type):
     """
     Determine the type

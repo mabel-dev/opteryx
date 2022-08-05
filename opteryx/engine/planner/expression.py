@@ -14,6 +14,8 @@
 Expressions describe a calculation or evaluation of some sort.
 
 It is defined as an expression tree of binary and unary operators, and functions.
+
+Expressions are evaluated against an entire table at a time.
 """
 from enum import Enum
 
@@ -61,14 +63,15 @@ class NodeType(int, Enum):
 
 
 NUMPY_TYPES = {
-    NodeType.LITERAL_NUMERIC : numpy.dtype('float64'),
-    NodeType.LITERAL_VARCHAR : numpy.str_,
-    NodeType.LITERAL_BOOLEAN : numpy.dtype('?'),
-    NodeType.LITERAL_INTERVAL : numpy.dtype('m'),
-    NodeType.LITERAL_LIST : numpy.dtype('O'),
-    NodeType.LITERAL_STRUCT : numpy.dtype('O'),
-    NodeType.LITERAL_TIMESTAMP : "datetime64[s]"
+    NodeType.LITERAL_NUMERIC: numpy.dtype("float64"),
+    NodeType.LITERAL_VARCHAR: numpy.str_,
+    NodeType.LITERAL_BOOLEAN: numpy.dtype("?"),
+    NodeType.LITERAL_INTERVAL: numpy.dtype("m"),
+    NodeType.LITERAL_LIST: numpy.dtype("O"),
+    NodeType.LITERAL_STRUCT: numpy.dtype("O"),
+    NodeType.LITERAL_TIMESTAMP: "datetime64[s]",
 }
+
 
 class ExpressionTreeNode:
     __slots__ = (
@@ -128,17 +131,18 @@ def _inner_evaluate(root: ExpressionTreeNode, table: Table):
     node_type = root.token_type
 
     if node_type & 1 == 1:
-        print('boolean')
+        print("boolean")
     if node_type & 2 == 2:
-        print('internal')
+        print("internal")
     if node_type & 4 == 4:
         # if it's a literal value, return it once for every value in the table
         if node_type == NodeType.LITERAL_LIST:
+            # this isn't as fast as .full, but this is just another way lists
+            # are problematic
             return numpy.array([root.value] * table.num_rows)
         return numpy.full(table.num_rows, root.value, dtype=NUMPY_TYPES[node_type])
 
 
 def evaluate(expression: ExpressionTreeNode, table: Table):
-    
-    return _inner_evaluate(root=expression, table=table)
 
+    return _inner_evaluate(root=expression, table=table)

@@ -1,8 +1,8 @@
 import decimal
-import numpy
 import os
 import sys
 
+import numpy
 
 import pytest
 
@@ -10,7 +10,11 @@ sys.path.insert(1, os.path.join(sys.path[0], ".."))
 from rich import traceback
 
 import opteryx
-from opteryx.engine.planner.expression import ExpressionTreeNode, NodeType, evaluate, NUMPY_TYPES
+from opteryx.engine.planner.expression import ExpressionTreeNode
+from opteryx.engine.planner.expression import NodeType
+from opteryx.engine.planner.expression import evaluate
+from opteryx.engine.planner.expression import NUMPY_TYPES
+
 
 traceback.install()
 
@@ -37,6 +41,7 @@ LITERALS = [
     ]
 # fmt:on
 
+
 @pytest.mark.parametrize("node_type, value", LITERALS)
 def test_literals(node_type, value):
 
@@ -60,5 +65,3 @@ if __name__ == "__main__":
         print(node_type)
         test_literals(node_type, value)
     print("okay")
-
-
