@@ -129,6 +129,97 @@ def test_logical_expressions():
     assert not any(result)
 
 
+def test_reading_identifiers():
+    planets = opteryx.samples.planets()
+    print(planets)
+
+    names_node = ExpressionTreeNode(NodeType.IDENTIFIER, value="name")
+    names = evaluate(names_node, planets)
+    assert len(names) == 9
+    assert sorted(names) == [
+        "Earth",
+        "Jupiter",
+        "Mars",
+        "Mercury",
+        "Neptune",
+        "Pluto",
+        "Saturn",
+        "Uranus",
+        "Venus",
+    ], sorted(names)
+
+    gravity_node = ExpressionTreeNode(NodeType.IDENTIFIER, value="gravity")
+    gravities = evaluate(gravity_node, planets)
+    assert len(gravities) == 9
+    assert sorted(gravities) == [0.7, 3.7, 3.7, 8.7, 8.9, 9.0, 9.8, 11.0, 23.1], sorted(
+        gravities
+    )
+
+
+def test_operations():
+
+    planets = opteryx.samples.planets()
+
+    name = ExpressionTreeNode(NodeType.IDENTIFIER, value="name")
+    concat = ExpressionTreeNode(
+        NodeType.OPERATOR, value="stringconcat", left_node=name, right_node=name
+    )
+
+    gravity = ExpressionTreeNode(NodeType.IDENTIFIER, value="gravity")
+    seven = ExpressionTreeNode(NodeType.LITERAL_NUMERIC, value=7)
+    three_point_seven = ExpressionTreeNode(NodeType.LITERAL_NUMERIC, value=3.7)
+    plus = ExpressionTreeNode(
+        NodeType.OPERATOR, value="plus", left_node=gravity, right_node=seven
+    )
+    multiply = ExpressionTreeNode(
+        NodeType.OPERATOR, value="multiply", left_node=gravity, right_node=seven
+    )
+    equals = ExpressionTreeNode(
+        NodeType.OPERATOR,
+        value="equals",
+        left_node=gravity,
+        right_node=three_point_seven,
+    )
+
+    names = evaluate(concat, planets)
+    assert len(names) == 9
+    assert True, list(names) == [
+        "MercuryMercury",
+        "VenusVenus",
+        "EarthEarth",
+        "MarsMars",
+        "JupiterJupiter",
+        "SaturnSaturn",
+        "UranusUranus",
+        "NeptuneNeptune",
+        "PlutoPluto",
+    ]  # , list(names)
+
+    plussed = evaluate(plus, planets)
+    assert len(plussed) == 9
+    assert set(plussed).issubset(
+        [10.7, 15.9, 16.8, 10.7, 30.1, 16, 15.7, 18, 7.7]
+    ), plussed
+
+    timesed = evaluate(multiply, planets)
+    assert len(timesed) == 9
+    assert set(timesed) == {
+        161.70000000000002,
+        68.60000000000001,
+        4.8999999999999995,
+        77.0,
+        25.900000000000002,
+        60.89999999999999,
+        62.300000000000004,
+        63.0,
+    }, set(timesed)
+
+    compared = evaluate(equals, planets)
+    assert len(timesed) == 9
+    print('000000000000000')
+    print(compared)
+
+
 if __name__ == "__main__":
 
     print(f"RUNNING BATTERY OF {len(LITERALS)} LITERAL TYPE TESTS")
@@ -138,3 +229,7 @@ if __name__ == "__main__":
     print("okay")
 
     test_logical_expressions()
+    test_reading_identifiers()
+    test_operations()
+
+    planets = opteryx.samples.planets()

@@ -45,6 +45,7 @@ def arr_op_to_idxs(arr, operator, value):
     if operator in (
         "=",
         "==",
+        "equals"
     ):
         # type checking added for Opteryx
         if value is None and identifier_type == TOKEN_TYPES.NUMERIC:
@@ -112,6 +113,22 @@ def arr_op_to_idxs(arr, operator, value):
         matches = compute.match_substring_regex(arr, value)
         matches = compute.fill_null(matches, True)
         return numpy.invert(matches)
+
+    # new operations for Opteryx
+    elif operator == "divide":
+        return numpy.divide(arr, value)
+    elif operator == "minus":
+        return numpy.subtract(arr, value)
+    elif operator == "modulo":
+        return numpy.mod(arr, value)
+    elif operator == "multiply":
+        return numpy.multiply(arr, value)
+    elif operator == "plus":
+        return numpy.add(arr, value)
+    elif operator == "stringconcat":
+        empty = numpy.full(arr.size, "")
+        return compute.binary_join_element_wise(arr, value, empty)
+
     else:
         raise Exception(f"Operator {operator} is not implemented!")
 

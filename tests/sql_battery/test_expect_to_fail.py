@@ -47,6 +47,8 @@ STATEMENTS = [
         ("SELECT * FROM $planets FOR DATES BETWEEN 2022-01-01 AND TODAY"),
         ("SELECT * FROM $planets FOR DATES BETWEEN today AND yesterday"),
 
+        # Can't IN an INDENTIFIER
+        ("SELECT * FROM $astronauts WHERE 'Apollo 11' IN Missions"),
     ]
 # fmt:on
 
