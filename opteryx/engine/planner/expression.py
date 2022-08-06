@@ -133,7 +133,7 @@ def _inner_evaluate(root: ExpressionTreeNode, table: Table):
     if node_type & 1 == 1:
 
         left, right, centre = None, None, None
-        
+
         if root.left is not None:
             left = _inner_evaluate(root.left, table)
         if root.right is not None:

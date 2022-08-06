@@ -63,7 +63,7 @@ def test_logical_expressions():
 
     true = ExpressionTreeNode(NodeType.LITERAL_BOOLEAN, value=True)
     false = ExpressionTreeNode(NodeType.LITERAL_BOOLEAN, value=False)
-    
+
     T_AND_T = ExpressionTreeNode(NodeType.AND, left_node=true, right_node=true)
     T_AND_F = ExpressionTreeNode(NodeType.AND, left_node=true, right_node=false)
     F_AND_T = ExpressionTreeNode(NodeType.AND, left_node=false, right_node=true)
