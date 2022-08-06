@@ -65,3 +65,45 @@ if __name__ == "__main__":
         print(node_type)
         test_literals(node_type, value)
     print("okay")
+
+    planets = opteryx.samples.planets()
+
+    true = ExpressionTreeNode(NodeType.LITERAL_BOOLEAN, value=True)
+    false = ExpressionTreeNode(NodeType.LITERAL_BOOLEAN, value=False)
+    none = ExpressionTreeNode(NodeType.LITERAL_BOOLEAN, value=None)
+    
+    T_AND_T = ExpressionTreeNode(NodeType.AND, left_node=true, right_node=true)
+    T_AND_F = ExpressionTreeNode(NodeType.AND, left_node=true, right_node=false)
+    F_AND_T = ExpressionTreeNode(NodeType.AND, left_node=false, right_node=true)
+    F_AND_F = ExpressionTreeNode(NodeType.AND, left_node=false, right_node=false)
+
+    print(evaluate(T_AND_T, table=planets))
+    print(evaluate(T_AND_F, table=planets))
+    print(evaluate(F_AND_T, table=planets))
+    print(evaluate(F_AND_F, table=planets))
+
+    T_OR_T = ExpressionTreeNode(NodeType.OR, left_node=true, right_node=true)
+    T_OR_F = ExpressionTreeNode(NodeType.OR, left_node=true, right_node=false)
+    F_OR_T = ExpressionTreeNode(NodeType.OR, left_node=false, right_node=true)
+    F_OR_F = ExpressionTreeNode(NodeType.OR, left_node=false, right_node=false)
+
+    print(evaluate(T_OR_T, table=planets))
+    print(evaluate(T_OR_F, table=planets))
+    print(evaluate(F_OR_T, table=planets))
+    print(evaluate(F_OR_F, table=planets))
+
+    NOT_T = ExpressionTreeNode(NodeType.NOT, centre_node=true)
+    NOT_F = ExpressionTreeNode(NodeType.NOT, centre_node=false)
+
+    print(evaluate(NOT_T, table=planets))
+    print(evaluate(NOT_F, table=planets))
+
+    T_XOR_T = ExpressionTreeNode(NodeType.XOR, left_node=true, right_node=true)
+    T_XOR_F = ExpressionTreeNode(NodeType.XOR, left_node=true, right_node=false)
+    F_XOR_T = ExpressionTreeNode(NodeType.XOR, left_node=false, right_node=true)
+    F_XOR_F = ExpressionTreeNode(NodeType.XOR, left_node=false, right_node=false)
+
+    print(evaluate(T_XOR_T, table=planets))
+    print(evaluate(T_XOR_F, table=planets))
+    print(evaluate(F_XOR_T, table=planets))
+    print(evaluate(F_XOR_F, table=planets))

@@ -131,7 +131,24 @@ def _inner_evaluate(root: ExpressionTreeNode, table: Table):
     node_type = root.token_type
 
     if node_type & 1 == 1:
-        print("boolean")
+
+        left, right, centre = None, None, None
+        
+        if root.left is not None:
+            left = _inner_evaluate(root.left, table)
+        if root.right is not None:
+            right = _inner_evaluate(root.right, table)
+        if root.centre is not None:
+            centre = _inner_evaluate(root.centre, table)
+
+        if node_type == NodeType.AND:
+            return numpy.logical_and(left, right)
+        if node_type == NodeType.OR:
+            return numpy.logical_or(left, right)  # type:ignore
+        if node_type == NodeType.NOT:
+            return numpy.logical_not(centre)
+        if node_type == NodeType.XOR:
+            return numpy.logical_xor(left, right)
     if node_type & 2 == 2:
         print("internal")
     if node_type & 4 == 4:
