@@ -16,7 +16,7 @@ import numpy
 from pyarrow import compute
 
 
-BINARY_OPERATORS = { "divide", "minus", "modulo", "multiply", "plus", "stringconcat" }
+BINARY_OPERATORS = {"Divide", "Minus", "Modulo", "Multiply", "Plus", "StringConcat"}
 
 # Also supported by the AST but not implemented
 # BitwiseOr => ("|"),
@@ -25,6 +25,7 @@ BINARY_OPERATORS = { "divide", "minus", "modulo", "multiply", "plus", "stringcon
 # PGBitwiseXor => ("#"),
 # PGBitwiseShiftLeft => ("<<"),
 # PGBitwiseShiftRight => (">>"),
+
 
 def binary_operations(left, operator, right):
     """
@@ -39,18 +40,19 @@ def binary_operations(left, operator, right):
         return numpy.full(right.size, False)
 
     # new operations for Opteryx
-    if operator == "divide":
+    if operator == "Divide":
         return numpy.divide(left, right)
-    if operator == "minus":
+    if operator == "Minus":
         return numpy.subtract(left, right)
-    if operator == "modulo":
+    if operator == "Modulo":
         return numpy.mod(left, right)
-    if operator == "multiply":
+    if operator == "Multiply":
         return numpy.multiply(left, right)
-    if operator == "plus":
+    if operator == "Plus":
         return numpy.add(left, right)
-    if operator == "stringconcat":
+    if operator == "StringConcat":
         empty = numpy.full(left.size, "")
-        return compute.binary_join_element_wise(left, right, empty)
+        joined = compute.binary_join_element_wise(left, right, empty)
+        return joined
 
     raise Exception(f"Operator {operator} is not implemented!")

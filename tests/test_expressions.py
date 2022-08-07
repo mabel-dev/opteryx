@@ -161,7 +161,7 @@ def test_function_operations():
 
     name = ExpressionTreeNode(NodeType.IDENTIFIER, value="name")
     concat = ExpressionTreeNode(
-        NodeType.FUNCTION_OPERATOR,
+        NodeType.BINARY_OPERATOR,
         value="stringconcat",
         left_node=name,
         right_node=name,
@@ -170,10 +170,10 @@ def test_function_operations():
     gravity = ExpressionTreeNode(NodeType.IDENTIFIER, value="gravity")
     seven = ExpressionTreeNode(NodeType.LITERAL_NUMERIC, value=7)
     plus = ExpressionTreeNode(
-        NodeType.FUNCTION_OPERATOR, value="plus", left_node=gravity, right_node=seven
+        NodeType.BINARY_OPERATOR, value="plus", left_node=gravity, right_node=seven
     )
     multiply = ExpressionTreeNode(
-        NodeType.FUNCTION_OPERATOR,
+        NodeType.BINARY_OPERATOR,
         value="multiply",
         left_node=gravity,
         right_node=seven,
@@ -213,6 +213,68 @@ def test_function_operations():
     }, set(timesed)
 
 
+def test_compound_expressions():
+
+    planets = opteryx.samples.planets()
+
+    # this builds and tests the following `3.7 * gravity > mass`
+
+    name = ExpressionTreeNode(NodeType.IDENTIFIER, value="name")
+    concat = ExpressionTreeNode(NodeType.LITERAL_NUMERIC, value=3.7)
+    mass = ExpressionTreeNode(NodeType.IDENTIFIER, value="mass")
+
+    multiply = ExpressionTreeNode(
+        NodeType.BINARY_OPERATOR,
+        value="multiply",
+        right_node=three_point_seven,
+        left_node=gravity,
+    )
+    gt = ExpressionTreeNode(
+        NodeType.COMPARISON_OPERATOR, value="Gt", left_node=multiply, right_node=mass
+    )
+
+    result = evaluate(gt, planets)[0]
+    assert len(result) == 5, len(result)
+    assert set(result) == {0, 1, 2, 3, 8}
+
+
+def test_compound_expressions():
+
+    planets = opteryx.samples.planets()
+
+    # this builds and tests the following `3.7 * gravity > mass`
+
+    gravity = ExpressionTreeNode(NodeType.IDENTIFIER, value="gravity")
+    three_point_seven = ExpressionTreeNode(NodeType.LITERAL_NUMERIC, value=3.7)
+    mass = ExpressionTreeNode(NodeType.IDENTIFIER, value="mass")
+
+    multiply = ExpressionTreeNode(
+        NodeType.BINARY_OPERATOR,
+        value="multiply",
+        right_node=three_point_seven,
+        left_node=gravity,
+    )
+    gt = ExpressionTreeNode(
+        NodeType.COMPARISON_OPERATOR, value="Gt", left_node=multiply, right_node=mass
+    )
+
+    result = evaluate(gt, planets)[0]
+    assert len(result) == 5, len(result)
+    assert set(result) == {0, 1, 2, 3, 8}
+
+
+def test_functions():
+
+    planets = opteryx.samples.planets()
+
+    gravity = ExpressionTreeNode(NodeType.IDENTIFIER, value="gravity")
+    _round = ExpressionTreeNode(NodeType.FUNCTION, value="ROUND", parameters=[gravity])
+
+    rounded = evaluate(_round, planets)
+    assert len(rounded) == 9
+    assert set(r.as_py() for r in rounded) == {4, 23, 9, 1, 11, 10}
+
+
 if __name__ == "__main__":
 
     print(f"RUNNING BATTERY OF {len(LITERALS)} LITERAL TYPE TESTS")
@@ -224,3 +286,5 @@ if __name__ == "__main__":
     test_logical_expressions()
     test_reading_identifiers()
     test_function_operations()
+    test_compound_expressions()
+    test_functions()

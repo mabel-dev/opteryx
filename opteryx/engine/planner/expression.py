@@ -25,20 +25,27 @@ from pyarrow import Table
 
 from opteryx.utils.columns import Columns
 from opteryx.third_party.pyarrow_ops.ops import filter_operations, FILTER_OPERATORS
+from opteryx.engine.functions import FUNCTIONS
 from opteryx.engine.functions.binary_operators import binary_operations
 from opteryx.engine.functions.binary_operators import BINARY_OPERATORS
 
 
-BOOLEAN_TYPE: int = int("0001", 2)
+LOGICAL_TYPE: int = int("0001", 2)
 INTERNAL_TYPE: int = int("0010", 2)
 LITERAL_TYPE: int = int("0100", 2)
 
 
 def operator_type_factory(function):
     if function in FILTER_OPERATORS:
-        return NodeType.BOOLEAN_OPERATOR
+        return NodeType.COMPARISON_OPERATOR
     if function in BINARY_OPERATORS:
-        return NodeType.FUNCTION_OPERATOR
+        return NodeType.BINARY_OPERATOR
+    if function == "And":
+        return NodeType.AND
+    if function == "Or":
+        return NodeType.OR
+    if function == "Xor":
+        return NodeType.XOR
     return NodeType.UNKNOWN
 
 
@@ -59,7 +66,7 @@ class NodeType(int, Enum):
     # 00000000
     UNKNOWN: int = 0
 
-    # BOOLEAN OPERATORS
+    # LOGICAL OPERATORS
     # nnnn0001
     AND: int = 17
     OR: int = 33
@@ -69,11 +76,13 @@ class NodeType(int, Enum):
     # INTERAL IDENTIFIERS
     # nnnn0010
     WILDCARD: int = 18
-    BOOLEAN_OPERATOR: int = 34
-    FUNCTION_OPERATOR: int = 50
-    FUNCTION: int = 66
-    IDENTIFIER: int = 82
-    SUBQUERY: int = 98
+    COMPARISON_OPERATOR: int = 34
+    BINARY_OPERATOR: int = 50
+    # UNARY_OPERATOR: int = 66
+    FUNCTION: int = 82
+    IDENTIFIER: int = 98
+    SUBQUERY: int = 114
+    NESTED: int = 130
 
     # LITERAL TYPES
     # nnnn0100
@@ -149,7 +158,7 @@ def _inner_evaluate(root: ExpressionTreeNode, table: Table, columns):
     node_type = root.token_type
 
     # BOOLEAN OPERATORS
-    if node_type & BOOLEAN_TYPE == BOOLEAN_TYPE:
+    if node_type & LOGICAL_TYPE == LOGICAL_TYPE:
 
         left, right, centre = None, None, None
 
@@ -161,29 +170,39 @@ def _inner_evaluate(root: ExpressionTreeNode, table: Table, columns):
             centre = _inner_evaluate(root.centre, table, columns)
 
         if node_type == NodeType.AND:
-            return numpy.logical_and(left, right)
+            return numpy.intersect1d(left, right)
         if node_type == NodeType.OR:
-            return numpy.logical_or(left, right)
+            return numpy.union1d(left, right)
         if node_type == NodeType.NOT:
-            return numpy.logical_not(centre)
+            mask = numpy.arange(table.num_rows, dtype=numpy.int32)
+            return numpy.setdiff1d(mask, centre, assume_unique=True)
         if node_type == NodeType.XOR:
-            return numpy.logical_xor(left, right)
+            filter_indices = numpy.logical_xor(left, right)
+            indices = numpy.arange(table.num_rows)
+            return indices[filter_indices]
 
     # INTERAL IDENTIFIERS
     if node_type & INTERNAL_TYPE == INTERNAL_TYPE:
         if node_type == NodeType.FUNCTION:
-            raise NotImplementedError("functions")
+            parameters = [
+                _inner_evaluate(param, table, columns) for param in root.parameters
+            ]
+            return FUNCTIONS[root.value][1](*parameters)
         if node_type == NodeType.IDENTIFIER:
             if root.value in table.column_names:
                 mapped_column = root.value
             else:
                 mapped_column = columns.get_column_from_alias(root.value, only_one=True)
             return table[mapped_column].to_numpy()
-        if node_type == NodeType.BOOLEAN_OPERATOR:
+        if node_type == NodeType.COMPARISON_OPERATOR:
             left = _inner_evaluate(root.left, table, columns)
             right = _inner_evaluate(root.right, table, columns)
-            return filter_operations(left, root.value, right)
-        if node_type == NodeType.FUNCTION_OPERATOR:
+            indices = numpy.arange(table.num_rows)
+            f_idxs = filter_operations(left, root.value, right)
+            indices = indices[f_idxs]
+
+            return indices
+        if node_type == NodeType.BINARY_OPERATOR:
             left = _inner_evaluate(root.left, table, columns)
             right = _inner_evaluate(root.right, table, columns)
             return binary_operations(left, root.value, right)
@@ -191,14 +210,17 @@ def _inner_evaluate(root: ExpressionTreeNode, table: Table, columns):
             numpy.full(table.num_rows, "*", dtype=numpy.str_)
         if node_type == NodeType.SUBQUERY:
             raise NotImplementedError("subquery")
+        if node_type == NodeType.NESTED:
+            return _inner_evaluate(root.centre, table, columns)
 
     # LITERAL TYPES
     if node_type & LITERAL_TYPE == LITERAL_TYPE:
         # if it's a literal value, return it once for every value in the table
         if node_type == NodeType.LITERAL_LIST:
-            # this isn't as fast as .full, but this is just another way lists
-            # are problematic
+            # this isn't as fast as .full - but lists and strings are problematic
             return numpy.array([root.value] * table.num_rows)
+        if node_type == NodeType.LITERAL_VARCHAR:
+            return numpy.array([root.value] * table.num_rows, dtype=numpy.str_)
         return numpy.full(table.num_rows, root.value, dtype=NUMPY_TYPES[node_type])
 
 
