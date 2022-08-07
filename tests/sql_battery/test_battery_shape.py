@@ -89,6 +89,13 @@ STATEMENTS = [
         ("SELECT name as NAME FROM $satellites GROUP BY name", 177, 1),
 
         ("SELECT * FROM $satellites WHERE id = 5", 1, 8),
+        ("SELECT * FROM $satellites WHERE name = 'Cal' || 'ypso'", 1, 8),
+        ("SELECT * FROM $satellites WHERE name = 'C' || 'a' || 'l' || 'y' || 'p' || 's' || 'o'", 1, 8),
+        ("SELECT * FROM $satellites WHERE id = 5 * 1 AND name = 'Europa'", 1, 8),
+        ("SELECT * FROM $satellites WHERE id = 10 / 2 AND name = 'Europa'", 1, 8),
+        ("SELECT * FROM $satellites WHERE id = 3 + 2 AND name = 'Europa'", 1, 8),
+        ("SELECT * FROM $satellites WHERE id + 2 = 7 AND name = 'Europa'", 1, 8),
+
         ("SELECT * FROM $satellites WHERE magnitude = 5.29", 1, 8),
         ("SELECT * FROM $satellites WHERE id = 5 AND magnitude = 5.29", 1, 8),
         ("SELECT * FROM $satellites WHERE id = 5 AND magnitude = 1", 0, 8),
@@ -500,7 +507,7 @@ def test_sql_battery(statement, rows, columns):
 if __name__ == "__main__":  # pragma: no cover
 
     print(f"RUNNING BATTERY OF {len(STATEMENTS)} SHAPE TESTS")
-    for statement, rows, cols in STATEMENTS:
-        print(statement)
+    for index, (statement, rows, cols) in enumerate(STATEMENTS):
+        print(index, statement)
         test_sql_battery(statement, rows, cols)
     print("okay")

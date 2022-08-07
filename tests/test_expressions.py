@@ -59,6 +59,16 @@ def test_literals(node_type, value):
 
 
 def test_logical_expressions():
+    """
+    In this test we return the indexes of the matching rows, the source table is
+    meaningless as we're using literals everywhere - but the source table is 9 
+    records long.
+
+    If the result is TRUE, we have 9 indicies (rows) returned, if the result is
+    FALSE, we we have 0 returned. So we test our truth tables by looking for
+    9 (TRUE) or 0 (FALSE)
+    """
+
     planets = opteryx.samples.planets()
 
     true = ExpressionTreeNode(NodeType.LITERAL_BOOLEAN, value=True)
@@ -71,16 +81,12 @@ def test_logical_expressions():
 
     result = evaluate(T_AND_T, table=planets)
     assert len(result) == 9
-    assert all(result)
     result = evaluate(T_AND_F, table=planets)
-    assert len(result) == 9
-    assert not any(result), result
+    assert len(result) == 0
     result = evaluate(F_AND_T, table=planets)
-    assert len(result) == 9
-    assert not any(result)
+    assert len(result) == 0
     result = evaluate(F_AND_F, table=planets)
-    assert len(result) == 9
-    assert not any(result)
+    assert len(result) == 0
 
     T_OR_T = ExpressionTreeNode(NodeType.OR, left_node=true, right_node=true)
     T_OR_F = ExpressionTreeNode(NodeType.OR, left_node=true, right_node=false)
@@ -89,26 +95,20 @@ def test_logical_expressions():
 
     result = evaluate(T_OR_T, table=planets)
     assert len(result) == 9
-    assert all(result)
     result = evaluate(T_OR_F, table=planets)
     assert len(result) == 9
-    assert all(result)
     result = evaluate(F_OR_T, table=planets)
     assert len(result) == 9
-    assert all(result)
     result = evaluate(F_OR_F, table=planets)
-    assert len(result) == 9
-    assert not any(result)
+    assert len(result) == 0
 
     NOT_T = ExpressionTreeNode(NodeType.NOT, centre_node=true)
     NOT_F = ExpressionTreeNode(NodeType.NOT, centre_node=false)
 
     result = evaluate(NOT_T, table=planets)
-    assert len(result) == 9
-    assert not any(result)
+    assert len(result) == 0
     result = evaluate(NOT_F, table=planets)
     assert len(result) == 9
-    assert all(result)
 
     T_XOR_T = ExpressionTreeNode(NodeType.XOR, left_node=true, right_node=true)
     T_XOR_F = ExpressionTreeNode(NodeType.XOR, left_node=true, right_node=false)
@@ -116,17 +116,13 @@ def test_logical_expressions():
     F_XOR_F = ExpressionTreeNode(NodeType.XOR, left_node=false, right_node=false)
 
     result = evaluate(T_XOR_T, table=planets)
-    assert len(result) == 9
-    assert not any(result)
+    assert len(result) == 0
     result = evaluate(T_XOR_F, table=planets)
     assert len(result) == 9
-    assert all(result)
     result = evaluate(F_XOR_T, table=planets)
     assert len(result) == 9
-    assert all(result)
     result = evaluate(F_XOR_F, table=planets)
-    assert len(result) == 9
-    assert not any(result)
+    assert len(result) == 0
 
 
 def test_reading_identifiers():
@@ -162,7 +158,7 @@ def test_function_operations():
     name = ExpressionTreeNode(NodeType.IDENTIFIER, value="name")
     concat = ExpressionTreeNode(
         NodeType.BINARY_OPERATOR,
-        value="stringconcat",
+        value="StringConcat",
         left_node=name,
         right_node=name,
     )
@@ -170,11 +166,11 @@ def test_function_operations():
     gravity = ExpressionTreeNode(NodeType.IDENTIFIER, value="gravity")
     seven = ExpressionTreeNode(NodeType.LITERAL_NUMERIC, value=7)
     plus = ExpressionTreeNode(
-        NodeType.BINARY_OPERATOR, value="plus", left_node=gravity, right_node=seven
+        NodeType.BINARY_OPERATOR, value="Plus", left_node=gravity, right_node=seven
     )
     multiply = ExpressionTreeNode(
         NodeType.BINARY_OPERATOR,
-        value="multiply",
+        value="Multiply",
         left_node=gravity,
         right_node=seven,
     )
@@ -219,13 +215,13 @@ def test_compound_expressions():
 
     # this builds and tests the following `3.7 * gravity > mass`
 
-    name = ExpressionTreeNode(NodeType.IDENTIFIER, value="name")
-    concat = ExpressionTreeNode(NodeType.LITERAL_NUMERIC, value=3.7)
+    gravity = ExpressionTreeNode(NodeType.IDENTIFIER, value="gravity")
+    three_point_seven = ExpressionTreeNode(NodeType.LITERAL_NUMERIC, value=3.7)
     mass = ExpressionTreeNode(NodeType.IDENTIFIER, value="mass")
 
     multiply = ExpressionTreeNode(
         NodeType.BINARY_OPERATOR,
-        value="multiply",
+        value="Multiply",
         right_node=three_point_seven,
         left_node=gravity,
     )
@@ -233,8 +229,8 @@ def test_compound_expressions():
         NodeType.COMPARISON_OPERATOR, value="Gt", left_node=multiply, right_node=mass
     )
 
-    result = evaluate(gt, planets)[0]
-    assert len(result) == 5, len(result)
+    result = evaluate(gt, planets)
+    assert len(result) == 5, result
     assert set(result) == {0, 1, 2, 3, 8}
 
 
@@ -250,7 +246,7 @@ def test_compound_expressions():
 
     multiply = ExpressionTreeNode(
         NodeType.BINARY_OPERATOR,
-        value="multiply",
+        value="Multiply",
         right_node=three_point_seven,
         left_node=gravity,
     )
@@ -258,7 +254,7 @@ def test_compound_expressions():
         NodeType.COMPARISON_OPERATOR, value="Gt", left_node=multiply, right_node=mass
     )
 
-    result = evaluate(gt, planets)[0]
+    result = evaluate(gt, planets)
     assert len(result) == 5, len(result)
     assert set(result) == {0, 1, 2, 3, 8}
 

@@ -170,10 +170,20 @@ def _inner_evaluate(root: ExpressionTreeNode, table: Table, columns):
             centre = _inner_evaluate(root.centre, table, columns)
 
         if node_type == NodeType.AND:
+            if left.dtype == bool:
+                left = numpy.where(left)[0]
+            if right.dtype == bool:
+                right = numpy.where(right)[0]
             return numpy.intersect1d(left, right)
         if node_type == NodeType.OR:
+            if left.dtype == bool:
+                left = numpy.where(left)[0]
+            if right.dtype == bool:
+                right = numpy.where(right)[0]
             return numpy.union1d(left, right)
         if node_type == NodeType.NOT:
+            if centre.dtype == bool:
+                centre = numpy.where(centre)[0]
             mask = numpy.arange(table.num_rows, dtype=numpy.int32)
             return numpy.setdiff1d(mask, centre, assume_unique=True)
         if node_type == NodeType.XOR:

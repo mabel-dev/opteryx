@@ -51,7 +51,7 @@ def binary_operations(left, operator, right):
     if operator == "Plus":
         return numpy.add(left, right)
     if operator == "StringConcat":
-        empty = numpy.full(left.size, "")
+        empty = numpy.full(len(left), "")
         joined = compute.binary_join_element_wise(left, right, empty)
         return joined
 
