@@ -16,20 +16,22 @@ The operators `AND`, `OR`, and `XOR` are commutative, that is, you can switch th
 
 Operator     | Description                   
 :----------- | :-----------------------------
+`=`          | equal to               
+`<>`         | not equal to  
 `<`          | less than                     
 `>`          | greater than                
 `<=`         | less than or equal to        
-`>=`         | greater than or equal to   
-`=`          | equal to               
-`<>`         | not equal to                 
+`>=`         | greater than or equal to                  
 `IN`         | value in list              
 `NOT IN`     | value not in list            
 `LIKE`       | pattern match           
-`NOT LIKE`   | inverse of `LIKE`         
+`NOT LIKE`   | inverse results of `LIKE`         
 `ILIKE`      | case-insensitive pattern match 
-`NOT ILIKE`  | inverse of `ILIKE`     
+`NOT ILIKE`  | inverse results of `ILIKE`     
 `~`          | regular expression match     
-`!~`         | inverse of `~`
+`!~`         | inverse results of `~`
+`~*`         | case insensitive regular expression match
+`!~*`        | inverse results of `~*`
 
 !!! note
     When handling `null` and `none` values, infix inversions (e.g. `x NOT LIKE y`) behave differently to prefix inversions (`NOT x LIKE y`).

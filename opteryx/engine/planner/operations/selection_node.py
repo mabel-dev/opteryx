@@ -91,7 +91,7 @@ def _evaluate(predicate: Union[tuple, list], table: Table):
             if predicate[0] in table.column_names:
                 predicate = (
                     (predicate[0], TOKEN_TYPES.IDENTIFIER),
-                    "=",
+                    "Eq",
                     (True, TOKEN_TYPES.BOOLEAN),
                 )
             # The function has not already been evaluated, so we need to do this.
@@ -132,7 +132,7 @@ def _evaluate(predicate: Union[tuple, list], table: Table):
 
                 predicate = (
                     (predicate[0], TOKEN_TYPES.IDENTIFIER),
-                    "=",
+                    "Eq",
                     (True, TOKEN_TYPES.BOOLEAN),
                 )
 

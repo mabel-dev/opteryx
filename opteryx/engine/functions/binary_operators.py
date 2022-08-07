@@ -16,8 +16,15 @@ import numpy
 from pyarrow import compute
 
 
-BINARY_OPERATORS = ("divide", "minus", "modulo", "multiply", "plus", "stringconcat")
+BINARY_OPERATORS = { "divide", "minus", "modulo", "multiply", "plus", "stringconcat" }
 
+# Also supported by the AST but not implemented
+# BitwiseOr => ("|"),
+# BitwiseAnd => ("&"),
+# BitwiseXor => ("^"),
+# PGBitwiseXor => ("#"),
+# PGBitwiseShiftLeft => ("<<"),
+# PGBitwiseShiftRight => (">>"),
 
 def binary_operations(left, operator, right):
     """

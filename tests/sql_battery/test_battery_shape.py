@@ -122,6 +122,8 @@ STATEMENTS = [
         ("SELECT * FROM $satellites WHERE name NOT ILIKE '%c%'", 154, 8),
         ("SELECT * FROM $satellites WHERE name ~ '^C.'", 12, 8),
         ("SELECT * FROM $satellites WHERE name !~ '^C.'", 165, 8),
+        ("SELECT * FROM $satellites WHERE name ~* '^c.'", 12, 8),
+        ("SELECT * FROM $satellites WHERE name !~* '^c.'", 165, 8),
 
         ("SELECT COUNT(*) FROM $satellites", 1, 1),
         ("SELECT count(*) FROM $satellites", 1, 1),

@@ -12,6 +12,26 @@ from opteryx.engine.attribute_types import TOKEN_TYPES
 
 from .helpers import columns_to_array
 
+# Added for Opteryx, comparisons in filter_operators updated to match
+# this set is from sqloxide
+FILTER_OPERATORS = {
+    "Eq",
+    "NotEq",
+    "Gt",
+    "GtEq",
+    "Lt",
+    "LtEq",
+    "Like",
+    "ILike",
+    "NotLike",
+    "NotILike",
+    "InList",
+    "PGRegexMatch",
+    "PGRegexNotMatch",
+    "PGRegexIMatch", # "~*"
+    "PGRegexNotIMatch", # "!~*"
+}
+
 
 def _get_type(var):
     # added for Opteryx
@@ -46,7 +66,7 @@ def filter_operations(arr, operator, value):
 
     identifier_type = _get_type(arr)
     literal_type = _get_type(value)
-    if operator in ("=", "=="):
+    if operator == "Eq":
         # type checking added for Opteryx
         if value is None and identifier_type == TOKEN_TYPES.NUMERIC:
             # Nones are stored as NaNs, so perform a different test.
@@ -57,63 +77,70 @@ def filter_operations(arr, operator, value):
                 f"Type mismatch, unable to compare {identifier_type} with {literal_type}"
             )
         return numpy.where(arr == value)
-    elif operator in (
-        "!=",
-        "<>",
-    ):
+    elif operator == "NotEq":
         return numpy.where(arr != value)
-    elif operator == "<":
+    elif operator == "Lt":
         return numpy.where(arr < value)
-    elif operator == ">":
+    elif operator == "Gt":
         return numpy.where(arr > value)
-    elif operator == "<=":
+    elif operator == "LtEq":
         return numpy.where(arr <= value)
-    elif operator == ">=":
+    elif operator == "GtEq":
         return numpy.where(arr >= value)
-    elif operator == "in":
+    elif operator == "InList":
         # MODIFIED FOR OPTERYX
         # some of the lists are saved as sets, which are faster than searching numpy
         # arrays, even with numpy's native functionality - choosing the right algo
         # is almost always faster than choosing a fast language.
         return numpy.array([a in value for a in arr], dtype=numpy.bool8)
-    elif operator == "not in":
+    elif operator == "NotInList": 
         # MODIFIED FOR OPTERYX - see comment above
         return numpy.array([a not in value for a in arr], dtype=numpy.bool8)
-    elif operator == "like":
+    elif operator == "Like":
         # MODIFIED FOR OPTERYX
         # null input emits null output, which should be false/0
         _check_type("LIKE", identifier_type, (TOKEN_TYPES.VARCHAR))
         matches = compute.match_like(arr, value)
         return compute.fill_null(matches, False)
-    elif operator == "not like":
+    elif operator == "NotLike":
         # MODIFIED FOR OPTERYX - see comment above
         _check_type("NOT LIKE", identifier_type, (TOKEN_TYPES.VARCHAR))
         matches = compute.match_like(arr, value)
         matches = compute.fill_null(matches, True)
         return numpy.invert(matches)
-    elif operator == "ilike":
+    elif operator == "ILike":
         # MODIFIED FOR OPTERYX - see comment above
         _check_type("ILIKE", identifier_type, (TOKEN_TYPES.VARCHAR))
         matches = compute.match_like(arr, value, ignore_case=True)
         return compute.fill_null(matches, False)
-    elif operator == "not ilike":
+    elif operator == "NotILike":
         # MODIFIED FOR OPTERYX - see comment above
         _check_type("NOT ILIKE", identifier_type, (TOKEN_TYPES.VARCHAR))
         matches = compute.match_like(arr, value, ignore_case=True)
         matches = compute.fill_null(matches, True)
         return numpy.invert(matches)
-    elif operator == "~":
+    elif operator == "PGRegexMatch":
         # MODIFIED FOR OPTERYX - see comment above
         _check_type("~", identifier_type, (TOKEN_TYPES.VARCHAR))
         matches = compute.match_substring_regex(arr, value)
         return compute.fill_null(matches, False)
-    elif operator == "!~":
+    elif operator == "PGRegexNotMatch":
         # MODIFIED FOR OPTERYX - see comment above
-        _check_type("~", identifier_type, (TOKEN_TYPES.VARCHAR))
+        _check_type("!~", identifier_type, (TOKEN_TYPES.VARCHAR))
         matches = compute.match_substring_regex(arr, value)
         matches = compute.fill_null(matches, True)
         return numpy.invert(matches)
-
+    elif operator == "PGRegexIMatch":
+        # MODIFIED FOR OPTERYX - see comment above
+        _check_type("~*", identifier_type, (TOKEN_TYPES.VARCHAR))
+        matches = compute.match_substring_regex(arr, value, ignore_case=True)
+        return compute.fill_null(matches, False)
+    elif operator == "PGRegexNotIMatch":
+        # MODIFIED FOR OPTERYX - see comment above
+        _check_type("!~*", identifier_type, (TOKEN_TYPES.VARCHAR))
+        matches = compute.match_substring_regex(arr, value, ignore_case=True)
+        matches = compute.fill_null(matches, True)
+        return numpy.invert(matches)
     else:
         raise Exception(f"Operator {operator} is not implemented!")
 

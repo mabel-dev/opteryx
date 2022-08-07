@@ -56,23 +56,6 @@ from opteryx.utils import dates
 from opteryx.utils.columns import Columns
 
 
-OPERATOR_XLAT = {
-    "Eq": "=",
-    "NotEq": "<>",
-    "Gt": ">",
-    "GtEq": ">=",
-    "Lt": "<",
-    "LtEq": "<=",
-    "Like": "like",
-    "ILike": "ilike",
-    "NotLike": "not like",
-    "NotILike": "not ilike",
-    "InList": "in",
-    "PGRegexMatch": "~",
-    "PGRegexNotMatch": "!~",
-}
-
-
 class QueryPlanner(ExecutionTree):
     def __init__(self, statistics, cache=None):
         """
@@ -203,7 +186,7 @@ class QueryPlanner(ExecutionTree):
                 return [left, right]
             if operator in ("Or"):
                 return [[left], [right]]
-            return (left, OPERATOR_XLAT[operator], right)
+            return (left, operator, right)
         if "UnaryOp" in filters:
             if filters["UnaryOp"]["op"] == "Not":
                 right = self._build_dnf_filters(filters["UnaryOp"]["expr"])
@@ -221,9 +204,9 @@ class QueryPlanner(ExecutionTree):
 
             if inverted:
                 # LEFT <= LOW AND LEFT >= HIGH (not between)
-                return [[(left, "<", low)], [(left, ">", high)]]
+                return [[(left, "Lt", low)], [(left, "Gt", high)]]
             # LEFT > LOW and LEFT < HIGH (between)
-            return [(left, ">=", low), (left, "<=", high)]
+            return [(left, "GtEq", low), (left, "LtEq", high)]
         if "InSubquery" in filters:
             # if it's a sub-query we create a plan for it
             left = self._build_dnf_filters(filters["InSubquery"]["expr"])
@@ -231,7 +214,7 @@ class QueryPlanner(ExecutionTree):
             ast["Query"] = filters["InSubquery"]["subquery"]
             subquery_plan = self.copy()
             subquery_plan.create_plan(ast=[ast])
-            operator = "not in" if filters["InSubquery"]["negated"] else "in"
+            operator = "NotInList" if filters["InSubquery"]["negated"] else "InList"
             return (left, operator, (subquery_plan, TOKEN_TYPES.QUERY_PLAN))
         try_unary_filter = list(filters.keys())[0]
         if try_unary_filter in ("IsTrue", "IsFalse", "IsNull", "IsNotNull"):
@@ -243,7 +226,7 @@ class QueryPlanner(ExecutionTree):
                 {self._build_dnf_filters(v)[0] for v in filters["InList"]["list"]},
                 TOKEN_TYPES.LIST,
             )
-            operator = "not in" if filters["InList"]["negated"] else "in"
+            operator = "NotInList" if filters["InList"]["negated"] else "InList"
             return (left, operator, right)
         if "Function" in filters:
             func = filters["Function"]["name"][0]["value"].upper()
@@ -588,7 +571,7 @@ class QueryPlanner(ExecutionTree):
                     "column_name",
                     TOKEN_TYPES.IDENTIFIER,
                 ),
-                "like",
+                "Like",
                 (filters["Like"], TOKEN_TYPES.VARCHAR),
             )
 

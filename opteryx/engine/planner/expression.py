@@ -15,7 +15,7 @@ Expressions describe a calculation or evaluation of some sort.
 
 It is defined as an expression tree of binary and unary operators, and functions.
 
-Expressions are evaluated against an entire table at a time.
+Expressions are evaluated against an entire page at a time.
 """
 from enum import Enum
 
@@ -24,13 +24,22 @@ import numpy
 from pyarrow import Table
 
 from opteryx.utils.columns import Columns
-from opteryx.third_party.pyarrow_ops.ops import filter_operations
+from opteryx.third_party.pyarrow_ops.ops import filter_operations, FILTER_OPERATORS
 from opteryx.engine.functions.binary_operators import binary_operations
+from opteryx.engine.functions.binary_operators import BINARY_OPERATORS
 
 
 BOOLEAN_TYPE: int = int("0001", 2)
 INTERNAL_TYPE: int = int("0010", 2)
 LITERAL_TYPE: int = int("0100", 2)
+
+
+def operator_type_factory(function):
+    if function in FILTER_OPERATORS:
+        return NodeType.BOOLEAN_OPERATOR
+    if function in BINARY_OPERATORS:
+        return NodeType.FUNCTION_OPERATOR
+    return NodeType.UNKNOWN
 
 
 class NodeType(int, Enum):
@@ -76,6 +85,8 @@ class NodeType(int, Enum):
     LITERAL_STRUCT: int = 100
     LITERAL_TIMESTAMP: int = 116
     LITERAL_NONE: int = 132
+    # LITERAL_TABLE: int = 148 (may be needed for CTEs/Subqueries and manual literals)
+
     # fmt:on
 
 
