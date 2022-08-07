@@ -24,7 +24,8 @@ import numpy
 from pyarrow import Table
 
 from opteryx.utils.columns import Columns
-from opteryx.third_party.pyarrow_ops.ops import arr_op_to_idxs
+from opteryx.third_party.pyarrow_ops.ops import filter_operations
+from opteryx.engine.functions.binary_operators import binary_operations
 
 
 BOOLEAN_TYPE: int = int("0001", 2)
@@ -59,10 +60,11 @@ class NodeType(int, Enum):
     # INTERAL IDENTIFIERS
     # nnnn0010
     WILDCARD: int = 18
-    OPERATOR: int = 34
-    FUNCTION: int = 50
-    IDENTIFIER: int = 66
-    SUBQUERY: int = 82
+    BOOLEAN_OPERATOR: int = 34
+    FUNCTION_OPERATOR: int = 50
+    FUNCTION: int = 66
+    IDENTIFIER: int = 82
+    SUBQUERY: int = 98
 
     # LITERAL TYPES
     # nnnn0100
@@ -166,10 +168,14 @@ def _inner_evaluate(root: ExpressionTreeNode, table: Table, columns):
             else:
                 mapped_column = columns.get_column_from_alias(root.value, only_one=True)
             return table[mapped_column].to_numpy()
-        if node_type == NodeType.OPERATOR:
+        if node_type == NodeType.BOOLEAN_OPERATOR:
             left = _inner_evaluate(root.left, table, columns)
             right = _inner_evaluate(root.right, table, columns)
-            return arr_op_to_idxs(left, root.value, right)
+            return filter_operations(left, root.value, right)
+        if node_type == NodeType.FUNCTION_OPERATOR:
+            left = _inner_evaluate(root.left, table, columns)
+            right = _inner_evaluate(root.right, table, columns)
+            return binary_operations(left, root.value, right)
         if node_type == NodeType.WILDCARD:
             numpy.full(table.num_rows, "*", dtype=numpy.str_)
         if node_type == NodeType.SUBQUERY:

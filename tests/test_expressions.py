@@ -131,7 +131,6 @@ def test_logical_expressions():
 
 def test_reading_identifiers():
     planets = opteryx.samples.planets()
-    print(planets)
 
     names_node = ExpressionTreeNode(NodeType.IDENTIFIER, value="name")
     names = evaluate(names_node, planets)
@@ -156,29 +155,28 @@ def test_reading_identifiers():
     )
 
 
-def test_operations():
+def test_function_operations():
 
     planets = opteryx.samples.planets()
 
     name = ExpressionTreeNode(NodeType.IDENTIFIER, value="name")
     concat = ExpressionTreeNode(
-        NodeType.OPERATOR, value="stringconcat", left_node=name, right_node=name
+        NodeType.FUNCTION_OPERATOR,
+        value="stringconcat",
+        left_node=name,
+        right_node=name,
     )
 
     gravity = ExpressionTreeNode(NodeType.IDENTIFIER, value="gravity")
     seven = ExpressionTreeNode(NodeType.LITERAL_NUMERIC, value=7)
-    three_point_seven = ExpressionTreeNode(NodeType.LITERAL_NUMERIC, value=3.7)
     plus = ExpressionTreeNode(
-        NodeType.OPERATOR, value="plus", left_node=gravity, right_node=seven
+        NodeType.FUNCTION_OPERATOR, value="plus", left_node=gravity, right_node=seven
     )
     multiply = ExpressionTreeNode(
-        NodeType.OPERATOR, value="multiply", left_node=gravity, right_node=seven
-    )
-    equals = ExpressionTreeNode(
-        NodeType.OPERATOR,
-        value="equals",
+        NodeType.FUNCTION_OPERATOR,
+        value="multiply",
         left_node=gravity,
-        right_node=three_point_seven,
+        right_node=seven,
     )
 
     names = evaluate(concat, planets)
@@ -214,11 +212,6 @@ def test_operations():
         63.0,
     }, set(timesed)
 
-    compared = evaluate(equals, planets)
-    assert len(timesed) == 9
-    print('000000000000000')
-    print(compared)
-
 
 if __name__ == "__main__":
 
@@ -230,6 +223,4 @@ if __name__ == "__main__":
 
     test_logical_expressions()
     test_reading_identifiers()
-    test_operations()
-
-    planets = opteryx.samples.planets()
+    test_function_operations()

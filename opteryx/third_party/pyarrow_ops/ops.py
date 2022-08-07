@@ -34,7 +34,11 @@ def _check_type(operation, provided_type, valid_types):
 
 
 # Filter functionality
-def arr_op_to_idxs(arr, operator, value):
+def filter_operations(arr, operator, value):
+    """
+    Execute filter operations, this returns an array of the indexes of the rows that
+    match the filter
+    """
 
     # ADDED FOR OPTERYX - if all of the values are null, shortcut
     if compute.is_null(arr, nan_is_null=True).false_count == 0:
@@ -42,11 +46,7 @@ def arr_op_to_idxs(arr, operator, value):
 
     identifier_type = _get_type(arr)
     literal_type = _get_type(value)
-    if operator in (
-        "=",
-        "==",
-        "equals"
-    ):
+    if operator in ("=", "=="):
         # type checking added for Opteryx
         if value is None and identifier_type == TOKEN_TYPES.NUMERIC:
             # Nones are stored as NaNs, so perform a different test.
@@ -114,21 +114,6 @@ def arr_op_to_idxs(arr, operator, value):
         matches = compute.fill_null(matches, True)
         return numpy.invert(matches)
 
-    # new operations for Opteryx
-    elif operator == "divide":
-        return numpy.divide(arr, value)
-    elif operator == "minus":
-        return numpy.subtract(arr, value)
-    elif operator == "modulo":
-        return numpy.mod(arr, value)
-    elif operator == "multiply":
-        return numpy.multiply(arr, value)
-    elif operator == "plus":
-        return numpy.add(arr, value)
-    elif operator == "stringconcat":
-        empty = numpy.full(arr.size, "")
-        return compute.binary_join_element_wise(arr, value, empty)
-
     else:
         raise Exception(f"Operator {operator} is not implemented!")
 
@@ -158,7 +143,7 @@ def ifilters(table, filters):
     # Filter is a list of (col, op, value) tuples
     indices = numpy.arange(table.num_rows)
     for (left_operand, operator, right_operand) in filters:
-        f_idxs = arr_op_to_idxs(
+        f_idxs = filter_operations(
             _get_values(table, left_operand),
             operator,
             _get_values(table, right_operand),
