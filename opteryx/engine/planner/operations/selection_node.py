@@ -17,7 +17,7 @@ This is a SQL Query Execution Plan Node.
 """
 import time
 
-from typing import Iterable, Union
+from typing import Iterable
 from pyarrow import Table
 
 from opteryx.engine import QueryDirectives, QueryStatistics

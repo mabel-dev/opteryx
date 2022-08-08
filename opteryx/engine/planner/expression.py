@@ -83,6 +83,7 @@ class NodeType(int, Enum):
     IDENTIFIER: int = 98
     SUBQUERY: int = 114
     NESTED: int = 130
+    AGGREGATOR = 146
 
     # LITERAL TYPES
     # nnnn0100
@@ -118,6 +119,7 @@ class ExpressionTreeNode:
         "right",
         "centre",
         "parameters",
+        "alias",
     )
 
     def __init__(
@@ -129,6 +131,7 @@ class ExpressionTreeNode:
         right_node=None,
         centre_node=None,
         parameters=None,
+        alias=None,
     ):
         self.token_type: NodeType = token_type
         self.value = value
@@ -136,6 +139,7 @@ class ExpressionTreeNode:
         self.right = right_node
         self.centre = centre_node
         self.parameters = parameters
+        self.alias = alias
 
         if self.token_type == NodeType.UNKNOWN:
             raise ValueError(f"ExpressionNode of unknown type in plan. {self.value}")

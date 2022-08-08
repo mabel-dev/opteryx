@@ -64,7 +64,7 @@ class SortNode(BasePlanNode):
             yield data_pages[0]
             return
 
-        table = concat_tables(data_pages)
+        table = concat_tables(data_pages, promote=True)
         columns = Columns(table)
         need_to_remove_random = False
 

@@ -41,7 +41,6 @@ these are not supported by SqlOxide and so are in a different module which strip
 temporal aspects out of the query.
 """
 import datetime
-from http.client import NETWORK_AUTHENTICATION_REQUIRED
 
 import numpy
 import pyarrow
@@ -51,11 +50,9 @@ from opteryx.engine.attribute_types import TOKEN_TYPES
 from opteryx.engine.functions import is_function
 from opteryx.engine.planner import operations
 from opteryx.engine.planner.execution_tree import ExecutionTree
-from opteryx.engine.planner.expression import (
-    ExpressionTreeNode,
-    NodeType,
-    operator_type_factory,
-)
+from opteryx.engine.planner.expression import ExpressionTreeNode
+from opteryx.engine.planner.expression import NodeType
+from opteryx.engine.planner.expression import operator_type_factory
 from opteryx.engine.planner.temporal import extract_temporal_filters
 from opteryx.engine.query_directives import QueryDirectives
 from opteryx.exceptions import SqlError
@@ -180,7 +177,7 @@ class QueryPlanner(ExecutionTree):
         if "CompoundIdentifier" in filters:
             return ExpressionTreeNode(
                 NodeType.IDENTIFIER,
-                value=".".join([i["value"] for i in filters["CompoundIdentifier"]]),
+                value=".".join(i["value"] for i in filters["CompoundIdentifier"]),
             )
         if "Value" in filters:  # we're a literal
             return self._build_literal_node(filters["Value"])
@@ -467,48 +464,46 @@ class QueryPlanner(ExecutionTree):
                 function = attribute["ExprWithAlias"]["expr"]
                 alias = [attribute["ExprWithAlias"]["alias"]["value"]]
             if "QualifiedWildcard" in attribute:
-                return {"*": attribute["QualifiedWildcard"][0]["value"]}
-
+                return ExpressionTreeNode(NodeType.WILDCARD, value=attribute["QualifiedWildcard"][0]["value"])
             if function:
 
                 if "Identifier" in function:
-                    return {
-                        "identifier": function["Identifier"]["value"],
-                        "alias": alias,
-                    }
+                    return ExpressionTreeNode(token_type=NodeType.IDENTIFIER, value=function["Identifier"]["value"], alias=alias)
                 if "CompoundIdentifier" in function:
-                    return {
-                        "identifier": [
-                            ".".join(
-                                [p["value"] for p in function["CompoundIdentifier"]]
-                            )
-                        ].pop(),
-                        "alias": [
-                            ".".join(
-                                [p["value"] for p in function["CompoundIdentifier"]]
-                            )
-                        ],
-                    }
+                    return ExpressionTreeNode(
+                        token_type=NodeType.IDENTIFIER,
+                        value=".".join(p["value"] for p in function["CompoundIdentifier"]),
+                        alias=".".join(p["value"] for p in function["CompoundIdentifier"])
+                    )
+                    
+#                    return {
+#                        "identifier": [
+#                            ".".join(
+#                                [p["value"] for p in function["CompoundIdentifier"]]
+#                            )
+#                        ].pop(),
+#                        "alias": [
+#                            ".".join(
+#                                [p["value"] for p in function["CompoundIdentifier"]]
+#                            )
+#                        ],
+#                    }
                 if "Function" in function:
                     func = function["Function"]["name"][0]["value"].upper()
                     args = [
                         self._build_filters(a) for a in function["Function"]["args"]
                     ]
                     if is_function(func):
-                        return {"function": func, "args": args, "alias": alias}
-                    return {"aggregate": func, "args": args, "alias": alias}
+                        node_type = NodeType.FUNCTION
+                    else:
+                        node_type = NodeType.AGGREGATOR
+                    return ExpressionTreeNode(token_type=node_type, value=func, parameters=args, alias=alias)
                 if "BinaryOp" in function:
                     left = self._build_filters(function["BinaryOp"]["left"])
                     operator = function["BinaryOp"]["op"]
                     right = self._build_filters(function["BinaryOp"]["right"])
 
-                    opmap = {"Plus": "+"}
-
-                    return {
-                        "function": operator.upper(),
-                        "args": [left, right],
-                        "alias": f"`{left.value} {opmap.get(operator, '?')} {right.value}`",
-                    }
+                    raise Exception("IS THIS EVER CALLED?")
                 if "Cast" in function:
                     # CAST(<var> AS <type>) - convert to the form <type>(var), e.g. BOOLEAN(on)
                     args = [self._build_filters(function["Cast"]["expr"])]
@@ -883,7 +878,7 @@ class QueryPlanner(ExecutionTree):
                 last_node = f"join-{join_id}"
 
         _projection = self._extract_projections(ast)
-        if any("function" in a for a in _projection):
+        if any(a.token_type == NodeType.FUNCTION for a in _projection if isinstance(a, ExpressionTreeNode)):
             self.add_operator(
                 "eval",
                 operations.EvaluationNode(
@@ -903,11 +898,11 @@ class QueryPlanner(ExecutionTree):
             last_node = "where"
 
         _groups = self._extract_groups(ast)
-        if _groups or any(["aggregate" in a for a in _projection]):
+        if _groups or any(a.token_type == NodeType.AGGREGATOR for a in _projection if isinstance(a, ExpressionTreeNode)):
             _aggregates = _projection.copy()
             if isinstance(_aggregates, dict):
                 raise SqlError("GROUP BY cannot be used with SELECT *")
-            if not any(["aggregate" in a for a in _aggregates]):
+            if not any(a.token_type == NodeType.AGGREGATOR for a in _aggregates if isinstance(a, ExpressionTreeNode)):
                 _aggregates.append(
                     {
                         "aggregate": "COUNT",

@@ -25,14 +25,15 @@ import pyarrow
 from opteryx.engine.attribute_types import TOKEN_TYPES
 from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
 from opteryx.engine import QueryDirectives, QueryStatistics
+from opteryx.engine.planner.expression import NodeType
 from opteryx.exceptions import SqlError
 from opteryx.utils.columns import Columns
 
 
 def replace_wildcards(arg):
-    if arg[1] == TOKEN_TYPES.WILDCARD:
+    if arg.token_type == NodeType.WILDCARD:
         return "*"
-    return str(arg[0])
+    return str(arg.value)
 
 
 class ProjectionNode(BasePlanNode):
@@ -50,25 +51,25 @@ class ProjectionNode(BasePlanNode):
         for attribute in projection:
             if projection == {"*": "*"}:
                 self._projection[attribute] = None
-            elif "*" in attribute:
+            elif attribute.token_type == NodeType.WILDCARD and attribute.value is not None:
                 # qualified wildcard, e.g. table.*
-                self._projection[(attribute["*"],)] = None
-            elif "aggregate" in attribute:
+                self._projection[(attribute.value,)] = None
+            elif attribute.token_type == NodeType.AGGREGATOR:
                 self._projection[
-                    f"{attribute['aggregate']}({','.join([replace_wildcards(a) for a in attribute['args']])})"
-                ] = attribute["alias"]
+                    f"{attribute.value}({','.join([replace_wildcards(a) for a in attribute.parameters])})"
+                ] = attribute.alias
 
-            elif "function" in attribute:
+            elif attribute.token_type == NodeType.FUNCTION:
                 args = [
                     ((f"({','.join(a[0])})", None) if isinstance(a[0], list) else a)
-                    for a in attribute["args"]
+                    for a in attribute.parameters
                 ]
                 self._projection[
-                    f"{attribute['function']}({','.join([replace_wildcards(a) for a in args])})"
-                ] = attribute["alias"]
+                    f"{attribute.value}({','.join([replace_wildcards(a) for a in attribute.parameters])})"
+                ] = attribute.alias
 
-            elif "identifier" in attribute:
-                self._projection[attribute["identifier"]] = attribute["alias"]
+            elif attribute.token_type == NodeType.IDENTIFIER:
+                self._projection[attribute.value] = attribute.alias
             else:
                 self._projection[attribute] = None
 

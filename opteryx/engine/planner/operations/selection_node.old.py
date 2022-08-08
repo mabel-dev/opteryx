@@ -200,7 +200,7 @@ def _evaluate_subqueries(predicate):
         and len(predicate) == 2
         and predicate[1] == TOKEN_TYPES.QUERY_PLAN
     ):
-        table_result = pyarrow.concat_tables(predicate[0].execute())
+        table_result = pyarrow.concat_tables(predicate[0].execute(), promote=True)
         if len(table_result) == 0:
             SqlError("Subquery in WHERE clause - column not found")
         if len(table_result.columns) != 1:
