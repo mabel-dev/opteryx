@@ -61,7 +61,7 @@ class Columns:
             if column.get("source_aliases"):
                 source_alias = column["source_aliases"][0]
                 local_preferences[index] = f"{source_alias}.{preferences[index]}"
-        return local_preferences
+        return [c for c in local_preferences if c is not None]
 
     @property
     def preferred_column_names(self):
