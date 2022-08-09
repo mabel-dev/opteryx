@@ -205,7 +205,7 @@ class Columns:
         all_aliases = pyarrow.array(all_aliases).unique()
 
         # use the comparison code for the general filters to find matches
-        filtered = pyarrow_ops.ops.arr_op_to_idxs(
+        filtered = pyarrow_ops.ops.filter_operations(
             all_aliases, _filter[1], _filter[2][0]
         )
         filtered = all_aliases.filter(filtered)

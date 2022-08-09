@@ -41,18 +41,13 @@ these are not supported by SqlOxide and so are in a different module which strip
 temporal aspects out of the query.
 """
 import datetime
-
 import numpy
 import pyarrow
-import sqloxide
 
 from opteryx.engine.attribute_types import TOKEN_TYPES
 from opteryx.engine.functions import is_function
 from opteryx.engine.planner import operations
 from opteryx.engine.planner.execution_tree import ExecutionTree
-from opteryx.engine.planner.expression import ExpressionTreeNode
-from opteryx.engine.planner.expression import NodeType
-from opteryx.engine.planner.expression import operator_type_factory
 from opteryx.engine.planner.temporal import extract_temporal_filters
 from opteryx.engine.query_directives import QueryDirectives
 from opteryx.exceptions import SqlError
@@ -99,6 +94,8 @@ class QueryPlanner(ExecutionTree):
             if isinstance(sql, bytes):
                 sql = sql.decode()
 
+            import sqloxide
+
             # extract temporal filters, this isn't supported by sqloxide
             self.start_date, self.end_date, sql = extract_temporal_filters(sql)
             # Parse the SQL into a AST
@@ -122,130 +119,97 @@ class QueryPlanner(ExecutionTree):
         else:  # pragma: no cover
             raise SqlError("Unknown or unsupported Query type.")
 
-    def _build_literal_node(self, value):
+    def _extract_value(self, value):
         """
-        extract values from a value node in the AST and create a ExpressionNode for it
+        extract values from a value node
         """
         if value is None or value in ("None", "Null"):
-            return ExpressionTreeNode(NodeType.LITERAL_NONE)
+            return (None, None)
         if "SingleQuotedString" in value:
             # quoted strings are either VARCHAR or TIMESTAMP
             str_value = value["SingleQuotedString"]
             dte_value = dates.parse_iso(str_value)
             if dte_value:
-                return ExpressionTreeNode(NodeType.LITERAL_TIMESTAMP, value=dte_value)
+                return (dte_value, TOKEN_TYPES.TIMESTAMP)
             #            ISO_8601 = r"^\d{4}(-\d\d(-\d\d([T\W]\d\d:\d\d(:\d\d)?(\.\d+)?(([+-]\d\d:\d\d)|Z)?)?)?)?$"
             #            if re.match(ISO_8601, str_value):
             #                return (numpy.datetime64(str_value), TOKEN_TYPES.TIMESTAMP)
-            return ExpressionTreeNode(NodeType.LITERAL_VARCHAR, value=str_value)
+            return (str_value, TOKEN_TYPES.VARCHAR)
         if "Number" in value:
             # we have one internal numeric type
-            return ExpressionTreeNode(
-                NodeType.LITERAL_NUMERIC, value=numpy.float64(value["Number"][0])
-            )
+            return (numpy.float64(value["Number"][0]), TOKEN_TYPES.NUMERIC)
         if "Boolean" in value:
-            return ExpressionTreeNode(NodeType.LITERAL_BOOLEAN, value=value["Boolean"])
+            return (value["Boolean"], TOKEN_TYPES.BOOLEAN)
         if "Tuple" in value:
-            return ExpressionTreeNode(
-                NodeType.LITERAL_LIST,
-                value=[
-                    self._build_literal_node(t["Value"]).value for t in value["Tuple"]
-                ],
+            return (
+                [self._extract_value(t["Value"])[0] for t in value["Tuple"]],
+                TOKEN_TYPES.LIST,
             )
         if "Value" in value:
-            print("VALUE")
             if value["Value"] == "Null":
-                return ExpressionTreeNode(NodeType.LITERAL_NONE)
-            return ExpressionTreeNode(NodeType.UNKNOWN, value=value["Value"])
+                return (None, TOKEN_TYPES.OTHER)
+            return (value["Value"], TOKEN_TYPES.OTHER)
 
-    def _build_filters(self, filters):
+    def _build_dnf_filters(self, filters):
 
         # None is None
         if filters is None:
             return None
 
         if filters == "Wildcard":
-            return ExpressionTreeNode(NodeType.WILDCARD)
+            return ("Wildcard", TOKEN_TYPES.WILDCARD)
 
         if not isinstance(filters, dict):
             return filters
 
         if "Identifier" in filters:  # we're an identifier
-            return ExpressionTreeNode(
-                NodeType.IDENTIFIER, value=filters["Identifier"]["value"]
-            )
+            return (filters["Identifier"]["value"], TOKEN_TYPES.IDENTIFIER)
         if "CompoundIdentifier" in filters:
-            return ExpressionTreeNode(
-                NodeType.IDENTIFIER,
-                value=".".join(i["value"] for i in filters["CompoundIdentifier"]),
+            return (
+                ".".join([i["value"] for i in filters["CompoundIdentifier"]]),
+                TOKEN_TYPES.IDENTIFIER,
             )
         if "Value" in filters:  # we're a literal
-            return self._build_literal_node(filters["Value"])
+            return self._extract_value(filters["Value"])
         if "BinaryOp" in filters:
-            left_node = self._build_filters(filters["BinaryOp"]["left"])
-            right_node = self._build_filters(filters["BinaryOp"]["right"])
+            left = self._build_dnf_filters(filters["BinaryOp"]["left"])
             operator = filters["BinaryOp"]["op"]
+            right = self._build_dnf_filters(filters["BinaryOp"]["right"])
 
-            node_type = operator_type_factory(operator)
-
-            return ExpressionTreeNode(
-                node_type,
-                value=operator,
-                left_node=left_node,
-                right_node=right_node,
-            )
-
+            if operator in ("And"):
+                if isinstance(left, list):
+                    left.append(right)
+                    return left
+                if isinstance(right, list):
+                    right.append(left)
+                    return right
+                return [left, right]
+            if operator in ("Or"):
+                return [[left], [right]]
+            return (left, operator, right)
         if "UnaryOp" in filters:
             if filters["UnaryOp"]["op"] == "Not":
-                right = self._build_filters(filters["UnaryOp"]["expr"])
-                return ExpressionTreeNode(token_type=NodeType.NOT, centre_node=right)
+                right = self._build_dnf_filters(filters["UnaryOp"]["expr"])
+                return ("Not", right)
             if filters["UnaryOp"]["op"] == "Minus":
                 number = 0 - numpy.float64(
                     filters["UnaryOp"]["expr"]["Value"]["Number"][0]
                 )
-                return ExpressionTreeNode(NodeType.LITERAL_NUMERIC, value=number)
+                return (number, TOKEN_TYPES.NUMERIC)
         if "Between" in filters:
-            expr = self._build_filters(filters["Between"]["expr"])
-            low = self._build_filters(filters["Between"]["low"])
-            high = self._build_filters(filters["Between"]["high"])
+            left = self._build_dnf_filters(filters["Between"]["expr"])
+            low = self._build_dnf_filters(filters["Between"]["low"])
+            high = self._build_dnf_filters(filters["Between"]["high"])
             inverted = filters["Between"]["negated"]
 
             if inverted:
                 # LEFT <= LOW AND LEFT >= HIGH (not between)
-                left_node = ExpressionTreeNode(
-                    NodeType.COMPARISON_OPERATOR,
-                    value="Lt",
-                    left_node=expr,
-                    right_node=low,
-                )
-                right_node = ExpressionTreeNode(
-                    NodeType.COMPARISON_OPERATOR,
-                    value="Gt",
-                    left_node=expr,
-                    right_node=high,
-                )
-            else:
-                # LEFT > LOW and LEFT < HIGH (between)
-                left_node = ExpressionTreeNode(
-                    NodeType.COMPARISON_OPERATOR,
-                    value="GtEq",
-                    left_node=expr,
-                    right_node=low,
-                )
-                right_node = ExpressionTreeNode(
-                    NodeType.COMPARISON_OPERATOR,
-                    value="LtEq",
-                    left_node=expr,
-                    right_node=high,
-                )
-
-            return ExpressionTreeNode(
-                NodeType.AND, left_node=left_node, right_node=right_node
-            )
-
+                return [[(left, "Lt", low)], [(left, "Gt", high)]]
+            # LEFT > LOW and LEFT < HIGH (between)
+            return [(left, "GtEq", low), (left, "LtEq", high)]
         if "InSubquery" in filters:
             # if it's a sub-query we create a plan for it
-            left = self._build_filters(filters["InSubquery"]["expr"])
+            left = self._build_dnf_filters(filters["InSubquery"]["expr"])
             ast = {}
             ast["Query"] = filters["InSubquery"]["subquery"]
             subquery_plan = self.copy()
@@ -254,27 +218,21 @@ class QueryPlanner(ExecutionTree):
             return (left, operator, (subquery_plan, TOKEN_TYPES.QUERY_PLAN))
         try_unary_filter = list(filters.keys())[0]
         if try_unary_filter in ("IsTrue", "IsFalse", "IsNull", "IsNotNull"):
-            right = self._build_filters(filters[try_unary_filter])
+            right = self._build_dnf_filters(filters[try_unary_filter])
             return (try_unary_filter, right)
         if "InList" in filters:
-            left_node = self._build_filters(filters["InList"]["expr"])
-            list_values = {
-                self._build_filters(v).value for v in filters["InList"]["list"]
-            }
+            left = self._build_dnf_filters(filters["InList"]["expr"])
+            right = (
+                {self._build_dnf_filters(v)[0] for v in filters["InList"]["list"]},
+                TOKEN_TYPES.LIST,
+            )
             operator = "NotInList" if filters["InList"]["negated"] else "InList"
-            right_node = ExpressionTreeNode(
-                token_type=NodeType.LITERAL_LIST, value=list_values
-            )
-            return ExpressionTreeNode(
-                token_type=NodeType.COMPARISON_OPERATOR,
-                value=operator,
-                left_node=left_node,
-                right_node=right_node,
-            )
+            return (left, operator, right)
         if "Function" in filters:
             func = filters["Function"]["name"][0]["value"].upper()
             args = [
-                self._build_filters(a["Unnamed"]) for a in filters["Function"]["args"]
+                self._build_dnf_filters(a["Unnamed"])
+                for a in filters["Function"]["args"]
             ]
             select_args = [(str(a[0]) if a[0] != "Wildcard" else "*") for a in args]
             select_args = [
@@ -289,14 +247,11 @@ class QueryPlanner(ExecutionTree):
                 {"function": func, "args": args},
             )
         if "Unnamed" in filters:
-            return self._build_filters(filters["Unnamed"])
+            return self._build_dnf_filters(filters["Unnamed"])
         if "Expr" in filters:
-            return self._build_filters(filters["Expr"])
+            return self._build_dnf_filters(filters["Expr"])
         if "Nested" in filters:
-            return ExpressionTreeNode(
-                token_type=NodeType.NESTED,
-                centre_node=self._build_filters(filters["Nested"]),
-            )
+            return (self._build_dnf_filters(filters["Nested"]),)
         if "MapAccess" in filters:
             identifier = filters["MapAccess"]["column"]["Identifier"]["value"]
             key_dict = filters["MapAccess"]["keys"][0]["Value"]
@@ -306,11 +261,9 @@ class QueryPlanner(ExecutionTree):
                 key = key_dict["Number"][0]
             return (f"{identifier}[{key}]", TOKEN_TYPES.IDENTIFIER)
         if "Tuple" in filters:
-            return ExpressionTreeNode(
-                NodeType.LITERAL_LIST,
-                value=[
-                    self._build_literal_node(t["Value"]).value for t in filters["Tuple"]
-                ],
+            return (
+                [self._extract_value(t["Value"])[0] for t in filters["Tuple"]],
+                TOKEN_TYPES.LIST,
             )
 
     def _check_hints(self, hints):
@@ -365,7 +318,7 @@ class QueryPlanner(ExecutionTree):
                     if relation["relation"]["Table"]["alias"] is not None:
                         alias = relation["relation"]["Table"]["alias"]["name"]["value"]
                     args = [
-                        self._build_filters(a["Unnamed"])
+                        self._build_dnf_filters(a["Unnamed"])
                         for a in relation["relation"]["Table"]["args"]
                     ]
                     yield (alias, {"function": function, "args": args}, "Function", [])
@@ -413,7 +366,7 @@ class QueryPlanner(ExecutionTree):
                     ]
                     for value_set in subquery["Values"]:
                         values = [
-                            _safe_get(self._build_literal_node(v["Value"]), 0)
+                            _safe_get(self._extract_value(v["Value"]), 0)
                             for v in value_set
                         ]
                         body.append(dict(zip(headers, values)))
@@ -437,7 +390,7 @@ class QueryPlanner(ExecutionTree):
                         for v in join["join_operator"][join_mode].get("Using", [])
                     ]
                 if "On" in join["join_operator"][join_mode]:
-                    join_on = self._build_filters(
+                    join_on = self._build_dnf_filters(
                         join["join_operator"][join_mode]["On"]
                     )
 
@@ -464,49 +417,51 @@ class QueryPlanner(ExecutionTree):
                 function = attribute["ExprWithAlias"]["expr"]
                 alias = [attribute["ExprWithAlias"]["alias"]["value"]]
             if "QualifiedWildcard" in attribute:
-                return ExpressionTreeNode(NodeType.WILDCARD, value=attribute["QualifiedWildcard"][0]["value"])
+                return {"*": attribute["QualifiedWildcard"][0]["value"]}
+
             if function:
 
                 if "Identifier" in function:
-                    return ExpressionTreeNode(token_type=NodeType.IDENTIFIER, value=function["Identifier"]["value"], alias=alias)
+                    return {
+                        "identifier": function["Identifier"]["value"],
+                        "alias": alias,
+                    }
                 if "CompoundIdentifier" in function:
-                    return ExpressionTreeNode(
-                        token_type=NodeType.IDENTIFIER,
-                        value=".".join(p["value"] for p in function["CompoundIdentifier"]),
-                        alias=".".join(p["value"] for p in function["CompoundIdentifier"])
-                    )
-                    
-#                    return {
-#                        "identifier": [
-#                            ".".join(
-#                                [p["value"] for p in function["CompoundIdentifier"]]
-#                            )
-#                        ].pop(),
-#                        "alias": [
-#                            ".".join(
-#                                [p["value"] for p in function["CompoundIdentifier"]]
-#                            )
-#                        ],
-#                    }
+                    return {
+                        "identifier": [
+                            ".".join(
+                                [p["value"] for p in function["CompoundIdentifier"]]
+                            )
+                        ].pop(),
+                        "alias": [
+                            ".".join(
+                                [p["value"] for p in function["CompoundIdentifier"]]
+                            )
+                        ],
+                    }
                 if "Function" in function:
                     func = function["Function"]["name"][0]["value"].upper()
                     args = [
-                        self._build_filters(a) for a in function["Function"]["args"]
+                        self._build_dnf_filters(a) for a in function["Function"]["args"]
                     ]
                     if is_function(func):
-                        node_type = NodeType.FUNCTION
-                    else:
-                        node_type = NodeType.AGGREGATOR
-                    return ExpressionTreeNode(token_type=node_type, value=func, parameters=args, alias=alias)
+                        return {"function": func, "args": args, "alias": alias}
+                    return {"aggregate": func, "args": args, "alias": alias}
                 if "BinaryOp" in function:
-                    left = self._build_filters(function["BinaryOp"]["left"])
+                    left = self._build_dnf_filters(function["BinaryOp"]["left"])
                     operator = function["BinaryOp"]["op"]
-                    right = self._build_filters(function["BinaryOp"]["right"])
+                    right = self._build_dnf_filters(function["BinaryOp"]["right"])
 
-                    raise Exception("IS THIS EVER CALLED?")
+                    opmap = {"Plus": "+"}
+
+                    return {
+                        "function": operator.upper(),
+                        "args": [left, right],
+                        "alias": f"`{left[0]} {opmap.get(operator, '?')} {right[0]}`",
+                    }
                 if "Cast" in function:
                     # CAST(<var> AS <type>) - convert to the form <type>(var), e.g. BOOLEAN(on)
-                    args = [self._build_filters(function["Cast"]["expr"])]
+                    args = [self._build_dnf_filters(function["Cast"]["expr"])]
                     data_type = function["Cast"]["data_type"]
                     if data_type == "Timestamp":
                         data_type = "TIMESTAMP"
@@ -525,7 +480,7 @@ class QueryPlanner(ExecutionTree):
 
                 if "TryCast" in function:
                     # CAST(<var> AS <type>) - convert to the form <type>(var), e.g. BOOLEAN(on)
-                    args = [self._build_filters(function["TryCast"]["expr"])]
+                    args = [self._build_dnf_filters(function["TryCast"]["expr"])]
                     data_type = function["TryCast"]["data_type"]
                     if data_type == "Timestamp":
                         data_type = "TIMESTAMP"
@@ -553,7 +508,7 @@ class QueryPlanner(ExecutionTree):
                         function["Extract"]["field"],
                         TOKEN_TYPES.INTERVAL,
                     )
-                    value = self._build_filters(function["Extract"]["expr"])
+                    value = self._build_dnf_filters(function["Extract"]["expr"])
 
                     alias.append(f"EXTRACT({datepart[0]} FROM {value[0]})")
                     alias.append(f"DATEPART({datepart[0]}, {value[0]}")
@@ -601,7 +556,7 @@ class QueryPlanner(ExecutionTree):
         filter or WHERE statement.
         """
         selections = ast[0]["Query"]["body"]["Select"]["selection"]
-        return self._build_filters(selections)
+        return self._build_dnf_filters(selections)
 
     def _extract_filter(self, ast):
         """ """
@@ -609,17 +564,16 @@ class QueryPlanner(ExecutionTree):
         if filters is None:
             return None
         if "Where" in filters:
-            return self._build_filters(filters["Where"])
+            return self._build_dnf_filters(filters["Where"])
         if "Like" in filters:
-            left = ExpressionTreeNode(NodeType.IDENTIFIER, value="column_name")
-            right = ExpressionTreeNode(NodeType.LITERAL_VARCHAR, value=filters["Like"])
-            root = ExpressionTreeNode(
-                NodeType.COMPARISON_OPERATOR,
-                value="Like",
-                left_node=left,
-                right_node=right,
+            return (
+                (
+                    "column_name",
+                    TOKEN_TYPES.IDENTIFIER,
+                ),
+                "Like",
+                (filters["Like"], TOKEN_TYPES.VARCHAR),
             )
-            return root
 
     def _extract_distinct(self, ast):
         return ast[0]["Query"]["body"]["Select"]["distinct"]
@@ -651,7 +605,8 @@ class QueryPlanner(ExecutionTree):
                 if "Function" in column:
                     func = column["Function"]["name"][0]["value"].upper()
                     args = [
-                        self._build_filters(a)[0] for a in column["Function"]["args"]
+                        self._build_dnf_filters(a)[0]
+                        for a in column["Function"]["args"]
                     ]
                     args = ["*" if i == "Wildcard" else i for i in args]
                     args = [
@@ -677,14 +632,16 @@ class QueryPlanner(ExecutionTree):
                     return element["Identifier"]["value"]
                 if "Function" in element:
                     func = element["Function"]["name"][0]["value"].upper()
-                    args = [self._build_filters(a) for a in element["Function"]["args"]]
+                    args = [
+                        self._build_dnf_filters(a) for a in element["Function"]["args"]
+                    ]
                     args = [
                         ((f"({','.join(a[0])})",) if isinstance(a[0], list) else a)
                         for a in args
                     ]
                     return f"{func.upper()}({','.join([str(a[0]) for a in args])})"
                 if "Cast" in element:
-                    args = [self._build_filters(element["Cast"]["expr"])]
+                    args = [self._build_dnf_filters(element["Cast"]["expr"])]
                     data_type = list(element["Cast"]["data_type"].keys())[0]
                     return f"CAST({args[0][0]} AS {str(data_type).upper()})"
                 if "MapAccess" in element:
@@ -703,7 +660,7 @@ class QueryPlanner(ExecutionTree):
 
     def _extract_having(self, ast):
         having = ast[0]["Query"]["body"]["Select"]["having"]
-        return self._build_filters(having)
+        return self._build_dnf_filters(having)
 
     def _extract_directives(self, ast):
         return QueryDirectives()
@@ -878,7 +835,7 @@ class QueryPlanner(ExecutionTree):
                 last_node = f"join-{join_id}"
 
         _projection = self._extract_projections(ast)
-        if any(a.token_type == NodeType.FUNCTION for a in _projection if isinstance(a, ExpressionTreeNode)):
+        if any("function" in a for a in _projection):
             self.add_operator(
                 "eval",
                 operations.EvaluationNode(
@@ -898,11 +855,11 @@ class QueryPlanner(ExecutionTree):
             last_node = "where"
 
         _groups = self._extract_groups(ast)
-        if _groups or any(a.token_type == NodeType.AGGREGATOR for a in _projection if isinstance(a, ExpressionTreeNode)):
+        if _groups or any(["aggregate" in a for a in _projection]):
             _aggregates = _projection.copy()
             if isinstance(_aggregates, dict):
                 raise SqlError("GROUP BY cannot be used with SELECT *")
-            if not any(a.token_type == NodeType.AGGREGATOR for a in _aggregates if isinstance(a, ExpressionTreeNode)):
+            if not any(["aggregate" in a for a in _aggregates]):
                 _aggregates.append(
                     {
                         "aggregate": "COUNT",
