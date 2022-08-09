@@ -481,7 +481,7 @@ def test_sql_battery(statement, rows, columns):
 
     cursor._results = list(cursor._results)
     if cursor._results:
-        result = pyarrow.concat_tables(cursor._results)
+        result = pyarrow.concat_tables(cursor._results, promote=True)
         actual_rows, actual_columns = result.shape
     else:  # pragma: no cover
         result = None

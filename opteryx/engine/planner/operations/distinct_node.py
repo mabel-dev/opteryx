@@ -56,6 +56,6 @@ class DistinctNode(BasePlanNode):
             data_pages = (data_pages,)
 
         if self._distinct:
-            yield drop_duplicates(concat_tables(data_pages.execute()))
+            yield drop_duplicates(concat_tables(data_pages.execute(), promote=True))
             return
         yield from data_pages

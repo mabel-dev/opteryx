@@ -59,7 +59,9 @@ class OuterJoinNode(BasePlanNode):
         left_node = self._producers[0]  # type:ignore
         right_node = self._producers[1]  # type:ignore
 
-        self._right_table = pyarrow.concat_tables(right_node.execute())  # type:ignore
+        self._right_table = pyarrow.concat_tables(
+            right_node.execute(), promote=True
+        )  # type:ignore
 
         right_columns = Columns(self._right_table)
         left_columns = None

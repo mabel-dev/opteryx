@@ -64,4 +64,6 @@ class LimitNode(BasePlanNode):
         if len(result_set) == 0:
             yield page
         else:
-            yield concat_tables(result_set).slice(offset=0, length=self._limit)
+            yield concat_tables(result_set, promote=True).slice(
+                offset=0, length=self._limit
+            )

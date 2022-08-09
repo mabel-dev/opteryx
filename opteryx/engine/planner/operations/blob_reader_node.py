@@ -60,44 +60,6 @@ KNOWN_EXTENSIONS = {
 }
 
 
-def _normalize_to_schema(table, schema):
-    """
-    Ensure all of the collected pages match the same schema, because of the way we read
-    data, this is to match the first page. We ensure they match by adding empty columns
-    when columns are missing, or removing excess columns.
-    """
-    # if we've never run before, collect the schema and return
-    if schema is None:
-        schema = table.schema
-        return table, schema
-
-    # remove unwanted columns
-    table = table.select([name for name in schema.names if name in table.schema.names])
-
-    # add missing columns
-    for column in [name for name in schema.names if name not in table.schema.names]:
-        table = table.append_column(column, [[None] * table.num_rows])
-
-    # cast mismtched columns
-    # the orders may be different - so build hash tables for comparing
-    first_types = dict(zip(schema.names, schema.types))
-    this_types = dict(zip(table.schema.names, table.schema.types))
-
-    for column in schema.names:
-        if (
-            first_types[column] != this_types[column]
-            and first_types[column] != pyarrow.null()
-        ):
-            index = table.column_names.index(column)
-            my_schema = table.schema.set(
-                index, pyarrow.field(column, first_types[column])
-            )
-
-            table = table.cast(target_schema=my_schema)
-
-    return table, schema
-
-
 def _normalize_to_types(table):
     """
     Normalize types e.g. all numbers are float64 and dates
@@ -284,7 +246,19 @@ class BlobReaderNode(BasePlanNode):
                             )
                             pyarrow_blob = metadata.apply(pyarrow_blob)
 
-                    pyarrow_blob, schema = _normalize_to_schema(pyarrow_blob, schema)
+                    # if we've never run before, collect the schema
+                    if schema is None:
+                        schema = pyarrow_blob.schema
+                    else:
+                        # remove unwanted columns
+                        pyarrow_blob = pyarrow_blob.select(
+                            [
+                                name
+                                for name in schema.names
+                                if name in pyarrow_blob.schema.names
+                            ]
+                        )
+
                     pyarrow_blob, schema = _normalize_to_types(pyarrow_blob)
 
                     # yield this blob

@@ -215,7 +215,7 @@ class CrossJoinNode(BasePlanNode):
         if self._join_type == "CrossJoin":
 
             self._right_table = pyarrow.concat_tables(
-                right_node.execute()
+                right_node.execute(), promote=True
             )  # type:ignore
 
             yield from _cross_join(left_node, self._right_table)
