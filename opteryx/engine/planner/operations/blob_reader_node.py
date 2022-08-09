@@ -251,7 +251,13 @@ class BlobReaderNode(BasePlanNode):
                         schema = pyarrow_blob.schema
                     else:
                         # remove unwanted columns
-                        pyarrow_blob = pyarrow_blob.select([name for name in schema.names if name in pyarrow_blob.schema.names])
+                        pyarrow_blob = pyarrow_blob.select(
+                            [
+                                name
+                                for name in schema.names
+                                if name in pyarrow_blob.schema.names
+                            ]
+                        )
 
                     pyarrow_blob, schema = _normalize_to_types(pyarrow_blob)
 
