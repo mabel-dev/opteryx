@@ -54,7 +54,7 @@ def consolidate_pages(pages, statistics):
             # add what we've collected before to the table
             if collected_rows:
                 statistics.page_merges += 1
-                page = pyarrow.concat_tables([collected_rows, page])
+                page = pyarrow.concat_tables([collected_rows, page], promote=True)
                 collected_rows = None
 
             # work out some stats about what we have
