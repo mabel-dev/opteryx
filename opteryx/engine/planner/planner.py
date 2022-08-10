@@ -464,30 +464,40 @@ class QueryPlanner(ExecutionTree):
                 function = attribute["ExprWithAlias"]["expr"]
                 alias = [attribute["ExprWithAlias"]["alias"]["value"]]
             if "QualifiedWildcard" in attribute:
-                return ExpressionTreeNode(NodeType.WILDCARD, value=attribute["QualifiedWildcard"][0]["value"])
+                return ExpressionTreeNode(
+                    NodeType.WILDCARD, value=attribute["QualifiedWildcard"][0]["value"]
+                )
             if function:
 
                 if "Identifier" in function:
-                    return ExpressionTreeNode(token_type=NodeType.IDENTIFIER, value=function["Identifier"]["value"], alias=alias)
+                    return ExpressionTreeNode(
+                        token_type=NodeType.IDENTIFIER,
+                        value=function["Identifier"]["value"],
+                        alias=alias,
+                    )
                 if "CompoundIdentifier" in function:
                     return ExpressionTreeNode(
                         token_type=NodeType.IDENTIFIER,
-                        value=".".join(p["value"] for p in function["CompoundIdentifier"]),
-                        alias=".".join(p["value"] for p in function["CompoundIdentifier"])
+                        value=".".join(
+                            p["value"] for p in function["CompoundIdentifier"]
+                        ),
+                        alias=".".join(
+                            p["value"] for p in function["CompoundIdentifier"]
+                        ),
                     )
-                    
-#                    return {
-#                        "identifier": [
-#                            ".".join(
-#                                [p["value"] for p in function["CompoundIdentifier"]]
-#                            )
-#                        ].pop(),
-#                        "alias": [
-#                            ".".join(
-#                                [p["value"] for p in function["CompoundIdentifier"]]
-#                            )
-#                        ],
-#                    }
+
+                #                    return {
+                #                        "identifier": [
+                #                            ".".join(
+                #                                [p["value"] for p in function["CompoundIdentifier"]]
+                #                            )
+                #                        ].pop(),
+                #                        "alias": [
+                #                            ".".join(
+                #                                [p["value"] for p in function["CompoundIdentifier"]]
+                #                            )
+                #                        ],
+                #                    }
                 if "Function" in function:
                     func = function["Function"]["name"][0]["value"].upper()
                     args = [
@@ -497,7 +507,9 @@ class QueryPlanner(ExecutionTree):
                         node_type = NodeType.FUNCTION
                     else:
                         node_type = NodeType.AGGREGATOR
-                    return ExpressionTreeNode(token_type=node_type, value=func, parameters=args, alias=alias)
+                    return ExpressionTreeNode(
+                        token_type=node_type, value=func, parameters=args, alias=alias
+                    )
                 if "BinaryOp" in function:
                     left = self._build_filters(function["BinaryOp"]["left"])
                     operator = function["BinaryOp"]["op"]
@@ -878,7 +890,11 @@ class QueryPlanner(ExecutionTree):
                 last_node = f"join-{join_id}"
 
         _projection = self._extract_projections(ast)
-        if any(a.token_type == NodeType.FUNCTION for a in _projection if isinstance(a, ExpressionTreeNode)):
+        if any(
+            a.token_type == NodeType.FUNCTION
+            for a in _projection
+            if isinstance(a, ExpressionTreeNode)
+        ):
             self.add_operator(
                 "eval",
                 operations.EvaluationNode(
@@ -898,17 +914,24 @@ class QueryPlanner(ExecutionTree):
             last_node = "where"
 
         _groups = self._extract_groups(ast)
-        if _groups or any(a.token_type == NodeType.AGGREGATOR for a in _projection if isinstance(a, ExpressionTreeNode)):
+        if _groups or any(
+            a.token_type == NodeType.AGGREGATOR
+            for a in _projection
+            if isinstance(a, ExpressionTreeNode)
+        ):
             _aggregates = _projection.copy()
             if isinstance(_aggregates, dict):
                 raise SqlError("GROUP BY cannot be used with SELECT *")
-            if not any(a.token_type == NodeType.AGGREGATOR for a in _aggregates if isinstance(a, ExpressionTreeNode)):
+            if not any(
+                a.token_type == NodeType.AGGREGATOR
+                for a in _aggregates
+                if isinstance(a, ExpressionTreeNode)
+            ):
+                wildcard = ExpressionTreeNode(NodeType.WILDCARD)
                 _aggregates.append(
-                    {
-                        "aggregate": "COUNT",
-                        "args": [("Wildcard", TOKEN_TYPES.WILDCARD)],
-                        "alias": None,
-                    }
+                    ExpressionTreeNode(
+                        NodeType.AGGREGATOR, value="COUNT", parameters=[wildcard]
+                    )
                 )
             self.add_operator(
                 "agg",

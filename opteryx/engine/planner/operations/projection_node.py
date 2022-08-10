@@ -51,7 +51,10 @@ class ProjectionNode(BasePlanNode):
         for attribute in projection:
             if projection == {"*": "*"}:
                 self._projection[attribute] = None
-            elif attribute.token_type == NodeType.WILDCARD and attribute.value is not None:
+            elif (
+                attribute.token_type == NodeType.WILDCARD
+                and attribute.value is not None
+            ):
                 # qualified wildcard, e.g. table.*
                 self._projection[(attribute.value,)] = None
             elif attribute.token_type == NodeType.AGGREGATOR:

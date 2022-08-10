@@ -51,18 +51,18 @@ AGGREGATORS = {
     "DISTINCT": "hash_distinct",
     "LIST": "hash_list",
     "MAX": "hash_max",
-    "MAXIMUM": "hash_max", # alias
+    "MAXIMUM": "hash_max",  # alias
     "MEAN": "hash_mean",
-    "AVG": "hash_mean", # alias
-    "AVERAGE": "hash_mean", # alias
+    "AVG": "hash_mean",  # alias
+    "AVERAGE": "hash_mean",  # alias
     "MIN": "hash_min",
-    "MINIMUM": "hash_min", # alias
+    "MINIMUM": "hash_min",  # alias
     "MIN_MAX": "hash_min_max",
     "ONE": "hash_one",
     "PRODUCT": "hash_product",
     "STDDEV": "hash_stddev",
     "QUANTILES": "hash_tdigest",
-    "VARIANCE": "hash_variance"
+    "VARIANCE": "hash_variance",
 }
 
 
@@ -116,8 +116,11 @@ class AggregateNode(BasePlanNode):
     def _project(self, tables, fields):
         for table in tables:
             columns = Columns(table)
-            column_names = [columns.get_column_from_alias(field, only_one=True) for field in fields]
-            yield table.select(column_names)
+            column_names = [
+                columns.get_column_from_alias(field, only_one=True) for field in fields
+            ]
+            # yield table.select(set(column_names))
+            yield table
 
     def execute(self) -> Iterable:
 
@@ -138,7 +141,10 @@ class AggregateNode(BasePlanNode):
         columns = None
 
         # select the appropriate columns from the tables then concatenate them together
-        table = pyarrow.concat_tables(self._project(data_pages.execute(), self._groups), promote=True)
+        # TODO: we need all the columns ever refrenced in the SELECT or GROUP BY clauses
+        table = pyarrow.concat_tables(
+            self._project(data_pages.execute(), self._groups), promote=True
+        )
 
         columns = Columns(table)
         preferred_names = columns.preferred_column_names
@@ -151,17 +157,29 @@ class AggregateNode(BasePlanNode):
         print(column_names)
 
         groups = table.group_by(self._groups)
-        del table # get rid of it from memory
         print(self._aggregates)
-        
-        groups = groups.aggregate([("name", "count")])
+
+        # TODO: deal with WILDCARD
+        # TODO: build a map for the result columns to the alias and preferred names (e.g. MAX(name))
+        aggs = [
+            (agg.parameters[0].value, AGGREGATORS.get(agg.value))
+            for agg in self._aggregates
+            if agg.token_type == NodeType.AGGREGATOR
+        ]
+        print(aggs)
+
+        groups = groups.aggregate(aggs)
+        print(groups.column_names)
         groups = Columns.create_table_metadata(
-                    table=groups,
-                    expected_rows=len(collector),
-                    name=columns.table_name,
-                    table_aliases=[],
-                )
+            table=groups,
+            expected_rows=len(collector),
+            name=columns.table_name,
+            table_aliases=[],
+        )
         columns = Columns(groups)
-        columns.set_preferred_name(columns.get_column_from_alias("name_count", only_one=True), "COUNT(*)")
+        # TODO: rename the columns before doing the metadata step
+        columns.set_preferred_name(
+            columns.get_column_from_alias("name_max", only_one=True), "MAX(name)"
+        )
         groups = columns.apply(groups)
         yield groups

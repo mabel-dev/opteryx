@@ -144,6 +144,15 @@ class ExpressionTreeNode:
         if self.token_type == NodeType.UNKNOWN:
             raise ValueError(f"ExpressionNode of unknown type in plan. {self.value}")
 
+    def __repr__(self):
+        return (
+            f"<ExpressionTreeNode {str(self.token_type).upper()}"
+            f"{' `' + str(self.value) + '`' if self.value else ''} "
+            f"{'L' if self.left is not None else ''}"
+            f"{'C' if self.centre is not None else ''}"
+            f"{'R' if self.right is not None else ''} ({id(self)})>"
+        )
+
     def _inner_print(self, node, prefix):
         ret = prefix + node.value + "\n"
         prefix += " |"

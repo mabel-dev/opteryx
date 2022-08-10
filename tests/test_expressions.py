@@ -61,7 +61,7 @@ def test_literals(node_type, value):
 def test_logical_expressions():
     """
     In this test we return the indexes of the matching rows, the source table is
-    meaningless as we're using literals everywhere - but the source table is 9 
+    meaningless as we're using literals everywhere - but the source table is 9
     records long.
 
     If the result is TRUE, we have 9 indicies (rows) returned, if the result is

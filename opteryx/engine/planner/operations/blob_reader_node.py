@@ -64,6 +64,8 @@ def _normalize_to_types(table):
     """
     Normalize types e.g. all numbers are float64 and dates
     """
+
+    #    table = table.add_column(0, "$id", [numpy.arange(index, index + table.num_rows, dtype=numpy.int32)])
     schema = table.schema
 
     for index, column_name in enumerate(schema.names):
@@ -259,7 +261,9 @@ class BlobReaderNode(BasePlanNode):
                             ]
                         )
 
-                    pyarrow_blob, schema = _normalize_to_types(pyarrow_blob)
+                    pyarrow_blob, schema = _normalize_to_types(
+                        pyarrow_blob
+                    )
 
                     # yield this blob
                     yield pyarrow_blob
@@ -374,6 +378,6 @@ class BlobReaderNode(BasePlanNode):
                 partition_structure.pop(partition)
 
         if len(partition_structure) == 0:
-            raise DatabaseError("No blobs found that match the requested dataset.")
+            raise DatabaseError("The requested dataset could not be found.")
 
         return partition_structure
