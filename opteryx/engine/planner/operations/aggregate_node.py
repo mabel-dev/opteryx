@@ -27,12 +27,10 @@ read time - e.g. 30s:21s where 20s is the read time).
 But, on high cardinality data (nearly unique columns), the performance is much faster,
 on a 10m record set, timings are 1:400 (50s:1220s where 20s is the read time).
 """
-from typing import Iterable, List
+from typing import Iterable
 
-import numpy as np
 import pyarrow.json
 
-from opteryx.engine.attribute_types import TOKEN_TYPES
 from opteryx.engine import QueryDirectives, QueryStatistics
 from opteryx.engine.planner.expression import NodeType, get_all_identifiers
 from opteryx.engine.planner.operations import BasePlanNode
@@ -43,30 +41,86 @@ COUNT_STAR: str = "COUNT(*)"
 
 # use the aggregators from pyarrow
 AGGREGATORS = {
-    "ALL": "hash_all",
-    "ANY": "hash_any",
-    "APPROXIMATE_MEDIAN": "hash_approximate_median",
-    "COUNT": "hash_count",  # counts only non nulls
-    "COUNT_DISTINCT": "hash_count_distinct",
+    "ALL": "all",
+    "ANY": "any",
+    "APPROXIMATE_MEDIAN": "approximate_median",
+    "COUNT": "count",  # counts only non nulls
+    "COUNT_DISTINCT": "count_distinct",
     "CUMULATIVE_SUM": "cumulative_sum",
-    "DISTINCT": "hash_distinct",
-    "LIST": "hash_list",
-    "MAX": "hash_max",
-    "MAXIMUM": "hash_max",  # alias
-    "MEAN": "hash_mean",
-    "AVG": "hash_mean",  # alias
-    "AVERAGE": "hash_mean",  # alias
-    "MIN": "hash_min",
-    "MINIMUM": "hash_min",  # alias
-    "MIN_MAX": "hash_min_max",
-    "ONE": "hash_one",
-    "PRODUCT": "hash_product",
-    "STDDEV": "hash_stddev",
+    "DISTINCT": "distinct",
+    "LIST": "list",
+    "MAX": "max",
+    "MAXIMUM": "max",  # alias
+    "MEAN": "mean",
+    "AVG": "mean",  # alias
+    "AVERAGE": "mean",  # alias
+    "MIN": "min",
+    "MINIMUM": "min",  # alias
+    "MIN_MAX": "min_max",
+    "ONE": "one",
+    "PRODUCT": "product",
+    "STDDEV": "stddev",
     "SUM": "sum",
-    "QUANTILES": "hash_tdigest",
-    "VARIANCE": "hash_variance",
+    "QUANTILES": "tdigest",
+    "VARIANCE": "variance",
 }
 
+def _is_count_star(aggregates, groups):
+    """
+    Is the SELECT clause `SELECT COUNT(*)` with no GROUP BY
+    """
+    if len(groups) != 0:
+        return False
+    if len(aggregates) != 1:
+        return False
+    if aggregates[0].value != "COUNT":
+        return False
+    if aggregates[0].parameters[0].token_type != NodeType.WILDCARD:
+        return False
+    return True
+
+def _count_star(data_pages):
+    count = 0
+    for page in data_pages.execute():
+        count += page.num_rows
+    table = pyarrow.Table.from_pylist([{COUNT_STAR: count}])
+    table = Columns.create_table_metadata(
+        table=table,
+        expected_rows=1,
+        name="groupby",
+        table_aliases=[],
+    )
+    yield table
+
+def _project(tables, fields):
+    fields = set(fields)
+    for table in tables:
+        columns = Columns(table)
+        column_names = [
+            columns.get_column_from_alias(field, only_one=True) for field in fields
+        ]
+        yield table.select(set(column_names))
+
+def _build_aggs(aggregators, columns):
+    column_map = {}
+    aggs = []
+
+    for aggregator in aggregators:
+        if aggregator.token_type == NodeType.AGGREGATOR:
+            field_node = aggregator.parameters[0]
+            if field_node.token_type == NodeType.WILDCARD:
+                display_field = "*"
+                field_name = columns.preferred_column_names[0][0]
+            elif field_node.token_type == NodeType.IDENTIFIER:
+                display_field = field_node.value
+                field_name = columns.get_column_from_alias(field_node.value, only_one=True)
+            else:
+                raise SqlError("Invalid identifier provided in aggregator function `{field_name.value}`")
+            function = AGGREGATORS.get(aggregator.value)
+            aggs.append((field_name,function,))
+            column_map[f"{aggregator.value.upper()}({display_field})"] = f"{field_name}_{function}"
+
+    return column_map, aggs
 
 class AggregateNode(BasePlanNode):
     def __init__(
@@ -81,49 +135,13 @@ class AggregateNode(BasePlanNode):
     def config(self):  # pragma: no cover
         return str(self._aggregates)
 
+    @property
     def greedy(self):  # pragma: no cover
         return True
 
     @property
     def name(self):  # pragma: no cover
         return "Aggregation"
-
-    def _is_count_star(self, aggregates, groups):
-        """
-        Is the SELECT clause `SELECT COUNT(*)` with no GROUP BY
-        """
-        if len(groups) != 0:
-            return False
-        if len(aggregates) != 1:
-            return False
-        if aggregates[0].value != "COUNT":
-            return False
-        if aggregates[0].parameters[0].token_type != NodeType.WILDCARD:
-            return False
-        return True
-
-    def _count_star(self, data_pages):
-        count = 0
-        for page in data_pages.execute():
-            count += page.num_rows
-        table = pyarrow.Table.from_pylist([{COUNT_STAR: count}])
-        table = Columns.create_table_metadata(
-            table=table,
-            expected_rows=1,
-            name="groupby",
-            table_aliases=[],
-        )
-        yield table
-
-    def _project(self, tables, fields):
-        fields = set(fields)
-        for table in tables:
-            columns = Columns(table)
-            column_names = [
-                columns.get_column_from_alias(field, only_one=True) for field in fields
-            ]
-            yield table.select(set(column_names))
-            
 
     def execute(self) -> Iterable:
 
@@ -134,19 +152,15 @@ class AggregateNode(BasePlanNode):
         if isinstance(data_pages, pyarrow.Table):
             data_pages = (data_pages,)
 
-        if self._is_count_star(self._aggregates, self._groups):
-            yield from self._count_star(data_pages)
+        if _is_count_star(self._aggregates, self._groups):
+            yield from _count_star(data_pages)
             return
-
-        from collections import defaultdict
-
-        collector: dict = defaultdict(dict)
 
         # get all the columns anywhere in the groups or aggregates
         all_identifiers = get_all_identifiers(self._groups + self._aggregates)
         # join all the pages together, selecting only the columns we found above
         table = pyarrow.concat_tables(
-            self._project(data_pages.execute(), all_identifiers), promote=True
+            _project(data_pages.execute(), all_identifiers), promote=True
         )
 
         print("GROUPS", self._groups)
@@ -158,29 +172,23 @@ class AggregateNode(BasePlanNode):
 
         # to allow grouping by functions not in the SELECT clause, we should execute
         # any functions in self._groups and add the column here
-        groups = table.group_by(columns.get_column_from_alias(group.value, only_one=True) for group in self._groups)
+        group_by_columns = [columns.get_column_from_alias(group.value, only_one=True) for group in self._groups]
+        print("GBC", group_by_columns)
+        groups = table.group_by(group_by_columns)
 
-        # TODO: deal with WILDCARD
-        # TODO: build a map for the result columns to the alias and preferred names (e.g. MAX(name))
-        aggs = [
-            (agg.parameters[0].value, AGGREGATORS.get(agg.value))
-            for agg in self._aggregates
-            if agg.token_type == NodeType.AGGREGATOR
-        ]
+        column_map, aggs = _build_aggs(self._aggregates, columns)
+
         print(aggs)
+        print(column_map)
 
         groups = groups.aggregate(aggs)
         print(groups.column_names)
-        groups = Columns.create_table_metadata(
-            table=groups,
-            expected_rows=len(collector),
-            name=columns.table_name,
-            table_aliases=[],
-        )
-        columns = Columns(groups)
-        # TODO: rename the columns before doing the metadata step
-        columns.set_preferred_name(
-            columns.get_column_from_alias("name_max", only_one=True), "MAX(name)"
-        )
+        
+        # name the aggregate fields
+        for friendly_name, agg_name in column_map.items():
+            columns.add_column(agg_name)
+            columns.set_preferred_name(
+                columns.get_column_from_alias(agg_name, only_one=True), friendly_name
+            )
         groups = columns.apply(groups)
         yield groups
