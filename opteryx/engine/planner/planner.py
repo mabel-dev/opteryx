@@ -444,13 +444,12 @@ class QueryPlanner(ExecutionTree):
             right = next(self._extract_relations([join], default_path=False))
             yield (join_mode, right, join_on, join_using)
 
-    def _extract_projections(self, ast):
+    def _extract_field_list(self, projection):
         """
         Projections are lists of attributes, the most obvious one is in the SELECT
         statement but they can exist elsewhere to limit the amount of data
         processed at each step.
         """
-        projection = ast[0]["Query"]["body"]["Select"]["projection"]
         # print(projection)
         if projection == ["Wildcard"]:
             return {"*": "*"}
@@ -467,6 +466,8 @@ class QueryPlanner(ExecutionTree):
                 return ExpressionTreeNode(
                     NodeType.WILDCARD, value=attribute["QualifiedWildcard"][0]["value"]
                 )
+            if "Identifier" in attribute:
+                function = attribute
             if function:
 
                 if "Identifier" in function:
@@ -682,37 +683,6 @@ class QueryPlanner(ExecutionTree):
                 )
             return orders
 
-    def _extract_groups(self, ast):
-        def _inner(element):
-            if element:
-                if "Identifier" in element:
-                    return element["Identifier"]["value"]
-                if "Function" in element:
-                    func = element["Function"]["name"][0]["value"].upper()
-                    args = [self._build_filters(a) for a in element["Function"]["args"]]
-                    args = [
-                        ((f"({','.join(a[0])})",) if isinstance(a[0], list) else a)
-                        for a in args
-                    ]
-                    return f"{func.upper()}({','.join([str(a[0]) for a in args])})"
-                if "Cast" in element:
-                    args = [self._build_filters(element["Cast"]["expr"])]
-                    data_type = list(element["Cast"]["data_type"].keys())[0]
-                    return f"CAST({args[0][0]} AS {str(data_type).upper()})"
-                if "MapAccess" in element:
-                    identifier = element["MapAccess"]["column"]["Identifier"]["value"]
-                    key_dict = element["MapAccess"]["keys"][0]["Value"]
-                    if "SingleQuotedString" in key_dict:
-                        key = f"'{key_dict['SingleQuotedString']}'"
-                    if "Number" in key_dict:
-                        key = key_dict["Number"][0]
-                    return f"{identifier}[{key}]"
-                if "Value" in element:
-                    return int(element["Value"]["Number"][0])
-
-        groups = ast[0]["Query"]["body"]["Select"]["group_by"]
-        return [_inner(g) for g in groups]
-
     def _extract_having(self, ast):
         having = ast[0]["Query"]["body"]["Select"]["having"]
         return self._build_filters(having)
@@ -889,7 +859,7 @@ class QueryPlanner(ExecutionTree):
 
                 last_node = f"join-{join_id}"
 
-        _projection = self._extract_projections(ast)
+        _projection = self._extract_field_list(ast[0]["Query"]["body"]["Select"]["projection"])
         if any(
             a.token_type == NodeType.FUNCTION
             for a in _projection
@@ -913,7 +883,7 @@ class QueryPlanner(ExecutionTree):
             self.link_operators(last_node, "where")
             last_node = "where"
 
-        _groups = self._extract_groups(ast)
+        _groups = self._extract_field_list(ast[0]["Query"]["body"]["Select"]["group_by"])
         if _groups or any(
             a.token_type == NodeType.AGGREGATOR
             for a in _projection

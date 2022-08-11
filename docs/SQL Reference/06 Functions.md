@@ -1,6 +1,6 @@
 # Functions
 
-Definitions noted with a ♫ accept different input arguments.
+Definitions noted with a 🔻 accept different input arguments.
 
 !!! note
     Functions presently cannot be used with the outputs of function calls, for example `DATEDIFF('year', birth_date, TODAY())` will return an error.
@@ -9,16 +9,16 @@ Definitions noted with a ♫ accept different input arguments.
 
 For more details, see [Working with Lists](https://mabel-dev.github.io/opteryx/SQL%20Reference/Working%20with%20SQL/20%20Working%20with%20Lists/).
 
-**array**: _list_`[`**index**: _numeric_`]` → **value** ♫  
+**array**: _list_`[`**index**: _numeric_`]` → **value** 🔻  
 &emsp;Return the **index**th element from **array**. 
 
-`GET` (**array**: _list_, **index**: _numeric_) → **value** ♫   
+`GET` (**array**: _list_, **index**: _numeric_) → **value** 🔻   
 &emsp;Alias of **array**`[`**index**`]`.  
 
-`LEN` (**array**: _list_) → _numeric_ ♫   
+`LEN` (**array**: _list_) → _numeric_ 🔻   
 &emsp;Alias of `LENGTH`(**array**).
 
-`LENGTH` (**array**: _list_) → _numeric_ ♫   
+`LENGTH` (**array**: _list_) → _numeric_ 🔻   
 &emsp;Returns the number of elements in **array**.
 
 `LIST_CONTAINS` (**array**: _list_, **value**) → _boolean_     
@@ -30,7 +30,7 @@ For more details, see [Working with Lists](https://mabel-dev.github.io/opteryx/S
 `LIST_CONTAINS_ALL` (**array**: _list_, **values**: _list_) → _boolean_            
 &emsp;Return `true` if **array** contains all of elements in **values**.
 
-`SEARCH` (**array**: _list_, **value**) → _boolean_ ♫  
+`SEARCH` (**array**: _list_, **value**) → _boolean_ 🔻  
 &emsp;Return `true` if **array** contains **value**. 
 
 ## Numeric Functions
@@ -53,10 +53,10 @@ For more details, see [Working with Lists](https://mabel-dev.github.io/opteryx/S
 `PI` () → _numeric_   
 &emsp;Returns the constant Pi.  
 
-`ROUND` (**x**: _numeric_) → _numeric_ ♫     
+`ROUND` (**x**: _numeric_) → _numeric_ 🔻     
 &emsp;Returns **x** rounded to the nearest integer. 
 
-`ROUND` (**x**: _numeric_, **places**: _numeric_) → _numeric_ ♫     
+`ROUND` (**x**: _numeric_, **places**: _numeric_) → _numeric_ 🔻     
 &emsp;Returns **x** rounded to **places** decimal places.
 
 `TRUNC` (**x**: _numeric_) → _numeric_     
@@ -69,19 +69,19 @@ For more details, see [Working with Lists](https://mabel-dev.github.io/opteryx/S
 
 Functions for examining and manipulating string values. 
 
-**str**: _varchar_`[`**index**: _numeric_`]` → _varchar_ ♫  
+**str**: _varchar_`[`**index**: _numeric_`]` → _varchar_ 🔻  
 &emsp;Return the **index**th character from **str**. 
 
-`GET` (**str**: _varchar_, **index**: _numeric_) → _varchar_ ♫   
+`GET` (**str**: _varchar_, **index**: _numeric_) → _varchar_ 🔻   
 &emsp;Alias of **str**`[`**index**`]`.   
 
 `LEFT` (**str**: _varchar_, **n**: _numeric_) → _varchar_    
 &emsp;Extract the left-most **n** characters of **str**.  
 
-`LEN` (**str**: _varchar_) → _numeric_ ♫   
+`LEN` (**str**: _varchar_) → _numeric_ 🔻   
 &emsp;Alias of `LENGTH`(**str**)
 
-`LENGTH` (**str**: _varchar_) → _numeric_ ♫   
+`LENGTH` (**str**: _varchar_) → _numeric_ 🔻   
 &emsp;Returns the length of **str** in characters.    
 
 `LOWER` (**str**: _varchar_) → _varchar_   
@@ -90,7 +90,7 @@ Functions for examining and manipulating string values.
 `RIGHT` (**str**: _varchar_, **n**: _numeric_) → _varchar_    
 &emsp;Extract the right-most **n** characters of **str**.   
 
-`SEARCH` (**str**: _varchar_, **value**: _varchar_) → _boolean_ ♫    
+`SEARCH` (**str**: _varchar_, **value**: _varchar_) → _boolean_ 🔻    
 &emsp;Return True if **str** contains **value**.   
 
 `TRIM` (**str**: _varchar_) → _varchar_   
@@ -188,11 +188,11 @@ For more details, see [Working with Timestamps](https://mabel-dev.github.io/opte
 `STRING` (**any**: _any_) → _varchar_   
 &emsp;Alias of `VARCHAR`(**any**) and `CAST`(**any** AS VARCHAR)
 
-`TIMESTAMP` (**iso8601**: _varchar_) → _timestamp_ ♫        
+`TIMESTAMP` (**iso8601**: _varchar_) → _timestamp_ 🔻        
 &emsp;Cast an [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format string to a timestamp.  
 &emsp;Alias for `CAST`(**iso8601** AS TIMESTAMP).   
 
-`TIMESTAMP` (**seconds**: _numeric_) → _timestamp_ ♫     
+`TIMESTAMP` (**seconds**: _numeric_) → _timestamp_ 🔻     
 &emsp;Return timestamp of **seconds** seconds since the Unix Epoch. 
 
 `TRY_CAST` (**any**: _any_ AS **type**) → _[type]_   
@@ -206,13 +206,13 @@ For more details, see [Working with Timestamps](https://mabel-dev.github.io/opte
 
 For more details, see [Working with Structs](https://mabel-dev.github.io/opteryx/SQL%20Reference/Working%20with%20SQL/30%20Working%20with%20Structs/).
 
-**object**: _struct_`[`**key**: _varchar_`]` → **value** ♫  
+**object**: _struct_`[`**key**: _varchar_`]` → **value** 🔻  
 &emsp;Return the value for **key** from **object**. 
 
-`GET` (**object**: _struct_, **key**: _varchar_) → **value** ♫   
+`GET` (**object**: _struct_, **key**: _varchar_) → **value** 🔻   
 &emsp;Alias of **object**`[`**key**`]`.  
 
-`SEARCH` (**object**: _struct_, **value**: _varchar_) → **boolean** ♫  
+`SEARCH` (**object**: _struct_, **value**: _varchar_) → **boolean** 🔻  
 &emsp;Return `true` if any of the values in **object** is **value**.
 
 ## System Functions
@@ -220,24 +220,46 @@ For more details, see [Working with Structs](https://mabel-dev.github.io/opteryx
 `VERSION` () → _varchar_        
 &emsp;Return the version of Opteryx.
 
+## Infix Function
+
+These are functions that are called similar to comparison operators:
+
+_numeric_ `+` _numeric_ → _numeric_  
+&emsp;Numeric addition
+
+_numeric_ `-` _numeric_ → _numeric_  
+&emsp;Numeric subtraction
+
+_numeric_ `*` _numeric_ → _numeric_  
+&emsp;Numeric multiplication
+
+_numeric_ `/` _numeric_ → _numeric_  
+&emsp;Numeric division
+
+_numeric_ `%` _numeric_ → _numeric_  
+&emsp;Numeric modulo
+
+_varchar_ `||` _varchar_ → _varchar_   
+&emsp;String concatenation  
+
 ## Other Functions
 
 `COALESCE` (**arg1**, **arg2**, ...) → _[input type]_   
 &emsp;Return the first item from args which is not `null`.   
 
-`GENERATE_SERIES` (**stop**: _numeric_) → _list_<_numeric_> ♫       
+`GENERATE_SERIES` (**stop**: _numeric_) → _list_<_numeric_> 🔻       
 &emsp;Return a numeric list between 1 and **stop**, with a step of 1.    
 
-`GENERATE_SERIES` (**start**: _numeric_, **stop**: _numeric_) → _list_<_numeric_> ♫       
+`GENERATE_SERIES` (**start**: _numeric_, **stop**: _numeric_) → _list_<_numeric_> 🔻       
 &emsp;Return a numeric list between **start** and **stop**, with a step of 1.
 
-`GENERATE_SERIES` (**start**: _numeric_, **stop**: _numeric_, **step**: _numeric_) → _list_<_numeric_> ♫       
+`GENERATE_SERIES` (**start**: _numeric_, **stop**: _numeric_, **step**: _numeric_) → _list_<_numeric_> 🔻       
 &emsp;Return a numeric list between **start** and **stop**, with an increment of **step**.
 
-`GENERATE_SERIES` (**start**: _timestamp_, **stop**: _timestamp_, _interval_) → _list_<_timestamp_> ♫       
+`GENERATE_SERIES` (**start**: _timestamp_, **stop**: _timestamp_, _interval_) → _list_<_timestamp_> 🔻       
 &emsp;Return a timestamp list between **start** and **stop**, with a interval of **step**.    
 
-`GENERATE_SERIES` (**cidr**: _varchar_) → _list_<_varchar_> ♫       
+`GENERATE_SERIES` (**cidr**: _varchar_) → _list_<_varchar_> 🔻       
 &emsp;Return a list of IP addresses from a given **cidr**.   
 
 `HASH` (**any**) → _varchar_           
@@ -251,3 +273,4 @@ For more details, see [Working with Structs](https://mabel-dev.github.io/opteryx
 
 `UNNEST` (**array**: _list_) → _relation_       
 &emsp;Create a virtual relation with a row for each element in **array**.
+

@@ -34,7 +34,7 @@ import pyarrow.json
 
 from opteryx.engine.attribute_types import TOKEN_TYPES
 from opteryx.engine import QueryDirectives, QueryStatistics
-from opteryx.engine.planner.expression import NodeType
+from opteryx.engine.planner.expression import NodeType, get_all_identifiers
 from opteryx.engine.planner.operations import BasePlanNode
 from opteryx.exceptions import SqlError
 from opteryx.utils.columns import Columns
@@ -48,6 +48,7 @@ AGGREGATORS = {
     "APPROXIMATE_MEDIAN": "hash_approximate_median",
     "COUNT": "hash_count",  # counts only non nulls
     "COUNT_DISTINCT": "hash_count_distinct",
+    "CUMULATIVE_SUM": "cumulative_sum",
     "DISTINCT": "hash_distinct",
     "LIST": "hash_list",
     "MAX": "hash_max",
@@ -61,6 +62,7 @@ AGGREGATORS = {
     "ONE": "hash_one",
     "PRODUCT": "hash_product",
     "STDDEV": "hash_stddev",
+    "SUM": "sum",
     "QUANTILES": "hash_tdigest",
     "VARIANCE": "hash_variance",
 }
@@ -114,13 +116,14 @@ class AggregateNode(BasePlanNode):
         yield table
 
     def _project(self, tables, fields):
+        fields = set(fields)
         for table in tables:
             columns = Columns(table)
             column_names = [
                 columns.get_column_from_alias(field, only_one=True) for field in fields
             ]
-            # yield table.select(set(column_names))
-            yield table
+            yield table.select(set(column_names))
+            
 
     def execute(self) -> Iterable:
 
@@ -138,26 +141,24 @@ class AggregateNode(BasePlanNode):
         from collections import defaultdict
 
         collector: dict = defaultdict(dict)
-        columns = None
 
-        # select the appropriate columns from the tables then concatenate them together
-        # TODO: we need all the columns ever refrenced in the SELECT or GROUP BY clauses
+        # get all the columns anywhere in the groups or aggregates
+        all_identifiers = get_all_identifiers(self._groups + self._aggregates)
+        # join all the pages together, selecting only the columns we found above
         table = pyarrow.concat_tables(
-            self._project(data_pages.execute(), self._groups), promote=True
+            self._project(data_pages.execute(), all_identifiers), promote=True
         )
 
+        print("GROUPS", self._groups)
+        print("AGGREGATES", self._aggregates)
+        print("EVERYTHING", all_identifiers)
+
+        # get the column metadata
         columns = Columns(table)
-        preferred_names = columns.preferred_column_names
-        column_names = []
-        for col in table.column_names:
-            column_names.append([c for a, c in preferred_names if a == col][0])
 
-        table = table.rename_columns(column_names)
-
-        print(column_names)
-
-        groups = table.group_by(self._groups)
-        print(self._aggregates)
+        # to allow grouping by functions not in the SELECT clause, we should execute
+        # any functions in self._groups and add the column here
+        groups = table.group_by(columns.get_column_from_alias(group.value, only_one=True) for group in self._groups)
 
         # TODO: deal with WILDCARD
         # TODO: build a map for the result columns to the alias and preferred names (e.g. MAX(name))

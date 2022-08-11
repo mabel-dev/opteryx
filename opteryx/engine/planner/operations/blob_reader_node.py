@@ -62,7 +62,7 @@ KNOWN_EXTENSIONS = {
 
 def _normalize_to_types(table):
     """
-    Normalize types e.g. all numbers are float64 and dates
+    Normalize types e.g. all numbers are decimal128 and dates
     """
 
     #    table = table.add_column(0, "$id", [numpy.arange(index, index + table.num_rows, dtype=numpy.int32)])
@@ -71,7 +71,7 @@ def _normalize_to_types(table):
     for index, column_name in enumerate(schema.names):
         type_name = str(schema.types[index])
         #        if type_name in ("int16", "int32", "int64", "int8", "float16", "float32"):
-        #            schema = schema.set(index, pyarrow.field(column_name, pyarrow.float64()))
+        #            schema = schema.set(index, pyarrow.field(column_name, pyarrow.decimal128(38,9)))
         if type_name in ("date32[day]", "date64", "timestamp"):
             schema = schema.set(
                 index,

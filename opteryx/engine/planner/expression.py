@@ -148,9 +148,11 @@ class ExpressionTreeNode:
         return (
             f"<ExpressionTreeNode {str(self.token_type).upper()}"
             f"{' `' + str(self.value) + '`' if self.value else ''} "
-            f"{'L' if self.left is not None else ''}"
-            f"{'C' if self.centre is not None else ''}"
-            f"{'R' if self.right is not None else ''} ({id(self)})>"
+            f"{'L' if self.left is not None else '.'}"
+            f"{'C' if self.centre is not None else '.'}"
+            f"{'R' if self.right is not None else '.'}"
+            f"{('[' + str(len(self.parameters)) + ']') if self.parameters is not None else '.'} "
+            f"({id(self)})>"
         )
 
     def _inner_print(self, node, prefix):
@@ -251,3 +253,27 @@ def evaluate(expression: ExpressionTreeNode, table: Table):
 
     columns = Columns(table)
     return _inner_evaluate(root=expression, table=table, columns=columns)
+
+def get_all_identifiers(root):
+    """
+    Walk a expression tree collecting all the identifiers in the tree
+    """
+    if not isinstance(root, list):
+        root = [root]
+
+    identifiers = []
+    for node in root:
+        if node.token_type == NodeType.IDENTIFIER:
+            identifiers.append(node.value)
+        if node.left:
+            identifiers.extend(get_all_identifiers(node.left))
+        if node.centre:
+            identifiers.extend(get_all_identifiers(node.centre))
+        if node.right:
+            identifiers.extend(get_all_identifiers(node.right))
+        if node.parameters:
+            for parameter in node.parameters:
+                if isinstance(parameter, ExpressionTreeNode):
+                    identifiers.extend(get_all_identifiers(parameter))
+
+    return identifiers
