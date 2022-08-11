@@ -29,7 +29,8 @@ on a 10m record set, timings are 1:400 (50s:1220s where 20s is the read time).
 """
 from typing import Iterable
 
-import pyarrow.json
+import pyarrow
+import numpy
 
 from opteryx.engine import QueryDirectives, QueryStatistics
 from opteryx.engine.planner.expression import NodeType, get_all_identifiers
@@ -122,6 +123,27 @@ def _build_aggs(aggregators, columns):
 
     return column_map, aggs
 
+def _non_group_aggregates(aggregates, table, columns):
+    """
+    If we're not doing a group by, we're just doing aggregations, the pyarrow
+    functionality for aggregate doesn't work
+    """
+
+    result = {}
+
+    for aggregate in aggregates:
+
+        column_name = aggregate.parameters[0].value
+        mapped_column_name = columns.get_column_from_alias(column_name, only_one=True)
+        raw_column_values = table[mapped_column_name].to_numpy()
+        aggregate_function_name = AGGREGATORS[aggregate.value]
+        aggregate_function = getattr(pyarrow.compute, aggregate_function_name)
+        aggregate_column_value = aggregate_function(raw_column_values).as_py()
+        aggregate_column_name = f"{mapped_column_name}_{aggregate_function_name}"
+        result[aggregate_column_name] = aggregate_column_value
+
+    return pyarrow.Table.from_pylist([result])
+
 class AggregateNode(BasePlanNode):
     def __init__(
         self, directives: QueryDirectives, statistics: QueryStatistics, **config
@@ -163,26 +185,22 @@ class AggregateNode(BasePlanNode):
             _project(data_pages.execute(), all_identifiers), promote=True
         )
 
-        print("GROUPS", self._groups)
-        print("AGGREGATES", self._aggregates)
-        print("EVERYTHING", all_identifiers)
-
         # get the column metadata
         columns = Columns(table)
 
         # to allow grouping by functions not in the SELECT clause, we should execute
         # any functions in self._groups and add the column here
         group_by_columns = [columns.get_column_from_alias(group.value, only_one=True) for group in self._groups]
-        print("GBC", group_by_columns)
-        groups = table.group_by(group_by_columns)
 
         column_map, aggs = _build_aggs(self._aggregates, columns)
 
-        print(aggs)
-        print(column_map)
-
-        groups = groups.aggregate(aggs)
-        print(groups.column_names)
+        # we're not a group_by
+        if len(group_by_columns) == 0:
+            groups = _non_group_aggregates(self._aggregates, table, columns)
+            del table
+        else:
+            groups = table.group_by(group_by_columns)
+            groups = groups.aggregate(aggs)
         
         # name the aggregate fields
         for friendly_name, agg_name in column_map.items():
