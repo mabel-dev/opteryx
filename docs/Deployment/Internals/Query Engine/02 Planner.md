@@ -8,7 +8,6 @@ Step       | Description
 ---------- | -------------
 Aggregate  | Perform aggregations such as COUNT and MAX
 Distinct   | Remove duplicate records
-Evaluation | Evaluate functions
 Explain    | Plan Explainer
 Join       | Join Relations
 Limit      | Return up to a stated number of records

@@ -452,7 +452,7 @@ class QueryPlanner(ExecutionTree):
         """
         # print(projection)
         if projection == ["Wildcard"]:
-            return {"*": "*"}
+            return [ExpressionTreeNode(token_type=NodeType.WILDCARD)]
 
         def _inner(attribute):
             function = None
@@ -758,7 +758,6 @@ class QueryPlanner(ExecutionTree):
         this order.
 
             FROM clause
-            EVALUATE
             WHERE clause
             AGGREGATE (GROUP BY clause)
             HAVING clause
@@ -859,21 +858,6 @@ class QueryPlanner(ExecutionTree):
 
                 last_node = f"join-{join_id}"
 
-        _projection = self._extract_field_list(ast[0]["Query"]["body"]["Select"]["projection"])
-        if any(
-            a.token_type == NodeType.FUNCTION
-            for a in _projection
-            if isinstance(a, ExpressionTreeNode)
-        ):
-            self.add_operator(
-                "eval",
-                operations.EvaluationNode(
-                    directives, statistics, projection=_projection
-                ),
-            )
-            self.link_operators(last_node, "eval")
-            last_node = "eval"
-
         _selection = self._extract_selection(ast)
         if _selection:
             self.add_operator(
@@ -883,6 +867,7 @@ class QueryPlanner(ExecutionTree):
             self.link_operators(last_node, "where")
             last_node = "where"
 
+        _projection = self._extract_field_list(ast[0]["Query"]["body"]["Select"]["projection"])
         _groups = self._extract_field_list(ast[0]["Query"]["body"]["Select"]["group_by"])
         if _groups or any(
             a.token_type == NodeType.AGGREGATOR
@@ -921,7 +906,8 @@ class QueryPlanner(ExecutionTree):
             self.link_operators(last_node, "having")
             last_node = "having"
 
-        if _projection != {"*": "*"}:
+        _projection = self._extract_field_list(ast[0]["Query"]["body"]["Select"]["projection"])
+        if _projection[0].token_type != NodeType.WILDCARD:
             self.add_operator(
                 "select",
                 operations.ProjectionNode(

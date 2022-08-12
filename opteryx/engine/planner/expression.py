@@ -277,3 +277,23 @@ def get_all_identifiers(root):
                     identifiers.extend(get_all_identifiers(parameter))
 
     return identifiers
+
+def evaluate_and_append(expressions, table: Table):
+
+    columns = Columns(table)
+
+    for statement in expressions:
+        # TODO: if the column already exists, skip
+        if statement.NodeType in (NodeType.FUNCTION, NodeType.BINARY_OPERATOR):
+            new_column = evaluate(statement, table)
+            if statement.NodeType == NodeType.FUNCTION:
+                new_column_name = f"{statement.value.upper()}({','.join(statement.args)}))"
+            else:
+                new_column_name = str(statement)
+            table = table.append_column(new_column_name, new_column)
+            columns.add_column(new_column_name)
+            if statement.alias:
+                columns.add_alias(new_column_name, statement.alias)
+
+    # TODO: rewrite the node as an IDENTIFIER
+    return columns, table
