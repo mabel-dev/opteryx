@@ -79,6 +79,15 @@ def _normalize_to_types(table):
                     metadata=table.field(column_name).metadata,
                 ),
             )
+        if type_name == ("list<item: null>"):
+            schema = schema.set(
+                index,
+                pyarrow.field(
+                    name=column_name,
+                    type=pyarrow.list_(pyarrow.string()),
+                    metadata=table.field(column_name).metadata,
+                ),
+            )
 
     return table.cast(target_schema=schema), schema
 
