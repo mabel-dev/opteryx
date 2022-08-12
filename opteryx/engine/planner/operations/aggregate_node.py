@@ -15,22 +15,15 @@ Grouping Node
 
 This is a SQL Query Execution Plan Node.
 
-This performs aggregations, both of grouped and non-grouped data. 
+This performs aggregations, both of grouped and non-grouped data.
 
 This is a greedy operator - it consumes all the data before responding.
-
-This algorithm is a balance of performance, it is much slower than a groupby based on
-the pyarrow_ops library for datasets with a high number of duplicate values (e.g.
-grouping by a boolean column) - on a 10m record set, timings are 10:1 (removing raw
-read time - e.g. 30s:21s where 20s is the read time).
-
-But, on high cardinality data (nearly unique columns), the performance is much faster,
-on a 10m record set, timings are 1:400 (50s:1220s where 20s is the read time).
 """
+import time
+
 from typing import Iterable
 
 import pyarrow
-import numpy
 
 from opteryx.engine import QueryDirectives, QueryStatistics
 from opteryx.engine.planner.expression import NodeType, get_all_identifiers
@@ -137,6 +130,7 @@ def _non_group_aggregates(aggregates, table, columns):
         mapped_column_name = columns.get_column_from_alias(column_name, only_one=True)
         raw_column_values = table[mapped_column_name].to_numpy()
         aggregate_function_name = AGGREGATORS[aggregate.value]
+        # this maps a string which is the function name to the function
         aggregate_function = getattr(pyarrow.compute, aggregate_function_name)
         aggregate_column_value = aggregate_function(raw_column_values).as_py()
         aggregate_column_name = f"{mapped_column_name}_{aggregate_function_name}"
@@ -188,6 +182,8 @@ class AggregateNode(BasePlanNode):
         # get the column metadata
         columns = Columns(table)
 
+        start_time = time.time_ns()
+
         # to allow grouping by functions not in the SELECT clause, we should execute
         # any functions in self._groups and add the column here
         group_by_columns = [columns.get_column_from_alias(group.value, only_one=True) for group in self._groups]
@@ -209,4 +205,7 @@ class AggregateNode(BasePlanNode):
                 columns.get_column_from_alias(agg_name, only_one=True), friendly_name
             )
         groups = columns.apply(groups)
+
+        self._statistics.time_aggregating += time.time_ns() - start_time
+
         yield groups

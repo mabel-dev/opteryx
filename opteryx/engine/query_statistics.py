@@ -54,6 +54,7 @@ class QueryStatistics:
         # time spent on various steps
         self.time_planning: int = 0
         self.time_selecting: float = 0
+        self.time_aggregating: float = 0
 
         self.start_time: int = 0
         self.end_time: int = 0
@@ -101,6 +102,7 @@ class QueryStatistics:
             "time_planning": self._ns_to_s(self.time_planning),
             "time_scanning_partitions": self._ns_to_s(self.time_scanning_partitions),
             "time_selecting": self._ns_to_s(self.time_selecting),
+            "time_aggregating": self._ns_to_s(self.time_aggregating),
             "partitions_found": self.partitions_found,
             "partitions_scanned": self.partitions_scanned,
             "partitions_read": self.partitions_read,
