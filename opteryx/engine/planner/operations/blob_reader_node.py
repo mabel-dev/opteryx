@@ -79,7 +79,7 @@ def _normalize_to_types(table):
                     metadata=table.field(column_name).metadata,
                 ),
             )
-        if type_name in ("list<item: null>"):
+        if type_name == ("list<item: null>"):
             schema = schema.set(
                 index,
                 pyarrow.field(
