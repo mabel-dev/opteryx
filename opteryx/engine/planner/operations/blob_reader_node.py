@@ -270,9 +270,7 @@ class BlobReaderNode(BasePlanNode):
                             ]
                         )
 
-                    pyarrow_blob, schema = _normalize_to_types(
-                        pyarrow_blob
-                    )
+                    pyarrow_blob, schema = _normalize_to_types(pyarrow_blob)
 
                     # yield this blob
                     yield pyarrow_blob

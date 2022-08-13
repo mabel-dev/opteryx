@@ -65,16 +65,12 @@ def _get(value, item):
         return None
 
 
-VECTORIZED_CASTERS = {
-    "BOOLEAN": "bool",
-    "NUMERIC": "float64",
-    "VARCHAR": "string"
-}
+VECTORIZED_CASTERS = {"BOOLEAN": "bool", "NUMERIC": "float64", "VARCHAR": "string"}
 
 ITERATIVE_CASTERS = {
-#    "TIMESTAMP": lambda x: numpy.datetime64(int(x), "s")
-#    if isinstance(x, numpy.float64)
-#    else numpy.datetime64(x),
+    #    "TIMESTAMP": lambda x: numpy.datetime64(int(x), "s")
+    #    if isinstance(x, numpy.float64)
+    #    else numpy.datetime64(x),
     "TIMESTAMP": dates.parse_iso
 }
 

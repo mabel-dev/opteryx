@@ -48,6 +48,7 @@ def operator_type_factory(function):
         return NodeType.XOR
     return NodeType.UNKNOWN
 
+
 def format_expression(root):
     node_type = root.token_type
 
@@ -64,7 +65,7 @@ def format_expression(root):
     # LITERAL TYPES
     if node_type & LITERAL_TYPE == LITERAL_TYPE:
         if node_type == NodeType.LITERAL_VARCHAR:
-            return "'" + root.value.replace("'", "\'") + "'"
+            return "'" + root.value.replace("'", "'") + "'"
         if node_type == NodeType.LITERAL_TIMESTAMP:
             return "'" + root.value.iso_format() + "'"
         if node_type == NodeType.LITERAL_INTERVAL:
@@ -78,6 +79,7 @@ def format_expression(root):
             return "*"
 
     return str(root.value)
+
 
 class NodeType(int, Enum):
     """
@@ -284,6 +286,7 @@ def evaluate(expression: ExpressionTreeNode, table: Table):
     columns = Columns(table)
     return _inner_evaluate(root=expression, table=table, columns=columns)
 
+
 def get_all_identifiers(root):
     """
     Walk a expression tree collecting all the identifiers in the tree
@@ -308,6 +311,7 @@ def get_all_identifiers(root):
 
     return identifiers
 
+
 def evaluate_and_append(expressions, table: Table):
 
     columns = Columns(table)
@@ -325,7 +329,9 @@ def evaluate_and_append(expressions, table: Table):
             columns.add_column(new_column_name)
             if statement.alias:
                 columns.add_alias(new_column_name, statement.alias)
-            statement = ExpressionTreeNode(NodeType.IDENTIFIER, value=new_column_name, alias=statement.alias)
+            statement = ExpressionTreeNode(
+                NodeType.IDENTIFIER, value=new_column_name, alias=statement.alias
+            )
 
         return_expressions.append(statement)
 

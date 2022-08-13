@@ -26,7 +26,11 @@ from typing import Iterable
 import pyarrow
 
 from opteryx.engine import QueryDirectives, QueryStatistics
-from opteryx.engine.planner.expression import NodeType, evaluate_and_append, get_all_identifiers
+from opteryx.engine.planner.expression import (
+    NodeType,
+    evaluate_and_append,
+    get_all_identifiers,
+)
 from opteryx.engine.planner.operations import BasePlanNode
 from opteryx.exceptions import SqlError
 from opteryx.utils.columns import Columns
@@ -59,6 +63,7 @@ AGGREGATORS = {
     "VARIANCE": "variance",
 }
 
+
 def _is_count_star(aggregates, groups):
     """
     Is the SELECT clause `SELECT COUNT(*)` with no GROUP BY
@@ -73,6 +78,7 @@ def _is_count_star(aggregates, groups):
         return False
     return True
 
+
 def _count_star(data_pages):
     count = 0
     for page in data_pages.execute():
@@ -86,6 +92,7 @@ def _count_star(data_pages):
     )
     yield table
 
+
 def _project(tables, fields):
     fields = set(fields)
     for table in tables:
@@ -94,6 +101,7 @@ def _project(tables, fields):
             columns.get_column_from_alias(field, only_one=True) for field in fields
         ]
         yield table.select(set(column_names))
+
 
 def _build_aggs(aggregators, columns):
     column_map = {}
@@ -107,14 +115,26 @@ def _build_aggs(aggregators, columns):
                 field_name = columns.preferred_column_names[0][0]
             elif field_node.token_type == NodeType.IDENTIFIER:
                 display_field = field_node.value
-                field_name = columns.get_column_from_alias(field_node.value, only_one=True)
+                field_name = columns.get_column_from_alias(
+                    field_node.value, only_one=True
+                )
             else:
-                raise SqlError("Invalid identifier provided in aggregator function `{field_name.value}`")
+                raise SqlError(
+                    "Invalid identifier provided in aggregator function `{field_name.value}`"
+                )
             function = AGGREGATORS.get(aggregator.value)
-            aggs.append((field_name,function,))
-            column_map[f"{aggregator.value.upper()}({display_field})"] = f"{field_name}_{function}"
+            aggs.append(
+                (
+                    field_name,
+                    function,
+                )
+            )
+            column_map[
+                f"{aggregator.value.upper()}({display_field})"
+            ] = f"{field_name}_{function}"
 
     return column_map, aggs
+
 
 def _non_group_aggregates(aggregates, table, columns):
     """
@@ -137,6 +157,7 @@ def _non_group_aggregates(aggregates, table, columns):
         result[aggregate_column_name] = aggregate_column_value
 
     return pyarrow.Table.from_pylist([result])
+
 
 class AggregateNode(BasePlanNode):
     def __init__(
@@ -183,7 +204,10 @@ class AggregateNode(BasePlanNode):
         columns, self._groups, table = evaluate_and_append(self._groups, table)
 
         start_time = time.time_ns()
-        group_by_columns = [columns.get_column_from_alias(group.value, only_one=True) for group in self._groups]
+        group_by_columns = [
+            columns.get_column_from_alias(group.value, only_one=True)
+            for group in self._groups
+        ]
 
         column_map, aggs = _build_aggs(self._aggregates, columns)
 
@@ -195,7 +219,7 @@ class AggregateNode(BasePlanNode):
         else:
             groups = table.group_by(group_by_columns)
             groups = groups.aggregate(aggs)
-        
+
         # name the aggregate fields
         for friendly_name, agg_name in column_map.items():
             columns.add_column(agg_name)

@@ -510,4 +510,5 @@ if __name__ == "__main__":  # pragma: no cover
     for index, (statement, rows, cols) in enumerate(STATEMENTS):
         print(f"{index:04}", statement)
         test_sql_battery(statement, rows, cols)
-    print("okay")
+
+    print("✅ okay")

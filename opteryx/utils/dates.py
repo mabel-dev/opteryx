@@ -125,7 +125,7 @@ def parse_iso(value):
 
         input_type = type(value)
 
-        if input_type in (int,  numpy.int64):
+        if input_type in (int, numpy.int64):
             value = numpy.datetime64(int(value), "s").astype(datetime.datetime)
             input_type = type(value)
 

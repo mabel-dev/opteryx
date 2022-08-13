@@ -860,8 +860,12 @@ class QueryPlanner(ExecutionTree):
             self.link_operators(last_node, "where")
             last_node = "where"
 
-        _projection = self._extract_field_list(ast[0]["Query"]["body"]["Select"]["projection"])
-        _groups = self._extract_field_list(ast[0]["Query"]["body"]["Select"]["group_by"])
+        _projection = self._extract_field_list(
+            ast[0]["Query"]["body"]["Select"]["projection"]
+        )
+        _groups = self._extract_field_list(
+            ast[0]["Query"]["body"]["Select"]["group_by"]
+        )
         if _groups or any(
             a.token_type == NodeType.AGGREGATOR
             for a in _projection
@@ -899,7 +903,9 @@ class QueryPlanner(ExecutionTree):
             self.link_operators(last_node, "having")
             last_node = "having"
 
-        _projection = self._extract_field_list(ast[0]["Query"]["body"]["Select"]["projection"])
+        _projection = self._extract_field_list(
+            ast[0]["Query"]["body"]["Select"]["projection"]
+        )
         if _projection[0].token_type != NodeType.WILDCARD:
             self.add_operator(
                 "select",
