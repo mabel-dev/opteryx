@@ -457,6 +457,8 @@ class QueryPlanner(ExecutionTree):
         def _inner(attribute):
             function = None
             alias = []
+
+            # get any alias information for a field (usually means we're in a SELECT clause)
             if "UnnamedExpr" in attribute:
                 function = attribute["UnnamedExpr"]
             if "ExprWithAlias" in attribute:
@@ -468,6 +470,10 @@ class QueryPlanner(ExecutionTree):
                 )
             if "Identifier" in attribute:
                 function = attribute
+            # this should only be hit if we're in a GROUP BY clause
+            if "Function" in attribute:
+                function = attribute
+
             if function:
 
                 if "Identifier" in function:
@@ -486,19 +492,6 @@ class QueryPlanner(ExecutionTree):
                             p["value"] for p in function["CompoundIdentifier"]
                         ),
                     )
-
-                #                    return {
-                #                        "identifier": [
-                #                            ".".join(
-                #                                [p["value"] for p in function["CompoundIdentifier"]]
-                #                            )
-                #                        ].pop(),
-                #                        "alias": [
-                #                            ".".join(
-                #                                [p["value"] for p in function["CompoundIdentifier"]]
-                #                            )
-                #                        ],
-                #                    }
                 if "Function" in function:
                     func = function["Function"]["name"][0]["value"].upper()
                     args = [

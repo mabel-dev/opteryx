@@ -22,10 +22,9 @@ from typing import Iterable
 
 import pyarrow
 
-from opteryx.engine.attribute_types import TOKEN_TYPES
 from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
 from opteryx.engine import QueryDirectives, QueryStatistics
-from opteryx.engine.planner.expression import NodeType
+from opteryx.engine.planner.expression import NodeType, format_expression
 from opteryx.exceptions import SqlError
 from opteryx.utils.columns import Columns
 
@@ -46,31 +45,17 @@ class ProjectionNode(BasePlanNode):
         super().__init__(directives=directives, statistics=statistics)
         self._projection: dict = {}
 
-        projection = config.get("projection", {"*": "*"})
+        projection = config.get("projection")
         # print("projection:", projection)
         for attribute in projection:
-            if projection == {"*": "*"}:
-                self._projection[attribute] = None
-            elif (
+            if (
                 attribute.token_type == NodeType.WILDCARD
                 and attribute.value is not None
             ):
                 # qualified wildcard, e.g. table.*
                 self._projection[(attribute.value,)] = None
-            elif attribute.token_type == NodeType.AGGREGATOR:
-                self._projection[
-                    f"{attribute.value}({','.join([replace_wildcards(a) for a in attribute.parameters])})"
-                ] = attribute.alias
-
-            elif attribute.token_type == NodeType.FUNCTION:
-                args = [
-                    ((f"({','.join(a[0])})", None) if isinstance(a[0], list) else a)
-                    for a in attribute.parameters
-                ]
-                self._projection[
-                    f"{attribute.value}({','.join([replace_wildcards(a) for a in attribute.parameters])})"
-                ] = attribute.alias
-
+            elif attribute.token_type in (NodeType.FUNCTION, NodeType.AGGREGATOR):
+                self._projection[format_expression(attribute)] = attribute.alias
             elif attribute.token_type == NodeType.IDENTIFIER:
                 self._projection[attribute.value] = attribute.alias
             else:

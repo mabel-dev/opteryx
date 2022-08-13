@@ -26,7 +26,7 @@ from typing import Iterable
 import pyarrow
 
 from opteryx.engine import QueryDirectives, QueryStatistics
-from opteryx.engine.planner.expression import NodeType, get_all_identifiers
+from opteryx.engine.planner.expression import NodeType, evaluate_and_append, get_all_identifiers
 from opteryx.engine.planner.operations import BasePlanNode
 from opteryx.exceptions import SqlError
 from opteryx.utils.columns import Columns
@@ -179,18 +179,16 @@ class AggregateNode(BasePlanNode):
             _project(data_pages.execute(), all_identifiers), promote=True
         )
 
-        # get the column metadata
-        columns = Columns(table)
+        # Allow grouping by functions by evaluating them
+        columns, self._groups, table = evaluate_and_append(self._groups, table)
 
         start_time = time.time_ns()
-
-        # to allow grouping by functions not in the SELECT clause, we should execute
-        # any functions in self._groups and add the column here
         group_by_columns = [columns.get_column_from_alias(group.value, only_one=True) for group in self._groups]
 
         column_map, aggs = _build_aggs(self._aggregates, columns)
 
-        # we're not a group_by
+        # we're not a group_by - either because the clause wasn't in the statement or
+        # because we're grouping by all the available columns
         if len(group_by_columns) == 0:
             groups = _non_group_aggregates(self._aggregates, table, columns)
             del table

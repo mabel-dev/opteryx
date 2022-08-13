@@ -48,6 +48,36 @@ def operator_type_factory(function):
         return NodeType.XOR
     return NodeType.UNKNOWN
 
+def format_expression(root):
+    node_type = root.token_type
+
+    # BOOLEAN OPERATORS
+    if node_type & LOGICAL_TYPE == LOGICAL_TYPE:
+        if node_type == NodeType.AND:
+            return "AND"
+        if node_type == NodeType.OR:
+            return "OR"
+        if node_type == NodeType.XOR:
+            return "XOR"
+        if node_type == NodeType.NOT:
+            return "NOT"
+    # LITERAL TYPES
+    if node_type & LITERAL_TYPE == LITERAL_TYPE:
+        if node_type == NodeType.LITERAL_VARCHAR:
+            return "'" + root.value.replace("'", "\'") + "'"
+        if node_type == NodeType.LITERAL_TIMESTAMP:
+            return "'" + root.value.iso_format() + "'"
+        if node_type == NodeType.LITERAL_INTERVAL:
+            return "<INTERVAL>"
+        return str(root.value)
+    # INTERAL IDENTIFIERS
+    if node_type & INTERNAL_TYPE == INTERNAL_TYPE:
+        if node_type in (NodeType.FUNCTION, NodeType.AGGREGATOR):
+            return f"{root.value.upper()}({','.join([format_expression(e) for e in root.parameters])})"
+        if node_type == NodeType.WILDCARD:
+            return "*"
+
+    return str(root.value)
 
 class NodeType(int, Enum):
     """
@@ -281,19 +311,22 @@ def get_all_identifiers(root):
 def evaluate_and_append(expressions, table: Table):
 
     columns = Columns(table)
+    return_expressions = []
 
     for statement in expressions:
         # TODO: if the column already exists, skip
-        if statement.NodeType in (NodeType.FUNCTION, NodeType.BINARY_OPERATOR):
+        if statement.token_type in (NodeType.FUNCTION, NodeType.BINARY_OPERATOR):
             new_column = evaluate(statement, table)
-            if statement.NodeType == NodeType.FUNCTION:
-                new_column_name = f"{statement.value.upper()}({','.join(statement.args)}))"
-            else:
-                new_column_name = str(statement)
+            new_column_name = format_expression(statement)
             table = table.append_column(new_column_name, new_column)
+
+            # add the column to the schema and because it's been evaluated and added to
+            # table, it's an INDENTIFIER rather than a FUNCTION
             columns.add_column(new_column_name)
             if statement.alias:
                 columns.add_alias(new_column_name, statement.alias)
+            statement = ExpressionTreeNode(NodeType.IDENTIFIER, value=new_column_name, alias=statement.alias)
 
-    # TODO: rewrite the node as an IDENTIFIER
-    return columns, table
+        return_expressions.append(statement)
+
+    return columns, return_expressions, table
