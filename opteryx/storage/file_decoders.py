@@ -22,7 +22,7 @@ def zstd_decoder(stream, projection):
     import zstandard
 
     with zstandard.open(stream, "rb") as file:
-        return jsonl_decoder(file)
+        return jsonl_decoder(file, projection)
 
 
 def parquet_decoder(stream, projection):
