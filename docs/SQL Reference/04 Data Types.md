@@ -7,8 +7,8 @@
 Name        | Symbol                       | Description
 ----------- | :--------------------------: | --------------
 `BOOLEAN`   | :fontawesome-solid-check:    | Logical boolean (True/False).
-`NUMERIC`   | :fontawesome-solid-hashtag:  | All numeric types
-`LIST`      | :fontawesome-solid-bars:     | An ordered sequence of data values.
+`NUMERIC`   | :fontawesome-solid-hashtag:  | All numeric types.
+`LIST`      | :fontawesome-solid-bars:     | An ordered sequence of strings.
 `VARCHAR`   | :fontawesome-solid-a:        | Variable-length character string.
 `STRUCT`    | :fontawesome-solid-box:      | A dictionary of multiple named values, where each key is a string, but the value can be a different type for each key.
 `TIMESTAMP` | :fontawesome-regular-clock:  | Combination of date and time.
@@ -16,7 +16,7 @@ Name        | Symbol                       | Description
 `OTHER`     | :fontawesome-solid-question: | None of the above or multiple types in the same column. 
 
 !!! note
-    - `INTERVAL` has limited support
+    - `INTERVAL` has limited support.
     - `OTHER` is not a type, it is a catch-all when a type cannot be determined.
 
 ## Casting
