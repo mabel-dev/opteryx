@@ -27,7 +27,7 @@ Would have the following datasets available (assuming leaf folders had data file
 
 ### Temporal Structures
 
-To enable temporal queries, data must be structured into date hierachy folders below the dataset folder. Using just the _products_ dataset from the above example, below the _products_ folder must be year, month and day folders like this:
+To enable temporal queries, data must be structured into date hierarchy folders below the dataset folder. Using just the _products_ dataset from the above example, below the _products_ folder must be year, month and day folders like this:
 
 ~~~
 /
@@ -69,5 +69,4 @@ Opteryx loads entire files (pages) into memory one at a time, this requires the 
 - Reading one record from a file loads the entire page. If you regularly only read a few records, prefer smaller pages.
 - Reading each page, particularly from Cloud Storage (S3/GCS), incurs a per-read overhead. If you have large datasets, prefer larger pages.
 
-If you are unsure where to start, 64Mb (before compression) is a good general-purpose page size.
-
+If you are unsure where to start, 64Mb (before compression) is a recommended general-purpose page size.

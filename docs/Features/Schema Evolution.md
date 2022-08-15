@@ -14,6 +14,8 @@ Opteryx supports the following schema evolution changes:
 !!! note
     Renamed columns will behave like the column has been removed and a new column added.
 
+Opteryx has limited support for column types changing, some changes within the same broad type (e.g. between numeric types and date resolutions) are supported, but these are not all supported and changing between types is not supported.
+
 ### Partitioning
 
 Changes to partition schemes are handled transparently. For example, data using Mabel partitioning moving from a daily to an hourly partition layout can occur without requiring any other changes to the configuration of the query engine. However, moving between no partition and partitioning (or vise-versa) is not supported.

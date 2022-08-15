@@ -35,12 +35,12 @@ FOR DATES BETWEEN start AND end
 FOR DATES IN range
 ~~~
 
-Date values in `BETWEEN` clauses must either be in 'YYYY-MM-DD' format or a recognised date placeholder, for example:
+Date values in `BETWEEN` clauses must either be in 'YYYY-MM-DD' format or a recognized date placeholder, for example:
 
 - `FOR DATES BETWEEN '2000-01-01' AND TODAY`
 - `FOR DATES BETWEEN '2020-04-01' AND '2020-04-30'`
 
-Date range values in `IN` clauses must be recognised date range placeholders, for example:
+Date range values in `IN` clauses must be recognized date range placeholders, for example:
 
 - `FOR DATES IN LAST_MONTH`
 
@@ -57,4 +57,4 @@ Placeholder  | Applicability   | Description
     - `FOR` clauses cannot contain comments or reference column values or aliases  
     - Dates can not include times and must be in the format 'YYYY-MM-DD'  
     - The default partition scheme does not support Temporal queries  
-    - Only one temporal clause can be provided, the same dates will be used for all datasets in the query. If you are performing a `JOIN` or a subquery, the date or date ranges are applied to all datasets in the query.
+    - Only one temporal clause can be provided, the same dates will be used for all datasets in the query. If you are performing a `JOIN` or a sub query, the date or date ranges are applied to all datasets in the query - this may have unintended consequences.
