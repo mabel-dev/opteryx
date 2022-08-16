@@ -188,7 +188,7 @@ STATEMENTS = [
 #        ("SELECT GET(name, 1) FROM $satellites GROUP BY planetId, GET(name, 1)", 56, 1),
         ("SELECT COUNT(*), ROUND(magnitude) FROM $satellites group by ROUND(magnitude)", 22, 2),
         ("SELECT ROUND(magnitude) FROM $satellites group by ROUND(magnitude)", 22, 1),
-        ("SELECT ROUND(magnitude, 1) FROM $satellites group by ROUND(magnitude, 1)", 93, 1),
+        ("SELECT ROUND(magnitude, 1) FROM $satellites group by ROUND(magnitude, 1)", 88, 1),
         ("SELECT VARCHAR(planetId), COUNT(*) FROM $satellites GROUP BY 1", 7, 2),
         ("SELECT LEFT(name, 1), COUNT(*) FROM $satellites GROUP BY 1 ORDER BY 2 DESC", 21, 2),
         ("SELECT LEFT(name, 2) as le, COUNT(*) FROM $satellites GROUP BY 1 ORDER BY 2 DESC", 87, 2),

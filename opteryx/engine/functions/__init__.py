@@ -212,7 +212,7 @@ FUNCTIONS = {
     "COALESCE": (None, compute.coalesce,),
 
     # NUMERIC
-    "ROUND": (None, compute.round,),
+    "ROUND": (None, number_functions.round,),
     "FLOOR": (None, compute.floor,),
     "CEIL": (None, compute.ceil,),
     "CEILING": (None, compute.ceil,),
