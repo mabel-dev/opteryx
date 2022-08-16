@@ -467,7 +467,6 @@ class QueryPlanner(ExecutionTree):
             if function is None:
                 function = attribute
 
-
             if "Identifier" in function:
                 return ExpressionTreeNode(
                     token_type=NodeType.IDENTIFIER,
@@ -477,18 +476,12 @@ class QueryPlanner(ExecutionTree):
             if "CompoundIdentifier" in function:
                 return ExpressionTreeNode(
                     token_type=NodeType.IDENTIFIER,
-                    value=".".join(
-                        p["value"] for p in function["CompoundIdentifier"]
-                    ),
-                    alias=".".join(
-                        p["value"] for p in function["CompoundIdentifier"]
-                    ),
+                    value=".".join(p["value"] for p in function["CompoundIdentifier"]),
+                    alias=".".join(p["value"] for p in function["CompoundIdentifier"]),
                 )
             if "Function" in function:
                 func = function["Function"]["name"][0]["value"].upper()
-                args = [
-                    self._build_filters(a) for a in function["Function"]["args"]
-                ]
+                args = [self._build_filters(a) for a in function["Function"]["args"]]
                 if is_function(func):
                     node_type = NodeType.FUNCTION
                 else:
@@ -539,9 +532,7 @@ class QueryPlanner(ExecutionTree):
                 elif "Boolean" in data_type:
                     data_type = "BOOLEAN"
                 else:
-                    raise SqlError(
-                        f"Unsupported type for TRY_CAST  - '{data_type}'"
-                    )
+                    raise SqlError(f"Unsupported type for TRY_CAST  - '{data_type}'")
 
                 alias.append(f"TRY_CAST({args[0].value} AS {data_type})")
 
@@ -585,8 +576,15 @@ class QueryPlanner(ExecutionTree):
                     key_node = ExpressionTreeNode(NodeType.LITERAL_NUMERIC, value=key)
                 alias.append(f"{identifier}[{key}]")
 
-                identifier_node = ExpressionTreeNode(NodeType.IDENTIFIER, value=identifier)
-                return ExpressionTreeNode(NodeType.FUNCTION, value="GET", parameters=[identifier_node, key_node], alias=alias)
+                identifier_node = ExpressionTreeNode(
+                    NodeType.IDENTIFIER, value=identifier
+                )
+                return ExpressionTreeNode(
+                    NodeType.FUNCTION,
+                    value="GET",
+                    parameters=[identifier_node, key_node],
+                    alias=alias,
+                )
 
         projection = [_inner(attribute) for attribute in projection]
         return projection

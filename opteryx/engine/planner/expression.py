@@ -328,7 +328,7 @@ def evaluate_and_append(expressions, table: Table):
             if new_column_name in table.column_names:
                 continue
             new_column = evaluate(statement, table)
-            
+
             # Strings need special handling
             if isinstance(new_column, (pyarrow.lib.StringScalar)):
                 new_column = [[new_column.as_py()]]
