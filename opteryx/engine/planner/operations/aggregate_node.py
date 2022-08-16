@@ -196,7 +196,7 @@ class AggregateNode(BasePlanNode):
             return
 
         # get all the columns anywhere in the groups or aggregates
-        all_identifiers = get_all_identifiers(self._groups + self._aggregates)
+        all_identifiers = set(get_all_identifiers(self._groups + self._aggregates))
         # join all the pages together, selecting only the columns we found above
         table = pyarrow.concat_tables(
             _project(data_pages.execute(), all_identifiers), promote=True

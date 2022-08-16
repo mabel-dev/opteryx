@@ -34,11 +34,11 @@ from opteryx.utils import dates
 
 
 def get_random():
-    """get a random number between 0 and 1, three decimal places"""
-    range_min, range_max = 0, 1000
+    """get a random number between 0 and 1, four decimal places"""
+    range_min, range_max = 0, 10000
     random_int = int.from_bytes(os.urandom(2), "big")
     try:
-        return ((random_int % ((range_max + 1) - range_min)) + range_min) / 1000
+        return ((random_int % ((range_max + 1) - range_min)) + range_min) / 10000
     except:
         return 0
 
@@ -115,8 +115,7 @@ def try_cast(_type):
 def _iterate_no_parameters(func):
     # call the function for each row, this is primarily to support "RANDOM"
     def _inner(items):
-        for i in range(items):
-            yield [func()]
+        return [[func()] for i in range(items)]
 
     return _inner
 
@@ -133,8 +132,7 @@ def _iterate_single_parameter(func):
     def _inner(array):
         if isinstance(array, str):
             array = [array]
-        for item in array:
-            yield [func(item)]
+        return [func(item) for item in array]
 
     return _inner
 
@@ -147,8 +145,7 @@ def _iterate_double_parameter(func):
     def _inner(array, literal):
         if isinstance(array, str):
             array = [array]
-        for index, item in enumerate(array):
-            yield [func(item, literal[index])]
+        return [[func(item, literal[index])] for index, item in enumerate(array)]
 
     return _inner
 
@@ -161,8 +158,7 @@ def _iterate_double_parameter_field_second(func):
     def _inner(literal, array):
         if isinstance(array, str):
             array = [array]
-        for item in array:
-            yield [func(literal, item)]
+        return [[func(literal, item)] for item in array]
 
     return _inner
 

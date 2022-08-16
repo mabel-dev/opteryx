@@ -585,6 +585,8 @@ class QueryPlanner(ExecutionTree):
                     parameters=[identifier_node, key_node],
                     alias=alias,
                 )
+            if "Value" in function:
+                return self._build_literal_node(function["Value"])
 
         projection = [_inner(attribute) for attribute in projection]
         return projection
@@ -635,27 +637,7 @@ class QueryPlanner(ExecutionTree):
         if order is not None:
             orders = []
             for col in order:
-                column = col["expr"]
-                if "Identifier" in column:
-                    column = column["Identifier"]["value"]
-                if "CompoundIdentifier" in column:
-                    column = ".".join(
-                        [i["value"] for i in column["CompoundIdentifier"]]
-                    )
-                if "Function" in column:
-                    func = column["Function"]["name"][0]["value"].upper()
-                    args = [
-                        self._build_filters(a)[0] for a in column["Function"]["args"]
-                    ]
-                    args = ["*" if i == "Wildcard" else i for i in args]
-                    args = [
-                        ((f"({','.join(a[0])})",) if isinstance(a[0], list) else a)
-                        for a in args
-                    ]
-                    alias = f"{func.upper()}({','.join([str(a[0]) for a in args])})"
-                    column = {"function": func, "args": args, "alias": alias}
-                if "Value" in column:
-                    column = int(column["Value"]["Number"][0])
+                column = self._extract_field_list([col["expr"]])
                 orders.append(
                     (
                         column,

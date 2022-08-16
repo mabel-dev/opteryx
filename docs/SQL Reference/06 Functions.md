@@ -269,7 +269,7 @@ _varchar_ `||` _varchar_ → _varchar_
 &emsp;Calculate the MD5 hash.
 
 `RANDOM` () → _numeric_       
-&emsp;Random number between 0.000 and 0.999.
+&emsp;Random number between 0.0000 and 0.9999.
 
 `UNNEST` (**array**: _list_) → _relation_       
 &emsp;Create a virtual relation with a row for each element in **array**.
