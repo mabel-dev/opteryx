@@ -520,11 +520,16 @@ class QueryPlanner(ExecutionTree):
                     elif "Boolean" in data_type:
                         data_type = "BOOLEAN"
                     else:
-                        raise SqlError("Unsupported CAST function")
+                        raise SqlError(f"Unsupported type for CAST  - '{data_type}'")
 
-                    alias.append(f"CAST({args[0][0]} AS {data_type})")
+                    alias.append(f"CAST({args[0].value} AS {data_type})")
 
-                    return {"function": data_type, "args": args, "alias": alias}
+                    return ExpressionTreeNode(
+                        NodeType.FUNCTION,
+                        value=data_type.upper(),
+                        parameters=args,
+                        alias=alias,
+                    )
 
                 if "TryCast" in function:
                     # CAST(<var> AS <type>) - convert to the form <type>(var), e.g. BOOLEAN(on)
@@ -539,15 +544,18 @@ class QueryPlanner(ExecutionTree):
                     elif "Boolean" in data_type:
                         data_type = "BOOLEAN"
                     else:
-                        raise SqlError("Unsupported CAST function")
+                        raise SqlError(
+                            f"Unsupported type for TRY_CAST  - '{data_type}'"
+                        )
 
-                    alias.append(f"TRY_CAST({args[0][0]} AS {data_type})")
+                    alias.append(f"TRY_CAST({args[0].value} AS {data_type})")
 
-                    return {
-                        "function": f"TRY_{data_type}",
-                        "args": args,
-                        "alias": alias,
-                    }
+                    return ExpressionTreeNode(
+                        NodeType.FUNCTION,
+                        value=f"TRY_{data_type.upper()}",
+                        parameters=args,
+                        alias=alias,
+                    )
 
                 if "Extract" in function:
                     # EXTRACT(part FROM timestamp)

@@ -24,7 +24,9 @@ import pyarrow
 
 from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
 from opteryx.engine import QueryDirectives, QueryStatistics
-from opteryx.engine.planner.expression import NodeType, format_expression
+from opteryx.engine.planner.expression import evaluate_and_append
+from opteryx.engine.planner.expression import format_expression
+from opteryx.engine.planner.expression import NodeType
 from opteryx.exceptions import SqlError
 from opteryx.utils.columns import Columns
 
@@ -44,6 +46,7 @@ class ProjectionNode(BasePlanNode):
         """
         super().__init__(directives=directives, statistics=statistics)
         self._projection: dict = {}
+        self._expressions = []
 
         projection = config.get("projection")
         # print("projection:", projection)
@@ -56,6 +59,7 @@ class ProjectionNode(BasePlanNode):
                 self._projection[(attribute.value,)] = None
             elif attribute.token_type in (NodeType.FUNCTION, NodeType.AGGREGATOR):
                 self._projection[format_expression(attribute)] = attribute.alias
+                self._expressions.append(attribute)
             elif attribute.token_type == NodeType.IDENTIFIER:
                 self._projection[attribute.value] = attribute.alias
             else:
@@ -89,11 +93,14 @@ class ProjectionNode(BasePlanNode):
 
         for page in data_pages.execute():
 
+            # If any of the columns are FUNCTIONs, we need to evaluate them
+            _columns, _expressions, page = evaluate_and_append(self._expressions, page)
+
             # first time round we're going work out what we need from the metadata
             if columns is None:
 
                 projection = []
-                columns = Columns(page)
+                columns = _columns
                 for key in self._projection:
                     if isinstance(key, tuple):
                         relation = key[0]

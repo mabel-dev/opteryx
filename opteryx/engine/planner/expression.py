@@ -318,10 +318,12 @@ def evaluate_and_append(expressions, table: Table):
     return_expressions = []
 
     for statement in expressions:
-        # TODO: if the column already exists, skip
         if statement.token_type in (NodeType.FUNCTION, NodeType.BINARY_OPERATOR):
-            new_column = evaluate(statement, table)
             new_column_name = format_expression(statement)
+            # if we've already been evaluated - don't do it again
+            if new_column_name in table.column_names:
+                continue
+            new_column = evaluate(statement, table)
             table = table.append_column(new_column_name, new_column)
 
             # add the column to the schema and because it's been evaluated and added to
