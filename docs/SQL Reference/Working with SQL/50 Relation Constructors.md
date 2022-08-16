@@ -4,7 +4,7 @@
 
 ## Using `VALUES`
 
-`VALUES` allows you to create a multicolumn temporary relation where the values in the relation are explicitly defined in the statement.
+`VALUES` allows you to create a multi-column temporary relation where the values in the relation are explicitly defined in the statement.
 
 A simple example is as follows:
 

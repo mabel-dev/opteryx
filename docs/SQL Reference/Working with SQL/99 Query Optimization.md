@@ -1,6 +1,8 @@
 # Query Optimization
 
-Adapted from [15 Best Practices for SQL Optimization](https://betterprogramming.pub/15-best-practices-for-sql-optimization-956759626321).
+No optimization technique is universally true, these recommendations should improve performance in most cases. As will all optimization, test in your unique set of circumstances before assuming it to be true.
+
+> Adapted from [15 Best Practices for SQL Optimization](https://betterprogramming.pub/15-best-practices-for-sql-optimization-956759626321).
 
 ## 1. Avoid using `SELECT *`
 
@@ -16,11 +18,11 @@ Not reading the record is faster than reading and working out if it needs to be 
 
 ## 3. `GROUP BY` field selection
 
-**strings**
-Grouping by string columns is slower than grouping by numeric columns, if you have an option of grouping by a username or a numeric user id, prefer the user id.
+**VARCHAR**
+Grouping by `VARCHAR` columns is usually slower than grouping by `NUMERIC` columns, if you have an option of grouping by a username or a numeric user id, prefer the user id.
 
 **cardinality**
-Grouping by columns with high cardinality (mostly unique) is much slower than grouping where there is a lot of duplication in the groups.
+Grouping by columns with high cardinality (mostly unique) is generally slower than grouping where there is a lot of duplication in the groups.
 
 ## 4. Avoid `CROSS JOIN`
 
@@ -28,21 +30,27 @@ Cross join will very likely create a lot of records that are not required - if y
 
 ## 5. Small table drives big table
 
-Most `JOIN`s require iterating over two tables, the _left_ table, which is the one in the `FROM` clause, and the _right_ table which is the one in the `JOIN` clause. It is generally faster to put the smaller table to the _left_.
+Most `JOIN`s require iterating over two relations, the _left_ relation, which is the one in the `FROM` clause, and the _right_ relation which is the one in the `JOIN` clause (`SELECT * FROM left JOIN right`). It is generally faster to put the smaller relation to the _left_.
 
 ## 6. Do not use too many values with the `IN` keyword
 
-## 7. Replace subqueries with `JOIN` queries
+## 7. Use the correct `JOIN`
 
-## 8. Use the correct `JOIN`
+## 8. Use `LIMIT`
 
-## 9. Use `LIMIT`
+`LIMIT` stops a query when it has returned the desired number of results; if you do not want the full dataset, using `LIMIT` can reduce the time taken to process a statement.
 
-## 10. Use `WHERE` to filter before `GROUP BY`
+However, some operations are 'greedy', that is, they need all of the data for their operation (for example `ORDER BY`, and `GROUP BY`) - `LIMIT` does not have the same impact on these queries.
 
-## 11. `IS` filters are generally faster than `=`
+## 9. Use `WHERE` to filter before `GROUP BY`
 
-IS NONE
-IS NOT NONE
-IS TRUE
-IS FALSE
+Only using `HAVING` to filter the aggregation results of `GROUP BY`. `GROUP BY` is a relatively expensive operation in terms of memory and compute, filter as much before the `GROUP BY` by using the `WHERE` clause and only use `HAVING` to filter the by aggregation function (e.g. `COUNT`, `SUM`).
+
+## 10. `IS` filters are generally faster than `=`
+
+`IS` comparisons are optimized for a specific check and perform up to twice as fast as `=` comparisons. However, they are only available for a limited set of checks:
+
+- `IS NONE`
+- `IS NOT NONE`
+- `IS TRUE`
+- `IS FALSE`
