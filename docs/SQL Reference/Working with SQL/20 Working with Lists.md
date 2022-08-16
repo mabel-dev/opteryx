@@ -1,6 +1,6 @@
 # Working with Lists
 
-In Opteryx a list is an ordered collection of zero or more values of the same data type.
+In Opteryx a list is an ordered collection of zero or more `VARCHAR` values.
 
 ## Actions
 
@@ -41,3 +41,15 @@ LIST_CONTAINS_ALL
 SELECT * 
   FROM UNNEST((True, False)) AS Booleans;
 ~~~
+
+## Limitations
+
+Lists have the following limitations
+
+- Statements cannot ORDER BY a list column
+- Statements cannot contain DISTINCT and JOIN when the tables include list columns
+- Lists cannot be used in comparisons
+
+!!! note
+    Some restrictions may be resolved by the query optimizer, for example, Projection Pushdown may remove list columns as part of optimization. However, you should not rely on the optimizer to
+    take any particular action.

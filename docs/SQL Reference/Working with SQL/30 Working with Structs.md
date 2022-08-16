@@ -34,3 +34,15 @@ SELECT name,
        SEARCH(birth_place, 'Italy')
   FROM $astronauts
 ~~~
+
+## Limitations
+
+Structs have the following limitations
+
+- Statements cannot ORDER BY a struct column
+- Statements cannot contain DISTINCT and JOIN when the tables include struct columns
+- Structs cannot be used in comparisons
+
+!!! note
+    Some restrictions may be resolved by the query optimizer, for example, Projection Pushdown may remove struct columns as part of optimization. However, you should not rely on the optimizer to
+    take any particular action.
