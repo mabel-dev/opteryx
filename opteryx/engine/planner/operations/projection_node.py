@@ -28,7 +28,6 @@ from opteryx.engine.planner.expression import evaluate_and_append
 from opteryx.engine.planner.expression import format_expression
 from opteryx.engine.planner.expression import NodeType
 from opteryx.exceptions import SqlError
-from opteryx.utils.columns import Columns
 
 
 def replace_wildcards(arg):

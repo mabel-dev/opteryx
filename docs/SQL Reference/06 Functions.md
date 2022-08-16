@@ -70,7 +70,7 @@ For more details, see [Working with Lists](https://mabel-dev.github.io/opteryx/S
 Functions for examining and manipulating string values. 
 
 **str**: _varchar_`[`**index**: _numeric_`]` → _varchar_ 🔻  
-&emsp;Return the **index**th character from **str**. 
+&emsp;Subscript operator, return the **index**th character from **str**. 
 
 `GET` (**str**: _varchar_, **index**: _numeric_) → _varchar_ 🔻   
 &emsp;Alias of **str**`[`**index**`]`.   
@@ -207,7 +207,7 @@ For more details, see [Working with Timestamps](https://mabel-dev.github.io/opte
 For more details, see [Working with Structs](https://mabel-dev.github.io/opteryx/SQL%20Reference/Working%20with%20SQL/30%20Working%20with%20Structs/).
 
 **object**: _struct_`[`**key**: _varchar_`]` → **value** 🔻  
-&emsp;Return the value for **key** from **object**. 
+&emsp;Subscript operator, return the value for **key** from **object**. 
 
 `GET` (**object**: _struct_, **key**: _varchar_) → **value** 🔻   
 &emsp;Alias of **object**`[`**key**`]`.  

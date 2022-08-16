@@ -447,7 +447,6 @@ class QueryPlanner(ExecutionTree):
         statement but they can exist elsewhere to limit the amount of data
         processed at each step.
         """
-        # print(projection)
         if projection == ["Wildcard"]:
             return [ExpressionTreeNode(token_type=NodeType.WILDCARD)]
 
@@ -465,145 +464,131 @@ class QueryPlanner(ExecutionTree):
                 return ExpressionTreeNode(
                     NodeType.WILDCARD, value=attribute["QualifiedWildcard"][0]["value"]
                 )
-            if "Identifier" in attribute:
-                function = attribute
-            # this should only be hit if we're in a GROUP BY clause
-            if "Function" in attribute:
+            if function is None:
                 function = attribute
 
-            if function:
 
-                if "Identifier" in function:
-                    return ExpressionTreeNode(
-                        token_type=NodeType.IDENTIFIER,
-                        value=function["Identifier"]["value"],
-                        alias=alias,
-                    )
-                if "CompoundIdentifier" in function:
-                    return ExpressionTreeNode(
-                        token_type=NodeType.IDENTIFIER,
-                        value=".".join(
-                            p["value"] for p in function["CompoundIdentifier"]
-                        ),
-                        alias=".".join(
-                            p["value"] for p in function["CompoundIdentifier"]
-                        ),
-                    )
-                if "Function" in function:
-                    func = function["Function"]["name"][0]["value"].upper()
-                    args = [
-                        self._build_filters(a) for a in function["Function"]["args"]
-                    ]
-                    if is_function(func):
-                        node_type = NodeType.FUNCTION
-                    else:
-                        node_type = NodeType.AGGREGATOR
-                    return ExpressionTreeNode(
-                        token_type=node_type, value=func, parameters=args, alias=alias
-                    )
-                if "BinaryOp" in function:
-                    left = self._build_filters(function["BinaryOp"]["left"])
-                    operator = function["BinaryOp"]["op"]
-                    right = self._build_filters(function["BinaryOp"]["right"])
+            if "Identifier" in function:
+                return ExpressionTreeNode(
+                    token_type=NodeType.IDENTIFIER,
+                    value=function["Identifier"]["value"],
+                    alias=alias,
+                )
+            if "CompoundIdentifier" in function:
+                return ExpressionTreeNode(
+                    token_type=NodeType.IDENTIFIER,
+                    value=".".join(
+                        p["value"] for p in function["CompoundIdentifier"]
+                    ),
+                    alias=".".join(
+                        p["value"] for p in function["CompoundIdentifier"]
+                    ),
+                )
+            if "Function" in function:
+                func = function["Function"]["name"][0]["value"].upper()
+                args = [
+                    self._build_filters(a) for a in function["Function"]["args"]
+                ]
+                if is_function(func):
+                    node_type = NodeType.FUNCTION
+                else:
+                    node_type = NodeType.AGGREGATOR
+                return ExpressionTreeNode(
+                    token_type=node_type, value=func, parameters=args, alias=alias
+                )
+            if "BinaryOp" in function:
+                left = self._build_filters(function["BinaryOp"]["left"])
+                operator = function["BinaryOp"]["op"]
+                right = self._build_filters(function["BinaryOp"]["right"])
 
-                    raise Exception("IS THIS EVER CALLED?")
-                if "Cast" in function:
-                    # CAST(<var> AS <type>) - convert to the form <type>(var), e.g. BOOLEAN(on)
-                    args = [self._build_filters(function["Cast"]["expr"])]
-                    data_type = function["Cast"]["data_type"]
-                    if data_type == "Timestamp":
-                        data_type = "TIMESTAMP"
-                    elif "Varchar" in data_type:
-                        data_type = "VARCHAR"
-                    elif "Decimal" in data_type:
-                        data_type = "NUMERIC"
-                    elif "Boolean" in data_type:
-                        data_type = "BOOLEAN"
-                    else:
-                        raise SqlError(f"Unsupported type for CAST  - '{data_type}'")
+                raise Exception("IS THIS EVER CALLED?")
+            if "Cast" in function:
+                # CAST(<var> AS <type>) - convert to the form <type>(var), e.g. BOOLEAN(on)
+                args = [self._build_filters(function["Cast"]["expr"])]
+                data_type = function["Cast"]["data_type"]
+                if data_type == "Timestamp":
+                    data_type = "TIMESTAMP"
+                elif "Varchar" in data_type:
+                    data_type = "VARCHAR"
+                elif "Decimal" in data_type:
+                    data_type = "NUMERIC"
+                elif "Boolean" in data_type:
+                    data_type = "BOOLEAN"
+                else:
+                    raise SqlError(f"Unsupported type for CAST  - '{data_type}'")
 
-                    alias.append(f"CAST({args[0].value} AS {data_type})")
+                alias.append(f"CAST({args[0].value} AS {data_type})")
 
-                    return ExpressionTreeNode(
-                        NodeType.FUNCTION,
-                        value=data_type.upper(),
-                        parameters=args,
-                        alias=alias,
-                    )
+                return ExpressionTreeNode(
+                    NodeType.FUNCTION,
+                    value=data_type.upper(),
+                    parameters=args,
+                    alias=alias,
+                )
 
-                if "TryCast" in function:
-                    # CAST(<var> AS <type>) - convert to the form <type>(var), e.g. BOOLEAN(on)
-                    args = [self._build_filters(function["TryCast"]["expr"])]
-                    data_type = function["TryCast"]["data_type"]
-                    if data_type == "Timestamp":
-                        data_type = "TIMESTAMP"
-                    elif "Varchar" in data_type:
-                        data_type = "VARCHAR"
-                    elif "Decimal" in data_type:
-                        data_type = "NUMERIC"
-                    elif "Boolean" in data_type:
-                        data_type = "BOOLEAN"
-                    else:
-                        raise SqlError(
-                            f"Unsupported type for TRY_CAST  - '{data_type}'"
-                        )
-
-                    alias.append(f"TRY_CAST({args[0].value} AS {data_type})")
-
-                    return ExpressionTreeNode(
-                        NodeType.FUNCTION,
-                        value=f"TRY_{data_type.upper()}",
-                        parameters=args,
-                        alias=alias,
+            if "TryCast" in function:
+                # CAST(<var> AS <type>) - convert to the form <type>(var), e.g. BOOLEAN(on)
+                args = [self._build_filters(function["TryCast"]["expr"])]
+                data_type = function["TryCast"]["data_type"]
+                if data_type == "Timestamp":
+                    data_type = "TIMESTAMP"
+                elif "Varchar" in data_type:
+                    data_type = "VARCHAR"
+                elif "Decimal" in data_type:
+                    data_type = "NUMERIC"
+                elif "Boolean" in data_type:
+                    data_type = "BOOLEAN"
+                else:
+                    raise SqlError(
+                        f"Unsupported type for TRY_CAST  - '{data_type}'"
                     )
 
-                if "Extract" in function:
-                    # EXTRACT(part FROM timestamp)
+                alias.append(f"TRY_CAST({args[0].value} AS {data_type})")
 
-                    datepart = (
-                        function["Extract"]["field"],
-                        TOKEN_TYPES.INTERVAL,
-                    )
-                    value = self._build_filters(function["Extract"]["expr"])
+                return ExpressionTreeNode(
+                    NodeType.FUNCTION,
+                    value=f"TRY_{data_type.upper()}",
+                    parameters=args,
+                    alias=alias,
+                )
 
-                    alias.append(f"EXTRACT({datepart[0]} FROM {value[0]})")
-                    alias.append(f"DATEPART({datepart[0]}, {value[0]}")
+            if "Extract" in function:
+                # EXTRACT(part FROM timestamp)
 
-                    return {
-                        "function": "DATEPART",
-                        "args": (
-                            datepart,
-                            value,
-                        ),
-                        "alias": alias,
-                    }
+                datepart = (
+                    function["Extract"]["field"],
+                    TOKEN_TYPES.INTERVAL,
+                )
+                value = self._build_filters(function["Extract"]["expr"])
 
-                if "MapAccess" in function:
-                    # Identifier[key] -> GET(Identifier, key) -> alias of I[k] or alias
-                    identifier = function["MapAccess"]["column"]["Identifier"]["value"]
-                    key_dict = function["MapAccess"]["keys"][0]["Value"]
-                    if "SingleQuotedString" in key_dict:
-                        key_value = (
-                            key_dict["SingleQuotedString"],
-                            TOKEN_TYPES.VARCHAR,
-                        )
-                        key = f"'{key_dict['SingleQuotedString']}'"
-                    if "Number" in key_dict:
-                        key_value = (
-                            int(key_dict["Number"][0]),
-                            TOKEN_TYPES.NUMERIC,
-                        )
-                        key = key_dict["Number"][0]
-                    alias.append(f"{identifier}[{key}]")
+                alias.append(f"EXTRACT({datepart[0]} FROM {value[0]})")
+                alias.append(f"DATEPART({datepart[0]}, {value[0]}")
 
-                    return {
-                        "function": "GET",
-                        "args": [(identifier, TOKEN_TYPES.IDENTIFIER), key_value],
-                        "alias": alias,
-                    }
+                return {
+                    "function": "DATEPART",
+                    "args": (
+                        datepart,
+                        value,
+                    ),
+                    "alias": alias,
+                }
+
+            if "MapAccess" in function:
+                # Identifier[key] -> GET(Identifier, key) -> alias of I[k] or alias
+                identifier = function["MapAccess"]["column"]["Identifier"]["value"]
+                key_dict = function["MapAccess"]["keys"][0]["Value"]
+                if "SingleQuotedString" in key_dict:
+                    key = key_dict["SingleQuotedString"]
+                    key_node = ExpressionTreeNode(NodeType.LITERAL_VARCHAR, value=key)
+                if "Number" in key_dict:
+                    key = key_dict["Number"][0]
+                    key_node = ExpressionTreeNode(NodeType.LITERAL_NUMERIC, value=key)
+                alias.append(f"{identifier}[{key}]")
+
+                identifier_node = ExpressionTreeNode(NodeType.IDENTIFIER, value=identifier)
+                return ExpressionTreeNode(NodeType.FUNCTION, value="GET", parameters=[identifier_node, key_node], alias=alias)
 
         projection = [_inner(attribute) for attribute in projection]
-        # print(projection)
         return projection
 
     def _extract_selection(self, ast):
@@ -773,6 +758,7 @@ class QueryPlanner(ExecutionTree):
         # TODO [#196]: move all information collection upfront so we can identify all
         # the identifiers for selection pushdown. is parameter 'selection' for the
         # reader
+        # all_identifiers = get_all_identifiers(self._groups)
 
         _relations = [r for r in self._extract_relations(ast)]
         if len(_relations) == 0:

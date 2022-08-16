@@ -147,8 +147,8 @@ def _iterate_double_parameter(func):
     def _inner(array, literal):
         if isinstance(array, str):
             array = [array]
-        for item in array:
-            yield [func(item, literal)]
+        for index, item in enumerate(array):
+            yield [func(item, literal[index])]
 
     return _inner
 

@@ -20,6 +20,7 @@ Expressions are evaluated against an entire page at a time.
 from enum import Enum
 
 import numpy
+import pyarrow
 
 from pyarrow import Table
 
@@ -244,6 +245,9 @@ def _inner_evaluate(root: ExpressionTreeNode, table: Table, columns):
             parameters = [
                 _inner_evaluate(param, table, columns) for param in root.parameters
             ]
+            # zero parameter functions get the number of rows as the parameter
+            if len(parameters) == 0:
+                parameters = [table.num_rows]
             return FUNCTIONS[root.value][1](*parameters)
         if node_type == NodeType.IDENTIFIER:
             if root.value in table.column_names:
@@ -324,6 +328,11 @@ def evaluate_and_append(expressions, table: Table):
             if new_column_name in table.column_names:
                 continue
             new_column = evaluate(statement, table)
+            
+            # Strings need special handling
+            if isinstance(new_column, (pyarrow.lib.StringScalar)):
+                new_column = [[new_column.as_py()]]
+
             table = table.append_column(new_column_name, new_column)
 
             # add the column to the schema and because it's been evaluated and added to

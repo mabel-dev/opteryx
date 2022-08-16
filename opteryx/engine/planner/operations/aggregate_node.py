@@ -166,7 +166,7 @@ class AggregateNode(BasePlanNode):
         super().__init__(directives=directives, statistics=statistics)
 
         self._aggregates = config.get("aggregates", [])
-        self._groups = config.get("groups", [])
+        self._groups = [group for group in config.get("groups", []) if group is not None]
 
     @property
     def config(self):  # pragma: no cover
