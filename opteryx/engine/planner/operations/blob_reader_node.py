@@ -140,7 +140,10 @@ class BlobReaderNode(BasePlanNode):
         self._end_date = config.get("end_date", today)
 
         # pushed down selection/filter
-        self._selection = config.get("selection")
+        if "NO_PUSH_PROJECTION" in config.get("hints", []):
+            self._selection = None
+        else:
+            self._selection = config.get("selection")
 
         # scan
         self._reading_list = self._scanner()

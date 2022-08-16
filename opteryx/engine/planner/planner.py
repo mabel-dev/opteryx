@@ -317,10 +317,7 @@ class QueryPlanner(ExecutionTree):
 
         from opteryx.third_party.mbleven import compare
 
-        well_known_hints = (
-            "NO_CACHE",
-            "NO_PARTITION",
-        )
+        well_known_hints = ("NO_CACHE", "NO_PARTITION", "NO_PUSH_PROJECTION")
 
         for hint in hints:
             if hint not in well_known_hints:
@@ -764,6 +761,10 @@ class QueryPlanner(ExecutionTree):
         functionality.
         """
         directives = self._extract_directives(ast)
+
+        # TODO [#196]: move all information collection upfront so we can identify all
+        # the identifiers for selection pushdown. is parameter 'selection' for the
+        # reader
 
         _relations = [r for r in self._extract_relations(ast)]
         if len(_relations) == 0:

@@ -15,3 +15,9 @@ FROM dataset WITH(NO_PARTITION)
 ~~~
 
 Instructs the blob/file reader to not use partitioning, regardless of other settings.
+
+~~~
+FROM dataset WITH(NO_PUSH_PROJECTION)
+~~~
+
+Instructs the reader not to try to prune columns at read time.

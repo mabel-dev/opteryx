@@ -422,6 +422,12 @@ STATEMENTS = [
 
         ("SELECT * FROM tests.data.schema WITH(NO_PARTITION) ORDER BY 1", 2, 4),
 
+        # TODO [#42] TESTS TO BE WRITTER
+        # NO_PUSH_PROJECTION - on *, on list of fields, on JOIN, on sub query
+        # the different aggregators
+        # functions as inputs to functions
+        # functions in GROUP BY, WHERE and SELECT
+
         ("SELECT COALESCE(death_date, '1900-01-01') FROM $astronauts", 357, 1),
 
         # These are queries which have been found to return the wrong result or not run correctly
