@@ -138,7 +138,7 @@ STATEMENTS = [
         ("SELECT\nCOUNT\n(*)\nFROM\n$satellites", 1, 1),
         ("SELECT Count(*) FROM $satellites", 1, 1),
         ("SELECT Count(*) FROM $satellites WHERE name = 'sputnik'", 1, 1),
-#        ("SELECT COUNT(name) FROM $satellites", 1, 1),
+        ("SELECT COUNT(name) FROM $satellites", 1, 1),
         ("SELECT COUNT(*) FROM $satellites GROUP BY name", 177, 1),
         ("SELECT COUNT(*) FROM $satellites GROUP BY planetId", 7, 1),
         ("SELECT COUNT(*) FROM $satellites GROUP\nBY planetId", 7, 1),
@@ -173,7 +173,7 @@ STATEMENTS = [
 
         ("SELECT BOOLEAN(planetId) FROM $satellites GROUP BY planetId, BOOLEAN(planetId)", 7, 1),
         ("SELECT VARCHAR(planetId) FROM $satellites GROUP BY planetId, VARCHAR(planetId)", 7, 1),
-#        ("SELECT TIMESTAMP(planetId) FROM $satellites GROUP BY planetId, TIMESTAMP(planetId)", 7, 1),
+        ("SELECT TIMESTAMP(planetId) FROM $satellites GROUP BY planetId, TIMESTAMP(planetId)", 7, 1),
         ("SELECT NUMERIC(planetId) FROM $satellites GROUP BY planetId, NUMERIC(planetId)", 7, 1),
         ("SELECT CAST(planetId AS BOOLEAN) FROM $satellites", 177, 1),
         ("SELECT CAST(planetId AS VARCHAR) FROM $satellites", 177, 1),
@@ -185,7 +185,7 @@ STATEMENTS = [
         ("SELECT TRY_CAST(planetId AS NUMERIC) FROM $satellites", 177, 1),
 
         ("SELECT PI()", 1, 1),
-#        ("SELECT GET(name, 1) FROM $satellites GROUP BY planetId, GET(name, 1)", 56, 1),
+        ("SELECT GET(name, 1) FROM $satellites GROUP BY planetId, GET(name, 1)", 56, 1),
         ("SELECT COUNT(*), ROUND(magnitude) FROM $satellites group by ROUND(magnitude)", 22, 2),
         ("SELECT ROUND(magnitude) FROM $satellites group by ROUND(magnitude)", 22, 1),
         ("SELECT ROUND(magnitude, 1) FROM $satellites group by ROUND(magnitude, 1)", 88, 1),
