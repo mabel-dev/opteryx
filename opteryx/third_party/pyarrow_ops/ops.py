@@ -45,6 +45,8 @@ def _get_type(var):
         return PARQUET_TYPES.get(_type, f"UNSUPPORTED ({str(var.dtype)})")
     if isinstance(var, (pyarrow.Array)):
         return PARQUET_TYPES.get(str(var.type), f"UNSUPPORTED ({str(var.type)})")
+    if isinstance(var, list):
+        return PYTHON_TYPES.get(type(var[0]).__name__, f"UNSUPPORTED ({type(var[0]).__name__})")
     type_name = type(var).__name__
     return PYTHON_TYPES.get(type_name, f"OTHER ({type_name})")
 
