@@ -273,21 +273,12 @@ class QueryPlanner(ExecutionTree):
             )
         if "Function" in filters:
             func = filters["Function"]["name"][0]["value"].upper()
-            args = [
-                self._build_filters(a["Unnamed"]) for a in filters["Function"]["args"]
-            ]
-            select_args = [(str(a[0]) if a[0] != "Wildcard" else "*") for a in args]
-            select_args = [
-                ((f"({','.join(a[0])})",) if isinstance(a[0], list) else a)
-                for a in select_args
-            ]
-            column_name = f"{func}({','.join(select_args)})"
-            # we pass the function definition so if needed we can execute the function
-            return (
-                column_name,
-                TOKEN_TYPES.IDENTIFIER,
-                {"function": func, "args": args},
-            )
+            args = [self._build_filters(a) for a in filters["Function"]["args"]]
+            if is_function(func):
+                node_type = NodeType.FUNCTION
+            else:
+                node_type = NodeType.AGGREGATOR
+            return ExpressionTreeNode(token_type=node_type, value=func, parameters=args)
         if "Unnamed" in filters:
             return self._build_filters(filters["Unnamed"])
         if "Expr" in filters:

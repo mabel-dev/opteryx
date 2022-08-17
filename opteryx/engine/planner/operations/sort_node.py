@@ -103,7 +103,9 @@ class SortNode(BasePlanNode):
                 else:
                     self._mapped_order.append(
                         (
-                            columns.get_column_from_alias(column.value, only_one=True),
+                            columns.get_column_from_alias(
+                                format_expression(column), only_one=True
+                            ),
                             direction,
                         )
                     )

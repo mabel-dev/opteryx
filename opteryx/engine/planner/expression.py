@@ -249,6 +249,12 @@ def _inner_evaluate(root: ExpressionTreeNode, table: Table, columns):
             if len(parameters) == 0:
                 parameters = [table.num_rows]
             return FUNCTIONS[root.value][1](*parameters)
+        if node_type == NodeType.AGGREGATOR:
+            # detected as an aggregator, but here it's an identifier because it
+            # should have been evaluated
+            node_type = NodeType.IDENTIFIER
+            root.value = format_expression(root)
+            root.token_type = NodeType.IDENTIFIER
         if node_type == NodeType.IDENTIFIER:
             if root.value in table.column_names:
                 mapped_column = root.value
