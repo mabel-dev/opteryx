@@ -37,7 +37,8 @@ def _get_type(var):
     # added for Opteryx
     if isinstance(var, (numpy.ndarray)):
         if isinstance(var[0], numpy.ndarray):
-            return "LIST"
+            #return "LIST"
+            _type = str(var[0].dtype)
         _type = str(var.dtype)
         if _type.startswith("<U"):
             _type = "string"
@@ -78,7 +79,7 @@ def filter_operations(arr, operator, value):
             raise TypeError(
                 f"Type mismatch, unable to compare {identifier_type} with {literal_type}"
             )
-        return numpy.where(arr == value)
+        return compute.equal(arr, value)
     elif operator == "NotEq":
         return numpy.where(arr != value)
     elif operator == "Lt":
@@ -94,10 +95,10 @@ def filter_operations(arr, operator, value):
         # some of the lists are saved as sets, which are faster than searching numpy
         # arrays, even with numpy's native functionality - choosing the right algo
         # is almost always faster than choosing a fast language.
-        return numpy.array([a in value[0] for a in arr], dtype=numpy.bool8)
+        return numpy.array([a in value[0] for a in arr], dtype=numpy.bool8)  # [#325]?
     elif operator == "NotInList":
         # MODIFIED FOR OPTERYX - see comment above
-        return numpy.array([a not in value[0] for a in arr], dtype=numpy.bool8)
+        return numpy.array([a not in value[0] for a in arr], dtype=numpy.bool8)  # [#325]?
     elif operator == "Like":
         # MODIFIED FOR OPTERYX
         # null input emits null output, which should be false/0

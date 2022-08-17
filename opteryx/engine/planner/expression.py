@@ -294,7 +294,10 @@ def _inner_evaluate(root: ExpressionTreeNode, table: Table, columns):
 def evaluate(expression: ExpressionTreeNode, table: Table):
 
     columns = Columns(table)
-    return _inner_evaluate(root=expression, table=table, columns=columns)
+    result = _inner_evaluate(root=expression, table=table, columns=columns)
+    if not isinstance(result, (pyarrow.Array, numpy.ndarray)):
+        result = numpy.array(result)
+    return result
 
 
 def get_all_identifiers(root):
@@ -337,9 +340,9 @@ def evaluate_and_append(expressions, table: Table):
 
             # Strings need special handling
             if isinstance(new_column, (pyarrow.lib.StringScalar)):
-                new_column = [[new_column.as_py()]]
+                new_column = new_column.as_py()
 
-            table = table.append_column(new_column_name, new_column)
+            table = table.append_column(new_column_name, [new_column])
 
             # add the column to the schema and because it's been evaluated and added to
             # table, it's an INDENTIFIER rather than a FUNCTION

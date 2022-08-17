@@ -15,7 +15,6 @@ These are a set of functions that can be applied to data.
 """
 import datetime
 import os
-import numpy
 import pyarrow
 
 from cityhash import CityHash64
@@ -83,12 +82,17 @@ def cast(_type):
 
         def _inner(arr):
             caster = ITERATIVE_CASTERS[_type]
-            for i in arr:
-                yield [caster(i)]
+            return [caster(i) for i in arr]
 
         return _inner
     raise SqlError(f"Unable to cast values in column to `{_type}`")
 
+def safe(func, *parms):
+    """ execute a function, return None if fails """
+    try:
+        return func(*parms)
+    except (ValueError, IndexError, TypeError, ArrowNotImplementedError):
+        return None
 
 def try_cast(_type):
     """cast a column to a specified type"""
@@ -102,11 +106,7 @@ def try_cast(_type):
 
         def _inner(arr):
             caster = casters[_type]
-            for i in arr:
-                try:
-                    yield [caster(i)]
-                except (ValueError, TypeError, ArrowNotImplementedError):
-                    yield [None]
+            return [safe(caster, i) for i in arr]
 
         return _inner
     raise SqlError(f"Unable to cast values in column to `{_type}`")
@@ -115,7 +115,7 @@ def try_cast(_type):
 def _iterate_no_parameters(func):
     # call the function for each row, this is primarily to support "RANDOM"
     def _inner(items):
-        return [[func()] for i in range(items)]
+        return [func() for i in range(items)]
 
     return _inner
 
@@ -123,7 +123,7 @@ def _iterate_no_parameters(func):
 def _repeat_no_parameters(func):
     # call once and repeat
     def _inner(items):
-        return [[func()] * items]
+        return [func() * items]
 
     return _inner
 
@@ -145,7 +145,7 @@ def _iterate_double_parameter(func):
     def _inner(array, literal):
         if isinstance(array, str):
             array = [array]
-        return [[func(item, literal[index])] for index, item in enumerate(array)]
+        return [func(item, literal[index]) for index, item in enumerate(array)]
 
     return _inner
 
@@ -158,7 +158,7 @@ def _iterate_double_parameter_field_second(func):
     def _inner(literal, array):
         if isinstance(array, str):
             array = [array]
-        return [[func(literal, item)] for item in array]
+        return [func(literal, item) for item in array]
 
     return _inner
 
