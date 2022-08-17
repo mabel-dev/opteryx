@@ -80,9 +80,16 @@ class SortNode(BasePlanNode):
             for column in column_list:
                 if column.token_type == NodeType.FUNCTION:
                     columns, expressions, table = evaluate_and_append([column], table)
-                    self._mapped_order.append((columns.get_column_from_alias(format_expression(column), only_one=True), direction,))
+                    self._mapped_order.append(
+                        (
+                            columns.get_column_from_alias(
+                                format_expression(column), only_one=True
+                            ),
+                            direction,
+                        )
+                    )
                 elif column.token_type == NodeType.LITERAL_NUMERIC:
-            
+
                     # we have an index rather than a column name, it's a natural
                     # number but the list of column names is zero-based, so we
                     # subtract one
@@ -102,7 +109,7 @@ class SortNode(BasePlanNode):
                     )
 
         table = table.sort_by(self._mapped_order)
-        
+
         # remove any columns we added just for ordering
         table = table.select(original_columns)
 

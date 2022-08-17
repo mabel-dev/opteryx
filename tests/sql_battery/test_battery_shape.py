@@ -194,7 +194,7 @@ STATEMENTS = [
         ("SELECT LEFT(name, 2) as le, COUNT(*) FROM $satellites GROUP BY 1 ORDER BY 2 DESC", 87, 2),
         ("SELECT RIGHT(name, 10), COUNT(*) FROM $satellites GROUP BY 1 ORDER BY 2 DESC", 177, 2),
         ("SELECT RIGHT(name, 2) as le, COUNT(*) FROM $satellites GROUP BY 1 ORDER BY 2 DESC", 30, 2),
-        ("SELECT round(magnitude) FROM $satellites group by round(magnitude)", 27, 1),
+        ("SELECT round(magnitude) FROM $satellites group by round(magnitude)", 22, 1),
         ("SELECT upper(name) as NAME, id as Identifier FROM $satellites", 177, 2),
         ("SELECT upper(name), lower(name), id as Identifier FROM $satellites", 177, 3),
 
@@ -425,6 +425,29 @@ STATEMENTS = [
         # TODO [#42] TESTS TO BE WRITTER
         # NO_PUSH_PROJECTION - on *, on list of fields, on JOIN, on sub query
         # the different aggregators
+#    "ALL": "all",
+#    "ANY": "any",
+#    "APPROXIMATE_MEDIAN": "approximate_median",
+#    "COUNT": "count",  # counts only non nulls
+#    "COUNT_DISTINCT": "count_distinct",
+#    "CUMULATIVE_SUM": "cumulative_sum",
+#    "DISTINCT": "distinct",
+#    "LIST": "list",
+#    "MAX": "max",
+#    "MAXIMUM": "max",  # alias
+#    "MEAN": "mean",
+#    "AVG": "mean",  # alias
+#    "AVERAGE": "mean",  # alias
+#    "MIN": "min",
+#    "MINIMUM": "min",  # alias
+#    "MIN_MAX": "min_max",
+#    "ONE": "one",
+#    "PRODUCT": "product",
+#    "STDDEV": "stddev",
+#    "SUM": "sum",
+#    "QUANTILES": "tdigest",
+#    "VARIANCE": "variance",
+
         # functions as inputs to functions
         # functions in GROUP BY, WHERE and SELECT
 

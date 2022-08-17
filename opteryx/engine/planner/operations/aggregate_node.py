@@ -18,6 +18,8 @@ This is a SQL Query Execution Plan Node.
 This performs aggregations, both of grouped and non-grouped data.
 
 This is a greedy operator - it consumes all the data before responding.
+
+This is built around the pyarrow table grouping functionality.
 """
 import time
 
@@ -26,11 +28,9 @@ from typing import Iterable
 import pyarrow
 
 from opteryx.engine import QueryDirectives, QueryStatistics
-from opteryx.engine.planner.expression import (
-    NodeType,
-    evaluate_and_append,
-    get_all_identifiers,
-)
+from opteryx.engine.planner.expression import evaluate_and_append
+from opteryx.engine.planner.expression import get_all_identifiers
+from opteryx.engine.planner.expression import NodeType
 from opteryx.engine.planner.operations import BasePlanNode
 from opteryx.exceptions import SqlError
 from opteryx.utils.columns import Columns
@@ -139,7 +139,8 @@ def _build_aggs(aggregators, columns):
 def _non_group_aggregates(aggregates, table, columns):
     """
     If we're not doing a group by, we're just doing aggregations, the pyarrow
-    functionality for aggregate doesn't work
+    functionality for aggregate doesn't work. So we do the calculation, it's
+    relatively straightforward as it's the entire table we're summarizing.
     """
 
     result = {}
@@ -150,7 +151,8 @@ def _non_group_aggregates(aggregates, table, columns):
         mapped_column_name = columns.get_column_from_alias(column_name, only_one=True)
         raw_column_values = table[mapped_column_name].to_numpy()
         aggregate_function_name = AGGREGATORS[aggregate.value]
-        # this maps a string which is the function name to the function
+        # this maps a string which is the function name to that function on the
+        # pyarrow.compute module
         aggregate_function = getattr(pyarrow.compute, aggregate_function_name)
         aggregate_column_value = aggregate_function(raw_column_values).as_py()
         aggregate_column_name = f"{mapped_column_name}_{aggregate_function_name}"
@@ -166,9 +168,17 @@ class AggregateNode(BasePlanNode):
         super().__init__(directives=directives, statistics=statistics)
 
         self._aggregates = config.get("aggregates", [])
-        self._groups = [
-            group for group in config.get("groups", []) if group is not None
-        ]
+
+        self._groups = []
+        for group in config.get("groups", []):
+            # skip nulls
+            if group is None:
+                continue
+            # handle numeric indexes - GROUP BY 1
+            if group.token_type == NodeType.LITERAL_NUMERIC:
+                # references are natural numbers, so -1 for zero-based
+                group = self._aggregates[int(group.value) - 1]
+            self._groups.append(group)
 
     @property
     def config(self):  # pragma: no cover

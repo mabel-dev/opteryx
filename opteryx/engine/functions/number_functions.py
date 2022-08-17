@@ -12,11 +12,13 @@
 
 from pyarrow import compute
 
+
 def pi():
     return 3.1415926535897932384626433
+
 
 def round(*args):
     if len(args) == 1:
         return compute.round(args[0])
     # the second parameter is a fixed value
-    return compute.round(args[0], args[1][0])
+    return compute.round(args[0], args[1][0])  # [#325]
