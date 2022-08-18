@@ -43,7 +43,8 @@ class ExtentionType(str, Enum):
     CONTROL = "CONTROL"
 
 
-do_nothing = lambda x, y: x
+def do_nothing(stream, projection = None):
+    return stream
 
 MAX_SIZE_SINGLE_CACHE_ITEM = config.MAX_SIZE_SINGLE_CACHE_ITEM
 PARTITION_SCHEME = config.PARTITION_SCHEME
