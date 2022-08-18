@@ -47,21 +47,29 @@ def search(array, item):
     `search` provides a way to look for values across different field types, rather
     than doing a LIKE on a string, IN on a list, `search` adapts to the field type.
     """
+
+    item = item[0]  # [#325]
+
     if len(array) > 0:
         array_type = type(array[0])
     else:
-        return [None]
+        return numpy.array([None], dtype=numpy.bool_)
     if array_type == str:
         # return True if the value is in the string
         return compute.match_substring(array, pattern=item, ignore_case=True)
     if array_type == numpy.ndarray:
         # converting to a set is faster for a handful of items which is what we're
         # almost definitely working with here - note compute.index is about 50x slower
-        return (
-            [False] if record is None else [item in set(record)] for record in array
+        return numpy.array(
+            [False if record is None else item in set(record) for record in array],
+            dtype=numpy.bool_,
         )
     if array_type == dict:
-        return (
-            [False] if record is None else [item in record.values()] for record in array
+        return numpy.array(
+            [
+                False if record is None else item in record.values()
+                for record in array
+            ],
+            dtype=numpy.bool_,
         )
-    return [[False] * array.shape[0]]
+    return numpy.array([[False] * array.shape[0]], dtype=numpy.bool_)

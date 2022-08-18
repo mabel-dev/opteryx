@@ -20,6 +20,7 @@ import time
 from typing import Iterable
 
 import numpy
+import pyarrow
 
 from pyarrow import Table
 
@@ -87,7 +88,7 @@ class SelectionNode(BasePlanNode):
 
                 # if the mask is a boolean array, we've called a function that
                 # returns booleans
-                if mask.dtype == numpy.bool:
+                if isinstance(mask, pyarrow.lib.BooleanArray) or (isinstance(mask, numpy.ndarray) and mask.dtype == numpy.bool):
                     mask = numpy.nonzero(mask)[0]
 
                 self._statistics.time_selecting += time.time_ns() - start_selection
