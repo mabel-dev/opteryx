@@ -75,7 +75,7 @@ class Columns:
         _column_metadata = self._column_metadata.copy()
         # we start by collecting the column_name/alias for each column
         columns, preferences = zip(
-            *[(c, v.get("preferred_name", None)) for c, v in _column_metadata.items()]
+            *[(c, v.get("preferred_name", c)) for c, v in _column_metadata.items()]
         )
         preferences = list(preferences)
         # go through each of the collected names, if there's collisions we need to work

@@ -56,7 +56,11 @@ class ProjectionNode(BasePlanNode):
             ):
                 # qualified wildcard, e.g. table.*
                 self._projection[(attribute.value,)] = None
-            elif attribute.token_type in (NodeType.FUNCTION, NodeType.AGGREGATOR):
+            elif attribute.token_type in (
+                NodeType.FUNCTION,
+                NodeType.AGGREGATOR,
+                NodeType.BINARY_OPERATOR,
+            ):
                 self._projection[format_expression(attribute)] = attribute.alias
                 self._expressions.append(attribute)
             elif attribute.token_type == NodeType.IDENTIFIER:
@@ -93,7 +97,9 @@ class ProjectionNode(BasePlanNode):
         for page in data_pages.execute():
 
             # If any of the columns are FUNCTIONs, we need to evaluate them
-            _columns, _expressions, page = evaluate_and_append(self._expressions, page)
+            _columns, self._expressions, page = evaluate_and_append(
+                self._expressions, page
+            )
 
             # first time round we're going work out what we need from the metadata
             if columns is None:

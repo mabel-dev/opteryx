@@ -79,6 +79,15 @@ def format_expression(root):
             return f"{root.value.upper()}({','.join([format_expression(e) for e in root.parameters])})"
         if node_type == NodeType.WILDCARD:
             return "*"
+        if node_type == NodeType.BINARY_OPERATOR:
+            MAP = {
+                "StringConcat": "||",
+                "Plus": "+",
+                "Minus": "-",
+                "Multiply": "*",
+                "Divide": "/",
+            }
+            return f"{format_expression(root.left)}{MAP.get(root.value, '?')}{format_expression(root.right)}"
 
     return str(root.value)
 

@@ -451,6 +451,13 @@ STATEMENTS = [
         # functions as inputs to functions
         # functions in GROUP BY, WHERE and SELECT
 
+        ("SELECT name || ' ' || name FROM $planets", 9, 1),
+        ("SELECT 32 * 12", 1, 1),
+        ("SELECT 9 / 12", 1, 1),
+        ("SELECT 3 + 3", 1, 1),
+        ("SELECT 12 % 2", 1, 1),
+        ("SELECT 10 - 10", 1, 1),
+
         ("SELECT COALESCE(death_date, '1900-01-01') FROM $astronauts", 357, 1),
 
         # These are queries which have been found to return the wrong result or not run correctly
