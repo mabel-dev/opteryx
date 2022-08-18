@@ -23,3 +23,5 @@ Component | Disposition | Copyright | Licence
 
 !!! note
     License information was correct as at 2022-06-03
+
+Archaeopteryx fossil image by Caro Asercion, used under [CC BY 3.0](https://github.com/game-icons/icons/blob/master/license.txt)
