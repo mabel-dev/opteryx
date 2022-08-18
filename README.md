@@ -8,20 +8,14 @@
 [Examples](notebooks) |
 [Contributing](https://mabel-dev.github.io/opteryx/Contributing%20Guide/CONTRIBUTING/)
 
-----
-[![Regression Suite](https://github.com/mabel-dev/opteryx/actions/workflows/regression_suite.yaml/badge.svg)](https://github.com/mabel-dev/opteryx/actions/workflows/regression_suite.yaml)
-[![Static Analysis](https://github.com/mabel-dev/opteryx/actions/workflows/static_analysis.yaml/badge.svg)](https://github.com/mabel-dev/opteryx/actions/workflows/static_analysis.yml)
 [![PyPI Latest Release](https://img.shields.io/pypi/v/opteryx.svg)](https://pypi.org/project/opteryx/)
 [![opteryx](https://snyk.io/advisor/python/opteryx/badge.svg?style=flat-square)](https://snyk.io/advisor/python/opteryx)
 [![Downloads](https://pepy.tech/badge/opteryx)](https://pepy.tech/project/opteryx)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![commit_freq](https://img.shields.io/github/commit-activity/m/mabel-dev/opteryx)](https://github.com/mabel-dev/opteryx/commits)
 [![last_commit](https://img.shields.io/github/last-commit/mabel-dev/opteryx)](https://github.com/mabel-dev/opteryx/commits)
 [![codecov](https://codecov.io/gh/mabel-dev/opteryx/branch/main/graph/badge.svg?token=sIgKpzzd95)](https://codecov.io/gh/mabel-dev/opteryx)
 [![PyPI Latest Release](https://img.shields.io/badge/Python-3.8%20%7C%203.9%20%7C%203.10-blue?logo=python)](https://pypi.org/project/opteryx/)
-[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=mabel-dev_opteryx&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=mabel-dev_opteryx)
-[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=mabel-dev_opteryx&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=mabel-dev_opteryx)
-[![Slack Invite](https://img.shields.io/badge/Slack-Join-blueviolet?logo=slack)](https://join.slack.com/t/mabel-corp/shared_invite/zt-1845skqgm-SEQMgvrPyJO~DLhSsNJovQ)
+[![Regression Suite](https://github.com/mabel-dev/opteryx/actions/workflows/regression_suite.yaml/badge.svg)](https://github.com/mabel-dev/opteryx/actions/workflows/regression_suite.yaml)
 
 ## Features
 
@@ -61,6 +55,9 @@ Changes to schemas and paritioning can be made without requiring any existing da
 
 ## How Can I Contribute?
 
+[![Slack Invite](https://img.shields.io/badge/Slack-Join-blueviolet?logo=slack)](https://join.slack.com/t/mabel-corp/shared_invite/zt-1845skqgm-SEQMgvrPyJO~DLhSsNJovQ)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
 All contributions, [bug reports](https://github.com/mabel-dev/opteryx/issues/new/choose), bug fixes, documentation improvements, enhancements, and [ideas](https://github.com/mabel-dev/opteryx/discussions) are welcome.
 
 If you have a suggestion for an improvement or a bug, [raise a ticket](https://github.com/mabel-dev/opteryx/issues/new/choose) or start a [discussion](https://github.com/mabel-dev/opteryx/discussions).
@@ -69,11 +66,16 @@ Want to help build Opteryx? See the [Contribution Guide](https://mabel-dev.githu
 
 ## Security
 
+[![Static Analysis](https://github.com/mabel-dev/opteryx/actions/workflows/static_analysis.yaml/badge.svg)](https://github.com/mabel-dev/opteryx/actions/workflows/static_analysis.yml)
+[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=mabel-dev_opteryx&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=mabel-dev_opteryx)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=mabel-dev_opteryx&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=mabel-dev_opteryx)
+
 See the project [security policy](SECURITY.md) for information about reporting vulnerabilities.
 
 ## License
 
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/mabel-dev/opteryx/blob/master/LICENSE)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/mabel-dev/opteryx/blob/master/LICENSE)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fmabel-dev%2Fopteryx.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fmabel-dev%2Fopteryx?ref=badge_shield)
 
 ## Status
 
