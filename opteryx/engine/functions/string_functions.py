@@ -25,7 +25,9 @@ def string_slicer_left(arr, length):
     """
     if len(arr) == 0:
         return [[]]
-    length = int(length[0])  # [#325]
+    if hasattr(length, "__iter__"):  # [#325]
+        length = length[0]
+    length = int(length)
     if length == 0:
         return [[""] * len(arr)]
     arr = arr.astype(str)  # it's probably an array of objects
@@ -39,7 +41,9 @@ def string_slicer_right(arr, length):
     """
     if len(arr) == 0:
         return [[]]
-    length = int(length[0])  # it's probably a float64 [#325]
+    if hasattr(length, "__iter__"):  # [#325]
+        length = length[0]
+    length = int(length)
     if length == 0:
         return [[""] * len(arr)]
     arr = arr.astype(str)  # it's probably an array of objects
