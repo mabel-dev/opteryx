@@ -76,3 +76,7 @@ class DatasetNotFoundError(SqlError):
 
 class CursorInvalidStateError(ProgrammingError):
     pass
+
+
+class ColumnNotFoundError(SqlError):
+    pass

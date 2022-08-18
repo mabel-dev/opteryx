@@ -59,11 +59,9 @@ class OuterJoinNode(BasePlanNode):
         left_node = self._producers[0]  # type:ignore
         right_node = self._producers[1]  # type:ignore
 
-        self._right_table = pyarrow.concat_tables(
-            right_node.execute(), promote=True
-        )  # type:ignore
+        right_table = pyarrow.concat_tables(right_node.execute(), promote=True)
 
-        right_columns = Columns(self._right_table)
+        right_columns = Columns(right_table)
         left_columns = None
 
         for page in arrow.consolidate_pages(left_node.execute(), self._statistics):
@@ -72,24 +70,23 @@ class OuterJoinNode(BasePlanNode):
                 left_columns = Columns(page)
                 try:
                     right_join_column = right_columns.get_column_from_alias(
-                        self._on[2][0], only_one=True
+                        self._on.right.value, only_one=True
                     )
                     left_join_column = left_columns.get_column_from_alias(
-                        self._on[0][0], only_one=True
+                        self._on.left.value, only_one=True
                     )
                 except SqlError:
                     # the ON condition may not always be in the order of the tables
+                    # we purposefully reference the columns incorrectly
                     right_join_column = right_columns.get_column_from_alias(
-                        self._on[0][0], only_one=True
+                        self._on.left.value, only_one=True
                     )
                     left_join_column = left_columns.get_column_from_alias(
-                        self._on[2][0], only_one=True
+                        self._on.right.value, only_one=True
                     )
 
                 # ensure the types are compatible for joining by coercing numerics
-                self._right_table = arrow.coerce_column(
-                    self._right_table, right_join_column
-                )
+                right_table = arrow.coerce_column(right_table, right_join_column)
 
             new_metadata = right_columns + left_columns
 
@@ -97,7 +94,7 @@ class OuterJoinNode(BasePlanNode):
 
             # do the join
             new_page = page.join(
-                self._right_table,
+                right_table,
                 keys=[left_join_column],
                 right_keys=[right_join_column],
                 join_type=self._join_type.lower(),

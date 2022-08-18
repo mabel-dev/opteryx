@@ -109,18 +109,19 @@ class InnerJoinNode(BasePlanNode):
                     left_columns = Columns(page)
                     try:
                         right_join_column = right_columns.get_column_from_alias(
-                            self._on[2][0], only_one=True
+                            self._on.right.value, only_one=True
                         )
                         left_join_column = left_columns.get_column_from_alias(
-                            self._on[0][0], only_one=True
+                            self._on.left.value, only_one=True
                         )
                     except SqlError:
                         # the ON condition may not always be in the order of the tables
+                        # purposefully reference the values the wrong way around
                         right_join_column = right_columns.get_column_from_alias(
-                            self._on[0][0], only_one=True
+                            self._on.left.value, only_one=True
                         )
                         left_join_column = left_columns.get_column_from_alias(
-                            self._on[2][0], only_one=True
+                            self._on.right.value, only_one=True
                         )
 
                     left_null_columns, page = Columns.remove_null_columns(page)

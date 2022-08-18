@@ -26,7 +26,7 @@ is actually being referred to.
 import os
 import pyarrow
 
-from opteryx.exceptions import SqlError
+from opteryx.exceptions import SqlError, ColumnNotFoundError
 from opteryx.utils import arrow
 
 
@@ -161,10 +161,10 @@ class Columns:
 
                 best_match = self.fuzzy_search(column)
                 if best_match:
-                    raise SqlError(
+                    raise ColumnNotFoundError(
                         f"Field `{column}` does not exist, did you mean `{best_match}`?"
                     )
-                raise SqlError(f"Field `{column}` does not exist.")
+                raise ColumnNotFoundError(f"Field `{column}` does not exist.")
             if len(matches) > 1:
                 raise SqlError(
                     f"Field `{column}` is ambiguous, try qualifying the field name."
