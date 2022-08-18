@@ -129,5 +129,6 @@ def date_diff(part, start, end):
 def date_format(dates, pattern):  # [#325]
     return compute.strftime(dates, pattern[0])
 
+
 def date_floor(dates, magnitude, units):  # [#325]
     return compute.floor_temporal(dates, magnitude[0], units[0])

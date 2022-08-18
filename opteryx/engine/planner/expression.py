@@ -69,7 +69,7 @@ def format_expression(root):
         if node_type == NodeType.LITERAL_VARCHAR:
             return "'" + root.value.replace("'", "'") + "'"
         if node_type == NodeType.LITERAL_TIMESTAMP:
-            return "'" + root.value.iso_format() + "'"
+            return "'" + root.value.isoformat() + "'"
         if node_type == NodeType.LITERAL_INTERVAL:
             return "<INTERVAL>"
         return str(root.value)

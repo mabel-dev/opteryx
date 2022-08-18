@@ -394,8 +394,8 @@ STATEMENTS = [
         ("SELECT time_bucket(birth_date, 10, 'year') AS decade, count(*) from $astronauts GROUP BY time_bucket(birth_date, 10, 'year')", 6, 2),
         ("SELECT time_bucket(birth_date, 6, 'month') AS half, count(*) from $astronauts GROUP BY time_bucket(birth_date, 6, 'month')", 97, 2),
     
-        ("SELECT COALESCE(graduate_major, undergraduate_major, 'high school') as ed FROM $astronauts WHERE COALESCE(graduate_major, undergraduate_major, 'high school') = 'high school'", 4, 1),
-        ("SELECT COALESCE(graduate_major, undergraduate_major) AS ed, graduate_major, undergraduate_major FROM $astronauts WHERE COALESCE(graduate_major, undergraduate_major) = 'Aeronautical Engineering'", 41, 3),
+        ("SELECT graduate_major, undergraduate_major FROM $astronauts WHERE COALESCE(graduate_major, undergraduate_major, 'high school') = 'high school'", 4, 2),
+        ("SELECT graduate_major, undergraduate_major FROM $astronauts WHERE COALESCE(graduate_major, undergraduate_major) = 'Aeronautical Engineering'", 41, 2),
         ("SELECT COALESCE(death_date, '2030-01-01') FROM $astronauts", 357, 1),
 
         ("SELECT SEARCH(name, 'al'), name FROM $satellites", 177, 2),
