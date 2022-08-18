@@ -68,7 +68,9 @@ def filter_operations(arr, operator, value):
     match the filter
     """
 
-    # ADDED FOR OPTERYX - if all of the values are null, shortcut
+    # OPTERYX - if the input is a table, get the first column
+    if isinstance(value, pyarrow.Table):
+        value = [value.columns[0].to_numpy()]
 
     identifier_type = _get_type(arr)
     literal_type = _get_type(value)

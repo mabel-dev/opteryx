@@ -129,7 +129,7 @@ class NodeType(int, Enum):
     LITERAL_STRUCT: int = 100
     LITERAL_TIMESTAMP: int = 116
     LITERAL_NONE: int = 132
-    # LITERAL_TABLE: int = 148 (may be needed for CTEs/Subqueries and manual literals)
+    LITERAL_TABLE: int = 148
 
     # fmt:on
 
@@ -277,7 +277,10 @@ def _inner_evaluate(root: ExpressionTreeNode, table: Table, columns):
         if node_type == NodeType.WILDCARD:
             numpy.full(table.num_rows, "*", dtype=numpy.str_)
         if node_type == NodeType.SUBQUERY:
-            raise NotImplementedError("subquery")
+            # we should have a query plan here
+            r = root.value.execute()
+            r = pyarrow.concat_tables(r, promote=True)
+            return r
         if node_type == NodeType.NESTED:
             return _inner_evaluate(root.centre, table, columns)
         if node_type == NodeType.UNARY_OPERATOR:

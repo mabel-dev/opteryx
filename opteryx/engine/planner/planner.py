@@ -251,7 +251,14 @@ class QueryPlanner(ExecutionTree):
             subquery_plan = self.copy()
             subquery_plan.create_plan(ast=[ast])
             operator = "NotInList" if filters["InSubquery"]["negated"] else "InList"
-            return (left, operator, (subquery_plan, TOKEN_TYPES.QUERY_PLAN))
+
+            sub_query = ExpressionTreeNode(NodeType.SUBQUERY, value=subquery_plan)
+            return ExpressionTreeNode(
+                NodeType.COMPARISON_OPERATOR,
+                value=operator,
+                left_node=left,
+                right_node=sub_query,
+            )
         try_unary_filter = list(filters.keys())[0]
         if try_unary_filter in ("IsTrue", "IsFalse", "IsNull", "IsNotNull"):
             centre = self._build_filters(filters[try_unary_filter])
@@ -316,6 +323,8 @@ class QueryPlanner(ExecutionTree):
                     self._build_literal_node(t["Value"]).value for t in filters["Tuple"]
                 ],
             )
+
+        raise SqlError("Unknown or unsupported clauses in statement")
 
     def _check_hints(self, hints):
 
