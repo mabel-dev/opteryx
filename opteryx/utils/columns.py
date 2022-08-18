@@ -212,7 +212,9 @@ class Columns:
 
         # get the list of matching columns - some physical columns may be referenced
         # multiple times so we deduplicate them
-        selected = [self.get_column_from_alias(alias.as_py(), True) for alias in filtered]
+        selected = [
+            self.get_column_from_alias(alias.as_py(), True) for alias in filtered
+        ]
         selected = list(set(selected))
 
         return selected

@@ -894,7 +894,11 @@ class QueryPlanner(ExecutionTree):
         _projection = self._extract_field_list(
             ast[0]["Query"]["body"]["Select"]["projection"]
         )
-        if _projection[0].token_type != NodeType.WILDCARD:
+        # qualified wildcards have the qualifer in the value
+        # e.g. SELECT table.* -> node.value = table
+        if (_projection[0].token_type != NodeType.WILDCARD) or (
+            _projection[0].value is not None
+        ):
             self.add_operator(
                 "select",
                 operations.ProjectionNode(

@@ -97,6 +97,8 @@ def date_trunc(truncate_to, datetime):
     # convert acceptable non datetime values to datetime
     datetime = dates.parse_iso(datetime)
 
+    truncate_to = truncate_to[0]  # [#325]
+
     if truncate_to in PERIODS:
         return datetime.replace(**PERIODS[truncate_to])
 
