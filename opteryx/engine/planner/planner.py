@@ -289,13 +289,26 @@ class QueryPlanner(ExecutionTree):
                 centre_node=self._build_filters(filters["Nested"]),
             )
         if "MapAccess" in filters:
+            # Identifier[key] -> GET(Identifier, key) -> alias of I[k] or alias
             identifier = filters["MapAccess"]["column"]["Identifier"]["value"]
             key_dict = filters["MapAccess"]["keys"][0]["Value"]
             if "SingleQuotedString" in key_dict:
-                key = f"'{key_dict['SingleQuotedString']}'"
+                key = key_dict["SingleQuotedString"]
+                key_node = ExpressionTreeNode(NodeType.LITERAL_VARCHAR, value=key)
             if "Number" in key_dict:
                 key = key_dict["Number"][0]
-            return (f"{identifier}[{key}]", TOKEN_TYPES.IDENTIFIER)
+                key_node = ExpressionTreeNode(NodeType.LITERAL_NUMERIC, value=key)
+            alias = [f"{identifier}[{key}]"]
+
+            identifier_node = ExpressionTreeNode(
+                NodeType.IDENTIFIER, value=identifier
+            )
+            return ExpressionTreeNode(
+                NodeType.FUNCTION,
+                value="GET",
+                parameters=[identifier_node, key_node],
+                alias=alias,
+            )
         if "Tuple" in filters:
             return ExpressionTreeNode(
                 NodeType.LITERAL_LIST,
