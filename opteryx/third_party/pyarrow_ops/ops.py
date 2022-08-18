@@ -81,17 +81,23 @@ def filter_operations(arr, operator, value):
             raise TypeError(
                 f"Type mismatch, unable to compare {identifier_type} with {literal_type}"
             )
-        return compute.equal(arr, value)
+        matches = compute.equal(arr, value)
+        return compute.fill_null(matches, False)
     elif operator == "NotEq":
-        return numpy.where(arr != value)
+        matches = compute.not_equal(arr, value)
+        return compute.fill_null(matches, False)
     elif operator == "Lt":
-        return numpy.where(arr < value)
+        matches = compute.less(arr, value)
+        return compute.fill_null(matches, False)
     elif operator == "Gt":
-        return numpy.where(arr > value)
+        matches = compute.greater(arr, value)
+        return compute.fill_null(matches, False)
     elif operator == "LtEq":
-        return numpy.where(arr <= value)
+        matches = compute.less_equal(arr, value)
+        return compute.fill_null(matches, False)
     elif operator == "GtEq":
-        return numpy.where(arr >= value)
+        matches = compute.greater_equal(arr, value)
+        return compute.fill_null(matches, False)
     elif operator == "InList":
         # MODIFIED FOR OPTERYX
         # some of the lists are saved as sets, which are faster than searching numpy
@@ -105,45 +111,45 @@ def filter_operations(arr, operator, value):
         # MODIFIED FOR OPTERYX
         # null input emits null output, which should be false/0
         _check_type("LIKE", identifier_type, (TOKEN_TYPES.VARCHAR))
-        matches = compute.match_like(arr, value[0])
+        matches = compute.match_like(arr, value[0])  # [#325]
         return compute.fill_null(matches, False)
     elif operator == "NotLike":
         # MODIFIED FOR OPTERYX - see comment above
         _check_type("NOT LIKE", identifier_type, (TOKEN_TYPES.VARCHAR))
-        matches = compute.match_like(arr, value[0])
+        matches = compute.match_like(arr, value[0])  # [#325]
         matches = compute.fill_null(matches, True)
         return numpy.invert(matches)
     elif operator == "ILike":
         # MODIFIED FOR OPTERYX - see comment above
         _check_type("ILIKE", identifier_type, (TOKEN_TYPES.VARCHAR))
-        matches = compute.match_like(arr, value[0], ignore_case=True)
+        matches = compute.match_like(arr, value[0], ignore_case=True)  # [#325]
         return compute.fill_null(matches, False)
     elif operator == "NotILike":
         # MODIFIED FOR OPTERYX - see comment above
         _check_type("NOT ILIKE", identifier_type, (TOKEN_TYPES.VARCHAR))
-        matches = compute.match_like(arr, value[0], ignore_case=True)
+        matches = compute.match_like(arr, value[0], ignore_case=True)  # [#325]
         matches = compute.fill_null(matches, True)
         return numpy.invert(matches)
     elif operator == "PGRegexMatch":
         # MODIFIED FOR OPTERYX - see comment above
         _check_type("~", identifier_type, (TOKEN_TYPES.VARCHAR))
-        matches = compute.match_substring_regex(arr, value[0])
+        matches = compute.match_substring_regex(arr, value[0])  # [#325]
         return compute.fill_null(matches, False)
     elif operator == "PGRegexNotMatch":
         # MODIFIED FOR OPTERYX - see comment above
         _check_type("!~", identifier_type, (TOKEN_TYPES.VARCHAR))
-        matches = compute.match_substring_regex(arr, value[0])
+        matches = compute.match_substring_regex(arr, value[0])  # [#325]
         matches = compute.fill_null(matches, True)
         return numpy.invert(matches)
     elif operator == "PGRegexIMatch":
         # MODIFIED FOR OPTERYX - see comment above
         _check_type("~*", identifier_type, (TOKEN_TYPES.VARCHAR))
-        matches = compute.match_substring_regex(arr, value[0], ignore_case=True)
+        matches = compute.match_substring_regex(arr, value[0], ignore_case=True)  # [#325]
         return compute.fill_null(matches, False)
     elif operator == "PGRegexNotIMatch":
         # MODIFIED FOR OPTERYX - see comment above
         _check_type("!~*", identifier_type, (TOKEN_TYPES.VARCHAR))
-        matches = compute.match_substring_regex(arr, value[0], ignore_case=True)
+        matches = compute.match_substring_regex(arr, value[0], ignore_case=True)  # [#325]
         matches = compute.fill_null(matches, True)
         return numpy.invert(matches)
     else:

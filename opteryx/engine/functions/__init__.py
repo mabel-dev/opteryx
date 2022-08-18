@@ -123,7 +123,7 @@ def _iterate_no_parameters(func):
 def _repeat_no_parameters(func):
     # call once and repeat
     def _inner(items):
-        return [func() * items]
+        return [func()] * items
 
     return _inner
 
