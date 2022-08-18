@@ -190,7 +190,7 @@ class ExpressionTreeNode:
         )
 
     def _inner_print(self, node, prefix):
-        ret = prefix + node.value + "\n"
+        ret = prefix + str(node.value) + "\n"
         prefix += " |"
         if node.left:
             ret += self._inner_print(node.left, prefix=prefix + "- ")
