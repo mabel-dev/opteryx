@@ -23,6 +23,7 @@ from typing import Iterable
 
 from opteryx.engine.attribute_types import TOKEN_TYPES
 from opteryx.engine import QueryDirectives, QueryStatistics
+from ..expression import NodeType
 from opteryx.engine.planner.operations import BasePlanNode
 from opteryx.exceptions import SqlError
 from opteryx.utils.columns import Columns
@@ -33,17 +34,17 @@ def _generate_series(alias, *args):
     from opteryx.utils import intervals, dates
 
     arg_len = len(args)
-    arg_vals = [i[0] for i in args]
-    first_arg_type = args[0][1]
+    arg_vals = [i.value for i in args]
+    first_arg_type = args[0].token_type
 
     # if the parameters are numbers, generate series is an alias for range
-    if first_arg_type == TOKEN_TYPES.NUMERIC:
+    if first_arg_type == NodeType.LITERAL_NUMERIC:
         if arg_len not in (1, 2, 3):
             raise SqlError("generate_series for numbers takes 1,2 or 3 parameters.")
         return [{alias: i} for i in intervals.generate_range(*arg_vals)]
 
     # if the params are timestamps, we create time intervals
-    if first_arg_type == TOKEN_TYPES.TIMESTAMP:
+    if first_arg_type == NodeType.LITERAL_TIMESTAMP:
         if arg_len != 3:
             raise SqlError(
                 "generate_series for dates needs start, end, and interval parameters"
@@ -51,7 +52,7 @@ def _generate_series(alias, *args):
         return [{alias: i} for i in dates.date_range(*arg_vals)]
 
     # if the param is a CIDR, we create network ranges
-    if first_arg_type == TOKEN_TYPES.VARCHAR:
+    if first_arg_type == NodeType.LITERAL_VARCHAR:
         if arg_len not in (1,):
             raise SqlError("generate_series for strings takes 1 CIDR parameter.")
 
