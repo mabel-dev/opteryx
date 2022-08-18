@@ -17,13 +17,15 @@ This is a SQL Query Execution Plan Node.
 
 This Node creates datasets based on function calls like VALUES and UNNEST.
 """
-import pyarrow
+import os
+import sys
 
 from typing import Iterable
 
-from opteryx.engine.attribute_types import TOKEN_TYPES
+import pyarrow
+
 from opteryx.engine import QueryDirectives, QueryStatistics
-from ..expression import NodeType
+from opteryx.engine.planner.expression import NodeType
 from opteryx.engine.planner.operations import BasePlanNode
 from opteryx.exceptions import SqlError
 from opteryx.utils.columns import Columns
@@ -72,10 +74,6 @@ def _values(alias, *values):
 
 
 def _fake_data(alias, *args):
-
-    import os
-    import sys
-
     def _inner(rows, columns):
         for row in range(rows):
             record = {
@@ -84,7 +82,7 @@ def _fake_data(alias, *args):
             }
             yield record
 
-    rows, columns = args[0][0], args[1][0]
+    rows, columns = args[0].value, args[1].value
     rows = int(rows)
     columns = int(columns)
     return list(_inner(rows, columns))

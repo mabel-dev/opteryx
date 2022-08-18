@@ -98,7 +98,7 @@ def date_diff(part, start, end):
         "years": compute.years_between,
     }
 
-    # if we get date literals
+    # if we get date literals - this will never run due to [#325]
     if isinstance(start, str):
         if not isinstance(end, (str, datetime.datetime)):
             start = pyarrow.array(
@@ -114,7 +114,13 @@ def date_diff(part, start, end):
         else:
             end = pyarrow.array([parse_iso(end)], type=pyarrow.timestamp("us"))
 
-    part = part.lower()
+    # cast to the desired type
+    if start.dtype != "datetime64[us]":
+        start = start.astype("datetime64[us]")
+    if end.dtype != "datetime64[us]":
+        end = end.astype("datetime64[us]")
+
+    part = part[0].lower()  # [#325]
     if part[-1] != "s":
         part += "s"
     if part in extractors:

@@ -334,14 +334,16 @@ class QueryPlanner(ExecutionTree):
             operator_type = NodeType.COMPARISON_OPERATOR
             if operator in BINARY_OPERATORS:
                 operator_type = NodeType.BINARY_OPERATOR
-            if operator == 'And':
+            if operator == "And":
                 operator_type = NodeType.AND
             if operator == "Or":
                 operator_type = NodeType.OR
             if operator == "Xor":
                 operator_type = NodeType.XOR
 
-            return ExpressionTreeNode(operator_type, value=operator, left_node=left, right_node=right)
+            return ExpressionTreeNode(
+                operator_type, value=operator, left_node=left, right_node=right
+            )
         if "Cast" in function:
             # CAST(<var> AS <type>) - convert to the form <type>(var), e.g. BOOLEAN(on)
             args = [self._filter_extract(function["Cast"]["expr"])]
@@ -392,13 +394,20 @@ class QueryPlanner(ExecutionTree):
 
         if "Extract" in function:
             # EXTRACT(part FROM timestamp)
-            datepart = ExpressionTreeNode(NodeType.LITERAL_VARCHAR, value=function["Extract"]["field"])
+            datepart = ExpressionTreeNode(
+                NodeType.LITERAL_VARCHAR, value=function["Extract"]["field"]
+            )
             value = self._filter_extract(function["Extract"]["expr"])
 
             alias.append(f"EXTRACT({datepart.value} FROM {value.value})")
             alias.append(f"DATEPART({datepart.value}, {value.value}")
 
-            return ExpressionTreeNode(NodeType.FUNCTION, value="DATEPART", parameters=[datepart, value], alias=alias)
+            return ExpressionTreeNode(
+                NodeType.FUNCTION,
+                value="DATEPART",
+                parameters=[datepart, value],
+                alias=alias,
+            )
 
         if "MapAccess" in function:
             # Identifier[key] -> GET(Identifier, key) -> alias of I[k] or alias
@@ -412,9 +421,7 @@ class QueryPlanner(ExecutionTree):
                 key_node = ExpressionTreeNode(NodeType.LITERAL_NUMERIC, value=key)
             alias.append(f"{identifier}[{key}]")
 
-            identifier_node = ExpressionTreeNode(
-                NodeType.IDENTIFIER, value=identifier
-            )
+            identifier_node = ExpressionTreeNode(NodeType.IDENTIFIER, value=identifier)
             return ExpressionTreeNode(
                 NodeType.FUNCTION,
                 value="GET",
@@ -423,7 +430,6 @@ class QueryPlanner(ExecutionTree):
             )
         if "Value" in function:
             return self._build_literal_node(function["Value"])
-
 
         if "UnaryOp" in function:
             if function["UnaryOp"]["op"] == "Not":
@@ -511,7 +517,6 @@ class QueryPlanner(ExecutionTree):
                 right_node=right_node,
             )
 
-
         if "Nested" in function:
             return ExpressionTreeNode(
                 token_type=NodeType.NESTED,
@@ -522,12 +527,14 @@ class QueryPlanner(ExecutionTree):
             return ExpressionTreeNode(
                 NodeType.LITERAL_LIST,
                 value=[
-                    self._build_literal_node(t["Value"]).value for t in function["Tuple"]
+                    self._build_literal_node(t["Value"]).value
+                    for t in function["Tuple"]
                 ],
             )
 
-        raise SqlError(f"Unknown or unsupported clauses in statement `{list(function.keys())}`")
-
+        raise SqlError(
+            f"Unknown or unsupported clauses in statement `{list(function.keys())}`"
+        )
 
     def _extract_field_list(self, projection):
         """
@@ -540,7 +547,6 @@ class QueryPlanner(ExecutionTree):
 
         projection = [self._filter_extract(attribute) for attribute in projection]
         return projection
-
 
     def _extract_selection(self, ast):
         """

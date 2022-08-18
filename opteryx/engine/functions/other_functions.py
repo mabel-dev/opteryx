@@ -66,10 +66,7 @@ def search(array, item):
         )
     if array_type == dict:
         return numpy.array(
-            [
-                False if record is None else item in record.values()
-                for record in array
-            ],
+            [False if record is None else item in record.values() for record in array],
             dtype=numpy.bool_,
         )
     return numpy.array([[False] * array.shape[0]], dtype=numpy.bool_)

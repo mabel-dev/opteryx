@@ -462,8 +462,8 @@ STATEMENTS = [
         ("SELECT * FROM $planets WHERE id = -1 ORDER BY id", 0, 20),
         ("SELECT * FROM $planets WHERE id = -1 LIMIT 10", 0, 20),
         # LEFT JOIN THEN FILTER ON NULLS
-        ("SELECT * FROM $planets LEFT JOIN $satellites ON $satellites.planetId = $planets.id WHERE $satellites.id = NONE", 2, 28),
-        ("SELECT * FROM $planets LEFT JOIN $satellites ON $satellites.planetId = $planets.id WHERE $satellites.name = NONE", 2, 28),
+        ("SELECT * FROM $planets LEFT JOIN $satellites ON $satellites.planetId = $planets.id WHERE $satellites.id IS NULL", 2, 28),
+        ("SELECT * FROM $planets LEFT JOIN $satellites ON $satellites.planetId = $planets.id WHERE $satellites.name IS NULL", 2, 28),
         # SORT BROKEN
         ("SELECT * FROM (SELECT * FROM $planets ORDER BY id DESC LIMIT 5) WHERE id > 7", 2, 20),
         # ORDER OF JOIN CONDITION
