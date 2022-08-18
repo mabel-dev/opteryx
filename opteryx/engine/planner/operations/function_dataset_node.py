@@ -61,9 +61,9 @@ def _generate_series(alias, *args):
         return [{alias: str(ip)} for ip in ips]
 
 
-def _unnest(alias, *args):
+def _unnest(alias, values):
     """unnest converts an list into rows"""
-    return [{alias: value} for value in args[0][0]]
+    return [{alias: row} for row in values.value]
 
 
 def _values(alias, *values):

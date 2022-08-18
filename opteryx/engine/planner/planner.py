@@ -412,7 +412,7 @@ class QueryPlanner(ExecutionTree):
                     ]
                     for value_set in subquery["Values"]:
                         values = [
-                            _safe_get(self._build_literal_node(v["Value"]), 0)
+                            self._build_literal_node(v["Value"]).value
                             for v in value_set
                         ]
                         body.append(dict(zip(headers, values)))
