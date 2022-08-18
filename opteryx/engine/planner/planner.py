@@ -300,9 +300,7 @@ class QueryPlanner(ExecutionTree):
                 key_node = ExpressionTreeNode(NodeType.LITERAL_NUMERIC, value=key)
             alias = [f"{identifier}[{key}]"]
 
-            identifier_node = ExpressionTreeNode(
-                NodeType.IDENTIFIER, value=identifier
-            )
+            identifier_node = ExpressionTreeNode(NodeType.IDENTIFIER, value=identifier)
             return ExpressionTreeNode(
                 NodeType.FUNCTION,
                 value="GET",

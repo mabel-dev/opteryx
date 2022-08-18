@@ -124,3 +124,7 @@ def date_diff(part, start, end):
         return [i.as_py() for i in diff]
 
     raise SqlError(f"Date part '{part}' unsupported for DATEDIFF")
+
+
+def date_format(dates, pattern):  # [#325]
+    return compute.strftime(dates, pattern[0])

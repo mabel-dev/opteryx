@@ -87,12 +87,14 @@ def cast(_type):
         return _inner
     raise SqlError(f"Unable to cast values in column to `{_type}`")
 
+
 def safe(func, *parms):
-    """ execute a function, return None if fails """
+    """execute a function, return None if fails"""
     try:
         return func(*parms)
     except (ValueError, IndexError, TypeError, ArrowNotImplementedError):
         return None
+
 
 def try_cast(_type):
     """cast a column to a specified type"""
@@ -226,7 +228,7 @@ FUNCTIONS = {
     "TIME_BUCKET": (None, compute.floor_temporal),
     "DATEDIFF": (pyarrow.float64(), date_functions.date_diff,),
     "DATEPART": (None, date_functions.date_part,),
-    "DATE_FORMAT": (None, compute.strftime),
+    "DATE_FORMAT": (None, date_functions.date_format),
     "CURRENT_TIME": (None, _repeat_no_parameters(datetime.datetime.utcnow),),
     "NOW": (None, _repeat_no_parameters(datetime.datetime.utcnow),),
     "CURRENT_DATE": (None, _repeat_no_parameters(datetime.datetime.utcnow().date),),

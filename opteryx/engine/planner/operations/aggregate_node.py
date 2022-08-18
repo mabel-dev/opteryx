@@ -28,7 +28,11 @@ from typing import Iterable
 import pyarrow
 
 from opteryx.engine import QueryDirectives, QueryStatistics
-from opteryx.engine.planner.expression import ExpressionTreeNode, evaluate_and_append, format_expression
+from opteryx.engine.planner.expression import (
+    ExpressionTreeNode,
+    evaluate_and_append,
+    format_expression,
+)
 from opteryx.engine.planner.expression import get_all_identifiers
 from opteryx.engine.planner.expression import NodeType
 from opteryx.engine.planner.operations import BasePlanNode
@@ -179,7 +183,9 @@ class AggregateNode(BasePlanNode):
                 # references are natural numbers, so -1 for zero-based
                 group = self._aggregates[int(group.value) - 1]
                 if group.token_type not in (NodeType.IDENTIFIER, NodeType.FUNCTION):
-                    raise SqlError("When using a positional reference, GROUP BY must be by an IDENTIFIER or FUNCTION only")
+                    raise SqlError(
+                        "When using a positional reference, GROUP BY must be by an IDENTIFIER or FUNCTION only"
+                    )
             self._groups.append(group)
 
     @property

@@ -33,7 +33,6 @@ def string_slicer_left(arr, length):
     return numpy.array(interim).view((str, length)).flatten()
 
 
-
 def string_slicer_right(arr, length):
     """
     Slice a list of strings from the right
