@@ -255,7 +255,9 @@ class QueryPlanner(ExecutionTree):
         try_unary_filter = list(filters.keys())[0]
         if try_unary_filter in ("IsTrue", "IsFalse", "IsNull", "IsNotNull"):
             centre = self._build_filters(filters[try_unary_filter])
-            return ExpressionTreeNode(NodeType.UNARY_OPERATOR, value=try_unary_filter, centre_node=centre)
+            return ExpressionTreeNode(
+                NodeType.UNARY_OPERATOR, value=try_unary_filter, centre_node=centre
+            )
         if "InList" in filters:
             left_node = self._build_filters(filters["InList"]["expr"])
             list_values = {

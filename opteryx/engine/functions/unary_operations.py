@@ -35,7 +35,6 @@ def _is_true(values):
     return numpy.nonzero(values)[0]
 
 
-
 def _is_false(values):
     matches = numpy.invert(values)
     return numpy.nonzero(matches)[0]

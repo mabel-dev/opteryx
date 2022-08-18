@@ -18,6 +18,9 @@ This is a SQL Query Execution Plan Node.
 import time
 
 from typing import Iterable
+
+import numpy
+
 from pyarrow import Table
 
 from opteryx.engine import QueryDirectives, QueryStatistics
@@ -81,5 +84,11 @@ class SelectionNode(BasePlanNode):
 
                 start_selection = time.time_ns()
                 mask = evaluate(self._filter, page)
+
+                # if the mask is a boolean array, we've called a function that
+                # returns booleans
+                if mask.dtype == numpy.bool:
+                    mask = numpy.nonzero(mask)[0]
+
                 self._statistics.time_selecting += time.time_ns() - start_selection
                 yield page.take(mask)
