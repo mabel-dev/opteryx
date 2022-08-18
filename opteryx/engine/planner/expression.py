@@ -23,6 +23,7 @@ import numpy
 import pyarrow
 
 from pyarrow import Table
+from ..functions.unary_operations import UNARY_OPERATIONS
 
 from opteryx.utils.columns import Columns
 from opteryx.third_party.pyarrow_ops.ops import filter_operations, FILTER_OPERATORS
@@ -111,7 +112,7 @@ class NodeType(int, Enum):
     WILDCARD: int = 18
     COMPARISON_OPERATOR: int = 34
     BINARY_OPERATOR: int = 50
-    # UNARY_OPERATOR: int = 66
+    UNARY_OPERATOR: int = 66
     FUNCTION: int = 82
     IDENTIFIER: int = 98
     SUBQUERY: int = 114
@@ -279,6 +280,9 @@ def _inner_evaluate(root: ExpressionTreeNode, table: Table, columns):
             raise NotImplementedError("subquery")
         if node_type == NodeType.NESTED:
             return _inner_evaluate(root.centre, table, columns)
+        if node_type == NodeType.UNARY_OPERATOR:
+            centre = _inner_evaluate(root.centre, table, columns)
+            return UNARY_OPERATIONS[root.value](centre)
 
     # LITERAL TYPES
     if node_type & LITERAL_TYPE == LITERAL_TYPE:

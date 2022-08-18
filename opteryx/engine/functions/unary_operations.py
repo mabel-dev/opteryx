@@ -22,34 +22,23 @@ from opteryx.engine.attribute_types import TOKEN_TYPES
 from opteryx.exceptions import SqlError
 
 
-def _is_null(table, identifier):
-    if len(identifier) == 2 and identifier[1] == TOKEN_TYPES.IDENTIFIER:
-        column = table.column(identifier[0]).to_numpy()
-        return numpy.nonzero(compute.is_null(column, nan_is_null=True))[0]
-    raise SqlError("`IS NULL` is not supported for literals or functions.")
+def _is_null(values):
+    return numpy.nonzero(compute.is_null(values, nan_is_null=True))[0]
 
 
-def _is_not_null(table, identifier):
-    if len(identifier) == 2 and identifier[1] == TOKEN_TYPES.IDENTIFIER:
-        column = table.column(identifier[0]).to_numpy()
-        matches = compute.is_null(column, nan_is_null=True)
-        return numpy.nonzero(numpy.invert(matches))[0]
-    raise SqlError("`IS NOT NULL` is not supported for literals or functions.")
+def _is_not_null(values):
+    matches = compute.is_null(values, nan_is_null=True)
+    return numpy.nonzero(numpy.invert(matches))[0]
 
 
-def _is_true(table, identifier):
-    if len(identifier) == 2 and identifier[1] == TOKEN_TYPES.IDENTIFIER:
-        column = table.column(identifier[0]).to_numpy()
-        return numpy.nonzero(column)[0]
-    raise SqlError("`IS TRUE` is not supported for literals or functions.")
+def _is_true(values):
+    return numpy.nonzero(values)[0]
 
 
-def _is_false(table, identifier):
-    if len(identifier) == 2 and identifier[1] == TOKEN_TYPES.IDENTIFIER:
-        column = table.column(identifier[0]).to_numpy()
-        matches = numpy.invert(column)
-        return numpy.nonzero(matches)[0]
-    raise SqlError("`IS TRUE` is not supported for literals or functions.")
+
+def _is_false(values):
+    matches = numpy.invert(values)
+    return numpy.nonzero(matches)[0]
 
 
 UNARY_OPERATIONS = {
