@@ -206,13 +206,16 @@ class Columns:
 
         # use the comparison code for the general filters to find matches
         filtered = pyarrow_ops.ops.filter_operations(
-            all_aliases, _filter[1], _filter[2][0]
+            all_aliases, _filter.value, [_filter.right.value]  # [#325]
         )
         filtered = all_aliases.filter(filtered)
 
-        # return a list of matching columns (some physical columns may be referenced
-        # multiple times)
-        return [self.get_column_from_alias(alias.as_py(), True) for alias in filtered]
+        # get the list of matching columns - some physical columns may be referenced
+        # multiple times so we deduplicate them
+        selected = [self.get_column_from_alias(alias.as_py(), True) for alias in filtered]
+        selected = list(set(selected))
+
+        return selected
 
     @staticmethod
     def create_table_metadata(table, expected_rows, name, table_aliases):
