@@ -76,7 +76,7 @@ def date_part(part, arr):
     if not hasattr(arr, "__iter__"):
         arr = numpy.array([arr])
 
-    part = part.lower()
+    part = part[0].lower()  # [#325]
     if part in extractors:
         return extractors[part](arr)
 

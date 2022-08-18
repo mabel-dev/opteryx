@@ -406,10 +406,10 @@ STATEMENTS = [
         ("SELECT name, birth_place FROM $astronauts WHERE SEARCH(birth_place, 'Italy')", 1, 2),
         ("SELECT name, birth_place FROM $astronauts WHERE SEARCH(birth_place, 'Rome')", 1, 2),
 
-        ("SELECT EXTRACT(year FROM birth_date) AS birth_year FROM $astronauts WHERE birth_year < 1930;", 14, 1),
+        ("SELECT birth_date FROM $astronauts WHERE EXTRACT(year FROM birth_date) < 1930;", 14, 1),
         ("SELECT EXTRACT(month FROM birth_date) FROM $astronauts", 357, 1),
         ("SELECT EXTRACT(day FROM birth_date) FROM $astronauts", 357, 1),
-        ("SELECT DATEPART('year', birth_date) AS birth_year FROM $astronauts WHERE birth_year < 1930;", 14, 1),
+        ("SELECT birth_date FROM $astronauts WHERE EXTRACT(year FROM birth_date) < 1930;", 14, 1),
         ("SELECT EXTRACT(doy FROM birth_date) FROM $astronauts", 357, 1),
         ("SELECT EXTRACT(DOY FROM birth_date) FROM $astronauts", 357, 1),
         ("SELECT EXTRACT(dow FROM birth_date) FROM $astronauts", 357, 1),
