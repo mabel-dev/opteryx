@@ -422,8 +422,7 @@ STATEMENTS = [
 
         ("SELECT * FROM tests.data.schema WITH(NO_PARTITION) ORDER BY 1", 2, 4),
 
-        # TODO [#42] TESTS TO BE WRITTER
-        # NO_PUSH_PROJECTION - on *, on list of fields, on JOIN, on sub query
+        # [#196] NO_PUSH_PROJECTION - on *, on list of fields, on JOIN, on sub query
         # the different aggregators
 #    "ALL": "all",
 #    "ANY": "any",
@@ -448,15 +447,17 @@ STATEMENTS = [
 #    "QUANTILES": "tdigest",
 #    "VARIANCE": "variance",
 
-        # functions as inputs to functions
-        # functions in GROUP BY, WHERE and SELECT
-
         ("SELECT name || ' ' || name FROM $planets", 9, 1),
         ("SELECT 32 * 12", 1, 1),
         ("SELECT 9 / 12", 1, 1),
         ("SELECT 3 + 3", 1, 1),
         ("SELECT 12 % 2", 1, 1),
         ("SELECT 10 - 10", 1, 1),
+        ("SELECT * FROM $satellites WHERE planetId = 2 + 5", 27, 8),
+        ("SELECT * FROM $satellites WHERE planetId = round(density)", 1, 8),
+        ("SELECT * FROM $satellites WHERE planetId * 1 = round(density * 1)", 1, 8),
+        ("SELECT ABSOLUTE(ROUND(gravity) * density * density) FROM $planets", 9, 1),
+        ("SELECT COUNT(*), ROUND(gm) FROM $satellites GROUP BY ROUND(gm)", 22, 2),
 
         ("SELECT COALESCE(death_date, '1900-01-01') FROM $astronauts", 357, 1),
 
@@ -504,7 +505,7 @@ STATEMENTS = [
         # DISTINCT on null values #285
         ("SELECT DISTINCT name FROM (VALUES (null),(null),('apple')) AS booleans (name)", 2, 1),
         # empty aggregates with other columns, loose the other columns #281
-#        ("SELECT name, COUNT(*) FROM $astronauts WHERE name = 'Jim' GROUP BY name", 1, 2),
+# [#358]       ("SELECT name, COUNT(*) FROM $astronauts WHERE name = 'Jim' GROUP BY name", 1, 2),
         # JOIN from subquery regressed #291
         ("SELECT * FROM (SELECT id from $planets) AS ONE LEFT JOIN (SELECT id from $planets) AS TWO ON id = id", 9, 2),
 
