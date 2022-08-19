@@ -12,15 +12,42 @@ from opteryx.engine.attribute_types import TOKEN_TYPES
 
 from .helpers import columns_to_array
 
+# Added for Opteryx, comparisons in filter_operators updated to match
+# this set is from sqloxide
+FILTER_OPERATORS = {
+    "Eq",
+    "NotEq",
+    "Gt",
+    "GtEq",
+    "Lt",
+    "LtEq",
+    "Like",
+    "ILike",
+    "NotLike",
+    "NotILike",
+    "InList",
+    "PGRegexMatch",
+    "PGRegexNotMatch",
+    "PGRegexIMatch",  # "~*"
+    "PGRegexNotIMatch",  # "!~*"
+}
+
 
 def _get_type(var):
     # added for Opteryx
     if isinstance(var, (numpy.ndarray)):
         if isinstance(var[0], numpy.ndarray):
-            return "LIST"
-        return PARQUET_TYPES.get(str(var.dtype), f"UNSUPPORTED ({str(var.dtype)})")
+            _type = str(var[0].dtype)
+        _type = str(var.dtype)
+        if _type.startswith("<U"):
+            _type = "string"
+        return PARQUET_TYPES.get(_type, f"UNSUPPORTED ({str(var.dtype)})")
     if isinstance(var, (pyarrow.Array)):
         return PARQUET_TYPES.get(str(var.type), f"UNSUPPORTED ({str(var.type)})")
+    if isinstance(var, list):
+        return PYTHON_TYPES.get(
+            type(var[0]).__name__, f"UNSUPPORTED ({type(var[0]).__name__})"
+        )
     type_name = type(var).__name__
     return PYTHON_TYPES.get(type_name, f"OTHER ({type_name})")
 
@@ -34,18 +61,25 @@ def _check_type(operation, provided_type, valid_types):
 
 
 # Filter functionality
-def arr_op_to_idxs(arr, operator, value):
+def filter_operations(arr, operator, value):
+    """
+    Execute filter operations, this returns an array of the indexes of the rows that
+    match the filter
+    """
+
+    # ADDED FOR OPTERYX - if the input is a table, get the first column
+    if isinstance(value, pyarrow.Table):
+        value = [value.columns[0].to_numpy()]
 
     # ADDED FOR OPTERYX - if all of the values are null, shortcut
     if compute.is_null(arr, nan_is_null=True).false_count == 0:
         return numpy.full(arr.size, False)
 
+    # ADDED FOR OPTERYX
     identifier_type = _get_type(arr)
     literal_type = _get_type(value)
-    if operator in (
-        "=",
-        "==",
-    ):
+
+    if operator == "Eq":
         # type checking added for Opteryx
         if value is None and identifier_type == TOKEN_TYPES.NUMERIC:
             # Nones are stored as NaNs, so perform a different test.
@@ -55,61 +89,83 @@ def arr_op_to_idxs(arr, operator, value):
             raise TypeError(
                 f"Type mismatch, unable to compare {identifier_type} with {literal_type}"
             )
-        return numpy.where(arr == value)
-    elif operator in (
-        "!=",
-        "<>",
-    ):
-        return numpy.where(arr != value)
-    elif operator == "<":
-        return numpy.where(arr < value)
-    elif operator == ">":
-        return numpy.where(arr > value)
-    elif operator == "<=":
-        return numpy.where(arr <= value)
-    elif operator == ">=":
-        return numpy.where(arr >= value)
-    elif operator == "in":
+        # element-wise, numpy.where may be faster, not tested as it wasn't a reasonable
+        # option without significant refactoring, same for >, >=, <, <= & !=
+        matches = compute.equal(arr, value)
+        return compute.fill_null(matches, False)
+    elif operator == "NotEq":
+        matches = compute.not_equal(arr, value)
+        return compute.fill_null(matches, False)
+    elif operator == "Lt":
+        matches = compute.less(arr, value)
+        return compute.fill_null(matches, False)
+    elif operator == "Gt":
+        matches = compute.greater(arr, value)
+        return compute.fill_null(matches, False)
+    elif operator == "LtEq":
+        matches = compute.less_equal(arr, value)
+        return compute.fill_null(matches, False)
+    elif operator == "GtEq":
+        matches = compute.greater_equal(arr, value)
+        return compute.fill_null(matches, False)
+    elif operator == "InList":
         # MODIFIED FOR OPTERYX
         # some of the lists are saved as sets, which are faster than searching numpy
         # arrays, even with numpy's native functionality - choosing the right algo
         # is almost always faster than choosing a fast language.
-        return numpy.array([a in value for a in arr], dtype=numpy.bool8)
-    elif operator == "not in":
+        return numpy.array([a in value[0] for a in arr], dtype=numpy.bool8)  # [#325]?
+    elif operator == "NotInList":
         # MODIFIED FOR OPTERYX - see comment above
-        return numpy.array([a not in value for a in arr], dtype=numpy.bool8)
-    elif operator == "like":
+        return numpy.array(
+            [a not in value[0] for a in arr], dtype=numpy.bool8
+        )  # [#325]?
+    elif operator == "Like":
         # MODIFIED FOR OPTERYX
         # null input emits null output, which should be false/0
         _check_type("LIKE", identifier_type, (TOKEN_TYPES.VARCHAR))
-        matches = compute.match_like(arr, value)
+        matches = compute.match_like(arr, value[0])  # [#325]
         return compute.fill_null(matches, False)
-    elif operator == "not like":
+    elif operator == "NotLike":
         # MODIFIED FOR OPTERYX - see comment above
         _check_type("NOT LIKE", identifier_type, (TOKEN_TYPES.VARCHAR))
-        matches = compute.match_like(arr, value)
+        matches = compute.match_like(arr, value[0])  # [#325]
         matches = compute.fill_null(matches, True)
         return numpy.invert(matches)
-    elif operator == "ilike":
+    elif operator == "ILike":
         # MODIFIED FOR OPTERYX - see comment above
         _check_type("ILIKE", identifier_type, (TOKEN_TYPES.VARCHAR))
-        matches = compute.match_like(arr, value, ignore_case=True)
+        matches = compute.match_like(arr, value[0], ignore_case=True)  # [#325]
         return compute.fill_null(matches, False)
-    elif operator == "not ilike":
+    elif operator == "NotILike":
         # MODIFIED FOR OPTERYX - see comment above
         _check_type("NOT ILIKE", identifier_type, (TOKEN_TYPES.VARCHAR))
-        matches = compute.match_like(arr, value, ignore_case=True)
+        matches = compute.match_like(arr, value[0], ignore_case=True)  # [#325]
         matches = compute.fill_null(matches, True)
         return numpy.invert(matches)
-    elif operator == "~":
+    elif operator == "PGRegexMatch":
         # MODIFIED FOR OPTERYX - see comment above
         _check_type("~", identifier_type, (TOKEN_TYPES.VARCHAR))
-        matches = compute.match_substring_regex(arr, value)
+        matches = compute.match_substring_regex(arr, value[0])  # [#325]
         return compute.fill_null(matches, False)
-    elif operator == "!~":
+    elif operator == "PGRegexNotMatch":
         # MODIFIED FOR OPTERYX - see comment above
-        _check_type("~", identifier_type, (TOKEN_TYPES.VARCHAR))
-        matches = compute.match_substring_regex(arr, value)
+        _check_type("!~", identifier_type, (TOKEN_TYPES.VARCHAR))
+        matches = compute.match_substring_regex(arr, value[0])  # [#325]
+        matches = compute.fill_null(matches, True)
+        return numpy.invert(matches)
+    elif operator == "PGRegexIMatch":
+        # MODIFIED FOR OPTERYX - see comment above
+        _check_type("~*", identifier_type, (TOKEN_TYPES.VARCHAR))
+        matches = compute.match_substring_regex(
+            arr, value[0], ignore_case=True
+        )  # [#325]
+        return compute.fill_null(matches, False)
+    elif operator == "PGRegexNotIMatch":
+        # MODIFIED FOR OPTERYX - see comment above
+        _check_type("!~*", identifier_type, (TOKEN_TYPES.VARCHAR))
+        matches = compute.match_substring_regex(
+            arr, value[0], ignore_case=True
+        )  # [#325]
         matches = compute.fill_null(matches, True)
         return numpy.invert(matches)
     else:
@@ -141,7 +197,7 @@ def ifilters(table, filters):
     # Filter is a list of (col, op, value) tuples
     indices = numpy.arange(table.num_rows)
     for (left_operand, operator, right_operand) in filters:
-        f_idxs = arr_op_to_idxs(
+        f_idxs = filter_operations(
             _get_values(table, left_operand),
             operator,
             _get_values(table, right_operand),

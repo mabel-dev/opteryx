@@ -1,4 +1,4 @@
-<img align="centre" alt="archaeopteryx" height="104" src="opteryx.png" />
+<img align="centre" alt="archaeopteryx" height="132" src="archaeopteryx-fossil.svg" />
 
 ## Query your data, no database required
 
@@ -16,6 +16,8 @@
 [![codecov](https://codecov.io/gh/mabel-dev/opteryx/branch/main/graph/badge.svg?token=sIgKpzzd95)](https://codecov.io/gh/mabel-dev/opteryx)
 [![PyPI Latest Release](https://img.shields.io/badge/Python-3.8%20%7C%203.9%20%7C%203.10-blue?logo=python)](https://pypi.org/project/opteryx/)
 [![Regression Suite](https://github.com/mabel-dev/opteryx/actions/workflows/regression_suite.yaml/badge.svg)](https://github.com/mabel-dev/opteryx/actions/workflows/regression_suite.yaml)
+
+## Features
 
 **Scalable**
 

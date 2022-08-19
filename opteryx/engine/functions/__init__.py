@@ -15,7 +15,6 @@ These are a set of functions that can be applied to data.
 """
 import datetime
 import os
-import numpy
 import pyarrow
 
 from cityhash import CityHash64
@@ -34,11 +33,11 @@ from opteryx.utils import dates
 
 
 def get_random():
-    """get a random number between 0 and 1, three decimal places"""
-    range_min, range_max = 0, 1000
+    """get a random number between 0 and 1, four decimal places"""
+    range_min, range_max = 0, 10000
     random_int = int.from_bytes(os.urandom(2), "big")
     try:
-        return ((random_int % ((range_max + 1) - range_min)) + range_min) / 1000
+        return ((random_int % ((range_max + 1) - range_min)) + range_min) / 10000
     except:
         return 0
 
@@ -65,16 +64,13 @@ def _get(value, item):
         return None
 
 
-VECTORIZED_CASTERS = {
-    "BOOLEAN": "bool",
-    "NUMERIC": "float64",
-    "VARCHAR": "string",
-}
+VECTORIZED_CASTERS = {"BOOLEAN": "bool", "NUMERIC": "float64", "VARCHAR": "string"}
 
 ITERATIVE_CASTERS = {
-    "TIMESTAMP": lambda x: numpy.datetime64(int(x), "s")
-    if isinstance(x, numpy.int64)
-    else numpy.datetime64(x),
+    #    "TIMESTAMP": lambda x: numpy.datetime64(int(x), "s")
+    #    if isinstance(x, numpy.float64)
+    #    else numpy.datetime64(x),
+    "TIMESTAMP": dates.parse_iso
 }
 
 
@@ -86,11 +82,18 @@ def cast(_type):
 
         def _inner(arr):
             caster = ITERATIVE_CASTERS[_type]
-            for i in arr:
-                yield [caster(i)]
+            return [caster(i) for i in arr]
 
         return _inner
     raise SqlError(f"Unable to cast values in column to `{_type}`")
+
+
+def safe(func, *parms):
+    """execute a function, return None if fails"""
+    try:
+        return func(*parms)
+    except (ValueError, IndexError, TypeError, ArrowNotImplementedError):
+        return None
 
 
 def try_cast(_type):
@@ -105,11 +108,7 @@ def try_cast(_type):
 
         def _inner(arr):
             caster = casters[_type]
-            for i in arr:
-                try:
-                    yield [caster(i)]
-                except (ValueError, TypeError, ArrowNotImplementedError):
-                    yield [None]
+            return [safe(caster, i) for i in arr]
 
         return _inner
     raise SqlError(f"Unable to cast values in column to `{_type}`")
@@ -118,8 +117,7 @@ def try_cast(_type):
 def _iterate_no_parameters(func):
     # call the function for each row, this is primarily to support "RANDOM"
     def _inner(items):
-        for i in range(items):
-            yield [func()]
+        return [func() for i in range(items)]
 
     return _inner
 
@@ -127,7 +125,7 @@ def _iterate_no_parameters(func):
 def _repeat_no_parameters(func):
     # call once and repeat
     def _inner(items):
-        return [[func()] * items]
+        return [func()] * items
 
     return _inner
 
@@ -136,8 +134,7 @@ def _iterate_single_parameter(func):
     def _inner(array):
         if isinstance(array, str):
             array = [array]
-        for item in array:
-            yield [func(item)]
+        return [func(item) for item in array]
 
     return _inner
 
@@ -150,8 +147,7 @@ def _iterate_double_parameter(func):
     def _inner(array, literal):
         if isinstance(array, str):
             array = [array]
-        for item in array:
-            yield [func(item, literal)]
+        return [func(item, literal[index]) for index, item in enumerate(array)]
 
     return _inner
 
@@ -164,8 +160,7 @@ def _iterate_double_parameter_field_second(func):
     def _inner(literal, array):
         if isinstance(array, str):
             array = [array]
-        for item in array:
-            yield [func(literal, item)]
+        return [func(literal, item) for item in array]
 
     return _inner
 
@@ -219,7 +214,7 @@ FUNCTIONS = {
     "COALESCE": (None, compute.coalesce,),
 
     # NUMERIC
-    "ROUND": (None, compute.round,),
+    "ROUND": (None, number_functions.round,),
     "FLOOR": (None, compute.floor,),
     "CEIL": (None, compute.ceil,),
     "CEILING": (None, compute.ceil,),
@@ -230,10 +225,10 @@ FUNCTIONS = {
     "PI": (None, _repeat_no_parameters(number_functions.pi)),
     # DATES & TIMES
     "DATE_TRUNC": (None, _iterate_double_parameter_field_second(date_trunc),),
-    "TIME_BUCKET": (None, compute.floor_temporal),
+    "TIME_BUCKET": (None, date_functions.date_floor),
     "DATEDIFF": (pyarrow.float64(), date_functions.date_diff,),
     "DATEPART": (None, date_functions.date_part,),
-    "DATE_FORMAT": (None, compute.strftime),
+    "DATE_FORMAT": (None, date_functions.date_format),
     "CURRENT_TIME": (None, _repeat_no_parameters(datetime.datetime.utcnow),),
     "NOW": (None, _repeat_no_parameters(datetime.datetime.utcnow),),
     "CURRENT_DATE": (None, _repeat_no_parameters(datetime.datetime.utcnow().date),),

@@ -1,19 +1,30 @@
 # Changelog
-All notable changes to this project will be documented in this file.
+
+All notable changes to this project will be documented in this file, where appropriate the GitHub issue reference will be noted along with the change. Breaking changes will be clearly indicated.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-### [Unreleased]
+## [Unreleased]
+
+**Added**
+
+- [[#196](https://github.com/mabel-dev/opteryx/issues/196)] Partial implementation of Selection pushdown (Parquet Only). ([@joocer](https://github.com/joocer))   
+- [[#41](https://github.com/mabel-dev/opteryx/issues/41)] Enable the results of functions to be used as parameters for other functions. ([@joocer](https://github.com/joocer))  
+- [[#42](https://github.com/mabel-dev/opteryx/issues/42)] Enable inline operations. ([@joocer](https://github.com/joocer)) 
 
 **Changed**
 
+- ⚠️**BREAKING** (correction) - Use of aliases defined in the `SELECT` clause can no longer be used in `WHERE` and `GROUP BY` clauses - this is a correction to align to standard SQL behaviour.
+- ⚠️**BREAKING** (correction) - Use of 'None' as an alias for 'Null' is no longer supported - this is a correction to align to standard SQL behaviour.
 - [[#326](https://github.com/mabel-dev/opteryx/issues/326)] Prefer pyarrow's 'promote' over manually handling missing fields. ([@joocer](https://github.com/joocer))   
+- [[#39](https://github.com/mabel-dev/opteryx/issues/39)] Rewrite Aggregation Node to use Pyarrow `group_by`. ([@joocer](https://github.com/joocer))  
+- [[#338](https://github.com/mabel-dev/opteryx/issues/338)] Remove Evaluation Node. ([@joocer](https://github.com/joocer)) 
 
 **Fixed**
 
 - [[#334](https://github.com/mabel-dev/opteryx/issues/334)] All lists should be cast to lists of strings. ([@joocer](https://github.com/joocer))
 
-### [0.2.0] - 2022-07-31
+## [0.2.0] - 2022-07-31
 
 **Added**
 
@@ -42,7 +53,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - [[#281](https://github.com/mabel-dev/opteryx/issues/281)] `SELECT` on empty aggregates reports missing columns. ([@joocer](https://github.com/joocer))
 - [[#312](https://github.com/mabel-dev/opteryx/issues/312)] Invalid dates in `FOR` clauses treated as `TODAY`. ([@joocer](https://github.com/joocer))
 
-### [0.1.0] - 2022-07-02
+## [0.1.0] - 2022-07-02
 
 **Added**
 
@@ -53,7 +64,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - [[#201](https://github.com/mabel-dev/opteryx/issues/201)] `generate_series` supports CIDR expansion. ([@joocer](https://github.com/joocer))
 - [[#175](https://github.com/mabel-dev/opteryx/issues/175)] Support `WITH (NOCACHE)` hint to disable using cache. ([@joocer](https://github.com/joocer))
 - [[#203](https://github.com/mabel-dev/opteryx/issues/203)] When reporting that a column doesn't exist, it should suggest likely correct columns. ([@joocer](https://github.com/joocer))
-- Not Regular Expression match operator, `!~` added to supported set of operators. ([@joocer](https://github.com/joocer))
+- 'Not' Regular Expression match operator, `!~` added to supported set of operators. ([@joocer](https://github.com/joocer))
 - [[#226](https://github.com/mabel-dev/opteryx/issues/226)] Implement `DATE_TRUNC` function. ([@joocer](https://github.com/joocer))
 - [[#230](https://github.com/mabel-dev/opteryx/issues/230)] Allow addressing fields as numbers. ([@joocer](https://github.com/joocer))
 - [[#234](https://github.com/mabel-dev/opteryx/issues/234)] Implement `SEARCH` function. ([@joocer](https://github.com/joocer))
@@ -61,8 +72,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 **Changed**
 
-- (non-breaking) Blob-based readers (disk & GCS) moved from 'local' and 'network' paths to a new 'blob' path. ([@joocer](https://github.com/joocer))
-- (non-breaking) Query Execution rewritten. ([@joocer](https://github.com/joocer))
+- Blob-based readers (disk & GCS) moved from 'local' and 'network' paths to a new 'blob' path. ([@joocer](https://github.com/joocer))
+- Query Execution rewritten. ([@joocer](https://github.com/joocer))
 - [[#20](https://github.com/mabel-dev/opteryx/issues/20)] Split query planner and query plan into different modules. ([@joocer](https://github.com/joocer))
 - [[#164](https://github.com/mabel-dev/opteryx/issues/164)] Split dataset reader into specific types. ([@joocer](https://github.com/joocer))
 - Expression evaluation short-cuts execution when executing evaluations against an array of `null`. ([@joocer](https://github.com/joocer))
@@ -83,7 +94,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - [[#222](https://github.com/mabel-dev/opteryx/issues/222)] Column of `NULL` detects as `VARCHAR`. ([@joocer](https://github.com/joocer))
 - [[#225](https://github.com/mabel-dev/opteryx/issues/225)] `UNNEST` does not assign a type to the column when all of the values are `NULL`. ([@joocer](https://github.com/joocer))
 
-### [0.0.2] - 2022-06-03
+## [0.0.2] - 2022-06-03
 
 **Added**
 
@@ -106,7 +117,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - [[#140](https://github.com/mabel-dev/opteryx/issues/140)] Appears to have read both frames rather than the latest frame ([@joocer](https://github.com/joocer))
 - [[#144](https://github.com/mabel-dev/opteryx/issues/144)] Multiple `JOINS` in one query aren't recognized ([@joocer](https://github.com/joocer))
 
-### [0.0.1] - 2022-05-09
+## [0.0.1] - 2022-05-09
 
 **Added**
 
@@ -115,13 +126,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 **Changed**
 
-- (non-breaking) Use PyArrow implementation for `INNER JOIN` and `LEFT JOIN` ([@joocer](https://github.com/joocer))
+- Use PyArrow implementation for `INNER JOIN` and `LEFT JOIN` ([@joocer](https://github.com/joocer))
 
 **Fixed**
 
 - [[#99](https://github.com/mabel-dev/opteryx/issues/99)] Grouping by a list gives an unhelpful error message  ([@joocer](https://github.com/joocer))
 - [[#100](https://github.com/mabel-dev/opteryx/issues/100)] Projection ignores field qualifications ([@joocer](https://github.com/joocer))
 
-### [0.0.0]
+## [0.0.0]
 
 - Initial Version

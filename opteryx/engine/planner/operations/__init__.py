@@ -18,7 +18,6 @@ from .collection_reader_node import CollectionReaderNode  # reader NoSQL datsets
 from .column_selection_node import ColumnSelectionNode  # filter for SHOW COLUMNS
 from .cross_join_node import CrossJoinNode  # CROSS JOIN
 from .distinct_node import DistinctNode  # remove duplicate records
-from .evaluation_node import EvaluationNode  # aliases and evaluations
 from .explain_node import ExplainNode  # EXPLAIN queries
 from .function_dataset_node import FunctionDatasetNode  # Dataset Constructors
 from .inner_join_node import InnerJoinNode  # INNER JOIN

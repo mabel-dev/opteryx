@@ -24,7 +24,7 @@ import numpy
 import pyarrow
 
 from opteryx import config
-from opteryx.engine.attribute_types import TOKEN_TYPES
+from opteryx.engine.planner.expression import NodeType
 from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
 from opteryx.engine import QueryDirectives, QueryStatistics
 from opteryx.exceptions import SqlError
@@ -117,21 +117,21 @@ def _cross_join_unnest(left, column, alias):
     each UNNESTed value and the dictionaries combined to a table.
     """
 
-    if column[1] != TOKEN_TYPES.IDENTIFIER:
+    if column.token_type != NodeType.IDENTIFIER:
         raise NotImplementedError("Can only CROSS JOIN UNNEST on a field")
 
     metadata = None
     column_type = None
 
     if alias is None:
-        alias = f"UNNEST({column[0]})"
+        alias = f"UNNEST({column.value})"
 
     for left_page in left.execute():
 
         if metadata is None:
             metadata = Columns(left_page)
             metadata.add_column(alias)
-            unnest_column = metadata.get_column_from_alias(column[0], only_one=True)
+            unnest_column = metadata.get_column_from_alias(column.value, only_one=True)
 
         # we break this into small chunks otherwise we very quickly run into memory issues
         for left_block in left_page.to_batches(max_chunksize=INTERNAL_BATCH_SIZE):

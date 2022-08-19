@@ -26,7 +26,7 @@ is actually being referred to.
 import os
 import pyarrow
 
-from opteryx.exceptions import SqlError
+from opteryx.exceptions import SqlError, ColumnNotFoundError
 from opteryx.utils import arrow
 
 
@@ -75,7 +75,7 @@ class Columns:
         _column_metadata = self._column_metadata.copy()
         # we start by collecting the column_name/alias for each column
         columns, preferences = zip(
-            *[(c, v.get("preferred_name", None)) for c, v in _column_metadata.items()]
+            *[(c, v.get("preferred_name", c)) for c, v in _column_metadata.items()]
         )
         preferences = list(preferences)
         # go through each of the collected names, if there's collisions we need to work
@@ -161,10 +161,10 @@ class Columns:
 
                 best_match = self.fuzzy_search(column)
                 if best_match:
-                    raise SqlError(
+                    raise ColumnNotFoundError(
                         f"Field `{column}` does not exist, did you mean `{best_match}`?"
                     )
-                raise SqlError(f"Field `{column}` does not exist.")
+                raise ColumnNotFoundError(f"Field `{column}` does not exist.")
             if len(matches) > 1:
                 raise SqlError(
                     f"Field `{column}` is ambiguous, try qualifying the field name."
@@ -205,14 +205,19 @@ class Columns:
         all_aliases = pyarrow.array(all_aliases).unique()
 
         # use the comparison code for the general filters to find matches
-        filtered = pyarrow_ops.ops.arr_op_to_idxs(
-            all_aliases, _filter[1], _filter[2][0]
+        filtered = pyarrow_ops.ops.filter_operations(
+            all_aliases, _filter.value, [_filter.right.value]  # [#325]
         )
         filtered = all_aliases.filter(filtered)
 
-        # return a list of matching columns (some physical columns may be referenced
-        # multiple times)
-        return [self.get_column_from_alias(alias.as_py(), True) for alias in filtered]
+        # get the list of matching columns - some physical columns may be referenced
+        # multiple times so we deduplicate them
+        selected = [
+            self.get_column_from_alias(alias.as_py(), True) for alias in filtered
+        ]
+        selected = list(set(selected))
+
+        return selected
 
     @staticmethod
     def create_table_metadata(table, expected_rows, name, table_aliases):

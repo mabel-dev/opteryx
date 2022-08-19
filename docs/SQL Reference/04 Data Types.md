@@ -12,7 +12,7 @@ Name        | Symbol                       | Description
 `VARCHAR`   | :fontawesome-solid-a:        | Variable-length character string.
 `STRUCT`    | :fontawesome-solid-box:      | A dictionary of multiple named values, where each key is a string, but the value can be a different type for each key.
 `TIMESTAMP` | :fontawesome-regular-clock:  | Combination of date and time.
-`INTERVAL`  | :fontawesome-solid-fa-arrows-left-right-to-line: | The difference between two TIMESTAMP values
+`INTERVAL`  | :fontawesome-solid-arrows-left-right-to-line: | The difference between two TIMESTAMP values
 `OTHER`     | :fontawesome-solid-question: | None of the above or multiple types in the same column. 
 
 !!! note
@@ -33,4 +33,4 @@ All `TIMESTAMP` and date values read from datasets are coerced to nanosecond pre
 
 ### Numbers
 
-All numeric values included in SQL statements and read from datasets are coerced to 64bit Floats.
+All numeric values included in SQL statements and read from datasets are coerced to 64bit floats.

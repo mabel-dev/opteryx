@@ -22,17 +22,18 @@ from typing import Iterable
 
 import pyarrow
 
-from opteryx.engine.attribute_types import TOKEN_TYPES
 from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
 from opteryx.engine import QueryDirectives, QueryStatistics
+from opteryx.engine.planner.expression import evaluate_and_append
+from opteryx.engine.planner.expression import format_expression
+from opteryx.engine.planner.expression import NodeType
 from opteryx.exceptions import SqlError
-from opteryx.utils.columns import Columns
 
 
 def replace_wildcards(arg):
-    if arg[1] == TOKEN_TYPES.WILDCARD:
+    if arg.token_type == NodeType.WILDCARD:
         return "*"
-    return str(arg[0])
+    return str(arg.value)
 
 
 class ProjectionNode(BasePlanNode):
@@ -44,31 +45,26 @@ class ProjectionNode(BasePlanNode):
         """
         super().__init__(directives=directives, statistics=statistics)
         self._projection: dict = {}
+        self._expressions = []
 
-        projection = config.get("projection", {"*": "*"})
+        projection = config.get("projection")
         # print("projection:", projection)
         for attribute in projection:
-            if projection == {"*": "*"}:
-                self._projection[attribute] = None
-            elif "*" in attribute:
+            if (
+                attribute.token_type == NodeType.WILDCARD
+                and attribute.value is not None
+            ):
                 # qualified wildcard, e.g. table.*
-                self._projection[(attribute["*"],)] = None
-            elif "aggregate" in attribute:
-                self._projection[
-                    f"{attribute['aggregate']}({','.join([replace_wildcards(a) for a in attribute['args']])})"
-                ] = attribute["alias"]
-
-            elif "function" in attribute:
-                args = [
-                    ((f"({','.join(a[0])})", None) if isinstance(a[0], list) else a)
-                    for a in attribute["args"]
-                ]
-                self._projection[
-                    f"{attribute['function']}({','.join([replace_wildcards(a) for a in args])})"
-                ] = attribute["alias"]
-
-            elif "identifier" in attribute:
-                self._projection[attribute["identifier"]] = attribute["alias"]
+                self._projection[(attribute.value,)] = None
+            elif attribute.token_type in (
+                NodeType.FUNCTION,
+                NodeType.AGGREGATOR,
+                NodeType.BINARY_OPERATOR,
+            ):
+                self._projection[format_expression(attribute)] = attribute.alias
+                self._expressions.append(attribute)
+            elif attribute.token_type == NodeType.IDENTIFIER:
+                self._projection[attribute.value] = attribute.alias
             else:
                 self._projection[attribute] = None
 
@@ -100,11 +96,16 @@ class ProjectionNode(BasePlanNode):
 
         for page in data_pages.execute():
 
+            # If any of the columns are FUNCTIONs, we need to evaluate them
+            _columns, self._expressions, page = evaluate_and_append(
+                self._expressions, page
+            )
+
             # first time round we're going work out what we need from the metadata
             if columns is None:
 
                 projection = []
-                columns = Columns(page)
+                columns = _columns
                 for key in self._projection:
                     if isinstance(key, tuple):
                         relation = key[0]

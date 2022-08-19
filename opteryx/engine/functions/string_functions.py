@@ -25,12 +25,14 @@ def string_slicer_left(arr, length):
     """
     if len(arr) == 0:
         return [[]]
-    length = int(length)  # it's probably a float64
+    if hasattr(length, "__iter__"):  # [#325]
+        length = length[0]
+    length = int(length)
     if length == 0:
         return [[""] * len(arr)]
     arr = arr.astype(str)  # it's probably an array of objects
     interim = arr.view((str, 1)).reshape(len(arr), -1)[:, 0:length]
-    return [numpy.array(interim).view((str, length)).flatten()]
+    return numpy.array(interim).view((str, length)).flatten()
 
 
 def string_slicer_right(arr, length):
@@ -39,9 +41,11 @@ def string_slicer_right(arr, length):
     """
     if len(arr) == 0:
         return [[]]
-    length = int(length)  # it's probably a float64
+    if hasattr(length, "__iter__"):  # [#325]
+        length = length[0]
+    length = int(length)
     if length == 0:
         return [[""] * len(arr)]
     arr = arr.astype(str)  # it's probably an array of objects
     interim = arr.view((str, 1)).reshape(len(arr), -1)[:, -length:]
-    return [numpy.array(interim).view((str, length)).flatten()]
+    return numpy.array(interim).view((str, length)).flatten()

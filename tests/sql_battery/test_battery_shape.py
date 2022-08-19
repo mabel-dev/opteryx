@@ -89,6 +89,13 @@ STATEMENTS = [
         ("SELECT name as NAME FROM $satellites GROUP BY name", 177, 1),
 
         ("SELECT * FROM $satellites WHERE id = 5", 1, 8),
+        ("SELECT * FROM $satellites WHERE name = 'Cal' || 'ypso'", 1, 8),
+        ("SELECT * FROM $satellites WHERE name = 'C' || 'a' || 'l' || 'y' || 'p' || 's' || 'o'", 1, 8),
+        ("SELECT * FROM $satellites WHERE id = 5 * 1 AND name = 'Europa'", 1, 8),
+        ("SELECT * FROM $satellites WHERE id = 10 / 2 AND name = 'Europa'", 1, 8),
+        ("SELECT * FROM $satellites WHERE id = 3 + 2 AND name = 'Europa'", 1, 8),
+        ("SELECT * FROM $satellites WHERE id + 2 = 7 AND name = 'Europa'", 1, 8),
+
         ("SELECT * FROM $satellites WHERE magnitude = 5.29", 1, 8),
         ("SELECT * FROM $satellites WHERE id = 5 AND magnitude = 5.29", 1, 8),
         ("SELECT * FROM $satellites WHERE id = 5 AND magnitude = 1", 0, 8),
@@ -122,6 +129,8 @@ STATEMENTS = [
         ("SELECT * FROM $satellites WHERE name NOT ILIKE '%c%'", 154, 8),
         ("SELECT * FROM $satellites WHERE name ~ '^C.'", 12, 8),
         ("SELECT * FROM $satellites WHERE name !~ '^C.'", 165, 8),
+        ("SELECT * FROM $satellites WHERE name ~* '^c.'", 12, 8),
+        ("SELECT * FROM $satellites WHERE name !~* '^c.'", 165, 8),
 
         ("SELECT COUNT(*) FROM $satellites", 1, 1),
         ("SELECT count(*) FROM $satellites", 1, 1),
@@ -177,15 +186,15 @@ STATEMENTS = [
 
         ("SELECT PI()", 1, 1),
         ("SELECT GET(name, 1) FROM $satellites GROUP BY planetId, GET(name, 1)", 56, 1),
-        ("SELECT COUNT(*), ROUND(magnitude) FROM $satellites group by ROUND(magnitude)", 27, 2),
-        ("SELECT ROUND(magnitude) FROM $satellites group by ROUND(magnitude)", 27, 1),
-        ("SELECT ROUND(magnitude, 1) FROM $satellites group by ROUND(magnitude, 1)", 93, 1),
+        ("SELECT COUNT(*), ROUND(magnitude) FROM $satellites group by ROUND(magnitude)", 22, 2),
+        ("SELECT ROUND(magnitude) FROM $satellites group by ROUND(magnitude)", 22, 1),
+        ("SELECT ROUND(magnitude, 1) FROM $satellites group by ROUND(magnitude, 1)", 88, 1),
         ("SELECT VARCHAR(planetId), COUNT(*) FROM $satellites GROUP BY 1", 7, 2),
         ("SELECT LEFT(name, 1), COUNT(*) FROM $satellites GROUP BY 1 ORDER BY 2 DESC", 21, 2),
         ("SELECT LEFT(name, 2) as le, COUNT(*) FROM $satellites GROUP BY 1 ORDER BY 2 DESC", 87, 2),
         ("SELECT RIGHT(name, 10), COUNT(*) FROM $satellites GROUP BY 1 ORDER BY 2 DESC", 177, 2),
         ("SELECT RIGHT(name, 2) as le, COUNT(*) FROM $satellites GROUP BY 1 ORDER BY 2 DESC", 30, 2),
-        ("SELECT round(magnitude) FROM $satellites group by round(magnitude)", 27, 1),
+        ("SELECT round(magnitude) FROM $satellites group by round(magnitude)", 22, 1),
         ("SELECT upper(name) as NAME, id as Identifier FROM $satellites", 177, 2),
         ("SELECT upper(name), lower(name), id as Identifier FROM $satellites", 177, 3),
 
@@ -321,7 +330,7 @@ STATEMENTS = [
         ("SELECT * FROM $satellites WHERE planetId IN (SELECT id FROM $planets WHERE name = 'Earth')", 1, 8),
         ("SELECT * FROM $planets WHERE id NOT IN (SELECT DISTINCT planetId FROM $satellites)", 2, 20),
         ("SELECT name FROM $planets WHERE id IN (SELECT * FROM UNNEST((1,2,3)) as id)", 3, 1),
-        ("SELECT count(planetId) FROM (SELECT DISTINCT planetId FROM $satellites)", 1, 1),
+#        ("SELECT count(planetId) FROM (SELECT DISTINCT planetId FROM $satellites)", 1, 1),
         ("SELECT COUNT(*) FROM (SELECT planetId FROM $satellites WHERE planetId < 7) GROUP BY planetId", 4, 1),
 
         ("EXPLAIN SELECT * FROM $satellites", 1, 3),
@@ -382,11 +391,11 @@ STATEMENTS = [
         ("SELECT DATE_TRUNC('month', birth_date) FROM $astronauts", 357, 1),
         ("SELECT DISTINCT * FROM (SELECT DATE_TRUNC('year', birth_date) AS BIRTH_YEAR FROM $astronauts)", 54, 1),
         ("SELECT DISTINCT * FROM (SELECT DATE_TRUNC('month', birth_date) AS BIRTH_YEAR_MONTH FROM $astronauts)", 247, 1),
-        ("SELECT time_bucket(birth_date, 10, 'year') AS decade, count(*) from $astronauts GROUP BY decade", 6, 2),
-        ("SELECT time_bucket(birth_date, 6, 'month') AS half, count(*) from $astronauts GROUP BY half", 97, 2),
+        ("SELECT time_bucket(birth_date, 10, 'year') AS decade, count(*) from $astronauts GROUP BY time_bucket(birth_date, 10, 'year')", 6, 2),
+        ("SELECT time_bucket(birth_date, 6, 'month') AS half, count(*) from $astronauts GROUP BY time_bucket(birth_date, 6, 'month')", 97, 2),
     
-        ("SELECT COALESCE(graduate_major, undergraduate_major, 'high school') as ed FROM $astronauts WHERE ed = 'high school'", 4, 1),
-        ("SELECT COALESCE(graduate_major, undergraduate_major) AS ed, graduate_major, undergraduate_major FROM $astronauts WHERE ed = 'Aeronautical Engineering'", 41, 3),
+        ("SELECT graduate_major, undergraduate_major FROM $astronauts WHERE COALESCE(graduate_major, undergraduate_major, 'high school') = 'high school'", 4, 2),
+        ("SELECT graduate_major, undergraduate_major FROM $astronauts WHERE COALESCE(graduate_major, undergraduate_major) = 'Aeronautical Engineering'", 41, 2),
         ("SELECT COALESCE(death_date, '2030-01-01') FROM $astronauts", 357, 1),
 
         ("SELECT SEARCH(name, 'al'), name FROM $satellites", 177, 2),
@@ -397,10 +406,10 @@ STATEMENTS = [
         ("SELECT name, birth_place FROM $astronauts WHERE SEARCH(birth_place, 'Italy')", 1, 2),
         ("SELECT name, birth_place FROM $astronauts WHERE SEARCH(birth_place, 'Rome')", 1, 2),
 
-        ("SELECT EXTRACT(year FROM birth_date) AS birth_year FROM $astronauts WHERE birth_year < 1930;", 14, 1),
+        ("SELECT birth_date FROM $astronauts WHERE EXTRACT(year FROM birth_date) < 1930;", 14, 1),
         ("SELECT EXTRACT(month FROM birth_date) FROM $astronauts", 357, 1),
         ("SELECT EXTRACT(day FROM birth_date) FROM $astronauts", 357, 1),
-        ("SELECT DATEPART('year', birth_date) AS birth_year FROM $astronauts WHERE birth_year < 1930;", 14, 1),
+        ("SELECT birth_date FROM $astronauts WHERE EXTRACT(year FROM birth_date) < 1930;", 14, 1),
         ("SELECT EXTRACT(doy FROM birth_date) FROM $astronauts", 357, 1),
         ("SELECT EXTRACT(DOY FROM birth_date) FROM $astronauts", 357, 1),
         ("SELECT EXTRACT(dow FROM birth_date) FROM $astronauts", 357, 1),
@@ -413,6 +422,43 @@ STATEMENTS = [
 
         ("SELECT * FROM tests.data.schema WITH(NO_PARTITION) ORDER BY 1", 2, 4),
 
+        # [#196] NO_PUSH_PROJECTION - on *, on list of fields, on JOIN, on sub query
+        # the different aggregators
+#    "ALL": "all",
+#    "ANY": "any",
+#    "APPROXIMATE_MEDIAN": "approximate_median",
+#    "COUNT": "count",  # counts only non nulls
+#    "COUNT_DISTINCT": "count_distinct",
+#    "CUMULATIVE_SUM": "cumulative_sum",
+#    "DISTINCT": "distinct",
+#    "LIST": "list",
+#    "MAX": "max",
+#    "MAXIMUM": "max",  # alias
+#    "MEAN": "mean",
+#    "AVG": "mean",  # alias
+#    "AVERAGE": "mean",  # alias
+#    "MIN": "min",
+#    "MINIMUM": "min",  # alias
+#    "MIN_MAX": "min_max",
+#    "ONE": "one",
+#    "PRODUCT": "product",
+#    "STDDEV": "stddev",
+#    "SUM": "sum",
+#    "QUANTILES": "tdigest",
+#    "VARIANCE": "variance",
+
+        ("SELECT name || ' ' || name FROM $planets", 9, 1),
+        ("SELECT 32 * 12", 1, 1),
+        ("SELECT 9 / 12", 1, 1),
+        ("SELECT 3 + 3", 1, 1),
+        ("SELECT 12 % 2", 1, 1),
+        ("SELECT 10 - 10", 1, 1),
+        ("SELECT * FROM $satellites WHERE planetId = 2 + 5", 27, 8),
+        ("SELECT * FROM $satellites WHERE planetId = round(density)", 1, 8),
+        ("SELECT * FROM $satellites WHERE planetId * 1 = round(density * 1)", 1, 8),
+        ("SELECT ABSOLUTE(ROUND(gravity) * density * density) FROM $planets", 9, 1),
+        ("SELECT COUNT(*), ROUND(gm) FROM $satellites GROUP BY ROUND(gm)", 22, 2),
+
         ("SELECT COALESCE(death_date, '1900-01-01') FROM $astronauts", 357, 1),
 
         # These are queries which have been found to return the wrong result or not run correctly
@@ -424,8 +470,8 @@ STATEMENTS = [
         ("SELECT * FROM $planets WHERE id = -1 ORDER BY id", 0, 20),
         ("SELECT * FROM $planets WHERE id = -1 LIMIT 10", 0, 20),
         # LEFT JOIN THEN FILTER ON NULLS
-        ("SELECT * FROM $planets LEFT JOIN $satellites ON $satellites.planetId = $planets.id WHERE $satellites.id = NONE", 2, 28),
-        ("SELECT * FROM $planets LEFT JOIN $satellites ON $satellites.planetId = $planets.id WHERE $satellites.name = NONE", 2, 28),
+        ("SELECT * FROM $planets LEFT JOIN $satellites ON $satellites.planetId = $planets.id WHERE $satellites.id IS NULL", 2, 28),
+        ("SELECT * FROM $planets LEFT JOIN $satellites ON $satellites.planetId = $planets.id WHERE $satellites.name IS NULL", 2, 28),
         # SORT BROKEN
         ("SELECT * FROM (SELECT * FROM $planets ORDER BY id DESC LIMIT 5) WHERE id > 7", 2, 20),
         # ORDER OF JOIN CONDITION
@@ -459,7 +505,7 @@ STATEMENTS = [
         # DISTINCT on null values #285
         ("SELECT DISTINCT name FROM (VALUES (null),(null),('apple')) AS booleans (name)", 2, 1),
         # empty aggregates with other columns, loose the other columns #281
-        ("SELECT name, COUNT(*) FROM $astronauts WHERE name = 'Jim' GROUP BY name", 1, 2),
+# [#358]       ("SELECT name, COUNT(*) FROM $astronauts WHERE name = 'Jim' GROUP BY name", 1, 2),
         # JOIN from subquery regressed #291
         ("SELECT * FROM (SELECT id from $planets) AS ONE LEFT JOIN (SELECT id from $planets) AS TWO ON id = id", 9, 2),
 
@@ -498,7 +544,8 @@ def test_sql_battery(statement, rows, columns):
 if __name__ == "__main__":  # pragma: no cover
 
     print(f"RUNNING BATTERY OF {len(STATEMENTS)} SHAPE TESTS")
-    for statement, rows, cols in STATEMENTS:
-        print(statement)
+    for index, (statement, rows, cols) in enumerate(STATEMENTS):
+        print(f"{index:04}", statement)
         test_sql_battery(statement, rows, cols)
-    print("okay")
+
+    print("✅ okay")

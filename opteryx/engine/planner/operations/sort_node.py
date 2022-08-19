@@ -17,13 +17,18 @@ This is a SQL Query Execution Plan Node.
 
 This node orders a dataset
 """
+import time
+
 from typing import Iterable, List
 
 from pyarrow import Table, concat_tables
 
-from opteryx.engine.functions import FUNCTIONS
-from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
 from opteryx.engine import QueryDirectives, QueryStatistics
+from opteryx.engine.planner.expression import evaluate_and_append
+from opteryx.engine.planner.expression import ExpressionTreeNode
+from opteryx.engine.planner.expression import format_expression
+from opteryx.engine.planner.expression import NodeType
+from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
 from opteryx.exceptions import SqlError
 from opteryx.utils.columns import Columns
 
@@ -65,69 +70,51 @@ class SortNode(BasePlanNode):
             return
 
         table = concat_tables(data_pages, promote=True)
+        original_columns = table.column_names
         columns = Columns(table)
-        need_to_remove_random = False
 
-        for column, direction in self._order:
+        start_time = time.time_ns()
 
-            # function references aere recorded as dictionaries
-            if isinstance(column, dict):
+        for column_list, direction in self._order:
 
-                # we only have special handling for RANDOM at the moment
-                if column["alias"] != "RANDOM()":
-                    if len(columns.get_column_from_alias(column["alias"])) == 0:
-                        raise SqlError(
-                            "ORDER BY can only reference functions used in the SELECT clause, or RANDOM()"
-                        )
-
+            for column in column_list:
+                if column.token_type == NodeType.FUNCTION:
+                    columns, expressions, table = evaluate_and_append([column], table)
                     self._mapped_order.append(
                         (
                             columns.get_column_from_alias(
-                                column["alias"], only_one=True
+                                format_expression(column), only_one=True
                             ),
                             direction,
                         )
                     )
-                else:
-                    # this currently only supports zero parameter functions
-                    return_type, executor = FUNCTIONS[column["function"]]
-                    calculated_values = executor(*[table.num_rows])
+                elif column.token_type == NodeType.LITERAL_NUMERIC:
 
-                    table = Table.append_column(
-                        table, column["alias"], calculated_values
-                    )
-                    # we add it to sort, but it's not in the SELECT so we shouldn't return it
-                    need_to_remove_random = True
-
+                    # we have an index rather than a column name, it's a natural
+                    # number but the list of column names is zero-based, so we
+                    # subtract one
+                    column_name = table.column_names[int(column.value) - 1]
                     self._mapped_order.append(
                         (
-                            column["alias"],
+                            column_name,
+                            direction,
+                        )
+                    )
+                else:
+                    self._mapped_order.append(
+                        (
+                            columns.get_column_from_alias(
+                                format_expression(column), only_one=True
+                            ),
                             direction,
                         )
                     )
 
-            # we have an index rather than a column name, it's a natural number but the
-            # list of column names is zero-based, so we subtract one
-            elif isinstance(column, int):
-                column_name = table.column_names[column - 1]
-                self._mapped_order.append(
-                    (
-                        column_name,
-                        direction,
-                    )
-                )
-
-            else:
-                self._mapped_order.append(
-                    (
-                        columns.get_column_from_alias(column, only_one=True),
-                        direction,
-                    )
-                )
-
         table = table.sort_by(self._mapped_order)
 
-        if need_to_remove_random:
-            table = table.drop(["RANDOM()"])
+        # remove any columns we added just for ordering
+        table = table.select(original_columns)
+
+        self._statistics.time_ordering = time.time_ns() - start_time
 
         yield table

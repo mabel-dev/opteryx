@@ -85,8 +85,6 @@ class FireStoreStorage(BaseDocumentStorageAdapter):  # pragma: no cover - no emu
         """
         _initialize()
         database = firestore.client()
-
-        print([doc.to_dict() for doc in database.collection(collection).stream()])
         documents = database.collection(collection).stream()
 
         for page in self.page_dictset((doc.to_dict() for doc in documents), page_size):

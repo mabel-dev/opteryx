@@ -4,22 +4,29 @@ Aggregates are functions that combine multiple rows into a single value. Aggrega
 
 When the `ORDER BY` clause is provided, the values being aggregated are sorted after applying the function. 
 
-Most aggregates require all of the data in the result set in order to complete, for large datasets this may result in memory issues; however, some aggregate functions have been written to run over huge datasets, `COUNT`, `MIN`, `MAX`, `SUM`.
+Aggregate functions generally ignore `null`/`none` values when performing calculations.
 
 ## General Functions
 
 The table below shows the available general aggregate functions. (+) indicates aggregates optimized for large datasets. Unless noted, NONE values are ignored.
 
-Function        | Description 
---------------- | ----------------------------------------------------------------
-`LIST(a)`       | Values in column 'a' returned as a list
-`AVG(a)`        | Average value for all values in column 'a', also `AVERAGE`
-`COUNT(a)`      | Number of values in column 'a'
-`FIRST(a)`      | First value in column 'a' (includes `NULL`)
-`LAST(a)`       | Last value in column 'a', (includes `NULL`)
-`MAX(a)`        | Maximum value in column 'a', also `MAXIMUM`
-`MEDIAN(a)`     | Middle value for values in column 'a'
-`MIN(a)`        | Minimum value in column 'a', also `MINIMUM`
-`STDDEV_POP(a)` | Population standard deviation of values in column 'a'
-`SUM(a)`        | Cumulative sum value for all values in column 'a'
-`VAR_POP(a)`    | Population variance for values in column 'a'
+Function             | Description 
+-------------------- | ----------------------------------------------------------------
+`ALL`                | All elements in a column is set to true
+`ANY`                | Any elements in a column is set to true
+`APPROXIMATE_MEDIAN` | Approximate median of a column with T-Digest algorithm
+`COUNT`              | 
+`COUNT_DISTINCT`     | Count the number of unique values
+`CUMULATIVE_SUM`     | 
+`DISTINCT`           | The list of the unique values
+`LIST`               | The complete list of values
+`MAX`                | The maximum value of a column (also `MAXIMUM`)
+`MEDIAN`             | The median of values in a numeric column
+`AVG`                | The average of a numeric column (alse `MEAN`, and `AVERAGE`)
+`MIN`                | The minimum values of a column (also `MINIMUM`)
+`MIN_MAX`            | The minimum and maximum values of a column (also `MINIMUM`)
+`ONE`                | Select one value from the column
+`PRODUCT`            | The product of values in a numeric column
+`STDDEV`             | The standard deviation of values in a numeric column
+`SUM`                | The sum of values in a numeric column
+`VARIANCE`           | The variance of values in a numeric column

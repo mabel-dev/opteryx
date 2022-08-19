@@ -22,7 +22,7 @@ Retrieve rows from zero or more relations.
 
 ~~~sql
 SELECT [ DISTINCT ] select_list
-FROM relation [WITH (NO_CACHE,NO_PARTITION)]
+FROM relation [WITH (NO_CACHE,NO_PARTITION,NO_PUSH_PROJECTION)]
   [ INNER ] JOIN relation
     USING (column)
   CROSS JOIN relation

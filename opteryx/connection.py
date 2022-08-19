@@ -16,6 +16,7 @@ stores, it is not compliant with the standard:
 https://www.python.org/dev/peps/pep-0249/
 """
 import datetime
+from decimal import Decimal
 import time
 
 from typing import Dict, List, Optional
@@ -67,7 +68,6 @@ class Cursor:
         """
         Formats parameters to be passed to a Query.
         """
-        from decimal import Decimal
 
         if param is None:
             return "NULL"

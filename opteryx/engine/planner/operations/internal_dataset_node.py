@@ -17,9 +17,9 @@ This is a SQL Query Execution Plan Node.
 
 This Node reads and parses the data from one of the sample datasets.
 """
-import pyarrow
-
 from typing import Iterable, Optional
+
+import pyarrow
 
 from opteryx import samples
 from opteryx.engine import QueryDirectives, QueryStatistics
@@ -36,9 +36,7 @@ def _normalize_to_types(table):
 
     for index, column_name in enumerate(schema.names):
         type_name = str(schema.types[index])
-        #        if type_name in ("int16", "int32", "int64", "int8", "float16", "float32"):
-        #            schema = schema.set(index, pyarrow.field(column_name, pyarrow.float64()))
-        if type_name in ("date32[day]", "date64", "timestamp"):
+        if type_name in ("date32[day]", "date64", "timestamp[s]", "timestamp[ms]"):
             schema = schema.set(
                 index, pyarrow.field(column_name, pyarrow.timestamp("us"))
             )

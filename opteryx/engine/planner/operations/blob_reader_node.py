@@ -43,7 +43,9 @@ class ExtentionType(str, Enum):
     CONTROL = "CONTROL"
 
 
-do_nothing = lambda x, y: x
+def do_nothing(stream, projection=None):
+    return stream
+
 
 MAX_SIZE_SINGLE_CACHE_ITEM = config.MAX_SIZE_SINGLE_CACHE_ITEM
 PARTITION_SCHEME = config.PARTITION_SCHEME
@@ -62,15 +64,13 @@ KNOWN_EXTENSIONS = {
 
 def _normalize_to_types(table):
     """
-    Normalize types e.g. all numbers are float64 and dates
+    Normalize types e.g. all numbers are decimal128 and dates
     """
     schema = table.schema
 
     for index, column_name in enumerate(schema.names):
         type_name = str(schema.types[index])
-        #        if type_name in ("int16", "int32", "int64", "int8", "float16", "float32"):
-        #            schema = schema.set(index, pyarrow.field(column_name, pyarrow.float64()))
-        if type_name in ("date32[day]", "date64", "timestamp"):
+        if type_name in ("date32[day]", "date64", "timestamp[s]", "timestamp[ms]"):
             schema = schema.set(
                 index,
                 pyarrow.field(
@@ -138,7 +138,10 @@ class BlobReaderNode(BasePlanNode):
         self._end_date = config.get("end_date", today)
 
         # pushed down selection/filter
-        self._selection = config.get("selection")
+        if "NO_PUSH_PROJECTION" in config.get("hints", []):
+            self._selection = None
+        else:
+            self._selection = config.get("selection")
 
         # scan
         self._reading_list = self._scanner()
@@ -383,6 +386,6 @@ class BlobReaderNode(BasePlanNode):
                 partition_structure.pop(partition)
 
         if len(partition_structure) == 0:
-            raise DatabaseError("No blobs found that match the requested dataset.")
+            raise DatabaseError("The requested dataset could not be found.")
 
         return partition_structure
