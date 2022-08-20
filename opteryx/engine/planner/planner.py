@@ -154,7 +154,6 @@ class QueryPlanner(ExecutionTree):
                 ],
             )
         if "Value" in value:
-            print("VALUE")
             if value["Value"] == "Null":
                 return ExpressionTreeNode(NodeType.LITERAL_NONE)
             return ExpressionTreeNode(NodeType.UNKNOWN, value=value["Value"])
@@ -672,6 +671,26 @@ class QueryPlanner(ExecutionTree):
         self.link_operators(last_node, "columns")
         last_node = "columns"
 
+    def _extract_identifiers(self, ast):
+        identifiers = []
+        if isinstance(ast, dict):
+            for key, value in ast.items():
+                if key in ("Identifier",):
+                    identifiers.append(value["value"])
+                if key in ("Using",):
+                    for item in ast["Using"]:
+                        identifiers.append(item["value"])
+                if key in ("QualifiedWildcard",):
+                    identifiers.append("*")
+                identifiers.extend(self._extract_identifiers(value))
+        if isinstance(ast, list):
+            for item in ast:
+                if item in ("Wildcard",):
+                    identifiers.append("*")
+                identifiers.extend(self._extract_identifiers(item))
+
+        return list(set(identifiers))
+
     def _naive_select_planner(self, ast, statistics):
         """
         The naive planner only works on single tables and always puts operations in
@@ -691,11 +710,7 @@ class QueryPlanner(ExecutionTree):
         functionality.
         """
         directives = self._extract_directives(ast)
-
-        # TODO [#196]: move all information collection upfront so we can identify all
-        # the identifiers for selection pushdown. is parameter 'selection' for the
-        # reader
-        # all_identifiers = get_all_identifiers(self._groups)
+        all_identifiers = self._extract_identifiers(ast)
 
         _relations = [r for r in self._extract_relations(ast)]
         if len(_relations) == 0:
@@ -722,6 +737,7 @@ class QueryPlanner(ExecutionTree):
                 start_date=self.start_date,
                 end_date=self.end_date,
                 hints=hints,
+                selection=all_identifiers,
             ),
         )
         last_node = "from"

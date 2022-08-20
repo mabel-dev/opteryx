@@ -18,6 +18,7 @@ This is a SQL Query Execution Plan Node.
 This Node reads and parses the data from a dataset into a Table.
 """
 import datetime
+from select import select
 import time
 
 from typing import Iterable
@@ -92,6 +93,14 @@ def _normalize_to_types(table):
     return table.cast(target_schema=schema), schema
 
 
+def _get_selection(schema, selection):
+    """ """
+    #    print(schema.names, selection)
+    if selection is None:
+        return schema.names
+    return list(set(schema.names).intersection(selection))
+
+
 class BlobReaderNode(BasePlanNode):
 
     _disable_cache = False
@@ -147,7 +156,7 @@ class BlobReaderNode(BasePlanNode):
         self._reading_list = self._scanner()
 
         # row count estimate
-        self._row_count = None
+        self._row_count_estimate = None
 
     @property
     def config(self):  # pragma: no cover
@@ -209,7 +218,13 @@ class BlobReaderNode(BasePlanNode):
                 ) in multiprocessor.processed_reader(
                     self._read_and_parse,
                     [
-                        (path, self._reader.read_blob, parser, self._cache)
+                        (
+                            path,
+                            self._reader.read_blob,
+                            parser,
+                            self._cache,
+                            self._selection,
+                        )
                         for path, parser in sorted(partition["blob_list"])
                     ],
                     plasma_channel,
@@ -226,10 +241,10 @@ class BlobReaderNode(BasePlanNode):
                     self._statistics.rows_read += pyarrow_blob.num_rows
                     self._statistics.bytes_processed_data += pyarrow_blob.nbytes
 
-                    if self._row_count is None:
+                    if self._row_count_estimate is None:
                         # This is really rough - it assumes all of the blobs have about
-                        # the same number of records, which is right rarely.
-                        self._row_count = pyarrow_blob.num_rows * (
+                        # the same number of records, which is almost never correct.
+                        self._row_count_estimate = pyarrow_blob.num_rows * (
                             self._statistics.count_blobs_found
                             - self._statistics.count_blobs_ignored_frames
                             - self._statistics.count_control_blobs_found
@@ -239,7 +254,7 @@ class BlobReaderNode(BasePlanNode):
                     if metadata is None:
                         pyarrow_blob = Columns.create_table_metadata(
                             table=pyarrow_blob,
-                            expected_rows=self._row_count,
+                            expected_rows=self._row_count_estimate,
                             name=self._dataset.replace("/", ".")[:-1],
                             table_aliases=[self._alias],
                         )
@@ -277,7 +292,7 @@ class BlobReaderNode(BasePlanNode):
                     yield pyarrow_blob
 
     def _read_and_parse(self, config):
-        path, reader, parser, cache = config
+        path, reader, parser, cache, projection = config
         start_read = time.time_ns()
 
         # if we have a cache set
@@ -309,7 +324,7 @@ class BlobReaderNode(BasePlanNode):
         else:
             blob_bytes = reader(path)
 
-        table = parser(blob_bytes, None)
+        table = parser(blob_bytes, projection)
 
         time_to_read = time.time_ns() - start_read
         return time_to_read, blob_bytes.getbuffer().nbytes, table, path

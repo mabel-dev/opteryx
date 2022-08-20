@@ -421,6 +421,10 @@ STATEMENTS = [
         ("SELECT DATEDIFF('minutes', birth_date, '2022-07-07') FROM $astronauts", 357, 1),
 
         ("SELECT * FROM tests.data.schema WITH(NO_PARTITION) ORDER BY 1", 2, 4),
+        ("SELECT * FROM tests.data.schema WITH(NO_PARTITION, NO_PUSH_PROJECTION) ORDER BY 1", 2, 4),
+        ("SELECT * FROM $planets WITH(NO_PARTITION) ORDER BY 1", 9, 20),
+        ("SELECT * FROM $planets WITH(NO_PUSH_PROJECTION) ORDER BY 1", 9, 20),
+        ("SELECT * FROM $planets WITH(NO_PARTITION, NO_PUSH_PROJECTION) ORDER BY 1", 9, 20),
 
         # [#196] NO_PUSH_PROJECTION - on *, on list of fields, on JOIN, on sub query
         # the different aggregators

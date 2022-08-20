@@ -33,14 +33,12 @@ def parquet_decoder(stream, projection: List = None):
     Read parquet formatted files
     """
     selected_columns = None
-    if isinstance(projection, list) and projection != ["*"]:
+    if isinstance(projection, list) and "*" not in projection:
         # if we have a pushed down projection, get the list of columns from the file
         # and then only set the reader to read those
         parquet_file = parquet.ParquetFile(stream)
         parquet_metadata = parquet_file.schema
-        selected_columns = list(
-            set(parquet_metadata.column_names).intersection(projection)
-        )
+        selected_columns = list(set(parquet_metadata.names).intersection(projection))
 
     # don't prebuffer - we're already buffered as an IO Stream
     return parquet.read_table(stream, columns=selected_columns, pre_buffer=False)
