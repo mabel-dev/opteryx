@@ -93,14 +93,6 @@ def _normalize_to_types(table):
     return table.cast(target_schema=schema), schema
 
 
-def _get_selection(schema, selection):
-    """ """
-    #    print(schema.names, selection)
-    if selection is None:
-        return schema.names
-    return list(set(schema.names).intersection(selection))
-
-
 class BlobReaderNode(BasePlanNode):
 
     _disable_cache = False
@@ -151,6 +143,8 @@ class BlobReaderNode(BasePlanNode):
             self._selection = None
         else:
             self._selection = config.get("selection")
+            if isinstance(self._selection, list):
+                self._selection = set(self._selection)
 
         # scan
         self._reading_list = self._scanner()
