@@ -426,11 +426,9 @@ STATEMENTS = [
         ("SELECT * FROM $planets WITH(NO_PUSH_PROJECTION) ORDER BY 1", 9, 20),
         ("SELECT * FROM $planets WITH(NO_PARTITION, NO_PUSH_PROJECTION) ORDER BY 1", 9, 20),
 
-        # [#196] NO_PUSH_PROJECTION - on *, on list of fields, on JOIN, on sub query
-        # the different aggregators
-#    "ALL": "all",
-#    "ANY": "any",
-#    "APPROXIMATE_MEDIAN": "approximate_median",
+        ("SELECT APPROXIMATE_MEDIAN(radius) AS AM FROM $satellites GROUP BY planetId HAVING APPROXIMATE_MEDIAN(radius) > 5;", 5, 1),
+        ("SELECT APPROXIMATE_MEDIAN(radius) AS AM FROM $satellites GROUP BY planetId HAVING AM > 5;", 5, 1),
+
 #    "COUNT": "count",  # counts only non nulls
 #    "COUNT_DISTINCT": "count_distinct",
 #    "CUMULATIVE_SUM": "cumulative_sum",

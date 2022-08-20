@@ -123,8 +123,9 @@ def _build_aggs(aggregators, columns):
                     field_node.value, only_one=True
                 )
             else:
+                display = format_expression(field_node)
                 raise SqlError(
-                    "Invalid identifier provided in aggregator function `{field_name.value}`"
+                    f"Invalid identifier provided in aggregator function `{display}`"
                 )
             function = AGGREGATORS.get(aggregator.value)
             aggs.append(
@@ -243,9 +244,12 @@ class AggregateNode(BasePlanNode):
         # name the aggregate fields
         for friendly_name, agg_name in column_map.items():
             columns.add_column(agg_name)
-            columns.set_preferred_name(
-                columns.get_column_from_alias(agg_name, only_one=True), friendly_name
-            )
+            column_name = columns.get_column_from_alias(agg_name, only_one=True)
+            columns.set_preferred_name(column_name, friendly_name)
+            # if we have an alias for this column, add it to the metadata
+            aliases = [agg.alias for agg in self._aggregates if friendly_name == format_expression(agg)]
+            for alias in aliases:
+                columns.add_alias(column_name, alias)
         groups = columns.apply(groups)
 
         self._statistics.time_aggregating += time.time_ns() - start_time
