@@ -2,7 +2,7 @@
 
 # Opteryx
 
-## Query your data, no database required
+### Query your data, no database required
 
 **Opteryx is a distributed SQL Engine written in Python, designed for cloud-native environments.**
 
@@ -16,7 +16,7 @@
 [![Regression Suite](https://github.com/mabel-dev/opteryx/actions/workflows/regression_suite.yaml/badge.svg)](https://github.com/mabel-dev/opteryx/actions/workflows/regression_suite.yaml)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-## [Documentation](https://mabel-dev.github.io/opteryx/) | [Examples](notebooks) | [Contributing](https://mabel-dev.github.io/opteryx/Contributing%20Guide/CONTRIBUTING/)
+### [Documentation](https://mabel-dev.github.io/opteryx/) | [Examples](notebooks) | [Contributing](https://mabel-dev.github.io/opteryx/Contributing%20Guide/CONTRIBUTING/)
 
 
 ## Features
