@@ -71,19 +71,31 @@ for row in cur.fetchall():
 
 ## Installation
 
-Installing Opteryx from PyPI is recommended
+**Install from PyPI (recommended)**
+
+This will install the latest release version.
 
 ~~~bash
 pip install opteryx
 ~~~
 
-## Support
+**Install from GitHub**
+
+The lastest version, including pre-release and beta versions can be installed from GitHub. This is not recommended for production environments.
+
+~~~bash
+pip install git+https://github.com/mabel-dev/opteryx
+~~~
+
+## Community
+
+**How do I get Support?**
 
 [![Slack Invite](https://img.shields.io/badge/Slack%20Community-Join-violet?logo=slack)](https://join.slack.com/t/mabel-corp/shared_invite/zt-1845skqgm-SEQMgvrPyJO~DLhSsNJovQ)
 
 For support join our [Slack channel](https://join.slack.com/t/mabel-corp/shared_invite/zt-1845skqgm-SEQMgvrPyJO~DLhSsNJovQ).
 
-## How Can I Contribute?
+**How Can I Contribute?**
 
 All contributions, [bug reports](https://github.com/mabel-dev/opteryx/issues/new/choose), documentation improvements, enhancements, and [ideas](https://github.com/mabel-dev/opteryx/discussions) are welcome.
 
