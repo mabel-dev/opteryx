@@ -6,6 +6,8 @@
 
 **Opteryx is a distributed SQL Engine written in Python, designed for cloud-native environments.**
 
+### [Documentation](https://mabel-dev.github.io/opteryx/) | [Examples](notebooks) | [Contributing](https://mabel-dev.github.io/opteryx/Contributing%20Guide/CONTRIBUTING/)
+
 [![PyPI Latest Release](https://img.shields.io/pypi/v/opteryx.svg)](https://pypi.org/project/opteryx/)
 [![opteryx](https://snyk.io/advisor/python/opteryx/badge.svg?style=flat-square)](https://snyk.io/advisor/python/opteryx)
 [![Downloads](https://pepy.tech/badge/opteryx)](https://pepy.tech/project/opteryx)
@@ -15,9 +17,6 @@
 [![PyPI Latest Release](https://img.shields.io/badge/Python-3.8%20%7C%203.9%20%7C%203.10-blue?logo=python)](https://pypi.org/project/opteryx/)
 [![Regression Suite](https://github.com/mabel-dev/opteryx/actions/workflows/regression_suite.yaml/badge.svg)](https://github.com/mabel-dev/opteryx/actions/workflows/regression_suite.yaml)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-
-### [Documentation](https://mabel-dev.github.io/opteryx/) | [Examples](notebooks) | [Contributing](https://mabel-dev.github.io/opteryx/Contributing%20Guide/CONTRIBUTING/)
-
 
 ## Features
 
