@@ -11,5 +11,5 @@ Version 1.0 goals will be delivered across various minor versions building towar
 - ⬛ **Execution** `JOIN` statements supported [v0.1]
 - 🔲 **Execution** `CASE` statements supported
 - 🔲 **Execution** Use asyncio/threading to read data, to improve through-put
-- 🔲 **Execution** Functions using the result of Functions (e.g. `LENGTH(LIST(field))`) [v0.3]
-- 🔲 **Execution** Inline operators (e.g. `firstname || surname`) [v0.3]
+- ⬛ **Execution** Functions using the result of Functions (e.g. `LENGTH(LIST(field))`) [v0.3]
+- ⬛ **Execution** Inline operators (e.g. `firstname || surname`) [v0.3]
