@@ -45,4 +45,5 @@ if __name__ == "__main__":  # pragma: no cover
     for statement, error in STATEMENTS:
         print(statement)
         test_no_data_errors(statement, error)
-    print("okay")
+
+    print("✅ okay")

@@ -42,7 +42,7 @@ def get_parts(path_string: str):
     return str(bucket), str(parts) + "/", stem, suffix
 
 
-def build_path(path: str, date: datetime.date = None):
+def build_path(path: str, date: datetime.date = None):   # pragma: no cover
 
     if not path:
         raise ValueError("build_path: path must have a value")
@@ -60,8 +60,8 @@ def build_path(path: str, date: datetime.date = None):
 
 def date_format(path_string: str, date: datetime.date = None):
 
-    if not date:
-        date = datetime.datetime.now()
+    if not date:   # pragma: no cover
+        date = datetime.datetime.utcnow()
 
     # convert dates to datetimes - so we can extract HH:MM:SS information
     args = date.timetuple()[:6]

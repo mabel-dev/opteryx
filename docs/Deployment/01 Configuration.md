@@ -21,8 +21,8 @@ Configuration values are set a `opteryx.yaml` file in the directory the applicat
 
 The environment is the preferred location for secrets, although the engine will read `.env` files if [dotenv](https://pypi.org/project/python-dotenv/) is installed.
 
-`MONGO_CONNECTION`
-`MINIO_END_POINT`
-`MINIO_ACCESS_KEY`
-`MINIO_SECRET_KEY`
-`MINIO_SECURE`
+- `MONGO_CONNECTION`
+- `MINIO_END_POINT`
+- `MINIO_ACCESS_KEY`
+- `MINIO_SECRET_KEY`
+- `MINIO_SECURE`

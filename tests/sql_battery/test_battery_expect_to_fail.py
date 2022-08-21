@@ -74,4 +74,5 @@ if __name__ == "__main__":  # pragma: no cover
     for statement in STATEMENTS:
         print(statement)
         test_sql_battery(statement)
-    print("okay")
+
+    print("✅ okay")

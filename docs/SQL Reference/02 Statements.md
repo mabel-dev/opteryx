@@ -22,21 +22,21 @@ Retrieve rows from zero or more relations.
 
 ~~~sql
 SELECT [ DISTINCT ] select_list
-FROM relation [WITH (NO_CACHE,NO_PARTITION,NO_PUSH_PROJECTION)]
-  [ INNER ] JOIN relation
-    USING (column)
-  CROSS JOIN relation
-  LEFT [ OUTER ] JOIN relation
-  RIGHT [ OUTER ] JOIN relation
-  FULL [ OUTER ] JOIN relation
-    ON condition
-FOR period
-WHERE condition
-GROUP BY groups
-  HAVING group_filter
-ORDER BY order_expr
+  FROM relation [WITH (NO_CACHE,NO_PARTITION,NO_PUSH_PROJECTION)]
+       [ INNER ] JOIN relation
+                 USING (column)
+       CROSS JOIN relation
+       LEFT [ OUTER ] JOIN relation
+       RIGHT [ OUTER ] JOIN relation
+       FULL [ OUTER ] JOIN relation
+                      ON condition
+   FOR period
+ WHERE condition
+ GROUP BY groups
+       HAVING group_filter
+ ORDER BY order_expr
 OFFSET n
-LIMIT n
+ LIMIT n
 ~~~
 
 ### SELECT clause
@@ -52,7 +52,7 @@ The `DISTINCT` modifier is specified, only unique rows are included in the resul
 ### FROM / JOIN clauses
 
 ~~~
-FROM relation [, ...] [WITH (NOCACHE)]
+FROM relation [, ...] [WITH (NO_CACHE, NO_PARTITION, NO_PUSH_PROJECTION)]
 ~~~
 ~~~
 FROM relation [ INNER ] JOIN relation < USING (column) | ON condition >
@@ -70,11 +70,13 @@ The `FROM` clause specifies the source of the data on which the remainder of the
 
 See [Joins](https://mabel-dev.github.io/opteryx/SQL%20Reference/08%20Joins/) for more information on `JOIN` syntax and functionality.
 
-Hints can be provided as part of the statement to direct the query planner and executor to make decisions. Relation hints are declared as `WITH` statements following a relation in the `FROM` and `JOIN` clauses, for example `FROM $astronauts WITH (NOCACHE)`. Reconised hints are:
+Hints can be provided as part of the statement to direct the query planner and executor to make decisions. Relation hints are declared as `WITH` statements following a relation in the `FROM` and `JOIN` clauses, for example `FROM $astronauts WITH (NO_CACHE)`. Reconised hints are:
 
-Hint    | Effect                         
-------- | -------------------------------
-NOCACHE | Ignores any cache configuration 
+Hint               | Effect                         
+------------------ | --------------------------------------------
+NO_CACHE           | Ignores any cache configuration 
+NO_PARTITION       | Do not use partition configuration when reading
+NO_PUSH_PROJECTION | Do not attempt to prune columns when reading 
 
 !!! note
     Hints are not guaranteed to be followed, the query planner and executor may ignore hints in specific circumstances.
@@ -137,11 +139,11 @@ LIMIT count
 List the columns in a relation along with their data type and an indication if nulls have been found in the first page of records.
 
 ~~~sql
-SHOW [EXTENDED] [FULL] COLUMNS
-FROM relation
-LIKE pattern
+ SHOW [EXTENDED] [FULL] COLUMNS
+ FROM relation
+ LIKE pattern
 WHERE condition
-FOR period
+  FOR period
 ~~~
 
 ### EXTENDED modifier

@@ -59,4 +59,5 @@ if __name__ == "__main__":  # pragma: no cover
     for statement, subs, rows, cols in STATEMENTS:
         print(statement)
         test_sql_battery(statement, subs, rows, cols)
-    print("okay")
+
+    print("✅ okay")
