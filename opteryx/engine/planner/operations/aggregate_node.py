@@ -48,22 +48,23 @@ AGGREGATORS = {
     "APPROXIMATE_MEDIAN": "approximate_median",
     "COUNT": "count",  # counts only non nulls
     "COUNT_DISTINCT": "count_distinct",
-    "CUMULATIVE_SUM": "cumulative_sum",
+    #    "CUMULATIVE_SUM": "cumulative_sum",
     "DISTINCT": "distinct",
-    "LIST": "list",
+    "LIST": "hash_list",
     "MAX": "max",
     "MAXIMUM": "max",  # alias
     "MEAN": "mean",
+    #    "MODE": "mode",
     "AVG": "mean",  # alias
     "AVERAGE": "mean",  # alias
     "MIN": "min",
     "MINIMUM": "min",  # alias
     "MIN_MAX": "min_max",
-    "ONE": "one",
+    "ONE": "hash_one",
     "PRODUCT": "product",
     "STDDEV": "stddev",
     "SUM": "sum",
-    "QUANTILES": "tdigest",
+    #    "QUANTILES": "tdigest",
     "VARIANCE": "variance",
 }
 
@@ -123,8 +124,9 @@ def _build_aggs(aggregators, columns):
                     field_node.value, only_one=True
                 )
             else:
+                display = format_expression(field_node)
                 raise SqlError(
-                    "Invalid identifier provided in aggregator function `{field_name.value}`"
+                    f"Invalid identifier provided in aggregator function `{display}`"
                 )
             function = AGGREGATORS.get(aggregator.value)
             aggs.append(
@@ -135,7 +137,7 @@ def _build_aggs(aggregators, columns):
             )
             column_map[
                 f"{aggregator.value.upper()}({display_field})"
-            ] = f"{field_name}_{function}"
+            ] = f"{field_name}_{function}".replace("_hash_", "_")
 
     return column_map, aggs
 
@@ -243,9 +245,17 @@ class AggregateNode(BasePlanNode):
         # name the aggregate fields
         for friendly_name, agg_name in column_map.items():
             columns.add_column(agg_name)
-            columns.set_preferred_name(
-                columns.get_column_from_alias(agg_name, only_one=True), friendly_name
-            )
+            column_name = columns.get_column_from_alias(agg_name, only_one=True)
+            columns.set_preferred_name(column_name, friendly_name)
+            # if we have an alias for this column, add it to the metadata
+            aliases = [
+                agg.alias
+                for agg in self._aggregates
+                if friendly_name == format_expression(agg)
+            ]
+            for alias in aliases:
+                if alias:
+                    columns.add_alias(column_name, alias)
         groups = columns.apply(groups)
 
         self._statistics.time_aggregating += time.time_ns() - start_time

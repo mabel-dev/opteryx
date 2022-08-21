@@ -4,28 +4,29 @@ Aggregates are functions that combine multiple rows into a single value. Aggrega
 
 When the `ORDER BY` clause is provided, the values being aggregated are sorted after applying the function. 
 
-Aggregate functions generally ignore `null`/`none` values when performing calculations.
+Aggregate functions generally ignore `NULL` values when performing calculations.
 
 ## General Functions
 
-The table below shows the available general aggregate functions. (+) indicates aggregates optimized for large datasets. Unless noted, NONE values are ignored.
+The table below shows the available general aggregate functions.
 
 Function             | Description 
 -------------------- | ----------------------------------------------------------------
-`ALL`                | All elements in a column is set to true
-`ANY`                | Any elements in a column is set to true
+<!--- `ALL`                | All elements in a column is set to true --->
+<!--- `ANY`                | Any elements in a column is set to true --->
 `APPROXIMATE_MEDIAN` | Approximate median of a column with T-Digest algorithm
+`AVG`                | The average of a numeric column (alse `MEAN`, and `AVERAGE`)
 `COUNT`              | 
 `COUNT_DISTINCT`     | Count the number of unique values
-`CUMULATIVE_SUM`     | 
-`DISTINCT`           | The list of the unique values
-`LIST`               | The complete list of values
+<!--- `CUMULATIVE_SUM`     |  --->
+<!--- `DISTINCT`           | The list of the unique values  --->
+`LIST`               | The complete list of values 
 `MAX`                | The maximum value of a column (also `MAXIMUM`)
 `MEDIAN`             | The median of values in a numeric column
-`AVG`                | The average of a numeric column (alse `MEAN`, and `AVERAGE`)
+<!--- `MODE`               | The mode of the values  --->
 `MIN`                | The minimum values of a column (also `MINIMUM`)
 `MIN_MAX`            | The minimum and maximum values of a column (also `MINIMUM`)
-`ONE`                | Select one value from the column
+`ONE`                | Select a single value from the grouping
 `PRODUCT`            | The product of values in a numeric column
 `STDDEV`             | The standard deviation of values in a numeric column
 `SUM`                | The sum of values in a numeric column
