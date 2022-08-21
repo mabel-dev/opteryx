@@ -40,7 +40,6 @@ def test_documentation_examples(statement):
         result = pyarrow.concat_tables(cursor._results, promote=True)
 
 
-
 if __name__ == "__main__":  # pragma: no cover
 
     print(f"RUNNING BATTERY OF {len(STATEMENTS)} DOCUMENTATION TESTS")
