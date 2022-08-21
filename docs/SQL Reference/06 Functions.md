@@ -2,9 +2,6 @@
 
 Definitions noted with a 🔻 accept different input arguments.
 
-!!! note
-    Functions presently cannot be used with the outputs of function calls, for example `DATEDIFF('year', birth_date, TODAY())` will return an error.
-
 ## List Functions
 
 For more details, see [Working with Lists](https://mabel-dev.github.io/opteryx/SQL%20Reference/Working%20with%20SQL/20%20Working%20with%20Lists/).

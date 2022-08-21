@@ -428,26 +428,23 @@ STATEMENTS = [
 
         ("SELECT APPROXIMATE_MEDIAN(radius) AS AM FROM $satellites GROUP BY planetId HAVING APPROXIMATE_MEDIAN(radius) > 5;", 5, 1),
         ("SELECT APPROXIMATE_MEDIAN(radius) AS AM FROM $satellites GROUP BY planetId HAVING AM > 5;", 5, 1),
-
-#    "COUNT": "count",  # counts only non nulls
-#    "COUNT_DISTINCT": "count_distinct",
-#    "CUMULATIVE_SUM": "cumulative_sum",
-#    "DISTINCT": "distinct",
-#    "LIST": "list",
-#    "MAX": "max",
-#    "MAXIMUM": "max",  # alias
-#    "MEAN": "mean",
-#    "AVG": "mean",  # alias
-#    "AVERAGE": "mean",  # alias
-#    "MIN": "min",
-#    "MINIMUM": "min",  # alias
-#    "MIN_MAX": "min_max",
-#    "ONE": "one",
-#    "PRODUCT": "product",
-#    "STDDEV": "stddev",
-#    "SUM": "sum",
-#    "QUANTILES": "tdigest",
-#    "VARIANCE": "variance",
+        ("SELECT COUNT(planetId) FROM $satellites", 1, 1),
+        ("SELECT COUNT_DISTINCT(planetId) FROM $satellites", 1, 1),
+        ("SELECT LIST(name), planetId FROM $satellites GROUP BY planetId", 7, 2),
+        ("SELECT ONE(name), planetId FROM $satellites GROUP BY planetId", 7, 2),
+        ("SELECT MAX(planetId) FROM $satellites", 1, 1),
+        ("SELECT MAXIMUM(planetId) FROM $satellites", 1, 1),
+        ("SELECT MEAN(planetId) FROM $satellites", 1, 1),
+        ("SELECT AVG(planetId) FROM $satellites", 1, 1),
+        ("SELECT AVERAGE(planetId) FROM $satellites", 1, 1),
+        ("SELECT MIN(planetId) FROM $satellites", 1, 1),
+        ("SELECT MIN_MAX(planetId) FROM $satellites", 1, 1),
+#        ("SELECT MODE(planetId) FROM $satellites", 1, 1),
+        ("SELECT PRODUCT(planetId) FROM $satellites", 1, 1),
+        ("SELECT STDDEV(planetId) FROM $satellites", 1, 1),
+        ("SELECT SUM(planetId) FROM $satellites", 1, 1),
+#        ("SELECT QUANTILES(planetId) FROM $satellites", 1, 1),
+        ("SELECT VARIANCE(planetId) FROM $satellites", 1, 1),
 
         ("SELECT name || ' ' || name FROM $planets", 9, 1),
         ("SELECT 32 * 12", 1, 1),
