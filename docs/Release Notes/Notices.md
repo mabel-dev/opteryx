@@ -3,7 +3,7 @@
 Opteryx uses the following libraries and components:
 
 Component | Disposition | Copyright | Licence   
-------------- | ----------- | ------------ | -- 
+--------- | :---------: | :-------- | -- 
 [cityhash](https://github.com/escherba/python-cityhash)    | Installed   | . | [Bespoke](https://github.com/escherba/python-cityhash/blob/master/LICENSE)  
 [cython](https://github.com/cython/cython)                 | Installed   | . | [Apache 2.0](https://github.com/cython/cython/blob/master/LICENSE.txt)
 [datetime_truncate](https://github.com/mediapop/datetime_truncate) | Integrated | 2020 Media Pop | [MIT](https://github.com/mediapop/datetime_truncate/blob/master/LICENSE)
@@ -21,7 +21,10 @@ Component | Disposition | Copyright | Licence
 - **Integrated** components have their source code included in the Opteryx codebase
 - **Transitive** components are key components installed by other components - this is not intended to be a complete list
 
-!!! note
+!!! Note
+    Integrated components may differ from their original form. Cosmetic changes are not generally noted however where functionality has been added or altered, this should be recorded in comments.
+
+!!! Note
     License information was correct as at 2022-06-03
 
 Archaeopteryx fossil image by Caro Asercion, used under [CC BY 3.0](https://github.com/game-icons/icons/blob/master/license.txt)

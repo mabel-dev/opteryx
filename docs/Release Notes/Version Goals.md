@@ -8,7 +8,7 @@ Version 1.0 goals will be delivered across various minor versions building towar
 
 - 🔲 **Planner** CTEs (`WITH`) statements supported
 - ⬛ **Planner** Read across multiple data sources (e.g. GCS and Postgres in the same query) [v0.2]
-- 🔲 **Planner** Support SQL data source
+- 🔲 **Planner** Support different plaform data sources (e.g. FireStore and BigQuery)
 - ⬛ **Execution** `JOIN` statements supported [v0.1]
 - 🔲 **Execution** `CASE` statements supported
 - 🔲 **Execution** Use asyncio/threading to read data, to improve through-put

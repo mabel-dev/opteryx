@@ -279,7 +279,7 @@ STATEMENTS = [
         ("SELECT * FROM generate_series(2,10,2) AS nums", 5, 1),
         ("SELECT * FROM generate_series(2,10,2) WHERE generate_series > 5", 3, 1),
         ("SELECT * FROM generate_series(2,10,2) AS nums WHERE nums < 5", 2, 1),
-        ("SELECT * FROM generate_series(2) WITH (NOCACHE)", 2, 1),
+        ("SELECT * FROM generate_series(2) WITH (NO_CACHE)", 2, 1),
 
         ("SELECT * FROM generate_series('2022-01-01', '2022-12-31', '1 month')", 12, 1),
         ("SELECT * FROM generate_series('2022-01-01', '2022-12-31', '1 mon')", 12, 1),
@@ -302,7 +302,7 @@ STATEMENTS = [
         ("SELECT * FROM generate_series('192.168.1.0/28')", 16, 1),
         ("SELECT * FROM generate_series('192.168.1.100/29')", 8, 1),
 
-        ("SELECT * FROM tests.data.dated WITH (NOCACHE) FOR '2020-02-03'", 25, 8),
+        ("SELECT * FROM tests.data.dated WITH (NO_CACHE) FOR '2020-02-03'", 25, 8),
         ("SELECT * FROM tests.data.dated FOR '2020-02-03'", 25, 8),
         ("SELECT * FROM tests.data.dated FOR '2020-02-04'", 25, 8),
         ("SELECT * FROM tests.data.dated FOR DATES BETWEEN '2020-02-01' AND '2020-02-28'", 50, 8),
@@ -346,12 +346,12 @@ STATEMENTS = [
         ("SHOW COLUMNS FROM tests.data.dated FOR '2020-02-03'", 8, 2),
 
         ("SELECT * FROM $satellites CROSS JOIN $astronauts", 63189, 27),
-        ("SELECT * FROM $satellites WITH (NOCACHE) CROSS JOIN $astronauts WITH (NOCACHE)", 63189, 27),
+        ("SELECT * FROM $satellites WITH (NO_CACHE) CROSS JOIN $astronauts WITH (NO_CACHE)", 63189, 27),
         ("SELECT * FROM $satellites, $planets", 1593, 28),
         ("SELECT * FROM $satellites INNER JOIN $planets USING (id)", 9, 28),
-        ("SELECT * FROM $satellites WITH (NOCACHE) INNER JOIN $planets USING (id)", 9, 28),
-        ("SELECT * FROM $satellites WITH (NOCACHE) INNER JOIN $planets WITH (NOCACHE) USING (id)", 9, 28),
-        ("SELECT * FROM $satellites INNER JOIN $planets WITH (NOCACHE) USING (id)", 9, 28),
+        ("SELECT * FROM $satellites WITH (NO_CACHE) INNER JOIN $planets USING (id)", 9, 28),
+        ("SELECT * FROM $satellites WITH (NO_CACHE) INNER JOIN $planets WITH (NO_CACHE) USING (id)", 9, 28),
+        ("SELECT * FROM $satellites INNER JOIN $planets WITH (NO_CACHE) USING (id)", 9, 28),
         ("SELECT * FROM $satellites JOIN $planets USING (id)", 9, 28),
         ("SELECT * FROM $astronauts CROSS JOIN UNNEST(missions) AS mission WHERE mission = 'Apollo 11'", 3, 20),
         ("SELECT * FROM $astronauts CROSS JOIN UNNEST(missions)", 869, 20),
@@ -419,6 +419,8 @@ STATEMENTS = [
         ("SELECT DATEDIFF('year', '2017-08-25', '2011-08-25') AS DateDiff;", 1, 1),
         ("SELECT DATEDIFF('days', '2022-07-07', birth_date) FROM $astronauts", 357, 1),
         ("SELECT DATEDIFF('minutes', birth_date, '2022-07-07') FROM $astronauts", 357, 1),
+        ("SELECT EXTRACT(DOW FROM birth_date) AS DOW, COUNT(*) FROM $astronauts GROUP BY EXTRACT(DOW FROM birth_date) ORDER BY COUNT(*) DESC", 7, 2),
+
 
         ("SELECT * FROM tests.data.schema WITH(NO_PARTITION) ORDER BY 1", 2, 4),
         ("SELECT * FROM tests.data.schema WITH(NO_PARTITION, NO_PUSH_PROJECTION) ORDER BY 1", 2, 4),
@@ -457,7 +459,6 @@ STATEMENTS = [
         ("SELECT * FROM $satellites WHERE planetId * 1 = round(density * 1)", 1, 8),
         ("SELECT ABSOLUTE(ROUND(gravity) * density * density) FROM $planets", 9, 1),
         ("SELECT COUNT(*), ROUND(gm) FROM $satellites GROUP BY ROUND(gm)", 22, 2),
-
         ("SELECT COALESCE(death_date, '1900-01-01') FROM $astronauts", 357, 1),
 
         # These are queries which have been found to return the wrong result or not run correctly

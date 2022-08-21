@@ -21,7 +21,7 @@ Name        | Symbol                       | Description
 
 ## Casting
 
-Values can be cast using the `CAST` function, its form is `CAST(any AS type)`.
+Values can be cast using the `CAST` function, its form is `CAST(any AS type)`. Where values are incompatible, an error will be thrown, to avoid errors `TRY_CAST` can be used instead which will return `NULL` instead of error.
 
 ## Coercion
 

@@ -11,7 +11,7 @@ Opteryx supports the following schema evolution changes:
 - **Reorder** - the order of columns can be changed
 - **Partitioning** - partition resolution can be changed
 
-!!! note
+!!! Note
     Renamed columns will behave like the column has been removed and a new column added.
 
 Opteryx has limited support for column types changing, some changes within the same broad type (e.g. between numeric types and date resolutions) are supported, but these are not all supported and changing between types is not supported.
