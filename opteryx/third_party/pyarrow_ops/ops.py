@@ -26,9 +26,13 @@ FILTER_OPERATORS = {
     "NotLike",
     "NotILike",
     "InList",
+    "SimilarTo",
+    "NotSimilarTo",
     "PGRegexMatch",
+    "NotPGRegexMatch",
     "PGRegexNotMatch",
     "PGRegexIMatch",  # "~*"
+    "NotPGRegexIMatch",  # "!~*"
     "PGRegexNotIMatch",  # "!~*"
 }
 
@@ -142,12 +146,12 @@ def filter_operations(arr, operator, value):
         matches = compute.match_like(arr, value[0], ignore_case=True)  # [#325]
         matches = compute.fill_null(matches, True)
         return numpy.invert(matches)
-    elif operator == "PGRegexMatch":
+    elif operator in ("PGRegexMatch", "SimilarTo"):
         # MODIFIED FOR OPTERYX - see comment above
         _check_type("~", identifier_type, (TOKEN_TYPES.VARCHAR))
         matches = compute.match_substring_regex(arr, value[0])  # [#325]
         return compute.fill_null(matches, False)
-    elif operator == "PGRegexNotMatch":
+    elif operator in ("PGRegexNotMatch", "NotSimilarTo"):
         # MODIFIED FOR OPTERYX - see comment above
         _check_type("!~", identifier_type, (TOKEN_TYPES.VARCHAR))
         matches = compute.match_substring_regex(arr, value[0])  # [#325]

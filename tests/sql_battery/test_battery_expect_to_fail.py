@@ -16,12 +16,6 @@ import opteryx
 # fmt:off
 STATEMENTS = [
 
-        # SIMILAR TO isn't supported
-        ("SELECT * FROM $planets WHERE name SIMILAR TO 'Earth'"),
-
-        # DECLARE isn't supported
-        ("DELARE @variable AS NUMERIC = 3 SELECT * FROM $planets WHERE ID = @variable"),
-
         # SELECT EXCEPT isn't supported
         # https://towardsdatascience.com/4-bigquery-sql-shortcuts-that-can-simplify-your-queries-30f94666a046
         ("SELECT * EXCEPT id FROM $satellites"),
@@ -49,9 +43,6 @@ STATEMENTS = [
 
         # Can't IN an INDENTIFIER
         ("SELECT * FROM $astronauts WHERE 'Apollo 11' IN Missions"),
-
-        # SAFE_CAST isn't supported (alias of TRY_CAST)
-        ("SELECT SAFE_CAST(planetId AS VARCHAR) FROM $satellites"),
     ]
 # fmt:on
 

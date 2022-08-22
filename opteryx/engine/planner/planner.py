@@ -367,10 +367,12 @@ class QueryPlanner(ExecutionTree):
                 alias=alias,
             )
 
-        if "TryCast" in function:
+        try_caster = list(function.keys())[0]
+        if try_caster in ("TryCast", "SafeCast"):
             # CAST(<var> AS <type>) - convert to the form <type>(var), e.g. BOOLEAN(on)
-            args = [self._filter_extract(function["TryCast"]["expr"])]
-            data_type = function["TryCast"]["data_type"]
+            args = [self._filter_extract(function[try_caster]["expr"])]
+            data_type = function[try_caster]["data_type"]
+            try_caster = try_caster.replace("Cast", "_Cast").upper()
             if data_type == "Timestamp":
                 data_type = "TIMESTAMP"
             elif "Varchar" in data_type:
@@ -380,9 +382,9 @@ class QueryPlanner(ExecutionTree):
             elif "Boolean" in data_type:
                 data_type = "BOOLEAN"
             else:
-                raise SqlError(f"Unsupported type for TRY_CAST  - '{data_type}'")
+                raise SqlError(f"Unsupported type for {try_caster}  - '{data_type}'")
 
-            alias.append(f"TRY_CAST({args[0].value} AS {data_type})")
+            alias.append(f"{try_caster}({args[0].value} AS {data_type})")
 
             return ExpressionTreeNode(
                 NodeType.FUNCTION,
@@ -494,11 +496,23 @@ class QueryPlanner(ExecutionTree):
                 left_node=left,
                 right_node=sub_query,
             )
-        try_unary_filter = list(function.keys())[0]
-        if try_unary_filter in ("IsTrue", "IsFalse", "IsNull", "IsNotNull"):
-            centre = self._filter_extract(function[try_unary_filter])
+        try_filter = list(function.keys())[0]
+        if try_filter in ("IsTrue", "IsFalse", "IsNull", "IsNotNull"):
+            centre = self._filter_extract(function[try_filter])
             return ExpressionTreeNode(
-                NodeType.UNARY_OPERATOR, value=try_unary_filter, centre_node=centre
+                NodeType.UNARY_OPERATOR, value=try_filter, centre_node=centre
+            )
+        if try_filter in ("Like", "SimilarTo", "ILike"):
+            negated = function[try_filter]["negated"]
+            left = self._filter_extract(function[try_filter]["expr"])
+            right = self._filter_extract(function[try_filter]["pattern"])
+            if negated:
+                try_filter = f"Not{try_filter}"
+            return ExpressionTreeNode(
+                NodeType.COMPARISON_OPERATOR,
+                value=try_filter,
+                left_node=left,
+                right_node=right,
             )
         if "InList" in function:
             left_node = self._filter_extract(function["InList"]["expr"])
@@ -757,6 +771,12 @@ class QueryPlanner(ExecutionTree):
                     dataset = right[1]
                     if isinstance(dataset, QueryPlanner):
                         mode = "Blob"  # this is still here until it's moved
+                        reader = None
+                    elif (
+                        isinstance(dataset, dict)
+                        and dataset.get("function") is not None
+                    ):
+                        mode = "Function"
                         reader = None
                     elif dataset[0:1] == "$":
                         mode = "Internal"

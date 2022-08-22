@@ -22,10 +22,11 @@ import sys
 
 from typing import Iterable
 
+import numpy
 import pyarrow
 
 from opteryx.engine import QueryDirectives, QueryStatistics
-from opteryx.engine.planner.expression import NodeType
+from opteryx.engine.planner.expression import NodeType, evaluate
 from opteryx.engine.planner.operations import BasePlanNode
 from opteryx.exceptions import SqlError
 from opteryx.utils.columns import Columns
@@ -66,7 +67,13 @@ def _generate_series(alias, *args):
 
 def _unnest(alias, values):
     """unnest converts an list into rows"""
-    return [{alias: row} for row in values.value]
+    list_items = values.value
+    if values.token_type == NodeType.NESTED:
+        # single item lists are reported as nested
+        from opteryx.samples import no_table
+
+        list_items = evaluate(values, no_table())
+    return [{alias: row} for row in list_items]
 
 
 def _values(alias, *values):
@@ -122,7 +129,15 @@ class FunctionDatasetNode(BasePlanNode):
 
     def execute(self) -> Iterable:
 
-        data = FUNCTIONS[self._function](self._alias, *self._args)  # type:ignore
+        try:
+            data = FUNCTIONS[self._function](self._alias, *self._args)  # type:ignore
+        except TypeError as err:
+            print(str(err))
+            if str(err).startswith("_unnest() takes 2"):
+                raise SqlError(
+                    "UNNEST expects a literal list in paranthesis, or a field name as a parameter."
+                )
+            raise err
 
         table = pyarrow.Table.from_pylist(data)
         table = Columns.create_table_metadata(

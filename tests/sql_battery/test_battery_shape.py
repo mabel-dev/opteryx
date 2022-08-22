@@ -128,7 +128,9 @@ STATEMENTS = [
         ("SELECT * FROM $satellites WHERE name NOT LIKE '%c%'", 166, 8),
         ("SELECT * FROM $satellites WHERE name NOT ILIKE '%c%'", 154, 8),
         ("SELECT * FROM $satellites WHERE name ~ '^C.'", 12, 8),
+        ("SELECT * FROM $satellites WHERE name SIMILAR TO '^C.'", 12, 8),
         ("SELECT * FROM $satellites WHERE name !~ '^C.'", 165, 8),
+        ("SELECT * FROM $satellites WHERE name NOT SIMILAR TO '^C.'", 165, 8),
         ("SELECT * FROM $satellites WHERE name ~* '^c.'", 12, 8),
         ("SELECT * FROM $satellites WHERE name !~* '^c.'", 165, 8),
 
@@ -508,7 +510,9 @@ STATEMENTS = [
 # [#358]       ("SELECT name, COUNT(*) FROM $astronauts WHERE name = 'Jim' GROUP BY name", 1, 2),
         # JOIN from subquery regressed #291
         ("SELECT * FROM (SELECT id from $planets) AS ONE LEFT JOIN (SELECT id from $planets) AS TWO ON id = id", 9, 2),
-
+        # JOIN on UNNEST #382
+        ("SELECT name FROM $planets INNER JOIN UNNEST(('Earth')) AS n on name = n ", 1, 1),
+        ("SELECT name FROM $planets INNER JOIN UNNEST(('Earth', 'Mars')) AS n on name = n", 2, 1),
     ]
 # fmt:on
 
