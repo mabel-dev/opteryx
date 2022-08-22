@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - [[#196](https://github.com/mabel-dev/opteryx/issues/196)] Partial implementation of Selection pushdown (Parquet Only). ([@joocer](https://github.com/joocer))   
 - [[#41](https://github.com/mabel-dev/opteryx/issues/41)] Enable the results of functions to be used as parameters for other functions. ([@joocer](https://github.com/joocer))  
 - [[#42](https://github.com/mabel-dev/opteryx/issues/42)] Enable inline operations. ([@joocer](https://github.com/joocer)) 
+- [[#330](https://github.com/mabel-dev/opteryx/issues/330)] Support `SIMILAR TO` alias for RegEx match. ([@joocer](https://github.com/joocer)) 
 
 **Changed**
 

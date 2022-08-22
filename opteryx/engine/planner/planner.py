@@ -494,11 +494,23 @@ class QueryPlanner(ExecutionTree):
                 left_node=left,
                 right_node=sub_query,
             )
-        try_unary_filter = list(function.keys())[0]
-        if try_unary_filter in ("IsTrue", "IsFalse", "IsNull", "IsNotNull"):
-            centre = self._filter_extract(function[try_unary_filter])
+        try_filter = list(function.keys())[0]
+        if try_filter in ("IsTrue", "IsFalse", "IsNull", "IsNotNull"):
+            centre = self._filter_extract(function[try_filter])
             return ExpressionTreeNode(
-                NodeType.UNARY_OPERATOR, value=try_unary_filter, centre_node=centre
+                NodeType.UNARY_OPERATOR, value=try_filter, centre_node=centre
+            )
+        if try_filter in ("Like", "SimilarTo", "ILike"):
+            negated = function[try_filter]["negated"]
+            left = self._filter_extract(function[try_filter]["expr"])
+            right = self._filter_extract(function[try_filter]["pattern"])
+            if negated:
+                try_filter = f"Not{try_filter}"
+            return ExpressionTreeNode(
+                NodeType.COMPARISON_OPERATOR,
+                value=try_filter,
+                left_node=left,
+                right_node=right,
             )
         if "InList" in function:
             left_node = self._filter_extract(function["InList"]["expr"])
