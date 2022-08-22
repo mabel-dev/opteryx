@@ -758,6 +758,12 @@ class QueryPlanner(ExecutionTree):
                     if isinstance(dataset, QueryPlanner):
                         mode = "Blob"  # this is still here until it's moved
                         reader = None
+                    elif (
+                        isinstance(dataset, dict)
+                        and dataset.get("function") is not None
+                    ):
+                        mode = "Function"
+                        reader = None
                     elif dataset[0:1] == "$":
                         mode = "Internal"
                         reader = None

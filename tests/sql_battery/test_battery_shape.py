@@ -508,7 +508,8 @@ STATEMENTS = [
 # [#358]       ("SELECT name, COUNT(*) FROM $astronauts WHERE name = 'Jim' GROUP BY name", 1, 2),
         # JOIN from subquery regressed #291
         ("SELECT * FROM (SELECT id from $planets) AS ONE LEFT JOIN (SELECT id from $planets) AS TWO ON id = id", 9, 2),
-
+        # JOIN on UNNEST #382
+        ("SELECT name FROM $planets INNER JOIN UNNEST(('Earth')) AS n on name = n ", 1, 1),
     ]
 # fmt:on
 

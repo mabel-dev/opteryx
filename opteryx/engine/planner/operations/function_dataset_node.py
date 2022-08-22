@@ -25,7 +25,7 @@ from typing import Iterable
 import pyarrow
 
 from opteryx.engine import QueryDirectives, QueryStatistics
-from opteryx.engine.planner.expression import NodeType
+from opteryx.engine.planner.expression import ExpressionTreeNode, NodeType, evaluate
 from opteryx.engine.planner.operations import BasePlanNode
 from opteryx.exceptions import SqlError
 from opteryx.utils.columns import Columns
@@ -66,6 +66,12 @@ def _generate_series(alias, *args):
 
 def _unnest(alias, values):
     """unnest converts an list into rows"""
+    if isinstance(values, ExpressionTreeNode):
+
+        from opteryx.samples import no_table
+
+        values = evaluate(values, no_table())
+        return [{alias: row} for row in values]
     return [{alias: row} for row in values.value]
 
 

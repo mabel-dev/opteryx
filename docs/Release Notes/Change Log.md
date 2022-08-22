@@ -23,6 +23,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 **Fixed**
 
 - [[#334](https://github.com/mabel-dev/opteryx/issues/334)] All lists should be cast to lists of strings. ([@joocer](https://github.com/joocer))
+- [[#382](https://github.com/mabel-dev/opteryx/issues/382)] `INNER JOIN` on `UNNEST` relation. ([@joocer](https://github.com/joocer))
+- [[#320](https://github.com/mabel-dev/opteryx/issues/320)] Can't execute functions on results of `GROUP BY`. ([@joocer](https://github.com/joocer))
 
 ## [0.2.0] - 2022-07-31
 

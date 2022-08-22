@@ -43,6 +43,9 @@ class OuterJoinNode(BasePlanNode):
         self._on = config.get("join_on")
         self._using = config.get("join_using")
 
+        if self._on is None and self._using is None:
+            raise SqlError("Missing JOIN 'on' condition")
+
     @property
     def name(self):  # pragma: no cover
         return f"{self._join_type} Join"
