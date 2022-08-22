@@ -20,7 +20,7 @@ Function             | Description
 `MAX`                | The maximum value of a column (also `MAXIMUM`)
 `MEDIAN`             | The median of values in a numeric column
 `MIN`                | The minimum values of a column (also `MINIMUM`)
-`MIN_MAX`            | The minimum and maximum values of a column (also `MINIMUM`)
+`MIN_MAX`            | The minimum and maximum values of a column
 `ONE`                | Select a single value from the grouping
 `PRODUCT`            | The product of values in a numeric column
 `STDDEV`             | The standard deviation of values in a numeric column
