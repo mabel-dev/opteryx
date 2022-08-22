@@ -134,7 +134,9 @@ class FunctionDatasetNode(BasePlanNode):
         except TypeError as err:
             print(str(err))
             if str(err).startswith("_unnest() takes 2"):
-                raise SqlError("UNNEST expects a literal list in paranthesis, or a field name as a parameter.")
+                raise SqlError(
+                    "UNNEST expects a literal list in paranthesis, or a field name as a parameter."
+                )
             raise err
 
         table = pyarrow.Table.from_pylist(data)
