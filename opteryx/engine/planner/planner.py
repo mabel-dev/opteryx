@@ -367,10 +367,12 @@ class QueryPlanner(ExecutionTree):
                 alias=alias,
             )
 
-        if "TryCast" in function:
+        try_caster = list(function.keys())[0]
+        if try_caster in ("TryCast", "SafeCast"):
             # CAST(<var> AS <type>) - convert to the form <type>(var), e.g. BOOLEAN(on)
-            args = [self._filter_extract(function["TryCast"]["expr"])]
-            data_type = function["TryCast"]["data_type"]
+            args = [self._filter_extract(function[try_caster]["expr"])]
+            data_type = function[try_caster]["data_type"]
+            try_caster = try_caster.replace("Cast", "_Cast").upper()
             if data_type == "Timestamp":
                 data_type = "TIMESTAMP"
             elif "Varchar" in data_type:
@@ -380,9 +382,9 @@ class QueryPlanner(ExecutionTree):
             elif "Boolean" in data_type:
                 data_type = "BOOLEAN"
             else:
-                raise SqlError(f"Unsupported type for TRY_CAST  - '{data_type}'")
+                raise SqlError(f"Unsupported type for {try_caster}  - '{data_type}'")
 
-            alias.append(f"TRY_CAST({args[0].value} AS {data_type})")
+            alias.append(f"{try_caster}({args[0].value} AS {data_type})")
 
             return ExpressionTreeNode(
                 NodeType.FUNCTION,
