@@ -27,6 +27,7 @@ class QueryStatistics:
         self.bytes_processed_data: int = 0
         self.count_blobs_ignored_frames: int = 0
         self.rows_read: int = 0
+        self.columns_read: int = 0
 
         self.read_errors: int = 0
 
@@ -98,6 +99,7 @@ class QueryStatistics:
             "bytes_read_data": self.bytes_read_data,
             "bytes_processed_data": self.bytes_processed_data,
             "rows_read": self.rows_read,
+            "columns_read": self.columns_read,
             "time_data_read": self._ns_to_s(self.time_data_read),
             "time_total": self._ns_to_s(self.end_time - self.start_time),
             "time_planning": self._ns_to_s(self.time_planning),

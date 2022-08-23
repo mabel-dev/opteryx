@@ -6,14 +6,18 @@
 
 **Available Connectors**
 
-Platform             | Connector  | Disposition
--------------------- | ---------- | ---------------------
-Google Cloud Storage | gcs        | Blob/File Store
-AWS S3               | minio      | Blob/File Store
-MinIo                | minio      | Blob/File Store
-Google FireStore     | firestore  | Document Store
-MongoDB              | mongodb    | Document Store
-Local Disk           | disk       | Blob/File Store
+Platform             | Connector         | Disposition
+-------------------- | ----------------- | ---------------------
+Google Cloud Storage | GcsStorage        | Blob/File Store
+AWS S3               | MinIoStorage      | Blob/File Store
+MinIo                | MinIoStorage      | Blob/File Store
+Google FireStore     | FireStoreStorage  | Document Store
+MongoDB              | MongoDbStore      | Document Store
+Local Disk           | DiskStorage       | Blob/File Store
+
+~~~
+opteryx.storage.register_prefix("tests", DiskStorage)
+~~~
 
 ## Blob/File Stores
 

@@ -15,7 +15,7 @@ import sys
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import opteryx
-from opteryx.storage.adapters.local import DiskStorage
+from opteryx.storage.adapters.blob import DiskStorage
 from opteryx.storage.cache.memory_cache import InMemoryCache
 
 import time
@@ -51,12 +51,16 @@ if __name__ == "__main__":
 
     CYCLES = 60
 
-    conn = opteryx.connect(reader=DiskStorage(), partition_scheme=None, cache=cache)
+    opteryx.storage.register_prefix("tests", DiskStorage)
+
+    conn = opteryx.connect(cache=cache)
 
     for format in FORMATS:
         with Timer(f"{CYCLES} cycles of {format}"):
             for round in range(CYCLES):
                 cur = conn.cursor()
-                cur.execute(f"SELECT * FROM tests.data.formats.{format};")
+                cur.execute(
+                    f"SELECT * FROM tests.data.formats.{format} WITH(NO_PARTITION);"
+                )
                 #                [a for a in cur._results]
                 [a for a in cur.fetchall()]

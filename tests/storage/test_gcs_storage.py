@@ -64,3 +64,4 @@ def test_gcs_storage():
 
 if __name__ == "__main__":
     test_gcs_storage()
+    print("✅ okay")

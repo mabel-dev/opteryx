@@ -62,3 +62,4 @@ def test_mongo_storage():
 
 if __name__ == "__main__":
     test_mongo_storage()
+    print("✅ okay")

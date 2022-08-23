@@ -140,6 +140,10 @@ class FunctionDatasetNode(BasePlanNode):
             raise err
 
         table = pyarrow.Table.from_pylist(data)
+
+        self._statistics.rows_read += table.num_rows
+        self._statistics.columns_read += len(table.column_names)
+
         table = Columns.create_table_metadata(
             table=table,
             expected_rows=table.num_rows,
