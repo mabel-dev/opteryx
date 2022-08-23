@@ -2,7 +2,10 @@
 The best way to test a SQL engine is to throw queries at it.
 
 This tests that features of the parser still aren't implemented, rather than having
-to remember to check the parser for them regularly.
+to remember to check the parser for them regularly. However, this is a blunt test
+and some items may fail because they've not had the implementation written, so do
+occassionally need checking.
+
 """
 import os
 import sys
@@ -43,6 +46,10 @@ STATEMENTS = [
 
         # Can't IN an INDENTIFIER
         ("SELECT * FROM $astronauts WHERE 'Apollo 11' IN Missions"),
+
+        # https://trino.io/docs/current/functions/aggregate.html#filtering-during-aggregation
+        ("SELECT array_agg(name) FILTER (WHERE name IS NOT NULL) FROM region;"),
+        ("SELECT array_agg(x ORDER BY y DESC) from region;"),
     ]
 # fmt:on
 

@@ -26,10 +26,3 @@ Function             | Description
 `STDDEV`             | The standard deviation of values in a numeric column
 `SUM`                | The sum of values in a numeric column
 `VARIANCE`           | The variance of values in a numeric column
-
-<!--- `ALL`                | All elements in a column is set to true --->
-<!--- `ANY`                | Any elements in a column is set to true --->
-<!--- `CUMULATIVE_SUM`     |  --->
-<!--- `DISTINCT`           | The list of the unique values  --->
-<!--- `MODE`               | The mode of the values  --->
-<!--- `QUANTILES`          |   --->
