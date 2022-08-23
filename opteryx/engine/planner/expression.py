@@ -37,33 +37,9 @@ INTERNAL_TYPE: int = int("0010", 2)
 LITERAL_TYPE: int = int("0100", 2)
 
 
-def operator_type_factory(function):
-    if function in FILTER_OPERATORS:
-        return NodeType.COMPARISON_OPERATOR
-    if function in BINARY_OPERATORS:
-        return NodeType.BINARY_OPERATOR
-    if function == "And":
-        return NodeType.AND
-    if function == "Or":
-        return NodeType.OR
-    if function == "Xor":
-        return NodeType.XOR
-    return NodeType.UNKNOWN
-
-
 def format_expression(root):
     node_type = root.token_type
 
-    # BOOLEAN OPERATORS
-    if node_type & LOGICAL_TYPE == LOGICAL_TYPE:
-        if node_type == NodeType.AND:
-            return "AND"
-        if node_type == NodeType.OR:
-            return "OR"
-        if node_type == NodeType.XOR:
-            return "XOR"
-        if node_type == NodeType.NOT:
-            return "NOT"
     # LITERAL TYPES
     if node_type & LITERAL_TYPE == LITERAL_TYPE:
         if node_type == NodeType.LITERAL_VARCHAR:

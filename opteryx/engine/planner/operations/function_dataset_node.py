@@ -131,7 +131,7 @@ class FunctionDatasetNode(BasePlanNode):
 
         try:
             data = FUNCTIONS[self._function](self._alias, *self._args)  # type:ignore
-        except TypeError as err:
+        except TypeError as err:  # pragma: no cover
             print(str(err))
             if str(err).startswith("_unnest() takes 2"):
                 raise SqlError(
