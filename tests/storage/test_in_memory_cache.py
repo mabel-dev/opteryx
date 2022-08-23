@@ -56,3 +56,4 @@ def test_in_memory_cache():
 if __name__ == "__main__":  # pragma: no cover
 
     test_in_memory_cache()
+    print("✅ okay")

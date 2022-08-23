@@ -61,3 +61,4 @@ def test_minio_storage():
 
 if __name__ == "__main__":
     test_minio_storage()
+    print("✅ okay")

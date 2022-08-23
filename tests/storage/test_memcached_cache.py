@@ -46,3 +46,4 @@ def test_memcached_cache():
 if __name__ == "__main__":  # pragma: no cover
 
     test_memcached_cache()
+    print("✅ okay")

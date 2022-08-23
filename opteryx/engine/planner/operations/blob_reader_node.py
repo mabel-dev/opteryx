@@ -18,7 +18,6 @@ This is a SQL Query Execution Plan Node.
 This Node reads and parses the data from a dataset into a Table.
 """
 import datetime
-from select import select
 import time
 
 from typing import Iterable
@@ -253,6 +252,7 @@ class BlobReaderNode(BasePlanNode):
                             table_aliases=[self._alias],
                         )
                         metadata = Columns(pyarrow_blob)
+                        self._statistics.columns_read += len(pyarrow_blob.column_names)
                     else:
                         try:
                             pyarrow_blob = metadata.apply(pyarrow_blob, source=path)
