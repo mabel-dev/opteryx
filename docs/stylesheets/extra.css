@@ -16,7 +16,7 @@ td {
 }
 
 code {
-    font-family: Menlo, 'Robot Mono', 'JetBrains Mono';
+    font-family: Menlo, 'Robot Mono', 'JetBrains Mono', sans-serif;
     font-size: 1em !important;
     color: #D63384 !important;
     font-weight: 300;
