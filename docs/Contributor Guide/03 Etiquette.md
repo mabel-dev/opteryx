@@ -1,14 +1,4 @@
-# Community
-
-## GitHub
-
-We use [GitHub](https://github.com/mabel-dev/opteryx) to host the code, perform testing, report bugs and maintain documentation.
-
-## Slack
-
-[Join us on Slack](https://join.slack.com/t/mabel-corp/shared_invite/zt-1845skqgm-SEQMgvrPyJO~DLhSsNJovQ)
-
-### Etiquettes to follow
+# Community Etiquette
 
 **1. Be nice to everyone**
 

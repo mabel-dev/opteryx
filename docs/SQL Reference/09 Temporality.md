@@ -3,12 +3,11 @@
 Temporality is the ability to view things as they were at a different point in time.
 
 Partition schemes that supports temporal queries allow you to view data from a different date by using a `FOR` clause in the SQL statement. `FOR` clauses state the date, or date range, a query should retrieve results for.
+  
+If no temporal clause is provided and the schema supports it, `FOR TODAY` is assumed.
 
-!!! note  
-    If no temporal clause is provided and the schema supports it, `FOR TODAY` is assumed.
-
-!!! note  
-    Temporal clauses operate on calendar days. For example, from midnight `FOR TODAY` will return no data until data is written for that day.
+!!! Warning     
+    Temporal clauses operate on calendar days in UTC. For example, from midnight `FOR TODAY` will return no data until data is written for that day.
 
 ## Single Dates
 

@@ -18,6 +18,13 @@
 [![Regression Suite](https://github.com/mabel-dev/opteryx/actions/workflows/regression_suite.yaml/badge.svg)](https://github.com/mabel-dev/opteryx/actions/workflows/regression_suite.yaml)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
+## Use Cases
+
+- Using SQL to query data written by another process, such as logs
+- A low-cost option to allow hundreds of analysts to each have part-time databases
+- Running a query engine in a serverless environment
+- Building a platform to allow time-travel and temporal queries
+
 ## Features
 
 ### Scalable
@@ -26,13 +33,15 @@ Designed to run in Knative and similar environments like Google Cloud Run, Opter
 
 ### High Availability
 
-Shared nothing design means each query can run in a separate container instance making it nearly impossible for a rogue query to affect any other users.
+[Shared Nothing](https://en.wikipedia.org/wiki/Shared-nothing_architecture) design means each query can run in a separate container instance making it nearly impossible for a rogue query to affect any other users. _(compute and storage can be shared)_
 
 If a cluster, region or datacentre is unavailable, if you have instances able to run in another location, Opteryx will keep responding to queries. _(inflight queries may not be recovered)_
 
 ### Query In Place
 
-With Opteryx, you don't need to migrate data to a common data platform to be able to query it. You can store some of your data in parquet files on disk or cloud storage, and some in MongoDB or Firestore and access all of these in the same query.
+With Opteryx, if the engine can see and understand the data you can run queries against it. Saving you from the cost and effort of maintaining duplicates your data into a common store.
+
+You can store your data in parquet files on disk or Cloud Storage, and in MongoDB or Firestore and access all of these data in the same query.
 
 ### Bring your own Files
 
@@ -52,11 +61,19 @@ Designed for data analytics in environments where decisions need to be replayabl
 
 ### Schema Evolution
 
-Changes to schemas and paritioning can be made without requiring any existing data to be updated. _(data types can only be changed to compatitble types)_
+Opteryx supports some change to schemas and paritioning without requiring any existing data to be updated. _(data types can only be changed to compatitble types)_
 
-## Usage/Examples
+## Get Started
 
-Example usage, querying one of the internal datasets.
+**Install from PyPI**
+
+~~~bash
+pip install opteryx
+~~~
+
+**Usage**
+
+Example usage, querying one of the internal example datasets.
 
 ~~~python
 import opteryx
@@ -68,23 +85,7 @@ for row in cur.fetchall():
     print(row["name"])
 ~~~
 
-## Installation
-
-**Install from PyPI (recommended)**
-
-This will install the latest release version.
-
-~~~bash
-pip install opteryx
-~~~
-
-**Install from GitHub**
-
-The lastest version, including pre-release and beta versions can be installed from GitHub. This is not recommended for production environments.
-
-~~~bash
-pip install git+https://github.com/mabel-dev/opteryx
-~~~
+For more example usage, see [Exmaple Notebooks](https://github.com/mabel-dev/opteryx/tree/main/notebooks) and the [Getting Started Guide](https://mabel-dev.github.io/opteryx/Getting%20Started/).
 
 ## Community
 

@@ -1,5 +1,9 @@
 # Set Up Guide (MacOS)
 
+This guide will help you to set up a MacOS workstation to work with the code and develop Opteryx.
+
+This has been tested on intel-based Macs.
+
 ## Setting Up
 
 ### 1. Install Python 

@@ -42,8 +42,8 @@ Operator     | Description
 `!~*`        | inverse results of `~*`
 `IS`         | special comparison for non-values `TRUE`, `FALSE` and `NULL`
 
-!!! note
-    When handling `NULL` and `NONE` values, infix inversions (e.g. `x NOT LIKE y`) behave differently to prefix inversions (`NOT x LIKE y`).
+!!! Note  
+    When handling `NULL` values, infix inversions (e.g. `x NOT LIKE y`) behave differently to prefix inversions (`NOT x LIKE y`).
 
 ## Other Comparisons
 
@@ -52,13 +52,15 @@ Predicate               | Description
 `a BETWEEN x AND y`     | equivalent to `a >= x AND a <= y`
 `a NOT BETWEEN x AND y` | equivalent to `a < x OR a > y`
 
-Using `BETWEEN` with other predicates, especially when used with an `AND` conjunction, can cause the query parser to fail. 
+!!! Warning  
+    Using `BETWEEN` with other predicates, especially when used with an `AND` conjunction, can cause the query parser to fail. 
 
 ## Sub Queries
 
 The `IN` operator can reference a sub query, this sub query cannot include a temporal clause (`FOR`), but otherwise the full syntax for `SELECT` queries are supported.
 
 For example, to find the planets without any satellites.
+
 ~~~sql
 SELECT name
   FROM $planets

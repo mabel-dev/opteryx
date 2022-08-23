@@ -1,6 +1,8 @@
 # Set Up Guide (Windows)
 
-For WSL, refer to the Debian/Ubuntu set up guide, assuming you have a functioning WSL environment set up already.
+This guide will help you to set up a Windows workstation to work with the code and develop Opteryx.
+
+If using WSL, refer to the Debian/Ubuntu set up guide. Initial set up of the WSL component is not covered in these guides.
 
 ## Setting Up
 
