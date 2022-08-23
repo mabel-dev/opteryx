@@ -39,6 +39,7 @@ def test_documentation_examples(statement):
     cursor._results = list(cursor._results)
     if cursor._results:
         result = pyarrow.concat_tables(cursor._results, promote=True)
+    assert result
 
 
 if __name__ == "__main__":  # pragma: no cover

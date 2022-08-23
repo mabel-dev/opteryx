@@ -30,12 +30,6 @@ from opteryx.engine.planner.expression import NodeType
 from opteryx.exceptions import SqlError
 
 
-def replace_wildcards(arg):
-    if arg.token_type == NodeType.WILDCARD:
-        return "*"
-    return str(arg.value)
-
-
 class ProjectionNode(BasePlanNode):
     def __init__(
         self, directives: QueryDirectives, statistics: QueryStatistics, **config

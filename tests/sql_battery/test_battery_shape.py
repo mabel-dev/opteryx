@@ -105,6 +105,7 @@ STATEMENTS = [
         ("SELECT * FROM $satellites WHERE id = 5 OR name = 'Moon'", 2, 8),
         ("SELECT * FROM $satellites WHERE id < 3 AND (name = 'Europa' OR name = 'Moon')", 1, 8),
         ("SELECT * FROM $satellites WHERE id BETWEEN 5 AND 8", 4, 8),
+        ("SELECT * FROM $satellites WHERE id NOT BETWEEN 5 AND 8", 173, 8),
         ("SELECT * FROM $satellites WHERE ((id BETWEEN 5 AND 10) AND (id BETWEEN 10 AND 12)) OR name = 'Moon'", 2, 8),
         ("SELECT * FROM $satellites WHERE id BETWEEN 5 AND 8 OR name = 'Moon'", 5, 8),
         ("SELECT * FROM $satellites WHERE id IN (5,6,7,8)", 4, 8),

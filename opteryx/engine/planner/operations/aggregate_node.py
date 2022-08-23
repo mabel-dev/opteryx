@@ -124,9 +124,9 @@ def _build_aggs(aggregators, columns):
                     field_node.value, only_one=True
                 )
             else:
-                display = format_expression(field_node)
+                display_name = format_expression(field_node)
                 raise SqlError(
-                    f"Invalid identifier provided in aggregator function `{display}`"
+                    f"Invalid identifier provided in aggregator function `{display_name}`"
                 )
             function = AGGREGATORS.get(aggregator.value)
             aggs.append(

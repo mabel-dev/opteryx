@@ -256,7 +256,7 @@ class BlobReaderNode(BasePlanNode):
                     else:
                         try:
                             pyarrow_blob = metadata.apply(pyarrow_blob, source=path)
-                        except:
+                        except:  # pragma:no cover
 
                             self._statistics.read_errors += 1
 

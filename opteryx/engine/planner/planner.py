@@ -46,14 +46,12 @@ import numpy
 import pyarrow
 import sqloxide
 
-from opteryx.engine.attribute_types import TOKEN_TYPES
 from opteryx.engine.functions import is_function
 from opteryx.engine.functions.binary_operators import BINARY_OPERATORS
 from opteryx.engine.planner import operations
 from opteryx.engine.planner.execution_tree import ExecutionTree
 from opteryx.engine.planner.expression import ExpressionTreeNode
 from opteryx.engine.planner.expression import NodeType
-from opteryx.engine.planner.expression import operator_type_factory
 from opteryx.engine.planner.temporal import extract_temporal_filters
 from opteryx.engine.query_directives import QueryDirectives
 from opteryx.exceptions import SqlError
@@ -461,6 +459,10 @@ class QueryPlanner(ExecutionTree):
                     left_node=expr,
                     right_node=high,
                 )
+
+                return ExpressionTreeNode(
+                    NodeType.OR, left_node=left_node, right_node=right_node
+                )
             else:
                 # LEFT > LOW and LEFT < HIGH (between)
                 left_node = ExpressionTreeNode(
@@ -476,9 +478,9 @@ class QueryPlanner(ExecutionTree):
                     right_node=high,
                 )
 
-            return ExpressionTreeNode(
-                NodeType.AND, left_node=left_node, right_node=right_node
-            )
+                return ExpressionTreeNode(
+                    NodeType.AND, left_node=left_node, right_node=right_node
+                )
 
         if "InSubquery" in function:
             # if it's a sub-query we create a plan for it

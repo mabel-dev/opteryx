@@ -225,7 +225,7 @@ def _extended_collector(pages):
                     continue
 
                 # to prevent problems, we set some limits
-                if column_data.nbytes > MAX_DATA_SIZE:
+                if column_data.nbytes > MAX_DATA_SIZE:  # pragma: no cover
                     if column not in uncollected_columns:
                         uncollected_columns.append(column)
                     continue

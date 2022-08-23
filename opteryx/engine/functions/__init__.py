@@ -117,7 +117,7 @@ def try_cast(_type):
 def _iterate_no_parameters(func):
     # call the function for each row, this is primarily to support "RANDOM"
     def _inner(items):
-        return [func() for i in range(items)]
+        return [func() for _ in range(items)]
 
     return _inner
 
