@@ -13,7 +13,7 @@ statement
 
 The `EXPLAIN` clause outputs a summary of the execution plan for the query in the `SELECT` statement.
 
-!!! warning
+!!! Warning  
     The data returned by the `EXPLAIN` statement is intended for interactive usage only and the output format may change between releases. Applications should not depend on the output of the `EXPLAIN` statement.
 
 ## SELECT
@@ -78,7 +78,7 @@ NO_CACHE           | Ignores any cache configuration
 NO_PARTITION       | Do not use partition configuration when reading
 NO_PUSH_PROJECTION | Do not attempt to prune columns when reading 
 
-!!! note
+!!! Note  
     Hints are not guaranteed to be followed, the query planner and executor may ignore hints in specific circumstances.
 
 ### FOR clause
@@ -136,13 +136,12 @@ LIMIT count
 
 ## SHOW COLUMNS
 
-List the columns in a relation along with their data type and an indication if nulls have been found in the first page of records.
+List the columns in a relation along with their data type. Without any modifiers, `SHOW COLUMNS` only reads a single page of data before returning.
 
 ~~~sql
  SHOW [EXTENDED] [FULL] COLUMNS
  FROM relation
  LIKE pattern
-WHERE condition
   FOR period
 ~~~
 
@@ -156,14 +155,24 @@ Inclusion of the `FULL` modifier uses the entire dataset in order to return comp
 
 ### LIKE clause
 
-Specify a pattern in the optional `LIKE` clause to filter the results to the desired subset by the column name.
+~~~
+LIKE pattern
+~~~
 
-### WHERE clause
-
-The `WHERE` clause specifies any filters to apply to the data. This allows you to select only a subset of the data in which you are interested. Only one of `LIKE` and `WHERE` can be used in the same statement.
+Specify a pattern in the optional `LIKE` clause to filter the results to the desired subset by the column name. This does not require a left-hand operator, it will always filter by the column name.
 
 ### FOR clause
 
-The `FOR` clause specifies the date to review data for. Although this supports the full syntax as per the `SELECT` statements, only one page of data is read in order to respond to `SHOW COLUMNS` statements.
+~~~
+FOR date
+~~~
+~~~
+FOR DATES BETWEEN start AND end
+~~~
+~~~
+FOR DATES IN range
+~~~
+
+The `FOR` clause specifies the date to review data for. Although this supports the full syntax as per the `SELECT` statements.
 
 See [Temporality](https://mabel-dev.github.io/opteryx/SQL%20Reference/09%20Temporality/) for more information on `FOR` syntax and functionality.

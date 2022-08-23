@@ -24,6 +24,7 @@ STATEMENTS = [
     ("SELECT * FROM $satellites, $planets WHERE $satellites.planetId = $planets.id;"),
     ("SELECT * FROM $satellites INNER JOIN $planets ON $satellites.planetId = $planets.id;"),
     ("SELECT * FROM $satellites LEFT OUTER JOIN $planets ON $satellites.planetId = $planets.id;"),
+    ("SELECT name FROM $planets WHERE id NOT IN (SELECT DISTINCT planetId FROM $satellites);"),
 ]
 # fmt:on
 

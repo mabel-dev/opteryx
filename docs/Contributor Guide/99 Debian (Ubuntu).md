@@ -1,5 +1,7 @@
 # Set Up Guide (Debian/Ubuntu)
 
+This guide will help you to set up a Debian or Ubuntu workstation to work with the code and develop Opteryx.
+
 ## Setting Up
 
 ### 1. Install Python 

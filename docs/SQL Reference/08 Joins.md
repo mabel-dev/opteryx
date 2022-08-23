@@ -26,13 +26,10 @@ The size of the resultant dataset when using `CROSS JOIN` is length of the two d
 ## INNER JOIN
 
 ~~~
-FROM left_table INNER JOIN right_table [ ON condition | USING (column) ]
-~~~
-~~~
-FROM left_table JOIN right_table [ ON condition | USING (column) ]
+FROM left_table [ INNER ] JOIN right_table < ON condition | USING (column) >
 ~~~
 
-An `INNER JOIN` returns rows from both relations where the value in the joining column of one relation matches the value in the joining column of the other relation. Inner joins can either be specified using the full `INNER JOIN` syntax or the shorter `JOIN` syntax, and the joining column specified using `ON condition` or `USING(column)` syntax.
+An `INNER JOIN` returns rows from both relations where the value in the joining column of one relation matches the value in the joining column of the other relation. Inner joins can either be specified using the full `INNER JOIN` syntax or the shorter `JOIN` syntax, and the joining logic specified using `ON condition` or `USING(column)` syntax.
 
 ~~~sql
 SELECT *
@@ -48,10 +45,7 @@ In this example, the blue column is used as the joining column in both relations
 ## LEFT JOIN
 
 ~~~
-FROM left_table LEFT JOIN right_table ON condition
-~~~
-~~~
-FROM left_table LEFT OUTER JOIN right_table ON condition
+FROM left_table LEFT [ OUTER ] JOIN right_table ON condition
 ~~~
 
 A `LEFT JOIN` returns all rows from the left relation, and rows from the right relation where there is a matching row, otherwise the fields for the right relation are populated with `NULL`.
@@ -72,10 +66,7 @@ A `RIGHT JOIN` is the same as a `LEFT JOIN` with the relations swapped.
 ## FULL JOIN
 
 ~~~
-FROM left_table FULL JOIN right_table ON condition
-~~~
-~~~
-FROM left_table FULL OUTER JOIN right_table ON condition
+FROM left_table FULL [ OUTER ] JOIN right_table ON condition
 ~~~
 
 The `FULL JOIN` keyword returns all rows from the left relation, and all rows from the right relation. Where they have a matching value in the joining column, the rows will be aligned, otherwise the fields will be populated with `NULL`.

@@ -17,3 +17,40 @@ Files don't need an explicit schema, but each partition must have the same colum
 Data types are inferred from the records, where data types are not consistent, the read will fail.
 
 Opteryx supports zStandard Compressed JSONL files as created by Mabel.
+
+# Storage Layout
+
+## Flat
+
+~~~
+dataset
+    file_1
+    file_2
+    file_3
+~~~
+
+## Mabel
+
+~~~
+dataset
+    year_2020
+        month_03
+            day_04
+                file_1
+                file_2
+                file_3
+~~~
+
+Mabel structured data enables temporal queries.
+
+# Storage Adapters
+
+## Local
+
+### Disk
+
+## Network
+
+### Google Cloud Storage
+
+### AWS S3 (Minio)

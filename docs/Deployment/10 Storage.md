@@ -1,6 +1,19 @@
 # Storage
 
-## Folder Structure
+## Connectors
+
+**Available Connectors**
+
+Platform             | Connector  | Disposition
+-------------------- | ---------- | ---------------------
+Google Cloud Storage | gcs        | Blob/File Store
+AWS S3               | minio      | Blob/File Store
+MinIo                | minio      | Blob/File Store
+Google FireStore     | firestore  | Document Store
+MongoDB              | mongodb    | Document Store
+Local Disk           | disk       | Blob/File Store
+
+## Blob/File Stores
 
 ### Datasets
 
@@ -17,13 +30,20 @@ Opteryx references datasets using their relative path as the table name. For exa
   └── purchases/ 
 ~~~
 
-Would have the following datasets available (assuming leaf folders had data files within them)
+Would have the following datasets available (assuming leaf folders have data files within them)
 
 - products
 - customers.profiles
 - customers.preferences.marketing
 - customers.preferences.site
 - purchases
+
+These are queryable like this:
+
+~~~sql
+SELECT *
+  FROM customers.profiles
+~~~
 
 ### Temporal Structures
 
@@ -54,7 +74,7 @@ SELECT *
 
 This is the default structure created by [Mabel](https://github.com/mabel-dev/mabel) and within Opteryx this is called Mabel Partitioning.
 
-## File Types
+### File Types
 
 Opteryx is primarily designed for use with [Parquet](https://parquet.apache.org/) to store data, Parquet is fast to process and offers optimizations not available for other formats, however, in some benchmarks [ORC](https://orc.apache.org/) out performs Parquet.
 
@@ -62,7 +82,7 @@ Opteryx also supports [JSONL](https://jsonlines.org/) files, and JSONL files whi
 
 Opteryx also has support for Feather (Arrow) files.
 
-## File Sizes
+### File Sizes
 
 Opteryx loads entire files (pages) into memory one at a time, this requires the following to be considered:
 
@@ -70,3 +90,5 @@ Opteryx loads entire files (pages) into memory one at a time, this requires the 
 - Reading each page, particularly from Cloud Storage (S3/GCS), incurs a per-read overhead. If you have large datasets, prefer larger pages.
 
 If you are unsure where to start, 64Mb (before compression) is a recommended general-purpose page size.
+
+## Document Stores

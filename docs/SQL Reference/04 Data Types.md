@@ -13,11 +13,9 @@ Name        | Symbol                       | Description
 `STRUCT`    | :fontawesome-solid-box:      | A dictionary of multiple named values, where each key is a string, but the value can be a different type for each key.
 `TIMESTAMP` | :fontawesome-regular-clock:  | Combination of date and time.
 `INTERVAL`  | :fontawesome-solid-arrows-left-right-to-line: | The difference between two TIMESTAMP values
-`OTHER`     | :fontawesome-solid-question: | None of the above or multiple types in the same column. 
 
-!!! note
-    - `INTERVAL` has limited support.
-    - `OTHER` is not a type, it is a catch-all when a type cannot be determined.
+!!! Note  
+    `INTERVAL` has limited support.  
 
 ## Casting
 
