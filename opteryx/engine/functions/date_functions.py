@@ -114,7 +114,7 @@ def date_diff(part, start, end):
         else:
             end = pyarrow.array([parse_iso(end)], type=pyarrow.timestamp("us"))
 
-    TARGET_DATE_TYPE:str = "datetime64[us]"
+    TARGET_DATE_TYPE: str = "datetime64[us]"
     # cast to the desired type
     if start.dtype != TARGET_DATE_TYPE:
         start = start.astype(TARGET_DATE_TYPE)
