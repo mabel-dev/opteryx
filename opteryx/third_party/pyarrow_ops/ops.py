@@ -40,8 +40,6 @@ FILTER_OPERATORS = {
 def _get_type(var):
     # added for Opteryx
     if isinstance(var, (numpy.ndarray)):
-        if isinstance(var[0], numpy.ndarray):
-            _type = str(var[0].dtype)
         _type = str(var.dtype)
         if _type.startswith("<U"):
             _type = "string"
