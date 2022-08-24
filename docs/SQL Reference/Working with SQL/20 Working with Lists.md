@@ -46,8 +46,8 @@ SELECT *
 
 Lists have the following limitations
 
-- Statements cannot ORDER BY a list column
-- Statements cannot contain DISTINCT and JOIN when the tables include list columns
+- Statements cannot `ORDER BY` a list column
+- Statements cannot contain `DISTINCT` and `JOIN` when the relations include list columns
 - Lists cannot be used in comparisons
 
 !!! note

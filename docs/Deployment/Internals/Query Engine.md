@@ -1,84 +1,55 @@
 # Query Engine
 
-Tokenize, Parse, Lex, AST
+The Opteryx query engine has the following key components and general process:
 
-Plan
+1) The Parser & Lexer, which recieves the user SQL and builds an Abstract Syntax Tree (AST).
+2) The Planner, which recieves the AST and builds a Query Plan.
+3) The Query Executor, which recieves the Query Plan and returns the result dataset.
 
-Execute
+## Parser & Lexer
 
-# Parser
+The primary goal of the Parser and Lexer (which in some engines is two separate components) is to interpret the SQL provided by the user. This is generally done in two steps, the first is the break the query into separate tokens (or words) and the second is to understand the meaning of those tokens.
 
-MySQL flavoured parser
-
-[sqloxide](https://github.com/wseaton/sqloxide)
-
-Python bindings for
-
-[sqlparser-rs](https://github.com/sqlparser-rs/sqlparser-rs)
-
-# Query Planner
-
-## Query Plan Steps
-
-Query Plans can contain the following steps:
-
-Step       | Description
----------- | -------------
-Aggregate  | Perform aggregations such as COUNT and MAX
-Distinct   | Remove duplicate records
-Explain    | Plan Explainer
-Join       | Join Relations
-Limit      | Return up to a stated number of records
-Offset     | Skip a number of records
-Projection | Remove unwanted columns
-Reader     | Read datasets
-Selection  | Remove unwanted rows
-
-## Query Plan Optimizer
-
-The Query Plan is naive and performs no optimizations.
-
-# Query Execution
-
-## Overview
-
-The planner creates a plan as a DAG, we can see simple plans using the `EXPLAIN` keyword, this is added as the first clause in a statement and the planner will return the plan for the query.
-
-To see the plan for this query
+For example for this statement
 
 ~~~sql
-SELECT *
-  FROM $planets;
+SELECT SELECT
+  FROM FROM
 ~~~
 
-We insert the `EXPLAIN` clause
+Understand that we're requesting the field `SELECT` from the relation `FROM`.
 
-~~~sql
-EXPLAIN
-SELECT *
-  FROM $planets;
-~~~
+Opteryx uses [sqlparser-rs](https://github.com/sqlparser-rs/sqlparser-rs) as it's Parser and Lexer, as a Rust library, Opteryx uses [sqloxide](https://github.com/wseaton/sqloxide) which creates Python bindings for sqlparser-rs. Opteryx does not support all features and functionality provided by this library.
 
-Which returns
+This sqlparser-rs interprets all SQL except for the Temporal `FOR` clause which is handled separately.
 
-~~~
+## Query Planner
 
+The Query planner's primary goal is to convert the AST into a plan to respond to the query. The Query Plan is described in a Directed Acyclic Graph (DAG) with the nodes that acquire the raw data, usually from storage, at the start of the flow and the node that forms the data to return to the user (usually the `SELECT` step) at the end.
 
-~~~
+The DAG is made of different nodes which process the data as they pass through then node. Different node types exist for processing actions like Aggregations (`GROUP BY`), Selection (`WHERE`) and Distinct (`DISTINCT`). There are currently 17 different Node types the planner can use to build a plan to respond to a query.
 
-Note that the query plan order does not match the order that the query is written, instead it runs in the order required to respond to the query.
+Most SQL Engines include an Optimization step as part of the planner, Opteryx currently does not perform plan-based optimizations.
 
-The execution engine starts at the node at left of the tree (LIMIT 10) and requests records from the node below (SELECT *), which in turn requests records from the node to the right (WHERE Alive = TRUE).
+Query plans follow a generally accepted order of execution, which does not match the order queries are usually written in:
 
-This continues until we reach a node which can feed data into the tree, this will usually be at a node which reads data files (FROM data_table).
+01) FROM
+01) JOIN
+01) WHERE
+01) GROUP BY
+01) HAVING
+01) SELECT
+01) DISTINCT
+01) ORDER BY
+01) OFFSET
+01) LIMIT
 
-Records are read in batches, and processed in batches, so although the leftmost node will emit it's result when it has 10 records, it may have recieved 1000 records.
+The planner ensures the processes to be applied to the data reflect this order.
 
-These batches are the data frames with broadly align to the database concept of data pages.
+The Query Plan can be seen for a given query using the `EXPLAIN` query.
 
-## Execution Optimization
+## Query Executor
 
-Two optimizations are used to improve execution performance:
+The goal of the Query Executor is to produce the results for the user. It takes the Plan and executes the steps in the plan.
 
-- Processing of data is done by page-by-page
-- Vectorization of aggregation and function calculations
+Opteryx uses a page-based pull pattern to execute it's plans. This means that the planner starts at the node closest to the end of the plan (e.g. `LIMIT`) and asks it for a page of data. This node asks its preceeding node for a page of data, etc etc until it gets to the node which aquires data from source. The data is then processed by each node until it is returned to the `LIMIT` node at the end.
