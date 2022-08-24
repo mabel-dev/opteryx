@@ -12,13 +12,13 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
         exclude:
           - os: macos-latest
-            version: 3.8
+            version: '3.8'
           - os: macos-latest
-            version: 3.9
+            version: '3.9'
           - os: windows-latest
-            version: 3.8
+            version: '3.8'
           - os: windows-latest
-            version: 3.9
+            version: '3.9'
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout code
