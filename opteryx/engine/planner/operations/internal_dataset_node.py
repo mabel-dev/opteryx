@@ -96,4 +96,20 @@ class InternalDatasetNode(BasePlanNode):
         self._statistics.rows_read += pyarrow_page.num_rows
         self._statistics.bytes_processed_data += pyarrow_page.nbytes
         self._statistics.columns_read += len(pyarrow_page.column_names)
+
+        schema = pyarrow_page.schema
+
+        for index, column_name in enumerate(schema.names):
+            type_name = str(schema.types[index])
+            if type_name in ("date32[day]", "date64", "timestamp[s]", "timestamp[ms]"):
+                schema = schema.set(
+                    index,
+                    pyarrow.field(
+                        name=column_name,
+                        type=pyarrow.timestamp("us"),
+                        metadata=pyarrow_page.field(column_name).metadata,
+                    ),
+                )
+        pyarrow_page = pyarrow_page.cast(target_schema=schema)
+
         yield pyarrow_page

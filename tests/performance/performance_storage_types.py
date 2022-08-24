@@ -49,7 +49,7 @@ cache = InMemoryCache(size=100)
 
 if __name__ == "__main__":
 
-    CYCLES = 60
+    CYCLES = 25
 
     opteryx.storage.register_prefix("tests", DiskStorage)
 
@@ -60,7 +60,7 @@ if __name__ == "__main__":
             for round in range(CYCLES):
                 cur = conn.cursor()
                 cur.execute(
-                    f"SELECT * FROM tests.data.formats.{format} WITH(NO_PARTITION);"
+                    f"SELECT followers FROM tests.data.formats.{format} WITH(NO_PARTITION);"
                 )
                 #                [a for a in cur._results]
                 [a for a in cur.fetchall()]

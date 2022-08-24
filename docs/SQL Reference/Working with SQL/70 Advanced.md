@@ -1,8 +1,11 @@
 # Advanced 
 
+## WITH hints
+
 Hints are used to force the planner, optimizer or the executor to make specific decisions. If a hint is not recognized, it is ignored by the planner and executor, however is reported in the warnings.
 
-## WITH hints
+!!! Note
+    Hints use the keyword `WITH` which is also the keyword for CTEs, this information relates to hints and not CTEs.
 
 ~~~
 FROM dataset WITH(NO_CACHE)

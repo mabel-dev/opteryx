@@ -48,3 +48,15 @@ The size of the cache is set by the number of pages to hold in memory. No checks
 Uses a Memcached instance to cache pages. Is a good option when remote reads are slow, for example from GCS or S3.
 
 This is also recommended in an environment where multiple servers, or container instances, may be serving customers. Here, the shared cache allows users to benefit from caching even on their first query if another user's query has populated the cache with the files being read.
+
+## Operating System Support
+
+The full regression suite runs against:
+
+OS       | Python 3.8 | Python 3.9 | Python 3.10
+-------- | :--------: | :--------: | :---------:
+MacOS    | X          | X          | X
+Windows  | X          | X          | X
+Ubuntu   | ✅         | ✅        | ✅
+
+Note that although not included in the regression suite, packages are built for all versions in this table.

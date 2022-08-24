@@ -10,7 +10,7 @@ In Opteryx a struct is a collection of zero or more key, value pairs. Keys must 
 struct[key]
 ~~~
 
-Values within structs can be accessed by key using map notation, putting the key in square brackets following the struct.
+Values within structs can be accessed by key using subscript notation, putting the key in square brackets following the struct.
 
 Example:
 
@@ -39,10 +39,10 @@ SELECT name,
 
 Structs have the following limitations
 
-- Statements cannot ORDER BY a struct column
-- Statements cannot contain DISTINCT and JOIN when the tables include struct columns
+- Statements cannot `ORDER BY` a struct column
+- Statements cannot contain `DISTINCT` and `JOIN` when the relations include struct columns
 - Structs cannot be used in comparisons
 
-!!! note
+!!! Note  
     Some restrictions may be resolved by the query optimizer, for example, Projection Pushdown may remove struct columns as part of optimization. However, you should not rely on the optimizer to
     take any particular action.

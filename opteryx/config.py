@@ -15,7 +15,7 @@ import yaml
 
 from pathlib import Path
 
-try:
+try:  # pragma: no cover
     _config_path = Path(".") / "opteryx.yaml"
     with open(_config_path, "rb") as _config_file:
         _config = yaml.safe_load(_config_file)

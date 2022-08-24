@@ -126,7 +126,7 @@ NUMPY_TYPES = {
     NodeType.LITERAL_INTERVAL: numpy.dtype("m"),
     NodeType.LITERAL_LIST: numpy.dtype("O"),
     NodeType.LITERAL_STRUCT: numpy.dtype("O"),
-    NodeType.LITERAL_TIMESTAMP: "datetime64[s]",
+    NodeType.LITERAL_TIMESTAMP: "datetime64[us]",
 }
 
 
@@ -263,9 +263,8 @@ def _inner_evaluate(root: ExpressionTreeNode, table: Table, columns):
             numpy.full(table.num_rows, "*", dtype=numpy.str_)
         if node_type == NodeType.SUBQUERY:
             # we should have a query plan here
-            r = root.value.execute()
-            r = pyarrow.concat_tables(r, promote=True)
-            return r
+            sub = root.value.execute()
+            return pyarrow.concat_tables(sub, promote=True)
         if node_type == NodeType.NESTED:
             return _inner_evaluate(root.centre, table, columns)
         if node_type == NodeType.UNARY_OPERATOR:
