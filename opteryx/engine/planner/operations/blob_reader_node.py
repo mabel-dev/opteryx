@@ -301,7 +301,7 @@ class BlobReaderNode(BasePlanNode):
                 blob_bytes = None
 
             # if the item was a miss, get it from storage and add it to the cache
-            if blob_bytes is None:
+            if blob_bytes is None:  # pragma: no cover
                 self._statistics.cache_misses += 1
                 blob_bytes = reader(path)
                 if cache and blob_bytes.getbuffer().nbytes < MAX_SIZE_SINGLE_CACHE_ITEM:

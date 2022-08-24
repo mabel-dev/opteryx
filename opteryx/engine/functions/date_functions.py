@@ -99,14 +99,14 @@ def date_diff(part, start, end):
     }
 
     # if we get date literals - this will never run due to [#325]
-    if isinstance(start, str):
+    if isinstance(start, str):  # pragma: no cover
         if not isinstance(end, (str, datetime.datetime)):
             start = pyarrow.array(
                 [parse_iso(start)] * len(end), type=pyarrow.timestamp("us")
             )
         else:
             start = pyarrow.array([parse_iso(start)], type=pyarrow.timestamp("us"))
-    if isinstance(end, str):
+    if isinstance(end, str):  # pragma: no cover
         if not isinstance(start, (str, datetime.datetime)):
             end = pyarrow.array(
                 [parse_iso(end)] * len(start), type=pyarrow.timestamp("us")

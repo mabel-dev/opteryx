@@ -89,7 +89,7 @@ class Cursor:
 
         if isinstance(param, datetime.datetime):
             datetime_str = param.strftime("%Y-%m-%d %H:%M:%S.%f")
-            return f'"{datetime_str}"'
+            return f"'{datetime_str}'"
 
         if isinstance(param, (list, tuple, set)):
             return f"({','.join(map(self._format_prepared_param, param))})"

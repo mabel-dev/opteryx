@@ -55,8 +55,8 @@ The full regression suite runs against:
 
 OS       | Python 3.8 | Python 3.9 | Python 3.10
 -------- | :--------: | :--------: | :---------:
-MacOS    | X          | X          | ✅
-Windows  | X          | X          | ✅
+MacOS    | X          | X          | X
+Windows  | X          | X          | X
 Ubuntu   | ✅         | ✅        | ✅
 
 Note that although not included in the regression suite, packages are built for all versions in this table.
