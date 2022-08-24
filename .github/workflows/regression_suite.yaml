@@ -23,7 +23,7 @@ jobs:
     steps:
 
       - name: Install Docker
-        if: matrix.os == 'macos-latest'
+        if: matrix.os != 'ubuntu-latest'
         uses: docker-practice/actions-setup-docker@master
 
       - name: Checkout code
