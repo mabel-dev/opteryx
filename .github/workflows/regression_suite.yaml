@@ -21,6 +21,11 @@ jobs:
             python-version: '3.9'
     runs-on: ${{ matrix.os }}
     steps:
+
+      - name: Install Docker
+        if: matrix.os == 'macos-latest'
+        uses: docker-practice/actions-setup-docker@master
+
       - name: Checkout code
         uses: actions/checkout@v2
   
