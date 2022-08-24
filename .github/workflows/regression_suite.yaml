@@ -5,11 +5,21 @@ on:
 
 jobs:
   regression_matrix:
-    runs-on: ubuntu-latest
     strategy:
       max-parallel: 4
       matrix:
         python-version: ['3.8', '3.9', '3.10']
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        exclude:
+          - os: macos-latest
+            version: 3.8
+          - os: macos-latest
+            version: 3.9
+          - os: windows-latest
+            version: 3.8
+          - os: windows-latest
+            version: 3.9
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -28,7 +38,7 @@ jobs:
           pip install -r $GITHUB_WORKSPACE/tests/requirements.txt
           python setup.py build_ext --inplace
 
-      - name: Start MinIo Server
+      - name: Start MinIo Instance
         run: |
           docker run -d -p 9000:9000 --name minio \
                      -e "MINIO_ACCESS_KEY=minioadmin" \
@@ -60,10 +70,10 @@ jobs:
                        -e MONGO_INITDB_ROOT_PASSWORD=secret \
                        mongo:latest
 
-      - name: "Authenticate to Google Cloud"
-        uses: google-github-actions/auth@v0
-        with:
-          credentials_json: ${{ secrets.GCP_KEY }}
+#      - name: "Authenticate to Google Cloud"
+#        uses: google-github-actions/auth@v0
+#        with:
+#          credentials_json: ${{ secrets.GCP_KEY }}
 
       - name: Run Regression Tests
         run: coverage run -m pytest 
@@ -75,6 +85,7 @@ jobs:
           MINIO_SECURE: false
           MONGO_CONNECTION: "mongodb://mongoadmin:secret@localhost:27017"
           MONGO_DATABASE: opteryx
+          GCP_PROJECT_ID: mabel
 
       - name: Check Coverage
         run: coverage report --include=opteryx* --fail-under=90 -m
