@@ -23,8 +23,10 @@ _Recommended Version:_ 3.10
 
 Opteryx supports Python versions 3.8, 3.9 and 3.10.
 
+<!---
 ## Installing Opteryx
 
 ## Configuring Opteryx
 
 ## Running Opteryx
+--->

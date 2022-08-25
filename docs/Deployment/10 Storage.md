@@ -1,12 +1,10 @@
 # Data Storage
 
-
-
 ## Connectors
 
 **Available Connectors**
 
-Platform             | Connector         | Disposition
+Platform             | Connector Name    | Disposition
 -------------------- | ----------------- | ---------------------
 Google Cloud Storage | GcsStorage        | Blob/File Store
 AWS S3               | MinIoStorage      | Blob/File Store
@@ -15,8 +13,28 @@ Google FireStore     | FireStoreStorage  | Document Store
 MongoDB              | MongoDbStore      | Document Store
 Local Disk           | DiskStorage       | Blob/File Store
 
+Connectors are registered with the storage engine using the `register_prefix` method. Multiple prefixes can be added, using different connectors - multiple storage types can be combined into a single query.
+
 ~~~
 opteryx.storage.register_prefix("tests", DiskStorage)
+~~~
+
+A more complete example using the `register_prefix` method to set up a connector to Google Cloud Storage (GCS) and then query data on GCS is below:
+
+~~~python
+import opteryx
+from opteryx.storage.adapters.blob import GcsStorage
+
+# Tell the storage engine that datasets with the prefix 'your_bucket' are
+# to be read using the GcsStorage adapter. Multiple prefixes can be added
+# and do not need to be the same adapter.
+opteryx.storage.register_prefix("your_bucket", GcsStorage)
+
+connextion = opteryx.connect()
+cursor = connection.cursor()
+cursor.execute("SELECT * FROM your_bucket.folder;")
+
+print(cursor.fetchone())
 ~~~
 
 ## Blob/File Stores
@@ -97,4 +115,6 @@ Opteryx loads entire files (pages) into memory one at a time, this requires the 
 
 If you are unsure where to start, 64Mb (before compression) is a recommended general-purpose page size.
 
+<!---
 ## Document Stores
+--->

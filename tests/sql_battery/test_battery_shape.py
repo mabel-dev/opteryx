@@ -400,6 +400,7 @@ STATEMENTS = [
         ("SELECT graduate_major, undergraduate_major FROM $astronauts WHERE COALESCE(graduate_major, undergraduate_major, 'high school') = 'high school'", 4, 2),
         ("SELECT graduate_major, undergraduate_major FROM $astronauts WHERE COALESCE(graduate_major, undergraduate_major) = 'Aeronautical Engineering'", 41, 2),
         ("SELECT COALESCE(death_date, '2030-01-01') FROM $astronauts", 357, 1),
+        ("SELECT * FROM $astronauts WHERE COALESCE(death_date, '2030-01-01') < '2000-01-01'", 30, 19),
 
         ("SELECT SEARCH(name, 'al'), name FROM $satellites", 177, 2),
         ("SELECT name FROM $satellites WHERE SEARCH(name, 'al')", 18, 1),
