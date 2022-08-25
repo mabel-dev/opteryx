@@ -89,9 +89,9 @@ For more example usage, see [Exmaple Notebooks](https://github.com/mabel-dev/opt
 
 ## Community
 
-**How do I get Support?**
-
 [![Join the chat at https://gitter.im/mabel-opteryx/community](https://badges.gitter.im/mabel-opteryx/community.svg)](https://gitter.im/mabel-opteryx/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
+**How do I get Support?**
 
 For support join our [Gitter Community](https://gitter.im/mabel-opteryx/community).
 
