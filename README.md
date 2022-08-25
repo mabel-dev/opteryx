@@ -116,7 +116,7 @@ See the project [Security Policy](SECURITY.md) for information about reporting v
 
 ## Status
 
-[![Status](https://img.shields.io/badge/status-beta-orange)](https://github.com/mabel-dev/opteryx)
+[![Status](https://img.shields.io/badge/status-beta-orange)](https://github.com/mabel-dev/opteryx) [![Join the chat at https://gitter.im/mabel-opteryx/community](https://badges.gitter.im/mabel-opteryx/community.svg)](https://gitter.im/mabel-opteryx/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 Opteryx is in beta. Beta means different things to different people, to us, being beta means:
 
