@@ -114,14 +114,6 @@ def try_cast(_type):
     raise SqlError(f"Unable to cast values in column to `{_type}`")
 
 
-def _iterate_no_parameters(func):
-    # call the function for each row, this is primarily to support "RANDOM"
-    def _inner(items):
-        return [func() for _ in range(items)]
-
-    return _inner
-
-
 def _repeat_no_parameters(func):
     # call once and repeat
     def _inner(items):
@@ -204,7 +196,8 @@ FUNCTIONS = {
     # HASHING & ENCODING
     "HASH": _iterate_single_parameter(lambda x: format(CityHash64(str(x)), "X")),
     "MD5": _iterate_single_parameter(get_md5),
-    "RANDOM": _iterate_no_parameters(get_random),  # return a random number 0-0.999
+    "RANDOM": number_functions.random,
+    "RAND": number_functions.random,
     # OTHER
     "GET": _iterate_double_parameter(_get),  # GET(LIST, index) => LIST[index] or GET(STRUCT, accessor) => STRUCT[accessor]
     "LIST_CONTAINS": _iterate_double_parameter(other_functions.list_contains),

@@ -21,11 +21,11 @@ import time
 
 from typing import Iterable, List
 
+import numpy
+
 from pyarrow import Table, concat_tables
 
 from opteryx.engine import QueryDirectives, QueryStatistics
-from opteryx.engine.planner.expression import evaluate_and_append
-from opteryx.engine.planner.expression import ExpressionTreeNode
 from opteryx.engine.planner.expression import format_expression
 from opteryx.engine.planner.expression import NodeType
 from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
@@ -70,7 +70,6 @@ class SortNode(BasePlanNode):
             return
 
         table = concat_tables(data_pages, promote=True)
-        original_columns = table.column_names
         columns = Columns(table)
 
         start_time = time.time_ns()
@@ -79,15 +78,25 @@ class SortNode(BasePlanNode):
 
             for column in column_list:
                 if column.token_type == NodeType.FUNCTION:
-                    columns, expressions, table = evaluate_and_append([column], table)
-                    self._mapped_order.append(
-                        (
-                            columns.get_column_from_alias(
-                                format_expression(column), only_one=True
-                            ),
-                            direction,
+
+                    # ORDER BY RAND() shuffles the results
+                    # we create a random list, sort that then take the rows from the
+                    # table in that order - this is faster than ordering the data
+                    if column.value in ("RANDOM", "RAND"):
+
+                        new_order = numpy.argsort(
+                            numpy.random.uniform(size=table.num_rows)
                         )
+                        table = table.take(new_order)
+                        self._statistics.time_ordering = time.time_ns() - start_time
+
+                        yield table
+                        return
+
+                    raise SqlError(
+                        "ORDER BY only supports RAND() as a functional sort order."
                     )
+
                 elif column.token_type == NodeType.LITERAL_NUMERIC:
 
                     # we have an index rather than a column name, it's a natural
@@ -111,10 +120,6 @@ class SortNode(BasePlanNode):
                     )
 
         table = table.sort_by(self._mapped_order)
-
-        # remove any columns we added just for ordering
-        table = table.select(original_columns)
-
         self._statistics.time_ordering = time.time_ns() - start_time
 
         yield table
