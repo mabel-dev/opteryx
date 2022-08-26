@@ -24,7 +24,7 @@ except ImportError:
 
 
 @cache
-def is_running_from_ipython():
+def is_running_from_ipython():  # pragma: no cover
     """
     True when running in Jupyter
     """
@@ -36,7 +36,7 @@ def is_running_from_ipython():
         return False
 
 
-def peak(generator):
+def peak(generator):  # type:ignore
     """
     peak an item off a generator, this may have undesirable consequences so
     only use if you also wrote the generator

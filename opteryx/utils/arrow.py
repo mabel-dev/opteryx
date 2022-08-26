@@ -29,17 +29,19 @@ LOW_WATER: float = 0.6  # Merge pages under 60% of PAGE_SIZE
 
 def consolidate_pages(pages, statistics):
     """
-    orignally implemented to test if datasets have any records as they pass through
-    the DAG, normalizes the number of bytes per page.
+    Orignally implemented to test if datasets have any records as they pass through
+    the DAG, this function normalizes the number of bytes per page.
 
     This is to balance two competing demands:
         - operate in a low memory environment, if the pages are too large they may
           cause the process to fail.
-        - operate quickly, if we spend our time doing SIMD on pages with 5 records
+        - operate quickly, if we spend our time doing SIMD on pages with few records
           we're not working as fast as we can.
 
     The low-water mark is 60% of the target size, less than this we look to merge
-    pages together.
+    pages together. This is more common follow the projection push down, one column
+    doesn't take up a lot of memory so we consolidate tens of pages into a single
+    page.
 
     The high-water mark is 120% of the target size, more than this we split the page.
     """
@@ -52,7 +54,7 @@ def consolidate_pages(pages, statistics):
         if page.num_rows > 0:
 
             # add what we've collected before to the table
-            if collected_rows:
+            if collected_rows:  # pragma: no cover
                 statistics.page_merges += 1
                 page = pyarrow.concat_tables([collected_rows, page], promote=True)
                 collected_rows = None
@@ -62,7 +64,7 @@ def consolidate_pages(pages, statistics):
             page_records = page.num_rows
 
             # if we're more than 20% over the target size, let's do something
-            if page_bytes > (PAGE_SIZE * HIGH_WATER):
+            if page_bytes > (PAGE_SIZE * HIGH_WATER):  # pragma: no cover
                 average_record_size = page_bytes / page_records
                 new_row_count = int(PAGE_SIZE / average_record_size)
                 row_counter += new_row_count

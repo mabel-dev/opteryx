@@ -193,6 +193,8 @@ FUNCTIONS = {
     "TRIM": compute.utf8_trim_whitespace,  # TRIM(str) -> str
     "LEFT": string_functions.string_slicer_left,
     "RIGHT": string_functions.string_slicer_right,
+    "REVERSE": compute.utf8_reverse,
+    "TITLE": compute.utf8_title,
     # HASHING & ENCODING
     "HASH": _iterate_single_parameter(lambda x: format(CityHash64(str(x)), "X")),
     "MD5": _iterate_single_parameter(get_md5),
@@ -213,6 +215,8 @@ FUNCTIONS = {
     "CEILING": compute.ceil,
     "ABS": compute.abs,
     "ABSOLUTE": compute.abs,
+    "SIGN": compute.sign,
+    "SQRT": compute.sqrt,
     "TRUNC": compute.trunc,
     "TRUNCATE": compute.trunc,
     "PI": _repeat_no_parameters(number_functions.pi),

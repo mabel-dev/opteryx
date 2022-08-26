@@ -18,13 +18,13 @@ import datetime
 
 
 def get_parts(path_string: str):
-    if not path_string:
+    if not path_string:  # pragma: no cover
         raise ValueError("get_parts: path_string must have a value")
 
     path = pathlib.PurePosixPath(path_string)
     bucket = path.parts[0]
 
-    if len(path.parts) == 1:
+    if len(path.parts) == 1:  # pragma: no cover
         parts = "partitions"  # type:ignore
         stem = None
         suffix = None

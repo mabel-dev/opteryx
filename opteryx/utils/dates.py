@@ -54,7 +54,7 @@ def add_months(date, months):
         try:
             new_date = datetime.datetime(year=new_year, month=new_month, day=new_day)
             return new_date
-        except ValueError:
+        except ValueError:  # pragma: no cover
             new_day -= 1
 
     # we should never be here - but just return a value

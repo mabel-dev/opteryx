@@ -184,6 +184,12 @@ For more details, see [Working with Lists](https://mabel-dev.github.io/opteryx/S
 !!! function "`ROUND` (**x**: _numeric_, **places**: _numeric_) → _numeric_ 🔻"  
     Returns **x** rounded to **places** decimal places.
 
+!!! function "`SIGN` (**x**: _numeric_) → _numeric_"   
+    Returns the signum function of **x**; 0 if **x** is 0, -1 if **x** is less than 0 and 1 if **x** is greater than 0.
+
+!!! function "`SQRT` (**x**: _numeric_) → _numeric_"   
+    Returns the square root of **x**.
+
 !!! function "`TRUNC` (**x**: _numeric_) → _numeric_"  
     Alias of `TRUNCATE`(**x**).  
 
@@ -212,11 +218,17 @@ Functions for examining and manipulating string values.
 !!! function "`LOWER` (**str**: _varchar_) → _varchar_"  
     Converts **str** to lowercase.
 
+!!! function "`REVERSE` (**str**: _varchar_) → _varchar_"  
+    Returns **str** with the characters in reverse order.
+
 !!! function "`RIGHT` (**str**: _varchar_, **n**: _numeric_) → _varchar_"  
     Extract the right-most **n** characters of **str**.   
 
 !!! function "`SEARCH` (**str**: _varchar_, **value**: _varchar_) → _boolean_ 🔻"  
-    Return True if **str** contains **value**.   
+    Return True if **str** contains **value**.  
+
+!!! function "`TITLE` (**str**: _varchar_) → _varchar_"  
+    Returns **str** with the first letter of each work in upper case.   
 
 !!! function "`TRIM` (**str**: _varchar_) → _varchar_"  
     Removes leading and trailing whitespace from **str**.  
