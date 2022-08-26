@@ -4,7 +4,7 @@
 
 ### Query your data, no database required
 
-**Opteryx is a distributed SQL Engine written in Python, designed for cloud-native environments.**
+**Opteryx is a SQL Engine written in Python, designed for cloud-native environments.**
 
 ### [Documentation](https://mabel-dev.github.io/opteryx/) | [Examples](notebooks) | [Contributing](https://mabel-dev.github.io/opteryx/Contributing%20Guide/CONTRIBUTING/)
 
