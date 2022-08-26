@@ -528,6 +528,8 @@ STATEMENTS = [
         ("EXPLAIN SELECT * FROM $planets AS a INNER JOIN (SELECT id FROM $planets) AS b USING (id)", 3, 3),
         # ALIAS issues #408
         ("SELECT $planets.* FROM $planets INNER JOIN (SELECT id FROM $planets) AS b USING (id)", 9, 21),
+        # DOUBLE QUOTED STRING #399
+        ("SELECT birth_place['town'] FROM $astronauts WHERE birth_place['town'] = \"Rome\"", 1, 1),
     ]
 # fmt:on
 

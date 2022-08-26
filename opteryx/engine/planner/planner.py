@@ -127,9 +127,10 @@ class QueryPlanner(ExecutionTree):
         """
         if value is None or value == "Null":
             return ExpressionTreeNode(NodeType.LITERAL_NONE)
-        if "SingleQuotedString" in value:
+        string_quoting = list(value.keys())[0]
+        if string_quoting in ("SingleQuotedString", "DoubleQuotedString"):
             # quoted strings are either VARCHAR or TIMESTAMP
-            str_value = value["SingleQuotedString"]
+            str_value = value[string_quoting]
             dte_value = dates.parse_iso(str_value)
             if dte_value:
                 return ExpressionTreeNode(
