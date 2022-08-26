@@ -56,7 +56,7 @@ def _inner_process(func, source_queue, reply_queue, plasma_channel):  # pragma: 
         page_id = plasma_client.put(page, memcopy_threads=2)
 
         # non blocking wait - this isn't thread aware in that it can trivially have
-        # race conditions, which themselves won't be fatat. We apply a simple back-off
+        # race conditions, which themselves won't be fatal. We apply a simple back-off
         # so we're not exhausting memory when we know we should wait
         while reply_queue.full():
             time.sleep(0.1)

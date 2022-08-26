@@ -168,7 +168,12 @@ class QueryPlanner(ExecutionTree):
 
         from opteryx.third_party.mbleven import compare
 
-        well_known_hints = ("NO_CACHE", "NO_PARTITION", "NO_PUSH_PROJECTION", "MULTI")
+        well_known_hints = (
+            "NO_CACHE",
+            "NO_PARTITION",
+            "NO_PUSH_PROJECTION",
+            "PARALLEL_READ",
+        )
 
         for hint in hints:
             if hint not in well_known_hints:

@@ -146,7 +146,7 @@ class BlobReaderNode(BasePlanNode):
                 self._selection = set(self._selection)
 
         # parallel download hint
-        self._parallel = "MULTI" in config.get("hints", [])
+        self._parallel = "PARALLEL_READ" in config.get("hints", [])
 
         # scan
         self._reading_list = self._scanner()
