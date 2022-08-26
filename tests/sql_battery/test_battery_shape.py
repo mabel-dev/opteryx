@@ -320,6 +320,8 @@ STATEMENTS = [
         ("SELECT * FROM tests.data.formats.parquet WITH(NO_PARTITION) WHERE user_verified IS TRUE", 711, 13),
         ("SELECT * FROM tests.data.formats.parquet WITH(NO_PARTITION) WHERE user_verified IS FALSE", 99289, 13),
 
+        ("SELECT * FROM tests.data.formats.parquet WITH(NO_PARTITION, MULTI)", 100000, 13),
+
         ("SELECT * FROM $satellites FOR DATES IN LAST_MONTH ORDER BY planetId OFFSET 10", 167, 8),
         ("SELECT * FROM $satellites FOR DATES IN LAST_CYCLE ORDER BY planetId OFFSET 10", 167, 8),
         ("SELECT * FROM $satellites FOR DATES IN THIS_MONTH ORDER BY planetId OFFSET 10", 167, 8),
@@ -515,6 +517,11 @@ STATEMENTS = [
         # JOIN on UNNEST #382
         ("SELECT name FROM $planets INNER JOIN UNNEST(('Earth')) AS n on name = n ", 1, 1),
         ("SELECT name FROM $planets INNER JOIN UNNEST(('Earth', 'Mars')) AS n on name = n", 2, 1),
+        # SELECT <literal> # 409
+        ("SELECT DATE FROM (SELECT '1980-10-20' AS DATE)", 1, 1),
+        ("SELECT NUMBER FROM (SELECT 1.0 AS NUMBER)", 1, 1),
+        ("SELECT VARCHAR FROM (SELECT 'varchar' AS VARCHAR)", 1, 1),
+        ("SELECT BOOLEAN FROM (SELECT False AS BOOLEAN)", 1, 1),
     ]
 # fmt:on
 

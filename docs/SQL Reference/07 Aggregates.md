@@ -8,21 +8,51 @@ Aggregate functions generally ignore `NULL` values when performing calculations.
 
 ## General Functions
 
-The table below shows the available general aggregate functions.
+!!! function "`APPROXIMATE_MEDIAN` (**column**: _numeric_) → _numeric_"  
+    Approximate median of a column with T-Digest algorithm.
 
-Function             | Description 
--------------------- | ----------------------------------------------------------------
-`APPROXIMATE_MEDIAN` | Approximate median of a column with T-Digest algorithm
-`AVG`                | The average of a numeric column (alse `MEAN`, and `AVERAGE`)
-`COUNT`              | Count the number of values
-`COUNT_DISTINCT`     | Count the number of unique values
-`LIST`               | The complete list of values 
-`MAX`                | The maximum value of a column (also `MAXIMUM`)
-`MEDIAN`             | The median of values in a numeric column
-`MIN`                | The minimum values of a column (also `MINIMUM`)
-`MIN_MAX`            | The minimum and maximum values of a column
-`ONE`                | Select a single value from the grouping
-`PRODUCT`            | The product of values in a numeric column
-`STDDEV`             | The standard deviation of values in a numeric column
-`SUM`                | The sum of values in a numeric column
-`VARIANCE`           | The variance of values in a numeric column
+!!! function "`AVG` (**column**: _numeric_) → _numeric_"  
+    The mean average of a numeric column.   
+    Also `MEAN` and `AVERAGE`.
+
+!!! function "`COUNT` (*) → _numeric_"  
+    Count the number of rows.
+
+!!! function "`COUNT` (**column**) → _numeric_"  
+    Count the number of non `NULL` values in **column**.
+
+!!! function "`COUNT_DISTINCT` (**column**) → _numeric_"  
+    Count the number of unique values.
+
+!!! function "`LIST` (**column**) → _array_"  
+    The complete list of values.
+
+!!! function "`MAX` (**column**) → _any_"  
+    The maximum value in **column**.  
+    Also `MAXIMUM`.
+
+!!! function "`MEDIAN` (**column**: _numeric_) → _numeric_"  
+    The median of values in **column**.  
+
+!!! function "`MIN` (**column**) → _any_"  
+    The minimum value in **column**.  
+    Also `MINIMUM`.
+
+!!! function "`MIN_MAX` (**column**) → _struct_"  
+    The minimum and maximum values in **column**.  
+
+!!! function "`ONE` (**column**) → _any_"  
+    Select a single value from the grouping.  
+
+!!! function "`PRODUCT` (**column**: _numeric_) → _numeric_"  
+    The product of values in **column**.  
+
+!!! function "`STDDEV` (**column**: _numeric_) → _numeric_"  
+    The standard deviation of values in **column**.  
+
+!!! function "`SUM` (**column**: _numeric_) → _numeric_"  
+    The sum of values in **column**.  
+
+!!! function "`VARIANCE` (**column**: _numeric_) → _numeric_"  
+    The variance of values in **column**.  
+

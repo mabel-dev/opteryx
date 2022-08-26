@@ -74,6 +74,7 @@ SELECT *
 
 This approach enables data to be partitioned by date and pruned using temporal filters.
 
+<!---
 # Storage Adapters
 
 ## Local
@@ -85,3 +86,4 @@ This approach enables data to be partitioned by date and pruned using temporal f
 ### Google Cloud Storage
 
 ### AWS S3 (Minio)
+--->

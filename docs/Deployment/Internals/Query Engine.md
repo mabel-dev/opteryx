@@ -33,16 +33,16 @@ Most SQL Engines include an Optimization step as part of the planner, Opteryx cu
 
 Query plans follow a generally accepted order of execution, which does not match the order queries are usually written in:
 
-01) FROM
-01) JOIN
-01) WHERE
-01) GROUP BY
-01) HAVING
-01) SELECT
-01) DISTINCT
-01) ORDER BY
-01) OFFSET
-01) LIMIT
+01) FROM   
+01) JOIN   
+01) WHERE   
+01) GROUP BY   
+01) HAVING   
+01) SELECT   
+01) DISTINCT   
+01) ORDER BY   
+01) OFFSET   
+01) LIMIT   
 
 The planner ensures the processes to be applied to the data reflect this order.
 
