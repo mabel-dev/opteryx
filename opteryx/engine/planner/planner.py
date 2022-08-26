@@ -153,17 +153,6 @@ class QueryPlanner(ExecutionTree):
             return ExpressionTreeNode(
                 NodeType.LITERAL_BOOLEAN, value=value["Boolean"], alias=alias
             )
-        if "Tuple" in value:
-            return ExpressionTreeNode(
-                NodeType.LITERAL_LIST,
-                value=[
-                    self._build_literal_node(t["Value"]).value for t in value["Tuple"]
-                ],
-            )
-        if "Value" in value:
-            if value["Value"] == "Null":
-                return ExpressionTreeNode(NodeType.LITERAL_NONE)
-            return ExpressionTreeNode(NodeType.UNKNOWN, value=value["Value"])
 
     def _check_hints(self, hints):
 

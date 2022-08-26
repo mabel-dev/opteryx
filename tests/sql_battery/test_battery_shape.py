@@ -428,12 +428,21 @@ STATEMENTS = [
         ("SELECT DATEDIFF('minutes', birth_date, '2022-07-07') FROM $astronauts", 357, 1),
         ("SELECT EXTRACT(DOW FROM birth_date) AS DOW, COUNT(*) FROM $astronauts GROUP BY EXTRACT(DOW FROM birth_date) ORDER BY COUNT(*) DESC", 7, 2),
 
-
         ("SELECT * FROM tests.data.schema WITH(NO_PARTITION) ORDER BY 1", 2, 4),
         ("SELECT * FROM tests.data.schema WITH(NO_PARTITION, NO_PUSH_PROJECTION) ORDER BY 1", 2, 4),
         ("SELECT * FROM $planets WITH(NO_PARTITION) ORDER BY 1", 9, 20),
         ("SELECT * FROM $planets WITH(NO_PUSH_PROJECTION) ORDER BY 1", 9, 20),
         ("SELECT * FROM $planets WITH(NO_PARTITION, NO_PUSH_PROJECTION) ORDER BY 1", 9, 20),
+
+        ("SELECT SQRT(mass) FROM $planets", 9, 1),
+        ("SELECT FLOOR(mass) FROM $planets", 9, 1),
+        ("SELECT CEIL(mass) FROM $planets", 9, 1),
+        ("SELECT CEILING(mass) FROM $planets", 9, 1),
+        ("SELECT ABS(mass) FROM $planets", 9, 1),
+        ("SELECT ABSOLUTE(mass) FROM $planets", 9, 1),
+        ("SELECT SIGN(mass) FROM $planets", 9, 1),
+        ("SELECT reverse(name) From $planets", 9, 1),
+        ("SELECT title(reverse(name)) From $planets", 9, 1),
 
         ("SELECT APPROXIMATE_MEDIAN(radius) AS AM FROM $satellites GROUP BY planetId HAVING APPROXIMATE_MEDIAN(radius) > 5;", 5, 1),
         ("SELECT APPROXIMATE_MEDIAN(radius) AS AM FROM $satellites GROUP BY planetId HAVING AM > 5;", 5, 1),
@@ -469,6 +478,8 @@ STATEMENTS = [
         ("SELECT COALESCE(death_date, '1900-01-01') FROM $astronauts", 357, 1),
         ("SELECT * FROM (SELECT COUNT(*) FROM tests.data.formats.parquet WITH(NO_PARTITION) GROUP BY followers)", 10016, 1),
         ("SELECT a.id, b.id FROM $planets AS a INNER JOIN (SELECT id FROM $planets) AS b USING (id)", 9, 2),
+        ("SELECT * FROM $planets INNER JOIN $planets AS b USING (id)", 9, 40),
+        ("SELECT ROUND(5 + RAND() * (10 - 5)) rand_between FROM $planets", 9, 1),
 
         # These are queries which have been found to return the wrong result or not run correctly
         # FILTERING ON FUNCTIONS
@@ -567,7 +578,7 @@ if __name__ == "__main__":  # pragma: no cover
 
     print(f"RUNNING BATTERY OF {len(STATEMENTS)} SHAPE TESTS")
     for index, (statement, rows, cols) in enumerate(STATEMENTS):
-        print(f"{index:04}", statement)
+        print(f"{index + 1:04}", statement)
         test_sql_battery(statement, rows, cols)
 
     print("✅ okay")

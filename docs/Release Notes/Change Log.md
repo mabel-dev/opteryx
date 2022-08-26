@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - [[#42](https://github.com/mabel-dev/opteryx/issues/42)] Enable inline operations. ([@joocer](https://github.com/joocer)) 
 - [[#330](https://github.com/mabel-dev/opteryx/issues/330)] Support `SIMILAR TO` alias for RegEx match. ([@joocer](https://github.com/joocer)) 
 - [[#331](https://github.com/mabel-dev/opteryx/issues/331)] Support `SAFE_CAST` alias for `TRY_CAST`. ([@joocer](https://github.com/joocer)) 
+- [[#419](https://github.com/mabel-dev/opteryx/issues/419)] Various simple functions (`SIGN`, `SQRT`, `TITLE`, `REVERSE`). ([@joocer](https://github.com/joocer)) 
 
 **Changed**
 
