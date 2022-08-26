@@ -578,7 +578,7 @@ if __name__ == "__main__":  # pragma: no cover
 
     print(f"RUNNING BATTERY OF {len(STATEMENTS)} SHAPE TESTS")
     for index, (statement, rows, cols) in enumerate(STATEMENTS):
-        print(f"{index:04}", statement)
+        print(f"{index + 1:04}", statement)
         test_sql_battery(statement, rows, cols)
 
     print("✅ okay")
