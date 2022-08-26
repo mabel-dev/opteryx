@@ -39,6 +39,9 @@ def parquet_decoder(stream, projection: List = None):
         parquet_file = parquet.ParquetFile(stream)
         parquet_metadata = parquet_file.schema
         selected_columns = list(set(parquet_metadata.names).intersection(projection))
+        # if nothing matched, there's been a problem - maybe HINTS confused for columns
+        if len(selected_columns) == 0:
+            selected_columns = None
 
     # don't prebuffer - we're already buffered as an IO Stream
     return parquet.read_table(stream, columns=selected_columns, pre_buffer=False)

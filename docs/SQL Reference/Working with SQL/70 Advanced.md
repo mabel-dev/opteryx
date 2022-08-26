@@ -26,7 +26,7 @@ FROM dataset WITH(NO_PUSH_PROJECTION)
 Instructs the blob/file reader not to try to prune columns at read time.
 
 ~~~
-FROM dataset WITH(MULTI)
+FROM dataset WITH(PARALLEL_READ)
 ~~~
 
-Instructs the blob/file reader to try to use multiple processes to download files (experimental).
+Instructs the blob/file reader to try to use multiple processes to download files (experimental). Expected to be be `NO_PARALLEL_READ` when out of experimental mode.
