@@ -254,6 +254,7 @@ STATEMENTS = [
         ("SELECT count(*), CAST(year AS VARCHAR) FROM $astronauts GROUP BY CAST(year AS VARCHAR)", 21, 2),
 
         ("SELECT RANDOM()", 1, 1),
+        ("SELECT RAND()", 1, 1),
         ("SELECT NOW()", 1, 1),
         ("SELECT NOW() from $planets", 9, 1),
         ("SELECT TODAY()", 1, 1),

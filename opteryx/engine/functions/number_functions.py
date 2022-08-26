@@ -10,6 +10,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import numpy
+
 from pyarrow import compute
 
 
@@ -22,3 +24,7 @@ def round(*args):
         return compute.round(args[0])
     # the second parameter is a fixed value
     return compute.round(args[0], args[1][0])  # [#325]
+
+
+def random(size):
+    return numpy.random.uniform(size=size)
