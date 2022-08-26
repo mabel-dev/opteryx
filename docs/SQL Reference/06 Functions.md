@@ -268,8 +268,11 @@ For more details, see [Working with Structs](https://mabel-dev.github.io/opteryx
 !!! function "`MD5` (**any**) → _varchar_"  
     Calculate the MD5 hash.
 
+!!! function "`RAND` () → _numeric_"  
+    Random number between 0 and 1.
+
 !!! function "`RANDOM` () → _numeric_"  
-    Random number between 0.0000 and 0.9999.
+    Alias of `RAND`().
 
 !!! function "`UNNEST` (**array**: _list_) → _relation_"  
     Create a virtual relation with a row for each element in **array**.
