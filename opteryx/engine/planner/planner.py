@@ -956,7 +956,7 @@ class QueryPlanner(ExecutionTree):
                     }
                 yield from _inner_explain(operator_name[0], depth + 1)
 
-        head = self.get_exit_points()
+        head = list(set(self.get_exit_points()))
         # print(head, self._edges)
         if len(head) != 1:
             raise SqlError(f"Problem with the plan - it has {len(head)} heads.")

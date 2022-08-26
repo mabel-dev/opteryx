@@ -85,7 +85,7 @@ for row in cur.fetchall():
     print(row["name"])
 ~~~
 
-For more example usage, see [Exmaple Notebooks](https://github.com/mabel-dev/opteryx/tree/main/notebooks) and the [Getting Started Guide](https://mabel-dev.github.io/opteryx/Getting%20Started/).
+For more example usage, see [Exmaple Notebooks](https://github.com/mabel-dev/opteryx/tree/main/notebooks) and the [Getting Started Guide](https://mabel-dev.github.io/opteryx/02%20Getting%20Started/).
 
 ## Community
 

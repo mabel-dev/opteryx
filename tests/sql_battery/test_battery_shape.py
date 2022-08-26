@@ -466,6 +466,8 @@ STATEMENTS = [
         ("SELECT ABSOLUTE(ROUND(gravity) * density * density) FROM $planets", 9, 1),
         ("SELECT COUNT(*), ROUND(gm) FROM $satellites GROUP BY ROUND(gm)", 22, 2),
         ("SELECT COALESCE(death_date, '1900-01-01') FROM $astronauts", 357, 1),
+        ("SELECT * FROM (SELECT COUNT(*) FROM tests.data.formats.parquet WITH(NO_PARTITION) GROUP BY followers)", 10016, 1),
+        ("SELECT a.id, b.id FROM $planets AS a INNER JOIN (SELECT id FROM $planets) AS b USING (id)", 9, 2),
 
         # These are queries which have been found to return the wrong result or not run correctly
         # FILTERING ON FUNCTIONS
@@ -522,6 +524,10 @@ STATEMENTS = [
         ("SELECT NUMBER FROM (SELECT 1.0 AS NUMBER)", 1, 1),
         ("SELECT VARCHAR FROM (SELECT 'varchar' AS VARCHAR)", 1, 1),
         ("SELECT BOOLEAN FROM (SELECT False AS BOOLEAN)", 1, 1),
+        # EXPLAIN has two heads (found looking a #408)
+        ("EXPLAIN SELECT * FROM $planets AS a INNER JOIN (SELECT id FROM $planets) AS b USING (id)", 3, 3),
+        # ALIAS issues #408
+        ("SELECT $planets.* FROM $planets INNER JOIN (SELECT id FROM $planets) AS b USING (id)", 9, 21),
     ]
 # fmt:on
 

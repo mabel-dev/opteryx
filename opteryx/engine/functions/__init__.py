@@ -181,71 +181,71 @@ def _raise_exception(text):
 # The type is needed particularly when returning Python objects that
 # the first entry is NONE.
 FUNCTIONS = {
-    "VERSION": (None, _repeat_no_parameters(get_version),),
+    "VERSION": _repeat_no_parameters(get_version),
     # TYPE CONVERSION
-    "TIMESTAMP": (None, cast("TIMESTAMP"),),
-    "BOOLEAN": (None, cast("BOOLEAN"),),
-    "NUMERIC": (None, cast("NUMERIC"),),
-    "VARCHAR": (None, cast("VARCHAR"),),
-    "STRING": (None, cast("VARCHAR"),),  # alias for VARCHAR
-    "TRY_TIMESTAMP": (None, try_cast("TIMESTAMP"),),
-    "TRY_BOOLEAN": (None, try_cast("BOOLEAN"),),
-    "TRY_NUMERIC": (None, try_cast("NUMERIC"),),
-    "TRY_VARCHAR": (None, try_cast("VARCHAR"),),
-    "TRY_STRING": (None, try_cast("VARCHAR"),),  # alias for VARCHAR
+    "TIMESTAMP": cast("TIMESTAMP"),
+    "BOOLEAN": cast("BOOLEAN"),
+    "NUMERIC": cast("NUMERIC"),
+    "VARCHAR": cast("VARCHAR"),
+    "STRING": cast("VARCHAR"),  # alias for VARCHAR
+    "TRY_TIMESTAMP": try_cast("TIMESTAMP"),
+    "TRY_BOOLEAN": try_cast("BOOLEAN"),
+    "TRY_NUMERIC": try_cast("NUMERIC"),
+    "TRY_VARCHAR": try_cast("VARCHAR"),
+    "TRY_STRING": try_cast("VARCHAR"),  # alias for VARCHAR
     # STRINGS
-    "LEN": (None, _iterate_single_parameter(get_len),),  # LENGTH(str) -> int
-    "LENGTH": (None, _iterate_single_parameter(get_len),),  # LENGTH(str) -> int
-    "UPPER": (None, compute.utf8_upper,),  # UPPER(str) -> str
-    "LOWER": (None, compute.utf8_lower,),  # LOWER(str) -> str
-    "TRIM": (None, compute.utf8_trim_whitespace,),  # TRIM(str) -> str
-    "LEFT": (None, string_functions.string_slicer_left,),
-    "RIGHT": (None, string_functions.string_slicer_right,),
+    "LEN": _iterate_single_parameter(get_len),  # LENGTH(str) -> int
+    "LENGTH": _iterate_single_parameter(get_len),  # LENGTH(str) -> int
+    "UPPER": compute.utf8_upper,  # UPPER(str) -> str
+    "LOWER": compute.utf8_lower,  # LOWER(str) -> str
+    "TRIM": compute.utf8_trim_whitespace,  # TRIM(str) -> str
+    "LEFT": string_functions.string_slicer_left,
+    "RIGHT": string_functions.string_slicer_right,
     # HASHING & ENCODING
-    "HASH": (None, _iterate_single_parameter(lambda x: format(CityHash64(str(x)), "X")),),
-    "MD5": (None, _iterate_single_parameter(get_md5),),
-    "RANDOM": (None, _iterate_no_parameters(get_random),),  # return a random number 0-0.999
+    "HASH": _iterate_single_parameter(lambda x: format(CityHash64(str(x)), "X")),
+    "MD5": _iterate_single_parameter(get_md5),
+    "RANDOM": _iterate_no_parameters(get_random),  # return a random number 0-0.999
     # OTHER
-    "GET": (None, _iterate_double_parameter(_get),),  # GET(LIST, index) => LIST[index] or GET(STRUCT, accessor) => STRUCT[accessor]
-    "LIST_CONTAINS": (None, _iterate_double_parameter(other_functions.list_contains),),
-    "LIST_CONTAINS_ANY": (None, _iterate_double_parameter(other_functions.list_contains_any),),
-    "LIST_CONTAINS_ALL": (None, _iterate_double_parameter(other_functions.list_contains_all),),
-    "SEARCH": (None, other_functions.search,),
-    "COALESCE": (None, compute.coalesce,),
+    "GET": _iterate_double_parameter(_get),  # GET(LIST, index) => LIST[index] or GET(STRUCT, accessor) => STRUCT[accessor]
+    "LIST_CONTAINS": _iterate_double_parameter(other_functions.list_contains),
+    "LIST_CONTAINS_ANY": _iterate_double_parameter(other_functions.list_contains_any),
+    "LIST_CONTAINS_ALL": _iterate_double_parameter(other_functions.list_contains_all),
+    "SEARCH": other_functions.search,
+    "COALESCE": compute.coalesce,
 
     # NUMERIC
-    "ROUND": (None, number_functions.round,),
-    "FLOOR": (None, compute.floor,),
-    "CEIL": (None, compute.ceil,),
-    "CEILING": (None, compute.ceil,),
-    "ABS": (None, compute.abs,),
-    "ABSOLUTE": (None, compute.abs,),
-    "TRUNC": (None, compute.trunc,),
-    "TRUNCATE": (None, compute.trunc,),
-    "PI": (None, _repeat_no_parameters(number_functions.pi)),
+    "ROUND": number_functions.round,
+    "FLOOR": compute.floor,
+    "CEIL": compute.ceil,
+    "CEILING": compute.ceil,
+    "ABS": compute.abs,
+    "ABSOLUTE": compute.abs,
+    "TRUNC": compute.trunc,
+    "TRUNCATE": compute.trunc,
+    "PI": _repeat_no_parameters(number_functions.pi),
     # DATES & TIMES
-    "DATE_TRUNC": (None, _iterate_double_parameter_field_second(date_trunc),),
-    "TIME_BUCKET": (None, date_functions.date_floor),
-    "DATEDIFF": (pyarrow.float64(), date_functions.date_diff,),
-    "DATEPART": (None, date_functions.date_part,),
-    "DATE_FORMAT": (None, date_functions.date_format),
-    "CURRENT_TIME": (None, _repeat_no_parameters(datetime.datetime.utcnow),),
-    "NOW": (None, _repeat_no_parameters(datetime.datetime.utcnow),),
-    "CURRENT_DATE": (None, _repeat_no_parameters(datetime.datetime.utcnow().date),),
-    "TODAY": (None, _repeat_no_parameters(datetime.datetime.utcnow().date),),
-    "TIME": (None, _repeat_no_parameters(date_functions.get_time),),
-    "YESTERDAY": (None, _repeat_no_parameters(date_functions.get_yesterday),),
-    "DATE": (None, _iterate_single_parameter(date_functions.get_date),),
-    "YEAR": (None, compute.year,),
-    "MONTH": (None, compute.month,),
-    "DAY": (None, compute.day,),
-    "WEEK": (None, compute.iso_week,),
-    "HOUR": (None, compute.hour,),
-    "MINUTE": (None, compute.minute,),
-    "SECOND": (None, compute.second,),
-    "QUARTER": (None, compute.quarter,),
+    "DATE_TRUNC": _iterate_double_parameter_field_second(date_trunc),
+    "TIME_BUCKET": date_functions.date_floor,
+    "DATEDIFF": date_functions.date_diff,
+    "DATEPART": date_functions.date_part,
+    "DATE_FORMAT": date_functions.date_format,
+    "CURRENT_TIME": _repeat_no_parameters(datetime.datetime.utcnow),
+    "NOW": _repeat_no_parameters(datetime.datetime.utcnow),
+    "CURRENT_DATE": _repeat_no_parameters(datetime.datetime.utcnow().date),
+    "TODAY": _repeat_no_parameters(datetime.datetime.utcnow().date),
+    "TIME": _repeat_no_parameters(date_functions.get_time),
+    "YESTERDAY": _repeat_no_parameters(date_functions.get_yesterday),
+    "DATE": _iterate_single_parameter(date_functions.get_date),
+    "YEAR": compute.year,
+    "MONTH": compute.month,
+    "DAY": compute.day,
+    "WEEK": compute.iso_week,
+    "HOUR": compute.hour,
+    "MINUTE": compute.minute,
+    "SECOND": compute.second,
+    "QUARTER": compute.quarter,
 
-    "ON": (None, lambda x: _raise_exception("`DISTINCT ON` is not supported"),)
+    "ON": lambda x: _raise_exception("`DISTINCT ON` is not supported"),
 
 }
 # fmt:on
