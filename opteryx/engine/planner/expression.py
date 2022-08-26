@@ -233,7 +233,7 @@ def _inner_evaluate(root: ExpressionTreeNode, table: Table, columns):
             # zero parameter functions get the number of rows as the parameter
             if len(parameters) == 0:
                 parameters = [table.num_rows]
-            return FUNCTIONS[root.value][1](*parameters)
+            return FUNCTIONS[root.value](*parameters)
         if node_type == NodeType.AGGREGATOR:
             # detected as an aggregator, but here it's an identifier because it
             # should have been evaluated

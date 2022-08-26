@@ -236,12 +236,13 @@ class Columns:
         if not isinstance(table_aliases, list):
             table_aliases = [table_aliases]
         table_aliases.append(name)
+        table_aliases = [a for a in set(table_aliases) if a is not None]
 
         # create the table information we're going to track
         table_metadata = {
             "expected_rows": expected_rows,
             "name": name,
-            "aliases": [a for a in set(table_aliases + [name]) if a],
+            "aliases": table_aliases,
         }
 
         # column information includes all the aliases a column is known by
