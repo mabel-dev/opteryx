@@ -26,7 +26,7 @@ from opteryx.engine.planner.operations.base_plan_node import BasePlanNode
 from opteryx.engine import QueryDirectives, QueryStatistics
 from opteryx.engine.planner.expression import evaluate_and_append
 from opteryx.engine.planner.expression import format_expression
-from opteryx.engine.planner.expression import NodeType
+from opteryx.engine.planner.expression import NodeType, LITERAL_TYPE
 from opteryx.exceptions import SqlError
 
 
@@ -54,8 +54,9 @@ class ProjectionNode(BasePlanNode):
                 NodeType.FUNCTION,
                 NodeType.AGGREGATOR,
                 NodeType.BINARY_OPERATOR,
-            ):
-                self._projection[format_expression(attribute)] = attribute.alias
+            ) or (attribute.token_type & LITERAL_TYPE == LITERAL_TYPE):
+                new_column_name = format_expression(attribute)
+                self._projection[new_column_name] = attribute.alias
                 self._expressions.append(attribute)
             elif attribute.token_type == NodeType.IDENTIFIER:
                 self._projection[attribute.value] = attribute.alias

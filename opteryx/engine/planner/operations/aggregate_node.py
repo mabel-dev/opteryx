@@ -28,11 +28,8 @@ from typing import Iterable
 import pyarrow
 
 from opteryx.engine import QueryDirectives, QueryStatistics
-from opteryx.engine.planner.expression import (
-    ExpressionTreeNode,
-    evaluate_and_append,
-    format_expression,
-)
+from opteryx.engine.planner.expression import evaluate_and_append
+from opteryx.engine.planner.expression import format_expression
 from opteryx.engine.planner.expression import get_all_identifiers
 from opteryx.engine.planner.expression import NodeType
 from opteryx.engine.planner.operations import BasePlanNode
@@ -48,7 +45,6 @@ AGGREGATORS = {
     "APPROXIMATE_MEDIAN": "approximate_median",
     "COUNT": "count",  # counts only non nulls
     "COUNT_DISTINCT": "count_distinct",
-    #    "CUMULATIVE_SUM": "cumulative_sum",
     "DISTINCT": "distinct",
     "LIST": "hash_list",
     "MAX": "max",

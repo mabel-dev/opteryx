@@ -145,6 +145,9 @@ class BlobReaderNode(BasePlanNode):
             if isinstance(self._selection, list):
                 self._selection = set(self._selection)
 
+        # parallel download hint
+        self._parallel = "MULTI" in config.get("hints", [])
+
         # scan
         self._reading_list = self._scanner()
 
@@ -186,17 +189,19 @@ class BlobReaderNode(BasePlanNode):
         metadata = None
         schema = None
 
-        #        import pyarrow.plasma as plasma
         from opteryx.storage import multiprocessor
 
-        # from opteryx import config
+        plasma_channel = None
+        plasma_store_ctx = None
+        if self._parallel:
+            import pyarrow.plasma as plasma
 
-        #        with plasma.start_plasma_store(
-        #            config.BUFFER_PER_SUB_PROCESS * config.MAX_SUB_PROCESSES
-        #        ) as plasma_store:
-        #            plasma_channel = plasma_store[0]
+            plasma_store_ctx = plasma.start_plasma_store(
+                config.BUFFER_PER_SUB_PROCESS * config.MAX_SUB_PROCESSES
+            )
+            plasma_channel, p = plasma_store_ctx.__enter__()
+
         if not metadata:
-            plasma_channel = None
 
             for partition in self._reading_list.values():
 
@@ -284,6 +289,9 @@ class BlobReaderNode(BasePlanNode):
 
                     # yield this blob
                     yield pyarrow_blob
+
+        if plasma_store_ctx is not None:
+            plasma_store_ctx.__exit__(None, None, None)
 
     def _read_and_parse(self, config):
         path, reader, parser, cache, projection = config

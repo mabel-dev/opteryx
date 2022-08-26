@@ -86,9 +86,8 @@ def processed_reader(function, items_to_read, plasma_channel):  # pragma: no cov
 
     process_pool = []
 
-    # we've effectively turned this feature off
-    # https://github.com/mabel-dev/opteryx/issues/134
-    if len(items_to_read) < 10 or True:
+    # if we're not reading much, or the channel isn't set, quickly return
+    if len(items_to_read) < 10 or plasma_channel is None:
         for item in items_to_read:
             yield function(item)
         return

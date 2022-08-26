@@ -121,29 +121,37 @@ class QueryPlanner(ExecutionTree):
         else:  # pragma: no cover
             raise SqlError("Unknown or unsupported Query type.")
 
-    def _build_literal_node(self, value):
+    def _build_literal_node(self, value, alias: list = []):
         """
         extract values from a value node in the AST and create a ExpressionNode for it
         """
-        if value is None or value in ("None", "Null"):
+        if value is None or value == "Null":
             return ExpressionTreeNode(NodeType.LITERAL_NONE)
         if "SingleQuotedString" in value:
             # quoted strings are either VARCHAR or TIMESTAMP
             str_value = value["SingleQuotedString"]
             dte_value = dates.parse_iso(str_value)
             if dte_value:
-                return ExpressionTreeNode(NodeType.LITERAL_TIMESTAMP, value=dte_value)
+                return ExpressionTreeNode(
+                    NodeType.LITERAL_TIMESTAMP, value=dte_value, alias=alias
+                )
             #            ISO_8601 = r"^\d{4}(-\d\d(-\d\d([T\W]\d\d:\d\d(:\d\d)?(\.\d+)?(([+-]\d\d:\d\d)|Z)?)?)?)?$"
             #            if re.match(ISO_8601, str_value):
             #                return (numpy.datetime64(str_value), TOKEN_TYPES.TIMESTAMP)
-            return ExpressionTreeNode(NodeType.LITERAL_VARCHAR, value=str_value)
+            return ExpressionTreeNode(
+                NodeType.LITERAL_VARCHAR, value=str_value, alias=alias
+            )
         if "Number" in value:
             # we have one internal numeric type
             return ExpressionTreeNode(
-                NodeType.LITERAL_NUMERIC, value=numpy.float64(value["Number"][0])
+                NodeType.LITERAL_NUMERIC,
+                value=numpy.float64(value["Number"][0]),
+                alias=alias,
             )
         if "Boolean" in value:
-            return ExpressionTreeNode(NodeType.LITERAL_BOOLEAN, value=value["Boolean"])
+            return ExpressionTreeNode(
+                NodeType.LITERAL_BOOLEAN, value=value["Boolean"], alias=alias
+            )
         if "Tuple" in value:
             return ExpressionTreeNode(
                 NodeType.LITERAL_LIST,
@@ -160,7 +168,7 @@ class QueryPlanner(ExecutionTree):
 
         from opteryx.third_party.mbleven import compare
 
-        well_known_hints = ("NO_CACHE", "NO_PARTITION", "NO_PUSH_PROJECTION")
+        well_known_hints = ("NO_CACHE", "NO_PARTITION", "NO_PUSH_PROJECTION", "MULTI")
 
         for hint in hints:
             if hint not in well_known_hints:
@@ -428,7 +436,7 @@ class QueryPlanner(ExecutionTree):
                 alias=alias,
             )
         if "Value" in function:
-            return self._build_literal_node(function["Value"])
+            return self._build_literal_node(function["Value"], alias)
 
         if "UnaryOp" in function:
             if function["UnaryOp"]["op"] == "Not":
