@@ -19,8 +19,8 @@ extensions = [
         include_dirs=[np.get_include()],
     ),
     Extension(
-        name="soundex",
-        sources=["opteryx/third_party/soundex.pyx"],
+        name="csoundex",
+        sources=["opteryx/third_party/fuzzy/csoundex.pyx"],
         include_dirs=[np.get_include()],
     ),
 ]

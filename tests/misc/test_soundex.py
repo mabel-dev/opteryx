@@ -4,7 +4,7 @@ import sys
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import pytest
-from opteryx.third_party.soundex import Soundex
+from opteryx.third_party.fuzzy.soundex import Soundex
 
 # fmt:off
 TESTS = [
