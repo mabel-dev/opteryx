@@ -16,7 +16,6 @@ import opteryx
 from opteryx.connectors import MongoDbStore
 
 
-
 COLLECTION_NAME = "mongo"
 MONGO_CONNECTION = os.environ.get("MONGO_CONNECTION")
 MONGO_DATABASE = os.environ.get("MONGO_DATABASE")

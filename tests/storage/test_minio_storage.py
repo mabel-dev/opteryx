@@ -15,7 +15,6 @@ import opteryx
 from opteryx.connectors import MinIoStorage
 
 
-
 BUCKET_NAME = "miniobucket"
 END_POINT = "localhost:9000"
 SECRETS = "minioadmin"

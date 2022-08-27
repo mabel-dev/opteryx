@@ -22,7 +22,6 @@ from .gcs_store import GcsStorage
 from .minio_store import MinIoStorage
 
 
-
 from opteryx.config import DATASET_PREFIX_MAPPING
 from opteryx.connectors import DiskStorage
 from opteryx.connectors import GcsStorage

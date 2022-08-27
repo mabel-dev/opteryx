@@ -15,7 +15,7 @@ import os
 
 from typing import Optional
 
-from opteryx.connectors  import BaseBlobStorageAdapter
+from opteryx.connectors import BaseBlobStorageAdapter
 from opteryx.exceptions import MissingDependencyError
 from opteryx.utils import paths
 

@@ -12,6 +12,7 @@
 
 import numpy
 
+
 def string_slicer_left(arr, length):
     """
     Slice a list of strings from the left

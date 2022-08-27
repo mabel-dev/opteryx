@@ -278,7 +278,9 @@ def _inner_evaluate(root: ExpressionTreeNode, table: Table, columns):
             return numpy.array([root.value] * table.num_rows)
         if node_type == NodeType.LITERAL_VARCHAR:
             return numpy.array([root.value] * table.num_rows, dtype=numpy.str_)
-        return numpy.full(table.num_rows, root.value, dtype=NUMPY_TYPES[node_type])
+        return numpy.full(
+            shape=table.num_rows, fill_value=root.value, dtype=NUMPY_TYPES[node_type]
+        )  # type:ignore
 
 
 def evaluate(expression: ExpressionTreeNode, table: Table):

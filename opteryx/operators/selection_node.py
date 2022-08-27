@@ -89,7 +89,7 @@ class SelectionNode(BasePlanNode):
                 # if the mask is a boolean array, we've called a function that
                 # returns booleans
                 if isinstance(mask, pyarrow.lib.BooleanArray) or (
-                    isinstance(mask, numpy.ndarray) and mask.dtype == numpy.bool
+                    isinstance(mask, numpy.ndarray) and mask.dtype == numpy.bool_
                 ):
                     mask = numpy.nonzero(mask)[0]
 

@@ -107,8 +107,8 @@ class BlobReaderNode(BasePlanNode):
 
         today = datetime.datetime.utcnow().date()
 
-        self._dataset = config.get("dataset", None)
-        self._alias = config.get("alias", None)
+        self._dataset: str = config.get("dataset", None)
+        self._alias: list = config.get("alias", None)
 
         # circular imports
         from opteryx.managers.query.planner import QueryPlanner
@@ -117,20 +117,22 @@ class BlobReaderNode(BasePlanNode):
             return
 
         self._dataset = self._dataset.replace(".", "/") + "/"
-        self._reader = config.get("reader")()
+        self._reader = config.get("reader")()  # type:ignore
 
         # WITH hint can turn off caching
         self._disable_cache = "NO_CACHE" in config.get("hints", [])
         if self._disable_cache:
-            self._cache = None
+            self._cache = None  # type:ignore
         else:
-            self._cache = config.get("cache")
+            self._cache = config.get("cache")  # type:ignore
 
         # WITH hint can turn off partitioning, oatherwise get it from config
         if "NO_PARTITION" in config.get("hints", []) or PARTITION_SCHEME is None:
-            self._partition_scheme = DefaultPartitionScheme("")
+            self._partition_scheme = DefaultPartitionScheme("")  # type:ignore
         elif PARTITION_SCHEME != "mabel":
-            self._partition_scheme = DefaultPartitionScheme(PARTITION_SCHEME)
+            self._partition_scheme = DefaultPartitionScheme(
+                PARTITION_SCHEME
+            )  # type:ignore
         else:
             self._partition_scheme = MabelPartitionScheme()  # type:ignore
 
@@ -139,20 +141,20 @@ class BlobReaderNode(BasePlanNode):
 
         # pushed down selection/filter
         if "NO_PUSH_PROJECTION" in config.get("hints", []):
-            self._selection = None
+            self._selection: Iterable = None
         else:
             self._selection = config.get("selection")
             if isinstance(self._selection, list):
                 self._selection = set(self._selection)
 
         # parallel download hint
-        self._parallel = "PARALLEL_READ" in config.get("hints", [])
+        self._parallel: bool = "PARALLEL_READ" in config.get("hints", [])
 
         # scan
-        self._reading_list = self._scanner()
+        self._reading_list: dict = self._scanner()
 
         # row count estimate
-        self._row_count_estimate = None
+        self._row_count_estimate: int = None
 
     @property
     def config(self):  # pragma: no cover
