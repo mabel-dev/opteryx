@@ -194,6 +194,7 @@ FUNCTIONS = {
     "LEFT": string_functions.string_slicer_left,
     "RIGHT": string_functions.string_slicer_right,
     "REVERSE": compute.utf8_reverse,
+    "SOUNDEX": string_functions.soundex,
     "TITLE": compute.utf8_title,
     # HASHING & ENCODING
     "HASH": _iterate_single_parameter(lambda x: format(CityHash64(str(x)), "X")),

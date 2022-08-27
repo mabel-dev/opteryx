@@ -462,6 +462,7 @@ STATEMENTS = [
         ("SELECT SIGN(mass) FROM $planets", 9, 1),
         ("SELECT reverse(name) From $planets", 9, 1),
         ("SELECT title(reverse(name)) From $planets", 9, 1),
+        ("SELECT SOUNDEX(name) From $planets", 9, 1),
 
         ("SELECT APPROXIMATE_MEDIAN(radius) AS AM FROM $satellites GROUP BY planetId HAVING APPROXIMATE_MEDIAN(radius) > 5;", 5, 1),
         ("SELECT APPROXIMATE_MEDIAN(radius) AS AM FROM $satellites GROUP BY planetId HAVING AM > 5;", 5, 1),

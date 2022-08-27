@@ -12,6 +12,8 @@
 
 import numpy
 
+from opteryx.third_party.soundex import Soundex
+
 
 def string_slicer_left(arr, length):
     """
@@ -49,3 +51,16 @@ def string_slicer_right(arr, length):
     arr = arr.astype(str)  # it's probably an array of objects
     interim = arr.view((str, 1)).reshape(len(arr), -1)[:, -length:]
     return numpy.array(interim).view((str, length)).flatten()
+
+
+def soundex(arr):
+    _soundex = Soundex(4)
+    interim = ["0000"] * arr.size
+
+    for index, string in enumerate(arr):
+        if string:
+            interim[index] = _soundex(string)
+        else:
+            interim[index] = None
+
+    return numpy.array(interim, dtype=numpy.str_)

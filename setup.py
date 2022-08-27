@@ -18,12 +18,11 @@ extensions = [
         sources=["opteryx/third_party/pyarrow_ops/cjoin.pyx"],
         include_dirs=[np.get_include()],
     ),
-#    "opteryx/third_party/soundex.pyx"
     Extension(
         name="soundex",
         sources=["opteryx/third_party/soundex.pyx"],
         include_dirs=[np.get_include()],
-    )
+    ),
 ]
 
 setup(
