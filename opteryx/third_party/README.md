@@ -7,6 +7,7 @@ These are third-party modules which we include into the Opteryx codebase.
 - [**hyperloglog**](https://github.com/ekzhu/datasketch)
 - [**mbleven**](https://github.com/fujimotos/mbleven)
 - [**pyarrow_ops**](https://github.com/TomScheffers/pyarrow_ops)
+- [**soundex**](https://github.com/yougov/fuzzy/blob/master/src/fuzzy.pyx)
 
 These modules have been removed from the codebase
 
