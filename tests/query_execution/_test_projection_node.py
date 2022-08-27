@@ -11,7 +11,7 @@ import sys
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
-from opteryx.engine.planner.operations import ProjectionNode
+from opteryx.models.planner.operations import ProjectionNode
 from opteryx.sample_data import SatelliteData
 
 

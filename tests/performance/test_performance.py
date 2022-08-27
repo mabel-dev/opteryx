@@ -4,7 +4,7 @@ import sys
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import opteryx
-from opteryx.storage.adapters import DiskStorage
+from opteryx.connectors import DiskStorage
 
 
 def simple_query():

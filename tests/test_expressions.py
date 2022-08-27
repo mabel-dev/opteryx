@@ -10,10 +10,11 @@ sys.path.insert(1, os.path.join(sys.path[0], ".."))
 from rich import traceback
 
 import opteryx
-from opteryx.engine.planner.expression import ExpressionTreeNode
-from opteryx.engine.planner.expression import NodeType
-from opteryx.engine.planner.expression import evaluate
-from opteryx.engine.planner.expression import NUMPY_TYPES
+import opteryx.samples
+from opteryx.managers.expression import ExpressionTreeNode
+from opteryx.managers.expression import NodeType
+from opteryx.managers.expression import evaluate
+from opteryx.managers.expression import NUMPY_TYPES
 
 
 traceback.install()

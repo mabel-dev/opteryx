@@ -8,7 +8,7 @@ import sys
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import opteryx
-from opteryx.storage.cache.memory_cache import InMemoryCache
+from opteryx.managers.cache import InMemoryCache
 
 
 def test_in_memory_cache():

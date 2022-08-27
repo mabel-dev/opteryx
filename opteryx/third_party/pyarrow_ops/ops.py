@@ -6,9 +6,9 @@ import pyarrow
 
 from pyarrow import compute
 
-from opteryx.engine.attribute_types import PARQUET_TYPES
-from opteryx.engine.attribute_types import PYTHON_TYPES
-from opteryx.engine.attribute_types import TOKEN_TYPES
+from opteryx.attribute_types import PARQUET_TYPES
+from opteryx.attribute_types import PYTHON_TYPES
+from opteryx.attribute_types import TOKEN_TYPES
 
 from .helpers import columns_to_array
 

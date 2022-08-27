@@ -1,5 +1,8 @@
 # Query Engine
 
+> If you are interested in how databases work, I recommend the resources from [The CMU Database Group](https://db.cs.cmu.edu/) and the collection of resources at [Awesome Database Learning](https://github.com/pingcap/awesome-database-learning).
+
+
 The Opteryx query engine has the following key components and general process:
 
 1) The Parser & Lexer, which recieves the user SQL and builds an Abstract Syntax Tree (AST).
@@ -52,4 +55,4 @@ The Query Plan can be seen for a given query using the `EXPLAIN` query.
 
 The goal of the Query Executor is to produce the results for the user. It takes the Plan and executes the steps in the plan.
 
-Opteryx uses a page-based pull pattern to execute it's plans. This means that the planner starts at the node closest to the end of the plan (e.g. `LIMIT`) and asks it for a page of data. This node asks its preceeding node for a page of data, etc etc until it gets to the node which aquires data from source. The data is then processed by each node until it is returned to the `LIMIT` node at the end.
+Opteryx implements a vectorized Volcano model executor. This means that the planner starts at the node closest to the end of the plan (e.g. `LIMIT`) and asks it for a page of data. This node asks its preceeding node for a page of data, etc etc until it gets to the node which aquires data from source. The data is then processed by each node until it is returned to the `LIMIT` node at the end.

@@ -46,3 +46,5 @@ if __name__ == "__main__":  # pragma: no cover
 
     test_connection_invalid_state()
     test_connection_warnings()
+
+    print("✅ okay")

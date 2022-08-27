@@ -12,7 +12,7 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 def test_memcached_cache():
 
     import opteryx
-    from opteryx.storage.cache.memcached_cache import MemcachedCache
+    from opteryx.managers.cache import MemcachedCache
 
     cache = MemcachedCache(server="localhost:11211")
 

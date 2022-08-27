@@ -10,8 +10,8 @@ import sys
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
-from opteryx.engine.planner.operations import LimitNode
-from opteryx.engine.query_statistics import QueryStatistics
+from opteryx.models.planner.operations import LimitNode
+from opteryx.models.query_statistics import QueryStatistics
 from opteryx.sample_data import SatelliteData
 
 

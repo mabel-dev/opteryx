@@ -1,0 +1,43 @@
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+"""
+Explain Node
+
+This is a SQL Query Execution Plan Node.
+
+This writes out a query plan
+"""
+from typing import Iterable
+
+from opteryx.models import QueryDirectives, QueryStatistics
+from opteryx.operators import BasePlanNode
+
+
+class ExplainNode(BasePlanNode):
+    def __init__(
+        self, directives: QueryDirectives, statistics: QueryStatistics, **config
+    ):
+        super().__init__(directives=directives, statistics=statistics)
+        self._query_plan = config.get("query_plan")
+
+    @property
+    def name(self):  # pragma: no cover
+        return "Explain"
+
+    @property  # pragma: no cover
+    def config(self):
+        return ""
+
+    def execute(self) -> Iterable:
+        if self._query_plan:
+            yield from self._query_plan.explain()

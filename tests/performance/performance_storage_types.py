@@ -15,8 +15,8 @@ import sys
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import opteryx
-from opteryx.storage.adapters.blob import DiskStorage
-from opteryx.storage.cache.memory_cache import InMemoryCache
+from opteryx.connectors import DiskStorage
+from opteryx.managers.cache import InMemoryCache
 
 import time
 
@@ -51,7 +51,7 @@ if __name__ == "__main__":
 
     CYCLES = 25
 
-    opteryx.storage.register_prefix("tests", DiskStorage)
+    opteryx.register_prefix("tests", DiskStorage)
 
     conn = opteryx.connect(cache=cache)
 

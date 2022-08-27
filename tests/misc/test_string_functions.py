@@ -8,7 +8,7 @@ import numpy
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
-from opteryx.engine.functions import string_functions
+from opteryx.functions import string_functions
 
 
 def test_slice_left():

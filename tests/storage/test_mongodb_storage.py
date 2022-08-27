@@ -13,8 +13,8 @@ import pymongo  # type:ignore
 
 import opteryx
 
-from opteryx.storage.adapters.document import MongoDbStore
-from opteryx.storage import register_prefix
+from opteryx.connectors import MongoDbStore
+
 
 
 COLLECTION_NAME = "mongo"
@@ -37,7 +37,7 @@ def populate_mongo():
 
 def test_mongo_storage():
 
-    register_prefix(COLLECTION_NAME, MongoDbStore)
+    opteryx.register_prefix(COLLECTION_NAME, MongoDbStore)
 
     populate_mongo()
 
