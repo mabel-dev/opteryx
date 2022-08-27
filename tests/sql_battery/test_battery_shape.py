@@ -1,11 +1,20 @@
 """
-The best way to test a SQL engine is to throw queries at it.
+The best way to test a SQL Engine is to throw queries at it.
+
+This is the main SQL Battery set, others exist for testing specific features (like
+reading different file types) but this is the main set of tests for if the Engine
+can respond to a query.
+
+Some test blocks have labels as to what the block is generally testing, even fewer
+tests have comments as to why they exist (usually if the test is a regression test)
 
 We have three in-memory tables, one of natural satellite data, one of planet data and
 one of astronaut data. These are both small to allow us to test the SQL engine quickly
 and is guaranteed to be available whereever the tests are run.
 
-These tests only test the shape of the response, more specific tests wil test values.
+These are suppliments with a few physical tables to test conditions unable to be tested
+with the in-memory tables.
+
 The point of these tests is that we can throw many variations of queries, such as
 different whitespace and capitalization and ensure we get a sensible looking response.
 
@@ -13,7 +22,10 @@ We test the shape in this battery because if the shape isn't right, the response
 going to be right, and testing shape of an in-memory dataset is quick, we can test 100s
 of queries in a few seconds.
 
-Testing the shape doesn't mean the response is right though.
+Note that testing the shape doesn't mean the response is right though.
+
+These tests only test the shape of the response, more specific tests would be needed to
+test values.
 """
 import os
 import sys
@@ -32,7 +44,11 @@ from opteryx.storage.adapters import DiskStorage
 
 # fmt:off
 STATEMENTS = [
+        # Are the datasets the shape we expect?
         ("SELECT * FROM $satellites", 177, 8),
+        ("SELECT * FROM $planets", 9, 20),
+        ("SELECT * FROM $astronauts", 357, 19),
+
         ("SELECT * FROM $satellites;", 177, 8),
         ("SELECT * FROM $satellites\n;", 177, 8),
         ("select * from $satellites", 177, 8),
@@ -58,6 +74,7 @@ STATEMENTS = [
         ("SELECT * FROM `$satellites` WHERE `name` = 'Calypso'", 1, 8),
         ("SELECT * FROM $satellites WITH (NO_CACHE)", 177, 8),
 
+        # Do we handle comments 
         ("/* comment */ SELECT * FROM $satellites WHERE name = 'Calypso'", 1, 8),
         ("SELECT * FROM $satellites /* comment */ WHERE name = 'Calypso'", 1, 8),
         ("SELECT * FROM $satellites /* WHERE name = 'Calypso' */", 177, 8),
@@ -88,6 +105,7 @@ STATEMENTS = [
         ("SELECT name as NAME FROM $satellites WHERE name = 'Calypso'", 1, 1),
         ("SELECT name as NAME FROM $satellites GROUP BY name", 177, 1),
 
+        # Test infix calculations
         ("SELECT * FROM $satellites WHERE id = 5", 1, 8),
         ("SELECT * FROM $satellites WHERE name = 'Cal' || 'ypso'", 1, 8),
         ("SELECT * FROM $satellites WHERE name = 'C' || 'a' || 'l' || 'y' || 'p' || 's' || 'o'", 1, 8),
@@ -95,6 +113,7 @@ STATEMENTS = [
         ("SELECT * FROM $satellites WHERE id = 10 / 2 AND name = 'Europa'", 1, 8),
         ("SELECT * FROM $satellites WHERE id = 3 + 2 AND name = 'Europa'", 1, 8),
         ("SELECT * FROM $satellites WHERE id + 2 = 7 AND name = 'Europa'", 1, 8),
+        ("SELECT * FROM $satellites WHERE id = 15 % 10 AND name = 'Europa'", 1, 8),
 
         ("SELECT * FROM $satellites WHERE magnitude = 5.29", 1, 8),
         ("SELECT * FROM $satellites WHERE id = 5 AND magnitude = 5.29", 1, 8),
@@ -443,6 +462,7 @@ STATEMENTS = [
         ("SELECT SIGN(mass) FROM $planets", 9, 1),
         ("SELECT reverse(name) From $planets", 9, 1),
         ("SELECT title(reverse(name)) From $planets", 9, 1),
+        ("SELECT SOUNDEX(name) From $planets", 9, 1),
 
         ("SELECT APPROXIMATE_MEDIAN(radius) AS AM FROM $satellites GROUP BY planetId HAVING APPROXIMATE_MEDIAN(radius) > 5;", 5, 1),
         ("SELECT APPROXIMATE_MEDIAN(radius) AS AM FROM $satellites GROUP BY planetId HAVING AM > 5;", 5, 1),
@@ -457,11 +477,9 @@ STATEMENTS = [
         ("SELECT AVERAGE(planetId) FROM $satellites", 1, 1),
         ("SELECT MIN(planetId) FROM $satellites", 1, 1),
         ("SELECT MIN_MAX(planetId) FROM $satellites", 1, 1),
-#        ("SELECT MODE(planetId) FROM $satellites", 1, 1),
         ("SELECT PRODUCT(planetId) FROM $satellites", 1, 1),
         ("SELECT STDDEV(planetId) FROM $satellites", 1, 1),
         ("SELECT SUM(planetId) FROM $satellites", 1, 1),
-#        ("SELECT QUANTILES(planetId) FROM $satellites", 1, 1),
         ("SELECT VARIANCE(planetId) FROM $satellites", 1, 1),
 
         ("SELECT name || ' ' || name FROM $planets", 9, 1),
@@ -484,7 +502,7 @@ STATEMENTS = [
         # These are queries which have been found to return the wrong result or not run correctly
         # FILTERING ON FUNCTIONS
         ("SELECT DATE(birth_date) FROM $astronauts FOR TODAY WHERE DATE(birth_date) < '1930-01-01'", 14, 1),
-        # ORDER OF CLAUSES
+        # ORDER OF CLAUSES (FOR before INNER JOIN)
         ("SELECT * FROM $planets FOR '2022-03-03' INNER JOIN $satellites ON $planets.id = $satellites.planetId", 177, 28),
         # ZERO RECORD RESULT SETS
         ("SELECT * FROM $planets WHERE id = -1 ORDER BY id", 0, 20),
@@ -508,7 +526,7 @@ STATEMENTS = [
         ("SELECT * FROM tests.data.framed FOR DATES BETWEEN '2021-03-28' AND '2021-03-29'", 200000, 1),
         ("SELECT * FROM tests.data.framed FOR DATES BETWEEN '2021-03-29' AND '2021-03-30'", 100000, 1),
         ("SELECT * FROM tests.data.framed FOR DATES BETWEEN '2021-03-28' AND '2021-03-30'", 200000, 1),
-        # DOESN'T WORK WITH LARGE DATASETS (#179)
+        # PAGING OF DATASETS AFTER A GROUP BY (#179)
         ("SELECT * FROM (SELECT COUNT(*), column_1 FROM FAKE(5000,2) GROUP BY column_1 ORDER BY COUNT(*)) LIMIT 5", 5, 2),
         # FILTER CREATION FOR 3 OR MORE ANDED PREDICATES FAILS (#182)
         ("SELECT * FROM $astronauts WHERE name LIKE '%o%' AND `year` > 1900 AND gender ILIKE '%ale%' AND group IN (1,2,3,4,5,6)", 41, 19),
@@ -519,6 +537,11 @@ STATEMENTS = [
         ("SELECT * FROM tests.data.nulls WHERE NOT username LIKE 'BBC%' FOR '2000-01-01'", 22, 5),
         ("SELECT * FROM tests.data.nulls WHERE username NOT ILIKE 'BBC%' FOR '2000-01-01'", 21, 5),
         ("SELECT * FROM tests.data.nulls WHERE username ~ 'BBC.+' FOR '2000-01-01'", 3, 5),
+        ("SELECT * FROM tests.data.nulls WHERE username !~ 'BBC.+' FOR '2000-01-01'", 21, 5),
+        ("SELECT * FROM tests.data.nulls WHERE username ~* 'bbc.+' FOR '2000-01-01'", 3, 5),
+        ("SELECT * FROM tests.data.nulls WHERE username !~* 'bbc.+' FOR '2000-01-01'", 21, 5),
+        ("SELECT * FROM tests.data.nulls WHERE username SIMILAR TO 'BBC.+' FOR '2000-01-01'", 3, 5),
+        ("SELECT * FROM tests.data.nulls WHERE username NOT SIMILAR TO 'BBC.+' FOR '2000-01-01'", 21, 5),
         ("SELECT * FROM tests.data.nulls WHERE tweet ILIKE '%Trump%' FOR '2000-01-01'", 0, 5),
         # BYTE-ARRAY FAILS #252
         (b"SELECT * FROM $satellites", 177, 8),
@@ -578,7 +601,7 @@ if __name__ == "__main__":  # pragma: no cover
 
     print(f"RUNNING BATTERY OF {len(STATEMENTS)} SHAPE TESTS")
     for index, (statement, rows, cols) in enumerate(STATEMENTS):
-        print(f"{index + 1:04}", statement)
+        print(f"{index:04}", statement)
         test_sql_battery(statement, rows, cols)
 
     print("✅ okay")

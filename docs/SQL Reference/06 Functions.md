@@ -224,6 +224,9 @@ Functions for examining and manipulating string values.
 !!! function "`RIGHT` (**str**: _varchar_, **n**: _numeric_) → _varchar_"  
     Extract the right-most **n** characters of **str**.   
 
+!!! function "`SOUNDEX` (**str**: _varchar_) → _varchar_"  
+    Returns a character string containing the phonetic representation of char. See [Soundex 🡕](https://en.wikipedia.org/wiki/Soundex).   
+
 !!! function "`SEARCH` (**str**: _varchar_, **value**: _varchar_) → _boolean_ 🔻"  
     Return True if **str** contains **value**.  
 

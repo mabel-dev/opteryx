@@ -5,6 +5,7 @@ __pycache__/
 
 # C extensions
 *.so
+*.c
 
 # Distribution / packaging
 .Python
@@ -154,3 +155,4 @@ tests/data/zoned/**
 tests/data/parquet/**
 opteryx.yaml
 data/**
+opteryx/third_party/soundex.c

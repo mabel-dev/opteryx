@@ -8,6 +8,7 @@ Component | Disposition | Copyright | Licence
 [cython](https://github.com/cython/cython)                 | Installed   | . | [Apache 2.0](https://github.com/cython/cython/blob/master/LICENSE.txt)
 [datetime_truncate](https://github.com/mediapop/datetime_truncate) | Integrated | 2020 Media Pop | [MIT](https://github.com/mediapop/datetime_truncate/blob/master/LICENSE)
 [distogram](https://github.com/maki-nage/distogram)        | Integrated  | 2020 Romain Picard | [MIT](https://github.com/maki-nage/distogram/blob/master/LICENSE.txt)
+[fuzzy](https://github.com/yougov/fuzzy)                   | Integrated | Jason R. Coombs | [MIT](https://github.com/yougov/fuzzy/blob/master/LICENSE)
 [mbleven](https://github.com/fujimotos/mbleven)            | Integrated  | 2018 Fujimoto Seiji | [Public Domain](https://github.com/fujimotos/mbleven/blob/master/LICENSE)
 [numpy](https://github.com/numpy/numpy)                    | Installed   | . | [BSD-3](https://github.com/numpy/numpy/blob/main/LICENSE.txt)
 [orjson](https://github.com/ijl/orjson)                    | Installed   | . | [Apache 2.0](https://github.com/ijl/orjson/blob/master/LICENSE-APACHE)

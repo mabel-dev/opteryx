@@ -61,4 +61,5 @@ if __name__ == "__main__":  # pragma: no cover
     print(f"RUNNING BATTERY OF {len(TESTS)} TESTS")
     for str1, str2, score in TESTS:
         test_level_battery(str1, str2, score)
-    print("okay")
+
+    print("✅ okay")
