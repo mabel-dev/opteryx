@@ -12,9 +12,6 @@
 
 import numpy
 
-from opteryx.third_party.soundex import Soundex
-
-
 def string_slicer_left(arr, length):
     """
     Slice a list of strings from the left
@@ -54,6 +51,8 @@ def string_slicer_right(arr, length):
 
 
 def soundex(arr):
+    from opteryx.third_party.fuzzy.soundex import Soundex
+
     _soundex = Soundex(4)
     interim = ["0000"] * arr.size
 
