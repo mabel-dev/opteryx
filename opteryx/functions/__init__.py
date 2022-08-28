@@ -15,13 +15,10 @@ These are a set of functions that can be applied to data.
 """
 import datetime
 import os
-import pyarrow
 
 from cityhash import CityHash64
 from pyarrow import compute
 from pyarrow import ArrowNotImplementedError
-
-import opteryx.managers.connection as connection
 
 from opteryx.exceptions import SqlError
 from opteryx.functions import date_functions
