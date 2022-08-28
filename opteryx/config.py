@@ -10,19 +10,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from pathlib import Path
+
 import pyarrow
 import yaml
 
-from pathlib import Path
-
+_config:dict = {}
 try:  # pragma: no cover
     _config_path = Path(".") / "opteryx.yaml"
-    with open(_config_path, "rb") as _config_file:
-        _config = yaml.safe_load(_config_file)
-    print(f"loaded config from {_config_path}")
+    if _config_path.exists():
+        with open(_config_path, "rb") as _config_file:
+            _config = yaml.safe_load(_config_file)
+        print(f"loaded config from {_config_path}")
 except Exception as exception:  # it doesn't matter why - just use the defaults
     print(f"config file {_config_path} not used - {exception}")
-    _config = {}
+
 
 # fmt:off
 
@@ -41,7 +43,7 @@ GCP_PROJECT_ID: str = _config.get("GCP_PROJECT_ID")
 # Mapping prefixes to readers - the default is to use disk
 DATASET_PREFIX_MAPPING: dict = _config.get("DATASET_PREFIX_MAPPING", {"_":"disk"})
 # Data Partitioning
-PARTITION_SCHEME: str = _config.get("PARTITION_SCHEME", "mabel")
+PARTITION_SCHEME: str = _config.get("PARTITION_SCHEME", None)
 # Maximum size for items saved to the buffer cache
 MAX_SIZE_SINGLE_CACHE_ITEM: int = _config.get("MAX_SIZE_SINGLE_CACHE_ITEM", 1024 * 1024)
 # Approximate Page Size

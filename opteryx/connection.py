@@ -187,7 +187,7 @@ class Cursor:
         """close the connection"""
         self._connection.close()
 
-    def __repr__(self):  # pragma: no cover
+    def head(self, size:int=10):  # pragma: no cover
 
         from opteryx.utils.display import html_table, ascii_table
 
@@ -201,8 +201,7 @@ class Cursor:
         if i_am_in_a_notebook:
             from IPython.display import HTML, display
 
-            html = html_table(iter(self.fetchmany(10)), 10)
+            html = html_table(iter(self.fetchmany(size)), size)
             display(HTML(html))
-            return ""  # __repr__ must return something
-
-        return ascii_table(iter(self.fetchmany(10)), 10)
+        else:
+            return ascii_table(iter(self.fetchmany(size)), size)

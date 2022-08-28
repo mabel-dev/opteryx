@@ -11,29 +11,23 @@
 # limitations under the License.
 
 from .base_document_storage_adapter import BaseDocumentStorageAdapter
-
-from .gcp_firestore import FireStoreStorage
-from .mongodb_store import MongoDbStore
-
 from .base_blob_storage_adapter import BaseBlobStorageAdapter
-
-from .disk_store import DiskStorage
-from .gcs_store import GcsStorage
-from .minio_store import MinIoStorage
 
 
 from opteryx.config import DATASET_PREFIX_MAPPING
-from opteryx.connectors import DiskStorage
-from opteryx.connectors import GcsStorage
-from opteryx.connectors import MinIoStorage
+from opteryx.connectors.disk_store import DiskStorage
+from opteryx.connectors.gcp_firestore import FireStoreStorage
+from opteryx.connectors.gcs_store import GcsStorage
+from opteryx.connectors.minio_store import MinIoStorage
+from opteryx.connectors.mongodb_store import MongoDbStorage
 
 
 WELL_KNOWN_ADAPTERS = {
     "disk": DiskStorage,
     "gcs": GcsStorage,
-    "firestore": None,
+    "firestore": FireStoreStorage,
     "minio": MinIoStorage,
-    "mongodb": None,
+    "mongodb": MongoDbStorage,
     "s3": MinIoStorage,
 }
 
@@ -48,7 +42,7 @@ else:
         )
 
 
-def register_prefix(prefix, adapter):
+def register_store(prefix, adapter):
     """add a prefix"""
     _storage_prefixes[prefix] = adapter
 

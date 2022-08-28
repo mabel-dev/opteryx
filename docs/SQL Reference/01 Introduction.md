@@ -59,7 +59,13 @@ This should give:
 
 Notice how the `AS` clause is used to relabel the output column. (The `AS` clause is optional.)
 
-A query can be “qualified” by adding a `WHERE` clause that specifies which rows are wanted. The `WHERE` clause contains a Boolean (truth value) expression, and only rows for which the Boolean expression is true are returned. The usual Boolean operators (`AND`, `OR`, and `NOT`) are allowed in the qualification. For example, the following the planets with fewer than 10 moons and a day longer than 24 hours:
+A query can be “qualified” by adding a `WHERE` clause that specifies which rows are wanted. The `WHERE` clause contains a Boolean (truth value) expression, and only rows for which the Boolean expression is true are returned. The usual Boolean operators (`AND`, `OR`, and `NOT`) are allowed in the qualification. 
+
+The `SELECT` clause can be thought of as choosing which columns we want from the relation, and the `WHERE` clause as choosing which rows we want from the relation.
+
+<img src="select-project.svg" width="420px">
+
+For example, the following the planets with fewer than 10 moons and a day longer than 24 hours:
 
 ~~~sql
 SELECT *

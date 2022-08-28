@@ -568,6 +568,8 @@ STATEMENTS = [
         ("SELECT $planets.* FROM $planets INNER JOIN (SELECT id FROM $planets) AS b USING (id)", 9, 21),
         # DOUBLE QUOTED STRING #399
         ("SELECT birth_place['town'] FROM $astronauts WHERE birth_place['town'] = \"Rome\"", 1, 1),
+        # COUNT incorrect
+        ("SELECT * FROM (SELECT COUNT(*) AS bodies FROM $planets) AS space WHERE space.bodies > 5", 1, 1),
     ]
 # fmt:on
 
@@ -578,7 +580,7 @@ def test_sql_battery(statement, rows, columns):
     Test an battery of statements
     """
 
-    opteryx.register_prefix("tests", DiskStorage)
+    opteryx.register_store("tests", DiskStorage)
 
     conn = opteryx.connect()
     cursor = conn.cursor()

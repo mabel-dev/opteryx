@@ -35,7 +35,7 @@ def populate_gcs():
     blob = bucket.blob("data/tweets/data.jsonl")
     blob.upload_from_string(data, content_type="application/octet-stream")
 
-    opteryx.register_prefix(BUCKET_NAME, GcsStorage)
+    opteryx.register_store(BUCKET_NAME, GcsStorage)
 
 
 def test_gcs_storage():

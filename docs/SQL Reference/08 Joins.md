@@ -19,7 +19,7 @@ SELECT *
  CROSS JOIN right_table;
 ~~~
 
-<img src="../diagrams/cross-join.svg" width="420px">
+<img src="cross-join.svg" width="420px">
 
 The size of the resultant dataset when using `CROSS JOIN` is length of the two datasets multiplied together (2 x 3 = 6, in the pictorial example), which can easily result in extremely large datasets. When an alternate join approach is possible, it will almost always perform better than a `CROSS JOIN`.
 
@@ -38,7 +38,7 @@ SELECT *
     ON left_table.column_name = right_table.column_name;
 ~~~
 
-<img src="../diagrams/inner-join.svg" width="420px">
+<img src="inner-join.svg" width="420px">
 
 In this example, the blue column is used as the joining column in both relations. Only the value `1` occurs in both relations so the resultant dataset is the combination of the row with `1` in _right_table_ and the row with `1` in _left_table_.
 
@@ -57,7 +57,7 @@ SELECT *
     ON left_table.column_name = right_table.column_name;
 ~~~
 
-<img src="../diagrams/left-join.svg" width="420px">
+<img src="left-join.svg" width="420px">
 
 ## RIGHT JOIN
 
@@ -78,4 +78,4 @@ SELECT *
     ON left_table.column_name = right_table.column_name;
 ~~~
 
-<img src="../diagrams/full-join.svg" width="420px">
+<img src="full-join.svg" width="420px">

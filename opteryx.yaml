@@ -1,0 +1,6 @@
+
+DATASET_PREFIX_MAPPING:
+  _: disk
+
+
+PARTITION_SCHEME: mabel

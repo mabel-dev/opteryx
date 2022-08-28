@@ -51,7 +51,7 @@ if __name__ == "__main__":
 
     CYCLES = 25
 
-    opteryx.register_prefix("tests", DiskStorage)
+    opteryx.register_store("tests", DiskStorage)
 
     conn = opteryx.connect(cache=cache)
 
