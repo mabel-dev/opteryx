@@ -187,7 +187,7 @@ class Cursor:
         """close the connection"""
         self._connection.close()
 
-    def head(self, size:int=10):  # pragma: no cover
+    def head(self, size: int = 10):  # pragma: no cover
 
         from opteryx.utils.display import html_table, ascii_table
 

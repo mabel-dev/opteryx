@@ -15,7 +15,7 @@ from pathlib import Path
 import pyarrow
 import yaml
 
-_config:dict = {}
+_config: dict = {}
 try:  # pragma: no cover
     _config_path = Path(".") / "opteryx.yaml"
     if _config_path.exists():
