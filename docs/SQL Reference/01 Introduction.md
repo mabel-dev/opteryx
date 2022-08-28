@@ -63,7 +63,7 @@ A query can be “qualified” by adding a `WHERE` clause that specifies which r
 
 The `SELECT` clause can be thought of as choosing which columns we want from the relation, and the `WHERE` clause as choosing which rows we want from the relation.
 
-<img src="select-project.svg" width="420px">
+![WHERE and SELECT](select-project.svg)
 
 For example, the following the planets with fewer than 10 moons and a day longer than 24 hours:
 
