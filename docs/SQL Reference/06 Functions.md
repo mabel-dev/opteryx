@@ -289,6 +289,15 @@ For more details, see [Working with Structs](https://mabel-dev.github.io/opteryx
 !!! function "`RANDOM` () → _numeric_"  
     Alias of `RAND`().
 
+!!! function "`SHA1` (**any**) → _varchar_"  
+    Calculate the SHA1 hash.
+
+!!! function "`SHA256` (**any**) → _varchar_"  
+    Calculate the SHA256 hash.
+
+!!! function "`SHA512` (**any**) → _varchar_"  
+    Calculate the SHA512 hash.
+
 !!! function "`UNNEST` (**array**: _list_) → _relation_"  
     Create a virtual relation with a row for each element in **array**.
 

@@ -42,14 +42,6 @@ def get_random():
         return 0
 
 
-def get_md5(item):
-    """calculate MD5 hash of a value"""
-    # this is slow but expected to not have a lot of use
-    import hashlib  # delay the import - it's rarely needed
-
-    return hashlib.md5(str(item).encode()).hexdigest()  # nosec - meant to be MD5
-
-
 def get_version():
     """return opteryx version"""
     return connection.__version__
@@ -198,7 +190,10 @@ FUNCTIONS = {
     "TITLE": compute.utf8_title,
     # HASHING & ENCODING
     "HASH": _iterate_single_parameter(lambda x: format(CityHash64(str(x)), "X")),
-    "MD5": _iterate_single_parameter(get_md5),
+    "MD5": _iterate_single_parameter(string_functions.get_md5),
+    "SHA1": _iterate_single_parameter(string_functions.get_sha1),
+    "SHA256": _iterate_single_parameter(string_functions.get_sha256),
+    "SHA512": _iterate_single_parameter(string_functions.get_sha512),
     "RANDOM": number_functions.random,
     "RAND": number_functions.random,
     # OTHER

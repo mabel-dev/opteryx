@@ -64,3 +64,31 @@ def soundex(arr):
             interim[index] = None
 
     return numpy.array(interim, dtype=numpy.str_)
+
+
+def get_md5(item):
+    """calculate MD5 hash of a value"""
+    import hashlib  # delay the import - it's rarely needed
+
+    return hashlib.md5(str(item).encode()).hexdigest()  # nosec - meant to be MD5
+
+
+def get_sha1(item):
+    """calculate SHA1 hash of a value"""
+    import hashlib  # delay the import - it's rarely needed
+
+    return hashlib.sha1(str(item).encode()).hexdigest()
+
+
+def get_sha256(item):
+    """calculate SHA256 hash of a value"""
+    import hashlib  # delay the import - it's rarely needed
+
+    return hashlib.sha256(str(item).encode()).hexdigest()
+
+
+def get_sha512(item):
+    """calculate SHA512 hash of a value"""
+    import hashlib  # delay the import - it's rarely needed
+
+    return hashlib.sha512(str(item).encode()).hexdigest()  # nosec - meant to be MD5
