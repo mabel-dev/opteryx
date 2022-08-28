@@ -4,11 +4,19 @@ All notable changes to this project will be documented in this file, where appro
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+**Added**
+
+**Changed**
+
+**Fixed**
+
 ## [0.3.0] - 2022-08-28
 
 **Added**
 
-- [[#196](https://github.com/mabel-dev/opteryx/issues/196)] Partial implementation of Selection pushdown (Parquet Only). ([@joocer](https://github.com/joocer))   
+- [[#196](https://github.com/mabel-dev/opteryx/issues/196)] Partial implementation of projection pushdown (Parquet Only). ([@joocer](https://github.com/joocer))   
 - [[#41](https://github.com/mabel-dev/opteryx/issues/41)] Enable the results of functions to be used as parameters for other functions. ([@joocer](https://github.com/joocer))  
 - [[#42](https://github.com/mabel-dev/opteryx/issues/42)] Enable inline operations. ([@joocer](https://github.com/joocer)) 
 - [[#330](https://github.com/mabel-dev/opteryx/issues/330)] Support `SIMILAR TO` alias for RegEx match. ([@joocer](https://github.com/joocer)) 
