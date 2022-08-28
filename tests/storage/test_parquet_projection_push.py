@@ -13,7 +13,7 @@ from opteryx.connectors import DiskStorage
 
 def test_parquet_projection_pushdown():
 
-    opteryx.register_prefix("tests", DiskStorage)
+    opteryx.register_store("tests", DiskStorage)
 
     # with pushdown
     conn = opteryx.connect()

@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file, where appro
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.3.0] - 2022-08-28
 
 **Added**
 
@@ -15,9 +15,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - [[#331](https://github.com/mabel-dev/opteryx/issues/331)] Support `SAFE_CAST` alias for `TRY_CAST`. ([@joocer](https://github.com/joocer)) 
 - [[#419](https://github.com/mabel-dev/opteryx/issues/419)] Various simple functions (`SIGN`, `SQRT`, `TITLE`, `REVERSE`). ([@joocer](https://github.com/joocer)) 
 - [[#364](https://github.com/mabel-dev/opteryx/issues/364)] Support `SOUNDEX` function. ([@joocer](https://github.com/joocer)) 
+- [[#401](https://github.com/mabel-dev/opteryx/issues/401)] Support SHA-based hash algorithm functions. ([@joocer](https://github.com/joocer)) 
 
 **Changed**
 
+- ⚠️**BREAKING** - Paths to storage adapters has been updated to reflect 'connector' terminology.
+- ⚠️**BREAKING** - Default behaviour changed from Mabel partitioning to no partitioning.
 - ⚠️**BREAKING** (correction) - Use of aliases defined in the `SELECT` clause can no longer be used in `WHERE` and `GROUP BY` clauses - this is a correction to align to standard SQL behaviour.
 - ⚠️**BREAKING** (correction) - Use of 'None' as an alias for 'Null' is no longer supported - this is a correction to align to standard SQL behaviour.
 - [[#326](https://github.com/mabel-dev/opteryx/issues/326)] Prefer pyarrow's 'promote' over manually handling missing fields. ([@joocer](https://github.com/joocer))   

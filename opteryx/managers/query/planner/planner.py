@@ -46,21 +46,19 @@ import numpy
 import pyarrow
 import sqloxide
 
+from opteryx import operators
 from opteryx.connectors import get_adapter
 from opteryx.exceptions import SqlError
 from opteryx.functions import is_function
 from opteryx.functions.binary_operators import BINARY_OPERATORS
-from opteryx import operators
-from opteryx.models import ExecutionTree
-from opteryx.managers.expression import ExpressionTreeNode
-from opteryx.managers.expression import NodeType
+from opteryx.managers.expression import ExpressionTreeNode, NodeType
 from opteryx.managers.query.planner.temporal import extract_temporal_filters
-from opteryx.models import Columns, QueryDirectives
+from opteryx.models import Columns, ExecutionTree, QueryDirectives
 from opteryx.utils import dates
 
 
 class QueryPlanner(ExecutionTree):
-    def __init__(self, statistics, cache=None):
+    def __init__(self, statistics, cache=None, directives=None):
         """
         Planner creates a plan (Execution Tree or DAG) which presents the plan to
         respond to the query.
@@ -70,7 +68,11 @@ class QueryPlanner(ExecutionTree):
         self._ast = None
 
         self._statistics = statistics
-        self._directives = QueryDirectives()
+        self._directives = (
+            QueryDirectives()
+            if not isinstance(directives, QueryDirectives)
+            else directives
+        )
         self._cache = cache
 
         self.start_date = datetime.datetime.utcnow().date()

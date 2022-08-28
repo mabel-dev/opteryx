@@ -35,7 +35,7 @@ def populate_minio():
 
 def test_minio_storage():
 
-    opteryx.register_prefix(BUCKET_NAME, MinIoStorage)
+    opteryx.register_store(BUCKET_NAME, MinIoStorage)
 
     populate_minio()
 

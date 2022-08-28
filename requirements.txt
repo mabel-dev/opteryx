@@ -2,6 +2,6 @@ cython
 numpy
 orjson
 cityhash
-sqloxide
-pyarrow
+sqloxide>=0.1.21
+pyarrow>=9.0.0
 pyyaml

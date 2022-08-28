@@ -32,7 +32,7 @@ except ImportError:  # pragma: no cover
 BATCH_SIZE = config.INTERNAL_BATCH_SIZE
 
 
-class MongoDbStore(BaseDocumentStorageAdapter):
+class MongoDbStorage(BaseDocumentStorageAdapter):
     def __init__(self):
         """establish the connection to mongodb"""
         mongo_connection = os.environ.get("MONGO_CONNECTION")

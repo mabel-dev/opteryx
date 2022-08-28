@@ -253,7 +253,7 @@ class HyperLogLog(object):  # pragma: no cover
         # Since p is no larger than 64, use 8 bits
         p_size = struct.calcsize("B")
         # Each register value is no larger than 64, use 8 bits
-        # TODO: is there a way to use 5 bits instead of 8 bits
+        # Is there a way to use 5 bits instead of 8 bits
         # to store integer in Python?
         reg_val_size = struct.calcsize("B")
         return p_size + reg_val_size * self.m

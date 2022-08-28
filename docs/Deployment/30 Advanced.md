@@ -13,7 +13,7 @@ Configuration values are set a `opteryx.yaml` file in the directory the applicat
 `BUFFER_PER_SUB_PROCESS`   | 100000000   | Memory to allocate per subprocess
 `MAXIMUM_SECONDS_SUB_PROCESSES_CAN_RUN ` | 3600 | Time to wait before killing subprocesses
 `DATASET_PREFIX_MAPPING`   | _ | reader
-`PARTITION_SCHEME`         | mabel       | How the blob/file data is partitioned
+`PARTITION_SCHEME`         | None        | How the blob/file data is partitioned
 `MAX_SIZE_SINGLE_CACHE_ITEM` | 1048576   | The maximum size of an item to store in the buffer cache
 `PAGE_SIZE`                | 67108864    | The size to try to make data pages as they are processed
 

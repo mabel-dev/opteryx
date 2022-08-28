@@ -6,8 +6,6 @@ This tests the various format readers.
 import os
 import sys
 
-import opteryx
-
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 import pyarrow
 import pytest
@@ -50,7 +48,7 @@ def test_sql_battery(statement, rows, columns):
     """
     Test an battery of statements
     """
-    opteryx.register_prefix("tests", DiskStorage)
+    opteryx.register_store("tests", DiskStorage)
 
     conn = opteryx.connect()
     cursor = conn.cursor()

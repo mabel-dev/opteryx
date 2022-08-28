@@ -6,9 +6,9 @@ The head of the current and previous minor version are supported for functional 
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 0.1     | :white_check_mark: |
 | 0.2     | :white_check_mark: |
-| <= 0.0  | :x:                |
+| 0.3     | :white_check_mark: |
+| <= 0.1  | :x:                |
 
 All features in supported versions have support to resolve security issues regardless, however features which are due for deprecation may be removed rather than fixed.
 

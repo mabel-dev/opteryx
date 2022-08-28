@@ -30,8 +30,7 @@ from opteryx import config
 from opteryx.exceptions import DatabaseError
 from opteryx.managers.schemes import MabelPartitionScheme
 from opteryx.managers.schemes import DefaultPartitionScheme
-from opteryx.models import Columns
-from opteryx.models import QueryDirectives, QueryStatistics
+from opteryx.models import Columns, QueryDirectives, QueryStatistics
 from opteryx.operators import BasePlanNode
 from opteryx.utils import file_decoders
 
@@ -129,12 +128,12 @@ class BlobReaderNode(BasePlanNode):
         # WITH hint can turn off partitioning, oatherwise get it from config
         if "NO_PARTITION" in config.get("hints", []) or PARTITION_SCHEME is None:
             self._partition_scheme = DefaultPartitionScheme("")  # type:ignore
-        elif PARTITION_SCHEME != "mabel":
+        elif PARTITION_SCHEME == "mabel":
+            self._partition_scheme = MabelPartitionScheme()  # type:ignore
+        else:
             self._partition_scheme = DefaultPartitionScheme(
                 PARTITION_SCHEME
             )  # type:ignore
-        else:
-            self._partition_scheme = MabelPartitionScheme()  # type:ignore
 
         self._start_date = config.get("start_date", today)
         self._end_date = config.get("end_date", today)

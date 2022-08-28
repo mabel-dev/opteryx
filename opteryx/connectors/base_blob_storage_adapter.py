@@ -28,7 +28,7 @@ class BaseBlobStorageAdapter(abc.ABC):
         self,
         *,
         dataset: str,
-        partitioning: Iterable = ("year_{yyyy}", "month_{mm}", "day_{dd}"),
+        partitioning: Iterable = None,  # ("year_{yyyy}", "month_{mm}", "day_{dd}"),
         start_date: Union[
             datetime.datetime, datetime.date, str
         ] = datetime.date.today(),

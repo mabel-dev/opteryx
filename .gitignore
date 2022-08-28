@@ -153,6 +153,5 @@ tests/data/half/**
 shelf/**
 tests/data/zoned/**
 tests/data/parquet/**
-opteryx.yaml
 data/**
 opteryx/third_party/soundex.c
