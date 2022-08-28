@@ -246,3 +246,7 @@ def is_function(name):
     sugar
     """
     return name.upper() in FUNCTIONS
+
+
+def functions():
+    return list(FUNCTIONS.keys())
