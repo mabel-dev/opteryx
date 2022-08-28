@@ -10,7 +10,7 @@ import sys
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
-from opteryx.engine.planner.operations import SelectionNode
+from opteryx.models.planner.operations import SelectionNode
 from opteryx.sample_data import PlanetData
 
 

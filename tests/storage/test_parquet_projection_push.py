@@ -8,13 +8,12 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import opteryx
 
-from opteryx.storage.adapters.blob import DiskStorage
-from opteryx.storage import register_prefix
+from opteryx.connectors import DiskStorage
 
 
 def test_parquet_projection_pushdown():
 
-    register_prefix("tests", DiskStorage)
+    opteryx.register_prefix("tests", DiskStorage)
 
     # with pushdown
     conn = opteryx.connect()

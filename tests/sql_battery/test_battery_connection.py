@@ -12,7 +12,7 @@ import pyarrow
 import pytest
 
 import opteryx
-from opteryx.storage.adapters import DiskStorage
+from opteryx.connectors import DiskStorage
 from opteryx.utils.arrow import fetchmany
 from opteryx.utils.display import ascii_table
 

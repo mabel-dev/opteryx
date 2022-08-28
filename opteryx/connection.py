@@ -21,10 +21,9 @@ import time
 
 from typing import Dict, List, Optional
 
-from opteryx.engine.planner import QueryPlanner
-from opteryx.engine import QueryStatistics
 from opteryx.exceptions import CursorInvalidStateError, ProgrammingError, SqlError
-from opteryx.storage import BaseBufferCache
+from opteryx.managers.cache import BaseBufferCache
+from opteryx.models import QueryStatistics
 from opteryx.utils import arrow
 
 CURSOR_NOT_RUN = "Cursor must be in an executed state"
@@ -122,6 +121,9 @@ class Cursor:
                 raise ProgrammingError(
                     "Number of placeholders and number of parameters must match."
                 )
+
+        # circular imports
+        from opteryx.managers.query.planner import QueryPlanner
 
         self._query_plan = QueryPlanner(
             statistics=self._stats,

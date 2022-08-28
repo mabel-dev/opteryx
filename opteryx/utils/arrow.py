@@ -89,7 +89,7 @@ def consolidate_pages(pages, statistics):
 
 def fetchmany(pages, limit: int = 1000):
     """fetch records from a Table as Python Dicts"""
-    from opteryx.utils.columns import Columns  # circular imports
+    from opteryx.models.columns import Columns  # circular imports
 
     if pages is None:
         return []

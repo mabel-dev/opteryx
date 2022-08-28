@@ -12,8 +12,7 @@ from minio import Minio  # type:ignore
 
 import opteryx
 
-from opteryx.storage.adapters.blob import MinIoStorage
-from opteryx.storage import register_prefix
+from opteryx.connectors import MinIoStorage
 
 
 BUCKET_NAME = "miniobucket"
@@ -36,7 +35,7 @@ def populate_minio():
 
 def test_minio_storage():
 
-    register_prefix(BUCKET_NAME, MinIoStorage)
+    opteryx.register_prefix(BUCKET_NAME, MinIoStorage)
 
     populate_minio()
 
