@@ -23,12 +23,12 @@ A more complete example using the `register_prefix` method to set up a connector
 
 ~~~python
 import opteryx
-from opteryx.storage.adapters.blob import GcsStorage
+from opteryx.connectors import GcsStorage
 
 # Tell the storage engine that datasets with the prefix 'your_bucket' are
 # to be read using the GcsStorage adapter. Multiple prefixes can be added
 # and do not need to be the same adapter.
-opteryx.storage.register_prefix("your_bucket", GcsStorage)
+opteryx.register_prefix("your_bucket", GcsStorage)
 
 connextion = opteryx.connect()
 cursor = connection.cursor()

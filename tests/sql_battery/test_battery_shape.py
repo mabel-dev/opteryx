@@ -279,6 +279,9 @@ STATEMENTS = [
         ("SELECT TODAY()", 1, 1),
         ("SELECT HASH('hello')", 1, 1),
         ("SELECT MD5('hello')", 1, 1),
+        ("SELECT SHA1('hello')", 1, 1),
+        ("SELECT SHA256('hello')", 1, 1),
+        ("SELECT SHA512('hello')", 1, 1),
         ("SELECT UPPER('upper'), LOWER('LOWER')", 1, 2),
 
         ("SELECT HASH(name), name from $astronauts", 357, 2),
