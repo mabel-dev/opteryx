@@ -46,15 +46,14 @@ import numpy
 import pyarrow
 import sqloxide
 
-from opteryx import operators
+from opteryx import operators, functions
 from opteryx.connectors import get_adapter
 from opteryx.exceptions import SqlError
-from opteryx.functions import is_function
 from opteryx.functions.binary_operators import BINARY_OPERATORS
 from opteryx.managers.expression import ExpressionTreeNode, NodeType
 from opteryx.managers.query.planner.temporal import extract_temporal_filters
 from opteryx.models import Columns, ExecutionTree, QueryDirectives
-from opteryx.utils import dates
+from opteryx.utils import dates, fuzzy_search
 
 
 class QueryPlanner(ExecutionTree):
@@ -320,10 +319,20 @@ class QueryPlanner(ExecutionTree):
         if "Function" in function:
             func = function["Function"]["name"][0]["value"].upper()
             args = [self._filter_extract(a) for a in function["Function"]["args"]]
-            if is_function(func):
+            if functions.is_function(func):
                 node_type = NodeType.FUNCTION
-            else:
+            elif operators.is_aggregator(func):
                 node_type = NodeType.AGGREGATOR
+            else:
+                likely_match = fuzzy_search(
+                    func, operators.aggregators() + functions.functions()
+                )
+                if likely_match is None:
+                    raise SqlError(f"Unknown function or aggregate '{func}'")
+                raise SqlError(
+                    f"Unknown function or aggregate '{func}'. Did you mean '{likely_match}'?"
+                )
+
             return ExpressionTreeNode(
                 token_type=node_type, value=func, parameters=args, alias=alias
             )

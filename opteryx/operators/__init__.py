@@ -57,3 +57,11 @@ def join_factory(mode):
 
 def reader_factory(mode):
     return _reader_nodes[mode]
+
+
+def is_aggregator(name):
+    return name in aggregate_node.AGGREGATORS
+
+
+def aggregators():
+    return list(aggregate_node.AGGREGATORS.keys())

@@ -46,3 +46,21 @@ def peak(generator):  # type:ignore
     except StopIteration:
         return None
     return item, itertools.chain(item, generator)
+
+
+def fuzzy_search(name, candidates):
+    """
+    Find closest match using a Levenshtein Distance variation
+    """
+    from opteryx.third_party.mbleven import compare
+
+    best_match_column = None
+    best_match_score = 100
+
+    for candidate in candidates:
+        my_dist = compare(candidate, name)
+        if 0 < my_dist < best_match_score:
+            best_match_score = my_dist
+            best_match_column = candidate
+
+    return best_match_column

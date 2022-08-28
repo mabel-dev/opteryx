@@ -1,6 +1,6 @@
 # Contributor Guide
 
-Welcome to the Opteryx Contributor Guide.
+**Welcome to the Opteryx Contributor Guide.**
 
 In this section you will find information to help you to bring your unique skills and experience and join us in building 
 
@@ -18,10 +18,12 @@ Pull requests that add support for, or fix a bug in, a feature in a popular RDBM
 
 We have included a number of tests which run automatically when code is submitted to help maintain consistency and quality of the codebase, note that these may not be automatically triggered for new contributors. Pull requests which do not meet the quality criteria will not be reviewed or merged.
 
-Changes should have:
-- Corresponding unit/regression tests
-- A clean execution of the CI tests 
-- Attributed external sources
+Changes should have:  
+
+- Corresponding unit and regression tests  
+- A clean execution of the CI tests   
+- Updated documentation (code-level, module-level and docs/ folder as appropriate)
+- Attributed external sources  
 
 ### Gitter
 
