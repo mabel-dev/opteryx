@@ -8,7 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 **Added**
 
-- [[#366](https://github.com/mabel-dev/opteryx/issues/336)] Implement function not found suggestions. ([@joocer](https://github.com/joocer))   
+- [[#366](https://github.com/mabel-dev/opteryx/issues/336)] Implement 'function not found' suggestions. ([@joocer](https://github.com/joocer))   
+- [[#443](https://github.com/mabel-dev/opteryx/issues/443)] Introduce a CLI. ([@joocer](https://github.com/joocer))  
 
 **Changed**
 
