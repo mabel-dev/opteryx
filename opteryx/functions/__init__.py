@@ -20,6 +20,8 @@ from cityhash import CityHash64
 from pyarrow import compute
 from pyarrow import ArrowNotImplementedError
 
+import opteryx
+
 from opteryx.exceptions import SqlError
 from opteryx.functions import date_functions
 from opteryx.functions import number_functions
@@ -41,7 +43,7 @@ def get_random():
 
 def get_version():
     """return opteryx version"""
-    return connection.__version__
+    return opteryx.__version__
 
 
 def _get(value, item):

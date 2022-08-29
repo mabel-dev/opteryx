@@ -586,6 +586,8 @@ STATEMENTS = [
         ("SELECT birth_place['town'] FROM $astronauts WHERE birth_place['town'] = \"Rome\"", 1, 1),
         # COUNT incorrect
         ("SELECT * FROM (SELECT COUNT(*) AS bodies FROM $planets) AS space WHERE space.bodies > 5", 1, 1),
+        # REGRESSION
+        ("SELECT VERSION()", 1, 1),
     ]
 # fmt:on
 
