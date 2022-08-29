@@ -28,3 +28,10 @@ def round(*args):
 
 def random(size):
     return numpy.random.uniform(size=size)
+
+
+def random_normal(size):
+    from numpy.random import default_rng
+
+    rng = default_rng()
+    return rng.standard_normal(size)

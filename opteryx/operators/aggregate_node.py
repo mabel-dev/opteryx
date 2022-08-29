@@ -57,6 +57,7 @@ AGGREGATORS = {
     "MINIMUM": "min",  # alias
     "MIN_MAX": "min_max",
     "ONE": "hash_one",
+    "ANY_VALUE": "hash_one",
     "PRODUCT": "product",
     "STDDEV": "stddev",
     "SUM": "sum",

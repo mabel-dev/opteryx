@@ -8,6 +8,9 @@ Aggregate functions generally ignore `NULL` values when performing calculations.
 
 ## General Functions
 
+!!! function "`ANY_VALUE` (**column**) → _any_"  
+    Select any single value from the grouping.  
+
 !!! function "`APPROXIMATE_MEDIAN` (**column**: _numeric_) → _numeric_"  
     Approximate median of a column with T-Digest algorithm.
 
@@ -42,7 +45,7 @@ Aggregate functions generally ignore `NULL` values when performing calculations.
     The minimum and maximum values in **column**.  
 
 !!! function "`ONE` (**column**) → _any_"  
-    Select a single value from the grouping.  
+    Alias for 'ANY_VALUE'()  
 
 !!! function "`PRODUCT` (**column**: _numeric_) → _numeric_"  
     The product of values in **column**.  
