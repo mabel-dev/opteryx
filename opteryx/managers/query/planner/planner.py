@@ -118,7 +118,7 @@ class QueryPlanner(ExecutionTree):
             self._explain_planner(self._ast, self._statistics)
         elif "ShowColumns" in self._ast[0]:
             self._show_columns_planner(self._ast, self._statistics)
-        if "ShowVariable" in self._ast[0]:
+        elif "ShowVariable" in self._ast[0]:
             self._show_variable_planner(self._ast, self._statistics)
         else:  # pragma: no cover
             raise SqlError("Unknown or unsupported Query type.")
