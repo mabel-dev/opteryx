@@ -10,6 +10,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from email.mime import base
 import numpy
 
 
@@ -92,3 +93,57 @@ def get_sha512(item):
     import hashlib  # delay the import - it's rarely needed
 
     return hashlib.sha512(str(item).encode()).hexdigest()  # nosec - meant to be MD5
+
+
+def get_base64_encode(item):
+    """calculate BASE64 encoding of a string"""
+    import base64
+
+    if not isinstance(item, bytes):
+        item = str(item).encode()
+    return base64.b64encode(item).decode("UTF8")
+
+
+def get_base64_decode(item):
+    """calculate BASE64 encoding of a string"""
+    import base64
+
+    if not isinstance(item, bytes):
+        item = str(item).encode()
+    return base64.b64decode(item).decode("UTF8")
+
+
+def get_base85_encode(item):
+    """calculate BASE85 encoding of a string"""
+    import base64
+
+    if not isinstance(item, bytes):
+        item = str(item).encode()
+    return base64.b85encode(item).decode("UTF8")
+
+
+def get_base85_decode(item):
+    """calculate BASE85 encoding of a string"""
+    import base64
+
+    if not isinstance(item, bytes):
+        item = str(item).encode()
+    return base64.b85decode(item).decode("UTF8")
+
+
+def get_hex_encode(item):
+    """calculate HEX encoding of a string"""
+    import base64
+
+    if not isinstance(item, bytes):
+        item = str(item).encode()
+    return base64.b16encode(item).decode("UTF8")
+
+
+def get_hex_decode(item):
+    """calculate HEX encoding of a string"""
+    import base64
+
+    if not isinstance(item, bytes):
+        item = str(item).encode()
+    return base64.b16decode(item).decode("UTF8")

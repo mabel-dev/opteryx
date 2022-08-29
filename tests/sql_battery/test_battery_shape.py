@@ -197,6 +197,9 @@ STATEMENTS = [
         ("SELECT VARCHAR(planetId) FROM $satellites GROUP BY planetId, VARCHAR(planetId)", 7, 1),
         ("SELECT TIMESTAMP(planetId) FROM $satellites GROUP BY planetId, TIMESTAMP(planetId)", 7, 1),
         ("SELECT NUMERIC(planetId) FROM $satellites GROUP BY planetId, NUMERIC(planetId)", 7, 1),
+        ("SELECT INT(planetId) FROM $satellites GROUP BY planetId, INT(planetId)", 7, 1),
+        ("SELECT INTEGER(planetId) FROM $satellites GROUP BY planetId, INTEGER(planetId)", 7, 1),
+        ("SELECT FLOAT(planetId) FROM $satellites GROUP BY planetId, FLOAT(planetId)", 7, 1),
         ("SELECT CAST(planetId AS BOOLEAN) FROM $satellites", 177, 1),
         ("SELECT CAST(planetId AS VARCHAR) FROM $satellites", 177, 1),
         ("SELECT CAST(planetId AS TIMESTAMP) FROM $satellites", 177, 1),
@@ -473,6 +476,7 @@ STATEMENTS = [
         ("SELECT COUNT_DISTINCT(planetId) FROM $satellites", 1, 1),
         ("SELECT LIST(name), planetId FROM $satellites GROUP BY planetId", 7, 2),
         ("SELECT ONE(name), planetId FROM $satellites GROUP BY planetId", 7, 2),
+        ("SELECT ANY_VALUE(name), planetId FROM $satellites GROUP BY planetId", 7, 2),
         ("SELECT MAX(planetId) FROM $satellites", 1, 1),
         ("SELECT MAXIMUM(planetId) FROM $satellites", 1, 1),
         ("SELECT MEAN(planetId) FROM $satellites", 1, 1),
@@ -501,6 +505,18 @@ STATEMENTS = [
         ("SELECT a.id, b.id FROM $planets AS a INNER JOIN (SELECT id FROM $planets) AS b USING (id)", 9, 2),
         ("SELECT * FROM $planets INNER JOIN $planets AS b USING (id)", 9, 40),
         ("SELECT ROUND(5 + RAND() * (10 - 5)) rand_between FROM $planets", 9, 1),
+
+        ("SELECT BASE64_DECODE(BASE64_ENCODE('this is a string'));", 1, 1),
+        ("SELECT BASE64_ENCODE('this is a string');", 1, 1),
+        ("SELECT BASE64_DECODE('aGVsbG8=')", 1, 1),
+        ("SELECT BASE85_DECODE(BASE85_ENCODE('this is a string'));", 1, 1),
+        ("SELECT BASE85_ENCODE('this is a string');", 1, 1),
+        ("SELECT BASE85_DECODE('Xk~0{Zv')", 1, 1),
+        ("SELECT HEX_DECODE(HEX_ENCODE('this is a string'));", 1, 1),
+        ("SELECT HEX_ENCODE('this is a string');", 1, 1),
+        ("SELECT HEX_DECODE('68656C6C6F')", 1, 1),
+        ("SELECT NORMAL()", 1, 1),
+        ("SELECT NORMAL() FROM $astronauts", 357, 1),
 
         # These are queries which have been found to return the wrong result or not run correctly
         # FILTERING ON FUNCTIONS
@@ -606,7 +622,7 @@ if __name__ == "__main__":  # pragma: no cover
 
     print(f"RUNNING BATTERY OF {len(STATEMENTS)} SHAPE TESTS")
     for index, (statement, rows, cols) in enumerate(STATEMENTS):
-        print(f"{index:04}", statement)
+        print(f"{(index + 1):04}", statement)
         test_sql_battery(statement, rows, cols)
 
     print("✅ okay")

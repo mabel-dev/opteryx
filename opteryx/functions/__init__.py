@@ -163,6 +163,7 @@ def _raise_exception(text):
 # the first entry is NONE.
 FUNCTIONS = {
     "VERSION": _repeat_no_parameters(get_version),
+
     # TYPE CONVERSION
     "TIMESTAMP": cast("TIMESTAMP"),
     "BOOLEAN": cast("BOOLEAN"),
@@ -174,6 +175,7 @@ FUNCTIONS = {
     "TRY_NUMERIC": try_cast("NUMERIC"),
     "TRY_VARCHAR": try_cast("VARCHAR"),
     "TRY_STRING": try_cast("VARCHAR"),  # alias for VARCHAR
+
     # STRINGS
     "LEN": _iterate_single_parameter(get_len),  # LENGTH(str) -> int
     "LENGTH": _iterate_single_parameter(get_len),  # LENGTH(str) -> int
@@ -185,6 +187,7 @@ FUNCTIONS = {
     "REVERSE": compute.utf8_reverse,
     "SOUNDEX": string_functions.soundex,
     "TITLE": compute.utf8_title,
+
     # HASHING & ENCODING
     "HASH": _iterate_single_parameter(lambda x: format(CityHash64(str(x)), "X")),
     "MD5": _iterate_single_parameter(string_functions.get_md5),
@@ -193,6 +196,14 @@ FUNCTIONS = {
     "SHA512": _iterate_single_parameter(string_functions.get_sha512),
     "RANDOM": number_functions.random,
     "RAND": number_functions.random,
+    "NORMAL": number_functions.random_normal,
+    "BASE64_ENCODE": _iterate_single_parameter(string_functions.get_base64_encode),
+    "BASE64_DECODE": _iterate_single_parameter(string_functions.get_base64_decode),
+    "BASE85_ENCODE": _iterate_single_parameter(string_functions.get_base85_encode),
+    "BASE85_DECODE": _iterate_single_parameter(string_functions.get_base85_decode),
+    "HEX_ENCODE": _iterate_single_parameter(string_functions.get_hex_encode),
+    "HEX_DECODE": _iterate_single_parameter(string_functions.get_hex_decode),
+
     # OTHER
     "GET": _iterate_double_parameter(_get),  # GET(LIST, index) => LIST[index] or GET(STRUCT, accessor) => STRUCT[accessor]
     "LIST_CONTAINS": _iterate_double_parameter(other_functions.list_contains),
@@ -213,6 +224,10 @@ FUNCTIONS = {
     "TRUNC": compute.trunc,
     "TRUNCATE": compute.trunc,
     "PI": _repeat_no_parameters(number_functions.pi),
+    "INT": _iterate_single_parameter(int),
+    "INTEGER": _iterate_single_parameter(int),
+    "FLOAT": _iterate_single_parameter(float),
+
     # DATES & TIMES
     "DATE_TRUNC": _iterate_double_parameter_field_second(date_trunc),
     "TIME_BUCKET": date_functions.date_floor,

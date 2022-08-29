@@ -5,12 +5,23 @@ Definitions noted with a 🔻 accept different input arguments.
 ## Conversion Functions
 
 !!! function "`BOOLEAN` (**any**: _any_) → _boolean_"  
-    Cast **any** to a `boolean`, raises an error if cast is not possible.   
+    Cast **any** to a `BOOLEAN`, raises an error if cast is not possible.   
     Alias for `CAST`(**any** AS BOOLEAN).   
 
 !!! function "`CAST` (**any**: _any_ AS **type**) → _[type]_"  
     Cast **any** to **type**, raises an error if cast is not possible.   
     Also implemented as individual cast functions.
+
+!!! function "`INT` (**num**: _numeric_) → _numeric_"  
+    Alias for `INTEGER`.
+
+!!! function "`INTEGER` (**num**: _numeric_) → _numeric_"  
+    Convert **num** to an integer.   
+    `INTEGER` is a psuedo-type, `CAST` is not supported and values may be coerced to `NUMERIC`.
+
+!!! function "`FLOAT` (**num**: _numeric_) → _numeric_"  
+    Convert **num** to a floating point number.   
+    `FLOAT` is a psuedo-type, `CAST` is not supported and values may be coerced to `NUMERIC`..
 
 !!! function "`NUMERIC` (**any**: _any_) → _numeric_"  
     Cast **any** to a floating point number, raises an error if cast is not possible.   
@@ -259,6 +270,18 @@ For more details, see [Working with Structs](https://mabel-dev.github.io/opteryx
 
 ## Other Functions
 
+!!! function "`BASE64_DECODE` (**any**) → _varchar_"  
+    Decode a value which has been encoded using BASE64 encoding.
+
+!!! function "`BASE64_ENCODE` (**any**) → _varchar_"  
+    Encode value with BASE64 encoding.
+
+!!! function "`BASE85_DECODE` (**any**) → _varchar_"  
+    Decode a value which has been encoded using BASE85 encoding.
+
+!!! function "`BASE85_ENCODE` (**any**) → _varchar_"  
+    Encode value with BASE85 encoding.
+
 !!! function "`COALESCE` (**arg1**, **arg2**, ...) → _[input type]_"  
     Return the first item from args which is not `NULL`.   
 
@@ -279,6 +302,15 @@ For more details, see [Working with Structs](https://mabel-dev.github.io/opteryx
 
 !!! function "`HASH` (**any**) → _varchar_"  
     Calculate the [CityHash](https://opensource.googleblog.com/2011/04/introducing-cityhash.html) (64 bit).
+
+!!! function "`HEX_DECODE` (**any**) → _varchar_"  
+    Decode a value which has been encoded using HEX (BASE16) encoding.
+
+!!! function "`HEX_ENCODE` (**any**) → _varchar_"  
+    Encode value with HEX (BASE16) encoding.
+
+!!! function "`NORMAL` () → _numeric_"  
+    Random number from a normal (Gaussian) distribution; distribution is centred at 0.0 and have a standard deviation of 1.0.
 
 !!! function "`MD5` (**any**) → _varchar_"  
     Calculate the MD5 hash.
