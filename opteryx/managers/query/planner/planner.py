@@ -118,6 +118,8 @@ class QueryPlanner(ExecutionTree):
             self._explain_planner(self._ast, self._statistics)
         elif "ShowColumns" in self._ast[0]:
             self._show_columns_planner(self._ast, self._statistics)
+        if "ShowVariable" in self._ast[0]:
+            self._show_variable_planner(self._ast, self._statistics)
         else:  # pragma: no cover
             raise SqlError("Unknown or unsupported Query type.")
 
@@ -719,6 +721,40 @@ class QueryPlanner(ExecutionTree):
                 identifiers.extend(self._extract_identifiers(item))
 
         return list(set(identifiers))
+
+    def _show_variable_planner(self, ast, statistics):
+        """
+        SHOW <variable> only really has a single node.
+
+        All of the keywords should up as a 'values' list in the variable in the ast.
+
+        The last word is the variable, preceeding words are modifiers.
+        """
+
+        directives = self._extract_directives(ast)
+
+        keywords = [
+            value["value"].upper() for value in ast[0]["ShowVariable"]["variable"]
+        ]
+        if keywords[-1] == "FUNCTIONS":
+            show_node = "show_functions"
+            node = operators.ShowFunctionsNode(
+                directives=directives,
+                statistics=statistics,
+            )
+            self.add_operator(show_node, operator=node)
+        else:
+            raise SqlError(f"SHOW statement type not supported for `{keywords[-1]}`.")
+
+        name_column = ExpressionTreeNode(NodeType.IDENTIFIER, value="name")
+
+        order_by_node = operators.SortNode(
+            directives=directives,
+            statistics=statistics,
+            order=[([name_column], "ascending")],
+        )
+        self.add_operator("order", operator=order_by_node)
+        self.link_operators(show_node, "order")
 
     def _naive_select_planner(self, ast, statistics):
         """
