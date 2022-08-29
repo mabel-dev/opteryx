@@ -139,10 +139,10 @@ LIMIT count
 List the columns in a relation along with their data type. Without any modifiers, `SHOW COLUMNS` only reads a single page of data before returning.
 
 ~~~sql
- SHOW [EXTENDED] [FULL] COLUMNS
- FROM relation
- LIKE pattern
-  FOR period
+SHOW [EXTENDED] [FULL] COLUMNS
+FROM relation
+LIKE pattern
+ FOR period
 ~~~
 
 ### EXTENDED modifier
@@ -176,3 +176,11 @@ FOR DATES IN range
 The `FOR` clause specifies the date to review data for. Although this supports the full syntax as per the `SELECT` statements.
 
 See [Temporality](https://mabel-dev.github.io/opteryx/SQL%20Reference/09%20Temporality/) for more information on `FOR` syntax and functionality.
+
+## SHOW FUNCTIONS
+
+List the functions and aggregators supported by the engine.
+
+~~~sql
+SHOW FUNCTIONS
+~~~
