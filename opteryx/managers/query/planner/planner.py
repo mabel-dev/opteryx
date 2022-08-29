@@ -743,7 +743,7 @@ class QueryPlanner(ExecutionTree):
                 statistics=statistics,
             )
             self.add_operator(show_node, operator=node)
-        else:
+        else:  # pragma: no cover
             raise SqlError(f"SHOW statement type not supported for `{keywords[-1]}`.")
 
         name_column = ExpressionTreeNode(NodeType.IDENTIFIER, value="name")
