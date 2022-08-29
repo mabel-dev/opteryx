@@ -2,9 +2,7 @@ name: Static Analysis
 
 on:
   workflow_call
-  push:
-    branches:
-      - main
+  push
 
 jobs:
   test:
