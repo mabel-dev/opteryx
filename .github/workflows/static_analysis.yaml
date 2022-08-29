@@ -1,8 +1,8 @@
 name: Static Analysis
 
 on:
-  workflow_call
-  push
+  - workflow_call
+  - push
 
 jobs:
   test:
