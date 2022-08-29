@@ -39,6 +39,6 @@ setup(
     install_requires=required,
     ext_modules=cythonize(extensions),
     entry_points={
-        'console_scripts': ['opteryx=opteryx.command:main'],
-    }
+        "console_scripts": ["opteryx=opteryx.command:main"],
+    },
 )

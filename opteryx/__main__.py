@@ -25,12 +25,14 @@ import opteryx
 from opteryx.managers.query.planner.temporal import extract_temporal_filters
 from opteryx.utils.display import ascii_table
 
+
 def main(
     ast: bool = typer.Option(False, help="Display the AST for the query"),
-    sql: str = typer.Argument(None)):
+    sql: str = typer.Argument(None),
+):
 
     print(f"Opteryx version {opteryx.__version__}")
-    
+
     if ast:
         _, _, temporal_removed_sql = extract_temporal_filters(sql)
         ast = sqloxide.parse_sql(temporal_removed_sql, dialect="mysql")
@@ -42,6 +44,7 @@ def main(
     cur.execute(sql)
 
     print(ascii_table(cur.fetchmany(size=5), limit=200))
+
 
 #    [a for a in cur.fetchall()]
 #    print(json.dumps(cur.stats, indent=2))
