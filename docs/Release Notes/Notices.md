@@ -17,6 +17,7 @@ Component | Disposition | Copyright | Licence
 [pyyaml](https://pyyaml.org/)                              | Installed   | . | [MIT](https://github.com/yaml/pyyaml/blob/master/LICENSE)
 [sqloxide](https://github.com/wseaton/sqloxide)            | Installed   | . | [MIT](https://github.com/wseaton/sqloxide/blob/master/LICENSE)
 [sqlparser-rs](https://github.com/sqlparser-rs/sqlparser-rs) | Transitive | . | [Apache 2.0](https://github.com/sqlparser-rs/sqlparser-rs/blob/main/LICENSE.TXT)
+[typer](https://github.com/tiangolo/typer)                 | Installed   | . | [MIT](https://github.com/tiangolo/typer/blob/master/LICENSE)
 
 - **Installed** components are installed from PyPI
 - **Integrated** components have their source code included in the Opteryx codebase
@@ -24,8 +25,8 @@ Component | Disposition | Copyright | Licence
 
 Integrated components may differ from their original form. Cosmetic changes are not generally noted however where functionality has been added or altered, this should be recorded in comments.
 
-!!! Note
-    License information was correct as at 2022-06-03
+!!! Note   
+    License information was correct as at 2022-06-03, or when updated in this document if later.
 
 **Other Assets**
 

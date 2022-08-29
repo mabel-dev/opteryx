@@ -38,4 +38,7 @@ setup(
     url="https://github.com/mabel-dev/opteryx/",
     install_requires=required,
     ext_modules=cythonize(extensions),
+    entry_points={
+        'console_scripts': ['opteryx=opteryx.command:main'],
+    }
 )

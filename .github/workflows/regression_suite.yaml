@@ -84,7 +84,7 @@ jobs:
           GCP_PROJECT_ID: mabel
 
       - name: Check Coverage
-        run: coverage report --include=opteryx* --fail-under=90 -m
+        run: coverage report --include=opteryx* --fail-under=92 -m
 
       - name: "Upload coverage to Codecov"
         uses: codecov/codecov-action@v1
