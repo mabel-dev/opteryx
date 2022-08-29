@@ -1,4 +1,4 @@
-<img align="centre" alt="archaeopteryx" height="132" src="archaeopteryx-fossil.svg" />
+![archaeopteryx](archaeopteryx-fossil.png)
 
 # Opteryx
 
@@ -6,7 +6,7 @@
 
 **Opteryx is a SQL Engine written in Python, designed for cloud-native environments.**
 
-### [Documentation](https://mabel-dev.github.io/opteryx/) | [Examples](notebooks) | [Contributing](https://mabel-dev.github.io/opteryx/Contributing%20Guide/CONTRIBUTING/)
+### [Documentation](https://mabel-dev.github.io/opteryx/) | [Examples](https://github.com/mabel-dev/opteryx/tree/main/notebooks) | [Contributing](https://mabel-dev.github.io/opteryx/Contributor%20Guide/01%20Guide/)
 
 [![PyPI Latest Release](https://img.shields.io/pypi/v/opteryx.svg)](https://pypi.org/project/opteryx/)
 [![opteryx](https://snyk.io/advisor/python/opteryx/badge.svg?style=flat-square)](https://snyk.io/advisor/python/opteryx)
