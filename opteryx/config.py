@@ -31,7 +31,7 @@ except Exception as exception:  # it doesn't matter why - just use the defaults
 # The maximum input frame size for JOINs
 INTERNAL_BATCH_SIZE: int = int(_config.get("INTERNAL_BATCH_SIZE", 500))
 # The maximum number of records to create in a CROSS JOIN frame
-MAX_JOIN_SIZE: int = int(_config.get("MAX_JOIN_SIZE", 1000000))
+MAX_JOIN_SIZE: int = int(_config.get("MAX_JOIN_SIZE", 10000))
 # The maximum number of processors to use for multi processing
 MAX_SUB_PROCESSES: int = int(_config.get("MAX_SUB_PROCESSES", pyarrow.io_thread_count()))
 # The number of bytes to allocate for each processor

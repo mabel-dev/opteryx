@@ -20,6 +20,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - [[#448](https://github.com/mabel-dev/opteryx/issues/448)] `VERSION()` failed and missing from regression suite. ([@joocer](https://github.com/joocer)) 
 - [[#404](https://github.com/mabel-dev/opteryx/issues/404)] `COALESCE` fails for NaN values. ([@joocer](https://github.com/joocer))   
 - [[#453](https://github.com/mabel-dev/opteryx/issues/453)] PyArrow bug with long lists creating new columns. ([@joocer](https://github.com/joocer))   
+- [[#444](https://github.com/mabel-dev/opteryx/issues/444)] Very low cardinality `INNER JOINS` exceed memory allocation. ([@joocer](https://github.com/joocer))   
 
 ## [0.3.0] - 2022-08-28
 

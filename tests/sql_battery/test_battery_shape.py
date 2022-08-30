@@ -545,9 +545,9 @@ STATEMENTS = [
         ("SELECT * FROM tests.data.framed FOR DATES BETWEEN '2021-03-28' AND '2021-03-29'", 200000, 1),
         ("SELECT * FROM tests.data.framed FOR DATES BETWEEN '2021-03-29' AND '2021-03-30'", 100000, 1),
         ("SELECT * FROM tests.data.framed FOR DATES BETWEEN '2021-03-28' AND '2021-03-30'", 200000, 1),
-        # PAGING OF DATASETS AFTER A GROUP BY (#179)
+        # PAGING OF DATASETS AFTER A GROUP BY [#179]
         ("SELECT * FROM (SELECT COUNT(*), column_1 FROM FAKE(5000,2) GROUP BY column_1 ORDER BY COUNT(*)) LIMIT 5", 5, 2),
-        # FILTER CREATION FOR 3 OR MORE ANDED PREDICATES FAILS (#182)
+        # FILTER CREATION FOR 3 OR MORE ANDED PREDICATES FAILS [#182]
         ("SELECT * FROM $astronauts WHERE name LIKE '%o%' AND `year` > 1900 AND gender ILIKE '%ale%' AND group IN (1,2,3,4,5,6)", 41, 19),
         # LIKE-ING NULL
         ("SELECT * FROM tests.data.nulls WHERE username LIKE 'BBC%' FOR '2000-01-01'", 3, 5),
@@ -562,27 +562,27 @@ STATEMENTS = [
         ("SELECT * FROM tests.data.nulls WHERE username SIMILAR TO 'BBC.+' FOR '2000-01-01'", 3, 5),
         ("SELECT * FROM tests.data.nulls WHERE username NOT SIMILAR TO 'BBC.+' FOR '2000-01-01'", 21, 5),
         ("SELECT * FROM tests.data.nulls WHERE tweet ILIKE '%Trump%' FOR '2000-01-01'", 0, 5),
-        # BYTE-ARRAY FAILS #252
+        # BYTE-ARRAY FAILS [#252]
         (b"SELECT * FROM $satellites", 177, 8),
-        # DISTINCT on null values #285
+        # DISTINCT on null values [#285]
         ("SELECT DISTINCT name FROM (VALUES (null),(null),('apple')) AS booleans (name)", 2, 1),
-        # empty aggregates with other columns, loose the other columns #281
+        # empty aggregates with other columns, loose the other columns [#281]
 # [#358]       ("SELECT name, COUNT(*) FROM $astronauts WHERE name = 'Jim' GROUP BY name", 1, 2),
-        # JOIN from subquery regressed #291
+        # JOIN from subquery regressed [#291]
         ("SELECT * FROM (SELECT id from $planets) AS ONE LEFT JOIN (SELECT id from $planets) AS TWO ON id = id", 9, 2),
-        # JOIN on UNNEST #382
+        # JOIN on UNNEST [#382]
         ("SELECT name FROM $planets INNER JOIN UNNEST(('Earth')) AS n on name = n ", 1, 1),
         ("SELECT name FROM $planets INNER JOIN UNNEST(('Earth', 'Mars')) AS n on name = n", 2, 1),
-        # SELECT <literal> # 409
+        # SELECT <literal> [#409]
         ("SELECT DATE FROM (SELECT '1980-10-20' AS DATE)", 1, 1),
         ("SELECT NUMBER FROM (SELECT 1.0 AS NUMBER)", 1, 1),
         ("SELECT VARCHAR FROM (SELECT 'varchar' AS VARCHAR)", 1, 1),
         ("SELECT BOOLEAN FROM (SELECT False AS BOOLEAN)", 1, 1),
-        # EXPLAIN has two heads (found looking a #408)
+        # EXPLAIN has two heads (found looking a [#408])
         ("EXPLAIN SELECT * FROM $planets AS a INNER JOIN (SELECT id FROM $planets) AS b USING (id)", 3, 3),
-        # ALIAS issues #408
+        # ALIAS issues [#408]
         ("SELECT $planets.* FROM $planets INNER JOIN (SELECT id FROM $planets) AS b USING (id)", 9, 21),
-        # DOUBLE QUOTED STRING #399
+        # DOUBLE QUOTED STRING [#399]
         ("SELECT birth_place['town'] FROM $astronauts WHERE birth_place['town'] = \"Rome\"", 1, 1),
         # COUNT incorrect
         ("SELECT * FROM (SELECT COUNT(*) AS bodies FROM $planets) AS space WHERE space.bodies > 5", 1, 1),
@@ -590,8 +590,6 @@ STATEMENTS = [
         ("SELECT VERSION()", 1, 1),
         # COALESCE doesn't work with NaNs [#404]
         ("SELECT is_reply_to FROM tests.data.formats.parquet WITH(NO_PARTITION) WHERE COALESCE(is_reply_to, -1) < 0", 74765, 1),
-        # Large results can't be added to pages #453
-        ("SELECT SHA512(column_0) FROM FAKE(150000, 1)", 150000, 1),
     ]
 # fmt:on
 
