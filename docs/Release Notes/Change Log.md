@@ -17,7 +17,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 **Fixed**
 
-- [[#448](https://github.com/mabel-dev/opteryx/issues/448)] `VERSION()` failed and missing from regression suite. ([@joocer](https://github.com/joocer))  
+- [[#448](https://github.com/mabel-dev/opteryx/issues/448)] `VERSION()` failed and missing from regression suite. ([@joocer](https://github.com/joocer)) 
+- [[#404](https://github.com/mabel-dev/opteryx/issues/404)] `COALESCE` fails for NaN values. ([@joocer](https://github.com/joocer))   
 
 ## [0.3.0] - 2022-08-28
 

@@ -20,6 +20,9 @@ from cityhash import CityHash64
 from pyarrow import compute
 from pyarrow import ArrowNotImplementedError
 
+import numpy
+import pyarrow
+
 import opteryx
 
 from opteryx.exceptions import SqlError
@@ -159,6 +162,17 @@ def _raise_exception(text):
     raise SqlError(text)
 
 
+def _coalesce(*args):
+    """wrap the pyarrow coalesce function because NaN != None"""
+    coerced = []
+    for arg in args:
+        # there's no reasonable test to see if we need to do this before we start
+        coerced.append(
+            [None if value != value else value for value in arg]  # nosemgrep
+        )
+    return compute.coalesce(*coerced)
+
+
 # fmt:off
 # Function definitions optionally include the type and the function.
 # The type is needed particularly when returning Python objects that
@@ -212,7 +226,7 @@ FUNCTIONS = {
     "LIST_CONTAINS_ANY": _iterate_double_parameter(other_functions.list_contains_any),
     "LIST_CONTAINS_ALL": _iterate_double_parameter(other_functions.list_contains_all),
     "SEARCH": other_functions.search,
-    "COALESCE": compute.coalesce,
+    "COALESCE": _coalesce,
 
     # NUMERIC
     "ROUND": number_functions.round,
