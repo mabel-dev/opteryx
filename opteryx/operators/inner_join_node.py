@@ -17,8 +17,10 @@ This is a SQL Query Execution Plan Node.
 
 This performs a INNER JOIN
 """
+import time
 from typing import Iterable
 
+import numpy
 import pyarrow
 
 from opteryx import config
@@ -29,6 +31,20 @@ from opteryx.third_party import pyarrow_ops
 from opteryx.utils import arrow
 
 INTERNAL_BATCH_SIZE = config.INTERNAL_BATCH_SIZE
+
+
+def calculate_batch_size(cardinality):
+    """dynamically work out the processing batch size for the USING JOIN"""
+    # - HIGH_CARDINALITY_BATCH_SIZE (over 90% unique) = INTERNAL_BATCH_SIZE
+    # - MEDIUM_CARDINALITY_BATCH_SIZE (5% > n < 90%) = INTERNAL_BATCH_SIZE * n
+    # - LOW_CARDINALITY_BATCH_SIZE (less than 5% unique) = 5
+    # These numbers have had very little science put into them, they are unlikely
+    # to be optimal
+    if cardinality < 0.05:
+        return 5
+    if cardinality > 0.9:
+        return INTERNAL_BATCH_SIZE
+    return INTERNAL_BATCH_SIZE * cardinality
 
 
 class InnerJoinNode(BasePlanNode):
@@ -80,8 +96,20 @@ class InnerJoinNode(BasePlanNode):
                     ]
                     new_metadata = left_columns + right_columns
 
+                    # we estimate the cardinality of the left table to inform the
+                    # batch size for the joins. Cardinality here is the ratio of
+                    # unique values in the set. Although we're working it out, we'll
+                    # refer to this as an estimate because it may be different per
+                    # page of data - we're assuming it's not very different.
+                    cols = pyarrow_ops.columns_to_array(page, left_join_columns)
+                    if page.num_rows > 0:
+                        card = len(numpy.unique(cols)) / page.num_rows
+                    else:
+                        card = 0
+                    batch_size = calculate_batch_size(card)
+
                 # we break this into small chunks otherwise we very quickly run into memory issues
-                for batch in page.to_batches(max_chunksize=INTERNAL_BATCH_SIZE):
+                for batch in page.to_batches(max_chunksize=batch_size):
 
                     # blocks don't have column_names, so we need to wrap in a table
                     batch = pyarrow.Table.from_batches([batch], schema=page.schema)
