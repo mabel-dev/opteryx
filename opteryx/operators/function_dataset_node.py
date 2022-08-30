@@ -19,10 +19,10 @@ This Node creates datasets based on function calls like VALUES and UNNEST.
 """
 import os
 import sys
+import time
 
 from typing import Iterable
 
-import numpy
 import pyarrow
 
 from opteryx.models import Columns, QueryDirectives, QueryStatistics
@@ -129,7 +129,9 @@ class FunctionDatasetNode(BasePlanNode):
     def execute(self) -> Iterable:
 
         try:
+            start_time = time.time_ns()
             data = FUNCTIONS[self._function](self._alias, *self._args)  # type:ignore
+            self._statistics.time_data_read += time.time_ns() - start_time
         except TypeError as err:  # pragma: no cover
             print(str(err))
             if str(err).startswith("_unnest() takes 2"):

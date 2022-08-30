@@ -15,7 +15,7 @@ Local Disk           | DiskStorage       | Blob/File Store
 
 Connectors are registered with the storage engine using the `register_store` method. Multiple prefixes can be added, using different connectors - multiple storage types can be combined into a single query.
 
-~~~
+~~~python
 opteryx.storage.register_store("tests", DiskStorage)
 ~~~
 
@@ -26,8 +26,8 @@ import opteryx
 from opteryx.connectors import GcsStorage
 
 # Tell the storage engine that datasets with the prefix 'your_bucket' are
-# to be read using the GcsStorage adapter. Multiple prefixes can be added
-# and do not need to be the same adapter.
+# to be read using the GcsStorage connector. Multiple prefixes can be added
+# and do not need to be the same connector.
 opteryx.register_store("your_bucket", GcsStorage)
 
 connextion = opteryx.connect()
@@ -45,13 +45,13 @@ Opteryx references datasets using their relative path as the table name. For exa
 
 ~~~
 /
-  ├── products/
-  ├── customers/
-  │     ├── profiles/
-  │     └── preferences/
-  │           ├── marketing/
-  │           └── site/
-  └── purchases/ 
+ ├─ products/
+ ├─ customers/
+ │   ├─ profiles/
+ │   └─ preferences/
+ │       ├─ marketing/
+ │       └─ site/
+ └── purchases/ 
 ~~~
 
 Would have the following datasets available (assuming leaf folders have data files within them)
@@ -75,10 +75,10 @@ To enable temporal queries, data must be structured into date hierarchy folders 
 
 ~~~
 /
-  └── products/
-        └── year_2022/
-              └── month_05/
-                    └── day_01/
+ └─ products/
+     └─ year_2022/
+         └─ month_05/
+             └─ day_01/
 ~~~
 
 To query the data for today with this structure, you can execute:
