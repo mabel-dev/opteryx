@@ -161,12 +161,15 @@ def get_len(obj):
 def _raise_exception(text):
     raise SqlError(text)
 
+
 def _coalesce(*args):
-    """ wrap the pyarrow coalesce function because NaN != None """
+    """wrap the pyarrow coalesce function because NaN != None"""
     coerced = []
     for arg in args:
         # there's no reasonable test to see if we need to do this before we start
-        coerced.append([None if value != value else value for value in arg])
+        coerced.append(
+            [None if value != value else value for value in arg]  # nosemgrep
+        )
     return compute.coalesce(*coerced)
 
 
