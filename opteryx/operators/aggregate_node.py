@@ -220,7 +220,9 @@ class AggregateNode(BasePlanNode):
         )
 
         # Allow grouping by functions by evaluating them
+        start_time = time.time_ns()
         columns, self._groups, table = evaluate_and_append(self._groups, table)
+        self._statistics.time_evaluating += time.time_ns() - start_time
 
         start_time = time.time_ns()
         group_by_columns = [

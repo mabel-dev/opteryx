@@ -287,6 +287,7 @@ def evaluate(expression: ExpressionTreeNode, table: Table):
 
     columns = Columns(table)
     result = _inner_evaluate(root=expression, table=table, columns=columns)
+
     if not isinstance(result, (pyarrow.Array, numpy.ndarray)):
         result = numpy.array(result)
     return result
@@ -334,11 +335,15 @@ def evaluate_and_append(expressions, table: Table):
 
             new_column = evaluate(statement, table)
 
-            # Strings need special handling
-            if isinstance(new_column, (pyarrow.lib.StringScalar)):
-                new_column = new_column.as_py()
+            # large arrays appear to have a bug in PyArrow where they're automatically
+            # converted to a chunked array, but the internal function can't handle
+            # chunked arrays
+            if new_column.nbytes > 50000000:
+                new_column = [[i] for i in new_column]
+            else:
+                new_column = [new_column]
 
-            table = table.append_column(new_column_name, [new_column])
+            table = table.append_column(new_column_name, new_column)
 
             # add the column to the schema and because it's been evaluated and added to
             # table, it's an INDENTIFIER rather than a FUNCTION

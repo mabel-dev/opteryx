@@ -18,6 +18,8 @@ This is a SQL Query Execution Plan Node.
 This Node eliminates columns that are not needed in a Relation. This is also the Node
 that performs column renames.
 """
+import time
+
 from typing import Iterable
 
 import pyarrow
@@ -92,9 +94,11 @@ class ProjectionNode(BasePlanNode):
         for page in data_pages.execute():
 
             # If any of the columns are FUNCTIONs, we need to evaluate them
+            start_time = time.time_ns()
             _columns, self._expressions, page = evaluate_and_append(
                 self._expressions, page
             )
+            self._statistics.time_evaluating += time.time_ns() - start_time
 
             # first time round we're going work out what we need from the metadata
             if columns is None:

@@ -590,6 +590,8 @@ STATEMENTS = [
         ("SELECT VERSION()", 1, 1),
         # COALESCE doesn't work with NaNs [#404]
         ("SELECT is_reply_to FROM tests.data.formats.parquet WITH(NO_PARTITION) WHERE COALESCE(is_reply_to, -1) < 0", 74765, 1),
+        # Large results can't be added to pages #453
+        ("SELECT SHA512(column_0) FROM FAKE(150000, 1)", 150000, 1),
     ]
 # fmt:on
 
