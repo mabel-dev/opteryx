@@ -101,7 +101,9 @@ class InnerJoinNode(BasePlanNode):
                     # unique values in the set. Although we're working it out, we'll
                     # refer to this as an estimate because it may be different per
                     # page of data - we're assuming it's not very different.
-                    cols = pyarrow_ops.columns_to_array(page, left_join_columns)
+                    cols = pyarrow_ops.columns_to_array_denulled(
+                        page, left_join_columns
+                    )
                     if page.num_rows > 0:
                         card = len(numpy.unique(cols)) / page.num_rows
                     else:
