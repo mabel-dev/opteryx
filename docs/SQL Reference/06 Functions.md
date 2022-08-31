@@ -214,6 +214,15 @@ Functions for examining and manipulating string values.
 !!! function "**str**: _varchar_`[`**index**: _numeric_`]` → _varchar_ 🔻"  
     Subscript operator, return the **index**th character from **str**. 
 
+!!! function "`CONCAT` (**list**: _array_<_varchar_>) → _varchar_"   
+    Returns the result of concatenating, or joining, of two or more string values in an end-to-end manner.
+
+!!! function "`CONCAT_WS` (**separator**: _varchar_, **list**: _array_<_varchar_>) → _varchar_"   
+    Returns the result of concatenating, or joining, of two or more string values with a **separator** used to delimit individual values.
+
+!!! function "`ENDS_WITH` (**str**: _varchar_, **value**: _varchar_) → _boolean_"  
+    Return True if **str** ends with **value**.  
+
 !!! function "`GET` (**str**: _varchar_, **index**: _numeric_) → _varchar_ 🔻"  
     Alias of **str**`[`**index**`]`.   
 
@@ -240,6 +249,9 @@ Functions for examining and manipulating string values.
 
 !!! function "`SEARCH` (**str**: _varchar_, **value**: _varchar_) → _boolean_ 🔻"  
     Return True if **str** contains **value**.  
+
+!!! function "`STARTS_WITH` (**str**: _varchar_, **value**: _varchar_) → _boolean_"  
+    Return True if **str** starts with **value**.  
 
 !!! function "`TITLE` (**str**: _varchar_) → _varchar_"  
     Returns **str** with the first letter of each work in upper case.   
@@ -300,6 +312,9 @@ For more details, see [Working with Structs](https://mabel-dev.github.io/opteryx
 !!! function "`GENERATE_SERIES` (**cidr**: _varchar_) → _list_<_varchar_> 🔻"  
     Return a list of IP addresses from a given **cidr**.   
 
+!!! function "`ISNULL` (**check_expression**: _any_, **replacement_value**: _any_) → _[input type]_"  
+    Returns **check_expression** if not `NULL`, otherwise returns **replacement_value**.
+
 !!! function "`HASH` (**any**) → _varchar_"  
     Calculate the [CityHash](https://opensource.googleblog.com/2011/04/introducing-cityhash.html) (64 bit).
 
@@ -316,10 +331,13 @@ For more details, see [Working with Structs](https://mabel-dev.github.io/opteryx
     Calculate the MD5 hash.
 
 !!! function "`RAND` () → _numeric_"  
-    Random number between 0 and 1.
+    Returns a random number between 0 and 1.
 
 !!! function "`RANDOM` () → _numeric_"  
     Alias of `RAND`().
+
+!!! function "`RANDOM_STRING` (**length**: _numeric_) → _varchar_"  
+    Returns a random string of lowercase alphabetic characters with a length of **length**.
 
 !!! function "`SHA1` (**any**) → _varchar_"  
     Calculate the SHA1 hash.

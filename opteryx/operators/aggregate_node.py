@@ -28,7 +28,7 @@ from typing import Iterable
 import pyarrow
 
 from opteryx.exceptions import SqlError
-from opteryx.managers.expression import get_all_identifiers
+from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import evaluate_and_append
 from opteryx.managers.expression import format_expression
@@ -109,32 +109,38 @@ def _build_aggs(aggregators, columns):
     column_map = {}
     aggs = []
 
-    for aggregator in aggregators:
-        if aggregator.token_type == NodeType.AGGREGATOR:
-            field_node = aggregator.parameters[0]
-            if field_node.token_type == NodeType.WILDCARD:
-                display_field = "*"
-                field_name = columns.preferred_column_names[0][0]
-            elif field_node.token_type == NodeType.IDENTIFIER:
-                display_field = field_node.value
-                field_name = columns.get_column_from_alias(
-                    field_node.value, only_one=True
+    if not isinstance(aggregators, list):
+        aggregators = [aggregators]
+
+    for root in aggregators:
+
+        for aggregator in get_all_nodes_of_type(root, NodeType.AGGREGATOR):
+
+            if aggregator.token_type == NodeType.AGGREGATOR:
+                field_node = aggregator.parameters[0]
+                if field_node.token_type == NodeType.WILDCARD:
+                    display_field = "*"
+                    field_name = columns.preferred_column_names[0][0]
+                elif field_node.token_type == NodeType.IDENTIFIER:
+                    display_field = field_node.value
+                    field_name = columns.get_column_from_alias(
+                        field_node.value, only_one=True
+                    )
+                else:
+                    display_name = format_expression(field_node)
+                    raise SqlError(
+                        f"Invalid identifier provided in aggregator function `{display_name}`"
+                    )
+                function = AGGREGATORS.get(aggregator.value)
+                aggs.append(
+                    (
+                        field_name,
+                        function,
+                    )
                 )
-            else:
-                display_name = format_expression(field_node)
-                raise SqlError(
-                    f"Invalid identifier provided in aggregator function `{display_name}`"
-                )
-            function = AGGREGATORS.get(aggregator.value)
-            aggs.append(
-                (
-                    field_name,
-                    function,
-                )
-            )
-            column_map[
-                f"{aggregator.value.upper()}({display_field})"
-            ] = f"{field_name}_{function}".replace("_hash_", "_")
+                column_map[
+                    f"{aggregator.value.upper()}({display_field})"
+                ] = f"{field_name}_{function}".replace("_hash_", "_")
 
     return column_map, aggs
 
@@ -213,7 +219,14 @@ class AggregateNode(BasePlanNode):
             return
 
         # get all the columns anywhere in the groups or aggregates
-        all_identifiers = set(get_all_identifiers(self._groups + self._aggregates))
+        all_identifiers = set(
+            [
+                node.value
+                for node in get_all_nodes_of_type(
+                    self._groups + self._aggregates, NodeType.IDENTIFIER
+                )
+            ]
+        )
         # join all the pages together, selecting only the columns we found above
         table = pyarrow.concat_tables(
             _project(data_pages.execute(), all_identifiers), promote=True

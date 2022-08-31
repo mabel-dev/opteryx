@@ -294,27 +294,27 @@ def evaluate(expression: ExpressionTreeNode, table: Table):
     return result
 
 
-def get_all_identifiers(root):
+def get_all_nodes_of_type(root, *node_type):
     """
-    Walk a expression tree collecting all the identifiers in the tree
+    Walk a expression tree collecting all the nodes of a specified type
     """
     if not isinstance(root, list):
         root = [root]
 
     identifiers = []
     for node in root:
-        if node.token_type == NodeType.IDENTIFIER:
-            identifiers.append(node.value)
+        if node.token_type in node_type:
+            identifiers.append(node)
         if node.left:
-            identifiers.extend(get_all_identifiers(node.left))
+            identifiers.extend(get_all_nodes_of_type(node.left, *node_type))
         if node.centre:
-            identifiers.extend(get_all_identifiers(node.centre))
+            identifiers.extend(get_all_nodes_of_type(node.centre, *node_type))
         if node.right:
-            identifiers.extend(get_all_identifiers(node.right))
+            identifiers.extend(get_all_nodes_of_type(node.right, *node_type))
         if node.parameters:
             for parameter in node.parameters:
                 if isinstance(parameter, ExpressionTreeNode):
-                    identifiers.extend(get_all_identifiers(parameter))
+                    identifiers.extend(get_all_nodes_of_type(parameter, *node_type))
 
     return identifiers
 
