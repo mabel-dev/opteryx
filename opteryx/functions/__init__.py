@@ -72,6 +72,7 @@ def cast(_type):
     """cast a column to a specified type"""
     if _type in VECTORIZED_CASTERS:
         return lambda a: compute.cast(a, VECTORIZED_CASTERS[_type])
+
     if _type in ITERATIVE_CASTERS:
 
         def _inner(arr):

@@ -31,6 +31,7 @@ from opteryx.models import Columns
 from opteryx.third_party.pyarrow_ops.ops import filter_operations
 
 
+# These are bit-masks
 LOGICAL_TYPE: int = int("0001", 2)
 INTERNAL_TYPE: int = int("0010", 2)
 LITERAL_TYPE: int = int("0100", 2)
@@ -55,14 +56,14 @@ def format_expression(root):
         if node_type == NodeType.WILDCARD:
             return "*"
         if node_type == NodeType.BINARY_OPERATOR:
-            MAP = {
+            _map = {
                 "StringConcat": "||",
                 "Plus": "+",
                 "Minus": "-",
                 "Multiply": "*",
                 "Divide": "/",
             }
-            return f"{format_expression(root.left)}{MAP.get(root.value, '?')}{format_expression(root.right)}"
+            return f"{format_expression(root.left)}{_map.get(root.value, '?')}{format_expression(root.right)}"
 
     return str(root.value)
 
@@ -355,5 +356,7 @@ def evaluate_and_append(expressions, table: Table):
             )
 
         return_expressions.append(statement)
+
+        table = columns.apply(table)
 
     return columns, return_expressions, table
