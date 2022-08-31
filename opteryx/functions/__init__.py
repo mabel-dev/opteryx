@@ -204,6 +204,10 @@ FUNCTIONS = {
     "REVERSE": compute.utf8_reverse,
     "SOUNDEX": string_functions.soundex,
     "TITLE": compute.utf8_title,
+    "CONCAT": string_functions.concat,
+    "CONCAT_WS": string_functions.concat_ws,
+    "STARTS_WITH": string_functions.starts_w,
+    "ENDS_WITH": string_functions.ends_w,
 
     # HASHING & ENCODING
     "HASH": _iterate_single_parameter(lambda x: format(CityHash64(str(x)), "X")),
@@ -214,6 +218,7 @@ FUNCTIONS = {
     "RANDOM": number_functions.random,
     "RAND": number_functions.random,
     "NORMAL": number_functions.random_normal,
+    "RANDOM_STRING": _iterate_single_parameter(number_functions.random_string),
     "BASE64_ENCODE": _iterate_single_parameter(string_functions.get_base64_encode),
     "BASE64_DECODE": _iterate_single_parameter(string_functions.get_base64_decode),
     "BASE85_ENCODE": _iterate_single_parameter(string_functions.get_base85_encode),
@@ -228,6 +233,7 @@ FUNCTIONS = {
     "LIST_CONTAINS_ALL": _iterate_double_parameter(other_functions.list_contains_all),
     "SEARCH": other_functions.search,
     "COALESCE": _coalesce,
+    "ISNULL": _coalesce,
 
     # NUMERIC
     "ROUND": number_functions.round,

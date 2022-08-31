@@ -10,8 +10,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from email.mime import base
 import numpy
+
+from pyarrow import compute
 
 
 def string_slicer_left(arr, length):
@@ -147,3 +148,34 @@ def get_hex_decode(item):
     if not isinstance(item, bytes):
         item = str(item).encode()
     return base64.b16decode(item).decode("UTF8")
+
+
+def concat(arr):
+    """concatenate a list of strings"""
+    result = []
+    for row in arr:
+        if row is None:
+            result.append(None)
+        else:
+            result.append("".join(row))
+    return result
+
+
+def concat_ws(sep, arr):
+    """concatenate a list of strings with a separator"""
+    sep = sep[0]
+    result = []
+    for row in arr:
+        if row is None:
+            result.append(None)
+        else:
+            result.append(sep.join(row))
+    return result
+
+
+def starts_w(arr, test):
+    return compute.starts_with(arr, test[0])
+
+
+def ends_w(arr, test):
+    return compute.ends_with(arr, test[0])

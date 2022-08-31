@@ -9,6 +9,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import os
 
 import numpy
 
@@ -35,3 +36,8 @@ def random_normal(size):
 
     rng = default_rng()
     return rng.standard_normal(size)
+
+
+def random_string(width):
+    random_ints = numpy.random.uniform(low=97, high=123, size=int(width))
+    return "".join([chr(int(i)) for i in random_ints])
