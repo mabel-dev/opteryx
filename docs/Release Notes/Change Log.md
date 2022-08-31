@@ -15,6 +15,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 **Changed**
 
+- [[#457](https://github.com/mabel-dev/opteryx/issues/457)] Null values are removed before performing `INNER JOIN USING`. ([@joocer](https://github.com/joocer)) 
+
 **Fixed**
 
 - [[#448](https://github.com/mabel-dev/opteryx/issues/448)] `VERSION()` failed and missing from regression suite. ([@joocer](https://github.com/joocer)) 

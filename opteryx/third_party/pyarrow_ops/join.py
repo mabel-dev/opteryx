@@ -3,7 +3,7 @@ import numpy as np
 from cjoin import cython_inner_join
 from cjoin import cython_left_join
 
-from .helpers import columns_to_array, groupify_array
+from .helpers import columns_to_array_denulled, groupify_array
 
 
 def align_tables(t1, t2, l1, l2):
@@ -18,9 +18,9 @@ def align_tables(t1, t2, l1, l2):
 def inner_join(left, right, left_on, right_on):
     # Gather join columns - create arrays of the hashes of the values in the column
     # updated for Opteryx
-    l_array, r_array = columns_to_array(left, left_on), columns_to_array(
-        right, right_on
-    )
+    l_array, r_array = columns_to_array_denulled(
+        left, left_on
+    ), columns_to_array_denulled(right, right_on)
 
     # Groupify the join array, this generates a set of data about the array
     # including the unique values in the array, and the sort order for the array.

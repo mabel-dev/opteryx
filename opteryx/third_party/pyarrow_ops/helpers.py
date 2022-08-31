@@ -40,8 +40,12 @@ def _hash_value(val, nan=numpy.nan):
 
 def columns_to_array(table, columns):
     """modified for Opteryx"""
+    # used for distinct
     columns = [columns] if isinstance(columns, str) else list(set(columns))
+
     if len(columns) == 1:
+        if not columns[0] in table.column_names:
+            return numpy.array([])
         # FIX https://github.com/mabel-dev/opteryx/issues/98
         # hashing NULL doesn't result in the same value each time
         # FIX https://github.com/mabel-dev/opteryx/issues/285
@@ -49,5 +53,20 @@ def columns_to_array(table, columns):
         column_values = table.column(columns[0]).to_numpy()
         return numpy.array([_hash_value(el) for el in column_values])
 
+    columns = sorted(set(table.column_names).intersection(columns))
     values = (c.to_numpy() for c in table.select(columns).itercolumns())
+    return numpy.array([_hash_value(x) for x in zip(*values)])
+
+
+def columns_to_array_denulled(table, columns):
+    """added for Opteryx"""
+    # used for joins
+    columns = [columns] if isinstance(columns, str) else sorted(set(columns))
+    if len(columns) == 1:
+        if not columns[0] in table.column_names:
+            return numpy.array([])
+        column_values = table.column(columns[0]).drop_null().to_numpy()
+        return numpy.array([_hash_value(el) for el in column_values])
+
+    values = (c.to_numpy() for c in table.select(columns).drop_null().itercolumns())
     return numpy.array([_hash_value(x) for x in zip(*values)])
