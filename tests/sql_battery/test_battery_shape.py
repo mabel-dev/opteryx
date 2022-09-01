@@ -532,6 +532,11 @@ STATEMENTS = [
         ("SELECT * FROM $astronauts WHERE STARTS_WITH(name, 'Jo')", 23, 19),
         ("SELECT * FROM $planets WHERE ENDS_WITH(name, 'r')", 1, 20),
         ("SELECT * FROM $astronauts WHERE ENDS_WITH(name, 'son')", 17, 19),
+        ("SELECT CONCAT_WS(', ', LIST(mass)) as MASSES FROM \$planets GROUP BY gravity", 8, 1),
+        ("SELECT GREATEST(LIST(name)) as NAMES FROM $satellites GROUP BY planetId", 7, 1),
+        ("SELECT GREATEST(LIST(gm)) as MASSES FROM $satellites GROUP BY planetId", 7, 1),
+        ("SELECT LEAST(LIST(name)) as NAMES FROM $satellites GROUP BY planetId", 7, 1),
+        ("SELECT LEAST(LIST(gm)) as MASSES FROM $satellites GROUP BY planetId", 7, 1),
 
         # These are queries which have been found to return the wrong result or not run correctly
         # FILTERING ON FUNCTIONS
