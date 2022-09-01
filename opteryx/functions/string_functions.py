@@ -157,6 +157,7 @@ def concat(arr):
         if row is None:
             result.append(None)
         else:
+            row = row.astype(dtype=numpy.str_)
             result.append("".join(row))
     return result
 
@@ -169,6 +170,7 @@ def concat_ws(sep, arr):
         if row is None:
             result.append(None)
         else:
+            row = row.astype(dtype=numpy.str_)
             result.append(sep.join(row))
     return result
 
