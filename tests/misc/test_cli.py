@@ -15,7 +15,7 @@ def test_basic_cli():
     main(ast=True, sql="SELECT * FROM $planets;")
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     test_basic_cli()
 
     print("✅ okay")

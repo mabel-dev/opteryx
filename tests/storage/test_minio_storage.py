@@ -58,6 +58,6 @@ def test_minio_storage():
     conn.close()
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     test_minio_storage()
     print("✅ okay")

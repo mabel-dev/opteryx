@@ -7,7 +7,7 @@ import opteryx
 from opteryx.connectors import DiskStorage
 
 
-def simple_query():
+def simple_query():  # pragma: no cover
 
     conn = opteryx.connect(reader=DiskStorage(), partition_scheme=None)
 
@@ -19,7 +19,7 @@ def simple_query():
     [a for a in cur.fetchall()]
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     import cProfile
     from pstats import Stats
 

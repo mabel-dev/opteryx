@@ -61,6 +61,6 @@ def test_gcs_storage():
     conn.close()
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     test_gcs_storage()
     print("✅ okay")
