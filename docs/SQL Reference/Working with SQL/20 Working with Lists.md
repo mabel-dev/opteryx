@@ -31,6 +31,12 @@ LIST_CONTAINS_ANY
 LIST_CONTAINS_ALL
 ~~~
 
+### Transforms
+
+~~~
+SORT
+~~~
+
 ## Converting Lists to Relations
 
 ### Using `UNNEST`

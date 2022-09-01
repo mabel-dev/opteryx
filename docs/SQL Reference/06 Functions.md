@@ -151,6 +151,14 @@ For more details, see [Working with Lists](https://mabel-dev.github.io/opteryx/S
 !!! function "`GET` (**array**: _list_, **index**: _numeric_) → **value** 🔻"   
     Alias of **array**`[`**index**`]`.  
 
+!!! function "`GREATEST` (**array**: _list_) → **value** 🔻"   
+    Return the greatest value in **array**.  
+    Related: `LEAST`.
+
+!!! function "`LEAST` (**array**: _list_) → **value** 🔻"   
+    Return the smallest value in **array**.  
+    Related: `GREATEST`.
+
 !!! function "`LEN` (**array**: _list_) → _numeric_ 🔻"   
     Alias of `LENGTH`(**array**).
 
@@ -158,7 +166,8 @@ For more details, see [Working with Lists](https://mabel-dev.github.io/opteryx/S
     Returns the number of elements in **array**.
 
 !!! function "`LIST_CONTAINS` (**array**: _list_, **value**) → _boolean_"  
-    Return `true` if **array** contains **value**. See also `SEARCH`(**array**, **value**).
+    Return `true` if **array** contains **value**.  
+    See also `SEARCH`(**array**, **value**).  
 
 !!! function "`LIST_CONTAINS_ANY` (**array**: _list_, **values**: _list_) → _boolean_"    
     Return `true` if **array** contains any elements in **values**.
@@ -169,19 +178,23 @@ For more details, see [Working with Lists](https://mabel-dev.github.io/opteryx/S
 !!! function "`SEARCH` (**array**: _list_, **value**) → _boolean_ 🔻"  
     Return `true` if **array** contains **value**. 
 
+!!! function "`SORT` (**array**: _list_) → _list_"  
+    Return **array** in ascending order. 
+
 ## Numeric Functions
 
 !!! function "`ABS` (**x**: _numeric_) → _numeric_"  
-    Alias of `ABSOLUTE`(**x**).  
+    Alias of `ABSOLUTE`.  
 
 !!! function "`ABSOLUTE` (**x**: _numeric_) → _numeric_"  
     Returns the absolute value of **x**.   
 
 !!! function "`CEIL` (**x**: _numeric_) → _numeric_"  
-    Alias of `CEILING`(**x**).  
+    Alias of `CEILING`.  
 
 !!! function "`CEILING` (**x**: _numeric_) → _numeric_"  
-    Returns **x** rounded up to the nearest integer.    
+    Returns **x** rounded up to the nearest integer.   
+    Related: `FLOOR` 
 
 !!! function "`FLOOR` (**x**: _numeric_) → _numeric_"  
     Returns **x** rounded down to the nearest integer.   
@@ -202,7 +215,7 @@ For more details, see [Working with Lists](https://mabel-dev.github.io/opteryx/S
     Returns the square root of **x**.
 
 !!! function "`TRUNC` (**x**: _numeric_) → _numeric_"  
-    Alias of `TRUNCATE`(**x**).  
+    Alias of `TRUNCATE`.  
 
 !!! function "`TRUNCATE` (**x**: _numeric_) → _numeric_"  
     Returns **x** rounded to integer by dropping digits after decimal point.    
@@ -215,34 +228,40 @@ Functions for examining and manipulating string values.
     Subscript operator, return the **index**th character from **str**. 
 
 !!! function "`CONCAT` (**list**: _array_<_varchar_>) → _varchar_"   
-    Returns the result of concatenating, or joining, of two or more string values in an end-to-end manner.
+    Returns the result of concatenating, or joining, of two or more string values in an end-to-end manner.  
+    Related: `CONCAT_WS`.
 
 !!! function "`CONCAT_WS` (**separator**: _varchar_, **list**: _array_<_varchar_>) → _varchar_"   
-    Returns the result of concatenating, or joining, of two or more string values with a **separator** used to delimit individual values.
+    Returns the result of concatenating, or joining, of two or more string values with a **separator** used to delimit individual values.  
+    Related: `CONCAT`.
 
 !!! function "`ENDS_WITH` (**str**: _varchar_, **value**: _varchar_) → _boolean_"  
     Return True if **str** ends with **value**.  
+    Related: `STARTS_WITH`.
 
 !!! function "`GET` (**str**: _varchar_, **index**: _numeric_) → _varchar_ 🔻"  
     Alias of **str**`[`**index**`]`.   
 
 !!! function "`LEFT` (**str**: _varchar_, **n**: _numeric_) → _varchar_"  
     Extract the left-most **n** characters of **str**.  
+    Related: `RIGHT`
 
 !!! function "`LEN` (**str**: _varchar_) → _numeric_ 🔻"   
-    Alias of `LENGTH`(**str**)
+    Alias of `LENGTH`
 
 !!! function "`LENGTH` (**str**: _varchar_) → _numeric_ 🔻"  
     Returns the length of **str** in characters.    
 
 !!! function "`LOWER` (**str**: _varchar_) → _varchar_"  
-    Converts **str** to lowercase.
+    Converts **str** to lowercase.   
+    Related: `UPPER`, `TITLE`.
 
 !!! function "`REVERSE` (**str**: _varchar_) → _varchar_"  
     Returns **str** with the characters in reverse order.
 
 !!! function "`RIGHT` (**str**: _varchar_, **n**: _numeric_) → _varchar_"  
     Extract the right-most **n** characters of **str**.   
+    Related: `LEFT`.
 
 !!! function "`SOUNDEX` (**str**: _varchar_) → _varchar_"  
     Returns a character string containing the phonetic representation of char. See [Soundex 🡕](https://en.wikipedia.org/wiki/Soundex).   
@@ -252,15 +271,18 @@ Functions for examining and manipulating string values.
 
 !!! function "`STARTS_WITH` (**str**: _varchar_, **value**: _varchar_) → _boolean_"  
     Return True if **str** starts with **value**.  
+    Related: `ENDS_WITH`
 
 !!! function "`TITLE` (**str**: _varchar_) → _varchar_"  
     Returns **str** with the first letter of each work in upper case.   
+    Related: `LOWER`, `UPPER`.
 
 !!! function "`TRIM` (**str**: _varchar_) → _varchar_"  
     Removes leading and trailing whitespace from **str**.  
 
 !!! function "`UPPER` (**str**: _varchar_) → _varchar_"  
-    Converts **str** to uppercase.  
+    Converts **str** to uppercase.   
+    Related: `LOWER`, `TITLE`.
 
 ## Struct Functions
 
@@ -283,19 +305,24 @@ For more details, see [Working with Structs](https://mabel-dev.github.io/opteryx
 ## Other Functions
 
 !!! function "`BASE64_DECODE` (**any**) → _varchar_"  
-    Decode a value which has been encoded using BASE64 encoding.
+    Decode a value which has been encoded using BASE64 encoding.  
+    Related: `BASE64_ENCODE`.
 
 !!! function "`BASE64_ENCODE` (**any**) → _varchar_"  
-    Encode value with BASE64 encoding.
+    Encode value with BASE64 encoding.  
+    Related: `BASE64_DECODE`.
 
 !!! function "`BASE85_DECODE` (**any**) → _varchar_"  
-    Decode a value which has been encoded using BASE85 encoding.
+    Decode a value which has been encoded using BASE85 encoding.  
+    Related: `BASE85_ENCODE`.
 
 !!! function "`BASE85_ENCODE` (**any**) → _varchar_"  
-    Encode value with BASE85 encoding.
+    Encode value with BASE85 encoding.  
+    Related: `BASE85_DECODE`.
 
 !!! function "`COALESCE` (**arg1**, **arg2**, ...) → _[input type]_"  
     Return the first item from args which is not `NULL`.   
+    Related: `IFNULL`.
 
 !!! function "`GENERATE_SERIES` (**stop**: _numeric_) → _list_<_numeric_> 🔻"  
     Return a numeric list between 1 and **stop**, with a step of 1.  
@@ -312,17 +339,20 @@ For more details, see [Working with Structs](https://mabel-dev.github.io/opteryx
 !!! function "`GENERATE_SERIES` (**cidr**: _varchar_) → _list_<_varchar_> 🔻"  
     Return a list of IP addresses from a given **cidr**.   
 
-!!! function "`ISNULL` (**check_expression**: _any_, **replacement_value**: _any_) → _[input type]_"  
+!!! function "`IFNULL` (**check_expression**: _any_, **replacement_value**: _any_) → _[input type]_"  
     Returns **check_expression** if not `NULL`, otherwise returns **replacement_value**.
+    Related: `COALESCE`.
 
 !!! function "`HASH` (**any**) → _varchar_"  
     Calculate the [CityHash](https://opensource.googleblog.com/2011/04/introducing-cityhash.html) (64 bit).
 
 !!! function "`HEX_DECODE` (**any**) → _varchar_"  
-    Decode a value which has been encoded using HEX (BASE16) encoding.
+    Decode a value which has been encoded using HEX (BASE16) encoding.  
+    Related: `HEX_ENCODE`.
 
 !!! function "`HEX_ENCODE` (**any**) → _varchar_"  
-    Encode value with HEX (BASE16) encoding.
+    Encode value with HEX (BASE16) encoding.  
+    Related: `HEX_DECODE`.
 
 !!! function "`NORMAL` () → _numeric_"  
     Random number from a normal (Gaussian) distribution; distribution is centred at 0.0 and have a standard deviation of 1.0.
@@ -340,13 +370,16 @@ For more details, see [Working with Structs](https://mabel-dev.github.io/opteryx
     Returns a random string of lowercase alphabetic characters with a length of **length**.
 
 !!! function "`SHA1` (**any**) → _varchar_"  
-    Calculate the SHA1 hash.
+    Calculate the SHA1 hash.  
+    Related: `SHA256`, `SHA512`.
 
 !!! function "`SHA256` (**any**) → _varchar_"  
-    Calculate the SHA256 hash.
+    Calculate the SHA256 hash.  
+    Related: `SHA1`, `SHA512`.
 
 !!! function "`SHA512` (**any**) → _varchar_"  
-    Calculate the SHA512 hash.
+    Calculate the SHA512 hash.  
+    Related: `SHA1`, `SHA256`.
 
 !!! function "`UNNEST` (**array**: _list_) → _relation_"  
     Create a virtual relation with a row for each element in **array**.

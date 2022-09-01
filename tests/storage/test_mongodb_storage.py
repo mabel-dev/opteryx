@@ -59,6 +59,6 @@ def test_mongo_storage():
     conn.close()
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     test_mongo_storage()
     print("✅ okay")

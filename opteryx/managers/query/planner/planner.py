@@ -107,7 +107,7 @@ class QueryPlanner(ExecutionTree):
                 # identifiers to start with _ (underscore) and $ (dollar sign)
                 # https://github.com/sqlparser-rs/sqlparser-rs/blob/main/src/dialect/mysql.rs
             except ValueError as exception:  # pragma: no cover
-                raise SqlError from exception
+                raise SqlError(exception)
         else:
             self._ast = ast
 

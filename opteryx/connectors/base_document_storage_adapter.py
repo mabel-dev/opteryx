@@ -43,13 +43,13 @@ class BaseDocumentStorageAdapter(abc.ABC):
                 chunk[index % page_size] = record
         yield chunk[: (index + 1) % page_size]
 
-    def get_document_count(self, collection) -> int:
+    def get_document_count(self, collection) -> int:  # pragma: no cover
         """
         Return the count, or an estimate of, the number of documents
         """
         raise NotImplementedError("get_document_list not implemented")
 
-    def read_documents(self, collection, page_size: int = 500):
+    def read_documents(self, collection, page_size: int = 500):  # pragma: no cover
         """
         Return a page of documents
         """

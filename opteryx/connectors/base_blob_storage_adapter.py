@@ -41,7 +41,7 @@ class BaseBlobStorageAdapter(abc.ABC):
         import pathlib
 
         # apply the partitioning to the dataset name
-        if not dataset.endswith("/"):
+        if not dataset.endswith("/"):  # pragma: no cover
             dataset += "/"
         if not isinstance(partitioning, (list, set, tuple)):
             partitioning = [partitioning]
@@ -63,13 +63,13 @@ class BaseBlobStorageAdapter(abc.ABC):
 
         return partitions
 
-    def get_blob_list(self, partition=None) -> Iterable:
+    def get_blob_list(self, partition=None) -> Iterable:  # pragma: no cover
         """
         Return an interable of blobs/files
         """
         raise NotImplementedError("get_blob_list not implemented")
 
-    def read_blob(self, blob_name: str) -> bytes:
+    def read_blob(self, blob_name: str) -> bytes:  # pragma: no cover
         """
         Return a filelike object
         """

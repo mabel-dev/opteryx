@@ -233,7 +233,10 @@ FUNCTIONS = {
     "LIST_CONTAINS_ALL": _iterate_double_parameter(other_functions.list_contains_all),
     "SEARCH": other_functions.search,
     "COALESCE": _coalesce,
-    "ISNULL": _coalesce,
+    "IFNULL": _coalesce,
+    "SORT": _iterate_single_parameter(numpy.sort),
+    "GREATEST": _iterate_single_parameter(numpy.nanmax),
+    "LEAST": _iterate_single_parameter(numpy.nanmin),
 
     # NUMERIC
     "ROUND": number_functions.round,

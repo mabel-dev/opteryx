@@ -49,6 +49,6 @@ def test_parquet_projection_pushdown():
     assert cur.stats["columns_read"] == 13
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     test_parquet_projection_pushdown()
     print("✅ okay")

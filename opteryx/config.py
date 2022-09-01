@@ -22,7 +22,7 @@ try:  # pragma: no cover
         with open(_config_path, "rb") as _config_file:
             _config = yaml.safe_load(_config_file)
         print(f"loaded config from {_config_path}")
-except Exception as exception:  # it doesn't matter why - just use the defaults
+except Exception as exception:  # pragma: no cover # it doesn't matter why - just use the defaults
     print(f"config file {_config_path} not used - {exception}")
 
 
