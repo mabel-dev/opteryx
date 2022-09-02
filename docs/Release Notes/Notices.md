@@ -3,7 +3,7 @@
 Opteryx uses the following libraries and components:
 
 Component | Disposition | Copyright | Licence   
---------- | :---------: | :-------- | -- 
+:-------- | :---------- | :-------- | :------ 
 [cityhash](https://github.com/escherba/python-cityhash)    | Installed   | . | [Bespoke](https://github.com/escherba/python-cityhash/blob/master/LICENSE)  
 [cython](https://github.com/cython/cython)                 | Installed   | . | [Apache 2.0](https://github.com/cython/cython/blob/master/LICENSE.txt)
 [datetime_truncate](https://github.com/mediapop/datetime_truncate) | Integrated | 2020 Media Pop | [MIT](https://github.com/mediapop/datetime_truncate/blob/master/LICENSE)
@@ -19,9 +19,9 @@ Component | Disposition | Copyright | Licence
 [sqlparser-rs](https://github.com/sqlparser-rs/sqlparser-rs) | Transitive | . | [Apache 2.0](https://github.com/sqlparser-rs/sqlparser-rs/blob/main/LICENSE.TXT)
 [typer](https://github.com/tiangolo/typer)                 | Installed   | . | [MIT](https://github.com/tiangolo/typer/blob/master/LICENSE)
 
-- **Installed** components are installed from PyPI
-- **Integrated** components have their source code included in the Opteryx codebase
-- **Transitive** components are key components installed by other components - this is not intended to be a complete list
+**Installed** components are installed from PyPI.  
+**Integrated** components have their source code included in the Opteryx codebase.  
+**Transitive** components are key components installed by other components - this is not intended to be a complete list.
 
 Integrated components may differ from their original form. Cosmetic changes are not generally noted however where functionality has been added or altered, this should be recorded in comments.
 

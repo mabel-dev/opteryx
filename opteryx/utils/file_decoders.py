@@ -37,7 +37,9 @@ def parquet_decoder(stream, projection: List = None):
         # if we have a pushed down projection, get the list of columns from the file
         # and then only set the reader to read those
         parquet_file = parquet.ParquetFile(stream)
-        parquet_metadata = parquet_file.schema
+        # .schema_arrow is probably slower than .schema but there are instances of
+        # .schema being incomplete #468
+        parquet_metadata = parquet_file.schema_arrow
         selected_columns = list(set(parquet_metadata.names).intersection(projection))
         # if nothing matched, there's been a problem - maybe HINTS confused for columns
         if len(selected_columns) == 0:

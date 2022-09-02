@@ -18,9 +18,9 @@ As data grew, we started to hit problems. Reading tens of million of rows, const
 
 ## Redesign
 
-The decision
+The decision to write the SQL Engine as a new library separate from the existing data handling library was made early it freed us from some of the implementation decisions of the existing solution.
 
-redesigned SQL Engine, called Opteryx, is leveraging Parquet to help improve performance. Parquet was assessed for the transactional use case but the optimized JSONL implementation in Mabel consistently outperformed Parquet. However, reassessing performance for a SQL engine, Parquet out performs JSONL.
+XXX leveraging Apache Arrow (using Parquet) to help improve performance. Parquet was assessed for the transactional use case but the optimized JSONL implementation in Mabel consistently outperformed Parquet. However, reassessing performance for a SQL engine, Parquet out performs JSONL.
 
 The previous SQL Engine had a fixed execution plan, this meant that no matter what your query was it followed the same steps, with some steps doing nothing. This was simplier to write, but will have affected performance. Opteryx creates a query plan, the initial version doesn't optimize this plan by doing things like running selections and projections early, but it does only add steps to the plan that are required. 
 
