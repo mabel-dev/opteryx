@@ -25,6 +25,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - [[#444](https://github.com/mabel-dev/opteryx/issues/444)] Very low cardinality `INNER JOINS` exceed memory allocation. ([@joocer](https://github.com/joocer))   
 - [[#459](https://github.com/mabel-dev/opteryx/issues/459)] Functions lose some detail on non-first page. ([@joocer](https://github.com/joocer))  
 - [[#465](https://github.com/mabel-dev/opteryx/issues/465)] Pages aren't matched to schema for simple queries. ([@joocer](https://github.com/joocer)) 
+- [[#468](https://github.com/mabel-dev/opteryx/issues/468)] Parquet reader shows some fields as "item". ([@joocer](https://github.com/joocer)) 
+
 
 ## [0.3.0] - 2022-08-28
 
