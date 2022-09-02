@@ -610,6 +610,12 @@ STATEMENTS = [
         ("SELECT VERSION()", 1, 1),
         # COALESCE doesn't work with NaNs [#404]
         ("SELECT is_reply_to FROM tests.data.formats.parquet WITH(NO_PARTITION) WHERE COALESCE(is_reply_to, -1) < 0", 74765, 1),
+        # Names not found / clashes [#471]
+        ("SELECT P.* FROM (SELECT * FROM $planets) AS P", 9, 20),
+        ("SELECT P0.id, P1.ID, P2.ID FROM $planets AS P0 JOIN (SELECT id AS ID, name FROM $planets) AS P1 ON P0.name = P1.name JOIN (SELECT id, name AS ID FROM $planets) AS P2 ON P0.name = P2.name", 9, 3),
+        ("SELECT P0.id, P1.ID FROM $planets AS P0 INNER JOIN (SELECT id, name AS ID FROM $planets) AS P1 ON P0.name = P1.name", 9, 2),
+        ("SELECT P0.id, P1.ID FROM $planets AS P0 INNER JOIN (SELECT name, id AS ID FROM $planets) AS P1 USING (name)", 9, 2),
+        ("SELECT P0.id, P1.ID FROM $planets AS P0 LEFT JOIN (SELECT id, name AS ID FROM $planets) AS P1 ON P0.name = P1.name", 9, 2),
     ]
 # fmt:on
 

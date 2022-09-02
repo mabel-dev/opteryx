@@ -175,6 +175,8 @@ class BlobReaderNode(BasePlanNode):
         # circular imports
         from opteryx.managers.query.planner import QueryPlanner
 
+        # This is here for legacy reasons and should be moved to a DAG rather than
+        # a Node (as per the other reader nodes)
         if isinstance(self._dataset, QueryPlanner):
             metadata = None
 
