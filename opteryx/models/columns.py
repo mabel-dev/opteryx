@@ -102,11 +102,19 @@ class Columns:
 
     def rename_table(self, new_name):
         """rename a table"""
+        self._table_metadata["aliases"].append(new_name)
         self._table_metadata["name"] = new_name
         for column, attribs in self._column_metadata.items():
-            self._column_metadata[column]["aliases"].append(
-                f"{new_name}.{attribs['preferred_name']}"
-            )
+            # column and relation aliases compounded together
+            old_aliases = attribs["aliases"]
+            new_aliases = [f"{new_name}.{alias}" for alias in old_aliases]
+            new_aliases.extend(old_aliases)
+            new_aliases.append(f"{new_name}.{attribs['preferred_name']}")
+            self._column_metadata[column]["aliases"] = new_aliases
+            if "source_aliases" in attribs:
+                self._column_metadata[column]["source_aliases"].append(new_name)
+            else:
+                self._column_metadata[column]["source_aliases"] = [new_name]
 
     def set_preferred_name(self, column, preferred_name):
         """change the preferred name for a column"""
@@ -156,6 +164,7 @@ class Columns:
         matches = []
         for col, att in self._column_metadata.items():
             matches.extend([col for alias in att.get("aliases", []) if alias == column])
+            matches = list(set(matches))
         if only_one:
             if len(matches) == 0:
 
