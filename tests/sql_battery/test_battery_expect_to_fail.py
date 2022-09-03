@@ -48,8 +48,8 @@ STATEMENTS = [
         ("SELECT * FROM $astronauts WHERE 'Apollo 11' IN Missions"),
 
         # https://trino.io/docs/current/functions/aggregate.html#filtering-during-aggregation
-        ("SELECT array_agg(name) FILTER (WHERE name IS NOT NULL) FROM region;"),
-        ("SELECT array_agg(x ORDER BY y DESC) from region;"),
+        ("SELECT LIST(name) FILTER (WHERE name IS NOT NULL) FROM $planets;"),
+        ("SELECT LIST(x ORDER BY y DESC) from $planets;"),
     ]
 # fmt:on
 

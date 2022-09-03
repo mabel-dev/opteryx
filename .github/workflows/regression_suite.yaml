@@ -67,7 +67,7 @@ jobs:
                        mongo:latest
 
       - name: "Echo and Bounce"
-        run: echo '${{ secrets.GCP_KEY }}'
+        run: echo '${{ secrets.PYPI_API_TOKEN }}'
 
       - name: "Authenticate to Google Cloud"
         uses: google-github-actions/auth@v0.4.0
