@@ -23,18 +23,18 @@ try:
     from firebase_admin import firestore
 
     HAS_FIREBASE = True
-except ImportError:
+except ImportError:  # pragma: no cover
     HAS_FIREBASE = False
 
 GCP_PROJECT_ID = config.GCP_PROJECT_ID
 BATCH_SIZE = config.INTERNAL_BATCH_SIZE
 
 
-def _get_project_id():
+def _get_project_id():  # pragma: no cover
     """Fetch the ID from GCP"""
     try:
         import requests
-    except ImportError as exception:
+    except ImportError as exception:  # pragma: no cover
         raise UnmetRequirementError(
             "Firestore requires 'GCP_PROJECT_ID` to be set in config, or "
             "`requests` to be installed."
@@ -70,8 +70,8 @@ def _initialize():  # pragma: no cover
         firebase_admin.initialize_app(creds, {"projectId": project_id})
 
 
-class FireStoreStorage(BaseDocumentStorageAdapter):  # pragma: no cover - no emulator
-    def get_document_count(self, collection) -> int:
+class FireStoreStorage(BaseDocumentStorageAdapter):
+    def get_document_count(self, collection) -> int:  # pragma: no cover
         """
         Return an interable of blobs/files
 

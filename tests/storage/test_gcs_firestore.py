@@ -11,7 +11,6 @@ import opteryx
 from opteryx.connectors import FireStoreStorage
 
 
-
 def test_firestore_storage():
 
     opteryx.register_store("dwarves", FireStoreStorage)
@@ -27,9 +26,7 @@ def test_firestore_storage():
 
     # PROCESS THE DATA IN SOME WAY
     cur = conn.cursor()
-    cur.execute(
-        f"SELECT actor, COUNT(*) FROM dwarves GROUP BY actor;"
-    )
+    cur.execute(f"SELECT actor, COUNT(*) FROM dwarves GROUP BY actor;")
     rows = list(cur.fetchall())
     assert len(rows) == 6, len(rows)
 
