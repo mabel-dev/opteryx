@@ -11,9 +11,9 @@ on:
 jobs:
 
   regression-tests:
-    env: 
-      GCP_KEY: ${{ secrets.GCP_KEY }}
     uses: ./.github/workflows/regression_suite.yaml
+    with:
+      GCP_KEY: ${{ secrets.GCP_KEY }}
 
   secrets-scanning:
     uses: ./.github/workflows/secrets_scanning.yaml
