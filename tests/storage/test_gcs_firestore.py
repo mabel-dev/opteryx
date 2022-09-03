@@ -15,6 +15,7 @@ from opteryx.connectors import FireStoreStorage
 def test_firestore_storage():
 
     opteryx.register_store("dwarves", FireStoreStorage)
+    os.environ["GCP_PROJECT_ID"] = "mabeldev"
 
     conn = opteryx.connect()
 
@@ -27,10 +28,10 @@ def test_firestore_storage():
     # PROCESS THE DATA IN SOME WAY
     cur = conn.cursor()
     cur.execute(
-        f"SELECT COUNT(*) FROM dwarves GROUP BY actor;"
+        f"SELECT actor, COUNT(*) FROM dwarves GROUP BY actor;"
     )
     rows = list(cur.fetchall())
-    assert len(rows) == 2
+    assert len(rows) == 6, len(rows)
 
     conn.close()
 
