@@ -1,7 +1,7 @@
 name: Regression Suite
 
 on:
-  workflow_call
+  push
 
 jobs:
   regression_matrix:
