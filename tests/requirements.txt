@@ -13,3 +13,4 @@ mypy
 google-cloud-storage
 minio
 pymongo
+firebase-admin

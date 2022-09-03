@@ -33,7 +33,7 @@ WELL_KNOWN_ADAPTERS = {
 
 _storage_prefixes = {}
 
-if not isinstance(DATASET_PREFIX_MAPPING, dict):
+if not isinstance(DATASET_PREFIX_MAPPING, dict):  # pragma: no cover
     _storage_prefixes = {"_": "disk"}
 else:
     for _prefix, _adapter_name in DATASET_PREFIX_MAPPING.items():
