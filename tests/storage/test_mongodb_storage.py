@@ -48,9 +48,7 @@ def test_mongo_storage():
 
     # PROCESS THE DATA IN SOME WAY
     cur = conn.cursor()
-    cur.execute(
-        f"SELECT COUNT(*) FROM {COLLECTION_NAME}.data.tweets GROUP BY userid;"
-    )
+    cur.execute(f"SELECT COUNT(*) FROM {COLLECTION_NAME}.data.tweets GROUP BY userid;")
     rows = list(cur.fetchall())
     assert len(rows) == 2
 
