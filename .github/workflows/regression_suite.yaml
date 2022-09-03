@@ -69,7 +69,7 @@ jobs:
       - name: "Authenticate to Google Cloud"
         uses: google-github-actions/auth@v0.4.0
         with:
-          credentials_json: ${{ secrets.GCP_KEY }}
+          credentials_json: '${{ secrets.GCP_KEY }}'
 
       - name: Run Regression Tests
         run: coverage run -m pytest 
