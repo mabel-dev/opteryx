@@ -1,7 +1,7 @@
 name: Regression Suite
 
 on:
-  workflow_call
+  push
 
 jobs:
   regression_matrix:
@@ -66,10 +66,10 @@ jobs:
                        -e MONGO_INITDB_ROOT_PASSWORD=secret \
                        mongo:latest
 
-#      - name: "Authenticate to Google Cloud"
-#        uses: google-github-actions/auth@v0
-#        with:
-#          credentials_json: ${{ secrets.GCP_KEY }}
+      - name: "Authenticate to Google Cloud"
+        uses: google-github-actions/auth@v0.4.0
+        with:
+          credentials_json: '${{ secrets.GCP_KEY }}'
 
       - name: Run Regression Tests
         run: coverage run -m pytest 

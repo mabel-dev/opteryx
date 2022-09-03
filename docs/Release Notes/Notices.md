@@ -6,6 +6,7 @@ Component | Disposition | Copyright | Licence
 :-------- | :---------- | :-------- | :------ 
 [cityhash](https://github.com/escherba/python-cityhash)    | Installed   | . | [Bespoke](https://github.com/escherba/python-cityhash/blob/master/LICENSE)  
 [cython](https://github.com/cython/cython)                 | Installed   | . | [Apache 2.0](https://github.com/cython/cython/blob/master/LICENSE.txt)
+[datasketch](https://github.com/ekzhu/datasketch)          | Integrated  | 2015 Eric Zhu | [MIT](https://github.com/ekzhu/datasketch/blob/master/LICENSE)
 [datetime_truncate](https://github.com/mediapop/datetime_truncate) | Integrated | 2020 Media Pop | [MIT](https://github.com/mediapop/datetime_truncate/blob/master/LICENSE)
 [distogram](https://github.com/maki-nage/distogram)        | Integrated  | 2020 Romain Picard | [MIT](https://github.com/maki-nage/distogram/blob/master/LICENSE.txt)
 [fuzzy](https://github.com/yougov/fuzzy)                   | Integrated | Jason R. Coombs | [MIT](https://github.com/yougov/fuzzy/blob/master/LICENSE)

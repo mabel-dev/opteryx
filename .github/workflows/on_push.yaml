@@ -10,9 +10,6 @@ on:
 
 jobs:
 
-  regression-tests:
-    uses: ./.github/workflows/regression_suite.yaml
-
   secrets-scanning:
     uses: ./.github/workflows/secrets_scanning.yaml
 
