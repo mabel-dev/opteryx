@@ -11,6 +11,7 @@
 # limitations under the License.
 
 import numpy
+import pyarrow
 
 from pyarrow import compute
 
@@ -70,3 +71,20 @@ def search(array, item):
             dtype=numpy.bool_,
         )
     return numpy.array([[False] * array.shape[0]], dtype=numpy.bool_)
+
+
+def iif(mask, true_values, false_values):
+    # we have three columns, the first is TRUE offsets
+    # the second is TRUE response
+    # the third is FAST response
+
+    if isinstance(mask, pyarrow.lib.BooleanArray) or (
+        isinstance(mask, numpy.ndarray) and mask.dtype == numpy.bool_
+    ):
+        mask = numpy.nonzero(mask)[0]
+
+    response = false_values
+
+    for index in mask:
+        response[index] = true_values[index]
+    return response

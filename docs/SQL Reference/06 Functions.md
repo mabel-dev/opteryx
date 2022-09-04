@@ -196,11 +196,37 @@ For more details, see [Working with Lists](https://mabel-dev.github.io/opteryx/S
     Returns **x** rounded up to the nearest integer.   
     Related: `FLOOR` 
 
+!!! function "`E` () → _numeric_"  
+    Returns the constant _e_, also known as _Euler's number_.  
+    Related: `LN`.
+
 !!! function "`FLOOR` (**x**: _numeric_) → _numeric_"  
     Returns **x** rounded down to the nearest integer.   
 
+!!! function "`PHI` () → _numeric_"  
+    Returns the constant φ (_phi_), also known as _the golden ratio_.  
+
 !!! function "`PI` () → _numeric_"  
-    Returns the constant Pi.  
+    Returns the constant π (_pi_).  
+
+!!! function "`POWER` (**base**: _numeric_, **exponent**: _numeric**) → _numeric_"   
+    Returns **base** to the power of **exponent**.  
+
+!!! function "`LN` (**x**: _numeric_) → _numeric_"   
+    Returns the natural logarithm of **x**.  
+    Related: `E`, `LOG`, `LOG10`, `LOG2`.
+
+!!! function "`LOG` (**x**: _numeric_, **base**: _numeric_) → _numeric_"   
+    Returns the logarithm of **x** for base **base**.   
+    Related: `LN`, `LOG10`, `LOG2`.
+
+!!! function "`LOG10` (**x**: _numeric_) → _numeric_"   
+    Returns the logarithm for base 10 of **x**.  
+    Related: `LN`, `LOG`, `LOG2`.
+
+!!! function "`LOG2` (**x**: _numeric_) → _numeric_"   
+    Returns the logarithm for base 2 of **x**.  
+    Related: `LN`, `LOG`, `LOG10`.
 
 !!! function "`ROUND` (**x**: _numeric_) → _numeric_ 🔻"  
     Returns **x** rounded to the nearest integer. 
@@ -210,6 +236,9 @@ For more details, see [Working with Lists](https://mabel-dev.github.io/opteryx/S
 
 !!! function "`SIGN` (**x**: _numeric_) → _numeric_"   
     Returns the signum function of **x**; 0 if **x** is 0, -1 if **x** is less than 0 and 1 if **x** is greater than 0.
+
+!!! function "`SIGNUM` (**x**: _numeric_) → _numeric_"   
+    Alias for `SIGN`.
 
 !!! function "`SQRT` (**x**: _numeric_) → _numeric_"   
     Returns the square root of **x**.
@@ -354,6 +383,9 @@ For more details, see [Working with Structs](https://mabel-dev.github.io/opteryx
     Encode value with HEX (BASE16) encoding.  
     Related: `HEX_DECODE`.
 
+!!! function "`IIF` (**condition**, **true_value**, **false_value***) → _[input type]_"  
+    Return the **true_value** if the condition evaluates to True, otherwise return the **false_value**.
+
 !!! function "`NORMAL` () → _numeric_"  
     Random number from a normal (Gaussian) distribution; distribution is centred at 0.0 and have a standard deviation of 1.0.
 
@@ -371,15 +403,23 @@ For more details, see [Working with Structs](https://mabel-dev.github.io/opteryx
 
 !!! function "`SHA1` (**any**) → _varchar_"  
     Calculate the SHA1 hash.  
-    Related: `SHA256`, `SHA512`.
+    Related: `SHA224`, `SHA256`, `SHA384`, `SHA512`.
+
+!!! function "`SHA224` (**any**) → _varchar_"  
+    Calculate the SHA224 hash.  
+    Related: `SHA1`, `SHA256`, `SHA384`, `SHA512`.
 
 !!! function "`SHA256` (**any**) → _varchar_"  
     Calculate the SHA256 hash.  
-    Related: `SHA1`, `SHA512`.
+    Related: `SHA1`, `SHA224`, `SHA384`, `SHA512`.
+
+!!! function "`SHA384` (**any**) → _varchar_"  
+    Calculate the SHA384 hash.  
+    Related: `SHA1`, `SHA224`, `SHA256`, `SHA512`.
 
 !!! function "`SHA512` (**any**) → _varchar_"  
     Calculate the SHA512 hash.  
-    Related: `SHA1`, `SHA256`.
+    Related: `SHA1`, `SHA224`, `SHA256`, `SHA384`.
 
 !!! function "`UNNEST` (**array**: _list_) → _relation_"  
     Create a virtual relation with a row for each element in **array**.

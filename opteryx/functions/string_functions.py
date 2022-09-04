@@ -72,6 +72,9 @@ def get_md5(item):
     """calculate MD5 hash of a value"""
     import hashlib  # delay the import - it's rarely needed
 
+    if item is None:
+        return None
+
     return hashlib.md5(str(item).encode()).hexdigest()  # nosec - meant to be MD5
 
 
@@ -79,26 +82,58 @@ def get_sha1(item):
     """calculate SHA1 hash of a value"""
     import hashlib  # delay the import - it's rarely needed
 
+    if item is None:
+        return None
+
     return hashlib.sha1(str(item).encode()).hexdigest()
+
+
+def get_sha224(item):
+    """calculate SHA256 hash of a value"""
+    import hashlib  # delay the import - it's rarely needed
+
+    if item is None:
+        return None
+
+    return hashlib.sha224(str(item).encode()).hexdigest()
 
 
 def get_sha256(item):
     """calculate SHA256 hash of a value"""
     import hashlib  # delay the import - it's rarely needed
 
+    if item is None:
+        return None
+
     return hashlib.sha256(str(item).encode()).hexdigest()
+
+
+def get_sha384(item):
+    """calculate SHA256 hash of a value"""
+    import hashlib  # delay the import - it's rarely needed
+
+    if item is None:
+        return None
+
+    return hashlib.sha384(str(item).encode()).hexdigest()
 
 
 def get_sha512(item):
     """calculate SHA512 hash of a value"""
     import hashlib  # delay the import - it's rarely needed
 
-    return hashlib.sha512(str(item).encode()).hexdigest()  # nosec - meant to be MD5
+    if item is None:
+        return None
+
+    return hashlib.sha512(str(item).encode()).hexdigest()
 
 
 def get_base64_encode(item):
     """calculate BASE64 encoding of a string"""
     import base64
+
+    if item is None:
+        return None
 
     if not isinstance(item, bytes):
         item = str(item).encode()
@@ -109,6 +144,9 @@ def get_base64_decode(item):
     """calculate BASE64 encoding of a string"""
     import base64
 
+    if item is None:
+        return None
+
     if not isinstance(item, bytes):
         item = str(item).encode()
     return base64.b64decode(item).decode("UTF8")
@@ -117,6 +155,9 @@ def get_base64_decode(item):
 def get_base85_encode(item):
     """calculate BASE85 encoding of a string"""
     import base64
+
+    if item is None:
+        return None
 
     if not isinstance(item, bytes):
         item = str(item).encode()
@@ -127,6 +168,9 @@ def get_base85_decode(item):
     """calculate BASE85 encoding of a string"""
     import base64
 
+    if item is None:
+        return None
+
     if not isinstance(item, bytes):
         item = str(item).encode()
     return base64.b85decode(item).decode("UTF8")
@@ -136,6 +180,9 @@ def get_hex_encode(item):
     """calculate HEX encoding of a string"""
     import base64
 
+    if item is None:
+        return None
+
     if not isinstance(item, bytes):
         item = str(item).encode()
     return base64.b16encode(item).decode("UTF8")
@@ -144,6 +191,9 @@ def get_hex_encode(item):
 def get_hex_decode(item):
     """calculate HEX encoding of a string"""
     import base64
+
+    if item is None:
+        return None
 
     if not isinstance(item, bytes):
         item = str(item).encode()
@@ -165,6 +215,8 @@ def concat(arr):
 def concat_ws(sep, arr):
     """concatenate a list of strings with a separator"""
     sep = sep[0]
+    if sep is None:
+        return None
     result = []
     for row in arr:
         if row is None:

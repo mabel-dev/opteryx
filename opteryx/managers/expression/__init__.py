@@ -64,8 +64,10 @@ def format_expression(root):
                 "Multiply": "*",
                 "Divide": "/",
             }
-            return f"{format_expression(root.left)}{_map.get(root.value, '?')}{format_expression(root.right)}"
-
+            return f"{format_expression(root.left)}{_map.get(root.value, root.value)}{format_expression(root.right)}"
+    if node_type == NodeType.COMPARISON_OPERATOR:
+        _map = {"Eq": "=", "Lt": "<", "Gt": ">"}
+        return f"{format_expression(root.left)}{_map.get(root.value, root.value)}{format_expression(root.right)}"
     return str(root.value)
 
 
@@ -295,27 +297,60 @@ def evaluate(expression: ExpressionTreeNode, table: Table):
     return result
 
 
-def get_all_nodes_of_type(root, *node_type):
+def get_all_nodes_of_type(
+    root, select_nodes, block_nodes=[], enable_nodes=[], enabled=True
+):
     """
-    Walk a expression tree collecting all the nodes of a specified type
+    Walk a expression tree collecting all the nodes of a specified type.
+
+    This handles the complex scenario of capturing aggregates wrapping functions
+    but waiting until it sees an aggregate before capturing functions.
+
+    **FUNCTION on an AGGREGATION result**
+        SELECT CONCAT(LIST(name)) FROM $planets GROUP BY gravity
+    **AGGREGATION on a FUNCTION result**
+        SELECT SUM(IIF(year < 1970, 1, 0)), MAX(year) FROM $astronauts
+
+    The aggregation step can't evaluate the CONCAT but it needs to evaluate the LIST
+    and leave the CONCAT to be evaluated by the projection step - but if it left the
+    IIF for the projection step, there's nothing left in the pipeline to evaluate it
+    so the aggregation step needs to also evaluate the IIF before the SUM.
+
+    This works by setting the 'enabled' flag to false so it doesn't capture any
+    expressions until is passes an enabling node (an aggregation). This way, if a
+    function is wrapped in an aggregation, it's returned so it can be evaluated
+    but if the function is wrapping an aggregation, it's not captured.
     """
     if not isinstance(root, list):
         root = [root]
 
     identifiers = []
     for node in root:
-        if node.token_type in node_type:
-            identifiers.append(node)
+        if node.token_type in block_nodes:
+            return []
+        if node.token_type in enable_nodes:
+            enabled = True
+        if node.token_type in select_nodes:
+            if enabled:
+                identifiers.append(node)
         if node.left:
-            identifiers.extend(get_all_nodes_of_type(node.left, *node_type))
+            identifiers.extend(
+                get_all_nodes_of_type(node.left, select_nodes, block_nodes)
+            )
         if node.centre:
-            identifiers.extend(get_all_nodes_of_type(node.centre, *node_type))
+            identifiers.extend(
+                get_all_nodes_of_type(node.centre, select_nodes, block_nodes)
+            )
         if node.right:
-            identifiers.extend(get_all_nodes_of_type(node.right, *node_type))
+            identifiers.extend(
+                get_all_nodes_of_type(node.right, select_nodes, block_nodes)
+            )
         if node.parameters:
             for parameter in node.parameters:
                 if isinstance(parameter, ExpressionTreeNode):
-                    identifiers.extend(get_all_nodes_of_type(parameter, *node_type))
+                    identifiers.extend(
+                        get_all_nodes_of_type(parameter, select_nodes, block_nodes)
+                    )
 
     return identifiers
 
@@ -333,9 +368,11 @@ def evaluate_and_append(expressions, table: Table, seed: str = None):
 
     for statement in expressions:
 
-        if statement.token_type in (NodeType.FUNCTION, NodeType.BINARY_OPERATOR) or (
-            statement.token_type & LITERAL_TYPE == LITERAL_TYPE
-        ):
+        if statement.token_type in (
+            NodeType.FUNCTION,
+            NodeType.BINARY_OPERATOR,
+            NodeType.COMPARISON_OPERATOR,
+        ) or (statement.token_type & LITERAL_TYPE == LITERAL_TYPE):
             new_column_name = format_expression(statement)
             raw_column_name = new_column_name
 
@@ -349,10 +386,21 @@ def evaluate_and_append(expressions, table: Table, seed: str = None):
 
             # if we've already been evaluated - don't do it again
             if len(columns.get_column_from_alias(raw_column_name)) > 0:
+                statement = ExpressionTreeNode(
+                    NodeType.IDENTIFIER, value=raw_column_name, alias=alias
+                )
+                return_expressions.append(statement)
                 continue
 
             # do the evaluation
             new_column = evaluate(statement, table)
+
+            # some activities give us masks rather than the values, if we don't have
+            # enough values, assume it's a mask
+            if len(new_column) < table.num_rows:
+                bool_list = numpy.full(table.num_rows, False)
+                bool_list[new_column] = True
+                new_column = bool_list
 
             # large arrays appear to have a bug in PyArrow where they're automatically
             # converted to a chunked array, but the internal function can't handle
@@ -376,6 +424,6 @@ def evaluate_and_append(expressions, table: Table, seed: str = None):
 
         return_expressions.append(statement)
 
-        table = columns.apply(table)
+    table = columns.apply(table)
 
     return columns, return_expressions, table

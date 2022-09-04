@@ -114,10 +114,15 @@ def _build_aggs(aggregators, columns):
 
     for root in aggregators:
 
-        for aggregator in get_all_nodes_of_type(root, NodeType.AGGREGATOR):
+        for aggregator in get_all_nodes_of_type(
+            root, select_nodes=(NodeType.AGGREGATOR,)
+        ):
 
             if aggregator.token_type == NodeType.AGGREGATOR:
                 field_node = aggregator.parameters[0]
+                display_name = format_expression(field_node)
+                exists = columns.get_column_from_alias(display_name)
+
                 if field_node.token_type == NodeType.WILDCARD:
                     display_field = "*"
                     field_name = columns.preferred_column_names[0][0]
@@ -126,6 +131,9 @@ def _build_aggs(aggregators, columns):
                     field_name = columns.get_column_from_alias(
                         field_node.value, only_one=True
                     )
+                elif len(exists) > 0:
+                    display_field = exists[0]
+                    field_name = exists[0]
                 else:
                     display_name = format_expression(field_node)
                     raise SqlError(
@@ -156,16 +164,26 @@ def _non_group_aggregates(aggregates, table, columns):
 
     for aggregate in aggregates:
 
-        column_name = aggregate.parameters[0].value
-        mapped_column_name = columns.get_column_from_alias(column_name, only_one=True)
-        raw_column_values = table[mapped_column_name].to_numpy()
-        aggregate_function_name = AGGREGATORS[aggregate.value]
-        # this maps a string which is the function name to that function on the
-        # pyarrow.compute module
-        aggregate_function = getattr(pyarrow.compute, aggregate_function_name)
-        aggregate_column_value = aggregate_function(raw_column_values).as_py()
-        aggregate_column_name = f"{mapped_column_name}_{aggregate_function_name}"
-        result[aggregate_column_name] = aggregate_column_value
+        if aggregate.token_type == NodeType.AGGREGATOR:
+
+            column_name = format_expression(aggregate.parameters[0])
+            mapped_column_name = columns.get_column_from_alias(
+                column_name, only_one=True
+            )
+            raw_column_values = table[mapped_column_name].to_numpy()
+            aggregate_function_name = AGGREGATORS[aggregate.value]
+            # this maps a string which is the function name to that function on the
+            # pyarrow.compute module
+            aggregate_function = getattr(pyarrow.compute, aggregate_function_name)
+            aggregate_column_value = aggregate_function(raw_column_values).as_py()
+            aggregate_column_name = f"{mapped_column_name}_{aggregate_function_name}"
+            result[aggregate_column_name] = aggregate_column_value
+
+    #        else:
+
+    #            raise SqlError(
+    #                "Cannot mix aggregate and non aggregate columns in SELECT statement."
+    #            )
 
     return pyarrow.Table.from_pylist([result])
 
@@ -223,7 +241,7 @@ class AggregateNode(BasePlanNode):
             [
                 node.value
                 for node in get_all_nodes_of_type(
-                    self._groups + self._aggregates, NodeType.IDENTIFIER
+                    self._groups + self._aggregates, select_nodes=(NodeType.IDENTIFIER,)
                 )
             ]
         )
@@ -232,8 +250,23 @@ class AggregateNode(BasePlanNode):
             _project(data_pages.execute(), all_identifiers), promote=True
         )
 
+        # extract any inner evaluations, like the IIF in SUM(IIF(x, 1, 0))
+        # we can't pass an aggregator node so block traversal past these
+        evaluatable_nodes = get_all_nodes_of_type(
+            self._aggregates,
+            select_nodes=(
+                NodeType.FUNCTION,
+                NodeType.BINARY_OPERATOR,
+                NodeType.COMPARISON_OPERATOR,
+            ),
+            # block_nodes=(NodeType.AGGREGATOR,),
+            enable_nodes=(NodeType.AGGREGATOR,),
+            enabled=False,
+        )
+
         # Allow grouping by functions by evaluating them
         start_time = time.time_ns()
+        columns, _, table = evaluate_and_append(evaluatable_nodes, table)
         columns, self._groups, table = evaluate_and_append(self._groups, table)
         self._statistics.time_evaluating += time.time_ns() - start_time
 

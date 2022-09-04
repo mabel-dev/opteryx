@@ -210,6 +210,8 @@ STATEMENTS = [
         ("SELECT TRY_CAST(planetId AS NUMERIC) FROM $satellites", 177, 1),
 
         ("SELECT PI()", 1, 1),
+        ("SELECT E()", 1, 1),
+        ("SELECT PHI()", 1, 1),
         ("SELECT GET(name, 1) FROM $satellites GROUP BY planetId, GET(name, 1)", 56, 1),
         ("SELECT COUNT(*), ROUND(magnitude) FROM $satellites group by ROUND(magnitude)", 22, 2),
         ("SELECT ROUND(magnitude) FROM $satellites group by ROUND(magnitude)", 22, 1),
@@ -283,9 +285,16 @@ STATEMENTS = [
         ("SELECT HASH('hello')", 1, 1),
         ("SELECT MD5('hello')", 1, 1),
         ("SELECT SHA1('hello')", 1, 1),
+        ("SELECT SHA224('hello')", 1, 1),
         ("SELECT SHA256('hello')", 1, 1),
+        ("SELECT SHA384('hello')", 1, 1),
         ("SELECT SHA512('hello')", 1, 1),
         ("SELECT UPPER('upper'), LOWER('LOWER')", 1, 2),
+        ("SELECT POWER(2, 10)", 1, 1),
+        ("SELECT LN(10)", 1, 1),
+        ("SELECT LOG10(10)", 1, 1),
+        ("SELECT LOG2(10)", 1, 1),
+        ("SELECT LOG(10, 4)", 1, 1),
 
         ("SELECT HASH(name), name from $astronauts", 357, 2),
         ("SELECT HASH(death_date), death_date from $astronauts", 357, 2),
@@ -495,6 +504,7 @@ STATEMENTS = [
         ("SELECT 3 + 3", 1, 1),
         ("SELECT 12 % 2", 1, 1),
         ("SELECT 10 - 10", 1, 1),
+        ("SELECT POWER(((6.67 * POWER(10, -11) * 5.97 * POWER(10, 24) * 86400 * 86400) / (4 * PI() * PI())), 1/3)", 1, 1),
         ("SELECT name || ' ' || name AS DBL FROM $planets", 9, 1),
         ("SELECT * FROM $satellites WHERE planetId = 2 + 5", 27, 8),
         ("SELECT * FROM $satellites WHERE planetId = round(density)", 1, 8),
@@ -538,6 +548,12 @@ STATEMENTS = [
         ("SELECT GREATEST(LIST(gm)) as MASSES FROM $satellites GROUP BY planetId", 7, 1),
         ("SELECT LEAST(LIST(name)) as NAMES FROM $satellites GROUP BY planetId", 7, 1),
         ("SELECT LEAST(LIST(gm)) as MASSES FROM $satellites GROUP BY planetId", 7, 1),
+        ("SELECT IIF(SEARCH(missions, 'Apollo 13'), 1, 0), SEARCH(missions, 'Apollo 13'), missions FROM $astronauts", 357, 3),
+        ("SELECT IIF(year = 1960, 1, 0), year FROM $astronauts", 357, 2),
+        ("SELECT SUM(IIF(year < 1970, 1, 0)), MAX(year) FROM $astronauts", 1, 2),
+        ("SELECT SUM(IIF(year < 1970, 1, 0)), year FROM $astronauts GROUP BY year ORDER BY year ASC", 21, 2),
+ #       ("SELECT SUM(id) * COUNT(id) FROM $planets", 1, 1),
+        ("SELECT SUM(id) + id FROM $planets GROUP BY id", 9, 1),
 
         ("SHOW CREATE TABLE $planets", 1, 1),
         ("SHOW CREATE TABLE $satellites", 1, 1),
@@ -624,6 +640,11 @@ STATEMENTS = [
         ("SELECT P0.id, P1.ID FROM $planets AS P0 LEFT JOIN (SELECT id, name AS ID FROM $planets) AS P1 ON P0.name = P1.name", 9, 2),
         # [#475] a variation of #471
         ("SELECT P0.id, P1.ID, P2.ID FROM $planets AS P0 JOIN (SELECT CONCAT_WS(' ', list(id)) AS ID, MAX(name) AS n FROM $planets GROUP BY gravity) AS P1 ON P0.name = P1.n JOIN (SELECT CONCAT_WS(' ', list(id)) AS ID, MAX(name) AS n FROM $planets GROUP BY gravity) AS P2 ON P0.name = P2.n", 8, 3),
+        # no issue number - but these two caused a headache
+        # FUNCTION (AGG)
+        ("SELECT CONCAT(LIST(name)) FROM $planets GROUP BY gravity", 8, 1),
+        # AGG (FUNCTION)
+        ("SELECT SUM(IIF(year < 1970, 1, 0)), MAX(year) FROM $astronauts", 1, 2),
     ]
 # fmt:on
 
