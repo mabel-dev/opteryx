@@ -354,7 +354,11 @@ class QueryPlanner(ExecutionTree):
                 operator_type = NodeType.XOR
 
             return ExpressionTreeNode(
-                operator_type, value=operator, left_node=left, right_node=right
+                operator_type,
+                value=operator,
+                left_node=left,
+                right_node=right,
+                alias=alias,
             )
         if "Cast" in function:
             # CAST(<var> AS <type>) - convert to the form <type>(var), e.g. BOOLEAN(on)
@@ -453,7 +457,9 @@ class QueryPlanner(ExecutionTree):
                 number = 0 - numpy.float64(
                     function["UnaryOp"]["expr"]["Value"]["Number"][0]
                 )
-                return ExpressionTreeNode(NodeType.LITERAL_NUMERIC, value=number)
+                return ExpressionTreeNode(
+                    NodeType.LITERAL_NUMERIC, value=number, alias=alias
+                )
         if "Between" in function:
             expr = self._filter_extract(function["Between"]["expr"])
             low = self._filter_extract(function["Between"]["low"])
@@ -560,6 +566,7 @@ class QueryPlanner(ExecutionTree):
                     self._build_literal_node(t["Value"]).value
                     for t in function["Tuple"]
                 ],
+                alias=alias,
             )
 
         raise SqlError(
