@@ -539,6 +539,11 @@ STATEMENTS = [
         ("SELECT LEAST(LIST(name)) as NAMES FROM $satellites GROUP BY planetId", 7, 1),
         ("SELECT LEAST(LIST(gm)) as MASSES FROM $satellites GROUP BY planetId", 7, 1),
 
+        ("SHOW CREATE TABLE $planets", 1, 1),
+        ("SHOW CREATE TABLE $satellites", 1, 1),
+        ("SHOW CREATE TABLE $astronauts", 1, 1),
+        ("SHOW CREATE TABLE tests.data.framed FOR '2021-03-28'", 1, 1),
+
         # These are queries which have been found to return the wrong result or not run correctly
         # FILTERING ON FUNCTIONS
         ("SELECT DATE(birth_date) FROM $astronauts FOR TODAY WHERE DATE(birth_date) < '1930-01-01'", 14, 1),

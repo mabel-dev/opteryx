@@ -28,6 +28,7 @@ from .outer_join_node import OuterJoinNode  # LEFT/RIGHT/FULL OUTER JOIN
 from .projection_node import ProjectionNode  # remove unwanted columns including renames
 from .selection_node import SelectionNode  # filter unwanted rows
 from .show_columns_node import ShowColumnsNode  # column details
+from .show_create_node import ShowCreateNode  # SHOW CREATE TABLE
 from .show_functions_node import ShowFunctionsNode  # supported functions
 from .sort_node import SortNode  # order by selected columns
 
