@@ -142,6 +142,22 @@ def fetchall(pages) -> List[dict]:
     return fetchmany(pages=pages, limit=-1)
 
 
+def as_arrow(pages):
+    """return a result set a a pyarrow table"""
+    # cicular imports
+    from opteryx.models import Columns
+
+    merged = pyarrow.concat_tables(pages, promote=True)
+
+    columns = Columns(merged)
+    preferred_names = columns.preferred_column_names
+    column_names = []
+    for col in merged.column_names:
+        column_names.append([c for a, c in preferred_names if a == col][0])
+
+    return merged.rename_columns(column_names)
+
+
 # Adapted from:
 # https://stackoverflow.com/questions/55546027/how-to-assign-arbitrary-metadata-to-pyarrow-table-parquet-columns
 
