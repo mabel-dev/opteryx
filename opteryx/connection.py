@@ -16,10 +16,12 @@ stores, it is not compliant with the standard:
 https://www.python.org/dev/peps/pep-0249/
 """
 import datetime
-from decimal import Decimal
 import time
 
+from decimal import Decimal
 from typing import Dict, List, Optional
+
+from pyarrow import Table
 
 from opteryx.exceptions import CursorInvalidStateError, ProgrammingError, SqlError
 from opteryx.managers.cache import BaseBufferCache
@@ -182,6 +184,10 @@ class Cursor:
         if self._results is None:
             raise CursorInvalidStateError(CURSOR_NOT_RUN)
         return arrow.fetchall(self._results)
+
+    def to_arrow(self) -> Table:
+        """fetch all matching records as a pyarrow table"""
+        return arrow.as_arrow(self._results)
 
     def close(self):
         """close the connection"""
