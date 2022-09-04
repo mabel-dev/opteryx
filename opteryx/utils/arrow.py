@@ -18,6 +18,8 @@ from pyarrow import Table
 
 import pyarrow
 
+from orjson import dumps, loads
+
 from opteryx import config
 
 INTERNAL_BATCH_SIZE = config.INTERNAL_BATCH_SIZE
@@ -39,9 +41,9 @@ def consolidate_pages(pages, statistics):
           we're not working as fast as we can.
 
     The low-water mark is 60% of the target size, less than this we look to merge
-    pages together. This is more common follow the projection push down, one column
-    doesn't take up a lot of memory so we consolidate tens of pages into a single
-    page.
+    pages together. This is more common following the implementation of projection
+    push down, one column doesn't take up a lot of memory so we consolidate tens of
+    pages into a single page.
 
     The high-water mark is 120% of the target size, more than this we split the page.
     """
@@ -162,7 +164,7 @@ def set_metadata(table, table_metadata=None, column_metadata=None):
         tbl_meta: dict
             A json-serializable dictionary with table-level metadata.
     """
-    from orjson import dumps
+    
 
     # Create updated column fields with new metadata
     if table_metadata or column_metadata:
@@ -204,7 +206,6 @@ def _decode_metadata(metadata):
     Arrow stores metadata keys and values as bytes. We store "arbitrary" data as
     json-encoded strings (utf-8), which are here decoded into normal dict.
     """
-    from orjson import loads
 
     if not metadata:
         # None or {} are not decoded

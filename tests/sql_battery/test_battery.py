@@ -495,6 +495,7 @@ STATEMENTS = [
         ("SELECT 3 + 3", 1, 1),
         ("SELECT 12 % 2", 1, 1),
         ("SELECT 10 - 10", 1, 1),
+        ("SELECT name || ' ' || name AS DBL FROM $planets", 9, 1),
         ("SELECT * FROM $satellites WHERE planetId = 2 + 5", 27, 8),
         ("SELECT * FROM $satellites WHERE planetId = round(density)", 1, 8),
         ("SELECT * FROM $satellites WHERE planetId * 1 = round(density * 1)", 1, 8),
@@ -616,6 +617,8 @@ STATEMENTS = [
         ("SELECT P0.id, P1.ID FROM $planets AS P0 INNER JOIN (SELECT id, name AS ID FROM $planets) AS P1 ON P0.name = P1.name", 9, 2),
         ("SELECT P0.id, P1.ID FROM $planets AS P0 INNER JOIN (SELECT name, id AS ID FROM $planets) AS P1 USING (name)", 9, 2),
         ("SELECT P0.id, P1.ID FROM $planets AS P0 LEFT JOIN (SELECT id, name AS ID FROM $planets) AS P1 ON P0.name = P1.name", 9, 2),
+        # [#475] a variation of #471
+        ("SELECT P0.id, P1.ID, P2.ID FROM $planets AS P0 JOIN (SELECT CONCAT_WS(' ', list(id)) AS ID, MAX(name) AS n FROM $planets GROUP BY gravity) AS P1 ON P0.name = P1.n JOIN (SELECT CONCAT_WS(' ', list(id)) AS ID, MAX(name) AS n FROM $planets GROUP BY gravity) AS P2 ON P0.name = P2.n", 8, 3),
     ]
 # fmt:on
 

@@ -192,10 +192,11 @@ class Columns:
 
         for attributes in self._column_metadata.values():
             for alias in attributes.get("aliases") or []:
-                my_dist = compare(column_name, alias)
-                if 0 < my_dist < best_match_score:
-                    best_match_score = my_dist
-                    best_match_column = alias
+                if alias is not None:
+                    my_dist = compare(column_name, alias)
+                    if 0 < my_dist < best_match_score:
+                        best_match_score = my_dist
+                        best_match_column = alias
 
         return best_match_column
 

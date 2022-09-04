@@ -11,6 +11,7 @@
 # limitations under the License.
 
 import itertools
+import os
 
 from functools import lru_cache
 
@@ -64,3 +65,19 @@ def fuzzy_search(name, candidates):
             best_match_column = candidate
 
     return best_match_column
+
+def random_int() -> int:
+    """
+    Select a random integer (32bit)
+    """
+    return bytes_to_int(os.urandom(4))
+
+
+def bytes_to_int(bytes: bytes) -> int:
+    """
+    Helper function, convert set of bytes to an integer
+    """
+    result = 0
+    for byte in bytes:
+        result = result * 256 + int(byte)
+    return result

@@ -30,6 +30,7 @@ from opteryx.managers.expression import format_expression
 from opteryx.managers.expression import NodeType, LITERAL_TYPE
 from opteryx.models import QueryDirectives, QueryStatistics
 from opteryx.operators import BasePlanNode
+from opteryx.utils import random_int
 
 
 class ProjectionNode(BasePlanNode):
@@ -90,12 +91,14 @@ class ProjectionNode(BasePlanNode):
 
         # we can't do much with this until we have a chunk to read the metadata from
         columns = None
+        # we want to avoid collisions in internal column names
+        seed = str(random_int() + 1)
 
         for page in data_pages.execute():
 
             # If any of the columns are FUNCTIONs, we need to evaluate them
             start_time = time.time_ns()
-            _columns, _, page = evaluate_and_append(self._expressions, page)
+            _columns, _, page = evaluate_and_append(self._expressions, page, seed)
             self._statistics.time_evaluating += time.time_ns() - start_time
 
             # first time round we're going work out what we need from the metadata

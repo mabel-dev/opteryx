@@ -22,6 +22,7 @@ from enum import Enum
 import numpy
 import pyarrow
 
+from cityhash import CityHash64
 from pyarrow import Table
 
 from opteryx.functions import FUNCTIONS
@@ -319,7 +320,7 @@ def get_all_nodes_of_type(root, *node_type):
     return identifiers
 
 
-def evaluate_and_append(expressions, table: Table):
+def evaluate_and_append(expressions, table: Table, seed:str=None):
 
     columns = Columns(table)
     return_expressions = []
@@ -330,15 +331,25 @@ def evaluate_and_append(expressions, table: Table):
             statement.token_type & LITERAL_TYPE == LITERAL_TYPE
         ):
             new_column_name = format_expression(statement)
+
+            # avoid clashes in column names
+            alias = statement.alias
+            if not alias:
+                alias = [new_column_name]
+            if seed is not None:
+                alias.append(new_column_name)
+                new_column_name = hex(CityHash64(seed + new_column_name))
+     
             # if we've already been evaluated - don't do it again
             if len(columns.get_column_from_alias(new_column_name)) > 0:
                 continue
 
+            # do the evaluation
             new_column = evaluate(statement, table)
 
             # large arrays appear to have a bug in PyArrow where they're automatically
             # converted to a chunked array, but the internal function can't handle
-            # chunked arrays
+            # chunked arrays - 50Mb columns are rare when we have 64Mb pages.
             if new_column.nbytes > 50000000:
                 new_column = [[i] for i in new_column]
             else:
@@ -349,10 +360,11 @@ def evaluate_and_append(expressions, table: Table):
             # add the column to the schema and because it's been evaluated and added to
             # table, it's an INDENTIFIER rather than a FUNCTION
             columns.add_column(new_column_name)
-            columns.add_alias(new_column_name, statement.alias)
+            columns.add_alias(new_column_name, alias)
+            columns.set_preferred_name(new_column_name, alias[0])
 
             statement = ExpressionTreeNode(
-                NodeType.IDENTIFIER, value=new_column_name, alias=statement.alias
+                NodeType.IDENTIFIER, value=new_column_name, alias=alias
             )
 
         return_expressions.append(statement)
