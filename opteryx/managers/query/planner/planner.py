@@ -50,7 +50,9 @@ from opteryx import operators, functions
 from opteryx.connectors import get_adapter
 from opteryx.exceptions import SqlError
 from opteryx.functions.binary_operators import BINARY_OPERATORS
-from opteryx.managers.expression import ExpressionTreeNode, NodeType
+from opteryx.managers.expression import ExpressionTreeNode
+from opteryx.managers.expression import get_all_nodes_of_type
+from opteryx.managers.expression import NodeType
 from opteryx.managers.query.planner.temporal import extract_temporal_filters
 from opteryx.models import Columns, ExecutionTree, QueryDirectives
 from opteryx.utils import dates, fuzzy_search
@@ -934,10 +936,8 @@ class QueryPlanner(ExecutionTree):
         _groups = self._extract_field_list(
             ast[0]["Query"]["body"]["Select"]["group_by"]
         )
-        if _groups or any(
-            a.token_type == NodeType.AGGREGATOR
-            for a in _projection
-            if isinstance(a, ExpressionTreeNode)
+        if _groups or get_all_nodes_of_type(
+            _projection, select_nodes=(NodeType.AGGREGATOR,)
         ):
             _aggregates = _projection.copy()
             if isinstance(_aggregates, dict):

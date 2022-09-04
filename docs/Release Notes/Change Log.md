@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - [[#442](https://github.com/mabel-dev/opteryx/issues/442)] Various functions. ([@joocer](https://github.com/joocer))  
 - [[#483](https://github.com/mabel-dev/opteryx/issues/483)] Support `SHOW CREATE TABLE`. ([@joocer](https://github.com/joocer))  
 - [[#375](https://github.com/mabel-dev/opteryx/issues/375)] Results to an Arrow Table. ([@joocer](https://github.com/joocer))  
+- [[#486](https://github.com/mabel-dev/opteryx/issues/486)] Suppoer functions on aggregates and aggregates on functions. ([@joocer](https://github.com/joocer))  
 
 **Changed**
 
