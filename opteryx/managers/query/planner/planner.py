@@ -120,6 +120,8 @@ class QueryPlanner(ExecutionTree):
             self._show_columns_planner(self._ast, self._statistics)
         elif "ShowVariable" in self._ast[0]:
             self._show_variable_planner(self._ast, self._statistics)
+        elif "ShowCreate" in self._ast[0]:
+            self._show_create_planner(self._ast, self._statistics)
         else:  # pragma: no cover
             raise SqlError("Unknown or unsupported Query type.")
 
@@ -708,6 +710,46 @@ class QueryPlanner(ExecutionTree):
         )
         self.link_operators(last_node, "columns")
         last_node = "columns"
+
+    def _show_create_planner(self, ast, statistics):
+
+        directives = self._extract_directives(ast)
+
+        if ast[0]["ShowCreate"]["obj_type"] != "Table":
+            raise SqlError("SHOW CREATE only supports tables")
+
+        dataset = ".".join([part["value"] for part in ast[0]["ShowCreate"]["obj_name"]])
+
+        if dataset[0:1] == "$":
+            mode = "Internal"
+            reader = None
+        else:
+            reader = get_adapter(dataset)
+            mode = reader.__mode__
+
+        self.add_operator(
+            "reader",
+            operators.reader_factory(mode)(
+                directives=directives,
+                statistics=statistics,
+                dataset=dataset,
+                alias=None,
+                reader=reader,
+                cache=None,  # never read from cache
+                start_date=self.start_date,
+                end_date=self.end_date,
+            ),
+        )
+        last_node = "reader"
+
+        self.add_operator(
+            "show_create",
+            operators.ShowCreateNode(
+                directives=directives, statistics=statistics, table=dataset
+            ),
+        )
+        self.link_operators(last_node, "show_create")
+        last_node = "show_create"
 
     def _extract_identifiers(self, ast):
         identifiers = []
