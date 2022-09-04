@@ -66,6 +66,7 @@ def fuzzy_search(name, candidates):
 
     return best_match_column
 
+
 def random_int() -> int:
     """
     Select a random integer (32bit)

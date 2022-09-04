@@ -320,7 +320,13 @@ def get_all_nodes_of_type(root, *node_type):
     return identifiers
 
 
-def evaluate_and_append(expressions, table: Table, seed:str=None):
+def evaluate_and_append(expressions, table: Table, seed: str = None):
+    """
+    Evaluate an expression and add it to the table.
+
+    This needs to be able to deal with and avoid cascading problems where field names
+    are duplicated, this is most common when performing many joins on the same table.
+    """
 
     columns = Columns(table)
     return_expressions = []
@@ -331,6 +337,7 @@ def evaluate_and_append(expressions, table: Table, seed:str=None):
             statement.token_type & LITERAL_TYPE == LITERAL_TYPE
         ):
             new_column_name = format_expression(statement)
+            raw_column_name = new_column_name
 
             # avoid clashes in column names
             alias = statement.alias
@@ -339,9 +346,9 @@ def evaluate_and_append(expressions, table: Table, seed:str=None):
             if seed is not None:
                 alias.append(new_column_name)
                 new_column_name = hex(CityHash64(seed + new_column_name))
-     
+
             # if we've already been evaluated - don't do it again
-            if len(columns.get_column_from_alias(new_column_name)) > 0:
+            if len(columns.get_column_from_alias(raw_column_name)) > 0:
                 continue
 
             # do the evaluation

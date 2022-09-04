@@ -164,7 +164,6 @@ def set_metadata(table, table_metadata=None, column_metadata=None):
         tbl_meta: dict
             A json-serializable dictionary with table-level metadata.
     """
-    
 
     # Create updated column fields with new metadata
     if table_metadata or column_metadata:
