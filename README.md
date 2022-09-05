@@ -1,4 +1,4 @@
-![archaeopteryx](archaeopteryx-fossil.png)
+![Icarus Opteryx](icarus-opteryx-small.png)
 
 # Opteryx
 
