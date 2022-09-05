@@ -75,7 +75,7 @@ class SelectionNode(BasePlanNode):
         if isinstance(data_pages, Table):
             data_pages = (data_pages,)
 
-        # we should always have a filter - but harm checking
+        # we should always have a filter - but no harm in checking
         if self._filter is None:
             yield from data_pages
 

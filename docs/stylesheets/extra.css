@@ -5,49 +5,67 @@ table {
 }
 
 th {
-    padding: 0.4em 0.4em !important;
+    padding-top: 0.4em !important;
+    padding-bottom: 0.4em !important;
+    margin-left: 0.8em !important;
+    margin-right: 0.8em !important;
     font-weight: 300;
     color: #fff;
     background-color: #666;
 }
 
 td {
-    padding: 0.4em 0.4em !important;
+    padding-top: 0.4em !important;
+    padding-bottom: 0.4em !important;
+    margin-left: 0.8em !important;
+    margin-right: 0.8em !important;
 }
 
 code {
     font-family: Menlo, 'Robot Mono', 'JetBrains Mono', sans-serif;
-    font-size: 1em !important;
+    font-size: 0.85em !important;
     color: #D63384 !important;
     font-weight: 300;
     word-wrap: break-word;
+    background-color: transparent !important;
+    padding: 0px !important;
+}
+
+pre>code {
+    background-color: #faf7fd !important;
+    font-size: 1em !important;
+    padding: 1em !important;
 }
 
 body {
-    font-family: 'IBM Plex Sans', sans-serif;
+    font-family: Inter, 'IBM Plex Sans', sans-serif;
     font-weight: 400;
 }
 
+p, li {
+    font-size: 1.2em !important;
+}
+
 h1 {
-    font-family: "IBM Plex Sans", Georgia, 'Times New Roman', Times, serif;
+    font-family: Georgia, 'Times New Roman', Times, serif;
     font-weight: 500 !important;
-    font-size: 1.8em !important;
+    font-size: 2em !important;
     margin-bottom: 0.7em !important;
     color: #333 !important;
 }
 
 h2 {
-    font-family: "IBM Plex Sans", Georgia, 'Times New Roman', Times, serif;
+    font-family: Inter, 'IBM Plex Sans', sans-serif;
     font-weight: 500 !important;
-    font-size: 1.4em !important;
+    font-size: 1.5em !important;
     margin-bottom: 0.7em !important;
     margin-top: 0.5em !important;
     color: #333 !important;
 }
 
 h3 {
-    font-family: "IBM Plex Sans", Georgia, 'Times New Roman', Times, serif;
-    font-weight: 500 !important;
+    font-family: Inter, 'IBM Plex Sans', sans-serif;
+    font-weight: 600 !important;
     font-size: 1.2em !important;
     margin-bottom: 0.7em !important;
     margin-top: 0.5em !important;
@@ -55,7 +73,7 @@ h3 {
 }
 
 h4 {
-    font-family: "IBM Plex Sans", Georgia, 'Times New Roman', Times, serif;
+    font-family: Inter, 'IBM Plex Sans', sans-serif;
     font-weight: 300 !important;
     font-size: 1em !important;
     margin-bottom: 0.7em !important;
@@ -102,4 +120,8 @@ h4 {
   
 .admonition.function  > p {
     margin: 0.2em 0px 0px 1em;
+}
+
+.md-header {
+    background-color: #174d8d;
 }
