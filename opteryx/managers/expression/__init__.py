@@ -297,60 +297,27 @@ def evaluate(expression: ExpressionTreeNode, table: Table):
     return result
 
 
-def get_all_nodes_of_type(
-    root, select_nodes, block_nodes=[], enable_nodes=[], enabled=True
-):
+def get_all_nodes_of_type(root, select_nodes):
     """
     Walk a expression tree collecting all the nodes of a specified type.
-
-    This handles the complex scenario of capturing aggregates wrapping functions
-    but waiting until it sees an aggregate before capturing functions.
-
-    **FUNCTION on an AGGREGATION result**
-        SELECT CONCAT(LIST(name)) FROM $planets GROUP BY gravity
-    **AGGREGATION on a FUNCTION result**
-        SELECT SUM(IIF(year < 1970, 1, 0)), MAX(year) FROM $astronauts
-
-    The aggregation step can't evaluate the CONCAT but it needs to evaluate the LIST
-    and leave the CONCAT to be evaluated by the projection step - but if it left the
-    IIF for the projection step, there's nothing left in the pipeline to evaluate it
-    so the aggregation step needs to also evaluate the IIF before the SUM.
-
-    This works by setting the 'enabled' flag to false so it doesn't capture any
-    expressions until is passes an enabling node (an aggregation). This way, if a
-    function is wrapped in an aggregation, it's returned so it can be evaluated
-    but if the function is wrapping an aggregation, it's not captured.
     """
     if not isinstance(root, list):
         root = [root]
 
     identifiers = []
     for node in root:
-        if node.token_type in block_nodes:
-            return []
-        if node.token_type in enable_nodes:
-            enabled = True
         if node.token_type in select_nodes:
-            if enabled:
-                identifiers.append(node)
+            identifiers.append(node)
         if node.left:
-            identifiers.extend(
-                get_all_nodes_of_type(node.left, select_nodes, block_nodes)
-            )
+            identifiers.extend(get_all_nodes_of_type(node.left, select_nodes))
         if node.centre:
-            identifiers.extend(
-                get_all_nodes_of_type(node.centre, select_nodes, block_nodes)
-            )
+            identifiers.extend(get_all_nodes_of_type(node.centre, select_nodes))
         if node.right:
-            identifiers.extend(
-                get_all_nodes_of_type(node.right, select_nodes, block_nodes)
-            )
+            identifiers.extend(get_all_nodes_of_type(node.right, select_nodes))
         if node.parameters:
             for parameter in node.parameters:
                 if isinstance(parameter, ExpressionTreeNode):
-                    identifiers.extend(
-                        get_all_nodes_of_type(parameter, select_nodes, block_nodes)
-                    )
+                    identifiers.extend(get_all_nodes_of_type(parameter, select_nodes))
 
     return identifiers
 
