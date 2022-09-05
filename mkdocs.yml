@@ -2,7 +2,7 @@ site_name: Opteryx
 
 theme:
   name: material
-  logo: opteryx-mini.png
+  logo: icarus-opteryx.png
   font:
     text: Inter
     code: JetBrains Mono

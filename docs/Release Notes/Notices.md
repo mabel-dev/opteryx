@@ -31,7 +31,7 @@ Integrated components may differ from their original form. Cosmetic changes are 
 
 **Other Assets**
 
-Archaeopteryx fossil image by Caro Asercion, used under [CC BY 3.0](https://github.com/game-icons/icons/blob/master/license.txt)
+[Icarus Opteryx](../../icarus-opteryx.png) image based on '[Evening: Fall of Day](https://collections.mfa.org/objects/30905)' by William Rimmer (Public Domain) using visual components from 'Archaeopteryx' fossil image by Caro Asercion ([CC BY 3.0](https://github.com/game-icons/icons/blob/master/license.txt)).
 
 Satellite and Planet datasets acquired from [devstronomy](https://github.com/devstronomy/nasa-data-scraper/tree/f610e541a053f05e26573570604aed50b358cc43/data/json).
 
