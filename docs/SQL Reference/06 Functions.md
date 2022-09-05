@@ -350,7 +350,7 @@ For more details, see [Working with Structs](https://mabel-dev.github.io/opteryx
     Related: `BASE85_DECODE`.
 
 !!! function "`COALESCE` (**arg1**, **arg2**, ...) → _[input type]_"  
-    Return the first item from args which is not `NULL`.   
+    Return the first item from args which is not `NULL`.    
     Related: `IFNULL`.
 
 !!! function "`GENERATE_SERIES` (**stop**: _numeric_) → _list_<_numeric_> 🔻"  

@@ -188,6 +188,28 @@ def _non_group_aggregates(aggregates, table, columns):
     return pyarrow.Table.from_pylist([result])
 
 
+def _extract_functions(aggregates):
+
+    # extract any inner evaluations, like the IIF in SUM(IIF(x, 1, 0))
+
+    all_evaluatable_nodes = get_all_nodes_of_type(
+        aggregates,
+        select_nodes=(
+            NodeType.FUNCTION,
+            NodeType.BINARY_OPERATOR,
+            NodeType.COMPARISON_OPERATOR,
+        ),
+    )
+
+    evaluatable_nodes = []
+    for node in all_evaluatable_nodes:
+        aggregators = get_all_nodes_of_type(node, select_nodes=(NodeType.AGGREGATOR,))
+        if len(aggregators) == 0:
+            evaluatable_nodes.append(node)
+
+    return evaluatable_nodes
+
+
 class AggregateNode(BasePlanNode):
     def __init__(
         self, directives: QueryDirectives, statistics: QueryStatistics, **config
@@ -250,19 +272,8 @@ class AggregateNode(BasePlanNode):
             _project(data_pages.execute(), all_identifiers), promote=True
         )
 
-        # extract any inner evaluations, like the IIF in SUM(IIF(x, 1, 0))
-        # we can't pass an aggregator node so block traversal past these
-        evaluatable_nodes = get_all_nodes_of_type(
-            self._aggregates,
-            select_nodes=(
-                NodeType.FUNCTION,
-                NodeType.BINARY_OPERATOR,
-                NodeType.COMPARISON_OPERATOR,
-            ),
-            # block_nodes=(NodeType.AGGREGATOR,),
-            enable_nodes=(NodeType.AGGREGATOR,),
-            enabled=False,
-        )
+        # get any functions we need to execute before aggregating
+        evaluatable_nodes = _extract_functions(self._aggregates)
 
         # Allow grouping by functions by evaluating them
         start_time = time.time_ns()
