@@ -164,6 +164,7 @@ class InnerJoinNode(BasePlanNode):
                 page = arrow.coerce_column(page, left_join_column)
 
                 # do the join
+                # This uses the cjoin / HASH JOIN / legacy join
                 new_page = page.join(
                     self._right_table,
                     keys=[left_join_column],

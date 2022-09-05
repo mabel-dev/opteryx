@@ -13,6 +13,9 @@ def cython_inner_join(
         const int64_t[:] left_idxs, const int64_t[:] right_idxs, 
         const int64_t[:] left_counts, const int64_t[:] right_counts, 
         const int64_t[:] left_bidxs, const int64_t[:] right_bidxs):
+
+    """ this is referred to as the HASH join in Opteryx """
+
     cdef:
         Py_ssize_t i, li, ri, rows = 0, p = 0
         int64_t cats, lbi, rbi, lc, rc, lp, rp
@@ -51,6 +54,9 @@ def cython_left_join(
         const int64_t[:] left_idxs, const int64_t[:] right_idxs, 
         const int64_t[:] left_counts, const int64_t[:] right_counts, 
         const int64_t[:] left_bidxs, const int64_t[:] right_bidxs):
+
+    """ this is referred to as the HASH join in Opteryx """
+
     cdef:
         Py_ssize_t i, li, ri, rows = 0, p = 0
         int64_t cats, lbi, rbi, lc, rc, lp, rp
