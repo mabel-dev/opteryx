@@ -88,3 +88,11 @@ def iif(mask, true_values, false_values):
     for index in mask:
         response[index] = true_values[index]
     return response
+
+
+def if_null(values, replacement):
+    response = values
+    for index, value in enumerate(values):
+        if value is None or value != value:  # nosec # nosemgrep
+            response[index] = replacement[index]
+    return response

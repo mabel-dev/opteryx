@@ -4,7 +4,7 @@ theme:
   name: material
   logo: opteryx-mini.png
   font:
-    text: IBM Plex Sans
+    text: Inter
     code: JetBrains Mono
 
 repo_url: https://github.com/mabel-dev/opteryx

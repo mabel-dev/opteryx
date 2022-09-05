@@ -60,8 +60,10 @@ def columns_to_array(table, columns):
 
 def columns_to_array_denulled(table, columns):
     """added for Opteryx"""
-    # used for joins
-    columns = [columns] if isinstance(columns, str) else sorted(set(columns))
+    # Used for joins - nulls don't join so we can remove them
+    # The columns need to be read in the order provided, so don't set() or order()
+    # them anywhere here.
+    columns = [columns] if isinstance(columns, str) else columns
     if len(columns) == 1:
         if not columns[0] in table.column_names:
             return numpy.array([])

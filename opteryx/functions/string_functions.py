@@ -200,10 +200,10 @@ def get_hex_decode(item):
     return base64.b16decode(item).decode("UTF8")
 
 
-def concat(arr):
+def concat(list_values):
     """concatenate a list of strings"""
     result = []
-    for row in arr:
+    for row in list_values:
         if row is None:
             result.append(None)
         else:
@@ -212,18 +212,19 @@ def concat(arr):
     return result
 
 
-def concat_ws(sep, arr):
+def concat_ws(separator, list_values):
     """concatenate a list of strings with a separator"""
-    sep = sep[0]
-    if sep is None:
-        return None
     result = []
-    for row in arr:
+    if len(separator) > 0:
+        separator = separator[0]
+        if separator is None:
+            return None
+    for row in list_values:
         if row is None:
             result.append(None)
         else:
             row = row.astype(dtype=numpy.str_)
-            result.append(sep.join(row))
+            result.append(separator.join(row))
     return result
 
 

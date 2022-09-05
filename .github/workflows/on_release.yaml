@@ -7,9 +7,6 @@ on:
 
 jobs:
 
-  regression-tests:
-    uses: ./.github/workflows/regression_suite.yaml
-
   secrets-scanning:
     uses: ./.github/workflows/secrets_scanning.yaml
 
@@ -20,5 +17,5 @@ jobs:
     uses: ./.github/workflows/code_form.yaml
 
   publish-docs:
-    needs: [regression-tests, secrets-scanning, static-analysis, code-form]
+    needs: [secrets-scanning, static-analysis, code-form]
     uses: ./.github/workflows/documents.yaml

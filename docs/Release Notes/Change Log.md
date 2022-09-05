@@ -30,6 +30,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - [[#465](https://github.com/mabel-dev/opteryx/issues/465)] Pages aren't matched to schema for simple queries. ([@joocer](https://github.com/joocer)) 
 - [[#468](https://github.com/mabel-dev/opteryx/issues/468)] Parquet reader shows some fields as "item". ([@joocer](https://github.com/joocer)) 
 - [[#471](https://github.com/mabel-dev/opteryx/issues/471)] Column aliases not correctly applied when the relation has an alias. ([@joocer](https://github.com/joocer)) 
+- [[#489](https://github.com/mabel-dev/opteryx/issues/489)] Intermittent behaviour on hash `JOIN` algorithm. ([@joocer](https://github.com/joocer)) 
 
 ## [0.3.0] - 2022-08-28
 
