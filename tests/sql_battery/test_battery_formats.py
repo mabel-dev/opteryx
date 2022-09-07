@@ -11,7 +11,7 @@ import pyarrow
 import pytest
 
 import opteryx
-from opteryx.connectors import DiskStorage
+from opteryx.connectors import DiskConnector
 from opteryx.utils.arrow import fetchmany
 from opteryx.utils.display import ascii_table
 
@@ -48,7 +48,7 @@ def test_sql_battery(statement, rows, columns):
     """
     Test an battery of statements
     """
-    opteryx.register_store("tests", DiskStorage)
+    opteryx.register_store("tests", DiskConnector)
 
     conn = opteryx.connect()
     cursor = conn.cursor()

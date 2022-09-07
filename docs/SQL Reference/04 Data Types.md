@@ -15,7 +15,19 @@ Name        | Symbol                       | Description
 `INTERVAL`  | :fontawesome-solid-arrows-left-right-to-line: | The difference between two TIMESTAMP values
 
 !!! Note  
-    `INTERVAL` has limited support.  
+    `INTERVAL` may not support all functions in all circumstances.  
+
+## Type Hinting
+
+### Intervals
+
+Intervals require definition by type hints, using the type name before providing a literal description of the value.
+
+~~~
+INTERVAL 'value' unit
+~~~
+
+Where unit can be 'Year', 'Month', 'Day', 'Hour', 'Minute' or 'Second'.
 
 ## Casting
 

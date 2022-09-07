@@ -20,7 +20,7 @@ import opteryx
 
 from opteryx.utils.arrow import fetchmany
 from opteryx.utils.display import ascii_table
-from opteryx.connectors import DiskStorage
+from opteryx.connectors import DiskConnector
 
 
 # fmt:off
@@ -44,7 +44,7 @@ def test_sql_battery_slow_tests(statement, rows, columns):
     Test an battery of statements
     """
 
-    opteryx.register_store("tests", DiskStorage)
+    opteryx.register_store("tests", DiskConnector)
 
     conn = opteryx.connect()
     cursor = conn.cursor()

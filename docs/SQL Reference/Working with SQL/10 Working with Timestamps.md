@@ -1,15 +1,28 @@
 # Working with Timestamps
 
+Working with Timestamps often involves working with Intervals.
+
 ## Actions
 
 ### Add/Subtract
 
-~~~
-DATEDIFF(part, start, end)
-~~~
-<!---
+_timestamp_ `+` _interval_ → _timestamp_  
+
+_timestamp_ `-` _interval_ → _timestamp_  
+
+_timestamp_ `-` _timestamp_ → _interval_  
+
+`DATEDIFF` (**unit**: _varchar_, **start**: _timestamp_, **end**: _timestamp_) → _numeric_  
+
+!!! Note  
+    `INTERVAL` may not support all functions in all circumstances.  
+
 ### Construct
---->
+
+~~~
+INTERVAL values units
+~~~
+
 ### Extract
 
 ~~~

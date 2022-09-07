@@ -8,7 +8,7 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import opteryx
 
-from opteryx.connectors import GcsStorage
+from opteryx.connectors import GcpCloudStorageConnector
 
 BUCKET_NAME = "opteryx"
 
@@ -35,7 +35,7 @@ def populate_gcs():
     blob = bucket.blob("data/tweets/data.jsonl")
     blob.upload_from_string(data, content_type="application/octet-stream")
 
-    opteryx.register_store(BUCKET_NAME, GcsStorage)
+    opteryx.register_store(BUCKET_NAME, GcpCloudStorageConnector)
 
 
 def test_gcs_storage():

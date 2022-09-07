@@ -126,8 +126,17 @@ These are functions that are called similar to comparison operators:
 !!! function "_numeric_ `+` _numeric_ → _numeric_"  
     Numeric addition
 
+!!! function "_timestamp_ `+` _interval_ → _timestamp_"  
+    Timestamp and Interval addition
+
 !!! function "_numeric_ `-` _numeric_ → _numeric_"  
     Numeric subtraction
+
+!!! function "_timestamp_ `-` _interval_ → _timestamp_"  
+    Timestamp and Interval subtraction
+
+!!! function "_timestamp_ `-` _timestamp_ → _interval_"  
+    Timestamp subtraction
 
 !!! function "_numeric_ `*` _numeric_ → _numeric_"  
     Numeric multiplication

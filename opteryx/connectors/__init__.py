@@ -10,25 +10,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .base_document_storage_adapter import BaseDocumentStorageAdapter
-from .base_blob_storage_adapter import BaseBlobStorageAdapter
+from .base.base_document_storage_adapter import BaseDocumentStorageAdapter
+from .base.base_blob_storage_adapter import BaseBlobStorageAdapter
 
 
 from opteryx.config import DATASET_PREFIX_MAPPING
-from opteryx.connectors.disk_store import DiskStorage
-from opteryx.connectors.gcp_firestore import FireStoreStorage
-from opteryx.connectors.gcs_store import GcsStorage
-from opteryx.connectors.minio_store import MinIoStorage
-from opteryx.connectors.mongodb_store import MongoDbStorage
+from opteryx.connectors.aws_s3_connector import AwsS3Connector
+from opteryx.connectors.disk_connector import DiskConnector
+from opteryx.connectors.gcp_firestore_connector import GcpFireStoreConnector
+from opteryx.connectors.gcp_cloudstorage_connector import GcpCloudStorageConnector
+from opteryx.connectors.mongodb_connector import MongoDbConnector
 
 
 WELL_KNOWN_ADAPTERS = {
-    "disk": DiskStorage,
-    "gcs": GcsStorage,
-    "firestore": FireStoreStorage,
-    "minio": MinIoStorage,
-    "mongodb": MongoDbStorage,
-    "s3": MinIoStorage,
+    "disk": DiskConnector,
+    "gcs": GcpCloudStorageConnector,
+    "firestore": GcpFireStoreConnector,
+    "minio": AwsS3Connector,
+    "mongodb": MongoDbConnector,
+    "s3": AwsS3Connector,
 }
 
 _storage_prefixes = {}
@@ -47,7 +47,7 @@ def register_store(prefix, adapter):
     _storage_prefixes[prefix] = adapter
 
 
-def get_adapter(dataset):
+def connector_factory(dataset):
     prefix = dataset.split(".")[0]
     if prefix in _storage_prefixes:
         return _storage_prefixes[prefix]

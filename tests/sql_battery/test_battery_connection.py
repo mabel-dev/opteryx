@@ -12,7 +12,7 @@ import pyarrow
 import pytest
 
 import opteryx
-from opteryx.connectors import DiskStorage
+from opteryx.connectors import DiskConnector
 from opteryx.utils.arrow import fetchmany
 from opteryx.utils.display import ascii_table
 
@@ -38,7 +38,7 @@ def test_sql_battery(statement, subs, rows, columns):
     """
     Test an battery of statements
     """
-    conn = opteryx.connect(reader=DiskStorage(), partition_scheme=None)
+    conn = opteryx.connect(reader=DiskConnector(), partition_scheme=None)
     cursor = conn.cursor()
     cursor.execute(statement, subs)
 

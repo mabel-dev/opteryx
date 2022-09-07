@@ -28,7 +28,7 @@ except ImportError:  # pragma: no cover
     GOOGLE_CLOUD_STORAGE_INSTALLED = False
 
 
-class GcsStorage(BaseBlobStorageAdapter):
+class GcpCloudStorageConnector(BaseBlobStorageAdapter):
     def __init__(self, project: Optional[str] = None, credentials=None, **kwargs):
         if not GOOGLE_CLOUD_STORAGE_INSTALLED:  # pragma: no cover
             raise MissingDependencyError(

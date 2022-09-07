@@ -8,12 +8,12 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import opteryx
 
-from opteryx.connectors import FireStoreStorage
+from opteryx.connectors import GcpFireStoreConnector
 
 
 def test_firestore_storage():
 
-    opteryx.register_store("dwarves", FireStoreStorage)
+    opteryx.register_store("dwarves", GcpFireStoreConnector)
     os.environ["GCP_PROJECT_ID"] = "mabeldev"
 
     conn = opteryx.connect()
