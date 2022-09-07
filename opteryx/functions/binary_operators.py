@@ -17,7 +17,7 @@ import pyarrow
 
 from pyarrow import compute
 
-from opteryx.utils.dates import add_months
+from opteryx.utils import dates
 
 
 BINARY_OPERATORS = {"Divide", "Minus", "Modulo", "Multiply", "Plus", "StringConcat"}
@@ -44,10 +44,10 @@ def _date_plus_interval(left, right):
         days = interval.days
         nano = interval.nanoseconds
 
-        date = date.astype(datetime.datetime)
+        date = dates.parse_iso(date)
         date = date + datetime.timedelta(days=days)
         date = date + datetime.timedelta(microseconds=(nano * 1000))
-        date = add_months(date, months)
+        date = dates.add_months(date, months)
 
         result.append(date)
 
@@ -64,10 +64,10 @@ def _date_minus_interval(left, right):
         days = interval.days
         nano = interval.nanoseconds
 
-        date = date.astype(datetime.datetime)
+        date = dates.parse_iso(date)
         date = date - datetime.timedelta(days=days)
         date = date - datetime.timedelta(microseconds=(nano * 1000))
-        date = add_months(date, (0 - months))
+        date = dates.add_months(date, (0 - months))
 
         result.append(date)
 

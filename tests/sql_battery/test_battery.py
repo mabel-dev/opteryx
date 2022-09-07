@@ -560,6 +560,7 @@ STATEMENTS = [
         ("SELECT today() - INTERVAL '1' HOUR", 1, 1),
         ("SELECT today() - INTERVAL '1' MINUTE", 1, 1),
         ("SELECT today() - INTERVAL '1' SECOND", 1, 1),
+        ("SELECT today() + INTERVAL '1' DAY", 1, 1),
         ("SELECT INTERVAL '1 1' DAY TO HOUR", 1, 1),
         ("SELECT INTERVAL '5 6' YEAR TO MONTH", 1, 1),
         ("SELECT today() - yesterday()", 1, 1),
