@@ -10,7 +10,7 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 import opteryx
 
 from opteryx.exceptions import DatabaseError
-from opteryx.connectors import DiskStorage
+from opteryx.connectors import DiskConnector
 
 # fmt:off
 STATEMENTS = [
@@ -25,7 +25,7 @@ STATEMENTS = [
 @pytest.mark.parametrize("statement, error", STATEMENTS)
 def test_no_data_errors(statement, error):
 
-    conn = opteryx.connect(reader=DiskStorage(), partition_scheme=None)
+    conn = opteryx.connect(reader=DiskConnector(), partition_scheme=None)
     cursor = conn.cursor()
 
     ex = None

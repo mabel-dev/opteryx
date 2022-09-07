@@ -10,10 +10,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import datetime
 
 import numpy
+import pyarrow
 
 from pyarrow import compute
+
+from opteryx.utils import dates
 
 
 BINARY_OPERATORS = {"Divide", "Minus", "Modulo", "Multiply", "Plus", "StringConcat"}
@@ -27,28 +31,82 @@ BINARY_OPERATORS = {"Divide", "Minus", "Modulo", "Multiply", "Plus", "StringConc
 # PGBitwiseShiftRight => (">>"),
 
 
+def _date_plus_interval(left, right):
+    # we want left to be the date and right to be the interval
+    if type(left) == pyarrow.lib.MonthDayNanoIntervalArray:
+        left, right = right, left
+
+    result = []
+
+    for index, date in enumerate(left):
+        interval = right[index].value
+        months = interval.months
+        days = interval.days
+        nano = interval.nanoseconds
+
+        date = dates.parse_iso(date)
+        date = date + datetime.timedelta(days=days)
+        date = date + datetime.timedelta(microseconds=(nano * 1000))
+        date = dates.add_months(date, months)
+
+        result.append(date)
+
+    return result
+
+
+def _date_minus_interval(left, right):
+    # left is the date, right is the interval
+    result = []
+
+    for index, date in enumerate(left):
+        interval = right[index].value
+        months = interval.months
+        days = interval.days
+        nano = interval.nanoseconds
+
+        date = dates.parse_iso(date)
+        date = date - datetime.timedelta(days=days)
+        date = date - datetime.timedelta(microseconds=(nano * 1000))
+        date = dates.add_months(date, (0 - months))
+
+        result.append(date)
+
+    return result
+
+
+def _has_intervals(left, right):
+    return (
+        type(left) == pyarrow.lib.MonthDayNanoIntervalArray
+        or type(right) == pyarrow.lib.MonthDayNanoIntervalArray
+    )
+
+
 def binary_operations(left, operator, right):
     """
     Execute inline operators (e.g. the add in 3 + 4)
     """
 
     # if all of the values are null
-    if (
-        compute.is_null(left, nan_is_null=True).false_count == 0
-        or compute.is_null(right, nan_is_null=True).false_count == 0
-    ):
-        return numpy.full(right.size, False)
+    #    if (
+    #        compute.is_null(left, nan_is_null=True).false_count == 0
+    #        or compute.is_null(right, nan_is_null=True).false_count == 0
+    #    ):
+    #        return numpy.full(right.size, False)
 
     # new operations for Opteryx
     if operator == "Divide":
         return numpy.divide(left, right)
     if operator == "Minus":
+        if _has_intervals(left, right):
+            return _date_minus_interval(left, right)
         return numpy.subtract(left, right)
     if operator == "Modulo":
         return numpy.mod(left, right)
     if operator == "Multiply":
         return numpy.multiply(left, right)
     if operator == "Plus":
+        if _has_intervals(left, right):
+            return _date_plus_interval(left, right)
         return numpy.add(left, right)
     if operator == "StringConcat":
         empty = numpy.full(len(left), "")

@@ -4,12 +4,12 @@ import sys
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import opteryx
-from opteryx.connectors import DiskStorage
+from opteryx.connectors import DiskConnector
 
 
 def simple_query():  # pragma: no cover
 
-    conn = opteryx.connect(reader=DiskStorage(), partition_scheme=None)
+    conn = opteryx.connect(reader=DiskConnector(), partition_scheme=None)
 
     # SELECT EVERYTHING
     cur = conn.cursor()

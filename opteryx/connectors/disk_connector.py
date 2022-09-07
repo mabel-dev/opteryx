@@ -15,7 +15,7 @@ import os
 from opteryx.connectors import BaseBlobStorageAdapter
 
 
-class DiskStorage(BaseBlobStorageAdapter):
+class DiskConnector(BaseBlobStorageAdapter):
     def read_blob(self, blob_name):
 
         with open(blob_name, "rb") as blob:

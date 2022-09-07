@@ -36,7 +36,7 @@ However, this doesn't preclude the order being different to achieve optimization
 long as the functional outcode would be the same. Expressions and aliases technically
 should not be evaluated until the SELECT statement.
 
-note: This module does not handle temporal filters, those as part of the FOR clause, 
+note: This module does not handle temporal filters, those as part of the FOR clause,
 these are not supported by SqlOxide and so are in a different module which strips
 temporal aspects out of the query.
 """
@@ -47,15 +47,27 @@ import pyarrow
 import sqloxide
 
 from opteryx import operators, functions
-from opteryx.connectors import get_adapter
+from opteryx.connectors import connector_factory
 from opteryx.exceptions import SqlError
 from opteryx.functions.binary_operators import BINARY_OPERATORS
 from opteryx.managers.expression import ExpressionTreeNode
 from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.managers.expression import NodeType
 from opteryx.managers.query.planner.temporal import extract_temporal_filters
+from opteryx.managers.query.planner import builders
 from opteryx.models import Columns, ExecutionTree, QueryDirectives
-from opteryx.utils import dates, fuzzy_search
+from opteryx.utils import fuzzy_search
+
+
+# parts to build the literal parts of a query
+LITERAL_BUILDER = {
+    "Boolean": builders.literal_boolean,
+    "DoubleQuotedString": builders.literal_string,
+    "Interval": builders.literal_interval,
+    "Null": builders.literal_null,
+    "Number": builders.literal_number,
+    "SingleQuotedString": builders.literal_string,
+}
 
 
 class QueryPlanner(ExecutionTree):
@@ -127,38 +139,16 @@ class QueryPlanner(ExecutionTree):
         else:  # pragma: no cover
             raise SqlError("Unknown or unsupported Query type.")
 
-    def _build_literal_node(self, value, alias: list = []):
+    def _build_literal_node(self, value, alias: list = None):
         """
-        extract values from a value node in the AST and create a ExpressionNode for it
+        Extract values from a value node in the AST and create a ExpressionNode for it
+
+        More of the builders will be migrated to this approach to keep the code
+        more succinct and easier to read.
         """
-        if value is None or value == "Null":
-            return ExpressionTreeNode(NodeType.LITERAL_NONE)
-        string_quoting = list(value.keys())[0]
-        if string_quoting in ("SingleQuotedString", "DoubleQuotedString"):
-            # quoted strings are either VARCHAR or TIMESTAMP
-            str_value = value[string_quoting]
-            dte_value = dates.parse_iso(str_value)
-            if dte_value:
-                return ExpressionTreeNode(
-                    NodeType.LITERAL_TIMESTAMP, value=dte_value, alias=alias
-                )
-            #            ISO_8601 = r"^\d{4}(-\d\d(-\d\d([T\W]\d\d:\d\d(:\d\d)?(\.\d+)?(([+-]\d\d:\d\d)|Z)?)?)?)?$"
-            #            if re.match(ISO_8601, str_value):
-            #                return (numpy.datetime64(str_value), TOKEN_TYPES.TIMESTAMP)
-            return ExpressionTreeNode(
-                NodeType.LITERAL_VARCHAR, value=str_value, alias=alias
-            )
-        if "Number" in value:
-            # we have one internal numeric type
-            return ExpressionTreeNode(
-                NodeType.LITERAL_NUMERIC,
-                value=numpy.float64(value["Number"][0]),
-                alias=alias,
-            )
-        if "Boolean" in value:
-            return ExpressionTreeNode(
-                NodeType.LITERAL_BOOLEAN, value=value["Boolean"], alias=alias
-            )
+        if value == "Null":
+            return LITERAL_BUILDER["Null"](value)  # type:ignore
+        return LITERAL_BUILDER[list(value.keys())[0]](value, alias)  # type:ignore
 
     def _check_hints(self, hints):
 
@@ -598,7 +588,7 @@ class QueryPlanner(ExecutionTree):
         return self._filter_extract(selections)
 
     def _extract_filter(self, ast):
-        """ """
+        """filters are used in SHOW queries"""
         filters = ast[0]["ShowColumns"]["filter"]
         if filters is None:
             return None
@@ -672,7 +662,7 @@ class QueryPlanner(ExecutionTree):
             mode = "Internal"
             reader = None
         else:
-            reader = get_adapter(dataset)
+            reader = connector_factory(dataset)
             mode = reader.__mode__
 
         self.add_operator(
@@ -726,7 +716,7 @@ class QueryPlanner(ExecutionTree):
             mode = "Internal"
             reader = None
         else:
-            reader = get_adapter(dataset)
+            reader = connector_factory(dataset)
             mode = reader.__mode__
 
         self.add_operator(
@@ -809,21 +799,10 @@ class QueryPlanner(ExecutionTree):
 
     def _naive_select_planner(self, ast, statistics):
         """
-        The naive planner only works on single tables and always puts operations in
-        this order.
+        The planner creates the naive query plan.
 
-            FROM clause
-            WHERE clause
-            AGGREGATE (GROUP BY clause)
-            HAVING clause
-            SELECT clause
-            DISTINCT
-            ORDER BY clause
-            LIMIT clause
-            OFFSET clause
-
-        This is phase one of the rewrite, to essentially mimick the existing
-        functionality.
+        The goal here is to create a plan to respond to the user, it creates has
+        no clever tricks to improve performance.
         """
         directives = self._extract_directives(ast)
         all_identifiers = self._extract_identifiers(ast)
@@ -838,7 +817,7 @@ class QueryPlanner(ExecutionTree):
         # external comes in different flavours
         reader = None
         if mode == "External":
-            reader = get_adapter(dataset)
+            reader = connector_factory(dataset)
             mode = reader.__mode__
 
         self.add_operator(
@@ -884,7 +863,7 @@ class QueryPlanner(ExecutionTree):
                         mode = "Internal"
                         reader = None
                     else:
-                        reader = get_adapter(dataset)
+                        reader = connector_factory(dataset)
                         mode = reader.__mode__
 
                     # Otherwise, the right table needs to come from the Reader

@@ -12,7 +12,7 @@ from minio import Minio  # type:ignore
 
 import opteryx
 
-from opteryx.connectors import MinIoStorage
+from opteryx.connectors import AwsS3Connector
 
 
 BUCKET_NAME = "miniobucket"
@@ -35,7 +35,7 @@ def populate_minio():
 
 def test_minio_storage():
 
-    opteryx.register_store(BUCKET_NAME, MinIoStorage)
+    opteryx.register_store(BUCKET_NAME, AwsS3Connector)
 
     populate_minio()
 

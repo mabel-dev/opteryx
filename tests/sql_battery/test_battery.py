@@ -39,7 +39,7 @@ import opteryx
 
 from opteryx.utils.arrow import fetchmany
 from opteryx.utils.display import ascii_table
-from opteryx.connectors import DiskStorage
+from opteryx.connectors import DiskConnector
 
 
 # fmt:off
@@ -554,6 +554,19 @@ STATEMENTS = [
         ("SELECT SUM(IIF(year < 1970, 1, 0)), year FROM $astronauts GROUP BY year ORDER BY year ASC", 21, 2),
  #       ("SELECT SUM(id) * COUNT(id) FROM $planets", 1, 1),
         ("SELECT SUM(id) + id FROM $planets GROUP BY id", 9, 1),
+        ("SELECT today() - INTERVAL '1' YEAR", 1, 1),
+        ("SELECT today() - INTERVAL '1' MONTH", 1, 1),
+        ("SELECT today() - INTERVAL '1' DAY", 1, 1),
+        ("SELECT today() - INTERVAL '1' HOUR", 1, 1),
+        ("SELECT today() - INTERVAL '1' MINUTE", 1, 1),
+        ("SELECT today() - INTERVAL '1' SECOND", 1, 1),
+        ("SELECT today() + INTERVAL '1' DAY", 1, 1),
+        ("SELECT INTERVAL '1 1' DAY TO HOUR", 1, 1),
+        ("SELECT INTERVAL '5 6' YEAR TO MONTH", 1, 1),
+        ("SELECT today() - yesterday()", 1, 1),
+        ("SELECT INTERVAL '100' YEAR + birth_date, birth_date from $astronauts", 357, 2),
+        ("SELECT INTERVAL '1 1' MONTH to DAY + birth_date, birth_date from $astronauts", 357, 2),
+        ("SELECT birth_date - INTERVAL '1 1' MONTH to DAY, birth_date from $astronauts", 357, 2),
 
         ("SHOW CREATE TABLE $planets", 1, 1),
         ("SHOW CREATE TABLE $satellites", 1, 1),
@@ -655,7 +668,7 @@ def test_sql_battery(statement, rows, columns):
     Test an battery of statements
     """
 
-    opteryx.register_store("tests", DiskStorage)
+    opteryx.register_store("tests", DiskConnector)
 
     conn = opteryx.connect()
     cursor = conn.cursor()

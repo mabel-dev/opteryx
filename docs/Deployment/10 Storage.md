@@ -2,33 +2,33 @@
 
 ## Connectors
 
-**Available Connectors**
+**Built-In Connectors**
 
-Platform             | Connector Name    | Disposition
--------------------- | ----------------- | ---------------------
-Google Cloud Storage | GcsStorage        | Blob/File Store
-AWS S3               | MinIoStorage      | Blob/File Store
-MinIo                | MinIoStorage      | Blob/File Store
-Google FireStore     | FireStoreStorage  | Document Store
-MongoDB              | MongoDbStore      | Document Store
-Local Disk           | DiskStorage       | Blob/File Store
+Platform             | Connector Name           | Disposition
+-------------------- | ------------------------ | ---------------------
+Google Cloud Storage | GcpCloudStorageConnector | Blob/File Store
+AWS S3               | AwsS3Connector           | Blob/File Store
+MinIo                | AwsS3Connector           | Blob/File Store
+Google FireStore     | GcpFireStoreConnector    | Document Store
+MongoDB              | MongoDbConnector         | Document Store
+Local Disk           | DiskConnector            | Blob/File Store
 
 Connectors are registered with the storage engine using the `register_store` method. Multiple prefixes can be added, using different connectors - multiple storage types can be combined into a single query.
 
 ~~~python
-opteryx.storage.register_store("tests", DiskStorage)
+opteryx.storage.register_store("tests", DiskConnector)
 ~~~
 
 A more complete example using the `register_store` method to set up a connector to Google Cloud Storage (GCS) and then query data on GCS is below:
 
 ~~~python
 import opteryx
-from opteryx.connectors import GcsStorage
+from opteryx.connectors import GcpCloudStorageConnector
 
 # Tell the storage engine that datasets with the prefix 'your_bucket' are
-# to be read using the GcsStorage connector. Multiple prefixes can be added
+# to be read using the GcpCloudStorageConnector connector. Multiple prefixes can be added
 # and do not need to be the same connector.
-opteryx.register_store("your_bucket", GcsStorage)
+opteryx.register_store("your_bucket", GcpCloudStorageConnector)
 
 connextion = opteryx.connect()
 cursor = connection.cursor()

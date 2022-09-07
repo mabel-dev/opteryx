@@ -70,7 +70,7 @@ def _initialize():  # pragma: no cover
         firebase_admin.initialize_app(creds, {"projectId": project_id})
 
 
-class FireStoreStorage(BaseDocumentStorageAdapter):
+class GcpFireStoreConnector(BaseDocumentStorageAdapter):
     def get_document_count(self, collection) -> int:  # pragma: no cover
         """
         Return an interable of blobs/files

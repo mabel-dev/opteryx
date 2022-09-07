@@ -16,7 +16,7 @@ except ImportError:  # pragma: no cover
     MINIO_INSTALLED = False
 
 
-class MinIoStorage(BaseBlobStorageAdapter):
+class AwsS3Connector(BaseBlobStorageAdapter):
     def __init__(self, **kwargs):
 
         if not MINIO_INSTALLED:  # pragma: no cover
