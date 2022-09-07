@@ -147,8 +147,8 @@ class QueryPlanner(ExecutionTree):
         more succinct and easier to read.
         """
         if value == "Null":
-            return LITERAL_BUILDER["Null"](value)
-        return LITERAL_BUILDER[list(value.keys())[0]](value, alias)
+            return LITERAL_BUILDER["Null"](value)  # type:ignore
+        return LITERAL_BUILDER[list(value.keys())[0]](value, alias)  # type:ignore
 
     def _check_hints(self, hints):
 
