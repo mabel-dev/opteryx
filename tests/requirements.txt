@@ -2,15 +2,15 @@ types-orjson
 types-PyYAML
 types-requests
 
-pytest
 coverage
+pymemcache
+pytest
+mypy
 rich
 zstandard
-pymemcache
-mypy
 
 # different storage providers
+firebase-admin
 google-cloud-storage
 minio
 pymongo
-firebase-admin

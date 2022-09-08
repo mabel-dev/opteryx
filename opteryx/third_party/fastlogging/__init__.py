@@ -22,7 +22,7 @@
 
 """Implements lightweight and fast logging."""
 
-from fastlogging.fastlogging import (
+from opteryx.third_party.fastlogging.fastlogging import (
     Colors,
     domains,
     Logger,
@@ -44,7 +44,7 @@ from fastlogging.fastlogging import (
     LOG2SSYM,
     LVL2COL,
 )
-from fastlogging.optimize import (
+from opteryx.third_party.fastlogging.optimize import (
     OptimizeAst,
     Optimize,
     OptimizeObj,

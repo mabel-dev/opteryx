@@ -8,7 +8,7 @@ import sys
 from collections import deque
 from threading import Thread, Event
 
-from . import ERROR
+from opteryx.third_party.fastlogging import ERROR
 
 
 class ConsoleLogger(Thread):

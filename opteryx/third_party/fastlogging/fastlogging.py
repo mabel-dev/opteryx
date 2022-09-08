@@ -29,7 +29,7 @@ def Shutdown(now=True):
 atexit.register(Shutdown)
 
 
-domains = {}  # Dictionary holding all Logger instances for the configured domains
+domains: dict = {}  # Dictionary holding all Logger instances for the configured domains
 
 # Log-Levels
 EXCEPTION = 60
@@ -87,7 +87,7 @@ try:
 
 except ImportError:
 
-    class Colors:
+    class Colors:  # type:ignore
         RESETALL = ""
         NORMAL = ""
         BRIGHT = ""
