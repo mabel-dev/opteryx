@@ -329,7 +329,7 @@ def WritePycFile(fileName, code):
     with open(os.path.splitext(fileName)[0] + ".pyc", "wb") as F:
         F.write(b"\0\0\0\0")
         F.write(struct.pack("L", int(time.time())))
-        marshal.dump(code, F)
+        marshal.dump(code, F)  # nosemgrep
         F.flush()
         F.seek(0, 0)
         F.write(importlib.util.MAGIC_NUMBER)
