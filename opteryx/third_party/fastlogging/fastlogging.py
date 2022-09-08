@@ -217,21 +217,21 @@ class Logger(object):
                         )
                         self._thrLogger.start()
         if Logger.useThreads and Logger.thrConsoleLogger is None:
-            import fastlogging.console
+            from opteryx.third_party.fastlogging import console
 
-            Logger.thrConsoleLogger = fastlogging.console.ConsoleLogger(
+            Logger.thrConsoleLogger = console.ConsoleLogger(
                 Logger.consoleLock
             )
             Logger.thrConsoleLogger.start()
         if server is not None:
-            import fastlogging.network
+            from opteryx.third_party.fastlogging import network
 
-            self.server = fastlogging.network.LoggingServer(self, *server)
+            self.server = network.LoggingServer(self, *server)
             self.server.start()
         if connect is not None:
-            import fastlogging.network
+            from opteryx.third_party.fastlogging import network
 
-            self.client = fastlogging.network.LoggingClient(*connect)
+            self.client = network.LoggingClient(*connect)
             self.client.start()
 
     def __del__(self):
