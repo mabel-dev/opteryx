@@ -21,24 +21,24 @@ STATEMENTS = [
         # values that have been read.
 
         # arrow (feather)
-        ("SELECT * FROM tests.data.formats.arrow WITH(NO_PARTITION)", 100000, 13),
-        ("SELECT user_name, user_verified FROM tests.data.formats.arrow WITH(NO_PARTITION) WHERE user_name ILIKE '%news%'", 122, 2),
+        ("SELECT * FROM testdata.formats.arrow WITH(NO_PARTITION)", 100000, 13),
+        ("SELECT user_name, user_verified FROM testdata.formats.arrow WITH(NO_PARTITION) WHERE user_name ILIKE '%news%'", 122, 2),
 
         # jsonl
-        ("SELECT * FROM tests.data.formats.jsonl WITH(NO_PARTITION)", 100000, 13),
-        ("SELECT user_name, user_verified FROM tests.data.formats.jsonl WITH(NO_PARTITION) WHERE user_name ILIKE '%news%'", 122, 2),
+        ("SELECT * FROM testdata.formats.jsonl WITH(NO_PARTITION)", 100000, 13),
+        ("SELECT user_name, user_verified FROM testdata.formats.jsonl WITH(NO_PARTITION) WHERE user_name ILIKE '%news%'", 122, 2),
 
         # orc
-        ("SELECT * FROM tests.data.formats.orc WITH(NO_PARTITION)", 100000, 13),
-        ("SELECT user_name, user_verified FROM tests.data.formats.orc WITH(NO_PARTITION) WHERE user_name ILIKE '%news%'", 122, 2),
+        ("SELECT * FROM testdata.formats.orc WITH(NO_PARTITION)", 100000, 13),
+        ("SELECT user_name, user_verified FROM testdata.formats.orc WITH(NO_PARTITION) WHERE user_name ILIKE '%news%'", 122, 2),
 
         # parquet
-        ("SELECT * FROM tests.data.formats.parquet WITH(NO_PARTITION)", 100000, 13),
-        ("SELECT user_name, user_verified FROM tests.data.formats.parquet WITH(NO_PARTITION) WHERE user_name ILIKE '%news%'", 122, 2),
+        ("SELECT * FROM testdata.formats.parquet WITH(NO_PARTITION)", 100000, 13),
+        ("SELECT user_name, user_verified FROM testdata.formats.parquet WITH(NO_PARTITION) WHERE user_name ILIKE '%news%'", 122, 2),
 
         # zstandard jsonl
-        ("SELECT * FROM tests.data.formats.zstd WITH(NO_PARTITION)", 100000, 13),
-        ("SELECT user_name, user_verified FROM tests.data.formats.zstd WITH(NO_PARTITION) WHERE user_name ILIKE '%news%'", 122, 2),
+        ("SELECT * FROM testdata.formats.zstd WITH(NO_PARTITION)", 100000, 13),
+        ("SELECT user_name, user_verified FROM testdata.formats.zstd WITH(NO_PARTITION) WHERE user_name ILIKE '%news%'", 122, 2),
     ]
 # fmt:on
 

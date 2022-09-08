@@ -14,7 +14,7 @@ def simple_query():  # pragma: no cover
     # SELECT EVERYTHING
     cur = conn.cursor()
     cur.execute(
-        f"SELECT * FROM tests.data.formats.jsonl WHERE user_id = 762916610478747648"
+        f"SELECT * FROM testdata.formats.jsonl WHERE user_id = 762916610478747648"
     )
     [a for a in cur.fetchall()]
 

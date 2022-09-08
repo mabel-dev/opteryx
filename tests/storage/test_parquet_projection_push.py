@@ -19,7 +19,7 @@ def test_parquet_projection_pushdown():
     conn = opteryx.connect()
     cur = conn.cursor()
     cur.execute(
-        f"SELECT MAX(following) FROM tests.data.formats.parquet WITH(NO_PARTITION);"
+        f"SELECT MAX(following) FROM testdata.formats.parquet WITH(NO_PARTITION);"
     )
     [a for a in cur.fetchall()]
     assert cur.stats["columns_read"] == 1
@@ -27,7 +27,7 @@ def test_parquet_projection_pushdown():
     conn = opteryx.connect()
     cur = conn.cursor()
     cur.execute(
-        f"SELECT MAX(following), MAX(followers) FROM tests.data.formats.parquet WITH(NO_PARTITION);"
+        f"SELECT MAX(following), MAX(followers) FROM testdata.formats.parquet WITH(NO_PARTITION);"
     )
     [a for a in cur.fetchall()]
     assert cur.stats["columns_read"] == 2
@@ -36,7 +36,7 @@ def test_parquet_projection_pushdown():
     conn = opteryx.connect()
     cur = conn.cursor()
     cur.execute(
-        f"SELECT MAX(following) FROM tests.data.formats.parquet WITH(NO_PARTITION, NO_PUSH_PROJECTION);"
+        f"SELECT MAX(following) FROM testdata.formats.parquet WITH(NO_PARTITION, NO_PUSH_PROJECTION);"
     )
     [a for a in cur.fetchall()]
     assert cur.stats["columns_read"] == 13
@@ -44,7 +44,7 @@ def test_parquet_projection_pushdown():
     # without pushdown
     conn = opteryx.connect()
     cur = conn.cursor()
-    cur.execute(f"SELECT * FROM tests.data.formats.parquet WITH(NO_PARTITION);")
+    cur.execute(f"SELECT * FROM testdata.formats.parquet WITH(NO_PARTITION);")
     [a for a in cur.fetchall()]
     assert cur.stats["columns_read"] == 13
 
