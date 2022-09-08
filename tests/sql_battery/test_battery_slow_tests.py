@@ -33,7 +33,7 @@ STATEMENTS = [
         # Large results can't be added to pages [#453]
         ("SELECT SHA512(column_0) FROM FAKE(150000, 1)", 150000, 1),
         # Low cardinality INNER JOINS blow memory [#444]
-        ("SELECT COUNT(*) FROM (SELECT * FROM tests.data.formats.parquet WITH(NO_PARTITION) LIMIT 50) INNER JOIN tests.data.formats.parquet WITH(NO_PARTITION) USING (user_verified)", 1, 1)
+        ("SELECT COUNT(*) FROM (SELECT * FROM testdata.formats.parquet WITH(NO_PARTITION) LIMIT 50) INNER JOIN testdata.formats.parquet WITH(NO_PARTITION) USING (user_verified)", 1, 1)
     ]
 # fmt:on
 

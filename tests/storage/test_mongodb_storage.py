@@ -28,7 +28,7 @@ def populate_mongo():
     collection.drop()
 
     for i in range(25):
-        data = open("tests/data/tweets/tweets-0000.jsonl", mode="rb").read()
+        data = open("testdata/tweets/tweets-0000.jsonl", mode="rb").read()
         collection.insert_many(map(orjson.loads, data.split(b"\n")[:-1]))
 
 

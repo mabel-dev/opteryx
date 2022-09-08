@@ -30,7 +30,7 @@ def populate_gcs():
         pass
     bucket = client.create_bucket(BUCKET_NAME)
 
-    data = open("tests/data/tweets/tweets-0000.jsonl", mode="rb").read()
+    data = open("testdata/tweets/tweets-0000.jsonl", mode="rb").read()
 
     blob = bucket.blob("data/tweets/data.jsonl")
     blob.upload_from_string(data, content_type="application/octet-stream")

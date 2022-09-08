@@ -26,7 +26,7 @@ def populate_minio():
     if not client.bucket_exists(BUCKET_NAME):
         client.make_bucket(BUCKET_NAME)
 
-    data = open("tests/data/tweets/tweets-0000.jsonl", mode="rb").read()
+    data = open("testdata/tweets/tweets-0000.jsonl", mode="rb").read()
 
     client.put_object(
         BUCKET_NAME, "data/tweets/data.jsonl", io.BytesIO(data), len(data)
