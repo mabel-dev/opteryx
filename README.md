@@ -1,13 +1,13 @@
 ![Icarus Opteryx](icarus-opteryx-small.png)
 
+## Opteryx, query your data, no database required
+
 <h3 align="center">
 
 [Documentation](https://mabel-dev.github.io/opteryx/) |
 [Examples](https://github.com/mabel-dev/opteryx/tree/main/notebooks) |
 [Contributing](https://mabel-dev.github.io/opteryx/Contributor%20Guide/01%20Guide/)
 </h3>
-
-## Query your data, no database required
 
 **Opteryx is a SQL Engine written in Python, designed for cloud-native environments.**
 
