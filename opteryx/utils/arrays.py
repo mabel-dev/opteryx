@@ -3,6 +3,7 @@ import numpy
 from opteryx.exceptions import SqlError
 from opteryx.utils import intervals, dates
 
+
 def generate_series(*args):
 
     from opteryx.managers.expression import NodeType
@@ -10,7 +11,7 @@ def generate_series(*args):
     arg_len = len(args)
     arg_vals = [i.value for i in args]
     first_arg_type = args[0].token_type
-    
+
     # if the parameters are numbers, generate series is an alias for range
     if first_arg_type in (NodeType.LITERAL_NUMERIC, numpy.float64):
         if arg_len not in (1, 2, 3):
