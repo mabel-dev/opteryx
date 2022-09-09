@@ -21,7 +21,6 @@ from pyarrow import compute
 from pyarrow import ArrowNotImplementedError
 
 import numpy
-import pyarrow
 
 import opteryx
 
@@ -31,7 +30,7 @@ from opteryx.functions import number_functions
 from opteryx.functions import other_functions
 from opteryx.functions import string_functions
 from opteryx.third_party.date_trunc import date_trunc
-from opteryx.utils import dates
+from opteryx.utils import dates, arrays
 
 
 def get_random():
@@ -240,6 +239,7 @@ FUNCTIONS = {
     "GREATEST": _iterate_single_parameter(numpy.nanmax),
     "LEAST": _iterate_single_parameter(numpy.nanmin),
     "IIF": other_functions.iif,
+    "GENERATE_SERIES": arrays.generate_series,
 
     # NUMERIC
     "ROUND": number_functions.round,

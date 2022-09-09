@@ -354,8 +354,9 @@ STATEMENTS = [
         ("SELECT * FROM $astronauts WHERE death_date IS NOT NULL", 52, 19),
         ("SELECT * FROM testdata.formats.parquet WITH(NO_PARTITION) WHERE user_verified IS TRUE", 711, 13),
         ("SELECT * FROM testdata.formats.parquet WITH(NO_PARTITION) WHERE user_verified IS FALSE", 99289, 13),
+        ("SELECT * FROM testdata.formats.csv WITH(NO_PARTITION) WHERE user_verified IS FALSE", 29633, 10),
 
-        ("SELECT * FROM testdata.formats.parquet WITH(NO_PARTITION, MULTI)", 100000, 13),
+        ("SELECT * FROM testdata.formats.parquet WITH(NO_PARTITION, PARALLEL_READ)", 100000, 13),
 
         ("SELECT * FROM $satellites FOR DATES IN LAST_MONTH ORDER BY planetId OFFSET 10", 167, 8),
         ("SELECT * FROM $satellites FOR DATES IN LAST_CYCLE ORDER BY planetId OFFSET 10", 167, 8),

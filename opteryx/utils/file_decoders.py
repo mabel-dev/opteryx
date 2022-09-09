@@ -56,6 +56,15 @@ def orc_decoder(stream, projection: List = None):
     import pyarrow.orc as orc
 
     orc_file = orc.ORCFile(stream)
+
+    selected_columns = None
+    if isinstance(projection, (list, set)) and "*" not in projection:
+        orc_metadata = orc_file.schema
+        selected_columns = list(set(orc_metadata.names).intersection(projection))
+        # if nothing matched, there's been a problem - maybe HINTS confused for columns
+        if len(selected_columns) == 0:
+            selected_columns = None
+
     table = orc_file.read()
     return table
 
@@ -67,8 +76,27 @@ def jsonl_decoder(stream, projection: List = None):
     table = pyarrow.json.read_json(stream)
 
     # the read doesn't support projection, so do it now
-    #    if projection:
-    #        table = table.select(projection)
+    if projection and "*" not in projection:
+        selected_columns = list(set(table.column_names).intersection(projection))
+        # if nothing matched, don't do a thing
+        if len(selected_columns) > 0:
+            table = table.select(selected_columns)
+
+    return table
+
+
+def csv_decoder(stream, projection: List = None):
+
+    import pyarrow.csv
+
+    table = pyarrow.csv.read_csv(stream)
+
+    # the read doesn't support projection, so do it now
+    if projection and "*" not in projection:
+        selected_columns = list(set(table.column_names).intersection(projection))
+        # if nothing matched, don't do a thing
+        if len(selected_columns) > 0:
+            table = table.select(selected_columns)
 
     return table
 
@@ -78,4 +106,12 @@ def arrow_decoder(stream, projection: List = None):
     import pyarrow.feather as pf
 
     table = pf.read_table(stream)
+
+    # we can't get the schema before reading the file, so do selection now
+    if projection and "*" not in projection:
+        selected_columns = list(set(table.column_names).intersection(projection))
+        # if nothing matched, don't do a thing
+        if len(selected_columns) > 0:
+            table = table.select(selected_columns)
+
     return table

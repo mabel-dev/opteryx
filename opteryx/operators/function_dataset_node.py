@@ -29,39 +29,12 @@ from opteryx.models import Columns, QueryDirectives, QueryStatistics
 from opteryx.managers.expression import NodeType, evaluate
 from opteryx.operators import BasePlanNode
 from opteryx.exceptions import SqlError
+from opteryx.utils import arrays
 
 
 def _generate_series(alias, *args):
-
-    from opteryx.utils import intervals, dates
-
-    arg_len = len(args)
-    arg_vals = [i.value for i in args]
-    first_arg_type = args[0].token_type
-
-    # if the parameters are numbers, generate series is an alias for range
-    if first_arg_type == NodeType.LITERAL_NUMERIC:
-        if arg_len not in (1, 2, 3):
-            raise SqlError("generate_series for numbers takes 1,2 or 3 parameters.")
-        return [{alias: i} for i in intervals.generate_range(*arg_vals)]
-
-    # if the params are timestamps, we create time intervals
-    if first_arg_type == NodeType.LITERAL_TIMESTAMP:
-        if arg_len != 3:
-            raise SqlError(
-                "generate_series for dates needs start, end, and interval parameters"
-            )
-        return [{alias: i} for i in dates.date_range(*arg_vals)]
-
-    # if the param is a CIDR, we create network ranges
-    if first_arg_type == NodeType.LITERAL_VARCHAR:
-        if arg_len not in (1,):
-            raise SqlError("generate_series for strings takes 1 CIDR parameter.")
-
-        import ipaddress
-
-        ips = ipaddress.ip_network(arg_vals[0], strict=False)
-        return [{alias: str(ip)} for ip in ips]
+    value_array = arrays.generate_series(*args)
+    return [{alias: value} for value in value_array]
 
 
 def _unnest(alias, values):

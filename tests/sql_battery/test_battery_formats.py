@@ -39,6 +39,10 @@ STATEMENTS = [
         # zstandard jsonl
         ("SELECT * FROM testdata.formats.zstd WITH(NO_PARTITION)", 100000, 13),
         ("SELECT user_name, user_verified FROM testdata.formats.zstd WITH(NO_PARTITION) WHERE user_name ILIKE '%news%'", 122, 2),
+
+        # csv - has a different input file
+        ("SELECT * FROM testdata.formats.csv WITH(NO_PARTITION)", 29751, 10),
+        ("SELECT username, user_verified FROM testdata.formats.csv WITH(NO_PARTITION) WHERE username ILIKE '%cve%'", 2002, 2),
     ]
 # fmt:on
 

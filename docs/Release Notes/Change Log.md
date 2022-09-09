@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - [[#375](https://github.com/mabel-dev/opteryx/issues/375)] Results to an Arrow Table. ([@joocer](https://github.com/joocer))  
 - [[#486](https://github.com/mabel-dev/opteryx/issues/486)] Support functions on aggregates and aggregates on functions. ([@joocer](https://github.com/joocer))  
 - Initial support for `INTERVAL`s. ([@joocer](https://github.com/joocer))  
+- [[#395](https://github.com/mabel-dev/opteryx/issues/395)] Support reading CSV files. ([@joocer](https://github.com/joocer))  
 
 **Changed**
 

@@ -1,5 +1,9 @@
 # Functions
 
+This document describes the built-in SQL functions and operators supported by Opteryx.
+
+Generally functions will return `Null` on `Null` input, although note that this is not true in all circumstances.
+
 Definitions noted with a 🔻 accept different input arguments.
 
 ## Conversion Functions
@@ -41,7 +45,7 @@ Definitions noted with a 🔻 accept different input arguments.
     Return timestamp of **seconds** seconds since the Unix Epoch. 
 
 !!! function "`TRY_CAST` (**any**: _any_ AS **type**) → _[type]_"  
-    Cast **any** to **type**, if cast is not possible, returns `NULL`.   
+    Cast **any** to **type**, if cast is not possible, returns `Null`.   
 
 !!! function "`VARCHAR` (_any_) → _varchar_"  
     Cast **any** to a string, raises an error if cast is not possible.  
@@ -175,17 +179,17 @@ For more details, see [Working with Lists](https://mabel-dev.github.io/opteryx/S
     Returns the number of elements in **array**.
 
 !!! function "`LIST_CONTAINS` (**array**: _list_, **value**) → _boolean_"  
-    Return `true` if **array** contains **value**.  
+    Return `True` if **array** contains **value**.  
     See also `SEARCH`(**array**, **value**).  
 
 !!! function "`LIST_CONTAINS_ANY` (**array**: _list_, **values**: _list_) → _boolean_"    
-    Return `true` if **array** contains any elements in **values**.
+    Return `True` if **array** contains any elements in **values**.
 
 !!! function "`LIST_CONTAINS_ALL` (**array**: _list_, **values**: _list_) → _boolean_"   
-    Return `true` if **array** contains all of elements in **values**.
+    Return `True` if **array** contains all of elements in **values**.
 
 !!! function "`SEARCH` (**array**: _list_, **value**) → _boolean_ 🔻"  
-    Return `true` if **array** contains **value**. 
+    Return `True` if **array** contains **value**. 
 
 !!! function "`SORT` (**array**: _list_) → _list_"  
     Return **array** in ascending order. 
@@ -274,7 +278,7 @@ Functions for examining and manipulating string values.
     Related: `CONCAT`.
 
 !!! function "`ENDS_WITH` (**str**: _varchar_, **value**: _varchar_) → _boolean_"  
-    Return True if **str** ends with **value**.  
+    Return `True` if **str** ends with **value**.  
     Related: `STARTS_WITH`.
 
 !!! function "`GET` (**str**: _varchar_, **index**: _numeric_) → _varchar_ 🔻"  
@@ -305,10 +309,10 @@ Functions for examining and manipulating string values.
     Returns a character string containing the phonetic representation of char. See [Soundex 🡕](https://en.wikipedia.org/wiki/Soundex).   
 
 !!! function "`SEARCH` (**str**: _varchar_, **value**: _varchar_) → _boolean_ 🔻"  
-    Return True if **str** contains **value**.  
+    Return `True` if **str** contains **value**.  
 
 !!! function "`STARTS_WITH` (**str**: _varchar_, **value**: _varchar_) → _boolean_"  
-    Return True if **str** starts with **value**.  
+    Return `True` if **str** starts with **value**.  
     Related: `ENDS_WITH`
 
 !!! function "`TITLE` (**str**: _varchar_) → _varchar_"  
@@ -333,7 +337,7 @@ For more details, see [Working with Structs](https://mabel-dev.github.io/opteryx
     Alias of **object**`[`**key**`]`.  
 
 !!! function "`SEARCH` (**object**: _struct_, **value**: _varchar_) → **boolean** 🔻"  
-    Return `TRUE` if any of the values in **object** is **value**. Note `SEARCH` does not match struct keys.
+    Return `True` if any of the values in **object** is **value**. Note `SEARCH` does not match struct keys.
 
 ## System Functions
 
@@ -359,7 +363,7 @@ For more details, see [Working with Structs](https://mabel-dev.github.io/opteryx
     Related: `BASE85_DECODE`.
 
 !!! function "`COALESCE` (**arg1**, **arg2**, ...) → _[input type]_"  
-    Return the first item from args which is not `NULL`.    
+    Return the first item from args which is not `Null`.    
     Related: `IFNULL`.
 
 !!! function "`GENERATE_SERIES` (**stop**: _numeric_) → _list_<_numeric_> 🔻"  
@@ -378,25 +382,25 @@ For more details, see [Working with Structs](https://mabel-dev.github.io/opteryx
     Return a list of IP addresses from a given **cidr**.   
 
 !!! function "`IFNULL` (**check_expression**: _any_, **replacement_value**: _any_) → _[input type]_"  
-    Returns **check_expression** if not `NULL`, otherwise returns **replacement_value**.
+    Returns **check_expression** if not `Null`, otherwise returns **replacement_value**.
     Related: `COALESCE`.
 
 !!! function "`HASH` (**any**) → _varchar_"  
     Calculate the [CityHash](https://opensource.googleblog.com/2011/04/introducing-cityhash.html) (64 bit).
 
 !!! function "`HEX_DECODE` (**any**) → _varchar_"  
-    Decode a value which has been encoded using HEX (BASE16) encoding.  
+    Decode a value which has been encoded using hexadecimal (Base16) encoding.  
     Related: `HEX_ENCODE`.
 
 !!! function "`HEX_ENCODE` (**any**) → _varchar_"  
-    Encode value with HEX (BASE16) encoding.  
+    Encode value with hexadecimal (Base16) encoding.  
     Related: `HEX_DECODE`.
 
-!!! function "`IIF` (**condition**, **true_value**, **false_value***) → _[input type]_"  
-    Return the **true_value** if the condition evaluates to True, otherwise return the **false_value**.
+!!! function "`IIF` (**condition**, **true_value**, **false_value**) → _[input type]_"  
+    Return the **true_value** if the condition evaluates to `True`, otherwise return the **false_value**.
 
 !!! function "`NORMAL` () → _numeric_"  
-    Random number from a normal (Gaussian) distribution; distribution is centred at 0.0 and have a standard deviation of 1.0.
+    Random number from a normal (Gaussian) distribution; distribution is centred at 0.0 and has a standard deviation of 1.0.
 
 !!! function "`MD5` (**any**) → _varchar_"  
     Calculate the MD5 hash.

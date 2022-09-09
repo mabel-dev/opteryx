@@ -42,7 +42,7 @@ class GcpCloudStorageConnector(BaseBlobStorageAdapter):
     def read_blob(self, blob_name):
 
         bucket, object_path, name, extension = paths.get_parts(blob_name)
-        bucket = bucket.replace("_data", "-data")
+        bucket = bucket.replace("va_data", "va-data")
         bucket = bucket.replace("data_", "data-")
 
         blob = get_blob(
@@ -55,7 +55,7 @@ class GcpCloudStorageConnector(BaseBlobStorageAdapter):
 
     def get_blob_list(self, partition=None):
         bucket, object_path, name, extension = paths.get_parts(partition)
-        bucket = bucket.replace("_data", "-data")
+        bucket = bucket.replace("va_data", "va-data")
         bucket = bucket.replace("data_", "data-")
 
         # print(bucket, object_path, name, extension)
