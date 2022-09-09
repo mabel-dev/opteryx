@@ -54,6 +54,7 @@ KNOWN_EXTENSIONS = {
     "complete": (do_nothing, ExtentionType.CONTROL),
     "ignore": (do_nothing, ExtentionType.CONTROL),
     "arrow": (file_decoders.arrow_decoder, ExtentionType.DATA),  # feather
+    "csv": (file_decoders.csv_decoder, ExtentionType.DATA),
     "jsonl": (file_decoders.jsonl_decoder, ExtentionType.DATA),
     "orc": (file_decoders.orc_decoder, ExtentionType.DATA),
     "parquet": (file_decoders.parquet_decoder, ExtentionType.DATA),
