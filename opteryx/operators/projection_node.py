@@ -53,11 +53,15 @@ class ProjectionNode(BasePlanNode):
             ):
                 # qualified wildcard, e.g. table.*
                 self._projection[(attribute.value,)] = None
-            elif attribute.token_type in (
-                NodeType.FUNCTION,
-                NodeType.AGGREGATOR,
-                NodeType.BINARY_OPERATOR,
-            ) or (attribute.token_type & LITERAL_TYPE == LITERAL_TYPE):
+            elif (
+                attribute.token_type
+                in (
+                    NodeType.FUNCTION,
+                    NodeType.AGGREGATOR,
+                    NodeType.BINARY_OPERATOR,
+                )
+                or (attribute.token_type & LITERAL_TYPE == LITERAL_TYPE)
+            ):
                 new_column_name = format_expression(attribute)
                 self._projection[new_column_name] = attribute.alias
                 self._expressions.append(attribute)

@@ -53,10 +53,12 @@ def main(
 
         if ext == "parquet":
             from pyarrow import parquet
+
             parquet.write_table(table, o)
             return
         if ext == "csv":
             from pyarrow import csv
+
             csv.write_csv(table, o)
             return
         if ext == "jsonl":
@@ -64,9 +66,8 @@ def main(
                 for row in table.to_pylist():
                     file.write(orjson.dumps(row) + b"\n")
             return
-        
-    print(f"Unkown output format '{ext}'")
 
+    print(f"Unkown output format '{ext}'")
 
 
 if __name__ == "__main__":  # pragma: no cover
