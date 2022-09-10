@@ -37,7 +37,7 @@ def main(
     if ast:
         _, _, temporal_removed_sql = extract_temporal_filters(sql)
         ast = sqloxide.parse_sql(temporal_removed_sql, dialect="mysql")
-        print(json.dumps(ast, indent=2))
+        print(orjson.dumps(ast, indent=2))
 
     conn = opteryx.connect()
     cur = conn.cursor()
