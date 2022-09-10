@@ -337,15 +337,11 @@ def evaluate_and_append(expressions, table: Table, seed: str = None):
 
     for statement in expressions:
 
-        if (
-            statement.token_type
-            in (
-                NodeType.FUNCTION,
-                NodeType.BINARY_OPERATOR,
-                NodeType.COMPARISON_OPERATOR,
-            )
-            or (statement.token_type & LITERAL_TYPE == LITERAL_TYPE)
-        ):
+        if statement.token_type in (
+            NodeType.FUNCTION,
+            NodeType.BINARY_OPERATOR,
+            NodeType.COMPARISON_OPERATOR,
+        ) or (statement.token_type & LITERAL_TYPE == LITERAL_TYPE):
             new_column_name = format_expression(statement)
             raw_column_name = new_column_name
 
