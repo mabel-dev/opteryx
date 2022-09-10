@@ -1,15 +1,16 @@
-![Icarus Opteryx](icarus-opteryx-small.png)
+<div align="center">
 
-## Opteryx, query your data, no database required
+![Icarus Opteryx](icarus-opteryx-small.png)
+## Opteryx. Query your data, no database required
+</div>
 
 <h3 align="center">
+
+Opteryx is a SQL Engine written in Python, designed for cloud-native environments.
 
 [Documentation](https://mabel-dev.github.io/opteryx/) |
 [Examples](https://github.com/mabel-dev/opteryx/tree/main/notebooks) |
 [Contributing](https://mabel-dev.github.io/opteryx/Contributor%20Guide/01%20Guide/)
-</h3>
-
-**Opteryx is a SQL Engine written in Python, designed for cloud-native environments.**
 
 [![PyPI Latest Release](https://img.shields.io/pypi/v/opteryx.svg)](https://pypi.org/project/opteryx/)
 [![opteryx](https://snyk.io/advisor/python/opteryx/badge.svg?style=flat-square)](https://snyk.io/advisor/python/opteryx)
@@ -21,12 +22,13 @@
 [![Regression Suite](https://github.com/mabel-dev/opteryx/actions/workflows/regression_suite.yaml/badge.svg)](https://github.com/mabel-dev/opteryx/actions/workflows/regression_suite.yaml)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
+</h3>
+
 ## Use Cases
 
 - Using SQL to query data written by another process, such as logs
-- A low-cost option to allow hundreds of analysts to each have part-time databases
-- Running a query engine in a serverless environment
-- Building a platform to allow time-travel and temporal queries
+- As a command line tool - bring the power and flexibility of SQL to filter and transform files
+- As an embeddable engine - a low-cost option to allow hundreds of analysts to each have part-time databases
 
 ## Features
 

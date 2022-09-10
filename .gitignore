@@ -155,3 +155,4 @@ testdata/zoned/**
 testdata/parquet/**
 data/**
 opteryx/third_party/soundex.c
+temp.*

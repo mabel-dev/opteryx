@@ -15,10 +15,10 @@
 """
 A command line utility for Opteryx
 """
-import json
-
 import sqloxide
 import typer
+
+import orjson
 
 import opteryx
 
@@ -28,6 +28,7 @@ from opteryx.utils.display import ascii_table
 
 def main(
     ast: bool = typer.Option(False, help="Display the AST for the query"),
+    o: str = typer.Option(default="console", help="Output location"),
     sql: str = typer.Argument(None),
 ):
 
@@ -36,20 +37,37 @@ def main(
     if ast:
         _, _, temporal_removed_sql = extract_temporal_filters(sql)
         ast = sqloxide.parse_sql(temporal_removed_sql, dialect="mysql")
-        print(json.dumps(ast, indent=2))
+        print(orjson.dumps(ast))
 
     conn = opteryx.connect()
     cur = conn.cursor()
 
     cur.execute(sql)
 
-    print(ascii_table(cur.fetchmany(size=5), limit=200))
+    if o == "console":
+        print(ascii_table(cur.fetchall(), limit=-1))
+        return
+    else:
+        ext = o.lower().split(".")[-1]
+        table = cur.to_arrow()
 
+        if ext == "parquet":
+            from pyarrow import parquet
 
-#    [a for a in cur.fetchall()]
-#    print(json.dumps(cur.stats, indent=2))
-#    if cur.has_warnings:
-#        print(cur.warnings)
+            parquet.write_table(table, o)
+            return
+        if ext == "csv":
+            from pyarrow import csv
+
+            csv.write_csv(table, o)
+            return
+        if ext == "jsonl":
+            with open(o, mode="wb") as file:
+                for row in table.to_pylist():
+                    file.write(orjson.dumps(row) + b"\n")
+            return
+
+    print(f"Unkown output format '{ext}'")
 
 
 if __name__ == "__main__":  # pragma: no cover
