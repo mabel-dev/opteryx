@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - [[#486](https://github.com/mabel-dev/opteryx/issues/486)] Support functions on aggregates and aggregates on functions. ([@joocer](https://github.com/joocer))  
 - Initial support for `INTERVAL`s. ([@joocer](https://github.com/joocer))  
 - [[#395](https://github.com/mabel-dev/opteryx/issues/395)] Support reading CSV files. ([@joocer](https://github.com/joocer))  
+- [[#498](https://github.com/mabel-dev/opteryx/issues/498)] CLI support writing CSV/JSONL/Parquet. ([@joocer](https://github.com/joocer))  
 
 **Changed**
 
