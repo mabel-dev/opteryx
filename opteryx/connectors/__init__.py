@@ -21,7 +21,6 @@ from opteryx.connectors.gcp_firestore_connector import GcpFireStoreConnector
 from opteryx.connectors.gcp_cloudstorage_connector import GcpCloudStorageConnector
 from opteryx.connectors.mongodb_connector import MongoDbConnector
 
-
 WELL_KNOWN_ADAPTERS = {
     "disk": DiskConnector,
     "gcs": GcpCloudStorageConnector,

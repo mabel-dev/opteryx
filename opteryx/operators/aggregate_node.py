@@ -150,7 +150,7 @@ def _build_aggs(aggregators, columns):
                     f"{aggregator.value.upper()}({display_field})"
                 ] = f"{field_name}_{function}".replace("_hash_", "_")
 
-    return column_map, aggs
+    return column_map, list(set(aggs))
 
 
 def _non_group_aggregates(aggregates, table, columns):

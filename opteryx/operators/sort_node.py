@@ -25,7 +25,7 @@ import numpy
 
 from pyarrow import Table, concat_tables
 
-from opteryx.exceptions import SqlError
+from opteryx.exceptions import ColumnNotFoundError, SqlError
 from opteryx.managers.expression import format_expression
 from opteryx.managers.expression import NodeType
 from opteryx.models import Columns, QueryDirectives, QueryStatistics
@@ -109,14 +109,19 @@ class SortNode(BasePlanNode):
                         )
                     )
                 else:
-                    self._mapped_order.append(
-                        (
-                            columns.get_column_from_alias(
-                                format_expression(column), only_one=True
-                            ),
-                            direction,
+                    try:
+                        self._mapped_order.append(
+                            (
+                                columns.get_column_from_alias(
+                                    format_expression(column), only_one=True
+                                ),
+                                direction,
+                            )
                         )
-                    )
+                    except ColumnNotFoundError as cnfe:
+                        raise ColumnNotFoundError(
+                            f"`ORDER BY` must reference columns as they appear in the `SELECT` clause. {cnfe}"
+                        )
 
         table = table.sort_by(self._mapped_order)
         self._statistics.time_ordering = time.time_ns() - start_time
