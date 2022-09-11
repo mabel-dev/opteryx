@@ -164,7 +164,7 @@ class Columns:
         matches = []
         for col, att in self._column_metadata.items():
             matches.extend([col for alias in att.get("aliases", []) if alias == column])
-            matches = list(set(matches))
+        matches = list(set(matches))
         if only_one:
             if len(matches) == 0:
 
