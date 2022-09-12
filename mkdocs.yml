@@ -28,3 +28,8 @@ markdown_extensions:
 
 extra_css:
   - stylesheets/extra.css
+
+plugins:
+  - mike:
+      canonical_version: 'latest'
+      version_selector: true

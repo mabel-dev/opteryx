@@ -30,7 +30,7 @@ Abridged usage guidance is available below:
 Usage: python -m opteryx [OPTIONS] [SQL] 
 
 --ast --no-ast    Display the AST for the query. [default: no-ast]
---o <taget>       Where to output the results. [default: console]
+--o <target>      Where to output the results. [default: console]
 --help            Show the full help details.          
 ~~~
 

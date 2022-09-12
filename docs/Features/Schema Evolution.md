@@ -1,6 +1,6 @@
 # Schema Evolution
 
-[Opteryx](https://mabel-dev.github.io/opteryx/) has support for in-place relation evolution. You can evolve a table schema or change a partition layout without requiring existing data to be rewritten or migrated to a new dataset.
+[Opteryx](https://github.com/mabel-dev/opteryx) has support for in-place relation evolution. You can evolve a table schema or change a partition layout without requiring existing data to be rewritten or migrated to a new dataset.
 
 Schema of the data is determined by the first page read to respond to a query, new columns are removed and missing columns are null-filled. This allows graceful handling of pages with different schemas, but may result in the appearance of missing data as columns not found in the first page are removed.
 

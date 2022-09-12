@@ -2,7 +2,7 @@
 
 ## Reference Data
 
-[Opteryx](https://mabel-dev.github.io/opteryx/) supports viewing data as it was on a given date. This is desirable functionality if:
+[Opteryx](https://github.com/mabel-dev/opteryx) supports viewing data as it was on a given date. This is desirable functionality if:
 
 - Backfills need to be run against reference data as it was at the time, rather than as it is today
 - Previous state needs to be retained to demonstrate why algorithms had results different today than they did when run
