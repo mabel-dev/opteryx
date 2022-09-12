@@ -34,7 +34,7 @@ def planets(end_date):
         # November 13, 1846 - Neptune
         mask = [True, True, True, True, True, True, True, False, False]
     if end_date < datetime.date(1781, 4, 26):
-        # April 26, 1781 - Uranus discovered by Sir William Herschel 
+        # April 26, 1781 - Uranus discovered by Sir William Herschel
         mask = [True, True, True, True, True, True, False, False, False]
 
     return full_set.filter(mask)
