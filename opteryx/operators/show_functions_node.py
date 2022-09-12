@@ -19,15 +19,15 @@ from typing import Iterable
 import pyarrow
 
 from opteryx import operators, functions
-from opteryx.models import Columns, QueryDirectives, QueryStatistics
+from opteryx.models import Columns, QueryProperties, QueryStatistics
 from opteryx.operators import BasePlanNode
 
 
 class ShowFunctionsNode(BasePlanNode):
     def __init__(
-        self, directives: QueryDirectives, statistics: QueryStatistics, **config
+        self, properties: QueryProperties, statistics: QueryStatistics, **config
     ):
-        super().__init__(directives=directives, statistics=statistics)
+        super().__init__(properties=properties, statistics=statistics)
         self._full = config.get("full")
         self._extended = config.get("extended")
 

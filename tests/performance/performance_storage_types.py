@@ -16,7 +16,7 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import opteryx
 from opteryx.connectors import DiskConnector
-from opteryx.managers.cache import InMemoryCache
+from opteryx.kvstores import InMemoryCache
 
 import time
 

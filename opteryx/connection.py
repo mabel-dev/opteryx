@@ -24,7 +24,7 @@ from typing import Dict, List, Optional
 from pyarrow import Table
 
 from opteryx.exceptions import CursorInvalidStateError, ProgrammingError, SqlError
-from opteryx.managers.cache import BaseBufferCache
+from opteryx.managers.kvstores import BaseKeyValueStore
 from opteryx.models import QueryStatistics
 from opteryx.utils import arrow
 
@@ -39,7 +39,7 @@ class Connection:
     def __init__(
         self,
         *,
-        cache: Optional[BaseBufferCache] = None,
+        cache: Optional[BaseKeyValueStore] = None,
         **kwargs,
     ):
         self._results = None

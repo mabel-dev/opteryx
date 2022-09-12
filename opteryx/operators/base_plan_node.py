@@ -13,7 +13,7 @@
 
 import abc
 
-from opteryx.models import QueryDirectives, QueryStatistics
+from opteryx.models import QueryProperties, QueryStatistics
 
 
 class BasePlanNode(abc.ABC):
@@ -21,7 +21,7 @@ class BasePlanNode(abc.ABC):
     _producers = None
 
     def __init__(
-        self, directives: QueryDirectives, statistics: QueryStatistics, **config
+        self, properties: QueryProperties, statistics: QueryStatistics, **config
     ):
         """
         This is the base class for nodes in the execution plan.
@@ -30,7 +30,7 @@ class BasePlanNode(abc.ABC):
         different nodes differently to record what happened during the query
         execution.
         """
-        self._directives = directives
+        self._properties = properties
         self._statistics = statistics
 
     def __call__(self):

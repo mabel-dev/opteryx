@@ -9,8 +9,9 @@ Opteryx's repository folder structure is described below:
  ├── connectors/         <- modules to connect to data sources
  ├── functions/          <- modules to execute functions within SQL statements
  ├── managers/           <- libraries responsible for key functional units
- │   ├── cache/          <- modules implementing the caching mechanism
+mechanism
  │   ├── expression/     <- modules implementing expression evaluation
+│   ├── kvstore/         <- modules implementing interfacing with KV Stores (internal usage) 
  │   ├── process/        <- modules implementing process management
  │   ├── query/           
  │   │   └── planner/    <- modules implementing query planning 

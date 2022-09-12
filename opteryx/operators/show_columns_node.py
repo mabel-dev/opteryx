@@ -30,7 +30,7 @@ import pyarrow
 
 from opteryx.attribute_types import OPTERYX_TYPES, determine_type
 from opteryx.exceptions import SqlError
-from opteryx.models import Columns, QueryDirectives, QueryStatistics
+from opteryx.models import Columns, QueryProperties, QueryStatistics
 from opteryx.operators import BasePlanNode
 
 MAX_COLLECTOR: int = 17
@@ -360,9 +360,9 @@ def _extended_collector(pages):
 
 class ShowColumnsNode(BasePlanNode):
     def __init__(
-        self, directives: QueryDirectives, statistics: QueryStatistics, **config
+        self, properties: QueryProperties, statistics: QueryStatistics, **config
     ):
-        super().__init__(directives=directives, statistics=statistics)
+        super().__init__(properties=properties, statistics=statistics)
         self._full = config.get("full")
         self._extended = config.get("extended")
 

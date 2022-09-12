@@ -23,20 +23,20 @@ from typing import Iterable, Optional
 
 import pyarrow
 
-from opteryx.models import QueryDirectives, QueryStatistics
+from opteryx.models import QueryProperties, QueryStatistics
 from opteryx.operators import BasePlanNode
 from opteryx.models.columns import Columns
 
 
 class CollectionReaderNode(BasePlanNode):
     def __init__(
-        self, directives: QueryDirectives, statistics: QueryStatistics, **config
+        self, properties: QueryProperties, statistics: QueryStatistics, **config
     ):
         """
         The Collection Reader Node is responsible for reading the relevant documents
         from a NoSQL document store and returning a Table/Relation.
         """
-        super().__init__(directives=directives, statistics=statistics)
+        super().__init__(properties=properties, statistics=statistics)
 
         self._statistics = statistics
         self._alias = config.get("alias")

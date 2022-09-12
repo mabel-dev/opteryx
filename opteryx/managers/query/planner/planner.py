@@ -55,7 +55,7 @@ from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.managers.expression import NodeType
 from opteryx.managers.query.planner.temporal import extract_temporal_filters
 from opteryx.managers.query.planner import builders
-from opteryx.models import Columns, ExecutionTree, QueryDirectives
+from opteryx.models import Columns, ExecutionTree, QueryProperties
 from opteryx.utils import fuzzy_search
 
 
@@ -71,7 +71,7 @@ LITERAL_BUILDER = {
 
 
 class QueryPlanner(ExecutionTree):
-    def __init__(self, statistics, cache=None, directives=None):
+    def __init__(self, statistics, cache=None, properties=None):
         """
         Planner creates a plan (Execution Tree or DAG) which presents the plan to
         respond to the query.
@@ -81,10 +81,10 @@ class QueryPlanner(ExecutionTree):
         self._ast = None
 
         self._statistics = statistics
-        self._directives = (
-            QueryDirectives()
-            if not isinstance(directives, QueryDirectives)
-            else directives
+        self._properties = (
+            QueryProperties()
+            if not isinstance(properties, QueryProperties)
+            else properties
         )
         self._cache = cache
 
@@ -125,16 +125,22 @@ class QueryPlanner(ExecutionTree):
         else:
             self._ast = ast
 
+        # step one to allowing multiple plans - don't reference
+        # the array of ASTs in the plan
+        ast = self._ast[0]
+
         # build a plan for the query
-        if "Query" in self._ast[0]:
+        if "Query" in ast:
             self._naive_select_planner(self._ast, self._statistics)
-        elif "Explain" in self._ast[0]:
+        elif "Explain" in ast:
             self._explain_planner(self._ast, self._statistics)
-        elif "ShowColumns" in self._ast[0]:
+#        elif "SetVariable" is self._ast[0]:
+#            self._set_variable_planner(self._ast, self._statistics)
+        elif "ShowColumns" in ast:
             self._show_columns_planner(self._ast, self._statistics)
-        elif "ShowVariable" in self._ast[0]:
+        elif "ShowVariable" in ast:
             self._show_variable_planner(self._ast, self._statistics)
-        elif "ShowCreate" in self._ast[0]:
+        elif "ShowCreate" in ast:
             self._show_create_planner(self._ast, self._statistics)
         else:  # pragma: no cover
             raise SqlError("Unknown or unsupported Query type.")
@@ -638,21 +644,21 @@ class QueryPlanner(ExecutionTree):
         having = ast[0]["Query"]["body"]["Select"]["having"]
         return self._filter_extract(having)
 
-    def _extract_directives(self, ast):
-        return QueryDirectives()
+    def _extract_properties(self, ast):
+        return QueryProperties()
 
     def _explain_planner(self, ast, statistics):
-        directives = self._extract_directives(ast)
+        properties = self._extract_properties(ast)
         explain_plan = self.copy()
         explain_plan.create_plan(ast=[ast[0]["Explain"]["statement"]])
         explain_node = operators.ExplainNode(
-            directives, statistics, query_plan=explain_plan
+            properties, statistics, query_plan=explain_plan
         )
         self.add_operator("explain", explain_node)
 
     def _show_columns_planner(self, ast, statistics):
 
-        directives = self._extract_directives(ast)
+        properties = self._extract_properties(ast)
 
         dataset = ".".join(
             [part["value"] for part in ast[0]["ShowColumns"]["table_name"]]
@@ -668,7 +674,7 @@ class QueryPlanner(ExecutionTree):
         self.add_operator(
             "reader",
             operators.reader_factory(mode)(
-                directives=directives,
+                properties=properties,
                 statistics=statistics,
                 dataset=dataset,
                 alias=None,
@@ -685,7 +691,7 @@ class QueryPlanner(ExecutionTree):
             self.add_operator(
                 "filter",
                 operators.ColumnSelectionNode(
-                    directives=directives, statistics=statistics, filter=filters
+                    properties=properties, statistics=statistics, filter=filters
                 ),
             )
             self.link_operators(last_node, "filter")
@@ -694,7 +700,7 @@ class QueryPlanner(ExecutionTree):
         self.add_operator(
             "columns",
             operators.ShowColumnsNode(
-                directives=directives,
+                properties=properties,
                 statistics=statistics,
                 full=ast[0]["ShowColumns"]["full"],
                 extended=ast[0]["ShowColumns"]["extended"],
@@ -705,7 +711,7 @@ class QueryPlanner(ExecutionTree):
 
     def _show_create_planner(self, ast, statistics):
 
-        directives = self._extract_directives(ast)
+        properties = self._extract_properties(ast)
 
         if ast[0]["ShowCreate"]["obj_type"] != "Table":
             raise SqlError("SHOW CREATE only supports tables")
@@ -722,7 +728,7 @@ class QueryPlanner(ExecutionTree):
         self.add_operator(
             "reader",
             operators.reader_factory(mode)(
-                directives=directives,
+                properties=properties,
                 statistics=statistics,
                 dataset=dataset,
                 alias=None,
@@ -737,7 +743,7 @@ class QueryPlanner(ExecutionTree):
         self.add_operator(
             "show_create",
             operators.ShowCreateNode(
-                directives=directives, statistics=statistics, table=dataset
+                properties=properties, statistics=statistics, table=dataset
             ),
         )
         self.link_operators(last_node, "show_create")
@@ -772,7 +778,7 @@ class QueryPlanner(ExecutionTree):
         The last word is the variable, preceeding words are modifiers.
         """
 
-        directives = self._extract_directives(ast)
+        properties = self._extract_properties(ast)
 
         keywords = [
             value["value"].upper() for value in ast[0]["ShowVariable"]["variable"]
@@ -780,7 +786,7 @@ class QueryPlanner(ExecutionTree):
         if keywords[-1] == "FUNCTIONS":
             show_node = "show_functions"
             node = operators.ShowFunctionsNode(
-                directives=directives,
+                properties=properties,
                 statistics=statistics,
             )
             self.add_operator(show_node, operator=node)
@@ -790,7 +796,7 @@ class QueryPlanner(ExecutionTree):
         name_column = ExpressionTreeNode(NodeType.IDENTIFIER, value="name")
 
         order_by_node = operators.SortNode(
-            directives=directives,
+            properties=properties,
             statistics=statistics,
             order=[([name_column], "ascending")],
         )
@@ -804,7 +810,7 @@ class QueryPlanner(ExecutionTree):
         The goal here is to create a plan to respond to the user, it creates has
         no clever tricks to improve performance.
         """
-        directives = self._extract_directives(ast)
+        properties = self._extract_properties(ast)
         all_identifiers = self._extract_identifiers(ast)
 
         _relations = [r for r in self._extract_relations(ast)]
@@ -823,7 +829,7 @@ class QueryPlanner(ExecutionTree):
         self.add_operator(
             "from",
             operators.reader_factory(mode)(
-                directives=directives,
+                properties=properties,
                 statistics=statistics,
                 alias=alias,
                 dataset=dataset,
@@ -868,7 +874,7 @@ class QueryPlanner(ExecutionTree):
 
                     # Otherwise, the right table needs to come from the Reader
                     right = operators.reader_factory(mode)(
-                        directives=directives,
+                        properties=properties,
                         statistics=statistics,
                         dataset=dataset,
                         alias=right[0],
@@ -886,7 +892,7 @@ class QueryPlanner(ExecutionTree):
                 self.add_operator(
                     f"join-{join_id}",
                     join_node(
-                        directives=directives,
+                        properties=properties,
                         statistics=statistics,
                         join_type=join_type,
                         join_on=join_on,
@@ -904,7 +910,7 @@ class QueryPlanner(ExecutionTree):
         if _selection:
             self.add_operator(
                 "where",
-                operators.SelectionNode(directives, statistics, filter=_selection),
+                operators.SelectionNode(properties, statistics, filter=_selection),
             )
             self.link_operators(last_node, "where")
             last_node = "where"
@@ -935,7 +941,7 @@ class QueryPlanner(ExecutionTree):
             self.add_operator(
                 "agg",
                 operators.AggregateNode(
-                    directives, statistics, aggregates=_aggregates, groups=_groups
+                    properties, statistics, aggregates=_aggregates, groups=_groups
                 ),
             )
             self.link_operators(last_node, "agg")
@@ -945,7 +951,7 @@ class QueryPlanner(ExecutionTree):
         if _having:
             self.add_operator(
                 "having",
-                operators.SelectionNode(directives, statistics, filter=_having),
+                operators.SelectionNode(properties, statistics, filter=_having),
             )
             self.link_operators(last_node, "having")
             last_node = "having"
@@ -961,7 +967,7 @@ class QueryPlanner(ExecutionTree):
             self.add_operator(
                 "select",
                 operators.ProjectionNode(
-                    directives, statistics, projection=_projection
+                    properties, statistics, projection=_projection
                 ),
             )
             self.link_operators(last_node, "select")
@@ -970,7 +976,7 @@ class QueryPlanner(ExecutionTree):
         _distinct = self._extract_distinct(ast)
         if _distinct:
             self.add_operator(
-                "distinct", operators.DistinctNode(directives, statistics)
+                "distinct", operators.DistinctNode(properties, statistics)
             )
             self.link_operators(last_node, "distinct")
             last_node = "distinct"
@@ -978,7 +984,7 @@ class QueryPlanner(ExecutionTree):
         _order = self._extract_order(ast)
         if _order:
             self.add_operator(
-                "order", operators.SortNode(directives, statistics, order=_order)
+                "order", operators.SortNode(properties, statistics, order=_order)
             )
             self.link_operators(last_node, "order")
             last_node = "order"
@@ -986,7 +992,7 @@ class QueryPlanner(ExecutionTree):
         _offset = self._extract_offset(ast)
         if _offset:
             self.add_operator(
-                "offset", operators.OffsetNode(directives, statistics, offset=_offset)
+                "offset", operators.OffsetNode(properties, statistics, offset=_offset)
             )
             self.link_operators(last_node, "offset")
             last_node = "offset"
@@ -995,7 +1001,7 @@ class QueryPlanner(ExecutionTree):
         # 0 limit is valid
         if _limit is not None:
             self.add_operator(
-                "limit", operators.LimitNode(directives, statistics, limit=_limit)
+                "limit", operators.LimitNode(properties, statistics, limit=_limit)
             )
             self.link_operators(last_node, "limit")
             last_node = "limit"

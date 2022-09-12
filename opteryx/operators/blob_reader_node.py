@@ -30,7 +30,7 @@ from opteryx import config
 from opteryx.exceptions import DatabaseError
 from opteryx.managers.schemes import MabelPartitionScheme
 from opteryx.managers.schemes import DefaultPartitionScheme
-from opteryx.models import Columns, QueryDirectives, QueryStatistics
+from opteryx.models import Columns, QueryProperties, QueryStatistics
 from opteryx.operators import BasePlanNode
 from opteryx.utils import file_decoders
 
@@ -97,13 +97,13 @@ class BlobReaderNode(BasePlanNode):
     _disable_cache = False
 
     def __init__(
-        self, directives: QueryDirectives, statistics: QueryStatistics, **config
+        self, properties: QueryProperties, statistics: QueryStatistics, **config
     ):
         """
         The Blob Reader Node is responsible for reading the relevant blobs
         and returning a Table/Relation.
         """
-        super().__init__(directives=directives, statistics=statistics)
+        super().__init__(properties=properties, statistics=statistics)
 
         today = datetime.datetime.utcnow().date()
 

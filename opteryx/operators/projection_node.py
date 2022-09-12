@@ -28,19 +28,19 @@ from opteryx.exceptions import SqlError
 from opteryx.managers.expression import evaluate_and_append
 from opteryx.managers.expression import format_expression
 from opteryx.managers.expression import NodeType, LITERAL_TYPE
-from opteryx.models import QueryDirectives, QueryStatistics
+from opteryx.models import QueryProperties, QueryStatistics
 from opteryx.operators import BasePlanNode
 from opteryx.utils import random_int
 
 
 class ProjectionNode(BasePlanNode):
     def __init__(
-        self, directives: QueryDirectives, statistics: QueryStatistics, **config
+        self, properties: QueryProperties, statistics: QueryStatistics, **config
     ):
         """
         Attribute Projection, remove unwanted columns and performs column renames.
         """
-        super().__init__(directives=directives, statistics=statistics)
+        super().__init__(properties=properties, statistics=statistics)
         self._projection: dict = {}
         self._expressions = []
 

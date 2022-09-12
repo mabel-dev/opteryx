@@ -8,12 +8,12 @@ import sys
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import opteryx
-from opteryx.managers.cache import InMemoryCache
+from opteryx.managers.kvstores import InMemoryKVStore
 
 
 def test_in_memory_cache():
 
-    cache = InMemoryCache(size=5)
+    cache = InMemoryKVStore(size=5)
 
     # read the data once, this should populate the cache
     conn = opteryx.connect(cache=cache)
