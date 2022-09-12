@@ -1,6 +1,6 @@
 name: Documentation
 on:
-  workflow_call
+  push
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -9,5 +9,7 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: 3.x
-      - run: pip install mkdocs-material
-      - run: mkdocs gh-deploy --force
+      - run: git fetch origin gh-pages --depth=1
+      - run: pip install mkdocs-material mike
+      - run: mike delete --all
+      - run: mike deploy 0.4.1 latest
