@@ -9,7 +9,9 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: 3.x
+      - run: git config user.name XB500
+      - run: git config user.email XB500@users.noreply.github.com
       - run: git fetch origin gh-pages --depth=1
       - run: pip install mkdocs-material mike
-      - run: mike delete --all
+#      - run: mike delete --all
       - run: mike deploy 0.4.1 latest
