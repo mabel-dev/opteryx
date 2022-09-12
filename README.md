@@ -76,7 +76,15 @@ Opteryx is a SQL Engine written in Python, designed for cloud-native environment
 pip install opteryx
 ~~~
 
-**Query Data**
+**Query Data (Command Line)**
+
+Example usage, filtering one of the internal example datasets and saving the results as a CSV.
+
+~~~bash
+python -m opteryx --o 'planets.csv' "SELECT * FROM \$planets"
+~~~
+
+**Query Data (Python)**
 
 Example usage, querying one of the internal example datasets.
 
