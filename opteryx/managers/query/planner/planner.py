@@ -134,8 +134,8 @@ class QueryPlanner(ExecutionTree):
             self._naive_select_planner(self._ast, self._statistics)
         elif "Explain" in ast:
             self._explain_planner(self._ast, self._statistics)
-#        elif "SetVariable" is self._ast[0]:
-#            self._set_variable_planner(self._ast, self._statistics)
+        #        elif "SetVariable" is self._ast[0]:
+        #            self._set_variable_planner(self._ast, self._statistics)
         elif "ShowColumns" in ast:
             self._show_columns_planner(self._ast, self._statistics)
         elif "ShowVariable" in ast:
