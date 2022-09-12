@@ -27,16 +27,16 @@ from pyarrow import Table
 from opteryx.attribute_types import TOKEN_TYPES
 from opteryx.exceptions import SqlError
 from opteryx.managers.expression import evaluate
-from opteryx.models import QueryDirectives, QueryStatistics
+from opteryx.models import QueryProperties, QueryStatistics
 from opteryx.operators import BasePlanNode
 from opteryx.utils.arrow import consolidate_pages
 
 
 class SelectionNode(BasePlanNode):
     def __init__(
-        self, directives: QueryDirectives, statistics: QueryStatistics, **config
+        self, properties: QueryProperties, statistics: QueryStatistics, **config
     ):
-        super().__init__(directives=directives, statistics=statistics)
+        super().__init__(properties=properties, statistics=statistics)
         self._filter = config.get("filter")
         self._unfurled_filter = None
         self._mapped_filter = None

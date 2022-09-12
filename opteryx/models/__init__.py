@@ -12,5 +12,5 @@
 
 from .columns import Columns
 from .execution_tree import ExecutionTree
-from .query_directives import QueryDirectives
+from .query_properties import QueryProperties
 from .query_statistics import QueryStatistics

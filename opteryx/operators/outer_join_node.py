@@ -22,7 +22,7 @@ from typing import Iterable
 import pyarrow
 
 from opteryx.exceptions import SqlError
-from opteryx.models import Columns, QueryDirectives, QueryStatistics
+from opteryx.models import Columns, QueryProperties, QueryStatistics
 from opteryx.operators import BasePlanNode
 from opteryx.utils import arrow
 
@@ -35,9 +35,9 @@ OUTER_JOINS = {
 
 class OuterJoinNode(BasePlanNode):
     def __init__(
-        self, directives: QueryDirectives, statistics: QueryStatistics, **config
+        self, properties: QueryProperties, statistics: QueryStatistics, **config
     ):
-        super().__init__(directives=directives, statistics=statistics)
+        super().__init__(properties=properties, statistics=statistics)
         self._join_type = OUTER_JOINS[config.get("join_type")]
         self._on = config.get("join_on")
         self._using = config.get("join_using")

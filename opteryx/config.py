@@ -48,4 +48,8 @@ PARTITION_SCHEME: str = _config.get("PARTITION_SCHEME", None)
 MAX_SIZE_SINGLE_CACHE_ITEM: int = _config.get("MAX_SIZE_SINGLE_CACHE_ITEM", 1024 * 1024)
 # Approximate Page Size
 PAGE_SIZE: int = _config.get("PAGE_SIZE", 64 * 1024 * 1024)
+
+
+# The number of metadata cache records to hold
+LOCAL_METADATA_CACHE: int = int(_config.get("LOCAL_METADATA_CACHE", 512))
 # fmt:on

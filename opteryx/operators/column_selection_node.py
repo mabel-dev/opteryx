@@ -19,16 +19,16 @@ This Node is used to evaluate the filters on SHOW COLUMNS
 """
 from typing import Iterable
 
-from opteryx.models import Columns, QueryDirectives, QueryStatistics
+from opteryx.models import Columns, QueryProperties, QueryStatistics
 from opteryx.operators import BasePlanNode
 from opteryx.exceptions import SqlError
 
 
 class ColumnSelectionNode(BasePlanNode):
     def __init__(
-        self, directives: QueryDirectives, statistics: QueryStatistics, **config
+        self, properties: QueryProperties, statistics: QueryStatistics, **config
     ):
-        super().__init__(directives=directives, statistics=statistics)
+        super().__init__(properties=properties, statistics=statistics)
         self._filter = config.get("filter", True)
 
     @property

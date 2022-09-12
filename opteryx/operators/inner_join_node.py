@@ -25,7 +25,7 @@ import pyarrow
 
 from opteryx import config
 from opteryx.operators import BasePlanNode
-from opteryx.models import Columns, QueryDirectives, QueryStatistics
+from opteryx.models import Columns, QueryProperties, QueryStatistics
 from opteryx.exceptions import SqlError
 from opteryx.third_party import pyarrow_ops
 from opteryx.utils import arrow
@@ -49,9 +49,9 @@ def calculate_batch_size(cardinality):
 
 class InnerJoinNode(BasePlanNode):
     def __init__(
-        self, directives: QueryDirectives, statistics: QueryStatistics, **config
+        self, properties: QueryProperties, statistics: QueryStatistics, **config
     ):
-        super().__init__(directives=directives, statistics=statistics)
+        super().__init__(properties=properties, statistics=statistics)
         self._right_table = config.get("right_table")
         self._join_type = config.get("join_type", "CrossJoin")
         self._on = config.get("join_on")

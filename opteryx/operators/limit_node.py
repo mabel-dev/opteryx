@@ -22,15 +22,15 @@ from typing import Iterable
 from pyarrow import Table, concat_tables
 
 from opteryx.exceptions import SqlError
-from opteryx.models import QueryDirectives, QueryStatistics
+from opteryx.models import QueryProperties, QueryStatistics
 from opteryx.operators import BasePlanNode
 
 
 class LimitNode(BasePlanNode):
     def __init__(
-        self, directives: QueryDirectives, statistics: QueryStatistics, **config
+        self, properties: QueryProperties, statistics: QueryStatistics, **config
     ):
-        super().__init__(directives=directives, statistics=statistics)
+        super().__init__(properties=properties, statistics=statistics)
         self._limit = config.get("limit")
 
     @property

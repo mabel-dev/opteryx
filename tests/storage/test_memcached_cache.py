@@ -12,9 +12,9 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 def test_memcached_cache():
 
     import opteryx
-    from opteryx.managers.cache import MemcachedCache
+    from opteryx.managers.kvstores import MemcachedKVStore
 
-    cache = MemcachedCache(server="localhost:11211")
+    cache = MemcachedKVStore(server="localhost:11211")
 
     # read the data once, this should populate the cache if it hasn't already
     conn = opteryx.connect(cache=cache)

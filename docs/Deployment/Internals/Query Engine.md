@@ -2,7 +2,6 @@
 
 > If you are interested in how databases work, I recommend the resources from [The CMU Database Group](https://db.cs.cmu.edu/) and the collection of resources at [Awesome Database Learning](https://github.com/pingcap/awesome-database-learning).
 
-
 The Opteryx query engine has the following key components and general process:
 
 1) The Parser & Lexer, which recieves the user SQL and builds an Abstract Syntax Tree (AST).
