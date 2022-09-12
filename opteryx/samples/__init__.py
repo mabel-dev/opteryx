@@ -20,7 +20,7 @@ def satellites(*args):
     return load()
 
 
-def planets(end_date):
+def planets(end_date=datetime.date.today()):
     """load the planets sample data"""
     from .planet_data import load
 
