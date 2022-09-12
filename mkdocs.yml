@@ -28,7 +28,3 @@ markdown_extensions:
 
 extra_css:
   - stylesheets/extra.css
-
-plugins:
-  - mike:
-      alias_type: copy

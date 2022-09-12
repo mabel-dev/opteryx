@@ -13,5 +13,7 @@ jobs:
       - run: git config user.email XB500@users.noreply.github.com
       - run: git fetch origin gh-pages --depth=1
       - run: pip install mkdocs-material mike
-#      - run: mike delete --all
-      - run: mike deploy 0.4.1 latest
+      # delete this line
+      - run: mike delete --all
+      # this should match the version
+      - run: mike deploy -p 0.4.1 latest
