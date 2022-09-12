@@ -32,3 +32,4 @@ extra_css:
 plugins:
   - mike:
       canonical_version: 'latest'
+      version_selector: true
