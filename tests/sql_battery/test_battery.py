@@ -349,6 +349,10 @@ STATEMENTS = [
         ("SELECT * FROM $satellites FOR YESTERDAY ORDER BY planetId OFFSET 10", 167, 8),
 
         ("SELECT * FROM testdata.segmented FOR '2020-02-03'", 25, 8),
+        ("SELECT * FROM $planets FOR '1730-01-01'", 6, 20),
+        ("SELECT * FROM $planets FOR '1830-01-01'", 7, 20),
+        ("SELECT * FROM $planets FOR '1930-01-01'", 8, 20),
+        ("SELECT * FROM $planets FOR '2030-01-01'", 9, 20),
 
         ("SELECT * FROM $astronauts WHERE death_date IS NULL", 305, 19),
         ("SELECT * FROM $astronauts WHERE death_date IS NOT NULL", 52, 19),
@@ -553,7 +557,6 @@ STATEMENTS = [
         ("SELECT IIF(year = 1960, 1, 0), year FROM $astronauts", 357, 2),
         ("SELECT SUM(IIF(year < 1970, 1, 0)), MAX(year) FROM $astronauts", 1, 2),
         ("SELECT SUM(IIF(year < 1970, 1, 0)), year FROM $astronauts GROUP BY year ORDER BY year ASC", 21, 2),
- #       ("SELECT SUM(id) * COUNT(id) FROM $planets", 1, 1),
         ("SELECT SUM(id) + id FROM $planets GROUP BY id", 9, 1),
         ("SELECT today() - INTERVAL '1' YEAR", 1, 1),
         ("SELECT today() - INTERVAL '1' MONTH", 1, 1),

@@ -17,6 +17,8 @@ This is a SQL Query Execution Plan Node.
 
 This Node reads and parses the data from one of the sample datasets.
 """
+import datetime
+
 from typing import Iterable, Optional
 
 import pyarrow
@@ -43,7 +45,7 @@ def _normalize_to_types(table):
     return table.cast(target_schema=schema)
 
 
-def _get_sample_dataset(dataset, alias):
+def _get_sample_dataset(dataset, alias, end_date):
     # we do this like this so the datasets are not loaded into memory unless
     # they are going to be used
     sample_datasets = {
@@ -54,7 +56,7 @@ def _get_sample_dataset(dataset, alias):
     }
     dataset = dataset.lower()
     if dataset in sample_datasets:
-        table = sample_datasets[dataset]()
+        table = sample_datasets[dataset](end_date)
         table = _normalize_to_types(table)
         table = Columns.create_table_metadata(
             table=table,
@@ -80,6 +82,10 @@ class InternalDatasetNode(BasePlanNode):
         self._alias = config["alias"]
         self._dataset = config["dataset"]
 
+        today = datetime.datetime.utcnow().date()
+        self._start_date = config.get("start_date", today)
+        self._end_date = config.get("end_date", today)
+
     @property
     def config(self):  # pragma: no cover
         if self._alias:
@@ -91,7 +97,7 @@ class InternalDatasetNode(BasePlanNode):
         return "Sample Dataset Reader"
 
     def execute(self, data_pages: Optional[Iterable] = None) -> Iterable:
-        pyarrow_page = _get_sample_dataset(self._dataset, self._alias)
+        pyarrow_page = _get_sample_dataset(self._dataset, self._alias, self._end_date)
         self._statistics.rows_read += pyarrow_page.num_rows
         self._statistics.bytes_processed_data += pyarrow_page.nbytes
         self._statistics.columns_read += len(pyarrow_page.column_names)

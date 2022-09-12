@@ -2,7 +2,21 @@
 
 All notable changes to this project will be documented in this file, where appropriate the GitHub issue reference will be noted along with the change. Breaking changes will be clearly indicated.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+
+## [0.5.0] - Unreleased
+
+**Fixed**
+
+None
+
+**Changed**
+
+None
+
+**Added**
+
+- [[#397](https://github.com/mabel-dev/opteryx/issues/397)] Time Travel with '$planets' dataset. ([@joocer](https://github.com/joocer))  
 
 ## [0.4.1] - 2022-09-12
 
