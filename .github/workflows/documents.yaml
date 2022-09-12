@@ -1,6 +1,6 @@
 name: Documentation
 on:
-  push
+  workflow_call
 jobs:
   deploy:
     runs-on: ubuntu-latest

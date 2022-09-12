@@ -10,29 +10,44 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import datetime
 
-def satellites():
+
+def satellites(*args):
     """load the satellite sample data"""
     from .satellite_data import load
 
     return load()
 
 
-def planets():
+def planets(end_date):
     """load the planets sample data"""
     from .planet_data import load
 
-    return load()
+    full_set = load()
+
+    mask = [True, True, True, True, True, True, True, True, True]
+    if end_date < datetime.date(1930, 3, 13):
+        # March 13, 1930 - Pluto discovered by Clyde William Tombaugh
+        mask = [True, True, True, True, True, True, True, True, False]
+    if end_date < datetime.date(1846, 11, 13):
+        # November 13, 1846 - Neptune
+        mask = [True, True, True, True, True, True, True, False, False]
+    if end_date < datetime.date(1781, 4, 26):
+        # April 26, 1781 - Uranus discovered by Sir William Herschel 
+        mask = [True, True, True, True, True, True, False, False, False]
+
+    return full_set.filter(mask)
 
 
-def astronauts():
+def astronauts(*args):
     """load the astronaut sample data"""
     from .astronaut_data import load
 
     return load()
 
 
-def no_table():
+def no_table(*args):
     """load the null data table"""
     from .no_table_data import load
 
