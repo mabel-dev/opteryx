@@ -68,7 +68,7 @@ The `FROM` clause specifies the source of the data on which the remainder of the
 
 `JOIN` clauses allow you to combine data from multiple relations. If no `JOIN` qualifier is provided, `INNER` will be used. `JOIN` qualifiers are mutually exclusive. `ON` and `USING` clauses are also mutually exclusive and can only be used with `INNER` and `LEFT` joins.
 
-See [Joins](https://mabel-dev.github.io/opteryx/SQL%20Reference/08%20Joins/) for more information on `JOIN` syntax and functionality.
+See [Joins](08%20Joins) for more information on `JOIN` syntax and functionality.
 
 Hints can be provided as part of the statement to direct the query planner and executor to make decisions. Relation hints are declared as `WITH` statements following a relation in the `FROM` and `JOIN` clauses, for example `FROM $astronauts WITH (NO_CACHE)`. Reconised hints are:
 
@@ -95,7 +95,7 @@ FOR DATES IN range
 
 The `FOR` clause is a non ANSI SQL extension which filters data by the date it was recorded for.
 
-See [Temporality](https://mabel-dev.github.io/opteryx/SQL%20Reference/09%20Temporality/) for more information on `FOR` syntax and functionality.
+See [Temporality](09%20Temporality) for more information on `FOR` syntax and functionality.
 
 ### WHERE clause
 
@@ -175,7 +175,7 @@ FOR DATES IN range
 
 The `FOR` clause specifies the date to review data for. Although this supports the full syntax as per the `SELECT` statements.
 
-See [Temporality](https://mabel-dev.github.io/opteryx/SQL%20Reference/09%20Temporality/) for more information on `FOR` syntax and functionality.
+See [Temporality](09%20Temporality) for more information on `FOR` syntax and functionality.
 
 ## SHOW CREATE TABLE
 

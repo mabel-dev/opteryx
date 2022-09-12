@@ -8,9 +8,9 @@
 
 Opteryx is a SQL Engine written in Python, designed for cloud-native environments.
 
-[Documentation](https://mabel-dev.github.io/opteryx/) |
+[Documentation](https://mabel-dev.github.io/opteryx/latest) |
 [Examples](https://github.com/mabel-dev/opteryx/tree/main/notebooks) |
-[Contributing](https://mabel-dev.github.io/opteryx/Contributor%20Guide/01%20Guide/)
+[Contributing](https://mabel-dev.github.io/opteryx/latest/Contributor%20Guide/01%20Guide/)
 
 [![PyPI Latest Release](https://img.shields.io/pypi/v/opteryx.svg)](https://pypi.org/project/opteryx/)
 [![opteryx](https://snyk.io/advisor/python/opteryx/badge.svg?style=flat-square)](https://snyk.io/advisor/python/opteryx)
@@ -90,7 +90,7 @@ for row in cur.fetchall():
     print(row)
 ~~~
 
-For more example usage, see [Exmaple Notebooks](https://github.com/mabel-dev/opteryx/tree/main/notebooks) and the [Getting Started Guide](https://mabel-dev.github.io/opteryx/02%20Getting%20Started/).
+For more example usage, see [Exmaple Notebooks](https://github.com/mabel-dev/opteryx/tree/main/notebooks) and the [Getting Started Guide](https://mabel-dev.github.io/opteryx/latest/02%20Getting%20Started/).
 
 ## Community
 
@@ -104,7 +104,7 @@ For support join our [Gitter Community](https://gitter.im/mabel-opteryx/communit
 
 All contributions, [bug reports](https://github.com/mabel-dev/opteryx/issues/new/choose), documentation improvements, enhancements, and [ideas](https://github.com/mabel-dev/opteryx/discussions) are welcome.
 
-Want to help build Opteryx? See the [Contribution](https://mabel-dev.github.io/opteryx/Contributor%20Guide/01%20Guide/) and [Set Up](https://mabel-dev.github.io/opteryx/Contributor%20Guide/90%20Debian%20%28Ubuntu%29/) Guides.
+Want to help build Opteryx? See the [Contribution](https://mabel-dev.github.io/opteryx/latest/Contributor%20Guide/01%20Guide/) and [Set Up](https://mabel-dev.github.io/opteryx/latest/Contributor%20Guide/90%20Debian%20%28Ubuntu%29/) Guides.
 
 ## Security
 

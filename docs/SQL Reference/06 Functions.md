@@ -53,7 +53,7 @@ Definitions noted with a 🔻 accept different input arguments.
 
 ## Date and Time Functions
 
-For more details, see [Working with Timestamps](https://mabel-dev.github.io/opteryx/SQL%20Reference/Working%20with%20SQL/10%20Working%20with%20Timestamps/).
+For more details, see [Working with Timestamps](Working%20with%20SQL/10%20Working%20with%20Timestamps/).
 
 !!! function "`current_date` → _timestamp_"  
     Return the current date, in UTC. Note `current_date` does not require parenthesis.  
@@ -156,7 +156,7 @@ These are functions that are called similar to comparison operators:
 
 ## List Functions
 
-For more details, see [Working with Lists](https://mabel-dev.github.io/opteryx/SQL%20Reference/Working%20with%20SQL/20%20Working%20with%20Lists/).
+For more details, see [Working with Lists](Working%20with%20SQL/20%20Working%20with%20Lists/).
 
 !!! function "**array**: _list_`[`**index**: _numeric_`]` → **value** 🔻"  
     Return the **index**th element from **array**. 
@@ -328,7 +328,7 @@ Functions for examining and manipulating string values.
 
 ## Struct Functions
 
-For more details, see [Working with Structs](https://mabel-dev.github.io/opteryx/SQL%20Reference/Working%20with%20SQL/30%20Working%20with%20Structs/).
+For more details, see [Working with Structs](Working%20with%20SQL/30%20Working%20with%20Structs/).
 
 !!! function "**object**: _struct_`[`**key**: _varchar_`]` → **value** 🔻"  
     Subscript operator, return the value for **key** from **object**. 
