@@ -126,7 +126,7 @@ def processed_reader(function, items_to_read, plasma_channel):  # pragma: no cov
     while (
         any({p.is_alive() for p in process_pool})
         or not reply_queue.empty()
-#        or not send_queue.empty()
+        #        or not send_queue.empty()
     ):
         try:
             page_id = reply_queue.get(timeout=1)

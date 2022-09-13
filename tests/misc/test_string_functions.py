@@ -25,6 +25,7 @@ def test_slice_left():
     assert sorted(slicer(numpy.array([None, "", "abcdef", "a"]), 2)) == ["","No","a","ab"], sorted(slicer(numpy.array([None, "", "abcdef", "a"]), 2)[0])
     # fmt:on
 
+
 def test_slice_right():
 
     slicer = string_functions.string_slicer_right
