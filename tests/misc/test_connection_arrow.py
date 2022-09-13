@@ -28,7 +28,7 @@ def test_to_arrow_with_limit():
     conn = opteryx.connect()
     cur = conn.cursor()
     cur.execute("SELECT * FROM $planets")
-    table = cur.to_arrow(limit=5)
+    table = cur.to_arrow(size=5)
 
     assert "name" in table.column_names
     assert table.num_rows == 5
