@@ -26,11 +26,23 @@ def test_slice_left():
     # fmt:on
 
 
+def skip_test_slice_right():
+
+    slicer = string_functions.string_slicer_right
+
+    # fmt:off
+    assert slicer(numpy.array(["abcdef"]), 3) == ["def"]
+    assert sorted(slicer(numpy.array(["abcdef", "ghijklm"]), 3)) == ["ef","klm"], sorted(slicer(numpy.array(["abcdef", "ghijklm"]), 3))
+    assert slicer(numpy.array([]), 3) == [[]], slicer(numpy.array([]), 3)
+    assert slicer(numpy.array([None]), 3) == ["one"], slicer(numpy.array([None]), 3)
+    assert slicer(numpy.array([""]), 0) == [[""]], slicer(numpy.array([""]), 0)
+    assert sorted(slicer(numpy.array(["abc", "abcdefghijklmnopqrstuvwxyz"]), 5)) == ["","vwxyz"], slicer(numpy.array(["abc", "abcdefghijklmnopqrstuvwxyz"]), 5)
+    assert sorted(slicer(numpy.array([None, "", "abcdef", "a"]), 2)) == ["","a","ef","ne"], sorted(slicer(numpy.array([None, "", "abcdef", "a"]), 2)[0])
+    # fmt:on
+
+
 if __name__ == "__main__":  # pragma: no cover
 
     test_slice_left()
+    skip_test_slice_right()
     print("✅ okay")
-
-    import string
-
-    print(string_functions.string_slicer_right(numpy.array([string.ascii_letters]), 8))

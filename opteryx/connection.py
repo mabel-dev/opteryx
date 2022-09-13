@@ -185,9 +185,10 @@ class Cursor:
             raise CursorInvalidStateError(CURSOR_NOT_RUN)
         return arrow.fetchall(self._results)
 
-    def to_arrow(self) -> Table:
+    def to_arrow(self, size: int = None) -> Table:
         """fetch all matching records as a pyarrow table"""
-        return arrow.as_arrow(self._results)
+        # called 'size' to match the 'fetchmany' nomenclature
+        return arrow.as_arrow(self._results, limit=size)
 
     def close(self):
         """close the connection"""

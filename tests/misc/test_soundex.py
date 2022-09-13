@@ -19,6 +19,8 @@ TESTS = [
 
 @pytest.mark.parametrize("input, result", TESTS)
 def test_soundex_battery(input, result):
+    # soundex itself isn't special enough to get it's own test, what's more interesting
+    # is that soundex is a cython implementation
 
     actual_result = Soundex(4)(input)
     assert actual_result == result, f"expected: '{result}', got: '{actual_result}'"
