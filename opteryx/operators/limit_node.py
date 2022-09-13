@@ -19,11 +19,12 @@ This Node returns up to a specified number of tuples.
 """
 from typing import Iterable
 
-from pyarrow import Table, concat_tables
+from pyarrow import Table
 
 from opteryx.exceptions import SqlError
 from opteryx.models import QueryProperties, QueryStatistics
 from opteryx.operators import BasePlanNode
+from opteryx.utils import arrow
 
 
 class LimitNode(BasePlanNode):
@@ -50,20 +51,4 @@ class LimitNode(BasePlanNode):
         if isinstance(data_pages, Table):
             data_pages = (data_pages,)
 
-        result_set = []
-        row_count = 0
-        page = None
-
-        for page in data_pages.execute():
-            if page.num_rows > 0:
-                row_count += page.num_rows
-                result_set.append(page)
-                if row_count > self._limit:  # type:ignore
-                    break
-
-        if len(result_set) == 0:
-            yield page
-        else:
-            yield concat_tables(result_set, promote=True).slice(
-                offset=0, length=self._limit
-            )
+        yield arrow.limit_records(data_pages, limit=self._limit)

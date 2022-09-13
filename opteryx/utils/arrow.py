@@ -142,12 +142,40 @@ def fetchall(pages) -> List[dict]:
     return fetchmany(pages=pages, limit=-1)
 
 
-def as_arrow(pages):
+def limit_records(data_pages, limit):
+    """
+    Cycle over an iterable of pages, limiting the response to a given
+    number of records.
+    """
+    result_set = []
+    row_count = 0
+    page = None
+
+    # if we don't actually have a limit set, just return
+    if limit is None:
+        return pyarrow.concat_tables(data_pages, promote=True)
+
+    for page in data_pages:
+        if page.num_rows > 0:
+            row_count += page.num_rows
+            result_set.append(page)
+            if row_count > limit:  # type:ignore
+                break
+
+    if len(result_set) == 0:
+        return page
+    else:
+        return pyarrow.concat_tables(result_set, promote=True).slice(
+            offset=0, length=limit
+        )
+
+
+def as_arrow(pages, limit: int = None):
     """return a result set a a pyarrow table"""
     # cicular imports
     from opteryx.models import Columns
 
-    merged = pyarrow.concat_tables(pages, promote=True)
+    merged = limit_records(pages, limit)
 
     columns = Columns(merged)
     preferred_names = columns.preferred_column_names

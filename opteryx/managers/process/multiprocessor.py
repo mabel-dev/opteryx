@@ -86,18 +86,19 @@ def processed_reader(function, items_to_read, plasma_channel):  # pragma: no cov
 
     process_pool = []
 
-    # if we're not reading much, or the channel isn't set, quickly return
-    if len(items_to_read) < 10 or plasma_channel is None:
-        for item in items_to_read:
-            yield function(item)
-        return
-
     # determine the number of slots we're going to make available:
     # - less than or equal to the number of files to read
     # - one less than the physical CPUs we have
     # - must have at least two processes
 
     slots = max(min(len(items_to_read), config.MAX_SUB_PROCESSES), 2)
+
+    # if we're not reading much, or the channel isn't set, quickly return
+    if len(items_to_read) < (slots) or plasma_channel is None:
+        for item in items_to_read:
+            yield function(item)
+        return
+
     reply_queue = multiprocessing.Queue(maxsize=slots)
 
     send_queue = multiprocessing.SimpleQueue()
@@ -125,7 +126,7 @@ def processed_reader(function, items_to_read, plasma_channel):  # pragma: no cov
     while (
         any({p.is_alive() for p in process_pool})
         or not reply_queue.empty()
-        or not send_queue.empty()
+#        or not send_queue.empty()
     ):
         try:
             page_id = reply_queue.get(timeout=1)
@@ -135,8 +136,10 @@ def processed_reader(function, items_to_read, plasma_channel):  # pragma: no cov
             if item_index < len(items_to_read):
                 send_queue.put(items_to_read[item_index])
                 item_index += 1
+                print("Again!")
             else:
                 send_queue.put(TERMINATE_SIGNAL)
+                print("I'm done")
 
         except Empty:  # nosec
             # kill long-running processes - they may have a problem

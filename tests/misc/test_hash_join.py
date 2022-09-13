@@ -19,7 +19,10 @@ def test_hash_join_consistency():
 
     conn = opteryx.connect()
 
-    for i in range(20):
+    for i in range(25):
+        # there was about a 50% failure of this query failing to return any rows due to
+        # a bug in the join implementation. 1/(2^25) is a small chance this test will
+        # pass if the problem still exists. 
         cur = conn.cursor()
         cur.execute("SELECT * FROM $planets INNER JOIN $planets USING (name, id)")
         assert cur.to_arrow().num_rows == 9
