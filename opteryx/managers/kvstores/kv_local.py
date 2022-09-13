@@ -19,7 +19,7 @@ class LocalKVStore(BaseKeyValueStore):
         location = kwargs.get("location", "metastore.rocksdb")
         self._db = rocksdb.DB(location, rocksdb.Options(create_if_missing=True))
 
-    def get(self, key) -> Optional[io.BytesIO]:
+    def get(self, key):
         byte_reponse = self._db.get(key.encode())
         if byte_reponse:
             return io.BytesIO(byte_reponse)
