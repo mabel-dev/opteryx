@@ -51,4 +51,4 @@ class LimitNode(BasePlanNode):
         if isinstance(data_pages, Table):
             data_pages = (data_pages,)
 
-        yield arrow.limit_records(data_pages, limit=self._limit)
+        yield arrow.limit_records(data_pages.execute(), limit=self._limit)
