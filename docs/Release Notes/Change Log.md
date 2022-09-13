@@ -17,6 +17,7 @@ None
 **Added**
 
 - [[#397](https://github.com/mabel-dev/opteryx/issues/397)] Time Travel with '$planets' dataset. ([@joocer](https://github.com/joocer))  
+- [[#519](https://github.com/mabel-dev/opteryx/issues/519)] Introduce a size limit on `to_arrow()`. ([@joocer](https://github.com/joocer))  
 
 ## [0.4.1] - 2022-09-12
 
