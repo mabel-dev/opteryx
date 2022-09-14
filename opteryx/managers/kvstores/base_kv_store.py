@@ -35,3 +35,11 @@ class BaseKeyValueStore(abc.ABC):
         Overwrite this method to place a value in the cache.
         """
         raise NotImplementedError("`set` method on cache object not overridden.")
+
+    def contains(self, list):
+        """
+        Overwrite this method to return a list of itmes which are in the cache from
+        a given list
+        """
+        # default to returning no matches
+        return []

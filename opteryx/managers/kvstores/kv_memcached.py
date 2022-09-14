@@ -90,3 +90,4 @@ class MemcachedKVStore(BaseKeyValueStore):
         if self._server:
             self._server.set(key, value.read())
             value.seek(0)
+        return None

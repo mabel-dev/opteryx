@@ -52,4 +52,6 @@ PAGE_SIZE: int = _config.get("PAGE_SIZE", 64 * 1024 * 1024)
 
 # The number of metadata cache records to hold
 LOCAL_METADATA_CACHE: int = int(_config.get("LOCAL_METADATA_CACHE", 512))
+# The maximum bumber of evictions by a single query
+MAX_CACHE_EVICTIONS: int = int(_config.get("MAX_CACHE_EVICTIONS", 50))
 # fmt:on
