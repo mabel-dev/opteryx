@@ -1,5 +1,3 @@
-
-
 """
 Optimization Rule - Selection Pushdown PreJoin
 
@@ -12,11 +10,14 @@ to reduce this by trying to identify when it can move the filter to before the j
 from opteryx import operators
 from opteryx.managers.query.optimizer import plan_has_operator
 
+
 def run(plan):
 
     # find the in-scope nodes
     selection_nodes = plan_has_operator(plan, operators.SelectionNode)
-    join_nodes = plan_has_operator(plan, (operators.InnerJoinNode, operators.OuterJoinNode)
+    join_nodes = plan_has_operator(
+        plan, (operators.InnerJoinNode, operators.OuterJoinNode)
+    )
 
     # killer questions
     if selection_nodes is None:
@@ -26,6 +27,6 @@ def run(plan):
 
     # just because we're here - doesn't mean we can optimize
 
-#    walk the DAG
+    #    walk the DAG
 
     return plan

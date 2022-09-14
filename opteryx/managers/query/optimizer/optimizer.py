@@ -1,5 +1,3 @@
-
-
 """
 This is a naive initial impementation of a query optimizer.
 
@@ -19,7 +17,7 @@ RULESET = []
 
 
 def run_optimizer(plan):
-    
+
     for rule in RULESET:
         plan = rule(plan)
 

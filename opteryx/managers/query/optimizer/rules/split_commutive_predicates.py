@@ -1,5 +1,3 @@
-
-
 """
 Optimization Rule - Split Commutive Predicates (ANDs)
 
@@ -15,6 +13,7 @@ The reason for splitting is two-fold:
 
 from opteryx import operators
 from opteryx.managers.query.optimizer import plan_has_operator
+
 
 def run(plan):
 
