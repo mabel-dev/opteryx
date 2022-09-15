@@ -309,7 +309,7 @@ class QueryPlanner(ExecutionTree):
         if "Identifier" in function:
             token_name = function["Identifier"]["value"]
             if token_name[0] == "@":
-                if token_name not in self._properties.variables:
+                if token_name not in self._properties.variables:  # pragma: no cover
                     raise SqlError(f"Undefined variable found in query `{token_name}`.")
                 return self._properties.variables.get(token_name)
             else:
@@ -726,7 +726,7 @@ class QueryPlanner(ExecutionTree):
     def _set_variable_planner(self, ast, statistics):
         """put variables defined in SET statements into context"""
         key = ast["SetVariable"]["variable"][0]["value"]
-        if key[0] != "@":
+        if key[0] != "@":  # pragma: no cover
             raise SqlError("Variable definitions must start with '@'.")
         value = self._build_literal_node(ast["SetVariable"]["value"][0]["Value"])
 
