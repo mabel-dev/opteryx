@@ -19,10 +19,8 @@ def test_in_memory_cache():
     conn = opteryx.connect(cache=cache)
     cur = conn.cursor()
     cur.execute("SELECT * FROM testdata.tweets WITH(NO_PARTITION);")
-    for record in cur.fetchall():
-        # we just want to make sure we consume the data, doing it like this doesn't
-        # waste memory as much
-        pass
+    cur.to_arrow()
+
     stats = cur.stats
     assert stats["cache_hits"] == 0
     assert stats["cache_misses"] == 2
@@ -32,11 +30,10 @@ def test_in_memory_cache():
     conn = opteryx.connect(cache=cache)
     cur = conn.cursor()
     cur.execute("SELECT * FROM testdata.tweets WITH(NO_PARTITION);")
-    for record in cur.fetchall():
-        # we just want to make sure we consume the data
-        pass
+    cur.to_arrow()
+
     stats = cur.stats
-    assert stats["cache_hits"] == 2
+    assert stats["cache_hits"] == 2, stats["cache_hits"]
     assert stats["cache_misses"] == 0
     conn.close()
 
@@ -44,9 +41,8 @@ def test_in_memory_cache():
     conn = opteryx.connect(cache=cache)
     cur = conn.cursor()
     cur.execute("SELECT * FROM testdata.tweets WITH (NO_CACHE, NO_PARTITION);")
-    for record in cur.fetchall():
-        # we just want to make sure we consume the data
-        pass
+    cur.to_arrow()
+
     stats = cur.stats
     assert stats["cache_hits"] == 0
     assert stats["cache_misses"] == 0

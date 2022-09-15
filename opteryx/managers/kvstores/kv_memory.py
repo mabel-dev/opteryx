@@ -12,8 +12,8 @@
 """
 This implements an in-memory cache.
 
-We use an LRU to maintain the size of the cache, this is simple and only
-tracks number of items in the cache.
+We use an LRU-K(2) to maintain the size of the cache, this is a variation of the naive
+LRU algorithm.
 
 We're using a dictionary and moving items to the top of the dictionary
 when it's accessed. This relies on Python dictionaries being ordered.
@@ -22,35 +22,33 @@ when it's accessed. This relies on Python dictionaries being ordered.
 import io
 
 from opteryx.managers.kvstores import BaseKeyValueStore
+from opteryx.utils.lru_2 import LRU2
 
 
 class InMemoryKVStore(BaseKeyValueStore):
+
+    slots = ("_lru2",)
+
     def __init__(self, **kwargs):
         """
         Parameters:
             size: int (optional)
                 The maximim number of items maintained in the cache.
         """
-        self._size = int(kwargs.get("size", 50))
-        self._cache = {}
+        size = int(kwargs.get("size", 50))
+        self._lru2 = LRU2(size=size)
 
     def get(self, key):
-        # pop() will remove the item if it's in the dict, we will return it to the
-        # cache which will put it at the end of the list, that means the unused items
-        # will slowly creep to the end of the list.
-        value = self._cache.pop(key, None)
+        value = self._lru2.get(key)
         if value:
-            self._cache[key] = value
             return io.BytesIO(value)
         return None
 
     def set(self, key, value):
-        # add the new item to the top of the dict
-        self._cache[key] = value.read()
-        value.seek(0)
+        value.seek(0, 0)
+        ret = self._lru2.set(key, value.read())
+        value.seek(0, 0)
+        return ret
 
-        # if we're  full, we want to remove the oldest item from the cache
-        if len(self._cache) == self._size:
-            # we want to remove the first item in the dict, we could convert to a list,
-            # but then we need to create a list, this is faster and uses less memory
-            self._cache.pop(next(iter(self._cache)))
+    def contains(self, keys):
+        return list(set(keys).intersection(self._lru2.keys))

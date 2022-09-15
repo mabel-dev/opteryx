@@ -10,10 +10,10 @@
 PyArrow is awesome, but it has bugs, odd limitations and some parts are so slow it hurts.
 
 bugs
-- date diff just doesn't work for dates
+- date diff just doesn't work for months
 
-off limitations
+odd limitations
 - can't join on tables with arrays or structs
 
 so slow it hurts
-- the file system abstractions are 4x slower than the next slowest ways to access S3 I've tried
+- Abstraction == Slow, if you want fast, you need to get as close to the bare metal or raw API as possible

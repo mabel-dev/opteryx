@@ -51,6 +51,7 @@ class QueryStatistics:
         self.cache_misses: int = 0
         self.cache_oversize: int = 0
         self.cache_errors: int = 0
+        self.cache_evictions: int = 0
 
         # time spent on various steps
         self.time_planning: int = 0
@@ -117,6 +118,7 @@ class QueryStatistics:
             "cache_misses": self.cache_misses,
             "cache_oversize": self.cache_oversize,
             "cache_errors": self.cache_errors,
+            "cache_evictions": self.cache_evictions,
             "collections_read": self.collections_read,
             "document_pages": self.document_pages,
             "page_splits": self.page_splits,

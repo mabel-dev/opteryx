@@ -29,3 +29,4 @@ class LocalKVStore(BaseKeyValueStore):
         value.seek(0, 0)
         self._db.put(key.encode(), value.read())
         value.seek(0, 0)
+        return None

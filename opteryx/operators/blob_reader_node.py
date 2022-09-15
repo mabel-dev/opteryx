@@ -48,6 +48,7 @@ def do_nothing(stream, projection=None):
 
 MAX_SIZE_SINGLE_CACHE_ITEM = config.MAX_SIZE_SINGLE_CACHE_ITEM
 PARTITION_SCHEME = config.PARTITION_SCHEME
+MAX_CACHE_EVICTIONS = config.MAX_CACHE_EVICTIONS
 
 
 KNOWN_EXTENSIONS = {
@@ -150,7 +151,7 @@ class BlobReaderNode(BasePlanNode):
         # parallel download hint
         self._parallel: bool = "PARALLEL_READ" in config.get("hints", [])
 
-        # scan
+        # this is the list of blobs we're going to read
         self._reading_list: dict = self._scanner()
 
         # row count estimate
@@ -227,7 +228,7 @@ class BlobReaderNode(BasePlanNode):
                             self._cache,
                             self._selection,
                         )
-                        for path, parser in sorted(partition["blob_list"])
+                        for path, parser in partition["blob_list"]
                     ],
                     plasma_channel,
                 ):
@@ -316,9 +317,17 @@ class BlobReaderNode(BasePlanNode):
             if blob_bytes is None:  # pragma: no cover
                 self._statistics.cache_misses += 1
                 blob_bytes = reader(path)
-                if cache and blob_bytes.getbuffer().nbytes < MAX_SIZE_SINGLE_CACHE_ITEM:
+                # limit the number of evictions a single query can do to prevent
+                # sequential floods of the cache
+                if (
+                    cache
+                    and (self._statistics.cache_evictions < MAX_CACHE_EVICTIONS)
+                    and (blob_bytes.getbuffer().nbytes < MAX_SIZE_SINGLE_CACHE_ITEM)
+                ):
                     try:
-                        cache.set(blob_hash, blob_bytes)
+                        evicted = cache.set(blob_hash, blob_bytes)
+                        if evicted is not None:
+                            self._statistics.cache_evictions += 1
                     except (ConnectionResetError, BrokenPipeError):  # pragma: no-cover
                         self._statistics.cache_errors += 1
                 elif cache:  # pragma: no-cover

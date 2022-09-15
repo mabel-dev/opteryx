@@ -18,6 +18,7 @@ None
 
 - [[#397](https://github.com/mabel-dev/opteryx/issues/397)] Time Travel with '$planets' dataset. ([@joocer](https://github.com/joocer))  
 - [[#519](https://github.com/mabel-dev/opteryx/issues/519)] Introduce a size limit on `to_arrow()`. ([@joocer](https://github.com/joocer))  
+- [[#522](https://github.com/mabel-dev/opteryx/issues/522)] Implementation of LRU-K(2) for cache evictions. ([@joocer](https://github.com/joocer))  
 
 ## [0.4.1] - 2022-09-12
 

@@ -15,7 +15,7 @@ jobs:
       - name: Set Up Environment
         uses: actions/setup-python@v2
         with:
-          python-version: '3.9' 
+          python-version: '3.10' 
           
       - name: Install Requirements
         run: |
@@ -47,7 +47,7 @@ jobs:
       - name: Set Up Environment
         uses: actions/setup-python@v2
         with:
-          python-version: '3.9' 
+          python-version: '3.10' 
 
       - name: Install Requirements
         run: |
@@ -55,7 +55,7 @@ jobs:
           pip install -r $GITHUB_WORKSPACE/tests/requirements.txt
 
       - name: Execute Test
-        run: mypy --ignore-missing-imports --python-version 3.9 --no-strict-optional opteryx
+        run: mypy --ignore-missing-imports --python-version 3.10 --no-strict-optional opteryx
 
   perflint:
     name: PyLint and PerfLint
@@ -67,7 +67,7 @@ jobs:
       - name: Set Up Environment
         uses: actions/setup-python@v2
         with:
-          python-version: '3.9' 
+          python-version: '3.10' 
 
       - name: Install Requirements
         run: |
