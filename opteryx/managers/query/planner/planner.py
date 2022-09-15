@@ -552,6 +552,16 @@ class QueryPlanner(ExecutionTree):
                 left_node=left_node,
                 right_node=right_node,
             )
+        if "InUnnest" in function:
+            left_node = self._filter_extract(function["InUnnest"]["expr"])
+            operator = "NotContains" if function["InUnnest"]["negated"] else "Contains"
+            right_node = self._filter_extract(function["InUnnest"]["array_expr"])
+            return ExpressionTreeNode(
+                token_type=NodeType.COMPARISON_OPERATOR,
+                value=operator,
+                left_node=left_node,
+                right_node=right_node,
+            )
 
         if "Nested" in function:
             return ExpressionTreeNode(

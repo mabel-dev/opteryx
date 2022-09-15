@@ -22,6 +22,9 @@ value IN list
 SEARCH(list, value)
 ~~~
 ~~~
+IN UNNEST(list)
+~~~
+~~~
 LIST_CONTAINS   
 ~~~
 ~~~
@@ -56,6 +59,5 @@ Lists have the following limitations
 - Statements cannot contain `DISTINCT` and `JOIN` when the relations include list columns
 - Lists cannot be used in comparisons
 
-!!! note
-    Some restrictions may be resolved by the query optimizer, for example, Projection Pushdown may remove list columns as part of optimization. However, you should not rely on the optimizer to
-    take any particular action.
+!!! Note
+    Some restrictions may be resolved by the query optimizer, for example, Projection Pushdown may remove list columns as part of optimization. However, you should not rely on the optimizer to take any particular action.

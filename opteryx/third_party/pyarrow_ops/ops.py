@@ -121,6 +121,16 @@ def filter_operations(arr, operator, value):
         return numpy.array(
             [a not in value[0] for a in arr], dtype=numpy.bool8
         )  # [#325]?
+    elif operator == "Contains":
+        # ADDED FOR OPTERYX
+        return numpy.array(
+            [None if v is None else (arr[0] in v) for v in value], dtype=numpy.bool8
+        )  # [#325]?
+    elif operator == "NotContains":
+        # ADDED FOR OPTERYX
+        return numpy.array(
+            [None if v is None else (arr[0] not in v) for v in value], dtype=numpy.bool8
+        )  # [#325]?
     elif operator == "Like":
         # MODIFIED FOR OPTERYX
         # null input emits null output, which should be false/0

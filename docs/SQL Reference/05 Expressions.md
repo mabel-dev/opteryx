@@ -13,6 +13,8 @@ The following logical operators are available: `NOT`, `AND`, `OR`, and `XOR`.
 | TRUE  | TRUE  | TRUE      | TRUE     | FALSE     |
 | TRUE  | FALSE | FALSE     | TRUE     | TRUE      |
 | FALSE | FALSE | FALSE     | FALSE    | FALSE     |
+| NULL  | TRUE  | NULL      | NULL     | NULL      |
+| NULL  | FALSE | NULL      | NULL     | NULL      |
 
 The operators `AND`, `OR`, and `XOR` are commutative, that is, you can switch the left and right operand without affecting the result.
 
