@@ -1,5 +1,21 @@
 # Advanced 
 
+## Variables
+
+Variables can be used when a value within a query would benefit from being configurable by the user running the query. For example pre-built queries which perform the same core statement, but with a variable input.
+
+Variables are defined using the `SET` statement. These variables are available to `SELECT` statements as part of the same query batch. For example:
+
+~~~sql
+-- set the planet id, change for different planets
+SET @id = 3;
+SELECT name
+  FROM $planets
+ WHERE id = @id;
+~~~
+
+The above query batch contains two statements, the `SET` and the `SELECT` separated by a semicolon (`;`). The variable is defined in the `SET` statement and must start with an at symbol (`@`). The variable is then used within a filter in the `WHERE` clause of the `SELECT` statement.
+
 ## WITH hints
 
 Hints are used to force the planner, optimizer or the executor to make specific decisions. If a hint is not recognized, it is ignored by the planner and executor, however is reported in the warnings.

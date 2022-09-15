@@ -16,7 +16,8 @@ Query Planner
 
 This builds a DAG which describes a query.
 
-This doesn't attempt to do optimization, this just decomposes the query.
+This doesn't attempt to do optimization, this just build a convenient plan which will
+respond to the query correctly.
 
 The effective order of operations must be:
     01. FROM
@@ -81,6 +82,7 @@ class QueryPlanner(ExecutionTree):
         self._ast = None
 
         self._statistics = statistics
+
         self._properties = (
             QueryProperties()
             if not isinstance(properties, QueryProperties)
@@ -125,25 +127,23 @@ class QueryPlanner(ExecutionTree):
         else:
             self._ast = ast
 
-        # step one to allowing multiple plans - don't reference
-        # the array of ASTs in the plan
-        ast = self._ast[0]
+        for ast in self._ast:
 
-        # build a plan for the query
-        if "Query" in ast:
-            self._naive_select_planner(self._ast, self._statistics)
-        elif "Explain" in ast:
-            self._explain_planner(self._ast, self._statistics)
-        #        elif "SetVariable" is self._ast[0]:
-        #            self._set_variable_planner(self._ast, self._statistics)
-        elif "ShowColumns" in ast:
-            self._show_columns_planner(self._ast, self._statistics)
-        elif "ShowVariable" in ast:
-            self._show_variable_planner(self._ast, self._statistics)
-        elif "ShowCreate" in ast:
-            self._show_create_planner(self._ast, self._statistics)
-        else:  # pragma: no cover
-            raise SqlError("Unknown or unsupported Query type.")
+            # build a plan for the query
+            if "Query" in ast:
+                self._naive_select_planner(ast, self._statistics)
+            elif "Explain" in ast:
+                self._explain_planner(ast, self._statistics)
+            elif "SetVariable" in ast:
+                self._set_variable_planner(ast, self._statistics)
+            elif "ShowColumns" in ast:
+                self._show_columns_planner(ast, self._statistics)
+            elif "ShowVariable" in ast:
+                self._show_variable_planner(ast, self._statistics)
+            elif "ShowCreate" in ast:
+                self._show_create_planner(ast, self._statistics)
+            else:  # pragma: no cover
+                raise SqlError("Unknown or unsupported Query type.")
 
     def _build_literal_node(self, value, alias: list = None):
         """
@@ -190,7 +190,7 @@ class QueryPlanner(ExecutionTree):
         relations = ast
         if default_path:
             try:
-                relations = ast[0]["Query"]["body"]["Select"]["from"]
+                relations = ast["Query"]["body"]["Select"]["from"]
             except IndexError:
                 return "$no_table"
 
@@ -259,7 +259,7 @@ class QueryPlanner(ExecutionTree):
 
     def _extract_joins(self, ast):
         try:
-            joins = ast[0]["Query"]["body"]["Select"]["from"][0]["joins"]
+            joins = ast["Query"]["body"]["Select"]["from"][0]["joins"]
         except IndexError:
             return None
 
@@ -307,11 +307,17 @@ class QueryPlanner(ExecutionTree):
             return self._filter_extract(function["Expr"])
 
         if "Identifier" in function:
-            return ExpressionTreeNode(
-                token_type=NodeType.IDENTIFIER,
-                value=function["Identifier"]["value"],
-                alias=alias,
-            )
+            token_name = function["Identifier"]["value"]
+            if token_name[0] == "@":
+                if token_name not in self._properties.variables:  # pragma: no cover
+                    raise SqlError(f"Undefined variable found in query `{token_name}`.")
+                return self._properties.variables.get(token_name)
+            else:
+                return ExpressionTreeNode(
+                    token_type=NodeType.IDENTIFIER,
+                    value=token_name,
+                    alias=alias,
+                )
         if "CompoundIdentifier" in function:
             return ExpressionTreeNode(
                 token_type=NodeType.IDENTIFIER,
@@ -600,12 +606,12 @@ class QueryPlanner(ExecutionTree):
         Although there is a SELECT statement in a SQL Query, Selection refers to the
         filter or WHERE statement.
         """
-        selections = ast[0]["Query"]["body"]["Select"]["selection"]
+        selections = ast["Query"]["body"]["Select"]["selection"]
         return self._filter_extract(selections)
 
     def _extract_filter(self, ast):
         """filters are used in SHOW queries"""
-        filters = ast[0]["ShowColumns"]["filter"]
+        filters = ast["ShowColumns"]["filter"]
         if filters is None:
             return None
         if "Where" in filters:
@@ -622,22 +628,22 @@ class QueryPlanner(ExecutionTree):
             return root
 
     def _extract_distinct(self, ast):
-        return ast[0]["Query"]["body"]["Select"]["distinct"]
+        return ast["Query"]["body"]["Select"]["distinct"]
 
     def _extract_limit(self, ast):
-        limit = ast[0]["Query"].get("limit")
+        limit = ast["Query"].get("limit")
         if limit is not None:
             return int(limit["Value"]["Number"][0])
         return None
 
     def _extract_offset(self, ast):
-        offset = ast[0]["Query"].get("offset")
+        offset = ast["Query"].get("offset")
         if offset is not None:
             return int(offset["value"]["Value"]["Number"][0])
         return None
 
     def _extract_order(self, ast):
-        order = ast[0]["Query"].get("order_by")
+        order = ast["Query"].get("order_by")
         if order is not None:
             orders = []
             for col in order:
@@ -651,7 +657,7 @@ class QueryPlanner(ExecutionTree):
             return orders
 
     def _extract_having(self, ast):
-        having = ast[0]["Query"]["body"]["Select"]["having"]
+        having = ast["Query"]["body"]["Select"]["having"]
         return self._filter_extract(having)
 
     def _extract_properties(self, ast):
@@ -660,7 +666,7 @@ class QueryPlanner(ExecutionTree):
     def _explain_planner(self, ast, statistics):
         properties = self._extract_properties(ast)
         explain_plan = self.copy()
-        explain_plan.create_plan(ast=[ast[0]["Explain"]["statement"]])
+        explain_plan.create_plan(ast=[ast["Explain"]["statement"]])
         explain_node = operators.ExplainNode(
             properties, statistics, query_plan=explain_plan
         )
@@ -670,9 +676,7 @@ class QueryPlanner(ExecutionTree):
 
         properties = self._extract_properties(ast)
 
-        dataset = ".".join(
-            [part["value"] for part in ast[0]["ShowColumns"]["table_name"]]
-        )
+        dataset = ".".join([part["value"] for part in ast["ShowColumns"]["table_name"]])
 
         if dataset[0:1] == "$":
             mode = "Internal"
@@ -712,21 +716,30 @@ class QueryPlanner(ExecutionTree):
             operators.ShowColumnsNode(
                 properties=properties,
                 statistics=statistics,
-                full=ast[0]["ShowColumns"]["full"],
-                extended=ast[0]["ShowColumns"]["extended"],
+                full=ast["ShowColumns"]["full"],
+                extended=ast["ShowColumns"]["extended"],
             ),
         )
         self.link_operators(last_node, "columns")
         last_node = "columns"
 
+    def _set_variable_planner(self, ast, statistics):
+        """put variables defined in SET statements into context"""
+        key = ast["SetVariable"]["variable"][0]["value"]
+        if key[0] != "@":  # pragma: no cover
+            raise SqlError("Variable definitions must start with '@'.")
+        value = self._build_literal_node(ast["SetVariable"]["value"][0]["Value"])
+
+        self._properties.variables[key] = value
+
     def _show_create_planner(self, ast, statistics):
 
         properties = self._extract_properties(ast)
 
-        if ast[0]["ShowCreate"]["obj_type"] != "Table":
+        if ast["ShowCreate"]["obj_type"] != "Table":
             raise SqlError("SHOW CREATE only supports tables")
 
-        dataset = ".".join([part["value"] for part in ast[0]["ShowCreate"]["obj_name"]])
+        dataset = ".".join([part["value"] for part in ast["ShowCreate"]["obj_name"]])
 
         if dataset[0:1] == "$":
             mode = "Internal"
@@ -790,9 +803,7 @@ class QueryPlanner(ExecutionTree):
 
         properties = self._extract_properties(ast)
 
-        keywords = [
-            value["value"].upper() for value in ast[0]["ShowVariable"]["variable"]
-        ]
+        keywords = [value["value"].upper() for value in ast["ShowVariable"]["variable"]]
         if keywords[-1] == "FUNCTIONS":
             show_node = "show_functions"
             node = operators.ShowFunctionsNode(
@@ -926,11 +937,9 @@ class QueryPlanner(ExecutionTree):
             last_node = "where"
 
         _projection = self._extract_field_list(
-            ast[0]["Query"]["body"]["Select"]["projection"]
+            ast["Query"]["body"]["Select"]["projection"]
         )
-        _groups = self._extract_field_list(
-            ast[0]["Query"]["body"]["Select"]["group_by"]
-        )
+        _groups = self._extract_field_list(ast["Query"]["body"]["Select"]["group_by"])
         if _groups or get_all_nodes_of_type(
             _projection, select_nodes=(NodeType.AGGREGATOR,)
         ):
@@ -967,7 +976,7 @@ class QueryPlanner(ExecutionTree):
             last_node = "having"
 
         _projection = self._extract_field_list(
-            ast[0]["Query"]["body"]["Select"]["projection"]
+            ast["Query"]["body"]["Select"]["projection"]
         )
         # qualified wildcards have the qualifer in the value
         # e.g. SELECT table.* -> node.value = table

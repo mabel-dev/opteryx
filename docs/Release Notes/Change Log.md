@@ -20,6 +20,7 @@ None
 - [[#519](https://github.com/mabel-dev/opteryx/issues/519)] Introduce a size limit on `to_arrow()`. ([@joocer](https://github.com/joocer))  
 - [[#522](https://github.com/mabel-dev/opteryx/issues/522)] Implementation of LRU-K(2) for cache evictions. ([@joocer](https://github.com/joocer))  
 - [[#324](https://github.com/mabel-dev/opteryx/issues/324)] Support `IN UNNEST()`. ([@joocer](https://github.com/joocer))  
+- [[#386](https://github.com/mabel-dev/opteryx/issues/386)] Support `SET` statements. ([@joocer](https://github.com/joocer))  
 
 ## [0.4.1] - 2022-09-12
 
