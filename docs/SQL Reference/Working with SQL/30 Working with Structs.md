@@ -44,5 +44,4 @@ Structs have the following limitations
 - Structs cannot be used in comparisons
 
 !!! Note  
-    Some restrictions may be resolved by the query optimizer, for example, Projection Pushdown may remove struct columns as part of optimization. However, you should not rely on the optimizer to
-    take any particular action.
+    Some restrictions may be resolved by the query optimizer, for example, Projection Pushdown may remove struct columns as part of optimization. However, you should not rely on the optimizer to take any particular action.
