@@ -90,18 +90,3 @@ class LRU2:
     def stats(self):
         # return hits, misses
         return (self._hits, self._misses)
-
-
-if __name__ == "__main__":
-
-    cache = lru_2(size=95)
-
-    t = time.time_ns()
-
-    for i in range(500000):
-        new_value = int(numpy.random.uniform(0, 100))
-        cache.get(new_value)
-        cache.set(new_value, new_value)
-
-    print((time.time_ns() - t) / 1e9)
-    print(f"Hit ratio: {int(cache.stats[0] / cache.stats[1])}:1")
