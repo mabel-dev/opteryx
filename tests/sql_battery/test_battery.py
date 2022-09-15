@@ -574,6 +574,12 @@ STATEMENTS = [
         ("SELECT * FROM $astronauts WHERE 'Apollo 11' IN UNNEST(missions)", 3, 19),
         ("SELECT * FROM $astronauts WHERE 'Apollo 11' NOT IN UNNEST(missions)", 331, 19),
         ("SELECT * FROM $astronauts WHERE NOT 'Apollo 11' IN UNNEST(missions)", 354, 19),
+        ("SET @variable = 'Apollo 11'; SELECT * FROM $astronauts WHERE @variable IN UNNEST(missions)", 3, 19),
+        ("SET @id = 3; SELECT name FROM $planets WHERE id = @id;", 1, 1),
+        ("SET @id = 3; SELECT name FROM $planets WHERE id < @id;", 2, 1),
+        ("SET @id = 3; SELECT name FROM $planets WHERE id < @id OR id > @id;", 8, 1),
+        ("SET @dob = '1950-01-01'; SELECT name FROM $astronauts WHERE birth_date < @dob;", 149, 1),
+        ("SET @dob = '1950-01-01'; SET @mission = 'Apollo 11'; SELECT name FROM $astronauts WHERE birth_date < @dob AND @mission IN UNNEST(missions);", 3, 1),
 
         ("SHOW CREATE TABLE $planets", 1, 1),
         ("SHOW CREATE TABLE $satellites", 1, 1),

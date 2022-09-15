@@ -134,6 +134,22 @@ LIMIT count
 
 `ORDER BY` expressions may use column numbers, however, this is not recommended for statements intended for reuse.
 
+## SET
+
+Specifies the value of a query variable.
+
+~~~sql
+SET variable = value
+~~~
+
+### SET clause
+
+Specifies the value of a variabled available to the scope of the executing query batch. The variable name must start with an at sign (`@`) and the value must be a literal value.
+
+The variable can be used within `SELECT` clauses within the same query batch.
+
+A `SET` statement without a `SELECT` statement is invalid.
+
 ## SHOW COLUMNS
 
 List the columns in a relation along with their data type. Without any modifiers, `SHOW COLUMNS` only reads a single page of data before returning.
