@@ -14,16 +14,17 @@
 some helper functions for plan exploration and rewriting
 """
 
+
 def get_matching_plan_operators(plan, opterator):
-    """ return all operators in a plan which match """
+    """return all operators in a plan which match"""
     pass
 
 
 def plan_remove_plan_operation(plan, operator_name):
-    """ plan rewrite by removing an operator """
+    """plan rewrite by removing an operator"""
     pass
 
 
 def plan_insert_plan_operation(plan, operation, before):
-    """ plan rewrite by inserting an operator """
+    """plan rewrite by inserting an operator"""
     pass

@@ -23,13 +23,12 @@ def run(plan):
     """
     The naive order of a query execution puts the WHERE execution after the JOIN
     execution.
-    
+
     This means that most of the time when these two exist in the same query, the JOIN
     is doing work that is thrown-away almost immediately. This optimization step
     attempts to reduce this by trying to identify when it can move the filter to before
     the join.
     """
-
 
     # find the in-scope nodes
     selection_nodes = get_matching_plan_operators(plan, operators.SelectionNode)
