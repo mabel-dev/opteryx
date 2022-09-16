@@ -46,3 +46,16 @@ The Query Plan can be seen for a given query using the `EXPLAIN` query.
 The goal of the Query Executor is to produce the results for the user. It takes the Plan and executes the steps in the plan.
 
 Opteryx implements a vectorized Volcano model executor. This means that the planner starts at the node closest to the end of the plan (e.g. `LIMIT`) and asks it for a page of data. This node asks its preceeding node for a page of data, etc etc until it gets to the node which aquires data from source. The data is then processed by each node until it is returned to the `LIMIT` node at the end.
+
+
+## Performance Features
+
+The following features are build into the query engine to improve performance
+
+- Small pages are merged together before activities which operate on the entire page-at-a-time (such as selections)
+- Projections are pushed to the parser, either to prevent parsing of unwanted fields (Parquet), or before passing to the next operation
+- A page cache is used (local or memcached) to reduce reads to attached or remote storage
+- A LRU-K cache eviction strategy with a fixed eviction budget per query to help ensure effective use of the page cache
+- Aggressive pruning of date partitioned datasets
+- SIMD and vectorized execution where available (via Numpy and PyArrow)
+- Projection before GROUP BY to reduce data handled by the aggregators
