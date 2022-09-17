@@ -11,20 +11,7 @@
 # limitations under the License.
 
 """
-some helper functions for plan exploration and rewriting
+The Query Optimizer in Opteryx is called Raptor. The Query Optimizer is usually one
+of the most complex sections of a database.
+
 """
-
-
-def get_matching_plan_operators(plan, opterator):
-    """return all operators in a plan which match"""
-    pass
-
-
-def plan_remove_plan_operation(plan, operator_name):
-    """plan rewrite by removing an operator"""
-    pass
-
-
-def plan_insert_plan_operation(plan, operation, before):
-    """plan rewrite by inserting an operator"""
-    pass

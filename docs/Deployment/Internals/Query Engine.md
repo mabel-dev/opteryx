@@ -6,7 +6,8 @@ The Opteryx query engine has the following key components and general process:
 
 1) The Parser & Lexer, which recieves the user SQL and builds an Abstract Syntax Tree (AST).
 2) The Planner, which recieves the AST and builds a Query Plan.
-3) The Query Executor, which recieves the Query Plan and returns the result dataset.
+3) The Optimizer (Raptor), recieves a Query Plan and rewrites it to improve performance. 
+4) The Query Executor, which recieves the Query Plan and returns the result dataset.
 
 ## Parser & Lexer
 
@@ -29,17 +30,19 @@ This sqlparser-rs interprets all SQL except for the Temporal `FOR` clause which 
 
 The Query planner's primary goal is to convert the AST into a plan to respond to the query. The Query Plan is described in a Directed Acyclic Graph (DAG) with the nodes that acquire the raw data, usually from storage, at the start of the flow and the node that forms the data to return to the user (usually the `SELECT` step) at the end.
 
-The DAG is made of different nodes which process the data as they pass through then node. Different node types exist for processing actions like Aggregations (`GROUP BY`), Selection (`WHERE`) and Distinct (`DISTINCT`). There are currently 17 different Node types the planner can use to build a plan to respond to a query.
+The DAG is made of different nodes which process the data as they pass through then node. Different node types exist for processing actions like Aggregations (`GROUP BY`), Selection (`WHERE`) and Distinct (`DISTINCT`).
 
-Most SQL Engines include an Optimization step as part of the planner, Opteryx currently does not perform plan-based optimizations.
-
-Query plans follow a generally accepted order of execution, which does not match the order queries are usually written in:
+Query plans follow a generally accepted order of execution. This does not match the order queries are usually written in, instead it follows this order:
 
 ![OPERATOR ORDER](operator-order.svg) 
 
-The planner ensures the processes to be applied to the data reflect this order.
+The planner ensures the processes to be applied to the data reflect this order and creates the most convenient plan to achieve this.
 
 The Query Plan can be seen for a given query using the `EXPLAIN` query.
+
+## Query Optimizer (Raptor)
+
+The goal of the Query Optimizer is to rewrite the Query Plan to a plan which will return result to users faster.
 
 ## Query Executor
 

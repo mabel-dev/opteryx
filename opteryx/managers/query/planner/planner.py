@@ -727,11 +727,20 @@ class QueryPlanner(ExecutionTree):
     def _set_variable_planner(self, ast, statistics):
         """put variables defined in SET statements into context"""
         key = ast["SetVariable"]["variable"][0]["value"]
-        if key[0] != "@":  # pragma: no cover
-            raise SqlError("Variable definitions must start with '@'.")
         value = self._build_literal_node(ast["SetVariable"]["value"][0]["Value"])
-
-        self.properties.variables[key] = value
+        if key[0] == "$":
+            key = key[1:].lower()
+            if key in ("variables"):
+                raise SqlError(f"Invalid Directive '{key}'")
+            if hasattr(self.properties, key):
+                setattr(self.properties, key, value.value)
+            else:
+                raise SqlError(f"Unknown Directive '{key}'")
+        elif key[0] == "@":  # pragma: no cover
+            self.properties.variables[key] = value
+        else:
+            raise SqlError("Variable definitions must start with '@'.")
+        
 
     def _show_create_planner(self, ast, statistics):
 
@@ -812,6 +821,10 @@ class QueryPlanner(ExecutionTree):
                 statistics=statistics,
             )
             self.add_operator(show_node, operator=node)
+        elif keywords[0] == "VARIABLE":
+            # TODO: node to return the right value
+            # either from the variables or attributes of the properties
+            print(getattr(self.properties, keywords[1].lower()))
         else:  # pragma: no cover
             raise SqlError(f"SHOW statement type not supported for `{keywords[-1]}`.")
 
@@ -1025,6 +1038,10 @@ class QueryPlanner(ExecutionTree):
             )
             self.link_operators(last_node, "limit")
             last_node = "limit"
+
+#        if self.properties.enable_optimizer:
+#            import opteryx.managers.query.optimizer
+#            self
 
     def explain(self):
         def _inner_explain(node, depth):

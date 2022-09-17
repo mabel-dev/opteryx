@@ -20,8 +20,11 @@ things emerged from simple things, we we've set a low bar to get started on
 implementing optimization.
 """
 
+from opteryx.managers.query.optimizer import rules
 
-RULESET: list = []
+RULESET: list = [
+    rules.split_commutive_predicates.run
+]
 
 # split commutive expressions into multiple where filters (ANDs) - gives more opportunity to push down
 # move selection nodes

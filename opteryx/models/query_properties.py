@@ -19,3 +19,6 @@ class QueryProperties:
     def __init__(self):
 
         self.variables = {}
+
+        # query directives
+        self.enable_optimizer = True
