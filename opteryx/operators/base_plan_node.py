@@ -30,7 +30,7 @@ class BasePlanNode(abc.ABC):
         different nodes differently to record what happened during the query
         execution.
         """
-        self._properties = properties
+        self.properties = properties
         self._statistics = statistics
 
     def __call__(self):

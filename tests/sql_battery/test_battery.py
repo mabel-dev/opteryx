@@ -671,6 +671,8 @@ STATEMENTS = [
         ("SELECT CONCAT(LIST(name)) FROM $planets GROUP BY gravity", 8, 1),
         # AGG (FUNCTION)
         ("SELECT SUM(IIF(year < 1970, 1, 0)), MAX(year) FROM $astronauts", 1, 2),
+        # [#527] variables referenced in subqueries
+        ("SET @v = 1; SELECT * FROM (SELECT @v);", 1, 1),
     ]
 # fmt:on
 

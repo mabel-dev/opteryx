@@ -83,7 +83,7 @@ class QueryPlanner(ExecutionTree):
 
         self._statistics = statistics
 
-        self._properties = (
+        self.properties = (
             QueryProperties()
             if not isinstance(properties, QueryProperties)
             else properties
@@ -102,6 +102,7 @@ class QueryPlanner(ExecutionTree):
             statistics=self._statistics,
             cache=self._cache,
         )
+        planner.properties = self.properties
         planner.start_date = self.start_date
         planner.end_date = self.end_date
         return planner
@@ -309,9 +310,9 @@ class QueryPlanner(ExecutionTree):
         if "Identifier" in function:
             token_name = function["Identifier"]["value"]
             if token_name[0] == "@":
-                if token_name not in self._properties.variables:  # pragma: no cover
+                if token_name not in self.properties.variables:  # pragma: no cover
                     raise SqlError(f"Undefined variable found in query `{token_name}`.")
-                return self._properties.variables.get(token_name)
+                return self.properties.variables.get(token_name)
             else:
                 return ExpressionTreeNode(
                     token_type=NodeType.IDENTIFIER,
@@ -730,7 +731,7 @@ class QueryPlanner(ExecutionTree):
             raise SqlError("Variable definitions must start with '@'.")
         value = self._build_literal_node(ast["SetVariable"]["value"][0]["Value"])
 
-        self._properties.variables[key] = value
+        self.properties.variables[key] = value
 
     def _show_create_planner(self, ast, statistics):
 

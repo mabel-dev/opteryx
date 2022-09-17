@@ -39,7 +39,7 @@ def html_table(dictset: Iterable[dict], limit: int = 5):  # pragma: no cover
                 "{ " + ", ".join([f'"{k}": {v}' for k, v in htmlstring.items()]) + " }"
             )
         if not isinstance(htmlstring, str):
-            return htmlstring
+            return str(htmlstring)
         escapes = {'"': "&quot;", "'": "&#39;", "<": "&lt;", ">": "&gt;", "$": "&#x24;"}
         # This is done first to prevent escaping other escapes.
         htmlstring = htmlstring.replace("&", "&amp;")
@@ -122,15 +122,15 @@ def ascii_table(dictset: Iterable[Dict[Any, Any]], limit: int = 5):  # pragma: n
             break
 
         cache.append(row)
-        for k, v in row.items():
-            v = format_value(v)
-            length = max(len(str(v)), len(str(k)))
+        for k, value in row.items():
+            value = format_value(value)
+            length = max(len(str(value)), len(str(k)))
             if length > columns.get(k, 0):
                 columns[k] = length
 
     # draw table
     bars = []
-    for header, width in columns.items():
+    for _, width in columns.items():
         bars.append("-" * (width + 2))
 
     # display headers
