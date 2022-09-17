@@ -1,6 +1,5 @@
 table {
     width: 100% !important;
-    font-size: 0.9em !important;
     line-height: 1.3em;
 }
 
@@ -12,6 +11,7 @@ th {
     font-weight: 300;
     color: #fff;
     background-color: #666;
+    font-size: 1.2em !important;
 }
 
 td {
@@ -19,6 +19,12 @@ td {
     padding-bottom: 0.4em !important;
     margin-left: 0.8em !important;
     margin-right: 0.8em !important;
+    font-size: 1.2em !important;
+    min-width: 9em;
+}
+
+td code {
+    font-size: 1.1em !important;
 }
 
 code {
@@ -27,11 +33,12 @@ code {
     color: #D63384 !important;
     font-weight: 300;
     word-wrap: break-word;
+    white-space:pre-wrap;
     background-color: transparent !important;
     padding: 0px !important;
 }
 
-pre>code {
+pre > code {
     background-color: #faf7fd !important;
     font-size: 1em !important;
     padding: 1em !important;
@@ -49,7 +56,7 @@ p, li {
 h1 {
     font-family: Georgia, 'Times New Roman', Times, serif;
     font-weight: 500 !important;
-    font-size: 2em !important;
+    font-size: 2.2em !important;
     margin-bottom: 0.7em !important;
     color: #333 !important;
 }

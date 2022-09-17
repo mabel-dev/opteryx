@@ -136,13 +136,15 @@ LIMIT count
 
 ## SET
 
-Specifies the value of a variabled available to the scope of the executing query batch.
+Specifies the value of a variable, the variable is available to the scope of the executing query batch.
 
 ~~~sql
 SET variable = value
 ~~~
 
-The variable name must start with an at sign (`@`) and the value must be a literal value. The variable can be used within `SELECT` clauses within the same query batch. A `SET` statement without a `SELECT` statement is invalid.
+User defined variable names must be prefixed with an 'at' symbol (`@`) and the value must be a literal value. The variable can be used within `SELECT` clauses within the same query batch. A `SET` statement without a `SELECT` statement is invalid.
+
+Note, System variables are prefixed with a dollar sign (`$`).
 
 ## SHOW COLUMNS
 
