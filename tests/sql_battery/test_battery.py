@@ -580,6 +580,9 @@ STATEMENTS = [
         ("SET @id = 3; SELECT name FROM $planets WHERE id < @id OR id > @id;", 8, 1),
         ("SET @dob = '1950-01-01'; SELECT name FROM $astronauts WHERE birth_date < @dob;", 149, 1),
         ("SET @dob = '1950-01-01'; SET @mission = 'Apollo 11'; SELECT name FROM $astronauts WHERE birth_date < @dob AND @mission IN UNNEST(missions);", 3, 1),
+        ("SET @pples = 'b'; SET @ngles = 90; SHOW VARIABLES LIKE '%s'", 2, 2),
+        ("SET @pples = 'b'; SET @rgon = 90; SHOW VARIABLES LIKE '%gon'", 1, 2),
+        ("SHOW PARAMETER enable_optimizer", 1, 2),
 
         ("SHOW CREATE TABLE $planets", 1, 1),
         ("SHOW CREATE TABLE $satellites", 1, 1),

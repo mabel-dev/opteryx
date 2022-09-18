@@ -144,7 +144,9 @@ SET variable = value
 
 User defined variable names must be prefixed with an 'at' symbol (`@`) and the value must be a literal value. The variable can be used within `SELECT` clauses within the same query batch. A `SET` statement without a `SELECT` statement is invalid.
 
-Note, System variables are prefixed with a dollar sign (`$`).
+System parameters can also be temporarily for a query batch and are prefixed with a dollar sign (`$`).
+
+**Related: `SHOW VARIABLES` and `SHOW PARAMETER`**
 
 ## SHOW COLUMNS
 
@@ -206,3 +208,23 @@ List the functions and aggregators supported by the engine.
 ~~~sql
 SHOW FUNCTIONS
 ~~~
+
+## SHOW PARAMETER
+
+Display the value of a given configuration setting.
+
+~~~sql
+SHOW PARAMETER parameter
+~~~
+
+**Related: `SET`**
+
+## SHOW VARIABLES
+
+List the variables set in the query batch.
+
+~~~sql
+SHOW VARIABLES
+~~~
+
+**Related: `SET`**

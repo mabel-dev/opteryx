@@ -11,16 +11,15 @@
 # limitations under the License.
 
 """
-Optimization Rule - Split Commutive Predicates (ANDs)
+Optimization Rule - Split Commutative Predicates (ANDs)
 """
 
 from opteryx import operators
-from opteryx.managers.query.optimizer import get_matching_plan_operators
 
 
 def run(plan):
     """
-    Commutive Predicates are those that the order of their evaluation doesn't matter.
+    Commutative Predicates are those that the order of their evaluation doesn't matter.
 
     The reason for splitting is two-fold:
 
@@ -30,9 +29,9 @@ def run(plan):
         fewer records, which is generally faster
     """
     # find the in-scope nodes
-    selection_nodes = get_matching_plan_operators(plan, operators.SelectionNode)
+    selection_nodes = plan.get_nodes_of_type(operators.SelectionNode)
 
-    # killer questions
+    # killer questions - if any aren't met, bale
     if selection_nodes is None:
         return plan
 

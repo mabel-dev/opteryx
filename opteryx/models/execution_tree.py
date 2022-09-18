@@ -22,6 +22,13 @@ class ExecutionTree:
         self._nodes: dict = {}
         self._edges: list = []
 
+    def get_nodes_of_type(self, operator):
+        if not isinstance(operator, (list, tuple, set)):
+            operator = [operator]
+        for nid, item in self._nodes.items():
+            if isinstance(item, *operator):
+                yield nid
+
     def add_operator(self, nid, operator):
         """
         Add a step to the DAG

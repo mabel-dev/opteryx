@@ -18,13 +18,22 @@ It is simply a set of rules which are executed in turn.
 Query optimizers are the magic in a query engine, this is not magic, but all complex
 things emerged from simple things, we we've set a low bar to get started on
 implementing optimization.
+
+The initial optimizer will be heuristic (rule-based)
 """
+import os
+import sys
+
+sys.path.insert(1, os.path.join(sys.path[0], "../../../.."))
 
 
-RULESET: list = []
+# from opteryx.managers.query.optimizer import stages
 
-# split commutive expressions into multiple where filters (ANDs) - gives more opportunity to push down
-# move selection nodes
+# print(dir(stages))
+
+# RULESET: list = [stages.scp.run]
+
+
 # choose join based on the fields in the column (I don't know if there's a performance choice)
 
 
