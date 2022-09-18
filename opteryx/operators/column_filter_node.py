@@ -15,7 +15,12 @@ Distinct Node
 
 This is a SQL Query Execution Plan Node.
 
-This Node is used to evaluate the filters on SHOW COLUMNS
+This Node is used to evaluate the filters on SHOW queries e.g.: 
+
+- SHOW COLUMNS
+- SHOW VARIABLES
+
+It expects the filter to be applied to the 'name' column.
 """
 from typing import Iterable
 
@@ -24,7 +29,7 @@ from opteryx.operators import BasePlanNode
 from opteryx.exceptions import SqlError
 
 
-class ColumnSelectionNode(BasePlanNode):
+class ColumnFilterNode(BasePlanNode):
     def __init__(
         self, properties: QueryProperties, statistics: QueryStatistics, **config
     ):

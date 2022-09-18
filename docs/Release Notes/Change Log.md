@@ -12,7 +12,7 @@ None
 
 **Changed**
 
-None
+- ⚠️**BREAKING** `SHOW COLUMNS` returns the column name in the `name` column, previously `column_name` ([@joocer](https://github.com/joocer))  
 
 **Added**
 

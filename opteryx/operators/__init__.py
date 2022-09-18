@@ -15,7 +15,7 @@ from .base_plan_node import BasePlanNode
 from .aggregate_node import AggregateNode  # aggregate data
 from .blob_reader_node import BlobReaderNode  # read file/blob datasets
 from .collection_reader_node import CollectionReaderNode  # reader NoSQL datsets
-from .column_selection_node import ColumnSelectionNode  # filter for SHOW COLUMNS
+from .column_filter_node import ColumnFilterNode  # filter for SHOW COLUMNS
 from .cross_join_node import CrossJoinNode  # CROSS JOIN
 from .distinct_node import DistinctNode  # remove duplicate records
 from .explain_node import ExplainNode  # EXPLAIN queries
@@ -30,6 +30,7 @@ from .selection_node import SelectionNode  # filter unwanted rows
 from .show_columns_node import ShowColumnsNode  # column details
 from .show_create_node import ShowCreateNode  # SHOW CREATE TABLE
 from .show_functions_node import ShowFunctionsNode  # supported functions
+from .show_variables_node import ShowVariablesNode  # SHOW VARIABLES
 from .sort_node import SortNode  # order by selected columns
 
 

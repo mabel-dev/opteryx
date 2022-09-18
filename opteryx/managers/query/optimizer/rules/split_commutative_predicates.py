@@ -11,7 +11,7 @@
 # limitations under the License.
 
 """
-Optimization Rule - Split Commutive Predicates (ANDs)
+Optimization Rule - Split Commutative Predicates (ANDs)
 """
 
 from opteryx import operators
@@ -19,7 +19,7 @@ from opteryx import operators
 
 def run(plan):
     """
-    Commutive Predicates are those that the order of their evaluation doesn't matter.
+    Commutative Predicates are those that the order of their evaluation doesn't matter.
 
     The reason for splitting is two-fold:
 

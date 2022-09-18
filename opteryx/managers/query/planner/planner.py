@@ -139,8 +139,10 @@ class QueryPlanner(ExecutionTree):
                 self._set_variable_planner(ast, self._statistics)
             elif "ShowColumns" in ast:
                 self._show_columns_planner(ast, self._statistics)
-            elif "ShowVariable" in ast:
+            elif "ShowVariable" in ast:  # generic SHOW handler
                 self._show_variable_planner(ast, self._statistics)
+            elif "ShowVariables" in ast:
+                self._show_variables_planner(ast, self._statistics)
             elif "ShowCreate" in ast:
                 self._show_create_planner(ast, self._statistics)
             else:  # pragma: no cover
@@ -612,13 +614,13 @@ class QueryPlanner(ExecutionTree):
 
     def _extract_filter(self, ast):
         """filters are used in SHOW queries"""
-        filters = ast["ShowColumns"]["filter"]
+        filters = ast["filter"]
         if filters is None:
             return None
         if "Where" in filters:
             return self._filter_extract(filters["Where"])
         if "Like" in filters:
-            left = ExpressionTreeNode(NodeType.IDENTIFIER, value="column_name")
+            left = ExpressionTreeNode(NodeType.IDENTIFIER, value="name")
             right = ExpressionTreeNode(NodeType.LITERAL_VARCHAR, value=filters["Like"])
             root = ExpressionTreeNode(
                 NodeType.COMPARISON_OPERATOR,
@@ -661,21 +663,15 @@ class QueryPlanner(ExecutionTree):
         having = ast["Query"]["body"]["Select"]["having"]
         return self._filter_extract(having)
 
-    def _extract_properties(self, ast):
-        return QueryProperties()
-
     def _explain_planner(self, ast, statistics):
-        properties = self._extract_properties(ast)
         explain_plan = self.copy()
         explain_plan.create_plan(ast=[ast["Explain"]["statement"]])
         explain_node = operators.ExplainNode(
-            properties, statistics, query_plan=explain_plan
+            self.properties, statistics, query_plan=explain_plan
         )
         self.add_operator("explain", explain_node)
 
     def _show_columns_planner(self, ast, statistics):
-
-        properties = self._extract_properties(ast)
 
         dataset = ".".join([part["value"] for part in ast["ShowColumns"]["table_name"]])
 
@@ -689,7 +685,7 @@ class QueryPlanner(ExecutionTree):
         self.add_operator(
             "reader",
             operators.reader_factory(mode)(
-                properties=properties,
+                properties=self.properties,
                 statistics=statistics,
                 dataset=dataset,
                 alias=None,
@@ -701,12 +697,12 @@ class QueryPlanner(ExecutionTree):
         )
         last_node = "reader"
 
-        filters = self._extract_filter(ast)
+        filters = self._extract_filter(ast["ShowColumns"])
         if filters:
             self.add_operator(
                 "filter",
-                operators.ColumnSelectionNode(
-                    properties=properties, statistics=statistics, filter=filters
+                operators.ColumnFilterNode(
+                    properties=self.properties, statistics=statistics, filter=filters
                 ),
             )
             self.link_operators(last_node, "filter")
@@ -715,7 +711,7 @@ class QueryPlanner(ExecutionTree):
         self.add_operator(
             "columns",
             operators.ShowColumnsNode(
-                properties=properties,
+                properties=self.properties,
                 statistics=statistics,
                 full=ast["ShowColumns"]["full"],
                 extended=ast["ShowColumns"]["extended"],
@@ -740,11 +736,8 @@ class QueryPlanner(ExecutionTree):
             self.properties.variables[key] = value
         else:
             raise SqlError("Variable definitions must start with '@'.")
-        
 
     def _show_create_planner(self, ast, statistics):
-
-        properties = self._extract_properties(ast)
 
         if ast["ShowCreate"]["obj_type"] != "Table":
             raise SqlError("SHOW CREATE only supports tables")
@@ -761,7 +754,7 @@ class QueryPlanner(ExecutionTree):
         self.add_operator(
             "reader",
             operators.reader_factory(mode)(
-                properties=properties,
+                properties=self.properties,
                 statistics=statistics,
                 dataset=dataset,
                 alias=None,
@@ -776,7 +769,7 @@ class QueryPlanner(ExecutionTree):
         self.add_operator(
             "show_create",
             operators.ShowCreateNode(
-                properties=properties, statistics=statistics, table=dataset
+                properties=self.properties, statistics=statistics, table=dataset
             ),
         )
         self.link_operators(last_node, "show_create")
@@ -811,19 +804,16 @@ class QueryPlanner(ExecutionTree):
         The last word is the variable, preceeding words are modifiers.
         """
 
-        properties = self._extract_properties(ast)
-
         keywords = [value["value"].upper() for value in ast["ShowVariable"]["variable"]]
         if keywords[-1] == "FUNCTIONS":
             show_node = "show_functions"
             node = operators.ShowFunctionsNode(
-                properties=properties,
+                properties=self.properties,
                 statistics=statistics,
             )
             self.add_operator(show_node, operator=node)
-        elif keywords[0] == "VARIABLE":
-            # TODO: node to return the right value
-            # either from the variables or attributes of the properties
+        elif keywords[0] == "PARAMETERS":
+            # TODO: show all of the paramters
             print(getattr(self.properties, keywords[1].lower()))
         else:  # pragma: no cover
             raise SqlError(f"SHOW statement type not supported for `{keywords[-1]}`.")
@@ -831,12 +821,30 @@ class QueryPlanner(ExecutionTree):
         name_column = ExpressionTreeNode(NodeType.IDENTIFIER, value="name")
 
         order_by_node = operators.SortNode(
-            properties=properties,
+            properties=self.properties,
             statistics=statistics,
             order=[([name_column], "ascending")],
         )
         self.add_operator("order", operator=order_by_node)
         self.link_operators(show_node, "order")
+
+    def _show_variables_planner(self, ast, statistics):
+        show = operators.ShowVariablesNode(
+            properties=self.properties, statistics=statistics
+        )
+        self.add_operator("show", show)
+        last_node = "show"
+
+        filters = self._extract_filter(ast["ShowVariables"])
+        if filters:
+            self.add_operator(
+                "filter",
+                operators.SelectionNode(
+                    properties=self.properties, statistics=statistics, filter=filters
+                ),
+            )
+            self.link_operators(last_node, "filter")
+            last_node = "filter"
 
     def _naive_select_planner(self, ast, statistics):
         """
@@ -845,7 +853,6 @@ class QueryPlanner(ExecutionTree):
         The goal here is to create a plan to respond to the user, it creates has
         no clever tricks to improve performance.
         """
-        properties = self._extract_properties(ast)
         all_identifiers = self._extract_identifiers(ast)
 
         _relations = [r for r in self._extract_relations(ast)]
@@ -864,7 +871,7 @@ class QueryPlanner(ExecutionTree):
         self.add_operator(
             "from",
             operators.reader_factory(mode)(
-                properties=properties,
+                properties=self.properties,
                 statistics=statistics,
                 alias=alias,
                 dataset=dataset,
@@ -909,7 +916,7 @@ class QueryPlanner(ExecutionTree):
 
                     # Otherwise, the right table needs to come from the Reader
                     right = operators.reader_factory(mode)(
-                        properties=properties,
+                        properties=self.properties,
                         statistics=statistics,
                         dataset=dataset,
                         alias=right[0],
@@ -927,7 +934,7 @@ class QueryPlanner(ExecutionTree):
                 self.add_operator(
                     f"join-{join_id}",
                     join_node(
-                        properties=properties,
+                        properties=self.properties,
                         statistics=statistics,
                         join_type=join_type,
                         join_on=join_on,
@@ -945,7 +952,7 @@ class QueryPlanner(ExecutionTree):
         if _selection:
             self.add_operator(
                 "where",
-                operators.SelectionNode(properties, statistics, filter=_selection),
+                operators.SelectionNode(self.properties, statistics, filter=_selection),
             )
             self.link_operators(last_node, "where")
             last_node = "where"
@@ -974,7 +981,7 @@ class QueryPlanner(ExecutionTree):
             self.add_operator(
                 "agg",
                 operators.AggregateNode(
-                    properties, statistics, aggregates=_aggregates, groups=_groups
+                    self.properties, statistics, aggregates=_aggregates, groups=_groups
                 ),
             )
             self.link_operators(last_node, "agg")
@@ -984,7 +991,7 @@ class QueryPlanner(ExecutionTree):
         if _having:
             self.add_operator(
                 "having",
-                operators.SelectionNode(properties, statistics, filter=_having),
+                operators.SelectionNode(self.properties, statistics, filter=_having),
             )
             self.link_operators(last_node, "having")
             last_node = "having"
@@ -1000,7 +1007,7 @@ class QueryPlanner(ExecutionTree):
             self.add_operator(
                 "select",
                 operators.ProjectionNode(
-                    properties, statistics, projection=_projection
+                    self.properties, statistics, projection=_projection
                 ),
             )
             self.link_operators(last_node, "select")
@@ -1009,7 +1016,7 @@ class QueryPlanner(ExecutionTree):
         _distinct = self._extract_distinct(ast)
         if _distinct:
             self.add_operator(
-                "distinct", operators.DistinctNode(properties, statistics)
+                "distinct", operators.DistinctNode(self.properties, statistics)
             )
             self.link_operators(last_node, "distinct")
             last_node = "distinct"
@@ -1017,7 +1024,7 @@ class QueryPlanner(ExecutionTree):
         _order = self._extract_order(ast)
         if _order:
             self.add_operator(
-                "order", operators.SortNode(properties, statistics, order=_order)
+                "order", operators.SortNode(self.properties, statistics, order=_order)
             )
             self.link_operators(last_node, "order")
             last_node = "order"
@@ -1025,7 +1032,8 @@ class QueryPlanner(ExecutionTree):
         _offset = self._extract_offset(ast)
         if _offset:
             self.add_operator(
-                "offset", operators.OffsetNode(properties, statistics, offset=_offset)
+                "offset",
+                operators.OffsetNode(self.properties, statistics, offset=_offset),
             )
             self.link_operators(last_node, "offset")
             last_node = "offset"
@@ -1034,14 +1042,14 @@ class QueryPlanner(ExecutionTree):
         # 0 limit is valid
         if _limit is not None:
             self.add_operator(
-                "limit", operators.LimitNode(properties, statistics, limit=_limit)
+                "limit", operators.LimitNode(self.properties, statistics, limit=_limit)
             )
             self.link_operators(last_node, "limit")
             last_node = "limit"
 
-#        if self.properties.enable_optimizer:
-#            import opteryx.managers.query.optimizer
-#            self
+    #        if self.properties.enable_optimizer:
+    #            import opteryx.managers.query.optimizer
+    #            self
 
     def explain(self):
         def _inner_explain(node, depth):

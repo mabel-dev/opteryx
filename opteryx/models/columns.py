@@ -74,6 +74,8 @@ class Columns:
         """
         _column_metadata = self._column_metadata.copy()
         # we start by collecting the column_name/alias for each column
+        if len(_column_metadata) == 0:
+            return []
         columns, preferences = zip(
             *[(c, v.get("preferred_name", c)) for c, v in _column_metadata.items()]
         )

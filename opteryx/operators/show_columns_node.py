@@ -69,7 +69,7 @@ def _simple_collector(page):
     for column in page.column_names:
         column_data = page.column(column)
         _type = determine_type(str(column_data.type))
-        new_row = {"column_name": columns.get_preferred_name(column), "type": _type}
+        new_row = {"name": columns.get_preferred_name(column), "type": _type}
         buffer.append(new_row)
 
     table = pyarrow.Table.from_pylist(buffer)
@@ -90,7 +90,7 @@ def _full_collector(pages):
 
     empty_profile = orjson.dumps(
         {
-            "column_name": None,
+            "name": None,
             "type": [],
             "count": 0,
             "min": None,
@@ -136,7 +136,7 @@ def _full_collector(pages):
     buffer = []
 
     for column, profile in profile_collector.items():
-        profile["column_name"] = columns.get_preferred_name(column)
+        profile["name"] = columns.get_preferred_name(column)
         profile["type"] = ", ".join(profile["type"])
         buffer.append(profile)
 
@@ -166,7 +166,7 @@ def _extended_collector(pages):
 
     empty_profile = orjson.dumps(
         {
-            "column_name": None,
+            "name": None,
             "type": [],
             "count": 0,
             "min": None,
@@ -307,7 +307,7 @@ def _extended_collector(pages):
     buffer = []
 
     for column, profile in profile_collector.items():
-        profile["column_name"] = columns.get_preferred_name(column)
+        profile["name"] = columns.get_preferred_name(column)
         profile["type"] = ", ".join(profile["type"])
 
         if column not in uncollected_columns:
