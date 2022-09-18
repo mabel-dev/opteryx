@@ -22,7 +22,7 @@ implementing optimization.
 
 from opteryx.managers.query.optimizer import rules
 
-RULESET: list = [rules.split_commutive_predicates.run]
+RULESET: list = [rules.split_commutative_predicates.run]
 
 # split commutive expressions into multiple where filters (ANDs) - gives more opportunity to push down
 # move selection nodes
