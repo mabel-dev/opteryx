@@ -21,6 +21,8 @@ None
 - [[#522](https://github.com/mabel-dev/opteryx/issues/522)] Implementation of LRU-K(2) for cache evictions. ([@joocer](https://github.com/joocer))  
 - [[#324](https://github.com/mabel-dev/opteryx/issues/324)] Support `IN UNNEST()`. ([@joocer](https://github.com/joocer))  
 - [[#386](https://github.com/mabel-dev/opteryx/issues/386)] Support `SET` statements. ([@joocer](https://github.com/joocer))  
+- [[#531](https://github.com/mabel-dev/opteryx/issues/531)] Support `SHOW VARIABLES` and `SHOW PARAMETERS`. ([@joocer](https://github.com/joocer))  
+
 
 ## [0.4.1] - 2022-09-12
 

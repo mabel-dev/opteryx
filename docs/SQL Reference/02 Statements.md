@@ -146,7 +146,7 @@ User defined variable names must be prefixed with an 'at' symbol (`@`) and the v
 
 System parameters can also be temporarily for a query batch and are prefixed with a dollar sign (`$`).
 
-**Related: `SHOW VARIABLES` and `SHOW PARAMETERS`**
+**Related: `SHOW VARIABLES` and `SHOW PARAMETER`**
 
 ## SHOW COLUMNS
 
