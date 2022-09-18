@@ -209,12 +209,12 @@ List the functions and aggregators supported by the engine.
 SHOW FUNCTIONS
 ~~~
 
-## SHOW PARAMETERS
+## SHOW PARAMETER
 
-List the current configuration settings.
+Display the value of a given configuration setting.
 
 ~~~sql
-SHOW PARAMETERS
+SHOW PARAMETER parameter
 ~~~
 
 **Related: `SET`**

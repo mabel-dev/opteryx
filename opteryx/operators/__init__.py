@@ -30,6 +30,7 @@ from .selection_node import SelectionNode  # filter unwanted rows
 from .show_columns_node import ShowColumnsNode  # column details
 from .show_create_node import ShowCreateNode  # SHOW CREATE TABLE
 from .show_functions_node import ShowFunctionsNode  # supported functions
+from .show_value_node import ShowValueNode  # display node for SHOW
 from .show_variables_node import ShowVariablesNode  # SHOW VARIABLES
 from .sort_node import SortNode  # order by selected columns
 

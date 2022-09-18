@@ -805,18 +805,28 @@ class QueryPlanner(ExecutionTree):
         """
 
         keywords = [value["value"].upper() for value in ast["ShowVariable"]["variable"]]
-        if keywords[-1] == "FUNCTIONS":
+        if keywords[0] == "FUNCTIONS":
             show_node = "show_functions"
             node = operators.ShowFunctionsNode(
                 properties=self.properties,
                 statistics=statistics,
             )
             self.add_operator(show_node, operator=node)
-        elif keywords[0] == "PARAMETERS":
-            # TODO: show all of the paramters
-            print(getattr(self.properties, keywords[1].lower()))
+        elif keywords[0] == "PARAMETER":
+            if len(keywords) != 2:
+                raise SqlError("`SHOW PARAMETER` expects a single parameter name.")
+            key = keywords[1].lower()
+            if not hasattr(self.properties, key) or key == "variables":
+                raise SqlError(f"Unknown parameter '{key}'.")
+            value = getattr(self.properties, key)
+
+            show_node = "show_paramter"
+            node = operators.ShowValueNode(
+                properties=self.properties, statistics=statistics, key=key, value=value
+            )
+            self.add_operator(show_node, operator=node)
         else:  # pragma: no cover
-            raise SqlError(f"SHOW statement type not supported for `{keywords[-1]}`.")
+            raise SqlError(f"SHOW statement type not supported for `{keywords[0]}`.")
 
         name_column = ExpressionTreeNode(NodeType.IDENTIFIER, value="name")
 
