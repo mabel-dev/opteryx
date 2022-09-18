@@ -27,11 +27,11 @@ import sys
 sys.path.insert(1, os.path.join(sys.path[0], "../../../.."))
 
 
-#from opteryx.managers.query.optimizer import stages
+# from opteryx.managers.query.optimizer import stages
 
-#print(dir(stages))
+# print(dir(stages))
 
-#RULESET: list = [stages.scp.run]
+# RULESET: list = [stages.scp.run]
 
 
 # choose join based on the fields in the column (I don't know if there's a performance choice)
