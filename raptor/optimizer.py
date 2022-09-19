@@ -31,7 +31,7 @@ sys.path.insert(1, os.path.join(sys.path[0], "../../../.."))
 
 # print(dir(stages))
 
-# RULESET: list = [stages.scp.run]
+RULESET: list = []
 
 
 # choose join based on the fields in the column (I don't know if there's a performance choice)

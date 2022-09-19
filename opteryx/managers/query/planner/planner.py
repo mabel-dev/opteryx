@@ -1057,10 +1057,6 @@ class QueryPlanner(ExecutionTree):
             self.link_operators(last_node, "limit")
             last_node = "limit"
 
-    #        if self.properties.enable_optimizer:
-    #            import opteryx.managers.query.optimizer
-    #            self
-
     def explain(self):
         def _inner_explain(node, depth):
             if depth == 1:

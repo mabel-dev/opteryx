@@ -89,7 +89,7 @@ def consolidate_pages(pages, statistics):
         raise Exception("No Records")
 
 
-def fetchmany(pages, limit: int = 1000):
+def fetchmany(pages, limit: int = 1000, as_dicts: bool = False):
     """fetch records from a Table as Python Dicts"""
     from opteryx.models.columns import Columns  # circular imports
 
@@ -122,7 +122,10 @@ def fetchmany(pages, limit: int = 1000):
             page = page.rename_columns(column_names)
 
             for batch in page.to_batches(max_chunksize=chunk_size):
-                yield from batch.to_pylist()
+                if as_dicts:
+                    yield from batch.to_pylist()
+                else:
+                    yield from [list(tpl.values()) for tpl in batch.to_pylist()]
 
     index = -1
     for index, row in enumerate(_inner_row_reader()):
@@ -131,15 +134,18 @@ def fetchmany(pages, limit: int = 1000):
         yield row
 
     if index < 0:
-        yield {}
+        if as_dicts:
+            yield {}
+        else:
+            yield tuple()
 
 
-def fetchone(pages: Iterable) -> dict:
-    return next(fetchmany(pages=pages, limit=1), None)
+def fetchone(pages: Iterable, as_dicts: bool = False) -> dict:
+    return next(fetchmany(pages=pages, limit=1, as_dicts=as_dicts), None)
 
 
-def fetchall(pages) -> List[dict]:
-    return fetchmany(pages=pages, limit=-1)
+def fetchall(pages, as_dicts: bool = False) -> List[dict]:
+    return fetchmany(pages=pages, limit=-1, as_dicts=as_dicts)
 
 
 def limit_records(data_pages, limit):

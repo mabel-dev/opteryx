@@ -133,6 +133,10 @@ class Cursor:
         )
         self._query_plan.create_plan(sql=operation)
 
+        #        if self.properties.enable_optimizer:
+        #            import raptor
+        #            print(raptor.run_optimizer(self))
+
         # how long have we spent planning
         self._stats.time_planning = time.time_ns() - self._stats.start_time
 
@@ -166,24 +170,24 @@ class Cursor:
         """list of run-time warnings"""
         return self._stats.warnings
 
-    def fetchone(self) -> Optional[Dict]:
+    def fetchone(self, as_dicts: bool = False) -> Optional[Dict]:
         """fetch one record only"""
         if self._results is None:
             raise CursorInvalidStateError(CURSOR_NOT_RUN)
-        return arrow.fetchone(self._results)
+        return arrow.fetchone(self._results, as_dicts=as_dicts)
 
-    def fetchmany(self, size=None) -> List[Dict]:
+    def fetchmany(self, size=None, as_dicts: bool = False) -> List[Dict]:
         """fetch a given number of records"""
         fetch_size = self.arraysize if size is None else size
         if self._results is None:
             raise CursorInvalidStateError(CURSOR_NOT_RUN)
-        return arrow.fetchmany(self._results, fetch_size)
+        return arrow.fetchmany(self._results, limit=fetch_size, as_dicts=as_dicts)
 
-    def fetchall(self) -> List[Dict]:
+    def fetchall(self, as_dicts: bool = False) -> List[Dict]:
         """fetch all matching records"""
         if self._results is None:
             raise CursorInvalidStateError(CURSOR_NOT_RUN)
-        return arrow.fetchall(self._results)
+        return arrow.fetchall(self._results, as_dicts=as_dicts)
 
     def to_arrow(self, size: int = None) -> Table:
         """fetch all matching records as a pyarrow table"""

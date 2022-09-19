@@ -15,3 +15,4 @@ The Query Optimizer in Opteryx is called Raptor. The Query Optimizer is usually 
 of the most complex sections of a database.
 
 """
+from raptor.optimizer import run_optimizer
