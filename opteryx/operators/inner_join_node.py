@@ -30,7 +30,7 @@ from opteryx.exceptions import SqlError
 from opteryx.third_party import pyarrow_ops
 from opteryx.utils import arrow
 
-INTERNAL_BATCH_SIZE = config.INTERNAL_BATCH_SIZE
+INTERNAL_BATCH_SIZE = 500
 
 
 def calculate_batch_size(cardinality):

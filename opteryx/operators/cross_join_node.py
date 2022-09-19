@@ -30,7 +30,8 @@ from opteryx.models import Columns, QueryProperties, QueryStatistics
 from opteryx.operators import BasePlanNode
 
 
-INTERNAL_BATCH_SIZE = config.INTERNAL_BATCH_SIZE
+INTERNAL_BATCH_SIZE = 500
+MAX_JOIN_SIZE = 500
 
 
 def _cartesian_product(*arrays):
@@ -92,7 +93,7 @@ def _cross_join(left, right):
             # CROSS JOINs can create huge tables quickly, this is used to limit the
             # number of records we hold in memory at any time
             for left_chunk, right_chunk in _chunker(
-                left_align, right_align, config.MAX_JOIN_SIZE
+                left_align, right_align, MAX_JOIN_SIZE
             ):
 
                 # now build the resultant table

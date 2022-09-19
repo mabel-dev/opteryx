@@ -29,7 +29,7 @@ try:
 except ImportError:  # pragma: no cover
     pass
 
-BATCH_SIZE = config.INTERNAL_BATCH_SIZE
+BATCH_SIZE = 500
 
 
 class MongoDbConnector(BaseDocumentStorageAdapter):

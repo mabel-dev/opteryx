@@ -22,8 +22,8 @@ from orjson import dumps, loads
 
 from opteryx import config
 
-INTERNAL_BATCH_SIZE = config.INTERNAL_BATCH_SIZE
-PAGE_SIZE = config.PAGE_SIZE
+INTERNAL_BATCH_SIZE = 500
+PAGE_SIZE = 64 * 1024 * 1024
 
 HIGH_WATER: float = 1.20  # Split pages over 120% of PAGE_SIZE
 LOW_WATER: float = 0.6  # Merge pages under 60% of PAGE_SIZE

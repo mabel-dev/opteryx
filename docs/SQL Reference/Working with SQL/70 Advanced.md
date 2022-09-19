@@ -1,6 +1,6 @@
 # Advanced 
 
-## Variables
+## Query Variables
 
 Variables can be used when a value within a query would benefit from being configurable by the user running the query. For example pre-built queries which perform the same core statement, but with a variable input.
 
@@ -15,6 +15,10 @@ SELECT name
 ~~~
 
 The above query batch contains two statements, the `SET` and the `SELECT` separated by a semicolon (`;`). The variable is defined in the `SET` statement and must start with an at symbol (`@`). The variable is then used within a filter in the `WHERE` clause of the `SELECT` statement.
+
+## Query Parameters
+
+
 
 ## WITH hints
 
@@ -45,4 +49,5 @@ Instructs the blob/file reader not to try to prune columns at read time.
 FROM dataset WITH(PARALLEL_READ)
 ~~~
 
-Instructs the blob/file reader to try to use multiple processes to download files (experimental). Expected to be be `NO_PARALLEL_READ` when out of experimental mode.
+☣️ **Experimental** Instructs the blob/file reader to try to use multiple processes to download files (experimental). Expected to be be `NO_PARALLEL_READ` when out of experimental mode.
+
