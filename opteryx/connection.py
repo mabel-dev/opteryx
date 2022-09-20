@@ -194,7 +194,9 @@ class Cursor:
         # called 'size' to match the 'fetchmany' nomenclature
         if not isinstance(self._results, Table):
             self._results = arrow.as_arrow(self._results)
-        return self._results.slice(size)
+        if size:
+            return self._results.slice(size)
+        return self._results
 
     def close(self):
         """close the connection"""
