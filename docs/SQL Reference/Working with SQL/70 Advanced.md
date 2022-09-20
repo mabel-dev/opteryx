@@ -20,16 +20,16 @@ The above query batch contains two statements, the `SET` and the `SELECT` separa
 
 Query parameters which affect the execution of the query can be tuned on a per-query basis using the `SET` statement.
 
-!!! function "enable_optimizer: _boolean_ (True)"
+!!! function "enable_optimizer: _boolean_ (True)"    
     Use the query optimizer
 
-!!! function "internal_batch_size: _int_ (500)"
+!!! function "internal_batch_size: _int_ (500)"    
     The maximum input frame size for JOINs
 
-!!! function "max_join_size: _int_ (10000)"
+!!! function "max_join_size: _int_ (10000)"    
     The maximum number of records to create in a CROSS JOIN frame
 
-!!! function "page_size: _int_ (67108864)"
+!!! function "page_size: _int_ (67108864)"    
     Approximate Page Size in bytes
 
 ## WITH hints

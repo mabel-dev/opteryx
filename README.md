@@ -93,9 +93,8 @@ import opteryx
 
 conn = opteryx.connect()
 cur = conn.cursor()
-cur.execute("SELECT * FROM $planets;")
-for row in cur.fetchall():
-    print(row)
+cur.execute("SELECT 4 * 7;")
+print(cur.fetchone())
 ~~~
 
 For more example usage, see [Exmaple Notebooks](https://github.com/mabel-dev/opteryx/tree/main/notebooks) and the [Getting Started Guide](https://mabel-dev.github.io/opteryx/latest/02%20Getting%20Started/).
@@ -139,4 +138,4 @@ Opteryx is in beta. Beta means different things to different people, to us, bein
 - Some edge cases may have undetected bugs
 - Performance tuning may be incomplete
 - Changes are focused on feature completion, bugs, performance, reducing debt, and security
-- Code structure and APIs may change
+- Code structure and APIs are not stable and may change

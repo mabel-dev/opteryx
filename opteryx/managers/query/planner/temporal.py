@@ -52,6 +52,8 @@ SQL_PARTS = [
     r"JOIN",
     r"WITH",
     r"SHOW",
+    r"ON",
+    r"USING",
 ]
 
 COMBINE_WHITESPACE_REGEX = re.compile(r"\s+")

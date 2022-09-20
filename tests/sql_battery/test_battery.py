@@ -406,6 +406,11 @@ STATEMENTS = [
         ("SELECT DISTINCT $planets.id, $satellites.id FROM $planets LEFT OUTER JOIN $satellites ON $satellites.planetId = $planets.id", 179, 2),
         ("SELECT DISTINCT $planets.id, $satellites.id FROM $planets LEFT JOIN $satellites ON $satellites.planetId = $planets.id", 179, 2),
         ("SELECT planetId FROM $satellites LEFT JOIN $planets ON $satellites.planetId = $planets.id", 177, 1),
+        ("SELECT * FROM $planets LEFT JOIN $planets USING(id)", 9, 40),
+        ("SELECT * FROM $planets LEFT OUTER JOIN $planets USING(id)", 9, 40),
+        ("SELECT * FROM $planets LEFT JOIN $planets FOR TODAY USING(id)", 9, 40),
+        ("SELECT * FROM $planets LEFT JOIN $planets USING(id, name)", 9, 40),
+        ("SELECT * FROM $planets INNER JOIN $planets ON id = id AND name = name", 9, 40),
 
         ("SELECT DISTINCT planetId FROM $satellites RIGHT OUTER JOIN $planets ON $satellites.planetId = $planets.id", 8, 1),
         ("SELECT DISTINCT planetId FROM $satellites RIGHT JOIN $planets ON $satellites.planetId = $planets.id", 8, 1),
@@ -703,18 +708,30 @@ def test_sql_battery(statement, rows, columns):
 
     assert (
         rows == actual_rows
-    ), f"Query returned {actual_rows} rows but {rows} were expected, {statement}\n{ascii_table(fetchmany(result, limit=10), limit=10)}"
+    ), f"Query returned {actual_rows} rows but {rows} were expected, {statement}\n{ascii_table(fetchmany(result, limit=10, as_dicts=True), limit=10)}"
     assert (
         columns == actual_columns
-    ), f"Query returned {actual_columns} cols but {columns} were expected, {statement}\n{ascii_table(fetchmany(result, limit=10), limit=10)}"
+    ), f"Query returned {actual_columns} cols but {columns} were expected, {statement}\n{ascii_table(fetchmany(result, limit=10, as_dicts=True), limit=10)}"
 
 
 if __name__ == "__main__":  # pragma: no cover
 
+    """
+    Running in the IDE we do some formatting - it's not functional but helps
+    when reading the outputs.
+    """
+
+    import shutil
+
+    width = shutil.get_terminal_size((80, 20))[0] - 7
+
     print(f"RUNNING BATTERY OF {len(STATEMENTS)} SHAPE TESTS")
     for index, (statement, rows, cols) in enumerate(STATEMENTS):
-        print(f"{(index + 1):04}", statement[0:110].ljust(110), end="")
+        print(
+            f"\033[0;36m{(index + 1):04}\033[0m {statement[0:width - 1].ljust(width)}",
+            end="",
+        )
         test_sql_battery(statement, rows, cols)
         print("✅")
 
-    print("-- ✅ done")
+    print("--- ✅ \033[0;32mdone\033[0m")

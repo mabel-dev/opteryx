@@ -23,6 +23,8 @@ None
 - [[#324](https://github.com/mabel-dev/opteryx/issues/324)] Support `IN UNNEST()`. ([@joocer](https://github.com/joocer))  
 - [[#386](https://github.com/mabel-dev/opteryx/issues/386)] Support `SET` statements. ([@joocer](https://github.com/joocer))  
 - [[#531](https://github.com/mabel-dev/opteryx/issues/531)] Support `SHOW VARIABLES` and `SHOW PARAMETERS`. ([@joocer](https://github.com/joocer))  
+- [[#464](https://github.com/mabel-dev/opteryx/issues/464)] Support `LEFT JOIN USING` ([@joocer](https://github.com/joocer))  
+- [[#402](https://github.com/mabel-dev/opteryx/issues/402)] `JOIN` with expressions should support multiple conditions ([@joocer](https://github.com/joocer))  
 
 
 ## [0.4.1] - 2022-09-12

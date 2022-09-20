@@ -25,9 +25,10 @@ A more complete example using the `register_store` method to set up a connector 
 import opteryx
 from opteryx.connectors import GcpCloudStorageConnector
 
-# Tell the storage engine that datasets with the prefix 'your_bucket' are
-# to be read using the GcpCloudStorageConnector connector. Multiple prefixes can be added
-# and do not need to be the same connector.
+# Tell the storage engine that datasets with the prefix 'your_bucket'
+# are to be read using the GcpCloudStorageConnector connector.
+# Multiple prefixes can be added and do not need to be the same
+# connector.
 opteryx.register_store("your_bucket", GcpCloudStorageConnector)
 
 connextion = opteryx.connect()

@@ -733,7 +733,9 @@ class QueryPlanner(ExecutionTree):
             if hasattr(self.properties, key):
                 setattr(self.properties, key, value.value)
             else:
-                raise SqlError(f"Unknown parameter, variables must be prefixed with a '@' - '{key}'")
+                raise SqlError(
+                    f"Unknown parameter, variables must be prefixed with a '@' - '{key}'"
+                )
 
     def _show_create_planner(self, ast, statistics):
 

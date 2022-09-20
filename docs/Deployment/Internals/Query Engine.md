@@ -58,7 +58,7 @@ The following features are build into the query engine to improve performance
 - Small pages are merged together before activities which operate on the entire page-at-a-time (such as selections)
 - Projections are pushed to the parser, either to prevent parsing of unwanted fields (Parquet), or before passing to the next operation
 - A page cache is used (local or memcached) to reduce reads to attached or remote storage
-- A LRU-K cache eviction strategy with a fixed eviction budget per query to help ensure effective use of the page cache
+- An [LRU-K](https://en.wikipedia.org/wiki/Page_replacement_algorithm#Variants_on_LRU) cache eviction strategy with a fixed eviction budget per query to help ensure effective use of the page cache
 - Aggressive pruning of date partitioned datasets
-- SIMD and vectorized execution where available (via Numpy and PyArrow)
-- Projection before GROUP BY to reduce data handled by the aggregators
+- SIMD and vectorized execution where available (via [Numpy](https://numpy.org/devdocs/reference/simd/index.html) and [PyArrow](https://arrow.apache.org/docs/format/Columnar.html))
+- Projection before `GROUP BY` to reduce data handled by the aggregators

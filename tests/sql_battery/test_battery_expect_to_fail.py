@@ -45,7 +45,7 @@ STATEMENTS = [
         ("SELECT * FROM $planets FOR DATES BETWEEN today AND yesterday"),
 
         # Can't IN an INDENTIFIER
-        ("SELECT * FROM $astronauts WHERE 'Apollo 11' IN Missions"),
+        ("SELECT * FROM $astronauts WHERE 'Apollo 11' IN missions"),
 
         # https://trino.io/docs/current/functions/aggregate.html#filtering-during-aggregation
         ("SELECT LIST(name) FILTER (WHERE name IS NOT NULL) FROM $planets;"),

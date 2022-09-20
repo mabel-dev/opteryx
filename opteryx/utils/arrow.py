@@ -283,18 +283,25 @@ def get_metadata(tbl):
     return column_metadata(tbl), table_metadata(tbl)
 
 
-def coerce_column(table, column_name):
+def coerce_columns(table, column_names):
     """convert numeric types to a common type to allow comparisons"""
     # get the column we're coercing
     my_schema = table.schema
-    index = table.column_names.index(column_name)
-    column = my_schema.field(column_name)
 
-    # if it's numeric, and not already the type we want, convert it
-    if str(column.type) in ("int64", "double"):
-        column = column.with_type(pyarrow.float64())
-        my_schema = my_schema.set(index, pyarrow.field(column_name, pyarrow.float64()))
-        return table.cast(target_schema=my_schema)
+    if not isinstance(column_names, list):
+        column_names = [column_names]
+
+    for column_name in column_names:
+        index = table.column_names.index(column_name)
+        column = my_schema.field(column_name)
+
+        # if it's numeric, and not already the type we want, convert it
+        if str(column.type) in ("int64", "double"):
+            column = column.with_type(pyarrow.float64())
+            my_schema = my_schema.set(
+                index, pyarrow.field(column_name, pyarrow.float64())
+            )
+            table = table.cast(target_schema=my_schema)
 
     return table
 
