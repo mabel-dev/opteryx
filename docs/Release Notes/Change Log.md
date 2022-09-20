@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 **Fixed**
 
-None
+- [[#528](https://github.com/mabel-dev/opteryx/issues/528)] `.shape` and `.count` not working as expected. ([@joocer](https://github.com/joocer))  
 
 **Changed**
 

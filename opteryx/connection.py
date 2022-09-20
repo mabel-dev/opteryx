@@ -133,10 +133,6 @@ class Cursor:
         )
         self._query_plan.create_plan(sql=operation)
 
-        #        if self.properties.enable_optimizer:
-        #            import raptor
-        #            print(raptor.run_optimizer(self))
-
         # how long have we spent planning
         self._stats.time_planning = time.time_ns() - self._stats.start_time
 
@@ -146,12 +142,16 @@ class Cursor:
     def rowcount(self):
         if self._results is None:
             raise CursorInvalidStateError(CURSOR_NOT_RUN)
-        return self._results.count()
+        if not isinstance(self._results, Table):
+            self._results = arrow.as_arrow(self._results)
+        return self._results.num_rows
 
     @property
     def shape(self):
         if self._results is None:
             raise CursorInvalidStateError(CURSOR_NOT_RUN)
+        if not isinstance(self._results, Table):
+            self._results = arrow.as_arrow(self._results)
         return self._results.shape
 
     @property
@@ -192,7 +192,9 @@ class Cursor:
     def to_arrow(self, size: int = None) -> Table:
         """fetch all matching records as a pyarrow table"""
         # called 'size' to match the 'fetchmany' nomenclature
-        return arrow.as_arrow(self._results, limit=size)
+        if not isinstance(self._results, Table):
+            self._results = arrow.as_arrow(self._results)
+        return self._results.slice(size)
 
     def close(self):
         """close the connection"""
