@@ -31,7 +31,7 @@ def test_to_arrow_with_limit():
     table = cur.to_arrow(size=5)
 
     assert "name" in table.column_names
-    assert table.num_rows == 5
+    assert table.num_rows == 5, table.num_rows
     assert len(table.column_names) == 20
 
 

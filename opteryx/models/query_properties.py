@@ -10,6 +10,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Any
+
 
 class QueryProperties:
     """
@@ -19,7 +21,7 @@ class QueryProperties:
     def __init__(self, config: dict = None):
 
         # this is empty unless it's set as part of the query
-        self.variables = {}
+        self.variables: dict[str, Any] = {}
 
         # fmt:off
         if config is None:

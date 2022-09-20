@@ -195,7 +195,7 @@ class Cursor:
         if not isinstance(self._results, Table):
             self._results = arrow.as_arrow(self._results)
         if size:
-            return self._results.slice(size)
+            return self._results.slice(offset=0, length=size)
         return self._results
 
     def close(self):
