@@ -13,7 +13,7 @@ None
 **Changed**
 
 - ⚠️**BREAKING** `SHOW COLUMNS` returns the column name in the `name` column, previously `column_name` ([@joocer](https://github.com/joocer))  
-- ⚠️**BREAKING** (correction) cursor 'fetch*' methods returns tuples rather than dictionaries as defaults. ([@joocer](https://github.com/joocer))  
+- ⚠️**BREAKING** (correction) cursor 'fetch*' methods returns tuples rather than dictionaries as defaults, this is correcting a bug in [PEP249](https://peps.python.org/pep-0249/) compatibility. ([@joocer](https://github.com/joocer))  
 
 **Added**
 

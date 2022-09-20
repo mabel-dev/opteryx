@@ -583,6 +583,7 @@ STATEMENTS = [
         ("SET @pples = 'b'; SET @ngles = 90; SHOW VARIABLES LIKE '%s'", 2, 2),
         ("SET @pples = 'b'; SET @rgon = 90; SHOW VARIABLES LIKE '%gon'", 1, 2),
         ("SHOW PARAMETER enable_optimizer", 1, 2),
+        ("SET enable_optimizer = 1; SHOW PARAMETER enable_optimizer;", 1, 2),
 
         ("SHOW CREATE TABLE $planets", 1, 1),
         ("SHOW CREATE TABLE $satellites", 1, 1),

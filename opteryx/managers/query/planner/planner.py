@@ -724,18 +724,16 @@ class QueryPlanner(ExecutionTree):
         """put variables defined in SET statements into context"""
         key = ast["SetVariable"]["variable"][0]["value"]
         value = self._build_literal_node(ast["SetVariable"]["value"][0]["Value"])
-        if key[0] == "$":
-            key = key[1:].lower()
+        if key[0] == "@":  # pragma: no cover
+            self.properties.variables[key] = value
+        else:
+            key = key.lower()
             if key in ("variables"):
-                raise SqlError(f"Invalid Directive '{key}'")
+                raise SqlError(f"Invalid parameter '{key}'")
             if hasattr(self.properties, key):
                 setattr(self.properties, key, value.value)
             else:
-                raise SqlError(f"Unknown Directive '{key}'")
-        elif key[0] == "@":  # pragma: no cover
-            self.properties.variables[key] = value
-        else:
-            raise SqlError("Variable definitions must start with '@'.")
+                raise SqlError(f"Unknown parameter, variables must be prefixed with a '@' - '{key}'")
 
     def _show_create_planner(self, ast, statistics):
 
