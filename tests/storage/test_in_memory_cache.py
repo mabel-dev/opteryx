@@ -19,7 +19,7 @@ def test_in_memory_cache():
     conn = opteryx.connect(cache=cache)
     cur = conn.cursor()
     cur.execute("SELECT * FROM testdata.tweets WITH(NO_PARTITION);")
-    cur.to_arrow()
+    cur.as_arrow()
 
     stats = cur.stats
     assert stats["cache_hits"] == 0
@@ -30,7 +30,7 @@ def test_in_memory_cache():
     conn = opteryx.connect(cache=cache)
     cur = conn.cursor()
     cur.execute("SELECT * FROM testdata.tweets WITH(NO_PARTITION);")
-    cur.to_arrow()
+    cur.as_arrow()
 
     stats = cur.stats
     assert stats["cache_hits"] == 2, stats["cache_hits"]
@@ -41,7 +41,7 @@ def test_in_memory_cache():
     conn = opteryx.connect(cache=cache)
     cur = conn.cursor()
     cur.execute("SELECT * FROM testdata.tweets WITH (NO_CACHE, NO_PARTITION);")
-    cur.to_arrow()
+    cur.as_arrow()
 
     stats = cur.stats
     assert stats["cache_hits"] == 0

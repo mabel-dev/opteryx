@@ -97,46 +97,59 @@ class Cursor:
 
         raise SqlError(f"Query parameter of type '{type(param)}' is not supported.")
 
-    def execute(self, operation, params=None):
+    def execute(self, operation, params=None, experimental: bool = False):
         if self._query is not None:
             raise CursorInvalidStateError("Cursor can only be executed once")
 
         self._stats.start_time = time.time_ns()
 
-        if params:
-            if not isinstance(params, (list, tuple)):
-                raise ProgrammingError(
-                    "params must be a list or tuple containing the query parameter values"
-                )
+        if not experimental:
 
-            for param in params:
-                if operation.find("%s") == -1:
-                    # we have too few placeholders
+            if params:
+                if not isinstance(params, (list, tuple)):
+                    raise ProgrammingError(
+                        "params must be a list or tuple containing the query parameter values"
+                    )
+
+                for param in params:
+                    if operation.find("%s") == -1:
+                        # we have too few placeholders
+                        raise ProgrammingError(
+                            "Number of placeholders and number of parameters must match."
+                        )
+                    operation = operation.replace(
+                        "%s", self._format_prepared_param(param), 1
+                    )
+                if operation.find("%s") != -1:
+                    # we have too many placeholders
                     raise ProgrammingError(
                         "Number of placeholders and number of parameters must match."
                     )
-                operation = operation.replace(
-                    "%s", self._format_prepared_param(param), 1
-                )
-            if operation.find("%s") != -1:
-                # we have too many placeholders
-                raise ProgrammingError(
-                    "Number of placeholders and number of parameters must match."
-                )
 
-        # circular imports
-        from opteryx.managers.query.planner import QueryPlanner
+            # circular imports
+            from opteryx.managers.query.planner import QueryPlanner
 
-        self._query_plan = QueryPlanner(
-            statistics=self._stats,
-            cache=self._connection._cache,
-        )
-        self._query_plan.create_plan(sql=operation)
+            self._query_plan = QueryPlanner(
+                statistics=self._stats,
+                cache=self._connection._cache,
+            )
+            self._query_plan.create_plan(sql=operation)
 
-        # how long have we spent planning
-        self._stats.time_planning = time.time_ns() - self._stats.start_time
+            # how long have we spent planning
+            self._stats.time_planning = time.time_ns() - self._stats.start_time
 
-        self._results = self._query_plan.execute()
+            self._results = self._query_plan.execute()
+
+        else:
+            from opteryx.managers.planner import _QueryPlanner
+
+            qp = _QueryPlanner(statement=operation)
+            qp.parse_and_lex()
+            qp.bind_ast(parameters=params)
+            qp.create_logical_plan()
+            qp.optimize_plan()
+
+            self._results = qp.execute()
 
     @property
     def rowcount(self):
@@ -189,7 +202,7 @@ class Cursor:
             raise CursorInvalidStateError(CURSOR_NOT_RUN)
         return arrow.fetchall(self._results, as_dicts=as_dicts)
 
-    def to_arrow(self, size: int = None) -> Table:
+    def as_arrow(self, size: int = None) -> Table:
         """fetch all matching records as a pyarrow table"""
         # called 'size' to match the 'fetchmany' nomenclature
         if not isinstance(self._results, Table):
@@ -216,7 +229,7 @@ class Cursor:
         if i_am_in_a_notebook:
             from IPython.display import HTML, display
 
-            html = html_table(iter(self.fetchmany(size)), size)
+            html = html_table(iter(self.fetchmany(size, as_dicts=True)), size)
             display(HTML(html))
         else:
-            return ascii_table(iter(self.fetchmany(size)), size)
+            return ascii_table(iter(self.fetchmany(size, as_dicts=True)), size)

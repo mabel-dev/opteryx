@@ -11,7 +11,7 @@
 # limitations under the License.
 
 """
-This compensates for missing temporal table support in the SQL parser.
+This compensates for missing temporal table support in the SQL parser (sqlparser-rs).
 
 For information on temporal tables see:
 https://blog.devgenius.io/a-query-in-time-introduction-to-sql-server-temporal-tables-145ddb1355d9
@@ -52,6 +52,8 @@ SQL_PARTS = [
     r"JOIN",
     r"WITH",
     r"SHOW",
+    r"ON",
+    r"USING",
 ]
 
 COMBINE_WHITESPACE_REGEX = re.compile(r"\s+")

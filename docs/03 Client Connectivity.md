@@ -1,8 +1,10 @@
 # Clients
 
+Opteryx supports two methods of invocation; as an importable Python library and as a command line tool.
+
 ## Python Embedded
 
-Opteryx is an embeddable package into Python applications, scripts and Notebooks which implements a partial Python DBAPI (PEP-0249) interface.
+Opteryx is an embeddable package into Python applications, scripts and Notebooks which implements a partial Python DBAPI ([PEP 249](https://peps.python.org/pep-0249/)) interface.
 
 ~~~python
 import opteryx
@@ -12,7 +14,7 @@ cur.execute('SELECT * FROM $planets')
 rows = cur.fetchall()
 ~~~
 
-The results of the query are availble via the cursor using `fetchone()` which returns a dictionary, `fetchmany(size)` and `fetchall()` which return generators of dictionaries, or `to_arrow()` which returns an [Arrow Table](https://arrow.apache.org/docs/python/generated/pyarrow.Table.html#pyarrow.Table).
+The results of the query are availble via the cursor using `fetchone()` which returns a dictionary, `fetchmany(size)` and `fetchall()` which return generators of dictionaries, or `as_arrow()` which returns an [Arrow Table](https://arrow.apache.org/docs/python/generated/pyarrow.Table.html#pyarrow.Table).
 
 ## Command Line Interface
 

@@ -49,7 +49,7 @@ def main(
         return
     else:
         ext = o.lower().split(".")[-1]
-        table = cur.to_arrow()
+        table = cur.as_arrow()
 
         if ext == "parquet":
             from pyarrow import parquet

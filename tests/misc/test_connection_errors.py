@@ -42,9 +42,32 @@ def test_connection_warnings():
     assert cur.has_warnings
 
 
+def test_connection_parameter_mismatch():
+    """test substitution binding errors"""
+
+    import opteryx
+    from opteryx.exceptions import ProgrammingError
+
+    conn = opteryx.connect()
+    cur = conn.cursor()
+    with pytest.raises(ProgrammingError):
+        cur.execute("SELECT * FROM $planets WHERE id = ?", experimental=True)
+    with pytest.raises(ProgrammingError):
+        cur.execute(
+            "SELECT * FROM $planets WHERE id = ? AND name = ?", [1], experimental=True
+        )
+    with pytest.raises(ProgrammingError):
+        cur.execute(
+            "SELECT * FROM $planets WHERE id = ? AND name = ?", (1,), experimental=True
+        )
+    with pytest.raises(ProgrammingError):
+        cur.execute("SELECT * FROM $planets WHERE id = ?", (1, 2), experimental=True)
+
+
 if __name__ == "__main__":  # pragma: no cover
 
     test_connection_invalid_state()
     test_connection_warnings()
+    test_connection_parameter_mismatch()
 
     print("✅ okay")

@@ -10,13 +10,13 @@ th {
     margin-left: 0.8em !important;
     margin-right: 0.8em !important;
     font-weight: 600 !important;
-    color: #333;
+    color: #4b4b4b;
     background-color: #edf1fd;
     font-size: 1.3em !important;
 }
 
 strong {
-    color: #333;
+    color: #4b4b4b;
 }
 
 td {
@@ -31,7 +31,7 @@ td {
 code {
     font-family: Menlo, 'Robot Mono', 'JetBrains Mono', sans-serif;
     font-size: 0.9em !important;
-    color: #D63384 !important;
+    color: #d83790 !important;
     font-weight: 300;
     word-wrap: break-word;
     white-space:pre-wrap;
@@ -59,25 +59,25 @@ h1 {
     font-weight: 500 !important;
     font-size: 2.2em !important;
     margin-bottom: 0.7em !important;
-    color: #333 !important;
+    color: #4b4b4b !important;
 }
 
 h2 {
     font-family: Inter, 'IBM Plex Sans', sans-serif;
     font-weight: 500 !important;
-    font-size: 1.5em !important;
+    font-size: 1.7em !important;
     margin-bottom: 0.7em !important;
     margin-top: 0.5em !important;
-    color: #333 !important;
+    color: #11595c !important;
 }
 
 h3 {
     font-family: Inter, 'IBM Plex Sans', sans-serif;
-    font-weight: 600 !important;
-    font-size: 1.2em !important;
-    margin-bottom: 0.7em !important;
+    font-weight: 400 !important;
+    font-size: 1.4em !important;
+    margin-bottom: 0em !important;
     margin-top: 0.5em !important;
-    color: #333 !important;
+    color: #11595c !important;
 }
 
 h4 {
@@ -91,6 +91,14 @@ h4 {
 
 p>a {
     color: #2680eb !important;
+}
+
+li>a {
+    color: #2680eb !important;
+}
+
+strong {
+    color: #6e6e6e !important;
 }
 
 .admonition {
@@ -140,8 +148,9 @@ p>a {
 
 .md-nav__link {
     font-size: 0.9em;
+    color: #6e6e6e !important;
 }
 
 .md-nav__link--active {
-    color: #D63384 !important;
+    color: #d83790 !important;
 }

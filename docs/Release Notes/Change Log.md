@@ -14,17 +14,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - ⚠️**BREAKING** `SHOW COLUMNS` returns the column name in the `name` column, previously `column_name` ([@joocer](https://github.com/joocer))  
 - ⚠️**BREAKING** (correction) cursor 'fetch*' methods returns tuples rather than dictionaries as defaults, this is correcting a bug in [PEP249](https://peps.python.org/pep-0249/) compatibility. ([@joocer](https://github.com/joocer))  
+- ⚠️**BREAKING** (security) [[#517](https://github.com/mabel-dev/opteryx/issues/517)] Placeholder changed from '%s' to '?'. ([@joocer](https://github.com/joocer))  
+- [[#522](https://github.com/mabel-dev/opteryx/issues/522)] Implementation of LRU-K(2) for cache evictions. ([@joocer](https://github.com/joocer))  
 
 **Added**
 
 - [[#397](https://github.com/mabel-dev/opteryx/issues/397)] Time Travel with '$planets' dataset. ([@joocer](https://github.com/joocer))  
-- [[#519](https://github.com/mabel-dev/opteryx/issues/519)] Introduce a size limit on `to_arrow()`. ([@joocer](https://github.com/joocer))  
-- [[#522](https://github.com/mabel-dev/opteryx/issues/522)] Implementation of LRU-K(2) for cache evictions. ([@joocer](https://github.com/joocer))  
+- [[#519](https://github.com/mabel-dev/opteryx/issues/519)] Introduce a size limit on `as_arrow()`. ([@joocer](https://github.com/joocer))  
 - [[#324](https://github.com/mabel-dev/opteryx/issues/324)] Support `IN UNNEST()`. ([@joocer](https://github.com/joocer))  
 - [[#386](https://github.com/mabel-dev/opteryx/issues/386)] Support `SET` statements. ([@joocer](https://github.com/joocer))  
 - [[#531](https://github.com/mabel-dev/opteryx/issues/531)] Support `SHOW VARIABLES` and `SHOW PARAMETERS`. ([@joocer](https://github.com/joocer))  
 - [[#464](https://github.com/mabel-dev/opteryx/issues/464)] Support `LEFT JOIN USING` ([@joocer](https://github.com/joocer))  
-- [[#402](https://github.com/mabel-dev/opteryx/issues/402)] `JOIN` with expressions should support multiple conditions ([@joocer](https://github.com/joocer))  
+- [[#402](https://github.com/mabel-dev/opteryx/issues/402)] `INNER JOIN ON` supports multiple conditions ([@joocer](https://github.com/joocer))  
 
 
 ## [0.4.1] - 2022-09-12

@@ -24,7 +24,7 @@ __author__: str = "@joocer"
 
 apilevel = "1.0"  # pylint: disable=C0103
 threadsafety = 0  # pylint: disable=C0103
-paramstyle = "format"  # pylint: disable=C0103
+paramstyle = "qmark"  # pylint: disable=C0103
 
 
 def connect(*args, **kwargs):
