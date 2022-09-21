@@ -89,3 +89,26 @@ def literal_interval(branch, alias: list = None):
     #    interval = numpy.timedelta64(nano, 'us')
 
     return ExpressionTreeNode(NodeType.LITERAL_INTERVAL, value=interval, alias=alias)
+
+
+# parts to build the literal parts of a query
+LITERAL_BUILDERS = {
+    "Boolean": literal_boolean,
+    "DoubleQuotedString": literal_string,
+    "Interval": literal_interval,
+    "Null": literal_null,
+    "Number": literal_number,
+    "SingleQuotedString": literal_string,
+}
+
+
+def build(value, alias: list = None):
+    """
+    Extract values from a value node in the AST and create a ExpressionNode for it
+
+    More of the builders will be migrated to this approach to keep the code
+    more succinct and easier to read.
+    """
+    if value == "Null":
+        return LITERAL_BUILDERS["Null"](value)  # type:ignore
+    return LITERAL_BUILDERS[list(value.keys())[0]](value, alias)  # type:ignore

@@ -38,50 +38,29 @@ import pyarrow
 
 from opteryx import operators, functions
 from opteryx.connectors import connector_factory
-from opteryx.exceptions import SqlError
+from opteryx.exceptions import SqlError, UnsupportedSyntaxError
 from opteryx.functions.binary_operators import BINARY_OPERATORS
 from opteryx.managers.expression import ExpressionTreeNode
 from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.managers.expression import NodeType
 
-from opteryx.managers.planner.logical import builders_literals
-from opteryx.managers.planner.logical import builders_queries
+
+from opteryx.managers.planner.logical import queries
 
 from opteryx.models import Columns, ExecutionTree, QueryProperties
 from opteryx.utils import fuzzy_search
 
-# wrappers for the query builders
-QUERY_BUILDER = {
-    "Explain": builders_queries.explain_query,
-    "Query": builders_queries.select_query,
-    "SetVariable": builders_queries.set_variable_query,
-    "ShowColumns": builders_queries.show_columns_query,
-    "ShowCreate": builders_queries.show_create_query,
-    "ShowVariable": builders_queries.show_variable_query,  # generic SHOW handler
-    "ShowVariables": builders_queries.show_variables_query,
-}
 
-# parts to build the literal parts of a query
-LITERAL_BUILDER = {
-    "Boolean": builders_literals.literal_boolean,
-    "DoubleQuotedString": builders_literals.literal_string,
-    "Interval": builders_literals.literal_interval,
-    "Null": builders_literals.literal_null,
-    "Number": builders_literals.literal_number,
-    "SingleQuotedString": builders_literals.literal_string,
-}
+def create_plan(ast, properties):
 
-
-def _build_literal_node(value, alias: list = None):
-    """
-    Extract values from a value node in the AST and create a ExpressionNode for it
-
-    More of the builders will be migrated to this approach to keep the code
-    more succinct and easier to read.
-    """
-    if value == "Null":
-        return LITERAL_BUILDER["Null"](value)  # type:ignore
-    return LITERAL_BUILDER[list(value.keys())[0]](value, alias)  # type:ignore
+    last_query = None
+    for query in ast:
+        query_type = next(iter(query))
+        builder = queries.QUERY_BUILDER.get(query_type)
+        if builder is None:
+            raise UnsupportedSyntaxError(f"Statement not supported `{query_type}`")
+        last_query = builder(query, properties)
+    return last_query
 
 
 def _check_hints(self, hints):

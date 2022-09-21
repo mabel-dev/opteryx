@@ -70,7 +70,7 @@ class SqlError(ProgrammingError):
     pass
 
 
-class DatasetNotFoundError(SqlError):
+class DatasetNotFoundError(ProgrammingError):
     pass
 
 
@@ -78,5 +78,9 @@ class CursorInvalidStateError(ProgrammingError):
     pass
 
 
-class ColumnNotFoundError(SqlError):
+class ColumnNotFoundError(ProgrammingError):
+    pass
+
+
+class UnsupportedSyntaxError(ProgrammingError):
     pass

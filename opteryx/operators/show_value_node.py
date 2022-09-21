@@ -24,7 +24,7 @@ from opteryx.operators import BasePlanNode
 
 class ShowValueNode(BasePlanNode):
     def __init__(
-        self, properties: QueryProperties, statistics: QueryStatistics, **config
+        self, properties: QueryProperties, statistics: QueryStatistics = None, **config
     ):
         super().__init__(properties=properties, statistics=statistics)
         self._key = config.get("key")
