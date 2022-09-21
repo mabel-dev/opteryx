@@ -34,7 +34,7 @@ from opteryx.utils.arrow import consolidate_pages
 
 class SelectionNode(BasePlanNode):
     def __init__(
-        self, properties: QueryProperties, statistics: QueryStatistics, **config
+        self, properties: QueryProperties, statistics: QueryStatistics = None, **config
     ):
         super().__init__(properties=properties, statistics=statistics)
         self._filter = config.get("filter")

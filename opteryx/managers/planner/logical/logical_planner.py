@@ -47,7 +47,7 @@ from opteryx.managers.expression import NodeType
 
 from opteryx.managers.planner.logical import queries
 
-from opteryx.models import Columns, ExecutionTree, QueryProperties
+from opteryx.models import Columns
 from opteryx.utils import fuzzy_search
 
 
@@ -631,24 +631,6 @@ def _show_columns_planner(self, ast, statistics):
     last_node = "columns"
 
 
-def _set_variable_planner(self, ast, statistics):
-    """put variables defined in SET statements into context"""
-    key = ast["SetVariable"]["variable"][0]["value"]
-    value = self._build_literal_node(ast["SetVariable"]["value"][0]["Value"])
-    if key[0] == "@":  # pragma: no cover
-        self.properties.variables[key] = value
-    else:
-        key = key.lower()
-        if key in ("variables"):
-            raise SqlError(f"Invalid parameter '{key}'")
-        if hasattr(self.properties, key):
-            setattr(self.properties, key, value.value)
-        else:
-            raise SqlError(
-                f"Unknown parameter, variables must be prefixed with a '@' - '{key}'"
-            )
-
-
 def _show_create_planner(self, ast, statistics):
 
     if ast["ShowCreate"]["obj_type"] != "Table":
@@ -734,7 +716,7 @@ def _show_variable_planner(self, ast, statistics):
             raise SqlError(f"Unknown parameter '{key}'.")
         value = getattr(self.properties, key)
 
-        show_node = "show_paramter"
+        show_node = "show_parameter"
         node = operators.ShowValueNode(
             properties=self.properties, statistics=statistics, key=key, value=value
         )
@@ -751,25 +733,6 @@ def _show_variable_planner(self, ast, statistics):
     )
     self.add_operator("order", operator=order_by_node)
     self.link_operators(show_node, "order")
-
-
-def _show_variables_planner(self, ast, statistics):
-    show = operators.ShowVariablesNode(
-        properties=self.properties, statistics=statistics
-    )
-    self.add_operator("show", show)
-    last_node = "show"
-
-    filters = self._extract_filter(ast["ShowVariables"])
-    if filters:
-        self.add_operator(
-            "filter",
-            operators.SelectionNode(
-                properties=self.properties, statistics=statistics, filter=filters
-            ),
-        )
-        self.link_operators(last_node, "filter")
-        last_node = "filter"
 
 
 def _naive_select_planner(self, ast, statistics):
@@ -996,32 +959,3 @@ def explain(self):
     table = pyarrow.Table.from_pylist(plan)
     table = Columns.create_table_metadata(table, table.num_rows, "plan", None)
     yield table
-
-
-#    def __repr__(self):
-#        return "\n".join(list(self._draw()))
-
-
-def _inner(self, nodes):
-    for node in nodes:
-        producers = self.get_incoming_links(node)
-
-        # print(node, producers)
-        operator = self.get_operator(node)
-        if producers:
-            operator.set_producers([self.get_operator(i[0]) for i in producers])
-            self._inner(i[0] for i in producers)
-
-
-def execute(self):
-    # we get the tail of the query - the first steps
-    head = list(set(self.get_exit_points()))
-    # print(head, self._edges)
-    if len(head) != 1:
-        raise SqlError(
-            f"Problem with the plan - it has {len(head)} heads, this is quite unexpected."
-        )
-    self._inner(head)
-
-    operator = self.get_operator(head[0])
-    yield from operator.execute()

@@ -21,7 +21,7 @@ class BasePlanNode(abc.ABC):
     _producers = None
 
     def __init__(
-        self, properties: QueryProperties, statistics: QueryStatistics, **config
+        self, properties: QueryProperties, statistics: QueryStatistics = None, **config
     ):
         """
         This is the base class for nodes in the execution plan.

@@ -62,8 +62,23 @@ def show_variable_query():
     pass
 
 
-def show_variables_query():
-    pass
+def show_variables_query(ast, properties):
+    """show the known variables, optionally filter them"""
+    plan = ExecutionTree()
+
+    show = operators.ShowVariablesNode(properties=properties)
+    plan.add_operator("show", show)
+    last_node = "show"
+
+    filters = None  # self._extract_filter(ast["ShowVariables"])
+    if filters:
+        plan.add_operator(
+            "filter",
+            operators.SelectionNode(properties=properties, filter=filters),
+        )
+        plan.link_operators(last_node, "filter")
+
+    return plan
 
 
 # wrappers for the query builders
