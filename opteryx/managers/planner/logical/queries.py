@@ -11,7 +11,7 @@
 # limitations under the License.
 
 from opteryx.exceptions import SqlError
-from opteryx.managers.planner.logical import literals
+from opteryx.managers.planner.logical import builders
 from opteryx.models import ExecutionTree
 from opteryx import operators
 
@@ -20,14 +20,14 @@ def explain_query():
     pass
 
 
-def select_query():
+def select_query(ast, properties):
     pass
 
 
 def set_variable_query(ast, properties):
     """put variables defined in SET statements into context"""
     key = ast["SetVariable"]["variable"][0]["value"]
-    value = literals.build(ast["SetVariable"]["value"][0]["Value"])
+    value = builders.build(ast["SetVariable"]["value"][0]["Value"])
     if key[0] == "@":  # pragma: no cover
         properties.variables[key] = value
     else:
@@ -70,7 +70,7 @@ def show_variables_query(ast, properties):
     plan.add_operator("show", show)
     last_node = "show"
 
-    filters = None  # self._extract_filter(ast["ShowVariables"])
+    filters = builders.build(ast["ShowVariables"])
     if filters:
         plan.add_operator(
             "filter",

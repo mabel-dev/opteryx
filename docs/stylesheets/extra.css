@@ -43,6 +43,7 @@ pre > code {
     background-color: #faf7fd !important;
     font-size: 1em !important;
     padding: 1em !important;
+    color: #822156 !important;
 }
 
 body {
@@ -153,4 +154,29 @@ strong {
 
 .md-nav__link--active {
     color: #d83790 !important;
+}
+
+.k {
+    color: #006699 !important;
+    font-weight: 700 !important;
+}
+
+.s1 {
+    color: #dd3300 !important;
+}
+
+.err {
+    color: #555555 !important;
+}
+
+.n {
+    color: #555555 !important;
+}
+
+.mi {
+    color: #FF6600 !important;
+}
+
+.p {
+    color: #998000 !important;
 }

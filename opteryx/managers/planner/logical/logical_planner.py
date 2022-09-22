@@ -31,15 +31,13 @@ The effective order of operations must be:
 
 So we just build it in that order.
 """
-import datetime
-
 import numpy
 import pyarrow
 
-from opteryx import operators, functions
+from opteryx import operators
 from opteryx.connectors import connector_factory
 from opteryx.exceptions import SqlError, UnsupportedSyntaxError
-from opteryx.functions.binary_operators import BINARY_OPERATORS
+
 from opteryx.managers.expression import ExpressionTreeNode
 from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.managers.expression import NodeType
@@ -48,7 +46,6 @@ from opteryx.managers.expression import NodeType
 from opteryx.managers.planner.logical import queries
 
 from opteryx.models import Columns
-from opteryx.utils import fuzzy_search
 
 
 def create_plan(ast, properties):
@@ -187,189 +184,7 @@ def _extract_joins(self, ast):
 
 
 def _filter_extract(self, function):
-    alias = []
 
-    if function is None:
-        return None
-
-    if function == "Wildcard":
-        return ExpressionTreeNode(NodeType.WILDCARD)
-
-    # get any alias information for a field (usually means we're in a SELECT clause)
-    if "UnnamedExpr" in function:
-        return self._filter_extract(function["UnnamedExpr"])
-    if "ExprWithAlias" in function:
-        alias = [function["ExprWithAlias"]["alias"]["value"]]
-        function = function["ExprWithAlias"]["expr"]
-    if "QualifiedWildcard" in function:
-        return ExpressionTreeNode(
-            NodeType.WILDCARD, value=function["QualifiedWildcard"][0]["value"]
-        )
-    if "Unnamed" in function:
-        return self._filter_extract(function["Unnamed"])
-    if "Expr" in function:
-        return self._filter_extract(function["Expr"])
-
-    if "Identifier" in function:
-        token_name = function["Identifier"]["value"]
-        if token_name[0] == "@":
-            if token_name not in self.properties.variables:  # pragma: no cover
-                raise SqlError(f"Undefined variable found in query `{token_name}`.")
-            return self.properties.variables.get(token_name)
-        else:
-            return ExpressionTreeNode(
-                token_type=NodeType.IDENTIFIER,
-                value=token_name,
-                alias=alias,
-            )
-    if "CompoundIdentifier" in function:
-        return ExpressionTreeNode(
-            token_type=NodeType.IDENTIFIER,
-            value=".".join(p["value"] for p in function["CompoundIdentifier"]),
-            alias=".".join(p["value"] for p in function["CompoundIdentifier"]),
-        )
-    if "Function" in function:
-        func = function["Function"]["name"][0]["value"].upper()
-        args = [self._filter_extract(a) for a in function["Function"]["args"]]
-        if functions.is_function(func):
-            node_type = NodeType.FUNCTION
-        elif operators.is_aggregator(func):
-            node_type = NodeType.AGGREGATOR
-        else:
-            likely_match = fuzzy_search(
-                func, operators.aggregators() + functions.functions()
-            )
-            if likely_match is None:
-                raise SqlError(f"Unknown function or aggregate '{func}'")
-            raise SqlError(
-                f"Unknown function or aggregate '{func}'. Did you mean '{likely_match}'?"
-            )
-
-        return ExpressionTreeNode(
-            token_type=node_type, value=func, parameters=args, alias=alias
-        )
-    if "BinaryOp" in function:
-        left = self._filter_extract(function["BinaryOp"]["left"])
-        operator = function["BinaryOp"]["op"]
-        right = self._filter_extract(function["BinaryOp"]["right"])
-
-        operator_type = NodeType.COMPARISON_OPERATOR
-        if operator in BINARY_OPERATORS:
-            operator_type = NodeType.BINARY_OPERATOR
-        if operator == "And":
-            operator_type = NodeType.AND
-        if operator == "Or":
-            operator_type = NodeType.OR
-        if operator == "Xor":
-            operator_type = NodeType.XOR
-
-        return ExpressionTreeNode(
-            operator_type,
-            value=operator,
-            left_node=left,
-            right_node=right,
-            alias=alias,
-        )
-    if "Cast" in function:
-        # CAST(<var> AS <type>) - convert to the form <type>(var), e.g. BOOLEAN(on)
-        args = [self._filter_extract(function["Cast"]["expr"])]
-        data_type = function["Cast"]["data_type"]
-        if data_type == "Timestamp":
-            data_type = "TIMESTAMP"
-        elif "Varchar" in data_type:
-            data_type = "VARCHAR"
-        elif "Decimal" in data_type:
-            data_type = "NUMERIC"
-        elif "Boolean" in data_type:
-            data_type = "BOOLEAN"
-        else:
-            raise SqlError(f"Unsupported type for CAST  - '{data_type}'")
-
-        alias.append(f"CAST({args[0].value} AS {data_type})")
-
-        return ExpressionTreeNode(
-            NodeType.FUNCTION,
-            value=data_type.upper(),
-            parameters=args,
-            alias=alias,
-        )
-
-    try_caster = list(function.keys())[0]
-    if try_caster in ("TryCast", "SafeCast"):
-        # CAST(<var> AS <type>) - convert to the form <type>(var), e.g. BOOLEAN(on)
-        args = [self._filter_extract(function[try_caster]["expr"])]
-        data_type = function[try_caster]["data_type"]
-        try_caster = try_caster.replace("Cast", "_Cast").upper()
-        if data_type == "Timestamp":
-            data_type = "TIMESTAMP"
-        elif "Varchar" in data_type:
-            data_type = "VARCHAR"
-        elif "Decimal" in data_type:
-            data_type = "NUMERIC"
-        elif "Boolean" in data_type:
-            data_type = "BOOLEAN"
-        else:
-            raise SqlError(f"Unsupported type for {try_caster}  - '{data_type}'")
-
-        alias.append(f"{try_caster}({args[0].value} AS {data_type})")
-
-        return ExpressionTreeNode(
-            NodeType.FUNCTION,
-            value=f"TRY_{data_type.upper()}",
-            parameters=args,
-            alias=alias,
-        )
-
-    if "Extract" in function:
-        # EXTRACT(part FROM timestamp)
-        datepart = ExpressionTreeNode(
-            NodeType.LITERAL_VARCHAR, value=function["Extract"]["field"]
-        )
-        value = self._filter_extract(function["Extract"]["expr"])
-
-        alias.append(f"EXTRACT({datepart.value} FROM {value.value})")
-        alias.append(f"DATEPART({datepart.value}, {value.value}")
-
-        return ExpressionTreeNode(
-            NodeType.FUNCTION,
-            value="DATEPART",
-            parameters=[datepart, value],
-            alias=alias,
-        )
-
-    if "MapAccess" in function:
-        # Identifier[key] -> GET(Identifier, key) -> alias of I[k] or alias
-        identifier = function["MapAccess"]["column"]["Identifier"]["value"]
-        key_dict = function["MapAccess"]["keys"][0]["Value"]
-        if "SingleQuotedString" in key_dict:
-            key = key_dict["SingleQuotedString"]
-            key_node = ExpressionTreeNode(NodeType.LITERAL_VARCHAR, value=key)
-        if "Number" in key_dict:
-            key = key_dict["Number"][0]
-            key_node = ExpressionTreeNode(NodeType.LITERAL_NUMERIC, value=key)
-        alias.append(f"{identifier}[{key}]")
-
-        identifier_node = ExpressionTreeNode(NodeType.IDENTIFIER, value=identifier)
-        return ExpressionTreeNode(
-            NodeType.FUNCTION,
-            value="GET",
-            parameters=[identifier_node, key_node],
-            alias=alias,
-        )
-    if "Value" in function:
-        return self._build_literal_node(function["Value"], alias)
-
-    if "UnaryOp" in function:
-        if function["UnaryOp"]["op"] == "Not":
-            right = self._filter_extract(function["UnaryOp"]["expr"])
-            return ExpressionTreeNode(token_type=NodeType.NOT, centre_node=right)
-        if function["UnaryOp"]["op"] == "Minus":
-            number = 0 - numpy.float64(
-                function["UnaryOp"]["expr"]["Value"]["Number"][0]
-            )
-            return ExpressionTreeNode(
-                NodeType.LITERAL_NUMERIC, value=number, alias=alias
-            )
     if "Between" in function:
         expr = self._filter_extract(function["Between"]["expr"])
         low = self._filter_extract(function["Between"]["low"])
@@ -513,25 +328,6 @@ def _extract_selection(self, ast):
     """
     selections = ast["Query"]["body"]["Select"]["selection"]
     return self._filter_extract(selections)
-
-
-def _extract_filter(self, ast):
-    """filters are used in SHOW queries"""
-    filters = ast["filter"]
-    if filters is None:
-        return None
-    if "Where" in filters:
-        return self._filter_extract(filters["Where"])
-    if "Like" in filters:
-        left = ExpressionTreeNode(NodeType.IDENTIFIER, value="name")
-        right = ExpressionTreeNode(NodeType.LITERAL_VARCHAR, value=filters["Like"])
-        root = ExpressionTreeNode(
-            NodeType.COMPARISON_OPERATOR,
-            value="Like",
-            left_node=left,
-            right_node=right,
-        )
-        return root
 
 
 def _extract_distinct(self, ast):
