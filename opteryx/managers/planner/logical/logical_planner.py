@@ -31,7 +31,6 @@ The effective order of operations must be:
 
 So we just build it in that order.
 """
-import numpy
 import pyarrow
 
 from opteryx import operators
@@ -43,7 +42,7 @@ from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.managers.expression import NodeType
 
 
-from opteryx.managers.planner.logical import queries
+from opteryx.managers.planner.logical import builders, queries
 
 from opteryx.models import Columns
 
@@ -60,7 +59,7 @@ def create_plan(ast, properties):
     return last_query
 
 
-def _check_hints(self, hints):
+def _check_hints(hints):
 
     from opteryx.third_party.mbleven import compare
 
@@ -83,14 +82,14 @@ def _check_hints(self, hints):
                     best_match_hint = known_hint
 
             if best_match_hint:
-                self._statistics.warn(
+                _statistics.warn(
                     f"Hint `{hint}` is not recognized, did you mean `{best_match_hint}`?"
                 )
             else:
-                self._statistics.warn(f"Hint `{hint}` is not recognized.")
+                _statistics.warn(f"Hint `{hint}` is not recognized.")
 
 
-def _extract_relations(self, ast, default_path: bool = True):
+def _extract_relations(ast, default_path: bool = True):
     """ """
     relations = ast
     if default_path:
@@ -108,7 +107,7 @@ def _extract_relations(self, ast, default_path: bool = True):
                 if relation["relation"]["Table"]["alias"] is not None:
                     alias = relation["relation"]["Table"]["alias"]["name"]["value"]
                 args = [
-                    self._filter_extract(a["Unnamed"])
+                    builders.build(a["Unnamed"])
                     for a in relation["relation"]["Table"]["args"]
                 ]
                 yield (alias, {"function": function, "args": args}, "Function", [])
@@ -123,7 +122,7 @@ def _extract_relations(self, ast, default_path: bool = True):
                         for hint in relation["relation"]["Table"]["with_hints"]
                     ]
                     # hint checks
-                    self._check_hints(hints)
+                    _check_hints(hints)
                 dataset = ".".join(
                     [part["value"] for part in relation["relation"]["Table"]["name"]]
                 )
@@ -141,7 +140,7 @@ def _extract_relations(self, ast, default_path: bool = True):
             if "Select" in subquery:
                 ast = {}
                 ast["Query"] = relation["relation"]["Derived"]["subquery"]
-                subquery_plan = self.copy()
+                subquery_plan = copy()
                 subquery_plan.create_plan(ast=[ast])
 
                 yield (alias, subquery_plan, "SubQuery", [])
@@ -152,14 +151,12 @@ def _extract_relations(self, ast, default_path: bool = True):
                     for h in relation["relation"]["Derived"]["alias"]["columns"]
                 ]
                 for value_set in subquery["Values"]:
-                    values = [
-                        self._build_literal_node(v["Value"]).value for v in value_set
-                    ]
+                    values = [builders.build(v["Value"]).value for v in value_set]
                     body.append(dict(zip(headers, values)))
                 yield (alias, {"function": "values", "args": body}, "Function", [])
 
 
-def _extract_joins(self, ast):
+def _extract_joins(ast):
     try:
         joins = ast["Query"]["body"]["Select"]["from"][0]["joins"]
     except IndexError:
@@ -177,183 +174,36 @@ def _extract_joins(self, ast):
                     for v in join["join_operator"][join_mode].get("Using", [])
                 ]
             if "On" in join["join_operator"][join_mode]:
-                join_on = self._filter_extract(join["join_operator"][join_mode]["On"])
+                join_on = builders.build(join["join_operator"][join_mode]["On"])
 
-        right = next(self._extract_relations([join], default_path=False))
+        right = next(builders.build([join]))
         yield (join_mode, right, join_on, join_using)
 
 
-def _filter_extract(self, function):
-
-    if "Between" in function:
-        expr = self._filter_extract(function["Between"]["expr"])
-        low = self._filter_extract(function["Between"]["low"])
-        high = self._filter_extract(function["Between"]["high"])
-        inverted = function["Between"]["negated"]
-
-        if inverted:
-            # LEFT <= LOW AND LEFT >= HIGH (not between)
-            left_node = ExpressionTreeNode(
-                NodeType.COMPARISON_OPERATOR,
-                value="Lt",
-                left_node=expr,
-                right_node=low,
-            )
-            right_node = ExpressionTreeNode(
-                NodeType.COMPARISON_OPERATOR,
-                value="Gt",
-                left_node=expr,
-                right_node=high,
-            )
-
-            return ExpressionTreeNode(
-                NodeType.OR, left_node=left_node, right_node=right_node
-            )
-        else:
-            # LEFT > LOW and LEFT < HIGH (between)
-            left_node = ExpressionTreeNode(
-                NodeType.COMPARISON_OPERATOR,
-                value="GtEq",
-                left_node=expr,
-                right_node=low,
-            )
-            right_node = ExpressionTreeNode(
-                NodeType.COMPARISON_OPERATOR,
-                value="LtEq",
-                left_node=expr,
-                right_node=high,
-            )
-
-            return ExpressionTreeNode(
-                NodeType.AND, left_node=left_node, right_node=right_node
-            )
-
-    if "InSubquery" in function:
-        # if it's a sub-query we create a plan for it
-        left = self._filter_extract(function["InSubquery"]["expr"])
-        ast = {}
-        ast["Query"] = function["InSubquery"]["subquery"]
-        subquery_plan = self.copy()
-        subquery_plan.create_plan(ast=[ast])
-        operator = "NotInList" if function["InSubquery"]["negated"] else "InList"
-
-        sub_query = ExpressionTreeNode(NodeType.SUBQUERY, value=subquery_plan)
-        return ExpressionTreeNode(
-            NodeType.COMPARISON_OPERATOR,
-            value=operator,
-            left_node=left,
-            right_node=sub_query,
-        )
-    try_filter = list(function.keys())[0]
-    if try_filter in ("IsTrue", "IsFalse", "IsNull", "IsNotNull"):
-        centre = self._filter_extract(function[try_filter])
-        return ExpressionTreeNode(
-            NodeType.UNARY_OPERATOR, value=try_filter, centre_node=centre
-        )
-    if try_filter in ("Like", "SimilarTo", "ILike"):
-        negated = function[try_filter]["negated"]
-        left = self._filter_extract(function[try_filter]["expr"])
-        right = self._filter_extract(function[try_filter]["pattern"])
-        if negated:
-            try_filter = f"Not{try_filter}"
-        return ExpressionTreeNode(
-            NodeType.COMPARISON_OPERATOR,
-            value=try_filter,
-            left_node=left,
-            right_node=right,
-        )
-    if "InList" in function:
-        left_node = self._filter_extract(function["InList"]["expr"])
-        list_values = {
-            self._filter_extract(v).value for v in function["InList"]["list"]
-        }
-        operator = "NotInList" if function["InList"]["negated"] else "InList"
-        right_node = ExpressionTreeNode(
-            token_type=NodeType.LITERAL_LIST, value=list_values
-        )
-        return ExpressionTreeNode(
-            token_type=NodeType.COMPARISON_OPERATOR,
-            value=operator,
-            left_node=left_node,
-            right_node=right_node,
-        )
-    if "InUnnest" in function:
-        left_node = self._filter_extract(function["InUnnest"]["expr"])
-        operator = "NotContains" if function["InUnnest"]["negated"] else "Contains"
-        right_node = self._filter_extract(function["InUnnest"]["array_expr"])
-        return ExpressionTreeNode(
-            token_type=NodeType.COMPARISON_OPERATOR,
-            value=operator,
-            left_node=left_node,
-            right_node=right_node,
-        )
-
-    if "Nested" in function:
-        return ExpressionTreeNode(
-            token_type=NodeType.NESTED,
-            centre_node=self._filter_extract(function["Nested"]),
-        )
-
-    if "Tuple" in function:
-        return ExpressionTreeNode(
-            NodeType.LITERAL_LIST,
-            value=[
-                self._build_literal_node(t["Value"]).value for t in function["Tuple"]
-            ],
-            alias=alias,
-        )
-
-    raise SqlError(
-        f"Unknown or unsupported clauses in statement `{list(function.keys())}`"
-    )
-
-
-def _extract_field_list(self, projection):
-    """
-    Projections are lists of attributes, the most obvious one is in the SELECT
-    statement but they can exist elsewhere to limit the amount of data
-    processed at each step.
-    """
-    if projection == ["Wildcard"]:
-        return [ExpressionTreeNode(token_type=NodeType.WILDCARD)]
-
-    projection = [self._filter_extract(attribute) for attribute in projection]
-    return projection
-
-
-def _extract_selection(self, ast):
-    """
-    Although there is a SELECT statement in a SQL Query, Selection refers to the
-    filter or WHERE statement.
-    """
-    selections = ast["Query"]["body"]["Select"]["selection"]
-    return self._filter_extract(selections)
-
-
-def _extract_distinct(self, ast):
+def _extract_distinct(ast):
     return ast["Query"]["body"]["Select"]["distinct"]
 
 
-def _extract_limit(self, ast):
+def _extract_limit(ast):
     limit = ast["Query"].get("limit")
     if limit is not None:
         return int(limit["Value"]["Number"][0])
     return None
 
 
-def _extract_offset(self, ast):
+def _extract_offset(ast):
     offset = ast["Query"].get("offset")
     if offset is not None:
         return int(offset["value"]["Value"]["Number"][0])
     return None
 
 
-def _extract_order(self, ast):
+def _extract_order(ast):
     order = ast["Query"].get("order_by")
     if order is not None:
         orders = []
         for col in order:
-            column = self._extract_field_list([col["expr"]])
+            column = builders.build([col["expr"]])
             orders.append(
                 (
                     column,
@@ -363,21 +213,21 @@ def _extract_order(self, ast):
         return orders
 
 
-def _extract_having(self, ast):
+def _extract_having(ast):
     having = ast["Query"]["body"]["Select"]["having"]
-    return self._filter_extract(having)
+    return builders.build(having)
 
 
-def _explain_planner(self, ast, statistics):
-    explain_plan = self.copy()
+def _explain_planner(ast, statistics):
+    explain_plan = copy()
     explain_plan.create_plan(ast=[ast["Explain"]["statement"]])
     explain_node = operators.ExplainNode(
-        self.properties, statistics, query_plan=explain_plan
+        properties, statistics, query_plan=explain_plan
     )
-    self.add_operator("explain", explain_node)
+    add_operator("explain", explain_node)
 
 
-def _show_columns_planner(self, ast, statistics):
+def _show_columns_planner(ast, statistics):
 
     dataset = ".".join([part["value"] for part in ast["ShowColumns"]["table_name"]])
 
@@ -388,46 +238,46 @@ def _show_columns_planner(self, ast, statistics):
         reader = connector_factory(dataset)
         mode = reader.__mode__
 
-    self.add_operator(
+    add_operator(
         "reader",
         operators.reader_factory(mode)(
-            properties=self.properties,
+            properties=properties,
             statistics=statistics,
             dataset=dataset,
             alias=None,
             reader=reader,
             cache=None,  # never read from cache
-            start_date=self.start_date,
-            end_date=self.end_date,
+            start_date=start_date,
+            end_date=end_date,
         ),
     )
     last_node = "reader"
 
-    filters = self._extract_filter(ast["ShowColumns"])
+    filters = builders.build(ast["ShowColumns"])
     if filters:
-        self.add_operator(
+        add_operator(
             "filter",
             operators.ColumnFilterNode(
-                properties=self.properties, statistics=statistics, filter=filters
+                properties=properties, statistics=statistics, filter=filters
             ),
         )
-        self.link_operators(last_node, "filter")
+        link_operators(last_node, "filter")
         last_node = "filter"
 
-    self.add_operator(
+    add_operator(
         "columns",
         operators.ShowColumnsNode(
-            properties=self.properties,
+            properties=properties,
             statistics=statistics,
             full=ast["ShowColumns"]["full"],
             extended=ast["ShowColumns"]["extended"],
         ),
     )
-    self.link_operators(last_node, "columns")
+    link_operators(last_node, "columns")
     last_node = "columns"
 
 
-def _show_create_planner(self, ast, statistics):
+def _show_create_planner(ast, statistics):
 
     if ast["ShowCreate"]["obj_type"] != "Table":
         raise SqlError("SHOW CREATE only supports tables")
@@ -441,32 +291,32 @@ def _show_create_planner(self, ast, statistics):
         reader = connector_factory(dataset)
         mode = reader.__mode__
 
-    self.add_operator(
+    add_operator(
         "reader",
         operators.reader_factory(mode)(
-            properties=self.properties,
+            properties=properties,
             statistics=statistics,
             dataset=dataset,
             alias=None,
             reader=reader,
             cache=None,  # never read from cache
-            start_date=self.start_date,
-            end_date=self.end_date,
+            start_date=start_date,
+            end_date=end_date,
         ),
     )
     last_node = "reader"
 
-    self.add_operator(
+    add_operator(
         "show_create",
         operators.ShowCreateNode(
-            properties=self.properties, statistics=statistics, table=dataset
+            properties=properties, statistics=statistics, table=dataset
         ),
     )
-    self.link_operators(last_node, "show_create")
+    link_operators(last_node, "show_create")
     last_node = "show_create"
 
 
-def _extract_identifiers(self, ast):
+def _extract_identifiers(ast):
     identifiers = []
     if isinstance(ast, dict):
         for key, value in ast.items():
@@ -477,17 +327,17 @@ def _extract_identifiers(self, ast):
                     identifiers.append(item["value"])
             if key in ("QualifiedWildcard",):
                 identifiers.append("*")
-            identifiers.extend(self._extract_identifiers(value))
+            identifiers.extend(_extract_identifiers(value))
     if isinstance(ast, list):
         for item in ast:
             if item in ("Wildcard",):
                 identifiers.append("*")
-            identifiers.extend(self._extract_identifiers(item))
+            identifiers.extend(_extract_identifiers(item))
 
     return list(set(identifiers))
 
 
-def _show_variable_planner(self, ast, statistics):
+def _show_variable_planner(ast, statistics):
     """
     SHOW <variable> only really has a single node.
 
@@ -500,47 +350,47 @@ def _show_variable_planner(self, ast, statistics):
     if keywords[0] == "FUNCTIONS":
         show_node = "show_functions"
         node = operators.ShowFunctionsNode(
-            properties=self.properties,
+            properties=properties,
             statistics=statistics,
         )
-        self.add_operator(show_node, operator=node)
+        add_operator(show_node, operator=node)
     elif keywords[0] == "PARAMETER":
         if len(keywords) != 2:
             raise SqlError("`SHOW PARAMETER` expects a single parameter name.")
         key = keywords[1].lower()
-        if not hasattr(self.properties, key) or key == "variables":
+        if not hasattr(properties, key) or key == "variables":
             raise SqlError(f"Unknown parameter '{key}'.")
-        value = getattr(self.properties, key)
+        value = getattr(properties, key)
 
         show_node = "show_parameter"
         node = operators.ShowValueNode(
-            properties=self.properties, statistics=statistics, key=key, value=value
+            properties=properties, statistics=statistics, key=key, value=value
         )
-        self.add_operator(show_node, operator=node)
+        add_operator(show_node, operator=node)
     else:  # pragma: no cover
         raise SqlError(f"SHOW statement type not supported for `{keywords[0]}`.")
 
     name_column = ExpressionTreeNode(NodeType.IDENTIFIER, value="name")
 
     order_by_node = operators.SortNode(
-        properties=self.properties,
+        properties=properties,
         statistics=statistics,
         order=[([name_column], "ascending")],
     )
-    self.add_operator("order", operator=order_by_node)
-    self.link_operators(show_node, "order")
+    add_operator("order", operator=order_by_node)
+    link_operators(show_node, "order")
 
 
-def _naive_select_planner(self, ast, statistics):
+def _naive_select_planner(ast, statistics):
     """
     The planner creates the naive query plan.
 
     The goal here is to create a plan to respond to the user, it creates has
     no clever tricks to improve performance.
     """
-    all_identifiers = self._extract_identifiers(ast)
+    all_identifiers = _extract_identifiers(ast)
 
-    _relations = [r for r in self._extract_relations(ast)]
+    _relations = [r for r in _extract_relations(ast)]
     if len(_relations) == 0:
         _relations = [(None, "$no_table", "Internal", [])]
 
@@ -553,24 +403,24 @@ def _naive_select_planner(self, ast, statistics):
         reader = connector_factory(dataset)
         mode = reader.__mode__
 
-    self.add_operator(
+    add_operator(
         "from",
         operators.reader_factory(mode)(
-            properties=self.properties,
+            properties=properties,
             statistics=statistics,
             alias=alias,
             dataset=dataset,
             reader=reader,
-            cache=self._cache,
-            start_date=self.start_date,
-            end_date=self.end_date,
+            cache=_cache,
+            start_date=start_date,
+            end_date=end_date,
             hints=hints,
             selection=all_identifiers,
         ),
     )
     last_node = "from"
 
-    _joins = list(self._extract_joins(ast))
+    _joins = list(_extract_joins(ast))
     if len(_joins) == 0 and len(_relations) == 2:
         # If there's no explicit JOIN but the query has two relations, we
         # use a CROSS JOIN
@@ -598,14 +448,14 @@ def _naive_select_planner(self, ast, statistics):
 
                 # Otherwise, the right table needs to come from the Reader
                 right = operators.reader_factory(mode)(
-                    properties=self.properties,
+                    properties=properties,
                     statistics=statistics,
                     dataset=dataset,
                     alias=right[0],
                     reader=reader,
-                    cache=self._cache,
-                    start_date=self.start_date,
-                    end_date=self.end_date,
+                    cache=_cache,
+                    start_date=start_date,
+                    end_date=end_date,
                     hints=right[3],
                 )
 
@@ -613,34 +463,34 @@ def _naive_select_planner(self, ast, statistics):
             if join_node is None:
                 raise SqlError(f"Join type not supported - `{_join[0]}`")
 
-            self.add_operator(
+            add_operator(
                 f"join-{join_id}",
                 join_node(
-                    properties=self.properties,
+                    properties=properties,
                     statistics=statistics,
                     join_type=join_type,
                     join_on=join_on,
                     join_using=join_using,
                 ),
             )
-            self.link_operators(last_node, f"join-{join_id}")
+            link_operators(last_node, f"join-{join_id}")
 
-            self.add_operator(f"join-{join_id}-right", right)
-            self.link_operators(f"join-{join_id}-right", f"join-{join_id}", "right")
+            add_operator(f"join-{join_id}-right", right)
+            link_operators(f"join-{join_id}-right", f"join-{join_id}", "right")
 
             last_node = f"join-{join_id}"
 
-    _selection = self._extract_selection(ast)
+    _selection = builders.build(ast["Query"]["body"]["Select"]["selection"])
     if _selection:
-        self.add_operator(
+        add_operator(
             "where",
-            operators.SelectionNode(self.properties, statistics, filter=_selection),
+            operators.SelectionNode(properties, statistics, filter=_selection),
         )
-        self.link_operators(last_node, "where")
+        link_operators(last_node, "where")
         last_node = "where"
 
-    _projection = self._extract_field_list(ast["Query"]["body"]["Select"]["projection"])
-    _groups = self._extract_field_list(ast["Query"]["body"]["Select"]["group_by"])
+    _projection = _extract_field_list(ast["Query"]["body"]["Select"]["projection"])
+    _groups = _extract_field_list(ast["Query"]["body"]["Select"]["group_by"])
     if _groups or get_all_nodes_of_type(
         _projection, select_nodes=(NodeType.AGGREGATOR,)
     ):
@@ -658,86 +508,78 @@ def _naive_select_planner(self, ast, statistics):
                     NodeType.AGGREGATOR, value="COUNT", parameters=[wildcard]
                 )
             )
-        self.add_operator(
+        add_operator(
             "agg",
             operators.AggregateNode(
-                self.properties, statistics, aggregates=_aggregates, groups=_groups
+                properties, statistics, aggregates=_aggregates, groups=_groups
             ),
         )
-        self.link_operators(last_node, "agg")
+        link_operators(last_node, "agg")
         last_node = "agg"
 
-    _having = self._extract_having(ast)
+    _having = _extract_having(ast)
     if _having:
-        self.add_operator(
+        add_operator(
             "having",
-            operators.SelectionNode(self.properties, statistics, filter=_having),
+            operators.SelectionNode(properties, statistics, filter=_having),
         )
-        self.link_operators(last_node, "having")
+        link_operators(last_node, "having")
         last_node = "having"
 
-    _projection = self._extract_field_list(ast["Query"]["body"]["Select"]["projection"])
+    _projection = _extract_field_list(ast["Query"]["body"]["Select"]["projection"])
     # qualified wildcards have the qualifer in the value
     # e.g. SELECT table.* -> node.value = table
     if (_projection[0].token_type != NodeType.WILDCARD) or (
         _projection[0].value is not None
     ):
-        self.add_operator(
+        add_operator(
             "select",
-            operators.ProjectionNode(
-                self.properties, statistics, projection=_projection
-            ),
+            operators.ProjectionNode(properties, statistics, projection=_projection),
         )
-        self.link_operators(last_node, "select")
+        link_operators(last_node, "select")
         last_node = "select"
 
-    _distinct = self._extract_distinct(ast)
+    _distinct = _extract_distinct(ast)
     if _distinct:
-        self.add_operator(
-            "distinct", operators.DistinctNode(self.properties, statistics)
-        )
-        self.link_operators(last_node, "distinct")
+        add_operator("distinct", operators.DistinctNode(properties, statistics))
+        link_operators(last_node, "distinct")
         last_node = "distinct"
 
-    _order = self._extract_order(ast)
+    _order = _extract_order(ast)
     if _order:
-        self.add_operator(
-            "order", operators.SortNode(self.properties, statistics, order=_order)
-        )
-        self.link_operators(last_node, "order")
+        add_operator("order", operators.SortNode(properties, statistics, order=_order))
+        link_operators(last_node, "order")
         last_node = "order"
 
-    _offset = self._extract_offset(ast)
+    _offset = _extract_offset(ast)
     if _offset:
-        self.add_operator(
+        add_operator(
             "offset",
-            operators.OffsetNode(self.properties, statistics, offset=_offset),
+            operators.OffsetNode(properties, statistics, offset=_offset),
         )
-        self.link_operators(last_node, "offset")
+        link_operators(last_node, "offset")
         last_node = "offset"
 
-    _limit = self._extract_limit(ast)
+    _limit = _extract_limit(ast)
     # 0 limit is valid
     if _limit is not None:
-        self.add_operator(
-            "limit", operators.LimitNode(self.properties, statistics, limit=_limit)
-        )
-        self.link_operators(last_node, "limit")
+        add_operator("limit", operators.LimitNode(properties, statistics, limit=_limit))
+        link_operators(last_node, "limit")
         last_node = "limit"
 
 
 def explain(self):
     def _inner_explain(node, depth):
         if depth == 1:
-            operator = self.get_operator(node)
+            operator = get_operator(node)
             yield {
                 "operator": operator.name,
                 "config": operator.config,
                 "depth": depth - 1,
             }
-        incoming_operators = self.get_incoming_links(node)
+        incoming_operators = get_incoming_links(node)
         for operator_name in incoming_operators:
-            operator = self.get_operator(operator_name[0])
+            operator = get_operator(operator_name[0])
             if isinstance(operator, operators.BasePlanNode):
                 yield {
                     "operator": operator.name,
@@ -746,8 +588,8 @@ def explain(self):
                 }
             yield from _inner_explain(operator_name[0], depth + 1)
 
-    head = list(set(self.get_exit_points()))
-    # print(head, self._edges)
+    head = list(set(get_exit_points()))
+    # print(head, _edges)
     if len(head) != 1:
         raise SqlError(f"Problem with the plan - it has {len(head)} heads.")
     plan = list(_inner_explain(head[0], 1))

@@ -9,6 +9,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+"""
+This module contains various converters for parts of the AST, this 
+helps to ensure new AST-based functionality can be added by adding
+a function and a reference to it in the dictionary.
+"""
+
 import numpy
 import pyarrow
 
@@ -281,6 +288,127 @@ def unary_op(branch, alias=None, key=None):
         return ExpressionTreeNode(NodeType.LITERAL_NUMERIC, value=number, alias=alias)
 
 
+def between(branch, alias=None, key=None):
+    expr = build(branch["expr"])
+    low = build(branch["low"])
+    high = build(branch["high"])
+    inverted = branch["negated"]
+
+    if inverted:
+        # LEFT <= LOW AND LEFT >= HIGH (not between)
+        left_node = ExpressionTreeNode(
+            NodeType.COMPARISON_OPERATOR,
+            value="Lt",
+            left_node=expr,
+            right_node=low,
+        )
+        right_node = ExpressionTreeNode(
+            NodeType.COMPARISON_OPERATOR,
+            value="Gt",
+            left_node=expr,
+            right_node=high,
+        )
+
+        return ExpressionTreeNode(
+            NodeType.OR, left_node=left_node, right_node=right_node
+        )
+    else:
+        # LEFT > LOW and LEFT < HIGH (between)
+        left_node = ExpressionTreeNode(
+            NodeType.COMPARISON_OPERATOR,
+            value="GtEq",
+            left_node=expr,
+            right_node=low,
+        )
+        right_node = ExpressionTreeNode(
+            NodeType.COMPARISON_OPERATOR,
+            value="LtEq",
+            left_node=expr,
+            right_node=high,
+        )
+
+        return ExpressionTreeNode(
+            NodeType.AND, left_node=left_node, right_node=right_node
+        )
+
+
+def in_subquery(branch, alias=None, key=None):
+    # if it's a sub-query we create a plan for it
+    left = build(branch["expr"])
+    ast = {}
+    ast["Query"] = branch["subquery"]
+    subquery_plan = None  # this should be an empty plan
+    subquery_plan.create_plan(ast=[ast])
+    operator = "NotInList" if branch["negated"] else "InList"
+
+    sub_query = ExpressionTreeNode(NodeType.SUBQUERY, value=subquery_plan)
+    return ExpressionTreeNode(
+        NodeType.COMPARISON_OPERATOR,
+        value=operator,
+        left_node=left,
+        right_node=sub_query,
+    )
+
+
+def is_compare(branch, alias=None, key=None):
+    centre = build(branch[key])
+    return ExpressionTreeNode(NodeType.UNARY_OPERATOR, value=key, centre_node=centre)
+
+
+def pattern_match(branch, alias=None, key=None):
+    negated = branch["negated"]
+    left = build(branch["expr"])
+    right = build(branch["pattern"])
+    if negated:
+        try_filter = f"Not{try_filter}"
+    return ExpressionTreeNode(
+        NodeType.COMPARISON_OPERATOR,
+        value=try_filter,
+        left_node=left,
+        right_node=right,
+    )
+
+
+def in_list(branch, alias=None, key=None):
+    left_node = build(branch["expr"])
+    list_values = {build(v).value for v in branch["list"]}
+    operator = "NotInList" if branch["negated"] else "InList"
+    right_node = ExpressionTreeNode(token_type=NodeType.LITERAL_LIST, value=list_values)
+    return ExpressionTreeNode(
+        token_type=NodeType.COMPARISON_OPERATOR,
+        value=operator,
+        left_node=left_node,
+        right_node=right_node,
+    )
+
+
+def in_unnest(branch, alias=None, key=None):
+    left_node = build(branch["expr"])
+    operator = "NotContains" if branch["negated"] else "Contains"
+    right_node = build(branch["array_expr"])
+    return ExpressionTreeNode(
+        token_type=NodeType.COMPARISON_OPERATOR,
+        value=operator,
+        left_node=left_node,
+        right_node=right_node,
+    )
+
+
+def nested(branch, alias=None, key=None):
+    return ExpressionTreeNode(
+        token_type=NodeType.NESTED,
+        centre_node=build(branch),
+    )
+
+
+def tuple_literal(branch, alias=None, key=None):
+    return ExpressionTreeNode(
+        NodeType.LITERAL_LIST,
+        value=[build(t["Value"]).value for t in branch],
+        alias=alias,
+    )
+
+
 def unsupported(branch, alias=None):
     """raise an error"""
     raise SqlError(branch)
@@ -306,6 +434,7 @@ def build(value, alias: list = None):
 
 # parts to build the literal parts of a query
 BUILDERS = {
+    "Between": between,
     "BinaryOp": binary_op,
     "Boolean": literal_boolean,
     "Cast": cast,
@@ -316,13 +445,25 @@ BUILDERS = {
     "Extract": extract,
     "Function": function,
     "Identifier": identifier,
+    "ILike": pattern_match,
+    "InList": in_list,
+    "InSubquery": in_subquery,
     "Interval": literal_interval,
+    "InUnnest": in_unnest,
+    "IsFalse": is_compare,
+    "IsNotNull": is_compare,
+    "IsNull": is_compare,
+    "IsTrue": is_compare,
+    "Like": pattern_match,
     "MapAccess": map_access,
+    "Nested": nested,
     "Null": literal_null,
     "Number": literal_number,
     "QualifiedWildcard": qualified_wildcard,
     "SafeCast": try_cast,
     "SingleQuotedString": literal_string,
+    "SimilarTo": pattern_match,
+    "Tuple": tuple_literal,
     "TryCast": try_cast,
     "UnaryOp": unary_op,
     "Unnamed": build,
