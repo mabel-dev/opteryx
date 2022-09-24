@@ -354,10 +354,10 @@ def pattern_match(branch, alias=None, key=None):
     left = build(branch["expr"])
     right = build(branch["pattern"])
     if negated:
-        try_filter = f"Not{try_filter}"
+        key = f"Not{key}"
     return ExpressionTreeNode(
         NodeType.COMPARISON_OPERATOR,
-        value=try_filter,
+        value=key,
         left_node=left,
         right_node=right,
     )
@@ -418,13 +418,12 @@ def build(value, alias: list = None, key=None):
     ignored = ("filter",)
 
     if value in ("Null", "Wildcard"):
-        return [BUILDERS[value](value)]
+        return BUILDERS[value](value)
     if isinstance(value, dict):
-        return [
-            BUILDERS.get(key, unsupported)(value[key], alias, key)
-            for key in value.keys()
-            if key not in ignored
-        ]
+        key = next(iter(value))
+        if key in ignored:
+            return None
+        return BUILDERS.get(key, unsupported)(value[key], alias, key)
     if isinstance(value, list):
         return [build(item, alias) for item in value]
 

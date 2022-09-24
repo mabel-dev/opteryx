@@ -131,7 +131,7 @@ def select_query(ast, properties):
         plan.link_operators(last_node, "where")
         last_node = "where"
 
-    _projection = builders.build(ast["Query"]["body"]["Select"]["projection"])[0]
+    _projection = builders.build(ast["Query"]["body"]["Select"]["projection"])
     _groups = builders.build(ast["Query"]["body"]["Select"]["group_by"])
     if _groups or get_all_nodes_of_type(
         _projection, select_nodes=(NodeType.AGGREGATOR,)
