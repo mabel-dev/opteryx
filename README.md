@@ -101,8 +101,8 @@ For more example usage, see [Exmaple Notebooks](https://github.com/mabel-dev/opt
 
 ## Community
 
-[![gitter](https://img.shields.io/badge/chat-on%20gitter-ED1965.svg)](https://gitter.im/mabel-opteryx/community)
-![Twitter Follow](https://img.shields.io/twitter/follow/opteryxSQL?style=social)
+[![gitter](https://img.shields.io/badge/chat-on%20gitter-ED1965.svg?logo=gitter)](https://gitter.im/mabel-opteryx/community)
+[![Twitter Follow](https://img.shields.io/badge/follow-on%20twitter-1DA1F2.svg?logo=twitter)](https://img.shields.io/twitter/follow/OpteryxSQL)
 
 **How do I get Support?**
 
