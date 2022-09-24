@@ -8,6 +8,7 @@ pytest
 mypy
 rich
 zstandard
+hypothesis
 
 # different storage providers
 firebase-admin

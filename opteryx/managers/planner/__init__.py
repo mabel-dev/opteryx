@@ -116,8 +116,10 @@ class QueryPlanner:
                         placeholder_value = parameter_set.pop(0)
                         if placeholder_value is None:
                             return {"Value": "Null"}
-                        if isinstance(placeholder_value, (str, datetime.date, datetime.datetime)):
-                            return {"Value": {"SingleQuotedString": str(placeholder_value)}}
+                        if isinstance(placeholder_value, (datetime.date, datetime.datetime)):
+                            return {"Value": {"SingleQuotedString": placeholder_value.isoformat()}}
+                        if isinstance(placeholder_value, (str)):
+                            return {"Value": {"SingleQuotedString": placeholder_value}}
                         if isinstance(placeholder_value, (int, float, decimal.Decimal)):
                             return {"Value": {"Number": [placeholder_value, False]}}
                         if isinstance(placeholder_value, bool):
