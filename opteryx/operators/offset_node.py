@@ -22,15 +22,13 @@ from typing import Iterable
 import pyarrow
 
 from opteryx.exceptions import SqlError
-from opteryx.models import QueryProperties, QueryStatistics
+from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 
 
 class OffsetNode(BasePlanNode):
-    def __init__(
-        self, properties: QueryProperties, statistics: QueryStatistics, **config
-    ):
-        super().__init__(properties=properties, statistics=statistics)
+    def __init__(self, properties: QueryProperties, **config):
+        super().__init__(properties=properties)
         self._offset = config.get("offset")
 
     @property

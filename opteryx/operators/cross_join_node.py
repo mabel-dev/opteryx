@@ -26,12 +26,12 @@ import pyarrow
 from opteryx import config
 from opteryx.exceptions import SqlError
 from opteryx.managers.expression import NodeType
-from opteryx.models import Columns, QueryProperties, QueryStatistics
+from opteryx.models import Columns, QueryProperties
 from opteryx.operators import BasePlanNode
 
 
-INTERNAL_BATCH_SIZE = 500
-MAX_JOIN_SIZE = 500
+INTERNAL_BATCH_SIZE = 500  # config
+MAX_JOIN_SIZE = 500  # config
 
 
 def _cartesian_product(*arrays):
@@ -188,10 +188,8 @@ class CrossJoinNode(BasePlanNode):
     Implements a SQL CROSS JOIN and CROSS JOIN UNNEST
     """
 
-    def __init__(
-        self, properties: QueryProperties, statistics: QueryStatistics, **config
-    ):
-        super().__init__(properties=properties, statistics=statistics)
+    def __init__(self, properties: QueryProperties, **config):
+        super().__init__(properties=properties)
         self._right_table = config.get("right_table")
         self._join_type = config.get("join_type", "CrossJoin")
 

@@ -43,7 +43,7 @@ from opteryx.managers.planner.logical import logical_planner
 from opteryx.models import QueryProperties, QueryStatistics
 
 
-class _QueryPlanner:
+class QueryPlanner:
     def __init__(self, *, statement: str = "", cache=None):
 
         self._cache = cache

@@ -13,16 +13,14 @@
 
 import abc
 
-from opteryx.models import QueryProperties, QueryStatistics
+from opteryx.models import QueryProperties
 
 
 class BasePlanNode(abc.ABC):
 
     _producers = None
 
-    def __init__(
-        self, properties: QueryProperties, statistics: QueryStatistics = None, **config
-    ):
+    def __init__(self, properties: QueryProperties, **config):
         """
         This is the base class for nodes in the execution plan.
 
@@ -31,7 +29,7 @@ class BasePlanNode(abc.ABC):
         execution.
         """
         self.properties = properties
-        self._statistics = statistics
+        self._statistics = properties.statistics
 
     def __call__(self):
         return self.execute()

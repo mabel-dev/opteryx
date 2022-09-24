@@ -409,9 +409,9 @@ def tuple_literal(branch, alias=None, key=None):
     )
 
 
-def unsupported(branch, alias=None):
+def unsupported(branch, alias=None, key=None):
     """raise an error"""
-    raise SqlError(branch)
+    raise SqlError(key)
 
 
 def build(value, alias: list = None):
@@ -421,12 +421,15 @@ def build(value, alias: list = None):
     More of the builders will be migrated to this approach to keep the code
     more succinct and easier to read.
     """
+    ignored = ("filter",)
+
     if value == "Null":
         return BUILDERS["Null"](value)
     if isinstance(value, dict):
         return [
             BUILDERS.get(key, unsupported)(value[key], alias, key)
             for key in value.keys()
+            if key not in ignored
         ]
     if isinstance(value, list):
         return [build(item, alias) for item in value]

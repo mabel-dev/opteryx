@@ -587,6 +587,7 @@ STATEMENTS = [
         ("SET @dob = '1950-01-01'; SET @mission = 'Apollo 11'; SELECT name FROM $astronauts WHERE birth_date < @dob AND @mission IN UNNEST(missions);", 3, 1),
         ("SET @pples = 'b'; SET @ngles = 90; SHOW VARIABLES LIKE '%s'", 2, 2),
         ("SET @pples = 'b'; SET @rgon = 90; SHOW VARIABLES LIKE '%gon'", 1, 2),
+        ("SET @variable = 44; SET @var = 'name'; SHOW VARIABLES LIKE '%ri%';", 1, 2),
         ("SHOW PARAMETER enable_optimizer", 1, 2),
         ("SET enable_optimizer = 1; SHOW PARAMETER enable_optimizer;", 1, 2),
 

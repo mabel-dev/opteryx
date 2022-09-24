@@ -23,7 +23,7 @@ import numpy
 import pyarrow
 
 from opteryx.exceptions import SqlError
-from opteryx.models import Columns, QueryProperties, QueryStatistics
+from opteryx.models import Columns, QueryProperties
 from opteryx.operators import BasePlanNode
 from opteryx.third_party import pyarrow_ops
 from opteryx.utils import arrow
@@ -34,7 +34,7 @@ OUTER_JOINS = {
     "RightOuter": "Right Outer",
 }
 
-INTERNAL_BATCH_SIZE = 500
+INTERNAL_BATCH_SIZE = 500  # config
 
 
 def calculate_batch_size(cardinality):
@@ -52,10 +52,8 @@ def calculate_batch_size(cardinality):
 
 
 class OuterJoinNode(BasePlanNode):
-    def __init__(
-        self, properties: QueryProperties, statistics: QueryStatistics, **config
-    ):
-        super().__init__(properties=properties, statistics=statistics)
+    def __init__(self, properties: QueryProperties, **config):
+        super().__init__(properties=properties)
         self._join_type = OUTER_JOINS[config.get("join_type")]
         self._on = config.get("join_on")
         self._using = config.get("join_using")

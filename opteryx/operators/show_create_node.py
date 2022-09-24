@@ -22,16 +22,14 @@ from typing import Iterable
 import pyarrow
 
 from opteryx.exceptions import SqlError
-from opteryx.models import QueryProperties, QueryStatistics
+from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 from opteryx.models import Columns
 
 
 class ShowCreateNode(BasePlanNode):
-    def __init__(
-        self, properties: QueryProperties, statistics: QueryStatistics, **config
-    ):
-        super().__init__(properties=properties, statistics=statistics)
+    def __init__(self, properties: QueryProperties, **config):
+        super().__init__(properties=properties)
         self._table = config.get("table")
 
     @property

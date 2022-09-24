@@ -10,7 +10,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import datetime
+
 from typing import Any
+
+from opteryx.models.query_statistics import QueryStatistics
 
 
 class QueryProperties:
@@ -42,3 +46,7 @@ class QueryProperties:
         #    1 million times
 
         # fmt:on
+
+        self.start_date = datetime.datetime.utcnow().date()
+        self.end_date = datetime.datetime.utcnow().date()
+        self.statistics = QueryStatistics()

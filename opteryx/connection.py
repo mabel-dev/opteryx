@@ -97,59 +97,21 @@ class Cursor:
 
         raise SqlError(f"Query parameter of type '{type(param)}' is not supported.")
 
-    def execute(self, operation, params=None, experimental: bool = False):
+    def execute(self, operation, params=None):
         if self._query is not None:
             raise CursorInvalidStateError("Cursor can only be executed once")
 
         self._stats.start_time = time.time_ns()
 
-        if not experimental:
+        from opteryx.managers.planner import QueryPlanner
 
-            if params:
-                if not isinstance(params, (list, tuple)):
-                    raise ProgrammingError(
-                        "params must be a list or tuple containing the query parameter values"
-                    )
+        qp = QueryPlanner(statement=operation)
+        qp.parse_and_lex()
+        qp.bind_ast(parameters=params)
+        qp.create_logical_plan()
+        qp.optimize_plan()
 
-                for param in params:
-                    if operation.find("%s") == -1:
-                        # we have too few placeholders
-                        raise ProgrammingError(
-                            "Number of placeholders and number of parameters must match."
-                        )
-                    operation = operation.replace(
-                        "%s", self._format_prepared_param(param), 1
-                    )
-                if operation.find("%s") != -1:
-                    # we have too many placeholders
-                    raise ProgrammingError(
-                        "Number of placeholders and number of parameters must match."
-                    )
-
-            # circular imports
-            from opteryx.managers.query.planner import QueryPlanner
-
-            self._query_plan = QueryPlanner(
-                statistics=self._stats,
-                cache=self._connection._cache,
-            )
-            self._query_plan.create_plan(sql=operation)
-
-            # how long have we spent planning
-            self._stats.time_planning = time.time_ns() - self._stats.start_time
-
-            self._results = self._query_plan.execute()
-
-        else:
-            from opteryx.managers.planner import _QueryPlanner
-
-            qp = _QueryPlanner(statement=operation)
-            qp.parse_and_lex()
-            qp.bind_ast(parameters=params)
-            qp.create_logical_plan()
-            qp.optimize_plan()
-
-            self._results = qp.execute()
+        self._results = qp.execute()
 
     @property
     def rowcount(self):

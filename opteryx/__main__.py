@@ -22,7 +22,7 @@ import orjson
 
 import opteryx
 
-from opteryx.managers.query.planner.temporal import extract_temporal_filters
+from opteryx.managers.planner.temporal import extract_temporal_filters
 from opteryx.utils.display import ascii_table
 
 

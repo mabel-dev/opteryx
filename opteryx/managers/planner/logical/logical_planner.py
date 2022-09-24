@@ -40,7 +40,7 @@ from opteryx.exceptions import SqlError, UnsupportedSyntaxError
 from opteryx.managers.expression import ExpressionTreeNode
 from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.managers.expression import NodeType
-
+from opteryx.utils import fuzzy_search
 
 from opteryx.managers.planner.logical import builders, queries
 
@@ -61,8 +61,6 @@ def create_plan(ast, properties):
 
 def _check_hints(hints):
 
-    from opteryx.third_party.mbleven import compare
-
     well_known_hints = (
         "NO_CACHE",
         "NO_PARTITION",
@@ -72,14 +70,7 @@ def _check_hints(hints):
 
     for hint in hints:
         if hint not in well_known_hints:
-            best_match_hint = None
-            best_match_score = 100
-
-            for known_hint in well_known_hints:
-                my_dist = compare(hint, known_hint)
-                if my_dist > 0 and my_dist < best_match_score:
-                    best_match_score = my_dist
-                    best_match_hint = known_hint
+            best_match_hint = fuzzy_search(hint, well_known_hints)
 
             if best_match_hint:
                 _statistics.warn(
@@ -221,60 +212,8 @@ def _extract_having(ast):
 def _explain_planner(ast, statistics):
     explain_plan = copy()
     explain_plan.create_plan(ast=[ast["Explain"]["statement"]])
-    explain_node = operators.ExplainNode(
-        properties, statistics, query_plan=explain_plan
-    )
+    explain_node = operators.ExplainNode(properties, query_plan=explain_plan)
     add_operator("explain", explain_node)
-
-
-def _show_columns_planner(ast, statistics):
-
-    dataset = ".".join([part["value"] for part in ast["ShowColumns"]["table_name"]])
-
-    if dataset[0:1] == "$":
-        mode = "Internal"
-        reader = None
-    else:
-        reader = connector_factory(dataset)
-        mode = reader.__mode__
-
-    add_operator(
-        "reader",
-        operators.reader_factory(mode)(
-            properties=properties,
-            statistics=statistics,
-            dataset=dataset,
-            alias=None,
-            reader=reader,
-            cache=None,  # never read from cache
-            start_date=start_date,
-            end_date=end_date,
-        ),
-    )
-    last_node = "reader"
-
-    filters = builders.build(ast["ShowColumns"])
-    if filters:
-        add_operator(
-            "filter",
-            operators.ColumnFilterNode(
-                properties=properties, statistics=statistics, filter=filters
-            ),
-        )
-        link_operators(last_node, "filter")
-        last_node = "filter"
-
-    add_operator(
-        "columns",
-        operators.ShowColumnsNode(
-            properties=properties,
-            statistics=statistics,
-            full=ast["ShowColumns"]["full"],
-            extended=ast["ShowColumns"]["extended"],
-        ),
-    )
-    link_operators(last_node, "columns")
-    last_node = "columns"
 
 
 def _show_create_planner(ast, statistics):
@@ -335,50 +274,6 @@ def _extract_identifiers(ast):
             identifiers.extend(_extract_identifiers(item))
 
     return list(set(identifiers))
-
-
-def _show_variable_planner(ast, statistics):
-    """
-    SHOW <variable> only really has a single node.
-
-    All of the keywords should up as a 'values' list in the variable in the ast.
-
-    The last word is the variable, preceeding words are modifiers.
-    """
-
-    keywords = [value["value"].upper() for value in ast["ShowVariable"]["variable"]]
-    if keywords[0] == "FUNCTIONS":
-        show_node = "show_functions"
-        node = operators.ShowFunctionsNode(
-            properties=properties,
-            statistics=statistics,
-        )
-        add_operator(show_node, operator=node)
-    elif keywords[0] == "PARAMETER":
-        if len(keywords) != 2:
-            raise SqlError("`SHOW PARAMETER` expects a single parameter name.")
-        key = keywords[1].lower()
-        if not hasattr(properties, key) or key == "variables":
-            raise SqlError(f"Unknown parameter '{key}'.")
-        value = getattr(properties, key)
-
-        show_node = "show_parameter"
-        node = operators.ShowValueNode(
-            properties=properties, statistics=statistics, key=key, value=value
-        )
-        add_operator(show_node, operator=node)
-    else:  # pragma: no cover
-        raise SqlError(f"SHOW statement type not supported for `{keywords[0]}`.")
-
-    name_column = ExpressionTreeNode(NodeType.IDENTIFIER, value="name")
-
-    order_by_node = operators.SortNode(
-        properties=properties,
-        statistics=statistics,
-        order=[([name_column], "ascending")],
-    )
-    add_operator("order", operator=order_by_node)
-    link_operators(show_node, "order")
 
 
 def _naive_select_planner(ast, statistics):

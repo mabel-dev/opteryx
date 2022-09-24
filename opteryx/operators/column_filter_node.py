@@ -24,16 +24,14 @@ It expects the filter to be applied to the 'name' column.
 """
 from typing import Iterable
 
-from opteryx.models import Columns, QueryProperties, QueryStatistics
+from opteryx.models import Columns, QueryProperties
 from opteryx.operators import BasePlanNode
 from opteryx.exceptions import SqlError
 
 
 class ColumnFilterNode(BasePlanNode):
-    def __init__(
-        self, properties: QueryProperties, statistics: QueryStatistics, **config
-    ):
-        super().__init__(properties=properties, statistics=statistics)
+    def __init__(self, properties: QueryProperties, **config):
+        super().__init__(properties=properties)
         self._filter = config.get("filter", True)
 
     @property
