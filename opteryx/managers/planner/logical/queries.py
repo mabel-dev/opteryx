@@ -14,6 +14,7 @@ from opteryx import operators
 from opteryx.connectors import connector_factory
 from opteryx.exceptions import SqlError
 from opteryx.managers.expression import ExpressionTreeNode
+from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.managers.expression import NodeType
 from opteryx.managers.planner.logical import builders, custom_builders
 from opteryx.models import ExecutionTree
@@ -24,7 +25,188 @@ def explain_query(ast, properties):
 
 
 def select_query(ast, properties):
-    pass
+    """
+    The planner creates the naive query plan.
+
+    The goal here is to create a plan to respond to the user, it creates has
+    no clever tricks to improve performance.
+    """
+    plan = ExecutionTree()
+    all_identifiers = custom_builders.extract_identifiers(ast)
+
+    _relations = [r for r in custom_builders.extract_relations(ast)]
+    if len(_relations) == 0:
+        _relations = [(None, "$no_table", "Internal", [])]
+
+    # We always have a data source - even if it's 'no table'
+    alias, dataset, mode, hints = _relations[0]
+
+    # external comes in different flavours
+    reader = None
+    if mode == "External":
+        reader = connector_factory(dataset)
+        mode = reader.__mode__
+
+    plan.add_operator(
+        "from",
+        operators.reader_factory(mode)(
+            properties=properties,
+            alias=alias,
+            dataset=dataset,
+            reader=reader,
+            #            cache=_cache,
+            start_date=properties.start_date,
+            end_date=properties.end_date,
+            hints=hints,
+            selection=all_identifiers,
+        ),
+    )
+    last_node = "from"
+
+    _joins = list(custom_builders.extract_joins(ast))
+    if len(_joins) == 0 and len(_relations) == 2:
+        # If there's no explicit JOIN but the query has two relations, we
+        # use a CROSS JOIN
+        _joins = [("CrossJoin", _relations[1], None, None)]
+    for join_id, _join in enumerate(_joins):
+        if _join:
+            join_type, right, join_on, join_using = _join
+            if join_type == "CrossJoin" and right[2] == "Function":
+                join_type = "CrossJoinUnnest"
+            else:
+
+                dataset = right[1]
+                if isinstance(dataset, QueryPlanner):
+                    mode = "Blob"  # this is still here until it's moved
+                    reader = None
+                elif isinstance(dataset, dict) and dataset.get("function") is not None:
+                    mode = "Function"
+                    reader = None
+                elif dataset[0:1] == "$":
+                    mode = "Internal"
+                    reader = None
+                else:
+                    reader = connector_factory(dataset)
+                    mode = reader.__mode__
+
+                # Otherwise, the right table needs to come from the Reader
+                right = operators.reader_factory(mode)(
+                    properties=properties,
+                    dataset=dataset,
+                    alias=right[0],
+                    reader=reader,
+                    #                    cache=_cache,
+                    start_date=properties.start_date,
+                    end_date=properties.end_date,
+                    hints=right[3],
+                )
+
+            join_node = operators.join_factory(join_type)
+            if join_node is None:
+                raise SqlError(f"Join type not supported - `{_join[0]}`")
+
+            plan.add_operator(
+                f"join-{join_id}",
+                join_node(
+                    properties=properties,
+                    join_type=join_type,
+                    join_on=join_on,
+                    join_using=join_using,
+                ),
+            )
+            plan.link_operators(last_node, f"join-{join_id}")
+
+            plan.add_operator(f"join-{join_id}-right", right)
+            plan.link_operators(f"join-{join_id}-right", f"join-{join_id}", "right")
+
+            last_node = f"join-{join_id}"
+
+    _selection = builders.build(ast["Query"]["body"]["Select"]["selection"])
+    if _selection:
+        plan.add_operator(
+            "where",
+            operators.SelectionNode(properties, filter=_selection),
+        )
+        plan.link_operators(last_node, "where")
+        last_node = "where"
+
+    _projection = builders.build(ast["Query"]["body"]["Select"]["projection"])
+    _groups = builders.build(ast["Query"]["body"]["Select"]["group_by"])
+    if _groups or get_all_nodes_of_type(
+        _projection, select_nodes=(NodeType.AGGREGATOR,)
+    ):
+        _aggregates = _projection.copy()
+        if isinstance(_aggregates, dict):
+            raise SqlError("GROUP BY cannot be used with SELECT *")
+        if not any(
+            a.token_type == NodeType.AGGREGATOR
+            for a in _aggregates
+            if isinstance(a, ExpressionTreeNode)
+        ):
+            wildcard = ExpressionTreeNode(NodeType.WILDCARD)
+            _aggregates.append(
+                ExpressionTreeNode(
+                    NodeType.AGGREGATOR, value="COUNT", parameters=[wildcard]
+                )
+            )
+        plan.add_operator(
+            "agg",
+            operators.AggregateNode(properties, aggregates=_aggregates, groups=_groups),
+        )
+        plan.link_operators(last_node, "agg")
+        last_node = "agg"
+
+    _having = builders.build(ast["Query"]["body"]["Select"]["having"])
+    if _having:
+        plan.add_operator(
+            "having",
+            operators.SelectionNode(properties, filter=_having),
+        )
+        plan.link_operators(last_node, "having")
+        last_node = "having"
+
+    _projection = builders.build(ast["Query"]["body"]["Select"]["projection"])
+    # qualified wildcards have the qualifer in the value
+    # e.g. SELECT table.* -> node.value = table
+    if (_projection[0].token_type != NodeType.WILDCARD) or (
+        _projection[0].value is not None
+    ):
+        plan.add_operator(
+            "select",
+            operators.ProjectionNode(properties, projection=_projection),
+        )
+        plan.link_operators(last_node, "select")
+        last_node = "select"
+
+    _distinct = custom_builders.extract_distinct(ast)
+    if _distinct:
+        plan.add_operator("distinct", operators.DistinctNode(properties))
+        plan.link_operators(last_node, "distinct")
+        last_node = "distinct"
+
+    _order = custom_builders.extract_order(ast)
+    if _order:
+        plan.add_operator("order", operators.SortNode(properties, order=_order))
+        plan.link_operators(last_node, "order")
+        last_node = "order"
+
+    _offset = custom_builders.extract_offset(ast)
+    if _offset:
+        plan.add_operator(
+            "offset",
+            operators.OffsetNode(properties, offset=_offset),
+        )
+        plan.link_operators(last_node, "offset")
+        last_node = "offset"
+
+    _limit = custom_builders.extract_limit(ast)
+    # 0 limit is valid
+    if _limit is not None:
+        plan.add_operator("limit", operators.LimitNode(properties, limit=_limit))
+        plan.link_operators(last_node, "limit")
+        last_node = "limit"
+
+    return plan
 
 
 def set_variable_query(ast, properties):
@@ -103,7 +285,43 @@ def show_columns_query(ast, properties):
 
 
 def show_create_query(ast, properties):
-    pass
+
+    plan = ExecutionTree()
+
+    if ast["ShowCreate"]["obj_type"] != "Table":
+        raise SqlError("SHOW CREATE only supports tables")
+
+    dataset = ".".join([part["value"] for part in ast["ShowCreate"]["obj_name"]])
+
+    if dataset[0:1] == "$":
+        mode = "Internal"
+        reader = None
+    else:
+        reader = connector_factory(dataset)
+        mode = reader.__mode__
+
+    plan.add_operator(
+        "reader",
+        operators.reader_factory(mode)(
+            properties=properties,
+            dataset=dataset,
+            alias=None,
+            reader=reader,
+            cache=None,  # never read from cache
+            start_date=properties.start_date,
+            end_date=properties.end_date,
+        ),
+    )
+    last_node = "reader"
+
+    plan.add_operator(
+        "show_create",
+        operators.ShowCreateNode(properties=properties, table=dataset),
+    )
+    plan.link_operators(last_node, "show_create")
+    last_node = "show_create"
+
+    return plan
 
 
 def show_variable_query(ast, properties):
