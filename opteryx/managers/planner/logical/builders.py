@@ -105,7 +105,7 @@ def wildcard_filter(branch, alias=None, key=None):
 def expression_with_alias(branch, alias=None, key=None):
     """an alias"""
     if not isinstance(alias, list):
-        alias = [alias or []]
+        alias = [] if alias is None else [alias]
     alias.append(branch["alias"]["value"])
     return build(branch["expr"], alias=alias)
 
@@ -123,7 +123,7 @@ def identifier(branch, alias=None, key=None):
 
 def compound_identifier(branch, alias=None, key=None):
     if not isinstance(alias, list):
-        alias = [alias or []]
+        alias = [] if alias is None else [alias]
     alias.append(".".join(p["value"] for p in branch))
     return ExpressionTreeNode(
         token_type=NodeType.IDENTIFIER,
@@ -180,6 +180,9 @@ def binary_op(branch, alias=None, key=None):
 
 def cast(branch, alias=None, key=None):
     # CAST(<var> AS <type>) - convert to the form <type>(var), e.g. BOOLEAN(on)
+    if not isinstance(alias, list):
+        alias = [] if alias is None else [alias]
+
     args = [build(branch["expr"])]
     data_type = branch["data_type"]
     if data_type == "Timestamp":
@@ -206,6 +209,9 @@ def cast(branch, alias=None, key=None):
 def try_cast(branch, alias=None, key="TryCast"):
     # TRY_CAST(<var> AS <type>) - convert to the form <type>(var), e.g. BOOLEAN(on)
     # also: SAFE_CAST
+    if not isinstance(alias, list):
+        alias = [] if alias is None else [alias]
+
     function_name = key.replace("Cast", "_Cast").upper()
     args = [build(branch["expr"])]
     data_type = branch["data_type"]
@@ -233,7 +239,7 @@ def try_cast(branch, alias=None, key="TryCast"):
 def extract(branch, alias=None, key=None):
     # EXTRACT(part FROM timestamp)
     if not isinstance(alias, list):
-        alias = [alias or []]
+        alias = [] if alias is None else [alias]
     datepart = ExpressionTreeNode(NodeType.LITERAL_VARCHAR, value=branch["field"])
     value = build(branch["expr"])
 
@@ -251,7 +257,7 @@ def extract(branch, alias=None, key=None):
 def map_access(branch, alias=None, key=None):
     # Identifier[key] -> GET(Identifier, key) -> alias of I[k] or alias
     if not isinstance(alias, list):
-        alias = [alias or []]
+        alias = [] if alias is None else [alias]
     field = branch["column"]["Identifier"]["value"]
     key_dict = branch["keys"][0]["Value"]
     if "SingleQuotedString" in key_dict:
@@ -273,7 +279,7 @@ def map_access(branch, alias=None, key=None):
 
 def unary_op(branch, alias=None, key=None):
     if not isinstance(alias, list):
-        alias = [alias or []]
+        alias = [] if alias is None else [alias]
     if branch["op"] == "Not":
         right = build(branch["expr"])
         return ExpressionTreeNode(token_type=NodeType.NOT, centre_node=right)
