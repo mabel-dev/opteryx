@@ -102,11 +102,11 @@ def extract_joins(ast):
             if "On" in join["join_operator"][join_mode]:
                 join_on = builders.build(join["join_operator"][join_mode]["On"])
 
-        right = next(builders.build([join]))
+        right = next(extract_relations([join]))
         yield (join_mode, right, join_on, join_using)
 
 
-def extract_relations(ast, default_path: bool = True):
+def extract_relations(branch):
     """ """
     from opteryx.managers.planner.logical import builders
 
@@ -130,14 +130,8 @@ def extract_relations(ast, default_path: bool = True):
     #                else:
     #                    _statistics.warn(f"Hint `{hint}` is not recognized.")
 
-    relations = ast
-    if default_path:
-        try:
-            relations = ast["Query"]["body"]["Select"]["from"]
-        except IndexError:
-            return "$no_table"
 
-    for relation in relations:
+    for relation in branch:
         if "Table" in relation["relation"]:
             # is the relation a builder function
             if relation["relation"]["Table"]["args"]:
@@ -179,8 +173,11 @@ def extract_relations(ast, default_path: bool = True):
             if "Select" in subquery:
                 ast = {}
                 ast["Query"] = relation["relation"]["Derived"]["subquery"]
-                subquery_plan = copy()
-                subquery_plan.create_plan(ast=[ast])
+
+                subquery_plan = QueryPlanner(ast=ast, properties=None)
+                subquery_plan.bind_ast(parameters=[])
+                subquery_plan.create_logical_plan()
+                subquery_plan.optimize_plan()
 
                 yield (alias, subquery_plan, "SubQuery", [])
             if "Values" in subquery:

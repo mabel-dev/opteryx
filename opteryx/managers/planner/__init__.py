@@ -44,7 +44,7 @@ from opteryx.models import QueryProperties, QueryStatistics
 
 
 class QueryPlanner:
-    def __init__(self, *, statement: str = "", cache=None):
+    def __init__(self, *, statement: str = "", cache=None, ast=None):
 
         self._cache = cache
 
@@ -59,7 +59,7 @@ class QueryPlanner:
         # set to null, we're going to populate these later
         self.start_date = None
         self.end_date = None
-        self.ast = None
+        self.ast = ast
         self.logical_plan = None
         self.physical_plan = None
 

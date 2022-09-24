@@ -28,14 +28,22 @@ def select_query(ast, properties):
     """
     The planner creates the naive query plan.
 
-    The goal here is to create a plan to respond to the user, it creates has
-    no clever tricks to improve performance.
+    The goal here is to create a plan that's only guarantee is the response is correct.
+    It doesn't try to make it performant, low-memory or any other measure of 'good'
+    beyond correctness.
     """
+    # prevent circular imports
+    from opteryx.managers.planner import QueryPlanner
+
     plan = ExecutionTree()
 
     all_identifiers = custom_builders.extract_identifiers(ast)
-    _relations = [r for r in custom_builders.extract_relations(ast)]
+    try:
+        _relations = list(custom_builders.extract_relations(ast["Query"]["body"]["Select"]["from"]))
+    except IndexError:
+        _relations = []
 
+    # if we have no relations, use the $no_table relation
     if len(_relations) == 0:
         _relations = [(None, "$no_table", "Internal", [])]
 
@@ -78,7 +86,7 @@ def select_query(ast, properties):
 
                 dataset = right[1]
                 if isinstance(dataset, QueryPlanner):
-                    mode = "Blob"  # this is still here until it's moved
+                    mode = "Blob"  # subqueries are here due to legacy reasons
                     reader = None
                 elif isinstance(dataset, dict) and dataset.get("function") is not None:
                     mode = "Function"

@@ -1,6 +1,6 @@
 # Overview
 
-![Welcome](welcome.png)
+[:fontawesome-brands-github: Star on Github](https://github.com/mabel-dev/opteryx){ .md-button .btn-github }
 
 [Opteryx](https://github.com/mabel-dev/opteryx) is a SQL query engine to query large data sets designed to run in low-cost serverless environments.
 

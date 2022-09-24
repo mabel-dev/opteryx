@@ -29,7 +29,7 @@ Changes should have:
 
 Gitter is our target channel for interactive conversations and support.
 
-[Join us on Gitter](https://gitter.im/mabel-opteryx/community)
+[:fontawesome-brands-gitter: Join us on Gitter](https://gitter.im/mabel-opteryx/community){ .md-button }
 
 ## Licence
 

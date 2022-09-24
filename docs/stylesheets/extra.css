@@ -180,3 +180,18 @@ strong {
 .p {
     color: #998000 !important;
 }
+
+.btn-github {
+    background-color: #000;
+    color: #fff !important;
+    border: 0px;
+}
+
+.md-button {
+    padding: 0.4em 1em !important;
+    font-weight: 400 !important;
+}
+
+.md-button:hover {
+    color: #fff !important;
+}
