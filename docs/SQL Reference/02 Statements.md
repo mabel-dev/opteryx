@@ -225,6 +225,15 @@ List the variables set in the query batch.
 
 ~~~sql
 SHOW VARIABLES
+LIKE pattern
 ~~~
+
+### LIKE clause
+
+~~~
+LIKE pattern
+~~~
+
+Specify a pattern in the optional `LIKE` clause to filter the results to the desired subset by the variable name. This does not require a left-hand operator, it will always filter by the variable name.
 
 **Related: `SET`**

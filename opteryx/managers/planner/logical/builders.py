@@ -423,8 +423,8 @@ def build(value, alias: list = None):
     """
     ignored = ("filter",)
 
-    if value == "Null":
-        return BUILDERS["Null"](value)
+    if value in ("Null", "Wildcard"):
+        return BUILDERS[value](value)
     if isinstance(value, dict):
         return [
             BUILDERS.get(key, unsupported)(value[key], alias, key)

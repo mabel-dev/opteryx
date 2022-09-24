@@ -12,8 +12,6 @@ def extract_show_filter(ast):
     filters = ast["filter"]
     if filters is None:
         return None
-    #    if "Where" in filters:
-    #        return self._filter_extract(filters["Where"])
     if "Like" in filters:
         left = ExpressionTreeNode(NodeType.IDENTIFIER, value="name")
         right = ExpressionTreeNode(NodeType.LITERAL_VARCHAR, value=filters["Like"])
@@ -45,7 +43,7 @@ def extract_offset(ast):
 
 
 def extract_order(ast):
-    from opteryx.managers.planner import builders
+    from opteryx.managers.planner.logical import builders
 
     order = ast["Query"].get("order_by")
     if order is not None:
@@ -83,7 +81,7 @@ def extract_identifiers(ast):
 
 
 def extract_joins(ast):
-    from opteryx.managers.planner import builders
+    from opteryx.managers.planner.logical import builders
 
     try:
         joins = ast["Query"]["body"]["Select"]["from"][0]["joins"]
@@ -110,7 +108,7 @@ def extract_joins(ast):
 
 def extract_relations(ast, default_path: bool = True):
     """ """
-    from opteryx.managers.planner import builders
+    from opteryx.managers.planner.logical import builders
 
     def _check_hints(hints):
 

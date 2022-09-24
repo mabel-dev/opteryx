@@ -1,4 +1,4 @@
-# Set Up Guide (Windows)
+# Windows
 
 This guide will help you to set up a Windows workstation to work with the code and develop Opteryx.
 

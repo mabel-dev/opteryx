@@ -1,12 +1,14 @@
-# Set Up Guide (Debian/Ubuntu)
+# MacOS
 
-This guide will help you to set up a Debian or Ubuntu workstation to work with the code and develop Opteryx.
+This guide will help you to set up a MacOS workstation to work with the code and develop Opteryx.
+
+This has been tested on intel-based Macs.
 
 ## Setting Up
 
 ### 1. Install Python 
 
-**3.10 recommended** 
+**3.10 recommended**
 
 We recommmend using [pyenv](https://github.com/pyenv/pyenv) to install and manage Python environments, particularly in development and test environments.
 
