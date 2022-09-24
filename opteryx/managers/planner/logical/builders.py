@@ -106,7 +106,7 @@ def expression_with_alias(branch, alias=None, key=None):
     """an alias"""
     if not isinstance(alias, list):
         alias = [alias or []]
-    alias.append(branch["ast"]["value"])
+    alias.append(branch["alias"]["value"])
     return build(branch["expr"], alias=alias)
 
 
