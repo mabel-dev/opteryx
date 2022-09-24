@@ -50,7 +50,7 @@ class ProjectionNode(BasePlanNode):
                 and attribute.value is not None
             ):
                 # qualified wildcard, e.g. table.*
-                self._projection[(attribute.value,)] = None
+                self._projection[attribute.value] = None
             elif attribute.token_type in (
                 NodeType.FUNCTION,
                 NodeType.AGGREGATOR,

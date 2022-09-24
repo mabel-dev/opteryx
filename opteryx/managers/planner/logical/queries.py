@@ -32,9 +32,10 @@ def select_query(ast, properties):
     no clever tricks to improve performance.
     """
     plan = ExecutionTree()
-    all_identifiers = custom_builders.extract_identifiers(ast)
 
+    all_identifiers = custom_builders.extract_identifiers(ast)
     _relations = [r for r in custom_builders.extract_relations(ast)]
+
     if len(_relations) == 0:
         _relations = [(None, "$no_table", "Internal", [])]
 
@@ -130,7 +131,7 @@ def select_query(ast, properties):
         plan.link_operators(last_node, "where")
         last_node = "where"
 
-    _projection = builders.build(ast["Query"]["body"]["Select"]["projection"])
+    _projection = builders.build(ast["Query"]["body"]["Select"]["projection"])[0]
     _groups = builders.build(ast["Query"]["body"]["Select"]["group_by"])
     if _groups or get_all_nodes_of_type(
         _projection, select_nodes=(NodeType.AGGREGATOR,)
@@ -165,7 +166,6 @@ def select_query(ast, properties):
         plan.link_operators(last_node, "having")
         last_node = "having"
 
-    _projection = builders.build(ast["Query"]["body"]["Select"]["projection"])
     # qualified wildcards have the qualifer in the value
     # e.g. SELECT table.* -> node.value = table
     if (_projection[0].token_type != NodeType.WILDCARD) or (

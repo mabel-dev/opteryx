@@ -111,17 +111,11 @@ def expression_with_alias(branch, alias=None, key=None):
 
 
 def qualified_wildcard(branch, alias=None, key=None):
-    return ExpressionTreeNode(NodeType.WILDCARD, value=branch[0]["value"], alias=alias)
+    qualifier = (".".join(p["value"] for p in branch),)
+    return ExpressionTreeNode(NodeType.WILDCARD, value=qualifier, alias=alias)
 
 
 def identifier(branch, alias=None, key=None):
-    # TODO: restore variable exchanges
-    #        token_name = function["value"]
-    #        if token_name[0] == "@":
-    #            if token_name not in self.properties.variables:  # pragma: no cover
-    #                raise SqlError(f"Undefined variable found in query `{token_name}`.")
-    #            return self.properties.variables.get(token_name)
-    #        else:
     return ExpressionTreeNode(
         token_type=NodeType.IDENTIFIER, value=branch["value"], alias=alias
     )
@@ -414,7 +408,7 @@ def unsupported(branch, alias=None, key=None):
     raise SqlError(key)
 
 
-def build(value, alias: list = None):
+def build(value, alias: list = None, key=None):
     """
     Extract values from a value node in the AST and create a ExpressionNode for it
 
@@ -424,7 +418,7 @@ def build(value, alias: list = None):
     ignored = ("filter",)
 
     if value in ("Null", "Wildcard"):
-        return BUILDERS[value](value)
+        return [BUILDERS[value](value)]
     if isinstance(value, dict):
         return [
             BUILDERS.get(key, unsupported)(value[key], alias, key)

@@ -16,7 +16,7 @@ Combined with the SQL Battery test, the aim is for 95% coverage (with explicit e
 **Frequency**: CI  
 **Maturity**: Medium
 
-Part of the CI process. Executes hundreds of SQL statements against the engine.
+Part of the CI process. Executes hundreds of hand-crafted SQL statements against the engine.
 
 The SQL Battery helps to ensure the entire system performs as expected and when used in tandem with Unit Testing, which primarily focuses on ensuring parts work as they should, this provides a level of confidence that the system continues to perform as expected.
 

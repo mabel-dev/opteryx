@@ -138,6 +138,14 @@ class QueryPlanner:
                 "Incorrect number of bindings supplied. Fewer placeholders are provided than parameters."
             )
 
+    # TODO: restore variable exchanges - do it in the binder
+    #        token_name = function["value"]
+    #        if token_name[0] == "@":
+    #            if token_name not in self.properties.variables:  # pragma: no cover
+    #                raise SqlError(f"Undefined variable found in query `{token_name}`.")
+    #            return self.properties.variables.get(token_name)
+    #        else:
+
     def create_logical_plan(self):
         self.logical_plan = logical_planner.create_plan(self.ast, self.properties)
 
