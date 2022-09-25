@@ -10,8 +10,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+The Execution Tree is the graph which defines and supports the execution of
+query plans.
+"""
+
+import pyarrow
+
 
 from opteryx.exceptions import DatabaseError
+
+
 
 
 class ExecutionTree:
@@ -197,3 +206,39 @@ class ExecutionTree:
 
         operator = self.get_operator(head[0])
         yield from operator.execute()
+
+
+
+    def explain(self):
+
+        from opteryx import operators
+        from opteryx.models import Columns
+
+        def _inner_explain(node, depth):
+            if depth == 1:
+                operator = self.get_operator(node)
+                yield {
+                    "operator": operator.name,
+                    "config": operator.config,
+                    "depth": depth - 1,
+                }
+            incoming_operators = self.get_incoming_links(node)
+            for operator_name in incoming_operators:
+                operator = self.get_operator(operator_name[0])
+                if isinstance(operator, operators.BasePlanNode):
+                    yield {
+                        "operator": operator.name,
+                        "config": operator.config,
+                        "depth": depth,
+                    }
+                yield from _inner_explain(operator_name[0], depth + 1)
+
+        head = list(set(self.get_exit_points()))
+        # print(head, _edges)
+        if len(head) != 1:
+            raise DatabaseError(f"Problem with the plan - it has {len(head)} heads.")
+        plan = list(_inner_explain(head[0], 1))
+
+        table = pyarrow.Table.from_pylist(plan)
+        table = Columns.create_table_metadata(table, table.num_rows, "plan", None)
+        yield table

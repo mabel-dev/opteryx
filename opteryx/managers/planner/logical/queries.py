@@ -21,7 +21,19 @@ from opteryx.models import ExecutionTree
 
 
 def explain_query(ast, properties):
-    pass
+    # we're handling two plans here:
+    # - query_plan - this is the plan for the query we're exlaining
+    # - my_plan - this is the plan for this query
+
+    from opteryx.managers.planner import QueryPlanner
+
+    query_plan = QueryPlanner(ast=[ast["Explain"]["statement"]])
+    query_plan.create_logical_plan()
+    query_plan.optimize_plan()
+    my_plan = ExecutionTree()
+    explain_node = operators.ExplainNode(properties, query_plan=query_plan)
+    my_plan.add_operator("explain", explain_node)
+    return my_plan
 
 
 def select_query(ast, properties):
