@@ -14,11 +14,11 @@ jobs:
     steps:
 
       - name: Install Docker
-        if: matrix.os == 'ARM64'
+        if: matrix.os == 'MacOS'
         uses: docker-practice/actions-setup-docker@master
 
       - name: Install Python on ARM64
-        if: matrix.os == 'ARM64' && matrix.python-version == '3.10'
+        if: matrix.os == 'ARM64'
         run: |
           sudo apt -y install python3
 
