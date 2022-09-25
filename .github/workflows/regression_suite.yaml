@@ -21,6 +21,7 @@ jobs:
         if: matrix.os == 'ARM64'
         run: |
           sudo apt -y install python3
+          python -m ensurepip --upgrade
 
       - name: Checkout code
         uses: actions/checkout@v2
