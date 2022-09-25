@@ -109,6 +109,7 @@ def extract_joins(ast):
 def extract_relations(branch):
     """ """
     from opteryx.managers.planner.logical import builders
+    from opteryx.managers.planner import QueryPlanner
 
     def _check_hints(hints):
 
@@ -129,7 +130,6 @@ def extract_relations(branch):
     #                    )
     #                else:
     #                    _statistics.warn(f"Hint `{hint}` is not recognized.")
-
 
     for relation in branch:
         if "Table" in relation["relation"]:
@@ -174,7 +174,7 @@ def extract_relations(branch):
                 ast = {}
                 ast["Query"] = relation["relation"]["Derived"]["subquery"]
 
-                subquery_plan = QueryPlanner(ast=ast, properties=None)
+                subquery_plan = QueryPlanner(ast=[ast], properties=None)
                 subquery_plan.bind_ast(parameters=[])
                 subquery_plan.create_logical_plan()
                 subquery_plan.optimize_plan()

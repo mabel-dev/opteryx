@@ -26,7 +26,7 @@ from opteryx import config
 from opteryx.managers.expression import NodeType
 from opteryx.operators import BasePlanNode
 from opteryx.models import Columns, QueryProperties
-from opteryx.exceptions import SqlError
+from opteryx.exceptions import ColumnNotFoundError, SqlError
 from opteryx.third_party import pyarrow_ops
 from opteryx.utils import arrow
 
@@ -76,7 +76,7 @@ def get_columns(expression, left_columns, right_columns):
             left = [
                 left_columns.get_column_from_alias(expression.left.value, only_one=True)
             ]
-        except SqlError:
+        except ColumnNotFoundError:
             # the ON condition may not always be in the order of the tables
             # purposefully reference the values the wrong way around
             right = [

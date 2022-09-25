@@ -110,7 +110,7 @@ class BlobReaderNode(BasePlanNode):
         self._alias: list = config.get("alias", None)
 
         # circular imports
-        from opteryx.managers.query.planner import QueryPlanner
+        from opteryx.managers.planner import QueryPlanner
 
         if isinstance(self._dataset, (list, QueryPlanner, dict)):
             return
@@ -173,7 +173,7 @@ class BlobReaderNode(BasePlanNode):
     def execute(self) -> Iterable:
 
         # circular imports
-        from opteryx.managers.query.planner import QueryPlanner
+        from opteryx.managers.planner import QueryPlanner
 
         # This is here for legacy reasons and should be moved to a DAG rather than
         # a Node (as per the other reader nodes)

@@ -351,7 +351,7 @@ def in_subquery(branch, alias=None, key=None):
 
 
 def is_compare(branch, alias=None, key=None):
-    centre = build(branch[key])
+    centre = build(branch)
     return ExpressionTreeNode(NodeType.UNARY_OPERATOR, value=key, centre_node=centre)
 
 

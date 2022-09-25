@@ -22,7 +22,7 @@ from typing import Iterable
 import numpy
 import pyarrow
 
-from opteryx.exceptions import SqlError
+from opteryx.exceptions import ColumnNotFoundError, SqlError
 from opteryx.models import Columns, QueryProperties
 from opteryx.operators import BasePlanNode
 from opteryx.third_party import pyarrow_ops
@@ -143,7 +143,7 @@ class OuterJoinNode(BasePlanNode):
                         left_join_column = left_columns.get_column_from_alias(
                             self._on.left.value, only_one=True
                         )
-                    except SqlError:
+                    except ColumnNotFoundError:
                         # the ON condition may not always be in the order of the tables
                         # we purposefully reference the columns incorrectly
                         right_join_column = right_columns.get_column_from_alias(

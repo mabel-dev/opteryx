@@ -44,7 +44,7 @@ from opteryx.models import QueryProperties, QueryStatistics
 
 
 class QueryPlanner:
-    def __init__(self, *, statement: str = "", cache=None, ast=None):
+    def __init__(self, *, statement: str = "", cache=None, ast=None, properties=None):
 
         self._cache = cache
 
@@ -54,11 +54,15 @@ class QueryPlanner:
         self.statement = statement
 
         self.statistics = QueryStatistics()
-        self.properties = QueryProperties(config)
+
+        if properties is None:
+            self.properties = QueryProperties(config)
+        else:
+            self.properties = properties
 
         # set to null, we're going to populate these later
-        self.start_date = None
-        self.end_date = None
+        self.properties.start_date = None
+        self.properties.end_date = None
         self.ast = ast
         self.logical_plan = None
         self.physical_plan = None
@@ -78,9 +82,11 @@ class QueryPlanner:
         """
 
         # Extract and remove temporal filters, this isn't supported by sqloxide.
-        self.start_date, self.end_date, statement = extract_temporal_filters(
-            self.statement
-        )
+        (
+            self.properties.start_date,
+            self.properties.end_date,
+            statement,
+        ) = extract_temporal_filters(self.statement)
         try:
             self.ast = sqloxide.parse_sql(statement, dialect="mysql")
             # MySQL Dialect allows identifiers to be delimited with ` (backticks) and

@@ -36,6 +36,7 @@ def test_fuzz_text_parameters(value):
     # fmt:on
     assert control.ast == subject.ast
 
+
 @settings(deadline=None)
 @given(value=st.integers())
 def test_fuzz_int_parameters(value):

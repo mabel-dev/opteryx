@@ -10,6 +10,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from types import NoneType
 from typing import Any, Dict, Iterable, Union
 
 
@@ -157,6 +158,8 @@ def ascii_table(
     def just(val, width):
         if isinstance(val, (int, float)):
             return " " + str(val).rjust(width) + " "
+        if isinstance(val, (NoneType, bool)):
+            return " " + str(val).center(width) + " "
         return " " + str(val).ljust(width) + " "
 
     # display headers

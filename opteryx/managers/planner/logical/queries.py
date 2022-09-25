@@ -39,7 +39,9 @@ def select_query(ast, properties):
 
     all_identifiers = custom_builders.extract_identifiers(ast)
     try:
-        _relations = list(custom_builders.extract_relations(ast["Query"]["body"]["Select"]["from"]))
+        _relations = list(
+            custom_builders.extract_relations(ast["Query"]["body"]["Select"]["from"])
+        )
     except IndexError:
         _relations = []
 
