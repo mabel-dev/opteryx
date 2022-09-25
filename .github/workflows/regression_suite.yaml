@@ -17,12 +17,6 @@ jobs:
         if: matrix.os == 'MacOS'
         uses: docker-practice/actions-setup-docker@master
 
-      - name: Install Python on ARM64
-        if: matrix.os == 'ARM64'
-        run: |
-          sudo apt -y install python3
-          python -m ensurepip --upgrade
-
       - name: Checkout code
         uses: actions/checkout@v2
   

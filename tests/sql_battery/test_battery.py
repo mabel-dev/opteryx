@@ -386,8 +386,7 @@ STATEMENTS = [
         ("SHOW EXTENDED COLUMNS FROM $satellites", 8, 12),
         ("SHOW EXTENDED COLUMNS FROM $planets", 20, 12),
         ("SHOW EXTENDED COLUMNS FROM $astronauts", 19, 12),
-        ("SHOW COLUMNS FROM $satellites WHERE column_name ILIKE '%id'", 2, 2),
-        ("SHOW COLUMNS FROM $satellites LIKE '%id'", 1, 2),
+        ("SHOW COLUMNS FROM $satellites LIKE '%d'", 2, 2),
         ("SHOW COLUMNS FROM testdata.dated FOR '2020-02-03'", 8, 2),
 
         ("SELECT * FROM $satellites CROSS JOIN $astronauts", 63189, 27),

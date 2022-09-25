@@ -21,8 +21,6 @@ import pyarrow
 from opteryx.exceptions import DatabaseError
 
 
-
-
 class ExecutionTree:
     """
     The execution tree is defined separately to the planner to simplify the
@@ -206,8 +204,6 @@ class ExecutionTree:
 
         operator = self.get_operator(head[0])
         yield from operator.execute()
-
-
 
     def explain(self):
 

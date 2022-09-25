@@ -59,7 +59,7 @@ def literal_string(branch, alias: str = None, key=None):
 
 def literal_interval(branch, alias: list = None, key=None):
     """create node for a time literal"""
-    values = literal_string(branch["value"]["Value"]).value.split(" ")
+    values = build(branch["value"]["Value"]).value.split(" ")
     leading_unit = branch["leading_field"]
 
     parts = ["Year", "Month", "Day", "Hour", "Minute", "Second"]
@@ -335,6 +335,7 @@ def between(branch, alias=None, key=None):
 def in_subquery(branch, alias=None, key=None):
     # if it's a sub-query we create a plan for it
     from opteryx.managers.planner import QueryPlanner
+
     left = build(branch["expr"])
     ast = {}
     ast["Query"] = branch["subquery"]
