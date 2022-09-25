@@ -60,9 +60,9 @@ class QueryPlanner:
         else:
             self.properties = properties
 
-        # set to null, we're going to populate these later
-        self.properties.start_date = None
-        self.properties.end_date = None
+        # set to defaults, we're going to populate these later
+        self.properties.start_date = datetime.datetime.utcnow().date()
+        self.properties.end_date = datetime.datetime.utcnow().date()
         self.ast = ast
         self.logical_plan = None
         self.physical_plan = None
