@@ -195,3 +195,18 @@ strong {
 .md-button:hover {
     color: #fff !important;
 }
+
+.md-tabs {
+    background-color: #174d8d;
+}
+
+.md-tabs__link {
+    color: #fff !important;
+}
+
+.md-tabs__link--active {
+    text-decoration: underline;
+    text-underline-offset: 0.3em;
+    text-decoration-color: #aaa;
+    font-weight: 400;
+}

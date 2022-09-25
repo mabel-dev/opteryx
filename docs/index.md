@@ -1,4 +1,3 @@
 ---
-template: docs/homepage.html
+template: homepage.html
 ---
-This is the first paragraph of the document.
