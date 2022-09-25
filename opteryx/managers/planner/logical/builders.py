@@ -334,11 +334,13 @@ def between(branch, alias=None, key=None):
 
 def in_subquery(branch, alias=None, key=None):
     # if it's a sub-query we create a plan for it
+    from opteryx.managers.planner import QueryPlanner
     left = build(branch["expr"])
     ast = {}
     ast["Query"] = branch["subquery"]
-    subquery_plan = None  # this should be an empty plan
-    subquery_plan.create_plan(ast=[ast])
+    subquery_plan = QueryPlanner(ast=[ast])
+    subquery_plan.create_logical_plan()
+    subquery_plan.optimize_plan()
     operator = "NotInList" if branch["negated"] else "InList"
 
     sub_query = ExpressionTreeNode(NodeType.SUBQUERY, value=subquery_plan)
