@@ -1,7 +1,5 @@
 # Getting Started
 
-![Getting Started](getting-started.png)
-
 ## Installation
 
 **Install from PyPI (recommended)**

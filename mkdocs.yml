@@ -1,12 +1,22 @@
 site_name: Opteryx
+site_url: https://mabel-dev.github.io/opteryx/latest/
+site_author: Justin Joyce
+site_description: Opteryx. Query your data, no database required.
+copyright: Copyright &copy; 2021 - 2022 Justin Joyce
 
 theme:
   name: material
   logo: icarus-opteryx.png
+  favicon: icarus-opteryx.png
   font:
     text: Inter
     code: JetBrains Mono
+  features:
+    - navigation.tabs
+    - navigation.top
+  custom_dir: docs/overrides
 
+repo_name: mabel-dev/opteryx
 repo_url: https://github.com/mabel-dev/opteryx
 
 markdown_extensions:
@@ -29,7 +39,70 @@ markdown_extensions:
 extra_css:
   - stylesheets/extra.css
 
-plugins:
-  - mike:
-      canonical_version: 'latest'
-      version_selector: true
+extra:
+  version:
+    provider: mike
+    default: latest
+  social:
+    - icon: fontawesome/brands/github 
+      link: https://github.com/mabel-dev/opteryx
+    - icon: fontawesome/brands/twitter 
+      link: https://twitter.com/opteryxsql
+    - icon: fontawesome/brands/gitter 
+      link: https://gitter.im/mabel-opteryx/community
+
+# Page tree
+nav:
+  - Home: index.md
+  - Getting started:
+    - Installation: getting-started/getting-started.md
+    - Clients: getting-started/clients.md
+    - Deployment Guide: 
+      - getting-started/deployment/deployment-guide.md
+      - Hosting: getting-started/deployment/hosting.md
+      - Storage: getting-started/deployment/storage.md
+      - Advanced: getting-started/deployment/advanced.md
+    - Release Notes:
+      - Change Log: getting-started/release-notes/change-log.md
+      - Notices: getting-started/release-notes/notices.md
+  - SQL Reference:
+    - sql-reference/introduction.md
+    - Statements: sql-reference/statements.md
+    - Data Types: sql-reference/data-types.md
+    - Expressions: sql-reference/expressions.md
+    - Functions: sql-reference/functions.md
+    - Aggregates: sql-reference/aggregates.md
+    - Joins: sql-reference/joins.md
+    - Advanced:
+      - Working with Timestamps: sql-reference/adv-working-with-timestamps.md
+      - Working with Lists: sql-reference/adv-working-with-lists.md
+      - Working with Structs: sql-reference/adv-working-with-structs.md
+      - Time Travel: sql-reference/adv-time-travel.md
+      - Null Semantics: sql-reference/adv-null-semantics.md
+      - Temporary Tables: sql-reference/adv-temp-tables.md
+      - Sample Data: sql-reference/adv-sample-data.md
+      - Engine Configuration: sql-reference/adv-engine-configuration.md
+      - Query Optimization: sql-reference/adv-query-optimization.md
+  - Contributing:
+      - contributing/contributing.md
+      - Code of Conduct: contributing/code-of-conduct.md
+      - Etiquette: contributing/etiquette.md
+      - Set Up Guides:
+        - Debian/Ubuntu: contributing/set-up-guides/debian.md
+        - MacOS: contributing/set-up-guides/macos.md
+        - Windows: contributing/set-up-guides/windows.md
+      - System Internals:
+        - Project Structure: contributing/internals/project-structure.md
+        - Query Engine: contributing/internals/query-engine.md
+        - Storage Engine: contributing/internals/storage-engine.md
+        - Testing Approach: contributing/internals/testing.md
+      - Version Goals: contributing/version-goals.md
+  - Blog:
+    - blog/index.md
+    - 2022:
+      - blog/posts/blog-support-just-landed.md
+      - blog/posts/chinese-search-support.md
+    - 2021:
+      - blog/posts/the-past-present-and-future.md
+      - blog/posts/excluding-content-from-search.md
+      - blog/posts/search-better-faster-smaller.md

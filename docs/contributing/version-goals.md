@@ -1,5 +1,7 @@
 # Version Goals
 
+Until version 1.0 is released, a set of goals for an initial version are set out in place of a Road Map.
+
 ## Version 1.0
 
 Version 1.0 goals will be delivered across various minor versions building toward v1.0. These minor releases will also include bug fixes, performance improvements and functional completeness. The items listed below are major pieces of functionality.

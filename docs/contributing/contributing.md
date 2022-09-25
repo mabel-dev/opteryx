@@ -10,6 +10,8 @@ Opteryx is primarily written in Python, but you don't need to be a Python develo
 
 ### GitHub
 
+[:fontawesome-brands-github: Join us on Github](https://github.com/mabel-dev/opteryx){ .md-button }
+
 We use [GitHub](https://github.com/mabel-dev/opteryx) to host the code, track feature requests, perform testing, report bugs and maintain documentation.
 
 All submissions, including submissions by core project members, require review. We use GitHub pull requests for this purpose. Consult [GitHub Help](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/about-pull-requests) for more information on using pull requests. 
