@@ -22,16 +22,16 @@ from opteryx.models import ExecutionTree
 
 def explain_query(ast, properties):
     # we're handling two plans here:
-    # - query_plan - this is the plan for the query we're exlaining
+    # - plan - this is the plan for the query we're exlaining
     # - my_plan - this is the plan for this query
 
     from opteryx.managers.planner import QueryPlanner
 
-    query_plan = QueryPlanner(ast=[ast["Explain"]["statement"]])
-    query_plan.create_logical_plan()
-    query_plan.optimize_plan()
+    query_planner = QueryPlanner()
+    plan = query_planner.create_logical_plan(ast["Explain"]["statement"])
+    plan = query_planner.optimize_plan(plan)
     my_plan = ExecutionTree()
-    explain_node = operators.ExplainNode(properties, query_plan=query_plan)
+    explain_node = operators.ExplainNode(properties, query_plan=plan)
     my_plan.add_operator("explain", explain_node)
     return my_plan
 
@@ -99,7 +99,7 @@ def select_query(ast, properties):
             else:
 
                 dataset = right[1]
-                if isinstance(dataset, QueryPlanner):
+                if isinstance(dataset, ExecutionTree):
                     mode = "Blob"  # subqueries are here due to legacy reasons
                     reader = None
                 elif isinstance(dataset, dict) and dataset.get("function") is not None:

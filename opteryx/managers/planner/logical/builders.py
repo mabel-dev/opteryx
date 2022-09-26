@@ -339,12 +339,12 @@ def in_subquery(branch, alias=None, key=None):
     left = build(branch["expr"])
     ast = {}
     ast["Query"] = branch["subquery"]
-    subquery_plan = QueryPlanner(ast=[ast])
-    subquery_plan.create_logical_plan()
-    subquery_plan.optimize_plan()
+    subquery_planner = QueryPlanner()
+    plan = subquery_planner.create_logical_plan(ast)
+    plan = subquery_planner.optimize_plan(plan)
     operator = "NotInList" if branch["negated"] else "InList"
 
-    sub_query = ExpressionTreeNode(NodeType.SUBQUERY, value=subquery_plan)
+    sub_query = ExpressionTreeNode(NodeType.SUBQUERY, value=plan)
     return ExpressionTreeNode(
         NodeType.COMPARISON_OPERATOR,
         value=operator,

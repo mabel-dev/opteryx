@@ -1,0 +1,19 @@
+name: Documentation
+on:
+  workflow_call
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.x
+      - run: git config user.name XB500
+      - run: git config user.email XB500@users.noreply.github.com
+      - run: git fetch origin gh-pages --depth=1
+      - run: pip install mkdocs-material mike
+      # this should match the version
+      # - run: mike delete latest
+      # - run: mike delete dev
+      - run: mike deploy -p 0.5.0 dev

@@ -38,4 +38,4 @@ class ExplainNode(BasePlanNode):
 
     def execute(self) -> Iterable:
         if self._query_plan:
-            yield from self._query_plan.physical_plan.explain()
+            yield from self._query_plan.explain()

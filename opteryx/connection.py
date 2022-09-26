@@ -23,7 +23,7 @@ from typing import Dict, List, Optional
 
 from pyarrow import Table
 
-from opteryx.exceptions import CursorInvalidStateError, ProgrammingError, SqlError
+from opteryx.exceptions import CursorInvalidStateError, SqlError
 from opteryx.managers.kvstores import BaseKeyValueStore
 from opteryx.models import QueryStatistics
 from opteryx.utils import arrow
@@ -105,13 +105,18 @@ class Cursor:
 
         from opteryx.managers.planner import QueryPlanner
 
-        qp = QueryPlanner(statement=operation)
-        qp.parse_and_lex()
-        qp.bind_ast(parameters=params)
-        qp.create_logical_plan()
-        qp.optimize_plan()
+        planner = QueryPlanner(statement=operation)
+        asts = planner.parse_and_lex()
 
-        self._results = qp.execute()
+        results = None
+        for ast in asts:
+            ast = planner.bind_ast(ast, parameters=params)
+            plan = planner.create_logical_plan(ast)
+
+            plan = planner.optimize_plan(plan)
+            results = planner.execute(plan)
+
+        self._results = results
 
     @property
     def rowcount(self):

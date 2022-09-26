@@ -31,24 +31,15 @@ The effective order of operations must be:
 
 So we just build it in that order.
 """
-import pyarrow
+from opteryx.exceptions import UnsupportedSyntaxError
 
-from opteryx import operators
-from opteryx.exceptions import SqlError, UnsupportedSyntaxError
-
-
-from opteryx.managers.planner.logical import builders, queries
-
-from opteryx.models import Columns
+from opteryx.managers.planner.logical import queries
 
 
 def create_plan(ast, properties):
 
-    last_query = None
-    for query in ast:
-        query_type = next(iter(query))
-        builder = queries.QUERY_BUILDER.get(query_type)
-        if builder is None:
-            raise UnsupportedSyntaxError(f"Statement not supported `{query_type}`")
-        last_query = builder(query, properties)
-    return last_query
+    query_type = next(iter(ast))
+    builder = queries.QUERY_BUILDER.get(query_type)
+    if builder is None:
+        raise UnsupportedSyntaxError(f"Statement not supported `{query_type}`")
+    return builder(ast, properties)

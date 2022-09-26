@@ -174,12 +174,11 @@ def extract_relations(branch):
                 ast = {}
                 ast["Query"] = relation["relation"]["Derived"]["subquery"]
 
-                subquery_plan = QueryPlanner(ast=[ast], properties=None)
-                subquery_plan.bind_ast(parameters=[])
-                subquery_plan.create_logical_plan()
-                subquery_plan.optimize_plan()
+                subquery_planner = QueryPlanner()
+                plan = subquery_planner.create_logical_plan(ast)
+                plan = subquery_planner.optimize_plan(plan)
 
-                yield (alias, subquery_plan, "SubQuery", [])
+                yield (alias, plan, "SubQuery", [])
             if "Values" in subquery:
                 body = []
                 headers = [
