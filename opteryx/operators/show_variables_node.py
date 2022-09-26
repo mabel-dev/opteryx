@@ -42,7 +42,7 @@ class ShowVariablesNode(BasePlanNode):
             )
 
         for variable, value in self.properties.variables.items():
-            buffer.append({"name": variable, "value": str(value[0].value)})
+            buffer.append({"name": variable, "value": str(value.value)})
 
         table = pyarrow.Table.from_pylist(buffer)
         table = Columns.create_table_metadata(
