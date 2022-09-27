@@ -44,9 +44,6 @@ def select_query(ast, properties):
     It doesn't try to make it performant, low-memory or any other measure of 'good'
     beyond correctness.
     """
-    # prevent circular imports
-    from opteryx.managers.planner import QueryPlanner
-
     plan = ExecutionTree()
 
     all_identifiers = custom_builders.extract_identifiers(ast)
@@ -77,7 +74,7 @@ def select_query(ast, properties):
             alias=alias,
             dataset=dataset,
             reader=reader,
-            #            cache=_cache,
+            cache=properties.cache,
             start_date=properties.start_date,
             end_date=properties.end_date,
             hints=hints,
@@ -118,7 +115,7 @@ def select_query(ast, properties):
                     dataset=dataset,
                     alias=right[0],
                     reader=reader,
-                    #                    cache=_cache,
+                    cache=properties.cache,
                     start_date=properties.start_date,
                     end_date=properties.end_date,
                     hints=right[3],
@@ -239,7 +236,7 @@ def set_variable_query(ast, properties):
         properties.variables[key] = value
     else:
         key = key.lower()
-        if key in ("variables",):
+        if key in properties.read_only_properties:
             raise SqlError(f"Invalid parameter '{key}'")
         if hasattr(properties, key):
             setattr(properties, key, value.value)

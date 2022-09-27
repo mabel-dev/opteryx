@@ -30,7 +30,9 @@ def test_fuzz_text_parameters(value):
     subject = subject_planner.bind_ast(subject, parameters=[value])
 
     # plant a safe value
-    control_planner = QueryPlanner(statement=statement.replace("?", "'exchanged_value'"))
+    control_planner = QueryPlanner(
+        statement=statement.replace("?", "'exchanged_value'")
+    )
     control = next(control_planner.parse_and_lex())
     control = control_planner.bind_ast(control, [])
     # manually replace the value

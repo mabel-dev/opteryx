@@ -12,13 +12,14 @@
 
 import pyximport
 
+from pathlib import Path
+
 pyximport.install()  # build any pyx files
 
 from opteryx.connection import Connection
 from opteryx.connectors import register_store
 from opteryx.version import __version__
 
-from pathlib import Path
 
 __author__: str = "@joocer"
 

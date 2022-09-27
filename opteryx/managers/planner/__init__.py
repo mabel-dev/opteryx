@@ -47,8 +47,6 @@ from opteryx.models import QueryProperties
 class QueryPlanner:
     def __init__(self, *, statement: str = "", cache=None, ast=None, properties=None):
 
-        self._cache = cache
-
         # if it's a byte string, convert to an ascii string
         if isinstance(statement, bytes):
             statement = statement.decode()
@@ -56,6 +54,7 @@ class QueryPlanner:
 
         if properties is None:
             self.properties = QueryProperties(config)
+            self.properties.cache = cache
 
             # we need to deal with the temporal filters before we use sqloxide
             if statement is not None:

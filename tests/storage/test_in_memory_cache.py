@@ -23,7 +23,7 @@ def test_in_memory_cache():
 
     stats = cur.stats
     assert stats["cache_hits"] == 0
-    assert stats["cache_misses"] == 2
+    assert stats["cache_misses"] == 2, stats["cache_misses"]
     conn.close()
 
     # read the data a second time, this should hit the cache
