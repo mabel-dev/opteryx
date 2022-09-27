@@ -100,7 +100,9 @@ class Cursor:
 
         from opteryx.managers.planner import QueryPlanner
 
-        self._query_planner = QueryPlanner(statement=operation, cache=self._connection.cache)
+        self._query_planner = QueryPlanner(
+            statement=operation, cache=self._connection.cache
+        )
         self._query_planner.properties.statistics.start_time = time.time_ns()
         asts = self._query_planner.parse_and_lex()
 

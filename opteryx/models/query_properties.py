@@ -21,7 +21,8 @@ class QueryProperties:
     """
     Hints and properties to use when executing queries.
     """
-    read_only_properties = ('variables', 'statistics', 'cache')
+
+    read_only_properties = ("variables", "statistics", "cache")
 
     def __init__(self, config: dict = None):
 
