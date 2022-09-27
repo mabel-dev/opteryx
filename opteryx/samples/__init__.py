@@ -20,12 +20,13 @@ def satellites(*args):
     return load()
 
 
-def planets(end_date=datetime.date.today()):
+def planets(end_date=datetime.datetime.utcnow().date()):
     """load the planets sample data"""
     from .planet_data import load
 
     full_set = load()
 
+    # make planet data act like it support temporality
     mask = [True, True, True, True, True, True, True, True, True]
     if end_date < datetime.date(1930, 3, 13):
         # March 13, 1930 - Pluto discovered by Clyde William Tombaugh

@@ -17,20 +17,20 @@ This is a SQL Query Execution Plan Node.
 
 This performs a INNER JOIN
 """
-import time
 from typing import Iterable
 
 import numpy
 import pyarrow
 
 from opteryx import config
+from opteryx.managers.expression import NodeType
 from opteryx.operators import BasePlanNode
-from opteryx.models import Columns, QueryProperties, QueryStatistics
-from opteryx.exceptions import SqlError
+from opteryx.models import Columns, QueryProperties
+from opteryx.exceptions import ColumnNotFoundError, SqlError
 from opteryx.third_party import pyarrow_ops
 from opteryx.utils import arrow
 
-INTERNAL_BATCH_SIZE = config.INTERNAL_BATCH_SIZE
+INTERNAL_BATCH_SIZE = 500  # config
 
 
 def calculate_batch_size(cardinality):
@@ -47,11 +47,57 @@ def calculate_batch_size(cardinality):
     return INTERNAL_BATCH_SIZE * cardinality
 
 
-class InnerJoinNode(BasePlanNode):
-    def __init__(
-        self, properties: QueryProperties, statistics: QueryStatistics, **config
+def get_columns(expression, left_columns, right_columns):
+
+    left = []
+    right = []
+
+    if expression.token_type == NodeType.AND:
+        left_left, left_right = get_columns(
+            expression.left, left_columns, right_columns
+        )
+        right_left, right_right = get_columns(
+            expression.right, left_columns, right_columns
+        )
+        left.extend(left_left)
+        left.extend(right_left)
+        right.extend(left_right)
+        right.extend(right_right)
+    elif (
+        expression.token_type == NodeType.COMPARISON_OPERATOR
+        and expression.value == "Eq"
     ):
-        super().__init__(properties=properties, statistics=statistics)
+        try:
+            right = [
+                right_columns.get_column_from_alias(
+                    expression.right.value, only_one=True
+                )
+            ]
+            left = [
+                left_columns.get_column_from_alias(expression.left.value, only_one=True)
+            ]
+        except ColumnNotFoundError:
+            # the ON condition may not always be in the order of the tables
+            # purposefully reference the values the wrong way around
+            right = [
+                right_columns.get_column_from_alias(
+                    expression.left.value, only_one=True
+                )
+            ]
+            left = [
+                left_columns.get_column_from_alias(
+                    expression.right.value, only_one=True
+                )
+            ]
+    else:
+        raise SqlError("JOIN 'on' condition can only be comprised of 'AND's and '='s.")
+
+    return left, right
+
+
+class InnerJoinNode(BasePlanNode):
+    def __init__(self, properties: QueryProperties, **config):
+        super().__init__(properties=properties)
         self._right_table = config.get("right_table")
         self._join_type = config.get("join_type", "CrossJoin")
         self._on = config.get("join_on")
@@ -136,39 +182,26 @@ class InnerJoinNode(BasePlanNode):
 
                 if left_columns is None:
                     left_columns = Columns(page)
-                    try:
-                        right_join_column = right_columns.get_column_from_alias(
-                            self._on.right.value, only_one=True
-                        )
-                        left_join_column = left_columns.get_column_from_alias(
-                            self._on.left.value, only_one=True
-                        )
-                    except SqlError:
-                        # the ON condition may not always be in the order of the tables
-                        # purposefully reference the values the wrong way around
-                        right_join_column = right_columns.get_column_from_alias(
-                            self._on.left.value, only_one=True
-                        )
-                        left_join_column = left_columns.get_column_from_alias(
-                            self._on.right.value, only_one=True
-                        )
+                    left_join_columns, right_join_columns = get_columns(
+                        self._on, left_columns, right_columns
+                    )
 
                     left_null_columns, page = Columns.remove_null_columns(page)
                     new_metadata = right_columns + left_columns
 
                     # ensure the types are compatible for joining by coercing numerics
-                    self._right_table = arrow.coerce_column(
-                        self._right_table, right_join_column
+                    self._right_table = arrow.coerce_columns(
+                        self._right_table, right_join_columns
                     )
 
-                page = arrow.coerce_column(page, left_join_column)
+                page = arrow.coerce_columns(page, left_join_columns)
 
                 # do the join
                 # This uses the cjoin / HASH JOIN / legacy join
                 new_page = page.join(
                     self._right_table,
-                    keys=[left_join_column],
-                    right_keys=[right_join_column],
+                    keys=left_join_columns,
+                    right_keys=right_join_columns,
                     join_type="inner",
                     coalesce_keys=False,
                 )

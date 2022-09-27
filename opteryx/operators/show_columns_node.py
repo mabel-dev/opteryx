@@ -19,7 +19,6 @@ Gives information about a dataset's columns
 """
 import datetime
 
-from cityhash import CityHash64
 from functools import reduce
 from typing import Iterable
 from numpy import nan, nanmin, nanmax
@@ -28,9 +27,11 @@ import numpy
 import orjson
 import pyarrow
 
+from cityhash import CityHash64
+
 from opteryx.attribute_types import OPTERYX_TYPES, determine_type
 from opteryx.exceptions import SqlError
-from opteryx.models import Columns, QueryProperties, QueryStatistics
+from opteryx.models import Columns, QueryProperties
 from opteryx.operators import BasePlanNode
 
 MAX_COLLECTOR: int = 17
@@ -359,10 +360,8 @@ def _extended_collector(pages):
 
 
 class ShowColumnsNode(BasePlanNode):
-    def __init__(
-        self, properties: QueryProperties, statistics: QueryStatistics, **config
-    ):
-        super().__init__(properties=properties, statistics=statistics)
+    def __init__(self, properties: QueryProperties, **config):
+        super().__init__(properties=properties)
         self._full = config.get("full")
         self._extended = config.get("extended")
 

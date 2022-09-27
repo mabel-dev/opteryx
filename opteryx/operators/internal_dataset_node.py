@@ -25,7 +25,7 @@ import pyarrow
 
 from opteryx import samples
 from opteryx.exceptions import DatabaseError
-from opteryx.models import Columns, QueryProperties, QueryStatistics
+from opteryx.models import Columns, QueryProperties
 from opteryx.operators import BasePlanNode
 
 
@@ -69,16 +69,13 @@ def _get_sample_dataset(dataset, alias, end_date):
 
 
 class InternalDatasetNode(BasePlanNode):
-    def __init__(
-        self, properties: QueryProperties, statistics: QueryStatistics, **config
-    ):
+    def __init__(self, properties: QueryProperties, **config):
         """
         The Blob Reader Node is responsible for reading the relevant blobs
         and returning a Table/Relation.
         """
-        super().__init__(properties=properties, statistics=statistics)
+        super().__init__(properties=properties)
 
-        self._statistics = statistics
         self._alias = config["alias"]
         self._dataset = config["dataset"]
 

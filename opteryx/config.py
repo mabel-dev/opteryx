@@ -15,12 +15,12 @@ from pathlib import Path
 import pyarrow
 import yaml
 
-_config: dict = {}
+config: dict = {}
 try:  # pragma: no cover
     _config_path = Path(".") / "opteryx.yaml"
     if _config_path.exists():
         with open(_config_path, "rb") as _config_file:
-            _config = yaml.safe_load(_config_file)
+            config = yaml.safe_load(_config_file)
         print(f"loaded config from {_config_path}")
 except Exception as exception:  # pragma: no cover # it doesn't matter why - just use the defaults
     print(f"config file {_config_path} not used - {exception}")
@@ -28,30 +28,24 @@ except Exception as exception:  # pragma: no cover # it doesn't matter why - jus
 
 # fmt:off
 
-# The maximum input frame size for JOINs
-INTERNAL_BATCH_SIZE: int = int(_config.get("INTERNAL_BATCH_SIZE", 500))
-# The maximum number of records to create in a CROSS JOIN frame
-MAX_JOIN_SIZE: int = int(_config.get("MAX_JOIN_SIZE", 10000))
-# The maximum number of processors to use for multi processing
-MAX_SUB_PROCESSES: int = int(_config.get("MAX_SUB_PROCESSES", pyarrow.io_thread_count()))
-# The number of bytes to allocate for each processor
-BUFFER_PER_SUB_PROCESS: int = int(_config.get("BUFFER_PER_SUB_PROCESS", 100000000))
-# The number of seconds before forcably killing processes
-MAXIMUM_SECONDS_SUB_PROCESSES_CAN_RUN: int = int(_config.get("MAXIMUM_SECONDS_SUB_PROCESSES_CAN_RUN", 3600))
+# These are 'protected' properties which cannot be overridden by a single query
+
 # GCP project ID - for Google Cloud Data
-GCP_PROJECT_ID: str = _config.get("GCP_PROJECT_ID")
+GCP_PROJECT_ID: str = config.get("GCP_PROJECT_ID")
 # Mapping prefixes to readers - the default is to use disk
-DATASET_PREFIX_MAPPING: dict = _config.get("DATASET_PREFIX_MAPPING", {"_":"disk"})
+DATASET_PREFIX_MAPPING: dict = config.get("DATASET_PREFIX_MAPPING", {"_":"disk"})
 # Data Partitioning
-PARTITION_SCHEME: str = _config.get("PARTITION_SCHEME", None)
+PARTITION_SCHEME: str = config.get("PARTITION_SCHEME", None)
 # Maximum size for items saved to the buffer cache
-MAX_SIZE_SINGLE_CACHE_ITEM: int = _config.get("MAX_SIZE_SINGLE_CACHE_ITEM", 1024 * 1024)
-# Approximate Page Size
-PAGE_SIZE: int = _config.get("PAGE_SIZE", 64 * 1024 * 1024)
-
-
+MAX_SIZE_SINGLE_CACHE_ITEM: int = config.get("MAX_SIZE_SINGLE_CACHE_ITEM", 1024 * 1024)
+# The maximum number of processors to use for multi processing
+MAX_SUB_PROCESSES: int = int(config.get("MAX_SUB_PROCESSES", pyarrow.io_thread_count()))
+# The number of bytes to allocate for each processor
+BUFFER_PER_SUB_PROCESS: int = int(config.get("BUFFER_PER_SUB_PROCESS", 100000000))
+# The number of seconds before forcably killing processes
+MAXIMUM_SECONDS_SUB_PROCESSES_CAN_RUN: int = int(config.get("MAXIMUM_SECONDS_SUB_PROCESSES_CAN_RUN", 3600))
 # The number of metadata cache records to hold
-LOCAL_METADATA_CACHE: int = int(_config.get("LOCAL_METADATA_CACHE", 512))
+LOCAL_METADATA_CACHE: int = int(config.get("LOCAL_METADATA_CACHE", 512))
 # The maximum bumber of evictions by a single query
-MAX_CACHE_EVICTIONS: int = int(_config.get("MAX_CACHE_EVICTIONS", 50))
+MAX_CACHE_EVICTIONS: int = int(config.get("MAX_CACHE_EVICTIONS", 50))
 # fmt:on

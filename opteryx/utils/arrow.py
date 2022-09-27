@@ -22,8 +22,8 @@ from orjson import dumps, loads
 
 from opteryx import config
 
-INTERNAL_BATCH_SIZE = config.INTERNAL_BATCH_SIZE
-PAGE_SIZE = config.PAGE_SIZE
+INTERNAL_BATCH_SIZE = 500
+PAGE_SIZE = 64 * 1024 * 1024
 
 HIGH_WATER: float = 1.20  # Split pages over 120% of PAGE_SIZE
 LOW_WATER: float = 0.6  # Merge pages under 60% of PAGE_SIZE
@@ -89,7 +89,7 @@ def consolidate_pages(pages, statistics):
         raise Exception("No Records")
 
 
-def fetchmany(pages, limit: int = 1000):
+def fetchmany(pages, limit: int = 1000, as_dicts: bool = False):
     """fetch records from a Table as Python Dicts"""
     from opteryx.models.columns import Columns  # circular imports
 
@@ -122,7 +122,10 @@ def fetchmany(pages, limit: int = 1000):
             page = page.rename_columns(column_names)
 
             for batch in page.to_batches(max_chunksize=chunk_size):
-                yield from batch.to_pylist()
+                if as_dicts:
+                    yield from batch.to_pylist()
+                else:
+                    yield from [list(tpl.values()) for tpl in batch.to_pylist()]
 
     index = -1
     for index, row in enumerate(_inner_row_reader()):
@@ -131,15 +134,18 @@ def fetchmany(pages, limit: int = 1000):
         yield row
 
     if index < 0:
-        yield {}
+        if as_dicts:
+            yield {}
+        else:
+            yield tuple()
 
 
-def fetchone(pages: Iterable) -> dict:
-    return next(fetchmany(pages=pages, limit=1), None)
+def fetchone(pages: Iterable, as_dicts: bool = False) -> dict:
+    return next(fetchmany(pages=pages, limit=1, as_dicts=as_dicts), None)
 
 
-def fetchall(pages) -> List[dict]:
-    return fetchmany(pages=pages, limit=-1)
+def fetchall(pages, as_dicts: bool = False) -> List[dict]:
+    return fetchmany(pages=pages, limit=-1, as_dicts=as_dicts)
 
 
 def limit_records(data_pages, limit):
@@ -277,18 +283,25 @@ def get_metadata(tbl):
     return column_metadata(tbl), table_metadata(tbl)
 
 
-def coerce_column(table, column_name):
+def coerce_columns(table, column_names):
     """convert numeric types to a common type to allow comparisons"""
     # get the column we're coercing
     my_schema = table.schema
-    index = table.column_names.index(column_name)
-    column = my_schema.field(column_name)
 
-    # if it's numeric, and not already the type we want, convert it
-    if str(column.type) in ("int64", "double"):
-        column = column.with_type(pyarrow.float64())
-        my_schema = my_schema.set(index, pyarrow.field(column_name, pyarrow.float64()))
-        return table.cast(target_schema=my_schema)
+    if not isinstance(column_names, list):
+        column_names = [column_names]
+
+    for column_name in column_names:
+        index = table.column_names.index(column_name)
+        column = my_schema.field(column_name)
+
+        # if it's numeric, and not already the type we want, convert it
+        if str(column.type) in ("int64", "double"):
+            column = column.with_type(pyarrow.float64())
+            my_schema = my_schema.set(
+                index, pyarrow.field(column_name, pyarrow.float64())
+            )
+            table = table.cast(target_schema=my_schema)
 
     return table
 

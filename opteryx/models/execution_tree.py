@@ -10,6 +10,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+The Execution Tree is the graph which defines and supports the execution of
+query plans.
+"""
+
+import pyarrow
+
+
+from opteryx.exceptions import DatabaseError
+
 
 class ExecutionTree:
     """
@@ -158,3 +168,73 @@ class ExecutionTree:
             ]
             my_edges = new_edges
         return True
+
+    def execute(self):
+        """
+        This implements a 'pull' model execution engine. It finds the last stage in
+        the plan and pulls records from it - this stage then pulls records from earlier
+        stages in the plan as needed, and so on, until we get to a node that creates
+        records to feed into the engine (usually reading a data file).
+        """
+
+        def map_operators(nodes):
+            """
+            We're walking the query plan telling each node where to get the data it
+            needs from.
+            """
+            for node in nodes:
+                producers = self.get_incoming_links(node)
+                operator = self.get_operator(node)
+                if producers:
+                    operator.set_producers([self.get_operator(i[0]) for i in producers])
+                    map_operators(i[0] for i in producers)
+
+        # do some basic validation
+        if not self.is_acyclic():
+            raise DatabaseError("Problem executing the query plan - it is cyclic.")
+
+        # we get the tail of the query - the first steps
+        head = list(set(self.get_exit_points()))
+        if len(head) != 1:
+            raise DatabaseError(
+                f"Problem executing the query plan - it has {len(head)} heads."
+            )
+
+        map_operators(head)
+
+        operator = self.get_operator(head[0])
+        yield from operator.execute()
+
+    def explain(self):
+
+        from opteryx import operators
+        from opteryx.models import Columns
+
+        def _inner_explain(node, depth):
+            if depth == 1:
+                operator = self.get_operator(node)
+                yield {
+                    "operator": operator.name,
+                    "config": operator.config,
+                    "depth": depth - 1,
+                }
+            incoming_operators = self.get_incoming_links(node)
+            for operator_name in incoming_operators:
+                operator = self.get_operator(operator_name[0])
+                if isinstance(operator, operators.BasePlanNode):
+                    yield {
+                        "operator": operator.name,
+                        "config": operator.config,
+                        "depth": depth,
+                    }
+                yield from _inner_explain(operator_name[0], depth + 1)
+
+        head = list(set(self.get_exit_points()))
+        # print(head, _edges)
+        if len(head) != 1:
+            raise DatabaseError(f"Problem with the plan - it has {len(head)} heads.")
+        plan = list(_inner_explain(head[0], 1))
+
+        table = pyarrow.Table.from_pylist(plan)
+        table = Columns.create_table_metadata(table, table.num_rows, "plan", None)
+        yield table

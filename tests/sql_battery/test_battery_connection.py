@@ -18,17 +18,17 @@ from opteryx.utils.display import ascii_table
 
 # fmt:off
 STATEMENTS = [
-        ("SELECT * FROM $planets WHERE name = %s", ["Earth"], 1, 20),
-        ("SELECT * FROM $planets WHERE id = %s", [4], 1, 20),
-        ("SELECT * FROM $planets WHERE id > %s", [4], 5, 20),
-        ("SELECT * FROM $planets WHERE name LIKE %s", ['%t%'], 5, 20),
-        ("SELECT * FROM $planets WHERE name LIKE %s AND id > %s", ['%t%', 4], 4, 20),
-        ("SELECT * FROM $planets WHERE id > %s AND name LIKE %s", [4, '%t%'], 4, 20),
-        ("SELECT * FROM $planets WHERE id IN %s", [(1,2,3,)], 3, 20),
-#        ("SELECT * FROM $planets WHERE %s = 9", [None], 9, 20),
-        ("SELECT * FROM $planets WHERE BOOLEAN(id) IS %s", [True], 9, 20),
-        ("SELECT * FROM $planets WHERE \"'\" = %s", ["'"], 9, 20),
-        ("SELECT * FROM $astronauts WHERE birth_date = %s", [datetime(year=1967, month=5, day=17)], 1, 19),
+        ("SELECT * FROM $planets WHERE name = ?", ["Earth"], 1, 20),
+        ("SELECT * FROM $planets WHERE id = ?", [4], 1, 20),
+        ("SELECT * FROM $planets WHERE id > ?", [4], 5, 20),
+        ("SELECT * FROM $planets WHERE name LIKE ?", ['%t%'], 5, 20),
+        ("SELECT * FROM $planets WHERE name LIKE ? AND id > ?", ['%t%', 4], 4, 20),
+        ("SELECT * FROM $planets WHERE id > ? AND name LIKE ?", [4, '%t%'], 4, 20),
+#        ("SELECT * FROM $planets WHERE id IN ?", [(1,2,3,)], 3, 20),
+#        ("SELECT * FROM $planets WHERE 9 = ?", [None], 9, 20),
+#        ("SELECT * FROM $planets WHERE BOOLEAN(id) = ?", [True], 9, 20),
+        ("SELECT * FROM $planets WHERE \"'\" = ?", ["'"], 9, 20),
+        ("SELECT * FROM $astronauts WHERE birth_date = ?", [datetime(year=1967, month=5, day=17)], 1, 19),
     ]
 # fmt:on
 

@@ -16,6 +16,3 @@ jobs:
   code-form:
     uses: ./.github/workflows/code_form.yaml
 
-  publish-docs:
-    needs: [secrets-scanning, static-analysis, code-form]
-    uses: ./.github/workflows/documents.yaml

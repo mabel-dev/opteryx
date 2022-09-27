@@ -22,7 +22,7 @@ import orjson
 
 import opteryx
 
-from opteryx.managers.query.planner.temporal import extract_temporal_filters
+from opteryx.managers.planner.temporal import extract_temporal_filters
 from opteryx.utils.display import ascii_table
 
 
@@ -45,11 +45,11 @@ def main(
     cur.execute(sql)
 
     if o == "console":
-        print(ascii_table(cur.fetchall(), limit=-1))
+        print(ascii_table(cur.fetchall(as_dicts=True), limit=-1))
         return
     else:
         ext = o.lower().split(".")[-1]
-        table = cur.to_arrow()
+        table = cur.as_arrow()
 
         if ext == "parquet":
             from pyarrow import parquet

@@ -28,19 +28,17 @@ from opteryx.exceptions import SqlError
 from opteryx.managers.expression import evaluate_and_append
 from opteryx.managers.expression import format_expression
 from opteryx.managers.expression import NodeType, LITERAL_TYPE
-from opteryx.models import QueryProperties, QueryStatistics
+from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 from opteryx.utils import random_int
 
 
 class ProjectionNode(BasePlanNode):
-    def __init__(
-        self, properties: QueryProperties, statistics: QueryStatistics, **config
-    ):
+    def __init__(self, properties: QueryProperties, **config):
         """
         Attribute Projection, remove unwanted columns and performs column renames.
         """
-        super().__init__(properties=properties, statistics=statistics)
+        super().__init__(properties=properties)
         self._projection: dict = {}
         self._expressions = []
 
@@ -52,7 +50,7 @@ class ProjectionNode(BasePlanNode):
                 and attribute.value is not None
             ):
                 # qualified wildcard, e.g. table.*
-                self._projection[(attribute.value,)] = None
+                self._projection[attribute.value] = None
             elif attribute.token_type in (
                 NodeType.FUNCTION,
                 NodeType.AGGREGATOR,

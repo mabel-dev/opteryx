@@ -1,26 +1,25 @@
 <div align="center">
 
 ![Icarus Opteryx](icarus-opteryx-small.png)
-## Opteryx. Query your data, no database required
+## Opteryx. Query your data, no database required.
 </div>
 
 <h3 align="center">
 
 Opteryx is a SQL Engine written in Python, designed for cloud-native environments.
 
-[Documentation](https://mabel-dev.github.io/opteryx/latest) |
+[Documentation](https://opteryx.dev/latest) |
 [Examples](https://github.com/mabel-dev/opteryx/tree/main/notebooks) |
 [Contributing](https://mabel-dev.github.io/opteryx/latest/Contributor%20Guide/01%20Guide/)
+
+[![Tweet](https://img.shields.io/twitter/url/http/shields.io.svg?style=social)](https://twitter.com/intent/tweet?text=Easily%20query%20your%data%20with%20Opteryx&url=https://mabel-dev.github.io/opteryx/&hashtags=python,sql)
 
 [![PyPI Latest Release](https://img.shields.io/pypi/v/opteryx.svg)](https://pypi.org/project/opteryx/)
 [![opteryx](https://snyk.io/advisor/python/opteryx/badge.svg?style=flat-square)](https://snyk.io/advisor/python/opteryx)
 [![Downloads](https://pepy.tech/badge/opteryx)](https://pepy.tech/project/opteryx)
-[![commit_freq](https://img.shields.io/github/commit-activity/m/mabel-dev/opteryx)](https://github.com/mabel-dev/opteryx/commits)
 [![last_commit](https://img.shields.io/github/last-commit/mabel-dev/opteryx)](https://github.com/mabel-dev/opteryx/commits)
 [![codecov](https://codecov.io/gh/mabel-dev/opteryx/branch/main/graph/badge.svg?token=sIgKpzzd95)](https://codecov.io/gh/mabel-dev/opteryx)
 [![PyPI Latest Release](https://img.shields.io/badge/Python-3.8%20%7C%203.9%20%7C%203.10-blue?logo=python)](https://pypi.org/project/opteryx/)
-[![Regression Suite](https://github.com/mabel-dev/opteryx/actions/workflows/regression_suite.yaml/badge.svg)](https://github.com/mabel-dev/opteryx/actions/workflows/regression_suite.yaml)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 </h3>
 
@@ -93,16 +92,16 @@ import opteryx
 
 conn = opteryx.connect()
 cur = conn.cursor()
-cur.execute("SELECT * FROM $planets;")
-for row in cur.fetchall():
-    print(row)
+cur.execute("SELECT 4 * 7;")
+print(cur.fetchone())
 ~~~
 
 For more example usage, see [Exmaple Notebooks](https://github.com/mabel-dev/opteryx/tree/main/notebooks) and the [Getting Started Guide](https://mabel-dev.github.io/opteryx/latest/02%20Getting%20Started/).
 
 ## Community
 
-[![Join the chat at https://gitter.im/mabel-opteryx/community](https://badges.gitter.im/mabel-opteryx/community.svg)](https://gitter.im/mabel-opteryx/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![gitter](https://img.shields.io/badge/chat-on%20gitter-ED1965.svg?logo=gitter)](https://gitter.im/mabel-opteryx/community)
+[![Twitter Follow](https://img.shields.io/badge/follow-on%20twitter-1DA1F2.svg?logo=twitter)](https://img.shields.io/twitter/follow/OpteryxSQL)
 
 **How do I get Support?**
 
@@ -139,4 +138,4 @@ Opteryx is in beta. Beta means different things to different people, to us, bein
 - Some edge cases may have undetected bugs
 - Performance tuning may be incomplete
 - Changes are focused on feature completion, bugs, performance, reducing debt, and security
-- Code structure and APIs may change
+- Code structure and APIs are not stable and may change

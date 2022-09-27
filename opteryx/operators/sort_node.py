@@ -28,15 +28,13 @@ from pyarrow import Table, concat_tables
 from opteryx.exceptions import ColumnNotFoundError, SqlError
 from opteryx.managers.expression import format_expression
 from opteryx.managers.expression import NodeType
-from opteryx.models import Columns, QueryProperties, QueryStatistics
+from opteryx.models import Columns, QueryProperties
 from opteryx.operators import BasePlanNode
 
 
 class SortNode(BasePlanNode):
-    def __init__(
-        self, properties: QueryProperties, statistics: QueryStatistics, **config
-    ):
-        super().__init__(properties=properties, statistics=statistics)
+    def __init__(self, properties: QueryProperties, **config):
+        super().__init__(properties=properties)
         self._order = config.get("order", [])
         self._mapped_order: List = []
 

@@ -10,7 +10,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Any, Dict, Iterable
+from typing import Any, Dict, Iterable, Union
 
 
 def html_table(dictset: Iterable[dict], limit: int = 5):  # pragma: no cover
@@ -86,7 +86,11 @@ def html_table(dictset: Iterable[dict], limit: int = 5):  # pragma: no cover
     return "".join(_to_html_table(rows, columns)) + footer
 
 
-def ascii_table(dictset: Iterable[Dict[Any, Any]], limit: int = 5):  # pragma: no cover
+def ascii_table(
+    dictset: Iterable[Dict[Any, Any]],
+    limit: int = 5,
+    display_width: Union[bool, int] = True,
+):  # pragma: no cover
     """
     Render the dictset as a ASCII table.
 
@@ -98,10 +102,20 @@ def ascii_table(dictset: Iterable[Dict[Any, Any]], limit: int = 5):  # pragma: n
             The dictset to render
         limit: integer (optional)
             The maximum number of record to show in the table, defaults to 5
+        display_width: integer/boolean (optional)
+            The maximum width of the table, if an integer, the number of characters,
+            if a boolean, True uses the display width, False disables (5000)
 
     Returns:
         string (ASCII table)
     """
+    if isinstance(display_width, bool):
+        if not display_width:
+            display_width = 5000
+        else:
+            import shutil
+
+            display_width = shutil.get_terminal_size((80, 20))[0]
 
     def format_value(val):
         if isinstance(val, (list, tuple, set)) or hasattr(val, "as_list"):
@@ -110,11 +124,12 @@ def ascii_table(dictset: Iterable[Dict[Any, Any]], limit: int = 5):  # pragma: n
             return format_value(
                 "{ " + ", ".join([f'"{k}": {v}' for k, v in val.items()]) + " }"
             )
-        return str(val)
+        return val
 
     result = []
     columns: dict = {}
     cache = []
+    cropped = "│"
 
     # inspect values
     for count, row in enumerate(dictset):
@@ -130,13 +145,28 @@ def ascii_table(dictset: Iterable[Dict[Any, Any]], limit: int = 5):  # pragma: n
 
     # draw table
     bars = []
-    for _, width in columns.items():
-        bars.append("-" * (width + 2))
+    total_width = 2
+    for k, width in columns.items():
+        total_width += width + 3
+        if total_width < display_width:
+            bars.append("─" * (width + 2))
+        else:
+            columns[k] = -1
+            cropped = " >"
+
+    def just(val, width):
+        if isinstance(val, (int, float)):
+            return " " + str(val).rjust(width) + " "
+        if isinstance(val, (bool)) or val is None:
+            return " " + str(val).center(width) + " "
+        return " " + str(val).ljust(width) + " "
 
     # display headers
     result.append("┌" + "┬".join(bars) + "┐")
     result.append(
-        "│" + "│".join([str(k).center(v + 2) for k, v in columns.items()]) + "│"
+        "│"
+        + "│".join([str(k).center(v + 2) for k, v in columns.items() if v > 0])
+        + cropped
     )
     result.append("├" + "┼".join(bars) + "┤")
 
@@ -145,9 +175,13 @@ def ascii_table(dictset: Iterable[Dict[Any, Any]], limit: int = 5):  # pragma: n
         result.append(
             "│"
             + "│".join(
-                [str(format_value(v)).center(columns[k] + 2) for k, v in row.items()]
+                [
+                    just(format_value(v), columns[k])
+                    for k, v in row.items()
+                    if columns[k] > 0
+                ]
             )
-            + "│"
+            + cropped
         )
 
     # display footer

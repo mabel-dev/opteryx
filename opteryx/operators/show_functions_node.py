@@ -19,17 +19,13 @@ from typing import Iterable
 import pyarrow
 
 from opteryx import operators, functions
-from opteryx.models import Columns, QueryProperties, QueryStatistics
+from opteryx.models import Columns, QueryProperties
 from opteryx.operators import BasePlanNode
 
 
 class ShowFunctionsNode(BasePlanNode):
-    def __init__(
-        self, properties: QueryProperties, statistics: QueryStatistics, **config
-    ):
-        super().__init__(properties=properties, statistics=statistics)
-        self._full = config.get("full")
-        self._extended = config.get("extended")
+    def __init__(self, properties: QueryProperties, **config):
+        super().__init__(properties=properties)
 
     @property
     def name(self):  # pragma: no cover
@@ -52,7 +48,7 @@ class ShowFunctionsNode(BasePlanNode):
         table = Columns.create_table_metadata(
             table=table,
             expected_rows=len(buffer),
-            name="show_columns",
+            name="show_functions",
             table_aliases=[],
         )
 

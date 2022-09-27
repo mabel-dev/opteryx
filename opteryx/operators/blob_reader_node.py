@@ -30,7 +30,7 @@ from opteryx import config
 from opteryx.exceptions import DatabaseError
 from opteryx.managers.schemes import MabelPartitionScheme
 from opteryx.managers.schemes import DefaultPartitionScheme
-from opteryx.models import Columns, QueryProperties, QueryStatistics
+from opteryx.models import Columns, QueryProperties, ExecutionTree
 from opteryx.operators import BasePlanNode
 from opteryx.utils import file_decoders
 
@@ -97,24 +97,19 @@ class BlobReaderNode(BasePlanNode):
 
     _disable_cache = False
 
-    def __init__(
-        self, properties: QueryProperties, statistics: QueryStatistics, **config
-    ):
+    def __init__(self, properties: QueryProperties, **config):
         """
         The Blob Reader Node is responsible for reading the relevant blobs
         and returning a Table/Relation.
         """
-        super().__init__(properties=properties, statistics=statistics)
+        super().__init__(properties=properties)
 
         today = datetime.datetime.utcnow().date()
 
         self._dataset: str = config.get("dataset", None)
         self._alias: list = config.get("alias", None)
 
-        # circular imports
-        from opteryx.managers.query.planner import QueryPlanner
-
-        if isinstance(self._dataset, (list, QueryPlanner, dict)):
+        if isinstance(self._dataset, (list, ExecutionTree, dict)):
             return
 
         self._dataset = self._dataset.replace(".", "/") + "/"
@@ -173,13 +168,9 @@ class BlobReaderNode(BasePlanNode):
         return "Blob Reader"
 
     def execute(self) -> Iterable:
-
-        # circular imports
-        from opteryx.managers.query.planner import QueryPlanner
-
         # This is here for legacy reasons and should be moved to a DAG rather than
         # a Node (as per the other reader nodes)
-        if isinstance(self._dataset, QueryPlanner):
+        if isinstance(self._dataset, ExecutionTree):
             metadata = None
 
             for table in self._dataset.execute():

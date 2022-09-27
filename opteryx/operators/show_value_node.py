@@ -18,15 +18,13 @@ This is a SQL Query Execution Plan Node.
 from typing import Iterable
 import pyarrow
 
-from opteryx.models import Columns, QueryProperties, QueryStatistics
+from opteryx.models import Columns, QueryProperties
 from opteryx.operators import BasePlanNode
 
 
 class ShowValueNode(BasePlanNode):
-    def __init__(
-        self, properties: QueryProperties, statistics: QueryStatistics, **config
-    ):
-        super().__init__(properties=properties, statistics=statistics)
+    def __init__(self, properties: QueryProperties, **config):
+        super().__init__(properties=properties)
         self._key = config.get("key")
         self._value = config.get("value")
 

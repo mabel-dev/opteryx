@@ -23,9 +23,8 @@ from typing import Dict, List, Optional
 
 from pyarrow import Table
 
-from opteryx.exceptions import CursorInvalidStateError, ProgrammingError, SqlError
+from opteryx.exceptions import CursorInvalidStateError, SqlError
 from opteryx.managers.kvstores import BaseKeyValueStore
-from opteryx.models import QueryStatistics
 from opteryx.utils import arrow
 
 CURSOR_NOT_RUN = "Cursor must be in an executed state"
@@ -43,7 +42,7 @@ class Connection:
         **kwargs,
     ):
         self._results = None
-        self._cache = cache
+        self.cache = cache
         self._kwargs = kwargs
 
     def cursor(self):
@@ -60,10 +59,8 @@ class Cursor:
         self._connection = connection
         self._query = None
         self.arraysize = 1
-        self._stats = QueryStatistics()
         self._results = None
-
-        self._query_plan = None
+        self._query_planner = None
 
     def _format_prepared_param(self, param):
         """
@@ -101,94 +98,83 @@ class Cursor:
         if self._query is not None:
             raise CursorInvalidStateError("Cursor can only be executed once")
 
-        self._stats.start_time = time.time_ns()
+        from opteryx.managers.planner import QueryPlanner
 
-        if params:
-            if not isinstance(params, (list, tuple)):
-                raise ProgrammingError(
-                    "params must be a list or tuple containing the query parameter values"
-                )
-
-            for param in params:
-                if operation.find("%s") == -1:
-                    # we have too few placeholders
-                    raise ProgrammingError(
-                        "Number of placeholders and number of parameters must match."
-                    )
-                operation = operation.replace(
-                    "%s", self._format_prepared_param(param), 1
-                )
-            if operation.find("%s") != -1:
-                # we have too many placeholders
-                raise ProgrammingError(
-                    "Number of placeholders and number of parameters must match."
-                )
-
-        # circular imports
-        from opteryx.managers.query.planner import QueryPlanner
-
-        self._query_plan = QueryPlanner(
-            statistics=self._stats,
-            cache=self._connection._cache,
+        self._query_planner = QueryPlanner(
+            statement=operation, cache=self._connection.cache
         )
-        self._query_plan.create_plan(sql=operation)
+        self._query_planner.properties.statistics.start_time = time.time_ns()
+        asts = self._query_planner.parse_and_lex()
 
-        # how long have we spent planning
-        self._stats.time_planning = time.time_ns() - self._stats.start_time
+        results = None
+        for ast in asts:
+            ast = self._query_planner.bind_ast(ast, parameters=params)
+            plan = self._query_planner.create_logical_plan(ast)
 
-        self._results = self._query_plan.execute()
+            plan = self._query_planner.optimize_plan(plan)
+            results = self._query_planner.execute(plan)
+
+        self._results = results
 
     @property
     def rowcount(self):
         if self._results is None:
             raise CursorInvalidStateError(CURSOR_NOT_RUN)
-        return self._results.count()
+        if not isinstance(self._results, Table):
+            self._results = arrow.as_arrow(self._results)
+        return self._results.num_rows
 
     @property
     def shape(self):
         if self._results is None:
             raise CursorInvalidStateError(CURSOR_NOT_RUN)
+        if not isinstance(self._results, Table):
+            self._results = arrow.as_arrow(self._results)
         return self._results.shape
 
     @property
     def stats(self):
         """execution statistics"""
-        self._stats.end_time = time.time_ns()
-        return self._stats.as_dict()
+        self._query_planner.properties.statistics.end_time = time.time_ns()
+        return self._query_planner.properties.statistics.as_dict()
 
     @property
     def has_warnings(self):
         """do I have warnings"""
-        return self._stats.has_warnings
+        return self._query_planner.properties.statistics.has_warnings
 
     @property
     def warnings(self):
         """list of run-time warnings"""
-        return self._stats.warnings
+        return self._query_planner.properties.statistics.warnings
 
-    def fetchone(self) -> Optional[Dict]:
+    def fetchone(self, as_dicts: bool = False) -> Optional[Dict]:
         """fetch one record only"""
         if self._results is None:
             raise CursorInvalidStateError(CURSOR_NOT_RUN)
-        return arrow.fetchone(self._results)
+        return arrow.fetchone(self._results, as_dicts=as_dicts)
 
-    def fetchmany(self, size=None) -> List[Dict]:
+    def fetchmany(self, size=None, as_dicts: bool = False) -> List[Dict]:
         """fetch a given number of records"""
         fetch_size = self.arraysize if size is None else size
         if self._results is None:
             raise CursorInvalidStateError(CURSOR_NOT_RUN)
-        return arrow.fetchmany(self._results, fetch_size)
+        return arrow.fetchmany(self._results, limit=fetch_size, as_dicts=as_dicts)
 
-    def fetchall(self) -> List[Dict]:
+    def fetchall(self, as_dicts: bool = False) -> List[Dict]:
         """fetch all matching records"""
         if self._results is None:
             raise CursorInvalidStateError(CURSOR_NOT_RUN)
-        return arrow.fetchall(self._results)
+        return arrow.fetchall(self._results, as_dicts=as_dicts)
 
-    def to_arrow(self, size: int = None) -> Table:
+    def as_arrow(self, size: int = None) -> Table:
         """fetch all matching records as a pyarrow table"""
         # called 'size' to match the 'fetchmany' nomenclature
-        return arrow.as_arrow(self._results, limit=size)
+        if not isinstance(self._results, Table):
+            self._results = arrow.as_arrow(self._results)
+        if size:
+            return self._results.slice(offset=0, length=size)
+        return self._results
 
     def close(self):
         """close the connection"""
@@ -208,7 +194,7 @@ class Cursor:
         if i_am_in_a_notebook:
             from IPython.display import HTML, display
 
-            html = html_table(iter(self.fetchmany(size)), size)
+            html = html_table(iter(self.fetchmany(size, as_dicts=True)), size)
             display(HTML(html))
         else:
-            return ascii_table(iter(self.fetchmany(size)), size)
+            return ascii_table(iter(self.fetchmany(size, as_dicts=True)), size)

@@ -10,15 +10,46 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import datetime
+
+from typing import Any
+
+from opteryx.models.query_statistics import QueryStatistics
+
 
 class QueryProperties:
     """
     Hints and properties to use when executing queries.
     """
 
-    def __init__(self):
+    read_only_properties = ("variables", "statistics", "cache")
 
-        self.variables = {}
+    def __init__(self, config: dict = None):
 
-        # query directives
+        # this is empty unless it's set as part of the query
+        self.variables: dict[str, Any] = {}
+
+        # fmt:off
+        if config is None:
+            config = {}
+        # query parameters - these can be overridden on a per-query basis
+
+        # use the query optimizer
         self.enable_optimizer = True
+        # The maximum input frame size for JOINs
+        self.internal_batch_size: int = int(config.get("INTERNAL_BATCH_SIZE", 500))
+        # The maximum number of records to create in a CROSS JOIN frame
+        self.max_join_size: int = int(config.get("MAX_JOIN_SIZE", 10000))
+        # Approximate Page Size
+        self.page_size: int = config.get("PAGE_SIZE", 64 * 1024 * 1024)
+
+        # cost values go here:
+        #    costs are the approximate number of seconds to perform an action
+        #    1 million times
+
+        # fmt:on
+
+        self.start_date = datetime.datetime.utcnow().date()
+        self.end_date = datetime.datetime.utcnow().date()
+        self.statistics = QueryStatistics()
+        self.cache = None

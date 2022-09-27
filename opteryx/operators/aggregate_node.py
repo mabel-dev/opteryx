@@ -32,7 +32,7 @@ from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import evaluate_and_append
 from opteryx.managers.expression import format_expression
-from opteryx.models import QueryProperties, QueryStatistics
+from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 from opteryx.models.columns import Columns
 
@@ -211,10 +211,8 @@ def _extract_functions(aggregates):
 
 
 class AggregateNode(BasePlanNode):
-    def __init__(
-        self, properties: QueryProperties, statistics: QueryStatistics, **config
-    ):
-        super().__init__(properties=properties, statistics=statistics)
+    def __init__(self, properties: QueryProperties, **config):
+        super().__init__(properties=properties)
 
         self._aggregates = config.get("aggregates", [])
 

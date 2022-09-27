@@ -19,15 +19,13 @@ This writes out a query plan
 """
 from typing import Iterable
 
-from opteryx.models import QueryProperties, QueryStatistics
+from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 
 
 class ExplainNode(BasePlanNode):
-    def __init__(
-        self, properties: QueryProperties, statistics: QueryStatistics, **config
-    ):
-        super().__init__(properties=properties, statistics=statistics)
+    def __init__(self, properties: QueryProperties, **config):
+        super().__init__(properties=properties)
         self._query_plan = config.get("query_plan")
 
     @property
