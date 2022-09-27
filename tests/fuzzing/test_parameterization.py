@@ -15,52 +15,56 @@ from hypothesis import given, settings
 
 from opteryx.managers.planner import QueryPlanner
 
+# allows us to run short CI and longer scheduled tests
+TEST_ITERATIONS = int(os.environ.get("TEST_ITERATIONS", 100))
 
-@settings(deadline=None)
+
+@settings(deadline=None, max_examples=TEST_ITERATIONS)
 @given(value=st.text(min_size=0))
 def test_fuzz_text_parameters(value):
 
     statement = "SELECT * FROM $planets WHERE name = ? AND id = 0"
 
-    subject = QueryPlanner(statement=statement)
-    subject.parse_and_lex()
-    subject.bind_ast([value])
+    subject_planner = QueryPlanner(statement=statement)
+    subject = next(subject_planner.parse_and_lex())
+    subject = subject_planner.bind_ast(subject, parameters=[value])
 
     # plant a safe value
-    control = QueryPlanner(statement=statement.replace("?", "'exchanged_value'"))
-    control.parse_and_lex()
-    control.bind_ast([])
+    control_planner = QueryPlanner(statement=statement.replace("?", "'exchanged_value'"))
+    control = next(control_planner.parse_and_lex())
+    control = control_planner.bind_ast(control, [])
     # manually replace the value
     # fmt:off
-    control.ast[0]["Query"]["body"]["Select"]["selection"]["BinaryOp"]["left"]["BinaryOp"]["right"]["Value"]["SingleQuotedString"] = value
+    control["Query"]["body"]["Select"]["selection"]["BinaryOp"]["left"]["BinaryOp"]["right"]["Value"]["SingleQuotedString"] = value
     # fmt:on
-    assert control.ast == subject.ast
+    assert control == subject
 
 
-@settings(deadline=None)
+@settings(deadline=None, max_examples=TEST_ITERATIONS)
 @given(value=st.integers())
 def test_fuzz_int_parameters(value):
 
     statement = "SELECT * FROM $planets WHERE name = ? AND id = 0"
 
-    subject = QueryPlanner(statement=statement)
-    subject.parse_and_lex()
-    subject.bind_ast([value])
+    subject_planner = QueryPlanner(statement=statement)
+    subject = next(subject_planner.parse_and_lex())
+    subject = subject_planner.bind_ast(subject, parameters=[value])
 
     # plant a safe value
-    control = QueryPlanner(statement=statement.replace("?", "10"))
-    control.parse_and_lex()
-    control.bind_ast([])
+    control_planner = QueryPlanner(statement=statement.replace("?", "10"))
+    control = next(control_planner.parse_and_lex())
+    control = control_planner.bind_ast(control, [])
     # manually replace the value
     # fmt:off
-    control.ast[0]["Query"]["body"]["Select"]["selection"]["BinaryOp"]["left"]["BinaryOp"]["right"]["Value"]["Number"] = [value, False]
+    control["Query"]["body"]["Select"]["selection"]["BinaryOp"]["left"]["BinaryOp"]["right"]["Value"]["Number"] = [value, False]
     # fmt:on
 
-    assert control.ast == subject.ast
+    assert control == subject
 
 
 if __name__ == "__main__":  # pragma: no cover
 
-    test_fuzz_text_parameters()
+    test_fuzz_text_parameters("0")
+    test_fuzz_int_parameters(10)
 
     print("✅ okay")
