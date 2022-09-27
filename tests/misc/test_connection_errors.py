@@ -30,16 +30,16 @@ def test_connection_invalid_state():
         cur.shape()
 
 
-def test_connection_warnings():
-
-    import opteryx
-
-    conn = opteryx.connect()
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM $planets WITH(_NO_CACHE)")
-    cur.fetchone()
-
-    assert cur.has_warnings
+#def test_connection_warnings():
+#
+#    import opteryx
+#
+#    conn = opteryx.connect()
+#    cur = conn.cursor()
+#    cur.execute("SELECT * FROM $planets WITH(_NO_CACHE)")
+#    cur.fetchone()
+#
+#    assert cur.has_warnings
 
 
 def test_connection_parameter_mismatch():
@@ -67,7 +67,7 @@ def test_connection_parameter_mismatch():
 if __name__ == "__main__":  # pragma: no cover
 
     test_connection_invalid_state()
-    test_connection_warnings()
+#    test_connection_warnings()
     test_connection_parameter_mismatch()
 
     print("✅ okay")
