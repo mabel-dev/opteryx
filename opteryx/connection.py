@@ -25,7 +25,6 @@ from pyarrow import Table
 
 from opteryx.exceptions import CursorInvalidStateError, SqlError
 from opteryx.managers.kvstores import BaseKeyValueStore
-from opteryx.models import QueryStatistics
 from opteryx.utils import arrow
 
 CURSOR_NOT_RUN = "Cursor must be in an executed state"
@@ -60,10 +59,8 @@ class Cursor:
         self._connection = connection
         self._query = None
         self.arraysize = 1
-        self._stats = QueryStatistics()
         self._results = None
-
-        self._query_plan = None
+        self._query_planner = None
 
     def _format_prepared_param(self, param):
         """
@@ -101,20 +98,19 @@ class Cursor:
         if self._query is not None:
             raise CursorInvalidStateError("Cursor can only be executed once")
 
-        self._stats.start_time = time.time_ns()
-
         from opteryx.managers.planner import QueryPlanner
 
-        planner = QueryPlanner(statement=operation)
-        asts = planner.parse_and_lex()
+        self._query_planner = QueryPlanner(statement=operation)
+        self._query_planner.properties.statistics.start_time = time.time_ns()
+        asts = self._query_planner.parse_and_lex()
 
         results = None
         for ast in asts:
-            ast = planner.bind_ast(ast, parameters=params)
-            plan = planner.create_logical_plan(ast)
+            ast = self._query_planner.bind_ast(ast, parameters=params)
+            plan = self._query_planner.create_logical_plan(ast)
 
-            plan = planner.optimize_plan(plan)
-            results = planner.execute(plan)
+            plan = self._query_planner.optimize_plan(plan)
+            results = self._query_planner.execute(plan)
 
         self._results = results
 
@@ -137,18 +133,18 @@ class Cursor:
     @property
     def stats(self):
         """execution statistics"""
-        self._stats.end_time = time.time_ns()
-        return self._stats.as_dict()
+        self._query_planner.properties.statistics.end_time = time.time_ns()
+        return self._query_planner.properties.statistics.as_dict()
 
     @property
     def has_warnings(self):
         """do I have warnings"""
-        return self._stats.has_warnings
+        return self._query_planner.properties.statistics.has_warnings
 
     @property
     def warnings(self):
         """list of run-time warnings"""
-        return self._stats.warnings
+        return self._query_planner.properties.statistics.warnings
 
     def fetchone(self, as_dicts: bool = False) -> Optional[Dict]:
         """fetch one record only"""

@@ -41,7 +41,7 @@ from opteryx.config import config
 from opteryx.exceptions import SqlError, ProgrammingError
 from opteryx.managers.planner.logical import logical_planner
 from opteryx.managers.planner.temporal import extract_temporal_filters
-from opteryx.models import QueryStatistics, QueryProperties
+from opteryx.models import QueryProperties
 
 
 class QueryPlanner:
@@ -53,8 +53,6 @@ class QueryPlanner:
         if isinstance(statement, bytes):
             statement = statement.decode()
         self.raw_statement = statement
-
-        self.statistics = QueryStatistics()
 
         if properties is None:
             self.properties = QueryProperties(config)
