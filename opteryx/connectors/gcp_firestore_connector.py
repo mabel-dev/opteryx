@@ -87,5 +87,7 @@ class GcpFireStoreConnector(BaseDocumentStorageAdapter):
         database = firestore.client()
         documents = database.collection(collection).stream()
 
-        for page in self.page_dictset((doc.to_dict() for doc in documents), page_size):
+        for page in self.page_dictset(
+            ({**doc.to_dict(), "_id": doc.id} for doc in documents), page_size
+        ):
             yield page
