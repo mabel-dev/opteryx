@@ -100,7 +100,8 @@ def filter_operations(arr, operator, value):
         return compute.fill_null(matches, False)
     elif operator == "Lt":
         matches = compute.less(arr, value)
-        return compute.fill_null(matches, False)
+        matches = compute.fill_null(matches, False)
+        return matches
     elif operator == "Gt":
         matches = compute.greater(arr, value)
         return compute.fill_null(matches, False)

@@ -45,6 +45,8 @@ class ProjectionNode(BasePlanNode):
         projection = config.get("projection")
         # print("projection:", projection)
         for attribute in projection:
+            while attribute.token_type == NodeType.NESTED:
+                attribute = attribute.centre
             if (
                 attribute.token_type == NodeType.WILDCARD
                 and attribute.value is not None
@@ -55,6 +57,7 @@ class ProjectionNode(BasePlanNode):
                 NodeType.FUNCTION,
                 NodeType.AGGREGATOR,
                 NodeType.BINARY_OPERATOR,
+                NodeType.COMPARISON_OPERATOR,
             ) or (attribute.token_type & LITERAL_TYPE == LITERAL_TYPE):
                 new_column_name = format_expression(attribute)
                 self._projection[new_column_name] = attribute.alias

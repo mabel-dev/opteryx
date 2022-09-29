@@ -23,8 +23,8 @@ TEST_ITERATIONS = int(os.environ.get("TEST_ITERATIONS", 100))
 
 names = st.text(alphabet=string.ascii_letters, min_size=1)
 
-#@settings(deadline=None, max_examples=TEST_ITERATIONS)
-#@given(name=names, value=st.text(alphabet=string.printable))
+# @settings(deadline=None, max_examples=TEST_ITERATIONS)
+# @given(name=names, value=st.text(alphabet=string.printable))
 def test_fuzz_variables(name, value):
 
     value = value.replace("'", "''")

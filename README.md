@@ -1,7 +1,7 @@
 <div align="center">
 
 ![Opteryx](opteryx-word-small.png)
-## Opteryx. Query your data, no database required.
+## Query your data, no database required.
 </div>
 
 <h3 align="center">

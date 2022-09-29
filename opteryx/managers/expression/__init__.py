@@ -366,7 +366,10 @@ def evaluate_and_append(expressions, table: Table, seed: str = None):
 
             # some activities give us masks rather than the values, if we don't have
             # enough values, assume it's a mask
-            if len(new_column) < table.num_rows:
+            if (
+                len(new_column) < table.num_rows
+                or statement.token_type == NodeType.COMPARISON_OPERATOR
+            ):
                 bool_list = numpy.full(table.num_rows, False)
                 bool_list[new_column] = True
                 new_column = bool_list
