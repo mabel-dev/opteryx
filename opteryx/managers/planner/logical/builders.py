@@ -286,7 +286,9 @@ def unary_op(branch, alias=None, key=None):
     if branch["op"] == "Minus":
         number = 0 - numpy.float64(branch["expr"]["Value"]["Number"][0])
         return ExpressionTreeNode(NodeType.LITERAL_NUMERIC, value=number, alias=alias)
-
+    if branch["op"] == "Plus":
+        number = numpy.float64(branch["expr"]["Value"]["Number"][0])
+        return ExpressionTreeNode(NodeType.LITERAL_NUMERIC, value=number, alias=alias)
 
 def between(branch, alias=None, key=None):
     expr = build(branch["expr"])

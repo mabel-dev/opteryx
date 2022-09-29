@@ -12,7 +12,7 @@
 
 from opteryx import operators
 from opteryx.connectors import connector_factory
-from opteryx.exceptions import SqlError
+from opteryx.exceptions import ProgrammingError, SqlError
 from opteryx.managers.expression import ExpressionTreeNode
 from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.managers.expression import NodeType
@@ -237,11 +237,11 @@ def set_variable_query(ast, properties):
     else:
         key = key.lower()
         if key in properties.read_only_properties:
-            raise SqlError(f"Invalid parameter '{key}'")
+            raise ProgrammingError(f"Invalid parameter '{key}'")
         if hasattr(properties, key):
             setattr(properties, key, value.value)
         else:
-            raise SqlError(
+            raise ProgrammingError(
                 f"Unknown parameter, variables must be prefixed with a '@' - '{key}'"
             )
 

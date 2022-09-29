@@ -1,6 +1,6 @@
 <div align="center">
 
-![Icarus Opteryx](icarus-opteryx-small.png)
+![Opteryx](opteryx-word-small.png)
 ## Opteryx. Query your data, no database required.
 </div>
 
@@ -37,7 +37,7 @@ Opteryx is a SQL Engine written in Python, designed for cloud-native environment
 
 - __High Availability__
 
-    [Shared Nothing](https://en.wikipedia.org/wiki/Shared-nothing_architecture) design means each query can run in a separate container instance making it nearly impossible for a rogue query to affect any other users. _(compute and storage can be shared)_
+    [Shared Nothing](https://en.wikipedia.org/wiki/Shared-nothing_architecture)/Shared Disk design means each query can run in a separate container instance making it nearly impossible for a rogue query to affect any other users. _(compute and storage can be shared)_
 
     If a cluster, region or datacentre is unavailable, if you have instances able to run in another location, Opteryx will keep responding to queries. _(inflight queries may not be recovered)_
 
