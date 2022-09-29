@@ -34,7 +34,8 @@ class BaseDocumentStorageAdapter(abc.ABC):
         index = -1
         chunk: list = [{}] * page_size
         for index, record in enumerate(dictset):
-            record.pop("_id", None)  # this column type isn't supported
+            _id = record.pop("_id", None)
+            record["id"] = None if _id is None else str(_id)
             if index > 0 and index % page_size == 0:
                 yield chunk
                 chunk = [{}] * page_size

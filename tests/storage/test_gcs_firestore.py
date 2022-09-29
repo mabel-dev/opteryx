@@ -20,13 +20,13 @@ def test_firestore_storage():
 
     # SELECT EVERYTHING
     cur = conn.cursor()
-    cur.execute(f"SELECT * FROM dwarves;")
+    cur.execute("SELECT * FROM dwarves;")
     rows = list(cur.fetchall())
     assert len(rows) == 7
 
     # PROCESS THE DATA IN SOME WAY
     cur = conn.cursor()
-    cur.execute(f"SELECT actor, COUNT(*) FROM dwarves GROUP BY actor;")
+    cur.execute("SELECT actor, COUNT(*) FROM dwarves GROUP BY actor;")
     rows = list(cur.fetchall())
     assert len(rows) == 6, len(rows)
 

@@ -124,7 +124,7 @@ class NodeType(int, Enum):
 
 NUMPY_TYPES = {
     NodeType.LITERAL_NUMERIC: numpy.dtype("float64"),
-    NodeType.LITERAL_VARCHAR: numpy.str_,
+    NodeType.LITERAL_VARCHAR: numpy.unicode_(),
     NodeType.LITERAL_BOOLEAN: numpy.dtype("?"),
     NodeType.LITERAL_INTERVAL: numpy.dtype("m"),
     NodeType.LITERAL_LIST: numpy.dtype("O"),
@@ -281,7 +281,7 @@ def _inner_evaluate(root: ExpressionTreeNode, table: Table, columns):
             # this isn't as fast as .full - but lists and strings are problematic
             return numpy.array([root.value] * table.num_rows)
         if node_type == NodeType.LITERAL_VARCHAR:
-            return numpy.array([root.value] * table.num_rows, dtype=numpy.str_)
+            return numpy.array([root.value] * table.num_rows)
         if node_type == NodeType.LITERAL_INTERVAL:
             return pyarrow.array([root.value] * table.num_rows)
         return numpy.full(
@@ -366,7 +366,10 @@ def evaluate_and_append(expressions, table: Table, seed: str = None):
 
             # some activities give us masks rather than the values, if we don't have
             # enough values, assume it's a mask
-            if len(new_column) < table.num_rows:
+            if (
+                len(new_column) < table.num_rows
+                or statement.token_type == NodeType.COMPARISON_OPERATOR
+            ):
                 bool_list = numpy.full(table.num_rows, False)
                 bool_list[new_column] = True
                 new_column = bool_list
