@@ -103,6 +103,8 @@ For more example usage, see [Exmaple Notebooks](https://github.com/mabel-dev/opt
 [![gitter](https://img.shields.io/badge/chat-on%20gitter-ED1965.svg?logo=gitter)](https://gitter.im/mabel-opteryx/community)
 [![Twitter Follow](https://img.shields.io/badge/follow-on%20twitter-1DA1F2.svg?logo=twitter)](https://img.shields.io/twitter/follow/OpteryxSQL)
 
+[![Stargazers repo roster for @mabel-dev/opteryx](https://reporoster.com/stars/mabel-dev/opteryx)](https://github.com/mabel-dev/opteryx/stargazers)
+
 **How do I get Support?**
 
 For support join our [Gitter Community](https://gitter.im/mabel-opteryx/community).
