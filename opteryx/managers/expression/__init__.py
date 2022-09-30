@@ -281,7 +281,7 @@ def _inner_evaluate(root: ExpressionTreeNode, table: Table, columns):
             # this isn't as fast as .full - but lists and strings are problematic
             return numpy.array([root.value] * table.num_rows)
         if node_type == NodeType.LITERAL_VARCHAR:
-            return numpy.array([root.value] * table.num_rows)
+            return numpy.array([root.value] * table.num_rows, dtype=numpy.unicode_)
         if node_type == NodeType.LITERAL_INTERVAL:
             return pyarrow.array([root.value] * table.num_rows)
         return numpy.full(

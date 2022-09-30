@@ -15,12 +15,7 @@ from opteryx.managers.kvstores import LocalKVStore
 
 def test_in_memory_cache():
 
-    try:
-        shutil.rmtree("test.rocksdb", ignore_errors=True)
-        pass
-    except Exception as e:
-        print(e)
-
+    shutil.rmtree("test.rocksdb", ignore_errors=True)
     cache = LocalKVStore(location="test.rocksdb")
 
     # read the data once, this should populate the cache
