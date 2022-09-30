@@ -18,12 +18,6 @@ from pyarrow import compute
 def string_slicer_left(arr, length):
     """
     Slice a list of strings from the left
-
-    This implementation is about 4x faster with record batches of 50,000, and 10x
-    faster on batches of 500 than a naive Python string slicing implementation.
-
-    However, this implementation is slower on large batches due to memory allocation,
-    but as Opteryx works on data pages at-a-time, this is unlikely to be encountered.
     """
     if len(arr) == 0:
         return [[]]
@@ -32,9 +26,7 @@ def string_slicer_left(arr, length):
     length = int(length)
     if length == 0:
         return [[""] * len(arr)]
-    arr = arr.astype(str)  # it's probably an array of objects
-    interim = arr.view((str, 1)).reshape(len(arr), -1)[:, 0:length]
-    return numpy.array(interim).view((str, length)).flatten()
+    return [None if s is None else s[:length] for s in arr]
 
 
 def string_slicer_right(arr, length):
@@ -48,9 +40,7 @@ def string_slicer_right(arr, length):
     length = int(length)
     if length == 0:
         return [[""] * len(arr)]
-    arr = arr.astype(str)  # it's probably an array of objects
-    interim = arr.view((str, 1)).reshape(len(arr), -1)[:, -length:]
-    return numpy.array(interim).view((str, length)).flatten()
+    return [None if s is None else s[-length:] for s in arr]
 
 
 def soundex(arr):

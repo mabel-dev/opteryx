@@ -16,13 +16,13 @@ def test_slice_left():
     slicer = string_functions.string_slicer_left
 
     # fmt:off
-    assert slicer(numpy.array(["abcdef"]), 3) == ["abc"]
-    assert sorted(slicer(numpy.array(["abcdef", "ghijklm"]), 3)) == ["abc","ghi"], sorted(slicer(numpy.array(["abcdef", "ghijklm"]), 3))
+    assert slicer(numpy.array(["abcdef"]), 3) == ["abc"], slicer(numpy.array(["abcdef"]), 3)
+    assert slicer(numpy.array(["abcdef", "ghijklm"]), 3) == ["abc","ghi"], slicer(numpy.array(["abcdef", "ghijklm"]), 3)
     assert slicer(numpy.array([]), 3) == [[]], slicer(numpy.array([]), 3)
-    assert slicer(numpy.array([None]), 3) == ["Non"], slicer(numpy.array([None]), 3)
+    assert slicer(numpy.array([None]), 3) == [None], slicer(numpy.array([None]), 3)
     assert slicer(numpy.array([""]), 0) == [[""]], slicer(numpy.array([""]), 0)
-    assert sorted(slicer(numpy.array(["abc", "abcdefghijklmnopqrstuvwxyz"]), 5)) == ["abc","abcde"], slicer(numpy.array(["abc", "abcdefghijklmnopqrstuvwxyz"]), 5)
-    assert sorted(slicer(numpy.array([None, "", "abcdef", "a"]), 2)) == ["","No","a","ab"], sorted(slicer(numpy.array([None, "", "abcdef", "a"]), 2)[0])
+    assert slicer(numpy.array(["abc", "abcdefghijklmnopqrstuvwxyz"]), 5) == ["abc","abcde"], slicer(numpy.array(["abc", "abcdefghijklmnopqrstuvwxyz"]), 5)
+    assert slicer(numpy.array([None, "", "abcdef", "a"]), 2) == [None,"","ab","a"], slicer(numpy.array([None, "", "abcdef", "a"]), 2)[0]
     # fmt:on
 
 
@@ -31,13 +31,13 @@ def skip_test_slice_right():
     slicer = string_functions.string_slicer_right
 
     # fmt:off
-    assert slicer(numpy.array(["abcdef"]), 3) == ["def"]
-    assert sorted(slicer(numpy.array(["abcdef", "ghijklm"]), 3)) == ["ef","klm"], sorted(slicer(numpy.array(["abcdef", "ghijklm"]), 3))
+    assert slicer(numpy.array(["abcdef"]), 3) == ["def"], slicer(numpy.array(["abcdef"]), 3)
+    assert slicer(numpy.array(["abcdef", "ghijklm"]), 3) == ["def","klm"], slicer(numpy.array(["abcdef", "ghijklm"]), 3)
     assert slicer(numpy.array([]), 3) == [[]], slicer(numpy.array([]), 3)
-    assert slicer(numpy.array([None]), 3) == ["one"], slicer(numpy.array([None]), 3)
+    assert slicer(numpy.array([None]), 3) == [None], slicer(numpy.array([None]), 3)
     assert slicer(numpy.array([""]), 0) == [[""]], slicer(numpy.array([""]), 0)
-    assert sorted(slicer(numpy.array(["abc", "abcdefghijklmnopqrstuvwxyz"]), 5)) == ["","vwxyz"], slicer(numpy.array(["abc", "abcdefghijklmnopqrstuvwxyz"]), 5)
-    assert sorted(slicer(numpy.array([None, "", "abcdef", "a"]), 2)) == ["","a","ef","ne"], sorted(slicer(numpy.array([None, "", "abcdef", "a"]), 2)[0])
+    assert slicer(numpy.array(["abc", "abcdefghijklmnopqrstuvwxyz"]), 5) == ["abc","vwxyz"], slicer(numpy.array(["abc", "abcdefghijklmnopqrstuvwxyz"]), 5)
+    assert slicer(numpy.array([None, "", "abcdef", "a"]), 2) == [None, "","ef", "a"], slicer(numpy.array([None, "", "abcdef", "a"]), 2)[0]
     # fmt:on
 
 

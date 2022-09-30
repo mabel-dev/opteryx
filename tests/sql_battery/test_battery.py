@@ -220,7 +220,7 @@ STATEMENTS = [
         ("SELECT LEFT(name, 1), COUNT(*) FROM $satellites GROUP BY 1 ORDER BY 2 DESC", 21, 2),
         ("SELECT LEFT(name, 2) as le, COUNT(*) FROM $satellites GROUP BY 1 ORDER BY 2 DESC", 87, 2),
         ("SELECT RIGHT(name, 10), COUNT(*) FROM $satellites GROUP BY 1 ORDER BY 2 DESC", 177, 2),
-        ("SELECT RIGHT(name, 2) as le, COUNT(*) FROM $satellites GROUP BY 1 ORDER BY 2 DESC", 30, 2),
+        ("SELECT RIGHT(name, 2) as le, COUNT(*) FROM $satellites GROUP BY 1 ORDER BY 2 DESC", 91, 2),
         ("SELECT round(magnitude) FROM $satellites group by round(magnitude)", 22, 1),
         ("SELECT upper(name) as NAME, id as Identifier FROM $satellites", 177, 2),
         ("SELECT upper(name), lower(name), id as Identifier FROM $satellites", 177, 3),
