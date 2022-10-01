@@ -1,0 +1,37 @@
+# These are SQL statement that appear in the documentation
+# ther's nothing special about them other than it's not a good experience if they fail
+
+# numerous places
+SELECT * FROM $planets;
+
+# sql introduction
+SELECT id, name FROM $planets WHERE name = 'Earth';
+SELECT id, UPPER(name) AS uppercase_name FROM $planets WHERE id = 3;
+SELECT * FROM $planets WHERE lengthOfDay > 24 AND numberOfMoons < 10;
+SELECT name, numberOfMoons FROM $planets WHERE numberOfMoons = 0;
+SELECT name, numberOfMoons FROM $planets WHERE numberOfMoons = 0 ORDER BY name;
+SELECT DISTINCT planetId FROM $satellites;
+SELECT DISTINCT planetId FROM $satellites ORDER BY planetId;
+SELECT * FROM $satellites, $planets WHERE planetId = $planets.id;
+SELECT * FROM $satellites, $planets WHERE $satellites.planetId = $planets.id;
+SELECT * FROM $satellites INNER JOIN $planets ON $satellites.planetId = $planets.id;
+SELECT * FROM $satellites LEFT OUTER JOIN $planets ON $satellites.planetId = $planets.id;
+SELECT name FROM $planets WHERE id NOT IN (SELECT DISTINCT planetId FROM $satellites);
+
+# time travel
+SELECT * FROM $planets FOR YESTERDAY;
+SELECT name FROM $planets FOR '1846-01-01';
+SELECT name FROM $planets FOR DATES BETWEEN '2021-01-01' and '2022-12-31';
+
+# temporary tables
+SELECT * FROM (VALUES ('High', 3), ('Medium', 2),('Low', 1)) AS ratings (name, rating);
+SELECT * FROM UNNEST((1,2,3));
+SELECT * FROM generate_series(3);
+SELECT * FROM generate_series('192.168.1.0/30');
+SELECT * FROM generate_series(2, 4);
+SELECT * FROM generate_series(-5, 5, 5);
+SELECT * FROM generate_series('2020-01-01', '2025-12-31', '1y');
+SELECT * FROM FAKE(3, 2);
+
+# engine configuration
+SET @id = 3; SELECT name FROM $planets WHERE id = @id;
