@@ -35,9 +35,27 @@ class ExecutionTree:
     def get_nodes_of_type(self, operator):
         if not isinstance(operator, (list, tuple, set)):
             operator = [operator]
-        for nid, item in self._nodes.items():
+        for nid, item in list(self._nodes.items()):
             if isinstance(item, *operator):
                 yield nid
+
+    def insert_operator_before(self, nid, operator, before_nid):
+        """rewrite the plan putting the new node before a given node"""
+        # add the new node to the plan
+        self.add_operator(nid, operator)
+        # change all the edges that were going into the old nid to the new one
+        self._edges = [
+            (source, target if target != before_nid else nid, direction) for source, target, direction in self._edges
+        ]
+        # add an edge from the new nid to the old one
+        self.link_operators(nid, before_nid)
+
+    def remove_operator(self, nid):
+        """rewrite a plan, removing a node"""
+        self._nodes.pop(nid, None)
+        self._edges = [
+            (source, target, direction) for source, target, direction in self._edges if source != nid and target != nid
+        ]
 
     def add_operator(self, nid, operator):
         """
@@ -51,7 +69,7 @@ class ExecutionTree:
         """
         self._nodes[nid] = operator
 
-    def link_operators(self, source_operator, target_operator, connection_name=None):
+    def link_operators(self, source_operator, target_operator, direction=None):
         """
         Link steps in a flow.
 
@@ -60,13 +78,13 @@ class ExecutionTree:
                 The id of the source step
             target_operator: string
                 The id of the target step
-            connection_name: string (optional)
+            direction: string (optional)
                 The name of the connection, for joins this will be Left/Right
         """
         edge = (
             source_operator,
             target_operator,
-            connection_name,
+            direction,
         )
         if edge not in self._edges:
             self._edges.append(edge)
@@ -80,7 +98,7 @@ class ExecutionTree:
                 The name of the step to search from
         """
         retval = {
-            target for source, target, connection_name in self._edges if source == nid
+            target for source, target, direction in self._edges if source == nid
         }
         return sorted(retval)
 
@@ -93,11 +111,8 @@ class ExecutionTree:
                 The name of the step to search from
         """
         retval = {
-            (
-                source,
-                connection_name,
-            )
-            for source, target, connection_name in self._edges
+            (source, direction)
+            for source, target, direction in self._edges
             if target == nid
         }
         return sorted(retval)
@@ -108,10 +123,10 @@ class ExecutionTree:
         """
         if len(self._nodes) == 1:
             return list(self._nodes.keys())
-        sources = {source for source, target, connection_name in self._edges}
+        sources = {source for source, target, direction in self._edges}
         retval = (
             target
-            for source, target, connection_name in self._edges
+            for source, target, direction in self._edges
             if target not in sources
         )
         return sorted(retval)
@@ -122,10 +137,10 @@ class ExecutionTree:
         """
         if len(self._nodes) == 1:
             return list(self._nodes.keys())
-        targets = {target for source, target, connection_name in self._edges}
+        targets = {target for source, target, direction in self._edges}
         retval = (
             source
-            for source, target, connection_name in self._edges
+            for source, target, direction in self._edges
             if source not in targets
         )
         return sorted(retval)
@@ -150,10 +165,10 @@ class ExecutionTree:
 
         while len(my_edges) > 0:
             # find all of the exits
-            sources = {source for source, target, connection_name in my_edges}
+            sources = {source for source, target, direction in my_edges}
             exits = {
                 target
-                for source, target, connection_name in my_edges
+                for source, target, direction in my_edges
                 if target not in sources
             }
 
@@ -162,8 +177,8 @@ class ExecutionTree:
 
             # remove the exits
             new_edges = [
-                (source, target, connection_name)
-                for source, target, connection_name in my_edges
+                (source, target, direction)
+                for source, target, direction in my_edges
                 if target not in exits
             ]
             my_edges = new_edges

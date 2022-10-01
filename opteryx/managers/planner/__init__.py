@@ -40,6 +40,7 @@ import sqloxide
 from opteryx.config import config
 from opteryx.exceptions import SqlError, ProgrammingError
 from opteryx.managers.planner.logical import logical_planner
+from opteryx.managers.planner.optimizer import run_optimizer
 from opteryx.managers.planner.temporal import extract_temporal_filters
 from opteryx.models import QueryProperties
 
@@ -172,6 +173,8 @@ class QueryPlanner:
         return logical_planner.create_plan(ast, self.properties)
 
     def optimize_plan(self, plan):
+        if self.properties.enable_optimizer:
+            return run_optimizer(plan)
         return plan
 
     def execute(self, plan):

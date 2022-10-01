@@ -59,14 +59,14 @@ SQL_PARTS = [
 COMBINE_WHITESPACE_REGEX = re.compile(r"\s+")
 
 
-def clean_statement(string):
+def clean_statement(string):  # pragma: no cover
     """
     Remove carriage returns and all whitespace to single spaces
     """
     return COMBINE_WHITESPACE_REGEX.sub(" ", string).strip().upper()
 
 
-def sql_parts(string):
+def sql_parts(string):  # pragma: no cover
     """
     Split a SQL statement into clauses
     """
@@ -80,7 +80,7 @@ def sql_parts(string):
     return [part.strip() for part in parts if part.strip() != ""]
 
 
-def remove_comments(string):
+def remove_comments(string):  # pragma: no cover
     """
     Remove comments from the string
     """
@@ -100,7 +100,7 @@ def remove_comments(string):
     return regex.sub(_replacer, string)
 
 
-def _subtract_one_month(in_date):
+def _subtract_one_month(in_date):  # pragma: no cover
     day = in_date.day
     end_of_previous_month = in_date.replace(day=1) - datetime.timedelta(days=1)
     while True:
@@ -112,7 +112,7 @@ def _subtract_one_month(in_date):
                 raise ValueError("Unable to determine previous month")
 
 
-def parse_range(fixed_range):
+def parse_range(fixed_range):  # pragma: no cover
     fixed_range = fixed_range.upper()
     today = datetime.datetime.utcnow().date()
 
@@ -157,7 +157,7 @@ def parse_range(fixed_range):
     return start, end
 
 
-def parse_date(date):
+def parse_date(date):  # pragma: no cover
 
     date = date.upper()
     today = datetime.datetime.utcnow().date()
@@ -172,7 +172,7 @@ def parse_date(date):
         return parsed_date.date()
 
 
-def extract_temporal_filters(sql):
+def extract_temporal_filters(sql):  # pragma: no cover
 
     # prep the statement, by normalizing it
     clean_sql = remove_comments(sql)

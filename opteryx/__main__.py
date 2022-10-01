@@ -67,7 +67,7 @@ def main(
                     file.write(orjson.dumps(row) + b"\n")
             return
 
-    print(f"Unkown output format '{ext}'")
+    print(f"Unkown output format '{ext}'")  # pragma: no cover
 
 
 if __name__ == "__main__":  # pragma: no cover

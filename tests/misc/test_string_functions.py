@@ -26,7 +26,7 @@ def test_slice_left():
     # fmt:on
 
 
-def skip_test_slice_right():
+def test_slice_right():
 
     slicer = string_functions.string_slicer_right
 
