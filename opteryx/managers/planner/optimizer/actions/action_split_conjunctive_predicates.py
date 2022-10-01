@@ -16,6 +16,41 @@ Optimization Rule - Split Conjunctive Predicates (ANDs)
 Type: Heuristic
 Goal: Reduce rows
 """
+from opteryx import operators
+from opteryx.managers.expression import NodeType
+
+
+def unique_id():
+    import random
+
+    return hex(random.getrandbits(16))
+
+
+def _inner_split(plan, nid, operator):
+
+    selection = operator.filter
+    if selection.token_type != NodeType.AND:
+        return plan
+
+    # get the left and right filters
+    left_node = operators.SelectionNode(
+        filter=selection.left, properties=operator.properties
+    )
+    right_node = operators.SelectionNode(
+        filter=selection.right, properties=operator.properties
+    )
+    # insert them into the plan and remove the old node
+    # we're chaining the new operators
+    uid = unique_id()  # avoid collisions
+    plan.insert_operator_before(f"{nid}-{uid}-right", right_node, nid)
+    plan.insert_operator_before(f"{nid}-{uid}-left", left_node, f"{nid}-{uid}-right")
+    plan.remove_operator(nid)
+
+    # recurse until we get to a non-AND condition
+    plan = _inner_split(plan, f"{nid}-{uid}-right", right_node)
+    plan = _inner_split(plan, f"{nid}-{uid}-left", left_node)
+
+    return plan
 
 
 def split_conjunctive_predicates(plan):
@@ -33,9 +68,6 @@ def split_conjunctive_predicates(plan):
         result, balancing the selectivity (get rid of more records faster) vs cost of
         the check (a numeric check is faster than a string check)
     """
-    from opteryx import operators
-    from opteryx.managers.expression import NodeType
-
     # find the in-scope nodes
     selection_nodes = plan.get_nodes_of_type(operators.SelectionNode)
 
@@ -47,19 +79,6 @@ def split_conjunctive_predicates(plan):
     for nid in selection_nodes:
         # get the node from the node_id
         operator = plan.get_operator(nid)
-        selection = operator.filter
-        if selection.token_type == NodeType.AND:
-            # get the left and right filters
-            left_node = operators.SelectionNode(
-                filter=selection.left, properties=operator.properties
-            )
-            right_node = operators.SelectionNode(
-                filter=selection.right, properties=operator.properties
-            )
-            # insert them into the plan and remove the old node
-            # we're chaining the new operators
-            plan.insert_operator_before(f"{nid}-right", right_node, nid)
-            plan.insert_operator_before(f"{nid}-left", left_node, f"{nid}-right")
-            plan.remove_operator(nid)
+        plan = _inner_split(plan, nid, operator)
 
     return plan
