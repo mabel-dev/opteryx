@@ -1,7 +1,7 @@
 <div align="center">
 
 ![Opteryx](opteryx-word-small.png)
-## Query your data where it lives.
+## Query your data, where it lives.
 </div>
 
 <h3 align="center">

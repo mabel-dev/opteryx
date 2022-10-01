@@ -35,13 +35,15 @@ class QueryProperties:
         # query parameters - these can be overridden on a per-query basis
 
         # use the query optimizer
-        self.enable_optimizer = True
+        self.enable_optimizer:bool = True
         # The maximum input frame size for JOINs
         self.internal_batch_size: int = int(config.get("INTERNAL_BATCH_SIZE", 500))
         # The maximum number of records to create in a CROSS JOIN frame
         self.max_join_size: int = int(config.get("MAX_JOIN_SIZE", 10000))
         # Approximate Page Size
         self.page_size: int = config.get("PAGE_SIZE", 64 * 1024 * 1024)
+        # Internally split and merge pages
+        self.enable_page_management: bool = True
 
         # cost values go here:
         #    costs are the approximate number of seconds to perform an action

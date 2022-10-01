@@ -35,7 +35,7 @@ from opteryx.utils.arrow import consolidate_pages
 class SelectionNode(BasePlanNode):
     def __init__(self, properties: QueryProperties, **config):
         super().__init__(properties=properties)
-        self._filter = config.get("filter")
+        self.filter = config.get("filter")
         self._unfurled_filter = None
         self._mapped_filter = None
 
@@ -58,7 +58,7 @@ class SelectionNode(BasePlanNode):
                 return "[" + ",".join(_inner_config(p) for p in predicate) + "]"
             return f"{predicate}"
 
-        return _inner_config(self._filter)
+        return _inner_config(self.filter)
 
     @property
     def name(self):  # pragma: no cover
@@ -74,15 +74,19 @@ class SelectionNode(BasePlanNode):
             data_pages = (data_pages,)
 
         # we should always have a filter - but no harm in checking
-        if self._filter is None:
+        if self.filter is None:
             yield from data_pages
 
         else:
 
-            for page in consolidate_pages(data_pages.execute(), self._statistics):
+            for page in consolidate_pages(
+                data_pages.execute(),
+                self._statistics,
+                self.properties.enable_page_management,
+            ):
 
                 start_selection = time.time_ns()
-                mask = evaluate(self._filter, page)
+                mask = evaluate(self.filter, page)
                 self._statistics.time_evaluating += time.time_ns() - start_selection
 
                 # if the mask is a boolean array, we've called a function that

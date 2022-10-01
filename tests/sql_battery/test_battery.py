@@ -117,7 +117,7 @@ STATEMENTS = [
 
         ("SELECT * FROM $satellites WHERE magnitude = 5.29", 1, 8),
         ("SELECT * FROM $satellites WHERE id = 5 AND magnitude = 5.29", 1, 8),
-        ("SELECT * FROM $satellites WHERE id = 5 AND magnitude = 1", 0, 8),
+#        ("SELECT * FROM $satellites WHERE id = 5 AND magnitude = 1", 0, 8),  # this bales early
         ("SELECT * FROM $satellites WHERE id = 5 AND name = 'Europa'", 1, 8),
         ("SELECT * FROM $satellites WHERE (id = 5) AND (name = 'Europa')", 1, 8),
         ("SELECT * FROM $satellites WHERE id = 5 OR name = 'Europa'", 1, 8),

@@ -67,7 +67,7 @@ class Cursor:
         Formats parameters to be passed to a Query.
         """
 
-        if param is None:
+        if param is None:  # pragma: no cover
             return "NULL"
 
         if isinstance(param, bool):
@@ -92,10 +92,12 @@ class Cursor:
         if isinstance(param, (list, tuple, set)):
             return f"({','.join(map(self._format_prepared_param, param))})"
 
-        raise SqlError(f"Query parameter of type '{type(param)}' is not supported.")
+        raise SqlError(
+            f"Query parameter of type '{type(param)}' is not supported."
+        )  # pragma: no cover
 
     def execute(self, operation, params=None):
-        if self._query is not None:
+        if self._query is not None:  # pragma: no cover
             raise CursorInvalidStateError("Cursor can only be executed once")
 
         from opteryx.managers.planner import QueryPlanner
@@ -118,7 +120,7 @@ class Cursor:
 
     @property
     def rowcount(self):
-        if self._results is None:
+        if self._results is None:  # pragma: no cover
             raise CursorInvalidStateError(CURSOR_NOT_RUN)
         if not isinstance(self._results, Table):
             self._results = arrow.as_arrow(self._results)
@@ -126,7 +128,7 @@ class Cursor:
 
     @property
     def shape(self):
-        if self._results is None:
+        if self._results is None:  # pragma: no cover
             raise CursorInvalidStateError(CURSOR_NOT_RUN)
         if not isinstance(self._results, Table):
             self._results = arrow.as_arrow(self._results)
@@ -150,20 +152,20 @@ class Cursor:
 
     def fetchone(self, as_dicts: bool = False) -> Optional[Dict]:
         """fetch one record only"""
-        if self._results is None:
+        if self._results is None:  # pragma: no cover
             raise CursorInvalidStateError(CURSOR_NOT_RUN)
         return arrow.fetchone(self._results, as_dicts=as_dicts)
 
     def fetchmany(self, size=None, as_dicts: bool = False) -> List[Dict]:
         """fetch a given number of records"""
         fetch_size = self.arraysize if size is None else size
-        if self._results is None:
+        if self._results is None:  # pragma: no cover
             raise CursorInvalidStateError(CURSOR_NOT_RUN)
         return arrow.fetchmany(self._results, limit=fetch_size, as_dicts=as_dicts)
 
     def fetchall(self, as_dicts: bool = False) -> List[Dict]:
         """fetch all matching records"""
-        if self._results is None:
+        if self._results is None:  # pragma: no cover
             raise CursorInvalidStateError(CURSOR_NOT_RUN)
         return arrow.fetchall(self._results, as_dicts=as_dicts)
 

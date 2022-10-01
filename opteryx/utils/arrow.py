@@ -29,7 +29,7 @@ HIGH_WATER: float = 1.20  # Split pages over 120% of PAGE_SIZE
 LOW_WATER: float = 0.6  # Merge pages under 60% of PAGE_SIZE
 
 
-def consolidate_pages(pages, statistics):
+def consolidate_pages(pages, statistics, enable):
     """
     Orignally implemented to test if datasets have any records as they pass through
     the DAG, this function normalizes the number of bytes per page.
@@ -49,6 +49,11 @@ def consolidate_pages(pages, statistics):
     """
     if isinstance(pages, Table):
         pages = (pages,)
+
+    # we can disable this function in the properties
+    if not enable:
+        yield from pages
+        return
 
     row_counter = 0
     collected_rows = None
@@ -73,7 +78,7 @@ def consolidate_pages(pages, statistics):
                 statistics.page_splits += 1
                 yield page.slice(offset=0, length=new_row_count)
                 collected_rows = page.slice(offset=new_row_count)
-            # if we're less that 60% of the page size, go collect the next page
+            # if we're less than 60% of the page size, go collect the next page
             elif page_bytes < (PAGE_SIZE * LOW_WATER):
                 collected_rows = page
             # otherwise, emit the current page
