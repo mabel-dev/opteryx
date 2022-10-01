@@ -90,9 +90,6 @@ def consolidate_pages(pages, statistics, enable):
         row_counter += collected_rows.num_rows
         yield collected_rows
 
-    if row_counter == 0:
-        raise Exception("No Records")
-
 
 def fetchmany(pages, limit: int = 1000, as_dicts: bool = False):
     """fetch records from a Table as Python Dicts"""
