@@ -9,6 +9,9 @@ from .helpers import columns_to_array_denulled, groupify_array
 def align_tables(t1, t2, l1, l2):
     # Align tables
     table = t1.take(l1)
+    # added for opteryx - deal with empty lists
+    if len(l1) == 0 or len(l2) == 0:
+        return table
     for c in t2.column_names:
         if c not in t1.column_names:
             table = table.append_column(c, t2.column(c).take(l2))

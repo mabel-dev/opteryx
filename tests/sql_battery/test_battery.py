@@ -117,7 +117,7 @@ STATEMENTS = [
 
         ("SELECT * FROM $satellites WHERE magnitude = 5.29", 1, 8),
         ("SELECT * FROM $satellites WHERE id = 5 AND magnitude = 5.29", 1, 8),
-#        ("SELECT * FROM $satellites WHERE id = 5 AND magnitude = 1", 0, 8),  # this bales early
+        ("SELECT * FROM $satellites WHERE id = 5 AND magnitude = 1", 0, 8),  # this bales early
         ("SELECT * FROM $satellites WHERE id = 5 AND name = 'Europa'", 1, 8),
         ("SELECT * FROM $satellites WHERE (id = 5) AND (name = 'Europa')", 1, 8),
         ("SELECT * FROM $satellites WHERE id = 5 OR name = 'Europa'", 1, 8),
@@ -375,7 +375,7 @@ STATEMENTS = [
         ("SELECT * FROM $satellites WHERE planetId IN (SELECT id FROM $planets WHERE name = 'Earth')", 1, 8),
         ("SELECT * FROM $planets WHERE id NOT IN (SELECT DISTINCT planetId FROM $satellites)", 2, 20),
         ("SELECT name FROM $planets WHERE id IN (SELECT * FROM UNNEST((1,2,3)) as id)", 3, 1),
-#        ("SELECT count(planetId) FROM (SELECT DISTINCT planetId FROM $satellites)", 1, 1),
+        ("SELECT count(planetId) FROM (SELECT DISTINCT planetId FROM $satellites)", 1, 1),
         ("SELECT COUNT(*) FROM (SELECT planetId FROM $satellites WHERE planetId < 7) GROUP BY planetId", 4, 1),
 
         ("EXPLAIN SELECT * FROM $satellites", 1, 3),
@@ -589,12 +589,16 @@ STATEMENTS = [
         ("SET @pples = 'b'; SET @rgon = 90; SHOW VARIABLES LIKE '%gon'", 1, 2),
         ("SET @variable = 44; SET @var = 'name'; SHOW VARIABLES LIKE '%ri%';", 1, 2),
         ("SHOW PARAMETER enable_optimizer", 1, 2),
-        ("SET enable_optimizer = 1; SHOW PARAMETER enable_optimizer;", 1, 2),
+        ("SET enable_optimizer = true; SHOW PARAMETER enable_optimizer;", 1, 2),
 
         ("SHOW CREATE TABLE $planets", 1, 1),
         ("SHOW CREATE TABLE $satellites", 1, 1),
         ("SHOW CREATE TABLE $astronauts", 1, 1),
         ("SHOW CREATE TABLE testdata.framed FOR '2021-03-28'", 1, 1),
+        ("SET enable_optimizer = false;\nSET enable_page_management = true;\nSELECT COUNT(*) FROM $planets WHERE id > 3 AND name ILIKE '%e%'", 1, 1),
+        ("SET enable_optimizer = true;\nSET enable_page_management = true;\nSELECT COUNT(*) FROM $planets WHERE id > 3 AND name ILIKE '%e%'", 1, 1),
+        ("SET enable_optimizer = true;\nSET enable_page_management = false;\nSELECT COUNT(*) FROM $planets WHERE id > 3 AND name ILIKE '%e%'", 1, 1),
+        ("SET enable_optimizer = false;\nSET enable_page_management = false;\nSELECT COUNT(*) FROM $planets WHERE id > 3 AND name ILIKE '%e%'", 1, 1),
 
         # These are queries which have been found to return the wrong result or not run correctly
         # FILTERING ON FUNCTIONS
@@ -683,6 +687,8 @@ STATEMENTS = [
         ("SELECT SUM(IIF(year < 1970, 1, 0)), MAX(year) FROM $astronauts", 1, 2),
         # [#527] variables referenced in subqueries
         ("SET @v = 1; SELECT * FROM (SELECT @v);", 1, 1),
+        # [#561] HASH JOIN with an empty table
+        ("SELECT * FROM $planets LEFT JOIN (SELECT planetId as id FROM $satellites WHERE id < 0) USING (id)", 0, 1),
     ]
 # fmt:on
 
@@ -709,10 +715,10 @@ def test_sql_battery(statement, rows, columns):
 
     assert (
         rows == actual_rows
-    ), f"Query returned {actual_rows} rows but {rows} were expected, {statement}\n{ascii_table(fetchmany(result, limit=10, as_dicts=True), limit=10)}"
+    ), f"Query returned {actual_rows} rows but {rows} were expected ({actual_columns} vs {columns})\n{statement}\n{ascii_table(fetchmany(result, limit=10, as_dicts=True), limit=10)}"
     assert (
         columns == actual_columns
-    ), f"Query returned {actual_columns} cols but {columns} were expected, {statement}\n{ascii_table(fetchmany(result, limit=10, as_dicts=True), limit=10)}"
+    ), f"Query returned {actual_columns} cols but {columns} were expected\n{statement}\n{ascii_table(fetchmany(result, limit=10, as_dicts=True), limit=10)}"
 
 
 if __name__ == "__main__":  # pragma: no cover
