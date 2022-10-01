@@ -85,7 +85,11 @@ class OuterJoinNode(BasePlanNode):
         right_columns = Columns(right_table)
         left_columns = None
 
-        for page in arrow.consolidate_pages(left_node.execute(), self._statistics):
+        for page in arrow.consolidate_pages(
+            left_node.execute(),
+            self._statistics,
+            self.properties.enable_page_management,
+        ):
 
             if self._using:
 
@@ -95,7 +99,9 @@ class OuterJoinNode(BasePlanNode):
                 ]
 
                 for page in arrow.consolidate_pages(
-                    left_node.execute(), self._statistics
+                    left_node.execute(),
+                    self._statistics,
+                    self.properties.enable_page_management,
                 ):
 
                     if left_columns is None:

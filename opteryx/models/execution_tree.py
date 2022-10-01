@@ -45,16 +45,29 @@ class ExecutionTree:
         self.add_operator(nid, operator)
         # change all the edges that were going into the old nid to the new one
         self._edges = [
-            (source, target if target != before_nid else nid, direction) for source, target, direction in self._edges
+            (source, target if target != before_nid else nid, direction)
+            for source, target, direction in self._edges
         ]
         # add an edge from the new nid to the old one
         self.link_operators(nid, before_nid)
 
     def remove_operator(self, nid):
         """rewrite a plan, removing a node"""
+
+        # remove the node
         self._nodes.pop(nid, None)
+
+        # link the nodes each side of the node being removed
+        out_going = self.get_outgoing_links(nid)
+        in_coming = self.get_incoming_links(nid)
+        for out_nid in out_going:
+            for in_nid in in_coming:
+                self.link_operators(in_nid[0], out_nid, in_nid[1])
+
         self._edges = [
-            (source, target, direction) for source, target, direction in self._edges if source != nid and target != nid
+            (source, target, direction)
+            for source, target, direction in self._edges
+            if source != nid and target != nid
         ]
 
     def add_operator(self, nid, operator):
@@ -97,9 +110,7 @@ class ExecutionTree:
             name: string
                 The name of the step to search from
         """
-        retval = {
-            target for source, target, direction in self._edges if source == nid
-        }
+        retval = {target for source, target, direction in self._edges if source == nid}
         return sorted(retval)
 
     def get_incoming_links(self, nid):
@@ -125,9 +136,7 @@ class ExecutionTree:
             return list(self._nodes.keys())
         sources = {source for source, target, direction in self._edges}
         retval = (
-            target
-            for source, target, direction in self._edges
-            if target not in sources
+            target for source, target, direction in self._edges if target not in sources
         )
         return sorted(retval)
 
@@ -139,9 +148,7 @@ class ExecutionTree:
             return list(self._nodes.keys())
         targets = {target for source, target, direction in self._edges}
         retval = (
-            source
-            for source, target, direction in self._edges
-            if source not in targets
+            source for source, target, direction in self._edges if source not in targets
         )
         return sorted(retval)
 

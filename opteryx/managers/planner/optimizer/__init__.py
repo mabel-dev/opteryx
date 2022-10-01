@@ -14,6 +14,7 @@ from opteryx.managers.planner.optimizer import actions
 
 RULESET: list = [actions.split_conjunctive_predicates]
 
+
 def run_optimizer(plan):
 
     for rule in RULESET:

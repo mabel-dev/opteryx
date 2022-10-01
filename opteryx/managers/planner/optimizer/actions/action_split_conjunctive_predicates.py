@@ -17,6 +17,7 @@ Type: Heuristic
 Goal: Reduce rows
 """
 
+
 def split_conjunctive_predicates(plan):
     """
     Conjunctive Predicates (ANDs) can be split and executed in any order to get the
@@ -49,12 +50,16 @@ def split_conjunctive_predicates(plan):
         selection = operator.filter
         if selection.token_type == NodeType.AND:
             # get the left and right filters
-            left_node = operators.SelectionNode(filter=selection.left, properties=operator.properties)
-            right_node = operators.SelectionNode(filter=selection.right, properties=operator.properties)
+            left_node = operators.SelectionNode(
+                filter=selection.left, properties=operator.properties
+            )
+            right_node = operators.SelectionNode(
+                filter=selection.right, properties=operator.properties
+            )
             # insert them into the plan and remove the old node
             # we're chaining the new operators
-            plan.insert_operator_before(f"{nid}-left", left_node, nid)
-            plan.insert_operator_before(f"{nid}-right", right_node, f"{nid}-left")
+            plan.insert_operator_before(f"{nid}-right", right_node, nid)
+            plan.insert_operator_before(f"{nid}-left", left_node, f"{nid}-right")
             plan.remove_operator(nid)
 
     return plan

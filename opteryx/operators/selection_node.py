@@ -79,7 +79,11 @@ class SelectionNode(BasePlanNode):
 
         else:
 
-            for page in consolidate_pages(data_pages.execute(), self._statistics):
+            for page in consolidate_pages(
+                data_pages.execute(),
+                self._statistics,
+                self.properties.enable_page_management,
+            ):
 
                 start_selection = time.time_ns()
                 mask = evaluate(self.filter, page)
