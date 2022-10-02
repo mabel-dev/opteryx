@@ -22,7 +22,6 @@ from typing import Iterable
 import numpy
 import pyarrow
 
-from opteryx import config
 from opteryx.managers.expression import NodeType
 from opteryx.operators import BasePlanNode
 from opteryx.models import Columns, QueryProperties
@@ -134,7 +133,7 @@ class InnerJoinNode(BasePlanNode):
 
             for page in arrow.consolidate_pages(
                 left_node.execute(),
-                self._statistics,
+                self.statistics,
                 self.properties.enable_page_management,
             ):
 
@@ -184,7 +183,7 @@ class InnerJoinNode(BasePlanNode):
 
             for page in arrow.consolidate_pages(
                 left_node.execute(),
-                self._statistics,
+                self.statistics,
                 self.properties.enable_page_management,
             ):
 

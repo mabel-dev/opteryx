@@ -53,7 +53,7 @@ def _truncate_quarter(datetime):
     """
     datetime = date_trunc("month", datetime)
 
-    month = datetime.month
+    month: int = datetime.month
     if 1 <= month <= 3:
         return datetime.replace(month=1)
     elif 4 <= month <= 6:
@@ -64,7 +64,7 @@ def _truncate_quarter(datetime):
         return datetime.replace(month=10)
 
 
-def date_trunc(truncate_to, datetime):
+def date_trunc(truncate_to: str, datetime):
     """
     Truncates a datetime to have the values with higher precision than
     the one set as `truncate_to` as zero (or one for day and month).

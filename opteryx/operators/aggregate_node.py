@@ -277,7 +277,7 @@ class AggregateNode(BasePlanNode):
         start_time = time.time_ns()
         columns, _, table = evaluate_and_append(evaluatable_nodes, table)
         columns, self._groups, table = evaluate_and_append(self._groups, table)
-        self._statistics.time_evaluating += time.time_ns() - start_time
+        self.statistics.time_evaluating += time.time_ns() - start_time
 
         start_time = time.time_ns()
         group_by_columns = [
@@ -312,6 +312,6 @@ class AggregateNode(BasePlanNode):
                     columns.add_alias(column_name, alias)
         groups = columns.apply(groups)
 
-        self._statistics.time_aggregating += time.time_ns() - start_time
+        self.statistics.time_aggregating += time.time_ns() - start_time
 
         yield groups

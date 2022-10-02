@@ -36,7 +36,7 @@ def test_run_only_tests(statement):
     cursor = conn.cursor()
 
     cursor.execute(statement)
-    cursor.as_arrow()
+    cursor.arrow()
 
 
 if __name__ == "__main__":  # pragma: no cover

@@ -202,7 +202,7 @@ class BlobReaderNode(BasePlanNode):
             for partition in self._reading_list.values():
 
                 # we're reading this partition now
-                self._statistics.partitions_read += 1
+                self.statistics.partitions_read += 1
 
                 for (
                     time_to_read,
@@ -225,24 +225,24 @@ class BlobReaderNode(BasePlanNode):
                 ):
 
                     # we're going to open this blob
-                    self._statistics.count_data_blobs_read += 1
+                    self.statistics.count_data_blobs_read += 1
 
                     # extract stats from reader
-                    self._statistics.bytes_read_data += blob_bytes
-                    self._statistics.time_data_read += time_to_read
+                    self.statistics.bytes_read_data += blob_bytes
+                    self.statistics.time_data_read += time_to_read
 
                     # we should know the number of entries
-                    self._statistics.rows_read += pyarrow_blob.num_rows
-                    self._statistics.bytes_processed_data += pyarrow_blob.nbytes
+                    self.statistics.rows_read += pyarrow_blob.num_rows
+                    self.statistics.bytes_processed_data += pyarrow_blob.nbytes
 
                     if self._row_count_estimate is None:
                         # This is really rough - it assumes all of the blobs have about
                         # the same number of records, which is almost never correct.
                         self._row_count_estimate = pyarrow_blob.num_rows * (
-                            self._statistics.count_blobs_found
-                            - self._statistics.count_blobs_ignored_frames
-                            - self._statistics.count_control_blobs_found
-                            - self._statistics.count_unknown_blob_type_found
+                            self.statistics.count_blobs_found
+                            - self.statistics.count_blobs_ignored_frames
+                            - self.statistics.count_control_blobs_found
+                            - self.statistics.count_unknown_blob_type_found
                         )
 
                     if metadata is None:
@@ -253,13 +253,13 @@ class BlobReaderNode(BasePlanNode):
                             table_aliases=[self._alias],
                         )
                         metadata = Columns(pyarrow_blob)
-                        self._statistics.columns_read += len(pyarrow_blob.column_names)
+                        self.statistics.columns_read += len(pyarrow_blob.column_names)
                     else:
                         try:
                             pyarrow_blob = metadata.apply(pyarrow_blob, source=path)
                         except:  # pragma:no cover
 
-                            self._statistics.read_errors += 1
+                            self.statistics.read_errors += 1
 
                             import pyarrow
 
@@ -306,27 +306,27 @@ class BlobReaderNode(BasePlanNode):
 
             # if the item was a miss, get it from storage and add it to the cache
             if blob_bytes is None:  # pragma: no cover
-                self._statistics.cache_misses += 1
+                self.statistics.cache_misses += 1
                 blob_bytes = reader(path)
                 # limit the number of evictions a single query can do to prevent
                 # sequential floods of the cache
                 if (
                     cache
-                    and (self._statistics.cache_evictions < MAX_CACHE_EVICTIONS)
+                    and (self.statistics.cache_evictions < MAX_CACHE_EVICTIONS)
                     and (blob_bytes.getbuffer().nbytes < MAX_SIZE_SINGLE_CACHE_ITEM)
                 ):
                     try:
                         evicted = cache.set(blob_hash, blob_bytes)
                         if evicted is not None:
-                            self._statistics.cache_evictions += 1
+                            self.statistics.cache_evictions += 1
                     except (ConnectionResetError, BrokenPipeError):  # pragma: no-cover
-                        self._statistics.cache_errors += 1
+                        self.statistics.cache_errors += 1
                 elif cache:  # pragma: no-cover
-                    self._statistics.cache_oversize += 1
+                    self.statistics.cache_oversize += 1
                 else:  # pragma: no-cover
-                    self._statistics.cache_errors += 1
+                    self.statistics.cache_errors += 1
             else:
-                self._statistics.cache_hits += 1
+                self.statistics.cache_hits += 1
         else:
             blob_bytes = reader(path)
 
@@ -347,7 +347,7 @@ class BlobReaderNode(BasePlanNode):
             end_date=self._end_date,
         )
 
-        self._statistics.partitions_found += len(partitions)
+        self.statistics.partitions_found += len(partitions)
 
         partition_structure: dict = {}
 
@@ -358,12 +358,12 @@ class BlobReaderNode(BasePlanNode):
 
             partition_structure[partition] = {}
             partition_structure[partition]["blob_list"] = []
-            self._statistics.partitions_scanned += 1
+            self.statistics.partitions_scanned += 1
 
             # Get a list of all of the blobs in the partition.
             time_scanning_partitions = time.time_ns()
             blob_list = self._reader.get_blob_list(partition)
-            self._statistics.time_scanning_partitions = (
+            self.statistics.time_scanning_partitions = (
                 time.time_ns() - time_scanning_partitions
             )
 
@@ -372,14 +372,14 @@ class BlobReaderNode(BasePlanNode):
 
             # Track how many blobs we found
             count_blobs_found = len(blob_list)
-            self._statistics.count_blobs_found += count_blobs_found
+            self.statistics.count_blobs_found += count_blobs_found
 
             # Filter the blob list to just the frame we're interested in
             if self._partition_scheme is not None:
                 blob_list = self._partition_scheme.filter_blobs(
-                    blob_list, self._statistics
+                    blob_list, self.statistics
                 )
-                self._statistics.count_blobs_ignored_frames += count_blobs_found - len(
+                self.statistics.count_blobs_ignored_frames += count_blobs_found - len(
                     blob_list
                 )
 
@@ -399,9 +399,9 @@ class BlobReaderNode(BasePlanNode):
                         )
                     )
                 elif file_type == ExtentionType.CONTROL:
-                    self._statistics.count_control_blobs_found += 1
+                    self.statistics.count_control_blobs_found += 1
                 else:
-                    self._statistics.count_unknown_blob_type_found += 1
+                    self.statistics.count_unknown_blob_type_found += 1
 
             if len(partition_structure[partition]["blob_list"]) == 0:
                 partition_structure.pop(partition)

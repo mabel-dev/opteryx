@@ -11,8 +11,14 @@
 # limitations under the License.
 
 """
-The Execution Tree is the graph which defines and supports the execution of
-query plans.
+The Execution Tree is the graph which defines a Query Plan.
+
+The execution tree contains functionality to:
+
+- build and define the plan
+- execute the plan
+- manipulate the plan
+
 """
 
 import pyarrow
@@ -33,11 +39,25 @@ class ExecutionTree:
         self._edges: list = []
 
     def get_nodes_of_type(self, operator):
+        """
+        Traverse the plan looking for nodes of a given type or set of types.
+
+        Parameters:
+            operator: BaseOperator or Iterable of BaseOperator
+                The operator type(s) to match.
+        Yields:
+            string
+                nids of matching nodes.
+        """
         if not isinstance(operator, (list, tuple, set)):
             operator = [operator]
         for nid, item in list(self._nodes.items()):
             if isinstance(item, *operator):
                 yield nid
+
+    def nodes(self):
+        """return all of the nodes in the plan"""
+        return list(self._nodes.values())
 
     def insert_operator_before(self, nid, operator, before_nid):
         """rewrite the plan putting the new node before a given node"""
@@ -67,12 +87,12 @@ class ExecutionTree:
         self._edges = [
             (source, target, direction)
             for source, target, direction in self._edges
-            if source != nid and target != nid
+            if nid not in (source, target)
         ]
 
     def add_operator(self, nid, operator):
         """
-        Add a step to the DAG
+        Add a step to the plan
 
         Parameters:
             id: string
@@ -84,7 +104,7 @@ class ExecutionTree:
 
     def link_operators(self, source_operator, target_operator, direction=None):
         """
-        Link steps in a flow.
+        Link steps in a plan.
 
         Parameters:
             source_operator: string
@@ -130,7 +150,7 @@ class ExecutionTree:
 
     def get_exit_points(self):
         """
-        Get steps in the flow with no outgoing steps.
+        Get steps in the plan with no outgoing steps.
         """
         if len(self._nodes) == 1:
             return list(self._nodes.keys())
@@ -142,7 +162,7 @@ class ExecutionTree:
 
     def get_entry_points(self):
         """
-        Get steps in the flow with no incoming steps.
+        Get steps in the plan with no incoming steps.
         """
         if len(self._nodes) == 1:
             return list(self._nodes.keys())
@@ -154,7 +174,7 @@ class ExecutionTree:
 
     def get_operator(self, nid):
         """
-        Get the Operator class by id.
+        Get the Operator class by nid.
 
         Parameters:
             nid: string
@@ -164,7 +184,7 @@ class ExecutionTree:
 
     def is_acyclic(self):
         """
-        Test if the graph is acyclic
+        Test if the plan is acyclic - it should always be
         """
         # cycle over the graph removing a layer of exits each cycle
         # if we have nodes but no exists, we're cyclic
@@ -211,7 +231,7 @@ class ExecutionTree:
                     operator.set_producers([self.get_operator(i[0]) for i in producers])
                     map_operators(i[0] for i in producers)
 
-        # do some basic validation
+        # do some basic validation before we try to execute
         if not self.is_acyclic():
             raise DatabaseError("Problem executing the query plan - it is cyclic.")
 

@@ -95,9 +95,9 @@ class InternalDatasetNode(BasePlanNode):
 
     def execute(self, data_pages: Optional[Iterable] = None) -> Iterable:
         pyarrow_page = _get_sample_dataset(self._dataset, self._alias, self._end_date)
-        self._statistics.rows_read += pyarrow_page.num_rows
-        self._statistics.bytes_processed_data += pyarrow_page.nbytes
-        self._statistics.columns_read += len(pyarrow_page.column_names)
+        self.statistics.rows_read += pyarrow_page.num_rows
+        self.statistics.bytes_processed_data += pyarrow_page.nbytes
+        self.statistics.columns_read += len(pyarrow_page.column_names)
 
         schema = pyarrow_page.schema
 

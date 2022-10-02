@@ -68,10 +68,10 @@ class CollectionReaderNode(BasePlanNode):
             start_read = time.time_ns()
             pyarrow_page = pyarrow.Table.from_pylist(page)
 
-            self._statistics.time_data_read += time.time_ns() - start_read
-            self._statistics.rows_read += pyarrow_page.num_rows
-            self._statistics.bytes_processed_data += pyarrow_page.nbytes
-            self._statistics.document_pages += 1
+            self.statistics.time_data_read += time.time_ns() - start_read
+            self.statistics.rows_read += pyarrow_page.num_rows
+            self.statistics.bytes_processed_data += pyarrow_page.nbytes
+            self.statistics.document_pages += 1
 
             if metadata is None:
                 pyarrow_page = Columns.create_table_metadata(
@@ -81,7 +81,7 @@ class CollectionReaderNode(BasePlanNode):
                     table_aliases=[self._alias],
                 )
                 metadata = Columns(pyarrow_page)
-                self._statistics.collections_read += 1
+                self.statistics.collections_read += 1
             else:
                 pyarrow_page = metadata.apply(pyarrow_page)
 

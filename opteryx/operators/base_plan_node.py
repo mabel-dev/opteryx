@@ -14,6 +14,7 @@
 import abc
 
 from opteryx.models import QueryProperties
+from opteryx.models import QueryStatistics
 
 
 class BasePlanNode(abc.ABC):
@@ -29,7 +30,7 @@ class BasePlanNode(abc.ABC):
         execution.
         """
         self.properties = properties
-        self._statistics = properties.statistics
+        self.statistics = QueryStatistics()
 
     def __call__(self):
         return self.execute()

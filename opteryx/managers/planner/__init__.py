@@ -43,6 +43,7 @@ from opteryx.managers.planner.logical import logical_planner
 from opteryx.managers.planner.optimizer import run_optimizer
 from opteryx.managers.planner.temporal import extract_temporal_filters
 from opteryx.models import QueryProperties
+from opteryx.models import QueryStatistics
 
 
 class QueryPlanner:
@@ -56,6 +57,7 @@ class QueryPlanner:
         if properties is None:
             self.properties = QueryProperties(config)
             self.properties.cache = cache
+            self.statistics = QueryStatistics()
 
             # we need to deal with the temporal filters before we use sqloxide
             if statement is not None:

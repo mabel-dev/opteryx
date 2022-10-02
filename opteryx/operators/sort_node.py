@@ -85,7 +85,7 @@ class SortNode(BasePlanNode):
                             numpy.random.uniform(size=table.num_rows)
                         )
                         table = table.take(new_order)
-                        self._statistics.time_ordering = time.time_ns() - start_time
+                        self.statistics.time_ordering = time.time_ns() - start_time
 
                         yield table
                         return
@@ -122,6 +122,6 @@ class SortNode(BasePlanNode):
                         )
 
         table = table.sort_by(self._mapped_order)
-        self._statistics.time_ordering = time.time_ns() - start_time
+        self.statistics.time_ordering = time.time_ns() - start_time
 
         yield table

@@ -61,6 +61,8 @@ class Cursor:
         self.arraysize = 1
         self._results = None
         self._query_planner = None
+        self._collected_stats = None
+        self._plan = None
 
     def _format_prepared_param(self, param):
         """
@@ -105,7 +107,7 @@ class Cursor:
         self._query_planner = QueryPlanner(
             statement=operation, cache=self._connection.cache
         )
-        self._query_planner.properties.statistics.start_time = time.time_ns()
+        self._query_planner.statistics.start_time = time.time_ns()
         asts = self._query_planner.parse_and_lex()
 
         results = None
@@ -113,8 +115,8 @@ class Cursor:
             ast = self._query_planner.bind_ast(ast, parameters=params)
             plan = self._query_planner.create_logical_plan(ast)
 
-            plan = self._query_planner.optimize_plan(plan)
-            results = self._query_planner.execute(plan)
+            self._plan = self._query_planner.optimize_plan(plan)
+            results = self._query_planner.execute(self._plan)
 
         self._results = results
 
@@ -123,7 +125,7 @@ class Cursor:
         if self._results is None:  # pragma: no cover
             raise CursorInvalidStateError(CURSOR_NOT_RUN)
         if not isinstance(self._results, Table):
-            self._results = arrow.as_arrow(self._results)
+            self._results = arrow.arrow(self._results)
         return self._results.num_rows
 
     @property
@@ -131,24 +133,30 @@ class Cursor:
         if self._results is None:  # pragma: no cover
             raise CursorInvalidStateError(CURSOR_NOT_RUN)
         if not isinstance(self._results, Table):
-            self._results = arrow.as_arrow(self._results)
+            self._results = arrow.arrow(self._results)
         return self._results.shape
 
     @property
     def stats(self):
         """execution statistics"""
-        self._query_planner.properties.statistics.end_time = time.time_ns()
-        return self._query_planner.properties.statistics.as_dict()
+        if self._query_planner.statistics.end_time == 0:
+            self._query_planner.statistics.end_time = time.time_ns()
+        if self._collected_stats is None:
+            statistics = self._query_planner.statistics
+            for node in self._plan.nodes():
+                statistics.merge(node.statistics)
+            self._collected_stats = statistics
+        return self._collected_stats.as_dict()
 
     @property
     def has_warnings(self):
         """do I have warnings"""
-        return self._query_planner.properties.statistics.has_warnings
+        return self._query_planner.statistics.has_warnings
 
     @property
     def warnings(self):
         """list of run-time warnings"""
-        return self._query_planner.properties.statistics.warnings
+        return self._query_planner.statistics.warnings
 
     def fetchone(self, as_dicts: bool = False) -> Optional[Dict]:
         """fetch one record only"""
@@ -169,11 +177,11 @@ class Cursor:
             raise CursorInvalidStateError(CURSOR_NOT_RUN)
         return arrow.fetchall(self._results, as_dicts=as_dicts)
 
-    def as_arrow(self, size: int = None) -> Table:
+    def arrow(self, size: int = None) -> Table:
         """fetch all matching records as a pyarrow table"""
         # called 'size' to match the 'fetchmany' nomenclature
         if not isinstance(self._results, Table):
-            self._results = arrow.as_arrow(self._results)
+            self._results = arrow.arrow(self._results)
         if size:
             return self._results.slice(offset=0, length=size)
         return self._results
