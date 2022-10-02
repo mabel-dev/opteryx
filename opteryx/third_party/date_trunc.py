@@ -109,5 +109,5 @@ def date_trunc(truncate_to: str, datetime):
     if truncate_to == "quarter":
         return _truncate_quarter(datetime)
     raise ValueError(
-        f"DATE_TRUNC not valid. Valid periods: {', '.join(list(PERIODS.keys()).extend(list(ODD_PERIODS)))}"
+        f"DATE_TRUNC not valid. Valid periods: {', '.join(list(PERIODS.keys()) + list(ODD_PERIODS)))}"
     )

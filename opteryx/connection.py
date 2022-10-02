@@ -25,7 +25,7 @@ from pyarrow import Table
 
 from opteryx.exceptions import CursorInvalidStateError, SqlError
 from opteryx.managers.kvstores import BaseKeyValueStore
-from opteryx.utils import arrow
+from opteryx import utils
 
 CURSOR_NOT_RUN = "Cursor must be in an executed state"
 
@@ -125,7 +125,7 @@ class Cursor:
         if self._results is None:  # pragma: no cover
             raise CursorInvalidStateError(CURSOR_NOT_RUN)
         if not isinstance(self._results, Table):
-            self._results = arrow.arrow(self._results)
+            self._results = utils.arrow.as_arrow(self._results)
         return self._results.num_rows
 
     @property
@@ -133,7 +133,7 @@ class Cursor:
         if self._results is None:  # pragma: no cover
             raise CursorInvalidStateError(CURSOR_NOT_RUN)
         if not isinstance(self._results, Table):
-            self._results = arrow.arrow(self._results)
+            self._results = utils.arrow.as_arrow(self._results)
         return self._results.shape
 
     @property
@@ -162,26 +162,26 @@ class Cursor:
         """fetch one record only"""
         if self._results is None:  # pragma: no cover
             raise CursorInvalidStateError(CURSOR_NOT_RUN)
-        return arrow.fetchone(self._results, as_dicts=as_dicts)
+        return utils.arrow.fetchone(self._results, as_dicts=as_dicts)
 
     def fetchmany(self, size=None, as_dicts: bool = False) -> List[Dict]:
         """fetch a given number of records"""
         fetch_size = self.arraysize if size is None else size
         if self._results is None:  # pragma: no cover
             raise CursorInvalidStateError(CURSOR_NOT_RUN)
-        return arrow.fetchmany(self._results, limit=fetch_size, as_dicts=as_dicts)
+        return utils.arrow.fetchmany(self._results, limit=fetch_size, as_dicts=as_dicts)
 
     def fetchall(self, as_dicts: bool = False) -> List[Dict]:
         """fetch all matching records"""
         if self._results is None:  # pragma: no cover
             raise CursorInvalidStateError(CURSOR_NOT_RUN)
-        return arrow.fetchall(self._results, as_dicts=as_dicts)
+        return utils.arrow.fetchall(self._results, as_dicts=as_dicts)
 
     def arrow(self, size: int = None) -> Table:
         """fetch all matching records as a pyarrow table"""
         # called 'size' to match the 'fetchmany' nomenclature
         if not isinstance(self._results, Table):
-            self._results = arrow.arrow(self._results)
+            self._results = utilsarrow.as_arrow(self._results)
         if size:
             return self._results.slice(offset=0, length=size)
         return self._results
