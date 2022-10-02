@@ -56,12 +56,13 @@ def _truncate_quarter(datetime):
     month: int = datetime.month
     if 1 <= month <= 3:
         return datetime.replace(month=1)
-    elif 4 <= month <= 6:
+    if 4 <= month <= 6:
         return datetime.replace(month=4)
-    elif 7 <= month <= 9:
+    if 7 <= month <= 9:
         return datetime.replace(month=7)
-    elif 10 <= month <= 12:
+    if 10 <= month <= 12:
         return datetime.replace(month=10)
+    return None
 
 
 def date_trunc(truncate_to: str, datetime):
@@ -108,5 +109,5 @@ def date_trunc(truncate_to: str, datetime):
     if truncate_to == "quarter":
         return _truncate_quarter(datetime)
     raise ValueError(
-        f"DATE_TRUNC not valid. Valid periods: {', '.join(PERIODS.keys() + ODD_PERIODS)}"
+        f"DATE_TRUNC not valid. Valid periods: {', '.join(list(PERIODS.keys()).extend(list(ODD_PERIODS)))}"
     )
