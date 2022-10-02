@@ -81,13 +81,13 @@ class SelectionNode(BasePlanNode):
 
             for page in consolidate_pages(
                 data_pages.execute(),
-                self._statistics,
+                self.statistics,
                 self.properties.enable_page_management,
             ):
 
                 start_selection = time.time_ns()
                 mask = evaluate(self.filter, page)
-                self._statistics.time_evaluating += time.time_ns() - start_selection
+                self.statistics.time_evaluating += time.time_ns() - start_selection
 
                 # if the mask is a boolean array, we've called a function that
                 # returns booleans
@@ -96,5 +96,5 @@ class SelectionNode(BasePlanNode):
                 ):
                     mask = numpy.nonzero(mask)[0]
 
-                self._statistics.time_selecting += time.time_ns() - start_selection
+                self.statistics.time_selecting += time.time_ns() - start_selection
                 yield page.take(mask)

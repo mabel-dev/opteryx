@@ -23,7 +23,6 @@ from typing import Iterable
 import numpy
 import pyarrow
 
-from opteryx import config
 from opteryx.exceptions import SqlError
 from opteryx.managers.expression import NodeType
 from opteryx.models import Columns, QueryProperties
@@ -200,7 +199,7 @@ class CrossJoinNode(BasePlanNode):
     @property
     def config(self):  # pragma: no cover
         if self._join_type == "CrossJoinUnnest":
-            return f"UNNEST()"
+            return "UNNEST()"
         return ""
 
     def execute(self) -> Iterable:

@@ -10,19 +10,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from dataclasses import dataclass
 import datetime
 
 from typing import Any
 
-from opteryx.models.query_statistics import QueryStatistics
 
-
+@dataclass
 class QueryProperties:
     """
     Hints and properties to use when executing queries.
     """
 
-    read_only_properties = ("variables", "statistics", "cache")
+    read_only_properties = ("variables", "cache")
 
     def __init__(self, config: dict = None):
 
@@ -53,5 +53,4 @@ class QueryProperties:
 
         self.start_date = datetime.datetime.utcnow().date()
         self.end_date = datetime.datetime.utcnow().date()
-        self.statistics = QueryStatistics()
         self.cache = None

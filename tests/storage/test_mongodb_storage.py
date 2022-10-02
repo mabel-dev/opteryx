@@ -43,7 +43,7 @@ def test_mongo_storage():
     # SELECT EVERYTHING
     cur = conn.cursor()
     cur.execute(f"SELECT * FROM {COLLECTION_NAME}.data.tweets;")
-    rows = cur.as_arrow()
+    rows = cur.arrow()
     assert rows.num_rows == 25 * 25, rows.num_rows
 
     # PROCESS THE DATA IN SOME WAY

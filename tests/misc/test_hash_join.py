@@ -25,7 +25,7 @@ def test_hash_join_consistency():
         # pass if the problem still exists.
         cur = conn.cursor()
         cur.execute("SELECT * FROM $planets INNER JOIN $planets USING (name, id)")
-        assert cur.as_arrow().num_rows == 9
+        assert cur.arrow().num_rows == 9
 
 
 if __name__ == "__main__":  # pragma: no cover

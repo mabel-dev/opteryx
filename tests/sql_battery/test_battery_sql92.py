@@ -220,7 +220,7 @@ def test_sql92(statement, feature):
     conn = opteryx.connect()
     cursor = conn.cursor()
     cursor.execute(statement)
-    cursor.as_arrow()
+    cursor.arrow()
 
 
 if __name__ == "__main__":  # pragma: no cover

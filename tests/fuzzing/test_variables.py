@@ -42,7 +42,7 @@ def test_fuzz_variables(name, value):
     curr.execute(statement)
     #    result = curr.fetchall()
     #    print(result)
-    result = curr.as_arrow().to_pylist()
+    result = curr.arrow().to_pylist()
     #    print(result)
 
     #    print(name, value, result)

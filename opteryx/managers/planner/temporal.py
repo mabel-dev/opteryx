@@ -193,7 +193,7 @@ def extract_temporal_filters(sql):  # pragma: no cover
             start_date = for_date
             end_date = for_date
             clearing_regex = (
-                r"(\bFOR[\n\r\s]+" + for_date_string.replace("'", r"\'") + r"(?!\S))"
+                r"(\bFOR[\n\r\s]+" + for_date_string.replace("'", r"\'") + r"(?!\S;))"
             )
         elif for_date_string.startswith("DATES BETWEEN "):
             parts = for_date_string.split(" ")
@@ -212,14 +212,14 @@ def extract_temporal_filters(sql):  # pragma: no cover
                 + parts[2]
                 + r"[\n\r\s]+AND[\n\r\s]+"
                 + parts[4]
-                + r"(?!\S))"
+                + r"(?!\S;))"
             )
         elif for_date_string.startswith("DATES IN "):
             parts = for_date_string.split(" ")
             start_date, end_date = parse_range(parts[2])
 
             clearing_regex = (
-                r"(FOR[\n\r\s]+DATES[\n\r\s]+IN[\n\r\s]+" + parts[2] + r"(?!\S))"
+                r"(FOR[\n\r\s]+DATES[\n\r\s]+IN[\n\r\s]+" + parts[2] + r"(?!\S;))"
             )
 
         if clearing_regex:

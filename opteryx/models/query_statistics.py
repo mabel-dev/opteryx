@@ -10,7 +10,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from dataclasses import dataclass
 
+
+@dataclass
 class QueryStatistics:
     """
     Data object to collect information during query execution
@@ -65,6 +68,11 @@ class QueryStatistics:
 
         self.page_splits: int = 0
         self.page_merges: int = 0
+
+    def merge(self, assimilee):
+        for key, value in assimilee.__dict__.items():
+            if key[0] != "_":
+                self.__dict__[key] += value
 
     def _ns_to_s(self, nano_seconds):
         """convert elapsed ns to s"""

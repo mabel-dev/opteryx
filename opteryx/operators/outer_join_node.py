@@ -59,7 +59,7 @@ class OuterJoinNode(BasePlanNode):
         self._using = config.get("join_using")
 
         if self._on is None and self._using is None:
-            raise SqlError("Missing JOIN 'on' condition.")
+            raise SqlError("Missing JOIN 'ON' condition.")
 
         if self._using is not None and self._join_type.lower() != "left outer":
             raise SqlError("JOIN `USING` only valid for `INNER` and `LEFT` joins.")
@@ -87,7 +87,7 @@ class OuterJoinNode(BasePlanNode):
 
         for page in arrow.consolidate_pages(
             left_node.execute(),
-            self._statistics,
+            self.statistics,
             self.properties.enable_page_management,
         ):
 
@@ -100,7 +100,7 @@ class OuterJoinNode(BasePlanNode):
 
                 for page in arrow.consolidate_pages(
                     left_node.execute(),
-                    self._statistics,
+                    self.statistics,
                     self.properties.enable_page_management,
                 ):
 

@@ -29,14 +29,14 @@ MATRIX = (
     (
         (INSERT, DELETE, ),
         (DELETE, INSERT, ),
-        (REPLACE, REPLACE, ), 
+        (REPLACE, REPLACE, ),
     ),
     (
         (DELETE, REPLACE, ),
-        (REPLACE, DELETE, ), 
+        (REPLACE, DELETE, ),
     ),
     (
-        (DELETE, DELETE, ), 
+        (DELETE, DELETE, ),
     )
 )
 # fmt:on

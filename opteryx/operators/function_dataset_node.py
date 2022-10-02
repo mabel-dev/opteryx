@@ -101,7 +101,7 @@ class FunctionDatasetNode(BasePlanNode):
         try:
             start_time = time.time_ns()
             data = FUNCTIONS[self._function](self._alias, *self._args)  # type:ignore
-            self._statistics.time_data_read += time.time_ns() - start_time
+            self.statistics.time_data_read += time.time_ns() - start_time
         except TypeError as err:  # pragma: no cover
             print(str(err))
             if str(err).startswith("_unnest() takes 2"):
@@ -112,8 +112,8 @@ class FunctionDatasetNode(BasePlanNode):
 
         table = pyarrow.Table.from_pylist(data)
 
-        self._statistics.rows_read += table.num_rows
-        self._statistics.columns_read += len(table.column_names)
+        self.statistics.rows_read += table.num_rows
+        self.statistics.columns_read += len(table.column_names)
 
         table = Columns.create_table_metadata(
             table=table,
