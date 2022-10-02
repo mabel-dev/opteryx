@@ -57,7 +57,14 @@ class ExecutionTree:
 
     def nodes(self):
         """return all of the nodes in the plan"""
-        return list(self._nodes.values())
+        all_nodes = []
+        for node in self._nodes.values():
+            # [#275] - because the subqueries are attached as query plans, we need to
+            # walk them differently to just walking the tree
+            if hasattr(node, "_dataset") and isinstance(node._dataset, ExecutionTree):
+                all_nodes.extend(node._dataset.nodes())
+            all_nodes.append(node)
+        return all_nodes
 
     def insert_operator_before(self, nid, operator, before_nid):
         """rewrite the plan putting the new node before a given node"""

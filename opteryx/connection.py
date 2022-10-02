@@ -181,7 +181,7 @@ class Cursor:
         """fetch all matching records as a pyarrow table"""
         # called 'size' to match the 'fetchmany' nomenclature
         if not isinstance(self._results, Table):
-            self._results = utilsarrow.as_arrow(self._results)
+            self._results = utils.arrow.as_arrow(self._results)
         if size:
             return self._results.slice(offset=0, length=size)
         return self._results
