@@ -6,7 +6,7 @@ name: Fuzzing
 
 on:
   schedule:
-    - cron: '0 3 * * 1'  # 0300 on Mondays
+    - cron: '0 3 * * *'  # 0300 each day
 
 jobs:
   fuzz_testing:
