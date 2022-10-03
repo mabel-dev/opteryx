@@ -45,7 +45,7 @@ def peak(generator):  # type:ignore
     try:
         item = next(generator)
     except StopIteration:
-        return None
+        return None, []
     return item, itertools.chain(item, generator)
 
 

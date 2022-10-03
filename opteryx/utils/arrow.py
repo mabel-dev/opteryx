@@ -25,7 +25,7 @@ from opteryx import config
 INTERNAL_BATCH_SIZE = 500
 PAGE_SIZE = 64 * 1024 * 1024
 
-HIGH_WATER: float = 1.20  # Split pages over 120% of PAGE_SIZE
+HIGH_WATER: float = 1.25  # Split pages over 125% of PAGE_SIZE
 LOW_WATER: float = 0.6  # Merge pages under 60% of PAGE_SIZE
 
 
@@ -45,7 +45,7 @@ def consolidate_pages(pages, statistics, enable):
     push down, one column doesn't take up a lot of memory so we consolidate tens of
     pages into a single page.
 
-    The high-water mark is 120% of the target size, more than this we split the page.
+    The high-water mark is 125% of the target size, more than this we split the page.
     """
     if isinstance(pages, Table):
         pages = (pages,)
@@ -70,7 +70,7 @@ def consolidate_pages(pages, statistics, enable):
             page_bytes = page.nbytes
             page_records = page.num_rows
 
-            # if we're more than 20% over the target size, let's do something
+            # if we're more than 25% over the target size, let's do something
             if page_bytes > (PAGE_SIZE * HIGH_WATER):  # pragma: no cover
                 average_record_size = page_bytes / page_records
                 new_row_count = int(PAGE_SIZE / average_record_size)
@@ -127,7 +127,7 @@ def fetchmany(pages, limit: int = 1000, as_dicts: bool = False):
                 if as_dicts:
                     yield from batch.to_pylist()
                 else:
-                    yield from [list(tpl.values()) for tpl in batch.to_pylist()]
+                    yield from tuple([list(tpl.values()) for tpl in batch.to_pylist()])
 
     index = -1
     for index, row in enumerate(_inner_row_reader()):
@@ -161,6 +161,7 @@ def limit_records(data_pages, limit):
 
     # if we don't actually have a limit set, just return
     if limit is None:
+        data_pages = list(data_pages)
         return pyarrow.concat_tables(data_pages, promote=True)
 
     for page in data_pages:
@@ -182,16 +183,19 @@ def as_arrow(pages, limit: int = None):
     """return a result set a a pyarrow table"""
     # cicular imports
     from opteryx.models import Columns
+    from opteryx.utils import peak
 
-    merged = limit_records(pages, limit)
+    first, pages = peak(pages)
+    if first:
+        merged = limit_records(pages, limit)
+        columns = Columns(merged)
+        preferred_names = columns.preferred_column_names
+        column_names = []
+        for col in merged.column_names:
+            column_names.append([c for a, c in preferred_names if a == col][0])
 
-    columns = Columns(merged)
-    preferred_names = columns.preferred_column_names
-    column_names = []
-    for col in merged.column_names:
-        column_names.append([c for a, c in preferred_names if a == col][0])
-
-    return merged.rename_columns(column_names)
+        return merged.rename_columns(column_names)
+    return set()
 
 
 # Adapted from:

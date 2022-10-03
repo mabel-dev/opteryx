@@ -23,7 +23,9 @@ from typing import Dict, List, Optional
 
 from pyarrow import Table
 
-from opteryx.exceptions import CursorInvalidStateError, SqlError
+from opteryx.exceptions import CursorInvalidStateError
+from opteryx.exceptions import EmptyResultSetError
+from opteryx.exceptions import SqlError
 from opteryx.managers.kvstores import BaseKeyValueStore
 from opteryx import utils
 
@@ -124,6 +126,8 @@ class Cursor:
     def rowcount(self):
         if self._results is None:  # pragma: no cover
             raise CursorInvalidStateError(CURSOR_NOT_RUN)
+        if self._results == set():
+            return 0
         if not isinstance(self._results, Table):
             self._results = utils.arrow.as_arrow(self._results)
         return self._results.num_rows
@@ -132,7 +136,9 @@ class Cursor:
     def shape(self):
         if self._results is None:  # pragma: no cover
             raise CursorInvalidStateError(CURSOR_NOT_RUN)
-        if not isinstance(self._results, Table):
+        if self._results == set():
+            return (0, 0)
+        if not isinstance(self._results, (Table, set)):
             self._results = utils.arrow.as_arrow(self._results)
         return self._results.shape
 
@@ -159,9 +165,17 @@ class Cursor:
         return self._query_planner.statistics.warnings
 
     def fetchone(self, as_dicts: bool = False) -> Optional[Dict]:
-        """fetch one record only"""
+        """
+        Fetch one record only.
+
+        Parameters:
+            as_dicts: boolean (optional):
+                Return a dictionary, default is False, return a tuple
+        """
         if self._results is None:  # pragma: no cover
             raise CursorInvalidStateError(CURSOR_NOT_RUN)
+        if self._results == set():
+            raise EmptyResultSetError("Cannot fulfil request on an empty result set")
         return utils.arrow.fetchone(self._results, as_dicts=as_dicts)
 
     def fetchmany(self, size=None, as_dicts: bool = False) -> List[Dict]:
@@ -169,19 +183,35 @@ class Cursor:
         fetch_size = self.arraysize if size is None else size
         if self._results is None:  # pragma: no cover
             raise CursorInvalidStateError(CURSOR_NOT_RUN)
+        if self._results == set():
+            raise EmptyResultSetError("Cannot fulfil request on an empty result set")
         return utils.arrow.fetchmany(self._results, limit=fetch_size, as_dicts=as_dicts)
 
     def fetchall(self, as_dicts: bool = False) -> List[Dict]:
         """fetch all matching records"""
         if self._results is None:  # pragma: no cover
             raise CursorInvalidStateError(CURSOR_NOT_RUN)
+        if self._results == set():
+            raise EmptyResultSetError("Cannot fulfil request on an empty result set")
         return utils.arrow.fetchall(self._results, as_dicts=as_dicts)
 
     def arrow(self, size: int = None) -> Table:
-        """fetch all matching records as a pyarrow table"""
+        """
+        Fetch the resultset as a pyarrow table, this is generally the fastest way to 
+        get the entire set of results.
+
+        Parameters:
+            size: int (optional)
+                Return the head 'size' number of records.
+
+        Returns:
+            pyarrow.Table
+        """
         # called 'size' to match the 'fetchmany' nomenclature
         if not isinstance(self._results, Table):
             self._results = utils.arrow.as_arrow(self._results)
+        if self._results == set():
+            raise EmptyResultSetError("Cannot fulfil request on an empty result set")
         if size:
             return self._results.slice(offset=0, length=size)
         return self._results

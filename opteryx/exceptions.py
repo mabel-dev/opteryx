@@ -84,3 +84,7 @@ class ColumnNotFoundError(ProgrammingError):
 
 class UnsupportedSyntaxError(ProgrammingError):
     pass
+
+
+class EmptyResultSetError(Error):
+    pass
