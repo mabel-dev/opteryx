@@ -186,6 +186,7 @@ FUNCTIONS = {
     "NUMERIC": cast("NUMERIC"),
     "VARCHAR": cast("VARCHAR"),
     "STRING": cast("VARCHAR"),  # alias for VARCHAR
+    "STR": cast("VARCHAR"),
     "TRY_TIMESTAMP": try_cast("TIMESTAMP"),
     "TRY_BOOLEAN": try_cast("BOOLEAN"),
     "TRY_NUMERIC": try_cast("NUMERIC"),

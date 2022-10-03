@@ -242,7 +242,10 @@ def head(table, n=5, max_width=100):
         return
 
     # Extract head data
-    t = table.slice(length=n)
+    if n > 0:
+        t = table.slice(length=n)
+    else:
+        t = table
     head = {k: list(map(str, v)) for k, v in t.to_pydict().items()}
 
     # Calculate width

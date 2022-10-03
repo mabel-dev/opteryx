@@ -275,6 +275,8 @@ STATEMENTS = [
         ("SELECT DATE_FORMAT(death_date, '%Y') FROM $astronauts", 357, 1),
 
         ("SELECT count(*), VARCHAR(year) FROM $astronauts GROUP BY VARCHAR(year)", 21, 2),
+        ("SELECT count(*), STRING(year) FROM $astronauts GROUP BY STRING(year)", 21, 2),
+        ("SELECT count(*), STR(year) FROM $astronauts GROUP BY STR(year)", 21, 2),
         ("SELECT count(*), CAST(year AS VARCHAR) FROM $astronauts GROUP BY CAST(year AS VARCHAR)", 21, 2),
 
         ("SELECT RANDOM()", 1, 1),
