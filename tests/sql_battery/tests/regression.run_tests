@@ -1,4 +1,4 @@
-# test stuff that has broken in the planets
+# test stuff that has broken
 
 # ; after a FOR clause
 SELECT * FROM $planets FOR '2022-01-09'
@@ -13,3 +13,9 @@ SELECT * FROM $planets FOR DATES BETWEEN YESTERDAY AND TODAY; --
 SELECT * FROM $planets FOR DATES BETWEEN '2000-01-01' AND '2022-01-01'
 SELECT * FROM $planets FOR DATES BETWEEN '2000-01-01' AND '2022-01-01';
 SELECT * FROM $planets FOR DATES BETWEEN '2000-01-01' AND '2022-01-01'; --
+
+
+#SELECT * FROM $planets WHERE TRUE AND FALSE;
+#SELECT * FROM $planets WHERE FALSE AND TRUE;
+#SELECT * FROM $planets WHERE TRUE OR FALSE;
+#SELECT * FROM $planets WHERE FALSE OR TRUE;

@@ -207,4 +207,4 @@ class Cursor:
             html = html_table(iter(self.fetchmany(size, as_dicts=True)), size)
             display(HTML(html))
         else:
-            return ascii_table(iter(self.fetchmany(size, as_dicts=True)), size)
+            return ascii_table(self.arrow(), size)

@@ -12,6 +12,8 @@
 
 from typing import Any, Dict, Iterable, Union
 
+import opteryx
+
 
 def html_table(dictset: Iterable[dict], limit: int = 5):  # pragma: no cover
     """
@@ -87,7 +89,7 @@ def html_table(dictset: Iterable[dict], limit: int = 5):  # pragma: no cover
 
 
 def ascii_table(
-    dictset: Iterable[Dict[Any, Any]],
+    table: Iterable[Dict[Any, Any]],
     limit: int = 5,
     display_width: Union[bool, int] = True,
 ):  # pragma: no cover
@@ -109,82 +111,14 @@ def ascii_table(
     Returns:
         string (ASCII table)
     """
+    from opteryx.third_party.pyarrow_ops import ops
+
     if isinstance(display_width, bool):
         if not display_width:
             display_width = 5000
         else:
             import shutil
 
-            display_width = shutil.get_terminal_size((80, 20))[0]
+            display_width = shutil.get_terminal_size((80, 20))[0] - 5
 
-    def format_value(val):
-        if isinstance(val, (list, tuple, set)) or hasattr(val, "as_list"):
-            return "[ " + ", ".join([format_value(i) for i in val]) + " ]"
-        if hasattr(val, "items"):
-            return format_value(
-                "{ " + ", ".join([f'"{k}": {v}' for k, v in val.items()]) + " }"
-            )
-        return val
-
-    result = []
-    columns: dict = {}
-    cache = []
-    cropped = "│"
-
-    # inspect values
-    for count, row in enumerate(dictset):
-        if count == limit:
-            break
-
-        cache.append(row)
-        for k, value in row.items():
-            value = format_value(value)
-            length = max(len(str(value)), len(str(k)))
-            if length > columns.get(k, 0):
-                columns[k] = length
-
-    # draw table
-    bars = []
-    total_width = 2
-    for k, width in columns.items():
-        total_width += width + 3
-        if total_width < display_width:
-            bars.append("─" * (width + 2))
-        else:
-            columns[k] = -1
-            cropped = " >"
-
-    def just(val, width):
-        if isinstance(val, (int, float)):
-            return " " + str(val).rjust(width) + " "
-        if isinstance(val, (bool)) or val is None:
-            return " " + str(val).center(width) + " "
-        return " " + str(val).ljust(width) + " "
-
-    # display headers
-    result.append("┌" + "┬".join(bars) + "┐")
-    result.append(
-        "│"
-        + "│".join([str(k).center(v + 2) for k, v in columns.items() if v > 0])
-        + cropped
-    )
-    result.append("├" + "┼".join(bars) + "┤")
-
-    # display values
-    for row in cache:
-        result.append(
-            "│"
-            + "│".join(
-                [
-                    just(format_value(v), columns[k])
-                    for k, v in row.items()
-                    if columns[k] > 0
-                ]
-            )
-            + cropped
-        )
-
-    # display footer
-    result.append("└" + "┴".join(bars) + "┘")
-
-    return "\n".join(result)
+    return "\n".join(ops.head(table, limit, display_width))
