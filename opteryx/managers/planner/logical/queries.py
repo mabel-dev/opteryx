@@ -46,7 +46,9 @@ def select_query(ast, properties):
     """
     plan = ExecutionTree()
 
-    all_identifiers = custom_builders.extract_identifiers(ast)
+    all_identifiers = (
+        set(custom_builders.extract_identifiers(ast)) - custom_builders.WELL_KNOWN_HINTS
+    )
     try:
         _relations = list(
             custom_builders.extract_relations(ast["Query"]["body"]["Select"]["from"])

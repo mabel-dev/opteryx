@@ -15,7 +15,8 @@ Decode files from a raw binary format to a PyArrow Table.
 """
 from typing import List
 
-from pyarrow import parquet
+import numpy
+import pyarrow
 
 
 def zstd_decoder(stream, projection: List = None):
@@ -32,6 +33,8 @@ def parquet_decoder(stream, projection: List = None):
     """
     Read parquet formatted files
     """
+    from pyarrow import parquet
+
     selected_columns = None
     if isinstance(projection, (list, set)) and "*" not in projection:
         # if we have a pushed down projection, get the list of columns from the file
@@ -40,11 +43,20 @@ def parquet_decoder(stream, projection: List = None):
         # .schema_arrow is probably slower than .schema but there are instances of
         # .schema being incomplete #468
         parquet_metadata = parquet_file.schema_arrow
+
+        if projection == {"count_*"}:
+            return pyarrow.Table.from_pydict(
+                {
+                    "_": numpy.full(
+                        parquet_file.metadata.num_rows, True, dtype=numpy.bool_
+                    )
+                }
+            )
+
         selected_columns = list(set(parquet_metadata.names).intersection(projection))
         # if nothing matched, there's been a problem - maybe HINTS confused for columns
         if len(selected_columns) == 0:
             selected_columns = None
-
     # don't prebuffer - we're already buffered as an IO Stream
     return parquet.read_table(stream, columns=selected_columns, pre_buffer=False)
 

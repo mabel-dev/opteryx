@@ -6,6 +6,13 @@ from opteryx.managers.expression import ExpressionTreeNode
 from opteryx.managers.expression import NodeType
 from opteryx.utils import fuzzy_search
 
+WELL_KNOWN_HINTS = {
+    "NO_CACHE",
+    "NO_PARTITION",
+    "NO_PUSH_PROJECTION",
+    "PARALLEL_READ",
+}
+
 
 def extract_show_filter(ast):
     """filters are used in SHOW queries"""
@@ -61,7 +68,15 @@ def extract_order(ast):
 
 def extract_identifiers(ast):
     identifiers = []
-    if isinstance(ast, dict):
+    if ast == {
+        "name": [{"value": "COUNT", "quote_style": None}],
+        "args": [{"Unnamed": "Wildcard"}],
+        "over": None,
+        "distinct": False,
+        "special": False,
+    }:
+        identifiers.append("count_*")
+    elif isinstance(ast, dict):
         for key, value in ast.items():
             if key in ("Identifier",):
                 identifiers.append(value["value"])
@@ -71,13 +86,13 @@ def extract_identifiers(ast):
             if key in ("QualifiedWildcard",):
                 identifiers.append("*")
             identifiers.extend(extract_identifiers(value))
-    if isinstance(ast, list):
+    elif isinstance(ast, list):
         for item in ast:
-            if item in ("Wildcard",):
+            if item in ("Wildcard", {"Unnamed": "Wildcard"}):
                 identifiers.append("*")
             identifiers.extend(extract_identifiers(item))
 
-    return list(set(identifiers))
+    return identifiers
 
 
 def extract_joins(ast):
@@ -113,16 +128,9 @@ def extract_relations(branch):
 
     def _check_hints(hints):
 
-        well_known_hints = (
-            "NO_CACHE",
-            "NO_PARTITION",
-            "NO_PUSH_PROJECTION",
-            "PARALLEL_READ",
-        )
-
         for hint in hints:
-            if hint not in well_known_hints:
-                best_match_hint = fuzzy_search(hint, well_known_hints)
+            if hint not in WELL_KNOWN_HINTS:
+                best_match_hint = fuzzy_search(hint, WELL_KNOWN_HINTS)
 
     #                if best_match_hint:
     #                    _statistics.warn(

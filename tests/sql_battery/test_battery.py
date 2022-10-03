@@ -430,6 +430,7 @@ STATEMENTS = [
 
         ("SELECT $planets.* FROM $satellites INNER JOIN $planets USING (id)", 9, 20),
         ("SELECT $satellites.* FROM $satellites INNER JOIN $planets USING (id)", 9, 8),
+        ("SELECT $satellites.* FROM $satellites INNER JOIN $planets ON $planets.id = $satellites.id", 9, 8),
         ("SELECT $planets.* FROM $satellites INNER JOIN $planets AS p USING (id)", 9, 20),
         ("SELECT p.* FROM $satellites INNER JOIN $planets AS p USING (id)", 9, 20),
         ("SELECT s.* FROM $satellites AS s INNER JOIN $planets USING (id)", 9, 8),
@@ -730,16 +731,22 @@ if __name__ == "__main__":  # pragma: no cover
     """
 
     import shutil
+    import time
 
-    width = shutil.get_terminal_size((80, 20))[0] - 7
+    width = shutil.get_terminal_size((80, 20))[0] - 15
+
+    nl = "\n"
 
     print(f"RUNNING BATTERY OF {len(STATEMENTS)} SHAPE TESTS")
     for index, (statement, rows, cols) in enumerate(STATEMENTS):
+        start = time.monotonic_ns()
         print(
             f"\033[0;36m{(index + 1):04}\033[0m {statement[0:width - 1].ljust(width)}",
             end="",
         )
         test_sql_battery(statement, rows, cols)
-        print("✅")
+        print(
+            f"\033[0;32m{str(int((time.monotonic_ns() - start)/1000000)).rjust(4)}ms\033[0m ✅"
+        )
 
     print("--- ✅ \033[0;32mdone\033[0m")

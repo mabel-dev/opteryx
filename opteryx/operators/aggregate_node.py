@@ -25,6 +25,7 @@ import time
 
 from typing import Iterable
 
+import numpy
 import pyarrow
 
 from opteryx.exceptions import SqlError
@@ -50,7 +51,6 @@ AGGREGATORS = {
     "MAX": "max",
     "MAXIMUM": "max",  # alias
     "MEAN": "mean",
-    #    "MODE": "mode",
     "AVG": "mean",  # alias
     "AVERAGE": "mean",  # alias
     "MIN": "min",
@@ -61,7 +61,6 @@ AGGREGATORS = {
     "PRODUCT": "product",
     "STDDEV": "stddev",
     "SUM": "sum",
-    #    "QUANTILES": "tdigest",
     "VARIANCE": "variance",
 }
 
@@ -78,6 +77,8 @@ def _is_count_star(aggregates, groups):
         return False
     if aggregates[0].parameters[0].token_type != NodeType.WILDCARD:
         return False
+    #    if aggregates[0].parameters[0].value != 1.0:
+    #        return False
     return True
 
 
@@ -98,11 +99,17 @@ def _count_star(data_pages):
 def _project(tables, fields):
     fields = set(fields)
     for table in tables:
+        row_count = table.num_rows
         columns = Columns(table)
         column_names = [
             columns.get_column_from_alias(field, only_one=True) for field in fields
         ]
-        yield table.select(set(column_names))
+        if len(column_names) > 0:
+            yield table.select(set(column_names))
+        else:
+            yield pyarrow.Table.from_pydict(
+                {"_": numpy.full(row_count, True, dtype=numpy.bool_)}
+            )
 
 
 def _build_aggs(aggregators, columns):
@@ -131,13 +138,16 @@ def _build_aggs(aggregators, columns):
                     field_name = columns.get_column_from_alias(
                         field_node.value, only_one=True
                     )
+                elif field_node.token_type == NodeType.LITERAL_NUMERIC:
+                    display_field = str(field_node.value)
+                    field_name = field_node.value
                 elif len(exists) > 0:
                     display_field = exists[0]
                     field_name = exists[0]
                 else:
                     display_name = format_expression(field_node)
                     raise SqlError(
-                        f"Invalid identifier provided in aggregator function `{display_name}`"
+                        f"Invalid identifier or literal provided in aggregator function `{display_name}`"
                     )
                 function = AGGREGATORS.get(aggregator.value)
                 aggs.append(
@@ -166,11 +176,18 @@ def _non_group_aggregates(aggregates, table, columns):
 
         if aggregate.token_type == NodeType.AGGREGATOR:
 
-            column_name = format_expression(aggregate.parameters[0])
-            mapped_column_name = columns.get_column_from_alias(
-                column_name, only_one=True
-            )
-            raw_column_values = table[mapped_column_name].to_numpy()
+            column_node = aggregate.parameters[0]
+            if column_node.token_type == NodeType.LITERAL_NUMERIC:
+                raw_column_values = numpy.full(
+                    table.num_rows, column_node.value, dtype=numpy.float64
+                )
+                mapped_column_name = str(column_node.value)
+            else:
+                column_name = format_expression(aggregate.parameters[0])
+                mapped_column_name = columns.get_column_from_alias(
+                    column_name, only_one=True
+                )
+                raw_column_values = table[mapped_column_name].to_numpy()
             aggregate_function_name = AGGREGATORS[aggregate.value]
             # this maps a string which is the function name to that function on the
             # pyarrow.compute module
@@ -257,14 +274,12 @@ class AggregateNode(BasePlanNode):
             return
 
         # get all the columns anywhere in the groups or aggregates
-        all_identifiers = set(
-            [
-                node.value
-                for node in get_all_nodes_of_type(
-                    self._groups + self._aggregates, select_nodes=(NodeType.IDENTIFIER,)
-                )
-            ]
-        )
+        all_identifiers = {
+            node.value
+            for node in get_all_nodes_of_type(
+                self._groups + self._aggregates, select_nodes=(NodeType.IDENTIFIER,)
+            )
+        }
         # join all the pages together, selecting only the columns we found above
         table = pyarrow.concat_tables(
             _project(data_pages.execute(), all_identifiers), promote=True
