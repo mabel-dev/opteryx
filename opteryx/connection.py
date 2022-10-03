@@ -197,7 +197,7 @@ class Cursor:
 
     def arrow(self, size: int = None) -> Table:
         """
-        Fetch the resultset as a pyarrow table, this is generally the fastest way to 
+        Fetch the resultset as a pyarrow table, this is generally the fastest way to
         get the entire set of results.
 
         Parameters:
