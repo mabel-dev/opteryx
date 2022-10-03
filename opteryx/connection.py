@@ -55,6 +55,15 @@ class Connection:
         """exists for interface compatibility only"""
         pass
 
+    def commit(self):
+        """exists for interface compatibility only"""
+        pass
+
+    def rollback(self):
+        """exists for interface compatibility only"""
+        # return AttributeError as per https://peps.python.org/pep-0249/#id48
+        raise AttributeError("Opteryx does not support transactions.")
+
 
 class Cursor:
     def __init__(self, connection):
@@ -126,20 +135,20 @@ class Cursor:
     def rowcount(self):
         if self._results is None:  # pragma: no cover
             raise CursorInvalidStateError(CURSOR_NOT_RUN)
-        if self._results == set():
-            return 0
         if not isinstance(self._results, Table):
             self._results = utils.arrow.as_arrow(self._results)
+        if self._results == set():
+            return 0
         return self._results.num_rows
 
     @property
     def shape(self):
         if self._results is None:  # pragma: no cover
             raise CursorInvalidStateError(CURSOR_NOT_RUN)
-        if self._results == set():
-            return (0, 0)
         if not isinstance(self._results, (Table, set)):
             self._results = utils.arrow.as_arrow(self._results)
+        if self._results == set():
+            return (0, 0)
         return self._results.shape
 
     @property
