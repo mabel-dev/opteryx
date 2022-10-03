@@ -161,7 +161,6 @@ def limit_records(data_pages, limit):
 
     # if we don't actually have a limit set, just return
     if limit is None:
-        data_pages = list(data_pages)
         return pyarrow.concat_tables(data_pages, promote=True)
 
     for page in data_pages:
