@@ -1,6 +1,9 @@
 """
-Test that the queries used in documentation execute without error
+The best way to test a SQL Engine is to throw queries at it.
+
+This is the lightest of the main battery tests, it only ensures a query executes
 """
+import glob
 import os
 import sys
 import pytest
@@ -11,7 +14,6 @@ import opteryx
 
 
 def get_tests(test_type):
-    import glob
 
     suites = glob.glob(f"**/**.{test_type}", recursive=True)
     for suite in suites:
@@ -36,14 +38,32 @@ def test_run_only_tests(statement):
     cursor = conn.cursor()
 
     cursor.execute(statement)
-    cursor.arrow()
+    # row count doesn't fail if there are no records
+    cursor.rowcount
 
 
 if __name__ == "__main__":  # pragma: no cover
 
+    import shutil
+    import time
+
+    width = shutil.get_terminal_size((80, 20))[0] - 15
+
+    nl = "\n"
+
     print(f"RUNNING BATTERY OF {len(RUN_ONLY_TESTS)} RUN_ONLY TESTS")
-    for statement in RUN_ONLY_TESTS:
-        print(statement)
+    for index, statement in enumerate(RUN_ONLY_TESTS):
+
+        start = time.monotonic_ns()
+        print(
+            f"\033[0;36m{(index + 1):04}\033[0m {statement[0:width - 1].ljust(width)}",
+            end="",
+        )
+
         test_run_only_tests(statement)
 
-    print("✅ okay")
+        print(
+            f"\033[0;32m{str(int((time.monotonic_ns() - start)/1000000)).rjust(4)}ms\033[0m ✅"
+        )
+
+    print("--- ✅ \033[0;32mdone\033[0m")

@@ -217,7 +217,7 @@ class Cursor:
             pyarrow.Table
         """
         # called 'size' to match the 'fetchmany' nomenclature
-        if not isinstance(self._results, Table):
+        if not isinstance(self._results, (Table, set)):
             self._results = utils.arrow.as_arrow(self._results)
         if self._results == set():
             raise EmptyResultSetError("Cannot fulfil request on an empty result set")
