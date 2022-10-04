@@ -9,6 +9,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import random
+
 import numpy
 
 from pyarrow import compute
@@ -35,7 +37,7 @@ def round(*args):
     return compute.round(args[0], args[1][0])  # [#325]
 
 
-def random(size):
+def random_number(size):
     return numpy.random.uniform(size=size)
 
 
@@ -48,8 +50,9 @@ def random_normal(size):
 
 def random_string(width):
     # this is roughly twice as fast the the previous implementation
-    import random
-    import string
-
-    alphabet = tuple(string.ascii_letters + string.digits + "_/")
+    # a tuple is slightly faster than a string, don't use a list
+    width = int(width)
+    # fmt:off
+    alphabet = ('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '_', '/')
+    # ftm:on
     return "".join([alphabet[random.getrandbits(6)] for i in range(width)])

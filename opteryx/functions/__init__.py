@@ -33,15 +33,6 @@ from opteryx.third_party.date_trunc import date_trunc
 from opteryx.utils import dates, arrays
 
 
-def get_random():
-    """get a random number between 0 and 1, four decimal places"""
-    random_int = random.getrandbits(14)
-    try:
-        return (random_int % 10001) / 10000
-    except:
-        return 0
-
-
 def get_version():
     """return opteryx version"""
     return opteryx.__version__
@@ -216,8 +207,8 @@ FUNCTIONS = {
     "SHA256": _iterate_single_parameter(string_functions.get_sha256),
     "SHA384": _iterate_single_parameter(string_functions.get_sha384),
     "SHA512": _iterate_single_parameter(string_functions.get_sha512),
-    "RANDOM": number_functions.random,
-    "RAND": number_functions.random,
+    "RANDOM": number_functions.random_number,
+    "RAND": number_functions.random_number,
     "NORMAL": number_functions.random_normal,
     "RANDOM_STRING": _iterate_single_parameter(number_functions.random_string),
     "BASE64_ENCODE": _iterate_single_parameter(string_functions.get_base64_encode),
