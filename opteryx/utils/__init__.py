@@ -13,29 +13,6 @@
 import itertools
 import random
 
-from functools import lru_cache
-
-try:
-    # added 3.9
-    from functools import cache
-except ImportError:
-    from functools import lru_cache
-
-    cache = lru_cache(1)
-
-
-@cache
-def is_running_from_ipython():  # pragma: no cover
-    """
-    True when running in Jupyter
-    """
-    try:
-        from IPython import get_ipython  # type:ignore
-
-        return get_ipython() is not None
-    except:
-        return False
-
 
 def peak(generator):  # type:ignore
     """
@@ -44,7 +21,7 @@ def peak(generator):  # type:ignore
     """
     try:
         item = next(generator)
-    except StopIteration:
+    except StopIteration:  # pragma: no cover
         return None, []
     return item, itertools.chain([item], generator)
 
