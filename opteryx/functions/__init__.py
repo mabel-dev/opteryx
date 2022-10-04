@@ -14,7 +14,7 @@
 These are a set of functions that can be applied to data.
 """
 import datetime
-import os
+import random
 
 from cityhash import CityHash64
 from pyarrow import compute
@@ -35,10 +35,9 @@ from opteryx.utils import dates, arrays
 
 def get_random():
     """get a random number between 0 and 1, four decimal places"""
-    range_min, range_max = 0, 10000
-    random_int = int.from_bytes(os.urandom(2), "big")
+    random_int = random.getrandbits(14)
     try:
-        return ((random_int % ((range_max + 1) - range_min)) + range_min) / 10000
+        return (random_int % 10001) / 10000
     except:
         return 0
 

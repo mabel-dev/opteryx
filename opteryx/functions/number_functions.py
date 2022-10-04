@@ -9,8 +9,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import os
-
 import numpy
 
 from pyarrow import compute
@@ -49,5 +47,9 @@ def random_normal(size):
 
 
 def random_string(width):
-    random_ints = numpy.random.uniform(low=97, high=123, size=int(width))
-    return "".join([chr(int(i)) for i in random_ints])
+    # this is roughly twice as fast the the previous implementation
+    import random
+    import string
+
+    alphabet = tuple(string.ascii_letters + string.digits + "_/")
+    return "".join([alphabet[random.getrandbits(6)] for i in range(width)])
