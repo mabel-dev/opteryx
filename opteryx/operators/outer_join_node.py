@@ -85,10 +85,10 @@ class OuterJoinNode(BasePlanNode):
         right_columns = Columns(right_table)
         left_columns = None
 
-        for page in arrow.consolidate_pages(
+        for page in arrow.defragment_pages(
             left_node.execute(),
             self.statistics,
-            self.properties.enable_page_management,
+            self.properties.enable_page_defragmentation,
         ):
 
             if self._using:
@@ -98,10 +98,10 @@ class OuterJoinNode(BasePlanNode):
                     for col in self._using
                 ]
 
-                for page in arrow.consolidate_pages(
+                for page in arrow.defragment_pages(
                     left_node.execute(),
                     self.statistics,
-                    self.properties.enable_page_management,
+                    self.properties.enable_page_defragmentation,
                 ):
 
                     if left_columns is None:
