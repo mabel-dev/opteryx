@@ -17,6 +17,7 @@ def groupify_array(arr):
     sort_idx = numpy.argsort(arr)
     return dic, counts, sort_idx, [0] + numpy.cumsum(counts)[:-1].tolist()
 
+
 def _hash_value(val, nan=numpy.nan):
 
     # Added for Opteryx - Original code had bugs relating to distinct and nulls
