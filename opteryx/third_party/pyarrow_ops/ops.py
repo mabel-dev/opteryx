@@ -185,41 +185,6 @@ def filter_operations(arr, operator, value):
         raise Exception(f"Operator {operator} is not implemented!")
 
 
-def _get_values(table, operand):
-    """
-    MODIFIED FOR OPTERYX
-    This allows us to use two identifiers rather than the original implementation which
-    forced <identifier> <op> <literal>
-    """
-    try:
-        if operand[1] == TOKEN_TYPES.IDENTIFIER:
-            return table.column(operand[0]).to_numpy()
-        else:
-            return operand[0]
-    except:
-        pass
-
-
-def ifilters(table, filters):
-    """
-    ADDED FOR OPTERYX
-    return the indices so we can do unions (OR) and intersections (AND) on the lists
-    of indices to do complex filters
-    """
-    filters = [filters] if isinstance(filters, tuple) else filters
-    # Filter is a list of (col, op, value) tuples
-    indices = numpy.arange(table.num_rows)
-    for (left_operand, operator, right_operand) in filters:
-        f_idxs = filter_operations(
-            _get_values(table, left_operand),
-            operator,
-            _get_values(table, right_operand),
-        )
-        indices = indices[f_idxs]
-
-    return indices
-
-
 # Drop duplicates
 def drop_duplicates(table, columns=None):
     """
