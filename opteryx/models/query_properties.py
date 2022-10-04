@@ -43,7 +43,7 @@ class QueryProperties:
         # Approximate Page Size
         self.page_size: int = config.get("PAGE_SIZE", 64 * 1024 * 1024)
         # Internally split and merge pages
-        self.enable_page_management: bool = True
+        self.enable_page_defragmentation: bool = True
 
         # cost values go here:
         #    costs are the approximate number of seconds to perform an action

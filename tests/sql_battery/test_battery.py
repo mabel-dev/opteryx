@@ -32,13 +32,10 @@ import sys
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
-import pyarrow
 import pytest
 
 import opteryx
 
-from opteryx.utils.arrow import fetchmany
-from opteryx.utils.display import ascii_table
 from opteryx.connectors import DiskConnector
 
 
@@ -598,10 +595,10 @@ STATEMENTS = [
         ("SHOW CREATE TABLE $satellites", 1, 1),
         ("SHOW CREATE TABLE $astronauts", 1, 1),
         ("SHOW CREATE TABLE testdata.framed FOR '2021-03-28'", 1, 1),
-        ("SET enable_optimizer = false;\nSET enable_page_management = true;\nSELECT COUNT(*) FROM $planets WHERE id > 3 AND name ILIKE '%e%'", 1, 1),
-        ("SET enable_optimizer = true;\nSET enable_page_management = true;\nSELECT COUNT(*) FROM $planets WHERE id > 3 AND name ILIKE '%e%'", 1, 1),
-        ("SET enable_optimizer = true;\nSET enable_page_management = false;\nSELECT COUNT(*) FROM $planets WHERE id > 3 AND name ILIKE '%e%'", 1, 1),
-        ("SET enable_optimizer = false;\nSET enable_page_management = false;\nSELECT COUNT(*) FROM $planets WHERE id > 3 AND name ILIKE '%e%'", 1, 1),
+        ("SET enable_optimizer = false;\nSET enable_page_defragmentation = true;\nSELECT COUNT(*) FROM $planets WHERE id > 3 AND name ILIKE '%e%'", 1, 1),
+        ("SET enable_optimizer = true;\nSET enable_page_defragmentation = true;\nSELECT COUNT(*) FROM $planets WHERE id > 3 AND name ILIKE '%e%'", 1, 1),
+        ("SET enable_optimizer = true;\nSET enable_page_defragmentation = false;\nSELECT COUNT(*) FROM $planets WHERE id > 3 AND name ILIKE '%e%'", 1, 1),
+        ("SET enable_optimizer = false;\nSET enable_page_defragmentation = false;\nSELECT COUNT(*) FROM $planets WHERE id > 3 AND name ILIKE '%e%'", 1, 1),
         ("SELECT COUNT(*) FROM $planets WHERE id > 3 AND name ILIKE '%e%' AND id > 1 AND id > 0 AND id > 2 AND name ILIKE '%e%'", 1, 1),
 
         # These are queries which have been found to return the wrong result or not run correctly

@@ -25,11 +25,11 @@ from opteryx import config
 INTERNAL_BATCH_SIZE = 500
 PAGE_SIZE = 64 * 1024 * 1024
 
-HIGH_WATER: float = 1.25  # Split pages over 125% of PAGE_SIZE
-LOW_WATER: float = 0.6  # Merge pages under 60% of PAGE_SIZE
+HIGH_WATER: float = 1.99  # Split pages over 199% of PAGE_SIZE
+LOW_WATER: float = 0.75  # Merge pages under 75% of PAGE_SIZE
 
 
-def consolidate_pages(pages, statistics, enable):
+def defragment_pages(pages, statistics, enable):
     """
     Orignally implemented to test if datasets have any records as they pass through
     the DAG, this function normalizes the number of bytes per page.
@@ -40,12 +40,14 @@ def consolidate_pages(pages, statistics, enable):
         - operate quickly, if we spend our time doing SIMD on pages with few records
           we're not working as fast as we can.
 
-    The low-water mark is 60% of the target size, less than this we look to merge
+    The low-water mark is 75% of the target size, less than this we look to merge
     pages together. This is more common following the implementation of projection
     push down, one column doesn't take up a lot of memory so we consolidate tens of
     pages into a single page.
 
-    The high-water mark is 125% of the target size, more than this we split the page.
+    The high-water mark is 199% of the target size, more than this we split the page.
+    Splitting at a size any less than this will end up with pages less that the target
+    page size.
     """
     if isinstance(pages, Table):
         pages = (pages,)
@@ -70,7 +72,7 @@ def consolidate_pages(pages, statistics, enable):
             page_bytes = page.nbytes
             page_records = page.num_rows
 
-            # if we're more than 25% over the target size, let's do something
+            # if we're more than double the target size, let's do something
             if page_bytes > (PAGE_SIZE * HIGH_WATER):  # pragma: no cover
                 average_record_size = page_bytes / page_records
                 new_row_count = int(PAGE_SIZE / average_record_size)
@@ -78,13 +80,15 @@ def consolidate_pages(pages, statistics, enable):
                 statistics.page_splits += 1
                 yield page.slice(offset=0, length=new_row_count)
                 collected_rows = page.slice(offset=new_row_count)
-            # if we're less than 60% of the page size, go collect the next page
+            # if we're less than 75% of the page size, go collect the next page
             elif page_bytes < (PAGE_SIZE * LOW_WATER):
                 collected_rows = page
             # otherwise, emit the current page
             else:
                 row_counter += page_records
                 yield page
+        else:
+            yield page
 
     if collected_rows:
         row_counter += collected_rows.num_rows
