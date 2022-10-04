@@ -14,8 +14,20 @@ SELECT * FROM $planets FOR DATES BETWEEN '2000-01-01' AND '2022-01-01'
 SELECT * FROM $planets FOR DATES BETWEEN '2000-01-01' AND '2022-01-01';
 SELECT * FROM $planets FOR DATES BETWEEN '2000-01-01' AND '2022-01-01'; --
 
+# second condition empty failures
+SELECT * FROM $planets WHERE TRUE AND FALSE;
+SELECT * FROM $planets WHERE FALSE AND TRUE;
+SELECT * FROM $planets WHERE TRUE OR FALSE;
+SELECT * FROM $planets WHERE FALSE OR TRUE;
 
-#SELECT * FROM $planets WHERE TRUE AND FALSE;
-#SELECT * FROM $planets WHERE FALSE AND TRUE;
-#SELECT * FROM $planets WHERE TRUE OR FALSE;
-#SELECT * FROM $planets WHERE FALSE OR TRUE;
+# [#561] HASH JOIN with an empty table
+SELECT * FROM $planets LEFT JOIN (SELECT planetId as id FROM $satellites WHERE id < 0) USING (id);
+
+# zero record queries
+SELECT name, COUNT(*) FROM $astronauts WHERE name = 'Jim' GROUP BY name;
+SELECT * FROM testdata.nulls WHERE tweet ILIKE '%Trump%' FOR '2000-01-01';
+SELECT * FROM $planets WHERE id = -1 LIMIT 10;
+SELECT * FROM $planets WHERE id = -1 ORDER BY id;
+SELECT * FROM $planets WHERE id = -1;
+SELECT * FROM $satellites WHERE id = 5 AND magnitude = 1;
+SELECT * FROM $satellites WHERE name = '********';

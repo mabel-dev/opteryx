@@ -237,6 +237,9 @@ def drop_duplicates(table, columns=None):
 # Show for easier printing
 def head(table, n=5, max_width=100):
     # Updated to yield rather than print for Opteryx
+    if table == set():
+        yield "No data in table"
+        return
     if table.num_rows == 0:
         yield "No data in table"
         return

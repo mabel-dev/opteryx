@@ -45,8 +45,8 @@ def peak(generator):  # type:ignore
     try:
         item = next(generator)
     except StopIteration:
-        return None
-    return item, itertools.chain(item, generator)
+        return None, []
+    return item, itertools.chain([item], generator)
 
 
 def fuzzy_search(name, candidates):
