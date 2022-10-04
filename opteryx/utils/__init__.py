@@ -11,7 +11,7 @@
 # limitations under the License.
 
 import itertools
-import os
+import random
 
 from functools import lru_cache
 
@@ -71,14 +71,12 @@ def random_int() -> int:
     """
     Select a random integer (32bit)
     """
-    return bytes_to_int(os.urandom(4))
+    return random.getrandbits(32)
 
 
-def bytes_to_int(bytes: bytes) -> int:
-    """
-    Helper function, convert set of bytes to an integer
-    """
-    result = 0
-    for byte in bytes:
-        result = result * 256 + int(byte)
-    return result
+def random_string(width):
+    # this is roughly twice as fast the the previous implementation
+    import string
+
+    alphabet = tuple(string.ascii_letters + string.digits + "_/")
+    return "".join([alphabet[random.getrandbits(6)] for i in range(width)])

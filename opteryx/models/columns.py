@@ -27,7 +27,7 @@ import os
 import pyarrow
 
 from opteryx.exceptions import SqlError, ColumnNotFoundError
-from opteryx.utils import arrow
+from opteryx.utils import arrow, random_string
 
 
 class Columns:
@@ -234,17 +234,6 @@ class Columns:
     @staticmethod
     def create_table_metadata(table, expected_rows, name, table_aliases):
 
-        # we're going to replace the column names with random strings
-        def _random_string(length: int = 8) -> str:
-            import base64
-
-            # we're creating a series of random bytes, 3/4 the length
-            # of the string we want, base64 encoding it (which makes
-            # it longer) and then returning the length of string
-            # requested.
-            byte = os.urandom(-((length * -3) // 4))
-            return base64.b64encode(byte).decode("utf8")[:length]
-
         if not isinstance(table_aliases, list):
             table_aliases = [table_aliases]
         table_aliases.append(name)
@@ -261,7 +250,7 @@ class Columns:
         column_metadata = {}
         for column in table.column_names:
             # we're going to rename the columns
-            new_column = _random_string(12)
+            new_column = random_string(12)
             # the column is know aliased by it's previous name
             column_metadata[new_column] = {"aliases": [column]}
             # record the source table

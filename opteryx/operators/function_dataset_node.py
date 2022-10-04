@@ -17,8 +17,7 @@ This is a SQL Query Execution Plan Node.
 
 This Node creates datasets based on function calls like VALUES and UNNEST.
 """
-import os
-import sys
+import random
 import time
 
 from typing import Iterable
@@ -53,18 +52,11 @@ def _values(alias, *values):
 
 
 def _fake_data(alias, *args):
-    def _inner(rows, columns):
-        for row in range(rows):
-            record = {
-                f"column_{col}": int.from_bytes(os.urandom(2), sys.byteorder)
-                for col in range(columns)
-            }
-            yield record
-
-    rows, columns = args[0].value, args[1].value
-    rows = int(rows)
-    columns = int(columns)
-    return list(_inner(rows, columns))
+    rows, columns = int(args[0].value), int(args[1].value)
+    return [
+        {f"column_{col}": random.getrandbits(16) for col in range(columns)}
+        for row in range(rows)
+    ]
 
 
 FUNCTIONS = {
