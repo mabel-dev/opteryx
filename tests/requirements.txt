@@ -17,3 +17,5 @@ minio
 pymongo
 
 faust-streaming-rocksdb
+
+setuptools_rust

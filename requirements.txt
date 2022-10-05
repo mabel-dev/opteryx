@@ -1,8 +1,8 @@
 cityhash
-cython
 numpy
 orjson
 pyarrow>=9.0.0
 pyyaml
-sqloxide>=0.1.21
 typer
+
+cython
