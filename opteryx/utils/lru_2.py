@@ -20,7 +20,7 @@ classic LRU will evict and repopulate the cache for every call. LRU-2 reduces th
 likelihood of this, but not preferring the MRU item to be retained.
 
 LRU-K should be used in conjunction with eviction limits per query - this appears to
-broadly be the solution used by Postgres. This can be supported by the calling 
+broadly be the solution used by Postgres. This can be supported by the calling
 function using the return from the .set call to determine if an item was evicted from
 the cache.
 

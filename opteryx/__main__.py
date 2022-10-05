@@ -15,15 +15,15 @@
 """
 A command line utility for Opteryx
 """
-import sqloxide
 import typer
 
 import orjson
 
 import opteryx
 
+from opteryx.third_party import sqloxide
+
 from opteryx.managers.planner.temporal import extract_temporal_filters
-from opteryx.utils.display import ascii_table
 
 
 def main(

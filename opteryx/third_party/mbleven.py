@@ -22,7 +22,6 @@
 REPLACE: int = 1
 INSERT: int = 2
 DELETE: int = 4
-TRANSPOSE: int = 8
 
 # fmt:off
 MATRIX = (
@@ -89,13 +88,6 @@ def check_model(str1: str, str2: str, len1: int, len2: int, model) -> int:
                 idx1 += 1
                 idx2 += 1
                 pad = 0
-            elif option == TRANSPOSE:
-                if (idx2 + 1) < len2 and str1[idx1] == str2[idx2 + 1]:
-                    idx1 += 1
-                    idx2 += 1
-                    pad = 1
-                else:
-                    return 3
         else:
             idx1 += 1
             idx2 += 1

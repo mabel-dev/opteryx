@@ -158,3 +158,5 @@ opteryx/third_party/soundex.c
 temp.*
 test.rocksdb/**
 **.drawio.bkp
+Cargo.lock
+performance.jsonl

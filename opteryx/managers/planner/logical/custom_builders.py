@@ -24,7 +24,7 @@ def extract_show_filter(ast):
         right = ExpressionTreeNode(NodeType.LITERAL_VARCHAR, value=filters["Like"])
         root = ExpressionTreeNode(
             NodeType.COMPARISON_OPERATOR,
-            value="Like",
+            value="ILike",  # we're case insensitive for SHOW filters
             left_node=left,
             right_node=right,
         )

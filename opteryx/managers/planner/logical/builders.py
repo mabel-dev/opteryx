@@ -20,7 +20,7 @@ import numpy
 import pyarrow
 
 from opteryx import operators, functions
-from opteryx.exceptions import SqlError
+from opteryx.exceptions import SqlError, UnsupportedSyntaxError
 from opteryx.functions.binary_operators import BINARY_OPERATORS
 from opteryx.managers.expression import ExpressionTreeNode
 from opteryx.managers.expression import NodeType
@@ -140,13 +140,13 @@ def function(branch, alias=None, key=None):
         node_type = NodeType.FUNCTION
     elif operators.is_aggregator(func):
         node_type = NodeType.AGGREGATOR
-    else:
+    else:  # pragma: no cover
         likely_match = fuzzy_search(
             func, operators.aggregators() + functions.functions()
         )
         if likely_match is None:
-            raise SqlError(f"Unknown function or aggregate '{func}'")
-        raise SqlError(
+            raise UnsupportedSyntaxError(f"Unknown function or aggregate '{func}'")
+        raise UnsupportedSyntaxError(
             f"Unknown function or aggregate '{func}'. Did you mean '{likely_match}'?"
         )
     return ExpressionTreeNode(
@@ -185,6 +185,15 @@ def cast(branch, alias=None, key=None):
 
     args = [build(branch["expr"])]
     data_type = branch["data_type"]
+    if isinstance(data_type, dict):
+        # timestamps have the timezone as a value
+        type_key = next(iter(data_type))
+        if type_key == "Timestamp" and data_type[type_key] not in (
+            "None",
+            "WithoutTimeZone",
+        ):
+            raise UnsupportedSyntaxError("TIMESTAMPS do not support `TIME ZONE`")
+        data_type = type_key
     if data_type == "Timestamp":
         data_type = "TIMESTAMP"
     elif "Varchar" in data_type:
@@ -215,6 +224,15 @@ def try_cast(branch, alias=None, key="TryCast"):
     function_name = key.replace("Cast", "_Cast").upper()
     args = [build(branch["expr"])]
     data_type = branch["data_type"]
+    if isinstance(data_type, dict):
+        # timestamps have the timezone as a value
+        type_key = next(iter(data_type))
+        if type_key == "Timestamp" and data_type[type_key] not in (
+            "None",
+            "WithoutTimeZone",
+        ):
+            raise UnsupportedSyntaxError("TIMESTAMPS do not support `TIME ZONE`")
+        data_type = type_key
     if data_type == "Timestamp":
         data_type = "TIMESTAMP"
     elif "Varchar" in data_type:
