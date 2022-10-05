@@ -20,7 +20,7 @@ import numpy
 import pyarrow
 
 from opteryx import operators, functions
-from opteryx.exceptions import SqlError
+from opteryx.exceptions import SqlError, UnsupportedSyntaxError
 from opteryx.functions.binary_operators import BINARY_OPERATORS
 from opteryx.managers.expression import ExpressionTreeNode
 from opteryx.managers.expression import NodeType
@@ -185,6 +185,12 @@ def cast(branch, alias=None, key=None):
 
     args = [build(branch["expr"])]
     data_type = branch["data_type"]
+    if isinstance(data_type, dict):
+        # timestamps have the timezone as a value
+        key = next(iter(data_type))
+        if key == "Timestamp" and not data_type[key] in ("None", "WithoutTimeZone"):
+            raise UnsupportedSyntaxError("TIMESTAMPS do not support `TIME ZONE`")
+        data_type = key
     if data_type == "Timestamp":
         data_type = "TIMESTAMP"
     elif "Varchar" in data_type:
@@ -215,6 +221,12 @@ def try_cast(branch, alias=None, key="TryCast"):
     function_name = key.replace("Cast", "_Cast").upper()
     args = [build(branch["expr"])]
     data_type = branch["data_type"]
+    if isinstance(data_type, dict):
+        # timestamps have the timezone as a value
+        key = next(iter(data_type))
+        if key == "Timestamp" and not data_type[key] in ("None", "WithoutTimeZone"):
+            raise UnsupportedSyntaxError("TIMESTAMPS do not support `TIME ZONE`")
+        data_type = key
     if data_type == "Timestamp":
         data_type = "TIMESTAMP"
     elif "Varchar" in data_type:

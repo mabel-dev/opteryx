@@ -159,3 +159,4 @@ temp.*
 test.rocksdb/**
 **.drawio.bkp
 Cargo.lock
+performance.jsonl
