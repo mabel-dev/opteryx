@@ -31,3 +31,7 @@ SELECT * FROM $planets WHERE id = -1 ORDER BY id;
 SELECT * FROM $planets WHERE id = -1;
 SELECT * FROM $satellites WHERE id = 5 AND magnitude = 1;
 SELECT * FROM $satellites WHERE name = '********';
+
+# aggregate on literals
+SELECT COUNT(1) FROM $satellites;
+SELECT SUM(42) FROM $planets;

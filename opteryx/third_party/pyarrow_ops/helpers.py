@@ -18,10 +18,6 @@ def groupify_array(arr):
     return dic, counts, sort_idx, [0] + numpy.cumsum(counts)[:-1].tolist()
 
 
-def combine_column(table, name):
-    return table.column(name).combine_chunks()
-
-
 def _hash_value(val, nan=numpy.nan):
 
     # Added for Opteryx - Original code had bugs relating to distinct and nulls
@@ -44,8 +40,6 @@ def columns_to_array(table, columns):
     columns = [columns] if isinstance(columns, str) else list(set(columns))
 
     if len(columns) == 1:
-        if not columns[0] in table.column_names:
-            return numpy.array([])
         # FIX https://github.com/mabel-dev/opteryx/issues/98
         # hashing NULL doesn't result in the same value each time
         # FIX https://github.com/mabel-dev/opteryx/issues/285
@@ -65,8 +59,6 @@ def columns_to_array_denulled(table, columns):
     # them anywhere here.
     columns = [columns] if isinstance(columns, str) else columns
     if len(columns) == 1:
-        if not columns[0] in table.column_names:
-            return numpy.array([])
         column_values = table.column(columns[0]).drop_null().to_numpy()
         return numpy.array([_hash_value(el) for el in column_values])
 

@@ -44,5 +44,5 @@ def test_slice_right():
 if __name__ == "__main__":  # pragma: no cover
 
     test_slice_left()
-    skip_test_slice_right()
+    test_slice_right()
     print("✅ okay")
