@@ -188,7 +188,10 @@ def cast(branch, alias=None, key=None):
     if isinstance(data_type, dict):
         # timestamps have the timezone as a value
         type_key = next(iter(data_type))
-        if type_key == "Timestamp" and data_type[type_key] not in ("None", "WithoutTimeZone"):
+        if type_key == "Timestamp" and data_type[type_key] not in (
+            "None",
+            "WithoutTimeZone",
+        ):
             raise UnsupportedSyntaxError("TIMESTAMPS do not support `TIME ZONE`")
         data_type = type_key
     if data_type == "Timestamp":
@@ -224,7 +227,10 @@ def try_cast(branch, alias=None, key="TryCast"):
     if isinstance(data_type, dict):
         # timestamps have the timezone as a value
         type_key = next(iter(data_type))
-        if type_key == "Timestamp" and data_type[type_key] not in ("None", "WithoutTimeZone"):
+        if type_key == "Timestamp" and data_type[type_key] not in (
+            "None",
+            "WithoutTimeZone",
+        ):
             raise UnsupportedSyntaxError("TIMESTAMPS do not support `TIME ZONE`")
         data_type = type_key
     if data_type == "Timestamp":
