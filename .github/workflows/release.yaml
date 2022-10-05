@@ -15,11 +15,17 @@ jobs:
     steps:
     - uses: actions/checkout@master
 
+    - name: Install rust toolchain
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+
     - name: Install Python package dependencies
-      run: /opt/python/cp38-cp38/bin/python -m pip install --upgrade cython wheel numpy
+      run: python -m pip install --upgrade cython wheel numpy setuptools_rust
 
     - name: Build binary wheel
-      run: /opt/python/cp38-cp38/bin/python setup.py bdist_wheel
+      run: python setup.py bdist_wheel
 
     - name: Apply auditwheel for manylinux wheel
       run: auditwheel repair -w dist dist/*
@@ -41,11 +47,17 @@ jobs:
     steps:
     - uses: actions/checkout@master
 
+    - name: Install rust toolchain
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+
     - name: Install Python package dependencies
-      run: /opt/python/cp39-cp39/bin/python -m pip install --upgrade cython wheel numpy
+      run: python -m pip install --upgrade cython wheel numpy setuptools_rust
 
     - name: Build binary wheel
-      run: /opt/python/cp39-cp39/bin/python setup.py bdist_wheel
+      run: python setup.py bdist_wheel
 
     - name: Apply auditwheel for manylinux wheel
       run: auditwheel repair -w dist dist/*
@@ -66,11 +78,17 @@ jobs:
     steps:
     - uses: actions/checkout@master
 
+    - name: Install rust toolchain
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+
     - name: Install Python package dependencies
-      run: /opt/python/cp310-cp310/bin/python -m pip install --upgrade cython wheel numpy
+      run: python -m pip install --upgrade cython wheel numpy setuptools_rust
 
     - name: Build binary wheel
-      run: /opt/python/cp310-cp310/bin/python setup.py bdist_wheel
+      run: python setup.py bdist_wheel
 
     - name: Apply auditwheel for manylinux wheel
       run: auditwheel repair -w dist dist/*
@@ -94,11 +112,30 @@ jobs:
     steps:
     - uses: actions/checkout@master
 
+    - name: Install rust toolchain
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+
     - name: Set up Python ${{ matrix.python-version }} x64
       uses: actions/setup-python@v1
       with:
         python-version: ${{ matrix.python-version }}
-        architecture: x64
+
+    - name: Install Rust aarch64-apple-darwin target
+      if: matrix.os == 'macos-latest'
+      run: rustup target add aarch64-apple-darwin
+
+    - name: Build on macOS universal2
+      if: matrix.os == 'macos-latest'
+      shell: bash
+      env:
+        DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
+        MACOSX_DEPLOYMENT_TARGET: '10.9'
+        ARCHFLAGS: -arch x86_64 -arch arm64
+        PYO3_CROSS_LIB_DIR: /Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.8/lib
+      run: python setup.py bdist_wheel
 
     - name: Install Python package dependencies
       run: pip install --upgrade cython wheel numpy
