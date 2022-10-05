@@ -358,11 +358,7 @@ def show_variable_query(ast, properties):
     plan = ExecutionTree()
 
     keywords = [value["value"].upper() for value in ast["ShowVariable"]["variable"]]
-    if keywords[0] == "FUNCTIONS":
-        show_node = "show_functions"
-        node = operators.ShowFunctionsNode(properties=properties)
-        plan.add_operator(show_node, operator=node)
-    elif keywords[0] == "PARAMETER":
+    if keywords[0] == "PARAMETER":
         if len(keywords) != 2:
             raise SqlError("`SHOW PARAMETER` expects a single parameter name.")
         key = keywords[1].lower()
@@ -384,6 +380,24 @@ def show_variable_query(ast, properties):
     )
     plan.add_operator("order", operator=order_by_node)
     plan.link_operators(show_node, "order")
+
+    return plan
+
+def show_functions_query(ast, properties):
+    """show the supported functions, optionally filter them"""
+    plan = ExecutionTree()
+
+    show = operators.ShowFunctionsNode(properties=properties)
+    plan.add_operator("show", show)
+    last_node = "show"
+
+    filters = custom_builders.extract_show_filter(ast["ShowFunctions"])
+    if filters:
+        plan.add_operator(
+            "filter",
+            operators.SelectionNode(properties=properties, filter=filters),
+        )
+        plan.link_operators(last_node, "filter")
 
     return plan
 
@@ -414,6 +428,7 @@ QUERY_BUILDER = {
     "SetVariable": set_variable_query,
     "ShowColumns": show_columns_query,
     "ShowCreate": show_create_query,
+    "ShowFunctions": show_functions_query,
     "ShowVariable": show_variable_query,  # generic SHOW handler
     "ShowVariables": show_variables_query,
 }
