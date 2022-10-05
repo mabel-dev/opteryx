@@ -45,19 +45,6 @@ def _to_linux_epoch(date):
     return datetime.datetime.fromisoformat(date.as_py().isoformat()).timestamp()
 
 
-def myhash(anything):
-    if isinstance(anything, list):
-        hashed = map(myhash, anything)
-        return reduce(lambda x, y: x ^ y, hashed, 0)
-    if isinstance(anything, dict):
-        return CityHash64(
-            "".join([f"{k}:{anything[k]}" for k in sorted(anything.keys())])
-        )
-    if isinstance(anything, bool):
-        return int(anything)
-    return CityHash64(str(anything))
-
-
 def _simple_collector(page):
     """
     Collect the very summary type information only, we read only a single page to do

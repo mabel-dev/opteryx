@@ -383,6 +383,7 @@ def show_variable_query(ast, properties):
 
     return plan
 
+
 def show_functions_query(ast, properties):
     """show the supported functions, optionally filter them"""
     plan = ExecutionTree()

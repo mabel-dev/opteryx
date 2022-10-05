@@ -140,13 +140,13 @@ def function(branch, alias=None, key=None):
         node_type = NodeType.FUNCTION
     elif operators.is_aggregator(func):
         node_type = NodeType.AGGREGATOR
-    else:
+    else:  # pragma: no cover
         likely_match = fuzzy_search(
             func, operators.aggregators() + functions.functions()
         )
         if likely_match is None:
-            raise SqlError(f"Unknown function or aggregate '{func}'")
-        raise SqlError(
+            raise UnsupportedSyntaxError(f"Unknown function or aggregate '{func}'")
+        raise UnsupportedSyntaxError(
             f"Unknown function or aggregate '{func}'. Did you mean '{likely_match}'?"
         )
     return ExpressionTreeNode(
