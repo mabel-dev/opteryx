@@ -46,7 +46,7 @@ def format_expression(root):
         if node_type == NodeType.LITERAL_VARCHAR:
             return "'" + root.value.replace("'", "'") + "'"
         if node_type == NodeType.LITERAL_TIMESTAMP:
-            return "'" + root.value.isoformat() + "'"
+            return "'" + root.value.item().isoformat() + "'"
         if node_type == NodeType.LITERAL_INTERVAL:
             return "<INTERVAL>"
         return str(root.value)
@@ -129,7 +129,7 @@ NUMPY_TYPES = {
     NodeType.LITERAL_INTERVAL: numpy.dtype("m"),
     NodeType.LITERAL_LIST: numpy.dtype("O"),
     NodeType.LITERAL_STRUCT: numpy.dtype("O"),
-    NodeType.LITERAL_TIMESTAMP: "datetime64[us]",
+    NodeType.LITERAL_TIMESTAMP: numpy.dtype("datetime64[us]"),
 }
 
 
@@ -240,7 +240,7 @@ def _inner_evaluate(root: ExpressionTreeNode, table: Table, columns):
             return FUNCTIONS[root.value](*parameters)
         if node_type == NodeType.AGGREGATOR:
             # detected as an aggregator, but here it's an identifier because it
-            # should have been evaluated
+            # will have already been evaluated
             node_type = NodeType.IDENTIFIER
             root.value = format_expression(root)
             root.token_type = NodeType.IDENTIFIER

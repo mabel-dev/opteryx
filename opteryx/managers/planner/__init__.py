@@ -33,7 +33,10 @@ as per the below.
 """
 import datetime
 import decimal
+
 from typing import Iterable
+
+import numpy
 
 from opteryx.config import config
 from opteryx.exceptions import SqlError, ProgrammingError
@@ -111,14 +114,16 @@ class QueryPlanner:
         def _build_literal_node(value):
             if value is None:
                 return {"Value": "Null"}
-            if isinstance(value, (datetime.date, datetime.datetime)):
-                return {"Value": {"SingleQuotedString": value.isoformat()}}
             if isinstance(value, (str)):
                 return {"Value": {"SingleQuotedString": value}}
             if isinstance(value, (int, float, decimal.Decimal)):
                 return {"Value": {"Number": [value, False]}}
             if isinstance(value, bool):
                 return {"Value": {"Boolean": value}}
+            if isinstance(value, (numpy.datetime64)):
+                return {"Value": {"SingleQuotedString": value.item().isoformat()}}
+            if isinstance(value, (datetime.date, datetime.datetime)):
+                return {"Value": {"SingleQuotedString": value.isoformat()}}
 
         def _exchange_placeholders(node, parameter_set, query_type):
             """Walk the AST replacing 'Placeholder' nodes, this is recursive"""

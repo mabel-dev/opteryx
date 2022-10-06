@@ -35,3 +35,16 @@ SELECT * FROM $satellites WHERE name = '********';
 # aggregate on literals
 SELECT COUNT(1) FROM $satellites;
 SELECT SUM(42) FROM $planets;
+
+# [#592] 
+SELECT birth_date - TODAY() FROM $astronauts;
+SELECT birth_date - NOW() FROM $astronauts
+SELECT birth_date - current_time FROM $astronauts;
+SELECT birth_date - current_date FROM $astronauts;
+SELECT DATE(birth_date) - TODAY() FROM $astronauts;
+SELECT DATE(birth_date) - NOW() FROM $astronauts
+SELECT DATE(birth_date) - current_time FROM $astronauts;
+SELECT DATE(birth_date) - current_date FROM $astronauts;
+
+SELECT TIMESTAMP(birth_date) - TODAY() FROM $astronauts;
+SELECT DATEDIFF('days', birth_date, TODAY()) FROM $astronauts;

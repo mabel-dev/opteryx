@@ -26,11 +26,26 @@ def get_time():
     return datetime.datetime.utcnow().time()
 
 
+def get_today():
+    """get today"""
+    today = datetime.datetime.utcnow().date()
+    today = datetime.datetime.combine(today, datetime.time.min)
+    return numpy.datetime64(today)
+
+
+def get_now():
+    """get now"""
+    now = datetime.datetime.utcnow()
+    return numpy.datetime64(now)
+
+
 def get_yesterday():
     """
     calculate yesterday
     """
-    return datetime.datetime.utcnow().date() - datetime.timedelta(days=1)
+    yesterday = datetime.datetime.utcnow().date() - datetime.timedelta(days=1)
+    yesterday = datetime.datetime.combine(yesterday, datetime.time.min)
+    return numpy.datetime64(yesterday)
 
 
 def get_date(timestamp):
@@ -49,7 +64,8 @@ def get_date(timestamp):
     # set it to midnight that day to make it a datetime
     # even though we're getting the date, the supported column type is datetime
     if isinstance(timestamp, datetime.date):
-        return datetime.datetime.combine(timestamp, datetime.datetime.min.time())
+        date = datetime.datetime.combine(timestamp, datetime.time.min)
+        return numpy.datetime64(date)
     return None
 
 
