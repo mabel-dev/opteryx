@@ -55,8 +55,6 @@ VECTORIZED_CASTERS = {
     "TIMESTAMP": pyarrow.timestamp("us"),
 }
 
-ITERATIVE_CASTERS = {}
-
 
 def cast(_type):
     """cast a column to a specified type"""
