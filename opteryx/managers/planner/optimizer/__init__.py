@@ -12,7 +12,10 @@ The initial optimizer will be heuristic (rule-based)
 
 from opteryx.managers.planner.optimizer import actions
 
-RULESET: list = [actions.split_conjunctive_predicates]
+RULESET: list = [
+    actions.eliminate_negations,
+    actions.split_conjunctive_predicates,
+]
 
 
 def run_optimizer(plan):

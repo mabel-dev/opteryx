@@ -591,6 +591,15 @@ STATEMENTS = [
         ("SHOW PARAMETER enable_optimizer", 1, 2),
         ("SET enable_optimizer = true; SHOW PARAMETER enable_optimizer;", 1, 2),
 
+        ("SELECT id FROM $planets WHERE NOT NOT id > 3", 6, 1),
+        ("SELECT id FROM $planets WHERE NOT NOT id < 3", 2, 1),
+        ("SELECT id FROM $planets WHERE NOT id > 3", 3, 1),
+        ("SELECT id FROM $planets WHERE NOT id < 3", 7, 1),
+        ("SELECT id FROM $planets WHERE NOT (id < 5 AND id = 3)", 8, 1),
+        ("SELECT id FROM $planets WHERE NOT NOT (id < 5 AND id = 3)", 1, 1),
+        ("SELECT id FROM $planets WHERE NOT id = 2 AND NOT NOT (id < 5 AND id = 3)", 1, 1),
+        ("SET enable_optimizer = false; SELECT id FROM $planets WHERE NOT id = 2 AND NOT NOT (id < 5 AND id = 3)", 1, 1),
+
         ("SHOW CREATE TABLE $planets", 1, 1),
         ("SHOW CREATE TABLE $satellites", 1, 1),
         ("SHOW CREATE TABLE $astronauts", 1, 1),
