@@ -49,11 +49,15 @@ class ExecutionTree:
             string
                 nids of matching nodes.
         """
-        if not isinstance(operator, (list, tuple, set)):
-            operator = [operator]
-        for nid, item in list(self._nodes.items()):
-            if isinstance(item, *operator):
-                yield nid
+
+        def _inner(operator):
+            if not isinstance(operator, (list, tuple, set)):
+                operator = [operator]
+            for nid, item in list(self._nodes.items()):
+                if isinstance(item, *operator):
+                    yield nid
+
+        return list(_inner(operator))
 
     def nodes(self):
         """return all of the nodes in the plan"""

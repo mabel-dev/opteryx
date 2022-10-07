@@ -52,7 +52,7 @@ def literal_string(branch, alias: str = None, key=None):
     dte_value = dates.parse_iso(branch)
     if dte_value:
         return ExpressionTreeNode(
-            NodeType.LITERAL_TIMESTAMP, value=dte_value, alias=alias
+            NodeType.LITERAL_TIMESTAMP, value=numpy.datetime64(dte_value), alias=alias
         )
     return ExpressionTreeNode(NodeType.LITERAL_VARCHAR, value=branch, alias=alias)
 

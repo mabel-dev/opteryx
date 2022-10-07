@@ -21,6 +21,7 @@ from pyarrow import compute
 from pyarrow import ArrowNotImplementedError
 
 import numpy
+import pyarrow
 
 import opteryx
 
@@ -30,7 +31,7 @@ from opteryx.functions import number_functions
 from opteryx.functions import other_functions
 from opteryx.functions import string_functions
 from opteryx.third_party.date_trunc import date_trunc
-from opteryx.utils import dates, arrays
+from opteryx.utils import arrays
 
 
 def get_version():
@@ -47,13 +48,11 @@ def _get(value, item):
         return None
 
 
-VECTORIZED_CASTERS = {"BOOLEAN": "bool", "NUMERIC": "float64", "VARCHAR": "string"}
-
-ITERATIVE_CASTERS = {
-    #    "TIMESTAMP": lambda x: numpy.datetime64(int(x), "s")
-    #    if isinstance(x, numpy.float64)
-    #    else numpy.datetime64(x),
-    "TIMESTAMP": dates.parse_iso
+VECTORIZED_CASTERS = {
+    "BOOLEAN": "bool",
+    "NUMERIC": "float64",
+    "VARCHAR": "string",
+    "TIMESTAMP": pyarrow.timestamp("us"),
 }
 
 
@@ -62,13 +61,6 @@ def cast(_type):
     if _type in VECTORIZED_CASTERS:
         return lambda a: compute.cast(a, VECTORIZED_CASTERS[_type])
 
-    if _type in ITERATIVE_CASTERS:
-
-        def _inner(arr):
-            caster = ITERATIVE_CASTERS[_type]
-            return [caster(i) for i in arr]
-
-        return _inner
     raise SqlError(f"Unable to cast values in column to `{_type}`")
 
 
@@ -86,7 +78,7 @@ def try_cast(_type):
         "BOOLEAN": bool,
         "NUMERIC": float,
         "VARCHAR": str,
-        "TIMESTAMP": dates.parse_iso,
+        "TIMESTAMP": numpy.datetime64,
     }
     if _type in casters:
 
@@ -101,7 +93,7 @@ def try_cast(_type):
 def _repeat_no_parameters(func):
     # call once and repeat
     def _inner(items):
-        return [func()] * items
+        return numpy.array([func()] * items)
 
     return _inner
 
@@ -110,7 +102,7 @@ def _iterate_single_parameter(func):
     def _inner(array):
         if isinstance(array, str):
             array = [array]
-        return [func(item) for item in array]
+        return numpy.array([func(item) for item in array])
 
     return _inner
 
@@ -262,10 +254,10 @@ FUNCTIONS = {
     "DATEDIFF": date_functions.date_diff,
     "DATEPART": date_functions.date_part,
     "DATE_FORMAT": date_functions.date_format,
-    "CURRENT_TIME": _repeat_no_parameters(datetime.datetime.utcnow),
-    "NOW": _repeat_no_parameters(datetime.datetime.utcnow),
-    "CURRENT_DATE": _repeat_no_parameters(datetime.datetime.utcnow().date),
-    "TODAY": _repeat_no_parameters(datetime.datetime.utcnow().date),
+    "CURRENT_TIME": _repeat_no_parameters(date_functions.get_now),
+    "NOW": _repeat_no_parameters(date_functions.get_now),
+    "CURRENT_DATE": _repeat_no_parameters(date_functions.get_today),
+    "TODAY": _repeat_no_parameters(date_functions.get_today),
     "TIME": _repeat_no_parameters(date_functions.get_time),
     "YESTERDAY": _repeat_no_parameters(date_functions.get_yesterday),
     "DATE": _iterate_single_parameter(date_functions.get_date),
