@@ -24,7 +24,11 @@ jobs:
           architecture: x64
 
       - name: apt Installs
-        run: sudo apt-get install --no-install-suggests --no-install-recommends --yes python3-dev
+        run: |
+          sudo apt-get install --no-install-suggests --no-install-recommends --yes python3-dev
+          sudo cp librocksdb.so /usr/local/lib
+          sudo mkdir -p /usr/local/include/rocksdb/
+          sudo cp -r ./include/* /usr/local/include/
         
       - name: Install Requirements
         run: |
