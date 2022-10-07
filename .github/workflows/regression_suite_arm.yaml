@@ -24,7 +24,7 @@ jobs:
           architecture: x64
 
       - name: apt Installs
-        run: sudo apt-get install --no-install-suggests --no-install-recomments --yes python3-dev
+        run: sudo apt-get install --no-install-suggests --no-install-recommends --yes python3-dev
         
       - name: Install Requirements
         run: |
