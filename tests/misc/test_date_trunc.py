@@ -3,18 +3,18 @@ import sys
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
-from datetime import datetime
+from datetime import datetime, timezone
 import unittest
 
 from opteryx.third_party.date_trunc import date_trunc
 
 
-DEFAULT_DT = datetime(2012, 7, 12, 12, 14, 14, 342)
+DEFAULT_DT = datetime(2012, 7, 12, 12, 14, 14, 342, timezone.utc)
 
 
 class TestDatetimeTruncate(unittest.TestCase):
     def setUp(self):
-        self.default_dt = datetime(2012, 7, 12, 12, 14, 14, 342)
+        self.default_dt = datetime(2012, 7, 12, 12, 14, 14, 342, timezone.utc)
 
     def test_truncate_to_second(self):
         self.assertEqual(
