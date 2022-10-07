@@ -1,4 +1,4 @@
-name: ARM Regression Suite
+name: Regression Suite (ARM)
 
 on:
   push
