@@ -216,10 +216,7 @@ def _temporal_extration_state_machine(parts):
             relation = part
         elif transition == [TEMPORAL, TEMPORAL]:
             temporal = part
-        elif (
-            transition in ([WAITING, WAITING], [TEMPORAL, RELATION])
-            and relation
-        ):
+        elif transition in ([WAITING, WAITING], [TEMPORAL, RELATION]) and relation:
             collector.append((relation, temporal))
             relation = ""
             temporal = ""
