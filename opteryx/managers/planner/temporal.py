@@ -31,16 +31,8 @@ import re
 from opteryx.exceptions import SqlError
 from opteryx.utils import dates
 
-SQL_PARTS = [
-    r"SELECT",
+COLLECT_RELATION = [
     r"FROM",
-    r"FOR",
-    r"WHERE",
-    r"GROUP\sBY",
-    r"HAVING",
-    r"ORDER\sBY",
-    r"LIMIT",
-    r"OFFSET",
     r"INNER\sJOIN",
     r"CROSS\sJOIN",
     r"LEFT\sJOIN",
@@ -50,11 +42,26 @@ SQL_PARTS = [
     r"FULL\sJOIN",
     r"FULL\sOUTER\sJOIN",
     r"JOIN",
+]
+
+COLLECT_TEMPORAL = ["FOR"]
+
+STOP_COLLECTING = [
+    r"SELECT",
+    r"WHERE",
+    r"GROUP\sBY",
+    r"HAVING",
+    r"ORDER\sBY",
+    r"LIMIT",
+    r"OFFSET",
     r"WITH",
     r"SHOW",
     r"ON",
     r"USING",
+    r";",
 ]
+
+SQL_PARTS = COLLECT_RELATION + COLLECT_TEMPORAL + STOP_COLLECTING
 
 COMBINE_WHITESPACE_REGEX = re.compile(r"\s+")
 
@@ -172,6 +179,58 @@ def parse_date(date):  # pragma: no cover
         return parsed_date.date()
 
 
+def _temporal_extration_state_machine(parts):
+    """
+    we use a three state machine to extract the temporal information from the query
+    and maintain the relation to filter information.
+
+    We separate out the two key parts of the algorithm, first we determin the state,
+    then we work out if the state transition means we should do something.
+
+    We're essentially using a bit mask to record state and transitions.
+    """
+    WAITING: int = 1
+    RELATION: int = 4
+    TEMPORAL: int = 16
+
+    state = WAITING
+    relation = ""
+    temporal = ""
+    collector = []
+    for part in parts:
+
+        # record the current state
+        transition = [state]
+
+        # work out what our current state is
+        if part.replace(" ", r"\s") in STOP_COLLECTING:
+            state = WAITING
+        if part.replace(" ", r"\s") in COLLECT_RELATION:
+            state = RELATION
+        if part.replace(" ", r"\s") in COLLECT_TEMPORAL:
+            state = TEMPORAL
+        transition.append(state)
+
+        # based on what the state was and what it is now, do something
+        if transition == [RELATION, RELATION]:
+            relation = part
+        elif transition == [TEMPORAL, TEMPORAL]:
+            temporal = part
+        elif (
+            transition in ([WAITING, WAITING], [TEMPORAL, RELATION])
+            and relation
+        ):
+            collector.append((relation, temporal))
+            relation = ""
+            temporal = ""
+
+    # if we're at the end of we have a relation, emit it
+    if relation:
+        collector.append((relation, temporal))
+
+    return collector
+
+
 def extract_temporal_filters(sql):  # pragma: no cover
 
     # prep the statement, by normalizing it
@@ -183,6 +242,10 @@ def extract_temporal_filters(sql):  # pragma: no cover
     clearing_regex = None
     start_date = today
     end_date = today
+
+    collector = _temporal_extration_state_machine(parts)
+    print("THIS ISN'T USED")
+    print(collector)
 
     try:
         pos = parts.index("FOR")  # this fails when there is no temporal clause
