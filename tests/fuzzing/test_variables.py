@@ -29,9 +29,9 @@ names = st.text(alphabet=string.ascii_letters, min_size=1)
 def test_fuzz_variables(name, value):
 
     # we know these fail
-    if "'" in value:  # pragme: no cover
+    if "'" in value:  # pragma: no cover
         return
-    if "\\" in value:  # pragme: no cover
+    if "\\" in value:  # pragma: no cover
         return
 
     statement = f"SET @{name} = '{value}'; SELECT @{name};"
