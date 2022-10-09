@@ -31,8 +31,6 @@ as per the below.
        ▼
     Executor
 """
-from typing import Iterable
-
 from opteryx.config import config
 from opteryx.exceptions import SqlError
 from opteryx.managers.planner import binder

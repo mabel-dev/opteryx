@@ -58,10 +58,10 @@ def select_query(ast, properties):
 
     # if we have no relations, use the $no_table relation
     if len(_relations) == 0:
-        _relations = [(None, "$no_table", "Internal", [])]
+        _relations = [(None, "$no_table", "Internal", [], None, None)]
 
     # We always have a data source - even if it's 'no table'
-    alias, dataset, mode, hints = _relations[0]
+    alias, dataset, mode, hints, start_date, end_date = _relations[0]
 
     # external comes in different flavours
     reader = None
@@ -77,8 +77,8 @@ def select_query(ast, properties):
             dataset=dataset,
             reader=reader,
             cache=properties.cache,
-            start_date=properties.start_date,
-            end_date=properties.end_date,
+            start_date=start_date,
+            end_date=end_date,
             hints=hints,
             selection=all_identifiers,
         ),
@@ -89,10 +89,10 @@ def select_query(ast, properties):
     if len(_joins) == 0 and len(_relations) == 2:
         # If there's no explicit JOIN but the query has two relations, we
         # use a CROSS JOIN
-        _joins = [("CrossJoin", _relations[1], None, None)]
+        _joins = [("CrossJoin", _relations[1], None, None, None, None)]
     for join_id, _join in enumerate(_joins):
         if _join:
-            join_type, right, join_on, join_using = _join
+            join_type, right, join_on, join_using, start_date, end_date = _join
             if join_type == "CrossJoin" and right[2] == "Function":
                 join_type = "CrossJoinUnnest"
             else:
@@ -118,8 +118,8 @@ def select_query(ast, properties):
                     alias=right[0],
                     reader=reader,
                     cache=properties.cache,
-                    start_date=properties.start_date,
-                    end_date=properties.end_date,
+                    start_date=right[4],
+                    end_date=right[5],
                     hints=right[3],
                 )
 
@@ -276,8 +276,8 @@ def show_columns_query(ast, properties):
             alias=None,
             reader=reader,
             cache=None,  # never read from cache
-            start_date=properties.start_date,
-            end_date=properties.end_date,
+            start_date=ast["ShowColumns"]["table_name"][0]["start_date"],
+            end_date=ast["ShowColumns"]["table_name"][0]["end_date"],
         ),
     )
     last_node = "reader"

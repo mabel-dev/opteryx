@@ -151,7 +151,7 @@ def extract_relations(branch):
                     builders.build(a["Unnamed"])
                     for a in relation["relation"]["Table"]["args"]
                 ]
-                yield (alias, {"function": function, "args": args}, "Function", [])
+                yield (alias, {"function": function, "args": args}, "Function", [], None, None)
             else:
                 alias = None
                 if relation["relation"]["Table"]["alias"] is not None:
@@ -167,10 +167,12 @@ def extract_relations(branch):
                 dataset = ".".join(
                     [part["value"] for part in relation["relation"]["Table"]["name"]]
                 )
+                start_date = relation["relation"]["Table"]["start_date"]
+                end_date = relation["relation"]["Table"]["end_date"]
                 if dataset[0:1] == "$":
-                    yield (alias, dataset, "Internal", hints)
+                    yield (alias, dataset, "Internal", hints, start_date, end_date)
                 else:
-                    yield (alias, dataset, "External", hints)
+                    yield (alias, dataset, "External", hints, start_date, end_date)
 
         if "Derived" in relation["relation"]:
             subquery = relation["relation"]["Derived"]["subquery"]["body"]
@@ -186,7 +188,7 @@ def extract_relations(branch):
                 plan = subquery_planner.create_logical_plan(ast)
                 plan = subquery_planner.optimize_plan(plan)
 
-                yield (alias, plan, "SubQuery", [])
+                yield (alias, plan, "SubQuery", [], None, None)
             if "Values" in subquery:
                 body = []
                 headers = [
@@ -196,4 +198,4 @@ def extract_relations(branch):
                 for value_set in subquery["Values"]:
                     values = [builders.build(v["Value"]).value for v in value_set]
                     body.append(dict(zip(headers, values)))
-                yield (alias, {"function": "values", "args": body}, "Function", [])
+                yield (alias, {"function": "values", "args": body}, "Function", [], None, None)

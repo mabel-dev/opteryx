@@ -88,13 +88,14 @@ def temporal_range_binder(ast, filters):
     if isinstance(ast, (dict)):
         node_name = next(iter(ast))
         if node_name == "Table":
-            relation_name = ast["Table"]["name"][0]["value"]
-            if filters[0][0] != relation_name:
-                raise DatabaseError(f"{relation_name} != {filters[0][0]}")
-            else:
-                temporal_range = filters.pop(0)
-                ast["Table"]["start_date"] = temporal_range[1]
-                ast["Table"]["end_date"] = temporal_range[2]
+            temporal_range = filters.pop(0)
+            ast["Table"]["start_date"] = temporal_range[1]
+            ast["Table"]["end_date"] = temporal_range[2]
+            return ast
+        if "table_name" in ast:
+            temporal_range = filters.pop(0)
+            ast["table_name"][0]["start_date"] = temporal_range[1]
+            ast["table_name"][0]["end_date"] = temporal_range[2]
             return ast
         return {
             k: temporal_range_binder(v, filters) for k, v in ast.items()
@@ -125,11 +126,13 @@ def bind_ast(ast, parameters: Iterable = None, properties: QueryProperties = Non
 
     bound_ast = ast.copy()
     bound_ast = variable_binder(bound_ast, working_parameter_set, properties, query_type)
-    bound_ast = temporal_range_binder(bound_ast, list(properties.temporal_filters))
-    bound_ast = statistics_binder(bound_ast)
+    if query_type in ("Query", "Explain", "ShowColumns"):
+        bound_ast = temporal_range_binder(bound_ast, list(properties.temporal_filters))
+        bound_ast = statistics_binder(bound_ast)
 
     if len(working_parameter_set) > 0:
         raise ProgrammingError(
             "Incorrect number of bindings supplied. Fewer placeholders are provided than parameters."
         )
+
     return bound_ast

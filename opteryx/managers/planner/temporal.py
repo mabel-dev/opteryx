@@ -204,7 +204,7 @@ def _temporal_extration_state_machine(parts):
 
         # record the current state
         transition = [state]
-        comparable_part = part.replace(" ", r"\s").upper()
+        comparable_part = part.upper().replace(" ", r"\s")
 
         # work out what our current state is
         if comparable_part in BOUNDARIES:
@@ -218,14 +218,14 @@ def _temporal_extration_state_machine(parts):
         transition.append(state)
 
         # based on what the state was and what it is now, do something
-        if transition == [RELATION, RELATION]:
-            relation = part
-        elif transition == [TEMPORAL, TEMPORAL]:
+        if transition == [TEMPORAL, TEMPORAL]:
             temporal = part
-        elif transition in ([WAITING, WAITING], [TEMPORAL, RELATION]) and relation:
+        elif transition in ([WAITING, WAITING], [TEMPORAL, RELATION], [RELATION, RELATION], [RELATION, WAITING]) and relation:
             temporal_range_collector.append((relation, temporal))
             relation = ""
             temporal = ""
+        elif transition == [RELATION, RELATION]:
+            relation = part
 
         if state != TEMPORAL:
             query_collector.append(part)

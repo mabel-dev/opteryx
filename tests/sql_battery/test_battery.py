@@ -340,7 +340,7 @@ STATEMENTS = [
         ("SELECT * FROM generate_series('192.168.1.0/28')", 16, 1),
         ("SELECT * FROM generate_series('192.168.1.100/29')", 8, 1),
 
-        ("SELECT * FROM testdata.dated WITH (NO_CACHE) FOR '2020-02-03'", 25, 8),
+        ("SELECT * FROM testdata.dated FOR '2020-02-03' WITH (NO_CACHE)", 25, 8),
         ("SELECT * FROM testdata.dated FOR '2020-02-03'", 25, 8),
         ("SELECT * FROM testdata.dated FOR '2020-02-04'", 25, 8),
         ("SELECT * FROM testdata.dated FOR DATES BETWEEN '2020-02-01' AND '2020-02-28'", 50, 8),
@@ -610,6 +610,9 @@ STATEMENTS = [
         ("SET enable_optimizer = true;\nSET enable_page_defragmentation = false;\nSELECT COUNT(*) FROM $planets WHERE id > 3 AND name ILIKE '%e%'", 1, 1),
         ("SET enable_optimizer = false;\nSET enable_page_defragmentation = false;\nSELECT COUNT(*) FROM $planets WHERE id > 3 AND name ILIKE '%e%'", 1, 1),
         ("SELECT COUNT(*) FROM $planets WHERE id > 3 AND name ILIKE '%e%' AND id > 1 AND id > 0 AND id > 2 AND name ILIKE '%e%'", 1, 1),
+
+        ("SELECT planets.* FROM $planets AS planets LEFT JOIN $planets AS older FOR '1600-01-01' ON planets.id = older.id WHERE older.name IS NULL", 3, 20),
+        ("SELECT * FROM generate_series(1,10) LEFT JOIN $planets FOR '1600-01-01' ON id = generate_series", 21, 10),
 
         # These are queries which have been found to return the wrong result or not run correctly
         # FILTERING ON FUNCTIONS
