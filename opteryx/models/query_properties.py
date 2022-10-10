@@ -51,6 +51,6 @@ class QueryProperties:
 
         # fmt:on
 
-        self.temporal_filters = []
+        self.temporal_filters: list = []
         self.date = datetime.datetime.utcnow().date()
         self.cache = None
