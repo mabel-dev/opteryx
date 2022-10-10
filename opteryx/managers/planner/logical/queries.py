@@ -10,6 +10,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import datetime
+
 from opteryx import operators
 from opteryx.connectors import connector_factory
 from opteryx.exceptions import ProgrammingError, SqlError
@@ -58,28 +60,30 @@ def select_query(ast, properties):
 
     # if we have no relations, use the $no_table relation
     if len(_relations) == 0:
-        _relations = [(None, "$no_table", "Internal", [], None, None)]
+        _relations = [
+            custom_builders.RelationDescription(dataset="$no_table", kind="Internal")
+        ]
 
     # We always have a data source - even if it's 'no table'
-    alias, dataset, mode, hints, start_date, end_date = _relations[0]
+    relation = _relations[0]
 
     # external comes in different flavours
     reader = None
-    if mode == "External":
-        reader = connector_factory(dataset)
-        mode = reader.__mode__
+    if relation.kind == "External":
+        reader = connector_factory(relation.dataset)
+        relation.kind = reader.__mode__
 
     plan.add_operator(
         "from",
-        operators.reader_factory(mode)(
+        operators.reader_factory(relation.kind)(
             properties=properties,
-            alias=alias,
-            dataset=dataset,
+            alias=relation.alias,
+            dataset=relation.dataset,
             reader=reader,
             cache=properties.cache,
-            start_date=start_date,
-            end_date=end_date,
-            hints=hints,
+            start_date=relation.start_date,
+            end_date=relation.end_date,
+            hints=relation.hints,
             selection=all_identifiers,
         ),
     )
@@ -89,15 +93,15 @@ def select_query(ast, properties):
     if len(_joins) == 0 and len(_relations) == 2:
         # If there's no explicit JOIN but the query has two relations, we
         # use a CROSS JOIN
-        _joins = [("CrossJoin", _relations[1], None, None, None, None)]
+        _joins = [("CrossJoin", _relations[1], None, None)]
     for join_id, _join in enumerate(_joins):
         if _join:
-            join_type, right, join_on, join_using, start_date, end_date = _join
-            if join_type == "CrossJoin" and right[2] == "Function":
+            join_type, right, join_on, join_using = _join
+            if join_type == "CrossJoin" and right.kind == "Function":
                 join_type = "CrossJoinUnnest"
             else:
 
-                dataset = right[1]
+                dataset = right.dataset
                 if isinstance(dataset, ExecutionTree):
                     mode = "Blob"  # subqueries are here due to legacy reasons
                     reader = None
@@ -114,13 +118,13 @@ def select_query(ast, properties):
                 # Otherwise, the right table needs to come from the Reader
                 right = operators.reader_factory(mode)(
                     properties=properties,
-                    dataset=dataset,
-                    alias=right[0],
+                    dataset=right.dataset,
+                    alias=right.alias,
                     reader=reader,
                     cache=properties.cache,
-                    start_date=right[4],
-                    end_date=right[5],
-                    hints=right[3],
+                    start_date=right.start_date,
+                    end_date=right.end_date,
+                    hints=right.hints,
                 )
 
             join_node = operators.join_factory(join_type)
@@ -329,8 +333,8 @@ def show_create_query(ast, properties):
             alias=None,
             reader=reader,
             cache=None,  # never read from cache
-            start_date=properties.start_date,
-            end_date=properties.end_date,
+            start_date=ast["ShowCreate"]["start_date"],
+            end_date=ast["ShowCreate"]["end_date"],
         ),
     )
     last_node = "reader"

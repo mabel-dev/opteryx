@@ -97,7 +97,7 @@ def _count_star(data_pages):
 
 
 def _project(tables, fields):
-    fields = set(fields)
+    fields = list(dict.fromkeys(fields))
     for table in tables:
         row_count = table.num_rows
         columns = Columns(table)
@@ -105,7 +105,7 @@ def _project(tables, fields):
             columns.get_column_from_alias(field, only_one=True) for field in fields
         ]
         if len(column_names) > 0:
-            yield table.select(set(column_names))
+            yield table.select(dict.fromkeys(column_names))
         else:
             yield pyarrow.Table.from_pydict(
                 {"_": numpy.full(row_count, True, dtype=numpy.bool_)}
@@ -160,7 +160,7 @@ def _build_aggs(aggregators, columns):
                     f"{aggregator.value.upper()}({display_field})"
                 ] = f"{field_name}_{function}".replace("_hash_", "_")
 
-    return column_map, list(set(aggs))
+    return column_map, list(dict.fromkeys(aggs))
 
 
 def _non_group_aggregates(aggregates, table, columns):

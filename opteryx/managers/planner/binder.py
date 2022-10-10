@@ -41,7 +41,6 @@ def _build_literal_node(value):
         return {"Value": {"SingleQuotedString": value.isoformat()}}
 
 
-
 def variable_binder(node, parameter_set, properties, query_type):
     """Walk the AST replacing 'Placeholder' nodes, this is recursive"""
     # Replace placeholders with parameters.
@@ -49,9 +48,7 @@ def variable_binder(node, parameter_set, properties, query_type):
     # parameter affecting the meaning of any of the other tokens - i.e. to
     # eliminate this feature being used for SQL injection.
     if isinstance(node, list):
-        return [
-            variable_binder(i, parameter_set, properties, query_type) for i in node
-        ]
+        return [variable_binder(i, parameter_set, properties, query_type) for i in node]
     if isinstance(node, dict):
         if "Value" in node:
             if "Placeholder" in node["Value"]:
@@ -66,12 +63,8 @@ def variable_binder(node, parameter_set, properties, query_type):
         if query_type != "SetVariable" and "Identifier" in node:
             token_name = node["Identifier"]["value"]
             if token_name[0] == "@":
-                if (
-                    token_name not in properties.variables
-                ):  # pragma: no cover
-                    raise SqlError(
-                        f"Undefined variable found in query `{token_name}`."
-                    )
+                if token_name not in properties.variables:  # pragma: no cover
+                    raise SqlError(f"Undefined variable found in query `{token_name}`.")
                 variable_value = properties.variables.get(token_name)
                 return _build_literal_node(variable_value.value)
         return {
@@ -97,10 +90,14 @@ def temporal_range_binder(ast, filters):
             ast["table_name"][0]["start_date"] = temporal_range[1]
             ast["table_name"][0]["end_date"] = temporal_range[2]
             return ast
-        return {
-            k: temporal_range_binder(v, filters) for k, v in ast.items()
-        }
+        if "ShowCreate" in ast:
+            temporal_range = filters.pop(0)
+            ast["ShowCreate"]["start_date"] = temporal_range[1]
+            ast["ShowCreate"]["end_date"] = temporal_range[2]
+            return ast
+        return {k: temporal_range_binder(v, filters) for k, v in ast.items()}
     return ast
+
 
 def statistics_binder(ast):
     return ast
@@ -125,8 +122,10 @@ def bind_ast(ast, parameters: Iterable = None, properties: QueryProperties = Non
     query_type = next(iter(ast))
 
     bound_ast = ast.copy()
-    bound_ast = variable_binder(bound_ast, working_parameter_set, properties, query_type)
-    if query_type in ("Query", "Explain", "ShowColumns"):
+    bound_ast = variable_binder(
+        bound_ast, working_parameter_set, properties, query_type
+    )
+    if query_type in ("Query", "Explain", "ShowColumns", "ShowCreate"):
         bound_ast = temporal_range_binder(bound_ast, list(properties.temporal_filters))
         bound_ast = statistics_binder(bound_ast)
 

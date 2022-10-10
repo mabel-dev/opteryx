@@ -612,7 +612,8 @@ STATEMENTS = [
         ("SELECT COUNT(*) FROM $planets WHERE id > 3 AND name ILIKE '%e%' AND id > 1 AND id > 0 AND id > 2 AND name ILIKE '%e%'", 1, 1),
 
         ("SELECT planets.* FROM $planets AS planets LEFT JOIN $planets AS older FOR '1600-01-01' ON planets.id = older.id WHERE older.name IS NULL", 3, 20),
-        ("SELECT * FROM generate_series(1,10) LEFT JOIN $planets FOR '1600-01-01' ON id = generate_series", 21, 10),
+        ("SELECT * FROM generate_series(1,10) LEFT JOIN $planets FOR '1600-01-01' ON id = generate_series", 10, 21),
+        ("SELECT DISTINCT name FROM generate_series(1,10) LEFT JOIN $planets FOR '1600-01-01' ON id = generate_series", 7, 1),
 
         # These are queries which have been found to return the wrong result or not run correctly
         # FILTERING ON FUNCTIONS
@@ -634,7 +635,7 @@ STATEMENTS = [
         # NAMED SUBQUERIES
         ("SELECT P.name FROM ( SELECT * FROM $planets ) AS P", 9, 1),
         # UNNEST
-        ("SELECT * FROM testdata.unnest_test CROSS JOIN UNNEST (values) AS value FOR '2000-01-01'", 15, 3),
+        ("SELECT * FROM testdata.unnest_test FOR '2000-01-01' CROSS JOIN UNNEST (values) AS value ", 15, 3),
         # FRAME HANDLING
         ("SELECT * FROM testdata.framed FOR '2021-03-28'", 100000, 1),
         ("SELECT * FROM testdata.framed FOR '2021-03-29'", 100000, 1),
@@ -646,18 +647,18 @@ STATEMENTS = [
         # FILTER CREATION FOR 3 OR MORE ANDED PREDICATES FAILS [#182]
         ("SELECT * FROM $astronauts WHERE name LIKE '%o%' AND `year` > 1900 AND gender ILIKE '%ale%' AND group IN (1,2,3,4,5,6)", 41, 19),
         # LIKE-ING NULL
-        ("SELECT * FROM testdata.nulls WHERE username LIKE 'BBC%' FOR '2000-01-01'", 3, 5),
-        ("SELECT * FROM testdata.nulls WHERE username ILIKE 'BBC%' FOR '2000-01-01'", 3, 5),
-        ("SELECT * FROM testdata.nulls WHERE username NOT LIKE 'BBC%' FOR '2000-01-01'", 21, 5),
-        ("SELECT * FROM testdata.nulls WHERE NOT username LIKE 'BBC%' FOR '2000-01-01'", 22, 5),
-        ("SELECT * FROM testdata.nulls WHERE username NOT ILIKE 'BBC%' FOR '2000-01-01'", 21, 5),
-        ("SELECT * FROM testdata.nulls WHERE username ~ 'BBC.+' FOR '2000-01-01'", 3, 5),
-        ("SELECT * FROM testdata.nulls WHERE username !~ 'BBC.+' FOR '2000-01-01'", 21, 5),
-        ("SELECT * FROM testdata.nulls WHERE username ~* 'bbc.+' FOR '2000-01-01'", 3, 5),
-        ("SELECT * FROM testdata.nulls WHERE username !~* 'bbc.+' FOR '2000-01-01'", 21, 5),
-        ("SELECT * FROM testdata.nulls WHERE username SIMILAR TO 'BBC.+' FOR '2000-01-01'", 3, 5),
-        ("SELECT * FROM testdata.nulls WHERE username NOT SIMILAR TO 'BBC.+' FOR '2000-01-01'", 21, 5),
-#        ("SELECT * FROM testdata.nulls WHERE tweet ILIKE '%Trump%' FOR '2000-01-01'", 0, 5),
+        ("SELECT * FROM testdata.nulls FOR '2000-01-01' WHERE username LIKE 'BBC%'", 3, 5),
+        ("SELECT * FROM testdata.nulls FOR '2000-01-01' WHERE username ILIKE 'BBC%'", 3, 5),
+        ("SELECT * FROM testdata.nulls FOR '2000-01-01' WHERE username NOT LIKE 'BBC%'", 21, 5),
+        ("SELECT * FROM testdata.nulls FOR '2000-01-01' WHERE NOT username LIKE 'BBC%'", 22, 5),
+        ("SELECT * FROM testdata.nulls FOR '2000-01-01' WHERE username NOT ILIKE 'BBC%'", 21, 5),
+        ("SELECT * FROM testdata.nulls FOR '2000-01-01' WHERE username ~ 'BBC.+'", 3, 5),
+        ("SELECT * FROM testdata.nulls FOR '2000-01-01' WHERE username !~ 'BBC.+'", 21, 5),
+        ("SELECT * FROM testdata.nulls FOR '2000-01-01' WHERE username ~* 'bbc.+'", 3, 5),
+        ("SELECT * FROM testdata.nulls FOR '2000-01-01' WHERE username !~* 'bbc.+'", 21, 5),
+        ("SELECT * FROM testdata.nulls FOR '2000-01-01' WHERE username SIMILAR TO 'BBC.+'", 3, 5),
+        ("SELECT * FROM testdata.nulls FOR '2000-01-01' WHERE username NOT SIMILAR TO 'BBC.+'", 21, 5),
+#        ("SELECT * FROM testdata.nulls FOR '2000-01-01' WHERE tweet ILIKE '%Trump%'", 0, 5),
         # BYTE-ARRAY FAILS [#252]
         (b"SELECT * FROM $satellites", 177, 8),
         # DISTINCT on null values [#285]
@@ -702,7 +703,7 @@ STATEMENTS = [
         # [#527] variables referenced in subqueries
         ("SET @v = 1; SELECT * FROM (SELECT @v);", 1, 1),
         # [#561] HASH JOIN with an empty table
-#        ("SELECT * FROM $planets LEFT JOIN (SELECT planetId as id FROM $satellites WHERE id < 0) USING (id)", 0, 1),
+        #("SELECT * FROM $planets LEFT JOIN (SELECT planetId as id FROM $satellites WHERE id < 0) USING (id)", 0, 1),
     ]
 # fmt:on
 

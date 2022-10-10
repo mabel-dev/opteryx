@@ -37,7 +37,7 @@ def _hash_value(val, nan=numpy.nan):
 def columns_to_array(table, columns):
     """modified for Opteryx"""
     # used for distinct
-    columns = [columns] if isinstance(columns, str) else list(set(columns))
+    columns = [columns] if isinstance(columns, str) else list(dict.fromkeys(columns))
 
     if len(columns) == 1:
         # FIX https://github.com/mabel-dev/opteryx/issues/98

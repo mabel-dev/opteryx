@@ -75,7 +75,7 @@ def html_table(dictset: Iterable[dict], limit: int = 5):  # pragma: no cover
         columns = columns + list(row.keys())
         if (i + 1) == limit:
             break
-    columns = set(columns)  # type:ignore
+    columns = list(dict.fromkeys(columns))  # type:ignore
 
     import types
 

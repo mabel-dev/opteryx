@@ -166,7 +166,7 @@ class Columns:
         matches = []
         for col, att in self._column_metadata.items():
             matches.extend([col for alias in att.get("aliases", []) if alias == column])
-        matches = list(set(matches))
+        matches = list(dict.fromkeys(matches))
         if only_one:
             if len(matches) == 0:
 
@@ -227,7 +227,7 @@ class Columns:
         selected = [
             self.get_column_from_alias(alias.as_py(), True) for alias in filtered
         ]
-        selected = list(set(selected))
+        selected = list(dict.fromkeys(selected))
 
         return selected
 

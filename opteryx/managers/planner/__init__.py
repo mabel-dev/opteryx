@@ -57,7 +57,10 @@ class QueryPlanner:
 
             # we need to deal with the temporal filters before we use sqloxide
             if statement is not None:
-                self.statement, self.properties.temporal_filters = extract_temporal_filters(statement)
+                (
+                    self.statement,
+                    self.properties.temporal_filters,
+                ) = extract_temporal_filters(statement)
             else:
                 self.statement = statement
         else:

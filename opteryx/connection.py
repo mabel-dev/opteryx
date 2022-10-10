@@ -159,7 +159,8 @@ class Cursor:
         if self._collected_stats is None:
             statistics = self._query_planner.statistics
             for node in self._plan.nodes():
-                statistics.merge(node.statistics)
+                if hasattr(node, "statistics"):
+                    statistics.merge(node.statistics)
             self._collected_stats = statistics
         return self._collected_stats.as_dict()
 

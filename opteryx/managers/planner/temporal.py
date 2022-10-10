@@ -42,6 +42,7 @@ COLLECT_RELATION = [
     r"FULL\sJOIN",
     r"FULL\sOUTER\sJOIN",
     r"JOIN",
+    r"CREATE\sTABLE",
 ]
 
 COLLECT_TEMPORAL = ["FOR"]
@@ -71,6 +72,7 @@ COMBINE_WHITESPACE_REGEX = re.compile(r"\s+")
 WAITING: int = 1
 RELATION: int = 4
 TEMPORAL: int = 16
+
 
 def clean_statement(string):  # pragma: no cover
     """
@@ -220,7 +222,16 @@ def _temporal_extration_state_machine(parts):
         # based on what the state was and what it is now, do something
         if transition == [TEMPORAL, TEMPORAL]:
             temporal = part
-        elif transition in ([WAITING, WAITING], [TEMPORAL, RELATION], [RELATION, RELATION], [RELATION, WAITING]) and relation:
+        elif (
+            transition
+            in (
+                [WAITING, WAITING],
+                [TEMPORAL, RELATION],
+                [RELATION, RELATION],
+                [RELATION, WAITING],
+            )
+            and relation
+        ):
             temporal_range_collector.append((relation, temporal))
             relation = ""
             temporal = ""
@@ -280,8 +291,13 @@ def extract_temporal_filters(sql):  # pragma: no cover
             parts = for_date_string.split(" ")
             start_date, end_date = parse_range(parts[2])
 
+        final_collector.append(
+            (
+                relation,
+                start_date,
+                end_date,
+            )
+        )
 
-        final_collector.append((relation, start_date, end_date,))
-    
     # we've rewritten the sql so make it sqlparser-rs compatible
     return sql, final_collector

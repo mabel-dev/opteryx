@@ -1,6 +1,9 @@
 """
 Builders which require special handling
 """
+import datetime
+
+from dataclasses import dataclass, field
 
 from opteryx.managers.expression import ExpressionTreeNode
 from opteryx.managers.expression import NodeType
@@ -12,6 +15,16 @@ WELL_KNOWN_HINTS = {
     "NO_PUSH_PROJECTION",
     "PARALLEL_READ",
 }
+
+
+@dataclass
+class RelationDescription:
+    dataset: str = None
+    alias: str = None
+    kind: str = None
+    hints: list = field(default_factory=list)
+    start_date: datetime.date = None
+    end_date: datetime.date = None
 
 
 def extract_show_filter(ast):
@@ -140,46 +153,54 @@ def extract_relations(branch):
     #                    _statistics.warn(f"Hint `{hint}` is not recognized.")
 
     for relation in branch:
+        relation_desc = RelationDescription()
         if "Table" in relation["relation"]:
             # is the relation a builder function
             if relation["relation"]["Table"]["args"]:
                 function = relation["relation"]["Table"]["name"][0]["value"].lower()
-                alias = function
+                relation_desc.alias = function
                 if relation["relation"]["Table"]["alias"] is not None:
-                    alias = relation["relation"]["Table"]["alias"]["name"]["value"]
+                    relation_desc.alias = relation["relation"]["Table"]["alias"][
+                        "name"
+                    ]["value"]
                 args = [
                     builders.build(a["Unnamed"])
                     for a in relation["relation"]["Table"]["args"]
                 ]
-                yield (alias, {"function": function, "args": args}, "Function", [], None, None)
+                relation_desc.kind = "Function"
+                relation_desc.dataset = {"function": function, "args": args}
+                yield relation_desc
             else:
-                alias = None
                 if relation["relation"]["Table"]["alias"] is not None:
-                    alias = relation["relation"]["Table"]["alias"]["name"]["value"]
-                hints = []
+                    relation_desc.alias = relation["relation"]["Table"]["alias"][
+                        "name"
+                    ]["value"]
                 if relation["relation"]["Table"]["with_hints"] is not None:
-                    hints = [
+                    relation_desc.hints = [
                         hint["Identifier"]["value"]
                         for hint in relation["relation"]["Table"]["with_hints"]
                     ]
                     # hint checks
-                    _check_hints(hints)
-                dataset = ".".join(
+                    _check_hints(relation_desc.hints)
+                relation_desc.dataset = ".".join(
                     [part["value"] for part in relation["relation"]["Table"]["name"]]
                 )
-                start_date = relation["relation"]["Table"]["start_date"]
-                end_date = relation["relation"]["Table"]["end_date"]
-                if dataset[0:1] == "$":
-                    yield (alias, dataset, "Internal", hints, start_date, end_date)
+                relation_desc.start_date = relation["relation"]["Table"]["start_date"]
+                relation_desc.end_date = relation["relation"]["Table"]["end_date"]
+                if relation_desc.dataset[0:1] == "$":
+                    relation_desc.kind = "Internal"
                 else:
-                    yield (alias, dataset, "External", hints, start_date, end_date)
+                    relation_desc.kind = "External"
+                yield relation_desc
 
         if "Derived" in relation["relation"]:
             subquery = relation["relation"]["Derived"]["subquery"]["body"]
             try:
-                alias = relation["relation"]["Derived"]["alias"]["name"]["value"]
+                relation_desc.alias = relation["relation"]["Derived"]["alias"]["name"][
+                    "value"
+                ]
             except (KeyError, TypeError):
-                alias = None
+                pass
             if "Select" in subquery:
                 ast = {}
                 ast["Query"] = relation["relation"]["Derived"]["subquery"]
@@ -188,7 +209,9 @@ def extract_relations(branch):
                 plan = subquery_planner.create_logical_plan(ast)
                 plan = subquery_planner.optimize_plan(plan)
 
-                yield (alias, plan, "SubQuery", [], None, None)
+                relation_desc.dataset = plan
+                relation_desc.kind = "SubQuery"
+                yield relation_desc
             if "Values" in subquery:
                 body = []
                 headers = [
@@ -198,4 +221,6 @@ def extract_relations(branch):
                 for value_set in subquery["Values"]:
                     values = [builders.build(v["Value"]).value for v in value_set]
                     body.append(dict(zip(headers, values)))
-                yield (alias, {"function": "values", "args": body}, "Function", [], None, None)
+                relation_desc.dataset = {"function": "values", "args": body}
+                relation_desc.kind = "Function"
+                yield relation_desc
