@@ -185,10 +185,6 @@ def parse_date(date):  # pragma: no cover
     if parsed_date:
         return parsed_date.date()
 
-    if date[1] != date[-1] and date[1] not in ("\"'`"):
-        raise ValueError(f"Temporal date not correctly delimited `{date}`")
-    raise ValueError(f"Unable to interpret Temporal date `{date}`")
-
 
 def _temporal_extration_state_machine(parts):
     """
@@ -294,6 +290,9 @@ def extract_temporal_filters(sql):  # pragma: no cover
         elif for_date_string.startswith("DATES IN "):
             parts = for_date_string.split(" ")
             start_date, end_date = parse_range(parts[2])
+
+        elif for_date_string:
+            raise ValueError(f"Unable to interpret temporal filter `{for_date_string}`")
 
         final_collector.append(
             (
