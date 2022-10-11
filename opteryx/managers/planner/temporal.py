@@ -186,7 +186,14 @@ def parse_range(fixed_range):  # pragma: no cover
 
 def parse_date(date):  # pragma: no cover
 
+    if not date:
+        return None
+
     today = datetime.datetime.utcnow().date()
+
+    # the splitter keeps ';' at the end of date literals
+    if date[-1] == ";":
+        date = date[:-1].strip()
 
     if date == "TODAY":
         return today
