@@ -247,7 +247,7 @@ class ExecutionTree:
             raise DatabaseError("Problem executing the query plan - it is cyclic.")
 
         # we get the tail of the query - the first steps
-        head = list(set(self.get_exit_points()))
+        head = list(dict.fromkeys(self.get_exit_points()))
         if len(head) != 1:
             raise DatabaseError(
                 f"Problem executing the query plan - it has {len(head)} heads."
@@ -282,7 +282,7 @@ class ExecutionTree:
                     }
                 yield from _inner_explain(operator_name[0], depth + 1)
 
-        head = list(set(self.get_exit_points()))
+        head = list(dict.fromkeys(self.get_exit_points()))
         # print(head, _edges)
         if len(head) != 1:
             raise DatabaseError(f"Problem with the plan - it has {len(head)} heads.")

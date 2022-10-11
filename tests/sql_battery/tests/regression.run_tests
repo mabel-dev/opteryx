@@ -25,7 +25,7 @@ SELECT * FROM $planets LEFT JOIN (SELECT planetId as id FROM $satellites WHERE i
 
 # zero record queries
 SELECT name, COUNT(*) FROM $astronauts WHERE name = 'Jim' GROUP BY name;
-SELECT * FROM testdata.nulls WHERE tweet ILIKE '%Trump%' FOR '2000-01-01';
+SELECT * FROM testdata.nulls FOR '2000-01-01' WHERE tweet ILIKE '%Trump%';
 SELECT * FROM $planets WHERE id = -1 LIMIT 10;
 SELECT * FROM $planets WHERE id = -1 ORDER BY id;
 SELECT * FROM $planets WHERE id = -1;

@@ -59,6 +59,6 @@ class ColumnFilterNode(BasePlanNode):
         for page in data_pages.execute():
             if selection is None:
                 columns = Columns(page)
-                selection = list(set(columns.filter(self._filter)))
+                selection = list(dict.fromkeys(columns.filter(self._filter)))
             page = page.select(selection)
             yield columns.apply(page)

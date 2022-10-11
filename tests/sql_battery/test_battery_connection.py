@@ -29,6 +29,7 @@ STATEMENTS = [
 #        ("SELECT * FROM $planets WHERE BOOLEAN(id) = ?", [True], 9, 20),
         ("SELECT * FROM $planets WHERE \"'\" = ?", ["'"], 9, 20),
         ("SELECT * FROM $astronauts WHERE birth_date = ?", [datetime(year=1967, month=5, day=17)], 1, 19),
+#        ("SET @id = ?; SELECT * FROM $planets WHERE id >= @id AND id <= @id;", [1], 1, 20),
     ]
 # fmt:on
 

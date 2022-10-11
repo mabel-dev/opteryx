@@ -1,9 +1,10 @@
-import numpy as numpy
+from typing import Any, Dict
+
+import numpy
 
 from Cython.Build import cythonize
 from setuptools import Extension, find_packages, setup
 from setuptools_rust import RustExtension
-from typing import Any, Dict
 
 
 def rust_build(setup_kwargs: Dict[str, Any]) -> None:
@@ -20,14 +21,14 @@ def rust_build(setup_kwargs: Dict[str, Any]) -> None:
 
 
 __version__ = "notset"
-with open("opteryx/version.py", "r") as v:
+with open("opteryx/version.py", mode="r") as v:
     vers = v.read()
 exec(vers)  # nosec
 
-with open("README.md", "r") as rm:
+with open("README.md", mode="r") as rm:
     long_description = rm.read()
 
-with open("requirements.txt") as f:
+with open("requirements.txt", mode="r") as f:
     required = f.read().splitlines()
 
 extensions = [

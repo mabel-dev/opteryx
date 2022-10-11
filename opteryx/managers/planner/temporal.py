@@ -31,16 +31,8 @@ import re
 from opteryx.exceptions import SqlError
 from opteryx.utils import dates
 
-SQL_PARTS = [
-    r"SELECT",
+COLLECT_RELATION = [
     r"FROM",
-    r"FOR",
-    r"WHERE",
-    r"GROUP\sBY",
-    r"HAVING",
-    r"ORDER\sBY",
-    r"LIMIT",
-    r"OFFSET",
     r"INNER\sJOIN",
     r"CROSS\sJOIN",
     r"LEFT\sJOIN",
@@ -50,34 +42,69 @@ SQL_PARTS = [
     r"FULL\sJOIN",
     r"FULL\sOUTER\sJOIN",
     r"JOIN",
+    r"CREATE\sTABLE",
+]
+
+COLLECT_TEMPORAL = ["FOR"]
+
+STOP_COLLECTING = [
+    r"SELECT",
+    r"WHERE",
+    r"GROUP\sBY",
+    r"HAVING",
+    r"ORDER\sBY",
+    r"LIMIT",
+    r"OFFSET",
     r"WITH",
     r"SHOW",
     r"ON",
     r"USING",
+    r"AS",
+    r";",
 ]
 
+BOUNDARIES = ["(", ")"]
+
+SQL_PARTS = (
+    COLLECT_RELATION
+    + COLLECT_TEMPORAL
+    + STOP_COLLECTING
+    + [r"DATES\sIN\s\w+", r"DATES\sBETWEEN\s[^\r\n\t\f\v]+AND\s[^\r\n\t\f\v\s]+"]
+)
+
 COMBINE_WHITESPACE_REGEX = re.compile(r"\s+")
+
+# states for the collection algorithm
+WAITING: int = 1
+RELATION: int = 4
+TEMPORAL: int = 16
 
 
 def clean_statement(string):  # pragma: no cover
     """
     Remove carriage returns and all whitespace to single spaces
     """
-    return COMBINE_WHITESPACE_REGEX.sub(" ", string).strip().upper()
+    return COMBINE_WHITESPACE_REGEX.sub(" ", string).strip()
 
 
 def sql_parts(string):  # pragma: no cover
     """
     Split a SQL statement into clauses
     """
+    sub = re.compile(r"(\,|\(|\)|;)")
     reg = re.compile(
-        r"(\(|\)|,|;|"
+        r"(?:[\"'`].*?[^\\\\][\"'`]|"
         + r"|".join([r"\b" + i.replace(r" ", r"\s") + r"\b" for i in SQL_PARTS])
-        + r")",
+        + r"|\S)+",
         re.IGNORECASE,
     )
-    parts = reg.split(string)
-    return [part.strip() for part in parts if part.strip() != ""]
+    parts = [
+        [p] if p[0] in ("\"'`") else sub.split(p)
+        for p in reg.findall(string)
+        if p.strip() != ""
+    ]
+    parts = [item for sublist in parts for item in sublist if item != ""]
+    return parts
 
 
 def remove_comments(string):  # pragma: no cover
@@ -159,8 +186,14 @@ def parse_range(fixed_range):  # pragma: no cover
 
 def parse_date(date):  # pragma: no cover
 
-    date = date.upper()
+    if not date:
+        return None
+
     today = datetime.datetime.utcnow().date()
+
+    # the splitter keeps ';' at the end of date literals
+    if date[-1] == ";":
+        date = date[:-1].strip()
 
     if date == "TODAY":
         return today
@@ -172,6 +205,68 @@ def parse_date(date):  # pragma: no cover
         return parsed_date.date()
 
 
+def _temporal_extration_state_machine(parts):
+    """
+    we use a three state machine to extract the temporal information from the query
+    and maintain the relation to filter information.
+
+    We separate out the two key parts of the algorithm, first we determin the state,
+    then we work out if the state transition means we should do something.
+
+    We're essentially using a bit mask to record state and transitions.
+    """
+
+    state = WAITING
+    relation = ""
+    temporal = ""
+    query_collector = []
+    temporal_range_collector = []
+    for part in parts:
+
+        # record the current state
+        transition = [state]
+        comparable_part = part.upper().replace(" ", r"\s")
+
+        # work out what our current state is
+        if comparable_part in BOUNDARIES:
+            state = WAITING
+        if comparable_part in STOP_COLLECTING:
+            state = WAITING
+        if comparable_part in COLLECT_RELATION:
+            state = RELATION
+        if comparable_part in COLLECT_TEMPORAL:
+            state = TEMPORAL
+        transition.append(state)
+
+        # based on what the state was and what it is now, do something
+        if transition == [TEMPORAL, TEMPORAL]:
+            temporal = part
+        elif (
+            transition
+            in (
+                [WAITING, WAITING],
+                [TEMPORAL, RELATION],
+                [RELATION, RELATION],
+                [RELATION, WAITING],
+            )
+            and relation
+        ):
+            temporal_range_collector.append((relation, temporal))
+            relation = ""
+            temporal = ""
+        elif transition == [RELATION, RELATION]:
+            relation = part
+
+        if state != TEMPORAL:
+            query_collector.append(part)
+
+    # if we're at the end of we have a relation, emit it
+    if relation:
+        temporal_range_collector.append((relation, temporal))
+
+    return temporal_range_collector, " ".join(query_collector)
+
+
 def extract_temporal_filters(sql):  # pragma: no cover
 
     # prep the statement, by normalizing it
@@ -179,22 +274,26 @@ def extract_temporal_filters(sql):  # pragma: no cover
     clean_sql = clean_statement(clean_sql)
     parts = sql_parts(clean_sql)
 
+    # define today once
     today = datetime.datetime.utcnow().date()
-    clearing_regex = None
-    start_date = today
-    end_date = today
 
-    try:
-        pos = parts.index("FOR")  # this fails when there is no temporal clause
-        for_date_string = parts[pos + 1]
+    # extract the raw temporal information
+    initial_collector, sql = _temporal_extration_state_machine(parts)
+
+    final_collector = []
+
+    for relation, for_date_string in initial_collector:
+
+        start_date = today
+        end_date = today
+
+        for_date_string = for_date_string.upper()
         for_date = parse_date(for_date_string)
 
         if for_date:
             start_date = for_date
             end_date = for_date
-            clearing_regex = (
-                r"(\bFOR[\n\r\s]+" + for_date_string.replace("'", r"\'") + r"(?!\S;))"
-            )
+
         elif for_date_string.startswith("DATES BETWEEN "):
             parts = for_date_string.split(" ")
             start_date = parse_date(parts[2])
@@ -207,28 +306,20 @@ def extract_temporal_filters(sql):  # pragma: no cover
                     "Invalid temporal range, start of range is after end of range."
                 )
 
-            clearing_regex = (
-                r"(FOR[\n\r\s]+DATES[\n\r\s]+BETWEEN[\n\r\s]+"
-                + parts[2]
-                + r"[\n\r\s]+AND[\n\r\s]+"
-                + parts[4]
-                + r"(?!\S;))"
-            )
         elif for_date_string.startswith("DATES IN "):
             parts = for_date_string.split(" ")
             start_date, end_date = parse_range(parts[2])
 
-            clearing_regex = (
-                r"(FOR[\n\r\s]+DATES[\n\r\s]+IN[\n\r\s]+" + parts[2] + r"(?!\S;))"
+        elif for_date_string:
+            raise ValueError(f"Unable to interpret temporal filter `{for_date_string}`")
+
+        final_collector.append(
+            (
+                relation,
+                start_date,
+                end_date,
             )
+        )
 
-        if clearing_regex:
-            regex = re.compile(clearing_regex, re.MULTILINE | re.DOTALL | re.IGNORECASE)
-            sql = regex.sub("\n-- FOR STATEMENT REMOVED\n", sql)
-
-    except SqlError as sql_error:
-        raise sql_error
-    except Exception as e:
-        pass
-
-    return start_date, end_date, sql
+    # we've rewritten the sql so make it sqlparser-rs compatible
+    return sql, final_collector

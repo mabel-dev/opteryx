@@ -31,15 +31,9 @@ as per the below.
        ▼
     Executor
 """
-import datetime
-import decimal
-
-from typing import Iterable
-
-import numpy
-
 from opteryx.config import config
-from opteryx.exceptions import SqlError, ProgrammingError
+from opteryx.exceptions import SqlError
+from opteryx.managers.planner import binder
 from opteryx.managers.planner.logical import logical_planner
 from opteryx.managers.planner.optimizer import run_optimizer
 from opteryx.managers.planner.temporal import extract_temporal_filters
@@ -64,9 +58,8 @@ class QueryPlanner:
             # we need to deal with the temporal filters before we use sqloxide
             if statement is not None:
                 (
-                    self.properties.start_date,
-                    self.properties.end_date,
                     self.statement,
+                    self.properties.temporal_filters,
                 ) = extract_temporal_filters(statement)
             else:
                 self.statement = statement
@@ -98,82 +91,8 @@ class QueryPlanner:
         except ValueError as exception:  # pragma: no cover
             raise SqlError(exception) from exception
 
-    def bind_ast(self, ast, parameters: Iterable = None):
-        """
-        Bind physical information to the AST
-
-        This includes the following activities
-        - Replacing placeholders with the parameters
-        """
-
-        # Replace placeholders with parameters.
-        # We do this after the AST has been parsed to remove any chance of the
-        # parameter affecting the meaning of any of the other tokens - i.e. to
-        # eliminate this feature being used for SQL injection.
-
-        def _build_literal_node(value):
-            if value is None:
-                return {"Value": "Null"}
-            if isinstance(value, (str)):
-                return {"Value": {"SingleQuotedString": value}}
-            if isinstance(value, (int, float, decimal.Decimal)):
-                return {"Value": {"Number": [value, False]}}
-            if isinstance(value, bool):
-                return {"Value": {"Boolean": value}}
-            if isinstance(value, (numpy.datetime64)):
-                return {"Value": {"SingleQuotedString": value.item().isoformat()}}
-            if isinstance(value, (datetime.date, datetime.datetime)):
-                return {"Value": {"SingleQuotedString": value.isoformat()}}
-
-        def _exchange_placeholders(node, parameter_set, query_type):
-            """Walk the AST replacing 'Placeholder' nodes, this is recursive"""
-            if isinstance(node, list):
-                return [
-                    _exchange_placeholders(i, parameter_set, query_type) for i in node
-                ]
-            if isinstance(node, dict):
-                if "Value" in node:
-                    if "Placeholder" in node["Value"]:
-                        # fmt:off
-                        if len(parameter_set) == 0:
-                            raise ProgrammingError("Incorrect number of bindings supplied."
-                            " More placeholders are provided than parameters.")
-                        placeholder_value = parameter_set.pop(0)
-                        return _build_literal_node(placeholder_value)
-                        # fmt:on
-                # replace @variables
-                if query_type != "SetVariable" and "Identifier" in node:
-                    token_name = node["Identifier"]["value"]
-                    if token_name[0] == "@":
-                        if (
-                            token_name not in self.properties.variables
-                        ):  # pragma: no cover
-                            raise SqlError(
-                                f"Undefined variable found in query `{token_name}`."
-                            )
-                        variable_value = self.properties.variables.get(token_name)
-                        return _build_literal_node(variable_value.value)
-                return {
-                    k: _exchange_placeholders(v, parameter_set, query_type)
-                    for k, v in node.items()
-                }
-            # we're a leaf
-            return node
-
-        # create a copy of the parameters so we can consume them
-        if parameters is None:
-            working_parameter_set = []
-        else:
-            working_parameter_set = list(parameters)
-
-        query_type = next(iter(ast))
-
-        bound_ast = _exchange_placeholders(ast, working_parameter_set, query_type)
-        if len(working_parameter_set) > 0:
-            raise ProgrammingError(
-                "Incorrect number of bindings supplied. Fewer placeholders are provided than parameters."
-            )
-        return bound_ast
+    def bind_ast(self, ast, parameters):
+        return binder.bind_ast(ast, parameters, self.properties)
 
     def create_logical_plan(self, ast):
         return logical_planner.create_plan(ast, self.properties)
