@@ -614,6 +614,7 @@ STATEMENTS = [
         ("SELECT planets.* FROM $planets AS planets LEFT JOIN $planets FOR '1600-01-01' AS older ON planets.id = older.id WHERE older.name IS NULL", 3, 20),
         ("SELECT * FROM generate_series(1,10) LEFT JOIN $planets FOR '1600-01-01' ON id = generate_series", 10, 21),
         ("SELECT DISTINCT name FROM generate_series(1,10) LEFT JOIN $planets FOR '1600-01-01' ON id = generate_series", 7, 1),
+        ("SELECT 1 WHERE ' a  b ' \t = \n\n ' ' || 'a' || ' ' || \n ' b '", 1, 1),
 
         # These are queries which have been found to return the wrong result or not run correctly
         # FILTERING ON FUNCTIONS

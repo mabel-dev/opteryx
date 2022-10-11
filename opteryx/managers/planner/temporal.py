@@ -72,7 +72,7 @@ SQL_PARTS = (
     + [r"DATES\sIN\s\w+", r"DATES\sBETWEEN\s[^\r\n\t\f\v]AND\s[^\r\n\t\f\v]"]
 )
 
-COMBINE_WHITESPACE_REGEX = re.compile(r"\s+")
+COMBINE_WHITESPACE_REGEX = re.compile(r"\r\n\t\f\v+")
 
 # states for the collection algorithm
 WAITING: int = 1
