@@ -59,12 +59,18 @@ STOP_COLLECTING = [
     r"SHOW",
     r"ON",
     r"USING",
+    r"AS",
     r";",
 ]
 
 BOUNDARIES = ["(", ")"]
 
-SQL_PARTS = COLLECT_RELATION + COLLECT_TEMPORAL + STOP_COLLECTING
+SQL_PARTS = (
+    COLLECT_RELATION
+    + COLLECT_TEMPORAL
+    + STOP_COLLECTING
+    + [r"DATES\sIN\s\w+", r"DATES\sBETWEEN\s[^\r\n\t\f\v]+AND\s[^\r\n\t\f\v\s]+"]
+)
 
 COMBINE_WHITESPACE_REGEX = re.compile(r"\s+")
 
@@ -85,14 +91,20 @@ def sql_parts(string):  # pragma: no cover
     """
     Split a SQL statement into clauses
     """
+    sub = re.compile(r"(\,|\(|\)|;)")
     reg = re.compile(
-        r"(\(|\)|,|;|"
+        r"(?:[\"'`].*?[^\\\\][\"'`]|"
         + r"|".join([r"\b" + i.replace(r" ", r"\s") + r"\b" for i in SQL_PARTS])
-        + r")",
+        + r"|\S)+",
         re.IGNORECASE,
     )
-    parts = reg.split(string)
-    return [part.strip() for part in parts if part.strip() != ""]
+    parts = [
+        [p] if p[0] in ("\"'`") else sub.split(p)
+        for p in reg.findall(string)
+        if p.strip() != ""
+    ]
+    parts = [item for sublist in parts for item in sublist if item != ""]
+    return parts
 
 
 def remove_comments(string):  # pragma: no cover

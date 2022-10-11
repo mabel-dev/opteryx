@@ -611,7 +611,7 @@ STATEMENTS = [
         ("SET enable_optimizer = false;\nSET enable_page_defragmentation = false;\nSELECT COUNT(*) FROM $planets WHERE id > 3 AND name ILIKE '%e%'", 1, 1),
         ("SELECT COUNT(*) FROM $planets WHERE id > 3 AND name ILIKE '%e%' AND id > 1 AND id > 0 AND id > 2 AND name ILIKE '%e%'", 1, 1),
 
-        ("SELECT planets.* FROM $planets AS planets LEFT JOIN $planets AS older FOR '1600-01-01' ON planets.id = older.id WHERE older.name IS NULL", 3, 20),
+        ("SELECT planets.* FROM $planets AS planets LEFT JOIN $planets FOR '1600-01-01' AS older ON planets.id = older.id WHERE older.name IS NULL", 3, 20),
         ("SELECT * FROM generate_series(1,10) LEFT JOIN $planets FOR '1600-01-01' ON id = generate_series", 10, 21),
         ("SELECT DISTINCT name FROM generate_series(1,10) LEFT JOIN $planets FOR '1600-01-01' ON id = generate_series", 7, 1),
 
