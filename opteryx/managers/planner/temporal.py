@@ -69,10 +69,10 @@ SQL_PARTS = (
     COLLECT_RELATION
     + COLLECT_TEMPORAL
     + STOP_COLLECTING
-    + [r"DATES\sIN\s\w+", r"DATES\sBETWEEN\s[^\r\n\t\f\v]+AND\s[^\r\n\t\f\v\s]+"]
+    + [r"DATES\sIN\s\w+", r"DATES\sBETWEEN\s[^\r\n\t\f\v]AND\s[^\r\n\t\f\v]"]
 )
 
-COMBINE_WHITESPACE_REGEX = re.compile(r"\s+")
+COMBINE_WHITESPACE_REGEX = re.compile(r"\r\n\t\f\v+")
 
 # states for the collection algorithm
 WAITING: int = 1
@@ -91,11 +91,14 @@ def sql_parts(string):  # pragma: no cover
     """
     Split a SQL statement into clauses
     """
-    sub = re.compile(r"(\,|\(|\)|;)")
-    reg = re.compile(
-        r"(?:[\"'`].*?[^\\\\][\"'`]|"
+    sub = re.compile(
+        r"(\,|\(|\)|;|"
         + r"|".join([r"\b" + i.replace(r" ", r"\s") + r"\b" for i in SQL_PARTS])
-        + r"|\S)+",
+        + r")",
+        re.IGNORECASE,
+    )
+    reg = re.compile(
+        r"(?:[\"'`].*?[^\\\\][\"'`]|.*)",
         re.IGNORECASE,
     )
     parts = [
@@ -103,7 +106,9 @@ def sql_parts(string):  # pragma: no cover
         for p in reg.findall(string)
         if p.strip() != ""
     ]
-    parts = [item for sublist in parts for item in sublist if item != ""]
+    parts = [
+        item.strip() for sublist in parts for item in sublist if item.strip() != ""
+    ]
     return parts
 
 
