@@ -46,7 +46,7 @@ def _cartesian_product(*arrays):
     return numpy.hsplit(arr.reshape(-1, array_count), array_count)
 
 
-def _cross_join(left, right):
+def _cross_join(left, right, statistics):
     """
     A cross join is the cartesian product of two tables - this usually isn't very
     useful, but it does allow you to the theta joins (non-equi joins)
@@ -68,7 +68,7 @@ def _cross_join(left, right):
     right_columns = Columns(right)
     left_columns = None
 
-    for left_page in left.execute():
+    for left_page in left.execute(statistics):
 
         if left_columns is None:
             left_columns = Columns(left_page)
@@ -102,7 +102,7 @@ def _cross_join(left, right):
                 yield new_columns.apply(table)
 
 
-def _cross_join_unnest(left, column, alias):
+def _cross_join_unnest(left, column, alias, statistics):
     """
     This is a specific instance the CROSS JOIN, where instead of joining on another
     table, we're joining on a field in the current row.
@@ -126,7 +126,7 @@ def _cross_join_unnest(left, column, alias):
     if alias is None:
         alias = f"UNNEST({column.value})"
 
-    for left_page in left.execute():
+    for left_page in left.execute(statistics):
 
         if metadata is None:
             metadata = Columns(left_page)
@@ -202,7 +202,9 @@ class CrossJoinNode(BasePlanNode):
             return "UNNEST()"
         return ""
 
-    def execute(self) -> Iterable:
+    def execute(self, statistics) -> Iterable:
+
+        self.statistics = statistics
 
         if len(self._producers) != 2:
             raise SqlError(f"{self.name} expects two producers")
@@ -213,10 +215,10 @@ class CrossJoinNode(BasePlanNode):
         if self._join_type == "CrossJoin":
 
             self._right_table = pyarrow.concat_tables(
-                right_node.execute(), promote=True
+                right_node.execute(self.statistics), promote=True
             )  # type:ignore
 
-            yield from _cross_join(left_node, self._right_table)
+            yield from _cross_join(left_node, self._right_table, self.statistics)
 
         elif self._join_type == "CrossJoinUnnest":
 
@@ -230,4 +232,5 @@ class CrossJoinNode(BasePlanNode):
                 left=left_node,
                 column=args[0],
                 alias=right_node.alias,
+                statistics=self.statistics,
             )

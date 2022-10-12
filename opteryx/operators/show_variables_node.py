@@ -32,7 +32,9 @@ class ShowVariablesNode(BasePlanNode):
     def config(self):  # pragma: no cover
         return ""
 
-    def execute(self) -> Iterable:
+    def execute(self, statistics) -> Iterable:
+
+        self.statistics = statistics
 
         buffer = []
 

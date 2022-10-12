@@ -18,6 +18,7 @@ It is defined as an expression tree of binary and unary operators, and functions
 Expressions are evaluated against an entire page at a time.
 """
 from enum import Enum
+import statistics
 
 import numpy
 import pyarrow
@@ -190,7 +191,7 @@ class ExpressionTreeNode:
         return self._inner_print(self, "")
 
 
-def _inner_evaluate(root: ExpressionTreeNode, table: Table, columns):
+def _inner_evaluate(root: ExpressionTreeNode, table: Table, columns, statistics):
 
     node_type = root.token_type
 
@@ -200,11 +201,11 @@ def _inner_evaluate(root: ExpressionTreeNode, table: Table, columns):
         left, right, centre = None, None, None
 
         if root.left is not None:
-            left = _inner_evaluate(root.left, table, columns)
+            left = _inner_evaluate(root.left, table, columns, statistics)
         if root.right is not None:
-            right = _inner_evaluate(root.right, table, columns)
+            right = _inner_evaluate(root.right, table, columns, statistics)
         if root.centre is not None:
-            centre = _inner_evaluate(root.centre, table, columns)
+            centre = _inner_evaluate(root.centre, table, columns, statistics)
 
         if node_type == NodeType.AND:
             if left.dtype == bool:
@@ -232,7 +233,8 @@ def _inner_evaluate(root: ExpressionTreeNode, table: Table, columns):
     if node_type & INTERNAL_TYPE == INTERNAL_TYPE:
         if node_type == NodeType.FUNCTION:
             parameters = [
-                _inner_evaluate(param, table, columns) for param in root.parameters
+                _inner_evaluate(param, table, columns, statistics)
+                for param in root.parameters
             ]
             # zero parameter functions get the number of rows as the parameter
             if len(parameters) == 0:
@@ -251,27 +253,27 @@ def _inner_evaluate(root: ExpressionTreeNode, table: Table, columns):
                 mapped_column = columns.get_column_from_alias(root.value, only_one=True)
             return table[mapped_column].to_numpy()
         if node_type == NodeType.COMPARISON_OPERATOR:
-            left = _inner_evaluate(root.left, table, columns)
-            right = _inner_evaluate(root.right, table, columns)
+            left = _inner_evaluate(root.left, table, columns, statistics)
+            right = _inner_evaluate(root.right, table, columns, statistics)
             indices = numpy.arange(table.num_rows)
             f_idxs = filter_operations(left, root.value, right)
             indices = indices[f_idxs]
 
             return indices
         if node_type == NodeType.BINARY_OPERATOR:
-            left = _inner_evaluate(root.left, table, columns)
-            right = _inner_evaluate(root.right, table, columns)
+            left = _inner_evaluate(root.left, table, columns, statistics)
+            right = _inner_evaluate(root.right, table, columns, statistics)
             return binary_operations(left, root.value, right)
         if node_type == NodeType.WILDCARD:
             numpy.full(table.num_rows, "*", dtype=numpy.str_)
         if node_type == NodeType.SUBQUERY:
             # we should have a query plan here
-            sub = root.value.execute()
+            sub = root.value.execute(statistics)
             return pyarrow.concat_tables(sub, promote=True)
         if node_type == NodeType.NESTED:
-            return _inner_evaluate(root.centre, table, columns)
+            return _inner_evaluate(root.centre, table, columns, statistics)
         if node_type == NodeType.UNARY_OPERATOR:
-            centre = _inner_evaluate(root.centre, table, columns)
+            centre = _inner_evaluate(root.centre, table, columns, statistics)
             return UNARY_OPERATIONS[root.value](centre)
 
     # LITERAL TYPES
@@ -284,15 +286,19 @@ def _inner_evaluate(root: ExpressionTreeNode, table: Table, columns):
             return numpy.array([root.value] * table.num_rows, dtype=numpy.unicode_)
         if node_type == NodeType.LITERAL_INTERVAL:
             return pyarrow.array([root.value] * table.num_rows)
+        if node_type == NodeType.LITERAL_NONE:
+            return numpy.full(table.num_rows, numpy.nan)
         return numpy.full(
             shape=table.num_rows, fill_value=root.value, dtype=NUMPY_TYPES[node_type]
         )  # type:ignore
 
 
-def evaluate(expression: ExpressionTreeNode, table: Table):
+def evaluate(expression: ExpressionTreeNode, table: Table, statistics):
 
     columns = Columns(table)
-    result = _inner_evaluate(root=expression, table=table, columns=columns)
+    result = _inner_evaluate(
+        root=expression, table=table, columns=columns, statistics=statistics
+    )
 
     if not isinstance(result, (pyarrow.Array, numpy.ndarray)):
         result = numpy.array(result)
@@ -324,7 +330,7 @@ def get_all_nodes_of_type(root, select_nodes):
     return identifiers
 
 
-def evaluate_and_append(expressions, table: Table, seed: str = None):
+def evaluate_and_append(expressions, table: Table, seed: str = None, statistics=None):
     """
     Evaluate an expression and add it to the table.
 
@@ -362,7 +368,7 @@ def evaluate_and_append(expressions, table: Table, seed: str = None):
                 continue
 
             # do the evaluation
-            new_column = evaluate(statement, table)
+            new_column = evaluate(statement, table, statistics)
 
             # some activities give us masks rather than the values, if we don't have
             # enough values, assume it's a mask

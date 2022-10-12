@@ -36,6 +36,8 @@ class ExplainNode(BasePlanNode):
     def config(self):
         return ""
 
-    def execute(self) -> Iterable:
+    def execute(self, statistics) -> Iterable:
+
+        self.statistics = statistics
         if self._query_plan:
             yield from self._query_plan.explain()

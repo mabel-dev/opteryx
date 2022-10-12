@@ -50,7 +50,9 @@ class SortNode(BasePlanNode):
     def name(self):  # pragma: no cover
         return "Sort"
 
-    def execute(self) -> Iterable:
+    def execute(self, statistics) -> Iterable:
+
+        self.statistics = statistics
 
         if len(self._producers) != 1:
             raise SqlError(f"{self.name} on expects a single producer")
@@ -59,7 +61,7 @@ class SortNode(BasePlanNode):
         if isinstance(data_pages, Table):
             data_pages = (data_pages,)
 
-        data_pages = data_pages.execute()
+        data_pages = data_pages.execute(self.statistics)
         data_pages = tuple(data_pages)
 
         if len([page for page in data_pages if page.num_rows == 0]) > 0:

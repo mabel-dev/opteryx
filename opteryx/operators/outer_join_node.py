@@ -72,7 +72,9 @@ class OuterJoinNode(BasePlanNode):
     def config(self):  # pragma: no cover
         return ""
 
-    def execute(self) -> Iterable:
+    def execute(self, statistics) -> Iterable:
+
+        self.statistics = statistics
 
         if len(self._producers) != 2:
             raise SqlError(f"{self.name} expects two producers")
@@ -80,13 +82,15 @@ class OuterJoinNode(BasePlanNode):
         left_node = self._producers[0]  # type:ignore
         right_node = self._producers[1]  # type:ignore
 
-        right_table = pyarrow.concat_tables(right_node.execute(), promote=True)
+        right_table = pyarrow.concat_tables(
+            right_node.execute(self.statistics), promote=True
+        )
 
         right_columns = Columns(right_table)
         left_columns = None
 
         for page in arrow.defragment_pages(
-            left_node.execute(),
+            left_node.execute(self.statistics),
             self.statistics,
             self.properties.enable_page_defragmentation,
         ):
@@ -99,7 +103,7 @@ class OuterJoinNode(BasePlanNode):
                 ]
 
                 for page in arrow.defragment_pages(
-                    left_node.execute(),
+                    left_node.execute(self.statistics),
                     self.statistics,
                     self.properties.enable_page_defragmentation,
                 ):

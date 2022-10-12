@@ -24,12 +24,15 @@ STATEMENTS = [
         ("SELECT * FROM $planets WHERE name LIKE ?", ['%t%'], 5, 20),
         ("SELECT * FROM $planets WHERE name LIKE ? AND id > ?", ['%t%', 4], 4, 20),
         ("SELECT * FROM $planets WHERE id > ? AND name LIKE ?", [4, '%t%'], 4, 20),
-#        ("SELECT * FROM $planets WHERE id IN ?", [(1,2,3,)], 3, 20),
-#        ("SELECT * FROM $planets WHERE 9 = ?", [None], 9, 20),
-#        ("SELECT * FROM $planets WHERE BOOLEAN(id) = ?", [True], 9, 20),
+        ("SELECT * FROM $planets WHERE 9 <> ?", [None], 9, 20),
+        ("SELECT * FROM $planets WHERE BOOLEAN(id) = ?", [True], 9, 20),
         ("SELECT * FROM $planets WHERE \"'\" = ?", ["'"], 9, 20),
         ("SELECT * FROM $astronauts WHERE birth_date = ?", [datetime(year=1967, month=5, day=17)], 1, 19),
-#        ("SET @id = ?; SELECT * FROM $planets WHERE id >= @id AND id <= @id;", [1], 1, 20),
+
+        # parameterized query batches
+        ("SET @id = ?; SELECT * FROM $planets WHERE id >= @id AND id <= @id;", [1], 1, 20),
+        ("SET @id = ?; SELECT * FROM $planets WHERE id <> @id AND name = ?;", [1, "Earth"], 1, 20),
+        ("SET @id = 1; SELECT * FROM $planets WHERE id <> @id AND name = ?;", ["Earth"], 1, 20),
     ]
 # fmt:on
 

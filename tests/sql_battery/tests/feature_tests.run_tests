@@ -3,3 +3,5 @@ SHOW FUNCTIONS;
 SHOW FUNCTIONS LIKE '%date';
 SHOW FUNCTIONS LIKE '%date%';
 SHOW FUNCTIONS LIKE '%zz';
+
+SELECT planetId, LEAST(LIST(magnitude)) FROM $satellites group by planetId;

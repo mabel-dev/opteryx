@@ -40,7 +40,9 @@ class LimitNode(BasePlanNode):
     def config(self):  # pragma: no cover
         return str(self._limit)
 
-    def execute(self) -> Iterable:
+    def execute(self, statistics) -> Iterable:
+
+        self.statistics = statistics
 
         if len(self._producers) != 1:
             raise SqlError(f"{self.name} on expects a single producer")
@@ -49,4 +51,6 @@ class LimitNode(BasePlanNode):
         if isinstance(data_pages, Table):
             data_pages = (data_pages,)
 
-        yield arrow.limit_records(data_pages.execute(), limit=self._limit)
+        yield arrow.limit_records(
+            data_pages.execute(self.statistics), limit=self._limit
+        )

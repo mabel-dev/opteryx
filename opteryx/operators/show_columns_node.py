@@ -360,7 +360,9 @@ class ShowColumnsNode(BasePlanNode):
     def config(self):  # pragma: no cover
         return ""
 
-    def execute(self) -> Iterable:
+    def execute(self, statistics) -> Iterable:
+
+        self.statistics = statistics
 
         if len(self._producers) != 1:
             raise SqlError(f"{self.name} on expects a single producer")
@@ -373,15 +375,15 @@ class ShowColumnsNode(BasePlanNode):
         if not (self._full or self._extended):
             # if it's not full or extended, do just get the list of columns and their
             # types
-            yield _simple_collector(next(data_pages.execute()))
+            yield _simple_collector(next(data_pages.execute(self.statistics)))
             return
 
         if self._full and not self._extended:
             # we're going to read the full table, so we can count stuff
-            yield _full_collector(data_pages.execute())
+            yield _full_collector(data_pages.execute(self.statistics))
             return
 
         if self._extended:
             # get everything we can reasonable get
-            yield _extended_collector(data_pages.execute())
+            yield _extended_collector(data_pages.execute(self.statistics))
             return
