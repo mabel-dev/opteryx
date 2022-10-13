@@ -10,6 +10,8 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 import opteryx
 from opteryx.managers.kvstores import InMemoryKVStore
 
+from tests.tools import skip
+
 
 def test_in_memory_cache():
 
@@ -48,7 +50,7 @@ def test_in_memory_cache():
     assert stats["cache_misses"] == 0
     conn.close()
 
-
+@skip
 def test_cache_in_subqueries():
 
     cache = InMemoryKVStore(size=5)
