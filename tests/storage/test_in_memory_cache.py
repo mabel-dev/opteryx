@@ -50,6 +50,7 @@ def test_in_memory_cache():
     assert stats["cache_misses"] == 0
     conn.close()
 
+
 @skip
 def test_cache_in_subqueries():
 
