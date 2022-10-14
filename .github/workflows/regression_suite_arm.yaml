@@ -1,4 +1,4 @@
-name: Regression Suite
+name: Regression Suite (ARM)
 
 on:
   push
@@ -8,14 +8,10 @@ jobs:
     strategy:
       max-parallel: 4
       matrix:
-        python-version: ['3.8', '3.9', '3.10']
+        python-version: ['3.9']
         os: [ARM64]   # ARM64 = Raspberry Pi
     runs-on: ${{ matrix.os }}
     steps:
-
-      - name: Install Docker
-        if: matrix.os == 'MacOS'
-        uses: docker-practice/actions-setup-docker@master
 
       - name: Checkout code
         uses: actions/checkout@v2
@@ -26,6 +22,13 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           architecture: x64
+
+      - name: apt Installs
+        run: |
+          sudo apt-get install --no-install-suggests --no-install-recommends --yes python3-dev
+          sudo cp librocksdb.so /usr/local/lib
+          sudo mkdir -p /usr/local/include/rocksdb/
+          sudo cp -r ./include/* /usr/local/include/
         
       - name: Install Requirements
         run: |
@@ -86,9 +89,3 @@ jobs:
 
       - name: Check Coverage
         run: python -m coverage report --include=opteryx* --fail-under=94 -m
-
-      - name: "Upload coverage to Codecov"
-        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.10'
-        uses: codecov/codecov-action@v1
-        with:
-          fail_ci_if_error: false
