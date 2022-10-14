@@ -15,6 +15,7 @@ Builders which require special handling
 import datetime
 
 from dataclasses import dataclass, field
+from typing import Any
 
 from opteryx.managers.expression import ExpressionTreeNode
 from opteryx.managers.expression import NodeType
@@ -36,7 +37,7 @@ class RelationDescription:
     hints: list = field(default_factory=list)
     start_date: datetime.date = None
     end_date: datetime.date = None
-    cache = None
+    cache: Any = None
 
 
 def extract_show_filter(ast):
