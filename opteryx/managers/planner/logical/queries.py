@@ -9,9 +9,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-import datetime
-
 from opteryx import operators
 from opteryx.connectors import connector_factory
 from opteryx.exceptions import ProgrammingError, SqlError

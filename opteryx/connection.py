@@ -28,6 +28,7 @@ from opteryx.exceptions import EmptyResultSetError
 from opteryx.exceptions import SqlError
 from opteryx.managers.kvstores import BaseKeyValueStore
 from opteryx import utils
+from opteryx.models.query_statistics import QueryStatistics
 
 CURSOR_NOT_RUN = "Cursor must be in an executed state"
 
@@ -115,19 +116,26 @@ class Cursor:
 
         from opteryx.managers.planner import QueryPlanner
 
+        self._statistics = QueryStatistics()
+
         self._query_planner = QueryPlanner(
             statement=operation, cache=self._connection.cache
         )
-        self._query_planner.statistics.start_time = time.time_ns()
-        asts = self._query_planner.parse_and_lex()
+        self._statistics.start_time = time.time_ns()
+        asts = list(self._query_planner.parse_and_lex())
 
         results = None
+        if params is None:
+            params = []
+
+        self._query_planner.test_paramcount(asts, params)
+
         for ast in asts:
             ast = self._query_planner.bind_ast(ast, parameters=params)
             plan = self._query_planner.create_logical_plan(ast)
 
             self._plan = self._query_planner.optimize_plan(plan)
-            results = self._query_planner.execute(self._plan)
+            results = self._query_planner.execute(self._plan, self._statistics)
 
         self._results = results
 

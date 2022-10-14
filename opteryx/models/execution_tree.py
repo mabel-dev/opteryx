@@ -222,7 +222,7 @@ class ExecutionTree:
             my_edges = new_edges
         return True
 
-    def execute(self):
+    def execute(self, statistics):
         """
         This implements a 'pull' model execution engine. It finds the last stage in
         the plan and pulls records from it - this stage then pulls records from earlier
@@ -256,7 +256,7 @@ class ExecutionTree:
         map_operators(head)
 
         operator = self.get_operator(head[0])
-        yield from operator.execute()
+        yield from operator.execute(statistics)
 
     def explain(self):
 

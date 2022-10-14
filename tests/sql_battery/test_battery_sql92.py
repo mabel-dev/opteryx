@@ -180,7 +180,7 @@ STATEMENTS = [
 #    ("SELECT CAST ( CAST ( '01:02:03' AS TIME ) AS VARCHAR )", "F051-05"),
 #    ("SELECT CAST ( CAST ( '2016-03-26 01:02:03' AS TIMESTAMP WITHOUT TIME ZONE ) AS DATE )", "F051-05"),
 #    ("SELECT CAST ( CAST ( '2016-03-26 01:02:03' AS TIMESTAMP WITHOUT TIME ZONE ) AS TIME )", "F051-05"),
-#    ("SELECT CAST ( CAST ( '2016-03-26 01:02:03' AS TIMESTAMP WITHOUT TIME ZONE ) AS TIMESTAMP )", "F051-05"),
+    ("SELECT CAST ( CAST ( '2016-03-26 01:02:03' AS TIMESTAMP WITHOUT TIME ZONE ) AS TIMESTAMP )", "F051-05"),
 #    ("SELECT CAST ( CAST ( '2016-03-26 01:02:03' AS TIMESTAMP WITHOUT TIME ZONE ) AS VARCHAR )", "F051-05"),
     ("SELECT CURRENT_DATE", "F051-06"),
     ("SELECT CURRENT_TIME", "F051-07"),
@@ -232,7 +232,7 @@ if __name__ == "__main__":  # pragma: no cover
 
     import shutil
 
-    width = shutil.get_terminal_size((80, 20))[0] - 7
+    width = shutil.get_terminal_size((80, 20))[0]
 
     print(f"RUNNING BATTERY OF {len(STATEMENTS)} SQL92 TESTS")
     for index, (statement, feature) in enumerate(STATEMENTS):

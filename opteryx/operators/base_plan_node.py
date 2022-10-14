@@ -13,8 +13,9 @@
 
 import abc
 
-from opteryx.models import QueryProperties
-from opteryx.models import QueryStatistics
+from typing import Optional
+
+from opteryx.models import QueryProperties, QueryStatistics
 
 
 class BasePlanNode(abc.ABC):
@@ -30,10 +31,7 @@ class BasePlanNode(abc.ABC):
         execution.
         """
         self.properties = properties
-        self.statistics = QueryStatistics()
-
-    def __call__(self):
-        return self.execute()
+        self.statistics: Optional[QueryStatistics] = None  # type:ignore
 
     def set_producers(self, producers):
         self._producers = producers

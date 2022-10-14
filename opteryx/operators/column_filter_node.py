@@ -46,7 +46,9 @@ class ColumnFilterNode(BasePlanNode):
     def name(self):  # pragma: no cover
         return "Select Columns"
 
-    def execute(self) -> Iterable:
+    def execute(self, statistics) -> Iterable:
+
+        self.statistics = statistics
 
         if len(self._producers) != 1:
             raise SqlError(f"{self.name} on expects a single producer")
@@ -56,7 +58,7 @@ class ColumnFilterNode(BasePlanNode):
         selection = None
         columns = None
 
-        for page in data_pages.execute():
+        for page in data_pages.execute(self.statistics):
             if selection is None:
                 columns = Columns(page)
                 selection = list(dict.fromkeys(columns.filter(self._filter)))

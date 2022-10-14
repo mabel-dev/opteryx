@@ -14,7 +14,7 @@ SELECT * FROM $planets FOR DATES BETWEEN '2000-01-01' AND '2022-01-01'
 SELECT * FROM $planets FOR DATES BETWEEN '2000-01-01' AND '2022-01-01';
 SELECT * FROM $planets FOR DATES BETWEEN '2000-01-01' AND '2022-01-01'; --
 
-# second condition empty failures
+# Executing a condition on an empty dataset (FALSE AND, others for completeness)
 SELECT * FROM $planets WHERE TRUE AND FALSE;
 SELECT * FROM $planets WHERE FALSE AND TRUE;
 SELECT * FROM $planets WHERE TRUE OR FALSE;
@@ -23,7 +23,7 @@ SELECT * FROM $planets WHERE FALSE OR TRUE;
 # [#561] HASH JOIN with an empty table
 SELECT * FROM $planets LEFT JOIN (SELECT planetId as id FROM $satellites WHERE id < 0) USING (id);
 
-# zero record queries
+# Zero results queries
 SELECT name, COUNT(*) FROM $astronauts WHERE name = 'Jim' GROUP BY name;
 SELECT * FROM testdata.nulls FOR '2000-01-01' WHERE tweet ILIKE '%Trump%';
 SELECT * FROM $planets WHERE id = -1 LIMIT 10;
@@ -32,11 +32,11 @@ SELECT * FROM $planets WHERE id = -1;
 SELECT * FROM $satellites WHERE id = 5 AND magnitude = 1;
 SELECT * FROM $satellites WHERE name = '********';
 
-# aggregate on literals
+# Aggregate on literals
 SELECT COUNT(1) FROM $satellites;
 SELECT SUM(42) FROM $planets;
 
-# [#592] 
+# [#592] Date functions
 SELECT birth_date - TODAY() FROM $astronauts;
 SELECT birth_date - NOW() FROM $astronauts
 SELECT birth_date - current_time FROM $astronauts;
@@ -45,10 +45,12 @@ SELECT DATE(birth_date) - TODAY() FROM $astronauts;
 SELECT DATE(birth_date) - NOW() FROM $astronauts
 SELECT DATE(birth_date) - current_time FROM $astronauts;
 SELECT DATE(birth_date) - current_date FROM $astronauts;
-
 SELECT TIMESTAMP(birth_date) - TODAY() FROM $astronauts;
+SELECT TIMESTAMP("2022-02-01") - TODAY() FROM $astronauts;
 SELECT DATEDIFF('days', birth_date, TODAY()) FROM $astronauts;
+SELECT DATEDIFF('days', "2022-01-02", "2010-10-01") FROM $astronauts;
+SELECT DATEDIFF('days', "2022-01-02", "2010-10-01");
+SELECT DATEDIFF('minutes', "2022-01-02", "2010-10-01");
 
 # [TEMPORAL FILTER EXTRACTION PROBLEMS]
-SET @planet = 'Saturn'; SELECT name AS nom, bigsats.occurances, smallsats.occurances FROM (SELECT DISTINCT id as planetId, name FROM $planets WHERE name = @planet) as planets LEFT JOIN (SELECT planetId, COUNT(*) AS occurances FROM $satellites FOR DATES BETWEEN '2022-01-01' AND TODAY WHERE gm > 10 GROUP BY planetId) AS bigsats ON bigsats.planetId = planets.planetId LEFT JOIN (SELECT planetId, COUNT(*) AS occurances FROM $satellites FOR DATES IN LAST_MONTH WHERE gm < 10 GROUP BY planetId) as smallsats ON smallsats.planetId = planets.planetId ; 
-SELECT 1 WHERE ' a  b ' = ' ' || 'a' || ' ' || ' b '
+SET @planet = 'Saturn'; SELECT name AS nom, bigsats.occurances, smallsats.occurances FROM (SELECT DISTINCT id as planetId, name FROM $planets WHERE name = @planet) as planets LEFT JOIN (SELECT planetId, COUNT(*) AS occurances FROM $satellites FOR DATES BETWEEN '2022-01-01' AND TODAY WHERE gm > 10 GROUP BY planetId) AS bigsats ON bigsats.planetId = planets.planetId LEFT JOIN (SELECT planetId, COUNT(*) AS occurances FROM $satellites FOR DATES IN LAST_MONTH WHERE gm < 10 GROUP BY planetId) as smallsats ON smallsats.planetId = planets.planetId;

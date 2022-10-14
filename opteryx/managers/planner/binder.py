@@ -29,12 +29,13 @@ from opteryx.models import QueryProperties
 def _build_literal_node(value):
     if value is None:
         return {"Value": "Null"}
+    if isinstance(value, (bool)):
+        # boolean must be before numeric
+        return {"Value": {"Boolean": value}}
     if isinstance(value, (str)):
         return {"Value": {"SingleQuotedString": value}}
     if isinstance(value, (int, float, decimal.Decimal)):
         return {"Value": {"Number": [value, False]}}
-    if isinstance(value, (bool)):
-        return {"Value": {"Boolean": value}}
     if isinstance(value, (numpy.datetime64)):
         return {"Value": {"SingleQuotedString": value.item().isoformat()}}
     if isinstance(value, (datetime.date, datetime.datetime)):
@@ -111,27 +112,12 @@ def bind_ast(ast, parameters: Iterable = None, properties: QueryProperties = Non
     - Replacing placeholders with the parameters
     - Adding temporal range information to relations
     """
-
-    # create a copy of the parameters so we can consume them and
-    # check the state at the end of the binding
-    if parameters is None:
-        working_parameter_set = []
-    else:
-        working_parameter_set = list(parameters)
-
     query_type = next(iter(ast))
 
     bound_ast = ast.copy()
-    bound_ast = variable_binder(
-        bound_ast, working_parameter_set, properties, query_type
-    )
+    bound_ast = variable_binder(bound_ast, parameters, properties, query_type)
     if query_type in ("Query", "Explain", "ShowColumns", "ShowCreate"):
         bound_ast = temporal_range_binder(bound_ast, list(properties.temporal_filters))
         bound_ast = statistics_binder(bound_ast)
-
-    if len(working_parameter_set) > 0:
-        raise ProgrammingError(
-            "Incorrect number of bindings supplied. Fewer placeholders are provided than parameters."
-        )
 
     return bound_ast

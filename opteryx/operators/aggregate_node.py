@@ -82,9 +82,9 @@ def _is_count_star(aggregates, groups):
     return True
 
 
-def _count_star(data_pages):
+def _count_star(data_pages, statistics):
     count = 0
-    for page in data_pages.execute():
+    for page in data_pages.execute(statistics):
         count += page.num_rows
     table = pyarrow.Table.from_pylist([{COUNT_STAR: count}])
     table = Columns.create_table_metadata(
@@ -129,10 +129,13 @@ def _build_aggs(aggregators, columns):
                 field_node = aggregator.parameters[0]
                 display_name = format_expression(field_node)
                 exists = columns.get_column_from_alias(display_name)
+                count_options = None
 
                 if field_node.token_type == NodeType.WILDCARD:
                     display_field = "*"
                     field_name = columns.preferred_column_names[0][0]
+                    # count * counts nulls
+                    count_options = pyarrow.compute.CountOptions(mode="all")
                 elif field_node.token_type == NodeType.IDENTIFIER:
                     display_field = field_node.value
                     field_name = columns.get_column_from_alias(
@@ -150,17 +153,12 @@ def _build_aggs(aggregators, columns):
                         f"Invalid identifier or literal provided in aggregator function `{display_name}`"
                     )
                 function = AGGREGATORS.get(aggregator.value)
-                aggs.append(
-                    (
-                        field_name,
-                        function,
-                    )
-                )
+                aggs.append((field_name, function, count_options))
                 column_map[
                     f"{aggregator.value.upper()}({display_field})"
                 ] = f"{field_name}_{function}".replace("_hash_", "_")
 
-    return column_map, list(dict.fromkeys(aggs))
+    return column_map, aggs
 
 
 def _non_group_aggregates(aggregates, table, columns):
@@ -260,7 +258,9 @@ class AggregateNode(BasePlanNode):
     def name(self):  # pragma: no cover
         return "Aggregation"
 
-    def execute(self) -> Iterable:
+    def execute(self, statistics) -> Iterable:
+
+        self.statistics = statistics
 
         if len(self._producers) != 1:
             raise SqlError(f"{self.name} on expects a single producer")
@@ -270,19 +270,20 @@ class AggregateNode(BasePlanNode):
             data_pages = (data_pages,)
 
         if _is_count_star(self._aggregates, self._groups):
-            yield from _count_star(data_pages)
+            yield from _count_star(data_pages, self.statistics)
             return
 
         # get all the columns anywhere in the groups or aggregates
-        all_identifiers = {
+        all_identifiers = [
             node.value
             for node in get_all_nodes_of_type(
                 self._groups + self._aggregates, select_nodes=(NodeType.IDENTIFIER,)
             )
-        }
+        ]
+        all_identifiers = list(dict.fromkeys(all_identifiers))
         # join all the pages together, selecting only the columns we found above
         table = pyarrow.concat_tables(
-            _project(data_pages.execute(), all_identifiers), promote=True
+            _project(data_pages.execute(self.statistics), all_identifiers), promote=True
         )
 
         # get any functions we need to execute before aggregating

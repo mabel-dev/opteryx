@@ -15,9 +15,11 @@ from opteryx.managers.expression import ExpressionTreeNode
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import evaluate
 from opteryx.managers.expression import NUMPY_TYPES
+from opteryx.models import QueryStatistics
 
 
 traceback.install()
+stats = QueryStatistics()
 
 
 # fmt:off
@@ -49,7 +51,7 @@ def test_literals(node_type, value):
     planets = opteryx.samples.planets()
 
     node = ExpressionTreeNode(node_type, value=value)
-    values = evaluate(node, table=planets)
+    values = evaluate(node, table=planets, statistics=stats)
     if node_type != NodeType.LITERAL_LIST:
         assert values.dtype == NUMPY_TYPES[node_type], values
     else:
@@ -80,13 +82,13 @@ def test_logical_expressions():
     F_AND_T = ExpressionTreeNode(NodeType.AND, left_node=false, right_node=true)
     F_AND_F = ExpressionTreeNode(NodeType.AND, left_node=false, right_node=false)
 
-    result = evaluate(T_AND_T, table=planets)
+    result = evaluate(T_AND_T, table=planets, statistics=stats)
     assert len(result) == 9
-    result = evaluate(T_AND_F, table=planets)
+    result = evaluate(T_AND_F, table=planets, statistics=stats)
     assert len(result) == 0
-    result = evaluate(F_AND_T, table=planets)
+    result = evaluate(F_AND_T, table=planets, statistics=stats)
     assert len(result) == 0
-    result = evaluate(F_AND_F, table=planets)
+    result = evaluate(F_AND_F, table=planets, statistics=stats)
     assert len(result) == 0
 
     T_OR_T = ExpressionTreeNode(NodeType.OR, left_node=true, right_node=true)
@@ -94,21 +96,21 @@ def test_logical_expressions():
     F_OR_T = ExpressionTreeNode(NodeType.OR, left_node=false, right_node=true)
     F_OR_F = ExpressionTreeNode(NodeType.OR, left_node=false, right_node=false)
 
-    result = evaluate(T_OR_T, table=planets)
+    result = evaluate(T_OR_T, table=planets, statistics=stats)
     assert len(result) == 9
-    result = evaluate(T_OR_F, table=planets)
+    result = evaluate(T_OR_F, table=planets, statistics=stats)
     assert len(result) == 9
-    result = evaluate(F_OR_T, table=planets)
+    result = evaluate(F_OR_T, table=planets, statistics=stats)
     assert len(result) == 9
-    result = evaluate(F_OR_F, table=planets)
+    result = evaluate(F_OR_F, table=planets, statistics=stats)
     assert len(result) == 0
 
     NOT_T = ExpressionTreeNode(NodeType.NOT, centre_node=true)
     NOT_F = ExpressionTreeNode(NodeType.NOT, centre_node=false)
 
-    result = evaluate(NOT_T, table=planets)
+    result = evaluate(NOT_T, table=planets, statistics=stats)
     assert len(result) == 0
-    result = evaluate(NOT_F, table=planets)
+    result = evaluate(NOT_F, table=planets, statistics=stats)
     assert len(result) == 9
 
     T_XOR_T = ExpressionTreeNode(NodeType.XOR, left_node=true, right_node=true)
@@ -116,13 +118,13 @@ def test_logical_expressions():
     F_XOR_T = ExpressionTreeNode(NodeType.XOR, left_node=false, right_node=true)
     F_XOR_F = ExpressionTreeNode(NodeType.XOR, left_node=false, right_node=false)
 
-    result = evaluate(T_XOR_T, table=planets)
+    result = evaluate(T_XOR_T, table=planets, statistics=stats)
     assert len(result) == 0
-    result = evaluate(T_XOR_F, table=planets)
+    result = evaluate(T_XOR_F, table=planets, statistics=stats)
     assert len(result) == 9
-    result = evaluate(F_XOR_T, table=planets)
+    result = evaluate(F_XOR_T, table=planets, statistics=stats)
     assert len(result) == 9
-    result = evaluate(F_XOR_F, table=planets)
+    result = evaluate(F_XOR_F, table=planets, statistics=stats)
     assert len(result) == 0
 
 
@@ -130,7 +132,7 @@ def test_reading_identifiers():
     planets = opteryx.samples.planets()
 
     names_node = ExpressionTreeNode(NodeType.IDENTIFIER, value="name")
-    names = evaluate(names_node, planets)
+    names = evaluate(names_node, planets, statistics=stats)
     assert len(names) == 9
     assert sorted(names) == [
         "Earth",
@@ -145,7 +147,7 @@ def test_reading_identifiers():
     ], sorted(names)
 
     gravity_node = ExpressionTreeNode(NodeType.IDENTIFIER, value="gravity")
-    gravities = evaluate(gravity_node, planets)
+    gravities = evaluate(gravity_node, planets, statistics=stats)
     assert len(gravities) == 9
     assert sorted(gravities) == [0.7, 3.7, 3.7, 8.7, 8.9, 9.0, 9.8, 11.0, 23.1], sorted(
         gravities
@@ -176,7 +178,7 @@ def test_function_operations():
         right_node=seven,
     )
 
-    names = evaluate(concat, planets)
+    names = evaluate(concat, planets, statistics=stats)
     assert len(names) == 9
     assert True, list(names) == [
         "MercuryMercury",
@@ -190,13 +192,13 @@ def test_function_operations():
         "PlutoPluto",
     ]  # , list(names)
 
-    plussed = evaluate(plus, planets)
+    plussed = evaluate(plus, planets, statistics=stats)
     assert len(plussed) == 9
     assert set(plussed).issubset(
         [10.7, 15.9, 16.8, 10.7, 30.1, 16, 15.7, 18, 7.7]
     ), plussed
 
-    timesed = evaluate(multiply, planets)
+    timesed = evaluate(multiply, planets, statistics=stats)
     assert len(timesed) == 9
     assert set(timesed) == {
         161.70000000000002,
@@ -230,7 +232,7 @@ def test_compound_expressions():
         NodeType.COMPARISON_OPERATOR, value="Gt", left_node=multiply, right_node=mass
     )
 
-    result = evaluate(gt, planets)
+    result = evaluate(gt, planets, statistics=stats)
     assert len(result) == 5, result
     assert set(result) == {0, 1, 2, 3, 8}
 
@@ -242,7 +244,7 @@ def test_functions():
     gravity = ExpressionTreeNode(NodeType.IDENTIFIER, value="gravity")
     _round = ExpressionTreeNode(NodeType.FUNCTION, value="ROUND", parameters=[gravity])
 
-    rounded = evaluate(_round, planets)
+    rounded = evaluate(_round, planets, statistics=stats)
     assert len(rounded) == 9
     assert set(r.as_py() for r in rounded) == {4, 23, 9, 1, 11, 10}
 

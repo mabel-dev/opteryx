@@ -27,7 +27,7 @@ except ImportError:  # pragma: no cover
     HAS_FIREBASE = False
 
 GCP_PROJECT_ID = config.GCP_PROJECT_ID
-BATCH_SIZE = 500
+BATCH_SIZE = 5000
 
 
 def _get_project_id():  # pragma: no cover

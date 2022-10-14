@@ -32,13 +32,12 @@ as per the below.
     Executor
 """
 from opteryx.config import config
-from opteryx.exceptions import SqlError
+from opteryx.exceptions import SqlError, ProgrammingError
 from opteryx.managers.planner import binder
 from opteryx.managers.planner.logical import logical_planner
 from opteryx.managers.planner.optimizer import run_optimizer
 from opteryx.managers.planner.temporal import extract_temporal_filters
-from opteryx.models import QueryProperties
-from opteryx.models import QueryStatistics
+from opteryx.models import QueryProperties, QueryStatistics
 from opteryx.third_party import sqloxide
 
 
@@ -102,5 +101,29 @@ class QueryPlanner:
             return run_optimizer(plan)
         return plan
 
-    def execute(self, plan):
-        return plan.execute()
+    def execute(self, plan, statistics):
+        return plan.execute(statistics)
+
+    def test_paramcount(self, asts, params):
+        """count the number of Placeholders and compare to the number of params"""
+
+        def _inner(node):
+            # walk the tree counting Placeholders
+            if isinstance(node, list):
+                return sum(_inner(n) for n in node)
+            if isinstance(node, dict):
+                if "Value" in node:
+                    if "Placeholder" in node["Value"]:
+                        return 1
+                return sum(_inner(v) for v in node.values())
+            return 0
+
+        found_params = _inner(asts)
+        if found_params > len(params):
+            raise ProgrammingError(
+                "Incorrect number of bindings supplied. Fewer parameters were found than placeholders."
+            )
+        if found_params < len(params):
+            raise ProgrammingError(
+                "Incorrect number of bindings supplied. Fewer placeholders are provided than parameters."
+            )

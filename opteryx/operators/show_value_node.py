@@ -36,7 +36,9 @@ class ShowValueNode(BasePlanNode):
     def config(self):  # pragma: no cover
         return ""
 
-    def execute(self) -> Iterable:
+    def execute(self, statistics) -> Iterable:
+
+        self.statistics = statistics
 
         buffer = [{"name": self._key, "value": str(self._value)}]
 

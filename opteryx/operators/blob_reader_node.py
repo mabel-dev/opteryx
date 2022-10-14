@@ -31,6 +31,7 @@ from opteryx.exceptions import DatabaseError
 from opteryx.managers.schemes import MabelPartitionScheme
 from opteryx.managers.schemes import DefaultPartitionScheme
 from opteryx.models import Columns, QueryProperties, ExecutionTree
+from opteryx.models.query_statistics import QueryStatistics
 from opteryx.operators import BasePlanNode
 from opteryx.utils import file_decoders
 
@@ -109,6 +110,8 @@ class BlobReaderNode(BasePlanNode):
         self._dataset: str = config.get("dataset", None)
         self._alias: list = config.get("alias", None)
 
+        self.statistics = QueryStatistics()
+
         if isinstance(self._dataset, (list, ExecutionTree, dict)):
             return
 
@@ -167,13 +170,16 @@ class BlobReaderNode(BasePlanNode):
     def name(self):  # pragma: no cover
         return "Blob Reader"
 
-    def execute(self) -> Iterable:
+    def execute(self, statistics) -> Iterable:
+
+        self.statistics.merge(statistics)
+
         # This is here for legacy reasons and should be moved to a DAG rather than
         # a Node (as per the other reader nodes)
         if isinstance(self._dataset, ExecutionTree):
             metadata = None
 
-            for table in self._dataset.execute():
+            for table in self._dataset.execute(self.statistics):
                 if metadata is None:
                     metadata = Columns(table)
                     metadata.rename_table(self._alias)
