@@ -145,14 +145,14 @@ class QueryStatistics(object):
     _instances = {}
 
     def __new__(cls, qid):
-        #if qid is None:
+        # if qid is None:
         #    raise ValueError("query id is None")
         if cls._instances.get(qid) is None:
-        #    print("Creating the QueryStatistics object for", qid)
+            #    print("Creating the QueryStatistics object for", qid)
             cls._instances[qid] = _QueryStatistics()
             if len(cls._instances.keys()) > 50:
                 # don't keep collecting these things
                 cls._instances.pop(next(iter(cls._instances)))
-        #else:
+        # else:
         #    print("Using existing QueryStatistics object for", qid)
         return cls._instances[qid]
