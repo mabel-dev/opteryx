@@ -58,7 +58,9 @@ def select_query(ast, properties):
     # if we have no relations, use the $no_table relation
     if len(_relations) == 0:
         _relations = [
-            custom_builders.RelationDescription(dataset="$no_table", kind="Internal")
+            custom_builders.RelationDescription(
+                dataset="$no_table", kind="Internal", cache=properties.cache
+            )
         ]
 
     # We always have a data source - even if it's 'no table'
@@ -77,7 +79,7 @@ def select_query(ast, properties):
             alias=relation.alias,
             dataset=relation.dataset,
             reader=reader,
-            cache=properties.cache,
+            cache=relation.cache,
             start_date=relation.start_date,
             end_date=relation.end_date,
             hints=relation.hints,
@@ -118,7 +120,7 @@ def select_query(ast, properties):
                     dataset=right.dataset,
                     alias=right.alias,
                     reader=reader,
-                    cache=properties.cache,
+                    cache=relation.cache,
                     start_date=right.start_date,
                     end_date=right.end_date,
                     hints=right.hints,

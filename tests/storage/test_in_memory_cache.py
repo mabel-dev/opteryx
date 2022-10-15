@@ -51,7 +51,7 @@ def test_in_memory_cache():
     conn.close()
 
 
-@skip
+# @skip
 def test_cache_in_subqueries():
 
     cache = InMemoryKVStore(size=5)

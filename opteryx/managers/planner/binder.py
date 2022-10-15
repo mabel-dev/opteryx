@@ -22,7 +22,7 @@ from typing import Iterable
 
 import numpy
 
-from opteryx.exceptions import DatabaseError, ProgrammingError, SqlError
+from opteryx.exceptions import ProgrammingError, SqlError
 from opteryx.models import QueryProperties
 
 
@@ -76,27 +76,30 @@ def variable_binder(node, parameter_set, properties, query_type):
     return node
 
 
-def temporal_range_binder(ast, filters):
+def temporal_range_binder(ast, filters, cache):
     if isinstance(ast, (list)):
-        return [temporal_range_binder(node, filters) for node in ast]
+        return [temporal_range_binder(node, filters, cache) for node in ast]
     if isinstance(ast, (dict)):
         node_name = next(iter(ast))
         if node_name == "Table":
             temporal_range = filters.pop(0)
             ast["Table"]["start_date"] = temporal_range[1]
             ast["Table"]["end_date"] = temporal_range[2]
+            ast["Table"]["cache"] = cache
             return ast
         if "table_name" in ast:
             temporal_range = filters.pop(0)
             ast["table_name"][0]["start_date"] = temporal_range[1]
             ast["table_name"][0]["end_date"] = temporal_range[2]
+            ast["table_name"][0]["cache"] = cache
             return ast
         if "ShowCreate" in ast:
             temporal_range = filters.pop(0)
             ast["ShowCreate"]["start_date"] = temporal_range[1]
             ast["ShowCreate"]["end_date"] = temporal_range[2]
+            ast["ShowCreate"]["cache"] = cache
             return ast
-        return {k: temporal_range_binder(v, filters) for k, v in ast.items()}
+        return {k: temporal_range_binder(v, filters, cache) for k, v in ast.items()}
     return ast
 
 
@@ -117,7 +120,9 @@ def bind_ast(ast, parameters: Iterable = None, properties: QueryProperties = Non
     bound_ast = ast.copy()
     bound_ast = variable_binder(bound_ast, parameters, properties, query_type)
     if query_type in ("Query", "Explain", "ShowColumns", "ShowCreate"):
-        bound_ast = temporal_range_binder(bound_ast, list(properties.temporal_filters))
+        bound_ast = temporal_range_binder(
+            bound_ast, list(properties.temporal_filters), properties.cache
+        )
         bound_ast = statistics_binder(bound_ast)
 
     return bound_ast
