@@ -121,7 +121,7 @@ def extract_identifiers(ast):
     return identifiers
 
 
-def extract_joins(ast):
+def extract_joins(ast, qid):
     from opteryx.managers.planner.logical import builders
 
     try:
@@ -143,11 +143,11 @@ def extract_joins(ast):
             if "On" in join["join_operator"][join_mode]:
                 join_on = builders.build(join["join_operator"][join_mode]["On"])
 
-        right = next(extract_relations([join]))
+        right = next(extract_relations([join], qid))
         yield (join_mode, right, join_on, join_using)
 
 
-def extract_relations(branch):
+def extract_relations(branch, qid):
     """ """
     from opteryx.managers.planner.logical import builders
     from opteryx.managers.planner import QueryPlanner
@@ -219,7 +219,7 @@ def extract_relations(branch):
                 ast = {}
                 ast["Query"] = relation["relation"]["Derived"]["subquery"]
 
-                subquery_planner = QueryPlanner()
+                subquery_planner = QueryPlanner(qid=qid)
                 plan = subquery_planner.create_logical_plan(ast)
                 plan = subquery_planner.optimize_plan(plan)
 

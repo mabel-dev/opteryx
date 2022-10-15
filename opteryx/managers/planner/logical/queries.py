@@ -50,7 +50,9 @@ def select_query(ast, properties):
     )
     try:
         _relations = list(
-            custom_builders.extract_relations(ast["Query"]["body"]["Select"]["from"])
+            custom_builders.extract_relations(
+                ast["Query"]["body"]["Select"]["from"], properties.qid
+            )
         )
     except IndexError:
         _relations = []
@@ -88,7 +90,7 @@ def select_query(ast, properties):
     )
     last_node = "from"
 
-    _joins = list(custom_builders.extract_joins(ast))
+    _joins = list(custom_builders.extract_joins(ast, properties.qid))
     if len(_joins) == 0 and len(_relations) == 2:
         # If there's no explicit JOIN but the query has two relations, we
         # use a CROSS JOIN

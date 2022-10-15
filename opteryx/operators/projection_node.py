@@ -75,9 +75,7 @@ class ProjectionNode(BasePlanNode):
     def name(self):  # pragma: no cover
         return "Projection"
 
-    def execute(self, statistics) -> Iterable:
-
-        self.statistics = statistics
+    def execute(self) -> Iterable:
 
         if len(self._producers) != 1:
             raise SqlError(f"{self.name} on expects a single producer")
@@ -97,7 +95,7 @@ class ProjectionNode(BasePlanNode):
         # we want to avoid collisions in internal column names
         seed = str(random_int() + 1)
 
-        for page in data_pages.execute(statistics):
+        for page in data_pages.execute():
 
             # If any of the columns are FUNCTIONs, we need to evaluate them
             start_time = time.time_ns()

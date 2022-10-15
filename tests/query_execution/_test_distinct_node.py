@@ -11,8 +11,8 @@ import sys
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 from opteryx.models.planner.operations import DistinctNode
-from opteryx.models.query_statistics import QueryStatistics
 from opteryx.samples import satellites
+from opteryx.shared import QueryStatistics
 import pyarrow
 
 

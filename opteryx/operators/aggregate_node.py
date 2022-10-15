@@ -82,9 +82,9 @@ def _is_count_star(aggregates, groups):
     return True
 
 
-def _count_star(data_pages, statistics):
+def _count_star(data_pages):
     count = 0
-    for page in data_pages.execute(statistics):
+    for page in data_pages.execute():
         count += page.num_rows
     table = pyarrow.Table.from_pylist([{COUNT_STAR: count}])
     table = Columns.create_table_metadata(
@@ -258,9 +258,7 @@ class AggregateNode(BasePlanNode):
     def name(self):  # pragma: no cover
         return "Aggregation"
 
-    def execute(self, statistics) -> Iterable:
-
-        self.statistics = statistics
+    def execute(self) -> Iterable:
 
         if len(self._producers) != 1:
             raise SqlError(f"{self.name} on expects a single producer")
@@ -270,7 +268,7 @@ class AggregateNode(BasePlanNode):
             data_pages = (data_pages,)
 
         if _is_count_star(self._aggregates, self._groups):
-            yield from _count_star(data_pages, self.statistics)
+            yield from _count_star(data_pages)
             return
 
         # get all the columns anywhere in the groups or aggregates
@@ -283,7 +281,7 @@ class AggregateNode(BasePlanNode):
         all_identifiers = list(dict.fromkeys(all_identifiers))
         # join all the pages together, selecting only the columns we found above
         table = pyarrow.concat_tables(
-            _project(data_pages.execute(self.statistics), all_identifiers), promote=True
+            _project(data_pages.execute(), all_identifiers), promote=True
         )
 
         # get any functions we need to execute before aggregating

@@ -40,9 +40,7 @@ class ShowCreateNode(BasePlanNode):
     def config(self):  # pragma: no cover
         return str(self._offset)
 
-    def execute(self, statistics) -> Iterable:
-
-        self.statistics = statistics
+    def execute(self) -> Iterable:
 
         statement = f"CREATE TABLE `{self._table}` (\n"
 
@@ -53,7 +51,7 @@ class ShowCreateNode(BasePlanNode):
         if isinstance(data_pages, pyarrow.Table):
             data_pages = (data_pages,)
 
-        page = next(data_pages.execute(self.statistics))
+        page = next(data_pages.execute())
 
         columns = Columns(page)
         preferred_names = columns.preferred_column_names

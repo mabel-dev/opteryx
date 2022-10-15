@@ -110,9 +110,7 @@ class InnerJoinNode(BasePlanNode):
     def config(self):  # pragma: no cover
         return ""
 
-    def execute(self, statistics) -> Iterable:
-
-        self.statistics = statistics
+    def execute(self) -> Iterable:
 
         if len(self._producers) != 2:
             raise SqlError(f"{self.name} expects two producers")
@@ -121,7 +119,7 @@ class InnerJoinNode(BasePlanNode):
         right_node = self._producers[1]  # type:ignore
 
         self._right_table = pyarrow.concat_tables(
-            right_node.execute(self.statistics), promote=True
+            right_node.execute(), promote=True
         )  # type:ignore
 
         if self._using:
@@ -134,7 +132,7 @@ class InnerJoinNode(BasePlanNode):
             ]
 
             for page in arrow.defragment_pages(
-                left_node.execute(self.statistics),
+                left_node.execute(),
                 self.statistics,
                 self.properties.enable_page_defragmentation,
             ):
@@ -184,7 +182,7 @@ class InnerJoinNode(BasePlanNode):
             left_columns = None
 
             for page in arrow.defragment_pages(
-                left_node.execute(self.statistics),
+                left_node.execute(),
                 self.statistics,
                 self.properties.enable_page_defragmentation,
             ):

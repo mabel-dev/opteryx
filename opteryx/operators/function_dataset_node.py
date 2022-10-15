@@ -31,27 +31,27 @@ from opteryx.exceptions import SqlError
 from opteryx.utils import arrays
 
 
-def _generate_series(alias, statistics, *args):
+def _generate_series(alias, *args):
     value_array = arrays.generate_series(*args)
     return [{alias: value} for value in value_array]
 
 
-def _unnest(alias, statistics, values):
+def _unnest(alias, values):
     """unnest converts an list into rows"""
     list_items = values.value
     if values.token_type == NodeType.NESTED:
         # single item lists are reported as nested
         from opteryx.samples import no_table
 
-        list_items = evaluate(values, no_table(), statistics)
+        list_items = evaluate(values, no_table())
     return [{alias: row} for row in list_items]
 
 
-def _values(alias, statistics, *values):
+def _values(alias, *values):
     return values
 
 
-def _fake_data(alias, statisitcs, *args):
+def _fake_data(alias, *args):
     rows, columns = int(args[0].value), int(args[1].value)
     return [
         {f"column_{col}": random.getrandbits(16) for col in range(columns)}
@@ -88,15 +88,11 @@ class FunctionDatasetNode(BasePlanNode):
     def name(self):  # pragma: no cover
         return "Dataset Constructor"
 
-    def execute(self, statistics) -> Iterable:
-
-        self.statistics = statistics
+    def execute(self) -> Iterable:
 
         try:
             start_time = time.time_ns()
-            data = FUNCTIONS[self._function](
-                self._alias, self.statistics, *self._args
-            )  # type:ignore
+            data = FUNCTIONS[self._function](self._alias, *self._args)  # type:ignore
             self.statistics.time_data_read += time.time_ns() - start_time
         except TypeError as err:  # pragma: no cover
             if str(err).startswith("_unnest() takes 2"):

@@ -14,13 +14,13 @@ from dataclasses import dataclass
 
 
 @dataclass
-class QueryStatistics:
+class _QueryStatistics:
     """
     Data object to collect information during query execution.
 
-    Statistics are a property of the planner, it relates to the execution of statement.
-    This involves nodes in the plan having their own statistics which are merged with
-    the planner's set of stats.
+    Implemented as a singleton rather than having to pass the Statistics modeal around
+    the plan and execution, you only need the query id (qid) and the stats model can be
+    returned.
     """
 
     def __init__(self):
@@ -136,3 +136,23 @@ class QueryStatistics:
             "page_splits": self.page_splits,
             "page_merges": self.page_merges,
         }
+
+
+class QueryStatistics(object):
+
+    slots = "_instances"
+
+    _instances = {}
+
+    def __new__(cls, qid):
+        #if qid is None:
+        #    raise ValueError("query id is None")
+        if cls._instances.get(qid) is None:
+        #    print("Creating the QueryStatistics object for", qid)
+            cls._instances[qid] = _QueryStatistics()
+            if len(cls._instances.keys()) > 50:
+                # don't keep collecting these things
+                cls._instances.pop(next(iter(cls._instances)))
+        #else:
+        #    print("Using existing QueryStatistics object for", qid)
+        return cls._instances[qid]

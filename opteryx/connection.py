@@ -20,12 +20,14 @@ import time
 
 from decimal import Decimal
 from typing import Dict, List, Optional
+from uuid import uuid4
 
 from pyarrow import Table
 
 from opteryx.exceptions import CursorInvalidStateError
 from opteryx.exceptions import EmptyResultSetError
 from opteryx.exceptions import SqlError
+from opteryx.shared import QueryStatistics
 from opteryx.managers.kvstores import BaseKeyValueStore
 from opteryx import utils
 
@@ -67,13 +69,17 @@ class Connection:
 
 class Cursor:
     def __init__(self, connection):
+
+        self.arraysize = 1
+
         self._connection = connection
         self._query = None
-        self.arraysize = 1
         self._results = None
         self._query_planner = None
         self._collected_stats = None
         self._plan = None
+        self._qid = str(uuid4())
+        self._statistics = QueryStatistics(self._qid)
 
     def _format_prepared_param(self, param):
         """
@@ -116,9 +122,9 @@ class Cursor:
         from opteryx.managers.planner import QueryPlanner
 
         self._query_planner = QueryPlanner(
-            statement=operation, cache=self._connection.cache
+            statement=operation, cache=self._connection.cache, qid=self._qid
         )
-        self._query_planner.statistics.start_time = time.time_ns()
+        self._statistics.start_time = time.time_ns()
         asts = list(self._query_planner.parse_and_lex())
 
         results = None
@@ -142,8 +148,8 @@ class Cursor:
             raise CursorInvalidStateError(CURSOR_NOT_RUN)
         if not isinstance(self._results, (Table, set)):
             self._results = utils.arrow.as_arrow(self._results)
-        if self._query_planner.statistics.end_time == 0:
-            self._query_planner.statistics.end_time = time.time_ns()
+        if self._statistics.end_time == 0:
+            self._statistics.end_time = time.time_ns()
         if self._results == set():
             return 0
         return self._results.num_rows
@@ -154,8 +160,8 @@ class Cursor:
             raise CursorInvalidStateError(CURSOR_NOT_RUN)
         if not isinstance(self._results, (Table, set)):
             self._results = utils.arrow.as_arrow(self._results)
-        if self._query_planner.statistics.end_time == 0:
-            self._query_planner.statistics.end_time = time.time_ns()
+        if self._statistics.end_time == 0:
+            self._statistics.end_time = time.time_ns()
         if self._results == set():
             return (0, 0)
         return self._results.shape
@@ -163,25 +169,25 @@ class Cursor:
     @property
     def stats(self):
         """execution statistics"""
-        if self._query_planner.statistics.end_time == 0:
-            self._query_planner.statistics.end_time = time.time_ns()
-        if self._collected_stats is None:
-            statistics = self._query_planner.statistics
-            for node in self._plan.nodes():
-                if hasattr(node, "statistics"):
-                    statistics.merge(node.statistics)
-            self._collected_stats = statistics
-        return self._collected_stats.as_dict()
+        if self._statistics.end_time == 0:
+            self._statistics.end_time = time.time_ns()
+        #        if self._collected_stats is None:
+        #            statistics = self._query_planner.statistics
+        #            for node in self._plan.nodes():
+        #                if hasattr(node, "statistics"):
+        #                    statistics.merge(node.statistics)
+        #            self._collected_stats = statistics
+        return self._statistics.as_dict()
 
     @property
     def has_warnings(self):
         """do I have warnings"""
-        return self._query_planner.statistics.has_warnings
+        return self._statistics.has_warnings
 
     @property
     def warnings(self):
         """list of run-time warnings"""
-        return self._query_planner.statistics.warnings
+        return self._statistics.warnings
 
     def fetchone(self, as_dicts: bool = False) -> Optional[Dict]:
         """
@@ -197,8 +203,8 @@ class Cursor:
             self._results = utils.arrow.as_arrow(self._results)
         if self._results == set():
             raise EmptyResultSetError("Cannot fulfil request on an empty result set")
-        if self._query_planner.statistics.end_time == 0:
-            self._query_planner.statistics.end_time = time.time_ns()
+        if self._statistics.end_time == 0:
+            self._statistics.end_time = time.time_ns()
         return utils.arrow.fetchone(self._results, as_dicts=as_dicts)
 
     def fetchmany(self, size=None, as_dicts: bool = False) -> List[Dict]:
@@ -210,8 +216,8 @@ class Cursor:
             self._results = utils.arrow.as_arrow(self._results)
         if self._results == set():
             raise EmptyResultSetError("Cannot fulfil request on an empty result set")
-        if self._query_planner.statistics.end_time == 0:
-            self._query_planner.statistics.end_time = time.time_ns()
+        if self._statistics.end_time == 0:
+            self._statistics.end_time = time.time_ns()
         return utils.arrow.fetchmany(self._results, limit=fetch_size, as_dicts=as_dicts)
 
     def fetchall(self, as_dicts: bool = False) -> List[Dict]:
@@ -222,8 +228,8 @@ class Cursor:
             self._results = utils.arrow.as_arrow(self._results)
         if self._results == set():
             raise EmptyResultSetError("Cannot fulfil request on an empty result set")
-        if self._query_planner.statistics.end_time == 0:
-            self._query_planner.statistics.end_time = time.time_ns()
+        if self._statistics.end_time == 0:
+            self._statistics.end_time = time.time_ns()
         return utils.arrow.fetchall(self._results, as_dicts=as_dicts)
 
     def arrow(self, size: int = None) -> Table:
@@ -243,8 +249,8 @@ class Cursor:
             self._results = utils.arrow.as_arrow(self._results)
         if self._results == set():
             raise EmptyResultSetError("Cannot fulfil request on an empty result set")
-        if self._query_planner.statistics.end_time == 0:
-            self._query_planner.statistics.end_time = time.time_ns()
+        if self._statistics.end_time == 0:
+            self._statistics.end_time = time.time_ns()
         if size:
             return self._results.slice(offset=0, length=size)
         return self._results

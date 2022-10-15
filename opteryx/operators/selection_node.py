@@ -64,9 +64,7 @@ class SelectionNode(BasePlanNode):
     def name(self):  # pragma: no cover
         return "Selection"
 
-    def execute(self, statistics) -> Iterable:
-
-        self.statistics = statistics
+    def execute(self) -> Iterable:
 
         if len(self._producers) != 1:
             raise SqlError(f"{self.name} on expects a single producer")
@@ -82,13 +80,13 @@ class SelectionNode(BasePlanNode):
         else:
 
             for page in defragment_pages(
-                data_pages.execute(self.statistics),
+                data_pages.execute(),
                 self.statistics,
                 self.properties.enable_page_defragmentation,
             ):
 
                 start_selection = time.time_ns()
-                mask = evaluate(self.filter, page, self.statistics)
+                mask = evaluate(self.filter, page)
                 self.statistics.time_evaluating += time.time_ns() - start_selection
 
                 # if the mask is a boolean array, we've called a function that
