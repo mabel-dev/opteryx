@@ -28,7 +28,6 @@ from opteryx.exceptions import EmptyResultSetError
 from opteryx.exceptions import SqlError
 from opteryx.managers.kvstores import BaseKeyValueStore
 from opteryx import utils
-from opteryx.models.query_statistics import QueryStatistics
 
 CURSOR_NOT_RUN = "Cursor must be in an executed state"
 
@@ -116,12 +115,10 @@ class Cursor:
 
         from opteryx.managers.planner import QueryPlanner
 
-        self._statistics = QueryStatistics()
-
         self._query_planner = QueryPlanner(
             statement=operation, cache=self._connection.cache
         )
-        self._statistics.start_time = time.time_ns()
+        self._query_planner.statistics.start_time = time.time_ns()
         asts = list(self._query_planner.parse_and_lex())
 
         results = None
@@ -135,7 +132,7 @@ class Cursor:
             plan = self._query_planner.create_logical_plan(ast)
 
             self._plan = self._query_planner.optimize_plan(plan)
-            results = self._query_planner.execute(self._plan, self._statistics)
+            results = self._query_planner.execute(self._plan)
 
         self._results = results
 
@@ -143,8 +140,10 @@ class Cursor:
     def rowcount(self):
         if self._results is None:  # pragma: no cover
             raise CursorInvalidStateError(CURSOR_NOT_RUN)
-        if not isinstance(self._results, Table):
+        if not isinstance(self._results, (Table, set)):
             self._results = utils.arrow.as_arrow(self._results)
+        if self._query_planner.statistics.end_time == 0:
+            self._query_planner.statistics.end_time = time.time_ns()
         if self._results == set():
             return 0
         return self._results.num_rows
@@ -155,6 +154,8 @@ class Cursor:
             raise CursorInvalidStateError(CURSOR_NOT_RUN)
         if not isinstance(self._results, (Table, set)):
             self._results = utils.arrow.as_arrow(self._results)
+        if self._query_planner.statistics.end_time == 0:
+            self._query_planner.statistics.end_time = time.time_ns()
         if self._results == set():
             return (0, 0)
         return self._results.shape
@@ -192,8 +193,12 @@ class Cursor:
         """
         if self._results is None:  # pragma: no cover
             raise CursorInvalidStateError(CURSOR_NOT_RUN)
+        if not isinstance(self._results, (Table, set)):
+            self._results = utils.arrow.as_arrow(self._results)
         if self._results == set():
             raise EmptyResultSetError("Cannot fulfil request on an empty result set")
+        if self._query_planner.statistics.end_time == 0:
+            self._query_planner.statistics.end_time = time.time_ns()
         return utils.arrow.fetchone(self._results, as_dicts=as_dicts)
 
     def fetchmany(self, size=None, as_dicts: bool = False) -> List[Dict]:
@@ -201,16 +206,24 @@ class Cursor:
         fetch_size = self.arraysize if size is None else size
         if self._results is None:  # pragma: no cover
             raise CursorInvalidStateError(CURSOR_NOT_RUN)
+        if not isinstance(self._results, (Table, set)):
+            self._results = utils.arrow.as_arrow(self._results)
         if self._results == set():
             raise EmptyResultSetError("Cannot fulfil request on an empty result set")
+        if self._query_planner.statistics.end_time == 0:
+            self._query_planner.statistics.end_time = time.time_ns()
         return utils.arrow.fetchmany(self._results, limit=fetch_size, as_dicts=as_dicts)
 
     def fetchall(self, as_dicts: bool = False) -> List[Dict]:
         """fetch all matching records"""
         if self._results is None:  # pragma: no cover
             raise CursorInvalidStateError(CURSOR_NOT_RUN)
+        if not isinstance(self._results, (Table, set)):
+            self._results = utils.arrow.as_arrow(self._results)
         if self._results == set():
             raise EmptyResultSetError("Cannot fulfil request on an empty result set")
+        if self._query_planner.statistics.end_time == 0:
+            self._query_planner.statistics.end_time = time.time_ns()
         return utils.arrow.fetchall(self._results, as_dicts=as_dicts)
 
     def arrow(self, size: int = None) -> Table:
@@ -230,6 +243,8 @@ class Cursor:
             self._results = utils.arrow.as_arrow(self._results)
         if self._results == set():
             raise EmptyResultSetError("Cannot fulfil request on an empty result set")
+        if self._query_planner.statistics.end_time == 0:
+            self._query_planner.statistics.end_time = time.time_ns()
         if size:
             return self._results.slice(offset=0, length=size)
         return self._results

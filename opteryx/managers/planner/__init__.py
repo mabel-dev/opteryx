@@ -68,6 +68,7 @@ class QueryPlanner:
         self.ast = ast
         self.logical_plan = None
         self.physical_plan = None
+        self.statistics = QueryStatistics()
 
     def parse_and_lex(self):
         """
@@ -101,8 +102,8 @@ class QueryPlanner:
             return run_optimizer(plan)
         return plan
 
-    def execute(self, plan, statistics):
-        return plan.execute(statistics)
+    def execute(self, plan):
+        return plan.execute(self.statistics)
 
     def test_paramcount(self, asts, params):
         """count the number of Placeholders and compare to the number of params"""

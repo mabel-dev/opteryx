@@ -16,7 +16,11 @@ from dataclasses import dataclass
 @dataclass
 class QueryStatistics:
     """
-    Data object to collect information during query execution
+    Data object to collect information during query execution.
+
+    Statistics are a property of the planner, it relates to the execution of statement.
+    This involves nodes in the plan having their own statistics which are merged with
+    the planner's set of stats.
     """
 
     def __init__(self):
@@ -71,7 +75,7 @@ class QueryStatistics:
 
     def merge(self, assimilee):
         for key, value in assimilee.__dict__.items():
-            if key[0] != "_":
+            if key[0] != "_" and key not in ("start_time", "end_time"):
                 self.__dict__[key] += value
 
     def _ns_to_s(self, nano_seconds):
