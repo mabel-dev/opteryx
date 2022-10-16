@@ -138,7 +138,9 @@ class QueryStatistics(_QueryStatistics):
 
     slots = "_instances"
 
-    _instances: dict[str, _QueryStatistics] = {}
+    #   Python 3.8 doesn't support this style
+    #    _instances: dict[str, _QueryStatistics] = {}
+    _instances: dict = {}
 
     def __new__(cls, qid=""):
         # if qid is None:
