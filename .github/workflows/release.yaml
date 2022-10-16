@@ -22,10 +22,10 @@ jobs:
         override: true
 
     - name: Install Python package dependencies
-      run: /opt/python/cp38-cp38m/bin/python -m pip install --upgrade cython wheel numpy setuptools_rust
+      run: /opt/python/cp38-cp38/bin/python -m pip install --upgrade cython wheel numpy setuptools_rust
 
     - name: Build binary wheel
-      run: /opt/python/cp38-cp38m/bin/python setup.py bdist_wheel
+      run: /opt/python/cp38-cp38/bin/python setup.py bdist_wheel
 
     - name: Apply auditwheel for manylinux wheel
       run: auditwheel repair -w dist dist/*
@@ -54,10 +54,10 @@ jobs:
         override: true
 
     - name: Install Python package dependencies
-      run: /opt/python/cp39-cp39m/bin/python -m pip install --upgrade cython wheel numpy setuptools_rust
+      run: /opt/python/cp39-cp39/bin/python -m pip install --upgrade cython wheel numpy setuptools_rust
 
     - name: Build binary wheel
-      run: /opt/python/cp38-cp38m/bin/python setup.py bdist_wheel
+      run: /opt/python/cp38-cp38/bin/python setup.py bdist_wheel
 
     - name: Apply auditwheel for manylinux wheel
       run: auditwheel repair -w dist dist/*
@@ -85,10 +85,10 @@ jobs:
         override: true
 
     - name: Install Python package dependencies
-      run: /opt/python/cp39-cp39m/bin/python -m pip install --upgrade cython wheel numpy setuptools_rust
+      run: /opt/python/cp39-cp39/bin/python -m pip install --upgrade cython wheel numpy setuptools_rust
 
     - name: Build binary wheel
-      run: /opt/python/cp39-cp39m/bin/python setup.py bdist_wheel
+      run: /opt/python/cp39-cp39/bin/python setup.py bdist_wheel
 
     - name: Apply auditwheel for manylinux wheel
       run: auditwheel repair -w dist dist/*
