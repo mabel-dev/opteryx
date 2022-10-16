@@ -190,6 +190,7 @@ FUNCTIONS = {
     "CONCAT_WS": string_functions.concat_ws,
     "STARTS_WITH": string_functions.starts_w,
     "ENDS_WITH": string_functions.ends_w,
+    "SUBSTRING": string_functions.substring,
 
     # HASHING & ENCODING
     "HASH": _iterate_single_parameter(lambda x: format(CityHash64(str(x)), "X")),

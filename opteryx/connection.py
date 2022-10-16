@@ -180,14 +180,9 @@ class Cursor:
         return self._statistics.as_dict()
 
     @property
-    def has_warnings(self):
-        """do I have warnings"""
-        return self._statistics.has_warnings
-
-    @property
-    def warnings(self):
+    def messages(self):
         """list of run-time warnings"""
-        return self._statistics.warnings
+        return self._statistics.messages
 
     def fetchone(self, as_dicts: bool = False) -> Optional[Dict]:
         """

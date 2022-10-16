@@ -615,6 +615,10 @@ STATEMENTS = [
         ("SELECT * FROM generate_series(1,10) LEFT JOIN $planets FOR '1600-01-01' ON id = generate_series", 10, 21),
         ("SELECT DISTINCT name FROM generate_series(1,10) LEFT JOIN $planets FOR '1600-01-01' ON id = generate_series", 7, 1),
         ("SELECT 1 WHERE ' a  b ' \t = \n\n ' ' || 'a' || ' ' || \n ' b '", 1, 1),
+        ("SELECT name FROM $planets WHERE SUBSTRING ( name, 1, 1 ) = 'M'", 2, 1),
+        ("SELECT name FROM $planets WHERE SUBSTRING ( name, 2, 1 ) = 'a'", 3, 1),
+        ("SELECT name FROM $planets WHERE SUBSTRING ( name, 3 ) = 'rth'", 1, 1),
+        ("SELECT name FROM $planets WHERE SUBSTRING ( name, -1 ) = 's'", 3, 1),
 
         # These are queries which have been found to return the wrong result or not run correctly
         # FILTERING ON FUNCTIONS

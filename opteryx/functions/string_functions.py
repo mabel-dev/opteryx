@@ -224,3 +224,24 @@ def starts_w(arr, test):
 
 def ends_w(arr, test):
     return compute.ends_with(arr, test[0])
+
+
+def substring(arr, from_pos, count):
+
+    if len(arr) == 0:
+        return [[]]
+
+    def _inner(val, _from, _for):
+        _from = int(_from)
+        if _from > 0:
+            _from -= 1
+        _for = int(_for) if _for == _for else None  # nosec
+        if _for is None:
+            return val[_from:]
+        return val[_from : _for + _from]
+
+    def _outer():
+        for index, value in enumerate(arr):
+            yield _inner(value, from_pos[index], count[index])
+
+    return list(_outer())
