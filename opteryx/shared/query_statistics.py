@@ -138,7 +138,7 @@ class QueryStatistics(_QueryStatistics):
 
     slots = "_instances"
 
-    _instances = {}
+    _instances:dict[str, _QueryStatistics] = {}
 
     def __new__(cls, qid=""):
         # if qid is None:

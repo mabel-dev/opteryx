@@ -12,6 +12,9 @@
 
 """
 This compensates for missing temporal table support in the SQL parser (sqlparser-rs).
+This is relatively complex for what it appears to be doing - it needs to account for
+a number of situations whilst being able to reconstruct the SQL query as the parser
+would expect it.
 
 For information on temporal tables see:
 https://blog.devgenius.io/a-query-in-time-introduction-to-sql-server-temporal-tables-145ddb1355d9
@@ -267,7 +270,7 @@ def _temporal_extration_state_machine(parts):
 
         # based on what the state was and what it is now, do something
         if transition == [TEMPORAL, TEMPORAL]:
-            temporal = part
+            temporal = (temporal + " " + part).strip()
         elif (
             transition
             in (
