@@ -144,7 +144,7 @@ class QueryStatistics(object):
 
     _instances = {}
 
-    def __new__(cls, qid):
+    def __new__(cls, qid=""):
         # if qid is None:
         #    raise ValueError("query id is None")
         if cls._instances.get(qid) is None:

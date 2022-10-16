@@ -15,7 +15,7 @@ from opteryx.managers.expression import ExpressionTreeNode
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import evaluate
 from opteryx.managers.expression import NUMPY_TYPES
-from opteryx.models import QueryStatistics
+from opteryx.shared import QueryStatistics
 
 
 traceback.install()
