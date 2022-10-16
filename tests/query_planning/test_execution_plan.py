@@ -19,7 +19,7 @@ def test_linear_execution_tree():
     tree.add_operator("m", max)
     tree.link_operators("p", "m")
 
-    assert len(tree._nodes) == 2
+    assert len(tree.nodes()) == 2
     assert ["m", "p"] == sorted(tree._nodes.keys())
     assert tree.get_operator("p") == print
     assert len(tree._edges) == 1
@@ -32,7 +32,7 @@ def test_linear_execution_tree():
     tree.add_operator("n", min)
     tree.link_operators("m", "n")
 
-    assert len(tree._nodes) == 3
+    assert len(tree.nodes()) == 3
     assert ["m", "n", "p"] == sorted(tree._nodes.keys())
     assert len(tree._edges) == 2
 

@@ -93,9 +93,8 @@ class InternalDatasetNode(BasePlanNode):
     def name(self):  # pragma: no cover
         return "Sample Dataset Reader"
 
-    def execute(self, statistics) -> Iterable:
+    def execute(self) -> Iterable:
 
-        self.statistics = statistics
         pyarrow_page = _get_sample_dataset(self._dataset, self._alias, self._end_date)
         self.statistics.rows_read += pyarrow_page.num_rows
         self.statistics.bytes_processed_data += pyarrow_page.nbytes

@@ -14,14 +14,18 @@ from dataclasses import dataclass
 
 
 @dataclass
-class QueryStatistics:
+class _QueryStatistics:
     """
-    Data object to collect information during query execution
+    Data object to collect information during query execution.
+
+    Implemented as a singleton rather than having to pass the Statistics modeal around
+    the plan and execution, you only need the query id (qid) and the stats model can be
+    returned.
     """
 
     def __init__(self):
 
-        self._warnings = []
+        self._messages = []
 
         self.count_blobs_found: int = 0
         self.count_data_blobs_read: int = 0
@@ -71,7 +75,7 @@ class QueryStatistics:
 
     def merge(self, assimilee):
         for key, value in assimilee.__dict__.items():
-            if key[0] != "_":
+            if key[0] != "_" and key not in ("start_time", "end_time"):
                 self.__dict__[key] += value
 
     def _ns_to_s(self, nano_seconds):
@@ -80,18 +84,14 @@ class QueryStatistics:
             return 0
         return nano_seconds / 1e9
 
-    def warn(self, warning_text: str):
+    def add_message(self, message: str):
         """collect warnings"""
-        if warning_text not in self._warnings:
-            self._warnings.append(warning_text)
+        if message not in self._messages:
+            self._messages.append(message)
 
     @property
-    def has_warnings(self):
-        return len(self._warnings) > 0
-
-    @property
-    def warnings(self):
-        return self._warnings
+    def messages(self):
+        return self._messages
 
     def as_dict(self):
         """
@@ -132,3 +132,25 @@ class QueryStatistics:
             "page_splits": self.page_splits,
             "page_merges": self.page_merges,
         }
+
+
+class QueryStatistics(_QueryStatistics):
+
+    slots = "_instances"
+
+    #   Python 3.8 doesn't support this style
+    #    _instances: dict[str, _QueryStatistics] = {}
+    _instances: dict = {}
+
+    def __new__(cls, qid=""):
+        # if qid is None:
+        #    raise ValueError("query id is None")
+        if cls._instances.get(qid) is None:
+            #    print("Creating the QueryStatistics object for", qid)
+            cls._instances[qid] = _QueryStatistics()
+            if len(cls._instances.keys()) > 50:
+                # don't keep collecting these things
+                cls._instances.pop(next(iter(cls._instances)))
+        # else:
+        #    print("Using existing QueryStatistics object for", qid)
+        return cls._instances[qid]

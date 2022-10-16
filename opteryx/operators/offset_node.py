@@ -39,9 +39,7 @@ class OffsetNode(BasePlanNode):
     def config(self):  # pragma: no cover
         return str(self._offset)
 
-    def execute(self, statistics) -> Iterable:
-
-        self.statistics = statistics
+    def execute(self) -> Iterable:
 
         if len(self._producers) != 1:
             raise SqlError(f"{self.name} on expects a single producer")
@@ -52,7 +50,7 @@ class OffsetNode(BasePlanNode):
 
         row_count = 0
 
-        iterator = data_pages.execute(self.statistics)
+        iterator = data_pages.execute()
 
         for page in iterator:
             if (row_count + page.num_rows) > self._offset:

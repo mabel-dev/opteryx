@@ -37,12 +37,14 @@ from opteryx.managers.planner import binder
 from opteryx.managers.planner.logical import logical_planner
 from opteryx.managers.planner.optimizer import run_optimizer
 from opteryx.managers.planner.temporal import extract_temporal_filters
-from opteryx.models import QueryProperties, QueryStatistics
+from opteryx.models import QueryProperties
 from opteryx.third_party import sqloxide
 
 
 class QueryPlanner:
-    def __init__(self, *, statement: str = "", cache=None, ast=None, properties=None):
+    def __init__(
+        self, *, statement: str = "", cache=None, ast=None, properties=None, qid=None
+    ):
 
         # if it's a byte string, convert to an ascii string
         if isinstance(statement, bytes):
@@ -50,9 +52,8 @@ class QueryPlanner:
         self.raw_statement = statement
 
         if properties is None:
-            self.properties = QueryProperties(config)
+            self.properties = QueryProperties(qid, config)
             self.properties.cache = cache
-            self.statistics = QueryStatistics()
 
             # we need to deal with the temporal filters before we use sqloxide
             if statement is not None:
@@ -101,8 +102,8 @@ class QueryPlanner:
             return run_optimizer(plan)
         return plan
 
-    def execute(self, plan, statistics):
-        return plan.execute(statistics)
+    def execute(self, plan):
+        return plan.execute()
 
     def test_paramcount(self, asts, params):
         """count the number of Placeholders and compare to the number of params"""

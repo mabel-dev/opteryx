@@ -44,9 +44,7 @@ class DistinctNode(BasePlanNode):
     def name(self):  # pragma: no cover
         return "Distinction"
 
-    def execute(self, statistics) -> Iterable:
-
-        self.statistics = statistics
+    def execute(self) -> Iterable:
 
         if len(self._producers) != 1:
             raise SqlError(f"{self.name} on expects a single producer")
@@ -56,8 +54,6 @@ class DistinctNode(BasePlanNode):
             data_pages = (data_pages,)
 
         if self._distinct:
-            yield drop_duplicates(
-                concat_tables(data_pages.execute(self.statistics), promote=True)
-            )
+            yield drop_duplicates(concat_tables(data_pages.execute(), promote=True))
             return
         yield from data_pages

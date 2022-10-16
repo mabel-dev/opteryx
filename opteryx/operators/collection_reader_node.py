@@ -57,9 +57,7 @@ class CollectionReaderNode(BasePlanNode):
     def name(self):  # pragma: no cover
         return "Collection Reader"
 
-    def execute(self, statistics) -> Iterable:
-
-        self.statistics = statistics
+    def execute(self) -> Iterable:
 
         metadata = None
 
