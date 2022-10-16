@@ -433,6 +433,19 @@ def tuple_literal(branch, alias=None, key=None):
     )
 
 
+def substring(branch, alias=None, key=None):
+    NoneNode = ExpressionTreeNode(NodeType.LITERAL_NONE)
+    string = build(branch["expr"])
+    substring_from = build(branch["substring_from"]) or NoneNode
+    substring_for = build(branch["substring_for"]) or NoneNode
+    return ExpressionTreeNode(
+        NodeType.FUNCTION,
+        value="SUBSTRING",
+        parameters=[string, substring_from, substring_for],
+        alias=alias,
+    )
+
+
 def unsupported(branch, alias=None, key=None):
     """raise an error"""
     raise SqlError(key)
@@ -456,6 +469,7 @@ def build(value, alias: list = None, key=None):
         return BUILDERS.get(key, unsupported)(value[key], alias, key)
     if isinstance(value, list):
         return [build(item, alias) for item in value]
+    return None
 
 
 # parts to build the literal parts of a query
@@ -489,6 +503,7 @@ BUILDERS = {
     "SafeCast": try_cast,
     "SingleQuotedString": literal_string,
     "SimilarTo": pattern_match,
+    "Substring": substring,
     "Tuple": tuple_literal,
     "TryCast": try_cast,
     "UnaryOp": unary_op,
