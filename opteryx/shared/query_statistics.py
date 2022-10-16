@@ -25,7 +25,7 @@ class _QueryStatistics:
 
     def __init__(self):
 
-        self._warnings = []
+        self._messages = []
 
         self.count_blobs_found: int = 0
         self.count_data_blobs_read: int = 0
@@ -84,18 +84,14 @@ class _QueryStatistics:
             return 0
         return nano_seconds / 1e9
 
-    def warn(self, warning_text: str):
+    def add_message(self, message: str):
         """collect warnings"""
-        if warning_text not in self._warnings:
-            self._warnings.append(warning_text)
+        if message not in self._messages:
+            self._messages.append(message)
 
     @property
-    def has_warnings(self):
-        return len(self._warnings) > 0
-
-    @property
-    def warnings(self):
-        return self._warnings
+    def messages(self):
+        return self._messages
 
     def as_dict(self):
         """
@@ -138,7 +134,7 @@ class _QueryStatistics:
         }
 
 
-class QueryStatistics(object):
+class QueryStatistics(_QueryStatistics):
 
     slots = "_instances"
 
