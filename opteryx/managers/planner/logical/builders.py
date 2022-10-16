@@ -434,16 +434,19 @@ def tuple_literal(branch, alias=None, key=None):
 
 
 def substring(branch, alias=None, key=None):
-    NoneNode = ExpressionTreeNode(NodeType.LITERAL_NONE)
+    node_node = ExpressionTreeNode(NodeType.LITERAL_NONE)
     string = build(branch["expr"])
-    substring_from = build(branch["substring_from"]) or NoneNode
-    substring_for = build(branch["substring_for"]) or NoneNode
+    substring_from = build(branch["substring_from"]) or node_node
+    substring_for = build(branch["substring_for"]) or node_node
     return ExpressionTreeNode(
         NodeType.FUNCTION,
         value="SUBSTRING",
         parameters=[string, substring_from, substring_for],
         alias=alias,
     )
+
+def typed_string(branch, alias=None, key=None):
+    return cast({"expr": branch}, alias, key)
 
 
 def unsupported(branch, alias=None, key=None):
@@ -506,6 +509,7 @@ BUILDERS = {
     "Substring": substring,
     "Tuple": tuple_literal,
     "TryCast": try_cast,
+    "TypedString": typed_string,
     "UnaryOp": unary_op,
     "Unnamed": build,
     "Value": build,
