@@ -245,6 +245,7 @@ def try_cast(branch, alias=None, key="TryCast"):
         raise SqlError(f"Unsupported type for `{function_name}`  - '{data_type}'")
 
     alias.append(f"{function_name}({args[0].value} AS {data_type})")
+    alias.append(f"{data_type.upper} {args[0].value}")
 
     return ExpressionTreeNode(
         NodeType.FUNCTION,
@@ -445,8 +446,15 @@ def substring(branch, alias=None, key=None):
         alias=alias,
     )
 
+
 def typed_string(branch, alias=None, key=None):
-    return cast({"expr": branch}, alias, key)
+    data_type = branch["data_type"]
+    data_value = branch["value"]
+    return cast(
+        {"expr": {"Value": {"SingleQuotedString": data_value}}, "data_type": data_type},
+        alias,
+        key,
+    )
 
 
 def unsupported(branch, alias=None, key=None):
