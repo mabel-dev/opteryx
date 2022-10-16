@@ -82,33 +82,55 @@ TEMPORAL: int = 16
 
 def clean_statement(string):  # pragma: no cover
     """
-    Remove carriage returns and all whitespace to single spaces
+    Remove carriage returns and all whitespace to single spaces.
+
+    Avoid removing whitespace in quoted strings.
     """
-    return COMBINE_WHITESPACE_REGEX.sub(" ", string).strip()
+    pattern = r"(\"[^\"]\"|\'[^\']\'|\`[^\`]\`)|(\r\n\t\f\v+)"
+    regex = re.compile(pattern, re.MULTILINE | re.DOTALL)
+
+    def _replacer(match):
+        if match.group(2) is not None:
+            return " "
+        return match.group(1)  # captured quoted-string
+
+    return regex.sub(_replacer, string).strip()
 
 
 def sql_parts(string):  # pragma: no cover
     """
     Split a SQL statement into clauses
     """
-    sub = re.compile(
-        r"(\,|\(|\)|;|"
+    keywords = re.compile(
+        r"(\,|\(|\)|\;|"
         + r"|".join([r"\b" + i.replace(r" ", r"\s") + r"\b" for i in SQL_PARTS])
         + r")",
         re.IGNORECASE,
     )
-    reg = re.compile(
-        r"(?:[\"'`].*?[^\\\\][\"'`]|.*)",
-        re.IGNORECASE,
+    quoted_strings = re.compile(
+        r'(?:[^"\s]*"(?:\\.|[^"])*"[^"\s]*)+|(?:[^\'\s]*\'(?:\\.|[^\'])*\'[^\'\s]*)+|[^\s]+'
     )
-    parts = [
-        [p] if p[0] in ("\"'`") else sub.split(p)
-        for p in reg.findall(string)
-        if p.strip() != ""
-    ]
-    parts = [
-        item.strip() for sublist in parts for item in sublist if item.strip() != ""
-    ]
+
+    # This probably can be done with regexes, but after trying I've implemented
+    # procedurally. We're capturing strings in quotes and preserving them, strings
+    # not in quotes we're then splitting by keywords. This means that no matter
+    # what is in quotes, it will not be split, even SQL statements and FOR clauses.
+    parts = []
+    accumulator = ""
+    for part in quoted_strings.findall(string):
+        part = part.strip()
+        if part != "":
+            if part[0] in ("\"'`"):
+                parts.extend(keywords.split(accumulator))
+                parts.append(part)
+                accumulator = ""
+            else:
+                accumulator += f" {part}"
+    if accumulator != "":
+        parts.extend(keywords.split(accumulator))
+
+    parts = [i.strip() for i in parts if i.strip() != ""]
+
     return parts
 
 
