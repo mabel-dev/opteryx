@@ -245,6 +245,7 @@ def try_cast(branch, alias=None, key="TryCast"):
         raise SqlError(f"Unsupported type for `{function_name}`  - '{data_type}'")
 
     alias.append(f"{function_name}({args[0].value} AS {data_type})")
+    alias.append(f"{data_type.upper} {args[0].value}")
 
     return ExpressionTreeNode(
         NodeType.FUNCTION,
@@ -434,15 +435,25 @@ def tuple_literal(branch, alias=None, key=None):
 
 
 def substring(branch, alias=None, key=None):
-    NoneNode = ExpressionTreeNode(NodeType.LITERAL_NONE)
+    node_node = ExpressionTreeNode(NodeType.LITERAL_NONE)
     string = build(branch["expr"])
-    substring_from = build(branch["substring_from"]) or NoneNode
-    substring_for = build(branch["substring_for"]) or NoneNode
+    substring_from = build(branch["substring_from"]) or node_node
+    substring_for = build(branch["substring_for"]) or node_node
     return ExpressionTreeNode(
         NodeType.FUNCTION,
         value="SUBSTRING",
         parameters=[string, substring_from, substring_for],
         alias=alias,
+    )
+
+
+def typed_string(branch, alias=None, key=None):
+    data_type = branch["data_type"]
+    data_value = branch["value"]
+    return cast(
+        {"expr": {"Value": {"SingleQuotedString": data_value}}, "data_type": data_type},
+        alias,
+        key,
     )
 
 
@@ -506,6 +517,7 @@ BUILDERS = {
     "Substring": substring,
     "Tuple": tuple_literal,
     "TryCast": try_cast,
+    "TypedString": typed_string,
     "UnaryOp": unary_op,
     "Unnamed": build,
     "Value": build,
