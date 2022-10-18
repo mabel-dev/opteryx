@@ -96,7 +96,7 @@ cur.execute("SELECT 4 * 7;")
 print(cur.fetchone())
 ~~~
 
-For more example usage, see [Exmaple Notebooks](https://github.com/mabel-dev/opteryx/tree/main/notebooks) and the [Getting Started Guide](https://mabel-dev.github.io/opteryx/latest/02%20Getting%20Started/).
+For more example usage, see [Example Notebooks](https://github.com/mabel-dev/opteryx/tree/main/notebooks) and the [Getting Started Guide](https://mabel-dev.github.io/opteryx/latest/02%20Getting%20Started/).
 
 ## Community
 

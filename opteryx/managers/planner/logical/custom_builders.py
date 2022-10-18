@@ -51,8 +51,8 @@ def extract_show_filter(ast):
         root = ExpressionTreeNode(
             NodeType.COMPARISON_OPERATOR,
             value="ILike",  # we're case insensitive for SHOW filters
-            left_node=left,
-            right_node=right,
+            left=left,
+            right=right,
         )
         return root
 

@@ -81,6 +81,11 @@ class Cursor:
         self._qid = str(uuid4())
         self._statistics = QueryStatistics(self._qid)
 
+    @property
+    def id(self):
+        """The unique internal reference for this query"""
+        return self._qid
+
     def _format_prepared_param(self, param):
         """
         Formats parameters to be passed to a Query.

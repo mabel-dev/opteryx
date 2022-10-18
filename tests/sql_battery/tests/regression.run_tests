@@ -51,8 +51,8 @@ SELECT DATEDIFF('days', birth_date, TODAY()) FROM $astronauts;
 SELECT DATEDIFF('days', "2022-01-02", "2010-10-01") FROM $astronauts;
 SELECT DATEDIFF('days', "2022-01-02", "2010-10-01");
 SELECT DATEDIFF('minutes', "2022-01-02", "2010-10-01");
-#SELECT DATEDIFF('days', TIMESTAMP "2022-01-02", TIMESTAMP "2010-10-01") FROM $astronauts;
-#SELECT DATEDIFF('days', TIMESTAMP("2022-01-02"), CAST("2010-10-01" AS TIMESTAMP));
+SELECT DATEDIFF('days', TIMESTAMP "2022-01-02", TIMESTAMP "2010-10-01") FROM $astronauts;
+SELECT DATEDIFF('days', TIMESTAMP("2022-01-02"), CAST("2010-10-01" AS TIMESTAMP));
 
 # [TEMPORAL FILTER EXTRACTION PROBLEMS]
 SET @planet = 'Saturn'; SELECT name AS nom, bigsats.occurances, smallsats.occurances FROM (SELECT DISTINCT id as planetId, name FROM $planets WHERE name = @planet) as planets LEFT JOIN (SELECT planetId, COUNT(*) AS occurances FROM $satellites FOR DATES BETWEEN '2022-01-01' AND TODAY WHERE gm > 10 GROUP BY planetId) AS bigsats ON bigsats.planetId = planets.planetId LEFT JOIN (SELECT planetId, COUNT(*) AS occurances FROM $satellites FOR DATES IN LAST_MONTH WHERE gm < 10 GROUP BY planetId) as smallsats ON smallsats.planetId = planets.planetId;
