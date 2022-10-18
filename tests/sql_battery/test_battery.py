@@ -379,7 +379,11 @@ STATEMENTS = [
         ("SELECT COUNT(*) FROM (SELECT planetId FROM $satellites WHERE planetId < 7) GROUP BY planetId", 4, 1),
 
         ("EXPLAIN SELECT * FROM $satellites", 1, 3),
-        ("EXPLAIN SELECT * FROM $satellites WHERE id = 8", 2, 3),
+        ("EXPLAIN SELECT * FROM $satellites WHERE id = 8", 3, 3),
+        ("SET enable_page_defragmentation = false; EXPLAIN SELECT * FROM $satellites WHERE id = 8", 2, 3),
+        ("SET enable_optimizer = false; EXPLAIN SELECT * FROM $satellites WHERE id = 8", 2, 3),
+        ("SET enable_optimizer = true; EXPLAIN SELECT * FROM $satellites WHERE id = 8 AND id = 7", 5, 3),
+        ("SET enable_optimizer = false; EXPLAIN SELECT * FROM $satellites WHERE id = 8 AND id = 7", 2, 3),
 
         ("SHOW COLUMNS FROM $satellites", 8, 2),
         ("SHOW FULL COLUMNS FROM $satellites", 8, 6),

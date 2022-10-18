@@ -20,7 +20,7 @@ from opteryx import operators
 from opteryx.managers.expression import NodeType
 
 
-def split_conjunctive_predicates(plan):
+def split_conjunctive_predicates(plan, properties):
     """
     Conjunctive Predicates (ANDs) can be split and executed in any order to get the
     same result. This means we can split them into separate steps in the plan.
@@ -49,10 +49,10 @@ def split_conjunctive_predicates(plan):
 
         # get the left and right filters
         left_node = operators.SelectionNode(
-            filter=selection.left, properties=operator.properties
+            filter=selection.left, properties=properties
         )
         right_node = operators.SelectionNode(
-            filter=selection.right, properties=operator.properties
+            filter=selection.right, properties=properties
         )
         # insert them into the plan and remove the old node
         # we're chaining the new operators
@@ -72,7 +72,7 @@ def split_conjunctive_predicates(plan):
     # find the in-scope nodes
     selection_nodes = plan.get_nodes_of_type(operators.SelectionNode)
 
-    # killer questions - if any aren't met, bale
+    # killer questions - if any aren't met, bail
     if selection_nodes is None:
         return plan
 
