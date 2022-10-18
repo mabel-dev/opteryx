@@ -47,7 +47,7 @@ def literal_number(branch, alias: list = None, key=None):
     )
 
 
-def literal_string(branch, alias: str = None, key=None):
+def literal_string(branch, alias: list = None, key=None):
     """create node for a string branch, this is either a data or a string"""
     dte_value = dates.parse_iso(branch)
     if dte_value:
@@ -172,8 +172,8 @@ def binary_op(branch, alias=None, key=None):
     return ExpressionTreeNode(
         operator_type,
         value=operator,
-        left_node=left,
-        right_node=right,
+        left=left,
+        right=right,
         alias=alias,
     )
 
@@ -301,7 +301,7 @@ def unary_op(branch, alias=None, key=None):
         alias = [] if alias is None else [alias]
     if branch["op"] == "Not":
         right = build(branch["expr"])
-        return ExpressionTreeNode(token_type=NodeType.NOT, centre_node=right)
+        return ExpressionTreeNode(token_type=NodeType.NOT, centre=right)
     if branch["op"] == "Minus":
         number = 0 - numpy.float64(branch["expr"]["Value"]["Number"][0])
         return ExpressionTreeNode(NodeType.LITERAL_NUMERIC, value=number, alias=alias)
@@ -321,37 +321,33 @@ def between(branch, alias=None, key=None):
         left_node = ExpressionTreeNode(
             NodeType.COMPARISON_OPERATOR,
             value="Lt",
-            left_node=expr,
-            right_node=low,
+            left=expr,
+            right=low,
         )
         right_node = ExpressionTreeNode(
             NodeType.COMPARISON_OPERATOR,
             value="Gt",
-            left_node=expr,
-            right_node=high,
+            left=expr,
+            right=high,
         )
 
-        return ExpressionTreeNode(
-            NodeType.OR, left_node=left_node, right_node=right_node
-        )
+        return ExpressionTreeNode(NodeType.OR, left=left_node, right=right_node)
     else:
         # LEFT > LOW and LEFT < HIGH (between)
         left_node = ExpressionTreeNode(
             NodeType.COMPARISON_OPERATOR,
             value="GtEq",
-            left_node=expr,
-            right_node=low,
+            left=expr,
+            right=low,
         )
         right_node = ExpressionTreeNode(
             NodeType.COMPARISON_OPERATOR,
             value="LtEq",
-            left_node=expr,
-            right_node=high,
+            left=expr,
+            right=high,
         )
 
-        return ExpressionTreeNode(
-            NodeType.AND, left_node=left_node, right_node=right_node
-        )
+        return ExpressionTreeNode(NodeType.AND, left=left_node, right=right_node)
 
 
 def in_subquery(branch, alias=None, key=None):
@@ -370,14 +366,14 @@ def in_subquery(branch, alias=None, key=None):
     return ExpressionTreeNode(
         NodeType.COMPARISON_OPERATOR,
         value=operator,
-        left_node=left,
-        right_node=sub_query,
+        left=left,
+        right=sub_query,
     )
 
 
 def is_compare(branch, alias=None, key=None):
     centre = build(branch)
-    return ExpressionTreeNode(NodeType.UNARY_OPERATOR, value=key, centre_node=centre)
+    return ExpressionTreeNode(NodeType.UNARY_OPERATOR, value=key, centre=centre)
 
 
 def pattern_match(branch, alias=None, key=None):
@@ -389,8 +385,8 @@ def pattern_match(branch, alias=None, key=None):
     return ExpressionTreeNode(
         NodeType.COMPARISON_OPERATOR,
         value=key,
-        left_node=left,
-        right_node=right,
+        left=left,
+        right=right,
     )
 
 
@@ -402,8 +398,8 @@ def in_list(branch, alias=None, key=None):
     return ExpressionTreeNode(
         token_type=NodeType.COMPARISON_OPERATOR,
         value=operator,
-        left_node=left_node,
-        right_node=right_node,
+        left=left_node,
+        right=right_node,
     )
 
 
@@ -414,15 +410,15 @@ def in_unnest(branch, alias=None, key=None):
     return ExpressionTreeNode(
         token_type=NodeType.COMPARISON_OPERATOR,
         value=operator,
-        left_node=left_node,
-        right_node=right_node,
+        left=left_node,
+        right=right_node,
     )
 
 
 def nested(branch, alias=None, key=None):
     return ExpressionTreeNode(
         token_type=NodeType.NESTED,
-        centre_node=build(branch),
+        centre=build(branch),
     )
 
 

@@ -17,7 +17,9 @@ It is defined as an expression tree of binary and unary operators, and functions
 
 Expressions are evaluated against an entire page at a time.
 """
+from dataclasses import dataclass, field
 from enum import Enum
+from typing import Any
 
 import numpy
 import pyarrow
@@ -46,7 +48,7 @@ def format_expression(root):
         if node_type == NodeType.LITERAL_VARCHAR:
             return "'" + root.value.replace("'", "'") + "'"
         if node_type == NodeType.LITERAL_TIMESTAMP:
-            return "'" + root.value.item().isoformat() + "'"
+            return "'" + str(root) + "'"
         if node_type == NodeType.LITERAL_INTERVAL:
             return "<INTERVAL>"
         return str(root.value)
@@ -133,38 +135,16 @@ NUMPY_TYPES = {
 }
 
 
+@dataclass
 class ExpressionTreeNode:
-    __slots__ = (
-        "token_type",
-        "value",
-        "left",
-        "right",
-        "centre",
-        "parameters",
-        "alias",
-    )
 
-    def __init__(
-        self,
-        token_type,
-        *,
-        value=None,
-        left_node=None,
-        right_node=None,
-        centre_node=None,
-        parameters=None,
-        alias=None,
-    ):
-        self.token_type: NodeType = token_type
-        self.value = value
-        self.left = left_node
-        self.right = right_node
-        self.centre = centre_node
-        self.parameters = parameters
-        self.alias = alias
-
-        if self.token_type == NodeType.UNKNOWN:
-            raise ValueError(f"ExpressionNode of unknown type in plan. {self.value}")
+    token_type: NodeType
+    value: Any = None
+    left: Any = None  # ExpressionTreeNode
+    right: Any = None  # ExpressionTreeNode
+    centre: Any = None  # ExpressionTreeNode
+    parameters: list = None
+    alias: list = field(default_factory=list)
 
     def __repr__(self):
         return (
@@ -177,17 +157,8 @@ class ExpressionTreeNode:
             f"({id(self)})>"
         )
 
-    def _inner_print(self, node, prefix):
-        ret = prefix + str(node.value) + "\n"
-        prefix += " |"
-        if node.left:
-            ret += self._inner_print(node.left, prefix=prefix + "- ")
-        if node.right:
-            ret += self._inner_print(node.right, prefix=prefix + "- ")
-        return ret
-
     def __str__(self):
-        return self._inner_print(self, "")
+        return str(self.value)
 
 
 def _inner_evaluate(root: ExpressionTreeNode, table: Table, columns):

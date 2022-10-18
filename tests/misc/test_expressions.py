@@ -77,10 +77,10 @@ def test_logical_expressions():
     true = ExpressionTreeNode(NodeType.LITERAL_BOOLEAN, value=True)
     false = ExpressionTreeNode(NodeType.LITERAL_BOOLEAN, value=False)
 
-    T_AND_T = ExpressionTreeNode(NodeType.AND, left_node=true, right_node=true)
-    T_AND_F = ExpressionTreeNode(NodeType.AND, left_node=true, right_node=false)
-    F_AND_T = ExpressionTreeNode(NodeType.AND, left_node=false, right_node=true)
-    F_AND_F = ExpressionTreeNode(NodeType.AND, left_node=false, right_node=false)
+    T_AND_T = ExpressionTreeNode(NodeType.AND, left=true, right=true)
+    T_AND_F = ExpressionTreeNode(NodeType.AND, left=true, right=false)
+    F_AND_T = ExpressionTreeNode(NodeType.AND, left=false, right=true)
+    F_AND_F = ExpressionTreeNode(NodeType.AND, left=false, right=false)
 
     result = evaluate(T_AND_T, table=planets)
     assert len(result) == 9
@@ -91,10 +91,10 @@ def test_logical_expressions():
     result = evaluate(F_AND_F, table=planets)
     assert len(result) == 0
 
-    T_OR_T = ExpressionTreeNode(NodeType.OR, left_node=true, right_node=true)
-    T_OR_F = ExpressionTreeNode(NodeType.OR, left_node=true, right_node=false)
-    F_OR_T = ExpressionTreeNode(NodeType.OR, left_node=false, right_node=true)
-    F_OR_F = ExpressionTreeNode(NodeType.OR, left_node=false, right_node=false)
+    T_OR_T = ExpressionTreeNode(NodeType.OR, left=true, right=true)
+    T_OR_F = ExpressionTreeNode(NodeType.OR, left=true, right=false)
+    F_OR_T = ExpressionTreeNode(NodeType.OR, left=false, right=true)
+    F_OR_F = ExpressionTreeNode(NodeType.OR, left=false, right=false)
 
     result = evaluate(T_OR_T, table=planets)
     assert len(result) == 9
@@ -105,18 +105,18 @@ def test_logical_expressions():
     result = evaluate(F_OR_F, table=planets)
     assert len(result) == 0
 
-    NOT_T = ExpressionTreeNode(NodeType.NOT, centre_node=true)
-    NOT_F = ExpressionTreeNode(NodeType.NOT, centre_node=false)
+    NOT_T = ExpressionTreeNode(NodeType.NOT, centre=true)
+    NOT_F = ExpressionTreeNode(NodeType.NOT, centre=false)
 
     result = evaluate(NOT_T, table=planets)
     assert len(result) == 0
     result = evaluate(NOT_F, table=planets)
     assert len(result) == 9
 
-    T_XOR_T = ExpressionTreeNode(NodeType.XOR, left_node=true, right_node=true)
-    T_XOR_F = ExpressionTreeNode(NodeType.XOR, left_node=true, right_node=false)
-    F_XOR_T = ExpressionTreeNode(NodeType.XOR, left_node=false, right_node=true)
-    F_XOR_F = ExpressionTreeNode(NodeType.XOR, left_node=false, right_node=false)
+    T_XOR_T = ExpressionTreeNode(NodeType.XOR, left=true, right=true)
+    T_XOR_F = ExpressionTreeNode(NodeType.XOR, left=true, right=false)
+    F_XOR_T = ExpressionTreeNode(NodeType.XOR, left=false, right=true)
+    F_XOR_F = ExpressionTreeNode(NodeType.XOR, left=false, right=false)
 
     result = evaluate(T_XOR_T, table=planets)
     assert len(result) == 0
@@ -162,20 +162,20 @@ def test_function_operations():
     concat = ExpressionTreeNode(
         NodeType.BINARY_OPERATOR,
         value="StringConcat",
-        left_node=name,
-        right_node=name,
+        left=name,
+        right=name,
     )
 
     gravity = ExpressionTreeNode(NodeType.IDENTIFIER, value="gravity")
     seven = ExpressionTreeNode(NodeType.LITERAL_NUMERIC, value=7)
     plus = ExpressionTreeNode(
-        NodeType.BINARY_OPERATOR, value="Plus", left_node=gravity, right_node=seven
+        NodeType.BINARY_OPERATOR, value="Plus", left=gravity, right=seven
     )
     multiply = ExpressionTreeNode(
         NodeType.BINARY_OPERATOR,
         value="Multiply",
-        left_node=gravity,
-        right_node=seven,
+        left=gravity,
+        right=seven,
     )
 
     names = evaluate(concat, planets)
@@ -225,11 +225,11 @@ def test_compound_expressions():
     multiply = ExpressionTreeNode(
         NodeType.BINARY_OPERATOR,
         value="Multiply",
-        right_node=three_point_seven,
-        left_node=gravity,
+        right=three_point_seven,
+        left=gravity,
     )
     gt = ExpressionTreeNode(
-        NodeType.COMPARISON_OPERATOR, value="Gt", left_node=multiply, right_node=mass
+        NodeType.COMPARISON_OPERATOR, value="Gt", left=multiply, right=mass
     )
 
     result = evaluate(gt, planets)
