@@ -47,7 +47,7 @@ def literal_number(branch, alias: list = None, key=None):
     )
 
 
-def literal_string(branch, alias: str = None, key=None):
+def literal_string(branch, alias: list = None, key=None):
     """create node for a string branch, this is either a data or a string"""
     dte_value = dates.parse_iso(branch)
     if dte_value:
