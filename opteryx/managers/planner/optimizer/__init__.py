@@ -15,12 +15,13 @@ from opteryx.managers.planner.optimizer import actions
 RULESET: list = [
     actions.eliminate_negations,
     actions.split_conjunctive_predicates,
+    actions.defragment_pages,
 ]
 
 
-def run_optimizer(plan):
+def run_optimizer(plan, properties):
 
     for rule in RULESET:
-        plan = rule(plan)
+        plan = rule(plan, properties)
 
     return plan

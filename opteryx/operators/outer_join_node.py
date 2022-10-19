@@ -85,11 +85,7 @@ class OuterJoinNode(BasePlanNode):
         right_columns = Columns(right_table)
         left_columns = None
 
-        for page in arrow.defragment_pages(
-            left_node.execute(),
-            self.statistics,
-            self.properties.enable_page_defragmentation,
-        ):
+        for page in left_node.execute():
 
             if self._using:
 
@@ -98,11 +94,7 @@ class OuterJoinNode(BasePlanNode):
                     for col in self._using
                 ]
 
-                for page in arrow.defragment_pages(
-                    left_node.execute(),
-                    self.statistics,
-                    self.properties.enable_page_defragmentation,
-                ):
+                for page in left_node.execute():
 
                     if left_columns is None:
                         left_columns = Columns(page)

@@ -29,7 +29,6 @@ from opteryx.exceptions import SqlError
 from opteryx.managers.expression import evaluate
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
-from opteryx.utils.arrow import defragment_pages
 
 
 class SelectionNode(BasePlanNode):
@@ -79,11 +78,7 @@ class SelectionNode(BasePlanNode):
 
         else:
 
-            for page in defragment_pages(
-                data_pages.execute(),
-                self.statistics,
-                self.properties.enable_page_defragmentation,
-            ):
+            for page in data_pages.execute():
 
                 start_selection = time.time_ns()
                 mask = evaluate(self.filter, page)

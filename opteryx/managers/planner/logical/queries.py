@@ -26,7 +26,7 @@ def explain_query(ast, properties):
 
     from opteryx.managers.planner import QueryPlanner
 
-    query_planner = QueryPlanner()
+    query_planner = QueryPlanner(properties=properties)
     plan = query_planner.create_logical_plan(ast["Explain"]["statement"])
     plan = query_planner.optimize_plan(plan)
     my_plan = ExecutionTree()

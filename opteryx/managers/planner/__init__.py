@@ -99,7 +99,7 @@ class QueryPlanner:
 
     def optimize_plan(self, plan):
         if self.properties.enable_optimizer:
-            return run_optimizer(plan)
+            return run_optimizer(plan, self.properties)
         return plan
 
     def execute(self, plan):

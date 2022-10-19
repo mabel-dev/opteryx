@@ -20,7 +20,7 @@ from opteryx import operators
 from opteryx.managers.expression import ExpressionTreeNode, NodeType
 
 
-def eliminate_negations(plan):
+def eliminate_negations(plan, properties):
     """
     This action aims to remove steps from the execution of an expression by eliminating
     negations. This is triggered by a NOT in an expression, when this is observed we
@@ -75,10 +75,10 @@ def eliminate_negations(plan):
             ]
         return node
 
-    # find the in-scope nodes
+    # find the in-scope nodes (WHERE AND HAVING)
     selection_nodes = plan.get_nodes_of_type(operators.SelectionNode)
 
-    # killer questions - if any aren't met, bale
+    # killer questions - if any aren't met, bail
     if selection_nodes is None:
         return plan
 
