@@ -14,8 +14,9 @@ from opteryx.managers.planner.optimizer import actions
 
 RULESET: list = [
     actions.eliminate_negations,
-    actions.split_conjunctive_predicates,
+    actions.split_conjunctive_predicates,  # run after eliminate_negations
     actions.defragment_pages,
+    actions.use_heap_sort,
 ]
 
 

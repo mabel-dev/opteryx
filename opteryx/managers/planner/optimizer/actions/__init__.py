@@ -14,5 +14,6 @@
 from .action_defragment_pages import defragment_pages
 from .action_eliminate_negations import eliminate_negations
 from .action_split_conjunctive_predicates import split_conjunctive_predicates
+from .action_use_heap_sort import use_heap_sort
 
 # fmt:on

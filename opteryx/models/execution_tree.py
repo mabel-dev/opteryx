@@ -140,6 +140,8 @@ class ExecutionTree:
         Paramters:
             name: string
                 The name of the step to search from
+        Returns:
+            Set of nids
         """
         retval = {target for source, target, direction in self._edges if source == nid}
         return sorted(retval)
@@ -151,6 +153,8 @@ class ExecutionTree:
         Paramters:
             nid: string
                 The name of the step to search from
+        Retutns:
+            Set of Tuples, (source nid, connection direction)
         """
         retval = {
             (source, direction)

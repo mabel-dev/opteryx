@@ -35,8 +35,7 @@ from opteryx.operators import BasePlanNode
 class SortNode(BasePlanNode):
     def __init__(self, properties: QueryProperties, **config):
         super().__init__(properties=properties)
-        self._order = config.get("order", [])
-        self._mapped_order: List = []
+        self.order = config.get("order", [])
 
     @property
     def greedy(self):  # pragma: no cover
@@ -44,7 +43,7 @@ class SortNode(BasePlanNode):
 
     @property
     def config(self):  # pragma: no cover
-        return ",".join([str(i) for i in self._order])
+        return ",".join([str(i) for i in self.order])
 
     @property
     def name(self):  # pragma: no cover
@@ -61,6 +60,7 @@ class SortNode(BasePlanNode):
 
         data_pages = data_pages.execute()
         data_pages = tuple(data_pages)
+        mapped_order = []
 
         if len([page for page in data_pages if page.num_rows == 0]) > 0:
             yield data_pages[0]
@@ -71,7 +71,7 @@ class SortNode(BasePlanNode):
 
         start_time = time.time_ns()
 
-        for column_list, direction in self._order:
+        for column_list, direction in self.order:
 
             for column in column_list:
                 if column.token_type == NodeType.FUNCTION:
@@ -100,7 +100,7 @@ class SortNode(BasePlanNode):
                     # number but the list of column names is zero-based, so we
                     # subtract one
                     column_name = table.column_names[int(column.value) - 1]
-                    self._mapped_order.append(
+                    mapped_order.append(
                         (
                             column_name,
                             direction,
@@ -108,7 +108,7 @@ class SortNode(BasePlanNode):
                     )
                 else:
                     try:
-                        self._mapped_order.append(
+                        mapped_order.append(
                             (
                                 columns.get_column_from_alias(
                                     format_expression(column), only_one=True
@@ -121,7 +121,7 @@ class SortNode(BasePlanNode):
                             f"`ORDER BY` must reference columns as they appear in the `SELECT` clause. {cnfe}"
                         )
 
-        table = table.sort_by(self._mapped_order)
+        table = table.sort_by(mapped_order)
         self.statistics.time_ordering = time.time_ns() - start_time
 
         yield table
