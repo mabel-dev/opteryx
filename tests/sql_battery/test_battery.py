@@ -384,6 +384,11 @@ STATEMENTS = [
         ("SET enable_optimizer = false; EXPLAIN SELECT * FROM $satellites WHERE id = 8", 2, 3),
         ("SET enable_optimizer = true; EXPLAIN SELECT * FROM $satellites WHERE id = 8 AND id = 7", 5, 3),
         ("SET enable_optimizer = false; EXPLAIN SELECT * FROM $satellites WHERE id = 8 AND id = 7", 2, 3),
+        ("SET enable_optimizer = false; EXPLAIN SELECT * FROM $planets ORDER BY id LIMIT 5", 3, 3),
+        ("SET enable_optimizer = true; EXPLAIN SELECT * FROM $planets ORDER BY id LIMIT 5", 2, 3),
+        ("EXPLAIN SELECT * FROM $planets ORDER BY id LIMIT 5", 2, 3),
+        ("SELECT name, id FROM $planets ORDER BY id LIMIT 5", 5, 2),
+        ("SELECT name, id FROM $planets ORDER BY id LIMIT 100", 9, 2),
 
         ("SHOW COLUMNS FROM $satellites", 8, 2),
         ("SHOW FULL COLUMNS FROM $satellites", 8, 6),

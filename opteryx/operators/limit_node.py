@@ -30,7 +30,7 @@ from opteryx.utils import arrow
 class LimitNode(BasePlanNode):
     def __init__(self, properties: QueryProperties, **config):
         super().__init__(properties=properties)
-        self._limit = config.get("limit")
+        self.limit = config.get("limit")
 
     @property
     def name(self):  # pragma: no cover
@@ -38,7 +38,7 @@ class LimitNode(BasePlanNode):
 
     @property
     def config(self):  # pragma: no cover
-        return str(self._limit)
+        return str(self.limit)
 
     def execute(self) -> Iterable:
 
@@ -49,4 +49,4 @@ class LimitNode(BasePlanNode):
         if isinstance(data_pages, Table):
             data_pages = (data_pages,)
 
-        yield arrow.limit_records(data_pages.execute(), limit=self._limit)
+        yield arrow.limit_records(data_pages.execute(), limit=self.limit)

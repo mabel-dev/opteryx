@@ -11,10 +11,10 @@
 # limitations under the License.
 
 """
-Optimization Rule - Split Conjunctive Predicates (ANDs)
+Optimization Rule - Defragment pages
 
 Type: Heuristic
-Goal: Reduce rows
+Goal: Reduce small units of work
 """
 from opteryx import operators
 from opteryx.models.execution_tree import ExecutionTree
@@ -29,6 +29,9 @@ def defragment_pages(plan: ExecutionTree, properties):
     This benefit is lessened if the chunks passing through the system are very
     small. This action adds a defragmentation step to the plan to help ensure
     activities which most benefit from full pages are more likely to get them.
+
+    This presently only works on adjacent pages - so does not scan the entire
+    partition or query set looking for pages to merge.
     """
 
     def unique_id():
