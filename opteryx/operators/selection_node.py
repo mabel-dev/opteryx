@@ -72,6 +72,9 @@ class SelectionNode(BasePlanNode):
         if isinstance(data_pages, Table):
             data_pages = (data_pages,)
 
+        schema = None
+        at_least_one = False
+
         # we should always have a filter - but no harm in checking
         if self.filter is None:
             yield from data_pages
@@ -79,6 +82,9 @@ class SelectionNode(BasePlanNode):
         else:
 
             for page in data_pages.execute():
+
+                if schema is None:
+                    schema = page.schema
 
                 start_selection = time.time_ns()
                 mask = evaluate(self.filter, page)
@@ -92,4 +98,12 @@ class SelectionNode(BasePlanNode):
                     mask = numpy.nonzero(mask)[0]
 
                 self.statistics.time_selecting += time.time_ns() - start_selection
-                yield page.take(mask)
+
+                # if there's no matching rows, just drop the page
+                if mask.size > 0:
+                    yield page.take(mask)
+                    at_least_one = True
+
+        # we need to send something to the next operator, send an empty table
+        if not at_least_one:
+            yield pyarrow.Table.from_arrays([[] for i in schema.names], schema=schema)

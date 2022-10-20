@@ -117,7 +117,7 @@ def as_arrow(pages, limit: int = None):
     from opteryx.utils import peak
 
     first, pages = peak(pages)
-    if first:
+    if first is not None:
         merged = limit_records(pages, limit)
         columns = Columns(merged)
         preferred_names = columns.preferred_column_names
