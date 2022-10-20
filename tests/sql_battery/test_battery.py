@@ -62,7 +62,7 @@ STATEMENTS = [
         ("SELECT * FROM $satellites WHERE `name` = 'Calypso'", 1, 8),
         ("select * from $satellites where name = 'Calypso'", 1, 8),
         ("SELECT * FROM $satellites WHERE name <> 'Calypso'", 176, 8),
-#        ("SELECT * FROM $satellites WHERE name = '********'", 0, 8),
+        ("SELECT * FROM $satellites WHERE name = '********'", 0, 8),
         ("SELECT * FROM $satellites WHERE name LIKE '_a_y_s_'", 1, 8),
         ("SELECT * FROM $satellites WHERE name LIKE 'Cal%'", 4, 8),
         ("SELECT * FROM $satellites WHERE name like 'Cal%'", 4, 8),
@@ -114,7 +114,7 @@ STATEMENTS = [
 
         ("SELECT * FROM $satellites WHERE magnitude = 5.29", 1, 8),
         ("SELECT * FROM $satellites WHERE id = 5 AND magnitude = 5.29", 1, 8),
-#        ("SELECT * FROM $satellites WHERE id = 5 AND magnitude = 1", 0, 8),  # this bales early
+        ("SELECT * FROM $satellites WHERE id = 5 AND magnitude = 1", 0, 8),  # this bales early
         ("SELECT * FROM $satellites WHERE id = 5 AND name = 'Europa'", 1, 8),
         ("SELECT * FROM $satellites WHERE (id = 5) AND (name = 'Europa')", 1, 8),
         ("SELECT * FROM $satellites WHERE id = 5 OR name = 'Europa'", 1, 8),
@@ -169,7 +169,7 @@ STATEMENTS = [
         
         ("SELECT DISTINCT planetId FROM $satellites", 7, 1),
         ("SELECT * FROM $satellites LIMIT 50", 50, 8),
-#        ("SELECT * FROM $satellites LIMIT 0", 0, 8),
+        ("SELECT * FROM $satellites LIMIT 0", 0, 8),
         ("SELECT * FROM $satellites OFFSET 150", 27, 8),
         ("SELECT * FROM $satellites LIMIT 50 OFFSET 150", 27, 8),
         ("SELECT * FROM $satellites LIMIT 50 OFFSET 170", 7, 8),
@@ -431,7 +431,7 @@ STATEMENTS = [
         ("SELECT * FROM ( SELECT id AS pid FROM $planets) WHERE pid > 5", 4, 1),
         ("SELECT * FROM ( SELECT COUNT(planetId) AS moons, planetId FROM $satellites GROUP BY planetId ) WHERE moons > 10", 4, 2),
 
-#        ("SELECT * FROM $planets WHERE id = -1", 0, 20),
+        ("SELECT * FROM $planets WHERE id = -1", 0, 20),
         ("SELECT COUNT(*) FROM (SELECT DISTINCT a FROM $astronauts CROSS JOIN UNNEST(alma_mater) AS a ORDER BY a)", 1, 1),
 
         ("SELECT a.id, b.id, c.id FROM $planets AS a INNER JOIN $planets AS b ON a.id = b.id INNER JOIN $planets AS c ON c.id = b.id", 9, 3),
@@ -636,8 +636,8 @@ STATEMENTS = [
         # ORDER OF CLAUSES (FOR before INNER JOIN)
         ("SELECT * FROM $planets FOR '2022-03-03' INNER JOIN $satellites ON $planets.id = $satellites.planetId", 177, 28),
         # ZERO RECORD RESULT SETS
-#        ("SELECT * FROM $planets WHERE id = -1 ORDER BY id", 0, 20),
-#        ("SELECT * FROM $planets WHERE id = -1 LIMIT 10", 0, 20),
+        ("SELECT * FROM $planets WHERE id = -1 ORDER BY id", 0, 20),
+        ("SELECT * FROM $planets WHERE id = -1 LIMIT 10", 0, 20),
         # LEFT JOIN THEN FILTER ON NULLS
         ("SELECT * FROM $planets LEFT JOIN $satellites ON $satellites.planetId = $planets.id WHERE $satellites.id IS NULL", 2, 28),
         ("SELECT * FROM $planets LEFT JOIN $satellites ON $satellites.planetId = $planets.id WHERE $satellites.name IS NULL", 2, 28),
@@ -673,7 +673,7 @@ STATEMENTS = [
         ("SELECT * FROM testdata.nulls FOR '2000-01-01' WHERE username !~* 'bbc.+'", 21, 5),
         ("SELECT * FROM testdata.nulls FOR '2000-01-01' WHERE username SIMILAR TO 'BBC.+'", 3, 5),
         ("SELECT * FROM testdata.nulls FOR '2000-01-01' WHERE username NOT SIMILAR TO 'BBC.+'", 21, 5),
-#        ("SELECT * FROM testdata.nulls FOR '2000-01-01' WHERE tweet ILIKE '%Trump%'", 0, 5),
+        ("SELECT * FROM testdata.nulls FOR '2000-01-01' WHERE tweet ILIKE '%Trump%'", 0, 5),
         # BYTE-ARRAY FAILS [#252]
         (b"SELECT * FROM $satellites", 177, 8),
         # DISTINCT on null values [#285]
@@ -718,7 +718,7 @@ STATEMENTS = [
         # [#527] variables referenced in subqueries
         ("SET @v = 1; SELECT * FROM (SELECT @v);", 1, 1),
         # [#561] HASH JOIN with an empty table
-        #("SELECT * FROM $planets LEFT JOIN (SELECT planetId as id FROM $satellites WHERE id < 0) USING (id)", 0, 1),
+        ("SELECT * FROM $planets LEFT JOIN (SELECT planetId as id FROM $satellites WHERE id < 0) USING (id)", 0, 1),
     ]
 # fmt:on
 
