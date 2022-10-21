@@ -13,9 +13,6 @@
 """
 These are a set of functions that can be applied to data.
 """
-import datetime
-import random
-
 from cityhash import CityHash64
 from pyarrow import compute
 from pyarrow import ArrowNotImplementedError
@@ -224,6 +221,7 @@ FUNCTIONS = {
     "LEAST": _iterate_single_parameter(numpy.nanmin),
     "IIF": other_functions.iif,
     "GENERATE_SERIES": arrays.generate_series,
+    "NULLIF": other_functions.null_if,
 
     # NUMERIC
     "ROUND": number_functions.round,

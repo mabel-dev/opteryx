@@ -96,3 +96,7 @@ def if_null(values, replacement):
         if value is None or value != value:  # nosec # nosemgrep
             response[index] = replacement[index]
     return response
+
+
+def null_if(col1, col2):
+    return [None if a == b else a for a, b in zip(col1, col2)]
