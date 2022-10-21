@@ -630,7 +630,7 @@ STATEMENTS = [
         ("SELECT name FROM $planets WHERE SUBSTRING ( name, -1 ) = 's'", 3, 1),
         ("SELECT TIMESTAMP '2022-01-02', DATEDIFF('days', TIMESTAMP '2022-01-02', TIMESTAMP '2022-10-01') FROM $astronauts;", 357, 2),
         ("SELECT * FROM $satellites WHERE NULLIF(planetId, 5) IS NULL", 67, 8),
-        ("SELECT * FROM $satellites WHERE NULLIF(planetId, 5) IS NULL", 110, 8),
+        ("SELECT * FROM $satellites WHERE NULLIF(planetId, 5) IS NOT NULL", 110, 8),
 
         # These are queries which have been found to return the wrong result or not run correctly
         # FILTERING ON FUNCTIONS
