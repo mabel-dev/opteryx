@@ -27,7 +27,7 @@ from cityhash import CityHash64
 import pyarrow
 
 from opteryx import config
-from opteryx.exceptions import DatabaseError
+from opteryx.exceptions import DatasetNotFoundError
 from opteryx.managers.schemes import MabelPartitionScheme
 from opteryx.managers.schemes import DefaultPartitionScheme
 from opteryx.models import Columns, QueryProperties, ExecutionTree
@@ -408,7 +408,7 @@ class BlobReaderNode(BasePlanNode):
                 partition_structure.pop(partition)
 
         if len(partition_structure) == 0:
-            raise DatabaseError(
+            raise DatasetNotFoundError(
                 f"The requested dataset could not be found {str(partition).replace('/', '.')}."
             )
 

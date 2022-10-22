@@ -19,12 +19,12 @@ This Node reads and parses the data from one of the sample datasets.
 """
 import datetime
 
-from typing import Iterable, Optional
+from typing import Iterable
 
 import pyarrow
 
 from opteryx import samples
-from opteryx.exceptions import DatabaseError
+from opteryx.exceptions import DatasetNotFoundError
 from opteryx.models import Columns, QueryProperties
 from opteryx.operators import BasePlanNode
 
@@ -65,7 +65,7 @@ def _get_sample_dataset(dataset, alias, end_date):
             table_aliases=[alias],
         )
         return table
-    raise DatabaseError(f"Dataset not found `{dataset}`.")
+    raise DatasetNotFoundError(f"Dataset not found `{dataset}`.")
 
 
 class InternalDatasetNode(BasePlanNode):
