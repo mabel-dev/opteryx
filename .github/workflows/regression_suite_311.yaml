@@ -1,4 +1,4 @@
-name: Regression Suite
+name: Regression Suite (3.11)
 
 on:
   push

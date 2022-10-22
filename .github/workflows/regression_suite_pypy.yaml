@@ -8,7 +8,7 @@ jobs:
     strategy:
       max-parallel: 4
       matrix:
-        python-version: ['3.9']
+        python-version: ['3.10']
         os: [ubuntu-latest]   # ARM64 = Raspberry Pi
     runs-on: ${{ matrix.os }}
     steps:
