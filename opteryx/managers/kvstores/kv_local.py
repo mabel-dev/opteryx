@@ -8,7 +8,6 @@ locally, which is unlikely to be what is wanted.
 import io
 
 from opteryx.managers.kvstores import BaseKeyValueStore
-from opteryx.managers.kvstores import LocalKVJson
 
 
 ROCKS_DB = True
@@ -26,6 +25,8 @@ class LocalKVStore(BaseKeyValueStore):
         if ROCKS_DB:
             self._db = rocksdb.DB(location, rocksdb.Options(create_if_missing=True))
         else:
+            from opteryx.managers.kvstores import LocalKVJson
+
             self._db = LocalKVJson(location + ".json")
 
     def get(self, key):
