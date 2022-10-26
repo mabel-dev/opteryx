@@ -37,38 +37,6 @@ jobs:
           python -m pip install --upgrade -r $GITHUB_WORKSPACE/tests/requirements_arm.txt
           python setup.py build_ext --inplace
 
-      - name: Start MinIo Instance
-        run: |
-          docker run -d -p 9000:9000 --name minio \
-                     -e "MINIO_ACCESS_KEY=minioadmin" \
-                     -e "MINIO_SECRET_KEY=minioadmin" \
-                     -v /tmp/data:/data \
-                     -v /tmp/config:/root/.minio \
-                     minio/minio server /data
-
-      - name: "Start GCS Emulator"
-        run: |
-            docker run -d --name \
-                       fake-gcs-server \
-                       -p 9090:4443 \
-                       fsouza/fake-gcs-server \
-                       -scheme http
-
-      - name: "Start Memcached Instance"
-        run: |
-            docker run -d --name my-memcached \
-                       -p 11211:11211 \
-                       memcached \
-                       -m 16
-
-      - name: "Start MongoDB Instance"
-        run: |
-            docker run -d --name test-mongo \
-                       -p 27017:27017 \
-                       -e MONGO_INITDB_ROOT_USERNAME=mongoadmin \
-                       -e MONGO_INITDB_ROOT_PASSWORD=secret \
-                       mongo:latest
-
       - name: "Authenticate to Google Cloud"
         uses: google-github-actions/auth@v0.4.0
         with:

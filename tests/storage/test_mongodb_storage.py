@@ -13,6 +13,7 @@ import opteryx
 
 from opteryx.connectors import MongoDbConnector
 
+from tests.tools import skip_on_raspberry_pi
 
 COLLECTION_NAME = "mongo"
 MONGO_CONNECTION = os.environ.get("MONGO_CONNECTION")
@@ -32,6 +33,7 @@ def populate_mongo():
         collection.insert_many(map(orjson.loads, data.split(b"\n")[:-1]))
 
 
+@skip_on_raspberry_pi
 def test_mongo_storage():
 
     opteryx.register_store(COLLECTION_NAME, MongoDbConnector)

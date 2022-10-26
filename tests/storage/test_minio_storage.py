@@ -14,6 +14,7 @@ import opteryx
 
 from opteryx.connectors import AwsS3Connector
 
+from tests.tools import skip_on_raspberry_pi
 
 BUCKET_NAME = "miniobucket"
 END_POINT = "localhost:9000"
@@ -33,6 +34,7 @@ def populate_minio():
     )
 
 
+@skip_on_raspberry_pi
 def test_minio_storage():
 
     opteryx.register_store(BUCKET_NAME, AwsS3Connector)
