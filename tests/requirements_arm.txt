@@ -1,0 +1,22 @@
+types-orjson
+types-PyYAML
+types-requests
+
+coverage
+pymemcache
+pytest
+mypy
+rich
+zstandard
+hypothesis
+
+# different storage providers
+firebase-admin
+google-cloud-storage
+minio
+pymongo
+
+# not supported on ARM
+# faust-streaming-rocksdb
+
+setuptools_rust

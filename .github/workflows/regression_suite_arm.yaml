@@ -22,20 +22,13 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           architecture: x64
-
-      - name: apt Installs
-        run: |
-          sudo apt-get install --no-install-suggests --no-install-recommends --yes python3-dev
-          sudo cp librocksdb.so /usr/local/lib
-          sudo mkdir -p /usr/local/include/rocksdb/
-          sudo cp -r ./include/* /usr/local/include/
         
       - name: Install Requirements
         run: |
           python -m pip install --upgrade pip
           python -m pip install --upgrade numpy cython
           python -m pip install --upgrade -r $GITHUB_WORKSPACE/requirements.txt
-          python -m pip install --upgrade -r $GITHUB_WORKSPACE/tests/requirements.txt
+          python -m pip install --upgrade -r $GITHUB_WORKSPACE/tests/requirements_arm.txt
           python setup.py build_ext --inplace
 
       - name: Start MinIo Instance
