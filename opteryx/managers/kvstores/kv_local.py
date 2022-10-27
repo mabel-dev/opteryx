@@ -4,6 +4,8 @@
 This is opinionated for use as a metadata cache, it can be used as a reader cache
 because they implement the same interface, but that would cache all of the files
 locally, which is unlikely to be what is wanted.
+
+This will automatically fall back to the JSON store.
 """
 import io
 
