@@ -36,7 +36,7 @@ class BaseKeyValueStore(abc.ABC):
         """
         raise NotImplementedError("`set` method on cache object not overridden.")
 
-    def contains(self, list):
+    def contains(self, lst):
         """
         Overwrite this method to return a list of itmes which are in the cache from
         a given list

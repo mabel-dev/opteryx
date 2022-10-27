@@ -15,5 +15,6 @@ from .base_kv_store import BaseKeyValueStore
 from .kv_firestore import FireStoreKVStore
 from .kv_memory import InMemoryKVStore
 from .kv_local import LocalKVStore
+from .kv_local_json import LocalKVJson
 from .kv_memcached import MemcachedKVStore
 from .kv_mongodb import MongoDbKVStore

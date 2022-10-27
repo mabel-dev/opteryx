@@ -8,7 +8,10 @@ import sys
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
+from tests.tools import skip_on_raspberry_pi
 
+
+@skip_on_raspberry_pi
 def test_memcached_cache():
 
     import opteryx

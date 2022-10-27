@@ -10,6 +10,8 @@ import opteryx
 
 from opteryx.connectors import GcpCloudStorageConnector
 
+from tests.tools import skip_on_raspberry_pi
+
 BUCKET_NAME = "opteryx"
 
 
@@ -38,6 +40,7 @@ def populate_gcs():
     opteryx.register_store(BUCKET_NAME, GcpCloudStorageConnector)
 
 
+@skip_on_raspberry_pi
 def test_gcs_storage():
 
     populate_gcs()
