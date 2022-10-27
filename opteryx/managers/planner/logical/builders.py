@@ -453,6 +453,20 @@ def typed_string(branch, alias=None, key=None):
     )
 
 
+def ceiling(value, alias: list = None, key=None):
+    data_value = build(value["expr"])
+    return ExpressionTreeNode(
+        NodeType.FUNCTION, value="CEIL", parameters=[data_value], alias=alias
+    )
+
+
+def floor(value, alias: list = None, key=None):
+    data_value = build(value["expr"])
+    return ExpressionTreeNode(
+        NodeType.FUNCTION, value="FLOOR", parameters=[data_value], alias=alias
+    )
+
+
 def unsupported(branch, alias=None, key=None):
     """raise an error"""
     raise SqlError(key)
@@ -485,11 +499,13 @@ BUILDERS = {
     "BinaryOp": binary_op,
     "Boolean": literal_boolean,
     "Cast": cast,
+    "Ceil": ceiling,
     "CompoundIdentifier": compound_identifier,
     "DoubleQuotedString": literal_string,
     "Expr": build,
     "ExprWithAlias": expression_with_alias,
     "Extract": extract,
+    "Floor": floor,
     "Function": function,
     "Identifier": identifier,
     "ILike": pattern_match,
