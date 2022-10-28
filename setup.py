@@ -6,6 +6,8 @@ from Cython.Build import cythonize
 from setuptools import Extension, find_packages, setup
 from setuptools_rust import RustExtension
 
+LIBRARY = "opteryx"
+
 
 def rust_build(setup_kwargs: Dict[str, Any]) -> None:
     setup_kwargs.update(
@@ -21,15 +23,19 @@ def rust_build(setup_kwargs: Dict[str, Any]) -> None:
 
 
 __version__ = "notset"
-with open("opteryx/version.py", mode="r") as v:
+with open(f"{LIBRARY}/version.py", mode="r") as v:
     vers = v.read()
 exec(vers)  # nosec
 
 with open("README.md", mode="r") as rm:
     long_description = rm.read()
 
-with open("requirements.txt", mode="r") as f:
-    required = f.read().splitlines()
+try:
+    with open("requirements.txt", "r") as f:
+        required = f.read().splitlines()
+except:
+    with open(f"{LIBRARY}.egg-info/requires.txt", "r") as f:
+        required = f.read().splitlines()
 
 extensions = [
     Extension(
@@ -45,7 +51,7 @@ extensions = [
 ]
 
 setup_config = {
-    "name": "opteryx",
+    "name": LIBRARY,
     "version": __version__,
     "description": "Python SQL Query Engine for Serverless Environments",
     "long_description": long_description,
@@ -53,7 +59,7 @@ setup_config = {
     "maintainer": "@joocer",
     "author": "@joocer",
     "author_email": "justin.joyce@joocer.com",
-    "packages": find_packages(include=["opteryx", "opteryx.*"]),
+    "packages": find_packages(include=[LIBRARY, f"{LIBRARY}.*"]),
     "url": "https://github.com/mabel-dev/opteryx/",
     "install_requires": required,
     "ext_modules": cythonize(extensions),

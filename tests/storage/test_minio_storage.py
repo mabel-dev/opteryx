@@ -8,13 +8,11 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import io
 
-from minio import Minio  # type:ignore
-
 import opteryx
 
 from opteryx.connectors import AwsS3Connector
 
-from tests.tools import skip_on_raspberry_pi
+from tests.tools import skip_on_partials
 
 BUCKET_NAME = "miniobucket"
 END_POINT = "localhost:9000"
@@ -22,6 +20,8 @@ SECRETS = "minioadmin"
 
 
 def populate_minio():
+
+    from minio import Minio  # type:ignore
 
     client = Minio(END_POINT, SECRETS, SECRETS, secure=False)
     if not client.bucket_exists(BUCKET_NAME):
@@ -34,7 +34,7 @@ def populate_minio():
     )
 
 
-@skip_on_raspberry_pi
+@skip_on_partials
 def test_minio_storage():
 
     opteryx.register_store(BUCKET_NAME, AwsS3Connector)

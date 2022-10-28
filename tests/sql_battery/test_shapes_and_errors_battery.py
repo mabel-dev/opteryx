@@ -730,10 +730,7 @@ STATEMENTS = [
         # [#527] variables referenced in subqueries
         ("SET @v = 1; SELECT * FROM (SELECT @v);", 1, 1, None),
         # [#561] HASH JOIN with an empty table
-        ("SELECT * FROM $planets LEFT JOIN (SELECT planetId as id FROM $satellites WHERE id < 0) USING (id)", 0, 1, None),
-        # Low cardinality INNER JOINS blow memory [#444]
-        ("SELECT COUNT(*) FROM (SELECT * FROM testdata.formats.parquet WITH(NO_PARTITION) LIMIT 50) INNER JOIN testdata.formats.parquet WITH(NO_PARTITION) USING (user_verified)", 1, 1, None),
-    ]
+        ("SELECT * FROM $planets LEFT JOIN (SELECT planetId as id FROM $satellites WHERE id < 0) USING (id)", 0, 1, None),    ]
 # fmt:on
 
 

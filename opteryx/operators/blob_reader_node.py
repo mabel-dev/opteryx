@@ -143,9 +143,6 @@ class BlobReaderNode(BasePlanNode):
             if isinstance(self._selection, list):
                 self._selection = set(self._selection)
 
-        # parallel download hint
-        self._parallel: bool = "PARALLEL_READ" in config.get("hints", [])
-
         # this is the list of blobs we're going to read
         self._reading_list: dict = self._scanner()
 
@@ -186,18 +183,6 @@ class BlobReaderNode(BasePlanNode):
         metadata = None
         schema = None
 
-        from opteryx.managers.process import multiprocessor
-
-        plasma_channel = None
-        plasma_store_ctx = None
-        if self._parallel:
-            import pyarrow.plasma as plasma
-
-            plasma_store_ctx = plasma.start_plasma_store(
-                config.BUFFER_PER_SUB_PROCESS * config.MAX_SUB_PROCESSES
-            )
-            plasma_channel, p = plasma_store_ctx.__enter__()
-
         if not metadata:
 
             for partition in self._reading_list.values():
@@ -205,14 +190,8 @@ class BlobReaderNode(BasePlanNode):
                 # we're reading this partition now
                 self.statistics.partitions_read += 1
 
-                for (
-                    time_to_read,
-                    blob_bytes,
-                    pyarrow_blob,
-                    path,
-                ) in multiprocessor.processed_reader(
-                    self._read_and_parse,
-                    [
+                for (time_to_read, blob_bytes, pyarrow_blob, path,) in [
+                    self._read_and_parse(
                         (
                             path,
                             self._reader.read_blob,
@@ -220,12 +199,11 @@ class BlobReaderNode(BasePlanNode):
                             self._cache,
                             self._selection,
                         )
-                        for path, parser in partition["blob_list"]
-                    ],
-                    plasma_channel,
-                ):
+                    )
+                    for path, parser in partition["blob_list"]
+                ]:
 
-                    # we're going to open this blob
+                    # we've read a blob
                     self.statistics.count_data_blobs_read += 1
 
                     # extract stats from reader
@@ -287,9 +265,6 @@ class BlobReaderNode(BasePlanNode):
                     # yield this blob
                     yield pyarrow_blob
 
-        if plasma_store_ctx is not None:
-            plasma_store_ctx.__exit__(None, None, None)
-
     def _read_and_parse(self, config):
         path, reader, parser, cache, projection = config
         start_read = time.time_ns()
@@ -301,7 +276,8 @@ class BlobReaderNode(BasePlanNode):
             # try to read the cache
             try:
                 blob_bytes = cache.get(blob_hash)
-            except Exception:  # pragma: no cover
+            except Exception as e:  # pragma: no cover
+                print(e)
                 cache = None
                 blob_bytes = None
 

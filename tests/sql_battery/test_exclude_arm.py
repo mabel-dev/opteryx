@@ -15,7 +15,7 @@ import pytest
 import opteryx
 
 from opteryx.connectors import DiskConnector
-from tests.tools import skip_on_raspberry_pi
+from tests.tools import skip_on_partials
 
 # fmt:off
 STATEMENTS = [
@@ -26,10 +26,12 @@ STATEMENTS = [
 
         # Large results can't be added to pages [#453]
         ("SELECT SHA512(column_0) FROM FAKE(150000, 1)", 150000, 1, None),
+        # Low cardinality INNER JOINS blow memory [#444]
+        ("SELECT COUNT(*) FROM (SELECT * FROM testdata.formats.parquet WITH(NO_PARTITION) LIMIT 50) INNER JOIN testdata.formats.parquet WITH(NO_PARTITION) USING (user_verified)", 1, 1, None),
 ]
 
 
-@skip_on_raspberry_pi
+@skip_on_partials
 @pytest.mark.parametrize("statement, rows, columns, exception", STATEMENTS)
 def test_sql_battery(statement, rows, columns, exception):
     """

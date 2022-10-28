@@ -160,3 +160,4 @@ test.rocksdb/**
 **.drawio.bkp
 Cargo.lock
 performance.jsonl
+test.json

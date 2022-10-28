@@ -7,19 +7,15 @@ import sys
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
-import shutil
-
 import opteryx
-from opteryx.managers.kvstores import LocalKVStore
-
-from tests.tools import skip_on_partials
+from opteryx.managers.kvstores import LocalKVJson
 
 
-@skip_on_partials
-def test_in_memory_cache():
+def test_json_cache():
 
-    shutil.rmtree("test.rocksdb", ignore_errors=True)
-    cache = LocalKVStore(location="test.rocksdb")
+    if os.path.isfile("test.json"):
+        os.remove("test.json")
+    cache = LocalKVJson(location="test.json")
 
     # read the data once, this should populate the cache
     conn = opteryx.connect(cache=cache)
@@ -30,7 +26,7 @@ def test_in_memory_cache():
         # waste memory as much
         pass
     stats = cur.stats
-    assert stats["cache_hits"] == 0
+    assert stats["cache_hits"] == 0, stats["cache_hits"]
     assert stats["cache_misses"] == 2
     conn.close()
 
@@ -42,7 +38,7 @@ def test_in_memory_cache():
         # we just want to make sure we consume the data
         pass
     stats = cur.stats
-    assert stats["cache_hits"] == 2
+    assert stats["cache_hits"] == 2, stats["cache_hits"]
     assert stats["cache_misses"] == 0
     conn.close()
 
@@ -61,5 +57,5 @@ def test_in_memory_cache():
 
 if __name__ == "__main__":  # pragma: no cover
 
-    test_in_memory_cache()
+    test_json_cache()
     print("✅ okay")

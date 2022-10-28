@@ -36,16 +36,23 @@ GCP_PROJECT_ID: str = config.get("GCP_PROJECT_ID")
 DATASET_PREFIX_MAPPING: dict = config.get("DATASET_PREFIX_MAPPING", {"_":"disk"})
 # Data Partitioning
 PARTITION_SCHEME: str = config.get("PARTITION_SCHEME", None)
-# Maximum size for items saved to the buffer cache
-MAX_SIZE_SINGLE_CACHE_ITEM: int = config.get("MAX_SIZE_SINGLE_CACHE_ITEM", 1024 * 1024)
-# The maximum number of processors to use for multi processing
-MAX_SUB_PROCESSES: int = int(config.get("MAX_SUB_PROCESSES", pyarrow.io_thread_count()))
-# The number of bytes to allocate for each processor
-BUFFER_PER_SUB_PROCESS: int = int(config.get("BUFFER_PER_SUB_PROCESS", 100000000))
 # The number of seconds before forcably killing processes
 MAXIMUM_SECONDS_SUB_PROCESSES_CAN_RUN: int = int(config.get("MAXIMUM_SECONDS_SUB_PROCESSES_CAN_RUN", 3600))
-# The number of metadata cache records to hold
-LOCAL_METADATA_CACHE: int = int(config.get("LOCAL_METADATA_CACHE", 512))
-# The maximum bumber of evictions by a single query
+# The maximum number of evictions by a single query
 MAX_CACHE_EVICTIONS: int = int(config.get("MAX_CACHE_EVICTIONS", 50))
+# Maximum size for items saved to the buffer cache
+MAX_SIZE_SINGLE_CACHE_ITEM: int = config.get("MAX_SIZE_SINGLE_CACHE_ITEM", 1024 * 1024)
+# The local buffer pool size
+LOCAL_BUFFER_POOL_SIZE: int = int(config.get("LOCAL_BUFFER_POOL_SIZE", 50))
+# The maximum number of evictions from the buffer pool per query
+MAX_BUFFER_POOL_EVICTIONS: int = int(config.get("MAX_BUFFER_POOL_EVICTIONS", 20))
+# fmt:on
+
+# fmt:off
+# The number of metadata cache records to hold
+# LOCAL_METADATA_CACHE: int = int(config.get("LOCAL_METADATA_CACHE", 512))
+# The maximum number of processors to use for multi processing
+# MAX_SUB_PROCESSES: int = int(config.get("MAX_SUB_PROCESSES", pyarrow.io_thread_count()))
+# The number of bytes to allocate for each processor
+# BUFFER_PER_SUB_PROCESS: int = int(config.get("BUFFER_PER_SUB_PROCESS", 100000000))
 # fmt:on
