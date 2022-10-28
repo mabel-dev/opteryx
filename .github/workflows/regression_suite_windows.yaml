@@ -31,7 +31,7 @@ jobs:
       - name: Install Requirements
         run: |
           python -m pip install --upgrade pip
-          python -m pip install --upgrade numpy cython setuptools_rust
+          python -m pip install --upgrade wheel numpy cython setuptools_rust pytest
           python -m pip install --upgrade -r $GITHUB_WORKSPACE/requirements.txt
           python -m pip install --upgrade -r $GITHUB_WORKSPACE/tests/requirements.txt
           python setup.py build_ext --inplace
