@@ -12,7 +12,10 @@ import shutil
 import opteryx
 from opteryx.managers.kvstores import LocalKVStore
 
+from tests.tools import skip_on_arm
 
+
+@skip_on_arm
 def test_in_memory_cache():
 
     shutil.rmtree("test.rocksdb", ignore_errors=True)

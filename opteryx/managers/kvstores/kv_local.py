@@ -24,12 +24,13 @@ class LocalKVStore(BaseKeyValueStore):
     def __init__(self, **kwargs):
 
         location = kwargs.get("location", "metastore.rocksdb")
-        if ROCKS_DB:
-            self._db = rocksdb.DB(location, rocksdb.Options(create_if_missing=True))
-        else:
-            from opteryx.managers.kvstores import LocalKVJson
+        if not ROCKS_DB:
+            raise FeatureNotSupportedOnArchitectureError("RocksDB is not available")
+        self._db = rocksdb.DB(location, rocksdb.Options(create_if_missing=True))
 
-            self._db = LocalKVJson(location + ".json")
+    @staticmethod
+    def can_use(self):
+        return ROCKS_DB
 
     def get(self, key):
         byte_reponse = self._db.get(key.encode())

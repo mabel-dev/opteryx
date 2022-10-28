@@ -3,14 +3,10 @@ import io
 from functools import wraps
 
 
-def is_raspberry_pi():
-    try:
-        with io.open("/sys/firmware/devicetree/base/model", "r") as model:
-            if "raspberry pi" in model.read().lower():
-                return True
-    except Exception:
-        pass
-    return False
+def is_arm():
+    import platform
+
+    return platform.machine() in ("armv7l", "aarch64")
 
 
 def skip(func):
@@ -21,11 +17,11 @@ def skip(func):
     return wrapper
 
 
-def skip_on_raspberry_pi(func):
+def skip_on_arm(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
-        if is_raspberry_pi():
-            print(f"Skipping {func.__name__} - doesn't run on Raspberry Pi")
+        if is_arm():
+            print(f"Skipping {func.__name__} - doesn't run on ARM CPUs")
         else:
             return func(*args, **kwargs)
 

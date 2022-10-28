@@ -57,3 +57,9 @@ def random_string(width):
 
     alphabet = tuple(string.ascii_letters + string.digits + "_/")
     return "".join([alphabet[random.getrandbits(6)] for i in range(width)])
+
+
+def is_arm():
+    import platform
+
+    return platform.machine() in ("armv7l", "aarch64")

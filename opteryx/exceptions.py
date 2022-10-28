@@ -27,6 +27,10 @@ class UnmetRequirementError(Exception):
     pass
 
 
+class FeatureNotSupportedOnArchitectureError(Exception):
+    pass
+
+
 # PEP-0249
 
 
