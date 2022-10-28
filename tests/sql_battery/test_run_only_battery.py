@@ -1,7 +1,25 @@
 """
 The best way to test a SQL Engine is to throw queries at it.
 
-This is the lightest of the main battery tests, it only ensures a query executes
+This is part of a suite of tests which are based on running many SQL statements.
+
+ >  Run Only
+    Shape Checking
+    Results Checking
+    Compare to DuckDB
+
+This is the lightest of the battery tests, it only ensures a query executes. 
+
+This may seem pointless as a test if that is all it is doing, but this has it's uses,
+particularly in testing SQL parsing based problems/features - we don't care if the
+result is right, if the engine can't parse the statements.
+
+However, this is the lowest value of the SQL battery tests, all we know after running
+this set is that the statements parse and the resulting query executes without error.
+We don't know if the query parsed correctly or if the result is correct.
+
+It currently takes less than a second to run the whole set, and it gives us some
+confidence in the function of the engine.
 """
 import glob
 import os

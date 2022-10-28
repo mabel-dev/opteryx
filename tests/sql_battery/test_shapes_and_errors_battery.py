@@ -1,6 +1,13 @@
 """
 The best way to test a SQL Engine is to throw queries at it.
 
+This is part of a suite of tests which are based on running many SQL statements.
+
+    Run Only
+    Shape Checking
+ >  Results Checking
+    Compare to DuckDB
+
 This is the main SQL Battery set, others exist for testing specific features (like
 reading different file types) but this is the main set of tests for if the Engine
 can respond to a query.
