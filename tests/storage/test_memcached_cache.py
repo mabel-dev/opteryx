@@ -8,10 +8,10 @@ import sys
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
-from tests.tools import skip_on_arm
+from tests.tools import skip_on_partials
 
 
-@skip_on_arm
+@skip_on_partials
 def test_memcached_cache():
 
     import opteryx

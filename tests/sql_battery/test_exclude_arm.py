@@ -15,7 +15,7 @@ import pytest
 import opteryx
 
 from opteryx.connectors import DiskConnector
-from tests.tools import skip_on_arm
+from tests.tools import skip_on_partials
 
 # fmt:off
 STATEMENTS = [
@@ -31,7 +31,7 @@ STATEMENTS = [
 ]
 
 
-@skip_on_arm
+@skip_on_partials
 @pytest.mark.parametrize("statement, rows, columns, exception", STATEMENTS)
 def test_sql_battery(statement, rows, columns, exception):
     """
