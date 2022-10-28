@@ -7,7 +7,7 @@ import sys
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import orjson
-import pymongo  # type:ignore
+
 
 import opteryx
 
@@ -21,6 +21,8 @@ MONGO_DATABASE = os.environ.get("MONGO_DATABASE")
 
 
 def populate_mongo():
+
+    import pymongo  # type:ignore
 
     myclient = pymongo.MongoClient(MONGO_CONNECTION)
     mydb = myclient[MONGO_DATABASE]

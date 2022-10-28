@@ -8,8 +8,6 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import io
 
-from minio import Minio  # type:ignore
-
 import opteryx
 
 from opteryx.connectors import AwsS3Connector
@@ -22,6 +20,8 @@ SECRETS = "minioadmin"
 
 
 def populate_minio():
+
+    from minio import Minio  # type:ignore
 
     client = Minio(END_POINT, SECRETS, SECRETS, secure=False)
     if not client.bucket_exists(BUCKET_NAME):
