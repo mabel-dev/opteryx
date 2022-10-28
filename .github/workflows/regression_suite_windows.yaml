@@ -1,4 +1,4 @@
-name: Regression Suite (ARM)
+name: Regression Suite (Windows)
 
 on:
   push
@@ -9,7 +9,7 @@ jobs:
       max-parallel: 4
       matrix:
         python-version: ['3.8', '3.9', '3.10']
-        os: 'windows-latest'
+        os: ['windows-latest']
     runs-on: ${{ matrix.os }}
     steps:
 
