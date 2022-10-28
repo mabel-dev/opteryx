@@ -6,6 +6,7 @@ from functools import wraps
 def is_arm():
     return platform.machine() in ("armv7l", "aarch64")
 
+
 def is_windows():
     return platform.system().lower() == "windows"
 
