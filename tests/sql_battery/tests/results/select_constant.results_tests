@@ -1,0 +1,5 @@
+{
+    "summary": "This is to confirm the results testing system works",
+    "statement": "SELECT 'VALUE'",
+    "result": {"'VALUE'": ["VALUE"]}
+}
