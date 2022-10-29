@@ -46,6 +46,10 @@ MAX_SIZE_SINGLE_CACHE_ITEM: int = config.get("MAX_SIZE_SINGLE_CACHE_ITEM", 1024 
 LOCAL_BUFFER_POOL_SIZE: int = int(config.get("LOCAL_BUFFER_POOL_SIZE", 50))
 # The maximum number of evictions from the buffer pool per query
 MAX_BUFFER_POOL_EVICTIONS: int = int(config.get("MAX_BUFFER_POOL_EVICTIONS", 20))
+
+
+DISABLE_HIGH_PRIORITY: bool = bool(config.get("DISABLE_HIGH_PRIORITY", False))
+DISABLE_RESOURCE_LOGGING: bool = bool(config.get("DISABLE_RESOURCE_LOGGING", True))
 # fmt:on
 
 # fmt:off
