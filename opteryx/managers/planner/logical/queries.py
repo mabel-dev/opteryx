@@ -232,6 +232,8 @@ def select_query(ast, properties):
         plan.link_operators(last_node, "limit")
         last_node = "limit"
 
+    _insert = custom_builders.extract_into(ast)
+
     return plan
 
 

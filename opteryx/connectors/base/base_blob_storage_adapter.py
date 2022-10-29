@@ -74,3 +74,9 @@ class BaseBlobStorageAdapter(abc.ABC):
         Return a filelike object
         """
         raise NotImplementedError("read_blob not implemented")
+
+    def write_blob(self, name, content):
+        raise NotImplementedError("write_blob not implemented")
+
+    def remove_blob(self, name):
+        raise NotImplementedError("remove_blob not implemented")
