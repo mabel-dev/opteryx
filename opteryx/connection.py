@@ -185,7 +185,7 @@ class Cursor:
         return self._statistics.as_dict()
 
     @property
-    def messages(self):
+    def messages(self) -> list:
         """list of run-time warnings"""
         return self._statistics.messages
 
