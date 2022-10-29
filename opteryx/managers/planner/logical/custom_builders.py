@@ -19,6 +19,7 @@ from typing import Any
 
 from opteryx.managers.expression import ExpressionTreeNode
 from opteryx.managers.expression import NodeType
+from opteryx.shared import QueryStatistics
 from opteryx.utils import fuzzy_search
 
 WELL_KNOWN_HINTS = {
@@ -157,13 +158,13 @@ def extract_relations(branch, qid):
         for hint in hints:
             if hint not in WELL_KNOWN_HINTS:
                 best_match_hint = fuzzy_search(hint, WELL_KNOWN_HINTS)
-
-    #                if best_match_hint:
-    #                    _statistics.warn(
-    #                        f"Hint `{hint}` is not recognized, did you mean `{best_match_hint}`?"
-    #                    )
-    #                else:
-    #                    _statistics.warn(f"Hint `{hint}` is not recognized.")
+                statistics = QueryStatistics(qid)
+                if best_match_hint:
+                    statistics.add_message(
+                        f"Hint `{hint}` is not recognized, did you mean `{best_match_hint}`?"
+                    )
+                else:
+                    statistics.add_message(f"Hint `{hint}` is not recognized.")
 
     for relation in branch:
         relation_desc = RelationDescription()
@@ -238,3 +239,7 @@ def extract_relations(branch, qid):
                 relation_desc.dataset = {"function": "values", "args": body}
                 relation_desc.kind = "Function"
                 yield relation_desc
+
+
+def extract_into(branch):
+    return None
