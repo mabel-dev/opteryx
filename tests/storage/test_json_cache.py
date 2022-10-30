@@ -9,9 +9,13 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import opteryx
 from opteryx.managers.kvstores import LocalKVJson
+from opteryx.shared import BufferPool
 
 
 def test_json_cache():
+
+    buffer = BufferPool()
+    buffer.reset(True)
 
     if os.path.isfile("test.json"):
         os.remove("test.json")

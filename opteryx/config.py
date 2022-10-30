@@ -39,13 +39,11 @@ PARTITION_SCHEME: str = config.get("PARTITION_SCHEME", None)
 # The number of seconds before forcably killing processes
 MAXIMUM_SECONDS_SUB_PROCESSES_CAN_RUN: int = int(config.get("MAXIMUM_SECONDS_SUB_PROCESSES_CAN_RUN", 3600))
 # The maximum number of evictions by a single query
-MAX_CACHE_EVICTIONS: int = int(config.get("MAX_CACHE_EVICTIONS", 50))
+MAX_CACHE_EVICTIONS: int = int(config.get("MAX_CACHE_EVICTIONS", 25))
 # Maximum size for items saved to the buffer cache
 MAX_SIZE_SINGLE_CACHE_ITEM: int = config.get("MAX_SIZE_SINGLE_CACHE_ITEM", 1024 * 1024)
 # The local buffer pool size
-LOCAL_BUFFER_POOL_SIZE: int = int(config.get("LOCAL_BUFFER_POOL_SIZE", 50))
-# The maximum number of evictions from the buffer pool per query
-MAX_BUFFER_POOL_EVICTIONS: int = int(config.get("MAX_BUFFER_POOL_EVICTIONS", 20))
+LOCAL_BUFFER_POOL_SIZE: int = int(config.get("LOCAL_BUFFER_POOL_SIZE", 256))
 
 
 DISABLE_HIGH_PRIORITY: bool = bool(config.get("DISABLE_HIGH_PRIORITY", False))

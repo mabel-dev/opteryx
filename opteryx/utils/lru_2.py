@@ -25,7 +25,7 @@ function using the return from the .set call to determine if an item was evicted
 the cache.
 
 This can also be used as the index for an external cache (for example in plasma), where
-the .set returns the evicted item which the calling function can then evict from the
+the set() returns the evicted item which the calling function can then evict from the
 external cache.
 """
 
@@ -35,23 +35,27 @@ import numpy
 
 
 class LRU2:
+
+    slots = ("_size", "_cache", "_hits", "_misses", "_evictions")
+
     def __init__(self, **kwargs):
         """
         Parameters:
             size: int (optional)
-                The maximim number of items maintained in the cache.
+                The maximim number of items maintained in the cache, default is 50.
         """
         self._size = int(kwargs.get("size", 50))
         self._cache = {}
         self._hits = 0
         self._misses = 0
+        self._evictions = 0
 
     def get(self, key):
         # we're disposing of access_2 (the penultimate access), recording this access
         # as the latest and making the access_1 the new penultimate access
         (value, access_1, _) = self._cache.get(key, (None, None, None))
-        if value:
-            self._cache[key] = (value, time.time_ns(), access_1)
+        if value is not None:
+            self._cache[key] = (value, time.monotonic_ns(), access_1)
             self._hits += 1
             return value
         self._misses += 1
@@ -77,6 +81,7 @@ class LRU2:
             evicted_key = keys[least_recently_used]
 
             self._cache.pop(evicted_key)
+            self._evictions += 1
 
             return evicted_key
 
@@ -88,5 +93,12 @@ class LRU2:
 
     @property
     def stats(self):
-        # return hits, misses
-        return (self._hits, self._misses)
+        # return hits, misses, evictions
+        return (self._hits, self._misses, self._evictions)
+
+    def reset(self, reset_stats: bool = False):
+        self._cache = {}
+        if reset_stats:
+            self._hits = 0
+            self._misses = 0
+            self._evictions = 0

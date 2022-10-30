@@ -15,7 +15,9 @@ Dataset Reader Node
 
 This is a SQL Query Execution Plan Node.
 
-This Node reads and parses the data from a dataset into a Table.
+This Node reads and parses blob (and file) stores into a PyArrow Table.
+
+Blob stores have some features not available to other stores such as caching.
 """
 import datetime
 import time
@@ -32,6 +34,7 @@ from opteryx.managers.schemes import MabelPartitionScheme
 from opteryx.managers.schemes import DefaultPartitionScheme
 from opteryx.models import Columns, QueryProperties, ExecutionTree
 from opteryx.operators import BasePlanNode
+from opteryx.shared import BufferPool
 from opteryx.utils import file_decoders
 
 
@@ -50,6 +53,7 @@ MAX_SIZE_SINGLE_CACHE_ITEM = config.MAX_SIZE_SINGLE_CACHE_ITEM
 PARTITION_SCHEME = config.PARTITION_SCHEME
 MAX_CACHE_EVICTIONS = config.MAX_CACHE_EVICTIONS
 
+BUFFER_POOL = BufferPool()
 
 KNOWN_EXTENSIONS = {
     "complete": (do_nothing, ExtentionType.CONTROL),
@@ -269,43 +273,43 @@ class BlobReaderNode(BasePlanNode):
         path, reader, parser, cache, projection = config
         start_read = time.time_ns()
 
-        # if we have a cache set
-        if cache:
-            # hash the blob name for the look up
-            blob_hash = format(CityHash64(path), "X")
-            # try to read the cache
-            try:
-                blob_bytes = cache.get(blob_hash)
-            except Exception as e:  # pragma: no cover
-                print(e)
-                cache = None
-                blob_bytes = None
+        # hash the blob name for the look up
+        blob_hash = format(CityHash64(path), "X")
+        # try to read the cache
+        try:
+            blob_bytes = None
+            if not self._disable_cache:
+                blob_bytes = BUFFER_POOL.get(blob_hash, cache)
+        except Exception as e:  # pragma: no cover
+            print(e)
+            cache = None
+            blob_bytes = None
 
-            # if the item was a miss, get it from storage and add it to the cache
-            if blob_bytes is None:  # pragma: no cover
+        # if the item was a miss, get it from storage and add it to the cache
+        if blob_bytes is None:  # pragma: no cover
+            if not self._disable_cache:
                 self.statistics.cache_misses += 1
-                blob_bytes = reader(path)
-                # limit the number of evictions a single query can do to prevent
-                # sequential floods of the cache
-                if (
-                    cache
-                    and (self.statistics.cache_evictions < MAX_CACHE_EVICTIONS)
-                    and (blob_bytes.getbuffer().nbytes < MAX_SIZE_SINGLE_CACHE_ITEM)
-                ):
-                    try:
-                        evicted = cache.set(blob_hash, blob_bytes)
-                        if evicted is not None:
-                            self.statistics.cache_evictions += 1
-                    except (ConnectionResetError, BrokenPipeError):  # pragma: no-cover
-                        self.statistics.cache_errors += 1
-                elif cache:  # pragma: no-cover
-                    self.statistics.cache_oversize += 1
-                else:  # pragma: no-cover
-                    self.statistics.cache_errors += 1
-            else:
-                self.statistics.cache_hits += 1
-        else:
             blob_bytes = reader(path)
+            # limit the number of evictions a single query can do to prevent
+            # sequential floods of the cache
+            if (
+                cache
+                and (self.statistics.cache_evictions < MAX_CACHE_EVICTIONS)
+                and (blob_bytes.getbuffer().nbytes < MAX_SIZE_SINGLE_CACHE_ITEM)
+                and (not self._disable_cache)
+            ):
+                try:
+                    evicted = BUFFER_POOL.set(blob_hash, blob_bytes, cache)
+                    if evicted is not None:
+                        self.statistics.cache_evictions += 1
+                except (ConnectionResetError, BrokenPipeError):  # pragma: no-cover
+                    self.statistics.cache_errors += 1
+            elif cache:  # pragma: no-cover
+                self.statistics.cache_oversize += 1
+            else:  # pragma: no-cover
+                self.statistics.cache_errors += 1
+        else:
+            self.statistics.cache_hits += 1
 
         table = parser(blob_bytes, projection)
 
