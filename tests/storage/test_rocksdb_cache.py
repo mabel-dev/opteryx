@@ -11,12 +11,16 @@ import shutil
 
 import opteryx
 from opteryx.managers.kvstores import LocalKVStore
+from opteryx.shared import BufferPool
 
 from tests.tools import skip_on_partials
 
 
 @skip_on_partials
 def test_in_memory_cache():
+
+    buffer = BufferPool()
+    buffer.reset(True)
 
     shutil.rmtree("test.rocksdb", ignore_errors=True)
     cache = LocalKVStore(location="test.rocksdb")
