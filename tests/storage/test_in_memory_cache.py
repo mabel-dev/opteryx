@@ -9,13 +9,14 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import opteryx
 from opteryx.managers.kvstores import InMemoryKVStore
-
-from tests.tools import skip
+from opteryx.shared import BufferPool
 
 
 def test_in_memory_cache():
 
     cache = InMemoryKVStore(size=5)
+    buffer = BufferPool()
+    buffer.reset(True)
 
     # read the data once, this should populate the cache
     conn = opteryx.connect(cache=cache)
@@ -46,8 +47,8 @@ def test_in_memory_cache():
     cur.arrow()
 
     stats = cur.stats
-    assert stats["cache_hits"] == 0
-    assert stats["cache_misses"] == 0
+    assert stats["cache_hits"] == 0, stats["cache_hits"]
+    assert stats["cache_misses"] == 0, stats["cache_misses"]
     conn.close()
 
 
@@ -55,6 +56,8 @@ def test_in_memory_cache():
 def test_cache_in_subqueries():
 
     cache = InMemoryKVStore(size=5)
+    buffer = BufferPool()
+    buffer.reset(True)
 
     # read the data once, this should populate the cache
     conn = opteryx.connect(cache=cache)
@@ -63,7 +66,7 @@ def test_cache_in_subqueries():
     cur.arrow()
 
     stats = cur.stats
-    assert stats["cache_hits"] == 0
+    assert stats["cache_hits"] == 0, stats["cache_hits"]
     assert stats["cache_misses"] == 2, stats["cache_misses"]
     conn.close()
 

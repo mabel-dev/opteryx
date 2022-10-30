@@ -67,6 +67,10 @@ Opteryx is a SQL Engine written in Python, designed for cloud-native environment
 
     Opteryx supports some change to schemas and paritioning without requiring any existing data to be updated. _(data types can only be changed to compatitble types)_
 
+- __Fast__
+
+    Benchmarks on M1 Pro Mac running a GROUP BY over 1Gb of data via the CLI in less than 1/10th of a second. _(different systems will have different performance characteristics)_
+
 ## Try Opteryx
 
 **Install from PyPI**

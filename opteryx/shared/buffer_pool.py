@@ -13,17 +13,52 @@
 """
 Global Buffer Pool.
 
-This is pretty naive at the moment.
+This is little more than a wrapper around the LRU-K(2) cache.
 """
+import io
 
-from opteryx.managers.kvstores import InMemoryKVStore
+from opteryx.utils.lru_2 import LRU2
 
 
-class BufferPool(InMemoryKVStore):
+class _BufferPool:
+
+    slots = "_lru"
+
+    def __init__(self, size):
+        self._lru = LRU2(size=size)
+
+    def get(self, key, cache):
+        value = self._lru.get(key)
+        if value is not None:
+            return io.BytesIO(value)
+        if cache is not None:
+            value = cache.get(key)
+        return value
+
+    def set(self, key, value, cache):
+        value.seek(0, 0)
+        key = self._lru.set(key, value.read())
+        value.seek(0, 0)
+        if cache is not None:
+            cache.set(key, value)
+        return key
+
+    @property
+    def stats(self):
+        return self._lru.stats
+
+    def reset(self, reset_stats: bool = False):
+        self._lru.reset(reset_stats=reset_stats)
+
+
+class BufferPool(_BufferPool):
 
     _kv = None
 
     def __new__(cls):
         if cls._kv is None:
-            cls._kv = InMemoryKVStore(size=50)
+            from opteryx import config
+
+            LOCAL_BUFFER_POOL_SIZE = config.LOCAL_BUFFER_POOL_SIZE
+            cls._kv = _BufferPool(size=LOCAL_BUFFER_POOL_SIZE)
         return cls._kv
