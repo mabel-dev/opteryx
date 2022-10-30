@@ -37,11 +37,11 @@ class _BufferPool:
 
     def set(self, key, value, cache):
         value.seek(0, 0)
-        key = self._lru.set(key, value.read())
+        evicted = self._lru.set(key, value.read())
         value.seek(0, 0)
         if cache is not None:
             cache.set(key, value)
-        return key
+        return evicted
 
     @property
     def stats(self):
