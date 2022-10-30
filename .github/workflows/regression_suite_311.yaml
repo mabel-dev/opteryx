@@ -9,7 +9,7 @@ jobs:
       max-parallel: 4
       matrix:
         python-version: ['3.11']
-        os: [ubuntu-latest]   # ARM64 = Raspberry Pi
+        os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
 
