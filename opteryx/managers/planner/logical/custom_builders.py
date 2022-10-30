@@ -101,6 +101,12 @@ def extract_identifiers(ast):
         "over": None,
         "distinct": False,
         "special": False,
+    } or ast == {
+        "name": [{"value": "count", "quote_style": None}],
+        "args": [{"Unnamed": "Wildcard"}],
+        "over": None,
+        "distinct": False,
+        "special": False,
     }:
         identifiers.append("count_*")
     elif isinstance(ast, dict):
