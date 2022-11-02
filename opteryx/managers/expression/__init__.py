@@ -51,6 +51,8 @@ def format_expression(root):
             return "'" + str(root) + "'"
         if node_type == NodeType.LITERAL_INTERVAL:
             return "<INTERVAL>"
+        if node_type == NodeType.LITERAL_NONE:
+            return "null"
         return str(root.value)
     # INTERAL IDENTIFIERS
     if node_type & INTERNAL_TYPE == INTERNAL_TYPE:
@@ -68,8 +70,15 @@ def format_expression(root):
             }
             return f"{format_expression(root.left)}{_map.get(root.value, root.value)}{format_expression(root.right)}"
     if node_type == NodeType.COMPARISON_OPERATOR:
-        _map = {"Eq": "=", "Lt": "<", "Gt": ">"}
+        _map = {"Eq": "=", "Lt": "<", "Gt": ">", "NotEq": "!="}
         return f"{format_expression(root.left)}{_map.get(root.value, root.value)}{format_expression(root.right)}"
+    if node_type == NodeType.UNARY_OPERATOR:
+        _map = {"IsNull": "%s IS NULL", "IsNotNull": "%s IS NOT NULL"}
+        return _map.get(root.value, root.value + "(%s)").replace(
+            "%s", format_expression(root.centre)
+        )
+    if node_type == NodeType.NOT:
+        return f"NOT {format_expression(root.centre)}"
     return str(root.value)
 
 
@@ -208,7 +217,12 @@ def _inner_evaluate(root: ExpressionTreeNode, table: Table, columns):
             # zero parameter functions get the number of rows as the parameter
             if len(parameters) == 0:
                 parameters = [table.num_rows]
-            return FUNCTIONS[root.value](*parameters)
+            result = FUNCTIONS[root.value](*parameters)
+            if isinstance(result, list):
+                result = numpy.array(result)
+            #            if result.dtype.kind == "U":
+            #                result = result.astype(numpy.unicode_)
+            return result
         if node_type == NodeType.AGGREGATOR:
             # detected as an aggregator, but here it's an identifier because it
             # will have already been evaluated
@@ -234,7 +248,7 @@ def _inner_evaluate(root: ExpressionTreeNode, table: Table, columns):
             right = _inner_evaluate(root.right, table, columns)
             return binary_operations(left, root.value, right)
         if node_type == NodeType.WILDCARD:
-            numpy.full(table.num_rows, "*", dtype=numpy.str_)
+            numpy.full(table.num_rows, "*", dtype=numpy.unicode_)
         if node_type == NodeType.SUBQUERY:
             # we should have a query plan here
             sub = root.value.execute()
@@ -314,6 +328,8 @@ def evaluate_and_append(expressions, table: Table, seed: str = None):
             NodeType.FUNCTION,
             NodeType.BINARY_OPERATOR,
             NodeType.COMPARISON_OPERATOR,
+            NodeType.UNARY_OPERATOR,
+            NodeType.NOT,
         ) or (statement.token_type & LITERAL_TYPE == LITERAL_TYPE):
             new_column_name = format_expression(statement)
             raw_column_name = new_column_name
@@ -339,9 +355,10 @@ def evaluate_and_append(expressions, table: Table, seed: str = None):
 
             # some activities give us masks rather than the values, if we don't have
             # enough values, assume it's a mask
-            if (
-                len(new_column) < table.num_rows
-                or statement.token_type == NodeType.COMPARISON_OPERATOR
+            if len(new_column) < table.num_rows or statement.token_type in (
+                NodeType.COMPARISON_OPERATOR,
+                NodeType.UNARY_OPERATOR,
+                NodeType.NOT,
             ):
                 bool_list = numpy.full(table.num_rows, False)
                 bool_list[new_column] = True

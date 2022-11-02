@@ -1,6 +1,7 @@
 """
 Original code modified for Opteryx.
 """
+from unittest import result
 import numpy
 import pyarrow
 
@@ -62,37 +63,59 @@ def _check_type(operation, provided_type, valid_types):
         )
 
 
-# Filter functionality
 def filter_operations(arr, operator, value):
+    """
+    Wrapped for Opteryx added to correctly handle null semantics
+    """
+
+    # if the input is a table, get the first column
+    if isinstance(value, pyarrow.Table):
+        value = [value.columns[0].to_numpy()]
+
+    # work out which rows we're going to actually evaluate
+    # we're working out if either array has a null value so we can exclude them
+    # from the actual evaluation.
+    #   True = values, False = null
+    null_arr = compute.is_null(arr, nan_is_null=True)
+    null_val = compute.is_null(value, nan_is_null=True)
+    null_positions = numpy.invert(numpy.logical_or(null_arr, null_val))
+
+    # if there's no non-null values, stop here
+    if all(null_positions):
+        return numpy.full(arr.size, False)
+
+    # get the values at the offsets in combined
+    #null_mask = numpy.nonzero(null_positions)
+    arr = arr.compress(null_positions)
+    value = value.compress(null_positions)
+
+    # do the evaluation
+    results_mask = _inner_filter_operations(arr, operator, value)
+    # fill the result set
+    results = numpy.
+    # return
+    return results_mask
+
+# Filter functionality
+def _inner_filter_operations(arr, operator, value):
     """
     Execute filter operations, this returns an array of the indexes of the rows that
     match the filter
     """
-
-    # ADDED FOR OPTERYX - if the input is a table, get the first column
-    if isinstance(value, pyarrow.Table):
-        value = [value.columns[0].to_numpy()]
-
-    # ADDED FOR OPTERYX - if all of the values are null, shortcut
-    if compute.is_null(arr, nan_is_null=True).false_count == 0:
-        return numpy.full(arr.size, False)
-
     # ADDED FOR OPTERYX
     identifier_type = _get_type(arr)
     literal_type = _get_type(value)
 
     if operator == "Eq":
-        # type checking added for Opteryx
-        if value is None and identifier_type == TOKEN_TYPES.NUMERIC:
-            # Nones are stored as NaNs, so perform a different test.
-            # Tests against None should be IS NONE, not = NONE, this code is for = only
-            return numpy.where(numpy.isnan(arr))
+#        # type checking added for Opteryx
+#        if value is None and identifier_type == TOKEN_TYPES.NUMERIC:
+#            # Nones are stored as NaNs, so perform a different test.
+#            # Tests against None should be IS NONE, not = NONE, this code is for = only
+#            return numpy.where(numpy.isnan(arr))
         if identifier_type != literal_type and value is not None:
             raise TypeError(
                 f"Type mismatch, unable to compare {identifier_type} with {literal_type}"
             )
-        # element-wise, numpy.where may be faster, not tested as it wasn't a reasonable
-        # option without significant refactoring, same for >, >=, <, <= & !=
         matches = compute.equal(arr, value)
         return compute.fill_null(matches, False)
     elif operator == "NotEq":
