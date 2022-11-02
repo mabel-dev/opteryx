@@ -62,9 +62,12 @@ def _check_type(operation, provided_type, valid_types):
         )
 
 
-def filter_operations(arr, operator, value):
+def filter_operations_for_display(arr, operator, value):
     """
-    Wrapped for Opteryx added to correctly handle null semantics
+    Wrapped for Opteryx added to correctly handle null semantics.
+
+    This returns an array with tri-state boolean (tue/false/none). This is
+    for use where an expression result is deplayed to users.
     """
 
     # if the input is a table, get the first column
@@ -75,6 +78,7 @@ def filter_operations(arr, operator, value):
     # we're working out if either array has a null value so we can exclude them
     # from the actual evaluation.
     #   True = values, False = null
+    record_count = len(arr)
     null_arr = compute.is_null(arr, nan_is_null=True)
     null_val = compute.is_null(value, nan_is_null=True)
     null_positions = numpy.invert(numpy.logical_or(null_arr, null_val))
@@ -91,9 +95,43 @@ def filter_operations(arr, operator, value):
     # do the evaluation
     results_mask = _inner_filter_operations(arr, operator, value)
     # fill the result set
-    # results = list_of_nulls[numpy.nonzero(null_poisitions)] = results_mask ??
+    results = numpy.full(record_count, -1, numpy.int8)
+    results[numpy.nonzero(null_positions)] = results_mask
     # return
-    return results_mask
+    
+    return [bool(r) if r != -1 else None for r in results]
+
+def filter_operations(arr, operator, value):
+    """
+    Wrapped for Opteryx added to correctly handle null semantics.
+
+    This is used where the filter actually filters records so is bi-state
+    (true/false) where null is coaleced to false.
+    """
+
+    # if the input is a table, get the first column
+    if isinstance(value, pyarrow.Table):
+        value = [value.columns[0].to_numpy()]
+
+    # work out which rows we're going to actually evaluate
+    # we're working out if either array has a null value so we can exclude them
+    # from the actual evaluation.
+    #   True = values, False = null
+    null_arr = compute.is_null(arr, nan_is_null=True)
+    null_val = compute.is_null(value, nan_is_null=True)
+    null_positions = numpy.logical_or(null_arr, null_val)
+
+    # if there's no non-null values, stop here
+    if all(null_positions):
+        return []
+
+    # get the values at the offsets in combined
+    # null_mask = numpy.nonzero(null_positions)
+#    arr = arr.compress(null_positions)
+#    value = value.compress(null_positions)
+
+    # do the evaluation
+    return _inner_filter_operations(arr, operator, value)
 
 
 # Filter functionality

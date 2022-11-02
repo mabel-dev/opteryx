@@ -43,7 +43,7 @@ def _unnest(alias, values):
         # single item lists are reported as nested
         from opteryx.samples import no_table
 
-        list_items = evaluate(values, no_table())
+        list_items = evaluate(values, no_table(), True)
     return [{alias: row} for row in list_items]
 
 

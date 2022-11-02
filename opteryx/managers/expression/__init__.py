@@ -32,6 +32,7 @@ from opteryx.functions.binary_operators import binary_operations
 from opteryx.functions.unary_operations import UNARY_OPERATIONS
 from opteryx.models import Columns
 from opteryx.third_party.pyarrow_ops.ops import filter_operations
+from opteryx.third_party.pyarrow_ops.ops import filter_operations_for_display
 
 
 # These are bit-masks
@@ -170,7 +171,7 @@ class ExpressionTreeNode:
         return str(self.value)
 
 
-def _inner_evaluate(root: ExpressionTreeNode, table: Table, columns):
+def _inner_evaluate(root: ExpressionTreeNode, table: Table, columns, for_display:bool=False):
 
     node_type = root.token_type
 
@@ -180,11 +181,11 @@ def _inner_evaluate(root: ExpressionTreeNode, table: Table, columns):
         left, right, centre = None, None, None
 
         if root.left is not None:
-            left = _inner_evaluate(root.left, table, columns)
+            left = _inner_evaluate(root.left, table, columns, for_display)
         if root.right is not None:
-            right = _inner_evaluate(root.right, table, columns)
+            right = _inner_evaluate(root.right, table, columns, for_display)
         if root.centre is not None:
-            centre = _inner_evaluate(root.centre, table, columns)
+            centre = _inner_evaluate(root.centre, table, columns, for_display)
 
         if node_type == NodeType.AND:
             if left.dtype == bool:
@@ -199,7 +200,7 @@ def _inner_evaluate(root: ExpressionTreeNode, table: Table, columns):
                 right = numpy.where(right)[0]  # [#325]
             return numpy.union1d(left, right)
         if node_type == NodeType.NOT:
-            if centre.dtype == bool:
+            if hasattr(centre, "dtype") and centre.dtype == bool:
                 centre = numpy.where(centre)[0]  # [#325]
             mask = numpy.arange(table.num_rows, dtype=numpy.int32)
             return numpy.setdiff1d(mask, centre, assume_unique=True)
@@ -212,7 +213,7 @@ def _inner_evaluate(root: ExpressionTreeNode, table: Table, columns):
     if node_type & INTERNAL_TYPE == INTERNAL_TYPE:
         if node_type == NodeType.FUNCTION:
             parameters = [
-                _inner_evaluate(param, table, columns) for param in root.parameters
+                _inner_evaluate(param, table, columns, for_display) for param in root.parameters
             ]
             # zero parameter functions get the number of rows as the parameter
             if len(parameters) == 0:
@@ -220,8 +221,6 @@ def _inner_evaluate(root: ExpressionTreeNode, table: Table, columns):
             result = FUNCTIONS[root.value](*parameters)
             if isinstance(result, list):
                 result = numpy.array(result)
-            #            if result.dtype.kind == "U":
-            #                result = result.astype(numpy.unicode_)
             return result
         if node_type == NodeType.AGGREGATOR:
             # detected as an aggregator, but here it's an identifier because it
@@ -236,16 +235,15 @@ def _inner_evaluate(root: ExpressionTreeNode, table: Table, columns):
                 mapped_column = columns.get_column_from_alias(root.value, only_one=True)
             return table[mapped_column].to_numpy()
         if node_type == NodeType.COMPARISON_OPERATOR:
-            left = _inner_evaluate(root.left, table, columns)
-            right = _inner_evaluate(root.right, table, columns)
-            indices = numpy.arange(table.num_rows)
-            f_idxs = filter_operations(left, root.value, right)
-            indices = indices[f_idxs]
-
-            return indices
+            left = _inner_evaluate(root.left, table, columns, for_display)
+            right = _inner_evaluate(root.right, table, columns, for_display)
+#            indices = numpy.arange(table.num_rows)
+            if for_display:
+                return filter_operations_for_display(left, root.value, right)
+            return filter_operations(left, root.value, right)
         if node_type == NodeType.BINARY_OPERATOR:
-            left = _inner_evaluate(root.left, table, columns)
-            right = _inner_evaluate(root.right, table, columns)
+            left = _inner_evaluate(root.left, table, columns, for_display)
+            right = _inner_evaluate(root.right, table, columns, for_display)
             return binary_operations(left, root.value, right)
         if node_type == NodeType.WILDCARD:
             numpy.full(table.num_rows, "*", dtype=numpy.unicode_)
@@ -254,9 +252,9 @@ def _inner_evaluate(root: ExpressionTreeNode, table: Table, columns):
             sub = root.value.execute()
             return pyarrow.concat_tables(sub, promote=True)
         if node_type == NodeType.NESTED:
-            return _inner_evaluate(root.centre, table, columns)
+            return _inner_evaluate(root.centre, table, columns, for_display)
         if node_type == NodeType.UNARY_OPERATOR:
-            centre = _inner_evaluate(root.centre, table, columns)
+            centre = _inner_evaluate(root.centre, table, columns, for_display)
             return UNARY_OPERATIONS[root.value](centre)
 
     # LITERAL TYPES
@@ -276,10 +274,10 @@ def _inner_evaluate(root: ExpressionTreeNode, table: Table, columns):
         )  # type:ignore
 
 
-def evaluate(expression: ExpressionTreeNode, table: Table):
+def evaluate(expression: ExpressionTreeNode, table: Table, for_display:bool=False):
 
     columns = Columns(table)
-    result = _inner_evaluate(root=expression, table=table, columns=columns)
+    result = _inner_evaluate(root=expression, table=table, columns=columns, for_display=for_display)
 
     if not isinstance(result, (pyarrow.Array, numpy.ndarray)):
         result = numpy.array(result)
@@ -351,12 +349,12 @@ def evaluate_and_append(expressions, table: Table, seed: str = None):
                 continue
 
             # do the evaluation
-            new_column = evaluate(statement, table)
+            new_column = evaluate(statement, table, True)
 
             # some activities give us masks rather than the values, if we don't have
             # enough values, assume it's a mask
             if len(new_column) < table.num_rows or statement.token_type in (
-                NodeType.COMPARISON_OPERATOR,
+#                NodeType.COMPARISON_OPERATOR,
                 NodeType.UNARY_OPERATOR,
                 NodeType.NOT,
             ):

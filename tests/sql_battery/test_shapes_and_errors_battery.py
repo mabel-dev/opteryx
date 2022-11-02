@@ -737,7 +737,12 @@ STATEMENTS = [
         # [#527] variables referenced in subqueries
         ("SET @v = 1; SELECT * FROM (SELECT @v);", 1, 1, None),
         # [#561] HASH JOIN with an empty table
-        ("SELECT * FROM $planets LEFT JOIN (SELECT planetId as id FROM $satellites WHERE id < 0) USING (id)", 0, 1, None),    ]
+        ("SELECT * FROM $planets LEFT JOIN (SELECT planetId as id FROM $satellites WHERE id < 0) USING (id)", 0, 1, None),  
+
+        ("SELECT * FROM $planets WHERE 1 = 1 FOR TODAY;", None, None, SqlError),
+        ("SELECT * FROM $planets GROUP BY name FOR TODAY;", None, None, SqlError),
+        ("SELECT * FROM $planets AS P FOR TODAY;", None, None, SqlError), 
+]
 # fmt:on
 
 
