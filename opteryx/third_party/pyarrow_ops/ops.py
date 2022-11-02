@@ -1,7 +1,6 @@
 """
 Original code modified for Opteryx.
 """
-from unittest import result
 import numpy
 import pyarrow
 
@@ -85,16 +84,17 @@ def filter_operations(arr, operator, value):
         return numpy.full(arr.size, False)
 
     # get the values at the offsets in combined
-    #null_mask = numpy.nonzero(null_positions)
+    # null_mask = numpy.nonzero(null_positions)
     arr = arr.compress(null_positions)
     value = value.compress(null_positions)
 
     # do the evaluation
     results_mask = _inner_filter_operations(arr, operator, value)
     # fill the result set
-    results = numpy.
+    # results = list_of_nulls[numpy.nonzero(null_poisitions)] = results_mask ??
     # return
     return results_mask
+
 
 # Filter functionality
 def _inner_filter_operations(arr, operator, value):
@@ -107,11 +107,11 @@ def _inner_filter_operations(arr, operator, value):
     literal_type = _get_type(value)
 
     if operator == "Eq":
-#        # type checking added for Opteryx
-#        if value is None and identifier_type == TOKEN_TYPES.NUMERIC:
-#            # Nones are stored as NaNs, so perform a different test.
-#            # Tests against None should be IS NONE, not = NONE, this code is for = only
-#            return numpy.where(numpy.isnan(arr))
+        #        # type checking added for Opteryx
+        #        if value is None and identifier_type == TOKEN_TYPES.NUMERIC:
+        #            # Nones are stored as NaNs, so perform a different test.
+        #            # Tests against None should be IS NONE, not = NONE, this code is for = only
+        #            return numpy.where(numpy.isnan(arr))
         if identifier_type != literal_type and value is not None:
             raise TypeError(
                 f"Type mismatch, unable to compare {identifier_type} with {literal_type}"
