@@ -1,0 +1,5 @@
+{
+    "summary": "Anything compared to null results in null",
+    "statement": "SELECT 1 <> NULL AS V",
+    "result": {"V": [null]}
+}

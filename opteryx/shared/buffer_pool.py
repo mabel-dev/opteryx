@@ -21,6 +21,11 @@ from opteryx.utils.lru_2 import LRU2
 
 
 class _BufferPool:
+    """
+    This is the class that there is a single instance of.
+
+    This is the Buffer Pool, currently implemented as a dictionary of buffers.
+    """
 
     slots = "_lru"
 
@@ -28,6 +33,7 @@ class _BufferPool:
         self._lru = LRU2(size=size)
 
     def get(self, key, cache):
+        """Retrieve an item from the pool, return None if the item isn't found"""
         value = self._lru.get(key)
         if value is not None:
             return io.BytesIO(value)
@@ -36,6 +42,7 @@ class _BufferPool:
         return value
 
     def set(self, key, value, cache):
+        """Put an item into the pool, evict an item if the pool is full"""
         value.seek(0, 0)
         evicted = self._lru.set(key, value.read())
         value.seek(0, 0)
@@ -45,9 +52,11 @@ class _BufferPool:
 
     @property
     def stats(self):
+        """hit, miss and eviction statistics"""
         return self._lru.stats
 
     def reset(self, reset_stats: bool = False):
+        """reset the statistics"""
         self._lru.reset(reset_stats=reset_stats)
 
 
@@ -57,8 +66,9 @@ class BufferPool(_BufferPool):
 
     def __new__(cls):
         if cls._kv is None:
+            # import here to avoid cicular imports
             from opteryx import config
 
-            LOCAL_BUFFER_POOL_SIZE = config.LOCAL_BUFFER_POOL_SIZE
-            cls._kv = _BufferPool(size=LOCAL_BUFFER_POOL_SIZE)
+            local_buffer_pool_size = config.LOCAL_BUFFER_POOL_SIZE
+            cls._kv = _BufferPool(size=local_buffer_pool_size)
         return cls._kv

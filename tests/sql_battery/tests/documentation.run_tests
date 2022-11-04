@@ -35,3 +35,10 @@ SELECT * FROM FAKE(3, 2);
 
 # engine configuration
 SET @id = 3; SELECT name FROM $planets WHERE id = @id;
+
+# type strings
+SELECT TIMESTAMP '2022-01-01';
+
+# nulls
+SELECT name = null FROM $planets;
+SELECT name FROM $planets WHERE name = null;

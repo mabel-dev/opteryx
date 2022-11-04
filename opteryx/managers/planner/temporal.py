@@ -287,7 +287,9 @@ def _temporal_extration_state_machine(parts):
         elif transition == [RELATION, RELATION]:
             relation = part
         elif transition == [WAITING, TEMPORAL]:
-            raise SqlError("Temporal `FOR` statements must directly follow the dataset they apply to.")
+            raise SqlError(
+                "Temporal `FOR` statements must directly follow the dataset they apply to."
+            )
 
         if state != TEMPORAL:
             query_collector.append(part)

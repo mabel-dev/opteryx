@@ -81,25 +81,36 @@ def filter_operations_for_display(arr, operator, value):
     record_count = len(arr)
     null_arr = compute.is_null(arr, nan_is_null=True)
     null_val = compute.is_null(value, nan_is_null=True)
-    null_positions = numpy.invert(numpy.logical_or(null_arr, null_val))
+    null_positions = numpy.logical_or(null_arr, null_val)
 
     # if there's no non-null values, stop here
     if all(null_positions):
-        return numpy.full(arr.size, False)
+        return numpy.full(record_count, None)
 
-    # get the values at the offsets in combined
-    # null_mask = numpy.nonzero(null_positions)
-    arr = arr.compress(null_positions)
-    value = value.compress(null_positions)
+    any_null = any(null_positions)
+    null_positions = numpy.invert(null_positions)
+
+    compressed = False
+    if any_null and isinstance(arr, numpy.ndarray) and isinstance(value, numpy.ndarray):
+        # if we have nulls and both columns are numpy arrays, we can speed things
+        # up by removing the nulls from the calculations, we add the rows back in
+        # later
+        arr = arr.compress(null_positions)
+        value = value.compress(null_positions)
+        compressed = True
 
     # do the evaluation
     results_mask = _inner_filter_operations(arr, operator, value)
-    # fill the result set
-    results = numpy.full(record_count, -1, numpy.int8)
-    results[numpy.nonzero(null_positions)] = results_mask
-    # return
-    
-    return [bool(r) if r != -1 else None for r in results]
+
+    if compressed:
+        # fill the result set
+        results = numpy.full(record_count, -1, numpy.int8)
+        results[numpy.nonzero(null_positions)] = results_mask
+        # build tri-state response
+        return [bool(r) if r != -1 else None for r in results]
+
+    return results_mask
+
 
 def filter_operations(arr, operator, value):
     """
@@ -117,21 +128,41 @@ def filter_operations(arr, operator, value):
     # we're working out if either array has a null value so we can exclude them
     # from the actual evaluation.
     #   True = values, False = null
+    record_count = len(arr)
     null_arr = compute.is_null(arr, nan_is_null=True)
     null_val = compute.is_null(value, nan_is_null=True)
     null_positions = numpy.logical_or(null_arr, null_val)
 
     # if there's no non-null values, stop here
     if all(null_positions):
-        return []
+        return numpy.full(record_count, False)
 
-    # get the values at the offsets in combined
-    # null_mask = numpy.nonzero(null_positions)
-#    arr = arr.compress(null_positions)
-#    value = value.compress(null_positions)
+    any_nulls = any(null_positions)
+    null_positions = numpy.invert(null_positions)
+
+    compressed = False
+    if (
+        any_nulls
+        and isinstance(arr, numpy.ndarray)
+        and isinstance(value, numpy.ndarray)
+    ):
+        # if we have nulls and both columns are numpy arrays, we can speed things
+        # up by removing the nulls from the calculations, we add the rows back in
+        # later
+        arr = arr.compress(null_positions)
+        value = value.compress(null_positions)
+        compressed = True
 
     # do the evaluation
-    return _inner_filter_operations(arr, operator, value)
+    results_mask = _inner_filter_operations(arr, operator, value)
+
+    # fill the result set
+    if compressed:
+        results = numpy.full(record_count, False, numpy.bool_)
+        results[numpy.nonzero(null_positions)] = results_mask
+        return results
+
+    return results_mask
 
 
 # Filter functionality
@@ -145,33 +176,21 @@ def _inner_filter_operations(arr, operator, value):
     literal_type = _get_type(value)
 
     if operator == "Eq":
-        #        # type checking added for Opteryx
-        #        if value is None and identifier_type == TOKEN_TYPES.NUMERIC:
-        #            # Nones are stored as NaNs, so perform a different test.
-        #            # Tests against None should be IS NONE, not = NONE, this code is for = only
-        #            return numpy.where(numpy.isnan(arr))
         if identifier_type != literal_type and value is not None:
             raise TypeError(
                 f"Type mismatch, unable to compare {identifier_type} with {literal_type}"
             )
-        matches = compute.equal(arr, value)
-        return compute.fill_null(matches, False)
+        return compute.equal(arr, value)
     elif operator == "NotEq":
-        matches = compute.not_equal(arr, value)
-        return compute.fill_null(matches, False)
+        return compute.not_equal(arr, value)
     elif operator == "Lt":
-        matches = compute.less(arr, value)
-        matches = compute.fill_null(matches, False)
-        return matches
+        return compute.less(arr, value)
     elif operator == "Gt":
-        matches = compute.greater(arr, value)
-        return compute.fill_null(matches, False)
+        return compute.greater(arr, value)
     elif operator == "LtEq":
-        matches = compute.less_equal(arr, value)
-        return compute.fill_null(matches, False)
+        return compute.less_equal(arr, value)
     elif operator == "GtEq":
-        matches = compute.greater_equal(arr, value)
-        return compute.fill_null(matches, False)
+        return compute.greater_equal(arr, value)
     elif operator == "InList":
         # MODIFIED FOR OPTERYX
         # some of the lists are saved as sets, which are faster than searching numpy
@@ -187,7 +206,7 @@ def _inner_filter_operations(arr, operator, value):
         # ADDED FOR OPTERYX
         return numpy.array(
             [None if v is None else (arr[0] in v) for v in value], dtype=numpy.bool8
-        )  # [#325]?
+        )
     elif operator == "NotContains":
         # ADDED FOR OPTERYX
         return numpy.array(
@@ -197,50 +216,40 @@ def _inner_filter_operations(arr, operator, value):
         # MODIFIED FOR OPTERYX
         # null input emits null output, which should be false/0
         _check_type("LIKE", identifier_type, (TOKEN_TYPES.VARCHAR))
-        matches = compute.match_like(arr, value[0])  # [#325]
-        return compute.fill_null(matches, False)
+        return compute.match_like(arr, value[0])  # [#325]
     elif operator == "NotLike":
         # MODIFIED FOR OPTERYX - see comment above
         _check_type("NOT LIKE", identifier_type, (TOKEN_TYPES.VARCHAR))
         matches = compute.match_like(arr, value[0])  # [#325]
-        matches = compute.fill_null(matches, True)
         return numpy.invert(matches)
     elif operator == "ILike":
         # MODIFIED FOR OPTERYX - see comment above
         _check_type("ILIKE", identifier_type, (TOKEN_TYPES.VARCHAR))
-        matches = compute.match_like(arr, value[0], ignore_case=True)  # [#325]
-        return compute.fill_null(matches, False)
+        return compute.match_like(arr, value[0], ignore_case=True)  # [#325]
     elif operator == "NotILike":
         # MODIFIED FOR OPTERYX - see comment above
         _check_type("NOT ILIKE", identifier_type, (TOKEN_TYPES.VARCHAR))
         matches = compute.match_like(arr, value[0], ignore_case=True)  # [#325]
-        matches = compute.fill_null(matches, True)
         return numpy.invert(matches)
     elif operator in ("PGRegexMatch", "SimilarTo"):
         # MODIFIED FOR OPTERYX - see comment above
         _check_type("~", identifier_type, (TOKEN_TYPES.VARCHAR))
-        matches = compute.match_substring_regex(arr, value[0])  # [#325]
-        return compute.fill_null(matches, False)
+        return compute.match_substring_regex(arr, value[0])  # [#325]
     elif operator in ("PGRegexNotMatch", "NotSimilarTo"):
         # MODIFIED FOR OPTERYX - see comment above
         _check_type("!~", identifier_type, (TOKEN_TYPES.VARCHAR))
         matches = compute.match_substring_regex(arr, value[0])  # [#325]
-        matches = compute.fill_null(matches, True)
         return numpy.invert(matches)
     elif operator == "PGRegexIMatch":
         # MODIFIED FOR OPTERYX - see comment above
         _check_type("~*", identifier_type, (TOKEN_TYPES.VARCHAR))
-        matches = compute.match_substring_regex(
-            arr, value[0], ignore_case=True
-        )  # [#325]
-        return compute.fill_null(matches, False)
+        return compute.match_substring_regex(arr, value[0], ignore_case=True)  # [#325]
     elif operator == "PGRegexNotIMatch":
         # MODIFIED FOR OPTERYX - see comment above
         _check_type("!~*", identifier_type, (TOKEN_TYPES.VARCHAR))
         matches = compute.match_substring_regex(
             arr, value[0], ignore_case=True
         )  # [#325]
-        matches = compute.fill_null(matches, True)
         return numpy.invert(matches)
     else:
         raise Exception(f"Operator {operator} is not implemented!")

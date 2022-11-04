@@ -47,7 +47,12 @@ def test_results_tests(test):
     cursor.execute(sql)
     result = cursor.arrow().to_pydict()
 
-    assert result == test["result"], result
+    printable_result = orjson.dumps(result).decode()
+    printable_expected = orjson.dumps(test["result"]).decode()
+
+    assert (
+        result == test["result"]
+    ), f"Outcome:\n{printable_result}\nExpected:\n{printable_expected}"
 
 
 if __name__ == "__main__":  # pragma: no cover
