@@ -65,7 +65,6 @@ class LRU2:
         # if we're already in the cache - do nothing
         if key in self._cache:
             return None
-
         # create an initial entry for the new item
         clock = time.monotonic_ns()
         self._cache[key] = (value, clock, clock)
@@ -82,9 +81,7 @@ class LRU2:
 
             self._cache.pop(evicted_key)
             self._evictions += 1
-
             return evicted_key
-
         return None
 
     @property
