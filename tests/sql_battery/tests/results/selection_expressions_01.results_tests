@@ -1,0 +1,5 @@
+{
+    "summary": "Test greater than",
+    "statement": "SELECT 1 > 2 AS V",
+    "result": {"V": [false]}
+}

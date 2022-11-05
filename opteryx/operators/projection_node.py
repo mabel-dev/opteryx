@@ -25,7 +25,7 @@ from typing import Iterable
 import pyarrow
 
 from opteryx.exceptions import SqlError
-from opteryx.managers.expression import evaluate_and_append
+from opteryx.managers.expression import ExpressionTreeNode, evaluate_and_append
 from opteryx.managers.expression import format_expression
 from opteryx.managers.expression import NodeType, LITERAL_TYPE
 from opteryx.models import QueryProperties
@@ -64,6 +64,10 @@ class ProjectionNode(BasePlanNode):
                 self._expressions.append(attribute)
             elif attribute.token_type == NodeType.IDENTIFIER:
                 self._projection[attribute.value] = attribute.alias
+            elif isinstance(attribute, ExpressionTreeNode):
+                new_column_name = format_expression(attribute)
+                self._projection[new_column_name] = attribute.alias
+                self._expressions.append(attribute)
             else:
                 self._projection[attribute] = None
 

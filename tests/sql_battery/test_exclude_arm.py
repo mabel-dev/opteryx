@@ -1,8 +1,10 @@
 """
 The best way to test a SQL Engine is to throw queries at it.
 
-We use a 1GB Raspberry Pi for ARM tests. We have come tests that are pusrposefully
-large to test what happens at those limits. Exclude those from the ARM test suite.
+Note: These are not excluded due to compatibility problems. We use a 1GB Raspberry Pi
+for ARM tests. We have come tests that are pusrposefully large to test what happens
+at those limits. We exclude those from the ARM test suite because of our limited
+memory management means we know we will crash on the Raspberry Pi.
 """
 
 import os

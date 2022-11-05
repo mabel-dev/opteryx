@@ -24,7 +24,7 @@ STATEMENTS = [
         ("SELECT * FROM $planets WHERE name LIKE ?", ['%t%'], 5, 20),
         ("SELECT * FROM $planets WHERE name LIKE ? AND id > ?", ['%t%', 4], 4, 20),
         ("SELECT * FROM $planets WHERE id > ? AND name LIKE ?", [4, '%t%'], 4, 20),
-        ("SELECT * FROM $planets WHERE 9 <> ?", [None], 9, 20),
+        ("SELECT * FROM $planets WHERE 9 <> ?", [None], 0, 20),
         ("SELECT * FROM $planets WHERE BOOLEAN(id) = ?", [True], 9, 20),
         ("SELECT * FROM $planets WHERE \"'\" = ?", ["'"], 9, 20),
         ("SELECT * FROM $astronauts WHERE birth_date = ?", [datetime(year=1967, month=5, day=17)], 1, 19),
@@ -45,14 +45,7 @@ def test_sql_battery(statement, subs, rows, columns):
     conn = opteryx.connect(reader=DiskConnector(), partition_scheme=None)
     cursor = conn.cursor()
     cursor.execute(statement, subs)
-
-    cursor._results = list(cursor._results)
-    if cursor._results:
-        result = pyarrow.concat_tables(cursor._results, promote=True)
-        actual_rows, actual_columns = result.shape
-    else:  # pragma: no cover
-        result = None
-        actual_rows, actual_columns = 0, 0
+    actual_rows, actual_columns = cursor.shape
 
     assert (
         rows == actual_rows

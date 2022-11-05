@@ -57,3 +57,25 @@ SELECT DATEDIFF('days', TIMESTAMP("2022-01-02"), CAST("2010-10-01" AS TIMESTAMP)
 # [TEMPORAL FILTER EXTRACTION PROBLEMS]
 SET @planet = 'Saturn'; SELECT name AS nom, bigsats.occurances, smallsats.occurances FROM (SELECT DISTINCT id as planetId, name FROM $planets WHERE name = @planet) as planets LEFT JOIN (SELECT planetId, COUNT(*) AS occurances FROM $satellites FOR DATES BETWEEN '2022-01-01' AND TODAY WHERE gm > 10 GROUP BY planetId) AS bigsats ON bigsats.planetId = planets.planetId LEFT JOIN (SELECT planetId, COUNT(*) AS occurances FROM $satellites FOR DATES IN LAST_MONTH WHERE gm < 10 GROUP BY planetId) as smallsats ON smallsats.planetId = planets.planetId;
 SELECT 'SELECT * FROM $planets FOR TODAY' FROM (SELECT 'FOR TODAY') INNER JOIN $planets FOR YESTERDAY;
+
+# 
+SELECT (true IS NOT null);
+SELECT true IS NOT null;
+SELECT NOT (true IS NOT null);
+SELECT NOT true IS null;
+SELECT (false IS NOT null);
+SELECT false IS NOT null;
+SELECT NOT (false IS NOT null);
+SELECT NOT false IS null;
+
+SELECT 1 > 2;
+SELECT 1 = 2;
+SELECT 1 != 2;
+SELECT 1 <> 2;
+SELECT 1 >= 2;
+SELECT 1 <= 1;
+SELECT TRUE OR FALSE;
+SELECT TRUE AND FALSE;
+SELECT TRUE XOR FALSE;
+SELECT NOT TRUE;
+SELECT NOT FALSE;

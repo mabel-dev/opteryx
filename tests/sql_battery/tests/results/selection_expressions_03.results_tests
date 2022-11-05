@@ -1,0 +1,5 @@
+{
+    "summary": "Test Equals",
+    "statement": "SELECT 1 = 2 AS V",
+    "result": {"V": [false]}
+}

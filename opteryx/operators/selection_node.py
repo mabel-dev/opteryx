@@ -87,7 +87,7 @@ class SelectionNode(BasePlanNode):
                     schema = page.schema
 
                 start_selection = time.time_ns()
-                mask = evaluate(self.filter, page)
+                mask = evaluate(self.filter, page, False)
                 self.statistics.time_evaluating += time.time_ns() - start_selection
 
                 # if the mask is a boolean array, we've called a function that

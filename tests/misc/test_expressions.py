@@ -1,5 +1,6 @@
 import decimal
 import os
+import re
 import sys
 
 import numpy
@@ -67,9 +68,8 @@ def test_logical_expressions():
     meaningless as we're using literals everywhere - but the source table is 9
     records long.
 
-    If the result is TRUE, we have 9 indicies (rows) returned, if the result is
-    FALSE, we we have 0 returned. So we test our truth tables by looking for
-    9 (TRUE) or 0 (FALSE)
+    One thing to be aware of is that a pyarrow boolean scalar is a truthy, which is
+    illogical from a user perspective but technically correct.
     """
 
     planets = opteryx.samples.planets()
@@ -83,13 +83,13 @@ def test_logical_expressions():
     F_AND_F = ExpressionTreeNode(NodeType.AND, left=false, right=false)
 
     result = evaluate(T_AND_T, table=planets)
-    assert len(result) == 9
+    assert all(result)
     result = evaluate(T_AND_F, table=planets)
-    assert len(result) == 0
+    assert not any(c.as_py() for c in result)
     result = evaluate(F_AND_T, table=planets)
-    assert len(result) == 0
+    assert not any(c.as_py() for c in result)
     result = evaluate(F_AND_F, table=planets)
-    assert len(result) == 0
+    assert not any(c.as_py() for c in result)
 
     T_OR_T = ExpressionTreeNode(NodeType.OR, left=true, right=true)
     T_OR_F = ExpressionTreeNode(NodeType.OR, left=true, right=false)
@@ -97,21 +97,21 @@ def test_logical_expressions():
     F_OR_F = ExpressionTreeNode(NodeType.OR, left=false, right=false)
 
     result = evaluate(T_OR_T, table=planets)
-    assert len(result) == 9
+    assert all(result)
     result = evaluate(T_OR_F, table=planets)
-    assert len(result) == 9
+    assert all(result)
     result = evaluate(F_OR_T, table=planets)
-    assert len(result) == 9
+    assert all(result)
     result = evaluate(F_OR_F, table=planets)
-    assert len(result) == 0
+    assert not any(c.as_py() for c in result)
 
     NOT_T = ExpressionTreeNode(NodeType.NOT, centre=true)
     NOT_F = ExpressionTreeNode(NodeType.NOT, centre=false)
 
     result = evaluate(NOT_T, table=planets)
-    assert len(result) == 0
+    assert not any(result), result
     result = evaluate(NOT_F, table=planets)
-    assert len(result) == 9
+    assert all(result)
 
     T_XOR_T = ExpressionTreeNode(NodeType.XOR, left=true, right=true)
     T_XOR_F = ExpressionTreeNode(NodeType.XOR, left=true, right=false)
@@ -119,13 +119,13 @@ def test_logical_expressions():
     F_XOR_F = ExpressionTreeNode(NodeType.XOR, left=false, right=false)
 
     result = evaluate(T_XOR_T, table=planets)
-    assert len(result) == 0
+    assert not any(c.as_py() for c in result)
     result = evaluate(T_XOR_F, table=planets)
-    assert len(result) == 9
+    assert all(result), result
     result = evaluate(F_XOR_T, table=planets)
-    assert len(result) == 9
+    assert all(result)
     result = evaluate(F_XOR_F, table=planets)
-    assert len(result) == 0
+    assert not any(c.as_py() for c in result)
 
 
 def test_reading_identifiers():
@@ -148,7 +148,6 @@ def test_reading_identifiers():
 
     gravity_node = ExpressionTreeNode(NodeType.IDENTIFIER, value="gravity")
     gravities = evaluate(gravity_node, planets)
-    assert len(gravities) == 9
     assert sorted(gravities) == [0.7, 3.7, 3.7, 8.7, 8.9, 9.0, 9.8, 11.0, 23.1], sorted(
         gravities
     )
@@ -179,7 +178,6 @@ def test_function_operations():
     )
 
     names = evaluate(concat, planets)
-    assert len(names) == 9
     assert True, list(names) == [
         "MercuryMercury",
         "VenusVenus",
@@ -193,13 +191,11 @@ def test_function_operations():
     ]  # , list(names)
 
     plussed = evaluate(plus, planets)
-    assert len(plussed) == 9
     assert set(plussed).issubset(
         [10.7, 15.9, 16.8, 10.7, 30.1, 16, 15.7, 18, 7.7]
     ), plussed
 
     timesed = evaluate(multiply, planets)
-    assert len(timesed) == 9
     assert set(timesed) == {
         161.70000000000002,
         68.60000000000001,
@@ -233,8 +229,17 @@ def test_compound_expressions():
     )
 
     result = evaluate(gt, planets)
-    assert len(result) == 5, result
-    assert set(result) == {0, 1, 2, 3, 8}
+    assert [c.as_py() for c in result] == [
+        True,
+        True,
+        True,
+        True,
+        False,
+        False,
+        False,
+        False,
+        True,
+    ], result
 
 
 def test_functions():

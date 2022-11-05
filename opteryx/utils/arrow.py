@@ -59,7 +59,7 @@ def fetchmany(pages, limit: int = 1000, as_dicts: bool = False):
                 if as_dicts:
                     yield from batch.to_pylist()
                 else:
-                    yield from tuple([list(tpl.values()) for tpl in batch.to_pylist()])
+                    yield from [tuple(tpl.values()) for tpl in batch.to_pylist()]
 
     index = -1
     for index, row in enumerate(_inner_row_reader()):
