@@ -29,6 +29,7 @@ import numpy
 import pyarrow
 
 from opteryx.exceptions import SqlError
+from opteryx.exceptions import UnsupportedSyntaxError
 from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import evaluate_and_append
@@ -77,8 +78,6 @@ def _is_count_star(aggregates, groups):
         return False
     if aggregates[0].parameters[0].token_type != NodeType.WILDCARD:
         return False
-    #    if aggregates[0].parameters[0].value != 1.0:
-    #        return False
     return True
 
 
@@ -189,16 +188,12 @@ def _non_group_aggregates(aggregates, table, columns):
             aggregate_function_name = AGGREGATORS[aggregate.value]
             # this maps a string which is the function name to that function on the
             # pyarrow.compute module
+            if not hasattr(pyarrow.compute, aggregate_function_name):
+                raise UnsupportedSyntaxError(f"Aggregate {aggregate.value} can only be used with GROUP BY")
             aggregate_function = getattr(pyarrow.compute, aggregate_function_name)
             aggregate_column_value = aggregate_function(raw_column_values).as_py()
             aggregate_column_name = f"{mapped_column_name}_{aggregate_function_name}"
             result[aggregate_column_name] = aggregate_column_value
-
-    #        else:
-
-    #            raise SqlError(
-    #                "Cannot mix aggregate and non aggregate columns in SELECT statement."
-    #            )
 
     return pyarrow.Table.from_pylist([result])
 
