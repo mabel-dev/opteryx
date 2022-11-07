@@ -53,7 +53,7 @@ extensions = [
 setup_config = {
     "name": LIBRARY,
     "version": __version__,
-    "description": "Python SQL Query Engine for Serverless Environments",
+    "description": "Python SQL Query Engine",
     "long_description": long_description,
     "long_description_content_type": "text/markdown",
     "maintainer": "@joocer",

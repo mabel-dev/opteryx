@@ -1,6 +1,6 @@
 <div align="center">
 
-![Opteryx](opteryx-word-small.png)
+![Opteryx](https://raw.githubusercontent.com/mabel-dev/opteryx/main/opteryx-word-small.png)
 ## Query your data, where it lives.
 </div>
 
