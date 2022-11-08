@@ -11,7 +11,7 @@
 # limitations under the License.
 
 """
-Optimization Rule - Split Conjunctive Predicates (ANDs)
+Optimization Rule - Combine Operators for Effeciency
 
 Type: Heuristic
 Goal: Reduce rows
