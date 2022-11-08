@@ -189,7 +189,9 @@ def _non_group_aggregates(aggregates, table, columns):
             # this maps a string which is the function name to that function on the
             # pyarrow.compute module
             if not hasattr(pyarrow.compute, aggregate_function_name):
-                raise UnsupportedSyntaxError(f"Aggregate {aggregate.value} can only be used with GROUP BY")
+                raise UnsupportedSyntaxError(
+                    f"Aggregate {aggregate.value} can only be used with GROUP BY"
+                )
             aggregate_function = getattr(pyarrow.compute, aggregate_function_name)
             aggregate_column_value = aggregate_function(raw_column_values).as_py()
             aggregate_column_name = f"{mapped_column_name}_{aggregate_function_name}"

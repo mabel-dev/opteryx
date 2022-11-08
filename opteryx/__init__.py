@@ -53,7 +53,7 @@ elif dotenv is not None:  # pragma: no cover
 
 
 # Try to increase the priority of the application
-if not config.DISABLE_HIGH_PRIORITY:  # pragma: no cover
+if not config.DISABLE_HIGH_PRIORITY and hasattr(os, "nice"):  # pragma: no cover
     nice_value = os.nice(0)
     try:
         os.nice(-20 + nice_value)
