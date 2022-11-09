@@ -77,32 +77,31 @@ class SelectionNode(BasePlanNode):
 
         # we should always have a filter - but no harm in checking
         if self.filter is None:
-            yield from data_pages
+            yield from data_pages.execute()
+            return
 
-        else:
+        for page in data_pages.execute():
 
-            for page in data_pages.execute():
+            if schema is None:
+                schema = page.schema
 
-                if schema is None:
-                    schema = page.schema
+            start_selection = time.time_ns()
+            mask = evaluate(self.filter, page, False)
+            self.statistics.time_evaluating += time.time_ns() - start_selection
 
-                start_selection = time.time_ns()
-                mask = evaluate(self.filter, page, False)
-                self.statistics.time_evaluating += time.time_ns() - start_selection
+            # if the mask is a boolean array, we've called a function that
+            # returns booleans
+            if isinstance(mask, pyarrow.lib.BooleanArray) or (
+                isinstance(mask, numpy.ndarray) and mask.dtype == numpy.bool_
+            ):
+                mask = numpy.nonzero(mask)[0]
 
-                # if the mask is a boolean array, we've called a function that
-                # returns booleans
-                if isinstance(mask, pyarrow.lib.BooleanArray) or (
-                    isinstance(mask, numpy.ndarray) and mask.dtype == numpy.bool_
-                ):
-                    mask = numpy.nonzero(mask)[0]
+            self.statistics.time_selecting += time.time_ns() - start_selection
 
-                self.statistics.time_selecting += time.time_ns() - start_selection
-
-                # if there's no matching rows, just drop the page
-                if mask.size > 0:
-                    yield page.take(mask)
-                    at_least_one = True
+            # if there's no matching rows, just drop the page
+            if mask.size > 0:
+                yield page.take(mask)
+                at_least_one = True
 
         # we need to send something to the next operator, send an empty table
         if not at_least_one:

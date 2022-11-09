@@ -27,6 +27,12 @@ import pyarrow
 from opteryx.exceptions import DatabaseError
 
 
+def unique_id():
+    import random
+
+    return hex(random.getrandbits(16))
+
+
 class ExecutionTree:
     """
     The execution tree is defined separately to the planner to simplify the

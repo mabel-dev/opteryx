@@ -9,12 +9,15 @@ implementing optimization.
 
 The initial optimizer will be heuristic (rule-based)
 """
+import time
 
 from opteryx.managers.planner.optimizer import actions
+from opteryx.shared.query_statistics import QueryStatistics
 
 RULESET: list = [
     actions.eliminate_negations,
     actions.split_conjunctive_predicates,  # run after eliminate_negations
+    actions.eliminate_constant_evaluations,
     actions.defragment_pages,
     actions.use_heap_sort,
 ]
@@ -22,7 +25,12 @@ RULESET: list = [
 
 def run_optimizer(plan, properties):
 
+    stats = QueryStatistics(properties.qid)
+    start = time.monotonic_ns()
+
     for rule in RULESET:
         plan = rule(plan, properties)
+
+    stats.time_optimizing += time.monotonic_ns() - start
 
     return plan

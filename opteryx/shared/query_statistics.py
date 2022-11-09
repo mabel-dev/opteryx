@@ -66,6 +66,7 @@ class _QueryStatistics:
         self.time_aggregating: float = 0
         self.time_ordering: float = 0
         self.time_evaluating: float = 0
+        self.time_optimizing: float = 0
 
         self.start_time: int = 0
         self.end_time: int = 0
@@ -118,6 +119,7 @@ class _QueryStatistics:
             "time_aggregating": self._ns_to_s(self.time_aggregating),
             "time_ordering": self._ns_to_s(self.time_ordering),
             "time_evaluating": self._ns_to_s(self.time_evaluating),
+            "time_optimizing": self._ns_to_s(self.time_optimizing),
             "partitions_found": self.partitions_found,
             "partitions_scanned": self.partitions_scanned,
             "partitions_read": self.partitions_read,
