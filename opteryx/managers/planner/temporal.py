@@ -51,18 +51,19 @@ COLLECT_RELATION = [
 COLLECT_TEMPORAL = [r"FOR"]
 
 STOP_COLLECTING = [
-    r"SELECT",
-    r"WHERE",
+    r"AS",
     r"GROUP\sBY",
     r"HAVING",
-    r"ORDER\sBY",
+    r"LIKE",
     r"LIMIT",
     r"OFFSET",
-    r"WITH",
-    r"SHOW",
     r"ON",
+    r"ORDER\sBY",
+    r"SHOW",
+    r"SELECT",
+    r"WHERE",
+    r"WITH",
     r"USING",
-    r"AS",
     r";",
 ]
 
