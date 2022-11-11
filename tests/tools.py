@@ -15,7 +15,7 @@ def is_mac():
     return platform.system().lower() == "darwin"
 
 
-def skip(func):
+def skip(func):  # pragma: no cover
     @wraps(func)
     def wrapper(*args, **kwargs):
         print(f"Skipping {func.__name__}")
@@ -23,7 +23,7 @@ def skip(func):
     return wrapper
 
 
-def skip_on_partials(func):
+def skip_on_partials(func):  # pragma: no cover
     @wraps(func)
     def wrapper(*args, **kwargs):
         if is_arm() or is_windows() or is_mac():
