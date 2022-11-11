@@ -376,6 +376,12 @@ def show_variable_query(ast, properties):
         show_node = "show_parameter"
         node = operators.ShowValueNode(properties=properties, key=key, value=value)
         plan.add_operator(show_node, operator=node)
+    if keywords[0] == "STORES":
+        if len(keywords) != 1:
+            raise SqlError(f"`SHOW STORES` end expected, got '{keywords[1]}'")
+        show_node = "show_stores"
+        node = operators.ShowStoresNode(properties=properties)
+        plan.add_operator(show_node, operator=node)
     else:  # pragma: no cover
         raise SqlError(f"SHOW statement type not supported for `{keywords[0]}`.")
 
