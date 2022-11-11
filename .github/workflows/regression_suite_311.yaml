@@ -4,7 +4,7 @@ on:
   push
 
 jobs:
-  regression_matrix:
+  regression_matrix-3:
     strategy:
       max-parallel: 4
       matrix:
@@ -83,12 +83,3 @@ jobs:
           MONGO_CONNECTION: "mongodb://mongoadmin:secret@localhost:27017"
           MONGO_DATABASE: opteryx
           GCP_PROJECT_ID: mabel
-
-      - name: Check Coverage
-        run: python -m coverage report --include=opteryx* --fail-under=94 -m
-
-      - name: "Upload coverage to Codecov"
-        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.10'
-        uses: codecov/codecov-action@v1
-        with:
-          fail_ci_if_error: false

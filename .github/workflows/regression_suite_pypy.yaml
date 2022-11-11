@@ -77,6 +77,3 @@ jobs:
           MONGO_CONNECTION: "mongodb://mongoadmin:secret@localhost:27017"
           MONGO_DATABASE: opteryx
           GCP_PROJECT_ID: mabel
-
-      - name: Check Coverage
-        run: python -m coverage report --include=opteryx* --fail-under=94 -m

@@ -17,7 +17,7 @@ def test_json_cache():
     buffer = BufferPool()
     buffer.reset(True)
 
-    if os.path.isfile("test.json"):
+    if os.path.isfile("test.json"):  # pragma: no cover
         os.remove("test.json")
     cache = LocalKVJson(location="test.json")
 

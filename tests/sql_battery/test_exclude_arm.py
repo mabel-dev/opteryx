@@ -56,7 +56,7 @@ def test_sql_battery(statement, rows, columns, exception):
             columns == actual_columns
         ), f"Query returned {actual_columns} cols but {columns} were"
         f" expected\n{statement}\n{cursor.head(10)}"
-    except Exception as err:
+    except Exception as err:  # pragma: no cover
         assert type(err) == exception, f"Query failed with error {type(err)}"
         f" but error {exception} was expected"
 
