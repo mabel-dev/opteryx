@@ -376,7 +376,7 @@ def show_variable_query(ast, properties):
         show_node = "show_parameter"
         node = operators.ShowValueNode(properties=properties, key=key, value=value)
         plan.add_operator(show_node, operator=node)
-    if keywords[0] == "STORES":
+    elif keywords[0] == "STORES":
         if len(keywords) != 1:
             raise SqlError(f"`SHOW STORES` end expected, got '{keywords[1]}'")
         show_node = "show_stores"

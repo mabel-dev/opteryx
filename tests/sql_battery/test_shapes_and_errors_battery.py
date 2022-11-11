@@ -644,6 +644,8 @@ STATEMENTS = [
         ("SELECT * FROM $satellites WHERE NULLIF(planetId, 5) IS NULL", 67, 8, None),
         ("SELECT * FROM $satellites WHERE NULLIF(planetId, 5) IS NOT NULL", 110, 8, None),
 
+        ("SHOW STORES LIKE 'apple'", None, None, SqlError),
+
         # virtual dataset doesn't exist
         ("SELECT * FROM $RomanGods", None, None, DatasetNotFoundError),
         # disk dataset doesn't exist
