@@ -25,3 +25,6 @@ SELECT POSITION('e' IN 'barge');
 SELECT POSITION('x' IN 'barge');
 SELECT POSITION('a' IN name) FROM $planets;
 SELECT POSITION(' ' IN name) FROM $astronauts;
+SELECT LEFT('', 1);
+SELECT LEFT('a', 1);
+SELECT LEFT('ab', 1);
