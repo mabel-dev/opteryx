@@ -80,7 +80,7 @@ def _truncate_quarter(dt):
         return dt.replace(month=7)
     if 10 <= month <= 12:
         return dt.replace(month=10)
-    return None
+    return None  # pragma: no cover
 
 
 def date_trunc(truncate_to: str, dt):
@@ -135,4 +135,4 @@ def date_trunc(truncate_to: str, dt):
         return _truncate_quarter(dt)
     raise ValueError(
         f"DATE_TRUNC not valid. Valid periods: {', '.join(list(PERIODS.keys()) + list(ODD_PERIODS))}"
-    )
+    )  # pragma: no cover

@@ -50,8 +50,8 @@ def _get_type(var):
         return PYTHON_TYPES.get(
             type(var[0]).__name__, f"UNSUPPORTED ({type(var[0]).__name__})"
         )
-    type_name = type(var).__name__
-    return PYTHON_TYPES.get(type_name, f"OTHER ({type_name})")
+    type_name = type(var).__name__  # pragma: no cover
+    return PYTHON_TYPES.get(type_name, f"OTHER ({type_name})")  # pragma: no cover
 
 
 def _check_type(operation, provided_type, valid_types):
@@ -71,7 +71,7 @@ def filter_operations_for_display(arr, operator, value):
     """
 
     # if the input is a table, get the first column
-    if isinstance(value, pyarrow.Table):
+    if isinstance(value, pyarrow.Table):  # pragma: no cover
         value = [value.columns[0].to_numpy()]
 
     # work out which rows we're going to actually evaluate
@@ -121,7 +121,7 @@ def filter_operations(arr, operator, value):
     """
 
     # if the input is a table, get the first column
-    if isinstance(value, pyarrow.Table):
+    if isinstance(value, pyarrow.Table):  # pragma: no cover
         value = [value.columns[0].to_numpy()]
 
     # work out which rows we're going to actually evaluate
@@ -176,83 +176,83 @@ def _inner_filter_operations(arr, operator, value):
     literal_type = _get_type(value)
 
     if operator == "Eq":
-        if identifier_type != literal_type and value is not None:
+        if identifier_type != literal_type and value is not None:  # pragma: no cover
             raise TypeError(
                 f"Type mismatch, unable to compare {identifier_type} with {literal_type}"
             )
         return compute.equal(arr, value)
-    elif operator == "NotEq":
+    if operator == "NotEq":
         return compute.not_equal(arr, value)
-    elif operator == "Lt":
+    if operator == "Lt":
         return compute.less(arr, value)
-    elif operator == "Gt":
+    if operator == "Gt":
         return compute.greater(arr, value)
-    elif operator == "LtEq":
+    if operator == "LtEq":
         return compute.less_equal(arr, value)
-    elif operator == "GtEq":
+    if operator == "GtEq":
         return compute.greater_equal(arr, value)
-    elif operator == "InList":
+    if operator == "InList":
         # MODIFIED FOR OPTERYX
         # some of the lists are saved as sets, which are faster than searching numpy
         # arrays, even with numpy's native functionality - choosing the right algo
         # is almost always faster than choosing a fast language.
         return numpy.array([a in value[0] for a in arr], dtype=numpy.bool8)  # [#325]?
-    elif operator == "NotInList":
+    if operator == "NotInList":
         # MODIFIED FOR OPTERYX - see comment above
         return numpy.array(
             [a not in value[0] for a in arr], dtype=numpy.bool8
         )  # [#325]?
-    elif operator == "Contains":
+    if operator == "Contains":
         # ADDED FOR OPTERYX
         return numpy.array(
             [None if v is None else (arr[0] in v) for v in value], dtype=numpy.bool8
         )
-    elif operator == "NotContains":
+    if operator == "NotContains":
         # ADDED FOR OPTERYX
         return numpy.array(
             [None if v is None else (arr[0] not in v) for v in value], dtype=numpy.bool8
         )  # [#325]?
-    elif operator == "Like":
+    if operator == "Like":
         # MODIFIED FOR OPTERYX
         # null input emits null output, which should be false/0
         _check_type("LIKE", identifier_type, (TOKEN_TYPES.VARCHAR))
         return compute.match_like(arr, value[0])  # [#325]
-    elif operator == "NotLike":
+    if operator == "NotLike":
         # MODIFIED FOR OPTERYX - see comment above
         _check_type("NOT LIKE", identifier_type, (TOKEN_TYPES.VARCHAR))
         matches = compute.match_like(arr, value[0])  # [#325]
         return numpy.invert(matches)
-    elif operator == "ILike":
+    if operator == "ILike":
         # MODIFIED FOR OPTERYX - see comment above
         _check_type("ILIKE", identifier_type, (TOKEN_TYPES.VARCHAR))
         return compute.match_like(arr, value[0], ignore_case=True)  # [#325]
-    elif operator == "NotILike":
+    if operator == "NotILike":
         # MODIFIED FOR OPTERYX - see comment above
         _check_type("NOT ILIKE", identifier_type, (TOKEN_TYPES.VARCHAR))
         matches = compute.match_like(arr, value[0], ignore_case=True)  # [#325]
         return numpy.invert(matches)
-    elif operator in ("PGRegexMatch", "SimilarTo"):
+    if operator in ("PGRegexMatch", "SimilarTo"):
         # MODIFIED FOR OPTERYX - see comment above
         _check_type("~", identifier_type, (TOKEN_TYPES.VARCHAR))
         return compute.match_substring_regex(arr, value[0])  # [#325]
-    elif operator in ("PGRegexNotMatch", "NotSimilarTo"):
+    if operator in ("PGRegexNotMatch", "NotSimilarTo"):
         # MODIFIED FOR OPTERYX - see comment above
         _check_type("!~", identifier_type, (TOKEN_TYPES.VARCHAR))
         matches = compute.match_substring_regex(arr, value[0])  # [#325]
         return numpy.invert(matches)
-    elif operator == "PGRegexIMatch":
+    if operator == "PGRegexIMatch":
         # MODIFIED FOR OPTERYX - see comment above
         _check_type("~*", identifier_type, (TOKEN_TYPES.VARCHAR))
         return compute.match_substring_regex(arr, value[0], ignore_case=True)  # [#325]
-    elif operator == "PGRegexNotIMatch":
+    if operator == "PGRegexNotIMatch":
         # MODIFIED FOR OPTERYX - see comment above
         _check_type("!~*", identifier_type, (TOKEN_TYPES.VARCHAR))
         matches = compute.match_substring_regex(
             arr, value[0], ignore_case=True
         )  # [#325]
         return numpy.invert(matches)
-    else:
-        raise Exception(f"Operator {operator} is not implemented!")
+
+    raise Exception(f"Operator {operator} is not implemented!")  # pragma: no cover
 
 
 # Drop duplicates
@@ -272,7 +272,7 @@ def drop_duplicates(table, columns=None):
 # Show for easier printing
 def head(table, n=5, max_width=100):
     # Updated to yield rather than print for Opteryx
-    if table == set():
+    if table == set():  # pragma: no cover
         yield "No data in table"
         return
     if table.num_rows == 0:
