@@ -56,7 +56,7 @@ def _get_type(var):
 
 def _check_type(operation, provided_type, valid_types):
     # added for Opteryx
-    if provided_type not in valid_types:
+    if provided_type not in valid_types:  # pragma: no cover
         raise TypeError(
             f"Cannot use the {operation} operation on a {provided_type} column, a {valid_types} column is required."
         )

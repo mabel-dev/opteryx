@@ -30,7 +30,7 @@ class QueryProperties:
         self.variables: dict[str, Any] = {}
 
         # fmt:off
-        if config is None:
+        if config is None: # pragma: no cover
             config = {}
         # query parameters - these can be overridden on a per-query basis
 

@@ -74,7 +74,7 @@ class Columns:
         """
         _column_metadata = self._column_metadata.copy()
         # we start by collecting the column_name/alias for each column
-        if len(_column_metadata) == 0:
+        if len(_column_metadata) == 0:  # pragma: no cover
             return []
         columns, preferences = zip(
             *[(c, v.get("preferred_name", c)) for c, v in _column_metadata.items()]
@@ -96,11 +96,6 @@ class Columns:
     def get_preferred_name(self, column):
         """get the preferred name for a given column"""
         return self._column_metadata[column]["preferred_name"]
-
-    @property
-    def table_name(self):
-        """the name of the table these columns are in"""
-        return self._table_metadata.get("name")
 
     def rename_table(self, new_name):
         """rename a table"""
@@ -126,13 +121,9 @@ class Columns:
 
     def add_alias(self, column, alias):
         """add aliases to a column"""
-        if not isinstance(alias, (list, tuple)):
+        if not isinstance(alias, (list, tuple)):  # pragma: no cover
             alias = (alias,)
         self._column_metadata[column]["aliases"].extend(alias)
-
-    def remove_alias(self, column, alias):
-        """remove an alias"""
-        self._column_metadata[column]["aliases"].remove(alias)
 
     def add_column(self, column):
         """add a reference to a new physical column"""
@@ -176,7 +167,7 @@ class Columns:
                         f"Field `{column}` does not exist, did you mean `{best_match}`?"
                     )
                 raise ColumnNotFoundError(f"Field `{column}` does not exist.")
-            if len(matches) > 1:
+            if len(matches) > 1:  # pragma: no cover
                 raise SqlError(
                     f"Field `{column}` is ambiguous, try qualifying the field name."
                 )
@@ -276,7 +267,7 @@ class Columns:
         kept = []
         for column in table.column_names:
             column_data = table.column(column)
-            if str(column_data.type) == "null":
+            if str(column_data.type) == "null":  # pragma: no cover
                 removed.append(column)
             else:
                 kept.append(column)
@@ -285,6 +276,6 @@ class Columns:
 
     @staticmethod
     def restore_null_columns(removed, table):
-        for column in removed:
+        for column in removed:  # pragma: no cover
             table = table.append_column(column, pyarrow.array([None] * table.num_rows))
         return table
