@@ -20,3 +20,11 @@ SELECT CEIL(1.5);
 SELECT FLOOR(2.5);
 
 SHOW STORES;
+
+SELECT POSITION('e' IN 'barge');
+SELECT POSITION('x' IN 'barge');
+SELECT POSITION('a' IN name) FROM $planets;
+SELECT POSITION(' ' IN name) FROM $astronauts;
+SELECT LEFT('', 1);
+SELECT LEFT('a', 1);
+SELECT LEFT('ab', 1);

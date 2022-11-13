@@ -21,12 +21,9 @@ def string_slicer_left(arr, length):
     """
     if len(arr) == 0:
         return [[]]
-    if hasattr(length, "__iter__"):  # [#325]
-        length = length[0]
-    length = int(length)
-    if length == 0:
-        return [[""] * len(arr)]
-    return [None if s is None else s[:length] for s in arr]
+    if not hasattr(length, "__iter__"):
+        length = [length] * len(arr)
+    return [None if s is None else s[: int(length[i])] for i, s in enumerate(arr)]
 
 
 def string_slicer_right(arr, length):
@@ -35,12 +32,9 @@ def string_slicer_right(arr, length):
     """
     if len(arr) == 0:
         return [[]]
-    if hasattr(length, "__iter__"):  # [#325]
-        length = length[0]
-    length = int(length)
-    if length == 0:
-        return [[""] * len(arr)]
-    return [None if s is None else s[-length:] for s in arr]
+    if not hasattr(length, "__iter__"):
+        length = [length] * len(arr)
+    return [None if s is None else s[-int(length[i]) :] for i, s in enumerate(arr)]
 
 
 def soundex(arr):
@@ -245,3 +239,10 @@ def substring(arr, from_pos, count):
             yield _inner(value, from_pos[index], count[index])
 
     return list(_outer())
+
+
+def position(sub, string):
+    """
+    Returns the starting position of the first instance of substring in string. Positions start with 1. If not found, 0 is returned.
+    """
+    return string.find(sub) + 1
