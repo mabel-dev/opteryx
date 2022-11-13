@@ -28,7 +28,7 @@ def test_fuzz_literals(literal):
 
     # single quote is the delimiter, it's not a bug that we think a delimeter
     # mid string indicates the end of the string
-    literal = literal.replace("'", "'")
+    literal = literal.replace("'", "#")
 
     # this one is a bug
     literal = literal.replace("\\", "")
