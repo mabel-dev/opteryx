@@ -137,7 +137,7 @@ STATEMENTS = [
 #    ("SELECT TRIM ( LEADING FROM 'foo' )", "E021-09"),
 #    ("SELECT TRIM ( TRAILING 'foo' FROM 'foo' )", "E021-09"),
 #    ("SELECT TRIM ( TRAILING FROM 'foo' )", "E021-09"),
-#    ("SELECT POSITION ( 'foo' IN 'bar' )", "E021-11"),
+    ("SELECT POSITION ( 'foo' IN 'bar' )", "E021-11"),
 #    ("SELECT POSITION ( 'foo' IN 'bar' USING CHARACTERS )", "E021-11"),
 #    ("SELECT POSITION ( 'foo' IN 'bar' USING OCTETS )", "E021-11"),
     ("SELECT 'foo' < 'bar'", "E021-12"),

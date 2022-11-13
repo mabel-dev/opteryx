@@ -467,6 +467,14 @@ def floor(value, alias: list = None, key=None):
     )
 
 
+def position(value, alias: list = None, key=None):
+    sub = build(value["expr"])
+    string = build(value["in"])
+    return ExpressionTreeNode(
+        NodeType.FUNCTION, value="POSITION", parameters=[sub, string], alias=alias
+    )
+
+
 def unsupported(branch, alias=None, key=None):
     """raise an error"""
     raise SqlError(key)
@@ -522,6 +530,7 @@ BUILDERS = {
     "Nested": nested,
     "Null": literal_null,
     "Number": literal_number,
+    "Position": position,
     "QualifiedWildcard": qualified_wildcard,
     "SafeCast": try_cast,
     "SingleQuotedString": literal_string,
