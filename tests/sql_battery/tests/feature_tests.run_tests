@@ -28,3 +28,8 @@ SELECT POSITION(' ' IN name) FROM $astronauts;
 SELECT LEFT('', 1);
 SELECT LEFT('a', 1);
 SELECT LEFT('ab', 1);
+
+SELECT CASE id WHEN 3 THEN 'Earth' WHEN 1 THEN 'Mercury' ELSE 'Elsewhere' END FROM $planets;
+SELECT CASE id WHEN 3 THEN 'Earth' WHEN 1 THEN 'Mercury' END FROM $planets;
+SELECT CASE WHEN id = 3 THEN 'Earth' WHEN id = 1 THEN 'Mercury' ELSE 'Elsewhere' END FROM $planets;
+SELECT CASE WHEN id = 3 THEN 'Earth' WHEN id = 1 THEN 'Mercury' END FROM $planets;

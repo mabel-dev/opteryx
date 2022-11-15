@@ -475,6 +475,43 @@ def position(value, alias: list = None, key=None):
     )
 
 
+def case_when(value, alias: list = None, key=None):
+    fixed_operand = build(value["operand"])
+    else_result = build(value["else_result"])
+
+    conditions = []
+    for condition in value["conditions"]:
+        operand = build(condition)
+        if fixed_operand is None:
+            conditions.append(operand)
+        else:
+            conditions.append(
+                ExpressionTreeNode(
+                    NodeType.COMPARISON_OPERATOR,
+                    value="Eq",
+                    left=fixed_operand,
+                    right=operand,
+                )
+            )
+    if else_result is not None:
+        conditions.append(ExpressionTreeNode(NodeType.LITERAL_BOOLEAN, value=True))
+    conditions_node = ExpressionTreeNode(NodeType.EXPRESSION_LIST, value=conditions)
+
+    results = []
+    for result in value["results"]:
+        results.append(build(result))
+    if else_result is not None:
+        results.append(else_result)
+    results_node = ExpressionTreeNode(NodeType.EXPRESSION_LIST, value=results)
+
+    return ExpressionTreeNode(
+        NodeType.FUNCTION,
+        value="CASE",
+        parameters=[conditions_node, results_node],
+        alias=alias,
+    )
+
+
 def unsupported(branch, alias=None, key=None):
     """raise an error"""
     raise SqlError(key)
@@ -506,6 +543,7 @@ BUILDERS = {
     "Between": between,
     "BinaryOp": binary_op,
     "Boolean": literal_boolean,
+    "Case": case_when,
     "Cast": cast,
     "Ceil": ceiling,
     "CompoundIdentifier": compound_identifier,

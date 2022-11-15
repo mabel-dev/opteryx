@@ -94,9 +94,7 @@ class NodeType(int, Enum):
     The second nibble (4 bits) is a category marker, the first nibble is just an
     enumeration of the values in that category.
 
-    We could just code these as ints, but by building them here, either we're
-    going to confuse the hell out of the reader, or they'll see what we've done
-    and it'll make perfect sense.
+    This allows us to use bitmasks to add a category to the enumerations.
     """
 
     # fmt:off
@@ -109,7 +107,7 @@ class NodeType(int, Enum):
     AND: int = 17
     OR: int = 33
     XOR: int = 49
-    NOT: int = 65
+    NOT: int = 65 ## 0100 0001
 
     # INTERAL IDENTIFIERS
     # nnnn0010
@@ -121,7 +119,8 @@ class NodeType(int, Enum):
     IDENTIFIER: int = 98
     SUBQUERY: int = 114
     NESTED: int = 130
-    AGGREGATOR = 146
+    AGGREGATOR:int = 146
+    EXPRESSION_LIST:int = 162  # 1010 0010
 
     # LITERAL TYPES
     # nnnn0100
@@ -133,7 +132,7 @@ class NodeType(int, Enum):
     LITERAL_STRUCT: int = 100
     LITERAL_TIMESTAMP: int = 116
     LITERAL_NONE: int = 132
-    LITERAL_TABLE: int = 148
+    LITERAL_TABLE: int = 148  # 1001 0100
 
     # fmt:on
 
@@ -259,6 +258,9 @@ def _inner_evaluate(
         if node_type == NodeType.UNARY_OPERATOR:
             centre = _inner_evaluate(root.centre, table, columns, for_display)
             return UNARY_OPERATIONS[root.value](centre)
+        if node_type == NodeType.EXPRESSION_LIST:
+            values = [_inner_evaluate(val, table, columns) for val in root.value]
+            return values
 
     # LITERAL TYPES
     if node_type & LITERAL_TYPE == LITERAL_TYPE:

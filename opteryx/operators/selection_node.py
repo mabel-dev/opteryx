@@ -100,7 +100,7 @@ class SelectionNode(BasePlanNode):
 
             # if there's no matching rows, just drop the page
             if mask.size > 0:
-                yield page.take(mask)
+                yield page.take(pyarrow.array(mask))
                 at_least_one = True
 
         # we need to send something to the next operator, send an empty table
