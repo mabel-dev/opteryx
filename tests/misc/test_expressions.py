@@ -229,7 +229,7 @@ def test_compound_expressions():
     )
 
     result = evaluate(gt, planets)
-    assert [c.as_py() for c in result] == [
+    assert [c for c in result] == [
         True,
         True,
         True,
