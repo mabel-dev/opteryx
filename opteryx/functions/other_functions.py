@@ -100,3 +100,16 @@ def if_null(values, replacement):
 
 def null_if(col1, col2):
     return [None if a == b else a for a, b in zip(col1, col2)]
+
+
+def case_when(conditions, values):
+    res = []
+    cons = list(zip(*conditions))
+    vals = zip(*values)
+    for idx, val_set in enumerate(vals):
+        offset = next((i for i, j in enumerate(cons[idx]) if j), None)
+        if offset is not None:
+            res.append(val_set[offset])
+        else:
+            res.append(None)
+    return res

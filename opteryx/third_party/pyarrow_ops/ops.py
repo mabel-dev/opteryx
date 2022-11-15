@@ -180,17 +180,17 @@ def _inner_filter_operations(arr, operator, value):
             raise TypeError(
                 f"Type mismatch, unable to compare {identifier_type} with {literal_type}"
             )
-        return compute.equal(arr, value)
+        return compute.equal(arr, value).to_numpy(False).astype(dtype=bool)
     elif operator == "NotEq":
-        return compute.not_equal(arr, value)
+        return compute.not_equal(arr, value).to_numpy(False).astype(dtype=bool)
     elif operator == "Lt":
-        return compute.less(arr, value)
+        return compute.less(arr, value).to_numpy(False).astype(dtype=bool)
     elif operator == "Gt":
-        return compute.greater(arr, value)
+        return compute.greater(arr, value).to_numpy(False).astype(dtype=bool)
     elif operator == "LtEq":
-        return compute.less_equal(arr, value)
+        return compute.less_equal(arr, value).to_numpy(False).astype(dtype=bool)
     elif operator == "GtEq":
-        return compute.greater_equal(arr, value)
+        return compute.greater_equal(arr, value).to_numpy(False).astype(dtype=bool)
     elif operator == "InList":
         # MODIFIED FOR OPTERYX
         # some of the lists are saved as sets, which are faster than searching numpy
@@ -216,16 +216,24 @@ def _inner_filter_operations(arr, operator, value):
         # MODIFIED FOR OPTERYX
         # null input emits null output, which should be false/0
         _check_type("LIKE", identifier_type, (TOKEN_TYPES.VARCHAR))
-        return compute.match_like(arr, value[0])  # [#325]
+        return (
+            compute.match_like(arr, value[0]).to_numpy(False).astype(dtype=bool)
+        )  # [#325]
     elif operator == "NotLike":
         # MODIFIED FOR OPTERYX - see comment above
         _check_type("NOT LIKE", identifier_type, (TOKEN_TYPES.VARCHAR))
-        matches = compute.match_like(arr, value[0])  # [#325]
+        matches = (
+            compute.match_like(arr, value[0]).to_numpy(False).astype(dtype=bool)
+        )  # [#325]
         return numpy.invert(matches)
     elif operator == "ILike":
         # MODIFIED FOR OPTERYX - see comment above
         _check_type("ILIKE", identifier_type, (TOKEN_TYPES.VARCHAR))
-        return compute.match_like(arr, value[0], ignore_case=True)  # [#325]
+        return (
+            compute.match_like(arr, value[0], ignore_case=True)
+            .to_numpy(False)
+            .astype(dtype=bool)
+        )  # [#325]
     elif operator == "NotILike":
         # MODIFIED FOR OPTERYX - see comment above
         _check_type("NOT ILIKE", identifier_type, (TOKEN_TYPES.VARCHAR))
@@ -234,7 +242,11 @@ def _inner_filter_operations(arr, operator, value):
     elif operator in ("PGRegexMatch", "SimilarTo"):
         # MODIFIED FOR OPTERYX - see comment above
         _check_type("~", identifier_type, (TOKEN_TYPES.VARCHAR))
-        return compute.match_substring_regex(arr, value[0])  # [#325]
+        return (
+            compute.match_substring_regex(arr, value[0])
+            .to_numpy(False)
+            .astype(dtype=bool)
+        )  # [#325]
     elif operator in ("PGRegexNotMatch", "NotSimilarTo"):
         # MODIFIED FOR OPTERYX - see comment above
         _check_type("!~", identifier_type, (TOKEN_TYPES.VARCHAR))
@@ -243,7 +255,11 @@ def _inner_filter_operations(arr, operator, value):
     elif operator == "PGRegexIMatch":
         # MODIFIED FOR OPTERYX - see comment above
         _check_type("~*", identifier_type, (TOKEN_TYPES.VARCHAR))
-        return compute.match_substring_regex(arr, value[0], ignore_case=True)  # [#325]
+        return (
+            compute.match_substring_regex(arr, value[0], ignore_case=True)
+            .to_numpy(False)
+            .astype(dtype=bool)
+        )  # [#325]
     elif operator == "PGRegexNotIMatch":
         # MODIFIED FOR OPTERYX - see comment above
         _check_type("!~*", identifier_type, (TOKEN_TYPES.VARCHAR))
