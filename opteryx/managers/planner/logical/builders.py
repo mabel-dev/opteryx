@@ -189,8 +189,8 @@ def cast(branch, alias=None, key=None):
         # timestamps have the timezone as a value
         type_key = next(iter(data_type))
         if type_key == "Timestamp" and data_type[type_key] not in (
-            "None",
-            "WithoutTimeZone",
+            (None, "None"),
+            (None, "WithoutTimeZone"),
         ):
             raise UnsupportedSyntaxError("TIMESTAMPS do not support `TIME ZONE`")
         data_type = type_key
@@ -199,6 +199,8 @@ def cast(branch, alias=None, key=None):
     elif "Varchar" in data_type:
         data_type = "VARCHAR"
     elif "Decimal" in data_type:
+        data_type = "NUMERIC"
+    elif "Numeric" in data_type:
         data_type = "NUMERIC"
     elif "Boolean" in data_type:
         data_type = "BOOLEAN"
@@ -228,8 +230,8 @@ def try_cast(branch, alias=None, key="TryCast"):
         # timestamps have the timezone as a value
         type_key = next(iter(data_type))
         if type_key == "Timestamp" and data_type[type_key] not in (
-            "None",
-            "WithoutTimeZone",
+            (None, "None"),
+            (None, "WithoutTimeZone"),
         ):
             raise UnsupportedSyntaxError("TIMESTAMPS do not support `TIME ZONE`")
         data_type = type_key
@@ -238,6 +240,8 @@ def try_cast(branch, alias=None, key="TryCast"):
     elif "Varchar" in data_type:
         data_type = "VARCHAR"
     elif "Decimal" in data_type:
+        data_type = "NUMERIC"
+    elif "Numeric" in data_type:
         data_type = "NUMERIC"
     elif "Boolean" in data_type:
         data_type = "BOOLEAN"
