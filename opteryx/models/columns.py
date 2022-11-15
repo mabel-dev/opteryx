@@ -220,7 +220,7 @@ class Columns:
         filtered = pyarrow_ops.ops.filter_operations(
             all_aliases, _filter.value, [_filter.right.value]  # [#325]
         )
-        filtered = all_aliases.filter(filtered)
+        filtered = all_aliases.filter(pyarrow.array(filtered))
 
         # get the list of matching columns - some physical columns may be referenced
         # multiple times so we deduplicate them

@@ -223,6 +223,7 @@ FUNCTIONS = {
     "IIF": other_functions.iif,
     "GENERATE_SERIES": arrays.generate_series,
     "NULLIF": other_functions.null_if,
+    "CASE": other_functions.case_when,
 
     # NUMERIC
     "ROUND": number_functions.round,
