@@ -61,7 +61,11 @@ def format_expression(root):
             if root.value == "CASE":
                 con = [format_expression(a) for a in root.parameters[0].value]
                 vals = [format_expression(a) for a in root.parameters[1].value]
-                return "CASE " + "".join([f"WHERE {c} THEN {v} " for c, v in zip(con, vals)]) + "END"
+                return (
+                    "CASE "
+                    + "".join([f"WHERE {c} THEN {v} " for c, v in zip(con, vals)])
+                    + "END"
+                )
             return f"{root.value.upper()}({','.join([format_expression(e) for e in root.parameters])})"
         if node_type == NodeType.WILDCARD:
             return "*"
