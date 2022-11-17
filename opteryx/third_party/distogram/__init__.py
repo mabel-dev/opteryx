@@ -40,6 +40,46 @@ class Distogram(object):  # pragma: no cover
         self.min_diff: Optional[float] = None
         self.weighted_diff: bool = weighted_diff
 
+    ## all class methods below here have been added for Opteryx
+    def dump(self):  # pragma: no cover
+        import orjson
+
+        return orjson.dumps(
+            {
+                "bin_count": self.bin_count,
+                "bins": self.bins,
+                "min": self.min,
+                "max": self.max,
+                "diffs": self.diffs,
+                "min_diff": self.min_diff,
+                "weighted_diff": self.weighted_diff,
+            }
+        )
+
+    def __add__(self, operand):  # pragma: no cover
+        dgram = merge(self, operand)
+        # merge estimates min and max, so set them manually
+        dgram.min = min(self.min, operand.min)
+        dgram.max = max(self.max, operand.max)
+        return dgram
+
+
+# added for opteryx
+def load(dic):  # pragma: no cover
+    if not isinstance(dic, dict):
+        import orjson
+
+        dic = orjson.loads(dic)
+    dgram = Distogram()
+    dgram.bin_count = dic["bin_count"]
+    dgram.bins = dic["bins"]
+    dgram.min = dic["min"]
+    dgram.max = dic["max"]
+    dgram.diffs = dic["diffs"]
+    dgram.min_diff = dic["min_diff"]
+    dgram.weighted_diff = dic["weighted_diff"]
+    return dgram
+
 
 def _linspace(start: float, stop: float, num: int) -> List[float]:  # pragma: no cover
     if num == 1:
@@ -284,7 +324,7 @@ def count(h: Distogram) -> float:  # pragma: no cover
     Returns:
         The number of elements in the distribution.
     """
-    return sum((f for _, f in h.bins))
+    return sum(f for _, f in h.bins)
 
 
 def bounds(h: Distogram) -> Tuple[float, float]:  # pragma: no cover

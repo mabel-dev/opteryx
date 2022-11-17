@@ -45,10 +45,11 @@ AGGREGATORS = {
     "ALL": "all",
     "ANY": "any",
     "APPROXIMATE_MEDIAN": "approximate_median",
+    "ARRAY_AGG": "hash_list",
     "COUNT": "count",  # counts only non nulls
     "COUNT_DISTINCT": "count_distinct",
-    "DISTINCT": "distinct",
-    "LIST": "hash_list",
+    "DISTINCT": "distinct",  # fated
+    "LIST": "hash_list",  # fated
     "MAX": "max",
     "MAXIMUM": "max",  # alias
     "MEAN": "mean",
@@ -121,10 +122,13 @@ def _build_aggs(aggregators, columns):
     for root in aggregators:
 
         for aggregator in get_all_nodes_of_type(
-            root, select_nodes=(NodeType.AGGREGATOR,)
+            root, select_nodes=(NodeType.AGGREGATOR, NodeType.COMPLEX_AGGREGATOR)
         ):
 
-            if aggregator.token_type == NodeType.AGGREGATOR:
+            if aggregator.token_type in (
+                NodeType.AGGREGATOR,
+                NodeType.COMPLEX_AGGREGATOR,
+            ):
                 field_node = aggregator.parameters[0]
                 display_name = format_expression(field_node)
                 exists = columns.get_column_from_alias(display_name)
@@ -152,9 +156,14 @@ def _build_aggs(aggregators, columns):
                         f"Invalid identifier or literal provided in aggregator function `{display_name}`"
                     )
                 function = AGGREGATORS.get(aggregator.value)
+                if aggregator.value == "ARRAY_AGG":
+                    # if the array agg is distinct, base off that function instead
+                    if aggregator.parameters[1]:
+                        function = "distinct"
                 aggs.append((field_name, function, count_options))
                 column_map[
-                    f"{aggregator.value.upper()}({display_field})"
+                    format_expression(aggregator)
+                    #                    f"{aggregator.value.upper()}({display_field})"
                 ] = f"{field_name}_{function}".replace("_hash_", "_")
 
     return column_map, aggs
@@ -171,7 +180,7 @@ def _non_group_aggregates(aggregates, table, columns):
 
     for aggregate in aggregates:
 
-        if aggregate.token_type == NodeType.AGGREGATOR:
+        if aggregate.token_type in (NodeType.AGGREGATOR, NodeType.COMPLEX_AGGREGATOR):
 
             column_node = aggregate.parameters[0]
             if column_node.token_type == NodeType.LITERAL_NUMERIC:
@@ -190,7 +199,7 @@ def _non_group_aggregates(aggregates, table, columns):
             # pyarrow.compute module
             if not hasattr(pyarrow.compute, aggregate_function_name):
                 raise UnsupportedSyntaxError(
-                    f"Aggregate {aggregate.value} can only be used with GROUP BY"
+                    f"Aggregate `{aggregate.value}` can only be used with GROUP BY"
                 )
             aggregate_function = getattr(pyarrow.compute, aggregate_function_name)
             aggregate_column_value = aggregate_function(raw_column_values).as_py()
@@ -306,6 +315,23 @@ class AggregateNode(BasePlanNode):
         else:
             groups = table.group_by(group_by_columns)
             groups = groups.aggregate(aggs)
+
+        # do the secondary activities on ARRAY_AGG
+        for agg in [a for a in self._aggregates if a.value == "ARRAY_AGG"]:
+            _, _, order, limit = agg.parameters
+            if order or limit:
+                # rip the column out of the table
+                column_name = column_map[format_expression(agg)]
+                column_def = groups.field(column_name)
+                column = groups.column(column_name).to_pylist()
+                groups = groups.drop([column_name])
+                # order
+                if order:
+                    pass
+                if limit:
+                    column = [c[:limit] for c in column]
+                # put the new column into the table
+                groups = groups.append_column(column_def, [column])
 
         # name the aggregate fields
         for friendly_name, agg_name in column_map.items():

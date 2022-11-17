@@ -11,11 +11,7 @@
 # limitations under the License.
 import os
 
-# import pyximport
-
 from pathlib import Path
-
-# pyximport.install()  # build any pyx files
 
 from opteryx import config
 from opteryx.connection import Connection
@@ -59,7 +55,10 @@ if not config.DISABLE_HIGH_PRIORITY and hasattr(os, "nice"):  # pragma: no cover
         os.nice(-20 + nice_value)
         print(f"Process priority set to {os.nice(0)}.")
     except PermissionError:
-        print(f"Cannot update process priority. Currently set to {nice_value}.")
+        display_nice = str(nice_value)
+        if nice_value == 0:
+            display_nice = "0 (normal)"
+        print(f"Cannot update process priority. Currently set to {display_nice}.")
 
 # Log resource usage
 if not config.DISABLE_RESOURCE_LOGGING:  # pragma: no cover

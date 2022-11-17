@@ -57,7 +57,11 @@ def format_expression(root):
         return str(root.value)
     # INTERAL IDENTIFIERS
     if node_type & INTERNAL_TYPE == INTERNAL_TYPE:
-        if node_type in (NodeType.FUNCTION, NodeType.AGGREGATOR):
+        if node_type in (
+            NodeType.FUNCTION,
+            NodeType.AGGREGATOR,
+            NodeType.COMPLEX_AGGREGATOR,
+        ):
             if root.value == "CASE":
                 con = [format_expression(a) for a in root.parameters[0].value]
                 vals = [format_expression(a) for a in root.parameters[1].value]
@@ -66,6 +70,11 @@ def format_expression(root):
                     + "".join([f"WHERE {c} THEN {v} " for c, v in zip(con, vals)])
                     + "END"
                 )
+            if root.value == "ARRAY_AGG":
+                distinct = "DISTINCT " if root.parameters[1] else ""
+                order = f" ORDER BY {root.parameters[2]}" if root.parameters[2] else ""
+                limit = f" LIMIT {root.parameters[3]}" if root.parameters[3] else ""
+                return f"{root.value.upper()}({distinct}{format_expression(root.parameters[0])}{order}{limit})"
             return f"{root.value.upper()}({','.join([format_expression(e) for e in root.parameters])})"
         if node_type == NodeType.WILDCARD:
             return "*"
@@ -128,7 +137,9 @@ class NodeType(int, Enum):
     SUBQUERY: int = 114
     NESTED: int = 130
     AGGREGATOR:int = 146
-    EXPRESSION_LIST:int = 162  # 1010 0010
+    COMPLEX_AGGREGATOR: int = 162
+    EXPRESSION_LIST:int = 178  # 1011 0010
+
 
     # LITERAL TYPES
     # nnnn0100

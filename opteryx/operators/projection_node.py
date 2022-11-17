@@ -56,6 +56,7 @@ class ProjectionNode(BasePlanNode):
             elif attribute.token_type in (
                 NodeType.FUNCTION,
                 NodeType.AGGREGATOR,
+                NodeType.COMPLEX_AGGREGATOR,
                 NodeType.BINARY_OPERATOR,
                 NodeType.COMPARISON_OPERATOR,
             ) or (attribute.token_type & LITERAL_TYPE == LITERAL_TYPE):
