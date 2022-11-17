@@ -160,22 +160,11 @@ def select_query(ast, properties):
     _projection = builders.build(ast["Query"]["body"]["Select"]["projection"])
     _groups = builders.build(ast["Query"]["body"]["Select"]["group_by"])
     if _groups or get_all_nodes_of_type(
-        _projection, select_nodes=(NodeType.AGGREGATOR,)
+        _projection, select_nodes=(NodeType.AGGREGATOR, NodeType.COMPLEX_AGGREGATOR)
     ):
         _aggregates = _projection.copy()
         if isinstance(_aggregates, dict):
             raise SqlError("GROUP BY cannot be used with SELECT *")
-        if not any(
-            a.token_type == NodeType.AGGREGATOR
-            for a in _aggregates
-            if isinstance(a, ExpressionTreeNode)
-        ):
-            wildcard = ExpressionTreeNode(NodeType.WILDCARD)
-            _aggregates.append(
-                ExpressionTreeNode(
-                    NodeType.AGGREGATOR, value="COUNT", parameters=[wildcard]
-                )
-            )
         plan.add_operator(
             "agg",
             operators.AggregateNode(properties, aggregates=_aggregates, groups=_groups),

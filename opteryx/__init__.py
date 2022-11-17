@@ -59,6 +59,8 @@ if not config.DISABLE_HIGH_PRIORITY and hasattr(os, "nice"):  # pragma: no cover
         os.nice(-20 + nice_value)
         print(f"Process priority set to {os.nice(0)}.")
     except PermissionError:
+        if nice_value == 0:
+            nice_value = "0 (normal)"
         print(f"Cannot update process priority. Currently set to {nice_value}.")
 
 # Log resource usage

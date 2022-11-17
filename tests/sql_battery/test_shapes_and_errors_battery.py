@@ -45,7 +45,10 @@ import pytest
 import opteryx
 
 from opteryx.connectors import DiskConnector
-from opteryx.exceptions import SqlError, DatasetNotFoundError
+
+from opteryx.exceptions import DatasetNotFoundError
+from opteryx.exceptions import SqlError
+from opteryx.exceptions import UnsupportedSyntaxError
 
 # fmt:off
 STATEMENTS = [
@@ -647,6 +650,15 @@ STATEMENTS = [
         ("SHOW STORES LIKE 'apple'", None, None, SqlError),
         ("SELECT name FROM $astronauts WHERE LEFT(name, POSITION(' ' IN name) - 1) = 'Andrew'", 3, 1, None),
         ("SELECT name FROM $astronauts WHERE LEFT(name, POSITION(' ' IN name)) = 'Andrew '", 3, 1, None),
+        
+        ("SELECT ARRAY_AGG(name) from $satellites GROUP BY planetId", 7, 1, None),
+        ("SELECT ARRAY_AGG(DISTINCT name) from $satellites GROUP BY planetId", 7, 1, None),
+        ("SELECT ARRAY_AGG(name ORDER BY name) from $satellites GROUP BY TRUE", None, None, UnsupportedSyntaxError),
+        ("SELECT ARRAY_AGG(name LIMIT 1) from $satellites GROUP BY planetId", 7, 1, None),
+        ("SELECT ARRAY_AGG(DISTINCT name LIMIT 1) from $satellites GROUP BY planetId", 7, 1, None),
+        ("SELECT COUNT(*), ARRAY_AGG(name) from $satellites GROUP BY planetId", 7, 2, None),
+        ("SELECT planetId, COUNT(*), ARRAY_AGG(name) from $satellites GROUP BY planetId", 7, 3, None),
+        ("SELECT ARRAY_AGG(DISTINCT LEFT(name, 1)) from $satellites GROUP BY planetId", 7, 1, None),
 
         ("SELECT COUNT(*), place FROM (SELECT CASE id WHEN 3 THEN 'Earth' WHEN 1 THEN 'Mercury' ELSE 'Elsewhere' END as place FROM $planets) GROUP BY place;", 3, 2, None),
         ("SELECT COUNT(*), place FROM (SELECT CASE id WHEN 3 THEN 'Earth' WHEN 1 THEN 'Mercury' END as place FROM $planets) GROUP BY place HAVING place IS NULL;", 1, 2, None),

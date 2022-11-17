@@ -516,6 +516,27 @@ def case_when(value, alias: list = None, key=None):
     )
 
 
+def array_agg(branch, alias=None, key=None):
+    from opteryx.managers.planner.logical import custom_builders
+
+    distinct = branch["distinct"]
+    expression = build(branch["expr"])
+    order = None
+    if branch["order_by"]:
+        raise UnsupportedSyntaxError("`ORDER BY` not supported in `ARRAY_AGG`.")
+    #        order = custom_builders.extract_order({"Query": {"order_by": [branch["order_by"]]}})
+    limit = None
+    if branch["limit"]:
+        limit = int(build(branch["limit"]).value)
+
+    return ExpressionTreeNode(
+        token_type=NodeType.COMPLEX_AGGREGATOR,
+        value="ARRAY_AGG",
+        parameters=(expression, distinct, order, limit),
+        alias=alias,
+    )
+
+
 def unsupported(branch, alias=None, key=None):
     """raise an error"""
     raise SqlError(key)
@@ -544,6 +565,7 @@ def build(value, alias: list = None, key=None):
 
 # parts to build the literal parts of a query
 BUILDERS = {
+    "ArrayAgg": array_agg,
     "Between": between,
     "BinaryOp": binary_op,
     "Boolean": literal_boolean,
