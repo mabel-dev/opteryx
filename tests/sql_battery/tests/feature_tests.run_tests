@@ -33,3 +33,6 @@ SELECT CASE id WHEN 3 THEN 'Earth' WHEN 1 THEN 'Mercury' ELSE 'Elsewhere' END FR
 SELECT CASE id WHEN 3 THEN 'Earth' WHEN 1 THEN 'Mercury' END FROM $planets;
 SELECT CASE WHEN id = 3 THEN 'Earth' WHEN id = 1 THEN 'Mercury' ELSE 'Elsewhere' END FROM $planets;
 SELECT CASE WHEN id = 3 THEN 'Earth' WHEN id = 1 THEN 'Mercury' END FROM $planets;
+
+SELECT * FROM $astronauts WHERE death_date > current_time - interval '50' YEAR;
+SELECT * FROM $astronauts WHERE birth_date < current_time + interval '50' YEAR;

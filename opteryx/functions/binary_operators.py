@@ -21,6 +21,7 @@ from opteryx.utils import dates
 
 
 BINARY_OPERATORS = {"Divide", "Minus", "Modulo", "Multiply", "Plus", "StringConcat"}
+INTERVALS = (pyarrow.lib.MonthDayNano, pyarrow.lib.MonthDayNanoIntervalArray)
 
 # Also supported by the AST but not implemented
 # BitwiseOr => ("|"),
@@ -32,14 +33,19 @@ BINARY_OPERATORS = {"Divide", "Minus", "Modulo", "Multiply", "Plus", "StringConc
 
 
 def _date_plus_interval(left, right):
-    # we want left to be the date and right to be the interval
-    if type(left) == pyarrow.lib.MonthDayNanoIntervalArray:
+
+    # left is the date, right is the interval
+    if type(left) in INTERVALS or (
+        isinstance(left, list) and type(left[0]) in INTERVALS
+    ):
         left, right = right, left
 
     result = []
 
     for index, date in enumerate(left):
-        interval = right[index].value
+        interval = right[index]
+        if hasattr(interval, "value"):
+            interval = interval.value
         months = interval.months
         days = interval.days
         nano = interval.nanoseconds
@@ -55,11 +61,19 @@ def _date_plus_interval(left, right):
 
 
 def _date_minus_interval(left, right):
+
     # left is the date, right is the interval
+    if type(left) in INTERVALS or (
+        isinstance(left, list) and type(left[0]) in INTERVALS
+    ):
+        left, right = right, left
+
     result = []
 
     for index, date in enumerate(left):
-        interval = right[index].value
+        interval = right[index]
+        if hasattr(interval, "value"):
+            interval = interval.value
         months = interval.months
         days = interval.days
         nano = interval.nanoseconds
@@ -76,8 +90,10 @@ def _date_minus_interval(left, right):
 
 def _has_intervals(left, right):
     return (
-        type(left) == pyarrow.lib.MonthDayNanoIntervalArray
-        or type(right) == pyarrow.lib.MonthDayNanoIntervalArray
+        type(left) in INTERVALS
+        or type(right) in INTERVALS
+        or (isinstance(left, list) and type(left[0]) in INTERVALS)
+        or (isinstance(right, list) and type(right[0]) in INTERVALS)
     )
 
 

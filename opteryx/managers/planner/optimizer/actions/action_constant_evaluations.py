@@ -22,6 +22,7 @@ import decimal
 import numpy
 
 from opteryx import operators
+from opteryx.functions.binary_operators import binary_operations
 from opteryx.managers.expression import ExpressionTreeNode, LITERAL_TYPE, NodeType
 from opteryx.third_party.pyarrow_ops.ops import filter_operations
 
@@ -77,8 +78,13 @@ def eliminate_constant_evaluations(plan, properties):
                 value = filter_operations(
                     [node.left.value], node.value, [node.right.value]
                 )[0]
-                return build_literal_node(value)
 
+                return build_literal_node(value)
+            if node.token_type == NodeType.BINARY_OPERATOR:
+                value = binary_operations(
+                    [node.left.value], node.value, [node.right.value]
+                )[0]
+                return build_literal_node(value)
         return node
 
     # find the in-scope nodes (WHERE AND HAVING)
