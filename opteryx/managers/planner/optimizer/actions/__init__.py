@@ -12,6 +12,7 @@
 
 # fmt: off
 from .action_constant_evaluations import eliminate_constant_evaluations
+from .action_function_evaluations import eliminate_fixed_function_evaluations
 from .action_defragment_pages import defragment_pages
 from .action_eliminate_negations import eliminate_negations
 from .action_split_conjunctive_predicates import split_conjunctive_predicates
