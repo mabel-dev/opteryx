@@ -1,0 +1,5 @@
+{
+    "summary": "Test XOR",
+    "statement": "SELECT TRUE XOR TRUE AS T;",
+    "result": {"T": [false]}
+}
