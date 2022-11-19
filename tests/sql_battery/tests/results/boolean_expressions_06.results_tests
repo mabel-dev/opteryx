@@ -1,0 +1,5 @@
+{
+    "summary": "Test OR",
+    "statement": "SELECT FALSE OR FALSE AS T;",
+    "result": {"T": [false]}
+}

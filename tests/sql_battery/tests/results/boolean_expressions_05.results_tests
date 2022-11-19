@@ -1,0 +1,5 @@
+{
+    "summary": "Test OR",
+    "statement": "SELECT TRUE OR TRUE AS T;",
+    "result": {"T": [true]}
+}

@@ -42,3 +42,9 @@ SELECT TIMESTAMP '2022-01-01';
 # nulls
 SELECT name = null FROM $planets;
 SELECT name FROM $planets WHERE name = null;
+
+# CASE
+SELECT name, CASE numberOfMoons WHEN 0 THEN 'none' WHEN 1 THEN 'one' ELSE 'lots' END as how_many_moons from $planets;
+SELECT name, CASE WHEN numberOfMoons = 0 THEN 'none' WHEN numberOfMoons = 1 THEN 'one' ELSE 'lots' END as how_many_moons from $planets;
+
+SELECT name FROM $planets WHERE id NOT IN (SELECT DISTINCT planetId FROM $satellites);

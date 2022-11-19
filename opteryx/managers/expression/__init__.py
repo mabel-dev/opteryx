@@ -67,7 +67,7 @@ def format_expression(root):
                 vals = [format_expression(a) for a in root.parameters[1].value]
                 return (
                     "CASE "
-                    + "".join([f"WHERE {c} THEN {v} " for c, v in zip(con, vals)])
+                    + "".join([f"WHEN {c} THEN {v} " for c, v in zip(con, vals)])
                     + "END"
                 )
             if root.value == "ARRAY_AGG":

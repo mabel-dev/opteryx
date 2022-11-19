@@ -1,0 +1,5 @@
+{
+    "summary": "Test CASE (simple) match second condition",
+    "statement": "SELECT CASE 2 WHEN 1 THEN 'one' WHEN 2 THEN 'two' END AS C",
+    "result": {"C": ["two"]}
+}
