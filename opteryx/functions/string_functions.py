@@ -12,6 +12,8 @@
 
 import numpy
 
+import pyarrow
+
 from pyarrow import compute
 
 
@@ -23,6 +25,8 @@ def string_slicer_left(arr, length):
         return [[]]
     if not hasattr(length, "__iter__"):
         length = [length] * len(arr)
+    if hasattr(arr, "to_numpy"):
+        arr = arr.to_numpy(False)
     return [None if s is None else s[: int(length[i])] for i, s in enumerate(arr)]
 
 
@@ -34,6 +38,8 @@ def string_slicer_right(arr, length):
         return [[]]
     if not hasattr(length, "__iter__"):
         length = [length] * len(arr)
+    if hasattr(arr, "to_numpy"):
+        arr = arr.to_numpy(False)
     return [None if s is None else s[-int(length[i]) :] for i, s in enumerate(arr)]
 
 
