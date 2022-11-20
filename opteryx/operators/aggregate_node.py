@@ -135,20 +135,16 @@ def _build_aggs(aggregators, columns):
                 count_options = None
 
                 if field_node.token_type == NodeType.WILDCARD:
-                    display_field = "*"
                     field_name = columns.preferred_column_names[0][0]
                     # count * counts nulls
                     count_options = pyarrow.compute.CountOptions(mode="all")
                 elif field_node.token_type == NodeType.IDENTIFIER:
-                    display_field = field_node.value
                     field_name = columns.get_column_from_alias(
                         field_node.value, only_one=True
                     )
                 elif field_node.token_type == NodeType.LITERAL_NUMERIC:
-                    display_field = str(field_node.value)
                     field_name = field_node.value
                 elif len(exists) > 0:
-                    display_field = exists[0]
                     field_name = exists[0]
                 else:
                     display_name = format_expression(field_node)
@@ -188,6 +184,12 @@ def _non_group_aggregates(aggregates, table, columns):
                     table.num_rows, column_node.value, dtype=numpy.float64
                 )
                 mapped_column_name = str(column_node.value)
+            elif (
+                aggregate.value == "COUNT"
+                and aggregate.parameters[0].token_type == NodeType.WILDCARD
+            ):
+                result["COUNT(*)"] = table.num_rows
+                continue
             else:
                 column_name = format_expression(aggregate.parameters[0])
                 mapped_column_name = columns.get_column_from_alias(
