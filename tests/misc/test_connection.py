@@ -6,6 +6,8 @@ import sys
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
+import pytest
+
 
 def test_connection():
 
@@ -17,6 +19,14 @@ def test_connection():
 
     assert cur.rowcount == 9
     assert cur.shape == (9, 20)
+
+    conn.commit()
+    conn.close()
+
+    with pytest.raises(AttributeError):
+        conn.rollback()
+
+    assert len(cur.id) == 36, len(cur.id)
 
 
 if __name__ == "__main__":  # pragma: no cover

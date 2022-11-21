@@ -22,7 +22,7 @@ import pyarrow
 
 import opteryx
 
-from opteryx.exceptions import SqlError
+from opteryx.exceptions import SqlError, UnsupportedSyntaxError
 from opteryx.functions import date_functions
 from opteryx.functions import number_functions
 from opteryx.functions import other_functions
@@ -138,7 +138,7 @@ def get_len(obj):
 
 
 def _raise_exception(text):
-    raise SqlError(text)
+    raise UnsupportedSyntaxError(text)
 
 
 def _coalesce(*args):

@@ -85,8 +85,6 @@ class Cursor:
     def id(self):
         """The unique internal reference for this query"""
         return self._qid
-
-    def _format_prepared_param(self, param):
         """
         Formats parameters to be passed to a Query.
         """

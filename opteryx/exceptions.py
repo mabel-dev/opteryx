@@ -92,3 +92,7 @@ class UnsupportedSyntaxError(ProgrammingError):
 
 class EmptyResultSetError(Error):
     pass
+
+
+class InvalidTemporalRangeFilterError(SqlError):
+    pass
