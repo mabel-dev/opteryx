@@ -206,7 +206,7 @@ class Cursor:
             raise CursorInvalidStateError(CURSOR_NOT_RUN)
         if not isinstance(self._results, (Table, set)):
             self._results = utils.arrow.as_arrow(self._results)
-        if self._results == set():
+        if self._results == set():  # pragma: no cover
             raise EmptyResultSetError("Cannot fulfil request on an empty result set")
         if self._statistics.end_time == 0:
             self._statistics.end_time = time.time_ns()
@@ -218,7 +218,7 @@ class Cursor:
             raise CursorInvalidStateError(CURSOR_NOT_RUN)
         if not isinstance(self._results, (Table, set)):
             self._results = utils.arrow.as_arrow(self._results)
-        if self._results == set():
+        if self._results == set():  # pragma: no cover
             raise EmptyResultSetError("Cannot fulfil request on an empty result set")
         if self._statistics.end_time == 0:
             self._statistics.end_time = time.time_ns()
@@ -239,7 +239,7 @@ class Cursor:
         # called 'size' to match the 'fetchmany' nomenclature
         if not isinstance(self._results, (Table, set)):
             self._results = utils.arrow.as_arrow(self._results)
-        if self._results == set():
+        if self._results == set():  # pragma: no cover
             raise EmptyResultSetError("Cannot fulfil request on an empty result set")
         if self._statistics.end_time == 0:
             self._statistics.end_time = time.time_ns()

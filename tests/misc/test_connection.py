@@ -28,6 +28,8 @@ def test_connection():
 
     assert len(cur.id) == 36, len(cur.id)
 
+    cur.close()
+
 
 if __name__ == "__main__":  # pragma: no cover
 
