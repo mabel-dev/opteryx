@@ -97,8 +97,6 @@ def _repeat_no_parameters(func):
 
 def _iterate_single_parameter(func):
     def _inner(array):
-        if isinstance(array, str):
-            array = [array]
         return numpy.array([func(item) for item in array])
 
     return _inner

@@ -165,21 +165,15 @@ class Cursor:
             self._results = utils.arrow.as_arrow(self._results)
         if self._statistics.end_time == 0:
             self._statistics.end_time = time.time_ns()
-        if self._results == set():
+        if self._results == set():  # pragma: no cover
             return (0, 0)
         return self._results.shape
 
     @property
     def stats(self):
         """execution statistics"""
-        if self._statistics.end_time == 0:
+        if self._statistics.end_time == 0:  # pragma: no cover
             self._statistics.end_time = time.time_ns()
-        #        if self._collected_stats is None:
-        #            statistics = self._query_planner.statistics
-        #            for node in self._plan.nodes():
-        #                if hasattr(node, "statistics"):
-        #                    statistics.merge(node.statistics)
-        #            self._collected_stats = statistics
         return self._statistics.as_dict()
 
     @property

@@ -693,6 +693,9 @@ STATEMENTS = [
         ("SELECT * EXCEPT id FROM $satellites", None, None, SqlError),
         # TEMPORAL QUERIES aren't part of the AST
         ("SELECT * FROM CUSTOMERS FOR SYSTEM_TIME ('2022-01-01', '2022-12-31')", None, None, InvalidTemporalRangeFilterError),
+        # can't cast to a list
+        ("SELECT CAST('abc' AS LIST)", None, None, SqlError),
+        ("SELECT TRY_CAST('abc' AS LIST)", None, None, SqlError),
 
         # These are queries which have been found to return the wrong result or not run correctly
         # FILTERING ON FUNCTIONS
