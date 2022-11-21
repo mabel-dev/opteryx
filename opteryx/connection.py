@@ -85,38 +85,6 @@ class Cursor:
     def id(self):
         """The unique internal reference for this query"""
         return self._qid
-        """
-        Formats parameters to be passed to a Query.
-        """
-
-        if param is None:  # pragma: no cover
-            return "NULL"
-
-        if isinstance(param, bool):
-            return "TRUE" if param else "FALSE"
-
-        if isinstance(param, (float, int, Decimal)):
-            return f"{param}"
-
-        if isinstance(param, str):
-            # if I have no apostrophes, use them as the delimiter
-            if param.find("'") == -1:
-                delimited = param.replace('"', '""')
-                return f"'{delimited}'"
-            # otherwise use quotes
-            delimited = param.replace('"', '""')
-            return f'"{delimited}"'
-
-        if isinstance(param, datetime.datetime):
-            datetime_str = param.strftime("%Y-%m-%d %H:%M:%S.%f")
-            return f"'{datetime_str}'"
-
-        if isinstance(param, (list, tuple, set)):
-            return f"({','.join(map(self._format_prepared_param, param))})"
-
-        raise SqlError(
-            f"Query parameter of type '{type(param)}' is not supported."
-        )  # pragma: no cover
 
     def execute(self, operation, params=None):
         if self._query is not None:  # pragma: no cover
