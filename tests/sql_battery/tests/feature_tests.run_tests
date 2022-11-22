@@ -43,3 +43,6 @@ SELECT TRIM('_' FROM '__init__');
 SELECT TRIM(BOTH '_' FROM '____dunder_');
 SELECT TRIM(TRAILING '__' FROM '_dunder_');
 SELECT RTRIM('   dunder    ');
+SELECT TRIM('    ABC   ');
+SELECT TRIM(name) FROM $planets;
+SELECT TRIM(LEADING ' ' FROM name) FROM $planets;
