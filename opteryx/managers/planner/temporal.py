@@ -31,6 +31,7 @@ This supports the following syntaxes
 import datetime
 import re
 
+from opteryx.exceptions import InvalidTemporalRangeFilterError
 from opteryx.exceptions import SqlError
 from opteryx.utils import dates
 
@@ -210,7 +211,7 @@ def parse_range(fixed_range):  # pragma: no cover
             start = today.replace(day=22)
 
     else:
-        raise SqlError(f"Unknown temporal range `{fixed_range}`")
+        raise InvalidTemporalRangeFilterError(f"Unknown temporal range `{fixed_range}`")
 
     return start, end
 
@@ -335,9 +336,11 @@ def extract_temporal_filters(sql):  # pragma: no cover
             end_date = parse_date(parts[4])
 
             if start_date is None or end_date is None:
-                raise SqlError("Unrecognized temporal range values.")
+                raise InvalidTemporalRangeFilterError(
+                    "Unrecognized temporal range values."
+                )
             if start_date > end_date:
-                raise SqlError(
+                raise InvalidTemporalRangeFilterError(
                     "Invalid temporal range, start of range is after end of range."
                 )
 
@@ -346,7 +349,9 @@ def extract_temporal_filters(sql):  # pragma: no cover
             start_date, end_date = parse_range(parts[2])
 
         elif for_date_string:
-            raise ValueError(f"Unable to interpret temporal filter `{for_date_string}`")
+            raise InvalidTemporalRangeFilterError(
+                f"Unable to interpret temporal filter `{for_date_string}`"
+            )
 
         final_collector.append(
             (

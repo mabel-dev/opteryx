@@ -523,8 +523,10 @@ def array_agg(branch, alias=None, key=None):
     expression = build(branch["expr"])
     order = None
     if branch["order_by"]:
+        order = custom_builders.extract_order(
+            {"Query": {"order_by": [branch["order_by"]]}}
+        )
         raise UnsupportedSyntaxError("`ORDER BY` not supported in `ARRAY_AGG`.")
-    #        order = custom_builders.extract_order({"Query": {"order_by": [branch["order_by"]]}})
     limit = None
     if branch["limit"]:
         limit = int(build(branch["limit"]).value)
@@ -533,6 +535,29 @@ def array_agg(branch, alias=None, key=None):
         token_type=NodeType.COMPLEX_AGGREGATOR,
         value="ARRAY_AGG",
         parameters=(expression, distinct, order, limit),
+        alias=alias,
+    )
+
+
+def trim_string(branch, alias=None, key=None):
+    who = build(branch["trim_what"])
+    what = build(branch["expr"])
+    where = branch["trim_where"] or "Both"
+
+    function = "TRIM"
+    if where == "Leading":
+        function = "LTRIM"
+    if where == "Trailing":
+        function = "RTRIM"
+
+    parameters = [what]
+    if who is not None:
+        parameters.append(who)
+
+    return ExpressionTreeNode(
+        NodeType.FUNCTION,
+        value=function,
+        parameters=parameters,
         alias=alias,
     )
 
@@ -601,6 +626,7 @@ BUILDERS = {
     "SimilarTo": pattern_match,
     "Substring": substring,
     "Tuple": tuple_literal,
+    "Trim": trim_string,
     "TryCast": try_cast,
     "TypedString": typed_string,
     "UnaryOp": unary_op,

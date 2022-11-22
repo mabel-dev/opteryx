@@ -46,7 +46,9 @@ import opteryx
 
 from opteryx.connectors import DiskConnector
 
+from opteryx.exceptions import ColumnNotFoundError
 from opteryx.exceptions import DatasetNotFoundError
+from opteryx.exceptions import InvalidTemporalRangeFilterError
 from opteryx.exceptions import SqlError
 from opteryx.exceptions import UnsupportedSyntaxError
 
@@ -664,10 +666,40 @@ STATEMENTS = [
         ("SELECT COUNT(*), place FROM (SELECT CASE id WHEN 3 THEN 'Earth' WHEN 1 THEN 'Mercury' END as place FROM $planets) GROUP BY place HAVING place IS NULL;", 1, 2, None),
         ("SELECT COUNT(*), place FROM (SELECT CASE id WHEN 3 THEN 'Earth' WHEN 1 THEN 'Mercury' ELSE 'Elsewhere' END as place FROM $planets) GROUP BY place HAVING place IS NULL;", 0, 2, None),
 
+        ("SELECT TRIM(LEADING 'E' FROM name) FROM $planets;", 9, 1, None),
+        ("SELECT * FROM $planets WHERE TRIM(TRAILING 'arth' FROM name) = 'E'", 1, 20, None),
+        ("SELECT * FROM $planets WHERE TRIM(TRAILING 'ahrt' FROM name) = 'E'", 1, 20, None),
+
         # virtual dataset doesn't exist
         ("SELECT * FROM $RomanGods", None, None, DatasetNotFoundError),
         # disk dataset doesn't exist
         ("SELECT * FROM non.existent", None, None, DatasetNotFoundError),
+        # https://trino.io/docs/current/functions/aggregate.html#filtering-during-aggregation
+        ("SELECT LIST(name) FILTER (WHERE name IS NOT NULL) FROM $planets;", None, None, SqlError),
+        # Can't IN an INDENTIFIER
+        ("SELECT * FROM $astronauts WHERE 'Apollo 11' IN missions", None, None, SqlError),
+        # Invalid temporal ranges
+        ("SELECT * FROM $planets FOR 2022-01-01", None, None, InvalidTemporalRangeFilterError),
+        ("SELECT * FROM $planets FOR DATES IN 2022", None, None, InvalidTemporalRangeFilterError),
+        ("SELECT * FROM $planets FOR DATES BETWEEN 2022-01-01 AND TODAY", None, None, InvalidTemporalRangeFilterError),
+        ("SELECT * FROM $planets FOR DATES BETWEEN today AND yesterday", None, None, InvalidTemporalRangeFilterError),
+        # Join hints aren't supported
+        ("SELECT * FROM $satellites INNER HASH JOIN $planets USING (id)", None, None, SqlError),
+        # MONTH has a bug
+        ("SELECT DATEDIFF('months', birth_date, '2022-07-07') FROM $astronauts", None, None, KeyError),
+        ("SELECT DATEDIFF('months', birth_date, '2022-07-07') FROM $astronauts", None, None, KeyError),
+        ("SELECT DATEDIFF(MONTH, birth_date, '2022-07-07') FROM $astronauts", None, None, ColumnNotFoundError),
+        ("SELECT DATEDIFF(MONTHS, birth_date, '2022-07-07') FROM $astronauts", None, None, ColumnNotFoundError),
+        # DISTINCT ON detects as a function call for function ON
+        ("SELECT DISTINCT ON (name) FROM $astronauts ORDER BY 1", None, None, UnsupportedSyntaxError),
+        # SELECT EXCEPT isn't supported
+        # https://towardsdatascience.com/4-bigquery-sql-shortcuts-that-can-simplify-your-queries-30f94666a046
+        ("SELECT * EXCEPT id FROM $satellites", None, None, SqlError),
+        # TEMPORAL QUERIES aren't part of the AST
+        ("SELECT * FROM CUSTOMERS FOR SYSTEM_TIME ('2022-01-01', '2022-12-31')", None, None, InvalidTemporalRangeFilterError),
+        # can't cast to a list
+        ("SELECT CAST('abc' AS LIST)", None, None, SqlError),
+        ("SELECT TRY_CAST('abc' AS LIST)", None, None, SqlError),
 
         # These are queries which have been found to return the wrong result or not run correctly
         # FILTERING ON FUNCTIONS

@@ -36,3 +36,13 @@ SELECT CASE WHEN id = 3 THEN 'Earth' WHEN id = 1 THEN 'Mercury' END FROM $planet
 
 SELECT * FROM $astronauts WHERE death_date > current_time - interval '50' YEAR;
 SELECT * FROM $astronauts WHERE birth_date < current_time + interval '50' YEAR;
+
+SELECT LTRIM('   ABC');
+SELECT TRIM(LEADING '_' FROM '___ABC');
+SELECT TRIM('_' FROM '__init__');
+SELECT TRIM(BOTH '_' FROM '____dunder_');
+SELECT TRIM(TRAILING '__' FROM '_dunder_');
+SELECT RTRIM('   dunder    ');
+SELECT TRIM('    ABC   ');
+SELECT TRIM(name) FROM $planets;
+SELECT TRIM(LEADING ' ' FROM name) FROM $planets;

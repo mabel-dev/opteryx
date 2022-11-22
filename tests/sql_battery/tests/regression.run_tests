@@ -111,6 +111,6 @@ SELECT ARRAY_AGG(DISTINCT RIGHT(LOWER(name), 1) LIMIT 2) from $satellites GROUP 
 SELECT ARRAY_AGG(DISTINCT LEFT(UPPER(name), 1) LIMIT 2) from $satellites GROUP BY planetId;
 SELECT ARRAY_AGG(DISTINCT RIGHT(UPPER(name), 1) LIMIT 2) from $satellites GROUP BY planetId
 
-
+# [669]
 SELECT COUNT(*), COUNT_DISTINCT(id) FROM $planets;
 SELECT COUNT(*), SUM(id) FROM $planets;

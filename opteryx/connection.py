@@ -86,40 +86,6 @@ class Cursor:
         """The unique internal reference for this query"""
         return self._qid
 
-    def _format_prepared_param(self, param):
-        """
-        Formats parameters to be passed to a Query.
-        """
-
-        if param is None:  # pragma: no cover
-            return "NULL"
-
-        if isinstance(param, bool):
-            return "TRUE" if param else "FALSE"
-
-        if isinstance(param, (float, int, Decimal)):
-            return f"{param}"
-
-        if isinstance(param, str):
-            # if I have no apostrophes, use them as the delimiter
-            if param.find("'") == -1:
-                delimited = param.replace('"', '""')
-                return f"'{delimited}'"
-            # otherwise use quotes
-            delimited = param.replace('"', '""')
-            return f'"{delimited}"'
-
-        if isinstance(param, datetime.datetime):
-            datetime_str = param.strftime("%Y-%m-%d %H:%M:%S.%f")
-            return f"'{datetime_str}'"
-
-        if isinstance(param, (list, tuple, set)):
-            return f"({','.join(map(self._format_prepared_param, param))})"
-
-        raise SqlError(
-            f"Query parameter of type '{type(param)}' is not supported."
-        )  # pragma: no cover
-
     def execute(self, operation, params=None):
         if self._query is not None:  # pragma: no cover
             raise CursorInvalidStateError("Cursor can only be executed once")
@@ -167,21 +133,15 @@ class Cursor:
             self._results = utils.arrow.as_arrow(self._results)
         if self._statistics.end_time == 0:
             self._statistics.end_time = time.time_ns()
-        if self._results == set():
+        if self._results == set():  # pragma: no cover
             return (0, 0)
         return self._results.shape
 
     @property
     def stats(self):
         """execution statistics"""
-        if self._statistics.end_time == 0:
+        if self._statistics.end_time == 0:  # pragma: no cover
             self._statistics.end_time = time.time_ns()
-        #        if self._collected_stats is None:
-        #            statistics = self._query_planner.statistics
-        #            for node in self._plan.nodes():
-        #                if hasattr(node, "statistics"):
-        #                    statistics.merge(node.statistics)
-        #            self._collected_stats = statistics
         return self._statistics.as_dict()
 
     @property
@@ -214,7 +174,7 @@ class Cursor:
             raise CursorInvalidStateError(CURSOR_NOT_RUN)
         if not isinstance(self._results, (Table, set)):
             self._results = utils.arrow.as_arrow(self._results)
-        if self._results == set():
+        if self._results == set():  # pragma: no cover
             raise EmptyResultSetError("Cannot fulfil request on an empty result set")
         if self._statistics.end_time == 0:
             self._statistics.end_time = time.time_ns()
@@ -226,7 +186,7 @@ class Cursor:
             raise CursorInvalidStateError(CURSOR_NOT_RUN)
         if not isinstance(self._results, (Table, set)):
             self._results = utils.arrow.as_arrow(self._results)
-        if self._results == set():
+        if self._results == set():  # pragma: no cover
             raise EmptyResultSetError("Cannot fulfil request on an empty result set")
         if self._statistics.end_time == 0:
             self._statistics.end_time = time.time_ns()
@@ -247,7 +207,7 @@ class Cursor:
         # called 'size' to match the 'fetchmany' nomenclature
         if not isinstance(self._results, (Table, set)):
             self._results = utils.arrow.as_arrow(self._results)
-        if self._results == set():
+        if self._results == set():  # pragma: no cover
             raise EmptyResultSetError("Cannot fulfil request on an empty result set")
         if self._statistics.end_time == 0:
             self._statistics.end_time = time.time_ns()

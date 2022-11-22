@@ -75,8 +75,8 @@ class BaseBlobStorageAdapter(abc.ABC):
         """
         raise NotImplementedError("read_blob not implemented")
 
-    def write_blob(self, name, content):
+    def write_blob(self, name, content):  # pragma: no cover
         raise NotImplementedError("write_blob not implemented")
 
-    def remove_blob(self, name):
+    def remove_blob(self, name):  # pragma: no cover
         raise NotImplementedError("remove_blob not implemented")
