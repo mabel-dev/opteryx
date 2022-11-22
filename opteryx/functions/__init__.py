@@ -175,7 +175,6 @@ FUNCTIONS = {
     "LENGTH": _iterate_single_parameter(get_len),  # LENGTH(str) -> int
     "UPPER": compute.utf8_upper,  # UPPER(str) -> str
     "LOWER": compute.utf8_lower,  # LOWER(str) -> str
-    "TRIM": compute.utf8_trim_whitespace,  # TRIM(str) -> str
     "LEFT": string_functions.string_slicer_left,
     "RIGHT": string_functions.string_slicer_right,
     "REVERSE": compute.utf8_reverse,
@@ -187,6 +186,9 @@ FUNCTIONS = {
     "ENDS_WITH": string_functions.ends_w,
     "SUBSTRING": string_functions.substring,
     "POSITION": _iterate_double_parameter(string_functions.position),
+    "TRIM": string_functions.trim,
+    "LTRIM": string_functions.ltrim,
+    "RTRIM": string_functions.rtrim,
 
     # HASHING & ENCODING
     "HASH": _iterate_single_parameter(lambda x: format(CityHash64(str(x)), "X")),

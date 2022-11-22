@@ -252,3 +252,21 @@ def position(sub, string):
     Returns the starting position of the first instance of substring in string. Positions start with 1. If not found, 0 is returned.
     """
     return string.find(sub) + 1
+
+
+def trim(*args):
+    if len(args) == 1:
+        return compute.utf8_trim_whitespace(args[0])
+    return compute.utf8_trim(args[0], args[1][0])
+
+
+def ltrim(*args):
+    if len(args) == 1:
+        return compute.utf8_ltrim_whitespace(args[0])
+    return compute.utf8_ltrim(args[0], args[1][0])
+
+
+def rtrim(*args):
+    if len(args) == 1:
+        return compute.utf8_rtrim_whitespace(args[0])
+    return compute.utf8_rtrim(args[0], args[1][0])
