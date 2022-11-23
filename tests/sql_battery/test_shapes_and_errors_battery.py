@@ -794,6 +794,8 @@ STATEMENTS = [
         ("SELECT * FROM $planets WHERE 1 = 1 FOR TODAY;", None, None, SqlError),
         ("SELECT * FROM $planets GROUP BY name FOR TODAY;", None, None, SqlError),
         ("SELECT * FROM $planets AS P FOR TODAY;", None, None, SqlError),
+        # [#518] SELECT * and GROUP BY can't be used together
+        ("SELECT * FROM $planets GROUP BY name", None, None, SqlError),
 ]
 # fmt:on
 

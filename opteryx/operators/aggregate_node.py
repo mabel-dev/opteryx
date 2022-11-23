@@ -238,6 +238,8 @@ class AggregateNode(BasePlanNode):
         super().__init__(properties=properties)
 
         self._aggregates = config.get("aggregates", [])
+        if any(node.token_type == NodeType.WILDCARD for node in self._aggregates):
+            raise SqlError("Cannot select `*` with `GROUP BY` clause.")
 
         self._groups = []
         for group in config.get("groups", []):
