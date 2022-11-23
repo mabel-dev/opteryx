@@ -99,5 +99,7 @@ def eliminate_constant_evaluations(plan, properties):
         # get the node from the node_id
         operator = plan.get_operator(nid)
         operator.filter = update_expression_tree(operator.filter)
+        if operator.filter is None:
+            plan.remove_operator(nid)
 
     return plan
