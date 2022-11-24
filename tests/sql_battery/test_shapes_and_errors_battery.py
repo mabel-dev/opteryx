@@ -626,6 +626,11 @@ STATEMENTS = [
         ("SELECT id FROM $planets WHERE NOT NOT (id < 5 AND id = 3)", 1, 1, None),
         ("SELECT id FROM $planets WHERE NOT id = 2 AND NOT NOT (id < 5 AND id = 3)", 1, 1, None),
         ("SET enable_optimizer = false; SELECT id FROM $planets WHERE NOT id = 2 AND NOT NOT (id < 5 AND id = 3)", 1, 1, None),
+        ("SELECT * FROM $planets WHERE NOT(id = 9 OR id = 8)", 7, 20, None),
+        ("SELECT * FROM $planets WHERE NOT(id = 9 OR id = 8) OR True", 9, 20, None),
+        ("SELECT * FROM $planets WHERE NOT(id = 9 OR 8 = 8)", 8, 20, None),
+        ("SELECT * FROM $planets WHERE 1 = 1", 9, 20, None),
+        ("SELECT * FROM $planets WHERE NOT 1 = 2", 9, 20, None),
 
         ("SHOW CREATE TABLE $planets", 1, 1, None),
         ("SHOW CREATE TABLE $satellites", 1, 1, None),

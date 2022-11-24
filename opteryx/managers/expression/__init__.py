@@ -42,6 +42,9 @@ LITERAL_TYPE: int = int("0100", 2)
 
 
 def format_expression(root):
+    if root is None:
+        return "null"
+
     node_type = root.token_type
 
     # LITERAL TYPES

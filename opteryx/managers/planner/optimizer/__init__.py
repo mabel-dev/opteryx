@@ -15,6 +15,7 @@ from opteryx.managers.planner.optimizer import actions
 from opteryx.shared.query_statistics import QueryStatistics
 
 RULESET: list = [
+    actions.apply_demorgans_law,
     actions.eliminate_negations,
     actions.split_conjunctive_predicates,  # run after eliminate_negations
     actions.eliminate_fixed_function_evaluations,  # run before constant evaluations

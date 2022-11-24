@@ -11,6 +11,7 @@
 # limitations under the License.
 
 # fmt: off
+from .action_apply_demorgans_law import apply_demorgans_law
 from .action_constant_evaluations import eliminate_constant_evaluations
 from .action_function_evaluations import eliminate_fixed_function_evaluations
 from .action_defragment_pages import defragment_pages

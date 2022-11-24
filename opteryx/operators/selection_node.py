@@ -26,7 +26,7 @@ from pyarrow import Table
 
 from opteryx.attribute_types import TOKEN_TYPES
 from opteryx.exceptions import SqlError
-from opteryx.managers.expression import evaluate
+from opteryx.managers.expression import evaluate, format_expression
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 
@@ -35,29 +35,10 @@ class SelectionNode(BasePlanNode):
     def __init__(self, properties: QueryProperties, **config):
         super().__init__(properties=properties)
         self.filter = config.get("filter")
-        self._unfurled_filter = None
-        self._mapped_filter = None
 
     @property
     def config(self):  # pragma: no cover
-        def _inner_config(predicate):
-            if isinstance(predicate, tuple):
-                if len(predicate) > 1 and predicate[1] == TOKEN_TYPES.IDENTIFIER:
-                    return f"`{predicate[0]}`"
-                if len(predicate) > 1 and predicate[1] == TOKEN_TYPES.VARCHAR:
-                    return f'"{predicate[0]}"'
-                if len(predicate) == 2:
-                    if predicate[0] == "Not":
-                        return f"NOT {_inner_config(predicate[1])}"
-                    return f"{predicate[0]}"
-                return "(" + " ".join(_inner_config(p) for p in predicate) + ")"
-            if isinstance(predicate, list):
-                if len(predicate) == 1:
-                    return _inner_config(predicate[0])
-                return "[" + ",".join(_inner_config(p) for p in predicate) + "]"
-            return f"{predicate}"
-
-        return _inner_config(self.filter)
+        return format_expression(self.filter)
 
     @property
     def name(self):  # pragma: no cover

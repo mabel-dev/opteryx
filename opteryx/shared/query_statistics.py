@@ -62,11 +62,12 @@ class _QueryStatistics:
 
         # time spent on various steps
         self.time_planning: int = 0
-        self.time_selecting: float = 0
-        self.time_aggregating: float = 0
-        self.time_ordering: float = 0
-        self.time_evaluating: float = 0
-        self.time_optimizing: float = 0
+        self.time_selecting: int = 0
+        self.time_aggregating: int = 0
+        self.time_ordering: int = 0
+        self.time_evaluating: int = 0
+        self.time_optimizing: int = 0
+        self.time_defragmenting: int = 0
 
         self.start_time: int = 0
         self.end_time: int = 0
@@ -120,6 +121,7 @@ class _QueryStatistics:
             "time_ordering": self._ns_to_s(self.time_ordering),
             "time_evaluating": self._ns_to_s(self.time_evaluating),
             "time_optimizing": self._ns_to_s(self.time_optimizing),
+            "time_defragmenting": self._ns_to_s(self.time_defragmenting),
             "partitions_found": self.partitions_found,
             "partitions_scanned": self.partitions_scanned,
             "partitions_read": self.partitions_read,

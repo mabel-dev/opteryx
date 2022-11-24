@@ -34,9 +34,11 @@ This is a SQL Query Execution Plan Node.
     page size.
 
 """
+import time
+
 from typing import Iterable
+
 import pyarrow
-from opteryx.exceptions import SqlError
 
 from opteryx.operators import BasePlanNode
 
@@ -73,11 +75,13 @@ class PageDefragmentNode(BasePlanNode):
 
             if page.num_rows > 0:
 
+                start = time.monotonic_ns()
                 # add what we've collected before to the table
                 if collected_rows:  # pragma: no cover
                     self.statistics.page_merges += 1
                     page = pyarrow.concat_tables([collected_rows, page], promote=True)
                     collected_rows = None
+                self.statistics.time_defragmenting += time.monotonic_ns() - start
 
                 # work out some stats about what we have
                 page_bytes = page.nbytes
@@ -85,13 +89,19 @@ class PageDefragmentNode(BasePlanNode):
 
                 # if we're more than double the target size, let's do something
                 if page_bytes > (PAGE_SIZE * HIGH_WATER):  # pragma: no cover
+                    start = time.monotonic_ns()
+
                     average_record_size = page_bytes / page_records
                     new_row_count = int(PAGE_SIZE / average_record_size)
                     row_counter += new_row_count
                     self.statistics.page_splits += 1
-                    yield page.slice(offset=0, length=new_row_count)
+                    new_page = page.slice(offset=0, length=new_row_count)
                     at_least_one_page = True
                     collected_rows = page.slice(offset=new_row_count)
+
+                    self.statistics.time_defragmenting += time.monotonic_ns() - start
+
+                    yield new_page
                 # if we're less than 75% of the page size, save hold what we have so
                 # far and go collect the next page
                 elif page_bytes < (PAGE_SIZE * LOW_WATER):
