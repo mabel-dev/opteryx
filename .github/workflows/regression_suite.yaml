@@ -85,7 +85,7 @@ jobs:
           GCP_PROJECT_ID: mabel
 
       - name: Check Coverage
-        run: python -m coverage report --include=opteryx* --fail-under=94 -m
+        run: python -m coverage report --include=opteryx* --fail-under=95 -m
 
       - name: "Upload coverage to Codecov"
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.10'
