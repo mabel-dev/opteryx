@@ -6,7 +6,7 @@
 
 <h3 align="center">
 
-Opteryx is a SQL Engine written in Python, designed for cloud-native environments.
+Opteryx is a SQL Engine written in Python, designed for embedded and cloud-native environments.
 
 [Documentation](https://opteryx.dev/latest) |
 [Examples](https://github.com/mabel-dev/opteryx/tree/main/notebooks) |
@@ -19,7 +19,7 @@ Opteryx is a SQL Engine written in Python, designed for cloud-native environment
 [![Downloads](https://pepy.tech/badge/opteryx)](https://pepy.tech/project/opteryx)
 [![last_commit](https://img.shields.io/github/last-commit/mabel-dev/opteryx)](https://github.com/mabel-dev/opteryx/commits)
 [![codecov](https://codecov.io/gh/mabel-dev/opteryx/branch/main/graph/badge.svg?token=sIgKpzzd95)](https://codecov.io/gh/mabel-dev/opteryx)
-[![PyPI Latest Release](https://img.shields.io/badge/Python-3.8%20%7C%203.9%20%7C%203.10-blue?logo=python)](https://pypi.org/project/opteryx/)
+[![PyPI Latest Release](https://img.shields.io/badge/Python-3.8%20%7C%203.9%20%7C%203.10%20%7C%203.11-blue?logo=python)](https://pypi.org/project/opteryx/)
 
 </h3>
 
