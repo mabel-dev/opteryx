@@ -50,13 +50,13 @@ def _get_type(var):
         return PYTHON_TYPES.get(
             type(var[0]).__name__, f"UNSUPPORTED ({type(var[0]).__name__})"
         )
-    type_name = type(var).__name__
-    return PYTHON_TYPES.get(type_name, f"OTHER ({type_name})")
+    type_name = type(var).__name__  # pragma: no cover
+    return PYTHON_TYPES.get(type_name, f"OTHER ({type_name})")  # pragma: no cover
 
 
 def _check_type(operation, provided_type, valid_types):
     # added for Opteryx
-    if provided_type not in valid_types:
+    if provided_type not in valid_types:  # pragma: no cover
         raise TypeError(
             f"Cannot use the {operation} operation on a {provided_type} column, a {valid_types} column is required."
         )
@@ -71,7 +71,7 @@ def filter_operations_for_display(arr, operator, value):
     """
 
     # if the input is a table, get the first column
-    if isinstance(value, pyarrow.Table):
+    if isinstance(value, pyarrow.Table):  # pragma: no cover
         value = [value.columns[0].to_numpy()]
 
     # work out which rows we're going to actually evaluate
@@ -121,7 +121,7 @@ def filter_operations(arr, operator, value):
     """
 
     # if the input is a table, get the first column
-    if isinstance(value, pyarrow.Table):
+    if isinstance(value, pyarrow.Table):  # pragma: no cover
         value = [value.columns[0].to_numpy()]
 
     # work out which rows we're going to actually evaluate
@@ -176,7 +176,7 @@ def _inner_filter_operations(arr, operator, value):
     literal_type = _get_type(value)
 
     if operator == "Eq":
-        if identifier_type != literal_type and value is not None:
+        if identifier_type != literal_type and value is not None:  # pragma: no cover
             raise TypeError(
                 f"Type mismatch, unable to compare {identifier_type} with {literal_type}"
             )
@@ -268,7 +268,7 @@ def _inner_filter_operations(arr, operator, value):
         )  # [#325]
         return numpy.invert(matches)
     else:
-        raise Exception(f"Operator {operator} is not implemented!")
+        raise Exception(f"Operator {operator} is not implemented!")  # pragma: no cover
 
 
 # Drop duplicates
@@ -288,7 +288,7 @@ def drop_duplicates(table, columns=None):
 # Show for easier printing
 def head(table, n=5, max_width=100):
     # Updated to yield rather than print for Opteryx
-    if table == set():
+    if table == set():  # pragma: no cover
         yield "No data in table"
         return
     if table.num_rows == 0:
