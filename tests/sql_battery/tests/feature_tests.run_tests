@@ -49,3 +49,6 @@ SELECT TRIM(LEADING ' ' FROM name) FROM $planets;
 
 SELECT HASH(name || str(id)) FROM $planets GROUP BY name, id;
 SELECT * FROM (SELECT HASH(name || str(id)) AS PID, name, id FROM $planets) AS pset INNER JOIN (SELECT HASH(name || str(id)) as PID, name, id FROM $planets GROUP BY name, id) ON PID = PID ORDER BY pset.name, pset.id;
+
+ANALYZE TABLE $planets;
+ANALYZE TABLE $astronauts;

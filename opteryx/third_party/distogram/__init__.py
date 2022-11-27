@@ -3,7 +3,15 @@ __author__ = """Romain Picard"""
 __email__ = "romain.picard@oakbits.com"
 __version__ = "3.0.0"
 
+"""
+The following changes have been made for Opteryx:
+- The number of bins is no longer configurable, it is always 100
+- The ability to weight the differences has been removed
+"""
+
 import math
+import numpy
+
 from bisect import bisect_left
 from functools import reduce
 from itertools import accumulate
@@ -13,6 +21,7 @@ from typing import Optional
 from typing import Tuple
 
 EPSILON = 1e-5
+BIN_COUNT: int = 100
 Bin = Tuple[float, int]
 
 
@@ -20,9 +29,9 @@ Bin = Tuple[float, int]
 class Distogram(object):  # pragma: no cover
     """Compressed representation of a distribution."""
 
-    __slots__ = "bin_count", "bins", "min", "max", "diffs", "min_diff", "weighted_diff"
+    __slots__ = "bins", "min", "max", "diffs", "min_diff"
 
-    def __init__(self, bin_count: int = 100, weighted_diff: bool = False):
+    def __init__(self):
         """Creates a new Distogram object
 
         Args:
@@ -32,29 +41,33 @@ class Distogram(object):  # pragma: no cover
         Returns:
             A Distogram object.
         """
-        self.bin_count: int = bin_count
         self.bins: List[Bin] = list()
         self.min: Optional[float] = None
         self.max: Optional[float] = None
         self.diffs: Optional[List[float]] = None
         self.min_diff: Optional[float] = None
-        self.weighted_diff: bool = weighted_diff
 
     ## all class methods below here have been added for Opteryx
     def dump(self):  # pragma: no cover
         import orjson
 
-        return orjson.dumps(
-            {
-                "bin_count": self.bin_count,
-                "bins": self.bins,
-                "min": self.min,
-                "max": self.max,
-                "diffs": self.diffs,
-                "min_diff": self.min_diff,
-                "weighted_diff": self.weighted_diff,
-            }
-        )
+        def handler(obj):
+            if isinstance(obj, numpy.integer):
+                return int(obj)
+            if isinstance(obj, numpy.inexact):
+                return float(obj)
+            raise TypeError
+
+        return orjson.dumps(self.dump(), default=handler)
+
+    def dump(self):
+        return {
+            "bins": self.bins,
+            "min": self.min,
+            "max": self.max,
+            "diffs": self.diffs,
+            "min_diff": self.min_diff,
+        }
 
     def __add__(self, operand):  # pragma: no cover
         dgram = merge(self, operand)
@@ -71,13 +84,11 @@ def load(dic):  # pragma: no cover
 
         dic = orjson.loads(dic)
     dgram = Distogram()
-    dgram.bin_count = dic["bin_count"]
     dgram.bins = dic["bins"]
     dgram.min = dic["min"]
     dgram.max = dic["max"]
     dgram.diffs = dic["diffs"]
     dgram.min_diff = dic["min_diff"]
-    dgram.weighted_diff = dic["weighted_diff"]
     return dgram
 
 
@@ -97,13 +108,6 @@ def _moment(
     return sum(m) / sum(counts)
 
 
-def _weighted_diff(h: Distogram, left: Bin, right: Bin):  # pragma: no cover
-    diff = left[0] - right[0]
-    if h.weighted_diff is True:
-        diff *= math.log(EPSILON + min(left[1], right[1]))
-    return diff
-
-
 def _update_diffs(h: Distogram, i: int) -> None:  # pragma: no cover
     if h.diffs is not None:
         update_min = False
@@ -112,7 +116,7 @@ def _update_diffs(h: Distogram, i: int) -> None:  # pragma: no cover
             if h.diffs[i - 1] == h.min_diff:
                 update_min = True
 
-            h.diffs[i - 1] = _weighted_diff(h, h.bins[i], h.bins[i - 1])
+            h.diffs[i - 1] = h.bins[i][0] - h.bins[i - 1][0]
             if h.diffs[i - 1] < h.min_diff:
                 h.min_diff = h.diffs[i - 1]
 
@@ -120,7 +124,7 @@ def _update_diffs(h: Distogram, i: int) -> None:  # pragma: no cover
             if h.diffs[i] == h.min_diff:
                 update_min = True
 
-            h.diffs[i] = _weighted_diff(h, h.bins[i + 1], h.bins[i])
+            h.diffs[i] = h.bins[i + 1][0] - h.bins[i][0]
             if h.diffs[i] < h.min_diff:
                 h.min_diff = h.diffs[i]
 
@@ -131,12 +135,12 @@ def _update_diffs(h: Distogram, i: int) -> None:  # pragma: no cover
 
 
 def _trim(h: Distogram) -> Distogram:  # pragma: no cover
-    while len(h.bins) > h.bin_count:
+    while len(h.bins) > BIN_COUNT:
         if h.diffs is not None:
             i = h.diffs.index(h.min_diff)
         else:
             diffs = [
-                (i - 1, _weighted_diff(h, b, h.bins[i - 1]))
+                (i - 1, b[0] - h.bins[i - 1][0])
                 for i, b in enumerate(h.bins[1:], start=1)
             ]
             i, _ = min(diffs, key=itemgetter(1))
@@ -162,13 +166,7 @@ def _trim_in_place(h: Distogram, value: float, c: int, i: int):  # pragma: no co
 
 
 def _compute_diffs(h: Distogram) -> List[float]:  # pragma: no cover
-    if h.weighted_diff is True:
-        diffs = [
-            (v2 - v1) * math.log(EPSILON + min(f1, f2))
-            for (v1, f1), (v2, f2) in zip(h.bins[:-1], h.bins[1:])
-        ]
-    else:
-        diffs = [v2 - v1 for (v1, _), (v2, _) in zip(h.bins[:-1], h.bins[1:])]
+    diffs = [v2 - v1 for (v1, _), (v2, _) in zip(h.bins[:-1], h.bins[1:])]
     h.min_diff = min(diffs)
 
     return diffs
@@ -181,8 +179,8 @@ def _search_in_place_index(
         h.diffs = _compute_diffs(h)
 
     if index > 0:
-        diff1 = _weighted_diff(h, (new_value, 1), h.bins[index - 1])
-        diff2 = _weighted_diff(h, h.bins[index], (new_value, 1))
+        diff1 = new_value - h.bins[index - 1][0]
+        diff2 = h.bins[index][0] - new_value
 
         i_bin, diff = (index - 1, diff1) if diff1 < diff2 else (index, diff2)
 
@@ -231,7 +229,7 @@ def update(h: Distogram, value: float, count: int = 1) -> Distogram:  # pragma: 
     if index == -1:
         h.bins.append((value, count))
         if h.diffs is not None:
-            diff = _weighted_diff(h, h.bins[-1], h.bins[-2])
+            diff = h.bins[-1][0] - h.bins[-2][0]
             h.diffs.append(diff)
             h.min_diff = min(h.min_diff, diff)
     else:
