@@ -3,16 +3,20 @@ import platform
 from functools import wraps
 
 
-def is_arm():
+def is_arm():  # pragma: no cover
     return platform.machine() in ("armv7l", "aarch64")
 
 
-def is_windows():
+def is_windows():  # pragma: no cover
     return platform.system().lower() == "windows"
 
 
-def is_mac():
+def is_mac():  # pragma: no cover
     return platform.system().lower() == "darwin"
+
+
+def is_pypy():  # pragma: no cover
+    return platform.python_implementation() == "PyPy"
 
 
 def skip(func):  # pragma: no cover
