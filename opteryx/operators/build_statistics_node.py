@@ -85,7 +85,10 @@ def _extended_collector(pages):
             "missing": 0,
             "most_frequent_values": None,
             "most_frequent_counts": None,
-            "distogram": None,
+            "numeric_range": None,
+            "varchar_range": None,
+            "distogram_values": None,
+            "distogram_counts": None
         }
     )
 
@@ -99,7 +102,7 @@ def _extended_collector(pages):
         if columns is None:
             columns = Columns(page)
 
-        for block in page.to_batches(5000):
+        for block in page.to_batches(10000):
 
             for column in page.column_names:
 
@@ -147,9 +150,12 @@ def _extended_collector(pages):
 
                 # long strings are meaningless
                 if _type in (OPTERYX_TYPES.VARCHAR):
+
+                    column_data = [v.as_py() for v in column_data if v.is_valid]
+
                     max_len = reduce(
                         lambda x, y: max(len(y), x),
-                        (v.as_py() for v in column_data if v.is_valid),
+                        column_data,
                         0,
                     )
                     if max_len > MAX_VARCHAR_SIZE:
@@ -157,10 +163,20 @@ def _extended_collector(pages):
                             uncollected_columns.append(column)
                         continue
 
+                    # collect the range values
+                    varchar_range_min = min(column_data)
+                    varchar_range_max = max(column_data)
+
+                    if profile["varchar_range"] is not None:
+                        varchar_range_min = min(varchar_range_min, profile["varchar_range"][0])
+                        varchar_range_max = max(varchar_range_max, profile["varchar_range"][1])
+                    
+                    profile["varchar_range"] = (varchar_range_min, varchar_range_max)
+
                 # convert TIMESTAMP into a NUMERIC (seconds after Linux Epoch)
                 if _type == OPTERYX_TYPES.TIMESTAMP:
                     column_data = (_to_linux_epoch(i) for i in column_data)
-                else:
+                elif _type != OPTERYX_TYPES.VARCHAR:
                     column_data = (i.as_py() for i in column_data)
 
                 # remove empty values
@@ -210,7 +226,9 @@ def _extended_collector(pages):
 
             dgram = profile.pop("dgram", None)
             if dgram:
-                profile["distogram"] = dgram.dump()
+                profile["numeric_range"] = (dgram.min, dgram.max)
+                profile["distogram_values"], profile["distogram_counts"] = zip(*dgram.bins)
+                profile["distogram_values"] = numpy.array(profile["distogram_values"], numpy.double)
 
             counter = profile.pop("counter", None)
             if counter:
@@ -229,7 +247,11 @@ def _extended_collector(pages):
 
         buffer.append(profile)
 
+#    import pprint
+#    pprint.pprint(buffer)
+
     table = pyarrow.Table.from_pylist(buffer)
+
     table = Columns.create_table_metadata(
         table=table,
         expected_rows=len(buffer),

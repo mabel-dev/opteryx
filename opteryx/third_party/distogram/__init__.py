@@ -7,6 +7,7 @@ __version__ = "3.0.0"
 The following changes have been made for Opteryx:
 - The number of bins is no longer configurable, it is always 100
 - The ability to weight the differences has been removed
+- Dump and Load functionality
 """
 
 import math
@@ -61,12 +62,13 @@ class Distogram(object):  # pragma: no cover
         return orjson.dumps(self.dump(), default=handler)
 
     def dump(self):
+        bin_vals, bin_counts = zip(*self.bins)
+        bin_vals = numpy.array(bin_vals, dtype=numpy.double)
+        self.bins = list(zip(bin_vals, bin_counts))
         return {
             "bins": self.bins,
             "min": self.min,
             "max": self.max,
-            "diffs": self.diffs,
-            "min_diff": self.min_diff,
         }
 
     def __add__(self, operand):  # pragma: no cover
@@ -87,8 +89,13 @@ def load(dic):  # pragma: no cover
     dgram.bins = dic["bins"]
     dgram.min = dic["min"]
     dgram.max = dic["max"]
-    dgram.diffs = dic["diffs"]
-    dgram.min_diff = dic["min_diff"]
+
+    # TODO: CHECK THIS LOGIC
+    for i in range(len(dgram.bins) - 1):
+        diff = dgram.bins[i][0] - dgram.bins[i-1][0]
+        dgram.diffs.append(diff)
+    dgram.min_diff = min(dgram.min_diff)
+
     return dgram
 
 
@@ -220,7 +227,7 @@ def update(h: Distogram, value: float, count: int = 1) -> Distogram:  # pragma: 
             h.bins[index] = (vi, fi + count)
             return h
 
-    if index > 0 and len(h.bins) >= h.bin_count:
+    if index > 0 and len(h.bins) >= BIN_COUNT:
         in_place_index = _search_in_place_index(h, value, index)
         if in_place_index > 0:
             h = _trim_in_place(h, value, count, in_place_index)
