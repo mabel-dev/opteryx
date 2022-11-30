@@ -92,7 +92,7 @@ def load(dic):  # pragma: no cover
 
     # TODO: CHECK THIS LOGIC
     for i in range(len(dgram.bins) - 1):
-        diff = dgram.bins[i][0] - dgram.bins[i-1][0]
+        diff = dgram.bins[i][0] - dgram.bins[i - 1][0]
         dgram.diffs.append(diff)
     dgram.min_diff = min(dgram.min_diff)
 

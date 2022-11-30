@@ -88,7 +88,7 @@ def _extended_collector(pages):
             "numeric_range": None,
             "varchar_range": None,
             "distogram_values": None,
-            "distogram_counts": None
+            "distogram_counts": None,
         }
     )
 
@@ -168,9 +168,13 @@ def _extended_collector(pages):
                     varchar_range_max = max(column_data)
 
                     if profile["varchar_range"] is not None:
-                        varchar_range_min = min(varchar_range_min, profile["varchar_range"][0])
-                        varchar_range_max = max(varchar_range_max, profile["varchar_range"][1])
-                    
+                        varchar_range_min = min(
+                            varchar_range_min, profile["varchar_range"][0]
+                        )
+                        varchar_range_max = max(
+                            varchar_range_max, profile["varchar_range"][1]
+                        )
+
                     profile["varchar_range"] = (varchar_range_min, varchar_range_max)
 
                 # convert TIMESTAMP into a NUMERIC (seconds after Linux Epoch)
@@ -227,8 +231,12 @@ def _extended_collector(pages):
             dgram = profile.pop("dgram", None)
             if dgram:
                 profile["numeric_range"] = (dgram.min, dgram.max)
-                profile["distogram_values"], profile["distogram_counts"] = zip(*dgram.bins)
-                profile["distogram_values"] = numpy.array(profile["distogram_values"], numpy.double)
+                profile["distogram_values"], profile["distogram_counts"] = zip(
+                    *dgram.bins
+                )
+                profile["distogram_values"] = numpy.array(
+                    profile["distogram_values"], numpy.double
+                )
 
             counter = profile.pop("counter", None)
             if counter:
@@ -247,8 +255,8 @@ def _extended_collector(pages):
 
         buffer.append(profile)
 
-#    import pprint
-#    pprint.pprint(buffer)
+    #    import pprint
+    #    pprint.pprint(buffer)
 
     table = pyarrow.Table.from_pylist(buffer)
 
