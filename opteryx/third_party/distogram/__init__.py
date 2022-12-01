@@ -49,7 +49,7 @@ class Distogram(object):  # pragma: no cover
         self.min_diff: Optional[float] = None
 
     ## all class methods below here have been added for Opteryx
-    def dump(self):  # pragma: no cover
+    def dumps(self):  # pragma: no cover
         import orjson
 
         def handler(obj):

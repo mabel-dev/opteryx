@@ -40,28 +40,6 @@ def _to_linux_epoch(date):
     if date.as_py() is None:
         return numpy.nan
     return datetime.datetime.fromisoformat(date.as_py().isoformat()).timestamp()
-    """
-    Collect the very summary type information only, we read only a single page to do
-    this so it's pretty quick - helpful if you want to know what fields are available
-    programatically.
-    """
-    columns = Columns(page)
-
-    buffer = []
-    for column in page.column_names:
-        column_data = page.column(column)
-        _type = determine_type(str(column_data.type))
-        new_row = {"name": columns.get_preferred_name(column), "type": _type}
-        buffer.append(new_row)
-
-    table = pyarrow.Table.from_pylist(buffer)
-    table = Columns.create_table_metadata(
-        table=table,
-        expected_rows=len(buffer),
-        name="show_columns",
-        table_aliases=[],
-    )
-    return table
 
 
 def increment(dic: dict, value):
