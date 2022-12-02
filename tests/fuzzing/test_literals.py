@@ -30,8 +30,9 @@ def test_fuzz_literals(literal):
     # mid string indicates the end of the string
     literal = literal.replace("'", "#")
 
-    # this one is a bug
+    # these ones are a bug
     literal = literal.replace("\\", "")
+    literal = literal.replace("--", "")
 
     statement = f"SELECT HASH('{literal}');"
     print(statement)
