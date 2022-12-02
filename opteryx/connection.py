@@ -149,14 +149,7 @@ class Cursor:
         """list of run-time warnings"""
         return self._statistics.messages
 
-    def fetchone(self, as_dicts: bool = False) -> Optional[Dict]:
-        """
-        Fetch one record only.
-
-        Parameters:
-            as_dicts: boolean (optional):
-                Return a dictionary, default is False, return a tuple
-        """
+    def _do_fetch(self, limit: int, as_dicts):
         if self._results is None:  # pragma: no cover
             raise CursorInvalidStateError(CURSOR_NOT_RUN)
         if not isinstance(self._results, (Table, set)):
@@ -165,32 +158,35 @@ class Cursor:
             raise EmptyResultSetError("Cannot fulfil request on an empty result set")
         if self._statistics.end_time == 0:
             self._statistics.end_time = time.time_ns()
-        return utils.arrow.fetchone(self._results, as_dicts=as_dicts)
+
+        if limit == 1:
+            return next(
+                utils.arrow.fetchmany(
+                    pages=self._results, limit=limit, as_dicts=as_dicts
+                ),
+                None,
+            )
+
+        return utils.arrow.fetchmany(self._results, limit=limit, as_dicts=as_dicts)
+
+    def fetchone(self, as_dicts: bool = False) -> Optional[Dict]:
+        """
+        Fetch one record only.
+
+        Parameters:
+            as_dicts: boolean (optional):
+                Return a dictionary, default is False, return a tuple
+        """
+        return self._do_fetch(1, as_dicts)
 
     def fetchmany(self, size=None, as_dicts: bool = False) -> List[Dict]:
         """fetch a given number of records"""
         fetch_size = self.arraysize if size is None else size
-        if self._results is None:  # pragma: no cover
-            raise CursorInvalidStateError(CURSOR_NOT_RUN)
-        if not isinstance(self._results, (Table, set)):
-            self._results = utils.arrow.as_arrow(self._results)
-        if self._results == set():  # pragma: no cover
-            raise EmptyResultSetError("Cannot fulfil request on an empty result set")
-        if self._statistics.end_time == 0:
-            self._statistics.end_time = time.time_ns()
-        return utils.arrow.fetchmany(self._results, limit=fetch_size, as_dicts=as_dicts)
+        return self._do_fetch(fetch_size, as_dicts)
 
     def fetchall(self, as_dicts: bool = False) -> List[Dict]:
         """fetch all matching records"""
-        if self._results is None:  # pragma: no cover
-            raise CursorInvalidStateError(CURSOR_NOT_RUN)
-        if not isinstance(self._results, (Table, set)):
-            self._results = utils.arrow.as_arrow(self._results)
-        if self._results == set():  # pragma: no cover
-            raise EmptyResultSetError("Cannot fulfil request on an empty result set")
-        if self._statistics.end_time == 0:
-            self._statistics.end_time = time.time_ns()
-        return utils.arrow.fetchall(self._results, as_dicts=as_dicts)
+        return self._do_fetch(-1, as_dicts)
 
     def arrow(self, size: int = None) -> Table:
         """

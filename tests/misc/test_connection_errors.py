@@ -60,10 +60,25 @@ def test_connection_parameter_mismatch():
         cur.execute("SELECT * FROM $planets WHERE id = ?", (1, 2))
 
 
+def test_fetching():
+    import opteryx
+
+    conn = opteryx.connect()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM $planets;")
+
+    assert isinstance(cur.fetchone(), tuple)
+    assert isinstance(cur.fetchone(True), dict)
+    assert len(list(cur.fetchall())) == 9
+    assert len(list(cur.fetchmany(4))) == 4
+    assert len(list(cur.fetchmany(100))) == 9
+
+
 if __name__ == "__main__":  # pragma: no cover
 
     test_connection_invalid_state()
     test_connection_warnings()
     test_connection_parameter_mismatch()
+    test_fetching()
 
     print("✅ okay")

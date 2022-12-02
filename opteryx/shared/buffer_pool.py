@@ -51,7 +51,7 @@ class _BufferPool:
         return evicted
 
     @property
-    def stats(self):
+    def stats(self):  # pragma: no cover
         """hit, miss and eviction statistics"""
         return self._lru.stats
 

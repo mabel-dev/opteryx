@@ -20,21 +20,33 @@ from pyarrow import compute
 
 
 def _is_null(values):
-    return numpy.nonzero(compute.is_null(values, nan_is_null=True))[0]
+    indicies = numpy.nonzero(compute.is_null(values, nan_is_null=True))[0]
+    mask_array = numpy.zeros(len(values), dtype=bool)
+    mask_array[indicies] = True
+    return mask_array
 
 
 def _is_not_null(values):
-    matches = compute.is_null(values, nan_is_null=True)
-    return numpy.nonzero(numpy.invert(matches))[0]
+    indicies = compute.is_null(values, nan_is_null=True)
+    indicies = numpy.nonzero(numpy.invert(indicies))[0]
+    mask_array = numpy.zeros(len(values), dtype=bool)
+    mask_array[indicies] = True
+    return mask_array
 
 
 def _is_true(values):
-    return numpy.nonzero(values)[0]
+    indicies = numpy.nonzero(values)[0]
+    mask_array = numpy.zeros(len(values), dtype=bool)
+    mask_array[indicies] = True
+    return mask_array
 
 
 def _is_false(values):
-    matches = numpy.invert(values)
-    return numpy.nonzero(matches)[0]
+    indicies = numpy.invert(values)
+    indicies = numpy.nonzero(indicies)[0]
+    mask_array = numpy.zeros(len(values), dtype=bool)
+    mask_array[indicies] = True
+    return mask_array
 
 
 UNARY_OPERATIONS = {

@@ -8,7 +8,7 @@ jobs:
     strategy:
       max-parallel: 4
       matrix:
-        python-version: ['3.8', '3.9', '3.10']
+        python-version: ['3.8', '3.9', '3.10', '3.11']
         os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
@@ -18,11 +18,11 @@ jobs:
         uses: docker-practice/actions-setup-docker@master
 
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
   
       - name: Set up Python ${{ matrix.python-version }} x64
         if: matrix.os == 'ubuntu-latest'
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
           architecture: x64
@@ -85,7 +85,7 @@ jobs:
           GCP_PROJECT_ID: mabel
 
       - name: Check Coverage
-        run: python -m coverage report --include=opteryx* --fail-under=94 -m
+        run: python -m coverage report --include=opteryx* --fail-under=95 -m
 
       - name: "Upload coverage to Codecov"
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.10'

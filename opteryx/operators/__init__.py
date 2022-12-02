@@ -14,6 +14,7 @@ from .base_plan_node import BasePlanNode
 
 from .aggregate_node import AggregateNode  # aggregate data
 from .blob_reader_node import BlobReaderNode  # read file/blob datasets
+from .build_statistics_node import BuildStatisticsNode  # Analyze Tables
 from .collection_reader_node import CollectionReaderNode  # reader NoSQL datsets
 from .column_filter_node import ColumnFilterNode  # filter for SHOW COLUMNS
 from .cross_join_node import CrossJoinNode  # CROSS JOIN

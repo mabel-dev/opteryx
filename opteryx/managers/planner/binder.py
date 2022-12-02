@@ -119,7 +119,7 @@ def bind_ast(ast, parameters: Iterable = None, properties: QueryProperties = Non
 
     bound_ast = ast.copy()
     bound_ast = variable_binder(bound_ast, parameters, properties, query_type)
-    if query_type in ("Query", "Explain", "ShowColumns", "ShowCreate"):
+    if query_type in ("Analyze", "Query", "Explain", "ShowColumns", "ShowCreate"):
         bound_ast = temporal_range_binder(
             bound_ast, list(properties.temporal_filters), properties.cache
         )

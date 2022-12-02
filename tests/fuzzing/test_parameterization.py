@@ -42,7 +42,7 @@ def test_fuzz_text_parameters(value):
     assert control == subject
 
 
-@settings(deadline=None, max_examples=TEST_ITERATIONS)
+@settings(deadline=None, max_examples=TEST_ITERATIONS // 10)
 @given(value=st.integers())
 def test_fuzz_int_parameters(value):
 

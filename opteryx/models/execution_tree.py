@@ -27,12 +27,6 @@ import pyarrow
 from opteryx.exceptions import DatabaseError
 
 
-def unique_id():
-    import random
-
-    return hex(random.getrandbits(16))
-
-
 class ExecutionTree:
     """
     The execution tree is defined separately to the planner to simplify the
@@ -72,7 +66,7 @@ class ExecutionTree:
             # [#275] - because the subqueries are attached as query plans, we need to
             # walk them differently to just walking the tree
             if hasattr(node, "_dataset") and isinstance(node._dataset, ExecutionTree):
-                all_nodes.extend(node._dataset.nodes())
+                all_nodes.extend(node._dataset.nodes())  # pragma: no cover
             all_nodes.append(node)
         return all_nodes
 
@@ -173,7 +167,7 @@ class ExecutionTree:
         """
         Get steps in the plan with no outgoing steps.
         """
-        if len(self._nodes) == 1:
+        if len(self._nodes) == 1:  # pragma: no cover
             return list(self._nodes.keys())
         sources = {source for source, target, direction in self._edges}
         retval = (
@@ -253,12 +247,12 @@ class ExecutionTree:
                     map_operators(i[0] for i in producers)
 
         # do some basic validation before we try to execute
-        if not self.is_acyclic():
+        if not self.is_acyclic():  # pragma: no cover
             raise DatabaseError("Problem executing the query plan - it is cyclic.")
 
         # we get the tail of the query - the first steps
         head = list(dict.fromkeys(self.get_exit_points()))
-        if len(head) != 1:
+        if len(head) != 1:  # pragma: no cover
             raise DatabaseError(
                 f"Problem executing the query plan - it has {len(head)} heads."
             )
@@ -294,7 +288,7 @@ class ExecutionTree:
 
         head = list(dict.fromkeys(self.get_exit_points()))
         # print(head, _edges)
-        if len(head) != 1:
+        if len(head) != 1:  # pragma: no cover
             raise DatabaseError(f"Problem with the plan - it has {len(head)} heads.")
         plan = list(_inner_explain(head[0], 1))
 

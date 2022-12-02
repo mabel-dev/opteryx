@@ -424,8 +424,44 @@ def show_variables_query(ast, properties):
     return plan
 
 
+def analyze_query(ast, properties):
+    """build statistics for a table"""
+    plan = ExecutionTree()
+    dataset = ".".join([part["value"] for part in ast["Analyze"]["table_name"]])
+
+    if dataset[0:1] == "$":
+        mode = "Internal"
+        reader = None
+    else:
+        reader = connector_factory(dataset)
+        mode = reader.__mode__
+
+    plan.add_operator(
+        "reader",
+        operators.reader_factory(mode)(
+            properties=properties,
+            dataset=dataset,
+            alias=None,
+            reader=reader,
+            cache=None,  # never read from cache
+            start_date=ast["Analyze"]["table_name"][0]["start_date"],
+            end_date=ast["Analyze"]["table_name"][0]["end_date"],
+        ),
+    )
+    last_node = "reader"
+
+    plan.add_operator(
+        "buildstats",
+        operators.BuildStatisticsNode(properties=properties),
+    )
+    plan.link_operators(last_node, "buildstats")
+
+    return plan
+
+
 # wrappers for the query builders
 QUERY_BUILDER = {
+    "Analyze": analyze_query,
     "Explain": explain_query,
     "Query": select_query,
     "SetVariable": set_variable_query,

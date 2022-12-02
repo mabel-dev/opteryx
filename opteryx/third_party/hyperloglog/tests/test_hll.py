@@ -162,5 +162,5 @@ class TestHyperLogLogPlusPlus(TestHyperLogLog):
         self.assertEqual(h.reg[5], self._class._hash_range_bit - 4 - 3)
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     unittest.main()

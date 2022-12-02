@@ -102,12 +102,43 @@ jobs:
         name: dist-linux-3.10
         path: dist
 
+  build-linux-cp311:
+    runs-on: ubuntu-latest
+    container: quay.io/pypa/manylinux2014_x86_64
+
+    steps:
+    - uses: actions/checkout@master
+
+    - name: Install rust toolchain
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+
+    - name: Install Python package dependencies
+      run: /opt/python/cp311-cp311/bin/python -m pip install --upgrade cython wheel numpy setuptools_rust
+
+    - name: Build binary wheel
+      run: /opt/python/cp311-cp311/bin/python setup.py bdist_wheel
+
+    - name: Apply auditwheel for manylinux wheel
+      run: auditwheel repair -w dist dist/*
+
+    - name: Remove linux wheel
+      run: rm dist/*-linux_x86_64.whl
+
+    - name: Archive dist artifacts
+      uses: actions/upload-artifact@v1
+      with:
+        name: dist-linux-3.11
+        path: dist
+
   build-macos:
     runs-on: macos-latest
     strategy:
       max-parallel: 4
       matrix:
-        python-version: ['3.8', '3.9', '3.10']
+        python-version: ['3.8', '3.9', '3.10', '3.11']
 
     steps:
     - uses: actions/checkout@master
@@ -119,7 +150,7 @@ jobs:
         override: true
 
     - name: Set up Python ${{ matrix.python-version }} x64
-      uses: actions/setup-python@v1
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
 
@@ -149,7 +180,7 @@ jobs:
     strategy:
       max-parallel: 3
       matrix:
-        python-version: ['3.8', '3.9', '3.10']
+        python-version: ['3.8', '3.9', '3.10', '3.11']
 
     steps:
     - uses: actions/checkout@master
@@ -161,7 +192,7 @@ jobs:
       run: ./vs_buildtools.exe --quiet --wait --norestart --nocache --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Component.VC.v141.x86.x64 --add Microsoft.VisualStudio.Component.VC.140 --includeRecommended
 
     - name: Set up Python ${{ matrix.python-version }} x64
-      uses: actions/setup-python@v1
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
         architecture: x64
@@ -179,14 +210,14 @@ jobs:
         path: dist
 
   upload:
-    needs: [build-linux-cp38, build-linux-cp39, build-linux-cp310, build-macos, build-windows]
+    needs: [build-linux-cp38, build-linux-cp39, build-linux-cp310, build-linux-cp311, build-macos, build-windows]
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v1
 
     - name: Set up Python
-      uses: actions/setup-python@v1
+      uses: actions/setup-python@v4
       with:
         python-version: 3.9
 
@@ -217,6 +248,12 @@ jobs:
         name: dist-linux-3.10
     - run: mv -v dist-linux-3.10/* dist/
 
+    - name: Stage linux 3.11
+      uses: actions/download-artifact@v1
+      with:
+        name: dist-linux-3.11
+    - run: mv -v dist-linux-3.11/* dist/
+
     - name: Stage macos 3.8
       uses: actions/download-artifact@v1
       with:
@@ -235,6 +272,12 @@ jobs:
         name: dist-macos-3.10
     - run: mv -v dist-macos-3.10/* dist/
 
+    - name: Stage macos 3.11
+      uses: actions/download-artifact@v1
+      with:
+        name: dist-macos-3.11
+    - run: mv -v dist-macos-3.11/* dist/
+
     - name: Stage windows 3.8
       uses: actions/download-artifact@v1
       with:
@@ -252,6 +295,12 @@ jobs:
       with:
         name: dist-windows-3.10
     - run: mv -v dist-windows-3.10/* dist/
+
+    - name: Stage windows 3.11
+      uses: actions/download-artifact@v1
+      with:
+        name: dist-windows-3.11
+    - run: mv -v dist-windows-3.11/* dist/
 
     - name: Publish distribution 📦 to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1

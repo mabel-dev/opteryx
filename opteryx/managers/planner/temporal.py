@@ -47,6 +47,7 @@ COLLECT_RELATION = [
     r"FULL\sOUTER\sJOIN",
     r"JOIN",
     r"CREATE\sTABLE",
+    r"ANALYZE\sTABLE",
 ]
 
 COLLECT_TEMPORAL = [r"FOR"]
