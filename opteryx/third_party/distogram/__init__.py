@@ -32,7 +32,7 @@ class Distogram(object):  # pragma: no cover
 
     __slots__ = "bins", "min", "max", "diffs", "min_diff"
 
-    def __init__(self):
+    def __init__(self, bin_count:int=BIN_COUNT):
         """Creates a new Distogram object
 
         Args:
@@ -47,6 +47,8 @@ class Distogram(object):  # pragma: no cover
         self.max: Optional[float] = None
         self.diffs: Optional[List[float]] = None
         self.min_diff: Optional[float] = None
+
+        self._bin_count = bin_count
 
     ## all class methods below here have been added for Opteryx
     def dumps(self):  # pragma: no cover
@@ -142,7 +144,7 @@ def _update_diffs(h: Distogram, i: int) -> None:  # pragma: no cover
 
 
 def _trim(h: Distogram) -> Distogram:  # pragma: no cover
-    while len(h.bins) > BIN_COUNT:
+    while len(h.bins) > self._bin_count:
         if h.diffs is not None:
             i = h.diffs.index(h.min_diff)
         else:
@@ -227,7 +229,7 @@ def update(h: Distogram, value: float, count: int = 1) -> Distogram:  # pragma: 
             h.bins[index] = (vi, fi + count)
             return h
 
-    if index > 0 and len(h.bins) >= BIN_COUNT:
+    if index > 0 and len(h.bins) >= self._bin_count:
         in_place_index = _search_in_place_index(h, value, index)
         if in_place_index > 0:
             h = _trim_in_place(h, value, count, in_place_index)
