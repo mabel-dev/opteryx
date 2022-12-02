@@ -30,7 +30,7 @@ Bin = Tuple[float, int]
 class Distogram(object):  # pragma: no cover
     """Compressed representation of a distribution."""
 
-    __slots__ = "bins", "min", "max", "diffs", "min_diff"
+    __slots__ = "bins", "min", "max", "diffs", "min_diff", "_bin_count"
 
     def __init__(self, bin_count: int = BIN_COUNT):
         """Creates a new Distogram object
