@@ -32,7 +32,7 @@ class Distogram(object):  # pragma: no cover
 
     __slots__ = "bins", "min", "max", "diffs", "min_diff"
 
-    def __init__(self, bin_count:int=BIN_COUNT):
+    def __init__(self, bin_count: int = BIN_COUNT):
         """Creates a new Distogram object
 
         Args:
