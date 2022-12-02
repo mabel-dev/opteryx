@@ -144,7 +144,7 @@ def _update_diffs(h: Distogram, i: int) -> None:  # pragma: no cover
 
 
 def _trim(h: Distogram) -> Distogram:  # pragma: no cover
-    while len(h.bins) > self._bin_count:
+    while len(h.bins) > h._bin_count:
         if h.diffs is not None:
             i = h.diffs.index(h.min_diff)
         else:
@@ -229,7 +229,7 @@ def update(h: Distogram, value: float, count: int = 1) -> Distogram:  # pragma: 
             h.bins[index] = (vi, fi + count)
             return h
 
-    if index > 0 and len(h.bins) >= self._bin_count:
+    if index > 0 and len(h.bins) >= h._bin_count:
         in_place_index = _search_in_place_index(h, value, index)
         if in_place_index > 0:
             h = _trim_in_place(h, value, count, in_place_index)
