@@ -157,3 +157,14 @@ def date_format(dates, pattern):  # [#325]
 
 def date_floor(dates, magnitude, units):  # [#325]
     return compute.floor_temporal(dates, magnitude[0], units[0])
+
+
+def from_unixtimestamp(values):
+    return [datetime.datetime.fromtimestamp(i) for i in values]
+
+
+def unixtime(*args):
+    if isinstance(args[0], int):
+        now = datetime.datetime.utcnow().timestamp()
+        return numpy.full(args[0], now, numpy.int64)
+    return [numpy.nan if d != d else d.astype(numpy.int64) for d in args[0]]

@@ -271,7 +271,8 @@ def rtrim(*args):
 
 
 def levenshtein(a, b):
-    from opteryx.third_party import levenshtein
+
+    from opteryx.third_party.levenshtein import levenshtein
 
     func = levenshtein.levenshtein
 

@@ -271,6 +271,8 @@ FUNCTIONS = {
     "MINUTE": compute.minute,
     "SECOND": compute.second,
     "QUARTER": compute.quarter,
+    "FROM_UNIXTIME": date_functions.from_unixtimestamp,
+    "UNIXTIME": date_functions.unixtime,
 
     "ON": lambda x: _raise_exception("`DISTINCT ON` is not supported"),
 
