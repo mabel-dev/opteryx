@@ -48,6 +48,11 @@ extensions = [
         sources=["opteryx/third_party/fuzzy/csoundex.pyx"],
         include_dirs=[numpy.get_include()],
     ),
+    Extension(
+        name="clevenshtein",
+        sources=["opteryx/third_party/levenshtein/clevenshtein.pyx"],
+        include_dirs=[numpy.get_include()],
+    ),
 ]
 
 setup_config = {
