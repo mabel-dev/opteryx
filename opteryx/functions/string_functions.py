@@ -12,8 +12,6 @@
 
 import numpy
 
-import pyarrow
-
 from pyarrow import compute
 
 
@@ -270,3 +268,15 @@ def rtrim(*args):
     if len(args) == 1:
         return compute.utf8_rtrim_whitespace(args[0])
     return compute.utf8_rtrim(args[0], args[1][0])
+
+
+def levenshtein(a, b):
+    from opteryx.third_party import levenshtein
+
+    func = levenshtein.levenshtein
+
+    def _outer():
+        for index, value in enumerate(a):
+            yield func(value, b[index])
+
+    return list(_outer())

@@ -52,3 +52,5 @@ SELECT * FROM (SELECT HASH(name || str(id)) AS PID, name, id FROM $planets) AS p
 
 ANALYZE TABLE $planets;
 ANALYZE TABLE $astronauts;
+
+SELECT LEVENSHTEIN(name, 'zeus') FROM $planets;
