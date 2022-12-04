@@ -66,6 +66,8 @@ def _simple_collector(page):
         expected_rows=len(buffer),
         name="show_columns",
         table_aliases=[],
+        disposition="calculated",
+        path="show_columns",
     )
     return table
 
@@ -134,6 +136,8 @@ def _full_collector(pages):
         expected_rows=len(buffer),
         name="show_columns",
         table_aliases=[],
+        disposition="calculated",
+        path="show_columns",
     )
     return table
 
@@ -342,6 +346,8 @@ def _extended_collector(pages):
         expected_rows=len(buffer),
         name="show_columns",
         table_aliases=[],
+        disposition="calculated",
+        path="show_columns",
     )
     return table
 

@@ -72,5 +72,7 @@ class ShowCreateNode(BasePlanNode):
             expected_rows=1,
             name="show_table_create",
             table_aliases=[],
+            disposition="calculated",
+            path="show_create",
         )
         yield table

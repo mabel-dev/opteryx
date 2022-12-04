@@ -53,6 +53,8 @@ class ShowStoresNode(BasePlanNode):
             expected_rows=len(buffer),
             name="show_stores",
             table_aliases=[],
+            disposition="calculated",
+            path="show_stores",
         )
 
         yield table

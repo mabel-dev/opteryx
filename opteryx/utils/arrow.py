@@ -154,7 +154,6 @@ def set_metadata(table, table_metadata=None, column_metadata=None):
 
     # Create updated column fields with new metadata
     if table_metadata or column_metadata:
-
         fields = []
         for name in table.schema.names:
             col = table.field(name)

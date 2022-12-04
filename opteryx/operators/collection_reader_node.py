@@ -79,6 +79,8 @@ class CollectionReaderNode(BasePlanNode):
                     expected_rows=row_count,
                     name=self._dataset,
                     table_aliases=[self._alias],
+                    disposition="collection",
+                    path=self._dataset,
                 )
                 metadata = Columns(pyarrow_page)
                 self.statistics.collections_read += 1

@@ -234,12 +234,14 @@ class BlobReaderNode(BasePlanNode):
                             expected_rows=self._row_count_estimate,
                             name=self._dataset.replace("/", ".")[:-1],
                             table_aliases=[self._alias],
+                            disposition="blob",
+                            path=path,
                         )
                         metadata = Columns(pyarrow_blob)
                         self.statistics.columns_read += len(pyarrow_blob.column_names)
                     else:
                         try:
-                            pyarrow_blob = metadata.apply(pyarrow_blob, source=path)
+                            pyarrow_blob = metadata.apply(pyarrow_blob, path=path)
                         except:  # pragma:no cover
 
                             self.statistics.read_errors += 1

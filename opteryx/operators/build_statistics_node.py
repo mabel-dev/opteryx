@@ -61,6 +61,7 @@ def _extended_collector(pages):
             "type": [],
             "count": 0,
             "missing": 0,
+            "bytes": 0,
             "most_frequent_values": None,
             "most_frequent_counts": None,
             "numeric_range": None,
@@ -77,8 +78,8 @@ def _extended_collector(pages):
 
     for page in pages:
 
-        if columns is None:
-            columns = Columns(page)
+        columns = Columns(page)
+        print(columns._table_metadata)
 
         for block in page.to_batches(10000):
 
@@ -92,18 +93,11 @@ def _extended_collector(pages):
                     profile["type"].append(_type)
 
                 profile["count"] += len(column_data)
+                profile["bytes"] += column_data.nbytes
 
-                # calculate the missing count more robustly
-                missing = reduce(
-                    lambda x, y: x + 1,
-                    (
-                        i
-                        for i in column_data
-                        if i in (None, numpy.nan) or not i.is_valid
-                    ),
-                    0,
-                )
-                profile["missing"] += missing
+                # if boolean, just use the column_data.false_count
+
+                profile["missing"] += column_data.null_count
 
                 # interim save
                 profile_collector[column] = profile
@@ -243,6 +237,8 @@ def _extended_collector(pages):
         expected_rows=len(buffer),
         name="show_columns",
         table_aliases=[],
+        disposition="calculated",
+        path="statistics",
     )
     return table
 
