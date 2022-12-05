@@ -57,3 +57,8 @@ SELECT LEVENSHTEIN(name, 'zeus') FROM $planets;
 SELECT FROM_UNIXTIME(0);
 SELECT UNIXTIME();
 SELECT UNIXTIME(death_date), death_date from $astronauts;
+
+SELECT name FROM $planets ORDER BY mass, gravity;
+SELECT name FROM $planets ORDER BY mass DESC;
+SELECT name FROM $planets ORDER BY mass DESC, gravity ASC;
+SELECT * FROM $planets ORDER BY mass;

@@ -46,6 +46,8 @@ class ShowValueNode(BasePlanNode):
             expected_rows=len(buffer),
             name="show_value",
             table_aliases=[],
+            disposition="calculated",
+            path="show_value",
         )
 
         yield table

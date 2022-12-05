@@ -63,6 +63,8 @@ def _get_sample_dataset(dataset, alias, end_date):
             expected_rows=table.num_rows,
             name=dataset,
             table_aliases=[alias],
+            disposition="sample",
+            path=dataset,
         )
         return table
     raise DatasetNotFoundError(f"Dataset not found `{dataset}`.")

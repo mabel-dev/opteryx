@@ -293,5 +293,7 @@ class ExecutionTree:
         plan = list(_inner_explain(head[0], 1))
 
         table = pyarrow.Table.from_pylist(plan)
-        table = Columns.create_table_metadata(table, table.num_rows, "plan", None)
+        table = Columns.create_table_metadata(
+            table, table.num_rows, "plan", None, "calculated", "explain"
+        )
         yield table

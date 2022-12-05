@@ -92,6 +92,8 @@ def _count_star(data_pages):
         expected_rows=1,
         name="groupby",
         table_aliases=[],
+        disposition="calculated",
+        path="group_by",
     )
     yield table
 

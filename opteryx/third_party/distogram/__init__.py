@@ -25,6 +25,7 @@ EPSILON = 1e-5
 BIN_COUNT: int = 100
 Bin = Tuple[float, int]
 
+_caster = numpy.float64
 
 # bins is a tuple of (cut point, count)
 class Distogram(object):  # pragma: no cover
@@ -65,7 +66,7 @@ class Distogram(object):  # pragma: no cover
 
     def dump(self):
         bin_vals, bin_counts = zip(*self.bins)
-        bin_vals = numpy.array(bin_vals, dtype=numpy.double)
+        bin_vals = numpy.array(bin_vals, dtype=numpy.float128)
         self.bins = list(zip(bin_vals, bin_counts))
         return {
             "bins": self.bins,
@@ -79,6 +80,11 @@ class Distogram(object):  # pragma: no cover
         dgram.min = min(self.min, operand.min)
         dgram.max = max(self.max, operand.max)
         return dgram
+
+    def bulkload(self, values):
+        unique_values, counts = numpy.unique(values, return_counts=True)
+        for index, value in enumerate(unique_values):
+            update(self, value=value, count=counts[index])
 
 
 # added for opteryx
@@ -169,6 +175,7 @@ def _trim(h: Distogram) -> Distogram:  # pragma: no cover
 
 def _trim_in_place(h: Distogram, value: float, c: int, i: int):  # pragma: no cover
     v, f = h.bins[i]
+    v = _caster(v)
     h.bins[i] = (v * f + value * c) / (f + c), f + c
     _update_diffs(h, i)
     return h
@@ -226,7 +233,7 @@ def update(h: Distogram, value: float, count: int = 1) -> Distogram:  # pragma: 
 
         vi, fi = h.bins[index]
         if vi == value:
-            h.bins[index] = (vi, fi + count)
+            h.bins[index] = (_caster(vi), fi + count)
             return h
 
     if index > 0 and len(h.bins) >= h._bin_count:
@@ -236,13 +243,13 @@ def update(h: Distogram, value: float, count: int = 1) -> Distogram:  # pragma: 
             return h
 
     if index == -1:
-        h.bins.append((value, count))
+        h.bins.append((_caster(value), count))
         if h.diffs is not None:
             diff = h.bins[-1][0] - h.bins[-2][0]
             h.diffs.append(diff)
             h.min_diff = min(h.min_diff, diff)
     else:
-        h.bins.insert(index, (value, count))
+        h.bins.insert(index, (_caster(value), count))
         if h.diffs is not None:
             h.diffs.insert(index, 0)
             _update_diffs(h, index)

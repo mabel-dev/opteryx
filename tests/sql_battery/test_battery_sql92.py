@@ -153,6 +153,7 @@ STATEMENTS = [
     ("SELECT MAX(i) FROM GENERATE_SERIES(10) as i", "E091-03"),
     ("SELECT MIN(i) FROM GENERATE_SERIES(10) as i", "E091-04"),
     ("SELECT SUM(i) FROM GENERATE_SERIES(10) as i", "E091-05"),
+    ("SELECT * FROM $planets ORDER BY mass;", "E121-02"),
 #    ("SELECT DATE '2016-03-26'", "F051-01"),
 #    ("SELECT TIME '01:02:03'", "F051-02"),
     ("SELECT TIMESTAMP '2016-03-26 01:02:03'", "F051-03"),
@@ -212,6 +213,7 @@ STATEMENTS = [
     ("SELECT CASE WHEN 0 = 1 THEN NULL END", "F261-02"),
     ("SELECT NULLIF ( 1 , 1 )", "F261-03"),
     ("SELECT COALESCE ( 1 , 1 )", "F261-04"),
+
 
 ]
 # fmt:on

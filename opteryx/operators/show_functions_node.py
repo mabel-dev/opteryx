@@ -50,6 +50,8 @@ class ShowFunctionsNode(BasePlanNode):
             expected_rows=len(buffer),
             name="show_functions",
             table_aliases=[],
+            disposition="calculated",
+            path="show_functions",
         )
 
         yield table

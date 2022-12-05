@@ -50,6 +50,8 @@ class ShowVariablesNode(BasePlanNode):
             expected_rows=len(buffer),
             name="show_variables",
             table_aliases=[],
+            disposition="calculated",
+            path="show_variable",
         )
 
         yield table

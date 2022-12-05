@@ -223,7 +223,9 @@ class Columns:
         return selected
 
     @staticmethod
-    def create_table_metadata(table, expected_rows, name, table_aliases):
+    def create_table_metadata(
+        table, expected_rows, name, table_aliases, disposition, path
+    ):
 
         if not isinstance(table_aliases, list):
             table_aliases = [table_aliases]
@@ -235,6 +237,8 @@ class Columns:
             "expected_rows": expected_rows,
             "name": name,
             "aliases": table_aliases,
+            "disposition": disposition,
+            "path": path,
         }
 
         # column information includes all the aliases a column is known by
@@ -279,3 +283,7 @@ class Columns:
         for column in removed:  # pragma: no cover
             table = table.append_column(column, pyarrow.array([None] * table.num_rows))
         return table
+
+    @property
+    def table_path(self):
+        return self._table_metadata.get("path")

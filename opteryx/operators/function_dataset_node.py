@@ -111,5 +111,7 @@ class FunctionDatasetNode(BasePlanNode):
             expected_rows=table.num_rows,
             name=self._function,
             table_aliases=[self._alias],
+            disposition="calculated",
+            path=self._function,
         )
         yield table
