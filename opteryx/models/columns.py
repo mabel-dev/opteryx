@@ -283,3 +283,7 @@ class Columns:
         for column in removed:  # pragma: no cover
             table = table.append_column(column, pyarrow.array([None] * table.num_rows))
         return table
+
+    @property
+    def table_path(self):
+        return self._table_metadata.get("path")

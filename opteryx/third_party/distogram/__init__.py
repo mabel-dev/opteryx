@@ -81,6 +81,11 @@ class Distogram(object):  # pragma: no cover
         dgram.max = max(self.max, operand.max)
         return dgram
 
+    def bulkload(self, values):
+        unique_values, counts = numpy.unique(values, return_counts=True)
+        for index, value in enumerate(unique_values):
+            update(self, value=value, count=counts[index])
+
 
 # added for opteryx
 def load(dic):  # pragma: no cover

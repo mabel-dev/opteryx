@@ -181,6 +181,17 @@ def select_query(ast, properties):
         plan.link_operators(last_node, "having")
         last_node = "having"
 
+    # collect ORDER BY now, so we can keep any columns in the ORDER BY clause too
+    _order = custom_builders.extract_order(ast)
+    reproject = None
+
+    if _order and (_projection[0].token_type != NodeType.WILDCARD):
+        order_fields = [
+            f[0][0] for f in _order if f[0][0].token_type == NodeType.IDENTIFIER
+        ]
+        reproject = _projection.copy()
+        _projection.extend(order_fields)
+
     # qualified wildcards have the qualifer in the value
     # e.g. SELECT table.* -> node.value = table
     if (_projection[0].token_type != NodeType.WILDCARD) or (
@@ -199,11 +210,19 @@ def select_query(ast, properties):
         plan.link_operators(last_node, "distinct")
         last_node = "distinct"
 
-    _order = custom_builders.extract_order(ast)
     if _order:
         plan.add_operator("order", operators.SortNode(properties, order=_order))
         plan.link_operators(last_node, "order")
         last_node = "order"
+
+    # if we need to project after the order by
+    if reproject:
+        plan.add_operator(
+            "post_order_select",
+            operators.ProjectionNode(properties, projection=reproject),
+        )
+        plan.link_operators(last_node, "post_order_select")
+        last_node = "post_order_select"
 
     _offset = custom_builders.extract_offset(ast)
     if _offset:
