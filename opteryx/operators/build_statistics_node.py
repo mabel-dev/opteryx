@@ -169,10 +169,7 @@ def _statitics_collector(pages):
                     counter["False"] += column_data.size - trues
                     profile["counter"] = counter
 
-                if (
-                    _type == OPTERYX_TYPES.VARCHAR
-                    and profile.get("counter") != {}
-                ):
+                if _type == OPTERYX_TYPES.VARCHAR and profile.get("counter") != {}:
                     # counter is used to collect and count unique values
                     vals, counts = numpy.unique(column_data, return_counts=True)
                     counter = {}

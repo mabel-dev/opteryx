@@ -114,7 +114,7 @@ def sql_parts(string):  # pragma: no cover
         re.IGNORECASE,
     )
     quoted_strings = re.compile(
-        r'(?:[^"\s]*"(?:\\.|[^"])*"[^"\s]*)+|(?:[^\'\s]*\'(?:\\.|[^\'])*\'[^\'\s]*)+|[^\s]+'
+        r'(?:[^"\s]*"(?:\\.|[^"]))+|(?:[^\'\s]*\'(?:\\.|[^\'])*\')+|[^\s]+'
     )
 
     # This probably can be done with regexes, but after trying I've implemented

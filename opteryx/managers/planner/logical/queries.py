@@ -71,7 +71,7 @@ def select_query(ast, properties):
     relation = _relations[0]
 
     reader = None
-    if relation.dataset in properties.ctes:
+    if isinstance(relation.dataset, str) and relation.dataset in properties.ctes:
         # CTEs look like subqueries
         relation.kind = "SubQuery"
         relation.alias = relation.dataset
@@ -123,7 +123,8 @@ def select_query(ast, properties):
                     # CTEs look like subqueries
                     mode = "SubQuery"  # subqueries are here due to legacy reasons
                     reader = None
-                    dataset = properties.ctes[dataset]
+                    right.alias = right.dataset
+                    right.dataset = properties.ctes[dataset]
                 else:
                     reader = connector_factory(dataset)
                     mode = reader.__mode__

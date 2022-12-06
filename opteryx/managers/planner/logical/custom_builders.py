@@ -250,6 +250,7 @@ def extract_relations(branch, qid):
 def extract_into(branch):
     return None
 
+
 def extract_ctes(branch, qid):
 
     from opteryx.managers.planner import QueryPlanner

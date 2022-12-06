@@ -22,7 +22,14 @@ class QueryProperties:
     Hints and properties to use when executing queries.
     """
 
-    read_only_properties = ("variables", "cache", "temporal_filters", "date", "qid", "ctes")
+    read_only_properties = (
+        "variables",
+        "cache",
+        "temporal_filters",
+        "date",
+        "qid",
+        "ctes",
+    )
 
     def __init__(self, qid, config: dict = None):
 
