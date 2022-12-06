@@ -55,9 +55,9 @@ class MabelPartitionScheme(BasePartitionScheme):
 
         # The segments are stored in folders with the prefix 'by_', as in,
         # segments **by** field name
-        list_of_segments = sorted({
-            _extract_by(blob) for blob in list_of_blobs if "/by_" in blob
-        })
+        list_of_segments = sorted(
+            {_extract_by(blob) for blob in list_of_blobs if "/by_" in blob}
+        )
         chosen_segment = ""
 
         # If we have multiple 'by_' segments, pick one - pick the first one until
@@ -94,9 +94,9 @@ class MabelPartitionScheme(BasePartitionScheme):
             ]
 
             # work out if there's an as_at part
-            as_ats = sorted({
-                _extract_as_at(blob) for blob in segment_blobs if "as_at_" in blob
-            })
+            as_ats = sorted(
+                {_extract_as_at(blob) for blob in segment_blobs if "as_at_" in blob}
+            )
             if as_ats:
                 as_at = as_ats.pop()
 

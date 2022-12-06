@@ -88,7 +88,7 @@ def _full_collector(pages):
     )
 
     columns = None
-    profile_collector:dict = {}
+    profile_collector: dict = {}
 
     for page in pages:
         if columns is None:
@@ -174,7 +174,7 @@ def _extended_collector(pages):
     uncollected_columns = []
 
     columns = None
-    profile_collector:dict = {}
+    profile_collector: dict = {}
 
     for page in pages:
 

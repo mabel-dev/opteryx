@@ -191,7 +191,7 @@ def get_hex_decode(item):
 
 def concat(list_values):
     """concatenate a list of strings"""
-    result:List = []
+    result: List = []
     for row in list_values:
         if row is None:
             result.append(None)
@@ -203,7 +203,7 @@ def concat(list_values):
 
 def concat_ws(separator, list_values):
     """concatenate a list of strings with a separator"""
-    result:List = []
+    result: List = []
     if len(separator) > 0:
         separator = separator[0]
         if separator is None:
