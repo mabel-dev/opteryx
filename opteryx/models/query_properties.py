@@ -22,7 +22,7 @@ class QueryProperties:
     Hints and properties to use when executing queries.
     """
 
-    read_only_properties = ("variables", "cache", "temporal_filters", "date", "qid")
+    read_only_properties = ("variables", "cache", "temporal_filters", "date", "qid", "ctes")
 
     def __init__(self, qid, config: dict = None):
 
@@ -55,3 +55,4 @@ class QueryProperties:
         self.date = datetime.datetime.utcnow().date()
         self.cache = None
         self.qid = qid
+        self.ctes = {}

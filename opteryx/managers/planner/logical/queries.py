@@ -45,6 +45,8 @@ def select_query(ast, properties):
     """
     plan = ExecutionTree()
 
+    properties.ctes = custom_builders.extract_ctes(ast["Query"], properties.qid)
+
     all_identifiers = (
         set(custom_builders.extract_identifiers(ast)) - custom_builders.WELL_KNOWN_HINTS
     )
@@ -68,9 +70,14 @@ def select_query(ast, properties):
     # We always have a data source - even if it's 'no table'
     relation = _relations[0]
 
-    # external comes in different flavours
     reader = None
-    if relation.kind == "External":
+    if relation.dataset in properties.ctes:
+        # CTEs look like subqueries
+        relation.kind = "SubQuery"
+        relation.alias = relation.dataset
+        relation.dataset = properties.ctes[relation.dataset]
+    elif relation.kind == "External":
+        # external comes in different flavours
         reader = connector_factory(relation.dataset)
         relation.kind = reader.__mode__
 
@@ -112,6 +119,11 @@ def select_query(ast, properties):
                 elif dataset[0:1] == "$":
                     mode = "Internal"
                     reader = None
+                elif dataset in properties.ctes:
+                    # CTEs look like subqueries
+                    mode = "SubQuery"  # subqueries are here due to legacy reasons
+                    reader = None
+                    dataset = properties.ctes[dataset]
                 else:
                     reader = connector_factory(dataset)
                     mode = reader.__mode__

@@ -249,3 +249,18 @@ def extract_relations(branch, qid):
 
 def extract_into(branch):
     return None
+
+def extract_ctes(branch, qid):
+
+    from opteryx.managers.planner import QueryPlanner
+
+    ctes = {}
+
+    if branch["with"]:
+        for ast in branch["with"]["cte_tables"]:
+            subquery_planner = QueryPlanner(qid=qid)
+            alias = ast.pop("alias")["name"]["value"]
+            plan = subquery_planner.create_logical_plan({"Query": ast["query"]})
+            ctes[alias] = plan
+
+    return ctes

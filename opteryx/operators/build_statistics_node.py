@@ -80,8 +80,6 @@ def _statitics_collector(pages):
         columns = Columns(page)
         table_path = columns.table_path
 
-        print(page.column_names)
-
         for block in page.to_batches(10000):
 
             for column in page.column_names:
@@ -172,12 +170,7 @@ def _statitics_collector(pages):
                     profile["counter"] = counter
 
                 if (
-                    _type
-                    in (
-                        OPTERYX_TYPES.VARCHAR,
-                        OPTERYX_TYPES.NUMERIC,
-                        OPTERYX_TYPES.TIMESTAMP,
-                    )
+                    _type == OPTERYX_TYPES.VARCHAR
                     and profile.get("counter") != {}
                 ):
                     # counter is used to collect and count unique values
