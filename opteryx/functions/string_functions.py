@@ -9,6 +9,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from typing import List
 
 import numpy
 
@@ -190,7 +191,7 @@ def get_hex_decode(item):
 
 def concat(list_values):
     """concatenate a list of strings"""
-    result = []
+    result:List = []
     for row in list_values:
         if row is None:
             result.append(None)
@@ -202,7 +203,7 @@ def concat(list_values):
 
 def concat_ws(separator, list_values):
     """concatenate a list of strings with a separator"""
-    result = []
+    result:List = []
     if len(separator) > 0:
         separator = separator[0]
         if separator is None:
@@ -272,12 +273,10 @@ def rtrim(*args):
 
 def levenshtein(a, b):
 
-    from opteryx.third_party.levenshtein import levenshtein
-
-    func = levenshtein.levenshtein
+    from opteryx.third_party.levenshtein.levenshtein import levenshtein as lev
 
     def _outer():
         for index, value in enumerate(a):
-            yield func(value, b[index])
+            yield lev(value, b[index])
 
     return list(_outer())

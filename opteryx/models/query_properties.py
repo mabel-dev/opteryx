@@ -62,4 +62,4 @@ class QueryProperties:
         self.date = datetime.datetime.utcnow().date()
         self.cache = None
         self.qid = qid
-        self.ctes = {}
+        self.ctes:dict = {}

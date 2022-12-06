@@ -9,6 +9,7 @@ This will automatically fall back to the JSON store.
 """
 import io
 
+from opteryx.exceptions import FeatureNotSupportedOnArchitectureError
 from opteryx.managers.kvstores import BaseKeyValueStore
 
 

@@ -75,7 +75,7 @@ def _statitics_collector(pages):
     for page in pages:
 
         uncollected_columns = []
-        profile_collector = {}
+        profile_collector:dict = {}
 
         columns = Columns(page)
         table_path = columns.table_path
@@ -185,7 +185,7 @@ def _statitics_collector(pages):
                     # populate the distogram, this is used for distribution statistics
                     dgram = profile.get("dgram")
                     if dgram is None:
-                        dgram = distogram.Distogram()
+                        dgram = distogram.Distogram() # type:ignore
                     dgram.bulkload(column_data)
                     profile["dgram"] = dgram
 

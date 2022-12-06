@@ -38,6 +38,7 @@ from .show_value_node import ShowValueNode  # display node for SHOW
 from .show_variables_node import ShowVariablesNode  # SHOW VARIABLES
 from .sort_node import SortNode  # order by selected columns
 
+from .aggregate_node import AGGREGATORS
 
 # map join types to their implementations
 _join_nodes = {
@@ -68,8 +69,8 @@ def reader_factory(mode):
 
 
 def is_aggregator(name):
-    return name in aggregate_node.AGGREGATORS
+    return name in AGGREGATORS
 
 
 def aggregators():
-    return list(aggregate_node.AGGREGATORS.keys())
+    return list(AGGREGATORS.keys())

@@ -43,7 +43,7 @@ class MongoDbConnector(BaseDocumentStorageAdapter):
                 "MongoDB adapter requires MONGO_CONNECTION and MONGO_DATABASE set in environment variables."
             )
 
-        client = pymongo.MongoClient(mongo_connection)
+        client = pymongo.MongoClient(mongo_connection)  # type:ignore
         self._database = client[mongo_database]
 
     def get_document_count(self, collection) -> int:

@@ -27,8 +27,6 @@ import numpy
 import orjson
 import pyarrow
 
-from cityhash import CityHash64
-
 from opteryx.attribute_types import OPTERYX_TYPES, determine_type
 from opteryx.exceptions import SqlError
 from opteryx.models import Columns, QueryProperties
@@ -90,7 +88,7 @@ def _full_collector(pages):
     )
 
     columns = None
-    profile_collector = {}
+    profile_collector:dict = {}
 
     for page in pages:
         if columns is None:
@@ -176,7 +174,7 @@ def _extended_collector(pages):
     uncollected_columns = []
 
     columns = None
-    profile_collector = {}
+    profile_collector:dict = {}
 
     for page in pages:
 
@@ -286,10 +284,10 @@ def _extended_collector(pages):
                     # populate the distogram, this is used for distribution statistics
                     dgram = profile.get("distogram")
                     if dgram is None:
-                        dgram = distogram.Distogram()
+                        dgram = distogram.Distogram()  # type:ignore
                     values, counts = numpy.unique(column_data, return_counts=True)
                     for index, value in enumerate(values):
-                        dgram = distogram.update(
+                        dgram = distogram.update(  # type:ignore
                             dgram, value=value, count=counts[index]
                         )
                     profile["distogram"] = dgram
@@ -306,17 +304,17 @@ def _extended_collector(pages):
 
             dgram = profile.pop("distogram", None)
             if dgram:
-                profile["min"], profile["max"] = distogram.bounds(dgram)
-                profile["mean"] = distogram.mean(dgram)
+                profile["min"], profile["max"] = distogram.bounds(dgram)  # type:ignore
+                profile["mean"] = distogram.mean(dgram)  # type:ignore
 
-                histogram = distogram.histogram(dgram, bin_count=10)
+                histogram = distogram.histogram(dgram, bin_count=10)  # type:ignore
                 if histogram:
                     profile["histogram"] = histogram[0]
 
                 profile["quantiles"] = (
-                    distogram.quantile(dgram, value=0.25),
-                    distogram.quantile(dgram, value=0.5),
-                    distogram.quantile(dgram, value=0.75),
+                    distogram.quantile(dgram, value=0.25),  # type:ignore
+                    distogram.quantile(dgram, value=0.5),  # type:ignore
+                    distogram.quantile(dgram, value=0.75),  # type:ignore
                 )
             hll = profile.pop("hyperloglog", None)
             if hll:
