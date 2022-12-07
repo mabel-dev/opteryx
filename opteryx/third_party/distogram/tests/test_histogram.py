@@ -14,15 +14,15 @@ def test_histogram():
     h = distogram.Distogram(bin_count=64)
 
     for i in normal:
-        h = distogram.update(h, i)
+        distogram.update(h, i)
 
     np_values, np_edges = np.histogram(normal, 10)
     d_values, d_edges = distogram.histogram(h, 10)
 
     h = distogram.Distogram(bin_count=3)
-    h = distogram.update(h, 23)
-    h = distogram.update(h, 28)
-    h = distogram.update(h, 16)
+    distogram.update(h, 23)
+    distogram.update(h, 28)
+    distogram.update(h, 16)
     assert distogram.histogram(h, bin_count=3) == (
         approx([1.0714285714285714, 0.6285714285714286, 1.3]),
         [16.0, 20.0, 24.0, 28],
@@ -34,7 +34,7 @@ def test_histogram_on_too_small_distribution():
     h = distogram.Distogram(bin_count=64)
 
     for i in range(5):
-        h = distogram.update(h, i)
+        distogram.update(h, i)
 
     assert distogram.histogram(h, 10) == None
 
@@ -44,7 +44,7 @@ def test_format_histogram():
     h = distogram.Distogram(bin_count=bin_count)
 
     for i in range(4):
-        h = distogram.update(h, i)
+        distogram.update(h, i)
 
     hist = distogram.histogram(h, bin_count=bin_count)
     assert len(hist[1]) == len(hist[0]) + 1

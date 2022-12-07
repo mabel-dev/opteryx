@@ -259,7 +259,8 @@ def _extended_collector(pages):
                     hll = profile.get("hyperloglog")
                     if hll is None:
                         hll = hyperloglog.HyperLogLogPlusPlus(p=16)
-                    [hll.update(value) for value in column_data]
+                    for value in column_data:
+                        hll.update(value)
                     profile["hyperloglog"] = hll
 
                 if _type in (
@@ -273,11 +274,9 @@ def _extended_collector(pages):
                     if counter is None:
                         counter = {}
                     if len(counter) < MAX_COLLECTOR:
-                        [
-                            increment(counter, value)
-                            for value in column_data
-                            if len(counter) < MAX_COLLECTOR
-                        ]
+                        for value in column_data:
+                            if len(counter) < MAX_COLLECTOR:
+                                increment(counter, value)
                     profile["counter"] = counter
 
                 if _type in (OPTERYX_TYPES.NUMERIC, OPTERYX_TYPES.TIMESTAMP):
@@ -285,11 +284,7 @@ def _extended_collector(pages):
                     dgram = profile.get("distogram")
                     if dgram is None:
                         dgram = distogram.Distogram()  # type:ignore
-                    values, counts = numpy.unique(column_data, return_counts=True)
-                    for index, value in enumerate(values):
-                        dgram = distogram.update(  # type:ignore
-                            dgram, value=value, count=counts[index]
-                        )
+                    dgram.bulkload(column_data)
                     profile["distogram"] = dgram
 
                 profile_collector[column] = profile
@@ -307,7 +302,7 @@ def _extended_collector(pages):
                 profile["min"], profile["max"] = distogram.bounds(dgram)  # type:ignore
                 profile["mean"] = distogram.mean(dgram)  # type:ignore
 
-                histogram = distogram.histogram(dgram, bin_count=10)  # type:ignore
+                histogram = distogram.histogram(dgram, bin_count=50)  # type:ignore
                 if histogram:
                     profile["histogram"] = histogram[0]
 

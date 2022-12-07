@@ -16,6 +16,7 @@ from .action_constant_evaluations import eliminate_constant_evaluations
 from .action_function_evaluations import eliminate_fixed_function_evaluations
 from .action_defragment_pages import defragment_pages
 from .action_eliminate_negations import eliminate_negations
+from .action_selection_pushdown import selection_pushdown
 from .action_split_conjunctive_predicates import split_conjunctive_predicates
 from .action_use_heap_sort import use_heap_sort
 

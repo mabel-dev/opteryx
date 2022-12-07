@@ -82,9 +82,30 @@ class Distogram:  # pragma: no cover
         return dgram
 
     def bulkload(self, values):
-        unique_values, counts = numpy.unique(values, return_counts=True)
-        for index, value in enumerate(unique_values):
-            update(self, value=value, count=counts[index])
+        # To speed up bulk loads we use numpy to get a histogram at a higher resolution
+        # and add this to the distogram.
+        # Histogram gives us n+1 values, so we average consecutive values.
+        # This ends up being an approximation of an approximation but 1000x faster.
+        # The accuracy of this approach is poor on datasets with very low record counts,
+        # but even if a bad decision is made on a table with 500 rows, the consequence
+        # is minimal, if a bad decision is made on a table with 5m rows, it starts to
+        # matter.
+        counts, bin_values = numpy.histogram(values, self._bin_count * 5, density=False)
+        for index, count in enumerate(counts):
+            if count > 0:
+                update(
+                    self,
+                    value=(bin_values[index] + bin_values[index + 1]) / 2,
+                    count=count,
+                )
+
+        # we need to overwrite any range values as we've approximated the dataset
+        if self.min is None:
+            self.min = min(values)
+            self.max = max(values)
+        else:
+            self.min = min(self.min, min(values))
+            self.max = max(self.max, max(values))
 
 
 # added for opteryx
@@ -259,7 +280,7 @@ def update(h: Distogram, value: float, count: int = 1) -> Distogram:  # pragma: 
     if (h.max is None) or (h.max < value):
         h.max = value
 
-    return _trim(h)
+    h = _trim(h)
 
 
 def merge(h1: Distogram, h2: Distogram) -> Distogram:  # pragma: no cover

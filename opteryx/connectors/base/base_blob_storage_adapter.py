@@ -29,10 +29,8 @@ class BaseBlobStorageAdapter(abc.ABC):
         *,
         dataset: str,
         partitioning: Iterable = None,  # ("year_{yyyy}", "month_{mm}", "day_{dd}"),
-        start_date: Union[
-            datetime.datetime, datetime.date, str
-        ] = datetime.date.today(),
-        end_date: Union[datetime.datetime, datetime.date, str] = datetime.date.today(),
+        start_date: Union[datetime.datetime, datetime.date, str] = None,
+        end_date: Union[datetime.datetime, datetime.date, str] = None,
     ) -> List:
         """
         Get partitions doesn't confirm the partitions exist, it just creates a list

@@ -21,14 +21,23 @@ def test_firestore_storage():
     # SELECT EVERYTHING
     cur = conn.cursor()
     cur.execute("SELECT * FROM dwarves;")
-    rows = list(cur.fetchall())
-    assert len(rows) == 7
+    assert cur.rowcount == 7
 
     # PROCESS THE DATA IN SOME WAY
     cur = conn.cursor()
     cur.execute("SELECT actor, COUNT(*) FROM dwarves GROUP BY actor;")
-    rows = list(cur.fetchall())
-    assert len(rows) == 6, len(rows)
+    assert cur.rowcount == 6, cur.rowcount
+
+    # TEST PREDICATE PUSHDOWN
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM dwarves WHERE actor = 'Pinto Colvig';")
+    assert cur.rowcount == 2, cur.rowcount
+
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT * FROM dwarves WHERE actor = 'Pinto Colvig' and name = 'Sleepy';"
+    )
+    assert cur.rowcount == 1, cur.rowcount
 
     conn.close()
 
