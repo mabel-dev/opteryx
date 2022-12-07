@@ -76,7 +76,7 @@ def _initialize():  # pragma: no cover
 class GcpFireStoreConnector(BaseDocumentStorageAdapter):
     def __init__(self) -> None:
         super().__init__()
-        self._predicates:List = []
+        self._predicates: List = []
 
     def get_document_count(self, collection) -> int:  # pragma: no cover
         """
