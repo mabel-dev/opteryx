@@ -46,6 +46,7 @@ def format_expression(root):
         return "null"
 
     node_type = root.token_type
+    _map:dict = {}
 
     # LITERAL TYPES
     if node_type & LITERAL_TYPE == LITERAL_TYPE:
