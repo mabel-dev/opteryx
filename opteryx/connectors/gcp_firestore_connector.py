@@ -16,6 +16,7 @@ from opteryx import config
 from opteryx.connectors import BaseDocumentStorageAdapter
 from opteryx.exceptions import MissingDependencyError
 from opteryx.exceptions import UnmetRequirementError
+from opteryx.managers.expression import to_dnf
 
 try:
     import firebase_admin
@@ -71,6 +72,10 @@ def _initialize():  # pragma: no cover
 
 
 class GcpFireStoreConnector(BaseDocumentStorageAdapter):
+    def __init__(self) -> None:
+        super().__init__()
+        self._predicates = []
+
     def get_document_count(self, collection) -> int:  # pragma: no cover
         """
         Return an interable of blobs/files
@@ -85,9 +90,22 @@ class GcpFireStoreConnector(BaseDocumentStorageAdapter):
         """
         _initialize()
         database = firestore.client()
-        documents = database.collection(collection).stream()
+        documents = database.collection(collection)
+
+        for predicate in self._predicates:
+            documents = documents.where(*predicate)
+
+        documents = documents.stream()
 
         for page in self.page_dictset(
             ({**doc.to_dict(), "_id": doc.id} for doc in documents), page_size
         ):
             yield page
+
+    @property
+    def can_push_selection(self):
+        return True
+
+    def push_predicate(self, predicate):
+        self._predicates.append(to_dnf(predicate))
+        return True

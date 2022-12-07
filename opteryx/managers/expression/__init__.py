@@ -42,7 +42,14 @@ INTERNAL_TYPE: int = int("0010", 2)
 LITERAL_TYPE: int = int("0100", 2)
 
 
-PUSHABLE_OPERATORS = {"Gt": ">", "Lt": "<", "Eg": "="}
+PUSHABLE_OPERATORS = {
+    "Gt": ">",
+    "Lt": "<",
+    "Eq": "==",
+    "NotEq": "!=",
+    "GtEq": ">=",
+    "LtEq": "<=",
+}
 
 
 def to_dnf(root):
@@ -55,7 +62,14 @@ def to_dnf(root):
 
     def _predicate_to_dnf(root):
         if root.token_type == NodeType.AND:
-            return [_predicate_to_dnf(root.left), _predicate_to_dnf(root.right)]
+            left = _predicate_to_dnf(root.left)
+            right = _predicate_to_dnf(root.right)
+            if not isinstance(left, list):
+                left = [left]
+            if not isinstance(right, list):
+                right = [right]
+            left.extend(right)
+            return left
         if root.token_type != NodeType.COMPARISON_OPERATOR:
             raise NotSupportedError()
         if not root.value in PUSHABLE_OPERATORS:

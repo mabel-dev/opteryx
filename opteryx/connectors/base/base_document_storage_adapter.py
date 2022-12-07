@@ -55,3 +55,7 @@ class BaseDocumentStorageAdapter(abc.ABC):
         Return a page of documents
         """
         raise NotImplementedError("read_document not implemented")
+
+    @property
+    def can_push_selection(self):
+        return False

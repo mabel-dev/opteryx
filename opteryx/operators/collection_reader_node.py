@@ -23,6 +23,7 @@ from typing import Iterable
 
 import pyarrow
 
+from opteryx.exceptions import NotSupportedError
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 from opteryx.models.columns import Columns
@@ -59,6 +60,11 @@ class CollectionReaderNode(BasePlanNode):
 
     @property
     def can_push_selection(self):
+        return self._reader.can_push_selection
+
+    def push_predicate(self, predicate):
+        if self._reader.can_push_selection:
+            return self._reader.push_predicate(predicate)
         return False
 
     def execute(self) -> Iterable:
