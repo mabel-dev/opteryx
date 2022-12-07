@@ -534,7 +534,7 @@ def array_agg(branch, alias=None, key=None):
     return ExpressionTreeNode(
         token_type=NodeType.COMPLEX_AGGREGATOR,
         value="ARRAY_AGG",
-        parameters=(expression, distinct, order, limit),
+        parameters=(expression, distinct, order, limit),  # type:ignore
         alias=alias,
     )
 

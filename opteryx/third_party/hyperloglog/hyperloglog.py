@@ -298,7 +298,7 @@ class HyperLogLog(object):  # pragma: no cover
             p = struct.unpack_from("B", buf, 0)[0]
         except TypeError:
             p = struct.unpack_from("B", bytearray(buf), 0)[0]
-        self.__init__(p=p)
+        self.__init__(p=p)  # type:ignore
         offset = size
         try:
             self.reg = numpy.array(

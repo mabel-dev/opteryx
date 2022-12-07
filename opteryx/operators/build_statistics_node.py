@@ -75,12 +75,10 @@ def _statitics_collector(pages):
     for page in pages:
 
         uncollected_columns = []
-        profile_collector = {}
+        profile_collector: dict = {}
 
         columns = Columns(page)
         table_path = columns.table_path
-
-        print(page.column_names)
 
         for block in page.to_batches(10000):
 
@@ -171,15 +169,7 @@ def _statitics_collector(pages):
                     counter["False"] += column_data.size - trues
                     profile["counter"] = counter
 
-                if (
-                    _type
-                    in (
-                        OPTERYX_TYPES.VARCHAR,
-                        OPTERYX_TYPES.NUMERIC,
-                        OPTERYX_TYPES.TIMESTAMP,
-                    )
-                    and profile.get("counter") != {}
-                ):
+                if _type == OPTERYX_TYPES.VARCHAR and profile.get("counter") != {}:
                     # counter is used to collect and count unique values
                     vals, counts = numpy.unique(column_data, return_counts=True)
                     counter = {}
@@ -195,7 +185,7 @@ def _statitics_collector(pages):
                     # populate the distogram, this is used for distribution statistics
                     dgram = profile.get("dgram")
                     if dgram is None:
-                        dgram = distogram.Distogram()
+                        dgram = distogram.Distogram()  # type:ignore
                     dgram.bulkload(column_data)
                     profile["dgram"] = dgram
 

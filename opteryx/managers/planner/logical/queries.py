@@ -45,6 +45,8 @@ def select_query(ast, properties):
     """
     plan = ExecutionTree()
 
+    properties.ctes = custom_builders.extract_ctes(ast["Query"], properties.qid)
+
     all_identifiers = (
         set(custom_builders.extract_identifiers(ast)) - custom_builders.WELL_KNOWN_HINTS
     )
@@ -68,9 +70,14 @@ def select_query(ast, properties):
     # We always have a data source - even if it's 'no table'
     relation = _relations[0]
 
-    # external comes in different flavours
     reader = None
-    if relation.kind == "External":
+    if isinstance(relation.dataset, str) and relation.dataset in properties.ctes:
+        # CTEs look like subqueries
+        relation.kind = "SubQuery"
+        relation.alias = relation.dataset
+        relation.dataset = properties.ctes[relation.dataset]
+    elif relation.kind == "External":
+        # external comes in different flavours
         reader = connector_factory(relation.dataset)
         relation.kind = reader.__mode__
 
@@ -112,6 +119,12 @@ def select_query(ast, properties):
                 elif dataset[0:1] == "$":
                     mode = "Internal"
                     reader = None
+                elif dataset in properties.ctes:
+                    # CTEs look like subqueries
+                    mode = "SubQuery"  # subqueries are here due to legacy reasons
+                    reader = None
+                    right.alias = right.dataset
+                    right.dataset = properties.ctes[dataset]
                 else:
                     reader = connector_factory(dataset)
                     mode = reader.__mode__
@@ -388,7 +401,7 @@ def show_variable_query(ast, properties):
         if len(keywords) != 1:
             raise SqlError(f"`SHOW STORES` end expected, got '{keywords[1]}'")
         show_node = "show_stores"
-        node = operators.ShowStoresNode(properties=properties)
+        node = operators.ShowStoresNode(properties=properties)  # type:ignore
         plan.add_operator(show_node, operator=node)
     else:  # pragma: no cover
         raise SqlError(f"SHOW statement type not supported for `{keywords[0]}`.")

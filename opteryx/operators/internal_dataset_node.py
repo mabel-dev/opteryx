@@ -56,7 +56,7 @@ def _get_sample_dataset(dataset, alias, end_date):
     }
     dataset = dataset.lower()
     if dataset in sample_datasets:
-        table = sample_datasets[dataset](end_date)
+        table = sample_datasets[dataset](end_date)  # type:ignore
         table = _normalize_to_types(table)
         table = Columns.create_table_metadata(
             table=table,

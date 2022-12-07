@@ -188,7 +188,10 @@ def extract_relations(branch, qid):
                     for a in relation["relation"]["Table"]["args"]
                 ]
                 relation_desc.kind = "Function"
-                relation_desc.dataset = {"function": function, "args": args}
+                relation_desc.dataset = {
+                    "function": function,
+                    "args": args,
+                }  # type:ignore
                 yield relation_desc
             else:
                 if relation["relation"]["Table"]["alias"] is not None:
@@ -242,10 +245,29 @@ def extract_relations(branch, qid):
                 for value_set in subquery["Values"]:
                     values = [builders.build(v["Value"]).value for v in value_set]
                     body.append(dict(zip(headers, values)))
-                relation_desc.dataset = {"function": "values", "args": body}
+                relation_desc.dataset = {
+                    "function": "values",
+                    "args": body,
+                }  # type:ignore
                 relation_desc.kind = "Function"
                 yield relation_desc
 
 
 def extract_into(branch):
     return None
+
+
+def extract_ctes(branch, qid):
+
+    from opteryx.managers.planner import QueryPlanner
+
+    ctes = {}
+
+    if branch["with"]:
+        for ast in branch["with"]["cte_tables"]:
+            subquery_planner = QueryPlanner(qid=qid)
+            alias = ast.pop("alias")["name"]["value"]
+            plan = subquery_planner.create_logical_plan({"Query": ast["query"]})
+            ctes[alias] = plan
+
+    return ctes

@@ -149,7 +149,7 @@ def parse_iso(value):
             if val_len == 10:
                 # YYYY-MM-DD
                 return datetime.datetime(
-                    *map(int, [value[:4], value[5:7], value[8:10]])
+                    *map(int, [value[:4], value[5:7], value[8:10]])  # type:ignore
                 )
             if val_len >= 16:
                 if not (value[10] in ("T", " ") and value[13] in date_separators):

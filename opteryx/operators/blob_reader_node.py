@@ -113,6 +113,9 @@ class BlobReaderNode(BasePlanNode):
         self._dataset: str = config.get("dataset", None)
         self._alias: list = config.get("alias", None)
 
+        self._start_date = config.get("start_date", today)
+        self._end_date = config.get("end_date", today)
+
         if isinstance(self._dataset, (list, ExecutionTree, dict)):
             return
 
@@ -156,10 +159,13 @@ class BlobReaderNode(BasePlanNode):
     @property
     def config(self):  # pragma: no cover
         use_cache = ""
+        dates = ""
+        if self._start_date != datetime.datetime.utcnow().date():
+            dates = f" ({self._start_date} to {self._end_date})"
         if self._disable_cache:
             use_cache = " (NO_CACHE)"
         if self._alias:
-            return f"{self._dataset} => {self._alias}{use_cache}"
+            return f"{self._dataset} => {self._alias}{use_cache}{dates}"
         if isinstance(self._dataset, str):
             return f"{self._dataset}{use_cache}"
         return "<complex dataset>"

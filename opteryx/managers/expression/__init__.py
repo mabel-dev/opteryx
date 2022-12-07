@@ -46,6 +46,7 @@ def format_expression(root):
         return "null"
 
     node_type = root.token_type
+    _map: dict = {}
 
     # LITERAL TYPES
     if node_type & LITERAL_TYPE == LITERAL_TYPE:
@@ -101,7 +102,11 @@ def format_expression(root):
     if node_type == NodeType.NOT:
         return f"NOT {format_expression(root.centre)}"
     if node_type in (NodeType.AND, NodeType.OR, NodeType.XOR):
-        _map = {NodeType.AND: "AND", NodeType.OR: "OR", NodeType.XOR: "XOR"}
+        _map = {
+            NodeType.AND: "AND",
+            NodeType.OR: "OR",
+            NodeType.XOR: "XOR",
+        }  # type:ignore
         return f"{format_expression(root.left)} {_map[node_type]} {format_expression(root.right)}"
 
     return str(root.value)

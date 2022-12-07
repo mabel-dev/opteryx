@@ -62,3 +62,10 @@ SELECT name FROM $planets ORDER BY mass, gravity;
 SELECT name FROM $planets ORDER BY mass DESC;
 SELECT name FROM $planets ORDER BY mass DESC, gravity ASC;
 SELECT * FROM $planets ORDER BY mass;
+SELECT name FROM $planets ORDER BY mass LIMIT 2;
+
+WITH nom AS (SELECT planetId FROM $satellites GROUP BY planetId) SELECT planetId FROM nom;
+WITH nom AS (SELECT planetId as id FROM $satellites GROUP BY planetId) SELECT * FROM $planets INNER JOIN nom ON id = id;
+WITH nom AS (SELECT id FROM $planets FOR '1688-01-01') SELECT * FROM $planets INNER JOIN nom ON id = id;
+WITH nom AS (SELECT id FROM $planets FOR '1688-01-01') SELECT * FROM $planets FOR TODAY INNER JOIN nom ON id = id;
+WITH nom AS (SELECT id FROM $planets FOR DATES BETWEEN '2022-01-01' AND TODAY) SELECT * FROM $planets INNER JOIN nom ON id = id;

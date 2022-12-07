@@ -38,7 +38,7 @@ class ShowCreateNode(BasePlanNode):
 
     @property
     def config(self):  # pragma: no cover
-        return str(self._offset)
+        return str(self._table)
 
     def execute(self) -> Iterable:
 

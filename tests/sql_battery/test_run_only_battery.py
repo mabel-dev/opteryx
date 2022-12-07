@@ -8,7 +8,7 @@ This is part of a suite of tests which are based on running many SQL statements.
     Results Checking
     Compare to DuckDB
 
-This is the lightest of the battery tests, it only ensures a query executes. 
+This is the lightest of the battery tests, it only ensures a query executes.
 
 This may seem pointless as a test if that is all it is doing, but this has it's uses,
 particularly in testing SQL parsing based problems/features - we don't care if the

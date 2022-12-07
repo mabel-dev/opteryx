@@ -76,7 +76,7 @@ class LRU2:
             keys = tuple(self._cache.keys())
             accesses = (c[2] for c in self._cache.values())
 
-            least_recently_used = numpy.argmin(accesses)
+            least_recently_used = numpy.argmin(accesses)  # type:ignore
             evicted_key = keys[least_recently_used]
 
             self._cache.pop(evicted_key)
