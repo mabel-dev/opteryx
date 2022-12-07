@@ -18,8 +18,14 @@ from typing import List
 import numpy
 import pyarrow
 
+def _filter(filter, table):
+    # notes:
+    #   at this point we've not renamed any columns
+    from opteryx.managers.expression import evaluate
+    mask = evaluate(filter, table, False)
+    return table.take(pyarrow.array(mask))
 
-def zstd_decoder(stream, projection: List = None):
+def zstd_decoder(stream, projection: List = None, selection=None):
     """
     Read zstandard compressed JSONL files
     """
@@ -29,11 +35,17 @@ def zstd_decoder(stream, projection: List = None):
         return jsonl_decoder(file, projection)
 
 
-def parquet_decoder(stream, projection: List = None):
+def parquet_decoder(stream, projection: List = None, selection=None):
     """
     Read parquet formatted files
     """
     from pyarrow import parquet
+    from opteryx.managers.expression import to_dnf
+
+    # parquet uses DNF filters
+    _select = None
+    if selection is not None:
+        _select = to_dnf(selection)
 
     selected_columns = None
     if isinstance(projection, (list, set)) and "*" not in projection:
@@ -58,10 +70,10 @@ def parquet_decoder(stream, projection: List = None):
         if len(selected_columns) == 0:
             selected_columns = None
     # don't prebuffer - we're already buffered as an IO Stream
-    return parquet.read_table(stream, columns=selected_columns, pre_buffer=False)
+    return parquet.read_table(stream, columns=selected_columns, pre_buffer=False, filters=_select)
 
 
-def orc_decoder(stream, projection: List = None):
+def orc_decoder(stream, projection: List = None, selection=None):
     """
     Read orc formatted files
     """
@@ -77,11 +89,13 @@ def orc_decoder(stream, projection: List = None):
         if len(selected_columns) == 0:
             selected_columns = None
 
-    table = orc_file.read()
+    table = orc_file.read(columns=selected_columns)
+    if selection is not None:
+        table = _filter(selection, table)
     return table
 
 
-def jsonl_decoder(stream, projection: List = None):
+def jsonl_decoder(stream, projection: List = None, selection=None):
 
     import pyarrow.json
 
@@ -94,10 +108,12 @@ def jsonl_decoder(stream, projection: List = None):
         if len(selected_columns) > 0:
             table = table.select(selected_columns)
 
+    if selection is not None:
+        table = _filter(selection, table)
     return table
 
 
-def csv_decoder(stream, projection: List = None):
+def csv_decoder(stream, projection: List = None, selection=None):
 
     import pyarrow.csv
 
@@ -110,10 +126,12 @@ def csv_decoder(stream, projection: List = None):
         if len(selected_columns) > 0:
             table = table.select(selected_columns)
 
+    if selection is not None:
+        table = _filter(selection, table)
     return table
 
 
-def arrow_decoder(stream, projection: List = None):
+def arrow_decoder(stream, projection: List = None, selection=None):
 
     import pyarrow.feather as pf
 
@@ -126,4 +144,6 @@ def arrow_decoder(stream, projection: List = None):
         if len(selected_columns) > 0:
             table = table.select(selected_columns)
 
+    if selection is not None:
+        table = _filter(selection, table)
     return table

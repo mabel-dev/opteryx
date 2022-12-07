@@ -27,6 +27,7 @@ import pyarrow
 from cityhash import CityHash64
 from pyarrow import Table
 
+from opteryx.exceptions import NotSupportedError
 from opteryx.functions import FUNCTIONS
 from opteryx.functions.binary_operators import binary_operations
 from opteryx.functions.unary_operations import UNARY_OPERATIONS
@@ -39,6 +40,41 @@ from opteryx.third_party.pyarrow_ops.ops import filter_operations_for_display
 LOGICAL_TYPE: int = int("0001", 2)
 INTERNAL_TYPE: int = int("0010", 2)
 LITERAL_TYPE: int = int("0100", 2)
+
+
+PUSHABLE_OPERATORS = {
+    "Gt": ">",
+    "Lt": "<",
+    "Eg": "="
+}
+
+def to_dnf(root):
+    """
+    convert a filter to the form used by the selection pushdown
+
+    version 1 only does single predicate filters in the form
+        (identifier, operator, literal)
+    """
+    def _predicate_to_dnf(root):
+        if root.token_type == NodeType.AND:
+            return [_predicate_to_dnf(root.left), _predicate_to_dnf(root.right)]
+        if root.token_type != NodeType.COMPARISON_OPERATOR:
+            raise NotSupportedError()
+        if not root.value in PUSHABLE_OPERATORS:
+            # not all operators are universally supported
+            raise NotSupportedError()
+        if root.left.token_type != NodeType.IDENTIFIER:
+            raise NotSupportedError()
+        if root.left.token_type in (NodeType.LITERAL_NUMERIC, NodeType.LITERAL_VARCHAR):
+            # not all operands are universally supported
+            raise NotSupportedError()
+        return (root.left.value, PUSHABLE_OPERATORS[root.value], root.right.value)
+
+    try:
+        dnf = _predicate_to_dnf(root)
+    except NotSupportedError:
+        return None
+    return dnf
 
 
 def format_expression(root):
@@ -422,3 +458,4 @@ def evaluate_and_append(expressions, table: Table, seed: str = None):
     table = columns.apply(table)
 
     return columns, return_expressions, table
+

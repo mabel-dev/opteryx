@@ -20,6 +20,7 @@ RULESET: list = [
     actions.split_conjunctive_predicates,  # run after eliminate_negations
     actions.eliminate_fixed_function_evaluations,  # run before constant evaluations
     actions.eliminate_constant_evaluations,
+    actions.selection_pushdown,
     actions.defragment_pages,
     actions.use_heap_sort,
 ]

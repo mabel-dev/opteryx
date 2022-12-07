@@ -88,6 +88,10 @@ class FunctionDatasetNode(BasePlanNode):
     def name(self):  # pragma: no cover
         return "Dataset Constructor"
 
+    @property
+    def can_push_selection(self):
+        return False
+
     def execute(self) -> Iterable:
 
         try:

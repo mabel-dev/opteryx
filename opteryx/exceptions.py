@@ -30,6 +30,8 @@ class UnmetRequirementError(Exception):
 class FeatureNotSupportedOnArchitectureError(Exception):
     pass
 
+class NotSupportedError(Exception):
+    pass
 
 # PEP-0249
 

@@ -195,7 +195,7 @@ class Columns:
 
     def filter(self, _filter):
         """
-        accept a filter and return matching columnsd
+        accept a filter and return matching columns
         """
         from opteryx.third_party import pyarrow_ops
 

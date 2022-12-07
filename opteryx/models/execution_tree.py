@@ -52,9 +52,9 @@ class ExecutionTree:
 
         def _inner(operator):
             if not isinstance(operator, (list, tuple, set)):
-                operator = [operator]
+                operator = tuple([operator])
             for nid, item in list(self._nodes.items()):
-                if isinstance(item, *operator):
+                if isinstance(item, operator):
                     yield nid
 
         return list(_inner(operator))

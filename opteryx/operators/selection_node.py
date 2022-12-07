@@ -24,12 +24,11 @@ import pyarrow
 
 from pyarrow import Table
 
-from opteryx.attribute_types import TOKEN_TYPES
 from opteryx.exceptions import SqlError
-from opteryx.managers.expression import evaluate, format_expression
+from opteryx.managers.expression import evaluate
+from opteryx.managers.expression import format_expression
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
-
 
 class SelectionNode(BasePlanNode):
     def __init__(self, properties: QueryProperties, **config):

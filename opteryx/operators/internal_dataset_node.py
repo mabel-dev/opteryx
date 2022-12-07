@@ -95,6 +95,10 @@ class InternalDatasetNode(BasePlanNode):
     def name(self):  # pragma: no cover
         return "Sample Dataset Reader"
 
+    @property
+    def can_push_selection(self):
+        return False
+
     def execute(self) -> Iterable:
 
         pyarrow_page = _get_sample_dataset(self._dataset, self._alias, self._end_date)

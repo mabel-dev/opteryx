@@ -30,6 +30,9 @@ import pyarrow
 
 from opteryx import config
 from opteryx.exceptions import DatasetNotFoundError
+from opteryx.managers.expression import ExpressionTreeNode
+from opteryx.managers.expression import NodeType
+from opteryx.managers.expression import to_dnf
 from opteryx.managers.schemes import MabelPartitionScheme
 from opteryx.managers.schemes import DefaultPartitionScheme
 from opteryx.models import Columns, QueryProperties, ExecutionTree
@@ -116,6 +119,8 @@ class BlobReaderNode(BasePlanNode):
         self._start_date = config.get("start_date", today)
         self._end_date = config.get("end_date", today)
 
+        self._filter = None
+
         if isinstance(self._dataset, (list, ExecutionTree, dict)):
             return
 
@@ -155,6 +160,20 @@ class BlobReaderNode(BasePlanNode):
 
         # row count estimate
         self._row_count_estimate: int = None
+
+    @property
+    def can_push_selection(self):
+        return isinstance(self._dataset, str)
+
+    def push_predicate(self, predicate):
+        if to_dnf(predicate) is None:
+            # we can't push all predicates everywhere
+            return False
+        if self._filter is None:
+            self._filter = predicate
+            return True
+        self._filter = ExpressionTreeNode(NodeType.AND, left=predicate, right=self._filter)
+        return True
 
     @property
     def config(self):  # pragma: no cover
@@ -208,6 +227,7 @@ class BlobReaderNode(BasePlanNode):
                             parser,
                             self._cache,
                             self._selection,
+                            self._filter
                         )
                     )
                     for path, parser in partition["blob_list"]
@@ -278,7 +298,7 @@ class BlobReaderNode(BasePlanNode):
                     yield pyarrow_blob
 
     def _read_and_parse(self, config):
-        path, reader, parser, cache, projection = config
+        path, reader, parser, cache, projection, selection = config
         start_read = time.time_ns()
 
         # hash the blob name for the look up
@@ -319,7 +339,7 @@ class BlobReaderNode(BasePlanNode):
         else:
             self.statistics.cache_hits += 1
 
-        table = parser(blob_bytes, projection)
+        table = parser(blob_bytes, projection, selection)
 
         time_to_read = time.time_ns() - start_read
         return time_to_read, blob_bytes.getbuffer().nbytes, table, path

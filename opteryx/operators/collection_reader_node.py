@@ -19,7 +19,7 @@ This Node primarily is used for reading NoSQL sources like MongoDB and Firestore
 """
 import time
 
-from typing import Iterable, Optional
+from typing import Iterable
 
 import pyarrow
 
@@ -56,6 +56,10 @@ class CollectionReaderNode(BasePlanNode):
     @property
     def name(self):  # pragma: no cover
         return "Collection Reader"
+        
+    @property
+    def can_push_selection(self):
+        return False
 
     def execute(self) -> Iterable:
 
