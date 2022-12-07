@@ -18,12 +18,15 @@ from typing import List
 import numpy
 import pyarrow
 
+
 def _filter(filter, table):
     # notes:
     #   at this point we've not renamed any columns
     from opteryx.managers.expression import evaluate
+
     mask = evaluate(filter, table, False)
     return table.take(pyarrow.array(mask))
+
 
 def zstd_decoder(stream, projection: List = None, selection=None):
     """
@@ -70,7 +73,9 @@ def parquet_decoder(stream, projection: List = None, selection=None):
         if len(selected_columns) == 0:
             selected_columns = None
     # don't prebuffer - we're already buffered as an IO Stream
-    return parquet.read_table(stream, columns=selected_columns, pre_buffer=False, filters=_select)
+    return parquet.read_table(
+        stream, columns=selected_columns, pre_buffer=False, filters=_select
+    )
 
 
 def orc_decoder(stream, projection: List = None, selection=None):

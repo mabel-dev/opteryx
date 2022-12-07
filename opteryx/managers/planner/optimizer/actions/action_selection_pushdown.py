@@ -41,7 +41,14 @@ def selection_pushdown(plan, properties):
     """
     # find the in-scope nodes
     selection_nodes = plan.get_nodes_of_type(operators.SelectionNode)
-    reader_nodes = plan.get_nodes_of_type((operators.BlobReaderNode, operators.CollectionReaderNode, operators.FunctionDatasetNode, operators.InternalDatasetNode))
+    reader_nodes = plan.get_nodes_of_type(
+        (
+            operators.BlobReaderNode,
+            operators.CollectionReaderNode,
+            operators.FunctionDatasetNode,
+            operators.InternalDatasetNode,
+        )
+    )
 
     # killer questions - if any aren't met, bail
     if selection_nodes is None:

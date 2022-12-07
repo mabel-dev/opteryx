@@ -42,11 +42,8 @@ INTERNAL_TYPE: int = int("0010", 2)
 LITERAL_TYPE: int = int("0100", 2)
 
 
-PUSHABLE_OPERATORS = {
-    "Gt": ">",
-    "Lt": "<",
-    "Eg": "="
-}
+PUSHABLE_OPERATORS = {"Gt": ">", "Lt": "<", "Eg": "="}
+
 
 def to_dnf(root):
     """
@@ -55,6 +52,7 @@ def to_dnf(root):
     version 1 only does single predicate filters in the form
         (identifier, operator, literal)
     """
+
     def _predicate_to_dnf(root):
         if root.token_type == NodeType.AND:
             return [_predicate_to_dnf(root.left), _predicate_to_dnf(root.right)]
@@ -458,4 +456,3 @@ def evaluate_and_append(expressions, table: Table, seed: str = None):
     table = columns.apply(table)
 
     return columns, return_expressions, table
-

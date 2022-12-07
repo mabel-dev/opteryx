@@ -172,7 +172,9 @@ class BlobReaderNode(BasePlanNode):
         if self._filter is None:
             self._filter = predicate
             return True
-        self._filter = ExpressionTreeNode(NodeType.AND, left=predicate, right=self._filter)
+        self._filter = ExpressionTreeNode(
+            NodeType.AND, left=predicate, right=self._filter
+        )
         return True
 
     @property
@@ -227,7 +229,7 @@ class BlobReaderNode(BasePlanNode):
                             parser,
                             self._cache,
                             self._selection,
-                            self._filter
+                            self._filter,
                         )
                     )
                     for path, parser in partition["blob_list"]

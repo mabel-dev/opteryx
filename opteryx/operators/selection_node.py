@@ -30,6 +30,7 @@ from opteryx.managers.expression import format_expression
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 
+
 class SelectionNode(BasePlanNode):
     def __init__(self, properties: QueryProperties, **config):
         super().__init__(properties=properties)

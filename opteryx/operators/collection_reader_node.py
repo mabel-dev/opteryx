@@ -56,7 +56,7 @@ class CollectionReaderNode(BasePlanNode):
     @property
     def name(self):  # pragma: no cover
         return "Collection Reader"
-        
+
     @property
     def can_push_selection(self):
         return False

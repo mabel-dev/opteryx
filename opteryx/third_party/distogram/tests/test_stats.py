@@ -15,7 +15,7 @@ def test_stats():
     h = distogram.Distogram()
 
     for i in normal:
-        h = distogram.update(h, i)
+        distogram.update(h, i)
 
     assert distogram.mean(h) == approx(np.mean(normal), abs=0.1)
     assert distogram.variance(h) == approx(np.var(normal), abs=0.1)
