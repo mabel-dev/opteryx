@@ -15,6 +15,8 @@ import pyarrow
 
 from pyarrow import compute
 
+from opteryx.exceptions import SqlError
+
 
 def list_contains(array, item):
     """
@@ -47,30 +49,48 @@ def search(array, item):
     """
     `search` provides a way to look for values across different field types, rather
     than doing a LIKE on a string, IN on a list, `search` adapts to the field type.
+
+    This performs a pre-filter of the data to remove nulls - this means that the 
+    checks should generally be faster.
     """
 
     item = item[0]  # [#325]
+    record_count = array.size
 
-    if len(array) > 0:
+    if record_count > 0:
+        null_positions = compute.is_null(array, nan_is_null=True)
+        # if all the values are null, short-cut
+        if null_positions.false_count == 0:
+            return numpy.full(record_count, False, numpy.bool_)
+        # do we have any nulls?
+        compressed = null_positions.true_count > 0
+        null_positions = numpy.invert(null_positions)
+        # remove nulls from the checks
+        if compressed:
+            array = array.compress(null_positions)
         array_type = type(array[0])
     else:
-        return numpy.array([None], dtype=numpy.bool_)
+        return numpy.array([False], dtype=numpy.bool_)
+
     if array_type == str:
         # return True if the value is in the string
-        return compute.match_substring(array, pattern=item, ignore_case=True)
-    if array_type == numpy.ndarray:
+        results_mask = compute.match_substring(array, pattern=item, ignore_case=True)
+    elif array_type == numpy.ndarray:
         # converting to a set is faster for a handful of items which is what we're
         # almost definitely working with here - note compute.index is about 50x slower
-        return numpy.array(
-            [False if record is None else item in set(record) for record in array],
-            dtype=numpy.bool_,
-        )
-    if array_type == dict:
-        return numpy.array(
-            [False if record is None else item in record.values() for record in array],
-            dtype=numpy.bool_,
-        )
-    return numpy.array([[False] * array.shape[0]], dtype=numpy.bool_)
+        results_mask = numpy.array([item in set(record) for record in array], dtype=numpy.bool_)
+    elif array_type == dict:
+        results_mask = numpy.array([item in record.values() for record in array], dtype=numpy.bool_)
+    else:
+        raise SqlError("SEARCH can only be used with VARCHAR, LIST and STRUCT.")
+
+    if compressed:
+        # fill the result set
+        results = numpy.full(record_count, False, numpy.bool_)
+        results[numpy.nonzero(null_positions)] = results_mask
+        return results
+
+    return results_mask
 
 
 def iif(mask, true_values, false_values):

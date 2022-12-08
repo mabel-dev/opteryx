@@ -109,10 +109,10 @@ def _project(tables, fields):
         if len(column_names) > 0:
             yield table.select(dict.fromkeys(column_names))
         else:
+            # if we can't find the column, add a placeholder column
             yield pyarrow.Table.from_pydict(
                 {"_": numpy.full(row_count, True, dtype=numpy.bool_)}
             )
-
 
 def _build_aggs(aggregators, columns):
     column_map = {}
@@ -144,8 +144,8 @@ def _build_aggs(aggregators, columns):
                     field_name = columns.get_column_from_alias(
                         field_node.value, only_one=True
                     )
-                elif field_node.token_type == NodeType.LITERAL_NUMERIC:
-                    field_name = field_node.value
+                elif field_node.token_type in (NodeType.LITERAL_NUMERIC, NodeType.LITERAL_BOOLEAN, NodeType.LITERAL_VARCHAR):
+                    field_name = str(field_node.value)
                 elif len(exists) > 0:
                     field_name = exists[0]
                 else:
@@ -295,6 +295,13 @@ class AggregateNode(BasePlanNode):
         table = pyarrow.concat_tables(
             _project(data_pages.execute(), all_identifiers), promote=True
         )
+        # add any literal columns
+        all_literals = [
+            node.value
+            for node in get_all_nodes_of_type(
+                self._groups + self._aggregates, select_nodes=(NodeType.LITERAL_BOOLEAN, NodeType.LITERAL_NUMERIC, NodeType.LITERAL_VARCHAR,)
+            )
+        ]
 
         # get any functions we need to execute before aggregating
         evaluatable_nodes = _extract_functions(self._aggregates)
@@ -304,6 +311,12 @@ class AggregateNode(BasePlanNode):
         columns, _, table = evaluate_and_append(evaluatable_nodes, table)
         columns, self._groups, table = evaluate_and_append(self._groups, table)
         self.statistics.time_evaluating += time.time_ns() - start_time
+
+        all_literals = list(dict.fromkeys(all_literals))
+        all_literals = [a for a in all_literals if str(a) not in table.column_names]
+        for literal in all_literals:
+            table = table.append_column(str(literal), [numpy.full(shape=table.num_rows, fill_value=literal)])
+            columns.add_column(str(literal))
 
         start_time = time.time_ns()
         group_by_columns = [
@@ -328,7 +341,7 @@ class AggregateNode(BasePlanNode):
             if order or limit:
                 # rip the column out of the table
                 column_name = column_map[format_expression(agg)]
-                column_def = groups.field(column_name)
+                column_def = groups.field(column_name)  # this is used
                 column = groups.column(column_name).to_pylist()
                 groups = groups.drop([column_name])
                 # order
