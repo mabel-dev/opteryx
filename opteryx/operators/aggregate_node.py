@@ -21,6 +21,7 @@ This is a greedy operator - it consumes all the data before responding.
 
 This is built around the pyarrow table grouping functionality.
 """
+import random
 import time
 
 from typing import Iterable
@@ -111,7 +112,7 @@ def _project(tables, fields):
         else:
             # if we can't find the column, add a placeholder column
             yield pyarrow.Table.from_pydict(
-                {"_": numpy.full(row_count, 1, dtype=numpy.int)}
+                {"*": numpy.full(row_count, 1, dtype=numpy.int)}
             )
 
 
@@ -138,7 +139,7 @@ def _build_aggs(aggregators, columns):
                 count_options = None
 
                 if field_node.token_type == NodeType.WILDCARD:
-                    field_name = "_"
+                    field_name = "*"
                     # count * counts nulls
                     count_options = pyarrow.compute.CountOptions(mode="all")
                 elif field_node.token_type == NodeType.IDENTIFIER:
@@ -296,11 +297,31 @@ class AggregateNode(BasePlanNode):
             )
         ]
         all_identifiers = list(dict.fromkeys(all_identifiers))
-        # join all the pages together, selecting only the columns we found above
+
+        # join all the pages together into one table, selecting only the columns
+        # we're pretty sure we're going to use - this will fail for datasets
+        # larger than memory
         table = pyarrow.concat_tables(
             _project(data_pages.execute(), all_identifiers), promote=True
         )
-        # add any literal columns
+
+        # Get any functions we need to execute before aggregating
+        evaluatable_nodes = _extract_functions(self._aggregates)
+
+        # Allow grouping by functions by evaluating them first
+        start_time = time.time_ns()
+        columns, _, table = evaluate_and_append(evaluatable_nodes, table)
+        columns, self._groups, table = evaluate_and_append(self._groups, table)
+
+        # Add a "*" column, this is an int because when a bool it miscounts
+        if "*" not in table.column_names:
+            table = table.append_column(
+                "*", [numpy.full(shape=table.num_rows, fill_value=1, dtype=numpy.int)]
+            )
+        self.statistics.time_evaluating += time.time_ns() - start_time
+
+        # Extract any literal columns, we need to add these so we can group and/or
+        # aggregate by them (e.g. SELECT SUM(4) FROM table;)
         all_literals = [
             node.value
             for node in get_all_nodes_of_type(
@@ -312,19 +333,6 @@ class AggregateNode(BasePlanNode):
                 ),
             )
         ]
-
-        # get any functions we need to execute before aggregating
-        evaluatable_nodes = _extract_functions(self._aggregates)
-
-        # Allow grouping by functions by evaluating them
-        start_time = time.time_ns()
-        columns, _, table = evaluate_and_append(evaluatable_nodes, table)
-        columns, self._groups, table = evaluate_and_append(self._groups, table)
-        table = table.append_column(
-            "_", [numpy.full(shape=table.num_rows, fill_value=1, dtype=numpy.int)]
-        )
-        self.statistics.time_evaluating += time.time_ns() - start_time
-
         all_literals = list(dict.fromkeys(all_literals))
         all_literals = [a for a in all_literals if str(a) not in table.column_names]
         for literal in all_literals:
@@ -341,8 +349,7 @@ class AggregateNode(BasePlanNode):
 
         column_map, aggs = _build_aggs(self._aggregates, columns)
 
-        # we're not a group_by - either because the clause wasn't in the statement or
-        # because we're grouping by all the available columns
+        # we're not a group_by - we're aggregating without grouping
         if len(group_by_columns) == 0:
             groups = _non_group_aggregates(self._aggregates, table, columns)
             del table
@@ -350,7 +357,7 @@ class AggregateNode(BasePlanNode):
             groups = table.group_by(group_by_columns)
             groups = groups.aggregate(aggs)
 
-        # do the secondary activities on ARRAY_AGG
+        # do the secondary activities for ARRAY_AGG
         for agg in [a for a in self._aggregates if a.value == "ARRAY_AGG"]:
             _, _, order, limit = agg.parameters
             if order or limit:
@@ -367,20 +374,32 @@ class AggregateNode(BasePlanNode):
                 # put the new column into the table
                 groups = groups.append_column(column_def, [column])
 
-        # name the aggregate fields
+        # name the aggregate fields and add them to the Columns data
         for friendly_name, agg_name in column_map.items():
-            columns.add_column(agg_name)
-            column_name = columns.get_column_from_alias(agg_name, only_one=True)
-            columns.set_preferred_name(column_name, friendly_name)
+            # randomize the column name to prevent collisions, particularly on joined
+            # or chained aggregations
+            new_column_name = hex(random.getrandbits(64))
+            groups = groups.rename_columns(
+                [
+                    col if col != agg_name else new_column_name
+                    for col in groups.column_names
+                ]
+            )
+
+            columns.add_column(new_column_name)
+            columns.set_preferred_name(new_column_name, friendly_name)
             # if we have an alias for this column, add it to the metadata
             aliases = [
                 agg.alias
                 for agg in self._aggregates
                 if friendly_name == format_expression(agg)
             ]
+            aliases.append(agg_name)
             for alias in aliases:
                 if alias:
-                    columns.add_alias(column_name, alias)
+                    columns.add_alias(new_column_name, alias)
+
+        # apply the metadata to the resultant dataset
         groups = columns.apply(groups)
 
         self.statistics.time_aggregating += time.time_ns() - start_time
