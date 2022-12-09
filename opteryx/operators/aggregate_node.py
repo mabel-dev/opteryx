@@ -111,8 +111,9 @@ def _project(tables, fields):
         else:
             # if we can't find the column, add a placeholder column
             yield pyarrow.Table.from_pydict(
-                {"_": numpy.full(row_count, True, dtype=numpy.bool_)}
+                {"_": numpy.full(row_count, 1, dtype=numpy.int)}
             )
+
 
 def _build_aggs(aggregators, columns):
     column_map = {}
@@ -137,14 +138,18 @@ def _build_aggs(aggregators, columns):
                 count_options = None
 
                 if field_node.token_type == NodeType.WILDCARD:
-                    field_name = columns.preferred_column_names[0][0]
+                    field_name = "_"
                     # count * counts nulls
                     count_options = pyarrow.compute.CountOptions(mode="all")
                 elif field_node.token_type == NodeType.IDENTIFIER:
                     field_name = columns.get_column_from_alias(
                         field_node.value, only_one=True
                     )
-                elif field_node.token_type in (NodeType.LITERAL_NUMERIC, NodeType.LITERAL_BOOLEAN, NodeType.LITERAL_VARCHAR):
+                elif field_node.token_type in (
+                    NodeType.LITERAL_NUMERIC,
+                    NodeType.LITERAL_BOOLEAN,
+                    NodeType.LITERAL_VARCHAR,
+                ):
                     field_name = str(field_node.value)
                 elif len(exists) > 0:
                     field_name = exists[0]
@@ -299,7 +304,12 @@ class AggregateNode(BasePlanNode):
         all_literals = [
             node.value
             for node in get_all_nodes_of_type(
-                self._groups + self._aggregates, select_nodes=(NodeType.LITERAL_BOOLEAN, NodeType.LITERAL_NUMERIC, NodeType.LITERAL_VARCHAR,)
+                self._groups + self._aggregates,
+                select_nodes=(
+                    NodeType.LITERAL_BOOLEAN,
+                    NodeType.LITERAL_NUMERIC,
+                    NodeType.LITERAL_VARCHAR,
+                ),
             )
         ]
 
@@ -310,12 +320,17 @@ class AggregateNode(BasePlanNode):
         start_time = time.time_ns()
         columns, _, table = evaluate_and_append(evaluatable_nodes, table)
         columns, self._groups, table = evaluate_and_append(self._groups, table)
+        table = table.append_column(
+            "_", [numpy.full(shape=table.num_rows, fill_value=1, dtype=numpy.int)]
+        )
         self.statistics.time_evaluating += time.time_ns() - start_time
 
         all_literals = list(dict.fromkeys(all_literals))
         all_literals = [a for a in all_literals if str(a) not in table.column_names]
         for literal in all_literals:
-            table = table.append_column(str(literal), [numpy.full(shape=table.num_rows, fill_value=literal)])
+            table = table.append_column(
+                str(literal), [numpy.full(shape=table.num_rows, fill_value=literal)]
+            )
             columns.add_column(str(literal))
 
         start_time = time.time_ns()
