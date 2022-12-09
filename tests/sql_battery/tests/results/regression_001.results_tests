@@ -1,0 +1,5 @@
+{
+    "summary": "This has caught a few different problems",
+    "statement": "SET @planet = 'Saturn'; SELECT name AS nom, bigsats.occurances, smallsats.occurances FROM (SELECT DISTINCT id as planetId, name FROM $planets WHERE name = @planet) as planets LEFT JOIN (SELECT planetId, COUNT(*) AS occurances FROM $satellites FOR DATES BETWEEN '2022-01-01' AND TODAY WHERE gm > 10 GROUP BY planetId) AS bigsats ON bigsats.planetId = planets.planetId LEFT JOIN (SELECT planetId, COUNT(*) AS occurances FROM $satellites FOR DATES IN LAST_MONTH WHERE gm < 10 GROUP BY planetId) as smallsats ON smallsats.planetId = planets.planetId;",
+    "result": {"nom": ["Saturn"], "bigsats.occurances":[5], "smallsats.occurances":[56]}
+}

@@ -50,7 +50,7 @@ def search(array, item):
     `search` provides a way to look for values across different field types, rather
     than doing a LIKE on a string, IN on a list, `search` adapts to the field type.
 
-    This performs a pre-filter of the data to remove nulls - this means that the 
+    This performs a pre-filter of the data to remove nulls - this means that the
     checks should generally be faster.
     """
 
@@ -78,9 +78,13 @@ def search(array, item):
     elif array_type == numpy.ndarray:
         # converting to a set is faster for a handful of items which is what we're
         # almost definitely working with here - note compute.index is about 50x slower
-        results_mask = numpy.array([item in set(record) for record in array], dtype=numpy.bool_)
+        results_mask = numpy.array(
+            [item in set(record) for record in array], dtype=numpy.bool_
+        )
     elif array_type == dict:
-        results_mask = numpy.array([item in record.values() for record in array], dtype=numpy.bool_)
+        results_mask = numpy.array(
+            [item in record.values() for record in array], dtype=numpy.bool_
+        )
     else:
         raise SqlError("SEARCH can only be used with VARCHAR, LIST and STRUCT.")
 
