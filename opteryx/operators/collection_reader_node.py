@@ -48,6 +48,8 @@ class CollectionReaderNode(BasePlanNode):
         # pushed down selection/filter
         self._selection = config.get("selection")
 
+        self._disable_selections = "NO_PUSH_SELECTION" in config.get("hints", [])
+
     @property
     def config(self):  # pragma: no cover
         if self._alias:
@@ -60,7 +62,7 @@ class CollectionReaderNode(BasePlanNode):
 
     @property
     def can_push_selection(self):
-        return self._reader.can_push_selection
+        return self._reader.can_push_selection and not self._disable_selections
 
     def push_predicate(self, predicate):
         if self._reader.can_push_selection:
