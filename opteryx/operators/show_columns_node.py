@@ -163,9 +163,9 @@ def _extended_collector(pages):
             "max": None,
             "missing": 0,
             "mean": None,
+            "unique": None,
             "quantiles": None,
             "histogram": None,
-            "unique": None,
             "most_frequent_values": None,
             "most_frequent_counts": None,
         }
@@ -302,7 +302,7 @@ def _extended_collector(pages):
                 profile["min"], profile["max"] = distogram.bounds(dgram)  # type:ignore
                 profile["mean"] = distogram.mean(dgram)  # type:ignore
 
-                histogram = distogram.histogram(dgram, bin_count=50)  # type:ignore
+                histogram = distogram.histogram(dgram, bin_count=20)  # type:ignore
                 if histogram:
                     profile["histogram"] = histogram[0]
 
@@ -311,8 +311,13 @@ def _extended_collector(pages):
                     distogram.quantile(dgram, value=0.5),  # type:ignore
                     distogram.quantile(dgram, value=0.75),  # type:ignore
                 )
+
+                if dgram.bin_count < dgram.max_bin_count:
+                    profile["unique"] = dgram.bin_count
+
+            # if we can get the exact count from the distrogram, don't approximate
             hll = profile.pop("hyperloglog", None)
-            if hll:
+            if hll and profile.get("unique") is None:
                 profile["unique"] = hll.count()
 
             counter = profile.pop("counter", None)
