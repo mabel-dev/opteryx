@@ -109,5 +109,5 @@ class GcpFireStoreConnector(BaseDocumentStorageAdapter):
         return True
 
     def push_predicate(self, predicate):
-        self._predicates.append(to_dnf(predicate))
+        self._predicates.extend(to_dnf(predicate))
         return True
