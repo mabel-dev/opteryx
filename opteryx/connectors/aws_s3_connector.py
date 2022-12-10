@@ -31,9 +31,7 @@ class AwsS3Connector(BaseBlobStorageAdapter):
         secret_key = os.environ.get("MINIO_SECRET_KEY")
         secure = str(os.environ.get("MINIO_SECURE", "TRUE")).lower() == "true"
 
-        if (
-            end_point is None or access_key is None or secret_key is None
-        ):  # pragma: no cover
+        if end_point is None:  # pragma: no cover
             raise UnmetRequirementError(
                 "MinIo (S3) adapter requires MINIO_END_POINT, MINIO_ACCESS_KEY and MINIO_SECRET_KEY set in environment variables."
             )

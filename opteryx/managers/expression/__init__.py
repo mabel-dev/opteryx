@@ -84,6 +84,8 @@ def to_dnf(root):
 
     try:
         dnf = _predicate_to_dnf(root)
+        if not isinstance(dnf, list):
+            dnf = [dnf]
     except NotSupportedError:
         return None
     return dnf

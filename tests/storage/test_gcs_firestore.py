@@ -30,14 +30,23 @@ def test_firestore_storage():
 
     # TEST PREDICATE PUSHDOWN
     cur = conn.cursor()
+    cur.execute(
+        "SET enable_optimizer = false; SELECT * FROM dwarves WHERE actor = 'Pinto Colvig';"
+    )
+    assert cur.rowcount == 2, cur.rowcount
+    assert cur.stats["rows_read"] == 7, cur.stats
+
+    cur = conn.cursor()
     cur.execute("SELECT * FROM dwarves WHERE actor = 'Pinto Colvig';")
     assert cur.rowcount == 2, cur.rowcount
+    assert cur.stats["rows_read"] == 2, cur.stats
 
     cur = conn.cursor()
     cur.execute(
         "SELECT * FROM dwarves WHERE actor = 'Pinto Colvig' and name = 'Sleepy';"
     )
     assert cur.rowcount == 1, cur.rowcount
+    print(cur.stats)
 
     conn.close()
 

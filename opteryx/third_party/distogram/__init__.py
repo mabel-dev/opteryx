@@ -107,6 +107,17 @@ class Distogram:  # pragma: no cover
             self.min = min(self.min, min(values))
             self.max = max(self.max, max(values))
 
+    def count(self):
+        return sum(f for _, f in self.bins)
+
+    @property
+    def max_bin_count(self):
+        return self._bin_count
+
+    @property
+    def bin_count(self):
+        return len(self.bins)
+
 
 # added for opteryx
 def load(dic):  # pragma: no cover

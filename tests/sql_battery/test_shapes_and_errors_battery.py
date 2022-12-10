@@ -44,6 +44,7 @@ import pytest
 
 import opteryx
 
+from opteryx.connectors import AwsS3Connector
 from opteryx.connectors import DiskConnector
 
 from opteryx.exceptions import ColumnNotFoundError
@@ -675,6 +676,13 @@ STATEMENTS = [
         ("SELECT * FROM $planets WHERE TRIM(TRAILING 'arth' FROM name) = 'E'", 1, 20, None),
         ("SELECT * FROM $planets WHERE TRIM(TRAILING 'ahrt' FROM name) = 'E'", 1, 20, None),
 
+        ("SELECT user_name, user_verified FROM testdata.formats.parquet WITH(NO_PARTITION) WHERE user_verified IS TRUE", 711, 2, None),
+        ("SELECT user_name, user_verified FROM testdata.formats.parquet WITH(NO_PARTITION) WHERE user_verified = TRUE", 711, 2, None),
+        ("SELECT user_name, user_verified FROM testdata.formats.parquet WITH(NO_PARTITION) WHERE user_verified IS TRUE AND followers < 1000", 10, 2, None),
+        ("SELECT user_name, user_verified FROM testdata.formats.parquet WITH(NO_PARTITION) WHERE followers < 1000 and user_name LIKE '%news%'", 12, 2, None),
+        ("SELECT user_name, user_verified FROM testdata.formats.parquet WITH(NO_PARTITION) WHERE followers < 1000 and followers < 500 and followers < 250", 40739, 2, None),
+        ("SELECT user_name, user_verified FROM testdata.formats.parquet WITH(NO_PARTITION) WHERE followers BETWEEN 0 AND 251", 40939, 2, None),
+
         # virtual dataset doesn't exist
         ("SELECT * FROM $RomanGods", None, None, DatasetNotFoundError),
         # disk dataset doesn't exist
@@ -812,13 +820,13 @@ def test_sql_battery(statement, rows, columns, exception):
     """
 
     opteryx.register_store("tests", DiskConnector)
+    opteryx.register_store("mabellabs", AwsS3Connector)
 
     conn = opteryx.connect()
     cursor = conn.cursor()
     try:
         cursor.execute(statement)
         actual_rows, actual_columns = cursor.shape
-
         assert (
             rows == actual_rows
         ), f"Query returned {actual_rows} rows but {rows} were expected"
@@ -827,6 +835,7 @@ def test_sql_battery(statement, rows, columns, exception):
             columns == actual_columns
         ), f"Query returned {actual_columns} cols but {columns} were"
         f" expected\n{statement}\n{cursor.head(10)}"
+
     except Exception as err:
         assert type(err) == exception, f"Query failed with error {type(err)}"
         f" but error {exception} was expected"

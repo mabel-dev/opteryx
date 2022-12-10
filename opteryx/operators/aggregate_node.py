@@ -112,7 +112,7 @@ def _project(tables, fields):
         else:
             # if we can't find the column, add a placeholder column
             yield pyarrow.Table.from_pydict(
-                {"*": numpy.full(row_count, 1, dtype=numpy.int)}
+                {"*": numpy.full(row_count, 1, dtype=numpy.int8)}
             )
 
 
@@ -316,7 +316,7 @@ class AggregateNode(BasePlanNode):
         # Add a "*" column, this is an int because when a bool it miscounts
         if "*" not in table.column_names:
             table = table.append_column(
-                "*", [numpy.full(shape=table.num_rows, fill_value=1, dtype=numpy.int)]
+                "*", [numpy.full(shape=table.num_rows, fill_value=1, dtype=numpy.int8)]
             )
         self.statistics.time_evaluating += time.time_ns() - start_time
 
