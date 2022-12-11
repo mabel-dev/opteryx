@@ -120,3 +120,9 @@ SELECT SUM(14) FROM $planets GROUP BY FALSE;
 SELECT COUNT(14) FROM $planets GROUP BY FALSE;
 SELECT SUM(14) FROM $planets;
 SELECT COUNT(14) FROM $planets;
+
+# [711]
+SELECT DATE_TRUNC('YEAR', current_date);
+SELECT DATE_TRUNC('MONTH', current_date);
+SELECT DATE_TRUNC('year', current_date);
+SELECT DATE_TRUNC('month', current_date);

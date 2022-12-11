@@ -119,6 +119,9 @@ def date_trunc(truncate_to: str, dt):
     if not isinstance(truncate_to, str):
         truncate_to = truncate_to[0]  # [#325]
 
+    # [#711]
+    truncate_to = str(truncate_to).lower()
+
     # Added for Opteryx - this improves performance approximately
     # 33% for these items
     if truncate_to in NUMERIC_PERIODS:
