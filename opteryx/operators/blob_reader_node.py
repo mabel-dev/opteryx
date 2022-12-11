@@ -144,10 +144,12 @@ class BlobReaderNode(BasePlanNode):
                 PARTITION_SCHEME
             )  # type:ignore
 
+        self._disable_selections = "NO_PUSH_SELECTION" in config.get("hints", [])
+
         self._start_date = config.get("start_date", today)
         self._end_date = config.get("end_date", today)
 
-        # pushed down selection/filter
+        # pushed down projections
         if "NO_PUSH_PROJECTION" in config.get("hints", []):
             self._selection: Iterable = None
         else:
@@ -163,10 +165,10 @@ class BlobReaderNode(BasePlanNode):
 
     @property
     def can_push_selection(self):
-        return isinstance(self._dataset, str)
+        return isinstance(self._dataset, str) and not self._disable_selections
 
     def push_predicate(self, predicate):
-        if to_dnf(predicate) is None:
+        if len(to_dnf(predicate)) == 0:
             # we can't push all predicates everywhere
             return False
         if self._filter is None:
