@@ -103,5 +103,8 @@ class GcpFireStoreConnector(BaseDocumentStorageAdapter):
         return True
 
     def push_predicate(self, predicate):
+        dnfed = to_dnf(predicate)
+        if len(dnfed) == 0:
+            return False
         self._predicates.extend(to_dnf(predicate))
         return True

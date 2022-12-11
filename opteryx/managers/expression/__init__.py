@@ -87,7 +87,7 @@ def to_dnf(root):
         if not isinstance(dnf, list):
             dnf = [dnf]
     except NotSupportedError:
-        return None
+        return []
     return dnf
 
 

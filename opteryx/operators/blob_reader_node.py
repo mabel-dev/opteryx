@@ -168,7 +168,7 @@ class BlobReaderNode(BasePlanNode):
         return isinstance(self._dataset, str) and not self._disable_selections
 
     def push_predicate(self, predicate):
-        if to_dnf(predicate) is None:
+        if len(to_dnf(predicate)) == 0:
             # we can't push all predicates everywhere
             return False
         if self._filter is None:
