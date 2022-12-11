@@ -15,12 +15,15 @@ Base Inner Reader for nosql document stores
 """
 import abc
 
-from typing import Iterable
+from typing import Iterable, List
 
 
 class BaseDocumentStorageAdapter(abc.ABC):
 
     __mode__ = "Collection"
+
+    def __init__(self) -> None:
+        self._predicates: List = []
 
     def page_dictset(self, dictset: Iterable[dict], page_size: int):
         """

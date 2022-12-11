@@ -23,7 +23,6 @@ from typing import Iterable
 
 import pyarrow
 
-from opteryx.exceptions import NotSupportedError
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 from opteryx.models.columns import Columns

@@ -11,7 +11,7 @@ import opteryx
 from opteryx.connectors import GcpFireStoreConnector
 
 
-def test_predicate_pushdowns_collections():
+def test_predicate_pushdowns_firestore():
 
     opteryx.register_store("dwarves", GcpFireStoreConnector)
     os.environ["GCP_PROJECT_ID"] = "mabeldev"
@@ -61,5 +61,5 @@ def test_predicate_pushdowns_collections():
 
 
 if __name__ == "__main__":  # pragma: no cover
-    test_predicate_pushdowns_collections()
+    test_predicate_pushdowns_firestore()
     print("✅ okay")
