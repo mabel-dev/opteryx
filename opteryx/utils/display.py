@@ -12,8 +12,6 @@
 
 from typing import Any, Dict, Iterable, Union
 
-import opteryx
-
 
 def html_table(dictset: Iterable[dict], limit: int = 5):  # pragma: no cover
     """
