@@ -29,6 +29,7 @@ class PredicatePushable(abc.ABC):
         """
 
         def _predicate_to_dnf(root):
+            # Reduce look-ahead effort by using Exceptions to control flow
             if root.token_type == NodeType.AND:
                 left = _predicate_to_dnf(root.left)
                 right = _predicate_to_dnf(root.right)
