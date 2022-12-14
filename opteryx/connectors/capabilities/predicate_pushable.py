@@ -83,8 +83,8 @@ class PredicatePushable(abc.ABC):
         Push the predicate to the set - this creates a set of ANDs
         """
         dnfed = PredicatePushable.to_dnf(predicate)
-        if dnfed is not None:
+        if dnfed is None:
             # we can't push all predicates everywhere
             return False
-        self._predicates.append(dnfed)
+        self._predicates.extend(dnfed)
         return True
