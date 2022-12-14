@@ -15,7 +15,9 @@ Base Inner Reader for blob and file stores
 """
 import abc
 import datetime
+
 from typing import Iterable, List, Union
+
 from opteryx.utils import dates
 from opteryx.utils import paths
 

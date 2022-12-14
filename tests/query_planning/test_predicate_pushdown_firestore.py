@@ -45,9 +45,17 @@ def test_predicate_pushdowns_firestore():
     cur.execute(
         "SELECT * FROM dwarves WHERE actor = 'Pinto Colvig' AND name = 'Sleepy';"
     )
-    # test with a more complex filter
+    # test with a two part filter
     assert cur.rowcount == 1, cur.rowcount
     assert cur.stats["rows_read"] == 1, cur.stats
+
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT * FROM dwarves WHERE actor = 'Pinto Colvig' AND name = 'Sleepy' AND name = 'Brian';"
+    )
+    # test with A three part filter
+    assert cur.rowcount == 0, cur.rowcount
+    assert cur.stats["rows_read"] == 0, cur.stats
 
     cur = conn.cursor()
     cur.execute(

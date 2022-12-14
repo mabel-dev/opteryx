@@ -37,9 +37,10 @@ MAX_DATA_SIZE: int = 100 * 1024 * 1024
 
 
 def _to_linux_epoch(date):
-    if date.as_py() is None:
+    #    return date
+    if not date.is_valid:
         return numpy.nan
-    return datetime.datetime.fromisoformat(date.as_py().isoformat()).timestamp()
+    return date.as_py().timestamp()
 
 
 def increment(dic: dict, value):
