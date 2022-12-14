@@ -23,6 +23,7 @@ from typing import Iterable
 
 import pyarrow
 
+from opteryx.connectors.capabilities import PredicatePushable
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 from opteryx.models.columns import Columns
@@ -61,7 +62,9 @@ class CollectionReaderNode(BasePlanNode):
 
     @property
     def can_push_selection(self):
-        return self._reader.can_push_selection and not self._disable_selections
+        return (
+            isinstance(self._reader, PredicatePushable) and not self._disable_selections
+        )
 
     def push_predicate(self, predicate):
         if self.can_push_selection:

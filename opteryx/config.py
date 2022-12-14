@@ -36,8 +36,6 @@ GCP_PROJECT_ID: str = config.get("GCP_PROJECT_ID")
 DATASET_PREFIX_MAPPING: dict = config.get("DATASET_PREFIX_MAPPING", {"_":"disk"})
 # Data Partitioning
 PARTITION_SCHEME: str = config.get("PARTITION_SCHEME", None)
-# The number of seconds before forcably killing processes
-MAXIMUM_SECONDS_SUB_PROCESSES_CAN_RUN: int = int(config.get("MAXIMUM_SECONDS_SUB_PROCESSES_CAN_RUN", 3600))
 # The maximum number of evictions by a single query
 MAX_CACHE_EVICTIONS: int = int(config.get("MAX_CACHE_EVICTIONS", 25))
 # Maximum size for items saved to the buffer cache

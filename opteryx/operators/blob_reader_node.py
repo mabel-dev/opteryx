@@ -32,7 +32,6 @@ from opteryx import config
 from opteryx.exceptions import DatasetNotFoundError
 from opteryx.managers.expression import ExpressionTreeNode
 from opteryx.managers.expression import NodeType
-from opteryx.managers.expression import to_dnf
 from opteryx.managers.schemes import MabelPartitionScheme
 from opteryx.managers.schemes import DefaultPartitionScheme
 from opteryx.models import Columns, QueryProperties, ExecutionTree
@@ -168,7 +167,11 @@ class BlobReaderNode(BasePlanNode):
         return isinstance(self._dataset, str) and not self._disable_selections
 
     def push_predicate(self, predicate):
-        if len(to_dnf(predicate)) == 0:
+        # For the blob reader, we push selection nodes, for parquet we then convert
+        # these to DNF at read time, for everything else, we run the selection nodes
+        from opteryx.connectors.capabilities import PredicatePushable
+
+        if PredicatePushable.to_dnf(predicate) is None:
             # we can't push all predicates everywhere
             return False
         if self._filter is None:

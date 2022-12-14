@@ -9,14 +9,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 import os
 
 from opteryx import config
 
 from opteryx.connectors import BaseDocumentStorageAdapter
+from opteryx.connectors.capabilities import PredicatePushable
 from opteryx.exceptions import MissingDependencyError
 from opteryx.exceptions import UnmetRequirementError
-from opteryx.managers.expression import to_dnf
 
 try:
     import firebase_admin
@@ -71,7 +72,7 @@ def _initialize():  # pragma: no cover
         firebase_admin.initialize_app(creds, {"projectId": project_id})
 
 
-class GcpFireStoreConnector(BaseDocumentStorageAdapter):
+class GcpFireStoreConnector(BaseDocumentStorageAdapter, PredicatePushable):
     def get_document_count(self, collection) -> int:  # pragma: no cover
         """
         Return an interable of blobs/files
@@ -97,14 +98,3 @@ class GcpFireStoreConnector(BaseDocumentStorageAdapter):
             ({**doc.to_dict(), "_id": doc.id} for doc in documents), page_size
         ):
             yield page
-
-    @property
-    def can_push_selection(self):
-        return True
-
-    def push_predicate(self, predicate):
-        dnfed = to_dnf(predicate)
-        if len(dnfed) == 0:
-            return False
-        self._predicates.extend(to_dnf(predicate))
-        return True
