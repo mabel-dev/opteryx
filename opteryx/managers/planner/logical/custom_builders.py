@@ -121,8 +121,10 @@ def extract_identifiers(ast):
             identifiers.extend(extract_identifiers(value))
     elif isinstance(ast, list):
         for item in ast:
-            if item in ("Wildcard", {"Unnamed": "Wildcard"}):
-                identifiers.append("*")
+            if isinstance(item, dict):
+                _key = next(iter(item))
+                if _key in ("Wildcard",):
+                    identifiers.append("*")
             identifiers.extend(extract_identifiers(item))
 
     return identifiers
@@ -242,7 +244,7 @@ def extract_relations(branch, qid):
                     h["value"]
                     for h in relation["relation"]["Derived"]["alias"]["columns"]
                 ]
-                for value_set in subquery["Values"]:
+                for value_set in subquery["Values"]["rows"]:
                     values = [builders.build(v["Value"]).value for v in value_set]
                     body.append(dict(zip(headers, values)))
                 relation_desc.dataset = {

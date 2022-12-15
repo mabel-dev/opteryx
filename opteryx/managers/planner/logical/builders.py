@@ -111,7 +111,10 @@ def expression_with_alias(branch, alias=None, key=None):
 
 
 def qualified_wildcard(branch, alias=None, key=None):
-    qualifier = (".".join(p["value"] for p in branch),)
+    parts = [
+        part["value"] for part in [node for node in branch if isinstance(node, list)][0]
+    ]
+    qualifier = (".".join(parts),)
     return ExpressionTreeNode(NodeType.WILDCARD, value=qualifier, alias=alias)
 
 
