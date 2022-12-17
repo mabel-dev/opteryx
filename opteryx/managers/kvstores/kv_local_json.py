@@ -9,6 +9,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 """
 This is a persisted JSON document as a KV store - this is a really bad idea, but
 exists as a KV store of last resort. This is probably only going to be used on
@@ -17,6 +18,8 @@ Raspberry Pis and toy implementations of Opteryx.
 
 import base64
 import io
+
+from typing import Iterable
 
 import orjson
 
@@ -56,23 +59,23 @@ class LocalKVJson(BaseKeyValueStore):
             bytes_value = base64.b85encode(value.read()).decode()
             value.seek(0, 0)
         try:
-            with open(self._location, mode="rb") as f:
-                doc = orjson.loads(f.read())
+            with open(self._location, mode="rb") as store:
+                doc = orjson.loads(store.read())
         except FileNotFoundError:
             doc = {}
         doc.pop(key, None)
         if bytes_value:
             doc[key] = bytes_value
-        with open(self._location, mode="wb") as f:
-            f.write(orjson.dumps(doc))
+        with open(self._location, mode="wb") as store:
+            store.write(orjson.dumps(doc))
 
-    def contains(self, keys):
+    def contains(self, keys: Iterable) -> Iterable:
         if not isinstance(keys, (list, set, tuple)):
             keys = [keys]
         keys = [key.decode() if hasattr(key, "decode") else key for key in keys]
         try:
-            with open(self._location, mode="r") as f:
-                doc = orjson.loads(f.read())
+            with open(self._location, mode="r", encoding="UTF8") as store:
+                doc = orjson.loads(store.read())
             return [k for k in doc.keys() if k in keys]
         except FileNotFoundError:
             return []

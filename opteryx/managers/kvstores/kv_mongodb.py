@@ -4,4 +4,5 @@ from opteryx.managers.kvstores import BaseKeyValueStore
 
 
 class MongoDbKVStore(BaseKeyValueStore):
-    pass
+    def __init__(self):
+        raise NotImplementedError("Mongo KV Store not implemented")
