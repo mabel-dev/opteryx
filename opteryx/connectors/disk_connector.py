@@ -26,4 +26,4 @@ class DiskConnector(BaseBlobStorageAdapter):
         import glob
 
         files = glob.glob(str(partition / "**"), recursive=True)
-        return (f for f in files if os.path.isfile(f))
+        return [str(f).replace("\\", "/") for f in files if os.path.isfile(f)]

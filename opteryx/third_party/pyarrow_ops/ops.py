@@ -196,21 +196,21 @@ def _inner_filter_operations(arr, operator, value):
         # some of the lists are saved as sets, which are faster than searching numpy
         # arrays, even with numpy's native functionality - choosing the right algo
         # is almost always faster than choosing a fast language.
-        return numpy.array([a in value[0] for a in arr], dtype=numpy.bool8)  # [#325]?
+        return numpy.array([a in value[0] for a in arr], dtype=numpy.bool_)  # [#325]?
     elif operator == "NotInList":
         # MODIFIED FOR OPTERYX - see comment above
         return numpy.array(
-            [a not in value[0] for a in arr], dtype=numpy.bool8
+            [a not in value[0] for a in arr], dtype=numpy.bool_
         )  # [#325]?
     elif operator == "Contains":
         # ADDED FOR OPTERYX
         return numpy.array(
-            [None if v is None else (arr[0] in v) for v in value], dtype=numpy.bool8
+            [None if v is None else (arr[0] in v) for v in value], dtype=numpy.bool_
         )
     elif operator == "NotContains":
         # ADDED FOR OPTERYX
         return numpy.array(
-            [None if v is None else (arr[0] not in v) for v in value], dtype=numpy.bool8
+            [None if v is None else (arr[0] not in v) for v in value], dtype=numpy.bool_
         )  # [#325]?
     elif operator == "Like":
         # MODIFIED FOR OPTERYX
