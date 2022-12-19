@@ -210,7 +210,7 @@ def _inner_filter_operations(arr, operator, value):
     elif operator == "NotContains":
         # ADDED FOR OPTERYX
         return numpy.array(
-            [None if v is None else (arr[0] not in v) for v in value], dtype=numpy.bool8
+            [None if v is None else (arr[0] not in v) for v in value], dtype=numpy.bool_
         )  # [#325]?
     elif operator == "Like":
         # MODIFIED FOR OPTERYX
