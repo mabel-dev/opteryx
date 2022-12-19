@@ -14,3 +14,15 @@
 # get a KV store from config - default is
 # implement a get
 # implement a put
+
+
+def quick_put():
+    pass
+
+
+def put():
+    pass
+
+
+def get():
+    pass
