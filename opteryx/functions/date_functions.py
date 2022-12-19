@@ -153,7 +153,8 @@ def date_diff(part, start, end):
 
 
 def date_format(dates, pattern):  # [#325]
-    return compute.strftime(dates, pattern[0])
+    pattern = pattern[0]
+    return [None if d is None else d.strftime(pattern) for d in dates.tolist()]
 
 
 def date_floor(dates, magnitude, units):  # [#325]
