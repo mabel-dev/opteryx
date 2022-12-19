@@ -53,7 +53,6 @@ COLLECT_RELATION = [
 COLLECT_TEMPORAL = [r"FOR"]
 
 STOP_COLLECTING = [
-    r"AS",
     r"GROUP\sBY",
     r"HAVING",
     r"LIKE",
@@ -69,12 +68,15 @@ STOP_COLLECTING = [
     r";",
 ]
 
-BOUNDARIES = ["(", ")"]
+COLLECT_ALIAS = [r"AS"]
+
+BOUNDARIES = [r"(", r")"]
 
 SQL_PARTS = (
     COLLECT_RELATION
     + COLLECT_TEMPORAL
     + STOP_COLLECTING
+    + COLLECT_ALIAS
     + [r"DATES\sIN\s\w+", r"DATES\sBETWEEN\s[^\r\n\t\f\v]AND\s[^\r\n\t\f\v]"]
 )
 
@@ -84,6 +86,7 @@ COMBINE_WHITESPACE_REGEX = re.compile(r"\r\n\t\f\v+")
 WAITING: int = 1
 RELATION: int = 4
 TEMPORAL: int = 16
+ALIAS: int = 64
 
 
 def clean_statement(string):  # pragma: no cover
@@ -269,6 +272,8 @@ def _temporal_extration_state_machine(parts):
             state = RELATION
         if comparable_part in COLLECT_TEMPORAL:
             state = TEMPORAL
+        if comparable_part in COLLECT_ALIAS:
+            state = ALIAS
         transition.append(state)
 
         # based on what the state was and what it is now, do something
@@ -281,6 +286,8 @@ def _temporal_extration_state_machine(parts):
                 [TEMPORAL, RELATION],
                 [RELATION, RELATION],
                 [RELATION, WAITING],
+                [ALIAS, RELATION],
+                [ALIAS, WAITING],  # probably
             )
             and relation
         ):

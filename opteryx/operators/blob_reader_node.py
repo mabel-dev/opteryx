@@ -341,8 +341,6 @@ class BlobReaderNode(BasePlanNode):
                     self.statistics.cache_errors += 1
             elif cache:  # pragma: no-cover
                 self.statistics.cache_oversize += 1
-            else:  # pragma: no-cover
-                self.statistics.cache_errors += 1
         else:
             self.statistics.cache_hits += 1
 

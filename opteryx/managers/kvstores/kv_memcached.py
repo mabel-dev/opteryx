@@ -84,10 +84,8 @@ class MemcachedKVStore(BaseKeyValueStore):
             response = self._server.get(key)
             if response:
                 return io.BytesIO(response)
-        return None
 
     def set(self, key, value):
         if self._server:
             self._server.set(key, value.read())
             value.seek(0)
-        return None

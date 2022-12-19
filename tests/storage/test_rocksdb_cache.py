@@ -10,7 +10,7 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 import shutil
 
 import opteryx
-from opteryx.managers.kvstores import LocalKVStore
+from opteryx.managers.kvstores import RocksDB_KVStore
 from opteryx.shared import BufferPool
 
 from tests.tools import skip_on_partials
@@ -23,15 +23,14 @@ def test_in_memory_cache():
     buffer.reset(True)
 
     shutil.rmtree("test.rocksdb", ignore_errors=True)
-    cache = LocalKVStore(location="test.rocksdb")
+    cache = RocksDB_KVStore(location="test.rocksdb")
 
     # read the data once, this should populate the cache
     conn = opteryx.connect(cache=cache)
     cur = conn.cursor()
     cur.execute("SELECT * FROM testdata.tweets WITH(NO_PARTITION);")
     for record in cur.fetchall():
-        # we just want to make sure we consume the data, doing it like this doesn't
-        # waste memory as much
+        # we just want to make sure we consume the data
         pass
     stats = cur.stats
     assert stats["cache_hits"] == 0

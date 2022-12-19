@@ -371,6 +371,10 @@ STATEMENTS = [
         ("SELECT * FROM $planets FOR '1830-01-01'", 7, 20, None),
         ("SELECT * FROM $planets FOR '1930-01-01'", 8, 20, None),
         ("SELECT * FROM $planets FOR '2030-01-01'", 9, 20, None),
+        ("SELECT * FROM $planets AS planets FOR '1730-01-01'", 6, 20, None),
+        ("SELECT * FROM $planets AS p FOR '1830-01-01'", 7, 20, None),
+        ("SELECT * FROM $planets AS pppp FOR '1930-01-01'", 8, 20, None),
+        ("SELECT * FROM $planets AS P FOR '2030-01-01'", 9, 20, None),
 
         ("SELECT * FROM $astronauts WHERE death_date IS NULL", 305, 19, None),
         ("SELECT * FROM $astronauts WHERE death_date IS NOT NULL", 52, 19, None),
@@ -806,7 +810,6 @@ STATEMENTS = [
         # [#646] Incorrectly placed temporal clauses
         ("SELECT * FROM $planets WHERE 1 = 1 FOR TODAY;", None, None, SqlError),
         ("SELECT * FROM $planets GROUP BY name FOR TODAY;", None, None, SqlError),
-        ("SELECT * FROM $planets AS P FOR TODAY;", None, None, SqlError),
         # [#518] SELECT * and GROUP BY can't be used together
         ("SELECT * FROM $planets GROUP BY name", None, None, SqlError),
 ]

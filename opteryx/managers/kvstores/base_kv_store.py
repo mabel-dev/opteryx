@@ -15,7 +15,7 @@ This is a Base class for KV Value Storage adapter.
 This is used by the metadata store and in-memory buffer cache. 
 """
 import abc
-from typing import Optional
+from typing import Iterable, Optional
 
 
 class BaseKeyValueStore(abc.ABC):
@@ -36,7 +36,7 @@ class BaseKeyValueStore(abc.ABC):
         """
         raise NotImplementedError("`set` method on cache object not overridden.")
 
-    def contains(self, lst):
+    def contains(self, keys: Iterable) -> Iterable:
         """
         Overwrite this method to return a list of itmes which are in the cache from
         a given list

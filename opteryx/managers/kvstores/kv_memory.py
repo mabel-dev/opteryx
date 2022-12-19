@@ -15,11 +15,13 @@ This implements an in-memory cache.
 We use an LRU-K(2) to maintain the size of the cache, this is a variation of the naive
 LRU algorithm.
 
-We're using a dictionary and moving items to the top of the dictionary
-when it's accessed. This relies on Python dictionaries being ordered.
+We're using a dictionary and moving items to the top of the dictionary when it's
+accessed. This relies on Python dictionaries being ordered.
 """
 
 import io
+
+from typing import Iterable
 
 from opteryx.managers.kvstores import BaseKeyValueStore
 from opteryx.utils.lru_2 import LRU2
@@ -42,7 +44,6 @@ class InMemoryKVStore(BaseKeyValueStore):
         value = self._lru2.get(key)
         if value:
             return io.BytesIO(value)
-        return None
 
     def set(self, key, value):
         value.seek(0, 0)
@@ -50,5 +51,5 @@ class InMemoryKVStore(BaseKeyValueStore):
         value.seek(0, 0)
         return ret
 
-    def contains(self, keys):
+    def contains(self, keys: Iterable) -> Iterable:
         return list(set(keys).intersection(self._lru2.keys))

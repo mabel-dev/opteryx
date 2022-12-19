@@ -10,20 +10,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import io
-import os
-from opteryx.connectors import BaseBlobStorageAdapter
+
+# get a KV store from config - default is
+# implement a get
+# implement a put
 
 
-class DiskConnector(BaseBlobStorageAdapter):
-    def read_blob(self, blob_name):
+def quick_put():
+    pass
 
-        with open(blob_name, "rb") as blob:
-            # wrap in a BytesIO so we can close the file
-            return io.BytesIO(blob.read())
 
-    def get_blob_list(self, partition):
-        import glob
+def put():
+    pass
 
-        files = glob.glob(str(partition / "**"), recursive=True)
-        return [str(f).replace("\\", "/") for f in files if os.path.isfile(f)]
+
+def get():
+    pass
