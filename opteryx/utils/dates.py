@@ -140,9 +140,13 @@ def parse_iso(value):
             return datetime.datetime.combine(value, datetime.time.min)
         if input_type in (int, float):
             return datetime.datetime.fromtimestamp(value)
-        if input_type == str and 10 <= len(value) <= 28:
+        if input_type == str and 10 <= len(value) <= 33:
             if value[-1] == "Z":
                 value = value[:-1]
+            if "+" in value:
+                value = value.split("+")[0]
+                if not 10 <= len(value) <= 28:
+                    return None
             val_len = len(value)
             if not value[4] in date_separators or not value[7] in date_separators:
                 return None
