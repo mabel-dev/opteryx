@@ -34,13 +34,15 @@ from opteryx.operators import BasePlanNode
 MAX_COLLECTOR: int = 8
 MAX_VARCHAR_SIZE: int = 64  # long strings tend to lose meaning
 MAX_DATA_SIZE: int = 100 * 1024 * 1024
+UNIX_EPOCH = datetime.datetime(1970, 1, 1)
 
 
-def _to_linux_epoch(date):
-    #    return date
-    if not date.is_valid:
+def _to_unix_epoch(date):
+    if date.as_py() is None:
         return numpy.nan
-    return date.as_py().timestamp()
+    # Not all platforms can handle negative timestamp()
+    # https://bugs.python.org/issue29097
+    return (date.as_py() - UNIX_EPOCH).total_seconds()
 
 
 def increment(dic: dict, value):
@@ -150,9 +152,9 @@ def _statitics_collector(pages):
                             varchar_range_max,
                         )
 
-                # convert TIMESTAMP into a NUMERIC (seconds after Linux Epoch)
+                # convert TIMESTAMP into a NUMERIC (seconds after Unix Epoch)
                 if _type == OPTERYX_TYPES.TIMESTAMP:
-                    column_data = (_to_linux_epoch(i) for i in column_data)
+                    column_data = (_to_unix_epoch(i) for i in column_data)
                 elif _type != OPTERYX_TYPES.VARCHAR:
                     column_data = (i.as_py() for i in column_data)
                 # remove empty values
