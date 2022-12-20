@@ -12,7 +12,6 @@
 
 from pathlib import Path
 
-import pyarrow
 import yaml
 
 config: dict = {}
@@ -42,17 +41,10 @@ MAX_CACHE_EVICTIONS: int = int(config.get("MAX_CACHE_EVICTIONS", 25))
 MAX_SIZE_SINGLE_CACHE_ITEM: int = config.get("MAX_SIZE_SINGLE_CACHE_ITEM", 1024 * 1024)
 # The local buffer pool size
 LOCAL_BUFFER_POOL_SIZE: int = int(config.get("LOCAL_BUFFER_POOL_SIZE", 256))
-
-
+# don't try to raise the priority of the server process
 DISABLE_HIGH_PRIORITY: bool = bool(config.get("DISABLE_HIGH_PRIORITY", False))
-DISABLE_RESOURCE_LOGGING: bool = bool(config.get("DISABLE_RESOURCE_LOGGING", True))
-# fmt:on
-
-# fmt:off
-# The number of metadata cache records to hold
-# LOCAL_METADATA_CACHE: int = int(config.get("LOCAL_METADATA_CACHE", 512))
-# The maximum number of processors to use for multi processing
-# MAX_SUB_PROCESSES: int = int(config.get("MAX_SUB_PROCESSES", pyarrow.io_thread_count()))
-# The number of bytes to allocate for each processor
-# BUFFER_PER_SUB_PROCESS: int = int(config.get("BUFFER_PER_SUB_PROCESS", 100000000))
+# don't output resource (memory) utilization information
+ENABLE_RESOURCE_LOGGING: bool = bool(config.get("ENABLE_RESOURCE_LOGGING", False))
+# only push equals predicates
+ONLY_PUSH_EQUALS_PREDICATES: bool = bool(config.get("ONLY_PUSH_EQUALS_PREDICATES", False))
 # fmt:on
