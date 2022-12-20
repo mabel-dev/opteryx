@@ -215,6 +215,10 @@ def parse_range(fixed_range):  # pragma: no cover
             start = today.replace(day=22)
 
     else:
+        if parse_date(fixed_range):
+            raise InvalidTemporalRangeFilterError(
+                f"`THIS_MONTH`, `LAST_MONTH` expected, got `{fixed_range}`"
+            )
         raise InvalidTemporalRangeFilterError(f"Unknown temporal range `{fixed_range}`")
 
     return start, end

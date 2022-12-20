@@ -375,6 +375,8 @@ STATEMENTS = [
         ("SELECT * FROM $planets AS p FOR '1830-01-01'", 7, 20, None),
         ("SELECT * FROM $planets AS pppp FOR '1930-01-01'", 8, 20, None),
         ("SELECT * FROM $planets AS P FOR '2030-01-01'", 9, 20, None),
+        ("SELECT * FROM (SELECT * FROM $planets AS D) AS P FOR '2030-01-01'", 9, 20, None),
+        ("SELECT * FROM $planets AS P FOR '1699-01-01' INNER JOIN $satellites FOR '2030-01-01' ON id = planetId;", 131, 28, None),
 
         ("SELECT * FROM $astronauts WHERE death_date IS NULL", 305, 19, None),
         ("SELECT * FROM $astronauts WHERE death_date IS NOT NULL", 52, 19, None),
@@ -700,6 +702,7 @@ STATEMENTS = [
         ("SELECT * FROM $planets FOR DATES IN 2022", None, None, InvalidTemporalRangeFilterError),
         ("SELECT * FROM $planets FOR DATES BETWEEN 2022-01-01 AND TODAY", None, None, InvalidTemporalRangeFilterError),
         ("SELECT * FROM $planets FOR DATES BETWEEN today AND yesterday", None, None, InvalidTemporalRangeFilterError),
+        ("SELECT * FROM $planets FOR DATES IN '2022-01-01' AND '2022-01-02'", None, None, InvalidTemporalRangeFilterError),
         # Join hints aren't supported
         ("SELECT * FROM $satellites INNER HASH JOIN $planets USING (id)", None, None, SqlError),
         # MONTH has a bug
