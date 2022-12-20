@@ -16,6 +16,7 @@ Optimization Rule - Selection Pushdown
 Type: Heuristic
 Goal: Reduce rows
 """
+from opteryx import config
 from opteryx import operators
 from opteryx.managers.expression import NodeType
 
@@ -66,6 +67,8 @@ def selection_pushdown(plan, properties):
         operator = plan.get_operator(nid)
         # only add simple predicates (makes ANDs)
         if operator.filter.token_type == NodeType.COMPARISON_OPERATOR:
+            if config.ONLY_PUSH_EQUALS_PREDICATES and operator.filter.value != "Eq":
+                continue
             if reader_node.push_predicate(operator.filter):
                 plan.remove_operator(nid)
 

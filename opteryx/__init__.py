@@ -62,5 +62,5 @@ if not config.DISABLE_HIGH_PRIORITY and hasattr(os, "nice"):  # pragma: no cover
         print(f"Cannot update process priority. Currently set to {display_nice}.")
 
 # Log resource usage
-if not config.DISABLE_RESOURCE_LOGGING:  # pragma: no cover
+if config.ENABLE_RESOURCE_LOGGING:  # pragma: no cover
     from opteryx.utils.resource_monitor import ResourceMonitor
