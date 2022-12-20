@@ -35,14 +35,6 @@ jobs:
           python -m pip install --upgrade -r $GITHUB_WORKSPACE/tests/requirements.txt
           python setup.py build_ext --inplace
 
-      - name: "Start GCS Emulator"
-        run: |
-            docker run -d --name \
-                       fake-gcs-server \
-                       -p 9090:4443 \
-                       fsouza/fake-gcs-server \
-                       -scheme http
-
       - name: "Start Memcached Instance"
         run: |
             docker run -d --name my-memcached \

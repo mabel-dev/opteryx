@@ -10,56 +10,27 @@ import opteryx
 
 from opteryx.connectors import GcpCloudStorageConnector
 
-from tests.tools import skip_on_partials
 
 BUCKET_NAME = "opteryx"
 
 
-def populate_gcs():
-
-    from google.auth.credentials import AnonymousCredentials
-    from google.cloud import storage
-
-    os.environ["STORAGE_EMULATOR_HOST"] = "http://localhost:9090"
-    client = storage.Client(
-        credentials=AnonymousCredentials(),
-        project="testing",
-    )
-    bucket = client.bucket(BUCKET_NAME)
-    try:
-        bucket.delete(force=True)
-    except:  # pragma: no cover
-        pass
-    bucket = client.create_bucket(BUCKET_NAME)
-
-    data = open("testdata/tweets/tweets-0000.jsonl", mode="rb").read()
-
-    blob = bucket.blob("data/tweets/data.jsonl")
-    blob.upload_from_string(data, content_type="application/octet-stream")
-
-    opteryx.register_store(BUCKET_NAME, GcpCloudStorageConnector)
-
-
-@skip_on_partials
 def test_gcs_storage():
 
-    populate_gcs()
+    opteryx.register_store(BUCKET_NAME, GcpCloudStorageConnector)
 
     conn = opteryx.connect()
 
     # SELECT EVERYTHING
     cur = conn.cursor()
-    cur.execute(f"SELECT * FROM {BUCKET_NAME}.data.tweets WITH(NO_PARTITION);")
-    rows = list(cur.fetchall())
-    assert len(rows) == 25
+    cur.execute(f"SELECT * FROM {BUCKET_NAME}.space_missions WITH(NO_PARTITION);")
+    assert cur.rowcount == 4630, cur.rowcount
 
     # PROCESS THE DATA IN SOME WAY
     cur = conn.cursor()
     cur.execute(
-        f"SELECT COUNT(*) FROM {BUCKET_NAME}.data.tweets WITH(NO_PARTITION) GROUP BY userid;"
+        f"SELECT COUNT(*) AS Missions, Company FROM {BUCKET_NAME}.space_missions WITH(NO_PARTITION) GROUP BY Company;"
     )
-    rows = list(cur.fetchall())
-    assert len(rows) == 2
+    assert cur.rowcount == 62, cur.rowcount
 
     conn.close()
 
