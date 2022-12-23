@@ -31,9 +31,9 @@ Opteryx is a SQL Engine written in Python, designed for embedded and cloud-nativ
 
 ## Features
 
-- __Instant Elasticity__
+- __Feature Rich__
 
-    Designed to run in Knative and similar environments like Google Cloud Run, Opteryx can scale down to zero, and scale up to respond to thousands of concurrent queries within seconds.
+    Supports most of the base [SQL92 standard](https://opteryx.dev/latest/get-started/external-standards/sql92/) and multiple extensions from modern SQL platforms like [Snowflake](https://www.snowflake.com/en/) and [Trino](https://trino.io/).
 
 - __High Availability__
 
@@ -69,7 +69,11 @@ Opteryx is a SQL Engine written in Python, designed for embedded and cloud-nativ
 
 - __Fast__
 
-    Benchmarks on M1 Pro Mac running a GROUP BY over 1Gb of data via the CLI in less than 1/10th of a second. _(different systems will have different performance characteristics)_
+    Benchmarks on M1 Pro Mac running a `GROUP BY` over 1Gb of data via the CLI in less than 1/10th of a second. _(different systems will have different performance characteristics)_
+
+- __Instant Elasticity__
+
+    Designed to run in Knative and similar environments like Google Cloud Run, Opteryx can scale down to zero, and scale up to respond to thousands of concurrent queries within seconds.
 
 ## Try Opteryx
 
