@@ -161,7 +161,7 @@ class Columns:
         if only_one:
             if len(matches) == 0:
 
-                best_match = self.fuzzy_search(column)
+                best_match = self.fuzzy_search(column.upper())
                 if best_match:
                     raise ColumnNotFoundError(
                         f"Field `{column}` does not exist, did you mean `{best_match}`?"
@@ -186,8 +186,8 @@ class Columns:
         for attributes in self._column_metadata.values():
             for alias in attributes.get("aliases") or []:
                 if alias is not None:
-                    my_dist = compare(column_name, alias)
-                    if 0 < my_dist < best_match_score:
+                    my_dist = compare(column_name, alias.upper())
+                    if -1 < my_dist < best_match_score:
                         best_match_score = my_dist
                         best_match_column = alias
 
