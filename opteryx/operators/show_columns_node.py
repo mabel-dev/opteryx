@@ -369,6 +369,8 @@ class ShowColumnsNode(BasePlanNode):
 
     def execute(self) -> Iterable:
 
+        # TODO: [TARCHIA] - use the metastore to get the column statisitcs
+
         if len(self._producers) != 1:
             raise SqlError(f"{self.name} on expects a single producer")
 

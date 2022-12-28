@@ -14,9 +14,21 @@
 Decode files from a raw binary format to a PyArrow Table.
 """
 from typing import List
+from enum import Enum
 
 import numpy
 import pyarrow
+
+
+class ExtentionType(str, Enum):
+    """labels for the file extentions"""
+
+    DATA = "DATA"
+    CONTROL = "CONTROL"
+
+
+def do_nothing(stream, projection=None):
+    return stream
 
 
 def _filter(filter, table):
@@ -152,3 +164,15 @@ def arrow_decoder(stream, projection: List = None, selection=None):
     if selection is not None:
         table = _filter(selection, table)
     return table
+
+
+KNOWN_EXTENSIONS = {
+    "complete": (do_nothing, ExtentionType.CONTROL),
+    "ignore": (do_nothing, ExtentionType.CONTROL),
+    "arrow": (arrow_decoder, ExtentionType.DATA),  # feather
+    "csv": (csv_decoder, ExtentionType.DATA),
+    "jsonl": (jsonl_decoder, ExtentionType.DATA),
+    "orc": (orc_decoder, ExtentionType.DATA),
+    "parquet": (parquet_decoder, ExtentionType.DATA),
+    "zstd": (zstd_decoder, ExtentionType.DATA),  # jsonl/zstd
+}

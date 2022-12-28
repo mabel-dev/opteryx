@@ -23,7 +23,6 @@ import datetime
 import time
 
 from typing import Iterable
-from enum import Enum
 from cityhash import CityHash64
 
 import pyarrow
@@ -37,18 +36,7 @@ from opteryx.managers.schemes import DefaultPartitionScheme
 from opteryx.models import Columns, QueryProperties, ExecutionTree
 from opteryx.operators import BasePlanNode
 from opteryx.shared import BufferPool
-from opteryx.utils import file_decoders
-
-
-class ExtentionType(str, Enum):
-    """labels for the file extentions"""
-
-    DATA = "DATA"
-    CONTROL = "CONTROL"
-
-
-def do_nothing(stream, projection=None):
-    return stream
+from opteryx.utils.file_decoders import ExtentionType, KNOWN_EXTENSIONS
 
 
 MAX_SIZE_SINGLE_CACHE_ITEM = config.MAX_SIZE_SINGLE_CACHE_ITEM
@@ -56,17 +44,6 @@ PARTITION_SCHEME = config.PARTITION_SCHEME
 MAX_CACHE_EVICTIONS = config.MAX_CACHE_EVICTIONS
 
 BUFFER_POOL = BufferPool()
-
-KNOWN_EXTENSIONS = {
-    "complete": (do_nothing, ExtentionType.CONTROL),
-    "ignore": (do_nothing, ExtentionType.CONTROL),
-    "arrow": (file_decoders.arrow_decoder, ExtentionType.DATA),  # feather
-    "csv": (file_decoders.csv_decoder, ExtentionType.DATA),
-    "jsonl": (file_decoders.jsonl_decoder, ExtentionType.DATA),
-    "orc": (file_decoders.orc_decoder, ExtentionType.DATA),
-    "parquet": (file_decoders.parquet_decoder, ExtentionType.DATA),
-    "zstd": (file_decoders.zstd_decoder, ExtentionType.DATA),  # jsonl/zstd
-}
 
 
 def _normalize_to_types(table):

@@ -458,6 +458,10 @@ def show_variables_query(ast, properties):
 
 def analyze_query(ast, properties):
     """build statistics for a table"""
+
+    # TODO: [TARCHIA] - get a list of all of the blobs for this dataset and trigger add
+    # requests to Tarchia - this will add/update the statistics for the blob
+
     plan = ExecutionTree()
     dataset = ".".join([part["value"] for part in ast["Analyze"]["table_name"]])
 
