@@ -22,7 +22,7 @@ import orjson
 import opteryx
 
 from opteryx.utils import display
-
+from opteryx.third_party import sqloxide
 from opteryx.managers.planner.temporal import extract_temporal_filters
 
 

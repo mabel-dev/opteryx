@@ -27,7 +27,6 @@ from opteryx.managers.kvstores import BaseKeyValueStore
 
 
 class LocalKVJson(BaseKeyValueStore):
-
     def get(self, key):
         if hasattr(key, "decode"):
             key = key.decode()

@@ -17,6 +17,7 @@ except ImportError:  # pragma: no cover
 
 GCP_PROJECT_ID = config.GCP_PROJECT_ID
 
+
 def _get_project_id():  # pragma: no cover
     """Fetch the ID from GCP"""
     try:
@@ -41,6 +42,7 @@ def _get_project_id():  # pragma: no cover
     response.raise_for_status()
     return response.text
 
+
 def _initialize():  # pragma: no cover
     """Create the connection to Firebase"""
     if not HAS_FIREBASE:
@@ -55,8 +57,8 @@ def _initialize():  # pragma: no cover
         creds = credentials.ApplicationDefault()
         firebase_admin.initialize_app(creds, {"projectId": project_id})
 
-class FireStoreKVStore(BaseKeyValueStore):
 
+class FireStoreKVStore(BaseKeyValueStore):
     def get(self, key: bytes) -> Optional[bytes]:
         _initialize()
         database = firestore.client()
