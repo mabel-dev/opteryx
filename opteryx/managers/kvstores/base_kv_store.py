@@ -22,6 +22,8 @@ class BaseKeyValueStore(abc.ABC):
     """
     Base class for cache objects
     """
+    def __init__(self, location):
+        self._location = location
 
     def get(self, key: bytes) -> Optional[bytes]:
         """
