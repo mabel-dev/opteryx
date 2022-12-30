@@ -295,7 +295,7 @@ def head(table, n=5, max_width=100, colorize: bool = False):
         yield "No data in table"
         return
 
-    from opteryx.utils.colors import colorize
+    from opteryx.utils.colors import colorize as add_color
 
     # Extract head data
     if n > 0:
@@ -317,6 +317,6 @@ def head(table, n=5, max_width=100, colorize: bool = False):
             w.ljust(max(cw, dw) + 2)
             for w, cw, dw in zip(data[i], col_width, data_width)
         ]
-        yield colorize(
+        yield add_color(
             "{UNDERLINE_WHITE}Row  " if i == 0 else str(i - 1).ljust(5)
-        ) + "".join(adjust)[:max_width] + colorize("{OFF}")
+        ) + "".join(adjust)[:max_width] + add_color("{OFF}")

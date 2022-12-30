@@ -19,6 +19,7 @@ from opteryx.connectors import register_store
 from opteryx.version import __version__
 
 import faulthandler
+
 faulthandler.enable()
 
 

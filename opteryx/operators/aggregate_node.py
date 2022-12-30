@@ -354,6 +354,7 @@ class AggregateNode(BasePlanNode):
             groups = _non_group_aggregates(self._aggregates, table, columns)
             del table
         else:
+            table = table.combine_chunks()
             groups = table.group_by(group_by_columns)
             groups = groups.aggregate(aggs)
 
