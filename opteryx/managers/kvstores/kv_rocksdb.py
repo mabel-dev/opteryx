@@ -20,6 +20,8 @@ locally, which is unlikely to be what is wanted.
 """
 import io
 
+from typing import Iterable
+
 from opteryx.exceptions import MissingDependencyError
 from opteryx.managers.kvstores import BaseKeyValueStore
 
@@ -47,11 +49,19 @@ class RocksDB_KVStore(BaseKeyValueStore):
         return ROCKS_DB
 
     def get(self, key):
-        byte_reponse = self._db.get(key.encode())
+        if hasattr(key, "encode"):
+            key = key.encode()
+        byte_reponse = self._db.get(key)
         if byte_reponse:
             return io.BytesIO(byte_reponse)
+        return None
 
     def set(self, key, value):
+        if hasattr(key, "encode"):
+            key = key.encode()
         value.seek(0, 0)
-        self._db.put(key.encode(), value.read())
+        self._db.put(key, value.read())
         value.seek(0, 0)
+
+    def contains(self, keys: Iterable) -> Iterable:
+        return [key for key in keys if self.get(key) is not None]

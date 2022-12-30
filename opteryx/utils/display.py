@@ -90,6 +90,7 @@ def ascii_table(
     table: Iterable[Dict[Any, Any]],
     limit: int = 5,
     display_width: Union[bool, int] = True,
+    colorize: bool = True,
 ):  # pragma: no cover
     """
     Render the dictset as a ASCII table.
@@ -119,4 +120,4 @@ def ascii_table(
 
             display_width = shutil.get_terminal_size((80, 20))[0] - 5
 
-    return "\n".join(ops.head(table, limit, display_width))
+    return "\n".join(ops.head(table, limit, display_width, colorize))

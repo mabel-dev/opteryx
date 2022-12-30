@@ -4,10 +4,10 @@ __email__ = "romain.picard@oakbits.com"
 __version__ = "3.0.0"
 
 """
-The following changes have been made for Opteryx:
-- The number of bins is no longer configurable, it is always 100
+The following changes have been made for Opteryx\Tarchia:
 - The ability to weight the differences has been removed
 - Dump and Load functionality
+- Bulk load functionality added
 """
 
 import math
@@ -22,7 +22,7 @@ from typing import Optional
 from typing import Tuple
 
 EPSILON = 1e-5
-BIN_COUNT: int = 100
+BIN_COUNT: int = 50
 Bin = Tuple[float, int]
 
 _caster = numpy.float64
@@ -90,12 +90,20 @@ class Distogram:  # pragma: no cover
         # but even if a bad decision is made on a table with 500 rows, the consequence
         # is minimal, if a bad decision is made on a table with 5m rows, it starts to
         # matter.
-        counts, bin_values = numpy.histogram(values, self._bin_count * 5, density=False)
+        bin_values, counts = numpy.unique(values, return_counts=True)
+        if len(bin_values) > (self._bin_count * 5):
+            counts, bin_values = numpy.histogram(
+                values, self._bin_count * 5, density=False
+            )
+            bin_values = [
+                bin_values[i] + bin_values[i + 1] / 2
+                for i in range(len(bin_values) - 1)
+            ]
         for index, count in enumerate(counts):
             if count > 0:
                 update(
                     self,
-                    value=(bin_values[index] + bin_values[index + 1]) / 2,
+                    value=bin_values[index],
                     count=count,
                 )
 
@@ -130,7 +138,6 @@ def load(dic):  # pragma: no cover
     dgram.min = dic["min"]
     dgram.max = dic["max"]
 
-    # TODO: CHECK THIS LOGIC
     for i in range(len(dgram.bins) - 1):
         diff = dgram.bins[i][0] - dgram.bins[i - 1][0]
         dgram.diffs.append(diff)

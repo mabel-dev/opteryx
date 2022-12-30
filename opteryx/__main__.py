@@ -21,8 +21,8 @@ import orjson
 
 import opteryx
 
+from opteryx.utils import display
 from opteryx.third_party import sqloxide
-
 from opteryx.managers.planner.temporal import extract_temporal_filters
 
 
@@ -45,7 +45,7 @@ def main(
     cur.execute(sql)
 
     if o == "console":
-        print(cur.head(-1))
+        print(display.ascii_table(cur.arrow(), display_width=True))
         return
     else:
         ext = o.lower().split(".")[-1]
