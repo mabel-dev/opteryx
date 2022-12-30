@@ -1,0 +1,8 @@
+cityhash
+numpy
+orjson
+pyarrow
+pyyaml
+typer
+
+cython
