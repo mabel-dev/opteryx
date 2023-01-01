@@ -48,7 +48,7 @@ class QueryProperties:
         # The maximum number of records to create in a CROSS JOIN frame
         self.max_join_size: int = int(config.get("MAX_JOIN_SIZE", 10000))
         # Approximate Page Size
-        self.page_size: int = config.PAGE_SIZE
+        self.page_size: int = int(config.get("PAGE_SIZE", 64 * 1024 * 1024))
         # Internally split and merge pages
         self.enable_page_defragmentation: bool = True
 
