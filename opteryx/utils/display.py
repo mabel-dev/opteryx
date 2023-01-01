@@ -126,7 +126,7 @@ def ascii_table(
         else:
             import shutil
 
-            display_width = shutil.get_terminal_size((80, 20))[0] - 5
+            display_width = shutil.get_terminal_size((80, 20))[0]
 
     # Extract head data
     if limit > 0:
