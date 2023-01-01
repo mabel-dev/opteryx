@@ -28,10 +28,9 @@ def _get_project_id():  # pragma: no cover
             "`requests` to be installed."
         ) from exception
 
-    # if it's set in the environ, use that
-    project_id = os.environ.get("GCP_PROJECT_ID")
-    if project_id:
-        return project_id
+    # if it's set in the config/environ, use that
+    if GCP_PROJECT_ID:
+        return GCP_PROJECT_ID
 
     # otherwise try to get it from GCP
     response = requests.get(

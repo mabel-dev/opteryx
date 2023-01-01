@@ -31,7 +31,7 @@ as per the below.
        ▼
     Executor
 """
-from opteryx.config import config
+from opteryx import config
 from opteryx.exceptions import SqlError, ProgrammingError
 from opteryx.managers.planner import binder
 from opteryx.managers.planner.logical import logical_planner
