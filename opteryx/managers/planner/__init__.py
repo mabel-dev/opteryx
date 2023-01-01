@@ -52,7 +52,7 @@ class QueryPlanner:
         self.raw_statement = statement
 
         if properties is None:
-            self.properties = QueryProperties(qid, config)
+            self.properties = QueryProperties(qid, config._config_values)
             self.properties.cache = cache
 
             # we need to deal with the temporal filters before we use sqloxide
