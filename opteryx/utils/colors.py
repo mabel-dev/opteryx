@@ -4,10 +4,10 @@ COLORS = {
     "{BLACK}": "\033[0;30m",  # Black
     "{RED}": "\033[0;31m",  # Red
     "{GREEN}": "\033[0;32m",  # Green
-    "{YELLOW}": "\033[0;33m",  # Yellow
+    "{YELLOW}": "\033[38;5;228m",  #  "\033[0;33m",  # Yellow
     "{BLUE}": "\033[0;34m",  # Blue
     "{PURPLE}": "\033[0;35m",  # Purple
-    "{CYAN}": "\033[0;36m",  # Cyan
+    "{CYAN}": "\033[38;5;117m",  #  "\033[0;36m",  # Cyan
     "{WHITE}": "\033[0;37m",  # White
     # Bold
     "{BOLD_BLACK}": "\033[1;30m",  # Black
@@ -27,6 +27,15 @@ COLORS = {
     "{UNDERLINE_PURPLE}": "\033[4;35m",  # Purple
     "{UNDERLINE_CYAN}": "\033[4;36m",  # Cyan
     "{UNDERLINE_WHITE}": "\033[4;37m",  # White
+    # Background
+    "{BACKGROUND_BLACK}": "\033[40m",  # Black
+    "{BACKGROUND_RED}": "\033[41m",  # 	Red
+    "{BACKGROUND_GREEN}": "\033[42m",  # 	Green
+    "{BACKGROUND_YELLOW}": "\033[43m",  # 	Yellow
+    "{BACKGROUND_BLUE}": "\033[44m",  # 	Blue
+    "{BACKGROUND_PURPLE}": "\033[45m",  # 	Purple
+    "{BACKGROUND_CYAN}": "\033[46m",  # 	Cyan
+    "{BACKGROUND_WHITE}": "\033[47m",  # 	White
 }
 
 

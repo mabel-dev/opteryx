@@ -90,8 +90,10 @@ pip install opteryx
 Example usage, filtering one of the internal example datasets and saving the results as a CSV.
 
 ~~~bash
-python -m opteryx --o 'planets.csv' "SELECT * FROM \$planets"
+python -m opteryx "SELECT * FROM \$astronauts LIMIT 10;"
 ~~~
+
+![Opteryx](https://github.com/mabel-dev/opteryx.dev/raw/main/assets/cli.png)
 
 **Query Data (Python)**
 

@@ -286,7 +286,7 @@ def drop_duplicates(table, columns=None):
 
 
 # Show for easier printing
-def head(table, n=5, max_width=100, colorize: bool = False):
+def head(table, n=5, max_width=100):
     # Updated to yield rather than print for Opteryx
     if table == set():  # pragma: no cover
         yield "No data in table"
@@ -294,8 +294,6 @@ def head(table, n=5, max_width=100, colorize: bool = False):
     if table.num_rows == 0:
         yield "No data in table"
         return
-
-    from opteryx.utils.colors import colorize as add_color
 
     # Extract head data
     if n > 0:
@@ -317,6 +315,4 @@ def head(table, n=5, max_width=100, colorize: bool = False):
             w.ljust(max(cw, dw) + 2)
             for w, cw, dw in zip(data[i], col_width, data_width)
         ]
-        yield add_color(
-            "{UNDERLINE_WHITE}Row  " if i == 0 else str(i - 1).ljust(5)
-        ) + "".join(adjust)[:max_width] + add_color("{OFF}")
+        yield "Row  " if i == 0 else str(i - 1).ljust(5) + "".join(adjust)[:max_width]
