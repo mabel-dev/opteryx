@@ -203,17 +203,17 @@ def ascii_table(
 
         # Print data
         data = [[head[c][i] for c in head.keys()] for i in range(t.num_rows)]
-        yield ("┌───────┬─" + "─┬─".join("─" * cw for cw in col_width) + "─┐")
+        yield ("┌──────┬─" + "─┬─".join("─" * cw for cw in col_width) + "─┐")
         yield (
-            "│ Row   │ "
+            "│ Row  │ "
             + " │ ".join(v.ljust(w) for v, w in zip(head.keys(), col_width))
             + " │"
         )
-        yield ("╞═══════╪═" + "═╪═".join("═" * cw for cw in col_width) + "═╡")
+        yield ("╞══════╪═" + "═╪═".join("═" * cw for cw in col_width) + "═╡")
         for i in range(len(data)):
             formatted = [type_formatter(v, w) for v, w in zip(data[i], col_width)]
-            yield ("│ " + str(i).ljust(5) + " │ " + " │ ".join(formatted) + " │")
-        yield ("└───────┴─" + "─┴─".join("─" * cw for cw in col_width) + "─┘")
+            yield ("│ " + str(i).rjust(4) + " │ " + " │ ".join(formatted) + " │")
+        yield ("└──────┴─" + "─┴─".join("─" * cw for cw in col_width) + "─┘")
 
     from opteryx.utils import colors
 
