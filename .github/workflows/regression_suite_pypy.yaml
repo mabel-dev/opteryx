@@ -56,4 +56,4 @@ jobs:
           MINIO_END_POINT: "s3.eu-west-2.amazonaws.com"
           MONGO_CONNECTION: "mongodb://mongoadmin:secret@localhost:27017"
           MONGO_DATABASE: opteryx
-          GCP_PROJECT_ID: mabel
+          GCP_PROJECT_ID: mabeldev
