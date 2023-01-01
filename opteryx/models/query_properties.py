@@ -31,24 +31,24 @@ class QueryProperties:
         "ctes",
     )
 
-    def __init__(self, qid, config: dict = None):
+    def __init__(self, qid, mutable_config: dict = None):
 
         # this is empty unless it's set as part of the query
         self.variables: dict[str, Any] = {}
 
         # fmt:off
-        if config is None: # pragma: no cover
-            config = {}
+        if mutable_config is None: # pragma: no cover
+            mutable_config = {}
         # query parameters - these can be overridden on a per-query basis
 
         # use the query optimizer
         self.enable_optimizer:bool = True
         # The maximum input frame size for JOINs
-        self.internal_batch_size: int = int(config.get("INTERNAL_BATCH_SIZE", 500))
+        self.internal_batch_size: int = int(mutable_config.get("INTERNAL_BATCH_SIZE", 500))
         # The maximum number of records to create in a CROSS JOIN frame
-        self.max_join_size: int = int(config.get("MAX_JOIN_SIZE", 10000))
+        self.max_join_size: int = int(mutable_config.get("MAX_JOIN_SIZE", 10000))
         # Approximate Page Size
-        self.page_size: int = int(config.get("PAGE_SIZE", 64 * 1024 * 1024))
+        self.page_size: int = int(mutable_config.get("PAGE_SIZE", 64 * 1024 * 1024))
         # Internally split and merge pages
         self.enable_page_defragmentation: bool = True
 
