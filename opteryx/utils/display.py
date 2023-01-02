@@ -138,37 +138,34 @@ def ascii_table(
 
     def type_formatter(value, width):
 
-        punc: str = "\033[38;5;240m"
-
         if value is None or isinstance(value, bool):
-            return "{CYAN}" + str(value).center(width)[:width] + "{OFF}"
+            return "\001CONSTm" + str(value).center(width)[:width] + "\001OFFm"
         if isinstance(value, int):
-            return "\033[38;5;203m" + str(value).rjust(width)[:width] + "\033[0m"
+            return "\001NUMERICm" + str(value).rjust(width)[:width] + "\001OFFm"
         if isinstance(value, float):
-            return "\033[38;5;203m" + str(value).rjust(width)[:width] + "\033[0m"
+            return "\001NUMERICm" + str(value).rjust(width)[:width] + "\001OFFm"
         if isinstance(value, str):
-            return "{YELLOW}" + str(value).ljust(width)[:width] + "{OFF}"
+            return "\001VARCHARm" + str(value).ljust(width)[:width] + "\001OFFm"
         if isinstance(value, datetime.datetime):
-            return f"\033[38;5;72m{value.strftime('%Y-%m-%d')} \033[38;5;150m{value.strftime('%H:%M:%S')}\033[0m"
+            return (
+                f"\001DATEm{value.strftime('%Y-%m-%d')} \001TIMEm{value.strftime('%H:%M:%S')}"
+                + "\001OFFm"
+            )
         if isinstance(value, list):
             value = (
-                punc
-                + "['\033[38;5;26m"
-                + f"{punc}', '\033[38;5;26m".join(map(str, value))
-                + punc
-                + "']\033[0m"
+                "\001PUNCm['\001VALUEm"
+                + "\001PUNCm', '\001VALUEm".join(map(str, value))
+                + "\001PUNCm']\001OFFm"
             )
             return trunc_printable(value, width)
         if isinstance(value, dict):
             value = (
-                punc
-                + "{"
-                + f"{punc}, ".join(
-                    f"'\033[38;5;26m{k}{punc}':'\033[38;5;170m{v}{punc}'"
+                "\001PUNCm{"
+                + "\001PUNCm, ".join(
+                    f"'\001KEYm{k}\001PUNCm':'\001VALUEm{v}\001PUNCm'"
                     for k, v in value.items()
                 )
-                + punc
-                + "}\033[0m"
+                + "\001OFFm"
             )
             return trunc_printable(value, width)
         return str(value).ljust(width)[:width]
@@ -181,15 +178,15 @@ def ascii_table(
 
         for char in value:
             emit += char
-            if char == "\033":
+            if char in ("\033", "\001"):
                 ignoring = True
             if not ignoring:
                 offset += 1
             if ignoring and char == "m":
                 ignoring = False
             if not ignoring and offset >= width:
-                return emit + "\033[0m"
-        return emit + "\033[0m" + " " * (width - offset)
+                return emit + "\001OFFm"
+        return emit + "\001OFFm" + " " * (width - offset)
 
     def _inner():
 
@@ -220,6 +217,6 @@ def ascii_table(
     from opteryx.utils import colors
 
     return "\n".join(
-        trunc_printable(colors.colorize(line), display_width) + colors.colorize("{OFF}")
+        colors.colorize(trunc_printable(line, display_width), colorize)
         for line in _inner()
     )
