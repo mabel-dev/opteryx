@@ -35,9 +35,11 @@ except ImportError:
 
 
 class RocksDB_KVStore(BaseKeyValueStore):
-    def __init__(self, **kwargs):
+    def __init__(self, location):
 
-        location = kwargs.get("location", "rocksdb.rocksdb")
+        super().__init__(location)
+        self._location += ".rocks"
+
         if not ROCKS_DB:
             raise MissingDependencyError(
                 "`RocksDB` is missing, please install or include in requirements.txt"

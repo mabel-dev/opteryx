@@ -45,7 +45,7 @@ def main(
     cur.execute(sql)
 
     if o == "console":
-        print(display.ascii_table(cur.arrow(), display_width=True))
+        print(display.ascii_table(cur.arrow(), limit=-1, display_width=True))
         return
     else:
         ext = o.lower().split(".")[-1]

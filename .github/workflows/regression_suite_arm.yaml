@@ -45,4 +45,4 @@ jobs:
       - name: Run Regression Tests
         run: python -m pytest 
         env:
-          GCP_PROJECT_ID: mabel
+          GCP_PROJECT_ID: mabeldev

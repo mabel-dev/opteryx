@@ -31,49 +31,51 @@ Opteryx is a SQL Engine written in Python, designed for embedded and cloud-nativ
 
 ## Features
 
-- __Feature Rich__
+### __Feature Rich__
 
-    Supports most of the base [SQL92 standard](https://opteryx.dev/latest/get-started/external-standards/sql92/) and multiple extensions from modern SQL platforms like [Snowflake](https://www.snowflake.com/en/) and [Trino](https://trino.io/).
+Supports most of the base [SQL92 standard](https://opteryx.dev/latest/get-started/external-standards/sql92/) and multiple extensions from modern SQL platforms like [Snowflake](https://www.snowflake.com/en/) and [Trino](https://trino.io/).
 
-- __High Availability__
+### __High Availability__
 
-    [Shared Nothing](https://en.wikipedia.org/wiki/Shared-nothing_architecture)/Shared Disk design means each query can run in a separate container instance making it nearly impossible for a rogue query to affect any other users. _(compute and storage can be shared)_
+[Shared Nothing](https://en.wikipedia.org/wiki/Shared-nothing_architecture)/Shared Disk design means each query can run in a separate container instance making it nearly impossible for a rogue query to affect any other users. _(compute and storage can be shared)_
 
-    If a cluster, region or datacentre is unavailable, if you have instances able to run in another location, Opteryx will keep responding to queries. _(inflight queries may not be recovered)_
+If a cluster, region or datacentre is unavailable, if you have instances able to run in another location, Opteryx will keep responding to queries. _(inflight queries may not be recovered)_
 
-- __Query In Place__
+### __Query In Place__
 
-    With Opteryx, if the engine can see and understand the data you can run queries against it. Saving you from the cost and effort of maintaining duplicates your data into a common store.
+![Opteryx](https://github.com/mabel-dev/opteryx.dev/raw/main/assets/data-stores.png)
 
-    You can store your data in parquet files on disk or Cloud Storage, and in MongoDB or Firestore and access all of these data in the same query.
+Opteryx queries your data in the systems you store them in saving you from the cost and effort of maintaining duplicates your data into a common store for analytics.
 
-- __Bring your own Files__
+You can store your data in parquet files on disk or Cloud Storage, and in MongoDB or Firestore and access all of these data in the same query.
 
-    Opteryx supports many popular data formats, including Parquet, ORC, Feather and JSONL, stored on local disk or on Cloud Storage. You can mix-and-match formats, so one dataset can be Parquet and another JSONL, and Opteryx will be able to JOIN across them.
+### __Bring your own Files__
 
-- __Consumption-Based Billing Friendly__
+Opteryx supports many popular data formats, including Parquet, ORC, Feather and JSONL, stored on local disk or on Cloud Storage. You can mix-and-match formats, so one dataset can be Parquet and another JSONL, and Opteryx will be able to JOIN across them.
 
-    Opteryx is well-suited for deployments to environments which are pay-as-you-use, like Google Cloud Run. Great for situations where you low-volume usage, or many environments, where the costs of many traditional database deployment can quickly add up.
+### __Consumption-Based Billing Friendly__
 
-- __Python Native__
+Opteryx is well-suited for deployments to environments which are pay-as-you-use, like Google Cloud Run. Great for situations where you low-volume usage, or many environments, where the costs of many traditional database deployment can quickly add up.
 
-    Opteryx is an Open Source Python library, it quickly and easily integrates into Python code, including Jupyter Notebooks, so you can start querying your data within a few minutes.
+### __Python Native__
 
-- __Time Travel__
+Opteryx is Open Source Python, it quickly and easily integrates into Python code, including Jupyter Notebooks, so you can start querying your data within a few minutes.
 
-    Designed for data analytics in environments where decisions need to be replayable, Opteryx allows you to query data as at a point in time in the past to replay decision algorithms against facts as they were known in the past. _(data must be structured to enable temporal queries)_
+### __Time Travel__
 
-- __Schema Evolution__
+Designed for data analytics in environments where decisions need to be replayable, Opteryx allows you to query data as at a point in time in the past to replay decision algorithms against facts as they were known in the past. _(data must be structured to enable temporal queries)_
 
-    Opteryx supports some change to schemas and paritioning without requiring any existing data to be updated. _(data types can only be changed to compatitble types)_
+### __Schema Evolution__
 
-- __Fast__
+Opteryx supports some change to schemas and paritioning without requiring any existing data to be updated. _(data types can only be changed to compatitble types)_
 
-    Benchmarks on M1 Pro Mac running a `GROUP BY` over 1Gb of data via the CLI in less than 1/10th of a second. _(different systems will have different performance characteristics)_
+### __Fast__
 
-- __Instant Elasticity__
+Benchmarks on M1 Pro Mac running a `GROUP BY` over 1Gb of data via the CLI in less than 1/10th of a second. _(different systems will have different performance characteristics)_
 
-    Designed to run in Knative and similar environments like Google Cloud Run, Opteryx can scale down to zero, and scale up to respond to thousands of concurrent queries within seconds.
+### __Instant Elasticity__
+
+Designed to run in Knative and similar environments like Google Cloud Run, Opteryx can scale down to zero, and scale up to respond to thousands of concurrent queries within seconds.
 
 ## Try Opteryx
 
@@ -88,8 +90,10 @@ pip install opteryx
 Example usage, filtering one of the internal example datasets and saving the results as a CSV.
 
 ~~~bash
-python -m opteryx --o 'planets.csv' "SELECT * FROM \$planets"
+python -m opteryx "SELECT * FROM \$astronauts LIMIT 10;"
 ~~~
+
+![Opteryx](https://github.com/mabel-dev/opteryx.dev/raw/main/assets/cli.png)
 
 **Query Data (Python)**
 

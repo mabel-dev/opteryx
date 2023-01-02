@@ -31,7 +31,7 @@ as per the below.
        ▼
     Executor
 """
-from opteryx.config import config
+from opteryx import config
 from opteryx.exceptions import SqlError, ProgrammingError
 from opteryx.managers.planner import binder
 from opteryx.managers.planner.logical import logical_planner
@@ -52,7 +52,7 @@ class QueryPlanner:
         self.raw_statement = statement
 
         if properties is None:
-            self.properties = QueryProperties(qid, config)
+            self.properties = QueryProperties(qid, config._config_values)
             self.properties.cache = cache
 
             # we need to deal with the temporal filters before we use sqloxide
