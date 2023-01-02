@@ -6,7 +6,7 @@
 
 <h3 align="center">
 
-Opteryx is a SQL Engine written in Python, designed for embedded and cloud-native environments.
+Opteryx is a SQL Engine designed for embedded and cloud-native environments, and with command-line skills.
 
 [Documentation](https://opteryx.dev/latest) |
 [Examples](https://github.com/mabel-dev/opteryx/tree/main/notebooks) |
@@ -26,7 +26,7 @@ Opteryx is a SQL Engine written in Python, designed for embedded and cloud-nativ
 ## Use Cases
 
 - Using SQL to query data written by another process, such as logs
-- As a command line tool - bring the power and flexibility of SQL to filter and transform files
+- As a command line tool - Run SQL directly on files - bring the power and flexibility of SQL to filter and transform files
 - As an embeddable engine - a low-cost option to allow hundreds of analysts to each have part-time databases
 
 ## Features
@@ -71,7 +71,11 @@ Opteryx supports some change to schemas and paritioning without requiring any ex
 
 ### __Fast__
 
-Benchmarks on M1 Pro Mac running a `GROUP BY` over 1Gb of data via the CLI in less than 1/10th of a second. _(different systems will have different performance characteristics)_
+Benchmarks on M1 Pro Mac running an ad hoc `GROUP BY` over 1Gb of data via the CLI in 1/5th of a second. _(different systems will have different performance characteristics)_
+
+Rows   | Columns | File Size | Query Time
+------ | ------- | --------- | ----------
+561225 | 81      | 1Gb       | 0.22sec
 
 ### __Instant Elasticity__
 
@@ -105,7 +109,8 @@ import opteryx
 conn = opteryx.connect()
 cur = conn.cursor()
 cur.execute("SELECT 4 * 7;")
-print(cur.fetchone())
+
+print(cur.head())
 ~~~
 
 For more example usage, see [Example Notebooks](https://github.com/mabel-dev/opteryx/tree/main/notebooks) and the [Getting Started Guide](https://mabel-dev.github.io/opteryx/latest/02%20Getting%20Started/).
