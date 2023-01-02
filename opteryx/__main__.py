@@ -29,6 +29,9 @@ from opteryx.managers.planner.temporal import extract_temporal_filters
 def main(
     ast: bool = typer.Option(False, help="Display the AST for the query"),
     o: str = typer.Option(default="console", help="Output location"),
+    color: bool = typer.Option(
+        default=True, help="Colorize the table displayed to the console."
+    ),
     sql: str = typer.Argument(None),
 ):
 
@@ -45,7 +48,11 @@ def main(
     cur.execute(sql)
 
     if o == "console":
-        print(display.ascii_table(cur.arrow(), limit=-1, display_width=True))
+        print(
+            display.ascii_table(
+                cur.arrow(), limit=-1, display_width=True, colorize=color
+            )
+        )
         return
     else:
         ext = o.lower().split(".")[-1]
