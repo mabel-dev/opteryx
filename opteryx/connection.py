@@ -215,7 +215,9 @@ class Cursor:
         """close the connection"""
         self._connection.close()
 
-    def head(self, size: int = 10, colorize: bool = True, max_column_width:int=30):  # pragma: no cover
+    def head(
+        self, size: int = 10, colorize: bool = True, max_column_width: int = 30
+    ):  # pragma: no cover
 
         from opteryx.utils.display import html_table, ascii_table
 
@@ -232,4 +234,6 @@ class Cursor:
             html = html_table(iter(self.fetchmany(size, as_dicts=True)), size)
             display(HTML(html))
         else:
-            return ascii_table(self.arrow(), size, colorize=colorize, max_column_width=max_column_width)
+            return ascii_table(
+                self.arrow(), size, colorize=colorize, max_column_width=max_column_width
+            )
