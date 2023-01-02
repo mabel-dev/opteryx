@@ -10,9 +10,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Any, Dict, Iterable, Union
+from typing import Iterable, Union
 
 import datetime
+
+import pyarrow
 
 
 def html_table(dictset: Iterable[dict], limit: int = 5):  # pragma: no cover
@@ -89,7 +91,7 @@ def html_table(dictset: Iterable[dict], limit: int = 5):  # pragma: no cover
 
 
 def ascii_table(
-    table: Iterable[Dict[Any, Any]],
+    table: pyarrow.Table,
     limit: int = 5,
     display_width: Union[bool, int] = True,
     max_column_width: int = 30,
@@ -139,7 +141,7 @@ def ascii_table(
         punc: str = "\033[38;5;240m"
 
         if value is None or isinstance(value, bool):
-            return "{CYAN}" + str(value).ljust(width)[:width] + "{OFF}"
+            return "{CYAN}" + str(value).center(width)[:width] + "{OFF}"
         if isinstance(value, int):
             return "\033[38;5;203m" + str(value).rjust(width)[:width] + "\033[0m"
         if isinstance(value, float):
@@ -152,7 +154,7 @@ def ascii_table(
             value = (
                 punc
                 + "['\033[38;5;26m"
-                + f"{punc}', '\033[38;5;26m".join(value)
+                + f"{punc}', '\033[38;5;26m".join(map(str, value))
                 + punc
                 + "']\033[0m"
             )
