@@ -25,6 +25,10 @@ STATEMENTS = [
         ("SELECT * FROM testdata.formats.arrow WITH (NO_PARTITION)", 100000, 13, False),
         ("SELECT user_name, user_verified FROM testdata.formats.arrow WITH(NO_PARTITION) WHERE user_name ILIKE '%news%'", 122, 2, False),
 
+        # avro
+        ("SELECT * FROM testdata.formats.avro WITH (NO_PARTITION)", 100000, 13, False),
+        ("SELECT user_name, user_verified FROM testdata.formats.avro WITH(NO_PARTITION) WHERE user_name ILIKE '%news%'", 122, 2, False),
+
         # jsonl
         ("SELECT * FROM testdata.formats.jsonl WITH (NO_PARTITION)", 100000, 13, False),
         ("SELECT user_name, user_verified FROM testdata.formats.jsonl WITH(NO_PARTITION) WHERE user_name ILIKE '%news%'", 122, 2, False),
@@ -42,8 +46,12 @@ STATEMENTS = [
         ("SELECT user_name, user_verified FROM testdata.formats.zstd WITH(NO_PARTITION) WHERE user_name ILIKE '%news%'", 122, 2, False),
 
         # csv - has a different input file
-        ("SELECT * FROM testdata.formats.csv WITH (NO_PARTITION)", 29751, 10, False),
-        ("SELECT username, user_verified FROM testdata.formats.csv WITH(NO_PARTITION) WHERE username ILIKE '%cve%'", 2002, 2, False),
+        ("SELECT * FROM testdata.formats.csv WITH (NO_PARTITION)", 33529, 10, False),
+        ("SELECT username, user_verified FROM testdata.formats.csv WITH(NO_PARTITION) WHERE username ILIKE '%cve%'", 2532, 2, False),
+
+        # tsv - has the same file as csv
+        ("SELECT * FROM testdata.formats.tsv WITH (NO_PARTITION)", 33529, 10, False),
+        ("SELECT username, user_verified FROM testdata.formats.tsv WITH(NO_PARTITION) WHERE username ILIKE '%cve%'", 2532, 2, False),
     ]
 # fmt:on
 
@@ -66,10 +74,10 @@ def test_sql_battery(statement, rows, columns, skip):
 
     assert (
         rows == actual_rows
-    ), f"Query returned {actual_rows} rows but {rows} were expected, {statement}\n{ascii_table(fetchmany(result, limit=10))}"
+    ), f"Query returned {actual_rows} rows but {rows} were expected, {statement}\n{cursor.head(10)}"
     assert (
         columns == actual_columns
-    ), f"Query returned {actual_columns} cols but {columns} were expected, {statement}\n{ascii_table(fetchmany(result, limit=10))}"
+    ), f"Query returned {actual_columns} cols but {columns} were expected, {statement}\n{cursor.head(10)}"
 
 
 if __name__ == "__main__":  # pragma: no cover

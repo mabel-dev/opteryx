@@ -130,11 +130,13 @@ def jsonl_decoder(stream, projection: List = None, selection=None):
     return table
 
 
-def csv_decoder(stream, projection: List = None, selection=None):
+def csv_decoder(stream, projection: List = None, selection=None, delimiter=","):
 
     import pyarrow.csv
+    from pyarrow.csv import ParseOptions
 
-    table = pyarrow.csv.read_csv(stream)
+    parse_options = ParseOptions(delimiter=delimiter, newlines_in_values=True)
+    table = pyarrow.csv.read_csv(stream, parse_options=parse_options)
 
     # the read doesn't support projection, so do it now
     if projection and "*" not in projection:
@@ -146,6 +148,12 @@ def csv_decoder(stream, projection: List = None, selection=None):
     if selection is not None:
         table = _filter(selection, table)
     return table
+
+
+def tsv_decoder(stream, projection: List = None, selection=None):
+    return csv_decoder(
+        stream=stream, projection=projection, selection=selection, delimiter="\t"
+    )
 
 
 def arrow_decoder(stream, projection: List = None, selection=None):
@@ -166,7 +174,28 @@ def arrow_decoder(stream, projection: List = None, selection=None):
     return table
 
 
+def avro_decoder(stream, projection: List = None, selection=None):
+    try:
+        from avro.datafile import DataFileReader
+        from avro.io import DatumReader
+    except ImportError:
+        raise Exception(
+            "`avro` is missing, please install or include in your `requirements.txt`."
+        )
+
+    reader = DataFileReader(stream, DatumReader())
+    table = pyarrow.Table.from_pylist(list(reader))
+    if projection and "*" not in projection:
+        selected_columns = list(set(table.column_names).intersection(projection))
+        if len(selected_columns) > 0:
+            table = table.select(selected_columns)
+    if selection is not None:
+        table = _filter(selection, table)
+    return table
+
+
 KNOWN_EXTENSIONS = {
+    "avro": (avro_decoder, ExtentionType.DATA),
     "complete": (do_nothing, ExtentionType.CONTROL),
     "ignore": (do_nothing, ExtentionType.CONTROL),
     "arrow": (arrow_decoder, ExtentionType.DATA),  # feather
@@ -174,5 +203,6 @@ KNOWN_EXTENSIONS = {
     "jsonl": (jsonl_decoder, ExtentionType.DATA),
     "orc": (orc_decoder, ExtentionType.DATA),
     "parquet": (parquet_decoder, ExtentionType.DATA),
+    "tsv": (tsv_decoder, ExtentionType.DATA),
     "zstd": (zstd_decoder, ExtentionType.DATA),  # jsonl/zstd
 }

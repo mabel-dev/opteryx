@@ -73,9 +73,10 @@ Opteryx supports some change to schemas and paritioning without requiring any ex
 
 Benchmarks on M1 Pro Mac running an ad hoc `GROUP BY` over 1Gb of data via the CLI in 1/5th of a second. _(different systems will have different performance characteristics)_
 
-Rows   | Columns | File Size | Query Time
------- | ------- | --------- | ----------
-561225 | 81      | 1Gb       | 0.22sec
+Rows    | Columns | File Size | Query Time
+------- | ------- | --------- | ----------
+561225  | 81      | 1Gb       | 0.22sec
+1064539 | 81      | 2Gb       | 0.27sec
 
 ### __Instant Elasticity__
 

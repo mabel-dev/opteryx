@@ -11,6 +11,7 @@ zstandard
 hypothesis
 
 # different storage providers
+avro
 firebase-admin
 
 setuptools_rust
