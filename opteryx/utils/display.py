@@ -145,7 +145,11 @@ def ascii_table(
         if isinstance(value, float):
             return "\001NUMERICm" + str(value).rjust(width)[:width] + "\001OFFm"
         if isinstance(value, str):
-            return "\001VARCHARm" + str(value).ljust(width)[:width] + "\001OFFm"
+            return (
+                "\001VARCHARm"
+                + trunc_printable(str(value).ljust(width), width)
+                + "\001OFFm"
+            )
         if isinstance(value, datetime.datetime):
             return (
                 f"\001DATEm{value.strftime('%Y-%m-%d')} \001TIMEm{value.strftime('%H:%M:%S')}"
@@ -165,10 +169,15 @@ def ascii_table(
                     f"'\001KEYm{k}\001PUNCm':'\001VALUEm{v}\001PUNCm'"
                     for k, v in value.items()
                 )
-                + "\001OFFm"
+                + "}\001OFFm"
             )
             return trunc_printable(value, width)
         return str(value).ljust(width)[:width]
+
+    def character_width(symbol):
+        import unicodedata
+
+        return 2 if unicodedata.east_asian_width(symbol) in ("F", "N", "W") else 1
 
     def trunc_printable(value, width):
 
@@ -177,11 +186,15 @@ def ascii_table(
         ignoring = False
 
         for char in value:
+            if char == "\n":
+                emit += "\001PUNCm↵\001VARCHARm"
+                offset += 1
+                continue
             emit += char
             if char in ("\033", "\001"):
                 ignoring = True
             if not ignoring:
-                offset += 1
+                offset += character_width(char)
             if ignoring and char == "m":
                 ignoring = False
             if not ignoring and offset >= width:
@@ -220,3 +233,8 @@ def ascii_table(
         colors.colorize(trunc_printable(line, display_width), colorize)
         for line in _inner()
     )
+
+
+import unicodedata
+
+print(unicodedata.east_asian_width("😀"))

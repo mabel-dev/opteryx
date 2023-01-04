@@ -252,7 +252,7 @@ def _inner_evaluate(
             if isinstance(result, list):
                 result = numpy.array(result)
             return result
-        if node_type == NodeType.AGGREGATOR:
+        if node_type in (NodeType.AGGREGATOR, NodeType.COMPLEX_AGGREGATOR):
             # detected as an aggregator, but here it's an identifier because it
             # will have already been evaluated
             node_type = NodeType.IDENTIFIER

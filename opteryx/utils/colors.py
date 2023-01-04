@@ -1,8 +1,8 @@
 COLORS = {
     "\001OFFm": "\033[0m",  # Text Reset
     # Opteryx named colors
-    "\001PUNCm": "\033[38;5;240m",
-    "\001VARCHARm": "\033[38;5;228m",
+    "\001PUNCm": "\033[38;5;237m",
+    "\001VARCHARm": "\033[38;5;227m",
     "\001CONSTm": "\033[38;5;117m",
     "\001VALUEm": "\033[38;5;170m",
     "\001NUMERICm": "\033[38;5;203m",

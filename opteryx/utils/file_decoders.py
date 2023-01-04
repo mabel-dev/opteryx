@@ -37,7 +37,7 @@ def _filter(filter, table):
     from opteryx.managers.expression import evaluate
 
     mask = evaluate(filter, table, False)
-    return table.take(pyarrow.array(mask))
+    return table.filter(pyarrow.array(mask))
 
 
 def zstd_decoder(stream, projection: List = None, selection=None):
