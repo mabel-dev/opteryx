@@ -169,7 +169,7 @@ def ascii_table(
                     f"'\001KEYm{k}\001PUNCm':'\001VALUEm{v}\001PUNCm'"
                     for k, v in value.items()
                 )
-                + "\001OFFm"
+                + "}\001OFFm"
             )
             return trunc_printable(value, width)
         return str(value).ljust(width)[:width]

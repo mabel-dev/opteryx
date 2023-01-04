@@ -102,6 +102,13 @@ def _iterate_single_parameter(func):
     return _inner
 
 
+def _sort(func):
+    def _inner(array):
+        return pyarrow.array([func(item) for item in array])
+
+    return _inner
+
+
 def _iterate_double_parameter(func):
     """
     for functions called FUNCTION(field, literal)
@@ -218,7 +225,7 @@ FUNCTIONS = {
     "SEARCH": other_functions.search,
     "COALESCE": _coalesce,
     "IFNULL": other_functions.if_null,
-    "SORT": _iterate_single_parameter(numpy.sort),
+    "SORT": _sort(numpy.sort),
     "GREATEST": _iterate_single_parameter(numpy.nanmax),
     "LEAST": _iterate_single_parameter(numpy.nanmin),
     "IIF": other_functions.iif,

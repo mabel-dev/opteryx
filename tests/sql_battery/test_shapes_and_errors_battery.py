@@ -816,6 +816,14 @@ STATEMENTS = [
         ("SELECT * FROM $planets GROUP BY name FOR TODAY;", None, None, SqlError),
         # [#518] SELECT * and GROUP BY can't be used together
         ("SELECT * FROM $planets GROUP BY name", None, None, SqlError),
+        # found testing
+        ("SELECT user_name FROM testdata.formats.orc WITH(NO_PARTITION) WHERE user_name = 'Niran'", 1, 1, None),
+        #769
+        ("SELECT GREATEST(ARRAY_AGG(name)) as NAMES FROM $satellites GROUP BY planetId", 7, 1, None),
+        ("SELECT LEAST(ARRAY_AGG(name)) as NAMES FROM $satellites GROUP BY planetId", 7, 1, None),
+        ("SELECT SORT(ARRAY_AGG(name)) as NAMES FROM $satellites GROUP BY planetId", 7, 1, None),
+        ("SELECT LEAST(ARRAY_AGG(DISTINCT name LIMIT 5)) as NAMES FROM $satellites GROUP BY planetId", 7, 1, None),
+        ("SELECT SORT(ARRAY_AGG(name LIMIT 5)) as NAMES FROM $satellites GROUP BY planetId", 7, 1, None),
 ]
 # fmt:on
 
