@@ -92,7 +92,7 @@ pip install opteryx
 
 **Query Data (Command Line)**
 
-Example usage, filtering one of the internal example datasets and saving the results as a CSV.
+Example usage, filtering one of the internal example datasets and displaying the results on the console.
 
 ~~~bash
 python -m opteryx "SELECT * FROM \$astronauts LIMIT 10;"
