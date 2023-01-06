@@ -202,13 +202,11 @@ class Cursor:
         """
         # called 'size' to match the 'fetchmany' nomenclature
         if not isinstance(self._results, (Table, set)):
-            self._results = utils.arrow.as_arrow(self._results)
-        if self._results == set():  # pragma: no cover
-            raise EmptyResultSetError("Cannot fulfil request on an empty result set")
+            self._results = utils.arrow.as_arrow(self._results, limit=size)
         if self._statistics.end_time == 0:
             self._statistics.end_time = time.time_ns()
-        if size:
-            return self._results.slice(offset=0, length=size)
+        if self._results == set():  # pragma: no cover
+            raise EmptyResultSetError("Cannot fulfil request on an empty result set")
         return self._results
 
     def close(self):
