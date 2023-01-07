@@ -87,8 +87,8 @@ Designed to run in Knative and similar environments like Google Cloud Run, Opter
 [Install from PyPI](#install-from-pypi)  
 [Filter a CSV on the Command Line](#filter-a-csv-on-the-command-line)  
 [Execute a Simple Query](#execute-a-simple-query)   
+[Query Data on Local Disk](#query-data-on-local-disk)
 [Query Data on GCS](#query-data-on-gcs)  
-[Query Data in MongoDB](#query-data-in-mongodb)
 [More Examples](#more-examples)
 
 #### Install from PyPI
@@ -109,7 +109,7 @@ python -m opteryx "SELECT * FROM \$astronauts LIMIT 10;"
 
 #### Execute a Simple Query  
 
-Example usage, querying one of the internal example datasets.
+Example usage, executing a query which makes no references to any datasets.
 
 ~~~python
 import opteryx
@@ -120,7 +120,7 @@ cur.execute("SELECT 4 * 7;")
 
 cur.head()
 ~~~
-~~~
+~~~java
 ┌──────┬─────────┐  
 │ Row  │ 4.0*7.0 │ 
 ╞══════╪═════════╡ 
@@ -128,8 +128,51 @@ cur.head()
 └──────┴─────────┘
 ~~~
 
+#### Query Data on Local Disk
+
+~~~python
+import opteryx
+
+conn = opteryx.connect()
+cur = conn.cursor()
+cur.execute("SELECT 4 * 7;")
+
+cur.head()
+~~~
+
 #### Query Data on GCS  
-#### Query Data in MongoDB
+
+In this example we're going to query a dataset on GCS in a public bucket called 'opteryx'.
+
+~~~python
+import opteryx
+
+# Register the store, so we know queries for this store should be handled by
+# the GCS connector
+opteryx.register_store("opteryx", GcpCloudStorageConnector)
+
+conn = opteryx.connect()
+cur = conn.cursor()
+cur.execute(f"SELECT * FROM opteryx.space_missions LIMIT 10;")
+
+cur.head()
+~~~
+~~~
+┌──────┬───────────┬────────────────────────────────┬───────┬─────────────────────┬────────────────┬───────────────┬────────────────┬────────────────┐
+│ Row  │ Company   │ Location                       │ Price │ Lauched_at          │ Rocket         │ Rocket_Status │ Mission        │ Mission_Status │
+╞══════╪═══════════╪════════════════════════════════╪═══════╪═════════════════════╪════════════════╪═══════════════╪════════════════╪════════════════╡
+│    0 │ RVSN USSR │ Site 1/5, Baikonur Cosmodrome, │  None │ 1957-10-04 19:28:00 │ Sputnik 8K71PS │ Retired       │ Sputnik-1      │ Success        │
+│    1 │ RVSN USSR │ Site 1/5, Baikonur Cosmodrome, │  None │ 1957-11-03 02:30:00 │ Sputnik 8K71PS │ Retired       │ Sputnik-2      │ Success        │
+│    2 │ US Navy   │ LC-18A, Cape Canaveral AFS, Fl │  None │ 1957-12-06 16:44:00 │ Vanguard       │ Retired       │ Vanguard TV3   │ Failure        │
+│    3 │ AMBA      │ LC-26A, Cape Canaveral AFS, Fl │  None │ 1958-02-01 03:48:00 │ Juno I         │ Retired       │ Explorer 1     │ Success        │
+│    4 │ US Navy   │ LC-18A, Cape Canaveral AFS, Fl │  None │ 1958-02-05 07:33:00 │ Vanguard       │ Retired       │ Vanguard TV3BU │ Failure        │
+│    5 │ AMBA      │ LC-26A, Cape Canaveral AFS, Fl │  None │ 1958-03-05 18:27:00 │ Juno I         │ Retired       │ Explorer 2     │ Failure        │
+│    6 │ US Navy   │ LC-18A, Cape Canaveral AFS, Fl │  None │ 1958-03-17 12:15:00 │ Vanguard       │ Retired       │ Vanguard 1     │ Success        │
+│    7 │ AMBA      │ LC-5, Cape Canaveral AFS, Flor │  None │ 1958-03-26 17:38:00 │ Juno I         │ Retired       │ Explorer 3     │ Success        │
+│    8 │ RVSN USSR │ Site 1/5, Baikonur Cosmodrome, │  None │ 1958-04-27 09:01:00 │ Sputnik 8A91   │ Retired       │ Sputnik-3 #1   │ Failure        │
+│    9 │ US Navy   │ LC-18A, Cape Canaveral AFS, Fl │  None │ 1958-04-28 02:53:00 │ Vanguard       │ Retired       │ Vanguard TV5   │ Failure        │
+└──────┴───────────┴────────────────────────────────┴───────┴─────────────────────┴────────────────┴───────────────┴────────────────┴────────────────┘
+~~~
 
 #### More Examples
 
