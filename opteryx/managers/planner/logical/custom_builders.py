@@ -195,6 +195,16 @@ def extract_relations(branch, qid):
                     "args": args,
                 }  # type:ignore
                 yield relation_desc
+            if relation["relation"]["Table"]["name"][0]["quote_style"] == "`":
+                if relation["relation"]["Table"]["alias"] is not None:
+                    relation_desc.alias = relation["relation"]["Table"]["alias"][
+                        "name"
+                    ]["value"]
+                relation_desc.dataset = relation["relation"]["Table"]["name"][0][
+                    "value"
+                ]
+                relation_desc.kind = "File"
+                yield relation_desc
             else:
                 if relation["relation"]["Table"]["alias"] is not None:
                     relation_desc.alias = relation["relation"]["Table"]["alias"][

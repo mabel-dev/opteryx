@@ -76,6 +76,8 @@ def select_query(ast, properties):
         relation.kind = "SubQuery"
         relation.alias = relation.dataset
         relation.dataset = properties.ctes[relation.dataset]
+    if relation.kind == "File":
+        reader = connector_factory(relation.dataset)
     elif relation.kind == "External":
         # external comes in different flavours
         reader = connector_factory(relation.dataset)
