@@ -86,7 +86,7 @@ Designed to run in Knative and similar environments like Google Cloud Run, Opter
 
 [Install from PyPI](#install-from-pypi)  
 [Filter a CSV on the Command Line](#filter-a-csv-on-the-command-line)  
-[Query a Sample Dataset](#query-a-sample-dataset)   
+[Execute a Simple Query](#execute-a-simple-query)   
 [Query Data on GCS](#query-data-on-gcs)  
 [Query Data in MongoDB](#query-data-in-mongodb)
 [More Examples](#more-examples)
@@ -107,7 +107,7 @@ python -m opteryx "SELECT * FROM \$astronauts LIMIT 10;"
 
 ![Opteryx](https://github.com/mabel-dev/opteryx.dev/raw/main/assets/cli.png)
 
-#### Query a Sample Dataset   
+#### Execute a Simple Query  
 
 Example usage, querying one of the internal example datasets.
 
@@ -118,7 +118,14 @@ conn = opteryx.connect()
 cur = conn.cursor()
 cur.execute("SELECT 4 * 7;")
 
-print(cur.head())
+cur.head()
+~~~
+~~~
+┌──────┬─────────┐  
+│ Row  │ 4.0*7.0 │ 
+╞══════╪═════════╡ 
+│    0 │    28.0 │
+└──────┴─────────┘
 ~~~
 
 #### Query Data on GCS  
