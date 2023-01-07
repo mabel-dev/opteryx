@@ -9,7 +9,7 @@
 Opteryx is a SQL Engine designed for embedded and cloud-native environments, and with command-line skills.
 
 [Documentation](https://opteryx.dev/latest) |
-[Examples](https://github.com/mabel-dev/opteryx/tree/main/notebooks) |
+[Examples](#examples) |
 [Contributing](https://mabel-dev.github.io/opteryx/latest/Contributor%20Guide/01%20Guide/)
 
 [![Tweet](https://img.shields.io/twitter/url/http/shields.io.svg?style=social)](https://twitter.com/intent/tweet?text=Easily%20query%20your%data%20with%20Opteryx&url=https://mabel-dev.github.io/opteryx/&hashtags=python,sql)
@@ -82,15 +82,22 @@ Rows    | Columns | File Size | Query Time
 
 Designed to run in Knative and similar environments like Google Cloud Run, Opteryx can scale down to zero, and scale up to respond to thousands of concurrent queries within seconds.
 
-## Try Opteryx
+## Examples
 
-**Install from PyPI**
+Install from PyPI  
+Filter a CSV on the Command Line  
+Query a Sample Dataset   
+Query Data on GCS  
+Query Data in MongoDB
+More Examples
+
+#### Install from PyPI
 
 ~~~bash
 pip install opteryx
 ~~~
 
-**Query Data (Command Line)**
+#### Filter a CSV on the Command Line
 
 Example usage, filtering one of the internal example datasets and displaying the results on the console.
 
@@ -100,7 +107,7 @@ python -m opteryx "SELECT * FROM \$astronauts LIMIT 10;"
 
 ![Opteryx](https://github.com/mabel-dev/opteryx.dev/raw/main/assets/cli.png)
 
-**Query Data (Python)**
+#### Query a Sample Dataset   
 
 Example usage, querying one of the internal example datasets.
 
@@ -113,6 +120,11 @@ cur.execute("SELECT 4 * 7;")
 
 print(cur.head())
 ~~~
+
+#### Query Data on GCS  
+#### Query Data in MongoDB
+
+#### More Examples
 
 For more example usage, see [Example Notebooks](https://github.com/mabel-dev/opteryx/tree/main/notebooks) and the [Getting Started Guide](https://mabel-dev.github.io/opteryx/latest/02%20Getting%20Started/).
 
