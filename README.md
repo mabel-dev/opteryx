@@ -99,17 +99,18 @@ pip install opteryx
 
 #### Filter a CSV on the Command Line
 
-Example usage, filtering one of the internal example datasets and displaying the results on the console.
+In this example, we are running Opteryx from the command line to filter one of the internal example datasets and display the results on the console.
 
 ~~~bash
-python -m opteryx "SELECT * FROM \$astronauts LIMIT 10;"
+python -m opteryx "SELECT * FROM \$astronauts WHERE 'Apollo 11' IN UNNEST(missions);"
 ~~~
+_this example is complete and should run as-is_
 
 ![Opteryx](https://github.com/mabel-dev/opteryx.dev/raw/main/assets/cli.png)
 
 #### Execute a Simple Query  
 
-Example usage, executing a query which makes no references to any datasets.
+In this example, we are showing the basic usage of the Python API by executing a simple query that makes no references to any datasets.
 
 ~~~python
 import opteryx
@@ -120,13 +121,14 @@ cur.execute("SELECT 4 * 7;")
 
 cur.head()
 ~~~
-~~~java
+~~~python
 ┌──────┬─────────┐  
 │ Row  │ 4.0*7.0 │ 
 ╞══════╪═════════╡ 
 │    0 │    28.0 │
 └──────┴─────────┘
 ~~~
+_this example is complete and should run as-is_
 
 #### Query Data on Local Disk
 
@@ -153,11 +155,11 @@ opteryx.register_store("opteryx", GcpCloudStorageConnector)
 
 conn = opteryx.connect()
 cur = conn.cursor()
-cur.execute(f"SELECT * FROM opteryx.space_missions LIMIT 10;")
+cur.execute("SELECT * FROM opteryx.space_missions LIMIT 10;")
 
 cur.head()
 ~~~
-~~~
+~~~python
 ┌──────┬───────────┬────────────────────────────────┬───────┬─────────────────────┬────────────────┬───────────────┬────────────────┬────────────────┐
 │ Row  │ Company   │ Location                       │ Price │ Lauched_at          │ Rocket         │ Rocket_Status │ Mission        │ Mission_Status │
 ╞══════╪═══════════╪════════════════════════════════╪═══════╪═════════════════════╪════════════════╪═══════════════╪════════════════╪════════════════╡
