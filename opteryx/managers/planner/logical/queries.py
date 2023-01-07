@@ -128,8 +128,14 @@ def select_query(ast, properties):
                     right.alias = right.dataset
                     right.dataset = properties.ctes[dataset]
                 else:
-                    reader = connector_factory(dataset)
-                    mode = reader.__mode__
+                    from pathlib import Path
+
+                    path = Path(dataset)
+                    if path.is_file():
+                        mode = "File"
+                    else:
+                        reader = connector_factory(dataset)
+                        mode = reader.__mode__
 
                 # Otherwise, the right table needs to come from the Reader
                 right = operators.reader_factory(mode)(

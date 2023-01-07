@@ -195,16 +195,6 @@ def extract_relations(branch, qid):
                     "args": args,
                 }  # type:ignore
                 yield relation_desc
-            if relation["relation"]["Table"]["name"][0]["quote_style"] == "`":
-                if relation["relation"]["Table"]["alias"] is not None:
-                    relation_desc.alias = relation["relation"]["Table"]["alias"][
-                        "name"
-                    ]["value"]
-                relation_desc.dataset = relation["relation"]["Table"]["name"][0][
-                    "value"
-                ]
-                relation_desc.kind = "File"
-                yield relation_desc
             else:
                 if relation["relation"]["Table"]["alias"] is not None:
                     relation_desc.alias = relation["relation"]["Table"]["alias"][
@@ -220,13 +210,20 @@ def extract_relations(branch, qid):
                 relation_desc.dataset = ".".join(
                     [part["value"] for part in relation["relation"]["Table"]["name"]]
                 )
+
                 relation_desc.start_date = relation["relation"]["Table"]["start_date"]
                 relation_desc.end_date = relation["relation"]["Table"]["end_date"]
                 relation_desc.cache = relation["relation"]["Table"]["cache"]
                 if relation_desc.dataset[0:1] == "$":
                     relation_desc.kind = "Internal"
                 else:
-                    relation_desc.kind = "External"
+                    from pathlib import Path
+
+                    path = Path(relation_desc.dataset)
+                    if path.is_file():
+                        relation_desc.kind = "File"
+                    else:
+                        relation_desc.kind = "External"
                 yield relation_desc
 
         if "Derived" in relation["relation"]:

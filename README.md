@@ -25,9 +25,9 @@ Opteryx is a SQL Engine designed for embedded and cloud-native environments, and
 
 ## Use Cases
 
-- Using SQL to query data written by another process, such as logs
-- As a command line tool - Run SQL directly on files - bring the power and flexibility of SQL to filter and transform files
-- As an embeddable engine - a low-cost option to allow hundreds of analysts to each have part-time databases
+- Using SQL to query data written by another process - such as logs.
+- As a command line tool - Run SQL directly on files - bring the power and flexibility of SQL to filter, transform and combine files.
+- As an embeddable engine - a low-cost option to allow hundreds of analysts to each have part-time databases.
 
 ## Features
 
@@ -132,14 +132,14 @@ _this example is complete and should run as-is_
 
 #### Query Data on Local Disk
 
-In this example, we are querying and filtering a file directly. File names are wrapped in backticks (`) to differeniate them from other datasets.
+In this example, we are querying and filtering a file directly.
 
 ~~~python
 import opteryx
 
 conn = opteryx.connect()
 cur = conn.cursor()
-cur.execute("SELECT * FROM `space_missions.parquet` LIMIT 5;")
+cur.execute("SELECT * FROM space_missions.parquet LIMIT 5;")
 
 cur.head()
 ~~~
@@ -154,7 +154,7 @@ cur.head()
 │    4 │ US Navy   │ LC-18A, Cape Canaveral AFS, Fl │  None │ 1958-02-05 07:33:00 │ Vanguard       │ Retired       │ Vanguard TV3BU │ Failure        │
 └──────┴───────────┴────────────────────────────────┴───────┴─────────────────────┴────────────────┴───────────────┴────────────────┴────────────────┘
 ~~~
-_this example requires a data file called `space_missions.parquet`._
+_this example requires a data file, [space_missions.parquet](https://storage.googleapis.com/opteryx/space_missions/space_missions.parquet)._
 
 #### Query Data on GCS  
 
