@@ -84,12 +84,12 @@ Designed to run in Knative and similar environments like Google Cloud Run, Opter
 
 ## Examples
 
-Install from PyPI  
-Filter a CSV on the Command Line  
-Query a Sample Dataset   
-Query Data on GCS  
-Query Data in MongoDB
-More Examples
+[Install from PyPI](#install-from-pypi)  
+[Filter a CSV on the Command Line](#filter-a-csv-on-the-command-line)  
+[Query a Sample Dataset](#query-a-sample-dataset)   
+[Query Data on GCS](#query-data-on-gcs)  
+[Query Data in MongoDB](#query-data-in-mongodb)
+[More Examples](#more-examples)
 
 #### Install from PyPI
 
