@@ -20,6 +20,7 @@ from .column_filter_node import ColumnFilterNode  # filter for SHOW COLUMNS
 from .cross_join_node import CrossJoinNode  # CROSS JOIN
 from .distinct_node import DistinctNode  # remove duplicate records
 from .explain_node import ExplainNode  # EXPLAIN queries
+from .file_reader_node import FileReaderNode  # usually on the CLI
 from .function_dataset_node import FunctionDatasetNode  # Dataset Constructors
 from .heap_sort_node import HeapSortNode  # Heap
 from .inner_join_node import InnerJoinNode  # INNER JOIN
@@ -54,6 +55,7 @@ _join_nodes = {
 _reader_nodes = {
     "Blob": BlobReaderNode,  # (disk, gcs, minio, s3)
     "Collection": CollectionReaderNode,  # (mongodb, firestore)
+    "File": FileReaderNode,  # usually the command line
     "Function": FunctionDatasetNode,
     "Internal": InternalDatasetNode,
     "SubQuery": BlobReaderNode,  # ?? <- this shouldn't be a reader

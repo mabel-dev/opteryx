@@ -9,7 +9,7 @@
 Opteryx is a SQL Engine designed for embedded and cloud-native environments, and with command-line skills.
 
 [Documentation](https://opteryx.dev/latest) |
-[Examples](https://github.com/mabel-dev/opteryx/tree/main/notebooks) |
+[Examples](#examples) |
 [Contributing](https://mabel-dev.github.io/opteryx/latest/Contributor%20Guide/01%20Guide/)
 
 [![Tweet](https://img.shields.io/twitter/url/http/shields.io.svg?style=social)](https://twitter.com/intent/tweet?text=Easily%20query%20your%data%20with%20Opteryx&url=https://mabel-dev.github.io/opteryx/&hashtags=python,sql)
@@ -25,9 +25,9 @@ Opteryx is a SQL Engine designed for embedded and cloud-native environments, and
 
 ## Use Cases
 
-- Using SQL to query data written by another process, such as logs
-- As a command line tool - Run SQL directly on files - bring the power and flexibility of SQL to filter and transform files
-- As an embeddable engine - a low-cost option to allow hundreds of analysts to each have part-time databases
+- Using SQL to query data written by another process - such as logs.
+- As a command line tool - Run SQL directly on files - bring the power and flexibility of SQL to filter, transform and combine files.
+- As an embeddable engine - a low-cost option to allow hundreds of analysts to each have part-time databases.
 
 ## Features
 
@@ -82,27 +82,35 @@ Rows    | Columns | File Size | Query Time
 
 Designed to run in Knative and similar environments like Google Cloud Run, Opteryx can scale down to zero, and scale up to respond to thousands of concurrent queries within seconds.
 
-## Try Opteryx
+## Examples
 
-**Install from PyPI**
+[Install from PyPI](#install-from-pypi)  
+[Filter a Dataset on the Command Line](#filter-a-dataset-on-the-command-line)  
+[Execute a Simple Query](#execute-a-simple-query)   
+[Query Data on Local Disk](#query-data-on-local-disk)
+[Query Data on GCS](#query-data-on-gcs)  
+[Further Examples](#further-examples)
+
+#### Install from PyPI
 
 ~~~bash
 pip install opteryx
 ~~~
 
-**Query Data (Command Line)**
+#### Filter a Dataset on the Command Line
 
-Example usage, filtering one of the internal example datasets and displaying the results on the console.
+In this example, we are running Opteryx from the command line to filter one of the internal example datasets and display the results on the console.
 
 ~~~bash
-python -m opteryx "SELECT * FROM \$astronauts LIMIT 10;"
+python -m opteryx "SELECT * FROM \$astronauts WHERE 'Apollo 11' IN UNNEST(missions);"
 ~~~
 
 ![Opteryx](https://github.com/mabel-dev/opteryx.dev/raw/main/assets/cli.png)
+_this example is complete and should run as-is_
 
-**Query Data (Python)**
+#### Execute a Simple Query  
 
-Example usage, querying one of the internal example datasets.
+In this example, we are showing the basic usage of the Python API by executing a simple query that makes no references to any datasets.
 
 ~~~python
 import opteryx
@@ -111,8 +119,74 @@ conn = opteryx.connect()
 cur = conn.cursor()
 cur.execute("SELECT 4 * 7;")
 
-print(cur.head())
+cur.head()
 ~~~
+~~~
+┌──────┬─────────┐  
+│ Row  │ 4.0*7.0 │ 
+╞══════╪═════════╡ 
+│    0 │    28.0 │
+└──────┴─────────┘
+~~~
+_this example is complete and should run as-is_
+
+#### Query Data on Local Disk
+
+In this example, we are querying and filtering a file directly.
+
+~~~python
+import opteryx
+
+conn = opteryx.connect()
+cur = conn.cursor()
+cur.execute("SELECT * FROM space_missions.parquet LIMIT 5;")
+
+cur.head()
+~~~
+~~~
+┌──────┬───────────┬────────────────────────────────┬───────┬─────────────────────┬────────────────┬───────────────┬────────────────┬────────────────┐
+│ Row  │ Company   │ Location                       │ Price │ Lauched_at          │ Rocket         │ Rocket_Status │ Mission        │ Mission_Status │
+╞══════╪═══════════╪════════════════════════════════╪═══════╪═════════════════════╪════════════════╪═══════════════╪════════════════╪════════════════╡
+│    0 │ RVSN USSR │ Site 1/5, Baikonur Cosmodrome, │  None │ 1957-10-04 19:28:00 │ Sputnik 8K71PS │ Retired       │ Sputnik-1      │ Success        │
+│    1 │ RVSN USSR │ Site 1/5, Baikonur Cosmodrome, │  None │ 1957-11-03 02:30:00 │ Sputnik 8K71PS │ Retired       │ Sputnik-2      │ Success        │
+│    2 │ US Navy   │ LC-18A, Cape Canaveral AFS, Fl │  None │ 1957-12-06 16:44:00 │ Vanguard       │ Retired       │ Vanguard TV3   │ Failure        │
+│    3 │ AMBA      │ LC-26A, Cape Canaveral AFS, Fl │  None │ 1958-02-01 03:48:00 │ Juno I         │ Retired       │ Explorer 1     │ Success        │
+│    4 │ US Navy   │ LC-18A, Cape Canaveral AFS, Fl │  None │ 1958-02-05 07:33:00 │ Vanguard       │ Retired       │ Vanguard TV3BU │ Failure        │
+└──────┴───────────┴────────────────────────────────┴───────┴─────────────────────┴────────────────┴───────────────┴────────────────┴────────────────┘
+~~~
+_this example requires a data file, [space_missions.parquet](https://storage.googleapis.com/opteryx/space_missions/space_missions.parquet)._
+
+#### Query Data on GCS  
+
+In this example, we are to querying a dataset on GCS in a public bucket called 'opteryx'.
+
+~~~python
+import opteryx
+
+# Register the store, so we know queries for this store should be handled by
+# the GCS connector
+opteryx.register_store("opteryx", GcpCloudStorageConnector)
+
+conn = opteryx.connect()
+cur = conn.cursor()
+cur.execute("SELECT * FROM opteryx.space_missions LIMIT 5;")
+
+cur.head()
+~~~
+~~~
+┌──────┬───────────┬────────────────────────────────┬───────┬─────────────────────┬────────────────┬───────────────┬────────────────┬────────────────┐
+│ Row  │ Company   │ Location                       │ Price │ Lauched_at          │ Rocket         │ Rocket_Status │ Mission        │ Mission_Status │
+╞══════╪═══════════╪════════════════════════════════╪═══════╪═════════════════════╪════════════════╪═══════════════╪════════════════╪════════════════╡
+│    0 │ RVSN USSR │ Site 1/5, Baikonur Cosmodrome, │  None │ 1957-10-04 19:28:00 │ Sputnik 8K71PS │ Retired       │ Sputnik-1      │ Success        │
+│    1 │ RVSN USSR │ Site 1/5, Baikonur Cosmodrome, │  None │ 1957-11-03 02:30:00 │ Sputnik 8K71PS │ Retired       │ Sputnik-2      │ Success        │
+│    2 │ US Navy   │ LC-18A, Cape Canaveral AFS, Fl │  None │ 1957-12-06 16:44:00 │ Vanguard       │ Retired       │ Vanguard TV3   │ Failure        │
+│    3 │ AMBA      │ LC-26A, Cape Canaveral AFS, Fl │  None │ 1958-02-01 03:48:00 │ Juno I         │ Retired       │ Explorer 1     │ Success        │
+│    4 │ US Navy   │ LC-18A, Cape Canaveral AFS, Fl │  None │ 1958-02-05 07:33:00 │ Vanguard       │ Retired       │ Vanguard TV3BU │ Failure        │
+└──────┴───────────┴────────────────────────────────┴───────┴─────────────────────┴────────────────┴───────────────┴────────────────┴────────────────┘
+~~~
+_this example is complete and should run as-is_
+
+#### Further Examples
 
 For more example usage, see [Example Notebooks](https://github.com/mabel-dev/opteryx/tree/main/notebooks) and the [Getting Started Guide](https://mabel-dev.github.io/opteryx/latest/02%20Getting%20Started/).
 

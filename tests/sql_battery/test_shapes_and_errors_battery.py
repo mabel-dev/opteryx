@@ -690,6 +690,10 @@ STATEMENTS = [
         ("SELECT user_name, user_verified FROM testdata.formats.parquet WITH(NO_PARTITION) WHERE followers < 1000 and followers < 500 and followers < 250", 40739, 2, None),
         ("SELECT user_name, user_verified FROM testdata.formats.parquet WITH(NO_PARTITION) WHERE followers BETWEEN 0 AND 251", 40939, 2, None),
 
+        ("SELECT * FROM 'testdata/formats/arrow/tweets.arrow'", 100000, 13, None),
+        ("SELECT * FROM 'testdata/tweets/tweets-0000.jsonl' INNER JOIN 'testdata/tweets/tweets-0001.jsonl' USING (userid)", 491, 16, None),
+        ("SELECT * FROM 'testdata/tweets/tweets-0000.jsonl' INNER JOIN $planets on sentiment = numberOfMoons", 12, 28, None),
+
         # virtual dataset doesn't exist
         ("SELECT * FROM $RomanGods", None, None, DatasetNotFoundError),
         # disk dataset doesn't exist
