@@ -89,7 +89,7 @@ Designed to run in Knative and similar environments like Google Cloud Run, Opter
 [Execute a Simple Query](#execute-a-simple-query)   
 [Query Data on Local Disk](#query-data-on-local-disk)
 [Query Data on GCS](#query-data-on-gcs)  
-[More Examples](#more-examples)
+[Further Examples](#further-examples)
 
 #### Install from PyPI
 
@@ -105,7 +105,7 @@ In this example, we are running Opteryx from the command line to filter one of t
 python -m opteryx "SELECT * FROM \$astronauts WHERE 'Apollo 11' IN UNNEST(missions);"
 ~~~
 
-![Opteryx](https://github.com/mabel-dev/opteryx.dev/raw/main/assets/cli-sample.png)
+![Opteryx](https://github.com/mabel-dev/opteryx.dev/raw/main/assets/cli.png)
 _this example is complete and should run as-is_
 
 #### Execute a Simple Query  
@@ -132,7 +132,7 @@ _this example is complete and should run as-is_
 
 #### Query Data on Local Disk
 
-In this example, we are querying and filtering a file directly. Filenames must be with backticks (`) in order to be understood as file names.
+In this example, we are querying and filtering a file directly. File names are wrapped in backticks (`) to differeniate them from other datasets.
 
 ~~~python
 import opteryx
@@ -186,7 +186,7 @@ cur.head()
 ~~~
 _this example is complete and should run as-is_
 
-#### More Examples
+#### Further Examples
 
 For more example usage, see [Example Notebooks](https://github.com/mabel-dev/opteryx/tree/main/notebooks) and the [Getting Started Guide](https://mabel-dev.github.io/opteryx/latest/02%20Getting%20Started/).
 
