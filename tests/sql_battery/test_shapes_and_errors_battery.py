@@ -694,6 +694,11 @@ STATEMENTS = [
         ("SELECT * FROM 'testdata/tweets/tweets-0000.jsonl' INNER JOIN 'testdata/tweets/tweets-0001.jsonl' USING (userid)", 491, 16, None),
         ("SELECT * FROM 'testdata/tweets/tweets-0000.jsonl' INNER JOIN $planets on sentiment = numberOfMoons", 12, 28, None),
 
+        ("SELECT * FROM $planets AS p JOIN $planets AS g ON p.id = g.id AND g.name = 'Earth';", 1, 40, None),
+        ("SELECT * FROM $planets AS p JOIN $planets AS g ON p.id = g.id AND p.name = 'Earth';", 1, 40, None),
+        ("SELECT * FROM $planets AS p JOIN $planets AS g ON g.name = 'Earth' AND p.id = g.id;", 1, 40, None),
+        ("SELECT * FROM $planets AS p JOIN $planets AS g ON p.name = 'Earth' AND p.id = g.id;", 1, 40, None),
+
         # virtual dataset doesn't exist
         ("SELECT * FROM $RomanGods", None, None, DatasetNotFoundError),
         # disk dataset doesn't exist
