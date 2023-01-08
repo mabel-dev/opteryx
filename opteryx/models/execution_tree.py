@@ -51,8 +51,10 @@ class ExecutionTree:
         """
 
         def _inner(operator):
-            if not isinstance(operator, (list, tuple, set)):
+            if not isinstance(operator, (list, set)):
                 operator = tuple([operator])
+            if not isinstance(operator, tuple):
+                operator = tuple(operator)
             for nid, item in list(self._nodes.items()):
                 if isinstance(item, operator):
                     yield nid
@@ -81,6 +83,18 @@ class ExecutionTree:
         ]
         # add an edge from the new nid to the old one
         self.link_operators(nid, before_nid)
+
+    def insert_operator_after(self, nid, operator, after_nid):
+        """rewrite the plan putting the new node after a given node"""
+        # add the new node to the plan
+        self.add_operator(nid, operator)
+        # change all the edges that were coming from the old nid to the new one
+        self._edges = [
+            (source if source != after_nid else nid, target, direction)
+            for source, target, direction in self._edges
+        ]
+        # add an edge from the new nid to the old one
+        self.link_operators(after_nid, nid)
 
     def remove_operator(self, nid):
         """rewrite a plan, removing a node"""

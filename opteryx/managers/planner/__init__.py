@@ -25,6 +25,9 @@ as per the below.
  │            ├────────►│ Logical Planner │
  │            |         └─────────────────┘
  │            │  Plan   ┌─────────────────┐
+ │            ├────────►│ Rewriter        │
+ │            |         └─────────────────┘
+ │            │  Plan   ┌─────────────────┐
  │            ├────────►│ Optimizer       │
  └────────────┘         └─────────────────┘
        │
@@ -37,6 +40,7 @@ from opteryx.managers.planner import binder
 from opteryx.managers.planner.logical import logical_planner
 from opteryx.managers.planner.optimizer import run_optimizer
 from opteryx.managers.planner.temporal import extract_temporal_filters
+from opteryx.managers.planner.rewriter import run_rewriter
 from opteryx.models import QueryProperties
 from opteryx.third_party import sqloxide
 
@@ -95,7 +99,8 @@ class QueryPlanner:
         return binder.bind_ast(ast, parameters, self.properties)
 
     def create_logical_plan(self, ast):
-        return logical_planner.create_plan(ast, self.properties)
+        plan = logical_planner.create_plan(ast, self.properties)
+        return run_rewriter(plan, self.properties)
 
     def optimize_plan(self, plan):
         if self.properties.enable_optimizer:
