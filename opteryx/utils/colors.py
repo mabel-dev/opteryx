@@ -55,4 +55,5 @@ def colorize(record, can_colorize=True):
     else:
         for k, v in COLORS.items():  # pragma: no cover
             record = record.replace(k, "")
+
     return record

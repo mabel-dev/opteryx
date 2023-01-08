@@ -68,6 +68,7 @@ class _QueryStatistics:
         self.time_evaluating: int = 0
         self.time_optimizing: int = 0
         self.time_defragmenting: int = 0
+        self.time_rewriting: int = 0
 
         self.start_time: int = 0
         self.end_time: int = 0
@@ -117,6 +118,7 @@ class _QueryStatistics:
             "time_evaluating": self._ns_to_s(self.time_evaluating),
             "time_optimizing": self._ns_to_s(self.time_optimizing),
             "time_defragmenting": self._ns_to_s(self.time_defragmenting),
+            "time_rewriting": self._ns_to_s(self.time_rewriting),
             "partitions_found": self.partitions_found,
             "partitions_scanned": self.partitions_scanned,
             "partitions_read": self.partitions_read,

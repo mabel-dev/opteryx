@@ -10,15 +10,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-# get a KV store from config - default is
-# implement a get
-# implement a put
+# fmt: off
+from .action_move_literal_join_filters import move_literal_join_filters
 
 
-def put():
-    pass
-
-
-def get():
-    pass
+# fmt:on

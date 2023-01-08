@@ -233,8 +233,3 @@ def ascii_table(
         colors.colorize(trunc_printable(line, display_width), colorize)
         for line in _inner()
     )
-
-
-import unicodedata
-
-print(unicodedata.east_asian_width("😀"))
