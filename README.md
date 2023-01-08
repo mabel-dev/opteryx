@@ -188,7 +188,7 @@ _this example is complete and should run as-is_
 
 #### Further Examples
 
-For more example usage, see [Example Notebooks](https://github.com/mabel-dev/opteryx/tree/main/notebooks) and the [Getting Started Guide](https://mabel-dev.github.io/opteryx/latest/02%20Getting%20Started/).
+For more example usage, see [Example Notebooks](https://github.com/mabel-dev/opteryx/tree/main/notebooks) and the [Getting Started Guide](https://opteryx.dev/latest/get-started/overview/).
 
 ## Community
 
@@ -205,7 +205,7 @@ We are looking for volunteers to help build and direct Opteryx. If you are inter
 
 All contributions, [bug reports](https://github.com/mabel-dev/opteryx/issues/new/choose), documentation improvements, enhancements, and [ideas](https://github.com/mabel-dev/opteryx/discussions) are welcome.
 
-Want to help build Opteryx? See the [Contribution](https://mabel-dev.github.io/opteryx/latest/Contributor%20Guide/01%20Guide/) and [Set Up](https://mabel-dev.github.io/opteryx/latest/Contributor%20Guide/90%20Debian%20%28Ubuntu%29/) Guides.
+Want to help build Opteryx? See the [Contribution](https://opteryx.dev/latest/contributing/contributing/) and [Set Up](https://opteryx.dev/latest/contributing/set-up-guides/debian/) Guides.
 
 ## Security
 
