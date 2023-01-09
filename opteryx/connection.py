@@ -26,7 +26,7 @@ from pyarrow import Table
 
 from opteryx.exceptions import CursorInvalidStateError
 from opteryx.exceptions import EmptyResultSetError
-from opteryx.exceptions import SqlError
+from opteryx.exceptions import MissingDependencyError
 from opteryx.shared import QueryStatistics
 from opteryx.managers.kvstores import BaseKeyValueStore
 from opteryx import utils
@@ -220,6 +220,12 @@ class Cursor:
         Returns:
             pandas DataFrame
         """
+        try:
+            import pandas
+        except ImportError:  # pragma: nocover
+            raise MissingDependencyError(
+                "`pandas` is missing, please install or include in requirements.txt"
+            )
         return self.arrow(size=size).to_pandas()
 
     def close(self):

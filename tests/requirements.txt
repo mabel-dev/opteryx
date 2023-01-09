@@ -9,6 +9,7 @@ mypy
 rich
 zstandard
 hypothesis
+pandas
 
 # different storage providers
 avro
