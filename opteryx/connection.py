@@ -26,7 +26,7 @@ from pyarrow import Table
 
 from opteryx.exceptions import CursorInvalidStateError
 from opteryx.exceptions import EmptyResultSetError
-from opteryx.exceptions import SqlError
+from opteryx.exceptions import MissingDependencyError
 from opteryx.shared import QueryStatistics
 from opteryx.managers.kvstores import BaseKeyValueStore
 from opteryx import utils
@@ -209,6 +209,25 @@ class Cursor:
             raise EmptyResultSetError("Cannot fulfil request on an empty result set")
         return self._results
 
+    def to_df(self, size: int = None):
+        """
+        Fetch the resultset as Pandas DataFrame.
+
+        Parameters:
+            size: int (optional)
+                Return the head 'size' number of records.
+
+        Returns:
+            pandas DataFrame
+        """
+        try:
+            import pandas
+        except ImportError:  # pragma: nocover
+            raise MissingDependencyError(
+                "`pandas` is missing, please install or include in requirements.txt"
+            )
+        return self.arrow(size=size).to_pandas()
+
     def close(self):
         """close the connection"""
         self._connection.close()
@@ -232,6 +251,12 @@ class Cursor:
             html = html_table(iter(self.fetchmany(size, as_dicts=True)), size)
             display(HTML(html))
         else:
-            return ascii_table(
-                self.arrow(), size, colorize=colorize, max_column_width=max_column_width
+            return (
+                ascii_table(
+                    self.arrow(),
+                    size,
+                    colorize=colorize,
+                    max_column_width=max_column_width,
+                )
+                + f"\n [ {self.rowcount} rows x {self.shape[1]} columns ]"
             )

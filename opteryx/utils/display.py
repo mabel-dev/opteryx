@@ -136,6 +136,9 @@ def ascii_table(
     else:
         t = table
 
+    # width of index column
+    index_width = len(str(table.num_rows)) + 2
+
     def type_formatter(value, width):
 
         if value is None or isinstance(value, bool):
@@ -215,17 +218,43 @@ def ascii_table(
 
         # Print data
         data = [[head[c][i] for c in head.keys()] for i in range(t.num_rows)]
-        yield ("┌──────┬─" + "─┬─".join("─" * cw for cw in col_width) + "─┐")
         yield (
-            "│ Row  │ "
+            "┌"
+            + ("─" * index_width)
+            + "┬─"
+            + "─┬─".join("─" * cw for cw in col_width)
+            + "─┐"
+        )
+        yield (
+            "│"
+            + (" " * index_width)
+            + "│ "
             + " │ ".join(v.ljust(w) for v, w in zip(head.keys(), col_width))
             + " │"
         )
-        yield ("╞══════╪═" + "═╪═".join("═" * cw for cw in col_width) + "═╡")
+        yield (
+            "╞"
+            + ("═" * index_width)
+            + "╪═"
+            + "═╪═".join("═" * cw for cw in col_width)
+            + "═╡"
+        )
         for i in range(len(data)):
             formatted = [type_formatter(v, w) for v, w in zip(data[i], col_width)]
-            yield ("│ " + str(i).rjust(4) + " │ " + " │ ".join(formatted) + " │")
-        yield ("└──────┴─" + "─┴─".join("─" * cw for cw in col_width) + "─┘")
+            yield (
+                "│"
+                + str(i).rjust(index_width - 1)
+                + " │ "
+                + " │ ".join(formatted)
+                + " │"
+            )
+        yield (
+            "└"
+            + ("─" * index_width)
+            + "┴─"
+            + "─┴─".join("─" * cw for cw in col_width)
+            + "─┘"
+        )
 
     from opteryx.utils import colors
 
