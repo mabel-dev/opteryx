@@ -43,6 +43,9 @@ class CollectionReaderNode(BasePlanNode):
         self._dataset = ".".join(dataset.split(".")[:-1])
         self._collection = dataset.split(".")[0]
 
+        if self._dataset == "":
+            self._dataset = self._collection
+
         self._reader = config.get("reader")()
 
         # pushed down selection/filter
