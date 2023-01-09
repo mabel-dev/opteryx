@@ -26,7 +26,7 @@ Opteryx is a SQL Engine designed for embedded and cloud-native environments, and
 ## Use Cases
 
 - Using SQL to query data written by another process - such as logs.
-- As a command line tool - Run SQL directly on files - bring the power and flexibility of SQL to filter, transform and combine files.
+- As a command line tool - Run SQL directly on files - bring the power and flexibility of SQL to filter, transform and combine files, or as a command line viewer and converter for Parquet, ORC or AVRO format files.
 - As an embeddable engine - a low-cost option to allow hundreds of analysts to each have part-time databases.
 
 ## Features
@@ -86,7 +86,7 @@ Designed to run in Knative and similar environments like Google Cloud Run, Opter
 
 [Install from PyPI](#install-from-pypi)  
 [Filter a Dataset on the Command Line](#filter-a-dataset-on-the-command-line)  
-[Execute a Simple Query](#execute-a-simple-query)   
+[Execute a Simple Query in Python](#execute-a-simple-query-in-python)   
 [Query Data on Local Disk](#query-data-on-local-disk)    
 [Query Data on GCS](#query-data-on-gcs)  
 [Further Examples](#further-examples)
@@ -108,7 +108,7 @@ python -m opteryx "SELECT * FROM \$astronauts WHERE 'Apollo 11' IN UNNEST(missio
 ![Opteryx](https://github.com/mabel-dev/opteryx.dev/raw/main/assets/cli.png)
 _this example is complete and should run as-is_
 
-#### Execute a Simple Query  
+#### Execute a Simple Query in Python  
 
 In this example, we are showing the basic usage of the Python API by executing a simple query that makes no references to any datasets.
 
