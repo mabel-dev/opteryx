@@ -21,7 +21,7 @@ It's just a dictionary.
 
 class MaterializedDatasets(dict):
 
-    _md:dict = None
+    _md: dict = None
 
     def __new__(cls):
         if cls._md is None:
