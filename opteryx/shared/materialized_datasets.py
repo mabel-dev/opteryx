@@ -19,9 +19,9 @@ It's just a dictionary.
 """
 
 
-class MaterializedDatasets:
+class MaterializedDatasets(dict):
 
-    _md = None
+    _md:dict = None
 
     def __new__(cls):
         if cls._md is None:
