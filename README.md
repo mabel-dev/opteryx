@@ -87,7 +87,7 @@ Designed to run in Knative and similar environments like Google Cloud Run, Opter
 [Install from PyPI](#install-from-pypi)  
 [Filter a Dataset on the Command Line](#filter-a-dataset-on-the-command-line)  
 [Execute a Simple Query](#execute-a-simple-query)   
-[Query Data on Local Disk](#query-data-on-local-disk)
+[Query Data on Local Disk](#query-data-on-local-disk)    
 [Query Data on GCS](#query-data-on-gcs)  
 [Further Examples](#further-examples)
 

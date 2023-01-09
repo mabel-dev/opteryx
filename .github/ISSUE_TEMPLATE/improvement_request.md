@@ -1,6 +1,6 @@
 ---
-name: Feature Request
-about: Suggest an idea for this library
+name: Improvement Request
+about: Suggest how we can make Opteryx better
 title: "✨"
 
 ---
