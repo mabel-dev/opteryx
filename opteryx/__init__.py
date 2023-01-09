@@ -13,7 +13,7 @@ import os
 
 from opteryx import config
 from opteryx.connection import Connection
-from opteryx.connectors import register_store
+from opteryx.connectors import register_arrow, register_df, register_store
 from opteryx.version import __version__
 
 

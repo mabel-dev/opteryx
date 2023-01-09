@@ -15,10 +15,8 @@ This module provides a PEP-249 familiar interface for interacting with mabel dat
 stores, it is not compliant with the standard:
 https://www.python.org/dev/peps/pep-0249/
 """
-import datetime
 import time
 
-from decimal import Decimal
 from typing import Dict, List, Optional
 from uuid import uuid4
 
@@ -45,6 +43,9 @@ class Connection:
         cache: Optional[BaseKeyValueStore] = None,
         **kwargs,
     ):
+        """
+        A virtual connection to the Opteryx query engine.
+        """
         self._results = None
         self.cache = cache
         self._kwargs = kwargs

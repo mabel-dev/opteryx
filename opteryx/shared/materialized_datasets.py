@@ -10,6 +10,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .buffer_pool import BufferPool
-from .query_statistics import QueryStatistics
-from .materialized_datasets import MaterializedDatasets
+"""
+Materialized Datasets.
+
+Used to store datasets manually registered with the engine.
+
+It's just a dictionary.
+"""
+
+
+class MaterializedDatasets(dict):
+
+    _md: dict = None
+
+    def __new__(cls):
+        if cls._md is None:
+            cls._md = {}
+        return cls._md
