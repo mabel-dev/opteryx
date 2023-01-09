@@ -6,9 +6,9 @@ The head of the current and previous minor version are supported for functional 
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 0.2     | :white_check_mark: |
-| 0.3     | :white_check_mark: |
-| <= 0.1  | :x:                |
+| 0.7     | :white_check_mark: |
+| 0.8     | :white_check_mark: |
+| <= 0.6  | :x:                |
 
 All features in supported versions have support to resolve security issues regardless, however features which are due for deprecation may be removed rather than fixed.
 
@@ -16,7 +16,7 @@ Releases may be yanked from PyPI if they contain material bugs, including securi
 
 ## Reporting a Vulnerability
 
-Thank you for helping to make Opteryx more secure - Security weaknesses should be reported [via slack](https://join.slack.com/t/mabel-corp/shared_invite/zt-1845skqgm-SEQMgvrPyJO~DLhSsNJovQ) .
+Thank you for helping to make Opteryx more secure - Security weaknesses should be reported [issues](https://github.com/mabel-dev/opteryx/issues), or if you'd prefer not to make the details pubically visible, message us on [Gitter](https://gitter.im/mabel-opteryx/community) for DM details.
 
 Please provide a description of the issue, the steps you took to create the issue, affected versions, and if known, mitigations for the issue.
 
