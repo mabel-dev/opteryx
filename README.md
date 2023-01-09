@@ -10,7 +10,7 @@ Opteryx is a SQL Engine designed for embedded and cloud-native environments, and
 
 [Documentation](https://opteryx.dev/latest) |
 [Examples](#examples) |
-[Contributing](https://mabel-dev.github.io/opteryx/latest/Contributor%20Guide/01%20Guide/)
+[Contributing](https://opteryx.dev/latest/contributing/contributing/)
 
 [![Tweet](https://img.shields.io/twitter/url/http/shields.io.svg?style=social)](https://twitter.com/intent/tweet?text=Easily%20query%20your%data%20with%20Opteryx&url=https://mabel-dev.github.io/opteryx/&hashtags=python,sql)
 
@@ -87,7 +87,7 @@ Designed to run in Knative and similar environments like Google Cloud Run, Opter
 [Install from PyPI](#install-from-pypi)  
 [Filter a Dataset on the Command Line](#filter-a-dataset-on-the-command-line)  
 [Execute a Simple Query](#execute-a-simple-query)   
-[Query Data on Local Disk](#query-data-on-local-disk)
+[Query Data on Local Disk](#query-data-on-local-disk)    
 [Query Data on GCS](#query-data-on-gcs)  
 [Further Examples](#further-examples)
 

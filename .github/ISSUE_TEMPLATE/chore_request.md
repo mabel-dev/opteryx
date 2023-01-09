@@ -1,6 +1,6 @@
 ---
-name: Chore Request
-about: Work that should be completed
+name: Maintenance Request
+about: Tasks to ensure the quality of the system is preserved
 title: "🧹"
 
 ---

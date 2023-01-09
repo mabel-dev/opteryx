@@ -1,32 +1,45 @@
-# Contribution Guide
+# Contributing to Opteryx
 
-We'd love to accept your patches and contributions to this project. There are just a few small guidelines you need to follow.
+We're excited your considering contributing to Opteryx and look forward to reviewing your contribution. 
 
-## We Develop with GitHub
+Opteryx is open source software, we value your feedback and want to make contributing to this project as easy and transparent as possible.
 
-All submissions, including submissions by core project members, require review. We use GitHub pull requests for this purpose. Consult [GitHub Help](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/about-pull-requests) for more information on using pull requests.
+We use GitHub to host code, and to track issues and feature requests. 
 
-## All Change must meet Quality Bars
+**Quick Links**   
+[Submitting Code Changes](#submitting-code-changes)     
+[Reporting a Bug](#reporting-a-bug)    
+[Contibutor Documentation](https://opteryx.dev/latest/contributing/contributing/)
+
+## Submitting Code Changes
+
+We actively welcome your improvements to the Opteryx project. If you are addressing an existing issue or a minor change, you can just raise a Pull Request with the details of the changes you are making and why, new Pull Requestss have a template to help prompt you for the information we'd like to see.
+
+If you're unfamiliar with the Pull Request process, see the [GitHub Help Pages](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/about-pull-requests) for more information on using pull requests.
+
+If you are considering a significant change to the code, or adding a new feature not discussed previously, we ask that you start a [discussion](https://github.com/mabel-dev/opteryx/discussions) or raise an [issue](https://github.com/mabel-dev/opteryx/issues) before starting.
+
+### All Change must meet Quality Bars
 
 We have included a number of tests which run automatically when code is submitted using GitHub Actions. These tests must pass before a change is elligible to be merged.
 
 These tests include a regression test suite, security tests and other quality checks.
 
-## All contributions will be under Apache 2.0 Licence
+New contributors may need approval before these run.
+
+#### All contributions will be under Apache 2.0 Licence
 
 The project is licensed under [Apache 2.0](https://github.com/mabel-dev/opteryx/blob/main/LICENSE), your submissions will be under this same licence.
 
-## Format and Style Guidance
-
-### Code Style
+#### Format and Style Guidance
 
 For consistent style, code should look like:
 
-- Imports on separate lines (`imports` then `froms`)
+- Imports on separate lines (`import`s then `from`s)
 - Variables should be in `snake_case`
 - Classes should be in `PascalCase`
-- Constants should be in `UPPER_CASE`
-- Methods have docstrings
+- Constants should be in `UPPER_SNAKE_CASE`
+- Methods should have docstrings
 - [Black](https://github.com/psf/black) formatted
 - Self-explanatory method, class and variable names
 - Type hints, especially in function definitions
@@ -42,29 +55,18 @@ A note about comments:
 - Spend time writing readable code rather than verbose comments
 - Humans struggle with threading, recursion, parallelization, variables called `x` and more than 10... of anything
 - Comments should usually be more than just the code in other words
-- Good variable names and well-written code doesn't always need comments
+- Well-written code doesn't always need comments
 
-Code pushes should have prefixes:  
+## Reporting a Bug
 
-- `FIX\#nn` merges which fix [GitHub issues](https://github.com/mabel-dev/opteryx/issues) (#nn represents the GitHub issue number)
-- `FEATURE\#nn` merges which implement [GitHub feature requests](https://github.com/mabel-dev/opteryx/issues) (#nn represents the GitHub issue number) 
-- `[DOCS]` improvements to documentation
+We would love to hear how we can make Opteryx better. We use GitHub [issues](https://github.com/mabel-dev/opteryx/issues) to track bugs and improvement requests.
 
-Docstrings should look like this for non-trivial methods:
-~~~python
-def sample_method(
-        param_1: str,
-        param_2: Optional[int] = None) -> bool:
-"""
-A short description of what the method does.
+Great Bug and Feature requests usually have:
 
-Parameters:
-    param_1: string
-        describe this parameter
-    param_2: integer (optional)
-        describe this parameter, if it's optional, what is the default
+- A summary of the problem
+- Sample code, if possible
+- What you expected to happen
+- What actually happened
+- Any other context (did you try other things to get it to work, did it stop working after something happened)
 
-Returns:
-    boolean
-"""
-~~~
+We provide a template for [Bug Reports](https://github.com/mabel-dev/opteryx/issues/new?labels=Bug+%F0%9F%AA%B2&template=bug_report.md&title=%F0%9F%AA%B2) to help prompt you for information to help us act on your report.
