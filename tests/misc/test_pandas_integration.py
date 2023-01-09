@@ -20,7 +20,9 @@ def test_pandas():
     assert curr.shape == (2532, 2)
 
     # execute a join across a dataframe an another dataset
-    curr.execute("SELECT * FROM twitter INNER JOIN $planets ON followers = $planets.id")
+    curr.execute(
+        "SELECT username, user_verified, name FROM twitter INNER JOIN $planets ON twitter.followers = $planets.id"
+    )
     assert curr.shape == (402, 3), curr.shape
 
 
