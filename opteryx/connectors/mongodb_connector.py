@@ -20,7 +20,6 @@ https://github.com/mabel-dev/mabel/blob/6bcd978b90870187d5eff939be3f5845a3cdf900
 """
 import os
 
-from opteryx import config
 from opteryx.connectors import BaseDocumentStorageAdapter
 from opteryx.exceptions import UnmetRequirementError
 

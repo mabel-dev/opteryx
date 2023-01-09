@@ -25,9 +25,10 @@ Opteryx is a SQL Engine designed for embedded and cloud-native environments, and
 
 ## Use Cases
 
-- Using SQL to query data written by another process - such as logs.
+- Using SQL to query data files written by another process - such as logs.
 - As a command line tool - Run SQL directly on files - bring the power and flexibility of SQL to filter, transform and combine files, or as a command line viewer and converter for Parquet, ORC or AVRO format files.
 - As an embeddable engine - a low-cost option to allow hundreds of analysts to each have part-time databases.
+- Executing SQL against pandas DataFrames
 
 ## Features
 
@@ -59,7 +60,7 @@ Opteryx is well-suited for deployments to environments which are pay-as-you-use,
 
 ### __Python Native__
 
-Opteryx is Open Source Python, it quickly and easily integrates into Python code, including Jupyter Notebooks, so you can start querying your data within a few minutes.
+Opteryx is Open Source Python, it quickly and easily integrates into Python code, including Jupyter Notebooks, so you can start querying your data within a few minutes. You can even use Opteryx to run SQL against pandas DataFrames, and even execute a join with an in-memoty DataFrame with a remote dataset.
 
 ### __Time Travel__
 
@@ -87,6 +88,7 @@ Designed to run in Knative and similar environments like Google Cloud Run, Opter
 [Install from PyPI](#install-from-pypi)  
 [Filter a Dataset on the Command Line](#filter-a-dataset-on-the-command-line)  
 [Execute a Simple Query in Python](#execute-a-simple-query-in-python)   
+[Execute SQL on a pandas DataFrame](#execute-sql-on-a-pandas-dataframe)   
 [Query Data on Local Disk](#query-data-on-local-disk)    
 [Query Data on GCS](#query-data-on-gcs)  
 [Further Examples](#further-examples)
@@ -127,6 +129,30 @@ cur.head()
 ╞══════╪═════════╡ 
 │    0 │    28.0 │
 └──────┴─────────┘
+~~~
+_this example is complete and should run as-is_
+
+#### Execute SQL on a pandas DataFrame
+
+In this example, we are running a SQL statement on a pandas DataFrame and returning the result as a new pandas DataFrame.
+
+~~~python
+import opteryx
+import pandas
+
+pandas_df = pandas.read_csv("https://storage.googleapis.com/opteryx/exoplanets/exoplanets.csv")
+
+opteryx.register_df("exoplanets", pandas_df)
+curr = opteryx.Connection().cursor()
+curr.execute("SELECT koi_disposition, COUNT(*) FROM exoplanets GROUP BY koi_disposition;")
+aggregrated_df = curr.to_df()
+print(aggregated_df.head())
+~~~
+~~~
+  koi_disposition  COUNT(*)
+0       CONFIRMED      2293
+1  FALSE POSITIVE      5023
+2       CANDIDATE      2248 
 ~~~
 _this example is complete and should run as-is_
 
