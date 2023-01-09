@@ -7,8 +7,9 @@ Opteryx is open source software, we value your feedback and want to make contrib
 We use GitHub to host code, and to track issues and feature requests. 
 
 **Quick Links**   
-[Submitting Code Changes](#submitting-code-changes)    
-[Reporting a Bug](#reporting-a-bug)   
+[Submitting Code Changes](#submitting-code-changes)     
+[Reporting a Bug](#reporting-a-bug)    
+[Contibutor Documentation](https://opteryx.dev/latest/contributing/contributing/)
 
 ## Submitting Code Changes
 

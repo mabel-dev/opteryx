@@ -10,7 +10,7 @@ Opteryx is a SQL Engine designed for embedded and cloud-native environments, and
 
 [Documentation](https://opteryx.dev/latest) |
 [Examples](#examples) |
-[Contributing](https://mabel-dev.github.io/opteryx/latest/Contributor%20Guide/01%20Guide/)
+[Contributing](https://opteryx.dev/latest/contributing/contributing/)
 
 [![Tweet](https://img.shields.io/twitter/url/http/shields.io.svg?style=social)](https://twitter.com/intent/tweet?text=Easily%20query%20your%data%20with%20Opteryx&url=https://mabel-dev.github.io/opteryx/&hashtags=python,sql)
 
