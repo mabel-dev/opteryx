@@ -27,7 +27,7 @@ with open(f"{LIBRARY}/version.py", mode="r") as v:
     vers = v.read()
 exec(vers)  # nosec
 
-with open("README.md", mode="r") as rm:
+with open("README.md", mode="r", encoding="UTF8") as rm:
     long_description = rm.read()
 
 try:
