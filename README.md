@@ -208,7 +208,12 @@ _this example is complete and should run as-is_
 
 #### Further Examples
 
-For more example usage, see [Example Notebooks](https://github.com/mabel-dev/opteryx/tree/main/notebooks) and the [Getting Started Guide](https://opteryx.dev/latest/get-started/overview/).
+For prepared example usage, see the below notebooks on Google Colab.
+
+Description                       | Try It Now 
+:-------------------------------- | :------
+An introduction to using Opteryx  | [Simple Query & Display](https://colab.research.google.com/drive/19n0HJvzknczogDIJT3Zbf-BFSwJofh3U?usp=sharing)
+Run SQL on local files            | [Query a Local File](https://colab.research.google.com/drive/10QXMbFE-jzcA9bndtRqry1tsfKgu6yPC?usp=sharing)
 
 ## Community
 
