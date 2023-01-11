@@ -23,7 +23,6 @@ WHERE column = 'one'
 The selection operator should focus on the selection not on working out which column
 is actually being referred to.
 """
-import os
 import pyarrow
 
 from opteryx.exceptions import SqlError, ColumnNotFoundError
