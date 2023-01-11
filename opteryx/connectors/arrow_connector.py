@@ -34,6 +34,9 @@ class ArrowConnector(BaseDocumentStorageAdapter):
 
     def read_documents(self, collection, page_size: int = BATCH_SIZE):
         dataset = self._datasets[collection]
-        for batch in dataset.to_batches(max_chunksize=BATCH_SIZE):
+
+        batch_size = (96 * 1024 * 1024) // (dataset.nbytes / dataset.num_rows)
+
+        for batch in dataset.to_batches(max_chunksize=batch_size):
             page = pyarrow.Table.from_batches([batch], schema=dataset.schema)
             yield page
