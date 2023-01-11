@@ -29,6 +29,15 @@ def connect(*args, **kwargs):
     return Connection(*args, **kwargs)
 
 
+def query(operation, *args, params: list = None, **kwargs):
+    """helper routine, create a connection and return an executed cursor"""
+    # query is the similar DuckDB function
+    conn = Connection(*args, **kwargs)
+    curr = conn.cursor()
+    curr.execute(operation=operation, params=params)
+    return curr
+
+
 # Try to increase the priority of the application
 if not config.DISABLE_HIGH_PRIORITY and hasattr(os, "nice"):  # pragma: no cover
     nice_value = os.nice(0)
