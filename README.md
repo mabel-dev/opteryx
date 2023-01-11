@@ -144,7 +144,8 @@ opteryx.register_df("exoplanets", pandas_df)
 curr = opteryx.Connection().cursor()
 curr.execute("SELECT koi_disposition, COUNT(*) FROM exoplanets GROUP BY koi_disposition;")
 aggregrated_df = curr.to_df()
-print(aggregated_df.head())
+
+aggregated_df.head()
 ~~~
 ~~~
   koi_disposition  COUNT(*)
@@ -163,7 +164,7 @@ import opteryx
 
 conn = opteryx.connect()
 cur = conn.cursor()
-cur.execute("SELECT * FROM space_missions.parquet LIMIT 5;")
+cur.execute("SELECT * FROM 'space_missions.parquet' LIMIT 5;")
 
 cur.head()
 ~~~

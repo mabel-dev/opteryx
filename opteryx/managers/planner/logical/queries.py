@@ -12,6 +12,7 @@
 from opteryx import operators
 from opteryx.connectors import connector_factory
 from opteryx.exceptions import ProgrammingError, SqlError
+from opteryx.managers.expression import deduplicate_list_of_nodes
 from opteryx.managers.expression import ExpressionTreeNode
 from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.managers.expression import NodeType
@@ -212,6 +213,11 @@ def select_query(ast, properties):
         ]
         reproject = _projection.copy()
         _projection.extend(order_fields)
+        # aliases appear in the list as different fields here, so dedupe and see if the
+        # lists are different lengths
+        _projection = deduplicate_list_of_nodes(_projection)
+        if len(_projection) == len(reproject):
+            reproject = None
 
     # qualified wildcards have the qualifer in the value
     # e.g. SELECT table.* -> node.value = table
