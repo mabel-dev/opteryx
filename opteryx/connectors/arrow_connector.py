@@ -21,8 +21,6 @@ import pyarrow
 from opteryx.connectors import BaseDocumentStorageAdapter
 from opteryx.shared import MaterializedDatasets
 
-BATCH_SIZE = 500
-
 
 class ArrowConnector(BaseDocumentStorageAdapter):
     def __init__(self):
@@ -32,7 +30,7 @@ class ArrowConnector(BaseDocumentStorageAdapter):
         dataset = self._datasets[collection]
         return dataset.num_rows
 
-    def read_documents(self, collection, page_size: int = BATCH_SIZE):
+    def read_documents(self, collection, page_size: int = 0):
         dataset = self._datasets[collection]
 
         batch_size = (96 * 1024 * 1024) // (dataset.nbytes / dataset.num_rows)

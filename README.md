@@ -38,7 +38,7 @@ Supports most of the base [SQL92 standard](https://opteryx.dev/latest/get-starte
 
 ### __High Availability__
 
-[Shared Nothing](https://en.wikipedia.org/wiki/Shared-nothing_architecture)/Shared Disk design means each query can run in a separate container instance making it nearly impossible for a rogue query to affect any other users. _(compute and storage can be shared)_
+[Shared Nothing](https://en.wikipedia.org/wiki/Shared-nothing_architecture)/[Shared Disk](https://en.wikipedia.org/wiki/Shared-disk_architecture) design means each query can run in a separate container instance making it nearly impossible for a rogue query to affect any other users. _(compute and storage can be shared)_
 
 If a cluster, region or datacentre is unavailable, if you have instances able to run in another location, Opteryx will keep responding to queries. _(inflight queries may not be recovered)_
 
@@ -117,11 +117,8 @@ In this example, we are showing the basic usage of the Python API by executing a
 ~~~python
 import opteryx
 
-conn = opteryx.connect()
-cur = conn.cursor()
-cur.execute("SELECT 4 * 7;")
-
-cur.head()
+result = opteryx.query("SELECT 4 * 7;")
+result.head()
 ~~~
 ~~~
    | 4.0*7.0  
@@ -139,12 +136,8 @@ import opteryx
 import pandas
 
 pandas_df = pandas.read_csv("https://storage.googleapis.com/opteryx/exoplanets/exoplanets.csv")
-
 opteryx.register_df("exoplanets", pandas_df)
-curr = opteryx.Connection().cursor()
-curr.execute("SELECT koi_disposition, COUNT(*) FROM exoplanets GROUP BY koi_disposition;")
-aggregrated_df = curr.to_df()
-
+aggregated_df = opteryx.query("SELECT koi_disposition, COUNT(*) FROM exoplanets GROUP BY koi_disposition;").to_df()
 aggregated_df.head()
 ~~~
 ~~~
@@ -162,11 +155,8 @@ In this example, we are querying and filtering a file directly.
 ~~~python
 import opteryx
 
-conn = opteryx.connect()
-cur = conn.cursor()
-cur.execute("SELECT * FROM 'space_missions.parquet' LIMIT 5;")
-
-cur.head()
+result = opteryx.query("SELECT * FROM 'space_missions.parquet' LIMIT 5;")
+result.head()
 ~~~
 ~~~
      | Company   | Location                       | Price | Lauched_at          | Rocket         | Rocket_Status | Mission        | Mission_Status 
@@ -185,16 +175,13 @@ In this example, we are to querying a dataset on GCS in a public bucket called '
 
 ~~~python
 import opteryx
+from opteryx.connectors import GcpCloudStorageConnector
 
 # Register the store, so we know queries for this store should be handled by
 # the GCS connector
 opteryx.register_store("opteryx", GcpCloudStorageConnector)
-
-conn = opteryx.connect()
-cur = conn.cursor()
-cur.execute("SELECT * FROM opteryx.space_missions LIMIT 5;")
-
-cur.head()
+result = opteryx.query("SELECT * FROM opteryx.space_missions LIMIT 5;")
+result.head()
 ~~~
 ~~~
      | Company   | Location                       | Price | Lauched_at          | Rocket         | Rocket_Status | Mission        | Mission_Status 

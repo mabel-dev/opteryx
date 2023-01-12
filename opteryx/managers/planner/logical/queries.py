@@ -10,7 +10,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from opteryx import operators
-from opteryx.connectors import connector_factory
+from opteryx.connectors import connector_factory, DiskConnector
 from opteryx.exceptions import ProgrammingError, SqlError
 from opteryx.managers.expression import deduplicate_list_of_nodes
 from opteryx.managers.expression import ExpressionTreeNode
@@ -78,7 +78,7 @@ def select_query(ast, properties):
         relation.alias = relation.dataset
         relation.dataset = properties.ctes[relation.dataset]
     if relation.kind == "File":
-        reader = connector_factory(relation.dataset)
+        reader = DiskConnector
     elif relation.kind == "External":
         # external comes in different flavours
         reader = connector_factory(relation.dataset)
