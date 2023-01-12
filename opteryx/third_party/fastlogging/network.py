@@ -1,3 +1,4 @@
+# type:ignore
 # -*- coding: utf-8 -*-
 # Copyright 2018 Martin Bammer. All Rights Reserved.
 # Licensed under MIT license.

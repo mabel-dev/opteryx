@@ -18,6 +18,7 @@ from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.managers.expression import NodeType
 from opteryx.managers.planner.logical import builders, custom_builders
 from opteryx.models import ExecutionTree
+from opteryx.utils import paths
 
 
 def explain_query(ast, properties):
@@ -129,10 +130,7 @@ def select_query(ast, properties):
                     right.alias = right.dataset
                     right.dataset = properties.ctes[dataset]
                 else:
-                    from pathlib import Path
-
-                    path = Path(dataset)
-                    if path.is_file():
+                    if paths.is_file(dataset):
                         mode = "File"
                     else:
                         reader = connector_factory(dataset)

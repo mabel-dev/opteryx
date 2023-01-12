@@ -20,6 +20,7 @@ from typing import Any
 from opteryx.managers.expression import ExpressionTreeNode
 from opteryx.managers.expression import NodeType
 from opteryx.shared import QueryStatistics
+from opteryx.utils import paths
 from opteryx.utils import fuzzy_search
 
 WELL_KNOWN_HINTS = {
@@ -217,10 +218,7 @@ def extract_relations(branch, qid):
                 if relation_desc.dataset[0:1] == "$":
                     relation_desc.kind = "Internal"
                 else:
-                    from pathlib import Path
-
-                    path = Path(relation_desc.dataset)
-                    if path.is_file():
+                    if paths.is_file(relation_desc.dataset):
                         relation_desc.kind = "File"
                     else:
                         relation_desc.kind = "External"
