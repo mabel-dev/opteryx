@@ -1,4 +1,3 @@
-# type:ignore
 # The MIT License (MIT)
 #
 # Copyright (c) <2018> <Martin Bammer, mrbm74 at gmail dot com>
