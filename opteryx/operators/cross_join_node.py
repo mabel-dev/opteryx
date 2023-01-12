@@ -29,7 +29,7 @@ from opteryx.models import Columns, QueryProperties
 from opteryx.operators import BasePlanNode
 
 
-INTERNAL_BATCH_SIZE = 500  # config
+INTERNAL_BATCH_SIZE = 100  # config
 MAX_JOIN_SIZE = 500  # config
 
 
@@ -74,7 +74,7 @@ def _cross_join(left, right):
             left_columns = Columns(left_page)
             new_columns = left_columns + right_columns
 
-        # we break this into small chunks, each cycle will have 100 * rows in the right table
+        # we break this into small chunks, each cycle will have 500 * rows in the right table
         for left_block in left_page.to_batches(max_chunksize=INTERNAL_BATCH_SIZE):
 
             # blocks don't have column_names, so we need to wrap in a table

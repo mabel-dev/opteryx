@@ -27,7 +27,7 @@ class ExtentionType(str, Enum):
     CONTROL = "CONTROL"
 
 
-def do_nothing(stream, projection=None):
+def do_nothing(stream, projection=None):  # pragma: no-cover
     return stream
 
 
@@ -82,7 +82,7 @@ def parquet_decoder(stream, projection: List = None, selection=None):
 
         selected_columns = list(set(parquet_metadata.names).intersection(projection))
         # if nothing matched, there's been a problem - maybe HINTS confused for columns
-        if len(selected_columns) == 0:
+        if len(selected_columns) == 0:  # pragma: no-cover
             selected_columns = None
     # don't prebuffer - we're already buffered as an IO Stream
     return parquet.read_table(
@@ -103,7 +103,7 @@ def orc_decoder(stream, projection: List = None, selection=None):
         orc_metadata = orc_file.schema
         selected_columns = list(set(orc_metadata.names).intersection(projection))
         # if nothing matched, there's been a problem - maybe HINTS confused for columns
-        if len(selected_columns) == 0:
+        if len(selected_columns) == 0:  # pragma: no-cover
             selected_columns = None
 
     table = orc_file.read(columns=selected_columns)
@@ -178,7 +178,7 @@ def avro_decoder(stream, projection: List = None, selection=None):
     try:
         from avro.datafile import DataFileReader
         from avro.io import DatumReader
-    except ImportError:
+    except ImportError:  # pragma: no-cover
         raise Exception(
             "`avro` is missing, please install or include in your `requirements.txt`."
         )

@@ -77,3 +77,8 @@ def date_format(path_string: str, date: datetime.date = None):
     path_string = path_string.replace("{SS}", f"{date.second:02d}")
 
     return path_string
+
+
+def is_file(path):
+    path = pathlib.Path(path)
+    return path.is_file()

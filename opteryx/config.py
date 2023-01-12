@@ -74,4 +74,6 @@ ENABLE_RESOURCE_LOGGING: bool = bool(get("ENABLE_RESOURCE_LOGGING", False))
 ONLY_PUSH_EQUALS_PREDICATES: bool = bool(get("ONLY_PUSH_EQUALS_PREDICATES", False))
 # size of pages to push between steps
 PAGE_SIZE: int = int(get("PAGE_SIZE", 64 * 1024 * 1024))
+
+METADATA_SERVER: str = None
 # fmt:on

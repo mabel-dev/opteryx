@@ -10,10 +10,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from opteryx import config
 
-# get a KV store from config - default is
-# implement a get
-# implement a put
+
+def metadata_factory():
+    if config.METADATA_SERVER is None or config.METADATA_SERVER.upper() == "LOCAL":
+        # if rocks is installed, use that
+        # else, use JSON
+        pass
+    else:
+        # use the configured one
+        pass
 
 
 def put():

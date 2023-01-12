@@ -3,13 +3,14 @@ types-PyYAML
 types-requests
 
 coverage
+hypothesis
+mypy
+pandas
 pymemcache
 pytest
-mypy
+requests
 rich
 zstandard
-hypothesis
-pandas
 
 # different storage providers
 avro
