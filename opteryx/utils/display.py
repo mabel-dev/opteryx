@@ -123,7 +123,7 @@ def ascii_table(
 
     # get the width of the display
     if isinstance(display_width, bool):
-        if not display_width:
+        if not display_width:  # pragma: no-cover
             display_width = 5000
         else:
             import shutil

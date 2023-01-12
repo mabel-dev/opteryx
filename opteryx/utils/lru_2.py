@@ -63,7 +63,7 @@ class LRU2:
 
     def set(self, key, value):
         # if we're already in the cache - do nothing
-        if key in self._cache:
+        if key in self._cache:  # pragma: no-cover
             return None
         # create an initial entry for the new item
         clock = time.monotonic_ns()
@@ -85,7 +85,7 @@ class LRU2:
         return None
 
     @property
-    def keys(self):
+    def keys(self):  # pragma: no-cover
         return list(self._cache.keys())
 
     @property

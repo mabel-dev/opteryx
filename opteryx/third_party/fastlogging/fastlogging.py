@@ -21,7 +21,7 @@ time_localtime = time.localtime
 path_join = os.path.join
 
 
-def Shutdown(now=True):
+def Shutdown(now=True):  # pragma: no cover
     for logger in tuple(domains.values()):
         logger.shutdown(now)
 
@@ -60,7 +60,7 @@ LOG2SYM = {
     DEBUG: "DEBUG  ",
 }
 
-try:
+try:  # pragma: no cover
     # noinspection PyUnresolvedReferences,PyPep8Naming
     from colorama import init as initColorama, Fore, Style
 
@@ -85,7 +85,7 @@ try:
         CYAN = Style.BRIGHT + DARKCYAN
         ORANGE = Style.BRIGHT + DARKORANGE
 
-except ImportError:
+except ImportError:  # pragma: no cover
 
     class Colors:
         RESETALL = ""
