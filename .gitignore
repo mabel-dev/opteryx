@@ -162,3 +162,4 @@ Cargo.lock
 performance.jsonl
 test.json
 .iac-data/**
+space_missions.parquet
