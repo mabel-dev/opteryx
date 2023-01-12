@@ -13,7 +13,7 @@ COMPILE = True
 DEBUG = True
 
 
-def extract_cython(path_in, force=False, debug=True):
+def extract_cython(path_in, force=False, debug=True):  # pragma: no cover
     """Extract cython code from the .py file. The script is called by the
     cythonize decorator. It can also be used directly when launching the
     pyorcy.py script with a sys.argv argument. This can be handy for
@@ -46,7 +46,7 @@ def extract_cython(path_in, force=False, debug=True):
             fobj.write(line + "\n")
 
 
-def import_module(name):
+def import_module(name):  # pragma: no cover
     # XXX: not sure this covers all import possibilities offered by python2
     # and python3
     # XXX: is there a cleaner system?
@@ -59,7 +59,7 @@ def import_module(name):
     return importlib.import_module(name_last, package)
 
 
-def cythonize(func):
+def cythonize(func):  # pragma: no cover
     """function decorator for triggering the pyorcy mechanism"""
     # inspect usage found in http://stackoverflow.com/a/7151403
     if COMPILE:

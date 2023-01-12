@@ -15,7 +15,7 @@ from .fastlogging import DEBUG, INFO, WARNING, ERROR, FATAL
 optimized = set()
 
 
-class OptimizeAst(ast.NodeTransformer):
+class OptimizeAst(ast.NodeTransformer):  # pragma: no cover
     def __init__(
         self,
         id_,
@@ -256,7 +256,7 @@ def OptimizeObj(
     remove=0,
     const2value=False,
     value2const=False,
-):
+):  # pragma: no cover
     tree = ast.parse(inspect.getsource(obj))
     tree = OptimizeAst(
         id_, optimize, deoptimize, remove, const2value, value2const
@@ -276,7 +276,7 @@ def OptimizeObj(
 
 def OptimizeModule(
     obj, id_, optimize=0, deoptimize=0, remove=0, const2value=False, value2const=False
-):
+):  # pragma: no cover
     tree = ast.parse(inspect.getsource(obj))
     tree = OptimizeAst(
         id_, optimize, deoptimize, remove, const2value, value2const
@@ -297,7 +297,7 @@ def OptimizeFile(
     remove=0,
     const2value=False,
     value2const=False,
-):
+):  # pragma: no cover
     tree = ast.parse(open(fileName).read())
     tree = OptimizeAst(
         id_, optimize, deoptimize, remove, const2value, value2const
@@ -313,7 +313,7 @@ def OptimizeFile(
 
 def Optimize(
     glob, id_, optimize=0, deoptimize=0, remove=0, const2value=False, value2const=False
-):
+):  # pragma: no cover
     def OptimizeDecorator(obj):
         if obj.__name__ in optimized:
             return obj
@@ -325,7 +325,7 @@ def Optimize(
     return OptimizeDecorator
 
 
-def WritePycFile(fileName, code):
+def WritePycFile(fileName, code):  # pragma: no cover
     with open(os.path.splitext(fileName)[0] + ".pyc", "wb") as F:
         F.write(b"\0\0\0\0")
         F.write(struct.pack("L", int(time.time())))

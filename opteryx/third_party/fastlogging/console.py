@@ -11,7 +11,7 @@ from threading import Thread, Event
 from . import ERROR
 
 
-class ConsoleLogger(Thread):
+class ConsoleLogger(Thread):  # pragma: no cover
     def __init__(self, consoleLock):
         super(ConsoleLogger, self).__init__()
         self.name = "LogConsoleThread"

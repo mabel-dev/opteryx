@@ -116,7 +116,7 @@ LVL2COL = {
 }
 
 
-def Rotate():
+def Rotate():  # pragma: no cover
     signaled = set()
     for logger in domains.values():
         if logger.F is None or logger.common.evtRotate in signaled:
@@ -125,14 +125,14 @@ def Rotate():
         logger.rotate()
 
 
-class LastMessage(object):
+class LastMessage(object):  # pragma: no cover
     def __init__(self, key, cnt, entry):
         self.key = key
         self.cnt = cnt
         self.entry = entry
 
 
-class CommonConfig(object):
+class CommonConfig(object):  # pragma: no cover
     def __init__(self, queue, evtQueue, evtRotate, maxSize, backupCnt):
         self.queue = queue
         self.evtQueue = evtQueue
@@ -141,7 +141,7 @@ class CommonConfig(object):
         self.backupCnt = backupCnt
 
 
-class Logger(object):
+class Logger(object):  # pragma: no cover
 
     backlog = None
     dateFmt = "%y.%m.%d %H:%M:%S"
@@ -219,9 +219,7 @@ class Logger(object):
         if Logger.useThreads and Logger.thrConsoleLogger is None:
             from .console import ConsoleLogger
 
-            Logger.thrConsoleLogger = ConsoleLogger(
-                Logger.consoleLock
-            )
+            Logger.thrConsoleLogger = ConsoleLogger(Logger.consoleLock)
             Logger.thrConsoleLogger.start()
         if server is not None:
             from .network import LoggingServer
@@ -234,10 +232,10 @@ class Logger(object):
             self.client = LoggingClient(*connect)
             self.client.start()
 
-    def __del__(self):
+    def __del__(self):  # pragma: no cover
         self.stopNetwork()
 
-    def stopNetwork(self):
+    def stopNetwork(self):  # pragma: no cover
         if hasattr(self, "server"):
             self.server.stop()
             self.server.join()
@@ -247,10 +245,10 @@ class Logger(object):
             self.client.join()
             del self.client
 
-    def setLevel(self, level):
+    def setLevel(self, level):  # pragma: no cover
         self.level = level
 
-    def setConsole(self, console):
+    def setConsole(self, console):  # pragma: no cover
         self._console = console
 
     @staticmethod
@@ -551,7 +549,7 @@ class Logger(object):
                 print(f"{Colors.RED}{errMsg}{Colors.RESETALL}", file=self.stderr)
 
 
-def Remove(domain=None, now=False):
+def Remove(domain=None, now=False):  # pragma: no cover
     if domain is None:
         domain = "root"
     if domain in domains:
@@ -571,7 +569,7 @@ def GetLogger(
     indent=True,
     server=None,
     connect=None,
-):
+):  # pragma: no cover
     if not domains:
         print(f"Warning: {domain}: LogInit should be called first!")
     if console is None:
@@ -611,7 +609,7 @@ def LogInit(
     consoleLock=None,
     stdout=None,
     stderr=None,
-):
+):  # pragma: no cover
     if domain is None:
         domain = "root"
     Logger.colors = colors

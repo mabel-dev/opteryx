@@ -16,7 +16,7 @@ from threading import Thread, Event, Lock
 import msgpack
 
 
-class LoggingServer(Thread):
+class LoggingServer(Thread):  # pragma: no cover
     def __init__(
         self,
         logger,
@@ -214,7 +214,7 @@ class LoggingServer(Thread):
             del self.__clients[client]
 
 
-class LoggingClient(Thread):
+class LoggingClient(Thread):  # pragma: no cover
     def __init__(
         self,
         address,

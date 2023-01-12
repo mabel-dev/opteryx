@@ -24,7 +24,7 @@ PKGNAME = "fastlogging"
 PKGDIR = os.path.join(BASEDIR, PKGNAME)
 VERSION = "1.0.0"
 
-if os.path.exists("build"):
+if os.path.exists("build"):  # pragma: no cover
     shutil.rmtree("build")
 for filename in os.listdir(PKGDIR):
     if (
@@ -41,9 +41,9 @@ if debug:
     del sys.argv[sys.argv.index("debug")]
 nocython = "nocython" in sys.argv
 
-if nocython:
+if nocython:  # pragma: no cover
     del sys.argv[sys.argv.index("nocython")]
-else:
+else:  # pragma: no cover
     # noinspection PyUnresolvedReferences
     try:
         from Cython.Distutils import build_ext
@@ -55,12 +55,12 @@ else:
         )
         nocython = True
 
-if nocython:
+if nocython:  # pragma: no cover
     install_requires = []
     cmdclass = {}
     packages = [PKGNAME]
     ext_modules = None
-else:
+else:  # pragma: no cover
     from pyorcy import extract_cython
 
     extract_cython(os.path.join(PKGDIR, "fastlogging.py"))
@@ -144,10 +144,12 @@ else:
 
 
 # Get the long description from the README file
-with open(os.path.join(BASEDIR, "README.rst"), encoding="utf-8") as F:
+with open(
+    os.path.join(BASEDIR, "README.rst"), encoding="utf-8"
+) as F:  # pragma: no cover
     long_description = F.read()
 
-if annotate:
+if annotate:  # pragma: no cover
     sys.exit(0)
 
 setup(
@@ -183,4 +185,4 @@ setup(
     install_requires=install_requires,
     packages=packages,
     ext_modules=ext_modules,
-)
+)  # pragma: no cover
