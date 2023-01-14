@@ -11,13 +11,14 @@
 # limitations under the License.
 
 # fmt: off
-from .action_apply_demorgans_law import apply_demorgans_law
-from .action_constant_evaluations import eliminate_constant_evaluations
-from .action_function_evaluations import eliminate_fixed_function_evaluations
-from .action_defragment_pages import defragment_pages
-from .action_eliminate_negations import eliminate_negations
-from .action_selection_pushdown import selection_pushdown
-from .action_split_conjunctive_predicates import split_conjunctive_predicates
-from .action_use_heap_sort import use_heap_sort
+from .rule_apply_demorgans_law import apply_demorgans_law
+from .rule_constant_evaluations import eliminate_constant_evaluations
+from .rule_function_evaluations import eliminate_fixed_function_evaluations
+from .rule_defragment_pages import defragment_pages
+from .rule_eliminate_negations import eliminate_negations
+from .rule_move_literal_join_filters import move_literal_join_filters
+from .rule_selection_pushdown import selection_pushdown
+from .rule_split_conjunctive_predicates import split_conjunctive_predicates
+from .rule_use_heap_sort import use_heap_sort
 
 # fmt:on

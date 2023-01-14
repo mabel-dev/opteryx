@@ -16,6 +16,6 @@ import abc
 class BasePartitionScheme(abc.ABC):
     """Implement a partition scheme"""
 
-    def filter_blobs(self, list_of_blobs):
+    def filter_blobs(self, list_of_blobs, statistics):
         """filter the blobs acording to the chosen scheme"""
         raise NotImplementedError()

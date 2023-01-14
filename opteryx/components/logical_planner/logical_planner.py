@@ -33,10 +33,10 @@ So we just build it in that order.
 """
 from opteryx.exceptions import UnsupportedSyntaxError
 
-from opteryx.managers.planner.logical import queries
+from opteryx.components.logical_planner import queries
 
 
-def create_plan(ast, properties):
+def create_logical_plan(ast, properties):
 
     query_type = next(iter(ast))
     builder = queries.QUERY_BUILDER.get(query_type)

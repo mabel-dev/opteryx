@@ -10,7 +10,9 @@ import datetime
 
 import pytest
 
-from opteryx.managers.planner.temporal import extract_temporal_filters
+from opteryx.components.sql_rewriter.sql_rewriter import clean_statement
+from opteryx.components.sql_rewriter.sql_rewriter import remove_comments
+from opteryx.components.sql_rewriter.temporal_extraction import extract_temporal_filters
 
 
 TODAY = datetime.datetime.utcnow().date()
@@ -104,7 +106,8 @@ def test_temporal_extraction(statement, filters):
     Test an battery of statements
     """
 
-    _, extracted_filters = extract_temporal_filters(statement)
+    clean = clean_statement(remove_comments(statement))
+    _, extracted_filters = extract_temporal_filters(clean)
 
     assert filters == extracted_filters, f"{filters} != {extracted_filters}"
 

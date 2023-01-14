@@ -78,7 +78,7 @@ def extract_offset(ast):
 
 
 def extract_order(ast):
-    from opteryx.managers.planner.logical import builders
+    from opteryx.components.logical_planner import builders
 
     order = ast["Query"].get("order_by")
     if order is not None:
@@ -132,7 +132,7 @@ def extract_identifiers(ast):
 
 
 def extract_joins(ast, qid):
-    from opteryx.managers.planner.logical import builders
+    from opteryx.components.logical_planner import builders
 
     try:
         joins = ast["Query"]["body"]["Select"]["from"][0]["joins"]
@@ -159,8 +159,8 @@ def extract_joins(ast, qid):
 
 def extract_relations(branch, qid):
     """ """
-    from opteryx.managers.planner.logical import builders
-    from opteryx.managers.planner import QueryPlanner
+    from opteryx.components.logical_planner import builders
+    from opteryx.components.query_planner import QueryPlanner
 
     def _check_hints(hints):
 
@@ -266,7 +266,7 @@ def extract_into(branch):
 
 def extract_ctes(branch, qid):
 
-    from opteryx.managers.planner import QueryPlanner
+    from opteryx.components.query_planner import QueryPlanner
 
     ctes = {}
 

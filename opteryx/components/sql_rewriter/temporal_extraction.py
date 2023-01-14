@@ -89,23 +89,6 @@ TEMPORAL: int = 16
 ALIAS: int = 64
 
 
-def clean_statement(string):  # pragma: no cover
-    """
-    Remove carriage returns and all whitespace to single spaces.
-
-    Avoid removing whitespace in quoted strings.
-    """
-    pattern = r"(\"[^\"]\"|\'[^\']\'|\`[^\`]\`)|(\r\n\t\f\v+)"
-    regex = re.compile(pattern, re.MULTILINE | re.DOTALL)
-
-    def _replacer(match):
-        if match.group(2) is not None:
-            return " "
-        return match.group(1)  # captured quoted-string
-
-    return regex.sub(_replacer, string).strip()
-
-
 def sql_parts(string):  # pragma: no cover
     """
     Split a SQL statement into clauses
@@ -143,38 +126,6 @@ def sql_parts(string):  # pragma: no cover
     return parts
 
 
-def remove_comments(string):  # pragma: no cover
-    """
-    Remove comments from the string
-    """
-    # first group captures quoted strings (double, single or back tick)
-    # second group captures comments (//single-line or /* multi-line */)
-    pattern = r"(\"[^\"]\"|\'[^\']\'|\`[^\`]\`)|(/\*[^\*/]*\*/|--[^\r\n]*$)"
-    regex = re.compile(pattern, re.MULTILINE | re.DOTALL)
-
-    def _replacer(match):
-        # if the 2nd group (capturing comments) is not None,
-        # it means we have captured a non-quoted (real) comment string.
-        if match.group(2) is not None:
-            return ""  # so we will return empty to remove the comment
-        # otherwise, we will return the 1st group
-        return match.group(1)  # captured quoted-string
-
-    return regex.sub(_replacer, string)
-
-
-def _subtract_one_month(in_date):  # pragma: no cover
-    day = in_date.day
-    end_of_previous_month = in_date.replace(day=1) - datetime.timedelta(days=1)
-    while True:
-        try:
-            return end_of_previous_month.replace(day=day)
-        except:
-            day -= 1
-            if day < 0:
-                raise ValueError("Unable to determine previous month")
-
-
 def parse_range(fixed_range):  # pragma: no cover
     fixed_range = fixed_range.upper()
     today = datetime.datetime.utcnow().date()
@@ -189,31 +140,6 @@ def parse_range(fixed_range):  # pragma: no cover
         start = today.replace(day=1)
         # end today
         end = today
-    elif fixed_range in ("PREVIOUS_CYCLE", "LAST_CYCLE"):
-        # if we're before the 21st
-        if today.day < 22:
-            # end the 21st of last month
-            end = _subtract_one_month(today).replace(day=21)
-            # start the 22nd of the month before
-            start = _subtract_one_month(end).replace(day=22)
-        else:
-            # end the 21st of this month
-            end = today.replace(day=21)
-            # start the 22nd of the month before
-            start = _subtract_one_month(end).replace(day=22)
-    elif fixed_range == "THIS_CYCLE":
-        # if we're before the 21st
-        if today.day < 22:
-            # end today
-            end = today
-            # start the 22nd of last month
-            start = _subtract_one_month(today).replace(day=22)
-        else:
-            # end the today
-            end = today
-            # start the 22nd of this month
-            start = today.replace(day=22)
-
     else:
         if parse_date(fixed_range):
             raise InvalidTemporalRangeFilterError(
@@ -247,10 +173,10 @@ def parse_date(date):  # pragma: no cover
 
 def _temporal_extration_state_machine(parts):
     """
-    we use a three state machine to extract the temporal information from the query
+    we use a four state machine to extract the temporal information from the query
     and maintain the relation to filter information.
 
-    We separate out the two key parts of the algorithm, first we determin the state,
+    We separate out the two key parts of the algorithm, first we determine the state,
     then we work out if the state transition means we should do something.
 
     We're essentially using a bit mask to record state and transitions.
@@ -317,10 +243,7 @@ def _temporal_extration_state_machine(parts):
 
 def extract_temporal_filters(sql):  # pragma: no cover
 
-    # prep the statement, by normalizing it
-    clean_sql = remove_comments(sql)
-    clean_sql = clean_statement(clean_sql)
-    parts = sql_parts(clean_sql)
+    parts = sql_parts(sql)
 
     # define today once
     today = datetime.datetime.utcnow().date()

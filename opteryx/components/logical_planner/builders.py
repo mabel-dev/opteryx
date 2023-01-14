@@ -359,7 +359,7 @@ def between(branch, alias=None, key=None):
 
 def in_subquery(branch, alias=None, key=None):
     # if it's a sub-query we create a plan for it
-    from opteryx.managers.planner import QueryPlanner
+    from opteryx.components.query_planner import QueryPlanner
 
     left = build(branch["expr"])
     ast = {}
@@ -520,7 +520,7 @@ def case_when(value, alias: list = None, key=None):
 
 
 def array_agg(branch, alias=None, key=None):
-    from opteryx.managers.planner.logical import custom_builders
+    from opteryx.components.logical_planner import custom_builders
 
     distinct = branch["distinct"]
     expression = build(branch["expr"])

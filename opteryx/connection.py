@@ -91,7 +91,7 @@ class Cursor:
         if self._query is not None:  # pragma: no cover
             raise CursorInvalidStateError("Cursor can only be executed once")
 
-        from opteryx.managers.planner import QueryPlanner
+        from opteryx.components.query_planner import QueryPlanner
 
         self._query_planner = QueryPlanner(
             statement=operation, cache=self._connection.cache, qid=self._qid
