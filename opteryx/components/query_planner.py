@@ -15,32 +15,35 @@ This is the Query Planner, it is responsible for creating the physical execution
 from the SQL statement provided by the user. It does this is a multistage process
 as per the below.
 
- ┌────────────┐  SQL    ┌─────────────────┐
- │            ├────────►│ Parser + Lexer  │
- │            |         └─────────────────┘
- │  Query     │  AST    ┌─────────────────┐
- │   Planner  ├────────►| Binder          │
- │            |         └─────────────────┘
- │            │  AST    ┌─────────────────┐
- │            ├────────►│ Logical Planner │
- │            |         └─────────────────┘
- │            │  Plan   ┌─────────────────┐
- │            ├────────►│ Rewriter        │
- │            |         └─────────────────┘
- │            │  Plan   ┌─────────────────┐
- │            ├────────►│ Optimizer       │
- └────────────┘         └─────────────────┘
-       │
-       ▼
-    Executor
+                      ┌───────────┐
+                      │   USER    │
+         ┌────────────┤           ◄────────────┐
+         │SQL         └───────────┘            │
+  ───────┼─────────────────────────────────────┼──────
+         │                                     │
+   ┌─────▼─────┐                         ┌─────┴─────┐
+   │ SQL       │                         │           │
+   │  Rewriter │                         │ Executor  │
+   └─────┬─────┘                         └─────▲─────┘
+         │SQL                                  │Plan
+   ┌─────▼─────┐      ┌───────────┐      ┌─────┴─────┐
+   │           │      │           │      │           │
+   │ Parser    │      │ Catalogue ├──────► Optimizer │
+   └─────┬─────┘      └─────┬─────┘      └─────▲─────┘
+         │AST               │                  │Plan
+   ┌─────▼─────┐      ┌─────▼─────┐      ┌─────┴─────┐
+   │ Logical   │ Plan │           │ Plan │ Tree      │
+   │   Planner ├──────► Binder    ├──────►  Rewriter │
+   └───────────┘      └───────────┘      └───────────┘
 """
 from opteryx import config
 from opteryx.exceptions import SqlError, ProgrammingError
-from opteryx.managers.planner import binder
-from opteryx.managers.planner.logical import logical_planner
-from opteryx.managers.planner.optimizer import run_optimizer
-from opteryx.managers.planner.temporal import extract_temporal_filters
-from opteryx.managers.planner.rewriter import run_rewriter
+from opteryx.components.binder.binder import bind_ast
+from opteryx.components.logical_planner.logical_planner import create_logical_plan
+from opteryx.components.sql_rewriter.sql_rewriter import clean_statement
+from opteryx.components.sql_rewriter.sql_rewriter import remove_comments
+from opteryx.components.sql_rewriter.temporal_extraction import extract_temporal_filters
+from opteryx.components.tree_rewriter import tree_rewriter
 from opteryx.models import QueryProperties
 from opteryx.third_party import sqloxide
 
@@ -61,10 +64,15 @@ class QueryPlanner:
 
             # we need to deal with the temporal filters before we use sqloxide
             if statement is not None:
+
+                # prep the statement, by normalizing it
+                clean_sql = remove_comments(statement)
+                clean_sql = clean_statement(clean_sql)
+
                 (
                     self.statement,
                     self.properties.temporal_filters,
-                ) = extract_temporal_filters(statement)
+                ) = extract_temporal_filters(clean_sql)
             else:
                 self.statement = statement
         else:
@@ -96,15 +104,15 @@ class QueryPlanner:
             raise SqlError(exception) from exception
 
     def bind_ast(self, ast, parameters):
-        return binder.bind_ast(ast, parameters, self.properties)
+        return bind_ast(ast, parameters, self.properties)
 
     def create_logical_plan(self, ast):
-        plan = logical_planner.create_plan(ast, self.properties)
-        return run_rewriter(plan, self.properties)
+        return create_logical_plan(ast, self.properties)
 
     def optimize_plan(self, plan):
         if self.properties.enable_optimizer:
-            return run_optimizer(plan, self.properties)
+            plan = tree_rewriter(plan, self.properties)
+        #            return run_optimizer(plan, self.properties)
         return plan
 
     def execute(self, plan):

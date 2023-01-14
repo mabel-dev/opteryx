@@ -10,13 +10,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from opteryx import operators
+from opteryx.components.logical_planner import builders, custom_builders
 from opteryx.connectors import connector_factory, DiskConnector
 from opteryx.exceptions import ProgrammingError, SqlError
 from opteryx.managers.expression import deduplicate_list_of_nodes
 from opteryx.managers.expression import ExpressionTreeNode
 from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.managers.expression import NodeType
-from opteryx.managers.planner.logical import builders, custom_builders
 from opteryx.models import ExecutionTree
 from opteryx.utils import paths
 
@@ -26,7 +26,7 @@ def explain_query(ast, properties):
     # - plan - this is the plan for the query we're exlaining
     # - my_plan - this is the plan for this query
 
-    from opteryx.managers.planner import QueryPlanner
+    from opteryx.components.query_planner import QueryPlanner
 
     query_planner = QueryPlanner(properties=properties)
     plan = query_planner.create_logical_plan(ast["Explain"]["statement"])

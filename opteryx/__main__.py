@@ -15,15 +15,15 @@
 """
 A command line utility for Opteryx
 """
-import typer
-
 import orjson
+import time
+import typer
 
 import opteryx
 
 from opteryx.utils import display
 from opteryx.third_party import sqloxide
-from opteryx.managers.planner.temporal import extract_temporal_filters
+from opteryx.components.sql_rewriter.temporal import extract_temporal_filters
 
 
 def main(
@@ -32,6 +32,7 @@ def main(
     color: bool = typer.Option(
         default=True, help="Colorize the table displayed to the console."
     ),
+    stats: bool = typer.Option(default=False, help="Report statistics."),
     sql: str = typer.Argument(None),
 ):
 
@@ -42,21 +43,17 @@ def main(
         ast = sqloxide.parse_sql(temporal_removed_sql, dialect="mysql")
         print(orjson.dumps(ast))
 
-    conn = opteryx.connect()
-    cur = conn.cursor()
-
-    cur.execute(sql)
+    start = time.monotonic_ns()
+    table = opteryx.query(sql).arrow()
+    duration = time.monotonic_ns() - start
 
     if o == "console":
-        print(
-            display.ascii_table(
-                cur.arrow(), limit=-1, display_width=True, colorize=color
-            )
-        )
+        print(display.ascii_table(table, limit=-1, display_width=True, colorize=color))
+        if stats:
+            print(f"{duration/1e9}")
         return
     else:
         ext = o.lower().split(".")[-1]
-        table = cur.arrow()
 
         if ext == "parquet":
             from pyarrow import parquet
