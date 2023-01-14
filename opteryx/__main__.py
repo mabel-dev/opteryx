@@ -23,7 +23,9 @@ import opteryx
 
 from opteryx.utils import display
 from opteryx.third_party import sqloxide
-from opteryx.components.sql_rewriter.temporal import extract_temporal_filters
+from opteryx.components.sql_rewriter.temporal_extraction import extract_temporal_filters
+from opteryx.components.sql_rewriter.sql_rewriter import clean_statement
+from opteryx.components.sql_rewriter.sql_rewriter import remove_comments
 
 
 def main(
@@ -35,6 +37,9 @@ def main(
     stats: bool = typer.Option(default=False, help="Report statistics."),
     sql: str = typer.Argument(None),
 ):
+
+    # tidy up the statement
+    sql = clean_statement(remove_comments(sql))
 
     print(f"Opteryx version {opteryx.__version__}")
 
