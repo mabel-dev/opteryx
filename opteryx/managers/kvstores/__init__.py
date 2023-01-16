@@ -20,7 +20,7 @@ from .kv_mongodb import MongoDbKVStore
 from .kv_rocksdb import RocksDB_KVStore
 
 
-def KV_store_factory(store):
+def KV_store_factory(store):  # pragma: no-cover
     """
     A factory method for getting KV Store instances
     """
