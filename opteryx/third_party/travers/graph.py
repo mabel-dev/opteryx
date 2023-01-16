@@ -205,8 +205,8 @@ class Graph(object):
         Returns:
             Set of Tuples (Source, Target, Relationship)
         """
-        targets = self._edges.get(source) or {}
-        return {(source, t, r) for t, r in targets}
+        targets = self._edges.get(source) or []
+        return [(source, t, r) for t, r in targets]
 
     def ingoing_edges(self, target) -> Iterable[Tuple]:
         """

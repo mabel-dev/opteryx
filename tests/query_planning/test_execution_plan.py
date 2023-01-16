@@ -15,9 +15,9 @@ def test_linear_execution_tree():
     Test an execution tree where each item has no more than one incoming edge
     """
     tree = ExecutionTree()
-    tree.add_operator("p", print)
-    tree.add_operator("m", max)
-    tree.link_operators("p", "m")
+    tree.add_node("p", print)
+    tree.add_node("m", max)
+    tree.add_edge("p", "m")
 
     assert len(tree.nodes()) == 2
     assert ["m", "p"] == sorted(tree._nodes.keys())
@@ -26,11 +26,11 @@ def test_linear_execution_tree():
     assert tree.get_entry_points() == ["p"]
     assert tree.get_exit_points() == ["m"]
     assert tree.is_acyclic()
-    assert tree.get_outgoing_links("p") == ["m"]
-    assert tree.get_incoming_links("m") == [("p", None)]
+    assert tree.outgoing_edges("p") == [("p", "m", None)], tree.outgoing_edges("p")
+    assert tree.ingoing_edges("m") == [("p", "m", None)], tree.ingoing_edges("m")
 
-    tree.add_operator("n", min)
-    tree.link_operators("m", "n")
+    tree.add_node("n", min)
+    tree.add_edge("m", "n")
 
     assert len(tree.nodes()) == 3
     assert ["m", "n", "p"] == sorted(tree._nodes.keys())
