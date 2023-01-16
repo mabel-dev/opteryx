@@ -57,11 +57,9 @@ def split_conjunctive_predicates(plan, properties):
         # insert them into the plan and remove the old node
         # we're chaining the new operators
         uid = unique_id()  # avoid collisions
-        plan.insert_operator_before(f"{nid}-{uid}-right", right_node, nid)
-        plan.insert_operator_before(
-            f"{nid}-{uid}-left", left_node, f"{nid}-{uid}-right"
-        )
-        plan.remove_operator(nid)
+        plan.insert_node_before(f"{nid}-{uid}-right", right_node, nid)
+        plan.insert_node_before(f"{nid}-{uid}-left", left_node, f"{nid}-{uid}-right")
+        plan.remove_node(nid, heal=True)
 
         # recurse until we get to a non-AND condition
         plan = _inner_split(plan, f"{nid}-{uid}-right", right_node)
@@ -79,7 +77,7 @@ def split_conjunctive_predicates(plan, properties):
     # HAVING and WHERE are selection nodes
     for nid in selection_nodes:
         # get the node from the node_id
-        operator = plan.get_operator(nid)
+        operator = plan[nid]
         plan = _inner_split(plan, nid, operator)
 
     return plan

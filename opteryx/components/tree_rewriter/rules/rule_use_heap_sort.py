@@ -39,17 +39,18 @@ def use_heap_sort(plan: ExecutionTree, properties):
         return plan
 
     for nid in sort_nodes:
-        next_nids = plan.get_outgoing_links(nid)
+        next_nids = plan.outgoing_edges(nid)
         if len(next_nids) != 1:
             continue
-        limit_node = plan.get_operator(next_nids[0])
+        next_nid = next_nids.pop()[1]
+        limit_node = plan[next_nid]
         if isinstance(limit_node, operators.LimitNode):
-            sort_node = plan.get_operator(nid)
+            sort_node = plan[nid]
             heap_sort = operators.HeapSortNode(
                 properties=properties, order=sort_node.order, limit=limit_node.limit
             )
-            plan.insert_operator_before(f"heap-sort-{unique_id()}", heap_sort, nid)
-            plan.remove_operator(nid)
-            plan.remove_operator(next_nids[0])
+            plan.insert_node_before(f"heap-sort-{unique_id()}", heap_sort, nid)
+            plan.remove_node(nid, heal=True)
+            plan.remove_node(next_nid, heal=True)
 
     return plan

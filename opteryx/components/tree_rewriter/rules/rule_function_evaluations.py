@@ -78,7 +78,7 @@ def eliminate_fixed_function_evaluations(plan, properties):
     # HAVING and WHERE are selection nodes
     for nid in selection_nodes:
         # get the node from the node_id
-        operator = plan.get_operator(nid)
+        operator = plan[nid]
         operator.filter = update_expression_tree(operator.filter)
 
     return plan

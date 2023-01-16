@@ -50,12 +50,12 @@ def move_literal_join_filters(plan, properties):
         if _has_literal(node.left):
             # we create a new selection node with the literal filter and add it to the plan
             new_node = operators.SelectionNode(filter=node.left, properties=properties)
-            plan.insert_operator_after(f"select-{nid}-{uid}-left", new_node, nid)
+            plan.insert_node_after(f"select-{nid}-{uid}-left", new_node, nid)
             # we remove the filter from this node
             node = node.right
         elif _has_literal(node.right):
             new_node = operators.SelectionNode(filter=node.right, properties=properties)
-            plan.insert_operator_after(f"select-{nid}-{uid}-right", new_node, nid)
+            plan.insert_node_after(f"select-{nid}-{uid}-right", new_node, nid)
             # we remove the filter from this node
             node = node.left
 
@@ -69,7 +69,7 @@ def move_literal_join_filters(plan, properties):
     # HAVING and WHERE are selection nodes
     for nid in join_nodes:
         # get the node from the node_id
-        operator = plan.get_operator(nid)
+        operator = plan[nid]
         if operator._on is not None:
             operator._on, plan = _move_literal_filters(plan, nid, operator._on)
 

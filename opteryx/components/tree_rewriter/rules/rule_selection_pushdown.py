@@ -56,7 +56,7 @@ def selection_pushdown(plan, properties):
     if len(reader_nodes) != 1:
         # don't try to work out which reader to push to
         return plan
-    reader_node = plan.get_operator(reader_nodes[0])
+    reader_node = plan[reader_nodes[0]]
     if not reader_node.can_push_selection:
         # not all readers support pushdown
         return plan
@@ -64,12 +64,12 @@ def selection_pushdown(plan, properties):
     # WHERE are selection nodes
     for nid in selection_nodes:
         # get the node from the node_id
-        operator = plan.get_operator(nid)
+        operator = plan[nid]
         # only add simple predicates (makes ANDs)
         if operator.filter.token_type == NodeType.COMPARISON_OPERATOR:
             if config.ONLY_PUSH_EQUALS_PREDICATES and operator.filter.value != "Eq":
                 continue
             if reader_node.push_predicate(operator.filter):
-                plan.remove_operator(nid)
+                plan.remove_node(nid, heal=True)
 
     return plan
