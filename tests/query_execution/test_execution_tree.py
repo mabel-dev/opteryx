@@ -12,17 +12,17 @@ from opteryx.models.execution_tree import ExecutionTree
 def test_execution_tree():
 
     et = ExecutionTree()
-    et.add_operator("a", None)
-    et.add_operator("b", None)
-    et.link_operators("a", "b", "forwards")
+    et.add_node("a", None)
+    et.add_node("b", None)
+    et.add_edge("a", "b", "forwards")
 
     assert et.is_acyclic()
     assert et.get_entry_points() == ["a"]
     assert et.get_exit_points() == ["b"]
 
-    et.add_operator("c", None)
-    et.link_operators("b", "c", "forward")
-    et.link_operators("c", "a", "forward")
+    et.add_node("c", None)
+    et.add_edge("b", "c", "forward")
+    et.add_edge("c", "a", "forward")
 
     assert not et.is_acyclic()
     assert et.get_entry_points() == []
