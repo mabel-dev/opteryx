@@ -53,7 +53,7 @@ class Graph(object):
             return obj
         return [obj]
 
-    def save(self, graph_path):
+    def save(self, graph_path):  # pragma: nocover
         """
         Persist a graph to storage. It saves nodes and edges to separate files.
 
@@ -143,7 +143,7 @@ class Graph(object):
                 (source, target, relationship) for target, relationship in records
             )
 
-    def breadth_first_search(self, source: str, depth: int = 100):
+    def breadth_first_search(self, source: str, depth: int = 100):  # pragma: nocover
         """
         Search a tree for nodes we can walk to from a given node.
 
@@ -353,13 +353,13 @@ class Graph(object):
         # add an edge from the new nid to the old one
         self.add_edge(after_nid, nid)
 
-    def copy(self):
+    def copy(self):  # pragma: nocover
         g = Graph()
         g._nodes = self._nodes.copy()
         g._edges = self._edges.copy()
         return g
 
-    def to_networkx(self):
+    def to_networkx(self):  # pragma: nocover
         """
         Convert a travers graph to a NetworkX graph
         """
@@ -377,7 +377,7 @@ class Graph(object):
             g.add_node(node, **attribs)
         return g
 
-    def epitomize(self):
+    def epitomize(self):  # pragma: nocover
         """
         Summarize a Graph by reducing to only the node_types and relationships
         """

@@ -16,10 +16,10 @@ Releases may be yanked from PyPI if they contain material bugs, including securi
 
 ## Reporting a Vulnerability
 
-Thank you for helping to make Opteryx more secure - Security weaknesses should be reported [issues](https://github.com/mabel-dev/opteryx/issues), or if you'd prefer not to make the details pubically visible, message us on [Gitter](https://gitter.im/mabel-opteryx/community) for DM details.
+Thank you for helping to make Opteryx more secure - Security weaknesses should be reported [via GitHub](https://github.com/mabel-dev/opteryx/security/advisories).
 
 Please provide a description of the issue, the steps you took to create the issue, affected versions, and if known, mitigations for the issue.
 
 We will try to triage and respond to you within a week, if you do not get a response, please continue to get in touch - we appreciate your input but are a small development team who may not monitor for communications continuously.
 
-This project follows a 90 day disclosure timeline regardless of response or resolution.
+This project follows a 90 day disclosure timeline (from first contact) regardless of response or resolution.
