@@ -89,6 +89,7 @@ def try_cast(_type):
 
 def _repeat_no_parameters(func):
     # call once and repeat
+    # these should all be eliminated by the optimizer
     def _inner(items):
         return numpy.array([func()] * items)
 

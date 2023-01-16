@@ -54,6 +54,6 @@ def defragment_pages(plan: ExecutionTree, properties):
     for nid in selection_nodes:
         # get the node from the node_id
         defrag = operators.PageDefragmentNode(properties=properties)
-        plan.insert_operator_before(f"defrag-{unique_id()}", defrag, nid)
+        plan.insert_node_before(f"defrag-{unique_id()}", defrag, nid)
 
     return plan

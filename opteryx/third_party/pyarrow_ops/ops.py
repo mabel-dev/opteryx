@@ -283,36 +283,3 @@ def drop_duplicates(table, columns=None):
     values, indices = numpy.unique(arr, return_index=True)
     del values
     return table.take(indices)
-
-
-# Show for easier printing
-def head(table, n=5, max_width=100):
-    # Updated to yield rather than print for Opteryx
-    if table == set():  # pragma: no cover
-        yield "No data in table"
-        return
-    if table.num_rows == 0:
-        yield "No data in table"
-        return
-
-    # Extract head data
-    if n > 0:
-        t = table.slice(length=n)
-    else:
-        t = table
-    head = {k: list(map(str, v)) for k, v in t.to_pydict().items()}
-
-    # Calculate width
-    col_width = list(map(len, head.keys()))
-    data_width = [max(map(len, h)) for h in head.values()]
-
-    # Print data
-    data = [list(head.keys())] + [
-        [head[c][i] for c in head.keys()] for i in range(t.num_rows)
-    ]
-    for i in range(len(data)):
-        adjust = [
-            w.ljust(max(cw, dw) + 2)
-            for w, cw, dw in zip(data[i], col_width, data_width)
-        ]
-        yield "Row  " if i == 0 else str(i - 1).ljust(5) + "".join(adjust)[:max_width]

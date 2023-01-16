@@ -33,7 +33,7 @@ def explain_query(ast, properties):
     plan = query_planner.optimize_plan(plan)
     my_plan = ExecutionTree()
     explain_node = operators.ExplainNode(properties, query_plan=plan)
-    my_plan.add_operator("explain", explain_node)
+    my_plan.add_node("explain", explain_node)
     return my_plan
 
 
@@ -85,7 +85,7 @@ def select_query(ast, properties):
         reader = connector_factory(relation.dataset)
         relation.kind = reader.__mode__
 
-    plan.add_operator(
+    plan.add_node(
         "from",
         operators.reader_factory(relation.kind)(
             properties=properties,
@@ -152,7 +152,7 @@ def select_query(ast, properties):
             if join_node is None:
                 raise SqlError(f"Join type not supported - `{_join[0]}`")
 
-            plan.add_operator(
+            plan.add_node(
                 f"join-{join_id}",
                 join_node(
                     properties=properties,
@@ -161,20 +161,20 @@ def select_query(ast, properties):
                     join_using=join_using,
                 ),
             )
-            plan.link_operators(last_node, f"join-{join_id}")
+            plan.add_edge(last_node, f"join-{join_id}")
 
-            plan.add_operator(f"join-{join_id}-right", right)
-            plan.link_operators(f"join-{join_id}-right", f"join-{join_id}", "right")
+            plan.add_node(f"join-{join_id}-right", right)
+            plan.add_edge(f"join-{join_id}-right", f"join-{join_id}", "right")
 
             last_node = f"join-{join_id}"
 
     _selection = builders.build(ast["Query"]["body"]["Select"]["selection"])
     if _selection:
-        plan.add_operator(
+        plan.add_node(
             "where",
             operators.SelectionNode(properties, filter=_selection),
         )
-        plan.link_operators(last_node, "where")
+        plan.add_edge(last_node, "where")
         last_node = "where"
 
     _projection = builders.build(ast["Query"]["body"]["Select"]["projection"])
@@ -185,20 +185,20 @@ def select_query(ast, properties):
         _aggregates = _projection.copy()
         if isinstance(_aggregates, dict):
             raise SqlError("GROUP BY cannot be used with SELECT *")
-        plan.add_operator(
+        plan.add_node(
             "agg",
             operators.AggregateNode(properties, aggregates=_aggregates, groups=_groups),
         )
-        plan.link_operators(last_node, "agg")
+        plan.add_edge(last_node, "agg")
         last_node = "agg"
 
     _having = builders.build(ast["Query"]["body"]["Select"]["having"])
     if _having:
-        plan.add_operator(
+        plan.add_node(
             "having",
             operators.SelectionNode(properties, filter=_having),
         )
-        plan.link_operators(last_node, "having")
+        plan.add_edge(last_node, "having")
         last_node = "having"
 
     # collect ORDER BY now, so we can keep any columns in the ORDER BY clause too
@@ -222,47 +222,47 @@ def select_query(ast, properties):
     if (_projection[0].token_type != NodeType.WILDCARD) or (
         _projection[0].value is not None
     ):
-        plan.add_operator(
+        plan.add_node(
             "select",
             operators.ProjectionNode(properties, projection=_projection),
         )
-        plan.link_operators(last_node, "select")
+        plan.add_edge(last_node, "select")
         last_node = "select"
 
     _distinct = custom_builders.extract_distinct(ast)
     if _distinct:
-        plan.add_operator("distinct", operators.DistinctNode(properties))
-        plan.link_operators(last_node, "distinct")
+        plan.add_node("distinct", operators.DistinctNode(properties))
+        plan.add_edge(last_node, "distinct")
         last_node = "distinct"
 
     if _order:
-        plan.add_operator("order", operators.SortNode(properties, order=_order))
-        plan.link_operators(last_node, "order")
+        plan.add_node("order", operators.SortNode(properties, order=_order))
+        plan.add_edge(last_node, "order")
         last_node = "order"
 
     # if we need to project after the order by
     if reproject:
-        plan.add_operator(
+        plan.add_node(
             "post_order_select",
             operators.ProjectionNode(properties, projection=reproject),
         )
-        plan.link_operators(last_node, "post_order_select")
+        plan.add_edge(last_node, "post_order_select")
         last_node = "post_order_select"
 
     _offset = custom_builders.extract_offset(ast)
     if _offset:
-        plan.add_operator(
+        plan.add_node(
             "offset",
             operators.OffsetNode(properties, offset=_offset),
         )
-        plan.link_operators(last_node, "offset")
+        plan.add_edge(last_node, "offset")
         last_node = "offset"
 
     _limit = custom_builders.extract_limit(ast)
     # 0 limit is valid
     if _limit is not None:
-        plan.add_operator("limit", operators.LimitNode(properties, limit=_limit))
-        plan.link_operators(last_node, "limit")
+        plan.add_node("limit", operators.LimitNode(properties, limit=_limit))
+        plan.add_edge(last_node, "limit")
         last_node = "limit"
 
     _insert = custom_builders.extract_into(ast)
@@ -292,7 +292,7 @@ def set_variable_query(ast, properties):
     operator = operators.ShowValueNode(
         key="result", value="Complete", properties=properties
     )
-    plan.add_operator("show", operator=operator)
+    plan.add_node("show", operator)
     return plan
 
 
@@ -308,7 +308,7 @@ def show_columns_query(ast, properties):
         reader = connector_factory(dataset)
         mode = reader.__mode__
 
-    plan.add_operator(
+    plan.add_node(
         "reader",
         operators.reader_factory(mode)(
             properties=properties,
@@ -324,14 +324,14 @@ def show_columns_query(ast, properties):
 
     filters = custom_builders.extract_show_filter(ast["ShowColumns"])
     if filters:
-        plan.add_operator(
+        plan.add_node(
             "filter",
             operators.ColumnFilterNode(properties=properties, filter=filters),
         )
-        plan.link_operators(last_node, "filter")
+        plan.add_edge(last_node, "filter")
         last_node = "filter"
 
-    plan.add_operator(
+    plan.add_node(
         "columns",
         operators.ShowColumnsNode(
             properties=properties,
@@ -339,7 +339,7 @@ def show_columns_query(ast, properties):
             extended=ast["ShowColumns"]["extended"],
         ),
     )
-    plan.link_operators(last_node, "columns")
+    plan.add_edge(last_node, "columns")
     last_node = "columns"
 
     return plan
@@ -361,7 +361,7 @@ def show_create_query(ast, properties):
         reader = connector_factory(dataset)
         mode = reader.__mode__
 
-    plan.add_operator(
+    plan.add_node(
         "reader",
         operators.reader_factory(mode)(
             properties=properties,
@@ -375,11 +375,11 @@ def show_create_query(ast, properties):
     )
     last_node = "reader"
 
-    plan.add_operator(
+    plan.add_node(
         "show_create",
         operators.ShowCreateNode(properties=properties, table=dataset),
     )
-    plan.link_operators(last_node, "show_create")
+    plan.add_edge(last_node, "show_create")
     last_node = "show_create"
 
     return plan
@@ -408,13 +408,13 @@ def show_variable_query(ast, properties):
 
         show_node = "show_parameter"
         node = operators.ShowValueNode(properties=properties, key=key, value=value)
-        plan.add_operator(show_node, operator=node)
+        plan.add_node(show_node, node)
     elif keywords[0] == "STORES":
         if len(keywords) != 1:
             raise SqlError(f"`SHOW STORES` end expected, got '{keywords[1]}'")
         show_node = "show_stores"
         node = operators.ShowStoresNode(properties=properties)  # type:ignore
-        plan.add_operator(show_node, operator=node)
+        plan.add_node(show_node, node)
     else:  # pragma: no cover
         raise SqlError(f"SHOW statement type not supported for `{keywords[0]}`.")
 
@@ -424,8 +424,8 @@ def show_variable_query(ast, properties):
         properties=properties,
         order=[([name_column], "ascending")],
     )
-    plan.add_operator("order", operator=order_by_node)
-    plan.link_operators(show_node, "order")
+    plan.add_node("order", order_by_node)
+    plan.add_edge(show_node, "order")
 
     return plan
 
@@ -435,16 +435,16 @@ def show_functions_query(ast, properties):
     plan = ExecutionTree()
 
     show = operators.ShowFunctionsNode(properties=properties)
-    plan.add_operator("show", show)
+    plan.add_node("show", show)
     last_node = "show"
 
     filters = custom_builders.extract_show_filter(ast["ShowFunctions"])
     if filters:
-        plan.add_operator(
+        plan.add_node(
             "filter",
             operators.SelectionNode(properties=properties, filter=filters),
         )
-        plan.link_operators(last_node, "filter")
+        plan.add_edge(last_node, "filter")
 
     return plan
 
@@ -454,16 +454,16 @@ def show_variables_query(ast, properties):
     plan = ExecutionTree()
 
     show = operators.ShowVariablesNode(properties=properties)
-    plan.add_operator("show", show)
+    plan.add_node("show", show)
     last_node = "show"
 
     filters = custom_builders.extract_show_filter(ast["ShowVariables"])
     if filters:
-        plan.add_operator(
+        plan.add_node(
             "filter",
             operators.SelectionNode(properties=properties, filter=filters),
         )
-        plan.link_operators(last_node, "filter")
+        plan.add_edge(last_node, "filter")
 
     return plan
 
@@ -484,7 +484,7 @@ def analyze_query(ast, properties):
         reader = connector_factory(dataset)
         mode = reader.__mode__
 
-    plan.add_operator(
+    plan.add_node(
         "reader",
         operators.reader_factory(mode)(
             properties=properties,
@@ -498,11 +498,11 @@ def analyze_query(ast, properties):
     )
     last_node = "reader"
 
-    plan.add_operator(
+    plan.add_node(
         "buildstats",
         operators.BuildStatisticsNode(properties=properties),
     )
-    plan.link_operators(last_node, "buildstats")
+    plan.add_edge(last_node, "buildstats")
 
     return plan
 
