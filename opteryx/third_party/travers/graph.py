@@ -17,7 +17,7 @@ limitations under the License.
 """
 
 from pathlib import Path
-from typing import Iterable, Optional, Tuple
+from typing import List, Optional, Tuple
 
 import orjson
 
@@ -194,7 +194,7 @@ class Graph(object):
             queue.popleft()
         return new_edges
 
-    def outgoing_edges(self, source) -> Iterable[Tuple]:
+    def outgoing_edges(self, source) -> List[Tuple]:
         """
         Get the list of edges traversable from a given node.
 
@@ -208,7 +208,7 @@ class Graph(object):
         targets = self._edges.get(source) or []
         return [(source, t, r) for t, r in targets]
 
-    def ingoing_edges(self, target) -> Iterable[Tuple]:
+    def ingoing_edges(self, target) -> List[Tuple]:
         """
         Get the list of edges which can traverse to a given node.
 
