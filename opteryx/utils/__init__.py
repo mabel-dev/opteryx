@@ -59,7 +59,13 @@ def random_string(width):
     return "".join([alphabet[random.getrandbits(6)] for i in range(width)])
 
 
+def unique_id():
+    """create a short, random hexadecimal string, uniqueness not guaranteed"""
+    return hex(random.getrandbits(32))[2:]
+
+
 def is_arm():
+    """am I running on an ARM CPU?"""
     import platform
 
     return platform.machine() in ("armv7l", "aarch64")

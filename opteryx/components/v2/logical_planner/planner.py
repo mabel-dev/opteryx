@@ -18,18 +18,13 @@ different from Cobb's relational algebra)
 
 Steps are given random IDs to prevent collisions
 """
-"""1xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"""
-import os
-import sys
-
-sys.path.insert(1, os.path.join(sys.path[0], "../.."))
-"""2xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"""
-
 
 from enum import auto, Enum
 
+from opteryx.components.logical_planner import builders
 from opteryx.managers.expression import ExpressionTreeNode, NodeType
 from opteryx.third_party.travers import Graph
+from opteryx.utils import unique_id
 
 
 class LogicalPlanStepType(int, Enum):
@@ -47,13 +42,13 @@ class LogicalPlanStepType(int, Enum):
 
 
 class LogicalPlan(Graph):
-    pass
+    def get_relations(self):
+        relations = []
+        for nid, node in self._nodes.items():
+            if node["step"] == LogicalPlanStepType.READ:
+                relations.append(nid)
+        return relations
 
-
-"""xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"""
-
-from opteryx.utils import unique_id
-from opteryx.components.logical_planner import builders
 
 """
 CLAUSE PLANNERS
@@ -138,16 +133,3 @@ def get_planners(parsed_statements):
     for parsed_statement in parsed_statements:
         statement_type = next(iter(parsed_statement))
         yield QUERY_BUILDERS[statement_type], parsed_statement
-
-
-if __name__ == "__main__":
-    import json
-    import opteryx.third_party.sqloxide
-
-    SQL = "SET enable_optimizer = 7"
-    SQL = "SHOW VARIABLES ILIKE '%s'"
-
-    parsed_statements = opteryx.third_party.sqloxide.parse_sql(SQL, dialect="mysql")
-    print(json.dumps(parsed_statements, indent=2))
-    for planner, ast in get_planners(parsed_statements):
-        print(planner(ast))
