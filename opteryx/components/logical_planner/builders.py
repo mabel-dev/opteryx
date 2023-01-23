@@ -567,7 +567,7 @@ def trim_string(branch, alias=None, key=None):
 
 def unsupported(branch, alias=None, key=None):
     """raise an error"""
-    raise SqlError(key)
+    raise SqlError(f"Unhandled token in Syntax Tree `{key}`")
 
 
 def build(value, alias: list = None, key=None):
