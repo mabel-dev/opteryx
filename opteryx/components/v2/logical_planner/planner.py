@@ -19,6 +19,18 @@ different from Cobb's relational algebra)
 Steps are given random IDs to prevent collisions
 """
 
+"""1xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"""
+import os
+import sys
+
+sys.path.insert(1, os.path.join(sys.path[0], "../../../.."))
+
+from opteryx.utils import unique_id
+from opteryx.components.logical_planner import builders
+
+"""2xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"""
+
+
 from enum import auto, Enum
 
 from opteryx.components.logical_planner import builders
@@ -40,6 +52,9 @@ class LogicalPlanStepType(int, Enum):
     LIMIT = auto()  # limit and offset
     ORDER = auto()  # order by
 
+    CTE = auto()
+    SUBQUERY = auto()
+
 
 class LogicalPlan(Graph):
     def get_relations(self):
@@ -53,6 +68,16 @@ class LogicalPlan(Graph):
 """
 CLAUSE PLANNERS
 """
+
+
+def extract_ctes(branch, planner):
+    ctes = {}
+    if branch["with"]:
+        for _ast in branch["with"]["cte_tables"]:
+            alias = _ast.pop("alias")["name"]["value"]
+            plan = {"Query": _ast["query"]}
+            ctes[alias] = planner(plan)
+    return ctes
 
 
 def extract_value(clause):
@@ -70,6 +95,67 @@ def extract_variable(clause):
 """
 STATEMENT PLANNERS
 """
+
+
+def plan_query(statement):
+    """
+    01. FROM
+    02. JOIN
+    03. WHERE
+    04. GROUP BY
+    05. HAVING
+    06. SELECT
+    07. DISTINCT
+    08. ORDER BY
+    09. OFFSET
+    10. LIMIT
+    """
+
+    def _inner_query_planner(sub_plan):
+        inner_plan = LogicalPlan()
+
+        # extract data sources
+        for relation in sub_plan["Select"]["from"]:
+            read_step = {"step": LogicalPlanStepType.READ, "relation": relation}
+            step_id = unique_id()
+            inner_plan.add_node(step_id, read_step)
+
+        # joins
+
+        # groups
+
+        # aggregates
+
+        # projection
+
+        # selection
+
+        # if groups or aggregates:
+        #   having
+
+        # order
+
+        # distinct
+
+        # limit/offset
+
+        return inner_plan
+
+    # CTEs need to be extracted so we can deal with them later
+    raw_ctes = extract_ctes(statement["Query"], _inner_query_planner)
+
+    # union?
+    if "SetOperator" in statement["Query"]["body"]:
+        plan = LogicalPlan()
+        root_node = statement["Query"]["body"]["SetOperator"]
+        _left = _inner_query_planner(root_node["left"])
+        _right = _inner_query_planner(root_node["right"])
+        _operator = root_node["op"]
+        # join the plans together
+        raise NotImplementedError("Set Operators (UNION) not implemented")
+
+    root_node = statement["Query"]["body"]
+    return _inner_query_planner(root_node)
 
 
 def plan_set_variable(statement):
@@ -118,7 +204,7 @@ def plan_show_variables(statement):
 QUERY_BUILDERS = {
     #    "Analyze": analyze_query,
     #    "Explain": explain_query,
-    #    "Query": select_query,
+    "Query": plan_query,
     "SetVariable": plan_set_variable,
     #    "ShowColumns": show_columns_query,
     #    "ShowCreate": show_create_query,
@@ -133,3 +219,16 @@ def get_planners(parsed_statements):
     for parsed_statement in parsed_statements:
         statement_type = next(iter(parsed_statement))
         yield QUERY_BUILDERS[statement_type], parsed_statement
+
+
+if __name__ == "__main__":
+    import json
+    import opteryx.third_party.sqloxide
+
+    SQL = "SET enable_optimizer = 7"
+    SQL = "SELECT * FROM $planets"
+
+    parsed_statements = opteryx.third_party.sqloxide.parse_sql(SQL, dialect="mysql")
+    print(json.dumps(parsed_statements, indent=2))
+    for planner, ast in get_planners(parsed_statements):
+        print(planner(ast))
