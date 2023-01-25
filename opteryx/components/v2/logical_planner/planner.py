@@ -114,7 +114,7 @@ def plan_query(statement):
     def _inner_query_planner(sub_plan):
         inner_plan = LogicalPlan()
 
-        # extract data sources
+        # from
         for relation in sub_plan["Select"]["from"]:
             read_step = {"step": LogicalPlanStepType.READ, "relation": relation}
             step_id = unique_id()

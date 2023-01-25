@@ -1,0 +1,13 @@
+# Components in this file are not installed, they are embedded into
+# the Opteryx codebase. This file exists for two reasons:
+#    1) To give credit to the authors of these libraries
+#    2) For dependabot to alert to new versions
+
+datasketch==1.5.8
+datetime_truncate==1.1.1
+distogram==3.0.0
+fastlogging==1.0.0
+fuzzy==1.2.2
+pyarrow_ops==0.0.8
+travers==0.1.6
+sqloxide
