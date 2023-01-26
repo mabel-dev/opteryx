@@ -81,7 +81,8 @@ class Graph(object):
         Add edge to the graph
 
         Note:
-            This does not create nodes if they don't already exist
+            This does not create an edge if either node does not already exist.
+            This does not create an edge if either node is None.
 
         Parameters:
             source: string
@@ -91,10 +92,15 @@ class Graph(object):
             relationship: string
                 The relationship between the source and target nodes
         """
+        if source is None or target is None:
+            print("Trying to create edge with undefined nodes")
+            return False
+
         if source not in self._edges:
             targets = []
         else:
             targets = self._edges[source]
+
         targets.append(
             (
                 target,
@@ -102,6 +108,7 @@ class Graph(object):
             )
         )
         self._edges[source] = list(set(targets))
+        return True
 
     def add_node(self, nid: str, node):
         """

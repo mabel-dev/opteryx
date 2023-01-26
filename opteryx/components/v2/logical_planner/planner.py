@@ -113,16 +113,32 @@ def plan_query(statement):
 
     def _inner_query_planner(sub_plan):
         inner_plan = LogicalPlan()
+        step_id = None
 
         # from
         for relation in sub_plan["Select"]["from"]:
             read_step = {"step": LogicalPlanStepType.READ, "relation": relation}
-            step_id = unique_id()
+            previous_step_id, step_id = step_id, unique_id()
             inner_plan.add_node(step_id, read_step)
+            if previous_step_id is not None:
+                inner_plan.add_edge(previous_step_id, step_id)
 
         # joins
+        for join in sub_plan["Select"]["from"][0]["joins"]:
+            join_step = {"step": LogicalPlanStepType.JOIN, "join": join}
+            previous_step_id, step_id = step_id, unique_id()
+            inner_plan.add_node(step_id, join_step)
+            if previous_step_id is not None:
+                inner_plan.add_edge(previous_step_id, step_id)
 
         # groups
+        groups = builders.build(sub_plan["Select"]["group_by"])
+        if groups is not None:
+            group_step = {"step": LogicalPlanStepType.GROUP, "group": groups}
+            previous_step_id, step_id = step_id, unique_id()
+            inner_plan.add_node(step_id, group_step)
+            if previous_step_id is not None:
+                inner_plan.add_edge(previous_step_id, step_id)
 
         # aggregates
 
