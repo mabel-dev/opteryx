@@ -414,3 +414,32 @@ class Graph(object):
 
     def __getitem__(self, nid):
         return self._nodes.get(nid, None)
+
+
+    # adapted from https://stackoverflow.com/questions/9727673/list-directory-tree-structure-in-python
+    def _tree(self, node, prefix=""):
+
+        space = "    "
+        branch = " │  "
+        tee = " ├─ "
+        last = " └─ "
+
+        contents = [node[0] for node in self.ingoing_edges(node)]
+        # contents each get pointers that are ├── with a final └── :
+        pointers = [tee] * (len(contents) - 1) + [last]
+        for pointer, child_node in zip(pointers, contents):
+            label = str(self[child_node]["node_type"])
+            yield prefix + pointer + label
+            if (
+                len(self.ingoing_edges(node)) > 0
+            ):  # extend the prefix and recurse:
+                extension = branch if pointer == tee else space
+                # i.e. space because last, └── , above so no more |
+                yield from self._tree(child_node, prefix=prefix + extension)
+
+    def draw(self):
+        for entry in self.get_exit_points():
+            label = str(self[entry]["node_type"])
+            print(label)
+            t = self._tree(entry, "")
+            print("\n".join(t))

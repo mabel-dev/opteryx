@@ -61,7 +61,7 @@ def random_string(width):
 
 def unique_id():
     """create a short, random hexadecimal string, uniqueness not guaranteed"""
-    return hex(random.getrandbits(32))[2:]
+    return f"{hex(random.getrandbits(40))[2:]:0>10}"
 
 
 def is_arm():
