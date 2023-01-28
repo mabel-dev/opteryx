@@ -119,29 +119,37 @@ def plan_query(statement):
         # from
         _relations = sub_plan["Select"]["from"]
         for relation in _relations:
-            read_step = {"node_type": LogicalPlanStepType.READ, "relation": relation}
+            from_step = {"node_type": LogicalPlanStepType.READ, "relation": relation}
             previous_step_id, step_id = step_id, unique_id()
-            inner_plan.add_node(step_id, read_step)
-            if previous_step_id is not None:
-                inner_plan.add_edge(previous_step_id, step_id)
+            previous_from_step_id, from_step_id = previous_step_id, step_id
+            inner_plan.add_node(from_step_id, from_step)
 
-        # joins
-        _joins = sub_plan["Select"]["from"][0]["joins"]
-        for join in _joins:
-            join_step = {"node_type": LogicalPlanStepType.JOIN, "join": join}
-            previous_step_id, step_id = step_id, unique_id()
-            inner_plan.add_node(step_id, join_step)
-            if previous_step_id is not None:
-                inner_plan.add_edge(previous_step_id, step_id, "left")
-            # add the other side of the join
-            previous_step_id, step_id = step_id, unique_id()
-            read_step = {"node_type": LogicalPlanStepType.READ, "relation": join["relation"]}
-            inner_plan.add_node(step_id, read_step)
-            inner_plan.add_edge(previous_step_id, step_id, "right")
+            # joins
+            _joins = relation["joins"]
+            for join in _joins:
+                # add the join node
+                join_step = {"node_type": LogicalPlanStepType.JOIN, "join": join}
+                previous_step_id, step_id = step_id, unique_id()
+                join_step_id = step_id
+                inner_plan.add_node(join_step_id, join_step)
+                # add the from table as the left side of the join
+                inner_plan.add_edge(from_step_id, join_step_id, "left")
+                # add the other side of the join
+                right_node = unique_id()
+                joined_read_step = {
+                    "node_type": LogicalPlanStepType.READ,
+                    "relation": join["relation"],
+                }
+                inner_plan.add_node(right_node, joined_read_step)
+                inner_plan.add_edge(right_node, join_step_id, "right")
+
+            if len(_joins) == 0:
+                if previous_from_step_id is not None:
+                    inner_plan.add_edge(previous_from_step_id, step_id)
 
         # there's any orphaned relations, they are implicit cross joins
-        if len(_joins) < len(_relations):
-            pass
+
+        # selection
 
         # groups
         _groups = builders.build(sub_plan["Select"]["group_by"])
@@ -156,12 +164,8 @@ def plan_query(statement):
 
         # projection
 
-        # selection
-
         # if groups or aggregates:
         #   having
-
-        # order
 
         # distinct
         if sub_plan["Select"]["distinct"]:
@@ -171,11 +175,24 @@ def plan_query(statement):
             if previous_step_id is not None:
                 inner_plan.add_edge(previous_step_id, step_id)
 
+        # order
+        _order_by = sub_plan["order_by"]
+        if _order_by:
+            order_step = {"node_type": LogicalPlanStepType.ORDER, "order": _order_by}
+            previous_step_id, step_id = step_id, unique_id()
+            inner_plan.add_node(step_id, order_step)
+            if previous_step_id is not None:
+                inner_plan.add_edge(previous_step_id, step_id)
+
         # limit/offset
         _limit = sub_plan["limit"]
         _offset = sub_plan["offset"]
         if _limit or _offset:
-            limit_step = {"node_type": LogicalPlanStepType.LIMIT, "limit": _limit, "offset": _offset }
+            limit_step = {
+                "node_type": LogicalPlanStepType.LIMIT,
+                "limit": _limit,
+                "offset": _offset,
+            }
             previous_step_id, step_id = step_id, unique_id()
             inner_plan.add_node(step_id, limit_step)
             if previous_step_id is not None:
@@ -197,8 +214,10 @@ def plan_query(statement):
         raise NotImplementedError("Set Operators (UNION) not implemented")
 
     root_node = statement["Query"]["body"]
+    # we do some minor AST rewriting
     root_node["limit"] = statement["Query"].pop("limit", None)
     root_node["offset"] = statement["Query"].pop("offset", None)
+    root_node["order_by"] = statement["Query"].pop("order_by", None)
     return _inner_query_planner(root_node)
 
 
@@ -237,7 +256,6 @@ def plan_show_variables(statement):
                 right=predicate[operator],
             ),
         }
-        print(select_step)
         previous_step_id, step_id = step_id, unique_id()
         plan.add_node(step_id, select_step)
         plan.add_edge(previous_step_id, step_id)
@@ -276,4 +294,5 @@ if __name__ == "__main__":
     parsed_statements = opteryx.third_party.sqloxide.parse_sql(SQL, dialect="mysql")
     print(json.dumps(parsed_statements, indent=2))
     for planner, ast in get_planners(parsed_statements):
+        print("---")
         print(planner(ast).draw())
