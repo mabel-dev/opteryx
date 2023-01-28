@@ -418,10 +418,10 @@ class Graph(object):
     # adapted from https://stackoverflow.com/questions/9727673/list-directory-tree-structure-in-python
     def _tree(self, node, prefix=""):
 
-        space = "    "
-        branch = " │  "
-        tee = " ├─ "
-        last = " └─ "
+        space = "   "
+        branch = "│  "
+        tee = "├─ "
+        last = "└─ "
 
         contents = [node[0] for node in self.ingoing_edges(node)]
         # contents each get pointers that are ├── with a final └── :
@@ -439,5 +439,4 @@ class Graph(object):
             label = str(self[entry]["node_type"])
             print(label)
             t = self._tree(entry, "")
-            t = list(t)
             print("\n".join(t))

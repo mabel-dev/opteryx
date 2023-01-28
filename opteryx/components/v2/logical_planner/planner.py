@@ -35,6 +35,7 @@ from enum import auto, Enum
 
 from opteryx.components.logical_planner import builders
 from opteryx.managers.expression import ExpressionTreeNode, NodeType
+from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.third_party.travers import Graph
 from opteryx.utils import unique_id
 
@@ -44,9 +45,9 @@ class LogicalPlanStepType(int, Enum):
     SELECT = auto()  # tuple filtering
     UNION = auto()  #  appending relations
     DIFFERENCE = auto()  # relation interection
-    RENAME = auto()  # field renaming, including evaluation
     JOIN = auto()  # all joina
     GROUP = auto()  # group by, without the aggregation
+    AGGREGATE = auto()
     READ = auto()  # read a dataset
     SET = auto()  # set a variable
     LIMIT = auto()  # limit and offset
@@ -99,18 +100,7 @@ STATEMENT PLANNERS
 
 
 def plan_query(statement):
-    """
-    01. FROM
-    02. JOIN
-    03. WHERE
-    04. GROUP BY
-    05. HAVING
-    06. SELECT
-    07. DISTINCT
-    08. ORDER BY
-    09. OFFSET
-    10. LIMIT
-    """
+    """ """
 
     def _inner_query_planner(sub_plan):
         inner_plan = LogicalPlan()
@@ -119,6 +109,7 @@ def plan_query(statement):
         # from
         _relations = sub_plan["Select"]["from"]
         for relation in _relations:
+            # TODO: if it's a subquery, expand it out
             from_step = {"node_type": LogicalPlanStepType.READ, "relation": relation}
             previous_step_id, step_id = step_id, unique_id()
             previous_from_step_id, from_step_id = previous_step_id, step_id
@@ -135,6 +126,7 @@ def plan_query(statement):
                 # add the from table as the left side of the join
                 inner_plan.add_edge(from_step_id, join_step_id, "left")
                 # add the other side of the join
+                # TODO: if it's a subquery, expand it out
                 right_node = unique_id()
                 joined_read_step = {
                     "node_type": LogicalPlanStepType.READ,
@@ -147,13 +139,20 @@ def plan_query(statement):
                 if previous_from_step_id is not None:
                     inner_plan.add_edge(previous_from_step_id, step_id)
 
-        # there's any orphaned relations, they are implicit cross joins
+        # TODO: if there's any orphaned relations, they are implicit cross joins
 
         # selection
+        _selection = builders.build(sub_plan["Select"]["selection"])
+        if _selection:
+            selection_step = {"node_type": LogicalPlanStepType.SELECT}
+            previous_step_id, step_id = step_id, unique_id()
+            inner_plan.add_node(step_id, selection_step)
+            if previous_step_id is not None:
+                inner_plan.add_edge(previous_step_id, step_id)
 
         # groups
         _groups = builders.build(sub_plan["Select"]["group_by"])
-        if _groups is not None:
+        if _groups != []:
             group_step = {"node_type": LogicalPlanStepType.GROUP, "group": _groups}
             previous_step_id, step_id = step_id, unique_id()
             inner_plan.add_node(step_id, group_step)
@@ -161,11 +160,42 @@ def plan_query(statement):
                 inner_plan.add_edge(previous_step_id, step_id)
 
         # aggregates
+        _projection = builders.build(sub_plan["Select"]["projection"])
+        _aggregates = get_all_nodes_of_type(
+            _projection, select_nodes=(NodeType.AGGREGATOR, NodeType.COMPLEX_AGGREGATOR)
+        )
+        if len(_aggregates) > 0:
+            aggregate_step = {
+                "node_type": LogicalPlanStepType.AGGREGATE,
+                "aggregates": _aggregates,
+            }
+            previous_step_id, step_id = step_id, unique_id()
+            inner_plan.add_node(step_id, aggregate_step)
+            if previous_step_id is not None:
+                inner_plan.add_edge(previous_step_id, step_id)
 
         # projection
+        _projection = [clause for clause in _projection if clause not in _aggregates]
+        if not (
+            len(_projection) == 1 and _projection[0].token_type == NodeType.WILDCARD
+        ):
+            project_step = {
+                "node_type": LogicalPlanStepType.PROJECT,
+                "projection": _projection,
+            }
+            previous_step_id, step_id = step_id, unique_id()
+            inner_plan.add_node(step_id, project_step)
+            if previous_step_id is not None:
+                inner_plan.add_edge(previous_step_id, step_id)
 
-        # if groups or aggregates:
-        #   having
+        # having
+        _having = builders.build(sub_plan["Select"]["having"])
+        if _having:
+            having_step = {"node_type": LogicalPlanStepType.SELECT}
+            previous_step_id, step_id = step_id, unique_id()
+            inner_plan.add_node(step_id, having_step)
+            if previous_step_id is not None:
+                inner_plan.add_edge(previous_step_id, step_id)
 
         # distinct
         if sub_plan["Select"]["distinct"]:
@@ -289,7 +319,9 @@ if __name__ == "__main__":
 
     SQL = "SET enable_optimizer = 7"
     SQL = "SELECT * FROM $planets"
-    SQL = "SELECT DISTINCT MAX(planetId), name FROM $satellites INNER JOIN $planets ON $planets.id = $satellites.id GROUP BY planetId ORDER BY name LIMIT 1 OFFSET 1"
+    TSQL = "SELECT DISTINCT MAX(planetId), name FROM $satellites INNER JOIN $planets ON $planets.id = $satellites.id WHERE id = 1 GROUP BY planetId HAVING id > 2 ORDER BY name LIMIT 1 OFFSET 1"
+    TSQL = "SELECT * FROM T1, T2"
+    TSQL = "SET @planet = 'Saturn'; SELECT name AS nom FROM (SELECT DISTINCT id as planetId, name FROM $planets WHERE name = @planet) as planets -- LEFT JOIN (SELECT planetId, COUNT(*) FROM $satellites FOR DATES BETWEEN '2022-01-01' AND TODAY WHERE gm > 10) AS bigsats ON bigsats.planetId = planets.planetId -- LEFT JOIN (SELECT planetId, COUNT(*) FROM $satellites FOR DATES IN LAST_MONTH WHERE gm < 10) as smallsats ON smallsats.planetId = planets.planetId ; "
 
     parsed_statements = opteryx.third_party.sqloxide.parse_sql(SQL, dialect="mysql")
     print(json.dumps(parsed_statements, indent=2))
