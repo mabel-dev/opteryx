@@ -75,5 +75,8 @@ ONLY_PUSH_EQUALS_PREDICATES: bool = bool(get("ONLY_PUSH_EQUALS_PREDICATES", Fals
 # size of pages to push between steps
 PAGE_SIZE: int = int(get("PAGE_SIZE", 64 * 1024 * 1024))
 
+# not GA
+PROFILE_LOCATION:str = get("PROFILE_LOCATION", False)
+# not currently supported
 METADATA_SERVER: str = None
 # fmt:on

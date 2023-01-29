@@ -47,6 +47,7 @@ from opteryx.components.tree_rewriter import tree_rewriter
 from opteryx.models import QueryProperties
 from opteryx.third_party import sqloxide
 
+PROFILE_LOCATION = config.PROFILE_LOCATION
 
 class QueryPlanner:
     def __init__(
@@ -104,16 +105,17 @@ class QueryPlanner:
 
             from opteryx.components.v2.logical_planner.planner import get_planners
 
-            try:
-                plans = ""
-                for planner, ast in get_planners(parsed_statements):
-                    plans = self.statement + "\n\n"
-                    plans += planner(ast).draw()
-                with open("plans.txt", mode="w") as f:
-                    f.write(plans)
-            except Exception as err:
-                print("Unable to plan query {self.statement}")
-                print(f"{type(err).__name__} - {err}")
+            if PROFILE_LOCATION:
+                try:
+                    plans = ""
+                    for planner, ast in get_planners(parsed_statements):
+                        plans = self.statement + "\n\n"
+                        plans += planner(ast).draw()
+                    with open("plans.txt", mode="w") as f:
+                        f.write(plans)
+                except Exception as err:
+                    print("Unable to plan query {self.statement}")
+                    print(f"{type(err).__name__} - {err}")
 
             yield from parsed_statements
         except ValueError as exception:  # pragma: no cover
