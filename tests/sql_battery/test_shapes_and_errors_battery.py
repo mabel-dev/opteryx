@@ -416,9 +416,9 @@ STATEMENTS = [
 
         ("SHOW COLUMNS FROM $satellites", 8, 2, None),
         ("SHOW FULL COLUMNS FROM $satellites", 8, 6, None),
-        ("SHOW EXTENDED COLUMNS FROM $satellites", 8, 12, None),
-        ("SHOW EXTENDED COLUMNS FROM $planets", 20, 12, None),
-        ("SHOW EXTENDED COLUMNS FROM $astronauts", 19, 12, None),
+        ("SHOW EXTENDED COLUMNS FROM $satellites", 8, 11, None),
+        ("SHOW EXTENDED COLUMNS FROM $planets", 20, 11, None),
+        ("SHOW EXTENDED COLUMNS FROM $astronauts", 19, 11, None),
         ("SHOW COLUMNS FROM $satellites LIKE '%d'", 2, 2, None),
         ("SHOW COLUMNS FROM testdata.dated FOR '2020-02-03'", 8, 2, None),
 

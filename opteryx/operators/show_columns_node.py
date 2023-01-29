@@ -155,7 +155,6 @@ def _extended_collector(pages):
     Collect summary statistics about each column
     """
     from opteryx.third_party import distogram
-    from opteryx.third_party import hyperloglog
 
     empty_profile = orjson.dumps(
         {
@@ -166,7 +165,6 @@ def _extended_collector(pages):
             "max": None,
             "missing": 0,
             "mean": None,
-            "unique": None,
             "quantiles": None,
             "histogram": None,
             "most_frequent_values": None,
@@ -254,19 +252,6 @@ def _extended_collector(pages):
                 )
 
                 if _type in (
-                    OPTERYX_TYPES.VARCHAR,
-                    OPTERYX_TYPES.NUMERIC,
-                    OPTERYX_TYPES.TIMESTAMP,
-                ):
-                    # hyperloglog estimates cardinality/uniqueness
-                    hll = profile.get("hyperloglog")
-                    if hll is None:
-                        hll = hyperloglog.HyperLogLogPlusPlus(p=16)
-                    for value in column_data:
-                        hll.update(value)
-                    profile["hyperloglog"] = hll
-
-                if _type in (
                     OPTERYX_TYPES.BOOLEAN,
                     OPTERYX_TYPES.VARCHAR,
                     OPTERYX_TYPES.NUMERIC,
@@ -315,18 +300,9 @@ def _extended_collector(pages):
                     distogram.quantile(dgram, value=0.75),  # type:ignore
                 )
 
-                if dgram.bin_count < dgram.max_bin_count:
-                    profile["unique"] = dgram.bin_count
-
-            # if we can get the exact count from the distrogram, don't approximate
-            hll = profile.pop("hyperloglog", None)
-            if hll and profile.get("unique") is None:
-                profile["unique"] = hll.count()
-
             counter = profile.pop("counter", None)
             if counter:
                 if len(counter) < MAX_COLLECTOR:
-                    profile["unique"] = len(counter)
                     counts = list(counter.values())
                     if min(counts) != max(counts):
                         profile["most_frequent_values"] = [
@@ -336,7 +312,6 @@ def _extended_collector(pages):
 
         # remove collectors
         profile.pop("distogram", None)
-        profile.pop("hyperloglog", None)
         profile.pop("counter", None)
 
         buffer.append(profile)
