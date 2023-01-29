@@ -435,8 +435,10 @@ class Graph(object):
                 yield from self._tree(child_node, prefix=prefix + extension)
 
     def draw(self):
+        tree = ""
         for entry in self.get_exit_points():
             label = str(self[entry]["node_type"])
-            print(label)
+            tree += label
             t = self._tree(entry, "")
-            print("\n".join(t))
+            tree += "\n".join(t)
+        return tree

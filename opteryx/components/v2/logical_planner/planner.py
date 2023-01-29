@@ -245,9 +245,9 @@ def plan_query(statement):
 
     root_node = statement["Query"]["body"]
     # we do some minor AST rewriting
-    root_node["limit"] = statement["Query"].pop("limit", None)
-    root_node["offset"] = statement["Query"].pop("offset", None)
-    root_node["order_by"] = statement["Query"].pop("order_by", None)
+    root_node["limit"] = statement["Query"].get("limit", None)
+    root_node["offset"] = statement["Query"].get("offset", None)
+    root_node["order_by"] = statement["Query"].get("order_by", None)
     return _inner_query_planner(root_node)
 
 
