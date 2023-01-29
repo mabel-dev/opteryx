@@ -81,7 +81,8 @@ class Graph(object):
         Add edge to the graph
 
         Note:
-            This does not create nodes if they don't already exist
+            This does not create an edge if either node does not already exist.
+            This does not create an edge if either node is None.
 
         Parameters:
             source: string
@@ -91,10 +92,15 @@ class Graph(object):
             relationship: string
                 The relationship between the source and target nodes
         """
+        if source is None or target is None:
+            print("Trying to create edge with undefined nodes")
+            return False
+
         if source not in self._edges:
             targets = []
         else:
             targets = self._edges[source]
+
         targets.append(
             (
                 target,
@@ -102,6 +108,7 @@ class Graph(object):
             )
         )
         self._edges[source] = list(set(targets))
+        return True
 
     def add_node(self, nid: str, node):
         """
@@ -407,3 +414,31 @@ class Graph(object):
 
     def __getitem__(self, nid):
         return self._nodes.get(nid, None)
+
+    # adapted from https://stackoverflow.com/questions/9727673/list-directory-tree-structure-in-python
+    def _tree(self, node, prefix=""):
+
+        space = "   "
+        branch = "│  "
+        tee = "├─ "
+        last = "└─ "
+
+        contents = [node[0] for node in self.ingoing_edges(node)]
+        # contents each get pointers that are ├── with a final └── :
+        pointers = [tee] * (len(contents) - 1) + [last]
+        for pointer, child_node in zip(pointers, contents):
+            label = str(self[child_node]["node_type"])
+            yield prefix + pointer + label
+            if len(self.ingoing_edges(node)) > 0:  # extend the prefix and recurse:
+                extension = branch if pointer == tee else space
+                # i.e. space because last, └── , above so no more |
+                yield from self._tree(child_node, prefix=prefix + extension)
+
+    def draw(self):
+        tree = ""
+        for entry in self.get_exit_points():
+            label = str(self[entry]["node_type"])
+            tree += label + "\n"
+            t = self._tree(entry, "")
+            tree += "\n".join(t)
+        return tree

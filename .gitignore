@@ -164,3 +164,4 @@ test.json
 .iac-data/**
 space_missions.parquet
 astronauts.parquet
+execution_plan.txt

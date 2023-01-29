@@ -122,7 +122,7 @@ result.head()
 ~~~
 ~~~
    | 4.0*7.0  
-============= 
+===#========= 
  0 |    28.0 
 ~~~
 _this example is complete and should run as-is_
@@ -159,8 +159,8 @@ result = opteryx.query("SELECT * FROM 'space_missions.parquet' LIMIT 5;")
 result.head()
 ~~~
 ~~~
-     | Company   | Location                       | Price | Lauched_at          | Rocket         | Rocket_Status | Mission        | Mission_Status 
-=================================================================================================================================================== 
+     | Company   | Location                       | Price | Launched_at         | Rocket         | Rocket_Status | Mission        | Mission_Status 
+=====#===========#================================#=======#=====================#================#===============#================#================ 
    0 | RVSN USSR | Site 1/5, Baikonur Cosmodrome, |  None | 1957-10-04 19:28:00 | Sputnik 8K71PS | Retired       | Sputnik-1      | Success        
    1 | RVSN USSR | Site 1/5, Baikonur Cosmodrome, |  None | 1957-11-03 02:30:00 | Sputnik 8K71PS | Retired       | Sputnik-2      | Success        
    2 | US Navy   | LC-18A, Cape Canaveral AFS, Fl |  None | 1957-12-06 16:44:00 | Vanguard       | Retired       | Vanguard TV3   | Failure        
@@ -184,13 +184,13 @@ result = opteryx.query("SELECT * FROM opteryx.space_missions LIMIT 5;")
 result.head()
 ~~~
 ~~~
-     | Company   | Location                       | Price | Lauched_at          | Rocket         | Rocket_Status | Mission        | Mission_Status 
-=================================================================================================================================================== 
+     | Company   | Location                       | Price | Launched_at         | Rocket         | Rocket_Status | Mission        | Mission_Status 
+=====#===========#================================#=======#=====================#================#===============#================#================ 
    0 | RVSN USSR | Site 1/5, Baikonur Cosmodrome, |  None | 1957-10-04 19:28:00 | Sputnik 8K71PS | Retired       | Sputnik-1      | Success        
    1 | RVSN USSR | Site 1/5, Baikonur Cosmodrome, |  None | 1957-11-03 02:30:00 | Sputnik 8K71PS | Retired       | Sputnik-2      | Success        
    2 | US Navy   | LC-18A, Cape Canaveral AFS, Fl |  None | 1957-12-06 16:44:00 | Vanguard       | Retired       | Vanguard TV3   | Failure        
    3 | AMBA      | LC-26A, Cape Canaveral AFS, Fl |  None | 1958-02-01 03:48:00 | Juno I         | Retired       | Explorer 1     | Success        
-   4 | US Navy   | LC-18A, Cape Canaveral AFS, Fl |  None | 1958-02-05 07:33:00 | Vanguard       | Retired       | Vanguard TV3BU | Failure        
+   4 | US Navy   | LC-18A, Cape Canaveral AFS, Fl |  None | 1958-02-05 07:33:00 | Vanguard       | Retired       | Vanguard TV3BU | Failure         
 ~~~
 _this example is complete and should run as-is_
 

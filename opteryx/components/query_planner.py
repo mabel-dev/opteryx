@@ -47,6 +47,8 @@ from opteryx.components.tree_rewriter import tree_rewriter
 from opteryx.models import QueryProperties
 from opteryx.third_party import sqloxide
 
+PROFILE_LOCATION = config.PROFILE_LOCATION
+
 
 class QueryPlanner:
     def __init__(
@@ -96,10 +98,27 @@ class QueryPlanner:
         can actually execute it.
         """
         try:
-            yield from sqloxide.parse_sql(self.statement, dialect="mysql")
             # MySQL Dialect allows identifiers to be delimited with ` (backticks) and
             # identifiers to start with _ (underscore) and $ (dollar sign)
             # https://github.com/sqlparser-rs/sqlparser-rs/blob/main/src/dialect/mysql.rs
+
+            parsed_statements = sqloxide.parse_sql(self.statement, dialect="mysql")
+
+            from opteryx.components.v2.logical_planner.planner import get_planners
+
+            if PROFILE_LOCATION:
+                try:
+                    plans = ""
+                    for planner, ast in get_planners(parsed_statements):
+                        plans = self.statement + "\n\n"
+                        plans += planner(ast).draw()
+                    with open(PROFILE_LOCATION, mode="w") as f:
+                        f.write(plans)
+                except Exception as err:
+                    print("Unable to plan query {self.statement}")
+                    print(f"{type(err).__name__} - {err}")
+
+            yield from parsed_statements
         except ValueError as exception:  # pragma: no cover
             raise SqlError(exception) from exception
 

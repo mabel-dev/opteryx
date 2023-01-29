@@ -1,8 +1,0 @@
-datasketch==1.5.8
-datetime_truncate==1.1.1
-distogram==3.0.0
-fastlogging==1.0.0
-fuzzy==1.2.2
-pyarrow_ops==0.0.8
-travers==0.1.6
-sqloxide
