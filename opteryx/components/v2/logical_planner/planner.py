@@ -76,7 +76,7 @@ def extract_ctes(branch, planner):
     ctes = {}
     if branch["with"]:
         for _ast in branch["with"]["cte_tables"]:
-            alias = _ast.pop("alias")["name"]["value"]
+            alias = _ast.get("alias")["name"]["value"]
             plan = {"Query": _ast["query"]}
             ctes[alias] = planner(plan)
     return ctes

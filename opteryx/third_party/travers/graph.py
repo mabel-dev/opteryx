@@ -438,7 +438,7 @@ class Graph(object):
         tree = ""
         for entry in self.get_exit_points():
             label = str(self[entry]["node_type"])
-            tree += label
+            tree += label + "\n"
             t = self._tree(entry, "")
             tree += "\n".join(t)
         return tree

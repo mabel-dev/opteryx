@@ -112,7 +112,7 @@ class QueryPlanner:
                     for planner, ast in get_planners(parsed_statements):
                         plans = self.statement + "\n\n"
                         plans += planner(ast).draw()
-                    with open("plans.txt", mode="w") as f:
+                    with open(PROFILE_LOCATION, mode="w") as f:
                         f.write(plans)
                 except Exception as err:
                     print("Unable to plan query {self.statement}")
