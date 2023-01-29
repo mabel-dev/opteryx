@@ -234,7 +234,11 @@ class Cursor:
         self._connection.close()
 
     def head(
-        self, size: int = 10, colorize: bool = True, max_column_width: int = 30
+        self,
+        size: int = 10,
+        colorize: bool = True,
+        max_column_width: int = 30,
+        table_width=True,
     ):  # pragma: no cover
 
         from opteryx.utils.display import html_table, ascii_table
@@ -258,6 +262,7 @@ class Cursor:
                     size,
                     colorize=colorize,
                     max_column_width=max_column_width,
+                    display_width=table_width,
                 )
                 + f"\n [ {self.rowcount} rows x {self.shape[1]} columns ]"
             )
