@@ -49,6 +49,7 @@ from opteryx.third_party import sqloxide
 
 PROFILE_LOCATION = config.PROFILE_LOCATION
 
+
 class QueryPlanner:
     def __init__(
         self, *, statement: str = "", cache=None, ast=None, properties=None, qid=None
