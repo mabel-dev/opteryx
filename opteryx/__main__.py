@@ -42,6 +42,10 @@ def main(
     """
     Opteryx CLI
     """
+    if hasattr(max_col_width, "default"):
+        max_col_width = max_col_width.default
+    if hasattr(table_width, "default"):
+        table_width = table_width.default
 
     # tidy up the statement
     sql = clean_statement(remove_comments(sql))
