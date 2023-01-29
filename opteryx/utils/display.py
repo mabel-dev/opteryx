@@ -229,7 +229,7 @@ def ascii_table(
             "│"
             + (" " * index_width)
             + "│ "
-            + " │ ".join(v.ljust(w) for v, w in zip(head.keys(), col_width))
+            + " │ ".join(v.ljust(w)[:w] for v, w in zip(head.keys(), col_width))
             + " │"
         )
         yield (
