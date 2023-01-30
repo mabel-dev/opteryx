@@ -9,5 +9,5 @@ distogram==3.0.0
 fastlogging==1.0.0
 fuzzy==1.2.2
 pyarrow_ops==0.0.8
-travers==0.1.6
+travers==0.1.7
 sqloxide
