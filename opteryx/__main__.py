@@ -15,8 +15,9 @@
 """
 A command line utility for Opteryx
 """
-import orjson
 import time
+
+import orjson
 import typer
 
 import opteryx
@@ -27,21 +28,29 @@ from opteryx.components.sql_rewriter.temporal_extraction import extract_temporal
 from opteryx.components.sql_rewriter.sql_rewriter import clean_statement
 from opteryx.components.sql_rewriter.sql_rewriter import remove_comments
 
-
+# fmt:off
 def main(
     ast: bool = typer.Option(False, help="Display the AST for the query"),
-    o: str = typer.Option(default="console", help="Output location"),
-    color: bool = typer.Option(
-        default=True, help="Colorize the table displayed to the console."
-    ),
+    o: str = typer.Option(default="console", help="Output location", ),
+    color: bool = typer.Option(default=True, help="Colorize the table displayed to the console."),
+    table_width: bool = typer.Option(default=True, help="Limit console display to the screen width."),
+    max_col_width: int = typer.Option(default=30, help="Maximum column width"),
     stats: bool = typer.Option(default=False, help="Report statistics."),
-    sql: str = typer.Argument(None),
+    sql: str = typer.Argument(None, show_default=False, help="SQL statement to execute."),
 ):
+# fmt:on
+    """
+    Opteryx CLI
+    """
+    if hasattr(max_col_width, "default"):
+        max_col_width = max_col_width.default
+    if hasattr(table_width, "default"):
+        table_width = table_width.default
 
     # tidy up the statement
     sql = clean_statement(remove_comments(sql))
 
-    print(f"Opteryx version {opteryx.__version__}")
+    print()
 
     if ast:
         temporal_removed_sql, filters = extract_temporal_filters(sql)
@@ -53,7 +62,7 @@ def main(
     duration = time.monotonic_ns() - start
 
     if o == "console":
-        print(display.ascii_table(table, limit=-1, display_width=True, colorize=color))
+        print(display.ascii_table(table, limit=-1, display_width=table_width, colorize=color, max_column_width=max_col_width))
         if stats:
             print(f"{duration/1e9}")
         return
@@ -76,7 +85,7 @@ def main(
                     file.write(orjson.dumps(row) + b"\n")
             return
 
-    print(f"Unkown output format '{ext}'")  # pragma: no cover
+    print(f"Unknown output format '{ext}'")  # pragma: no cover
 
 
 if __name__ == "__main__":  # pragma: no cover

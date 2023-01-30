@@ -182,7 +182,7 @@ def ascii_table(
 
         return 2 if unicodedata.east_asian_width(symbol) in ("F", "N", "W") else 1
 
-    def trunc_printable(value, width):
+    def trunc_printable(value, width, full_line: bool = True):
 
         offset = 0
         emit = ""
@@ -202,7 +202,10 @@ def ascii_table(
                 ignoring = False
             if not ignoring and offset >= width:
                 return emit + "\001OFFm"
-        return emit + "\001OFFm" + " " * (width - offset)
+        line = emit + "\001OFFm"
+        if full_line:
+            return line + " " * (width - offset)
+        return line
 
     def _inner():
 
@@ -259,6 +262,6 @@ def ascii_table(
     from opteryx.utils import colors
 
     return "\n".join(
-        colors.colorize(trunc_printable(line, display_width), colorize)
+        colors.colorize(trunc_printable(line, display_width, False), colorize)
         for line in _inner()
     )
