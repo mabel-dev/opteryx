@@ -141,8 +141,10 @@ def ascii_table(
 
     def type_formatter(value, width):
 
-        if value is None or isinstance(value, bool):
-            return "\001CONSTm" + str(value).center(width)[:width] + "\001OFFm"
+        if value is None:
+            return "\001NULLm" + str(value).rjust(width)[:width] + "\001OFFm"
+        if isinstance(value, bool):
+            return "\001CONSTm" + str(value).rjust(width)[:width] + "\001OFFm"
         if isinstance(value, int):
             return "\001NUMERICm" + str(value).rjust(width)[:width] + "\001OFFm"
         if isinstance(value, float):
