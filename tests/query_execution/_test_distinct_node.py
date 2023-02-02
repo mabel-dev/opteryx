@@ -17,7 +17,6 @@ import pyarrow
 
 
 def test_dictinct_node_unique():
-
     dn = DistinctNode(QueryStatistics())
 
     # ensure we don't filter out when everything is unique
@@ -29,7 +28,6 @@ def test_dictinct_node_unique():
 
 
 def test_dictinct_node_nonunique():
-
     dn = DistinctNode(QueryStatistics())
 
     satellite_list = satellites()
@@ -42,7 +40,6 @@ def test_dictinct_node_nonunique():
 
 
 def test_dictinct_node_multicolumn():
-
     dn = DistinctNode(QueryStatistics())
 
     satellite_list = satellites()
@@ -55,7 +52,6 @@ def test_dictinct_node_multicolumn():
 
 
 if __name__ == "__main__":  # pragma: no cover
-
     test_dictinct_node_multicolumn()
     test_dictinct_node_nonunique()
     test_dictinct_node_unique()

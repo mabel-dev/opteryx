@@ -112,7 +112,6 @@ def select_query(ast, properties):
             if join_type == "CrossJoin" and right.kind == "Function":
                 join_type = "CrossJoinUnnest"
             else:
-
                 dataset = right.dataset
                 if isinstance(dataset, ExecutionTree):
                     mode = "Blob"  # subqueries are here due to legacy reasons
@@ -297,7 +296,6 @@ def set_variable_query(ast, properties):
 
 
 def show_columns_query(ast, properties):
-
     plan = ExecutionTree()
     dataset = ".".join([part["value"] for part in ast["ShowColumns"]["table_name"]])
 
@@ -346,7 +344,6 @@ def show_columns_query(ast, properties):
 
 
 def show_create_query(ast, properties):
-
     plan = ExecutionTree()
 
     if ast["ShowCreate"]["obj_type"] != "Table":

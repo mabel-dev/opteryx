@@ -93,7 +93,6 @@ class FunctionDatasetNode(BasePlanNode):
         return False
 
     def execute(self) -> Iterable:
-
         try:
             start_time = time.time_ns()
             data = FUNCTIONS[self._function](self._alias, *self._args)  # type:ignore

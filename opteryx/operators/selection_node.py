@@ -45,7 +45,6 @@ class SelectionNode(BasePlanNode):
         return "Selection"
 
     def execute(self) -> Iterable:
-
         if len(self._producers) != 1:
             raise SqlError(f"{self.name} on expects a single producer")
 
@@ -62,7 +61,6 @@ class SelectionNode(BasePlanNode):
             return
 
         for page in data_pages.execute():
-
             if schema is None:
                 schema = page.schema
 

@@ -16,5 +16,4 @@ try:
     print(f"updated to build {BUILD_NUMBER}")
 
 except Exception as e:
-
     print(f"failed to update build - {e}")

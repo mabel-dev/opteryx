@@ -10,7 +10,6 @@ import pytest
 
 
 def test_connection_invalid_state():
-
     import opteryx
     from opteryx.exceptions import CursorInvalidStateError
 
@@ -31,7 +30,6 @@ def test_connection_invalid_state():
 
 
 def test_connection_warnings():
-
     import opteryx
 
     conn = opteryx.connect()
@@ -75,7 +73,6 @@ def test_fetching():
 
 
 if __name__ == "__main__":  # pragma: no cover
-
     test_connection_invalid_state()
     test_connection_warnings()
     test_connection_parameter_mismatch()

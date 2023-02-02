@@ -113,7 +113,6 @@ def orc_decoder(stream, projection: List = None, selection=None):
 
 
 def jsonl_decoder(stream, projection: List = None, selection=None):
-
     import pyarrow.json
 
     table = pyarrow.json.read_json(stream)
@@ -131,7 +130,6 @@ def jsonl_decoder(stream, projection: List = None, selection=None):
 
 
 def csv_decoder(stream, projection: List = None, selection=None, delimiter=","):
-
     import pyarrow.csv
     from pyarrow.csv import ParseOptions
 
@@ -157,7 +155,6 @@ def tsv_decoder(stream, projection: List = None, selection=None):
 
 
 def arrow_decoder(stream, projection: List = None, selection=None):
-
     import pyarrow.feather as pf
 
     table = pf.read_table(stream)

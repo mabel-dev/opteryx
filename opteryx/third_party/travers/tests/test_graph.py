@@ -9,13 +9,11 @@ from opteryx.third_party.travers.tests.graph_data import (
 
 
 def test_graph():
-
     graph = build_graph()
     graph_is_as_expected(graph)
 
 
 def test_outgoing_edges():
-
     graph = build_graph()
 
     outgoing = graph.outgoing_edges("Sharlene")
@@ -32,7 +30,6 @@ def test_outgoing_edges():
 
 
 def test_epitomize():
-
     graph = build_graph()
 
     summ = graph.epitomize()
@@ -44,7 +41,6 @@ def test_epitomize():
 
 
 def test_bfs():
-
     graph = build_graph()
 
     # this should exclude the node with no edges
@@ -66,7 +62,6 @@ def test_bfs():
 
 
 if __name__ == "__main__":
-
     test_graph()
     test_outgoing_edges()
     test_epitomize()

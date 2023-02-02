@@ -10,7 +10,6 @@ from opteryx.third_party.travers import Graph
 
 
 def test_dag_checks():
-
     et = Graph()
     et.add_node("a", None)
     et.add_node("b", None)
@@ -30,5 +29,4 @@ def test_dag_checks():
 
 
 if __name__ == "__main__":  # pragma: no cover
-
     test_dag_checks()

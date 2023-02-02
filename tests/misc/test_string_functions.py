@@ -12,7 +12,6 @@ from opteryx.functions import string_functions
 
 
 def test_slice_left():
-
     slicer = string_functions.string_slicer_left
 
     # fmt:off
@@ -27,7 +26,6 @@ def test_slice_left():
 
 
 def test_slice_right():
-
     slicer = string_functions.string_slicer_right
 
     # fmt:off
@@ -42,7 +40,6 @@ def test_slice_right():
 
 
 if __name__ == "__main__":  # pragma: no cover
-
     test_slice_left()
     test_slice_right()
     print("✅ okay")

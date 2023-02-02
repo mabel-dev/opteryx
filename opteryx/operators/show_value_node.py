@@ -37,7 +37,6 @@ class ShowValueNode(BasePlanNode):
         return ""
 
     def execute(self) -> Iterable:
-
         buffer = [{"name": self._key, "value": str(self._value)}]
 
         table = pyarrow.Table.from_pylist(buffer)

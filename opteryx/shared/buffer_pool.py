@@ -61,7 +61,6 @@ class _BufferPool:
 
 
 class BufferPool(_BufferPool):
-
     _kv = None
 
     def __new__(cls):

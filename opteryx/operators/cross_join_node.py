@@ -69,14 +69,12 @@ def _cross_join(left, right):
     left_columns = None
 
     for left_page in left.execute():
-
         if left_columns is None:
             left_columns = Columns(left_page)
             new_columns = left_columns + right_columns
 
         # we break this into small chunks, each cycle will have 500 * rows in the right table
         for left_block in left_page.to_batches(max_chunksize=INTERNAL_BATCH_SIZE):
-
             # blocks don't have column_names, so we need to wrap in a table
             left_block = pyarrow.Table.from_batches(
                 [left_block], schema=left_page.schema
@@ -94,7 +92,6 @@ def _cross_join(left, right):
             for left_chunk, right_chunk in _chunker(
                 left_align, right_align, MAX_JOIN_SIZE
             ):
-
                 # now build the resultant table
                 table = align_tables(
                     left_block, right, left_chunk.flatten(), right_chunk.flatten()
@@ -127,7 +124,6 @@ def _cross_join_unnest(left, column, alias):
         alias = f"UNNEST({column.value})"
 
     for left_page in left.execute():
-
         if metadata is None:
             metadata = Columns(left_page)
             metadata.add_column(alias)
@@ -135,7 +131,6 @@ def _cross_join_unnest(left, column, alias):
 
         # we break this into small chunks otherwise we very quickly run into memory issues
         for left_block in left_page.to_batches(max_chunksize=INTERNAL_BATCH_SIZE):
-
             # Get the column we're going to UNNEST
             column_data = left_block[unnest_column]
             if column_type is None:
@@ -203,7 +198,6 @@ class CrossJoinNode(BasePlanNode):
         return ""
 
     def execute(self) -> Iterable:
-
         if len(self._producers) != 2:
             raise SqlError(f"{self.name} expects two producers")
 
@@ -211,7 +205,6 @@ class CrossJoinNode(BasePlanNode):
         right_node = self._producers[1]  # type:ignore
 
         if self._join_type == "CrossJoin":
-
             self._right_table = pyarrow.concat_tables(
                 right_node.execute(), promote=True
             )  # type:ignore
@@ -219,7 +212,6 @@ class CrossJoinNode(BasePlanNode):
             yield from _cross_join(left_node, self._right_table)
 
         elif self._join_type == "CrossJoinUnnest":
-
             function = right_node.dataset["function"]
             args = right_node.dataset["args"]
 

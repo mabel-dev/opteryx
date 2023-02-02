@@ -113,7 +113,6 @@ class FileReaderNode(BasePlanNode):
         return "File Reader"
 
     def execute(self) -> Iterable:
-
         ext = ".".join(self._dataset.split("/")[-1].split(".")[1:])
         parser, kind = KNOWN_EXTENSIONS[ext]
 

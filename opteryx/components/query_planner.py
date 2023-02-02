@@ -54,7 +54,6 @@ class QueryPlanner:
     def __init__(
         self, *, statement: str = "", cache=None, ast=None, properties=None, qid=None
     ):
-
         # if it's a byte string, convert to an ascii string
         if isinstance(statement, bytes):
             statement = statement.decode()
@@ -66,7 +65,6 @@ class QueryPlanner:
 
             # we need to deal with the temporal filters before we use sqloxide
             if statement is not None:
-
                 # prep the statement, by normalizing it
                 clean_sql = remove_comments(statement)
                 clean_sql = clean_statement(clean_sql)

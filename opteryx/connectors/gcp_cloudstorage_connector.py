@@ -40,7 +40,6 @@ class GcpCloudStorageConnector(BaseBlobStorageAdapter):
         self.credentials = credentials
 
     def read_blob(self, blob_name):
-
         bucket, object_path, name, extension = paths.get_parts(blob_name)
         bucket = bucket.replace("va_data", "va-data")
         bucket = bucket.replace("data_", "data-")
@@ -78,7 +77,6 @@ class GcpCloudStorageConnector(BaseBlobStorageAdapter):
 
 
 def get_blob(project: str, bucket: str, blob_name: str):
-
     # this means we're not actually going to GCP
     if os.environ.get("STORAGE_EMULATOR_HOST") is not None:
         client = storage.Client(

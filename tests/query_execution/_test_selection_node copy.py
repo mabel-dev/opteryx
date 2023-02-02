@@ -15,7 +15,6 @@ from opteryx.sample_data import PlanetData
 
 
 def test_selection_node():
-
     planet_data = PlanetData.get()
     print(planet_data)
 
@@ -53,5 +52,4 @@ def test_selection_node():
 
 
 if __name__ == "__main__":
-
     test_selection_node()

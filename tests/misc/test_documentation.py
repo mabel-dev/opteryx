@@ -10,7 +10,6 @@ from tests.tools import download_file
 
 
 def test_documentation_connect_example():
-
     import opteryx
 
     conn = opteryx.connect()
@@ -78,7 +77,6 @@ def test_get_started():
 
 
 if __name__ == "__main__":  # pragma: no cover
-
     test_documentation_connect_example()
     test_readme_1()
     test_readme_2()

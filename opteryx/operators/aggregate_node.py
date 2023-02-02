@@ -124,11 +124,9 @@ def _build_aggs(aggregators, columns):
         aggregators = [aggregators]
 
     for root in aggregators:
-
         for aggregator in get_all_nodes_of_type(
             root, select_nodes=(NodeType.AGGREGATOR, NodeType.COMPLEX_AGGREGATOR)
         ):
-
             if aggregator.token_type in (
                 NodeType.AGGREGATOR,
                 NodeType.COMPLEX_AGGREGATOR,
@@ -183,9 +181,7 @@ def _non_group_aggregates(aggregates, table, columns):
     result = {}
 
     for aggregate in aggregates:
-
         if aggregate.token_type in (NodeType.AGGREGATOR, NodeType.COMPLEX_AGGREGATOR):
-
             column_node = aggregate.parameters[0]
             if column_node.token_type == NodeType.LITERAL_NUMERIC:
                 raw_column_values = numpy.full(
@@ -220,7 +216,6 @@ def _non_group_aggregates(aggregates, table, columns):
 
 
 def _extract_functions(aggregates):
-
     # extract any inner evaluations, like the IIF in SUM(IIF(x, 1, 0))
 
     all_evaluatable_nodes = get_all_nodes_of_type(
@@ -279,7 +274,6 @@ class AggregateNode(BasePlanNode):
         return "Aggregation"
 
     def execute(self) -> Iterable:
-
         if len(self._producers) != 1:
             raise SqlError(f"{self.name} on expects a single producer")
 

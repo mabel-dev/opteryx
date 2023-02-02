@@ -27,6 +27,7 @@ Bin = Tuple[float, int]
 
 _caster = numpy.float64
 
+
 # bins is a tuple of (cut point, count)
 class Distogram:  # pragma: no cover
     """Compressed representation of a distribution."""

@@ -41,7 +41,6 @@ def move_literal_join_filters(plan, properties):
         )
 
     def _move_literal_filters(plan, nid, node):
-
         # we need to be at an AND
         if node.token_type != NodeType.AND:
             return node, plan

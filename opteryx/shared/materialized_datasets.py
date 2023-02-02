@@ -20,7 +20,6 @@ It's just a dictionary.
 
 
 class MaterializedDatasets(dict):
-
     _md: dict = None
 
     def __new__(cls):

@@ -32,7 +32,6 @@ class QueryProperties:
     )
 
     def __init__(self, qid, mutable_config: dict = None):
-
         # this is empty unless it's set as part of the query
         self.variables: dict[str, Any] = {}
 

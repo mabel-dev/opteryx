@@ -113,7 +113,6 @@ def test_temporal_extraction(statement, filters):
 
 
 if __name__ == "__main__":  # pragma: no cover
-
     print(f"RUNNING BATTERY OF {len(STATEMENTS)} TEMPORAL FILTER EXTRACTION TESTS")
     for statement, filters in STATEMENTS:
         print(statement)

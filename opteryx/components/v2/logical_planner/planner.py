@@ -313,7 +313,7 @@ def get_planners(parsed_statements):
         yield QUERY_BUILDERS[statement_type], parsed_statement
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     import json
     import opteryx.third_party.sqloxide
 

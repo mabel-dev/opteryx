@@ -16,7 +16,6 @@ from opteryx.sample_data import SatelliteData
 
 
 def test_projection_node():
-
     satellite_data = SatelliteData().get()
 
     # test None does nothing to the attributes
@@ -37,5 +36,4 @@ def test_projection_node():
 
 
 if __name__ == "__main__":
-
     test_projection_node()

@@ -47,7 +47,6 @@ def calculate_batch_size(cardinality):
 
 
 def get_columns(expression, left_columns, right_columns):
-
     left = []
     right = []
 
@@ -111,7 +110,6 @@ class InnerJoinNode(BasePlanNode):
         return ""
 
     def execute(self) -> Iterable:
-
         if len(self._producers) != 2:
             raise SqlError(f"{self.name} expects two producers")
 
@@ -123,7 +121,6 @@ class InnerJoinNode(BasePlanNode):
         )  # type:ignore
 
         if self._using:
-
             right_columns = Columns(self._right_table)
             left_columns = None
             right_join_columns = [
@@ -132,7 +129,6 @@ class InnerJoinNode(BasePlanNode):
             ]
 
             for page in left_node.execute():
-
                 if left_columns is None:
                     left_columns = Columns(page)
                     left_join_columns = [
@@ -157,7 +153,6 @@ class InnerJoinNode(BasePlanNode):
 
                 # we break this into small chunks otherwise we very quickly run into memory issues
                 for batch in page.to_batches(max_chunksize=batch_size):
-
                     # blocks don't have column_names, so we need to wrap in a table
                     batch = pyarrow.Table.from_batches([batch], schema=page.schema)
 
@@ -168,7 +163,6 @@ class InnerJoinNode(BasePlanNode):
                     yield new_page
 
         elif self._on:
-
             right_columns = Columns(self._right_table)
 
             right_null_columns, self._right_table = Columns.remove_null_columns(
@@ -178,7 +172,6 @@ class InnerJoinNode(BasePlanNode):
             left_columns = None
 
             for page in left_node.execute():
-
                 if left_columns is None:
                     left_columns = Columns(page)
                     left_join_columns, right_join_columns = get_columns(

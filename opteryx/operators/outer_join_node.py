@@ -73,7 +73,6 @@ class OuterJoinNode(BasePlanNode):
         return ""
 
     def execute(self) -> Iterable:
-
         if len(self._producers) != 2:
             raise SqlError(f"{self.name} expects two producers")
 
@@ -86,16 +85,13 @@ class OuterJoinNode(BasePlanNode):
         left_columns = None
 
         for page in left_node.execute():
-
             if self._using:
-
                 right_join_columns = [
                     right_columns.get_column_from_alias(col, only_one=True)
                     for col in self._using
                 ]
 
                 for page in left_node.execute():
-
                     if left_columns is None:
                         left_columns = Columns(page)
                         left_join_columns = [
@@ -120,7 +116,6 @@ class OuterJoinNode(BasePlanNode):
 
                     # we break this into small chunks otherwise we very quickly run into memory issues
                     for batch in page.to_batches(max_chunksize=batch_size):
-
                         # blocks don't have column_names, so we need to wrap in a table
                         batch = pyarrow.Table.from_batches([batch], schema=page.schema)
 
@@ -131,7 +126,6 @@ class OuterJoinNode(BasePlanNode):
                         yield new_page
 
             elif self._on:
-
                 if left_columns is None:
                     left_columns = Columns(page)
                     try:

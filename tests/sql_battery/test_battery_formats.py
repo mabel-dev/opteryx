@@ -81,7 +81,6 @@ def test_sql_battery(statement, rows, columns, skip):
 
 
 if __name__ == "__main__":  # pragma: no cover
-
     print(f"RUNNING BATTERY OF {len(STATEMENTS)} FORMAT TESTS")
     for statement, rows, cols, skip in STATEMENTS:
         print(statement)

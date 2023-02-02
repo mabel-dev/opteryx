@@ -96,7 +96,6 @@ def compare_versions(version_a, version_b):
 
 
 def get_package_summary(package=None, installed_version=None, vuln_details={}):
-
     result = {
         "package": package,
         "installed_version": installed_version,
@@ -122,7 +121,6 @@ def get_package_summary(package=None, installed_version=None, vuln_details={}):
 
     if vuln_details:
         for i in vuln_details:
-
             for version_pairs in i["specs"]:
                 versions = version_pairs.split(",")
                 if len(versions) == 1:
@@ -154,12 +152,10 @@ class CurrencyTest:
         pass
 
     def test(self):
-
         results = []
 
         known_vulns = get_known_vulns()
         for package in pkg_resources.working_set:
-
             package_result = get_package_summary(
                 package=package.project_name,
                 installed_version=package.version,

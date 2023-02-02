@@ -177,7 +177,6 @@ NUMPY_TYPES = {
 
 @dataclass
 class ExpressionTreeNode:
-
     token_type: NodeType
     value: Any = None
     left: Any = None  # ExpressionTreeNode
@@ -204,12 +203,10 @@ class ExpressionTreeNode:
 def _inner_evaluate(
     root: ExpressionTreeNode, table: Table, columns, for_display: bool = False
 ):
-
     node_type = root.token_type
 
     # BOOLEAN OPERATORS
     if node_type & LOGICAL_TYPE == LOGICAL_TYPE:
-
         left, right, centre = None, None, None
 
         if root.left is not None:
@@ -224,7 +221,6 @@ def _inner_evaluate(
         if node_type == NodeType.OR:
             return pyarrow.compute.or_(left, right)
         if node_type == NodeType.NOT:
-
             null_val = pyarrow.compute.is_null(centre, nan_is_null=True)
             if any(null_val) and isinstance(centre, numpy.ndarray):
                 null_val = numpy.invert(null_val)
@@ -307,7 +303,6 @@ def _inner_evaluate(
 
 
 def evaluate(expression: ExpressionTreeNode, table: Table, for_display: bool = False):
-
     columns = Columns(table)
     result = _inner_evaluate(
         root=expression, table=table, columns=columns, for_display=for_display
@@ -355,7 +350,6 @@ def evaluate_and_append(expressions, table: Table, seed: str = None):
     return_expressions = []
 
     for statement in expressions:
-
         if statement.token_type in (
             NodeType.FUNCTION,
             NodeType.BINARY_OPERATOR,

@@ -15,7 +15,6 @@ BUCKET_NAME = "opteryx"
 
 
 def test_gcs_storage():
-
     opteryx.register_store(BUCKET_NAME, GcpCloudStorageConnector)
 
     conn = opteryx.connect()

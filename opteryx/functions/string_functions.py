@@ -227,7 +227,6 @@ def ends_w(arr, test):
 
 
 def substring(arr, from_pos, count):
-
     if len(arr) == 0:
         return [[]]
 
@@ -273,7 +272,6 @@ def rtrim(*args):
 
 
 def levenshtein(a, b):
-
     from opteryx.third_party.levenshtein.levenshtein import levenshtein as lev
 
     def _outer():

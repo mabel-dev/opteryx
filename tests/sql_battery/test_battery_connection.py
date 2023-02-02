@@ -57,7 +57,6 @@ def test_sql_battery(statement, subs, rows, columns):
 
 
 if __name__ == "__main__":  # pragma: no cover
-
     print(f"RUNNING BATTERY OF {len(STATEMENTS)} CONNECTION TESTS")
     for statement, subs, rows, cols in STATEMENTS:
         print(statement)

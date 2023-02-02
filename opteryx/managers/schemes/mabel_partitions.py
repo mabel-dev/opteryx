@@ -52,7 +52,6 @@ class MabelPartitionScheme(BasePartitionScheme):
         return "year_{yyyy}/month_{mm}/day_{dd}"
 
     def _inner_filter_blobs(self, list_of_blobs, statistics):
-
         # The segments are stored in folders with the prefix 'by_', as in,
         # segments **by** field name
         list_of_segments = sorted(
@@ -84,7 +83,6 @@ class MabelPartitionScheme(BasePartitionScheme):
 
         # go through the list of segments, getting the active frame for each
         for segment_folder in segmented_folders:
-
             # we get the blobs for this segment by looking for the path to contain
             # a combination of the segment and the segmented folder
             segment_blobs = [

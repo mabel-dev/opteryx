@@ -35,7 +35,6 @@ class ShowStoresNode(BasePlanNode):
         return ""
 
     def execute(self) -> Iterable:
-
         from opteryx.connectors import _storage_prefixes
 
         buffer = [

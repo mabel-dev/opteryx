@@ -14,7 +14,6 @@ except ImportError:  # pragma: no cover
 
 
 class ResourceMonitor:  # pragma: no cover
-
     slots = "frequency"
 
     def __init__(self, frequency=0.01):  # pragma: no cover

@@ -23,7 +23,6 @@ from opteryx.utils import paths
 
 
 class BaseBlobStorageAdapter(abc.ABC):
-
     __mode__ = "Blob"
 
     def get_partitions(

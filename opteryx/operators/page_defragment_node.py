@@ -57,7 +57,6 @@ class PageDefragmentNode(BasePlanNode):
         return ""
 
     def execute(self) -> Iterable:
-
         data_pages = self._producers[0]  # type:ignore
         if isinstance(data_pages, pyarrow.Table):
             data_pages = (data_pages,)
@@ -72,9 +71,7 @@ class PageDefragmentNode(BasePlanNode):
         at_least_one_page = False
 
         for page in data_pages.execute():
-
             if page.num_rows > 0:
-
                 start = time.monotonic_ns()
                 # add what we've collected before to the table
                 if collected_rows:  # pragma: no cover

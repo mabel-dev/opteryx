@@ -105,7 +105,6 @@ def date_range(start, end, interval: str):
 
 @lru_cache(128)
 def parse_iso(value):
-
     date_separators = ("-", ":")
     # date validation at speed is hard, dateutil is great but really slow, this is fast
     # but error-prone. It assumes it is a date or it really nothing like a date.
@@ -122,7 +121,6 @@ def parse_iso(value):
     #
     # If the last character is a Z, we ignore it.
     try:
-
         input_type = type(value)
 
         if input_type in (int, numpy.int64):

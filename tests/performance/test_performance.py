@@ -8,7 +8,6 @@ from opteryx.connectors import DiskConnector
 
 
 def simple_query():  # pragma: no cover
-
     conn = opteryx.connect(reader=DiskConnector(), partition_scheme=None)
 
     # SELECT EVERYTHING

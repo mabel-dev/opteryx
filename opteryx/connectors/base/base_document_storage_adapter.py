@@ -19,7 +19,6 @@ from typing import Iterable, List
 
 
 class BaseDocumentStorageAdapter(abc.ABC):
-
     __mode__ = "Collection"
 
     def __init__(self) -> None:

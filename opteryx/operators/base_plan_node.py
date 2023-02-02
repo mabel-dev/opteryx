@@ -18,7 +18,6 @@ from opteryx.shared import QueryStatistics
 
 
 class BasePlanNode(abc.ABC):
-
     _producers = None
 
     def __init__(self, properties: QueryProperties, **config):

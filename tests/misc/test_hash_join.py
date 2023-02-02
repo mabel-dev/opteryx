@@ -16,7 +16,6 @@ import opteryx
 
 
 def test_hash_join_consistency():
-
     conn = opteryx.connect()
 
     for i in range(25):
@@ -29,7 +28,6 @@ def test_hash_join_consistency():
 
 
 if __name__ == "__main__":  # pragma: no cover
-
     test_hash_join_consistency()
 
     print("✅ okay")

@@ -75,13 +75,11 @@ class CollectionReaderNode(BasePlanNode):
         return False
 
     def execute(self) -> Iterable:
-
         metadata = None
 
         row_count = self._reader.get_document_count(self._collection)
 
         for pyarrow_page in self._reader.read_documents(self._collection):
-
             start_read = time.time_ns()
             if not isinstance(pyarrow_page, pyarrow.Table):
                 pyarrow_page = pyarrow.Table.from_pylist(pyarrow_page)

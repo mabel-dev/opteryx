@@ -10,7 +10,6 @@ from opteryx.models.execution_tree import ExecutionTree
 
 
 def test_execution_tree():
-
     et = ExecutionTree()
     et.add_node("a", None)
     et.add_node("b", None)
@@ -30,5 +29,4 @@ def test_execution_tree():
 
 
 if __name__ == "__main__":  # pragma: no cover
-
     test_execution_tree()

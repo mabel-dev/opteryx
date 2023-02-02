@@ -16,7 +16,6 @@ from opteryx.shared import QueryStatistics
 
 
 def test_limit_node():
-
     satellite_data = SatelliteData.get()
 
     ln = LimitNode(QueryStatistics(), limit=1)
@@ -40,5 +39,4 @@ def test_limit_node():
 
 
 if __name__ == "__main__":
-
     test_limit_node()

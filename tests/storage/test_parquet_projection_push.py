@@ -12,7 +12,6 @@ from opteryx.connectors import DiskConnector
 
 
 def test_parquet_projection_pushdown():
-
     opteryx.register_store("tests", DiskConnector)
 
     # with pushdown
