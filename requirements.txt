@@ -1,3 +1,4 @@
+bitarray
 cityhash
 numpy
 orjson

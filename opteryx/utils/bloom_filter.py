@@ -10,7 +10,7 @@ time.
 
 https://en.wikipedia.org/wiki/Bloom_filter
 
-(C) 2021-2022 Justin Joyce.
+(C) 2021-2023 Justin Joyce.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -24,32 +24,77 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-from bitarray import bitarray  # type:ignore
 
-HASH_SEEDS = [
+# having experimented with numpy, gmpy2, intbitset and sets, bitarray is the fastest,
+# gmpy2 is very close
+from bitarray import bitarray
+from cityhash import CityHash32
+
+HASH_SEEDS = (
     "ANTHROPOMORPHISM",
     "BLOODYMINDEDNESS",
+    "CHARACTERIZATION",
     "CONTEMPTUOUSNESS",
+    "DISFRANCHISEMENT",
     "DISINGENUOUSNESS",
+    "ELECTROTECHNICAL",
+    "HYPERVENTILATION",
     "INCOMPREHENSIBLE",
     "NONRECIPROCATING",
+    "ONEQUINTILLIONTH",
     "PRESUMPTUOUSNESS",
+    "QUINTESSENTIALLY",
+    "SENSATIONALISTIC",
+    "THREEDIMENSIONAL",
     "UNCOMPREHENSIBLE",
-    "DISFRANCHISEMENT",
     "UNDIPLOMATICALLY",
     "UNUNDERSTANDABLY",
-]
+)
 
 
 def _log(x):
     return 99999999 * (x ** (1 / 99999999) - 1)
 
 
+def _get_size(number_of_elements: int, fp_rate: float) -> int:
+    """
+    Calculate the size of the bitarray
+
+    Parameters:
+        number_of_elements: integer
+            The number of items expected to be stored in filter
+        fp_rate: float (optional)
+            False Positive rate (0 to 1), default 0.05
+
+    Returns:
+        integer
+    """
+    size = -(number_of_elements * _log(fp_rate)) / (_log(2) ** 2) + 1
+    return int(size)
+
+
+def _get_hash_count(filter_size, number_of_elements):
+    """
+    Calculate the number of hashes to use to identify elements
+
+    Parameters:
+        filter_size: integer
+            The size of the filter bit array
+        number_of_elements: integer
+            The number of items expected to be stored in filter
+
+    Returns:
+        integer
+    """
+    k = (filter_size / number_of_elements) * _log(2)
+    return max(int(k), 2)
+
+
 class BloomFilter:
 
-    __slots__ = ("filter_size", "hash_count", "bits", "_hash_seeds")
+    __slots__ = ("filter_size", "bits", "hash_seeds", "hash_count")
 
-    def __init__(self, number_of_elements: int = 50000, fp_rate: float = 0.05):
+    def __init__(self, number_of_elements: int = 50000, fp_rate: float = 0.01):
         """
         Bloom Filters are a probabilistic approach to tracking items in a list.
         They use an array of booleans which are set according to hashes of the
@@ -62,68 +107,26 @@ class BloomFilter:
         having to store the values or hashes of the values (minor errors
         with this count is not expected to be a problem)
         """
-        self.filter_size = BloomFilter.get_size(number_of_elements, fp_rate)
-        self.hash_count = BloomFilter.get_hash_count(
-            self.filter_size, number_of_elements
-        )
-        self._hash_seeds = [HASH_SEEDS[i] for i in range(self.hash_count)]
+        self.filter_size: int = _get_size(number_of_elements, fp_rate)
+        self.hash_count: int = _get_hash_count(self.filter_size, number_of_elements)
+        self.hash_seeds: list = tuple(HASH_SEEDS[i] for i in range(self.hash_count))
         self.bits = bitarray(self.filter_size)
         self.bits.setall(0)
-
-    @staticmethod
-    def get_size(number_of_elements, fp_rate):
-        """
-        Calculate the size of the bitarray
-
-        Parameters:
-            number_of_elements: integer
-                The number of items expected to be stored in filter
-            fp_rate: float (optional)
-                False Positive rate (0 to 1), default 0.05
-
-        Returns:
-            integer
-        """
-        size = -(number_of_elements * _log(fp_rate)) / (_log(2) ** 2) + 1
-        return int(size)
-
-    @staticmethod
-    def get_hash_count(filter_size, number_of_elements):
-        """
-        Calculate the number of hashes to use to identify elements
-
-        Parameters:
-            filter_size: integer
-                The size of the filter bit array
-            number_of_elements: integer
-                The number of items expected to be stored in filter
-
-        Returns:
-            integer
-        """
-        k = (filter_size / number_of_elements) * _log(2)
-        return max(int(k), 2)
 
     def add(self, term):
         """
         Add a value to the index, returns true if the item is new, false if seen before
         """
-        from cityhash import CityHash32
+        bits = self.bits
 
-        collision = True
-
-        for seed in self._hash_seeds:
-            hash_ = CityHash32(f"{seed}{term}") % self.filter_size
-            if not self.bits[hash_]:
-                self.bits[hash_] = 1
-                collision = False
-
-        return not collision
-
+        for hash_ in (
+            CityHash32(f"{seed}{term}") % self.filter_size
+            for seed in self.hash_seeds
+        ):
+            bits[hash_] = 1
+        
     def __contains__(self, term):
-        from cityhash import CityHash32
-
-        for seed in self._hash_seeds:
+        for seed in self.hash_seeds:
             hash_ = CityHash32(f"{seed}{term}") % self.filter_size
             if self.bits[hash_] == 0:
                 return False
@@ -139,7 +142,7 @@ if __name__ == "__main__":
     import random
 
     def unique_id():
-        return f"{hex(random.getrandbits(40))[2:]:0>10}"
+        return f"{hex(random.getrandbits(40))}"
 
     n = time.monotonic_ns()
     for i in range(1000000):
