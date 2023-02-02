@@ -120,11 +120,10 @@ class BloomFilter:
         bits = self.bits
 
         for hash_ in (
-            CityHash32(f"{seed}{term}") % self.filter_size
-            for seed in self.hash_seeds
+            CityHash32(f"{seed}{term}") % self.filter_size for seed in self.hash_seeds
         ):
             bits[hash_] = 1
-        
+
     def __contains__(self, term):
         for seed in self.hash_seeds:
             hash_ = CityHash32(f"{seed}{term}") % self.filter_size

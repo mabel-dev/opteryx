@@ -1,4 +1,3 @@
-
 import os
 import sys
 
@@ -7,7 +6,8 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 from opteryx.utils import random_string
 from opteryx.utils.bloom_filter import BloomFilter
 
-ITERATIONS:int = 50000
+ITERATIONS: int = 50000
+
 
 def test_bloom_filter():
 
@@ -26,7 +26,10 @@ def test_bloom_filter():
 
     # this is approximately 1% false positive rate, we're going to test between
     # 0.5 and 1.5 because this is probabilistic
-    assert (ITERATIONS * 0.005) < collisions < (ITERATIONS * 0.015), collisions / ITERATIONS
+    assert (ITERATIONS * 0.005) < collisions < (ITERATIONS * 0.015), (
+        collisions / ITERATIONS
+    )
+
 
 if __name__ == "__main__":  # pragma: no cover
 
