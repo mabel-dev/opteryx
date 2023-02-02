@@ -108,7 +108,7 @@ class BloomFilter:
         """
         self.filter_size: int = _get_size(number_of_elements, fp_rate)
         self.hash_count: int = _get_hash_count(self.filter_size, number_of_elements)
-        self.hash_seeds: list = tuple(HASH_SEEDS[i] for i in range(self.hash_count))
+        self.hash_seeds: tuple = tuple(HASH_SEEDS[i] for i in range(self.hash_count))
         self.bits = bitarray(self.filter_size)
         self.bits.setall(0)
 
@@ -134,7 +134,7 @@ class BloomFilter:
         return f"BloomFilter <bits:{self.filter_size}, hashes:{self.hash_count}>"
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     b = BloomFilter()
     import time
     import random
