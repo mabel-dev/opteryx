@@ -21,7 +21,6 @@ MONGO_DATABASE = os.environ.get("MONGO_DATABASE")
 
 
 def populate_mongo():
-
     import pymongo  # type:ignore
 
     myclient = pymongo.MongoClient(MONGO_CONNECTION)
@@ -37,7 +36,6 @@ def populate_mongo():
 
 @skip_on_partials
 def test_mongo_storage():
-
     opteryx.register_store(COLLECTION_NAME, MongoDbConnector)
 
     populate_mongo()

@@ -143,7 +143,6 @@ class CommonConfig(object):  # pragma: no cover
 
 
 class Logger(object):  # pragma: no cover
-
     backlog = None
     dateFmt = "%y.%m.%d %H:%M:%S"
     cbMessageKey = None  # Custom log messages key calculation callback function

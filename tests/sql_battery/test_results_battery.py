@@ -26,7 +26,6 @@ import opteryx
 
 
 def get_tests(test_type):
-
     suites = glob.glob(f"**/**.{test_type}", recursive=True)
     for suite in suites:
         with open(suite, mode="r") as test_file:
@@ -60,7 +59,6 @@ def test_results_tests(test):
 
 
 if __name__ == "__main__":  # pragma: no cover
-
     import shutil
     import time
 
@@ -68,7 +66,6 @@ if __name__ == "__main__":  # pragma: no cover
 
     print(f"RUNNING BATTERY OF {len(RESULTS_TESTS)} RESULTS TESTS")
     for index, test in enumerate(RESULTS_TESTS):
-
         start = time.monotonic_ns()
         print(
             f"\033[0;36m{(index + 1):04}\033[0m {test['statement'][0:width - 1].ljust(width)}",

@@ -76,7 +76,6 @@ def _statitics_collector(pages):
     target_metadata = None
 
     for page in pages:
-
         uncollected_columns = []
         profile_collector: dict = {}
 
@@ -84,9 +83,7 @@ def _statitics_collector(pages):
         table_path = columns.table_path
 
         for block in page.to_batches(10000):
-
             for column in page.column_names:
-
                 column_data = block.column(column)
 
                 profile = profile_collector.get(column, orjson.loads(empty_profile))
@@ -121,7 +118,6 @@ def _statitics_collector(pages):
 
                 # long strings are meaningless
                 if _type == OPTERYX_TYPES.VARCHAR:
-
                     column_data = [v.as_py() for v in column_data if v.is_valid]
 
                     max_len = reduce(
@@ -201,7 +197,6 @@ def _statitics_collector(pages):
             profile["type"] = ", ".join(profile["type"])
 
             if column not in uncollected_columns:
-
                 dgram = profile.pop("dgram", None)
                 if dgram:
                     # force numeric types to be the same
@@ -261,7 +256,6 @@ class BuildStatisticsNode(BasePlanNode):
         return ""
 
     def execute(self) -> Iterable:
-
         if len(self._producers) != 1:
             raise SqlError(f"{self.name} on expects a single producer")
 

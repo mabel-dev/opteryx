@@ -37,7 +37,6 @@ from opteryx.components.logical_planner import queries
 
 
 def create_logical_plan(ast, properties):
-
     query_type = next(iter(ast))
     builder = queries.QUERY_BUILDER.get(query_type)
     if builder is None:

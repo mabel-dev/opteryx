@@ -13,7 +13,6 @@ import pyarrow.parquet
 
 
 def compress_zstandard(records):  # pragma: no cover
-
     buffer = bytearray()
 
     for record in records:
@@ -26,7 +25,6 @@ def compress_zstandard(records):  # pragma: no cover
 
 
 if __name__ == "__main__":  # pragma: no cover
-
     # READ (JSONL)
     with open("testdata/formats/jsonl/tweets.jsonl", "rb") as stream:
         source = pyarrow.json.read_json(stream)

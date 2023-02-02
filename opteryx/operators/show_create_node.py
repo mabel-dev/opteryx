@@ -41,7 +41,6 @@ class ShowCreateNode(BasePlanNode):
         return str(self._table)
 
     def execute(self) -> Iterable:
-
         statement = f"CREATE TABLE `{self._table}` (\n"
 
         if len(self._producers) != 1:

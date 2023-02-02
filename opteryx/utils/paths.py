@@ -43,7 +43,6 @@ def get_parts(path_string: str):
 
 
 def build_path(path: str, date: datetime.date = None):  # pragma: no cover
-
     if not path:
         raise ValueError("build_path: path must have a value")
 
@@ -59,7 +58,6 @@ def build_path(path: str, date: datetime.date = None):  # pragma: no cover
 
 
 def date_format(path_string: str, date: datetime.date = None):
-
     if not date:  # pragma: no cover
         date = datetime.datetime.utcnow()
 

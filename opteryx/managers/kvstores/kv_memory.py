@@ -28,7 +28,6 @@ from opteryx.utils.lru_2 import LRU2
 
 
 class InMemoryKVStore(BaseKeyValueStore):
-
     slots = ("_lru2",)
 
     def __init__(self, **kwargs):

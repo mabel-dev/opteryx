@@ -22,7 +22,6 @@ TEST_ITERATIONS = int(os.environ.get("TEST_ITERATIONS", 100))
 @settings(deadline=None, max_examples=TEST_ITERATIONS)
 @given(value=st.text(min_size=0))
 def test_fuzz_text_parameters(value):
-
     statement = "SELECT * FROM $planets WHERE name = ? AND id = 0"
 
     subject_planner = QueryPlanner(statement=statement)
@@ -45,7 +44,6 @@ def test_fuzz_text_parameters(value):
 @settings(deadline=None, max_examples=TEST_ITERATIONS // 10)
 @given(value=st.integers())
 def test_fuzz_int_parameters(value):
-
     statement = "SELECT * FROM $planets WHERE name = ? AND id = 0"
 
     subject_planner = QueryPlanner(statement=statement)
@@ -65,7 +63,6 @@ def test_fuzz_int_parameters(value):
 
 
 if __name__ == "__main__":  # pragma: no cover
-
     test_fuzz_text_parameters("0")
     test_fuzz_int_parameters(10)
 

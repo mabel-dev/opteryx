@@ -19,12 +19,10 @@ TESTS = [
 
 @pytest.mark.parametrize("string, candidates, expected", TESTS)
 def test_date_parser(string, candidates, expected):
-
     assert fuzzy_search(string, candidates) == expected
 
 
 if __name__ == "__main__":  # pragma: no cover
-
     print(f"RUNNING BATTERY OF {len(TESTS)} FUZZY TESTS")
     for s, c, e in TESTS:
         test_date_parser(s, c, e)

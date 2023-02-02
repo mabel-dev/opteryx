@@ -77,7 +77,6 @@ def _normalize_to_types(table):
 
 
 class BlobReaderNode(BasePlanNode):
-
     _disable_cache = False
 
     def __init__(self, properties: QueryProperties, **config):
@@ -178,7 +177,6 @@ class BlobReaderNode(BasePlanNode):
         return "Blob Reader"
 
     def execute(self) -> Iterable:
-
         # This is here for legacy reasons and should be moved to a DAG rather than
         # a Node (as per the other reader nodes)
         if isinstance(self._dataset, ExecutionTree):
@@ -197,13 +195,16 @@ class BlobReaderNode(BasePlanNode):
         schema = None
 
         if not metadata:
-
             for partition in self._reading_list.values():
-
                 # we're reading this partition now
                 self.statistics.partitions_read += 1
 
-                for (time_to_read, blob_bytes, pyarrow_blob, path,) in [
+                for (
+                    time_to_read,
+                    blob_bytes,
+                    pyarrow_blob,
+                    path,
+                ) in [
                     self._read_and_parse(
                         (
                             path,
@@ -216,7 +217,6 @@ class BlobReaderNode(BasePlanNode):
                     )
                     for path, parser in partition["blob_list"]
                 ]:
-
                     # we've read a blob
                     self.statistics.count_data_blobs_read += 1
 
@@ -253,7 +253,6 @@ class BlobReaderNode(BasePlanNode):
                         try:
                             pyarrow_blob = metadata.apply(pyarrow_blob, path=path)
                         except:  # pragma:no cover
-
                             self.statistics.read_errors += 1
 
                             import pyarrow
@@ -354,7 +353,6 @@ class BlobReaderNode(BasePlanNode):
         # so we can use them for decisions later.
 
         for partition in partitions:
-
             partition_structure[partition] = {}
             partition_structure[partition]["blob_list"] = []
             self.statistics.partitions_scanned += 1
@@ -383,7 +381,6 @@ class BlobReaderNode(BasePlanNode):
                 )
 
             for blob_name in blob_list:
-
                 # the the blob filename extension
                 extension = blob_name.split(".")[-1]
 

@@ -6,7 +6,6 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 
 def test_lruk():
-
     from opteryx.utils.lru_2 import LRU2
 
     # make it very small to test
@@ -55,6 +54,5 @@ def test_lruk():
 
 
 if __name__ == "__main__":  # pragma: no cover
-
     test_lruk()
     print("✅ okay")

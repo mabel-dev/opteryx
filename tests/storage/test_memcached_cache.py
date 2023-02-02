@@ -13,7 +13,6 @@ from tests.tools import skip_on_partials
 
 @skip_on_partials
 def test_memcached_cache():
-
     import opteryx
     from opteryx.managers.kvstores import MemcachedKVStore
 
@@ -47,6 +46,5 @@ def test_memcached_cache():
 
 
 if __name__ == "__main__":  # pragma: no cover
-
     test_memcached_cache()
     print("✅ okay")

@@ -62,7 +62,6 @@ class HeapSortNode(BasePlanNode):
         return "Heap Sort"
 
     def execute(self) -> Iterable:
-
         if len(self._producers) != 1:
             raise SqlError(f"{self.name} on expects a single producer")
 
@@ -75,7 +74,6 @@ class HeapSortNode(BasePlanNode):
         mapped_order = []
 
         for page in data_pages.execute():
-
             if columns is None:
                 columns = Columns(page)
 

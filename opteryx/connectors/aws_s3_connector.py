@@ -30,7 +30,6 @@ except ImportError:  # pragma: no cover
 
 class AwsS3Connector(BaseBlobStorageAdapter):
     def __init__(self, **kwargs):
-
         if not MINIO_INSTALLED:  # pragma: no cover
             raise MissingDependencyError(
                 "`minio` is missing, please install or include in requirements.txt"

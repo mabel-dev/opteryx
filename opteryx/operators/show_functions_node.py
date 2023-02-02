@@ -36,7 +36,6 @@ class ShowFunctionsNode(BasePlanNode):
         return ""
 
     def execute(self) -> Iterable:
-
         buffer = []
 
         for function in functions.functions():

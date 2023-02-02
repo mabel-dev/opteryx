@@ -48,7 +48,6 @@ LITERALS = [
 
 @pytest.mark.parametrize("node_type, value", LITERALS)
 def test_literals(node_type, value):
-
     planets = opteryx.samples.planets()
 
     node = ExpressionTreeNode(node_type, value=value)
@@ -154,7 +153,6 @@ def test_reading_identifiers():
 
 
 def test_function_operations():
-
     planets = opteryx.samples.planets()
 
     name = ExpressionTreeNode(NodeType.IDENTIFIER, value="name")
@@ -209,7 +207,6 @@ def test_function_operations():
 
 
 def test_compound_expressions():
-
     planets = opteryx.samples.planets()
 
     # this builds and tests the following `3.7 * gravity > mass`
@@ -243,7 +240,6 @@ def test_compound_expressions():
 
 
 def test_functions():
-
     planets = opteryx.samples.planets()
 
     gravity = ExpressionTreeNode(NodeType.IDENTIFIER, value="gravity")
@@ -255,7 +251,6 @@ def test_functions():
 
 
 if __name__ == "__main__":  # pragma: no cover
-
     print(f"RUNNING BATTERY OF {len(LITERALS)} LITERAL TYPE TESTS")
     for node_type, value in LITERALS:
         print(node_type)

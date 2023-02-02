@@ -52,7 +52,6 @@ def html_table(dictset: Iterable[dict], limit: int = 5):  # pragma: no cover
         return htmlstring
 
     def _to_html_table(data, columns):
-
         yield '<table class="table table-sm">'
         for counter, record in enumerate(data):
             if counter == 0:
@@ -140,7 +139,6 @@ def ascii_table(
     index_width = len(str(table.num_rows)) + 2
 
     def type_formatter(value, width):
-
         if value is None:
             return "\001NULLm" + str(value).rjust(width)[:width] + "\001OFFm"
         if isinstance(value, bool):
@@ -185,7 +183,6 @@ def ascii_table(
         return 2 if unicodedata.east_asian_width(symbol) in ("F", "N", "W") else 1
 
     def trunc_printable(value, width, full_line: bool = True):
-
         offset = 0
         emit = ""
         ignoring = False
@@ -210,7 +207,6 @@ def ascii_table(
         return line
 
     def _inner():
-
         head = t.to_pydict()
 
         # Calculate width

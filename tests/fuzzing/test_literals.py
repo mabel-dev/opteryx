@@ -25,7 +25,6 @@ literals = st.text(min_size=1)
 @settings(deadline=None, max_examples=TEST_ITERATIONS)
 @given(literal=literals)
 def test_fuzz_literals(literal):
-
     # single quote is the delimiter, it's not a bug that we think a delimeter
     # mid string indicates the end of the string
     literal = literal.replace("'", "#")
@@ -44,7 +43,6 @@ def test_fuzz_literals(literal):
 
 
 if __name__ == "__main__":  # pragma: no cover
-
     test_fuzz_literals("\\")
 
     print("✅ okay")

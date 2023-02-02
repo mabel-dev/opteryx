@@ -50,7 +50,6 @@ class SortNode(BasePlanNode):
         return "Sort"
 
     def execute(self) -> Iterable:
-
         if len(self._producers) != 1:
             raise SqlError(f"{self.name} on expects a single producer")
 
@@ -72,15 +71,12 @@ class SortNode(BasePlanNode):
         start_time = time.time_ns()
 
         for column_list, direction in self.order:
-
             for column in column_list:
                 if column.token_type == NodeType.FUNCTION:
-
                     # ORDER BY RAND() shuffles the results
                     # we create a random list, sort that then take the rows from the
                     # table in that order - this is faster than ordering the data
                     if column.value in ("RANDOM", "RAND"):
-
                         new_order = numpy.argsort(
                             numpy.random.uniform(size=table.num_rows)
                         )
@@ -95,7 +91,6 @@ class SortNode(BasePlanNode):
                     )
 
                 elif column.token_type == NodeType.LITERAL_NUMERIC:
-
                     # we have an index rather than a column name, it's a natural
                     # number but the list of column names is zero-based, so we
                     # subtract one

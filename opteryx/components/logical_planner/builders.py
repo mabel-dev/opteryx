@@ -136,7 +136,6 @@ def compound_identifier(branch, alias=None, key=None):
 
 
 def function(branch, alias=None, key=None):
-
     func = branch["name"][0]["value"].upper()
     args = [build(a) for a in branch["args"]]
     if functions.is_function(func):

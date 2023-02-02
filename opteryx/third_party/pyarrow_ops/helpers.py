@@ -19,7 +19,6 @@ def groupify_array(arr):
 
 
 def _hash_value(val, nan=numpy.nan):
-
     # Added for Opteryx - Original code had bugs relating to distinct and nulls
     if isinstance(val, dict):
         return _hash_value(tuple(val.values()))

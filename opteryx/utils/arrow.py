@@ -38,12 +38,10 @@ def fetchmany(pages, limit: int = 1000, as_dicts: bool = False):
         chunk_size = INTERNAL_BATCH_SIZE
 
     def _inner_row_reader():
-
         column_names = None
         schema = None
 
         for page in pages:
-
             if column_names is None:
                 schema = page.schema
                 columns = Columns(page)

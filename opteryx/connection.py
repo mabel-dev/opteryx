@@ -70,7 +70,6 @@ class Connection:
 
 class Cursor:
     def __init__(self, connection):
-
         self.arraysize = 1
 
         self._connection = connection
@@ -240,7 +239,6 @@ class Cursor:
         max_column_width: int = 30,
         table_width=True,
     ):  # pragma: no cover
-
         from opteryx.utils.display import html_table, ascii_table
 
         try:

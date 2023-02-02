@@ -5,7 +5,6 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 
 def test_pandas():
-
     import opteryx
     import pandas
 
@@ -27,7 +26,6 @@ def test_pandas():
 
 
 def test_documentation():
-
     import opteryx
     import pandas
 
@@ -47,7 +45,6 @@ def test_documentation():
 
 
 if __name__ == "__main__":  # pragma: no cover
-
     test_pandas()
     test_documentation()
 

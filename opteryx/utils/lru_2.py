@@ -35,7 +35,6 @@ import numpy
 
 
 class LRU2:
-
     slots = ("_size", "_cache", "_hits", "_misses", "_evictions")
 
     def __init__(self, **kwargs):
@@ -72,7 +71,6 @@ class LRU2:
         # If we're  full, we want to remove an item from the cache.
         # We choose the item to remove based on the penultimate access for that item.
         if len(self._cache) > self._size:
-
             keys = tuple(self._cache.keys())
             accesses = (c[2] for c in self._cache.values())
 

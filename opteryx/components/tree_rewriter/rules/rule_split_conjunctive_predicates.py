@@ -42,7 +42,6 @@ def split_conjunctive_predicates(plan, properties):
         return hex(random.getrandbits(16))
 
     def _inner_split(plan, nid, operator):
-
         selection = operator.filter
         if selection.token_type != NodeType.AND:
             return plan

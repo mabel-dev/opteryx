@@ -10,7 +10,6 @@ import pytest
 
 
 def test_connection():
-
     import opteryx
 
     conn = opteryx.connect()
@@ -32,7 +31,6 @@ def test_connection():
 
 
 def test_execute():
-
     import opteryx
     import pandas
 
@@ -46,7 +44,6 @@ def test_execute():
 
 
 if __name__ == "__main__":  # pragma: no cover
-
     test_connection()
     test_execute()
 

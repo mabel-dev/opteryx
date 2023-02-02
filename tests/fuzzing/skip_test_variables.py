@@ -27,7 +27,6 @@ names = st.text(alphabet=string.ascii_letters, min_size=1)
 @settings(deadline=None, max_examples=TEST_ITERATIONS)
 @given(name=names, value=st.text(alphabet=string.printable))
 def test_fuzz_variables(name, value):
-
     # we know these fail
     failures = ("'", "\\", "\r", "\n", "\t", "\x0b", "\x0c", "--")
     if any(f in value for f in failures):  # pragma: no cover
@@ -50,7 +49,6 @@ def test_fuzz_variables(name, value):
 
 
 if __name__ == "__main__":  # pragma: no cover
-
     print(string.ascii_letters)
 
     test_fuzz_variables("a", "b")

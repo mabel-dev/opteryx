@@ -12,7 +12,6 @@ from opteryx.connectors import GcpFireStoreConnector
 
 
 def test_firestore_storage():
-
     opteryx.register_store("dwarves", GcpFireStoreConnector)
     os.environ["GCP_PROJECT_ID"] = "mabeldev"
 

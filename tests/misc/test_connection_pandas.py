@@ -8,7 +8,6 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 
 def test_as_pandas_no_limit():
-
     import opteryx
 
     conn = opteryx.connect()
@@ -22,7 +21,6 @@ def test_as_pandas_no_limit():
 
 
 def test_as_pandas_with_limit():
-
     import opteryx
 
     conn = opteryx.connect()
@@ -36,7 +34,6 @@ def test_as_pandas_with_limit():
 
 
 if __name__ == "__main__":  # pragma: no cover
-
     test_as_pandas_no_limit()
     test_as_pandas_with_limit()
 

@@ -417,7 +417,6 @@ class Graph(object):
 
     # adapted from https://stackoverflow.com/questions/9727673/list-directory-tree-structure-in-python
     def _tree(self, node, prefix=""):
-
         space = "   "
         branch = "│  "
         tee = "├─ "

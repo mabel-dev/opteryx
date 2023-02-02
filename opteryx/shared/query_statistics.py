@@ -24,7 +24,6 @@ class _QueryStatistics:
     """
 
     def __init__(self):
-
         self._messages = []
 
         self.count_blobs_found: int = 0
@@ -136,7 +135,6 @@ class _QueryStatistics:
 
 
 class QueryStatistics(_QueryStatistics):
-
     slots = "_instances"
 
     #   Python 3.8 doesn't support this style

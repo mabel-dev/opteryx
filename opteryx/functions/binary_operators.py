@@ -33,7 +33,6 @@ INTERVALS = (pyarrow.lib.MonthDayNano, pyarrow.lib.MonthDayNanoIntervalArray)
 
 
 def _date_plus_interval(left, right):
-
     # left is the date, right is the interval
     if type(left) in INTERVALS or (
         isinstance(left, list) and type(left[0]) in INTERVALS
@@ -61,7 +60,6 @@ def _date_plus_interval(left, right):
 
 
 def _date_minus_interval(left, right):
-
     # left is the date, right is the interval
     if type(left) in INTERVALS or (
         isinstance(left, list) and type(left[0]) in INTERVALS

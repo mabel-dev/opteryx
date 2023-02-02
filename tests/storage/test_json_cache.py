@@ -13,7 +13,6 @@ from opteryx.shared import BufferPool
 
 
 def test_json_cache():
-
     buffer = BufferPool()
     buffer.reset(True)
 
@@ -60,6 +59,5 @@ def test_json_cache():
 
 
 if __name__ == "__main__":  # pragma: no cover
-
     test_json_cache()
     print("✅ okay")

@@ -11,7 +11,6 @@ from opteryx import config
 
 
 def test_predicate_pushdowns_blobs():
-
     os.environ["GCP_PROJECT_ID"] = "mabeldev"
 
     conn = opteryx.connect()

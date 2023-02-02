@@ -10,7 +10,6 @@ ITERATIONS: int = 50000
 
 
 def test_bloom_filter():
-
     # first we populate the BloomFilter
     tokens = (random_string(48) for i in range(ITERATIONS))
     bf = BloomFilter()
@@ -32,7 +31,6 @@ def test_bloom_filter():
 
 
 if __name__ == "__main__":  # pragma: no cover
-
     test_bloom_filter()
 
     print("✅ okay")

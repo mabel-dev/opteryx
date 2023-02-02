@@ -231,7 +231,6 @@ def test_sql92(statement, feature):
 
 
 if __name__ == "__main__":  # pragma: no cover
-
     """
     Running in the IDE we do some formatting - it's not functional but helps
     when reading the outputs.

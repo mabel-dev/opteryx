@@ -94,7 +94,6 @@ class ExecutionTree(Graph):
         yield from operator.execute()
 
     def explain(self):
-
         from opteryx import operators
         from opteryx.models import Columns
 

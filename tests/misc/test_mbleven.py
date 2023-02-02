@@ -51,13 +51,11 @@ TESTS = [
 
 @pytest.mark.parametrize("str1, str2, score", TESTS)
 def test_level_battery(str1, str2, score):
-
     actual_score = compare(str1, str2)
     assert score == actual_score, f"expected: {score}, got: {actual_score}"
 
 
 if __name__ == "__main__":  # pragma: no cover
-
     print(f"RUNNING BATTERY OF {len(TESTS)} TESTS")
     for str1, str2, score in TESTS:
         test_level_battery(str1, str2, score)

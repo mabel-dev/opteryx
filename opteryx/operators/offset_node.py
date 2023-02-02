@@ -40,7 +40,6 @@ class OffsetNode(BasePlanNode):
         return str(self._offset)
 
     def execute(self) -> Iterable:
-
         if len(self._producers) != 1:
             raise SqlError(f"{self.name} on expects a single producer")
 

@@ -163,7 +163,6 @@ def extract_relations(branch, qid):
     from opteryx.components.query_planner import QueryPlanner
 
     def _check_hints(hints):
-
         for hint in hints:
             if hint not in WELL_KNOWN_HINTS:
                 best_match_hint = fuzzy_search(hint, WELL_KNOWN_HINTS)
@@ -265,7 +264,6 @@ def extract_into(branch):
 
 
 def extract_ctes(branch, qid):
-
     from opteryx.components.query_planner import QueryPlanner
 
     ctes = {}

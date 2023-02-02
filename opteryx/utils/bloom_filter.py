@@ -91,7 +91,6 @@ def _get_hash_count(filter_size, number_of_elements):
 
 
 class BloomFilter:
-
     __slots__ = ("filter_size", "bits", "hash_seeds", "hash_count")
 
     def __init__(self, number_of_elements: int = 50000, fp_rate: float = 0.01):

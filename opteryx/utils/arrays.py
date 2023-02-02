@@ -5,7 +5,6 @@ from opteryx.utils import intervals, dates
 
 
 def generate_series(*args):
-
     from opteryx.managers.expression import NodeType
 
     arg_len = len(args)

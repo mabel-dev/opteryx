@@ -178,14 +178,11 @@ def _extended_collector(pages):
     profile_collector: dict = {}
 
     for page in pages:
-
         if columns is None:
             columns = Columns(page)
 
         for block in page.to_batches(5000):
-
             for column in page.column_names:
-
                 column_data = block.column(column)
 
                 profile = profile_collector.get(column, orjson.loads(empty_profile))
@@ -284,7 +281,6 @@ def _extended_collector(pages):
         profile["type"] = ", ".join(profile["type"])
 
         if column not in uncollected_columns:
-
             dgram = profile.pop("distogram", None)
             if dgram:
                 profile["min"], profile["max"] = distogram.bounds(dgram)  # type:ignore
@@ -343,7 +339,6 @@ class ShowColumnsNode(BasePlanNode):
         return ""
 
     def execute(self) -> Iterable:
-
         # TODO: [TARCHIA] - use the metastore to get the column statisitcs
 
         if len(self._producers) != 1:

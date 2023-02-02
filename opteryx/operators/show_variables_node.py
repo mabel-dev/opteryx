@@ -33,7 +33,6 @@ class ShowVariablesNode(BasePlanNode):
         return ""
 
     def execute(self) -> Iterable:
-
         buffer = []
 
         if len(self.properties.variables) == 0:

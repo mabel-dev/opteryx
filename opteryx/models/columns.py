@@ -159,7 +159,6 @@ class Columns:
         matches = list(dict.fromkeys(matches))
         if only_one:
             if len(matches) == 0:
-
                 best_match = self.fuzzy_search(column.upper())
                 if best_match:
                     raise ColumnNotFoundError(
@@ -225,7 +224,6 @@ class Columns:
     def create_table_metadata(
         table, expected_rows, name, table_aliases, disposition, path
     ):
-
         if not isinstance(table_aliases, list):
             table_aliases = [table_aliases]
         table_aliases.append(name)
@@ -265,7 +263,6 @@ class Columns:
 
     @staticmethod
     def remove_null_columns(table):
-
         removed = []
         kept = []
         for column in table.column_names:

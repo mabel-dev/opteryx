@@ -24,7 +24,6 @@ RULESET: list = [
 
 
 def tree_rewriter(plan, properties):
-
     stats = QueryStatistics(properties.qid)
     start = time.monotonic_ns()
 

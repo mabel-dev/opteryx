@@ -27,7 +27,6 @@ def test_soundex_battery(input, result):
 
 
 if __name__ == "__main__":  # pragma: no cover
-
     print(f"RUNNING BATTERY OF {len(TESTS)} TESTS")
     for str1, str2 in TESTS:
         test_soundex_battery(str1, str2)

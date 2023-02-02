@@ -151,7 +151,6 @@ def parse_range(fixed_range):  # pragma: no cover
 
 
 def parse_date(date):  # pragma: no cover
-
     if not date:
         return None
 
@@ -188,7 +187,6 @@ def _temporal_extration_state_machine(parts):
     query_collector = []
     temporal_range_collector = []
     for part in parts:
-
         # record the current state
         transition = [state]
         comparable_part = part.upper().replace(" ", r"\s")
@@ -242,7 +240,6 @@ def _temporal_extration_state_machine(parts):
 
 
 def extract_temporal_filters(sql):  # pragma: no cover
-
     parts = sql_parts(sql)
 
     # define today once
@@ -254,7 +251,6 @@ def extract_temporal_filters(sql):  # pragma: no cover
     final_collector = []
 
     for relation, for_date_string in initial_collector:
-
         start_date = today
         end_date = today
 

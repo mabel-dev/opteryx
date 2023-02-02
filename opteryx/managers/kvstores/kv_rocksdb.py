@@ -36,7 +36,6 @@ except ImportError:
 
 class RocksDB_KVStore(BaseKeyValueStore):
     def __init__(self, location):
-
         super().__init__(location)
         self._location += ".rocks"
 

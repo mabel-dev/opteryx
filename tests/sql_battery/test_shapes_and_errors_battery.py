@@ -867,7 +867,6 @@ def test_sql_battery(statement, rows, columns, exception):
 
 
 if __name__ == "__main__":  # pragma: no cover
-
     """
     Running in the IDE we do some formatting - it's not functional but helps
     when reading the outputs.

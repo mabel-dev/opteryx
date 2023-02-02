@@ -18,7 +18,6 @@ from tests.tools import skip_on_partials
 
 @skip_on_partials
 def test_in_memory_cache():
-
     buffer = BufferPool()
     buffer.reset(True)
 
@@ -63,6 +62,5 @@ def test_in_memory_cache():
 
 
 if __name__ == "__main__":  # pragma: no cover
-
     test_in_memory_cache()
     print("✅ okay")

@@ -81,7 +81,6 @@ class ProjectionNode(BasePlanNode):
         return "Projection"
 
     def execute(self) -> Iterable:
-
         if len(self._producers) != 1:
             raise SqlError(f"{self.name} on expects a single producer")
 
@@ -101,7 +100,6 @@ class ProjectionNode(BasePlanNode):
         seed = str(random_int() + 1)
 
         for page in data_pages.execute():
-
             # If any of the columns are FUNCTIONs, we need to evaluate them
             start_time = time.time_ns()
             _columns, _, page = evaluate_and_append(self._expressions, page, seed)
@@ -109,7 +107,6 @@ class ProjectionNode(BasePlanNode):
 
             # first time round we're going work out what we need from the metadata
             if columns is None:
-
                 projection = []
                 columns = _columns
                 for key in self._projection:

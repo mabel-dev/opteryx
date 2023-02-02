@@ -48,7 +48,6 @@ FORMATS = (
 cache = InMemoryCache(size=100)
 
 if __name__ == "__main__":
-
     CYCLES = 25
 
     opteryx.register_store("tests", DiskConnector)
