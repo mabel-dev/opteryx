@@ -834,6 +834,10 @@ STATEMENTS = [
         ("SELECT SORT(ARRAY_AGG(name LIMIT 5)) as NAMES FROM $satellites GROUP BY planetId", 7, 1, None),
         # 797
         ("SELECT COUNT(*) AS planets, id FROM $planets GROUP BY id ORDER BY planets DESC", 9, 2, None),
+        # 833
+        (b"", None, None, ValueError),
+        ("", None, None, ValueError),
+
 ]
 # fmt:on
 

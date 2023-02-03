@@ -87,6 +87,9 @@ class Cursor:
         return self._qid
 
     def execute(self, operation, params=None):
+        if not operation:
+            raise ValueError("SQL statement not found")
+
         if self._query is not None:  # pragma: no cover
             raise CursorInvalidStateError("Cursor can only be executed once")
 
