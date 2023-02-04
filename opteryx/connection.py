@@ -225,10 +225,10 @@ class Cursor:
         """
         try:
             import pandas
-        except ImportError:  # pragma: nocover
+        except ImportError as err:  # pragma: nocover
             raise MissingDependencyError(
                 "`pandas` is missing, please install or include in requirements.txt"
-            )
+            ) from err
         return self.arrow(size=size).to_pandas()
 
     def close(self):

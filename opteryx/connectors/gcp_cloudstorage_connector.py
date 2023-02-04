@@ -19,21 +19,16 @@ from opteryx.connectors import BaseBlobStorageAdapter
 from opteryx.exceptions import MissingDependencyError
 from opteryx.utils import paths
 
-try:
-    from google.auth.credentials import AnonymousCredentials
-    from google.cloud import storage
-
-    GOOGLE_CLOUD_STORAGE_INSTALLED = True
-except ImportError:  # pragma: no cover
-    GOOGLE_CLOUD_STORAGE_INSTALLED = False
-
 
 class GcpCloudStorageConnector(BaseBlobStorageAdapter):
     def __init__(self, project: Optional[str] = None, credentials=None, **kwargs):
-        if not GOOGLE_CLOUD_STORAGE_INSTALLED:  # pragma: no cover
+        try:
+            from google.auth.credentials import AnonymousCredentials
+            from google.cloud import storage
+        except ImportError as err:
             raise MissingDependencyError(
                 "`google-cloud-storage` is missing, please install or include in requirements.txt"
-            )
+            ) from err
 
         #        super().__init__(**kwargs)
         self.project = project

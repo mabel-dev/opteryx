@@ -28,26 +28,28 @@ from opteryx.managers.kvstores import BaseKeyValueStore
 
 ROCKS_DB = True
 
-try:
-    import rocksdb
-except ImportError:
-    ROCKS_DB = False
-
 
 class RocksDB_KVStore(BaseKeyValueStore):
     def __init__(self, location):
         super().__init__(location)
         self._location += ".rocks"
 
-        if not ROCKS_DB:
+        try:
+            import rocksdb
+        except ImportError as err:
             raise MissingDependencyError(
                 "`RocksDB` is missing, please install or include in requirements.txt"
-            )
+            ) from err
         self._db = rocksdb.DB(location, rocksdb.Options(create_if_missing=True))
 
     @staticmethod
     def can_use():
-        return ROCKS_DB
+        try:
+            import rocksdb
+
+            return True
+        except ImportError:
+            return False
 
     def get(self, key):
         if hasattr(key, "encode"):

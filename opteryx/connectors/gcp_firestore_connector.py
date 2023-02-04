@@ -17,14 +17,6 @@ from opteryx.connectors.capabilities import PredicatePushable
 from opteryx.exceptions import MissingDependencyError
 from opteryx.exceptions import UnmetRequirementError
 
-try:
-    import firebase_admin
-    from firebase_admin import credentials
-    from firebase_admin import firestore
-
-    HAS_FIREBASE = True
-except ImportError:  # pragma: no cover
-    HAS_FIREBASE = False
 
 GCP_PROJECT_ID = config.GCP_PROJECT_ID
 BATCH_SIZE = 5000
@@ -56,10 +48,13 @@ def _get_project_id():  # pragma: no cover
 
 def _initialize():  # pragma: no cover
     """Create the connection to Firebase"""
-    if not HAS_FIREBASE:
+    try:
+        import firebase_admin
+        from firebase_admin import credentials
+    except ImportError as err:  # pragma: no cover
         raise MissingDependencyError(
             "`firebase-admin` missing, please install or add to requirements.txt"
-        )
+        ) from err
     if not firebase_admin._apps:
         # if we've not been given the ID, fetch it
         project_id = GCP_PROJECT_ID
@@ -82,6 +77,8 @@ class GcpFireStoreConnector(BaseDocumentStorageAdapter, PredicatePushable):
         """
         Return a page of documents
         """
+        from firebase_admin import firestore
+
         _initialize()
         database = firestore.client()
         documents = database.collection(collection)
