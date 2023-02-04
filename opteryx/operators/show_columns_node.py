@@ -17,8 +17,6 @@ This is a SQL Query Execution Plan Node.
 
 Gives information about a dataset's columns
 """
-import datetime
-
 from functools import reduce
 from typing import Iterable
 from numpy import nan, nanmin, nanmax
@@ -35,15 +33,13 @@ from opteryx.operators import BasePlanNode
 MAX_COLLECTOR: int = 17
 MAX_VARCHAR_SIZE: int = 64  # long strings tend to lose meaning
 MAX_DATA_SIZE: int = 100 * 1024 * 1024
-UNIX_EPOCH = datetime.datetime(1970, 1, 1)
 
 
 def _to_unix_epoch(date):
-    if date.as_py() is None:
+    timestamp = date.value
+    if timestamp is None:
         return numpy.nan
-    # Not all platforms can handle negative timestamp()
-    # https://bugs.python.org/issue29097
-    return (date.as_py() - UNIX_EPOCH).total_seconds()
+    return timestamp / 1e6
 
 
 def _simple_collector(page):
