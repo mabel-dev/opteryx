@@ -59,6 +59,7 @@ class GcpCloudStorageConnector(BaseBlobStorageAdapter):
         # this means we're not actually going to GCP
         if os.environ.get("STORAGE_EMULATOR_HOST") is not None:
             from google.auth.credentials import AnonymousCredentials
+
             client = storage.Client(
                 credentials=AnonymousCredentials(),
                 project=self.project,
@@ -80,6 +81,7 @@ def get_blob(project: str, bucket: str, blob_name: str):
     # this means we're not actually going to GCP
     if os.environ.get("STORAGE_EMULATOR_HOST") is not None:
         from google.auth.credentials import AnonymousCredentials
+
         client = storage.Client(
             credentials=AnonymousCredentials(),
             project=project,
