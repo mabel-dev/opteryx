@@ -19,21 +19,16 @@ from opteryx.connectors import BaseBlobStorageAdapter
 from opteryx.exceptions import MissingDependencyError
 from opteryx.utils import paths
 
-try:
-    from google.auth.credentials import AnonymousCredentials
-    from google.cloud import storage
-
-    GOOGLE_CLOUD_STORAGE_INSTALLED = True
-except ImportError:  # pragma: no cover
-    GOOGLE_CLOUD_STORAGE_INSTALLED = False
-
 
 class GcpCloudStorageConnector(BaseBlobStorageAdapter):
     def __init__(self, project: Optional[str] = None, credentials=None, **kwargs):
-        if not GOOGLE_CLOUD_STORAGE_INSTALLED:  # pragma: no cover
+        try:
+            from google.auth.credentials import AnonymousCredentials
+            from google.cloud import storage
+        except ImportError as err:
             raise MissingDependencyError(
                 "`google-cloud-storage` is missing, please install or include in requirements.txt"
-            )
+            ) from err
 
         #        super().__init__(**kwargs)
         self.project = project
@@ -53,6 +48,8 @@ class GcpCloudStorageConnector(BaseBlobStorageAdapter):
         return io.BytesIO(stream)
 
     def get_blob_list(self, partition=None):
+        from google.cloud import storage
+
         bucket, object_path, name, extension = paths.get_parts(partition)
         bucket = bucket.replace("va_data", "va-data")
         bucket = bucket.replace("data_", "data-")
@@ -61,6 +58,8 @@ class GcpCloudStorageConnector(BaseBlobStorageAdapter):
 
         # this means we're not actually going to GCP
         if os.environ.get("STORAGE_EMULATOR_HOST") is not None:
+            from google.auth.credentials import AnonymousCredentials
+
             client = storage.Client(
                 credentials=AnonymousCredentials(),
                 project=self.project,
@@ -77,8 +76,12 @@ class GcpCloudStorageConnector(BaseBlobStorageAdapter):
 
 
 def get_blob(project: str, bucket: str, blob_name: str):
+    from google.cloud import storage
+
     # this means we're not actually going to GCP
     if os.environ.get("STORAGE_EMULATOR_HOST") is not None:
+        from google.auth.credentials import AnonymousCredentials
+
         client = storage.Client(
             credentials=AnonymousCredentials(),
             project=project,

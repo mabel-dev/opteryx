@@ -20,20 +20,15 @@ from opteryx.connectors import BaseBlobStorageAdapter
 from opteryx.exceptions import MissingDependencyError, UnmetRequirementError
 from opteryx.utils import paths
 
-try:
-    from minio import Minio  # type:ignore
-
-    MINIO_INSTALLED = True
-except ImportError:  # pragma: no cover
-    MINIO_INSTALLED = False
-
 
 class AwsS3Connector(BaseBlobStorageAdapter):
     def __init__(self, **kwargs):
-        if not MINIO_INSTALLED:  # pragma: no cover
+        try:
+            from minio import Minio  # type:ignore
+        except ImportError as err:  # pragma: no cover
             raise MissingDependencyError(
                 "`minio` is missing, please install or include in requirements.txt"
-            )
+            ) from err
 
         super().__init__(**kwargs)
 

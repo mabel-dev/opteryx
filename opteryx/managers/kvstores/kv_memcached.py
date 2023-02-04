@@ -49,10 +49,10 @@ def _memcached_server(**kwargs):
 
     try:
         from pymemcache.client import base
-    except ImportError:
+    except ImportError as err:
         raise MissingDependencyError(
             "`pymemcache` not installed, include in your requirements.txt file."
-        )
+        ) from err
 
     # wait 1 second to try to connect, it's not worthwhile as a cache if it's slow
     return base.Client(

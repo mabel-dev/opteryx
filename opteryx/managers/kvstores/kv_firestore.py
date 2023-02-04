@@ -6,14 +6,6 @@ from opteryx import config
 from opteryx.exceptions import MissingDependencyError, UnmetRequirementError
 from opteryx.managers.kvstores import BaseKeyValueStore
 
-try:
-    import firebase_admin
-    from firebase_admin import credentials
-    from firebase_admin import firestore
-
-    HAS_FIREBASE = True
-except ImportError:  # pragma: no cover
-    HAS_FIREBASE = False
 
 GCP_PROJECT_ID = config.GCP_PROJECT_ID
 
@@ -44,10 +36,13 @@ def _get_project_id():  # pragma: no cover
 
 def _initialize():  # pragma: no cover
     """Create the connection to Firebase"""
-    if not HAS_FIREBASE:
+    try:
+        import firebase_admin
+        from firebase_admin import credentials
+    except ImportError as err:  # pragma: no cover
         raise MissingDependencyError(
             "`firebase-admin` missing, please install or add to requirements.txt"
-        )
+        ) from err
     if not firebase_admin._apps:
         # if we've not been given the ID, fetch it
         project_id = GCP_PROJECT_ID
@@ -59,6 +54,8 @@ def _initialize():  # pragma: no cover
 
 class FireStoreKVStore(BaseKeyValueStore):
     def get(self, key: bytes) -> Optional[bytes]:
+        from firebase_admin import firestore
+
         _initialize()
         database = firestore.client()
         document = database.collection(self._location).document(key).get()
@@ -68,12 +65,16 @@ class FireStoreKVStore(BaseKeyValueStore):
 
     def set(self, key: bytes, value: bytes):
         _initialize()
+        from firebase_admin import firestore
+
         database = firestore.client()
         database.collection(self._location).document(key).set(value)
         return True
 
     def contains(self, keys: Iterable) -> Iterable:
         _initialize()
+        from firebase_admin import firestore
+
         database = firestore.client()
         collection = database.collection(self._location)
         found = []
