@@ -1,13 +1,22 @@
 """
 Performance tests are not intended to be ran as part of the regression set.
 
-This tests the relative performance of different storage formats.
+This tests the relative performance of different storage formats - results should be
+used as instructive with caution - i.e. don't change formats between parquet and orc
+based on these results. So many things affect the performance that 10th of a second
+differences in this test are unlikely to be meaningful in real world situations.
 
-100 cycles of arrow took 78.264939371 seconds
-100 cycles of jsonl took 90.697849402 seconds
-100 cycles of orc took 79.319735311 seconds
-100 cycles of parquet took 84.210948929 seconds
-100 cycles of zstd took 92.060245531 seconds
+Best of three runs, lower is better
+
+500 cycles  orc_zstd        1.38 seconds    ▏
+500 cycles  parquet_zstd    1.57 seconds    ▎
+500 cycles  orc_snappy      1.64 seconds    ▎
+500 cycles  parquet_lz4     1.72 seconds    ▎
+500 cycles  parquet_snappy  1.76 seconds    ▎
+500 cycles  arrow_lz4       6.28 seconds    ▊
+500 cycles  arrow_zstd      9.67 seconds    █▎
+500 cycles  jsonl took      18.6 seconds    ██▍
+500 cycles  jsonl_zstd      23.5 seconds    ████
 """
 import os
 import sys
@@ -16,7 +25,7 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import opteryx
 from opteryx.connectors import DiskConnector
-from opteryx.kvstores import InMemoryCache
+
 
 import time
 
@@ -45,14 +54,14 @@ FORMATS = (
     "parquet_lz4",
     "zstd",
 )
-cache = InMemoryCache(size=100)
+
 
 if __name__ == "__main__":
     CYCLES = 25
 
     opteryx.register_store("tests", DiskConnector)
 
-    conn = opteryx.connect(cache=cache)
+    conn = opteryx.connect()
 
     for format in FORMATS:
         with Timer(f"{CYCLES} cycles of {format}"):
@@ -61,5 +70,4 @@ if __name__ == "__main__":
                 cur.execute(
                     f"SELECT followers FROM testdata.formats.{format} WITH(NO_PARTITION);"
                 )
-                #                [a for a in cur._results]
-                [a for a in cur.fetchall()]
+                cur.arrow()
