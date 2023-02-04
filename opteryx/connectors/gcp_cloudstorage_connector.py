@@ -48,6 +48,8 @@ class GcpCloudStorageConnector(BaseBlobStorageAdapter):
         return io.BytesIO(stream)
 
     def get_blob_list(self, partition=None):
+        from google.cloud import storage
+
         bucket, object_path, name, extension = paths.get_parts(partition)
         bucket = bucket.replace("va_data", "va-data")
         bucket = bucket.replace("data_", "data-")
@@ -56,6 +58,7 @@ class GcpCloudStorageConnector(BaseBlobStorageAdapter):
 
         # this means we're not actually going to GCP
         if os.environ.get("STORAGE_EMULATOR_HOST") is not None:
+            from google.auth.credentials import AnonymousCredentials
             client = storage.Client(
                 credentials=AnonymousCredentials(),
                 project=self.project,
@@ -72,8 +75,11 @@ class GcpCloudStorageConnector(BaseBlobStorageAdapter):
 
 
 def get_blob(project: str, bucket: str, blob_name: str):
+    from google.cloud import storage
+
     # this means we're not actually going to GCP
     if os.environ.get("STORAGE_EMULATOR_HOST") is not None:
+        from google.auth.credentials import AnonymousCredentials
         client = storage.Client(
             credentials=AnonymousCredentials(),
             project=project,
