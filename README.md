@@ -203,12 +203,13 @@ For prepared example usage, see the below Notebooks on Google Colab.
 
 ## Community
 
-[![gitter](https://img.shields.io/badge/chat-on%20gitter-ED1965.svg?logo=gitter)](https://gitter.im/mabel-opteryx/community)
-[![Twitter Follow](https://img.shields.io/badge/follow-on%20twitter-1DA1F2.svg?logo=twitter)](https://twitter.com/OpteryxSQL)
+[![gitter](https://img.shields.io/badge/get%20help%20on-gitter-ED1965.svg?logo=gitter)](https://gitter.im/mabel-opteryx/community)
+[![Twitter Follow](https://img.shields.io/badge/follow%20on-twitter-1DA1F2.svg?logo=twitter)](https://twitter.com/OpteryxSQL)
+<!---[![Discord](https://img.shields.io/badge/discuss%20on-discord-5865F2.svg?logo=discord)](https://discord.gg/PHqKAb9Y)--->
 
 **How do I get Support?**
 
-For support join our [Gitter Community](https://gitter.im/mabel-opteryx/community).
+For support ask our [Gitter Community](https://gitter.im/mabel-opteryx/community).
 
 **How Can I Contribute?**
 
