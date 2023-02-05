@@ -4,8 +4,8 @@ columns were in the join predicate. This was because the code was sorting the co
 names after they'd been converted to their internal representation - this should
 have failed about 50% of the time, but was closer to 33%.
 
-This test runs the join 20 times to confirm it still works - it's nearly impossible
-a 66% chance thing will happen 20 times in a row.
+This test runs the join 25 times to confirm it still works - it's nearly impossible
+a 66% chance thing will happen 25 times in a row.
 """
 import os
 import sys

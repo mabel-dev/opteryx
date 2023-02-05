@@ -31,6 +31,8 @@ New contributors may need approval before these run.
 
 The project is licensed under [Apache 2.0](https://github.com/mabel-dev/opteryx/blob/main/LICENSE), your submissions will be under this same licence.
 
+Code which is licensed under a compatible or more open license (e.g. Public Domain) will be considered.
+
 #### Format and Style Guidance
 
 For consistent style, code should look like:

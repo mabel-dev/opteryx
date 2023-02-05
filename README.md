@@ -231,7 +231,7 @@ See the project [Security Policy](SECURITY.md) for information about reporting v
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/mabel-dev/opteryx/blob/master/LICENSE)
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fmabel-dev%2Fopteryx.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fmabel-dev%2Fopteryx?ref=badge_shield)
 
-Opteryx is licensed under [Apache 2.0](https://github.com/mabel-dev/opteryx/blob/master/LICENSE).
+Opteryx is licensed under [Apache 2.0](https://github.com/mabel-dev/opteryx/blob/master/LICENSE) unless otherwise noted.
 
 ## Status
 
@@ -241,6 +241,6 @@ Opteryx is in beta. Beta means different things to different people, to us, bein
 
 - Core functionality has good regression test coverage to help ensure stability
 - Some edge cases may have undetected bugs
-- Performance tuning may be incomplete
+- Performance tuning is incomplete
 - Changes are focused on feature completion, bugs, performance, reducing debt, and security
 - Code structure and APIs are not stable and may change
