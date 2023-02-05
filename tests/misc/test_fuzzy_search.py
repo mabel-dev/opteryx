@@ -19,6 +19,10 @@ TESTS = [
 
 @pytest.mark.parametrize("string, candidates, expected", TESTS)
 def test_date_parser(string, candidates, expected):
+    """
+    We're running a string through a set of candidate matches and returning the item
+    which is the best match (expected)
+    """
     assert fuzzy_search(string, candidates) == expected
 
 
