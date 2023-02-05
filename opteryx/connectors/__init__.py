@@ -21,6 +21,7 @@ from opteryx.connectors.disk_connector import DiskConnector
 from opteryx.connectors.gcp_firestore_connector import GcpFireStoreConnector
 from opteryx.connectors.gcp_cloudstorage_connector import GcpCloudStorageConnector
 from opteryx.connectors.mongodb_connector import MongoDbConnector
+from opteryx.connectors.sql_connector import SqlConnector
 from opteryx.shared import MaterializedDatasets
 
 WELL_KNOWN_ADAPTERS = {
@@ -30,6 +31,7 @@ WELL_KNOWN_ADAPTERS = {
     "minio": AwsS3Connector,
     "mongodb": MongoDbConnector,
     "s3": AwsS3Connector,
+    "sql": SqlConnector,
 }
 
 _storage_prefixes = {}
