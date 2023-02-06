@@ -16,8 +16,6 @@ import orjson
 
 
 class Node:
-    _internal: dict = {}
-
     def _is_valid_key(self, key):
         if key.startswith("_"):
             raise AttributeError(
@@ -28,24 +26,29 @@ class Node:
         """
         A Python object with run-time defined attributes.
         """
+        internal = {}
         if isinstance(kwargs, dict):
             for k, v in kwargs.items():
                 self._is_valid_key(k)
-                self._internal[k] = v
+                internal[k] = v
+        self.__dict__["_internal"] = internal
 
     def __getattr__(self, __name: str) -> Any:
-        return self._internal.get(__name)
+        internal = self.__dict__.get("_internal", {})
+        return internal.get(__name)
 
     def __setattr__(self, __name: str, __value: Any) -> None:
+        internal = self.__dict__.get("_internal", {})
         if __name != "_internal":
             self._is_valid_key(__name)
             if __value is None:
-                self._internal.pop(__name, None)
+                internal.pop(__name, None)
             else:
-                self._internal[__name] = __value
+                internal[__name] = __value
 
     def __repr__(self) -> str:
-        return orjson.dumps(self._internal).decode()
+        internal = self.__dict__.get("_internal", {})
+        return orjson.dumps(internal).decode()
 
 
 if __name__ == "__main__":
