@@ -9,6 +9,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import abc
+
 import pyarrow
 
 from .base.base_document_storage_adapter import BaseDocumentStorageAdapter
@@ -45,9 +47,12 @@ else:
         )
 
 
-def register_store(prefix, adapter):
+def register_store(prefix, connector, *, remove_prefix: bool = False, **kwargs):
     """add a prefix"""
-    _storage_prefixes[prefix] = adapter
+    if isinstance(connector, type):
+        # uninitialized classes aren't a type
+        connector = connector(prefix=prefix, remove_prefix=remove_prefix, **kwargs)
+    _storage_prefixes[prefix] = connector
 
 
 def register_df(name, frame):

@@ -26,7 +26,7 @@ Opteryx is a SQL Engine designed for embedded and cloud-native environments, and
 ## Use Cases
 
 - Using SQL to query data files written by another process - such as logs.
-- As a command line tool - Run SQL directly on files - bring the power and flexibility of SQL to filter, transform and combine files, or as a command line viewer and converter for Parquet, ORC or AVRO format files.
+- As a command line tool - Run SQL directly on files - bring the power and flexibility of SQL to filter, transform and combine files, or as a command line viewer and converter for Parquet, ORC or Avro format files.
 - As an embeddable engine - a low-cost option to allow hundreds of analysts to each have part-time databases.
 - Executing SQL against pandas DataFrames
 
@@ -48,11 +48,11 @@ If a cluster, region or datacentre is unavailable, if you have instances able to
 
 Opteryx queries your data in the systems you store them in saving you from the cost and effort of maintaining duplicates your data into a common store for analytics.
 
-You can store your data in parquet files on disk or Cloud Storage, and in MongoDB or Firestore and access all of these data in the same query.
+You can store your data in Parquet, ORC or Avro files on disk or Cloud Storage, and in MongoDB or Firestore and access all of these data in the same query.
 
 ### __Bring your own Files__
 
-Opteryx supports many popular data formats, including Parquet, ORC, Feather and JSONL, stored on local disk or on Cloud Storage. You can mix-and-match formats, so one dataset can be Parquet and another JSONL, and Opteryx will be able to JOIN across them.
+Opteryx supports many popular data formats, including Parquet, ORC, Avro and JSONL, stored on local disk or on Cloud Storage. You can mix-and-match formats, so one dataset can be Parquet and another JSONL, and Opteryx will be able to JOIN across them.
 
 ### __Consumption-Based Billing Friendly__
 

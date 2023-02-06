@@ -21,8 +21,10 @@ from typing import Iterable, List
 class BaseDocumentStorageAdapter(abc.ABC):
     __mode__ = "Collection"
 
-    def __init__(self) -> None:
+    def __init__(self, prefix: str, remove_prefix: bool = False) -> None:
         self._predicates: List = []
+        self._prefix = prefix
+        self._remove_prefix = remove_prefix
 
     def page_dictset(self, dictset: Iterable[dict], page_size: int):
         """

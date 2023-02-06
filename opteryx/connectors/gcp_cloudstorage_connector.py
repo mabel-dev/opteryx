@@ -22,6 +22,7 @@ from opteryx.utils import paths
 
 class GcpCloudStorageConnector(BaseBlobStorageAdapter):
     def __init__(self, project: Optional[str] = None, credentials=None, **kwargs):
+        super().__init__(**kwargs)
         try:
             from google.auth.credentials import AnonymousCredentials
             from google.cloud import storage

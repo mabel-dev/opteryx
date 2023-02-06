@@ -23,7 +23,8 @@ from opteryx.shared import MaterializedDatasets
 
 
 class ArrowConnector(BaseDocumentStorageAdapter):
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self._datasets = MaterializedDatasets()
 
     def get_document_count(self, collection) -> int:

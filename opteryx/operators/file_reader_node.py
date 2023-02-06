@@ -73,7 +73,7 @@ class FileReaderNode(BasePlanNode):
 
         self._filter = None
 
-        self._reader = config.get("reader")()  # type:ignore
+        self._reader = config.get("reader")  # type:ignore
 
         # pushed down projections
         self._selection = config.get("selection")

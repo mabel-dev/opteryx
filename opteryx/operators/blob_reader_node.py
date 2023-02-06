@@ -100,7 +100,7 @@ class BlobReaderNode(BasePlanNode):
             return
 
         self._dataset = self._dataset.replace(".", "/") + "/"
-        self._reader = config.get("reader")()  # type:ignore
+        self._reader = config.get("reader")  # type:ignore
 
         # WITH hint can turn off caching
         self._disable_cache = "NO_CACHE" in config.get("hints", [])

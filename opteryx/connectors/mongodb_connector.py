@@ -32,7 +32,8 @@ BATCH_SIZE = 500
 
 
 class MongoDbConnector(BaseDocumentStorageAdapter):
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         """establish the connection to mongodb"""
         mongo_connection = os.environ.get("MONGO_CONNECTION")
         mongo_database = os.environ.get("MONGO_DATABASE")

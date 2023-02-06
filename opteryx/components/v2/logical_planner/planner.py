@@ -60,12 +60,7 @@ class LogicalPlanStepType(int, Enum):
 
 
 class LogicalPlan(Graph):
-    def get_relations(self):
-        relations = []
-        for nid, node in self._nodes.items():
-            if node["node_type"] == LogicalPlanStepType.READ:
-                relations.append(nid)
-        return relations
+    pass
 
 
 """

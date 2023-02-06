@@ -478,8 +478,12 @@ def analyze_query(ast, properties):
         mode = "Internal"
         reader = None
     else:
-        reader = connector_factory(dataset)
-        mode = reader.__mode__
+        if paths.is_file(dataset):
+            mode = "File"
+            reader = DiskConnector
+        else:
+            reader = connector_factory(dataset)
+            mode = reader.__mode__
 
     plan.add_node(
         "reader",
