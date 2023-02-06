@@ -71,4 +71,4 @@ def connector_factory(dataset):
     prefix = dataset.split(".")[0]
     if prefix in _storage_prefixes:
         return _storage_prefixes[prefix]
-    return _storage_prefixes.get("_", None)
+    return _storage_prefixes.get("_", None)(prefix="")
