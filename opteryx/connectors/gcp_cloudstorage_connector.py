@@ -22,6 +22,7 @@ from opteryx.utils import paths
 
 class GcpCloudStorageConnector(BaseBlobStorageAdapter):
     def __init__(self, project: Optional[str] = None, credentials=None, **kwargs):
+        super().__init__(**kwargs)
         try:
             from google.auth.credentials import AnonymousCredentials
             from google.cloud import storage
@@ -53,8 +54,6 @@ class GcpCloudStorageConnector(BaseBlobStorageAdapter):
         bucket, object_path, name, extension = paths.get_parts(partition)
         bucket = bucket.replace("va_data", "va-data")
         bucket = bucket.replace("data_", "data-")
-
-        # print(bucket, object_path, name, extension)
 
         # this means we're not actually going to GCP
         if os.environ.get("STORAGE_EMULATOR_HOST") is not None:

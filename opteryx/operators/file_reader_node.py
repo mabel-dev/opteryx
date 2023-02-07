@@ -73,7 +73,7 @@ class FileReaderNode(BasePlanNode):
 
         self._filter = None
 
-        self._reader = config.get("reader")()  # type:ignore
+        self._reader = config.get("reader")  # type:ignore
 
         # pushed down projections
         self._selection = config.get("selection")
@@ -87,9 +87,9 @@ class FileReaderNode(BasePlanNode):
     def push_predicate(self, predicate):
         # For the blob reader, we push selection nodes, for parquet we then convert
         # these to DNF at read time, for everything else, we run the selection nodes
-        from opteryx.connectors.capabilities import PredicatePushable
+        from opteryx.connectors.capabilities import predicate_pushable
 
-        if PredicatePushable.to_dnf(predicate) is None:
+        if predicate_pushable.to_dnf(predicate) is None:
             # we can't push all predicates everywhere
             return False
         if self._filter is None:

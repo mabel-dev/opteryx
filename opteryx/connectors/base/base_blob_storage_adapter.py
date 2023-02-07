@@ -25,6 +25,10 @@ from opteryx.utils import paths
 class BaseBlobStorageAdapter(abc.ABC):
     __mode__ = "Blob"
 
+    def __init__(self, prefix: str, remove_prefix: bool = False) -> None:
+        self._prefix = prefix
+        self._remove_prefix = remove_prefix
+
     def get_partitions(
         self,
         *,

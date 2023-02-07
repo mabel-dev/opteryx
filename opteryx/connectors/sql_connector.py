@@ -18,7 +18,7 @@ functionality of SQL engines.
 
 This relies on SQLAlchemy
 """
-from typing import List, Union
+from typing import Union
 
 import pyarrow
 
@@ -28,18 +28,21 @@ from opteryx.exceptions import MissingDependencyError
 class SqlConnector:
     __mode__ = "SQL"
 
-    def __init__(self, server) -> None:
-        # defer this step until we know we need it
+    def __init__(
+        self, prefix: str = "", remove_prefix: bool = False, connection: str = None
+    ) -> None:
+        # we're just testing we can import here
         try:
             from sqlalchemy import create_engine
-            from sqlalchemy import text
         except ImportError as err:  # pragma: nocover
             raise MissingDependencyError(
                 "`sqlalchemy` is missing, please install or include in requirements.txt"
             ) from err
 
-        self._predicates: List = []
-        self._server = server
+        self._connection = connection
+
+        self._remove_prefix = remove_prefix
+        self._prefix = prefix
 
     def read_records(
         self, dataset, selection: Union[list, None] = None, page_size: int = 500
@@ -47,14 +50,25 @@ class SqlConnector:
         """
         Return a page of documents
         """
-        raise NotImplementedError("read_document not implemented")
+        from sqlalchemy import create_engine
+        from sqlalchemy import text
+
+        queried_relation = dataset
+        if self._remove_prefix:
+            if dataset.startswith(f"{self._prefix}."):
+                queried_relation = dataset[len(self._prefix) + 1 :]
+
+        SQL = f'SELECT * from "{queried_relation}"'
+
+        engine = create_engine(self._connection)
+        with engine.connect() as conn:
+            result = conn.execute(text(SQL))
+
+            batch = result.fetchmany(page_size)
+            while batch:
+                yield pyarrow.Table.from_pylist([b._asdict() for b in batch])
+                batch = result.fetchmany(page_size)
 
     @property
     def can_push_selection(self):
-        return True
-
-
-if __name__ == "__main__":
-    from sqlalchemy import create_engine
-
-    engine = create_engine("postgresql://postgres:postgrespw@localhost:49153")
+        return False

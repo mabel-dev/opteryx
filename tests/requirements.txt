@@ -18,6 +18,7 @@ firebase-admin
 google-cloud-storage
 minio
 pymongo
+sqlalchemy
 
 faust-streaming-rocksdb
 

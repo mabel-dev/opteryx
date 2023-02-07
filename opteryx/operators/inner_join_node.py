@@ -110,7 +110,7 @@ class InnerJoinNode(BasePlanNode):
         return ""
 
     def execute(self) -> Iterable:
-        if len(self._producers) != 2:
+        if len(self._producers) != 2:  # pragma: no cover
             raise SqlError(f"{self.name} expects two producers")
 
         left_node = self._producers[0]  # type:ignore

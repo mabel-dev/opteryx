@@ -16,7 +16,9 @@ def test_count_star():
 
     conn = opteryx.connect()
     cur = conn.cursor()
-    cur.execute("SELECT count(*) FROM testdata.formats.parquet WITH(NO_PARTITION);")
+    cur.execute(
+        "SELECT count(*) FROM testdata.flat.formats.parquet WITH(NO_PARTITION);"
+    )
     cur.arrow()
     stats = cur.stats
     assert stats["columns_read"] == 1, stats["columns_read"]
@@ -25,7 +27,9 @@ def test_count_star():
 
     conn = opteryx.connect()
     cur = conn.cursor()
-    cur.execute("SELECT COUNT(*) FROM testdata.formats.parquet WITH(NO_PARTITION);")
+    cur.execute(
+        "SELECT COUNT(*) FROM testdata.flat.formats.parquet WITH(NO_PARTITION);"
+    )
     cur.arrow()
     stats = cur.stats
     assert stats["columns_read"] == 1

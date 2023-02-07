@@ -79,7 +79,7 @@ def select_query(ast, properties):
         relation.alias = relation.dataset
         relation.dataset = properties.ctes[relation.dataset]
     if relation.kind == "File":
-        reader = DiskConnector
+        reader = DiskConnector(prefix="")
     elif relation.kind == "External":
         # external comes in different flavours
         reader = connector_factory(relation.dataset)
@@ -478,8 +478,12 @@ def analyze_query(ast, properties):
         mode = "Internal"
         reader = None
     else:
-        reader = connector_factory(dataset)
-        mode = reader.__mode__
+        if paths.is_file(dataset):
+            mode = "File"
+            reader = DiskConnector(prefix="")
+        else:
+            reader = connector_factory(dataset)
+            mode = reader.__mode__
 
     plan.add_node(
         "reader",

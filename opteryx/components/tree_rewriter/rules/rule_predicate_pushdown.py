@@ -11,7 +11,7 @@
 # limitations under the License.
 
 """
-Optimization Rule - Selection Pushdown
+Optimization Rule - Predicate Pushdown
 
 Type: Heuristic
 Goal: Reduce rows
@@ -21,9 +21,9 @@ from opteryx import operators
 from opteryx.managers.expression import NodeType
 
 
-def selection_pushdown(plan, properties):
+def predicate_pushdown(plan, properties):
     """
-    Initial implementation of Selection Pushdown, this puts selections (filters) as
+    Initial implementation of Predicate Pushdown, this puts selections (filters) as
     close to the read as possible, including offloading them to external services.
 
     This has the benefit that we have less data to pass around the system, and

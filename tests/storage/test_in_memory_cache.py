@@ -20,7 +20,7 @@ def test_in_memory_cache():
     # read the data once, this should populate the cache
     conn = opteryx.connect(cache=cache)
     cur = conn.cursor()
-    cur.execute("SELECT * FROM testdata.tweets WITH(NO_PARTITION);")
+    cur.execute("SELECT * FROM testdata.flat.tweets WITH(NO_PARTITION);")
     cur.arrow()
 
     stats = cur.stats
@@ -31,7 +31,7 @@ def test_in_memory_cache():
     # read the data a second time, this should hit the cache
     conn = opteryx.connect(cache=cache)
     cur = conn.cursor()
-    cur.execute("SELECT * FROM testdata.tweets WITH(NO_PARTITION);")
+    cur.execute("SELECT * FROM testdata.flat.tweets WITH(NO_PARTITION);")
     cur.arrow()
 
     stats = cur.stats
@@ -42,7 +42,7 @@ def test_in_memory_cache():
     # read the data with the no cache directive
     conn = opteryx.connect(cache=cache)
     cur = conn.cursor()
-    cur.execute("SELECT * FROM testdata.tweets WITH (NO_CACHE, NO_PARTITION);")
+    cur.execute("SELECT * FROM testdata.flat.tweets WITH (NO_CACHE, NO_PARTITION);")
     cur.arrow()
 
     stats = cur.stats
@@ -60,7 +60,9 @@ def test_cache_in_subqueries():
     # read the data once, this should populate the cache
     conn = opteryx.connect(cache=cache)
     cur = conn.cursor()
-    cur.execute("SELECT * FROM (SELECT * FROM testdata.tweets WITH(NO_PARTITION));")
+    cur.execute(
+        "SELECT * FROM (SELECT * FROM testdata.flat.tweets WITH(NO_PARTITION));"
+    )
     cur.arrow()
 
     stats = cur.stats
@@ -71,7 +73,9 @@ def test_cache_in_subqueries():
     # read the data a second time, this should hit the cache
     conn = opteryx.connect(cache=cache)
     cur = conn.cursor()
-    cur.execute("SELECT * FROM (SELECT * FROM testdata.tweets WITH(NO_PARTITION));")
+    cur.execute(
+        "SELECT * FROM (SELECT * FROM testdata.flat.tweets WITH(NO_PARTITION));"
+    )
     cur.arrow()
 
     stats = cur.stats
@@ -83,7 +87,7 @@ def test_cache_in_subqueries():
     conn = opteryx.connect(cache=cache)
     cur = conn.cursor()
     cur.execute(
-        "SELECT * FROM (SELECT * FROM testdata.tweets WITH(NO_CACHE, NO_PARTITION));"
+        "SELECT * FROM (SELECT * FROM testdata.flat.tweets WITH(NO_CACHE, NO_PARTITION));"
     )
     cur.arrow()
 

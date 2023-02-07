@@ -21,6 +21,7 @@ from opteryx.connectors.disk_connector import DiskConnector
 from opteryx.connectors.gcp_firestore_connector import GcpFireStoreConnector
 from opteryx.connectors.gcp_cloudstorage_connector import GcpCloudStorageConnector
 from opteryx.connectors.mongodb_connector import MongoDbConnector
+from opteryx.connectors.sql_connector import SqlConnector
 from opteryx.shared import MaterializedDatasets
 
 WELL_KNOWN_ADAPTERS = {
@@ -30,6 +31,7 @@ WELL_KNOWN_ADAPTERS = {
     "minio": AwsS3Connector,
     "mongodb": MongoDbConnector,
     "s3": AwsS3Connector,
+    "sql": SqlConnector,
 }
 
 _storage_prefixes = {}
@@ -43,9 +45,19 @@ else:
         )
 
 
-def register_store(prefix, adapter):
+def register_store(prefix, connector, *, remove_prefix: bool = False, **kwargs):
     """add a prefix"""
-    _storage_prefixes[prefix] = adapter
+    if not isinstance(connector, type):  # type: ignore
+        # uninstantiated classes aren't a type
+        raise ValueError(
+            "connectors registered with `register_store` must be uninstantiated."
+        )
+    _storage_prefixes[prefix] = {
+        "connector": connector,  # type: ignore
+        "prefix": prefix,
+        "remove_prefix": remove_prefix,
+        **kwargs,
+    }
 
 
 def register_df(name, frame):
@@ -62,6 +74,14 @@ def register_arrow(name, table):
 
 def connector_factory(dataset):
     prefix = dataset.split(".")[0]
+    connector_entry: dict = {}
     if prefix in _storage_prefixes:
-        return _storage_prefixes[prefix]
-    return _storage_prefixes.get("_", None)
+        connector_entry = _storage_prefixes[prefix].copy()  # type: ignore
+        connector = connector_entry.pop("connector")
+    else:
+        connector = _storage_prefixes.get("_")
+
+    prefix = connector_entry.pop("prefix", "")
+    remove_prefix = connector_entry.pop("remove_prefix", False)
+
+    return connector(prefix=prefix, remove_prefix=remove_prefix, **connector_entry)

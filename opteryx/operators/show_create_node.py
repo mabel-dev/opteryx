@@ -43,7 +43,7 @@ class ShowCreateNode(BasePlanNode):
     def execute(self) -> Iterable:
         statement = f"CREATE TABLE `{self._table}` (\n"
 
-        if len(self._producers) != 1:
+        if len(self._producers) != 1:  # pragma: no cover
             raise SqlError(f"{self.name} on expects a single producer")
 
         data_pages = self._producers[0]  # type:ignore

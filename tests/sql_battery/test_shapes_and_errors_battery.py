@@ -358,15 +358,15 @@ STATEMENTS = [
         ("SELECT * FROM generate_series('192.168.1.0/28')", 16, 1, None),
         ("SELECT * FROM generate_series('192.168.1.100/29')", 8, 1, None),
 
-        ("SELECT * FROM testdata.dated FOR '2020-02-03' WITH (NO_CACHE)", 25, 8, None),
-        ("SELECT * FROM testdata.dated FOR '2020-02-03'", 25, 8, None),
-        ("SELECT * FROM testdata.dated FOR '2020-02-04'", 25, 8, None),
-        ("SELECT * FROM testdata.dated FOR DATES BETWEEN '2020-02-01' AND '2020-02-28'", 50, 8, None),
-        ("SELECT * FROM testdata.dated FOR '2020-02-03' OFFSET 1", 24, 8, None),
-        ("SELECT * FROM testdata.dated FOR DATES BETWEEN '2020-02-01' AND '2020-02-28' OFFSET 1", 49, 8, None),
+        ("SELECT * FROM testdata.partitioned.dated FOR '2020-02-03' WITH (NO_CACHE)", 25, 8, None),
+        ("SELECT * FROM testdata.partitioned.dated FOR '2020-02-03'", 25, 8, None),
+        ("SELECT * FROM testdata.partitioned.dated FOR '2020-02-04'", 25, 8, None),
+        ("SELECT * FROM testdata.partitioned.dated FOR DATES BETWEEN '2020-02-01' AND '2020-02-28'", 50, 8, None),
+        ("SELECT * FROM testdata.partitioned.dated FOR '2020-02-03' OFFSET 1", 24, 8, None),
+        ("SELECT * FROM testdata.partitioned.dated FOR DATES BETWEEN '2020-02-01' AND '2020-02-28' OFFSET 1", 49, 8, None),
         ("SELECT * FROM $satellites FOR YESTERDAY ORDER BY planetId OFFSET 10", 167, 8, None),
 
-        ("SELECT * FROM testdata.segmented FOR '2020-02-03'", 25, 8, None),
+        ("SELECT * FROM testdata.partitioned.segmented FOR '2020-02-03'", 25, 8, None),
         ("SELECT * FROM $planets FOR '1730-01-01'", 6, 20, None),
         ("SELECT * FROM $planets FOR '1830-01-01'", 7, 20, None),
         ("SELECT * FROM $planets FOR '1930-01-01'", 8, 20, None),
@@ -380,12 +380,12 @@ STATEMENTS = [
 
         ("SELECT * FROM $astronauts WHERE death_date IS NULL", 305, 19, None),
         ("SELECT * FROM $astronauts WHERE death_date IS NOT NULL", 52, 19, None),
-        ("SELECT * FROM testdata.formats.parquet WITH(NO_PARTITION) WHERE user_verified IS TRUE", 711, 13, None),
-        ("SELECT * FROM testdata.formats.parquet WITH(NO_PARTITION) WHERE user_verified IS FALSE", 99289, 13, None),
-        ("SELECT * FROM testdata.formats.csv WITH(NO_PARTITION) WHERE user_verified IS FALSE", 33395, 10, None),
-        ("SELECT * FROM testdata.formats.tsv WITH(NO_PARTITION) WHERE user_verified IS FALSE", 33395, 10, None),
+        ("SELECT * FROM testdata.flat.formats.parquet WITH(NO_PARTITION) WHERE user_verified IS TRUE", 711, 13, None),
+        ("SELECT * FROM testdata.flat.formats.parquet WITH(NO_PARTITION) WHERE user_verified IS FALSE", 99289, 13, None),
+        ("SELECT * FROM testdata.flat.formats.csv WITH(NO_PARTITION) WHERE user_verified IS FALSE", 33395, 10, None),
+        ("SELECT * FROM testdata.flat.formats.tsv WITH(NO_PARTITION) WHERE user_verified IS FALSE", 33395, 10, None),
 
-        ("SELECT * FROM testdata.formats.parquet WITH(NO_PARTITION, PARALLEL_READ)", 100000, 13, None),
+        ("SELECT * FROM testdata.flat.formats.parquet WITH(NO_PARTITION, PARALLEL_READ)", 100000, 13, None),
 
         ("SELECT * FROM $satellites FOR DATES IN LAST_MONTH ORDER BY planetId OFFSET 10", 167, 8, None),
         ("SELECT * FROM $satellites FOR DATES IN PREVIOUS_MONTH ORDER BY planetId OFFSET 10", 167, 8, None),
@@ -420,7 +420,7 @@ STATEMENTS = [
         ("SHOW EXTENDED COLUMNS FROM $planets", 20, 11, None),
         ("SHOW EXTENDED COLUMNS FROM $astronauts", 19, 11, None),
         ("SHOW COLUMNS FROM $satellites LIKE '%d'", 2, 2, None),
-        ("SHOW COLUMNS FROM testdata.dated FOR '2020-02-03'", 8, 2, None),
+        ("SHOW COLUMNS FROM testdata.partitioned.dated FOR '2020-02-03'", 8, 2, None),
 
         ("SELECT * FROM $satellites CROSS JOIN $astronauts", 63189, 27, None),
         ("SELECT * FROM $satellites WITH (NO_CACHE) CROSS JOIN $astronauts WITH (NO_CACHE)", 63189, 27, None),
@@ -556,7 +556,7 @@ STATEMENTS = [
         ("SELECT ABSOLUTE(ROUND(gravity) * density * density) FROM $planets", 9, 1, None),
         ("SELECT COUNT(*), ROUND(gm) FROM $satellites GROUP BY ROUND(gm)", 22, 2, None),
         ("SELECT COALESCE(death_date, '1900-01-01') FROM $astronauts", 357, 1, None),
-        ("SELECT * FROM (SELECT COUNT(*) FROM testdata.formats.parquet WITH(NO_PARTITION) GROUP BY followers)", 10016, 1, None),
+        ("SELECT * FROM (SELECT COUNT(*) FROM testdata.flat.formats.parquet WITH(NO_PARTITION) GROUP BY followers)", 10016, 1, None),
         ("SELECT a.id, b.id FROM $planets AS a INNER JOIN (SELECT id FROM $planets) AS b USING (id)", 9, 2, None),
         ("SELECT * FROM $planets INNER JOIN $planets AS b USING (id)", 9, 40, None),
         ("SELECT ROUND(5 + RAND() * (10 - 5)) rand_between FROM $planets", 9, 1, None),
@@ -642,7 +642,7 @@ STATEMENTS = [
         ("SHOW CREATE TABLE $planets", 1, 1, None),
         ("SHOW CREATE TABLE $satellites", 1, 1, None),
         ("SHOW CREATE TABLE $astronauts", 1, 1, None),
-        ("SHOW CREATE TABLE testdata.framed FOR '2021-03-28'", 1, 1, None),
+        ("SHOW CREATE TABLE testdata.partitioned.framed FOR '2021-03-28'", 1, 1, None),
         ("SET enable_optimizer = false;\nSET enable_page_defragmentation = true;\nSELECT COUNT(*) FROM $planets WHERE id > 3 AND name ILIKE '%e%'", 1, 1, None),
         ("SET enable_optimizer = true;\nSET enable_page_defragmentation = true;\nSELECT COUNT(*) FROM $planets WHERE id > 3 AND name ILIKE '%e%'", 1, 1, None),
         ("SET enable_optimizer = true;\nSET enable_page_defragmentation = false;\nSELECT COUNT(*) FROM $planets WHERE id > 3 AND name ILIKE '%e%'", 1, 1, None),
@@ -682,16 +682,16 @@ STATEMENTS = [
         ("SELECT * FROM $planets WHERE TRIM(TRAILING 'arth' FROM name) = 'E'", 1, 20, None),
         ("SELECT * FROM $planets WHERE TRIM(TRAILING 'ahrt' FROM name) = 'E'", 1, 20, None),
 
-        ("SELECT user_name, user_verified FROM testdata.formats.parquet WITH(NO_PARTITION) WHERE user_verified IS TRUE", 711, 2, None),
-        ("SELECT user_name, user_verified FROM testdata.formats.parquet WITH(NO_PARTITION) WHERE user_verified = TRUE", 711, 2, None),
-        ("SELECT user_name, user_verified FROM testdata.formats.parquet WITH(NO_PARTITION) WHERE user_verified IS TRUE AND followers < 1000", 10, 2, None),
-        ("SELECT user_name, user_verified FROM testdata.formats.parquet WITH(NO_PARTITION) WHERE followers < 1000 and user_name LIKE '%news%'", 12, 2, None),
-        ("SELECT user_name, user_verified FROM testdata.formats.parquet WITH(NO_PARTITION) WHERE followers < 1000 and followers < 500 and followers < 250", 40739, 2, None),
-        ("SELECT user_name, user_verified FROM testdata.formats.parquet WITH(NO_PARTITION) WHERE followers BETWEEN 0 AND 251", 40939, 2, None),
+        ("SELECT user_name, user_verified FROM testdata.flat.formats.parquet WITH(NO_PARTITION) WHERE user_verified IS TRUE", 711, 2, None),
+        ("SELECT user_name, user_verified FROM testdata.flat.formats.parquet WITH(NO_PARTITION) WHERE user_verified = TRUE", 711, 2, None),
+        ("SELECT user_name, user_verified FROM testdata.flat.formats.parquet WITH(NO_PARTITION) WHERE user_verified IS TRUE AND followers < 1000", 10, 2, None),
+        ("SELECT user_name, user_verified FROM testdata.flat.formats.parquet WITH(NO_PARTITION) WHERE followers < 1000 and user_name LIKE '%news%'", 12, 2, None),
+        ("SELECT user_name, user_verified FROM testdata.flat.formats.parquet WITH(NO_PARTITION) WHERE followers < 1000 and followers < 500 and followers < 250", 40739, 2, None),
+        ("SELECT user_name, user_verified FROM testdata.flat.formats.parquet WITH(NO_PARTITION) WHERE followers BETWEEN 0 AND 251", 40939, 2, None),
 
-        ("SELECT * FROM 'testdata/formats/arrow/tweets.arrow'", 100000, 13, None),
-        ("SELECT * FROM 'testdata/tweets/tweets-0000.jsonl' INNER JOIN 'testdata/tweets/tweets-0001.jsonl' USING (userid)", 491, 16, None),
-        ("SELECT * FROM 'testdata/tweets/tweets-0000.jsonl' INNER JOIN $planets on sentiment = numberOfMoons", 12, 28, None),
+        ("SELECT * FROM 'testdata/flat/formats/arrow/tweets.arrow'", 100000, 13, None),
+        ("SELECT * FROM 'testdata/flat/tweets/tweets-0000.jsonl' INNER JOIN 'testdata/flat/tweets/tweets-0001.jsonl' USING (userid)", 491, 16, None),
+        ("SELECT * FROM 'testdata/flat/tweets/tweets-0000.jsonl' INNER JOIN $planets on sentiment = numberOfMoons", 12, 28, None),
 
         ("SELECT * FROM $planets AS p JOIN $planets AS g ON p.id = g.id AND g.name = 'Earth';", 1, 40, None),
         ("SELECT * FROM $planets AS p JOIN $planets AS g ON p.id = g.id AND p.name = 'Earth';", 1, 40, None),
@@ -750,30 +750,30 @@ STATEMENTS = [
         # NAMED SUBQUERIES
         ("SELECT P.name FROM ( SELECT * FROM $planets ) AS P", 9, 1, None),
         # UNNEST
-        ("SELECT * FROM testdata.unnest_test FOR '2000-01-01' CROSS JOIN UNNEST (values) AS value ", 15, 3, None),
+        ("SELECT * FROM testdata.partitioned.unnest_test FOR '2000-01-01' CROSS JOIN UNNEST (values) AS value ", 15, 3, None),
         # FRAME HANDLING
-        ("SELECT * FROM testdata.framed FOR '2021-03-28'", 100000, 1, None),
-        ("SELECT * FROM testdata.framed FOR '2021-03-29'", 100000, 1, None),
-        ("SELECT * FROM testdata.framed FOR DATES BETWEEN '2021-03-28' AND '2021-03-29'", 200000, 1, None),
-        ("SELECT * FROM testdata.framed FOR DATES BETWEEN '2021-03-29' AND '2021-03-30'", 100000, 1, None),
-        ("SELECT * FROM testdata.framed FOR DATES BETWEEN '2021-03-28' AND '2021-03-30'", 200000, 1, None),
+        ("SELECT * FROM testdata.partitioned.framed FOR '2021-03-28'", 100000, 1, None),
+        ("SELECT * FROM testdata.partitioned.framed FOR '2021-03-29'", 100000, 1, None),
+        ("SELECT * FROM testdata.partitioned.framed FOR DATES BETWEEN '2021-03-28' AND '2021-03-29'", 200000, 1, None),
+        ("SELECT * FROM testdata.partitioned.framed FOR DATES BETWEEN '2021-03-29' AND '2021-03-30'", 100000, 1, None),
+        ("SELECT * FROM testdata.partitioned.framed FOR DATES BETWEEN '2021-03-28' AND '2021-03-30'", 200000, 1, None),
         # PAGING OF DATASETS AFTER A GROUP BY [#179]
         ("SELECT * FROM (SELECT COUNT(*), column_1 FROM FAKE(5000,2) GROUP BY column_1 ORDER BY COUNT(*)) LIMIT 5", 5, 2, None),
         # FILTER CREATION FOR 3 OR MORE ANDED PREDICATES FAILS [#182]
         ("SELECT * FROM $astronauts WHERE name LIKE '%o%' AND `year` > 1900 AND gender ILIKE '%ale%' AND group IN (1,2,3,4,5,6)", 41, 19, None),
         # LIKE-ING NULL
-        ("SELECT * FROM testdata.nulls FOR '2000-01-01' WHERE username LIKE 'BBC%'", 3, 5, None),
-        ("SELECT * FROM testdata.nulls FOR '2000-01-01' WHERE username ILIKE 'BBC%'", 3, 5, None),
-        ("SELECT * FROM testdata.nulls FOR '2000-01-01' WHERE username NOT LIKE 'BBC%'", 21, 5, None),
-        ("SELECT * FROM testdata.nulls FOR '2000-01-01' WHERE NOT username LIKE 'BBC%'", 22, 5, None),
-        ("SELECT * FROM testdata.nulls FOR '2000-01-01' WHERE username NOT ILIKE 'BBC%'", 21, 5, None),
-        ("SELECT * FROM testdata.nulls FOR '2000-01-01' WHERE username ~ 'BBC.+'", 3, 5, None),
-        ("SELECT * FROM testdata.nulls FOR '2000-01-01' WHERE username !~ 'BBC.+'", 21, 5, None),
-        ("SELECT * FROM testdata.nulls FOR '2000-01-01' WHERE username ~* 'bbc.+'", 3, 5, None),
-        ("SELECT * FROM testdata.nulls FOR '2000-01-01' WHERE username !~* 'bbc.+'", 21, 5, None),
-        ("SELECT * FROM testdata.nulls FOR '2000-01-01' WHERE username SIMILAR TO 'BBC.+'", 3, 5, None),
-        ("SELECT * FROM testdata.nulls FOR '2000-01-01' WHERE username NOT SIMILAR TO 'BBC.+'", 21, 5, None),
-        ("SELECT * FROM testdata.nulls FOR '2000-01-01' WHERE tweet ILIKE '%Trump%'", 0, 5, None),
+        ("SELECT * FROM testdata.partitioned.nulls FOR '2000-01-01' WHERE username LIKE 'BBC%'", 3, 5, None),
+        ("SELECT * FROM testdata.partitioned.nulls FOR '2000-01-01' WHERE username ILIKE 'BBC%'", 3, 5, None),
+        ("SELECT * FROM testdata.partitioned.nulls FOR '2000-01-01' WHERE username NOT LIKE 'BBC%'", 21, 5, None),
+        ("SELECT * FROM testdata.partitioned.nulls FOR '2000-01-01' WHERE NOT username LIKE 'BBC%'", 22, 5, None),
+        ("SELECT * FROM testdata.partitioned.nulls FOR '2000-01-01' WHERE username NOT ILIKE 'BBC%'", 21, 5, None),
+        ("SELECT * FROM testdata.partitioned.nulls FOR '2000-01-01' WHERE username ~ 'BBC.+'", 3, 5, None),
+        ("SELECT * FROM testdata.partitioned.nulls FOR '2000-01-01' WHERE username !~ 'BBC.+'", 21, 5, None),
+        ("SELECT * FROM testdata.partitioned.nulls FOR '2000-01-01' WHERE username ~* 'bbc.+'", 3, 5, None),
+        ("SELECT * FROM testdata.partitioned.nulls FOR '2000-01-01' WHERE username !~* 'bbc.+'", 21, 5, None),
+        ("SELECT * FROM testdata.partitioned.nulls FOR '2000-01-01' WHERE username SIMILAR TO 'BBC.+'", 3, 5, None),
+        ("SELECT * FROM testdata.partitioned.nulls FOR '2000-01-01' WHERE username NOT SIMILAR TO 'BBC.+'", 21, 5, None),
+        ("SELECT * FROM testdata.partitioned.nulls FOR '2000-01-01' WHERE tweet ILIKE '%Trump%'", 0, 5, None),
         # BYTE-ARRAY FAILS [#252]
         (b"SELECT * FROM $satellites", 177, 8, None),
         # DISTINCT on null values [#285]
@@ -801,7 +801,7 @@ STATEMENTS = [
         # REGRESSION
         ("SELECT VERSION()", 1, 1, None),
         # COALESCE doesn't work with NaNs [#404]
-        ("SELECT is_reply_to FROM testdata.formats.parquet WITH(NO_PARTITION) WHERE COALESCE(is_reply_to, -1) < 0", 74765, 1, None),
+        ("SELECT is_reply_to FROM testdata.flat.formats.parquet WITH(NO_PARTITION) WHERE COALESCE(is_reply_to, -1) < 0", 74765, 1, None),
         # Names not found / clashes [#471]
         ("SELECT P.* FROM (SELECT * FROM $planets) AS P", 9, 20, None),
         ("SELECT P0.id, P1.ID, P2.ID FROM $planets AS P0 JOIN (SELECT id AS ID, name FROM $planets) AS P1 ON P0.name = P1.name JOIN (SELECT id, name AS ID FROM $planets) AS P2 ON P0.name = P2.name", 9, 3, None),
@@ -825,7 +825,7 @@ STATEMENTS = [
         # [#518] SELECT * and GROUP BY can't be used together
         ("SELECT * FROM $planets GROUP BY name", None, None, SqlError),
         # found testing
-        ("SELECT user_name FROM testdata.formats.arrow WITH(NO_PARTITION) WHERE user_name = 'Niran'", 1, 1, None),
+        ("SELECT user_name FROM testdata.flat.formats.arrow WITH(NO_PARTITION) WHERE user_name = 'Niran'", 1, 1, None),
         #769
         ("SELECT GREATEST(ARRAY_AGG(name)) as NAMES FROM $satellites GROUP BY planetId", 7, 1, None),
         ("SELECT LEAST(ARRAY_AGG(name)) as NAMES FROM $satellites GROUP BY planetId", 7, 1, None),

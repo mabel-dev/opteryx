@@ -39,11 +39,13 @@ class ShowStoresNode(BasePlanNode):
 
         buffer = [
             {
-                "name": "<default>" if s == "_" else s,
-                "connector": str(c.__name__),
-                "type": str(c.mro()[1].__name__[4:-14]),
+                "name": "<default>" if s == "_" else s,  # type: ignore
+                "connector": str(c["connector"].__name__),  # type: ignore
+                "remove_prefix": c["remove_prefix"],  # type: ignore
+                "type": str(c["connector"].mro()[1].__name__[4:-14]),  # type: ignore
             }
             for s, c in _storage_prefixes.items()
+            if isinstance(c, dict)
         ]
 
         table = pyarrow.Table.from_pylist(buffer)

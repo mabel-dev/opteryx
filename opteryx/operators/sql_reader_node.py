@@ -11,7 +11,7 @@
 # limitations under the License.
 
 """
-Collection Reader Node
+SQL Reader Node
 
 This is a SQL Query Execution Plan Node.
 
@@ -29,7 +29,7 @@ from opteryx.operators import BasePlanNode
 from opteryx.models.columns import Columns
 
 
-class CollectionReaderNode(BasePlanNode):
+class SqlReaderNode(BasePlanNode):
     def __init__(self, properties: QueryProperties, **config):
         """
         The Collection Reader Node is responsible for reading the relevant documents
@@ -38,14 +38,7 @@ class CollectionReaderNode(BasePlanNode):
         super().__init__(properties=properties)
 
         self._alias = config.get("alias")
-
-        dataset = config["dataset"]
-        self._dataset = ".".join(dataset.split(".")[:-1])
-        self._collection = dataset.split(".")[0]
-
-        if self._dataset == "":
-            self._dataset = self._collection
-
+        self._dataset = config["dataset"]
         self._reader = config.get("reader")
 
         # pushed down selection/filter
@@ -61,7 +54,7 @@ class CollectionReaderNode(BasePlanNode):
 
     @property
     def name(self):  # pragma: no cover
-        return "Collection Reader"
+        return "SQL Reader"
 
     @property
     def can_push_selection(self):
@@ -77,9 +70,7 @@ class CollectionReaderNode(BasePlanNode):
     def execute(self) -> Iterable:
         metadata = None
 
-        row_count = self._reader.get_document_count(self._collection)
-
-        for pyarrow_page in self._reader.read_documents(self._collection):
+        for pyarrow_page in self._reader.read_records(dataset=self._dataset):
             start_read = time.time_ns()
             if not isinstance(pyarrow_page, pyarrow.Table):
                 pyarrow_page = pyarrow.Table.from_pylist(pyarrow_page)
@@ -92,7 +83,7 @@ class CollectionReaderNode(BasePlanNode):
             if metadata is None:
                 pyarrow_page = Columns.create_table_metadata(
                     table=pyarrow_page,
-                    expected_rows=row_count,
+                    expected_rows=None,  # TODO: can we get this?
                     name=self._dataset,
                     table_aliases=[self._alias],
                     disposition="collection",

@@ -43,7 +43,6 @@ class ProjectionNode(BasePlanNode):
         self._expressions = []
 
         projection = config.get("projection")
-        # print("projection:", projection)
         for attribute in projection:
             while attribute.token_type == NodeType.NESTED:
                 attribute = attribute.centre
@@ -81,7 +80,7 @@ class ProjectionNode(BasePlanNode):
         return "Projection"
 
     def execute(self) -> Iterable:
-        if len(self._producers) != 1:
+        if len(self._producers) != 1:  # pragma: no cover
             raise SqlError(f"{self.name} on expects a single producer")
 
         data_pages = self._producers[0]  # type:ignore
@@ -90,7 +89,6 @@ class ProjectionNode(BasePlanNode):
 
         # if we have nothing to do, move along
         if self._projection == {"*": None}:
-            # print(f"projector yielding *")
             yield from data_pages.execute()
             return
 

@@ -43,7 +43,7 @@ def test_sql_battery(statement, subs, rows, columns):
     """
     Test an battery of statements
     """
-    conn = opteryx.connect(reader=DiskConnector(), partition_scheme=None)
+    conn = opteryx.connect(reader=DiskConnector(prefix=""), partition_scheme=None)
     cursor = conn.cursor()
     cursor.execute(statement, subs)
     actual_rows, actual_columns = cursor.shape

@@ -17,7 +17,7 @@ RULESET: list = [
     rules.split_conjunctive_predicates,  # run after eliminate_negations
     rules.eliminate_fixed_function_evaluations,  # run before constant evaluations
     rules.eliminate_constant_evaluations,
-    rules.selection_pushdown,
+    rules.predicate_pushdown,
     rules.defragment_pages,
     rules.use_heap_sort,
 ]

@@ -71,6 +71,8 @@ def _statitics_collector(pages):
     )
     target_metadata = None
 
+    pages = list(pages)
+
     for page in pages:
         uncollected_columns = []
         profile_collector: dict = {}
@@ -252,12 +254,12 @@ class BuildStatisticsNode(BasePlanNode):
         return ""
 
     def execute(self) -> Iterable:
-        if len(self._producers) != 1:
+        if len(self._producers) != 1:  # pragma: no cover  # pragma: no cover
             raise SqlError(f"{self.name} on expects a single producer")
 
         data_pages = self._producers[0]  # type:ignore
 
-        if data_pages is None:
+        if data_pages is None:  # pragma: no cover
             return None
 
         return _statitics_collector(data_pages.execute())

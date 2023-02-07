@@ -8,12 +8,12 @@ from opteryx.connectors import DiskConnector
 
 
 def simple_query():  # pragma: no cover
-    conn = opteryx.connect(reader=DiskConnector(), partition_scheme=None)
+    conn = opteryx.connect(reader=DiskConnector(prefix=""), partition_scheme=None)
 
     # SELECT EVERYTHING
     cur = conn.cursor()
     cur.execute(
-        f"SELECT * FROM testdata.formats.jsonl WHERE user_id = 762916610478747648"
+        f"SELECT * FROM testdata.flat.formats.jsonl WHERE user_id = 762916610478747648"
     )
     [a for a in cur.fetchall()]
 

@@ -69,3 +69,7 @@ WITH nom AS (SELECT planetId as id FROM $satellites GROUP BY planetId) SELECT * 
 WITH nom AS (SELECT id FROM $planets FOR '1688-01-01') SELECT * FROM $planets INNER JOIN nom ON id = id;
 WITH nom AS (SELECT id FROM $planets FOR '1688-01-01') SELECT * FROM $planets FOR TODAY INNER JOIN nom ON id = id;
 WITH nom AS (SELECT id FROM $planets FOR DATES BETWEEN '2022-01-01' AND TODAY) SELECT * FROM $planets INNER JOIN nom ON id = id;
+
+ANALYZE TABLE $astronauts;
+ANALYZE TABLE $planets;
+ANALYZE TABLE 'testdata/flat/formats/parquet/tweets.parquet';

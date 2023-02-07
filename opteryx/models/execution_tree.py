@@ -117,7 +117,6 @@ class ExecutionTree(Graph):
                 yield from _inner_explain(operator_name[0], depth + 1)
 
         head = list(dict.fromkeys(self.get_exit_points()))
-        # print(head, _edges)
         if len(head) != 1:  # pragma: no cover
             raise DatabaseError(f"Problem with the plan - it has {len(head)} heads.")
         plan = list(_inner_explain(head[0], 1))

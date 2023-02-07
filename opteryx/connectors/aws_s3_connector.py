@@ -22,7 +22,8 @@ from opteryx.utils import paths
 
 
 class AwsS3Connector(BaseBlobStorageAdapter):
-    def __init__(self, **kwargs):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         try:
             from minio import Minio  # type:ignore
         except ImportError as err:  # pragma: no cover

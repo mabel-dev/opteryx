@@ -61,7 +61,7 @@ def test_bfs():
     assert len(bfs) == 14
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     test_graph()
     test_outgoing_edges()
     test_epitomize()

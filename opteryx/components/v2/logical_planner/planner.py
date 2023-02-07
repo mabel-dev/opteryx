@@ -36,6 +36,7 @@ from enum import auto, Enum
 from opteryx.components.logical_planner import builders
 from opteryx.managers.expression import ExpressionTreeNode, NodeType
 from opteryx.managers.expression import get_all_nodes_of_type
+from opteryx.models.node import Node
 from opteryx.third_party.travers import Graph
 from opteryx.utils import unique_id
 
@@ -59,12 +60,7 @@ class LogicalPlanStepType(int, Enum):
 
 
 class LogicalPlan(Graph):
-    def get_relations(self):
-        relations = []
-        for nid, node in self._nodes.items():
-            if node["node_type"] == LogicalPlanStepType.READ:
-                relations.append(nid)
-        return relations
+    pass
 
 
 """
@@ -110,7 +106,7 @@ def plan_query(statement):
         _relations = sub_plan["Select"]["from"]
         for relation in _relations:
             # TODO: if it's a subquery, expand it out
-            from_step = {"node_type": LogicalPlanStepType.READ, "relation": relation}
+            from_step = Node(node_type=LogicalPlanStepType.READ, relation=relation)
             previous_step_id, step_id = step_id, unique_id()
             previous_from_step_id, from_step_id = previous_step_id, step_id
             inner_plan.add_node(from_step_id, from_step)
@@ -119,7 +115,7 @@ def plan_query(statement):
             _joins = relation["joins"]
             for join in _joins:
                 # add the join node
-                join_step = {"node_type": LogicalPlanStepType.JOIN, "join": join}
+                join_step = Node(node_type=LogicalPlanStepType.JOIN, join=join)
                 previous_step_id, step_id = step_id, unique_id()
                 join_step_id = step_id
                 inner_plan.add_node(join_step_id, join_step)
@@ -128,10 +124,9 @@ def plan_query(statement):
                 # add the other side of the join
                 # TODO: if it's a subquery, expand it out
                 right_node = unique_id()
-                joined_read_step = {
-                    "node_type": LogicalPlanStepType.READ,
-                    "relation": join["relation"],
-                }
+                joined_read_step = Node(
+                    node_type=LogicalPlanStepType.READ, relation=join["relation"]
+                )
                 inner_plan.add_node(right_node, joined_read_step)
                 inner_plan.add_edge(right_node, join_step_id, "right")
 
@@ -144,7 +139,7 @@ def plan_query(statement):
         # selection
         _selection = builders.build(sub_plan["Select"]["selection"])
         if _selection:
-            selection_step = {"node_type": LogicalPlanStepType.SELECT}
+            selection_step = Node(node_type=LogicalPlanStepType.SELECT)
             previous_step_id, step_id = step_id, unique_id()
             inner_plan.add_node(step_id, selection_step)
             if previous_step_id is not None:
@@ -153,7 +148,7 @@ def plan_query(statement):
         # groups
         _groups = builders.build(sub_plan["Select"]["group_by"])
         if _groups != []:
-            group_step = {"node_type": LogicalPlanStepType.GROUP, "group": _groups}
+            group_step = Node(node_type=LogicalPlanStepType.GROUP, group=_groups)
             previous_step_id, step_id = step_id, unique_id()
             inner_plan.add_node(step_id, group_step)
             if previous_step_id is not None:
@@ -165,10 +160,9 @@ def plan_query(statement):
             _projection, select_nodes=(NodeType.AGGREGATOR, NodeType.COMPLEX_AGGREGATOR)
         )
         if len(_aggregates) > 0:
-            aggregate_step = {
-                "node_type": LogicalPlanStepType.AGGREGATE,
-                "aggregates": _aggregates,
-            }
+            aggregate_step = Node(
+                node_type=LogicalPlanStepType.AGGREGATE, aggregates=_aggregates
+            )
             previous_step_id, step_id = step_id, unique_id()
             inner_plan.add_node(step_id, aggregate_step)
             if previous_step_id is not None:
@@ -179,10 +173,9 @@ def plan_query(statement):
         if not (
             len(_projection) == 1 and _projection[0].token_type == NodeType.WILDCARD
         ):
-            project_step = {
-                "node_type": LogicalPlanStepType.PROJECT,
-                "projection": _projection,
-            }
+            project_step = Node(
+                node_type=LogicalPlanStepType.PROJECT, projection=_projection
+            )
             previous_step_id, step_id = step_id, unique_id()
             inner_plan.add_node(step_id, project_step)
             if previous_step_id is not None:
@@ -191,7 +184,7 @@ def plan_query(statement):
         # having
         _having = builders.build(sub_plan["Select"]["having"])
         if _having:
-            having_step = {"node_type": LogicalPlanStepType.SELECT}
+            having_step = Node(node_type=LogicalPlanStepType.SELECT)
             previous_step_id, step_id = step_id, unique_id()
             inner_plan.add_node(step_id, having_step)
             if previous_step_id is not None:
@@ -199,7 +192,7 @@ def plan_query(statement):
 
         # distinct
         if sub_plan["Select"]["distinct"]:
-            distinct_step = {"node_type": LogicalPlanStepType.DISTINCT}
+            distinct_step = Node(node_type=LogicalPlanStepType.DISTINCT)
             previous_step_id, step_id = step_id, unique_id()
             inner_plan.add_node(step_id, distinct_step)
             if previous_step_id is not None:
@@ -208,7 +201,7 @@ def plan_query(statement):
         # order
         _order_by = sub_plan["order_by"]
         if _order_by:
-            order_step = {"node_type": LogicalPlanStepType.ORDER, "order": _order_by}
+            order_step = Node(node_type=LogicalPlanStepType.ORDER, order=_order_by)
             previous_step_id, step_id = step_id, unique_id()
             inner_plan.add_node(step_id, order_step)
             if previous_step_id is not None:
@@ -218,11 +211,9 @@ def plan_query(statement):
         _limit = sub_plan["limit"]
         _offset = sub_plan["offset"]
         if _limit or _offset:
-            limit_step = {
-                "node_type": LogicalPlanStepType.LIMIT,
-                "limit": _limit,
-                "offset": _offset,
-            }
+            limit_step = Node(
+                node_type=LogicalPlanStepType.LIMIT, limit=_limit, offset=_offset
+            )
             previous_step_id, step_id = step_id, unique_id()
             inner_plan.add_node(step_id, limit_step)
             if previous_step_id is not None:
@@ -254,11 +245,11 @@ def plan_query(statement):
 def plan_set_variable(statement):
     root_node = "SetVariable"
     plan = LogicalPlan()
-    set_step = {
-        "node_type": LogicalPlanStepType.SET,
-        "variable": extract_variable(statement[root_node]["variable"]),
-        "value": extract_value(statement[root_node]["value"]),
-    }
+    set_step = Node(
+        node_type=LogicalPlanStepType.SET,
+        variable=extract_variable(statement[root_node]["variable"]),
+        value=extract_value(statement[root_node]["value"]),
+    )
     plan.add_node(unique_id(), set_step)
     return plan
 
@@ -267,25 +258,22 @@ def plan_show_variables(statement):
     root_node = "ShowVariables"
     plan = LogicalPlan()
 
-    read_step = {
-        "node_type": LogicalPlanStepType.READ,
-        "source": "$variables",
-    }
+    read_step = Node(node_type=LogicalPlanStepType.READ, source="$variables")
     step_id = unique_id()
     plan.add_node(step_id, read_step)
 
     predicate = statement[root_node]["filter"]
     if predicate is not None:
         operator = next(iter(predicate))
-        select_step = {
-            "node_type": LogicalPlanStepType.SELECT,
-            "predicate": ExpressionTreeNode(
+        select_step = Node(
+            node_type=LogicalPlanStepType.SELECT,
+            predicate=ExpressionTreeNode(
                 token_type=NodeType.COMPARISON_OPERATOR,
                 value=operator,
                 left=ExpressionTreeNode(token_type=NodeType.IDENTIFIER, value="name"),
                 right=predicate[operator],
             ),
-        }
+        )
         previous_step_id, step_id = step_id, unique_id()
         plan.add_node(step_id, select_step)
         plan.add_edge(previous_step_id, step_id)
@@ -319,9 +307,9 @@ if __name__ == "__main__":  # pragma: no cover
 
     SQL = "SET enable_optimizer = 7"
     SQL = "SELECT * FROM $planets"
-    TSQL = "SELECT DISTINCT MAX(planetId), name FROM $satellites INNER JOIN $planets ON $planets.id = $satellites.id WHERE id = 1 GROUP BY planetId HAVING id > 2 ORDER BY name LIMIT 1 OFFSET 1"
+    SQL = "SELECT DISTINCT MAX(planetId), name FROM $satellites INNER JOIN $planets ON $planets.id = $satellites.id WHERE id = 1 GROUP BY planetId HAVING id > 2 ORDER BY name LIMIT 1 OFFSET 1"
     TSQL = "SELECT * FROM T1, T2"
-    TSQL = "SET @planet = 'Saturn'; SELECT name AS nom FROM (SELECT DISTINCT id as planetId, name FROM $planets WHERE name = @planet) as planets -- LEFT JOIN (SELECT planetId, COUNT(*) FROM $satellites FOR DATES BETWEEN '2022-01-01' AND TODAY WHERE gm > 10) AS bigsats ON bigsats.planetId = planets.planetId -- LEFT JOIN (SELECT planetId, COUNT(*) FROM $satellites FOR DATES IN LAST_MONTH WHERE gm < 10) as smallsats ON smallsats.planetId = planets.planetId ; "
+    SQL = "SET @planet = 'Saturn'; SELECT name AS nom FROM (SELECT DISTINCT id as planetId, name FROM $planets WHERE name = @planet) as planets -- LEFT JOIN (SELECT planetId, COUNT(*) FROM $satellites FOR DATES BETWEEN '2022-01-01' AND TODAY WHERE gm > 10) AS bigsats ON bigsats.planetId = planets.planetId -- LEFT JOIN (SELECT planetId, COUNT(*) FROM $satellites FOR DATES IN LAST_MONTH WHERE gm < 10) as smallsats ON smallsats.planetId = planets.planetId ; "
 
     parsed_statements = opteryx.third_party.sqloxide.parse_sql(SQL, dialect="mysql")
     print(json.dumps(parsed_statements, indent=2))

@@ -8,7 +8,7 @@ def test_pandas():
     import opteryx
     import pandas
 
-    pandas_df = pandas.read_csv("testdata/formats/csv/tweets.csv")
+    pandas_df = pandas.read_csv("testdata/flat/formats/csv/tweets.csv")
 
     opteryx.register_df("twitter", pandas_df)
     curr = opteryx.Connection().cursor()

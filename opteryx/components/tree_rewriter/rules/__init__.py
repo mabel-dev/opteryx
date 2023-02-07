@@ -17,7 +17,7 @@ from .rule_function_evaluations import eliminate_fixed_function_evaluations
 from .rule_defragment_pages import defragment_pages
 from .rule_eliminate_negations import eliminate_negations
 from .rule_move_literal_join_filters import move_literal_join_filters
-from .rule_selection_pushdown import selection_pushdown
+from .rule_predicate_pushdown import predicate_pushdown
 from .rule_split_conjunctive_predicates import split_conjunctive_predicates
 from .rule_use_heap_sort import use_heap_sort
 

@@ -14,5 +14,6 @@ pandas
 # different storage providers
 avro
 firebase-admin
+sqlalchemy
 
 setuptools_rust

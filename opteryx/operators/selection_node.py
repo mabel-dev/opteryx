@@ -45,7 +45,7 @@ class SelectionNode(BasePlanNode):
         return "Selection"
 
     def execute(self) -> Iterable:
-        if len(self._producers) != 1:
+        if len(self._producers) != 1:  # pragma: no cover
             raise SqlError(f"{self.name} on expects a single producer")
 
         data_pages = self._producers[0]  # type:ignore
@@ -63,6 +63,9 @@ class SelectionNode(BasePlanNode):
         for page in data_pages.execute():
             if schema is None:
                 schema = page.schema
+
+            if page.num_rows == 0:
+                continue
 
             start_selection = time.time_ns()
             mask = evaluate(self.filter, page, False)
