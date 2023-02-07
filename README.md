@@ -48,7 +48,7 @@ If a cluster, region or datacentre is unavailable, if you have instances able to
 
 Opteryx queries your data in the systems you store them in saving you from the cost and effort of maintaining duplicates your data into a common store for analytics.
 
-You can store your data in Parquet, ORC or Avro files on disk or Cloud Storage, and in MongoDB or Firestore and access all of these data in the same query.
+You can store your data in Parquet, ORC or Avro files on disk or Cloud Storage, in MongoDB or Firestore, and in Postgres and access all of these data in the same query.
 
 ### __Bring your own Files__
 
@@ -91,6 +91,7 @@ Designed to run in Knative and similar environments like Google Cloud Run, Opter
 [Execute SQL on a pandas DataFrame](#execute-sql-on-a-pandas-dataframe)   
 [Query Data on Local Disk](#query-data-on-local-disk)    
 [Query Data on GCS](#query-data-on-gcs)  
+[Query Data in SQLite](#query-data-in-sqlite)  
 [Further Examples](#further-examples)
 
 #### Install from PyPI
@@ -150,7 +151,7 @@ _this example is complete and should run as-is_
 
 #### Query Data on Local Disk
 
-In this example, we are querying and filtering a file directly.
+In this example, we are querying and filtering a file directly. This example will not run as written because the file being queried does not exist.
 
 ~~~python
 import opteryx
@@ -168,6 +169,28 @@ result.head()
    4 | US Navy   | LC-18A, Cape Canaveral AFS, Fl |  None | 1958-02-05 07:33:00 | Vanguard       | Retired       | Vanguard TV3BU | Failure        
 ~~~
 _this example requires a data file, [space_missions.parquet](https://storage.googleapis.com/opteryx/space_missions/space_missions.parquet)._
+
+#### Query Data in SQLite
+
+In this example, we are querying a SQLite database via Opteryx. This example will not run as written because the file being queried does not exist.
+
+~~~python
+import opteryx
+from opteryx.connectors import SqlConnector
+
+# Register the store, so we know queries for this store should be handled by
+# the SQL Connector
+opteryx.register_store(
+   prefix="sql",
+   connector=SqlConnector, 
+   remove_prefix=True,  # the prefix isn't part of the SQLite table name
+   connection="sqlite:///database.db"  # SQLAlchemy connection string
+)
+result = opteryx.query("SELECT * FROM sql.planets LIMIT 5;")
+result.head()
+~~~
+
+_this example requires a data file, [database.db](https://storage.googleapis.com/opteryx/planets/database.db)._
 
 #### Query Data on GCS  
 

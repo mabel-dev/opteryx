@@ -690,7 +690,7 @@ STATEMENTS = [
         ("SELECT user_name, user_verified FROM testdata.flat.formats.parquet WITH(NO_PARTITION) WHERE followers BETWEEN 0 AND 251", 40939, 2, None),
 
         ("SELECT * FROM 'testdata/flat/formats/arrow/tweets.arrow'", 100000, 13, None),
-        ("SELECT * FROM 'testdata/flat/tweets/tweets-0000.jsonl' INNER JOIN 'testdata/tweets/tweets-0001.jsonl' USING (userid)", 491, 16, None),
+        ("SELECT * FROM 'testdata/flat/tweets/tweets-0000.jsonl' INNER JOIN 'testdata/flat/tweets/tweets-0001.jsonl' USING (userid)", 491, 16, None),
         ("SELECT * FROM 'testdata/flat/tweets/tweets-0000.jsonl' INNER JOIN $planets on sentiment = numberOfMoons", 12, 28, None),
 
         ("SELECT * FROM $planets AS p JOIN $planets AS g ON p.id = g.id AND g.name = 'Earth';", 1, 40, None),

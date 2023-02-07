@@ -1,5 +1,5 @@
 """
-Test we can read from S3
+Test we can read from Sqlite - this is a basic exercise of the SQL Connector
 """
 import os
 import sys
@@ -16,7 +16,7 @@ def test_sqlite_storage():
         "sqlite",
         SqlConnector,
         remove_prefix=True,
-        connection="sqlite:///testdata/sqlite/planets.db",
+        connection="sqlite:///testdata/sqlite/database.db",
     )
 
     results = opteryx.query("SELECT * FROM sqlite.planets")
