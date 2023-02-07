@@ -72,4 +72,4 @@ WITH nom AS (SELECT id FROM $planets FOR DATES BETWEEN '2022-01-01' AND TODAY) S
 
 ANALYZE TABLE $astronauts;
 ANALYZE TABLE $planets;
-ANALYZE TABLE 'testdata/formats/arrow/tweets.arrow';
+ANALYZE TABLE 'testdata/flat/formats/orc/tweets.orc';

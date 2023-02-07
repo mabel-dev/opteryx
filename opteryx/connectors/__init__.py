@@ -9,8 +9,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import abc
-
 import pyarrow
 
 from .base.base_document_storage_adapter import BaseDocumentStorageAdapter
@@ -49,10 +47,17 @@ else:
 
 def register_store(prefix, connector, *, remove_prefix: bool = False, **kwargs):
     """add a prefix"""
-    if isinstance(connector, type):
-        # uninitialized classes aren't a type
-        connector = connector(prefix=prefix, remove_prefix=remove_prefix, **kwargs)
-    _storage_prefixes[prefix] = connector
+    if not isinstance(connector, type):
+        # uninstantiated classes aren't a type
+        raise ValueError(
+            "connectors registered with `register_store` must be uninstantiated."
+        )
+    _storage_prefixes[prefix] = {
+        "connector": connector,
+        "prefix": prefix,
+        "remove_prefix": remove_prefix,
+        **kwargs,
+    }
 
 
 def register_df(name, frame):
@@ -70,5 +75,14 @@ def register_arrow(name, table):
 def connector_factory(dataset):
     prefix = dataset.split(".")[0]
     if prefix in _storage_prefixes:
-        return _storage_prefixes[prefix]
-    return _storage_prefixes.get("_", None)(prefix="")
+        connector_entry = _storage_prefixes[prefix]
+        connector_entry = connector_entry.copy()
+        connector = connector_entry.pop("connector")
+    else:
+        connector_entry = {}
+        connector = _storage_prefixes.get("_")
+
+    prefix = connector_entry.pop("prefix", "")
+    remove_prefix = connector_entry.pop("remove_prefix", False)
+
+    return connector(prefix=prefix, remove_prefix=remove_prefix, **connector_entry)

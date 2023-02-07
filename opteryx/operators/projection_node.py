@@ -43,7 +43,6 @@ class ProjectionNode(BasePlanNode):
         self._expressions = []
 
         projection = config.get("projection")
-        # print("projection:", projection)
         for attribute in projection:
             while attribute.token_type == NodeType.NESTED:
                 attribute = attribute.centre
@@ -90,7 +89,6 @@ class ProjectionNode(BasePlanNode):
 
         # if we have nothing to do, move along
         if self._projection == {"*": None}:
-            # print(f"projector yielding *")
             yield from data_pages.execute()
             return
 

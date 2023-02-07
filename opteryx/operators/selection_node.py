@@ -64,6 +64,9 @@ class SelectionNode(BasePlanNode):
             if schema is None:
                 schema = page.schema
 
+            if page.num_rows == 0:
+                continue
+
             start_selection = time.time_ns()
             mask = evaluate(self.filter, page, False)
             self.statistics.time_evaluating += time.time_ns() - start_selection

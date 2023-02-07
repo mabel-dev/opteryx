@@ -39,7 +39,6 @@ class SqlConnector:
                 "`sqlalchemy` is missing, please install or include in requirements.txt"
             ) from err
 
-        self._predicates: List = []
         self._connection = connection
 
         self._remove_prefix = remove_prefix
@@ -61,7 +60,7 @@ class SqlConnector:
 
         SQL = f'SELECT * from "{queried_relation}"'
 
-        engine = create_engine("postgresql://postgres:postgrespw@localhost:49153")
+        engine = create_engine(self._connection)
         with engine.connect() as conn:
             result = conn.execute(text(SQL))
 

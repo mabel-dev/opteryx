@@ -55,12 +55,12 @@ def parquet_decoder(stream, projection: List = None, selection=None):
     Read parquet formatted files
     """
     from pyarrow import parquet
-    from opteryx.connectors.capabilities import PredicatePushable
+    from opteryx.connectors.capabilities import predicate_pushable
 
     # parquet uses DNF filters
     _select = None
     if selection is not None:
-        _select = PredicatePushable.to_dnf(selection)
+        _select = predicate_pushable.to_dnf(selection)
 
     selected_columns = None
     if isinstance(projection, (list, set)) and "*" not in projection:

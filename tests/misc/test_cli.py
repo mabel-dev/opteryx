@@ -11,11 +11,11 @@ from opteryx.__main__ import main
 
 
 def test_basic_cli():
-    main(ast=False, sql="SELECT * FROM $planets;", o="console", max_col_width=5)
-    main(ast=True, sql="SELECT * FROM $planets;", o="console")
-    main(ast=False, sql="SELECT * FROM $planets;", o="temp.csv")
-    main(ast=False, sql="SELECT * FROM $planets;", o="temp.jsonl")
-    main(ast=False, sql="SELECT * FROM $planets;", o="temp.parquet")
+    main(sql="SELECT * FROM $planets;", o="console", max_col_width=5)
+    main(sql="SELECT * FROM $planets;", o="console")
+    main(sql="SELECT * FROM $planets;", o="temp.csv")
+    main(sql="SELECT * FROM $planets;", o="temp.jsonl")
+    main(sql="SELECT * FROM $planets;", o="temp.parquet")
 
 
 if __name__ == "__main__":  # pragma: no cover

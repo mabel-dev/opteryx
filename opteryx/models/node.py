@@ -51,7 +51,7 @@ class Node:
         return orjson.dumps(internal).decode()
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     n = Node(a=3)
     n.name = "john"
     print(n.a)

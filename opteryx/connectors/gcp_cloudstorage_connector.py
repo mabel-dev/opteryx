@@ -55,8 +55,6 @@ class GcpCloudStorageConnector(BaseBlobStorageAdapter):
         bucket = bucket.replace("va_data", "va-data")
         bucket = bucket.replace("data_", "data-")
 
-        # print(bucket, object_path, name, extension)
-
         # this means we're not actually going to GCP
         if os.environ.get("STORAGE_EMULATOR_HOST") is not None:
             from google.auth.credentials import AnonymousCredentials

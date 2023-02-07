@@ -65,6 +65,10 @@ def _initialize():  # pragma: no cover
 
 
 class GcpFireStoreConnector(BaseDocumentStorageAdapter, PredicatePushable):
+    def __init__(self, *args, **kwargs):
+        super(BaseDocumentStorageAdapter, self).__init__(*args, **kwargs)
+        super(PredicatePushable, self).__init__()
+
     def get_document_count(self, collection) -> int:  # pragma: no cover
         """
         Return an interable of blobs/files

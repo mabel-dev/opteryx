@@ -30,7 +30,6 @@ from opteryx.components.sql_rewriter.sql_rewriter import remove_comments
 
 # fmt:off
 def main(
-    ast: bool = typer.Option(False, help="Display the AST for the query"),
     o: str = typer.Option(default="console", help="Output location", ),
     color: bool = typer.Option(default=True, help="Colorize the table displayed to the console."),
     table_width: bool = typer.Option(default=True, help="Limit console display to the screen width."),
@@ -51,11 +50,6 @@ def main(
     sql = clean_statement(remove_comments(sql))
 
     print()
-
-    if ast:
-        temporal_removed_sql, filters = extract_temporal_filters(sql)
-        ast = sqloxide.parse_sql(temporal_removed_sql, dialect="mysql")
-        print(orjson.dumps(ast))
 
     start = time.monotonic_ns()
     table = opteryx.query(sql).arrow()

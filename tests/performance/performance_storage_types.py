@@ -68,6 +68,6 @@ if __name__ == "__main__":
             for round in range(CYCLES):
                 cur = conn.cursor()
                 cur.execute(
-                    f"SELECT followers FROM testdata.formats.{format} WITH(NO_PARTITION);"
+                    f"SELECT followers FROM testdata.flat.formats.{format} WITH(NO_PARTITION);"
                 )
                 cur.arrow()

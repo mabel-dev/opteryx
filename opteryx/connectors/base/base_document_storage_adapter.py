@@ -15,14 +15,13 @@ Base Inner Reader for nosql document stores
 """
 import abc
 
-from typing import Iterable, List
+from typing import Iterable
 
 
 class BaseDocumentStorageAdapter(abc.ABC):
     __mode__ = "Collection"
 
     def __init__(self, prefix: str, remove_prefix: bool = False) -> None:
-        self._predicates: List = []
         self._prefix = prefix
         self._remove_prefix = remove_prefix
 
