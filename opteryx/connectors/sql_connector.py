@@ -18,7 +18,7 @@ functionality of SQL engines.
 
 This relies on SQLAlchemy
 """
-from typing import List, Union
+from typing import Union
 
 import pyarrow
 
@@ -31,7 +31,7 @@ class SqlConnector:
     def __init__(
         self, prefix: str = "", remove_prefix: bool = False, connection: str = None
     ) -> None:
-        # defer this step until we know we need it
+        # we're just testing we can import here
         try:
             from sqlalchemy import create_engine
         except ImportError as err:  # pragma: nocover

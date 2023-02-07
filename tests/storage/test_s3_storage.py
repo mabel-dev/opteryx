@@ -18,7 +18,7 @@ SECRETS = None
 
 @skip_on_partials
 def test_minio_storage():
-    opteryx.register_store(BUCKET_NAME, AwsS3Connector())
+    opteryx.register_store(BUCKET_NAME, AwsS3Connector)
 
     conn = opteryx.connect()
 
