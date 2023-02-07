@@ -47,13 +47,13 @@ else:
 
 def register_store(prefix, connector, *, remove_prefix: bool = False, **kwargs):
     """add a prefix"""
-    if not isinstance(connector, type):
+    if not isinstance(connector, type):  # type: ignore
         # uninstantiated classes aren't a type
         raise ValueError(
             "connectors registered with `register_store` must be uninstantiated."
         )
     _storage_prefixes[prefix] = {
-        "connector": connector,
+        "connector": connector,  # type: ignore
         "prefix": prefix,
         "remove_prefix": remove_prefix,
         **kwargs,
@@ -74,12 +74,11 @@ def register_arrow(name, table):
 
 def connector_factory(dataset):
     prefix = dataset.split(".")[0]
+    connector_entry: dict = {}
     if prefix in _storage_prefixes:
-        connector_entry = _storage_prefixes[prefix]
-        connector_entry = connector_entry.copy()
+        connector_entry = _storage_prefixes[prefix].copy()  # type: ignore
         connector = connector_entry.pop("connector")
     else:
-        connector_entry = {}
         connector = _storage_prefixes.get("_")
 
     prefix = connector_entry.pop("prefix", "")
