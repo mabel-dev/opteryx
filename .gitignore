@@ -165,3 +165,4 @@ test.json
 space_missions.parquet
 astronauts.parquet
 execution_plan.txt
+database.db

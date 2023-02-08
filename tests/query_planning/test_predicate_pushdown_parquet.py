@@ -1,5 +1,5 @@
 """
-Test predicate pushdown using the document collections
+Test predicate pushdown using the blob reader
 """
 import os
 import sys

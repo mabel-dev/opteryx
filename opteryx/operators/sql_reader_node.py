@@ -90,7 +90,8 @@ class SqlReaderNode(BasePlanNode):
                     path=self._dataset,
                 )
                 metadata = Columns(pyarrow_page)
-                self.statistics.collections_read += 1
+                self.statistics.tables_read += 1
+                self.statistics.columns_read += len(pyarrow_page.column_names)
             else:
                 pyarrow_page = metadata.apply(pyarrow_page)
 
