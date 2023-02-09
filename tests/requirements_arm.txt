@@ -16,5 +16,6 @@ avro
 firebase-admin
 sqlalchemy
 pymysql
+psycopg2-binary
 
 setuptools_rust
