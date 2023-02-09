@@ -43,7 +43,11 @@ def predicate_pushdown(plan, properties):
     # find the in-scope nodes
     selection_nodes = plan.get_nodes_of_type(operators.SelectionNode)
     reader_nodes = plan.get_nodes_of_type(
-        (operators.BlobReaderNode, operators.CollectionReaderNode)
+        (
+            operators.BlobReaderNode,
+            operators.CollectionReaderNode,
+            operators.SqlReaderNode,
+        )
     )
 
     # killer questions - if any aren't met, bail

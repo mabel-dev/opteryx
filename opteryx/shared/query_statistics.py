@@ -51,6 +51,8 @@ class _QueryStatistics:
         self.collections_read: int = 0
         self.document_pages: int = 0
 
+        self.tables_read: int = 0
+
         self.time_data_read: int = 0
 
         self.cache_hits: int = 0
@@ -128,6 +130,7 @@ class _QueryStatistics:
             "cache_errors": self.cache_errors,
             "cache_evictions": self.cache_evictions,
             "collections_read": self.collections_read,
+            "tables_read": self.tables_read,
             "document_pages": self.document_pages,
             "page_splits": self.page_splits,
             "page_merges": self.page_merges,

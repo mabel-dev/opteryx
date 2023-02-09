@@ -22,15 +22,34 @@ from typing import Union
 
 import pyarrow
 
+from opteryx.connectors.capabilities import PredicatePushable
 from opteryx.exceptions import MissingDependencyError
 
 
-class SqlConnector:
+class BaseSQLStorageAdapter:  # this is used by the SHOW STORES statement
+    pass
+
+
+def _write_predicate(predicate):
+    column, operator, literal = predicate
+
+    operator_map = {"==": "="}
+    operator = operator_map.get(operator, operator)
+
+    if isinstance(literal, str):
+        literal = '"' + literal.replace('"', '""') + '"'
+
+    return f"{column} {operator} {literal}"
+
+
+class SqlConnector(BaseSQLStorageAdapter, PredicatePushable):
     __mode__ = "SQL"
 
     def __init__(
         self, prefix: str = "", remove_prefix: bool = False, connection: str = None
     ) -> None:
+        super(BaseSQLStorageAdapter, self).__init__()
+        super(PredicatePushable, self).__init__()
         # we're just testing we can import here
         try:
             from sqlalchemy import create_engine
@@ -52,23 +71,29 @@ class SqlConnector:
         """
         from sqlalchemy import create_engine
         from sqlalchemy import text
+        from opteryx.third_party.query_builder import Query
 
         queried_relation = dataset
         if self._remove_prefix:
             if dataset.startswith(f"{self._prefix}."):
                 queried_relation = dataset[len(self._prefix) + 1 :]
 
-        SQL = f'SELECT * from "{queried_relation}"'
+        # we're using a query builder to prevent hand-crafting SQL
+        query_builder = Query()
+        query_builder.FROM(queried_relation)
+        if selection is None:
+            query_builder.SELECT("*")
+        else:
+            query_builder.SELECT(*selection)
+
+        for predicate in self._predicates:
+            query_builder.WHERE(_write_predicate(predicate))
 
         engine = create_engine(self._connection)
         with engine.connect() as conn:
-            result = conn.execute(text(SQL))
+            result = conn.execute(text(str(query_builder)))
 
             batch = result.fetchmany(page_size)
             while batch:
                 yield pyarrow.Table.from_pylist([b._asdict() for b in batch])
                 batch = result.fetchmany(page_size)
-
-    @property
-    def can_push_selection(self):
-        return False

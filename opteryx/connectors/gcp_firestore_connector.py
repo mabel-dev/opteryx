@@ -68,6 +68,7 @@ class GcpFireStoreConnector(BaseDocumentStorageAdapter, PredicatePushable):
     def __init__(self, *args, **kwargs):
         super(BaseDocumentStorageAdapter, self).__init__(*args, **kwargs)
         super(PredicatePushable, self).__init__()
+        self.supported_ops = ["=="]
 
     def get_document_count(self, collection) -> int:  # pragma: no cover
         """

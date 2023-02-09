@@ -21,6 +21,7 @@ PUSHABLE_OPERATORS = {
     "NotEq": "!=",  # usually !=, sometimes <>
     "GtEq": ">=",
     "LtEq": "<=",
+    "Like": "Like",
 }
 
 
@@ -71,10 +72,11 @@ def to_dnf(root):
 
 
 class PredicatePushable:
-    __slots__ = ("_predicates",)
+    __slots__ = ("_predicates", "supported_ops")
 
     def __init__(self, *args, **kwargs):
         self._predicates = []
+        self.supported_ops = list(PUSHABLE_OPERATORS.values())
 
     def push_predicate(self, predicate):
         """
@@ -83,6 +85,8 @@ class PredicatePushable:
         dnfed = to_dnf(predicate)
         if dnfed is None:
             # we can't push all predicates everywhere
+            return False
+        if not all(d[1] in self.supported_ops for d in dnfed):
             return False
         self._predicates.extend(dnfed)
         return True

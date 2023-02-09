@@ -178,7 +178,7 @@ In this example, we are querying a SQLite database via Opteryx. This example wil
 import opteryx
 from opteryx.connectors import SqlConnector
 
-# Register the store, so we know queries for this store should be handled by
+# Register the store, so we know queries for the 'sql' store should be handled by
 # the SQL Connector
 opteryx.register_store(
    prefix="sql",
@@ -186,8 +186,17 @@ opteryx.register_store(
    remove_prefix=True,  # the prefix isn't part of the SQLite table name
    connection="sqlite:///database.db"  # SQLAlchemy connection string
 )
-result = opteryx.query("SELECT * FROM sql.planets LIMIT 5;")
+result = opteryx.query("SELECT name, mass, diameter, density FROM sql.planets LIMIT 5;")
 result.head()
+~~~
+~~~
+   │ name    │ mass   │ diameter │ density
+═══#═════════#════════#══════════#════════
+ 0 │ Mercury │   0.33 │   4879.0 │  5427.0
+ 1 │ Venus   │   4.87 │  12104.0 │  5243.0
+ 2 │ Earth   │   5.97 │  12756.0 │  5514.0
+ 3 │ Mars    │  0.642 │   6792.0 │  3933.0
+ 4 │ Jupiter │ 1898.0 │ 142984.0 │  1326.0
 ~~~
 
 _this example requires a data file, [database.db](https://storage.googleapis.com/opteryx/planets/database.db)._

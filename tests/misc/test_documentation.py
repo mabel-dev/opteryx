@@ -70,6 +70,28 @@ def test_readme_4():
     result.head()
 
 
+def test_readme_5():
+    import opteryx
+    from opteryx.connectors import SqlConnector
+
+    # this line isn't in the README
+    download_file(
+        "https://storage.googleapis.com/opteryx/planets/database.db",
+        "database.db",
+    )
+
+    # Register the store, so we know queries for this store should be handled by
+    # the SQL Connector
+    opteryx.register_store(
+        prefix="sql",
+        connector=SqlConnector,
+        remove_prefix=True,  # the prefix isn't part of the SQLite table name
+        connection="sqlite:///database.db",  # SQLAlchemy connection string
+    )
+    result = opteryx.query("SELECT * FROM sql.planets LIMIT 5;")
+    result.head()
+
+
 def test_get_started():
     import opteryx
 
@@ -78,10 +100,11 @@ def test_get_started():
 
 if __name__ == "__main__":  # pragma: no cover
     test_documentation_connect_example()
-    test_readme_1()
-    test_readme_2()
-    test_readme_3()
-    test_readme_4()
+    test_readme_1()  # execute-a-simple-query-in-python
+    test_readme_2()  # execute-sql-on-a-pandas-dataframe
+    test_readme_3()  # query-data-on-local-disk
+    test_readme_4()  # query-data-on-gcs
+    test_readme_5()  # query-data-in-sqlite
     test_get_started()
 
     print("✅ okay")

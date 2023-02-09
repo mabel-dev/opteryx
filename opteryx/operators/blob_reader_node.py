@@ -147,8 +147,11 @@ class BlobReaderNode(BasePlanNode):
         # these to DNF at read time, for everything else, we run the selection nodes
         from opteryx.connectors.capabilities import predicate_pushable
 
-        if predicate_pushable.to_dnf(predicate) is None:
+        dnf = predicate_pushable.to_dnf(predicate)
+        if dnf is None:
             # we can't push all predicates everywhere
+            return False
+        if not all(d[1] in {"==", ">", "<", "!=", ">=", "<="} for d in dnf):
             return False
         if self._filter is None:
             self._filter = predicate
