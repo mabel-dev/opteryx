@@ -1,6 +1,6 @@
 from textwrap import dedent
 
-from builder import Query
+from .builder import Query
 
 
 def test_query_simple():
