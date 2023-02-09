@@ -37,7 +37,7 @@ def _write_predicate(predicate):
     operator = operator_map.get(operator, operator)
 
     if isinstance(literal, str):
-        literal = '"' + literal.replace('"', '\\"') + '"'
+        literal = '"' + literal.replace('"', '""') + '"'
 
     return f"{column} {operator} {literal}"
 

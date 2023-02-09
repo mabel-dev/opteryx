@@ -19,7 +19,7 @@ class Query:
     separators = dict(WHERE="AND", HAVING="AND")
     default_separator = ","
 
-    formats:tuple = (
+    formats: tuple = (
         defaultdict(lambda: "{value}"),
         defaultdict(lambda: "{value} AS {alias}", WITH="{alias} AS {value}"),
     )
@@ -49,7 +49,7 @@ class Query:
                 raise ValueError(f"{keyword} already has flag: {flag!r}")
             target.flag = flag
 
-        kwargs:dict = {}
+        kwargs: dict = {}
         if fake_keyword:
             kwargs.update(keyword=fake_keyword)
         if keyword in self.subquery_keywords:
@@ -92,7 +92,7 @@ class Query:
             else:
                 yield f"{keyword}\n"
 
-            grouped:tuple = [], []
+            grouped: tuple = [], []
             for thing in things:
                 grouped[bool(thing.keyword)].append(thing)
             for group in grouped:

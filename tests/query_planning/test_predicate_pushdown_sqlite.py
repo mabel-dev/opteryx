@@ -18,7 +18,7 @@ opteryx.register_store(
 )
 
 
-def test_predicate_pushdowns_sqlite():
+def test_predicate_pushdowns_sqlite_eq():
     """
     This is the same test as the collection pushdown - but on a different dataset
     """
@@ -75,6 +75,41 @@ def test_predicate_pushdowns_sqlite():
     conn.close()
 
 
+def test_predicate_pushdown_sqlite_other():
+    res = opteryx.query("SELECT * FROM sqlite.planets WHERE gravity <= 3.7")
+    assert res.rowcount == 3, res.rowcount
+    assert res.stats["rows_read"] == 3, res.stats
+
+    res = opteryx.query("SELECT * FROM sqlite.planets WHERE name != 'Earth'")
+    assert res.rowcount == 8, res.rowcount
+    assert res.stats["rows_read"] == 8, res.stats
+
+    res = opteryx.query("SELECT * FROM sqlite.planets WHERE name != 'E\"arth'")
+    assert res.rowcount == 9, res.rowcount
+    assert res.stats["rows_read"] == 9, res.stats
+
+    res = opteryx.query("SELECT * FROM sqlite.planets WHERE gravity != 3.7")
+    assert res.rowcount == 7, res.rowcount
+    assert res.stats["rows_read"] == 7, res.stats
+
+    res = opteryx.query("SELECT * FROM sqlite.planets WHERE gravity < 3.7")
+    assert res.rowcount == 1, res.rowcount
+    assert res.stats["rows_read"] == 1, res.stats
+
+    res = opteryx.query("SELECT * FROM sqlite.planets WHERE gravity > 3.7")
+    assert res.rowcount == 6, res.rowcount
+    assert res.stats["rows_read"] == 6, res.stats
+
+    res = opteryx.query("SELECT * FROM sqlite.planets WHERE gravity >= 3.7")
+    assert res.rowcount == 8, res.rowcount
+    assert res.stats["rows_read"] == 8, res.stats
+
+    res = opteryx.query("SELECT * FROM sqlite.planets WHERE name LIKE '%a%'")
+    assert res.rowcount == 4, res.rowcount
+    assert res.stats["rows_read"] == 4, res.stats
+
+
 if __name__ == "__main__":  # pragma: no cover
-    test_predicate_pushdowns_sqlite()
+    test_predicate_pushdowns_sqlite_eq()
+    test_predicate_pushdown_sqlite_other()
     print("✅ okay")

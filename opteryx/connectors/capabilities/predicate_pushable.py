@@ -21,6 +21,7 @@ PUSHABLE_OPERATORS = {
     "NotEq": "!=",  # usually !=, sometimes <>
     "GtEq": ">=",
     "LtEq": "<=",
+    "Like": "Like",
 }
 
 
