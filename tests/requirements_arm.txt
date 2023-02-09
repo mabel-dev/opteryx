@@ -15,5 +15,6 @@ pandas
 avro
 firebase-admin
 sqlalchemy
+pymysql
 
 setuptools_rust

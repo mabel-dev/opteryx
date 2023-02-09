@@ -46,3 +46,5 @@ jobs:
         run: python -m pytest 
         env:
           GCP_PROJECT_ID: mabeldev
+          MYSQL_USER: '${{ secrets.MYSQL_USER }}'
+          MYSQL_PASSWORD: '${{ secrets.MYSQL_PASSWORD }}'

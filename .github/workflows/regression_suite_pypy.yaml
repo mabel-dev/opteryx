@@ -57,3 +57,5 @@ jobs:
           MONGO_CONNECTION: "mongodb://mongoadmin:secret@localhost:27017"
           MONGO_DATABASE: opteryx
           GCP_PROJECT_ID: mabeldev
+          MYSQL_USER: '${{ secrets.MYSQL_USER }}'
+          MYSQL_PASSWORD: '${{ secrets.MYSQL_PASSWORD }}'
