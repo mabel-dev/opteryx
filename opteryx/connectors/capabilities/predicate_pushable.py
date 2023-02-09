@@ -76,7 +76,7 @@ class PredicatePushable:
 
     def __init__(self, *args, **kwargs):
         self._predicates = []
-        self.supported_ops = list(PUSHABLE_OPERATORS.keys())
+        self.supported_ops = list(PUSHABLE_OPERATORS.values())
 
     def push_predicate(self, predicate):
         """
