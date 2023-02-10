@@ -50,12 +50,14 @@ class MongoDbConnector(BaseDocumentStorageAdapter):
         """
         Return the count, or an estimate of, the number of documents
         """
-        return self._database[collection].estimated_document_count()
+        _collection = collection.split(".")[0]
+        return self._database[_collection].estimated_document_count()
 
     def read_documents(self, collection, page_size: int = BATCH_SIZE):
         """
         Return a page of documents
         """
-        documents = self._database[collection].find()
+        _collection = collection.split(".")[0]
+        documents = self._database[_collection].find()
         for page in self.page_dictset(documents, page_size):
             yield page
