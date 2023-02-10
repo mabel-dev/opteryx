@@ -33,8 +33,8 @@ def test_connector_prefixes():
     cur = opteryx.query("SELECT * FROM planets")
     assert cur.rowcount == 9
 
-    #    cur = opteryx.query("SELECT * FROM dwarves")
-    #    assert cur.rowcount == 7
+    cur = opteryx.query("SELECT * FROM dwarves")
+    assert cur.rowcount == 7
 
     # remove the prefix
     cur = opteryx.query("SELECT * FROM sqlite.planets")

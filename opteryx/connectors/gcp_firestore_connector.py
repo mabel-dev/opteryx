@@ -92,8 +92,6 @@ class GcpFireStoreConnector(BaseDocumentStorageAdapter, PredicatePushable):
             if collection.startswith(f"{self._prefix}."):
                 queried_collection = collection[len(self._prefix) + 1 :]
 
-        print(collection, queried_collection, self._remove_prefix, self._prefix)
-
         _initialize()
         database = firestore.client()
         documents = database.collection(queried_collection)
