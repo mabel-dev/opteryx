@@ -65,10 +65,13 @@ def _initialize():  # pragma: no cover
 
 
 class GcpFireStoreConnector(BaseDocumentStorageAdapter, PredicatePushable):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, prefix: str = "", remove_prefix: bool = False, **kwargs):
         super(BaseDocumentStorageAdapter, self).__init__(*args, **kwargs)
         super(PredicatePushable, self).__init__()
         self.supported_ops = ["=="]
+
+        self._remove_prefix = remove_prefix
+        self._prefix = prefix
 
     def get_document_count(self, collection) -> int:  # pragma: no cover
         """
@@ -84,9 +87,16 @@ class GcpFireStoreConnector(BaseDocumentStorageAdapter, PredicatePushable):
         """
         from firebase_admin import firestore
 
+        queried_collection = collection
+        if self._remove_prefix:
+            if collection.startswith(f"{self._prefix}."):
+                queried_collection = collection[len(self._prefix) + 1 :]
+
+        print(collection, queried_collection, self._remove_prefix, self._prefix)
+
         _initialize()
         database = firestore.client()
-        documents = database.collection(collection)
+        documents = database.collection(queried_collection)
 
         for predicate in self._predicates:
             documents = documents.where(*predicate)

@@ -40,7 +40,7 @@ class CollectionReaderNode(BasePlanNode):
         self._alias = config.get("alias")
 
         dataset = config["dataset"]
-        self._dataset = ".".join(dataset.split(".")[:-1])
+        self._dataset = dataset  # ".".join(dataset.split(".")[:-1])
         self._collection = dataset.split(".")[0]
 
         if self._dataset == "":
