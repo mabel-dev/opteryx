@@ -18,6 +18,7 @@ functionality of SQL engines.
 
 This relies on SQLAlchemy
 """
+from functools import lru_cache
 from typing import Union
 
 import pyarrow
@@ -37,9 +38,17 @@ def _write_predicate(predicate):
     operator = operator_map.get(operator, operator)
 
     if isinstance(literal, str):
-        literal = '"' + literal.replace('"', '""') + '"'
+        literal = "'" + literal.replace("'", "''") + "'"
 
     return f"{column} {operator} {literal}"
+
+
+@lru_cache(8)
+def _get_engine(connection):
+    """take advantage of pooling"""
+    from sqlalchemy import create_engine
+
+    return create_engine(connection)
 
 
 class SqlConnector(BaseSQLStorageAdapter, PredicatePushable):
@@ -69,7 +78,6 @@ class SqlConnector(BaseSQLStorageAdapter, PredicatePushable):
         """
         Return a page of documents
         """
-        from sqlalchemy import create_engine
         from sqlalchemy import text
         from opteryx.third_party.query_builder import Query
 
@@ -89,7 +97,7 @@ class SqlConnector(BaseSQLStorageAdapter, PredicatePushable):
         for predicate in self._predicates:
             query_builder.WHERE(_write_predicate(predicate))
 
-        engine = create_engine(self._connection)
+        engine = _get_engine(self._connection)
         with engine.connect() as conn:
             result = conn.execute(text(str(query_builder)))
 

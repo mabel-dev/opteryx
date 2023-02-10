@@ -13,10 +13,6 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
 
-      - name: Install Docker
-        if: matrix.os == 'MacOS'
-        uses: docker-practice/actions-setup-docker@master
-
       - name: Checkout code
         uses: actions/checkout@v3
   
@@ -63,6 +59,10 @@ jobs:
           MONGO_CONNECTION: "mongodb://mongoadmin:secret@localhost:27017"
           MONGO_DATABASE: opteryx
           GCP_PROJECT_ID: mabeldev
+          MYSQL_USER: '${{ secrets.MYSQL_USER }}'
+          MYSQL_PASSWORD: '${{ secrets.MYSQL_PASSWORD }}'
+          POSTGRES_USER: '${{ secrets.POSTGRES_USER }}'
+          POSTGRES_PASSWORD: '${{ secrets.POSTGRES_PASSWORD }}'
 
       - name: Check Coverage
         run: python -m coverage report --include=opteryx/** --fail-under=95 -m

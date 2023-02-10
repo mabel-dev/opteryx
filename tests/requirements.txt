@@ -19,6 +19,8 @@ google-cloud-storage
 minio
 pymongo
 sqlalchemy
+pymysql
+psycopg2-binary
 
 faust-streaming-rocksdb
 
