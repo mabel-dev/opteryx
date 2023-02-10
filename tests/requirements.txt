@@ -21,6 +21,7 @@ pymongo
 sqlalchemy
 pymysql
 psycopg2-binary
+polars
 
 faust-streaming-rocksdb
 

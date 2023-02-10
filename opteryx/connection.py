@@ -231,6 +231,18 @@ class Cursor:
             ) from err
         return self.arrow(size=size).to_pandas()
 
+    def polars(self, size: int = None):
+        """
+        Fetch the resultset as a polars DataFrame
+        """
+        try:
+            import polars
+        except ImportError as err:  # pragma: nocover
+            raise MissingDependencyError(
+                "`polars` is missing, please install or include in requirements.txt"
+            ) from err
+        return polars.DataFrame(self.arrow(size=size))
+
     def close(self):
         """close the connection"""
         self._connection.close()
