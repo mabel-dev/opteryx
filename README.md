@@ -28,7 +28,7 @@ Opteryx is a SQL Engine designed for embedded and cloud-native environments, and
 - Using SQL to query data files written by another process - such as logs.
 - As a command line tool - Run SQL directly on files - bring the power and flexibility of SQL to filter, transform and combine files, or as a command line viewer and converter for Parquet, ORC or Avro format files.
 - As an embeddable engine - a low-cost option to allow hundreds of analysts to each have part-time databases.
-- Executing SQL against pandas DataFrames
+- Adding SQL to existing familar tools like pandas and Polars, Executing SQL against and returning result sets as Polars and pandas DataFrames
 
 ## Features
 
