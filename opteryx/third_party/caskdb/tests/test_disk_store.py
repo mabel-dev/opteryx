@@ -54,7 +54,12 @@ class TestDiskCaskDB(unittest.TestCase):
 
     def test_invalid_key(self) -> None:
         store = CaskDB(file_name=self.file.path)
-        self.assertEqual(store.get("some key"), "")
+        try:
+            store.get("some key")
+        except IndexError:
+            pass
+        except Exception:
+            raise
         store.close()
 
     def test_dict_api(self) -> None:

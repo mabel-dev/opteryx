@@ -5,8 +5,7 @@ import typing
 import unittest
 import uuid
 
-from format import encode_header, decode_header, encode_kv, decode_kv, HEADER_SIZE
-from format import KeyEntry
+from opteryx.third_party.caskdb.record import encode_header, decode_header, encode_kv, decode_kv, HEADER_SIZE, KeyEntry
 
 
 def get_random_header() -> tuple[int, int, int]:

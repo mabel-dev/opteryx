@@ -8,12 +8,12 @@ import sys
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import opteryx
-from opteryx.managers.kvstores import InMemoryKVStore
+from opteryx.managers.cache import MemoryCache
 from opteryx.shared import BufferPool
 
 
 def test_in_memory_cache():
-    cache = InMemoryKVStore(size=5)
+    cache = MemoryCache(size=5)
     buffer = BufferPool()
     buffer.reset(True)
 
@@ -53,7 +53,7 @@ def test_in_memory_cache():
 
 # @skip
 def test_cache_in_subqueries():
-    cache = InMemoryKVStore(size=5)
+    cache = MemoryCache(size=5)
     buffer = BufferPool()
     buffer.reset(True)
 
