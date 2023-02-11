@@ -9,6 +9,7 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 import opteryx
 
 from opteryx.connectors import SqlConnector
+from tests.tools import skip_on_partials
 
 POSTGRES_PASSWORD = os.environ.get("POSTGRES_PASSWORD")
 POSTGRES_USER = os.environ.get("POSTGRES_USER")
@@ -22,6 +23,8 @@ opteryx.register_store(
 )
 
 
+# skip in places to reduce contention
+@skip_on_partials
 def test_predicate_pushdowns_postgres_eq():
     """
     This is the same test as the collection pushdown - but on a different dataset

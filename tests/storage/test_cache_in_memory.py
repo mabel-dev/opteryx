@@ -14,8 +14,8 @@ from opteryx.shared import BufferPool
 
 def test_in_memory_cache():
     cache = MemoryCache(size=5)
-    buffer = BufferPool()
-    buffer.reset(True)
+    _buffer = BufferPool()
+    _buffer.reset(True)
 
     # read the data once, this should populate the cache
     conn = opteryx.connect(cache=cache)
@@ -54,8 +54,8 @@ def test_in_memory_cache():
 # @skip
 def test_cache_in_subqueries():
     cache = MemoryCache(size=5)
-    buffer = BufferPool()
-    buffer.reset(True)
+    _buffer = BufferPool()
+    _buffer.reset(True)
 
     # read the data once, this should populate the cache
     conn = opteryx.connect(cache=cache)

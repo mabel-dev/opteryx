@@ -14,7 +14,6 @@ from .base_kv_store import BaseKeyValueStore
 
 from opteryx.third_party.caskdb.caskdb import CaskDB
 from .kv_firestore import FireStoreKVStore
-from .kv_local_json import LocalKVJson
 
 
 def KV_store_factory(store):  # pragma: no-cover
@@ -24,7 +23,6 @@ def KV_store_factory(store):  # pragma: no-cover
     stores = {
         "cask": CaskDB,
         "firestore": FireStoreKVStore,
-        "json": LocalKVJson,
     }
 
-    return stores.get(store.lower(), LocalKVJson)
+    return stores.get(store.lower(), CaskDB)

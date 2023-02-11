@@ -14,14 +14,16 @@ import pytest
 
 from opteryx.managers.kvstores import CaskDB
 
+TEMP_FOLDER: str = ".temp"
+
 
 def test_caskdb_storage():
     try:
         # delete the old file and make sure there is a folder present
-        shutil.rmtree(".temp", ignore_errors=True)
-        os.makedirs(".temp", exist_ok=True)
+        shutil.rmtree(TEMP_FOLDER, ignore_errors=True)
+        os.makedirs(TEMP_FOLDER, exist_ok=True)
 
-        cdb = CaskDB(".temp/test.caskdb")
+        cdb = CaskDB(f"{TEMP_FOLDER}/test.caskdb")
 
         # set a value
         cdb["a"] = "b"
@@ -39,8 +41,6 @@ def test_caskdb_storage():
         # get a missing value with a default
         assert cdb.get("b", "g") == "g"
 
-    except AssertionError:
-        raise
     finally:
         shutil.rmtree(".temp", ignore_errors=True)
 
