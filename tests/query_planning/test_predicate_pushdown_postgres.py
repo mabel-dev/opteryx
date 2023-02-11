@@ -18,7 +18,7 @@ opteryx.register_store(
     "pg",
     SqlConnector,
     remove_prefix=True,
-    connection=f"postgresql+psycopg2://{POSTGRES_USER}:{POSTGRES_PASSWORD}@trumpet.db.elephantsql.com/{POSTGRES_USER}",
+    connection=f"postgresql+psycopg2://{POSTGRES_USER}:{POSTGRES_PASSWORD}@database-1.cx4rkvpilgqk.eu-west-2.rds.amazonaws.com/{POSTGRES_USER}",
 )
 
 

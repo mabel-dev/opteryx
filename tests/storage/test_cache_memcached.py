@@ -22,9 +22,7 @@ def test_memcached_cache():
     conn = opteryx.connect(cache=cache)
     cur = conn.cursor()
     cur.execute("SELECT * FROM testdata.flat.tweets WITH(NO_PARTITION);")
-    for record in cur.fetchall():
-        # we just want to make sure we consume the data
-        pass
+    cur.arrow()
     stats = cur.stats
     # this test is not idempotent, it will be in different states depending on if its
     # already been run
@@ -36,9 +34,7 @@ def test_memcached_cache():
     conn = opteryx.connect(cache=cache)
     cur = conn.cursor()
     cur.execute("SELECT * FROM testdata.flat.tweets WITH(NO_PARTITION);")
-    for record in cur.fetchall():
-        # we just want to make sure we consume the data
-        pass
+    cur.arrow()
     stats = cur.stats
     assert stats["cache_hits"] == 2, stats
     assert stats["cache_misses"] == 0, stats

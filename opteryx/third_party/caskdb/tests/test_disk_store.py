@@ -58,8 +58,6 @@ class TestDiskCaskDB(unittest.TestCase):
             store.get("some key")
         except IndexError:
             pass
-        except Exception:
-            raise
         store.close()
 
     def test_dict_api(self) -> None:
