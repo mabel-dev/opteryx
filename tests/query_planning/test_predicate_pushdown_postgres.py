@@ -23,7 +23,7 @@ opteryx.register_store(
 )
 
 
-# skip in places to reduce contention
+# skip to reduce contention
 @skip_on_partials
 def test_predicate_pushdowns_postgres_eq():
     """
@@ -79,7 +79,8 @@ def test_predicate_pushdowns_postgres_eq():
 
     conn.close()
 
-
+# skip to reduce contention
+@skip_on_partials
 def test_predicate_pushdown_postgres_other():
     res = opteryx.query("SELECT * FROM pg.planets WHERE gravity <= 3.7")
     assert res.rowcount == 3, res.rowcount
