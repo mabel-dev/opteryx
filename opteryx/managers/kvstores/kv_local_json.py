@@ -45,10 +45,6 @@ class LocalKVJson(BaseKeyValueStore):
         except FileNotFoundError:
             return None
 
-    def put(self, key, value):
-        # for comatibility with RocksDB
-        self.set(key, value)
-
     def set(self, key, value):
         if hasattr(key, "decode"):
             key = key.decode()

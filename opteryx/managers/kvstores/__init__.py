@@ -12,12 +12,9 @@
 
 from .base_kv_store import BaseKeyValueStore
 
+from opteryx.third_party.caskdb.caskdb import CaskDB
 from .kv_firestore import FireStoreKVStore
-from .kv_memory import InMemoryKVStore
 from .kv_local_json import LocalKVJson
-from .kv_memcached import MemcachedKVStore
-from .kv_mongodb import MongoDbKVStore
-from .kv_rocksdb import RocksDB_KVStore
 
 
 def KV_store_factory(store):  # pragma: no-cover
@@ -25,12 +22,9 @@ def KV_store_factory(store):  # pragma: no-cover
     A factory method for getting KV Store instances
     """
     stores = {
+        "cask": CaskDB,
         "firestore": FireStoreKVStore,
-        "memory": InMemoryKVStore,
         "json": LocalKVJson,
-        "memcached": MemcachedKVStore,
-        "mongodb": MongoDbKVStore,
-        "rocksdb": RocksDB_KVStore,
     }
 
     return stores.get(store.lower(), LocalKVJson)

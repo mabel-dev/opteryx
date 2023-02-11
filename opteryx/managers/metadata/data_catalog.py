@@ -13,16 +13,13 @@
 from opteryx import config
 
 from opteryx.managers.kvstores import KV_store_factory
-from opteryx.managers.kvstores import LocalKVJson
-from opteryx.managers.kvstores import RocksDB_KVStore
+from opteryx.managers.kvstores import CaskDB
 
 
 def metadata_factory():
     if config.METADATA_SERVER is None or config.METADATA_SERVER.upper() == "LOCAL":
-        # if rocks is installed, use that
-        if RocksDB_KVStore.can_use():
-            return RocksDB_KVStore
-        return LocalKVJson
+        # Cask is our default KV store
+        return CaskDB
     else:
         # use the configured one
         return KV_store_factory(config.METADATA_SERVER)

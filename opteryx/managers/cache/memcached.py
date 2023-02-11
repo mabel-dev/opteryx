@@ -65,7 +65,7 @@ def _memcached_server(**kwargs):
     )
 
 
-class MemcachedKVStore(BaseKeyValueStore):
+class MemcachedCache(BaseKeyValueStore):
     """
     Cache object
     """

@@ -14,9 +14,9 @@ from tests.tools import skip_on_partials
 @skip_on_partials
 def test_memcached_cache():
     import opteryx
-    from opteryx.managers.kvstores import MemcachedKVStore
+    from opteryx.managers.cache import MemcachedCache
 
-    cache = MemcachedKVStore(server="localhost:11211")
+    cache = MemcachedCache(server="localhost:11211")
 
     # read the data once, this should populate the cache if it hasn't already
     conn = opteryx.connect(cache=cache)
