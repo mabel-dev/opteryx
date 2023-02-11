@@ -3,7 +3,7 @@ import tempfile
 import typing
 import unittest
 
-from opteryx.third_party.caskdb.caskdb import DiskStorage
+from opteryx.third_party.caskdb.caskdb import CaskDB
 
 
 class TempStorageFile:
@@ -47,24 +47,24 @@ class TestDiskCaskDB(unittest.TestCase):
         self.file.clean_up()
 
     def test_get(self) -> None:
-        store = DiskStorage(file_name=self.file.path)
+        store = CaskDB(file_name=self.file.path)
         store.set("name", "jojo")
         self.assertEqual(store.get("name"), "jojo")
         store.close()
 
     def test_invalid_key(self) -> None:
-        store = DiskStorage(file_name=self.file.path)
+        store = CaskDB(file_name=self.file.path)
         self.assertEqual(store.get("some key"), "")
         store.close()
 
     def test_dict_api(self) -> None:
-        store = DiskStorage(file_name=self.file.path)
+        store = CaskDB(file_name=self.file.path)
         store["name"] = "jojo"
         self.assertEqual(store["name"], "jojo")
         store.close()
 
     def test_persistence(self) -> None:
-        store = DiskStorage(file_name=self.file.path)
+        store = CaskDB(file_name=self.file.path)
 
         tests = {
             "crime and punishment": "dostoevsky",
@@ -80,13 +80,13 @@ class TestDiskCaskDB(unittest.TestCase):
             self.assertEqual(store.get(k), v)
         store.close()
 
-        store = DiskStorage(file_name=self.file.path)
+        store = CaskDB(file_name=self.file.path)
         for k, v in tests.items():
             self.assertEqual(store.get(k), v)
         store.close()
 
     def test_deletion(self) -> None:
-        store = DiskStorage(file_name=self.file.path)
+        store = CaskDB(file_name=self.file.path)
 
         tests = {
             "crime and punishment": "dostoevsky",
@@ -104,7 +104,7 @@ class TestDiskCaskDB(unittest.TestCase):
         store.set("end", "yes")
         store.close()
 
-        store = DiskStorage(file_name=self.file.path)
+        store = CaskDB(file_name=self.file.path)
         for k, v in tests.items():
             self.assertEqual(store.get(k), "")
         self.assertEqual(store.get("end"), "yes")
@@ -114,13 +114,13 @@ class TestDiskCaskDB(unittest.TestCase):
 class TestDiskCaskDBExistingFile(unittest.TestCase):
     def test_get_new_file(self) -> None:
         t = TempStorageFile(path="temp.db")
-        store = DiskStorage(file_name=t.path)
+        store = CaskDB(file_name=t.path)
         store.set("name", "jojo")
         self.assertEqual(store.get("name"), "jojo")
         store.close()
 
         # check for key again
-        store = DiskStorage(file_name=t.path)
+        store = CaskDB(file_name=t.path)
         self.assertEqual(store.get("name"), "jojo")
         store.close()
         t.clean_up()

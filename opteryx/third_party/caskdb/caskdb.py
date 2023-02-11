@@ -23,7 +23,7 @@ import os.path
 import time
 import typing
 
-from .format import KeyEntry, encode_kv, decode_kv, HEADER_SIZE, decode_header
+from .record import KeyEntry, encode_kv, decode_kv, HEADER_SIZE, decode_header
 
 # We use `file.seek` method to move our cursor to certain byte offset for read
 # or write operations. The method takes two parameters file.seek(offset, whence).
