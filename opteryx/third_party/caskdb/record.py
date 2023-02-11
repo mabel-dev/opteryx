@@ -117,7 +117,7 @@ def encode_header(timestamp: int, key_size: int, value_size: int) -> bytes:
     return struct.pack(HEADER_FORMAT, timestamp, key_size, value_size)
 
 
-def encode_kv(timestamp: int, key: str, value: str) -> tuple[int, bytes]:
+def encode_kv(timestamp: int, key: str, value: str) -> typing.Tuple[int, bytes]:
     """
     encode_kv encodes the KV pair into bytes
 
@@ -138,7 +138,7 @@ def encode_kv(timestamp: int, key: str, value: str) -> tuple[int, bytes]:
     return HEADER_SIZE + len(data), header + data
 
 
-def decode_kv(data: bytes) -> tuple[int, str, str]:
+def decode_kv(data: bytes) -> typing.Tuple[int, str, str]:
     """
     decode_kv decodes the data bytes into appropriate KV pair
 
@@ -165,7 +165,7 @@ def decode_kv(data: bytes) -> tuple[int, str, str]:
     return timestamp, key, value
 
 
-def decode_header(data: bytes) -> tuple[int, int, int]:
+def decode_header(data: bytes) -> typing.Tuple[int, int, int]:
     """
     decode_header decodes the bytes into header using the `HEADER_FORMAT` format
     string
