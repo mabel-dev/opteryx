@@ -25,4 +25,4 @@ def KV_store_factory(store):  # pragma: no-cover
         "firestore": FireStoreKVStore,
     }
 
-    return stores.get(store.lower(), LocalKVJson)
+    return stores.get(store.lower(), CaskDB)
