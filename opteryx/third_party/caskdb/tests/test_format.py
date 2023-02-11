@@ -5,10 +5,17 @@ import typing
 import unittest
 import uuid
 
-from opteryx.third_party.caskdb.record import encode_header, decode_header, encode_kv, decode_kv, HEADER_SIZE, KeyEntry
+from opteryx.third_party.caskdb.record import (
+    encode_header,
+    decode_header,
+    encode_kv,
+    decode_kv,
+    HEADER_SIZE,
+    KeyEntry,
+)
 
 
-def get_random_header() -> tuple[int, int, int]:
+def get_random_header() -> typing.Tuple[int, int, int]:
     # we use 4 bytes to store the int, so max value cannot be greater than
     # the following
     max_size: int = (2**32) - 1
@@ -16,7 +23,7 @@ def get_random_header() -> tuple[int, int, int]:
     return random_int(), random_int(), random_int()
 
 
-def get_random_kv() -> tuple[int, str, str, int]:
+def get_random_kv() -> typing.Tuple[int, str, str, int]:
     return (
         int(time.time()),
         str(uuid.uuid4()),
