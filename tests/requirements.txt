@@ -23,6 +23,4 @@ pymysql
 psycopg2-binary
 polars
 
-faust-streaming-rocksdb
-
 setuptools_rust
