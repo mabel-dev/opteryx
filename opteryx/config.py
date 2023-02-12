@@ -13,8 +13,6 @@
 from pathlib import Path
 from os import environ
 
-import yaml
-
 # python-dotenv allows us to create an environment file to store secrets. If
 # there is no .env it will fail gracefully.
 try:
@@ -24,6 +22,48 @@ except ImportError:  # pragma: no cover
 
 _env_path = Path(".") / ".env"
 _config_values: dict = {}
+
+
+def parse_yaml(yaml_str):
+    ## based on an algorithm from chatgtp
+    result = {}
+    lines = yaml_str.strip().split("\n")
+    key = ""
+    value = ""
+    in_list = False
+    list_key = ""
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+        if in_list:
+            if line.startswith("- "):
+                result[list_key].append(line[2:].strip())
+            elif line.count(":") == 1:
+                key, value = line.split(":", 1)
+                if not value.strip():
+                    in_list = False
+                else:
+                    result[list_key].append((key.strip(), value.strip()))
+            else:
+                in_list = False
+        if not in_list:
+            key, value = line.split(":", 1)
+            if not value.split():
+                in_list = True
+                list_key = key.strip()
+                result[list_key] = []
+            else:
+                value = value.strip()
+                if value.isdigit():
+                    value = int(value)
+                elif value.replace(".", "", 1).isdigit():
+                    value = float(value)
+                elif value.startswith("["):
+                    value = [val.strip() for val in value[1:-1].split(",")]
+                result[key.strip()] = value
+    return result
+
 
 #  deepcode ignore PythonSameEvalBinaryExpressiontrue: false +ve, values can be different
 if _env_path.exists() and (dotenv is None):  # pragma: no cover  # nosemgrep
@@ -36,8 +76,8 @@ elif dotenv is not None:  # pragma: no cover
 try:  # pragma: no cover
     _config_path = Path(".") / "opteryx.yaml"
     if _config_path.exists():
-        with open(_config_path, "rb") as _config_file:
-            _config_values = yaml.safe_load(_config_file)
+        with open(_config_path, "r") as _config_file:
+            _config_values = parse_yaml(_config_file.read())
         print(f"Loading config from {_config_path}")
 except (
     Exception

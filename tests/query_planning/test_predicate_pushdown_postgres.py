@@ -79,6 +79,7 @@ def test_predicate_pushdowns_postgres_eq():
 
     conn.close()
 
+
 # skip to reduce contention
 @skip_on_partials
 def test_predicate_pushdown_postgres_other():
