@@ -47,6 +47,8 @@ def parse_yaml(yaml_str):
                 else:
                     result[list_key].append((key.strip(), value.strip()))
             else:
+                if isinstance(result[list_key][0], tuple):
+                    result[list_key] = {k: v for k, v in result[list_key]}
                 in_list = False
         if not in_list:
             key, value = line.split(":", 1)

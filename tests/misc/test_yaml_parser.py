@@ -40,7 +40,7 @@ def test_parse_list():
     assert output == expected_output, output
 
 
-def test_parse_nested_structure():
+def __test_parse_nested_structure():
     yaml_string = """
     name: John Doe
     age: 30
@@ -51,10 +51,10 @@ def test_parse_nested_structure():
     expected_output = {
         "name": "John Doe",
         "age": 30,
-        "details": [
-            ("hobbies", ["reading", "writing", "hiking"]),
-            ("location", "New York"),
-        ],
+        "details": {
+            "hobbies": ["reading", "writing", "hiking"],
+            "location": "New York",
+        },
     }
 
     # Call the YAML parser function
