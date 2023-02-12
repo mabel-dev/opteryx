@@ -11,6 +11,7 @@
 # limitations under the License.
 
 from pathlib import Path
+from typing import Any
 from os import environ
 
 # python-dotenv allows us to create an environment file to store secrets. If
@@ -26,10 +27,10 @@ _config_values: dict = {}
 
 def parse_yaml(yaml_str):
     ## based on an algorithm from chatgtp
-    result = {}
+    result: dict = {}
     lines = yaml_str.strip().split("\n")
     key = ""
-    value = ""
+    value: Any = ""
     in_list = False
     list_key = ""
     for line in lines:
