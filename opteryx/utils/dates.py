@@ -12,9 +12,11 @@
 """
 Date Utilities
 """
-import datetime
 import numpy
 import re
+
+from datetime import date, datetime, timedelta
+from datetime import time as dtime
 
 from functools import lru_cache
 from typing import Union
@@ -46,13 +48,13 @@ def add_months(date, months):
     new_day = date.day
 
     # if adding one day puts us in a new month, jump to the end of the month
-    if (date + datetime.timedelta(days=1)).month != date.month:
+    if (date + timedelta(days=1)).month != date.month:
         new_day = 31
 
     # not all months have 31 days so walk backwards to the end of the month
     while new_day > 0:
         try:
-            new_date = datetime.datetime(year=new_year, month=new_month, day=new_day)
+            new_date = datetime(year=new_year, month=new_month, day=new_day)
             return new_date
         except ValueError:  # pragma: no cover
             new_day -= 1
@@ -62,8 +64,8 @@ def add_months(date, months):
 
 
 def add_interval(
-    current_date: Union[datetime.date, datetime.datetime], interval: str
-) -> Union[datetime.date, datetime.datetime]:
+    current_date: Union[date, datetime], interval: str
+) -> Union[date, datetime]:
     """
     Parses a human readable timedelta (3d5h19m) into a datetime.timedelta.
     """
@@ -73,7 +75,7 @@ def add_interval(
         # time delta doesn't include weeks, months or years
         if "weeks" in parts:
             weeks = parts.pop("weeks")
-            current_date = current_date + datetime.timedelta(days=weeks * 7)
+            current_date = current_date + timedelta(days=weeks * 7)
         if "months" in parts:
             months = parts.pop("months")
             current_date = add_months(current_date, months)
@@ -82,7 +84,7 @@ def add_interval(
             years = parts.pop("years")
             current_date = add_months(current_date, 12 * years)
         if parts:
-            return current_date + datetime.timedelta(**parts)
+            return current_date + timedelta(**parts)
         return current_date
     raise ValueError(f"Unable to interpret interval - {interval}")
 
@@ -124,20 +126,20 @@ def parse_iso(value):
         input_type = type(value)
 
         if input_type in (int, numpy.int64):
-            value = numpy.datetime64(int(value), "s").astype(datetime.datetime)
+            value = numpy.datetime64(int(value), "s").astype(datetime)
             input_type = type(value)
 
         if input_type == numpy.datetime64:
             # this can create dates rather than datetimes, so don't return yet
-            value = value.astype(datetime.datetime)
+            value = value.astype(datetime)
             input_type = type(value)
 
-        if input_type == datetime.datetime:
+        if input_type == datetime:
             return value
-        if input_type == datetime.date:
-            return datetime.datetime.combine(value, datetime.time.min)
+        if input_type == date:
+            return datetime.combine(value, dtime.min)
         if input_type in (int, float):
-            return datetime.datetime.fromtimestamp(value)
+            return datetime.fromtimestamp(value)
         if input_type == str and 10 <= len(value) <= 33:
             if value[-1] == "Z":
                 value = value[:-1]
@@ -150,7 +152,7 @@ def parse_iso(value):
                 return None
             if val_len == 10:
                 # YYYY-MM-DD
-                return datetime.datetime(
+                return datetime(
                     *map(int, [value[:4], value[5:7], value[8:10]])  # type:ignore
                 )
             if val_len >= 16:
@@ -158,7 +160,7 @@ def parse_iso(value):
                     return False
                 if val_len >= 19 and value[16] in date_separators:
                     # YYYY-MM-DD HH:MM:SS
-                    return datetime.datetime(
+                    return datetime(
                         *map(  # type:ignore
                             int,
                             [
@@ -173,7 +175,7 @@ def parse_iso(value):
                     )
                 if val_len == 16:
                     # YYYY-MM-DD HH:MM
-                    return datetime.datetime(
+                    return datetime(
                         *map(  # type:ignore
                             int,
                             [
@@ -188,3 +190,47 @@ def parse_iso(value):
         return None
     except (ValueError, TypeError):
         return None
+
+
+EPOCH: datetime.date = datetime(1970, 1, 1)
+
+
+def date_trunc(unit: str, date: datetime):
+    """
+    Mimic the POSTGRES function
+    """
+    if unit == "second":
+        return date.replace(microsecond=0)
+    elif unit == "minute":
+        seconds_per_minute = 60
+        full_minutes, remainder = divmod(
+            (date - EPOCH).total_seconds(), seconds_per_minute
+        )
+        return date - timedelta(seconds=remainder)
+    elif unit == "hour":
+        seconds_per_hour = 60 * 60
+        full_hours, remainder = divmod((date - EPOCH).total_seconds(), seconds_per_hour)
+        return date - timedelta(seconds=remainder)
+    elif unit == "day":
+        days_per_day = 1
+        full_days, remainder = divmod((date - EPOCH).days, days_per_day)
+        return date - timedelta(days=remainder)
+    elif unit == "week":
+        days_per_week = 7
+        full_weeks, remainder = divmod((date - EPOCH).days, days_per_week)
+        return date - timedelta(days=remainder)
+    elif unit == "month":
+        full_months, remainder = divmod(12 * (date.year - 1970) + (date.month - 1), 12)
+        return date.replace(year=date.year - full_months, month=1)
+    elif unit == "quarter":
+        full_quarters, remainder = divmod(
+            4 * (date.year - 1970) + (date.month - 1) // 3, 4
+        )
+        return date.replace(
+            year=date.year - full_quarters, month=((remainder * 3) % 12) + 1
+        )
+    elif unit == "year":
+        full_years, remainder = divmod(date.year - 1970, 1)
+        return date.replace(year=date.year - full_years)
+    else:
+        raise ValueError("Invalid unit: {}".format(unit))
