@@ -53,6 +53,11 @@ extensions = [
         sources=["opteryx/third_party/levenshtein/clevenshtein.pyx"],
         include_dirs=[numpy.get_include()],
     ),
+    Extension(
+        name="cbitarray",
+        sources=["opteryx/utils/bitarray/cbitarray.pyx"],
+        include_dirs=[numpy.get_include()],
+    ),
 ]
 
 setup_config = {

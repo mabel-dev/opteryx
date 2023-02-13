@@ -4,7 +4,6 @@
 #    2) For dependabot to alert to new versions
 
 datasketch==1.5.8
-datetime_truncate==1.1.1
 distogram==3.0.0
 fastlogging==1.0.0
 fuzzy==1.2.2
