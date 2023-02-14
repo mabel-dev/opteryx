@@ -29,8 +29,7 @@ from opteryx.functions import date_functions
 from opteryx.functions import number_functions
 from opteryx.functions import other_functions
 from opteryx.functions import string_functions
-from opteryx.third_party.date_trunc import date_trunc
-from opteryx.utils import arrays
+from opteryx.utils import arrays, dates
 
 
 def get_version():
@@ -261,7 +260,7 @@ FUNCTIONS = {
     "LOG": compute.logb,
 
     # DATES & TIMES
-    "DATE_TRUNC": _iterate_double_parameter_field_second(date_trunc),
+    "DATE_TRUNC": _iterate_double_parameter_field_second(dates.date_trunc),
     "TIME_BUCKET": date_functions.date_floor,
     "DATEDIFF": date_functions.date_diff,
     "DATEPART": date_functions.date_part,

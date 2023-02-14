@@ -25,10 +25,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-# having experimented with numpy, gmpy2, intbitset and sets, bitarray is the fastest,
-# gmpy2 is very close
-from bitarray import bitarray
 from cityhash import CityHash32
+
+from opteryx.utils.bitarray.bitarray import bitarray
 
 HASH_SEEDS = (
     "ANTHROPOMORPHISM",
@@ -110,7 +109,6 @@ class BloomFilter:
         self.hash_count: int = _get_hash_count(self.filter_size, number_of_elements)
         self.hash_seeds: tuple = tuple(HASH_SEEDS[i] for i in range(self.hash_count))
         self.bits = bitarray(self.filter_size)
-        self.bits.setall(0)
 
     def add(self, term):
         """
@@ -118,15 +116,14 @@ class BloomFilter:
         """
         bits = self.bits
 
-        for hash_ in (
-            CityHash32(f"{seed}{term}") % self.filter_size for seed in self.hash_seeds
-        ):
-            bits[hash_] = 1
+        for seed in self.hash_seeds:
+            hash_ = CityHash32(f"{seed}{term}") % self.filter_size
+            bits.set(hash_, 1)
 
     def __contains__(self, term):
         for seed in self.hash_seeds:
             hash_ = CityHash32(f"{seed}{term}") % self.filter_size
-            if self.bits[hash_] == 0:
+            if self.bits.get(hash_) == 0:
                 return False
         return True
 
