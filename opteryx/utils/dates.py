@@ -15,7 +15,7 @@ Date Utilities
 import numpy
 import re
 
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from datetime import time as dtime
 
 from functools import lru_cache
@@ -192,45 +192,42 @@ def parse_iso(value):
         return None
 
 
-EPOCH: datetime.date = datetime(1970, 1, 1)
+EPOCH: date = datetime(1970, 1, 1, tzinfo=timezone.utc)
 
 
-def date_trunc(unit: str, date: datetime):
-    """
-    Mimic the POSTGRES function
-    """
-    if unit == "second":
-        return date.replace(microsecond=0)
-    elif unit == "minute":
-        seconds_per_minute = 60
-        full_minutes, remainder = divmod(
-            (date - EPOCH).total_seconds(), seconds_per_minute
+from datetime import datetime, timedelta
+
+
+def date_trunc(truncate_to, dt):
+    # convert acceptable non datetime values to datetime
+    dt = parse_iso(dt)
+
+    if not isinstance(truncate_to, str):
+        truncate_to = truncate_to[0]  # [#325]
+
+    # [#711]
+    truncate_to = str(truncate_to).lower()
+
+    if truncate_to == "year":
+        return datetime(dt.year, 1, 1, tzinfo=dt.tzinfo)
+    elif truncate_to == "quarter":
+        quarter = (dt.month - 1) // 3 + 1
+        return datetime(dt.year, 3 * quarter - 2, 1, tzinfo=dt.tzinfo)
+    elif truncate_to == "month":
+        return datetime(dt.year, dt.month, 1, tzinfo=dt.tzinfo)
+    elif truncate_to == "week":
+        days_since_monday = dt.weekday()
+        monday = dt - timedelta(days=days_since_monday)
+        return date_trunc("day", monday)
+    elif truncate_to == "day":
+        return datetime(dt.year, dt.month, dt.day, tzinfo=dt.tzinfo)
+    elif truncate_to == "hour":
+        return datetime(dt.year, dt.month, dt.day, dt.hour, tzinfo=dt.tzinfo)
+    elif truncate_to == "minute":
+        return datetime(dt.year, dt.month, dt.day, dt.hour, dt.minute, tzinfo=dt.tzinfo)
+    elif truncate_to == "second":
+        return datetime(
+            dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, tzinfo=dt.tzinfo
         )
-        return date - timedelta(seconds=remainder)
-    elif unit == "hour":
-        seconds_per_hour = 60 * 60
-        full_hours, remainder = divmod((date - EPOCH).total_seconds(), seconds_per_hour)
-        return date - timedelta(seconds=remainder)
-    elif unit == "day":
-        days_per_day = 1
-        full_days, remainder = divmod((date - EPOCH).days, days_per_day)
-        return date - timedelta(days=remainder)
-    elif unit == "week":
-        days_per_week = 7
-        full_weeks, remainder = divmod((date - EPOCH).days, days_per_week)
-        return date - timedelta(days=remainder)
-    elif unit == "month":
-        full_months, remainder = divmod(12 * (date.year - 1970) + (date.month - 1), 12)
-        return date.replace(year=date.year - full_months, month=1)
-    elif unit == "quarter":
-        full_quarters, remainder = divmod(
-            4 * (date.year - 1970) + (date.month - 1) // 3, 4
-        )
-        return date.replace(
-            year=date.year - full_quarters, month=((remainder * 3) % 12) + 1
-        )
-    elif unit == "year":
-        full_years, remainder = divmod(date.year - 1970, 1)
-        return date.replace(year=date.year - full_years)
     else:
-        raise ValueError("Invalid unit: {}".format(unit))
+        raise ValueError("Invalid unit: {}".format(truncate_to))

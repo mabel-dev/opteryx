@@ -19,6 +19,7 @@ This module was written with assistance from ChatGPT
 cdef extern from "Python.h":
     void *PyMem_Malloc(int size) nogil
     void PyMem_Free(void *ptr) nogil
+    void memset(void *s, int c, int n)
 
 cdef class bitarray:
     cdef public int size
@@ -29,19 +30,29 @@ cdef class bitarray:
         self.size = size
         cdef int n_bytes = (size + 7) // 8
         self.bits = <int *> PyMem_Malloc(n_bytes * sizeof(int))
+        memset(self.bits, 0, n_bytes * sizeof(int))
 
     def __dealloc__(self):
         PyMem_Free(self.bits)
 
     def get(self, int index):
-        if 0 > index > self.size:
+        if 0 > index or index >= self.size:
             raise IndexError("Index out of range")
         return (self.bits[index >> 3] & (1 << (index & 7))) != 0
 
     def set(self, int index, bint value):
-        if 0 > index > self.size:
+        if 0 > index or index >= self.size:
             raise IndexError("Index out of range")
         if value:
             self.bits[index >> 3] |= (1 << (index & 7))
         else:
             self.bits[index >> 3] &= ~(1 << (index & 7))
+
+    @property
+    def array(self):
+        ba = bytearray((self.size + 7) // 8)
+        for i in range((self.size + 7) // 8):
+            for j in range(8):
+                if i * 8 + j < self.size:
+                    ba[i] |= ((self.bits[i] >> j) & 1) << j
+        return ba
