@@ -40,22 +40,22 @@ def test_contains():
 
 
 def test_get_size():
-    assert _get_size(50000, 0.01) == 479899, _get_size(50000, 0.01)
-    assert _get_size(100000, 0.1) == 139314
+    assert _get_size(50000, 0.01) == 479253, _get_size(50000, 0.01)
+    assert _get_size(100000, 0.1) == 479253
 
 
 def test_get_hash_count():
-    assert _get_hash_count(479899, 50000) == 7
-    assert _get_hash_count(139314, 100000) == 1
+    assert _get_hash_count(479253, 50000) == 7, _get_hash_count(479253, 50000)
+    assert _get_hash_count(479253, 100000) == 3
 
 
 def test_init():
     bf = BloomFilter()
-    assert bf.filter_size == 479899
+    assert bf.filter_size == 479253
     assert bf.hash_count == 7
     assert len(bf.hash_seeds) == 7
-    assert isinstance(bf.bits, bitarray)
-    assert bf.bits.count() == 0
+    assert bf.bits.size == 479253, bf.bits.size
+    assert sum(bf.bits.array) == 0
 
 
 if __name__ == "__main__":  # pragma: no cover
