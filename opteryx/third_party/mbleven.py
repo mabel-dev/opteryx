@@ -45,6 +45,9 @@ MATRIX = (
 
 
 def compare(str1: str, str2: str) -> int:
+    str1 = str1.lower()
+    str2 = str2.lower()
+
     len1, len2 = len(str1), len(str2)
 
     if len1 < len2:
