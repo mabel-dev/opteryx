@@ -48,11 +48,11 @@ class DistinctNode(BasePlanNode):
         if len(self._producers) != 1:  # pragma: no cover
             raise SqlError(f"{self.name} on expects a single producer")
 
-        data_pages = self._producers[0]  # type:ignore
-        if isinstance(data_pages, Table):
-            data_pages = (data_pages,)
+        morsels = self._producers[0]  # type:ignore
+        if isinstance(morsels, Table):
+            morsels = (morsels,)
 
         if self._distinct:
-            yield drop_duplicates(concat_tables(data_pages.execute(), promote=True))
+            yield drop_duplicates(concat_tables(morsels.execute(), promote=True))
             return
-        yield from data_pages
+        yield from morsels

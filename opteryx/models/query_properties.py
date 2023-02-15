@@ -46,10 +46,10 @@ class QueryProperties:
         self.internal_batch_size: int = int(mutable_config.get("INTERNAL_BATCH_SIZE", 500))
         # The maximum number of records to create in a CROSS JOIN frame
         self.max_join_size: int = int(mutable_config.get("MAX_JOIN_SIZE", 10000))
-        # Approximate Page Size
-        self.page_size: int = int(mutable_config.get("PAGE_SIZE", 64 * 1024 * 1024))
-        # Internally split and merge pages
-        self.enable_page_defragmentation: bool = True
+        # Taget Morsel Size
+        self.morsel_size: int = int(mutable_config.get("MORSEL_SIZE", 64 * 1024 * 1024))
+        # Internally split and merge morsels
+        self.enable_morsel_defragmentation: bool = True
 
         # cost values go here:
         #    costs are the approximate number of seconds to perform an action

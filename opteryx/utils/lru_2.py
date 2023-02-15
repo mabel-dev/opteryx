@@ -11,7 +11,7 @@
 # limitations under the License.
 
 """
-LRU-K evicts the page whose K-th most recent access is furthest in the past.
+LRU-K evicts the morsel whose K-th most recent access is furthest in the past.
 
 This is a basic implementation of LRU-2, which evicts entries according to the time
 of their penultimate access. The main benefit of this approach is to prevent

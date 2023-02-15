@@ -83,10 +83,10 @@ def _is_count_star(aggregates, groups):
     return True
 
 
-def _count_star(data_pages):
+def _count_star(morsel_promise):
     count = 0
-    for page in data_pages.execute():
-        count += page.num_rows
+    for morsel in morsel_promise.execute():
+        count += morsel.num_rows
     table = pyarrow.Table.from_pylist([{COUNT_STAR: count}])
     table = Columns.create_table_metadata(
         table=table,
@@ -277,12 +277,12 @@ class AggregateNode(BasePlanNode):
         if len(self._producers) != 1:  # pragma: no cover
             raise SqlError(f"{self.name} on expects a single producer")
 
-        data_pages = self._producers[0]  # type:ignore
-        if isinstance(data_pages, pyarrow.Table):
-            data_pages = (data_pages,)
+        morsels = self._producers[0]  # type:ignore
+        if isinstance(morsels, pyarrow.Table):
+            morsels = (morsels,)
 
         if _is_count_star(self._aggregates, self._groups):
-            yield from _count_star(data_pages)
+            yield from _count_star(morsel_promise=morsels)
             return
 
         # get all the columns anywhere in the groups or aggregates
@@ -294,11 +294,11 @@ class AggregateNode(BasePlanNode):
         ]
         all_identifiers = list(dict.fromkeys(all_identifiers))
 
-        # join all the pages together into one table, selecting only the columns
+        # merge all the morsels together into one table, selecting only the columns
         # we're pretty sure we're going to use - this will fail for datasets
         # larger than memory
         table = pyarrow.concat_tables(
-            _project(data_pages.execute(), all_identifiers), promote=True
+            _project(morsels.execute(), all_identifiers), promote=True
         )
 
         # Get any functions we need to execute before aggregating

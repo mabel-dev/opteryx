@@ -44,8 +44,5 @@ class LimitNode(BasePlanNode):
         if len(self._producers) != 1:  # pragma: no cover
             raise SqlError(f"{self.name} on expects a single producer")
 
-        data_pages = self._producers[0]  # type:ignore
-        if isinstance(data_pages, Table):
-            data_pages = (data_pages,)
-
-        yield arrow.limit_records(data_pages.execute(), limit=self.limit)
+        morsels = self._producers[0]  # type:ignore
+        yield arrow.limit_records(morsels.execute(), limit=self.limit)

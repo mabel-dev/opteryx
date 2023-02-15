@@ -152,8 +152,7 @@ class FileReaderNode(BasePlanNode):
         # break up large files
         batch_size = (96 * 1024 * 1024) // (pyarrow_blob.nbytes / pyarrow_blob.num_rows)
         for batch in pyarrow_blob.to_batches(max_chunksize=batch_size):
-            page = pyarrow.Table.from_batches([batch], schema=pyarrow_blob.schema)
-            yield page
+            yield pyarrow.Table.from_batches([batch], schema=pyarrow_blob.schema)
 
     def _read_and_parse(self, config):
         path, reader, parser, projection, selection = config

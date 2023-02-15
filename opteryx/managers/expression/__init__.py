@@ -15,7 +15,7 @@ Expressions describe a calculation or evaluation of some sort.
 
 It is defined as an expression tree of binary and unary operators, and functions.
 
-Expressions are evaluated against an entire page at a time.
+Expressions are evaluated against an entire morsel at a time.
 """
 from dataclasses import dataclass, field
 from enum import Enum
@@ -393,7 +393,7 @@ def evaluate_and_append(expressions, table: Table, seed: str = None):
 
             # large arrays appear to have a bug in PyArrow where they're automatically
             # converted to a chunked array, but the internal function can't handle
-            # chunked arrays - 50Mb columns are rare when we have 64Mb pages.
+            # chunked arrays - 50Mb columns are rare when we have 64Mb morsels.
             if new_column.nbytes > 50000000:
                 new_column = [[i] for i in new_column]
             else:

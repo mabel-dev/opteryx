@@ -23,15 +23,15 @@ from orjson import dumps, loads
 INTERNAL_BATCH_SIZE = 500
 
 
-def fetchmany(pages, limit: int = 1000, as_dicts: bool = False):
+def fetchmany(morsels, limit: int = 1000, as_dicts: bool = False):
     """fetch records from a Table as Python Dicts"""
     from opteryx.models.columns import Columns  # circular imports
 
-    if pages is None:
+    if morsels is None:
         return []
 
-    if isinstance(pages, Table):
-        pages = (pages,)
+    if isinstance(morsels, Table):
+        morsels = (morsels,)
 
     chunk_size = min(limit, INTERNAL_BATCH_SIZE)
     if chunk_size < 0:
@@ -41,19 +41,19 @@ def fetchmany(pages, limit: int = 1000, as_dicts: bool = False):
         column_names = None
         schema = None
 
-        for page in pages:
+        for morsel in morsels:
             if column_names is None:
-                schema = page.schema
-                columns = Columns(page)
+                schema = morsel.schema
+                columns = Columns(morsel)
                 preferred_names = columns.preferred_column_names
                 column_names = []
-                for col in page.column_names:
+                for col in morsel.column_names:
                     column_names.append([c for a, c in preferred_names if a == col][0])
 
-            page, schema = normalize_to_schema(page, schema)
-            page = page.rename_columns(column_names)
+            morsel, schema = normalize_to_schema(morsel, schema)
+            morsel = morsel.rename_columns(column_names)
 
-            for batch in page.to_batches(max_chunksize=chunk_size):
+            for batch in morsel.to_batches(max_chunksize=chunk_size):
                 if as_dicts:
                     yield from batch.to_pylist()
                 else:
@@ -72,51 +72,51 @@ def fetchmany(pages, limit: int = 1000, as_dicts: bool = False):
             yield tuple()
 
 
-def fetchone(pages: Iterable, as_dicts: bool = False) -> dict:
-    return next(fetchmany(pages=pages, limit=1, as_dicts=as_dicts), None)
+def fetchone(morsels: Iterable, as_dicts: bool = False) -> dict:
+    return next(fetchmany(morsels=morsels, limit=1, as_dicts=as_dicts), None)
 
 
-def fetchall(pages, as_dicts: bool = False) -> List[dict]:
-    return fetchmany(pages=pages, limit=-1, as_dicts=as_dicts)
+def fetchall(morsels, as_dicts: bool = False) -> List[dict]:
+    return fetchmany(morsels=morsels, limit=-1, as_dicts=as_dicts)
 
 
-def limit_records(data_pages, limit):
+def limit_records(morsels, limit):
     """
-    Cycle over an iterable of pages, limiting the response to a given
+    Cycle over an iterable of morsels, limiting the response to a given
     number of records.
     """
     result_set = []
     row_count = 0
-    page = None
+    morsel = None
 
     # if we don't actually have a limit set, just return
     if limit is None:
-        return pyarrow.concat_tables(data_pages, promote=True)
+        return pyarrow.concat_tables(morsels, promote=True)
 
-    for page in data_pages:
-        if page.num_rows > 0:
-            row_count += page.num_rows
-            result_set.append(page)
+    for morsel in morsels:
+        if morsel.num_rows > 0:
+            row_count += morsel.num_rows
+            result_set.append(morsel)
             if row_count > limit:  # type:ignore
                 break
 
     if len(result_set) == 0:
-        return page
+        return morsel
     else:
         return pyarrow.concat_tables(result_set, promote=True).slice(
             offset=0, length=limit
         )
 
 
-def as_arrow(pages, limit: int = None):
+def as_arrow(morsels, limit: int = None):
     """return a result set a a pyarrow table"""
     # cicular imports
     from opteryx.models import Columns
     from opteryx.utils import peak
 
-    first, pages = peak(pages)
+    first, morsels = peak(morsels)
     if first is not None:
-        merged = limit_records(pages, limit)
+        merged = limit_records(morsels, limit)
         columns = Columns(merged)
         preferred_names = columns.preferred_column_names
         column_names = []
@@ -242,9 +242,9 @@ def coerce_columns(table, column_names):
 
 def normalize_to_schema(table, schema):
     """
-    Ensure all of the collected pages match the same schema, because of the way we read
-    data, this is to match the first page. We ensure they match by adding empty columns
-    when columns are missing, or removing excess columns.
+    Ensure all of the collected morsels match the same schema, because of the way we
+    read data, this is to match the first morsel. We ensure they match by adding empty
+    columns when columns are missing, or removing excess columns.
     """
     # if we've never run before, collect the schema and return
     if schema is None:

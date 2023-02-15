@@ -100,12 +100,12 @@ class InternalDatasetNode(BasePlanNode):
         return False
 
     def execute(self) -> Iterable:
-        pyarrow_page = _get_sample_dataset(self._dataset, self._alias, self._end_date)
-        self.statistics.rows_read += pyarrow_page.num_rows
-        self.statistics.bytes_processed_data += pyarrow_page.nbytes
-        self.statistics.columns_read += len(pyarrow_page.column_names)
+        morsel = _get_sample_dataset(self._dataset, self._alias, self._end_date)
+        self.statistics.rows_read += morsel.num_rows
+        self.statistics.bytes_processed_data += morsel.nbytes
+        self.statistics.columns_read += len(morsel.column_names)
 
-        schema = pyarrow_page.schema
+        schema = morsel.schema
 
         for index, column_name in enumerate(schema.names):
             type_name = str(schema.types[index])
@@ -115,9 +115,9 @@ class InternalDatasetNode(BasePlanNode):
                     pyarrow.field(
                         name=column_name,
                         type=pyarrow.timestamp("us"),
-                        metadata=pyarrow_page.field(column_name).metadata,
+                        metadata=morsel.field(column_name).metadata,
                     ),
                 )
-        pyarrow_page = pyarrow_page.cast(target_schema=schema)
+        morsel = morsel.cast(target_schema=schema)
 
-        yield pyarrow_page
+        yield morsel

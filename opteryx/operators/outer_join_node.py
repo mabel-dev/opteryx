@@ -84,16 +84,16 @@ class OuterJoinNode(BasePlanNode):
         right_columns = Columns(right_table)
         left_columns = None
 
-        for page in left_node.execute():
+        for morsel in left_node.execute():
             if self._using:
                 right_join_columns = [
                     right_columns.get_column_from_alias(col, only_one=True)
                     for col in self._using
                 ]
 
-                for page in left_node.execute():
+                for morsel in left_node.execute():
                     if left_columns is None:
-                        left_columns = Columns(page)
+                        left_columns = Columns(morsel)
                         left_join_columns = [
                             left_columns.get_column_from_alias(col, only_one=True)
                             for col in self._using
@@ -104,30 +104,32 @@ class OuterJoinNode(BasePlanNode):
                         # batch size for the joins. Cardinality here is the ratio of
                         # unique values in the set. Although we're working it out, we'll
                         # refer to this as an estimate because it may be different per
-                        # page of data - we're assuming it's not very different.
+                        # chunk of data - we're assuming it's not very different.
                         cols = pyarrow_ops.columns_to_array_denulled(
-                            page, left_join_columns
+                            morsel, left_join_columns
                         )
-                        if page.num_rows > 0:
-                            card = len(numpy.unique(cols)) / page.num_rows
+                        if morsel.num_rows > 0:
+                            card = len(numpy.unique(cols)) / morsel.num_rows
                         else:
                             card = 0
                         batch_size = calculate_batch_size(card)
 
                     # we break this into small chunks otherwise we very quickly run into memory issues
-                    for batch in page.to_batches(max_chunksize=batch_size):
+                    for batch in morsel.to_batches(max_chunksize=batch_size):
                         # blocks don't have column_names, so we need to wrap in a table
-                        batch = pyarrow.Table.from_batches([batch], schema=page.schema)
+                        batch = pyarrow.Table.from_batches(
+                            [batch], schema=morsel.schema
+                        )
 
-                        new_page = pyarrow_ops.left_join(
+                        new_morsel = pyarrow_ops.left_join(
                             right_table, batch, right_join_columns, left_join_columns
                         )
-                        new_page = new_metadata.apply(new_page)
-                        yield new_page
+                        new_morsel = new_metadata.apply(new_morsel)
+                        yield new_morsel
 
             elif self._on:
                 if left_columns is None:
-                    left_columns = Columns(page)
+                    left_columns = Columns(morsel)
                     try:
                         right_join_column = right_columns.get_column_from_alias(
                             self._on.right.value, only_one=True
@@ -150,10 +152,10 @@ class OuterJoinNode(BasePlanNode):
 
                 new_metadata = right_columns + left_columns
 
-                page = arrow.coerce_columns(page, left_join_column)
+                morsel = arrow.coerce_columns(morsel, left_join_column)
 
                 # do the join
-                new_page = page.join(
+                new_morsel = morsel.join(
                     right_table,
                     keys=[left_join_column],
                     right_keys=[right_join_column],
@@ -161,5 +163,5 @@ class OuterJoinNode(BasePlanNode):
                     coalesce_keys=False,
                 )
                 # update the metadata
-                new_page = new_metadata.apply(new_page)
-                yield new_page
+                new_morsel = new_metadata.apply(new_morsel)
+                yield new_morsel

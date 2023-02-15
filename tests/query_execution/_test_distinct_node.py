@@ -22,7 +22,7 @@ def test_dictinct_node_unique():
     # ensure we don't filter out when everything is unique
     satellite_list = satellites()
 
-    satellite_data = dn.execute(data_pages=[satellite_list])
+    satellite_data = dn.execute(morsels=[satellite_list])
     satellite_data = pyarrow.concat_tables(satellite_data, promote=True)
     assert satellite_data.num_rows == 177, satellite_data.num_rows
 
@@ -34,7 +34,7 @@ def test_dictinct_node_nonunique():
 
     # test with a column with duplicates
     planets = satellite_list.select(["planetId"])
-    planets = dn.execute(data_pages=[planets])
+    planets = dn.execute(morsels=[planets])
     planets = pyarrow.concat_tables(planets, promote=True)
     assert planets.num_rows == 7
 
@@ -46,7 +46,7 @@ def test_dictinct_node_multicolumn():
 
     # test with a compound column
     moons = satellite_list.select(["planetId", "density"])
-    moons = dn.execute(data_pages=[moons])
+    moons = dn.execute(morsels=[moons])
     moons = pyarrow.concat_tables(moons, promote=True)
     assert moons.num_rows == 43
 

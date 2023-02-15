@@ -53,19 +53,16 @@ class SortNode(BasePlanNode):
         if len(self._producers) != 1:  # pragma: no cover
             raise SqlError(f"{self.name} on expects a single producer")
 
-        data_pages = self._producers[0]  # type:ignore
-        if isinstance(data_pages, Table):
-            data_pages = (data_pages,)
-
-        data_pages = data_pages.execute()
-        data_pages = tuple(data_pages)
+        morsels = self._producers[0]  # type:ignore
+        morsels = morsels.execute()
+        morsels = tuple(morsels)
         mapped_order = []
 
-        if len([page for page in data_pages if page.num_rows == 0]) > 0:
-            yield data_pages[0]
+        if len([morsel for morsel in morsels if morsel.num_rows == 0]) > 0:
+            yield morsels[0]
             return
 
-        table = concat_tables(data_pages, promote=True)
+        table = concat_tables(morsels, promote=True)
         columns = Columns(table)
 
         start_time = time.time_ns()

@@ -81,9 +81,9 @@ class GcpFireStoreConnector(BaseDocumentStorageAdapter, PredicatePushable):
         """
         return -1
 
-    def read_documents(self, collection, page_size: int = BATCH_SIZE):
+    def read_documents(self, collection, morsel_size: int = BATCH_SIZE):
         """
-        Return a page of documents
+        Return a morsel of documents
         """
         from firebase_admin import firestore
 
@@ -101,7 +101,7 @@ class GcpFireStoreConnector(BaseDocumentStorageAdapter, PredicatePushable):
 
         documents = documents.stream()
 
-        for page in self.page_dictset(
-            ({**doc.to_dict(), "_id": doc.id} for doc in documents), page_size
+        for morsel in self.chunk_dictset(
+            ({**doc.to_dict(), "_id": doc.id} for doc in documents), morsel_size
         ):
-            yield page
+            yield morsel

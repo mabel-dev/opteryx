@@ -25,27 +25,27 @@ class BaseDocumentStorageAdapter(abc.ABC):
         self._prefix = prefix
         self._remove_prefix = remove_prefix
 
-    def page_dictset(self, dictset: Iterable[dict], page_size: int):
+    def chunk_dictset(self, dictset: Iterable[dict], chunk_size: int):
         """
-        Enables paging through a dictset by returning a page of records at a time.
+        Enables paging through a dictset by returning a chunk of records at a time.
         Parameters:
             dictset: iterable of dictionaries:
                 The dictset to process
-            page_size: integer:
-                The number of records per page
+            chunk_size: integer:
+                The number of records per chunk
         """
         index = -1
-        chunk: list = [{}] * page_size
+        chunk: list = [{}] * chunk_size
         for index, record in enumerate(dictset):
             _id = record.pop("_id", None)
             record["id"] = None if _id is None else str(_id)
-            if index > 0 and index % page_size == 0:
+            if index > 0 and index % chunk_size == 0:
                 yield chunk
-                chunk = [{}] * page_size
+                chunk = [{}] * chunk_size
                 chunk[0] = record
             else:
-                chunk[index % page_size] = record
-        yield chunk[: (index + 1) % page_size]
+                chunk[index % chunk_size] = record
+        yield chunk[: (index + 1) % chunk_size]
 
     def get_document_count(self, collection) -> int:  # pragma: no cover
         """
@@ -53,9 +53,9 @@ class BaseDocumentStorageAdapter(abc.ABC):
         """
         raise NotImplementedError("get_document_list not implemented")
 
-    def read_documents(self, collection, page_size: int = 500):  # pragma: no cover
+    def read_documents(self, collection, morsel_size: int = 500):  # pragma: no cover
         """
-        Return a page of documents
+        Return a morsel of documents
         """
         raise NotImplementedError("read_document not implemented")
 

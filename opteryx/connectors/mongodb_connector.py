@@ -53,11 +53,11 @@ class MongoDbConnector(BaseDocumentStorageAdapter):
         _collection = collection.split(".")[0]
         return self._database[_collection].estimated_document_count()
 
-    def read_documents(self, collection, page_size: int = BATCH_SIZE):
+    def read_documents(self, collection, morsel_size: int = BATCH_SIZE):
         """
-        Return a page of documents
+        Return a morsel of documents
         """
         _collection = collection.split(".")[0]
         documents = self._database[_collection].find()
-        for page in self.page_dictset(documents, page_size):
-            yield page
+        for morsel in self.chunk_dictset(documents, morsel_size):
+            yield morsel

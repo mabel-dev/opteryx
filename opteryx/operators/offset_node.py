@@ -19,8 +19,6 @@ This Node skips over tuples.
 """
 from typing import Iterable
 
-import pyarrow
-
 from opteryx.exceptions import SqlError
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
@@ -43,21 +41,18 @@ class OffsetNode(BasePlanNode):
         if len(self._producers) != 1:  # pragma: no cover
             raise SqlError(f"{self.name} on expects a single producer")
 
-        data_pages = self._producers[0]  # type:ignore
-        if isinstance(data_pages, pyarrow.Table):
-            data_pages = (data_pages,)
-
+        morsels = self._producers[0]  # type:ignore
         row_count = 0
 
-        iterator = data_pages.execute()
+        iterator = morsels.execute()
 
-        for page in iterator:
-            if (row_count + page.num_rows) > self._offset:
-                page = page.slice(
-                    self._offset - row_count, page.num_rows  # type:ignore
+        for morsel in iterator:
+            if (row_count + morsel.num_rows) > self._offset:
+                morsel = morsel.slice(
+                    self._offset - row_count, morsel.num_rows  # type:ignore
                 )
-                yield page
+                yield morsel
                 break
-            row_count += page.num_rows
+            row_count += morsel.num_rows
 
         yield from iterator

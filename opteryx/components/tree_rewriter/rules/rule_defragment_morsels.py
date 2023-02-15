@@ -11,7 +11,7 @@
 # limitations under the License.
 
 """
-Optimization Rule - Defragment pages
+Optimization Rule - Defragment morsels
 
 Type: Heuristic
 Goal: Reduce small units of work
@@ -20,7 +20,7 @@ from opteryx import operators
 from opteryx.models.execution_tree import ExecutionTree
 
 
-def defragment_pages(plan: ExecutionTree, properties):
+def defragment_morsels(plan: ExecutionTree, properties):
     """
     In a block/chunk iterator model, most of the performance improvement comes from
     fewer handoffs between operators (fewer function calls) and being able to
@@ -28,10 +28,10 @@ def defragment_pages(plan: ExecutionTree, properties):
 
     This benefit is lessened if the chunks passing through the system are very
     small. This action adds a defragmentation step to the plan to help ensure
-    activities which most benefit from full pages are more likely to get them.
+    activities which most benefit from full morsels are more likely to get them.
 
-    This presently only works on adjacent pages - so does not scan the entire
-    partition or query set looking for pages to merge.
+    This presently only works on adjacent morsels - so does not scan the entire
+    partition or query set looking for morsels to merge.
     """
 
     def unique_id():
@@ -40,7 +40,7 @@ def defragment_pages(plan: ExecutionTree, properties):
         return hex(random.getrandbits(16))
 
     # exit ASAP if disabled
-    if not properties.enable_page_defragmentation:
+    if not properties.enable_morsel_defragmentation:
         return plan
 
     # find the in-scope nodes
@@ -53,7 +53,7 @@ def defragment_pages(plan: ExecutionTree, properties):
     # HAVING and WHERE are selection nodes
     for nid in selection_nodes:
         # get the node from the node_id
-        defrag = operators.PageDefragmentNode(properties=properties)
+        defrag = operators.MorselDefragmentNode(properties=properties)
         plan.insert_node_before(f"defrag-{unique_id()}", defrag, nid)
 
     return plan

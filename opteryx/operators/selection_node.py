@@ -48,27 +48,24 @@ class SelectionNode(BasePlanNode):
         if len(self._producers) != 1:  # pragma: no cover
             raise SqlError(f"{self.name} on expects a single producer")
 
-        data_pages = self._producers[0]  # type:ignore
-        if isinstance(data_pages, Table):
-            data_pages = (data_pages,)
-
+        morsels = self._producers[0]  # type:ignore
         schema = None
         at_least_one = False
 
         # we should always have a filter - but no harm in checking
         if self.filter is None:
-            yield from data_pages.execute()
+            yield from morsels.execute()
             return
 
-        for page in data_pages.execute():
+        for morsel in morsels.execute():
             if schema is None:
-                schema = page.schema
+                schema = morsel.schema
 
-            if page.num_rows == 0:
+            if morsel.num_rows == 0:
                 continue
 
             start_selection = time.time_ns()
-            mask = evaluate(self.filter, page, False)
+            mask = evaluate(self.filter, morsel, False)
             self.statistics.time_evaluating += time.time_ns() - start_selection
 
             # if the mask is a boolean array, we've called a function that
@@ -80,9 +77,9 @@ class SelectionNode(BasePlanNode):
 
             self.statistics.time_selecting += time.time_ns() - start_selection
 
-            # if there's no matching rows, just drop the page
+            # if there's no matching rows, just drop the morsel
             if mask.size > 0:
-                yield page.take(pyarrow.array(mask))
+                yield morsel.take(pyarrow.array(mask))
                 at_least_one = True
 
         # we need to send something to the next operator, send an empty table

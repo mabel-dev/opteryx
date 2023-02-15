@@ -68,16 +68,16 @@ def _cross_join(left, right):
     right_columns = Columns(right)
     left_columns = None
 
-    for left_page in left.execute():
+    for left_morsel in left.execute():
         if left_columns is None:
-            left_columns = Columns(left_page)
+            left_columns = Columns(left_morsel)
             new_columns = left_columns + right_columns
 
         # we break this into small chunks, each cycle will have 500 * rows in the right table
-        for left_block in left_page.to_batches(max_chunksize=INTERNAL_BATCH_SIZE):
+        for left_block in left_morsel.to_batches(max_chunksize=INTERNAL_BATCH_SIZE):
             # blocks don't have column_names, so we need to wrap in a table
             left_block = pyarrow.Table.from_batches(
-                [left_block], schema=left_page.schema
+                [left_block], schema=left_morsel.schema
             )
 
             # build two lists, 0 to num_rows for each table
@@ -123,14 +123,14 @@ def _cross_join_unnest(left, column, alias):
     if alias is None:
         alias = f"UNNEST({column.value})"
 
-    for left_page in left.execute():
+    for left_morsel in left.execute():
         if metadata is None:
-            metadata = Columns(left_page)
+            metadata = Columns(left_morsel)
             metadata.add_column(alias)
             unnest_column = metadata.get_column_from_alias(column.value, only_one=True)
 
         # we break this into small chunks otherwise we very quickly run into memory issues
-        for left_block in left_page.to_batches(max_chunksize=INTERNAL_BATCH_SIZE):
+        for left_block in left_morsel.to_batches(max_chunksize=INTERNAL_BATCH_SIZE):
             # Get the column we're going to UNNEST
             column_data = left_block[unnest_column]
             if column_type is None:
@@ -165,7 +165,7 @@ def _cross_join_unnest(left, column, alias):
             # Append the column we created above, to the table with the repeated rows
             new_block = pyarrow.Table.append_column(new_block, alias, new_column)
 
-            # if the entire page is nulls, the schema won't match
+            # if the entire columns is nulls, the schema won't match
             column_index = new_block.column_names.index(alias)
             schema = new_block.schema
             column = schema.field(column_index)

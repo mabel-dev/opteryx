@@ -117,8 +117,8 @@ DISABLE_HIGH_PRIORITY: bool = bool(get("DISABLE_HIGH_PRIORITY", False))
 ENABLE_RESOURCE_LOGGING: bool = bool(get("ENABLE_RESOURCE_LOGGING", False))
 # only push equals predicates
 ONLY_PUSH_EQUALS_PREDICATES: bool = bool(get("ONLY_PUSH_EQUALS_PREDICATES", False))
-# size of pages to push between steps
-PAGE_SIZE: int = int(get("PAGE_SIZE", 64 * 1024 * 1024))
+# size of morsels to push between steps
+MORSEL_SIZE: int = int(get("MORSEL_SIZE", 64 * 1024 * 1024))
 
 # not GA
 PROFILE_LOCATION:str = get("PROFILE_LOCATION", False)

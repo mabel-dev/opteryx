@@ -46,21 +46,18 @@ class ShowCreateNode(BasePlanNode):
         if len(self._producers) != 1:  # pragma: no cover
             raise SqlError(f"{self.name} on expects a single producer")
 
-        data_pages = self._producers[0]  # type:ignore
-        if isinstance(data_pages, pyarrow.Table):
-            data_pages = (data_pages,)
+        morsels = self._producers[0]  # type:ignore
+        morsel = next(morsels.execute())
 
-        page = next(data_pages.execute())
-
-        columns = Columns(page)
+        columns = Columns(morsel)
         preferred_names = columns.preferred_column_names
         column_names = []
-        for col in page.column_names:
+        for col in morsel.column_names:
             column_names.append([c for a, c in preferred_names if a == col][0])
-        page = page.rename_columns(column_names)
+        morsel = morsel.rename_columns(column_names)
 
-        for column in page.column_names:
-            column_data = page.column(column)
+        for column in morsel.column_names:
+            column_data = morsel.column(column)
             column_type = str(column_data.type)
             statement += f"\t{column.ljust(32)} {column_type},\n"
         statement += ");"

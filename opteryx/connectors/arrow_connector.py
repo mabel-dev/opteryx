@@ -31,11 +31,11 @@ class ArrowConnector(BaseDocumentStorageAdapter):
         dataset = self._datasets[collection]
         return dataset.num_rows
 
-    def read_documents(self, collection, page_size: int = 0):
+    def read_documents(self, collection, morsel_size: int = 0):
         dataset = self._datasets[collection]
 
         batch_size = (96 * 1024 * 1024) // (dataset.nbytes / dataset.num_rows)
 
         for batch in dataset.to_batches(max_chunksize=batch_size):
-            page = pyarrow.Table.from_batches([batch], schema=dataset.schema)
-            yield page
+            morsel = pyarrow.Table.from_batches([batch], schema=dataset.schema)
+            yield morsel
