@@ -1,0 +1,175 @@
+# Bulk random queries created by ChatGPT
+# These are likely to cover functionality tested elsewhere, however this is intended
+# be closer to fuzzing than functional testing.
+
+SELECT name, mass FROM $planets WHERE mass > 100;
+SELECT name, diameter FROM $planets WHERE diameter BETWEEN 5000 AND 10000;
+SELECT name, gravity FROM $planets WHERE gravity < 5;
+SELECT name, escapeVelocity FROM $planets WHERE escapeVelocity > 50;
+SELECT name, distanceFromSun FROM $planets WHERE distanceFromSun < 500;
+SELECT name, orbitalPeriod FROM $planets WHERE orbitalPeriod > 500;
+SELECT name, numberOfMoons FROM $planets WHERE numberOfMoons > 1;
+SELECT name, meanTemperature FROM $planets WHERE meanTemperature < 0;
+SELECT name, surfacePressure FROM $planets WHERE surfacePressure > 50;
+SELECT name, orbitalEccentricity FROM $planets WHERE orbitalEccentricity > 0.1;
+SELECT name, lengthOfDay FROM $planets WHERE lengthOfDay < 30;
+SELECT name, density FROM $planets WHERE density BETWEEN 1000 AND 2000;
+SELECT name, obliquityToOrbit FROM $planets WHERE obliquityToOrbit > 90;
+SELECT name, perihelion FROM $planets WHERE perihelion < 50;
+SELECT name, aphelion FROM $planets WHERE aphelion > 5000;
+SELECT name, rotationPeriod FROM $planets WHERE rotationPeriod < 10;
+SELECT name, orbitalInclination FROM $planets WHERE orbitalInclination < 1;
+SELECT name, mass/diameter AS mass_to_diameter FROM $planets ORDER BY mass_to_diameter DESC;
+SELECT AVG(density) FROM $planets;
+SELECT MAX(numberOfMoons) FROM $planets;
+SELECT name, gravity, meanTemperature FROM $planets WHERE gravity > 20 AND meanTemperature < 0;
+SELECT name, diameter, surfacePressure FROM $planets WHERE surfacePressure IS NOT NULL;
+SELECT name, distanceFromSun, lengthOfDay FROM $planets WHERE lengthOfDay > distanceFromSun;
+SELECT name, density, gravity FROM $planets WHERE density/gravity > 1000;
+SELECT name, diameter, meanTemperature FROM $planets WHERE diameter > 10000 OR meanTemperature < -100;
+SELECT name, mass, escapeVelocity FROM $planets WHERE mass/escapeVelocity > 300;
+SELECT name, gravity, obliquityToOrbit FROM $planets WHERE gravity > 10 AND obliquityToOrbit < 30;
+SELECT name, surfacePressure, numberOfMoons FROM $planets WHERE numberOfMoons > 0 ORDER BY surfacePressure DESC;
+SELECT name, density, orbitalPeriod FROM $planets WHERE density > 1000 AND orbitalPeriod < 1000;
+SELECT name, mass, aphelion FROM $planets WHERE mass > 500 AND aphelion > 50000;
+SELECT name, diameter, escapeVelocity, lengthOfDay FROM $planets WHERE lengthOfDay < diameter AND escapeVelocity > 10;
+SELECT name, gravity, surfacePressure, numberOfMoons FROM $planets WHERE surfacePressure IS NOT NULL AND numberOfMoons > 5 ORDER BY gravity DESC;
+SELECT name, distanceFromSun, orbitalPeriod, orbitalVelocity FROM $planets WHERE distanceFromSun < 100 AND orbitalVelocity > 20 ORDER BY orbitalPeriod ASC;
+SELECT name, mass, obliquityToOrbit, meanTemperature FROM $planets WHERE mass > 1000 AND obliquityToOrbit < 45 AND meanTemperature < 0;
+SELECT name, diameter, density, gravity, escapeVelocity FROM $planets WHERE density > 5000 AND gravity > 15 AND escapeVelocity > 30 ORDER BY diameter DESC;
+SELECT name, surfacePressure, orbitalEccentricity, numberOfMoons FROM $planets WHERE surfacePressure > 50 AND orbitalEccentricity > 0.1 AND numberOfMoons < 5;
+SELECT name, mass, lengthOfDay, meanTemperature FROM $planets WHERE mass < 10 AND lengthOfDay < 100 AND meanTemperature < -100 ORDER BY mass ASC;
+SELECT name, density, obliquityToOrbit, aphelion FROM $planets WHERE density < 1000 AND obliquityToOrbit > 60 AND aphelion > 50000;
+SELECT name, diameter, gravity, escapeVelocity FROM $planets WHERE diameter > 5000 AND gravity < 5 AND escapeVelocity < 5;
+SELECT name, distanceFromSun, orbitalPeriod, orbitalVelocity FROM $planets WHERE distanceFromSun > 1000 AND orbitalPeriod > 10000 AND orbitalVelocity < 5;
+SELECT name, diameter, obliquityToOrbit, meanTemperature FROM $planets WHERE diameter > 10000 AND obliquityToOrbit < 30 AND meanTemperature < -100 ORDER BY diameter DESC;
+SELECT name, mass, density, gravity, escapeVelocity FROM $planets WHERE mass > 100 AND density < 2000 AND gravity > 5 AND escapeVelocity > 10;
+SELECT name, lengthOfDay, distanceFromSun, orbitalPeriod FROM $planets WHERE lengthOfDay < 10 AND distanceFromSun > 200 AND orbitalPeriod > 500 ORDER BY distanceFromSun ASC;
+SELECT name, surfacePressure, numberOfMoons, aphelion FROM $planets WHERE surfacePressure > 10 AND numberOfMoons < 3 AND aphelion < 10000;
+SELECT name, mass, diameter, density FROM $planets WHERE mass < 1 AND diameter < 5000 AND density > 3000;
+SELECT name, obliquityToOrbit, meanTemperature, surfacePressure FROM $planets WHERE obliquityToOrbit > 60 AND meanTemperature < -100 AND surfacePressure IS NULL;
+SELECT name, gravity, escapeVelocity, rotationPeriod FROM $planets WHERE gravity > 15 AND escapeVelocity > 40 AND rotationPeriod > 10 ORDER BY escapeVelocity DESC;
+SELECT name, distanceFromSun, orbitalPeriod, orbitalEccentricity FROM $planets WHERE distanceFromSun < 500 AND orbitalPeriod < 500 AND orbitalEccentricity > 0.3;
+SELECT name, diameter, density, obliquityToOrbit, meanTemperature FROM $planets WHERE diameter > 5000 AND density > 2000 AND obliquityToOrbit < 20 AND meanTemperature < -50 ORDER BY diameter ASC;
+SELECT name, mass, surfacePressure, numberOfMoons FROM $planets WHERE mass > 1000 AND surfacePressure > 50 AND numberOfMoons > 2 ORDER BY mass DESC;
+
+SELECT name FROM $satellites WHERE magnitude > 0;
+SELECT name FROM $satellites WHERE magnitude < 0;
+SELECT name FROM $satellites WHERE albedo > 0.05;
+SELECT name FROM $satellites WHERE albedo < 0.05;
+SELECT planetId FROM $satellites WHERE name = "Moon";
+SELECT COUNT(id) FROM $satellites WHERE gm > 5000;
+SELECT COUNT(id) FROM $satellites WHERE gm < 5000;
+SELECT COUNT(id) FROM $satellites WHERE radius > 1000;
+SELECT COUNT(id) FROM $satellites WHERE radius < 1000;
+SELECT name FROM $satellites WHERE density > 2;
+SELECT name FROM $satellites WHERE density < 2;
+SELECT name FROM $satellites WHERE planetId = 4;
+SELECT name FROM $satellites WHERE planetId = 5;
+SELECT name FROM $satellites WHERE planetId < 4;
+SELECT name FROM $satellites WHERE planetId > 5;
+SELECT planetId, COUNT(id) FROM $satellites GROUP BY planetId;
+SELECT name, albedo FROM $satellites WHERE albedo > 0.05 ORDER BY albedo DESC;
+SELECT name, albedo FROM $satellites WHERE albedo > 0.05 ORDER BY albedo ASC;
+SELECT name FROM $satellites WHERE planetId = 4 AND density < 2;
+SELECT name FROM $satellites WHERE planetId = 4 OR planetId = 5;
+SELECT name FROM $satellites WHERE planetId IN (4,5);
+SELECT name FROM $satellites WHERE planetId NOT IN (4,5);
+SELECT name FROM $satellites WHERE name LIKE "%a";
+SELECT name FROM $satellites WHERE name LIKE "%e%";
+SELECT name FROM $satellites WHERE name LIKE "A%";
+SELECT name FROM $satellites WHERE name LIKE "%a%" AND name LIKE "%e%";
+SELECT name FROM $satellites WHERE name SIMILAR TO "^.a";
+SELECT name FROM $satellites WHERE name SIMILAR TO "^.a.*e$";
+SELECT name FROM $satellites WHERE name SIMILAR TO "^A.*e$";
+SELECT name FROM $satellites WHERE name SIMILAR TO "a+";
+SELECT name FROM $satellites WHERE name SIMILAR TO "a{2,}";
+SELECT name FROM $satellites WHERE name SIMILAR TO "a{3}";
+SELECT name FROM $satellites WHERE name SIMILAR TO "[[:upper:]]";
+SELECT name FROM $satellites WHERE name SIMILAR TO "[[:digit:]]";
+SELECT name FROM $satellites WHERE name SIMILAR TO "[[:space:]]";
+SELECT name FROM $satellites WHERE name SIMILAR TO "^.$";
+SELECT name FROM $satellites WHERE name SIMILAR TO "^[AEIOU].*[aeiou]$";
+SELECT name FROM $satellites WHERE gm BETWEEN 0.001 AND 0.005;
+SELECT name FROM $satellites WHERE gm NOT BETWEEN 0.001 AND 0.005;
+SELECT name FROM $satellites WHERE albedo BETWEEN 0.05 AND 0.1;
+SELECT name FROM $satellites WHERE albedo NOT BETWEEN 0.05 AND 0.1;
+SELECT name FROM $satellites WHERE name = "Moon" OR name = "Phobos" OR name = "Deimos";
+SELECT * FROM $satellites WHERE name = "Moon";
+SELECT * FROM $satellites WHERE density > 2;
+SELECT * FROM $satellites WHERE planetId = 5 ORDER BY magnitude DESC;
+SELECT COUNT(*) FROM $satellites WHERE planetId = 5;
+SELECT SUM(density) FROM $satellites WHERE planetId = 5;
+SELECT AVG(radius) FROM $satellites WHERE planetId = 5;
+SELECT MIN(gm) FROM $satellites WHERE planetId = 5;
+SELECT MAX(albedo) FROM $satellites WHERE planetId = 5;
+SELECT name FROM $satellites WHERE id=10
+SELECT radius FROM $satellites WHERE magnitude>18
+SELECT name, gm, radius FROM $satellites WHERE planetId=5
+SELECT COUNT(*) FROM $satellites WHERE albedo>0.06
+SELECT id, name FROM $satellites WHERE density>1.8 AND magnitude>-15
+SELECT SUM(density) FROM $satellites WHERE planetId=3
+SELECT COUNT(*) FROM $satellites WHERE radius<70
+SELECT MAX(magnitude) FROM $satellites WHERE planetId=4
+SELECT COUNT(*) FROM $satellites WHERE density<1.5
+SELECT id, planetId, name FROM $satellites WHERE gm>5000
+SELECT AVG(albedo) FROM $satellites WHERE planetId=5
+SELECT id, name FROM $satellites WHERE density BETWEEN 1.4 AND 1.5
+SELECT name, magnitude FROM $satellites WHERE radius>2400 AND radius<2500
+SELECT COUNT(*) FROM $satellites WHERE magnitude<6
+SELECT SUM(gm) FROM $satellites WHERE planetId=5
+SELECT planetId, name, magnitude FROM $satellites WHERE albedo=0.04
+SELECT MAX(radius) FROM $satellites WHERE planetId=3
+SELECT name, albedo FROM $satellites WHERE density>3
+SELECT COUNT(*) FROM $satellites WHERE gm<0.001
+SELECT planetId, COUNT(*) FROM $satellites GROUP BY planetId
+SELECT MIN(magnitude) FROM $satellites WHERE planetId=5
+SELECT id, planetId, name FROM $satellites WHERE density>1.7 AND albedo>0.06
+SELECT name, albedo FROM $satellites WHERE radius>1500 AND radius<1700
+SELECT SUM(radius) FROM $satellites WHERE planetId=5
+SELECT AVG(density) FROM $satellites WHERE magnitude<6.5
+SELECT * FROM $satellites WHERE name='Io';
+SELECT COUNT(name) FROM $satellites WHERE planetId=5;
+SELECT name, radius FROM $satellites ORDER BY radius DESC LIMIT 5;
+SELECT * FROM $satellites WHERE gm BETWEEN 0.01 AND 0.02;
+# SELECT name FROM $satellites WHERE radius=(SELECT MIN(radius) FROM $satellites);
+SELECT name, magnitude FROM $satellites WHERE magnitude<0;
+#? SELECT * FROM $satellites WHERE radius=MAX(radius);
+SELECT AVG(density) FROM $satellites WHERE planetId=5;
+SELECT name, magnitude, albedo FROM $satellites WHERE magnitude >10 AND albedo < 0.5;
+# SELECT name FROM $satellites WHERE albedo=(SELECT MIN(albedo) FROM $satellites WHERE planetId=5);
+SELECT name, density FROM $satellites WHERE density > 1 AND density < 2;
+# SELECT name, radius FROM $satellites WHERE radius < (SELECT AVG(radius) FROM $satellites WHERE planetId=5);
+SELECT COUNT(id) FROM $satellites WHERE planetId=5;
+SELECT * FROM $satellites WHERE radius > 1000 ORDER BY radius ASC LIMIT 5;
+SELECT name FROM $satellites WHERE name LIKE 'A%';
+SELECT name, albedo FROM $satellites WHERE albedo > 0.1 ORDER BY albedo DESC LIMIT 10;
+# SELECT name, gm FROM $satellites WHERE gm > (SELECT AVG(gm) FROM $satellites WHERE planetId=5);
+SELECT name, radius, albedo FROM $satellites WHERE radius > 2000 AND albedo < 0.2 ORDER BY radius DESC LIMIT 10;
+SELECT planetId, COUNT(*) AS count FROM $satellites GROUP BY planetId;
+SELECT name FROM $satellites WHERE density > 3;
+SELECT name, gm, radius FROM $satellites WHERE gm < 0.01 AND radius > 100 ORDER BY radius DESC LIMIT 10;
+SELECT name, radius, density FROM $satellites WHERE radius > 1500 AND density < 2;
+#? SELECT planetId, COUNT(*) FROM $satellites WHERE albedo = 0.04;
+SELECT * FROM $satellites WHERE albedo BETWEEN 0.1 AND 0.5 ORDER BY albedo DESC LIMIT 5;
+SELECT planetId, MAX(radius) FROM $satellites GROUP BY planetId;
+SELECT COUNT(*) FROM $satellites;
+SELECT * FROM $satellites WHERE radius > 1000;
+SELECT name, radius FROM $satellites WHERE magnitude < 0;
+SELECT * FROM $satellites WHERE density > 2;
+SELECT id, name FROM $satellites WHERE planetId = 3;
+SELECT * FROM $satellites WHERE magnitude < 10 AND density > 2;
+SELECT * FROM $satellites WHERE name LIKE 'M%';
+SELECT AVG(density) FROM $satellites WHERE radius > 2000;
+SELECT name, radius FROM $satellites WHERE planetId = 5 AND magnitude < 10;
+SELECT MIN(radius), MAX(radius), AVG(radius) FROM $satellites;
+SELECT * FROM $satellites WHERE albedo > 0.06 AND density < 2;
+SELECT * FROM $satellites ORDER BY albedo DESC;
+SELECT COUNT(*) FROM $satellites WHERE albedo = 0.04;
+SELECT * FROM $satellites WHERE id = 1 OR id = 10 OR id = 20;
+SELECT name, magnitude, albedo FROM $satellites WHERE radius BETWEEN 1500 AND 2000;
+SELECT * FROM $satellites WHERE magnitude > 14 ORDER BY magnitude ASC;
+SELECT AVG(density) FROM $satellites WHERE name LIKE '%e';
+SELECT * FROM $satellites WHERE planetId IN (4, 5);
+SELECT name FROM $satellites WHERE name LIKE '%a' AND radius < 50;
+SELECT * FROM $satellites WHERE planetId = 4 AND (magnitude < 11 OR density > 2);

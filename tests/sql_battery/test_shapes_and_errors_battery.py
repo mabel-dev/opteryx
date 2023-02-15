@@ -53,6 +53,8 @@ from opteryx.exceptions import InvalidTemporalRangeFilterError
 from opteryx.exceptions import SqlError
 from opteryx.exceptions import UnsupportedSyntaxError
 
+from opteryx.utils.formatter import format_sql
+
 # fmt:off
 STATEMENTS = [
         # Are the datasets the shape we expect?
@@ -866,7 +868,9 @@ def test_sql_battery(statement, rows, columns, exception):
         f" expected\n{statement}\n{cursor.head(10)}"
 
     except Exception as err:
-        assert type(err) == exception, f"Query failed with error {type(err)}"
+        assert (
+            type(err) == exception
+        ), f"\n{format_sql(statement)}\nQuery failed with error {type(err)}"
         f" but error {exception} was expected"
 
 
@@ -886,8 +890,11 @@ if __name__ == "__main__":  # pragma: no cover
     print(f"RUNNING BATTERY OF {len(STATEMENTS)} SHAPE TESTS")
     for index, (statement, rows, cols, err) in enumerate(STATEMENTS):
         start = time.monotonic_ns()
+        printable = statement
+        if hasattr(printable, "encode"):
+            printable = str(printable.encode())[2:-1]
         print(
-            f"\033[0;36m{(index + 1):04}\033[0m {statement[0:width - 1].ljust(width)}",
+            f"\033[0;36m{(index + 1):04}\033[0m {printable[0:width - 1].ljust(width)}",
             end="",
         )
         test_sql_battery(statement, rows, cols, err)

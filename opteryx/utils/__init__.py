@@ -37,7 +37,7 @@ def fuzzy_search(name, candidates):
 
     for candidate in candidates:
         my_dist = compare(candidate, name)
-        if 0 < my_dist < best_match_score:
+        if 0 <= my_dist < best_match_score:
             best_match_score = my_dist
             best_match_column = candidate
 

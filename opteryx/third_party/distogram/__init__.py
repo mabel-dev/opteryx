@@ -11,15 +11,15 @@ The following changes have been made for Opteryx\Tarchia:
 """
 
 import math
-import numpy
-
 from bisect import bisect_left
 from functools import reduce
 from itertools import accumulate
 from operator import itemgetter
-from typing import List
-from typing import Optional
-from typing import Tuple
+
+import numpy
+
+from typing import List, Optional, Tuple
+
 
 EPSILON = 1e-5
 BIN_COUNT: int = 50
@@ -159,8 +159,27 @@ def _linspace(start: float, stop: float, num: int) -> List[float]:  # pragma: no
 def _moment(
     x: List[float], counts: List[float], c: float, n: int
 ) -> float:  # pragma: no cover
-    m = (ci * (v - c) ** n for i, (ci, v) in enumerate(zip(counts, x)))
-    return sum(m) / sum(counts)
+    """
+    Calculates the k-th moment of the distribution using the formula:
+
+    moment_k = sum((v - mean)**k * f) / sum(f)
+
+    where v is the value of a bin, f is its frequency, and mean is the mean of
+    the distribution.
+
+    Args:
+        h (Distogram): The input distribution.
+        k (int): The order of the moment to calculate.
+
+    Returns:
+        float: The k-th moment of the distribution.
+
+    Raises:
+        ValueError: If the distribution has no bins.
+
+    """
+    m = sum(ci * (v - c) ** n for ci, v in zip(counts, x))
+    return m / sum(counts)
 
 
 def _update_diffs(h: Distogram, i: int) -> None:  # pragma: no cover
@@ -201,24 +220,27 @@ def _trim(h: Distogram) -> Distogram:  # pragma: no cover
             i, _ = min(diffs, key=itemgetter(1))
 
         v1, f1 = h.bins[i]
-        v2, f2 = h.bins[i + 1]
+        v2, f2 = h.bins.pop(i + 1)
         h.bins[i] = (v1 * f1 + v2 * f2) / (f1 + f2), f1 + f2
-        del h.bins[i + 1]
 
         if h.diffs is not None:
-            del h.diffs[i]
+            h.diffs.pop(i)
             _update_diffs(h, i)
             h.min_diff = min(h.diffs)
 
     return h
 
 
-def _trim_in_place(h: Distogram, value: float, c: int, i: int):  # pragma: no cover
-    v, f = h.bins[i]
-    v = _caster(v)
-    h.bins[i] = (v * f + value * c) / (f + c), f + c
-    _update_diffs(h, i)
-    return h
+def _trim_in_place(
+    distogram: Distogram, new_value: float, new_count: int, bin_index: int
+) -> Distogram:
+    current_value, current_frequency = distogram.bins[bin_index]
+    current_value = _caster(current_value)
+    distogram.bins[bin_index] = (
+        current_value * current_frequency + new_value * new_count
+    ) / (current_frequency + new_count), current_frequency + new_count
+    _update_diffs(distogram, bin_index)
+    return distogram
 
 
 def _compute_diffs(h: Distogram) -> List[float]:  # pragma: no cover

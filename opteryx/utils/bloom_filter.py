@@ -86,7 +86,7 @@ def _get_hash_count(filter_size, number_of_elements):
         integer
     """
     k = (filter_size / number_of_elements) * _log(2)
-    return max(int(k), 2)
+    return max(round(k), 2)
 
 
 class BloomFilter:

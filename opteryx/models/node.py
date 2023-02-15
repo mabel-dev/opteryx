@@ -46,7 +46,7 @@ class Node:
             else:
                 internal[__name] = __value
 
-    def __repr__(self) -> str:
+    def __str__(self) -> str:
         internal = self.__dict__.get("_internal", {})
         return orjson.dumps(internal).decode()
 

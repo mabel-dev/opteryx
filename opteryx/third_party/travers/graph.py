@@ -212,8 +212,7 @@ class Graph(object):
         Returns:
             Set of Tuples (Source, Target, Relationship)
         """
-        targets = self._edges.get(source) or []
-        return [(source, t, r) for t, r in targets]
+        return [(source, t, r) for t, r in self._edges.get(source, [])]
 
     def ingoing_edges(self, target) -> List[Tuple]:
         """
