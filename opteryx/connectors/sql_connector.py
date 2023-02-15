@@ -73,10 +73,10 @@ class SqlConnector(BaseSQLStorageAdapter, PredicatePushable):
         self._prefix = prefix
 
     def read_records(
-        self, dataset, selection: Union[list, None] = None, page_size: int = 500
+        self, dataset, selection: Union[list, None] = None, morsel_size: int = 500
     ):  # pragma: no cover
         """
-        Return a page of documents
+        Return a morsel of documents
         """
         from sqlalchemy import text
         from opteryx.third_party.query_builder import Query
@@ -101,7 +101,7 @@ class SqlConnector(BaseSQLStorageAdapter, PredicatePushable):
         with engine.connect() as conn:
             result = conn.execute(text(str(query_builder)))
 
-            batch = result.fetchmany(page_size)
+            batch = result.fetchmany(morsel_size)
             while batch:
                 yield pyarrow.Table.from_pylist([b._asdict() for b in batch])
-                batch = result.fetchmany(page_size)
+                batch = result.fetchmany(morsel_size)

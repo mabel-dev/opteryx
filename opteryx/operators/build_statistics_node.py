@@ -48,7 +48,7 @@ def increment(dic: dict, value):
         dic[value] = 1
 
 
-def _statitics_collector(pages):
+def _statitics_collector(morsels):
     """
     Collect summary statistics about each column
     """
@@ -71,17 +71,17 @@ def _statitics_collector(pages):
     )
     target_metadata = None
 
-    pages = list(pages)
+    morsels = list(morsels)
 
-    for page in pages:
+    for morsel in morsels:
         uncollected_columns = []
         profile_collector: dict = {}
 
-        columns = Columns(page)
+        columns = Columns(morsel)
         table_path = columns.table_path
 
-        for block in page.to_batches(10000):
-            for column in page.column_names:
+        for block in morsel.to_batches(10000):
+            for column in morsel.column_names:
                 column_data = block.column(column)
 
                 profile = profile_collector.get(column, orjson.loads(empty_profile))
@@ -257,9 +257,9 @@ class BuildStatisticsNode(BasePlanNode):
         if len(self._producers) != 1:  # pragma: no cover  # pragma: no cover
             raise SqlError(f"{self.name} on expects a single producer")
 
-        data_pages = self._producers[0]  # type:ignore
+        morsels = self._producers[0]  # type:ignore
 
-        if data_pages is None:  # pragma: no cover
+        if morsels is None:  # pragma: no cover
             return None
 
-        return _statitics_collector(data_pages.execute())
+        return _statitics_collector(morsels.execute())

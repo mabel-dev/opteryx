@@ -23,7 +23,6 @@ from typing import Iterable
 
 import pyarrow
 
-from opteryx.connectors.capabilities import PredicatePushable
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 from opteryx.models.columns import Columns
@@ -68,29 +67,29 @@ class SqlReaderNode(BasePlanNode):
     def execute(self) -> Iterable:
         metadata = None
 
-        for pyarrow_page in self._reader.read_records(dataset=self._dataset):
+        for morsel in self._reader.read_records(dataset=self._dataset):
             start_read = time.time_ns()
-            if not isinstance(pyarrow_page, pyarrow.Table):
-                pyarrow_page = pyarrow.Table.from_pylist(pyarrow_page)
+            if not isinstance(morsel, pyarrow.Table):
+                morsel = pyarrow.Table.from_pylist(morsel)
 
             self.statistics.time_data_read += time.time_ns() - start_read
-            self.statistics.rows_read += pyarrow_page.num_rows
-            self.statistics.bytes_processed_data += pyarrow_page.nbytes
-            self.statistics.document_pages += 1
+            self.statistics.rows_read += morsel.num_rows
+            self.statistics.bytes_processed_data += morsel.nbytes
+            self.statistics.document_chunks += 1
 
             if metadata is None:
-                pyarrow_page = Columns.create_table_metadata(
-                    table=pyarrow_page,
+                morsel = Columns.create_table_metadata(
+                    table=morsel,
                     expected_rows=None,  # TODO: can we get this?
                     name=self._dataset,
                     table_aliases=[self._alias],
                     disposition="collection",
                     path=self._dataset,
                 )
-                metadata = Columns(pyarrow_page)
+                metadata = Columns(morsel)
                 self.statistics.tables_read += 1
-                self.statistics.columns_read += len(pyarrow_page.column_names)
+                self.statistics.columns_read += len(morsel.column_names)
             else:
-                pyarrow_page = metadata.apply(pyarrow_page)
+                morsel = metadata.apply(morsel)
 
-            yield pyarrow_page
+            yield morsel

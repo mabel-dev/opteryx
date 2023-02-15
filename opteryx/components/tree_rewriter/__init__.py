@@ -18,7 +18,7 @@ RULESET: list = [
     rules.eliminate_fixed_function_evaluations,  # run before constant evaluations
     rules.eliminate_constant_evaluations,
     rules.predicate_pushdown,
-    rules.defragment_pages,
+    rules.defragment_morsels,
     rules.use_heap_sort,
 ]
 

@@ -49,7 +49,7 @@ class _QueryStatistics:
         self.segments_scanned: int = 0
 
         self.collections_read: int = 0
-        self.document_pages: int = 0
+        self.document_chunks: int = 0
 
         self.tables_read: int = 0
 
@@ -74,8 +74,8 @@ class _QueryStatistics:
         self.start_time: int = 0
         self.end_time: int = 0
 
-        self.page_splits: int = 0
-        self.page_merges: int = 0
+        self.chunk_splits: int = 0
+        self.chunk_merges: int = 0
 
     def _ns_to_s(self, nano_seconds):
         """convert elapsed ns to s"""
@@ -131,9 +131,9 @@ class _QueryStatistics:
             "cache_evictions": self.cache_evictions,
             "collections_read": self.collections_read,
             "tables_read": self.tables_read,
-            "document_pages": self.document_pages,
-            "page_splits": self.page_splits,
-            "page_merges": self.page_merges,
+            "document_chunks": self.document_chunks,
+            "chunk_splits": self.chunk_splits,
+            "chunk_merges": self.chunk_merges,
         }
 
 

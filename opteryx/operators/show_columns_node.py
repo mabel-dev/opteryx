@@ -42,17 +42,17 @@ def _to_unix_epoch(date):
     return timestamp / 1e6
 
 
-def _simple_collector(page):
+def _simple_collector(morsel):
     """
-    Collect the very summary type information only, we read only a single page to do
+    Collect the very summary type information only, we read only a single morsel to do
     this so it's pretty quick - helpful if you want to know what fields are available
     programatically.
     """
-    columns = Columns(page)
+    columns = Columns(morsel)
 
     buffer = []
-    for column in page.column_names:
-        column_data = page.column(column)
+    for column in morsel.column_names:
+        column_data = morsel.column(column)
         _type = determine_type(str(column_data.type))
         new_row = {"name": columns.get_preferred_name(column), "type": _type}
         buffer.append(new_row)
@@ -69,7 +69,7 @@ def _simple_collector(page):
     return table
 
 
-def _full_collector(pages):
+def _full_collector(morsels):
     """
     Collect basic count information about columns, to do this we read the entire
     dataset.
@@ -89,12 +89,12 @@ def _full_collector(pages):
     columns = None
     profile_collector: dict = {}
 
-    for page in pages:
+    for morsel in morsels:
         if columns is None:
-            columns = Columns(page)
+            columns = Columns(morsel)
 
-        for column in page.column_names:
-            column_data = page.column(column)
+        for column in morsel.column_names:
+            column_data = morsel.column(column)
             profile = profile_collector.get(column, orjson.loads(empty_profile))
             _type = determine_type(str(column_data.type))
             if _type not in profile["type"]:
@@ -146,7 +146,7 @@ def increment(dic: dict, value):
         dic[value] = 1
 
 
-def _extended_collector(pages):
+def _extended_collector(morsels):
     """
     Collect summary statistics about each column
     """
@@ -173,12 +173,12 @@ def _extended_collector(pages):
     columns = None
     profile_collector: dict = {}
 
-    for page in pages:
+    for morsel in morsels:
         if columns is None:
-            columns = Columns(page)
+            columns = Columns(morsel)
 
-        for block in page.to_batches(5000):
-            for column in page.column_names:
+        for block in morsel.to_batches(5000):
+            for column in morsel.column_names:
                 column_data = block.column(column)
 
                 profile = profile_collector.get(column, orjson.loads(empty_profile))
@@ -340,23 +340,23 @@ class ShowColumnsNode(BasePlanNode):
         if len(self._producers) != 1:  # pragma: no cover
             raise SqlError(f"{self.name} on expects a single producer")
 
-        data_pages = self._producers[0]  # type:ignore
+        morsels = self._producers[0]  # type:ignore
 
-        if data_pages is None:
+        if morsels is None:
             return None
 
         if not (self._full or self._extended):
             # if it's not full or extended, do just get the list of columns and their
             # types
-            yield _simple_collector(next(data_pages.execute()))
+            yield _simple_collector(next(morsels.execute()))
             return
 
         if self._full and not self._extended:
             # we're going to read the full table, so we can count stuff
-            yield _full_collector(data_pages.execute())
+            yield _full_collector(morsels.execute())
             return
 
         if self._extended:
             # get everything we can reasonable get
-            yield _extended_collector(data_pages.execute())
+            yield _extended_collector(morsels.execute())
             return

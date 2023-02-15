@@ -50,14 +50,14 @@ class ColumnFilterNode(BasePlanNode):
         if len(self._producers) != 1:  # pragma: no cover
             raise SqlError(f"{self.name} on expects a single producer")
 
-        data_pages = self._producers[0]  # type:ignore
+        morsels = self._producers[0]  # type:ignore
 
         selection = None
         columns = None
 
-        for page in data_pages.execute():
+        for morsel in morsels.execute():
             if selection is None:
-                columns = Columns(page)
+                columns = Columns(morsel)
                 selection = list(dict.fromkeys(columns.filter(self._filter)))
-            page = page.select(selection)
-            yield columns.apply(page)
+            morsel = morsel.select(selection)
+            yield columns.apply(morsel)

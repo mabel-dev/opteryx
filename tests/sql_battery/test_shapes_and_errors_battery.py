@@ -406,7 +406,7 @@ STATEMENTS = [
 
         ("EXPLAIN SELECT * FROM $satellites", 1, 3, None),
         ("EXPLAIN SELECT * FROM $satellites WHERE id = 8", 3, 3, None),
-        ("SET enable_page_defragmentation = false; EXPLAIN SELECT * FROM $satellites WHERE id = 8", 2, 3, None),
+        ("SET enable_morsel_defragmentation = false; EXPLAIN SELECT * FROM $satellites WHERE id = 8", 2, 3, None),
         ("SET enable_optimizer = false; EXPLAIN SELECT * FROM $satellites WHERE id = 8", 2, 3, None),
         ("SET enable_optimizer = true; EXPLAIN SELECT * FROM $satellites WHERE id = 8 AND id = 7", 5, 3, None),
         ("SET enable_optimizer = false; EXPLAIN SELECT * FROM $satellites WHERE id = 8 AND id = 7", 2, 3, None),
@@ -645,10 +645,10 @@ STATEMENTS = [
         ("SHOW CREATE TABLE $satellites", 1, 1, None),
         ("SHOW CREATE TABLE $astronauts", 1, 1, None),
         ("SHOW CREATE TABLE testdata.partitioned.framed FOR '2021-03-28'", 1, 1, None),
-        ("SET enable_optimizer = false;\nSET enable_page_defragmentation = true;\nSELECT COUNT(*) FROM $planets WHERE id > 3 AND name ILIKE '%e%'", 1, 1, None),
-        ("SET enable_optimizer = true;\nSET enable_page_defragmentation = true;\nSELECT COUNT(*) FROM $planets WHERE id > 3 AND name ILIKE '%e%'", 1, 1, None),
-        ("SET enable_optimizer = true;\nSET enable_page_defragmentation = false;\nSELECT COUNT(*) FROM $planets WHERE id > 3 AND name ILIKE '%e%'", 1, 1, None),
-        ("SET enable_optimizer = false;\nSET enable_page_defragmentation = false;\nSELECT COUNT(*) FROM $planets WHERE id > 3 AND name ILIKE '%e%'", 1, 1, None),
+        ("SET enable_optimizer = false;\nSET enable_morsel_defragmentation = true;\nSELECT COUNT(*) FROM $planets WHERE id > 3 AND name ILIKE '%e%'", 1, 1, None),
+        ("SET enable_optimizer = true;\nSET enable_morsel_defragmentation = true;\nSELECT COUNT(*) FROM $planets WHERE id > 3 AND name ILIKE '%e%'", 1, 1, None),
+        ("SET enable_optimizer = true;\nSET enable_morsel_defragmentation = false;\nSELECT COUNT(*) FROM $planets WHERE id > 3 AND name ILIKE '%e%'", 1, 1, None),
+        ("SET enable_optimizer = false;\nSET enable_morsel_defragmentation = false;\nSELECT COUNT(*) FROM $planets WHERE id > 3 AND name ILIKE '%e%'", 1, 1, None),
         ("SELECT COUNT(*) FROM $planets WHERE id > 3 AND name ILIKE '%e%' AND id > 1 AND id > 0 AND id > 2 AND name ILIKE '%e%'", 1, 1, None),
 
         ("SELECT planets.* FROM $planets AS planets LEFT JOIN $planets FOR '1600-01-01' AS older ON planets.id = older.id WHERE older.name IS NULL", 3, 20, None),

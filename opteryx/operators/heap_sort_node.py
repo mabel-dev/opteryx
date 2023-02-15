@@ -17,7 +17,7 @@ This is a SQL Query Execution Plan Node.
 
 This node orders a dataset, note that Heap Sort in this instance isn't the heap sort
 algorithm, it is an approach where a heap of n items (the limit) is maintained as the
-data passes through the operator. Because we are working with pages, we build a 
+data passes through the operator. Because we are working with chunks, we build a 
 temporary batch of n + len(batch) items, sort them and then discard all but n of
 the items.
 
@@ -65,17 +65,17 @@ class HeapSortNode(BasePlanNode):
         if len(self._producers) != 1:  # pragma: no cover
             raise SqlError(f"{self.name} on expects a single producer")
 
-        data_pages = self._producers[0]  # type:ignore
-        if isinstance(data_pages, Table):
-            data_pages = (data_pages,)
+        morsels = self._producers[0]  # type:ignore
+        if isinstance(morsels, Table):
+            morsels = (morsels,)
 
         columns = None
         collected_rows = None
         mapped_order = []
 
-        for page in data_pages.execute():
+        for morsel in morsels.execute():
             if columns is None:
-                columns = Columns(page)
+                columns = Columns(morsel)
 
                 for column_list, direction in self.order:
                     for column in column_list:
@@ -83,7 +83,7 @@ class HeapSortNode(BasePlanNode):
                             # we have an index rather than a column name, it's a natural
                             # number but the list of column names is zero-based, so we
                             # subtract one
-                            column_name = page.column_names[int(column.value) - 1]
+                            column_name = morsel.column_names[int(column.value) - 1]
                             mapped_order.append(
                                 (
                                     column_name,
@@ -109,11 +109,11 @@ class HeapSortNode(BasePlanNode):
 
             # add what we've collected before to the table
             if collected_rows:  # pragma: no cover
-                self.statistics.page_merges += 1
-                page = pyarrow.concat_tables([collected_rows, page], promote=True)
+                self.statistics.morsel_merges += 1
+                morsel = pyarrow.concat_tables([collected_rows, morsel], promote=True)
 
-            page = page.sort_by(mapped_order)
-            collected_rows = page.slice(offset=0, length=self.limit)
+            morsel = morsel.sort_by(mapped_order)
+            collected_rows = morsel.slice(offset=0, length=self.limit)
 
             self.statistics.time_ordering += time.time_ns() - start_time
 

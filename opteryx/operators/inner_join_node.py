@@ -128,9 +128,9 @@ class InnerJoinNode(BasePlanNode):
                 for col in self._using
             ]
 
-            for page in left_node.execute():
+            for morsel in left_node.execute():
                 if left_columns is None:
-                    left_columns = Columns(page)
+                    left_columns = Columns(morsel)
                     left_join_columns = [
                         left_columns.get_column_from_alias(col, only_one=True)
                         for col in self._using
@@ -141,26 +141,26 @@ class InnerJoinNode(BasePlanNode):
                     # batch size for the joins. Cardinality here is the ratio of
                     # unique values in the set. Although we're working it out, we'll
                     # refer to this as an estimate because it may be different per
-                    # page of data - we're assuming it's not very different.
+                    # chunk of data - we're assuming it's not very different.
                     cols = pyarrow_ops.columns_to_array_denulled(
-                        page, left_join_columns
+                        morsel, left_join_columns
                     )
-                    if page.num_rows > 0:
-                        card = len(numpy.unique(cols)) / page.num_rows
+                    if morsel.num_rows > 0:
+                        card = len(numpy.unique(cols)) / morsel.num_rows
                     else:
                         card = 0
                     batch_size = calculate_batch_size(card)
 
                 # we break this into small chunks otherwise we very quickly run into memory issues
-                for batch in page.to_batches(max_chunksize=batch_size):
+                for batch in morsel.to_batches(max_chunksize=batch_size):
                     # blocks don't have column_names, so we need to wrap in a table
-                    batch = pyarrow.Table.from_batches([batch], schema=page.schema)
+                    batch = pyarrow.Table.from_batches([batch], schema=morsel.schema)
 
-                    new_page = pyarrow_ops.inner_join(
+                    new_morsel = pyarrow_ops.inner_join(
                         self._right_table, batch, right_join_columns, left_join_columns
                     )
-                    new_page = new_metadata.apply(new_page)
-                    yield new_page
+                    new_morsel = new_metadata.apply(new_morsel)
+                    yield new_morsel
 
         elif self._on:
             right_columns = Columns(self._right_table)
@@ -171,14 +171,14 @@ class InnerJoinNode(BasePlanNode):
 
             left_columns = None
 
-            for page in left_node.execute():
+            for morsel in left_node.execute():
                 if left_columns is None:
-                    left_columns = Columns(page)
+                    left_columns = Columns(morsel)
                     left_join_columns, right_join_columns = get_columns(
                         self._on, left_columns, right_columns
                     )
 
-                    left_null_columns, page = Columns.remove_null_columns(page)
+                    left_null_columns, morsel = Columns.remove_null_columns(morsel)
                     new_metadata = right_columns + left_columns
 
                     # ensure the types are compatible for joining by coercing numerics
@@ -186,11 +186,11 @@ class InnerJoinNode(BasePlanNode):
                         self._right_table, right_join_columns
                     )
 
-                page = arrow.coerce_columns(page, left_join_columns)
+                morsel = arrow.coerce_columns(morsel, left_join_columns)
 
                 # do the join
                 # This uses the cjoin / HASH JOIN / legacy join
-                new_page = page.join(
+                new_morsel = morsel.join(
                     self._right_table,
                     keys=left_join_columns,
                     right_keys=right_join_columns,
@@ -199,9 +199,9 @@ class InnerJoinNode(BasePlanNode):
                 )
 
                 # update the metadata
-                new_page = Columns.restore_null_columns(
-                    left_null_columns + right_null_columns, new_page
+                new_morsel = Columns.restore_null_columns(
+                    left_null_columns + right_null_columns, new_morsel
                 )
 
-                new_page = new_metadata.apply(new_page)
-                yield new_page
+                new_morsel = new_metadata.apply(new_morsel)
+                yield new_morsel

@@ -83,13 +83,11 @@ class ProjectionNode(BasePlanNode):
         if len(self._producers) != 1:  # pragma: no cover
             raise SqlError(f"{self.name} on expects a single producer")
 
-        data_pages = self._producers[0]  # type:ignore
-        if isinstance(data_pages, pyarrow.Table):
-            data_pages = (data_pages,)
+        morsels = self._producers[0]  # type:ignore
 
         # if we have nothing to do, move along
         if self._projection == {"*": None}:
-            yield from data_pages.execute()
+            yield from morsels.execute()
             return
 
         # we can't do much with this until we have a chunk to read the metadata from
@@ -97,10 +95,10 @@ class ProjectionNode(BasePlanNode):
         # we want to avoid collisions in internal column names
         seed = str(random_int() + 1)
 
-        for page in data_pages.execute():
+        for morsel in morsels.execute():
             # If any of the columns are FUNCTIONs, we need to evaluate them
             start_time = time.time_ns()
-            _columns, _, page = evaluate_and_append(self._expressions, page, seed)
+            _columns, _, morsel = evaluate_and_append(self._expressions, morsel, seed)
             self.statistics.time_evaluating += time.time_ns() - start_time
 
             # first time round we're going work out what we need from the metadata
@@ -116,7 +114,7 @@ class ProjectionNode(BasePlanNode):
                             columns.get_column_from_alias(key, only_one=True)
                         )
 
-            page = page.select(projection)  # type:ignore
+            morsel = morsel.select(projection)  # type:ignore
 
             if len(projection) != len(set(projection)):
                 raise SqlError(
@@ -125,13 +123,13 @@ class ProjectionNode(BasePlanNode):
 
             # then we rename the attributes
             if any([v is not None for k, v in self._projection.items()]):  # type:ignore
-                existing_columns = page.column_names
+                existing_columns = morsel.column_names
                 for k, v in self._projection.items():
                     if isinstance(v, list) and len(v) != 0:
                         v = v[0]
                     if v and v not in existing_columns:
                         column_name = columns.get_column_from_alias(k, only_one=True)
                         columns.set_preferred_name(column_name, v)
-                page = columns.apply(page)
+                morsel = columns.apply(morsel)
 
-            yield page
+            yield morsel
