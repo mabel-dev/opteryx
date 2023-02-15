@@ -16,3 +16,7 @@ def test_bounds():
     dmin, dmax = distogram.bounds(h)
     assert dmin == min(normal)
     assert dmax == max(normal)
+
+
+if __name__ == "__main__":  # pragma: no cover
+    test_bounds()

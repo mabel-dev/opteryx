@@ -49,7 +49,7 @@ def test_count_at_left():
     for i in [1, 2, 3, 4, 5, 6, 0.7, 1.1]:
         distogram.update(h, i)
 
-    assert distogram.count_at(h, 0.77) == approx(0.14)
+    assert distogram.count_at(h, 0.77) == approx(0.14), distogram.count_at(h, 0.77)
 
 
 def test_count_at_right():
@@ -75,3 +75,13 @@ def test_count_at_out_of_bouns():
 
     assert distogram.count_at(h, 0.2) is None
     assert distogram.count_at(h, 10) is None
+
+
+if __name__ == "__main__":  # pragma: no cover
+    test_count_at()
+    test_count_at_empty()
+    test_count_at_left()
+    test_count_at_normal()
+    test_count_at_not_enough_elements()
+    test_count_at_out_of_bouns()
+    test_count_at_right()

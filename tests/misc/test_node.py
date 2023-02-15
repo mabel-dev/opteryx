@@ -24,7 +24,7 @@ def test_node():
     with pytest.raises(AttributeError):
         b = Node(_node=False)
 
-    assert repr(n) == '{"a":1,"c":3}', repr(n)
+    assert str(n) == '{"a":1,"c":3}', str(n)
 
 
 if __name__ == "__main__":  # pragma: no cover

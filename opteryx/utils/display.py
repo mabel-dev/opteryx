@@ -154,9 +154,11 @@ def ascii_table(
                 + "\001OFFm"
             )
         if isinstance(value, datetime.datetime):
+            value = (
+                f"{value.strftime('%Y-%m-%d')} \001TIMEm{value.strftime('%H:%M:%S')}"
+            )
             return (
-                f"\001DATEm{value.strftime('%Y-%m-%d')} \001TIMEm{value.strftime('%H:%M:%S')}"
-                + "\001OFFm"
+                f"\001DATEm" + trunc_printable(value.rjust(width), width) + "\001OFFm"
             )
         if isinstance(value, list):
             value = (

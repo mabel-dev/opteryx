@@ -35,32 +35,15 @@ TIMEDELTA_REGEX = (
 TIMEDELTA_PATTERN = re.compile(TIMEDELTA_REGEX, re.IGNORECASE)
 
 
-def add_months(date, months):
-    """
-    Adding months is non-trivial, this makes one key assumption:
-    > If the 'current' date is the end of the month, when we add or subtract months
-    > we want to land at the end of that month. For example 28-FEB + 1 month should
-    > be 31-MAR not 28-MAR.
-    If this assumption isn't true - you'll need a different a different algo.
-    """
-    new_month = (((date.month - 1) + months) % 12) + 1
-    new_year = int(date.year + (((date.month - 1) + months) / 12))
-    new_day = date.day
-
-    # if adding one day puts us in a new month, jump to the end of the month
-    if (date + timedelta(days=1)).month != date.month:
-        new_day = 31
-
-    # not all months have 31 days so walk backwards to the end of the month
-    while new_day > 0:
-        try:
-            new_date = datetime(year=new_year, month=new_month, day=new_day)
-            return new_date
-        except ValueError:  # pragma: no cover
-            new_day -= 1
-
-    # we should never be here - but just return a value
-    return None
+def add_months(dte, num_months):
+    new_year, new_month = divmod(dte.month - 1 + num_months, 12)
+    new_year += dte.year
+    new_month += 1
+    last_day_of_month = (
+        datetime(new_year, new_month % 12 + 1, 1) - timedelta(days=1)
+    ).day
+    new_day = min(dte.day, last_day_of_month)
+    return datetime(new_year, new_month, new_day)
 
 
 def add_interval(
