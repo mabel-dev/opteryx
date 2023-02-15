@@ -839,6 +839,9 @@ STATEMENTS = [
         # 833
         (b"", None, None, ValueError),
         ("", None, None, ValueError),
+        # 870
+        ("SELECT MAX(density) FROM $planets GROUP BY orbitalInclination, escapeVelocity, orbitalInclination, numberOfMoons, escapeVelocity, density", 9, 1, None),
+        ("SELECT COUNT(*) FROM $planets GROUP BY orbitalInclination, orbitalInclination", 9, 1, None),
 
 ]
 # fmt:on
