@@ -338,10 +338,13 @@ class AggregateNode(BasePlanNode):
             columns.add_column(str(literal))
 
         start_time = time.time_ns()
-        group_by_columns = [
-            columns.get_column_from_alias(group.value, only_one=True)
-            for group in self._groups
-        ]
+        # GROUP BY columns are deduplicated #870
+        group_by_columns = list(
+            dict.fromkeys(
+                columns.get_column_from_alias(group.value, only_one=True)
+                for group in self._groups
+            )
+        )
 
         column_map, aggs = _build_aggs(self._aggregates, columns)
 

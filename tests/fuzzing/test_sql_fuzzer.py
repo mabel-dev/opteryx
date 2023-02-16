@@ -37,6 +37,14 @@ def generate_random_sql_select(columns, table):
         where_value = str(random.randint(1, 100))
         where_clause = f"{where_column} {where_operator} {where_value}"
         select_clause = f"{select_clause} WHERE {where_clause}"
+        # add an abitrary number of additional conditions
+        while random.random() < 0.3:
+            linking_condition = random.choice(["AND", "OR", "AND NOT"])
+            where_column = random.choice(columns[2:])
+            where_operator = random.choice(["=", "!=", "<", "<=", ">", ">="])
+            where_value = str(random.randint(1, 100))
+            where_clause = f"{where_column} {where_operator} {where_value}"
+            select_clause = f"{select_clause} {linking_condition} {where_clause}"
     # Add GROUP BY clause with 40% chance
     if agg_column and random.random() < 0.4:
         select_clause = (
@@ -81,14 +89,22 @@ TABLES = [
     }
 ]
 
-for i in range(100):
-    table = TABLES[random.choice(range(len(TABLES)))]
-    statement = generate_random_sql_select(table["fields"], table["name"])
 
-    res = opteryx.query(statement)
-    try:
-        res.arrow()
-    except Exception as e:
-        print(format_sql(statement))
-        print()
-        print(e)
+def test_sql_fuzzing():
+    for i in range(100):
+        table = TABLES[random.choice(range(len(TABLES)))]
+        statement = generate_random_sql_select(table["fields"], table["name"])
+        res = opteryx.query(statement)
+        try:
+            res.arrow()
+        except Exception as e:
+            print(format_sql(statement))
+            print()
+            print(e)
+            raise e
+
+
+if __name__ == "__main__":  # pragma: no cover
+    test_sql_fuzzing()
+
+    print("✅ okay")
