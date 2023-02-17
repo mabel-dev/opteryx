@@ -3,7 +3,7 @@ import tempfile
 import typing
 import unittest
 
-from opteryx.third_party.hadrodbb import HadroDB
+from opteryx.third_party.hadrodb import HadroDB
 
 
 class TempStorageFile:
