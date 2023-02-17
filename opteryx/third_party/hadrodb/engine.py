@@ -65,7 +65,7 @@ DEFAULT_WHENCE: typing.Final[int] = 0
 # Read the paper for more details: https://riak.com/assets/bitcask-intro.pdf
 
 
-class CaskDB:
+class HadroDB:
     """
     Implements the KV store on the disk
 
@@ -87,18 +87,28 @@ class CaskDB:
             quickly from the disk
     """
 
-    def __init__(self, file_name: str = "data.caskdb"):
-        self.file_name: str = file_name
+    def __init__(self, collection: typing.Union[str, None] = None):
+        self.collection: str = collection
+        self.file_name: str = collection + "/00000000.hadro"
         self.write_position: int = 0
         self.key_dir: dict[str, KeyEntry] = {}
-        # if the file exists already, then we will load the key_dir
-        if os.path.exists(file_name):
+
+        if collection is None:
+            raise ValueError("HadroDB requires a collection name")
+        # if the collection exists, it must be a folder, not a file
+        if os.path.exists(collection):
+            if not os.path.isdir(collection):
+                raise ValueError("Collection must be a folder")
+            # if the file exists already, then we will load the key_dir
             self._init_key_dir()
+        else:
+            os.makedirs(collection, exist_ok=True)
+
         # we open the file in `a+b` mode:
         # a - says the writes are append only. `a+` means we want append and read
         # b - says that we are operating the file in binary mode (as opposed to the
         #     default string mode)
-        self.file: typing.BinaryIO = open(file_name, "a+b")
+        self.file: typing.BinaryIO = open(self.file_name, "a+b")
 
     def set(self, key: str, value: str) -> None:
         """
@@ -172,6 +182,16 @@ class CaskDB:
         #
         # NOTE: this method is a blocking one, if the DB size is yuge then it will take
         # a lot of time to startup
+
+        """
+        # TODO
+        - Load the primary.key file, this is a B-TREE
+        - Hash the data file
+        - this primary.key file has a hash of the data file
+        - if the hashes match, just use the BTREE as the index
+        - if the hashes don't match, rebuild the BTREE from scratch
+        """
+
         print("****----------initialising the database----------****")
         with open(self.file_name, "rb") as f:
             while header_bytes := f.read(HEADER_SIZE):
@@ -188,7 +208,7 @@ class CaskDB:
                 )
                 self.key_dir[key] = kv
                 self.write_position += total_size
-                print(f"loaded k={key}, v={value}")
+        #                print(f"loaded k={key}, v={value}")
         print("****----------initialisation complete----------****")
 
     def close(self) -> None:
@@ -204,3 +224,6 @@ class CaskDB:
 
     def __getitem__(self, item: str) -> str:
         return self.get(item)
+
+    def keys(self) -> typing.List[str]:
+        return list(self.key_dir.keys())

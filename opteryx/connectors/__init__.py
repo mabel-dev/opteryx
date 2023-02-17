@@ -17,6 +17,7 @@ from .base.base_blob_storage_adapter import BaseBlobStorageAdapter
 from opteryx.config import DATASET_PREFIX_MAPPING
 from opteryx.connectors.arrow_connector import ArrowConnector
 from opteryx.connectors.aws_s3_connector import AwsS3Connector
+from opteryx.connectors.hadro_connector import HadroConnector
 from opteryx.connectors.disk_connector import DiskConnector
 from opteryx.connectors.gcp_firestore_connector import GcpFireStoreConnector
 from opteryx.connectors.gcp_cloudstorage_connector import GcpCloudStorageConnector
@@ -27,6 +28,7 @@ from opteryx.shared import MaterializedDatasets
 WELL_KNOWN_ADAPTERS = {
     "disk": DiskConnector,
     "gcs": GcpCloudStorageConnector,
+    "hadro": HadroConnector,
     "firestore": GcpFireStoreConnector,
     "minio": AwsS3Connector,
     "mongodb": MongoDbConnector,

@@ -5,7 +5,7 @@ import typing
 import unittest
 import uuid
 
-from opteryx.third_party.caskdb.record import (
+from opteryx.third_party.hadrodb.record import (
     encode_header,
     decode_header,
     encode_kv,

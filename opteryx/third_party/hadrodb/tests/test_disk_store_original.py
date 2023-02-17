@@ -3,7 +3,7 @@ import tempfile
 import typing
 import unittest
 
-from opteryx.third_party.caskdb.caskdb import CaskDB
+from opteryx.third_party.hadrodbb import HadroDB
 
 
 class TempStorageFile:
@@ -39,7 +39,7 @@ class TempStorageFile:
         os.remove(self.path)
 
 
-class TestDiskCaskDB(unittest.TestCase):
+class TestDiskHadroDB(unittest.TestCase):
     def setUp(self) -> None:
         self.file: TempStorageFile = TempStorageFile()
 
@@ -47,13 +47,13 @@ class TestDiskCaskDB(unittest.TestCase):
         self.file.clean_up()
 
     def test_get(self) -> None:
-        store = CaskDB(file_name=self.file.path)
+        store = HadroDB(collection=self.file.path)
         store.set("name", "jojo")
         self.assertEqual(store.get("name"), "jojo")
         store.close()
 
     def test_invalid_key(self) -> None:
-        store = CaskDB(file_name=self.file.path)
+        store = HadroDB(collection=self.file.path)
         try:
             store.get("some key")
         except IndexError:
@@ -61,13 +61,13 @@ class TestDiskCaskDB(unittest.TestCase):
         store.close()
 
     def test_dict_api(self) -> None:
-        store = CaskDB(file_name=self.file.path)
+        store = HadroDB(collection=self.file.path)
         store["name"] = "jojo"
         self.assertEqual(store["name"], "jojo")
         store.close()
 
     def test_persistence(self) -> None:
-        store = CaskDB(file_name=self.file.path)
+        store = HadroDB(collection=self.file.path)
 
         tests = {
             "crime and punishment": "dostoevsky",
@@ -83,13 +83,13 @@ class TestDiskCaskDB(unittest.TestCase):
             self.assertEqual(store.get(k), v)
         store.close()
 
-        store = CaskDB(file_name=self.file.path)
+        store = HadroDB(file_name=self.file.path)
         for k, v in tests.items():
             self.assertEqual(store.get(k), v)
         store.close()
 
     def test_deletion(self) -> None:
-        store = CaskDB(file_name=self.file.path)
+        store = HadroDB(file_name=self.file.path)
 
         tests = {
             "crime and punishment": "dostoevsky",
@@ -107,23 +107,23 @@ class TestDiskCaskDB(unittest.TestCase):
         store.set("end", "yes")
         store.close()
 
-        store = CaskDB(file_name=self.file.path)
+        store = HadroDB(file_name=self.file.path)
         for k, v in tests.items():
             self.assertEqual(store.get(k), "")
         self.assertEqual(store.get("end"), "yes")
         store.close()
 
 
-class TestDiskCaskDBExistingFile(unittest.TestCase):
+class TestDiskHadroDBExistingFile(unittest.TestCase):
     def test_get_new_file(self) -> None:
         t = TempStorageFile(path="temp.db")
-        store = CaskDB(file_name=t.path)
+        store = HadroDB(file_name=t.path)
         store.set("name", "jojo")
         self.assertEqual(store.get("name"), "jojo")
         store.close()
 
         # check for key again
-        store = CaskDB(file_name=t.path)
+        store = HadroDB(file_name=t.path)
         self.assertEqual(store.get("name"), "jojo")
         store.close()
         t.clean_up()

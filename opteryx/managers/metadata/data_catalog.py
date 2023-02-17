@@ -13,13 +13,13 @@
 from opteryx import config
 
 from opteryx.managers.kvstores import KV_store_factory
-from opteryx.managers.kvstores import CaskDB
+from opteryx.managers.kvstores import HadroDB
 
 
 def metadata_factory():
     if config.METADATA_SERVER is None or config.METADATA_SERVER.upper() == "LOCAL":
-        # Cask is our default KV store
-        return CaskDB
+        # HadroDB is our default KV store
+        return HadroDB
     else:
         # use the configured one
         return KV_store_factory(config.METADATA_SERVER)
