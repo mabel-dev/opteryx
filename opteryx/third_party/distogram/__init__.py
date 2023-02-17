@@ -4,7 +4,7 @@ __email__ = "romain.picard@oakbits.com"
 __version__ = "3.0.0"
 
 """
-The following changes have been made for Opteryx\Tarchia:
+The following changes have been made for Opteryx:
 - The ability to weight the differences has been removed
 - Dump and Load functionality
 - Bulk load functionality added
