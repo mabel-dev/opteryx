@@ -103,7 +103,7 @@ class HadroDB:
         self.collection: str = collection
         self.file_name: str = collection + "/00000000.hadro"
         self.write_position: int = 0
-        self.key_dir: dict[str, KeyEntry] = {}
+        self.key_dir: dict[bytes, KeyEntry] = {}
 
         if collection is None:
             raise ValueError("HadroDB requires a collection name")
@@ -122,7 +122,7 @@ class HadroDB:
         #     default string mode)
         self.file: typing.BinaryIO = open(self.file_name, "a+b")
 
-    def set(self, key: str, value: str) -> None:
+    def set(self, key: typing.Union[bytes, str], value: typing.Any) -> None:
         """
         set stores the key and value on the disk
 
@@ -146,7 +146,11 @@ class HadroDB:
         # update last write position, so that next record can be written from this point
         self.write_position += sz
 
-    def get(self, key: str, default: typing.Union[None, str] = None) -> str:
+    def get(
+        self,
+        key: typing.Union[bytes, str],
+        default: typing.Union[None, typing.Any] = None,
+    ) -> typing.Any:
         """
         get retrieves the value from the disk and returns. If the key does not exist
         then it returns an empty string
@@ -234,11 +238,11 @@ class HadroDB:
         os.fsync(self.file.fileno())
         self.file.close()
 
-    def __setitem__(self, key: str, value: str) -> None:
+    def __setitem__(self, key: typing.Union[bytes, str], value: typing.Any) -> None:
         return self.set(key, value)
 
-    def __getitem__(self, item: str) -> str:
+    def __getitem__(self, item: typing.Union[bytes, str]) -> typing.Any:
         return self.get(item)
 
-    def keys(self) -> typing.List[str]:
+    def keys(self) -> typing.List[bytes]:
         return list(self.key_dir.keys())

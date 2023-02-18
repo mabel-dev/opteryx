@@ -97,7 +97,7 @@ class KeyEntry:
         self.total_size: int = total_size
 
 
-def format_key(key):
+def format_key(key: typing.Union[bytes, str]) -> bytes:
     if isinstance(key, str):
         key = key.encode()
     if not isinstance(key, bytes):
@@ -137,7 +137,7 @@ def encode_kv(
     return HEADER_SIZE + len(data), header + data
 
 
-def decode_kv(data: bytes) -> typing.Tuple[int, str, str]:
+def decode_kv(data: bytes) -> typing.Tuple[int, bytes, bytes]:
     """
     decode_kv decodes the data bytes into appropriate KV pair
 

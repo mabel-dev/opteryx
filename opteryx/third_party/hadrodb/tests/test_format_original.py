@@ -22,7 +22,7 @@ def get_random_header() -> typing.Tuple[int, int, int]:
     return random_int(), random_int(), random_int()
 
 
-def get_random_kv() -> typing.Tuple[int, str, str, int]:
+def get_random_kv() -> typing.Tuple[int, bytes, str, int]:
     return (
         int(time.time()),
         str(uuid.uuid4()).encode(),
@@ -39,8 +39,8 @@ class Header(typing.NamedTuple):
 
 class KeyValue(typing.NamedTuple):
     timestamp: int
-    key: str
-    val: str
+    key: typing.Union[bytes, str]
+    val: typing.Union[bytes, str]
     sz: int
 
 
@@ -54,7 +54,7 @@ def test_header_serialisation():
         header_test(tt)
 
 
-def test_random():
+def test_random_header():
     for _ in range(100):
         tt = Header(*get_random_header())
         header_test(tt)
@@ -68,15 +68,15 @@ def header_test(tt):
 def test_KV_serialisation():
     tests: typing.List[KeyValue] = [
         KeyValue(
-            10, b"hello", "world", HEADER_SIZE + 10 + 1
+            10, "hello", "world", HEADER_SIZE + 10 + 1
         ),  # len(hello) = 5, len(world) = 5, + 1 type
-        KeyValue(0, b"", "", HEADER_SIZE + 1),
+        KeyValue(0, "", "", HEADER_SIZE + 1),
     ]
     for tt in tests:
         kv_test(tt)
 
 
-def test_random():
+def test_random_kv():
     for _ in range(100):
         tt = KeyValue(*get_random_kv())
         kv_test(tt)
@@ -102,6 +102,7 @@ if __name__ == "__main__":  # pragma: no cover
     test_header_serialisation()
     test_init()
     test_KV_serialisation()
-    test_random()
+    test_random_header()
+    test_random_kv()
 
     print("okay")
