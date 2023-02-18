@@ -83,13 +83,13 @@ class TestDiskHadroDB(unittest.TestCase):
             self.assertEqual(store.get(k), v)
         store.close()
 
-        store = HadroDB(file_name=self.file.path)
+        store = HadroDB(collection=self.file.path)
         for k, v in tests.items():
             self.assertEqual(store.get(k), v)
         store.close()
 
     def test_deletion(self) -> None:
-        store = HadroDB(file_name=self.file.path)
+        store = HadroDB(collection=self.file.path)
 
         tests = {
             "crime and punishment": "dostoevsky",
@@ -107,7 +107,7 @@ class TestDiskHadroDB(unittest.TestCase):
         store.set("end", "yes")
         store.close()
 
-        store = HadroDB(file_name=self.file.path)
+        store = HadroDB(collection=self.file.path)
         for k, v in tests.items():
             self.assertEqual(store.get(k), "")
         self.assertEqual(store.get("end"), "yes")
@@ -117,13 +117,13 @@ class TestDiskHadroDB(unittest.TestCase):
 class TestDiskHadroDBExistingFile(unittest.TestCase):
     def test_get_new_file(self) -> None:
         t = TempStorageFile(path="temp.db")
-        store = HadroDB(file_name=t.path)
+        store = HadroDB(collection=t.path)
         store.set("name", "jojo")
         self.assertEqual(store.get("name"), "jojo")
         store.close()
 
         # check for key again
-        store = HadroDB(file_name=t.path)
+        store = HadroDB(collection=t.path)
         self.assertEqual(store.get("name"), "jojo")
         store.close()
         t.clean_up()
