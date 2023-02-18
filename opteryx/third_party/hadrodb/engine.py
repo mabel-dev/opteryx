@@ -192,14 +192,14 @@ class HadroDB:
         - if the hashes don't match, rebuild the BTREE from scratch
         """
 
-        print("****----------initialising the database----------****")
+        #print("****----------initialising the database----------****")
         with open(self.file_name, "rb") as f:
             while header_bytes := f.read(HEADER_SIZE):
                 timestamp, key_size, value_size = decode_header(data=header_bytes)
                 key_bytes = f.read(key_size)
-                value_bytes = f.read(value_size)
+                value_bytes = f.read(value_size)  # we don't use this value but read it
                 key = key_bytes.decode("utf-8")
-                value = value_bytes.decode("utf-8")
+                #value = value_bytes.decode("utf-8")
                 total_size = HEADER_SIZE + key_size + value_size
                 kv = KeyEntry(
                     timestamp=timestamp,
@@ -209,7 +209,7 @@ class HadroDB:
                 self.key_dir[key] = kv
                 self.write_position += total_size
         #                print(f"loaded k={key}, v={value}")
-        print("****----------initialisation complete----------****")
+        #print("****----------initialisation complete----------****")
 
     def close(self) -> None:
         # before we close the file, we need to safely write the contents in the buffers
