@@ -68,9 +68,9 @@ def header_test(tt):
 def test_KV_serialisation():
     tests: typing.List[KeyValue] = [
         KeyValue(
-            10, "hello", "world", HEADER_SIZE + 10 + 1
+            10, b"hello", "world", HEADER_SIZE + 10 + 1
         ),  # len(hello) = 5, len(world) = 5, + 1 type
-        KeyValue(0, "", "", HEADER_SIZE + 1),
+        KeyValue(0, b"", "", HEADER_SIZE + 1),
     ]
     for tt in tests:
         kv_test(tt)
