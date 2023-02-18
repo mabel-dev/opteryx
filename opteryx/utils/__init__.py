@@ -70,12 +70,22 @@ def random_int() -> int:
 
 
 def random_string(width: int = 16):
-    # This is roughly twice as fast the the previous implementation
-    # A 16 character string is has a space of 7.73 x 10^30
-    import string
+    """
+    This is roughly twice as fast as the previous implementation which was roughly
+    twice as fast as it's previous implementation.
 
-    alphabet = tuple(string.ascii_letters + string.digits + "_/+=.-")
-    return "".join([alphabet[random.getrandbits(6)] for i in range(width)])
+    This has more room for improvement, particularly in the Base64 encoding part,
+    but this currently isn't identified as a performance bottleneck, the last
+    rewrite was incidental when writing tests for a hasher.
+    """
+    from base64 import b64encode
+    import struct
+    import random
+
+    words: int = int(-(width * 0.75) // -8) + 1
+
+    bytestring = struct.pack("=" + "Q" * words, *[random.getrandbits(64)] * words)
+    return b64encode(bytestring).decode()[:width]
 
 
 def unique_id():

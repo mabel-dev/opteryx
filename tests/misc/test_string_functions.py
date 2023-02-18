@@ -39,7 +39,21 @@ def test_slice_right():
     # fmt:on
 
 
+def test_random_string():
+    from opteryx.utils import random_string
+
+    seen = set()
+    for i in range(100):
+        rs = random_string()
+        # we shouldn't see the same string twice
+        assert rs not in seen
+        seen.add(rs)
+        # we shouldn't see padding in the string
+        assert rs.count("=") == 0
+
+
 if __name__ == "__main__":  # pragma: no cover
     test_slice_left()
     test_slice_right()
+    test_random_string()
     print("✅ okay")

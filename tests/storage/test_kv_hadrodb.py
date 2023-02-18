@@ -1,7 +1,5 @@
 """
 Test HadroDB - this is the default local KV store
-
-it's portable (100% python) but not recommended in production)
 """
 import os
 import sys
@@ -26,20 +24,20 @@ def test_hadrodb_storage():
         cdb = HadroDB(f"{TEMP_FOLDER}/test")
 
         # set a value
-        cdb["a"] = "b"
-        assert cdb["a"] == "b"
+        cdb[b"a"] = "b"
+        assert cdb[b"a"] == "b"
 
         # update a value
-        cdb["a"] = "c"
-        assert cdb["a"] == "c"
+        cdb[b"a"] = "c"
+        assert cdb[b"a"] == "c"
 
         # get a value
-        assert cdb.get("a") == "c"
+        assert cdb.get(b"a") == "c"
         # get a missing value
         with pytest.raises(IndexError):
-            cdb["b"]
+            cdb[b"b"]
         # get a missing value with a default
-        assert cdb.get("b", "g") == "g"
+        assert cdb.get(b"b", "g") == "g"
 
     finally:
         shutil.rmtree(".temp", ignore_errors=True)

@@ -23,7 +23,16 @@ import os.path
 import time
 import typing
 
-from .record import KeyEntry, encode_kv, decode_kv, HEADER_SIZE, decode_header
+from .record import (
+    KeyEntry,
+    encode_kv,
+    decode_kv,
+    HEADER_SIZE,
+    decode_header,
+    format_key,
+)
+from .config import ConsistencyMode, WRITE_CONSISTENCY
+
 
 # We use `file.seek` method to move our cursor to certain byte offset for read
 # or write operations. The method takes two parameters file.seek(offset, whence).
@@ -88,6 +97,9 @@ class HadroDB:
     """
 
     def __init__(self, collection: typing.Union[str, None] = None):
+        import logging
+
+        logging.warning("HadroDB is experimental and not recommended for use.")
         self.collection: str = collection
         self.file_name: str = collection + "/00000000.hadro"
         self.write_position: int = 0
@@ -123,6 +135,7 @@ class HadroDB:
         # 2. Write the bytes to disk by appending to the file
         # 3. Update KeyDir with the KeyEntry of this key
         timestamp: int = int(time.time())
+        key = format_key(key)
         sz, data = encode_kv(timestamp=timestamp, key=key, value=value)
         # notice we don't do file seek while writing
         self._write(data)
@@ -150,6 +163,7 @@ class HadroDB:
         # 3. If it exists, then read KeyEntry.total_size bytes starting from the
         #    KeyEntry.position from the disk
         # 4. Decode the bytes into valid KV pair and return the value
+        key = format_key(key)
         kv: typing.Optional[KeyEntry] = self.key_dir.get(key)
         if kv is None:
             if default is not None:
@@ -167,20 +181,22 @@ class HadroDB:
         # start from here: https://danluu.com/file-consistency/
         # and read this too: https://lwn.net/Articles/457667/
         self.file.write(data)
-        # we need to call flush after every write so that our data is moved from
-        # runtime buffer to the os buffer
-        # read more about here: https://docs.python.org/3/library/os.html#os.fsync
-        self.file.flush()
-        # calling fsync after every write is important, this assures that our writes
-        # are actually persisted to the disk
-        os.fsync(self.file.fileno())
+
+        if WRITE_CONSISTENCY == ConsistencyMode.AGGRESSIVE:
+            # we need to call flush after every write so that our data is moved from
+            # runtime buffer to the os buffer
+            # read more about here: https://docs.python.org/3/library/os.html#os.fsync
+            self.file.flush()
+            # calling fsync after every write is important, this assures that our writes
+            # are actually persisted to the disk
+            os.fsync(self.file.fileno())
 
     def _init_key_dir(self) -> None:
         # we will initialise the key_dir by reading the contents of the file, record by
         # record. As we read each record, we will also update our KeyDir with the
         # corresponding KeyEntry
         #
-        # NOTE: this method is a blocking one, if the DB size is yuge then it will take
+        # NOTE: this method is a blocking one, if the DB size is huge then it will take
         # a lot of time to startup
 
         """
@@ -192,13 +208,12 @@ class HadroDB:
         - if the hashes don't match, rebuild the BTREE from scratch
         """
 
-        # print("****----------initialising the database----------****")
+        print("****----------initialising the database----------****")
         with open(self.file_name, "rb") as f:
             while header_bytes := f.read(HEADER_SIZE):
                 timestamp, key_size, value_size = decode_header(data=header_bytes)
-                key_bytes = f.read(key_size)
+                key = f.read(key_size)
                 value_bytes = f.read(value_size)  # we don't use this value but read it
-                key = key_bytes.decode("utf-8")
                 # value = value_bytes.decode("utf-8")
                 total_size = HEADER_SIZE + key_size + value_size
                 kv = KeyEntry(
@@ -209,7 +224,7 @@ class HadroDB:
                 self.key_dir[key] = kv
                 self.write_position += total_size
         #                print(f"loaded k={key}, v={value}")
-        # print("****----------initialisation complete----------****")
+        print("****----------initialisation complete----------****")
 
     def close(self) -> None:
         # before we close the file, we need to safely write the contents in the buffers
