@@ -1,9 +1,16 @@
 import os
-import tempfile
+import shutil
 import typing
-import unittest
+import pytest
+
+import os
+import sys
+
+sys.path.insert(1, os.path.join(sys.path[0], "../../../.."))
 
 from opteryx.third_party.hadrodb import HadroDB
+
+TEMP_FOLDER: str = "temp/cask"
 
 
 class TempStorageFile:
@@ -25,105 +32,115 @@ class TempStorageFile:
 
     def __init__(self, path: typing.Optional[str] = None):
         if path:
-            self.path = path
             return
-
-        fd, self.path = tempfile.mkstemp()
-        os.close(fd)
+        shutil.rmtree(TEMP_FOLDER, ignore_errors=True)
+        os.makedirs(TEMP_FOLDER, exist_ok=True)
 
     def clean_up(self) -> None:
-        # NOTE: you might be tempted to use the destructor method `__del__`, however
-        # destructor method gets called whenever the object goes out of scope, and it
-        # will delete our database file. Having a separate method would give us better
-        # control.
-        os.remove(self.path)
+        shutil.rmtree(TEMP_FOLDER, ignore_errors=True)
 
 
-class TestDiskHadroDB(unittest.TestCase):
-    def setUp(self) -> None:
-        self.file: TempStorageFile = TempStorageFile()
-
-    def tearDown(self) -> None:
-        self.file.clean_up()
-
-    def test_get(self) -> None:
-        store = HadroDB(collection=self.file.path)
-        store.set("name", "jojo")
-        self.assertEqual(store.get("name"), "jojo")
-        store.close()
-
-    def test_invalid_key(self) -> None:
-        store = HadroDB(collection=self.file.path)
-        try:
-            store.get("some key")
-        except IndexError:
-            pass
-        store.close()
-
-    def test_dict_api(self) -> None:
-        store = HadroDB(collection=self.file.path)
-        store["name"] = "jojo"
-        self.assertEqual(store["name"], "jojo")
-        store.close()
-
-    def test_persistence(self) -> None:
-        store = HadroDB(collection=self.file.path)
-
-        tests = {
-            "crime and punishment": "dostoevsky",
-            "anna karenina": "tolstoy",
-            "war and peace": "tolstoy",
-            "hamlet": "shakespeare",
-            "othello": "shakespeare",
-            "brave new world": "huxley",
-            "dune": "frank herbert",
-        }
-        for k, v in tests.items():
-            store.set(k, v)
-            self.assertEqual(store.get(k), v)
-        store.close()
-
-        store = HadroDB(collection=self.file.path)
-        for k, v in tests.items():
-            self.assertEqual(store.get(k), v)
-        store.close()
-
-    def test_deletion(self) -> None:
-        store = HadroDB(collection=self.file.path)
-
-        tests = {
-            "crime and punishment": "dostoevsky",
-            "anna karenina": "tolstoy",
-            "war and peace": "tolstoy",
-            "hamlet": "shakespeare",
-            "othello": "shakespeare",
-            "brave new world": "huxley",
-            "dune": "frank herbert",
-        }
-        for k, v in tests.items():
-            store.set(k, v)
-        for k, _ in tests.items():
-            store.set(k, "")
-        store.set("end", "yes")
-        store.close()
-
-        store = HadroDB(collection=self.file.path)
-        for k, v in tests.items():
-            self.assertEqual(store.get(k), "")
-        self.assertEqual(store.get("end"), "yes")
-        store.close()
+@pytest.fixture(scope="module")
+def file():
+    return TempStorageFile()
 
 
-class TestDiskHadroDBExistingFile(unittest.TestCase):
-    def test_get_new_file(self) -> None:
-        t = TempStorageFile(path="temp.db")
-        store = HadroDB(collection=t.path)
-        store.set("name", "jojo")
-        self.assertEqual(store.get("name"), "jojo")
-        store.close()
+def test_get():
+    store = HadroDB(collection=TEMP_FOLDER)
+    store.set("name", "jojo")
+    assert store.get("name") == "jojo"
+    store.close()
 
-        # check for key again
-        store = HadroDB(collection=t.path)
-        self.assertEqual(store.get("name"), "jojo")
-        store.close()
-        t.clean_up()
+
+def test_invalid_key():
+    store = HadroDB(collection=TEMP_FOLDER)
+    with pytest.raises(IndexError):
+        store.get("some key")
+    store.close()
+
+
+def test_dict_api():
+    store = HadroDB(collection=TEMP_FOLDER)
+    store["name"] = "jojo"
+    assert store["name"] == "jojo"
+    store.close()
+
+
+def test_persistence():
+    store = HadroDB(collection=TEMP_FOLDER)
+
+    tests = {
+        "crime and punishment": "dostoevsky",
+        "anna karenina": "tolstoy",
+        "war and peace": "tolstoy",
+        "hamlet": "shakespeare",
+        "othello": "shakespeare",
+        "brave new world": "huxley",
+        "dune": "frank herbert",
+    }
+    for k, v in tests.items():
+        store.set(k, v)
+        assert store.get(k) == v
+    store.close()
+
+    store = HadroDB(collection=TEMP_FOLDER)
+    for k, v in tests.items():
+        assert store.get(k) == v
+    store.close()
+
+
+def test_deletion():
+    shutil.rmtree(TEMP_FOLDER, ignore_errors=True)
+    store = HadroDB(collection=TEMP_FOLDER)
+
+    tests = {
+        "crime and punishment": "dostoevsky",
+        "anna karenina": "tolstoy",
+        "war and peace": "tolstoy",
+        "hamlet": "shakespeare",
+        "othello": "shakespeare",
+        "brave new world": "huxley",
+        "dune": "frank herbert",
+    }
+    for k, v in tests.items():
+        store.set(k, v)
+    for k, _ in tests.items():
+        store.set(k, "")
+    store.set("end", "yes")
+    store.close()
+
+    store = HadroDB(collection=TEMP_FOLDER)
+    for k, v in tests.items():
+        assert store.get(k) == ""
+    assert store.get("end") == "yes"
+    store.close()
+
+
+def test_get_new_file() -> None:
+    temp_db_file_path = "temp.db"
+    t = TempStorageFile(path=temp_db_file_path)
+
+    store = HadroDB(collection=temp_db_file_path)
+    store.set("name", "jojo")
+    assert store.get("name") == "jojo"
+    store.close()
+
+    # check for key again
+    store = HadroDB(collection=temp_db_file_path)
+    assert store.get("name") == "jojo"
+    store.close()
+
+    # remove temp db file
+    shutil.rmtree(temp_db_file_path, ignore_errors=True)
+    t.clean_up()
+
+
+if __name__ == "__main__":  # pragma: no cover
+    test_deletion()
+    test_dict_api()
+    test_get()
+    test_get_new_file()
+    test_invalid_key()
+    test_persistence()
+
+    print("okay")
