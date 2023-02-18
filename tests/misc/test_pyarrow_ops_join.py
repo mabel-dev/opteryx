@@ -14,16 +14,20 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import opteryx
 
+import numpy as np
+import pytest
+
+from opteryx.third_party.pyarrow_ops.join import cython_inner_join
+
 
 def test_hash_join_consistency():
-    conn = opteryx.connect()
-
     for i in range(25):
         # there was about a 50% failure of this query failing to return any rows due to
         # a bug in the join implementation. 1/(2^25) is a small chance this test will
         # pass if the problem still exists.
-        cur = conn.cursor()
-        cur.execute("SELECT * FROM $planets INNER JOIN $planets USING (name, id)")
+        cur = opteryx.query(
+            "SELECT * FROM $planets INNER JOIN $planets USING (name, id)"
+        )
         assert cur.arrow().num_rows == 9
 
 

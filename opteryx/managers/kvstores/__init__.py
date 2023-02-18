@@ -12,7 +12,7 @@
 
 from .base_kv_store import BaseKeyValueStore
 
-from opteryx.third_party.caskdb.caskdb import CaskDB
+from opteryx.third_party.hadrodb import HadroDB
 from .kv_firestore import FireStoreKVStore
 
 
@@ -21,8 +21,8 @@ def KV_store_factory(store):  # pragma: no-cover
     A factory method for getting KV Store instances
     """
     stores = {
-        "cask": CaskDB,
+        "hadro": HadroDB,
         "firestore": FireStoreKVStore,
     }
 
-    return stores.get(store.lower(), CaskDB)
+    return stores.get(store.lower(), HadroDB)

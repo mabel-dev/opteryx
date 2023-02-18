@@ -13,6 +13,24 @@
 import itertools
 import random
 
+import numpy
+
+from cityhash import CityHash64
+
+
+def hasher(vals):
+    """
+    Quickly hash a list of string or numerics (i.e. intended for join hash table)
+
+    This is roughly 2x faster than the previous implementation for lists of strings.
+
+    Do note though, if you're micro-optimizing, this is faster to create but is
+    slower for some Python functions to handle, like 'sorted'.
+    """
+    if numpy.issubdtype(vals.dtype, numpy.character):
+        return numpy.array([CityHash64(s.encode()) for s in vals], numpy.uint64)
+    return vals
+
 
 def peak(generator):  # type:ignore
     """
@@ -51,11 +69,12 @@ def random_int() -> int:
     return random.getrandbits(32)
 
 
-def random_string(width):
-    # this is roughly twice as fast the the previous implementation
+def random_string(width: int = 16):
+    # This is roughly twice as fast the the previous implementation
+    # A 16 character string is has a space of 7.73 x 10^30
     import string
 
-    alphabet = tuple(string.ascii_letters + string.digits + "_/")
+    alphabet = tuple(string.ascii_letters + string.digits + "_/+=.-")
     return "".join([alphabet[random.getrandbits(6)] for i in range(width)])
 
 

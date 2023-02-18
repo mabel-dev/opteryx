@@ -1,5 +1,5 @@
 """
-Test CaskDB - this is the default local KV store
+Test HadroDB - this is the default local KV store
 
 it's portable (100% python) but not recommended in production)
 """
@@ -12,18 +12,18 @@ import shutil
 
 import pytest
 
-from opteryx.managers.kvstores import CaskDB
+from opteryx.managers.kvstores import HadroDB
 
 TEMP_FOLDER: str = ".temp"
 
 
-def test_caskdb_storage():
+def test_hadrodb_storage():
     try:
         # delete the old file and make sure there is a folder present
         shutil.rmtree(TEMP_FOLDER, ignore_errors=True)
         os.makedirs(TEMP_FOLDER, exist_ok=True)
 
-        cdb = CaskDB(f"{TEMP_FOLDER}/test.caskdb")
+        cdb = HadroDB(f"{TEMP_FOLDER}/test")
 
         # set a value
         cdb["a"] = "b"
@@ -46,5 +46,5 @@ def test_caskdb_storage():
 
 
 if __name__ == "__main__":  # pragma: no cover
-    test_caskdb_storage()
+    test_hadrodb_storage()
     print("✅ okay")
