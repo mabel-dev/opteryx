@@ -28,16 +28,14 @@ format module provides two functions which help us with serialisation of data.
     encode_kv - takes the key value pair and encodes them into bytes
     decode_kv - takes a bunch of bytes and decodes them into key value pairs
 
-**workshop note**
-
-For the workshop, the functions will have the following signature:
-
-    def encode_kv(timestamp: int, key: str, value: str) -> tuple[int, bytes]
-    def decode_kv(data: bytes) -> tuple[int, str, str]
 """
 
 import struct
 import typing
+import base64
+
+import msgpack
+from cityhash import CityHash32, CityHash64
 
 # Our key value pair, when stored on disk looks like this:
 #   ┌───────────┬──────────┬────────────┬─────┬───────┐
@@ -91,33 +89,33 @@ class KeyEntry:
             how many bytes we need to read from the file
     """
 
+    slots = "timestamp", "position", "total_size"
+
     def __init__(self, timestamp: int, position: int, total_size: int):
         self.timestamp: int = timestamp
         self.position: int = position
         self.total_size: int = total_size
 
 
-def encode_header(timestamp: int, key_size: int, value_size: int) -> bytes:
-    """
-    encode_header encodes the data into bytes using the `HEADER_FORMAT` format
-    string
+def format_key(key: typing.Union[bytes, str]) -> bytes:
+    if isinstance(key, str):
+        key = key.encode()
+    if not isinstance(key, bytes):
+        raise ValueError("HadroDB keys must be strings or byte strings.")
 
-    Args:
-        timestamp (int): Timestamp at which we wrote the KV pair to the disk. The value
-            is current time in seconds since the epoch.
-        key_size (int): size of the key (cannot exceed the maximum)
-        value_size (int): size of the value (cannot exceed the maximum)
+    if len(key) != 16:
+        # We want a 96 bit hash, but CityHash doesn't support
+        bits64 = CityHash64(key)
+        bits32 = CityHash32(key)
+        key = struct.pack("<Q", bits64) + struct.pack("<L", bits32)
+        return base64.b64encode(key)
 
-    Returns:
-        byte object containing the encoded data
-
-    Raises:
-        struct.error when parameters don't match the specific type / size
-    """
-    return struct.pack(HEADER_FORMAT, timestamp, key_size, value_size)
+    return key
 
 
-def encode_kv(timestamp: int, key: str, value: str) -> typing.Tuple[int, bytes]:
+def encode_kv(
+    timestamp: int, key: bytes, value: typing.Any
+) -> typing.Tuple[int, bytes]:
     """
     encode_kv encodes the KV pair into bytes
 
@@ -133,12 +131,13 @@ def encode_kv(timestamp: int, key: str, value: str) -> typing.Tuple[int, bytes]:
     Raises:
         struct.error when parameters don't match the specific type / size
     """
-    header: bytes = encode_header(timestamp, len(key), len(value))
-    data: bytes = b"".join([str.encode(key), str.encode(value)])
+    binary_data = msgpack.packb(value)
+    header: bytes = struct.pack(HEADER_FORMAT, timestamp, len(key), len(binary_data))
+    data: bytes = key + binary_data
     return HEADER_SIZE + len(data), header + data
 
 
-def decode_kv(data: bytes) -> typing.Tuple[int, str, str]:
+def decode_kv(data: bytes) -> typing.Tuple[int, bytes, bytes]:
     """
     decode_kv decodes the data bytes into appropriate KV pair
 
@@ -157,11 +156,11 @@ def decode_kv(data: bytes) -> typing.Tuple[int, str, str]:
         IndexError: if the length of bytes is shorter than expected
         UnicodeDecodeError: if the key or values bytes could not be decoded to string
     """
-    timestamp, key_size, value_size = struct.unpack(HEADER_FORMAT, data[:HEADER_SIZE])
+    timestamp, key_size, value_size = decode_header(data[:HEADER_SIZE])
     key_bytes: bytes = data[HEADER_SIZE : HEADER_SIZE + key_size]
     value_bytes: bytes = data[HEADER_SIZE + key_size :]
-    key: str = key_bytes.decode("utf-8")
-    value: str = value_bytes.decode("utf-8")
+    key: bytes = key_bytes
+    value: bytes = msgpack.unpackb(value_bytes)
     return timestamp, key, value
 
 

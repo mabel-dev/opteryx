@@ -10,8 +10,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import orjson
-
 from opteryx.connectors import BaseDocumentStorageAdapter
 
 
@@ -47,6 +45,6 @@ class HadroConnector(BaseDocumentStorageAdapter):
         hadro = HadroDB(collection=queried_collection)
 
         for morsel in self.chunk_dictset(
-            (orjson.loads(hadro[doc]) for doc in hadro.keys()), morsel_size
+            (hadro[doc] for doc in hadro.keys()), morsel_size
         ):
             yield morsel

@@ -121,7 +121,7 @@ def test_get_new_file() -> None:
     t = TempStorageFile(path=temp_db_file_path)
 
     store = HadroDB(collection=temp_db_file_path)
-    store.set("name", "jojo")
+    store.set(b"name", "jojo")
     assert store.get("name") == "jojo"
     store.close()
 
