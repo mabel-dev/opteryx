@@ -30,6 +30,7 @@ from .record import (
     HEADER_SIZE,
     decode_header,
     format_key,
+    random_string,
 )
 from .config import ConsistencyMode, WRITE_CONSISTENCY
 
@@ -121,6 +122,7 @@ class HadroDB:
         # b - says that we are operating the file in binary mode (as opposed to the
         #     default string mode)
         self.file: typing.BinaryIO = open(self.file_name, "a+b")
+        self.fileno = self.file.fileno()
 
     def set(self, key: typing.Union[bytes, str], value: typing.Any) -> None:
         """
@@ -145,6 +147,14 @@ class HadroDB:
         self.key_dir[key] = kv
         # update last write position, so that next record can be written from this point
         self.write_position += sz
+
+    def add(self, value: typing.Any) -> bytes:
+        """
+        Adds a value to the store and lets the system create the key.
+        """
+        key = random_string()
+        self.set(key=key, value=value)
+        return key
 
     def get(
         self,
@@ -184,16 +194,12 @@ class HadroDB:
         # if you would like to explore and learn more, then
         # start from here: https://danluu.com/file-consistency/
         # and read this too: https://lwn.net/Articles/457667/
-        self.file.write(data)
+        os.write(self.fileno, data)
 
         if WRITE_CONSISTENCY == ConsistencyMode.AGGRESSIVE:
-            # we need to call flush after every write so that our data is moved from
-            # runtime buffer to the os buffer
-            # read more about here: https://docs.python.org/3/library/os.html#os.fsync
-            self.file.flush()
             # calling fsync after every write is important, this assures that our writes
             # are actually persisted to the disk
-            os.fsync(self.file.fileno())
+            os.fsync(self.fileno)
 
     def _init_key_dir(self) -> None:
         # we will initialise the key_dir by reading the contents of the file, record by
@@ -235,7 +241,7 @@ class HadroDB:
         # to the disk. Check documentation of DiskStorage._write() to understand
         # following the operations
         self.file.flush()
-        os.fsync(self.file.fileno())
+        os.fsync(self.fileno)
         self.file.close()
 
     def __setitem__(self, key: typing.Union[bytes, str], value: typing.Any) -> None:

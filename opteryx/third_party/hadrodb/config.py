@@ -9,8 +9,8 @@ class ConsistencyMode(int, Enum):
     Aggressive is at least have the speed, but significantly reduces the chance of
     data loss due to system crashes.
 
-    Relaxed is faster, but if the system crashes, your data may be in an inconsistent
-    state.
+    Relaxed is faster (10x), but if the system crashes, your data may be in an
+    inconsistent state.
 
     Aggressive is the default (safe default), but there are some scenarios where a
     relaxed approach to write consistency is okay.

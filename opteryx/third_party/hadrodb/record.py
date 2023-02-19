@@ -29,10 +29,10 @@ format module provides two functions which help us with serialisation of data.
     decode_kv - takes a bunch of bytes and decodes them into key value pairs
 
 """
-
+import base64
+import random
 import struct
 import typing
-import base64
 
 import msgpack
 from cityhash import CityHash32, CityHash64
@@ -72,6 +72,15 @@ from cityhash import CityHash32, CityHash64
 # `L` - represents long unsigned int (4 bytes). We have three fields, hence `LLL`
 HEADER_FORMAT: typing.Final[str] = "<LLL"
 HEADER_SIZE: typing.Final[int] = 12
+
+
+def random_string():
+    """
+    Create a 16 character random string. This is a specialized version of the
+    one in Opteryx which accepts a width arg.
+    """
+    bytestring = struct.pack("=QL", random.getrandbits(64), random.getrandbits(32))
+    return base64.b64encode(bytestring)
 
 
 class KeyEntry:
