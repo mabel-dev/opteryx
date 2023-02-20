@@ -26,7 +26,18 @@ _config_values: dict = {}
 
 
 def parse_yaml(yaml_str):
-    ## based on an algorithm from chatgtp
+    ## Based on an algorithm from ChatGPT
+
+    def line_value(value):
+        value = value.strip()
+        if value.isdigit():
+            value = int(value)
+        elif value.replace(".", "", 1).isdigit():
+            value = float(value)
+        elif value.startswith("["):
+            value = [val.strip() for val in value[1:-1].split(",")]
+        return value
+
     result: dict = {}
     lines = yaml_str.strip().split("\n")
     key = ""
@@ -34,6 +45,8 @@ def parse_yaml(yaml_str):
     in_list = False
     list_key = ""
     for line in lines:
+        ## remove comments
+        line = line.split("#")[0]
         line = line.strip()
         if not line:
             continue
@@ -45,7 +58,9 @@ def parse_yaml(yaml_str):
                 if not value.strip():
                     in_list = False
                 else:
-                    result[list_key].append((key.strip(), value.strip()))
+                    if not isinstance(result[list_key], dict):
+                        result[list_key] = {}
+                    result[list_key][key.strip()] = line_value(value.strip())
             else:
                 if isinstance(result[list_key][0], tuple):
                     result[list_key] = {k: v for k, v in result[list_key]}
@@ -57,14 +72,7 @@ def parse_yaml(yaml_str):
                 list_key = key.strip()
                 result[list_key] = []
             else:
-                value = value.strip()
-                if value.isdigit():
-                    value = int(value)
-                elif value.replace(".", "", 1).isdigit():
-                    value = float(value)
-                elif value.startswith("["):
-                    value = [val.strip() for val in value[1:-1].split(",")]
-                result[key.strip()] = value
+                result[key.strip()] = line_value(value)
     return result
 
 
