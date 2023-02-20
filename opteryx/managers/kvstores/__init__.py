@@ -12,7 +12,7 @@
 
 from .base_kv_store import BaseKeyValueStore
 
-from opteryx.third_party.hadrodb import HadroDB
+from hadrodb import HadroDB
 from .kv_firestore import FireStoreKVStore
 
 
