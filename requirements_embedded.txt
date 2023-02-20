@@ -3,7 +3,7 @@
 #    1) To give credit to the authors of these libraries
 #    2) For dependabot to alert to new versions
 
-datasketch==1.5.8
+datasketch==1.5.9
 distogram==3.0.0
 fastlogging==1.0.0
 fuzzy==1.2.2
