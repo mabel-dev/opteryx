@@ -34,7 +34,7 @@ class HadroConnector(BaseDocumentStorageAdapter):
         """
         Return a morsel of documents
         """
-        from opteryx.third_party.hadrodb import HadroDB
+        from hadrodb import HadroDB
 
         queried_collection = collection
         if self._remove_prefix:
