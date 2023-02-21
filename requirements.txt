@@ -1,4 +1,3 @@
-cityhash
 hadrodb
 numpy
 orjson
