@@ -1,5 +1,4 @@
-cityhash
-hadrodb
+# hadrodb
 numpy
 orjson
 pyarrow>=11.0.0

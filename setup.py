@@ -58,6 +58,13 @@ extensions = [
         sources=["opteryx/utils/bitarray/cbitarray.pyx"],
         include_dirs=[numpy.get_include()],
     ),
+    Extension(
+        "cityhash",
+        [
+            "opteryx/third_party/cityhash/city.cc",
+            "opteryx/third_party/cityhash/cityhash.cpp",
+        ],
+    ),
 ]
 
 setup_config = {

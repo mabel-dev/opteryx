@@ -30,4 +30,5 @@ def test_hadrodb_storage():
 
 if __name__ == "__main__":  # pragma: no cover
     test_hadrodb_storage()
+
     print("✅ okay")
