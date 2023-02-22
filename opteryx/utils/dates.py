@@ -39,16 +39,12 @@ def add_months(dte, num_months):
     new_year, new_month = divmod(dte.month - 1 + num_months, 12)
     new_year += dte.year
     new_month += 1
-    last_day_of_month = (
-        datetime(new_year, new_month % 12 + 1, 1) - timedelta(days=1)
-    ).day
+    last_day_of_month = (datetime(new_year, new_month % 12 + 1, 1) - timedelta(days=1)).day
     new_day = min(dte.day, last_day_of_month)
     return datetime(new_year, new_month, new_day)
 
 
-def add_interval(
-    current_date: Union[date, datetime], interval: str
-) -> Union[date, datetime]:
+def add_interval(current_date: Union[date, datetime], interval: str) -> Union[date, datetime]:
     """
     Parses a human readable timedelta (3d5h19m) into a datetime.timedelta.
     """
@@ -78,9 +74,7 @@ def date_range(start, end, interval: str):
     end = parse_iso(end)
 
     if start is end or start == end or start > end:
-        raise ValueError(
-            "Cannot create an series with the provided start and end dates"
-        )
+        raise ValueError("Cannot create an series with the provided start and end dates")
 
     cursor = start
     while cursor <= end:
@@ -209,8 +203,6 @@ def date_trunc(truncate_to, dt):
     elif truncate_to == "minute":
         return datetime(dt.year, dt.month, dt.day, dt.hour, dt.minute, tzinfo=dt.tzinfo)
     elif truncate_to == "second":
-        return datetime(
-            dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, tzinfo=dt.tzinfo
-        )
+        return datetime(dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, tzinfo=dt.tzinfo)
     else:
         raise ValueError("Invalid unit: {}".format(truncate_to))

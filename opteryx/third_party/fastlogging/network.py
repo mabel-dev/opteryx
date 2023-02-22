@@ -110,9 +110,7 @@ class LoggingServer(Thread):  # pragma: no cover
         buf = bytearray(self.maxMsgSize)
         view = memoryview(buf)  # p
         # c cdef unsigned char[:] view = buf
-        if self.cbAuth is None or self.cbAuth(
-            client, addr, client_recv(self.maxMsgSize)
-        ):
+        if self.cbAuth is None or self.cbAuth(client, addr, client_recv(self.maxMsgSize)):
             # noinspection PyBroadException
             try:
                 prefix = socket.gethostbyaddr(addr)[0] + ": "
@@ -159,9 +157,7 @@ class LoggingServer(Thread):  # pragma: no cover
                             else:
                                 size = (view[rPos] << 8) + view[0] + 2
                             if size > bufLen:
-                                raise Exception(
-                                    "Received too big (%d) message frame!" % size
-                                )
+                                raise Exception("Received too big (%d) message frame!" % size)
                             if size > rcvCnt:
                                 break
                             if rPos == bufLastPos:
@@ -268,9 +264,7 @@ class LoggingClient(Thread):  # pragma: no cover
             if self.cbConnect is not None:
                 if not self.cbConnect(self.__socket):
                     self.evtSent.set()
-                    raise Exception(
-                        "Failed to connect to %s:%d!" % (self.address, self.port)
-                    )
+                    raise Exception("Failed to connect to %s:%d!" % (self.address, self.port))
             queue_popleft = self.queue.popleft
             sock_sendall = self.__socket.sendall
             msgpack_packb = msgpack.packb
@@ -289,15 +283,12 @@ class LoggingClient(Thread):  # pragma: no cover
                         if cbEncode is None:
                             message = msgpack_packb(queue_popleft(), use_bin_type=True)
                         else:
-                            message = msgpack_packb(
-                                cbEncode(queue_popleft()), use_bin_type=True
-                            )
+                            message = msgpack_packb(cbEncode(queue_popleft()), use_bin_type=True)
                         msgLen = len(message) + 3
                         if totLen + msgLen >= maxMsgSize:
                             if msgLen >= maxMsgSize:
                                 self.errors.append(
-                                    "Error: Message with size %d too big! Ignoring it!"
-                                    % msgLen
+                                    "Error: Message with size %d too big! Ignoring it!" % msgLen
                                 )
                                 continue
                             data = msgpack_packb(messages, use_bin_type=True)

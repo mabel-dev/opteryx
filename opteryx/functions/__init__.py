@@ -153,9 +153,7 @@ def _coalesce(*args):
     coerced = []
     for arg in args:
         # there's no reasonable test to see if we need to do this before we start
-        coerced.append(
-            [None if value != value else value for value in arg]  # nosemgrep
-        )
+        coerced.append([None if value != value else value for value in arg])  # nosemgrep
     return compute.coalesce(*coerced)
 
 

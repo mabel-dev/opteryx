@@ -74,18 +74,14 @@ class SortNode(BasePlanNode):
                     # we create a random list, sort that then take the rows from the
                     # table in that order - this is faster than ordering the data
                     if column.value in ("RANDOM", "RAND"):
-                        new_order = numpy.argsort(
-                            numpy.random.uniform(size=table.num_rows)
-                        )
+                        new_order = numpy.argsort(numpy.random.uniform(size=table.num_rows))
                         table = table.take(new_order)
                         self.statistics.time_ordering = time.time_ns() - start_time
 
                         yield table
                         return
 
-                    raise SqlError(
-                        "`ORDER BY` only supports `RAND()` as a functional sort order."
-                    )
+                    raise SqlError("`ORDER BY` only supports `RAND()` as a functional sort order.")
 
                 elif column.token_type == NodeType.LITERAL_NUMERIC:
                     # we have an index rather than a column name, it's a natural

@@ -90,9 +90,7 @@ try:  # pragma: no cover
         with open(_config_path, "r") as _config_file:
             _config_values = parse_yaml(_config_file.read())
         print(f"Loading config from {_config_path}")
-except (
-    Exception
-) as exception:  # pragma: no cover # it doesn't matter why - just use the defaults
+except Exception as exception:  # pragma: no cover # it doesn't matter why - just use the defaults
     print(f"Config file {_config_path} not used - {exception}")
 
 

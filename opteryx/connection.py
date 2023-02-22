@@ -164,9 +164,7 @@ class Cursor:
 
         if limit == 1:
             return next(
-                utils.arrow.fetchmany(
-                    morsels=self._results, limit=limit, as_dicts=as_dicts
-                ),
+                utils.arrow.fetchmany(morsels=self._results, limit=limit, as_dicts=as_dicts),
                 None,
             )
 

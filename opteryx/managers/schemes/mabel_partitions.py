@@ -35,12 +35,8 @@ def _extract_by(path):
             return part
 
 
-_is_complete = lambda blobs, as_at: any(
-    blob for blob in blobs if as_at + "/frame.complete" in blob
-)
-_is_invalid = lambda blobs, as_at: any(
-    blob for blob in blobs if (as_at + "/frame.ignore" in blob)
-)
+_is_complete = lambda blobs, as_at: any(blob for blob in blobs if as_at + "/frame.complete" in blob)
+_is_invalid = lambda blobs, as_at: any(blob for blob in blobs if (as_at + "/frame.ignore" in blob))
 
 
 class MabelPartitionScheme(BasePartitionScheme):
@@ -54,9 +50,7 @@ class MabelPartitionScheme(BasePartitionScheme):
     def _inner_filter_blobs(self, list_of_blobs, statistics):
         # The segments are stored in folders with the prefix 'by_', as in,
         # segments **by** field name
-        list_of_segments = sorted(
-            {_extract_by(blob) for blob in list_of_blobs if "/by_" in blob}
-        )
+        list_of_segments = sorted({_extract_by(blob) for blob in list_of_blobs if "/by_" in blob})
         chosen_segment = ""
 
         # If we have multiple 'by_' segments, pick one - pick the first one until
@@ -64,9 +58,7 @@ class MabelPartitionScheme(BasePartitionScheme):
         if list_of_segments:
             chosen_segment = list_of_segments.pop()
             # Do the pruning
-            list_of_blobs = [
-                blob for blob in list_of_blobs if f"/{chosen_segment}/" in blob
-            ]
+            list_of_blobs = [blob for blob in list_of_blobs if f"/{chosen_segment}/" in blob]
 
         # build a list of the segments we're going to read, for example, if we have
         # data which are segmented by hour, this will be the hour=00 part
@@ -74,8 +66,7 @@ class MabelPartitionScheme(BasePartitionScheme):
             segmented_folders = {""}
         else:
             segmented_folders = {
-                _safe_get_next_element(blob.split("/"), chosen_segment)
-                for blob in list_of_blobs
+                _safe_get_next_element(blob.split("/"), chosen_segment) for blob in list_of_blobs
             }
 
         # count the segments we're planning to read
@@ -86,21 +77,15 @@ class MabelPartitionScheme(BasePartitionScheme):
             # we get the blobs for this segment by looking for the path to contain
             # a combination of the segment and the segmented folder
             segment_blobs = [
-                blob
-                for blob in list_of_blobs
-                if f"{chosen_segment}/{segment_folder}" in blob
+                blob for blob in list_of_blobs if f"{chosen_segment}/{segment_folder}" in blob
             ]
 
             # work out if there's an as_at part
-            as_ats = sorted(
-                {_extract_as_at(blob) for blob in segment_blobs if "as_at_" in blob}
-            )
+            as_ats = sorted({_extract_as_at(blob) for blob in segment_blobs if "as_at_" in blob})
             if as_ats:
                 as_at = as_ats.pop()
 
-                while not _is_complete(segment_blobs, as_at) or _is_invalid(
-                    segment_blobs, as_at
-                ):
+                while not _is_complete(segment_blobs, as_at) or _is_invalid(segment_blobs, as_at):
                     if len(as_ats) > 0:
                         as_at = as_ats.pop()
                     else:

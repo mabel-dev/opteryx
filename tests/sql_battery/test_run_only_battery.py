@@ -36,9 +36,7 @@ def get_tests(test_type):
     for suite in suites:
         with open(suite, mode="r") as test_file:
             yield from [
-                line
-                for line in test_file.read().splitlines()
-                if len(line) > 0 and line[0] != "#"
+                line for line in test_file.read().splitlines() if len(line) > 0 and line[0] != "#"
             ]
 
 
@@ -77,8 +75,6 @@ if __name__ == "__main__":  # pragma: no cover
 
         test_run_only_tests(statement)
 
-        print(
-            f"\033[0;32m{str(int((time.monotonic_ns() - start)/1000000)).rjust(4)}ms\033[0m ✅"
-        )
+        print(f"\033[0;32m{str(int((time.monotonic_ns() - start)/1000000)).rjust(4)}ms\033[0m ✅")
 
     print("--- ✅ \033[0;32mdone\033[0m")

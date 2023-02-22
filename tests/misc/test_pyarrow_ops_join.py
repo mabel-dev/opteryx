@@ -25,9 +25,7 @@ def test_hash_join_consistency():
         # there was about a 50% failure of this query failing to return any rows due to
         # a bug in the join implementation. 1/(2^25) is a small chance this test will
         # pass if the problem still exists.
-        cur = opteryx.query(
-            "SELECT * FROM $planets INNER JOIN $planets USING (name, id)"
-        )
+        cur = opteryx.query("SELECT * FROM $planets INNER JOIN $planets USING (name, id)")
         assert cur.arrow().num_rows == 9
 
 

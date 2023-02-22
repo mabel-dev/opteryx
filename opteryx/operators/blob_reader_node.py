@@ -115,9 +115,7 @@ class BlobReaderNode(BasePlanNode):
         elif PARTITION_SCHEME == "mabel":
             self._partition_scheme = MabelPartitionScheme()  # type:ignore
         else:
-            self._partition_scheme = DefaultPartitionScheme(
-                PARTITION_SCHEME
-            )  # type:ignore
+            self._partition_scheme = DefaultPartitionScheme(PARTITION_SCHEME)  # type:ignore
 
         self._disable_selections = "NO_PUSH_SELECTION" in config.get("hints", [])
 
@@ -156,9 +154,7 @@ class BlobReaderNode(BasePlanNode):
         if self._filter is None:
             self._filter = predicate
             return True
-        self._filter = ExpressionTreeNode(
-            NodeType.AND, left=predicate, right=self._filter
-        )
+        self._filter = ExpressionTreeNode(NodeType.AND, left=predicate, right=self._filter)
         return True
 
     @property
@@ -260,9 +256,7 @@ class BlobReaderNode(BasePlanNode):
 
                             import pyarrow
 
-                            pyarrow_blob = pyarrow.Table.from_pydict(
-                                pyarrow_blob.to_pydict()
-                            )
+                            pyarrow_blob = pyarrow.Table.from_pydict(pyarrow_blob.to_pydict())
                             pyarrow_blob = metadata.apply(pyarrow_blob)
 
                     # if we've never run before, collect the schema
@@ -271,25 +265,17 @@ class BlobReaderNode(BasePlanNode):
                     else:
                         # remove unwanted columns
                         pyarrow_blob = pyarrow_blob.select(
-                            [
-                                name
-                                for name in schema.names
-                                if name in pyarrow_blob.schema.names
-                            ]
+                            [name for name in schema.names if name in pyarrow_blob.schema.names]
                         )
 
                     pyarrow_blob, schema = _normalize_to_types(pyarrow_blob)
 
                     # break up large files
-                    batch_size = (96 * 1024 * 1024) // (
-                        pyarrow_blob.nbytes / pyarrow_blob.num_rows
-                    )
+                    batch_size = (96 * 1024 * 1024) // (pyarrow_blob.nbytes / pyarrow_blob.num_rows)
                     import pyarrow
 
                     for batch in pyarrow_blob.to_batches(max_chunksize=batch_size):
-                        yield pyarrow.Table.from_batches(
-                            [batch], schema=pyarrow_blob.schema
-                        )
+                        yield pyarrow.Table.from_batches([batch], schema=pyarrow_blob.schema)
 
     def _read_and_parse(self, config):
         path, reader, parser, cache, projection, selection = config
@@ -363,9 +349,7 @@ class BlobReaderNode(BasePlanNode):
             # Get a list of all of the blobs in the partition.
             time_scanning_partitions = time.time_ns()
             blob_list = self._reader.get_blob_list(partition)
-            self.statistics.time_scanning_partitions = (
-                time.time_ns() - time_scanning_partitions
-            )
+            self.statistics.time_scanning_partitions = time.time_ns() - time_scanning_partitions
 
             # remove folders, that's items ending with '/'
             blob_list = [blob for blob in blob_list if not blob.endswith("/")]
@@ -376,12 +360,8 @@ class BlobReaderNode(BasePlanNode):
 
             # Filter the blob list to just the frame we're interested in
             if self._partition_scheme is not None:
-                blob_list = self._partition_scheme.filter_blobs(
-                    blob_list, self.statistics
-                )
-                self.statistics.count_blobs_ignored_frames += count_blobs_found - len(
-                    blob_list
-                )
+                blob_list = self._partition_scheme.filter_blobs(blob_list, self.statistics)
+                self.statistics.count_blobs_ignored_frames += count_blobs_found - len(blob_list)
 
             for blob_name in blob_list:
                 # the the blob filename extension

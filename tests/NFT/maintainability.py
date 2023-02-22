@@ -39,12 +39,8 @@ class MaintainabilityTest:
 
             maintainability_index = radon.metrics.mi_visit(code=code, multi=True)
 
-            if code.startswith("#no-maintain-checks") or code.startswith(
-                "# no-maintain-checks"
-            ):
-                logger.info(
-                    f"{item:20} {maintainability_index:.2f} - \033[0;36mskipped\033[0m"
-                )
+            if code.startswith("#no-maintain-checks") or code.startswith("# no-maintain-checks"):
+                logger.info(f"{item:20} {maintainability_index:.2f} - \033[0;36mskipped\033[0m")
                 results.append("SKIPPED")
                 continue
 

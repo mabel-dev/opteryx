@@ -44,18 +44,13 @@ def eliminate_fixed_function_evaluations(plan, properties):
         """
 
         # this is the main work of this action
-        if (
-            node.token_type == NodeType.FUNCTION
-            and node.value in FIXED_OUTCOME_FUNCTIONS
-        ):
+        if node.token_type == NodeType.FUNCTION and node.value in FIXED_OUTCOME_FUNCTIONS:
             function, node_type = FIXED_OUTCOME_FUNCTIONS[node.value]
             return ExpressionTreeNode(node_type, value=function(), alias=node.alias)
 
         # walk the tree
         node.left = None if node.left is None else update_expression_tree(node.left)
-        node.centre = (
-            None if node.centre is None else update_expression_tree(node.centre)
-        )
+        node.centre = None if node.centre is None else update_expression_tree(node.centre)
         node.right = None if node.right is None else update_expression_tree(node.right)
 
         if node.parameters:

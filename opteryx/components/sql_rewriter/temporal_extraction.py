@@ -267,9 +267,7 @@ def extract_temporal_filters(sql):  # pragma: no cover
             end_date = parse_date(parts[4])
 
             if start_date is None or end_date is None:
-                raise InvalidTemporalRangeFilterError(
-                    "Unrecognized temporal range values."
-                )
+                raise InvalidTemporalRangeFilterError("Unrecognized temporal range values.")
             if start_date > end_date:
                 raise InvalidTemporalRangeFilterError(
                     "Invalid temporal range, start of range is after end of range."

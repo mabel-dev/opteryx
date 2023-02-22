@@ -35,9 +35,7 @@ def test_predicate_pushdowns_sqlite_eq():
     assert cur.stats["rows_read"] == 9, cur.stats
 
     cur = conn.cursor()
-    cur.execute(
-        "SELECT * FROM sqlite.planets WITH(NO_PUSH_SELECTION) WHERE name = 'Mercury';"
-    )
+    cur.execute("SELECT * FROM sqlite.planets WITH(NO_PUSH_SELECTION) WHERE name = 'Mercury';")
     # if we disable pushdown, we read all the rows from the source and we do the filter
     assert cur.rowcount == 1, cur.rowcount
     assert cur.stats["rows_read"] == 9, cur.stats
@@ -49,9 +47,7 @@ def test_predicate_pushdowns_sqlite_eq():
     assert cur.stats["rows_read"] == 1, cur.stats
 
     cur = conn.cursor()
-    cur.execute(
-        "SELECT * FROM sqlite.planets WHERE name = 'Mercury' AND gravity = 3.7;"
-    )
+    cur.execute("SELECT * FROM sqlite.planets WHERE name = 'Mercury' AND gravity = 3.7;")
     # test with a two part filter
     assert cur.rowcount == 1, cur.rowcount
     assert cur.stats["rows_read"] == 1, cur.stats

@@ -31,17 +31,13 @@ def test_predicate_pushdowns_mysql_eq():
 
     # TEST PREDICATE PUSHDOWN
     cur = conn.cursor()
-    cur.execute(
-        "SET enable_optimizer = false; SELECT * FROM mysql.planets WHERE name = 'Mercury';"
-    )
+    cur.execute("SET enable_optimizer = false; SELECT * FROM mysql.planets WHERE name = 'Mercury';")
     # if we disable pushdown, we read all the rows from the source and we do the filter
     assert cur.rowcount == 1, cur.rowcount
     assert cur.stats["rows_read"] == 9, cur.stats
 
     cur = conn.cursor()
-    cur.execute(
-        "SELECT * FROM mysql.planets WITH(NO_PUSH_SELECTION) WHERE name = 'Mercury';"
-    )
+    cur.execute("SELECT * FROM mysql.planets WITH(NO_PUSH_SELECTION) WHERE name = 'Mercury';")
     # if we disable pushdown, we read all the rows from the source and we do the filter
     assert cur.rowcount == 1, cur.rowcount
     assert cur.stats["rows_read"] == 9, cur.stats
@@ -67,9 +63,7 @@ def test_predicate_pushdowns_mysql_eq():
     assert cur.stats["rows_read"] == 0, cur.stats
 
     cur = conn.cursor()
-    cur.execute(
-        "SELECT * FROM mysql.planets WHERE gravity = 3.7 AND name IN ('Mercury', 'Venus');"
-    )
+    cur.execute("SELECT * FROM mysql.planets WHERE gravity = 3.7 AND name IN ('Mercury', 'Venus');")
     # we don't push all predicates down,
     assert cur.rowcount == 1, cur.rowcount
     assert cur.stats["rows_read"] == 2, cur.stats

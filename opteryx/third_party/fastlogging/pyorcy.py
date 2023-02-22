@@ -63,9 +63,7 @@ def cythonize(func):  # pragma: no cover
     """function decorator for triggering the pyorcy mechanism"""
     # inspect usage found in http://stackoverflow.com/a/7151403
     if COMPILE:
-        path = inspect.getframeinfo(
-            inspect.getouterframes(inspect.currentframe())[1][0]
-        )[0]
+        path = inspect.getframeinfo(inspect.getouterframes(inspect.currentframe())[1][0])[0]
         if "pyximport" in path:
             # XXX: workaround for an unexpetected pyximport side effect: find
             # a cleaner solution!

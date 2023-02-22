@@ -51,9 +51,7 @@ PROFILE_LOCATION = config.PROFILE_LOCATION
 
 
 class QueryPlanner:
-    def __init__(
-        self, *, statement: str = "", cache=None, ast=None, properties=None, qid=None
-    ):
+    def __init__(self, *, statement: str = "", cache=None, ast=None, properties=None, qid=None):
         # if it's a byte string, convert to an ascii string
         if isinstance(statement, bytes):
             statement = statement.decode()

@@ -20,14 +20,10 @@ def test_projection_node():
 
     # test None does nothing to the attributes
     pn = ProjectionNode(projection={"*": "*"})
-    assert (
-        pn.execute(relation=satellite_data).column_names == satellite_data.column_names
-    )
+    assert pn.execute(relation=satellite_data).column_names == satellite_data.column_names
 
     # test renames, reorder and elimination
-    pn = ProjectionNode(
-        projection={"name": "name", "id": "identifier", "gm": "gravity"}
-    )
+    pn = ProjectionNode(projection={"name": "name", "id": "identifier", "gm": "gravity"})
     assert pn.execute(relation=satellite_data).column_names == [
         "name",
         "identifier",

@@ -77,9 +77,7 @@ else:  # pragma: no cover
                 PKGNAME + "/__init__.py",
                 self.build_lib + "/" + PKGNAME + "/__init__.py",
             )
-            shutil.copyfile(
-                PKGNAME + "/console.py", self.build_lib + "/" + PKGNAME + "/console.py"
-            )
+            shutil.copyfile(PKGNAME + "/console.py", self.build_lib + "/" + PKGNAME + "/console.py")
             shutil.copyfile(
                 PKGNAME + "/optimize.py",
                 self.build_lib + "/" + PKGNAME + "/optimize.py",
@@ -129,9 +127,7 @@ else:  # pragma: no cover
     install_requires = ["Cython"]
     cmdclass = {"build_ext": build_ext_subclass}
 
-    MODULES = [
-        filename[:-4] for filename in os.listdir(PKGDIR) if filename.endswith(".pyx")
-    ]
+    MODULES = [filename[:-4] for filename in os.listdir(PKGDIR) if filename.endswith(".pyx")]
     packages = None
     ext_modules = [
         Extension(
@@ -144,9 +140,7 @@ else:  # pragma: no cover
 
 
 # Get the long description from the README file
-with open(
-    os.path.join(BASEDIR, "README.rst"), encoding="utf-8"
-) as F:  # pragma: no cover
+with open(os.path.join(BASEDIR, "README.rst"), encoding="utf-8") as F:  # pragma: no cover
     long_description = F.read()
 
 if annotate:  # pragma: no cover

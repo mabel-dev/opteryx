@@ -51,42 +51,21 @@ def get_columns(expression, left_columns, right_columns):
     right = []
 
     if expression.token_type == NodeType.AND:
-        left_left, left_right = get_columns(
-            expression.left, left_columns, right_columns
-        )
-        right_left, right_right = get_columns(
-            expression.right, left_columns, right_columns
-        )
+        left_left, left_right = get_columns(expression.left, left_columns, right_columns)
+        right_left, right_right = get_columns(expression.right, left_columns, right_columns)
         left.extend(left_left)
         left.extend(right_left)
         right.extend(left_right)
         right.extend(right_right)
-    elif (
-        expression.token_type == NodeType.COMPARISON_OPERATOR
-        and expression.value == "Eq"
-    ):
+    elif expression.token_type == NodeType.COMPARISON_OPERATOR and expression.value == "Eq":
         try:
-            right = [
-                right_columns.get_column_from_alias(
-                    expression.right.value, only_one=True
-                )
-            ]
-            left = [
-                left_columns.get_column_from_alias(expression.left.value, only_one=True)
-            ]
+            right = [right_columns.get_column_from_alias(expression.right.value, only_one=True)]
+            left = [left_columns.get_column_from_alias(expression.left.value, only_one=True)]
         except ColumnNotFoundError:
             # the ON condition may not always be in the order of the tables
             # purposefully reference the values the wrong way around
-            right = [
-                right_columns.get_column_from_alias(
-                    expression.left.value, only_one=True
-                )
-            ]
-            left = [
-                left_columns.get_column_from_alias(
-                    expression.right.value, only_one=True
-                )
-            ]
+            right = [right_columns.get_column_from_alias(expression.left.value, only_one=True)]
+            left = [left_columns.get_column_from_alias(expression.right.value, only_one=True)]
     else:
         raise SqlError("JOIN 'on' condition can only be comprised of 'AND's and '='s.")
 
@@ -116,16 +95,13 @@ class InnerJoinNode(BasePlanNode):
         left_node = self._producers[0]  # type:ignore
         right_node = self._producers[1]  # type:ignore
 
-        self._right_table = pyarrow.concat_tables(
-            right_node.execute(), promote=True
-        )  # type:ignore
+        self._right_table = pyarrow.concat_tables(right_node.execute(), promote=True)  # type:ignore
 
         if self._using:
             right_columns = Columns(self._right_table)
             left_columns = None
             right_join_columns = [
-                right_columns.get_column_from_alias(col, only_one=True)
-                for col in self._using
+                right_columns.get_column_from_alias(col, only_one=True) for col in self._using
             ]
 
             for morsel in left_node.execute():
@@ -142,9 +118,7 @@ class InnerJoinNode(BasePlanNode):
                     # unique values in the set. Although we're working it out, we'll
                     # refer to this as an estimate because it may be different per
                     # chunk of data - we're assuming it's not very different.
-                    cols = pyarrow_ops.columns_to_array_denulled(
-                        morsel, left_join_columns
-                    )
+                    cols = pyarrow_ops.columns_to_array_denulled(morsel, left_join_columns)
                     if morsel.num_rows > 0:
                         card = len(numpy.unique(cols)) / morsel.num_rows
                     else:
@@ -165,9 +139,7 @@ class InnerJoinNode(BasePlanNode):
         elif self._on:
             right_columns = Columns(self._right_table)
 
-            right_null_columns, self._right_table = Columns.remove_null_columns(
-                self._right_table
-            )
+            right_null_columns, self._right_table = Columns.remove_null_columns(self._right_table)
 
             left_columns = None
 
@@ -182,9 +154,7 @@ class InnerJoinNode(BasePlanNode):
                     new_metadata = right_columns + left_columns
 
                     # ensure the types are compatible for joining by coercing numerics
-                    self._right_table = arrow.coerce_columns(
-                        self._right_table, right_join_columns
-                    )
+                    self._right_table = arrow.coerce_columns(self._right_table, right_join_columns)
 
                 morsel = arrow.coerce_columns(morsel, left_join_columns)
 

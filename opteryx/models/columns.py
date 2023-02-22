@@ -131,9 +131,7 @@ class Columns:
 
     def apply(self, table, **additional):
         """apply this metadata to a new table"""
-        column_names = [
-            self.get_column_from_alias(c) or [c] for c in table.column_names
-        ]
+        column_names = [self.get_column_from_alias(c) or [c] for c in table.column_names]
         column_names = [item for sublist in column_names for item in sublist]
 
         self._column_metadata = {
@@ -166,9 +164,7 @@ class Columns:
                     )
                 raise ColumnNotFoundError(f"Field `{column}` does not exist.")
             if len(matches) > 1:  # pragma: no cover
-                raise SqlError(
-                    f"Field `{column}` is ambiguous, try qualifying the field name."
-                )
+                raise SqlError(f"Field `{column}` is ambiguous, try qualifying the field name.")
             return matches[0]
         return matches
 
@@ -213,17 +209,13 @@ class Columns:
 
         # get the list of matching columns - some physical columns may be referenced
         # multiple times so we deduplicate them
-        selected = [
-            self.get_column_from_alias(alias.as_py(), True) for alias in filtered
-        ]
+        selected = [self.get_column_from_alias(alias.as_py(), True) for alias in filtered]
         selected = list(dict.fromkeys(selected))
 
         return selected
 
     @staticmethod
-    def create_table_metadata(
-        table, expected_rows, name, table_aliases, disposition, path
-    ):
+    def create_table_metadata(table, expected_rows, name, table_aliases, disposition, path):
         if not isinstance(table_aliases, list):
             table_aliases = [table_aliases]
         table_aliases.append(name)

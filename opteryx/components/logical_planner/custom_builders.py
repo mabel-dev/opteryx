@@ -146,10 +146,7 @@ def extract_joins(ast, qid):
         if isinstance(join_mode, dict):
             join_mode = list(join["join_operator"].keys())[0]
             if "Using" in join["join_operator"][join_mode]:
-                join_using = [
-                    v["value"]
-                    for v in join["join_operator"][join_mode].get("Using", [])
-                ]
+                join_using = [v["value"] for v in join["join_operator"][join_mode].get("Using", [])]
             if "On" in join["join_operator"][join_mode]:
                 join_on = builders.build(join["join_operator"][join_mode]["On"])
 
@@ -182,13 +179,8 @@ def extract_relations(branch, qid):
                 function = relation["relation"]["Table"]["name"][0]["value"].lower()
                 relation_desc.alias = function
                 if relation["relation"]["Table"]["alias"] is not None:
-                    relation_desc.alias = relation["relation"]["Table"]["alias"][
-                        "name"
-                    ]["value"]
-                args = [
-                    builders.build(a["Unnamed"])
-                    for a in relation["relation"]["Table"]["args"]
-                ]
+                    relation_desc.alias = relation["relation"]["Table"]["alias"]["name"]["value"]
+                args = [builders.build(a["Unnamed"]) for a in relation["relation"]["Table"]["args"]]
                 relation_desc.kind = "Function"
                 relation_desc.dataset = {
                     "function": function,
@@ -197,9 +189,7 @@ def extract_relations(branch, qid):
                 yield relation_desc
             else:
                 if relation["relation"]["Table"]["alias"] is not None:
-                    relation_desc.alias = relation["relation"]["Table"]["alias"][
-                        "name"
-                    ]["value"]
+                    relation_desc.alias = relation["relation"]["Table"]["alias"]["name"]["value"]
                 if relation["relation"]["Table"]["with_hints"] is not None:
                     relation_desc.hints = [
                         hint["Identifier"]["value"]
@@ -226,9 +216,7 @@ def extract_relations(branch, qid):
         if "Derived" in relation["relation"]:
             subquery = relation["relation"]["Derived"]["subquery"]["body"]
             try:
-                relation_desc.alias = relation["relation"]["Derived"]["alias"]["name"][
-                    "value"
-                ]
+                relation_desc.alias = relation["relation"]["Derived"]["alias"]["name"]["value"]
             except (KeyError, TypeError):
                 pass
             if "Select" in subquery:
@@ -244,10 +232,7 @@ def extract_relations(branch, qid):
                 yield relation_desc
             if "Values" in subquery:
                 body = []
-                headers = [
-                    h["value"]
-                    for h in relation["relation"]["Derived"]["alias"]["columns"]
-                ]
+                headers = [h["value"] for h in relation["relation"]["Derived"]["alias"]["columns"]]
                 for value_set in subquery["Values"]["rows"]:
                     values = [builders.build(v["Value"]).value for v in value_set]
                     body.append(dict(zip(headers, values)))

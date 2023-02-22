@@ -62,9 +62,7 @@ def eliminate_negations(plan, properties):
                 return update_expression_tree(centre_node)
         # below here is generic to walk the tree
         node.left = None if node.left is None else update_expression_tree(node.left)
-        node.centre = (
-            None if node.centre is None else update_expression_tree(node.centre)
-        )
+        node.centre = None if node.centre is None else update_expression_tree(node.centre)
         node.right = None if node.right is None else update_expression_tree(node.right)
         if node.parameters:
             node.parameters = [

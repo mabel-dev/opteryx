@@ -38,9 +38,7 @@ def _normalize_to_types(table):
     for index, column_name in enumerate(schema.names):
         type_name = str(schema.types[index])
         if type_name in ("date32[day]", "date64", "timestamp[s]", "timestamp[ms]"):
-            schema = schema.set(
-                index, pyarrow.field(column_name, pyarrow.timestamp("us"))
-            )
+            schema = schema.set(index, pyarrow.field(column_name, pyarrow.timestamp("us")))
 
     return table.cast(target_schema=schema)
 

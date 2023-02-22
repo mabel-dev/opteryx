@@ -429,9 +429,7 @@ class Logger(object):  # pragma: no cover
                 if depth > 0:
                     msg = " " * min(depth * self._indent_inc, self._indent_max) + msg
             if "exc_info" in kwargs:
-                message = (
-                    f"{sTime}: {domain}: {LOG2SYM[level]}: {msg}\n{kwargs['exc_info']}"
-                )
+                message = f"{sTime}: {domain}: {LOG2SYM[level]}: {msg}\n{kwargs['exc_info']}"
             else:
                 message = f"{sTime}: {domain}: {LOG2SYM[level]}: {msg}"
         else:
@@ -478,9 +476,7 @@ class Logger(object):  # pragma: no cover
                     print(message, file=self.stdout if level < ERROR else self.stderr)
                 else:
                     with Logger.consoleLock:
-                        print(
-                            message, file=self.stdout if level < ERROR else self.stderr
-                        )
+                        print(message, file=self.stdout if level < ERROR else self.stderr)
             else:
                 Logger.thrConsoleLogger.append((level, message))
         if hasattr(self, "client"):

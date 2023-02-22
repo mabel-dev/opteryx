@@ -58,9 +58,7 @@ class CollectionReaderNode(BasePlanNode):
 
     @property
     def can_push_selection(self):
-        return (
-            isinstance(self._reader, PredicatePushable) and not self._disable_selections
-        )
+        return isinstance(self._reader, PredicatePushable) and not self._disable_selections
 
     def push_predicate(self, predicate):
         if self.can_push_selection:

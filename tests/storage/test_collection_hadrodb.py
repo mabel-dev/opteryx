@@ -22,9 +22,7 @@ def test_hadrodb_storage():
         "SELECT gravity, COUNT(*) FROM hadro.testdata.hadro.planets GROUP BY gravity;"
     )
     assert cur.rowcount == 8, cur.rowcount
-    cur = opteryx.query(
-        "SELECT * FROM hadro.testdata.hadro.planets WHERE name LIKE '%a%';"
-    )
+    cur = opteryx.query("SELECT * FROM hadro.testdata.hadro.planets WHERE name LIKE '%a%';")
     assert cur.rowcount == 4, cur.rowcount
 
 

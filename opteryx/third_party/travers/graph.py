@@ -146,9 +146,7 @@ class Graph(object):
             Generator of Tuples of (Source, Target and Relationship)
         """
         for source, records in self._edges.items():
-            yield from (
-                (source, target, relationship) for target, relationship in records
-            )
+            yield from ((source, target, relationship) for target, relationship in records)
 
     def breadth_first_search(self, source: str, depth: int = 100):  # pragma: nocover
         """
@@ -240,11 +238,7 @@ class Graph(object):
         while len(my_edges) > 0:
             # find all of the exits
             sources = {source for source, target, direction in my_edges}
-            exits = {
-                target
-                for source, target, direction in my_edges
-                if target not in sources
-            }
+            exits = {target for source, target, direction in my_edges if target not in sources}
 
             if len(exits) == 0:
                 return False
@@ -265,11 +259,7 @@ class Graph(object):
         if len(self._nodes) == 1:
             return list(self._nodes.keys())
         targets = {target for source, target, direction in self.edges()}
-        retval = (
-            source
-            for source, target, direction in self.edges()
-            if source not in targets
-        )
+        retval = (source for source, target, direction in self.edges() if source not in targets)
         return sorted(retval)
 
     def get_exit_points(self):
@@ -279,11 +269,7 @@ class Graph(object):
         if len(self._nodes) == 1:  # pragma: no cover
             return list(self._nodes.keys())
         sources = self._edges.keys()
-        retval = (
-            target
-            for source, target, direction in self.edges()
-            if target not in sources
-        )
+        retval = (target for source, target, direction in self.edges() if target not in sources)
         return sorted(retval)
 
     def remove_node(self, nid, heal: bool = False):
@@ -311,9 +297,7 @@ class Graph(object):
             # remove the edges where the node is the target
             for source, records in self._edges.items():
                 self._edges[source] = [
-                    (target, relationship)
-                    for target, relationship in records
-                    if target != nid
+                    (target, relationship) for target, relationship in records if target != nid
                 ]
             self._edges = {k: v for k, v in self._edges.items() if len(v) > 0}
 
@@ -394,19 +378,13 @@ class Graph(object):
             if node1 and node2:
                 g.add_edge(node1.get("node_type"), node2.get("node_type"), r)
             if node1:
-                g.add_node(
-                    node1.get("node_type"), {"node_type": node1.get("node_type")}
-                )
+                g.add_node(node1.get("node_type"), {"node_type": node1.get("node_type")})
             if node2:
-                g.add_node(
-                    node2.get("node_type"), {"node_type": node2.get("node_type")}
-                )
+                g.add_node(node2.get("node_type"), {"node_type": node2.get("node_type")})
         return g
 
     def __repr__(self):
-        return (
-            f"Graph - {len(list(self.nodes()))} nodes, {len(list(self.edges()))} edges"
-        )
+        return f"Graph - {len(list(self.nodes()))} nodes, {len(list(self.edges()))} edges"
 
     def __len__(self):
         return len(list(self.nodes()))

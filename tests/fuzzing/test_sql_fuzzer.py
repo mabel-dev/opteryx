@@ -47,16 +47,12 @@ def generate_random_sql_select(columns, table):
             select_clause = f"{select_clause} {linking_condition} {where_clause}"
     # Add GROUP BY clause with 40% chance
     if agg_column and random.random() < 0.4:
-        select_clause = (
-            select_clause + " GROUP BY " + ", ".join(column_list + [agg_column])
-        )
+        select_clause = select_clause + " GROUP BY " + ", ".join(column_list + [agg_column])
     # Add ORDER BY clause with 60% chance
     if not agg_column and random.random() < 0.6:
         order_column = random.choice(column_list)
         order_direction = random.choice(["ASC", "DESC"])
-        select_clause = (
-            select_clause + " ORDER BY " + order_column + " " + order_direction
-        )
+        select_clause = select_clause + " ORDER BY " + order_column + " " + order_direction
 
     return select_clause
 

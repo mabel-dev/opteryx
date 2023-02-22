@@ -60,9 +60,7 @@ class BaseBlobStorageAdapter(abc.ABC):
         # this dataset on this data - without knowing if the partition exists
         for delta in range(int((end_date - start_date).days) + 1):
             working_date = start_date + datetime.timedelta(delta)
-            partitions.append(
-                pathlib.Path(paths.build_path(path=dataset, date=working_date))
-            )
+            partitions.append(pathlib.Path(paths.build_path(path=dataset, date=working_date)))
 
         return partitions
 

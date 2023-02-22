@@ -13,9 +13,7 @@ def test_pandas():
     opteryx.register_df("twitter", pandas_df)
     curr = opteryx.Connection().cursor()
     # this is the same statement as the CSV format test
-    curr.execute(
-        "SELECT username, user_verified FROM twitter WHERE username ILIKE '%cve%'"
-    )
+    curr.execute("SELECT username, user_verified FROM twitter WHERE username ILIKE '%cve%'")
     assert curr.shape == (2532, 2)
 
     # execute a join across a dataframe an another dataset
@@ -29,15 +27,11 @@ def test_documentation():
     import opteryx
     import pandas
 
-    pandas_df = pandas.read_csv(
-        "https://storage.googleapis.com/opteryx/exoplanets/exoplanets.csv"
-    )
+    pandas_df = pandas.read_csv("https://storage.googleapis.com/opteryx/exoplanets/exoplanets.csv")
 
     opteryx.register_df("exoplanets", pandas_df)
     curr = opteryx.Connection().cursor()
-    curr.execute(
-        "SELECT koi_disposition, COUNT(*) FROM exoplanets GROUP BY koi_disposition;"
-    )
+    curr.execute("SELECT koi_disposition, COUNT(*) FROM exoplanets GROUP BY koi_disposition;")
     aggregrated_df = curr.to_df()
 
     assert len(aggregrated_df) == 3

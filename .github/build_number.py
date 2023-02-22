@@ -6,9 +6,7 @@ try:
     with open("opteryx/version.py", mode="rt", encoding="UTF8") as vf:
         version_file_contents = vf.read()
 
-    version_file_contents = version_file_contents.replace(
-        "{BUILD_NUMBER}", str(BUILD_NUMBER)
-    )
+    version_file_contents = version_file_contents.replace("{BUILD_NUMBER}", str(BUILD_NUMBER))
 
     with open("opteryx/version.py", mode="wt", encoding="UTF8") as vf:
         vf.write(version_file_contents)

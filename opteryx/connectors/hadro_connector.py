@@ -44,7 +44,5 @@ class HadroConnector(BaseDocumentStorageAdapter):
 
         hadro = HadroDB(collection=queried_collection)
 
-        for morsel in self.chunk_dictset(
-            (hadro[doc] for doc in hadro.keys()), morsel_size
-        ):
+        for morsel in self.chunk_dictset((hadro[doc] for doc in hadro.keys()), morsel_size):
             yield morsel

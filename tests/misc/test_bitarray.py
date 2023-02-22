@@ -12,9 +12,7 @@ import pytest
 
 
 def test_init_size():
-    with pytest.raises(
-        AssertionError, match="bitarray size must be a positive integer"
-    ):
+    with pytest.raises(AssertionError, match="bitarray size must be a positive integer"):
         bitarray(0)
 
 

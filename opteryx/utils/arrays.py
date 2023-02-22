@@ -32,9 +32,7 @@ def generate_series(*args):
     # if the params are timestamps, we create time intervals
     if first_arg_type == NodeType.LITERAL_TIMESTAMP:
         if arg_len != 3:
-            raise SqlError(
-                "generate_series for dates needs start, end, and interval parameters"
-            )
+            raise SqlError("generate_series for dates needs start, end, and interval parameters")
         return dates.date_range(*arg_vals)
 
     # if the param is a CIDR, we create network ranges

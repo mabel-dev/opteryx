@@ -128,9 +128,7 @@ TESTS = [
 @pytest.mark.parametrize("str1, str2, score", TESTS)
 def test_level_battery(str1, str2, score):
     actual_score = compare(str1, str2)
-    assert (
-        score == actual_score
-    ), f"{str1} -> {str2}, expected: {score}, got: {actual_score}"
+    assert score == actual_score, f"{str1} -> {str2}, expected: {score}, got: {actual_score}"
 
 
 @given(text(), text())

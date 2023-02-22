@@ -134,12 +134,8 @@ def _statitics_collector(morsels):
                         varchar_range_max = max(column_data)
 
                         if profile["varchar_range"] is not None:
-                            varchar_range_min = min(
-                                varchar_range_min, profile["varchar_range"][0]
-                            )
-                            varchar_range_max = max(
-                                varchar_range_max, profile["varchar_range"][1]
-                            )
+                            varchar_range_min = min(varchar_range_min, profile["varchar_range"][0])
+                            varchar_range_max = max(varchar_range_max, profile["varchar_range"][1])
 
                         profile["varchar_range"] = (
                             varchar_range_min,
@@ -152,9 +148,7 @@ def _statitics_collector(morsels):
                 elif _type != OPTERYX_TYPES.VARCHAR:
                     column_data = (i.as_py() for i in column_data)
                 # remove empty values
-                column_data = numpy.array(
-                    [i for i in column_data if i not in (None, numpy.nan)]
-                )
+                column_data = numpy.array([i for i in column_data if i not in (None, numpy.nan)])
 
                 if _type in (OPTERYX_TYPES.BOOLEAN):
                     # we can make it easier to collect booleans
@@ -202,9 +196,7 @@ def _statitics_collector(morsels):
                         numpy.double(dgram.min),
                         numpy.double(dgram.max),
                     )
-                    profile["distogram_values"], profile["distogram_counts"] = zip(
-                        *dgram.bins
-                    )
+                    profile["distogram_values"], profile["distogram_counts"] = zip(*dgram.bins)
                     profile["distogram_values"] = numpy.array(
                         profile["distogram_values"], numpy.double
                     )
@@ -213,9 +205,7 @@ def _statitics_collector(morsels):
                 if counter:
                     counts = list(counter.values())
                     if min(counts) != max(counts):
-                        profile["most_frequent_values"] = [
-                            str(k) for k in counter.keys()
-                        ]
+                        profile["most_frequent_values"] = [str(k) for k in counter.keys()]
                         profile["most_frequent_counts"] = counts
 
             # remove collectors

@@ -43,6 +43,4 @@ class ConsoleLogger(Thread):  # pragma: no cover
                 print(entry[1], file=self.stdOut if entry[0] < ERROR else self.stdErr)
             else:
                 with self.consoleLock:
-                    print(
-                        entry[1], file=self.stdOut if entry[0] < ERROR else self.stdErr
-                    )
+                    print(entry[1], file=self.stdOut if entry[0] < ERROR else self.stdErr)

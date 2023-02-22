@@ -47,13 +47,9 @@ class AwsS3Connector(BaseBlobStorageAdapter):
 
     def get_blob_list(self, partition):
         bucket, object_path, _, _ = paths.get_parts(partition)
-        blobs = self.minio.list_objects(
-            bucket_name=bucket, prefix=object_path, recursive=True
-        )
+        blobs = self.minio.list_objects(bucket_name=bucket, prefix=object_path, recursive=True)
         return [
-            bucket + "/" + blob.object_name
-            for blob in blobs
-            if not blob.object_name.endswith("/")
+            bucket + "/" + blob.object_name for blob in blobs if not blob.object_name.endswith("/")
         ]
 
     def read_blob(self, blob_name):

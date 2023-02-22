@@ -18,9 +18,7 @@ import orjson
 class Node:
     def _is_valid_key(self, key):
         if key.startswith("_"):
-            raise AttributeError(
-                "Node cannot have dynamic attributes starting with an underscore"
-            )
+            raise AttributeError("Node cannot have dynamic attributes starting with an underscore")
 
     def __init__(self, **kwargs):
         """

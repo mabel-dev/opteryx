@@ -51,9 +51,7 @@ if not config.DISABLE_HIGH_PRIORITY and hasattr(os, "nice"):  # pragma: no cover
         display_nice = str(nice_value)
         if nice_value == 0:
             display_nice = "0 (normal)"
-        logger.debug(
-            f"Cannot update process priority. Currently set to {display_nice}."
-        )
+        logger.debug(f"Cannot update process priority. Currently set to {display_nice}.")
 
 # Log resource usage
 if config.ENABLE_RESOURCE_LOGGING:  # pragma: no cover

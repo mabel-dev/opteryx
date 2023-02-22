@@ -73,11 +73,7 @@ def parquet_decoder(stream, projection: List = None, selection=None):
 
         if projection == {"count_*"}:
             return pyarrow.Table.from_pydict(
-                {
-                    "_": numpy.full(
-                        parquet_file.metadata.num_rows, True, dtype=numpy.bool_
-                    )
-                }
+                {"_": numpy.full(parquet_file.metadata.num_rows, True, dtype=numpy.bool_)}
             )
 
         selected_columns = list(set(parquet_metadata.names).intersection(projection))
@@ -85,9 +81,7 @@ def parquet_decoder(stream, projection: List = None, selection=None):
         if len(selected_columns) == 0:  # pragma: no-cover
             selected_columns = None
     # don't prebuffer - we're already buffered as an IO Stream
-    return parquet.read_table(
-        stream, columns=selected_columns, pre_buffer=False, filters=_select
-    )
+    return parquet.read_table(stream, columns=selected_columns, pre_buffer=False, filters=_select)
 
 
 def orc_decoder(stream, projection: List = None, selection=None):
@@ -149,9 +143,7 @@ def csv_decoder(stream, projection: List = None, selection=None, delimiter=","):
 
 
 def tsv_decoder(stream, projection: List = None, selection=None):
-    return csv_decoder(
-        stream=stream, projection=projection, selection=selection, delimiter="\t"
-    )
+    return csv_decoder(stream=stream, projection=projection, selection=selection, delimiter="\t")
 
 
 def arrow_decoder(stream, projection: List = None, selection=None):
@@ -176,9 +168,7 @@ def avro_decoder(stream, projection: List = None, selection=None):
         from avro.datafile import DataFileReader
         from avro.io import DatumReader
     except ImportError:  # pragma: no-cover
-        raise Exception(
-            "`avro` is missing, please install or include in your `requirements.txt`."
-        )
+        raise Exception("`avro` is missing, please install or include in your `requirements.txt`.")
 
     reader = DataFileReader(stream, DatumReader())
     table = pyarrow.Table.from_pylist(list(reader))

@@ -54,8 +54,7 @@ def _values(alias, *values):
 def _fake_data(alias, *args):
     rows, columns = int(args[0].value), int(args[1].value)
     return [
-        {f"column_{col}": random.getrandbits(16) for col in range(columns)}
-        for row in range(rows)
+        {f"column_{col}": random.getrandbits(16) for col in range(columns)} for row in range(rows)
     ]
 
 

@@ -17,9 +17,7 @@ def test_parquet_projection_pushdown():
     # with pushdown
     conn = opteryx.connect()
     cur = conn.cursor()
-    cur.execute(
-        f"SELECT MAX(following) FROM testdata.flat.formats.parquet WITH(NO_PARTITION);"
-    )
+    cur.execute(f"SELECT MAX(following) FROM testdata.flat.formats.parquet WITH(NO_PARTITION);")
     cur.arrow()
     assert cur.stats["columns_read"] == 1, cur.stats
 

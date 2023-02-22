@@ -38,9 +38,7 @@ def _cartesian_product(*arrays):
     Cartesian product of arrays creates every combination of the elements in the arrays
     """
     array_count = len(arrays)
-    arr = numpy.empty(
-        [len(array) for array in arrays] + [array_count], dtype=numpy.int64
-    )
+    arr = numpy.empty([len(array) for array in arrays] + [array_count], dtype=numpy.int64)
     for i, array in enumerate(numpy.ix_(*arrays)):
         arr[..., i] = array
     return numpy.hsplit(arr.reshape(-1, array_count), array_count)
@@ -59,8 +57,7 @@ def _cross_join(left, right):
         This returns a generator.
         """
         return (
-            (seq_1[pos : pos + size], seq_2[pos : pos + size])
-            for pos in range(0, len(seq_1), size)
+            (seq_1[pos : pos + size], seq_2[pos : pos + size]) for pos in range(0, len(seq_1), size)
         )
 
     from opteryx.third_party.pyarrow_ops import align_tables
@@ -76,9 +73,7 @@ def _cross_join(left, right):
         # we break this into small chunks, each cycle will have 500 * rows in the right table
         for left_block in left_morsel.to_batches(max_chunksize=INTERNAL_BATCH_SIZE):
             # blocks don't have column_names, so we need to wrap in a table
-            left_block = pyarrow.Table.from_batches(
-                [left_block], schema=left_morsel.schema
-            )
+            left_block = pyarrow.Table.from_batches([left_block], schema=left_morsel.schema)
 
             # build two lists, 0 to num_rows for each table
             left_array = numpy.arange(left_block.num_rows, dtype=numpy.int64)
@@ -89,13 +84,9 @@ def _cross_join(left, right):
 
             # CROSS JOINs can create huge tables quickly, this is used to limit the
             # number of records we hold in memory at any time
-            for left_chunk, right_chunk in _chunker(
-                left_align, right_align, MAX_JOIN_SIZE
-            ):
+            for left_chunk, right_chunk in _chunker(left_align, right_align, MAX_JOIN_SIZE):
                 # now build the resultant table
-                table = align_tables(
-                    left_block, right, left_chunk.flatten(), right_chunk.flatten()
-                )
+                table = align_tables(left_block, right, left_chunk.flatten(), right_chunk.flatten())
                 yield new_columns.apply(table)
 
 
@@ -218,6 +209,4 @@ class CrossJoinNode(BasePlanNode):
             if function != "unnest":
                 raise SqlError(f"I was expecting 'UNNEST' but I got `{function}`")
 
-            yield from _cross_join_unnest(
-                left=left_node, column=args[0], alias=right_node.alias
-            )
+            yield from _cross_join_unnest(left=left_node, column=args[0], alias=right_node.alias)

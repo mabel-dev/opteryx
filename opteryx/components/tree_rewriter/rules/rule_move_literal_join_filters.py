@@ -61,9 +61,7 @@ def move_literal_join_filters(plan, properties):
         return node, plan
 
     # find the in-scope nodes (INNER and OUTER joins)
-    join_nodes = plan.get_nodes_of_type(
-        [operators.InnerJoinNode, operators.OuterJoinNode]
-    )
+    join_nodes = plan.get_nodes_of_type([operators.InnerJoinNode, operators.OuterJoinNode])
 
     # HAVING and WHERE are selection nodes
     for nid in join_nodes:
