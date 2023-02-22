@@ -25,8 +25,10 @@ is actually being referred to.
 """
 import pyarrow
 
-from opteryx.exceptions import SqlError, ColumnNotFoundError
-from opteryx.utils import arrow, random_string
+from opteryx.exceptions import ColumnNotFoundError
+from opteryx.exceptions import SqlError
+from opteryx.utils import arrow
+from opteryx.utils import random_string
 
 
 class Columns:

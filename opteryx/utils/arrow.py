@@ -13,12 +13,13 @@
 """
 This module contains support functions for working with PyArrow
 """
-from typing import Iterable, List
-from pyarrow import Table
+from typing import Iterable
+from typing import List
 
 import pyarrow
-
-from orjson import dumps, loads
+from orjson import dumps
+from orjson import loads
+from pyarrow import Table
 
 INTERNAL_BATCH_SIZE = 500
 

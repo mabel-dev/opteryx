@@ -7,7 +7,8 @@
 
 import sys
 from collections import deque
-from threading import Thread, Event
+from threading import Event
+from threading import Thread
 
 from . import ERROR
 

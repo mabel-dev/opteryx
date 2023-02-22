@@ -6,13 +6,16 @@
 
 """Network logging support."""
 
+import gc
+import socket
+import struct
+
 # c cdef gc
 import time
-import struct
-import socket
-import gc
 from collections import deque
-from threading import Thread, Event, Lock
+from threading import Event
+from threading import Lock
+from threading import Thread
 
 import msgpack
 

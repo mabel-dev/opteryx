@@ -23,7 +23,6 @@ This is built around the pyarrow table grouping functionality.
 """
 import random
 import time
-
 from typing import Iterable
 
 import numpy
@@ -31,13 +30,13 @@ import pyarrow
 
 from opteryx.exceptions import SqlError
 from opteryx.exceptions import UnsupportedSyntaxError
-from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import evaluate_and_append
 from opteryx.managers.expression import format_expression
+from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.models import QueryProperties
-from opteryx.operators import BasePlanNode
 from opteryx.models.columns import Columns
+from opteryx.operators import BasePlanNode
 
 COUNT_STAR: str = "COUNT(*)"
 

@@ -17,7 +17,8 @@ import io
 import os
 
 from opteryx.connectors import BaseBlobStorageAdapter
-from opteryx.exceptions import MissingDependencyError, UnmetRequirementError
+from opteryx.exceptions import MissingDependencyError
+from opteryx.exceptions import UnmetRequirementError
 from opteryx.utils import paths
 
 

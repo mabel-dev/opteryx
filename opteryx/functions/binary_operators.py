@@ -14,11 +14,9 @@ import datetime
 
 import numpy
 import pyarrow
-
 from pyarrow import compute
 
 from opteryx.utils import dates
-
 
 BINARY_OPERATORS = {"Divide", "Minus", "Modulo", "Multiply", "Plus", "StringConcat"}
 INTERVALS = (pyarrow.lib.MonthDayNano, pyarrow.lib.MonthDayNanoIntervalArray)

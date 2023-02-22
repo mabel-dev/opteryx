@@ -1,6 +1,5 @@
 import os
 import threading
-
 from time import sleep
 
 import orjson

@@ -1,11 +1,11 @@
 import os
-
-from typing import Iterable, Optional
+from typing import Iterable
+from typing import Optional
 
 from opteryx import config
-from opteryx.exceptions import MissingDependencyError, UnmetRequirementError
+from opteryx.exceptions import MissingDependencyError
+from opteryx.exceptions import UnmetRequirementError
 from opteryx.managers.kvstores import BaseKeyValueStore
-
 
 GCP_PROJECT_ID = config.GCP_PROJECT_ID
 

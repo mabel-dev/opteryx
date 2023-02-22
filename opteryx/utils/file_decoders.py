@@ -13,8 +13,8 @@
 """
 Decode files from a raw binary format to a PyArrow Table.
 """
-from typing import List
 from enum import Enum
+from typing import List
 
 import numpy
 import pyarrow
@@ -55,6 +55,7 @@ def parquet_decoder(stream, projection: List = None, selection=None):
     Read parquet formatted files
     """
     from pyarrow import parquet
+
     from opteryx.connectors.capabilities import predicate_pushable
 
     # parquet uses DNF filters

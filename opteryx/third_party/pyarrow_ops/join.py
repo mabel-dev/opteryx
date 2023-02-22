@@ -1,9 +1,9 @@
 import numpy as np
-
 from cjoin import cython_inner_join
 from cjoin import cython_left_join
 
-from .helpers import columns_to_array_denulled, groupify_array
+from .helpers import columns_to_array_denulled
+from .helpers import groupify_array
 
 
 def align_tables(t1, t2, l1, l2):

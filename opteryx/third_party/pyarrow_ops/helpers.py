@@ -1,4 +1,5 @@
 import functools
+
 import numpy
 
 APOLLO_11_DURATION: int = 703115  # we need a constant to use as a seed

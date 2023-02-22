@@ -18,17 +18,19 @@ This is a SQL Query Execution Plan Node.
 This node orders a dataset
 """
 import time
-
-from typing import Iterable, List
+from typing import Iterable
+from typing import List
 
 import numpy
+from pyarrow import Table
+from pyarrow import concat_tables
 
-from pyarrow import Table, concat_tables
-
-from opteryx.exceptions import ColumnNotFoundError, SqlError
-from opteryx.managers.expression import format_expression
+from opteryx.exceptions import ColumnNotFoundError
+from opteryx.exceptions import SqlError
 from opteryx.managers.expression import NodeType
-from opteryx.models import Columns, QueryProperties
+from opteryx.managers.expression import format_expression
+from opteryx.models import Columns
+from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 
 

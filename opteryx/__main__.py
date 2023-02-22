@@ -21,12 +21,12 @@ import orjson
 import typer
 
 import opteryx
-
-from opteryx.utils import display
-from opteryx.third_party import sqloxide
-from opteryx.components.sql_rewriter.temporal_extraction import extract_temporal_filters
 from opteryx.components.sql_rewriter.sql_rewriter import clean_statement
 from opteryx.components.sql_rewriter.sql_rewriter import remove_comments
+from opteryx.components.sql_rewriter.temporal_extraction import extract_temporal_filters
+from opteryx.third_party import sqloxide
+from opteryx.utils import display
+
 
 # fmt:off
 def main(

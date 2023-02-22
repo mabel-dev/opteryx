@@ -13,8 +13,8 @@
 """
 Functions to help with handling file paths
 """
-import pathlib
 import datetime
+import pathlib
 
 
 def get_parts(path_string: str):

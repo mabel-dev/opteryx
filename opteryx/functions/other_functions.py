@@ -12,7 +12,6 @@
 
 import numpy
 import pyarrow
-
 from pyarrow import compute
 
 from opteryx.exceptions import SqlError

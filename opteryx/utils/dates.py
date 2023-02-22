@@ -12,15 +12,16 @@
 """
 Date Utilities
 """
-import numpy
 import re
-
-from datetime import date, datetime, timedelta, timezone
+from datetime import date
+from datetime import datetime
 from datetime import time as dtime
-
+from datetime import timedelta
+from datetime import timezone
 from functools import lru_cache
 from typing import Union
 
+import numpy
 
 TIMEDELTA_REGEX = (
     r"((?P<years>\d+)\s?(?:ys?|yrs?|years?))?\s*"
@@ -172,7 +173,6 @@ def parse_iso(value):
 EPOCH: date = datetime(1970, 1, 1, tzinfo=timezone.utc)
 
 
-from datetime import datetime, timedelta
 
 
 def date_trunc(truncate_to, dt):

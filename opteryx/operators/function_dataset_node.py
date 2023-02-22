@@ -19,15 +19,16 @@ This Node creates datasets based on function calls like VALUES and UNNEST.
 """
 import random
 import time
-
 from typing import Iterable
 
 import pyarrow
 
-from opteryx.models import Columns, QueryProperties
-from opteryx.managers.expression import NodeType, evaluate
-from opteryx.operators import BasePlanNode
 from opteryx.exceptions import SqlError
+from opteryx.managers.expression import NodeType
+from opteryx.managers.expression import evaluate
+from opteryx.models import Columns
+from opteryx.models import QueryProperties
+from opteryx.operators import BasePlanNode
 from opteryx.utils import arrays
 
 

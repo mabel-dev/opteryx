@@ -1,3 +1,6 @@
+from distutils.core import setup
+from distutils.extension import Extension
+
 __author__ = "Alexander [Amper] Marshalov"
 __email__ = "alone.amper+cityhash@gmail.com"
 __icq__ = "87-555-3"
@@ -5,8 +8,6 @@ __jabber__ = "alone.amper@gmail.com"
 __twitter__ = "amper"
 __url__ = "http://amper.github.com/cityhash"
 
-from distutils.core import setup
-from distutils.extension import Extension
 
 ext_modules = [Extension("cityhash", ["city.cc", "cityhash.cpp"])]
 

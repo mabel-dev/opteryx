@@ -18,14 +18,14 @@ This is a SQL Query Execution Plan Node.
 This Node reads and parses the data from one of the sample datasets.
 """
 import datetime
-
 from typing import Iterable
 
 import pyarrow
 
 from opteryx import samples
 from opteryx.exceptions import DatasetNotFoundError
-from opteryx.models import Columns, QueryProperties
+from opteryx.models import Columns
+from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 
 

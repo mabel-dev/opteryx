@@ -35,7 +35,6 @@ This is a SQL Query Execution Plan Node.
 
 """
 import time
-
 from typing import Iterable
 
 import pyarrow

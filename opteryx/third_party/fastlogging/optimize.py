@@ -1,17 +1,21 @@
+import ast
+import importlib.util
+import inspect
+import marshal
+
 # type:ignore
 import os
-import time
-import marshal
 import struct
-import ast
-import inspect
-import importlib.util
+import time
 
 # noinspection PyUnresolvedReferences
 from types import ModuleType
 
-from .fastlogging import DEBUG, INFO, WARNING, ERROR, FATAL
-
+from .fastlogging import DEBUG
+from .fastlogging import ERROR
+from .fastlogging import FATAL
+from .fastlogging import INFO
+from .fastlogging import WARNING
 
 optimized = set()
 

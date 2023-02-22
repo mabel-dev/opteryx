@@ -25,9 +25,9 @@ import pyarrow
 
 from opteryx.exceptions import SqlError
 from opteryx.managers.expression import NodeType
-from opteryx.models import Columns, QueryProperties
+from opteryx.models import Columns
+from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
-
 
 INTERNAL_BATCH_SIZE = 100  # config
 MAX_JOIN_SIZE = 500  # config

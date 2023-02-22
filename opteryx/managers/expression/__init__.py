@@ -17,13 +17,13 @@ It is defined as an expression tree of binary and unary operators, and functions
 
 Expressions are evaluated against an entire morsel at a time.
 """
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+from dataclasses import field
 from enum import Enum
 from typing import Any
 
 import numpy
 import pyarrow
-
 from cityhash import CityHash64
 from pyarrow import Table
 
@@ -33,7 +33,6 @@ from opteryx.functions.unary_operations import UNARY_OPERATIONS
 from opteryx.models import Columns
 from opteryx.third_party.pyarrow_ops.ops import filter_operations
 from opteryx.third_party.pyarrow_ops.ops import filter_operations_for_display
-
 
 # These are bit-masks
 LOGICAL_TYPE: int = int("0001", 2)

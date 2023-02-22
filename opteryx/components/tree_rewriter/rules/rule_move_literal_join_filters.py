@@ -16,7 +16,8 @@ Rewrite Rule - Literal Join Filters
 Goal: Move filters JOIN which reference literals
 """
 from opteryx import operators
-from opteryx.managers.expression import LITERAL_TYPE, NodeType
+from opteryx.managers.expression import LITERAL_TYPE
+from opteryx.managers.expression import NodeType
 
 
 def move_literal_join_filters(plan, properties):

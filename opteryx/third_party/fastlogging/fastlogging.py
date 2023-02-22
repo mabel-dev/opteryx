@@ -6,14 +6,16 @@
 
 """Implements lightweight and fast logging."""
 
+import atexit
 import os
 import sys
-import atexit
 import time
 import traceback
 from collections import deque
-from threading import Thread, Timer, Event, Lock
-
+from threading import Event
+from threading import Lock
+from threading import Thread
+from threading import Timer
 
 # c cdef time_time, time_strftime, time_localtime, path_join
 time_time = time.time
@@ -63,7 +65,9 @@ LOG2SYM = {
 
 try:  # pragma: no cover
     # noinspection PyUnresolvedReferences,PyPep8Naming
-    from colorama import init as initColorama, Fore, Style
+    from colorama import Fore
+    from colorama import Style
+    from colorama import init as initColorama
 
     initColorama()
 

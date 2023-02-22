@@ -22,8 +22,10 @@ from typing import Iterable
 import numpy
 import pyarrow
 
-from opteryx.exceptions import ColumnNotFoundError, SqlError
-from opteryx.models import Columns, QueryProperties
+from opteryx.exceptions import ColumnNotFoundError
+from opteryx.exceptions import SqlError
+from opteryx.models import Columns
+from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 from opteryx.third_party import pyarrow_ops
 from opteryx.utils import arrow

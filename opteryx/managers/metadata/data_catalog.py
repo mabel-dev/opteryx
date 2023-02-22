@@ -11,9 +11,8 @@
 # limitations under the License.
 
 from opteryx import config
-
-from opteryx.managers.kvstores import KV_store_factory
 from opteryx.managers.kvstores import HadroDB
+from opteryx.managers.kvstores import KV_store_factory
 
 
 def metadata_factory():

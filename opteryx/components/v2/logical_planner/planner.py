@@ -22,23 +22,24 @@ Steps are given random IDs to prevent collisions
 """1xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"""
 import os
 import sys
-
-sys.path.insert(1, os.path.join(sys.path[0], "../../../.."))
-
-from opteryx.utils import unique_id
-from opteryx.components.logical_planner import builders
-
-"""2xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"""
-
-
-from enum import auto, Enum
+from enum import Enum
+from enum import auto
 
 from opteryx.components.logical_planner import builders
-from opteryx.managers.expression import ExpressionTreeNode, NodeType
+from opteryx.managers.expression import ExpressionTreeNode
+from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.models.node import Node
 from opteryx.third_party.travers import Graph
 from opteryx.utils import unique_id
+
+sys.path.insert(1, os.path.join(sys.path[0], "../../../.."))
+
+
+"""2xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"""
+
+
+
 
 
 class LogicalPlanStepType(int, Enum):
@@ -295,6 +296,7 @@ def get_planners(parsed_statements):
 
 if __name__ == "__main__":  # pragma: no cover
     import json
+
     import opteryx.third_party.sqloxide
 
     SQL = "SET enable_optimizer = 7"

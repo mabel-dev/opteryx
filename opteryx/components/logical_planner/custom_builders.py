@@ -13,15 +13,15 @@
 Builders which require special handling
 """
 import datetime
-
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+from dataclasses import field
 from typing import Any
 
 from opteryx.managers.expression import ExpressionTreeNode
 from opteryx.managers.expression import NodeType
 from opteryx.shared import QueryStatistics
-from opteryx.utils import paths
 from opteryx.utils import fuzzy_search
+from opteryx.utils import paths
 
 WELL_KNOWN_HINTS = {
     "NO_CACHE",

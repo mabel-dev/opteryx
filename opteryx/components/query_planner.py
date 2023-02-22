@@ -37,13 +37,14 @@ as per the below.
    └───────────┘      └───────────┘      └───────────┘
 """
 from opteryx import config
-from opteryx.exceptions import SqlError, ProgrammingError
 from opteryx.components.binder.binder import bind_ast
 from opteryx.components.logical_planner.logical_planner import create_logical_plan
 from opteryx.components.sql_rewriter.sql_rewriter import clean_statement
 from opteryx.components.sql_rewriter.sql_rewriter import remove_comments
 from opteryx.components.sql_rewriter.temporal_extraction import extract_temporal_filters
 from opteryx.components.tree_rewriter import tree_rewriter
+from opteryx.exceptions import ProgrammingError
+from opteryx.exceptions import SqlError
 from opteryx.models import QueryProperties
 from opteryx.third_party import sqloxide
 

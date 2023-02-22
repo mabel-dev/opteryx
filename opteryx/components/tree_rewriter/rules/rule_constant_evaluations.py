@@ -23,7 +23,9 @@ import numpy
 
 from opteryx import operators
 from opteryx.functions.binary_operators import binary_operations
-from opteryx.managers.expression import ExpressionTreeNode, LITERAL_TYPE, NodeType
+from opteryx.managers.expression import LITERAL_TYPE
+from opteryx.managers.expression import ExpressionTreeNode
+from opteryx.managers.expression import NodeType
 from opteryx.third_party.pyarrow_ops.ops import filter_operations
 
 

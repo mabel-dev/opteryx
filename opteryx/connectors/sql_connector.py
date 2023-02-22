@@ -79,6 +79,7 @@ class SqlConnector(BaseSQLStorageAdapter, PredicatePushable):
         Return a morsel of documents
         """
         from sqlalchemy import text
+
         from opteryx.third_party.query_builder import Query
 
         queried_relation = dataset

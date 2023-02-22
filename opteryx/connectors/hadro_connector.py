@@ -12,7 +12,6 @@
 
 from opteryx.connectors import BaseDocumentStorageAdapter
 
-
 BATCH_SIZE = 100
 
 

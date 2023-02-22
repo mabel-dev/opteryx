@@ -1,8 +1,9 @@
 import os
 import sys
 
-sys.path.insert(1, os.path.join(sys.path[0], ".."))
 from travers import Graph
+
+sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
 
 def build_graph():

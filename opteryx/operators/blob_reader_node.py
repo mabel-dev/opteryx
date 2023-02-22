@@ -21,23 +21,24 @@ Blob stores have some features not available to other stores such as caching.
 """
 import datetime
 import time
-
 from typing import Iterable
-from cityhash import CityHash64
 
 import pyarrow
+from cityhash import CityHash64
 
 from opteryx import config
 from opteryx.exceptions import DatasetNotFoundError
 from opteryx.managers.expression import ExpressionTreeNode
 from opteryx.managers.expression import NodeType
-from opteryx.managers.schemes import MabelPartitionScheme
 from opteryx.managers.schemes import DefaultPartitionScheme
-from opteryx.models import Columns, QueryProperties, ExecutionTree
+from opteryx.managers.schemes import MabelPartitionScheme
+from opteryx.models import Columns
+from opteryx.models import ExecutionTree
+from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 from opteryx.shared import BufferPool
-from opteryx.utils.file_decoders import ExtentionType, KNOWN_EXTENSIONS
-
+from opteryx.utils.file_decoders import KNOWN_EXTENSIONS
+from opteryx.utils.file_decoders import ExtentionType
 
 MAX_SIZE_SINGLE_CACHE_ITEM = config.MAX_SIZE_SINGLE_CACHE_ITEM
 PARTITION_SCHEME = config.PARTITION_SCHEME

@@ -17,7 +17,8 @@ Type: Heuristic
 Goal: Reduce complexity
 """
 from opteryx import operators
-from opteryx.managers.expression import ExpressionTreeNode, NodeType
+from opteryx.managers.expression import ExpressionTreeNode
+from opteryx.managers.expression import NodeType
 
 
 def eliminate_negations(plan, properties):

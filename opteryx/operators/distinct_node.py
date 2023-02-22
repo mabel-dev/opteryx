@@ -19,7 +19,8 @@ This Node eliminates duplicate records.
 """
 from typing import Iterable
 
-from pyarrow import Table, concat_tables
+from pyarrow import Table
+from pyarrow import concat_tables
 
 from opteryx.exceptions import SqlError
 from opteryx.models import QueryProperties

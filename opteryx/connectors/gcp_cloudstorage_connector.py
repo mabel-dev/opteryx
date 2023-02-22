@@ -12,7 +12,6 @@
 
 import io
 import os
-
 from typing import Optional
 
 from opteryx.connectors import BaseBlobStorageAdapter

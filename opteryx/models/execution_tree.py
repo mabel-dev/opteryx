@@ -23,7 +23,6 @@ The execution tree contains functionality to:
 
 import pyarrow
 
-
 from opteryx.exceptions import DatabaseError
 from opteryx.third_party.travers import Graph
 

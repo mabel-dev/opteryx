@@ -6,15 +6,15 @@ https://github.com/brmmm3/fastlogging
 """
 
 import os
+import shutil
 import sys
 
 # To use a consistent encoding
 from codecs import open
-import shutil
 
 try:
-    from setuptools import setup
     from setuptools import Extension
+    from setuptools import setup
 except ImportError:
     from distutils.core import setup
     from distutils.extension import Extension
@@ -46,9 +46,9 @@ if nocython:  # pragma: no cover
 else:  # pragma: no cover
     # noinspection PyUnresolvedReferences
     try:
-        from Cython.Distutils import build_ext
-        from Cython.Build import cythonize
         import Cython.Compiler.Version
+        from Cython.Build import cythonize
+        from Cython.Distutils import build_ext
     except ImportError:
         print(
             "Warning: cython package not installed! Creating fastlogging package in pure python mode."

@@ -24,9 +24,10 @@ It expects the filter to be applied to the 'name' column.
 """
 from typing import Iterable
 
-from opteryx.models import Columns, QueryProperties
-from opteryx.operators import BasePlanNode
 from opteryx.exceptions import SqlError
+from opteryx.models import Columns
+from opteryx.models import QueryProperties
+from opteryx.operators import BasePlanNode
 
 
 class ColumnFilterNode(BasePlanNode):

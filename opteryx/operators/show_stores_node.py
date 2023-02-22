@@ -16,9 +16,11 @@ Show Stores Node
 This is a SQL Query Execution Plan Node.
 """
 from typing import Iterable
+
 import pyarrow
 
-from opteryx.models import Columns, QueryProperties
+from opteryx.models import Columns
+from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 
 

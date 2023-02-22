@@ -13,7 +13,8 @@
 import numpy
 
 from opteryx.exceptions import SqlError
-from opteryx.utils import intervals, dates
+from opteryx.utils import dates
+from opteryx.utils import intervals
 
 
 def generate_series(*args):

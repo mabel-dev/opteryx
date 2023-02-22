@@ -19,15 +19,16 @@ This Node eliminates columns that are not needed in a Relation. This is also the
 that performs column renames.
 """
 import time
-
 from typing import Iterable
 
 import pyarrow
 
 from opteryx.exceptions import SqlError
-from opteryx.managers.expression import ExpressionTreeNode, evaluate_and_append
+from opteryx.managers.expression import LITERAL_TYPE
+from opteryx.managers.expression import ExpressionTreeNode
+from opteryx.managers.expression import NodeType
+from opteryx.managers.expression import evaluate_and_append
 from opteryx.managers.expression import format_expression
-from opteryx.managers.expression import NodeType, LITERAL_TYPE
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 from opteryx.utils import random_int

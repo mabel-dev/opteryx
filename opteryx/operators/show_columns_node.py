@@ -19,15 +19,19 @@ Gives information about a dataset's columns
 """
 from functools import reduce
 from typing import Iterable
-from numpy import nan, nanmin, nanmax
 
 import numpy
 import orjson
 import pyarrow
+from numpy import nan
+from numpy import nanmax
+from numpy import nanmin
 
-from opteryx.attribute_types import OPTERYX_TYPES, determine_type
+from opteryx.attribute_types import OPTERYX_TYPES
+from opteryx.attribute_types import determine_type
 from opteryx.exceptions import SqlError
-from opteryx.models import Columns, QueryProperties
+from opteryx.models import Columns
+from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 
 MAX_COLLECTOR: int = 17

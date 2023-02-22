@@ -24,9 +24,11 @@ import numpy
 import orjson
 import pyarrow
 
-from opteryx.attribute_types import OPTERYX_TYPES, determine_type
+from opteryx.attribute_types import OPTERYX_TYPES
+from opteryx.attribute_types import determine_type
 from opteryx.exceptions import SqlError
-from opteryx.models import Columns, QueryProperties
+from opteryx.models import Columns
+from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 
 MAX_COLLECTOR: int = 8

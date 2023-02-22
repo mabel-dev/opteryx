@@ -20,7 +20,6 @@ accessed. This relies on Python dictionaries being ordered.
 """
 
 import io
-
 from typing import Iterable
 
 from opteryx.managers.kvstores import BaseKeyValueStore

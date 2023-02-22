@@ -17,7 +17,8 @@ Type: Heuristic
 Goal: Preposition for following actions
 """
 from opteryx import operators
-from opteryx.managers.expression import ExpressionTreeNode, NodeType
+from opteryx.managers.expression import ExpressionTreeNode
+from opteryx.managers.expression import NodeType
 
 
 def apply_demorgans_law(plan, properties):

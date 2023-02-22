@@ -14,7 +14,6 @@ import itertools
 import random
 
 import numpy
-
 from cityhash import CityHash64
 
 
@@ -78,9 +77,9 @@ def random_string(width: int = 16):
     but this currently isn't identified as a performance bottleneck, the last
     rewrite was incidental when writing tests for a hasher.
     """
-    from base64 import b64encode
-    import struct
     import random
+    import struct
+    from base64 import b64encode
 
     words: int = int(-(width * 0.75) // -8) + 1
 

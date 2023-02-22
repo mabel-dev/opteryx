@@ -19,12 +19,15 @@ a function and a reference to it in the dictionary.
 import numpy
 import pyarrow
 
-from opteryx import operators, functions
-from opteryx.exceptions import SqlError, UnsupportedSyntaxError
+from opteryx import functions
+from opteryx import operators
+from opteryx.exceptions import SqlError
+from opteryx.exceptions import UnsupportedSyntaxError
 from opteryx.functions.binary_operators import BINARY_OPERATORS
 from opteryx.managers.expression import ExpressionTreeNode
 from opteryx.managers.expression import NodeType
-from opteryx.utils import dates, fuzzy_search
+from opteryx.utils import dates
+from opteryx.utils import fuzzy_search
 
 
 def literal_boolean(branch, alias: list = None, key=None):

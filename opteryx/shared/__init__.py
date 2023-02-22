@@ -11,5 +11,5 @@
 # limitations under the License.
 
 from .buffer_pool import BufferPool
-from .query_statistics import QueryStatistics
 from .materialized_datasets import MaterializedDatasets
+from .query_statistics import QueryStatistics

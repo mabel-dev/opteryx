@@ -16,9 +16,10 @@ Show Variables Node
 This is a SQL Query Execution Plan Node.
 """
 from typing import Iterable
-import pyarrow
-from opteryx.exceptions import SqlError
 
+import pyarrow
+
+from opteryx.exceptions import SqlError
 from opteryx.models import Columns
 from opteryx.operators import BasePlanNode
 

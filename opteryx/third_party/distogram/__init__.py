@@ -1,4 +1,15 @@
 # type:ignore
+import math
+from bisect import bisect_left
+from functools import reduce
+from itertools import accumulate
+from operator import itemgetter
+from typing import List
+from typing import Optional
+from typing import Tuple
+
+import numpy
+
 __author__ = """Romain Picard"""
 __email__ = "romain.picard@oakbits.com"
 __version__ = "3.0.0"
@@ -10,15 +21,8 @@ The following changes have been made for Opteryx:
 - Bulk load functionality added
 """
 
-import math
-from bisect import bisect_left
-from functools import reduce
-from itertools import accumulate
-from operator import itemgetter
 
-import numpy
 
-from typing import List, Optional, Tuple
 
 
 EPSILON = 1e-5

@@ -3,7 +3,6 @@ Original code modified for Opteryx.
 """
 import numpy
 import pyarrow
-
 from pyarrow import compute
 
 from opteryx.attribute_types import PARQUET_TYPES

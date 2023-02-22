@@ -15,21 +15,21 @@ These are a set of functions that can be applied to data.
 """
 
 
-from cityhash import CityHash64
-from pyarrow import compute
-from pyarrow import ArrowNotImplementedError
-
 import numpy
 import pyarrow
+from cityhash import CityHash64
+from pyarrow import ArrowNotImplementedError
+from pyarrow import compute
 
 import opteryx
-
-from opteryx.exceptions import SqlError, UnsupportedSyntaxError
+from opteryx.exceptions import SqlError
+from opteryx.exceptions import UnsupportedSyntaxError
 from opteryx.functions import date_functions
 from opteryx.functions import number_functions
 from opteryx.functions import other_functions
 from opteryx.functions import string_functions
-from opteryx.utils import arrays, dates
+from opteryx.utils import arrays
+from opteryx.utils import dates
 
 
 def get_version():

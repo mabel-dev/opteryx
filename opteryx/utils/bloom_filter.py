@@ -133,8 +133,8 @@ class BloomFilter:
 
 if __name__ == "__main__":  # pragma: no cover
     b = BloomFilter()
-    import time
     import random
+    import time
 
     def unique_id():
         return f"{hex(random.getrandbits(40))}"

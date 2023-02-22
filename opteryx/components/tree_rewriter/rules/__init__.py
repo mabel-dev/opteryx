@@ -13,9 +13,9 @@
 # fmt: off
 from .rule_apply_demorgans_law import apply_demorgans_law
 from .rule_constant_evaluations import eliminate_constant_evaluations
-from .rule_function_evaluations import eliminate_fixed_function_evaluations
 from .rule_defragment_morsels import defragment_morsels
 from .rule_eliminate_negations import eliminate_negations
+from .rule_function_evaluations import eliminate_fixed_function_evaluations
 from .rule_move_literal_join_filters import move_literal_join_filters
 from .rule_predicate_pushdown import predicate_pushdown
 from .rule_split_conjunctive_predicates import split_conjunctive_predicates

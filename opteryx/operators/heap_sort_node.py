@@ -29,17 +29,17 @@ Early testing with a ~10m record dataset:
 - heapsort: 9.8 seconds
 """
 import time
-
 from typing import Iterable
 
 import pyarrow
-
 from pyarrow import Table
 
-from opteryx.exceptions import ColumnNotFoundError, SqlError
-from opteryx.managers.expression import format_expression
+from opteryx.exceptions import ColumnNotFoundError
+from opteryx.exceptions import SqlError
 from opteryx.managers.expression import NodeType
-from opteryx.models import Columns, QueryProperties
+from opteryx.managers.expression import format_expression
+from opteryx.models import Columns
+from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 
 

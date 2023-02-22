@@ -15,6 +15,7 @@ This implements an interface to Memcached
 
 import io
 import os
+
 from opteryx.exceptions import MissingDependencyError
 from opteryx.managers.kvstores import BaseKeyValueStore
 

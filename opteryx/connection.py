@@ -16,18 +16,19 @@ stores, it is not compliant with the standard:
 https://www.python.org/dev/peps/pep-0249/
 """
 import time
-
-from typing import Dict, List, Optional
+from typing import Dict
+from typing import List
+from typing import Optional
 from uuid import uuid4
 
 from pyarrow import Table
 
+from opteryx import utils
 from opteryx.exceptions import CursorInvalidStateError
 from opteryx.exceptions import EmptyResultSetError
 from opteryx.exceptions import MissingDependencyError
-from opteryx.shared import QueryStatistics
 from opteryx.managers.kvstores import BaseKeyValueStore
-from opteryx import utils
+from opteryx.shared import QueryStatistics
 
 CURSOR_NOT_RUN = "Cursor must be in an executed state"
 
@@ -252,7 +253,8 @@ class Cursor:
         max_column_width: int = 30,
         table_width=True,
     ):  # pragma: no cover
-        from opteryx.utils.display import html_table, ascii_table
+        from opteryx.utils.display import ascii_table
+        from opteryx.utils.display import html_table
 
         try:
             from IPython import get_ipython
@@ -262,7 +264,8 @@ class Cursor:
             i_am_in_a_notebook = False
 
         if i_am_in_a_notebook:
-            from IPython.display import HTML, display
+            from IPython.display import HTML
+            from IPython.display import display
 
             html = html_table(iter(self.fetchmany(size, as_dicts=True)), size)
             display(HTML(html))

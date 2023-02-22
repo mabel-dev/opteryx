@@ -17,8 +17,10 @@ Type: Heuristic
 Goal: Reduce complexity
 """
 from opteryx import operators
-from opteryx.functions import date_functions, get_version
-from opteryx.managers.expression import ExpressionTreeNode, NodeType
+from opteryx.functions import date_functions
+from opteryx.functions import get_version
+from opteryx.managers.expression import ExpressionTreeNode
+from opteryx.managers.expression import NodeType
 
 FIXED_OUTCOME_FUNCTIONS = {
     "CURRENT_TIME": (date_functions.get_now, NodeType.LITERAL_TIMESTAMP),

@@ -1,9 +1,11 @@
 from __future__ import print_function
-import sys
-import re
-import os
+
 import importlib
 import inspect
+import os
+import re
+import sys
+
 import pyximport
 
 pyximport.install()

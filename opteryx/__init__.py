@@ -13,10 +13,12 @@ import os
 
 from opteryx import config
 from opteryx.connection import Connection
-from opteryx.connectors import register_arrow, register_df, register_store
-from opteryx.third_party.fastlogging import LogInit, GetLogger
+from opteryx.connectors import register_arrow
+from opteryx.connectors import register_df
+from opteryx.connectors import register_store
+from opteryx.third_party.fastlogging import GetLogger
+from opteryx.third_party.fastlogging import LogInit
 from opteryx.version import __version__
-
 
 __author__: str = "@joocer"
 

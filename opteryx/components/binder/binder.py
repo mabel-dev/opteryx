@@ -17,12 +17,12 @@
 
 import datetime
 import decimal
-
 from typing import Iterable
 
 import numpy
 
-from opteryx.exceptions import ProgrammingError, SqlError
+from opteryx.exceptions import ProgrammingError
+from opteryx.exceptions import SqlError
 from opteryx.models import QueryProperties
 
 

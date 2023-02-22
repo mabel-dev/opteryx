@@ -11,6 +11,5 @@
 # limitations under the License.
 
 from .base_partition_scheme import BasePartitionScheme
-
 from .default_partitions import DefaultPartitionScheme
 from .mabel_partitions import MabelPartitionScheme

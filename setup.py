@@ -1,9 +1,11 @@
-from typing import Any, Dict
+from typing import Any
+from typing import Dict
 
 import numpy
-
 from Cython.Build import cythonize
-from setuptools import Extension, find_packages, setup
+from setuptools import Extension
+from setuptools import find_packages
+from setuptools import setup
 from setuptools_rust import RustExtension
 
 LIBRARY = "opteryx"
