@@ -10,13 +10,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from opteryx import operators
-from opteryx.components.logical_planner import builders, custom_builders
-from opteryx.connectors import connector_factory, DiskConnector
-from opteryx.exceptions import ProgrammingError, SqlError
-from opteryx.managers.expression import deduplicate_list_of_nodes
+from opteryx.components.logical_planner import builders
+from opteryx.components.logical_planner import custom_builders
+from opteryx.connectors import DiskConnector
+from opteryx.connectors import connector_factory
+from opteryx.exceptions import ProgrammingError
+from opteryx.exceptions import SqlError
 from opteryx.managers.expression import ExpressionTreeNode
-from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.managers.expression import NodeType
+from opteryx.managers.expression import deduplicate_list_of_nodes
+from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.models import ExecutionTree
 from opteryx.utils import paths
 

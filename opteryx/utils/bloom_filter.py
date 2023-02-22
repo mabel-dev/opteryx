@@ -26,7 +26,6 @@ limitations under the License.
 """
 
 from cityhash import CityHash32
-
 from opteryx.utils.bitarray.bitarray import bitarray
 
 HASH_SEEDS = (

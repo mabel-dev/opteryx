@@ -14,6 +14,7 @@ import itertools
 import random
 
 import numpy
+
 from cityhash import CityHash64
 
 

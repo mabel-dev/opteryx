@@ -11,16 +11,16 @@
 # limitations under the License.
 import pyarrow
 
-from .base.base_document_storage_adapter import BaseDocumentStorageAdapter
-from .base.base_blob_storage_adapter import BaseBlobStorageAdapter
+from .base.base_blob_storage_adapter import BaseBlobStorageAdapter  # NOQA
+from .base.base_document_storage_adapter import BaseDocumentStorageAdapter  # NOQA
 
 from opteryx.config import DATASET_PREFIX_MAPPING
 from opteryx.connectors.arrow_connector import ArrowConnector
 from opteryx.connectors.aws_s3_connector import AwsS3Connector
-from opteryx.connectors.hadro_connector import HadroConnector
 from opteryx.connectors.disk_connector import DiskConnector
-from opteryx.connectors.gcp_firestore_connector import GcpFireStoreConnector
 from opteryx.connectors.gcp_cloudstorage_connector import GcpCloudStorageConnector
+from opteryx.connectors.gcp_firestore_connector import GcpFireStoreConnector
+from opteryx.connectors.hadro_connector import HadroConnector
 from opteryx.connectors.mongodb_connector import MongoDbConnector
 from opteryx.connectors.sql_connector import SqlConnector
 from opteryx.shared import MaterializedDatasets

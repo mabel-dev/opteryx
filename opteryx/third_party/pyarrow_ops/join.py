@@ -1,4 +1,5 @@
 import numpy as np
+
 from cjoin import cython_inner_join
 from cjoin import cython_left_join
 

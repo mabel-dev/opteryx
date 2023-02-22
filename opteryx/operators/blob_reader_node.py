@@ -24,8 +24,8 @@ import time
 from typing import Iterable
 
 import pyarrow
-from cityhash import CityHash64
 
+from cityhash import CityHash64
 from opteryx import config
 from opteryx.exceptions import DatasetNotFoundError
 from opteryx.managers.expression import ExpressionTreeNode
