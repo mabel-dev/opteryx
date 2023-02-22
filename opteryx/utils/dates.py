@@ -173,8 +173,6 @@ def parse_iso(value):
 EPOCH: date = datetime(1970, 1, 1, tzinfo=timezone.utc)
 
 
-
-
 def date_trunc(truncate_to, dt):
     # convert acceptable non datetime values to datetime
     dt = parse_iso(dt)

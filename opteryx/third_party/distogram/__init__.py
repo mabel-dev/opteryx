@@ -22,9 +22,6 @@ The following changes have been made for Opteryx:
 """
 
 
-
-
-
 EPSILON = 1e-5
 BIN_COUNT: int = 50
 Bin = Tuple[float, int]

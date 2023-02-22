@@ -39,9 +39,6 @@ sys.path.insert(1, os.path.join(sys.path[0], "../../../.."))
 """2xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"""
 
 
-
-
-
 class LogicalPlanStepType(int, Enum):
     PROJECT = auto()  # field selection
     SELECT = auto()  # tuple filtering
