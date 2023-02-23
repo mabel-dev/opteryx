@@ -35,9 +35,7 @@ DATE_TESTS = [
 
 @pytest.mark.parametrize("string, expect", DATE_TESTS)
 def test_date_parser(string, expect):
-    assert (
-        dates.parse_iso(string) == expect
-    ), f"{string}  {dates.parse_iso(string)}  {expect}"
+    assert dates.parse_iso(string) == expect, f"{string}  {dates.parse_iso(string)}  {expect}"
 
 
 if __name__ == "__main__":  # pragma: no cover

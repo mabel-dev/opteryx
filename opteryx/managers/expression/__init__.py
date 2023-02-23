@@ -17,23 +17,22 @@ It is defined as an expression tree of binary and unary operators, and functions
 
 Expressions are evaluated against an entire morsel at a time.
 """
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+from dataclasses import field
 from enum import Enum
 from typing import Any
 
 import numpy
 import pyarrow
-
-from cityhash import CityHash64
 from pyarrow import Table
 
+from cityhash import CityHash64
 from opteryx.functions import FUNCTIONS
 from opteryx.functions.binary_operators import binary_operations
 from opteryx.functions.unary_operations import UNARY_OPERATIONS
 from opteryx.models import Columns
 from opteryx.third_party.pyarrow_ops.ops import filter_operations
 from opteryx.third_party.pyarrow_ops.ops import filter_operations_for_display
-
 
 # These are bit-masks
 LOGICAL_TYPE: int = int("0001", 2)
@@ -69,17 +68,15 @@ def format_expression(root):
             if root.value == "CASE":
                 con = [format_expression(a) for a in root.parameters[0].value]
                 vals = [format_expression(a) for a in root.parameters[1].value]
-                return (
-                    "CASE "
-                    + "".join([f"WHEN {c} THEN {v} " for c, v in zip(con, vals)])
-                    + "END"
-                )
+                return "CASE " + "".join([f"WHEN {c} THEN {v} " for c, v in zip(con, vals)]) + "END"
             if root.value == "ARRAY_AGG":
                 distinct = "DISTINCT " if root.parameters[1] else ""
                 order = f" ORDER BY {root.parameters[2]}" if root.parameters[2] else ""
                 limit = f" LIMIT {root.parameters[3]}" if root.parameters[3] else ""
                 return f"{root.value.upper()}({distinct}{format_expression(root.parameters[0])}{order}{limit})"
-            return f"{root.value.upper()}({','.join([format_expression(e) for e in root.parameters])})"
+            return (
+                f"{root.value.upper()}({','.join([format_expression(e) for e in root.parameters])})"
+            )
         if node_type == NodeType.WILDCARD:
             return "*"
         if node_type == NodeType.BINARY_OPERATOR:
@@ -200,9 +197,7 @@ class ExpressionTreeNode:
         return str(self.value)
 
 
-def _inner_evaluate(
-    root: ExpressionTreeNode, table: Table, columns, for_display: bool = False
-):
+def _inner_evaluate(root: ExpressionTreeNode, table: Table, columns, for_display: bool = False):
     node_type = root.token_type
 
     # BOOLEAN OPERATORS
@@ -238,8 +233,7 @@ def _inner_evaluate(
     if node_type & INTERNAL_TYPE == INTERNAL_TYPE:
         if node_type == NodeType.FUNCTION:
             parameters = [
-                _inner_evaluate(param, table, columns, for_display)
-                for param in root.parameters
+                _inner_evaluate(param, table, columns, for_display) for param in root.parameters
             ]
             # zero parameter functions get the number of rows as the parameter
             if len(parameters) == 0:
@@ -304,9 +298,7 @@ def _inner_evaluate(
 
 def evaluate(expression: ExpressionTreeNode, table: Table, for_display: bool = False):
     columns = Columns(table)
-    result = _inner_evaluate(
-        root=expression, table=table, columns=columns, for_display=for_display
-    )
+    result = _inner_evaluate(root=expression, table=table, columns=columns, for_display=for_display)
 
     if not isinstance(result, (pyarrow.Array, numpy.ndarray)):
         result = numpy.array(result)
@@ -407,9 +399,7 @@ def evaluate_and_append(expressions, table: Table, seed: str = None):
             columns.add_alias(new_column_name, alias)
             columns.set_preferred_name(new_column_name, alias[0])
 
-            statement = ExpressionTreeNode(
-                NodeType.IDENTIFIER, value=new_column_name, alias=alias
-            )
+            statement = ExpressionTreeNode(NodeType.IDENTIFIER, value=new_column_name, alias=alias)
 
         return_expressions.append(statement)
 

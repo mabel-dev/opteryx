@@ -47,12 +47,8 @@ def split_conjunctive_predicates(plan, properties):
             return plan
 
         # get the left and right filters
-        left_node = operators.SelectionNode(
-            filter=selection.left, properties=properties
-        )
-        right_node = operators.SelectionNode(
-            filter=selection.right, properties=properties
-        )
+        left_node = operators.SelectionNode(filter=selection.left, properties=properties)
+        right_node = operators.SelectionNode(filter=selection.right, properties=properties)
         # insert them into the plan and remove the old node
         # we're chaining the new operators
         uid = unique_id()  # avoid collisions

@@ -17,8 +17,10 @@ Type: Heuristic
 Goal: Reduce complexity
 """
 from opteryx import operators
-from opteryx.functions import date_functions, get_version
-from opteryx.managers.expression import ExpressionTreeNode, NodeType
+from opteryx.functions import date_functions
+from opteryx.functions import get_version
+from opteryx.managers.expression import ExpressionTreeNode
+from opteryx.managers.expression import NodeType
 
 FIXED_OUTCOME_FUNCTIONS = {
     "CURRENT_TIME": (date_functions.get_now, NodeType.LITERAL_TIMESTAMP),
@@ -44,18 +46,13 @@ def eliminate_fixed_function_evaluations(plan, properties):
         """
 
         # this is the main work of this action
-        if (
-            node.token_type == NodeType.FUNCTION
-            and node.value in FIXED_OUTCOME_FUNCTIONS
-        ):
+        if node.token_type == NodeType.FUNCTION and node.value in FIXED_OUTCOME_FUNCTIONS:
             function, node_type = FIXED_OUTCOME_FUNCTIONS[node.value]
             return ExpressionTreeNode(node_type, value=function(), alias=node.alias)
 
         # walk the tree
         node.left = None if node.left is None else update_expression_tree(node.left)
-        node.centre = (
-            None if node.centre is None else update_expression_tree(node.centre)
-        )
+        node.centre = None if node.centre is None else update_expression_tree(node.centre)
         node.right = None if node.right is None else update_expression_tree(node.right)
 
         if node.parameters:

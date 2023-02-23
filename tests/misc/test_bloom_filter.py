@@ -27,9 +27,7 @@ def test_bloom_filter():
 
     # this is approximately 1% false positive rate, we're going to test between
     # 0.5 and 1.5 because this is probabilistic so are unlikely to actually get 1%
-    assert (ITERATIONS * 0.005) < collisions < (ITERATIONS * 0.015), (
-        collisions / ITERATIONS
-    )
+    assert (ITERATIONS * 0.005) < collisions < (ITERATIONS * 0.015), collisions / ITERATIONS
 
 
 def test_contains():

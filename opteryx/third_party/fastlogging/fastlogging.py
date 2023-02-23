@@ -6,14 +6,16 @@
 
 """Implements lightweight and fast logging."""
 
+import atexit
 import os
 import sys
-import atexit
 import time
 import traceback
 from collections import deque
-from threading import Thread, Timer, Event, Lock
-
+from threading import Event
+from threading import Lock
+from threading import Thread
+from threading import Timer
 
 # c cdef time_time, time_strftime, time_localtime, path_join
 time_time = time.time
@@ -63,7 +65,9 @@ LOG2SYM = {
 
 try:  # pragma: no cover
     # noinspection PyUnresolvedReferences,PyPep8Naming
-    from colorama import init as initColorama, Fore, Style
+    from colorama import Fore
+    from colorama import Style
+    from colorama import init as initColorama
 
     initColorama()
 
@@ -429,9 +433,7 @@ class Logger(object):  # pragma: no cover
                 if depth > 0:
                     msg = " " * min(depth * self._indent_inc, self._indent_max) + msg
             if "exc_info" in kwargs:
-                message = (
-                    f"{sTime}: {domain}: {LOG2SYM[level]}: {msg}\n{kwargs['exc_info']}"
-                )
+                message = f"{sTime}: {domain}: {LOG2SYM[level]}: {msg}\n{kwargs['exc_info']}"
             else:
                 message = f"{sTime}: {domain}: {LOG2SYM[level]}: {msg}"
         else:
@@ -478,9 +480,7 @@ class Logger(object):  # pragma: no cover
                     print(message, file=self.stdout if level < ERROR else self.stderr)
                 else:
                     with Logger.consoleLock:
-                        print(
-                            message, file=self.stdout if level < ERROR else self.stderr
-                        )
+                        print(message, file=self.stdout if level < ERROR else self.stderr)
             else:
                 Logger.thrConsoleLogger.append((level, message))
         if hasattr(self, "client"):

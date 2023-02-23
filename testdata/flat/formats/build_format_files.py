@@ -30,9 +30,7 @@ if __name__ == "__main__":  # pragma: no cover
         source = pyarrow.json.read_json(stream)
 
     # ARROW (feather)
-    pyarrow.feather.write_feather(
-        source, "testdata/formats/arrow/tweets.arrow", compression="zstd"
-    )
+    pyarrow.feather.write_feather(source, "testdata/formats/arrow/tweets.arrow", compression="zstd")
 
     # ARROW (feather)
     pyarrow.feather.write_feather(
@@ -40,14 +38,10 @@ if __name__ == "__main__":  # pragma: no cover
     )
 
     # ORC
-    pyarrow.orc.write_table(
-        source, "testdata/formats/orc/tweets.orc", compression="ZSTD"
-    )
+    pyarrow.orc.write_table(source, "testdata/formats/orc/tweets.orc", compression="ZSTD")
 
     # ORC
-    pyarrow.orc.write_table(
-        source, "testdata/formats/orc_snappy/tweets.orc", compression="snappy"
-    )
+    pyarrow.orc.write_table(source, "testdata/formats/orc_snappy/tweets.orc", compression="snappy")
 
     # PARQUET
     pyarrow.parquet.write_table(

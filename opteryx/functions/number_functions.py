@@ -13,7 +13,6 @@
 import random
 
 import numpy
-
 from pyarrow import compute
 
 

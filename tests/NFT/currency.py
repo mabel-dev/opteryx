@@ -126,9 +126,9 @@ def get_package_summary(package=None, installed_version=None, vuln_details={}):
                 if len(versions) == 1:
                     versions = [">0"] + versions
 
-                if compare_versions(
-                    versions[0], installed_version
-                ) and compare_versions(versions[1], installed_version):
+                if compare_versions(versions[0], installed_version) and compare_versions(
+                    versions[1], installed_version
+                ):
                     result["state"] = "VULNERABLE"
                     ids = result.get("ids") or []
                     ids.append(i.get("cve"))
@@ -163,10 +163,7 @@ class CurrencyTest:
             )
 
             if package_result["state"] == "VULNERABLE":
-                if (
-                    package_result["installed_version"]
-                    == package_result["latest_version"]
-                ):
+                if package_result["installed_version"] == package_result["latest_version"]:
                     package_result["state"] = "NO PATCH"
 
             results.append(package_result["state"])

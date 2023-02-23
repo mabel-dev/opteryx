@@ -13,12 +13,13 @@
 """
 This module contains support functions for working with PyArrow
 """
-from typing import Iterable, List
-from pyarrow import Table
+from typing import Iterable
+from typing import List
 
 import pyarrow
-
-from orjson import dumps, loads
+from orjson import dumps
+from orjson import loads
+from pyarrow import Table
 
 INTERNAL_BATCH_SIZE = 500
 
@@ -103,9 +104,7 @@ def limit_records(morsels, limit):
     if len(result_set) == 0:
         return morsel
     else:
-        return pyarrow.concat_tables(result_set, promote=True).slice(
-            offset=0, length=limit
-        )
+        return pyarrow.concat_tables(result_set, promote=True).slice(offset=0, length=limit)
 
 
 def as_arrow(morsels, limit: int = None):
@@ -232,9 +231,7 @@ def coerce_columns(table, column_names):
         # if it's numeric, and not already the type we want, convert it
         if str(column.type) in ("int64", "double"):
             column = column.with_type(pyarrow.float64())
-            my_schema = my_schema.set(
-                index, pyarrow.field(column_name, pyarrow.float64())
-            )
+            my_schema = my_schema.set(index, pyarrow.field(column_name, pyarrow.float64()))
             table = table.cast(target_schema=my_schema)
 
     return table
@@ -264,14 +261,9 @@ def normalize_to_schema(table, schema):
     this_types = dict(zip(table.schema.names, table.schema.types))
 
     for column in schema.names:
-        if (
-            first_types[column] != this_types[column]
-            and first_types[column] != pyarrow.null()
-        ):
+        if first_types[column] != this_types[column] and first_types[column] != pyarrow.null():
             index = table.column_names.index(column)
-            my_schema = table.schema.set(
-                index, pyarrow.field(column, first_types[column])
-            )
+            my_schema = table.schema.set(index, pyarrow.field(column, first_types[column]))
 
             table = table.cast(target_schema=my_schema)
 

@@ -1,4 +1,5 @@
 # type:ignore
+# isort: skip_file
 import sys
 import os
 

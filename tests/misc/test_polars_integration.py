@@ -13,9 +13,7 @@ def test_polars():
     opteryx.register_df("twitter", polars_df)
     curr = opteryx.Connection().cursor()
     # this is the same statement as the CSV format test
-    curr.execute(
-        "SELECT username, user_verified FROM twitter WHERE username ILIKE '%cve%'"
-    )
+    curr.execute("SELECT username, user_verified FROM twitter WHERE username ILIKE '%cve%'")
     assert curr.shape == (2532, 2)
 
     # execute a join across a dataframe an another dataset

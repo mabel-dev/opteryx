@@ -23,7 +23,6 @@ This is built around the pyarrow table grouping functionality.
 """
 import random
 import time
-
 from typing import Iterable
 
 import numpy
@@ -31,13 +30,13 @@ import pyarrow
 
 from opteryx.exceptions import SqlError
 from opteryx.exceptions import UnsupportedSyntaxError
-from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import evaluate_and_append
 from opteryx.managers.expression import format_expression
+from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.models import QueryProperties
-from opteryx.operators import BasePlanNode
 from opteryx.models.columns import Columns
+from opteryx.operators import BasePlanNode
 
 COUNT_STAR: str = "COUNT(*)"
 
@@ -104,16 +103,12 @@ def _project(tables, fields):
     for table in tables:
         row_count = table.num_rows
         columns = Columns(table)
-        column_names = [
-            columns.get_column_from_alias(field, only_one=True) for field in fields
-        ]
+        column_names = [columns.get_column_from_alias(field, only_one=True) for field in fields]
         if len(column_names) > 0:
             yield table.select(dict.fromkeys(column_names))
         else:
             # if we can't find the column, add a placeholder column
-            yield pyarrow.Table.from_pydict(
-                {"*": numpy.full(row_count, 1, dtype=numpy.int8)}
-            )
+            yield pyarrow.Table.from_pydict({"*": numpy.full(row_count, 1, dtype=numpy.int8)})
 
 
 def _build_aggs(aggregators, columns):
@@ -141,9 +136,7 @@ def _build_aggs(aggregators, columns):
                     # count * counts nulls
                     count_options = pyarrow.compute.CountOptions(mode="all")
                 elif field_node.token_type == NodeType.IDENTIFIER:
-                    field_name = columns.get_column_from_alias(
-                        field_node.value, only_one=True
-                    )
+                    field_name = columns.get_column_from_alias(field_node.value, only_one=True)
                 elif field_node.token_type in (
                     NodeType.LITERAL_NUMERIC,
                     NodeType.LITERAL_BOOLEAN,
@@ -196,9 +189,7 @@ def _non_group_aggregates(aggregates, table, columns):
                 continue
             else:
                 column_name = format_expression(aggregate.parameters[0])
-                mapped_column_name = columns.get_column_from_alias(
-                    column_name, only_one=True
-                )
+                mapped_column_name = columns.get_column_from_alias(column_name, only_one=True)
                 raw_column_values = table[mapped_column_name].to_numpy()
             aggregate_function_name = AGGREGATORS[aggregate.value]
             # this maps a string which is the function name to that function on the
@@ -297,9 +288,7 @@ class AggregateNode(BasePlanNode):
         # merge all the morsels together into one table, selecting only the columns
         # we're pretty sure we're going to use - this will fail for datasets
         # larger than memory
-        table = pyarrow.concat_tables(
-            _project(morsels.execute(), all_identifiers), promote=True
-        )
+        table = pyarrow.concat_tables(_project(morsels.execute(), all_identifiers), promote=True)
 
         # Get any functions we need to execute before aggregating
         evaluatable_nodes = _extract_functions(self._aggregates)
@@ -341,8 +330,7 @@ class AggregateNode(BasePlanNode):
         # GROUP BY columns are deduplicated #870
         group_by_columns = list(
             dict.fromkeys(
-                columns.get_column_from_alias(group.value, only_one=True)
-                for group in self._groups
+                columns.get_column_from_alias(group.value, only_one=True) for group in self._groups
             )
         )
 
@@ -383,19 +371,14 @@ class AggregateNode(BasePlanNode):
             # or chained aggregations
             new_column_name = hex(random.getrandbits(64))
             groups = groups.rename_columns(
-                [
-                    col if col != agg_name else new_column_name
-                    for col in groups.column_names
-                ]
+                [col if col != agg_name else new_column_name for col in groups.column_names]
             )
 
             columns.add_column(new_column_name)
             columns.set_preferred_name(new_column_name, friendly_name)
             # if we have an alias for this column, add it to the metadata
             aliases = [
-                agg.alias
-                for agg in self._aggregates
-                if friendly_name == format_expression(agg)
+                agg.alias for agg in self._aggregates if friendly_name == format_expression(agg)
             ]
             aliases.append(agg_name)
             for alias in aliases:

@@ -147,9 +147,7 @@ def test_reading_identifiers():
 
     gravity_node = ExpressionTreeNode(NodeType.IDENTIFIER, value="gravity")
     gravities = evaluate(gravity_node, planets)
-    assert sorted(gravities) == [0.7, 3.7, 3.7, 8.7, 8.9, 9.0, 9.8, 11.0, 23.1], sorted(
-        gravities
-    )
+    assert sorted(gravities) == [0.7, 3.7, 3.7, 8.7, 8.9, 9.0, 9.8, 11.0, 23.1], sorted(gravities)
 
 
 def test_function_operations():
@@ -165,9 +163,7 @@ def test_function_operations():
 
     gravity = ExpressionTreeNode(NodeType.IDENTIFIER, value="gravity")
     seven = ExpressionTreeNode(NodeType.LITERAL_NUMERIC, value=7)
-    plus = ExpressionTreeNode(
-        NodeType.BINARY_OPERATOR, value="Plus", left=gravity, right=seven
-    )
+    plus = ExpressionTreeNode(NodeType.BINARY_OPERATOR, value="Plus", left=gravity, right=seven)
     multiply = ExpressionTreeNode(
         NodeType.BINARY_OPERATOR,
         value="Multiply",
@@ -189,9 +185,7 @@ def test_function_operations():
     ]  # , list(names)
 
     plussed = evaluate(plus, planets)
-    assert set(plussed).issubset(
-        [10.7, 15.9, 16.8, 10.7, 30.1, 16, 15.7, 18, 7.7]
-    ), plussed
+    assert set(plussed).issubset([10.7, 15.9, 16.8, 10.7, 30.1, 16, 15.7, 18, 7.7]), plussed
 
     timesed = evaluate(multiply, planets)
     assert set(timesed) == {
@@ -221,9 +215,7 @@ def test_compound_expressions():
         right=three_point_seven,
         left=gravity,
     )
-    gt = ExpressionTreeNode(
-        NodeType.COMPARISON_OPERATOR, value="Gt", left=multiply, right=mass
-    )
+    gt = ExpressionTreeNode(NodeType.COMPARISON_OPERATOR, value="Gt", left=multiply, right=mass)
 
     result = evaluate(gt, planets)
     assert [c for c in result] == [

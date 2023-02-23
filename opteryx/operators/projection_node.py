@@ -19,15 +19,16 @@ This Node eliminates columns that are not needed in a Relation. This is also the
 that performs column renames.
 """
 import time
-
 from typing import Iterable
 
 import pyarrow
 
 from opteryx.exceptions import SqlError
-from opteryx.managers.expression import ExpressionTreeNode, evaluate_and_append
+from opteryx.managers.expression import LITERAL_TYPE
+from opteryx.managers.expression import ExpressionTreeNode
+from opteryx.managers.expression import NodeType
+from opteryx.managers.expression import evaluate_and_append
 from opteryx.managers.expression import format_expression
-from opteryx.managers.expression import NodeType, LITERAL_TYPE
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 from opteryx.utils import random_int
@@ -46,10 +47,7 @@ class ProjectionNode(BasePlanNode):
         for attribute in projection:
             while attribute.token_type == NodeType.NESTED:
                 attribute = attribute.centre
-            if (
-                attribute.token_type == NodeType.WILDCARD
-                and attribute.value is not None
-            ):
+            if attribute.token_type == NodeType.WILDCARD and attribute.value is not None:
                 # qualified wildcard, e.g. table.*
                 self._projection[attribute.value] = None
             elif attribute.token_type in (
@@ -110,9 +108,7 @@ class ProjectionNode(BasePlanNode):
                         relation = key[0]
                         projection.extend(columns.get_columns_from_source(relation))
                     else:
-                        projection.append(
-                            columns.get_column_from_alias(key, only_one=True)
-                        )
+                        projection.append(columns.get_column_from_alias(key, only_one=True))
 
             morsel = morsel.select(projection)  # type:ignore
 

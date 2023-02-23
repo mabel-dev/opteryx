@@ -18,15 +18,14 @@ This is a SQL Query Execution Plan Node.
 This Node primarily is used for reading NoSQL sources like MongoDB and Firestore.
 """
 import time
-
 from typing import Iterable
 
 import pyarrow
 
 from opteryx.connectors.capabilities import PredicatePushable
 from opteryx.models import QueryProperties
-from opteryx.operators import BasePlanNode
 from opteryx.models.columns import Columns
+from opteryx.operators import BasePlanNode
 
 
 class CollectionReaderNode(BasePlanNode):
@@ -58,9 +57,7 @@ class CollectionReaderNode(BasePlanNode):
 
     @property
     def can_push_selection(self):
-        return (
-            isinstance(self._reader, PredicatePushable) and not self._disable_selections
-        )
+        return isinstance(self._reader, PredicatePushable) and not self._disable_selections
 
     def push_predicate(self, predicate):
         if self.can_push_selection:

@@ -1,3 +1,4 @@
+# isort: skip_file
 """
 Test basic functionality of the execution tree
 """

@@ -16,7 +16,8 @@ Rewrite Rule - Literal Join Filters
 Goal: Move filters JOIN which reference literals
 """
 from opteryx import operators
-from opteryx.managers.expression import LITERAL_TYPE, NodeType
+from opteryx.managers.expression import LITERAL_TYPE
+from opteryx.managers.expression import NodeType
 
 
 def move_literal_join_filters(plan, properties):
@@ -61,9 +62,7 @@ def move_literal_join_filters(plan, properties):
         return node, plan
 
     # find the in-scope nodes (INNER and OUTER joins)
-    join_nodes = plan.get_nodes_of_type(
-        [operators.InnerJoinNode, operators.OuterJoinNode]
-    )
+    join_nodes = plan.get_nodes_of_type([operators.InnerJoinNode, operators.OuterJoinNode])
 
     # HAVING and WHERE are selection nodes
     for nid in join_nodes:

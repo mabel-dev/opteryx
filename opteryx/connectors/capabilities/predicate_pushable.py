@@ -12,7 +12,6 @@
 from opteryx.exceptions import NotSupportedError
 from opteryx.managers.expression import NodeType
 
-
 PUSHABLE_OPERATORS = {
     # these are almost universally supported
     "Gt": ">",

@@ -31,9 +31,8 @@ The effective order of operations must be:
 
 So we just build it in that order.
 """
-from opteryx.exceptions import UnsupportedSyntaxError
-
 from opteryx.components.logical_planner import queries
+from opteryx.exceptions import UnsupportedSyntaxError
 
 
 def create_logical_plan(ast, properties):

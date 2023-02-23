@@ -23,7 +23,6 @@ The execution tree contains functionality to:
 
 import pyarrow
 
-
 from opteryx.exceptions import DatabaseError
 from opteryx.third_party.travers import Graph
 
@@ -84,9 +83,7 @@ class ExecutionTree(Graph):
         # we get the tail of the query - the first steps
         head = list(dict.fromkeys(self.get_exit_points()))
         if len(head) != 1:  # pragma: no cover
-            raise DatabaseError(
-                f"Problem executing the query plan - it has {len(head)} heads."
-            )
+            raise DatabaseError(f"Problem executing the query plan - it has {len(head)} heads.")
 
         map_operators(head)
 

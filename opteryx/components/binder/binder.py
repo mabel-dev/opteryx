@@ -17,12 +17,12 @@
 
 import datetime
 import decimal
-
 from typing import Iterable
 
 import numpy
 
-from opteryx.exceptions import ProgrammingError, SqlError
+from opteryx.exceptions import ProgrammingError
+from opteryx.exceptions import SqlError
 from opteryx.models import QueryProperties
 
 
@@ -69,8 +69,7 @@ def variable_binder(node, parameter_set, properties, query_type):
                 variable_value = properties.variables.get(token_name)
                 return _build_literal_node(variable_value.value)
         return {
-            k: variable_binder(v, parameter_set, properties, query_type)
-            for k, v in node.items()
+            k: variable_binder(v, parameter_set, properties, query_type) for k, v in node.items()
         }
     # we're a leaf
     return node

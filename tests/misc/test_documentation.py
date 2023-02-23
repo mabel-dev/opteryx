@@ -34,9 +34,7 @@ def test_readme_2():
     import opteryx
     import pandas
 
-    pandas_df = pandas.read_csv(
-        "https://storage.googleapis.com/opteryx/exoplanets/exoplanets.csv"
-    )
+    pandas_df = pandas.read_csv("https://storage.googleapis.com/opteryx/exoplanets/exoplanets.csv")
     opteryx.register_df("exoplanets", pandas_df)
     aggregated_df = opteryx.query(
         "SELECT koi_disposition, COUNT(*) FROM exoplanets GROUP BY koi_disposition;"
@@ -64,9 +62,7 @@ def test_readme_4():
     # Register the store, so we know queries for this store should be handled by
     # the GCS connector
     opteryx.register_store("opteryx", GcpCloudStorageConnector)
-    result = opteryx.query(
-        "SELECT * FROM opteryx.space_missions WITH(NO_PARTITION) LIMIT 5;"
-    )
+    result = opteryx.query("SELECT * FROM opteryx.space_missions WITH(NO_PARTITION) LIMIT 5;")
     result.head()
 
 

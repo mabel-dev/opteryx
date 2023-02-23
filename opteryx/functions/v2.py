@@ -1,4 +1,5 @@
-from typing import Any, Union
+from typing import Any
+from typing import Union
 
 import opteryx
 
@@ -29,7 +30,5 @@ FUNCTIONS = {"VERSION": Version}
 
 if __name__ == "__main__":  # pragma: no cover
     func = FUNCTIONS["VERSION"]()
-    print(
-        f"{func.__class__.__name__.upper()} (<params>) → <type>\n{func.__doc__.strip()}"
-    )
+    print(f"{func.__class__.__name__.upper()} (<params>) → <type>\n{func.__doc__.strip()}")
     print(func())

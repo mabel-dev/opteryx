@@ -23,7 +23,9 @@ import numpy
 
 from opteryx import operators
 from opteryx.functions.binary_operators import binary_operations
-from opteryx.managers.expression import ExpressionTreeNode, LITERAL_TYPE, NodeType
+from opteryx.managers.expression import LITERAL_TYPE
+from opteryx.managers.expression import ExpressionTreeNode
+from opteryx.managers.expression import NodeType
 from opteryx.third_party.pyarrow_ops.ops import filter_operations
 
 
@@ -57,9 +59,7 @@ def eliminate_constant_evaluations(plan, properties):
         """
         # walk the tree first so we can bubble constants as far up the tree as possible
         node.left = None if node.left is None else update_expression_tree(node.left)
-        node.centre = (
-            None if node.centre is None else update_expression_tree(node.centre)
-        )
+        node.centre = None if node.centre is None else update_expression_tree(node.centre)
         node.right = None if node.right is None else update_expression_tree(node.right)
 
         if node.parameters:
@@ -75,15 +75,11 @@ def eliminate_constant_evaluations(plan, properties):
             node.right and node.right.token_type & LITERAL_TYPE == LITERAL_TYPE
         ):
             if node.token_type == NodeType.COMPARISON_OPERATOR:
-                value = filter_operations(
-                    [node.left.value], node.value, [node.right.value]
-                )[0]
+                value = filter_operations([node.left.value], node.value, [node.right.value])[0]
 
                 return build_literal_node(value)
             if node.token_type == NodeType.BINARY_OPERATOR:
-                value = binary_operations(
-                    [node.left.value], node.value, [node.right.value]
-                )[0]
+                value = binary_operations([node.left.value], node.value, [node.right.value])[0]
                 return build_literal_node(value)
         return node
 

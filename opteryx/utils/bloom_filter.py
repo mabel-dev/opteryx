@@ -26,7 +26,6 @@ limitations under the License.
 """
 
 from cityhash import CityHash32
-
 from opteryx.utils.bitarray.bitarray import bitarray
 
 HASH_SEEDS = (
@@ -133,8 +132,8 @@ class BloomFilter:
 
 if __name__ == "__main__":  # pragma: no cover
     b = BloomFilter()
-    import time
     import random
+    import time
 
     def unique_id():
         return f"{hex(random.getrandbits(40))}"

@@ -1,4 +1,15 @@
 # type:ignore
+import math
+from bisect import bisect_left
+from functools import reduce
+from itertools import accumulate
+from operator import itemgetter
+from typing import List
+from typing import Optional
+from typing import Tuple
+
+import numpy
+
 __author__ = """Romain Picard"""
 __email__ = "romain.picard@oakbits.com"
 __version__ = "3.0.0"
@@ -9,16 +20,6 @@ The following changes have been made for Opteryx:
 - Dump and Load functionality
 - Bulk load functionality added
 """
-
-import math
-from bisect import bisect_left
-from functools import reduce
-from itertools import accumulate
-from operator import itemgetter
-
-import numpy
-
-from typing import List, Optional, Tuple
 
 
 EPSILON = 1e-5
@@ -93,13 +94,8 @@ class Distogram:  # pragma: no cover
         # matter.
         bin_values, counts = numpy.unique(values, return_counts=True)
         if len(bin_values) > (self._bin_count * 5):
-            counts, bin_values = numpy.histogram(
-                values, self._bin_count * 5, density=False
-            )
-            bin_values = [
-                bin_values[i] + bin_values[i + 1] / 2
-                for i in range(len(bin_values) - 1)
-            ]
+            counts, bin_values = numpy.histogram(values, self._bin_count * 5, density=False)
+            bin_values = [bin_values[i] + bin_values[i + 1] / 2 for i in range(len(bin_values) - 1)]
         for index, count in enumerate(counts):
             if count > 0:
                 update(
@@ -156,9 +152,7 @@ def _linspace(start: float, stop: float, num: int) -> List[float]:  # pragma: no
     return values
 
 
-def _moment(
-    x: List[float], counts: List[float], c: float, n: int
-) -> float:  # pragma: no cover
+def _moment(x: List[float], counts: List[float], c: float, n: int) -> float:  # pragma: no cover
     """
     Calculates the k-th moment of the distribution using the formula:
 
@@ -213,10 +207,7 @@ def _trim(h: Distogram) -> Distogram:  # pragma: no cover
         if h.diffs is not None:
             i = h.diffs.index(h.min_diff)
         else:
-            diffs = [
-                (i - 1, b[0] - h.bins[i - 1][0])
-                for i, b in enumerate(h.bins[1:], start=1)
-            ]
+            diffs = [(i - 1, b[0] - h.bins[i - 1][0]) for i, b in enumerate(h.bins[1:], start=1)]
             i, _ = min(diffs, key=itemgetter(1))
 
         v1, f1 = h.bins[i]
@@ -236,9 +227,9 @@ def _trim_in_place(
 ) -> Distogram:
     current_value, current_frequency = distogram.bins[bin_index]
     current_value = _caster(current_value)
-    distogram.bins[bin_index] = (
-        current_value * current_frequency + new_value * new_count
-    ) / (current_frequency + new_count), current_frequency + new_count
+    distogram.bins[bin_index] = (current_value * current_frequency + new_value * new_count) / (
+        current_frequency + new_count
+    ), current_frequency + new_count
     _update_diffs(distogram, bin_index)
     return distogram
 
@@ -250,9 +241,7 @@ def _compute_diffs(h: Distogram) -> List[float]:  # pragma: no cover
     return diffs
 
 
-def _search_in_place_index(
-    h: Distogram, new_value: float, index: int
-) -> int:  # pragma: no cover
+def _search_in_place_index(h: Distogram, new_value: float, index: int) -> int:  # pragma: no cover
     if h.diffs is None:
         h.diffs = _compute_diffs(h)
 
@@ -494,14 +483,11 @@ def frequency_density_distribution(
         return None
 
     bin_bounds = [float(i[0]) for i in h.bins]
-    bin_widths = [
-        (bin_bounds[i] - bin_bounds[i - 1]) for i in range(1, len(bin_bounds))
-    ]
+    bin_widths = [(bin_bounds[i] - bin_bounds[i - 1]) for i in range(1, len(bin_bounds))]
     counts = [0]
     counts.extend([count_at(h, e) for e in bin_bounds[1:]])
     densities = [
-        (new - last) / delta
-        for new, last, delta in zip(counts[1:], counts[:-1], bin_widths)
+        (new - last) / delta for new, last, delta in zip(counts[1:], counts[:-1], bin_widths)
     ]
     return (densities, bin_bounds)
 

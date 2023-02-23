@@ -11,12 +11,10 @@
 # limitations under the License.
 
 from opteryx import config
-
 from opteryx.connectors import BaseDocumentStorageAdapter
 from opteryx.connectors.capabilities import PredicatePushable
 from opteryx.exceptions import MissingDependencyError
 from opteryx.exceptions import UnmetRequirementError
-
 
 GCP_PROJECT_ID = config.GCP_PROJECT_ID
 BATCH_SIZE = 5000

@@ -16,7 +16,6 @@ Implement conditions which are essentially unary statements, usually IS statemen
 This are executed as functions on arrays rather than functions on elements in arrays.
 """
 import numpy
-
 from pyarrow import compute
 
 

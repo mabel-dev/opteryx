@@ -1,9 +1,11 @@
-from typing import Any, Dict
+from typing import Any
+from typing import Dict
 
 import numpy
-
 from Cython.Build import cythonize
-from setuptools import Extension, find_packages, setup
+from setuptools import Extension
+from setuptools import find_packages
+from setuptools import setup
 from setuptools_rust import RustExtension
 
 LIBRARY = "opteryx"
@@ -13,9 +15,7 @@ def rust_build(setup_kwargs: Dict[str, Any]) -> None:
     setup_kwargs.update(
         {
             "rust_extensions": [
-                RustExtension(
-                    "opteryx.third_party.sqloxide.sqloxide", "Cargo.toml", debug=False
-                )
+                RustExtension("opteryx.third_party.sqloxide.sqloxide", "Cargo.toml", debug=False)
             ],
             "zip_safe": False,
         }

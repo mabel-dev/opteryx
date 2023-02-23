@@ -861,13 +861,9 @@ def test_sql_battery(statement, rows, columns, exception):
     try:
         cursor.execute(statement)
         actual_rows, actual_columns = cursor.shape
-        assert (
-            rows == actual_rows
-        ), f"Query returned {actual_rows} rows but {rows} were expected"
+        assert rows == actual_rows, f"Query returned {actual_rows} rows but {rows} were expected"
         f" ({actual_columns} vs {columns})\n{statement}\n{cursor.head(10)}"
-        assert (
-            columns == actual_columns
-        ), f"Query returned {actual_columns} cols but {columns} were"
+        assert columns == actual_columns, f"Query returned {actual_columns} cols but {columns} were"
         f" expected\n{statement}\n{cursor.head(10)}"
 
     except Exception as err:
@@ -901,8 +897,6 @@ if __name__ == "__main__":  # pragma: no cover
             end="",
         )
         test_sql_battery(statement, rows, cols, err)
-        print(
-            f"\033[0;32m{str(int((time.monotonic_ns() - start)/1e6)).rjust(4)}ms\033[0m ✅"
-        )
+        print(f"\033[0;32m{str(int((time.monotonic_ns() - start)/1e6)).rjust(4)}ms\033[0m ✅")
 
     print("--- ✅ \033[0;32mdone\033[0m")

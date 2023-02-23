@@ -18,14 +18,14 @@ This is a SQL Query Execution Plan Node.
 This Node reads files to a PyArrow Table.
 """
 import time
-
 from typing import Iterable
 
 import pyarrow
 
 from opteryx.managers.expression import ExpressionTreeNode
 from opteryx.managers.expression import NodeType
-from opteryx.models import Columns, QueryProperties
+from opteryx.models import Columns
+from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 from opteryx.utils.file_decoders import KNOWN_EXTENSIONS
 
@@ -95,9 +95,7 @@ class FileReaderNode(BasePlanNode):
         if self._filter is None:
             self._filter = predicate
             return True
-        self._filter = ExpressionTreeNode(
-            NodeType.AND, left=predicate, right=self._filter
-        )
+        self._filter = ExpressionTreeNode(NodeType.AND, left=predicate, right=self._filter)
         return True
 
     @property

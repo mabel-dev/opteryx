@@ -3,7 +3,8 @@ import numpy as np
 from cjoin import cython_inner_join
 from cjoin import cython_left_join
 
-from .helpers import columns_to_array_denulled, groupify_array
+from .helpers import columns_to_array_denulled
+from .helpers import groupify_array
 
 
 def align_tables(t1, t2, l1, l2):
@@ -21,9 +22,9 @@ def align_tables(t1, t2, l1, l2):
 def inner_join(left, right, left_on, right_on):
     # Gather join columns - create arrays of the hashes of the values in the column
     # updated for Opteryx
-    l_array, r_array = columns_to_array_denulled(
-        left, left_on
-    ), columns_to_array_denulled(right, right_on)
+    l_array, r_array = columns_to_array_denulled(left, left_on), columns_to_array_denulled(
+        right, right_on
+    )
 
     # Groupify the join array, this generates a set of data about the array
     # including the unique values in the array, and the sort order for the array.
@@ -32,9 +33,7 @@ def inner_join(left, right, left_on, right_on):
 
     # Create the list of unique values combining the column from the left and the right
     # tables
-    unique, inv = np.unique(
-        np.concatenate([l_distinct, r_distinct]), return_inverse=True
-    )
+    unique, inv = np.unique(np.concatenate([l_distinct, r_distinct]), return_inverse=True)
 
     # Align Left side
     # the inv array the positions in the unique list of the combined left and right list,
@@ -73,14 +72,12 @@ def inner_join(left, right, left_on, right_on):
     return align_tables(left, right, left_align, right_align)
 
 
-def left_join(
-    left, right, left_on, right_on
-):  # pragma: no cover - currently not called
+def left_join(left, right, left_on, right_on):  # pragma: no cover - currently not called
     # Gather join columns - create arrays of the hashes of the values in the column
     # new for Opteryx
-    l_array, r_array = columns_to_array_denulled(
-        left, left_on
-    ), columns_to_array_denulled(right, right_on)
+    l_array, r_array = columns_to_array_denulled(left, left_on), columns_to_array_denulled(
+        right, right_on
+    )
 
     # Groupify the join array, this generates a set of data about the array
     # including the unique values in the array, and the sort order for the array.
@@ -89,9 +86,7 @@ def left_join(
 
     # Create the list of unique values combining the column from the left and the right
     # tables
-    unique, inv = np.unique(
-        np.concatenate([l_distinct, r_distinct]), return_inverse=True
-    )
+    unique, inv = np.unique(np.concatenate([l_distinct, r_distinct]), return_inverse=True)
 
     # Align Left side
     # the inv array the positions in the unique list of the combined left and right list,
@@ -118,9 +113,7 @@ def left_join(
     rbic[rinv] = rbi
 
     rows = len(l_array) * len(r_array)
-    left_align, right_align = np.empty(rows, dtype=np.int64), np.empty(
-        rows, dtype=np.int64
-    )
+    left_align, right_align = np.empty(rows, dtype=np.int64), np.empty(rows, dtype=np.int64)
 
     # Perform cjoin
     left_align, right_align = cython_left_join(

@@ -19,15 +19,19 @@ Gives information about a dataset's columns
 """
 from functools import reduce
 from typing import Iterable
-from numpy import nan, nanmin, nanmax
 
 import numpy
 import orjson
 import pyarrow
+from numpy import nan
+from numpy import nanmax
+from numpy import nanmin
 
-from opteryx.attribute_types import OPTERYX_TYPES, determine_type
+from opteryx.attribute_types import OPTERYX_TYPES
+from opteryx.attribute_types import determine_type
 from opteryx.exceptions import SqlError
-from opteryx.models import Columns, QueryProperties
+from opteryx.models import Columns
+from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 
 MAX_COLLECTOR: int = 17
@@ -191,11 +195,7 @@ def _extended_collector(morsels):
                 # calculate the missing count more robustly
                 missing = reduce(
                     lambda x, y: x + 1,
-                    (
-                        i
-                        for i in column_data
-                        if i in (None, numpy.nan) or not i.is_valid
-                    ),
+                    (i for i in column_data if i in (None, numpy.nan) or not i.is_valid),
                     0,
                 )
                 profile["missing"] += missing
@@ -240,9 +240,7 @@ def _extended_collector(morsels):
                     column_data = (i.as_py() for i in column_data)
 
                 # remove empty values
-                column_data = numpy.array(
-                    [i for i in column_data if i not in (None, numpy.nan)]
-                )
+                column_data = numpy.array([i for i in column_data if i not in (None, numpy.nan)])
 
                 if _type in (
                     OPTERYX_TYPES.BOOLEAN,
@@ -297,9 +295,7 @@ def _extended_collector(morsels):
                 if len(counter) < MAX_COLLECTOR:
                     counts = list(counter.values())
                     if min(counts) != max(counts):
-                        profile["most_frequent_values"] = [
-                            str(k) for k in counter.keys()
-                        ]
+                        profile["most_frequent_values"] = [str(k) for k in counter.keys()]
                         profile["most_frequent_counts"] = counts
 
         # remove collectors

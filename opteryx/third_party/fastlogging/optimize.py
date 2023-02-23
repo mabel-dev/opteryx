@@ -1,17 +1,22 @@
+# mypy: disable-error-code=attr-defined
+import ast
+import importlib.util
+import inspect
+import marshal
+
 # type:ignore
 import os
-import time
-import marshal
 import struct
-import ast
-import inspect
-import importlib.util
+import time
 
 # noinspection PyUnresolvedReferences
 from types import ModuleType
 
-from .fastlogging import DEBUG, INFO, WARNING, ERROR, FATAL
-
+from .fastlogging import DEBUG
+from .fastlogging import ERROR
+from .fastlogging import FATAL
+from .fastlogging import INFO
+from .fastlogging import WARNING
 
 optimized = set()
 
@@ -91,9 +96,7 @@ class OptimizeAst(ast.NodeTransformer):  # pragma: no cover
         if self.__const2value:
             levelNum = self.__level2value[levelName]
             return ast.Num(n=levelNum), ast.Num(n=levelNum)
-        return ast.Name(id=levelName, ctx=ast.Load()), ast.Name(
-            id=levelName, ctx=ast.Load()
-        )
+        return ast.Name(id=levelName, ctx=ast.Load()), ast.Name(id=levelName, ctx=ast.Load())
 
     def __levelName_compare_args(self, args):
         # noinspection PyBroadException
@@ -153,9 +156,7 @@ class OptimizeAst(ast.NodeTransformer):  # pragma: no cover
         attr = body.func.attr
         if attr in self.__remove:
             return None
-        levelName, compare, args = self.__levelName_compare_args(
-            node.test.comparators[0]
-        )
+        levelName, compare, args = self.__levelName_compare_args(node.test.comparators[0])
         if levelName in self.__removeLevel:
             return None
         if attr == "log":
@@ -222,9 +223,7 @@ class OptimizeAst(ast.NodeTransformer):  # pragma: no cover
                         self.__expr(self.__level2func[levelName], value_args, value),
                         node,
                     )
-                return ast.copy_location(
-                    self.__expr(attr, [args] + value_args, value), node
-                )
+                return ast.copy_location(self.__expr(attr, [args] + value_args, value), node)
             # Optimize
             args = [args] + value_args
         else:
@@ -259,13 +258,9 @@ def OptimizeObj(
     value2const=False,
 ):  # pragma: no cover
     tree = ast.parse(inspect.getsource(obj))
-    tree = OptimizeAst(
-        id_, optimize, deoptimize, remove, const2value, value2const
-    ).visit(tree)
+    tree = OptimizeAst(id_, optimize, deoptimize, remove, const2value, value2const).visit(tree)
     if inspect.ismodule(obj):
-        return compile(
-            ast.fix_missing_locations(tree), filename=obj.__file__, mode="exec"
-        )
+        return compile(ast.fix_missing_locations(tree), filename=obj.__file__, mode="exec")
     module = ModuleType("tempModule")
     module.__dict__.update(glob)
     exec(
@@ -279,9 +274,7 @@ def OptimizeModule(
     obj, id_, optimize=0, deoptimize=0, remove=0, const2value=False, value2const=False
 ):  # pragma: no cover
     tree = ast.parse(inspect.getsource(obj))
-    tree = OptimizeAst(
-        id_, optimize, deoptimize, remove, const2value, value2const
-    ).visit(tree)
+    tree = OptimizeAst(id_, optimize, deoptimize, remove, const2value, value2const).visit(tree)
     if inspect.ismodule(obj):
         fileName = obj.__file__
     else:
@@ -300,9 +293,7 @@ def OptimizeFile(
     value2const=False,
 ):  # pragma: no cover
     tree = ast.parse(open(fileName).read())
-    tree = OptimizeAst(
-        id_, optimize, deoptimize, remove, const2value, value2const
-    ).visit(tree)
+    tree = OptimizeAst(id_, optimize, deoptimize, remove, const2value, value2const).visit(tree)
     module = ModuleType("tempModule")
     module.__dict__.update(glob)
     exec(
@@ -319,9 +310,7 @@ def Optimize(
         if obj.__name__ in optimized:
             return obj
         optimized.add(obj.__name__)
-        return OptimizeObj(
-            glob, obj, id_, optimize, deoptimize, remove, const2value, value2const
-        )
+        return OptimizeObj(glob, obj, id_, optimize, deoptimize, remove, const2value, value2const)
 
     return OptimizeDecorator
 

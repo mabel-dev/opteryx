@@ -13,10 +13,12 @@ import os
 
 from opteryx import config
 from opteryx.connection import Connection
-from opteryx.connectors import register_arrow, register_df, register_store
-from opteryx.third_party.fastlogging import LogInit, GetLogger
+from opteryx.connectors import register_arrow
+from opteryx.connectors import register_df
+from opteryx.connectors import register_store
+from opteryx.third_party.fastlogging import GetLogger
+from opteryx.third_party.fastlogging import LogInit
 from opteryx.version import __version__
-
 
 __author__: str = "@joocer"
 
@@ -51,9 +53,7 @@ if not config.DISABLE_HIGH_PRIORITY and hasattr(os, "nice"):  # pragma: no cover
         display_nice = str(nice_value)
         if nice_value == 0:
             display_nice = "0 (normal)"
-        logger.debug(
-            f"Cannot update process priority. Currently set to {display_nice}."
-        )
+        logger.debug(f"Cannot update process priority. Currently set to {display_nice}.")
 
 # Log resource usage
 if config.ENABLE_RESOURCE_LOGGING:  # pragma: no cover

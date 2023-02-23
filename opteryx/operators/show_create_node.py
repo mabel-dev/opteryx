@@ -22,9 +22,9 @@ from typing import Iterable
 import pyarrow
 
 from opteryx.exceptions import SqlError
+from opteryx.models import Columns
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
-from opteryx.models import Columns
 
 
 class ShowCreateNode(BasePlanNode):

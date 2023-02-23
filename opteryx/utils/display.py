@@ -10,9 +10,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Iterable, Union
-
 import datetime
+from typing import Iterable
+from typing import Union
 
 import pyarrow
 
@@ -39,9 +39,7 @@ def html_table(dictset: Iterable[dict], limit: int = 5):  # pragma: no cover
         if isinstance(htmlstring, (list, tuple, set)) or hasattr(htmlstring, "as_list"):
             return "[ " + ", ".join([sanitize(i) for i in htmlstring]) + " ]"
         if hasattr(htmlstring, "items"):
-            return sanitize(
-                "{ " + ", ".join([f'"{k}": {v}' for k, v in htmlstring.items()]) + " }"
-            )
+            return sanitize("{ " + ", ".join([f'"{k}": {v}' for k, v in htmlstring.items()]) + " }")
         if not isinstance(htmlstring, str):
             return str(htmlstring)
         escapes = {'"': "&quot;", "'": "&#39;", "<": "&lt;", ">": "&gt;", "$": "&#x24;"}
@@ -148,18 +146,10 @@ def ascii_table(
         if isinstance(value, float):
             return "\001NUMERICm" + str(value).rjust(width)[:width] + "\001OFFm"
         if isinstance(value, str):
-            return (
-                "\001VARCHARm"
-                + trunc_printable(str(value).ljust(width), width)
-                + "\001OFFm"
-            )
+            return "\001VARCHARm" + trunc_printable(str(value).ljust(width), width) + "\001OFFm"
         if isinstance(value, datetime.datetime):
-            value = (
-                f"{value.strftime('%Y-%m-%d')} \001TIMEm{value.strftime('%H:%M:%S')}"
-            )
-            return (
-                f"\001DATEm" + trunc_printable(value.rjust(width), width) + "\001OFFm"
-            )
+            value = f"{value.strftime('%Y-%m-%d')} \001TIMEm{value.strftime('%H:%M:%S')}"
+            return f"\001DATEm" + trunc_printable(value.rjust(width), width) + "\001OFFm"
         if isinstance(value, list):
             value = (
                 "\001PUNCm['\001VALUEm"
@@ -171,8 +161,7 @@ def ascii_table(
             value = (
                 "\001PUNCm{"
                 + "\001PUNCm, ".join(
-                    f"'\001KEYm{k}\001PUNCm':'\001VALUEm{v}\001PUNCm'"
-                    for k, v in value.items()
+                    f"'\001KEYm{k}\001PUNCm':'\001VALUEm{v}\001PUNCm'" for k, v in value.items()
                 )
                 + "}\001OFFm"
             )
@@ -215,19 +204,11 @@ def ascii_table(
         col_width = list(map(len, head.keys()))
         data_width = [max(map(len, map(str, h))) for h in head.values()]
 
-        col_width = [
-            min(max(cw, dw), max_column_width) for cw, dw in zip(col_width, data_width)
-        ]
+        col_width = [min(max(cw, dw), max_column_width) for cw, dw in zip(col_width, data_width)]
 
         # Print data
         data = [[head[c][i] for c in head.keys()] for i in range(t.num_rows)]
-        yield (
-            "┌"
-            + ("─" * index_width)
-            + "┬─"
-            + "─┬─".join("─" * cw for cw in col_width)
-            + "─┐"
-        )
+        yield ("┌" + ("─" * index_width) + "┬─" + "─┬─".join("─" * cw for cw in col_width) + "─┐")
         yield (
             "│"
             + (" " * index_width)
@@ -235,33 +216,14 @@ def ascii_table(
             + " │ ".join(v.ljust(w)[:w] for v, w in zip(head.keys(), col_width))
             + " │"
         )
-        yield (
-            "╞"
-            + ("═" * index_width)
-            + "╪═"
-            + "═╪═".join("═" * cw for cw in col_width)
-            + "═╡"
-        )
+        yield ("╞" + ("═" * index_width) + "╪═" + "═╪═".join("═" * cw for cw in col_width) + "═╡")
         for i in range(len(data)):
             formatted = [type_formatter(v, w) for v, w in zip(data[i], col_width)]
-            yield (
-                "│"
-                + str(i).rjust(index_width - 1)
-                + " │ "
-                + " │ ".join(formatted)
-                + " │"
-            )
-        yield (
-            "└"
-            + ("─" * index_width)
-            + "┴─"
-            + "─┴─".join("─" * cw for cw in col_width)
-            + "─┘"
-        )
+            yield ("│" + str(i).rjust(index_width - 1) + " │ " + " │ ".join(formatted) + " │")
+        yield ("└" + ("─" * index_width) + "┴─" + "─┴─".join("─" * cw for cw in col_width) + "─┘")
 
     from opteryx.utils import colors
 
     return "\n".join(
-        colors.colorize(trunc_printable(line, display_width, False), colorize)
-        for line in _inner()
+        colors.colorize(trunc_printable(line, display_width, False), colorize) for line in _inner()
     )

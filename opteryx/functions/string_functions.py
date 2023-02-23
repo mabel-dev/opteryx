@@ -13,7 +13,6 @@
 from typing import List
 
 import numpy
-
 from pyarrow import compute
 
 

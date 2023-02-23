@@ -19,12 +19,15 @@ a function and a reference to it in the dictionary.
 import numpy
 import pyarrow
 
-from opteryx import operators, functions
-from opteryx.exceptions import SqlError, UnsupportedSyntaxError
+from opteryx import functions
+from opteryx import operators
+from opteryx.exceptions import SqlError
+from opteryx.exceptions import UnsupportedSyntaxError
 from opteryx.functions.binary_operators import BINARY_OPERATORS
 from opteryx.managers.expression import ExpressionTreeNode
 from opteryx.managers.expression import NodeType
-from opteryx.utils import dates, fuzzy_search
+from opteryx.utils import dates
+from opteryx.utils import fuzzy_search
 
 
 def literal_boolean(branch, alias: list = None, key=None):
@@ -111,17 +114,13 @@ def expression_with_alias(branch, alias=None, key=None):
 
 
 def qualified_wildcard(branch, alias=None, key=None):
-    parts = [
-        part["value"] for part in [node for node in branch if isinstance(node, list)][0]
-    ]
+    parts = [part["value"] for part in [node for node in branch if isinstance(node, list)][0]]
     qualifier = (".".join(parts),)
     return ExpressionTreeNode(NodeType.WILDCARD, value=qualifier, alias=alias)
 
 
 def identifier(branch, alias=None, key=None):
-    return ExpressionTreeNode(
-        token_type=NodeType.IDENTIFIER, value=branch["value"], alias=alias
-    )
+    return ExpressionTreeNode(token_type=NodeType.IDENTIFIER, value=branch["value"], alias=alias)
 
 
 def compound_identifier(branch, alias=None, key=None):
@@ -143,17 +142,13 @@ def function(branch, alias=None, key=None):
     elif operators.is_aggregator(func):
         node_type = NodeType.AGGREGATOR
     else:  # pragma: no cover
-        likely_match = fuzzy_search(
-            func, operators.aggregators() + functions.functions()
-        )
+        likely_match = fuzzy_search(func, operators.aggregators() + functions.functions())
         if likely_match is None:
             raise UnsupportedSyntaxError(f"Unknown function or aggregate '{func}'")
         raise UnsupportedSyntaxError(
             f"Unknown function or aggregate '{func}'. Did you mean '{likely_match}'?"
         )
-    return ExpressionTreeNode(
-        token_type=node_type, value=func, parameters=args, alias=alias
-    )
+    return ExpressionTreeNode(token_type=node_type, value=func, parameters=args, alias=alias)
 
 
 def binary_op(branch, alias=None, key=None):
@@ -461,9 +456,7 @@ def typed_string(branch, alias=None, key=None):
 
 def ceiling(value, alias: list = None, key=None):
     data_value = build(value["expr"])
-    return ExpressionTreeNode(
-        NodeType.FUNCTION, value="CEIL", parameters=[data_value], alias=alias
-    )
+    return ExpressionTreeNode(NodeType.FUNCTION, value="CEIL", parameters=[data_value], alias=alias)
 
 
 def floor(value, alias: list = None, key=None):
@@ -525,9 +518,7 @@ def array_agg(branch, alias=None, key=None):
     expression = build(branch["expr"])
     order = None
     if branch["order_by"]:
-        order = custom_builders.extract_order(
-            {"Query": {"order_by": [branch["order_by"]]}}
-        )
+        order = custom_builders.extract_order({"Query": {"order_by": [branch["order_by"]]}})
         raise UnsupportedSyntaxError("`ORDER BY` not supported in `ARRAY_AGG`.")
     limit = None
     if branch["limit"]:

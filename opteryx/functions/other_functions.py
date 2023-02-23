@@ -12,7 +12,6 @@
 
 import numpy
 import pyarrow
-
 from pyarrow import compute
 
 from opteryx.exceptions import SqlError
@@ -78,13 +77,9 @@ def search(array, item):
     elif array_type == numpy.ndarray:
         # converting to a set is faster for a handful of items which is what we're
         # almost definitely working with here - note compute.index is about 50x slower
-        results_mask = numpy.array(
-            [item in set(record) for record in array], dtype=numpy.bool_
-        )
+        results_mask = numpy.array([item in set(record) for record in array], dtype=numpy.bool_)
     elif array_type == dict:
-        results_mask = numpy.array(
-            [item in record.values() for record in array], dtype=numpy.bool_
-        )
+        results_mask = numpy.array([item in record.values() for record in array], dtype=numpy.bool_)
     else:
         raise SqlError("SEARCH can only be used with VARCHAR, LIST and STRUCT.")
 

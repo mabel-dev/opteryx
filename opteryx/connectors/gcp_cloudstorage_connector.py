@@ -12,7 +12,6 @@
 
 import io
 import os
-
 from typing import Optional
 
 from opteryx.connectors import BaseBlobStorageAdapter
@@ -69,9 +68,7 @@ class GcpCloudStorageConnector(BaseBlobStorageAdapter):
         gcs_bucket = client.get_bucket(bucket)
         blobs = list(client.list_blobs(bucket_or_name=gcs_bucket, prefix=object_path))
 
-        return [
-            bucket + "/" + blob.name for blob in blobs if not blob.name.endswith("/")
-        ]
+        return [bucket + "/" + blob.name for blob in blobs if not blob.name.endswith("/")]
 
 
 def get_blob(project: str, bucket: str, blob_name: str):

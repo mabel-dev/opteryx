@@ -13,8 +13,8 @@
 """
 Functions to help with handling file paths
 """
-import pathlib
 import datetime
+import pathlib
 
 
 def get_parts(path_string: str):
@@ -29,9 +29,7 @@ def get_parts(path_string: str):
         stem = None
         suffix = None
     elif path.suffix == "":
-        parts = (
-            pathlib.PurePosixPath("/".join(path.parts[1:-1])) / path.stem  # type:ignore
-        )
+        parts = pathlib.PurePosixPath("/".join(path.parts[1:-1])) / path.stem  # type:ignore
         stem = None
         suffix = None
     else:

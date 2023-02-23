@@ -22,23 +22,21 @@ Steps are given random IDs to prevent collisions
 """1xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"""
 import os
 import sys
-
-sys.path.insert(1, os.path.join(sys.path[0], "../../../.."))
-
-from opteryx.utils import unique_id
-from opteryx.components.logical_planner import builders
-
-"""2xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"""
-
-
-from enum import auto, Enum
+from enum import Enum
+from enum import auto
 
 from opteryx.components.logical_planner import builders
-from opteryx.managers.expression import ExpressionTreeNode, NodeType
+from opteryx.managers.expression import ExpressionTreeNode
+from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.models.node import Node
 from opteryx.third_party.travers import Graph
 from opteryx.utils import unique_id
+
+sys.path.insert(1, os.path.join(sys.path[0], "../../../.."))
+
+
+"""2xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"""
 
 
 class LogicalPlanStepType(int, Enum):
@@ -160,9 +158,7 @@ def plan_query(statement):
             _projection, select_nodes=(NodeType.AGGREGATOR, NodeType.COMPLEX_AGGREGATOR)
         )
         if len(_aggregates) > 0:
-            aggregate_step = Node(
-                node_type=LogicalPlanStepType.AGGREGATE, aggregates=_aggregates
-            )
+            aggregate_step = Node(node_type=LogicalPlanStepType.AGGREGATE, aggregates=_aggregates)
             previous_step_id, step_id = step_id, unique_id()
             inner_plan.add_node(step_id, aggregate_step)
             if previous_step_id is not None:
@@ -170,12 +166,8 @@ def plan_query(statement):
 
         # projection
         _projection = [clause for clause in _projection if clause not in _aggregates]
-        if not (
-            len(_projection) == 1 and _projection[0].token_type == NodeType.WILDCARD
-        ):
-            project_step = Node(
-                node_type=LogicalPlanStepType.PROJECT, projection=_projection
-            )
+        if not (len(_projection) == 1 and _projection[0].token_type == NodeType.WILDCARD):
+            project_step = Node(node_type=LogicalPlanStepType.PROJECT, projection=_projection)
             previous_step_id, step_id = step_id, unique_id()
             inner_plan.add_node(step_id, project_step)
             if previous_step_id is not None:
@@ -211,9 +203,7 @@ def plan_query(statement):
         _limit = sub_plan["limit"]
         _offset = sub_plan["offset"]
         if _limit or _offset:
-            limit_step = Node(
-                node_type=LogicalPlanStepType.LIMIT, limit=_limit, offset=_offset
-            )
+            limit_step = Node(node_type=LogicalPlanStepType.LIMIT, limit=_limit, offset=_offset)
             previous_step_id, step_id = step_id, unique_id()
             inner_plan.add_node(step_id, limit_step)
             if previous_step_id is not None:
@@ -303,6 +293,7 @@ def get_planners(parsed_statements):
 
 if __name__ == "__main__":  # pragma: no cover
     import json
+
     import opteryx.third_party.sqloxide
 
     SQL = "SET enable_optimizer = 7"

@@ -16,10 +16,13 @@ Show Functions Node
 This is a SQL Query Execution Plan Node.
 """
 from typing import Iterable
+
 import pyarrow
 
-from opteryx import operators, functions
-from opteryx.models import Columns, QueryProperties
+from opteryx import functions
+from opteryx import operators
+from opteryx.models import Columns
+from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 
 

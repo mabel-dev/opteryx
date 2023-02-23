@@ -3,7 +3,6 @@ Original code modified for Opteryx.
 """
 import numpy
 import pyarrow
-
 from pyarrow import compute
 
 from opteryx.attribute_types import PARQUET_TYPES
@@ -47,9 +46,7 @@ def _get_type(var):
     if isinstance(var, (pyarrow.Array)):
         return PARQUET_TYPES.get(str(var.type), f"UNSUPPORTED ({str(var.type)})")
     if isinstance(var, list):
-        return PYTHON_TYPES.get(
-            type(var[0]).__name__, f"UNSUPPORTED ({type(var[0]).__name__})"
-        )
+        return PYTHON_TYPES.get(type(var[0]).__name__, f"UNSUPPORTED ({type(var[0]).__name__})")
     type_name = type(var).__name__  # pragma: no cover
     return PYTHON_TYPES.get(type_name, f"OTHER ({type_name})")  # pragma: no cover
 
@@ -141,11 +138,7 @@ def filter_operations(arr, operator, value):
     null_positions = numpy.invert(null_positions)
 
     compressed = False
-    if (
-        any_nulls
-        and isinstance(arr, numpy.ndarray)
-        and isinstance(value, numpy.ndarray)
-    ):
+    if any_nulls and isinstance(arr, numpy.ndarray) and isinstance(value, numpy.ndarray):
         # if we have nulls and both columns are numpy arrays, we can speed things
         # up by removing the nulls from the calculations, we add the rows back in
         # later
@@ -199,14 +192,10 @@ def _inner_filter_operations(arr, operator, value):
         return numpy.array([a in value[0] for a in arr], dtype=numpy.bool_)  # [#325]?
     elif operator == "NotInList":
         # MODIFIED FOR OPTERYX - see comment above
-        return numpy.array(
-            [a not in value[0] for a in arr], dtype=numpy.bool_
-        )  # [#325]?
+        return numpy.array([a not in value[0] for a in arr], dtype=numpy.bool_)  # [#325]?
     elif operator == "Contains":
         # ADDED FOR OPTERYX
-        return numpy.array(
-            [None if v is None else (arr[0] in v) for v in value], dtype=numpy.bool_
-        )
+        return numpy.array([None if v is None else (arr[0] in v) for v in value], dtype=numpy.bool_)
     elif operator == "NotContains":
         # ADDED FOR OPTERYX
         return numpy.array(
@@ -216,23 +205,17 @@ def _inner_filter_operations(arr, operator, value):
         # MODIFIED FOR OPTERYX
         # null input emits null output, which should be false/0
         _check_type("LIKE", identifier_type, (TOKEN_TYPES.VARCHAR))
-        return (
-            compute.match_like(arr, value[0]).to_numpy(False).astype(dtype=bool)
-        )  # [#325]
+        return compute.match_like(arr, value[0]).to_numpy(False).astype(dtype=bool)  # [#325]
     elif operator == "NotLike":
         # MODIFIED FOR OPTERYX - see comment above
         _check_type("NOT LIKE", identifier_type, (TOKEN_TYPES.VARCHAR))
-        matches = (
-            compute.match_like(arr, value[0]).to_numpy(False).astype(dtype=bool)
-        )  # [#325]
+        matches = compute.match_like(arr, value[0]).to_numpy(False).astype(dtype=bool)  # [#325]
         return numpy.invert(matches)
     elif operator == "ILike":
         # MODIFIED FOR OPTERYX - see comment above
         _check_type("ILIKE", identifier_type, (TOKEN_TYPES.VARCHAR))
         return (
-            compute.match_like(arr, value[0], ignore_case=True)
-            .to_numpy(False)
-            .astype(dtype=bool)
+            compute.match_like(arr, value[0], ignore_case=True).to_numpy(False).astype(dtype=bool)
         )  # [#325]
     elif operator == "NotILike":
         # MODIFIED FOR OPTERYX - see comment above
@@ -243,9 +226,7 @@ def _inner_filter_operations(arr, operator, value):
         # MODIFIED FOR OPTERYX - see comment above
         _check_type("~", identifier_type, (TOKEN_TYPES.VARCHAR))
         return (
-            compute.match_substring_regex(arr, value[0])
-            .to_numpy(False)
-            .astype(dtype=bool)
+            compute.match_substring_regex(arr, value[0]).to_numpy(False).astype(dtype=bool)
         )  # [#325]
     elif operator in ("PGRegexNotMatch", "NotSimilarTo"):
         # MODIFIED FOR OPTERYX - see comment above
@@ -263,9 +244,7 @@ def _inner_filter_operations(arr, operator, value):
     elif operator == "PGRegexNotIMatch":
         # MODIFIED FOR OPTERYX - see comment above
         _check_type("!~*", identifier_type, (TOKEN_TYPES.VARCHAR))
-        matches = compute.match_substring_regex(
-            arr, value[0], ignore_case=True
-        )  # [#325]
+        matches = compute.match_substring_regex(arr, value[0], ignore_case=True)  # [#325]
         return numpy.invert(matches)
     else:
         raise Exception(f"Operator {operator} is not implemented!")  # pragma: no cover

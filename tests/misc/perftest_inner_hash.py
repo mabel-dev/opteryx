@@ -16,9 +16,7 @@ def _hash_value(vals, nan=numpy.nan):
         elif isinstance(val, (list, numpy.ndarray, tuple)):
             # XOR is faster however, x ^ x == y ^ y but x != y, so we don't use it
             ret.append(
-                functools.reduce(
-                    lambda x, y: _hash_value(f"{y}:{x}", 0), val, APOLLO_11_DURATION
-                )
+                functools.reduce(lambda x, y: _hash_value(f"{y}:{x}", 0), val, APOLLO_11_DURATION)
             )
         elif val != val or val is None:  # nosemgrep
             # nan is a float, but hash is an int, sometimes we need this to be an int

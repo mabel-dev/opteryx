@@ -22,8 +22,10 @@ from typing import Iterable
 import numpy
 import pyarrow
 
-from opteryx.exceptions import ColumnNotFoundError, SqlError
-from opteryx.models import Columns, QueryProperties
+from opteryx.exceptions import ColumnNotFoundError
+from opteryx.exceptions import SqlError
+from opteryx.models import Columns
+from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 from opteryx.third_party import pyarrow_ops
 from opteryx.utils import arrow
@@ -87,8 +89,7 @@ class OuterJoinNode(BasePlanNode):
         for morsel in left_node.execute():
             if self._using:
                 right_join_columns = [
-                    right_columns.get_column_from_alias(col, only_one=True)
-                    for col in self._using
+                    right_columns.get_column_from_alias(col, only_one=True) for col in self._using
                 ]
 
                 for morsel in left_node.execute():
@@ -105,9 +106,7 @@ class OuterJoinNode(BasePlanNode):
                         # unique values in the set. Although we're working it out, we'll
                         # refer to this as an estimate because it may be different per
                         # chunk of data - we're assuming it's not very different.
-                        cols = pyarrow_ops.columns_to_array_denulled(
-                            morsel, left_join_columns
-                        )
+                        cols = pyarrow_ops.columns_to_array_denulled(morsel, left_join_columns)
                         if morsel.num_rows > 0:
                             card = len(numpy.unique(cols)) / morsel.num_rows
                         else:
@@ -117,9 +116,7 @@ class OuterJoinNode(BasePlanNode):
                     # we break this into small chunks otherwise we very quickly run into memory issues
                     for batch in morsel.to_batches(max_chunksize=batch_size):
                         # blocks don't have column_names, so we need to wrap in a table
-                        batch = pyarrow.Table.from_batches(
-                            [batch], schema=morsel.schema
-                        )
+                        batch = pyarrow.Table.from_batches([batch], schema=morsel.schema)
 
                         new_morsel = pyarrow_ops.left_join(
                             right_table, batch, right_join_columns, left_join_columns
