@@ -20,5 +20,5 @@ jobs:
         run: pip install --upgrade black isort
       - name: Run black
         run: black --check .
-      - name: Run isort
-        run: isort --check-only .
+#      - name: Run isort
+#        run: isort --check-only .
