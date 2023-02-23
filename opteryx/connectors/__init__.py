@@ -9,10 +9,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import pyarrow
+from .base.base_blob_storage_adapter import BaseBlobStorageAdapter  # isort: skip
+from .base.base_document_storage_adapter import BaseDocumentStorageAdapter  # isort: skip
 
-from .base.base_blob_storage_adapter import BaseBlobStorageAdapter  # NOQA
-from .base.base_document_storage_adapter import BaseDocumentStorageAdapter  # NOQA
+import pyarrow
 
 from opteryx.config import DATASET_PREFIX_MAPPING
 from opteryx.connectors.arrow_connector import ArrowConnector

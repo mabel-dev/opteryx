@@ -10,7 +10,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .base_plan_node import BasePlanNode  # NOQA
+from .base_plan_node import BasePlanNode  # isort: skip
 
 from .aggregate_node import AGGREGATORS
 from .aggregate_node import AggregateNode  # aggregate data

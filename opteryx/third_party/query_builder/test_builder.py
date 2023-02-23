@@ -1,3 +1,4 @@
+# isort: skip_file
 from textwrap import dedent
 
 from .builder import Query
