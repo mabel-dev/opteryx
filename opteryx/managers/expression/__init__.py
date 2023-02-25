@@ -89,7 +89,7 @@ def format_expression(root):
             }
             return f"{format_expression(root.left)}{_map.get(root.value, root.value)}{format_expression(root.right)}"
     if node_type == NodeType.COMPARISON_OPERATOR:
-        _map = {"Eq": "=", "Lt": "<", "Gt": ">", "NotEq": "!="}
+        _map = {"Eq": "=", "Lt": "<", "Gt": ">", "NotEq": "!=", "BitwiseOr": "|"}
         return f"{format_expression(root.left)}{_map.get(root.value, root.value)}{format_expression(root.right)}"
     if node_type == NodeType.UNARY_OPERATOR:
         _map = {"IsNull": "%s IS NULL", "IsNotNull": "%s IS NOT NULL"}

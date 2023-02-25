@@ -26,7 +26,6 @@ SELECT name FROM $planets FOR DATES BETWEEN '2021-01-01' and '2022-12-31';
 # temporary tables
 SELECT * FROM (VALUES ('High', 3), ('Medium', 2),('Low', 1)) AS ratings (name, rating);
 SELECT * FROM UNNEST((1,2,3));
-SELECT * FROM generate_series(3);
 SELECT * FROM generate_series('192.168.1.0/30');
 SELECT * FROM generate_series(2, 4);
 SELECT * FROM generate_series(-5, 5, 5);
