@@ -1,6 +1,9 @@
 """
 Original code modified for Opteryx.
 """
+from ipaddress import IPv4Address
+from ipaddress import IPv4Network
+
 import numpy
 import pyarrow
 from pyarrow import compute
@@ -33,6 +36,7 @@ FILTER_OPERATORS = {
     "PGRegexIMatch",  # "~*"
     "NotPGRegexIMatch",  # "!~*"
     "PGRegexNotIMatch",  # "!~*"
+    "BitwiseOr",  # |
 }
 
 
@@ -246,8 +250,23 @@ def _inner_filter_operations(arr, operator, value):
         _check_type("!~*", identifier_type, (TOKEN_TYPES.VARCHAR))
         matches = compute.match_substring_regex(arr, value[0], ignore_case=True)  # [#325]
         return numpy.invert(matches)
+    elif operator == "BitwiseOr":
+        try:
+            # parse right to be a list of IPs
+            value = IPv4Network(value[0], strict=False)
+            # is left in right
+            result = []
+            for address in arr:
+                if address:
+                    result.append(IPv4Address(address) in value)
+                else:
+                    result.append(None)
+            return result
+        except Exception as e:
+            print(e)
+            raise NotImplementedError("`|` can only be used to test IP address containment.")
     else:
-        raise Exception(f"Operator {operator} is not implemented!")  # pragma: no cover
+        raise NotImplementedError(f"Operator {operator} is not implemented!")  # pragma: no cover
 
 
 # Drop duplicates

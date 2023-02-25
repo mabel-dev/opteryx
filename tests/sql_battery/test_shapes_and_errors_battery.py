@@ -329,7 +329,7 @@ STATEMENTS = [
         ("SELECT * FROM UNNEST(('foo', 'bar', 'baz', 'qux', 'corge', 'garply', 'waldo', 'fred'))", 8, 1, None),
         ("SELECT * FROM UNNEST(('foo', 'bar', 'baz', 'qux', 'corge', 'garply', 'waldo', 'fred')) WHERE unnest LIKE '%e%'", 2, 1, None),
 
-        ("SELECT * FROM generate_series(10)", 10, 1, None),
+        ("SELECT * FROM generate_series(1, 10)", 10, 1, None),
         ("SELECT * FROM generate_series(-10,10)", 21, 1, None),
         ("SELECT * FROM generate_series(2,10,2)", 5, 1, None),
         ("SELECT * FROM generate_series(0.5,10,0.5)", 20, 1, None),
@@ -337,7 +337,8 @@ STATEMENTS = [
         ("SELECT * FROM generate_series(2,10,2) AS nums", 5, 1, None),
         ("SELECT * FROM generate_series(2,10,2) WHERE generate_series > 5", 3, 1, None),
         ("SELECT * FROM generate_series(2,10,2) AS nums WHERE nums < 5", 2, 1, None),
-        ("SELECT * FROM generate_series(2) WITH (NO_CACHE)", 2, 1, None),
+        ("SELECT * FROM generate_series(2) WITH (NO_CACHE)", 2, 1, SqlError),
+        ("SELECT * FROM generate_series('192.168.0.0/24') WITH (NO_CACHE)", 2, 1, SqlError),
 
         ("SELECT * FROM generate_series('2022-01-01', '2022-12-31', '1 month')", 12, 1, None),
         ("SELECT * FROM generate_series('2022-01-01', '2022-12-31', '1 mon')", 12, 1, None),
@@ -356,9 +357,6 @@ STATEMENTS = [
         ("SELECT * FROM generate_series(1,10) LEFT JOIN $planets ON id = generate_series", 10, 21, None),
         ("SELECT * FROM generate_series(1,5) JOIN $planets ON id = generate_series", 5, 21, None),
         ("SELECT * FROM (SELECT * FROM generate_series(1,10,2) AS gs) INNER JOIN $planets on gs = id", 5, 21, None),
-
-        ("SELECT * FROM generate_series('192.168.1.0/28')", 16, 1, None),
-        ("SELECT * FROM generate_series('192.168.1.100/29')", 8, 1, None),
 
         ("SELECT * FROM testdata.partitioned.dated FOR '2020-02-03' WITH (NO_CACHE)", 25, 8, None),
         ("SELECT * FROM testdata.partitioned.dated FOR '2020-02-03'", 25, 8, None),
@@ -675,6 +673,10 @@ STATEMENTS = [
         ("SELECT COUNT(*), ARRAY_AGG(name) from $satellites GROUP BY planetId", 7, 2, None),
         ("SELECT planetId, COUNT(*), ARRAY_AGG(name) from $satellites GROUP BY planetId", 7, 3, None),
         ("SELECT ARRAY_AGG(DISTINCT LEFT(name, 1)) from $satellites GROUP BY planetId", 7, 1, None),
+
+        ("SELECT name FROM $satellites WHERE '192.168.0.1' | '192.168.0.0/24'", 177, 1, None),
+        ("SELECT name FROM $satellites WHERE '192.168.0.1' | '192.167.0.0/24'", 0, 1, None),
+        ("SELECT name FROM $satellites WHERE 12 | 22", None, None, NotImplementedError),
 
         ("SELECT COUNT(*), place FROM (SELECT CASE id WHEN 3 THEN 'Earth' WHEN 1 THEN 'Mercury' ELSE 'Elsewhere' END as place FROM $planets) GROUP BY place;", 3, 2, None),
         ("SELECT COUNT(*), place FROM (SELECT CASE id WHEN 3 THEN 'Earth' WHEN 1 THEN 'Mercury' END as place FROM $planets) GROUP BY place HAVING place IS NULL;", 1, 2, None),

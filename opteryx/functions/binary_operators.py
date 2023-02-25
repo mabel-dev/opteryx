@@ -25,9 +25,9 @@ INTERVALS = (pyarrow.lib.MonthDayNano, pyarrow.lib.MonthDayNanoIntervalArray)
 # BitwiseOr => ("|"),
 # BitwiseAnd => ("&"),
 # BitwiseXor => ("^"),
-# PGBitwiseXor => ("#"),
-# PGBitwiseShiftLeft => ("<<"),
-# PGBitwiseShiftRight => (">>"),
+# PGBitwiseXor => ("#"), -- not supported in mysql
+# PGBitwiseShiftLeft => ("<<"), -- not supported in mysql
+# PGBitwiseShiftRight => (">>"), -- not supported in mysql
 
 
 def _date_plus_interval(left, right):
@@ -121,4 +121,4 @@ def binary_operations(left, operator, right):
         joined = compute.binary_join_element_wise(left, right, empty)
         return joined
 
-    raise Exception(f"Operator {operator} is not implemented!")
+    raise NotImplementedError(f"Operator `{operator}` is not implemented!")
