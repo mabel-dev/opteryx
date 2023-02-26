@@ -113,8 +113,8 @@ class SqlConnector(BaseSQLStorageAdapter, PredicatePushable):
             batch = result.fetchmany(chunk_size)
             while batch:
                 morsel = pyarrow.Table.from_pylist([b._asdict() for b in batch])
-                yield morsel
                 # from 500 records, estimate the number of records to fill the morsel size
                 if chunk_size == 500 and morsel.nbytes > 0:
                     chunk_size = int(morsel_size // (morsel.nbytes / 500))
+                yield morsel
                 batch = result.fetchmany(chunk_size)
