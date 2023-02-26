@@ -18,11 +18,12 @@ functionality of SQL engines.
 
 This relies on SQLAlchemy
 """
+import typing
 from functools import lru_cache
-from typing import Union
 
 import pyarrow
 
+from opteryx import config
 from opteryx.connectors.capabilities import PredicatePushable
 from opteryx.exceptions import MissingDependencyError
 
@@ -73,7 +74,10 @@ class SqlConnector(BaseSQLStorageAdapter, PredicatePushable):
         self._prefix = prefix
 
     def read_records(
-        self, dataset, selection: Union[list, None] = None, morsel_size: int = 500
+        self,
+        dataset,
+        selection: typing.Union[list, None] = None,
+        morsel_size: typing.Union[int, None] = None,
     ):  # pragma: no cover
         """
         Return a morsel of documents
@@ -81,6 +85,10 @@ class SqlConnector(BaseSQLStorageAdapter, PredicatePushable):
         from sqlalchemy import text
 
         from opteryx.third_party.query_builder import Query
+
+        if morsel_size is None:
+            morsel_size = config.MORSEL_SIZE
+        chunk_size = 500
 
         queried_relation = dataset
         if self._remove_prefix:
@@ -102,7 +110,11 @@ class SqlConnector(BaseSQLStorageAdapter, PredicatePushable):
         with engine.connect() as conn:
             result = conn.execute(text(str(query_builder)))
 
-            batch = result.fetchmany(morsel_size)
+            batch = result.fetchmany(chunk_size)
             while batch:
-                yield pyarrow.Table.from_pylist([b._asdict() for b in batch])
-                batch = result.fetchmany(morsel_size)
+                morsel = pyarrow.Table.from_pylist([b._asdict() for b in batch])
+                yield morsel
+                # from 500 records, estimate the number of records to fill the morsel size
+                if chunk_size == 500 and morsel.nbytes > 0:
+                    chunk_size = int(morsel_size // (morsel.nbytes / 500))
+                batch = result.fetchmany(chunk_size)

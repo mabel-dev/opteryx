@@ -71,9 +71,6 @@ class CollectionReaderNode(BasePlanNode):
 
         for morsel in self._reader.read_documents(self._dataset):
             start_read = time.time_ns()
-            if not isinstance(morsel, pyarrow.Table):
-                morsel = pyarrow.Table.from_pylist(morsel)
-
             self.statistics.time_data_read += time.time_ns() - start_read
             self.statistics.rows_read += morsel.num_rows
             self.statistics.bytes_processed_data += morsel.nbytes

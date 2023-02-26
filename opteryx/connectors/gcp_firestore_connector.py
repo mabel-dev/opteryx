@@ -9,6 +9,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import typing
 
 from opteryx import config
 from opteryx.connectors import BaseDocumentStorageAdapter
@@ -17,7 +18,6 @@ from opteryx.exceptions import MissingDependencyError
 from opteryx.exceptions import UnmetRequirementError
 
 GCP_PROJECT_ID = config.GCP_PROJECT_ID
-BATCH_SIZE = 5000
 
 
 def _get_project_id():  # pragma: no cover
@@ -79,11 +79,14 @@ class GcpFireStoreConnector(BaseDocumentStorageAdapter, PredicatePushable):
         """
         return -1
 
-    def read_documents(self, collection, morsel_size: int = BATCH_SIZE):
+    def read_documents(self, collection, morsel_size: typing.Union[int, None] = None):
         """
         Return a morsel of documents
         """
         from firebase_admin import firestore
+
+        if morsel_size is None:
+            morsel_size = config.MORSEL_SIZE
 
         queried_collection = collection
         if self._remove_prefix:

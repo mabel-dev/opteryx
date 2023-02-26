@@ -19,7 +19,9 @@ Based on the now deprecated Mabel MongoDB reader
 https://github.com/mabel-dev/mabel/blob/6bcd978b90870187d5eff939be3f5845a3cdf900/mabel/adapters/mongo/mongodb_reader.py
 """
 import os
+import typing
 
+from opteryx import config
 from opteryx.connectors import BaseDocumentStorageAdapter
 from opteryx.exceptions import UnmetRequirementError
 
@@ -27,8 +29,6 @@ try:
     import pymongo  # type:ignore
 except ImportError:  # pragma: no cover
     pass
-
-BATCH_SIZE = 500
 
 
 class MongoDbConnector(BaseDocumentStorageAdapter):
@@ -53,10 +53,13 @@ class MongoDbConnector(BaseDocumentStorageAdapter):
         _collection = collection.split(".")[0]
         return self._database[_collection].estimated_document_count()
 
-    def read_documents(self, collection, morsel_size: int = BATCH_SIZE):
+    def read_documents(self, collection, morsel_size: typing.Union[int, None] = None):
         """
         Return a morsel of documents
         """
+        if morsel_size is None:
+            morsel_size = config.MORSEL_SIZE
+
         _collection = collection.split(".")[0]
         documents = self._database[_collection].find()
         for morsel in self.chunk_dictset(documents, morsel_size):
