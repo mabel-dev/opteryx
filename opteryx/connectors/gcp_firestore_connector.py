@@ -65,7 +65,7 @@ def _initialize():  # pragma: no cover
 class GcpFireStoreConnector(BaseDocumentStorageAdapter, PredicatePushable):
     def __init__(self, *args, prefix: str = "", remove_prefix: bool = False, **kwargs):
         BaseDocumentStorageAdapter.__init__(
-            self, *args, prefix=prefix, remove_prefix=remove_prefix, **kwargs
+            self, *args, prefix=prefix, remove_prefix=remove_prefix, **kwargs  # type: ignore
         )
         PredicatePushable.__init__(
             self, *args, prefix=prefix, remove_prefix=remove_prefix, **kwargs

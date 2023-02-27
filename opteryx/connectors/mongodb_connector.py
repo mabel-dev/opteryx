@@ -33,7 +33,7 @@ except ImportError:  # pragma: no cover
 
 class MongoDbConnector(BaseDocumentStorageAdapter):
     def __init__(self, *args, **kwargs):
-        BaseDocumentStorageAdapter.__init__(*args, **kwargs)
+        BaseDocumentStorageAdapter.__init__(self, *args, **kwargs)
         """establish the connection to mongodb"""
         mongo_connection = os.environ.get("MONGO_CONNECTION")
         mongo_database = os.environ.get("MONGO_DATABASE")
