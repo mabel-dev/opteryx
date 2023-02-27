@@ -278,5 +278,5 @@ class Cursor:
                     max_column_width=max_column_width,
                     display_width=table_width,
                 )
-                + f"\n [ {self.rowcount} rows x {self.shape[1]} columns ]"
+                + f"\n[ {self.rowcount} rows x {self.shape[1]} columns ]"
             )
