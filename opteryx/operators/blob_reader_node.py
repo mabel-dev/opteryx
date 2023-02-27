@@ -255,8 +255,6 @@ class BlobReaderNode(BasePlanNode):
                         except:  # pragma:no cover
                             self.statistics.read_errors += 1
 
-                            import pyarrow
-
                             pyarrow_blob = pyarrow.Table.from_pydict(pyarrow_blob.to_pydict())
                             pyarrow_blob = metadata.apply(pyarrow_blob)
 
@@ -272,11 +270,12 @@ class BlobReaderNode(BasePlanNode):
                     pyarrow_blob, schema = _normalize_to_types(pyarrow_blob)
 
                     # break up large files
-                    batch_size = (96 * 1024 * 1024) // (pyarrow_blob.nbytes / pyarrow_blob.num_rows)
-                    import pyarrow
-
-                    for batch in pyarrow_blob.to_batches(max_chunksize=batch_size):
-                        yield pyarrow.Table.from_batches([batch], schema=pyarrow_blob.schema)
+                    if pyarrow_blob.num_rows > 0:
+                        batch_size = config.MORSEL_SIZE // (
+                            pyarrow_blob.nbytes / pyarrow_blob.num_rows
+                        )
+                        for batch in pyarrow_blob.to_batches(max_chunksize=batch_size):
+                            yield pyarrow.Table.from_batches([batch], schema=pyarrow_blob.schema)
 
     def _read_and_parse(self, config):
         path, reader, parser, cache, projection, selection = config

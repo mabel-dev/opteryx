@@ -149,7 +149,7 @@ def ascii_table(
             return "\001VARCHARm" + trunc_printable(str(value).ljust(width), width) + "\001OFFm"
         if isinstance(value, datetime.datetime):
             value = f"{value.strftime('%Y-%m-%d')} \001TIMEm{value.strftime('%H:%M:%S')}"
-            return f"\001DATEm" + trunc_printable(value.rjust(width), width) + "\001OFFm"
+            return "\001DATEm" + trunc_printable(value.rjust(width), width) + "\001OFFm"
         if isinstance(value, list):
             value = (
                 "\001PUNCm['\001VALUEm"
@@ -219,7 +219,7 @@ def ascii_table(
         yield ("╞" + ("═" * index_width) + "╪═" + "═╪═".join("═" * cw for cw in col_width) + "═╡")
         for i in range(len(data)):
             formatted = [type_formatter(v, w) for v, w in zip(data[i], col_width)]
-            yield ("│" + str(i).rjust(index_width - 1) + " │ " + " │ ".join(formatted) + " │")
+            yield ("│" + str(i + 1).rjust(index_width - 1) + " │ " + " │ ".join(formatted) + " │")
         yield ("└" + ("─" * index_width) + "┴─" + "─┴─".join("─" * cw for cw in col_width) + "─┘")
 
     from opteryx.utils import colors
