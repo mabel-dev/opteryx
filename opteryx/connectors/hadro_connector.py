@@ -18,7 +18,9 @@ from opteryx.connectors import BaseDocumentStorageAdapter
 
 class HadroConnector(BaseDocumentStorageAdapter):
     def __init__(self, *args, prefix: str = "", remove_prefix: bool = False, **kwargs):
-        super().__init__(*args, **kwargs)
+        BaseDocumentStorageAdapter.__init__(
+            self, *args, prefix=prefix, remove_prefix=remove_prefix, **kwargs
+        )
         self._remove_prefix = remove_prefix
         self._prefix = prefix
 
