@@ -270,6 +270,8 @@ class Cursor:
             html = html_table(iter(self.fetchmany(size, as_dicts=True)), size)
             display(HTML(html))
         else:
+            displayed_footer = f"({size} displayed) " if size < self.rowcount else ""
+            footer = f"\n[ {self.rowcount} row{'s' if self.rowcount != 1 else ''} {displayed_footer}x {self.shape[1]} column{'s' if self.shape[1] != 1 else ''} ]"
             return (
                 ascii_table(
                     self.arrow(),
@@ -278,5 +280,5 @@ class Cursor:
                     max_column_width=max_column_width,
                     display_width=table_width,
                 )
-                + f"\n[ {self.rowcount} rows x {self.shape[1]} columns ]"
+                + footer
             )
