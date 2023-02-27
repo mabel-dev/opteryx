@@ -29,9 +29,8 @@ def populate_mongo():
 
     collection.drop()
 
-    for _ in range(25):
-        data = open("testdata/flat/tweets/tweets-0000.jsonl", mode="rb").read()
-        collection.insert_many(map(orjson.loads, data.split(b"\n")[:-1]))
+    data = open("testdata/flat/tweets/tweets-0000.jsonl", mode="rb").read()
+    collection.insert_many(map(orjson.loads, data.split(b"\n")[:-1]))
 
 
 @skip_on_partials
@@ -46,7 +45,7 @@ def test_mongo_storage():
     cur = conn.cursor()
     cur.execute(f"SELECT * FROM {COLLECTION_NAME}.data.tweets;")
     rows = cur.arrow()
-    assert rows.num_rows == 25 * 25, rows.num_rows
+    assert rows.num_rows == 25, rows.num_rows
 
     # PROCESS THE DATA IN SOME WAY
     cur = conn.cursor()

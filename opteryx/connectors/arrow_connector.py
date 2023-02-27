@@ -16,8 +16,11 @@ Arrow Reader
 Used to read datasets registered using the register_arrow or register_df functions.
 """
 
+import typing
+
 import pyarrow
 
+from opteryx import config
 from opteryx.connectors import BaseDocumentStorageAdapter
 from opteryx.shared import MaterializedDatasets
 
@@ -31,10 +34,12 @@ class ArrowConnector(BaseDocumentStorageAdapter):
         dataset = self._datasets[collection]
         return dataset.num_rows
 
-    def read_documents(self, collection, morsel_size: int = 0):
+    def read_documents(self, collection, morsel_size: typing.Union[int, None] = None):
+        if morsel_size is None:
+            morsel_size = config.MORSEL_SIZE
         dataset = self._datasets[collection]
 
-        batch_size = (96 * 1024 * 1024) // (dataset.nbytes / dataset.num_rows)
+        batch_size = morsel_size // (dataset.nbytes / dataset.num_rows)
 
         for batch in dataset.to_batches(max_chunksize=batch_size):
             morsel = pyarrow.Table.from_batches([batch], schema=dataset.schema)

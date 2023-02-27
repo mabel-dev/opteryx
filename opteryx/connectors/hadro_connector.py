@@ -10,14 +10,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from opteryx.connectors import BaseDocumentStorageAdapter
+import typing
 
-BATCH_SIZE = 100
+from opteryx import config
+from opteryx.connectors import BaseDocumentStorageAdapter
 
 
 class HadroConnector(BaseDocumentStorageAdapter):
     def __init__(self, *args, prefix: str = "", remove_prefix: bool = False, **kwargs):
-        super(BaseDocumentStorageAdapter, self).__init__(*args, **kwargs)
+        BaseDocumentStorageAdapter.__init__(
+            self, *args, prefix=prefix, remove_prefix=remove_prefix, **kwargs  # type: ignore
+        )
         self._remove_prefix = remove_prefix
         self._prefix = prefix
 
@@ -29,11 +32,14 @@ class HadroConnector(BaseDocumentStorageAdapter):
         """
         return -1
 
-    def read_documents(self, collection, morsel_size: int = BATCH_SIZE):
+    def read_documents(self, collection, morsel_size: typing.Union[int, None] = None):
         """
         Return a morsel of documents
         """
         from hadrodb import HadroDB
+
+        if morsel_size is None:
+            morsel_size = config.MORSEL_SIZE
 
         queried_collection = collection
         if self._remove_prefix:
