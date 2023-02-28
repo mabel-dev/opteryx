@@ -856,6 +856,13 @@ STATEMENTS = [
         ("SELECT * FROM $planets WHERE PI() = 3.141592653589793238462643383279502", 9, 20, None),
         ("SET enable_optimizer = false; SELECT * FROM $planets WHERE 3.141592653589793238462643383279502 = PI()", 9, 20, None),
         ("SET enable_optimizer = false; SELECT * FROM $planets WHERE PI() = 3.141592653589793238462643383279502", 9, 20, None),
+        # found in testing
+        ("SELECT * FROM $planets WHERE id = null", 0, 20, None),
+        ("SELECT * FROM $planets WHERE id != null", 0, 20, None),
+        ("SELECT * FROM $planets WHERE id > null", 0, 20, None),
+        ("SELECT * FROM $planets WHERE id < null", 0, 20, None),
+        ("SELECT * FROM $planets WHERE id >= null", 0, 20, None),
+        ("SELECT * FROM $planets WHERE id <= null", 0, 20, None),
 
 ]
 # fmt:on
