@@ -19,17 +19,24 @@ Goal: Reduce complexity
 from opteryx import operators
 from opteryx.functions import date_functions
 from opteryx.functions import get_version
+from opteryx.functions import number_functions
 from opteryx.managers.expression import ExpressionTreeNode
 from opteryx.managers.expression import NodeType
 
 FIXED_OUTCOME_FUNCTIONS = {
+    # TEMPORAL
     "CURRENT_TIME": (date_functions.get_now, NodeType.LITERAL_TIMESTAMP),
     "NOW": (date_functions.get_now, NodeType.LITERAL_TIMESTAMP),
     "CURRENT_DATE": (date_functions.get_today, NodeType.LITERAL_TIMESTAMP),
     "TODAY": (date_functions.get_today, NodeType.LITERAL_TIMESTAMP),
     "TIME": (date_functions.get_time, NodeType.LITERAL_TIMESTAMP),
     "YESTERDAY": (date_functions.get_yesterday, NodeType.LITERAL_TIMESTAMP),
+    # SYSTEM
     "VERSION": (get_version, NodeType.LITERAL_VARCHAR),
+    # MATHEMATICAL
+    "E": (number_functions.e, NodeType.LITERAL_NUMERIC),
+    "PI": (number_functions.pi, NodeType.LITERAL_NUMERIC),
+    "PHI": (number_functions.phi, NodeType.LITERAL_NUMERIC),
 }
 
 
