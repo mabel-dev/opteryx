@@ -40,7 +40,7 @@ def eliminate_constant_evaluations(plan, properties):
             value = value.as_py()
         if value is None:
             return ExpressionTreeNode(NodeType.LITERAL_NONE, alias=[])
-        if isinstance(value, (bool)):
+        if isinstance(value, (bool, numpy.bool_)):
             # boolean must be before numeric
             return ExpressionTreeNode(NodeType.LITERAL_BOOLEAN, value=value, alias=[])
         if isinstance(value, (str)):

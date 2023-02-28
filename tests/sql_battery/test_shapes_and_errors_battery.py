@@ -49,6 +49,7 @@ from opteryx.connectors import DiskConnector
 
 from opteryx.exceptions import ColumnNotFoundError
 from opteryx.exceptions import DatasetNotFoundError
+from opteryx.exceptions import EmptyResultSetError
 from opteryx.exceptions import InvalidTemporalRangeFilterError
 from opteryx.exceptions import SqlError
 from opteryx.exceptions import UnsupportedSyntaxError
@@ -635,7 +636,7 @@ STATEMENTS = [
         ("SET enable_optimizer = false; SELECT id FROM $planets WHERE NOT id = 2 AND NOT NOT (id < 5 AND id = 3)", 1, 1, None),
         ("SELECT * FROM $planets WHERE NOT(id = 9 OR id = 8)", 7, 20, None),
         ("SELECT * FROM $planets WHERE NOT(id = 9 OR id = 8) OR True", 9, 20, None),
-        ("SELECT * FROM $planets WHERE NOT(id = 9 OR 8 = 8)", 8, 20, None),
+        ("SELECT * FROM $planets WHERE NOT(id = 9 OR 8 = 8)", 0, 20, None),
         ("SELECT * FROM $planets WHERE 1 = 1", 9, 20, None),
         ("SELECT * FROM $planets WHERE NOT 1 = 2", 9, 20, None),
 
@@ -844,6 +845,24 @@ STATEMENTS = [
         # 870
         ("SELECT MAX(density) FROM $planets GROUP BY orbitalInclination, escapeVelocity, orbitalInclination, numberOfMoons, escapeVelocity, density", 9, 1, None),
         ("SELECT COUNT(*) FROM $planets GROUP BY orbitalInclination, orbitalInclination", 9, 1, None),
+        # 909 - zero results from pushed predicate
+        ("SELECT * FROM testdata.flat.formats.parquet WITH(NO_PARTITION) WHERE user_id = -1", 0, 13, EmptyResultSetError),
+        # 912 - optimized boolean evals were ignored
+        ("SELECT * FROM $planets WHERE 1 = PI()", 0, 20, None),
+        ("SELECT * FROM $planets WHERE PI() = 1", 0, 20, None),
+        ("SET enable_optimizer = false; SELECT * FROM $planets WHERE 1 = PI()", 0, 20, None),
+        ("SET enable_optimizer = false; SELECT * FROM $planets WHERE PI() = 1", 0, 20, None),
+        ("SELECT * FROM $planets WHERE 3.141592653589793238462643383279502 = PI()", 9, 20, None),
+        ("SELECT * FROM $planets WHERE PI() = 3.141592653589793238462643383279502", 9, 20, None),
+        ("SET enable_optimizer = false; SELECT * FROM $planets WHERE 3.141592653589793238462643383279502 = PI()", 9, 20, None),
+        ("SET enable_optimizer = false; SELECT * FROM $planets WHERE PI() = 3.141592653589793238462643383279502", 9, 20, None),
+        # found in testing
+        ("SELECT * FROM $planets WHERE id = null", 0, 20, None),
+        ("SELECT * FROM $planets WHERE id != null", 0, 20, None),
+        ("SELECT * FROM $planets WHERE id > null", 0, 20, None),
+        ("SELECT * FROM $planets WHERE id < null", 0, 20, None),
+        ("SELECT * FROM $planets WHERE id >= null", 0, 20, None),
+        ("SELECT * FROM $planets WHERE id <= null", 0, 20, None),
 
 ]
 # fmt:on
