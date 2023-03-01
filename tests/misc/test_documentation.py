@@ -94,6 +94,46 @@ def test_get_started():
     result = opteryx.query("SELECT * FROM $planets;").arrow()
 
 
+def test_pandas_integration_input():
+    import opteryx
+    import pandas
+
+    # Create the DataFrame
+    data = {'Name': ['Huey', 'Dewey', 'Louie'],
+            'Age': [12, 12, 12],
+            'Favorite Color': ['Red', 'Blue', 'Green']}
+    df = pandas.DataFrame(data)
+
+    # Register as a data source
+    opteryx.register_df('nephews', df)
+
+    results = opteryx.query("SELECT * FROM nephews").arrow()
+
+def test_pandas_integration_output():
+    import opteryx
+
+    dataframe = opteryx.query("SELECT * FROM $planets").to_df()
+
+def test_polars_integration_input():
+    import opteryx
+    import polars
+
+    # Create the DataFrame
+    data = {'Name': ['Huey', 'Dewey', 'Louie'],
+            'Age': [12, 12, 12],
+            'Favorite Color': ['Red', 'Blue', 'Green']}
+    df = polars.DataFrame(data)
+
+    # Register as a data source
+    opteryx.register_df('nephews', df)
+
+    results = opteryx.query("SELECT * FROM nephews").arrow()
+
+def test_polars_integration_output():
+    import opteryx
+
+    dataframe = opteryx.query("SELECT * FROM $planets").polars()
+
 if __name__ == "__main__":  # pragma: no cover
     test_documentation_connect_example()
     test_readme_1()  # execute-a-simple-query-in-python
@@ -102,5 +142,10 @@ if __name__ == "__main__":  # pragma: no cover
     test_readme_4()  # query-data-on-gcs
     test_readme_5()  # query-data-in-sqlite
     test_get_started()
+    test_pandas_integration_input()
+    test_pandas_integration_output()
+    test_polars_integration_input()
+    test_polars_integration_output()
+    
 
     print("✅ okay")

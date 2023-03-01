@@ -162,7 +162,7 @@ def _coalesce(*args):
 # The type is needed particularly when returning Python objects that
 # the first entry is NONE.
 FUNCTIONS = {
-    "VERSION": _repeat_no_parameters(get_version),
+    "VERSION": _repeat_no_parameters(get_version), # *
 
     # TYPE CONVERSION
     "TIMESTAMP": cast("TIMESTAMP"),
@@ -245,9 +245,9 @@ FUNCTIONS = {
     "SQRT": compute.sqrt,
     "TRUNC": compute.trunc,
     "TRUNCATE": compute.trunc,
-    "PI": _repeat_no_parameters(number_functions.pi),
-    "PHI": _repeat_no_parameters(number_functions.phi),
-    "E": _repeat_no_parameters(number_functions.e),
+    "PI": _repeat_no_parameters(number_functions.pi), # *
+    "PHI": _repeat_no_parameters(number_functions.phi), # *
+    "E": _repeat_no_parameters(number_functions.e), # *
     "INT": _iterate_single_parameter(int),
     "INTEGER": _iterate_single_parameter(int),
     "FLOAT": _iterate_single_parameter(float),
@@ -263,7 +263,7 @@ FUNCTIONS = {
     "DATEDIFF": date_functions.date_diff,
     "DATEPART": date_functions.date_part,
     "DATE_FORMAT": date_functions.date_format,
-    "CURRENT_TIME": _repeat_no_parameters(date_functions.get_now),
+    "CURRENT_TIME": _repeat_no_parameters(date_functions.get_now), # *
     "NOW": _repeat_no_parameters(date_functions.get_now),
     "CURRENT_DATE": _repeat_no_parameters(date_functions.get_today),
     "TODAY": _repeat_no_parameters(date_functions.get_today),
