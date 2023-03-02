@@ -6,6 +6,7 @@
 
 <h3 align="center">
 
+
 Opteryx is a SQL Engine designed for embedded and cloud-native environments, and with command-line skills.
 
 [Documentation](https://opteryx.dev/latest) |
@@ -23,38 +24,34 @@ Opteryx is a SQL Engine designed for embedded and cloud-native environments, and
 
 </h3>
 
-## Use Cases
+## What is Opteryx?
+
+Opteryx is a Python library for data wrangling and analytics. It creates a common interface to interact with various data platforms, enabling users to transform and explore data anywhere.
 
 - Using SQL to query data files written by another process - such as logs.
 - As a command line tool - Run SQL directly on files - bring the power and flexibility of SQL to filter, transform and combine files, or as a command line viewer and converter for Parquet, ORC or Avro format files.
 - As an embeddable engine - a low-cost option to allow hundreds of analysts to each have part-time databases.
 - Adding SQL to existing familar tools like pandas and Polars, Executing SQL against and returning result sets as Polars and pandas DataFrames
 
-## Features
+## Why Use Opteryx?
 
-### __Feature Rich__
+### __Familiar Interface__
 
-Supports most of the base [SQL92 standard](https://opteryx.dev/latest/get-started/external-standards/sql92/) and multiple extensions from modern SQL platforms like [Snowflake](https://www.snowflake.com/en/) and [Trino](https://trino.io/).
+Opteryx supports key parts of the Python ADODB and [SQL92 standard](https://opteryx.dev/latest/get-started/external-standards/sql92/) standards which many analysts and engineers will already know how to use.
 
-### __High Availability__
+### __Consistent Syntax__
 
-[Shared Nothing](https://en.wikipedia.org/wiki/Shared-nothing_architecture)/[Shared Disk](https://en.wikipedia.org/wiki/Shared-disk_architecture) design means each query can run in a separate container instance making it nearly impossible for a rogue query to affect any other users. _(compute and storage can be shared)_
-
-If a cluster, region or datacentre is unavailable, if you have instances able to run in another location, Opteryx will keep responding to queries. _(inflight queries may not be recovered)_
-
-### __Query In Place__
-
-![Opteryx](https://github.com/mabel-dev/opteryx.dev/raw/main/assets/data-stores.png)
-
-Opteryx queries your data in the systems you store them in saving you from the cost and effort of maintaining duplicates your data into a common store for analytics.
-
-You can store your data in Parquet, ORC or Avro files on disk or Cloud Storage, in MongoDB or Firestore, and in Postgres and access all of these data in the same query.
+Opteryx creates a common SQL-layer over multiple data platforms, allowing backend systems to be upgraded, migrated or consolidated without changing any Opteryx code.
 
 ### __Bring your own Data__
 
-Opteryx is able to read and process data from multiple sources, including data on local or cloud storage in popular data formats (including Parquet, ORC, Avro and JSONL), data in a SQL database like MySQL or Postgres. You can mix-and-match source, so one dataset can be in Parquet, and another MySQL, and Opteryx is able to JOIN across them.
+![Opteryx](https://github.com/mabel-dev/opteryx.dev/raw/main/assets/data-stores.png)
 
-Opteryx also allows you to execute SQL over pandas and Polars dataframes and return results of queries as arrow, pandas or Polars dataframes.
+Opteryx supports multiple query engines, dataframe APIs and storage formats. You can mix-and-match sources in a single query, so one dataset can be in Parquet, and another MySQL, and Opteryx is able to JOIN across them.
+
+Opteryx queries your data in the systems you store them in saving you from the cost and effort of maintaining duplicates your data into a common store for analytics.
+
+Opteryx is able to push parts of your query to the source query engine, meaning queries run at the speed of the backend, not your local computer.
 
 ### __Consumption-Based Billing Friendly__
 
@@ -67,10 +64,6 @@ Opteryx is Open Source Python, it quickly and easily integrates into Python code
 ### __Time Travel__
 
 Designed for data analytics in environments where decisions need to be replayable, Opteryx allows you to query data as at a point in time in the past to replay decision algorithms against facts as they were known in the past. _(data must be structured to enable temporal queries)_
-
-### __Schema Evolution__
-
-Opteryx supports some change to schemas and paritioning without requiring any existing data to be updated. _(data types can only be changed to compatitble types)_
 
 ### __Fast__
 
