@@ -108,11 +108,11 @@ class Distogram:  # pragma: no cover
 
         # we need to overwrite any range values as we've approximated the dataset
         if self.min is None:
-            self.min = bin_values.min
-            self.max = bin_values.max
+            self.min = bin_values.min()
+            self.max = bin_values.max()
         else:
-            self.min = min(self.min, bin_values.min)
-            self.max = max(self.max, bin_values.max)
+            self.min = min(self.min, bin_values.min())
+            self.max = max(self.max, bin_values.max())
 
     def count(self):
         return sum(f for _, f in self.bins)
