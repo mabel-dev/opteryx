@@ -29,71 +29,74 @@ the set() returns the evicted item which the calling function can then evict fro
 external cache.
 """
 
+from collections import defaultdict
 import time
-
-import numpy
 
 
 class LRU2:
-    slots = ("_size", "_cache", "_hits", "_misses", "_evictions")
-
-    def __init__(self, **kwargs):
-        """
-        Parameters:
-            size: int (optional)
-                The maximim number of items maintained in the cache, default is 50.
-        """
-        self._size = int(kwargs.get("size", 50))
-        self._cache = {}
-        self._hits = 0
-        self._misses = 0
-        self._evictions = 0
+    def __init__(self, k=2, size=50):
+        self.k = k
+        self.size = size
+        self.cache = {}
+        self.access_history = defaultdict(list)
+        self.hits = 0
+        self.misses = 0
+        self.evictions = 0
 
     def get(self, key):
-        # we're disposing of access_2 (the penultimate access), recording this access
-        # as the latest and making the access_1 the new penultimate access
-        (value, access_1, _) = self._cache.get(key, (None, None, None))
-        if value is not None:
-            self._cache[key] = (value, time.monotonic_ns(), access_1)
-            self._hits += 1
-            return value
-        self._misses += 1
-        return None
+        # Check if the key is in the cache
+        if key in self.cache:
+            # Update the access history for the key
+            self.access_history[key].append(time.monotonic_ns())
+            if len(self.access_history[key]) > self.k:
+                self.access_history[key].pop(0)
+            # Increment the hit count and return the value
+            self.hits += 1
+            return self.cache[key]
+        else:
+            # Increment the miss count and return None
+            self.misses += 1
+            return None
 
     def set(self, key, value):
-        # if we're already in the cache - do nothing
-        if key in self._cache:  # pragma: no-cover
+        # Check if the key is already in the cache
+        if key in self.cache:
             return None
-        # create an initial entry for the new item
-        clock = time.monotonic_ns()
-        self._cache[key] = (value, clock, clock)
 
-        # If we're  full, we want to remove an item from the cache.
-        # We choose the item to remove based on the penultimate access for that item.
-        if len(self._cache) > self._size:
-            keys = tuple(self._cache.keys())
-            accesses = (c[2] for c in self._cache.values())
+        # Add the new key-value pair to the cache
+        self.cache[key] = value
 
-            least_recently_used = numpy.argmin(accesses)  # type:ignore
-            evicted_key = keys[least_recently_used]
+        # Update the access history for the key
+        self.access_history[key].append(time.monotonic_ns())
 
-            self._cache.pop(evicted_key)
-            self._evictions += 1
-            return evicted_key
+        # If the cache is full, evict the least recently used item
+        if len(self.cache) > self.size:
+            # Find the key with the oldest access time and remove it from the cache
+            oldest_key = None
+            oldest_access_time = float("inf")
+            for k in self.cache:
+                if self.access_history[k][0] < oldest_access_time:
+                    oldest_key = k
+                    oldest_access_time = self.access_history[k][0]
+            self.cache.pop(oldest_key)
+            self.access_history.pop(oldest_key)
+            self.evictions += 1
+            return oldest_key
+
         return None
 
     @property
     def keys(self):  # pragma: no-cover
-        return list(self._cache.keys())
+        return list(self.cache.keys())
 
     @property
     def stats(self):
         # return hits, misses, evictions
-        return (self._hits, self._misses, self._evictions)
+        return (self.hits, self.misses, self.evictions)
 
     def reset(self, reset_stats: bool = False):
-        self._cache = {}
+        self.cache = {}
         if reset_stats:
-            self._hits = 0
-            self._misses = 0
-            self._evictions = 0
+            self.hits = 0
+            self.misses = 0
+            self.evictions = 0
