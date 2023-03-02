@@ -13,20 +13,18 @@
 """
 LRU-K evicts the morsel whose K-th most recent access is furthest in the past.
 
-This is a basic implementation of LRU-2, which evicts entries according to the time
-of their penultimate access. The main benefit of this approach is to prevent
-a problem when the items being checked exceeds the number of items in the cache. A
-classic LRU will evict and repopulate the cache for every call. LRU-2 reduces the
-likelihood of this, but not preferring the MRU item to be retained.
+This is a basic implementation of LRU-2, which evicts entries according to the time of their
+penultimate access. The main benefit of this approach is to prevent a problem when the items being
+getted exceeds the number of items in the cache. A classic LRU will evict and repopulate the cache
+for every call. LRU-2 reduces the likelihood of this, but not preferring the MRU item to be
+retained.
 
-LRU-K should be used in conjunction with eviction limits per query - this appears to
-broadly be the solution used by Postgres. This can be supported by the calling
-function using the return from the .set call to determine if an item was evicted from
-the cache.
+LRU-K should be used in conjunction with eviction limits per query - this appears to broadly be
+the solution used by Postgres. This can be supported by the calling function using the return from
+the .set call to determine if an item was evicted from the cache.
 
-This can also be used as the index for an external cache (for example in plasma), where
-the set() returns the evicted item which the calling function can then evict from the
-external cache.
+This can also be used as the index for an external cache (for example in plasma), where the set()
+returns the evicted item which the calling function can then evict from the external cache.
 """
 
 from collections import defaultdict
