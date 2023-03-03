@@ -18,9 +18,8 @@ class _QueryStatistics:
     """
     Data object to collect information during query execution.
 
-    Implemented as a singleton rather than having to pass the Statistics modeal around
-    the plan and execution, you only need the query id (qid) and the stats model can be
-    returned.
+    Implemented as a singleton rather than having to pass the Statistics modeal around the plan
+    and execution, you only need the query id (qid) and the stats model can be returned.
     """
 
     def __init__(self):

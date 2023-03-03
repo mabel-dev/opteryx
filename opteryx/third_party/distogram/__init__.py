@@ -92,6 +92,8 @@ class Distogram:  # pragma: no cover
         # but even if a bad decision is made on a table with 500 rows, the consequence
         # is minimal, if a bad decision is made on a table with 5m rows, it starts to
         # matter.
+        if len(values) == 0:
+            return
         bin_values, counts = numpy.unique(values, return_counts=True)
         if len(bin_values) > (self._bin_count * 5):
             counts, bin_values = numpy.histogram(values, self._bin_count * 5, density=False)
@@ -106,11 +108,11 @@ class Distogram:  # pragma: no cover
 
         # we need to overwrite any range values as we've approximated the dataset
         if self.min is None:
-            self.min = min(values)
-            self.max = max(values)
+            self.min = values.min()
+            self.max = values.max()
         else:
-            self.min = min(self.min, min(values))
-            self.max = max(self.max, max(values))
+            self.min = min(self.min, values.min())
+            self.max = max(self.max, values.max())
 
     def count(self):
         return sum(f for _, f in self.bins)

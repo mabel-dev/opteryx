@@ -24,9 +24,8 @@ class BasePlanNode(abc.ABC):
         """
         This is the base class for nodes in the execution plan.
 
-        The initializer accepts a QueryStatistics node which is populated by
-        different nodes differently to record what happened during the query
-        execution.
+        The initializer accepts a QueryStatistics node which is populated by different nodes
+        differently to record what happened during the query execution.
         """
         self.properties = properties
         self.statistics = QueryStatistics(properties.qid)
