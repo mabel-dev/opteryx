@@ -15,24 +15,24 @@ Morsel Defragment Node
 
 This is a SQL Query Execution Plan Node.
 
-    Orignally implemented to test if datasets have any records as they pass through
-    the DAG, this function normalizes the number of bytes per morsel.
+    Orignally implemented to test if datasets have any records as they pass through the DAG, this
+    function normalizes the number of bytes per morsel.
 
     This is to balance two competing demands:
-        - operate in a low memory environment, if the morsels are too large they may
-          cause the process to fail.
-        - operate quickly, if we spend our time doing SIMD on morsel with few records
-          we're not working as fast as we can.
+        - operate in a low memory environment, if the morsels are too large they may cause the
+          process to fail.
+        - operate quickly, if we spend our time doing Vecorization/SIMD on morsel with few records
+           we're not working as fast as we can.
 
-    The low-water mark is 75% of the target size, less than this we look to merge
-    morsels together. This is more common following the implementation of projection
-    push down, one column doesn't take up a lot of memory so we consolidate tens of
-    morsels into a single morsel.
+    The low-water mark is 75% of the target size, less than this we look to merge morsels together.
+    This is more common following the implementation of projection push down, one column doesn't
+    take up a lot of memory so we consolidate tens of morsels into a single morsel.
 
-    The high-water mark is 199% of the target size, more than this we split the morsel.
-    Splitting at a size any less than this will end up with morsels less that the
-    target morsel size.
+    The high-water mark is 199% of the target size, more than this we split the morsel. Splitting
+    at a size any less than this will end up with morsels less that the target morsel size.
 
+    We also have a record count limit, this is because of quirks with PyArrow, it changes long
+    arrays into ChunkedArrays which behave differently to Arrays in some circumstances.
 """
 import time
 from typing import Iterable
@@ -41,7 +41,8 @@ import pyarrow
 
 from opteryx.operators import BasePlanNode
 
-MORSEL_SIZE = 64 * 1024 * 1024  # 64Mb
+MORSEL_SIZE_BYTES: int = 64 * 1024 * 1024  # 64Mb
+MORSEL_SIZE_COUNT: int = 500000  # hard record count limit, half a million
 HIGH_WATER: float = 1.99  # Split morsels over 199% of MORSEL_SIZE
 LOW_WATER: float = 0.75  # Merge morsels under 75% of MORSEL_SIZE
 
@@ -82,11 +83,16 @@ class MorselDefragmentNode(BasePlanNode):
                 morsel_records = morsel.num_rows
 
                 # if we're more than double the target size, let's do something
-                if morsel_bytes > (MORSEL_SIZE * HIGH_WATER):  # pragma: no cover
+                if (
+                    morsel_bytes > (MORSEL_SIZE_BYTES * HIGH_WATER)
+                    or morsel_records > MORSEL_SIZE_COUNT
+                ):  # pragma: no cover
                     start = time.monotonic_ns()
 
                     average_record_size = morsel_bytes / morsel_records
-                    new_row_count = int(MORSEL_SIZE / average_record_size)
+                    new_row_count = min(
+                        int(MORSEL_SIZE_BYTES / average_record_size), MORSEL_SIZE_COUNT
+                    )
                     row_counter += new_row_count
                     self.statistics.chunk_splits += 1
                     new_morsel = morsel.slice(offset=0, length=new_row_count)
@@ -96,9 +102,9 @@ class MorselDefragmentNode(BasePlanNode):
                     self.statistics.time_defragmenting += time.monotonic_ns() - start
 
                     yield new_morsel
-                # if we're less than 75% of the morsel size, save hold what we have so
-                # far and go collect the next morsel
-                elif morsel_bytes < (MORSEL_SIZE * LOW_WATER):
+                # if we're less than 75% of the morsel size, save hold what we have so far and go
+                # collect the next morsel
+                elif morsel_bytes < (MORSEL_SIZE_BYTES * LOW_WATER):
                     collected_rows = morsel
                 # otherwise the morsel size is okay so we can emit the current morsel
                 else:
@@ -106,8 +112,7 @@ class MorselDefragmentNode(BasePlanNode):
                     yield morsel
                     at_least_one_morsel = True
             elif not at_least_one_morsel:
-                # we have to emit something to the next step, but don't emit
-                # multiple empty morsels
+                # we have to emit something to the next step, but don't emit multiple empty morsels
                 yield morsel
                 at_least_one_morsel = True
 

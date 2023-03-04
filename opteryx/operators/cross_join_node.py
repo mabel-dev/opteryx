@@ -15,8 +15,8 @@ Cross Join Node
 
 This is a SQL Query Execution Plan Node.
 
-This performs a CROSS JOIN - CROSS JOIN is not natively supported by
-PyArrow so this is written out rather than calling the join() functions
+This performs a CROSS JOIN - CROSS JOIN is not natively supported by PyArrow so this is written
+here rather than calling the join() functions
 """
 from typing import Iterable
 
