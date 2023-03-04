@@ -17,4 +17,4 @@ Store the version here so:
 """
 
 # __version__ = "0.4.0-alpha.6"
-__version__ = "0.9.2"
+__version__ = "0.9.3"
