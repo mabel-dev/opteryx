@@ -27,8 +27,8 @@ This can also be used as the index for an external cache (for example in plasma)
 returns the evicted item which the calling function can then evict from the external cache.
 """
 
-from collections import defaultdict
 import time
+from collections import defaultdict
 
 
 class LRU2:
