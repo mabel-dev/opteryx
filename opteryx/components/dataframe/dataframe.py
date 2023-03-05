@@ -25,15 +25,15 @@ class Dataframe:
 
         """
         # selection invalidates what we thought we knew about counts etc
-        new_header = {k: {"type": v.get("type")} for k, v in self.header.items()}
+        new_header = {k: {"type": v.get("type")} for k, v in self._schema.items()}
         return Dataframe(filter(predicate, self._tuples), new_header)
 
     def apply_projection(self, attributes):
         if not isinstance(attributes, (list, tuple)):
             attributes = [attributes]
         attribute_indices = []
-        new_header = {k: v for k, v in self.header.items() if k in attributes}
-        for index, attribute in enumerate(self.header.keys()):
+        new_header = {k: v for k, v in self._schema.items() if k in attributes}
+        for index, attribute in enumerate(self._schema.keys()):
             if attribute in attributes:
                 attribute_indices.append(index)
 
@@ -61,7 +61,7 @@ class Dataframe:
                     yield item
                     hash_list[hashed_item] = True
 
-        return Dataframe(do_dedupe(self._tuples), self.header)
+        return Dataframe(do_dedupe(self._tuples), self._schema)
 
     def collect(self, columns):
         single = False
