@@ -1,6 +1,7 @@
 hadrodb
 numpy
 orjson
+orso
 pyarrow>=11.0.0
 typer
 
