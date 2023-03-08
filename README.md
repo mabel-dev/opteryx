@@ -133,7 +133,7 @@ import pandas
 
 pandas_df = pandas.read_csv("https://storage.googleapis.com/opteryx/exoplanets/exoplanets.csv")
 opteryx.register_df("exoplanets", pandas_df)
-aggregated_df = opteryx.query("SELECT koi_disposition, COUNT(*) FROM exoplanets GROUP BY koi_disposition;").to_df()
+aggregated_df = opteryx.query("SELECT koi_disposition, COUNT(*) FROM exoplanets GROUP BY koi_disposition;").pandas()
 aggregated_df.head()
 ~~~
 ~~~

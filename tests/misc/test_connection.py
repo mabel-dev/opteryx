@@ -39,7 +39,7 @@ def test_execute():
     assert cur.rowcount == 9
     assert cur.shape == (9, 20)
 
-    planets = opteryx.query("SELECT * FROM $planets").to_df()
+    planets = opteryx.query("SELECT * FROM $planets").pandas()
     assert isinstance(planets, pandas.DataFrame)
 
 
