@@ -37,7 +37,12 @@ def peek(iterable):  # type:ignore
     peek an item off a generator
     """
     iter1, iter2 = itertools.tee(iterable)
-    return next(iter1), iter2
+    try:
+        first = next(iter1)
+    except StopIteration:
+        return None, iter([])
+    else:
+        return first, iter2
 
 
 def fuzzy_search(name, candidates):
