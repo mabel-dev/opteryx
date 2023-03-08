@@ -15,6 +15,7 @@ This module provides a PEP-249 familiar interface for interacting with mabel dat
 stores, it is not compliant with the standard:
 https://www.python.org/dev/peps/pep-0249/
 """
+import logging
 import time
 from typing import Dict
 from typing import List
@@ -228,6 +229,10 @@ class Cursor(DataFrame):
         except ImportError as err:  # pragma: nocover
             raise MissingDependencyError(err.name) from err
         return self.arrow(size=size).to_pandas()
+
+    def to_df(self, size: int = None):  # pragma: no cover
+        logging.warning("connection.to_df will be removed, replace with connection.pandas")
+        return self.pandas(size)
 
     def polars(self, size: int = None):
         """
