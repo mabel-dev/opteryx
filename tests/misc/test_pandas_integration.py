@@ -32,7 +32,7 @@ def test_documentation():
     opteryx.register_df("exoplanets", pandas_df)
     curr = opteryx.Connection().cursor()
     curr.execute("SELECT koi_disposition, COUNT(*) FROM exoplanets GROUP BY koi_disposition;")
-    aggregrated_df = curr.to_df()
+    aggregrated_df = curr.pandas()
 
     assert len(aggregrated_df) == 3
     assert len(aggregrated_df.columns) == 2
