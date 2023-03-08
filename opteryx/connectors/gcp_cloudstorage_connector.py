@@ -26,9 +26,7 @@ class GcpCloudStorageConnector(BaseBlobStorageAdapter):
             from google.auth.credentials import AnonymousCredentials
             from google.cloud import storage
         except ImportError as err:
-            raise MissingDependencyError(
-                "`google-cloud-storage` is missing, please install or include in requirements.txt"
-            ) from err
+            raise MissingDependencyError(err.name) from err
 
         #        super().__init__(**kwargs)
         self.project = project

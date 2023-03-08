@@ -50,9 +50,7 @@ def _initialize():  # pragma: no cover
         import firebase_admin
         from firebase_admin import credentials
     except ImportError as err:  # pragma: no cover
-        raise MissingDependencyError(
-            "`firebase-admin` missing, please install or add to requirements.txt"
-        ) from err
+        raise MissingDependencyError(err.name) from err
     if not firebase_admin._apps:
         # if we've not been given the ID, fetch it
         project_id = GCP_PROJECT_ID
