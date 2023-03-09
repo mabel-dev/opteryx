@@ -13,7 +13,11 @@
 """
 Helper routines for handling types between different dialects.
 """
+import datetime
+from decimal import Decimal
 from enum import Enum
+
+from pyarrow import lib
 
 
 class OPTERYX_TYPES(str, Enum):
@@ -47,14 +51,15 @@ PYTHON_TYPES = {
     "datetime": OPTERYX_TYPES.TIMESTAMP,
     "date": OPTERYX_TYPES.TIMESTAMP,
     "dict": OPTERYX_TYPES.STRUCT,
-    "int": OPTERYX_TYPES.NUMERIC,
-    "float": OPTERYX_TYPES.NUMERIC,
-    "float64": OPTERYX_TYPES.NUMERIC,
-    "Decimal": OPTERYX_TYPES.NUMERIC,
+    "int": OPTERYX_TYPES.NUMERIC,  # INTEGER
+    "float": OPTERYX_TYPES.NUMERIC,  # FLOAT
+    "float64": OPTERYX_TYPES.NUMERIC,  # IS THIS USED?
+    "Decimal": OPTERYX_TYPES.NUMERIC,  # DECIMAL
     "str": OPTERYX_TYPES.VARCHAR,
     "tuple": OPTERYX_TYPES.LIST,
     "list": OPTERYX_TYPES.LIST,
     "set": OPTERYX_TYPES.LIST,
+    # INTERVAL?
 }
 
 PARQUET_TYPES = {
@@ -85,3 +90,41 @@ def determine_type(_type):
     if _type.startswith("list"):
         return OPTERYX_TYPES.LIST
     return PARQUET_TYPES.get(_type, f"OTHER ({_type})")
+
+
+def parquet_type_map(parquet_type):
+    if parquet_type == lib.Type_NA:
+        return None
+    if parquet_type == lib.Type_BOOL:
+        return bool
+    if parquet_type in {lib.Type_STRING, lib.Type_LARGE_STRING}:
+        return str
+    if parquet_type in {
+        lib.Type_INT8,
+        lib.Type_INT16,
+        lib.Type_INT32,
+        lib.Type_INT64,
+        lib.Type_UINT8,
+        lib.Type_UINT16,
+        lib.Type_UINT32,
+        lib.Type_UINT64,
+    }:
+        return int
+    if parquet_type in {lib.Type_HALF_FLOAT, lib.Type_FLOAT, lib.Type_DOUBLE}:
+        return float
+    if parquet_type in {lib.Type_DECIMAL128, lib.Type_DECIMAL256}:
+        return Decimal
+    if parquet_type in {lib.Type_DATE32, lib.Type_DATE64}:
+        return datetime.datetime
+    if parquet_type in {lib.Type_TIME32, lib.Type_TIME64}:
+        return datetime.time
+    if parquet_type == lib.Type_INTERVAL_MONTH_DAY_NANO:  # lib.Type_DURATION?
+        return datetime.timedelta
+    if parquet_type in {lib.Type_LIST, lib.Type_LARGE_LIST, lib.Type_FIXED_SIZE_LIST}:
+        return list
+    if parquet_type in {lib.Type_STRUCT, lib.Type_MAP}:
+        return dict
+    if parquet_type in {lib.Type_BINARY, lib.Type_LARGE_BINARY}:
+        return bytes
+    # _UNION_TYPES = {lib.Type_SPARSE_UNION, lib.Type_DENSE_UNION}
+    raise ValueError(f"Unable to map parquet type {parquet_type}")

@@ -111,9 +111,9 @@ def as_arrow(morsels, limit: int = None):
     """return a result set a a pyarrow table"""
     # cicular imports
     from opteryx.models import Columns
-    from opteryx.utils import peak
+    from opteryx.utils import peek
 
-    first, morsels = peak(morsels)
+    first, morsels = peek(morsels)
     if first is not None:
         merged = limit_records(morsels, limit)
         columns = Columns(merged)

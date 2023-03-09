@@ -28,9 +28,7 @@ class AwsS3Connector(BaseBlobStorageAdapter):
         try:
             from minio import Minio  # type:ignore
         except ImportError as err:  # pragma: no cover
-            raise MissingDependencyError(
-                "`minio` is missing, please install or include in requirements.txt"
-            ) from err
+            raise MissingDependencyError(err.name) from err
 
         super().__init__(**kwargs)
 

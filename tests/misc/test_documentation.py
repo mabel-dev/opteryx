@@ -38,7 +38,7 @@ def test_readme_2():
     opteryx.register_df("exoplanets", pandas_df)
     aggregated_df = opteryx.query(
         "SELECT koi_disposition, COUNT(*) FROM exoplanets GROUP BY koi_disposition;"
-    ).to_df()
+    ).pandas()
     aggregated_df.head()
 
 
@@ -115,7 +115,7 @@ def test_pandas_integration_input():
 def test_pandas_integration_output():
     import opteryx
 
-    dataframe = opteryx.query("SELECT * FROM $planets").to_df()
+    dataframe = opteryx.query("SELECT * FROM $planets").pandas()
 
 
 def test_polars_integration_input():

@@ -13,7 +13,7 @@ def test_as_pandas_no_limit():
     conn = opteryx.connect()
     cur = conn.cursor()
     cur.execute("SELECT * FROM $planets")
-    table = cur.to_df()
+    table = cur.pandas()
 
     assert "name" in table.columns
     assert len(table) == 9
@@ -26,7 +26,7 @@ def test_as_pandas_with_limit():
     conn = opteryx.connect()
     cur = conn.cursor()
     cur.execute("SELECT * FROM $planets")
-    table = cur.to_df(size=5)
+    table = cur.pandas(size=5)
 
     assert "name" in table.columns
     assert len(table) == 5

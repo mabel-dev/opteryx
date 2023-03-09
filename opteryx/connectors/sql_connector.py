@@ -64,9 +64,7 @@ class SqlConnector(BaseSQLStorageAdapter, PredicatePushable):
         try:
             from sqlalchemy import create_engine
         except ImportError as err:  # pragma: nocover
-            raise MissingDependencyError(
-                "`sqlalchemy` is missing, please install or include in requirements.txt"
-            ) from err
+            raise MissingDependencyError(err.name) from err
 
         self._connection = connection
 

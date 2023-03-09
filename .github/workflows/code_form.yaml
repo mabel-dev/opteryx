@@ -17,7 +17,7 @@ jobs:
         with:
           python-version: '3.10'
       - name: Install Black & isort
-        run: pip install --upgrade black isort
+        run: pip install --upgrade black isort pymmh3
       - name: Run black
         run: black --check .
 #      - name: Run isort

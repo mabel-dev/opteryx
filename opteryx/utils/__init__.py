@@ -32,16 +32,17 @@ def hasher(vals):
     return vals
 
 
-def peak(generator):  # type:ignore
+def peek(iterable):  # type:ignore
     """
-    peak an item off a generator, this may have undesirable consequences so
-    only use if you also wrote the generator
+    peek an item off a generator
     """
+    iter1, iter2 = itertools.tee(iterable)
     try:
-        item = next(generator)
-    except StopIteration:  # pragma: no cover
-        return None, []
-    return item, itertools.chain([item], generator)
+        first = next(iter1)
+    except StopIteration:
+        return None, iter([])
+    else:
+        return first, iter2
 
 
 def fuzzy_search(name, candidates):

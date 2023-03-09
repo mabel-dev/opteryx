@@ -15,12 +15,14 @@ This module provides a PEP-249 familiar interface for interacting with mabel dat
 stores, it is not compliant with the standard:
 https://www.python.org/dev/peps/pep-0249/
 """
+import logging
 import time
 from typing import Dict
 from typing import List
 from typing import Optional
 from uuid import uuid4
 
+from orso import DataFrame
 from pyarrow import Table
 
 from opteryx import utils
@@ -69,7 +71,7 @@ class Connection:
         raise AttributeError("Opteryx does not support transactions.")
 
 
-class Cursor:
+class Cursor(DataFrame):
     def __init__(self, connection):
         self.arraysize = 1
 
@@ -211,7 +213,7 @@ class Cursor:
             raise EmptyResultSetError("Cannot fulfil request on an empty result set")
         return self._results
 
-    def to_df(self, size: int = None):
+    def pandas(self, size: int = None):
         """
         Fetch the resultset as Pandas DataFrame.
 
@@ -225,10 +227,12 @@ class Cursor:
         try:
             import pandas
         except ImportError as err:  # pragma: nocover
-            raise MissingDependencyError(
-                "`pandas` is missing, please install or include in requirements.txt"
-            ) from err
+            raise MissingDependencyError(err.name) from err
         return self.arrow(size=size).to_pandas()
+
+    def to_df(self, size: int = None):  # pragma: no cover
+        logging.warning("connection.to_df will be removed, replace with connection.pandas")
+        return self.pandas(size)
 
     def polars(self, size: int = None):
         """
@@ -237,9 +241,7 @@ class Cursor:
         try:
             import polars
         except ImportError as err:  # pragma: nocover
-            raise MissingDependencyError(
-                "`polars` is missing, please install or include in requirements.txt"
-            ) from err
+            raise MissingDependencyError(err.name) from err
         return polars.DataFrame(self.arrow(size=size))
 
     def close(self):

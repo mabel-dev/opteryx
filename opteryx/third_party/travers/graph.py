@@ -358,9 +358,7 @@ class Graph(object):
         try:
             import networkx as nx  # type:ignore
         except ImportError as err:  # pragma: no cover
-            raise MissingDependencyError(
-                "`networx` is missing, please install or include in requirements.txt"
-            ) from err
+            raise MissingDependencyError(err.name) from err
 
         g = nx.DiGraph()
         for s, t, r in self.edges():
