@@ -263,11 +263,27 @@ def extract_temporal_filters(sql):  # pragma: no cover
 
         elif for_date_string.startswith("DATES BETWEEN "):
             parts = for_date_string.split(" ")
+
+            if len(parts) != 5:
+                raise InvalidTemporalRangeFilterError(
+                    "Invalid temporal range, expected format `FOR DATES BETWEEN <start> AND <end>`."
+                )
+            if parts[3] != "AND":
+                raise InvalidTemporalRangeFilterError(
+                    f"Invalid temporal range, expected `AND`, found `{parts[3]}`."
+                )
+
             start_date = parse_date(parts[2])
             end_date = parse_date(parts[4])
 
-            if start_date is None or end_date is None:
-                raise InvalidTemporalRangeFilterError("Unrecognized temporal range values.")
+            if start_date is None:
+                raise InvalidTemporalRangeFilterError(
+                    f"Invalid temporal range, expected a date for start of range, found `{parts[2]}`."
+                )
+            if end_date is None:
+                raise InvalidTemporalRangeFilterError(
+                    f"Invalid temporal range, expected a date for end of range, found `{parts[4]}`."
+                )
             if start_date > end_date:
                 raise InvalidTemporalRangeFilterError(
                     "Invalid temporal range, start of range is after end of range."

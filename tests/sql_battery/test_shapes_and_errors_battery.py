@@ -863,6 +863,11 @@ STATEMENTS = [
         ("SELECT * FROM $planets WHERE id < null", 0, 20, None),
         ("SELECT * FROM $planets WHERE id >= null", 0, 20, None),
         ("SELECT * FROM $planets WHERE id <= null", 0, 20, None),
+        # 929 - handle invalid temporal range filters better
+        ("SELECT * FROM $planets FOR DATES BETWEEN TODAY", None, None, InvalidTemporalRangeFilterError),
+        ("SELECT * FROM $planets FOR DATES BETWEEN TODAY AND TOMORROW", None, None, InvalidTemporalRangeFilterError),
+        ("SELECT * FROM $planets FOR DATES BETWEEN TODAY OR TOMORROW", None, None, InvalidTemporalRangeFilterError),
+        ("SELECT * FROM $planets FOR DATES BETWEEN BEFORE AND TODAY", None, None, InvalidTemporalRangeFilterError),
 
 ]
 # fmt:on
