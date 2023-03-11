@@ -1,7 +1,7 @@
-hadrodb>=0.0.12
+hadrodb
 numpy
 orjson
-orso
+orso>=0.0.12
 pyarrow>=11.0.0
 typer
 
