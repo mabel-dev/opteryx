@@ -887,16 +887,17 @@ def test_sql_battery(statement, rows, columns, exception):
     try:
         cursor.execute(statement)
         actual_rows, actual_columns = cursor.shape
-        assert rows == actual_rows, f"Query returned {actual_rows} rows but {rows} were expected"
-        f" ({actual_columns} vs {columns})\n{statement}\n{cursor.head(10)}"
-        assert columns == actual_columns, f"Query returned {actual_columns} cols but {columns} were"
-        f" expected\n{statement}\n{cursor.head(10)}"
+        assert (
+            rows == actual_rows
+        ), f"Query returned {actual_rows} rows but {rows} were expected ({actual_columns} vs {columns})\n{statement}\n{cursor.head(10)}"
+        assert (
+            columns == actual_columns
+        ), f"Query returned {actual_columns} cols but {columns} were expected\n{statement}\n{cursor.head(10)}"
 
     except Exception as err:
         assert (
             type(err) == exception
-        ), f"\n{format_sql(statement)}\nQuery failed with error {type(err)}"
-        f" but error {exception} was expected"
+        ), f"\n{format_sql(statement)}\nQuery failed with error {type(err)} but error {exception} was expected"
 
 
 if __name__ == "__main__":  # pragma: no cover

@@ -126,6 +126,23 @@ def as_arrow(morsels, limit: int = None):
     return set()
 
 
+def rename_columns(morsels):
+    """rename columns to their preferred names"""
+    from opteryx.models import Columns
+
+    columns = None
+    morsels = iter(morsels)
+    for morsel in morsels:
+        if columns is None:
+            columns = Columns(morsel)
+            preferred_names = columns.preferred_column_names
+            column_names = []
+            for col in morsel.column_names:
+                column_names.append([c for a, c in preferred_names if a == col][0])
+        if column_names:
+            yield morsel.rename_columns(column_names)
+
+
 # Adapted from:
 # https://stackoverflow.com/questions/55546027/how-to-assign-arbitrary-metadata-to-pyarrow-table-parquet-columns
 
