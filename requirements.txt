@@ -1,4 +1,4 @@
-hadrodb
+hadrodb>=0.0.12
 numpy
 orjson
 orso
