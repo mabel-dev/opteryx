@@ -17,6 +17,7 @@ def test_polars():
     assert curr.shape == (2532, 2)
 
     # execute a join across a dataframe an another dataset
+    curr = opteryx.Connection().cursor()
     curr.execute(
         "SELECT username, user_verified, name FROM twitter INNER JOIN $planets ON twitter.followers = $planets.id"
     )

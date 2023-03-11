@@ -54,13 +54,13 @@ def rename_columns(morsels):
     columns = None
     morsels = iter(morsels)
     for morsel in morsels:
-        if columns is None:
+        if columns is None and morsel is not None:
             columns = Columns(morsel)
             preferred_names = columns.preferred_column_names
             column_names = []
             for col in morsel.column_names:
                 column_names.append([c for a, c in preferred_names if a == col][0])
-        if column_names:
+        if column_names and morsel is not None:
             yield morsel.rename_columns(column_names)
 
 
