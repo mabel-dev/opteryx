@@ -8,13 +8,11 @@ import os
 import sys
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
-import pyarrow
 import pytest
 
 import opteryx
 from opteryx.connectors import DiskConnector
-from opteryx.utils.arrow import fetchmany
-from opteryx.utils.display import ascii_table
+
 
 # fmt:off
 STATEMENTS = [

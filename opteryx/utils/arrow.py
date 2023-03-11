@@ -13,72 +13,12 @@
 """
 This module contains support functions for working with PyArrow
 """
-from typing import Iterable
-from typing import List
 
 import pyarrow
 from orjson import dumps
 from orjson import loads
-from pyarrow import Table
 
 INTERNAL_BATCH_SIZE = 500
-
-
-def fetchmany(morsels, limit: int = 1000, as_dicts: bool = False):
-    """fetch records from a Table as Python Dicts"""
-    from opteryx.models.columns import Columns  # circular imports
-
-    if morsels is None:
-        return []
-
-    if isinstance(morsels, Table):
-        morsels = (morsels,)
-
-    chunk_size = min(limit, INTERNAL_BATCH_SIZE)
-    if chunk_size < 0:
-        chunk_size = INTERNAL_BATCH_SIZE
-
-    def _inner_row_reader():
-        column_names = None
-        schema = None
-
-        for morsel in morsels:
-            if column_names is None:
-                schema = morsel.schema
-                columns = Columns(morsel)
-                preferred_names = columns.preferred_column_names
-                column_names = []
-                for col in morsel.column_names:
-                    column_names.append([c for a, c in preferred_names if a == col][0])
-
-            morsel, schema = normalize_to_schema(morsel, schema)
-            morsel = morsel.rename_columns(column_names)
-
-            for batch in morsel.to_batches(max_chunksize=chunk_size):
-                if as_dicts:
-                    yield from batch.to_pylist()
-                else:
-                    yield from [tuple(tpl.values()) for tpl in batch.to_pylist()]
-
-    index = -1
-    for index, row in enumerate(_inner_row_reader()):
-        if index == limit:
-            return
-        yield row
-
-    if index < 0:
-        if as_dicts:
-            yield {}
-        else:
-            yield tuple()
-
-
-def fetchone(morsels: Iterable, as_dicts: bool = False) -> dict:
-    return next(fetchmany(morsels=morsels, limit=1, as_dicts=as_dicts), None)
-
-
-def fetchall(morsels, as_dicts: bool = False) -> List[dict]:
-    return fetchmany(morsels=morsels, limit=-1, as_dicts=as_dicts)
 
 
 def limit_records(morsels, limit):
@@ -105,25 +45,6 @@ def limit_records(morsels, limit):
         return morsel
     else:
         return pyarrow.concat_tables(result_set, promote=True).slice(offset=0, length=limit)
-
-
-def as_arrow(morsels, limit: int = None):
-    """return a result set a a pyarrow table"""
-    # cicular imports
-    from opteryx.models import Columns
-    from opteryx.utils import peek
-
-    first, morsels = peek(morsels)
-    if first is not None:
-        merged = limit_records(morsels, limit)
-        columns = Columns(merged)
-        preferred_names = columns.preferred_column_names
-        column_names = []
-        for col in merged.column_names:
-            column_names.append([c for a, c in preferred_names if a == col][0])
-
-        return merged.rename_columns(column_names)
-    return set()
 
 
 def rename_columns(morsels):

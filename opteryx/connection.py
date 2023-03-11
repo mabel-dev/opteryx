@@ -192,7 +192,7 @@ class Cursor(DataFrame):
             from IPython.display import HTML
             from IPython.display import display
 
-            html = html_table(iter(self.fetchmany(size, as_dicts=True)), size)
+            html = html_table(iter(self.fetchmany(size)), size)
             display(HTML(html))
         else:
             displayed_footer = f"({size} displayed) " if size < self.rowcount else ""

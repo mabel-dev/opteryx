@@ -11,8 +11,6 @@ import pytest
 
 import opteryx
 from opteryx.connectors import DiskConnector
-from opteryx.utils.arrow import fetchmany
-from opteryx.utils.display import ascii_table
 
 from tests.tools import is_pypy, is_windows
 
