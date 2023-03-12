@@ -7,7 +7,6 @@ import pytest
 
 from opteryx.utils.bitarray.bitarray import bitarray
 
-
 import pytest
 
 
