@@ -86,7 +86,7 @@ class Columns:
         for name in preferences:
             if preferences.count(name) > 1:
                 # get the indices of the colliding columns
-                instances = [i for i, x in enumerate(preferences) if x == name]
+                instances = [i for i, x in enumerate(preferences) if x == name][1:]
                 # try renaming collisions to table_alias.column_name/alias
                 preferences = self._rename_columns_to_table_alias(
                     preferences, _column_metadata, instances

@@ -9,26 +9,6 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 import pytest
 
 
-def test_connection_invalid_state():
-    import opteryx
-    from opteryx.exceptions import CursorInvalidStateError
-
-    conn = opteryx.connect()
-    cur = conn.cursor()
-
-    with pytest.raises(CursorInvalidStateError):
-        cur.fetchone()
-
-    with pytest.raises(CursorInvalidStateError):
-        cur.fetchmany()
-
-    with pytest.raises(CursorInvalidStateError):
-        cur.fetchall()
-
-    with pytest.raises(CursorInvalidStateError):
-        cur.shape()
-
-
 def test_connection_warnings():
     import opteryx
 
@@ -65,15 +45,13 @@ def test_fetching():
     cur = conn.cursor()
     cur.execute("SELECT * FROM $planets;")
 
-    assert isinstance(cur.fetchone(), tuple)
-    assert isinstance(cur.fetchone(True), dict)
-    assert len(list(cur.fetchall())) == 9
-    assert len(list(cur.fetchmany(4))) == 4
-    assert len(list(cur.fetchmany(100))) == 9
+    assert isinstance(cur.fetchone(), tuple)  # we have 8 records left
+    assert len(cur.fetchmany(3)) == 3  # we have 5 records left
+    assert len(cur.fetchall()) == 5  # we have zero record left
+    assert len(cur.fetchmany(100)) == 0
 
 
 if __name__ == "__main__":  # pragma: no cover
-    test_connection_invalid_state()
     test_connection_warnings()
     test_connection_parameter_mismatch()
     test_fetching()

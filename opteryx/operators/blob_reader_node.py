@@ -276,6 +276,8 @@ class BlobReaderNode(BasePlanNode):
                         )
                         for batch in pyarrow_blob.to_batches(max_chunksize=batch_size):
                             yield pyarrow.Table.from_batches([batch], schema=pyarrow_blob.schema)
+                    else:
+                        yield pyarrow_blob
 
     def _read_and_parse(self, config):
         path, reader, parser, cache, projection, selection = config

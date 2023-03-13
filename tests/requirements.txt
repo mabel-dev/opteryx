@@ -5,9 +5,12 @@ types-requests
 coverage
 hypothesis
 mypy
+pytest
+black
+isort
+
 pandas
 pymemcache
-pytest
 requests
 rich
 zstandard

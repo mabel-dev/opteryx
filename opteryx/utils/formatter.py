@@ -30,7 +30,6 @@ def format_sql(sql):
             formatted_sql += "\033[38;5;102m" + word + "\033[0m "
             indent_level -= 1
         elif word in [
-            ",",
             "SELECT",
             "FROM",
             "WHERE",
@@ -43,7 +42,7 @@ def format_sql(sql):
             "ORDER",
             "LIMIT",
         ]:
-            formatted_sql += "\033[38;5;117m" + word + "\033[0m "
+            formatted_sql += "\033[38;5;117m\n" + word.rjust(7) + "\033[0m "
         elif word in ["=", ">=", "<=", "!=", "<", ">", "<>"]:
             formatted_sql += "\033[38;5;183m" + word + "\033[0m "
         elif word.isdigit():

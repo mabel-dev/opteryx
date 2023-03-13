@@ -113,9 +113,7 @@ def ascii_table(
         string (ASCII table)
     """
 
-    if table == set():  # pragma: no cover
-        return "No data in table"
-    if table.num_rows == 0:
+    if table is None:  # pragma: no cover
         return "No data in table"
 
     # get the width of the display

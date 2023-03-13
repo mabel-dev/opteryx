@@ -10,7 +10,7 @@ def test_format_sql_no_indent():
     sql = "SELECT * FROM mytable"
     formatted_sql = format_sql(sql)
     assert (
-        formatted_sql == "\n\x1b[38;5;117mSELECT\x1b[0m * \x1b[38;5;117mFROM\x1b[0m mytable"
+        formatted_sql == "\n\x1b[38;5;117m\n SELECT\x1b[0m * \x1b[38;5;117m\n   FROM\x1b[0m mytable"
     ), formatted_sql.encode()
 
 
@@ -19,7 +19,7 @@ def test_format_sql_single_level_indent():
     formatted_sql = format_sql(sql)
     assert (
         formatted_sql
-        == "\n\x1b[38;5;117mSELECT\x1b[0m * \x1b[38;5;117mFROM\x1b[0m mytable \x1b[38;5;117mWHERE\x1b[0m id \x1b[38;5;183m=\x1b[0m \x1b[0;31m1\x1b[0m"
+        == "\n\x1b[38;5;117m\n SELECT\x1b[0m * \x1b[38;5;117m\n   FROM\x1b[0m mytable \x1b[38;5;117m\n  WHERE\x1b[0m id \x1b[38;5;183m=\x1b[0m \x1b[0;31m1\x1b[0m"
     ), formatted_sql.encode()
 
 
@@ -30,7 +30,7 @@ def test_format_sql_multiple_level_indent():
     formatted_sql = format_sql(sql)
     assert (
         formatted_sql
-        == "\n\x1b[38;5;117mSELECT\x1b[0m * \x1b[38;5;117mFROM\x1b[0m mytable \x1b[38;5;117mWHERE\x1b[0m id \x1b[38;5;183m=\x1b[0m \x1b[0;31m1\x1b[0m \x1b[38;5;117mAND\x1b[0m name \x1b[38;5;183m=\x1b[0m 'John' \x1b[38;5;117mAND\x1b[0m \x1b[38;5;102m(\x1b[0m age \x1b[38;5;183m>=\x1b[0m \x1b[0;31m18\x1b[0m \x1b[38;5;117mOR\x1b[0m city \x1b[38;5;183m=\x1b[0m 'New York' \x1b[38;5;102m)\x1b[0m"
+        == "\n\x1b[38;5;117m\n SELECT\x1b[0m * \x1b[38;5;117m\n   FROM\x1b[0m mytable \x1b[38;5;117m\n  WHERE\x1b[0m id \x1b[38;5;183m=\x1b[0m \x1b[0;31m1\x1b[0m \x1b[38;5;117m\n    AND\x1b[0m name \x1b[38;5;183m=\x1b[0m 'John' \x1b[38;5;117m\n    AND\x1b[0m \x1b[38;5;102m(\x1b[0m age \x1b[38;5;183m>=\x1b[0m \x1b[0;31m18\x1b[0m \x1b[38;5;117m\n     OR\x1b[0m city \x1b[38;5;183m=\x1b[0m 'New York' \x1b[38;5;102m)\x1b[0m"
     ), formatted_sql.encode()
 
 
@@ -39,7 +39,7 @@ def test_format_sql_with_order_by():
     formatted_sql = format_sql(sql)
     assert (
         formatted_sql
-        == "\n\x1b[38;5;117mSELECT\x1b[0m * \x1b[38;5;117mFROM\x1b[0m mytable \x1b[38;5;117mWHERE\x1b[0m id \x1b[38;5;183m>\x1b[0m \x1b[0;31m10\x1b[0m \x1b[38;5;117mORDER\x1b[0m \x1b[38;5;117mBY\x1b[0m name DESC"
+        == "\n\x1b[38;5;117m\n SELECT\x1b[0m * \x1b[38;5;117m\n   FROM\x1b[0m mytable \x1b[38;5;117m\n  WHERE\x1b[0m id \x1b[38;5;183m>\x1b[0m \x1b[0;31m10\x1b[0m \x1b[38;5;117m\n  ORDER\x1b[0m \x1b[38;5;117m\n     BY\x1b[0m name DESC"
     ), formatted_sql.encode()
 
 
@@ -48,7 +48,7 @@ def test_format_sql_with_limit():
     formatted_sql = format_sql(sql)
     assert (
         formatted_sql
-        == "\n\x1b[38;5;117mSELECT\x1b[0m * \x1b[38;5;117mFROM\x1b[0m mytable \x1b[38;5;117mLIMIT\x1b[0m \x1b[0;31m10\x1b[0m"
+        == "\n\x1b[38;5;117m\n SELECT\x1b[0m * \x1b[38;5;117m\n   FROM\x1b[0m mytable \x1b[38;5;117m\n  LIMIT\x1b[0m \x1b[0;31m10\x1b[0m"
     ), formatted_sql.encode()
 
 

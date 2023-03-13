@@ -87,17 +87,19 @@ TABLES = [
 
 
 def test_sql_fuzzing():
-    for i in range(100):
+    for i in range(250):
         table = TABLES[random.choice(range(len(TABLES)))]
         statement = generate_random_sql_select(table["fields"], table["name"])
         res = opteryx.query(statement)
         try:
-            res.arrow()
+            print(".", end="")
+            res.materialize()
         except Exception as e:
             print(format_sql(statement))
             print()
             print(e)
             raise e
+    print("")
 
 
 if __name__ == "__main__":  # pragma: no cover
