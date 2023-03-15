@@ -17,11 +17,11 @@ These are a set of functions that can be applied to data.
 
 import numpy
 import pyarrow
+from orso.cityhash import CityHash64
 from pyarrow import ArrowNotImplementedError
 from pyarrow import compute
 
 import opteryx
-from cityhash import CityHash64
 from opteryx.exceptions import SqlError
 from opteryx.exceptions import UnsupportedSyntaxError
 from opteryx.functions import date_functions

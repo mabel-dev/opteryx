@@ -24,9 +24,9 @@ from typing import Any
 
 import numpy
 import pyarrow
+from orso.cityhash import CityHash64
 from pyarrow import Table
 
-from cityhash import CityHash64
 from opteryx.functions import FUNCTIONS
 from opteryx.functions.binary_operators import binary_operations
 from opteryx.functions.unary_operations import UNARY_OPERATIONS
