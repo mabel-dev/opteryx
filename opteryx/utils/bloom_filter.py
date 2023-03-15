@@ -25,7 +25,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from cityhash import CityHash32
+from orso.cityhash import CityHash32
+
 from opteryx.utils.bitarray.bitarray import bitarray
 
 HASH_SEEDS = (

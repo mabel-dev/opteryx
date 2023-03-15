@@ -14,8 +14,7 @@ import itertools
 import random
 
 import numpy
-
-from cityhash import CityHash64
+from orso.cityhash import CityHash64
 
 
 def hasher(vals):
