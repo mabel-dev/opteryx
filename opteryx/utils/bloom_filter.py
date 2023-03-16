@@ -25,9 +25,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+from orso.bitarray import BitArray
 from orso.cityhash import CityHash32
-
-from opteryx.utils.bitarray.bitarray import bitarray
 
 HASH_SEEDS = (
     "ANTHROPOMORPHISM",
@@ -108,7 +107,7 @@ class BloomFilter:
         self.filter_size: int = _get_size(number_of_elements, fp_rate)
         self.hash_count: int = _get_hash_count(self.filter_size, number_of_elements)
         self.hash_seeds: tuple = tuple(HASH_SEEDS[i] for i in range(self.hash_count))
-        self.bits = bitarray(self.filter_size)
+        self.bits = BitArray(self.filter_size)
 
     def add(self, term):
         """
