@@ -29,24 +29,24 @@ from orso.bitarray import BitArray
 from orso.cityhash import CityHash32
 
 HASH_SEEDS = (
-    "ANTHROPOMORPHISM",
-    "BLOODYMINDEDNESS",
-    "CHARACTERIZATION",
-    "CONTEMPTUOUSNESS",
-    "DISFRANCHISEMENT",
-    "DISINGENUOUSNESS",
-    "ELECTROTECHNICAL",
-    "HYPERVENTILATION",
-    "INCOMPREHENSIBLE",
-    "NONRECIPROCATING",
-    "ONEQUINTILLIONTH",
-    "PRESUMPTUOUSNESS",
-    "QUINTESSENTIALLY",
-    "SENSATIONALISTIC",
-    "THREEDIMENSIONAL",
-    "UNCOMPREHENSIBLE",
-    "UNDIPLOMATICALLY",
-    "UNUNDERSTANDABLY",
+    b"ANTHROPOMORPHISM",
+    b"BLOODYMINDEDNESS",
+    b"CHARACTERIZATION",
+    b"CONTEMPTUOUSNESS",
+    b"DISFRANCHISEMENT",
+    b"DISINGENUOUSNESS",
+    b"ELECTROTECHNICAL",
+    b"HYPERVENTILATION",
+    b"INCOMPREHENSIBLE",
+    b"NONRECIPROCATING",
+    b"ONEQUINTILLIONTH",
+    b"PRESUMPTUOUSNESS",
+    b"QUINTESSENTIALLY",
+    b"SENSATIONALISTIC",
+    b"THREEDIMENSIONAL",
+    b"UNCOMPREHENSIBLE",
+    b"UNDIPLOMATICALLY",
+    b"UNUNDERSTANDABLY",
 )
 
 
@@ -114,20 +114,19 @@ class BloomFilter:
         Add a value to the index, returns true if the item is new, false if seen before
         """
         bits = self.bits
-
+        term = term.encode()
         for seed in self.hash_seeds:
-            hash_ = CityHash32(f"{seed}{term}") % self.filter_size
+            hash_ = CityHash32(seed + term) % self.filter_size
             bits.set(hash_, 1)
 
     def __contains__(self, term):
+        bits = self.bits
+        term = term.encode()
         for seed in self.hash_seeds:
-            hash_ = CityHash32(f"{seed}{term}") % self.filter_size
-            if self.bits.get(hash_) == 0:
+            hash_ = CityHash32(seed + term) % self.filter_size
+            if bits.get(hash_) == 0:
                 return False
         return True
-
-    def __repr__(self):  # pragma: no cover
-        return f"BloomFilter <bits:{self.filter_size}, hashes:{self.hash_count}>"
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -135,10 +134,11 @@ if __name__ == "__main__":  # pragma: no cover
     import random
     import time
 
-    def unique_id():
-        return f"{hex(random.getrandbits(40))}"
+    from opteryx.utils import random_string
 
     n = time.monotonic_ns()
     for i in range(1000000):
-        b.add(unique_id())
-    print((time.monotonic_ns() - n) / 1e9)
+        b.add(random_string())
+    for i in range(1000000):
+        random_string(8) in b
+    print((time.monotonic_ns() - n) / 1e9, "opted")

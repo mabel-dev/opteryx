@@ -18,6 +18,7 @@ Goal: Reduce rows
 """
 from opteryx import operators
 from opteryx.managers.expression import NodeType
+from opteryx.utils import random_string
 
 
 def split_conjunctive_predicates(plan, properties):
@@ -36,11 +37,6 @@ def split_conjunctive_predicates(plan, properties):
         the check (a numeric check is faster than a string check)
     """
 
-    def unique_id():
-        import random
-
-        return hex(random.getrandbits(16))
-
     def _inner_split(plan, nid, operator):
         selection = operator.filter
         if selection.token_type != NodeType.AND:
@@ -51,7 +47,7 @@ def split_conjunctive_predicates(plan, properties):
         right_node = operators.SelectionNode(filter=selection.right, properties=properties)
         # insert them into the plan and remove the old node
         # we're chaining the new operators
-        uid = unique_id()  # avoid collisions
+        uid = random_string()  # avoid collisions
         plan.insert_node_before(f"{nid}-{uid}-right", right_node, nid)
         plan.insert_node_before(f"{nid}-{uid}-left", left_node, f"{nid}-{uid}-right")
         plan.remove_node(nid, heal=True)

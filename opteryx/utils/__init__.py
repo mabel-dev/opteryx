@@ -70,26 +70,12 @@ def random_int() -> int:
 
 
 def random_string(width: int = 16):
-    """
-    This is roughly twice as fast as the previous implementation which was roughly
-    twice as fast as it's previous implementation.
-
-    This has more room for improvement, particularly in the Base64 encoding part,
-    but this currently isn't identified as a performance bottleneck, the last
-    rewrite was incidental when writing tests for a hasher.
-    """
-    import struct
-    from base64 import b64encode
-
-    words: int = int(-(width * 0.75) // -8) + 1
-
-    bytestring = struct.pack("=" + "Q" * words, *[random.getrandbits(64)] * words)
-    return b64encode(bytestring).decode()[:width]
-
-
-def unique_id():
-    """create a short, random hexadecimal string, uniqueness not guaranteed"""
-    return f"{hex(random.getrandbits(40))[2:]:0>10}"
+    num_chars = ((width + 1) >> 1) << 3  # Convert length to number of bits
+    rand_bytes = random.getrandbits(num_chars)  # Generate random bytes
+    rand_hex = hex(rand_bytes)[
+        2 : width + 2
+    ]  # Convert to hex string and truncate to desired length
+    return rand_hex
 
 
 def is_arm():

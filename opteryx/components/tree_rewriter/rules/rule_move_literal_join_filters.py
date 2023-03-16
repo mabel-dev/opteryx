@@ -18,6 +18,7 @@ Goal: Move filters JOIN which reference literals
 from opteryx import operators
 from opteryx.managers.expression import LITERAL_TYPE
 from opteryx.managers.expression import NodeType
+from opteryx.utils import random_string
 
 
 def move_literal_join_filters(plan, properties):
@@ -31,11 +32,6 @@ def move_literal_join_filters(plan, properties):
     but non-optimal, that's fine we should let the optimizer work out where to filter.
     """
 
-    def unique_id():
-        import random
-
-        return hex(random.getrandbits(16))
-
     def _has_literal(node):
         return (node.left and node.left.token_type & LITERAL_TYPE == LITERAL_TYPE) or (
             node.right and node.right.token_type & LITERAL_TYPE == LITERAL_TYPE
@@ -46,7 +42,7 @@ def move_literal_join_filters(plan, properties):
         if node.token_type != NodeType.AND:
             return node, plan
 
-        uid = unique_id()  # avoid collisions
+        uid = random_string()  # avoid collisions
         if _has_literal(node.left):
             # we create a new selection node with the literal filter and add it to the plan
             new_node = operators.SelectionNode(filter=node.left, properties=properties)

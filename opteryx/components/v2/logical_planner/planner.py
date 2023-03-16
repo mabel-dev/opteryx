@@ -31,7 +31,7 @@ from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.models.node import Node
 from opteryx.third_party.travers import Graph
-from opteryx.utils import unique_id
+from opteryx.utils import random_string
 
 sys.path.insert(1, os.path.join(sys.path[0], "../../../.."))
 
@@ -105,7 +105,7 @@ def plan_query(statement):
         for relation in _relations:
             # TODO: if it's a subquery, expand it out
             from_step = Node(node_type=LogicalPlanStepType.READ, relation=relation)
-            previous_step_id, step_id = step_id, unique_id()
+            previous_step_id, step_id = step_id, random_string()
             previous_from_step_id, from_step_id = previous_step_id, step_id
             inner_plan.add_node(from_step_id, from_step)
 
@@ -114,14 +114,14 @@ def plan_query(statement):
             for join in _joins:
                 # add the join node
                 join_step = Node(node_type=LogicalPlanStepType.JOIN, join=join)
-                previous_step_id, step_id = step_id, unique_id()
+                previous_step_id, step_id = step_id, random_string()
                 join_step_id = step_id
                 inner_plan.add_node(join_step_id, join_step)
                 # add the from table as the left side of the join
                 inner_plan.add_edge(from_step_id, join_step_id, "left")
                 # add the other side of the join
                 # TODO: if it's a subquery, expand it out
-                right_node = unique_id()
+                right_node = random_string()
                 joined_read_step = Node(
                     node_type=LogicalPlanStepType.READ, relation=join["relation"]
                 )
@@ -138,7 +138,7 @@ def plan_query(statement):
         _selection = builders.build(sub_plan["Select"]["selection"])
         if _selection:
             selection_step = Node(node_type=LogicalPlanStepType.SELECT)
-            previous_step_id, step_id = step_id, unique_id()
+            previous_step_id, step_id = step_id, random_string()
             inner_plan.add_node(step_id, selection_step)
             if previous_step_id is not None:
                 inner_plan.add_edge(previous_step_id, step_id)
@@ -147,7 +147,7 @@ def plan_query(statement):
         _groups = builders.build(sub_plan["Select"]["group_by"])
         if _groups != []:
             group_step = Node(node_type=LogicalPlanStepType.GROUP, group=_groups)
-            previous_step_id, step_id = step_id, unique_id()
+            previous_step_id, step_id = step_id, random_string()
             inner_plan.add_node(step_id, group_step)
             if previous_step_id is not None:
                 inner_plan.add_edge(previous_step_id, step_id)
@@ -159,7 +159,7 @@ def plan_query(statement):
         )
         if len(_aggregates) > 0:
             aggregate_step = Node(node_type=LogicalPlanStepType.AGGREGATE, aggregates=_aggregates)
-            previous_step_id, step_id = step_id, unique_id()
+            previous_step_id, step_id = step_id, random_string()
             inner_plan.add_node(step_id, aggregate_step)
             if previous_step_id is not None:
                 inner_plan.add_edge(previous_step_id, step_id)
@@ -168,7 +168,7 @@ def plan_query(statement):
         _projection = [clause for clause in _projection if clause not in _aggregates]
         if not (len(_projection) == 1 and _projection[0].token_type == NodeType.WILDCARD):
             project_step = Node(node_type=LogicalPlanStepType.PROJECT, projection=_projection)
-            previous_step_id, step_id = step_id, unique_id()
+            previous_step_id, step_id = step_id, random_string()
             inner_plan.add_node(step_id, project_step)
             if previous_step_id is not None:
                 inner_plan.add_edge(previous_step_id, step_id)
@@ -177,7 +177,7 @@ def plan_query(statement):
         _having = builders.build(sub_plan["Select"]["having"])
         if _having:
             having_step = Node(node_type=LogicalPlanStepType.SELECT)
-            previous_step_id, step_id = step_id, unique_id()
+            previous_step_id, step_id = step_id, random_string()
             inner_plan.add_node(step_id, having_step)
             if previous_step_id is not None:
                 inner_plan.add_edge(previous_step_id, step_id)
@@ -185,7 +185,7 @@ def plan_query(statement):
         # distinct
         if sub_plan["Select"]["distinct"]:
             distinct_step = Node(node_type=LogicalPlanStepType.DISTINCT)
-            previous_step_id, step_id = step_id, unique_id()
+            previous_step_id, step_id = step_id, random_string()
             inner_plan.add_node(step_id, distinct_step)
             if previous_step_id is not None:
                 inner_plan.add_edge(previous_step_id, step_id)
@@ -194,7 +194,7 @@ def plan_query(statement):
         _order_by = sub_plan["order_by"]
         if _order_by:
             order_step = Node(node_type=LogicalPlanStepType.ORDER, order=_order_by)
-            previous_step_id, step_id = step_id, unique_id()
+            previous_step_id, step_id = step_id, random_string()
             inner_plan.add_node(step_id, order_step)
             if previous_step_id is not None:
                 inner_plan.add_edge(previous_step_id, step_id)
@@ -204,7 +204,7 @@ def plan_query(statement):
         _offset = sub_plan["offset"]
         if _limit or _offset:
             limit_step = Node(node_type=LogicalPlanStepType.LIMIT, limit=_limit, offset=_offset)
-            previous_step_id, step_id = step_id, unique_id()
+            previous_step_id, step_id = step_id, random_string()
             inner_plan.add_node(step_id, limit_step)
             if previous_step_id is not None:
                 inner_plan.add_edge(previous_step_id, step_id)
@@ -240,7 +240,7 @@ def plan_set_variable(statement):
         variable=extract_variable(statement[root_node]["variable"]),
         value=extract_value(statement[root_node]["value"]),
     )
-    plan.add_node(unique_id(), set_step)
+    plan.add_node(random_string(), set_step)
     return plan
 
 
@@ -249,7 +249,7 @@ def plan_show_variables(statement):
     plan = LogicalPlan()
 
     read_step = Node(node_type=LogicalPlanStepType.READ, source="$variables")
-    step_id = unique_id()
+    step_id = random_string()
     plan.add_node(step_id, read_step)
 
     predicate = statement[root_node]["filter"]
@@ -264,7 +264,7 @@ def plan_show_variables(statement):
                 right=predicate[operator],
             ),
         )
-        previous_step_id, step_id = step_id, unique_id()
+        previous_step_id, step_id = step_id, random_string()
         plan.add_node(step_id, select_step)
         plan.add_edge(previous_step_id, step_id)
 
