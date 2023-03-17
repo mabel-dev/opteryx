@@ -18,6 +18,7 @@ Goal: Reduce small units of work
 """
 from opteryx import operators
 from opteryx.models.execution_tree import ExecutionTree
+from opteryx.utils import random_string
 
 
 def defragment_morsels(plan: ExecutionTree, properties):
@@ -34,11 +35,6 @@ def defragment_morsels(plan: ExecutionTree, properties):
     partition or query set looking for morsels to merge.
     """
 
-    def unique_id():
-        import random
-
-        return hex(random.getrandbits(16))
-
     # exit ASAP if disabled
     if not properties.enable_morsel_defragmentation:
         return plan
@@ -54,6 +50,6 @@ def defragment_morsels(plan: ExecutionTree, properties):
     for nid in selection_nodes:
         # get the node from the node_id
         defrag = operators.MorselDefragmentNode(properties=properties)
-        plan.insert_node_before(f"defrag-{unique_id()}", defrag, nid)
+        plan.insert_node_before(f"defrag-{random_string()}", defrag, nid)
 
     return plan

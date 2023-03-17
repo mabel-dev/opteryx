@@ -73,7 +73,6 @@ class Cursor(DataFrame):
         self.arraysize = 1
         self._connection = connection
         self._query = None
-        self._results = None
         self._query_planner = None
         self._collected_stats = None
         self._plan = None
@@ -119,9 +118,7 @@ class Cursor(DataFrame):
             self._plan = self._query_planner.optimize_plan(plan)
             results = self._query_planner.execute(self._plan)
 
-        self._results = converters.from_arrow(utils.arrow.rename_columns(results))
-        self._rows = self._results._rows
-        self._schema = self._results._schema
+        self._rows, self._schema = converters.from_arrow(utils.arrow.rename_columns(results))
         self._cursor = iter(self._rows)
 
     @property
@@ -136,74 +133,10 @@ class Cursor(DataFrame):
         """list of run-time warnings"""
         return self._statistics.messages
 
-    def pandas(self, size: int = None):
-        """
-        Fetch the resultset as Pandas DataFrame.
-
-        Parameters:
-            size: int (optional)
-                Return the head 'size' number of records.
-
-        Returns:
-            pandas DataFrame
-        """
-        try:
-            import pandas
-        except ImportError as err:  # pragma: nocover
-            raise MissingDependencyError(err.name) from err
-        return self.arrow(size=size).to_pandas()
-
     def to_df(self, size: int = None):  # pragma: no cover
         logging.warning("connection.to_df will be removed, replace with connection.pandas")
         return self.pandas(size)
 
-    def polars(self, size: int = None):
-        """
-        Fetch the resultset as a polars DataFrame
-        """
-        try:
-            import polars
-        except ImportError as err:  # pragma: nocover
-            raise MissingDependencyError(err.name) from err
-        return polars.DataFrame(self.arrow(size=size))
-
     def close(self):
         """close the connection"""
         self._connection.close()
-
-    def head(
-        self,
-        size: int = 10,
-        colorize: bool = True,
-        max_column_width: int = 30,
-        table_width=True,
-    ):  # pragma: no cover
-        from opteryx.utils.display import ascii_table
-        from opteryx.utils.display import html_table
-
-        try:
-            from IPython import get_ipython
-
-            i_am_in_a_notebook = get_ipython() is not None
-        except Exception:
-            i_am_in_a_notebook = False
-
-        if i_am_in_a_notebook:
-            from IPython.display import HTML
-            from IPython.display import display
-
-            html = html_table(iter(self.fetchmany(size)), size)
-            display(HTML(html))
-        else:
-            displayed_footer = f"({size} displayed) " if size < self.rowcount else ""
-            footer = f"\n[ {self.rowcount} row{'s' if self.rowcount != 1 else ''} {displayed_footer}x {self.shape[1]} column{'s' if self.shape[1] != 1 else ''} ]"
-            return (
-                ascii_table(
-                    self.arrow(),
-                    size,
-                    colorize=colorize,
-                    max_column_width=max_column_width,
-                    display_width=table_width,
-                )
-                + footer
-            )

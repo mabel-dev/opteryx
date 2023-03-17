@@ -18,6 +18,7 @@ Goal: Reduce rows
 """
 from opteryx import operators
 from opteryx.models.execution_tree import ExecutionTree
+from opteryx.utils import random_string
 
 
 def use_heap_sort(plan: ExecutionTree, properties):
@@ -25,11 +26,6 @@ def use_heap_sort(plan: ExecutionTree, properties):
     This action merges sort and limit nodes to use an algorithm which performs both
     faster than if they are performed as separate steps.
     """
-
-    def unique_id():
-        import random
-
-        return hex(random.getrandbits(16))
 
     # find the in-scope nodes
     sort_nodes = plan.get_nodes_of_type(operators.SortNode)
@@ -49,7 +45,7 @@ def use_heap_sort(plan: ExecutionTree, properties):
             heap_sort = operators.HeapSortNode(
                 properties=properties, order=sort_node.order, limit=limit_node.limit
             )
-            plan.insert_node_before(f"heap-sort-{unique_id()}", heap_sort, nid)
+            plan.insert_node_before(f"heap-sort-{random_string()}", heap_sort, nid)
             plan.remove_node(nid, heal=True)
             plan.remove_node(next_nid, heal=True)
 
