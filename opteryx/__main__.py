@@ -52,11 +52,14 @@ def main(
     print()
 
     start = time.monotonic_ns()
-    table = opteryx.query(sql).arrow()
+    curr = opteryx.query(sql)
+    curr.materialize()
+    table = curr.arrow()
     duration = time.monotonic_ns() - start
 
     if o == "console":
-        print(orso.display.ascii_table(table, limit=-1, display_width=table_width, colorize=color, max_column_width=max_col_width))
+        print(curr)
+#        print(orso.display.ascii_table(table, limit=-1, display_width=table_width, colorize=color, max_column_width=max_col_width))
         if stats:
             print(f"{duration/1e9}")
         return
