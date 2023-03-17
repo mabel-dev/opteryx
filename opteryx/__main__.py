@@ -18,6 +18,7 @@ A command line utility for Opteryx
 import time
 
 import orjson
+import orso
 import typer
 
 import opteryx
@@ -25,7 +26,6 @@ from opteryx.components.sql_rewriter.sql_rewriter import clean_statement
 from opteryx.components.sql_rewriter.sql_rewriter import remove_comments
 from opteryx.components.sql_rewriter.temporal_extraction import extract_temporal_filters
 from opteryx.third_party import sqloxide
-from opteryx.utils import display
 
 
 # fmt:off
@@ -56,7 +56,7 @@ def main(
     duration = time.monotonic_ns() - start
 
     if o == "console":
-        print(display.ascii_table(table, limit=-1, display_width=table_width, colorize=color, max_column_width=max_col_width))
+        print(orso.display.ascii_table(table, limit=-1, display_width=table_width, colorize=color, max_column_width=max_col_width))
         if stats:
             print(f"{duration/1e9}")
         return
