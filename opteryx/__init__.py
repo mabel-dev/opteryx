@@ -10,6 +10,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import os
+import typing
 
 from opteryx import config
 from opteryx.connection import Connection
@@ -25,6 +26,18 @@ __author__: str = "@joocer"
 apilevel = "1.0"  # pylint: disable=C0103
 threadsafety = 0  # pylint: disable=C0103
 paramstyle = "qmark"  # pylint: disable=C0103
+permissions = {
+    "Analyze",
+    "Execute",
+    "Explain",
+    "Query",
+    "SetVariable",
+    "ShowColumns",
+    "ShowCreate",
+    "ShowFunctions",
+    "ShowVariable",
+    "ShowVariables",
+}
 
 
 def connect(*args, **kwargs):
