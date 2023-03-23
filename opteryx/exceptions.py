@@ -26,6 +26,10 @@ class MissingDependencyError(Exception):
         super().__init__(message)
 
 
+class PermissionsError(Exception):
+    pass
+
+
 class UnmetRequirementError(Exception):
     pass
 

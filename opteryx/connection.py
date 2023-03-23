@@ -17,7 +17,7 @@ https://www.python.org/dev/peps/pep-0249/
 """
 import logging
 import time
-from typing import Optional
+import typing
 from uuid import uuid4
 
 from orso import DataFrame
@@ -25,7 +25,8 @@ from orso import converters
 
 from opteryx import utils
 from opteryx.exceptions import CursorInvalidStateError
-from opteryx.exceptions import MissingDependencyError
+from opteryx.exceptions import PermissionsError
+from opteryx.exceptions import ProgrammingError
 from opteryx.managers.kvstores import BaseKeyValueStore
 from opteryx.shared import QueryStatistics
 
@@ -40,7 +41,8 @@ class Connection:
     def __init__(
         self,
         *,
-        cache: Optional[BaseKeyValueStore] = None,
+        cache: typing.Union[BaseKeyValueStore, None] = None,
+        permissions: typing.Union[typing.Iterable, None] = None,
         **kwargs,
     ):
         """
@@ -49,6 +51,19 @@ class Connection:
         self._results = None
         self.cache = cache
         self._kwargs = kwargs
+
+        from opteryx import permissions as all_perms
+
+        if permissions is None:
+            permissions = all_perms
+        permissions = set(permissions)
+        if permissions.intersection(all_perms) == set():
+            raise ProgrammingError("No valid permissions presented.")
+        if not permissions.issubset(all_perms):
+            raise ProgrammingError(
+                f"Invalid permissions presented - {all_perms.difference(permissions)}"
+            )
+        self.permissions = permissions
 
     def cursor(self):
         """return a cursor object"""
@@ -104,6 +119,12 @@ class Cursor(DataFrame):
         )
         self._statistics.start_time = time.time_ns()
         asts = list(self._query_planner.parse_and_lex())
+
+        # test permissions
+        for ast in asts:
+            statement_type = next(iter(ast))
+            if statement_type not in self._connection.permissions:
+                raise PermissionsError(f"Required permission {statement_type} not provided.")
 
         results = None
         if params is None:

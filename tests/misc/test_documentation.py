@@ -142,6 +142,46 @@ def test_polars_integration_output():
     dataframe = opteryx.query("SELECT * FROM $planets").polars()
 
 
+def test_permissions_example():
+    import opteryx
+
+    conn = opteryx.connect(permissions={"Query"})
+    curr = conn.cursor()
+    # The user does not have permissions to execute a SHOW COLUMNS statement
+    # and this will return a oPermissionsError
+    try:
+        curr.execute("SHOW COLUMNS FROM $planets")
+        print(curr.head())
+    except opteryx.exceptions.PermissionsError:
+        print("User does not have permission to execute this query")
+
+
+def test_role_based_permissions():
+    import opteryx
+
+    role_permissions = {
+        "admin": opteryx.permissions,
+        "user": {"Query"},
+        "agent": {"Execute", "Analyze"},
+    }
+
+    def get_user_permissions(user_roles):
+        permissions = set()
+        for role in user_roles:
+            if role in role_permissions:
+                permissions |= role_permissions[role]
+        return permissions
+
+    perms = get_user_permissions(["admin"])
+    assert perms == opteryx.permissions
+    perms = get_user_permissions(["user"])
+    assert perms == {"Query"}
+    perms = get_user_permissions(["admin", "user"])
+    assert perms == opteryx.permissions
+    perms = get_user_permissions(["user", "agent"])
+    assert perms == {"Query", "Execute", "Analyze"}
+
+
 if __name__ == "__main__":  # pragma: no cover
     test_documentation_connect_example()
     test_readme_1()  # execute-a-simple-query-in-python
@@ -154,5 +194,7 @@ if __name__ == "__main__":  # pragma: no cover
     test_pandas_integration_output()
     test_polars_integration_input()
     test_polars_integration_output()
+    test_permissions_example()
+    test_role_based_permissions()
 
     print("✅ okay")
