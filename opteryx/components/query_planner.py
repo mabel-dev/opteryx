@@ -57,6 +57,7 @@ class QueryPlanner:
         if isinstance(statement, bytes):
             statement = statement.decode()
         self.raw_statement = statement
+        self.statement = statement
 
         if properties is None:
             self.properties = QueryProperties(qid, config._config_values)
@@ -112,8 +113,9 @@ class QueryPlanner:
                     with open(PROFILE_LOCATION, mode="w") as f:
                         f.write(plans)
                 except Exception as err:
-                    print("Unable to plan query {self.statement}")
-                    print(f"{type(err).__name__} - {err}")
+                    # print("Unable to plan query {self.statement}")
+                    # print(f"{type(err).__name__} - {err}")
+                    pass
 
             yield from parsed_statements
         except ValueError as exception:  # pragma: no cover
