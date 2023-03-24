@@ -1,0 +1,5 @@
+{
+    "summary": "Test EXECUTE",
+    "statement": "EXECUTE get_planet_by_id(3)",
+    "result": {"id":[3],"name":["Earth"]}
+}

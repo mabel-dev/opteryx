@@ -9,11 +9,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import orjson
+
 from opteryx import operators
 from opteryx.components.logical_planner import builders
 from opteryx.components.logical_planner import custom_builders
 from opteryx.connectors import DiskConnector
 from opteryx.connectors import connector_factory
+from opteryx.exceptions import DatabaseError
 from opteryx.exceptions import ProgrammingError
 from opteryx.exceptions import SqlError
 from opteryx.managers.expression import ExpressionTreeNode
@@ -505,9 +508,48 @@ def analyze_query(ast, properties):
     return plan
 
 
+def execute_query(ast, properties):
+    """execute a prepared statement"""
+    try:
+        statement_name = ast["Execute"]["name"]["value"]
+        parameters = [builders.build(p["Value"]) for p in ast["Execute"]["parameters"]]
+        prepared_statatements = orjson.loads(open("prepared_statements.json").read())
+        if statement_name not in prepared_statatements:
+            raise SqlError("Unable to EXECUTE prepared statement, '{statement_name}' not defined.")
+        prepared_statement = prepared_statatements[statement_name]
+
+        from opteryx.components.query_planner import QueryPlanner
+        from opteryx.components.sql_rewriter.sql_rewriter import clean_statement
+        from opteryx.components.sql_rewriter.sql_rewriter import remove_comments
+        from opteryx.components.sql_rewriter.temporal_extraction import extract_temporal_filters
+
+        # these would have been applied to the EXECUTE statement, we want to do them on the
+        # prepared statement
+        statement = remove_comments(prepared_statement)
+        statement = clean_statement(statement)
+        statement, properties.temporal_filters = extract_temporal_filters(statement)
+
+        # we need to plan the prepared statement
+        query_planner = QueryPlanner(properties=properties, statement=statement)
+        asts = list(query_planner.parse_and_lex())
+        if len(asts) != 1:
+            raise SqlError("Cannot execute prepared batch statements.")
+        query_planner.test_paramcount(asts, parameters)
+        prepared_ast = query_planner.bind_ast(asts[0], parameters=parameters)
+        plan = query_planner.create_logical_plan(prepared_ast)
+        # optimize is the next step, so don't need to do it here
+        return plan
+
+    except OSError as err:
+        raise DatabaseError(
+            "Unable to EXECUTE prepared statement, cannot find definitions."
+        ) from err
+
+
 # wrappers for the query builders
 QUERY_BUILDER = {
     "Analyze": analyze_query,
+    "Execute": execute_query,
     "Explain": explain_query,
     "Query": select_query,
     "SetVariable": set_variable_query,
