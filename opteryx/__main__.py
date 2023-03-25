@@ -17,15 +17,11 @@ A command line utility for Opteryx
 """
 import time
 
-import orjson
-import orso
 import typer
 
 import opteryx
 from opteryx.components.sql_rewriter.sql_rewriter import clean_statement
 from opteryx.components.sql_rewriter.sql_rewriter import remove_comments
-from opteryx.components.sql_rewriter.temporal_extraction import extract_temporal_filters
-from opteryx.third_party import sqloxide
 
 
 # fmt:off
@@ -58,8 +54,7 @@ def main(
     duration = time.monotonic_ns() - start
 
     if o == "console":
-        print(curr)
-#        print(orso.display.ascii_table(table, limit=-1, display_width=table_width, colorize=color, max_column_width=max_col_width))
+        print(curr.display(limit=-1, display_width=table_width, colorize=color, max_column_width=max_col_width))
         if stats:
             print(f"{duration/1e9}")
         return
@@ -78,8 +73,8 @@ def main(
             return
         if ext == "jsonl":
             with open(o, mode="wb") as file:
-                for row in table.to_pylist():
-                    file.write(orjson.dumps(row) + b"\n")
+                for row in table:
+                    file.write(row.as_dict() + b"\n")
             return
 
     print(f"Unknown output format '{ext}'")  # pragma: no cover
