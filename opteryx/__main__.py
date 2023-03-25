@@ -72,9 +72,10 @@ def main(
             csv.write_csv(table, o)
             return
         if ext == "jsonl":
+            import orjson
             with open(o, mode="wb") as file:
-                for row in table:
-                    file.write(row.as_dict() + b"\n")
+                for row in curr:
+                    file.write(orjson.dumps(row.as_dict) + b"\n")
             return
 
     print(f"Unknown output format '{ext}'")  # pragma: no cover
