@@ -1,7 +1,7 @@
 """
 Generate random SQL statements
 
-These are pretty basic statements, but this has still found bugs.
+These are pretty basic statements but this has still found bugs.
 """
 
 import os
@@ -82,20 +82,25 @@ TABLES = [
             "surfacePressure",
             "numberOfMoons",
         ],
-    }
+    },
+    {
+        "name": "$satellites",
+        "fields": ["id", "name", "planetId", "gm", "radius", "density", "magnitude", "albedo"],
+    },
 ]
+
+TEST_CYCLES: int = 250
 
 
 def test_sql_fuzzing():
-    for i in range(250):
+    for i in range(TEST_CYCLES):
         table = TABLES[random.choice(range(len(TABLES)))]
         statement = generate_random_sql_select(table["fields"], table["name"])
+        print(format_sql(statement))
         res = opteryx.query(statement)
         try:
-            print(".", end="")
-            res.materialize()
+            print(res.shape)
         except Exception as e:
-            print(format_sql(statement))
             print()
             print(e)
             raise e
