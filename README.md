@@ -51,7 +51,7 @@ Opteryx creates a common SQL-layer over multiple data platforms, allowing backen
 
 Opteryx supports multiple query engines, dataframe APIs and storage formats. You can mix-and-match sources in a single query. Opteryx can even JOIN datasets stored in different formats, such as Parquet and MySQL.
 
-Opteryx allowa you to query your data directly in the systems where they are stored, eliminating the need to duplicate data into a common store for analytics. This saves you the cost and effort of maintaining duplicates.
+Opteryx allows you to query your data directly in the systems where they are stored, eliminating the need to duplicate data into a common store for analytics. This saves you the cost and effort of maintaining duplicates.
 
 Opteryx can push parts of your query to the source query engine, allowing queries to run at the speed of the backend, rather than your local computer.
 
