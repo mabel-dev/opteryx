@@ -19,9 +19,9 @@ class CircularLog:
     def __new__(cls, log_file, max_entries, block_size):
         if cls._instance is None:
             cls._instance = super().__new__(cls)
-            cls._instance.log_file = log_file
-            cls._instance.max_entries = max_entries
-            cls._instance.block_size = block_size
+            cls._instance.log_file = log_file  # type:ignore
+            cls._instance.max_entries = max_entries  # type:ignore
+            cls._instance.block_size = block_size  # type:ignore
             if not os.path.exists(log_file):
                 open(log_file, "wb")
         return cls._instance
