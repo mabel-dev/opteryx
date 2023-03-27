@@ -28,10 +28,10 @@ class CircularLog:
 
     def append(self, entry):
         # open the log file in binary mode
-        with open(self.log_file, "a") as log_file:
+        with open(self.log_file, "a") as log_file:  # type:ignore
             log_file.write(entry + "\n")
-        if sum(1 for _ in self.scan()) > self.max_entries:
-            with open(self.log_file, "r+b") as f:
+        if sum(1 for _ in self.scan()) > self.max_entries:  # type:ignore
+            with open(self.log_file, "r+b") as f:  # type:ignore
                 while f.read(1) != b"\n":
                     pass
                 remaining_data = f.read()
@@ -41,9 +41,9 @@ class CircularLog:
 
     def scan(self):
         # open the log file in binary mode
-        with open(self.log_file, "r") as log_file:
+        with open(self.log_file, "r") as log_file:  # type:ignore
             # read the current position in the circular buffer
-            chunk = log_file.read(self.block_size)
+            chunk = log_file.read(self.block_size)  # type:ignore
             # keep reading until there's no more data left
             while chunk:
                 # split the chunk by newlines
@@ -53,4 +53,4 @@ class CircularLog:
                     if line:
                         yield line
                 # read the next chunk
-                chunk = log_file.read(self.block_size)
+                chunk = log_file.read(self.block_size)  # type:ignore
