@@ -11,5 +11,6 @@
 # limitations under the License.
 
 from .buffer_pool import BufferPool
+from .circular_log import CircularLog
 from .materialized_datasets import MaterializedDatasets
 from .query_statistics import QueryStatistics

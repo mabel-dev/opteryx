@@ -46,9 +46,12 @@ from opteryx.components.tree_rewriter import tree_rewriter
 from opteryx.exceptions import ProgrammingError
 from opteryx.exceptions import SqlError
 from opteryx.models import QueryProperties
+from opteryx.shared import CircularLog
 from opteryx.third_party import sqloxide
 
 PROFILE_LOCATION = config.PROFILE_LOCATION
+QUERY_LOG_LOCATION = config.QUERY_LOG_LOCATION
+QUERY_LOG_SIZE = config.QUERY_LOG_SIZE
 
 
 class QueryPlanner:
@@ -103,6 +106,10 @@ class QueryPlanner:
             parsed_statements = sqloxide.parse_sql(self.statement, dialect="mysql")
 
             from opteryx.components.v2.logical_planner.planner import get_planners
+
+            if QUERY_LOG_LOCATION:
+                log = CircularLog(QUERY_LOG_LOCATION, QUERY_LOG_SIZE, 1024 * 1024)
+                log.append(self.statement)
 
             if PROFILE_LOCATION:
                 try:

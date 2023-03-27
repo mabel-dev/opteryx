@@ -1,3 +1,4 @@
 
 PARTITION_SCHEME: mabel
 PROFILE_LOCATION: execution_plan.txt
+QUERY_LOG_LOCATION: query.log
