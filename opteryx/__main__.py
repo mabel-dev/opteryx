@@ -33,7 +33,7 @@ def main(
     color: bool = typer.Option(default=True, help="Colorize the table displayed to the console."),
     table_width: bool = typer.Option(default=True, help="Limit console display to the screen width."),
     max_col_width: int = typer.Option(default=30, help="Maximum column width"),
-    stats: bool = typer.Option(default=False, help="Report statistics."),
+    stats: bool = typer.Option(default=True, help="Report statistics."),
     sql: str = typer.Argument(None, show_default=False, help="Execute SQL statement and quit."),
 ):
 # fmt:on
@@ -63,8 +63,13 @@ def main(
 
             try:
                 # Execute the SQL statement and display the results
+                start = time.monotonic_ns()
                 result = opteryx.query(statement)
+                result.materialize()
+                duration = time.monotonic_ns() - start
                 print(result.display(limit=-1, display_width=table_width, colorize=color, max_column_width=max_col_width))
+                if stats:
+                    print(f"[ {result.rowcount} rows x {result.columncount} columns ] ( {duration/1e9} seconds )")
             except Exception as e:
                 # Display a friendly error message if an exception occurs
                 print(f"{ANSI_RED}Error{ANSI_RESET}: {e}")
@@ -77,17 +82,18 @@ def main(
     print()
 
     start = time.monotonic_ns()
-    curr = opteryx.query(sql)
-    curr.materialize()
-    table = curr.arrow()
+    result = opteryx.query(sql)
+    result.materialize()
     duration = time.monotonic_ns() - start
 
     if o == "console":
-        print(curr.display(limit=-1, display_width=table_width, colorize=color, max_column_width=max_col_width))
+        print(result.display(limit=-1, display_width=table_width, colorize=color, max_column_width=max_col_width))
         if stats:
-            print(f"{duration/1e9}")
+            print(f"[ {result.rowcount} rows x {result.columncount} columns ] ( {duration/1e9} seconds )")
         return
     else:
+        table = curr.arrow()
+
         ext = o.lower().split(".")[-1]
 
         if ext == "parquet":
