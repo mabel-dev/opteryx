@@ -1,0 +1,2 @@
+SELECT version();
+SELECT connection_id() AS pid;

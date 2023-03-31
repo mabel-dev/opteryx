@@ -154,160 +154,17 @@ def _extended_collector(morsels):
     """
     Collect summary statistics about each column
     """
-    from opteryx.third_party import distogram
+    import orso
+    from orso import converters
 
-    empty_profile = orjson.dumps(
-        {
-            "name": None,
-            "type": [],
-            "count": 0,
-            "min": None,
-            "max": None,
-            "missing": 0,
-            "mean": None,
-            "quantiles": None,
-            "histogram": None,
-            "most_frequent_values": None,
-            "most_frequent_counts": None,
-        }
-    )
+    from opteryx import utils
 
-    uncollected_columns = []
-
-    columns = None
-    profile_collector: dict = {}
-
-    for morsel in morsels:
-        if columns is None:
-            columns = Columns(morsel)
-
-        for block in morsel.to_batches(5000):
-            for column in morsel.column_names:
-                column_data = block.column(column)
-
-                profile = profile_collector.get(column, orjson.loads(empty_profile))
-                _type = determine_type(str(column_data.type))
-                if _type not in profile["type"]:
-                    profile["type"].append(_type)
-
-                profile["count"] += len(column_data)
-
-                # calculate the missing count more robustly
-                missing = reduce(
-                    lambda x, y: x + 1,
-                    (i for i in column_data if i in (None, numpy.nan) or not i.is_valid),
-                    0,
-                )
-                profile["missing"] += missing
-
-                # interim save
-                profile_collector[column] = profile
-
-                # don't collect problematic columns
-                if column in uncollected_columns:
-                    continue
-
-                # to prevent problems, we set some limits
-                if column_data.nbytes > MAX_DATA_SIZE:  # pragma: no cover
-                    if column not in uncollected_columns:
-                        uncollected_columns.append(column)
-                    continue
-
-                # don't collect columns we can't analyse
-                if _type in (
-                    OPTERYX_TYPES.LIST,
-                    OPTERYX_TYPES.STRUCT,
-                    OPTERYX_TYPES.OTHER,
-                ):
-                    continue
-
-                # long strings are meaningless
-                if _type in (OPTERYX_TYPES.VARCHAR):
-                    max_len = reduce(
-                        lambda x, y: max(len(y), x),
-                        (v.as_py() for v in column_data if v.is_valid),
-                        0,
-                    )
-                    if max_len > MAX_VARCHAR_SIZE:
-                        if column not in uncollected_columns:
-                            uncollected_columns.append(column)
-                        continue
-
-                # convert TIMESTAMP into a NUMERIC (seconds after Unix Epoch)
-                if _type == OPTERYX_TYPES.TIMESTAMP:
-                    column_data = (_to_unix_epoch(i) for i in column_data)
-                else:
-                    column_data = (i.as_py() for i in column_data)
-
-                # remove empty values
-                column_data = numpy.array([i for i in column_data if i not in (None, numpy.nan)])
-
-                if _type in (
-                    OPTERYX_TYPES.BOOLEAN,
-                    OPTERYX_TYPES.VARCHAR,
-                    OPTERYX_TYPES.NUMERIC,
-                    OPTERYX_TYPES.TIMESTAMP,
-                ):
-                    # counter is used to collect and count unique values
-                    counter = profile.get("counter")
-                    if counter is None:
-                        counter = {}
-                    if len(counter) < MAX_COLLECTOR:
-                        for value in column_data:
-                            if len(counter) < MAX_COLLECTOR:
-                                increment(counter, value)
-                    profile["counter"] = counter
-
-                if _type in (OPTERYX_TYPES.NUMERIC, OPTERYX_TYPES.TIMESTAMP):
-                    # populate the distogram, this is used for distribution statistics
-                    dgram = profile.get("distogram")
-                    if dgram is None:
-                        dgram = distogram.Distogram()  # type:ignore
-                    dgram.bulkload(column_data)
-                    profile["distogram"] = dgram
-
-                profile_collector[column] = profile
-
-    buffer = []
-
-    for column, profile in profile_collector.items():
-        profile["name"] = columns.get_preferred_name(column)
-        profile["type"] = ", ".join(profile["type"])
-
-        if column not in uncollected_columns:
-            dgram = profile.pop("distogram", None)
-            if dgram:
-                profile["min"], profile["max"] = distogram.bounds(dgram)  # type:ignore
-                profile["mean"] = distogram.mean(dgram)  # type:ignore
-
-                histogram = distogram.histogram(dgram, bin_count=20)  # type:ignore
-                if histogram:
-                    profile["histogram"] = histogram[0]
-
-                profile["quantiles"] = (
-                    distogram.quantile(dgram, value=0.25),  # type:ignore
-                    distogram.quantile(dgram, value=0.5),  # type:ignore
-                    distogram.quantile(dgram, value=0.75),  # type:ignore
-                )
-
-            counter = profile.pop("counter", None)
-            if counter:
-                if len(counter) < MAX_COLLECTOR:
-                    counts = list(counter.values())
-                    if min(counts) != max(counts):
-                        profile["most_frequent_values"] = [str(k) for k in counter.keys()]
-                        profile["most_frequent_counts"] = counts
-
-        # remove collectors
-        profile.pop("distogram", None)
-        profile.pop("counter", None)
-
-        buffer.append(profile)
-
-    table = pyarrow.Table.from_pylist(buffer)
+    rows, schema = converters.from_arrow(utils.arrow.rename_columns(morsels))
+    df = orso.DataFrame(rows=rows, schema=schema)
+    table = df.profile.arrow()
     table = Columns.create_table_metadata(
         table=table,
-        expected_rows=len(buffer),
+        expected_rows=table.num_rows,
         name="show_columns",
         table_aliases=[],
         disposition="calculated",

@@ -19,8 +19,6 @@ Gives information about a dataset's columns
 """
 from typing import Iterable
 
-from orso.profiler import profiler
-
 from opteryx.exceptions import SqlError
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode

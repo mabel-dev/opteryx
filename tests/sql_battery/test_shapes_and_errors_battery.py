@@ -417,9 +417,9 @@ STATEMENTS = [
 
         ("SHOW COLUMNS FROM $satellites", 8, 2, None),
         ("SHOW FULL COLUMNS FROM $satellites", 8, 6, None),
-        ("SHOW EXTENDED COLUMNS FROM $satellites", 8, 11, None),
-        ("SHOW EXTENDED COLUMNS FROM $planets", 20, 11, None),
-        ("SHOW EXTENDED COLUMNS FROM $astronauts", 19, 11, None),
+        ("SHOW EXTENDED COLUMNS FROM $satellites", 8, 10, None),
+        ("SHOW EXTENDED COLUMNS FROM $planets", 20, 10, None),
+        ("SHOW EXTENDED COLUMNS FROM $astronauts", 19, 10, None),
         ("SHOW COLUMNS FROM $satellites LIKE '%d'", 2, 2, None),
         ("SHOW COLUMNS FROM testdata.partitioned.dated FOR '2020-02-03'", 8, 2, None),
 
