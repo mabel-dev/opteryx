@@ -15,6 +15,7 @@ import hypothesis.strategies as st
 from hypothesis import given, settings
 
 import opteryx
+from tests.tools import skip_on_partials
 
 # allows us to run short CI and longer scheduled tests
 TEST_ITERATIONS = int(os.environ.get("TEST_ITERATIONS", 100))
@@ -22,6 +23,7 @@ TEST_ITERATIONS = int(os.environ.get("TEST_ITERATIONS", 100))
 literals = st.text(min_size=1)
 
 
+@skip_on_partials
 @settings(deadline=None, max_examples=TEST_ITERATIONS)
 @given(literal=literals)
 def test_fuzz_literals(literal):
