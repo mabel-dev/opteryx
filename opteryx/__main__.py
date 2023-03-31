@@ -92,7 +92,7 @@ def main(
             print(f"[ {result.rowcount} rows x {result.columncount} columns ] ( {duration/1e9} seconds )")
         return
     else:
-        table = curr.arrow()
+        table = result.arrow()
 
         ext = o.lower().split(".")[-1]
 
@@ -100,17 +100,29 @@ def main(
             from pyarrow import parquet
 
             parquet.write_table(table, o)
+            print(f"[ {result.rowcount} rows x {result.columncount} columns ]")
+            print(f"Written result to '{o}'")
             return
         if ext == "csv":
             from pyarrow import csv
 
             csv.write_csv(table, o)
+            print(f"[ {result.rowcount} rows x {result.columncount} columns ]")
+            print(f"Written result to '{o}'")
             return
         if ext == "jsonl":
             import orjson
             with open(o, mode="wb") as file:
-                for row in curr:
+                for row in result:
                     file.write(orjson.dumps(row.as_dict) + b"\n")
+            print(f"[ {result.rowcount} rows x {result.columncount} columns ]")
+            print(f"Written result to '{o}'")
+            return
+        if ext == "md":
+            with open(o, mode="w") as file:
+                file.write(result.markdown(limit=-1))
+            print(f"[ {result.rowcount} rows x {result.columncount} columns ]")
+            print(f"Written result to '{o}'")
             return
 
     raise ValueError(f"Unknown output format '{ext}'")  # pragma: no cover
