@@ -3,7 +3,6 @@
 #    1) To give credit to the authors of these libraries
 #    2) For dependabot to alert to new versions
 
-distogram==3.0.0
 fastlogging==1.0.0
 fuzzy==1.2.2
 pyarrow_ops==0.0.8
