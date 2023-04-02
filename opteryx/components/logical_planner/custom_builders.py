@@ -57,6 +57,11 @@ def extract_show_filter(ast):
             right=right,
         )
         return root
+    if "Where" in filters:
+        from opteryx.components.logical_planner import builders
+
+        root = builders.build(filters["Where"])
+        return root
 
 
 def extract_distinct(ast):

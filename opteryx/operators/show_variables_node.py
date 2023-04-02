@@ -19,9 +19,12 @@ from typing import Iterable
 
 import pyarrow
 
+from opteryx import __version__
 from opteryx.exceptions import SqlError
 from opteryx.models import Columns
 from opteryx.operators import BasePlanNode
+
+SYSTEM_VARIABLES = [{"variable_name": "version", "value": __version__}]
 
 
 class ShowVariablesNode(BasePlanNode):
@@ -34,15 +37,10 @@ class ShowVariablesNode(BasePlanNode):
         return ""
 
     def execute(self) -> Iterable:
-        buffer = []
-
-        if len(self.properties.variables) == 0:
-            raise SqlError(
-                "Variables must be created using `SET` statements before `SHOW VARIABLES`."
-            )
+        buffer = SYSTEM_VARIABLES
 
         for variable, value in self.properties.variables.items():
-            buffer.append({"name": variable, "value": str(value.value)})
+            buffer.append({"variable_name": variable, "value": str(value.value)})
 
         table = pyarrow.Table.from_pylist(buffer)
         table = Columns.create_table_metadata(
