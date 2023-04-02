@@ -457,7 +457,7 @@ def show_variables_query(ast, properties):
     plan.add_node("show", show)
     last_node = "show"
 
-    filters = custom_builders.extract_show_filter(ast["ShowVariables"])
+    filters = custom_builders.extract_show_filter(ast["ShowVariables"], "variable_name")
     if filters:
         plan.add_node(
             "filter",
