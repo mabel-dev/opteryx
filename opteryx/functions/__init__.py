@@ -164,6 +164,7 @@ def _coalesce(*args):
 FUNCTIONS = {
     "VERSION": _repeat_no_parameters(get_version), # *
     "CONNECTION_ID": _repeat_no_parameters(get_version),
+    "DATABASE": _repeat_no_parameters(lambda : None),
 
     # TYPE CONVERSION
     "TIMESTAMP": cast("TIMESTAMP"),

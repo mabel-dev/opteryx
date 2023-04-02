@@ -24,13 +24,13 @@ from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 
 
-class ShowStoresNode(BasePlanNode):
+class ShowDatabasesNode(BasePlanNode):
     def __init__(self, properties: QueryProperties, **config):
         super().__init__(properties=properties)
 
     @property
     def name(self):  # pragma: no cover
-        return "Show Stores"
+        return "Show Databases"
 
     @property
     def config(self):  # pragma: no cover
@@ -41,14 +41,22 @@ class ShowStoresNode(BasePlanNode):
 
         buffer = [
             {
-                "name": "<default>" if s == "_" else s,  # type: ignore
-                "connector": str(c["connector"].__name__),  # type: ignore
-                "remove_prefix": c["remove_prefix"],  # type: ignore
-                "type": str(c["connector"].mro()[1].__name__[4:-14]),  # type: ignore
+                "Database": "<default>" if s == "_" else s,  # type: ignore
+                "Connector": str(c["connector"].__name__),  # type: ignore
+                "Remove_Prefix": c["remove_prefix"],  # type: ignore
+                "Type": str(c["connector"].mro()[1].__name__[4:-14]),  # type: ignore
             }
             for s, c in _storage_prefixes.items()
             if isinstance(c, dict)
         ]
+        buffer.append(
+            {
+                "Database": "opteryx",  # type: ignore
+                "Connector": "Internal",  # type: ignore
+                "Remove_Prefix": True,  # type: ignore
+                "Type": "Internal",  # type: ignore
+            }
+        )
 
         table = pyarrow.Table.from_pylist(buffer)
         table = Columns.create_table_metadata(

@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-A command line utility for Opteryx
+A command line interface for Opteryx
 """
 import time
 

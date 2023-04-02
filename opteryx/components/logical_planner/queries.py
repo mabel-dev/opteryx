@@ -393,6 +393,7 @@ def show_variable_query(ast, properties):
     """
 
     plan = ExecutionTree()
+    name_column = None
 
     keywords = [value["value"].upper() for value in ast["ShowVariable"]["variable"]]
     if keywords[0] == "PARAMETER":
@@ -406,16 +407,18 @@ def show_variable_query(ast, properties):
         show_node = "show_parameter"
         node = operators.ShowValueNode(properties=properties, key=key, value=value)
         plan.add_node(show_node, node)
-    elif keywords[0] == "STORES":
+    elif keywords[0] == "DATABASES":
         if len(keywords) != 1:
-            raise SqlError(f"`SHOW STORES` end expected, got '{keywords[1]}'")
-        show_node = "show_stores"
-        node = operators.ShowStoresNode(properties=properties)  # type:ignore
+            raise SqlError(f"`SHOW DATABASES` end expected, got '{keywords[1]}'")
+        show_node = "show_databases"
+        node = operators.ShowDatabasesNode(properties=properties)  # type:ignore
         plan.add_node(show_node, node)
+        name_column = ExpressionTreeNode(NodeType.IDENTIFIER, value="Database")
     else:  # pragma: no cover
         raise SqlError(f"SHOW statement type not supported for `{keywords[0]}`.")
 
-    name_column = ExpressionTreeNode(NodeType.IDENTIFIER, value="name")
+    if name_column is None:
+        name_column = ExpressionTreeNode(NodeType.IDENTIFIER, value="name")
 
     order_by_node = operators.SortNode(
         properties=properties,
@@ -454,7 +457,7 @@ def show_variables_query(ast, properties):
     plan.add_node("show", show)
     last_node = "show"
 
-    filters = custom_builders.extract_show_filter(ast["ShowVariables"])
+    filters = custom_builders.extract_show_filter(ast["ShowVariables"], "variable_name")
     if filters:
         plan.add_node(
             "filter",

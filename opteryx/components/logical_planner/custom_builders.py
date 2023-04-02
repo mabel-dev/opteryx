@@ -42,13 +42,13 @@ class RelationDescription:
     cache: Any = None
 
 
-def extract_show_filter(ast):
+def extract_show_filter(ast, name_column="name"):
     """filters are used in SHOW queries"""
     filters = ast["filter"]
     if filters is None:
         return None
     if "Like" in filters:
-        left = ExpressionTreeNode(NodeType.IDENTIFIER, value="name")
+        left = ExpressionTreeNode(NodeType.IDENTIFIER, value=name_column)
         right = ExpressionTreeNode(NodeType.LITERAL_VARCHAR, value=filters["Like"])
         root = ExpressionTreeNode(
             NodeType.COMPARISON_OPERATOR,
@@ -56,6 +56,11 @@ def extract_show_filter(ast):
             left=left,
             right=right,
         )
+        return root
+    if "Where" in filters:
+        from opteryx.components.logical_planner import builders
+
+        root = builders.build(filters["Where"])
         return root
 
 

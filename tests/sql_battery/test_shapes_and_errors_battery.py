@@ -922,6 +922,7 @@ if __name__ == "__main__":  # pragma: no cover
         print(
             f"\033[0;36m{(index + 1):04}\033[0m {printable[0:width - 1].ljust(width)}",
             end="",
+            flush=True,
         )
         test_sql_battery(statement, rows, cols, err)
         print(f"\033[0;32m{str(int((time.monotonic_ns() - start)/1e6)).rjust(4)}ms\033[0m ✅")
