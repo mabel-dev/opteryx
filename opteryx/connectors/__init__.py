@@ -36,13 +36,15 @@ WELL_KNOWN_ADAPTERS = {
     "sql": SqlConnector,
 }
 
-_storage_prefixes = {}
+_storage_prefixes = {"information_schema": "InformationSchema"}
 
 if not isinstance(DATASET_PREFIX_MAPPING, dict):  # pragma: no cover
-    _storage_prefixes = {"_": "disk"}
+    _storage_prefixes["_"] = "disk"
 else:
     for _prefix, _adapter_name in DATASET_PREFIX_MAPPING.items():
-        _storage_prefixes[_prefix] = WELL_KNOWN_ADAPTERS.get(_adapter_name.lower(), None)
+        _storage_prefixes[_prefix] = WELL_KNOWN_ADAPTERS.get(
+            _adapter_name.lower(), None
+        )  # type:ignore
 
 
 def register_store(prefix, connector, *, remove_prefix: bool = False, **kwargs):

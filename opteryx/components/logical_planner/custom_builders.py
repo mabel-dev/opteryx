@@ -211,11 +211,12 @@ def extract_relations(branch, qid):
                 relation_desc.cache = relation["relation"]["Table"]["cache"]
                 if relation_desc.dataset[0:1] == "$":
                     relation_desc.kind = "Internal"
+                elif relation_desc.dataset.startswith("information_schema"):
+                    relation_desc.kind = "InformationSchema"
+                elif paths.is_file(relation_desc.dataset):
+                    relation_desc.kind = "File"
                 else:
-                    if paths.is_file(relation_desc.dataset):
-                        relation_desc.kind = "File"
-                    else:
-                        relation_desc.kind = "External"
+                    relation_desc.kind = "External"
                 yield relation_desc
 
         if "Derived" in relation["relation"]:

@@ -18,7 +18,7 @@ This is a SQL Query Execution Plan Node.
 This performs a CROSS JOIN - CROSS JOIN is not natively supported by PyArrow so this is written
 here rather than calling the join() functions
 """
-from typing import Iterable
+import typing
 
 import numpy
 import pyarrow
@@ -90,20 +90,25 @@ def _cross_join(left, right):
                 yield new_columns.apply(table)
 
 
-def _cross_join_unnest(left, column, alias):
+def _cross_join_unnest(
+    left: pyarrow.Table, column, alias: str = None
+) -> typing.Generator[pyarrow.Table, None, None]:
     """
-    This is a specific instance the CROSS JOIN, where instead of joining on another
-    table, we're joining on a field in the current row.
+    Cross join on an unnested column. This function reads a row, creates a new column by unnesting
+    a column in that row, and then repeats the row for each unnested value. It then returns the
+    resulting table.
 
-    This means we need to read a row, create the dataset to join with, do the join
-    repeat.
+    Args:
+        left: An iterator of `pyarrow.Table` objects to cross join on.
+        column: The column to unnest.
+        alias: An optional string to use as the column name for the unnested column.
 
-    This is done by collecting the values together and creating them into a new column.
-
-    This column-based approach benchmarked roughly 33% faster than the row-based
-    approach, where each row was read as a dictionary, new dictionaries created for
-    each UNNESTed value and the dictionaries combined to a table.
+    Returns:
+        A generator that yields the resulting `pyarrow.Table` objects.
     """
+
+    if column.token_type != NodeType.IDENTIFIER:
+        raise ValueError("The `column` argument must be a valid identifier.")
 
     if column.token_type != NodeType.IDENTIFIER:
         raise NotImplementedError("Can only CROSS JOIN UNNEST on a field")
@@ -188,7 +193,7 @@ class CrossJoinNode(BasePlanNode):
             return "UNNEST()"
         return ""
 
-    def execute(self) -> Iterable:
+    def execute(self) -> typing.Iterable:
         if len(self._producers) != 2:  # pragma: no cover
             raise SqlError(f"{self.name} expects two producers")
 

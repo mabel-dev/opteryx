@@ -24,6 +24,7 @@ from .explain_node import ExplainNode  # EXPLAIN queries
 from .file_reader_node import FileReaderNode  # usually on the CLI
 from .function_dataset_node import FunctionDatasetNode  # Dataset Constructors
 from .heap_sort_node import HeapSortNode  # Heap
+from .information_schema_node import InformationSchemaNode  # information_schema
 from .inner_join_node import InnerJoinNode  # INNER JOIN
 from .internal_dataset_node import InternalDatasetNode  # Sample datasets
 from .limit_node import LimitNode  # select the first N records
@@ -57,6 +58,7 @@ _reader_nodes = {
     "Collection": CollectionReaderNode,  # (mongodb, firestore)
     "File": FileReaderNode,  # usually the command line
     "Function": FunctionDatasetNode,
+    "InformationSchema": InformationSchemaNode,
     "Internal": InternalDatasetNode,
     "SubQuery": BlobReaderNode,  # ?? <- this shouldn't be a reader
     "SQL": SqlReaderNode,
