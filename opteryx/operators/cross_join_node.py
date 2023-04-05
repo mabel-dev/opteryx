@@ -91,7 +91,7 @@ def _cross_join(left, right):
 
 
 def _cross_join_unnest(
-    left: pyarrow.Table, column: str, alias: str = None
+    left: pyarrow.Table, column, alias: str = None
 ) -> typing.Generator[pyarrow.Table, None, None]:
     """
     Cross join on an unnested column. This function reads a row, creates a new column by unnesting
