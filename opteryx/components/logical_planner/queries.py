@@ -134,12 +134,11 @@ def select_query(ast, properties):
                     reader = None
                     right.alias = right.dataset
                     right.dataset = properties.ctes[dataset]
+                elif paths.is_file(dataset):
+                    mode = "File"
                 else:
-                    if paths.is_file(dataset):
-                        mode = "File"
-                    else:
-                        reader = connector_factory(dataset)
-                        mode = reader.__mode__
+                    reader = connector_factory(dataset)
+                    mode = reader.__mode__
 
                 # Otherwise, the right table needs to come from the Reader
                 right = operators.reader_factory(mode)(
