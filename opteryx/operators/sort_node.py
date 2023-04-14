@@ -45,7 +45,7 @@ class SortNode(BasePlanNode):
 
     @property
     def config(self):  # pragma: no cover
-        return ",".join([str(i) for i in self.order])
+        return ", ".join([f"{i[0][0].value} {i[1][0:3].upper()}" for i in self.order])
 
     @property
     def name(self):  # pragma: no cover
