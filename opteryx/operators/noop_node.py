@@ -32,7 +32,7 @@ class NoOpNode(BasePlanNode):
 
     @property
     def config(self):  # pragma: no cover
-        return str(self._offset)
+        return ""
 
     def execute(self) -> Iterable:
         yield None
