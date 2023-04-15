@@ -86,7 +86,13 @@ class SqlError(ProgrammingError):
 
 
 class DatasetNotFoundError(ProgrammingError):
-    pass
+    def __init__(self, dataset=None):
+        if dataset is not None:
+            self.dataset = dataset
+            message = f"No dataset named '{dataset}' can be found."
+            super().__init__(message)
+        else:
+            super().__init__()
 
 
 class CursorInvalidStateError(ProgrammingError):

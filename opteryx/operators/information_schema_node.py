@@ -23,12 +23,60 @@ from typing import Iterable
 
 import pyarrow
 
+from opteryx.exceptions import DatasetNotFoundError
 from opteryx.models import QueryProperties
 from opteryx.models.columns import Columns
 from opteryx.operators import BasePlanNode
 
-# information_schema.routines
-# information_schema.views
+
+def information_schema_routines():
+    schema = {
+        "specific_name": None,
+        "routine_catalog": None,
+        "routine_schema": None,
+        "routine_name": None,
+        "routine_type": None,
+        "data_type": None,
+        "character_maximum_length": None,
+        "character_octet_length": None,
+        "numeric_precision": None,
+        "numeric_scale": None,
+        "datetime_precision": None,
+        "character_set_name": None,
+        "collation_name": None,
+        "dtd_identifier": None,
+        "routine_body": None,
+        "routine_definition": None,
+        "external_name": None,
+        "external_language": None,
+        "parameter_style": None,
+        "is_deterministic": None,
+        "sql_data_access": None,
+        "sql_path": None,
+        "security_type": None,
+        "created": None,
+        "last_altered": None,
+        "sql_mode": None,
+        "routine_comment": None,
+        "definer": None,
+        "character_set_client": None,
+        "collation_connection": None,
+        "database_collation": None,
+    }
+
+    buffer = [schema]
+
+    table = pyarrow.Table.from_pylist(buffer)
+    table = Columns.create_table_metadata(
+        table=table,
+        expected_rows=len(buffer),
+        name="information_schema_routines",
+        table_aliases=[],
+        disposition="calculated",
+        path="information_schema_routines",
+    )
+
+    return table
 
 
 def information_schema_views():
@@ -51,10 +99,10 @@ def information_schema_views():
     table = Columns.create_table_metadata(
         table=table,
         expected_rows=len(buffer),
-        name="show_value",
+        name="information_schema_views",
         table_aliases=[],
         disposition="calculated",
-        path="show_value",
+        path="information_schema_views",
     )
 
     return table
@@ -91,10 +139,10 @@ def information_schema_tables():
     table = Columns.create_table_metadata(
         table=table,
         expected_rows=len(buffer),
-        name="show_value",
+        name="information_schema_tables",
         table_aliases=[],
         disposition="calculated",
-        path="show_value",
+        path="information_schema_tables",
     )
 
     return table
@@ -123,6 +171,10 @@ class InformationSchemaNode(BasePlanNode):
     def execute(self) -> Iterable:
         if self._dataset == "information_schema.tables":
             yield information_schema_tables()
-        if self._dataset == "information_schema.views":
+        elif self._dataset == "information_schema.views":
             yield information_schema_views()
+        elif self._dataset == "information_schema.routines":
+            yield information_schema_routines()
+        else:
+            raise DatasetNotFoundError(dataset=self._dataset)
         return
