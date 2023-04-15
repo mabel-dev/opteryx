@@ -19,7 +19,7 @@ def test_mysql_storage():
         "mysql",
         SqlConnector,
         remove_prefix=True,
-        connection=f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}@sql8.freemysqlhosting.net/{MYSQL_USER}?charset=utf8mb4",
+        connection=f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}@mysql.ci.opteryx.info/opteryx?charset=utf8mb4",
     )
 
     results = opteryx.query("SELECT * FROM mysql.planets")
