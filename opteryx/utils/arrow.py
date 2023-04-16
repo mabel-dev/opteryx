@@ -50,6 +50,8 @@ def rename_columns(morsels):
     columns = None
     morsels = iter(morsels)
     for morsel in morsels:
+        if morsel is None:
+            break
         if columns is None and morsel is not None:
             columns = Columns(morsel)
             preferred_names = columns.preferred_column_names

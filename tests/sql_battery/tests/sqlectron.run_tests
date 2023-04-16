@@ -1,0 +1,9 @@
+# these are the queries issued by sqlectron when it first connects to a MySQL database
+
+SHOW VARIABLES WHERE variable_name='version' OR variable_name='version_comment';
+
+SELECT table_name as name FROM information_schema.tables WHERE table_schema = database() AND table_type NOT LIKE '%VIEW%' ORDER BY table_name
+
+SELECT table_name as name FROM information_schema.views WHERE table_schema = database() ORDER BY table_name
+
+SELECT routine_name as 'routine_name', routine_type as 'routine_type' FROM information_schema.routines WHERE routine_schema = database() ORDER BY routine_name

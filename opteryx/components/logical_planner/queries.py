@@ -548,6 +548,16 @@ def execute_query(ast, properties):
         ) from err
 
 
+def use_query(ast, properties):
+    # TODO - set the default database in the connection
+    plan = ExecutionTree()
+    plan.add_node(
+        "no_op",
+        operators.NoOpNode(properties=properties),
+    )
+    return plan
+
+
 # wrappers for the query builders
 QUERY_BUILDER = {
     "Analyze": analyze_query,
@@ -560,4 +570,5 @@ QUERY_BUILDER = {
     "ShowFunctions": show_functions_query,
     "ShowVariable": show_variable_query,  # generic SHOW handler
     "ShowVariables": show_variables_query,
+    "Use": use_query,
 }

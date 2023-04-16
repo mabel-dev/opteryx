@@ -30,7 +30,7 @@ from opteryx.exceptions import ProgrammingError
 from opteryx.managers.kvstores import BaseKeyValueStore
 from opteryx.shared import QueryStatistics
 
-CURSOR_NOT_RUN = "Cursor must be in an executed state"
+CURSOR_NOT_RUN: str = "Cursor must be in an executed state"
 
 
 class Connection:
@@ -52,6 +52,10 @@ class Connection:
         self.cache = cache
         self._kwargs = kwargs
 
+        self._default_database = None
+        self._connection_id = utils.random_int()
+
+        # check the permissions we've been given are valid permissions
         from opteryx import permissions as all_perms
 
         if permissions is None:
@@ -139,8 +143,9 @@ class Cursor(DataFrame):
             self._plan = self._query_planner.optimize_plan(plan)
             results = self._query_planner.execute(self._plan)
 
-        self._rows, self._schema = converters.from_arrow(utils.arrow.rename_columns(results))
-        self._cursor = iter(self._rows)
+        if results is not None:
+            self._rows, self._schema = converters.from_arrow(utils.arrow.rename_columns(results))
+            self._cursor = iter(self._rows)
 
     @property
     def stats(self):
