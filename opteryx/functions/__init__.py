@@ -28,8 +28,8 @@ from opteryx.functions import date_functions
 from opteryx.functions import number_functions
 from opteryx.functions import other_functions
 from opteryx.functions import string_functions
-from opteryx.utils import arrays
 from opteryx.utils import dates
+from opteryx.utils import series
 
 
 def get_version():
@@ -231,7 +231,7 @@ FUNCTIONS = {
     "GREATEST": _iterate_single_parameter(numpy.nanmax),
     "LEAST": _iterate_single_parameter(numpy.nanmin),
     "IIF": other_functions.iif,
-    "GENERATE_SERIES": arrays.generate_series,
+    "GENERATE_SERIES": series.generate_series,
     "NULLIF": other_functions.null_if,
     "CASE": other_functions.case_when,
 
