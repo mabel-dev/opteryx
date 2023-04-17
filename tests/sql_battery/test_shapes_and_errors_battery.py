@@ -383,8 +383,8 @@ STATEMENTS = [
         ("SELECT * FROM $astronauts WHERE death_date IS NOT NULL", 52, 19, None),
         ("SELECT * FROM testdata.flat.formats.parquet WITH(NO_PARTITION) WHERE user_verified IS TRUE", 711, 13, None),
         ("SELECT * FROM testdata.flat.formats.parquet WITH(NO_PARTITION) WHERE user_verified IS FALSE", 99289, 13, None),
-        ("SELECT * FROM testdata.flat.formats.csv WITH(NO_PARTITION) WHERE user_verified IS FALSE", 33395, 10, None),
-        ("SELECT * FROM testdata.flat.formats.tsv WITH(NO_PARTITION) WHERE user_verified IS FALSE", 33395, 10, None),
+        ("SELECT * FROM testdata.flat.formats.csv WITH(NO_PARTITION) WHERE user_verified IS TRUE", 134, 10, None),
+        ("SELECT * FROM testdata.flat.formats.tsv WITH(NO_PARTITION) WHERE user_verified IS TRUE", 134, 10, None),
 
         ("SELECT * FROM testdata.flat.formats.parquet WITH(NO_PARTITION, PARALLEL_READ)", 100000, 13, None),
 
@@ -889,11 +889,13 @@ def test_sql_battery(statement, rows, columns, exception):
         actual_rows, actual_columns = cursor.shape
         assert (
             rows == actual_rows
-        ), f"Query returned {actual_rows} rows but {rows} were expected ({actual_columns} vs {columns})\n{statement}\n{cursor.head(10)}"
+        ), f"\n{cursor.display()}\n\033[38;5;203mQuery returned {actual_rows} rows but {rows} were expected.\033[0m\n{statement}"
         assert (
             columns == actual_columns
-        ), f"Query returned {actual_columns} cols but {columns} were expected\n{statement}\n{cursor.head(10)}"
-
+        ), f"\n{cursor.display()}\n\033[38;5;203mQuery returned {actual_columns} cols but {columns} were expected.\033[0m\n{statement}"
+    except AssertionError as err:
+        print(f"\n{err}", flush=True)
+        quit()
     except Exception as err:
         assert (
             type(err) == exception

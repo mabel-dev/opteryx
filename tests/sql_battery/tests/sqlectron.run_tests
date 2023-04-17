@@ -1,4 +1,6 @@
-# these are the queries issued by sqlectron when it first connects to a MySQL database
+# these are the automated queries issued by sqlectron - https://sqlectron.github.io/
+
+show databases
 
 SHOW VARIABLES WHERE variable_name='version' OR variable_name='version_comment';
 

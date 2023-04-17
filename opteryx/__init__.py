@@ -11,14 +11,18 @@
 # limitations under the License.
 import os
 
+from orso.logging import get_logger
+from orso.logging import set_log_name
+
 from opteryx import config
 from opteryx.connection import Connection
 from opteryx.connectors import register_arrow
 from opteryx.connectors import register_df
 from opteryx.connectors import register_store
-from opteryx.third_party.fastlogging import GetLogger
-from opteryx.third_party.fastlogging import LogInit
 from opteryx.version import __version__
+
+set_log_name("OPTERYX")
+logger = get_logger()
 
 __author__: str = "@joocer"
 
@@ -100,8 +104,6 @@ def query(operation, *args, params: list = None, **kwargs):
     curr.execute(operation=operation, params=params)
     return curr
 
-
-logger = LogInit(console=True, colors=True, useThreads=False)
 
 # Try to increase the priority of the application
 if not config.DISABLE_HIGH_PRIORITY and hasattr(os, "nice"):  # pragma: no cover

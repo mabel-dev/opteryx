@@ -29,11 +29,11 @@ from opteryx.managers.expression import evaluate
 from opteryx.models import Columns
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
-from opteryx.utils import arrays
+from opteryx.utils import series
 
 
 def _generate_series(alias, *args):
-    value_array = arrays.generate_series(*args)
+    value_array = series.generate_series(*args)
     return [{alias: value} for value in value_array]
 
 
