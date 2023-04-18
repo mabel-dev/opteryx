@@ -9,7 +9,7 @@ jobs:
       max-parallel: 4
       matrix:
         python-version: ['3.9']
-        os: [ARM64]   # ARM64 = Raspberry Pi
+        os: [ARM64]   # ARM64 = Oracle Cloud
     runs-on: ${{ matrix.os }}
     steps:
 
