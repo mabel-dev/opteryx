@@ -51,6 +51,7 @@ from opteryx.exceptions import ColumnNotFoundError
 from opteryx.exceptions import DatasetNotFoundError
 from opteryx.exceptions import EmptyResultSetError
 from opteryx.exceptions import InvalidTemporalRangeFilterError
+from opteryx.exceptions import MissingSqlStatement
 from opteryx.exceptions import SqlError
 from opteryx.exceptions import UnsupportedSyntaxError
 
@@ -840,8 +841,8 @@ STATEMENTS = [
         # 797
         ("SELECT COUNT(*) AS planets, id FROM $planets GROUP BY id ORDER BY planets DESC", 9, 2, None),
         # 833
-        (b"", None, None, ValueError),
-        ("", None, None, ValueError),
+        (b"", None, None,  MissingSqlStatement),
+        ("", None, None, MissingSqlStatement),
         # 870
         ("SELECT MAX(density) FROM $planets GROUP BY orbitalInclination, escapeVelocity, orbitalInclination, numberOfMoons, escapeVelocity, density", 9, 1, None),
         ("SELECT COUNT(*) FROM $planets GROUP BY orbitalInclination, orbitalInclination", 9, 1, None),

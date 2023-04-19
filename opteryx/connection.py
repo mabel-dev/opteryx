@@ -25,6 +25,7 @@ from orso import converters
 
 from opteryx import utils
 from opteryx.exceptions import CursorInvalidStateError
+from opteryx.exceptions import MissingSqlStatement
 from opteryx.exceptions import PermissionsError
 from opteryx.exceptions import ProgrammingError
 from opteryx.managers.kvstores import BaseKeyValueStore
@@ -110,7 +111,7 @@ class Cursor(DataFrame):
 
     def execute(self, operation, params=None):
         if not operation:
-            raise ValueError("SQL statement not found")
+            raise MissingSqlStatement("SQL statement not found")
 
         if self._query is not None:
             raise CursorInvalidStateError("Cursor can only be executed once")
