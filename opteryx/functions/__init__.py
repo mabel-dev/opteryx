@@ -199,6 +199,7 @@ FUNCTIONS = {
     "LTRIM": string_functions.ltrim,
     "RTRIM": string_functions.rtrim,
     "LEVENSHTEIN": string_functions.levenshtein,
+    "SPLIT": string_functions.split,
 
     # HASHING & ENCODING
     "HASH": _iterate_single_parameter(lambda x: format(CityHash64(str(x)), "X")),

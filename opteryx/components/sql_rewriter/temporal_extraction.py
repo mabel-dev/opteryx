@@ -89,7 +89,7 @@ TEMPORAL: int = 16
 ALIAS: int = 64
 
 
-def sql_parts(string):  # pragma: no cover
+def sql_parts(string):
     """
     Split a SQL statement into clauses
     """
@@ -99,29 +99,17 @@ def sql_parts(string):  # pragma: no cover
         + r")",
         re.IGNORECASE,
     )
-    quoted_strings = re.compile(
-        r'(?:[^"\s]*"(?:\\.|[^"])*"+)+|(?:[^\'\s]*\'(?:\\.|[^\'])*\'+)+|[^\s]+'
-    )
+    quoted_strings = re.compile(r"(\"(?:\\.|[^\"])*\"|\'(?:\\.|[^\'])*\'|`(?:\\.|[^`])*`)")
 
-    # This probably can be done with regexes, but after trying I've implemented
-    # procedurally. We're capturing strings in quotes and preserving them, strings
-    # not in quotes we're then splitting by keywords. This means that no matter
-    # what is in quotes, it will not be split, even SQL statements and FOR clauses.
     parts = []
-    accumulator = ""
-    for part in quoted_strings.findall(string):
-        part = part.strip()
-        if part != "":
-            if part[0] in ("\"'`"):
-                parts.extend(keywords.split(accumulator))
-                parts.append(part)
-                accumulator = ""
-            else:
-                accumulator += f" {part}"
-    if accumulator != "":
-        parts.extend(keywords.split(accumulator))
-
-    parts = [i.strip() for i in parts if i.strip() != ""]
+    for part in quoted_strings.split(string):
+        if part and part[-1] in ("'", '"', "`"):
+            parts.append(part)
+        else:
+            for subpart in keywords.split(part):
+                subpart = subpart.strip()
+                if subpart:
+                    parts.append(subpart)
 
     return parts
 
