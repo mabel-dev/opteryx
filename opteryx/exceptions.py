@@ -42,6 +42,10 @@ class NotSupportedError(Exception):
     pass
 
 
+class MissingSqlStatement(Exception):
+    pass
+
+
 # PEP-0249
 
 
@@ -89,7 +93,7 @@ class DatasetNotFoundError(ProgrammingError):
     def __init__(self, dataset=None):
         if dataset is not None:
             self.dataset = dataset
-            message = f"No dataset named '{dataset}' can be found."
+            message = f"The requested dataset could not be found '{dataset}'."
             super().__init__(message)
         else:
             super().__init__()

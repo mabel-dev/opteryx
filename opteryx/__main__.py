@@ -22,6 +22,7 @@ import typer
 import opteryx
 from opteryx.components.sql_rewriter.sql_rewriter import clean_statement
 from opteryx.components.sql_rewriter.sql_rewriter import remove_comments
+from opteryx.exceptions import MissingSqlStatement
 
 # Define ANSI color codes
 ANSI_RED = "\u001b[31m"
@@ -47,19 +48,28 @@ def main(
 
     if sql is None:
 
-        import readline
+        import readline  # importing has impact, even when not referenced again
 
         if o != "console":
             raise ValueError("Cannot specify output location and not provide a SQL statement.")
 
+        print(f"Opteryx version {opteryx.__version__}")
+        print("  Enter '.help' for usage hints")
+        print("  Enter '.exit' to exit this program")
+        print()
+
         # Start the REPL loop
         while True:  # pragma: no cover
             # Prompt the user for a SQL statement
-            statement = input('>> ')
+            statement = input('opteryx> ')
 
             # If the user entered "quit", exit the loop
-            if statement == 'quit':
+            if statement == '.exit':
                 break
+            if statement == ".help":
+                print("  .exit        Exit this program")
+                print("  .help        Show help text")
+                continue
 
             try:
                 # Execute the SQL statement and display the results
@@ -70,6 +80,9 @@ def main(
                 print(result.display(limit=-1, display_width=table_width, colorize=color, max_column_width=max_col_width))
                 if stats:
                     print(f"[ {result.rowcount} rows x {result.columncount} columns ] ( {duration/1e9} seconds )")
+            except MissingSqlStatement:
+                print(f"{ANSI_RED}Error{ANSI_RESET}: Expected SQL statement or dot command missing.")
+                print("  Enter '.help' for usage hints")
             except Exception as e:
                 # Display a friendly error message if an exception occurs
                 print(f"{ANSI_RED}Error{ANSI_RESET}: {e}")

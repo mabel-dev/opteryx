@@ -388,8 +388,6 @@ class BlobReaderNode(BasePlanNode):
                 partition_structure.pop(partition)
 
         if len(partition_structure) == 0:
-            raise DatasetNotFoundError(
-                f"The requested dataset could not be found {str(partition).replace('/', '.')}."
-            )
+            raise DatasetNotFoundError(str(partition).replace("/", "."))
 
         return partition_structure
