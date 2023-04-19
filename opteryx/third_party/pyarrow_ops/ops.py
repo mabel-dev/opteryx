@@ -1,6 +1,7 @@
 """
 Original code modified for Opteryx.
 """
+from enum import Enum
 from ipaddress import IPv4Address
 from ipaddress import IPv4Network
 
@@ -8,6 +9,7 @@ import numpy
 import pyarrow
 from pyarrow import compute
 
+from opteryx.attribute_types import OPTERYX_TYPES
 from opteryx.attribute_types import PARQUET_TYPES
 from opteryx.attribute_types import PYTHON_TYPES
 from opteryx.attribute_types import TOKEN_TYPES
@@ -37,6 +39,38 @@ FILTER_OPERATORS = {
     "NotPGRegexIMatch",  # "!~*"
     "PGRegexNotIMatch",  # "!~*"
     "BitwiseOr",  # |
+}
+
+
+class TOKEN_TYPES(str, Enum):
+    BOOLEAN = "BOOLEAN"
+    NUMERIC = "NUMERIC"
+    LIST = "LIST"
+    VARCHAR = "VARCHAR"
+    STRUCT = "STRUCT"
+    TIMESTAMP = "TIMESTAMP"
+    OTHER = "OTHER"
+    IDENTIFIER = "IDENTIFIER"
+    WILDCARD = "WILDCARD"
+    QUERY_PLAN = "QUERY_PLAN"
+    FUNCTION = "FUNCTION"
+    INTERVAL = "INTERVAL"
+
+
+PYTHON_TYPES = {
+    "bool": OPTERYX_TYPES.BOOLEAN,
+    "datetime": OPTERYX_TYPES.TIMESTAMP,
+    "date": OPTERYX_TYPES.TIMESTAMP,
+    "dict": OPTERYX_TYPES.STRUCT,
+    "int": OPTERYX_TYPES.NUMERIC,  # INTEGER
+    "float": OPTERYX_TYPES.NUMERIC,  # FLOAT
+    "float64": OPTERYX_TYPES.NUMERIC,  # IS THIS USED?
+    "Decimal": OPTERYX_TYPES.NUMERIC,  # DECIMAL
+    "str": OPTERYX_TYPES.VARCHAR,
+    "tuple": OPTERYX_TYPES.LIST,
+    "list": OPTERYX_TYPES.LIST,
+    "set": OPTERYX_TYPES.LIST,
+    # INTERVAL?
 }
 
 
