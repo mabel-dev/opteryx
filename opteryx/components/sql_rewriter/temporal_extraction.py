@@ -94,7 +94,7 @@ def sql_parts(string):
     Split a SQL statement into clauses
     """
     keywords = re.compile(
-        r"(\,|\(|\)|\;|"
+        r"(\,|\(|\)|\;|\t|\n|"
         + r"|".join([r"\b" + i.replace(r" ", r"\s") + r"\b" for i in SQL_PARTS])
         + r")",
         re.IGNORECASE,
