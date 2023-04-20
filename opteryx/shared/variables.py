@@ -6,7 +6,7 @@ from opteryx.exceptions import VariableNotFoundError
 
 VariableSchema = typing.Tuple[typing.Type, typing.Any]
 
-SYSTEM_VARIABLES: dict[str, VariableSchema] = {
+SYSTEM_VARIABLES: typing.Dict[str, VariableSchema] = {
     # name: (type, default)
     "auto_increment_increment": (int, 1),
     "autocommit": (bool, True),
