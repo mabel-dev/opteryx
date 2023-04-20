@@ -27,6 +27,7 @@ FIXED_OUTCOME_FUNCTIONS = {
     # TEMPORAL
     "CURRENT_TIME": (date_functions.get_now, NodeType.LITERAL_TIMESTAMP),
     "NOW": (date_functions.get_now, NodeType.LITERAL_TIMESTAMP),
+    "UTC_TIMESTAMP": (date_functions.get_now, NodeType.LITERAL_TIMESTAMP),
     "CURRENT_DATE": (date_functions.get_today, NodeType.LITERAL_TIMESTAMP),
     "TODAY": (date_functions.get_today, NodeType.LITERAL_TIMESTAMP),
     "TIME": (date_functions.get_time, NodeType.LITERAL_TIMESTAMP),

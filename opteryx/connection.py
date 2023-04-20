@@ -57,16 +57,16 @@ class Connection:
         self._connection_id = utils.random_int()
 
         # check the permissions we've been given are valid permissions
-        from opteryx import permissions as all_perms
+        from opteryx.constants.permissions import PERMISSIONS
 
         if permissions is None:
-            permissions = all_perms
+            permissions = PERMISSIONS
         permissions = set(permissions)
-        if permissions.intersection(all_perms) == set():
+        if permissions.intersection(PERMISSIONS) == set():
             raise ProgrammingError("No valid permissions presented.")
-        if not permissions.issubset(all_perms):
+        if not permissions.issubset(PERMISSIONS):
             raise ProgrammingError(
-                f"Invalid permissions presented - {all_perms.difference(permissions)}"
+                f"Invalid permissions presented - {PERMISSIONS.difference(permissions)}"
             )
         self.permissions = permissions
 

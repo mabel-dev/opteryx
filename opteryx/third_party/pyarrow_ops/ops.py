@@ -9,8 +9,8 @@ import numpy
 import pyarrow
 from pyarrow import compute
 
-from opteryx.attribute_types import OPTERYX_TYPES
-from opteryx.attribute_types import PARQUET_TYPES
+from opteryx.constants.attribute_types import OPTERYX_TYPES
+from opteryx.constants.attribute_types import PARQUET_TYPES
 
 from .helpers import columns_to_array
 

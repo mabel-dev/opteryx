@@ -10,9 +10,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import typing
 from os import environ
 from pathlib import Path
-from typing import Any
+
+from orso.logging import get_logger
+from orso.logging import set_log_name
 
 # python-dotenv allows us to create an environment file to store secrets. If
 # there is no .env it will fail gracefully.
@@ -23,6 +26,10 @@ except ImportError:  # pragma: no cover
 
 _env_path = Path(".") / ".env"
 _config_values: dict = {}
+
+set_log_name("OPTERYX")
+logger = get_logger()
+logger.setLevel(5)
 
 
 def parse_yaml(yaml_str):
@@ -41,7 +48,7 @@ def parse_yaml(yaml_str):
     result: dict = {}
     lines = yaml_str.strip().split("\n")
     key = ""
-    value: Any = ""
+    value: typing.Any = ""
     in_list = False
     list_key = ""
     for line in lines:
@@ -63,7 +70,7 @@ def parse_yaml(yaml_str):
                     result[list_key][key.strip()] = line_value(value.strip())
             else:
                 if isinstance(result[list_key][0], tuple):
-                    result[list_key] = {k: v for k, v in result[list_key]}
+                    result[list_key] = dict(result[list_key])
                 in_list = False
         if not in_list:
             key, value = line.split(":", 1)
@@ -79,9 +86,9 @@ def parse_yaml(yaml_str):
 #  deepcode ignore PythonSameEvalBinaryExpressiontrue: false +ve, values can be different
 if _env_path.exists() and (dotenv is None):  # pragma: no cover  # nosemgrep
     # using a logger here will tie us in knots
-    print("`.env` file exists but `dotEnv` not installed.")
+    logger.error("`.env` file exists but `dotEnv` not installed.")
 elif dotenv is not None:  # pragma: no cover
-    print("Loading environment variables from `.env`")
+    logger.info("Loading environment variables from `.env`")
     dotenv.load_dotenv(dotenv_path=_env_path)
 
 try:  # pragma: no cover
@@ -89,9 +96,9 @@ try:  # pragma: no cover
     if _config_path.exists():
         with open(_config_path, "r") as _config_file:
             _config_values = parse_yaml(_config_file.read())
-        print(f"Loading config from {_config_path}")
+        logger.info(f"Loading config from {_config_path}")
 except Exception as exception:  # pragma: no cover # it doesn't matter why - just use the defaults
-    print(f"Config file {_config_path} not used - {exception}")
+    logger.error(f"Config file {_config_path} not used - {exception}")
 
 
 def get(key, default=None):
