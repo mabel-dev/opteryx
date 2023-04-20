@@ -4,8 +4,7 @@ from opteryx.constants.character_set import CharacterSet
 from opteryx.constants.character_set import Collation
 from opteryx.exceptions import VariableNotFoundError
 
-VariableType = typing.Callable[[typing.Any], typing.Any]
-VariableSchema = typing.Tuple[VariableType, typing.Any]
+VariableSchema = typing.Tuple[typing.Type, typing.Any]
 
 SYSTEM_VARIABLES: dict[str, VariableSchema] = {
     # name: (type, default)
@@ -29,12 +28,12 @@ SYSTEM_VARIABLES: dict[str, VariableSchema] = {
     "net_buffer_length": (int, 16384),
     "net_write_timeout": (int, 28800),
     "performance_schema": (bool, False),
-    "sql_auto_is_null": (bool),
+    "sql_auto_is_null": (bool, False),
     "sql_mode": (str, "ANSI"),
     "sql_select_limit": (int, None),
     "system_time_zone": (str, "UTC"),
     "time_zone": (str, "UTC"),
-    "transaction_read_only": (bool),
+    "transaction_read_only": (bool, False),
     "transaction_isolation": (str, "READ-COMMITTED"),
     "version": (str, "8.0.29"),
     "version_comment": (str, "mesos"),
