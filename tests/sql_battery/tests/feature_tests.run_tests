@@ -75,3 +75,9 @@ ANALYZE TABLE $planets;
 ANALYZE TABLE 'testdata/flat/formats/parquet/tweets.parquet';
 
 USE opteryx;
+
+SELECT SPLIT('a,bc,def');
+SELECT SPLIT('a,bc,def', ',');
+SELECT SPLIT('a');
+SELECT SPLIT('a', 'a');
+SELECT SPLIT(name, ' ') FROM $astronauts;

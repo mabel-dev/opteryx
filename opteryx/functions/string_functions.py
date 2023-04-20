@@ -15,6 +15,8 @@ from typing import List
 import numpy
 from pyarrow import compute
 
+from opteryx.exceptions import ProgrammingError
+
 
 def string_slicer_left(arr, length):
     """
@@ -40,6 +42,19 @@ def string_slicer_right(arr, length):
     if hasattr(arr, "to_numpy"):
         arr = arr.to_numpy(False)
     return [None if s is None else s[-int(length[i]) :] for i, s in enumerate(arr)]
+
+
+def split(arr, delimiter=",", limit=None):
+    """
+    Slice a list of strings from the right
+    """
+    if not isinstance(delimiter, str):
+        delimiter = delimiter[0]
+    if limit is not None:
+        limit = int(limit[0]) - 1
+        if limit < 0:
+            raise ProgrammingError("`SPLIT` limit parameter must be greater than zero.")
+    return compute.split_pattern(arr, pattern=delimiter, max_splits=limit)
 
 
 def soundex(arr):

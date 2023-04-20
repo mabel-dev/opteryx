@@ -53,6 +53,7 @@ from opteryx.exceptions import EmptyResultSetError
 from opteryx.exceptions import InvalidTemporalRangeFilterError
 from opteryx.exceptions import MissingSqlStatement
 from opteryx.exceptions import SqlError
+from opteryx.exceptions import ProgrammingError
 from opteryx.exceptions import UnsupportedSyntaxError
 
 from opteryx.utils.formatter import format_sql
@@ -703,6 +704,9 @@ STATEMENTS = [
         ("SELECT * FROM $planets AS p JOIN $planets AS g ON p.id = g.id AND p.name = 'Earth';", 1, 40, None),
         ("SELECT * FROM $planets AS p JOIN $planets AS g ON g.name = 'Earth' AND p.id = g.id;", 1, 40, None),
         ("SELECT * FROM $planets AS p JOIN $planets AS g ON p.name = 'Earth' AND p.id = g.id;", 1, 40, None),
+
+        ("SELECT SPLIT(name, ' ', 0) FROM $astronauts", None, None, ProgrammingError),
+        ("SELECT SPLIT(name, ' ', 1) FROM $astronauts", 357, 1, None),
 
         # virtual dataset doesn't exist
         ("SELECT * FROM $RomanGods", None, None, DatasetNotFoundError),
