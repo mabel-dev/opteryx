@@ -48,7 +48,7 @@ def test_security_permissions_query():
 
 def test_security_permissions_validation():
     # shouldn't have any issues
-    opteryx.query("SELECT * FROM $planets", permissions=opteryx.permissions).arrow()
+    opteryx.query("SELECT * FROM $planets", permissions=opteryx.constants.PERMISSIONS).arrow()
     opteryx.query("SELECT * FROM $planets", permissions=None).arrow()
     opteryx.query("SELECT * FROM $planets", permissions={"Analyze", "Execute", "Query"}).arrow()
     opteryx.query("SELECT * FROM $planets", permissions=["Analyze", "Execute", "Query"]).arrow()

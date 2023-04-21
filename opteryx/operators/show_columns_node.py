@@ -27,8 +27,8 @@ from numpy import nan
 from numpy import nanmax
 from numpy import nanmin
 
-from opteryx.attribute_types import OPTERYX_TYPES
-from opteryx.attribute_types import determine_type
+from opteryx.constants.attribute_types import OPTERYX_TYPES
+from opteryx.constants.attribute_types import determine_type
 from opteryx.exceptions import SqlError
 from opteryx.models import Columns
 from opteryx.models import QueryProperties

@@ -264,9 +264,11 @@ FUNCTIONS = {
     "DATE_TRUNC": _iterate_double_parameter_field_second(dates.date_trunc),
     "TIME_BUCKET": date_functions.date_floor,
     "DATEDIFF": date_functions.date_diff,
+    "TIMEDIFF": date_functions.time_diff,
     "DATEPART": date_functions.date_part,
     "DATE_FORMAT": date_functions.date_format,
     "CURRENT_TIME": _repeat_no_parameters(date_functions.get_now), # *
+    "UTC_TIMESTAMP": _repeat_no_parameters(date_functions.get_now),
     "NOW": _repeat_no_parameters(date_functions.get_now),
     "CURRENT_DATE": _repeat_no_parameters(date_functions.get_today),
     "TODAY": _repeat_no_parameters(date_functions.get_today),

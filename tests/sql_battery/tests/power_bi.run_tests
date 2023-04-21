@@ -1,0 +1,7 @@
+# these are the queries issued by PowerBI when it first connects to a MySQL database
+
+SELECT @@max_allowed_packet, @@character_set_client, @@character_set_connection, @@license, @@sql_mode, @@lower_case_table_names, @@autocommit
+
+SELECT TIMEDIFF(NOW(), UTC_TIMESTAMP())
+
+# select TABLE_CATALOG, TABLE_SCHEMA, TABLE_NAME, TABLE_TYPE, CREATE_TIME AS CREATED_DATE, UPDATE_TIME AS MODIFIED_DATE, TABLE_COMMENT AS DESCRIPTION from information_schema.TABLES  where TABLE_SCHEMA = 'opteryx'

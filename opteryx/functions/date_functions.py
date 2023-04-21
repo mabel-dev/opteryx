@@ -148,6 +148,10 @@ def date_diff(part, start, end):
     raise SqlError(f"Date part '{part}' unsupported for DATEDIFF")
 
 
+def time_diff(time1, time2):
+    return date_diff(["hours"], time1, time2)
+
+
 def date_format(dates, pattern):  # [#325]
     pattern = pattern[0]
     return [None if d is None else d.strftime(pattern) for d in dates.tolist()]

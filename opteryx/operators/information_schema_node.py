@@ -153,7 +153,7 @@ class InformationSchemaNode(BasePlanNode):
         super().__init__(properties=properties)
 
         self._alias = config.get("alias")
-        self._dataset = config["dataset"]
+        self._dataset = config["dataset"].lower()
 
         # pushed down selection/filter
         self._selection = config.get("selection")

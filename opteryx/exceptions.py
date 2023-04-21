@@ -107,6 +107,16 @@ class ColumnNotFoundError(ProgrammingError):
     pass
 
 
+class VariableNotFoundError(ProgrammingError):
+    def __init__(self, variable=None):
+        if variable is not None:
+            self.variable = variable
+            message = f"System variable could not be found '{variable}'."
+            super().__init__(message)
+        else:
+            super().__init__()
+
+
 class UnsupportedSyntaxError(ProgrammingError):
     pass
 
