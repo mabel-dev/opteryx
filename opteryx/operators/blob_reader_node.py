@@ -204,7 +204,7 @@ class BlobReaderNode(BasePlanNode):
                     blob_bytes,
                     pyarrow_blob,
                     path,
-                ) in [
+                ) in (
                     self._read_and_parse(
                         (
                             path,
@@ -216,7 +216,7 @@ class BlobReaderNode(BasePlanNode):
                         )
                     )
                     for path, parser in partition["blob_list"]
-                ]:
+                ):
                     # we've read a blob
                     self.statistics.count_data_blobs_read += 1
 
