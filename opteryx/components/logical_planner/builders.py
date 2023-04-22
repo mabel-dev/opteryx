@@ -191,6 +191,8 @@ def cast(branch, alias=None, key=None):
         ):
             raise UnsupportedSyntaxError("TIMESTAMPS do not support `TIME ZONE`")
         data_type = type_key
+    if "Custom" in data_type:
+        data_type = branch["data_type"]["Custom"][0][0]["value"].upper()
     if data_type == "Timestamp":
         data_type = "TIMESTAMP"
     elif "Varchar" in data_type:
@@ -201,6 +203,8 @@ def cast(branch, alias=None, key=None):
         data_type = "NUMERIC"
     elif "Boolean" in data_type:
         data_type = "BOOLEAN"
+    elif "STRUCT" in data_type:
+        data_type = "STRUCT"
     else:
         raise SqlError(f"Unsupported type for CAST  - '{data_type}'")
 
@@ -232,6 +236,8 @@ def try_cast(branch, alias=None, key="TryCast"):
         ):
             raise UnsupportedSyntaxError("TIMESTAMPS do not support `TIME ZONE`")
         data_type = type_key
+    if "Custom" in data_type:
+        data_type = branch["data_type"]["Custom"][0][0]["value"].upper()
     if data_type == "Timestamp":
         data_type = "TIMESTAMP"
     elif "Varchar" in data_type:
@@ -242,6 +248,8 @@ def try_cast(branch, alias=None, key="TryCast"):
         data_type = "NUMERIC"
     elif "Boolean" in data_type:
         data_type = "BOOLEAN"
+    elif "STRUCT" in data_type:
+        data_type = "STRUCT"
     else:
         raise SqlError(f"Unsupported type for `{function_name}`  - '{data_type}'")
 

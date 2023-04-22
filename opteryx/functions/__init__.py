@@ -14,6 +14,7 @@
 These are a set of functions that can be applied to data.
 """
 
+import json
 
 import numpy
 import pyarrow
@@ -22,6 +23,7 @@ from pyarrow import ArrowNotImplementedError
 from pyarrow import compute
 
 import opteryx
+from opteryx.exceptions import ProgrammingError
 from opteryx.exceptions import SqlError
 from opteryx.exceptions import UnsupportedSyntaxError
 from opteryx.functions import date_functions
@@ -42,6 +44,19 @@ def _get(value, item):
         if isinstance(value, dict):
             return value.get(item)
         return value[int(item)]
+    except ValueError as err:
+        if isinstance(value, str):
+            raise ProgrammingError(
+                f"VARCHAR values can only be subscripted with NUMERIC values"
+            ) from err
+        if isinstance(value, dict):
+            raise ProgrammingError(
+                f"STRUCT values must be subscripted with VARCHAR values"
+            ) from err
+        if isinstance(value, list):
+            raise ProgrammingError(f"LIST values must be subscripted with NUMERIC values") from err
+        else:
+            raise ProgrammingError(f"Cannot subscript {type(value).__name__} values") from err
     except (KeyError, IndexError, TypeError):
         return None
 
@@ -77,6 +92,7 @@ def try_cast(_type):
         "NUMERIC": float,
         "VARCHAR": str,
         "TIMESTAMP": numpy.datetime64,
+        "STRUCT": json.loads,
     }
     if _type in casters:
 
@@ -173,11 +189,13 @@ FUNCTIONS = {
     "VARCHAR": cast("VARCHAR"),
     "STRING": cast("VARCHAR"),  # alias for VARCHAR
     "STR": cast("VARCHAR"),
+    "STRUCT": _iterate_single_parameter(json.loads),
     "TRY_TIMESTAMP": try_cast("TIMESTAMP"),
     "TRY_BOOLEAN": try_cast("BOOLEAN"),
     "TRY_NUMERIC": try_cast("NUMERIC"),
     "TRY_VARCHAR": try_cast("VARCHAR"),
     "TRY_STRING": try_cast("VARCHAR"),  # alias for VARCHAR
+    "TRY_STRUCT": try_cast("STRUCT"),
 
     # STRINGS
     "LEN": _iterate_single_parameter(get_len),  # LENGTH(str) -> int

@@ -873,6 +873,9 @@ STATEMENTS = [
         ("SELECT * FROM $planets FOR DATES BETWEEN TODAY AND TOMORROW", None, None, InvalidTemporalRangeFilterError),
         ("SELECT * FROM $planets FOR DATES BETWEEN TODAY OR TOMORROW", None, None, InvalidTemporalRangeFilterError),
         ("SELECT * FROM $planets FOR DATES BETWEEN BEFORE AND TODAY", None, None, InvalidTemporalRangeFilterError),
+        # 999 - subscripting
+        ("SELECT name['n'] FROM $planets", None, None, ProgrammingError),
+        ("SELECT id['n'] FROM $planets", None, None, ProgrammingError),
 
 ]
 # fmt:on
