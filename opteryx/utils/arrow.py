@@ -30,6 +30,7 @@ def limit_records(morsels, limit):
     result_set = []
     morsels_iterator = iter(morsels)
 
+    morsel = None
     while row_count < limit:
         try:
             morsel = next(morsels_iterator)
@@ -46,12 +47,15 @@ def limit_records(morsels, limit):
                 num_rows_needed = limit - row_count
                 result_set.append(morsel.slice(offset=0, length=num_rows_needed))
                 row_count = limit
+
     if len(result_set) == 0:
-        return morsel
+        if morsel is None:
+            morsel = next(morsels_iterator, None)
+        if morsel is None:
+            return None
+        return pyarrow.Table.from_batches([], schema=morsel.schema)
     else:
         return pyarrow.concat_tables(result_set, promote=True)
-
-
 
 
 def rename_columns(morsels):
