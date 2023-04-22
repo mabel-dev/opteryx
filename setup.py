@@ -65,6 +65,7 @@ setup_config = {
     "author": "@joocer",
     "author_email": "justin.joyce@joocer.com",
     "packages": find_packages(include=[LIBRARY, f"{LIBRARY}.*"]),
+    "python_requires":">=3.8",
     "url": "https://github.com/mabel-dev/opteryx/",
     "install_requires": required,
     "ext_modules": cythonize(extensions),

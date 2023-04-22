@@ -17,9 +17,8 @@ This is a SQL Query Execution Plan Node.
 
 This Node returns up to a specified number of tuples.
 """
+import time
 from typing import Iterable
-
-from pyarrow import Table
 
 from opteryx.exceptions import SqlError
 from opteryx.models import QueryProperties
@@ -45,4 +44,7 @@ class LimitNode(BasePlanNode):
             raise SqlError(f"{self.name} on expects a single producer")
 
         morsels = self._producers[0]  # type:ignore
-        yield arrow.limit_records(morsels.execute(), limit=self.limit)
+        start_time = time.monotonic_ns()
+        limited = arrow.limit_records(morsels.execute(), limit=self.limit)
+        self.statistics.time_limiting += time.monotonic_ns() - start_time
+        yield limited

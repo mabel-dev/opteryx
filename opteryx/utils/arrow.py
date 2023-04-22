@@ -26,21 +26,32 @@ def limit_records(morsels, limit):
     Cycle over an iterable of morsels, limiting the response to a given
     number of records.
     """
-    result_set = []
     row_count = 0
-    morsel = None
+    result_set = []
+    morsels_iterator = iter(morsels)
 
-    for morsel in morsels:
+    while row_count < limit:
+        try:
+            morsel = next(morsels_iterator)
+        except StopIteration:
+            break
+
         if morsel.num_rows > 0:
-            row_count += morsel.num_rows
-            result_set.append(morsel)
-            if row_count > limit:  # type:ignore
-                break
-
+            if row_count + morsel.num_rows <= limit:
+                # append whole morsel to result_set
+                result_set.append(morsel)
+                row_count += morsel.num_rows
+            else:
+                # slice morsel to only append needed rows to result_set
+                num_rows_needed = limit - row_count
+                result_set.append(morsel.slice(offset=0, length=num_rows_needed))
+                row_count = limit
     if len(result_set) == 0:
         return morsel
     else:
-        return pyarrow.concat_tables(result_set, promote=True).slice(offset=0, length=limit)
+        return pyarrow.concat_tables(result_set, promote=True)
+
+
 
 
 def rename_columns(morsels):
