@@ -56,15 +56,16 @@ def main(
         print(f"Opteryx version {opteryx.__version__}")
         print("  Enter '.help' for usage hints")
         print("  Enter '.exit' to exit this program")
-        print()
 
         # Start the REPL loop
         while True:  # pragma: no cover
             # Prompt the user for a SQL statement
+            print()
             statement = input('opteryx> ')
 
-            # If the user entered "quit", exit the loop
-            if statement == '.exit':
+            # If the user entered "exit", exit the loop
+            # forgive them for 'quit'
+            if statement in {'.exit', '.quit'}:
                 break
             if statement == ".help":
                 print("  .exit        Exit this program")

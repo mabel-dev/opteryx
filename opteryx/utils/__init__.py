@@ -24,7 +24,7 @@ def hasher(vals):
     This is roughly 2x faster than the previous implementation for lists of strings.
 
     Do note though, if you're micro-optimizing, this is faster to create but is
-    slower for some Python functions to handle, like 'sorted'.
+    slower for some Python functions to handle the result of, like 'sorted'.
     """
     if numpy.issubdtype(vals.dtype, numpy.character):
         return numpy.array([CityHash64(s.encode()) for s in vals], numpy.uint64)
