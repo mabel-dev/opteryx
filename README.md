@@ -7,7 +7,7 @@
 <h3 align="center">
 
 
-Opteryx is a SQL Engine designed for embedded and cloud-native environments, and with command-line skills.
+Opteryx is an in-process SQL query engine for analysis of distributed datasets.
 
 [Documentation](https://opteryx.dev/latest) |
 [Examples](#examples) |
@@ -26,7 +26,7 @@ Opteryx is a SQL Engine designed for embedded and cloud-native environments, and
 
 ## What is Opteryx?
 
-Opteryx is a powerful Python library designed for data wrangling and analytics. With Opteryx, users can seamlessly interact with various data platforms, unlocking the full potential of their data.
+Opteryx is a Python library designed for data wrangling and analytics. With Opteryx, users can seamlessly interact with various data platforms, unlocking the full potential of their data.
 
 Opteryx offers the following features:
 
@@ -34,7 +34,7 @@ Opteryx offers the following features:
 - A command-line tool for filtering, transforming, and combining files in a flexible and intuitive manner.
 - Embeddable as a low-cost engine, allowing for hundreds of analysts to leverage ad hoc databases with ease.
 - Integration with familiar tools like pandas and Polars.
-- Unified access to data on disk, in the Cloud and in on-prem databases, not only through the same interface, but in the same query.
+- Unified and federated access to data on disk, in the Cloud and in on-prem databases, not only through the same interface, but in the same query.
 
 ## Why Use Opteryx?
 
@@ -68,7 +68,7 @@ Opteryx is Open Source Python, it quickly and easily integrates into Python code
 
 ### __Time Travel__
 
-Designed for data analytics in environments where decisions need to be replayable, Opteryx allows you to query data as at a point in time in the past to replay decision algorithms against facts as they were known in the past. _(data must be structured to enable temporal queries)_
+Designed for data analytics in environments where decisions need to be replayable, Opteryx allows you to query data as at a point in time in the past to replay decision algorithms against facts as they were known in the past. You can even self-join tables historic data, great for finding deltas in datasets over time. _(data must be structured to enable temporal queries)_
 
 ### __Fast__
 

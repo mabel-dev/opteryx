@@ -7,7 +7,7 @@ import sys
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
-from opteryx.__main__ import main
+from opteryx.command import main
 
 
 def test_basic_cli():
@@ -16,6 +16,7 @@ def test_basic_cli():
     main(sql="SELECT * FROM $planets;", o="temp.csv")
     main(sql="SELECT * FROM $planets;", o="temp.jsonl")
     main(sql="SELECT * FROM $planets;", o="temp.parquet")
+    main(sql="SELECT * FROM $planets;", o="temp.md")
 
 
 if __name__ == "__main__":  # pragma: no cover

@@ -20,6 +20,7 @@ import time
 import typing
 from uuid import uuid4
 
+import pyarrow
 from orso import DataFrame
 from orso import converters
 
@@ -109,7 +110,7 @@ class Cursor(DataFrame):
         """The unique internal reference for this query"""
         return self._qid
 
-    def execute(self, operation, params=None):
+    def _inner_execute(self, operation, params=None):
         if not operation:
             raise MissingSqlStatement("SQL statement not found")
 
@@ -145,8 +146,20 @@ class Cursor(DataFrame):
             results = self._query_planner.execute(self._plan)
 
         if results is not None:
-            self._rows, self._schema = converters.from_arrow(utils.arrow.rename_columns(results))
+            return utils.arrow.rename_columns(results)
+
+    def execute(self, operation, params=None):
+        results = self._inner_execute(operation, params)
+        if results is not None:
+            self._rows, self._schema = converters.from_arrow(results)
             self._cursor = iter(self._rows)
+
+    def execute_to_arrow(self, operation, params=None, limit=None):
+        results = self._inner_execute(operation, params)
+        if results is not None:
+            if limit is not None:
+                return utils.arrow.limit_records(results, limit)
+        return pyarrow.concat_tables(results, promote=True)
 
     @property
     def stats(self):

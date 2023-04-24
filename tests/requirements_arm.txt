@@ -18,5 +18,7 @@ firebase-admin
 sqlalchemy
 pymysql
 psycopg2-binary
+duckdb
+duckdb-engine
 
 setuptools_rust
