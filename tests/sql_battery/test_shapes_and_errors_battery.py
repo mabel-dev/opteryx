@@ -712,6 +712,9 @@ STATEMENTS = [
         ("SELECT * FROM $RomanGods", None, None, DatasetNotFoundError),
         # disk dataset doesn't exist
         ("SELECT * FROM non.existent", None, None, DatasetNotFoundError),
+        # column doesn't exist
+        ("SELECT awesomeness_factor FROM $planets;", None, None, ColumnNotFoundError),
+        ("SELECT * FROM $planets WHERE awesomeness_factor > 'Mega';", None, None, ColumnNotFoundError),
         # https://trino.io/docs/current/functions/aggregate.html#filtering-during-aggregation
         ("SELECT LIST(name) FILTER (WHERE name IS NOT NULL) FROM $planets;", None, None, SqlError),
         # Can't IN an INDENTIFIER
@@ -876,7 +879,11 @@ STATEMENTS = [
         # 999 - subscripting
         ("SELECT name['n'] FROM $planets", None, None, ProgrammingError),
         ("SELECT id['n'] FROM $planets", None, None, ProgrammingError),
-
+        # [1008] fuzzy search fails on ints
+        ("SELECT * FROM $planets JOIN $planets ON id = 12;", None, None, ColumnNotFoundError),
+        ("SELECT * FROM $planets JOIN $planets ON 12 = id;", None, None, ColumnNotFoundError),
+        # [1006] dots in filenames
+        ("SELECT * FROM 'testdata/flat/multi/00.01.jsonl'", 1, 4, None),
 ]
 # fmt:on
 

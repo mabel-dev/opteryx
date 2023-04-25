@@ -111,8 +111,8 @@ class FileReaderNode(BasePlanNode):
         return "File Reader"
 
     def execute(self) -> Iterable:
-        ext = ".".join(self._dataset.split("/")[-1].split(".")[1:])
-        parser, kind = KNOWN_EXTENSIONS[ext]
+        ext = self._dataset.split("/")[-1].split(".")[-1]
+        parser, _ = KNOWN_EXTENSIONS[ext]
 
         time_to_read, blob_bytes, pyarrow_blob = self._read_and_parse(
             (
