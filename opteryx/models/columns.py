@@ -154,6 +154,7 @@ class Columns:
         If we're expecting only_one match, we fail if that's not what we find.
         """
         matches = []
+        column = str(column)
         for col, att in self._column_metadata.items():
             matches.extend([col for alias in att.get("aliases", []) if alias == column])
         matches = list(dict.fromkeys(matches))
