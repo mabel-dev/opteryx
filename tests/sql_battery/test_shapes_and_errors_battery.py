@@ -882,7 +882,8 @@ STATEMENTS = [
         # [1008] fuzzy search fails on ints
         ("SELECT * FROM $planets JOIN $planets ON id = 12;", None, None, ColumnNotFoundError),
         ("SELECT * FROM $planets JOIN $planets ON 12 = id;", None, None, ColumnNotFoundError),
-
+        # [1006] dots in filenames
+        ("SELECT * FROM 'testdata/flat/multi/00.01.jsonl'", 1, 4, None),
 ]
 # fmt:on
 
