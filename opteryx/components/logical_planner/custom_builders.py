@@ -131,6 +131,8 @@ def extract_identifiers(ast):
                 _key = next(iter(item))
                 if _key in ("Wildcard",):
                     identifiers.append("*")
+            elif item == "Wildcard":
+                identifiers.append("*")
             identifiers.extend(extract_identifiers(item))
 
     return identifiers
