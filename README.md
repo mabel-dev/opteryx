@@ -60,7 +60,7 @@ And if there's not a connector in the box for your data platform; bespoke connec
 
 ### __Consumption-Based Billing Friendly__
 
-Opteryx is well-suited for deployments to environments which are pay-as-you-use, like Google Cloud Run. Great for situations where you low-volume usage, or multiple environments, where the costs of many traditional database deployment can quickly add up.
+Opteryx is well-suited for deployments to environments which are pay-as-you-use, like Google Cloud Run. Great for situations where you have low-volume usage, or multiple environments, where the costs of many traditional database deployment can quickly add up.
 
 ### __Python Native__
 

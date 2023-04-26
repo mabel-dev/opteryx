@@ -37,7 +37,7 @@ def _filter(filter, table):
     from opteryx.managers.expression import evaluate
 
     mask = evaluate(filter, table, False)
-    return table.filter(pyarrow.array(mask))
+    return table.filter(mask)
 
 
 def zstd_decoder(stream, projection: List = None, selection=None):
@@ -47,7 +47,7 @@ def zstd_decoder(stream, projection: List = None, selection=None):
     import zstandard
 
     with zstandard.open(stream, "rb") as file:
-        return jsonl_decoder(file, projection)
+        return jsonl_decoder(file, projection=projection, selection=selection)
 
 
 def parquet_decoder(stream, projection: List = None, selection=None):
