@@ -43,7 +43,9 @@ def get_functions():
         if function_name[0] != "_":
             # python CamelCase to SQL SNAKE_CASE
             function_name = CAMEL_TO_SNAKE.sub("_", function_name).upper()
-            functions[function_name] = function_implementation
+            if function_name.startswith("FUNCTION_"):
+                function_name = function_name[9:]
+                functions[function_name] = function_implementation
     return functions
 
 
@@ -80,7 +82,7 @@ class _BaseFunction:
         return f"{self.__class__.__name__.upper()} (<params>) → <type>\n{self.__doc__.strip()}"
 
 
-class CurrentTime(_BaseFunction):
+class FunctionCurrentTime(_BaseFunction):
     """Return the current system time."""
 
     style = _FunctionStyle.CONSTANT
@@ -90,7 +92,7 @@ class CurrentTime(_BaseFunction):
         return datetime.datetime.utcnow().time()
 
 
-class E(_BaseFunction):
+class FunctionE(_BaseFunction):
     """Return Euler's number."""
 
     style = _FunctionStyle.CONSTANT
@@ -100,7 +102,16 @@ class E(_BaseFunction):
         return 2.71828182845904523536028747135266249775724709369995
 
 
-class Phi(_BaseFunction):
+class FunctionLen(_BaseFunction):
+    """return the length of a VARCHAR or ARRAY"""
+
+    style = _FunctionStyle.ELEMENTWISE
+
+    def _func(self, item: typing.Union[list, str]) -> int:
+        return len(item)
+
+
+class FunctionPhi(_BaseFunction):
     """Return the golden ratio."""
 
     style = _FunctionStyle.CONSTANT
@@ -110,7 +121,7 @@ class Phi(_BaseFunction):
         return 1.61803398874989484820458683436563811772030917980576
 
 
-class Pi(_BaseFunction):
+class FunctionPi(_BaseFunction):
     """Return Pi."""
 
     style = _FunctionStyle.CONSTANT
@@ -120,7 +131,7 @@ class Pi(_BaseFunction):
         return 3.14159265358979323846264338327950288419716939937510
 
 
-class Version(_BaseFunction):
+class FunctionVersion(_BaseFunction):
     """Return the version of the query engine."""
 
     style = _FunctionStyle.CONSTANT

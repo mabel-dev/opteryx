@@ -22,6 +22,7 @@ from typing import Iterable
 
 import pyarrow
 
+from opteryx.managers.expression import NodeType
 from opteryx.models import QueryProperties
 from opteryx.models.columns import Columns
 from opteryx.operators import BasePlanNode
@@ -59,6 +60,9 @@ class SqlReaderNode(BasePlanNode):
         return not self._disable_selections
 
     def push_predicate(self, predicate):
+        # SQL reader currently assumes the right parameter is a literal
+        if predicate.left.token_type == predicate.right.token_type == NodeType.IDENTIFIER:
+            return False
         if self.can_push_selection:
             return self._reader.push_predicate(predicate)
         return False

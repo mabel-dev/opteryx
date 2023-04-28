@@ -46,6 +46,7 @@ def predicate_pushdown(plan, properties):
         (
             operators.BlobReaderNode,
             operators.CollectionReaderNode,
+            operators.FileReaderNode,
             operators.SqlReaderNode,
         )
     )

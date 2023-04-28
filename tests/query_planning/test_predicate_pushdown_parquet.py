@@ -66,6 +66,42 @@ def test_predicate_pushdowns_blobs_parquet():
     assert cur.stats["rows_read"] == 711, cur.stats
     config.ONLY_PUSH_EQUALS_PREDICATES = False
 
+    # identifier = identifier isn't pushed - file reader
+    config.ONLY_PUSH_EQUALS_PREDICATES = True
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT * FROM 'testdata/flat/planets/parquet/planets.parquet' WITH(NO_PARTITION) WHERE rotationPeriod = lengthOfDay;"
+    )
+    assert cur.rowcount == 3, cur.rowcount
+    assert cur.stats["rows_read"] == 9, cur.stats
+    config.ONLY_PUSH_EQUALS_PREDICATES = False
+
+    # push the >, not the eq
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT * FROM 'testdata/flat/planets/parquet/planets.parquet' WITH(NO_PARTITION) WHERE rotationPeriod = lengthOfDay AND id > 5;"
+    )
+    assert cur.rowcount == 2, cur.rowcount
+    assert cur.stats["rows_read"] == 4, cur.stats
+
+    # identifier = identifier isn't pushed - blob reader
+    config.ONLY_PUSH_EQUALS_PREDICATES = True
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT * FROM 'testdata.flat.planets.parquet' WITH(NO_PARTITION) WHERE rotationPeriod = lengthOfDay;"
+    )
+    assert cur.rowcount == 3, cur.rowcount
+    assert cur.stats["rows_read"] == 9, cur.stats
+    config.ONLY_PUSH_EQUALS_PREDICATES = False
+
+    # identifier = identifier isn't pushed - blob reader
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT * FROM 'testdata.flat.planets.parquet' WITH(NO_PARTITION) WHERE rotationPeriod = lengthOfDay AND id > 5;"
+    )
+    assert cur.rowcount == 2, cur.rowcount
+    assert cur.stats["rows_read"] == 4, cur.stats
+
     conn.close()
 
 
