@@ -105,11 +105,11 @@ class Query:
             if thing.keyword:
                 yield thing.keyword + "\n"
 
-            format = self.formats[bool(thing.alias)][keyword]
+            format_ = self.formats[bool(thing.alias)][keyword]
             value = thing.value
             if thing.is_subquery:
                 value = f"(\n{self._indent(value)}\n)"
-            yield self._indent(format.format(value=value, alias=thing.alias))
+            yield self._indent(format_.format(value=value, alias=thing.alias))
 
             if not last and not thing.keyword:
                 try:

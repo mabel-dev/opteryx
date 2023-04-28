@@ -282,6 +282,6 @@ Opteryx is in beta. Beta means different things to different people, to us, bein
 ## Related Projects
 
 - **[HadroDB](https://github.com/mabel-dev/hadrodb)** Data storage engine
-- **[mabel](https://github.com/mabel-dev/mabel)** platform for authoring 
+- **[mabel](https://github.com/mabel-dev/mabel)** Streaming data APIs
 - **[mesos](https://github.com/mabel-dev/mesos)** MySQL connector for Opteryx
-- **[orso](https://github.com/mabel-dev/orso)** DataFrame librarydata processing systems
+- **[orso](https://github.com/mabel-dev/orso)** DataFrame library

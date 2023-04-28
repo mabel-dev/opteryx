@@ -89,6 +89,9 @@ class FileReaderNode(BasePlanNode):
         # these to DNF at read time, for everything else, we run the selection nodes
         from opteryx.connectors.capabilities import predicate_pushable
 
+        # Appears to be a bug in how pyarrow does indentifier filters so don't push these
+        if predicate.left.token_type == predicate.right.token_type == NodeType.IDENTIFIER:
+            return False
         if predicate_pushable.to_dnf(predicate) is None:
             # we can't push all predicates everywhere
             return False

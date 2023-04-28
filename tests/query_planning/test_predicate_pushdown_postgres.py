@@ -71,6 +71,12 @@ def test_predicate_pushdowns_postgres_eq():
     assert cur.rowcount == 1, cur.rowcount
     assert cur.stats["rows_read"] == 2, cur.stats
 
+    # identifier = identifier isn't pushed to SQL engines
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM pg.planets WHERE rotation_period = length_of_day AND id > 5;")
+    assert cur.rowcount == 2, cur.rowcount
+    assert cur.stats["rows_read"] == 4, cur.stats
+
     conn.close()
 
 
