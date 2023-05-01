@@ -20,11 +20,15 @@ class Node:
         if key.startswith("_"):
             raise AttributeError("Node cannot have dynamic attributes starting with an underscore")
 
-    def __init__(self, **kwargs):
+    def __init__(self, *args, **kwargs):
         """
         A Python object with run-time defined attributes.
         """
         internal = {}
+        if len(args) == 1:
+            internal["type"] = str(args[0])
+        if len(args) > 1:
+            raise ValueError("Only one position argument can be passed to a Node initializer")
         if isinstance(kwargs, dict):
             for k, v in kwargs.items():
                 self._is_valid_key(k)
