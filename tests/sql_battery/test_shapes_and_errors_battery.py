@@ -884,6 +884,10 @@ STATEMENTS = [
         ("SELECT * FROM $planets JOIN $planets ON 12 = id;", None, None, ColumnNotFoundError),
         # [1006] dots in filenames
         ("SELECT * FROM 'testdata/flat/multi/00.01.jsonl'", 1, 4, None),
+        # [1015] predicate pushdowns
+        ("SELECT * FROM $planets WHERE rotationPeriod = lengthOfDay", 3, 20, None),
+        ("SELECT * FROM 'testdata.flat.planets.parquet' WITH(NO_PARTITION) WHERE rotationPeriod = lengthOfDay", 3, 20, None),
+        ("SELECT * FROM 'testdata/flat/planets/parquet/planets.parquet' WITH(NO_PARTITION) WHERE rotationPeriod = lengthOfDay", 3, 20, None),
 ]
 # fmt:on
 

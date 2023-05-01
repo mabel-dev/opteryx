@@ -168,3 +168,4 @@ database.db
 **.code-workspace
 data/**
 duckdb
+version_2/**
