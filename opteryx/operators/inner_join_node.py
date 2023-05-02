@@ -161,7 +161,6 @@ class InnerJoinNode(BasePlanNode):
                 morsel = arrow.coerce_columns(morsel, left_join_columns)
 
                 # do the join
-                # This uses the cjoin / HASH JOIN / legacy join
                 new_morsel = morsel.join(
                     self._right_table,
                     keys=left_join_columns,

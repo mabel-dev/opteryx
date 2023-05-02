@@ -26,6 +26,11 @@ def test_node():
 
     assert str(n) == '{"a":1,"c":3}', str(n)
 
+    m = Node(node_type="apple")
+    assert repr(m) == "apple ()"
+    o = Node(88)  # not recommended, but supported
+    assert repr(o) == "88 ()"
+
 
 if __name__ == "__main__":  # pragma: no cover
     test_node()

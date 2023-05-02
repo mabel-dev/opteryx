@@ -26,7 +26,7 @@ class Node:
         """
         internal = {}
         if len(args) == 1:
-            internal["type"] = str(args[0])
+            internal["node_type"] = str(args[0])
         if len(args) > 1:
             raise ValueError("Only one position argument can be passed to a Node initializer")
         if isinstance(kwargs, dict):
@@ -51,6 +51,13 @@ class Node:
     def __str__(self) -> str:
         internal = self.__dict__.get("_internal", {})
         return orjson.dumps(internal).decode()
+
+    def __repr__(self) -> str:
+        node_type = str(self.node_type)
+        if node_type.startswith("LogicalPlanStepType."):
+            node_type = node_type[20:]
+        node_params: list = []
+        return node_type + " (" + ",".join(node_params) + ")"
 
 
 if __name__ == "__main__":  # pragma: no cover

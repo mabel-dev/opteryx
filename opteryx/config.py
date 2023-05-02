@@ -137,7 +137,7 @@ MORSEL_SIZE: int = int(get("MORSEL_SIZE", 64 * 1024 * 1024))
 PROFILE_LOCATION:str = get("PROFILE_LOCATION", False)
 # query log
 QUERY_LOG_LOCATION:str = get("QUERY_LOG_LOCATION", False)
-QUERY_LOG_SIZE:int = int(get("QUERY_LOG_SIZE", 10))
+QUERY_LOG_SIZE:int = int(get("QUERY_LOG_SIZE", 100))
 # not currently supported
 METADATA_SERVER: str = None
 # fmt:on

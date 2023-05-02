@@ -46,7 +46,7 @@ from opteryx.components.tree_rewriter import tree_rewriter
 from opteryx.exceptions import ProgrammingError
 from opteryx.exceptions import SqlError
 from opteryx.models import QueryProperties
-from opteryx.shared import CircularLog
+from opteryx.shared import RollingLog
 from opteryx.third_party import sqloxide
 
 PROFILE_LOCATION = config.PROFILE_LOCATION
@@ -108,10 +108,11 @@ class QueryPlanner:
             from opteryx.components.v2.logical_planner.planner import get_planners
 
             if QUERY_LOG_LOCATION:
-                log = CircularLog(QUERY_LOG_LOCATION, QUERY_LOG_SIZE, 1024 * 1024)
+                log = RollingLog(QUERY_LOG_LOCATION, QUERY_LOG_SIZE, 1024 * 1024)
                 log.append(self.statement)
 
             if PROFILE_LOCATION:
+                # this is running the 2nd gen planner in parallel
                 try:
                     plans = ""
                     for planner, ast in get_planners(parsed_statements):
@@ -120,9 +121,7 @@ class QueryPlanner:
                     with open(PROFILE_LOCATION, mode="w") as f:
                         f.write(plans)
                 except Exception as err:
-                    # print("Unable to plan query {self.statement}")
-                    # print(f"{type(err).__name__} - {err}")
-                    pass
+                    log.append(f"{type(err).__name__} - {err}")
 
             yield from parsed_statements
         except ValueError as exception:  # pragma: no cover
