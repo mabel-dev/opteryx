@@ -201,6 +201,30 @@ class Graph(object):
             queue.popleft()
         return new_edges
 
+    def depth_first_search(
+        self, node: Optional[str] = None, visited: Optional[set] = None, depth: int = 0
+    ):
+        """
+        Returns a nested dictionary representing the graph as a tree
+        """
+        if node is None:
+            node = self.get_exit_points()[0]
+
+        if visited is None:
+            visited = set()
+
+        visited.add(node)
+
+        tree = {"type": str(self[node].node_type), "name": node, "depth": depth, "children": []}
+
+        for neighbor, _, relationship in self.ingoing_edges(node):
+            if neighbor not in visited:
+                child = self.depth_first_search(neighbor, visited, depth + 1)
+                child["relationship"] = relationship
+                tree["children"].append(child)
+
+        return tree
+
     def outgoing_edges(self, source) -> List[Tuple]:
         """
         Get the list of edges traversable from a given node.
@@ -392,18 +416,23 @@ class Graph(object):
     def __getitem__(self, nid):
         return self._nodes.get(nid, None)
 
+    def __add__(self, other):
+        self._edges.update(other._edges)
+        self._nodes.update(other._nodes)
+        return self
+
     # adapted from https://stackoverflow.com/questions/9727673/list-directory-tree-structure-in-python
     def _tree(self, node, prefix=""):
         space = "   "
-        branch = "│  "
-        tee = "├─ "
-        last = "└─ "
+        branch = " │ "
+        tee = " ├─"
+        last = " └─"
 
-        contents = [node[0] for node in self.ingoing_edges(node)]
+        contents = [node for node, _, _ in self.ingoing_edges(node)]
         # contents each get pointers that are ├── with a final └── :
         pointers = [tee] * (len(contents) - 1) + [last]
         for pointer, child_node in zip(pointers, contents):
-            label = str(self[child_node].node_type)
+            label = str(self[child_node])
             yield prefix + pointer + label
             if len(self.ingoing_edges(node)) > 0:  # extend the prefix and recurse:
                 extension = branch if pointer == tee else space
@@ -416,5 +445,5 @@ class Graph(object):
             label = str(self[entry].node_type)
             tree += label + "\n"
             t = self._tree(entry, "")
-            tree += "\n".join(t)
+            tree += "\n".join(t) + "\n"
         return tree

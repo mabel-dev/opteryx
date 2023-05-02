@@ -10,13 +10,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+Write to a log with a fixed number of entries, as the log fills the older entries are removed
+from the log file.
+"""
 import os
 
 
-class CircularLog:
+class RollingLog:
     _instance = None
 
-    def __new__(cls, log_file, max_entries, block_size):
+    def __new__(cls, log_file: str, max_entries: int = 100, block_size: int = 1024 * 1024):
         if cls._instance is None:
             cls._instance = super().__new__(cls)
             cls._instance.log_file = log_file  # type:ignore
@@ -28,7 +32,7 @@ class CircularLog:
 
     def append(self, entry):
         # open the log file in binary mode
-        with open(self.log_file, "a") as log_file:  # type:ignore
+        with open(self.log_file, "a", encoding="UTF8") as log_file:  # type:ignore
             log_file.write(entry + "\n")
         if sum(1 for _ in self.scan()) > self.max_entries:  # type:ignore
             with open(self.log_file, "r+b") as f:  # type:ignore
@@ -41,7 +45,7 @@ class CircularLog:
 
     def scan(self):
         # open the log file in binary mode
-        with open(self.log_file, "r") as log_file:  # type:ignore
+        with open(self.log_file, "r", encoding="UTF8") as log_file:  # type:ignore
             # read the current position in the circular buffer
             chunk = log_file.read(self.block_size)  # type:ignore
             # keep reading until there's no more data left
