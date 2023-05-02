@@ -25,7 +25,7 @@ def test_node():
         b = Node(_node=False)
 
     assert str(n) == '{"a":1,"c":3}', str(n)
-    
+
     m = Node(node_type="apple")
     assert repr(m) == "apple ()"
     o = Node(88)  # not recommended, but supported

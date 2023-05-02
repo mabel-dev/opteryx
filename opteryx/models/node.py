@@ -56,7 +56,7 @@ class Node:
         node_type = str(self.node_type)
         if node_type.startswith("LogicalPlanStepType."):
             node_type = node_type[20:]
-        node_params = []
+        node_params: list = []
         return node_type + " (" + ",".join(node_params) + ")"
 
 

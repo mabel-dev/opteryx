@@ -215,13 +215,18 @@ class Graph(object):
 
         visited.add(node)
 
-        tree = {"type": str(self[node].node_type), "name": node, "depth": depth, "children": []}
+        tree: dict = {
+            "type": str(self[node].node_type),
+            "name": node,
+            "depth": depth,
+            "children": [],
+        }
 
         for neighbor, _, relationship in self.ingoing_edges(node):
             if neighbor not in visited:
                 child = self.depth_first_search(neighbor, visited, depth + 1)
                 child["relationship"] = relationship
-                tree["children"].append(child)
+                tree["children"].append(child)  # type:ignore
 
         return tree
 
