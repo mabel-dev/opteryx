@@ -437,7 +437,7 @@ class Graph(object):
         # contents each get pointers that are ├── with a final └── :
         pointers = [tee] * (len(contents) - 1) + [last]
         for pointer, child_node in zip(pointers, contents):
-            label = str(self[child_node])
+            label = repr(self[child_node])
             yield prefix + pointer + label
             if len(self.ingoing_edges(node)) > 0:  # extend the prefix and recurse:
                 extension = branch if pointer == tee else space
@@ -447,7 +447,7 @@ class Graph(object):
     def draw(self):
         tree = ""
         for entry in self.get_exit_points():
-            label = str(self[entry].node_type)
+            label = repr(self[entry].node_type)
             tree += label + "\n"
             t = self._tree(entry, "")
             tree += "\n".join(t) + "\n"

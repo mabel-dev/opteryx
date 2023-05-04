@@ -35,8 +35,12 @@ def test_fuzz_text_parameters(value):
     # manually replace the value
     # fmt:off
     control["Query"]["body"]["Select"]["selection"]["BinaryOp"]["left"]["BinaryOp"]["right"]["Value"]["SingleQuotedString"] = value
+
+    # remove a chunk of the tree that has unique ids inserted during planning
+    control["Query"]["body"]["Select"].pop("from")
+    subject["Query"]["body"]["Select"].pop("from")
     # fmt:on
-    assert control == subject
+    assert control == subject, f"{control}\n\n{subject}"
 
 
 @settings(deadline=None, max_examples=TEST_ITERATIONS // 10)
@@ -55,6 +59,10 @@ def test_fuzz_int_parameters(value):
     # manually replace the value
     # fmt:off
     control["Query"]["body"]["Select"]["selection"]["BinaryOp"]["left"]["BinaryOp"]["right"]["Value"]["Number"] = [value, False]
+
+    # remove a chunk of the tree that has unique ids inserted during planning
+    control["Query"]["body"]["Select"].pop("from")
+    subject["Query"]["body"]["Select"].pop("from")
     # fmt:on
 
     assert control == subject
