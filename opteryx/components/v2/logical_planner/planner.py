@@ -19,7 +19,6 @@ different from Cobb's relational algebra)
 Steps are given random IDs to prevent collisions
 """
 
-"""1xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"""
 import os
 import sys
 from enum import Enum
@@ -34,9 +33,6 @@ from opteryx.third_party.travers import Graph
 from opteryx.utils import random_string
 
 sys.path.insert(1, os.path.join(sys.path[0], "../../../.."))
-
-
-"""2xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"""
 
 
 class LogicalPlanStepType(int, Enum):
@@ -107,15 +103,20 @@ def plan_query(statement):
                 if relation["relation"]["Derived"]["subquery"]:
                     subquery_step = Node(node_type=LogicalPlanStepType.Subquery)
                     previous_step_id, step_id = step_id, random_string()
-                    previous_from_step_id, from_step_id = previous_step_id, step_id
+
                     if previous_step_id is not None:
                         inner_plan.add_edge(previous_step_id, step_id)
-                    inner_plan.add_node(from_step_id, subquery_step)
+                    inner_plan.add_node(step_id, subquery_step)
 
                     subquery_plan = plan_query(relation["relation"]["Derived"]["subquery"])
+
                     inner_plan += subquery_plan
-                    subquery_entry_id = subquery_plan.get_entry_points()[0]
-                    inner_plan.add_edge(from_step_id, subquery_entry_id)
+                    subquery_entry_id = subquery_plan.get_exit_points()[0]
+                    inner_plan.add_edge(subquery_entry_id, step_id)
+
+                    from_step_id = step_id
+                    previous_from_step_id = step_id
+                    relation["step_id"] = step_id
 
                 else:
                     raise NotImplementedError(relation["relation"]["Derived"])
@@ -124,6 +125,8 @@ def plan_query(statement):
                 previous_step_id, step_id = step_id, random_string()
                 previous_from_step_id, from_step_id = previous_step_id, step_id
                 inner_plan.add_node(from_step_id, from_step)
+
+                relation["step_id"] = step_id
 
             # joins
             _joins = relation["joins"]
@@ -148,7 +151,13 @@ def plan_query(statement):
                 if previous_from_step_id is not None:
                     inner_plan.add_edge(previous_from_step_id, step_id)
 
-        # TODO: if there's any orphaned relations, they are implicit cross joins
+        # If there's any peer relations, they are implicit cross joins
+        if len(_relations) > 1:
+            join_step = Node(node_type=LogicalPlanStepType.Join, join="cross")
+            step_id = random_string()
+            inner_plan.add_node(step_id, join_step)
+            for relation in _relations:
+                inner_plan.add_edge(relation["step_id"], step_id)
 
         # selection
         _selection = builders.build(sub_plan["Select"]["selection"])
@@ -310,45 +319,32 @@ def get_planners(parsed_statements):
         yield QUERY_BUILDERS[statement_type], parsed_statement
 
 
-def print_tree(tree, lengths=None):
+def print_tree_inner(tree, prefix="", last=True):
     """
     Prints a nested dictionary as an ascii tree
     """
-    if lengths is None:
-        lengths = {}
 
-    name = tree["name"]
-    depth = tree["depth"]
-    relationship = tree.get("relationship")
-
-    # Calculate the length of the name and relationship strings
-    name_length = len(name)
-    rel_length = len(relationship) if relationship is not None else 0
-
-    # Update the maximum length for this depth if necessary
-    if depth not in lengths:
-        lengths[depth] = {"name": name_length, "relationship": rel_length}
+    yield prefix
+    if last:
+        yield "└─ "
+        prefix += "   "
     else:
-        lengths[depth]["name"] = max(lengths[depth]["name"], name_length)
-        lengths[depth]["relationship"] = max(lengths[depth]["relationship"], rel_length)
+        yield "├─ "
+        prefix += "│  "
 
-    # Print the node
-    print(" " * (depth * 4), end="")
-    print(tree["type"], end="")
-    if relationship is not None:
-        print(" (%s)" % relationship, end="")
-    print()
+    yield tree["type"][20:] + " "
+    yield tree["name"] + "\n"
 
     # Recursively print the children
-    for child in tree["children"]:
-        print_tree(child, lengths)
+    count = len(tree["children"])
+    for i, child in enumerate(tree["children"]):
+        last = i == count - 1
+        yield from print_tree_inner(child, prefix, last)
 
-    # Print a blank line to separate nodes at the same depth
-    if depth == 0:
-        print()
 
-    # Return the lengths for the parent to use
-    return lengths
+def print_tree(graph):
+    tree = graph.depth_first_search()
+    return "".join(print_tree_inner(tree))
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -356,11 +352,11 @@ if __name__ == "__main__":  # pragma: no cover
 
     import opteryx.third_party.sqloxide
 
-    SQL = "SET enable_optimizer = 7"
-    TSQL = "SELECT * FROM $planets"
-    TSQL = "SELECT DISTINCT MAX(planetId), name FROM $satellites INNER JOIN $planets ON $planets.id = $satellites.id WHERE id = 1 GROUP BY planetId HAVING id > 2 ORDER BY name LIMIT 1 OFFSET 1"
-    TSQL = "SELECT * FROM T1, T2"
-    TSQL = "SET @planet = 'Saturn'; SELECT name AS nom FROM (SELECT DISTINCT id as planetId, name FROM $planets WHERE name = @planet) as planets -- LEFT JOIN (SELECT planetId, COUNT(*) FROM $satellites FOR DATES BETWEEN '2022-01-01' AND TODAY WHERE gm > 10) AS bigsats ON bigsats.planetId = planets.planetId -- LEFT JOIN (SELECT planetId, COUNT(*) FROM $satellites FOR DATES IN LAST_MONTH WHERE gm < 10) as smallsats ON smallsats.planetId = planets.planetId ; "
+    TSQL = "SET enable_optimizer = 7"
+    SQL = "SELECT id FROM $planets"
+    SQL = "SELECT DISTINCT MAX(planetId), name FROM $satellites INNER JOIN $planets ON $planets.id = $satellites.id WHERE id = 1 GROUP BY planetId HAVING id > 2 ORDER BY name LIMIT 1 OFFSET 1"
+    SQL = "SELECT a FROM T1, T2"
+    SQL = "SET @planet = 'Saturn'; SELECT name AS nom FROM (SELECT DISTINCT id as planetId, name FROM $planets WHERE name = @planet) as planets -- LEFT JOIN (SELECT planetId, COUNT(*) FROM $satellites FOR DATES BETWEEN '2022-01-01' AND TODAY WHERE gm > 10) AS bigsats ON bigsats.planetId = planets.planetId -- LEFT JOIN (SELECT planetId, COUNT(*) FROM $satellites FOR DATES IN LAST_MONTH WHERE gm < 10) as smallsats ON smallsats.planetId = planets.planetId ; "
     SQL = """SELECT name AS nom , bigsats.occurances , smallsats.occurances 
   FROM ( SELECT DISTINCT id as planetId , name FROM $planets WHERE name = @planet ) as planets 
   LEFT JOIN ( SELECT planetId , COUNT ( * ) AS occurances FROM $satellites WHERE gm > 10 GROUP BY planetId ) AS bigsats 
@@ -370,12 +366,12 @@ if __name__ == "__main__":  # pragma: no cover
     TSQL = "SELECT COUNT(*) FROM $astronauts WHERE $astronauts.a = $astronauts.b"
 
     parsed_statements = opteryx.third_party.sqloxide.parse_sql(SQL, dialect="mysql")
-    print(json.dumps(parsed_statements, indent=2))
+    # print(json.dumps(parsed_statements, indent=2))
     for planner, ast in get_planners(parsed_statements):
         print("---")
         tree = planner(ast)
 
         print(tree.breadth_first_search(tree.get_entry_points()[0]))
-        print(tree.draw())
         print(json.dumps(tree.depth_first_search(), indent=2))
-        print(print_tree(tree.depth_first_search()))
+        print(print_tree(tree))
+#        print(tree.draw())
