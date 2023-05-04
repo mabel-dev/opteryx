@@ -97,7 +97,7 @@ def plan_query(statement):
         step_id = None
 
         # from
-        _relations = sub_plan["Select"]["from"]
+        _relations = sub_plan["Select"]["from"].copy()
         for relation in _relations:
             if "Derived" in relation["relation"]:
                 if relation["relation"]["Derived"]["subquery"]:
