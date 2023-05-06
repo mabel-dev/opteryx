@@ -57,6 +57,30 @@ class LogicalPlan(Graph):
     pass
 
 
+class LogicalPlanNode(Node):
+    def __str__(self):
+        try:
+            if self.node_type == LogicalPlanStepType.Scan:
+                table_name = ""
+                if "Table" in self.relation:
+                    table_name = self.relation["Table"]["name"][0]["value"]
+                return f"Scan ({table_name} AS)"
+            if self.node_type == LogicalPlanStepType.Join:
+                join_type = next(iter(self.join))
+                join_type = {
+                    "LeftOuter": "Left Join",
+                    "CrossJoin": "Cross Join",
+                    "RightOuter": "Right Join",
+                    "Inner": "Inner Join",
+                }.get(join_type, join_type)
+                return f"{join_type} (condition)"
+            if self.node_type == LogicalPlanStepType.Filter:
+                return "Filter (condition)"
+        except:
+            pass
+        return f"{str(self.node_type)[20:]}"
+
+
 """
 CLAUSE PLANNERS
 """
@@ -89,101 +113,106 @@ STATEMENT PLANNERS
 """
 
 
+def create_node_relation(relation):
+    sub_plan = LogicalPlan()
+    root_node = None
+
+    if "Derived" in relation["relation"]:
+        if relation["relation"]["Derived"]["subquery"]:
+            subquery_step = LogicalPlanNode(node_type=LogicalPlanStepType.Subquery)
+            step_id = random_string()
+            sub_plan.add_node(step_id, subquery_step)
+
+            subquery_plan = plan_query(relation["relation"]["Derived"]["subquery"])
+
+            sub_plan += subquery_plan
+            subquery_entry_id = subquery_plan.get_exit_points()[0]
+            sub_plan.add_edge(subquery_entry_id, step_id)
+
+            root_node = step_id
+            relation["step_id"] = step_id
+
+        else:
+            raise NotImplementedError(relation["relation"]["Derived"])
+    else:
+        from_step = LogicalPlanNode(
+            node_type=LogicalPlanStepType.Scan, relation=relation["relation"]
+        )
+        step_id = random_string()
+        sub_plan.add_node(step_id, from_step)
+
+        root_node = step_id
+        relation["step_id"] = step_id
+
+    # joins
+    _joins = relation.get("joins", [])
+    for join in _joins:
+        # add the join node
+        join_step = LogicalPlanNode(node_type=LogicalPlanStepType.Join, join=join["join_operator"])
+        join_step_id = random_string()
+        sub_plan.add_node(join_step_id, join_step)
+        # add the other side of the join
+
+        right_node_id, right_plan = create_node_relation(join)
+        sub_plan += right_plan
+
+        # add the from table as the left side of the join
+        sub_plan.add_edge(root_node, join_step_id, "left")
+        sub_plan.add_edge(right_node_id, join_step_id, "right")
+
+        root_node = join_step_id
+
+    return root_node, sub_plan
+
+
 def plan_query(statement):
     """ """
 
-    def _inner_query_planner(sub_plan):
+    def _inner_query_planner(ast_branch):
         inner_plan = LogicalPlan()
         step_id = None
 
         # from
-        _relations = sub_plan["Select"]["from"].copy()
+        _relations = ast_branch["Select"]["from"]
         for relation in _relations:
-            if "Derived" in relation["relation"]:
-                if relation["relation"]["Derived"]["subquery"]:
-                    subquery_step = Node(node_type=LogicalPlanStepType.Subquery)
-                    previous_step_id, step_id = step_id, random_string()
-
-                    if previous_step_id is not None:
-                        inner_plan.add_edge(previous_step_id, step_id)
-                    inner_plan.add_node(step_id, subquery_step)
-
-                    subquery_plan = plan_query(relation["relation"]["Derived"]["subquery"])
-
-                    inner_plan += subquery_plan
-                    subquery_entry_id = subquery_plan.get_exit_points()[0]
-                    inner_plan.add_edge(subquery_entry_id, step_id)
-
-                    from_step_id = step_id
-                    previous_from_step_id = step_id
-                    relation["step_id"] = step_id
-
-                else:
-                    raise NotImplementedError(relation["relation"]["Derived"])
-            else:
-                from_step = Node(node_type=LogicalPlanStepType.Scan, relation=relation)
-                previous_step_id, step_id = step_id, random_string()
-                previous_from_step_id, from_step_id = previous_step_id, step_id
-                inner_plan.add_node(from_step_id, from_step)
-
-                relation["step_id"] = step_id
-
-            # joins
-            _joins = relation["joins"]
-            for join in _joins:
-                # add the join node
-                join_step = Node(node_type=LogicalPlanStepType.Join, join=join)
-                previous_step_id, step_id = step_id, random_string()
-                join_step_id = step_id
-                inner_plan.add_node(join_step_id, join_step)
-                # add the from table as the left side of the join
-                inner_plan.add_edge(from_step_id, join_step_id, "left")
-                # add the other side of the join
-                # TODO: if it's a subquery, expand it out
-                right_node = random_string()
-                joined_read_step = Node(
-                    node_type=LogicalPlanStepType.Scan, relation=join["relation"]
-                )
-                inner_plan.add_node(right_node, joined_read_step)
-                inner_plan.add_edge(right_node, join_step_id, "right")
-
-            if len(_joins) == 0:
-                if previous_from_step_id is not None:
-                    inner_plan.add_edge(previous_from_step_id, step_id)
+            step_id, sub_plan = create_node_relation(relation)
+            inner_plan += sub_plan
 
         # If there's any peer relations, they are implicit cross joins
         if len(_relations) > 1:
-            join_step = Node(node_type=LogicalPlanStepType.Join, join="cross")
+            join_step = LogicalPlanNode(node_type=LogicalPlanStepType.Join, join={"CrossJoin": []})
             step_id = random_string()
             inner_plan.add_node(step_id, join_step)
             for relation in _relations:
                 inner_plan.add_edge(relation["step_id"], step_id)
 
         # selection
-        _selection = builders.build(sub_plan["Select"]["selection"])
+        _selection = builders.build(ast_branch["Select"]["selection"])
         if _selection:
-            selection_step = Node(node_type=LogicalPlanStepType.Filter)
+            selection_step = LogicalPlanNode(node_type=LogicalPlanStepType.Filter)
             previous_step_id, step_id = step_id, random_string()
             inner_plan.add_node(step_id, selection_step)
             if previous_step_id is not None:
                 inner_plan.add_edge(previous_step_id, step_id)
 
         # groups
-        _groups = builders.build(sub_plan["Select"]["group_by"])
+        _groups = builders.build(ast_branch["Select"]["group_by"])
         if _groups != []:
-            group_step = Node(node_type=LogicalPlanStepType.Group, group=_groups)
+            group_step = LogicalPlanNode(node_type=LogicalPlanStepType.Group, group=_groups)
             previous_step_id, step_id = step_id, random_string()
             inner_plan.add_node(step_id, group_step)
             if previous_step_id is not None:
                 inner_plan.add_edge(previous_step_id, step_id)
 
         # aggregates
-        _projection = builders.build(sub_plan["Select"]["projection"])
+        _projection = builders.build(ast_branch["Select"]["projection"])
         _aggregates = get_all_nodes_of_type(
             _projection, select_nodes=(NodeType.AGGREGATOR, NodeType.COMPLEX_AGGREGATOR)
         )
         if len(_aggregates) > 0:
-            aggregate_step = Node(node_type=LogicalPlanStepType.Aggregate, aggregates=_aggregates)
+            aggregate_step = LogicalPlanNode(
+                node_type=LogicalPlanStepType.Aggregate, aggregates=_aggregates
+            )
             previous_step_id, step_id = step_id, random_string()
             inner_plan.add_node(step_id, aggregate_step)
             if previous_step_id is not None:
@@ -192,43 +221,47 @@ def plan_query(statement):
         # projection
         _projection = [clause for clause in _projection if clause not in _aggregates]
         if not (len(_projection) == 1 and _projection[0].token_type == NodeType.WILDCARD):
-            project_step = Node(node_type=LogicalPlanStepType.Project, projection=_projection)
+            project_step = LogicalPlanNode(
+                node_type=LogicalPlanStepType.Project, projection=_projection
+            )
             previous_step_id, step_id = step_id, random_string()
             inner_plan.add_node(step_id, project_step)
             if previous_step_id is not None:
                 inner_plan.add_edge(previous_step_id, step_id)
 
         # having
-        _having = builders.build(sub_plan["Select"]["having"])
+        _having = builders.build(ast_branch["Select"]["having"])
         if _having:
-            having_step = Node(node_type=LogicalPlanStepType.Filter)
+            having_step = LogicalPlanNode(node_type=LogicalPlanStepType.Filter)
             previous_step_id, step_id = step_id, random_string()
             inner_plan.add_node(step_id, having_step)
             if previous_step_id is not None:
                 inner_plan.add_edge(previous_step_id, step_id)
 
         # distinct
-        if sub_plan["Select"]["distinct"]:
-            distinct_step = Node(node_type=LogicalPlanStepType.Distinct)
+        if ast_branch["Select"]["distinct"]:
+            distinct_step = LogicalPlanNode(node_type=LogicalPlanStepType.Distinct)
             previous_step_id, step_id = step_id, random_string()
             inner_plan.add_node(step_id, distinct_step)
             if previous_step_id is not None:
                 inner_plan.add_edge(previous_step_id, step_id)
 
         # order
-        _order_by = sub_plan["order_by"]
+        _order_by = ast_branch["order_by"]
         if _order_by:
-            order_step = Node(node_type=LogicalPlanStepType.Order, order=_order_by)
+            order_step = LogicalPlanNode(node_type=LogicalPlanStepType.Order, order=_order_by)
             previous_step_id, step_id = step_id, random_string()
             inner_plan.add_node(step_id, order_step)
             if previous_step_id is not None:
                 inner_plan.add_edge(previous_step_id, step_id)
 
         # limit/offset
-        _limit = sub_plan["limit"]
-        _offset = sub_plan["offset"]
+        _limit = ast_branch["limit"]
+        _offset = ast_branch["offset"]
         if _limit or _offset:
-            limit_step = Node(node_type=LogicalPlanStepType.Limit, limit=_limit, offset=_offset)
+            limit_step = LogicalPlanNode(
+                node_type=LogicalPlanStepType.Limit, limit=_limit, offset=_offset
+            )
             previous_step_id, step_id = step_id, random_string()
             inner_plan.add_node(step_id, limit_step)
             if previous_step_id is not None:
@@ -263,7 +296,7 @@ def plan_query(statement):
 def plan_set_variable(statement):
     root_node = "SetVariable"
     plan = LogicalPlan()
-    set_step = Node(
+    set_step = LogicalPlanNode(
         node_type=LogicalPlanStepType.Set,
         variable=extract_variable(statement[root_node]["variable"]),
         value=extract_value(statement[root_node]["value"]),
@@ -276,14 +309,14 @@ def plan_show_variables(statement):
     root_node = "ShowVariables"
     plan = LogicalPlan()
 
-    read_step = Node(node_type=LogicalPlanStepType.Scan, source="$variables")
+    read_step = LogicalPlanNode(node_type=LogicalPlanStepType.Scan, source="$variables")
     step_id = random_string()
     plan.add_node(step_id, read_step)
 
     predicate = statement[root_node]["filter"]
     if predicate is not None:
         operator = next(iter(predicate))
-        select_step = Node(
+        select_step = LogicalPlanNode(
             node_type=LogicalPlanStepType.Filter,
             predicate=ExpressionTreeNode(
                 token_type=NodeType.COMPARISON_OPERATOR,
@@ -332,8 +365,7 @@ def print_tree_inner(tree, prefix="", last=True):
         yield "├─ "
         prefix += "│  "
 
-    yield tree["type"][20:] + " "
-    yield tree["name"] + "\n"
+    yield str(tree["node"]) + "\n"
 
     # Recursively print the children
     count = len(tree["children"])
@@ -358,12 +390,12 @@ if __name__ == "__main__":  # pragma: no cover
     SQL = "SELECT a FROM T1, T2"
     SQL = "SET @planet = 'Saturn'; SELECT name AS nom FROM (SELECT DISTINCT id as planetId, name FROM $planets WHERE name = @planet) as planets -- LEFT JOIN (SELECT planetId, COUNT(*) FROM $satellites FOR DATES BETWEEN '2022-01-01' AND TODAY WHERE gm > 10) AS bigsats ON bigsats.planetId = planets.planetId -- LEFT JOIN (SELECT planetId, COUNT(*) FROM $satellites FOR DATES IN LAST_MONTH WHERE gm < 10) as smallsats ON smallsats.planetId = planets.planetId ; "
     SQL = """SELECT name AS nom , bigsats.occurances , smallsats.occurances 
-  FROM ( SELECT DISTINCT id as planetId , name FROM $planets WHERE name = @planet ) as planets 
-  LEFT JOIN ( SELECT planetId , COUNT ( * ) AS occurances FROM $satellites WHERE gm > 10 GROUP BY planetId ) AS bigsats 
+  FROM ( SELECT DISTINCT id as planetId , name FROM $planets WHERE name = 'Earth' ) as planets 
+  Inner JOIN ( SELECT planetId , COUNT ( * ) AS occurances FROM $satellites WHERE gm > 10 GROUP BY planetId ) AS bigsats 
        ON bigsats.planetId = planets.planetId
-  LEFT JOIN ( SELECT planetId , COUNT ( * ) AS occurances FROM $satellites WHERE gm < 10 GROUP BY planetId ) as smallsats 
+  left JOIN ( SELECT planetId , COUNT ( * ) AS occurances FROM $satellites WHERE gm < 10 GROUP BY planetId ) as smallsats 
        ON smallsats.planetId = planets.planetId ;"""
-    TSQL = "SELECT COUNT(*) FROM $astronauts WHERE $astronauts.a = $astronauts.b"
+    TSQL = "SELECT COUNT(*) FROM $astronauts WHERE $astronauts.a = $astronauts.b GROUP BY a"
 
     parsed_statements = opteryx.third_party.sqloxide.parse_sql(SQL, dialect="mysql")
     # print(json.dumps(parsed_statements, indent=2))
@@ -371,7 +403,8 @@ if __name__ == "__main__":  # pragma: no cover
         print("---")
         tree = planner(ast)
 
-        print(tree.breadth_first_search(tree.get_entry_points()[0]))
+        #        print(tree.breadth_first_search(tree.get_entry_points()[0]))
         print(json.dumps(tree.depth_first_search(), indent=2))
+        #        print(opteryx.query("EXPLAIN " + SQL))
         print(print_tree(tree))
 #        print(tree.draw())

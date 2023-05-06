@@ -217,6 +217,7 @@ class Graph(object):
 
         tree: dict = {
             "type": str(self[node].node_type),
+            "node": str(self[node]),
             "name": node,
             "depth": depth,
             "children": [],
