@@ -44,6 +44,9 @@ def format_expression(root):
     if root is None:
         return "null"
 
+    if isinstance(root, list):
+        return [format_expression(item) for item in root]
+
     node_type = root.token_type
     _map: dict = {}
 
