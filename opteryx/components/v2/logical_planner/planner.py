@@ -11,12 +11,9 @@
 # limitations under the License.
 
 """
-Represents a logical plan
+Converts the AST to a logical query plan.
 
-A small set of functions are available in the logical plan (a set similar to, but
-different from Cobb's relational algebra)
-
-Steps are given random IDs to prevent collisions
+The plan does not try to be efficient or clever, at this point it is only trying to be correct.
 """
 
 import os
@@ -53,6 +50,9 @@ class LogicalPlanStepType(int, Enum):
     CTE = auto()
     Subquery = auto()
     Values = auto()
+    Unnest = auto()
+    GenerateSeries = auto()
+    Fake = auto()
 
 
 class LogicalPlan(Graph):
@@ -62,23 +62,34 @@ class LogicalPlan(Graph):
 class LogicalPlanNode(Node):
     def __str__(self):
         try:
-            if self.node_type == LogicalPlanStepType.Scan:
-                return f"Scan ({self.relation}{' AS ' + self.alias if self.alias else ''}{' WITH(' + ','.join(self.hints) + ')' if self.hints else ''})"
+            # fmt:off
+            if self.node_type == LogicalPlanStepType.Fake:
+                return f"FAKE ({', '.join(format_expression(arg) for arg in self.args)}{' AS ' + self.alias if self.alias else ''})"
+            if self.node_type == LogicalPlanStepType.Filter:
+                return "FILTER"
+            if self.node_type == LogicalPlanStepType.GenerateSeries:
+                return f"GENERATE SERIES ({', '.join(format_expression(arg) for arg in self.args)}{' AS ' + self.alias if self.alias else ''})"
+            if self.node_type == LogicalPlanStepType.Group:
+                return f"GROUP ({', '.join(format_expression(col) for col in self.columns)})"
             if self.node_type == LogicalPlanStepType.Join:
                 if self.on:
-                    return f"{self.type} ({format_expression(self.filter)})"
+                    return f"{self.type.upper()} ({format_expression(self.on)})"
                 if self.using:
-                    return f"{self.type} (USING {','.join(format_expression(self.using))})"
-                return self.type
-            if self.node_type == LogicalPlanStepType.Filter:
-                return "Filter (condition)"
+                    return f"{self.type.upper()} (USING {','.join(format_expression(self.using))})"
+                return self.type.upper()
+            if self.node_type == LogicalPlanStepType.Scan:
+                return f"SCAN ({self.relation}{' AS ' + self.alias if self.alias else ''}{' WITH(' + ','.join(self.hints) + ')' if self.hints else ''})"
             if self.node_type == LogicalPlanStepType.Subquery:
-                return f"Subquery{' AS ' + self.alias if self.alias else ''}"
+                return f"SUBQUERY{' AS ' + self.alias if self.alias else ''}"
+            if self.node_type == LogicalPlanStepType.Unnest:
+                return f"UNNEST ({', '.join(format_expression(arg) for arg in self.args)}{' AS ' + self.alias if self.alias else ''})"
             if self.node_type == LogicalPlanStepType.Values:
-                return f"Values (({', '.join(self.columns)}) x {len(self.values)} AS {self.alias})"
-        except:
-            pass
-        return f"{str(self.node_type)[20:]}"
+                return f"VALUES (({', '.join(self.columns)}) x {len(self.values)} AS {self.alias})"
+
+            # fmt:on
+        except Exception as err:
+            print(err)
+        return f"{str(self.node_type)[20:].upper()}"
 
 
 """
@@ -88,7 +99,7 @@ CLAUSE PLANNERS
 
 def extract_ctes(branch, planner):
     ctes = {}
-    if branch["with"]:
+    if branch.get("with"):
         for _ast in branch["with"]["cte_tables"]:
             alias = _ast.get("alias")["name"]["value"]
             plan = {"Query": _ast["query"]}
@@ -121,6 +132,11 @@ def create_node_relation(relation):
         if relation["relation"]["Derived"]["subquery"]:
             subquery = relation["relation"]["Derived"]
             if "Values" not in subquery["subquery"]["body"]:
+                # SUBQUERY nodes wrap other queries and the result is available as a relation in
+                # the parent query.
+                #
+                # We have the name of the relation (alias), the query is added as a query plan to
+                # the parent plan.
                 subquery_step = LogicalPlanNode(node_type=LogicalPlanStepType.Subquery)
                 subquery_step.alias = (
                     None if subquery["alias"] is None else subquery["alias"]["name"]["value"]
@@ -137,11 +153,16 @@ def create_node_relation(relation):
                 root_node = step_id
                 relation["step_id"] = step_id
             else:
+                # VALUES nodes are where the relation is defined within the SQL statement.
+                # e.g. SELECT * FROM (VALUES(1),(2)) AS numbers (number)
+                #
+                # We have the name of the relation (alias), the column names (columns) and the
+                # values in each row (values)
                 values_step = LogicalPlanNode(node_type=LogicalPlanStepType.Values)
                 values_step.alias = subquery["alias"]["name"]["value"]
                 values_step.columns = tuple(col["value"] for col in subquery["alias"]["columns"])
                 values_step.values = [
-                    tuple(builders.build(value["Value"]).value for value in row)
+                    tuple(builders.build(value["Value"]) for value in row)
                     for row in subquery["subquery"]["body"]["Values"]["rows"]
                 ]
                 step_id = random_string()
@@ -149,7 +170,30 @@ def create_node_relation(relation):
                 root_node = step_id
         else:
             raise NotImplementedError(relation["relation"]["Derived"])
+    elif relation["relation"]["Table"]["args"]:
+        function = relation["relation"]["Table"]
+        function_name = function["name"][0]["value"].upper()
+        if function_name == "UNNEST":
+            function_step = LogicalPlanNode(node_type=LogicalPlanStepType.Unnest)
+        elif function_name == "GENERATE_SERIES":
+            function_step = LogicalPlanNode(node_type=LogicalPlanStepType.GenerateSeries)
+        elif function_name == "FAKE":
+            function_step = LogicalPlanNode(node_type=LogicalPlanStepType.Fake)
+        else:
+            raise NotImplementedError(f"function {function_name}")
+        function_step.alias = (
+            None if function["alias"] is None else function["alias"]["name"]["value"]
+        )
+        function_step.args = [builders.build(arg) for arg in function["args"]]
+
+        step_id = random_string()
+        sub_plan.add_node(step_id, function_step)
+        root_node = step_id
     else:
+        # SCAN nodes are where we read relations; these can be from memory, disk or a remote
+        # system. This has many physical implementations but at this point all we have is the
+        # name/location of the relation (relation), what the relation is called inside the
+        # query (alias) and if there are any hints (hints)
         from_step = LogicalPlanNode(node_type=LogicalPlanStepType.Scan)
         table = relation["relation"]["Table"]
         from_step.relation = ".".join(part["value"] for part in table["name"])
@@ -165,23 +209,31 @@ def create_node_relation(relation):
     _joins = relation.get("joins", [])
     for join in _joins:
         # add the join node
-        # TODO: joins need: type, filter
         join_step = LogicalPlanNode(node_type=LogicalPlanStepType.Join, join=join["join_operator"])
-        join_operator = next(iter(join["join_operator"]))
-        join_condition = next(iter(join["join_operator"][join_operator]))
-        join_step.type = {
-            "CrossJoin": "Cross Join",
-            "LeftOuter": "Left Join",
-            "Inner": "Inner Join",
-            "RightOuter": "Right Join",
-        }.get(join_operator)
-        if join_condition == "On":
-            join_step.on = builders.build(join["join_operator"][join_operator][join_condition])
+        if join["join_operator"] == {"Inner": "Natural"}:
+            join_step.type = "Natural Join"
+        elif join["join_operator"] == "CrossJoin":
+            join_step.type = "Cross Join"
         else:
-            join_step.using = [
-                builders.build({"Identifier": identifier})
-                for identifier in join["join_operator"][join_operator][join_condition]
-            ]
+            join_operator = next(iter(join["join_operator"]))
+            join_condition = next(iter(join["join_operator"][join_operator]))
+            join_step.type = {
+                "FullOuter": "Full Outer Join",
+                "Inner": "Inner Join",
+                "LeftAnti": "Left Anti Join",
+                "LeftOuter": "Left Outer Join",
+                "LeftSemi": "Left Semi Join",
+                "RightAnti": "Right Anti Join",
+                "RightOuter": "Right Outer Join",
+                "RightSemi": "Right Semi Join",
+            }.get(join_operator, join_operator)
+            if join_condition == "On":
+                join_step.on = builders.build(join["join_operator"][join_operator][join_condition])
+            elif join_condition == "Using":
+                join_step.using = [
+                    builders.build({"Identifier": identifier})
+                    for identifier in join["join_operator"][join_operator][join_condition]
+                ]
         join_step_id = random_string()
         sub_plan.add_node(join_step_id, join_step)
         # add the other side of the join
@@ -233,7 +285,8 @@ def plan_query(statement):
         _groups = builders.build(ast_branch["Select"]["group_by"])
         if _groups != []:
             # TODO: groups need: grouped columns
-            group_step = LogicalPlanNode(node_type=LogicalPlanStepType.Group, group=_groups)
+            group_step = LogicalPlanNode(node_type=LogicalPlanStepType.Group)
+            group_step.columns = _groups
             previous_step_id, step_id = step_id, random_string()
             inner_plan.add_node(step_id, group_step)
             if previous_step_id is not None:
@@ -286,7 +339,7 @@ def plan_query(statement):
                 inner_plan.add_edge(previous_step_id, step_id)
 
         # order
-        _order_by = ast_branch["order_by"]
+        _order_by = ast_branch.get("order_by")
         if _order_by:
             # TODO: order by needs: columns and directions
             order_step = LogicalPlanNode(node_type=LogicalPlanStepType.Order, order=_order_by)
@@ -296,8 +349,8 @@ def plan_query(statement):
                 inner_plan.add_edge(previous_step_id, step_id)
 
         # limit/offset
-        _limit = ast_branch["limit"]
-        _offset = ast_branch["offset"]
+        _limit = ast_branch.get("limit")
+        _offset = ast_branch.get("offset")
         if _limit or _offset:
             # TODO: limit needs: the limit
             limit_step = LogicalPlanNode(
@@ -318,14 +371,25 @@ def plan_query(statement):
     raw_ctes = extract_ctes(root_node, _inner_query_planner)
 
     # union?
-    if "SetOperator" in root_node["body"]:
+    if "SetOperation" in root_node["body"]:
         plan = LogicalPlan()
-        root_node = root_node["body"]["SetOperator"]
-        _left = _inner_query_planner(root_node["left"])
-        _right = _inner_query_planner(root_node["right"])
-        _operator = root_node["op"]
-        # join the plans together
-        raise NotImplementedError("Set Operators (UNION) not implemented")
+        set_op_node = LogicalPlanNode(node_type=LogicalPlanStepType.Union)
+        step_id = random_string()
+        plan.add_node(step_id, set_op_node)
+
+        set_operation = root_node["body"]["SetOperation"]
+
+        left_plan = _inner_query_planner(set_operation["left"])
+        plan += left_plan
+        subquery_entry_id = left_plan.get_exit_points()[0]
+        plan.add_edge(subquery_entry_id, step_id)
+
+        right_plan = _inner_query_planner(set_operation["left"])
+        plan += right_plan
+        subquery_entry_id = right_plan.get_exit_points()[0]
+        plan.add_edge(subquery_entry_id, step_id)
+
+        return plan
 
     # we do some minor AST rewriting
     root_node["body"]["limit"] = root_node.get("limit", None)
@@ -409,10 +473,10 @@ if __name__ == "__main__":  # pragma: no cover
        ON bigsats.planetId = planets.planetId
   left JOIN ( SELECT planetId , COUNT ( * ) AS occurances FROM $satellites WHERE gm < 10 GROUP BY planetId ) as smallsats 
        ON smallsats.planetId = planets.planetId ;"""
-    TSQL = "SELECT COUNT(*) FROM $astronauts WHERE $astronauts.a = $astronauts.b GROUP BY a"
+    SQL = "SELECT COUNT(*) FROM $astronauts WHERE $astronauts.a = $astronauts.b GROUP BY $astronauts.b, True"
     TSQL = "SELECT * FROM (SELECT * FROM $planets)"
-    TSQL = "SELECT * FROM (VALUES ('High', 3),('Medium', 2),('Low', 1)) AS ratings(name, rating) "
-    SQL = "SELECT * FROM tablio INNER JOIN table2 USING(b)"
+    SQL = "SELECT * FROM (VALUES ('High', 3),('Medium', 2),('Low', 1)) AS ratings(name, rating) "
+    SQL = "SELECT * FROM tab1 WHERE 1 = 2 union select * from tab2"
 
     parsed_statements = opteryx.third_party.sqloxide.parse_sql(SQL, dialect="mysql")
     # print(json.dumps(parsed_statements, indent=2))
