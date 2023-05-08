@@ -121,6 +121,7 @@ class QueryPlanner:
                     with open(PROFILE_LOCATION, mode="w") as f:
                         f.write(plans)
                 except Exception as err:
+                    print(f"{type(err).__name__} - {err}")
                     log.append(f"{type(err).__name__} - {err}")
 
             yield from parsed_statements

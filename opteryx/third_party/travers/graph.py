@@ -26,6 +26,28 @@ import orjson
 from opteryx.exceptions import MissingDependencyError
 
 
+def print_tree_inner(tree, prefix="", last=True):
+    """
+    Prints a nested dictionary as an ascii tree
+    """
+
+    yield prefix
+    if last:
+        yield "└─ "
+        prefix += "   "
+    else:
+        yield "├─ "
+        prefix += "│  "
+
+    yield str(tree["node"]) + "\n"
+
+    # Recursively print the children
+    count = len(tree["children"])
+    for i, child in enumerate(tree["children"]):
+        last = i == count - 1
+        yield from print_tree_inner(child, prefix, last)
+
+
 class Graph(object):
     """
     Graph object, optimized for traversal.
@@ -427,29 +449,6 @@ class Graph(object):
         self._nodes.update(other._nodes)
         return self
 
-    # adapted from https://stackoverflow.com/questions/9727673/list-directory-tree-structure-in-python
-    def _tree(self, node, prefix=""):
-        space = "   "
-        branch = " │ "
-        tee = " ├─"
-        last = " └─"
-
-        contents = [node for node, _, _ in self.ingoing_edges(node)]
-        # contents each get pointers that are ├── with a final └── :
-        pointers = [tee] * (len(contents) - 1) + [last]
-        for pointer, child_node in zip(pointers, contents):
-            label = repr(self[child_node])
-            yield prefix + pointer + label
-            if len(self.ingoing_edges(node)) > 0:  # extend the prefix and recurse:
-                extension = branch if pointer == tee else space
-                # i.e. space because last, └── , above so no more |
-                yield from self._tree(child_node, prefix=prefix + extension)
-
     def draw(self):
-        tree = ""
-        for entry in self.get_exit_points():
-            label = repr(self[entry].node_type)
-            tree += label + "\n"
-            t = self._tree(entry, "")
-            tree += "\n".join(t) + "\n"
-        return tree
+        tree = self.depth_first_search()
+        return "".join(print_tree_inner(tree))
