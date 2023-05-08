@@ -1,0 +1,2 @@
+SELECT * FROM $planets UNION SELECT * FROM $planets;
+SELECT * FROM $planets LEFT ANTI JOIN $satellites ON id = id;
