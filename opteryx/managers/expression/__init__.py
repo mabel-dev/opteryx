@@ -312,6 +312,8 @@ def get_all_nodes_of_type(root, select_nodes):
     """
     Walk a expression tree collecting all the nodes of a specified type.
     """
+    if root is None:
+        return []
     if not isinstance(root, list):
         root = [root]
 
