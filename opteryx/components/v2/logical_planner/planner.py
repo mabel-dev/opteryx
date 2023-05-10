@@ -83,6 +83,8 @@ class LogicalPlanNode(Node):
                 return f"SUBQUERY{' AS ' + self.alias if self.alias else ''}"
             if self.node_type == LogicalPlanStepType.Unnest:
                 return f"UNNEST ({', '.join(format_expression(arg) for arg in self.args)}{' AS ' + self.alias if self.alias else ''})"
+            if self.node_type == LogicalPlanStepType.Union:
+                return f"UNION {'' if self.modifier is None else self.modifier.upper()}"
             if self.node_type == LogicalPlanStepType.Values:
                 return f"VALUES (({', '.join(self.columns)}) x {len(self.values)} AS {self.alias})"
 
@@ -258,7 +260,7 @@ def plan_query(statement):
         step_id = None
 
         # from
-        _relations = ast_branch["Select"]["from"]
+        _relations = ast_branch["Select"].get("from", [])
         for relation in _relations:
             step_id, sub_plan = create_node_relation(relation)
             inner_plan += sub_plan
@@ -272,7 +274,7 @@ def plan_query(statement):
                 inner_plan.add_edge(relation["step_id"], step_id)
 
         # selection
-        _selection = builders.build(ast_branch["Select"]["selection"])
+        _selection = builders.build(ast_branch["Select"].get("selection"))
         if _selection:
             # TODO: filters need: condition
             selection_step = LogicalPlanNode(node_type=LogicalPlanStepType.Filter)
@@ -282,8 +284,8 @@ def plan_query(statement):
                 inner_plan.add_edge(previous_step_id, step_id)
 
         # groups
-        _groups = builders.build(ast_branch["Select"]["group_by"])
-        if _groups != []:
+        _groups = builders.build(ast_branch["Select"].get("group_by"))
+        if _groups is not None and _groups != []:
             # TODO: groups need: grouped columns
             group_step = LogicalPlanNode(node_type=LogicalPlanStepType.Group)
             group_step.columns = _groups
@@ -293,7 +295,7 @@ def plan_query(statement):
                 inner_plan.add_edge(previous_step_id, step_id)
 
         # aggregates
-        _projection = builders.build(ast_branch["Select"]["projection"])
+        _projection = builders.build(ast_branch["Select"].get("projection")) or []
         _aggregates = get_all_nodes_of_type(
             _projection, select_nodes=(NodeType.AGGREGATOR, NodeType.COMPLEX_AGGREGATOR)
         )
@@ -309,7 +311,9 @@ def plan_query(statement):
 
         # projection
         _projection = [clause for clause in _projection if clause not in _aggregates]
-        if not (len(_projection) == 1 and _projection[0].token_type == NodeType.WILDCARD):
+        if not _projection == [] and not (
+            len(_projection) == 1 and _projection[0].token_type == NodeType.WILDCARD
+        ):
             # TODO: projection needs: functions, columns, aliases
             project_step = LogicalPlanNode(
                 node_type=LogicalPlanStepType.Project, projection=_projection
@@ -320,7 +324,7 @@ def plan_query(statement):
                 inner_plan.add_edge(previous_step_id, step_id)
 
         # having
-        _having = builders.build(ast_branch["Select"]["having"])
+        _having = builders.build(ast_branch["Select"].get("having"))
         if _having:
             # TODO: filters need: condition
             having_step = LogicalPlanNode(node_type=LogicalPlanStepType.Filter)
@@ -330,7 +334,7 @@ def plan_query(statement):
                 inner_plan.add_edge(previous_step_id, step_id)
 
         # distinct
-        if ast_branch["Select"]["distinct"]:
+        if ast_branch["Select"].get("distinct"):
             # TODO: distinct needs: columns to distinct on, keep 1st/last
             distinct_step = LogicalPlanNode(node_type=LogicalPlanStepType.Distinct)
             previous_step_id, step_id = step_id, random_string()
@@ -372,12 +376,18 @@ def plan_query(statement):
 
     # union?
     if "SetOperation" in root_node["body"]:
-        plan = LogicalPlan()
-        set_op_node = LogicalPlanNode(node_type=LogicalPlanStepType.Union)
-        step_id = random_string()
-        plan.add_node(step_id, set_op_node)
-
         set_operation = root_node["body"]["SetOperation"]
+
+        if set_operation["op"] == "Union":
+            set_op_node = LogicalPlanNode(node_type=LogicalPlanStepType.Union)
+        else:
+            raise NotImplementedError(f"Unsupported SET operator {set_operation['op']}")
+        set_op_node.modifier = (
+            None if set_operation["set_quantifier"] == "None" else set_operation["set_quantifier"]
+        )
+        step_id = random_string()
+        plan = LogicalPlan()
+        plan.add_node(step_id, set_op_node)
 
         left_plan = _inner_query_planner(set_operation["left"])
         plan += left_plan
@@ -388,6 +398,13 @@ def plan_query(statement):
         plan += right_plan
         subquery_entry_id = right_plan.get_exit_points()[0]
         plan.add_edge(subquery_entry_id, step_id)
+
+        root_node["Select"] = {}
+        parent_plan = _inner_query_planner(root_node)
+        if len(parent_plan) > 0:
+            plan += parent_plan
+            parent_plan_exit_id = parent_plan.get_entry_points()[0]
+            plan.add_edge(step_id, parent_plan_exit_id)
 
         return plan
 
@@ -476,7 +493,7 @@ if __name__ == "__main__":  # pragma: no cover
     SQL = "SELECT COUNT(*) FROM $astronauts WHERE $astronauts.a = $astronauts.b GROUP BY $astronauts.b, True"
     TSQL = "SELECT * FROM (SELECT * FROM $planets)"
     SQL = "SELECT * FROM (VALUES ('High', 3),('Medium', 2),('Low', 1)) AS ratings(name, rating) "
-    SQL = "SELECT * FROM tab1 WHERE 1 = 2 union select * from tab2"
+    SQL = "SELECT * FROM tab1 WHERE 1 = 2 union select * from tab2 LIMIT 10"
 
     parsed_statements = opteryx.third_party.sqloxide.parse_sql(SQL, dialect="mysql")
     # print(json.dumps(parsed_statements, indent=2))
