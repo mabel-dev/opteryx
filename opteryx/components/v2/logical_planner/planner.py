@@ -37,11 +37,13 @@ class LogicalPlanStepType(int, Enum):
     Project = auto()  # field selection
     Filter = auto()  # tuple filtering
     Union = auto()  #  appending relations
+    Explain = auto()  # EXPLAIN
     Difference = auto()  # relation interection
-    Join = auto()  # all joina
+    Join = auto()  # all joins
     Group = auto()  # group by, without the aggregation
     Aggregate = auto()
     Scan = auto()  # read a dataset
+    Show = auto()  # show a variable
     Set = auto()  # set a variable
     Limit = auto()  # limit and offset
     Order = auto()  # order by
@@ -63,6 +65,8 @@ class LogicalPlanNode(Node):
     def __str__(self):
         try:
             # fmt:off
+            if self.node_type == LogicalPlanStepType.Explain:
+                return f"EXPLAIN{' ANALYZE' if self.analyze else ''}{(' (' + self.format + ')') if self.format else ''}"
             if self.node_type == LogicalPlanStepType.Fake:
                 return f"FAKE ({', '.join(format_expression(arg) for arg in self.args)}{' AS ' + self.alias if self.alias else ''})"
             if self.node_type == LogicalPlanStepType.Filter:
@@ -79,6 +83,8 @@ class LogicalPlanNode(Node):
                 return self.type.upper()
             if self.node_type == LogicalPlanStepType.Scan:
                 return f"SCAN ({self.relation}{' AS ' + self.alias if self.alias else ''}{' WITH(' + ','.join(self.hints) + ')' if self.hints else ''})"
+            if self.node_type == LogicalPlanStepType.Show:
+                return f"SHOW ({', '.join(self.items)})"
             if self.node_type == LogicalPlanStepType.Subquery:
                 return f"SUBQUERY{' AS ' + self.alias if self.alias else ''}"
             if self.node_type == LogicalPlanStepType.Unnest:
@@ -250,6 +256,23 @@ def create_node_relation(relation):
         root_node = join_step_id
 
     return root_node, sub_plan
+
+
+def plan_explain(statement):
+    plan = LogicalPlan()
+    explain_node = LogicalPlanNode(node_type=LogicalPlanStepType.Explain)
+    explain_node.analyze = statement["Explain"]["analyze"]
+    explain_node.format = statement["Explain"]["format"]
+
+    explain_id = random_string()
+    plan.add_node(explain_id, explain_node)
+
+    sub_plan = plan_query(statement=statement["Explain"]["statement"])
+    sub_plan_id = sub_plan.get_exit_points()[0]
+    plan += sub_plan
+    plan.add_edge(sub_plan_id, explain_id)
+
+    return plan
 
 
 def plan_query(statement):
@@ -427,6 +450,15 @@ def plan_set_variable(statement):
     return plan
 
 
+def plan_show_variable(statement):
+    root_node = "ShowVariable"
+    plan = LogicalPlan()
+    show_step = LogicalPlanNode(node_type=LogicalPlanStepType.Show)
+    show_step.items = extract_variable(statement[root_node]["variable"])
+    plan.add_node(random_string(), show_step)
+    return plan
+
+
 def plan_show_variables(statement):
     root_node = "ShowVariables"
     plan = LogicalPlan()
@@ -456,13 +488,13 @@ def plan_show_variables(statement):
 
 QUERY_BUILDERS = {
     #    "Analyze": analyze_query,
-    #    "Explain": explain_query,
+    "Explain": plan_explain,
     "Query": plan_query,
     "SetVariable": plan_set_variable,
     #    "ShowColumns": show_columns_query,
     #    "ShowCreate": show_create_query,
     #    "ShowFunctions": show_functions_query,
-    #    "ShowVariable": show_variable_query,  # generic SHOW handler
+    "ShowVariable": plan_show_variable,  # generic SHOW handler
     "ShowVariables": plan_show_variables,
 }
 
@@ -494,6 +526,12 @@ if __name__ == "__main__":  # pragma: no cover
     TSQL = "SELECT * FROM (SELECT * FROM $planets)"
     SQL = "SELECT * FROM (VALUES ('High', 3),('Medium', 2),('Low', 1)) AS ratings(name, rating) "
     SQL = "SELECT * FROM tab1 WHERE 1 = 2 union select * from tab2 LIMIT 10"
+    SQL = "SELECT * FROM $satellites WHERE planetId IN (SELECT id FROM $planets WHERE name = 'Earth') "
+    SQL = "SHOW STORES LIKE 'apple'"
+    SQL = "SET @v = 1; SELECT * FROM (SELECT @v); "
+    SQL = "explain ANALYZE FORMAT JSON  SELECT * FROM $planets AS a INNER JOIN (SELECT id FROM $planets) AS b USING (id)"
+    SQL = "SELECT CAST('abc' AS VARCHAR)"
+    SQL = "SHOW COLUMNS FROM $satellites LIKE '%d'"
 
     parsed_statements = opteryx.third_party.sqloxide.parse_sql(SQL, dialect="mysql")
     # print(json.dumps(parsed_statements, indent=2))

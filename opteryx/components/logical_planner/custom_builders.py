@@ -208,9 +208,13 @@ def extract_relations(branch, qid):
                     [part["value"] for part in relation["relation"]["Table"]["name"]]
                 )
 
-                relation_desc.start_date = relation["relation"]["Table"]["start_date"]
-                relation_desc.end_date = relation["relation"]["Table"]["end_date"]
-                relation_desc.cache = relation["relation"]["Table"]["cache"]
+                relation_desc.start_date = relation["relation"]["Table"].get(
+                    "start_date", datetime.datetime.utcnow().date
+                )
+                relation_desc.end_date = relation["relation"]["Table"].get(
+                    "end_date", datetime.datetime.utcnow().date
+                )
+                relation_desc.cache = relation["relation"]["Table"].get("cache")
                 if relation_desc.dataset[0:1] == "$":
                     relation_desc.kind = "Internal"
                 elif relation_desc.dataset.startswith("information_schema"):
