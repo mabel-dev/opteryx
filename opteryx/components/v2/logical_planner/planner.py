@@ -44,6 +44,7 @@ class LogicalPlanStepType(int, Enum):
     Aggregate = auto()
     Scan = auto()  # read a dataset
     Show = auto()  # show a variable
+    ShowColumns = auto()  # SHOW COLUMNS
     Set = auto()  # set a variable
     Limit = auto()  # limit and offset
     Order = auto()  # order by
@@ -70,7 +71,7 @@ class LogicalPlanNode(Node):
             if self.node_type == LogicalPlanStepType.Fake:
                 return f"FAKE ({', '.join(format_expression(arg) for arg in self.args)}{' AS ' + self.alias if self.alias else ''})"
             if self.node_type == LogicalPlanStepType.Filter:
-                return "FILTER"
+                return f"FILTER ({format_expression(self.filter)})"
             if self.node_type == LogicalPlanStepType.GenerateSeries:
                 return f"GENERATE SERIES ({', '.join(format_expression(arg) for arg in self.args)}{' AS ' + self.alias if self.alias else ''})"
             if self.node_type == LogicalPlanStepType.Group:
@@ -85,6 +86,8 @@ class LogicalPlanNode(Node):
                 return f"SCAN ({self.relation}{' AS ' + self.alias if self.alias else ''}{' WITH(' + ','.join(self.hints) + ')' if self.hints else ''})"
             if self.node_type == LogicalPlanStepType.Show:
                 return f"SHOW ({', '.join(self.items)})"
+            if self.node_type == LogicalPlanStepType.ShowColumns:
+                return f"SHOW{' FULL' if self.full else ''}{' EXTENDED' if self.extended else ''} COLUMNS ({self.relation})"
             if self.node_type == LogicalPlanStepType.Subquery:
                 return f"SUBQUERY{' AS ' + self.alias if self.alias else ''}"
             if self.node_type == LogicalPlanStepType.Unnest:
@@ -125,6 +128,22 @@ def extract_variable(clause):
     if len(clause) == 1:
         return clause[0]["value"]
     return [token["value"] for token in clause]
+
+
+def extract_simple_filter(filters, identifier: str = "Name"):
+    if "Like" in filters:
+        left = ExpressionTreeNode(NodeType.IDENTIFIER, value=identifier)
+        right = ExpressionTreeNode(NodeType.LITERAL_VARCHAR, value=filters["Like"])
+        root = ExpressionTreeNode(
+            NodeType.COMPARISON_OPERATOR,
+            value="ILike",  # we're case insensitive for SHOW filters
+            left=left,
+            right=right,
+        )
+        return root
+    if "Where" in filters:
+        root = builders.build(filters["Where"])
+        return root
 
 
 """
@@ -290,7 +309,8 @@ def plan_query(statement):
 
         # If there's any peer relations, they are implicit cross joins
         if len(_relations) > 1:
-            join_step = LogicalPlanNode(node_type=LogicalPlanStepType.Join, join={"CrossJoin": []})
+            join_step = LogicalPlanNode(node_type=LogicalPlanStepType.Join)
+            join_step.type = "Cross Join"
             step_id = random_string()
             inner_plan.add_node(step_id, join_step)
             for relation in _relations:
@@ -450,6 +470,27 @@ def plan_set_variable(statement):
     return plan
 
 
+def plan_show_columns(statement):
+    root_node = "ShowColumns"
+    plan = LogicalPlan()
+    show_step = LogicalPlanNode(node_type=LogicalPlanStepType.ShowColumns)
+    show_step.extended = statement[root_node]["extended"]
+    show_step.full = statement[root_node]["full"]
+    show_step.relation = ".".join([part["value"] for part in statement[root_node]["table_name"]])
+    show_step_id = random_string()
+    plan.add_node(show_step_id, show_step)
+
+    _filter = statement[root_node]["filter"]
+    if _filter:
+        filter_node = LogicalPlanNode(node_type=LogicalPlanStepType.Filter)
+        filter_node.filter = extract_simple_filter(_filter, "Column")
+        filter_node_id = random_string()
+        plan.add_node(filter_node_id, filter_node)
+        plan.add_edge(filter_node_id, show_step_id)
+
+    return plan
+
+
 def plan_show_variable(statement):
     root_node = "ShowVariable"
     plan = LogicalPlan()
@@ -491,7 +532,7 @@ QUERY_BUILDERS = {
     "Explain": plan_explain,
     "Query": plan_query,
     "SetVariable": plan_set_variable,
-    #    "ShowColumns": show_columns_query,
+    "ShowColumns": plan_show_columns,
     #    "ShowCreate": show_create_query,
     #    "ShowFunctions": show_functions_query,
     "ShowVariable": plan_show_variable,  # generic SHOW handler
@@ -531,6 +572,10 @@ if __name__ == "__main__":  # pragma: no cover
     SQL = "SET @v = 1; SELECT * FROM (SELECT @v); "
     SQL = "explain ANALYZE FORMAT JSON  SELECT * FROM $planets AS a INNER JOIN (SELECT id FROM $planets) AS b USING (id)"
     SQL = "SELECT CAST('abc' AS VARCHAR)"
+    SQL = "SHOW EXTENDED COLUMNS FROM $satellites LIKE '%d'"
+    SQL = "SELECT COUNT(*) FROM $satellites"
+    SQL = "SELECT ARRAY_AGG(name ORDER BY name) from $satellites GROUP BY TRUE"
+    SQL = "SELECT * FROM $satellites cross join $planets"
     SQL = "SHOW COLUMNS FROM $satellites LIKE '%d'"
 
     parsed_statements = opteryx.third_party.sqloxide.parse_sql(SQL, dialect="mysql")

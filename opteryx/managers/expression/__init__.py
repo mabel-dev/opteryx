@@ -90,10 +90,10 @@ def format_expression(root):
                 "Multiply": "*",
                 "Divide": "/",
             }
-            return f"{format_expression(root.left)}{_map.get(root.value, root.value)}{format_expression(root.right)}"
+            return f"{format_expression(root.left)} {_map.get(root.value, root.value).upper()} {format_expression(root.right)}"
     if node_type == NodeType.COMPARISON_OPERATOR:
         _map = {"Eq": "=", "Lt": "<", "Gt": ">", "NotEq": "!=", "BitwiseOr": "|"}
-        return f"{format_expression(root.left)}{_map.get(root.value, root.value)}{format_expression(root.right)}"
+        return f"{format_expression(root.left)} {_map.get(root.value, root.value).upper()} {format_expression(root.right)}"
     if node_type == NodeType.UNARY_OPERATOR:
         _map = {"IsNull": "%s IS NULL", "IsNotNull": "%s IS NOT NULL"}
         return _map.get(root.value, root.value + "(%s)").replace(
