@@ -576,6 +576,7 @@ if __name__ == "__main__":  # pragma: no cover
     SQL = "SELECT COUNT(*) FROM $satellites"
     SQL = "SELECT ARRAY_AGG(name ORDER BY name) from $satellites GROUP BY TRUE"
     SQL = "SELECT * FROM $satellites cross join $planets"
+    SQL = "SHOW COLUMNS FROM $satellites LIKE '%d'"
 
     parsed_statements = opteryx.third_party.sqloxide.parse_sql(SQL, dialect="mysql")
     # print(json.dumps(parsed_statements, indent=2))
