@@ -173,10 +173,6 @@ class Cursor(DataFrame):
         """list of run-time warnings"""
         return self._statistics.messages
 
-    def to_df(self, size: int = None):  # pragma: no cover
-        logging.warning("connection.to_df will be removed, replace with connection.pandas")
-        return self.pandas(size)
-
     def close(self):
         """close the connection"""
         self._connection.close()
