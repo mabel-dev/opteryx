@@ -1,5 +1,5 @@
 {
     "summary": "Not of null is also null",
     "statement": "SELECT NOT 1 = NULL AS V",
-    "result": {"NOT 1.0=null": [null]}
+    "result": {"NOT 1.0 = null": [null]}
 }
