@@ -46,7 +46,7 @@ def main(
     if hasattr(table_width, "default"):
         table_width = table_width.default
 
-    if sql is None:
+    if sql is None:  # pragma: no cover
 
         import readline  # importing has impact, even when not referenced again
 

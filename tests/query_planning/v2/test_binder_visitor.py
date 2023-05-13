@@ -61,6 +61,6 @@ def test_logical_plan_visitor():
     assert set(union_node.sources) == {"left", "right"}, union_node.sources
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     test_logical_plan_visitor()
     print("okay")
