@@ -15,7 +15,6 @@ This module provides a PEP-249 familiar interface for interacting with mabel dat
 stores, it is not compliant with the standard:
 https://www.python.org/dev/peps/pep-0249/
 """
-import logging
 import time
 import typing
 from uuid import uuid4
@@ -172,10 +171,6 @@ class Cursor(DataFrame):
     def messages(self) -> list:
         """list of run-time warnings"""
         return self._statistics.messages
-
-    def to_df(self, size: int = None):  # pragma: no cover
-        logging.warning("connection.to_df will be removed, replace with connection.pandas")
-        return self.pandas(size)
 
     def close(self):
         """close the connection"""
