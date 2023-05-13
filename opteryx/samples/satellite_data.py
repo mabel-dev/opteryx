@@ -47,3 +47,18 @@ def load():
             )
         )
     )
+
+
+schema = {
+    "columns": [
+        {"name": "id", "type": "NUMERIC"},
+        {"name": "planetId", "type": "NUMERIC"},
+        {"name": "name", "type": "VARCHAR"},
+        {"name": "gm", "type": "NUMERIC"},
+        {"name": "radius", "type": "NUMERIC"},
+        {"name": "density", "type": "NUMERIC"},
+        {"name": "magnitude", "type": "NUMERIC"},
+        {"name": "albedo", "type": "NUMERIC"},
+        {"name": "id", "type": "NUMERIC"},
+    ]
+}

@@ -46,3 +46,28 @@ def load():
             )
         )
     )
+
+
+schema = {
+    "columns": [
+        {"name": "name", "type": "VARCHAR"},
+        {"name": "year", "type": "NUMERIC"},
+        {"name": "group", "type": "NUMERIC"},
+        {"name": "status", "type": "VARCHAR"},
+        {"name": "birth_date", "type": "TIMESTAMP"},
+        {"name": "birth_place", "type": "STRUCT"},
+        {"name": "gender", "type": "VARCHAR"},
+        {"name": "alma_mater", "type": "LIST"},
+        {"name": "undergraduate_major", "type": "VARCHAR"},
+        {"name": "graduate_major", "type": "VARCHAR"},
+        {"name": "military_rank", "type": "VARCHAR"},
+        {"name": "military_branch", "type": "VARCHAR"},
+        {"name": "space_flights", "type": "NUMERIC"},
+        {"name": "space_flight_hours", "type": "NUMERIC"},
+        {"name": "space_walks", "type": "NUMERIC"},
+        {"name": "space_walks_hours", "type": "NUMERIC"},
+        {"name": "missions", "type": "LIST"},
+        {"name": "death_date", "type": "TIMESTAMP"},
+        {"name": "death_mission", "type": "VARCHAR"},
+    ]
+}
