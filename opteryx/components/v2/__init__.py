@@ -1,4 +1,4 @@
-from opteryx.components.v2.logical_planner.planner import QUERY_BUILDERS
+from opteryx.components.v2.logical_planner import QUERY_BUILDERS
 
 
 def engine_version(query):

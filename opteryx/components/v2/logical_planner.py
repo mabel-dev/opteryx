@@ -21,8 +21,6 @@ import sys
 from enum import Enum
 from enum import auto
 
-sys.path.insert(1, os.path.join(sys.path[0], "../../../.."))  # isort:skip
-
 from opteryx.components.logical_planner import builders
 from opteryx.managers.expression import ExpressionTreeNode
 from opteryx.managers.expression import NodeType
@@ -31,6 +29,8 @@ from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.models.node import Node
 from opteryx.third_party.travers import Graph
 from opteryx.utils import random_string
+
+sys.path.insert(1, os.path.join(sys.path[0], "../../../.."))  # isort:skip
 
 
 class LogicalPlanStepType(int, Enum):

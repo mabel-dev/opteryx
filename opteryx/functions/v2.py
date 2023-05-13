@@ -74,6 +74,8 @@ class _BaseFunction:
     value_range: typing.Union[typing.Tuple[typing.Any], None] = None
     # The type of function
     style: _FunctionStyle = _FunctionStyle.ELEMENTWISE
+    # Order Maintained
+    order_maintained: bool = False
 
     def __call__(self, *args: typing.Any, **kwds: typing.Any) -> typing.Any:
         return self._func(*args, **kwds)
@@ -86,7 +88,7 @@ class FunctionCurrentTime(_BaseFunction):
     """Return the current system time."""
 
     style = _FunctionStyle.CONSTANT
-    cost = 1
+    cost = 600
 
     def _func(self) -> datetime.time:
         return datetime.datetime.utcnow().time()
@@ -96,16 +98,18 @@ class FunctionE(_BaseFunction):
     """Return Euler's number."""
 
     style = _FunctionStyle.CONSTANT
-    cost = 1
+    cost = 300
 
     def _func(self) -> float:
-        return 2.71828182845904523536028747135266249775724709369995
+        return 2.718281828459045235360287
 
 
 class FunctionLen(_BaseFunction):
     """return the length of a VARCHAR or ARRAY"""
 
     style = _FunctionStyle.ELEMENTWISE
+    cost = 500
+    order_maintained = False
 
     def _func(self, item: typing.Union[list, str]) -> int:
         return len(item)
@@ -115,27 +119,27 @@ class FunctionPhi(_BaseFunction):
     """Return the golden ratio."""
 
     style = _FunctionStyle.CONSTANT
-    cost = 1
+    cost = 300
 
     def _func(self) -> float:
-        return 1.61803398874989484820458683436563811772030917980576
+        return 1.618033988749894848204586
 
 
 class FunctionPi(_BaseFunction):
     """Return Pi."""
 
     style = _FunctionStyle.CONSTANT
-    cost = 1
+    cost = 300
 
     def _func(self) -> float:
-        return 3.14159265358979323846264338327950288419716939937510
+        return 3.141592653589793238462643
 
 
 class FunctionVersion(_BaseFunction):
     """Return the version of the query engine."""
 
     style = _FunctionStyle.CONSTANT
-    cost = 1
+    cost = 400
 
     def _func(self) -> str:
         import opteryx
@@ -146,7 +150,21 @@ class FunctionVersion(_BaseFunction):
 FUNCTIONS = get_functions()
 
 if __name__ == "__main__":  # pragma: no cover
+    import opteryx
+
     func = FUNCTIONS["E"]()
     print(func)
     print(func())
     print(func.style)
+
+    import time
+
+    for k, v in FUNCTIONS.items():
+        try:
+            func = v()
+            start = time.monotonic_ns()
+            for i in range(1000000):
+                func()
+            print(f"running {k} 1 million times took {(time.monotonic_ns() - start) / 1000000}")
+        except:
+            pass

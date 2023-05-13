@@ -105,7 +105,7 @@ class QueryPlanner:
 
             parsed_statements = sqloxide.parse_sql(self.statement, dialect="mysql")
 
-            from opteryx.components.v2.logical_planner.planner import get_planners
+            from opteryx.components.v2.logical_planner import get_planners
 
             if QUERY_LOG_LOCATION:
                 log = RollingLog(QUERY_LOG_LOCATION, QUERY_LOG_SIZE, 1024 * 1024)

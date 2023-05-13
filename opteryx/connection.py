@@ -15,7 +15,6 @@ This module provides a PEP-249 familiar interface for interacting with mabel dat
 stores, it is not compliant with the standard:
 https://www.python.org/dev/peps/pep-0249/
 """
-import logging
 import time
 import typing
 from uuid import uuid4
