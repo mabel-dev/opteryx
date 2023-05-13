@@ -105,7 +105,7 @@ class BinderVisitor:
 
         def merge_dicts(*dicts):
             """we ned to handle merging lists so have our own merge function"""
-            merged_dict = {}
+            merged_dict: dict = {}
             for dic in dicts:
                 for key, value in dic.items():
                     if key in merged_dict:
