@@ -43,4 +43,4 @@ if __name__ == "__main__":  # pragma: no cover
     for date_string, date_date in DATE_TESTS:
         print(date_string)
         test_date_parser(date_string, date_date)
-    print("okay")
+    print("✅ okay")

@@ -15,8 +15,11 @@ This module provides a PEP-249 familiar interface for interacting with mabel dat
 stores, it is not compliant with the standard:
 https://www.python.org/dev/peps/pep-0249/
 """
+import datetime
 import time
 import typing
+from dataclasses import dataclass
+from dataclasses import field
 from uuid import uuid4
 
 import pyarrow
@@ -30,8 +33,24 @@ from opteryx.exceptions import PermissionsError
 from opteryx.exceptions import ProgrammingError
 from opteryx.managers.kvstores import BaseKeyValueStore
 from opteryx.shared import QueryStatistics
+from opteryx.shared.variables import SystemVariables
 
 CURSOR_NOT_RUN: str = "Cursor must be in an executed state"
+
+
+@dataclass
+class ConnectionContext:
+    connection_id: int = field(init=False)
+    connected_at: datetime.datetime = field(init=False)
+    user: str = None
+    variables: dict = field(init=False)
+    query_history: typing.List[int] = field(init=False)
+
+    def __post_init__(self):
+        object.__setattr__(self, "connection_id", utils.random_int())
+        object.__setattr__(self, "connected_at", datetime.datetime.utcnow())
+        object.__setattr__(self, "query_history", [])
+        object.__setattr__(self, "variables", SystemVariables.copy("USER"))
 
 
 class Connection:

@@ -83,23 +83,15 @@ class BinderVisitor:
         return context
 
     def visit_scan(self, node, context):
-        if node.relation[0] == "$":
-            from opteryx import samples
+        from opteryx.connectors import connector_factory
 
-            node.connector = "Internal"
-            _schema = samples.planets.schema
+        # work out who will be serving this request
+        node.connector = connector_factory(node.relation)
+        # get them to tell is the schema of the dataset
+        # None means we don't know ahead of time
+        context[node.alias] = node.connector.get_schema
 
         return context
-        """
-        - determine the source of the relation:
-            - sample
-            - in-memory
-            - on-disk
-            - storage
-            - collection
-            - sql
-        - if we can get the schema, do that and add it to the context
-        """
 
     def visit_show(self, node, context):
         logger.warning("visit_show not implemented")
@@ -196,6 +188,7 @@ class BinderVisitor:
 
 
 def do_bind_phase(plan):
+    # TODO: put the temporal range and paramter information into the context so we can set it
     binder_visitor = BinderVisitor()
     root_node = plan.get_entry_points()
     if len(root_node) > 1:
