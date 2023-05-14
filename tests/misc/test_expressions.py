@@ -48,7 +48,7 @@ LITERALS = [
 
 @pytest.mark.parametrize("node_type, value", LITERALS)
 def test_literals(node_type, value):
-    planets = opteryx.samples.planets()
+    planets = opteryx.samples.planets.read()
 
     node = ExpressionTreeNode(node_type, value=value)
     values = evaluate(node, table=planets)
@@ -71,7 +71,7 @@ def test_logical_expressions():
     illogical from a user perspective but technically correct.
     """
 
-    planets = opteryx.samples.planets()
+    planets = opteryx.samples.planets.read()
 
     true = ExpressionTreeNode(NodeType.LITERAL_BOOLEAN, value=True)
     false = ExpressionTreeNode(NodeType.LITERAL_BOOLEAN, value=False)
@@ -128,7 +128,7 @@ def test_logical_expressions():
 
 
 def test_reading_identifiers():
-    planets = opteryx.samples.planets()
+    planets = opteryx.samples.planets.read()
 
     names_node = ExpressionTreeNode(NodeType.IDENTIFIER, value="name")
     names = evaluate(names_node, planets)
@@ -151,7 +151,7 @@ def test_reading_identifiers():
 
 
 def test_function_operations():
-    planets = opteryx.samples.planets()
+    planets = opteryx.samples.planets.read()
 
     name = ExpressionTreeNode(NodeType.IDENTIFIER, value="name")
     concat = ExpressionTreeNode(
@@ -201,7 +201,7 @@ def test_function_operations():
 
 
 def test_compound_expressions():
-    planets = opteryx.samples.planets()
+    planets = opteryx.samples.planets.read()
 
     # this builds and tests the following `3.7 * gravity > mass`
 
@@ -232,7 +232,7 @@ def test_compound_expressions():
 
 
 def test_functions():
-    planets = opteryx.samples.planets()
+    planets = opteryx.samples.planets.read()
 
     gravity = ExpressionTreeNode(NodeType.IDENTIFIER, value="gravity")
     _round = ExpressionTreeNode(NodeType.FUNCTION, value="ROUND", parameters=[gravity])

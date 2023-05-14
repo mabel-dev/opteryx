@@ -24,6 +24,8 @@ from enum import Enum
 from enum import auto
 from functools import cache
 
+from opteryx.constants.attribute_types import OPTERYX_TYPES
+
 CAMEL_TO_SNAKE = re.compile(r"(?<!^)(?=[A-Z])")
 
 
@@ -74,8 +76,10 @@ class _BaseFunction:
     value_range: typing.Union[typing.Tuple[typing.Any], None] = None
     # The type of function
     style: _FunctionStyle = _FunctionStyle.ELEMENTWISE
-    # Order Maintained
+    # Is the order order maintained by this function
     order_maintained: bool = False
+    # What are the return types for this function
+    return_types: list = []
 
     def __call__(self, *args: typing.Any, **kwds: typing.Any) -> typing.Any:
         return self._func(*args, **kwds)
@@ -89,6 +93,8 @@ class FunctionCurrentTime(_BaseFunction):
 
     style = _FunctionStyle.CONSTANT
     cost = 600
+    returns_nulls = False
+    return_types = [OPTERYX_TYPES.TIMESTAMP]
 
     def _func(self) -> datetime.time:
         return datetime.datetime.utcnow().time()
@@ -99,6 +105,8 @@ class FunctionE(_BaseFunction):
 
     style = _FunctionStyle.CONSTANT
     cost = 300
+    returns_nulls = False
+    return_types = [OPTERYX_TYPES.DOUBLE]
 
     def _func(self) -> float:
         return 2.718281828459045235360287
@@ -110,6 +118,8 @@ class FunctionLen(_BaseFunction):
     style = _FunctionStyle.ELEMENTWISE
     cost = 500
     order_maintained = False
+    returns_nulls = True
+    return_types = [OPTERYX_TYPES.INTEGER]
 
     def _func(self, item: typing.Union[list, str]) -> int:
         return len(item)
@@ -120,6 +130,8 @@ class FunctionPhi(_BaseFunction):
 
     style = _FunctionStyle.CONSTANT
     cost = 300
+    returns_nulls = False
+    return_types = [OPTERYX_TYPES.DOUBLE]
 
     def _func(self) -> float:
         return 1.618033988749894848204586
@@ -130,6 +142,8 @@ class FunctionPi(_BaseFunction):
 
     style = _FunctionStyle.CONSTANT
     cost = 300
+    returns_nulls = False
+    return_types = [OPTERYX_TYPES.DOUBLE]
 
     def _func(self) -> float:
         return 3.141592653589793238462643
@@ -140,6 +154,8 @@ class FunctionVersion(_BaseFunction):
 
     style = _FunctionStyle.CONSTANT
     cost = 400
+    returns_nulls = False
+    return_types = [OPTERYX_TYPES.VARCHAR]
 
     def _func(self) -> str:
         import opteryx

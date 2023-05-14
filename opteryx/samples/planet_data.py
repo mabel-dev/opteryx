@@ -30,9 +30,14 @@ can instantiate a PlanetData() class and use it like a Relation.
 
 This has a companion dataset, $satellites, to help test joins.
 """
+import datetime
+
+from opteryx.constants.attribute_types import OPTERYX_TYPES
+from opteryx.models import Column
+from opteryx.models import TableSchema
 
 
-def load():
+def read(end_date=datetime.datetime.utcnow().date()):
     import pyarrow
 
     # fmt:off
@@ -62,30 +67,45 @@ def load():
     column_names = ["id", "name", "mass", "diameter", "density", "gravity", "escapeVelocity", "rotationPeriod", "lengthOfDay", "distanceFromSun", "perihelion", "aphelion", "orbitalPeriod", "orbitalVelocity", "orbitalInclination", "orbitalEccentricity", "obliquityToOrbit", "meanTemperature", "surfacePressure", "numberOfMoons"]
 
     # fmt: on
-    return pyarrow.Table.from_arrays(data, column_names)
+    full_set = pyarrow.Table.from_arrays(data, column_names)
+
+    # make planet data act like it support temporality
+    mask = [True, True, True, True, True, True, True, True, True]
+    if end_date < datetime.date(1930, 3, 13):
+        # March 13, 1930 - Pluto discovered by Clyde William Tombaugh
+        mask = [True, True, True, True, True, True, True, True, False]
+    if end_date < datetime.date(1846, 11, 13):
+        # November 13, 1846 - Neptune
+        mask = [True, True, True, True, True, True, True, False, False]
+    if end_date < datetime.date(1781, 4, 26):
+        # April 26, 1781 - Uranus discovered by Sir William Herschel
+        mask = [True, True, True, True, True, True, False, False, False]
+
+    return full_set.filter(mask)
 
 
-schema = {
-    "columns": [
-        {"name": "id", "type": "NUMERIC"},
-        {"name": "name", "type": "VARCHAR"},
-        {"name": "mass", "type": "NUMERIC"},
-        {"name": "diameter", "type": "NUMERIC"},
-        {"name": "density", "type": "NUMERIC"},
-        {"name": "gravity", "type": "NUMERIC"},
-        {"name": "escapeVelocity", "type": "NUMERIC"},
-        {"name": "rotationPeriod", "type": "NUMERIC"},
-        {"name": "lengthOfDay", "type": "NUMERIC"},
-        {"name": "distanceFromSun", "type": "NUMERIC"},
-        {"name": "perihelion", "type": "NUMERIC"},
-        {"name": "aphelion", "type": "NUMERIC"},
-        {"name": "orbitalPeriod", "type": "NUMERIC"},
-        {"name": "orbitalVelocity", "type": "NUMERIC"},
-        {"name": "orbitalInclination", "type": "NUMERIC"},
-        {"name": "orbitalEccentricity", "type": "NUMERIC"},
-        {"name": "obliquityToOrbit", "type": "NUMERIC"},
-        {"name": "meanTemperature", "type": "NUMERIC"},
-        {"name": "surfacePressure", "type": "NUMERIC"},
-        {"name": "numberOfMoons", "type": "NUMERIC"},
-    ]
-}
+schema = TableSchema(
+    table_name="$planets",
+    columns=[
+        Column(name="id", data_type=OPTERYX_TYPES.INTEGER),
+        Column(name="name", data_type=OPTERYX_TYPES.VARCHAR),
+        Column(name="mass", data_type=OPTERYX_TYPES.DOUBLE),
+        Column(name="diameter", data_type=OPTERYX_TYPES.INTEGER),
+        Column(name="density", data_type=OPTERYX_TYPES.INTEGER),
+        Column(name="gravity", data_type=OPTERYX_TYPES.DOUBLE),
+        Column(name="escapeVelocity", data_type=OPTERYX_TYPES.DOUBLE),
+        Column(name="rotationPeriod", data_type=OPTERYX_TYPES.DOUBLE),
+        Column(name="lengthOfDay", data_type=OPTERYX_TYPES.DOUBLE),
+        Column(name="distanceFromSun", data_type=OPTERYX_TYPES.DOUBLE),
+        Column(name="perihelion", data_type=OPTERYX_TYPES.DOUBLE),
+        Column(name="aphelion", data_type=OPTERYX_TYPES.DOUBLE),
+        Column(name="orbitalPeriod", data_type=OPTERYX_TYPES.DOUBLE),
+        Column(name="orbitalVelocity", data_type=OPTERYX_TYPES.DOUBLE),
+        Column(name="orbitalInclination", data_type=OPTERYX_TYPES.DOUBLE),
+        Column(name="orbitalEccentricity", data_type=OPTERYX_TYPES.DOUBLE),
+        Column(name="obliquityToOrbit", data_type=OPTERYX_TYPES.DOUBLE),
+        Column(name="meanTemperature", data_type=OPTERYX_TYPES.DOUBLE),
+        Column(name="surfacePressure", data_type=OPTERYX_TYPES.DOUBLE),
+        Column(name="numberOfMoons", data_type=OPTERYX_TYPES.INTEGER),
+    ],
+)

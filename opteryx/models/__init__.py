@@ -13,3 +13,5 @@
 from .columns import Columns
 from .execution_tree import ExecutionTree
 from .query_properties import QueryProperties
+from .table_schema import Column
+from .table_schema import TableSchema

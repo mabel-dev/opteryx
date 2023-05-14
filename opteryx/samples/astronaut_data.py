@@ -31,13 +31,19 @@ To access this dataset you can either run a query against dataset $astronats
 or you can instantiate a AstronautData() class and use it like a pyarrow Table.
 
 """
-import base64
-import io
-
-import pyarrow.parquet as pq
 
 
-def load():
+from opteryx.constants.attribute_types import OPTERYX_TYPES
+from opteryx.models import Column
+from opteryx.models import TableSchema
+
+
+def read(*args):
+    import base64
+    import io
+
+    import pyarrow.parquet as pq
+
     """The table is saved parquet table, base85 encoded."""
     return pq.read_table(
         io.BytesIO(
@@ -48,26 +54,27 @@ def load():
     )
 
 
-schema = {
-    "columns": [
-        {"name": "name", "type": "VARCHAR"},
-        {"name": "year", "type": "NUMERIC"},
-        {"name": "group", "type": "NUMERIC"},
-        {"name": "status", "type": "VARCHAR"},
-        {"name": "birth_date", "type": "TIMESTAMP"},
-        {"name": "birth_place", "type": "STRUCT"},
-        {"name": "gender", "type": "VARCHAR"},
-        {"name": "alma_mater", "type": "LIST"},
-        {"name": "undergraduate_major", "type": "VARCHAR"},
-        {"name": "graduate_major", "type": "VARCHAR"},
-        {"name": "military_rank", "type": "VARCHAR"},
-        {"name": "military_branch", "type": "VARCHAR"},
-        {"name": "space_flights", "type": "NUMERIC"},
-        {"name": "space_flight_hours", "type": "NUMERIC"},
-        {"name": "space_walks", "type": "NUMERIC"},
-        {"name": "space_walks_hours", "type": "NUMERIC"},
-        {"name": "missions", "type": "LIST"},
-        {"name": "death_date", "type": "TIMESTAMP"},
-        {"name": "death_mission", "type": "VARCHAR"},
-    ]
-}
+schema = TableSchema(
+    table_name="$astronauts",
+    columns=[
+        Column(name="name", data_type=OPTERYX_TYPES.VARCHAR),
+        Column(name="year", data_type=OPTERYX_TYPES.INTEGER),
+        Column(name="group", data_type=OPTERYX_TYPES.INTEGER),
+        Column(name="status", data_type=OPTERYX_TYPES.VARCHAR),
+        Column(name="birth_date", data_type=OPTERYX_TYPES.DATE),
+        Column(name="birth_place", data_type=OPTERYX_TYPES.STRUCT),
+        Column(name="gender", data_type=OPTERYX_TYPES.VARCHAR),
+        Column(name="alma_mater", data_type=OPTERYX_TYPES.ARRAY),
+        Column(name="undergraduate_major", data_type=OPTERYX_TYPES.VARCHAR),
+        Column(name="graduate_major", data_type=OPTERYX_TYPES.VARCHAR),
+        Column(name="military_rank", data_type=OPTERYX_TYPES.VARCHAR),
+        Column(name="military_branch", data_type=OPTERYX_TYPES.VARCHAR),
+        Column(name="space_flights", data_type=OPTERYX_TYPES.INTEGER),
+        Column(name="space_flight_hours", data_type=OPTERYX_TYPES.INTEGER),
+        Column(name="space_walks", data_type=OPTERYX_TYPES.INTEGER),
+        Column(name="space_walks_hours", data_type=OPTERYX_TYPES.INTEGER),
+        Column(name="missions", data_type=OPTERYX_TYPES.ARRAY),
+        Column(name="death_date", data_type=OPTERYX_TYPES.DATE),
+        Column(name="death_mission", data_type=OPTERYX_TYPES.VARCHAR),
+    ],
+)

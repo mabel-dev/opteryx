@@ -47,10 +47,10 @@ def _get_sample_dataset(dataset, alias, end_date):
     # we do this like this so the datasets are not loaded into memory unless
     # they are going to be used
     sample_datasets = {
-        "$satellites": samples.satellites,
-        "$planets": samples.planets,
-        "$astronauts": samples.astronauts,
-        "$no_table": samples.no_table,
+        "$satellites": samples.satellites.read,
+        "$planets": samples.planets.read,
+        "$astronauts": samples.astronauts.read,
+        "$no_table": samples.no_table.read,
     }
     dataset = dataset.lower()
     if dataset in sample_datasets:
