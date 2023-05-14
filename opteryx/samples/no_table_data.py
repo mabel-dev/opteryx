@@ -20,7 +20,7 @@ It actually is a table, with one row and one column.
 """
 
 
-def load():
+def read(*args):
     import pyarrow
 
     # Create a PyArrow schema with one column called 'column' of integer type

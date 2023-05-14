@@ -37,7 +37,7 @@ import io
 import pyarrow.parquet as pq
 
 
-def load():
+def read(*args):
     """The table is saved parquet table, base85 encoded."""
     return pq.read_table(
         io.BytesIO(
