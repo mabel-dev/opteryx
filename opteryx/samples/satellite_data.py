@@ -31,13 +31,18 @@ can instantiate a SatelliteData() class and use it like a Relation.
 This has a companion dataset, $planets, to help test joins.
 """
 
-import base64
-import io
 
-import pyarrow.parquet as pq
+from opteryx.constants.attribute_types import OPTERYX_TYPES
+from opteryx.models import Column
+from opteryx.models import TableSchema
 
 
 def read(*args):
+    import base64
+    import io
+
+    import pyarrow.parquet as pq
+
     """The table is saved parquet table, base85 encoded."""
 
     return pq.read_table(
@@ -49,16 +54,16 @@ def read(*args):
     )
 
 
-schema = {
-    "columns": [
-        {"name": "id", "type": "NUMERIC"},
-        {"name": "planetId", "type": "NUMERIC"},
-        {"name": "name", "type": "VARCHAR"},
-        {"name": "gm", "type": "NUMERIC"},
-        {"name": "radius", "type": "NUMERIC"},
-        {"name": "density", "type": "NUMERIC"},
-        {"name": "magnitude", "type": "NUMERIC"},
-        {"name": "albedo", "type": "NUMERIC"},
-        {"name": "id", "type": "NUMERIC"},
-    ]
-}
+schema = TableSchema(
+    table_name="$no_table",
+    columns=[
+        Column(name="id", data_type=OPTERYX_TYPES.INTEGER),
+        Column(name="planetId", data_type=OPTERYX_TYPES.INTEGER),
+        Column(name="name", data_type=OPTERYX_TYPES.VARCHAR),
+        Column(name="gm", data_type=OPTERYX_TYPES.DOUBLE),
+        Column(name="radius", data_type=OPTERYX_TYPES.DOUBLE),
+        Column(name="density", data_type=OPTERYX_TYPES.DOUBLE),
+        Column(name="magnitude", data_type=OPTERYX_TYPES.DOUBLE),
+        Column(name="albedo", data_type=OPTERYX_TYPES.DOUBLE),
+    ],
+)

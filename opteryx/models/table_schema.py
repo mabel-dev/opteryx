@@ -10,28 +10,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-no table
----------
+from dataclasses import dataclass
+from typing import List
 
-This is used to prepresent no table.
-
-It actually is a table, with one row and one column.
-"""
 from opteryx.constants.attribute_types import OPTERYX_TYPES
-from opteryx.models import Column
-from opteryx.models import TableSchema
 
 
-def read(*args):
-    import pyarrow
-
-    # Create a PyArrow schema with one column called 'column' of integer type
-    _schema = pyarrow.schema([("column", pyarrow.int64())])
-    # Create a PyArrow table with the given schema and one row
-    return pyarrow.Table.from_arrays([[None]], schema=_schema)
+@dataclass
+class Column:
+    name: str
+    data_type: OPTERYX_TYPES
+    aliases: List[str] = None
 
 
-schema = TableSchema(
-    table_name="$no_table", columns=[Column(name="name", data_type=OPTERYX_TYPES.INTEGER)]
-)
+@dataclass
+class TableSchema:
+    table_name: str
+    columns: List[Column]

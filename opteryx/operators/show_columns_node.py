@@ -58,7 +58,7 @@ def _simple_collector(morsel):
     for column in morsel.column_names:
         column_data = morsel.column(column)
         _type = determine_type(str(column_data.type))
-        new_row = {"name": columns.get_preferred_name(column), "type": _type}
+        new_row = {"name": columns.get_preferred_name(column), "type": _type.name}
         buffer.append(new_row)
 
     table = pyarrow.Table.from_pylist(buffer)
@@ -128,7 +128,7 @@ def _full_collector(morsels):
 
     for column, profile in profile_collector.items():
         profile["name"] = columns.get_preferred_name(column)
-        profile["type"] = ", ".join(profile["type"])
+        profile["type"] = ", ".join(t.name for t in profile["type"])
         buffer.append(profile)
 
     table = pyarrow.Table.from_pylist(buffer)

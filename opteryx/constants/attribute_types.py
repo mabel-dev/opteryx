@@ -14,21 +14,24 @@
 Helper routines for handling types between different dialects.
 """
 from enum import Enum
+from enum import auto
 
 
-class OPTERYX_TYPES(str, Enum):
-    BOOLEAN = "BOOLEAN"
-    NUMERIC = "NUMERIC"
-    LIST = "LIST"
-    VARCHAR = "VARCHAR"
-    STRUCT = "STRUCT"
-    TIMESTAMP = "TIMESTAMP"
-    INTERVAL = "INTERVAL"
-    OTHER = "OTHER"
-
-    # FLOAT = DOUBLE
-    # INTEGER = INTEGER
-    # BYTES = BLOB
+class OPTERYX_TYPES(int, Enum):
+    ARRAY = auto()
+    BLOB = auto()
+    BOOLEAN = auto()
+    DATE = auto()
+    DOUBLE = auto()
+    INTEGER = auto()
+    INTERVAL = auto()
+    LIST = auto()  # legacy type, alias for ARRAY
+    NUMERIC = auto()  # legacy type, alias for DOUBLE
+    OTHER = auto()  # legacy type - everything should map
+    STRUCT = auto()
+    TIME = auto()
+    TIMESTAMP = auto()
+    VARCHAR = auto()
 
 
 PARQUET_TYPES = {
