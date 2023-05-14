@@ -42,7 +42,10 @@ class BinderVisitor:
         visit_method = getattr(self, visit_method_name, self.visit_unsupported)
         result = visit_method(node, context)
         if not isinstance(result, dict):
-            raise DatabaseError(f"function {visit_method_name} didn't return a dict")
+            raise DatabaseError(
+                f"Internal Error - function {visit_method_name} didn't return a dict"
+            )
+        return result
 
     def visit_unsupported(self, node, context):
         raise NotImplementedError(f"No visit method implemented for node type {node.node_type}")
@@ -86,7 +89,7 @@ class BinderVisitor:
             node.connector = "Internal"
             _schema = samples.planets.schema
 
-        raise NotImplementedError("visit scan")
+        return context
         """
         - determine the source of the relation:
             - sample
@@ -163,6 +166,8 @@ class BinderVisitor:
             """we ned to handle merging lists so have our own merge function"""
             merged_dict: dict = {}
             for dic in dicts:
+                if not isinstance(dic, dict):
+                    raise DatabaseError("Internal Error - merge_dicts expected dicts")
                 for key, value in dic.items():
                     if key in merged_dict:
                         if isinstance(value, list):
