@@ -35,6 +35,7 @@ from opteryx.exceptions import ProgrammingError
 from opteryx.managers.kvstores import BaseKeyValueStore
 from opteryx.shared import QueryStatistics
 from opteryx.shared.variables import SystemVariables
+from opteryx.shared.variables import VariableOwner
 
 CURSOR_NOT_RUN: str = "Cursor must be in an executed state"
 PROFILE_LOCATION = config.PROFILE_LOCATION
@@ -53,7 +54,7 @@ class ConnectionContext:
         object.__setattr__(self, "connection_id", utils.random_int())
         object.__setattr__(self, "connected_at", datetime.datetime.utcnow())
         object.__setattr__(self, "query_history", [])
-        object.__setattr__(self, "variables", SystemVariables.copy("USER"))
+        object.__setattr__(self, "variables", SystemVariables.copy(VariableOwner.USER))
 
 
 class Connection:

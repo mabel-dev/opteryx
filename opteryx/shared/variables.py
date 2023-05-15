@@ -27,66 +27,66 @@ from opteryx.constants.character_set import Collation
 from opteryx.exceptions import VariableNotFoundError
 
 
-class SettingOwner(int, Enum):
+class VariableOwner(int, Enum):
     # Manually assign numbers because USER < INTERNAL < SERVER
     SERVER = 30
     INTERNAL = 20
     USER = 10
 
 
-VariableSchema = typing.Tuple[typing.Type, typing.Any, SettingOwner]
+VariableSchema = typing.Tuple[typing.Type, typing.Any, VariableOwner]
 
 # fmt: off
 SYSTEM_VARIABLES_DEFAULTS: typing.Dict[str, VariableSchema] = {
     # name: (type, default, owner, description)
 
     # These are the MySQL set of variables - we don't use all of them
-    "auto_increment_increment": (int, 1, SettingOwner.INTERNAL),
-    "autocommit": (bool, True, SettingOwner.SERVER),
-    "character_set_client": (str, CharacterSet.utf8mb4.name, SettingOwner.SERVER),
-    "character_set_connection": (str, CharacterSet.utf8mb4.name, SettingOwner.SERVER),
-    "character_set_database": (str, CharacterSet.utf8mb4.name, SettingOwner.SERVER),
-    "character_set_results": (str, CharacterSet.utf8mb4.name, SettingOwner.SERVER),
-    "character_set_server": (str, CharacterSet.utf8mb4.name, SettingOwner.SERVER),
-    "collation_connection": (str, Collation.utf8mb4_general_ci.name, SettingOwner.SERVER),
-    "collation_database": (str, Collation.utf8mb4_general_ci.name, SettingOwner.SERVER),
-    "collation_server": (str, Collation.utf8mb4_general_ci.name, SettingOwner.SERVER),
-    "external_user": (str, "", SettingOwner.INTERNAL),
-    "init_connect": (str, "", SettingOwner.SERVER),
-    "interactive_timeout": (int, 28800, SettingOwner.SERVER),
-    "license": (str, "MIT", SettingOwner.SERVER),
-    "lower_case_table_names": (int, 0, SettingOwner.SERVER),
-    "max_allowed_packet": (int, 67108864, SettingOwner.SERVER),
-    "max_execution_time": (int, 0, SettingOwner.SERVER),
-    "net_buffer_length": (int, 16384, SettingOwner.SERVER),
-    "net_write_timeout": (int, 28800, SettingOwner.SERVER),
-    "performance_schema": (bool, False, SettingOwner.SERVER),
-    "sql_auto_is_null": (bool, False, SettingOwner.SERVER),
-    "sql_mode": (str, "ANSI", SettingOwner.SERVER),
-    "sql_select_limit": (int, None, SettingOwner.SERVER),
-    "system_time_zone": (str, "UTC", SettingOwner.SERVER),
-    "time_zone": (str, "UTC", SettingOwner.SERVER),
-    "transaction_read_only": (bool, False, SettingOwner.SERVER),
-    "transaction_isolation": (str, "READ-COMMITTED", SettingOwner.SERVER),
-    "version": (str, "8.0.29", SettingOwner.SERVER),
-    "version_comment": (str, "mesos", SettingOwner.SERVER),
-    "wait_timeout": (int, 28800, SettingOwner.SERVER),
-    "event_scheduler": (str, "OFF", SettingOwner.SERVER),
-    "default_storage_engine": (str, "opteryx", SettingOwner.SERVER),
-    "default_tmp_storage_engine": (str, "opteryx", SettingOwner.SERVER),
+    "auto_increment_increment": (int, 1, VariableOwner.INTERNAL),
+    "autocommit": (bool, True, VariableOwner.SERVER),
+    "character_set_client": (str, CharacterSet.utf8mb4.name, VariableOwner.SERVER),
+    "character_set_connection": (str, CharacterSet.utf8mb4.name, VariableOwner.SERVER),
+    "character_set_database": (str, CharacterSet.utf8mb4.name, VariableOwner.SERVER),
+    "character_set_results": (str, CharacterSet.utf8mb4.name, VariableOwner.SERVER),
+    "character_set_server": (str, CharacterSet.utf8mb4.name, VariableOwner.SERVER),
+    "collation_connection": (str, Collation.utf8mb4_general_ci.name, VariableOwner.SERVER),
+    "collation_database": (str, Collation.utf8mb4_general_ci.name, VariableOwner.SERVER),
+    "collation_server": (str, Collation.utf8mb4_general_ci.name, VariableOwner.SERVER),
+    "external_user": (str, "", VariableOwner.INTERNAL),
+    "init_connect": (str, "", VariableOwner.SERVER),
+    "interactive_timeout": (int, 28800, VariableOwner.SERVER),
+    "license": (str, "MIT", VariableOwner.SERVER),
+    "lower_case_table_names": (int, 0, VariableOwner.SERVER),
+    "max_allowed_packet": (int, 67108864, VariableOwner.SERVER),
+    "max_execution_time": (int, 0, VariableOwner.SERVER),
+    "net_buffer_length": (int, 16384, VariableOwner.SERVER),
+    "net_write_timeout": (int, 28800, VariableOwner.SERVER),
+    "performance_schema": (bool, False, VariableOwner.SERVER),
+    "sql_auto_is_null": (bool, False, VariableOwner.SERVER),
+    "sql_mode": (str, "ANSI", VariableOwner.SERVER),
+    "sql_select_limit": (int, None, VariableOwner.SERVER),
+    "system_time_zone": (str, "UTC", VariableOwner.SERVER),
+    "time_zone": (str, "UTC", VariableOwner.SERVER),
+    "transaction_read_only": (bool, False, VariableOwner.SERVER),
+    "transaction_isolation": (str, "READ-COMMITTED", VariableOwner.SERVER),
+    "version": (str, "8.0.29", VariableOwner.SERVER),
+    "version_comment": (str, "mesos", VariableOwner.SERVER),
+    "wait_timeout": (int, 28800, VariableOwner.SERVER),
+    "event_scheduler": (str, "OFF", VariableOwner.SERVER),
+    "default_storage_engine": (str, "opteryx", VariableOwner.SERVER),
+    "default_tmp_storage_engine": (str, "opteryx", VariableOwner.SERVER),
 
     # these are Opteryx specific variables
-    "max_cache_evictions": (int, 32, SettingOwner.USER),
-    "max_size_single_cache_item": (int, 1024 * 1024, SettingOwner.SERVER),
-    "local_buffer_pool_size": (int, 256, SettingOwner.SERVER),
-    "disable_high_priority": (bool, False, SettingOwner.SERVER),
-    "morsel_size": (int, 64 * 1024 * 1024, SettingOwner.USER)
+    "max_cache_evictions": (int, 32, VariableOwner.USER),
+    "max_size_single_cache_item": (int, 1024 * 1024, VariableOwner.SERVER),
+    "local_buffer_pool_size": (int, 256, VariableOwner.SERVER),
+    "disable_high_priority": (bool, False, VariableOwner.SERVER),
+    "morsel_size": (int, 64 * 1024 * 1024, VariableOwner.USER)
 }
 # fmt: on
 
 
 class SystemVariablesContainer:
-    def __init__(self, owner: SettingOwner = SettingOwner.USER):
+    def __init__(self, owner: VariableOwner = VariableOwner.USER):
         self._variables = SYSTEM_VARIABLES_DEFAULTS.copy()
         self._owner = owner
 
@@ -114,9 +114,9 @@ class SystemVariablesContainer:
     def __len__(self):
         return len(self._variables)
 
-    def copy(self, owner: SettingOwner = SettingOwner.USER) -> "SystemVariablesContainer":
+    def copy(self, owner: VariableOwner = VariableOwner.USER) -> "SystemVariablesContainer":
         return SystemVariablesContainer(owner)
 
 
 # load the base set
-SystemVariables = SystemVariablesContainer(SettingOwner.INTERNAL)
+SystemVariables = SystemVariablesContainer(VariableOwner.INTERNAL)
