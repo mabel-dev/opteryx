@@ -26,6 +26,7 @@ import pyarrow
 from orso import DataFrame
 from orso import converters
 
+from opteryx import config
 from opteryx import utils
 from opteryx.exceptions import CursorInvalidStateError
 from opteryx.exceptions import MissingSqlStatement
@@ -36,6 +37,7 @@ from opteryx.shared import QueryStatistics
 from opteryx.shared.variables import SystemVariables
 
 CURSOR_NOT_RUN: str = "Cursor must be in an executed state"
+PROFILE_LOCATION = config.PROFILE_LOCATION
 
 
 @dataclass
@@ -43,6 +45,7 @@ class ConnectionContext:
     connection_id: int = field(init=False)
     connected_at: datetime.datetime = field(init=False)
     user: str = None
+    schema: str = None
     variables: dict = field(init=False)
     query_history: typing.List[int] = field(init=False)
 
@@ -72,8 +75,7 @@ class Connection:
         self.cache = cache
         self._kwargs = kwargs
 
-        self._default_database = None
-        self._connection_id = utils.random_int()
+        self._context = ConnectionContext()
 
         # check the permissions we've been given are valid permissions
         from opteryx.constants.permissions import PERMISSIONS
@@ -156,6 +158,24 @@ class Cursor(DataFrame):
 
         self._query_planner.test_paramcount(asts, params)
 
+        # do v2 here now
+        if PROFILE_LOCATION:
+            # this is running the 2nd gen planner in parallel
+            from opteryx.components.v2.logical_planner import get_planners
+            from opteryx.third_party import sqloxide
+
+            try:
+                parsed_statements = sqloxide.parse_sql(operation, dialect="mysql")
+                plans = ""
+                for planner, ast in get_planners(parsed_statements):
+                    plans = operation + "\n\n"
+                    plans += planner(ast).draw()
+                with open(PROFILE_LOCATION, mode="w") as f:
+                    f.write(plans)
+            except Exception as err:
+                print(f"{type(err).__name__} - {err}")
+
+        # v1 code
         for ast in asts:
             ast = self._query_planner.bind_ast(ast, parameters=params)
             plan = self._query_planner.create_logical_plan(ast)

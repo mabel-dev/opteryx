@@ -21,7 +21,6 @@ Owner meanings:
 
 import typing
 from enum import Enum
-from enum import auto
 
 from opteryx.constants.character_set import CharacterSet
 from opteryx.constants.character_set import Collation
@@ -29,9 +28,10 @@ from opteryx.exceptions import VariableNotFoundError
 
 
 class SettingOwner(int, Enum):
-    SERVER = 3
-    INTERNAL = 2
-    USER = 1
+    # Manually assign numbers because USER < INTERNAL < SERVER
+    SERVER = 30
+    INTERNAL = 20
+    USER = 10
 
 
 VariableSchema = typing.Tuple[typing.Type, typing.Any, SettingOwner]
@@ -118,4 +118,5 @@ class SystemVariablesContainer:
         return SystemVariablesContainer(owner)
 
 
+# load the base set
 SystemVariables = SystemVariablesContainer(SettingOwner.INTERNAL)
