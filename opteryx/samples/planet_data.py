@@ -33,8 +33,8 @@ This has a companion dataset, $satellites, to help test joins.
 import datetime
 
 from opteryx.constants.attribute_types import OPTERYX_TYPES
-from opteryx.models import Column
-from opteryx.models import TableSchema
+from opteryx.models import FlatColumn
+from opteryx.models import RelationSchema
 
 
 def read(end_date=datetime.datetime.utcnow().date()):
@@ -84,28 +84,28 @@ def read(end_date=datetime.datetime.utcnow().date()):
     return full_set.filter(mask)
 
 
-schema = TableSchema(
+schema = RelationSchema(
     table_name="$planets",
     columns=[
-        Column(name="id", data_type=OPTERYX_TYPES.INTEGER),
-        Column(name="name", data_type=OPTERYX_TYPES.VARCHAR),
-        Column(name="mass", data_type=OPTERYX_TYPES.DOUBLE),
-        Column(name="diameter", data_type=OPTERYX_TYPES.INTEGER),
-        Column(name="density", data_type=OPTERYX_TYPES.INTEGER),
-        Column(name="gravity", data_type=OPTERYX_TYPES.DOUBLE),
-        Column(name="escapeVelocity", data_type=OPTERYX_TYPES.DOUBLE),
-        Column(name="rotationPeriod", data_type=OPTERYX_TYPES.DOUBLE),
-        Column(name="lengthOfDay", data_type=OPTERYX_TYPES.DOUBLE),
-        Column(name="distanceFromSun", data_type=OPTERYX_TYPES.DOUBLE),
-        Column(name="perihelion", data_type=OPTERYX_TYPES.DOUBLE),
-        Column(name="aphelion", data_type=OPTERYX_TYPES.DOUBLE),
-        Column(name="orbitalPeriod", data_type=OPTERYX_TYPES.DOUBLE),
-        Column(name="orbitalVelocity", data_type=OPTERYX_TYPES.DOUBLE),
-        Column(name="orbitalInclination", data_type=OPTERYX_TYPES.DOUBLE),
-        Column(name="orbitalEccentricity", data_type=OPTERYX_TYPES.DOUBLE),
-        Column(name="obliquityToOrbit", data_type=OPTERYX_TYPES.DOUBLE),
-        Column(name="meanTemperature", data_type=OPTERYX_TYPES.DOUBLE),
-        Column(name="surfacePressure", data_type=OPTERYX_TYPES.DOUBLE),
-        Column(name="numberOfMoons", data_type=OPTERYX_TYPES.INTEGER),
+        FlatColumn(name="id", data_type=OPTERYX_TYPES.INTEGER),
+        FlatColumn(name="name", data_type=OPTERYX_TYPES.VARCHAR),
+        FlatColumn(name="mass", data_type=OPTERYX_TYPES.DOUBLE),
+        FlatColumn(name="diameter", data_type=OPTERYX_TYPES.INTEGER),
+        FlatColumn(name="density", data_type=OPTERYX_TYPES.INTEGER),
+        FlatColumn(name="gravity", data_type=OPTERYX_TYPES.DOUBLE),
+        FlatColumn(name="escapeVelocity", data_type=OPTERYX_TYPES.DOUBLE),
+        FlatColumn(name="rotationPeriod", data_type=OPTERYX_TYPES.DOUBLE),
+        FlatColumn(name="lengthOfDay", data_type=OPTERYX_TYPES.DOUBLE),
+        FlatColumn(name="distanceFromSun", data_type=OPTERYX_TYPES.DOUBLE),
+        FlatColumn(name="perihelion", data_type=OPTERYX_TYPES.DOUBLE),
+        FlatColumn(name="aphelion", data_type=OPTERYX_TYPES.DOUBLE),
+        FlatColumn(name="orbitalPeriod", data_type=OPTERYX_TYPES.DOUBLE),
+        FlatColumn(name="orbitalVelocity", data_type=OPTERYX_TYPES.DOUBLE),
+        FlatColumn(name="orbitalInclination", data_type=OPTERYX_TYPES.DOUBLE),
+        FlatColumn(name="orbitalEccentricity", data_type=OPTERYX_TYPES.DOUBLE),
+        FlatColumn(name="obliquityToOrbit", data_type=OPTERYX_TYPES.DOUBLE),
+        FlatColumn(name="meanTemperature", data_type=OPTERYX_TYPES.DOUBLE),
+        FlatColumn(name="surfacePressure", data_type=OPTERYX_TYPES.DOUBLE),
+        FlatColumn(name="numberOfMoons", data_type=OPTERYX_TYPES.INTEGER),
     ],
 )

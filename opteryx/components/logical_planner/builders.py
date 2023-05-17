@@ -43,9 +43,18 @@ def literal_null(branch, alias: list = None, key=None):
 def literal_number(branch, alias: list = None, key=None):
     """create node for a literal number branch"""
     # we have one internal numeric type
+
+    value = branch[0]
+    try:
+        # Try converting to int first
+        value = int(value)
+    except ValueError:
+        # If int conversion fails, try converting to float
+        value = float(value)
+
     return ExpressionTreeNode(
         NodeType.LITERAL_NUMERIC,
-        value=numpy.float64(branch[0]),
+        value=numpy.float64(branch[0]),  # value
         alias=alias,
     )
 

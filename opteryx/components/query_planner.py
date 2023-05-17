@@ -105,24 +105,9 @@ class QueryPlanner:
 
             parsed_statements = sqloxide.parse_sql(self.statement, dialect="mysql")
 
-            from opteryx.components.v2.logical_planner import get_planners
-
             if QUERY_LOG_LOCATION:
                 log = RollingLog(QUERY_LOG_LOCATION, QUERY_LOG_SIZE, 1024 * 1024)
                 log.append(self.statement)
-
-            if PROFILE_LOCATION:
-                # this is running the 2nd gen planner in parallel
-                try:
-                    plans = ""
-                    for planner, ast in get_planners(parsed_statements):
-                        plans = self.statement + "\n\n"
-                        plans += planner(ast).draw()
-                    with open(PROFILE_LOCATION, mode="w") as f:
-                        f.write(plans)
-                except Exception as err:
-                    print(f"{type(err).__name__} - {err}")
-                    log.append(f"{type(err).__name__} - {err}")
 
             yield from parsed_statements
         except ValueError as exception:  # pragma: no cover

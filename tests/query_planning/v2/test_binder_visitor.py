@@ -15,13 +15,13 @@ from opteryx.components.v2.logical_planner import LogicalPlanStepType
 
 def test_logical_plan_visitor():
     plan = LogicalPlan()
-    scan_node_left = LogicalPlanNode(LogicalPlanStepType.Scan)
+    scan_node_left = LogicalPlanNode(node_type=LogicalPlanStepType.Scan)
     scan_node_left.relation = "left"
-    scan_node_right = LogicalPlanNode(LogicalPlanStepType.Scan)
+    scan_node_right = LogicalPlanNode(node_type=LogicalPlanStepType.Scan)
     scan_node_right.relation = "right"
-    project_node = LogicalPlanNode(LogicalPlanStepType.Project)
-    filter_node = LogicalPlanNode(LogicalPlanStepType.Filter)
-    union_node = LogicalPlanNode(LogicalPlanStepType.Union)
+    project_node = LogicalPlanNode(node_type=LogicalPlanStepType.Project)
+    filter_node = LogicalPlanNode(node_type=LogicalPlanStepType.Filter)
+    union_node = LogicalPlanNode(node_type=LogicalPlanStepType.Union)
     plan.add_node(1, scan_node_left)
     plan.add_node(2, project_node)
     plan.add_node(3, filter_node)

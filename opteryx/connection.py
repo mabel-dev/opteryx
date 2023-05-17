@@ -15,14 +15,18 @@ This module provides a PEP-249 familiar interface for interacting with mabel dat
 stores, it is not compliant with the standard:
 https://www.python.org/dev/peps/pep-0249/
 """
+import datetime
 import time
 import typing
+from dataclasses import dataclass
+from dataclasses import field
 from uuid import uuid4
 
 import pyarrow
 from orso import DataFrame
 from orso import converters
 
+from opteryx import config
 from opteryx import utils
 from opteryx.exceptions import CursorInvalidStateError
 from opteryx.exceptions import MissingSqlStatement
@@ -30,8 +34,29 @@ from opteryx.exceptions import PermissionsError
 from opteryx.exceptions import ProgrammingError
 from opteryx.managers.kvstores import BaseKeyValueStore
 from opteryx.shared import QueryStatistics
+from opteryx.shared.variables import SystemVariables
+from opteryx.shared.variables import VariableOwner
 
 CURSOR_NOT_RUN: str = "Cursor must be in an executed state"
+PROFILE_LOCATION = config.PROFILE_LOCATION
+
+HistoryItem = typing.Tuple[str, bool, datetime.datetime]
+
+
+@dataclass
+class ConnectionContext:
+    connection_id: int = field(init=False)
+    connected_at: datetime.datetime = field(init=False)
+    user: str = None
+    schema: str = None
+    variables: dict = field(init=False)
+    history: typing.List[HistoryItem] = field(init=False)
+
+    def __post_init__(self):
+        object.__setattr__(self, "connection_id", utils.random_int())
+        object.__setattr__(self, "connected_at", datetime.datetime.utcnow())
+        object.__setattr__(self, "history", [])
+        object.__setattr__(self, "variables", SystemVariables.copy(VariableOwner.USER))
 
 
 class Connection:
@@ -49,12 +74,10 @@ class Connection:
         """
         A virtual connection to the Opteryx query engine.
         """
-        self._results = None
         self.cache = cache
         self._kwargs = kwargs
 
-        self._default_database = None
-        self._connection_id = utils.random_int()
+        self.context = ConnectionContext()
 
         # check the permissions we've been given are valid permissions
         from opteryx.constants.permissions import PERMISSIONS
@@ -76,11 +99,9 @@ class Connection:
 
     def close(self):
         """exists for interface compatibility only"""
-        pass
 
     def commit(self):
         """exists for interface compatibility only"""
-        pass
 
     def rollback(self):
         """exists for interface compatibility only"""
@@ -115,6 +136,8 @@ class Cursor(DataFrame):
 
         if self._query is not None:
             raise CursorInvalidStateError("Cursor can only be executed once")
+
+        self._connection.context.history.append((operation, True, datetime.datetime.utcnow()))
         self._query = operation
 
         from opteryx.components.query_planner import QueryPlanner
@@ -137,6 +160,32 @@ class Cursor(DataFrame):
 
         self._query_planner.test_paramcount(asts, params)
 
+        # do v2 here now
+        if PROFILE_LOCATION:
+            # this is running the 2nd gen planner in parallel
+            import json
+
+            from opteryx.components.v2.binder import do_bind_phase
+            from opteryx.components.v2.logical_planner import do_logical_planning_phase
+            from opteryx.third_party import sqloxide
+
+            try:
+                profile_content = operation + "\n\n"
+                parsed_statements = sqloxide.parse_sql(operation, dialect="mysql")
+                for logical_plan, ast in do_logical_planning_phase(parsed_statements):
+                    profile_content += json.dumps(ast) + "\n"
+                    profile_content += logical_plan.draw() + "\n"
+                    bound_plan = do_bind_phase(
+                        logical_plan, context={}, temporal_ranges={}, parameters={}
+                    )
+
+                with open(PROFILE_LOCATION, mode="w") as f:
+                    f.write(profile_content)
+
+            except Exception as err:
+                print(f"{type(err).__name__} - {err}")
+
+        # v1 code
         for ast in asts:
             ast = self._query_planner.bind_ast(ast, parameters=params)
             plan = self._query_planner.create_logical_plan(ast)
@@ -145,6 +194,11 @@ class Cursor(DataFrame):
             results = self._query_planner.execute(self._plan)
 
         if results is not None:
+            # we can't update tuples directly
+            self._connection.context.history[-1] = tuple(
+                True if i == 1 else value
+                for i, value in enumerate(self._connection.context.history[-1])
+            )
             return utils.arrow.rename_columns(results)
 
     def execute(self, operation, params=None):

@@ -224,7 +224,9 @@ def create_node_relation(relation):
         from_step = LogicalPlanNode(node_type=LogicalPlanStepType.Scan)
         table = relation["relation"]["Table"]
         from_step.relation = ".".join(part["value"] for part in table["name"])
-        from_step.alias = None if table["alias"] is None else table["alias"]["name"]["value"]
+        from_step.alias = (
+            from_step.relation if table["alias"] is None else table["alias"]["name"]["value"]
+        )
         from_step.hints = [hint["Identifier"]["value"] for hint in table["with_hints"]]
         step_id = random_string()
         sub_plan.add_node(step_id, from_step)
@@ -529,6 +531,7 @@ def plan_show_variables(statement):
 
 QUERY_BUILDERS = {
     #    "Analyze": analyze_query,
+    #    "Execute": plan_execute_query,
     "Explain": plan_explain,
     "Query": plan_query,
     "SetVariable": plan_set_variable,
@@ -540,52 +543,8 @@ QUERY_BUILDERS = {
 }
 
 
-def get_planners(parsed_statements):
+def do_logical_planning_phase(parsed_statements):
     # The sqlparser ast is an array of asts
     for parsed_statement in parsed_statements:
         statement_type = next(iter(parsed_statement))
-        yield QUERY_BUILDERS[statement_type], parsed_statement
-
-
-if __name__ == "__main__":  # pragma: no cover
-    import json
-
-    import opteryx.third_party.sqloxide
-
-    TSQL = "SET enable_optimizer = 7"
-    SQL = "SELECT id FROM $planets"
-    SQL = "SELECT DISTINCT MAX(planetId), name FROM $satellites INNER JOIN $planets ON $planets.id = $satellites.id WHERE id = 1 GROUP BY planetId HAVING id > 2 ORDER BY name LIMIT 1 OFFSET 1"
-    SQL = "SELECT a FROM T1, T2"
-    SQL = "SET @planet = 'Saturn'; SELECT name AS nom FROM (SELECT DISTINCT id as planetId, name FROM $planets WHERE name = @planet) as planets -- LEFT JOIN (SELECT planetId, COUNT(*) FROM $satellites FOR DATES BETWEEN '2022-01-01' AND TODAY WHERE gm > 10) AS bigsats ON bigsats.planetId = planets.planetId -- LEFT JOIN (SELECT planetId, COUNT(*) FROM $satellites FOR DATES IN LAST_MONTH WHERE gm < 10) as smallsats ON smallsats.planetId = planets.planetId ; "
-    SQL = """SELECT name AS nom , bigsats.occurances , smallsats.occurances 
-  FROM ( SELECT DISTINCT id as planetId , name FROM $planets WHERE name = 'Earth' ) as planets 
-  Inner JOIN ( SELECT planetId , COUNT ( * ) AS occurances FROM $satellites WHERE gm > 10 GROUP BY planetId ) AS bigsats 
-       ON bigsats.planetId = planets.planetId
-  left JOIN ( SELECT planetId , COUNT ( * ) AS occurances FROM $satellites WHERE gm < 10 GROUP BY planetId ) as smallsats 
-       ON smallsats.planetId = planets.planetId ;"""
-    SQL = "SELECT COUNT(*) FROM $astronauts WHERE $astronauts.a = $astronauts.b GROUP BY $astronauts.b, True"
-    TSQL = "SELECT * FROM (SELECT * FROM $planets)"
-    SQL = "SELECT * FROM (VALUES ('High', 3),('Medium', 2),('Low', 1)) AS ratings(name, rating) "
-    SQL = "SELECT * FROM tab1 WHERE 1 = 2 union select * from tab2 LIMIT 10"
-    SQL = "SELECT * FROM $satellites WHERE planetId IN (SELECT id FROM $planets WHERE name = 'Earth') "
-    SQL = "SHOW STORES LIKE 'apple'"
-    SQL = "SET @v = 1; SELECT * FROM (SELECT @v); "
-    SQL = "explain ANALYZE FORMAT JSON  SELECT * FROM $planets AS a INNER JOIN (SELECT id FROM $planets) AS b USING (id)"
-    SQL = "SELECT CAST('abc' AS VARCHAR)"
-    SQL = "SHOW EXTENDED COLUMNS FROM $satellites LIKE '%d'"
-    SQL = "SELECT COUNT(*) FROM $satellites"
-    SQL = "SELECT ARRAY_AGG(name ORDER BY name) from $satellites GROUP BY TRUE"
-    SQL = "SELECT * FROM $satellites cross join $planets"
-    SQL = "SHOW COLUMNS FROM $satellites LIKE '%d'"
-
-    parsed_statements = opteryx.third_party.sqloxide.parse_sql(SQL, dialect="mysql")
-    # print(json.dumps(parsed_statements, indent=2))
-    for planner, ast in get_planners(parsed_statements):
-        print("---")
-        tree = planner(ast)
-
-        #        print(tree.breadth_first_search(tree.get_entry_points()[0]))
-        print(json.dumps(tree.depth_first_search(), indent=2))
-        #        print(opteryx.query("EXPLAIN " + SQL))
-        print(tree.draw())
-#        print(tree.draw())
+        yield QUERY_BUILDERS[statement_type](parsed_statement), parsed_statement

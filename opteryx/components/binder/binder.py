@@ -26,6 +26,7 @@ from opteryx.exceptions import ProgrammingError
 from opteryx.exceptions import SqlError
 from opteryx.managers.expression import ExpressionTreeNode
 from opteryx.models import QueryProperties
+from opteryx.shared.variables import SystemVariables
 
 
 def _build_literal_node(value):
@@ -69,11 +70,11 @@ def variable_binder(node, parameter_set, properties, query_type):
         if query_type != "SetVariable" and "Identifier" in node:
             token_name = node["Identifier"]["value"]
             if token_name.startswith("@@"):
-                return _build_literal_node(opteryx.variables.get(token_name[2:]))
+                return _build_literal_node(SystemVariables[token_name[2:]])
             elif token_name[0] == "@":
                 if token_name not in properties.variables:  # pragma: no cover
                     raise SqlError(f"Undefined variable found in query `{token_name}`.")
-                variable_value = properties.variables.get(token_name)
+                variable_value = properties.variables[token_name]
                 return _build_literal_node(variable_value.value)
         return {
             k: variable_binder(v, parameter_set, properties, query_type) for k, v in node.items()
