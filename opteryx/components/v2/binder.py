@@ -27,18 +27,20 @@ as a fallback I need to:
 """
 
 import copy
+import re
 
 from orso.logging import get_logger
 
 from opteryx.exceptions import DatabaseError
 
+CAMEL_TO_SNAKE = re.compile(r"(?<!^)(?=[A-Z])")
 logger = get_logger()
 
 
 class BinderVisitor:
     def visit_node(self, node, context=None):
-        node_type = node.node_type
-        visit_method_name = f"visit_{node_type.split('.')[1].lower()}"
+        node_type = node.node_type.name
+        visit_method_name = f"visit_{CAMEL_TO_SNAKE.sub('_', node_type).lower()}"
         visit_method = getattr(self, visit_method_name, self.visit_unsupported)
         result = visit_method(node, context)
         if not isinstance(result, dict):
@@ -89,8 +91,9 @@ class BinderVisitor:
         node.connector = connector_factory(node.relation)
         # get them to tell is the schema of the dataset
         # None means we don't know ahead of time
-        context[node.alias] = node.connector.get_schema
+        # context[node.alias] = node.connector.get_schema()
 
+        logger.warning("visit_scan not implemented")
         return context
 
     def visit_show(self, node, context):
@@ -187,10 +190,10 @@ class BinderVisitor:
         return context
 
 
-def do_bind_phase(plan):
+def do_bind_phase(plan, context=None, temporal_ranges=None, parameters=None):
     # TODO: put the temporal range and paramter information into the context so we can set it
     binder_visitor = BinderVisitor()
-    root_node = plan.get_entry_points()
+    root_node = plan.get_exit_points()
     if len(root_node) > 1:
         raise ValueError(f"logical plan has {len(root_node)} heads - this is an error")
     binder_visitor.traverse(plan, root_node[0])
