@@ -71,7 +71,7 @@ class LogicalPlanNode(Node):
             if self.node_type == LogicalPlanStepType.Fake:
                 return f"FAKE ({', '.join(format_expression(arg) for arg in self.args)}{' AS ' + self.alias if self.alias else ''})"
             if self.node_type == LogicalPlanStepType.Filter:
-                return f"FILTER ({format_expression(self.filter)})"
+                return f"FILTER ({format_expression(self.condition)})"
             if self.node_type == LogicalPlanStepType.GenerateSeries:
                 return f"GENERATE SERIES ({', '.join(format_expression(arg) for arg in self.args)}{' AS ' + self.alias if self.alias else ''})"
             if self.node_type == LogicalPlanStepType.Group:
@@ -321,8 +321,8 @@ def plan_query(statement):
         # selection
         _selection = builders.build(ast_branch["Select"].get("selection"))
         if _selection:
-            # TODO: filters need: condition
             selection_step = LogicalPlanNode(node_type=LogicalPlanStepType.Filter)
+            selection_step.condition = _selection
             previous_step_id, step_id = step_id, random_string()
             inner_plan.add_node(step_id, selection_step)
             if previous_step_id is not None:
@@ -371,8 +371,8 @@ def plan_query(statement):
         # having
         _having = builders.build(ast_branch["Select"].get("having"))
         if _having:
-            # TODO: filters need: condition
             having_step = LogicalPlanNode(node_type=LogicalPlanStepType.Filter)
+            having_step.condition = _having
             previous_step_id, step_id = step_id, random_string()
             inner_plan.add_node(step_id, having_step)
             if previous_step_id is not None:

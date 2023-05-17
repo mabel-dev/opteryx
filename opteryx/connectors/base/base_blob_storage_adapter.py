@@ -13,7 +13,6 @@
 """
 Base Inner Reader for blob and file stores
 """
-import abc
 import datetime
 from typing import Iterable
 from typing import List
@@ -23,7 +22,7 @@ from opteryx.utils import dates
 from opteryx.utils import paths
 
 
-class BaseBlobStorageAdapter(abc.ABC):
+class BaseBlobStorageAdapter:
     __mode__ = "Blob"
 
     def __init__(self, prefix: str, remove_prefix: bool = False) -> None:

@@ -87,6 +87,16 @@ def register_arrow(name, table):
 
 
 def connector_factory(dataset):
+    """
+    Work out which connector will service the access to this dataset.
+    """
+
+    # if it starts with a $, it's a special internal dataset
+    if dataset[0] == "$":
+        from opteryx.connectors import sample_data
+
+        return sample_data.SampleDataConnector()
+
     prefix = dataset.split(".")[0]
     connector_entry: dict = {}
     if prefix in _storage_prefixes:

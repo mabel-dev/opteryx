@@ -323,7 +323,7 @@ class Graph(object):
         if len(self._nodes) == 1:  # pragma: no cover
             return list(self._nodes.keys())
         sources = self._edges.keys()
-        retval = (target for source, target, direction in self.edges() if target not in sources)
+        retval = {target for source, target, direction in self.edges() if target not in sources}
         return sorted(retval)
 
     def remove_node(self, nid, heal: bool = False):

@@ -165,18 +165,32 @@ class Cursor(DataFrame):
             # this is running the 2nd gen planner in parallel
             import json
 
+            from opteryx.components.sql_rewriter.sql_rewriter import clean_statement
+            from opteryx.components.sql_rewriter.sql_rewriter import remove_comments
+            from opteryx.components.sql_rewriter.temporal_extraction import extract_temporal_filters
             from opteryx.components.v2.binder import do_bind_phase
             from opteryx.components.v2.logical_planner import do_logical_planning_phase
             from opteryx.third_party import sqloxide
 
+            if isinstance(operation, bytes):
+                operation = operation.decode()
+
+            clean_sql = remove_comments(operation)
+            clean_sql = clean_statement(clean_sql)
+
+            (
+                clean_sql,
+                temporal_filters,
+            ) = extract_temporal_filters(clean_sql)
+
             try:
                 profile_content = operation + "\n\n"
-                parsed_statements = sqloxide.parse_sql(operation, dialect="mysql")
+                parsed_statements = sqloxide.parse_sql(clean_sql, dialect="mysql")
                 for logical_plan, ast in do_logical_planning_phase(parsed_statements):
-                    profile_content += json.dumps(ast) + "\n"
-                    profile_content += logical_plan.draw() + "\n"
+                    profile_content += json.dumps(ast) + "\n\n"
+                    profile_content += logical_plan.draw() + "\n\n"
                     bound_plan = do_bind_phase(
-                        logical_plan, context={}, temporal_ranges={}, parameters={}
+                        logical_plan, context={}, temporal_filters=temporal_filters, parameters={}
                     )
 
                 with open(PROFILE_LOCATION, mode="w") as f:
