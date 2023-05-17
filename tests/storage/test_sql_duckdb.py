@@ -17,6 +17,7 @@ def test_duckdb_storage():
         SqlConnector,
         remove_prefix=True,
         connection="duckdb:///testdata/duckdb/planets.duckdb",
+#        connection="duckdb:///testdata/flat/planets/parquet/planets.parquet",
     )
 
     results = opteryx.query("SELECT * FROM duckdb.planets")
