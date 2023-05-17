@@ -103,7 +103,7 @@ class SystemVariablesContainer:
             raise ValueError(f"Invalid type for {key}.")
         if owner > self._owner:
             raise PermissionError("Not enough permissions to set variable")
-        self._variables[key] = (variable_type, value)
+        self._variables[key] = (variable_type, value, owner)
 
     def __contains__(self, key: str) -> bool:
         return key in self._variables
