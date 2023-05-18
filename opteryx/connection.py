@@ -39,6 +39,7 @@ from opteryx.shared.variables import VariableOwner
 
 CURSOR_NOT_RUN: str = "Cursor must be in an executed state"
 PROFILE_LOCATION = config.PROFILE_LOCATION
+ENGINE_VERSION = config.ENGINE_VERSION
 
 HistoryItem = typing.Tuple[str, bool, datetime.datetime]
 
@@ -138,82 +139,54 @@ class Cursor(DataFrame):
             raise CursorInvalidStateError("Cursor can only be executed once")
 
         self._connection.context.history.append((operation, True, datetime.datetime.utcnow()))
-        self._query = operation
 
-        from opteryx.components.query_planner import QueryPlanner
-
-        self._query_planner = QueryPlanner(
-            statement=operation, cache=self._connection.cache, qid=self._qid
-        )
-        self._statistics.start_time = time.time_ns()
-        asts = list(self._query_planner.parse_and_lex())
-
-        # test permissions
-        for ast in asts:
-            statement_type = next(iter(ast))
-            if statement_type not in self._connection.permissions:
-                raise PermissionsError(f"Required permission {statement_type} not provided.")
-
-        results = None
-        if params is None:
-            params = []
-
-        self._query_planner.test_paramcount(asts, params)
-
-        # do v2 here now
-        if PROFILE_LOCATION:
+        if ENGINE_VERSION == 2:
             # this is running the 2nd gen planner in parallel
-            import json
-
-            from opteryx.components.sql_rewriter.sql_rewriter import clean_statement
-            from opteryx.components.sql_rewriter.sql_rewriter import remove_comments
-            from opteryx.components.sql_rewriter.temporal_extraction import extract_temporal_filters
-            from opteryx.components.v2.binder import do_bind_phase
-            from opteryx.components.v2.logical_planner import do_logical_planning_phase
-            from opteryx.third_party import sqloxide
-
-            if isinstance(operation, bytes):
-                operation = operation.decode()
-
-            clean_sql = remove_comments(operation)
-            clean_sql = clean_statement(clean_sql)
-
-            (
-                clean_sql,
-                temporal_filters,
-            ) = extract_temporal_filters(clean_sql)
-
             try:
-                profile_content = operation + "\n\n"
-                parsed_statements = sqloxide.parse_sql(clean_sql, dialect="mysql")
-                for logical_plan, ast in do_logical_planning_phase(parsed_statements):
-                    profile_content += json.dumps(ast) + "\n\n"
-                    profile_content += logical_plan.draw() + "\n\n"
-                    bound_plan = do_bind_phase(
-                        logical_plan, context={}, temporal_filters=temporal_filters, parameters={}
-                    )
+                from opteryx.components.v2 import query_planner
 
-                with open(PROFILE_LOCATION, mode="w") as f:
-                    f.write(profile_content)
-
+                plan = query_planner(
+                    operation=operation, parameters=params, connection=self._connection
+                )
             except Exception as err:
                 print(f"{type(err).__name__} - {err}")
+        else:
+            self._query = operation
 
-        # v1 code
-        for ast in asts:
-            ast = self._query_planner.bind_ast(ast, parameters=params)
-            plan = self._query_planner.create_logical_plan(ast)
+            from opteryx.components.query_planner import QueryPlanner
 
-            self._plan = self._query_planner.optimize_plan(plan)
-            results = self._query_planner.execute(self._plan)
-
-        if results is not None:
-            # we can't update tuples directly
-            self._connection.context.history[-1] = tuple(
-                True if i == 1 else value
-                for i, value in enumerate(self._connection.context.history[-1])
+            self._query_planner = QueryPlanner(
+                statement=operation, cache=self._connection.cache, qid=self._qid
             )
-            return utils.arrow.rename_columns(results)
+            self._statistics.start_time = time.time_ns()
+            asts = list(self._query_planner.parse_and_lex())
+
+            # test permissions
+            for ast in asts:
+                statement_type = next(iter(ast))
+                if statement_type not in self._connection.permissions:
+                    raise PermissionsError(f"Required permission {statement_type} not provided.")
+
+            results = None
+            if params is None:
+                params = []
+
+            self._query_planner.test_paramcount(asts, params)
+
+            for ast in asts:
+                ast = self._query_planner.bind_ast(ast, parameters=params)
+                plan = self._query_planner.create_logical_plan(ast)
+
+                self._plan = self._query_planner.optimize_plan(plan)
+                results = self._query_planner.execute(self._plan)
+
+            if results is not None:
+                # we can't update tuples directly
+                self._connection.context.history[-1] = tuple(
+                    True if i == 1 else value
+                    for i, value in enumerate(self._connection.context.history[-1])
+                )
+                return utils.arrow.rename_columns(results)
 
     def execute(self, operation, params=None):
         results = self._inner_execute(operation, params)

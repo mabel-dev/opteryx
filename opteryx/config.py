@@ -141,3 +141,5 @@ QUERY_LOG_SIZE:int = int(get("QUERY_LOG_SIZE", 100))
 # not currently supported
 METADATA_SERVER: str = None
 # fmt:on
+
+ENGINE_VERSION: int = int(environ.get("ENGINE_VERSION", 1))
