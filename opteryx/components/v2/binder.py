@@ -11,19 +11,38 @@
 # limitations under the License.
 
 """
-bind the following:
-- the date ranges for the relations
-- the schemas to the relations
-    - I need to work out the source for each of the relations
-- the source relation to each column
-- placeholders with the value from the parameters
+The binder is responsible for adding information about the database and engine into the logical
+plan. It's not a rewrite step but does to value exchanges (which could be seen as a rewrite type
+activity).
 
-to do this I need:
-- the plan
-- the schemas for all of the relations
+~~~
+                      ┌───────────┐
+                      │           │
+                      │ Catalogue │
+                      └─────┬─────┘
+                            │
+   ┌───────────┐      ┌─────▼─────┐      ┌───────────┐
+   │ Logical   │ Plan │           │ Plan │ Tree      │
+   │   Planner ├──────► Binder    ├──────►  Rewriter │
+   └───────────┘      └───────────┘      └───────────┘
+~~~
 
-as a fallback I need to:
-- handle not knowing the schemas
+The binder takes the output from the logical plan, and adds information from various catalogues 
+into that plan and then performs some validation checks.
+
+These catalogues include:
+- The data catalogue (e.g. data schemas)
+- The function catalogue (e.g. function inputs and data types)
+
+The binder then performs these activities:
+- schema lookup and propagation (add columns and types, add aliases)
+- parameters exchange (put the parameter values into the plan)
+- temporal range population (put the ranges into the plan)
+- function lookup (does the function exist, if it's a constant evaluation then replace the value
+  in the plan)
+- type checks (are the ops and functions compatible with the columns)
+? permission enforcement (does the user have the permission to that table, what additional
+  constraints should be added for contextual access)
 """
 
 import copy
@@ -50,38 +69,7 @@ class BinderVisitor:
         return result
 
     def visit_unsupported(self, node, context):
-        raise NotImplementedError(f"No visit method implemented for node type {node.node_type}")
-
-    def visit_project(self, node, context):
-        logger.warning("visit_project not implemented")
-        return context
-
-    def visit_filter(self, node, context):
-        logger.warning("visit_filter not implemented")
-        return context
-
-    def visit_union(self, node, context):
-        logger.warning("visit_union not implemented")
-        return context
-
-    def visit_explain(self, node, context):
-        logger.warning("visit_explain not implemented")
-        return context
-
-    def visit_difference(self, node, context):
-        logger.warning("visit_difference not implemented")
-        return context
-
-    def visit_join(self, node, context):
-        logger.warning("visit_join not implemented")
-        return context
-
-    def visit_group(self, node, context):
-        logger.warning("visit_group not implemented")
-        return context
-
-    def visit_aggregate(self, node, context):
-        logger.warning("visit_aggregate not implemented")
+        logger.warning(f"No visit method implemented for node type {node.node_type.name}")
         return context
 
     def visit_scan(self, node, context):
@@ -90,58 +78,10 @@ class BinderVisitor:
         # work out who will be serving this request
         node.connector = connector_factory(node.relation)
         # get them to tell is the schema of the dataset
-        # None means we don't know ahead of time
-        # context[node.alias] = node.connector.get_schema()
+        # None means we don't know ahead of time - we can usually get something
+        context[node.alias] = node.connector.get_dataset_schema(node.relation)
 
         logger.warning("visit_scan not implemented")
-        return context
-
-    def visit_show(self, node, context):
-        logger.warning("visit_show not implemented")
-        return context
-
-    def visit_show_columns(self, node, context):
-        logger.warning("visit_show_columns not implemented")
-        return context
-
-    def visit_set(self, node, context):
-        logger.warning("visit_set not implemented")
-        return context
-
-    def visit_limit(self, node, context):
-        logger.warning("visit_limit not implemented")
-        return context
-
-    def visit_order(self, node, context):
-        logger.warning("visit_order not implemented")
-        return context
-
-    def visit_distinct(self, node, context):
-        logger.warning("visit_distinct not implemented")
-        return context
-
-    def visit_cte(self, node, context):
-        logger.warning("visit_cte not implemented")
-        return context
-
-    def visit_subquery(self, node, context):
-        logger.warning("visit_subquery not implemented")
-        return context
-
-    def visit_values(self, node, context):
-        logger.warning("visit_values not implemented")
-        return context
-
-    def visit_unnest(self, node, context):
-        logger.warning("visit_unnest not implemented")
-        return context
-
-    def visit_generate_series(self, node, context):
-        logger.warning("visit_generate_series not implemented")
-        return context
-
-    def visit_fake(self, node, context):
-        logger.warning("visit_fake not implemented")
         return context
 
     def traverse(self, graph, node, context=None):
@@ -190,7 +130,7 @@ class BinderVisitor:
         return context
 
 
-def do_bind_phase(plan, context=None, temporal_ranges=None, parameters=None):
+def do_bind_phase(plan, context=None, temporal_filters=None, parameters=None):
     # TODO: put the temporal range and paramter information into the context so we can set it
     binder_visitor = BinderVisitor()
     root_node = plan.get_exit_points()

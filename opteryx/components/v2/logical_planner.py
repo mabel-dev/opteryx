@@ -71,7 +71,7 @@ class LogicalPlanNode(Node):
             if self.node_type == LogicalPlanStepType.Fake:
                 return f"FAKE ({', '.join(format_expression(arg) for arg in self.args)}{' AS ' + self.alias if self.alias else ''})"
             if self.node_type == LogicalPlanStepType.Filter:
-                return f"FILTER ({format_expression(self.filter)})"
+                return f"FILTER ({format_expression(self.condition)})"
             if self.node_type == LogicalPlanStepType.GenerateSeries:
                 return f"GENERATE SERIES ({', '.join(format_expression(arg) for arg in self.args)}{' AS ' + self.alias if self.alias else ''})"
             if self.node_type == LogicalPlanStepType.Group:
@@ -82,6 +82,10 @@ class LogicalPlanNode(Node):
                 if self.using:
                     return f"{self.type.upper()} (USING {','.join(format_expression(self.using))})"
                 return self.type.upper()
+            if self.node_type == LogicalPlanStepType.Order:
+                return f"ORDER BY ({', '.join(item[0] + (' DESC' if not item[1] else '') for item in self.order_by)})"
+            if self.node_type == LogicalPlanStepType.Project:
+                return f"PROJECT ({', '.join(format_expression(col) for col in self.columns)})"
             if self.node_type == LogicalPlanStepType.Scan:
                 return f"SCAN ({self.relation}{' AS ' + self.alias if self.alias else ''}{' WITH(' + ','.join(self.hints) + ')' if self.hints else ''})"
             if self.node_type == LogicalPlanStepType.Show:
@@ -321,8 +325,8 @@ def plan_query(statement):
         # selection
         _selection = builders.build(ast_branch["Select"].get("selection"))
         if _selection:
-            # TODO: filters need: condition
             selection_step = LogicalPlanNode(node_type=LogicalPlanStepType.Filter)
+            selection_step.condition = _selection
             previous_step_id, step_id = step_id, random_string()
             inner_plan.add_node(step_id, selection_step)
             if previous_step_id is not None:
@@ -359,10 +363,8 @@ def plan_query(statement):
         if not _projection == [] and not (
             len(_projection) == 1 and _projection[0].token_type == NodeType.WILDCARD
         ):
-            # TODO: projection needs: functions, columns, aliases
-            project_step = LogicalPlanNode(
-                node_type=LogicalPlanStepType.Project, projection=_projection
-            )
+            project_step = LogicalPlanNode(node_type=LogicalPlanStepType.Project)
+            project_step.columns = _projection
             previous_step_id, step_id = step_id, random_string()
             inner_plan.add_node(step_id, project_step)
             if previous_step_id is not None:
@@ -371,8 +373,8 @@ def plan_query(statement):
         # having
         _having = builders.build(ast_branch["Select"].get("having"))
         if _having:
-            # TODO: filters need: condition
             having_step = LogicalPlanNode(node_type=LogicalPlanStepType.Filter)
+            having_step.condition = _having
             previous_step_id, step_id = step_id, random_string()
             inner_plan.add_node(step_id, having_step)
             if previous_step_id is not None:
@@ -390,8 +392,11 @@ def plan_query(statement):
         # order
         _order_by = ast_branch.get("order_by")
         if _order_by:
-            # TODO: order by needs: columns and directions
-            order_step = LogicalPlanNode(node_type=LogicalPlanStepType.Order, order=_order_by)
+            order_step = LogicalPlanNode(node_type=LogicalPlanStepType.Order)
+            order_step.order_by = [
+                (builders.build(item["expr"]).value, not bool(item["asc"])) for item in _order_by
+            ]
+            print(_order_by)
             previous_step_id, step_id = step_id, random_string()
             inner_plan.add_node(step_id, order_step)
             if previous_step_id is not None:
@@ -401,10 +406,9 @@ def plan_query(statement):
         _limit = ast_branch.get("limit")
         _offset = ast_branch.get("offset")
         if _limit or _offset:
-            # TODO: limit needs: the limit
-            limit_step = LogicalPlanNode(
-                node_type=LogicalPlanStepType.Limit, limit=_limit, offset=_offset
-            )
+            limit_step = LogicalPlanNode(node_type=LogicalPlanStepType.Limit)
+            limit_step.limit = _limit
+            limit_step.offset = _offset
             previous_step_id, step_id = step_id, random_string()
             inner_plan.add_node(step_id, limit_step)
             if previous_step_id is not None:
