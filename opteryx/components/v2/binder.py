@@ -11,21 +11,36 @@
 # limitations under the License.
 
 """
-The binder is responsible for adding information about the database and engine into the logical
-plan. It's not a rewrite step but does to value exchanges (which could be seen as a rewrite type
-activity).
-
 ~~~
                       ┌───────────┐
-                      │           │
-                      │ Catalogue │
-                      └─────┬─────┘
-                            │
-   ┌───────────┐      ┌─────▼─────┐      ┌───────────┐
+                      │   USER    │
+         ┌────────────┤           ◄────────────┐
+         │SQL         └───────────┘            │
+  ───────┼─────────────────────────────────────┼──────
+         │                                     │
+   ┌─────▼─────┐                               │
+   │ SQL       │                               │
+   │  Rewriter │                               │
+   └─────┬─────┘                               │
+         │SQL                                  │Plan
+   ┌─────▼─────┐                         ┌─────┴─────┐
+   │           │                         │           │
+   │ Parser    │                         │ Executor  │
+   └─────┬─────┘                         └─────▲─────┘
+         │AST                                  │Plan
+   ┌─────▼─────┐      ┌───────────┐      ┌─────┴─────┐
+   │ AST       │      │           │Stats │           │
+   │ Rewriter  │      │ Catalogue ├──────► Optimizer │
+   └─────┬─────┘      └─────┬─────┘      └─────▲─────┘
+         │AST               │Schemas           │Plan
+   ┌─────▼─────┐      ┌─────▼─────┐      ┌─────┴─────┐
    │ Logical   │ Plan │           │ Plan │ Tree      │
    │   Planner ├──────► Binder    ├──────►  Rewriter │
    └───────────┘      └───────────┘      └───────────┘
 ~~~
+The binder is responsible for adding information about the database and engine into the logical
+plan. It's not a rewrite step but does to value exchanges (which could be seen as a rewrite type
+activity).
 
 The binder takes the output from the logical plan, and adds information from various catalogues 
 into that plan and then performs some validation checks.
@@ -37,7 +52,6 @@ These catalogues include:
 The binder then performs these activities:
 - schema lookup and propagation (add columns and types, add aliases)
 - parameters exchange (put the parameter values into the plan)
-- temporal range population (put the ranges into the plan)
 - function lookup (does the function exist, if it's a constant evaluation then replace the value
   in the plan)
 - type checks (are the ops and functions compatible with the columns)
