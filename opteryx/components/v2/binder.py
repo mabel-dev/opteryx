@@ -33,16 +33,16 @@
    │ Rewriter  │      │ Catalogue ├──────► Optimizer │
    └─────┬─────┘      └─────┬─────┘      └─────▲─────┘
          │AST               │Schemas           │Plan
-   ┌─────▼─────┐      ┌─────▼─────┐      ┌─────┴─────┐
-   │ Logical   │ Plan │           │ Plan │ Tree      │
-   │   Planner ├──────► Binder    ├──────►  Rewriter │
-   └───────────┘      └───────────┘      └───────────┘
-~~~
+   ┌─────▼─────┐      ╔═════▼═════╗      ┌─────┴─────┐
+   │ Logical   │ Plan ║           ║ Plan │ Tree      │
+   │   Planner ├──────►   Binder  ║──────►  Rewriter │
+   └───────────┘      ╚═══════════╝      └───────────┘
+   ~~~
 The binder is responsible for adding information about the database and engine into the logical
 plan. It's not a rewrite step but does to value exchanges (which could be seen as a rewrite type
 activity).
 
-The binder takes the output from the logical plan, and adds information from various catalogues 
+The binder takes the output from the logical plan, and adds information from various catalogues
 into that plan and then performs some validation checks.
 
 These catalogues include:
@@ -51,7 +51,6 @@ These catalogues include:
 
 The binder then performs these activities:
 - schema lookup and propagation (add columns and types, add aliases)
-- parameters exchange (put the parameter values into the plan)
 - function lookup (does the function exist, if it's a constant evaluation then replace the value
   in the plan)
 - type checks (are the ops and functions compatible with the columns)
@@ -144,8 +143,7 @@ class BinderVisitor:
         return context
 
 
-def do_bind_phase(plan, context=None, temporal_filters=None, parameters=None):
-    # TODO: put the temporal range and paramter information into the context so we can set it
+def do_bind_phase(plan, context=None):
     binder_visitor = BinderVisitor()
     root_node = plan.get_exit_points()
     if len(root_node) > 1:

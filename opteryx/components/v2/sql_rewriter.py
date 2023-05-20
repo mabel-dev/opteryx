@@ -298,8 +298,8 @@ def extract_temporal_filters(sql):  # pragma: no cover
     final_collector = []
 
     for relation, for_date_string in initial_collector:
-        start_date = today
-        end_date = today
+        start_date = None
+        end_date = None
 
         for_date_string = for_date_string.upper()
         for_date = parse_date(for_date_string)

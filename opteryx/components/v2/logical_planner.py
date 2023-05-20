@@ -114,7 +114,13 @@ class LogicalPlanNode(Node):
             if self.node_type == LogicalPlanStepType.Project:
                 return f"PROJECT ({', '.join(format_expression(col) for col in self.columns)})"
             if self.node_type == LogicalPlanStepType.Scan:
-                return f"SCAN ({self.relation}{' AS ' + self.alias if self.alias else ''}{' WITH(' + ','.join(self.hints) + ')' if self.hints else ''})"
+                date_range = ""
+                if self.start_date == self.end_date:
+                    if self.start_date is not None:
+                        date_range = f" FOR '{self.start_date}'"
+                else:
+                    date_range = f" FOR '{self.start_date}' TO '{self.end_date}'"
+                return f"SCAN ({self.relation}{' AS ' + self.alias if self.alias else ''}{date_range}{' WITH(' + ','.join(self.hints) + ')' if self.hints else ''})"
             if self.node_type == LogicalPlanStepType.Show:
                 return f"SHOW ({', '.join(self.items)})"
             if self.node_type == LogicalPlanStepType.ShowColumns:
@@ -144,8 +150,7 @@ def extract_ctes(branch, planner):
     if branch.get("with"):
         for _ast in branch["with"]["cte_tables"]:
             alias = _ast.get("alias")["name"]["value"]
-            plan = {"Query": _ast["query"]}
-            ctes[alias] = planner(plan)
+            ctes[alias] = planner(_ast["query"]["body"])
     return ctes
 
 
@@ -259,6 +264,8 @@ def create_node_relation(relation):
             from_step.relation if table["alias"] is None else table["alias"]["name"]["value"]
         )
         from_step.hints = [hint["Identifier"]["value"] for hint in table["with_hints"]]
+        from_step.start_date = table.get("start_date")
+        from_step.end_date = table.get("end_date")
         step_id = random_string()
         sub_plan.add_node(step_id, from_step)
 
@@ -423,7 +430,6 @@ def plan_query(statement):
             order_step.order_by = [
                 (builders.build(item["expr"]).value, not bool(item["asc"])) for item in _order_by
             ]
-            print(_order_by)
             previous_step_id, step_id = step_id, random_string()
             inner_plan.add_node(step_id, order_step)
             if previous_step_id is not None:
