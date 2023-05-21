@@ -33,10 +33,10 @@
    │ Rewriter  │      │ Catalogue ├──────► Optimizer │
    └─────┬─────┘      └─────┬─────┘      └─────▲─────┘
          │AST               │Schemas           │Plan
-   ┌─────▼─────┐      ┌─────▼─────┐      ┌─────┴─────┐
-   │ Logical   │ Plan │           │ Plan │ Tree      │
-   │   Planner ├──────► Binder    ├──────►  Rewriter │
-   └───────────┘      └───────────┘      └───────────┘
+   ╔═════▼═════╗      ┌─────▼─────┐      ┌─────┴─────┐
+   ║ Logical   ║ Plan │           │ Plan │ Tree      │
+   ║   Planner ║──────► Binder    ├──────►  Rewriter │
+   ╚═══════════╝      └───────────┘      └───────────┘
 ~~~
 Converts the AST to a logical query plan.
 
