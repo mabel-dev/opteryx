@@ -98,13 +98,9 @@ class BinderVisitor:
         return context
 
     def visit_project(self, node, context):
-        logger.warning("visit_project not implemented")
+        # identify which relation the identifiers come from
         for column in node.columns:
-            print(
-                source_identifiers(
-                    column,
-                )
-            )
+            print(source_identifiers(column, context["sources"]))
 
         return context
 
@@ -115,7 +111,6 @@ class BinderVisitor:
         node.connector = connector_factory(node.relation)
         # get them to tell is the schema of the dataset
         # None means we don't know ahead of time - we can usually get something
-        context.de
         context[node.alias] = node.connector.get_dataset_schema(node.relation)
 
         logger.warning("visit_scan not implemented")

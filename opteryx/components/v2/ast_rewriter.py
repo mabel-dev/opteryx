@@ -17,13 +17,13 @@
    └─────┬─────┘                         └─────▲─────┘
          │AST                                  │Plan
    ╔═════▼═════╗      ┌───────────┐      ┌─────┴─────┐
-   ║ AST       ║      │           │Stats │           │
+   ║ AST       ║      │           │Stats │Cost-Based │
    ║ Rewriter  ║      │ Catalogue ├──────► Optimizer │
    ╚═════╦═════╝      └─────┬─────┘      └─────▲─────┘
          │AST               │Schemas           │Plan
    ┌─────▼─────┐      ┌─────▼─────┐      ┌─────┴─────┐
-   │ Logical   │ Plan │           │ Plan │ Tree      │
-   │   Planner ├──────► Binder    ├──────►  Rewriter │
+   │ Logical   │ Plan │           │ Plan │ Heuristic │
+   │   Planner ├──────► Binder    ├──────► Optimizer │
    └───────────┘      └───────────┘      └───────────┘
 ~~~
 """

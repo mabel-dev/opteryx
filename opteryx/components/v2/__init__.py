@@ -17,19 +17,18 @@
    └─────┬─────┘                         └─────▲─────┘
          │AST                                  │Plan
    ┌─────▼─────┐      ┌───────────┐      ┌─────┴─────┐
-   │ AST       │      │           │Stats │           │
+   │ AST       │      │           │Stats │Cost-Based │
    │ Rewriter  │      │ Catalogue ├──────► Optimizer │
    └─────┬─────┘      └─────┬─────┘      └─────▲─────┘
          │AST               │Schemas           │Plan
    ┌─────▼─────┐      ┌─────▼─────┐      ┌─────┴─────┐
-   │ Logical   │ Plan │           │ Plan │ Tree      │
-   │   Planner ├──────► Binder    ├──────►  Rewriter │
+   │ Logical   │ Plan │           │ Plan │ Heuristic │
+   │   Planner ├──────► Binder    ├──────► Optimizer │
    └───────────┘      └───────────┘      └───────────┘
 ~~~
 """
 
 from opteryx import config
-from opteryx.components.v2.logical_planner import QUERY_BUILDERS
 
 PROFILE_LOCATION = config.PROFILE_LOCATION
 
@@ -63,7 +62,7 @@ def query_planner(operation, parameters, connection):
             connection=connection,
         )
         # Logical Planner converts ASTs to logical plans
-        for logical_plan, ast in do_logical_planning_phase(parsed_statements):
+        for logical_plan, ast, ctes in do_logical_planning_phase(parsed_statements):
             profile_content += (
                 orjson.dumps(logical_plan.depth_first_search(), option=orjson.OPT_INDENT_2).decode()
                 + "\n\n"
@@ -71,8 +70,7 @@ def query_planner(operation, parameters, connection):
             profile_content += logical_plan.draw() + "\n\n"
             # The Binder adds schema information to the logical plan
             bound_plan = do_bind_phase(
-                logical_plan,
-                context=connection.context,
+                logical_plan, context=connection.context, common_table_expressions=ctes
             )
 
         with open(PROFILE_LOCATION, mode="w") as f:
