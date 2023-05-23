@@ -64,14 +64,18 @@ import re
 from orso.logging import get_logger
 
 from opteryx.exceptions import DatabaseError
+from opteryx.managers.expression import NodeType
 
 CAMEL_TO_SNAKE = re.compile(r"(?<!^)(?=[A-Z])")
 logger = get_logger()
 
 
 def source_identifiers(node, relations):
-    if node.node_type == "Identifier":
-        print("I found and identifier - ", node)
+    if node.token_type & NodeType.IDENTIFIER == NodeType.IDENTIFIER:
+        print("I found and identifier - ", node.value)
+        for alias, schema in relations.items():
+            print(schema)
+
 
     if node.left:
         node.left = source_identifiers(node.left, relations)
@@ -103,6 +107,7 @@ class BinderVisitor:
             print(
                 source_identifiers(
                     column,
+                    context.get("schemas", {})
                 )
             )
 
@@ -115,8 +120,7 @@ class BinderVisitor:
         node.connector = connector_factory(node.relation)
         # get them to tell is the schema of the dataset
         # None means we don't know ahead of time - we can usually get something
-        context.de
-        context[node.alias] = node.connector.get_dataset_schema(node.relation)
+        context.setdefault("schemas", {})[node.alias] = node.connector.get_dataset_schema(node.relation)
 
         logger.warning("visit_scan not implemented")
         logger.warning("visit_scan doesn't resolve CTEs")
