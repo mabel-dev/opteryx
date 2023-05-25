@@ -71,7 +71,7 @@ logger = get_logger()
 
 
 def source_identifiers(node, relations):
-    if node.token_type & NodeType.IDENTIFIER == NodeType.IDENTIFIER:
+    if node.node_type & NodeType.IDENTIFIER == NodeType.IDENTIFIER:
         found_source_relation = False
         print("I found and identifier - ", node.value)
         for alias, schema in relations.items():

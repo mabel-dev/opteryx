@@ -17,8 +17,8 @@ Type: Heuristic
 Goal: Preposition for following actions
 """
 from opteryx import operators
-from opteryx.managers.expression import ExpressionTreeNode
 from opteryx.managers.expression import NodeType
+from opteryx.models.node import Node
 
 
 def apply_demorgans_law(plan, properties):
@@ -40,25 +40,21 @@ def apply_demorgans_law(plan, properties):
         Walk a expression tree collecting all the nodes of a specified type.
         """
         # this is the main work of this action
-        if node.token_type == NodeType.NESTED:
+        if node.node_type == NodeType.NESTED:
             return update_expression_tree(node.centre)
-        if node.token_type == NodeType.NOT:
+        if node.node_type == NodeType.NOT:
             centre_node = node.centre
 
             # break out of nesting
-            if centre_node.token_type == NodeType.NESTED:
+            if centre_node.node_type == NodeType.NESTED:
                 centre_node = centre_node.centre
 
             # do we have a NOT (a or b)?
-            if centre_node.token_type == NodeType.OR:
+            if centre_node.node_type == NodeType.OR:
                 # rewrite to (not A) and (not B)
-                a_side = ExpressionTreeNode(
-                    NodeType.NOT, centre=update_expression_tree(centre_node.left)
-                )
-                b_side = ExpressionTreeNode(
-                    NodeType.NOT, centre=update_expression_tree(centre_node.right)
-                )
-                return ExpressionTreeNode(NodeType.AND, left=a_side, right=b_side)
+                a_side = Node(NodeType.NOT, centre=update_expression_tree(centre_node.left))
+                b_side = Node(NodeType.NOT, centre=update_expression_tree(centre_node.right))
+                return Node(NodeType.AND, left=a_side, right=b_side)
 
         # below here is generic to walk the tree
         node.left = None if node.left is None else update_expression_tree(node.left)
@@ -66,9 +62,7 @@ def apply_demorgans_law(plan, properties):
         node.right = None if node.right is None else update_expression_tree(node.right)
         if node.parameters:
             node.parameters = [
-                parameter
-                if not isinstance(parameter, ExpressionTreeNode)
-                else update_expression_tree(parameter)
+                parameter if not isinstance(parameter, Node) else update_expression_tree(parameter)
                 for parameter in node.parameters
             ]
         return node

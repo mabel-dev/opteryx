@@ -33,13 +33,13 @@ def move_literal_join_filters(plan, properties):
     """
 
     def _has_literal(node):
-        return (node.left and node.left.token_type & LITERAL_TYPE == LITERAL_TYPE) or (
-            node.right and node.right.token_type & LITERAL_TYPE == LITERAL_TYPE
+        return (node.left and node.left.node_type & LITERAL_TYPE == LITERAL_TYPE) or (
+            node.right and node.right.node_type & LITERAL_TYPE == LITERAL_TYPE
         )
 
     def _move_literal_filters(plan, nid, node):
         # we need to be at an AND
-        if node.token_type != NodeType.AND:
+        if node.node_type != NodeType.AND:
             return node, plan
 
         uid = random_string()  # avoid collisions

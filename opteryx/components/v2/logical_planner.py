@@ -49,7 +49,6 @@ from enum import Enum
 from enum import auto
 
 from opteryx.components.logical_planner import builders
-from opteryx.managers.expression import ExpressionTreeNode
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import format_expression
 from opteryx.managers.expression import get_all_nodes_of_type
@@ -173,9 +172,9 @@ def extract_variable(clause):
 
 def extract_simple_filter(filters, identifier: str = "Name"):
     if "Like" in filters:
-        left = ExpressionTreeNode(NodeType.IDENTIFIER, value=identifier)
-        right = ExpressionTreeNode(NodeType.LITERAL_VARCHAR, value=filters["Like"])
-        root = ExpressionTreeNode(
+        left = Node(NodeType.IDENTIFIER, value=identifier)
+        right = Node(NodeType.LITERAL_VARCHAR, value=filters["Like"])
+        root = Node(
             NodeType.COMPARISON_OPERATOR,
             value="ILike",  # we're case insensitive for SHOW filters
             left=left,
@@ -245,7 +244,7 @@ def inner_query_planner(ast_branch):
     # projection
     _projection = [clause for clause in _projection if clause not in _aggregates]
     if not _projection == [] and not (
-        len(_projection) == 1 and _projection[0].token_type == NodeType.WILDCARD
+        len(_projection) == 1 and _projection[0].node_type == NodeType.WILDCARD
     ):
         project_step = LogicalPlanNode(node_type=LogicalPlanStepType.Project)
         project_step.columns = _projection
@@ -556,10 +555,10 @@ def plan_show_variables(statement):
         operator = next(iter(predicate))
         select_step = LogicalPlanNode(
             node_type=LogicalPlanStepType.Filter,
-            predicate=ExpressionTreeNode(
-                token_type=NodeType.COMPARISON_OPERATOR,
+            predicate=Node(
+                node_type=NodeType.COMPARISON_OPERATOR,
                 value=operator,
-                left=ExpressionTreeNode(token_type=NodeType.IDENTIFIER, value="name"),
+                left=Node(node_type=NodeType.IDENTIFIER, value="name"),
                 right=predicate[operator],
             ),
         )

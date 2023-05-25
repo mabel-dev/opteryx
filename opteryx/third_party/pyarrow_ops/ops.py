@@ -40,7 +40,7 @@ FILTER_OPERATORS = {
 }
 
 
-class TOKEN_TYPES(str, Enum):
+class node_typeS(str, Enum):
     BOOLEAN = "BOOLEAN"
     NUMERIC = "NUMERIC"
     LIST = "LIST"
@@ -240,38 +240,38 @@ def _inner_filter_operations(arr, operator, value):
     elif operator == "Like":
         # MODIFIED FOR OPTERYX
         # null input emits null output, which should be false/0
-        _check_type("LIKE", identifier_type, (TOKEN_TYPES.VARCHAR))
+        _check_type("LIKE", identifier_type, (node_typeS.VARCHAR))
         return compute.match_like(arr, value[0]).to_numpy(False).astype(dtype=bool)  # [#325]
     elif operator == "NotLike":
         # MODIFIED FOR OPTERYX - see comment above
-        _check_type("NOT LIKE", identifier_type, (TOKEN_TYPES.VARCHAR))
+        _check_type("NOT LIKE", identifier_type, (node_typeS.VARCHAR))
         matches = compute.match_like(arr, value[0]).to_numpy(False).astype(dtype=bool)  # [#325]
         return numpy.invert(matches)
     elif operator == "ILike":
         # MODIFIED FOR OPTERYX - see comment above
-        _check_type("ILIKE", identifier_type, (TOKEN_TYPES.VARCHAR))
+        _check_type("ILIKE", identifier_type, (node_typeS.VARCHAR))
         return (
             compute.match_like(arr, value[0], ignore_case=True).to_numpy(False).astype(dtype=bool)
         )  # [#325]
     elif operator == "NotILike":
         # MODIFIED FOR OPTERYX - see comment above
-        _check_type("NOT ILIKE", identifier_type, (TOKEN_TYPES.VARCHAR))
+        _check_type("NOT ILIKE", identifier_type, (node_typeS.VARCHAR))
         matches = compute.match_like(arr, value[0], ignore_case=True)  # [#325]
         return numpy.invert(matches)
     elif operator in ("PGRegexMatch", "SimilarTo"):
         # MODIFIED FOR OPTERYX - see comment above
-        _check_type("~", identifier_type, (TOKEN_TYPES.VARCHAR))
+        _check_type("~", identifier_type, (node_typeS.VARCHAR))
         return (
             compute.match_substring_regex(arr, value[0]).to_numpy(False).astype(dtype=bool)
         )  # [#325]
     elif operator in ("PGRegexNotMatch", "NotSimilarTo"):
         # MODIFIED FOR OPTERYX - see comment above
-        _check_type("!~", identifier_type, (TOKEN_TYPES.VARCHAR))
+        _check_type("!~", identifier_type, (node_typeS.VARCHAR))
         matches = compute.match_substring_regex(arr, value[0])  # [#325]
         return numpy.invert(matches)
     elif operator == "PGRegexIMatch":
         # MODIFIED FOR OPTERYX - see comment above
-        _check_type("~*", identifier_type, (TOKEN_TYPES.VARCHAR))
+        _check_type("~*", identifier_type, (node_typeS.VARCHAR))
         return (
             compute.match_substring_regex(arr, value[0], ignore_case=True)
             .to_numpy(False)
@@ -279,7 +279,7 @@ def _inner_filter_operations(arr, operator, value):
         )  # [#325]
     elif operator == "PGRegexNotIMatch":
         # MODIFIED FOR OPTERYX - see comment above
-        _check_type("!~*", identifier_type, (TOKEN_TYPES.VARCHAR))
+        _check_type("!~*", identifier_type, (node_typeS.VARCHAR))
         matches = compute.match_substring_regex(arr, value[0], ignore_case=True)  # [#325]
         return numpy.invert(matches)
     elif operator == "BitwiseOr":

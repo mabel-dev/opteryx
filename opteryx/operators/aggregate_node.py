@@ -77,7 +77,7 @@ def _is_count_star(aggregates, groups):
         return False
     if aggregates[0].value != "COUNT":
         return False
-    if aggregates[0].parameters[0].token_type != NodeType.WILDCARD:
+    if aggregates[0].parameters[0].node_type != NodeType.WILDCARD:
         return False
     return True
 
@@ -122,7 +122,7 @@ def _build_aggs(aggregators, columns):
         for aggregator in get_all_nodes_of_type(
             root, select_nodes=(NodeType.AGGREGATOR, NodeType.COMPLEX_AGGREGATOR)
         ):
-            if aggregator.token_type in (
+            if aggregator.node_type in (
                 NodeType.AGGREGATOR,
                 NodeType.COMPLEX_AGGREGATOR,
             ):
@@ -131,13 +131,13 @@ def _build_aggs(aggregators, columns):
                 exists = columns.get_column_from_alias(display_name)
                 count_options = None
 
-                if field_node.token_type == NodeType.WILDCARD:
+                if field_node.node_type == NodeType.WILDCARD:
                     field_name = "*"
                     # count * counts nulls
                     count_options = pyarrow.compute.CountOptions(mode="all")
-                elif field_node.token_type == NodeType.IDENTIFIER:
+                elif field_node.node_type == NodeType.IDENTIFIER:
                     field_name = columns.get_column_from_alias(field_node.value, only_one=True)
-                elif field_node.token_type in (
+                elif field_node.node_type in (
                     NodeType.LITERAL_NUMERIC,
                     NodeType.LITERAL_BOOLEAN,
                     NodeType.LITERAL_VARCHAR,
@@ -174,16 +174,16 @@ def _non_group_aggregates(aggregates, table, columns):
     result = {}
 
     for aggregate in aggregates:
-        if aggregate.token_type in (NodeType.AGGREGATOR, NodeType.COMPLEX_AGGREGATOR):
+        if aggregate.node_type in (NodeType.AGGREGATOR, NodeType.COMPLEX_AGGREGATOR):
             column_node = aggregate.parameters[0]
-            if column_node.token_type == NodeType.LITERAL_NUMERIC:
+            if column_node.node_type == NodeType.LITERAL_NUMERIC:
                 raw_column_values = numpy.full(
                     table.num_rows, column_node.value, dtype=numpy.float64
                 )
                 mapped_column_name = str(column_node.value)
             elif (
                 aggregate.value == "COUNT"
-                and aggregate.parameters[0].token_type == NodeType.WILDCARD
+                and aggregate.parameters[0].node_type == NodeType.WILDCARD
             ):
                 result["COUNT(*)"] = table.num_rows
                 continue
@@ -234,7 +234,7 @@ class AggregateNode(BasePlanNode):
         super().__init__(properties=properties)
 
         self._aggregates = config.get("aggregates", [])
-        if any(node.token_type == NodeType.WILDCARD for node in self._aggregates):
+        if any(node.node_type == NodeType.WILDCARD for node in self._aggregates):
             raise SqlError("Cannot select `*` with `GROUP BY` clause.")
 
         self._groups = []
@@ -243,10 +243,10 @@ class AggregateNode(BasePlanNode):
             if group is None:
                 continue
             # handle numeric indexes - GROUP BY 1
-            if group.token_type == NodeType.LITERAL_NUMERIC:
+            if group.node_type == NodeType.LITERAL_NUMERIC:
                 # references are natural numbers, so -1 for zero-based
                 group = self._aggregates[int(group.value) - 1]
-                if group.token_type not in (NodeType.IDENTIFIER, NodeType.FUNCTION):
+                if group.node_type not in (NodeType.IDENTIFIER, NodeType.FUNCTION):
                     raise SqlError(
                         "When using a positional reference, GROUP BY must be by an IDENTIFIER or FUNCTION only"
                     )

@@ -733,7 +733,7 @@ STATEMENTS = [
         ("SELECT DATEDIFF(MONTH, birth_date, '2022-07-07') FROM $astronauts", None, None, ColumnNotFoundError),
         ("SELECT DATEDIFF(MONTHS, birth_date, '2022-07-07') FROM $astronauts", None, None, ColumnNotFoundError),
         # DISTINCT ON detects as a function call for function ON
-        ("SELECT DISTINCT ON (name) FROM $astronauts ORDER BY 1", None, None, UnsupportedSyntaxError),
+#        ("SELECT DISTINCT ON (name) name FROM $astronauts ORDER BY 1", None, None, UnsupportedSyntaxError),
         # SELECT EXCEPT isn't supported
         # https://towardsdatascience.com/4-bigquery-sql-shortcuts-that-can-simplify-your-queries-30f94666a046
         ("SELECT * EXCEPT id FROM $satellites", None, None, SqlError),

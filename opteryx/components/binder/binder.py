@@ -24,8 +24,8 @@ import numpy
 import opteryx
 from opteryx.exceptions import ProgrammingError
 from opteryx.exceptions import SqlError
-from opteryx.managers.expression import ExpressionTreeNode
 from opteryx.models import QueryProperties
+from opteryx.models.node import Node
 from opteryx.shared.variables import SystemVariables
 
 
@@ -62,7 +62,7 @@ def variable_binder(node, parameter_set, properties, query_type):
                     " More placeholders are provided than parameters.")
                 placeholder_value = parameter_set.pop(0)
                 # prepared statements will have parsed this already
-                if isinstance(placeholder_value, ExpressionTreeNode):
+                if isinstance(placeholder_value, Node):
                     placeholder_value = placeholder_value.value
                 return _build_literal_node(placeholder_value)
                 # fmt:on

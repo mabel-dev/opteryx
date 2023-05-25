@@ -22,7 +22,7 @@ def generate_series(*args):
 
     arg_len = len(args)
     arg_vals = [i.value for i in args]
-    first_arg_type = args[0].token_type
+    first_arg_type = args[0].node_type
 
     # if the parameters are numbers, generate series is an alias for range
     if first_arg_type in (NodeType.LITERAL_NUMERIC, numpy.float64):

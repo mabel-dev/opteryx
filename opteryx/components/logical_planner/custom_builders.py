@@ -17,8 +17,8 @@ from dataclasses import dataclass
 from dataclasses import field
 from typing import Any
 
-from opteryx.managers.expression import ExpressionTreeNode
 from opteryx.managers.expression import NodeType
+from opteryx.models.node import Node
 from opteryx.shared import QueryStatistics
 from opteryx.utils import fuzzy_search
 from opteryx.utils import paths
@@ -48,9 +48,9 @@ def extract_show_filter(ast, name_column="name"):
     if filters is None:
         return None
     if "Like" in filters:
-        left = ExpressionTreeNode(NodeType.IDENTIFIER, value=name_column)
-        right = ExpressionTreeNode(NodeType.LITERAL_VARCHAR, value=filters["Like"])
-        root = ExpressionTreeNode(
+        left = Node(NodeType.IDENTIFIER, value=name_column)
+        right = Node(NodeType.LITERAL_VARCHAR, value=filters["Like"])
+        root = Node(
             NodeType.COMPARISON_OPERATOR,
             value="ILike",  # we're case insensitive for SHOW filters
             left=left,
@@ -101,21 +101,16 @@ def extract_order(ast):
 
 def extract_identifiers(ast):
     identifiers = []
-    if ast == {
-        "name": [{"value": "COUNT", "quote_style": None}],
-        "args": [{"Unnamed": "Wildcard"}],
-        "over": None,
-        "distinct": False,
-        "special": False,
-    } or ast == {
-        "name": [{"value": "count", "quote_style": None}],
-        "args": [{"Unnamed": "Wildcard"}],
-        "over": None,
-        "distinct": False,
-        "special": False,
-    }:
-        identifiers.append("count_*")
-    elif isinstance(ast, dict):
+
+    if ast is None:
+        return []
+
+    if isinstance(ast, dict):
+        if "name" in ast and "args" in ast:
+            names = (item["value"].lower() for item in ast.get("name") or [])
+            args = (str(item["Unnamed"]).lower() for item in ast.get("args") or [])
+            if "count" in names and "wildcard" in args:
+                identifiers.append("count_*")
         for key, value in ast.items():
             if key in ("Identifier",):
                 identifiers.append(value["value"])

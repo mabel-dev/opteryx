@@ -37,7 +37,7 @@ def to_dnf(root):
 
     def _predicate_to_dnf(root):
         # Reduce look-ahead effort by using Exceptions to control flow
-        if root.token_type == NodeType.AND:
+        if root.node_type == NodeType.AND:
             left = _predicate_to_dnf(root.left)
             right = _predicate_to_dnf(root.right)
             if not isinstance(left, list):
@@ -46,14 +46,14 @@ def to_dnf(root):
                 right = [right]
             left.extend(right)
             return left
-        if root.token_type != NodeType.COMPARISON_OPERATOR:
+        if root.node_type != NodeType.COMPARISON_OPERATOR:
             raise NotSupportedError()
         if not root.value in PUSHABLE_OPERATORS:
             # not all operators are universally supported
             raise NotSupportedError()
-        if root.left.token_type != NodeType.IDENTIFIER:
+        if root.left.node_type != NodeType.IDENTIFIER:
             raise NotSupportedError()
-        if root.left.token_type in (
+        if root.left.node_type in (
             NodeType.LITERAL_NUMERIC,
             NodeType.LITERAL_VARCHAR,
         ):

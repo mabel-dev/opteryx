@@ -22,10 +22,10 @@ from typing import Iterable
 
 import pyarrow
 
-from opteryx.managers.expression import ExpressionTreeNode
 from opteryx.managers.expression import NodeType
 from opteryx.models import Columns
 from opteryx.models import QueryProperties
+from opteryx.models.node import Node
 from opteryx.operators import BasePlanNode
 from opteryx.utils.file_decoders import KNOWN_EXTENSIONS
 
@@ -90,7 +90,7 @@ class FileReaderNode(BasePlanNode):
         from opteryx.connectors.capabilities import predicate_pushable
 
         # Appears to be a bug in how pyarrow does indentifier filters so don't push these
-        if predicate.left.token_type == predicate.right.token_type == NodeType.IDENTIFIER:
+        if predicate.left.node_type == predicate.right.node_type == NodeType.IDENTIFIER:
             return False
         if predicate_pushable.to_dnf(predicate) is None:
             # we can't push all predicates everywhere
@@ -98,7 +98,7 @@ class FileReaderNode(BasePlanNode):
         if self._filter is None:
             self._filter = predicate
             return True
-        self._filter = ExpressionTreeNode(NodeType.AND, left=predicate, right=self._filter)
+        self._filter = Node(NodeType.AND, left=predicate, right=self._filter)
         return True
 
     @property

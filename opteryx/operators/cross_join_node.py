@@ -107,10 +107,10 @@ def _cross_join_unnest(
         A generator that yields the resulting `pyarrow.Table` objects.
     """
 
-    if column.token_type != NodeType.IDENTIFIER:
+    if column.node_type != NodeType.IDENTIFIER:
         raise ValueError("The `column` argument must be a valid identifier.")
 
-    if column.token_type != NodeType.IDENTIFIER:
+    if column.node_type != NodeType.IDENTIFIER:
         raise NotImplementedError("Can only CROSS JOIN UNNEST on a field")
 
     metadata = None
