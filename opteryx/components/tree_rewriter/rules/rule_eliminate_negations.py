@@ -17,8 +17,8 @@ Type: Heuristic
 Goal: Reduce complexity
 """
 from opteryx import operators
-from opteryx.managers.expression import ExpressionTreeNode
 from opteryx.managers.expression import NodeType
+from opteryx.models.node import Node
 
 
 def eliminate_negations(plan, properties):
@@ -47,16 +47,16 @@ def eliminate_negations(plan, properties):
         Walk a expression tree collecting all the nodes of a specified type.
         """
         # this is the main work of this action
-        if node.token_type == NodeType.NESTED:
+        if node.node_type == NodeType.NESTED:
             return update_expression_tree(node.centre)
-        if node.token_type == NodeType.NOT:
+        if node.node_type == NodeType.NOT:
             centre_node = node.centre
             # a straight forward eliminate NOT(NOT(x))
-            if centre_node.token_type == NodeType.NOT:
+            if centre_node.node_type == NodeType.NOT:
                 return update_expression_tree(centre_node.centre)
             # do we have an invertable operator
             if (
-                centre_node.token_type == NodeType.COMPARISON_OPERATOR
+                centre_node.node_type == NodeType.COMPARISON_OPERATOR
                 and centre_node.value in inversions
             ):
                 centre_node.value = inversions[centre_node.value]
@@ -67,9 +67,7 @@ def eliminate_negations(plan, properties):
         node.right = None if node.right is None else update_expression_tree(node.right)
         if node.parameters:
             node.parameters = [
-                parameter
-                if not isinstance(parameter, ExpressionTreeNode)
-                else update_expression_tree(parameter)
+                parameter if not isinstance(parameter, Node) else update_expression_tree(parameter)
                 for parameter in node.parameters
             ]
         return node

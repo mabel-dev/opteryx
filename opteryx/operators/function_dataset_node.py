@@ -40,7 +40,7 @@ def _generate_series(alias, *args):
 def _unnest(alias, values):
     """unnest converts an list into rows"""
     list_items = values.value
-    if values.token_type == NodeType.NESTED:
+    if values.node_type == NodeType.NESTED:
         # single item lists are reported as nested
         from opteryx.samples import no_table
 

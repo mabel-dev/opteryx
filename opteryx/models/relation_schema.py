@@ -48,4 +48,9 @@ class RelationSchema:
             object.__setattr__(self, "columns", [])
 
     def find_column(self, column_name: str):
+        for column in self.columns:
+            if column.name == column_name:
+                return column
+            if column_name in column.aliases:
+                return column
         return None

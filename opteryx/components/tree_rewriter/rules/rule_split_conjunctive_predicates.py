@@ -39,7 +39,7 @@ def split_conjunctive_predicates(plan, properties):
 
     def _inner_split(plan, nid, operator):
         selection = operator.filter
-        if selection.token_type != NodeType.AND:
+        if selection.node_type != NodeType.AND:
             return plan
 
         # get the left and right filters

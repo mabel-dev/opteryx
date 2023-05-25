@@ -52,14 +52,14 @@ def get_columns(expression, left_columns, right_columns):
     left = []
     right = []
 
-    if expression.token_type == NodeType.AND:
+    if expression.node_type == NodeType.AND:
         left_left, left_right = get_columns(expression.left, left_columns, right_columns)
         right_left, right_right = get_columns(expression.right, left_columns, right_columns)
         left.extend(left_left)
         left.extend(right_left)
         right.extend(left_right)
         right.extend(right_right)
-    elif expression.token_type == NodeType.COMPARISON_OPERATOR and expression.value == "Eq":
+    elif expression.node_type == NodeType.COMPARISON_OPERATOR and expression.value == "Eq":
         try:
             right = [right_columns.get_column_from_alias(expression.right.value, only_one=True)]
             left = [left_columns.get_column_from_alias(expression.left.value, only_one=True)]

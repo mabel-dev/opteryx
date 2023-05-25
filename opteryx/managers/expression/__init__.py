@@ -31,6 +31,7 @@ from opteryx.functions import FUNCTIONS
 from opteryx.functions.binary_operators import binary_operations
 from opteryx.functions.unary_operations import UNARY_OPERATIONS
 from opteryx.models import Columns
+from opteryx.models.node import Node
 from opteryx.third_party.pyarrow_ops.ops import filter_operations
 from opteryx.third_party.pyarrow_ops.ops import filter_operations_for_display
 
@@ -47,7 +48,7 @@ def format_expression(root):
     if isinstance(root, list):
         return [format_expression(item) for item in root]
 
-    node_type = root.token_type
+    node_type = root.node_type
     _map: dict = {}
 
     # LITERAL TYPES
@@ -175,33 +176,8 @@ NUMPY_TYPES = {
 }
 
 
-@dataclass
-class ExpressionTreeNode:
-    token_type: NodeType
-    value: Any = None
-    left: Any = None  # ExpressionTreeNode
-    right: Any = None  # ExpressionTreeNode
-    centre: Any = None  # ExpressionTreeNode
-    parameters: list = None
-    alias: list = field(default_factory=list)
-
-    def __repr__(self):
-        return (
-            f"<ExpressionTreeNode {str(self.token_type).upper()}"
-            f"{' `' + str(self.value) + '`' if self.value else ''} "
-            f"{'L' if self.left is not None else '.'}"
-            f"{'C' if self.centre is not None else '.'}"
-            f"{'R' if self.right is not None else '.'}"
-            f"{('[' + str(len(self.parameters)) + ']') if self.parameters is not None else '.'} "
-            f"({id(self)})>"
-        )
-
-    def __str__(self):
-        return str(self.value)
-
-
-def _inner_evaluate(root: ExpressionTreeNode, table: Table, columns, for_display: bool = False):
-    node_type = root.token_type
+def _inner_evaluate(root: Node, table: Table, columns, for_display: bool = False):
+    node_type = root.node_type
 
     # BOOLEAN OPERATORS
     if node_type & LOGICAL_TYPE == LOGICAL_TYPE:
@@ -250,7 +226,7 @@ def _inner_evaluate(root: ExpressionTreeNode, table: Table, columns, for_display
             # will have already been evaluated
             node_type = NodeType.IDENTIFIER
             root.value = format_expression(root)
-            root.token_type = NodeType.IDENTIFIER
+            root.node_type = NodeType.IDENTIFIER
         if node_type == NodeType.IDENTIFIER:
             if root.value in table.column_names:
                 mapped_column = root.value
@@ -299,7 +275,7 @@ def _inner_evaluate(root: ExpressionTreeNode, table: Table, columns, for_display
         )  # type:ignore
 
 
-def evaluate(expression: ExpressionTreeNode, table: Table, for_display: bool = False):
+def evaluate(expression: Node, table: Table, for_display: bool = False):
     columns = Columns(table)
     result = _inner_evaluate(root=expression, table=table, columns=columns, for_display=for_display)
 
@@ -319,7 +295,7 @@ def get_all_nodes_of_type(root, select_nodes):
 
     identifiers = []
     for node in root:
-        if node.token_type in select_nodes:
+        if node.node_type in select_nodes:
             identifiers.append(node)
         if node.left:
             identifiers.extend(get_all_nodes_of_type(node.left, select_nodes))
@@ -329,7 +305,7 @@ def get_all_nodes_of_type(root, select_nodes):
             identifiers.extend(get_all_nodes_of_type(node.right, select_nodes))
         if node.parameters:
             for parameter in node.parameters:
-                if isinstance(parameter, ExpressionTreeNode):
+                if isinstance(parameter, Node):
                     identifiers.extend(get_all_nodes_of_type(parameter, select_nodes))
 
     return identifiers
@@ -347,7 +323,7 @@ def evaluate_and_append(expressions, table: Table, seed: str = None):
     return_expressions = []
 
     for statement in expressions:
-        if statement.token_type in (
+        if statement.node_type in (
             NodeType.FUNCTION,
             NodeType.BINARY_OPERATOR,
             NodeType.COMPARISON_OPERATOR,
@@ -356,7 +332,7 @@ def evaluate_and_append(expressions, table: Table, seed: str = None):
             NodeType.AND,
             NodeType.OR,
             NodeType.XOR,
-        ) or (statement.token_type & LITERAL_TYPE == LITERAL_TYPE):
+        ) or (statement.node_type & LITERAL_TYPE == LITERAL_TYPE):
             new_column_name = format_expression(statement)
             raw_column_name = new_column_name
 
@@ -370,9 +346,7 @@ def evaluate_and_append(expressions, table: Table, seed: str = None):
 
             # if we've already been evaluated - don't do it again
             if len(columns.get_column_from_alias(raw_column_name)) > 0:
-                statement = ExpressionTreeNode(
-                    NodeType.IDENTIFIER, value=raw_column_name, alias=alias
-                )
+                statement = Node(NodeType.IDENTIFIER, value=raw_column_name, alias=alias)
                 return_expressions.append(statement)
                 continue
 
@@ -381,7 +355,7 @@ def evaluate_and_append(expressions, table: Table, seed: str = None):
 
             # some activities give us masks rather than the values, if we don't have
             # enough values, assume it's a mask
-            if len(new_column) < table.num_rows or statement.token_type in (
+            if len(new_column) < table.num_rows or statement.node_type in (
                 NodeType.UNARY_OPERATOR,
             ):
                 bool_list = numpy.full(table.num_rows, False)
@@ -404,7 +378,7 @@ def evaluate_and_append(expressions, table: Table, seed: str = None):
             columns.add_alias(new_column_name, alias)
             columns.set_preferred_name(new_column_name, alias[0])
 
-            statement = ExpressionTreeNode(NodeType.IDENTIFIER, value=new_column_name, alias=alias)
+            statement = Node(NodeType.IDENTIFIER, value=new_column_name, alias=alias)
 
         return_expressions.append(statement)
 

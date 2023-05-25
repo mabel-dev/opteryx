@@ -81,7 +81,7 @@ class HeapSortNode(BasePlanNode):
 
                 for column_list, direction in self.order:
                     for column in column_list:
-                        if column.token_type == NodeType.LITERAL_NUMERIC:
+                        if column.node_type == NodeType.LITERAL_NUMERIC:
                             # we have an index rather than a column name, it's a natural
                             # number but the list of column names is zero-based, so we
                             # subtract one

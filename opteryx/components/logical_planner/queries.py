@@ -19,11 +19,11 @@ from opteryx.connectors import connector_factory
 from opteryx.exceptions import DatabaseError
 from opteryx.exceptions import ProgrammingError
 from opteryx.exceptions import SqlError
-from opteryx.managers.expression import ExpressionTreeNode
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import deduplicate_list_of_nodes
 from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.models import ExecutionTree
+from opteryx.models.node import Node
 from opteryx.utils import paths
 
 
@@ -209,8 +209,8 @@ def select_query(ast, properties):
     _order = custom_builders.extract_order(ast)
     reproject = None
 
-    if _order and (_projection[0].token_type != NodeType.WILDCARD):
-        order_fields = [f[0][0] for f in _order if f[0][0].token_type == NodeType.IDENTIFIER]
+    if _order and (_projection[0].node_type != NodeType.WILDCARD):
+        order_fields = [f[0][0] for f in _order if f[0][0].node_type == NodeType.IDENTIFIER]
         reproject = _projection.copy()
         _projection.extend(order_fields)
         # aliases appear in the list as different fields here, so dedupe and see if the
@@ -221,7 +221,7 @@ def select_query(ast, properties):
 
     # qualified wildcards have the qualifer in the value
     # e.g. SELECT table.* -> node.value = table
-    if (_projection[0].token_type != NodeType.WILDCARD) or (_projection[0].value is not None):
+    if (_projection[0].node_type != NodeType.WILDCARD) or (_projection[0].value is not None):
         plan.add_node(
             "select",
             operators.ProjectionNode(properties, projection=_projection),
@@ -412,12 +412,12 @@ def show_variable_query(ast, properties):
         show_node = "show_databases"
         node = operators.ShowDatabasesNode(properties=properties)  # type:ignore
         plan.add_node(show_node, node)
-        name_column = ExpressionTreeNode(NodeType.IDENTIFIER, value="Database")
+        name_column = Node(NodeType.IDENTIFIER, value="Database")
     else:  # pragma: no cover
         raise SqlError(f"SHOW statement type not supported for `{keywords[0]}`.")
 
     if name_column is None:
-        name_column = ExpressionTreeNode(NodeType.IDENTIFIER, value="name")
+        name_column = Node(NodeType.IDENTIFIER, value="name")
 
     order_by_node = operators.SortNode(
         properties=properties,

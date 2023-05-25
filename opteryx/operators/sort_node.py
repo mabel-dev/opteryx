@@ -19,10 +19,8 @@ This node orders a dataset
 """
 import time
 from typing import Iterable
-from typing import List
 
 import numpy
-from pyarrow import Table
 from pyarrow import concat_tables
 
 from opteryx.exceptions import ColumnNotFoundError
@@ -71,7 +69,7 @@ class SortNode(BasePlanNode):
 
         for column_list, direction in self.order:
             for column in column_list:
-                if column.token_type == NodeType.FUNCTION:
+                if column.node_type == NodeType.FUNCTION:
                     # ORDER BY RAND() shuffles the results
                     # we create a random list, sort that then take the rows from the
                     # table in that order - this is faster than ordering the data
@@ -85,7 +83,7 @@ class SortNode(BasePlanNode):
 
                     raise SqlError("`ORDER BY` only supports `RAND()` as a functional sort order.")
 
-                elif column.token_type == NodeType.LITERAL_NUMERIC:
+                elif column.node_type == NodeType.LITERAL_NUMERIC:
                     # we have an index rather than a column name, it's a natural
                     # number but the list of column names is zero-based, so we
                     # subtract one

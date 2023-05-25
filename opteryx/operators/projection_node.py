@@ -21,15 +21,13 @@ that performs column renames.
 import time
 from typing import Iterable
 
-import pyarrow
-
 from opteryx.exceptions import SqlError
 from opteryx.managers.expression import LITERAL_TYPE
-from opteryx.managers.expression import ExpressionTreeNode
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import evaluate_and_append
 from opteryx.managers.expression import format_expression
 from opteryx.models import QueryProperties
+from opteryx.models.node import Node
 from opteryx.operators import BasePlanNode
 from opteryx.utils import random_int
 
@@ -45,24 +43,24 @@ class ProjectionNode(BasePlanNode):
 
         projection = config.get("projection")
         for attribute in projection:
-            while attribute.token_type == NodeType.NESTED:
+            while attribute.node_type == NodeType.NESTED:
                 attribute = attribute.centre
-            if attribute.token_type == NodeType.WILDCARD and attribute.value is not None:
+            if attribute.node_type == NodeType.WILDCARD and attribute.value is not None:
                 # qualified wildcard, e.g. table.*
                 self._projection[attribute.value] = None
-            elif attribute.token_type in (
+            elif attribute.node_type in (
                 NodeType.FUNCTION,
                 NodeType.AGGREGATOR,
                 NodeType.COMPLEX_AGGREGATOR,
                 NodeType.BINARY_OPERATOR,
                 NodeType.COMPARISON_OPERATOR,
-            ) or (attribute.token_type & LITERAL_TYPE == LITERAL_TYPE):
+            ) or (attribute.node_type & LITERAL_TYPE == LITERAL_TYPE):
                 new_column_name = format_expression(attribute)
                 self._projection[new_column_name] = attribute.alias
                 self._expressions.append(attribute)
-            elif attribute.token_type == NodeType.IDENTIFIER:
+            elif attribute.node_type == NodeType.IDENTIFIER:
                 self._projection[attribute.value] = attribute.alias
-            elif isinstance(attribute, ExpressionTreeNode):
+            elif isinstance(attribute, Node):
                 new_column_name = format_expression(attribute)
                 self._projection[new_column_name] = attribute.alias
                 self._expressions.append(attribute)

@@ -61,7 +61,7 @@ class SqlReaderNode(BasePlanNode):
 
     def push_predicate(self, predicate):
         # SQL reader currently assumes the right parameter is a literal
-        if predicate.left.token_type == predicate.right.token_type == NodeType.IDENTIFIER:
+        if predicate.left.node_type == predicate.right.node_type == NodeType.IDENTIFIER:
             return False
         if self.can_push_selection:
             return self._reader.push_predicate(predicate)

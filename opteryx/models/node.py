@@ -26,7 +26,7 @@ class Node:
         """
         internal = {}
         if len(args) == 1:
-            internal["node_type"] = str(args[0])
+            internal["node_type"] = args[0]
         if len(args) > 1:
             raise ValueError("Only one position argument can be passed to a Node initializer")
         if isinstance(kwargs, dict):
@@ -50,7 +50,7 @@ class Node:
 
     def __str__(self) -> str:
         internal = self.__dict__.get("_internal", {})
-        return orjson.dumps(internal).decode()
+        return orjson.dumps(internal, default=str).decode()
 
     def __repr__(self) -> str:
         node_type = str(self.node_type)

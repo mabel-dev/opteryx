@@ -24,8 +24,8 @@ import numpy
 from opteryx import operators
 from opteryx.functions.binary_operators import binary_operations
 from opteryx.managers.expression import LITERAL_TYPE
-from opteryx.managers.expression import ExpressionTreeNode
 from opteryx.managers.expression import NodeType
+from opteryx.models.node import Node
 from opteryx.third_party.pyarrow_ops.ops import filter_operations
 
 
@@ -39,18 +39,18 @@ def eliminate_constant_evaluations(plan, properties):
         if hasattr(value, "as_py"):
             value = value.as_py()
         if value is None:
-            return ExpressionTreeNode(NodeType.LITERAL_NONE, alias=[])
+            return Node(NodeType.LITERAL_NONE, alias=[])
         if isinstance(value, (bool, numpy.bool_)):
             # boolean must be before numeric
-            return ExpressionTreeNode(NodeType.LITERAL_BOOLEAN, value=value, alias=[])
+            return Node(NodeType.LITERAL_BOOLEAN, value=value, alias=[])
         if isinstance(value, (str)):
-            return ExpressionTreeNode(NodeType.LITERAL_VARCHAR, value=value, alias=[])
+            return Node(NodeType.LITERAL_VARCHAR, value=value, alias=[])
         if isinstance(value, (int, float, decimal.Decimal)):
-            return ExpressionTreeNode(NodeType.LITERAL_NUMERIC, value=value, alias=[])
+            return Node(NodeType.LITERAL_NUMERIC, value=value, alias=[])
         if isinstance(value, (numpy.datetime64)):
-            return ExpressionTreeNode(NodeType.LITERAL_TIMESTAMP, value=value, alias=[])
+            return Node(NodeType.LITERAL_TIMESTAMP, value=value, alias=[])
         if isinstance(value, (datetime.date, datetime.datetime)):
-            return ExpressionTreeNode(NodeType.LITERAL_TIMESTAMP, value=numpy.datetime64(value), alias=[])
+            return Node(NodeType.LITERAL_TIMESTAMP, value=numpy.datetime64(value), alias=[])
         # fmt:on
 
     def update_expression_tree(node):
@@ -64,21 +64,19 @@ def eliminate_constant_evaluations(plan, properties):
 
         if node.parameters:
             node.parameters = [
-                parameter
-                if not isinstance(parameter, ExpressionTreeNode)
-                else update_expression_tree(parameter)
+                parameter if not isinstance(parameter, Node) else update_expression_tree(parameter)
                 for parameter in node.parameters
             ]
 
         # this is the main work of this action
-        if (node.left and node.left.token_type & LITERAL_TYPE == LITERAL_TYPE) and (
-            node.right and node.right.token_type & LITERAL_TYPE == LITERAL_TYPE
+        if (node.left and node.left.node_type & LITERAL_TYPE == LITERAL_TYPE) and (
+            node.right and node.right.node_type & LITERAL_TYPE == LITERAL_TYPE
         ):
-            if node.token_type == NodeType.COMPARISON_OPERATOR:
+            if node.node_type == NodeType.COMPARISON_OPERATOR:
                 value = filter_operations([node.left.value], node.value, [node.right.value])[0]
 
                 return build_literal_node(value)
-            if node.token_type == NodeType.BINARY_OPERATOR:
+            if node.node_type == NodeType.BINARY_OPERATOR:
                 value = binary_operations([node.left.value], node.value, [node.right.value])[0]
                 return build_literal_node(value)
         return node

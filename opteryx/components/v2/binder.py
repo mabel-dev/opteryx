@@ -29,20 +29,20 @@
    └─────┬─────┘                         └─────▲─────┘
          │AST                                  │Plan
    ┌─────▼─────┐      ┌───────────┐      ┌─────┴─────┐
-   │ AST       │      │           │Stats │           │
+   │ AST       │      │           │Stats │Cost-Based │
    │ Rewriter  │      │ Catalogue ├──────► Optimizer │
    └─────┬─────┘      └─────┬─────┘      └─────▲─────┘
          │AST               │Schemas           │Plan
-   ┌─────▼─────┐      ┌─────▼─────┐      ┌─────┴─────┐
-   │ Logical   │ Plan │           │ Plan │ Tree      │
-   │   Planner ├──────► Binder    ├──────►  Rewriter │
-   └───────────┘      └───────────┘      └───────────┘
-~~~
+   ┌─────▼─────┐      ╔═════▼═════╗      ┌─────┴─────┐
+   │ Logical   │ Plan ║           ║ Plan │ Heuristic │
+   │   Planner ├──────►   Binder  ║──────► Optimizer │
+   └───────────┘      ╚═══════════╝      └───────────┘
+   ~~~
 The binder is responsible for adding information about the database and engine into the logical
 plan. It's not a rewrite step but does to value exchanges (which could be seen as a rewrite type
 activity).
 
-The binder takes the output from the logical plan, and adds information from various catalogues 
+The binder takes the output from the logical plan, and adds information from various catalogues
 into that plan and then performs some validation checks.
 
 These catalogues include:
@@ -51,7 +51,6 @@ These catalogues include:
 
 The binder then performs these activities:
 - schema lookup and propagation (add columns and types, add aliases)
-- parameters exchange (put the parameter values into the plan)
 - function lookup (does the function exist, if it's a constant evaluation then replace the value
   in the plan)
 - type checks (are the ops and functions compatible with the columns)
@@ -65,9 +64,32 @@ import re
 from orso.logging import get_logger
 
 from opteryx.exceptions import DatabaseError
+from opteryx.managers.expression import NodeType
 
 CAMEL_TO_SNAKE = re.compile(r"(?<!^)(?=[A-Z])")
 logger = get_logger()
+
+
+def source_identifiers(node, relations):
+    if node.node_type & NodeType.IDENTIFIER == NodeType.IDENTIFIER:
+        found_source_relation = False
+        print("I found and identifier - ", node.value)
+        for alias, schema in relations.items():
+            if node.source is not None:
+                print("I think it's from ", node.source)
+            find_result = schema.find_column(node.value)
+            if find_result is not None:
+                found_source_relation = True
+                print("do something with the result")
+        if not found_source_relation:
+            print("raise a column not found error and give suggestions")
+
+    if node.left:
+        node.left = source_identifiers(node.left, relations)
+    if node.right:
+        node.right = source_identifiers(node.right, relations)
+
+    return node
 
 
 class BinderVisitor:
@@ -86,6 +108,13 @@ class BinderVisitor:
         logger.warning(f"No visit method implemented for node type {node.node_type.name}")
         return context
 
+    def visit_project(self, node, context):
+        logger.warning("visit_project not implemented")
+        for column in node.columns:
+            print(source_identifiers(column, context.get("schemas", {})))
+
+        return context
+
     def visit_scan(self, node, context):
         from opteryx.connectors import connector_factory
 
@@ -93,9 +122,12 @@ class BinderVisitor:
         node.connector = connector_factory(node.relation)
         # get them to tell is the schema of the dataset
         # None means we don't know ahead of time - we can usually get something
-        context[node.alias] = node.connector.get_dataset_schema(node.relation)
+        context.setdefault("schemas", {})[node.alias] = node.connector.get_dataset_schema(
+            node.relation
+        )
 
         logger.warning("visit_scan not implemented")
+        logger.warning("visit_scan doesn't resolve CTEs")
         return context
 
     def traverse(self, graph, node, context=None):
@@ -144,8 +176,7 @@ class BinderVisitor:
         return context
 
 
-def do_bind_phase(plan, context=None, temporal_filters=None, parameters=None):
-    # TODO: put the temporal range and paramter information into the context so we can set it
+def do_bind_phase(plan, context=None, common_table_expressions=None):
     binder_visitor = BinderVisitor()
     root_node = plan.get_exit_points()
     if len(root_node) > 1:

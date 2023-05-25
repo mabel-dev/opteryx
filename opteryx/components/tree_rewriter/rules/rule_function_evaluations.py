@@ -20,8 +20,8 @@ from opteryx import operators
 from opteryx.functions import date_functions
 from opteryx.functions import get_version
 from opteryx.functions import number_functions
-from opteryx.managers.expression import ExpressionTreeNode
 from opteryx.managers.expression import NodeType
+from opteryx.models.node import Node
 
 FIXED_OUTCOME_FUNCTIONS = {
     # TEMPORAL
@@ -54,9 +54,9 @@ def eliminate_fixed_function_evaluations(plan, properties):
         """
 
         # this is the main work of this action
-        if node.token_type == NodeType.FUNCTION and node.value in FIXED_OUTCOME_FUNCTIONS:
+        if node.node_type == NodeType.FUNCTION and node.value in FIXED_OUTCOME_FUNCTIONS:
             function, node_type = FIXED_OUTCOME_FUNCTIONS[node.value]
-            return ExpressionTreeNode(node_type, value=function(), alias=node.alias)
+            return Node(node_type, value=function(), alias=node.alias)
 
         # walk the tree
         node.left = None if node.left is None else update_expression_tree(node.left)
@@ -65,9 +65,7 @@ def eliminate_fixed_function_evaluations(plan, properties):
 
         if node.parameters:
             node.parameters = [
-                parameter
-                if not isinstance(parameter, ExpressionTreeNode)
-                else update_expression_tree(parameter)
+                parameter if not isinstance(parameter, Node) else update_expression_tree(parameter)
                 for parameter in node.parameters
             ]
 

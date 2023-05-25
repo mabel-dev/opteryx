@@ -29,14 +29,14 @@
    └─────┬─────┘                         └─────▲─────┘
          │AST                                  │Plan
    ┌─────▼─────┐      ┌───────────┐      ┌─────┴─────┐
-   │ AST       │      │           │Stats │           │
+   │ AST       │      │           │Stats │Cost-Based │
    │ Rewriter  │      │ Catalogue ├──────► Optimizer │
    └─────┬─────┘      └─────┬─────┘      └─────▲─────┘
          │AST               │Schemas           │Plan
-   ┌─────▼─────┐      ┌─────▼─────┐      ┌─────┴─────┐
-   │ Logical   │ Plan │           │ Plan │ Tree      │
-   │   Planner ├──────► Binder    ├──────►  Rewriter │
-   └───────────┘      └───────────┘      └───────────┘
+   ╔═════▼═════╗      ┌─────▼─────┐      ┌─────┴─────┐
+   ║ Logical   ║ Plan │           │ Plan │ Heuristic │
+   ║   Planner ║──────► Binder    ├──────► Optimizer │
+   ╚═══════════╝      └───────────┘      └───────────┘
 ~~~
 Converts the AST to a logical query plan.
 
@@ -49,7 +49,6 @@ from enum import Enum
 from enum import auto
 
 from opteryx.components.logical_planner import builders
-from opteryx.managers.expression import ExpressionTreeNode
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import format_expression
 from opteryx.managers.expression import get_all_nodes_of_type
@@ -93,6 +92,11 @@ class LogicalPlanNode(Node):
     def __str__(self):
         try:
             # fmt:off
+            if self.node_type == LogicalPlanStepType.Distinct:
+                distinct_on = ""
+                if self.on is not None:
+                    distinct_on = f" ON ({','.join(format_expression(col) for col in self.on)})"
+                return f"DISTINCT{distinct_on}"
             if self.node_type == LogicalPlanStepType.Explain:
                 return f"EXPLAIN{' ANALYZE' if self.analyze else ''}{(' (' + self.format + ')') if self.format else ''}"
             if self.node_type == LogicalPlanStepType.Fake:
@@ -114,7 +118,13 @@ class LogicalPlanNode(Node):
             if self.node_type == LogicalPlanStepType.Project:
                 return f"PROJECT ({', '.join(format_expression(col) for col in self.columns)})"
             if self.node_type == LogicalPlanStepType.Scan:
-                return f"SCAN ({self.relation}{' AS ' + self.alias if self.alias else ''}{' WITH(' + ','.join(self.hints) + ')' if self.hints else ''})"
+                date_range = ""
+                if self.start_date == self.end_date:
+                    if self.start_date is not None:
+                        date_range = f" FOR '{self.start_date}'"
+                else:
+                    date_range = f" FOR '{self.start_date}' TO '{self.end_date}'"
+                return f"SCAN ({self.relation}{' AS ' + self.alias if self.alias else ''}{date_range}{' WITH(' + ','.join(self.hints) + ')' if self.hints else ''})"
             if self.node_type == LogicalPlanStepType.Show:
                 return f"SHOW ({', '.join(self.items)})"
             if self.node_type == LogicalPlanStepType.ShowColumns:
@@ -141,11 +151,10 @@ CLAUSE PLANNERS
 
 def extract_ctes(branch, planner):
     ctes = {}
-    if branch.get("with"):
-        for _ast in branch["with"]["cte_tables"]:
+    if branch.get("Query", branch).get("with"):
+        for _ast in branch.get("Query", branch)["with"]["cte_tables"]:
             alias = _ast.get("alias")["name"]["value"]
-            plan = {"Query": _ast["query"]}
-            ctes[alias] = planner(plan)
+            ctes[alias] = planner(_ast["query"]["body"])
     return ctes
 
 
@@ -163,9 +172,9 @@ def extract_variable(clause):
 
 def extract_simple_filter(filters, identifier: str = "Name"):
     if "Like" in filters:
-        left = ExpressionTreeNode(NodeType.IDENTIFIER, value=identifier)
-        right = ExpressionTreeNode(NodeType.LITERAL_VARCHAR, value=filters["Like"])
-        root = ExpressionTreeNode(
+        left = Node(NodeType.IDENTIFIER, value=identifier)
+        right = Node(NodeType.LITERAL_VARCHAR, value=filters["Like"])
+        root = Node(
             NodeType.COMPARISON_OPERATOR,
             value="ILike",  # we're case insensitive for SHOW filters
             left=left,
@@ -175,6 +184,120 @@ def extract_simple_filter(filters, identifier: str = "Name"):
     if "Where" in filters:
         root = builders.build(filters["Where"])
         return root
+
+
+def inner_query_planner(ast_branch):
+    inner_plan = LogicalPlan()
+    step_id = None
+
+    # from
+    _relations = ast_branch["Select"].get("from", [])
+    for relation in _relations:
+        step_id, sub_plan = create_node_relation(relation)
+        inner_plan += sub_plan
+
+    # If there's any peer relations, they are implicit cross joins
+    if len(_relations) > 1:
+        join_step = LogicalPlanNode(node_type=LogicalPlanStepType.Join)
+        join_step.type = "Cross Join"
+        step_id = random_string()
+        inner_plan.add_node(step_id, join_step)
+        for relation in _relations:
+            inner_plan.add_edge(relation["step_id"], step_id)
+
+    # selection
+    _selection = builders.build(ast_branch["Select"].get("selection"))
+    if _selection:
+        selection_step = LogicalPlanNode(node_type=LogicalPlanStepType.Filter)
+        selection_step.condition = _selection
+        previous_step_id, step_id = step_id, random_string()
+        inner_plan.add_node(step_id, selection_step)
+        if previous_step_id is not None:
+            inner_plan.add_edge(previous_step_id, step_id)
+
+    # groups
+    _groups = builders.build(ast_branch["Select"].get("group_by"))
+    if _groups is not None and _groups != []:
+        # TODO: groups need: grouped columns
+        group_step = LogicalPlanNode(node_type=LogicalPlanStepType.Group)
+        group_step.columns = _groups
+        previous_step_id, step_id = step_id, random_string()
+        inner_plan.add_node(step_id, group_step)
+        if previous_step_id is not None:
+            inner_plan.add_edge(previous_step_id, step_id)
+
+    # aggregates
+    _projection = builders.build(ast_branch["Select"].get("projection")) or []
+    _aggregates = get_all_nodes_of_type(
+        _projection, select_nodes=(NodeType.AGGREGATOR, NodeType.COMPLEX_AGGREGATOR)
+    )
+    if len(_aggregates) > 0:
+        # TODO: aggregates need: functions
+        aggregate_step = LogicalPlanNode(
+            node_type=LogicalPlanStepType.Aggregate, aggregates=_aggregates
+        )
+        previous_step_id, step_id = step_id, random_string()
+        inner_plan.add_node(step_id, aggregate_step)
+        if previous_step_id is not None:
+            inner_plan.add_edge(previous_step_id, step_id)
+
+    # projection
+    _projection = [clause for clause in _projection if clause not in _aggregates]
+    if not _projection == [] and not (
+        len(_projection) == 1 and _projection[0].node_type == NodeType.WILDCARD
+    ):
+        project_step = LogicalPlanNode(node_type=LogicalPlanStepType.Project)
+        project_step.columns = _projection
+        previous_step_id, step_id = step_id, random_string()
+        inner_plan.add_node(step_id, project_step)
+        if previous_step_id is not None:
+            inner_plan.add_edge(previous_step_id, step_id)
+
+    # having
+    _having = builders.build(ast_branch["Select"].get("having"))
+    if _having:
+        having_step = LogicalPlanNode(node_type=LogicalPlanStepType.Filter)
+        having_step.condition = _having
+        previous_step_id, step_id = step_id, random_string()
+        inner_plan.add_node(step_id, having_step)
+        if previous_step_id is not None:
+            inner_plan.add_edge(previous_step_id, step_id)
+
+    # distinct
+    if ast_branch["Select"].get("distinct"):
+        distinct_step = LogicalPlanNode(node_type=LogicalPlanStepType.Distinct)
+        if isinstance(ast_branch["Select"]["distinct"], dict):
+            distinct_step.on = builders.build(ast_branch["Select"]["distinct"]["On"])
+        previous_step_id, step_id = step_id, random_string()
+        inner_plan.add_node(step_id, distinct_step)
+        if previous_step_id is not None:
+            inner_plan.add_edge(previous_step_id, step_id)
+
+    # order
+    _order_by = ast_branch.get("order_by")
+    if _order_by:
+        order_step = LogicalPlanNode(node_type=LogicalPlanStepType.Order)
+        order_step.order_by = [
+            (builders.build(item["expr"]).value, not bool(item["asc"])) for item in _order_by
+        ]
+        previous_step_id, step_id = step_id, random_string()
+        inner_plan.add_node(step_id, order_step)
+        if previous_step_id is not None:
+            inner_plan.add_edge(previous_step_id, step_id)
+
+    # limit/offset
+    _limit = ast_branch.get("limit")
+    _offset = ast_branch.get("offset")
+    if _limit or _offset:
+        limit_step = LogicalPlanNode(node_type=LogicalPlanStepType.Limit)
+        limit_step.limit = _limit
+        limit_step.offset = _offset
+        previous_step_id, step_id = step_id, random_string()
+        inner_plan.add_node(step_id, limit_step)
+        if previous_step_id is not None:
+            inner_plan.add_edge(previous_step_id, step_id)
+
+    return inner_plan
 
 
 """
@@ -259,6 +382,8 @@ def create_node_relation(relation):
             from_step.relation if table["alias"] is None else table["alias"]["name"]["value"]
         )
         from_step.hints = [hint["Identifier"]["value"] for hint in table["with_hints"]]
+        from_step.start_date = table.get("start_date")
+        from_step.end_date = table.get("end_date")
         step_id = random_string()
         sub_plan.add_node(step_id, from_step)
 
@@ -330,125 +455,9 @@ def plan_explain(statement):
 def plan_query(statement):
     """ """
 
-    def _inner_query_planner(ast_branch):
-        inner_plan = LogicalPlan()
-        step_id = None
-
-        # from
-        _relations = ast_branch["Select"].get("from", [])
-        for relation in _relations:
-            step_id, sub_plan = create_node_relation(relation)
-            inner_plan += sub_plan
-
-        # If there's any peer relations, they are implicit cross joins
-        if len(_relations) > 1:
-            join_step = LogicalPlanNode(node_type=LogicalPlanStepType.Join)
-            join_step.type = "Cross Join"
-            step_id = random_string()
-            inner_plan.add_node(step_id, join_step)
-            for relation in _relations:
-                inner_plan.add_edge(relation["step_id"], step_id)
-
-        # selection
-        _selection = builders.build(ast_branch["Select"].get("selection"))
-        if _selection:
-            selection_step = LogicalPlanNode(node_type=LogicalPlanStepType.Filter)
-            selection_step.condition = _selection
-            previous_step_id, step_id = step_id, random_string()
-            inner_plan.add_node(step_id, selection_step)
-            if previous_step_id is not None:
-                inner_plan.add_edge(previous_step_id, step_id)
-
-        # groups
-        _groups = builders.build(ast_branch["Select"].get("group_by"))
-        if _groups is not None and _groups != []:
-            # TODO: groups need: grouped columns
-            group_step = LogicalPlanNode(node_type=LogicalPlanStepType.Group)
-            group_step.columns = _groups
-            previous_step_id, step_id = step_id, random_string()
-            inner_plan.add_node(step_id, group_step)
-            if previous_step_id is not None:
-                inner_plan.add_edge(previous_step_id, step_id)
-
-        # aggregates
-        _projection = builders.build(ast_branch["Select"].get("projection")) or []
-        _aggregates = get_all_nodes_of_type(
-            _projection, select_nodes=(NodeType.AGGREGATOR, NodeType.COMPLEX_AGGREGATOR)
-        )
-        if len(_aggregates) > 0:
-            # TODO: aggregates need: functions
-            aggregate_step = LogicalPlanNode(
-                node_type=LogicalPlanStepType.Aggregate, aggregates=_aggregates
-            )
-            previous_step_id, step_id = step_id, random_string()
-            inner_plan.add_node(step_id, aggregate_step)
-            if previous_step_id is not None:
-                inner_plan.add_edge(previous_step_id, step_id)
-
-        # projection
-        _projection = [clause for clause in _projection if clause not in _aggregates]
-        if not _projection == [] and not (
-            len(_projection) == 1 and _projection[0].token_type == NodeType.WILDCARD
-        ):
-            project_step = LogicalPlanNode(node_type=LogicalPlanStepType.Project)
-            project_step.columns = _projection
-            previous_step_id, step_id = step_id, random_string()
-            inner_plan.add_node(step_id, project_step)
-            if previous_step_id is not None:
-                inner_plan.add_edge(previous_step_id, step_id)
-
-        # having
-        _having = builders.build(ast_branch["Select"].get("having"))
-        if _having:
-            having_step = LogicalPlanNode(node_type=LogicalPlanStepType.Filter)
-            having_step.condition = _having
-            previous_step_id, step_id = step_id, random_string()
-            inner_plan.add_node(step_id, having_step)
-            if previous_step_id is not None:
-                inner_plan.add_edge(previous_step_id, step_id)
-
-        # distinct
-        if ast_branch["Select"].get("distinct"):
-            # TODO: distinct needs: columns to distinct on, keep 1st/last
-            distinct_step = LogicalPlanNode(node_type=LogicalPlanStepType.Distinct)
-            previous_step_id, step_id = step_id, random_string()
-            inner_plan.add_node(step_id, distinct_step)
-            if previous_step_id is not None:
-                inner_plan.add_edge(previous_step_id, step_id)
-
-        # order
-        _order_by = ast_branch.get("order_by")
-        if _order_by:
-            order_step = LogicalPlanNode(node_type=LogicalPlanStepType.Order)
-            order_step.order_by = [
-                (builders.build(item["expr"]).value, not bool(item["asc"])) for item in _order_by
-            ]
-            print(_order_by)
-            previous_step_id, step_id = step_id, random_string()
-            inner_plan.add_node(step_id, order_step)
-            if previous_step_id is not None:
-                inner_plan.add_edge(previous_step_id, step_id)
-
-        # limit/offset
-        _limit = ast_branch.get("limit")
-        _offset = ast_branch.get("offset")
-        if _limit or _offset:
-            limit_step = LogicalPlanNode(node_type=LogicalPlanStepType.Limit)
-            limit_step.limit = _limit
-            limit_step.offset = _offset
-            previous_step_id, step_id = step_id, random_string()
-            inner_plan.add_node(step_id, limit_step)
-            if previous_step_id is not None:
-                inner_plan.add_edge(previous_step_id, step_id)
-
-        return inner_plan
-
     root_node = statement
     if "Query" in root_node:
         root_node = root_node["Query"]
-
-    # CTEs need to be extracted so we can deal with them later
-    raw_ctes = extract_ctes(root_node, _inner_query_planner)
 
     # union?
     if "SetOperation" in root_node["body"]:
@@ -465,18 +474,18 @@ def plan_query(statement):
         plan = LogicalPlan()
         plan.add_node(step_id, set_op_node)
 
-        left_plan = _inner_query_planner(set_operation["left"])
+        left_plan = inner_query_planner(set_operation["left"])
         plan += left_plan
         subquery_entry_id = left_plan.get_exit_points()[0]
         plan.add_edge(subquery_entry_id, step_id)
 
-        right_plan = _inner_query_planner(set_operation["left"])
+        right_plan = inner_query_planner(set_operation["left"])
         plan += right_plan
         subquery_entry_id = right_plan.get_exit_points()[0]
         plan.add_edge(subquery_entry_id, step_id)
 
         root_node["Select"] = {}
-        parent_plan = _inner_query_planner(root_node)
+        parent_plan = inner_query_planner(root_node)
         if len(parent_plan) > 0:
             plan += parent_plan
             parent_plan_exit_id = parent_plan.get_entry_points()[0]
@@ -488,7 +497,7 @@ def plan_query(statement):
     root_node["body"]["limit"] = root_node.get("limit", None)
     root_node["body"]["offset"] = root_node.get("offset", None)
     root_node["body"]["order_by"] = root_node.get("order_by", None)
-    return _inner_query_planner(root_node["body"])
+    return inner_query_planner(root_node["body"])
 
 
 def plan_set_variable(statement):
@@ -546,10 +555,10 @@ def plan_show_variables(statement):
         operator = next(iter(predicate))
         select_step = LogicalPlanNode(
             node_type=LogicalPlanStepType.Filter,
-            predicate=ExpressionTreeNode(
-                token_type=NodeType.COMPARISON_OPERATOR,
+            predicate=Node(
+                node_type=NodeType.COMPARISON_OPERATOR,
                 value=operator,
-                left=ExpressionTreeNode(token_type=NodeType.IDENTIFIER, value="name"),
+                left=Node(node_type=NodeType.IDENTIFIER, value="name"),
                 right=predicate[operator],
             ),
         )
@@ -578,4 +587,6 @@ def do_logical_planning_phase(parsed_statements):
     # The sqlparser ast is an array of asts
     for parsed_statement in parsed_statements:
         statement_type = next(iter(parsed_statement))
-        yield QUERY_BUILDERS[statement_type](parsed_statement), parsed_statement
+        # CTEs are Common Table Expressions, they're variations of subqueries
+        ctes = extract_ctes(parsed_statement, inner_query_planner)
+        yield QUERY_BUILDERS[statement_type](parsed_statement), parsed_statement, ctes
