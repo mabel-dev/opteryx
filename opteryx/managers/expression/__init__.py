@@ -184,6 +184,9 @@ class ExpressionTreeNode:
     centre: Any = None  # ExpressionTreeNode
     parameters: list = None
     alias: list = field(default_factory=list)
+    query_column: str = None  # the name of the column as it was in the query
+    source_column: str = None  # the name of the column, as it exists in the source
+    source: str = None  # what is the source of the column
 
     def __repr__(self):
         return (

@@ -129,7 +129,7 @@ def qualified_wildcard(branch, alias=None, key=None):
 
 
 def identifier(branch, alias=None, key=None):
-    return ExpressionTreeNode(token_type=NodeType.IDENTIFIER, value=branch["value"], alias=alias)
+    return ExpressionTreeNode(token_type=NodeType.IDENTIFIER, value=branch["value"], alias=alias, query_column=branch["value"])
 
 
 def compound_identifier(branch, alias=None, key=None):
@@ -140,6 +140,9 @@ def compound_identifier(branch, alias=None, key=None):
         token_type=NodeType.IDENTIFIER,
         value=".".join(p["value"] for p in branch),
         alias=alias,
+        query_column=".".join(p["value"] for p in branch),
+        source_column=branch[-1],
+        source=".".join(p["value"] for p in branch[:-1]),
     )
 
 

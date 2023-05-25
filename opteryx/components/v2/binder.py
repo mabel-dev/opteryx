@@ -72,10 +72,17 @@ logger = get_logger()
 
 def source_identifiers(node, relations):
     if node.token_type & NodeType.IDENTIFIER == NodeType.IDENTIFIER:
+        found_source_relation = False
         print("I found and identifier - ", node.value)
         for alias, schema in relations.items():
-            print(schema)
-
+            if node.source is not None:
+                print("I think it's from ", node.source)
+            find_result = schema.find_column(node.value)
+            if find_result is not None:
+                found_source_relation = True
+                print("do something with the result")
+        if not found_source_relation:
+            print("raise a column not found error and give suggestions")
 
     if node.left:
         node.left = source_identifiers(node.left, relations)
@@ -104,12 +111,7 @@ class BinderVisitor:
     def visit_project(self, node, context):
         logger.warning("visit_project not implemented")
         for column in node.columns:
-            print(
-                source_identifiers(
-                    column,
-                    context.get("schemas", {})
-                )
-            )
+            print(source_identifiers(column, context.get("schemas", {})))
 
         return context
 
@@ -120,7 +122,9 @@ class BinderVisitor:
         node.connector = connector_factory(node.relation)
         # get them to tell is the schema of the dataset
         # None means we don't know ahead of time - we can usually get something
-        context.setdefault("schemas", {})[node.alias] = node.connector.get_dataset_schema(node.relation)
+        context.setdefault("schemas", {})[node.alias] = node.connector.get_dataset_schema(
+            node.relation
+        )
 
         logger.warning("visit_scan not implemented")
         logger.warning("visit_scan doesn't resolve CTEs")

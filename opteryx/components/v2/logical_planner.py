@@ -93,6 +93,11 @@ class LogicalPlanNode(Node):
     def __str__(self):
         try:
             # fmt:off
+            if self.node_type == LogicalPlanStepType.Distinct:
+                distinct_on = ""
+                if self.on is not None:
+                    distinct_on = f" ON ({','.join(format_expression(col) for col in self.on)})"
+                return f"DISTINCT{distinct_on}"
             if self.node_type == LogicalPlanStepType.Explain:
                 return f"EXPLAIN{' ANALYZE' if self.analyze else ''}{(' (' + self.format + ')') if self.format else ''}"
             if self.node_type == LogicalPlanStepType.Fake:
@@ -261,8 +266,9 @@ def inner_query_planner(ast_branch):
 
     # distinct
     if ast_branch["Select"].get("distinct"):
-        # TODO: distinct needs: columns to distinct on, keep 1st/last
         distinct_step = LogicalPlanNode(node_type=LogicalPlanStepType.Distinct)
+        if isinstance(ast_branch["Select"]["distinct"], dict):
+            distinct_step.on = builders.build(ast_branch["Select"]["distinct"]["On"])
         previous_step_id, step_id = step_id, random_string()
         inner_plan.add_node(step_id, distinct_step)
         if previous_step_id is not None:
