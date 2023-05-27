@@ -63,6 +63,7 @@ import re
 
 from orso.logging import get_logger
 
+from opteryx.exceptions import ColumnNotFoundError
 from opteryx.exceptions import DatabaseError
 from opteryx.managers.expression import NodeType
 
@@ -71,25 +72,68 @@ logger = get_logger()
 
 
 def source_identifiers(node, relations):
+    """
+
+    When this is run we should have two things:
+    - a list of all of the identifiers in a tree
+    - for each identifier:
+        - the source table
+        - the source field
+        - the name of the identifier in the query (e.g. any aliases)
+        - the type of the column
+        - any aliases for the column
+    We will also know:
+    - if a column name is identifiable (i.e. does it exist, is it unique)
+
+    Note, this is a tree within a tree, this is a single step in the execution plan (i.e. the plan
+    associated with the relational algebra) which in itself may be an evaluation plan (i.e.
+    executing comparisons)
+    """
+    # we want to return an empty list if we don't find anything
+    identifiers = []
+    # we're only interested if this node is an identifier
     if node.node_type & NodeType.IDENTIFIER == NodeType.IDENTIFIER:
         found_source_relation = False
         print("I found and identifier - ", node.value)
-        for alias, schema in relations.items():
-            if node.source is not None:
-                print("I think it's from ", node.source)
-            find_result = schema.find_column(node.value)
-            if find_result is not None:
-                found_source_relation = True
-                print("do something with the result")
+        if node.source is not None:
+            print(f"I think it's from {node.source} but I haven't confirmed that column exists")
+            found_source_relation = True
+        else:
+            print("I'm going to look in all of the schemas I have to try to find it")
+            for alias, schema in relations.items():
+                find_result = schema.find_column(node.value)
+                if find_result is not None:
+                    if found_source_relation:
+                        print("I think I found it twice")
+                    found_source_relation = True
+                    print("do something with the result")
         if not found_source_relation:
-            print("raise a column not found error and give suggestions")
+            candidates = []
+            for a, s in relations.items():
+                candidates.extend(s.get_all_columns())
+            from opteryx.utils import fuzzy_search
 
+            suggestion = fuzzy_search(node.value, candidates)
+            raise ColumnNotFoundError(column=node.value, suggestion=suggestion)
+
+    # Now recurse and do this again for all the sub parts of the evaluation plan
     if node.left:
-        node.left = source_identifiers(node.left, relations)
+        these_identifiers, node.left = source_identifiers(node.left, relations)
+        identifiers.extend(these_identifiers)
     if node.right:
-        node.right = source_identifiers(node.right, relations)
+        these_identifiers, node.right = source_identifiers(node.right, relations)
+        identifiers.extend(these_identifiers)
+    if node.centre:
+        these_identifiers, node.centre = source_identifiers(node.centre, relations)
+        identifiers.extend(these_identifiers)
+    if node.parameters:
+        these_parameters = []
+        for parameter in node.parameters:
+            these_identifiers, this_parameter = source_identifiers(parameter, relations)
+            these_parameters.append(this_parameter)
+            identifiers.extend(these_identifiers)
 
-    return node
+    return identifiers, node
 
 
 class BinderVisitor:

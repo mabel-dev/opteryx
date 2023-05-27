@@ -104,7 +104,17 @@ class CursorInvalidStateError(ProgrammingError):
 
 
 class ColumnNotFoundError(ProgrammingError):
-    pass
+    def __init__(self, column=None, suggestion=None):
+        self.column = column
+        self.suggestion = suggestion
+
+        message = None
+        if column is not None:
+            if suggestion is not None:
+                message = f"'{column}' does not exist, did you mean '{suggestion}'?."
+            else:
+                message = f"'{column}' does not exist."
+        super().__init__(message)
 
 
 class VariableNotFoundError(ProgrammingError):
