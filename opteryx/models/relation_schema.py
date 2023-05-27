@@ -29,8 +29,8 @@ class FlatColumn:
 
 @dataclass
 class ConstantColumn(FlatColumn):
-    # Rather than pass around columns of constant values, where we can
-    # replace them with this column type
+    # Rather than pass around columns of constant values, where we can we should
+    # replace them with this column type.
     length: int = 0
     value: typing.Any = None
 
