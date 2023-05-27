@@ -62,7 +62,7 @@ def fuzzy_search(name, candidates):
     best_match_score = 100
 
     name = "".join(char for char in name if char.isalnum())
-    for raw_candidate, candidate in (
+    for raw, candidate in (
         (
             ca,
             "".join(ch for ch in ca if ch.isalnum()),
@@ -71,10 +71,10 @@ def fuzzy_search(name, candidates):
     ):
         my_dist = compare(candidate, name)
         if my_dist == 0:  # if we find an exact match, return that
-            return raw_candidate
+            return raw
         if 0 <= my_dist < best_match_score:
             best_match_score = my_dist
-            best_match_column = raw_candidate
+            best_match_column = raw
 
     return best_match_column
 
