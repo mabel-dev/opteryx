@@ -30,7 +30,7 @@ TESTS = [
         ("", [], None),
         ("apple", ["appl", "aple", "aplee", "aplle"], "appl"),  # first best match
         ("a_b_c_d", ["abcd", "a_b_cd", "a_b_c_d_e"], "abcd"),
-        ("a_b_c_d_e", ["abcd", "a_b_cd", "a_b_c_d_e"], "abcde"),
+        ("a_b_c_d_e", ["abcd", "a_b_cd", "a_b_c_d_e"], "a_b_c_d_e"),
         ("a-b+c_d", ["abcd", "a_b+cd", "a-b+c_d-e"], "abcd"),
         ("apple", ["banana", "orange", "pear"], None),
         ("apple", [], None),
