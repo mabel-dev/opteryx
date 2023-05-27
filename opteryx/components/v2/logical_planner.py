@@ -104,7 +104,7 @@ class LogicalPlanNode(Node):
             if self.node_type == LogicalPlanStepType.Filter:
                 return f"FILTER ({format_expression(self.condition)})"
             if self.node_type == LogicalPlanStepType.GenerateSeries:
-                return f"GENERATE SERIES ({', '.join(format_expression(arg) for arg in self.args)}{' AS ' + self.alias if self.alias else ''})"
+                return f"GENERATE SERIES ({', '.join(format_expression(arg) for arg in self.args)}){' AS ' + self.alias if self.alias else ''}"
             if self.node_type == LogicalPlanStepType.Group:
                 return f"GROUP ({', '.join(format_expression(col) for col in self.columns)})"
             if self.node_type == LogicalPlanStepType.Join:

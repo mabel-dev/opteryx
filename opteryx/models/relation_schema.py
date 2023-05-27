@@ -23,14 +23,14 @@ class FlatColumn:
     # This is a standard column, backed by PyArrow
     name: str
     data_type: OPTERYX_TYPES
-    aliases: typing.List[str] = None
+    description: str = None
+    aliases: typing.List[str] = field(default_factory=list)
 
 
 @dataclass
 class ConstantColumn(FlatColumn):
     # Rather than pass around columns of constant values, where we can
     # replace them with this column type
-    type: OPTERYX_TYPES = OPTERYX_TYPES.OTHER
     length: int = 0
     value: typing.Any = None
 
@@ -38,19 +38,22 @@ class ConstantColumn(FlatColumn):
 @dataclass
 class RelationSchema:
     table_name: str
-    alias: typing.Optional[str] = None
-    columns: typing.List[FlatColumn] = None
+    aliases: typing.Optional[str] = field(default_factory=list)
+    columns: typing.List[FlatColumn] = field(default_factory=list)
     temporal_start: typing.Optional[datetime.datetime] = None
     temporal_end: typing.Optional[datetime.datetime] = None
 
-    def __post_init__(self):
-        if self.columns is None:
-            object.__setattr__(self, "columns", [])
-
     def find_column(self, column_name: str):
+        # this is a simple match, this returns the column object
         for column in self.columns:
             if column.name == column_name:
                 return column
             if column_name in column.aliases:
                 return column
         return None
+
+    def get_all_columns(self):
+        # this returns all the names for columns in this relation
+        for column in self.columns:
+            yield column.name
+            yield from column.aliases
