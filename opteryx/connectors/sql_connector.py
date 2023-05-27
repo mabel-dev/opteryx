@@ -26,6 +26,7 @@ import pyarrow
 from opteryx import config
 from opteryx.connectors.capabilities import PredicatePushable
 from opteryx.exceptions import MissingDependencyError
+from opteryx.exceptions import UnmetRequirementError
 
 
 class BaseSQLStorageAdapter:  # this is used by the SHOW STORES statement
@@ -56,17 +57,23 @@ class SqlConnector(BaseSQLStorageAdapter, PredicatePushable):
     __mode__ = "SQL"
 
     def __init__(
-        self, prefix: str = "", remove_prefix: bool = False, connection: str = None
+        self, prefix: str = "", remove_prefix: bool = False, connection: str = None, engine=None
     ) -> None:
         super(BaseSQLStorageAdapter, self).__init__()
         super(PredicatePushable, self).__init__()
         # we're just testing we can import here
         try:
-            from sqlalchemy import create_engine
+            import sqlalchemy
         except ImportError as err:  # pragma: nocover
             raise MissingDependencyError(err.name) from err
 
         self._connection = connection
+        self._engine = engine
+
+        if self._engine is None and self._connection is None:
+            raise UnmetRequirementError(
+                "SQL Connections require either a SQL Alchemy connection string in the 'connection' parameter, or a SQL Alchemy Engine in the 'engine' parameter."
+            )
 
         self._remove_prefix = remove_prefix
         self._prefix = prefix
@@ -104,8 +111,9 @@ class SqlConnector(BaseSQLStorageAdapter, PredicatePushable):
         for predicate in self._predicates:
             query_builder.WHERE(_write_predicate(predicate))
 
-        engine = _get_engine(self._connection)
-        with engine.connect() as conn:
+        if self._engine is None:
+            self._engine = _get_engine(self._connection)
+        with self._engine.connect() as conn:
             result = conn.execute(text(str(query_builder)))
 
             batch = result.fetchmany(chunk_size)
