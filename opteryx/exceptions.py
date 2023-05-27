@@ -58,8 +58,6 @@ class Error(Exception):
     Python StandardError (defined in the module exceptions).
     """
 
-    pass
-
 
 class DatabaseError(Error):
     """
@@ -67,8 +65,6 @@ class DatabaseError(Error):
     Exception raised for errors that are related to the database. It must be a subclass
     of Error.
     """
-
-    pass
 
 
 class ProgrammingError(DatabaseError):
@@ -78,8 +74,6 @@ class ProgrammingError(DatabaseError):
     syntax error in the SQL statement, wrong number of parameters specified, etc. It
     must be a subclass of DatabaseError.
     """
-
-    pass
 
 
 # END PEP-0249
@@ -104,16 +98,17 @@ class CursorInvalidStateError(ProgrammingError):
 
 
 class ColumnNotFoundError(ProgrammingError):
-    def __init__(self, column=None, suggestion=None):
+    def __init__(self, message=None, column=None, suggestion=None):
         self.column = column
         self.suggestion = suggestion
 
-        message = None
         if column is not None:
             if suggestion is not None:
-                message = f"'{column}' does not exist, did you mean '{suggestion}'?."
+                message = f"Column '{column}' does not exist, did you mean '{suggestion}'?."
             else:
-                message = f"'{column}' does not exist."
+                message = f"Column '{column}' does not exist."
+        if message is None:
+            message = "Query contained columns which could not be found."
         super().__init__(message)
 
 
@@ -125,6 +120,13 @@ class VariableNotFoundError(ProgrammingError):
             super().__init__(message)
         else:
             super().__init__()
+
+
+class AmbiguousIdentifierError(ProgrammingError):
+    def __init__(self, identifier):
+        self.identifier = identifier
+        message = f"'Identifier reference '{identifier}' is ambiguous."
+        super().__init__(message)
 
 
 class UnsupportedSyntaxError(ProgrammingError):

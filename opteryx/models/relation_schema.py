@@ -29,8 +29,8 @@ class FlatColumn:
 
 @dataclass
 class ConstantColumn(FlatColumn):
-    # Rather than pass around columns of constant values, where we can
-    # replace them with this column type
+    # Rather than pass around columns of constant values, where we can we should
+    # replace them with this column type.
     length: int = 0
     value: typing.Any = None
 
@@ -38,7 +38,7 @@ class ConstantColumn(FlatColumn):
 @dataclass
 class RelationSchema:
     table_name: str
-    aliases: typing.Optional[str] = field(default_factory=list)
+    aliases: typing.List[str] = field(default_factory=list)
     columns: typing.List[FlatColumn] = field(default_factory=list)
     temporal_start: typing.Optional[datetime.datetime] = None
     temporal_end: typing.Optional[datetime.datetime] = None

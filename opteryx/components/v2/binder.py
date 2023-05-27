@@ -63,6 +63,7 @@ import re
 
 from orso.logging import get_logger
 
+from opteryx.exceptions import AmbiguousIdentifierError
 from opteryx.exceptions import ColumnNotFoundError
 from opteryx.exceptions import DatabaseError
 from opteryx.managers.expression import NodeType
@@ -104,13 +105,16 @@ def source_identifiers(node, relations):
                 find_result = schema.find_column(node.value)
                 if find_result is not None:
                     if found_source_relation:
-                        print("I think I found it twice")
+                        raise AmbiguousIdentifierError(identifier=node.value)
                     found_source_relation = True
                     print("do something with the result")
+
         if not found_source_relation:
+            # If we didn't find the relation, get all of the columns it could have been and
+            # see if we can suggest what the user should have entered in the error message
             candidates = []
-            for a, s in relations.items():
-                candidates.extend(s.get_all_columns())
+            for _, schema in relations.items():
+                candidates.extend(schema.get_all_columns())
             from opteryx.utils import fuzzy_search
 
             suggestion = fuzzy_search(node.value, candidates)
