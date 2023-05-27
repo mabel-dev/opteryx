@@ -38,7 +38,7 @@ class ConstantColumn(FlatColumn):
 @dataclass
 class RelationSchema:
     table_name: str
-    aliases: typing.Optional[typing.List[str]] = field(default_factory=list)
+    aliases: typing.List[str] = field(default_factory=list)
     columns: typing.List[FlatColumn] = field(default_factory=list)
     temporal_start: typing.Optional[datetime.datetime] = None
     temporal_end: typing.Optional[datetime.datetime] = None
