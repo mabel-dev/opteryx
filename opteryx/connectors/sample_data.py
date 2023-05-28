@@ -31,16 +31,22 @@ WELL_KNOWN_DATASETS = {
 class SampleDataConnector(BaseConnector):
     __mode__ = "Internal"
 
+    def suggest(self, dataset):
+        from opteryx.utils import fuzzy_search
+
+        known_datasets = (k for k in WELL_KNOWN_DATASETS if k != "$no_table")
+        suggestion = fuzzy_search(dataset, known_datasets)
+        if suggestion is not None:
+            return f"The requested dataset, '{dataset}', could not be found. Did you mean '{suggestion}'?"
+
     def read_dataset(self, dataset_name: str) -> "DatasetReader":
         return SampleDatasetReader(dataset_name.lower())
 
     def get_dataset_schema(self, dataset_name: str) -> RelationSchema:
         data_provider = WELL_KNOWN_DATASETS.get(dataset_name.lower())
         if data_provider is None:
-            known_datasets = (k for k in WELL_KNOWN_DATASETS if k != "$no_table")
-            raise DatasetNotFoundError(
-                f"Unknown internal dataset {dataset_name}. I know {','.join(known_datasets)}."
-            )
+            suggestion = self.suggest(dataset_name.lower())
+            raise DatasetNotFoundError(message=suggestion, dataset=dataset_name)
         return data_provider.schema
 
 
@@ -72,8 +78,6 @@ class SampleDatasetReader(DatasetReader):
 
         data_provider = WELL_KNOWN_DATASETS.get(self.dataset_name)
         if data_provider is None:
-            known_datasets = (k for k in WELL_KNOWN_DATASETS if k != "$no_table")
-            raise DatasetNotFoundError(
-                f"Unknown internal dataset {self.dataset_name}. I know {','.join(known_datasets)}."
-            )
+            suggestion = self.suggest(self.dataset_name.lower())
+            raise DatasetNotFoundError(message=suggestion, dataset=self.dataset_name)
         return data_provider.read()

@@ -66,6 +66,7 @@ from orso.logging import get_logger
 from opteryx.exceptions import AmbiguousIdentifierError
 from opteryx.exceptions import ColumnNotFoundError
 from opteryx.exceptions import DatabaseError
+from opteryx.exceptions import UnexpectedDatasetError
 from opteryx.managers.expression import NodeType
 
 CAMEL_TO_SNAKE = re.compile(r"(?<!^)(?=[A-Z])")
@@ -94,22 +95,36 @@ def source_identifiers(node, relations):
     identifiers = []
     # we're only interested if this node is an identifier
     if node.node_type & NodeType.IDENTIFIER == NodeType.IDENTIFIER:
-        found_source_relation = False
-        print("I found and identifier - ", node.value)
+        found_source_relation = None
+        column = None
         if node.source is not None:
-            print(f"I think it's from {node.source} but I haven't confirmed that column exists")
-            found_source_relation = True
+            # the data source is explicit in the query (e.g. table.column)
+            if node.source in relations:
+                schema = relations[node.source]
+                column = schema.find_column(node.source_column)
+                if column is None:
+                    candidates = schema.get_all_columns()
+                    from opteryx.utils import fuzzy_search
+
+                    suggestion = fuzzy_search(node.value, candidates)
+                    raise ColumnNotFoundError(
+                        column=node.value, dataset=node.source, suggestion=suggestion
+                    )
+                found_source_relation = schema
+            else:
+                # the dataset hasn't been loaded in a FROM or JOIN statement
+                raise UnexpectedDatasetError(dataset=node.source)
         else:
-            print("I'm going to look in all of the schemas I have to try to find it")
-            for alias, schema in relations.items():
-                find_result = schema.find_column(node.value)
-                if find_result is not None:
+            # look for the column in the loaded relations
+            for _, schema in relations.items():
+                column = schema.find_column(node.value)
+                if column is not None:
+                    # if we've found it again - we're not sure which one to use
                     if found_source_relation:
                         raise AmbiguousIdentifierError(identifier=node.value)
-                    found_source_relation = True
-                    print("do something with the result")
+                    found_source_relation = schema
 
-        if not found_source_relation:
+        if found_source_relation is None:
             # If we didn't find the relation, get all of the columns it could have been and
             # see if we can suggest what the user should have entered in the error message
             candidates = []
@@ -119,6 +134,10 @@ def source_identifiers(node, relations):
 
             suggestion = fuzzy_search(node.value, candidates)
             raise ColumnNotFoundError(column=node.value, suggestion=suggestion)
+
+        # add values to the node to indicate the source of this data
+        node.source = found_source_relation.table_name
+        node.source_column = column
 
     # Now recurse and do this again for all the sub parts of the evaluation plan
     if node.left:
@@ -142,6 +161,7 @@ def source_identifiers(node, relations):
 
 class BinderVisitor:
     def visit_node(self, node, context=None):
+        print(f"paying a visit to {node}")
         node_type = node.node_type.name
         visit_method_name = f"visit_{CAMEL_TO_SNAKE.sub('_', node_type).lower()}"
         visit_method = getattr(self, visit_method_name, self.visit_unsupported)
@@ -157,7 +177,7 @@ class BinderVisitor:
         return context
 
     def visit_project(self, node, context):
-        logger.warning("visit_project not implemented")
+        logger.warning("visit_project not fully implemented")
         for column in node.columns:
             print(source_identifiers(column, context.get("schemas", {})))
 
@@ -201,6 +221,8 @@ class BinderVisitor:
                     if key in merged_dict:
                         if isinstance(value, list):
                             merged_dict[key].extend(value)
+                        elif isinstance(value, dict):
+                            merged_dict[key].update(value)
                         else:
                             merged_dict[key] = value
                     else:
