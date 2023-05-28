@@ -84,13 +84,11 @@ class SqlError(ProgrammingError):
 
 
 class DatasetNotFoundError(ProgrammingError):
-    def __init__(self, dataset=None):
-        if dataset is not None:
+    def __init__(self, message=None, dataset=None):
+        if message is None and dataset is not None:
             self.dataset = dataset
-            message = f"The requested dataset could not be found '{dataset}'."
-            super().__init__(message)
-        else:
-            super().__init__()
+            message = f"The requested dataset, '{dataset}', could not be found."
+        super().__init__(message)
 
 
 class CursorInvalidStateError(ProgrammingError):
@@ -98,15 +96,21 @@ class CursorInvalidStateError(ProgrammingError):
 
 
 class ColumnNotFoundError(ProgrammingError):
-    def __init__(self, message=None, column=None, suggestion=None):
+    def __init__(self, message=None, column=None, dataset=None, suggestion=None):
+        """
+        Return as helpful Column Not Found error as we can by being specific and offering
+        suggestions.
+        """
         self.column = column
         self.suggestion = suggestion
+        self.dataset = dataset
 
+        dataset_message = (f" in '{dataset}'") if dataset else ""
         if column is not None:
             if suggestion is not None:
-                message = f"Column '{column}' does not exist, did you mean '{suggestion}'?."
+                message = f"Column '{column}' does not exist{dataset_message}. Did you mean '{suggestion}'?."
             else:
-                message = f"Column '{column}' does not exist."
+                message = f"Column '{column}' does not exist{dataset_message}."
         if message is None:
             message = "Query contained columns which could not be found."
         super().__init__(message)
@@ -125,7 +129,14 @@ class VariableNotFoundError(ProgrammingError):
 class AmbiguousIdentifierError(ProgrammingError):
     def __init__(self, identifier):
         self.identifier = identifier
-        message = f"'Identifier reference '{identifier}' is ambiguous."
+        message = f"Identifier reference '{identifier}' is ambiguous."
+        super().__init__(message)
+
+
+class UnexpectedDatasetError(ProgrammingError):
+    def __init__(self, dataset):
+        self.dataset = dataset
+        message = f"Dataset '{dataset}' referenced in query without FROM or JOIN."
         super().__init__(message)
 
 

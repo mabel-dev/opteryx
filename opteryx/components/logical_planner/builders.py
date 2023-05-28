@@ -144,7 +144,7 @@ def compound_identifier(branch, alias=None, key=None):
         value=".".join(p["value"] for p in branch),
         alias=alias,
         query_column=".".join(p["value"] for p in branch),
-        source_column=branch[-1],
+        source_column=branch[-1]["value"],
         source=".".join(p["value"] for p in branch[:-1]),
     )
 
