@@ -133,7 +133,7 @@ class AmbiguousIdentifierError(ProgrammingError):
         super().__init__(message)
 
 
-class UnexpectedDatasetError(ProgrammingError):
+class UnexpectedDatasetReferenceError(ProgrammingError):
     def __init__(self, dataset):
         self.dataset = dataset
         message = f"Dataset '{dataset}' referenced in query without FROM or JOIN."
