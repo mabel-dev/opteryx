@@ -66,7 +66,7 @@ from orso.logging import get_logger
 from opteryx.exceptions import AmbiguousIdentifierError
 from opteryx.exceptions import ColumnNotFoundError
 from opteryx.exceptions import DatabaseError
-from opteryx.exceptions import UnexpectedDatasetError
+from opteryx.exceptions import UnexpectedDatasetReferenceError
 from opteryx.managers.expression import NodeType
 
 CAMEL_TO_SNAKE = re.compile(r"(?<!^)(?=[A-Z])")
@@ -113,7 +113,7 @@ def source_identifiers(node, relations):
                 found_source_relation = schema
             else:
                 # the dataset hasn't been loaded in a FROM or JOIN statement
-                raise UnexpectedDatasetError(dataset=node.source)
+                raise UnexpectedDatasetReferenceError(dataset=node.source)
         else:
             # look for the column in the loaded relations
             for _, schema in relations.items():
@@ -161,7 +161,6 @@ def source_identifiers(node, relations):
 
 class BinderVisitor:
     def visit_node(self, node, context=None):
-        print(f"paying a visit to {node}")
         node_type = node.node_type.name
         visit_method_name = f"visit_{CAMEL_TO_SNAKE.sub('_', node_type).lower()}"
         visit_method = getattr(self, visit_method_name, self.visit_unsupported)

@@ -40,6 +40,7 @@ def query_planner(operation, parameters, connection):
     from opteryx.components.v2.binder import do_bind_phase
     from opteryx.components.v2.logical_planner import do_logical_planning_phase
     from opteryx.components.v2.sql_rewriter import do_sql_rewrite
+    from opteryx.exceptions import SqlError
     from opteryx.third_party import sqloxide
 
     if isinstance(operation, bytes):
@@ -53,7 +54,10 @@ def query_planner(operation, parameters, connection):
     try:
         profile_content = operation + "\n\n"
         # Parser converts the SQL command into an AST
-        parsed_statements = sqloxide.parse_sql(clean_sql, dialect="mysql")
+        try:
+            parsed_statements = sqloxide.parse_sql(clean_sql, dialect="mysql")
+        except ValueError as parser_error:
+            raise SqlError(parser_error) from parser_error
         # AST Rewriter adds temporal filters and parameters to the AST
         parsed_statements = do_ast_rewriter(
             parsed_statements,

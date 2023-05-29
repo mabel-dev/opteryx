@@ -16,6 +16,7 @@ stores, it is not compliant with the standard:
 https://www.python.org/dev/peps/pep-0249/
 """
 import datetime
+import os
 import time
 import typing
 from dataclasses import dataclass
@@ -140,16 +141,16 @@ class Cursor(DataFrame):
 
         self._connection.context.history.append((operation, True, datetime.datetime.utcnow()))
 
-        if ENGINE_VERSION == 2:
-            # this is running the 2nd gen planner in parallel
-            try:
-                from opteryx.components.v2 import query_planner
+        # if ENGINE_VERSION == 2:
+        if os.environ["ENGINE_VERSION"] == "2":
+            # this is running the 2nd gen planner
 
-                plan = query_planner(
-                    operation=operation, parameters=params, connection=self._connection
-                )
-            except Exception as err:
-                print(f"{type(err).__name__} - {err}")
+            from opteryx.components.v2 import query_planner
+
+            plan = query_planner(
+                operation=operation, parameters=params, connection=self._connection
+            )
+
         else:
             self._query = operation
 
