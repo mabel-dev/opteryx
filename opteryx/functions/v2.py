@@ -22,9 +22,16 @@ import sys
 import typing
 from enum import Enum
 from enum import auto
-from functools import cache
 
 from opteryx.constants.attribute_types import OPTERYX_TYPES
+
+try:
+    # added 3.9
+    from functools import cache
+except ImportError:
+    from functools import lru_cache
+
+    cache = lru_cache(1)
 
 CAMEL_TO_SNAKE = re.compile(r"(?<!^)(?=[A-Z])")
 
