@@ -48,6 +48,9 @@ def get_functions():
             if function_name.startswith("FUNCTION_"):
                 function_name = function_name[9:]
                 functions[function_name] = function_implementation
+                for alias in function_implementation.aliases:
+                    functions[alias] = function_implementation
+
     return functions
 
 
@@ -80,6 +83,8 @@ class _BaseFunction:
     order_maintained: bool = False
     # What are the return types for this function
     return_types: list = []
+    # Does this functiona have any aliases
+    aliases: list = []
 
     def __call__(self, *args: typing.Any, **kwds: typing.Any) -> typing.Any:
         return self._func(*args, **kwds)
@@ -120,6 +125,7 @@ class FunctionLen(_BaseFunction):
     order_maintained = False
     returns_nulls = True
     return_types = [OPTERYX_TYPES.INTEGER]
+    aliases = ["LENGTH"]
 
     def _func(self, item: typing.Union[list, str]) -> int:
         return len(item)
