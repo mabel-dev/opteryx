@@ -22,9 +22,16 @@ import sys
 import typing
 from enum import Enum
 from enum import auto
-from functools import cache
 
 from opteryx.constants.attribute_types import OPTERYX_TYPES
+
+try:
+    # added 3.9
+    from functools import cache
+except ImportError:
+    from functools import lru_cache
+
+    cache = lru_cache(1)
 
 CAMEL_TO_SNAKE = re.compile(r"(?<!^)(?=[A-Z])")
 
@@ -48,6 +55,9 @@ def get_functions():
             if function_name.startswith("FUNCTION_"):
                 function_name = function_name[9:]
                 functions[function_name] = function_implementation
+                for alias in function_implementation.aliases:
+                    functions[alias] = function_implementation
+
     return functions
 
 
@@ -80,6 +90,8 @@ class _BaseFunction:
     order_maintained: bool = False
     # What are the return types for this function
     return_types: list = []
+    # Does this functiona have any aliases
+    aliases: list = []
 
     def __call__(self, *args: typing.Any, **kwds: typing.Any) -> typing.Any:
         return self._func(*args, **kwds)
@@ -120,6 +132,7 @@ class FunctionLen(_BaseFunction):
     order_maintained = False
     returns_nulls = True
     return_types = [OPTERYX_TYPES.INTEGER]
+    aliases = ["LENGTH"]
 
     def _func(self, item: typing.Union[list, str]) -> int:
         return len(item)

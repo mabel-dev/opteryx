@@ -11,6 +11,8 @@
 # limitations under the License.
 
 """
+This is Binder, it sits between the Logical Planner and the Optimizers.
+
 ~~~
                       ┌───────────┐
                       │   USER    │
@@ -37,19 +39,19 @@
    │ Logical   │ Plan ║           ║ Plan │ Heuristic │
    │   Planner ├──────►   Binder  ║──────► Optimizer │
    └───────────┘      ╚═══════════╝      └───────────┘
-   ~~~
-The binder is responsible for adding information about the database and engine into the logical
-plan. It's not a rewrite step but does to value exchanges (which could be seen as a rewrite type
-activity).
+~~~
 
-The binder takes the output from the logical plan, and adds information from various catalogues
-into that plan and then performs some validation checks.
+The Binder is responsible for adding information about the database and engine into the
+Logical Plan.
+
+The binder takes the the logical plan, and adds information from various catalogues
+into that planand then performs some validation checks.
 
 These catalogues include:
-- The data catalogue (e.g. data schemas)
-- The function catalogue (e.g. function inputs and data types)
+- The Data Catalogue (e.g. data schemas)
+- The Function Catalogue (e.g. function inputs and data types)
 
-The binder then performs these activities:
+The Binder then performs these activities:
 - schema lookup and propagation (add columns and types, add aliases)
 - function lookup (does the function exist, if it's a constant evaluation then replace the value
   in the plan)
@@ -67,53 +69,39 @@ from opteryx.exceptions import AmbiguousIdentifierError
 from opteryx.exceptions import ColumnNotFoundError
 from opteryx.exceptions import DatabaseError
 from opteryx.exceptions import UnexpectedDatasetReferenceError
+from opteryx.functions.v2 import FUNCTIONS
 from opteryx.managers.expression import NodeType
 
 CAMEL_TO_SNAKE = re.compile(r"(?<!^)(?=[A-Z])")
 logger = get_logger()
 
 
-def source_identifiers(node, relations):
+def inner_binder(node, relations):
     """
-
-    When this is run we should have two things:
-    - a list of all of the identifiers in a tree
-    - for each identifier:
-        - the source table
-        - the source field
-        - the name of the identifier in the query (e.g. any aliases)
-        - the type of the column
-        - any aliases for the column
-    We will also know:
-    - if a column name is identifiable (i.e. does it exist, is it unique)
-
     Note, this is a tree within a tree, this is a single step in the execution plan (i.e. the plan
     associated with the relational algebra) which in itself may be an evaluation plan (i.e.
     executing comparisons)
     """
-    # we want to return an empty list if we don't find anything
-    identifiers = []
-    # we're only interested if this node is an identifier
-    if node.node_type & NodeType.IDENTIFIER == NodeType.IDENTIFIER:
-        found_source_relation = None
-        column = None
-        if node.source is not None:
-            # the data source is explicit in the query (e.g. table.column)
-            if node.source in relations:
-                schema = relations[node.source]
-                column = schema.find_column(node.source_column)
-                if column is None:
-                    candidates = schema.get_all_columns()
-                    from opteryx.utils import fuzzy_search
 
-                    suggestion = fuzzy_search(node.value, candidates)
-                    raise ColumnNotFoundError(
-                        column=node.value, dataset=node.source, suggestion=suggestion
-                    )
-                found_source_relation = schema
-            else:
+    if node.node_type & NodeType.IDENTIFIER == NodeType.IDENTIFIER:
+        column = None
+        found_source_relation = relations.get(node.source)
+
+        if node.source is not None:
+            if found_source_relation is None:
                 # the dataset hasn't been loaded in a FROM or JOIN statement
                 raise UnexpectedDatasetReferenceError(dataset=node.source)
+
+            column = found_source_relation.find_column(node.source_column)
+            if column is None:
+                candidates = found_source_relation.get_all_columns()
+                from opteryx.utils import fuzzy_search
+
+                suggestion = fuzzy_search(node.value, candidates)
+                raise ColumnNotFoundError(
+                    column=node.value, dataset=node.source, suggestion=suggestion
+                )
+
         else:
             # look for the column in the loaded relations
             for _, schema in relations.items():
@@ -138,25 +126,23 @@ def source_identifiers(node, relations):
         # add values to the node to indicate the source of this data
         node.source = found_source_relation.table_name
         node.source_column = column
+    if node.node_type & NodeType.FUNCTION == NodeType.FUNCTION:
+        if not FUNCTIONS.get(node.value):
+            raise NotImplementedError("Unknown function " + node.value)
+        print("I found a function, I should add metadata about it")
+        print("Like the number of paramters it's expecting, their types and the return type")
 
     # Now recurse and do this again for all the sub parts of the evaluation plan
     if node.left:
-        these_identifiers, node.left = source_identifiers(node.left, relations)
-        identifiers.extend(these_identifiers)
+        node.left = inner_binder(node.left, relations)
     if node.right:
-        these_identifiers, node.right = source_identifiers(node.right, relations)
-        identifiers.extend(these_identifiers)
+        node.right = inner_binder(node.right, relations)
     if node.centre:
-        these_identifiers, node.centre = source_identifiers(node.centre, relations)
-        identifiers.extend(these_identifiers)
+        node.centre = inner_binder(node.centre, relations)
     if node.parameters:
-        these_parameters = []
-        for parameter in node.parameters:
-            these_identifiers, this_parameter = source_identifiers(parameter, relations)
-            these_parameters.append(this_parameter)
-            identifiers.extend(these_identifiers)
+        node.parameters = [inner_binder(parameter, relations) for parameter in node.parameters]
 
-    return identifiers, node
+    return node
 
 
 class BinderVisitor:
@@ -178,7 +164,7 @@ class BinderVisitor:
     def visit_project(self, node, context):
         logger.warning("visit_project not fully implemented")
         for column in node.columns:
-            print(source_identifiers(column, context.get("schemas", {})))
+            print(inner_binder(column, context.get("schemas", {})))
 
         return context
 

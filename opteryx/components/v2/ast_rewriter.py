@@ -1,4 +1,18 @@
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 """
+This is the AST rewriter, it sits between the Parser and the Logical Planner.
+
 ~~~
                       ┌───────────┐
                       │   USER    │
@@ -26,6 +40,21 @@
    │   Planner ├──────► Binder    ├──────► Optimizer │
    └───────────┘      └───────────┘      └───────────┘
 ~~~
+
+It's primary role is to bind information to the AST which is provided in the order they appear
+in the AST. For example, parameter substitutions and temporal ranges. Both of these require the
+AST to be in the same order as the SQL provided by the user, which we can't guarantee after the
+logical planner.
+
+The parameter substitution is done after the AST is parsed to limit the possibility of the values
+in the parameters affecting how the SQL is parsed (i.e. to prevent injection attacks). For similar
+reasons, we do variable subsitutions here aswell. Although these are not sensitive to ordering, 
+we should remove any opportunity for them to be used for injection attacks so we bind them after
+the building of the AST.
+
+The temporal range binding is done here because it is a non-standard extention not supported by
+the AST parser, so we strip the temporal ranges out in the SQL rewriter, and add them to the AST
+here.
 """
 import datetime
 import decimal
@@ -37,6 +66,7 @@ from opteryx.exceptions import SqlError
 
 
 def _build_literal_node(value):
+    """for a given literal, write the AST node for it"""
     if value is None:
         return {"Value": "Null"}
     if isinstance(value, (bool)):
