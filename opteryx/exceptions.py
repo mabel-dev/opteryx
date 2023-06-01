@@ -116,6 +116,22 @@ class ColumnNotFoundError(ProgrammingError):
         super().__init__(message)
 
 
+class FunctionNotFoundError(ProgrammingError):
+    def __init__(self, function=None, suggestion=None):
+        """
+        Return as helpful Function Not Found error as we can by being specific and offering
+        suggestions.
+        """
+        self.function = function
+        self.suggestion = suggestion
+
+        if suggestion is not None:
+            message = f"Function '{function}' does not exist. Did you mean '{suggestion}'?."
+        else:
+            message = f"Function '{function}' does not exist."
+        super().__init__(message)
+
+
 class VariableNotFoundError(ProgrammingError):
     def __init__(self, variable=None):
         if variable is not None:

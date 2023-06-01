@@ -68,6 +68,7 @@ from orso.logging import get_logger
 from opteryx.exceptions import AmbiguousIdentifierError
 from opteryx.exceptions import ColumnNotFoundError
 from opteryx.exceptions import DatabaseError
+from opteryx.exceptions import FunctionNotFoundError
 from opteryx.exceptions import UnexpectedDatasetReferenceError
 from opteryx.functions.v2 import FUNCTIONS
 from opteryx.managers.expression import NodeType
@@ -127,10 +128,12 @@ def inner_binder(node, relations):
         node.source = found_source_relation.table_name
         node.source_column = column
     if node.node_type & NodeType.FUNCTION == NodeType.FUNCTION:
-        if not FUNCTIONS.get(node.value):
-            raise NotImplementedError("Unknown function " + node.value)
-        print("I found a function, I should add metadata about it")
-        print("Like the number of paramters it's expecting, their types and the return type")
+        # we're just going to put the function definition into the node
+        func = FUNCTIONS.get(node.value)
+        if not func:
+            suggest = FUNCTIONS.suggest(node.value)
+            raise FunctionNotFoundError(function=node.value, suggestion=suggest)
+        node.function = func
 
     # Now recurse and do this again for all the sub parts of the evaluation plan
     if node.left:
