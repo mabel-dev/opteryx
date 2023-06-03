@@ -50,14 +50,26 @@ into that planand then performs some validation checks.
 These catalogues include:
 - The Data Catalogue (e.g. data schemas)
 - The Function Catalogue (e.g. function inputs and data types)
+- The Variable Catalogue (i.e. the @@ variables)
+
+We also bind infromation about '@' variables.
 
 The Binder then performs these activities:
 - schema lookup and propagation (add columns and types, add aliases)
-- function lookup (does the function exist, if it's a constant evaluation then replace the value
-  in the plan)
 - type checks (are the ops and functions compatible with the columns)
 ? permission enforcement (does the user have the permission to that table, what additional
   constraints should be added for contextual access)
+"""
+
+"""
+TODO:
+- to bind the columns we need to pass them upwards, morsels have these columns with these types
+  with these aliases, this is the form of the data at this point. This includes when functions
+  and aggregates are run, this column has this type
+- we then need to prune columns, once we're at the head of the execution tree, work our way
+  back down pruning columns (no point reading a column if it's not used)
+- we need to do function type validation
+- we need to do evaluation (e.g. a + b) type validation
 """
 
 import copy
@@ -127,8 +139,10 @@ def inner_binder(node, relations):
         # add values to the node to indicate the source of this data
         node.source = found_source_relation.table_name
         node.source_column = column
-    if node.node_type & NodeType.FUNCTION == NodeType.FUNCTION:
-        # we're just going to put the function definition into the node
+    if (node.node_type & NodeType.FUNCTION == NodeType.FUNCTION) or (
+        node.node_type & NodeType.AGGREGATOR == NodeType.AGGREGATOR
+    ):
+        # we're just going to bind the function into the node
         func = FUNCTIONS.get(node.value)
         if not func:
             suggest = FUNCTIONS.suggest(node.value)
@@ -181,9 +195,6 @@ class BinderVisitor:
         context.setdefault("schemas", {})[node.alias] = node.connector.get_dataset_schema(
             node.relation
         )
-
-        logger.warning("visit_scan not implemented")
-        logger.warning("visit_scan doesn't resolve CTEs")
         return context
 
     def traverse(self, graph, node, context=None):

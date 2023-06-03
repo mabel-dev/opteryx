@@ -59,6 +59,7 @@ from opteryx.exceptions import UnexpectedDatasetReferenceError
 from opteryx.exceptions import UnsupportedSyntaxError
 
 from opteryx.utils.formatter import format_sql
+from tests.tools import skip_if, is_arm, is_mac, is_windows
 
 # fmt:off
 STATEMENTS = [
@@ -77,6 +78,7 @@ STATEMENTS = [
 # fmt:on
 
 
+@skip_if(is_arm() or is_windows() or is_mac())
 @pytest.mark.parametrize("statement, rows, columns, exception", STATEMENTS)
 def test_sql_battery_v2(statement, rows, columns, exception):
     """

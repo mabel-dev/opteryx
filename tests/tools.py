@@ -30,15 +30,18 @@ def skip(func):  # pragma: no cover
     return wrapper
 
 
-def skip_on_partials(func):  # pragma: no cover
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        if is_arm() or is_windows() or is_mac():
-            logger.warning(f"Skipping {func.__name__} - doesn't run on all platforms")
-        else:
-            return func(*args, **kwargs)
+def skip_if(is_true: bool = True):
+    def decorate(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            if is_true:
+                logger.warning(f"Skipping {func.__name__} because of conditional execution.")
+            else:
+                return func(*args, **kwargs)
 
-    return wrapper
+        return wrapper
+
+    return decorate
 
 
 def download_file(url, path):
