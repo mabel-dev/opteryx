@@ -9,7 +9,7 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 import opteryx
 
 from opteryx.connectors import SqlConnector
-from tests.tools import skip_on_partials
+from tests.tools import skip_if, is_arm, is_mac, is_windows
 
 MYSQL_PASSWORD = os.environ.get("MYSQL_PASSWORD")
 MYSQL_USER = os.environ.get("MYSQL_USER")
@@ -24,7 +24,7 @@ opteryx.register_store(
 
 
 # skip to reduce contention
-@skip_on_partials
+@skip_if(is_arm() or is_windows() or is_mac())
 def test_predicate_pushdowns_mysql_eq():
     """
     This is the same test as the collection pushdown - but on a different dataset
@@ -75,7 +75,7 @@ def test_predicate_pushdowns_mysql_eq():
 
 
 # skip to reduce contention
-@skip_on_partials
+@skip_if(is_arm() or is_windows() or is_mac())
 def test_predicate_pushdown_mysql_other():
     res = opteryx.query("SELECT * FROM mysql.planets WHERE gravity <= 3.7")
     assert res.rowcount == 3, res.rowcount

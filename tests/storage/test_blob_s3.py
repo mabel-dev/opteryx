@@ -10,13 +10,13 @@ import opteryx
 
 from opteryx.connectors import AwsS3Connector
 
-from tests.tools import skip_on_partials
+from tests.tools import skip_if, is_arm, is_windows, is_mac
 
 BUCKET_NAME = "mabellabs"
 SECRETS = None
 
 
-@skip_on_partials
+@skip_if(is_arm() or is_windows() or is_mac())
 def test_minio_storage():
     opteryx.register_store(BUCKET_NAME, AwsS3Connector)
 

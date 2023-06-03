@@ -8,10 +8,10 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import opteryx
 from opteryx import config
-from tests.tools import skip_on_partials
+from tests.tools import skip_if, is_arm, is_mac, is_windows
 
 
-@skip_on_partials
+@skip_if(is_arm() or is_windows() or is_mac())
 def test_predicate_pushdowns_blobs_orc():
     os.environ["GCP_PROJECT_ID"] = "mabeldev"
 
