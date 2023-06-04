@@ -62,7 +62,6 @@ import decimal
 import numpy
 
 from opteryx.exceptions import ProgrammingError
-from opteryx.exceptions import SqlError
 
 
 def _build_literal_node(value):
