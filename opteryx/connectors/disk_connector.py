@@ -27,3 +27,6 @@ class DiskConnector(BaseBlobStorageAdapter):
 
         files = glob.glob(str(partition / "**"), recursive=True)
         return [str(f).replace("\\", "/") for f in files if os.path.isfile(f)]
+
+    def get_dataset_schema(self, blob_name):
+        return None

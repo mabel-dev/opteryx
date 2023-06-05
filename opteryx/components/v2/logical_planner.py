@@ -48,7 +48,7 @@ import sys
 from enum import Enum
 from enum import auto
 
-from opteryx.components.logical_planner import builders
+from opteryx.components.v2 import logical_planner_builders
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import format_expression
 from opteryx.managers.expression import get_all_nodes_of_type
@@ -160,8 +160,8 @@ def extract_ctes(branch, planner):
 
 def extract_value(clause):
     if len(clause) == 1:
-        return builders.build(clause[0])
-    return [builders.build(token) for token in clause]
+        return logical_planner_builders.build(clause[0])
+    return [logical_planner_builders.build(token) for token in clause]
 
 
 def extract_variable(clause):
@@ -182,7 +182,7 @@ def extract_simple_filter(filters, identifier: str = "Name"):
         )
         return root
     if "Where" in filters:
-        root = builders.build(filters["Where"])
+        root = logical_planner_builders.build(filters["Where"])
         return root
 
 
@@ -206,7 +206,7 @@ def inner_query_planner(ast_branch):
             inner_plan.add_edge(relation["step_id"], step_id)
 
     # selection
-    _selection = builders.build(ast_branch["Select"].get("selection"))
+    _selection = logical_planner_builders.build(ast_branch["Select"].get("selection"))
     if _selection:
         selection_step = LogicalPlanNode(node_type=LogicalPlanStepType.Filter)
         selection_step.condition = _selection
@@ -216,7 +216,7 @@ def inner_query_planner(ast_branch):
             inner_plan.add_edge(previous_step_id, step_id)
 
     # groups
-    _groups = builders.build(ast_branch["Select"].get("group_by"))
+    _groups = logical_planner_builders.build(ast_branch["Select"].get("group_by"))
     if _groups is not None and _groups != []:
         # TODO: groups need: grouped columns
         group_step = LogicalPlanNode(node_type=LogicalPlanStepType.Group)
@@ -227,7 +227,7 @@ def inner_query_planner(ast_branch):
             inner_plan.add_edge(previous_step_id, step_id)
 
     # aggregates
-    _projection = builders.build(ast_branch["Select"].get("projection")) or []
+    _projection = logical_planner_builders.build(ast_branch["Select"].get("projection")) or []
     _aggregates = get_all_nodes_of_type(
         _projection, select_nodes=(NodeType.AGGREGATOR, NodeType.COMPLEX_AGGREGATOR)
     )
@@ -254,7 +254,7 @@ def inner_query_planner(ast_branch):
             inner_plan.add_edge(previous_step_id, step_id)
 
     # having
-    _having = builders.build(ast_branch["Select"].get("having"))
+    _having = logical_planner_builders.build(ast_branch["Select"].get("having"))
     if _having:
         having_step = LogicalPlanNode(node_type=LogicalPlanStepType.Filter)
         having_step.condition = _having
@@ -267,7 +267,9 @@ def inner_query_planner(ast_branch):
     if ast_branch["Select"].get("distinct"):
         distinct_step = LogicalPlanNode(node_type=LogicalPlanStepType.Distinct)
         if isinstance(ast_branch["Select"]["distinct"], dict):
-            distinct_step.on = builders.build(ast_branch["Select"]["distinct"]["On"])
+            distinct_step.on = logical_planner_builders.build(
+                ast_branch["Select"]["distinct"]["On"]
+            )
         previous_step_id, step_id = step_id, random_string()
         inner_plan.add_node(step_id, distinct_step)
         if previous_step_id is not None:
@@ -278,7 +280,8 @@ def inner_query_planner(ast_branch):
     if _order_by:
         order_step = LogicalPlanNode(node_type=LogicalPlanStepType.Order)
         order_step.order_by = [
-            (builders.build(item["expr"]).value, not bool(item["asc"])) for item in _order_by
+            (logical_planner_builders.build(item["expr"]).value, not bool(item["asc"]))
+            for item in _order_by
         ]
         previous_step_id, step_id = step_id, random_string()
         inner_plan.add_node(step_id, order_step)
@@ -343,7 +346,7 @@ def create_node_relation(relation):
                 values_step.alias = subquery["alias"]["name"]["value"]
                 values_step.columns = tuple(col["value"] for col in subquery["alias"]["columns"])
                 values_step.values = [
-                    tuple(builders.build(value["Value"]) for value in row)
+                    tuple(logical_planner_builders.build(value["Value"]) for value in row)
                     for row in subquery["subquery"]["body"]["Values"]["rows"]
                 ]
                 step_id = random_string()
@@ -365,7 +368,7 @@ def create_node_relation(relation):
         function_step.alias = (
             None if function["alias"] is None else function["alias"]["name"]["value"]
         )
-        function_step.args = [builders.build(arg) for arg in function["args"]]
+        function_step.args = [logical_planner_builders.build(arg) for arg in function["args"]]
 
         step_id = random_string()
         sub_plan.add_node(step_id, function_step)
@@ -413,10 +416,12 @@ def create_node_relation(relation):
                 "RightSemi": "Right Semi Join",
             }.get(join_operator, join_operator)
             if join_condition == "On":
-                join_step.on = builders.build(join["join_operator"][join_operator][join_condition])
+                join_step.on = logical_planner_builders.build(
+                    join["join_operator"][join_operator][join_condition]
+                )
             elif join_condition == "Using":
                 join_step.using = [
-                    builders.build({"Identifier": identifier})
+                    logical_planner_builders.build({"Identifier": identifier})
                     for identifier in join["join_operator"][join_operator][join_condition]
                 ]
         join_step_id = random_string()

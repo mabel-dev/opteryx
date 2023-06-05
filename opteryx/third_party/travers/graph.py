@@ -444,6 +444,11 @@ class Graph(object):
     def __getitem__(self, nid):
         return self._nodes.get(nid, None)
 
+    def __setitem__(self, nid, node):
+        if not nid in self._nodes:
+            raise ValueError("Cannot create nodes with [] syntax")
+        self._nodes[nid] = node
+
     def __add__(self, other):
         self._edges.update(other._edges)
         self._nodes.update(other._nodes)

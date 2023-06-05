@@ -23,7 +23,9 @@ import typing
 from enum import Enum
 from enum import auto
 
-from opteryx.constants.attribute_types import OPTERYX_TYPES
+import numpy
+from pyarrow import compute
+
 from opteryx.exceptions import DatabaseError
 
 try:
@@ -67,18 +69,50 @@ class _Functions:
         self._functions = get_functions()
 
     def get(self, func):
+        """return a function with a given name"""
         implementation = self._functions.get(func)
         if implementation is None:
             return None
         return implementation()
 
     def suggest(self, func):
+        """return the function with the nearest name match"""
         from opteryx.utils import fuzzy_search
 
         suggestion = fuzzy_search(func, self._functions.keys())
         return suggestion
 
     def collect(self, full_details: bool = False):
+        """return all of the functions"""
+        if full_details:
+            function_list = []
+            for function, implementation in self._functions.items():
+                concrete_implementation = implementation()
+                if (
+                    function.replace("_", "")
+                    != concrete_implementation.__class__.__name__[8:].upper()
+                ):
+                    # we're an alias
+                    continue
+                function_definition = {
+                    "Function": function,
+                    "Description": concrete_implementation.describe(),
+                    "Argument_Types": concrete_implementation.argument_types(),
+                    "Return_Type": ", ".join(concrete_implementation.return_types()),
+                    "Function_Type": concrete_implementation.style_name(),
+                }
+                function_list.append(function_definition)
+                for alias in concrete_implementation.aliases:
+                    if alias != function:
+                        function_definition = {
+                            "Function": alias,
+                            "Description": f"Alias of `{function}`",
+                            "Argument_Types": None,
+                            "Return_Type": None,
+                            "Function_Type": None,
+                        }
+                        function_list.append(function_definition)
+            return function_list
         return list(self._functions.keys())
 
 
@@ -88,7 +122,7 @@ class _FunctionStyle(Enum):
     # Elementwise functions accept a set of two or more columns of the same length and return
     # a column of the same length as the inputs
     ELEMENTWISE = auto()
-    # Setwise functions accept one column and one or more fixed values and return a column of
+    # Setwise functions accept one column and zero or more fixed values and return a column of
     # the same length as the input
     SETWISE = auto()
     # Constant functions return a single value, usually with no input
@@ -113,11 +147,24 @@ class _BaseFunction:
     def __call__(self, *args: typing.Any, **kwds: typing.Any) -> typing.Any:
         return self._func(*args, **kwds)
 
-    def __str__(self):
-        return f"{self.__class__.__name__[8:].upper()} (<params>) → {self.return_types()}\n{self.__doc__.strip()}"
+    def describe(self):
+        return f"{self.__doc__.strip()}"
+
+    def signature(self):
+        return f"{self.__class__.__name__[8:].upper()} (<params>) → {self.return_types()}"
+
+    def name(self):
+        return f"{self.__class__.__name__[8:].upper()}"
+
+    def style_name(self):
+        if self.style in (_FunctionStyle.ELEMENTWISE, _FunctionStyle.SETWISE):
+            return "SCALAR"
+        return str(self.style.name)
 
     def return_types(self):
         from orso.dataframe import TYPE_MAP
+
+        TYPE_MAP[typing.Any] = "INPUT TYPE"
 
         return_type_hints = typing.get_type_hints(self._func).get("return")
 
@@ -130,7 +177,34 @@ class _BaseFunction:
             return [TYPE_MAP.get(return_type_hints, "OTHER")]
         raise DatabaseError(f"{self.__class__.__name__.upper()} hasn't specified its return types")
 
-    def validate_func_parameters(self, *args, **kwargs):
+    def argument_types(self):
+        from orso.dataframe import TYPE_MAP
+
+        def is_optional_type(param_type):
+            origin = typing.get_origin(param_type)
+            return origin is typing.Union and type(None) in typing.get_args(param_type)
+
+        func_signature = inspect.signature(self._func)
+        func_parameters = func_signature.parameters
+        type_hints = typing.get_type_hints(self._func)
+
+        return_value = []
+        for arg_name, arg_value in func_parameters.items():
+            arg_type = type_hints.get(arg_name)
+            optional = is_optional_type(arg_type)
+            default = None
+            if isinstance(arg_value.default, type) and issubclass(arg_value.default, type):
+                default = arg_value.default
+
+            argument_types = [
+                f"{arg_value}{'='+str(default) if default else ''}{' OPTIONAL' if optional else ''}"
+            ]
+            return_value.append({arg_name: ", ".join(argument_types)})
+        if return_value == []:
+            return_value = None
+        return return_value
+
+    def validate_func_parameters(self, *args):
         func_signature = inspect.signature(self._func)
         func_parameters = func_signature.parameters
         type_hints = typing.get_type_hints(self._func)
@@ -148,35 +222,80 @@ class _BaseFunction:
                 if not isinstance(args[i], arg_type):
                     return False
 
-        # Validate keyword arguments
-        for kwarg_name, kwarg_value in kwargs.items():
-            if kwarg_name in func_parameters:
-                kwarg_type = type_hints.get(kwarg_name)
-                if (
-                    kwarg_type
-                    and not isinstance(kwarg_type, type)
-                    and not issubclass(kwarg_type, type)
-                ):
-                    raise TypeError(f"Invalid type hint for argument '{kwarg_name}': {kwarg_type}")
-
-                if not isinstance(func_parameters[kwarg_name].default, type) and not issubclass(
-                    func_parameters[kwarg_name].default, type
-                ):
-                    raise TypeError(
-                        f"Invalid type hint for argument '{kwarg_name}': {func_parameters[kwarg_name].default}"
-                    )
-
-                if not isinstance(kwarg_value, kwarg_type):
-                    return False
-
         return True
+
+    def determine_input_values(self):
+        """
+        Determine the input values for measuring the execution time of the given function.
+        """
+        parameters = inspect.signature(self._func).parameters
+        type_hints = typing.get_type_hints(self._func)
+
+        args = []
+        value: typing.Any = None
+        for parameter_name, parameter in parameters.items():
+            # Check if the parameter has a type hint
+            if parameter_name in type_hints:
+                parameter_type = type_hints[parameter_name]
+                # Optional
+                if isinstance(parameter_type.__args__, tuple):
+                    parameter_type = parameter_type.__args__[0]
+                # Generate a value based on the parameter type (customize as needed)
+                if parameter_type == int:
+                    value = 10
+                elif parameter_type == str:
+                    value = "example"
+                elif parameter_type == list:
+                    value = [1, 2, 3]
+                # Add more conditions for other parameter types as necessary
+                else:
+                    # Handle unsupported parameter types or default to None
+                    value = None
+                args.append(value)
+            else:
+                # Handle parameters without type hints or default to None
+                args.append(None)
+
+        return args
+
+    def calculate_cost(self):
+        """
+        You're not meant to call this function, I'm used internally for approximating the
+        cost value for this function.
+
+        Cost is roughly the number of nanoseconds to execute the function 1 million times.
+        """
+        import time
+
+        import numpy
+
+        CYCLES = 50
+
+        args = self.determine_input_values()
+
+        measurements = []
+        for cycle in range(CYCLES):
+            start = time.monotonic_ns()
+            for _ in range(1000000):
+                self._func(*args)
+            measurements.append((time.monotonic_ns() - start) / 1000000)
+
+        threshold = 3
+        mean = numpy.mean(measurements)
+        std = numpy.std(measurements)
+        # remove outliers - anything 3 standard deviations from the mean
+        measurements = [x for x in measurements if abs(x - mean) < threshold * std]
+        # 80% of responses were below p80
+        p80 = numpy.percentile(measurements, 80, method="nearest")
+
+        return numpy.round(p80 / 50) * 50
 
 
 class FunctionCurrentTime(_BaseFunction):
     """Return the current system time."""
 
     style = _FunctionStyle.CONSTANT
-    cost = 600
+    cost = 450
     returns_nulls = False
 
     def _func(self) -> datetime.time:
@@ -187,29 +306,39 @@ class FunctionE(_BaseFunction):
     """Return Euler's number."""
 
     style = _FunctionStyle.CONSTANT
-    cost = 300
+    cost = 150
 
     def _func(self) -> float:
         return 2.718281828459045235360287
 
 
+class FunctionGreatest(_BaseFunction):
+    """Return the greatest value in array."""
+
+    style = _FunctionStyle.SETWISE
+    cost = 150
+
+    def _func(self, array: list) -> typing.Any:
+        return numpy.nanmax(array)
+
+
 class FunctionLen(_BaseFunction):
-    """return the length of a VARCHAR or ARRAY"""
+    """Return the length of a VARCHAR or ARRAY"""
 
     style = _FunctionStyle.ELEMENTWISE
-    cost = 500
+    cost = 250
     order_maintained = False
     aliases = ["LENGTH"]
 
-    def _func(self, item: typing.Union[list, str]) -> int:
-        return len(item)
+    def _func(self, value: typing.Union[list, str]) -> int:
+        return len(value)
 
 
 class FunctionPhi(_BaseFunction):
     """Return the golden ratio."""
 
     style = _FunctionStyle.CONSTANT
-    cost = 300
+    cost = 150
 
     def _func(self) -> float:
         return 1.618033988749894848204586
@@ -219,17 +348,26 @@ class FunctionPi(_BaseFunction):
     """Return Pi."""
 
     style = _FunctionStyle.CONSTANT
-    cost = 300
+    cost = 150
 
     def _func(self) -> float:
         return 3.141592653589793238462643
+
+
+class FunctionRound(_BaseFunction):
+    """Returns `value` rounded to `places` decimal places."""
+
+    style = _FunctionStyle.SETWISE
+
+    def _func(self, value: typing.List[float], places: int = 0) -> float:
+        return compute.round(value, places)  # [#325]
 
 
 class FunctionVersion(_BaseFunction):
     """Return the version of the query engine."""
 
     style = _FunctionStyle.CONSTANT
-    cost = 400
+    cost = 350
 
     def _func(self) -> str:
         import opteryx
@@ -240,7 +378,12 @@ class FunctionVersion(_BaseFunction):
 FUNCTIONS = _Functions()
 
 if __name__ == "__main__":  # pragma: no cover
+    import orso
+
     import opteryx
+
+    function_table = orso.DataFrame(FUNCTIONS.collect(True))
+    print(function_table)
 
     func = FUNCTIONS.get("LEN")
     print(func)
@@ -250,12 +393,6 @@ if __name__ == "__main__":  # pragma: no cover
 
     import time
 
-    for f in FUNCTIONS.collect(False):
-        try:
-            func = FUNCTIONS.get(f)
-            start = time.monotonic_ns()
-            for i in range(1000000):
-                func()
-            print(f"running {f} 1 million times took {(time.monotonic_ns() - start) / 1000000}")
-        except:
-            pass
+#    for f in FUNCTIONS.collect(False):
+#        func = FUNCTIONS.get(f)
+#        print(f"running {f} 1 million times took {func.calculate_cost()}")

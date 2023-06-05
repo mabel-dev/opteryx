@@ -15,21 +15,27 @@ def tokenize_string(string):
 
 
 def format_sql(sql):
-    # Split the SQL statement into individual words
-    # this is not meant to cover all scenarios, it's mainly for debugging
     words = tokenize_string(sql)
 
-    # Add spaces and new lines to format the SQL statement
     formatted_sql = ""
-    indent_level = 0
-    for word in words:
-        if word == "(":
-            indent_level += 1
-            formatted_sql += "\033[38;5;102m" + word + "\033[0m "
-        elif word == ")":
-            formatted_sql += "\033[38;5;102m" + word + "\033[0m "
-            indent_level -= 1
-        elif word in [
+    in_string_literal = False
+
+    for i, word in enumerate(words):
+        if word in ("(", ")"):
+            formatted_sql += "\033[38;2;98;114;164m" + word + "\033[0m "
+        elif not in_string_literal and word.startswith("'"):
+            formatted_sql += "\033[38;5;203m" + word
+            if word.endswith("'"):
+                in_string_literal = False
+                formatted_sql += "\033[0m "
+        elif in_string_literal:
+            formatted_sql += word + " "
+            if word.endswith("'"):
+                in_string_literal = False
+                formatted_sql += "\033[0m"
+        elif (i + 1) < len(words) and words[i + 1] == "(":
+            formatted_sql += "\033[38;2;80;250;123m" + word.upper() + "\033[0m"
+        elif word in (
             "SELECT",
             "FROM",
             "WHERE",
@@ -41,13 +47,28 @@ def format_sql(sql):
             "BY",
             "ORDER",
             "LIMIT",
-        ]:
-            formatted_sql += "\033[38;5;117m\n" + word.rjust(7) + "\033[0m "
-        elif word in ["=", ">=", "<=", "!=", "<", ">", "<>"]:
+            "LIKE",
+            "ILIKE",
+            "UNION",
+            "LEFT",
+            "RIGHT",
+            "FULL",
+            "OUTER",
+            "INNER",
+        ):
+            formatted_sql += "\033[38;2;139;233;253m" + word + "\033[0m "
+        elif word in ("=", ">=", "<=", "!=", "<", ">", "<>"):
             formatted_sql += "\033[38;5;183m" + word + "\033[0m "
         elif word.isdigit():
-            formatted_sql += "\033[0;31m" + word + "\033[0m "
+            formatted_sql += "\033[38;2;255;184;108m" + word + "\033[0m "
         else:
             formatted_sql += word + " "
+
+    formatted_sql += "\033[0m"
+
+    formatted_sql = formatted_sql.replace(" \033[38;2;98;114;164m(", "\033[38;2;98;114;164m(")
+    formatted_sql = formatted_sql.replace("(\033[0m ", "(\033[0m")
+    formatted_sql = formatted_sql.replace(" \033[38;2;98;114;164m)", "\033[38;2;98;114;164m)")
+    formatted_sql = formatted_sql.replace(" ,", ",")
 
     return "\n" + formatted_sql.strip()

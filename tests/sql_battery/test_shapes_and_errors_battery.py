@@ -134,6 +134,7 @@ STATEMENTS = [
         ("SELECT * FROM $satellites WHERE id = 3 + 2 AND name = 'Europa'", 1, 8, None),
         ("SELECT * FROM $satellites WHERE id + 2 = 7 AND name = 'Europa'", 1, 8, None),
         ("SELECT * FROM $satellites WHERE id = 15 % 10 AND name = 'Europa'", 1, 8, None),
+        ("SELECT * FROM $satellites WHERE id = 15 DIV 4", 1, 8, None),
 
         ("SELECT * FROM $satellites WHERE magnitude = 5.29", 1, 8, None),
         ("SELECT * FROM $satellites WHERE id = 5 AND magnitude = 5.29", 1, 8, None),
@@ -929,6 +930,8 @@ if __name__ == "__main__":  # pragma: no cover
 
     import shutil
     import time
+
+    os.environ["ENGINE_VERSION"] = "1"
 
     width = shutil.get_terminal_size((80, 20))[0] - 15
 
