@@ -38,19 +38,19 @@ def test_logical_plan_visitor():
     class TestBinderVisitor(BinderVisitor):
         def visit_scan(self, node, context):
             context.setdefault("sources", []).append(node.relation)
-            return context
+            return node, context
 
         def visit_filter(self, node, context):
             node.sources = context.get("sources")
-            return context
+            return node, context
 
         def visit_union(self, node, context):
             node.sources = context.get("sources")
-            return context
+            return node, context
 
         def visit_project(self, node, context):
             node.sources = context.get("sources")
-            return context
+            return node, context
 
     visitor = TestBinderVisitor()
     visitor.traverse(plan, 4)
