@@ -167,23 +167,24 @@ class BinderVisitor:
         node_type = node.node_type.name
         visit_method_name = f"visit_{CAMEL_TO_SNAKE.sub('_', node_type).lower()}"
         visit_method = getattr(self, visit_method_name, self.visit_unsupported)
-        result = visit_method(node, context)
-        if not isinstance(result, dict):
+        return_node, return_context = visit_method(node, context)
+        if not isinstance(return_context, dict):
             raise DatabaseError(
                 f"Internal Error - function {visit_method_name} didn't return a dict"
             )
-        return result
+        return return_node, return_context
 
     def visit_unsupported(self, node, context):
         logger.warning(f"No visit method implemented for node type {node.node_type.name}")
-        return context
+        return node, context
 
     def visit_project(self, node, context):
         logger.warning("visit_project not fully implemented")
+        columns = []
         for column in node.columns:
-            print(inner_binder(column, context.get("schemas", {})))
-
-        return context
+            columns.append(inner_binder(column, context.get("schemas", {})))
+        node.columns = columns
+        return node, context
 
     def visit_scan(self, node, context):
         from opteryx.connectors import connector_factory
@@ -195,7 +196,7 @@ class BinderVisitor:
         context.setdefault("schemas", {})[node.alias] = node.connector.get_dataset_schema(
             node.relation
         )
-        return context
+        return node, context
 
     def traverse(self, graph, node, context=None):
         """
@@ -237,12 +238,15 @@ class BinderVisitor:
         if children:
             exit_context = copy.deepcopy(context)
             for child in children:
-                child_context = self.traverse(graph, child[0], copy.deepcopy(context))
+                returned_graph, child_context = self.traverse(
+                    graph, child[0], copy.deepcopy(context)
+                )
                 exit_context = merge_dicts(child_context, exit_context)
             context = merge_dicts(context, exit_context)
         # Visit node and return updated context
-        context = self.visit_node(graph[node], context=context)
-        return context
+        return_node, context = self.visit_node(graph[node], context=context)
+        graph[node] = return_node
+        return graph, context
 
 
 def do_bind_phase(plan, context=None, common_table_expressions=None):
@@ -250,5 +254,5 @@ def do_bind_phase(plan, context=None, common_table_expressions=None):
     root_node = plan.get_exit_points()
     if len(root_node) > 1:
         raise ValueError(f"logical plan has {len(root_node)} heads - this is an error")
-    binder_visitor.traverse(plan, root_node[0])
+    plan = binder_visitor.traverse(plan, root_node[0])
     return plan

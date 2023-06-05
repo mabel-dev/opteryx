@@ -538,7 +538,6 @@ def array_agg(branch, alias=None, key=None):
     order = None
     if branch["order_by"]:
         order = custom_builders.extract_order({"Query": {"order_by": branch["order_by"]}})
-        raise UnsupportedSyntaxError("`ORDER BY` not supported in `ARRAY_AGG`.")
     limit = None
     if branch["limit"]:
         limit = int(build(branch["limit"]).value)
@@ -546,7 +545,10 @@ def array_agg(branch, alias=None, key=None):
     return Node(
         node_type=NodeType.COMPLEX_AGGREGATOR,
         value="ARRAY_AGG",
-        parameters=(expression, distinct, order, limit),  # type:ignore
+        expression=expression,
+        distinct=distinct,
+        order=order,
+        limit=limit,
         alias=alias,
     )
 

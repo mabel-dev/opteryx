@@ -74,10 +74,17 @@ def format_expression(root):
                 vals = [format_expression(a) for a in root.parameters[1].value]
                 return "CASE " + "".join([f"WHEN {c} THEN {v} " for c, v in zip(con, vals)]) + "END"
             if root.value == "ARRAY_AGG":
-                distinct = "DISTINCT " if root.parameters[1] else ""
-                order = f" ORDER BY {root.parameters[2]}" if root.parameters[2] else ""
-                limit = f" LIMIT {root.parameters[3]}" if root.parameters[3] else ""
-                return f"{root.value.upper()}({distinct}{format_expression(root.parameters[0])}{order}{limit})"
+                if hasattr(root, "expression") and root.expression is not None:
+                    # V2 ARRAY_AGG is stored differently
+                    distinct = "DISTINCT " if root.distinct else ""
+                    order = f" ORDER BY {', '.join(item[0][0].value + (' DESC' if not item[1] else '') for item in root.order)}"
+                    limit = f" LIMIT {root.limit}" if root.limit else ""
+                    return f"{root.value.upper()}({distinct}{format_expression(root.expression)}{order}{limit})"
+                else:
+                    distinct = "DISTINCT " if root.parameters[1] else ""
+                    order = f" ORDER BY {root.parameters[2]}" if root.parameters[2] else ""
+                    limit = f" LIMIT {root.parameters[3]}" if root.parameters[3] else ""
+                    return f"{root.value.upper()}({distinct}{format_expression(root.parameters[0])}{order}{limit})"
             return (
                 f"{root.value.upper()}({','.join([format_expression(e) for e in root.parameters])})"
             )
