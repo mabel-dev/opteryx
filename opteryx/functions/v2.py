@@ -223,10 +223,12 @@ class _BaseFunction:
         type_hints = typing.get_type_hints(self._func)
 
         args = []
+        value: typing.Any = None
         for parameter_name, parameter in parameters.items():
             # Check if the parameter has a type hint
             if parameter_name in type_hints:
                 parameter_type = type_hints[parameter_name]
+                # Optional
                 if isinstance(parameter_type.__args__, tuple):
                     parameter_type = parameter_type.__args__[0]
                 # Generate a value based on the parameter type (customize as needed)
