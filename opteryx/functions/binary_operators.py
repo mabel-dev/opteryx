@@ -18,7 +18,7 @@ from pyarrow import compute
 
 from opteryx.utils import dates
 
-BINARY_OPERATORS = {"Divide", "Minus", "Modulo", "Multiply", "Plus", "StringConcat"}
+BINARY_OPERATORS = ("Divide", "Minus", "Modulo", "Multiply", "Plus", "StringConcat", "MyIntegerDivide")
 INTERVALS = (pyarrow.lib.MonthDayNano, pyarrow.lib.MonthDayNanoIntervalArray)
 
 # Also supported by the AST but not implemented
@@ -120,5 +120,7 @@ def binary_operations(left, operator, right):
         empty = numpy.full(len(left), "")
         joined = compute.binary_join_element_wise(left, right, empty)
         return joined
+    if operator == "MyIntegerDivide":
+        return numpy.trunc(numpy.divide(left, right))
 
     raise NotImplementedError(f"Operator `{operator}` is not implemented!")

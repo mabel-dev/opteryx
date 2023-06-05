@@ -71,9 +71,24 @@ STATEMENTS = [
         # Does the error tester work
         ("THIS IS NOT VALID SQL", None, None, SqlError),
 
-        # V2 Tests
+        # V2 Negative Tests
         ("SELECT $planets.id, name FROM $planets INNER JOIN $satellites ON planetId = $planets.id", None, None, AmbiguousIdentifierError),
         ("SELECT $planets.id FROM $satellites", None, None, UnexpectedDatasetReferenceError),
+
+        # V2 New Syntax Checks
+        ("SELECT * FROM $planets UNION SELECT * FROM $planets;", None, None, None),
+        ("SELECT * FROM $planets LEFT ANTI JOIN $satellites ON id = id;", None, None, None),
+        ("EXPLAIN ANALYZE FORMAT JSON SELECT * FROM $planets AS a INNER JOIN (SELECT id FROM $planets) AS b USING (id);", None, None, None),
+        ("SELECT DISTINCT ON (planetId) planetId, name FROM $satellites ", None, None, None),
+        ("SELECT 8 DIV 4", None, None, None),
+
+
+        # V1 tests
+        ("SELECT MAX(density) FROM $planets GROUP BY orbitalInclination, escapeVelocity, orbitalInclination, numberOfMoons, escapeVelocity, density", 9, 1, None),
+        ("SELECT GREATEST(ARRAY_AGG(name)) as NAMES FROM $satellites GROUP BY planetId", 7, 1, None),
+        ("SELECT P0.id, P1.ID, P2.ID FROM $planets AS P0 JOIN (SELECT id AS ID, name FROM $planets) AS P1 ON P0.name = P1.name JOIN (SELECT id, name AS ID FROM $planets) AS P2 ON P0.name = P2.name", 9, 3, None),
+        ("SELECT name FROM $planets INNER JOIN UNNEST(('Earth', 'Mars')) AS n on name = n", 2, 1, None),
+        
 ]
 # fmt:on
 
