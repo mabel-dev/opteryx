@@ -18,7 +18,15 @@ from pyarrow import compute
 
 from opteryx.utils import dates
 
-BINARY_OPERATORS = ("Divide", "Minus", "Modulo", "Multiply", "Plus", "StringConcat", "MyIntegerDivide")
+BINARY_OPERATORS = (
+    "Divide",
+    "Minus",
+    "Modulo",
+    "Multiply",
+    "Plus",
+    "StringConcat",
+    "MyIntegerDivide",
+)
 INTERVALS = (pyarrow.lib.MonthDayNano, pyarrow.lib.MonthDayNanoIntervalArray)
 
 # Also supported by the AST but not implemented

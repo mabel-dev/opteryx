@@ -23,6 +23,7 @@ import typing
 from enum import Enum
 from enum import auto
 
+import numpy
 from pyarrow import compute
 
 from opteryx.exceptions import DatabaseError
@@ -87,6 +88,12 @@ class _Functions:
             function_list = []
             for function, implementation in self._functions.items():
                 concrete_implementation = implementation()
+                if (
+                    function.replace("_", "")
+                    != concrete_implementation.__class__.__name__[8:].upper()
+                ):
+                    # we're an alias
+                    continue
                 function_definition = {
                     "Function": function,
                     "Description": concrete_implementation.describe(),
@@ -115,7 +122,7 @@ class _FunctionStyle(Enum):
     # Elementwise functions accept a set of two or more columns of the same length and return
     # a column of the same length as the inputs
     ELEMENTWISE = auto()
-    # Setwise functions accept one column and one or more fixed values and return a column of
+    # Setwise functions accept one column and zero or more fixed values and return a column of
     # the same length as the input
     SETWISE = auto()
     # Constant functions return a single value, usually with no input
@@ -156,6 +163,8 @@ class _BaseFunction:
 
     def return_types(self):
         from orso.dataframe import TYPE_MAP
+
+        TYPE_MAP[typing.Any] = "INPUT TYPE"
 
         return_type_hints = typing.get_type_hints(self._func).get("return")
 
@@ -303,8 +312,18 @@ class FunctionE(_BaseFunction):
         return 2.718281828459045235360287
 
 
+class FunctionGreatest(_BaseFunction):
+    """Return the greatest value in array."""
+
+    style = _FunctionStyle.SETWISE
+    cost = 150
+
+    def _func(self, array: list) -> typing.Any:
+        return numpy.nanmax(array)
+
+
 class FunctionLen(_BaseFunction):
-    """return the length of a VARCHAR or ARRAY"""
+    """Return the length of a VARCHAR or ARRAY"""
 
     style = _FunctionStyle.ELEMENTWISE
     cost = 250
@@ -359,9 +378,12 @@ class FunctionVersion(_BaseFunction):
 FUNCTIONS = _Functions()
 
 if __name__ == "__main__":  # pragma: no cover
+    import orso
+
     import opteryx
 
-    print(FUNCTIONS.collect(True))
+    function_table = orso.DataFrame(FUNCTIONS.collect(True))
+    print(function_table)
 
     func = FUNCTIONS.get("LEN")
     print(func)
@@ -371,6 +393,6 @@ if __name__ == "__main__":  # pragma: no cover
 
     import time
 
-    for f in FUNCTIONS.collect(False):
-        func = FUNCTIONS.get(f)
-        print(f"running {f} 1 million times took {func.calculate_cost()}")
+#    for f in FUNCTIONS.collect(False):
+#        func = FUNCTIONS.get(f)
+#        print(f"running {f} 1 million times took {func.calculate_cost()}")
