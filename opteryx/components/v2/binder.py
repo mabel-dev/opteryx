@@ -254,5 +254,5 @@ def do_bind_phase(plan, context=None, common_table_expressions=None):
     root_node = plan.get_exit_points()
     if len(root_node) > 1:
         raise ValueError(f"logical plan has {len(root_node)} heads - this is an error")
-    plan = binder_visitor.traverse(plan, root_node[0])
+    plan, _ = binder_visitor.traverse(plan, root_node[0])
     return plan

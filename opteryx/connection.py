@@ -147,9 +147,24 @@ class Cursor(DataFrame):
 
             from opteryx.components.v2 import query_planner
 
-            plan = query_planner(
+            plans = query_planner(
                 operation=operation, parameters=params, connection=self._connection
             )
+
+            results = None
+            for self._plan in plans:
+                try:
+                    results = self._query_planner.execute(self._plan)
+                except:
+                    pass
+
+            if results is not None:
+                # we can't update tuples directly
+                self._connection.context.history[-1] = tuple(
+                    True if i == 1 else value
+                    for i, value in enumerate(self._connection.context.history[-1])
+                )
+                return utils.arrow.rename_columns(results)
 
         else:
             self._query = operation

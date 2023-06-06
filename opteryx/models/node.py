@@ -36,8 +36,7 @@ class Node:
         self.__dict__["_internal"] = internal
 
     def __getattr__(self, __name: str) -> Any:
-        internal = self.__dict__.get("_internal", {})
-        return internal.get(__name)
+        return self.__dict__.get("_internal", {}).get(__name)
 
     def __setattr__(self, __name: str, __value: Any) -> None:
         internal = self.__dict__.get("_internal", {})

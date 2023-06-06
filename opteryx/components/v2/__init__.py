@@ -52,6 +52,7 @@ def query_planner(operation, parameters, connection):
     from opteryx.components.v2.binder import do_bind_phase
     from opteryx.components.v2.logical_planner import do_logical_planning_phase
     from opteryx.components.v2.sql_rewriter import do_sql_rewrite
+    from opteryx.components.v2.temporary_physical_planner import create_physical_plan
     from opteryx.exceptions import SqlError
     from opteryx.third_party import sqloxide
 
@@ -89,7 +90,12 @@ def query_planner(operation, parameters, connection):
                 logical_plan, context=connection.context, common_table_expressions=ctes
             )
 
-        with open(PROFILE_LOCATION, mode="w") as f:
-            f.write(profile_content)
+            # before we write the new optimizer and execution engine, convert to a V1 plan
+            physical_plan = create_physical_plan(bound_plan)
+            yield physical_plan
+
     except Exception as err:
         raise err
+    finally:
+        with open(PROFILE_LOCATION, mode="w") as f:
+            f.write(profile_content)

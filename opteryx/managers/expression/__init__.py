@@ -77,7 +77,7 @@ def format_expression(root):
                 if hasattr(root, "expression") and root.expression is not None:
                     # V2 ARRAY_AGG is stored differently
                     distinct = "DISTINCT " if root.distinct else ""
-                    order = f" ORDER BY {', '.join(item[0][0].value + (' DESC' if not item[1] else '') for item in root.order)}"
+                    order = f" ORDER BY {', '.join(item[0][0].value + (' DESC' if not item[1] else '') for item in (root.order or []))}"
                     limit = f" LIMIT {root.limit}" if root.limit else ""
                     return f"{root.value.upper()}({distinct}{format_expression(root.expression)}{order}{limit})"
                 else:
