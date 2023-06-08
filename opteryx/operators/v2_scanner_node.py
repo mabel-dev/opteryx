@@ -35,12 +35,19 @@ class V2ScannerNode(BasePlanNode):
     @property  # pragma: no cover
     def config(self):
         date_range = ""
-        if self.parameters.start_date == self.parameters.end_date:
+        if self.parameters.get("start_date") == self.parameters.get("end_date"):
             if self.parameters.start_date is not None:
-                date_range = f" FOR '{self.parameters.start_date}'"
+                date_range = f" FOR '{self.parameters.get('start_date')}'"
         else:
-            date_range = f" FOR '{self.parameters.start_date}' TO '{self.parameters.end_date}'"
-        return f"({self.parameters.relation}{' AS ' + self.parameters.alias if self.alias else ''}{date_range}{' WITH(' + ','.join(self.parameters.hints) + ')' if self.parameters.hints else ''})"
+            date_range = (
+                f" FOR '{self.parameters.get('start_date')}' TO '{self.parameters.get('end_date')}'"
+            )
+        return (
+            f"({self.parameters.get('relation')}"
+            f"{' AS ' + self.parameters.get('alias') if self.parameters.get('alias') else ''}"
+            f"{date_range}"
+            f"{' WITH(' + ','.join(self.parameters.get('hints')) + ')' if self.parameters.get('hints') else ''})"
+        )
 
     def execute(self) -> Iterable:
         start_clock = time.monotonic_ns()

@@ -35,27 +35,34 @@ def format_sql(sql):
                 formatted_sql += "\033[0m"
         elif (i + 1) < len(words) and words[i + 1] == "(":
             formatted_sql += "\033[38;2;80;250;123m" + word.upper() + "\033[0m"
-        elif word in (
-            "SELECT",
-            "FROM",
-            "WHERE",
-            "JOIN",
-            "ON",
+        elif word in {
             "AND",
-            "OR",
-            "GROUP",
+            "ANALYZE",
+            "ANTI",
+            "AS",
             "BY",
-            "ORDER",
+            "CROSS",
+            "EXPLAIN",
+            "FROM",
+            "FULL",
+            "GROUP",
+            "ILIKE",
+            "INNER",
+            "JOIN",
+            "LEFT",
             "LIMIT",
             "LIKE",
-            "ILIKE",
-            "UNION",
-            "LEFT",
-            "RIGHT",
-            "FULL",
+            "ON",
+            "OR",
+            "ORDER",
             "OUTER",
-            "INNER",
-        ):
+            "RIGHT",
+            "SELECT",
+            "SHOW",
+            "UNION",
+            "USE",
+            "WHERE",
+        }:
             formatted_sql += "\033[38;2;139;233;253m" + word + "\033[0m "
         elif word in ("=", ">=", "<=", "!=", "<", ">", "<>"):
             formatted_sql += "\033[38;5;183m" + word + "\033[0m "
@@ -71,4 +78,4 @@ def format_sql(sql):
     formatted_sql = formatted_sql.replace(" \033[38;2;98;114;164m)", "\033[38;2;98;114;164m)")
     formatted_sql = formatted_sql.replace(" ,", ",")
 
-    return "\n" + formatted_sql.strip()
+    return formatted_sql.strip()

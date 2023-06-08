@@ -35,12 +35,6 @@ class NoOpNode(BasePlanNode):
         return ""
 
     def execute(self) -> Iterable:
-        if len(self._producers) > 1:  # pragma: no cover
-            raise SqlError(f"{self.name} on expects a zero or one producers")
-
-        if len(self._producers) == 1:
-            morsels = self._producers[0]  # type:ignore
+        # nodes generally have 0 (scan), 1 (most) or 2 (join, union) producers
+        for morsels in self._producers:
             yield from morsels.execute()
-            return
-
-        yield None

@@ -29,8 +29,11 @@ def create_physical_plan(logical_plan):
     for nid, logical_node in logical_plan.nodes(data=True):
         node_type = logical_node.node_type
         node_config = logical_node.properties
+        node: operators.BasePlanNode = None
 
-        if node_type == LogicalPlanStepType.Distinct:
+        if node_type == LogicalPlanStepType.Aggregate:
+            node = operators.NoOpNode(query_properties, **node_config)
+        elif node_type == LogicalPlanStepType.Distinct:
             node = operators.NoOpNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Explain:
             node = operators.NoOpNode(query_properties, **node_config)
@@ -63,7 +66,7 @@ def create_physical_plan(logical_plan):
         elif node_type == LogicalPlanStepType.Values:
             node = operators.NoOpNode(query_properties, **node_config)
         else:
-            raise Exception("something unexpected happed")
+            raise Exception(f"something unexpected happed - {node_type.name}")
 
         plan.add_node(nid, node)
 

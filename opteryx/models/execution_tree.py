@@ -72,9 +72,9 @@ class ExecutionTree(Graph):
             for node in nodes:
                 producers = self.ingoing_edges(node)
                 operator = self[node]
-                # if producers:
-                operator.set_producers([self[i[0]] for i in producers])
-                map_operators(i[0] for i in producers)
+                if producers:
+                    operator.set_producers([self[i[0]] for i in producers])
+                    map_operators(i[0] for i in producers)
 
         # do some basic validation before we try to execute
         if not self.is_acyclic():  # pragma: no cover
