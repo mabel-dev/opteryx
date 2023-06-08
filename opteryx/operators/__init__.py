@@ -42,6 +42,7 @@ from .show_value_node import ShowValueNode  # display node for SHOW
 from .show_variables_node import ShowVariablesNode  # SHOW VARIABLES
 from .sort_node import SortNode  # order by selected columns
 from .sql_reader_node import SqlReaderNode  # external SQL databases
+from .v2_scanner_node import V2ScannerNode
 
 # map join types to their implementations
 _join_nodes = {

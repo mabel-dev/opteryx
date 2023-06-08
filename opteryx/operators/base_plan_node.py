@@ -20,7 +20,7 @@ from opteryx.shared import QueryStatistics
 class BasePlanNode(abc.ABC):
     _producers = None
 
-    def __init__(self, properties: QueryProperties, **config):
+    def __init__(self, properties: QueryProperties, **parameters):
         """
         This is the base class for nodes in the execution plan.
 
@@ -28,7 +28,9 @@ class BasePlanNode(abc.ABC):
         differently to record what happened during the query execution.
         """
         self.properties = properties
+        self.parameters = parameters
         self.statistics = QueryStatistics(properties.qid)
+        self.execution_time = 0
 
     def set_producers(self, producers):
         self._producers = producers

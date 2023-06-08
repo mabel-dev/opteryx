@@ -16,17 +16,56 @@ and converts them to V1 physical plans.
 """
 
 from opteryx import operators
+from opteryx.components.v2.logical_planner import LogicalPlanStepType
 from opteryx.models import ExecutionTree
+from opteryx.models import QueryProperties
 
 
 def create_physical_plan(logical_plan):
     plan = ExecutionTree()
 
+    query_properties = QueryProperties(qid=0)
+
     for nid, logical_node in logical_plan.nodes(data=True):
-        plan.add_node(
-            nid,
-            operators.SelectionNode("properties", filter="_selection"),
-        )
+        node_type = logical_node.node_type
+        node_config = logical_node.properties
+
+        if node_type == LogicalPlanStepType.Distinct:
+            node = operators.NoOpNode(query_properties, **node_config)
+        elif node_type == LogicalPlanStepType.Explain:
+            node = operators.NoOpNode(query_properties, **node_config)
+        elif node_type == LogicalPlanStepType.Fake:
+            node = operators.NoOpNode(query_properties, **node_config)
+        elif node_type == LogicalPlanStepType.Filter:
+            node = operators.NoOpNode(query_properties, **node_config)
+        elif node_type == LogicalPlanStepType.GenerateSeries:
+            node = operators.NoOpNode(query_properties, **node_config)
+        elif node_type == LogicalPlanStepType.Group:
+            node = operators.NoOpNode(query_properties, **node_config)
+        elif node_type == LogicalPlanStepType.Join:
+            node = operators.NoOpNode(query_properties, **node_config)
+        elif node_type == LogicalPlanStepType.Order:
+            node = operators.NoOpNode(query_properties, **node_config)
+        elif node_type == LogicalPlanStepType.Project:
+            node = operators.NoOpNode(query_properties, **node_config)
+        elif node_type == LogicalPlanStepType.Scan:
+            node = operators.V2ScannerNode(query_properties, **node_config)
+        elif node_type == LogicalPlanStepType.Show:
+            node = operators.NoOpNode(query_properties, **node_config)
+        elif node_type == LogicalPlanStepType.ShowColumns:
+            node = operators.NoOpNode(query_properties, **node_config)
+        elif node_type == LogicalPlanStepType.Subquery:
+            node = operators.NoOpNode(query_properties, **node_config)
+        elif node_type == LogicalPlanStepType.Unnest:
+            node = operators.NoOpNode(query_properties, **node_config)
+        elif node_type == LogicalPlanStepType.Union:
+            node = operators.NoOpNode(query_properties, **node_config)
+        elif node_type == LogicalPlanStepType.Values:
+            node = operators.NoOpNode(query_properties, **node_config)
+        else:
+            raise Exception("something unexpected happed")
+
+        plan.add_node(nid, node)
 
     for source, destination, relation in logical_plan.edges():
         plan.add_edge(source, destination)

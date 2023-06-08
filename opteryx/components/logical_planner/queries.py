@@ -552,9 +552,15 @@ def use_query(ast, properties):
     # TODO - set the default database in the connection
     plan = ExecutionTree()
     plan.add_node(
-        "no_op",
+        "no_op_one",
         operators.NoOpNode(properties=properties),
     )
+    plan.add_node(
+        "no_op_two",
+        operators.NoOpNode(properties=properties),
+    )
+    # two noop nodes to make a graph
+    plan.add_edge("no_op_one", "no_op_two")
     return plan
 
 

@@ -35,6 +35,10 @@ class Node:
                 internal[k] = v
         self.__dict__["_internal"] = internal
 
+    @property
+    def properties(self):
+        return self.__dict__.get("_internal", {})
+
     def __getattr__(self, __name: str) -> Any:
         return self.__dict__.get("_internal", {}).get(__name)
 

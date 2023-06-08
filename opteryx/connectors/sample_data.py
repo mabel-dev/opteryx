@@ -43,7 +43,7 @@ class SampleDataConnector(BaseConnector):
     __mode__ = "Internal"
 
     def read_dataset(self, dataset_name: str) -> "DatasetReader":
-        return SampleDatasetReader(dataset_name.lower())
+        return SampleDatasetReader(dataset_name.lower(), config=self.config)
 
     def get_dataset_schema(self, dataset_name: str) -> RelationSchema:
         data_provider = WELL_KNOWN_DATASETS.get(dataset_name.lower())

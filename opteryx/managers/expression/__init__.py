@@ -97,6 +97,7 @@ def format_expression(root):
                 "Minus": "-",
                 "Multiply": "*",
                 "Divide": "/",
+                "MyIntegerDivide": "div",
             }
             return f"{format_expression(root.left)} {_map.get(root.value, root.value).upper()} {format_expression(root.right)}"
     if node_type == NodeType.COMPARISON_OPERATOR:

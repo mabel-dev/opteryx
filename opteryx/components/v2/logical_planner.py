@@ -586,6 +586,7 @@ QUERY_BUILDERS = {
     #    "ShowFunctions": show_functions_query,
     "ShowVariable": plan_show_variable,  # generic SHOW handler
     "ShowVariables": plan_show_variables,
+    # "Use": plan_use
 }
 
 
@@ -593,6 +594,12 @@ def do_logical_planning_phase(parsed_statements):
     # The sqlparser ast is an array of asts
     for parsed_statement in parsed_statements:
         statement_type = next(iter(parsed_statement))
+        if not statement_type in QUERY_BUILDERS:
+            from opteryx.exceptions import UnsupportedSyntaxError
+
+            raise UnsupportedSyntaxError(
+                f"Version 2 Planner does not support '{statement_type}' type queries yet."
+            )
         # CTEs are Common Table Expressions, they're variations of subqueries
         ctes = extract_ctes(parsed_statement, inner_query_planner)
         yield QUERY_BUILDERS[statement_type](parsed_statement), parsed_statement, ctes

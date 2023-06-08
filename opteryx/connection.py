@@ -153,10 +153,7 @@ class Cursor(DataFrame):
 
             results = None
             for self._plan in plans:
-                try:
-                    results = self._query_planner.execute(self._plan)
-                except:
-                    pass
+                results = self._plan.execute()
 
             if results is not None:
                 # we can't update tuples directly
