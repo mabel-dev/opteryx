@@ -15,6 +15,9 @@ def tokenize_string(string):
 
 
 def format_sql(sql):
+    """
+    Adds colorization to SQL statements to make it easier to find keywords and literals
+    """
     words = tokenize_string(sql)
 
     formatted_sql = ""

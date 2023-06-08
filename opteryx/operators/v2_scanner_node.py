@@ -30,13 +30,15 @@ class V2ScannerNode(BasePlanNode):
 
     @property
     def name(self):  # pragma: no cover
+        """friendly name for this step"""
         return "Scan"
 
     @property  # pragma: no cover
     def config(self):
+        """Additional details for this step"""
         date_range = ""
         if self.parameters.get("start_date") == self.parameters.get("end_date"):
-            if self.parameters.start_date is not None:
+            if self.parameters.get("start_date") is not None:
                 date_range = f" FOR '{self.parameters.get('start_date')}'"
         else:
             date_range = (
@@ -50,6 +52,7 @@ class V2ScannerNode(BasePlanNode):
         )
 
     def execute(self) -> Iterable:
+        """Perform this step, time how long is spent doing work"""
         start_clock = time.monotonic_ns()
         reader = self.parameters.get("connector").read_dataset(self.parameters.get("relation"))
         for morsel in reader:

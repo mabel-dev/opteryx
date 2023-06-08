@@ -1,6 +1,7 @@
 """
 Originally from https://github.com/kelsin/mysql-mimic
 """
+# pylint: disable=C0103
 from __future__ import annotations
 
 from enum import IntEnum
