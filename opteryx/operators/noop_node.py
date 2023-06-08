@@ -36,5 +36,6 @@ class NoOpNode(BasePlanNode):
 
     def execute(self) -> Iterable:
         # nodes generally have 0 (scan), 1 (most) or 2 (join, union) producers
-        for morsels in self._producers:
-            yield from morsels.execute()
+        if self._producers:
+            for morsels in self._producers:
+                yield from morsels.execute()
