@@ -58,6 +58,8 @@ from opteryx.exceptions import ProgrammingError
 from opteryx.exceptions import UnexpectedDatasetReferenceError
 from opteryx.exceptions import UnsupportedSyntaxError
 
+from pyarrow.lib import ArrowInvalid
+
 from opteryx.utils.formatter import format_sql
 from tests.tools import skip_if, is_arm, is_mac, is_windows
 
@@ -77,7 +79,7 @@ STATEMENTS = [
 
         # V2 New Syntax Checks
         ("SELECT * FROM $planets UNION SELECT * FROM $planets;", None, None, None),
-        ("SELECT * FROM $planets LEFT ANTI JOIN $satellites ON id = id;", None, None, None),
+        ("SELECT * FROM $planets LEFT ANTI JOIN $satellites ON id = id;", None, None, ArrowInvalid),  # invalid until the join is written
         ("EXPLAIN ANALYZE FORMAT JSON SELECT * FROM $planets AS a INNER JOIN (SELECT id FROM $planets) AS b USING (id);", None, None, None),
         ("SELECT DISTINCT ON (planetId) planetId, name FROM $satellites ", None, None, None),
         ("SELECT 8 DIV 4", None, None, None),

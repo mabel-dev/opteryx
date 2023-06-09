@@ -92,32 +92,33 @@ class LogicalPlanNode(Node):
     def __str__(self):
         try:
             # fmt:off
-            if self.node_type == LogicalPlanStepType.Distinct:
+            node_type = self.node_type
+            if node_type == LogicalPlanStepType.Distinct:
                 distinct_on = ""
                 if self.on is not None:
                     distinct_on = f" ON ({','.join(format_expression(col) for col in self.on)})"
                 return f"DISTINCT{distinct_on}"
-            if self.node_type == LogicalPlanStepType.Explain:
+            if node_type == LogicalPlanStepType.Explain:
                 return f"EXPLAIN{' ANALYZE' if self.analyze else ''}{(' (' + self.format + ')') if self.format else ''}"
-            if self.node_type == LogicalPlanStepType.Fake:
+            if node_type == LogicalPlanStepType.Fake:
                 return f"FAKE ({', '.join(format_expression(arg) for arg in self.args)}{' AS ' + self.alias if self.alias else ''})"
-            if self.node_type == LogicalPlanStepType.Filter:
+            if node_type == LogicalPlanStepType.Filter:
                 return f"FILTER ({format_expression(self.condition)})"
-            if self.node_type == LogicalPlanStepType.GenerateSeries:
+            if node_type == LogicalPlanStepType.GenerateSeries:
                 return f"GENERATE SERIES ({', '.join(format_expression(arg) for arg in self.args)}){' AS ' + self.alias if self.alias else ''}"
-            if self.node_type == LogicalPlanStepType.Group:
+            if node_type == LogicalPlanStepType.Group:
                 return f"GROUP ({', '.join(format_expression(col) for col in self.columns)})"
-            if self.node_type == LogicalPlanStepType.Join:
+            if node_type == LogicalPlanStepType.Join:
                 if self.on:
                     return f"{self.type.upper()} ({format_expression(self.on)})"
                 if self.using:
                     return f"{self.type.upper()} (USING {','.join(format_expression(self.using))})"
                 return self.type.upper()
-            if self.node_type == LogicalPlanStepType.Order:
+            if node_type == LogicalPlanStepType.Order:
                 return f"ORDER BY ({', '.join(item[0] + (' DESC' if not item[1] else '') for item in self.order_by)})"
-            if self.node_type == LogicalPlanStepType.Project:
+            if node_type == LogicalPlanStepType.Project:
                 return f"PROJECT ({', '.join(format_expression(col) for col in self.columns)})"
-            if self.node_type == LogicalPlanStepType.Scan:
+            if node_type == LogicalPlanStepType.Scan:
                 date_range = ""
                 if self.start_date == self.end_date:
                     if self.start_date is not None:
@@ -125,17 +126,17 @@ class LogicalPlanNode(Node):
                 else:
                     date_range = f" FOR '{self.start_date}' TO '{self.end_date}'"
                 return f"SCAN ({self.relation}{' AS ' + self.alias if self.alias else ''}{date_range}{' WITH(' + ','.join(self.hints) + ')' if self.hints else ''})"
-            if self.node_type == LogicalPlanStepType.Show:
+            if node_type == LogicalPlanStepType.Show:
                 return f"SHOW ({', '.join(self.items)})"
-            if self.node_type == LogicalPlanStepType.ShowColumns:
+            if node_type == LogicalPlanStepType.ShowColumns:
                 return f"SHOW{' FULL' if self.full else ''}{' EXTENDED' if self.extended else ''} COLUMNS ({self.relation})"
-            if self.node_type == LogicalPlanStepType.Subquery:
+            if node_type == LogicalPlanStepType.Subquery:
                 return f"SUBQUERY{' AS ' + self.alias if self.alias else ''}"
-            if self.node_type == LogicalPlanStepType.Unnest:
+            if node_type == LogicalPlanStepType.Unnest:
                 return f"UNNEST ({', '.join(format_expression(arg) for arg in self.args)}{' AS ' + self.alias if self.alias else ''})"
-            if self.node_type == LogicalPlanStepType.Union:
+            if node_type == LogicalPlanStepType.Union:
                 return f"UNION {'' if self.modifier is None else self.modifier.upper()}"
-            if self.node_type == LogicalPlanStepType.Values:
+            if node_type == LogicalPlanStepType.Values:
                 return f"VALUES (({', '.join(self.columns)}) x {len(self.values)} AS {self.alias})"
 
             # fmt:on
@@ -585,6 +586,7 @@ QUERY_BUILDERS = {
     #    "ShowFunctions": show_functions_query,
     "ShowVariable": plan_show_variable,  # generic SHOW handler
     "ShowVariables": plan_show_variables,
+    # "Use": plan_use
 }
 
 
@@ -592,6 +594,12 @@ def do_logical_planning_phase(parsed_statements):
     # The sqlparser ast is an array of asts
     for parsed_statement in parsed_statements:
         statement_type = next(iter(parsed_statement))
+        if not statement_type in QUERY_BUILDERS:
+            from opteryx.exceptions import UnsupportedSyntaxError
+
+            raise UnsupportedSyntaxError(
+                f"Version 2 Planner does not support '{statement_type}' type queries yet."
+            )
         # CTEs are Common Table Expressions, they're variations of subqueries
         ctes = extract_ctes(parsed_statement, inner_query_planner)
         yield QUERY_BUILDERS[statement_type](parsed_statement), parsed_statement, ctes
