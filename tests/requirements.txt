@@ -25,7 +25,7 @@ sqlalchemy
 pymysql
 psycopg2-binary
 polars
-duckdb==0.7.1  # 1040
+duckdb==0.8.0  # 1040
 duckdb-engine==0.7.1  # 1040
 
 setuptools_rust
