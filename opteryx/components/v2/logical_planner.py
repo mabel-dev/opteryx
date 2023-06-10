@@ -115,7 +115,7 @@ class LogicalPlanNode(Node):
                     return f"{self.type.upper()} (USING {','.join(format_expression(self.using))})"
                 return self.type.upper()
             if node_type == LogicalPlanStepType.Order:
-                return f"ORDER BY ({', '.join(item[0] + (' DESC' if not item[1] else '') for item in self.order_by)})"
+                return f"ORDER BY ({', '.join(format_expression(item[0]) + (' DESC' if not item[1] else '') for item in self.order_by)})"
             if node_type == LogicalPlanStepType.Project:
                 return f"PROJECT ({', '.join(format_expression(col) for col in self.columns)})"
             if node_type == LogicalPlanStepType.Scan:
@@ -281,7 +281,7 @@ def inner_query_planner(ast_branch):
     if _order_by:
         order_step = LogicalPlanNode(node_type=LogicalPlanStepType.Order)
         order_step.order_by = [
-            (logical_planner_builders.build(item["expr"]).value, not bool(item["asc"]))
+            (logical_planner_builders.build(item["expr"]), not bool(item["asc"]))
             for item in _order_by
         ]
         previous_step_id, step_id = step_id, random_string()
