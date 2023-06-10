@@ -230,6 +230,7 @@ STATEMENTS = [
         ("SELECT TRY_CAST(planetId AS VARCHAR) FROM $satellites", 177, 1, None),
         ("SELECT TRY_CAST(planetId AS TIMESTAMP) FROM $satellites", 177, 1, None),
         ("SELECT TRY_CAST(planetId AS NUMERIC) FROM $satellites", 177, 1, None),
+        ("SELECT * FROM $planets WHERE id = GET(STRUCT('{\"a\":1,\"b\":\"c\"}'), 'a')", 1, 20, None),
 
         ("SELECT PI()", 1, 1, None),
         ("SELECT E()", 1, 1, None),
