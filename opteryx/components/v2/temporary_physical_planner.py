@@ -52,6 +52,7 @@ def create_physical_plan(logical_plan):
         #           we need a gen 2 order by that doesn't rely on the columns object
         #            node = operators.SortNode(query_properties, order=node_config["order_by"])
         elif node_type == LogicalPlanStepType.Project:
+            print(node_config)
             node = operators.NoOpNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Scan:
             node = operators.V2ScannerNode(query_properties, **node_config)
