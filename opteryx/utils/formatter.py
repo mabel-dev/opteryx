@@ -31,11 +31,13 @@ def format_sql(sql):
             if word.endswith("'"):
                 in_string_literal = False
                 formatted_sql += "\033[0m "
+            else:
+                in_string_literal = True
         elif in_string_literal:
-            formatted_sql += word + " "
+            formatted_sql += " " + word
             if word.endswith("'"):
                 in_string_literal = False
-                formatted_sql += "\033[0m"
+                formatted_sql += "\033[0m "
         elif (i + 1) < len(words) and words[i + 1] == "(":
             formatted_sql += "\033[38;2;80;250;123m" + word.upper() + "\033[0m"
         elif word in {

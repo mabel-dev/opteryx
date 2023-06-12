@@ -68,11 +68,25 @@ def literal_string(branch, alias: list = None, key=None):
 
 
 def literal_interval(branch, alias: list = None, key=None):
-    """create node for a time literal"""
-    values = build(branch["value"]["Value"]).value.split(" ")
+    """
+    Create node for a time literal.
+
+    This should look like this in the SQL:
+        INTERVAL '1' YEAR
+        INTERVAL '1 3' YEAR TO MONTH
+    """
+    parts = ("Year", "Month", "Day", "Hour", "Minute", "Second")
+
+    values = build(branch["value"]["Value"]).value
+    if not isinstance(values, str):
+        raise SqlError(f"Invalid INTERVAL, values must be provided as a VARCHAR.")
+
+    values = values.split(" ")
     leading_unit = branch["leading_field"]
 
-    parts = ["Year", "Month", "Day", "Hour", "Minute", "Second"]
+    if leading_unit is None:
+        raise SqlError(f"Invalid INTERVAL, valid units are {', '.join(p.upper() for p in parts)}")
+
     unit_index = parts.index(leading_unit)
 
     month, day, nano = (0, 0, 0)
@@ -100,9 +114,6 @@ def literal_interval(branch, alias: list = None, key=None):
             nano,
         )
     )
-    #    interval = numpy.timedelta64(month, 'M')
-    #    interval = numpy.timedelta64(day, 'D')
-    #    interval = numpy.timedelta64(nano, 'us')
 
     return Node(NodeType.LITERAL_INTERVAL, value=interval, alias=alias)
 

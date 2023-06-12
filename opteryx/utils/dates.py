@@ -34,14 +34,18 @@ TIMEDELTA_REGEX = (
 )
 
 TIMEDELTA_PATTERN = re.compile(TIMEDELTA_REGEX, re.IGNORECASE)
+UNIX_EPOCH: date = datetime(1970, 1, 1, tzinfo=timezone.utc)
 
 
-def add_months(dte, num_months):
-    new_year, new_month = divmod(dte.month - 1 + num_months, 12)
-    new_year += dte.year
+def add_months(start_date, number_of_months):
+    """
+    Add months to a date, makes assumptions about how to handle the end of the month.
+    """
+    new_year, new_month = divmod(start_date.month - 1 + number_of_months, 12)
+    new_year += start_date.year
     new_month += 1
     last_day_of_month = (datetime(new_year, new_month % 12 + 1, 1) - timedelta(days=1)).day
-    new_day = min(dte.day, last_day_of_month)
+    new_day = min(start_date.day, last_day_of_month)
     return datetime(new_year, new_month, new_day)
 
 
@@ -69,16 +73,16 @@ def add_interval(current_date: Union[date, datetime], interval: str) -> Union[da
     raise ValueError(f"Unable to interpret interval - {interval}")
 
 
-def date_range(start, end, interval: str):
-    """ """
-    start = parse_iso(start)
-    end = parse_iso(end)
+def date_range(start_date, end_date, interval: str):
+    """Create a series of dates between two dates with a given interval"""
+    start_date = parse_iso(start_date)
+    end_date = parse_iso(end_date)
 
-    if start is end or start == end or start > end:
+    if start_date is end_date or start_date == end_date or start_date > end_date:
         raise ValueError("Cannot create an series with the provided start and end dates")
 
-    cursor = start
-    while cursor <= end:
+    cursor = start_date
+    while cursor <= end_date:
         yield cursor
         cursor = add_interval(cursor, interval)
 
@@ -86,9 +90,9 @@ def date_range(start, end, interval: str):
 @lru_cache(128)
 def parse_iso(value):
     date_separators = ("-", ":")
-    # date validation at speed is hard, dateutil is great but really slow, this is fast
+    # Date validation at speed is hard, dateutil is great but really slow, this is fast
     # but error-prone. It assumes it is a date or it really nothing like a date.
-    # Making that assumption - and accepting the consequences - we can convert upto
+    # Making that assumption - and accepting the consequences - we can convert up to
     # three times faster than dateutil.
     #
     # valid formats (not exhaustive):
@@ -100,9 +104,11 @@ def parse_iso(value):
     #   YYYY-MM-DD HH:MM:SS.mmmm   <- date and time with milliseconds
     #
     # If the last character is a Z, we ignore it.
+    # If we can't parse as a date we return None rather than error
     try:
         input_type = type(value)
 
+        # can we easily convert to a datetime?
         if input_type in (int, numpy.int64):
             value = numpy.datetime64(int(value), "s").astype(datetime)
             input_type = type(value)
@@ -118,6 +124,8 @@ def parse_iso(value):
             return datetime.combine(value, dtime.min)
         if input_type in (int, float):
             return datetime.fromtimestamp(value)
+
+        # if we're here, we're doing string parsing
         if input_type == str and 10 <= len(value) <= 33:
             if value[-1] == "Z":
                 value = value[:-1]
@@ -170,12 +178,11 @@ def parse_iso(value):
         return None
 
 
-EPOCH: date = datetime(1970, 1, 1, tzinfo=timezone.utc)
-
-
-def date_trunc(truncate_to, dt):
-    # convert acceptable non datetime values to datetime
-    dt = parse_iso(dt)
+def date_trunc(truncate_to, date_value):
+    """
+    Truncate a datetime to a specified unit
+    """
+    date_value = parse_iso(date_value)
 
     if not isinstance(truncate_to, str):
         truncate_to = truncate_to[0]  # [#325]
@@ -183,24 +190,26 @@ def date_trunc(truncate_to, dt):
     # [#711]
     truncate_to = str(truncate_to).lower()
 
+    # fmt:off
     if truncate_to == "year":
-        return datetime(dt.year, 1, 1, tzinfo=dt.tzinfo)
+        return datetime(date_value.year, 1, 1, tzinfo=date_value.tzinfo)
     elif truncate_to == "quarter":
-        quarter = (dt.month - 1) // 3 + 1
-        return datetime(dt.year, 3 * quarter - 2, 1, tzinfo=dt.tzinfo)
+        quarter = (date_value.month - 1) // 3 + 1
+        return datetime(date_value.year, 3 * quarter - 2, 1, tzinfo=date_value.tzinfo)
     elif truncate_to == "month":
-        return datetime(dt.year, dt.month, 1, tzinfo=dt.tzinfo)
+        return datetime(date_value.year, date_value.month, 1, tzinfo=date_value.tzinfo)
     elif truncate_to == "week":
-        days_since_monday = dt.weekday()
-        monday = dt - timedelta(days=days_since_monday)
+        days_since_monday = date_value.weekday()
+        monday = date_value - timedelta(days=days_since_monday)
         return date_trunc("day", monday)
     elif truncate_to == "day":
-        return datetime(dt.year, dt.month, dt.day, tzinfo=dt.tzinfo)
+        return datetime(date_value.year, date_value.month, date_value.day, tzinfo=date_value.tzinfo)
     elif truncate_to == "hour":
-        return datetime(dt.year, dt.month, dt.day, dt.hour, tzinfo=dt.tzinfo)
+        return datetime(date_value.year, date_value.month, date_value.day, date_value.hour, tzinfo=date_value.tzinfo)
     elif truncate_to == "minute":
-        return datetime(dt.year, dt.month, dt.day, dt.hour, dt.minute, tzinfo=dt.tzinfo)
+        return datetime(date_value.year, date_value.month, date_value.day, date_value.hour, date_value.minute, tzinfo=date_value.tzinfo)
     elif truncate_to == "second":
-        return datetime(dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second, tzinfo=dt.tzinfo)
+        return datetime(date_value.year, date_value.month, date_value.day, date_value.hour, date_value.minute, date_value.second, tzinfo=date_value.tzinfo)
     else:
         raise ValueError("Invalid unit: {}".format(truncate_to))
+    # fmt:on

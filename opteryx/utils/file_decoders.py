@@ -28,12 +28,17 @@ class ExtentionType(str, Enum):
 
 
 def do_nothing(stream, projection=None):  # pragma: no-cover
+    """for when you need to look like you're doing something"""
     return stream
 
 
-def _filter(filter, table):
+def filter_records(filter, table):
+    """
+    When we can't push predicates to the actual read, use this to filter records
+    just after the read.
+    """
     # notes:
-    #   at this point we've not renamed any columns
+    #   at this point we've not renamed any columns, this may affect some filters
     from opteryx.managers.expression import evaluate
 
     mask = evaluate(filter, table, False)
@@ -68,8 +73,8 @@ def parquet_decoder(stream, projection: List = None, selection=None):
         # if we have a pushed down projection, get the list of columns from the file
         # and then only set the reader to read those
         parquet_file = parquet.ParquetFile(stream)
-        # .schema_arrow is probably slower than .schema but there are instances of
-        # .schema being incomplete #468
+        # .schema_arrow appears to be slower than .schema but there are instances of
+        # .schema being incomplete #468 so we pay for the extra time
         parquet_metadata = parquet_file.schema_arrow
 
         if projection == {"count_*"}:
@@ -103,7 +108,7 @@ def orc_decoder(stream, projection: List = None, selection=None):
 
     table = orc_file.read(columns=selected_columns)
     if selection is not None:
-        table = _filter(selection, table)
+        table = filter_records(selection, table)
     return table
 
 
@@ -120,7 +125,7 @@ def jsonl_decoder(stream, projection: List = None, selection=None):
             table = table.select(selected_columns)
 
     if selection is not None:
-        table = _filter(selection, table)
+        table = filter_records(selection, table)
     return table
 
 
@@ -139,7 +144,7 @@ def csv_decoder(stream, projection: List = None, selection=None, delimiter=","):
             table = table.select(selected_columns)
 
     if selection is not None:
-        table = _filter(selection, table)
+        table = filter_records(selection, table)
     return table
 
 
@@ -160,7 +165,7 @@ def arrow_decoder(stream, projection: List = None, selection=None):
             table = table.select(selected_columns)
 
     if selection is not None:
-        table = _filter(selection, table)
+        table = filter_records(selection, table)
     return table
 
 
@@ -178,10 +183,11 @@ def avro_decoder(stream, projection: List = None, selection=None):
         if len(selected_columns) > 0:
             table = table.select(selected_columns)
     if selection is not None:
-        table = _filter(selection, table)
+        table = filter_records(selection, table)
     return table
 
 
+# for types we know about, set up how we handle them
 KNOWN_EXTENSIONS = {
     "avro": (avro_decoder, ExtentionType.DATA),
     "complete": (do_nothing, ExtentionType.CONTROL),
