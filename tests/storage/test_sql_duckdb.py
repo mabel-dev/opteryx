@@ -52,10 +52,10 @@ def create_duck_db():
     import duckdb
 
     try:
-        os.remove("testdata/duckdb/planets.duckdb")
+        os.remove("planets.duckdb")
     except:
         pass
-    conn = duckdb.connect(database="testdata/duckdb/planets.duckdb")
+    conn = duckdb.connect(database="planets.duckdb")
     cur = conn.cursor()
     cur.execute(CREATE_DB)
 
@@ -67,8 +67,7 @@ def test_duckdb_storage():
         "duckdb",
         SqlConnector,
         remove_prefix=True,
-        connection="duckdb:///testdata/duckdb/planets.duckdb",
-        #        connection="duckdb:///testdata/flat/planets/parquet/planets.parquet",
+        connection="duckdb:///planets.duckdb",
     )
 
     results = opteryx.query("SELECT * FROM duckdb.planets")
