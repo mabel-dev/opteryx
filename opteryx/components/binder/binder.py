@@ -21,7 +21,6 @@ from typing import Iterable
 
 import numpy
 
-import opteryx
 from opteryx.exceptions import ProgrammingError
 from opteryx.exceptions import SqlError
 from opteryx.models import QueryProperties

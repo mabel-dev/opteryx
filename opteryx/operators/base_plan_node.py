@@ -11,13 +11,11 @@
 # limitations under the License.
 
 
-import abc
-
 from opteryx.models import QueryProperties
 from opteryx.shared import QueryStatistics
 
 
-class BasePlanNode(abc.ABC):
+class BasePlanNode:
     _producers = None
 
     def __init__(self, properties: QueryProperties, **parameters):

@@ -931,6 +931,7 @@ if __name__ == "__main__":  # pragma: no cover
 
     import shutil
     import time
+    from tests.tools import trunc_printable
 
     os.environ["ENGINE_VERSION"] = "1"
 
@@ -942,10 +943,11 @@ if __name__ == "__main__":  # pragma: no cover
     for index, (statement, rows, cols, err) in enumerate(STATEMENTS):
         start = time.monotonic_ns()
         printable = statement
-        if hasattr(printable, "encode"):
-            printable = str(printable.encode())[2:-1]
+        if hasattr(printable, "decode"):
+            printable = printable.decode()
         print(
-            f"\033[0;36m{(index + 1):04}\033[0m {printable[0:width - 1].ljust(width)}",
+            f"\033[38;2;255;184;108m{(index + 1):04}\033[0m"
+            f" {trunc_printable(format_sql(printable), width - 1)}",
             end="",
             flush=True,
         )

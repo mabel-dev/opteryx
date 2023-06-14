@@ -18,6 +18,8 @@ def format_sql(sql):
     """
     Adds colorization to SQL statements to make it easier to find keywords and literals
     """
+    if hasattr(sql, "decode"):
+        sql = sql.decode()
     words = tokenize_string(sql)
 
     formatted_sql = ""
@@ -38,40 +40,64 @@ def format_sql(sql):
             if word.endswith("'"):
                 in_string_literal = False
                 formatted_sql += "\033[0m "
-        elif (i + 1) < len(words) and words[i + 1] == "(":
-            formatted_sql += "\033[38;2;80;250;123m" + word.upper() + "\033[0m"
-        elif word in {
-            "AND",
+        elif word.upper() in {
             "ANALYZE",
             "ANTI",
             "AS",
             "BY",
             "CROSS",
+            "DATES",
+            "DISTINCT",
             "EXPLAIN",
+            "FOR",
             "FROM",
             "FULL",
             "GROUP",
-            "ILIKE",
             "INNER",
             "JOIN",
             "LEFT",
             "LIMIT",
-            "LIKE",
             "ON",
-            "OR",
             "ORDER",
             "OUTER",
             "RIGHT",
             "SELECT",
+            "SET",
             "SHOW",
+            "TODAY",
             "UNION",
             "USE",
+            "USING",
             "WHERE",
+            "WITH",
+            "YESTERDAY",
         }:
-            formatted_sql += "\033[38;2;139;233;253m" + word + "\033[0m "
-        elif word in ("=", ">=", "<=", "!=", "<", ">", "<>"):
-            formatted_sql += "\033[38;5;183m" + word + "\033[0m "
-        elif word.isdigit():
+            formatted_sql += "\033[38;2;139;233;253m" + word.upper() + "\033[0m "
+        elif word.upper() in ("TRUE", "FALSE", "NULL"):
+            formatted_sql += "\033[38;2;255;184;108m" + word.upper() + "\033[0m "
+        elif (i + 1) < len(words) and words[i + 1] == "(":
+            formatted_sql += "\033[38;2;80;250;123m" + word.upper() + "\033[0m"
+        elif word.upper() in (
+            "=",
+            ">=",
+            "<=",
+            "!=",
+            "<",
+            ">",
+            "<>",
+            "LIKE",
+            "ILIKE",
+            "NOT",
+            "AND",
+            "OR",
+            "IN",
+            "SIMILAR",
+            "TO",
+            "BETWEEN",
+            "IS",
+        ):
+            formatted_sql += "\033[38;5;183m" + word.upper() + "\033[0m "
+        elif word.replace(".", "", 1).isdigit():
             formatted_sql += "\033[38;2;255;184;108m" + word + "\033[0m "
         else:
             formatted_sql += word + " "

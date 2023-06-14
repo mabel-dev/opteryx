@@ -50,3 +50,39 @@ def download_file(url, path):
     response = requests.get(url)
     open(path, "wb").write(response.content)
     logger.warning(f"Saved downloaded contents to {path}")
+
+
+def character_width(symbol):
+    import unicodedata
+
+    return 2 if unicodedata.east_asian_width(symbol) in ("F", "N", "W") else 1
+
+
+def trunc_printable(value, width, full_line: bool = True):
+    if not isinstance(value, str):
+        value = str(value)
+
+    offset = 0
+    emit = ""
+    ignoring = False
+
+    for char in value:
+        if char == "\n":
+            emit += "↵"
+            offset += 1
+            continue
+        if char == "\r":
+            continue
+        emit += char
+        if char == "\033":
+            ignoring = True
+        if not ignoring:
+            offset += character_width(char)
+        if ignoring and char == "m":
+            ignoring = False
+        if not ignoring and offset >= width:
+            return emit + "\033[0m"
+    line = emit + "\033[0m"
+    if full_line:
+        return line + " " * (width - offset)
+    return line
