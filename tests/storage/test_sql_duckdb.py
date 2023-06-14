@@ -50,7 +50,7 @@ VALUES
 
 def create_duck_db():
     """
-    The DuckDB file format isn't stable, so ust create it anew each time and 
+    The DuckDB file format isn't stable, so ust create it anew each time and
     bypass the need to track versions.
     """
     import duckdb
