@@ -94,10 +94,11 @@ class _Functions:
                 ):
                     # we're an alias
                     continue
+                args = concrete_implementation.argument_types() or []
                 function_definition = {
                     "Function": function,
                     "Description": concrete_implementation.describe(),
-                    "Argument_Types": concrete_implementation.argument_types(),
+                    "Arguments": None if args == [] else ", ".join(arg[4] for arg in args),
                     "Return_Type": ", ".join(concrete_implementation.return_types()),
                     "Function_Type": concrete_implementation.style_name(),
                 }
@@ -107,7 +108,7 @@ class _Functions:
                         function_definition = {
                             "Function": alias,
                             "Description": f"Alias of `{function}`",
-                            "Argument_Types": None,
+                            "Argumentss": None,
                             "Return_Type": None,
                             "Function_Type": None,
                         }
@@ -150,8 +151,19 @@ class _BaseFunction:
     def describe(self):
         return f"{self.__doc__.strip()}"
 
+    @property
     def signature(self):
-        return f"{self.__class__.__name__[8:].upper()} (<params>) → {self.return_types()}"
+        def _render_arg(arg):
+            name, _, default, optional, _ = arg
+            if not optional:
+                return name
+            if default is False:
+                return f"[{name}]"
+            return f"[{name}:{default}]"
+
+        args = self.argument_types() or []
+        params = "" if args == [] else ", ".join(_render_arg(arg) for arg in args)
+        return f"{self.__class__.__name__[8:].upper()}({params}) → {self.return_types()[0]}"
 
     def name(self):
         return f"{self.__class__.__name__[8:].upper()}"
@@ -191,15 +203,19 @@ class _BaseFunction:
         return_value = []
         for arg_name, arg_value in func_parameters.items():
             arg_type = type_hints.get(arg_name)
-            optional = is_optional_type(arg_type)
             default = None
-            if isinstance(arg_value.default, type) and issubclass(arg_value.default, type):
+            if isinstance(arg_value.default, (str, int, float, bool)):
                 default = arg_value.default
 
-            argument_types = [
-                f"{arg_value}{'='+str(default) if default else ''}{' OPTIONAL' if optional else ''}"
-            ]
-            return_value.append({arg_name: ", ".join(argument_types)})
+            optional = is_optional_type(arg_type) or default is not None
+            argument = (
+                arg_name,
+                TYPE_MAP.get(arg_type, arg_type),
+                default,
+                optional,
+                f"{arg_value}{'='+str(default) if default else ''}{' OPTIONAL' if optional else ''}",
+            )
+            return_value.append(argument)
         if return_value == []:
             return_value = None
         return return_value
@@ -382,14 +398,16 @@ if __name__ == "__main__":  # pragma: no cover
 
     import opteryx
 
-    function_table = orso.DataFrame(FUNCTIONS.collect(True))
-    print(function_table)
+    #    function_table = orso.DataFrame(FUNCTIONS.collect(True))
+    #    print(function_table)
 
-    func = FUNCTIONS.get("LEN")
+    func = FUNCTIONS.get("ROUND")
     print(func)
     #    print(func())
     print(func.style)
     print(func.return_types())
+    print(func.argument_types())
+    print(func.signature)
 
     import time
 
