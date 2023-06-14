@@ -49,11 +49,18 @@ VALUES
 
 
 def create_duck_db():
+    """
+    The DuckDB file format isn't stable, so ust create it anew each time and 
+    bypass the need to track versions.
+    """
     import duckdb
 
     try:
         os.remove("planets.duckdb")
     except:
+        # we expect to fail when running in GitHub Actions, but not fail
+        # when running locally - just ignore failures here, it's not a
+        # meaningful part of the script
         pass
     conn = duckdb.connect(database="planets.duckdb")
     cur = conn.cursor()
