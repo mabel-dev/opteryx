@@ -13,13 +13,12 @@
 """
 Base Inner Reader for nosql document stores
 """
-import abc
 from typing import Iterable
 
 import pyarrow
 
 
-class BaseDocumentStorageAdapter(abc.ABC):
+class BaseDocumentStorageAdapter:
     __mode__ = "Collection"
 
     def __init__(self, prefix: str, remove_prefix: bool = False) -> None:

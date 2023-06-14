@@ -57,7 +57,7 @@ def _initialize():  # pragma: no cover
         if project_id is None:
             project_id = _get_project_id()
         creds = credentials.ApplicationDefault()
-        firebase_admin.initialize_app(creds, {"projectId": project_id})
+        firebase_admin.initialize_app(creds, {"projectId": project_id, "httpTimeout": 10})
 
 
 class GcpFireStoreConnector(BaseDocumentStorageAdapter, PredicatePushable):
