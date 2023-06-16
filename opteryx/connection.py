@@ -142,8 +142,9 @@ class Cursor(DataFrame):
         self._connection.context.history.append((operation, True, datetime.datetime.utcnow()))
 
         # if ENGINE_VERSION == 2:
-        if os.environ["ENGINE_VERSION"] == "2":
+        if os.environ.get("ENGINE_VERSION") == "2":
             # this is running the 2nd gen planner
+            print(f"Using Engine Version 2")
 
             from opteryx.components.v2 import query_planner
 
