@@ -12,11 +12,14 @@
 
 """
 This is a temporary step, which takes logical plans from the V2 planner
-and converts them to V1 physical plans.
+and converts them to modified-V1 physical plans.
+
+This should look different when the operators are rewritten for the 
+Gen 2 execution engine (a later piece of work)
 """
 
 from opteryx import operators
-from opteryx.components.v2.logical_planner import LogicalPlanStepType
+from opteryx.components.logical_planner import LogicalPlanStepType
 from opteryx.models import ExecutionTree
 from opteryx.models import QueryProperties
 
@@ -48,11 +51,8 @@ def create_physical_plan(logical_plan):
         elif node_type == LogicalPlanStepType.Join:
             node = operators.NoOpNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Order:
-            node = operators.NoOpNode(query_properties, **node_config)
-        #           we need a gen 2 order by that doesn't rely on the columns object
-        #            node = operators.SortNode(query_properties, order=node_config["order_by"])
+            node = operators.SortNode(query_properties, order=node_config["order_by"])
         elif node_type == LogicalPlanStepType.Project:
-            print(node_config)
             node = operators.NoOpNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Scan:
             node = operators.V2ScannerNode(query_properties, **node_config)

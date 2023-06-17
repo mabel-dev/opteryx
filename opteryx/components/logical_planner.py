@@ -48,7 +48,7 @@ import sys
 from enum import Enum
 from enum import auto
 
-from opteryx.components.v2 import logical_planner_builders
+from opteryx.components import logical_planner_builders
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import format_expression
 from opteryx.managers.expression import get_all_nodes_of_type
