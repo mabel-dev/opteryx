@@ -16,7 +16,7 @@ from collections import defaultdict
 
 class _QueryStatistics:
     def __init__(self):
-        self._stats = defaultdict(int)
+        self._stats:dict = defaultdict(int)
         self._stats["messages"] = []
 
     def _ns_to_s(self, nano_seconds):
