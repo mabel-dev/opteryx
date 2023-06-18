@@ -22,7 +22,7 @@ def test_predicate_pushdowns_blobs_parquet():
     )
     # if we disable pushdown, we read all the rows from the source and we do the filter
     assert cur.rowcount == 711, cur.rowcount
-    assert cur.stats["rows_read"] == 100000, cur.stats
+    assert cur.stats.get("rows_read", 0) == 100000, cur.stats
 
     cur = conn.cursor()
     cur.execute(
@@ -30,7 +30,7 @@ def test_predicate_pushdowns_blobs_parquet():
     )
     # if we disable pushdown, we read all the rows from the source and we do the filter
     assert cur.rowcount == 711, cur.rowcount
-    assert cur.stats["rows_read"] == 100000, cur.stats
+    assert cur.stats.get("rows_read", 0) == 100000, cur.stats
 
     cur = conn.cursor()
     cur.execute(
@@ -38,7 +38,7 @@ def test_predicate_pushdowns_blobs_parquet():
     )
     # when pushdown is enabled, we only read the matching rows from the source
     assert cur.rowcount == 711, cur.rowcount
-    assert cur.stats["rows_read"] == 711, cur.stats
+    assert cur.stats.get("rows_read", 0) == 711, cur.stats
 
     cur = conn.cursor()
     cur.execute(
@@ -46,7 +46,7 @@ def test_predicate_pushdowns_blobs_parquet():
     )
     # test with a more complex filter
     assert cur.rowcount == 266, cur.rowcount
-    assert cur.stats["rows_read"] == 266, cur.stats
+    assert cur.stats.get("rows_read", 0) == 266, cur.stats
 
     cur = conn.cursor()
     cur.execute(
@@ -54,7 +54,7 @@ def test_predicate_pushdowns_blobs_parquet():
     )
     # we don't push all predicates down,
     assert cur.rowcount == 86, cur.rowcount
-    assert cur.stats["rows_read"] == 711, cur.stats
+    assert cur.stats.get("rows_read", 0) == 711, cur.stats
 
     config.ONLY_PUSH_EQUALS_PREDICATES = True
     cur = conn.cursor()
@@ -63,7 +63,7 @@ def test_predicate_pushdowns_blobs_parquet():
     )
     # test only push equals
     assert cur.rowcount == 266, cur.rowcount
-    assert cur.stats["rows_read"] == 711, cur.stats
+    assert cur.stats.get("rows_read", 0) == 711, cur.stats
     config.ONLY_PUSH_EQUALS_PREDICATES = False
 
     # identifier = identifier isn't pushed - file reader
@@ -73,7 +73,7 @@ def test_predicate_pushdowns_blobs_parquet():
         "SELECT * FROM 'testdata/flat/planets/parquet/planets.parquet' WITH(NO_PARTITION) WHERE rotationPeriod = lengthOfDay;"
     )
     assert cur.rowcount == 3, cur.rowcount
-    assert cur.stats["rows_read"] == 9, cur.stats
+    assert cur.stats.get("rows_read", 0) == 9, cur.stats
     config.ONLY_PUSH_EQUALS_PREDICATES = False
 
     # push the >, not the eq
@@ -82,7 +82,7 @@ def test_predicate_pushdowns_blobs_parquet():
         "SELECT * FROM 'testdata/flat/planets/parquet/planets.parquet' WITH(NO_PARTITION) WHERE rotationPeriod = lengthOfDay AND id > 5;"
     )
     assert cur.rowcount == 2, cur.rowcount
-    assert cur.stats["rows_read"] == 4, cur.stats
+    assert cur.stats.get("rows_read", 0) == 4, cur.stats
 
     # identifier = identifier isn't pushed - blob reader
     config.ONLY_PUSH_EQUALS_PREDICATES = True
@@ -91,7 +91,7 @@ def test_predicate_pushdowns_blobs_parquet():
         "SELECT * FROM 'testdata.flat.planets.parquet' WITH(NO_PARTITION) WHERE rotationPeriod = lengthOfDay;"
     )
     assert cur.rowcount == 3, cur.rowcount
-    assert cur.stats["rows_read"] == 9, cur.stats
+    assert cur.stats.get("rows_read", 0) == 9, cur.stats
     config.ONLY_PUSH_EQUALS_PREDICATES = False
 
     # identifier = identifier isn't pushed - blob reader
@@ -100,7 +100,7 @@ def test_predicate_pushdowns_blobs_parquet():
         "SELECT * FROM 'testdata.flat.planets.parquet' WITH(NO_PARTITION) WHERE rotationPeriod = lengthOfDay AND id > 5;"
     )
     assert cur.rowcount == 2, cur.rowcount
-    assert cur.stats["rows_read"] == 4, cur.stats
+    assert cur.stats.get("rows_read", 0) == 4, cur.stats
 
     conn.close()
 
