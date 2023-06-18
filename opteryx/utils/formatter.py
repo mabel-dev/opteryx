@@ -26,10 +26,8 @@ def format_sql(sql):
     in_string_literal = False
 
     for i, word in enumerate(words):
-        if word in ("(", ")"):
-            formatted_sql += "\033[38;2;98;114;164m" + word + "\033[0m "
-        elif not in_string_literal and word.startswith("'"):
-            formatted_sql += "\033[38;5;203m" + word
+        if not in_string_literal and word.startswith("'"):
+            formatted_sql += "\033[38;2;255;171;82m" + word
             if word.endswith("'"):
                 in_string_literal = False
                 formatted_sql += "\033[0m "
@@ -40,6 +38,8 @@ def format_sql(sql):
             if word.endswith("'"):
                 in_string_literal = False
                 formatted_sql += "\033[0m "
+        elif word in ("(", ")", ",", ";"):
+            formatted_sql += "\033[38;5;102m" + word + "\033[0m "
         elif word.upper() in {
             "ANALYZE",
             "ANTI",
@@ -96,7 +96,7 @@ def format_sql(sql):
             "BETWEEN",
             "IS",
         ):
-            formatted_sql += "\033[38;5;183m" + word.upper() + "\033[0m "
+            formatted_sql += "\033[38;2;189;147;249m" + word.upper() + "\033[0m "
         elif word.replace(".", "", 1).isdigit():
             formatted_sql += "\033[38;2;255;184;108m" + word + "\033[0m "
         else:
@@ -104,9 +104,10 @@ def format_sql(sql):
 
     formatted_sql += "\033[0m"
 
-    formatted_sql = formatted_sql.replace(" \033[38;2;98;114;164m(", "\033[38;2;98;114;164m(")
+    formatted_sql = formatted_sql.replace(" \033[38;5;102m(", "\033[38;5;102m(")
     formatted_sql = formatted_sql.replace("(\033[0m ", "(\033[0m")
-    formatted_sql = formatted_sql.replace(" \033[38;2;98;114;164m)", "\033[38;2;98;114;164m)")
-    formatted_sql = formatted_sql.replace(" ,", ",")
+    formatted_sql = formatted_sql.replace(" \033[38;5;102m)", "\033[38;5;102m)")
+    formatted_sql = formatted_sql.replace(" \033[38;5;102m,", "\033[38;5;102m,")
+    formatted_sql = formatted_sql.replace(" \033[38;5;102m;", "\033[38;5;102m;")
 
     return formatted_sql.strip()

@@ -143,9 +143,7 @@ class Cursor(DataFrame):
 
         from opteryx.components import query_planner
 
-        plans = query_planner(
-            operation=operation, parameters=params, connection=self._connection
-        )
+        plans = query_planner(operation=operation, parameters=params, connection=self._connection)
 
         results = None
         for self._plan in plans:

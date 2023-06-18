@@ -64,7 +64,7 @@ def query_planner(operation, parameters, connection):
     # V2: copy for v2 to process, remove this when v2 is the engine
     v2_params = [p for p in parameters or []]
 
-    #try:
+    # try:
     if True:
         profile_content = operation + "\n\n"
         # Parser converts the SQL command into an AST
@@ -95,9 +95,9 @@ def query_planner(operation, parameters, connection):
             physical_plan = create_physical_plan(bound_plan)
             yield physical_plan
 
-    #except Exception as err:
+    # except Exception as err:
     #    raise err
-    #finally:
+    # finally:
     #    with open(PROFILE_LOCATION, mode="w") as f:
     #        print(profile_content)
     #        f.write(profile_content)
