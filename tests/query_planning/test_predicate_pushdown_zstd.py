@@ -22,7 +22,7 @@ def test_predicate_pushdowns_blobs_zstd():
     )
     # if we disable pushdown, we read all the rows from the source and we do the filter
     assert cur.rowcount == 711, cur.rowcount
-    assert cur.stats["rows_read"] == 100000, cur.stats
+    assert cur.stats.get("rows_read", 0) == 100000, cur.stats
 
     cur = conn.cursor()
     cur.execute(
@@ -30,7 +30,7 @@ def test_predicate_pushdowns_blobs_zstd():
     )
     # if we disable pushdown, we read all the rows from the source and we do the filter
     assert cur.rowcount == 711, cur.rowcount
-    assert cur.stats["rows_read"] == 100000, cur.stats
+    assert cur.stats.get("rows_read", 0) == 100000, cur.stats
 
     cur = conn.cursor()
     cur.execute(
@@ -38,7 +38,7 @@ def test_predicate_pushdowns_blobs_zstd():
     )
     # when pushdown is enabled, we only read the matching rows from the source
     assert cur.rowcount == 711, cur.rowcount
-    assert cur.stats["rows_read"] == 711, cur.stats
+    assert cur.stats.get("rows_read", 0) == 711, cur.stats
 
     cur = conn.cursor()
     cur.execute(
@@ -46,7 +46,7 @@ def test_predicate_pushdowns_blobs_zstd():
     )
     # test with a more complex filter
     assert cur.rowcount == 266, cur.rowcount
-    assert cur.stats["rows_read"] == 266, cur.stats
+    assert cur.stats.get("rows_read", 0) == 266, cur.stats
 
     cur = conn.cursor()
     cur.execute(
@@ -54,7 +54,7 @@ def test_predicate_pushdowns_blobs_zstd():
     )
     # we don't push all predicates down,
     assert cur.rowcount == 86, cur.rowcount
-    assert cur.stats["rows_read"] == 711, cur.stats
+    assert cur.stats.get("rows_read", 0) == 711, cur.stats
 
     config.ONLY_PUSH_EQUALS_PREDICATES = True
     cur = conn.cursor()
@@ -63,7 +63,7 @@ def test_predicate_pushdowns_blobs_zstd():
     )
     # test only push equals
     assert cur.rowcount == 266, cur.rowcount
-    assert cur.stats["rows_read"] == 711, cur.stats
+    assert cur.stats.get("rows_read", 0) == 711, cur.stats
     config.ONLY_PUSH_EQUALS_PREDICATES = False
 
     conn.close()
