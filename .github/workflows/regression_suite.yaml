@@ -52,7 +52,7 @@ jobs:
           credentials_json: '${{ secrets.GCP_KEY }}'
 
       - name: Run Regression Tests
-        run: python -m coverage run -m pytest 
+        run: python -m coverage run -m pytest --color=yes
         env:
           AZURE_STORAGE_CONNECTION_STRING: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;QueueEndpoint=http://127.0.0.1:10001/devstoreaccount1;"
           MINIO_END_POINT: "s3.eu-west-2.amazonaws.com"
