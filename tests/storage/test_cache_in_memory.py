@@ -24,7 +24,7 @@ def test_in_memory_cache():
     cur.arrow()
 
     stats = cur.stats
-    assert stats["cache_hits"] == 0
+    assert stats.get("cache_hits", 0) == 0
     assert stats["cache_misses"] == 2, stats["cache_misses"]
     conn.close()
 
@@ -36,7 +36,7 @@ def test_in_memory_cache():
 
     stats = cur.stats
     assert stats["cache_hits"] == 2, stats["cache_hits"]
-    assert stats["cache_misses"] == 0
+    assert stats.get("cache_misses", 0) == 0
     conn.close()
 
     # read the data with the no cache directive
@@ -46,8 +46,8 @@ def test_in_memory_cache():
     cur.arrow()
 
     stats = cur.stats
-    assert stats["cache_hits"] == 0, stats["cache_hits"]
-    assert stats["cache_misses"] == 0, stats["cache_misses"]
+    assert stats.get("cache_hits", 0) == 0, stats["cache_hits"]
+    assert stats.get("cache_misses", 0) == 0, stats["cache_misses"]
     conn.close()
 
 
@@ -64,7 +64,7 @@ def test_cache_in_subqueries():
     cur.arrow()
 
     stats = cur.stats
-    assert stats["cache_hits"] == 0, stats["cache_hits"]
+    assert stats.get("cache_hits", 0) == 0, stats["cache_hits"]
     assert stats["cache_misses"] == 2, stats["cache_misses"]
     conn.close()
 
@@ -76,7 +76,7 @@ def test_cache_in_subqueries():
 
     stats = cur.stats
     assert stats["cache_hits"] == 2, stats["cache_hits"]
-    assert stats["cache_misses"] == 0
+    assert stats.get("cache_misses", 0) == 0
     conn.close()
 
     # read the data with the no cache directive
@@ -86,8 +86,8 @@ def test_cache_in_subqueries():
     cur.arrow()
 
     stats = cur.stats
-    assert stats["cache_hits"] == 0
-    assert stats["cache_misses"] == 0
+    assert stats.get("cache_hits", 0) == 0
+    assert stats.get("cache_misses", 0) == 0
     conn.close()
 
 
