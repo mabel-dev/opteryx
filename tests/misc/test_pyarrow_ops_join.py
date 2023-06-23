@@ -12,11 +12,10 @@ import sys
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
-import opteryx
-
 import numpy as np
 import pytest
 
+import opteryx
 from opteryx.third_party.pyarrow_ops.join import cython_inner_join
 
 

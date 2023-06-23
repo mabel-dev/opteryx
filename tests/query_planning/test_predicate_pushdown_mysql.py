@@ -6,10 +6,10 @@ import sys
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
-import opteryx
+from tests.tools import is_arm, is_mac, is_windows, skip_if
 
+import opteryx
 from opteryx.connectors import SqlConnector
-from tests.tools import skip_if, is_arm, is_mac, is_windows
 
 MYSQL_PASSWORD = os.environ.get("MYSQL_PASSWORD")
 MYSQL_USER = os.environ.get("MYSQL_USER")

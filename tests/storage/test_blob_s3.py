@@ -6,11 +6,10 @@ import sys
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
+from tests.tools import is_arm, is_mac, is_windows, skip_if
+
 import opteryx
-
 from opteryx.connectors import AwsS3Connector
-
-from tests.tools import skip_if, is_arm, is_windows, is_mac
 
 BUCKET_NAME = "mabellabs"
 SECRETS = None

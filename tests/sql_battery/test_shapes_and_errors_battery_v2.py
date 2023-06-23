@@ -41,27 +41,24 @@ import sys
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import pytest
+from pyarrow.lib import ArrowInvalid
+from tests.tools import is_arm, is_mac, is_windows, skip_if
 
 import opteryx
-
-from opteryx.connectors import AwsS3Connector
-from opteryx.connectors import DiskConnector
-
-from opteryx.exceptions import AmbiguousIdentifierError
-from opteryx.exceptions import ColumnNotFoundError
-from opteryx.exceptions import DatasetNotFoundError
-from opteryx.exceptions import EmptyResultSetError
-from opteryx.exceptions import InvalidTemporalRangeFilterError
-from opteryx.exceptions import MissingSqlStatement
-from opteryx.exceptions import SqlError
-from opteryx.exceptions import ProgrammingError
-from opteryx.exceptions import UnexpectedDatasetReferenceError
-from opteryx.exceptions import UnsupportedSyntaxError
-
-from pyarrow.lib import ArrowInvalid
-
+from opteryx.connectors import AwsS3Connector, DiskConnector
+from opteryx.exceptions import (
+    AmbiguousIdentifierError,
+    ColumnNotFoundError,
+    DatasetNotFoundError,
+    EmptyResultSetError,
+    InvalidTemporalRangeFilterError,
+    MissingSqlStatement,
+    ProgrammingError,
+    SqlError,
+    UnexpectedDatasetReferenceError,
+    UnsupportedSyntaxError,
+)
 from opteryx.utils.formatter import format_sql
-from tests.tools import skip_if, is_arm, is_mac, is_windows
 
 # fmt:off
 STATEMENTS = [

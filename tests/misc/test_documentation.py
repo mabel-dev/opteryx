@@ -31,8 +31,9 @@ def test_readme_1():
 
 
 def test_readme_2():
-    import opteryx
     import pandas
+
+    import opteryx
 
     pandas_df = pandas.read_csv("https://storage.googleapis.com/opteryx/exoplanets/exoplanets.csv")
     opteryx.register_df("exoplanets", pandas_df)
@@ -95,8 +96,9 @@ def test_get_started():
 
 
 def test_pandas_integration_input():
-    import opteryx
     import pandas
+
+    import opteryx
 
     # Create the DataFrame
     data = {
@@ -119,8 +121,9 @@ def test_pandas_integration_output():
 
 
 def test_polars_integration_input():
-    import opteryx
     import polars
+
+    import opteryx
 
     # Create the DataFrame
     data = {

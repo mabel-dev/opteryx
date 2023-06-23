@@ -4,6 +4,7 @@ help to ensure that slice left still does what it should safely and correctly.
 """
 import os
 import sys
+
 import numpy
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))

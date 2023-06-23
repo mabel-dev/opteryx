@@ -5,11 +5,11 @@ Build different format files from a source JSONL file to test different format r
 # pragma: no cover
 
 import orjson
-import zstandard
-import pyarrow.json
 import pyarrow.feather
+import pyarrow.json
 import pyarrow.orc
 import pyarrow.parquet
+import zstandard
 
 
 def compress_zstandard(records):  # pragma: no cover

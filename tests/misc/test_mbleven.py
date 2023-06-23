@@ -9,6 +9,7 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 import pytest
 from hypothesis import given
 from hypothesis.strategies import text
+
 from opteryx.third_party.mbleven import compare
 
 # fmt:off

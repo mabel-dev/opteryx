@@ -8,7 +8,7 @@ import sys
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
-from tests.tools import skip_if, is_arm, is_mac, is_windows
+from tests.tools import is_arm, is_mac, is_windows, skip_if
 
 
 @skip_if(is_arm() or is_windows() or is_mac())

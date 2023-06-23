@@ -7,7 +7,7 @@ import sys
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import opteryx
-from opteryx.connectors import register_store, SqlConnector, GcpFireStoreConnector
+from opteryx.connectors import GcpFireStoreConnector, SqlConnector, register_store
 
 register_store(
     "sqlite",

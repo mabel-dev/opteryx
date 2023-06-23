@@ -1,5 +1,4 @@
 import platform
-
 from functools import wraps
 from logging import Logger
 

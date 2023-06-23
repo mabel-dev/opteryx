@@ -7,10 +7,8 @@ import sys
 
 sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
 
-from opteryx.components.v2.binder import BinderVisitor
-from opteryx.components.v2.logical_planner import LogicalPlan
-from opteryx.components.v2.logical_planner import LogicalPlanNode
-from opteryx.components.v2.logical_planner import LogicalPlanStepType
+from opteryx.components.binder import BinderVisitor
+from opteryx.components.logical_planner import LogicalPlan, LogicalPlanNode, LogicalPlanStepType
 
 
 def test_logical_plan_visitor():

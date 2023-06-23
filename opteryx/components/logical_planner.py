@@ -93,6 +93,8 @@ class LogicalPlanNode(Node):
         try:
             # fmt:off
             node_type = self.node_type
+            if node_type == LogicalPlanStepType.Aggregate:
+                return f"AGGREGATE ({', '.join(format_expression(col) for col in self.aggregates)})"
             if node_type == LogicalPlanStepType.Distinct:
                 distinct_on = ""
                 if self.on is not None:
@@ -234,9 +236,8 @@ def inner_query_planner(ast_branch):
     )
     if len(_aggregates) > 0:
         # TODO: aggregates need: functions
-        aggregate_step = LogicalPlanNode(
-            node_type=LogicalPlanStepType.Aggregate, aggregates=_aggregates
-        )
+        aggregate_step = LogicalPlanNode(node_type=LogicalPlanStepType.Aggregate)
+        aggregate_step.aggregates = _aggregates
         previous_step_id, step_id = step_id, random_string()
         inner_plan.add_node(step_id, aggregate_step)
         if previous_step_id is not None:

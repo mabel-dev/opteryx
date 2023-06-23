@@ -16,6 +16,7 @@ This suite executes a statement and confirms the output matches what was expecte
 import glob
 import os
 import sys
+
 import pytest
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))

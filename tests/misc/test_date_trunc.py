@@ -4,10 +4,10 @@ import sys
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 from datetime import datetime, timezone
+
 import pytest
 
 from opteryx.utils.dates import date_trunc
-
 
 DEFAULT_DT = datetime(2012, 7, 12, 12, 14, 14, 342, timezone.utc)
 

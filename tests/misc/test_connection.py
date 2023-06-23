@@ -31,8 +31,9 @@ def test_connection():
 
 
 def test_execute():
-    import opteryx
     import pandas
+
+    import opteryx
 
     cur = opteryx.query("SELECT * FROM $planets")
 

@@ -10,10 +10,11 @@ import sys
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
+import pyarrow
+
 from opteryx.models.planner.operations import DistinctNode
 from opteryx.samples import satellites
 from opteryx.shared import QueryStatistics
-import pyarrow
 
 
 def test_dictinct_node_unique():

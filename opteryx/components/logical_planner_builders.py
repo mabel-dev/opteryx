@@ -174,7 +174,17 @@ def function(branch, alias=None, key=None):
         raise UnsupportedSyntaxError(
             f"Unknown function or aggregate '{func}'. Did you mean '{likely_match}'?"
         )
-    return Node(node_type=node_type, value=func, parameters=args, alias=alias)
+
+    order_by = [(build(item["expr"]), not bool(item["asc"])) for item in branch.get("order_by", [])]
+
+    return Node(
+        node_type=node_type,
+        value=func,
+        parameters=args,
+        alias=alias,
+        distinct=branch.get("distinct"),
+        order=order_by,
+    )
 
 
 def binary_op(branch, alias=None, key=None):

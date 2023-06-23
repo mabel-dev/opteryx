@@ -10,7 +10,6 @@ import pytest
 
 import opteryx
 
-
 # fmt:off
 STATEMENTS = [
         

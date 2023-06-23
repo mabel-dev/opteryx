@@ -4,7 +4,6 @@ import re
 import sys
 
 import numpy
-
 import pytest
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
@@ -12,12 +11,9 @@ from rich import traceback
 
 import opteryx
 import opteryx.samples
+from opteryx.managers.expression import NUMPY_TYPES, NodeType, evaluate
 from opteryx.models.node import Node
-from opteryx.managers.expression import NodeType
-from opteryx.managers.expression import evaluate
-from opteryx.managers.expression import NUMPY_TYPES
 from opteryx.shared import QueryStatistics
-
 
 traceback.install()
 stats = QueryStatistics()

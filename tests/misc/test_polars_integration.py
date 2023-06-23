@@ -5,8 +5,9 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 
 def test_polars():
-    import opteryx
     import polars
+
+    import opteryx
 
     polars_df = polars.read_csv("testdata/flat/formats/csv/tweets.csv")
 

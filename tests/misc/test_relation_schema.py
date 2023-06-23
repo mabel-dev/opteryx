@@ -8,8 +8,8 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 
 def test_constant_column():
-    from opteryx.models.relation_schema import ConstantColumn
     from opteryx.constants.attribute_types import OPTERYX_TYPES
+    from opteryx.models.relation_schema import ConstantColumn
 
     col = ConstantColumn(name="numbers", data_type=OPTERYX_TYPES.INTEGER, length=100, value=0.75)
     val = col.materialize()
@@ -21,8 +21,8 @@ def test_constant_column():
 
 
 def test_dictionary_column():
-    from opteryx.models.relation_schema import DictionaryColumn
     from opteryx.constants.attribute_types import OPTERYX_TYPES
+    from opteryx.models.relation_schema import DictionaryColumn
 
     values = [1, 2, 3, 4, 5, 4, 3, 2, 1, 2, 3, 4, 3, 2, 1, 2, 3]
     col = DictionaryColumn(name="numbers", data_type=OPTERYX_TYPES.INTEGER, values=values)

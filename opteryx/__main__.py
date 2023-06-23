@@ -20,8 +20,8 @@ import time
 import typer
 
 import opteryx
-from opteryx.components.sql_rewriter.sql_rewriter import clean_statement
-from opteryx.components.sql_rewriter.sql_rewriter import remove_comments
+from opteryx.components.sql_rewriter import clean_statement
+from opteryx.components.sql_rewriter import remove_comments
 from opteryx.exceptions import MissingSqlStatement
 
 # Define ANSI color codes

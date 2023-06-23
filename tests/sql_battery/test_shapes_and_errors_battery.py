@@ -43,19 +43,17 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 import pytest
 
 import opteryx
-
-from opteryx.connectors import AwsS3Connector
-from opteryx.connectors import DiskConnector
-
-from opteryx.exceptions import ColumnNotFoundError
-from opteryx.exceptions import DatasetNotFoundError
-from opteryx.exceptions import EmptyResultSetError
-from opteryx.exceptions import InvalidTemporalRangeFilterError
-from opteryx.exceptions import MissingSqlStatement
-from opteryx.exceptions import SqlError
-from opteryx.exceptions import ProgrammingError
-from opteryx.exceptions import UnsupportedSyntaxError
-
+from opteryx.connectors import AwsS3Connector, DiskConnector
+from opteryx.exceptions import (
+    ColumnNotFoundError,
+    DatasetNotFoundError,
+    EmptyResultSetError,
+    InvalidTemporalRangeFilterError,
+    MissingSqlStatement,
+    ProgrammingError,
+    SqlError,
+    UnsupportedSyntaxError,
+)
 from opteryx.utils.formatter import format_sql
 
 # fmt:off
@@ -931,6 +929,7 @@ if __name__ == "__main__":  # pragma: no cover
 
     import shutil
     import time
+
     from tests.tools import trunc_printable
 
     os.environ["ENGINE_VERSION"] = "1"

@@ -5,8 +5,9 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 
 def test_pandas():
-    import opteryx
     import pandas
+
+    import opteryx
 
     pandas_df = pandas.read_csv("testdata/flat/formats/csv/tweets.csv")
 
@@ -25,8 +26,9 @@ def test_pandas():
 
 
 def test_documentation():
-    import opteryx
     import pandas
+
+    import opteryx
 
     pandas_df = pandas.read_csv("https://storage.googleapis.com/opteryx/exoplanets/exoplanets.csv")
 

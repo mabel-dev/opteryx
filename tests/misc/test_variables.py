@@ -3,10 +3,9 @@ import sys
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
-from opteryx.shared.variables import SystemVariables
-
-
 import pytest
+
+from opteryx.shared.variables import SystemVariables
 
 
 def test_connection_variables():
