@@ -11,8 +11,6 @@
 # limitations under the License.
 
 """
-Part of the v2 Engine.
-
 The BaseConnector provides a common interface for all storage connectors.
 """
 import typing

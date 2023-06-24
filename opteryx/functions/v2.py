@@ -14,9 +14,9 @@
 This is a long module, the intent is to have the functions defined in alphabetical order to
 help find them
 """
-
 import datetime
 import inspect
+import os
 import re
 import sys
 import typing
@@ -27,6 +27,9 @@ import numpy
 from pyarrow import compute
 
 from opteryx.exceptions import DatabaseError
+
+sys.path.insert(1, os.path.join(sys.path[0], "../.."))
+
 
 try:
     # added 3.9
@@ -77,9 +80,25 @@ class _Functions:
 
     def suggest(self, func):
         """return the function with the nearest name match"""
+        from itertools import permutations
+
         from opteryx.utils import fuzzy_search
 
-        suggestion = fuzzy_search(func, self._functions.keys())
+        available_functions = self._functions.keys()
+
+        # try a fuzzy search (typos) first
+        suggestion = fuzzy_search(func, available_functions)
+
+        # if it probably wasn't a typo, try rearranging the parts of the function names
+        if suggestion is None:
+            parts = func.split("_")
+            combinations = permutations(parts)
+            for combination in combinations:
+                candidate = "_".join(combination)
+                suggestion = fuzzy_search(candidate, available_functions)
+                if suggestion:
+                    break
+
         return suggestion
 
     def collect(self, full_details: bool = False):
@@ -156,10 +175,10 @@ class _BaseFunction:
         def _render_arg(arg):
             name, _, default, optional, _ = arg
             if not optional:
-                return name
+                return f"{name}:type"
             if default is False:
-                return f"[{name}]"
-            return f"[{name}:{default}]"
+                return f"[{name}:type]"
+            return f"[{name}:type = {default}]"
 
         args = self.argument_types() or []
         params = "" if args == [] else ", ".join(_render_arg(arg) for arg in args)
@@ -396,14 +415,11 @@ FUNCTIONS = _Functions()
 if __name__ == "__main__":  # pragma: no cover
     import orso
 
-    import opteryx
-
-    #    function_table = orso.DataFrame(FUNCTIONS.collect(True))
-    #    print(function_table)
+    function_table = orso.DataFrame(FUNCTIONS.collect(True))
+    print(function_table)
 
     func = FUNCTIONS.get("ROUND")
     print(func)
-    #    print(func())
     print(func.style)
     print(func.return_types())
     print(func.argument_types())
@@ -411,6 +427,7 @@ if __name__ == "__main__":  # pragma: no cover
 
     import time
 
+    print(f"Did you mean {FUNCTIONS.suggest('time_current')}?")
 #    for f in FUNCTIONS.collect(False):
 #        func = FUNCTIONS.get(f)
 #        print(f"running {f} 1 million times took {func.calculate_cost()}")

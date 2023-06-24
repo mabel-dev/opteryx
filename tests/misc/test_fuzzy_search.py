@@ -112,5 +112,7 @@ def test_date_parser(string, candidates, expected):
 if __name__ == "__main__":  # pragma: no cover
     print(f"RUNNING BATTERY OF {len(TESTS)} FUZZY TESTS")
     for s, c, e in TESTS:
+        print(".", end="")
         test_date_parser(s, c, e)
+    print()
     print("✅ okay")

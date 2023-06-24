@@ -14,16 +14,20 @@
 Base Inner Reader for blob and file stores
 """
 import datetime
-from typing import Iterable
-from typing import List
-from typing import Union
+import typing
 
 from opteryx.utils import dates
 from opteryx.utils import paths
 
+from .base_connector import BaseConnector
 
-class BaseBlobStorageAdapter:
+
+class BaseBlobStorageAdapter(BaseConnector):
     __mode__ = "Blob"
+
+    #   def __init__(self, config: typing.Dict[str, typing.Any] = None) -> None:
+    #   def get_dataset_schema(self, dataset_name: str) -> RelationSchema:
+    #   def read_dataset(self, dataset_name: str) -> "DatasetReader":
 
     def __init__(self, prefix: str, remove_prefix: bool = False) -> None:
         self._prefix = prefix
@@ -33,10 +37,10 @@ class BaseBlobStorageAdapter:
         self,
         *,
         dataset: str,
-        partitioning: Iterable = None,  # ("year_{yyyy}", "month_{mm}", "day_{dd}"),
-        start_date: Union[datetime.datetime, datetime.date, str] = None,
-        end_date: Union[datetime.datetime, datetime.date, str] = None,
-    ) -> List:
+        partitioning: typing.Iterable = None,  # ("year_{yyyy}", "month_{mm}", "day_{dd}"),
+        start_date: typing.Union[datetime.datetime, datetime.date, str] = None,
+        end_date: typing.Union[datetime.datetime, datetime.date, str] = None,
+    ) -> typing.List:
         """
         Get partitions doesn't confirm the partitions exist, it just creates a list
         of candidate partitions.
@@ -64,7 +68,7 @@ class BaseBlobStorageAdapter:
 
         return partitions
 
-    def get_blob_list(self, partition=None) -> Iterable:  # pragma: no cover
+    def get_blob_list(self, partition=None) -> typing.Iterable:  # pragma: no cover
         """
         Return an interable of blobs/files
         """

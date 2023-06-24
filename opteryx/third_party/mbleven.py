@@ -76,10 +76,10 @@ def check_model(str1: str, str2: str, len1: int, len2: int, model) -> int:
 
     idx1, idx2 = 0, 0
     cost, pad = 0, 0
-    while (idx1 < len1) and (idx2 < len2):
+    while idx1 < len1 and idx2 < len2:
         if str1[idx1] != str2[idx2 - pad]:
             cost += 1
-            if 2 < cost:
+            if cost > 2:
                 return cost
 
             option = model[cost - 1]

@@ -10,6 +10,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+The 'sample' connector provides readers for the internal sample datasets,
+($planets, $astronauts, $satellites, and $no_table).
+"""
+
 import typing
 
 import pyarrow
@@ -29,6 +34,9 @@ WELL_KNOWN_DATASETS = {
 
 
 def suggest(dataset):
+    """
+    Provide suggestions to the user if they gave a table that doesn't exist.
+    """
     from opteryx.utils import fuzzy_search
 
     known_datasets = (k for k in WELL_KNOWN_DATASETS if k != "$no_table")
