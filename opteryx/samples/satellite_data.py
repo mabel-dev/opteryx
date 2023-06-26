@@ -33,8 +33,8 @@ This has a companion dataset, $planets, to help test joins.
 
 
 from opteryx.constants.attribute_types import OPTERYX_TYPES
-from opteryx.models import FlatColumn
-from opteryx.models import RelationSchema
+from orso.schema import FlatColumn
+from orso.schema import RelationSchema
 
 
 def read(*args):
@@ -55,15 +55,15 @@ def read(*args):
 
 
 schema = RelationSchema(
-    table_name="$no_table",
+    name="$no_table",
     columns=[
-        FlatColumn(name="id", data_type=OPTERYX_TYPES.INTEGER),
-        FlatColumn(name="planetId", data_type=OPTERYX_TYPES.INTEGER),
-        FlatColumn(name="name", data_type=OPTERYX_TYPES.VARCHAR),
-        FlatColumn(name="gm", data_type=OPTERYX_TYPES.DOUBLE),
-        FlatColumn(name="radius", data_type=OPTERYX_TYPES.DOUBLE),
-        FlatColumn(name="density", data_type=OPTERYX_TYPES.DOUBLE),
-        FlatColumn(name="magnitude", data_type=OPTERYX_TYPES.DOUBLE),
-        FlatColumn(name="albedo", data_type=OPTERYX_TYPES.DOUBLE),
+        FlatColumn(name="id", type=OPTERYX_TYPES.INTEGER),
+        FlatColumn(name="planetId", type=OPTERYX_TYPES.INTEGER),
+        FlatColumn(name="name", type=OPTERYX_TYPES.VARCHAR),
+        FlatColumn(name="gm", type=OPTERYX_TYPES.DOUBLE),
+        FlatColumn(name="radius", type=OPTERYX_TYPES.DOUBLE),
+        FlatColumn(name="density", type=OPTERYX_TYPES.DOUBLE),
+        FlatColumn(name="magnitude", type=OPTERYX_TYPES.DOUBLE),
+        FlatColumn(name="albedo", type=OPTERYX_TYPES.DOUBLE),
     ],
 )

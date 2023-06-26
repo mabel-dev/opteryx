@@ -23,8 +23,21 @@ from typing import Iterable
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 
+def normalize_table(schema, table):
+    return table
+    normalized_names = []
 
-class V2ScannerNode(BasePlanNode):
+    for column_in_file in table.column_names:
+        logical_column = schema.find_column(column_in_file)
+        if logical_column is None:
+            # add it as a null column
+            pass
+        else:
+            normalized_names.append(logical_column.identity)
+    return table.rename_columns(physical_names)
+
+
+class ScannerNode(BasePlanNode):
     def __init__(self, properties: QueryProperties, **parameters):
         super().__init__(properties=properties, **parameters)
 
@@ -53,9 +66,11 @@ class V2ScannerNode(BasePlanNode):
 
     def execute(self) -> Iterable:
         """Perform this step, time how long is spent doing work"""
+        schema = self.parameters["schema"]
         start_clock = time.monotonic_ns()
         reader = self.parameters.get("connector").read_dataset(self.parameters.get("relation"))
         for morsel in reader:
             self.execution_time += time.monotonic_ns() - start_clock
-            yield morsel
+            yield normalize_table(schema, morsel)
             start_clock = time.monotonic_ns()
+

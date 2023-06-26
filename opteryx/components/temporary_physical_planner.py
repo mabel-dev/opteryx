@@ -53,9 +53,9 @@ def create_physical_plan(logical_plan):
         elif node_type == LogicalPlanStepType.Order:
             node = operators.SortNode(query_properties, order=node_config["order_by"])
         elif node_type == LogicalPlanStepType.Project:
-            node = operators.NoOpNode(query_properties, **node_config)
+            node = operators.ProjectionNode(query_properties, projection=logical_node.columns)
         elif node_type == LogicalPlanStepType.Scan:
-            node = operators.V2ScannerNode(query_properties, **node_config)
+            node = operators.ScannerNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Show:
             node = operators.NoOpNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.ShowColumns:

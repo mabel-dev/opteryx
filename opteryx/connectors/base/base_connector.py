@@ -17,7 +17,7 @@ import typing
 
 import pyarrow
 
-from opteryx.models import RelationSchema
+from orso.schema import RelationSchema
 
 
 class BaseConnector:

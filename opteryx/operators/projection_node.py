@@ -41,7 +41,7 @@ class ProjectionNode(BasePlanNode):
         self._projection: dict = {}
         self._expressions = []
 
-        projection = config.get("projection")
+        projection = config.get("projection", [])
         for attribute in projection:
             while attribute.node_type == NodeType.NESTED:
                 attribute = attribute.centre
@@ -77,7 +77,7 @@ class ProjectionNode(BasePlanNode):
 
     def execute(self) -> Iterable:
         if len(self._producers) != 1:  # pragma: no cover
-            raise SqlError(f"{self.name} on expects a single producer")
+            raise SqlError(f"{self.name} expects a single producer")
 
         morsels = self._producers[0]  # type:ignore
 
@@ -97,16 +97,9 @@ class ProjectionNode(BasePlanNode):
             _columns, _, morsel = evaluate_and_append(self._expressions, morsel, seed)
             self.statistics.time_evaluating += time.time_ns() - start_time
 
-            # first time round we're going work out what we need from the metadata
-            if columns is None:
-                projection = []
-                columns = _columns
-                for key in self._projection:
-                    if isinstance(key, tuple):
-                        relation = key[0]
-                        projection.extend(columns.get_columns_from_source(relation))
-                    else:
-                        projection.append(columns.get_column_from_alias(key, only_one=True))
+            projection = []
+            for column in self._projection:
+                projection.append(column)
 
             morsel = morsel.select(projection)  # type:ignore
 

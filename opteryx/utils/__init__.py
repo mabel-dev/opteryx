@@ -94,7 +94,6 @@ def random_string(width: int = 16):
     ]  # Convert to hex string and truncate to desired length
     return rand_hex
 
-
 def is_arm():
     """am I running on an ARM CPU?"""
     import platform

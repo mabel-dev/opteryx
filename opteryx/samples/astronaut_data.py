@@ -34,8 +34,8 @@ or you can instantiate a AstronautData() class and use it like a pyarrow Table.
 
 
 from opteryx.constants.attribute_types import OPTERYX_TYPES
-from opteryx.models import FlatColumn
-from opteryx.models import RelationSchema
+from orso.schema import FlatColumn
+from orso.schema import RelationSchema
 
 
 def read(*args):
@@ -55,26 +55,26 @@ def read(*args):
 
 
 schema = RelationSchema(
-    table_name="$astronauts",
+    name="$astronauts",
     columns=[
-        FlatColumn(name="name", data_type=OPTERYX_TYPES.VARCHAR),
-        FlatColumn(name="year", data_type=OPTERYX_TYPES.INTEGER),
-        FlatColumn(name="group", data_type=OPTERYX_TYPES.INTEGER),
-        FlatColumn(name="status", data_type=OPTERYX_TYPES.VARCHAR),
-        FlatColumn(name="birth_date", data_type=OPTERYX_TYPES.DATE),
-        FlatColumn(name="birth_place", data_type=OPTERYX_TYPES.STRUCT),
-        FlatColumn(name="gender", data_type=OPTERYX_TYPES.VARCHAR),
-        FlatColumn(name="alma_mater", data_type=OPTERYX_TYPES.ARRAY),
-        FlatColumn(name="undergraduate_major", data_type=OPTERYX_TYPES.VARCHAR),
-        FlatColumn(name="graduate_major", data_type=OPTERYX_TYPES.VARCHAR),
-        FlatColumn(name="military_rank", data_type=OPTERYX_TYPES.VARCHAR),
-        FlatColumn(name="military_branch", data_type=OPTERYX_TYPES.VARCHAR),
-        FlatColumn(name="space_flights", data_type=OPTERYX_TYPES.INTEGER),
-        FlatColumn(name="space_flight_hours", data_type=OPTERYX_TYPES.INTEGER),
-        FlatColumn(name="space_walks", data_type=OPTERYX_TYPES.INTEGER),
-        FlatColumn(name="space_walks_hours", data_type=OPTERYX_TYPES.INTEGER),
-        FlatColumn(name="missions", data_type=OPTERYX_TYPES.ARRAY),
-        FlatColumn(name="death_date", data_type=OPTERYX_TYPES.DATE),
-        FlatColumn(name="death_mission", data_type=OPTERYX_TYPES.VARCHAR),
+        FlatColumn(name="name", type=OPTERYX_TYPES.VARCHAR),
+        FlatColumn(name="year", type=OPTERYX_TYPES.INTEGER),
+        FlatColumn(name="group", type=OPTERYX_TYPES.INTEGER),
+        FlatColumn(name="status", type=OPTERYX_TYPES.VARCHAR),
+        FlatColumn(name="birth_date", type=OPTERYX_TYPES.DATE),
+        FlatColumn(name="birth_place", type=OPTERYX_TYPES.STRUCT),
+        FlatColumn(name="gender", type=OPTERYX_TYPES.VARCHAR),
+        FlatColumn(name="alma_mater", type=OPTERYX_TYPES.ARRAY),
+        FlatColumn(name="undergraduate_major", type=OPTERYX_TYPES.VARCHAR),
+        FlatColumn(name="graduate_major", type=OPTERYX_TYPES.VARCHAR),
+        FlatColumn(name="military_rank", type=OPTERYX_TYPES.VARCHAR),
+        FlatColumn(name="military_branch", type=OPTERYX_TYPES.VARCHAR),
+        FlatColumn(name="space_flights", type=OPTERYX_TYPES.INTEGER),
+        FlatColumn(name="space_flight_hours", type=OPTERYX_TYPES.INTEGER),
+        FlatColumn(name="space_walks", type=OPTERYX_TYPES.INTEGER),
+        FlatColumn(name="space_walks_hours", type=OPTERYX_TYPES.INTEGER),
+        FlatColumn(name="missions", type=OPTERYX_TYPES.ARRAY),
+        FlatColumn(name="death_date", type=OPTERYX_TYPES.DATE),
+        FlatColumn(name="death_mission", type=OPTERYX_TYPES.VARCHAR),
     ],
 )

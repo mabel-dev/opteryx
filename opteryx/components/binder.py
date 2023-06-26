@@ -84,6 +84,7 @@ from opteryx.exceptions import FunctionNotFoundError
 from opteryx.exceptions import UnexpectedDatasetReferenceError
 from opteryx.functions.v2 import FUNCTIONS
 from opteryx.managers.expression import NodeType
+from opteryx.utils import random_string
 
 CAMEL_TO_SNAKE = re.compile(r"(?<!^)(?=[A-Z])")
 logger = get_logger()
@@ -101,12 +102,14 @@ def inner_binder(node, relations):
         found_source_relation = relations.get(node.source)
 
         if node.source is not None:
+            # The column source is part of the name (e.g. relation.column)
             if found_source_relation is None:
-                # the dataset hasn't been loaded in a FROM or JOIN statement
+                # The relation hasn't been loaded in a FROM or JOIN statement
                 raise UnexpectedDatasetReferenceError(dataset=node.source)
 
             column = found_source_relation.find_column(node.source_column)
             if column is None:
+                # The column wasn't in the relation
                 candidates = found_source_relation.get_all_columns()
                 from opteryx.utils import fuzzy_search
 
@@ -116,11 +119,11 @@ def inner_binder(node, relations):
                 )
 
         else:
-            # look for the column in the loaded relations
+            # Look for the column in the loaded relations
             for _, schema in relations.items():
                 column = schema.find_column(node.value)
                 if column is not None:
-                    # if we've found it again - we're not sure which one to use
+                    # If we've found it again - we're not sure which one to use
                     if found_source_relation:
                         raise AmbiguousIdentifierError(identifier=node.value)
                     found_source_relation = schema
@@ -137,7 +140,7 @@ def inner_binder(node, relations):
             raise ColumnNotFoundError(column=node.value, suggestion=suggestion)
 
         # add values to the node to indicate the source of this data
-        node.source = found_source_relation.table_name
+        node.source = found_source_relation.name
         node.source_column = column
     if (node.node_type & NodeType.FUNCTION == NodeType.FUNCTION) or (
         node.node_type & NodeType.AGGREGATOR == NodeType.AGGREGATOR
@@ -179,7 +182,8 @@ class BinderVisitor:
         return node, context
 
     def visit_project(self, node, context):
-        logger.warning("visit_project not fully implemented")
+        # For each of the columns in the projection, identify the relation it
+        # will be taken from
         columns = []
         for column in node.columns:
             columns.append(inner_binder(column, context.get("schemas", {})))
@@ -193,9 +197,11 @@ class BinderVisitor:
         node.connector = connector_factory(node.relation)
         # get them to tell is the schema of the dataset
         # None means we don't know ahead of time - we can usually get something
-        context.setdefault("schemas", {})[node.alias] = node.connector.get_dataset_schema(
+        node.schema = node.connector.get_dataset_schema(
             node.relation
         )
+        context.setdefault("schemas", {})[node.alias] = node.schema
+
         return node, context
 
     def traverse(self, graph, node, context=None):

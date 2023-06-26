@@ -23,7 +23,7 @@ from opteryx import samples
 from opteryx.connectors.base.base_connector import BaseConnector
 from opteryx.connectors.base.base_connector import DatasetReader
 from opteryx.exceptions import DatasetNotFoundError
-from opteryx.models import RelationSchema
+from orso.schema import RelationSchema
 
 WELL_KNOWN_DATASETS = {
     "$astronauts": samples.astronauts,

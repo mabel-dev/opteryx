@@ -19,8 +19,8 @@ This is used to prepresent no table.
 It actually is a table, with one row and one column.
 """
 from opteryx.constants.attribute_types import OPTERYX_TYPES
-from opteryx.models import FlatColumn
-from opteryx.models import RelationSchema
+from orso.schema import FlatColumn
+from orso.schema import RelationSchema
 
 
 def read(*args):
@@ -33,5 +33,5 @@ def read(*args):
 
 
 schema = RelationSchema(
-    table_name="$no_table", columns=[FlatColumn(name="name", data_type=OPTERYX_TYPES.INTEGER)]
+    name="$no_table", columns=[FlatColumn(name="name", type=OPTERYX_TYPES.INTEGER)]
 )

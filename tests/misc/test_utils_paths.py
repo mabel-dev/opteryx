@@ -27,7 +27,7 @@ PATH_PARTS_TEST = [
 # fmt:on
 
 
-@pytest.mark.parametrize("string, expect, error", PATH_PARTS_TEST)
+@pytest.mark.parametrize("string, expected, error", PATH_PARTS_TEST)
 def test_paths_parts(string, expected, error):
     if error is not None:
         with pytest.raises(error):

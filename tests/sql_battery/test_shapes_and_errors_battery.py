@@ -40,11 +40,13 @@ import sys
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
+from pyarrow.lib import ArrowInvalid
 import pytest
 
 import opteryx
 from opteryx.connectors import AwsS3Connector, DiskConnector
 from opteryx.exceptions import (
+    AmbiguousIdentifierError,
     ColumnNotFoundError,
     DatasetNotFoundError,
     EmptyResultSetError,
@@ -52,6 +54,7 @@ from opteryx.exceptions import (
     MissingSqlStatement,
     ProgrammingError,
     SqlError,
+    UnexpectedDatasetReferenceError,
     UnsupportedSyntaxError,
 )
 from opteryx.utils.formatter import format_sql
@@ -742,6 +745,17 @@ STATEMENTS = [
         # can't cast to a list
         ("SELECT CAST('abc' AS LIST)", None, None, SqlError),
         ("SELECT TRY_CAST('abc' AS LIST)", None, None, SqlError),
+
+        # V2 Negative Tests
+        ("SELECT $planets.id, name FROM $planets INNER JOIN $satellites ON planetId = $planets.id", None, None, AmbiguousIdentifierError),
+        ("SELECT $planets.id FROM $satellites", None, None, UnexpectedDatasetReferenceError),
+
+        # V2 New Syntax Checks
+        ("SELECT * FROM $planets UNION SELECT * FROM $planets;", None, None, None),
+        ("SELECT * FROM $planets LEFT ANTI JOIN $satellites ON id = id;", None, None, ArrowInvalid),  # invalid until the join is written
+        ("EXPLAIN ANALYZE FORMAT JSON SELECT * FROM $planets AS a INNER JOIN (SELECT id FROM $planets) AS b USING (id);", None, None, None),
+        ("SELECT DISTINCT ON (planetId) planetId, name FROM $satellites ", None, None, None),
+        ("SELECT 8 DIV 4", None, None, None),
 
         # These are queries which have been found to return the wrong result or not run correctly
         # FILTERING ON FUNCTIONS
