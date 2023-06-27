@@ -96,8 +96,8 @@ def inner_binder(node, relations):
     associated with the relational algebra) which in itself may be an evaluation plan (i.e.
     executing comparisons)
     """
-
-    if node.node_type & NodeType.IDENTIFIER == NodeType.IDENTIFIER:
+    node_type = node.node_type
+    if node_type & NodeType.IDENTIFIER == NodeType.IDENTIFIER:
         column = None
         found_source_relation = relations.get(node.source)
 
@@ -142,8 +142,8 @@ def inner_binder(node, relations):
         # add values to the node to indicate the source of this data
         node.source = found_source_relation.name
         node.source_column = column
-    if (node.node_type & NodeType.FUNCTION == NodeType.FUNCTION) or (
-        node.node_type & NodeType.AGGREGATOR == NodeType.AGGREGATOR
+    if (node_type & NodeType.FUNCTION == NodeType.FUNCTION) or (
+        node_type & NodeType.AGGREGATOR == NodeType.AGGREGATOR
     ):
         # we're just going to bind the function into the node
         func = FUNCTIONS.get(node.value)
@@ -199,6 +199,11 @@ class BinderVisitor:
         # None means we don't know ahead of time - we can usually get something
         node.schema = node.connector.get_dataset_schema(node.relation)
         context.setdefault("schemas", {})[node.alias] = node.schema
+
+        return node, context
+
+    def visit_filter(self, node, context):
+        node.condition = inner_binder(node.condition, context.get("schemas", {}))
 
         return node, context
 

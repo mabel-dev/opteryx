@@ -1,13 +1,11 @@
 """
 Original code modified for Opteryx.
 """
-from enum import Enum
 from ipaddress import IPv4Address
 from ipaddress import IPv4Network
 
 import numpy
 import pyarrow
-from orso.types import PYTHON_TO_ORSO_MAP
 from orso.types import OrsoTypes
 from pyarrow import compute
 
@@ -37,29 +35,6 @@ FILTER_OPERATORS = {
     "PGRegexNotIMatch",  # "!~*"
     "BitwiseOr",  # |
 }
-
-
-def _get_type(var):
-    # added for Opteryx
-    if isinstance(var, (numpy.ndarray)):
-        _type = str(var.dtype)
-        if _type.startswith("<U"):
-            _type = "string"
-        return PARQUET_TYPES.get(_type, f"UNSUPPORTED ({str(var.dtype)})")
-    if isinstance(var, (pyarrow.Array)):
-        return PARQUET_TYPES.get(str(var.type), f"UNSUPPORTED ({str(var.type)})")
-    if isinstance(var, list):
-        return PYTHON_TO_ORSO_MAP.get(type(var[0]), f"UNSUPPORTED ({type(var[0]).__name__})")
-    _type = type(var)  # pragma: no cover
-    return PYTHON_TO_ORSO_MAP.get(_type, f"OTHER ({_type.__name__})")  # pragma: no cover
-
-
-def _check_type(operation, provided_type, valid_types):
-    # added for Opteryx
-    if str(provided_type.name) not in valid_types:  # pragma: no cover
-        raise TypeError(
-            f"Cannot use the {operation} operation on a {provided_type} column, a {valid_types} column is required."
-        )
 
 
 def filter_operations_for_display(arr, operator, value):

@@ -181,3 +181,22 @@ def coerce_columns(table, column_names):
             table = table.cast(target_schema=my_schema)
 
     return table
+
+
+def remove_null_columns(table):
+    removed = []
+    kept = []
+    for column in table.column_names:
+        column_data = table.column(column)
+        if str(column_data.type) == "null":  # pragma: no cover
+            removed.append(column)
+        else:
+            kept.append(column)
+
+    return removed, table.select(kept)
+
+
+def restore_null_columns(removed, table):
+    for column in removed:  # pragma: no cover
+        table = table.append_column(column, pyarrow.array([None] * table.num_rows))
+    return table

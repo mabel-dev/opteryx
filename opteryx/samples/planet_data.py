@@ -104,7 +104,7 @@ schema = RelationSchema(
         FlatColumn(name="orbitalInclination", type=OrsoTypes.DOUBLE),
         FlatColumn(name="orbitalEccentricity", type=OrsoTypes.DOUBLE),
         FlatColumn(name="obliquityToOrbit", type=OrsoTypes.DOUBLE),
-        FlatColumn(name="meanTemperature", type=OrsoTypes.DOUBLE),
+        FlatColumn(name="meanTemperature", type=OrsoTypes.INTEGER),
         FlatColumn(name="surfacePressure", type=OrsoTypes.DOUBLE),
         FlatColumn(name="numberOfMoons", type=OrsoTypes.INTEGER),
     ],

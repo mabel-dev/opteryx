@@ -55,7 +55,7 @@ def read(*args):
 
 
 schema = RelationSchema(
-    name="$no_table",
+    name="$satellites",
     columns=[
         FlatColumn(name="id", type=OrsoTypes.INTEGER),
         FlatColumn(name="planetId", type=OrsoTypes.INTEGER),

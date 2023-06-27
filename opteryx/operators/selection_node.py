@@ -14,13 +14,14 @@
 Selection Node
 
 This is a SQL Query Execution Plan Node.
+
+This node is responsible for applying filters to datasets.
 """
 import time
 from typing import Iterable
 
 import numpy
 import pyarrow
-from pyarrow import Table
 
 from opteryx.exceptions import SqlError
 from opteryx.managers.expression import evaluate
