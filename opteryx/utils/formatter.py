@@ -125,8 +125,4 @@ def format_sql(sql):
     formatted_sql = formatted_sql.replace(" \033[38;5;102m,", "\033[38;5;102m,")
     formatted_sql = formatted_sql.replace(" \033[38;5;102m;", "\033[38;5;102m;")
 
-    return (
-        color_comments(formatted_sql)
-        .strip()
-        .replace("\n", " \033[7;38;2;98;114;164m\033[3m↵\033[0m ")
-    )
+    return color_comments(formatted_sql).strip()

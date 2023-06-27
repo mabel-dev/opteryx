@@ -74,10 +74,9 @@ def compare(str1: str, str2: str) -> int:
 def check_model(str1: str, str2: str, len1: int, len2: int, model) -> int:
     """Check if the model can transform str1 into str2"""
 
-    idx1, idx2 = 0, 0
-    cost, pad = 0, 0
+    cost, idx1, idx2 = 0, 0, 0
     while idx1 < len1 and idx2 < len2:
-        if str1[idx1] != str2[idx2 - pad]:
+        if str1[idx1] != str2[idx2]:
             cost += 1
             if cost > 2:
                 return cost
@@ -90,10 +89,8 @@ def check_model(str1: str, str2: str, len1: int, len2: int, model) -> int:
             elif option == REPLACE:
                 idx1 += 1
                 idx2 += 1
-                pad = 0
         else:
             idx1 += 1
             idx2 += 1
-            pad = 0
 
     return cost + (len1 - idx1) + (len2 - idx2)
