@@ -41,7 +41,7 @@ def test_slice_right():
 
 
 def test_random_string():
-    from opteryx.utils import random_string
+    from orso.tools import random_string
 
     seen = set()
     for i in range(100):

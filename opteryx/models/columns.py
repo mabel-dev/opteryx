@@ -26,11 +26,11 @@ The selection operator should focus on the selection not on working out which co
 is actually being referred to.
 """
 import pyarrow
+from orso.tools import random_string
 
 from opteryx.exceptions import ColumnNotFoundError
 from opteryx.exceptions import SqlError
 from opteryx.utils import arrow
-from opteryx.utils import random_string
 
 
 class Columns:

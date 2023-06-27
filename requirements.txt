@@ -1,7 +1,7 @@
 hadro
 numpy
 orjson
-orso>=0.0.70
+orso>=0.0.71
 pyarrow>=12.0.1
 typer
 

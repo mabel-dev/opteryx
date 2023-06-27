@@ -32,9 +32,9 @@ This has a companion dataset, $planets, to help test joins.
 """
 
 
-from opteryx.constants.attribute_types import OPTERYX_TYPES
 from orso.schema import FlatColumn
 from orso.schema import RelationSchema
+from orso.types import OrsoTypes
 
 
 def read(*args):
@@ -57,13 +57,13 @@ def read(*args):
 schema = RelationSchema(
     name="$no_table",
     columns=[
-        FlatColumn(name="id", type=OPTERYX_TYPES.INTEGER),
-        FlatColumn(name="planetId", type=OPTERYX_TYPES.INTEGER),
-        FlatColumn(name="name", type=OPTERYX_TYPES.VARCHAR),
-        FlatColumn(name="gm", type=OPTERYX_TYPES.DOUBLE),
-        FlatColumn(name="radius", type=OPTERYX_TYPES.DOUBLE),
-        FlatColumn(name="density", type=OPTERYX_TYPES.DOUBLE),
-        FlatColumn(name="magnitude", type=OPTERYX_TYPES.DOUBLE),
-        FlatColumn(name="albedo", type=OPTERYX_TYPES.DOUBLE),
+        FlatColumn(name="id", type=OrsoTypes.INTEGER),
+        FlatColumn(name="planetId", type=OrsoTypes.INTEGER),
+        FlatColumn(name="name", type=OrsoTypes.VARCHAR),
+        FlatColumn(name="gm", type=OrsoTypes.DOUBLE),
+        FlatColumn(name="radius", type=OrsoTypes.DOUBLE),
+        FlatColumn(name="density", type=OrsoTypes.DOUBLE),
+        FlatColumn(name="magnitude", type=OrsoTypes.DOUBLE),
+        FlatColumn(name="albedo", type=OrsoTypes.DOUBLE),
     ],
 )

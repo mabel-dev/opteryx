@@ -48,13 +48,14 @@ import sys
 from enum import Enum
 from enum import auto
 
+from orso.tools import random_string
+
 from opteryx.components import logical_planner_builders
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import format_expression
 from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.models.node import Node
 from opteryx.third_party.travers import Graph
-from opteryx.utils import random_string
 
 sys.path.insert(1, os.path.join(sys.path[0], "../../../.."))  # isort:skip
 

@@ -26,9 +26,8 @@ import pyarrow
 from numpy import nan
 from numpy import nanmax
 from numpy import nanmin
+from orso.types import OrsoTypes
 
-from opteryx.constants.attribute_types import OPTERYX_TYPES
-from opteryx.constants.attribute_types import determine_type
 from opteryx.exceptions import SqlError
 from opteryx.models import Columns
 from opteryx.models import QueryProperties
@@ -57,7 +56,7 @@ def _simple_collector(morsel):
     buffer = []
     for column in morsel.column_names:
         column_data = morsel.column(column)
-        _type = determine_type(str(column_data.type))
+        _type = column_data.type
         new_row = {"name": columns.get_preferred_name(column), "type": _type.name}
         buffer.append(new_row)
 
@@ -100,7 +99,7 @@ def _full_collector(morsels):
         for column in morsel.column_names:
             column_data = morsel.column(column)
             profile = profile_collector.get(column, orjson.loads(empty_profile))
-            _type = determine_type(str(column_data.type))
+            _type = column_data.type
             if _type not in profile["type"]:
                 profile["type"].append(_type)
 
@@ -114,7 +113,7 @@ def _full_collector(morsels):
             )
             profile["missing"] += missing
 
-            if _type == OPTERYX_TYPES.NUMERIC:
+            if _type in (OrsoTypes.INTEGER, OrsoTypes.DOUBLE):
                 if profile["min"]:
                     profile["min"] = min(profile["min"], nanmin(column_data))
                     profile["max"] = max(profile["max"], nanmax(column_data))

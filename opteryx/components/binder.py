@@ -76,6 +76,7 @@ import copy
 import re
 
 from orso.logging import get_logger
+from orso.tools import random_string
 
 from opteryx.exceptions import AmbiguousIdentifierError
 from opteryx.exceptions import ColumnNotFoundError
@@ -84,7 +85,6 @@ from opteryx.exceptions import FunctionNotFoundError
 from opteryx.exceptions import UnexpectedDatasetReferenceError
 from opteryx.functions.v2 import FUNCTIONS
 from opteryx.managers.expression import NodeType
-from opteryx.utils import random_string
 
 CAMEL_TO_SNAKE = re.compile(r"(?<!^)(?=[A-Z])")
 logger = get_logger()
@@ -197,9 +197,7 @@ class BinderVisitor:
         node.connector = connector_factory(node.relation)
         # get them to tell is the schema of the dataset
         # None means we don't know ahead of time - we can usually get something
-        node.schema = node.connector.get_dataset_schema(
-            node.relation
-        )
+        node.schema = node.connector.get_dataset_schema(node.relation)
         context.setdefault("schemas", {})[node.alias] = node.schema
 
         return node, context

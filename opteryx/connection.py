@@ -26,6 +26,7 @@ from uuid import uuid4
 import pyarrow
 from orso import DataFrame
 from orso import converters
+from orso.tools import random_int
 
 from opteryx import config
 from opteryx import utils
@@ -55,7 +56,7 @@ class ConnectionContext:
     history: typing.List[HistoryItem] = field(init=False)
 
     def __post_init__(self):
-        object.__setattr__(self, "connection_id", utils.random_int())
+        object.__setattr__(self, "connection_id", random_int())
         object.__setattr__(self, "connected_at", datetime.datetime.utcnow())
         object.__setattr__(self, "history", [])
         object.__setattr__(self, "variables", SystemVariables.copy(VariableOwner.USER))

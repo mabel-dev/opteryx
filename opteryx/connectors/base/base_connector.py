@@ -16,7 +16,6 @@ The BaseConnector provides a common interface for all storage connectors.
 import typing
 
 import pyarrow
-
 from orso.schema import RelationSchema
 
 

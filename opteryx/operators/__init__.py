@@ -33,6 +33,9 @@ from .noop_node import NoOpNode  # No Operation
 from .offset_node import OffsetNode  # skip a number of records
 from .outer_join_node import OuterJoinNode  # LEFT/RIGHT/FULL OUTER JOIN
 from .projection_node import ProjectionNode  # remove unwanted columns including renames
+
+# Version 2
+from .scanner_node import ScannerNode
 from .selection_node import SelectionNode  # filter unwanted rows
 from .show_columns_node import ShowColumnsNode  # column details
 from .show_create_node import ShowCreateNode  # SHOW CREATE TABLE
@@ -42,9 +45,6 @@ from .show_value_node import ShowValueNode  # display node for SHOW
 from .show_variables_node import ShowVariablesNode  # SHOW VARIABLES
 from .sort_node import SortNode  # order by selected columns
 from .sql_reader_node import SqlReaderNode  # external SQL databases
-
-# Version 2
-from .scanner_node import ScannerNode
 
 # map join types to their implementations
 _join_nodes = {

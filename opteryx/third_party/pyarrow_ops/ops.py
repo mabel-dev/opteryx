@@ -7,10 +7,9 @@ from ipaddress import IPv4Network
 
 import numpy
 import pyarrow
+from orso.types import PYTHON_TO_ORSO_MAP
+from orso.types import OrsoTypes
 from pyarrow import compute
-
-from opteryx.constants.attribute_types import OPTERYX_TYPES
-from opteryx.constants.attribute_types import PARQUET_TYPES
 
 from .helpers import columns_to_array
 
@@ -40,38 +39,6 @@ FILTER_OPERATORS = {
 }
 
 
-class node_typeS(str, Enum):
-    BOOLEAN = "BOOLEAN"
-    NUMERIC = "NUMERIC"
-    LIST = "LIST"
-    VARCHAR = "VARCHAR"
-    STRUCT = "STRUCT"
-    TIMESTAMP = "TIMESTAMP"
-    OTHER = "OTHER"
-    IDENTIFIER = "IDENTIFIER"
-    WILDCARD = "WILDCARD"
-    QUERY_PLAN = "QUERY_PLAN"
-    FUNCTION = "FUNCTION"
-    INTERVAL = "INTERVAL"
-
-
-PYTHON_TYPES = {
-    "bool": OPTERYX_TYPES.BOOLEAN,
-    "datetime": OPTERYX_TYPES.TIMESTAMP,
-    "date": OPTERYX_TYPES.TIMESTAMP,
-    "dict": OPTERYX_TYPES.STRUCT,
-    "int": OPTERYX_TYPES.NUMERIC,  # INTEGER
-    "float": OPTERYX_TYPES.NUMERIC,  # FLOAT
-    "float64": OPTERYX_TYPES.NUMERIC,  # IS THIS USED?
-    "Decimal": OPTERYX_TYPES.NUMERIC,  # DECIMAL
-    "str": OPTERYX_TYPES.VARCHAR,
-    "tuple": OPTERYX_TYPES.LIST,
-    "list": OPTERYX_TYPES.LIST,
-    "set": OPTERYX_TYPES.LIST,
-    # INTERVAL?
-}
-
-
 def _get_type(var):
     # added for Opteryx
     if isinstance(var, (numpy.ndarray)):
@@ -82,9 +49,9 @@ def _get_type(var):
     if isinstance(var, (pyarrow.Array)):
         return PARQUET_TYPES.get(str(var.type), f"UNSUPPORTED ({str(var.type)})")
     if isinstance(var, list):
-        return PYTHON_TYPES.get(type(var[0]).__name__, f"UNSUPPORTED ({type(var[0]).__name__})")
-    type_name = type(var).__name__  # pragma: no cover
-    return PYTHON_TYPES.get(type_name, f"OTHER ({type_name})")  # pragma: no cover
+        return PYTHON_TO_ORSO_MAP.get(type(var[0]), f"UNSUPPORTED ({type(var[0]).__name__})")
+    _type = type(var)  # pragma: no cover
+    return PYTHON_TO_ORSO_MAP.get(_type, f"OTHER ({_type.__name__})")  # pragma: no cover
 
 
 def _check_type(operation, provided_type, valid_types):
@@ -240,38 +207,38 @@ def _inner_filter_operations(arr, operator, value):
     elif operator == "Like":
         # MODIFIED FOR OPTERYX
         # null input emits null output, which should be false/0
-        _check_type("LIKE", identifier_type, (node_typeS.VARCHAR))
+        _check_type("LIKE", identifier_type, (OrsoTypes.VARCHAR))
         return compute.match_like(arr, value[0]).to_numpy(False).astype(dtype=bool)  # [#325]
     elif operator == "NotLike":
         # MODIFIED FOR OPTERYX - see comment above
-        _check_type("NOT LIKE", identifier_type, (node_typeS.VARCHAR))
+        _check_type("NOT LIKE", identifier_type, (OrsoTypes.VARCHAR))
         matches = compute.match_like(arr, value[0]).to_numpy(False).astype(dtype=bool)  # [#325]
         return numpy.invert(matches)
     elif operator == "ILike":
         # MODIFIED FOR OPTERYX - see comment above
-        _check_type("ILIKE", identifier_type, (node_typeS.VARCHAR))
+        _check_type("ILIKE", identifier_type, (OrsoTypes.VARCHAR))
         return (
             compute.match_like(arr, value[0], ignore_case=True).to_numpy(False).astype(dtype=bool)
         )  # [#325]
     elif operator == "NotILike":
         # MODIFIED FOR OPTERYX - see comment above
-        _check_type("NOT ILIKE", identifier_type, (node_typeS.VARCHAR))
+        _check_type("NOT ILIKE", identifier_type, (OrsoTypes.VARCHAR))
         matches = compute.match_like(arr, value[0], ignore_case=True)  # [#325]
         return numpy.invert(matches)
     elif operator in ("PGRegexMatch", "SimilarTo"):
         # MODIFIED FOR OPTERYX - see comment above
-        _check_type("~", identifier_type, (node_typeS.VARCHAR))
+        _check_type("~", identifier_type, (OrsoTypes.VARCHAR))
         return (
             compute.match_substring_regex(arr, value[0]).to_numpy(False).astype(dtype=bool)
         )  # [#325]
     elif operator in ("PGRegexNotMatch", "NotSimilarTo"):
         # MODIFIED FOR OPTERYX - see comment above
-        _check_type("!~", identifier_type, (node_typeS.VARCHAR))
+        _check_type("!~", identifier_type, (OrsoTypes.VARCHAR))
         matches = compute.match_substring_regex(arr, value[0])  # [#325]
         return numpy.invert(matches)
     elif operator == "PGRegexIMatch":
         # MODIFIED FOR OPTERYX - see comment above
-        _check_type("~*", identifier_type, (node_typeS.VARCHAR))
+        _check_type("~*", identifier_type, (OrsoTypes.VARCHAR))
         return (
             compute.match_substring_regex(arr, value[0], ignore_case=True)
             .to_numpy(False)
@@ -279,7 +246,7 @@ def _inner_filter_operations(arr, operator, value):
         )  # [#325]
     elif operator == "PGRegexNotIMatch":
         # MODIFIED FOR OPTERYX - see comment above
-        _check_type("!~*", identifier_type, (node_typeS.VARCHAR))
+        _check_type("!~*", identifier_type, (OrsoTypes.VARCHAR))
         matches = compute.match_substring_regex(arr, value[0], ignore_case=True)  # [#325]
         return numpy.invert(matches)
     elif operator == "BitwiseOr":

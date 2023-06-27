@@ -18,12 +18,12 @@ The 'sample' connector provides readers for the internal sample datasets,
 import typing
 
 import pyarrow
+from orso.schema import RelationSchema
 
 from opteryx import samples
 from opteryx.connectors.base.base_connector import BaseConnector
 from opteryx.connectors.base.base_connector import DatasetReader
 from opteryx.exceptions import DatasetNotFoundError
-from orso.schema import RelationSchema
 
 WELL_KNOWN_DATASETS = {
     "$astronauts": samples.astronauts,

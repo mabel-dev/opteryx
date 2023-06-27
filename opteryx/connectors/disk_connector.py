@@ -18,9 +18,10 @@ NFS etc).
 import io
 import os
 
+from orso.schema import RelationSchema
+
 from opteryx.connectors.base.base_connector import BaseConnector
 from opteryx.connectors.base.base_connector import DatasetReader
-from orso.schema import RelationSchema
 from opteryx.utils import file_decoders
 from opteryx.utils import paths
 

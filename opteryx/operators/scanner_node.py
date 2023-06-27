@@ -23,6 +23,7 @@ from typing import Iterable
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 
+
 def normalize_table(schema, table):
     return table
     normalized_names = []
@@ -73,4 +74,3 @@ class ScannerNode(BasePlanNode):
             self.execution_time += time.monotonic_ns() - start_clock
             yield normalize_table(schema, morsel)
             start_clock = time.monotonic_ns()
-

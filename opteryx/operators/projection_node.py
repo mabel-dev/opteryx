@@ -21,6 +21,8 @@ that performs column renames.
 import time
 from typing import Iterable
 
+from orso.tools import random_int
+
 from opteryx.exceptions import SqlError
 from opteryx.managers.expression import LITERAL_TYPE
 from opteryx.managers.expression import NodeType
@@ -29,7 +31,6 @@ from opteryx.managers.expression import format_expression
 from opteryx.models import QueryProperties
 from opteryx.models.node import Node
 from opteryx.operators import BasePlanNode
-from opteryx.utils import random_int
 
 
 class ProjectionNode(BasePlanNode):
