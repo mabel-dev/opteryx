@@ -92,7 +92,6 @@ class ExecutionTree(Graph):
 
     def explain(self):
         from opteryx import operators
-        from opteryx.models import Columns
 
         def _inner_explain(node, depth):
             if depth == 1:

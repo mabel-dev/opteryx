@@ -21,7 +21,6 @@ import pyarrow
 
 from opteryx import functions
 from opteryx import operators
-from opteryx.models import Columns
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 

@@ -24,7 +24,6 @@ import pyarrow
 
 from opteryx.managers.expression import NodeType
 from opteryx.models import QueryProperties
-from opteryx.models.columns import Columns
 from opteryx.operators import BasePlanNode
 
 

@@ -29,7 +29,6 @@ from numpy import nanmin
 from orso.types import OrsoTypes
 
 from opteryx.exceptions import SqlError
-from opteryx.models import Columns
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 

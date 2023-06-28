@@ -20,8 +20,6 @@ from typing import Iterable
 import pyarrow
 
 from opteryx import __version__
-from opteryx.exceptions import SqlError
-from opteryx.models import Columns
 from opteryx.operators import BasePlanNode
 
 SYSTEM_VARIABLES = [{"variable_name": "version", "value": __version__}]

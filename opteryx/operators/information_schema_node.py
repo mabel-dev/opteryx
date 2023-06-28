@@ -25,7 +25,6 @@ import pyarrow
 
 from opteryx.exceptions import DatasetNotFoundError
 from opteryx.models import QueryProperties
-from opteryx.models.columns import Columns
 from opteryx.operators import BasePlanNode
 
 

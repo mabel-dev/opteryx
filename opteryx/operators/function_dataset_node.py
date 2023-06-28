@@ -26,7 +26,6 @@ import pyarrow
 from opteryx.exceptions import SqlError
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import evaluate
-from opteryx.models import Columns
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 from opteryx.utils import series

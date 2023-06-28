@@ -35,7 +35,6 @@ from opteryx.managers.expression import evaluate_and_append
 from opteryx.managers.expression import format_expression
 from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.models import QueryProperties
-from opteryx.models.columns import Columns
 from opteryx.operators import BasePlanNode
 
 COUNT_STAR: str = "COUNT(*)"

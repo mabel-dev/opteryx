@@ -31,7 +31,6 @@ from opteryx.exceptions import DatasetNotFoundError
 from opteryx.managers.expression import NodeType
 from opteryx.managers.schemes import DefaultPartitionScheme
 from opteryx.managers.schemes import MabelPartitionScheme
-from opteryx.models import Columns
 from opteryx.models import ExecutionTree
 from opteryx.models import QueryProperties
 from opteryx.models.node import Node

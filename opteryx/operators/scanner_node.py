@@ -13,9 +13,10 @@
 """
 Explain Node
 
-This is a SQL Query Execution Plan Node.
+This is the SQL Query Execution Plan Node responsible for the reading of data.
 
-
+It wraps different internal readers (e.g. GCP Blob reader, SQL Reader), 
+normalizes the data into the format for internal processing. 
 """
 import time
 from typing import Iterable
@@ -24,18 +25,16 @@ from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 
 
-def normalize_table(schema, table):
-    return table
-    normalized_names = []
+def normalize_morsel(schema, morsel):
+    # rename columns for internal use
+    target_column_names = []
 
-    for column_in_file in table.column_names:
-        logical_column = schema.find_column(column_in_file)
-        if logical_column is None:
-            # add it as a null column
-            pass
-        else:
-            normalized_names.append(logical_column.identity)
-    return table.rename_columns(physical_names)
+    for column in morsel.column_names:
+        column_name = str(schema.find_column(column))
+        target_column_names.append(column_name)
+
+    morsel = morsel.rename_columns(target_column_names)
+    return morsel
 
 
 class ScannerNode(BasePlanNode):
@@ -72,5 +71,5 @@ class ScannerNode(BasePlanNode):
         reader = self.parameters.get("connector").read_dataset(self.parameters.get("relation"))
         for morsel in reader:
             self.execution_time += time.monotonic_ns() - start_clock
-            yield normalize_table(schema, morsel)
+            yield normalize_morsel(schema, morsel)
             start_clock = time.monotonic_ns()

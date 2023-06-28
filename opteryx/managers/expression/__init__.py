@@ -17,10 +17,7 @@ It is defined as an expression tree of binary and unary operators, and functions
 
 Expressions are evaluated against an entire morsel at a time.
 """
-from dataclasses import dataclass
-from dataclasses import field
 from enum import Enum
-from typing import Any
 
 import numpy
 import pyarrow
@@ -30,7 +27,6 @@ from pyarrow import Table
 from opteryx.functions import FUNCTIONS
 from opteryx.functions.binary_operators import binary_operations
 from opteryx.functions.unary_operations import UNARY_OPERATIONS
-from opteryx.models import Columns
 from opteryx.models.node import Node
 from opteryx.third_party.pyarrow_ops.ops import filter_operations
 from opteryx.third_party.pyarrow_ops.ops import filter_operations_for_display
@@ -42,6 +38,12 @@ LITERAL_TYPE: int = int("0100", 2)
 
 
 def format_expression(root):
+    """
+    TODO:
+        - change so literals are called `column_1`, `column_2`
+        - change so expressions are called `1_times_7`
+    """
+
     if root is None:
         return "null"
 
@@ -175,7 +177,7 @@ NUMPY_TYPES = {
 }
 
 
-def _inner_evaluate(root: Node, table: Table, columns, for_display: bool = False):
+def _inner_evaluate(root: Node, table: Table, for_display: bool = False):
     node_type = root.node_type
 
     # BOOLEAN OPERATORS
@@ -183,11 +185,11 @@ def _inner_evaluate(root: Node, table: Table, columns, for_display: bool = False
         left, right, centre = None, None, None
 
         if root.left is not None:
-            left = _inner_evaluate(root.left, table, columns, for_display)
+            left = _inner_evaluate(root.left, table, for_display)
         if root.right is not None:
-            right = _inner_evaluate(root.right, table, columns, for_display)
+            right = _inner_evaluate(root.right, table, for_display)
         if root.centre is not None:
-            centre = _inner_evaluate(root.centre, table, columns, for_display)
+            centre = _inner_evaluate(root.centre, table, for_display)
 
         if node_type == NodeType.AND:
             return pyarrow.compute.and_(left, right)
@@ -210,9 +212,7 @@ def _inner_evaluate(root: Node, table: Table, columns, for_display: bool = False
     # INTERAL IDENTIFIERS
     if node_type & INTERNAL_TYPE == INTERNAL_TYPE:
         if node_type == NodeType.FUNCTION:
-            parameters = [
-                _inner_evaluate(param, table, columns, for_display) for param in root.parameters
-            ]
+            parameters = [_inner_evaluate(param, table, for_display) for param in root.parameters]
             # zero parameter functions get the number of rows as the parameter
             if len(parameters) == 0:
                 parameters = [table.num_rows]
@@ -230,17 +230,17 @@ def _inner_evaluate(root: Node, table: Table, columns, for_display: bool = False
             if root.value in table.column_names:
                 mapped_column = root.value
             else:
-                mapped_column = columns.get_column_from_alias(root.value, only_one=True)
+                mapped_column = 1  # columns.get_column_from_alias(root.value, only_one=True)
             return table[mapped_column].to_numpy()
         if node_type == NodeType.COMPARISON_OPERATOR:
-            left = _inner_evaluate(root.left, table, columns, for_display)
-            right = _inner_evaluate(root.right, table, columns, for_display)
+            left = _inner_evaluate(root.left, table, for_display)
+            right = _inner_evaluate(root.right, table, for_display)
             if for_display:
                 return filter_operations_for_display(left, root.value, right)
             return filter_operations(left, root.value, right)
         if node_type == NodeType.BINARY_OPERATOR:
-            left = _inner_evaluate(root.left, table, columns, for_display)
-            right = _inner_evaluate(root.right, table, columns, for_display)
+            left = _inner_evaluate(root.left, table, for_display)
+            right = _inner_evaluate(root.right, table, for_display)
             return binary_operations(left, root.value, right)
         if node_type == NodeType.WILDCARD:
             numpy.full(table.num_rows, "*", dtype=numpy.unicode_)
@@ -249,12 +249,12 @@ def _inner_evaluate(root: Node, table: Table, columns, for_display: bool = False
             sub = root.value.execute()
             return pyarrow.concat_tables(sub, promote=True)
         if node_type == NodeType.NESTED:
-            return _inner_evaluate(root.centre, table, columns, for_display)
+            return _inner_evaluate(root.centre, table, for_display)
         if node_type == NodeType.UNARY_OPERATOR:
-            centre = _inner_evaluate(root.centre, table, columns, for_display)
+            centre = _inner_evaluate(root.centre, table, for_display)
             return UNARY_OPERATIONS[root.value](centre)
         if node_type == NodeType.EXPRESSION_LIST:
-            values = [_inner_evaluate(val, table, columns) for val in root.value]
+            values = [_inner_evaluate(val, table) for val in root.value]
             return values
 
     # LITERAL TYPES
@@ -275,8 +275,7 @@ def _inner_evaluate(root: Node, table: Table, columns, for_display: bool = False
 
 
 def evaluate(expression: Node, table: Table, for_display: bool = False):
-    columns = Columns(table)
-    result = _inner_evaluate(root=expression, table=table, columns=columns, for_display=for_display)
+    result = _inner_evaluate(root=expression, table=table, for_display=for_display)
 
     if not isinstance(result, (pyarrow.Array, numpy.ndarray)):
         result = numpy.array(result)
@@ -310,16 +309,13 @@ def get_all_nodes_of_type(root, select_nodes):
     return identifiers
 
 
-def evaluate_and_append(expressions, table: Table, seed: str = None):
+def evaluate_and_append(expressions, table: Table):
     """
     Evaluate an expression and add it to the table.
 
     This needs to be able to deal with and avoid cascading problems where field names
     are duplicated, this is most common when performing many joins on the same table.
     """
-
-    columns = Columns(table)
-    return_expressions = []
 
     for statement in expressions:
         if statement.node_type in (
@@ -333,24 +329,9 @@ def evaluate_and_append(expressions, table: Table, seed: str = None):
             NodeType.XOR,
         ) or (statement.node_type & LITERAL_TYPE == LITERAL_TYPE):
             new_column_name = format_expression(statement)
-            raw_column_name = new_column_name
-
-            # avoid clashes in column names
-            alias = statement.alias
-            if not alias:
-                alias = [new_column_name]
-            if seed is not None:
-                alias.append(new_column_name)
-                new_column_name = hex(CityHash64(seed + new_column_name))
-
-            # if we've already been evaluated - don't do it again
-            if len(columns.get_column_from_alias(raw_column_name)) > 0:
-                statement = Node(NodeType.IDENTIFIER, value=raw_column_name, alias=alias)
-                return_expressions.append(statement)
-                continue
 
             # do the evaluation
-            new_column = evaluate(statement, table, True)
+            new_column = evaluate(statement, table)
 
             # some activities give us masks rather than the values, if we don't have
             # enough values, assume it's a mask
@@ -361,7 +342,7 @@ def evaluate_and_append(expressions, table: Table, seed: str = None):
                 bool_list[new_column] = True
                 new_column = bool_list
 
-            # large arrays appear to have a bug in PyArrow where they're automatically
+            # Large arrays appear to have a bug in PyArrow where they're automatically
             # converted to a chunked array, but the internal function can't handle
             # chunked arrays - 50Mb columns are rare when we have 64Mb morsels.
             if new_column.nbytes > 50000000:
@@ -371,19 +352,7 @@ def evaluate_and_append(expressions, table: Table, seed: str = None):
 
             table = table.append_column(new_column_name, new_column)
 
-            # add the column to the schema and because it's been evaluated and added to
-            # table, it's an INDENTIFIER rather than a FUNCTION
-            columns.add_column(new_column_name)
-            columns.add_alias(new_column_name, alias)
-            columns.set_preferred_name(new_column_name, alias[0])
-
-            statement = Node(NodeType.IDENTIFIER, value=new_column_name, alias=alias)
-
-        return_expressions.append(statement)
-
-    table = columns.apply(table)
-
-    return columns, return_expressions, table
+    return table
 
 
 def deduplicate_list_of_nodes(nodes):

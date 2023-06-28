@@ -60,8 +60,8 @@ def limit_records(morsels, limit):
 
 def rename_columns(morsels):
     """rename columns to their preferred names"""
-    from opteryx.models import Columns
-
+    yield from morsels
+    return
     columns = None
     morsels = iter(morsels)
     for morsel in morsels:
