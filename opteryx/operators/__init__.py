@@ -20,6 +20,7 @@ from .collection_reader_node import CollectionReaderNode  # reader NoSQL datsets
 from .column_filter_node import ColumnFilterNode  # filter for SHOW COLUMNS
 from .cross_join_node import CrossJoinNode  # CROSS JOIN
 from .distinct_node import DistinctNode  # remove duplicate records
+from .exit_node import ExitNode
 from .explain_node import ExplainNode  # EXPLAIN queries
 from .file_reader_node import FileReaderNode  # usually on the CLI
 from .function_dataset_node import FunctionDatasetNode  # Dataset Constructors

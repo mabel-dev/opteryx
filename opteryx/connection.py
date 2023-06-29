@@ -16,7 +16,6 @@ stores, it is not compliant with the standard:
 https://www.python.org/dev/peps/pep-0249/
 """
 import datetime
-import os
 import time
 import typing
 from dataclasses import dataclass
@@ -33,7 +32,6 @@ from opteryx import utils
 from opteryx.exceptions import CursorInvalidStateError
 from opteryx.exceptions import MissingSqlStatement
 from opteryx.exceptions import PermissionsError
-from opteryx.exceptions import ProgrammingError
 from opteryx.managers.kvstores import BaseKeyValueStore
 from opteryx.shared import QueryStatistics
 from opteryx.shared.variables import SystemVariables
@@ -89,9 +87,9 @@ class Connection:
             permissions = PERMISSIONS
         permissions = set(permissions)
         if permissions.intersection(PERMISSIONS) == set():
-            raise ProgrammingError("No valid permissions presented.")
+            raise PermissionsError("No valid permissions presented.")
         if not permissions.issubset(PERMISSIONS):
-            raise ProgrammingError(
+            raise PermissionsError(
                 f"Invalid permissions presented - {PERMISSIONS.difference(permissions)}"
             )
         self.permissions = permissions
@@ -134,6 +132,8 @@ class Cursor(DataFrame):
         return self._qid
 
     def _inner_execute(self, operation, params=None):
+        from opteryx.components import query_planner
+
         if not operation:
             raise MissingSqlStatement("SQL statement not found")
 
@@ -141,8 +141,6 @@ class Cursor(DataFrame):
             raise CursorInvalidStateError("Cursor can only be executed once")
 
         self._connection.context.history.append((operation, True, datetime.datetime.utcnow()))
-
-        from opteryx.components import query_planner
 
         plans = query_planner(operation=operation, parameters=params, connection=self._connection)
 
@@ -156,7 +154,7 @@ class Cursor(DataFrame):
                 True if i == 1 else value
                 for i, value in enumerate(self._connection.context.history[-1])
             )
-            return utils.arrow.rename_columns(results)
+            return results
 
     def execute(self, operation, params=None):
         results = self._inner_execute(operation, params)

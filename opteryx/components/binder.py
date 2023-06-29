@@ -76,7 +76,6 @@ import copy
 import re
 
 from orso.logging import get_logger
-from orso.tools import random_string
 
 from opteryx.exceptions import AmbiguousIdentifierError
 from opteryx.exceptions import ColumnNotFoundError
@@ -107,10 +106,10 @@ def inner_binder(node, relations):
                 # The relation hasn't been loaded in a FROM or JOIN statement
                 raise UnexpectedDatasetReferenceError(dataset=node.source)
 
-            column = found_source_relation.find_column(node.source_column)
+            column = found_source_relation.find_column(node.source_column.name)
             if column is None:
                 # The column wasn't in the relation
-                candidates = found_source_relation.get_all_columns()
+                candidates = found_source_relation.all_column_names()
                 from opteryx.utils import fuzzy_search
 
                 suggestion = fuzzy_search(node.value, candidates)
@@ -179,6 +178,18 @@ class BinderVisitor:
 
     def visit_unsupported(self, node, context):
         logger.warning(f"No visit method implemented for node type {node.node_type.name}")
+        return node, context
+
+    def visit_exit(self, node, context):
+        # For each of the columns in the projection, identify the relation it
+        # will be taken from
+        if node is None:
+            pass
+
+        columns = []
+        for column in node.columns:
+            columns.append(inner_binder(column, context.get("schemas", {})))
+        node.columns = columns
         return node, context
 
     def visit_project(self, node, context):

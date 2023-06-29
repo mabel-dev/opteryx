@@ -76,6 +76,7 @@ class LogicalPlanStepType(int, Enum):
     Limit = auto()  # limit and offset
     Order = auto()  # order by
     Distinct = auto()
+    Exit = auto()
 
     CTE = auto()
     Subquery = auto()
@@ -302,6 +303,14 @@ def inner_query_planner(ast_branch):
         inner_plan.add_node(step_id, limit_step)
         if previous_step_id is not None:
             inner_plan.add_edge(previous_step_id, step_id)
+
+    # add the exit node
+    exit_node = LogicalPlanNode(node_type=LogicalPlanStepType.Exit)
+    exit_node.columns = _projection
+    previous_step_id, step_id = step_id, random_string()
+    inner_plan.add_node(step_id, exit_node)
+    if previous_step_id is not None:
+        inner_plan.add_edge(previous_step_id, step_id)
 
     return inner_plan
 
