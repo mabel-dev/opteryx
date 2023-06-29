@@ -33,7 +33,7 @@ from opteryx.operators import BasePlanNode
 class ExitNode(BasePlanNode):
     def __init__(self, properties: QueryProperties, **config):
         super().__init__(properties=properties)
-        self.columns = config["columns"]
+        self.columns = config["projection"]
 
     @property
     def config(self):  # pragma: no cover
@@ -52,8 +52,17 @@ class ExitNode(BasePlanNode):
         final_columns = []
         final_names = []
         for column in self.columns:
-            final_columns.append(str(column.source_column))
+            final_columns.append(column.schema_column.identity)
             final_names.append(column.query_column)
+
+        if len(final_columns) != len(set(final_columns)):
+            from collections import Counter
+
+            duplicates = [column for column, count in Counter(final_columns).items() if count > 1]
+            matches = (a for a, b in zip(final_names, final_columns) if b in duplicates)
+            raise SqlError(
+                f"Query result contains multiple instances of the same column - {', '.join(matches)}"
+            )
 
         for morsel in morsels.execute():
             morsel = morsel.select(final_columns)

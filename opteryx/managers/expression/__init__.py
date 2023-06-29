@@ -29,7 +29,6 @@ from opteryx.functions.binary_operators import binary_operations
 from opteryx.functions.unary_operations import UNARY_OPERATIONS
 from opteryx.models.node import Node
 from opteryx.third_party.pyarrow_ops.ops import filter_operations
-from opteryx.third_party.pyarrow_ops.ops import filter_operations_for_display
 
 # These are bit-masks
 LOGICAL_TYPE: int = int("0001", 2)
@@ -177,7 +176,7 @@ NUMPY_TYPES = {
 }
 
 
-def _inner_evaluate(root: Node, table: Table, for_display: bool = False):
+def _inner_evaluate(root: Node, table: Table):
     node_type = root.node_type
 
     # BOOLEAN OPERATORS
@@ -185,11 +184,11 @@ def _inner_evaluate(root: Node, table: Table, for_display: bool = False):
         left, right, centre = None, None, None
 
         if root.left is not None:
-            left = _inner_evaluate(root.left, table, for_display)
+            left = _inner_evaluate(root.left, table)
         if root.right is not None:
-            right = _inner_evaluate(root.right, table, for_display)
+            right = _inner_evaluate(root.right, table)
         if root.centre is not None:
-            centre = _inner_evaluate(root.centre, table, for_display)
+            centre = _inner_evaluate(root.centre, table)
 
         if node_type == NodeType.AND:
             return pyarrow.compute.and_(left, right)
@@ -212,7 +211,7 @@ def _inner_evaluate(root: Node, table: Table, for_display: bool = False):
     # INTERAL IDENTIFIERS
     if node_type & INTERNAL_TYPE == INTERNAL_TYPE:
         if node_type == NodeType.FUNCTION:
-            parameters = [_inner_evaluate(param, table, for_display) for param in root.parameters]
+            parameters = [_inner_evaluate(param, table) for param in root.parameters]
             # zero parameter functions get the number of rows as the parameter
             if len(parameters) == 0:
                 parameters = [table.num_rows]
@@ -227,20 +226,14 @@ def _inner_evaluate(root: Node, table: Table, for_display: bool = False):
             root.value = format_expression(root)
             root.node_type = NodeType.IDENTIFIER
         if node_type == NodeType.IDENTIFIER:
-            if root.value in table.column_names:
-                mapped_column = root.value
-            else:
-                mapped_column = 1  # columns.get_column_from_alias(root.value, only_one=True)
-            return table[mapped_column].to_numpy()
+            return table[root.schema_column.identity].to_numpy()
         if node_type == NodeType.COMPARISON_OPERATOR:
-            left = _inner_evaluate(root.left, table, for_display)
-            right = _inner_evaluate(root.right, table, for_display)
-            if for_display:
-                return filter_operations_for_display(left, root.value, right)
+            left = _inner_evaluate(root.left, table)
+            right = _inner_evaluate(root.right, table)
             return filter_operations(left, root.value, right)
         if node_type == NodeType.BINARY_OPERATOR:
-            left = _inner_evaluate(root.left, table, for_display)
-            right = _inner_evaluate(root.right, table, for_display)
+            left = _inner_evaluate(root.left, table)
+            right = _inner_evaluate(root.right, table)
             return binary_operations(left, root.value, right)
         if node_type == NodeType.WILDCARD:
             numpy.full(table.num_rows, "*", dtype=numpy.unicode_)
@@ -249,9 +242,9 @@ def _inner_evaluate(root: Node, table: Table, for_display: bool = False):
             sub = root.value.execute()
             return pyarrow.concat_tables(sub, promote=True)
         if node_type == NodeType.NESTED:
-            return _inner_evaluate(root.centre, table, for_display)
+            return _inner_evaluate(root.centre, table)
         if node_type == NodeType.UNARY_OPERATOR:
-            centre = _inner_evaluate(root.centre, table, for_display)
+            centre = _inner_evaluate(root.centre, table)
             return UNARY_OPERATIONS[root.value](centre)
         if node_type == NodeType.EXPRESSION_LIST:
             values = [_inner_evaluate(val, table) for val in root.value]
@@ -274,8 +267,8 @@ def _inner_evaluate(root: Node, table: Table, for_display: bool = False):
         )  # type:ignore
 
 
-def evaluate(expression: Node, table: Table, for_display: bool = False):
-    result = _inner_evaluate(root=expression, table=table, for_display=for_display)
+def evaluate(expression: Node, table: Table):
+    result = _inner_evaluate(root=expression, table=table)
 
     if not isinstance(result, (pyarrow.Array, numpy.ndarray)):
         result = numpy.array(result)

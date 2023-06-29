@@ -109,8 +109,8 @@ STATEMENTS = [
         ("SELECT * FROM $satellites /* comment */ FOR TODAY /* comment */", 177, 8, None),
 
         ("SELECT name, id, planetId FROM $satellites", 177, 3, None),
-        ("SELECT name, name FROM $satellites", 177, 1, None),
-        ("SELECT name, id, name, id FROM $satellites", 177, 2, None),
+        ("SELECT name, name FROM $satellites", 177, 1, SqlError),  # V2 breaking
+        ("SELECT name, id, name, id FROM $satellites", 177, 2, SqlError),  # V2 breaking
 
         ("SELECT DISTINCT name FROM $astronauts", 357, 1, None),
         ("SELECT DISTINCT * FROM $astronauts", 357, 19, None),

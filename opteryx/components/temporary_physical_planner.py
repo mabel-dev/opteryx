@@ -39,9 +39,9 @@ def create_physical_plan(logical_plan):
         if node_type == LogicalPlanStepType.Aggregate:
             node = operators.NoOpNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Distinct:
-            node = operators.NoOpNode(query_properties, **node_config)
+            node = operators.DistinctNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Exit:
-            node = operators.ExitNode(query_properties, **node_config)
+            node = operators.ExitNode(query_properties, projection=logical_node.columns)
         elif node_type == LogicalPlanStepType.Explain:
             node = operators.NoOpNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Fake:

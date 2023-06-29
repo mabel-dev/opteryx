@@ -51,7 +51,7 @@ class ProjectionNode(BasePlanNode):
 
         projection = []
         for column in self.projection:
-            projection.append(str(column.source_column))
+            projection.append(column.schema_column.identity)
 
         for morsel in morsels.execute():
             # If any of the columns are FUNCTIONs, we need to evaluate them

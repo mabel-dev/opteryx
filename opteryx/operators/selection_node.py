@@ -64,7 +64,7 @@ class SelectionNode(BasePlanNode):
                 continue
 
             start_selection = time.time_ns()
-            mask = evaluate(self.filter, morsel, False)
+            mask = evaluate(self.filter, morsel)
             self.statistics.time_evaluating += time.time_ns() - start_selection
 
             # if the mask is a boolean array, we've called a function that

@@ -95,6 +95,10 @@ def inner_binder(node, relations):
     associated with the relational algebra) which in itself may be an evaluation plan (i.e.
     executing comparisons)
     """
+    # we're already binded
+    if node.schema_column is not None:
+        return node
+
     node_type = node.node_type
     if node_type & NodeType.IDENTIFIER == NodeType.IDENTIFIER:
         column = None
@@ -106,7 +110,7 @@ def inner_binder(node, relations):
                 # The relation hasn't been loaded in a FROM or JOIN statement
                 raise UnexpectedDatasetReferenceError(dataset=node.source)
 
-            column = found_source_relation.find_column(node.source_column.name)
+            column = found_source_relation.find_column(node.source_column)
             if column is None:
                 # The column wasn't in the relation
                 candidates = found_source_relation.all_column_names()
@@ -126,6 +130,8 @@ def inner_binder(node, relations):
                     if found_source_relation:
                         raise AmbiguousIdentifierError(identifier=node.value)
                     found_source_relation = schema
+            # we haven't been give a source, so add one here
+            node.source = found_source_relation.name
 
         if found_source_relation is None:
             # If we didn't find the relation, get all of the columns it could have been and
@@ -139,8 +145,7 @@ def inner_binder(node, relations):
             raise ColumnNotFoundError(column=node.value, suggestion=suggestion)
 
         # add values to the node to indicate the source of this data
-        node.source = found_source_relation.name
-        node.source_column = column
+        node.schema_column = column
     if (node_type & NodeType.FUNCTION == NodeType.FUNCTION) or (
         node_type & NodeType.AGGREGATOR == NodeType.AGGREGATOR
     ):
@@ -181,14 +186,22 @@ class BinderVisitor:
         return node, context
 
     def visit_exit(self, node, context):
-        # For each of the columns in the projection, identify the relation it
-        # will be taken from
-        if node is None:
-            pass
-
         columns = []
+        schemas = context.get("schemas", {})
+
+        # If it's SELECT * the node doesn't have the fields yet
+        if node.columns[0].node_type == NodeType.WILDCARD:
+            from opteryx.models.node import Node
+
+            for schema in schemas:
+                for column in schemas[schema].columns:
+                    column_reference = Node(schema_column=column, query_column=column.name)
+                    columns.append(column_reference)
+            node.columns = columns
+            return node, context
+
         for column in node.columns:
-            columns.append(inner_binder(column, context.get("schemas", {})))
+            columns.append(inner_binder(column, schemas))
         node.columns = columns
         return node, context
 
