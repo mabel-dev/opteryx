@@ -6,7 +6,6 @@ from ipaddress import IPv4Network
 
 import numpy
 import pyarrow
-from orso.types import OrsoTypes
 from pyarrow import compute
 
 from .helpers import columns_to_array
@@ -81,8 +80,8 @@ def filter_operations(arr, operator, value):
         # fill the result set
         results = numpy.full(record_count, -1, numpy.int8)
         results[numpy.nonzero(null_positions)] = results_mask
-        # build tri-state response
-        return [bool(r) if r != -1 else None for r in results]
+        # build tri-state response, PyArrow supports tristate, numpy does not
+        return pyarrow.array((bool(r) if r != -1 else None for r in results), type=pyarrow.bool_())
 
     return results_mask
 
