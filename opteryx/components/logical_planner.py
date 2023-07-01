@@ -246,10 +246,7 @@ def inner_query_planner(ast_branch):
             inner_plan.add_edge(previous_step_id, step_id)
 
     # projection
-    _projection = [clause for clause in _projection if clause not in _aggregates]
-    if not _projection == [] and not (
-        len(_projection) == 1 and _projection[0].node_type == NodeType.WILDCARD
-    ):
+    if not (len(_projection) == 1 and _projection[0].node_type == NodeType.WILDCARD):
         project_step = LogicalPlanNode(node_type=LogicalPlanStepType.Project)
         project_step.columns = _projection
         previous_step_id, step_id = step_id, random_string()

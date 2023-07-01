@@ -82,8 +82,12 @@ from opteryx.exceptions import ColumnNotFoundError
 from opteryx.exceptions import DatabaseError
 from opteryx.exceptions import FunctionNotFoundError
 from opteryx.exceptions import UnexpectedDatasetReferenceError
-from opteryx.functions.v2 import FUNCTIONS
+
+# from opteryx.functions.v2 import FUNCTIONS
+from opteryx.functions import FUNCTIONS
 from opteryx.managers.expression import NodeType
+from opteryx.operators.aggregate_node import AGGREGATORS
+from opteryx.samples import calculated
 
 CAMEL_TO_SNAKE = re.compile(r"(?<!^)(?=[A-Z])")
 logger = get_logger()
@@ -100,7 +104,7 @@ def inner_binder(node, relations):
         return node
 
     node_type = node.node_type
-    if node_type & NodeType.IDENTIFIER == NodeType.IDENTIFIER:
+    if node_type == NodeType.IDENTIFIER:
         column = None
         found_source_relation = relations.get(node.source)
 
@@ -146,15 +150,22 @@ def inner_binder(node, relations):
 
         # add values to the node to indicate the source of this data
         node.schema_column = column
-    if (node_type & NodeType.FUNCTION == NodeType.FUNCTION) or (
-        node_type & NodeType.AGGREGATOR == NodeType.AGGREGATOR
-    ):
+    if node_type == NodeType.FUNCTION:
         # we're just going to bind the function into the node
         func = FUNCTIONS.get(node.value)
         if not func:
-            suggest = FUNCTIONS.suggest(node.value)
+            # v1:
+            from opteryx.utils import fuzzy_search
+
+            suggest = fuzzy_search(node.value, FUNCTIONS.keys() + AGGREGATORS.keys())
+            # v2: suggest = FUNCTIONS.suggest(node.value)
             raise FunctionNotFoundError(function=node.value, suggestion=suggest)
         node.function = func
+    if node_type == NodeType.AGGREGATOR:
+        # We don't suggest because if it wasn't found as an aggregation, it's
+        # assumed to be a function
+        agg = AGGREGATORS.get(node.value)
+        node.function = agg
 
     # Now recurse and do this again for all the sub parts of the evaluation plan
     if node.left:
@@ -263,7 +274,7 @@ class BinderVisitor:
             return merged_dict
 
         if context is None:
-            context = {}
+            context = {"schemas": {"$calculated": calculated.schema}}
 
         # Recursively visit children
         children = graph.ingoing_edges(node)

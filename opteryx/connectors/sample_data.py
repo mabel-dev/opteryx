@@ -27,6 +27,7 @@ from opteryx.exceptions import DatasetNotFoundError
 
 WELL_KNOWN_DATASETS = {
     "$astronauts": samples.astronauts,
+    "$calculated": None,
     "$no_table": samples.no_table,
     "$planets": samples.planets,
     "$satellites": samples.satellites,
@@ -39,7 +40,7 @@ def suggest(dataset):
     """
     from opteryx.utils import fuzzy_search
 
-    known_datasets = (k for k in WELL_KNOWN_DATASETS if k != "$no_table")
+    known_datasets = (k for k in WELL_KNOWN_DATASETS if k not in ("$no_table", "$calculated"))
     suggestion = fuzzy_search(dataset, known_datasets)
     if suggestion is not None:
         return (

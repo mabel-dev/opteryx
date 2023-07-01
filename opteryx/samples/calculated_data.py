@@ -10,8 +10,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import opteryx.samples.astronaut_data as astronauts
-import opteryx.samples.calculated_data as calculated
-import opteryx.samples.no_table_data as no_table
-import opteryx.samples.planet_data as planets
-import opteryx.samples.satellite_data as satellites
+"""
+calculated
+---------
+
+This is used as the source relation for calculated values.
+"""
+from orso.schema import RelationSchema
+
+
+def read(*args):
+    return None
+
+
+schema = RelationSchema(name="$calculated", columns=[])
