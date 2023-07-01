@@ -458,7 +458,7 @@ def in_list(branch, alias=None, key=None):
     left_node = build(branch["expr"])
     list_values = {build(v).value for v in branch["list"]}
     operator = "NotInList" if branch["negated"] else "InList"
-    right_node = Node(node_type=NodeType.LITERAL_LIST, value=list_values)
+    right_node = Node(node_type=NodeType.LITERAL, type=OrsoTypes.ARRAY, value=list_values)
     return Node(
         node_type=NodeType.COMPARISON_OPERATOR,
         value=operator,
