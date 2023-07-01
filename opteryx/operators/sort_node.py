@@ -82,7 +82,7 @@ class SortNode(BasePlanNode):
 
                     raise SqlError("`ORDER BY` only supports `RAND()` as a functional sort order.")
 
-                elif column.node_type == NodeType.LITERAL_NUMERIC:
+                elif column.node_type == NodeType.LITERAL_INTEGER:
                     # we have an index rather than a column name, it's a natural
                     # number but the list of column names is zero-based, so we
                     # subtract one

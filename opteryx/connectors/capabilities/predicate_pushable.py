@@ -54,7 +54,8 @@ def to_dnf(root):
         if root.left.node_type != NodeType.IDENTIFIER:
             raise NotSupportedError()
         if root.left.node_type in (
-            NodeType.LITERAL_NUMERIC,
+            NodeType.LITERAL_FLOAT,
+            NodeType.LITERAL_INTEGER,
             NodeType.LITERAL_VARCHAR,
         ):
             # not all operands are universally supported

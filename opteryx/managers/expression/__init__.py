@@ -21,7 +21,7 @@ from enum import Enum
 
 import numpy
 import pyarrow
-from orso.cityhash import CityHash64
+from orso.types import OrsoTypes
 from pyarrow import Table
 
 from opteryx.functions import FUNCTIONS
@@ -31,9 +31,8 @@ from opteryx.models.node import Node
 from opteryx.third_party.pyarrow_ops.ops import filter_operations
 
 # These are bit-masks
-LOGICAL_TYPE: int = int("0001", 2)
-INTERNAL_TYPE: int = int("0010", 2)
-LITERAL_TYPE: int = int("0100", 2)
+LOGICAL_TYPE: int = int("00010000", 2)
+INTERNAL_TYPE: int = int("00100000", 2)
 
 
 def format_expression(root):
@@ -53,29 +52,26 @@ def format_expression(root):
     _map: dict = {}
 
     # LITERAL TYPES
-    if node_type & LITERAL_TYPE == LITERAL_TYPE:
-        if node_type == NodeType.LITERAL_VARCHAR:
+    if node_type == NodeType.LITERAL:
+        literal_type = root.type
+        if literal_type == OrsoTypes.VARCHAR:
             return "'" + root.value.replace("'", "'") + "'"
-        if node_type == NodeType.LITERAL_TIMESTAMP:
+        if literal_type == OrsoTypes.TIMESTAMP:
             return "'" + str(root) + "'"
-        if node_type == NodeType.LITERAL_INTERVAL:
+        if literal_type == OrsoTypes.INTERVAL:
             return "<INTERVAL>"
-        if node_type == NodeType.LITERAL_NONE:
-            return "null"
         return str(root.value)
     # INTERAL IDENTIFIERS
     if node_type & INTERNAL_TYPE == INTERNAL_TYPE:
-        if node_type in (
-            NodeType.FUNCTION,
-            NodeType.AGGREGATOR,
-            NodeType.COMPLEX_AGGREGATOR,
-        ):
+        if node_type in (NodeType.FUNCTION, NodeType.AGGREGATOR):
             if root.value == "CASE":
                 con = [format_expression(a) for a in root.parameters[0].value]
                 vals = [format_expression(a) for a in root.parameters[1].value]
                 return "CASE " + "".join([f"WHEN {c} THEN {v} " for c, v in zip(con, vals)]) + "END"
             distinct = "DISTINCT " if root.distinct else ""
-            order = f" ORDER BY {', '.join(item[0].value + (' DESC' if not item[1] else '') for item in (root.order or []))}"
+            order = ""
+            if root.order:
+                order = f" ORDER BY {', '.join(item[0].value + (' DESC' if not item[1] else '') for item in (root.order or []))}"
             if root.value == "ARRAY_AGG":
                 limit = f" LIMIT {root.limit}" if root.limit else ""
                 return f"{root.value.upper()}({distinct}{format_expression(root.expression)}{order}{limit})"
@@ -129,55 +125,59 @@ class NodeType(int, Enum):
     UNKNOWN: int = 0
 
     # LOGICAL OPERATORS
-    # nnnn0001
-    AND: int = 17
-    OR: int = 33
-    XOR: int = 49
-    NOT: int = 65 ## 0100 0001
+    # 0001 nnnn
+    AND: int = 17  # 0001 0001
+    OR: int = 18  # 0001 0010 
+    XOR: int = 19  # 0001 0011
+    NOT: int = 20  # 0001 0100
 
     # INTERAL IDENTIFIERS
-    # nnnn0010
-    WILDCARD: int = 18
-    COMPARISON_OPERATOR: int = 34
-    BINARY_OPERATOR: int = 50
-    UNARY_OPERATOR: int = 66
-    FUNCTION: int = 82
-    IDENTIFIER: int = 98
-    SUBQUERY: int = 114
-    NESTED: int = 130
-    AGGREGATOR:int = 146
-    COMPLEX_AGGREGATOR: int = 162
-    EXPRESSION_LIST:int = 178  # 1011 0010
+    # 0010 nnnn
+    WILDCARD: int = 33  # 0010 0001
+    COMPARISON_OPERATOR: int = 34  # 0010 0010
+    BINARY_OPERATOR: int = 35  # 0010 0011
+    UNARY_OPERATOR: int = 36  # 0010 0100
+    FUNCTION: int = 37  # 0010 0101
+    IDENTIFIER: int = 38  # 0010 0110
+    SUBQUERY: int = 39  # 0010 0111
+    NESTED: int = 40  # 0010 1000
+    AGGREGATOR:int = 41  # 0010 1001
+    LITERAL:int = 42  # 0010 1010
+    EXPRESSION_LIST: int = 43  # 0010 1011 (CASE WHEN)
 
 
-    # LITERAL TYPES
-    # nnnn0100
-    LITERAL_NUMERIC: int = 20
-    LITERAL_VARCHAR: int = 36
-    LITERAL_BOOLEAN: int = 52
-    LITERAL_INTERVAL: int = 68
-    LITERAL_LIST: int = 84
-    LITERAL_STRUCT: int = 100
-    LITERAL_TIMESTAMP: int = 116
-    LITERAL_NONE: int = 132
-    LITERAL_TABLE: int = 148  # 1001 0100
-
-    # fmt:on
-
-
-NUMPY_TYPES = {
-    NodeType.LITERAL_NUMERIC: numpy.dtype("float64"),
-    NodeType.LITERAL_VARCHAR: numpy.unicode_(),
-    NodeType.LITERAL_BOOLEAN: numpy.dtype("?"),
-    NodeType.LITERAL_INTERVAL: numpy.dtype("m"),
-    NodeType.LITERAL_LIST: numpy.dtype("O"),
-    NodeType.LITERAL_STRUCT: numpy.dtype("O"),
-    NodeType.LITERAL_TIMESTAMP: numpy.dtype("datetime64[us]"),
+ORSO_TO_NUMPY_MAP = {
+    OrsoTypes.ARRAY: numpy.dtype("O"),
+    OrsoTypes.BLOB: numpy.dtype("S"),
+    OrsoTypes.BOOLEAN: numpy.dtype("?"),
+    OrsoTypes.DATE: numpy.dtype("datetime64[D]"),  # [2.5e16 BC, 2.5e16 AD]
+    OrsoTypes.DOUBLE: numpy.dtype("float64"),
+    OrsoTypes.INTEGER: numpy.dtype("int64"),
+    OrsoTypes.INTERVAL: numpy.dtype("m"),
+    OrsoTypes.STRUCT: numpy.dtype("O"),
+    OrsoTypes.TIMESTAMP: numpy.dtype("datetime64[us]"),  # [290301 BC, 294241 AD]
+    OrsoTypes.TIME: numpy.dtype("O"),
+    OrsoTypes.VARCHAR: numpy.unicode_(),
 }
 
 
 def _inner_evaluate(root: Node, table: Table):
     node_type = root.node_type
+
+    # LITERAL TYPES
+    if node_type == NodeType.LITERAL:
+        # if it's a literal value, return it once for every value in the table
+        literal_type = root.type
+        if literal_type == OrsoTypes.ARRAY:
+            # this isn't as fast as .full - but lists and strings are problematic
+            return numpy.array([root.value] * table.num_rows)
+        if literal_type == OrsoTypes.VARCHAR:
+            return numpy.array([root.value] * table.num_rows, dtype=numpy.unicode_)
+        if literal_type == OrsoTypes.INTERVAL:
+            return pyarrow.array([root.value] * table.num_rows)
+        return numpy.full(
+            shape=table.num_rows, fill_value=root.value, dtype=ORSO_TO_NUMPY_MAP[literal_type]
+        )  # type:ignore
 
     # BOOLEAN OPERATORS
     if node_type & LOGICAL_TYPE == LOGICAL_TYPE:
@@ -219,7 +219,7 @@ def _inner_evaluate(root: Node, table: Table):
             if isinstance(result, list):
                 result = numpy.array(result)
             return result
-        if node_type in (NodeType.AGGREGATOR, NodeType.COMPLEX_AGGREGATOR):
+        if node_type in (NodeType.AGGREGATOR,):
             # detected as an aggregator, but here it's an identifier because it
             # will have already been evaluated
             node_type = NodeType.IDENTIFIER
@@ -249,22 +249,6 @@ def _inner_evaluate(root: Node, table: Table):
         if node_type == NodeType.EXPRESSION_LIST:
             values = [_inner_evaluate(val, table) for val in root.value]
             return values
-
-    # LITERAL TYPES
-    if node_type & LITERAL_TYPE == LITERAL_TYPE:
-        # if it's a literal value, return it once for every value in the table
-        if node_type == NodeType.LITERAL_LIST:
-            # this isn't as fast as .full - but lists and strings are problematic
-            return numpy.array([root.value] * table.num_rows)
-        if node_type == NodeType.LITERAL_VARCHAR:
-            return numpy.array([root.value] * table.num_rows, dtype=numpy.unicode_)
-        if node_type == NodeType.LITERAL_INTERVAL:
-            return pyarrow.array([root.value] * table.num_rows)
-        if node_type == NodeType.LITERAL_NONE:
-            return numpy.full(table.num_rows, numpy.nan)
-        return numpy.full(
-            shape=table.num_rows, fill_value=root.value, dtype=NUMPY_TYPES[node_type]
-        )  # type:ignore
 
 
 def evaluate(expression: Node, table: Table):
@@ -320,9 +304,8 @@ def evaluate_and_append(expressions, table: Table):
             NodeType.AND,
             NodeType.OR,
             NodeType.XOR,
-        ) or (statement.node_type & LITERAL_TYPE == LITERAL_TYPE):
-            new_column_name = format_expression(statement)
-
+            NodeType.LITERAL,
+        ):
             # do the evaluation
             new_column = evaluate(statement, table)
 
@@ -336,14 +319,14 @@ def evaluate_and_append(expressions, table: Table):
                 new_column = bool_list
 
             # Large arrays appear to have a bug in PyArrow where they're automatically
-            # converted to a chunked array, but the internal function can't handle
+            # converted to a chunked array, but the internal functions can't handle
             # chunked arrays - 50Mb columns are rare when we have 64Mb morsels.
             if new_column.nbytes > 50000000:
                 new_column = [[i] for i in new_column]
             else:
                 new_column = [new_column]
 
-            table = table.append_column(new_column_name, new_column)
+            table = table.append_column(statement.schema_column.identity, new_column)
 
     return table
 

@@ -118,13 +118,8 @@ def _build_aggs(aggregators, columns):
         aggregators = [aggregators]
 
     for root in aggregators:
-        for aggregator in get_all_nodes_of_type(
-            root, select_nodes=(NodeType.AGGREGATOR, NodeType.COMPLEX_AGGREGATOR)
-        ):
-            if aggregator.node_type in (
-                NodeType.AGGREGATOR,
-                NodeType.COMPLEX_AGGREGATOR,
-            ):
+        for aggregator in get_all_nodes_of_type(root, select_nodes=(NodeType.AGGREGATOR,)):
+            if aggregator.node_type in (NodeType.AGGREGATOR,):
                 field_node = aggregator.parameters[0]
                 display_name = format_expression(field_node)
                 exists = columns.get_column_from_alias(display_name)
@@ -137,7 +132,8 @@ def _build_aggs(aggregators, columns):
                 elif field_node.node_type == NodeType.IDENTIFIER:
                     field_name = columns.get_column_from_alias(field_node.value, only_one=True)
                 elif field_node.node_type in (
-                    NodeType.LITERAL_NUMERIC,
+                    NodeType.LITERAL_INTEGER,
+                    NodeType.LITERAL_FLOAT,
                     NodeType.LITERAL_BOOLEAN,
                     NodeType.LITERAL_VARCHAR,
                 ):
@@ -173,12 +169,15 @@ def _non_group_aggregates(aggregates, table, columns):
     result = {}
 
     for aggregate in aggregates:
-        if aggregate.node_type in (NodeType.AGGREGATOR, NodeType.COMPLEX_AGGREGATOR):
+        if aggregate.node_type in (NodeType.AGGREGATOR,):
             column_node = aggregate.parameters[0]
-            if column_node.node_type == NodeType.LITERAL_NUMERIC:
+            if column_node.node_type == NodeType.LITERAL_FLOAT:
                 raw_column_values = numpy.full(
                     table.num_rows, column_node.value, dtype=numpy.float64
                 )
+                mapped_column_name = str(column_node.value)
+            elif column_node.node_type == NodeType.LITERAL_INTEGER:
+                raw_column_values = numpy.full(table.num_rows, column_node.value, dtype=numpy.int64)
                 mapped_column_name = str(column_node.value)
             elif (
                 aggregate.value == "COUNT"
@@ -219,9 +218,7 @@ def _extract_functions(aggregates):
 
     evaluatable_nodes = []
     for node in all_evaluatable_nodes:
-        aggregators = get_all_nodes_of_type(
-            node, select_nodes=(NodeType.AGGREGATOR, NodeType.COMPLEX_AGGREGATOR)
-        )
+        aggregators = get_all_nodes_of_type(node, select_nodes=(NodeType.AGGREGATOR,))
         if len(aggregators) == 0:
             evaluatable_nodes.append(node)
 
@@ -242,7 +239,7 @@ class AggregateNode(BasePlanNode):
             if group is None:
                 continue
             # handle numeric indexes - GROUP BY 1
-            if group.node_type == NodeType.LITERAL_NUMERIC:
+            if group.node_type == NodeType.LITERAL_INTEGER:
                 # references are natural numbers, so -1 for zero-based
                 group = self._aggregates[int(group.value) - 1]
                 if group.node_type not in (NodeType.IDENTIFIER, NodeType.FUNCTION):
@@ -312,7 +309,8 @@ class AggregateNode(BasePlanNode):
                 self._groups + self._aggregates,
                 select_nodes=(
                     NodeType.LITERAL_BOOLEAN,
-                    NodeType.LITERAL_NUMERIC,
+                    NodeType.LITERAL_INTEGER,
+                    NodeType.LITERAL_FLOAT,
                     NodeType.LITERAL_VARCHAR,
                 ),
             )
@@ -345,9 +343,7 @@ class AggregateNode(BasePlanNode):
             groups = groups.aggregate(aggs)
 
         # do the secondary activities for ARRAY_AGG
-        for node in get_all_nodes_of_type(
-            self._aggregates, select_nodes=(NodeType.COMPLEX_AGGREGATOR,)
-        ):
+        for node in get_all_nodes_of_type(self._aggregates, select_nodes=(NodeType.AGGREGATOR,)):
             if node.value == "ARRAY_AGG":
                 _, _, order, limit = node.parameters
                 if order or limit:

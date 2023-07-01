@@ -18,6 +18,7 @@ a function and a reference to it in the dictionary.
 
 import numpy
 import pyarrow
+from orso.types import OrsoTypes
 
 from opteryx import functions
 from opteryx import operators
@@ -48,23 +49,41 @@ def literal_number(branch, alias: list = None, key=None):
     try:
         # Try converting to int first
         value = int(value)
+        return Node(
+            NodeType.LITERAL,
+            type=OrsoTypes.INTEGER,
+            value=numpy.int64(branch[0]),  # value
+            alias=alias,
+        )
     except ValueError:
         # If int conversion fails, try converting to float
         value = float(value)
-
-    return Node(
-        NodeType.LITERAL_NUMERIC,
-        value=numpy.float64(branch[0]),  # value
-        alias=alias,
-    )
+        return Node(
+            NodeType.LITERAL,
+            type=OrsoTypes.DOUBLE,
+            value=numpy.float64(branch[0]),  # value
+            alias=alias,
+        )
 
 
 def literal_string(branch, alias: list = None, key=None):
-    """create node for a string branch, this is either a data or a string"""
+    """create node for a string branch, this is either a date or a string"""
     dte_value = dates.parse_iso(branch)
     if dte_value:
-        return Node(NodeType.LITERAL_TIMESTAMP, value=numpy.datetime64(dte_value), alias=alias)
-    return Node(NodeType.LITERAL_VARCHAR, value=branch, alias=alias)
+        if len(branch) <= 10:
+            return Node(
+                NodeType.LITERAL,
+                type=OrsoTypes.DATE,
+                value=numpy.datetime64(dte_value, "D"),
+                alias=alias,
+            )
+        return Node(
+            NodeType.LITERAL,
+            type=OrsoTypes.TIMESTAMP,
+            value=numpy.datetime64(dte_value, "us"),
+            alias=alias,
+        )
+    return Node(NodeType.LITERAL, type=OrsoTypes.VARCHAR, value=branch, alias=alias)
 
 
 def literal_interval(branch, alias: list = None, key=None):
@@ -328,8 +347,8 @@ def map_access(branch, alias=None, key=None):
         key = key_dict["SingleQuotedString"]
         key_node = Node(NodeType.LITERAL_VARCHAR, value=key)
     if "Number" in key_dict:
-        key = key_dict["Number"][0]
-        key_node = Node(NodeType.LITERAL_NUMERIC, value=key)
+        key = int(key_dict["Number"][0])
+        key_node = Node(NodeType.LITERAL_INTEGER, value=key)
     alias.append(f"{identifier}[{key}]")
 
     identifier_node = Node(NodeType.IDENTIFIER, value=field)
@@ -345,14 +364,14 @@ def unary_op(branch, alias=None, key=None):
     if not isinstance(alias, list):
         alias = [] if alias is None else [alias]
     if branch["op"] == "Not":
-        right = build(branch["expr"])
-        return Node(node_type=NodeType.NOT, centre=right)
+        centre = build(branch["expr"])
+        return Node(node_type=NodeType.NOT, centre=centre)
     if branch["op"] == "Minus":
-        number = 0 - numpy.float64(branch["expr"]["Value"]["Number"][0])
-        return Node(NodeType.LITERAL_NUMERIC, value=number, alias=alias)
+        node = literal_number(branch["expr"]["Value"]["Number"], alias=alias)
+        node.value = 0 - node.value
+        return node
     if branch["op"] == "Plus":
-        number = numpy.float64(branch["expr"]["Value"]["Number"][0])
-        return Node(NodeType.LITERAL_NUMERIC, value=number, alias=alias)
+        return literal_number(branch["expr"]["Value"]["Number"], alias=alias)
 
 
 def between(branch, alias=None, key=None):
@@ -564,7 +583,7 @@ def array_agg(branch, alias=None, key=None):
         limit = int(build(branch["limit"]).value)
 
     return Node(
-        node_type=NodeType.COMPLEX_AGGREGATOR,
+        node_type=NodeType.AGGREGATOR,
         value="ARRAY_AGG",
         expression=expression,
         distinct=distinct,

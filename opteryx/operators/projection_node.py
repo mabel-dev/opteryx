@@ -22,6 +22,7 @@ import time
 from typing import Iterable
 
 from opteryx.exceptions import SqlError
+from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import evaluate_and_append
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
@@ -33,7 +34,16 @@ class ProjectionNode(BasePlanNode):
         Attribute Projection, remove unwanted columns and performs column renames.
         """
         super().__init__(properties=properties)
-        self.projection = config["projection"]
+
+        projection = config["projection"]
+
+        self.projection = []
+        for column in projection:
+            self.projection.append(column.schema_column.identity)
+
+        self.evaluations = [
+            column for column in projection if column.node_type != NodeType.IDENTIFIER
+        ]
 
     @property
     def config(self):  # pragma: no cover
@@ -49,16 +59,12 @@ class ProjectionNode(BasePlanNode):
 
         morsels = self._producers[0]  # type:ignore
 
-        projection = []
-        for column in self.projection:
-            projection.append(column.schema_column.identity)
-
         for morsel in morsels.execute():
-            # If any of the columns are FUNCTIONs, we need to evaluate them
-            #            start_time = time.time_ns()
-            #            morsel = evaluate_and_append(self._expressions, morsel)
-            #            self.statistics.time_evaluating += time.time_ns() - start_time
+            # If any of the columns need evaluating, we need to do that here
+            start_time = time.time_ns()
+            morsel = evaluate_and_append(self.evaluations, morsel)
+            self.statistics.time_evaluating += time.time_ns() - start_time
 
-            morsel = morsel.select(projection)
+            morsel = morsel.select(self.projection)
 
             yield morsel

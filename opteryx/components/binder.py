@@ -61,21 +61,13 @@ The Binder then performs these activities:
   constraints should be added for contextual access)
 """
 
-"""
-TODO:
-- to bind the columns we need to pass them upwards, morsels have these columns with these types
-  with these aliases, this is the form of the data at this point. This includes when functions
-  and aggregates are run, this column has this type
-- we then need to prune columns, once we're at the head of the execution tree, work our way
-  back down pruning columns (no point reading a column if it's not used)
-- we need to do function type validation
-- we need to do evaluation (e.g. a + b) type validation
-"""
 
 import copy
 import re
 
 from orso.logging import get_logger
+from orso.schema import ConstantColumn
+from orso.schema import FlatColumn
 
 from opteryx.exceptions import AmbiguousIdentifierError
 from opteryx.exceptions import ColumnNotFoundError
@@ -89,6 +81,7 @@ from opteryx.managers.expression import NodeType
 from opteryx.operators.aggregate_node import AGGREGATORS
 from opteryx.samples import calculated
 
+COMBINED_FUNCTIONS = {**FUNCTIONS, **AGGREGATORS}
 CAMEL_TO_SNAKE = re.compile(r"(?<!^)(?=[A-Z])")
 logger = get_logger()
 
@@ -150,22 +143,35 @@ def inner_binder(node, relations):
 
         # add values to the node to indicate the source of this data
         node.schema_column = column
-    if node_type == NodeType.FUNCTION:
+    if node_type in (NodeType.FUNCTION, NodeType.AGGREGATOR):
         # we're just going to bind the function into the node
-        func = FUNCTIONS.get(node.value)
+        func = COMBINED_FUNCTIONS.get(node.value)
         if not func:
             # v1:
             from opteryx.utils import fuzzy_search
 
-            suggest = fuzzy_search(node.value, FUNCTIONS.keys() + AGGREGATORS.keys())
+            suggest = fuzzy_search(node.value, COMBINED_FUNCTIONS.keys())
             # v2: suggest = FUNCTIONS.suggest(node.value)
             raise FunctionNotFoundError(function=node.value, suggestion=suggest)
+
+        # we need to add this new column to the schema
+        from opteryx.managers.expression import format_expression
+
+        schema_column = FlatColumn(format_expression(node), type=0)
+        relations["$calculated"].columns.append(schema_column)
         node.function = func
-    if node_type == NodeType.AGGREGATOR:
-        # We don't suggest because if it wasn't found as an aggregation, it's
-        # assumed to be a function
-        agg = AGGREGATORS.get(node.value)
-        node.function = agg
+        node.derived_from = []
+        node.schema_column = schema_column
+
+    if node_type == NodeType.LITERAL:
+        unnamed_columns = len(
+            [c for c in relations["$calculated"].columns if isinstance(c, ConstantColumn)]
+        )
+        unnamed_name = f"unnamed_{unnamed_columns + 1}"
+        schema_column = ConstantColumn(unnamed_name, type=0, value=node.value)
+        relations["$calculated"].columns.append(schema_column)
+        node.schema_column = schema_column
+        node.query_column = unnamed_name
 
     # Now recurse and do this again for all the sub parts of the evaluation plan
     if node.left:

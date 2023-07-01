@@ -210,6 +210,22 @@ def inner_query_planner(ast_branch):
         for relation in _relations:
             inner_plan.add_edge(relation["step_id"], step_id)
 
+    # If there's no relations, use $no_table
+    if len(_relations) == 0:
+        step_id, sub_plan = create_node_relation(
+            {
+                "relation": {
+                    "Table": {
+                        "name": [{"value": "$no_table"}],
+                        "args": None,
+                        "alias": None,
+                        "with_hints": [],
+                    }
+                }
+            }
+        )
+        inner_plan += sub_plan
+
     # selection
     _selection = logical_planner_builders.build(ast_branch["Select"].get("selection"))
     if _selection:
@@ -233,9 +249,7 @@ def inner_query_planner(ast_branch):
 
     # aggregates
     _projection = logical_planner_builders.build(ast_branch["Select"].get("projection")) or []
-    _aggregates = get_all_nodes_of_type(
-        _projection, select_nodes=(NodeType.AGGREGATOR, NodeType.COMPLEX_AGGREGATOR)
-    )
+    _aggregates = get_all_nodes_of_type(_projection, select_nodes=(NodeType.AGGREGATOR,))
     if len(_aggregates) > 0:
         # TODO: aggregates need: functions
         aggregate_step = LogicalPlanNode(node_type=LogicalPlanStepType.Aggregate)

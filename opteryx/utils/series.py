@@ -24,7 +24,7 @@ def generate_series(*args):
     first_arg_type = args[0].node_type
 
     # if the parameters are numbers, generate series is an alias for range
-    if first_arg_type in (NodeType.LITERAL_NUMERIC, numpy.float64):
+    if first_arg_type in (NodeType.LITERAL_FLOAT, numpy.float64, numpy.int64):
         if arg_len not in (2, 3):
             raise SqlError("generate_series for numbers takes 2 or 3 parameters.")
         return numeric_range(*arg_vals)

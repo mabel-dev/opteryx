@@ -12,7 +12,10 @@
 
 """
 The 'sample' connector provides readers for the internal sample datasets,
-($planets, $astronauts, $satellites, and $no_table).
+$planets, $astronauts, and $satellites.
+
+- $no_table is used in queries where there is no relation specified 'SELECT 1'
+- $calculated is used as a schema to align virtual columns to
 """
 
 import typing

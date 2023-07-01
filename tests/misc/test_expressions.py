@@ -27,14 +27,14 @@ LITERALS = [
         (NodeType.LITERAL_LIST, ['a', 'b', 'c']),
         (NodeType.LITERAL_LIST, []),
         (NodeType.LITERAL_LIST, [True]),
-        (NodeType.LITERAL_NUMERIC, 0),
-        (NodeType.LITERAL_NUMERIC, None),
-        (NodeType.LITERAL_NUMERIC, 0.1),
-        (NodeType.LITERAL_NUMERIC, 1e10),
-        (NodeType.LITERAL_NUMERIC, decimal.Decimal(4)), 
-        (NodeType.LITERAL_NUMERIC, int(4)), 
-        (NodeType.LITERAL_NUMERIC, float(4)),
-        (NodeType.LITERAL_NUMERIC, numpy.float64(4)),  
+        (NodeType.LITERAL_INTEGER, 0),
+        (NodeType.LITERAL_FLOAT, None),
+        (NodeType.LITERAL_FLOAT, 0.1),
+        (NodeType.LITERAL_FLOAT, 1e10),
+        (NodeType.LITERAL_FLOAT, decimal.Decimal(4)), 
+        (NodeType.LITERAL_INTEGER, int(4)), 
+        (NodeType.LITERAL_FLOAT, float(4)),
+        (NodeType.LITERAL_FLOAT, numpy.float64(4)),  
         (NodeType.LITERAL_STRUCT, {"a":"b"}),
         (NodeType.LITERAL_TIMESTAMP, opteryx.utils.dates.parse_iso('2022-01-01')),
         (NodeType.LITERAL_TIMESTAMP, opteryx.utils.dates.parse_iso('2022-01-01 13:31'))
@@ -158,7 +158,7 @@ def test_function_operations():
     )
 
     gravity = Node(NodeType.IDENTIFIER, value="gravity")
-    seven = Node(NodeType.LITERAL_NUMERIC, value=7)
+    seven = Node(NodeType.LITERAL_INTEGER, value=7)
     plus = Node(NodeType.BINARY_OPERATOR, value="Plus", left=gravity, right=seven)
     multiply = Node(
         NodeType.BINARY_OPERATOR,
@@ -202,7 +202,7 @@ def test_compound_expressions():
     # this builds and tests the following `3.7 * gravity > mass`
 
     gravity = Node(NodeType.IDENTIFIER, value="gravity")
-    three_point_seven = Node(NodeType.LITERAL_NUMERIC, value=3.7)
+    three_point_seven = Node(NodeType.LITERAL_FLOAT, value=3.7)
     mass = Node(NodeType.IDENTIFIER, value="mass")
 
     multiply = Node(
