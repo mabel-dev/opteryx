@@ -38,5 +38,6 @@ def test_sample_data_connector():
 
 
 if __name__ == "__main__":  # pragma: no cover
-    test_sample_data_connector()
-    print("✅ okay")
+    from tests.tools import run_tests
+
+    run_tests()

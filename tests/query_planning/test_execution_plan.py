@@ -38,5 +38,6 @@ def test_linear_execution_tree():
 
 
 if __name__ == "__main__":  # pragma: no cover
-    test_linear_execution_tree()
-    print("okay")
+    from tests.tools import run_tests
+
+    run_tests()

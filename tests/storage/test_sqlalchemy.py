@@ -27,5 +27,6 @@ def test_sqlalchemy():
 
 
 if __name__ == "__main__":  # pragma: no cover
-    test_sqlalchemy()
-    print("✅ okay")
+    from tests.tools import run_tests
+
+    run_tests()

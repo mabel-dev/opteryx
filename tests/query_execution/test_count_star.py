@@ -34,5 +34,6 @@ def test_count_star():
 
 
 if __name__ == "__main__":  # pragma: no cover
-    test_count_star()
-    print("✅ okay")
+    from tests.tools import run_tests
+
+    run_tests()

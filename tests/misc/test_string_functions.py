@@ -54,7 +54,6 @@ def test_random_string():
 
 
 if __name__ == "__main__":  # pragma: no cover
-    test_slice_left()
-    test_slice_right()
-    test_random_string()
-    print("✅ okay")
+    from tests.tools import run_tests
+
+    run_tests()

@@ -119,12 +119,6 @@ def test_execute_error():
 
 
 if __name__ == "__main__":  # pragma: no cover
-    test_execute()
-    test_rowcount()
-    test_shape()
-    test_fetchone()
-    test_fetchmany()
-    test_fetchall()
-    test_execute_error()
+    from tests.tools import run_tests
 
-    print("✅ okay")
+    run_tests()

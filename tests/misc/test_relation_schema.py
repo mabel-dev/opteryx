@@ -33,7 +33,6 @@ def test_dictionary_column():
 
 
 if __name__ == "__main__":  # pragma: no cover
-    test_constant_column()
-    test_dictionary_column()
+    from tests.tools import run_tests
 
-    print("✅ okay")
+    run_tests()

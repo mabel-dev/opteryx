@@ -26,6 +26,6 @@ def test_polars():
 
 
 if __name__ == "__main__":  # pragma: no cover
-    test_polars()
+    from tests.tools import run_tests
 
-    print("✅ okay")
+    run_tests()

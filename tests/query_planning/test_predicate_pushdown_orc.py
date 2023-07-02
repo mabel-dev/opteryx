@@ -73,5 +73,6 @@ def test_predicate_pushdowns_blobs_orc():
 
 
 if __name__ == "__main__":  # pragma: no cover
-    test_predicate_pushdowns_blobs_orc()
-    print("✅ okay")
+    from tests.tools import run_tests
+
+    run_tests()

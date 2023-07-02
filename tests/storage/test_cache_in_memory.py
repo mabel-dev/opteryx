@@ -92,6 +92,6 @@ def test_cache_in_subqueries():
 
 
 if __name__ == "__main__":  # pragma: no cover
-    test_in_memory_cache()
-    test_cache_in_subqueries()
-    print("✅ okay")
+    from tests.tools import run_tests
+
+    run_tests()

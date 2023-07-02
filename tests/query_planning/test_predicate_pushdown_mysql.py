@@ -111,6 +111,6 @@ def test_predicate_pushdown_mysql_other():
 
 
 if __name__ == "__main__":  # pragma: no cover
-    test_predicate_pushdowns_mysql_eq()
-    test_predicate_pushdown_mysql_other()
-    print("✅ okay")
+    from tests.tools import run_tests
+
+    run_tests()

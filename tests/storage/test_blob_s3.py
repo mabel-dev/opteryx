@@ -37,5 +37,6 @@ def test_minio_storage():
 
 
 if __name__ == "__main__":  # pragma: no cover
-    test_minio_storage()
-    print("✅ okay")
+    from tests.tools import run_tests
+
+    run_tests()

@@ -117,6 +117,6 @@ def test_predicate_pushdown_postgres_other():
 
 
 if __name__ == "__main__":  # pragma: no cover
-    test_predicate_pushdowns_postgres_eq()
-    test_predicate_pushdown_postgres_other()
-    print("✅ okay")
+    from tests.tools import run_tests
+
+    run_tests()

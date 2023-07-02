@@ -45,7 +45,6 @@ def test_execute():
 
 
 if __name__ == "__main__":  # pragma: no cover
-    test_connection()
-    test_execute()
+    from tests.tools import run_tests
 
-    print("✅ okay")
+    run_tests()

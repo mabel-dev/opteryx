@@ -70,5 +70,6 @@ def test_predicate_pushdowns_blobs_zstd():
 
 
 if __name__ == "__main__":  # pragma: no cover
-    test_predicate_pushdowns_blobs_zstd()
-    print("✅ okay")
+    from tests.tools import run_tests
+
+    run_tests()

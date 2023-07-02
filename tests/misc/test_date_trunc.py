@@ -65,11 +65,6 @@ def test_truncate_to_week():
 
 
 if __name__ == "__main__":  # pragma: no cover
-    test_truncate_to_day()
-    test_truncate_to_hour()
-    test_truncate_to_minute()
-    test_truncate_to_second()
-    test_truncate_to_week()
-    test_truncate_to_year()
+    from tests.tools import run_tests
 
-    print("✅ okay")
+    run_tests()

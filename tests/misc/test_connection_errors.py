@@ -52,8 +52,6 @@ def test_fetching():
 
 
 if __name__ == "__main__":  # pragma: no cover
-    test_connection_warnings()
-    test_connection_parameter_mismatch()
-    test_fetching()
+    from tests.tools import run_tests
 
-    print("✅ okay")
+    run_tests()

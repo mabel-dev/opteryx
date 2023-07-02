@@ -100,10 +100,6 @@ def test_parse_nested_structure():
 
 
 if __name__ == "__main__":  # pragma: no cover
-    test_parse_nested_structure()
-    test_parse_string()
-    test_parse_list()
-    test_parse_comments_line()
-    test_parse_comments_inline()
-    test_parse_number()
-    print("✅ okay")
+    from tests.tools import run_tests
+
+    run_tests()

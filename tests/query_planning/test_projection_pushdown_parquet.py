@@ -46,5 +46,6 @@ def test_parquet_projection_pushdown():
 
 
 if __name__ == "__main__":  # pragma: no cover
-    test_parquet_projection_pushdown()
-    print("✅ okay")
+    from tests.tools import run_tests
+
+    run_tests()

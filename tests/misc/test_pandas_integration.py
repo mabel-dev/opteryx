@@ -42,7 +42,6 @@ def test_documentation():
 
 
 if __name__ == "__main__":  # pragma: no cover
-    test_pandas()
-    test_documentation()
+    from tests.tools import run_tests
 
-    print("✅ okay")
+    run_tests()

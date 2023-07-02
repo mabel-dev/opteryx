@@ -47,8 +47,6 @@ def test_direct_as_arrow_no_limit():
 
 
 if __name__ == "__main__":  # pragma: no cover
-    test_as_arrow_no_limit()
-    test_as_arrow_with_limit()
-    test_direct_as_arrow_no_limit()
+    from tests.tools import run_tests
 
-    print("✅ okay")
+    run_tests()

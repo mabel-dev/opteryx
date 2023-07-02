@@ -26,6 +26,6 @@ def test_hadrodb_storage():
 
 
 if __name__ == "__main__":  # pragma: no cover
-    test_hadrodb_storage()
+    from tests.tools import run_tests
 
-    print("✅ okay")
+    run_tests()

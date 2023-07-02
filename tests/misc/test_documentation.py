@@ -186,18 +186,6 @@ def test_role_based_permissions():
 
 
 if __name__ == "__main__":  # pragma: no cover
-    test_documentation_connect_example()
-    test_readme_1()  # execute-a-simple-query-in-python
-    test_readme_2()  # execute-sql-on-a-pandas-dataframe
-    test_readme_3()  # query-data-on-local-disk
-    test_readme_4()  # query-data-on-gcs
-    test_readme_5()  # query-data-in-sqlite
-    test_get_started()
-    test_pandas_integration_input()
-    test_pandas_integration_output()
-    test_polars_integration_input()
-    test_polars_integration_output()
-    test_permissions_example()
-    test_role_based_permissions()
+    from tests.tools import run_tests
 
-    print("✅ okay")
+    run_tests()

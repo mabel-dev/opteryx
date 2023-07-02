@@ -85,5 +85,6 @@ def test_duckdb_storage():
 
 
 if __name__ == "__main__":  # pragma: no cover
-    test_duckdb_storage()
-    print("✅ okay")
+    from tests.tools import run_tests
+
+    run_tests()
