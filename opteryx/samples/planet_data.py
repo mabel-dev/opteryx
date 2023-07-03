@@ -31,6 +31,7 @@ can instantiate a PlanetData() class and use it like a Relation.
 This has a companion dataset, $satellites, to help test joins.
 """
 import datetime
+import decimal
 
 from orso.schema import FlatColumn
 from orso.schema import RelationSchema
@@ -48,7 +49,7 @@ def read(end_date=datetime.datetime.utcnow().date()):
         pyarrow.array([0.33, 4.87, 5.97, 0.642, 1898, 568, 86.8, 102, 0.0146], type=pyarrow.float64()),
         pyarrow.array([4879, 12104, 12756, 6792, 142984, 120536, 51118, 49528, 2370], type=pyarrow.int64()),
         pyarrow.array([5427, 5243, 5514, 3933, 1326, 687, 1271, 1638, 2095], type=pyarrow.int64()),
-        pyarrow.array([3.7, 8.9, 9.8, 3.7, 23.1, 9, 8.7, 11, 0.7], type=pyarrow.float64()),
+        pyarrow.array(map(decimal.Decimal, ("3.7", "8.9", "9.8", "3.7", "23.1", "9", "8.7", "11", "0.7")), type=pyarrow.decimal128(3,1)),
         pyarrow.array([4.3, 10.4, 11.2, 5, 59.5, 35.5, 21.3, 23.5, 1.3], type=pyarrow.float64()),
         pyarrow.array([1407.6, -5832.5, 23.9, 24.6, 9.9, 10.7, -17.2, 16.1, -153.3], type=pyarrow.float64()),
         pyarrow.array([4222.6, 2802, 24, 24.7, 9.9, 10.7, 17.2, 16.1, 153.3], type=pyarrow.float64()),
@@ -94,7 +95,7 @@ schema = RelationSchema(
         FlatColumn(name="mass", type=OrsoTypes.DOUBLE, identity="3PIdJRXsrVJL2QoC"),
         FlatColumn(name="diameter", type=OrsoTypes.INTEGER, identity="efyrTeHnP5MPcXLA"),
         FlatColumn(name="density", type=OrsoTypes.INTEGER, identity="2EW3XJEISKu9wHOo"),
-        FlatColumn(name="gravity", type=OrsoTypes.DOUBLE, identity="vpuytCcoQR8RvKY1"),
+        FlatColumn(name="gravity", type=OrsoTypes.DECIMAL, identity="vpuytCcoQR8RvKY1"),
         FlatColumn(name="escapeVelocity", type=OrsoTypes.DOUBLE, identity="9ICtZQfWFHxTmy6q", aliases=["escape_velocity"]),
         FlatColumn(name="rotationPeriod", type=OrsoTypes.DOUBLE, identity="f5XBFPgGfqdrOZbk", aliases=["rotation_period"]),
         FlatColumn(name="lengthOfDay", type=OrsoTypes.DOUBLE, identity="KK04Pugd4G2KyIl7", aliases=["length_of_day"]),

@@ -92,6 +92,8 @@ def inner_binder(node, relations):
     associated with the relational algebra) which in itself may be an evaluation plan (i.e.
     executing comparisons)
     """
+    from opteryx.managers.expression import format_expression
+
     # we're already binded
     if node.schema_column is not None:
         return node
@@ -143,7 +145,7 @@ def inner_binder(node, relations):
 
         # add values to the node to indicate the source of this data
         node.schema_column = column
-    if node_type in (NodeType.FUNCTION, NodeType.AGGREGATOR):
+    elif node_type in (NodeType.FUNCTION, NodeType.AGGREGATOR):
         # we're just going to bind the function into the node
         func = COMBINED_FUNCTIONS.get(node.value)
         if not func:
@@ -155,23 +157,25 @@ def inner_binder(node, relations):
             raise FunctionNotFoundError(function=node.value, suggestion=suggest)
 
         # we need to add this new column to the schema
-        from opteryx.managers.expression import format_expression
-
         schema_column = FlatColumn(format_expression(node), type=0)
         relations["$calculated"].columns.append(schema_column)
         node.function = func
         node.derived_from = []
         node.schema_column = schema_column
 
-    if node_type == NodeType.LITERAL:
-        unnamed_columns = len(
-            [c for c in relations["$calculated"].columns if isinstance(c, ConstantColumn)]
-        )
-        unnamed_name = f"unnamed_{unnamed_columns + 1}"
-        schema_column = ConstantColumn(unnamed_name, type=0, value=node.value)
+    elif node_type == NodeType.LITERAL:
+        column_name = format_expression(node)
+        schema_column = ConstantColumn(column_name, aliases=[node.alias], type=0, value=node.value)
         relations["$calculated"].columns.append(schema_column)
         node.schema_column = schema_column
-        node.query_column = unnamed_name
+        node.query_column = node.alias or column_name
+
+    else:
+        column_name = format_expression(node)
+        schema_column = ConstantColumn(column_name, aliases=[node.alias], type=0, value=node.value)
+        relations["$calculated"].columns.append(schema_column)
+        node.schema_column = schema_column
+        node.query_column = node.alias or column_name
 
     # Now recurse and do this again for all the sub parts of the evaluation plan
     if node.left:

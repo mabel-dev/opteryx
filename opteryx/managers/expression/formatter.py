@@ -14,7 +14,9 @@ from opteryx.third_party.pyarrow_ops.ops import filter_operations
 
 def format_expression(root):
     # circular imports
-    from . import NodeType, INTERNAL_TYPE, LOGICAL_TYPE
+    from . import INTERNAL_TYPE
+    from . import LOGICAL_TYPE
+    from . import NodeType
 
     if root is None:
         return "null"

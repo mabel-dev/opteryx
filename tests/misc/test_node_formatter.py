@@ -9,13 +9,24 @@ from opteryx.managers.expression import format_expression
 from opteryx.managers.expression import NodeType
 from opteryx.models.node import Node
 
+from tests.tools import create_duck_db
+import duckdb
+import opteryx
+
 
 def test_format_nodes():
-    left_node = Node(NodeType.LITERAL, type=OrsoTypes.INTEGER, value=1)
-    right_node = Node(NodeType.LITERAL, type=OrsoTypes.DOUBLE, value=1.1)
+    import duckdb
 
-    print(format_expression(left_node))
-    print(format_expression(right_node))
+    create_duck_db()
+
+    SQL = "SELECT 1+1*1"
+
+    result = duckdb.query(SQL)
+
+    print(result)
+
+    result = opteryx.query(SQL)
+    print(result)
 
 
 if __name__ == "__main__":  # pragma: no cover

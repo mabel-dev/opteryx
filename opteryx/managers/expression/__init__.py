@@ -30,7 +30,7 @@ from opteryx.functions.unary_operations import UNARY_OPERATIONS
 from opteryx.models.node import Node
 from opteryx.third_party.pyarrow_ops.ops import filter_operations
 
-from .format_expression import format_expression
+from .formatter import format_expression
 
 # These are bit-masks
 LOGICAL_TYPE: int = int("00010000", 2)
