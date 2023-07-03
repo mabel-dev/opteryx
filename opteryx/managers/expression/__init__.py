@@ -143,7 +143,7 @@ def _inner_evaluate(root: Node, table: Table):
             # zero parameter functions get the number of rows as the parameter
             if len(parameters) == 0:
                 parameters = [table.num_rows]
-            result = FUNCTIONS[root.value](*parameters)
+            result = root.function(*parameters)
             if isinstance(result, list):
                 result = numpy.array(result)
             return result

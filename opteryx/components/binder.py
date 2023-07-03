@@ -157,11 +157,13 @@ def inner_binder(node, relations):
             raise FunctionNotFoundError(function=node.value, suggestion=suggest)
 
         # we need to add this new column to the schema
-        schema_column = FlatColumn(format_expression(node), type=0)
+        column_name = format_expression(node)
+        schema_column = FlatColumn(column_name, type=0)
         relations["$calculated"].columns.append(schema_column)
         node.function = func
         node.derived_from = []
         node.schema_column = schema_column
+        node.query_column = node.alias or column_name
 
     elif node_type == NodeType.LITERAL:
         column_name = format_expression(node)

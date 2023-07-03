@@ -19,7 +19,7 @@ def test_format_nodes():
 
     create_duck_db()
 
-    SQL = "SELECT 1+1*1"
+    SQL = "SELECT Round(1+1*17)"
 
     result = duckdb.query(SQL)
 
