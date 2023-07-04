@@ -18,8 +18,6 @@ This should look different when the operators are rewritten for the
 Gen 2 execution engine (a later piece of work)
 """
 
-from orso.tools import random_string
-
 from opteryx import operators
 from opteryx.components.logical_planner import LogicalPlanStepType
 from opteryx.models import ExecutionTree
@@ -37,7 +35,7 @@ def create_physical_plan(logical_plan):
         node: operators.BasePlanNode = None
 
         if node_type == LogicalPlanStepType.Aggregate:
-            node = operators.NoOpNode(query_properties, **node_config)
+            node = operators.AggregateNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Distinct:
             node = operators.DistinctNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Exit:
@@ -51,7 +49,7 @@ def create_physical_plan(logical_plan):
         elif node_type == LogicalPlanStepType.GenerateSeries:
             node = operators.NoOpNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Group:
-            node = operators.NoOpNode(query_properties, **node_config)
+            node = operators.GroupNode(query_properties, groups=node_config["groups"])
         elif node_type == LogicalPlanStepType.Join:
             node = operators.NoOpNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Order:

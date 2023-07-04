@@ -24,6 +24,7 @@ from .exit_node import ExitNode
 from .explain_node import ExplainNode  # EXPLAIN queries
 from .file_reader_node import FileReaderNode  # usually on the CLI
 from .function_dataset_node import FunctionDatasetNode  # Dataset Constructors
+from .group_node import GroupNode  # Group is always followed by aggregate
 from .heap_sort_node import HeapSortNode  # Heap
 from .information_schema_node import InformationSchemaNode  # information_schema
 from .inner_join_node import InnerJoinNode  # INNER JOIN
@@ -34,8 +35,6 @@ from .noop_node import NoOpNode  # No Operation
 from .offset_node import OffsetNode  # skip a number of records
 from .outer_join_node import OuterJoinNode  # LEFT/RIGHT/FULL OUTER JOIN
 from .projection_node import ProjectionNode  # remove unwanted columns including renames
-
-# Version 2
 from .scanner_node import ScannerNode
 from .selection_node import SelectionNode  # filter unwanted rows
 from .show_columns_node import ShowColumnsNode  # column details

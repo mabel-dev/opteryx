@@ -68,6 +68,7 @@ import re
 from orso.logging import get_logger
 from orso.schema import ConstantColumn
 from orso.schema import FlatColumn
+from orso.schema import FunctionColumn
 
 from opteryx.exceptions import AmbiguousIdentifierError
 from opteryx.exceptions import ColumnNotFoundError
@@ -158,7 +159,7 @@ def inner_binder(node, relations):
 
         # we need to add this new column to the schema
         column_name = format_expression(node)
-        schema_column = FlatColumn(column_name, type=0)
+        schema_column = FunctionColumn(column_name, type=0, binding=func)
         relations["$calculated"].columns.append(schema_column)
         node.function = func
         node.derived_from = []
@@ -206,6 +207,10 @@ class BinderVisitor:
 
     def visit_unsupported(self, node, context):
         logger.warning(f"No visit method implemented for node type {node.node_type.name}")
+        return node, context
+
+    def visit_aggregate(self, node, context):
+        # do something?
         return node, context
 
     def visit_exit(self, node, context):

@@ -23,7 +23,17 @@ def rust_build(setup_kwargs: Dict[str, Any]) -> None:
 
 
 __version__ = "notset"
-with open(f"{LIBRARY}/version.py", mode="r") as v:
+with open(f"{LIBRARY}/__version__.py", mode="r") as v:
+    vers = v.read()
+exec(vers)  # nosec
+
+__build__ = "notset"
+with open(f"{LIBRARY}/__build__.py", mode="r") as v:
+    vers = v.read()
+exec(vers)  # nosec
+
+__author__ = "notset"
+with open(f"{LIBRARY}/__author__.py", mode="r") as v:
     vers = v.read()
 exec(vers)  # nosec
 

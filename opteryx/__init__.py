@@ -15,17 +15,17 @@ from orso.logging import get_logger
 from orso.logging import set_log_name
 
 from opteryx import config
+from opteryx.__author__ import __author__
+from opteryx.__build__ import __build__
+from opteryx.__version__ import __version__
 from opteryx.connection import Connection
 from opteryx.connectors import register_arrow
 from opteryx.connectors import register_df
 from opteryx.connectors import register_store
 from opteryx.shared import variables
-from opteryx.version import __version__
 
 set_log_name("OPTERYX")
 logger = get_logger()
-
-__author__: str = "@joocer"
 
 apilevel: str = "1.0"  # pylint: disable=C0103
 threadsafety: int = 0  # pylint: disable=C0103
