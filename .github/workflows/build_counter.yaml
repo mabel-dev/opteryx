@@ -19,8 +19,12 @@ jobs:
     - name: Check if build.py needs update
       id: check_changes
       run: |
-        git diff --name-only --exit-code
-        echo "::set-output name=changes::${{ steps.check_changes.outputs.exitcode }}"
+        changes=$(git diff --name-only)
+        if [[ "$changes" == *"build.py"* ]]; then
+          echo "::set-output name=changes::1"
+        else
+          echo "::set-output name=changes::0"
+        fi
     
     - name: Update build.py
       if: steps.check_changes.outputs.changes != 0
