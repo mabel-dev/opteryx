@@ -37,7 +37,6 @@ from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 
-
 COUNT_STAR: str = "COUNT(*)"
 
 # use the aggregators from pyarrow
@@ -98,7 +97,7 @@ def project(tables, column_names):
             yield pyarrow.Table.from_pydict({"*": numpy.full(row_count, 1, dtype=numpy.int8)})
 
 
-def build_aggregations(aggregators, columns):
+def build_aggregations(aggregators):
     column_map = {}
     aggs = []
 
@@ -107,37 +106,31 @@ def build_aggregations(aggregators, columns):
 
     for root in aggregators:
         for aggregator in get_all_nodes_of_type(root, select_nodes=(NodeType.AGGREGATOR,)):
-            if aggregator.node_type in (NodeType.AGGREGATOR,):
-                field_node = aggregator.parameters[0]
-                display_name = format_expression(field_node)
-                exists = columns.get_column_from_alias(display_name)
-                count_options = None
+            field_node = aggregator.parameters[0]
+            count_options = None
 
-                if field_node.node_type == NodeType.WILDCARD:
-                    field_name = "*"
-                    # count * counts nulls
-                    count_options = pyarrow.compute.CountOptions(mode="all")
-                elif field_node.node_type == NodeType.IDENTIFIER:
-                    field_name = columns.get_column_from_alias(field_node.value, only_one=True)
-                elif field_node.node_type == NodeType.LITERAL:
-                    field_name = str(field_node.value)
-                elif len(exists) > 0:
-                    field_name = exists[0]
-                else:
-                    display_name = format_expression(field_node)
-                    raise SqlError(
-                        f"Invalid identifier or literal provided in aggregator function `{display_name}`"
-                    )
-                function = AGGREGATORS.get(aggregator.value)
-                if aggregator.value == "ARRAY_AGG":
-                    # if the array agg is distinct, base off that function instead
-                    if aggregator.parameters[1]:
-                        function = "distinct"
-                aggs.append((field_name, function, count_options))
-                column_map[
-                    format_expression(aggregator)
-                    #                    f"{aggregator.value.upper()}({display_field})"
-                ] = f"{field_name}_{function}".replace("_hash_", "_")
+            if field_node.node_type == NodeType.WILDCARD:
+                field_name = "*"
+                # count * counts nulls
+                count_options = pyarrow.compute.CountOptions(mode="all")
+            elif field_node.node_type == NodeType.IDENTIFIER:
+                field_name = field_node.schema_column.identity
+            elif field_node.node_type == NodeType.LITERAL:
+                field_name = str(field_node.value)
+            else:
+                display_name = field_node.query_column
+                raise SqlError(
+                    f"Invalid identifier or literal provided in aggregator function `{display_name}`"
+                )
+            function = AGGREGATORS.get(aggregator.value)
+            if aggregator.value == "ARRAY_AGG":
+                # if the array agg is distinct, base off that function instead
+                if aggregator.parameters[1]:
+                    function = "distinct"
+            aggs.append((field_name, function, count_options))
+            column_map[aggregator.schema_column.identity] = f"{field_name}_{function}".replace(
+                "_hash_", "_"
+            )
 
     return column_map, aggs
 

@@ -32,9 +32,9 @@ from opteryx.managers.expression import evaluate_and_append
 from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
-
-
-from opteryx.operators.aggregate_node import project, extract_evaluations, build_aggregations
+from opteryx.operators.aggregate_node import build_aggregations
+from opteryx.operators.aggregate_node import extract_evaluations
+from opteryx.operators.aggregate_node import project
 
 
 class AggregateAndGroupNode(BasePlanNode):
@@ -56,7 +56,6 @@ class AggregateAndGroupNode(BasePlanNode):
         return "Group"
 
     def execute(self) -> Iterable:
-
         if len(self._producers) != 1:  # pragma: no cover
             raise SqlError(f"{self.name} on expects a single producer")
 
@@ -95,8 +94,14 @@ class AggregateAndGroupNode(BasePlanNode):
 
         group_by_columns = {node.schema_column.identity for node in self.groups}
 
+        column_map, aggs = build_aggregations(self.aggregates)
+
         table = table.combine_chunks()
         groups = table.group_by(group_by_columns)
         groups = groups.aggregate(aggs)
+
+        a = [c.schema_column.identity for c in self.groups]
+        groups = groups.select(list(column_map.values()) + a)
+        groups = groups.rename_columns(list(column_map.keys()) + a)
 
         yield groups
