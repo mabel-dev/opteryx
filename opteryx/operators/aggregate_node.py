@@ -37,6 +37,8 @@ from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 
+
+
 COUNT_STAR: str = "COUNT(*)"
 
 # use the aggregators from pyarrow
@@ -87,12 +89,9 @@ def _count_star(morsel_promise):
     yield table
 
 
-def _project(tables, fields):
-    fields = list(dict.fromkeys(fields))
+def project(tables, column_names):
     for table in tables:
         row_count = table.num_rows
-        columns = Columns(table)
-        column_names = [columns.get_column_from_alias(field, only_one=True) for field in fields]
         if len(column_names) > 0:
             yield table.select(dict.fromkeys(column_names))
         else:

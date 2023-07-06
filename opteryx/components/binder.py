@@ -209,9 +209,18 @@ class BinderVisitor:
         logger.warning(f"No visit method implemented for node type {node.node_type.name}")
         return node, context
 
-    def visit_aggregate(self, node, context):
-        # do something?
+    def visit_aggregate_and_group(self, node, context):
+        groups = []
+        for group in node.groups:
+            groups.append(inner_binder(group, context.get("schemas", {})))
+        node.groups = groups
+        aggregates = []
+        for aggregate in node.aggregates:
+            aggregates.append(inner_binder(aggregate, context.get("schemas", {})))
+        node.aggregates = aggregates
         return node, context
+    
+    visit_aggregate = visit_aggregate_and_group
 
     def visit_exit(self, node, context):
         columns = []

@@ -67,7 +67,7 @@ class LogicalPlanStepType(int, Enum):
     Explain = auto()  # EXPLAIN
     Difference = auto()  # relation interection
     Join = auto()  # all joins
-    Group = auto()  # group by, without the aggregation
+    AggregateAndGroup = auto()  # group by
     Aggregate = auto()
     Scan = auto()  # read a dataset
     Show = auto()  # show a variable
@@ -110,8 +110,8 @@ class LogicalPlanNode(Node):
                 return f"FILTER ({format_expression(self.condition)})"
             if node_type == LogicalPlanStepType.GenerateSeries:
                 return f"GENERATE SERIES ({', '.join(format_expression(arg) for arg in self.args)}){' AS ' + self.alias if self.alias else ''}"
-            if node_type == LogicalPlanStepType.Group:
-                return f"GROUP ({', '.join(format_expression(col) for col in self.columns)})"
+            if node_type == LogicalPlanStepType.AggregateAndGroup:
+                return f"GROUP ({', '.join(format_expression(col) for col in self.groups)})"
             if node_type == LogicalPlanStepType.Join:
                 if self.on:
                     return f"{self.type.upper()} ({format_expression(self.on)})"
@@ -237,22 +237,23 @@ def inner_query_planner(ast_branch):
             inner_plan.add_edge(previous_step_id, step_id)
 
     # groups
+    _projection = logical_planner_builders.build(ast_branch["Select"].get("projection")) or []
+    _aggregates = get_all_nodes_of_type(_projection, select_nodes=(NodeType.AGGREGATOR,))
     _groups = logical_planner_builders.build(ast_branch["Select"].get("group_by"))
     if _groups is not None and _groups != []:
         # TODO: groups need: grouped columns
-        group_step = LogicalPlanNode(node_type=LogicalPlanStepType.Group)
-        group_step.columns = _groups
+        group_step = LogicalPlanNode(node_type=LogicalPlanStepType.AggregateAndGroup)
+        group_step.groups = _groups
+        group_step.aggregates = _aggregates
         previous_step_id, step_id = step_id, random_string()
         inner_plan.add_node(step_id, group_step)
         if previous_step_id is not None:
             inner_plan.add_edge(previous_step_id, step_id)
-
     # aggregates
-    _projection = logical_planner_builders.build(ast_branch["Select"].get("projection")) or []
-    _aggregates = get_all_nodes_of_type(_projection, select_nodes=(NodeType.AGGREGATOR,))
-    if len(_aggregates) > 0:
+    elif len(_aggregates) > 0:
         # TODO: aggregates need: functions
         aggregate_step = LogicalPlanNode(node_type=LogicalPlanStepType.Aggregate)
+        aggregate_step.groups = _groups
         aggregate_step.aggregates = _aggregates
         previous_step_id, step_id = step_id, random_string()
         inner_plan.add_node(step_id, aggregate_step)

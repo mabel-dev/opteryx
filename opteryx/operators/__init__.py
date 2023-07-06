@@ -12,6 +12,7 @@
 
 from .base_plan_node import BasePlanNode  # isort: skip
 
+from .aggregate_and_group_node import AggregateAndGroupNode  # Group is always followed by aggregate
 from .aggregate_node import AGGREGATORS
 from .aggregate_node import AggregateNode  # aggregate data
 from .blob_reader_node import BlobReaderNode  # read file/blob datasets
@@ -24,7 +25,6 @@ from .exit_node import ExitNode
 from .explain_node import ExplainNode  # EXPLAIN queries
 from .file_reader_node import FileReaderNode  # usually on the CLI
 from .function_dataset_node import FunctionDatasetNode  # Dataset Constructors
-from .group_node import GroupNode  # Group is always followed by aggregate
 from .heap_sort_node import HeapSortNode  # Heap
 from .information_schema_node import InformationSchemaNode  # information_schema
 from .inner_join_node import InnerJoinNode  # INNER JOIN
