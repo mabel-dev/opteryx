@@ -20,7 +20,6 @@ the aggregation node doesn't need the grouping node.
 
 
 """
-import random
 import time
 from typing import Iterable
 
@@ -28,37 +27,14 @@ import numpy
 import pyarrow
 
 from opteryx.exceptions import SqlError
-from opteryx.exceptions import UnsupportedSyntaxError
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import evaluate_and_append
-from opteryx.managers.expression import format_expression
 from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 
 
-from opteryx.operators.aggregate_node import project
-
-
-def _extract_functions(aggregates):
-    # extract any inner evaluations, like the IIF in SUM(IIF(x, 1, 0))
-
-    all_evaluatable_nodes = get_all_nodes_of_type(
-        aggregates,
-        select_nodes=(
-            NodeType.FUNCTION,
-            NodeType.BINARY_OPERATOR,
-            NodeType.COMPARISON_OPERATOR,
-        ),
-    )
-
-    evaluatable_nodes = []
-    for node in all_evaluatable_nodes:
-        aggregators = get_all_nodes_of_type(node, select_nodes=(NodeType.AGGREGATOR,))
-        if len(aggregators) == 0:
-            evaluatable_nodes.append(node)
-
-    return evaluatable_nodes
+from opteryx.operators.aggregate_node import project, extract_evaluations, build_aggregations
 
 
 class AggregateAndGroupNode(BasePlanNode):
@@ -81,11 +57,6 @@ class AggregateAndGroupNode(BasePlanNode):
 
     def execute(self) -> Iterable:
 
-        # for each morsel
-        #   perform any evaluations                                    ] these two steps are the projection node
-        #   project down to the columns for the group by + aggregation ]
-        #   do the group by
-
         if len(self._producers) != 1:  # pragma: no cover
             raise SqlError(f"{self.name} on expects a single producer")
 
@@ -106,7 +77,7 @@ class AggregateAndGroupNode(BasePlanNode):
         table = pyarrow.concat_tables(project(morsels.execute(), all_identifiers), promote=True)
 
         # Get any functions we need to execute before aggregating
-        evaluatable_nodes = _extract_functions(self.aggregates)
+        evaluatable_nodes = extract_evaluations(self.aggregates)
 
         # Allow grouping by functions by evaluating them first
         start_time = time.time_ns()
@@ -120,34 +91,12 @@ class AggregateAndGroupNode(BasePlanNode):
             )
         self.statistics.time_evaluating += time.time_ns() - start_time
 
-        # Extract any literal columns, we need to add these so we can group and/or
-        # aggregate by them (e.g. SELECT SUM(4) FROM table;)
-        all_literals = [
-            node.value
-            for node in get_all_nodes_of_type(
-                self.groups + self.aggregates,
-                select_nodes=(
-                    NodeType.LITERAL,
-                ),
-            )
-        ]
-        all_literals = list(dict.fromkeys(all_literals))
-        all_literals = [a for a in all_literals if str(a) not in table.column_names]
-        for literal in all_literals:
-            table = table.append_column(
-                str(literal), [numpy.full(shape=table.num_rows, fill_value=literal)]
-            )
-            columns.add_column(str(literal))
-
         start_time = time.time_ns()
-        # GROUP BY columns are deduplicated #870
-        group_by_columns = list(
-            dict.fromkeys(
-                columns.get_column_from_alias(group.value, only_one=True) for group in self.groups
-            )
-        )
 
+        group_by_columns = {node.schema_column.identity for node in self.groups}
 
+        table = table.combine_chunks()
         groups = table.group_by(group_by_columns)
+        groups = groups.aggregate(aggs)
 
         yield groups

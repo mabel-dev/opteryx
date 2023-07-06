@@ -38,7 +38,6 @@ from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 
 
-
 COUNT_STAR: str = "COUNT(*)"
 
 # use the aggregators from pyarrow
@@ -99,7 +98,7 @@ def project(tables, column_names):
             yield pyarrow.Table.from_pydict({"*": numpy.full(row_count, 1, dtype=numpy.int8)})
 
 
-def _build_aggs(aggregators, columns):
+def build_aggregations(aggregators, columns):
     column_map = {}
     aggs = []
 
@@ -120,12 +119,7 @@ def _build_aggs(aggregators, columns):
                     count_options = pyarrow.compute.CountOptions(mode="all")
                 elif field_node.node_type == NodeType.IDENTIFIER:
                     field_name = columns.get_column_from_alias(field_node.value, only_one=True)
-                elif field_node.node_type in (
-                    NodeType.LITERAL_INTEGER,
-                    NodeType.LITERAL_FLOAT,
-                    NodeType.LITERAL_BOOLEAN,
-                    NodeType.LITERAL_VARCHAR,
-                ):
+                elif field_node.node_type == NodeType.LITERAL:
                     field_name = str(field_node.value)
                 elif len(exists) > 0:
                     field_name = exists[0]
@@ -193,7 +187,7 @@ def _non_group_aggregates(aggregates, table, columns):
     return pyarrow.Table.from_pylist([result])
 
 
-def _extract_functions(aggregates):
+def extract_evaluations(aggregates):
     # extract any inner evaluations, like the IIF in SUM(IIF(x, 1, 0))
 
     all_evaluatable_nodes = get_all_nodes_of_type(
@@ -202,6 +196,7 @@ def _extract_functions(aggregates):
             NodeType.FUNCTION,
             NodeType.BINARY_OPERATOR,
             NodeType.COMPARISON_OPERATOR,
+            NodeType.LITERAL,
         ),
     )
 
@@ -271,10 +266,10 @@ class AggregateNode(BasePlanNode):
         # merge all the morsels together into one table, selecting only the columns
         # we're pretty sure we're going to use - this will fail for datasets
         # larger than memory
-        table = pyarrow.concat_tables(_project(morsels.execute(), all_identifiers), promote=True)
+        table = pyarrow.concat_tables(project(morsels.execute(), all_identifiers), promote=True)
 
         # Get any functions we need to execute before aggregating
-        evaluatable_nodes = _extract_functions(self._aggregates)
+        evaluatable_nodes = extract_functions(self._aggregates)
 
         # Allow grouping by functions by evaluating them first
         start_time = time.time_ns()

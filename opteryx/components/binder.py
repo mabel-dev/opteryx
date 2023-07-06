@@ -219,7 +219,7 @@ class BinderVisitor:
             aggregates.append(inner_binder(aggregate, context.get("schemas", {})))
         node.aggregates = aggregates
         return node, context
-    
+
     visit_aggregate = visit_aggregate_and_group
 
     def visit_exit(self, node, context):
