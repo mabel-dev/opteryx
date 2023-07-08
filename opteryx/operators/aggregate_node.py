@@ -66,12 +66,10 @@ AGGREGATORS = {
 }
 
 
-def _is_count_star(aggregates, groups):
+def _is_count_star(aggregates):
     """
     Is the SELECT clause `SELECT COUNT(*)` with no GROUP BY
     """
-    if len(groups) != 0:
-        return False
     if len(aggregates) != 1:
         return False
     if aggregates[0].value != "COUNT":
@@ -81,9 +79,9 @@ def _is_count_star(aggregates, groups):
     return True
 
 
-def _count_star(morsel_promise):
+def _count_star(morsel_promise, column_name):
     count = sum(morsel.num_rows for morsel in morsel_promise.execute())
-    table = pyarrow.Table.from_pylist([{COUNT_STAR: count}])
+    table = pyarrow.Table.from_pylist([{column_name: count}])
     yield table
 
 
@@ -206,26 +204,11 @@ class AggregateNode(BasePlanNode):
     def __init__(self, properties: QueryProperties, **config):
         super().__init__(properties=properties)
 
-        self._aggregates = config.get("aggregates", [])
-
-        self._groups = []
-        for group in config.get("groups", []):
-            # skip nulls
-            if group is None:
-                continue
-            # handle numeric indexes - GROUP BY 1
-            if group.node_type == NodeType.LITERAL_INTEGER:
-                # references are natural numbers, so -1 for zero-based
-                group = self._aggregates[int(group.value) - 1]
-                if group.node_type not in (NodeType.IDENTIFIER, NodeType.FUNCTION):
-                    raise SqlError(
-                        "When using a positional reference, GROUP BY must be by an IDENTIFIER or FUNCTION only"
-                    )
-            self._groups.append(group)
+        self.aggregates = config.get("aggregates", [])
 
     @property
     def config(self):  # pragma: no cover
-        return str(self._aggregates)
+        return str(self.aggregates)
 
     @property
     def greedy(self):  # pragma: no cover
@@ -243,16 +226,16 @@ class AggregateNode(BasePlanNode):
         if isinstance(morsels, pyarrow.Table):
             morsels = (morsels,)
 
-        if _is_count_star(self._aggregates, self._groups):
-            yield from _count_star(morsel_promise=morsels)
+        if _is_count_star(self.aggregates):
+            yield from _count_star(
+                morsel_promise=morsels, column_name=self.aggregates[0].schema_column.identity
+            )
             return
 
         # get all the columns anywhere in the groups or aggregates
         all_identifiers = [
             node.value
-            for node in get_all_nodes_of_type(
-                self._groups + self._aggregates, select_nodes=(NodeType.IDENTIFIER,)
-            )
+            for node in get_all_nodes_of_type(self.aggregates, select_nodes=(NodeType.IDENTIFIER,))
         ]
         all_identifiers = list(dict.fromkeys(all_identifiers))
 
@@ -262,12 +245,11 @@ class AggregateNode(BasePlanNode):
         table = pyarrow.concat_tables(project(morsels.execute(), all_identifiers), promote=True)
 
         # Get any functions we need to execute before aggregating
-        evaluatable_nodes = extract_functions(self._aggregates)
+        evaluatable_nodes = extract_evaluations(self.aggregates)
 
         # Allow grouping by functions by evaluating them first
         start_time = time.time_ns()
         columns, _, table = evaluate_and_append(evaluatable_nodes, table)
-        columns, self._groups, table = evaluate_and_append(self._groups, table)
 
         # Add a "*" column, this is an int because when a bool it miscounts
         if "*" not in table.column_names:
@@ -281,7 +263,7 @@ class AggregateNode(BasePlanNode):
         all_literals = [
             node.value
             for node in get_all_nodes_of_type(
-                self._groups + self._aggregates,
+                self.aggregates,
                 select_nodes=(
                     NodeType.LITERAL_BOOLEAN,
                     NodeType.LITERAL_INTEGER,
@@ -299,26 +281,15 @@ class AggregateNode(BasePlanNode):
             columns.add_column(str(literal))
 
         start_time = time.time_ns()
-        # GROUP BY columns are deduplicated #870
-        group_by_columns = list(
-            dict.fromkeys(
-                columns.get_column_from_alias(group.value, only_one=True) for group in self._groups
-            )
-        )
 
-        column_map, aggs = _build_aggs(self._aggregates, columns)
+        column_map, aggs = build_aggregations(self.aggregates, columns)
 
         # we're not a group_by - we're aggregating without grouping
-        if len(group_by_columns) == 0:
-            groups = _non_group_aggregates(self._aggregates, table, columns)
-            del table
-        else:
-            table = table.combine_chunks()
-            groups = table.group_by(group_by_columns)
-            groups = groups.aggregate(aggs)
+        groups = _non_group_aggregates(self.aggregates, table, columns)
+        del table
 
         # do the secondary activities for ARRAY_AGG
-        for node in get_all_nodes_of_type(self._aggregates, select_nodes=(NodeType.AGGREGATOR,)):
+        for node in get_all_nodes_of_type(self.aggregates, select_nodes=(NodeType.AGGREGATOR,)):
             if node.value == "ARRAY_AGG":
                 _, _, order, limit = node.parameters
                 if order or limit:
@@ -336,27 +307,8 @@ class AggregateNode(BasePlanNode):
                     groups = groups.append_column(column_def, [column])
 
         # name the aggregate fields and add them to the Columns data
-        for friendly_name, agg_name in column_map.items():
-            # randomize the column name to prevent collisions, particularly on joined
-            # or chained aggregations
-            new_column_name = hex(random.getrandbits(64))
-            groups = groups.rename_columns(
-                [col if col != agg_name else new_column_name for col in groups.column_names]
-            )
-
-            columns.add_column(new_column_name)
-            columns.set_preferred_name(new_column_name, friendly_name)
-            # if we have an alias for this column, add it to the metadata
-            aliases = [
-                agg.alias for agg in self._aggregates if friendly_name == format_expression(agg)
-            ]
-            aliases.append(agg_name)
-            for alias in aliases:
-                if alias:
-                    columns.add_alias(new_column_name, alias)
-
-        # apply the metadata to the resultant dataset
-        groups = columns.apply(groups)
+        groups = groups.select(list(column_map.values()))
+        groups = groups.rename_columns(list(column_map.keys()))
 
         self.statistics.time_aggregating += time.time_ns() - start_time
 

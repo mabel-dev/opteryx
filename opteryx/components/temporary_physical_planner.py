@@ -35,9 +35,7 @@ def create_physical_plan(logical_plan):
         node: operators.BasePlanNode = None
 
         if node_type == LogicalPlanStepType.Aggregate:
-            node = operators.AggregateNode(
-                query_properties, groups=node_config["groups"], aggregates=node_config["aggregates"]
-            )
+            node = operators.AggregateNode(query_properties, aggregates=node_config["aggregates"])
         elif node_type == LogicalPlanStepType.Distinct:
             node = operators.DistinctNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Exit:

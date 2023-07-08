@@ -43,6 +43,23 @@ class AggregateAndGroupNode(BasePlanNode):
         self.groups = config["groups"]
         self.aggregates = config["aggregates"]
 
+        # we're going to preload some of the evaluation
+
+        # get all the columns anywhere in the groups or aggregates
+        all_identifiers = [
+            node.schema_column.identity
+            for node in get_all_nodes_of_type(
+                self.groups + self.aggregates, select_nodes=(NodeType.IDENTIFIER,)
+            )
+        ]
+        self.all_identifiers = list(dict.fromkeys(all_identifiers))
+
+        # Get any functions we need to execute before aggregating
+        self.evaluatable_nodes = extract_evaluations(self.aggregates)
+        # get the aggregated groupings and functions
+        self.group_by_columns = list({node.schema_column.identity for node in self.groups})
+        self.column_map, self.aggregate_functions = build_aggregations(self.aggregates)
+
     @property
     def config(self):  # pragma: no cover
         return str(self._aggregates)
@@ -61,26 +78,16 @@ class AggregateAndGroupNode(BasePlanNode):
 
         morsels = self._producers[0]  # type:ignore
 
-        # get all the columns anywhere in the groups or aggregates
-        all_identifiers = [
-            node.schema_column.identity
-            for node in get_all_nodes_of_type(
-                self.groups + self.aggregates, select_nodes=(NodeType.IDENTIFIER,)
-            )
-        ]
-        all_identifiers = list(dict.fromkeys(all_identifiers))
-
         # merge all the morsels together into one table, selecting only the columns
         # we're pretty sure we're going to use - this will fail for datasets
         # larger than memory
-        table = pyarrow.concat_tables(project(morsels.execute(), all_identifiers), promote=True)
-
-        # Get any functions we need to execute before aggregating
-        evaluatable_nodes = extract_evaluations(self.aggregates)
+        table = pyarrow.concat_tables(
+            project(morsels.execute(), self.all_identifiers), promote=True
+        )
 
         # Allow grouping by functions by evaluating them first
         start_time = time.time_ns()
-        table = evaluate_and_append(evaluatable_nodes, table)
+        table = evaluate_and_append(self.evaluatable_nodes, table)
         table = evaluate_and_append(self.groups, table)
 
         # Add a "*" column, this is an int because when a bool it miscounts
@@ -92,16 +99,15 @@ class AggregateAndGroupNode(BasePlanNode):
 
         start_time = time.time_ns()
 
-        group_by_columns = {node.schema_column.identity for node in self.groups}
-
-        column_map, aggs = build_aggregations(self.aggregates)
-
+        # do the group by and aggregates
         table = table.combine_chunks()
-        groups = table.group_by(group_by_columns)
-        groups = groups.aggregate(aggs)
+        groups = table.group_by(self.group_by_columns)
+        groups = groups.aggregate(self.aggregate_functions)
 
-        a = [c.schema_column.identity for c in self.groups]
-        groups = groups.select(list(column_map.values()) + a)
-        groups = groups.rename_columns(list(column_map.keys()) + a)
+        # project to the desired column names from the pyarrow names
+        groups = groups.select(list(self.column_map.values()) + self.group_by_columns)
+        groups = groups.rename_columns(list(self.column_map.keys()) + self.group_by_columns)
+
+        self.statistics.time_fgrouping += time.time_ns() - start_time
 
         yield groups
