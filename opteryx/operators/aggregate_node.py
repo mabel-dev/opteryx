@@ -133,7 +133,7 @@ def build_aggregations(aggregators):
     return column_map, aggs
 
 
-def _non_group_aggregates(aggregates, table, columns):
+def _non_group_aggregates(aggregates, table):
     """
     If we're not doing a group by, we're just doing aggregations, the pyarrow
     functionality for aggregate doesn't work. So we do the calculation, it's
@@ -145,14 +145,8 @@ def _non_group_aggregates(aggregates, table, columns):
     for aggregate in aggregates:
         if aggregate.node_type in (NodeType.AGGREGATOR,):
             column_node = aggregate.parameters[0]
-            if column_node.node_type == NodeType.LITERAL_FLOAT:
-                raw_column_values = numpy.full(
-                    table.num_rows, column_node.value, dtype=numpy.float64
-                )
-                mapped_column_name = str(column_node.value)
-            elif column_node.node_type == NodeType.LITERAL_INTEGER:
-                raw_column_values = numpy.full(table.num_rows, column_node.value, dtype=numpy.int64)
-                mapped_column_name = str(column_node.value)
+            if column_node.node_type == NodeType.LITERAL:
+                raw_column_values = numpy.full(table.num_rows, column_node.value)
             elif (
                 aggregate.value == "COUNT"
                 and aggregate.parameters[0].node_type == NodeType.WILDCARD
@@ -160,9 +154,7 @@ def _non_group_aggregates(aggregates, table, columns):
                 result["COUNT(*)"] = table.num_rows
                 continue
             else:
-                column_name = format_expression(aggregate.parameters[0])
-                mapped_column_name = columns.get_column_from_alias(column_name, only_one=True)
-                raw_column_values = table[mapped_column_name].to_numpy()
+                raw_column_values = table[column_node.schema_column.identity].to_numpy()
             aggregate_function_name = AGGREGATORS[aggregate.value]
             # this maps a string which is the function name to that function on the
             # pyarrow.compute module
@@ -172,8 +164,7 @@ def _non_group_aggregates(aggregates, table, columns):
                 )
             aggregate_function = getattr(pyarrow.compute, aggregate_function_name)
             aggregate_column_value = aggregate_function(raw_column_values).as_py()
-            aggregate_column_name = f"{mapped_column_name}_{aggregate_function_name}"
-            result[aggregate_column_name] = aggregate_column_value
+            result[aggregate.schema_column.identity] = aggregate_column_value
 
     return pyarrow.Table.from_pylist([result])
 
@@ -206,6 +197,20 @@ class AggregateNode(BasePlanNode):
 
         self.aggregates = config.get("aggregates", [])
 
+        # we're going to preload some of the evaluation
+
+        # get all the columns anywhere in the aggregates
+        all_identifiers = [
+            node.schema_column.identity
+            for node in get_all_nodes_of_type(self.aggregates, select_nodes=(NodeType.IDENTIFIER,))
+        ]
+        self.all_identifiers = list(dict.fromkeys(all_identifiers))
+
+        # Get any functions we need to execute before aggregating
+        self.evaluatable_nodes = extract_evaluations(self.aggregates)
+
+        self.column_map, self.aggregate_functions = build_aggregations(self.aggregates)
+
     @property
     def config(self):  # pragma: no cover
         return str(self.aggregates)
@@ -232,24 +237,16 @@ class AggregateNode(BasePlanNode):
             )
             return
 
-        # get all the columns anywhere in the groups or aggregates
-        all_identifiers = [
-            node.value
-            for node in get_all_nodes_of_type(self.aggregates, select_nodes=(NodeType.IDENTIFIER,))
-        ]
-        all_identifiers = list(dict.fromkeys(all_identifiers))
-
         # merge all the morsels together into one table, selecting only the columns
         # we're pretty sure we're going to use - this will fail for datasets
         # larger than memory
-        table = pyarrow.concat_tables(project(morsels.execute(), all_identifiers), promote=True)
-
-        # Get any functions we need to execute before aggregating
-        evaluatable_nodes = extract_evaluations(self.aggregates)
+        table = pyarrow.concat_tables(
+            project(morsels.execute(), self.all_identifiers), promote=True
+        )
 
         # Allow grouping by functions by evaluating them first
         start_time = time.time_ns()
-        columns, _, table = evaluate_and_append(evaluatable_nodes, table)
+        table = evaluate_and_append(self.evaluatable_nodes, table)
 
         # Add a "*" column, this is an int because when a bool it miscounts
         if "*" not in table.column_names:
@@ -258,34 +255,10 @@ class AggregateNode(BasePlanNode):
             )
         self.statistics.time_evaluating += time.time_ns() - start_time
 
-        # Extract any literal columns, we need to add these so we can group and/or
-        # aggregate by them (e.g. SELECT SUM(4) FROM table;)
-        all_literals = [
-            node.value
-            for node in get_all_nodes_of_type(
-                self.aggregates,
-                select_nodes=(
-                    NodeType.LITERAL_BOOLEAN,
-                    NodeType.LITERAL_INTEGER,
-                    NodeType.LITERAL_FLOAT,
-                    NodeType.LITERAL_VARCHAR,
-                ),
-            )
-        ]
-        all_literals = list(dict.fromkeys(all_literals))
-        all_literals = [a for a in all_literals if str(a) not in table.column_names]
-        for literal in all_literals:
-            table = table.append_column(
-                str(literal), [numpy.full(shape=table.num_rows, fill_value=literal)]
-            )
-            columns.add_column(str(literal))
-
         start_time = time.time_ns()
 
-        column_map, aggs = build_aggregations(self.aggregates, columns)
-
         # we're not a group_by - we're aggregating without grouping
-        groups = _non_group_aggregates(self.aggregates, table, columns)
+        aggregates = _non_group_aggregates(self.aggregates, table)
         del table
 
         # do the secondary activities for ARRAY_AGG
@@ -294,7 +267,7 @@ class AggregateNode(BasePlanNode):
                 _, _, order, limit = node.parameters
                 if order or limit:
                     # rip the column out of the table
-                    column_name = column_map[format_expression(node)]
+                    column_name = self.column_map[format_expression(node)]
                     column_def = groups.field(column_name)  # this is used
                     column = groups.column(column_name).to_pylist()
                     groups = groups.drop([column_name])
@@ -307,9 +280,9 @@ class AggregateNode(BasePlanNode):
                     groups = groups.append_column(column_def, [column])
 
         # name the aggregate fields and add them to the Columns data
-        groups = groups.select(list(column_map.values()))
-        groups = groups.rename_columns(list(column_map.keys()))
+        aggregates = aggregates.select(list(self.column_map.keys()))
+        #        aggregates = aggregates.rename_columns(list(self.column_map.keys()))
 
         self.statistics.time_aggregating += time.time_ns() - start_time
 
-        yield groups
+        yield aggregates

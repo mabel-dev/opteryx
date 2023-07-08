@@ -111,7 +111,7 @@ class LogicalPlanNode(Node):
             if node_type == LogicalPlanStepType.GenerateSeries:
                 return f"GENERATE SERIES ({', '.join(format_expression(arg) for arg in self.args)}){' AS ' + self.alias if self.alias else ''}"
             if node_type == LogicalPlanStepType.AggregateAndGroup:
-                return f"GROUP ({', '.join(format_expression(col) for col in self.groups)})"
+                return f"AGGREGATE ({', '.join(format_expression(col) for col in self.aggregates)}) GROUP BY ({', '.join(format_expression(col) for col in self.groups)})"
             if node_type == LogicalPlanStepType.Join:
                 if self.on:
                     return f"{self.type.upper()} ({format_expression(self.on)})"
