@@ -21,12 +21,12 @@ import time
 from typing import Iterable
 
 import numpy
+from orso.types import OrsoTypes
 from pyarrow import concat_tables
 
 from opteryx.exceptions import ColumnNotFoundError
 from opteryx.exceptions import SqlError
 from opteryx.managers.expression import NodeType
-from opteryx.managers.expression import format_expression
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 
@@ -65,47 +65,44 @@ class SortNode(BasePlanNode):
 
         start_time = time.time_ns()
 
-        for column_list, direction in self.order:
-            for column in column_list:
-                if column.node_type == NodeType.FUNCTION:
-                    # ORDER BY RAND() shuffles the results
-                    # we create a random list, sort that then take the rows from the
-                    # table in that order - this is faster than ordering the data
-                    if column.value in ("RANDOM", "RAND"):
-                        new_order = numpy.argsort(numpy.random.uniform(size=table.num_rows))
-                        table = table.take(new_order)
-                        self.statistics.time_ordering = time.time_ns() - start_time
+        for column, direction in self.order:
+            if column.node_type == NodeType.FUNCTION:
+                # ORDER BY RAND() shuffles the results
+                # we create a random list, sort that then take the rows from the
+                # table in that order - this is faster than ordering the data
+                if column.value in ("RANDOM", "RAND"):
+                    new_order = numpy.argsort(numpy.random.uniform(size=table.num_rows))
+                    table = table.take(new_order)
+                    self.statistics.time_ordering = time.time_ns() - start_time
 
-                        yield table
-                        return
+                    yield table
+                    return
 
-                    raise SqlError("`ORDER BY` only supports `RAND()` as a functional sort order.")
+                raise SqlError("`ORDER BY` only supports `RAND()` as a functional sort order.")
 
-                elif column.node_type == NodeType.LITERAL and column.type.is_numeric():
-                    # we have an index rather than a column name, it's a natural
-                    # number but the list of column names is zero-based, so we
-                    # subtract one
-                    column_name = table.column_names[int(column.value) - 1]
+            elif column.node_type == NodeType.LITERAL and column.type == OrsoTypes.INTEGER:
+                # we have an index rather than a column name, it's a natural
+                # number but the list of column names is zero-based, so we
+                # subtract one
+                column_name = table.column_names[int(column.value) - 1]
+                mapped_order.append(
+                    (
+                        column_name,
+                        direction,
+                    )
+                )
+            else:
+                try:
                     mapped_order.append(
                         (
-                            column_name,
+                            column.schema_column.identity,
                             direction,
                         )
                     )
-                else:
-                    try:
-                        mapped_order.append(
-                            (
-                                columns.get_column_from_alias(
-                                    format_expression(column), only_one=True
-                                ),
-                                direction,
-                            )
-                        )
-                    except ColumnNotFoundError as cnfe:
-                        raise ColumnNotFoundError(
-                            f"`ORDER BY` must reference columns as they appear in the `SELECT` clause. {cnfe}"
-                        )
+                except ColumnNotFoundError as cnfe:
+                    raise ColumnNotFoundError(
+                        f"`ORDER BY` must reference columns as they appear in the `SELECT` clause. {cnfe}"
+                    )
 
         table = table.sort_by(mapped_order)
         self.statistics.time_ordering = time.time_ns() - start_time

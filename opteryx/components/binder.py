@@ -67,7 +67,6 @@ import re
 
 from orso.logging import get_logger
 from orso.schema import ConstantColumn
-from orso.schema import FlatColumn
 from orso.schema import FunctionColumn
 
 from opteryx.exceptions import AmbiguousIdentifierError
@@ -266,6 +265,19 @@ class BinderVisitor:
     def visit_filter(self, node, context):
         node.condition = inner_binder(node.condition, context.get("schemas", {}))
 
+        return node, context
+
+    def visit_order(self, node, context):
+        order_by = []
+        for column, direction in node.order_by:
+            order_by.append(
+                (
+                    inner_binder(column, context.get("schemas", {})),
+                    "ascending" if direction else "descending",
+                )
+            )
+
+        node.order_by = order_by
         return node, context
 
     def traverse(self, graph, node, context=None):
