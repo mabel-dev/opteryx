@@ -34,6 +34,7 @@ def create_physical_plan(logical_plan):
         node_config = logical_node.properties
         node: operators.BasePlanNode = None
 
+        # fmt: off
         if node_type == LogicalPlanStepType.Aggregate:
             node = operators.AggregateNode(query_properties, aggregates=node_config["aggregates"])
         elif node_type == LogicalPlanStepType.Distinct:
@@ -49,17 +50,11 @@ def create_physical_plan(logical_plan):
         elif node_type == LogicalPlanStepType.GenerateSeries:
             node = operators.NoOpNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.AggregateAndGroup:
-            node = operators.AggregateAndGroupNode(
-                query_properties, groups=node_config["groups"], aggregates=node_config["aggregates"]
-            )
+            node = operators.AggregateAndGroupNode(query_properties, groups=node_config["groups"], aggregates=node_config["aggregates"])
         elif node_type == LogicalPlanStepType.Join:
             node = operators.NoOpNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Limit:
-            node = operators.LimitNode(
-                query_properties,
-                limit=node_config.get("limit"),
-                offset=node_config.get("offset", 0),
-            )
+            node = operators.LimitNode(query_properties, limit=node_config.get("limit"), offset=node_config.get("offset", 0))
         elif node_type == LogicalPlanStepType.Order:
             node = operators.SortNode(query_properties, order=node_config["order_by"])
         elif node_type == LogicalPlanStepType.Project:
@@ -81,7 +76,7 @@ def create_physical_plan(logical_plan):
 
         else:
             raise Exception(f"something unexpected happed - {node_type.name}")
-
+        # fmt: on
         plan.add_node(nid, node)
 
     for source, destination, relation in logical_plan.edges():

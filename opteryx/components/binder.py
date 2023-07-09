@@ -206,7 +206,7 @@ class BinderVisitor:
         return return_node, return_context
 
     def visit_unsupported(self, node, context):
-        logger.warning(f"No visit method implemented for node type {node.node_type.name}")
+        logger.debug(f"No visit method implemented for node type {node.node_type.name}")
         return node, context
 
     def visit_aggregate_and_group(self, node, context):

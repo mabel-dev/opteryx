@@ -62,7 +62,6 @@ class SortNode(BasePlanNode):
             return
 
         table = concat_tables(morsels, promote=True)
-        columns = Columns(table)
 
         start_time = time.time_ns()
 
@@ -82,7 +81,7 @@ class SortNode(BasePlanNode):
 
                     raise SqlError("`ORDER BY` only supports `RAND()` as a functional sort order.")
 
-                elif column.node_type == NodeType.LITERAL_INTEGER:
+                elif column.node_type == NodeType.LITERAL and column.type.is_numeric():
                     # we have an index rather than a column name, it's a natural
                     # number but the list of column names is zero-based, so we
                     # subtract one
