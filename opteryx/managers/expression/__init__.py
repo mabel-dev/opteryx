@@ -79,6 +79,7 @@ ORSO_TO_NUMPY_MAP = {
     OrsoTypes.BLOB: numpy.dtype("S"),
     OrsoTypes.BOOLEAN: numpy.dtype("?"),
     OrsoTypes.DATE: numpy.dtype("datetime64[D]"),  # [2.5e16 BC, 2.5e16 AD]
+    OrsoTypes.DECIMAL: numpy.dtype("O"),
     OrsoTypes.DOUBLE: numpy.dtype("float64"),
     OrsoTypes.INTEGER: numpy.dtype("int64"),
     OrsoTypes.INTERVAL: numpy.dtype("m"),
