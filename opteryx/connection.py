@@ -166,7 +166,7 @@ class Cursor(DataFrame):
         results = self._inner_execute(operation, params)
         if results is not None:
             if limit is not None:
-                return utils.arrow.limit_records(results, limit)
+                results = utils.arrow.limit_records(results, limit)
         return pyarrow.concat_tables(results, promote=True)
 
     @property

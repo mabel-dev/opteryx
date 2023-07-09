@@ -95,6 +95,8 @@ class LogicalPlanNode(Node):
         try:
             # fmt:off
             node_type = self.node_type
+            if node_type == LogicalPlanStepType.AggregateAndGroup:
+                return f"AGGREGATE ({', '.join(format_expression(col) for col in self.aggregates)}) GROUP BY ({', '.join(format_expression(col) for col in self.groups)})"
             if node_type == LogicalPlanStepType.Aggregate:
                 return f"AGGREGATE ({', '.join(format_expression(col) for col in self.aggregates)})"
             if node_type == LogicalPlanStepType.Distinct:
@@ -110,24 +112,25 @@ class LogicalPlanNode(Node):
                 return f"FILTER ({format_expression(self.condition)})"
             if node_type == LogicalPlanStepType.GenerateSeries:
                 return f"GENERATE SERIES ({', '.join(format_expression(arg) for arg in self.args)}){' AS ' + self.alias if self.alias else ''}"
-            if node_type == LogicalPlanStepType.AggregateAndGroup:
-                return f"AGGREGATE ({', '.join(format_expression(col) for col in self.aggregates)}) GROUP BY ({', '.join(format_expression(col) for col in self.groups)})"
             if node_type == LogicalPlanStepType.Join:
                 if self.on:
                     return f"{self.type.upper()} ({format_expression(self.on)})"
                 if self.using:
                     return f"{self.type.upper()} (USING {','.join(format_expression(self.using))})"
                 return self.type.upper()
+            if node_type == LogicalPlanStepType.Limit:
+                limit_str = f"LIMIT ({self.limit})" if self.limit is not None else ""
+                offset_str = f" OFFSET ({self.offset})" if self.offset is not None else ""
+                return (limit_str + offset_str).strip()
             if node_type == LogicalPlanStepType.Order:
                 return f"ORDER BY ({', '.join(format_expression(item[0]) + (' DESC' if not item[1] else '') for item in self.order_by)})"
             if node_type == LogicalPlanStepType.Project:
                 return f"PROJECT ({', '.join(format_expression(col) for col in self.columns)})"
             if node_type == LogicalPlanStepType.Scan:
                 date_range = ""
-                if self.start_date == self.end_date:
-                    if self.start_date is not None:
-                        date_range = f" FOR '{self.start_date}'"
-                else:
+                if self.start_date == self.end_date and self.start_date is not None:
+                    date_range = f" FOR '{self.start_date}'"
+                elif self.start_date is not None:
                     date_range = f" FOR '{self.start_date}' TO '{self.end_date}'"
                 return f"SCAN ({self.relation}{' AS ' + self.alias if self.alias else ''}{date_range}{' WITH(' + ','.join(self.hints) + ')' if self.hints else ''})"
             if node_type == LogicalPlanStepType.Show:
@@ -241,7 +244,6 @@ def inner_query_planner(ast_branch):
     _aggregates = get_all_nodes_of_type(_projection, select_nodes=(NodeType.AGGREGATOR,))
     _groups = logical_planner_builders.build(ast_branch["Select"].get("group_by"))
     if _groups is not None and _groups != []:
-        # TODO: groups need: grouped columns
         group_step = LogicalPlanNode(node_type=LogicalPlanStepType.AggregateAndGroup)
         group_step.groups = _groups
         group_step.aggregates = _aggregates
@@ -251,7 +253,6 @@ def inner_query_planner(ast_branch):
             inner_plan.add_edge(previous_step_id, step_id)
     # aggregates
     elif len(_aggregates) > 0:
-        # TODO: aggregates need: functions
         aggregate_step = LogicalPlanNode(node_type=LogicalPlanStepType.Aggregate)
         aggregate_step.groups = _groups
         aggregate_step.aggregates = _aggregates
@@ -309,8 +310,10 @@ def inner_query_planner(ast_branch):
     _offset = ast_branch.get("offset")
     if _limit or _offset:
         limit_step = LogicalPlanNode(node_type=LogicalPlanStepType.Limit)
-        limit_step.limit = _limit
-        limit_step.offset = _offset
+        limit_step.limit = None if _limit is None else logical_planner_builders.build(_limit).value
+        limit_step.offset = (
+            None if _offset is None else logical_planner_builders.build(_offset).value
+        )
         previous_step_id, step_id = step_id, random_string()
         inner_plan.add_node(step_id, limit_step)
         if previous_step_id is not None:
@@ -524,7 +527,7 @@ def plan_query(statement):
 
     # we do some minor AST rewriting
     root_node["body"]["limit"] = root_node.get("limit", None)
-    root_node["body"]["offset"] = root_node.get("offset", None)
+    root_node["body"]["offset"] = (root_node.get("offset") or {}).get("value")
     root_node["body"]["order_by"] = root_node.get("order_by", None)
     return inner_query_planner(root_node["body"])
 

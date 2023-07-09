@@ -54,6 +54,12 @@ def create_physical_plan(logical_plan):
             )
         elif node_type == LogicalPlanStepType.Join:
             node = operators.NoOpNode(query_properties, **node_config)
+        elif node_type == LogicalPlanStepType.Limit:
+            node = operators.LimitNode(
+                query_properties,
+                limit=node_config.get("limit"),
+                offset=node_config.get("offset", 0),
+            )
         elif node_type == LogicalPlanStepType.Order:
             node = operators.SortNode(query_properties, order=node_config["order_by"])
         elif node_type == LogicalPlanStepType.Project:

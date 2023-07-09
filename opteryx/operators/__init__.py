@@ -32,7 +32,6 @@ from .internal_dataset_node import InternalDatasetNode  # Sample datasets
 from .limit_node import LimitNode  # select the first N records
 from .morsel_defragment_node import MorselDefragmentNode  # consolidate small morsels
 from .noop_node import NoOpNode  # No Operation
-from .offset_node import OffsetNode  # skip a number of records
 from .outer_join_node import OuterJoinNode  # LEFT/RIGHT/FULL OUTER JOIN
 from .projection_node import ProjectionNode  # remove unwanted columns including renames
 from .scanner_node import ScannerNode

@@ -14,6 +14,10 @@
 This module contains support functions for working with PyArrow
 """
 
+from typing import Generator
+from typing import Iterator
+from typing import Optional
+
 import pyarrow
 from orjson import dumps
 from orjson import loads
@@ -21,60 +25,39 @@ from orjson import loads
 INTERNAL_BATCH_SIZE = 500
 
 
-def limit_records(morsels, limit):
+def limit_records(
+    morsels: Iterator[pyarrow.Table], limit: Optional[int] = None, offset: int = 0
+) -> Optional[Iterator[pyarrow.Table]]:
     """
     Cycle over an iterable of morsels, limiting the response to a given
-    number of records.
+    number of records with an optional offset.
     """
-    row_count = 0
-    result_set = []
-    morsels_iterator = iter(morsels)
+    remaining_rows = limit if limit is not None else float("inf")
+    rows_left_to_skip = max(0, offset)
 
-    morsel = None
-    while row_count < limit:
-        try:
-            morsel = next(morsels_iterator)
-        except StopIteration:
-            break
+    for morsel in morsels:
+        if rows_left_to_skip > 0:
+            if rows_left_to_skip >= morsel.num_rows:
+                rows_left_to_skip -= morsel.num_rows
+                continue
+            else:
+                morsel = morsel.slice(
+                    offset=rows_left_to_skip, length=morsel.num_rows - rows_left_to_skip
+                )
+                rows_left_to_skip = 0
 
         if morsel.num_rows > 0:
-            if row_count + morsel.num_rows <= limit:
-                # append whole morsel to result_set
-                result_set.append(morsel)
-                row_count += morsel.num_rows
+            if morsel.num_rows < remaining_rows:
+                yield morsel
             else:
-                # slice morsel to only append needed rows to result_set
-                num_rows_needed = limit - row_count
-                result_set.append(morsel.slice(offset=0, length=num_rows_needed))
-                row_count = limit
+                yield morsel.slice(offset=0, length=remaining_rows)
 
-    if len(result_set) == 0:
-        if morsel is None:
-            morsel = next(morsels_iterator, None)
-        if morsel is None:
-            return None
-        return pyarrow.Table.from_batches([], schema=morsel.schema)
-    else:
-        return pyarrow.concat_tables(result_set, promote=True)
-
-
-def rename_columns(morsels):
-    """rename columns to their preferred names"""
-    yield from morsels
-    return
-    columns = None
-    morsels = iter(morsels)
-    for morsel in morsels:
-        if morsel is None:
+        remaining_rows -= morsel.num_rows
+        if remaining_rows <= 0:
             break
-        if columns is None and morsel is not None:
-            columns = Columns(morsel)
-            preferred_names = columns.preferred_column_names
-            column_names = []
-            for col in morsel.column_names:
-                column_names.append([c for a, c in preferred_names if a == col][0])
-        if column_names and morsel is not None:
-            yield morsel.rename_columns(column_names)
+
+    if not remaining_rows:
+        return None
 
 
 # Adapted from:

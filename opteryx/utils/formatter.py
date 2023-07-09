@@ -70,6 +70,7 @@ def format_sql(sql):
             "JOIN",
             "LEFT",
             "LIMIT",
+            "OFFSET",
             "ON",
             "ORDER",
             "OUTER",
