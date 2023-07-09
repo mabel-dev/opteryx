@@ -1,8 +1,8 @@
 hadrodb
 numpy
 orjson
-orso>=0.0.61
-pyarrow
+orso>=0.0.77
+pyarrow>=12.0.1
 typer
 
 cython
