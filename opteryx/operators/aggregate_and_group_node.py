@@ -40,8 +40,8 @@ from opteryx.operators.aggregate_node import project
 class AggregateAndGroupNode(BasePlanNode):
     def __init__(self, properties: QueryProperties, **config):
         super().__init__(properties=properties)
-        self.groups = config["groups"]
-        self.aggregates = config["aggregates"]
+        self.groups = list(config["groups"])
+        self.aggregates = list(config["aggregates"])
 
         # we're going to preload some of the evaluation
 

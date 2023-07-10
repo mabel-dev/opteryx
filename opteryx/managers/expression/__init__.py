@@ -194,7 +194,7 @@ def get_all_nodes_of_type(root, select_nodes):
     """
     if root is None:
         return []
-    if not isinstance(root, list):
+    if not isinstance(root, (set, tuple, list)):
         root = [root]
 
     identifiers = []

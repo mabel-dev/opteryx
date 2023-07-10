@@ -64,6 +64,7 @@ The Binder then performs these activities:
 
 import copy
 import re
+import typing
 
 from orso.logging import get_logger
 from orso.schema import ConstantColumn
@@ -78,6 +79,7 @@ from opteryx.exceptions import UnexpectedDatasetReferenceError
 # from opteryx.functions.v2 import FUNCTIONS
 from opteryx.functions import FUNCTIONS
 from opteryx.managers.expression import NodeType
+from opteryx.models.node import Node
 from opteryx.operators.aggregate_node import AGGREGATORS
 from opteryx.samples import calculated
 
@@ -86,7 +88,26 @@ CAMEL_TO_SNAKE = re.compile(r"(?<!^)(?=[A-Z])")
 logger = get_logger()
 
 
-def inner_binder(node, relations):
+def merge_dicts(*dicts) -> dict:
+    """we ned to handle merging lists so have our own merge function"""
+    merged_dict: dict = {}
+    for dic in dicts:
+        if not isinstance(dic, dict):
+            raise DatabaseError("Internal Error - merge_dicts expected dicts")
+        for key, value in dic.items():
+            if key in merged_dict:
+                if isinstance(value, list):
+                    merged_dict[key].extend(value)
+                elif isinstance(value, dict):
+                    merged_dict[key].update(value)
+                else:
+                    merged_dict[key] = value
+            else:
+                merged_dict[key] = value.copy() if isinstance(value, list) else value
+    return merged_dict
+
+
+def inner_binder(node, schemas) -> typing.Tuple[Node, dict]:
     """
     Note, this is a tree within a tree, this is a single step in the execution plan (i.e. the plan
     associated with the relational algebra) which in itself may be an evaluation plan (i.e.
@@ -96,12 +117,12 @@ def inner_binder(node, relations):
 
     # we're already binded
     if node.schema_column is not None:
-        return node
+        return node, schemas
 
     node_type = node.node_type
     if node_type == NodeType.IDENTIFIER:
         column = None
-        found_source_relation = relations.get(node.source)
+        found_source_relation = schemas.get(node.source)
 
         if node.source is not None:
             # The column source is part of the name (e.g. relation.column)
@@ -121,8 +142,8 @@ def inner_binder(node, relations):
                 )
 
         else:
-            # Look for the column in the loaded relations
-            for _, schema in relations.items():
+            # Look for the column in the loaded schemas
+            for _, schema in schemas.items():
                 column = schema.find_column(node.value)
                 if column is not None:
                     # If we've found it again - we're not sure which one to use
@@ -136,7 +157,7 @@ def inner_binder(node, relations):
             # If we didn't find the relation, get all of the columns it could have been and
             # see if we can suggest what the user should have entered in the error message
             candidates = []
-            for _, schema in relations.items():
+            for _, schema in schemas.items():
                 candidates.extend(schema.get_all_columns())
             from opteryx.utils import fuzzy_search
 
@@ -159,7 +180,7 @@ def inner_binder(node, relations):
         # we need to add this new column to the schema
         column_name = format_expression(node)
         schema_column = FunctionColumn(column_name, type=0, binding=func)
-        relations["$calculated"].columns.append(schema_column)
+        schemas["$derived"].columns.append(schema_column)
         node.function = func
         node.derived_from = []
         node.schema_column = schema_column
@@ -168,28 +189,31 @@ def inner_binder(node, relations):
     elif node_type == NodeType.LITERAL:
         column_name = format_expression(node)
         schema_column = ConstantColumn(column_name, aliases=[node.alias], type=0, value=node.value)
-        relations["$calculated"].columns.append(schema_column)
+        schemas["$derived"].columns.append(schema_column)
         node.schema_column = schema_column
         node.query_column = node.alias or column_name
 
     else:
         column_name = format_expression(node)
         schema_column = ConstantColumn(column_name, aliases=[node.alias], type=0, value=node.value)
-        relations["$calculated"].columns.append(schema_column)
+        schemas["$derived"].columns.append(schema_column)
         node.schema_column = schema_column
         node.query_column = node.alias or column_name
 
     # Now recurse and do this again for all the sub parts of the evaluation plan
     if node.left:
-        node.left = inner_binder(node.left, relations)
+        node.left, schemas = inner_binder(node.left, schemas)
     if node.right:
-        node.right = inner_binder(node.right, relations)
+        node.right, schemas = inner_binder(node.right, schemas)
     if node.centre:
-        node.centre = inner_binder(node.centre, relations)
+        node.centre, schemas = inner_binder(node.centre, schemas)
     if node.parameters:
-        node.parameters = [inner_binder(parameter, relations) for parameter in node.parameters]
+        node.parameters, new_schemas = zip(
+            *(inner_binder(parm, schemas) for parm in node.parameters)
+        )
+        schemas = merge_dicts(*new_schemas)
 
-    return node
+    return node, schemas
 
 
 class BinderVisitor:
@@ -209,14 +233,18 @@ class BinderVisitor:
         return node, context
 
     def visit_aggregate_and_group(self, node, context):
-        groups = []
-        for group in node.groups:
-            groups.append(inner_binder(group, context.get("schemas", {})))
-        node.groups = groups
-        aggregates = []
-        for aggregate in node.aggregates:
-            aggregates.append(inner_binder(aggregate, context.get("schemas", {})))
-        node.aggregates = aggregates
+        if node.groups:
+            node.groups, schemas = zip(
+                *(inner_binder(group, context["schemas"]) for group in node.groups)
+            )
+            context["schemas"] = merge_dicts(*schemas)
+
+        if node.aggregates:
+            node.aggregates, schemas = zip(
+                *(inner_binder(aggregate, context["schemas"]) for aggregate in node.aggregates)
+            )
+            context["schemas"] = merge_dicts(*schemas)
+
         return node, context
 
     visit_aggregate = visit_aggregate_and_group
@@ -236,18 +264,20 @@ class BinderVisitor:
             node.columns = columns
             return node, context
 
-        for column in node.columns:
-            columns.append(inner_binder(column, schemas))
-        node.columns = columns
+        node.columns, schemas = zip(
+            *(inner_binder(col, context["schemas"]) for col in node.columns)
+        )
+        context["schemas"] = merge_dicts(*schemas)
+
         return node, context
 
     def visit_project(self, node, context):
         # For each of the columns in the projection, identify the relation it
         # will be taken from
-        columns = []
-        for column in node.columns:
-            columns.append(inner_binder(column, context.get("schemas", {})))
-        node.columns = columns
+        node.columns, schemas = zip(
+            *(inner_binder(col, context["schemas"]) for col in node.columns)
+        )
+        context["schemas"] = merge_dicts(*schemas)
         return node, context
 
     def visit_scan(self, node, context):
@@ -263,16 +293,18 @@ class BinderVisitor:
         return node, context
 
     def visit_filter(self, node, context):
-        node.condition = inner_binder(node.condition, context.get("schemas", {}))
+        node.condition, context["schemas"] = inner_binder(node.condition, context["schemas"])
 
         return node, context
 
     def visit_order(self, node, context):
         order_by = []
         for column, direction in node.order_by:
+            bound_column, context["schemas"] = inner_binder(column, context["schemas"])
+
             order_by.append(
                 (
-                    inner_binder(column, context.get("schemas", {})),
+                    bound_column,
                     "ascending" if direction else "descending",
                 )
             )
@@ -293,26 +325,8 @@ class BinderVisitor:
             context: An optional context object to pass to each visit method.
         """
 
-        def merge_dicts(*dicts):
-            """we ned to handle merging lists so have our own merge function"""
-            merged_dict: dict = {}
-            for dic in dicts:
-                if not isinstance(dic, dict):
-                    raise DatabaseError("Internal Error - merge_dicts expected dicts")
-                for key, value in dic.items():
-                    if key in merged_dict:
-                        if isinstance(value, list):
-                            merged_dict[key].extend(value)
-                        elif isinstance(value, dict):
-                            merged_dict[key].update(value)
-                        else:
-                            merged_dict[key] = value
-                    else:
-                        merged_dict[key] = value.copy() if isinstance(value, list) else value
-            return merged_dict
-
         if context is None:
-            context = {"schemas": {"$calculated": calculated.schema}}
+            context = {"schemas": {"$derived": calculated.schema}}
 
         # Recursively visit children
         children = graph.ingoing_edges(node)

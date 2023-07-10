@@ -15,7 +15,7 @@ The 'sample' connector provides readers for the internal sample datasets,
 $planets, $astronauts, and $satellites.
 
 - $no_table is used in queries where there is no relation specified 'SELECT 1'
-- $calculated is used as a schema to align virtual columns to
+- $derived is used as a schema to align virtual columns to
 """
 
 import typing
@@ -30,7 +30,7 @@ from opteryx.exceptions import DatasetNotFoundError
 
 WELL_KNOWN_DATASETS = {
     "$astronauts": samples.astronauts,
-    "$calculated": None,
+    "$derived": None,
     "$no_table": samples.no_table,
     "$planets": samples.planets,
     "$satellites": samples.satellites,
@@ -43,7 +43,7 @@ def suggest(dataset):
     """
     from opteryx.utils import fuzzy_search
 
-    known_datasets = (k for k in WELL_KNOWN_DATASETS if k not in ("$no_table", "$calculated"))
+    known_datasets = (k for k in WELL_KNOWN_DATASETS if k not in ("$no_table", "$derived"))
     suggestion = fuzzy_search(dataset, known_datasets)
     if suggestion is not None:
         return (

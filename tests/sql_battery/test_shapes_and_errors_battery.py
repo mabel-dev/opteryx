@@ -215,6 +215,7 @@ STATEMENTS = [
         ("SELECT MIN(id), MAX(id), SUM(planetId), planetId FROM $satellites GROUP BY planetId", 7, 4, None),
         ("SELECT planetId, LIST(name) FROM $satellites GROUP BY planetId", 7, 2, None),
 
+        ("SELECT planetId FROM $satellites GROUP BY planetId", 7, 1, None),
         ("SELECT BOOLEAN(planetId - 3) FROM $satellites GROUP BY BOOLEAN(planetId - 3)", 2, 1, None),
         ("SELECT VARCHAR(planetId) FROM $satellites GROUP BY VARCHAR(planetId)", 7, 1, None),
         ("SELECT STR(planetId) FROM $satellites GROUP BY STR(planetId)", 7, 1, None),
