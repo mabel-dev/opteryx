@@ -30,6 +30,7 @@ from opteryx.functions.unary_operations import UNARY_OPERATIONS
 from opteryx.models.node import Node
 from opteryx.third_party.pyarrow_ops.ops import filter_operations
 
+from .formatter import ExpressionColumn
 from .formatter import format_expression
 
 # These are bit-masks
@@ -92,6 +93,9 @@ ORSO_TO_NUMPY_MAP = {
 
 def _inner_evaluate(root: Node, table: Table):
     node_type = root.node_type
+
+    if root.schema_column.identity in table.column_names:
+        return table[root.schema_column.identity].to_numpy()
 
     # LITERAL TYPES
     if node_type == NodeType.LITERAL:

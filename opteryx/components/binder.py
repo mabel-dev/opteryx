@@ -99,7 +99,7 @@ def merge_dicts(*dicts) -> dict:
                 if isinstance(value, list):
                     merged_dict[key].extend(value)
                 elif isinstance(value, dict):
-                    merged_dict[key].update(value)
+                    merged_dict[key] = merge_dicts(value, merged_dict[key])
                 else:
                     merged_dict[key] = value
             else:
@@ -113,6 +113,7 @@ def inner_binder(node, schemas) -> typing.Tuple[Node, dict]:
     associated with the relational algebra) which in itself may be an evaluation plan (i.e.
     executing comparisons)
     """
+    from opteryx.managers.expression import ExpressionColumn
     from opteryx.managers.expression import format_expression
 
     # we're already binded
@@ -195,7 +196,9 @@ def inner_binder(node, schemas) -> typing.Tuple[Node, dict]:
 
     else:
         column_name = format_expression(node)
-        schema_column = ConstantColumn(column_name, aliases=[node.alias], type=0, value=node.value)
+        schema_column = ExpressionColumn(
+            column_name, aliases=[node.alias], type=0, expression=node.value
+        )
         schemas["$derived"].columns.append(schema_column)
         node.schema_column = schema_column
         node.query_column = node.alias or column_name
@@ -226,6 +229,7 @@ class BinderVisitor:
             raise DatabaseError(
                 f"Internal Error - function {visit_method_name} didn't return a dict"
             )
+        print(return_context)
         return return_node, return_context
 
     def visit_unsupported(self, node, context):

@@ -1,21 +1,18 @@
-from enum import Enum
+from dataclasses import dataclass
+from typing import Any
 
-import numpy
-import pyarrow
+from orso.schema import FlatColumn
 from orso.types import OrsoTypes
-from pyarrow import Table
 
-from opteryx.functions import FUNCTIONS
-from opteryx.functions.binary_operators import binary_operations
-from opteryx.functions.unary_operations import UNARY_OPERATIONS
-from opteryx.models.node import Node
-from opteryx.third_party.pyarrow_ops.ops import filter_operations
+
+@dataclass
+class ExpressionColumn(FlatColumn):
+    expression: Any = None
 
 
 def format_expression(root):
     # circular imports
     from . import INTERNAL_TYPE
-    from . import LOGICAL_TYPE
     from . import NodeType
 
     if root is None:
@@ -81,5 +78,7 @@ def format_expression(root):
             NodeType.XOR: "XOR",
         }  # type:ignore
         return f"{format_expression(root.left)} {_map[node_type]} {format_expression(root.right)}"
+    if node_type == NodeType.NESTED:
+        return f"({format_expression(root.centre)})"
 
     return str(root.value)
