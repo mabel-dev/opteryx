@@ -171,6 +171,20 @@ def inner_binder(node, schemas) -> typing.Tuple[Node, dict]:
 
         # add values to the node to indicate the source of this data
         node.schema_column = column
+
+    elif node_type == NodeType.LITERAL:
+        column_name = format_expression(node)
+        schema_column = ConstantColumn(
+            name=column_name,
+            aliases=[node.alias],
+            type=node.type,
+            value=node.value,
+            nullable=False,
+        )
+        schemas["$derived"].columns.append(schema_column)
+        node.schema_column = schema_column
+        node.query_column = node.alias or column_name
+
     else:
         column_name = format_expression(node)
         schema_column = schemas["$derived"].find_column(column_name)
@@ -206,19 +220,6 @@ def inner_binder(node, schemas) -> typing.Tuple[Node, dict]:
             schemas["$derived"].columns.append(schema_column)
             node.function = func
             node.derived_from = []
-            node.schema_column = schema_column
-            node.query_column = node.alias or column_name
-
-        elif node_type == NodeType.LITERAL:
-            column_name = format_expression(node)
-            schema_column = ConstantColumn(
-                name=column_name,
-                aliases=[node.alias],
-                type=node.type,
-                value=node.value,
-                nullable=False,
-            )
-            schemas["$derived"].columns.append(schema_column)
             node.schema_column = schema_column
             node.query_column = node.alias or column_name
 
@@ -288,9 +289,10 @@ class BinderVisitor:
             from opteryx.models.node import Node
 
             for schema in schemas:
-                for column in schemas[schema].columns:
-                    column_reference = Node(schema_column=column, query_column=column.name)
-                    columns.append(column_reference)
+                if schema != "$derived":  # we don't want columns we added for things like GROUP BYs
+                    for column in schemas[schema].columns:
+                        column_reference = Node(schema_column=column, query_column=column.name)
+                        columns.append(column_reference)
             node.columns = columns
             return node, context
 

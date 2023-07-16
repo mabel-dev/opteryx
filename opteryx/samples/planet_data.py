@@ -95,7 +95,7 @@ schema = RelationSchema(
         FlatColumn(name="mass", type=OrsoTypes.DOUBLE, identity="3PIdJRXsrVJL2QoC"),
         FlatColumn(name="diameter", type=OrsoTypes.INTEGER, identity="efyrTeHnP5MPcXLA"),
         FlatColumn(name="density", type=OrsoTypes.INTEGER, identity="2EW3XJEISKu9wHOo"),
-        FlatColumn(name="gravity", type=OrsoTypes.DECIMAL, identity="vpuytCcoQR8RvKY1"),
+        FlatColumn(name="gravity", type=OrsoTypes.DECIMAL, identity="vpuytCcoQR8RvKY1", precision=3, scale=1),
         FlatColumn(name="escapeVelocity", type=OrsoTypes.DOUBLE, identity="9ICtZQfWFHxTmy6q", aliases=["escape_velocity"]),
         FlatColumn(name="rotationPeriod", type=OrsoTypes.DOUBLE, identity="f5XBFPgGfqdrOZbk", aliases=["rotation_period"]),
         FlatColumn(name="lengthOfDay", type=OrsoTypes.DOUBLE, identity="KK04Pugd4G2KyIl7", aliases=["length_of_day"]),

@@ -263,7 +263,7 @@ def cast(branch, alias=None, key=None):
     else:
         raise SqlError(f"Unsupported type for CAST  - '{data_type}'")
 
-    alias.append(f"CAST({args[0].value} AS {data_type})")
+    #    alias.append(f"CAST({args[0].value} AS {data_type})")
 
     return Node(
         NodeType.FUNCTION,
@@ -308,8 +308,8 @@ def try_cast(branch, alias=None, key="TryCast"):
     else:
         raise SqlError(f"Unsupported type for `{function_name}`  - '{data_type}'")
 
-    alias.append(f"{function_name}({args[0].value} AS {data_type})")
-    alias.append(f"{data_type.upper} {args[0].value}")
+    #    alias.append(f"{function_name}({args[0].value} AS {data_type})")
+    #    alias.append(f"{data_type.upper} {args[0].value}")
 
     return Node(
         NodeType.FUNCTION,

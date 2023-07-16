@@ -156,7 +156,6 @@ def _inner_evaluate(root: Node, table: Table):
             root.value = format_expression(root)
             root.node_type = NodeType.IDENTIFIER
         if node_type == NodeType.IDENTIFIER:
-            print(table)
             return table[root.schema_column.identity].to_numpy()
         if node_type == NodeType.COMPARISON_OPERATOR:
             left = _inner_evaluate(root.left, table)

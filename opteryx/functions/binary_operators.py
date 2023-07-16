@@ -129,6 +129,6 @@ def binary_operations(left, operator, right):
         joined = compute.binary_join_element_wise(left, right, empty)
         return joined
     if operator == "MyIntegerDivide":
-        return numpy.trunc(numpy.divide(left, right))
+        return numpy.trunc(numpy.divide(left, right)).astype(numpy.int64)
 
     raise NotImplementedError(f"Operator `{operator}` is not implemented!")
