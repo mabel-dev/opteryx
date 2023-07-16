@@ -94,9 +94,6 @@ ORSO_TO_NUMPY_MAP = {
 def _inner_evaluate(root: Node, table: Table):
     node_type = root.node_type
 
-    if root.schema_column.identity in table.column_names:
-        return table[root.schema_column.identity].to_numpy()
-
     # LITERAL TYPES
     if node_type == NodeType.LITERAL:
         # if it's a literal value, return it once for every value in the table
@@ -159,6 +156,7 @@ def _inner_evaluate(root: Node, table: Table):
             root.value = format_expression(root)
             root.node_type = NodeType.IDENTIFIER
         if node_type == NodeType.IDENTIFIER:
+            print(table)
             return table[root.schema_column.identity].to_numpy()
         if node_type == NodeType.COMPARISON_OPERATOR:
             left = _inner_evaluate(root.left, table)

@@ -68,7 +68,9 @@ import typing
 
 from orso.logging import get_logger
 from orso.schema import ConstantColumn
+from orso.schema import FlatColumn
 from orso.schema import FunctionColumn
+from orso.schema import RelationSchema
 
 from opteryx.exceptions import AmbiguousIdentifierError
 from opteryx.exceptions import ColumnNotFoundError
@@ -100,10 +102,12 @@ def merge_dicts(*dicts) -> dict:
                     merged_dict[key].extend(value)
                 elif isinstance(value, dict):
                     merged_dict[key] = merge_dicts(value, merged_dict[key])
+                elif isinstance(value, RelationSchema):
+                    merged_dict[key] += value
                 else:
                     merged_dict[key] = value
             else:
-                merged_dict[key] = value.copy() if isinstance(value, list) else value
+                merged_dict[key] = value.copy() if isinstance(value, (list, dict)) else value
     return merged_dict
 
 
@@ -167,41 +171,64 @@ def inner_binder(node, schemas) -> typing.Tuple[Node, dict]:
 
         # add values to the node to indicate the source of this data
         node.schema_column = column
-    elif node_type in (NodeType.FUNCTION, NodeType.AGGREGATOR):
-        # we're just going to bind the function into the node
-        func = COMBINED_FUNCTIONS.get(node.value)
-        if not func:
-            # v1:
-            from opteryx.utils import fuzzy_search
-
-            suggest = fuzzy_search(node.value, COMBINED_FUNCTIONS.keys())
-            # v2: suggest = FUNCTIONS.suggest(node.value)
-            raise FunctionNotFoundError(function=node.value, suggestion=suggest)
-
-        # we need to add this new column to the schema
-        column_name = format_expression(node)
-        schema_column = FunctionColumn(column_name, type=0, binding=func)
-        schemas["$derived"].columns.append(schema_column)
-        node.function = func
-        node.derived_from = []
-        node.schema_column = schema_column
-        node.query_column = node.alias or column_name
-
-    elif node_type == NodeType.LITERAL:
-        column_name = format_expression(node)
-        schema_column = ConstantColumn(column_name, aliases=[node.alias], type=0, value=node.value)
-        schemas["$derived"].columns.append(schema_column)
-        node.schema_column = schema_column
-        node.query_column = node.alias or column_name
-
     else:
         column_name = format_expression(node)
-        schema_column = ExpressionColumn(
-            column_name, aliases=[node.alias], type=0, expression=node.value
-        )
-        schemas["$derived"].columns.append(schema_column)
-        node.schema_column = schema_column
-        node.query_column = node.alias or column_name
+        schema_column = schemas["$derived"].find_column(column_name)
+        if schema_column:
+            schema_column = FlatColumn(
+                name=column_name,
+                aliases=[schema_column.aliases],
+                type=0,
+                identity=schema_column.identity,
+            )
+            schemas["$derived"].columns = [
+                col for col in schemas["$derived"].columns if col.identity != schema_column.identity
+            ]
+            schemas["$derived"].columns.append(schema_column)
+            node.schema_column = schema_column
+            node.query_column = node.alias or column_name
+            node.node_type = NodeType.IDENTIFIER
+
+        elif node_type in (NodeType.FUNCTION, NodeType.AGGREGATOR):
+            # we're just going to bind the function into the node
+            func = COMBINED_FUNCTIONS.get(node.value)
+            if not func:
+                # v1:
+                from opteryx.utils import fuzzy_search
+
+                suggest = fuzzy_search(node.value, COMBINED_FUNCTIONS.keys())
+                # v2: suggest = FUNCTIONS.suggest(node.value)
+                raise FunctionNotFoundError(function=node.value, suggestion=suggest)
+
+            # we need to add this new column to the schema
+            column_name = format_expression(node)
+            schema_column = FunctionColumn(name=column_name, type=0, binding=func)
+            schemas["$derived"].columns.append(schema_column)
+            node.function = func
+            node.derived_from = []
+            node.schema_column = schema_column
+            node.query_column = node.alias or column_name
+
+        elif node_type == NodeType.LITERAL:
+            column_name = format_expression(node)
+            schema_column = ConstantColumn(
+                name=column_name,
+                aliases=[node.alias],
+                type=node.type,
+                value=node.value,
+                nullable=False,
+            )
+            schemas["$derived"].columns.append(schema_column)
+            node.schema_column = schema_column
+            node.query_column = node.alias or column_name
+
+        else:
+            schema_column = ExpressionColumn(
+                name=column_name, aliases=[node.alias], type=0, expression=node.value
+            )
+            schemas["$derived"].columns.append(schema_column)
+            node.schema_column = schema_column
+            node.query_column = node.alias or column_name
 
     # Now recurse and do this again for all the sub parts of the evaluation plan
     if node.left:
@@ -216,7 +243,7 @@ def inner_binder(node, schemas) -> typing.Tuple[Node, dict]:
         )
         schemas = merge_dicts(*new_schemas)
 
-    return node, schemas
+    return node, copy.deepcopy(schemas)
 
 
 class BinderVisitor:
@@ -229,7 +256,6 @@ class BinderVisitor:
             raise DatabaseError(
                 f"Internal Error - function {visit_method_name} didn't return a dict"
             )
-        print(return_context)
         return return_node, return_context
 
     def visit_unsupported(self, node, context):
