@@ -21,7 +21,6 @@ This is a greedy operator - it consumes all the data before responding.
 
 This is built around the pyarrow table grouping functionality.
 """
-import random
 import time
 from typing import Iterable
 

@@ -24,7 +24,6 @@ import pyarrow
 from orso.types import OrsoTypes
 from pyarrow import Table
 
-from opteryx.functions import FUNCTIONS
 from opteryx.functions.binary_operators import binary_operations
 from opteryx.functions.unary_operations import UNARY_OPERATIONS
 from opteryx.models.node import Node
@@ -92,6 +91,10 @@ ORSO_TO_NUMPY_MAP = {
 
 
 def _inner_evaluate(root: Node, table: Table):
+    # if we have this column already, just return it
+    if root.schema_column.identity in table.column_names:
+        return table[root.schema_column.identity].to_numpy()
+
     node_type = root.node_type
 
     # LITERAL TYPES
