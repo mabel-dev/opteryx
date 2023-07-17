@@ -5,5 +5,5 @@
 
 fuzzy==1.2.2
 pyarrow_ops==0.0.8
-travers==0.1.8
+travers==0.1.10
 sqloxide
