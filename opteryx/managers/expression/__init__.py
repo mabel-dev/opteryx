@@ -226,7 +226,6 @@ def evaluate_and_append(expressions, table: Table):
 
     for statement in expressions:
         if statement.schema_column.identity in table.column_names:
-            print("The binder missed a function")
             continue
 
         if statement.node_type in (

@@ -144,10 +144,7 @@ def wildcard_filter(branch, alias=None, key=None):
 
 def expression_with_alias(branch, alias=None, key=None):
     """an alias"""
-    if not isinstance(alias, list):
-        alias = [] if alias is None else [alias]
-    alias.append(branch["alias"]["value"])
-    return build(branch["expr"], alias=alias)
+    return build(branch["expr"], alias=branch["alias"]["value"])
 
 
 def qualified_wildcard(branch, alias=None, key=None):
@@ -166,9 +163,8 @@ def identifier(branch, alias=None, key=None):
 
 
 def compound_identifier(branch, alias=None, key=None):
-    if not isinstance(alias, list):
-        alias = [] if alias is None else [alias]
-    alias.append(".".join(p["value"] for p in branch))
+    if alias is None:
+        alias = ".".join(p["value"] for p in branch)
     return Node(
         node_type=NodeType.IDENTIFIER,
         value=".".join(p["value"] for p in branch),
@@ -232,8 +228,6 @@ def binary_op(branch, alias=None, key=None):
 
 def cast(branch, alias=None, key=None):
     # CAST(<var> AS <type>) - convert to the form <type>(var), e.g. BOOLEAN(on)
-    if not isinstance(alias, list):
-        alias = [] if alias is None else [alias]
 
     args = [build(branch["expr"])]
     data_type = branch["data_type"]
@@ -262,8 +256,6 @@ def cast(branch, alias=None, key=None):
         data_type = "STRUCT"
     else:
         raise SqlError(f"Unsupported type for CAST  - '{data_type}'")
-
-    #    alias.append(f"CAST({args[0].value} AS {data_type})")
 
     return Node(
         NodeType.FUNCTION,
