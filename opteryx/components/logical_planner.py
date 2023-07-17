@@ -247,6 +247,7 @@ def inner_query_planner(ast_branch):
         group_step = LogicalPlanNode(node_type=LogicalPlanStepType.AggregateAndGroup)
         group_step.groups = _groups
         group_step.aggregates = _aggregates
+        group_step.projection = _projection
         previous_step_id, step_id = step_id, random_string()
         inner_plan.add_node(step_id, group_step)
         if previous_step_id is not None:

@@ -50,7 +50,7 @@ def create_physical_plan(logical_plan):
         elif node_type == LogicalPlanStepType.GenerateSeries:
             node = operators.NoOpNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.AggregateAndGroup:
-            node = operators.AggregateAndGroupNode(query_properties, groups=node_config["groups"], aggregates=node_config["aggregates"])
+            node = operators.AggregateAndGroupNode(query_properties, groups=node_config["groups"], aggregates=node_config["aggregates"], projection=node_config["projection"])
         elif node_type == LogicalPlanStepType.Join:
             node = operators.NoOpNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Limit:

@@ -25,6 +25,7 @@ from typing import Iterable
 
 import numpy
 import pyarrow
+from orso.types import OrsoTypes
 
 from opteryx.exceptions import SqlError
 from opteryx.managers.expression import NodeType
@@ -42,8 +43,17 @@ class AggregateAndGroupNode(BasePlanNode):
         super().__init__(properties=properties)
         self.groups = list(config["groups"])
         self.aggregates = list(config["aggregates"])
+        projection = list(config["projection"])
 
         # we're going to preload some of the evaluation
+
+        # Replace offset based GROUP BYs with their column
+        self.groups = [
+            group
+            if not (group.node_type == NodeType.LITERAL and group.type == OrsoTypes.INTEGER)
+            else projection[group.value - 1]
+            for group in self.groups
+        ]
 
         # get all the columns anywhere in the groups or aggregates
         all_identifiers = [
@@ -56,6 +66,7 @@ class AggregateAndGroupNode(BasePlanNode):
 
         # Get any functions we need to execute before aggregating
         self.evaluatable_nodes = extract_evaluations(self.aggregates)
+
         # get the aggregated groupings and functions
         self.group_by_columns = list({node.schema_column.identity for node in self.groups})
         self.column_map, self.aggregate_functions = build_aggregations(self.aggregates)
