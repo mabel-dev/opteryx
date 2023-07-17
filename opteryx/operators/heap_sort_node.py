@@ -32,6 +32,7 @@ import time
 from typing import Iterable
 
 import pyarrow
+from orso.types import OrsoTypes
 from pyarrow import Table
 
 from opteryx.exceptions import ColumnNotFoundError
@@ -80,7 +81,10 @@ class HeapSortNode(BasePlanNode):
 
                 for column_list, direction in self.order:
                     for column in column_list:
-                        if column.node_type == NodeType.LITERAL_INTEGER:
+                        if (
+                            column.node_type == NodeType.LITERAL
+                            and column.type == OrsoTypes.INTEGER
+                        ):
                             # we have an index rather than a column name, it's a natural
                             # number but the list of column names is zero-based, so we
                             # subtract one

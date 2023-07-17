@@ -49,6 +49,7 @@ from enum import Enum
 from enum import auto
 
 from orso.tools import random_string
+from orso.types import OrsoTypes
 
 from opteryx.components import logical_planner_builders
 from opteryx.managers.expression import NodeType
@@ -181,7 +182,7 @@ def extract_variable(clause):
 def extract_simple_filter(filters, identifier: str = "Name"):
     if "Like" in filters:
         left = Node(NodeType.IDENTIFIER, value=identifier)
-        right = Node(NodeType.LITERAL_VARCHAR, value=filters["Like"])
+        right = Node(NodeType.LITERAL, type=OrsoTypes.VARCHAR, value=filters["Like"])
         root = Node(
             NodeType.COMPARISON_OPERATOR,
             value="ILike",  # we're case insensitive for SHOW filters

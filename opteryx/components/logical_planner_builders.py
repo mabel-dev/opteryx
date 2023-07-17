@@ -33,12 +33,12 @@ from opteryx.utils import fuzzy_search
 
 def literal_boolean(branch, alias: list = None, key=None):
     """create node for a literal boolean branch"""
-    return Node(NodeType.LITERAL_BOOLEAN, value=branch, alias=alias)
+    return Node(NodeType.LITERAL, OrsoTypes.BOOLEAN, value=branch, alias=alias)
 
 
 def literal_null(branch, alias: list = None, key=None):
     """create node for a literal null branch"""
-    return Node(NodeType.LITERAL_NONE, alias=alias)
+    return Node(NodeType.LITERAL, OrsoTypes.NULL, alias=alias)
 
 
 def literal_number(branch, alias: list = None, key=None):
@@ -134,7 +134,7 @@ def literal_interval(branch, alias: list = None, key=None):
         )
     )
 
-    return Node(NodeType.LITERAL_INTERVAL, value=interval, alias=alias)
+    return Node(NodeType.LITERAL, type=OrsoTypes.INTERVAL, value=interval, alias=alias)
 
 
 def wildcard_filter(branch, alias=None, key=None):
@@ -315,11 +315,8 @@ def extract(branch, alias=None, key=None):
     # EXTRACT(part FROM timestamp)
     if not isinstance(alias, list):
         alias = [] if alias is None else [alias]
-    datepart = Node(NodeType.LITERAL_VARCHAR, value=branch["field"])
+    datepart = Node(NodeType.LITERAL, type=OrsoTypes.VARCHAR, value=branch["field"])
     value = build(branch["expr"])
-
-    alias.append(f"EXTRACT({datepart.value} FROM {value.value})")
-    alias.append(f"DATEPART({datepart.value}, {value.value}")
 
     return Node(
         NodeType.FUNCTION,
@@ -331,17 +328,15 @@ def extract(branch, alias=None, key=None):
 
 def map_access(branch, alias=None, key=None):
     # Identifier[key] -> GET(Identifier, key) -> alias of I[k] or alias
-    if not isinstance(alias, list):
-        alias = [] if alias is None else [alias]
+
     field = branch["column"]["Identifier"]["value"]
     key_dict = branch["keys"][0]["Value"]
     if "SingleQuotedString" in key_dict:
         key = key_dict["SingleQuotedString"]
-        key_node = Node(NodeType.LITERAL_VARCHAR, value=key)
+        key_node = Node(NodeType.LITERAL, type=OrsoTypes.VARCHAR, value=key)
     if "Number" in key_dict:
         key = int(key_dict["Number"][0])
-        key_node = Node(NodeType.LITERAL_INTEGER, value=key)
-    alias.append(f"{identifier}[{key}]")
+        key_node = Node(NodeType.LITERAL, type=OrsoTypes.INTEGER, value=key)
 
     identifier_node = Node(NodeType.IDENTIFIER, value=field)
     return Node(
@@ -353,8 +348,6 @@ def map_access(branch, alias=None, key=None):
 
 
 def unary_op(branch, alias=None, key=None):
-    if not isinstance(alias, list):
-        alias = [] if alias is None else [alias]
     if branch["op"] == "Not":
         centre = build(branch["expr"])
         return Node(node_type=NodeType.NOT, centre=centre)
@@ -480,14 +473,15 @@ def nested(branch, alias=None, key=None):
 
 def tuple_literal(branch, alias=None, key=None):
     return Node(
-        NodeType.LITERAL_LIST,
+        NodeType.LITERAL,
+        type=OrsoTypes.ARRAY,
         value=[build(t["Value"]).value for t in branch],
         alias=alias,
     )
 
 
 def substring(branch, alias=None, key=None):
-    node_node = Node(NodeType.LITERAL_NONE)
+    node_node = Node(NodeType.LITERAL, type=OrsoTypes.NULL, value=None)
     string = build(branch["expr"])
     substring_from = build(branch["substring_from"]) or node_node
     substring_for = build(branch["substring_for"]) or node_node
@@ -544,7 +538,7 @@ def case_when(value, alias: list = None, key=None):
                 )
             )
     if else_result is not None:
-        conditions.append(Node(NodeType.LITERAL_BOOLEAN, value=True))
+        conditions.append(Node(NodeType.LITERAL, type=OrsoTypes.BOOLEAN, value=True))
     conditions_node = Node(NodeType.EXPRESSION_LIST, value=conditions)
 
     results = []

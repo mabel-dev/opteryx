@@ -1,3 +1,5 @@
+from orso.types import OrsoTypes
+
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -53,10 +55,10 @@ def to_dnf(root):
             raise NotSupportedError()
         if root.left.node_type != NodeType.IDENTIFIER:
             raise NotSupportedError()
-        if root.left.node_type in (
-            NodeType.LITERAL_FLOAT,
-            NodeType.LITERAL_INTEGER,
-            NodeType.LITERAL_VARCHAR,
+        if root.left.type in (
+            OrsoTypes.DOUBLE,
+            OrsoTypes.INTEGER,
+            OrsoTypes.VARCHAR,
         ):
             # not all operands are universally supported
             raise NotSupportedError()
