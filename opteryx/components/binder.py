@@ -66,7 +66,6 @@ import copy
 import re
 import typing
 
-from orso.logging import get_logger
 from orso.schema import ConstantColumn
 from orso.schema import FlatColumn
 from orso.schema import FunctionColumn
@@ -88,7 +87,6 @@ from opteryx.samples import calculated
 
 COMBINED_FUNCTIONS = {**FUNCTIONS, **AGGREGATORS}
 CAMEL_TO_SNAKE = re.compile(r"(?<!^)(?=[A-Z])")
-logger = get_logger()
 
 
 def merge_dicts(*dicts) -> dict:
@@ -261,7 +259,7 @@ class BinderVisitor:
         return return_node, return_context
 
     def visit_unsupported(self, node, context):
-        logger.debug(f"No visit method implemented for node type {node.node_type.name}")
+        opteryx_logger.debug(f"No visit method implemented for node type {node.node_type.name}")
         return node, context
 
     def visit_aggregate_and_group(self, node, context):

@@ -14,9 +14,6 @@ import typing
 from os import environ
 from pathlib import Path
 
-from orso.logging import get_logger
-from orso.logging import set_log_name
-
 # python-dotenv allows us to create an environment file to store secrets. If
 # there is no .env it will fail gracefully.
 try:
@@ -26,10 +23,6 @@ except ImportError:  # pragma: no cover
 
 _env_path = Path(".") / ".env"
 _config_values: dict = {}
-
-set_log_name("OPTERYX")
-logger = get_logger()
-logger.setLevel(5)
 
 
 def parse_yaml(yaml_str):
@@ -86,9 +79,9 @@ def parse_yaml(yaml_str):
 #  deepcode ignore PythonSameEvalBinaryExpressiontrue: false +ve, values can be different
 if _env_path.exists() and (dotenv is None):  # pragma: no cover  # nosemgrep
     # using a logger here will tie us in knots
-    logger.error("`.env` file exists but `dotEnv` not installed.")
+    opteryx_logger.error("`.env` file exists but `dotEnv` not installed.")
 elif dotenv is not None:  # pragma: no cover
-    logger.info("Loading environment variables from `.env`")
+    opteryx_logger.info("Loading environment variables from `.env`")
     dotenv.load_dotenv(dotenv_path=_env_path)
 
 try:  # pragma: no cover
@@ -96,9 +89,9 @@ try:  # pragma: no cover
     if _config_path.exists():
         with open(_config_path, "r") as _config_file:
             _config_values = parse_yaml(_config_file.read())
-        logger.info(f"Loading config from {_config_path}")
+        opteryx_logger.info(f"Loading config from {_config_path}")
 except Exception as exception:  # pragma: no cover # it doesn't matter why - just use the defaults
-    logger.error(f"Config file {_config_path} not used - {exception}")
+    opteryx_logger.error(f"Config file {_config_path} not used - {exception}")
 
 
 def get(key, default=None):

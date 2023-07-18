@@ -1,8 +1,5 @@
 import platform
 from functools import wraps
-from logging import Logger
-
-logger = Logger(name="opteryx-testing")
 
 
 def is_arm():  # pragma: no cover
@@ -24,7 +21,7 @@ def is_pypy():  # pragma: no cover
 def skip(func):  # pragma: no cover
     @wraps(func)
     def wrapper(*args, **kwargs):
-        logger.warning(f"Skipping {func.__name__}")
+        opteryx_logger.warning(f"Skipping {func.__name__}")
 
     return wrapper
 
@@ -34,7 +31,9 @@ def skip_if(is_true: bool = True):
         @wraps(func)
         def wrapper(*args, **kwargs):
             if is_true:
-                logger.warning(f"Skipping {func.__name__} because of conditional execution.")
+                opteryx_logger.warning(
+                    f"Skipping {func.__name__} because of conditional execution."
+                )
             else:
                 return func(*args, **kwargs)
 
@@ -48,7 +47,7 @@ def download_file(url, path):
 
     response = requests.get(url)
     open(path, "wb").write(response.content)
-    logger.warning(f"Saved downloaded contents to {path}")
+    opteryx_logger.warning(f"Saved downloaded contents to {path}")
 
 
 def character_width(symbol):

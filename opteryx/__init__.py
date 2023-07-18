@@ -1,3 +1,4 @@
+# isort: skip_file
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -14,6 +15,17 @@ import os
 from orso.logging import get_logger
 from orso.logging import set_log_name
 
+try:
+    builtins = __import__("__builtin__")
+except ImportError:
+    builtins = __import__("builtins")
+
+# create a common logger
+set_log_name("OPTERYX")
+opteryx_logger = get_logger()
+opteryx_logger.setLevel(int(os.environ.get("OPTERYX_LOG_LEVEL", 25)))  # WARNINGS +
+setattr(builtins, "opteryx_logger", opteryx_logger)
+
 from opteryx import config
 from opteryx.__author__ import __author__
 from opteryx.__build__ import __build__
@@ -24,8 +36,18 @@ from opteryx.connectors import register_df
 from opteryx.connectors import register_store
 from opteryx.shared import variables
 
-set_log_name("OPTERYX")
-logger = get_logger()
+
+__all__ = [
+    "apilevel",
+    "threadsafety",
+    "paramstyle",
+    "connect",
+    "query",
+    "Connection",
+    "register_arrow",
+    "register_df",
+    "register_store",
+]
 
 apilevel: str = "1.0"  # pylint: disable=C0103
 threadsafety: int = 0  # pylint: disable=C0103
@@ -39,7 +61,7 @@ def connect(*args, **kwargs):
 
 def query(operation, *args, params: list = None, **kwargs):
     """helper routine, create a connection and return an executed cursor"""
-    # query is the similar DuckDB function
+    # query is the similar DuckDB function with the same name
     conn = Connection(*args, **kwargs)
     curr = conn.cursor()
     curr.execute(operation=operation, params=params)
@@ -51,12 +73,12 @@ if not config.DISABLE_HIGH_PRIORITY and hasattr(os, "nice"):  # pragma: no cover
     nice_value = os.nice(0)
     try:
         os.nice(-20 + nice_value)
-        logger.info(f"Process priority set to {os.nice(0)}.")
+        opteryx_logger.info(f"Process priority set to {os.nice(0)}.")
     except PermissionError:
         display_nice = str(nice_value)
         if nice_value == 0:
             display_nice = "0 (normal)"
-        logger.info(f"Cannot update process priority. Currently set to {display_nice}.")
+        opteryx_logger.info(f"Cannot update process priority. Currently set to {display_nice}.")
 
 # Log resource usage
 if config.ENABLE_RESOURCE_LOGGING:  # pragma: no cover
