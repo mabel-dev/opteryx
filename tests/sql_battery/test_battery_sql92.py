@@ -237,11 +237,13 @@ if __name__ == "__main__":  # pragma: no cover
 
     import shutil
 
+    from opteryx.utils.formatter import format_sql
+
     width = shutil.get_terminal_size((80, 20))[0]
 
     print(f"RUNNING BATTERY OF {len(STATEMENTS)} SQL92 TESTS")
     for index, (statement, feature) in enumerate(STATEMENTS):
-        detail = f"\033[0;35m{feature}\033[0m {statement}"
+        detail = f"\033[0;35m{feature}\033[0m {format_sql(statement)}"
         print(
             f"\033[0;36m{(index + 1):04}\033[0m {detail[0:width - 1].ljust(width)}",
             end="",
