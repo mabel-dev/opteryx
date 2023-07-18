@@ -25,15 +25,14 @@ import pyarrow
 
 from opteryx.exceptions import SqlError
 from opteryx.managers.expression import NodeType
-from opteryx.managers.expression import evaluate
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 from opteryx.utils import series
 
 
-def _generate_series(alias, *args):
-    value_array = series.generate_series(*args)
-    return [{alias: value} for value in value_array]
+def _generate_series(**kwargs):
+    value_array = series.generate_series(*kwargs["args"])
+    return [{kwargs["columns"][0]: value} for value in value_array]
 
 
 def _unnest(**kwargs):

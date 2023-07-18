@@ -220,7 +220,7 @@ FUNCTIONS = {
     "SPLIT": string_functions.split,
 
     # HASHING & ENCODING
-    "HASH": _iterate_single_parameter(lambda x: format(CityHash64(str(x)), "X")),
+    "HASH": _iterate_single_parameter(lambda x: hex(CityHash64(str(x)))[2:]),
     "MD5": _iterate_single_parameter(string_functions.get_md5),
     "SHA1": _iterate_single_parameter(string_functions.get_sha1),
     "SHA224": _iterate_single_parameter(string_functions.get_sha224),

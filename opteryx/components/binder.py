@@ -319,6 +319,14 @@ class BinderVisitor:
             )
             context["schemas"][relation_name] = schema
             node.columns = [schema.columns[0].identity]
+        elif node.function == "GENERATE_SERIES":
+            relation_name = f"$generate-series-{random_string()}"
+            schema = RelationSchema(
+                name=relation_name,
+                columns=[FlatColumn(name=node.alias or "generate_series", type=0)],
+            )
+            context["schemas"][relation_name] = schema
+            node.columns = [schema.columns[0].identity]
         else:
             raise NotImplementedError(f"{node.function} binding isn't written yet")
         return node, context
