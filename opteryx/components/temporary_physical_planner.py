@@ -37,20 +37,18 @@ def create_physical_plan(logical_plan):
         # fmt: off
         if node_type == LogicalPlanStepType.Aggregate:
             node = operators.AggregateNode(query_properties, aggregates=node_config["aggregates"])
+        elif node_type == LogicalPlanStepType.AggregateAndGroup:
+            node = operators.AggregateAndGroupNode(query_properties, groups=node_config["groups"], aggregates=node_config["aggregates"], projection=node_config["projection"])
         elif node_type == LogicalPlanStepType.Distinct:
             node = operators.DistinctNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Exit:
             node = operators.ExitNode(query_properties, projection=logical_node.columns)
         elif node_type == LogicalPlanStepType.Explain:
             node = operators.NoOpNode(query_properties, **node_config)
-        elif node_type == LogicalPlanStepType.Fake:
-            node = operators.NoOpNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Filter:
             node = operators.SelectionNode(query_properties, filter=node_config["condition"])
-        elif node_type == LogicalPlanStepType.GenerateSeries:
-            node = operators.NoOpNode(query_properties, **node_config)
-        elif node_type == LogicalPlanStepType.AggregateAndGroup:
-            node = operators.AggregateAndGroupNode(query_properties, groups=node_config["groups"], aggregates=node_config["aggregates"], projection=node_config["projection"])
+        elif node_type == LogicalPlanStepType.FunctionDataset:
+            node = operators.FunctionDatasetNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Join:
             node = operators.NoOpNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Limit:
@@ -67,11 +65,7 @@ def create_physical_plan(logical_plan):
             node = operators.NoOpNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Subquery:
             node = operators.NoOpNode(query_properties, **node_config)
-        elif node_type == LogicalPlanStepType.Unnest:
-            node = operators.NoOpNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Union:
-            node = operators.NoOpNode(query_properties, **node_config)
-        elif node_type == LogicalPlanStepType.Values:
             node = operators.NoOpNode(query_properties, **node_config)
 
         else:

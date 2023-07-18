@@ -47,8 +47,10 @@ def _unnest(alias, values):
     return [{alias: row} for row in list_items]
 
 
-def _values(alias, *values):
-    return values
+def _values(**parameters):
+    columns = parameters["columns"]
+    values_array = parameters["values"]
+    return [{columns[i]: value.value for i, value in enumerate(values)} for values in values_array]
 
 
 def _fake_data(alias, *args):
@@ -59,10 +61,10 @@ def _fake_data(alias, *args):
 
 
 FUNCTIONS = {
-    "fake": _fake_data,
-    "generate_series": _generate_series,
-    "unnest": _unnest,
-    "values": _values,
+    "FAKE": _fake_data,
+    "GENERATE_SERIES": _generate_series,
+    "UNNEST": _unnest,
+    "VALUES": _values,
 }
 
 
@@ -73,15 +75,15 @@ class FunctionDatasetNode(BasePlanNode):
         and returning a Table/Relation.
         """
         super().__init__(properties=properties)
-        self._alias = config["alias"]
-        self._function = config["dataset"]["function"]
-        self._args = config["dataset"]["args"]
+        self.alias = config["alias"]
+        self.function = config["function"]
+        self.parameters = config
 
     @property
     def config(self):  # pragma: no cover
-        if self._alias:
-            return f"{self._function} => {self._alias}"
-        return f"{self._function}"
+        if self.alias:
+            return f"{self.function} => {self.alias}"
+        return f"{self.function}"
 
     @property
     def name(self):  # pragma: no cover
@@ -94,7 +96,7 @@ class FunctionDatasetNode(BasePlanNode):
     def execute(self) -> Iterable:
         try:
             start_time = time.time_ns()
-            data = FUNCTIONS[self._function](self._alias, *self._args)  # type:ignore
+            data = FUNCTIONS[self.function](**self.parameters)  # type:ignore
             self.statistics.time_data_read += time.time_ns() - start_time
         except TypeError as err:  # pragma: no cover
             if str(err).startswith("_unnest() takes 2"):
@@ -108,12 +110,4 @@ class FunctionDatasetNode(BasePlanNode):
         self.statistics.rows_read += table.num_rows
         self.statistics.columns_read += len(table.column_names)
 
-        table = Columns.create_table_metadata(
-            table=table,
-            expected_rows=table.num_rows,
-            name=self._function,
-            table_aliases=[self._alias],
-            disposition="calculated",
-            path=self._function,
-        )
         yield table

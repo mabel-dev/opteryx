@@ -292,8 +292,7 @@ class BlobReaderNode(BasePlanNode):
             blob_bytes = None
             if not self._disable_cache:
                 blob_bytes = BUFFER_POOL.get(blob_hash, cache)
-        except Exception as e:  # pragma: no cover
-            print(e)
+        except Exception as err:  # pragma: no cover
             cache = None
             blob_bytes = None
 

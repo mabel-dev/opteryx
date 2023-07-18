@@ -173,7 +173,6 @@ def _inner_filter_operations(arr, operator, value):
                     result.append(None)
             return result
         except Exception as e:
-            print(e)
             raise NotImplementedError("`|` can only be used to test IP address containment.")
     raise NotImplementedError(f"Operator {operator} is not implemented!")  # pragma: no cover
 

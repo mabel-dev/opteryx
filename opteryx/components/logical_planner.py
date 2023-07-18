@@ -81,10 +81,7 @@ class LogicalPlanStepType(int, Enum):
 
     CTE = auto()
     Subquery = auto()
-    Values = auto()
-    Unnest = auto()
-    GenerateSeries = auto()
-    Fake = auto()
+    FunctionDataset = auto()  # Unnest, GenerateSeries, values + Fake
 
 
 class LogicalPlan(Graph):
@@ -107,12 +104,17 @@ class LogicalPlanNode(Node):
                 return f"DISTINCT{distinct_on}"
             if node_type == LogicalPlanStepType.Explain:
                 return f"EXPLAIN{' ANALYZE' if self.analyze else ''}{(' (' + self.format + ')') if self.format else ''}"
-            if node_type == LogicalPlanStepType.Fake:
-                return f"FAKE ({', '.join(format_expression(arg) for arg in self.args)}{' AS ' + self.alias if self.alias else ''})"
+            if node_type == LogicalPlanStepType.FunctionDataset:
+                if self.function == "FAKE":
+                    return f"FAKE ({', '.join(format_expression(arg) for arg in self.args)}{' AS ' + self.alias if self.alias else ''})"
+                if self.function == "GENERATE_SERIES":
+                    return f"GENERATE SERIES ({', '.join(format_expression(arg) for arg in self.args)}){' AS ' + self.alias if self.alias else ''}"
+                if self.function == "VALUES":
+                    return f"VALUES (({', '.join(self.columns)}) x {len(self.values)} AS {self.alias})"
+                if self.function == "UNNEST":
+                    return f"UNNEST ({', '.join(format_expression(arg) for arg in self.args)}{' AS ' + self.alias if self.alias else ''})"
             if node_type == LogicalPlanStepType.Filter:
                 return f"FILTER ({format_expression(self.condition)})"
-            if node_type == LogicalPlanStepType.GenerateSeries:
-                return f"GENERATE SERIES ({', '.join(format_expression(arg) for arg in self.args)}){' AS ' + self.alias if self.alias else ''}"
             if node_type == LogicalPlanStepType.Join:
                 if self.on:
                     return f"{self.type.upper()} ({format_expression(self.on)})"
@@ -140,16 +142,14 @@ class LogicalPlanNode(Node):
                 return f"SHOW{' FULL' if self.full else ''}{' EXTENDED' if self.extended else ''} COLUMNS ({self.relation})"
             if node_type == LogicalPlanStepType.Subquery:
                 return f"SUBQUERY{' AS ' + self.alias if self.alias else ''}"
-            if node_type == LogicalPlanStepType.Unnest:
-                return f"UNNEST ({', '.join(format_expression(arg) for arg in self.args)}{' AS ' + self.alias if self.alias else ''})"
             if node_type == LogicalPlanStepType.Union:
                 return f"UNION {'' if self.modifier is None else self.modifier.upper()}"
-            if node_type == LogicalPlanStepType.Values:
-                return f"VALUES (({', '.join(self.columns)}) x {len(self.values)} AS {self.alias})"
 
             # fmt:on
         except Exception as err:
-            print(err)
+            from orso import logging
+
+            logging.get_logger().warning(f"Problem drawing logical plan - {err}")
         return f"{str(self.node_type)[20:].upper()}"
 
 
@@ -371,7 +371,9 @@ def create_node_relation(relation):
                 #
                 # We have the name of the relation (alias), the column names (columns) and the
                 # values in each row (values)
-                values_step = LogicalPlanNode(node_type=LogicalPlanStepType.Values)
+                values_step = LogicalPlanNode(
+                    node_type=LogicalPlanStepType.FunctionDataset, function="VALUES"
+                )
                 values_step.alias = subquery["alias"]["name"]["value"]
                 values_step.columns = tuple(col["value"] for col in subquery["alias"]["columns"])
                 values_step.values = [
@@ -386,14 +388,9 @@ def create_node_relation(relation):
     elif relation["relation"]["Table"]["args"]:
         function = relation["relation"]["Table"]
         function_name = function["name"][0]["value"].upper()
-        if function_name == "UNNEST":
-            function_step = LogicalPlanNode(node_type=LogicalPlanStepType.Unnest)
-        elif function_name == "GENERATE_SERIES":
-            function_step = LogicalPlanNode(node_type=LogicalPlanStepType.GenerateSeries)
-        elif function_name == "FAKE":
-            function_step = LogicalPlanNode(node_type=LogicalPlanStepType.Fake)
-        else:
-            raise NotImplementedError(f"function {function_name}")
+        function_step = LogicalPlanNode(
+            node_type=LogicalPlanStepType.FunctionDataset, function=function_name
+        )
         function_step.alias = (
             None if function["alias"] is None else function["alias"]["name"]["value"]
         )

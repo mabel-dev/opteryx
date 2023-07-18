@@ -71,6 +71,7 @@ from orso.schema import ConstantColumn
 from orso.schema import FlatColumn
 from orso.schema import FunctionColumn
 from orso.schema import RelationSchema
+from orso.tools import random_string
 
 from opteryx.exceptions import AmbiguousIdentifierError
 from opteryx.exceptions import ColumnNotFoundError
@@ -301,6 +302,20 @@ class BinderVisitor:
         )
         context["schemas"] = merge_dicts(*schemas)
 
+        return node, context
+
+    def visit_function_dataset(self, node, context):
+        if node.function == "VALUES":
+            # We need to build the schema and add it to the schema collection.
+            # The name of the dataset is randomized.
+            schema = RelationSchema(
+                name=random_string(),
+                columns=[FlatColumn(name=column, type=0) for column in node.columns],
+            )
+            context["schemas"][f"$values-{random_string()}"] = schema
+            node.columns = [column.identity for column in schema.columns]
+        else:
+            raise NotImplementedError(f"{node.function} binding isn't written yet")
         return node, context
 
     def visit_project(self, node, context):
