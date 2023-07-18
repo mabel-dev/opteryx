@@ -303,15 +303,22 @@ class BinderVisitor:
         return node, context
 
     def visit_function_dataset(self, node, context):
+        # We need to build the schema and add it to the schema collection.
         if node.function == "VALUES":
-            # We need to build the schema and add it to the schema collection.
-            # The name of the dataset is randomized.
+            relation_name = f"$values-{random_string()}"
             schema = RelationSchema(
-                name=random_string(),
+                name=relation_name,
                 columns=[FlatColumn(name=column, type=0) for column in node.columns],
             )
-            context["schemas"][f"$values-{random_string()}"] = schema
+            context["schemas"][relation_name] = schema
             node.columns = [column.identity for column in schema.columns]
+        elif node.function == "UNNEST":
+            relation_name = f"$unnest-{random_string()}"
+            schema = RelationSchema(
+                name=relation_name, columns=[FlatColumn(name=node.alias or "unnest", type=0)]
+            )
+            context["schemas"][relation_name] = schema
+            node.columns = [schema.columns[0].identity]
         else:
             raise NotImplementedError(f"{node.function} binding isn't written yet")
         return node, context

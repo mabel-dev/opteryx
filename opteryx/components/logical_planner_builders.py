@@ -33,12 +33,12 @@ from opteryx.utils import fuzzy_search
 
 def literal_boolean(branch, alias: list = None, key=None):
     """create node for a literal boolean branch"""
-    return Node(NodeType.LITERAL, OrsoTypes.BOOLEAN, value=branch, alias=alias)
+    return Node(NodeType.LITERAL, type=OrsoTypes.BOOLEAN, value=branch, alias=alias)
 
 
 def literal_null(branch, alias: list = None, key=None):
     """create node for a literal null branch"""
-    return Node(NodeType.LITERAL, OrsoTypes.NULL, alias=alias)
+    return Node(NodeType.LITERAL, type=OrsoTypes.NULL, alias=alias)
 
 
 def literal_number(branch, alias: list = None, key=None):

@@ -36,15 +36,14 @@ def _generate_series(alias, *args):
     return [{alias: value} for value in value_array]
 
 
-def _unnest(alias, values):
+def _unnest(**kwargs):
     """unnest converts an list into rows"""
-    list_items = values.value
-    if values.node_type == NodeType.NESTED:
-        # single item lists are reported as nested
-        from opteryx.samples import no_table
-
-        list_items = evaluate(values, no_table.read(), True)
-    return [{alias: row} for row in list_items]
+    if kwargs["args"][0].node_type == NodeType.NESTED:
+        list_items = [kwargs["args"][0].centre.value]
+    else:
+        list_items = kwargs["args"][0].value
+    column_name = kwargs["columns"][0]
+    return [{column_name: row} for row in list_items]
 
 
 def _values(**parameters):
@@ -75,7 +74,7 @@ class FunctionDatasetNode(BasePlanNode):
         and returning a Table/Relation.
         """
         super().__init__(properties=properties)
-        self.alias = config["alias"]
+        self.alias = config.get("alias")
         self.function = config["function"]
         self.parameters = config
 

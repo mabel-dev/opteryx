@@ -87,6 +87,7 @@ ORSO_TO_NUMPY_MAP = {
     OrsoTypes.TIMESTAMP: numpy.dtype("datetime64[us]"),  # [290301 BC, 294241 AD]
     OrsoTypes.TIME: numpy.dtype("O"),
     OrsoTypes.VARCHAR: numpy.unicode_(),
+    OrsoTypes.NULL: numpy.dtype("O"),
 }
 
 
@@ -236,6 +237,7 @@ def evaluate_and_append(expressions, table: Table):
             NodeType.BINARY_OPERATOR,
             NodeType.COMPARISON_OPERATOR,
             NodeType.UNARY_OPERATOR,
+            NodeType.NESTED,
             NodeType.NOT,
             NodeType.AND,
             NodeType.OR,

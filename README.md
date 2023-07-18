@@ -123,8 +123,8 @@ result.head()
 ~~~
 ~~~
    |  4 * 7  
-=============
- 1 |      28 
+============
+ 1 |     28 
 ~~~
 _this example is complete and should run as-is_
 
