@@ -4,5 +4,4 @@ orjson
 orso>=0.0.77
 pyarrow>=12.0.1
 typer
-
 cython
