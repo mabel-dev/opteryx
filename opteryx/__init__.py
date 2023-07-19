@@ -15,6 +15,17 @@ import os
 from orso.logging import get_logger
 from orso.logging import set_log_name
 
+from opteryx import config
+
+from opteryx.__author__ import __author__
+from opteryx.__build__ import __build__
+from opteryx.__version__ import __version__
+from opteryx.connection import Connection
+from opteryx.connectors import register_arrow
+from opteryx.connectors import register_df
+from opteryx.connectors import register_store
+from opteryx.shared import variables
+
 try:
     builtins = __import__("__builtin__")
 except ImportError:
@@ -25,16 +36,6 @@ set_log_name("OPTERYX")
 opteryx_logger = get_logger()
 opteryx_logger.setLevel(int(os.environ.get("OPTERYX_LOG_LEVEL", 25)))  # WARNINGS +
 setattr(builtins, "opteryx_logger", opteryx_logger)
-
-from opteryx import config
-from opteryx.__author__ import __author__
-from opteryx.__build__ import __build__
-from opteryx.__version__ import __version__
-from opteryx.connection import Connection
-from opteryx.connectors import register_arrow
-from opteryx.connectors import register_df
-from opteryx.connectors import register_store
-from opteryx.shared import variables
 
 
 __all__ = [

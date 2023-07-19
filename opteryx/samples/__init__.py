@@ -11,7 +11,7 @@
 # limitations under the License.
 
 import opteryx.samples.astronaut_data as astronauts
-import opteryx.samples.calculated_data as calculated
+import opteryx.samples.derived_data as derived
 import opteryx.samples.no_table_data as no_table
 import opteryx.samples.planet_data as planets
 import opteryx.samples.satellite_data as satellites

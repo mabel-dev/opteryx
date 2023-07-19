@@ -83,7 +83,7 @@ from opteryx.functions import FUNCTIONS
 from opteryx.managers.expression import NodeType
 from opteryx.models.node import Node
 from opteryx.operators.aggregate_node import AGGREGATORS
-from opteryx.samples import calculated
+from opteryx.samples import derived
 
 COMBINED_FUNCTIONS = {**FUNCTIONS, **AGGREGATORS}
 CAMEL_TO_SNAKE = re.compile(r"(?<!^)(?=[A-Z])")
@@ -331,6 +331,15 @@ class BinderVisitor:
             raise NotImplementedError(f"{node.function} binding isn't written yet")
         return node, context
 
+    def visit_join(self, node, context):
+        print(node)
+        print()
+        print(context)
+
+        node.on, context["schemas"] = inner_binder(node.on, context["schemas"])
+
+        return node, context
+
     def visit_project(self, node, context):
         # For each of the columns in the projection, identify the relation it
         # will be taken from
@@ -386,7 +395,7 @@ class BinderVisitor:
         """
 
         if context is None:
-            context = {"schemas": {"$derived": calculated.schema}}
+            context = {"schemas": {"$derived": derived.schema}}
 
         # Recursively visit children
         children = graph.ingoing_edges(node)

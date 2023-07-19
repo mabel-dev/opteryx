@@ -430,14 +430,14 @@ def create_node_relation(relation):
             join_operator = next(iter(join["join_operator"]))
             join_condition = next(iter(join["join_operator"][join_operator]))
             join_step.type = {
-                "FullOuter": "Full Outer Join",
-                "Inner": "Inner Join",
-                "LeftAnti": "Left Anti Join",
-                "LeftOuter": "Left Outer Join",
-                "LeftSemi": "Left Semi Join",
-                "RightAnti": "Right Anti Join",
-                "RightOuter": "Right Outer Join",
-                "RightSemi": "Right Semi Join",
+                "FullOuter": "full outer",
+                "Inner": "inner",
+                "LeftAnti": "left anti",
+                "LeftOuter": "left outer",
+                "LeftSemi": "left semi",
+                "RightAnti": "right anti",
+                "RightOuter": "right outer",
+                "RightSemi": "right semi",
             }.get(join_operator, join_operator)
             if join_condition == "On":
                 join_step.on = logical_planner_builders.build(

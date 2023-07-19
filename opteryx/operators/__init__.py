@@ -29,6 +29,7 @@ from .heap_sort_node import HeapSortNode  # Heap
 from .information_schema_node import InformationSchemaNode  # information_schema
 from .inner_join_node import InnerJoinNode  # INNER JOIN
 from .internal_dataset_node import InternalDatasetNode  # Sample datasets
+from .join_node import JoinNode
 from .limit_node import LimitNode  # select the first N records
 from .morsel_defragment_node import MorselDefragmentNode  # consolidate small morsels
 from .noop_node import NoOpNode  # No Operation

@@ -50,7 +50,7 @@ def create_physical_plan(logical_plan):
         elif node_type == LogicalPlanStepType.FunctionDataset:
             node = operators.FunctionDatasetNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Join:
-            node = operators.NoOpNode(query_properties, **node_config)
+            node = operators.JoinNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Limit:
             node = operators.LimitNode(query_properties, limit=node_config.get("limit"), offset=node_config.get("offset", 0))
         elif node_type == LogicalPlanStepType.Order:

@@ -10,6 +10,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import datetime
 import typing
 from os import environ
 from pathlib import Path
@@ -79,19 +80,19 @@ def parse_yaml(yaml_str):
 #  deepcode ignore PythonSameEvalBinaryExpressiontrue: false +ve, values can be different
 if _env_path.exists() and (dotenv is None):  # pragma: no cover  # nosemgrep
     # using a logger here will tie us in knots
-    opteryx_logger.error("`.env` file exists but `dotEnv` not installed.")
-elif dotenv is not None:  # pragma: no cover
-    opteryx_logger.info("Loading environment variables from `.env`")
+    print(f"{datetime.datetime.now()} [LOADER] `.env` file exists but `dotEnv` not installed.")
+elif dotenv is not None:  # pragma: no cover variables from `.env`")
     dotenv.load_dotenv(dotenv_path=_env_path)
+    print(f"{datetime.datetime.now()} [LOADER] Loading `.env` file.")
 
 try:  # pragma: no cover
     _config_path = Path(".") / "opteryx.yaml"
     if _config_path.exists():
         with open(_config_path, "r") as _config_file:
             _config_values = parse_yaml(_config_file.read())
-        opteryx_logger.info(f"Loading config from {_config_path}")
+        print(f"{datetime.datetime.now()} [LOADER] Loading config from {_config_path}")
 except Exception as exception:  # pragma: no cover # it doesn't matter why - just use the defaults
-    opteryx_logger.error(f"Config file {_config_path} not used - {exception}")
+    print(f"{datetime.datetime.now()} [LOADER] Config file {_config_path} not used - {exception}")
 
 
 def get(key, default=None):

@@ -494,14 +494,29 @@ def substring(branch, alias=None, key=None):
 
 
 def typed_string(branch, alias=None, key=None):
-    data_type = next(iter(branch["data_type"])).upper()
+    data_type = branch["data_type"]
+
+    if isinstance(data_type, dict):
+        # timestamps have the timezone as a value
+        type_key = next(iter(data_type))
+        if type_key == "Timestamp" and data_type[type_key] not in (
+            (None, "None"),
+            (None, "WithoutTimeZone"),
+        ):
+            raise UnsupportedSyntaxError("TIMESTAMPS do not support `TIME ZONE`")
+        data_type = type_key
+    data_type = data_type.upper()
+
     data_value = branch["value"]
 
-    Datatype_Map = {"TIMESTAMP": ("TIMESTAMP", lambda x: numpy.datetime64(x, "us"))}
+    Datatype_Map = {
+        "TIMESTAMP": ("TIMESTAMP", lambda x: numpy.datetime64(x, "us")),
+        "DATE": ("DATE", lambda x: numpy.datetime64(x, "D")),
+    }
 
     mapper = Datatype_Map.get(data_type)
     if mapper is None:
-        raise UnsupportedSyntaxError("Cannot Type String type {data_type}")
+        raise UnsupportedSyntaxError(f"Cannot Type String type {data_type}")
 
     return Node(NodeType.LITERAL, type=mapper[0], value=mapper[1](data_value), alias=alias)
 

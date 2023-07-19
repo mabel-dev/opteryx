@@ -11,7 +11,6 @@
 # limitations under the License.
 
 import itertools
-import random
 
 import numpy
 from orso.cityhash import CityHash64

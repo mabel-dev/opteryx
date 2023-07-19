@@ -11,10 +11,10 @@
 # limitations under the License.
 
 """
-calculated
+derived
 ---------
 
-This is used as the source relation for calculated values.
+This is used as the source relation for derived values.
 """
 from orso.schema import RelationSchema
 
