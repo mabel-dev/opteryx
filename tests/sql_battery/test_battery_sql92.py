@@ -238,14 +238,16 @@ if __name__ == "__main__":  # pragma: no cover
     import shutil
 
     from opteryx.utils.formatter import format_sql
+    from tests.tools import trunc_printable
 
     width = shutil.get_terminal_size((80, 20))[0]
 
     print(f"RUNNING BATTERY OF {len(STATEMENTS)} SQL92 TESTS")
     for index, (statement, feature) in enumerate(STATEMENTS):
         detail = f"\033[0;35m{feature}\033[0m {format_sql(statement)}"
+        detail = trunc_printable(detail, width - 8)
         print(
-            f"\033[0;36m{(index + 1):04}\033[0m {detail[0:width - 1].ljust(width)}",
+            f"\033[0;36m{(index + 1):04}\033[0m {detail.ljust(width)}",
             end="",
         )
         test_sql92(statement, feature)

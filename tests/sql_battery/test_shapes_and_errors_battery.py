@@ -947,8 +947,6 @@ if __name__ == "__main__":  # pragma: no cover
 
     from tests.tools import trunc_printable
 
-    os.environ["ENGINE_VERSION"] = "1"
-
     width = shutil.get_terminal_size((80, 20))[0] - 15
 
     nl = "\n"

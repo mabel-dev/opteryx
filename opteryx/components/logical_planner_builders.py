@@ -494,13 +494,16 @@ def substring(branch, alias=None, key=None):
 
 
 def typed_string(branch, alias=None, key=None):
-    data_type = branch["data_type"]
+    data_type = next(iter(branch["data_type"])).upper()
     data_value = branch["value"]
-    return cast(
-        {"expr": {"Value": {"SingleQuotedString": data_value}}, "data_type": data_type},
-        alias,
-        key,
-    )
+
+    Datatype_Map = {"TIMESTAMP": ("TIMESTAMP", lambda x: numpy.datetime64(x, "us"))}
+
+    mapper = Datatype_Map.get(data_type)
+    if mapper is None:
+        raise UnsupportedSyntaxError("Cannot Type String type {data_type}")
+
+    return Node(NodeType.LITERAL, type=mapper[0], value=mapper[1](data_value), alias=alias)
 
 
 def ceiling(value, alias: list = None, key=None):
