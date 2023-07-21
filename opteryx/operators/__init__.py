@@ -27,13 +27,11 @@ from .file_reader_node import FileReaderNode  # usually on the CLI
 from .function_dataset_node import FunctionDatasetNode  # Dataset Constructors
 from .heap_sort_node import HeapSortNode  # Heap
 from .information_schema_node import InformationSchemaNode  # information_schema
-from .inner_join_node import InnerJoinNode  # INNER JOIN
 from .internal_dataset_node import InternalDatasetNode  # Sample datasets
 from .join_node import JoinNode
 from .limit_node import LimitNode  # select the first N records
 from .morsel_defragment_node import MorselDefragmentNode  # consolidate small morsels
 from .noop_node import NoOpNode  # No Operation
-from .outer_join_node import OuterJoinNode  # LEFT/RIGHT/FULL OUTER JOIN
 from .projection_node import ProjectionNode  # remove unwanted columns including renames
 from .scanner_node import ScannerNode
 from .selection_node import SelectionNode  # filter unwanted rows
@@ -46,16 +44,6 @@ from .show_variables_node import ShowVariablesNode  # SHOW VARIABLES
 from .sort_node import SortNode  # order by selected columns
 from .sql_reader_node import SqlReaderNode  # external SQL databases
 
-# map join types to their implementations
-_join_nodes = {
-    "CrossJoin": CrossJoinNode,
-    "CrossJoinUnnest": CrossJoinNode,
-    "FullOuter": OuterJoinNode,
-    "Inner": InnerJoinNode,
-    "LeftOuter": OuterJoinNode,
-    "RightOuter": OuterJoinNode,
-}
-
 # map reader types to their implementation
 _reader_nodes = {
     "Blob": BlobReaderNode,  # (disk, gcs, minio, s3)
@@ -67,10 +55,6 @@ _reader_nodes = {
     "SubQuery": BlobReaderNode,  # ?? <- this shouldn't be a reader
     "SQL": SqlReaderNode,
 }
-
-
-def join_factory(mode):
-    return _join_nodes[mode]
 
 
 def reader_factory(mode):

@@ -148,25 +148,28 @@ def inner_binder(node, schemas) -> typing.Tuple[Node, dict]:
         else:
             # Look for the column in the loaded schemas
             for _, schema in schemas.items():
-                column = schema.find_column(node.value)
-                if column is not None:
+                found = schema.find_column(node.value)
+                if found and column:
                     # If we've found it again - we're not sure which one to use
                     if found_source_relation:
                         raise AmbiguousIdentifierError(identifier=node.value)
+                elif found:
                     found_source_relation = schema
-            # we haven't been give a source, so add one here
-            node.source = found_source_relation.name
+                    column = found
 
         if found_source_relation is None:
             # If we didn't find the relation, get all of the columns it could have been and
             # see if we can suggest what the user should have entered in the error message
             candidates = []
             for _, schema in schemas.items():
-                candidates.extend(schema.get_all_columns())
+                candidates.extend(schema.all_column_names())
             from opteryx.utils import fuzzy_search
 
             suggestion = fuzzy_search(node.value, candidates)
             raise ColumnNotFoundError(column=node.value, suggestion=suggestion)
+        elif node.source is None:
+            # we haven't been give a source, so add one here
+            node.source = found_source_relation.name
 
         # add values to the node to indicate the source of this data
         node.schema_column = column
@@ -332,12 +335,7 @@ class BinderVisitor:
         return node, context
 
     def visit_join(self, node, context):
-        print(node)
-        print()
-        print(context)
-
         node.on, context["schemas"] = inner_binder(node.on, context["schemas"])
-
         return node, context
 
     def visit_project(self, node, context):
