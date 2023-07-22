@@ -11,6 +11,7 @@
 # limitations under the License.
 
 import numpy
+from orso.types import OrsoTypes
 
 from opteryx.exceptions import SqlError
 from opteryx.utils import dates
@@ -24,13 +25,16 @@ def generate_series(*args):
     first_arg_type = args[0].node_type
 
     # if the parameters are numbers, generate series is an alias for range
-    if first_arg_type in (NodeType.LITERAL_NUMERIC, numpy.float64):
+    if first_arg_type in (numpy.float64, numpy.int64) or args[0].type in (
+        OrsoTypes.INTEGER,
+        OrsoTypes.DOUBLE,
+    ):
         if arg_len not in (2, 3):
             raise SqlError("generate_series for numbers takes 2 or 3 parameters.")
         return numeric_range(*arg_vals)
 
     # if the params are timestamps, we create time intervals
-    if first_arg_type == NodeType.LITERAL_TIMESTAMP:
+    if args[0].type in (OrsoTypes.DATE, OrsoTypes.TIMESTAMP):
         if arg_len != 3:
             raise SqlError("generate_series for dates needs start, end, and interval parameters")
         return dates.date_range(*arg_vals)

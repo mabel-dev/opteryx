@@ -34,7 +34,6 @@ def test_as_pandas_with_limit():
 
 
 if __name__ == "__main__":  # pragma: no cover
-    test_as_pandas_no_limit()
-    test_as_pandas_with_limit()
+    from tests.tools import run_tests
 
-    print("✅ okay")
+    run_tests()

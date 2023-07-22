@@ -3,10 +3,9 @@ import sys
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
-from opteryx.shared.variables import SystemVariables
-
-
 import pytest
+
+from opteryx.shared.variables import SystemVariables
 
 
 def test_connection_variables():
@@ -52,8 +51,6 @@ def test_variable_types():
 
 
 if __name__ == "__main__":  # pragma: no cover
-    test_connection_variables()
-    test_variables_permissions()
-    test_variable_types()
+    from tests.tools import run_tests
 
-    print("✅ okay")
+    run_tests()

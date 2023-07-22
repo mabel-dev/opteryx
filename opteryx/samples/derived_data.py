@@ -11,10 +11,16 @@
 # limitations under the License.
 
 """
-Store the version here so:
-1) we don't load dependencies by storing it in __init__.py
-2) we can import it in setup.py for the same reason
-"""
+derived
+---------
 
-# __version__ = "0.4.0-alpha.6"
-__version__ = "0.11.0"
+This is used as the source relation for derived values.
+"""
+from orso.schema import RelationSchema
+
+
+def read(*args):
+    return None
+
+
+schema = RelationSchema(name="$derived", columns=[])

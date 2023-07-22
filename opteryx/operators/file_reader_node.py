@@ -23,7 +23,6 @@ from typing import Iterable
 import pyarrow
 
 from opteryx.managers.expression import NodeType
-from opteryx.models import Columns
 from opteryx.models import QueryProperties
 from opteryx.models.node import Node
 from opteryx.operators import BasePlanNode

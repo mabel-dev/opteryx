@@ -16,7 +16,6 @@ stores, it is not compliant with the standard:
 https://www.python.org/dev/peps/pep-0249/
 """
 import datetime
-import os
 import time
 import typing
 from dataclasses import dataclass
@@ -26,13 +25,13 @@ from uuid import uuid4
 import pyarrow
 from orso import DataFrame
 from orso import converters
+from orso.tools import random_int
 
 from opteryx import config
 from opteryx import utils
 from opteryx.exceptions import CursorInvalidStateError
 from opteryx.exceptions import MissingSqlStatement
 from opteryx.exceptions import PermissionsError
-from opteryx.exceptions import ProgrammingError
 from opteryx.managers.kvstores import BaseKeyValueStore
 from opteryx.shared import QueryStatistics
 from opteryx.shared.variables import SystemVariables
@@ -55,7 +54,7 @@ class ConnectionContext:
     history: typing.List[HistoryItem] = field(init=False)
 
     def __post_init__(self):
-        object.__setattr__(self, "connection_id", utils.random_int())
+        object.__setattr__(self, "connection_id", random_int())
         object.__setattr__(self, "connected_at", datetime.datetime.utcnow())
         object.__setattr__(self, "history", [])
         object.__setattr__(self, "variables", SystemVariables.copy(VariableOwner.USER))
@@ -88,9 +87,9 @@ class Connection:
             permissions = PERMISSIONS
         permissions = set(permissions)
         if permissions.intersection(PERMISSIONS) == set():
-            raise ProgrammingError("No valid permissions presented.")
+            raise PermissionsError("No valid permissions presented.")
         if not permissions.issubset(PERMISSIONS):
-            raise ProgrammingError(
+            raise PermissionsError(
                 f"Invalid permissions presented - {PERMISSIONS.difference(permissions)}"
             )
         self.permissions = permissions
@@ -133,6 +132,8 @@ class Cursor(DataFrame):
         return self._qid
 
     def _inner_execute(self, operation, params=None):
+        from opteryx.components import query_planner
+
         if not operation:
             raise MissingSqlStatement("SQL statement not found")
 
@@ -141,66 +142,19 @@ class Cursor(DataFrame):
 
         self._connection.context.history.append((operation, True, datetime.datetime.utcnow()))
 
-        # if ENGINE_VERSION == 2:
-        if os.environ.get("ENGINE_VERSION") == "2":
-            # this is running the 2nd gen planner
-            print(f"Using Engine Version 2")
+        plans = query_planner(operation=operation, parameters=params, connection=self._connection)
 
-            from opteryx.components.v2 import query_planner
+        results = None
+        for self._plan in plans:
+            results = self._plan.execute()
 
-            plans = query_planner(
-                operation=operation, parameters=params, connection=self._connection
+        if results is not None:
+            # we can't update tuples directly
+            self._connection.context.history[-1] = tuple(
+                True if i == 1 else value
+                for i, value in enumerate(self._connection.context.history[-1])
             )
-
-            results = None
-            for self._plan in plans:
-                results = self._plan.execute()
-
-            if results is not None:
-                # we can't update tuples directly
-                self._connection.context.history[-1] = tuple(
-                    True if i == 1 else value
-                    for i, value in enumerate(self._connection.context.history[-1])
-                )
-                return utils.arrow.rename_columns(results)
-
-        else:
-            self._query = operation
-
-            from opteryx.components.query_planner import QueryPlanner
-
-            self._query_planner = QueryPlanner(
-                statement=operation, cache=self._connection.cache, qid=self._qid
-            )
-            self._statistics.start_time = time.time_ns()
-            asts = list(self._query_planner.parse_and_lex())
-
-            # test permissions
-            for ast in asts:
-                statement_type = next(iter(ast))
-                if statement_type not in self._connection.permissions:
-                    raise PermissionsError(f"Required permission {statement_type} not provided.")
-
-            results = None
-            if params is None:
-                params = []
-
-            self._query_planner.test_paramcount(asts, params)
-
-            for ast in asts:
-                ast = self._query_planner.bind_ast(ast, parameters=params)
-                plan = self._query_planner.create_logical_plan(ast)
-
-                self._plan = self._query_planner.optimize_plan(plan)
-                results = self._query_planner.execute(self._plan)
-
-            if results is not None:
-                # we can't update tuples directly
-                self._connection.context.history[-1] = tuple(
-                    True if i == 1 else value
-                    for i, value in enumerate(self._connection.context.history[-1])
-                )
-                return utils.arrow.rename_columns(results)
+            return results
 
     def execute(self, operation, params=None):
         results = self._inner_execute(operation, params)
@@ -212,7 +166,7 @@ class Cursor(DataFrame):
         results = self._inner_execute(operation, params)
         if results is not None:
             if limit is not None:
-                return utils.arrow.limit_records(results, limit)
+                results = utils.arrow.limit_records(results, limit)
         return pyarrow.concat_tables(results, promote=True)
 
     @property

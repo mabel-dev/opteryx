@@ -10,9 +10,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .columns import Columns
 from .execution_tree import ExecutionTree
 from .query_properties import QueryProperties
-from .relation_schema import ConstantColumn
-from .relation_schema import FlatColumn
-from .relation_schema import RelationSchema

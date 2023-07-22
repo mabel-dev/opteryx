@@ -8,7 +8,7 @@ import sys
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 
-def test_documentation_connect_example():
+def test_show_functions():
     import opteryx
 
     conn = opteryx.connect()
@@ -23,6 +23,6 @@ def test_documentation_connect_example():
 
 
 if __name__ == "__main__":  # pragma: no cover
-    test_documentation_connect_example()
+    from tests.tools import run_tests
 
-    print("✅ okay")
+    run_tests()

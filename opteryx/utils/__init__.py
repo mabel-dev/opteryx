@@ -11,8 +11,6 @@
 # limitations under the License.
 
 import itertools
-import random
-import re
 
 import numpy
 from orso.cityhash import CityHash64
@@ -77,22 +75,6 @@ def fuzzy_search(name, candidates):
             best_match_column = raw
 
     return best_match_column
-
-
-def random_int() -> int:
-    """
-    Select a random integer (32bit)
-    """
-    return random.getrandbits(32)
-
-
-def random_string(width: int = 16):
-    num_chars = ((width + 1) >> 1) << 3  # Convert length to number of bits
-    rand_bytes = random.getrandbits(num_chars)  # Generate random bytes
-    rand_hex = hex(rand_bytes)[
-        2 : width + 2
-    ]  # Convert to hex string and truncate to desired length
-    return rand_hex
 
 
 def is_arm():

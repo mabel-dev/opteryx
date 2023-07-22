@@ -91,7 +91,7 @@ class MabelPartitionScheme(BasePartitionScheme):
                     else:
                         return []
 
-                # get_logger().debug(f"Reading Frame `{as_at}`")
+                # opteryx_logger.debug(f"Reading Frame `{as_at}`")
                 yield from (blob for blob in segment_blobs if (as_at in blob))
 
             else:

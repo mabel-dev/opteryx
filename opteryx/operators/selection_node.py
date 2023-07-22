@@ -14,17 +14,21 @@
 Selection Node
 
 This is a SQL Query Execution Plan Node.
+
+This node is responsible for applying filters to datasets.
 """
 import time
 from typing import Iterable
 
 import numpy
 import pyarrow
-from pyarrow import Table
 
 from opteryx.exceptions import SqlError
+from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import evaluate
+from opteryx.managers.expression import evaluate_and_append
 from opteryx.managers.expression import format_expression
+from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 
@@ -33,6 +37,11 @@ class SelectionNode(BasePlanNode):
     def __init__(self, properties: QueryProperties, **config):
         super().__init__(properties=properties)
         self.filter = config.get("filter")
+
+        self.function_evaluations = get_all_nodes_of_type(
+            self.filter,
+            select_nodes=(NodeType.FUNCTION,),
+        )
 
     @property
     def config(self):  # pragma: no cover
@@ -63,7 +72,8 @@ class SelectionNode(BasePlanNode):
                 continue
 
             start_selection = time.time_ns()
-            mask = evaluate(self.filter, morsel, False)
+            morsel = evaluate_and_append(self.function_evaluations, morsel)
+            mask = evaluate(self.filter, morsel)
             self.statistics.time_evaluating += time.time_ns() - start_selection
 
             # if the mask is a boolean array, we've called a function that

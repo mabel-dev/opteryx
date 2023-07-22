@@ -40,22 +40,23 @@ import sys
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
+from pyarrow.lib import ArrowInvalid
 import pytest
 
 import opteryx
-
-from opteryx.connectors import AwsS3Connector
-from opteryx.connectors import DiskConnector
-
-from opteryx.exceptions import ColumnNotFoundError
-from opteryx.exceptions import DatasetNotFoundError
-from opteryx.exceptions import EmptyResultSetError
-from opteryx.exceptions import InvalidTemporalRangeFilterError
-from opteryx.exceptions import MissingSqlStatement
-from opteryx.exceptions import SqlError
-from opteryx.exceptions import ProgrammingError
-from opteryx.exceptions import UnsupportedSyntaxError
-
+from opteryx.connectors import AwsS3Connector, DiskConnector
+from opteryx.exceptions import (
+    AmbiguousIdentifierError,
+    ColumnNotFoundError,
+    DatasetNotFoundError,
+    EmptyResultSetError,
+    InvalidTemporalRangeFilterError,
+    MissingSqlStatement,
+    ProgrammingError,
+    SqlError,
+    UnexpectedDatasetReferenceError,
+    UnsupportedSyntaxError,
+)
 from opteryx.utils.formatter import format_sql
 
 # fmt:off
@@ -108,8 +109,8 @@ STATEMENTS = [
         ("SELECT * FROM $satellites /* comment */ FOR TODAY /* comment */", 177, 8, None),
 
         ("SELECT name, id, planetId FROM $satellites", 177, 3, None),
-        ("SELECT name, name FROM $satellites", 177, 1, None),
-        ("SELECT name, id, name, id FROM $satellites", 177, 2, None),
+        ("SELECT name, name FROM $satellites", 177, 1, SqlError),  # V2 breaking
+        ("SELECT name, id, name, id FROM $satellites", 177, 2, SqlError),  # V2 breaking
 
         ("SELECT DISTINCT name FROM $astronauts", 357, 1, None),
         ("SELECT DISTINCT * FROM $astronauts", 357, 19, None),
@@ -214,6 +215,7 @@ STATEMENTS = [
         ("SELECT MIN(id), MAX(id), SUM(planetId), planetId FROM $satellites GROUP BY planetId", 7, 4, None),
         ("SELECT planetId, LIST(name) FROM $satellites GROUP BY planetId", 7, 2, None),
 
+        ("SELECT planetId FROM $satellites GROUP BY planetId", 7, 1, None),
         ("SELECT BOOLEAN(planetId - 3) FROM $satellites GROUP BY BOOLEAN(planetId - 3)", 2, 1, None),
         ("SELECT VARCHAR(planetId) FROM $satellites GROUP BY VARCHAR(planetId)", 7, 1, None),
         ("SELECT STR(planetId) FROM $satellites GROUP BY STR(planetId)", 7, 1, None),
@@ -325,6 +327,10 @@ STATEMENTS = [
         ("SELECT HASH(death_date), death_date from $astronauts", 357, 2, None),
         ("SELECT HASH(birth_place), birth_place from $astronauts", 357, 2, None),
         ("SELECT HASH(missions), missions from $astronauts", 357, 2, None),
+
+        # Test Aliases
+        ("SELECT planet_id FROM $satellites", 177, 1, None),
+        ("SELECT escape_velocity, gravity, orbitalPeriod FROM $planets", 9, 3, None),
 
         ("SELECT * FROM (VALUES ('High', 3),('Medium', 2),('Low', 1)) AS ratings(name, rating)", 3, 2, None),
         ("SELECT * FROM (VALUES ('High', 3),('Medium', 2),('Low', 1)) AS ratings(name, rating) WHERE rating = 3", 1, 2, None),
@@ -745,6 +751,17 @@ STATEMENTS = [
         ("SELECT CAST('abc' AS LIST)", None, None, SqlError),
         ("SELECT TRY_CAST('abc' AS LIST)", None, None, SqlError),
 
+        # V2 Negative Tests
+        ("SELECT $planets.id, name FROM $planets INNER JOIN $satellites ON planetId = $planets.id", None, None, AmbiguousIdentifierError),
+        ("SELECT $planets.id FROM $satellites", None, None, UnexpectedDatasetReferenceError),
+
+        # V2 New Syntax Checks
+        ("SELECT * FROM $planets UNION SELECT * FROM $planets;", None, None, None),
+        ("SELECT * FROM $planets LEFT ANTI JOIN $satellites ON id = id;", None, None, ArrowInvalid),  # invalid until the join is written
+        ("EXPLAIN ANALYZE FORMAT JSON SELECT * FROM $planets AS a INNER JOIN (SELECT id FROM $planets) AS b USING (id);", None, None, None),
+        ("SELECT DISTINCT ON (planetId) planetId, name FROM $satellites ", None, None, None),
+        ("SELECT 8 DIV 4", None, None, None),
+
         # These are queries which have been found to return the wrong result or not run correctly
         # FILTERING ON FUNCTIONS
         ("SELECT DATE(birth_date) FROM $astronauts FOR TODAY WHERE DATE(birth_date) < '1930-01-01'", 14, 1, None),
@@ -931,9 +948,8 @@ if __name__ == "__main__":  # pragma: no cover
 
     import shutil
     import time
-    from tests.tools import trunc_printable
 
-    os.environ["ENGINE_VERSION"] = "1"
+    from tests.tools import trunc_printable
 
     width = shutil.get_terminal_size((80, 20))[0] - 15
 

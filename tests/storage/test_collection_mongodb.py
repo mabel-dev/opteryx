@@ -7,13 +7,10 @@ import sys
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import orjson
-
+from tests.tools import is_arm, is_mac, is_windows, skip_if
 
 import opteryx
-
 from opteryx.connectors import MongoDbConnector
-
-from tests.tools import skip_if, is_arm, is_mac, is_windows
 
 COLLECTION_NAME = "mongo"
 MONGO_CONNECTION = os.environ.get("MONGO_CONNECTION")
@@ -57,5 +54,6 @@ def test_mongo_storage():
 
 
 if __name__ == "__main__":  # pragma: no cover
-    test_mongo_storage()
-    print("✅ okay")
+    from tests.tools import run_tests
+
+    run_tests()

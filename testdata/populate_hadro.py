@@ -6,7 +6,6 @@ sys.path.insert(1, os.path.join(sys.path[0], ".."))
 import opteryx
 from hadrodb import HadroDB
 
-
 tweet_data = opteryx.query(
     "SELECT * FROM 'testdata/flat/formats/parquet/tweets.parquet' LIMIT 1000"
 )

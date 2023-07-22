@@ -23,11 +23,10 @@ import sys
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
+import time
+
 import opteryx
 from opteryx.connectors import DiskConnector
-
-
-import time
 
 
 class Timer(object):

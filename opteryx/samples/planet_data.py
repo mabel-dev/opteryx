@@ -31,10 +31,11 @@ can instantiate a PlanetData() class and use it like a Relation.
 This has a companion dataset, $satellites, to help test joins.
 """
 import datetime
+import decimal
 
-from opteryx.constants.attribute_types import OPTERYX_TYPES
-from opteryx.models import FlatColumn
-from opteryx.models import RelationSchema
+from orso.schema import FlatColumn
+from orso.schema import RelationSchema
+from orso.types import OrsoTypes
 
 
 def read(end_date=datetime.datetime.utcnow().date()):
@@ -48,7 +49,7 @@ def read(end_date=datetime.datetime.utcnow().date()):
         pyarrow.array([0.33, 4.87, 5.97, 0.642, 1898, 568, 86.8, 102, 0.0146], type=pyarrow.float64()),
         pyarrow.array([4879, 12104, 12756, 6792, 142984, 120536, 51118, 49528, 2370], type=pyarrow.int64()),
         pyarrow.array([5427, 5243, 5514, 3933, 1326, 687, 1271, 1638, 2095], type=pyarrow.int64()),
-        pyarrow.array([3.7, 8.9, 9.8, 3.7, 23.1, 9, 8.7, 11, 0.7], type=pyarrow.float64()),
+        pyarrow.array(map(decimal.Decimal, ("3.7", "8.9", "9.8", "3.7", "23.1", "9", "8.7", "11", "0.7")), type=pyarrow.decimal128(3,1)),
         pyarrow.array([4.3, 10.4, 11.2, 5, 59.5, 35.5, 21.3, 23.5, 1.3], type=pyarrow.float64()),
         pyarrow.array([1407.6, -5832.5, 23.9, 24.6, 9.9, 10.7, -17.2, 16.1, -153.3], type=pyarrow.float64()),
         pyarrow.array([4222.6, 2802, 24, 24.7, 9.9, 10.7, 17.2, 16.1, 153.3], type=pyarrow.float64()),
@@ -69,7 +70,7 @@ def read(end_date=datetime.datetime.utcnow().date()):
     # fmt: on
     full_set = pyarrow.Table.from_arrays(data, column_names)
 
-    # make planet data act like it support temporality
+    # Make the planet data act like it supports temporality
     mask = [True, True, True, True, True, True, True, True, True]
     if end_date < datetime.date(1930, 3, 13):
         # March 13, 1930 - Pluto discovered by Clyde William Tombaugh
@@ -84,28 +85,31 @@ def read(end_date=datetime.datetime.utcnow().date()):
     return full_set.filter(mask)
 
 
+# fmt:off
+# Use $planets to test aliases
 schema = RelationSchema(
-    table_name="$planets",
+    name="$planets",
     columns=[
-        FlatColumn(name="id", data_type=OPTERYX_TYPES.INTEGER),
-        FlatColumn(name="name", data_type=OPTERYX_TYPES.VARCHAR),
-        FlatColumn(name="mass", data_type=OPTERYX_TYPES.DOUBLE),
-        FlatColumn(name="diameter", data_type=OPTERYX_TYPES.INTEGER),
-        FlatColumn(name="density", data_type=OPTERYX_TYPES.INTEGER),
-        FlatColumn(name="gravity", data_type=OPTERYX_TYPES.DOUBLE),
-        FlatColumn(name="escapeVelocity", data_type=OPTERYX_TYPES.DOUBLE),
-        FlatColumn(name="rotationPeriod", data_type=OPTERYX_TYPES.DOUBLE),
-        FlatColumn(name="lengthOfDay", data_type=OPTERYX_TYPES.DOUBLE),
-        FlatColumn(name="distanceFromSun", data_type=OPTERYX_TYPES.DOUBLE),
-        FlatColumn(name="perihelion", data_type=OPTERYX_TYPES.DOUBLE),
-        FlatColumn(name="aphelion", data_type=OPTERYX_TYPES.DOUBLE),
-        FlatColumn(name="orbitalPeriod", data_type=OPTERYX_TYPES.DOUBLE),
-        FlatColumn(name="orbitalVelocity", data_type=OPTERYX_TYPES.DOUBLE),
-        FlatColumn(name="orbitalInclination", data_type=OPTERYX_TYPES.DOUBLE),
-        FlatColumn(name="orbitalEccentricity", data_type=OPTERYX_TYPES.DOUBLE),
-        FlatColumn(name="obliquityToOrbit", data_type=OPTERYX_TYPES.DOUBLE),
-        FlatColumn(name="meanTemperature", data_type=OPTERYX_TYPES.DOUBLE),
-        FlatColumn(name="surfacePressure", data_type=OPTERYX_TYPES.DOUBLE),
-        FlatColumn(name="numberOfMoons", data_type=OPTERYX_TYPES.INTEGER),
+        FlatColumn(name="id", type=OrsoTypes.INTEGER, identity="pb6AAzzdiVGXxI40"),
+        FlatColumn(name="name", type=OrsoTypes.VARCHAR, identity="3PgnUzEBkSdsX2Up"),
+        FlatColumn(name="mass", type=OrsoTypes.DOUBLE, identity="3PIdJRXsrVJL2QoC"),
+        FlatColumn(name="diameter", type=OrsoTypes.INTEGER, identity="efyrTeHnP5MPcXLA"),
+        FlatColumn(name="density", type=OrsoTypes.INTEGER, identity="2EW3XJEISKu9wHOo"),
+        FlatColumn(name="gravity", type=OrsoTypes.DECIMAL, identity="vpuytCcoQR8RvKY1", precision=3, scale=1),
+        FlatColumn(name="escapeVelocity", type=OrsoTypes.DOUBLE, identity="9ICtZQfWFHxTmy6q", aliases=["escape_velocity"]),
+        FlatColumn(name="rotationPeriod", type=OrsoTypes.DOUBLE, identity="f5XBFPgGfqdrOZbk", aliases=["rotation_period"]),
+        FlatColumn(name="lengthOfDay", type=OrsoTypes.DOUBLE, identity="KK04Pugd4G2KyIl7", aliases=["length_of_day"]),
+        FlatColumn(name="distanceFromSun", type=OrsoTypes.DOUBLE, identity="HbRkVHT7Tpg0puS4", aliases=["distance_from_sun"]),
+        FlatColumn(name="perihelion", type=OrsoTypes.DOUBLE, identity="jivS0ZbUHOp5J4Tf"),
+        FlatColumn(name="aphelion", type=OrsoTypes.DOUBLE, identity="aF6urpePt9m7K9fd"),
+        FlatColumn(name="orbitalPeriod", type=OrsoTypes.DOUBLE, identity="OIFm8N53bFZjIAJ5", aliases=["orbital_period"]),
+        FlatColumn(name="orbitalVelocity", type=OrsoTypes.DOUBLE, identity="7u9dCT83qKRWDyq2", aliases=["oribtal_velocity"]),
+        FlatColumn(name="orbitalInclination", type=OrsoTypes.DOUBLE, identity="ICSJZ6l7CjYKwWlM", aliases=["oribtial_inclination"]),
+        FlatColumn(name="orbitalEccentricity", type=OrsoTypes.DOUBLE, identity="zsrVx1qqeu2WzCDn", aliases=["orbital_eccentricity"]),
+        FlatColumn(name="obliquityToOrbit", type=OrsoTypes.DOUBLE, identity="upmAFqm942KqlN1Q", aliases=["obliquity_to_orbit"]),
+        FlatColumn(name="meanTemperature", type=OrsoTypes.INTEGER, identity="b6bFSkzgh8YPuDmu", aliases=["mean_temperature"]),
+        FlatColumn(name="surfacePressure", type=OrsoTypes.DOUBLE, identity="jHJbYvGqnjhALaf8", aliases=["surface_pressure"]),
+        FlatColumn(name="numberOfMoons", type=OrsoTypes.INTEGER, identity="uFtieEMHmC8ZeYZ3", aliases=["number_of_moons"]),
     ],
 )
+# fmt:on

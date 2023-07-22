@@ -4,6 +4,7 @@ help to ensure that slice left still does what it should safely and correctly.
 """
 import os
 import sys
+
 import numpy
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
@@ -40,7 +41,7 @@ def test_slice_right():
 
 
 def test_random_string():
-    from opteryx.utils import random_string
+    from orso.tools import random_string
 
     seen = set()
     for i in range(100):
@@ -53,7 +54,6 @@ def test_random_string():
 
 
 if __name__ == "__main__":  # pragma: no cover
-    test_slice_left()
-    test_slice_right()
-    test_random_string()
-    print("✅ okay")
+    from tests.tools import run_tests
+
+    run_tests()

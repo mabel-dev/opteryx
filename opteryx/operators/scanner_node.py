@@ -13,9 +13,10 @@
 """
 Explain Node
 
-This is a SQL Query Execution Plan Node.
+This is the SQL Query Execution Plan Node responsible for the reading of data.
 
-
+It wraps different internal readers (e.g. GCP Blob reader, SQL Reader), 
+normalizes the data into the format for internal processing. 
 """
 import time
 from typing import Iterable
@@ -24,7 +25,19 @@ from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 
 
-class V2ScannerNode(BasePlanNode):
+def normalize_morsel(schema, morsel):
+    # rename columns for internal use
+    target_column_names = []
+
+    for column in morsel.column_names:
+        column_name = str(schema.find_column(column))
+        target_column_names.append(column_name)
+
+    morsel = morsel.rename_columns(target_column_names)
+    return morsel
+
+
+class ScannerNode(BasePlanNode):
     def __init__(self, properties: QueryProperties, **parameters):
         super().__init__(properties=properties, **parameters)
 
@@ -53,9 +66,10 @@ class V2ScannerNode(BasePlanNode):
 
     def execute(self) -> Iterable:
         """Perform this step, time how long is spent doing work"""
+        schema = self.parameters["schema"]
         start_clock = time.monotonic_ns()
         reader = self.parameters.get("connector").read_dataset(self.parameters.get("relation"))
         for morsel in reader:
             self.execution_time += time.monotonic_ns() - start_clock
-            yield morsel
+            yield normalize_morsel(schema, morsel)
             start_clock = time.monotonic_ns()

@@ -15,7 +15,7 @@ Limit Node
 
 This is a SQL Query Execution Plan Node.
 
-This Node returns up to a specified number of tuples.
+This Node performs the LIMIT and the OFFSET steps
 """
 import time
 from typing import Iterable
@@ -30,14 +30,15 @@ class LimitNode(BasePlanNode):
     def __init__(self, properties: QueryProperties, **config):
         super().__init__(properties=properties)
         self.limit = config.get("limit")
+        self.offset = config.get("offset", 0)
 
     @property
     def name(self):  # pragma: no cover
-        return "Limitation"
+        return "LIMIT"
 
     @property
     def config(self):  # pragma: no cover
-        return str(self.limit)
+        return str(self.limit) + " OFFSET " + str(self.offset)
 
     def execute(self) -> Iterable:
         if len(self._producers) != 1:  # pragma: no cover
@@ -45,6 +46,6 @@ class LimitNode(BasePlanNode):
 
         morsels = self._producers[0]  # type:ignore
         start_time = time.monotonic_ns()
-        limited = arrow.limit_records(morsels.execute(), limit=self.limit)
+        limited = arrow.limit_records(morsels.execute(), limit=self.limit, offset=self.offset)
         self.statistics.time_limiting += time.monotonic_ns() - start_time
-        yield limited
+        return limited

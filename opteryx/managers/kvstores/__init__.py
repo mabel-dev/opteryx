@@ -10,7 +10,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from hadrodb import HadroDB
+from hadro import HadroDB
 
 from .base_kv_store import BaseKeyValueStore
 from .kv_firestore import FireStoreKVStore

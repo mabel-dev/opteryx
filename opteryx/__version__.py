@@ -9,3 +9,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+"""
+Store the version here so:
+1) we don't load dependencies by storing it in __init__.py
+2) we can import it in setup.py for the same reason
+"""
+
+# __version__ = "0.4.0-alpha.6"
+__version__ = "0.12.0-alpha.0"

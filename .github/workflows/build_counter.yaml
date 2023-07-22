@@ -1,0 +1,37 @@
+name: Count Action Executions
+
+on:
+  push
+
+jobs:
+  count_executions:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'  # Choose the Python version you want to use
+
+    - name: Check if build.py needs update
+      id: check_changes
+      run: |
+        changes=$(git diff --name-only)
+        if [[ "$changes" == *"__build.py__"* ]]; then
+          echo "::set-output name=changes::0"
+        else
+          echo "::set-output name=changes::1"
+        fi
+    
+    - name: Update build.py
+      if: steps.check_changes.outputs.changes != 0
+      run: |
+        python $GITHUB_WORKSPACE/build_counter.py
+        git config --global user.name "XB500"
+        git config --global user.email "XB500@users.noreply.github.com"
+        git add $GITHUB_WORKSPACE/opteryx/__build__.py
+        git commit -m "Update Build Number"
+        git push

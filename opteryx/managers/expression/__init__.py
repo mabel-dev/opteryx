@@ -17,108 +17,24 @@ It is defined as an expression tree of binary and unary operators, and functions
 
 Expressions are evaluated against an entire morsel at a time.
 """
-from dataclasses import dataclass
-from dataclasses import field
 from enum import Enum
-from typing import Any
 
 import numpy
 import pyarrow
-from orso.cityhash import CityHash64
+from orso.types import OrsoTypes
 from pyarrow import Table
 
-from opteryx.functions import FUNCTIONS
 from opteryx.functions.binary_operators import binary_operations
 from opteryx.functions.unary_operations import UNARY_OPERATIONS
-from opteryx.models import Columns
 from opteryx.models.node import Node
 from opteryx.third_party.pyarrow_ops.ops import filter_operations
-from opteryx.third_party.pyarrow_ops.ops import filter_operations_for_display
+
+from .formatter import ExpressionColumn
+from .formatter import format_expression
 
 # These are bit-masks
-LOGICAL_TYPE: int = int("0001", 2)
-INTERNAL_TYPE: int = int("0010", 2)
-LITERAL_TYPE: int = int("0100", 2)
-
-
-def format_expression(root):
-    if root is None:
-        return "null"
-
-    if isinstance(root, list):
-        return [format_expression(item) for item in root]
-
-    node_type = root.node_type
-    _map: dict = {}
-
-    # LITERAL TYPES
-    if node_type & LITERAL_TYPE == LITERAL_TYPE:
-        if node_type == NodeType.LITERAL_VARCHAR:
-            return "'" + root.value.replace("'", "'") + "'"
-        if node_type == NodeType.LITERAL_TIMESTAMP:
-            return "'" + str(root) + "'"
-        if node_type == NodeType.LITERAL_INTERVAL:
-            return "<INTERVAL>"
-        if node_type == NodeType.LITERAL_NONE:
-            return "null"
-        return str(root.value)
-    # INTERAL IDENTIFIERS
-    if node_type & INTERNAL_TYPE == INTERNAL_TYPE:
-        if node_type in (
-            NodeType.FUNCTION,
-            NodeType.AGGREGATOR,
-            NodeType.COMPLEX_AGGREGATOR,
-        ):
-            if root.value == "CASE":
-                con = [format_expression(a) for a in root.parameters[0].value]
-                vals = [format_expression(a) for a in root.parameters[1].value]
-                return "CASE " + "".join([f"WHEN {c} THEN {v} " for c, v in zip(con, vals)]) + "END"
-            if root.value == "ARRAY_AGG":
-                if hasattr(root, "expression") and root.expression is not None:
-                    # V2 ARRAY_AGG is stored differently
-                    distinct = "DISTINCT " if root.distinct else ""
-                    order = f" ORDER BY {', '.join(item[0][0].value + (' DESC' if not item[1] else '') for item in (root.order or []))}"
-                    limit = f" LIMIT {root.limit}" if root.limit else ""
-                    return f"{root.value.upper()}({distinct}{format_expression(root.expression)}{order}{limit})"
-                else:
-                    distinct = "DISTINCT " if root.parameters[1] else ""
-                    order = f" ORDER BY {root.parameters[2]}" if root.parameters[2] else ""
-                    limit = f" LIMIT {root.parameters[3]}" if root.parameters[3] else ""
-                    return f"{root.value.upper()}({distinct}{format_expression(root.parameters[0])}{order}{limit})"
-            return (
-                f"{root.value.upper()}({','.join([format_expression(e) for e in root.parameters])})"
-            )
-        if node_type == NodeType.WILDCARD:
-            return "*"
-        if node_type == NodeType.BINARY_OPERATOR:
-            _map = {
-                "StringConcat": "||",
-                "Plus": "+",
-                "Minus": "-",
-                "Multiply": "*",
-                "Divide": "/",
-                "MyIntegerDivide": "div",
-            }
-            return f"{format_expression(root.left)} {_map.get(root.value, root.value).upper()} {format_expression(root.right)}"
-    if node_type == NodeType.COMPARISON_OPERATOR:
-        _map = {"Eq": "=", "Lt": "<", "Gt": ">", "NotEq": "!=", "BitwiseOr": "|"}
-        return f"{format_expression(root.left)} {_map.get(root.value, root.value).upper()} {format_expression(root.right)}"
-    if node_type == NodeType.UNARY_OPERATOR:
-        _map = {"IsNull": "%s IS NULL", "IsNotNull": "%s IS NOT NULL"}
-        return _map.get(root.value, root.value + "(%s)").replace(
-            "%s", format_expression(root.centre)
-        )
-    if node_type == NodeType.NOT:
-        return f"NOT {format_expression(root.centre)}"
-    if node_type in (NodeType.AND, NodeType.OR, NodeType.XOR):
-        _map = {
-            NodeType.AND: "AND",
-            NodeType.OR: "OR",
-            NodeType.XOR: "XOR",
-        }  # type:ignore
-        return f"{format_expression(root.left)} {_map[node_type]} {format_expression(root.right)}"
-
-    return str(root.value)
+LOGICAL_TYPE: int = int("00010000", 2)
+INTERNAL_TYPE: int = int("00100000", 2)
 
 
 class NodeType(int, Enum):
@@ -137,66 +53,76 @@ class NodeType(int, Enum):
     UNKNOWN: int = 0
 
     # LOGICAL OPERATORS
-    # nnnn0001
-    AND: int = 17
-    OR: int = 33
-    XOR: int = 49
-    NOT: int = 65 ## 0100 0001
+    # 0001 nnnn
+    AND: int = 17  # 0001 0001
+    OR: int = 18  # 0001 0010 
+    XOR: int = 19  # 0001 0011
+    NOT: int = 20  # 0001 0100
 
     # INTERAL IDENTIFIERS
-    # nnnn0010
-    WILDCARD: int = 18
-    COMPARISON_OPERATOR: int = 34
-    BINARY_OPERATOR: int = 50
-    UNARY_OPERATOR: int = 66
-    FUNCTION: int = 82
-    IDENTIFIER: int = 98
-    SUBQUERY: int = 114
-    NESTED: int = 130
-    AGGREGATOR:int = 146
-    COMPLEX_AGGREGATOR: int = 162
-    EXPRESSION_LIST:int = 178  # 1011 0010
+    # 0010 nnnn
+    WILDCARD: int = 33  # 0010 0001
+    COMPARISON_OPERATOR: int = 34  # 0010 0010
+    BINARY_OPERATOR: int = 35  # 0010 0011
+    UNARY_OPERATOR: int = 36  # 0010 0100
+    FUNCTION: int = 37  # 0010 0101
+    IDENTIFIER: int = 38  # 0010 0110
+    SUBQUERY: int = 39  # 0010 0111
+    NESTED: int = 40  # 0010 1000
+    AGGREGATOR:int = 41  # 0010 1001
+    LITERAL:int = 42  # 0010 1010
+    EXPRESSION_LIST: int = 43  # 0010 1011 (CASE WHEN)
 
 
-    # LITERAL TYPES
-    # nnnn0100
-    LITERAL_NUMERIC: int = 20
-    LITERAL_VARCHAR: int = 36
-    LITERAL_BOOLEAN: int = 52
-    LITERAL_INTERVAL: int = 68
-    LITERAL_LIST: int = 84
-    LITERAL_STRUCT: int = 100
-    LITERAL_TIMESTAMP: int = 116
-    LITERAL_NONE: int = 132
-    LITERAL_TABLE: int = 148  # 1001 0100
-
-    # fmt:on
-
-
-NUMPY_TYPES = {
-    NodeType.LITERAL_NUMERIC: numpy.dtype("float64"),
-    NodeType.LITERAL_VARCHAR: numpy.unicode_(),
-    NodeType.LITERAL_BOOLEAN: numpy.dtype("?"),
-    NodeType.LITERAL_INTERVAL: numpy.dtype("m"),
-    NodeType.LITERAL_LIST: numpy.dtype("O"),
-    NodeType.LITERAL_STRUCT: numpy.dtype("O"),
-    NodeType.LITERAL_TIMESTAMP: numpy.dtype("datetime64[us]"),
+ORSO_TO_NUMPY_MAP = {
+    OrsoTypes.ARRAY: numpy.dtype("O"),
+    OrsoTypes.BLOB: numpy.dtype("S"),
+    OrsoTypes.BOOLEAN: numpy.dtype("?"),
+    OrsoTypes.DATE: numpy.dtype("datetime64[D]"),  # [2.5e16 BC, 2.5e16 AD]
+    OrsoTypes.DECIMAL: numpy.dtype("O"),
+    OrsoTypes.DOUBLE: numpy.dtype("float64"),
+    OrsoTypes.INTEGER: numpy.dtype("int64"),
+    OrsoTypes.INTERVAL: numpy.dtype("m"),
+    OrsoTypes.STRUCT: numpy.dtype("O"),
+    OrsoTypes.TIMESTAMP: numpy.dtype("datetime64[us]"),  # [290301 BC, 294241 AD]
+    OrsoTypes.TIME: numpy.dtype("O"),
+    OrsoTypes.VARCHAR: numpy.unicode_(),
+    OrsoTypes.NULL: numpy.dtype("O"),
 }
 
 
-def _inner_evaluate(root: Node, table: Table, columns, for_display: bool = False):
+def _inner_evaluate(root: Node, table: Table):
+    # if we have this column already, just return it
+    if root.schema_column.identity in table.column_names:
+        return table[root.schema_column.identity].to_numpy()
+
     node_type = root.node_type
+
+    # LITERAL TYPES
+    if node_type == NodeType.LITERAL:
+        # if it's a literal value, return it once for every value in the table
+        literal_type = root.type
+        if literal_type == OrsoTypes.ARRAY:
+            # this isn't as fast as .full - but lists and strings are problematic
+            return numpy.array([root.value] * table.num_rows)
+        if literal_type == OrsoTypes.VARCHAR:
+            return numpy.array([root.value] * table.num_rows, dtype=numpy.unicode_)
+        if literal_type == OrsoTypes.INTERVAL:
+            return pyarrow.array([root.value] * table.num_rows)
+        return numpy.full(
+            shape=table.num_rows, fill_value=root.value, dtype=ORSO_TO_NUMPY_MAP[literal_type]
+        )  # type:ignore
 
     # BOOLEAN OPERATORS
     if node_type & LOGICAL_TYPE == LOGICAL_TYPE:
         left, right, centre = None, None, None
 
         if root.left is not None:
-            left = _inner_evaluate(root.left, table, columns, for_display)
+            left = _inner_evaluate(root.left, table)
         if root.right is not None:
-            right = _inner_evaluate(root.right, table, columns, for_display)
+            right = _inner_evaluate(root.right, table)
         if root.centre is not None:
-            centre = _inner_evaluate(root.centre, table, columns, for_display)
+            centre = _inner_evaluate(root.centre, table)
 
         if node_type == NodeType.AND:
             return pyarrow.compute.and_(left, right)
@@ -219,37 +145,29 @@ def _inner_evaluate(root: Node, table: Table, columns, for_display: bool = False
     # INTERAL IDENTIFIERS
     if node_type & INTERNAL_TYPE == INTERNAL_TYPE:
         if node_type == NodeType.FUNCTION:
-            parameters = [
-                _inner_evaluate(param, table, columns, for_display) for param in root.parameters
-            ]
+            parameters = [_inner_evaluate(param, table) for param in root.parameters]
             # zero parameter functions get the number of rows as the parameter
             if len(parameters) == 0:
                 parameters = [table.num_rows]
-            result = FUNCTIONS[root.value](*parameters)
+            result = root.function(*parameters)
             if isinstance(result, list):
                 result = numpy.array(result)
             return result
-        if node_type in (NodeType.AGGREGATOR, NodeType.COMPLEX_AGGREGATOR):
+        if node_type in (NodeType.AGGREGATOR,):
             # detected as an aggregator, but here it's an identifier because it
             # will have already been evaluated
             node_type = NodeType.IDENTIFIER
             root.value = format_expression(root)
             root.node_type = NodeType.IDENTIFIER
         if node_type == NodeType.IDENTIFIER:
-            if root.value in table.column_names:
-                mapped_column = root.value
-            else:
-                mapped_column = columns.get_column_from_alias(root.value, only_one=True)
-            return table[mapped_column].to_numpy()
+            return table[root.schema_column.identity].to_numpy()
         if node_type == NodeType.COMPARISON_OPERATOR:
-            left = _inner_evaluate(root.left, table, columns, for_display)
-            right = _inner_evaluate(root.right, table, columns, for_display)
-            if for_display:
-                return filter_operations_for_display(left, root.value, right)
+            left = _inner_evaluate(root.left, table)
+            right = _inner_evaluate(root.right, table)
             return filter_operations(left, root.value, right)
         if node_type == NodeType.BINARY_OPERATOR:
-            left = _inner_evaluate(root.left, table, columns, for_display)
-            right = _inner_evaluate(root.right, table, columns, for_display)
+            left = _inner_evaluate(root.left, table)
+            right = _inner_evaluate(root.right, table)
             return binary_operations(left, root.value, right)
         if node_type == NodeType.WILDCARD:
             numpy.full(table.num_rows, "*", dtype=numpy.unicode_)
@@ -258,34 +176,17 @@ def _inner_evaluate(root: Node, table: Table, columns, for_display: bool = False
             sub = root.value.execute()
             return pyarrow.concat_tables(sub, promote=True)
         if node_type == NodeType.NESTED:
-            return _inner_evaluate(root.centre, table, columns, for_display)
+            return _inner_evaluate(root.centre, table)
         if node_type == NodeType.UNARY_OPERATOR:
-            centre = _inner_evaluate(root.centre, table, columns, for_display)
+            centre = _inner_evaluate(root.centre, table)
             return UNARY_OPERATIONS[root.value](centre)
         if node_type == NodeType.EXPRESSION_LIST:
-            values = [_inner_evaluate(val, table, columns) for val in root.value]
+            values = [_inner_evaluate(val, table) for val in root.value]
             return values
 
-    # LITERAL TYPES
-    if node_type & LITERAL_TYPE == LITERAL_TYPE:
-        # if it's a literal value, return it once for every value in the table
-        if node_type == NodeType.LITERAL_LIST:
-            # this isn't as fast as .full - but lists and strings are problematic
-            return numpy.array([root.value] * table.num_rows)
-        if node_type == NodeType.LITERAL_VARCHAR:
-            return numpy.array([root.value] * table.num_rows, dtype=numpy.unicode_)
-        if node_type == NodeType.LITERAL_INTERVAL:
-            return pyarrow.array([root.value] * table.num_rows)
-        if node_type == NodeType.LITERAL_NONE:
-            return numpy.full(table.num_rows, numpy.nan)
-        return numpy.full(
-            shape=table.num_rows, fill_value=root.value, dtype=NUMPY_TYPES[node_type]
-        )  # type:ignore
 
-
-def evaluate(expression: Node, table: Table, for_display: bool = False):
-    columns = Columns(table)
-    result = _inner_evaluate(root=expression, table=table, columns=columns, for_display=for_display)
+def evaluate(expression: Node, table: Table):
+    result = _inner_evaluate(root=expression, table=table)
 
     if not isinstance(result, (pyarrow.Array, numpy.ndarray)):
         result = numpy.array(result)
@@ -298,7 +199,7 @@ def get_all_nodes_of_type(root, select_nodes):
     """
     if root is None:
         return []
-    if not isinstance(root, list):
+    if not isinstance(root, (set, tuple, list)):
         root = [root]
 
     identifiers = []
@@ -319,7 +220,7 @@ def get_all_nodes_of_type(root, select_nodes):
     return identifiers
 
 
-def evaluate_and_append(expressions, table: Table, seed: str = None):
+def evaluate_and_append(expressions, table: Table):
     """
     Evaluate an expression and add it to the table.
 
@@ -327,39 +228,24 @@ def evaluate_and_append(expressions, table: Table, seed: str = None):
     are duplicated, this is most common when performing many joins on the same table.
     """
 
-    columns = Columns(table)
-    return_expressions = []
-
     for statement in expressions:
+        if statement.schema_column.identity in table.column_names:
+            continue
+
         if statement.node_type in (
             NodeType.FUNCTION,
             NodeType.BINARY_OPERATOR,
             NodeType.COMPARISON_OPERATOR,
             NodeType.UNARY_OPERATOR,
+            NodeType.NESTED,
             NodeType.NOT,
             NodeType.AND,
             NodeType.OR,
             NodeType.XOR,
-        ) or (statement.node_type & LITERAL_TYPE == LITERAL_TYPE):
-            new_column_name = format_expression(statement)
-            raw_column_name = new_column_name
-
-            # avoid clashes in column names
-            alias = statement.alias
-            if not alias:
-                alias = [new_column_name]
-            if seed is not None:
-                alias.append(new_column_name)
-                new_column_name = hex(CityHash64(seed + new_column_name))
-
-            # if we've already been evaluated - don't do it again
-            if len(columns.get_column_from_alias(raw_column_name)) > 0:
-                statement = Node(NodeType.IDENTIFIER, value=raw_column_name, alias=alias)
-                return_expressions.append(statement)
-                continue
-
+            NodeType.LITERAL,
+        ):
             # do the evaluation
-            new_column = evaluate(statement, table, True)
+            new_column = evaluate(statement, table)
 
             # some activities give us masks rather than the values, if we don't have
             # enough values, assume it's a mask
@@ -370,29 +256,17 @@ def evaluate_and_append(expressions, table: Table, seed: str = None):
                 bool_list[new_column] = True
                 new_column = bool_list
 
-            # large arrays appear to have a bug in PyArrow where they're automatically
-            # converted to a chunked array, but the internal function can't handle
+            # Large arrays appear to have a bug in PyArrow where they're automatically
+            # converted to a chunked array, but the internal functions can't handle
             # chunked arrays - 50Mb columns are rare when we have 64Mb morsels.
             if new_column.nbytes > 50000000:
                 new_column = [[i] for i in new_column]
             else:
                 new_column = [new_column]
 
-            table = table.append_column(new_column_name, new_column)
+            table = table.append_column(statement.schema_column.identity, new_column)
 
-            # add the column to the schema and because it's been evaluated and added to
-            # table, it's an INDENTIFIER rather than a FUNCTION
-            columns.add_column(new_column_name)
-            columns.add_alias(new_column_name, alias)
-            columns.set_preferred_name(new_column_name, alias[0])
-
-            statement = Node(NodeType.IDENTIFIER, value=new_column_name, alias=alias)
-
-        return_expressions.append(statement)
-
-    table = columns.apply(table)
-
-    return columns, return_expressions, table
+    return table
 
 
 def deduplicate_list_of_nodes(nodes):

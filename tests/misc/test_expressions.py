@@ -1,10 +1,8 @@
 import decimal
 import os
-import re
 import sys
 
 import numpy
-
 import pytest
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
@@ -12,12 +10,12 @@ from rich import traceback
 
 import opteryx
 import opteryx.samples
+from opteryx.managers.expression import ORSO_TO_NUMPY_MAP, NodeType, evaluate
 from opteryx.models.node import Node
-from opteryx.managers.expression import NodeType
-from opteryx.managers.expression import evaluate
-from opteryx.managers.expression import NUMPY_TYPES
 from opteryx.shared import QueryStatistics
 
+from orso.types import OrsoTypes
+from orso.schema import FlatColumn
 
 traceback.install()
 stats = QueryStatistics()
@@ -25,35 +23,35 @@ stats = QueryStatistics()
 
 # fmt:off
 LITERALS = [
-        (NodeType.LITERAL_BOOLEAN, True),
-        (NodeType.LITERAL_BOOLEAN, False),
-        (NodeType.LITERAL_BOOLEAN, None),
-        (NodeType.LITERAL_LIST, ['a', 'b', 'c']),
-        (NodeType.LITERAL_LIST, []),
-        (NodeType.LITERAL_LIST, [True]),
-        (NodeType.LITERAL_NUMERIC, 0),
-        (NodeType.LITERAL_NUMERIC, None),
-        (NodeType.LITERAL_NUMERIC, 0.1),
-        (NodeType.LITERAL_NUMERIC, 1e10),
-        (NodeType.LITERAL_NUMERIC, decimal.Decimal(4)), 
-        (NodeType.LITERAL_NUMERIC, int(4)), 
-        (NodeType.LITERAL_NUMERIC, float(4)),
-        (NodeType.LITERAL_NUMERIC, numpy.float64(4)),  
-        (NodeType.LITERAL_STRUCT, {"a":"b"}),
-        (NodeType.LITERAL_TIMESTAMP, opteryx.utils.dates.parse_iso('2022-01-01')),
-        (NodeType.LITERAL_TIMESTAMP, opteryx.utils.dates.parse_iso('2022-01-01 13:31'))
+        (NodeType.LITERAL, OrsoTypes.BOOLEAN, True),
+        (NodeType.LITERAL, OrsoTypes.BOOLEAN, False),
+        (NodeType.LITERAL, OrsoTypes.BOOLEAN,  None),
+        (NodeType.LITERAL, OrsoTypes.ARRAY, ['a', 'b', 'c']),
+        (NodeType.LITERAL, OrsoTypes.ARRAY, []),
+        (NodeType.LITERAL, OrsoTypes.ARRAY, [True]),
+        (NodeType.LITERAL, OrsoTypes.INTEGER, 0),
+        (NodeType.LITERAL, OrsoTypes.DOUBLE, None),
+        (NodeType.LITERAL, OrsoTypes.DOUBLE, 0.1),
+        (NodeType.LITERAL, OrsoTypes.DOUBLE, 1e10),
+        (NodeType.LITERAL, OrsoTypes.DECIMAL, decimal.Decimal(4)),
+        (NodeType.LITERAL, OrsoTypes.INTEGER, int(4)),
+        (NodeType.LITERAL, OrsoTypes.DOUBLE, float(4)),
+        (NodeType.LITERAL, OrsoTypes.DOUBLE, numpy.float64(4)),
+        (NodeType.LITERAL, OrsoTypes.STRUCT, {"a":"b"}),
+        (NodeType.LITERAL, OrsoTypes.DATE, opteryx.utils.dates.parse_iso('2022-01-01').date()),
+        (NodeType.LITERAL, OrsoTypes.TIMESTAMP, opteryx.utils.dates.parse_iso('2022-01-01 13:31'))
     ]
 # fmt:on
 
 
-@pytest.mark.parametrize("node_type, value", LITERALS)
-def test_literals(node_type, value):
+@pytest.mark.parametrize("node_type, value_type, value", LITERALS)
+def test_literals(node_type, value_type, value):
     planets = opteryx.samples.planets.read()
 
-    node = Node(node_type, value=value)
+    node = Node(node_type, type=value_type, value=value)
     values = evaluate(node, table=planets)
-    if node_type != NodeType.LITERAL_LIST:
-        assert values.dtype == NUMPY_TYPES[node_type], values
+    if value_type != OrsoTypes.ARRAY:
+        assert values.dtype == ORSO_TO_NUMPY_MAP[value_type], values
     else:
         assert type(values[0]) == numpy.ndarray, values[0]
     assert len(values) == planets.num_rows
@@ -73,8 +71,8 @@ def test_logical_expressions():
 
     planets = opteryx.samples.planets.read()
 
-    true = Node(NodeType.LITERAL_BOOLEAN, value=True)
-    false = Node(NodeType.LITERAL_BOOLEAN, value=False)
+    true = Node(NodeType.LITERAL, type=OrsoTypes.BOOLEAN, value=True)
+    false = Node(NodeType.LITERAL, type=OrsoTypes.BOOLEAN, value=False)
 
     T_AND_T = Node(NodeType.AND, left=true, right=true)
     T_AND_F = Node(NodeType.AND, left=true, right=false)
@@ -130,7 +128,13 @@ def test_logical_expressions():
 def test_reading_identifiers():
     planets = opteryx.samples.planets.read()
 
-    names_node = Node(NodeType.IDENTIFIER, value="name")
+    name_column = opteryx.samples.planets.schema.find_column("name")
+    names_node = Node(
+        NodeType.IDENTIFIER,
+        type=OrsoTypes.VARCHAR,
+        value=name_column.identity,
+        schema_column=name_column,
+    )
     names = evaluate(names_node, planets)
     assert len(names) == 9
     assert sorted(names) == [
@@ -145,7 +149,7 @@ def test_reading_identifiers():
         "Venus",
     ], sorted(names)
 
-    gravity_node = Node(NodeType.IDENTIFIER, value="gravity")
+    gravity_node = Node(NodeType.IDENTIFIER, type=OrsoTypes.DOUBLE, value="gravity")
     gravities = evaluate(gravity_node, planets)
     assert sorted(gravities) == [0.7, 3.7, 3.7, 8.7, 8.9, 9.0, 9.8, 11.0, 23.1], sorted(gravities)
 
@@ -162,7 +166,7 @@ def test_function_operations():
     )
 
     gravity = Node(NodeType.IDENTIFIER, value="gravity")
-    seven = Node(NodeType.LITERAL_NUMERIC, value=7)
+    seven = Node(NodeType.LITERAL, type=OrsoTypes.INTEGER, value=7)
     plus = Node(NodeType.BINARY_OPERATOR, value="Plus", left=gravity, right=seven)
     multiply = Node(
         NodeType.BINARY_OPERATOR,
@@ -206,7 +210,7 @@ def test_compound_expressions():
     # this builds and tests the following `3.7 * gravity > mass`
 
     gravity = Node(NodeType.IDENTIFIER, value="gravity")
-    three_point_seven = Node(NodeType.LITERAL_NUMERIC, value=3.7)
+    three_point_seven = Node(NodeType.LITERAL_FLOAT, value=3.7)
     mass = Node(NodeType.IDENTIFIER, value="mass")
 
     multiply = Node(
@@ -244,9 +248,9 @@ def test_functions():
 
 if __name__ == "__main__":  # pragma: no cover
     print(f"RUNNING BATTERY OF {len(LITERALS)} LITERAL TYPE TESTS")
-    for node_type, value in LITERALS:
+    for node_type, value_type, value in LITERALS:
         print(node_type)
-        test_literals(node_type, value)
+        test_literals(node_type, value_type, value)
     print("okay")
 
     test_logical_expressions()

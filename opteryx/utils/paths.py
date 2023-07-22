@@ -20,24 +20,29 @@ import pathlib
 def get_parts(path_string: str):
     if not path_string:  # pragma: no cover
         raise ValueError("get_parts: path_string must have a value")
+    if ".." in path_string or "~" in path_string:
+        raise ValueError("get_parts: paths cannot traverse the folder structure")
 
     path = pathlib.PurePosixPath(path_string)
     bucket = path.parts[0]
 
     if len(path.parts) == 1:  # pragma: no cover
-        parts = "partitions"  # type:ignore
-        stem = None
-        suffix = None
-    elif path.suffix == "":
-        parts = pathlib.PurePosixPath("/".join(path.parts[1:-1])) / path.stem  # type:ignore
-        stem = None
-        suffix = None
-    else:
-        parts = pathlib.PurePosixPath("/".join(path.parts[1:-1]))  # type:ignore
+        bucket = ""
+        parts = pathlib.PurePosixPath("")
         stem = path.stem
         suffix = path.suffix
+    elif path.suffix == "":
+        parts = pathlib.PurePosixPath("/".join(path.parts[1:-1])) / path.stem
+        stem = ""
+        suffix = ""
+    else:
+        parts = pathlib.PurePosixPath("/".join(path.parts[1:-1]))
+        stem = path.stem
+        suffix = path.suffix
+    if len(parts.parts) == 0:
+        parts = ""
 
-    return str(bucket), str(parts) + "/", stem, suffix
+    return str(bucket), str(parts), stem, suffix
 
 
 def build_path(path: str, date: datetime.date = None):  # pragma: no cover

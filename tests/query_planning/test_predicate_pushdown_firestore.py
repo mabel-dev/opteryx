@@ -7,7 +7,6 @@ import sys
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import opteryx
-
 from opteryx.connectors import GcpFireStoreConnector
 
 
@@ -60,5 +59,6 @@ def test_predicate_pushdowns_firestore():
 
 
 if __name__ == "__main__":  # pragma: no cover
-    test_predicate_pushdowns_firestore()
-    print("✅ okay")
+    from tests.tools import run_tests
+
+    run_tests()

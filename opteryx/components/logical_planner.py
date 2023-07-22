@@ -48,13 +48,15 @@ import sys
 from enum import Enum
 from enum import auto
 
-from opteryx.components.v2 import logical_planner_builders
+from orso.tools import random_string
+from orso.types import OrsoTypes
+
+from opteryx.components import logical_planner_builders
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import format_expression
 from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.models.node import Node
 from opteryx.third_party.travers import Graph
-from opteryx.utils import random_string
 
 sys.path.insert(1, os.path.join(sys.path[0], "../../../.."))  # isort:skip
 
@@ -66,7 +68,7 @@ class LogicalPlanStepType(int, Enum):
     Explain = auto()  # EXPLAIN
     Difference = auto()  # relation interection
     Join = auto()  # all joins
-    Group = auto()  # group by, without the aggregation
+    AggregateAndGroup = auto()  # group by
     Aggregate = auto()
     Scan = auto()  # read a dataset
     Show = auto()  # show a variable
@@ -75,13 +77,11 @@ class LogicalPlanStepType(int, Enum):
     Limit = auto()  # limit and offset
     Order = auto()  # order by
     Distinct = auto()
+    Exit = auto()
 
     CTE = auto()
     Subquery = auto()
-    Values = auto()
-    Unnest = auto()
-    GenerateSeries = auto()
-    Fake = auto()
+    FunctionDataset = auto()  # Unnest, GenerateSeries, values + Fake
 
 
 class LogicalPlan(Graph):
@@ -93,6 +93,10 @@ class LogicalPlanNode(Node):
         try:
             # fmt:off
             node_type = self.node_type
+            if node_type == LogicalPlanStepType.AggregateAndGroup:
+                return f"AGGREGATE ({', '.join(format_expression(col) for col in self.aggregates)}) GROUP BY ({', '.join(format_expression(col) for col in self.groups)})"
+            if node_type == LogicalPlanStepType.Aggregate:
+                return f"AGGREGATE ({', '.join(format_expression(col) for col in self.aggregates)})"
             if node_type == LogicalPlanStepType.Distinct:
                 distinct_on = ""
                 if self.on is not None:
@@ -100,30 +104,36 @@ class LogicalPlanNode(Node):
                 return f"DISTINCT{distinct_on}"
             if node_type == LogicalPlanStepType.Explain:
                 return f"EXPLAIN{' ANALYZE' if self.analyze else ''}{(' (' + self.format + ')') if self.format else ''}"
-            if node_type == LogicalPlanStepType.Fake:
-                return f"FAKE ({', '.join(format_expression(arg) for arg in self.args)}{' AS ' + self.alias if self.alias else ''})"
+            if node_type == LogicalPlanStepType.FunctionDataset:
+                if self.function == "FAKE":
+                    return f"FAKE ({', '.join(format_expression(arg) for arg in self.args)}{' AS ' + self.alias if self.alias else ''})"
+                if self.function == "GENERATE_SERIES":
+                    return f"GENERATE SERIES ({', '.join(format_expression(arg) for arg in self.args)}){' AS ' + self.alias if self.alias else ''}"
+                if self.function == "VALUES":
+                    return f"VALUES (({', '.join(self.columns)}) x {len(self.values)} AS {self.alias})"
+                if self.function == "UNNEST":
+                    return f"UNNEST ({', '.join(format_expression(arg) for arg in self.args)}{' AS ' + self.alias if self.alias else ''})"
             if node_type == LogicalPlanStepType.Filter:
                 return f"FILTER ({format_expression(self.condition)})"
-            if node_type == LogicalPlanStepType.GenerateSeries:
-                return f"GENERATE SERIES ({', '.join(format_expression(arg) for arg in self.args)}){' AS ' + self.alias if self.alias else ''}"
-            if node_type == LogicalPlanStepType.Group:
-                return f"GROUP ({', '.join(format_expression(col) for col in self.columns)})"
             if node_type == LogicalPlanStepType.Join:
                 if self.on:
                     return f"{self.type.upper()} ({format_expression(self.on)})"
                 if self.using:
                     return f"{self.type.upper()} (USING {','.join(format_expression(self.using))})"
                 return self.type.upper()
+            if node_type == LogicalPlanStepType.Limit:
+                limit_str = f"LIMIT ({self.limit})" if self.limit is not None else ""
+                offset_str = f" OFFSET ({self.offset})" if self.offset is not None else ""
+                return (limit_str + offset_str).strip()
             if node_type == LogicalPlanStepType.Order:
                 return f"ORDER BY ({', '.join(format_expression(item[0]) + (' DESC' if not item[1] else '') for item in self.order_by)})"
             if node_type == LogicalPlanStepType.Project:
                 return f"PROJECT ({', '.join(format_expression(col) for col in self.columns)})"
             if node_type == LogicalPlanStepType.Scan:
                 date_range = ""
-                if self.start_date == self.end_date:
-                    if self.start_date is not None:
-                        date_range = f" FOR '{self.start_date}'"
-                else:
+                if self.start_date == self.end_date and self.start_date is not None:
+                    date_range = f" FOR '{self.start_date}'"
+                elif self.start_date is not None:
                     date_range = f" FOR '{self.start_date}' TO '{self.end_date}'"
                 return f"SCAN ({self.relation}{' AS ' + self.alias if self.alias else ''}{date_range}{' WITH(' + ','.join(self.hints) + ')' if self.hints else ''})"
             if node_type == LogicalPlanStepType.Show:
@@ -132,16 +142,12 @@ class LogicalPlanNode(Node):
                 return f"SHOW{' FULL' if self.full else ''}{' EXTENDED' if self.extended else ''} COLUMNS ({self.relation})"
             if node_type == LogicalPlanStepType.Subquery:
                 return f"SUBQUERY{' AS ' + self.alias if self.alias else ''}"
-            if node_type == LogicalPlanStepType.Unnest:
-                return f"UNNEST ({', '.join(format_expression(arg) for arg in self.args)}{' AS ' + self.alias if self.alias else ''})"
             if node_type == LogicalPlanStepType.Union:
                 return f"UNION {'' if self.modifier is None else self.modifier.upper()}"
-            if node_type == LogicalPlanStepType.Values:
-                return f"VALUES (({', '.join(self.columns)}) x {len(self.values)} AS {self.alias})"
 
             # fmt:on
         except Exception as err:
-            print(err)
+            opteryx_logger.warning(f"Problem drawing logical plan - {err}")
         return f"{str(self.node_type)[20:].upper()}"
 
 
@@ -174,7 +180,7 @@ def extract_variable(clause):
 def extract_simple_filter(filters, identifier: str = "Name"):
     if "Like" in filters:
         left = Node(NodeType.IDENTIFIER, value=identifier)
-        right = Node(NodeType.LITERAL_VARCHAR, value=filters["Like"])
+        right = Node(NodeType.LITERAL, type=OrsoTypes.VARCHAR, value=filters["Like"])
         root = Node(
             NodeType.COMPARISON_OPERATOR,
             value="ILike",  # we're case insensitive for SHOW filters
@@ -206,6 +212,22 @@ def inner_query_planner(ast_branch):
         for relation in _relations:
             inner_plan.add_edge(relation["step_id"], step_id)
 
+    # If there's no relations, use $no_table
+    if len(_relations) == 0:
+        step_id, sub_plan = create_node_relation(
+            {
+                "relation": {
+                    "Table": {
+                        "name": [{"value": "$no_table"}],
+                        "args": None,
+                        "alias": None,
+                        "with_hints": [],
+                    }
+                }
+            }
+        )
+        inner_plan += sub_plan
+
     # selection
     _selection = logical_planner_builders.build(ast_branch["Select"].get("selection"))
     if _selection:
@@ -217,36 +239,30 @@ def inner_query_planner(ast_branch):
             inner_plan.add_edge(previous_step_id, step_id)
 
     # groups
+    _projection = logical_planner_builders.build(ast_branch["Select"].get("projection")) or []
+    _aggregates = get_all_nodes_of_type(_projection, select_nodes=(NodeType.AGGREGATOR,))
     _groups = logical_planner_builders.build(ast_branch["Select"].get("group_by"))
     if _groups is not None and _groups != []:
-        # TODO: groups need: grouped columns
-        group_step = LogicalPlanNode(node_type=LogicalPlanStepType.Group)
-        group_step.columns = _groups
+        group_step = LogicalPlanNode(node_type=LogicalPlanStepType.AggregateAndGroup)
+        group_step.groups = _groups
+        group_step.aggregates = _aggregates
+        group_step.projection = _projection
         previous_step_id, step_id = step_id, random_string()
         inner_plan.add_node(step_id, group_step)
         if previous_step_id is not None:
             inner_plan.add_edge(previous_step_id, step_id)
-
     # aggregates
-    _projection = logical_planner_builders.build(ast_branch["Select"].get("projection")) or []
-    _aggregates = get_all_nodes_of_type(
-        _projection, select_nodes=(NodeType.AGGREGATOR, NodeType.COMPLEX_AGGREGATOR)
-    )
-    if len(_aggregates) > 0:
-        # TODO: aggregates need: functions
-        aggregate_step = LogicalPlanNode(
-            node_type=LogicalPlanStepType.Aggregate, aggregates=_aggregates
-        )
+    elif len(_aggregates) > 0:
+        aggregate_step = LogicalPlanNode(node_type=LogicalPlanStepType.Aggregate)
+        aggregate_step.groups = _groups
+        aggregate_step.aggregates = _aggregates
         previous_step_id, step_id = step_id, random_string()
         inner_plan.add_node(step_id, aggregate_step)
         if previous_step_id is not None:
             inner_plan.add_edge(previous_step_id, step_id)
 
     # projection
-    _projection = [clause for clause in _projection if clause not in _aggregates]
-    if not _projection == [] and not (
-        len(_projection) == 1 and _projection[0].node_type == NodeType.WILDCARD
-    ):
+    if not (len(_projection) == 1 and _projection[0].node_type == NodeType.WILDCARD):
         project_step = LogicalPlanNode(node_type=LogicalPlanStepType.Project)
         project_step.columns = _projection
         previous_step_id, step_id = step_id, random_string()
@@ -294,12 +310,22 @@ def inner_query_planner(ast_branch):
     _offset = ast_branch.get("offset")
     if _limit or _offset:
         limit_step = LogicalPlanNode(node_type=LogicalPlanStepType.Limit)
-        limit_step.limit = _limit
-        limit_step.offset = _offset
+        limit_step.limit = None if _limit is None else logical_planner_builders.build(_limit).value
+        limit_step.offset = (
+            None if _offset is None else logical_planner_builders.build(_offset).value
+        )
         previous_step_id, step_id = step_id, random_string()
         inner_plan.add_node(step_id, limit_step)
         if previous_step_id is not None:
             inner_plan.add_edge(previous_step_id, step_id)
+
+    # add the exit node
+    exit_node = LogicalPlanNode(node_type=LogicalPlanStepType.Exit)
+    exit_node.columns = _projection
+    previous_step_id, step_id = step_id, random_string()
+    inner_plan.add_node(step_id, exit_node)
+    if previous_step_id is not None:
+        inner_plan.add_edge(previous_step_id, step_id)
 
     return inner_plan
 
@@ -343,7 +369,9 @@ def create_node_relation(relation):
                 #
                 # We have the name of the relation (alias), the column names (columns) and the
                 # values in each row (values)
-                values_step = LogicalPlanNode(node_type=LogicalPlanStepType.Values)
+                values_step = LogicalPlanNode(
+                    node_type=LogicalPlanStepType.FunctionDataset, function="VALUES"
+                )
                 values_step.alias = subquery["alias"]["name"]["value"]
                 values_step.columns = tuple(col["value"] for col in subquery["alias"]["columns"])
                 values_step.values = [
@@ -358,14 +386,9 @@ def create_node_relation(relation):
     elif relation["relation"]["Table"]["args"]:
         function = relation["relation"]["Table"]
         function_name = function["name"][0]["value"].upper()
-        if function_name == "UNNEST":
-            function_step = LogicalPlanNode(node_type=LogicalPlanStepType.Unnest)
-        elif function_name == "GENERATE_SERIES":
-            function_step = LogicalPlanNode(node_type=LogicalPlanStepType.GenerateSeries)
-        elif function_name == "FAKE":
-            function_step = LogicalPlanNode(node_type=LogicalPlanStepType.Fake)
-        else:
-            raise NotImplementedError(f"function {function_name}")
+        function_step = LogicalPlanNode(
+            node_type=LogicalPlanStepType.FunctionDataset, function=function_name
+        )
         function_step.alias = (
             None if function["alias"] is None else function["alias"]["name"]["value"]
         )
@@ -407,14 +430,14 @@ def create_node_relation(relation):
             join_operator = next(iter(join["join_operator"]))
             join_condition = next(iter(join["join_operator"][join_operator]))
             join_step.type = {
-                "FullOuter": "Full Outer Join",
-                "Inner": "Inner Join",
-                "LeftAnti": "Left Anti Join",
-                "LeftOuter": "Left Outer Join",
-                "LeftSemi": "Left Semi Join",
-                "RightAnti": "Right Anti Join",
-                "RightOuter": "Right Outer Join",
-                "RightSemi": "Right Semi Join",
+                "FullOuter": "full outer",
+                "Inner": "inner",
+                "LeftAnti": "left anti",
+                "LeftOuter": "left outer",
+                "LeftSemi": "left semi",
+                "RightAnti": "right anti",
+                "RightOuter": "right outer",
+                "RightSemi": "right semi",
             }.get(join_operator, join_operator)
             if join_condition == "On":
                 join_step.on = logical_planner_builders.build(
@@ -501,7 +524,7 @@ def plan_query(statement):
 
     # we do some minor AST rewriting
     root_node["body"]["limit"] = root_node.get("limit", None)
-    root_node["body"]["offset"] = root_node.get("offset", None)
+    root_node["body"]["offset"] = (root_node.get("offset") or {}).get("value")
     root_node["body"]["order_by"] = root_node.get("order_by", None)
     return inner_query_planner(root_node["body"])
 

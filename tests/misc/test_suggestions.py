@@ -20,6 +20,6 @@ def test_hint_hints():
 
 
 if __name__ == "__main__":  # pragma: no cover
-    test_hint_hints()
+    from tests.tools import run_tests
 
-    print("✅ okay")
+    run_tests()

@@ -10,15 +10,33 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+Disk Connector reads files from a locally addressable file system (local disk,
+NFS etc).
+"""
+
 import io
 import os
 
-from opteryx.connectors import BaseBlobStorageAdapter
+from orso.schema import RelationSchema
+
+from opteryx.connectors.base.base_connector import BaseConnector
+from opteryx.connectors.base.base_connector import DatasetReader
+from opteryx.utils import file_decoders
+from opteryx.utils import paths
 
 
-class DiskConnector(BaseBlobStorageAdapter):
-    def read_blob(self, blob_name):
-        with open(blob_name, "rb") as blob:
+class DiskConnector(BaseConnector):
+    __mode__ = "blob"
+
+    def get_dataset_schema(self, dataset_name: str) -> RelationSchema:
+        pass
+
+    def read_dataset(self, dataset_name: str) -> DatasetReader:
+        if not paths.is_file(dataset_name):
+            raise Exception(f"{dataset_name} is not a file")
+        parts = paths.get_parts(dataset_name)
+        with open(dataset_name, "rb") as blob:
             # wrap in a BytesIO so we can close the file
             return io.BytesIO(blob.read())
 
@@ -27,6 +45,3 @@ class DiskConnector(BaseBlobStorageAdapter):
 
         files = glob.glob(str(partition / "**"), recursive=True)
         return [str(f).replace("\\", "/") for f in files if os.path.isfile(f)]
-
-    def get_dataset_schema(self, blob_name):
-        return None

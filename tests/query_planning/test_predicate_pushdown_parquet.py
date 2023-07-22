@@ -106,5 +106,6 @@ def test_predicate_pushdowns_blobs_parquet():
 
 
 if __name__ == "__main__":  # pragma: no cover
-    test_predicate_pushdowns_blobs_parquet()
-    print("✅ okay")
+    from tests.tools import run_tests
+
+    run_tests()

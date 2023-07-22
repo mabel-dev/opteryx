@@ -122,9 +122,9 @@ result = opteryx.query("SELECT 4 * 7;")
 result.head()
 ~~~
 ~~~
-   | 4.0*7.0  
-===#========= 
- 0 |    28.0 
+   |  4 * 7  
+============
+ 1 |     28 
 ~~~
 _this example is complete and should run as-is_
 
@@ -190,14 +190,14 @@ result = opteryx.query("SELECT name, mass, diameter, density FROM sql.planets LI
 result.head()
 ~~~
 ~~~
-   │ name    │ mass   │ diameter │ density
-═══#═════════#════════#══════════#════════
- 0 │ Mercury │   0.33 │   4879.0 │  5427.0
- 1 │ Venus   │   4.87 │  12104.0 │  5243.0
- 2 │ Earth   │   5.97 │  12756.0 │  5514.0
- 3 │ Mars    │  0.642 │   6792.0 │  3933.0
- 4 │ Jupiter │ 1898.0 │ 142984.0 │  1326.0
-~~~
+   |   name  |  mass  | diameter | density 
+===========================================
+ 1 | Mercury |   0.33 |     4879 |    5427 
+ 2 | Venus   |   4.87 |    12104 |    5243 
+ 3 | Earth   |   5.97 |    12756 |    5514 
+ 4 | Mars    |  0.642 |     6792 |    3933 
+ 5 | Jupiter | 1898.0 |   142984 |    1326 
+ ~~~
 
 _this example requires a data file, [database.db](https://storage.googleapis.com/opteryx/planets/database.db)._
 

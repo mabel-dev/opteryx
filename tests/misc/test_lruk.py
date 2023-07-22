@@ -143,7 +143,6 @@ def test_lru_cache_eviction():
 
 
 if __name__ == "__main__":  # pragma: no cover
-    test_lruk()
-    test_lru2()
-    test_lru_cache_eviction()
-    print("✅ okay")
+    from tests.tools import run_tests
+
+    run_tests()

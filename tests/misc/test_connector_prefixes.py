@@ -7,7 +7,7 @@ import sys
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import opteryx
-from opteryx.connectors import register_store, SqlConnector, GcpFireStoreConnector
+from opteryx.connectors import GcpFireStoreConnector, SqlConnector, register_store
 
 register_store(
     "sqlite",
@@ -45,6 +45,6 @@ def test_connector_prefixes():
 
 
 if __name__ == "__main__":  # pragma: no cover
-    test_connector_prefixes()
+    from tests.tools import run_tests
 
-    print("✅ okay")
+    run_tests()

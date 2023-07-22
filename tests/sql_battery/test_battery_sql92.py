@@ -10,7 +10,6 @@ import pytest
 
 import opteryx
 
-
 # fmt:off
 STATEMENTS = [
         
@@ -154,14 +153,14 @@ STATEMENTS = [
     ("SELECT MIN(i) FROM GENERATE_SERIES(1, 10) as i", "E091-04"),
     ("SELECT SUM(i) FROM GENERATE_SERIES(1, 10) as i", "E091-05"),
     ("SELECT * FROM $planets ORDER BY mass;", "E121-02"),
-#    ("SELECT DATE '2016-03-26'", "F051-01"),
+    ("SELECT DATE '2016-03-26'", "F051-01"),
 #    ("SELECT TIME '01:02:03'", "F051-02"),
     ("SELECT TIMESTAMP '2016-03-26 01:02:03'", "F051-03"),
-#    ("SELECT DATE '2016-03-26' < DATE '2016-03-26'", "F051-04"),
-#    ("SELECT DATE '2016-03-26' <= DATE '2016-03-26'", "F051-04"),
-#    ("SELECT DATE '2016-03-26' <> DATE '2016-03-26'", "F051-04"),
-#    ("SELECT DATE '2016-03-26' = DATE '2016-03-26'", "F051-04"),
-#    ("SELECT DATE '2016-03-26' > DATE '2016-03-26'", "F051-04"),
+    ("SELECT DATE '2016-03-26' < DATE '2016-03-26'", "F051-04"),
+    ("SELECT DATE '2016-03-26' <= DATE '2016-03-26'", "F051-04"),
+    ("SELECT DATE '2016-03-26' <> DATE '2016-03-26'", "F051-04"),
+    ("SELECT DATE '2016-03-26' = DATE '2016-03-26'", "F051-04"),
+    ("SELECT DATE '2016-03-26' > DATE '2016-03-26'", "F051-04"),
 #    ("SELECT DATE '2016-03-26' >= DATE '2016-03-26'", "F051-04"),
 #    ("SELECT TIME '01:02:03' < TIME '01:02:03'", "F051-04"),
 #    ("SELECT TIME '01:02:03' <= TIME '01:02:03'", "F051-04"),
@@ -238,13 +237,17 @@ if __name__ == "__main__":  # pragma: no cover
 
     import shutil
 
+    from opteryx.utils.formatter import format_sql
+    from tests.tools import trunc_printable
+
     width = shutil.get_terminal_size((80, 20))[0]
 
     print(f"RUNNING BATTERY OF {len(STATEMENTS)} SQL92 TESTS")
     for index, (statement, feature) in enumerate(STATEMENTS):
-        detail = f"\033[0;35m{feature}\033[0m {statement}"
+        detail = f"\033[0;35m{feature}\033[0m {format_sql(statement)}"
+        detail = trunc_printable(detail, width - 8)
         print(
-            f"\033[0;36m{(index + 1):04}\033[0m {detail[0:width - 1].ljust(width)}",
+            f"\033[0;36m{(index + 1):04}\033[0m {detail.ljust(width)}",
             end="",
         )
         test_sql92(statement, feature)

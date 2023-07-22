@@ -11,15 +11,12 @@
 # limitations under the License.
 
 """
-Part of the v2 Engine.
-
 The BaseConnector provides a common interface for all storage connectors.
 """
 import typing
 
 import pyarrow
-
-from opteryx.models import RelationSchema
+from orso.schema import RelationSchema
 
 
 class BaseConnector:

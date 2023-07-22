@@ -28,6 +28,6 @@ def test_chunking_storage():
 
 
 if __name__ == "__main__":  # pragma: no cover
-    test_chunking_storage()
+    from tests.tools import run_tests
 
-    print("✅ okay")
+    run_tests()

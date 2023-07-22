@@ -25,31 +25,30 @@ import pyarrow
 
 from opteryx.exceptions import SqlError
 from opteryx.managers.expression import NodeType
-from opteryx.managers.expression import evaluate
-from opteryx.models import Columns
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 from opteryx.utils import series
 
 
-def _generate_series(alias, *args):
-    value_array = series.generate_series(*args)
-    return [{alias: value} for value in value_array]
+def _generate_series(**kwargs):
+    value_array = series.generate_series(*kwargs["args"])
+    return [{kwargs["columns"][0]: value} for value in value_array]
 
 
-def _unnest(alias, values):
+def _unnest(**kwargs):
     """unnest converts an list into rows"""
-    list_items = values.value
-    if values.node_type == NodeType.NESTED:
-        # single item lists are reported as nested
-        from opteryx.samples import no_table
+    if kwargs["args"][0].node_type == NodeType.NESTED:
+        list_items = [kwargs["args"][0].centre.value]
+    else:
+        list_items = kwargs["args"][0].value
+    column_name = kwargs["columns"][0]
+    return [{column_name: row} for row in list_items]
 
-        list_items = evaluate(values, no_table.read(), True)
-    return [{alias: row} for row in list_items]
 
-
-def _values(alias, *values):
-    return values
+def _values(**parameters):
+    columns = parameters["columns"]
+    values_array = parameters["values"]
+    return [{columns[i]: value.value for i, value in enumerate(values)} for values in values_array]
 
 
 def _fake_data(alias, *args):
@@ -60,10 +59,10 @@ def _fake_data(alias, *args):
 
 
 FUNCTIONS = {
-    "fake": _fake_data,
-    "generate_series": _generate_series,
-    "unnest": _unnest,
-    "values": _values,
+    "FAKE": _fake_data,
+    "GENERATE_SERIES": _generate_series,
+    "UNNEST": _unnest,
+    "VALUES": _values,
 }
 
 
@@ -74,15 +73,15 @@ class FunctionDatasetNode(BasePlanNode):
         and returning a Table/Relation.
         """
         super().__init__(properties=properties)
-        self._alias = config["alias"]
-        self._function = config["dataset"]["function"]
-        self._args = config["dataset"]["args"]
+        self.alias = config.get("alias")
+        self.function = config["function"]
+        self.parameters = config
 
     @property
     def config(self):  # pragma: no cover
-        if self._alias:
-            return f"{self._function} => {self._alias}"
-        return f"{self._function}"
+        if self.alias:
+            return f"{self.function} => {self.alias}"
+        return f"{self.function}"
 
     @property
     def name(self):  # pragma: no cover
@@ -95,7 +94,7 @@ class FunctionDatasetNode(BasePlanNode):
     def execute(self) -> Iterable:
         try:
             start_time = time.time_ns()
-            data = FUNCTIONS[self._function](self._alias, *self._args)  # type:ignore
+            data = FUNCTIONS[self.function](**self.parameters)  # type:ignore
             self.statistics.time_data_read += time.time_ns() - start_time
         except TypeError as err:  # pragma: no cover
             if str(err).startswith("_unnest() takes 2"):
@@ -109,12 +108,4 @@ class FunctionDatasetNode(BasePlanNode):
         self.statistics.rows_read += table.num_rows
         self.statistics.columns_read += len(table.column_names)
 
-        table = Columns.create_table_metadata(
-            table=table,
-            expected_rows=table.num_rows,
-            name=self._function,
-            table_aliases=[self._alias],
-            disposition="calculated",
-            path=self._function,
-        )
         yield table

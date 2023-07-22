@@ -19,7 +19,6 @@ from typing import Iterable
 
 import pyarrow
 
-from opteryx.models import Columns
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 

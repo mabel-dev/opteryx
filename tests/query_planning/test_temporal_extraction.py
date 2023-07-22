@@ -10,10 +10,8 @@ import datetime
 
 import pytest
 
-from opteryx.components.sql_rewriter.sql_rewriter import clean_statement
-from opteryx.components.sql_rewriter.sql_rewriter import remove_comments
-from opteryx.components.sql_rewriter.temporal_extraction import extract_temporal_filters
-
+from opteryx.components.sql_rewriter import clean_statement, remove_comments
+from opteryx.components.sql_rewriter import extract_temporal_filters
 
 TODAY = datetime.datetime.utcnow().date()
 YESTERDAY = datetime.datetime.utcnow().date() - datetime.timedelta(days=1)

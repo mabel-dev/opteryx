@@ -21,7 +21,6 @@ This is a greedy operator - it consumes all the data before responding.
 
 This is built around the pyarrow table grouping functionality.
 """
-import random
 import time
 from typing import Iterable
 
@@ -35,7 +34,6 @@ from opteryx.managers.expression import evaluate_and_append
 from opteryx.managers.expression import format_expression
 from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.models import QueryProperties
-from opteryx.models.columns import Columns
 from opteryx.operators import BasePlanNode
 
 COUNT_STAR: str = "COUNT(*)"
@@ -67,12 +65,10 @@ AGGREGATORS = {
 }
 
 
-def _is_count_star(aggregates, groups):
+def _is_count_star(aggregates):
     """
     Is the SELECT clause `SELECT COUNT(*)` with no GROUP BY
     """
-    if len(groups) != 0:
-        return False
     if len(aggregates) != 1:
         return False
     if aggregates[0].value != "COUNT":
@@ -82,28 +78,15 @@ def _is_count_star(aggregates, groups):
     return True
 
 
-def _count_star(morsel_promise):
-    count = 0
-    for morsel in morsel_promise.execute():
-        count += morsel.num_rows
-    table = pyarrow.Table.from_pylist([{COUNT_STAR: count}])
-    table = Columns.create_table_metadata(
-        table=table,
-        expected_rows=1,
-        name="groupby",
-        table_aliases=[],
-        disposition="calculated",
-        path="group_by",
-    )
+def _count_star(morsel_promise, column_name):
+    count = sum(morsel.num_rows for morsel in morsel_promise.execute())
+    table = pyarrow.Table.from_pylist([{column_name: count}])
     yield table
 
 
-def _project(tables, fields):
-    fields = list(dict.fromkeys(fields))
+def project(tables, column_names):
     for table in tables:
         row_count = table.num_rows
-        columns = Columns(table)
-        column_names = [columns.get_column_from_alias(field, only_one=True) for field in fields]
         if len(column_names) > 0:
             yield table.select(dict.fromkeys(column_names))
         else:
@@ -111,7 +94,7 @@ def _project(tables, fields):
             yield pyarrow.Table.from_pydict({"*": numpy.full(row_count, 1, dtype=numpy.int8)})
 
 
-def _build_aggs(aggregators, columns):
+def build_aggregations(aggregators):
     column_map = {}
     aggs = []
 
@@ -119,52 +102,37 @@ def _build_aggs(aggregators, columns):
         aggregators = [aggregators]
 
     for root in aggregators:
-        for aggregator in get_all_nodes_of_type(
-            root, select_nodes=(NodeType.AGGREGATOR, NodeType.COMPLEX_AGGREGATOR)
-        ):
-            if aggregator.node_type in (
-                NodeType.AGGREGATOR,
-                NodeType.COMPLEX_AGGREGATOR,
-            ):
-                field_node = aggregator.parameters[0]
-                display_name = format_expression(field_node)
-                exists = columns.get_column_from_alias(display_name)
-                count_options = None
+        for aggregator in get_all_nodes_of_type(root, select_nodes=(NodeType.AGGREGATOR,)):
+            field_node = aggregator.parameters[0]
+            count_options = None
 
-                if field_node.node_type == NodeType.WILDCARD:
-                    field_name = "*"
-                    # count * counts nulls
-                    count_options = pyarrow.compute.CountOptions(mode="all")
-                elif field_node.node_type == NodeType.IDENTIFIER:
-                    field_name = columns.get_column_from_alias(field_node.value, only_one=True)
-                elif field_node.node_type in (
-                    NodeType.LITERAL_NUMERIC,
-                    NodeType.LITERAL_BOOLEAN,
-                    NodeType.LITERAL_VARCHAR,
-                ):
-                    field_name = str(field_node.value)
-                elif len(exists) > 0:
-                    field_name = exists[0]
-                else:
-                    display_name = format_expression(field_node)
-                    raise SqlError(
-                        f"Invalid identifier or literal provided in aggregator function `{display_name}`"
-                    )
-                function = AGGREGATORS.get(aggregator.value)
-                if aggregator.value == "ARRAY_AGG":
-                    # if the array agg is distinct, base off that function instead
-                    if aggregator.parameters[1]:
-                        function = "distinct"
-                aggs.append((field_name, function, count_options))
-                column_map[
-                    format_expression(aggregator)
-                    #                    f"{aggregator.value.upper()}({display_field})"
-                ] = f"{field_name}_{function}".replace("_hash_", "_")
+            if field_node.node_type == NodeType.WILDCARD:
+                field_name = "*"
+                # count * counts nulls
+                count_options = pyarrow.compute.CountOptions(mode="all")
+            elif field_node.node_type == NodeType.IDENTIFIER:
+                field_name = field_node.schema_column.identity
+            elif field_node.node_type == NodeType.LITERAL:
+                field_name = str(field_node.value)
+            else:
+                display_name = field_node.query_column
+                raise SqlError(
+                    f"Invalid identifier or literal provided in aggregator function `{display_name}`"
+                )
+            function = AGGREGATORS.get(aggregator.value)
+            if aggregator.value == "ARRAY_AGG":
+                # if the array agg is distinct, base off that function instead
+                if aggregator.parameters[1]:
+                    function = "distinct"
+            aggs.append((field_name, function, count_options))
+            column_map[aggregator.schema_column.identity] = f"{field_name}_{function}".replace(
+                "_hash_", "_"
+            )
 
     return column_map, aggs
 
 
-def _non_group_aggregates(aggregates, table, columns):
+def _non_group_aggregates(aggregates, table):
     """
     If we're not doing a group by, we're just doing aggregations, the pyarrow
     functionality for aggregate doesn't work. So we do the calculation, it's
@@ -174,13 +142,10 @@ def _non_group_aggregates(aggregates, table, columns):
     result = {}
 
     for aggregate in aggregates:
-        if aggregate.node_type in (NodeType.AGGREGATOR, NodeType.COMPLEX_AGGREGATOR):
+        if aggregate.node_type in (NodeType.AGGREGATOR,):
             column_node = aggregate.parameters[0]
-            if column_node.node_type == NodeType.LITERAL_NUMERIC:
-                raw_column_values = numpy.full(
-                    table.num_rows, column_node.value, dtype=numpy.float64
-                )
-                mapped_column_name = str(column_node.value)
+            if column_node.node_type == NodeType.LITERAL:
+                raw_column_values = numpy.full(table.num_rows, column_node.value)
             elif (
                 aggregate.value == "COUNT"
                 and aggregate.parameters[0].node_type == NodeType.WILDCARD
@@ -188,9 +153,7 @@ def _non_group_aggregates(aggregates, table, columns):
                 result["COUNT(*)"] = table.num_rows
                 continue
             else:
-                column_name = format_expression(aggregate.parameters[0])
-                mapped_column_name = columns.get_column_from_alias(column_name, only_one=True)
-                raw_column_values = table[mapped_column_name].to_numpy()
+                raw_column_values = table[column_node.schema_column.identity].to_numpy()
             aggregate_function_name = AGGREGATORS[aggregate.value]
             # this maps a string which is the function name to that function on the
             # pyarrow.compute module
@@ -200,13 +163,12 @@ def _non_group_aggregates(aggregates, table, columns):
                 )
             aggregate_function = getattr(pyarrow.compute, aggregate_function_name)
             aggregate_column_value = aggregate_function(raw_column_values).as_py()
-            aggregate_column_name = f"{mapped_column_name}_{aggregate_function_name}"
-            result[aggregate_column_name] = aggregate_column_value
+            result[aggregate.schema_column.identity] = aggregate_column_value
 
     return pyarrow.Table.from_pylist([result])
 
 
-def _extract_functions(aggregates):
+def extract_evaluations(aggregates):
     # extract any inner evaluations, like the IIF in SUM(IIF(x, 1, 0))
 
     all_evaluatable_nodes = get_all_nodes_of_type(
@@ -215,14 +177,13 @@ def _extract_functions(aggregates):
             NodeType.FUNCTION,
             NodeType.BINARY_OPERATOR,
             NodeType.COMPARISON_OPERATOR,
+            NodeType.LITERAL,
         ),
     )
 
     evaluatable_nodes = []
     for node in all_evaluatable_nodes:
-        aggregators = get_all_nodes_of_type(
-            node, select_nodes=(NodeType.AGGREGATOR, NodeType.COMPLEX_AGGREGATOR)
-        )
+        aggregators = get_all_nodes_of_type(node, select_nodes=(NodeType.AGGREGATOR,))
         if len(aggregators) == 0:
             evaluatable_nodes.append(node)
 
@@ -233,28 +194,25 @@ class AggregateNode(BasePlanNode):
     def __init__(self, properties: QueryProperties, **config):
         super().__init__(properties=properties)
 
-        self._aggregates = config.get("aggregates", [])
-        if any(node.node_type == NodeType.WILDCARD for node in self._aggregates):
-            raise SqlError("Cannot select `*` with `GROUP BY` clause.")
+        self.aggregates = config.get("aggregates", [])
 
-        self._groups = []
-        for group in config.get("groups", []):
-            # skip nulls
-            if group is None:
-                continue
-            # handle numeric indexes - GROUP BY 1
-            if group.node_type == NodeType.LITERAL_NUMERIC:
-                # references are natural numbers, so -1 for zero-based
-                group = self._aggregates[int(group.value) - 1]
-                if group.node_type not in (NodeType.IDENTIFIER, NodeType.FUNCTION):
-                    raise SqlError(
-                        "When using a positional reference, GROUP BY must be by an IDENTIFIER or FUNCTION only"
-                    )
-            self._groups.append(group)
+        # we're going to preload some of the evaluation
+
+        # get all the columns anywhere in the aggregates
+        all_identifiers = [
+            node.schema_column.identity
+            for node in get_all_nodes_of_type(self.aggregates, select_nodes=(NodeType.IDENTIFIER,))
+        ]
+        self.all_identifiers = list(dict.fromkeys(all_identifiers))
+
+        # Get any functions we need to execute before aggregating
+        self.evaluatable_nodes = extract_evaluations(self.aggregates)
+
+        self.column_map, self.aggregate_functions = build_aggregations(self.aggregates)
 
     @property
     def config(self):  # pragma: no cover
-        return str(self._aggregates)
+        return str(self.aggregates)
 
     @property
     def greedy(self):  # pragma: no cover
@@ -272,31 +230,22 @@ class AggregateNode(BasePlanNode):
         if isinstance(morsels, pyarrow.Table):
             morsels = (morsels,)
 
-        if _is_count_star(self._aggregates, self._groups):
-            yield from _count_star(morsel_promise=morsels)
-            return
-
-        # get all the columns anywhere in the groups or aggregates
-        all_identifiers = [
-            node.value
-            for node in get_all_nodes_of_type(
-                self._groups + self._aggregates, select_nodes=(NodeType.IDENTIFIER,)
+        if _is_count_star(self.aggregates):
+            yield from _count_star(
+                morsel_promise=morsels, column_name=self.aggregates[0].schema_column.identity
             )
-        ]
-        all_identifiers = list(dict.fromkeys(all_identifiers))
+            return
 
         # merge all the morsels together into one table, selecting only the columns
         # we're pretty sure we're going to use - this will fail for datasets
         # larger than memory
-        table = pyarrow.concat_tables(_project(morsels.execute(), all_identifiers), promote=True)
-
-        # Get any functions we need to execute before aggregating
-        evaluatable_nodes = _extract_functions(self._aggregates)
+        table = pyarrow.concat_tables(
+            project(morsels.execute(), self.all_identifiers), promote=True
+        )
 
         # Allow grouping by functions by evaluating them first
         start_time = time.time_ns()
-        columns, _, table = evaluate_and_append(evaluatable_nodes, table)
-        columns, self._groups, table = evaluate_and_append(self._groups, table)
+        table = evaluate_and_append(self.evaluatable_nodes, table)
 
         # Add a "*" column, this is an int because when a bool it miscounts
         if "*" not in table.column_names:
@@ -305,55 +254,19 @@ class AggregateNode(BasePlanNode):
             )
         self.statistics.time_evaluating += time.time_ns() - start_time
 
-        # Extract any literal columns, we need to add these so we can group and/or
-        # aggregate by them (e.g. SELECT SUM(4) FROM table;)
-        all_literals = [
-            node.value
-            for node in get_all_nodes_of_type(
-                self._groups + self._aggregates,
-                select_nodes=(
-                    NodeType.LITERAL_BOOLEAN,
-                    NodeType.LITERAL_NUMERIC,
-                    NodeType.LITERAL_VARCHAR,
-                ),
-            )
-        ]
-        all_literals = list(dict.fromkeys(all_literals))
-        all_literals = [a for a in all_literals if str(a) not in table.column_names]
-        for literal in all_literals:
-            table = table.append_column(
-                str(literal), [numpy.full(shape=table.num_rows, fill_value=literal)]
-            )
-            columns.add_column(str(literal))
-
         start_time = time.time_ns()
-        # GROUP BY columns are deduplicated #870
-        group_by_columns = list(
-            dict.fromkeys(
-                columns.get_column_from_alias(group.value, only_one=True) for group in self._groups
-            )
-        )
-
-        column_map, aggs = _build_aggs(self._aggregates, columns)
 
         # we're not a group_by - we're aggregating without grouping
-        if len(group_by_columns) == 0:
-            groups = _non_group_aggregates(self._aggregates, table, columns)
-            del table
-        else:
-            table = table.combine_chunks()
-            groups = table.group_by(group_by_columns)
-            groups = groups.aggregate(aggs)
+        aggregates = _non_group_aggregates(self.aggregates, table)
+        del table
 
         # do the secondary activities for ARRAY_AGG
-        for node in get_all_nodes_of_type(
-            self._aggregates, select_nodes=(NodeType.COMPLEX_AGGREGATOR,)
-        ):
+        for node in get_all_nodes_of_type(self.aggregates, select_nodes=(NodeType.AGGREGATOR,)):
             if node.value == "ARRAY_AGG":
                 _, _, order, limit = node.parameters
                 if order or limit:
                     # rip the column out of the table
-                    column_name = column_map[format_expression(node)]
+                    column_name = self.column_map[format_expression(node)]
                     column_def = groups.field(column_name)  # this is used
                     column = groups.column(column_name).to_pylist()
                     groups = groups.drop([column_name])
@@ -366,28 +279,9 @@ class AggregateNode(BasePlanNode):
                     groups = groups.append_column(column_def, [column])
 
         # name the aggregate fields and add them to the Columns data
-        for friendly_name, agg_name in column_map.items():
-            # randomize the column name to prevent collisions, particularly on joined
-            # or chained aggregations
-            new_column_name = hex(random.getrandbits(64))
-            groups = groups.rename_columns(
-                [col if col != agg_name else new_column_name for col in groups.column_names]
-            )
-
-            columns.add_column(new_column_name)
-            columns.set_preferred_name(new_column_name, friendly_name)
-            # if we have an alias for this column, add it to the metadata
-            aliases = [
-                agg.alias for agg in self._aggregates if friendly_name == format_expression(agg)
-            ]
-            aliases.append(agg_name)
-            for alias in aliases:
-                if alias:
-                    columns.add_alias(new_column_name, alias)
-
-        # apply the metadata to the resultant dataset
-        groups = columns.apply(groups)
+        aggregates = aggregates.select(list(self.column_map.keys()))
+        #        aggregates = aggregates.rename_columns(list(self.column_map.keys()))
 
         self.statistics.time_aggregating += time.time_ns() - start_time
 
-        yield groups
+        yield aggregates

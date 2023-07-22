@@ -1,5 +1,6 @@
 import os
 import sys
+
 import pytest
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
@@ -66,8 +67,6 @@ def test_security_permissions_validation():
 
 
 if __name__ == "__main__":  # pragma: no cover
-    test_security_permissions_cursor()
-    test_security_permissions_query()
-    test_security_permissions_validation()
+    from tests.tools import run_tests
 
-    print("✅ okay")
+    run_tests()

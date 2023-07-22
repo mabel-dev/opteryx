@@ -10,18 +10,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+The 'sample' connector provides readers for the internal sample datasets,
+$planets, $astronauts, and $satellites.
+
+- $no_table is used in queries where there is no relation specified 'SELECT 1'
+- $derived is used as a schema to align virtual columns to
+"""
+
 import typing
 
 import pyarrow
+from orso.schema import RelationSchema
 
 from opteryx import samples
 from opteryx.connectors.base.base_connector import BaseConnector
 from opteryx.connectors.base.base_connector import DatasetReader
 from opteryx.exceptions import DatasetNotFoundError
-from opteryx.models import RelationSchema
 
 WELL_KNOWN_DATASETS = {
     "$astronauts": samples.astronauts,
+    "$derived": None,
     "$no_table": samples.no_table,
     "$planets": samples.planets,
     "$satellites": samples.satellites,
@@ -29,9 +38,12 @@ WELL_KNOWN_DATASETS = {
 
 
 def suggest(dataset):
+    """
+    Provide suggestions to the user if they gave a table that doesn't exist.
+    """
     from opteryx.utils import fuzzy_search
 
-    known_datasets = (k for k in WELL_KNOWN_DATASETS if k != "$no_table")
+    known_datasets = (k for k in WELL_KNOWN_DATASETS if k not in ("$no_table", "$derived"))
     suggestion = fuzzy_search(dataset, known_datasets)
     if suggestion is not None:
         return (

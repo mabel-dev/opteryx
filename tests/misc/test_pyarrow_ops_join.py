@@ -12,11 +12,10 @@ import sys
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
-import opteryx
-
 import numpy as np
 import pytest
 
+import opteryx
 from opteryx.third_party.pyarrow_ops.join import cython_inner_join
 
 
@@ -30,6 +29,6 @@ def test_hash_join_consistency():
 
 
 if __name__ == "__main__":  # pragma: no cover
-    test_hash_join_consistency()
+    from tests.tools import run_tests
 
-    print("✅ okay")
+    run_tests()

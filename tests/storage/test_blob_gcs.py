@@ -7,9 +7,7 @@ import sys
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import opteryx
-
 from opteryx.connectors import GcpCloudStorageConnector
-
 
 BUCKET_NAME = "opteryx"
 
@@ -35,5 +33,6 @@ def test_gcs_storage():
 
 
 if __name__ == "__main__":  # pragma: no cover
-    test_gcs_storage()
-    print("✅ okay")
+    from tests.tools import run_tests
+
+    run_tests()

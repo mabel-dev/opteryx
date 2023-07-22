@@ -7,12 +7,11 @@ import sys
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 
-import pytest
 import pyarrow
+import pytest
+
 from opteryx.connectors.sample_data import SampleDataConnector, SampleDatasetReader
 from opteryx.exceptions import DatasetNotFoundError
-
-import pytest
 
 
 def test_sample_data_connector():
@@ -39,5 +38,6 @@ def test_sample_data_connector():
 
 
 if __name__ == "__main__":  # pragma: no cover
-    test_sample_data_connector()
-    print("✅ okay")
+    from tests.tools import run_tests
+
+    run_tests()

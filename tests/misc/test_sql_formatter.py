@@ -15,5 +15,7 @@ def test_format_sql():
     ), (str(formatted_sql.encode()) + "\n" + formatted_sql)
 
 
-if __name__ == "__main__":
-    test_format_sql()
+if __name__ == "__main__":  # pragma: no cover
+    from tests.tools import run_tests
+
+    run_tests()

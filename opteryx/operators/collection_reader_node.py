@@ -20,11 +20,8 @@ This Node primarily is used for reading NoSQL sources like MongoDB and Firestore
 import time
 from typing import Iterable
 
-import pyarrow
-
 from opteryx.connectors.capabilities import PredicatePushable
 from opteryx.models import QueryProperties
-from opteryx.models.columns import Columns
 from opteryx.operators import BasePlanNode
 
 

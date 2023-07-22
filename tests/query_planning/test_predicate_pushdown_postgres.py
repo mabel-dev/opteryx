@@ -6,10 +6,10 @@ import sys
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
-import opteryx
+from tests.tools import is_arm, is_mac, is_windows, skip_if
 
+import opteryx
 from opteryx.connectors import SqlConnector
-from tests.tools import skip_if, is_arm, is_mac, is_windows
 
 POSTGRES_PASSWORD = os.environ.get("POSTGRES_PASSWORD")
 POSTGRES_USER = os.environ.get("POSTGRES_USER")
@@ -117,6 +117,6 @@ def test_predicate_pushdown_postgres_other():
 
 
 if __name__ == "__main__":  # pragma: no cover
-    test_predicate_pushdowns_postgres_eq()
-    test_predicate_pushdown_postgres_other()
-    print("✅ okay")
+    from tests.tools import run_tests
+
+    run_tests()

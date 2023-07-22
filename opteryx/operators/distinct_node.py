@@ -50,10 +50,5 @@ class DistinctNode(BasePlanNode):
             raise SqlError(f"{self.name} on expects a single producer")
 
         morsels = self._producers[0]  # type:ignore
-        if isinstance(morsels, Table):
-            morsels = (morsels,)
 
-        if self._distinct:
-            yield drop_duplicates(concat_tables(morsels.execute(), promote=True))
-            return
-        yield from morsels
+        yield drop_duplicates(concat_tables(morsels.execute()))
