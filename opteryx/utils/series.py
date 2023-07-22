@@ -18,14 +18,12 @@ from opteryx.utils import dates
 
 
 def generate_series(*args):
-    from opteryx.managers.expression import NodeType
-
     arg_len = len(args)
     arg_vals = [i.value for i in args]
-    first_arg_type = args[0].node_type
+    first_arg_type = args[0].type
 
     # if the parameters are numbers, generate series is an alias for range
-    if first_arg_type in (numpy.float64, numpy.int64) or args[0].type in (
+    if first_arg_type in (
         OrsoTypes.INTEGER,
         OrsoTypes.DOUBLE,
     ):
@@ -68,14 +66,30 @@ def numeric_range(*args):
     # Process arguments
     if len(args) == 2:
         start, stop = args
-        step = 1
-        stop += step
+        step = numpy.int8(1)
     elif len(args) == 3:
         start, stop, step = args
         # Ensure the last item is in the series
-        if numpy.isclose((stop - start) / step % 1, 0):
-            stop += step
     else:
         raise ValueError("Invalid number of arguments. Expected 2, or 3: start, stop [, step].")
 
-    return numpy.arange(start, stop, step, dtype=numpy.float64)
+    # numpy does this different to SQL so always want one more
+    stop += step
+
+    # how many of the resulting series are we going to keep?
+    max_items = int(((stop - start) / step) + 1)
+    if start + (max_items * step) > stop:
+        max_items -= 1
+
+    # It's hard to work out if we need to do one more so do it and we'll truncate excess
+    stop += step
+
+    dtype = numpy.float64
+    if (
+        numpy.issubdtype(start, numpy.integer)
+        and numpy.issubdtype(stop, numpy.integer)
+        and numpy.issubdtype(step, numpy.integer)
+    ):
+        dtype = numpy.int64
+
+    return numpy.arange(start, stop, step, dtype=dtype)[:max_items]
