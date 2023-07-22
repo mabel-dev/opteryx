@@ -328,6 +328,10 @@ STATEMENTS = [
         ("SELECT HASH(birth_place), birth_place from $astronauts", 357, 2, None),
         ("SELECT HASH(missions), missions from $astronauts", 357, 2, None),
 
+        # Test Aliases
+        ("SELECT planet_id FROM $satellites", 177, 1, None),
+        ("SELECT escape_velocity, gravity, orbitalPeriod FROM $planets", 9, 3, None),
+
         ("SELECT * FROM (VALUES ('High', 3),('Medium', 2),('Low', 1)) AS ratings(name, rating)", 3, 2, None),
         ("SELECT * FROM (VALUES ('High', 3),('Medium', 2),('Low', 1)) AS ratings(name, rating) WHERE rating = 3", 1, 2, None),
 
