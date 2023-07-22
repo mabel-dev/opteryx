@@ -356,6 +356,8 @@ def create_node_relation(relation):
                 sub_plan.add_node(step_id, subquery_step)
 
                 subquery_plan = plan_query(subquery["subquery"])
+                exit_node = subquery_plan.get_exit_points()[0]
+                subquery_plan.remove_node(exit_node, heal=True)
 
                 sub_plan += subquery_plan
                 subquery_entry_id = subquery_plan.get_exit_points()[0]
@@ -464,7 +466,7 @@ def create_node_relation(relation):
     return root_node, sub_plan
 
 
-def plan_explain(statement):
+def plan_explain(statement) -> LogicalPlan:
     plan = LogicalPlan()
     explain_node = LogicalPlanNode(node_type=LogicalPlanStepType.Explain)
     explain_node.analyze = statement["Explain"]["analyze"]

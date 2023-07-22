@@ -369,6 +369,7 @@ STATEMENTS = [
         ("SELECT * FROM generate_series('2022-01-01 12:00', '2022-01-01 12:15', '1 minute')", 16, 1, None),
         ("SELECT * FROM generate_series('2022-01-01 12:00', '2022-01-01 12:15', '1m30s')", 11, 1, None),
         ("SELECT * FROM generate_series(1,10) LEFT JOIN $planets ON id = generate_series", 10, 21, None),
+        ("SELECT * FROM GENERATE_SERIES(5, 10) AS PID LEFT JOIN $planets ON id = PID", 6, 21, None),
         ("SELECT * FROM generate_series(1,5) JOIN $planets ON id = generate_series", 5, 21, None),
         ("SELECT * FROM (SELECT * FROM generate_series(1,10,2) AS gs) INNER JOIN $planets on gs = id", 5, 21, None),
 
