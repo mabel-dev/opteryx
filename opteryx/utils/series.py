@@ -40,13 +40,9 @@ def generate_series(*args):
     raise SqlError("Unsupported value for GENERATE_SERIES")
 
 
-def numeric_range(*args):
+def numeric_range(*args) -> numpy.array:
     """
-    Combines numpy.arange and numpy.isclose to mimic
-    open, half-open, and closed intervals.
-    Avoids floating-point rounding errors like in
-    numpy.arange(1, 1.3, 0.1) returning
-    array([1. , 1.1, 1.2, 1.3]).
+    Generate a numeric range of vales
 
     Args:
         [start, ]stop, [step, ]: Arguments as in numpy.arange.
@@ -62,34 +58,28 @@ def numeric_range(*args):
         generate_range(1, 5)
         generate_range(1, 5, 0.5)
     """
+    # Define defaults
+    start, step, dtype = numpy.int64(0), numpy.int64(1), numpy.float64
 
     # Process arguments
-    if len(args) == 2:
+    if len(args) == 1:
+        stop = args[0]
+    elif len(args) == 2:
         start, stop = args
-        step = numpy.int8(1)
     elif len(args) == 3:
         start, stop, step = args
-        # Ensure the last item is in the series
     else:
-        raise ValueError("Invalid number of arguments. Expected 2, or 3: start, stop [, step].")
+        raise ValueError("Invalid number of arguments. Expected 1, 2, or 3: start, stop [, step].")
 
-    # numpy does this different to SQL so always want one more
-    stop += step
-
-    # how many of the resulting series are we going to keep?
-    max_items = int(((stop - start) / step) + 1)
-    if start + (max_items * step) > stop:
-        max_items -= 1
-
-    # It's hard to work out if we need to do one more so do it and we'll truncate excess
-    stop += step
-
-    dtype = numpy.float64
-    if (
-        numpy.issubdtype(start, numpy.integer)
-        and numpy.issubdtype(stop, numpy.integer)
-        and numpy.issubdtype(step, numpy.integer)
-    ):
+    # Determine dtype
+    if all(numpy.issubdtype(arg, numpy.integer) for arg in [start, stop, step]):
         dtype = numpy.int64
 
-    return numpy.arange(start, stop, step, dtype=dtype)[:max_items]
+    # Compute range
+    num_range = numpy.arange(start, stop + step, step, dtype=dtype)
+
+    # Check last value, remove if it doesn't fall on a step boundary or is over the stop value
+    if not numpy.isclose(num_range[-1], stop, atol=step / 2) or num_range[-1] > stop:
+        num_range = num_range[:-1]
+
+    return num_range

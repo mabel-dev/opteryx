@@ -92,7 +92,7 @@ Designed to run in Knative and similar environments like Google Cloud Run, Opter
 [Query Data on Local Disk](#query-data-on-local-disk)    
 [Query Data on GCS](#query-data-on-gcs)  
 [Query Data in SQLite](#query-data-in-sqlite)  
-[Further Examples](#further-examples)
+<!---[Further Examples](#further-examples)--->
 
 #### Install from PyPI
 
@@ -226,12 +226,14 @@ result.head()
 ~~~
 _this example is complete and should run as-is_
 
+<!---
 #### Further Examples
 
 For prepared example usage, see the below Notebooks on Google Colab.
 
 - [Simple Query & Display](https://colab.research.google.com/drive/19n0HJvzknczogDIJT3Zbf-BFSwJofh3U?usp=sharing)
 - [Query a Local File](https://colab.research.google.com/drive/10QXMbFE-jzcA9bndtRqry1tsfKgu6yPC?usp=sharing)
+--->
 
 ## Community
 
@@ -281,7 +283,7 @@ Opteryx is in beta. Beta means different things to different people, to us, bein
 
 ## Related Projects
 
-- **[HadroDB](https://github.com/mabel-dev/hadrodb)** Data storage engine
-- **[mabel](https://github.com/mabel-dev/mabel)** Streaming data APIs
-- **[mesos](https://github.com/mabel-dev/mesos)** MySQL connector for Opteryx
 - **[orso](https://github.com/mabel-dev/orso)** DataFrame library
+- **[mabel](https://github.com/mabel-dev/mabel)** Streaming data APIs
+- **[HadroDB](https://github.com/mabel-dev/hadrodb)** Data storage engine
+- **[mesos](https://github.com/mabel-dev/mesos)** MySQL connector for Opteryx

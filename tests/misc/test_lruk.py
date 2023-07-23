@@ -136,10 +136,54 @@ def test_lru_cache_eviction():
     # Check that the least recently used item 'c' has been evicted
     assert lru.get("a") is None
     assert lru.get("b") is None
-    assert lru.get("c") is None
+    assert lru.get("c") is None, lru.get("c")
     assert lru.get("d") == 4
     assert lru.get("e") == 5
     assert lru.get("f") == 6
+
+
+def test_get_non_existing_key_after_eviction():
+    lru = LRU2(size=3)
+
+    # Add 3 items to the cache
+    lru.set("a", 1)
+    lru.set("b", 2)
+    lru.set("c", 3)
+
+    # Add a fourth item to the cache, which should trigger an eviction of the least recently used item
+    lru.set("d", 4)
+
+    # Try to get a non-existing key
+    assert lru.get("e") is None
+
+
+def test_overwrite_existing_key():
+    lru = LRU2(size=3)
+
+    # Add 3 items to the cache
+    lru.set("a", 1)
+    lru.set("b", 2)
+    lru.set("c", 3)
+
+    # Overwrite key "b"
+    lru.set("b", 20)
+
+    # Check the new value of "b"
+    assert lru.get("b") == 20
+
+
+def test_handle_non_string_keys():
+    lru = LRU2(size=3)
+
+    # Add 3 items to the cache with integer keys
+    lru.set(1, "a")
+    lru.set(2, "b")
+    lru.set(3, "c")
+
+    # Check the values
+    assert lru.get(1) == "a"
+    assert lru.get(2) == "b"
+    assert lru.get(3) == "c"
 
 
 if __name__ == "__main__":  # pragma: no cover

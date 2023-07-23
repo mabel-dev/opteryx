@@ -10,37 +10,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-Connectors and Coordinators
-
-Connectors
-- provide low-level access, do the actual lists, schema guessing and record reading
-
-Handlers
-- Provide higherlevel functionality like cache, partitioning (pruning)
-
-
-Connectors may implement predicate and projection pushes
-
-
-FileStorageHandler
-- Local Connector
-BlobStorageHandler
-- GCS Connector
-- S3 Connector
-- Local Connector
-CollectionHandler
-- FireStore Connector
-- Mongo Connector
-SQLHandlder
-- SQL Connector
-SampleReader
-"""
-
-
 import pyarrow
 
-_storage_prefixes = {"information_schema": "InformationSchema"}
+from opteryx.shared import MaterializedDatasets
+
+# load the base set of prefixes
+_storage_prefixes = {"_default": None, "information_schema": "InformationSchema"}
 
 
 def register_store(prefix, connector, *, remove_prefix: bool = False, **kwargs):
@@ -93,13 +68,17 @@ def connector_factory(dataset):
 
         return sample_data.SampleDataConnector()
 
+    # otherwise look up the prefix from the registered prefixes
     prefix = dataset.split(".")[0]
     connector_entry: dict = {}
     if prefix in _storage_prefixes:
         connector_entry = _storage_prefixes[prefix].copy()  # type: ignore
         connector = connector_entry.pop("connector")
-    else:
-        connector = _storage_prefixes.get("_")
+    #    elif file_exists(dataset):
+    #
+    #    else:
+    #        # fall back to the detault connector (usually local disk)
+    #        connector = _storage_prefixes.get("_default")
 
     prefix = connector_entry.pop("prefix", "")
     remove_prefix = connector_entry.pop("remove_prefix", False)

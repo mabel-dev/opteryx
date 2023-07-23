@@ -45,9 +45,6 @@ MATRIX = (
 
 
 def compare(str1: str, str2: str) -> int:
-    str1 = str1.lower()
-    str2 = str2.lower()
-
     len1, len2 = len(str1), len(str2)
 
     if len1 < len2:
@@ -76,7 +73,7 @@ def check_model(str1: str, str2: str, len1: int, len2: int, model) -> int:
 
     cost, idx1, idx2 = 0, 0, 0
     while idx1 < len1 and idx2 < len2:
-        if str1[idx1] != str2[idx2]:
+        if str1[idx1].lower() != str2[idx2].lower():
             cost += 1
             if cost > 2:
                 return cost
