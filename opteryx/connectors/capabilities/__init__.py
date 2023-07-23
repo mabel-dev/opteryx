@@ -11,3 +11,4 @@
 # limitations under the License.
 
 from .predicate_pushable import PredicatePushable
+from .projection_pushable import ProjectionPushable

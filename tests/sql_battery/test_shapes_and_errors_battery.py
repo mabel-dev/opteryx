@@ -44,7 +44,8 @@ from pyarrow.lib import ArrowInvalid
 import pytest
 
 import opteryx
-from opteryx.connectors import AwsS3Connector, DiskConnector
+
+# from opteryx.connectors import AwsS3Connector, DiskConnector
 from opteryx.exceptions import (
     AmbiguousIdentifierError,
     ColumnNotFoundError,
@@ -921,8 +922,8 @@ def test_sql_battery(statement, rows, columns, exception):
     Test an battery of statements
     """
 
-    opteryx.register_store("tests", DiskConnector)
-    opteryx.register_store("mabellabs", AwsS3Connector)
+    #    opteryx.register_store("tests", DiskConnector)
+    #    opteryx.register_store("mabellabs", AwsS3Connector)
 
     conn = opteryx.connect()
     cursor = conn.cursor()

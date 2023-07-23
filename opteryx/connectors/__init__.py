@@ -9,42 +9,38 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from .base.base_blob_storage_adapter import BaseBlobStorageAdapter  # isort: skip
-from .base.base_document_storage_adapter import BaseDocumentStorageAdapter  # isort: skip
+
+"""
+Connectors and Coordinators
+
+Connectors
+- provide low-level access, do the actual lists, schema guessing and record reading
+
+Handlers
+- Provide higherlevel functionality like cache, partitioning (pruning)
+
+
+Connectors may implement predicate and projection pushes
+
+
+FileStorageHandler
+- Local Connector
+BlobStorageHandler
+- GCS Connector
+- S3 Connector
+- Local Connector
+CollectionHandler
+- FireStore Connector
+- Mongo Connector
+SQLHandlder
+- SQL Connector
+SampleReader
+"""
+
 
 import pyarrow
 
-from opteryx.config import DATASET_PREFIX_MAPPING
-from opteryx.connectors.arrow_connector import ArrowConnector
-from opteryx.connectors.aws_s3_connector import AwsS3Connector
-from opteryx.connectors.disk_connector import DiskConnector
-from opteryx.connectors.gcp_cloudstorage_connector import GcpCloudStorageConnector
-from opteryx.connectors.gcp_firestore_connector import GcpFireStoreConnector
-from opteryx.connectors.hadro_connector import HadroConnector
-from opteryx.connectors.mongodb_connector import MongoDbConnector
-from opteryx.connectors.sql_connector import SqlConnector
-from opteryx.shared import MaterializedDatasets
-
-WELL_KNOWN_ADAPTERS = {
-    "disk": DiskConnector,
-    "gcs": GcpCloudStorageConnector,
-    "hadro": HadroConnector,
-    "firestore": GcpFireStoreConnector,
-    "minio": AwsS3Connector,
-    "mongodb": MongoDbConnector,
-    "s3": AwsS3Connector,
-    "sql": SqlConnector,
-}
-
 _storage_prefixes = {"information_schema": "InformationSchema"}
-
-if not isinstance(DATASET_PREFIX_MAPPING, dict):  # pragma: no cover
-    _storage_prefixes["_"] = "disk"
-else:
-    for _prefix, _adapter_name in DATASET_PREFIX_MAPPING.items():
-        _storage_prefixes[_prefix] = WELL_KNOWN_ADAPTERS.get(
-            _adapter_name.lower(), None
-        )  # type:ignore
 
 
 def register_store(prefix, connector, *, remove_prefix: bool = False, **kwargs):
