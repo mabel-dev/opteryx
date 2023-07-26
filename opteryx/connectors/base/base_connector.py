@@ -24,31 +24,30 @@ class BaseConnector:
     def __mode__(self):
         raise NotImplementedError("__mode__ not defined")
 
-    def __init__(self, config: typing.Dict[str, typing.Any] = None) -> None:
+    def __init__(self, dataset: str = None, config: typing.Dict[str, typing.Any] = None) -> None:
         """
         Initialize the base connector with configuration.
 
         Args:
+            dataset: The name of the dataset to read.
             config: Configuration information specific to the connector.
         """
         if config is None:
             self.config = {}
         else:
             self.config = config.copy()
+        self.dataset = dataset
 
-    def get_dataset_schema(self, dataset_name: str) -> RelationSchema:
+    def get_dataset_schema(self) -> RelationSchema:
         """
         Retrieve the schema of a dataset.
-
-        Args:
-            dataset_name: Name of the dataset.
 
         Returns:
             A RelationSchema representing the schema of the dataset.
         """
         raise NotImplementedError("Subclasses must implement get_dataset_schema method.")
 
-    def read_dataset(self, dataset_name: str) -> "DatasetReader":
+    def read_dataset(self) -> "DatasetReader":
         """
         Read a dataset and return a reader object.
 

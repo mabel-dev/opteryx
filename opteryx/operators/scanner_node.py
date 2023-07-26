@@ -68,7 +68,7 @@ class ScannerNode(BasePlanNode):
         """Perform this step, time how long is spent doing work"""
         schema = self.parameters["schema"]
         start_clock = time.monotonic_ns()
-        reader = self.parameters.get("connector").read_dataset(self.parameters.get("relation"))
+        reader = self.parameters.get("connector").read_dataset()
         for morsel in reader:
             self.execution_time += time.monotonic_ns() - start_clock
             yield normalize_morsel(schema, morsel)

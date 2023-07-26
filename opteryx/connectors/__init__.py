@@ -10,6 +10,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+
 import pyarrow
 
 from opteryx.shared import MaterializedDatasets
@@ -66,7 +68,7 @@ def connector_factory(dataset):
     if dataset[0] == "$":
         from opteryx.connectors import sample_data
 
-        return sample_data.SampleDataConnector()
+        return sample_data.SampleDataConnector(dataset=dataset)
 
     # otherwise look up the prefix from the registered prefixes
     prefix = dataset.split(".")[0]
@@ -74,7 +76,10 @@ def connector_factory(dataset):
     if prefix in _storage_prefixes:
         connector_entry = _storage_prefixes[prefix].copy()  # type: ignore
         connector = connector_entry.pop("connector")
-    #    elif file_exists(dataset):
+    elif os.path.isfile(dataset):
+        from opteryx.connectors import local_disk
+
+        return local_disk.LocalDiskConnector(dataset=dataset)
     #
     #    else:
     #        # fall back to the detault connector (usually local disk)
@@ -82,5 +87,7 @@ def connector_factory(dataset):
 
     prefix = connector_entry.pop("prefix", "")
     remove_prefix = connector_entry.pop("remove_prefix", False)
+    if prefix and remove_prefix and dataset.startswith(prefix):
+        dataset = dataset[len(prefix) :]
 
-    return connector(prefix=prefix, remove_prefix=remove_prefix, **connector_entry)
+    return connector(dataset=dataset, **connector_entry)
