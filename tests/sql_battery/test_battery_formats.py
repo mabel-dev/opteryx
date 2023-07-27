@@ -11,7 +11,6 @@ import pytest
 from tests.tools import is_pypy, is_windows
 
 import opteryx
-from opteryx.connectors import DiskConnector
 
 # fmt:off
 STATEMENTS = [
@@ -19,8 +18,8 @@ STATEMENTS = [
         # values that have been read.
 
         # arrow (feather)
-        ("SELECT * FROM testdata.flat.formats.arrow WITH (NO_PARTITION)", 100000, 13, False),
-        ("SELECT user_name, user_verified FROM testdata.flat.formats.arrow WITH(NO_PARTITION) WHERE user_name ILIKE '%news%'", 122, 2, False),
+        ("SELECT * FROM 'testdata/flat/formats/arrow' WITH (NO_PARTITION)", 100000, 13, False),
+        ("SELECT user_name, user_verified FROM 'testdata/flat/formats/arrow' WITH(NO_PARTITION) WHERE user_name ILIKE '%news%'", 122, 2, False),
 
         # avro
         ("SELECT * FROM testdata.flat.formats.avro WITH (NO_PARTITION)", 100000, 13, False),
@@ -62,7 +61,7 @@ def test_sql_battery(statement, rows, columns, skip):
         print(f"Skipping testcase on unsupported platform - {statement}")
         return
 
-    opteryx.register_store("tests", DiskConnector)
+    #    opteryx.register_store("tests", DiskConnector)
 
     conn = opteryx.connect()
     cursor = conn.cursor()

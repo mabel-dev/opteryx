@@ -58,6 +58,10 @@ class SampleDataConnector(BaseConnector):
         super().__init__(*args, **kwargs)
         self.dataset = self.dataset.lower()
 
+    @property
+    def interal_only(self):
+        return True
+
     def read_dataset(self) -> "DatasetReader":
         return SampleDatasetReader(self.dataset, config=self.config)
 

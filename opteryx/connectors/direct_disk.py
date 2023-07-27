@@ -11,39 +11,25 @@
 # limitations under the License.
 
 """
-The 'sample' connector provides readers for the internal sample datasets,
-$planets, $astronauts, and $satellites.
+The 'direct disk' connector provides the reader for when a dataset file is
+given directly in a query.
 
-- $no_table is used in queries where there is no relation specified 'SELECT 1'
-- $derived is used as a schema to align virtual columns to
+As such it assumes 
 """
-
-import typing
 
 import pyarrow
 from orso.schema import RelationSchema
 
-from opteryx import samples
 from opteryx.connectors.base.base_connector import BaseConnector
-from opteryx.connectors.base.base_connector import DatasetReader
-from opteryx.exceptions import DatasetNotFoundError
+from opteryx.utils.file_decoders import get_decoder
 
 
-def get_decoder(dataset):
-    from opteryx.exceptions import UnsupportedFileTypeError
-    from opteryx.utils import file_decoders
-
-    ext = dataset.split(".")[-1].lower()
-    if ext not in file_decoders.KNOWN_EXTENSIONS:
-        raise UnsupportedFileTypeError(f"Unsupported file type - {ext}")
-    file_decoder, file_type = file_decoders.KNOWN_EXTENSIONS[ext]
-    if file_type != file_decoders.ExtentionType.DATA:
-        raise UnsupportedFileTypeError(f"File is not a data file - {ext}")
-    return file_decoder
-
-
-class LocalDiskConnector(BaseConnector):
+class DirectDiskConnector(BaseConnector):
     __mode__ = "Blob"
+
+    @property
+    def interal_only(self):
+        return True
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

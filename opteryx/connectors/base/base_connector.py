@@ -24,6 +24,10 @@ class BaseConnector:
     def __mode__(self):
         raise NotImplementedError("__mode__ not defined")
 
+    @property
+    def interal_only(self):
+        return False
+
     def __init__(self, dataset: str = None, config: typing.Dict[str, typing.Any] = None) -> None:
         """
         Initialize the base connector with configuration.
@@ -58,6 +62,10 @@ class BaseConnector:
             A reader object for iterating over the dataset.
         """
         raise NotImplementedError("Subclasses must implement read_dataset method.")
+
+    def read_schema_from_metastore(self):
+        # to be implemented
+        return None
 
 
 class DatasetReader:

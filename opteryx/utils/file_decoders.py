@@ -19,6 +19,8 @@ from typing import List
 import numpy
 import pyarrow
 
+from opteryx.exceptions import UnsupportedFileTypeError
+
 
 class ExtentionType(str, Enum):
     """labels for the file extentions"""
@@ -35,6 +37,16 @@ def convert_arrow_schema_to_orso_schema(arrow_schema):
         name="arrow",
         columns=[FlatColumn.from_arrow(field) for field in arrow_schema],
     )
+
+
+def get_decoder(dataset):
+    ext = dataset.split(".")[-1].lower()
+    if ext not in KNOWN_EXTENSIONS:
+        raise UnsupportedFileTypeError(f"Unsupported file type - {ext}")
+    file_decoder, file_type = KNOWN_EXTENSIONS[ext]
+    if file_type != ExtentionType.DATA:
+        raise UnsupportedFileTypeError(f"File is not a data file - {ext}")
+    return file_decoder
 
 
 def do_nothing(stream, projection=None, just_schema: bool = False):  # pragma: no-cover
