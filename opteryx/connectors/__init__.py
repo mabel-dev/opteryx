@@ -79,9 +79,9 @@ def connector_factory(dataset):
         connector_entry = _storage_prefixes[prefix].copy()  # type: ignore
         connector = connector_entry.pop("connector")
     elif os.path.isfile(dataset):
-        from opteryx.connectors import direct_disk
+        from opteryx.connectors import file_connector
 
-        return direct_disk.LocalDiskConnector(dataset=dataset)
+        return file_connector.FileConnector(dataset=dataset)
     else:
         #        # fall back to the detault connector (usually local disk)
         connector = _storage_prefixes.get("_default", Local)

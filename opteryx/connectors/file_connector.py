@@ -11,20 +11,19 @@
 # limitations under the License.
 
 """
-The 'direct disk' connector provides the reader for when a dataset file is
-given directly in a query.
-
-As such it assumes 
+The file connector provides the reader for when a file name is provided as the
+dataset name in a query.
 """
 
 import pyarrow
 from orso.schema import RelationSchema
 
 from opteryx.connectors.base.base_connector import BaseConnector
+from opteryx.exceptions import DatasetNotFoundError
 from opteryx.utils.file_decoders import get_decoder
 
 
-class DirectDiskConnector(BaseConnector):
+class FileConnector(BaseConnector):
     __mode__ = "Blob"
 
     @property
@@ -33,6 +32,9 @@ class DirectDiskConnector(BaseConnector):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if ".." in self.dataset or self.dataset[0] in ("/", "~"):
+            # Don't find any datasets which look like path traversal
+            raise DatasetNotFoundError(dataset=self.dataset)
         self.decoder = get_decoder(self.dataset)
 
     def read_dataset(self) -> pyarrow.Table:

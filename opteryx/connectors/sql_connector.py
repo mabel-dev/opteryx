@@ -84,15 +84,20 @@ class SqlConnector(BaseConnector):
             return self.schema
 
         # get the schema from the dataset
-        from sqlalchemy import MetaData
         from sqlalchemy import Table
-        from sqlalchemy import create_engine
         from sqlalchemy import select
-        from sqlalchemy import text
         from sqlalchemy.exc import NoSuchTableError
 
         table = Table(self.dataset, self.metadata, autoload_with=self._engine)
         query = select(table).limit(1)
+
+        from sqlalchemy import text
+
+        #        query = text(f"SELECT * FROM {self.dataset} LIMIT 1")
+        #        query = text(f"SELECT * FROM {self.dataset};")
+        with self._engine.connect() as conn:
+            result = conn.execute(query)
+        print(result.cursor.fetchall())
 
         try:
             with self._engine.connect() as conn:
@@ -102,6 +107,8 @@ class SqlConnector(BaseConnector):
 
         columns = [column[0] for column in result.cursor.description]
         record = result.fetchone()
+
+        print(record)
 
         # Close the result object
         result.close()

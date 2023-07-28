@@ -374,6 +374,9 @@ STATEMENTS = [
         ("SELECT * FROM generate_series(1,5) JOIN $planets ON id = generate_series", 5, 21, None),
         ("SELECT * FROM (SELECT * FROM generate_series(1,10,2) AS gs) INNER JOIN $planets on gs = id", 5, 21, None),
 
+        ("SELECT * FROM 'testdata/flat/formats/arrow/tweets.arrow'", 100000, 13, None),
+        ("SELECT * FROM 'testdata/flat/../flat/formats/arrow/tweets.arrow'", None, None, DatasetNotFoundError),  # don't allow traversal
+
         ("SELECT * FROM testdata.partitioned.dated FOR '2020-02-03' WITH (NO_CACHE)", 25, 8, None),
         ("SELECT * FROM testdata.partitioned.dated FOR '2020-02-03'", 25, 8, None),
         ("SELECT * FROM testdata.partitioned.dated FOR '2020-02-04'", 25, 8, None),
