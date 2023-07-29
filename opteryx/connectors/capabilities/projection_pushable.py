@@ -1,2 +1,4 @@
 class ProjectionPushable:
-    pass
+
+    def __init__(self, **kwargs):
+        pass

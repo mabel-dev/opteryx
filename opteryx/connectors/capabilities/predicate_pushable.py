@@ -29,7 +29,7 @@ class PredicatePushable:
         "Like": "Like",
     }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, **kwargs):
         self._predicates = []
         self.supported_ops = list(self.PUSHABLE_OPERATORS.values())
 

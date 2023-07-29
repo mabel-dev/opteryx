@@ -377,6 +377,7 @@ STATEMENTS = [
         ("SELECT * FROM 'testdata/flat/formats/arrow/tweets.arrow'", 100000, 13, None),
         ("SELECT * FROM 'testdata/flat/../flat/formats/arrow/tweets.arrow'", None, None, DatasetNotFoundError),  # don't allow traversal
 
+        ("SELECT * FROM testdata.partitioned.dated", 50, 8, None),
         ("SELECT * FROM testdata.partitioned.dated FOR '2020-02-03' WITH (NO_CACHE)", 25, 8, None),
         ("SELECT * FROM testdata.partitioned.dated FOR '2020-02-03'", 25, 8, None),
         ("SELECT * FROM testdata.partitioned.dated FOR '2020-02-04'", 25, 8, None),

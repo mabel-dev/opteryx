@@ -1,34 +1,36 @@
-"""
-Supports read-through cache
-"""
-
-from functools import wraps
 
 
 class Cacheable:
-    def __init__(self):
-        print("we need to set the cache")
+    """
+    Read Thru Cache
+    """
+    def __init__(self, **kwargs):
+        self.cache = {}
 
-    def read_thru(self, func):
+    def read_thru(self):
         """
         Decorator function for read-through cache functionality
         """
+        def decorator(func):
+            def wrapper(*args, **kwargs):
+                # Assume args[0] is the key for simplicity; adjust as needed
+                key = args[0]
 
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            # Assume args[0] is the key for simplicity; adjust as needed
-            key = args[0]
+                # Try to get the result from cache
+                result = self.cache.get(key)
 
-            # Try to get the result from cache
-            result = self.cache.get(key)
+                if result is None:
+                    # Key is not in cache, execute the function and store the result in cache
+                    result = func(*args, **kwargs)
 
-            if result is None:
-                # Key is not in cache, execute the function and store the result in cache
-                result = func(*args, **kwargs)
+                    # Write the result to cache
+                    self.cache[key] = result
 
-                # Write the result to cache
-                self.cache[key] = result
+                    print("MISS")
+                else:
+                    print("HIT")
 
-            return result
+                return result
 
-        return wrapper
+            return wrapper
+        return decorator

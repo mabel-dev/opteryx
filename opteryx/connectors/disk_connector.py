@@ -24,19 +24,43 @@ from opteryx.connectors.base.base_connector import BaseConnector
 from opteryx.connectors.capabilities import Cacheable
 from opteryx.connectors.capabilities import Partitionable
 from opteryx.utils.file_decoders import get_decoder
+from opteryx.exceptions import UnsupportedFileTypeError
 
+import os
 
 class DiskConnector(BaseConnector, Cacheable, Partitionable):
     __mode__ = "Blob"
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.decoder = get_decoder(self.dataset)
+    def __init__(self, **kwargs):
 
+        BaseConnector.__init__(self, **kwargs)
+        Partitionable.__init__(self, **kwargs)
+        Cacheable.__init__(self, **kwargs)
+
+        self.dataset = self.dataset.replace(".", "/")
+
+
+    @Cacheable().read_thru()
     def read_dataset(self) -> pyarrow.Table:
-        with open(self.dataset, mode="br") as file:
-            return iter([self.decoder(file)])
+        import glob
+        for g in glob.iglob(self.dataset + "/**", recursive=True):
+            if not os.path.isfile(g):
+                continue
+            try:
+                decoder = get_decoder(g)
+                with open(g, mode="br") as file:
+                    yield decoder(file)
+            except UnsupportedFileTypeError:
+                pass
 
     def get_dataset_schema(self) -> RelationSchema:
-        with open(self.dataset, mode="br") as file:
-            return self.decoder(file, just_schema=True)
+        import glob
+        for g in glob.iglob(self.dataset + "/**", recursive=True):
+            if not os.path.isfile(g):
+                continue
+            try:
+                decoder = get_decoder(g)
+                with open(g, mode="br") as file:
+                    return decoder(file, just_schema=True)
+            except UnsupportedFileTypeError:
+                pass

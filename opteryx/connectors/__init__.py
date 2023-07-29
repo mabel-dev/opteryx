@@ -17,9 +17,10 @@ import pyarrow
 from opteryx.shared import MaterializedDatasets
 
 from .sql_connector import SqlConnector
+from .disk_connector import DiskConnector
 
 # load the base set of prefixes
-_storage_prefixes = {"_default": None, "information_schema": "InformationSchema"}
+_storage_prefixes = {"information_schema": "InformationSchema"}
 
 
 def register_store(prefix, connector, *, remove_prefix: bool = False, **kwargs):
@@ -83,8 +84,8 @@ def connector_factory(dataset):
 
         return file_connector.FileConnector(dataset=dataset)
     else:
-        #        # fall back to the detault connector (usually local disk)
-        connector = _storage_prefixes.get("_default", Local)
+        # fall back to the detault connector (local disk if not set)
+        connector = _storage_prefixes.get("_default", DiskConnector)
 
     prefix = connector_entry.pop("prefix", "")
     remove_prefix = connector_entry.pop("remove_prefix", False)
