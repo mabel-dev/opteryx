@@ -57,7 +57,9 @@ class MabelPartitionScheme(BasePartitionScheme):
         # Prune the list of blobs based on the chosen segment
         list_of_blobs = [blob for blob in list_of_blobs if f"/{chosen_segment}/" in blob]
 
-        segmented_folders = {_safe_get_next_element(blob.split("/"), chosen_segment) for blob in list_of_blobs}
+        segmented_folders = {
+            _safe_get_next_element(blob.split("/"), chosen_segment) for blob in list_of_blobs
+        }
 
         # Count the segments we're planning to read
         statistics.segments_scanned += len(segmented_folders)

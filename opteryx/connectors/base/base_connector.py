@@ -28,7 +28,9 @@ class BaseConnector:
     def interal_only(self):
         return False
 
-    def __init__(self, *, dataset: str = None, config: typing.Dict[str, typing.Any] = None, **kwargs) -> None:
+    def __init__(
+        self, *, dataset: str = None, config: typing.Dict[str, typing.Any] = None, **kwargs
+    ) -> None:
         """
         Initialize the base connector with configuration.
 

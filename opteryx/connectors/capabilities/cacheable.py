@@ -1,9 +1,8 @@
-
-
 class Cacheable:
     """
     Read Thru Cache
     """
+
     def __init__(self, **kwargs):
         self.cache = {}
 
@@ -11,6 +10,7 @@ class Cacheable:
         """
         Decorator function for read-through cache functionality
         """
+
         def decorator(func):
             def wrapper(*args, **kwargs):
                 # Assume args[0] is the key for simplicity; adjust as needed
@@ -33,4 +33,5 @@ class Cacheable:
                 return result
 
             return wrapper
+
         return decorator

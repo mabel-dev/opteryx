@@ -16,8 +16,8 @@ import pyarrow
 
 from opteryx.shared import MaterializedDatasets
 
-from .sql_connector import SqlConnector
 from .disk_connector import DiskConnector
+from .sql_connector import SqlConnector
 
 # load the base set of prefixes
 _storage_prefixes = {"information_schema": "InformationSchema"}

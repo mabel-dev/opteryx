@@ -17,32 +17,32 @@ given directly in a query.
 As such it assumes 
 """
 
+import os
+
 import pyarrow
 from orso.schema import RelationSchema
 
 from opteryx.connectors.base.base_connector import BaseConnector
 from opteryx.connectors.capabilities import Cacheable
 from opteryx.connectors.capabilities import Partitionable
-from opteryx.utils.file_decoders import get_decoder
 from opteryx.exceptions import UnsupportedFileTypeError
+from opteryx.utils.file_decoders import get_decoder
 
-import os
 
 class DiskConnector(BaseConnector, Cacheable, Partitionable):
     __mode__ = "Blob"
 
     def __init__(self, **kwargs):
-
         BaseConnector.__init__(self, **kwargs)
         Partitionable.__init__(self, **kwargs)
         Cacheable.__init__(self, **kwargs)
 
         self.dataset = self.dataset.replace(".", "/")
 
-
     @Cacheable().read_thru()
     def read_dataset(self) -> pyarrow.Table:
         import glob
+
         for g in glob.iglob(self.dataset + "/**", recursive=True):
             if not os.path.isfile(g):
                 continue
@@ -55,6 +55,7 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable):
 
     def get_dataset_schema(self) -> RelationSchema:
         import glob
+
         for g in glob.iglob(self.dataset + "/**", recursive=True):
             if not os.path.isfile(g):
                 continue
