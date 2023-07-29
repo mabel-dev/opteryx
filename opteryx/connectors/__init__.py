@@ -9,42 +9,18 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from .base.base_blob_storage_adapter import BaseBlobStorageAdapter  # isort: skip
-from .base.base_document_storage_adapter import BaseDocumentStorageAdapter  # isort: skip
+
+import os
 
 import pyarrow
 
-from opteryx.config import DATASET_PREFIX_MAPPING
-from opteryx.connectors.arrow_connector import ArrowConnector
-from opteryx.connectors.aws_s3_connector import AwsS3Connector
-from opteryx.connectors.disk_connector import DiskConnector
-from opteryx.connectors.gcp_cloudstorage_connector import GcpCloudStorageConnector
-from opteryx.connectors.gcp_firestore_connector import GcpFireStoreConnector
-from opteryx.connectors.hadro_connector import HadroConnector
-from opteryx.connectors.mongodb_connector import MongoDbConnector
-from opteryx.connectors.sql_connector import SqlConnector
 from opteryx.shared import MaterializedDatasets
 
-WELL_KNOWN_ADAPTERS = {
-    "disk": DiskConnector,
-    "gcs": GcpCloudStorageConnector,
-    "hadro": HadroConnector,
-    "firestore": GcpFireStoreConnector,
-    "minio": AwsS3Connector,
-    "mongodb": MongoDbConnector,
-    "s3": AwsS3Connector,
-    "sql": SqlConnector,
-}
+from .sql_connector import SqlConnector
+from .disk_connector import DiskConnector
 
+# load the base set of prefixes
 _storage_prefixes = {"information_schema": "InformationSchema"}
-
-if not isinstance(DATASET_PREFIX_MAPPING, dict):  # pragma: no cover
-    _storage_prefixes["_"] = "disk"
-else:
-    for _prefix, _adapter_name in DATASET_PREFIX_MAPPING.items():
-        _storage_prefixes[_prefix] = WELL_KNOWN_ADAPTERS.get(
-            _adapter_name.lower(), None
-        )  # type:ignore
 
 
 def register_store(prefix, connector, *, remove_prefix: bool = False, **kwargs):
@@ -95,17 +71,25 @@ def connector_factory(dataset):
     if dataset[0] == "$":
         from opteryx.connectors import sample_data
 
-        return sample_data.SampleDataConnector()
+        return sample_data.SampleDataConnector(dataset=dataset)
 
+    # otherwise look up the prefix from the registered prefixes
     prefix = dataset.split(".")[0]
     connector_entry: dict = {}
     if prefix in _storage_prefixes:
         connector_entry = _storage_prefixes[prefix].copy()  # type: ignore
         connector = connector_entry.pop("connector")
+    elif os.path.isfile(dataset):
+        from opteryx.connectors import file_connector
+
+        return file_connector.FileConnector(dataset=dataset)
     else:
-        connector = _storage_prefixes.get("_")
+        # fall back to the detault connector (local disk if not set)
+        connector = _storage_prefixes.get("_default", DiskConnector)
 
     prefix = connector_entry.pop("prefix", "")
     remove_prefix = connector_entry.pop("remove_prefix", False)
+    if prefix and remove_prefix and dataset.startswith(prefix):
+        dataset = dataset[len(prefix) + 1 :]
 
-    return connector(prefix=prefix, remove_prefix=remove_prefix, **connector_entry)
+    return connector(dataset=dataset, **connector_entry)

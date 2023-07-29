@@ -47,14 +47,19 @@ class RollingLog:
         # open the log file in binary mode
         with open(self.log_file, "r", encoding="UTF8") as log_file:  # type:ignore
             # read the current position in the circular buffer
-            chunk = log_file.read(self.block_size)  # type:ignore
-            # keep reading until there's no more data left
-            while chunk:
-                # split the chunk by newlines
+            while True:
+                chunk = log_file.read(self.block_size)
+                if not chunk:
+                    break
                 lines = chunk.split("\n")
-                # yield each line
                 for line in lines:
                     if line:
                         yield line
-                # read the next chunk
-                chunk = log_file.read(self.block_size)  # type:ignore
+
+    def tail(self, count: int = 5):
+        """return the last 'count' records"""
+        return list(self.scan())[-count:]
+
+    def head(self, count: int = 5):
+        """return the first 'count' records"""
+        return list(self.scan())[:count]

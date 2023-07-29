@@ -11,116 +11,117 @@
 # limitations under the License.
 
 """
-Inner Reader for SQL stores
 
-This currently isn't a base class because we're assuming a standard
-functionality of SQL engines.
-
-This relies on SQLAlchemy
 """
-import typing
-from functools import lru_cache
-
 import pyarrow
+from orso.schema import FlatColumn
+from orso.schema import RelationSchema
+from orso.types import PYTHON_TO_ORSO_MAP
 
-from opteryx import config
-from opteryx.connectors.capabilities import PredicatePushable
+from opteryx.connectors.base.base_connector import BaseConnector
+from opteryx.exceptions import DatasetNotFoundError
 from opteryx.exceptions import MissingDependencyError
 from opteryx.exceptions import UnmetRequirementError
 
 
-class BaseSQLStorageAdapter:  # this is used by the SHOW STORES statement
-    pass
+class SqlConnector(BaseConnector):
+    __mode__ = "Sql"
 
-
-def _write_predicate(predicate):
-    column, operator, literal = predicate
-
-    operator_map = {"==": "="}
-    operator = operator_map.get(operator, operator)
-
-    if isinstance(literal, str):
-        literal = "'" + literal.replace("'", "''") + "'"
-
-    return f"{column} {operator} {literal}"
-
-
-@lru_cache(8)
-def _get_engine(connection):
-    """take advantage of pooling"""
-    from sqlalchemy import create_engine
-
-    return create_engine(connection)
-
-
-class SqlConnector(BaseSQLStorageAdapter, PredicatePushable):
-    __mode__ = "SQL"
-
-    def __init__(
-        self, prefix: str = "", remove_prefix: bool = False, connection: str = None, engine=None
-    ) -> None:
-        super(BaseSQLStorageAdapter, self).__init__()
-        super(PredicatePushable, self).__init__()
-        # we're just testing we can import here
+    def __init__(self, *args, connection: str = None, engine=None, **kwargs):
+        super().__init__(*args, **kwargs)
         try:
-            import sqlalchemy
+            from sqlalchemy import MetaData
+            from sqlalchemy import create_engine
         except ImportError as err:  # pragma: nocover
             raise MissingDependencyError(err.name) from err
 
-        self._connection = connection
-        self._engine = engine
-
-        if self._engine is None and self._connection is None:
+        if engine is None and connection is None:
             raise UnmetRequirementError(
                 "SQL Connections require either a SQL Alchemy connection string in the 'connection' parameter, or a SQL Alchemy Engine in the 'engine' parameter."
             )
 
-        self._remove_prefix = remove_prefix
-        self._prefix = prefix
+        # create the SqlAlchemy engine
+        if engine is None:
+            self._engine = create_engine(connection)
+        else:
+            self._engine = engine
 
-    def read_records(
-        self,
-        dataset,
-        selection: typing.Union[list, None] = None,
-        morsel_size: typing.Union[int, None] = None,
-    ):  # pragma: no cover
-        """
-        Return a morsel of documents
-        """
+        self.schema = None
+        self.metadata = MetaData()
+
+    def read_dataset(self) -> "DatasetReader":
         from sqlalchemy import text
 
-        from opteryx.third_party.query_builder import Query
+        sql = f"SELECT * FROM '{self.dataset}'"
 
+        with self._engine.connect() as conn:
+            result = conn.execute(text(sql))
+
+        morsel_size = 10000
         if morsel_size is None:
-            morsel_size = config.MORSEL_SIZE
+            morsel_size = 100000
         chunk_size = 500
 
-        queried_relation = dataset
-        if self._remove_prefix:
-            if dataset.startswith(f"{self._prefix}."):
-                queried_relation = dataset[len(self._prefix) + 1 :]
-
-        # we're using a query builder to prevent hand-crafting SQL
-        query_builder = Query()
-        query_builder.FROM(queried_relation)
-        if selection is None:
-            query_builder.SELECT("*")
-        else:
-            query_builder.SELECT(*selection)
-
-        for predicate in self._predicates:
-            query_builder.WHERE(_write_predicate(predicate))
-
-        if self._engine is None:
-            self._engine = _get_engine(self._connection)
-        with self._engine.connect() as conn:
-            result = conn.execute(text(str(query_builder)))
-
+        batch = result.fetchmany(chunk_size)
+        while batch:
+            arrays = [pyarrow.array(column) for column in zip(*batch)]
+            morsel = pyarrow.Table.from_arrays(arrays, self.schema.column_names)
+            # from 500 records, estimate the number of records to fill the morsel size
+            if chunk_size == 500 and morsel.nbytes > 0:
+                chunk_size = int(morsel_size // (morsel.nbytes / 500))
+            yield morsel
             batch = result.fetchmany(chunk_size)
-            while batch:
-                morsel = pyarrow.Table.from_pylist([b._asdict() for b in batch])
-                # from 500 records, estimate the number of records to fill the morsel size
-                if chunk_size == 500 and morsel.nbytes > 0:
-                    chunk_size = int(morsel_size // (morsel.nbytes / 500))
-                yield morsel
-                batch = result.fetchmany(chunk_size)
+
+        result.close()
+
+    def get_dataset_schema(self) -> RelationSchema:
+        if self.schema:
+            return self.schema
+
+        # Try to read the schema from the metastore
+        self.schema = self.read_schema_from_metastore()
+        if self.schema:
+            return self.schema
+
+        # get the schema from the dataset
+        from sqlalchemy import Table
+        from sqlalchemy import select
+        from sqlalchemy.exc import NoSuchTableError
+
+        table = Table(self.dataset, self.metadata, autoload_with=self._engine)
+        query = select(table).limit(1)
+
+        from sqlalchemy import text
+
+        #        query = text(f"SELECT * FROM {self.dataset} LIMIT 1")
+        #        query = text(f"SELECT * FROM {self.dataset};")
+        with self._engine.connect() as conn:
+            result = conn.execute(query)
+        print(result.cursor.fetchall())
+
+        try:
+            with self._engine.connect() as conn:
+                result = conn.execute(query)
+        except NoSuchTableError as err:
+            raise DatasetNotFoundError(dataset=self.dataset) from err
+
+        columns = [column[0] for column in result.cursor.description]
+        record = result.fetchone()
+
+        print(record)
+
+        # Close the result object
+        result.close()
+
+        if record is None:
+            raise DatasetNotFoundError(dataset=self.dataset)
+
+        self.schema = RelationSchema(
+            name=self.dataset,
+            columns=[
+                FlatColumn(name=column_name, type=PYTHON_TO_ORSO_MAP[type(column_value)])
+                for column_name, column_value in zip(columns, record)
+            ],
+        )
+
+        return self.schema

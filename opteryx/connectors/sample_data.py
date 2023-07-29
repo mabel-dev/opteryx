@@ -54,14 +54,22 @@ def suggest(dataset):
 class SampleDataConnector(BaseConnector):
     __mode__ = "Internal"
 
-    def read_dataset(self, dataset_name: str) -> "DatasetReader":
-        return SampleDatasetReader(dataset_name.lower(), config=self.config)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.dataset = self.dataset.lower()
 
-    def get_dataset_schema(self, dataset_name: str) -> RelationSchema:
-        data_provider = WELL_KNOWN_DATASETS.get(dataset_name.lower())
+    @property
+    def interal_only(self):
+        return True
+
+    def read_dataset(self) -> "DatasetReader":
+        return SampleDatasetReader(self.dataset, config=self.config)
+
+    def get_dataset_schema(self) -> RelationSchema:
+        data_provider = WELL_KNOWN_DATASETS.get(self.dataset)
         if data_provider is None:
-            suggestion = suggest(dataset_name.lower())
-            raise DatasetNotFoundError(message=suggestion, dataset=dataset_name)
+            suggestion = suggest(self.dataset)
+            raise DatasetNotFoundError(message=suggestion, dataset=self.dataset)
         return data_provider.schema
 
 

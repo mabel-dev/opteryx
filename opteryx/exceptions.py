@@ -166,3 +166,7 @@ class EmptyResultSetError(Error):
 
 class InvalidTemporalRangeFilterError(SqlError):
     pass
+
+
+class UnsupportedFileTypeError(Exception):
+    pass

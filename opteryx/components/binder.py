@@ -354,7 +354,7 @@ class BinderVisitor:
         node.connector = connector_factory(node.relation)
         # get them to tell is the schema of the dataset
         # None means we don't know ahead of time - we can usually get something
-        node.schema = node.connector.get_dataset_schema(node.relation)
+        node.schema = node.connector.get_dataset_schema()
         context.setdefault("schemas", {})[node.alias] = node.schema
 
         return node, context

@@ -35,8 +35,16 @@ def parse_yaml(yaml_str):
             value = int(value)
         elif value.replace(".", "", 1).isdigit():
             value = float(value)
+        elif value.lower() == "true":
+            return True
+        elif value.lower() == "false":
+            return False
+        elif value.lower() == "none":
+            return None
         elif value.startswith("["):
-            value = [val.strip() for val in value[1:-1].split(",")]
+            return [val.strip() for val in value[1:-1].split(",")]
+        elif value.startswith("-"):
+            return [val.strip() for val in value.split("-") if val.strip()]
         return value
 
     result: dict = {}

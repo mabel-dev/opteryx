@@ -11,37 +11,56 @@
 # limitations under the License.
 
 """
-Disk Connector reads files from a locally addressable file system (local disk,
-NFS etc).
+The 'direct disk' connector provides the reader for when a dataset file is
+given directly in a query.
+
+As such it assumes 
 """
 
-import io
-import os
-
+import pyarrow
 from orso.schema import RelationSchema
 
 from opteryx.connectors.base.base_connector import BaseConnector
-from opteryx.connectors.base.base_connector import DatasetReader
-from opteryx.utils import file_decoders
-from opteryx.utils import paths
+from opteryx.connectors.capabilities import Cacheable
+from opteryx.connectors.capabilities import Partitionable
+from opteryx.utils.file_decoders import get_decoder
+from opteryx.exceptions import UnsupportedFileTypeError
+
+import os
+
+class DiskConnector(BaseConnector, Cacheable, Partitionable):
+    __mode__ = "Blob"
+
+    def __init__(self, **kwargs):
+
+        BaseConnector.__init__(self, **kwargs)
+        Partitionable.__init__(self, **kwargs)
+        Cacheable.__init__(self, **kwargs)
+
+        self.dataset = self.dataset.replace(".", "/")
 
 
-class DiskConnector(BaseConnector):
-    __mode__ = "blob"
-
-    def get_dataset_schema(self, dataset_name: str) -> RelationSchema:
-        pass
-
-    def read_dataset(self, dataset_name: str) -> DatasetReader:
-        if not paths.is_file(dataset_name):
-            raise Exception(f"{dataset_name} is not a file")
-        parts = paths.get_parts(dataset_name)
-        with open(dataset_name, "rb") as blob:
-            # wrap in a BytesIO so we can close the file
-            return io.BytesIO(blob.read())
-
-    def get_blob_list(self, partition):
+    @Cacheable().read_thru()
+    def read_dataset(self) -> pyarrow.Table:
         import glob
+        for g in glob.iglob(self.dataset + "/**", recursive=True):
+            if not os.path.isfile(g):
+                continue
+            try:
+                decoder = get_decoder(g)
+                with open(g, mode="br") as file:
+                    yield decoder(file)
+            except UnsupportedFileTypeError:
+                pass
 
-        files = glob.glob(str(partition / "**"), recursive=True)
-        return [str(f).replace("\\", "/") for f in files if os.path.isfile(f)]
+    def get_dataset_schema(self) -> RelationSchema:
+        import glob
+        for g in glob.iglob(self.dataset + "/**", recursive=True):
+            if not os.path.isfile(g):
+                continue
+            try:
+                decoder = get_decoder(g)
+                with open(g, mode="br") as file:
+                    return decoder(file, just_schema=True)
+            except UnsupportedFileTypeError:
+                pass

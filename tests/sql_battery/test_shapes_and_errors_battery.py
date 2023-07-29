@@ -44,7 +44,8 @@ from pyarrow.lib import ArrowInvalid
 import pytest
 
 import opteryx
-from opteryx.connectors import AwsS3Connector, DiskConnector
+
+# from opteryx.connectors import AwsS3Connector, DiskConnector
 from opteryx.exceptions import (
     AmbiguousIdentifierError,
     ColumnNotFoundError,
@@ -345,6 +346,9 @@ STATEMENTS = [
         ("SELECT * FROM generate_series(2,10,2)", 5, 1, None),
         ("SELECT * FROM generate_series(0.5,10,0.5)", 20, 1, None),
         ("SELECT * FROM generate_series(2,11,2)", 5, 1, None),
+        ("SELECT * FROM generate_series(1, 10, 0.5)", 19, 1, None),
+        ("SELECT * FROM generate_series(0.1, 0.2, 10)", 1, 1, None),
+        ("SELECT * FROM generate_series(0, 5, 1.1)", 5, 1, None),
         ("SELECT * FROM generate_series(2,10,2) AS nums", 5, 1, None),
         ("SELECT * FROM generate_series(2,10,2) WHERE generate_series > 5", 3, 1, None),
         ("SELECT * FROM generate_series(2,10,2) AS nums WHERE nums < 5", 2, 1, None),
@@ -366,9 +370,14 @@ STATEMENTS = [
         ("SELECT * FROM generate_series('2022-01-01 12:00', '2022-01-01 12:15', '1 minute')", 16, 1, None),
         ("SELECT * FROM generate_series('2022-01-01 12:00', '2022-01-01 12:15', '1m30s')", 11, 1, None),
         ("SELECT * FROM generate_series(1,10) LEFT JOIN $planets ON id = generate_series", 10, 21, None),
+        ("SELECT * FROM GENERATE_SERIES(5, 10) AS PID LEFT JOIN $planets ON id = PID", 6, 21, None),
         ("SELECT * FROM generate_series(1,5) JOIN $planets ON id = generate_series", 5, 21, None),
         ("SELECT * FROM (SELECT * FROM generate_series(1,10,2) AS gs) INNER JOIN $planets on gs = id", 5, 21, None),
 
+        ("SELECT * FROM 'testdata/flat/formats/arrow/tweets.arrow'", 100000, 13, None),
+        ("SELECT * FROM 'testdata/flat/../flat/formats/arrow/tweets.arrow'", None, None, DatasetNotFoundError),  # don't allow traversal
+
+        ("SELECT * FROM testdata.partitioned.dated", 50, 8, None),
         ("SELECT * FROM testdata.partitioned.dated FOR '2020-02-03' WITH (NO_CACHE)", 25, 8, None),
         ("SELECT * FROM testdata.partitioned.dated FOR '2020-02-03'", 25, 8, None),
         ("SELECT * FROM testdata.partitioned.dated FOR '2020-02-04'", 25, 8, None),
@@ -917,8 +926,8 @@ def test_sql_battery(statement, rows, columns, exception):
     Test an battery of statements
     """
 
-    opteryx.register_store("tests", DiskConnector)
-    opteryx.register_store("mabellabs", AwsS3Connector)
+    #    opteryx.register_store("tests", DiskConnector)
+    #    opteryx.register_store("mabellabs", AwsS3Connector)
 
     conn = opteryx.connect()
     cursor = conn.cursor()
