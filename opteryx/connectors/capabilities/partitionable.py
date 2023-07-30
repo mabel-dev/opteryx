@@ -4,6 +4,8 @@ from opteryx.exceptions import InvalidConfigurationError
 
 
 class Partitionable:
+    partitioned = True
+
     def __init__(self, **kwargs):
         self.partition_scheme = kwargs.get("partition_scheme")
 
@@ -24,6 +26,9 @@ class Partitionable:
 
         if self.partition_scheme is None:
             self.partition_scheme = DefaultPartitionScheme
+
+        self.start_date = None
+        self.end_date = None
 
     def read_partitioned(self, func):
         @wraps(func)

@@ -26,6 +26,7 @@ from opteryx.connectors.base.base_connector import BaseConnector
 from opteryx.connectors.capabilities import Cacheable
 from opteryx.connectors.capabilities import Partitionable
 from opteryx.exceptions import UnsupportedFileTypeError
+from opteryx.utils.dates import date_range
 from opteryx.utils.file_decoders import get_decoder
 
 
@@ -45,13 +46,11 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable):
             file_stream = file.read()
         return io.BytesIO(file_stream)
 
+    #    @Partitionable.read_partitioned()
     def read_partition(self, base_folder):
         # get the list of files in the folder
         # pass them to the partitionable function to filter in/out blobs
         # use read_blob to read over the blobs
-        pass
-
-    def read_dataset(self) -> pyarrow.Table:
         import glob
 
         for g in glob.iglob(self.dataset + "/**", recursive=True):
@@ -64,7 +63,25 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable):
             except UnsupportedFileTypeError:
                 pass
 
+    def read_dataset(self) -> pyarrow.Table:
+        #        seen = set()
+        #        for segment_timeslice in date_range(start, end):
+        #            segment = self.build_segement(segment_timeslice)
+        #            if segment in seen:
+        #                continue
+        #            yield from self.read_partition(segment)
+        #            seen.add(segment)
+
+        print(self.start_date, self.end_date)
+        print(list(date_range(self.start_date, self.end_date, "1h")))
+        yield from self.read_partition(self.dataset)
+
     def get_dataset_schema(self) -> RelationSchema:
+        # Try to read the schema from the metastore
+        self.schema = self.read_schema_from_metastore()
+        if self.schema:
+            return self.schema
+
         import glob
 
         for g in glob.iglob(self.dataset + "/**", recursive=True):

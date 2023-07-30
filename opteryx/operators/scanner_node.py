@@ -40,6 +40,8 @@ def normalize_morsel(schema, morsel):
 class ScannerNode(BasePlanNode):
     def __init__(self, properties: QueryProperties, **parameters):
         super().__init__(properties=properties, **parameters)
+        self.start_date = parameters.get("start_date")
+        self.end_date = parameters.get("end_date")
 
     @property
     def name(self):  # pragma: no cover

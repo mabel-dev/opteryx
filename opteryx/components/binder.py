@@ -351,7 +351,10 @@ class BinderVisitor:
         from opteryx.connectors import connector_factory
 
         # work out who will be serving this request
-        node.connector = connector_factory(node.relation)
+        node.connector = connector_factory(node.relation, cache=context.get("cache"))
+        if hasattr(node.connector, "partitioned"):
+            node.connector.start_date = node.start_date
+            node.connector.end_date = node.end_date
         # get them to tell is the schema of the dataset
         # None means we don't know ahead of time - we can usually get something
         node.schema = node.connector.get_dataset_schema()
@@ -391,10 +394,6 @@ class BinderVisitor:
             node: The node to start the traversal from.
             context: An optional context object to pass to each visit method.
         """
-
-        if context is None:
-            context = {"schemas": {"$derived": derived.schema}}
-
         # Recursively visit children
         children = graph.ingoing_edges(node)
 
@@ -412,10 +411,11 @@ class BinderVisitor:
         return graph, context
 
 
-def do_bind_phase(plan, context=None, common_table_expressions=None):
+def do_bind_phase(plan, connection=None, cache=None, common_table_expressions=None):
     binder_visitor = BinderVisitor()
     root_node = plan.get_exit_points()
+    context = {"schemas": {"$derived": derived.schema}, "cache": cache, "connection": connection}
     if len(root_node) > 1:
         raise ValueError(f"logical plan has {len(root_node)} heads - this is an error")
-    plan, _ = binder_visitor.traverse(plan, root_node[0])
+    plan, _ = binder_visitor.traverse(plan, root_node[0], context=context)
     return plan

@@ -187,18 +187,18 @@ def sql_parts(string):
 
 def parse_range(fixed_range):  # pragma: no cover
     fixed_range = fixed_range.upper()
-    today = datetime.datetime.utcnow().date()
+    now = datetime.datetime.utcnow().replace(minute=0, second=0, microsecond=0)
 
     if fixed_range in ("PREVIOUS_MONTH", "LAST_MONTH"):
         # end the day before the first of this month
-        end = today.replace(day=1) - datetime.timedelta(days=1)
+        end = now.replace(day=1) - datetime.timedelta(days=1)
         # start the first day of that month
         start = end.replace(day=1)
     elif fixed_range == "THIS_MONTH":
         # start the first day of this month
-        start = today.replace(day=1)
+        start = now.replace(day=1)
         # end today
-        end = today
+        end = now
     else:
         if parse_date(fixed_range):
             raise InvalidTemporalRangeFilterError(
@@ -213,20 +213,18 @@ def parse_date(date):  # pragma: no cover
     if not date:
         return None
 
-    today = datetime.datetime.utcnow().date()
+    now = datetime.datetime.utcnow().replace(minute=0, second=0, microsecond=0)
 
     # the splitter keeps ';' at the end of date literals
     if date[-1] == ";":
         date = date[:-1].strip()
 
     if date == "TODAY":
-        return today
+        return now
     if date == "YESTERDAY":
-        return today - datetime.timedelta(days=1)
+        return (now - datetime.timedelta(days=1)).replace(hour=0)
 
-    parsed_date = dates.parse_iso(date[1:-1])
-    if parsed_date:
-        return parsed_date.date()
+    return dates.parse_iso(date[1:-1])
 
 
 def _temporal_extration_state_machine(parts):
@@ -301,9 +299,6 @@ def _temporal_extration_state_machine(parts):
 def extract_temporal_filters(sql):  # pragma: no cover
     parts = sql_parts(sql)
 
-    # define today once
-    today = datetime.datetime.utcnow().date()
-
     # extract the raw temporal information
     initial_collector, sql = _temporal_extration_state_machine(parts)
 
@@ -319,6 +314,9 @@ def extract_temporal_filters(sql):  # pragma: no cover
         if for_date:
             start_date = for_date
             end_date = for_date
+            if for_date_string in ("TODAY", "YESTERDAY"):
+                start_date = start_date.replace(hour=0)
+                end_date = end_date.replace(hour=23, minute=59)
 
         elif for_date_string.startswith("DATES BETWEEN "):
             parts = for_date_string.split(" ")
@@ -351,6 +349,11 @@ def extract_temporal_filters(sql):  # pragma: no cover
         elif for_date_string.startswith("DATES IN "):
             parts = for_date_string.split(" ")
             start_date, end_date = parse_range(parts[2])
+
+        elif for_date_string.startswith("DATES SINCE "):
+            parts = for_date_string.split(" ")
+            start_date = parse_date(parts[2])
+            end_date = datetime.datetime.utcnow().replace(minute=0, second=0, microsecond=0)
 
         elif for_date_string:
             raise InvalidTemporalRangeFilterError(

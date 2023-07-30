@@ -49,7 +49,7 @@ class SqlConnector(BaseConnector):
         self.schema = None
         self.metadata = MetaData()
 
-    def read_dataset(self) -> "DatasetReader":
+    def read_dataset(self, start_date=None, end_date=None) -> "DatasetReader":
         from sqlalchemy import text
 
         sql = f"SELECT * FROM '{self.dataset}'"

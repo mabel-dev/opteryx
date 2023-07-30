@@ -386,6 +386,14 @@ STATEMENTS = [
         ("SELECT * FROM testdata.partitioned.dated FOR DATES BETWEEN '2020-02-01' AND '2020-02-28' OFFSET 1", 49, 8, None),
         ("SELECT * FROM $satellites FOR YESTERDAY ORDER BY planetId OFFSET 10", 167, 8, None),
 
+        ("SELECT * FROM testdata.partitioned.dated FOR DATES SINCE '2020-02-28 03:30'", 49, 8, None),
+        ("SELECT * FROM testdata.partitioned.dated FOR '2020-02-03 00:00' WITH (NO_CACHE)", 25, 8, None),
+        ("SELECT * FROM testdata.partitioned.dated FOR '2020-02-03 12:00'", 25, 8, None),
+        ("SELECT * FROM testdata.partitioned.dated FOR '2020-02-04 00:00'", 25, 8, None),
+        ("SELECT * FROM testdata.partitioned.dated FOR DATES BETWEEN '2020-02-01 00:00' AND '2020-02-28 00:00'", 50, 8, None),
+        ("SELECT * FROM testdata.partitioned.dated FOR '2020-02-03 00:00' OFFSET 1", 24, 8, None),
+        ("SELECT * FROM testdata.partitioned.dated FOR DATES BETWEEN '2020-02-01 00:00' AND '2020-02-28 00:00' OFFSET 1", 49, 8, None),
+
         ("SELECT * FROM testdata.partitioned.segmented FOR '2020-02-03'", 25, 8, None),
         ("SELECT * FROM $planets FOR '1730-01-01'", 6, 20, None),
         ("SELECT * FROM $planets FOR '1830-01-01'", 7, 20, None),

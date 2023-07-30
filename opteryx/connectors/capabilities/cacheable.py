@@ -29,6 +29,8 @@ class Cacheable:
     decorator around the low-level read call.
     """
 
+    cached = True
+
     def __init__(self, cache=None, statistics: Optional[Dict[str, int]] = None, **kwargs):
         from opteryx.shared import BufferPool
 

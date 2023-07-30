@@ -62,7 +62,7 @@ def register_arrow(name, table):
     register_store(name, ArrowConnector)
 
 
-def connector_factory(dataset):
+def connector_factory(dataset, **config):
     """
     Work out which connector will service the access to this dataset.
     """
@@ -75,7 +75,7 @@ def connector_factory(dataset):
 
     # otherwise look up the prefix from the registered prefixes
     prefix = dataset.split(".")[0]
-    connector_entry: dict = {}
+    connector_entry: dict = config
     if prefix in _storage_prefixes:
         connector_entry = _storage_prefixes[prefix].copy()  # type: ignore
         connector = connector_entry.pop("connector")
