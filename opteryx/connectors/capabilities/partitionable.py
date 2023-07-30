@@ -1,9 +1,29 @@
 from functools import wraps
 
+from opteryx.exceptions import InvalidConfigurationError
+
 
 class Partitionable:
     def __init__(self, **kwargs):
-        pass
+        self.partition_scheme = kwargs.get("partition_scheme")
+
+        from opteryx.managers.schemes import BasePartitionScheme
+        from opteryx.managers.schemes import DefaultPartitionScheme
+
+        if not isinstance(self.partition_scheme, type):
+            raise InvalidConfigurationError(
+                config_item="partition_scheme",
+                provided_value=str(self.partition_scheme.__class__.__name__),
+                valid_value_description="an uninitialized class.",
+            )
+
+        if not issubclass(self.partition_scheme, BasePartitionScheme):
+            raise InvalidConfigurationError(
+                config_item="partition_scheme", provided_value=str(self.partition_scheme.__name__)
+            )
+
+        if self.partition_scheme is None:
+            self.partition_scheme = DefaultPartitionScheme
 
     def read_partitioned(self, func):
         @wraps(func)

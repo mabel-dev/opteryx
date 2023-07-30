@@ -4,7 +4,9 @@ class Cacheable:
     """
 
     def __init__(self, **kwargs):
-        self.cache = {}
+        from opteryx.shared import BufferPool
+
+        self.buffer_pool = BufferPool()
 
     def read_thru(self):
         """
@@ -17,14 +19,14 @@ class Cacheable:
                 key = args[0]
 
                 # Try to get the result from cache
-                result = self.cache.get(key)
+                result = self.buffer_pool.get(key, None)
 
                 if result is None:
                     # Key is not in cache, execute the function and store the result in cache
                     result = func(*args, **kwargs)
 
                     # Write the result to cache
-                    self.cache[key] = result
+                    self.buffer_pool.set(key, result, None)
 
                     print("MISS")
                 else:

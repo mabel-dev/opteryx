@@ -74,7 +74,7 @@ class LRU2:
         self.access_history[key].append(access_time)
         heapq.heappush(self.heap, (access_time, key))
         while len(self.cache) > self.size:
-            self._evict()
+            return self._evict()
 
     def _evict(self):
         while self.heap:
@@ -85,6 +85,7 @@ class LRU2:
                 self.evictions += 1
                 break
             self.removed.remove((oldest_access_time, oldest_key))
+            return oldest_key
 
     @property
     def keys(self):

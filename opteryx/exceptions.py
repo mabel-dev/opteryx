@@ -170,3 +170,17 @@ class InvalidTemporalRangeFilterError(SqlError):
 
 class UnsupportedFileTypeError(Exception):
     pass
+
+
+class InvalidConfigurationError(Exception):
+    def __init__(
+        self, *, config_item: str, provided_value: str, valid_value_description: str = None
+    ):
+        self.config_item = config_item
+        self.provided_value = provided_value
+        self.valid_value_description = valid_value_description
+
+        message = f"Value of '{str(provided_value)[:32]}' for '{config_item}' is not valid."
+        if valid_value_description:
+            message += f" Value should be {valid_value_description}"
+        super().__init__(message)

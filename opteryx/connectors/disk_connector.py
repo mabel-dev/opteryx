@@ -16,7 +16,7 @@ given directly in a query.
 
 As such it assumes 
 """
-
+import io
 import os
 
 import pyarrow
@@ -40,6 +40,17 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable):
         self.dataset = self.dataset.replace(".", "/")
 
     @Cacheable().read_thru()
+    def read_blob(self, blob_name):
+        with open(blob_name, mode="br") as file:
+            file_stream = file.read()
+        return io.BytesIO(file_stream)
+
+    def read_partition(self, base_folder):
+        # get the list of files in the folder
+        # pass them to the partitionable function to filter in/out blobs
+        # use read_blob to read over the blobs
+        pass
+
     def read_dataset(self) -> pyarrow.Table:
         import glob
 
@@ -48,8 +59,8 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable):
                 continue
             try:
                 decoder = get_decoder(g)
-                with open(g, mode="br") as file:
-                    yield decoder(file)
+                contents = self.read_blob(g)
+                yield decoder(contents)
             except UnsupportedFileTypeError:
                 pass
 
@@ -61,7 +72,7 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable):
                 continue
             try:
                 decoder = get_decoder(g)
-                with open(g, mode="br") as file:
-                    return decoder(file, just_schema=True)
+                contents = self.read_blob(g)
+                return decoder(contents, just_schema=True)
             except UnsupportedFileTypeError:
                 pass
