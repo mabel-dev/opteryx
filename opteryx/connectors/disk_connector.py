@@ -40,7 +40,7 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable):
         self.dataset = self.dataset.replace(".", "/")
 
     @Cacheable().read_thru()
-    def read_blob(self, blob_name):
+    def read_blob(self, *, blob_name):
         with open(blob_name, mode="br") as file:
             file_stream = file.read()
         return io.BytesIO(file_stream)
@@ -59,7 +59,7 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable):
                 continue
             try:
                 decoder = get_decoder(g)
-                contents = self.read_blob(g)
+                contents = self.read_blob(blob_name=g)
                 yield decoder(contents)
             except UnsupportedFileTypeError:
                 pass
@@ -72,7 +72,7 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable):
                 continue
             try:
                 decoder = get_decoder(g)
-                contents = self.read_blob(g)
+                contents = self.read_blob(blob_name=g)
                 return decoder(contents, just_schema=True)
             except UnsupportedFileTypeError:
                 pass
