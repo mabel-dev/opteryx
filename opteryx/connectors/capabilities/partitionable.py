@@ -12,6 +12,9 @@ class Partitionable:
         from opteryx.managers.schemes import BasePartitionScheme
         from opteryx.managers.schemes import DefaultPartitionScheme
 
+        if self.partition_scheme is None:
+            self.partition_scheme = DefaultPartitionScheme
+
         if not isinstance(self.partition_scheme, type):
             raise InvalidConfigurationError(
                 config_item="partition_scheme",
@@ -23,9 +26,6 @@ class Partitionable:
             raise InvalidConfigurationError(
                 config_item="partition_scheme", provided_value=str(self.partition_scheme.__name__)
             )
-
-        if self.partition_scheme is None:
-            self.partition_scheme = DefaultPartitionScheme
 
         self.start_date = None
         self.end_date = None

@@ -327,7 +327,7 @@ def extract(branch, alias=None, key=None):
 
 
 def map_access(branch, alias=None, key=None):
-    # Identifier[key] -> GET(Identifier, key) -> alias of I[k] or alias
+    # Identifier[key] -> GET(Identifier, key)
 
     field = branch["column"]["Identifier"]["value"]
     key_dict = branch["keys"][0]["Value"]
@@ -343,7 +343,7 @@ def map_access(branch, alias=None, key=None):
         NodeType.FUNCTION,
         value="GET",
         parameters=[identifier_node, key_node],
-        alias=alias,
+        alias=alias or f"{field}[{repr(key) if isinstance(key, str) else key}]",
     )
 
 

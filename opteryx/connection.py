@@ -41,11 +41,12 @@ from opteryx.shared.variables import VariableOwner
 CURSOR_NOT_RUN: str = "Cursor must be in an executed state"
 PROFILE_LOCATION = config.PROFILE_LOCATION
 ENGINE_VERSION = config.ENGINE_VERSION
-PROFILE_LOCATION = config.PROFILE_LOCATION
 
 HistoryItem = typing.Tuple[str, bool, datetime.datetime]
 
-rolling_log = RollingLog(PROFILE_LOCATION + ".log", 50, 1024 * 1024)
+rolling_log = None
+if PROFILE_LOCATION:
+    rolling_log = RollingLog(PROFILE_LOCATION + ".log", 50, 1024 * 1024)
 
 
 @dataclass
@@ -147,7 +148,8 @@ class Cursor(DataFrame):
         self._connection.context.history.append((operation, True, datetime.datetime.utcnow()))
         plans = query_planner(operation=operation, parameters=params, connection=self._connection)
 
-        rolling_log.append(operation)
+        if rolling_log:
+            rolling_log.append(operation)
 
         results = None
         for self._plan in plans:
