@@ -209,7 +209,7 @@ def parse_range(fixed_range):  # pragma: no cover
     return start, end
 
 
-def parse_date(date):  # pragma: no cover
+def parse_date(date, end: bool = False):  # pragma: no cover
     if not date:
         return None
 
@@ -224,7 +224,11 @@ def parse_date(date):  # pragma: no cover
     if date == "YESTERDAY":
         return (now - datetime.timedelta(days=1)).replace(hour=0)
 
-    return dates.parse_iso(date[1:-1])
+    parsed = dates.parse_iso(date[1:-1])
+    if parsed and end and len(date) <= 12:
+        return parsed.replace(hour=23, minute=59)
+
+    return parsed
 
 
 def _temporal_extration_state_machine(parts):
@@ -314,7 +318,7 @@ def extract_temporal_filters(sql):  # pragma: no cover
         if for_date:
             start_date = for_date
             end_date = for_date
-            if for_date_string in ("TODAY", "YESTERDAY"):
+            if for_date_string in ("TODAY", "YESTERDAY") or len(for_date_string) <= 12:
                 start_date = start_date.replace(hour=0)
                 end_date = end_date.replace(hour=23, minute=59)
 
@@ -331,7 +335,7 @@ def extract_temporal_filters(sql):  # pragma: no cover
                 )
 
             start_date = parse_date(parts[2])
-            end_date = parse_date(parts[4])
+            end_date = parse_date(parts[4], end=True)
 
             if start_date is None:
                 raise InvalidTemporalRangeFilterError(

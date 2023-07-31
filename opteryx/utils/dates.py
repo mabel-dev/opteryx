@@ -77,8 +77,13 @@ def date_range(start_date, end_date, interval: str):
     start_date = parse_iso(start_date)
     end_date = parse_iso(end_date)
 
-    if start_date is end_date or start_date == end_date or start_date > end_date:
+    if start_date > end_date:
         raise ValueError("Cannot create an series with the provided start and end dates")
+
+    # if the dates are the same, return that date
+    if start_date == end_date:
+        yield start_date
+        return
 
     cursor = start_date
     while cursor <= end_date:
