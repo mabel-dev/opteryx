@@ -193,10 +193,10 @@ def parse_range(fixed_range):  # pragma: no cover
         # end the day before the first of this month
         end = now.replace(day=1) - datetime.timedelta(days=1)
         # start the first day of that month
-        start = end.replace(day=1)
+        start = end.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     elif fixed_range == "THIS_MONTH":
         # start the first day of this month
-        start = now.replace(day=1)
+        start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         # end today
         end = now
     else:

@@ -1,1 +1,1 @@
-from csoundex import Soundex
+from csoundex import soundex
