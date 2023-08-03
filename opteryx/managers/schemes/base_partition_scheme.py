@@ -14,9 +14,21 @@ import datetime
 from typing import Callable
 from typing import List
 
+ONE_HOUR = datetime.timedelta(hours=1)
+
 
 class BasePartitionScheme:
     """Implement a partition scheme"""
+
+    def hourly_timestamps(self, start_time: datetime.datetime, end_time: datetime.datetime):
+        """
+        Create a generator of timestamps one hour apart between two datetimes.
+        """
+
+        current_time = start_time.replace(minute=0, second=0, microsecond=0)
+        while current_time <= end_time:
+            yield current_time
+            current_time += ONE_HOUR
 
     def get_blobs_in_partition(
         self, blob_list_getter: Callable, prefix: str, timestamp: datetime.datetime

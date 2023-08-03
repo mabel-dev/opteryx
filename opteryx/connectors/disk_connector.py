@@ -55,8 +55,6 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable):
 
     @single_item_cache
     def get_list_of_blob_names(self, *, prefix: str) -> List[str]:
-        print([(a, b, c) for (a, b, c) in os.walk("testdata/partitioned/dated")])
-
         files = [
             os.path.join(root, file)
             for root, _, files in os.walk(prefix)
@@ -66,21 +64,20 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable):
         return files
 
     def read_dataset(self) -> pyarrow.Table:
-        seen = set()
-        for segment_timeslice in self.hourly_timestamps(self.start_date, self.end_date):
-            blobs = self.partition_scheme.get_blobs_in_partition(
-                blob_list_getter=self.get_list_of_blob_names,
-                prefix=self.dataset,
-                timestamp=segment_timeslice,
-            )
-            for blob_name in sorted(set(blobs).difference(seen)):
-                try:
-                    decoder = get_decoder(blob_name)
-                    blob_bytes = self.read_blob(blob_name=blob_name)
-                    yield decoder(blob_bytes)
-                except UnsupportedFileTypeError:
-                    pass
-                seen.add(blob_name)
+        blob_names = self.partition_scheme.get_blobs_in_partition(
+            start_date=self.start_date,
+            end_date=self.end_date,
+            blob_list_getter=self.get_list_of_blob_names,
+            prefix=self.dataset,
+        )
+
+        for blob_name in blob_names:
+            try:
+                decoder = get_decoder(blob_name)
+                blob_bytes = self.read_blob(blob_name=blob_name)
+                yield decoder(blob_bytes)
+            except UnsupportedFileTypeError:
+                pass
 
     def get_dataset_schema(self) -> RelationSchema:
         # Try to read the schema from the metastore

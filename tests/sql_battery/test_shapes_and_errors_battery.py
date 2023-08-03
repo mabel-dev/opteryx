@@ -377,7 +377,7 @@ STATEMENTS = [
         ("SELECT * FROM 'testdata/flat/formats/arrow/tweets.arrow'", 100000, 13, None),
         ("SELECT * FROM 'testdata/flat/../flat/formats/arrow/tweets.arrow'", None, None, DatasetNotFoundError),  # don't allow traversal
 
-        ("SELECT * FROM testdata.partitioned.dated", 50, 8, None),
+        ("SELECT * FROM testdata.partitioned.dated", None, None, DatasetNotFoundError),  # it's there, but no partitions for today
         ("SELECT * FROM testdata.partitioned.dated FOR '2020-02-03' WITH (NO_CACHE)", 25, 8, None),
         ("SELECT * FROM testdata.partitioned.dated FOR '2020-02-03'", 25, 8, None),
         ("SELECT * FROM testdata.partitioned.dated FOR '2020-02-04'", 25, 8, None),
@@ -386,13 +386,15 @@ STATEMENTS = [
         ("SELECT * FROM testdata.partitioned.dated FOR DATES BETWEEN '2020-02-01' AND '2020-02-28' OFFSET 1", 49, 8, None),
         ("SELECT * FROM $satellites FOR YESTERDAY ORDER BY planetId OFFSET 10", 167, 8, None),
 
-        ("SELECT * FROM testdata.partitioned.dated FOR DATES SINCE '2020-02-28 03:30'", 49, 8, None),
         ("SELECT * FROM testdata.partitioned.dated FOR '2020-02-03 00:00' WITH (NO_CACHE)", 25, 8, None),
         ("SELECT * FROM testdata.partitioned.dated FOR '2020-02-03 12:00'", 25, 8, None),
         ("SELECT * FROM testdata.partitioned.dated FOR '2020-02-04 00:00'", 25, 8, None),
         ("SELECT * FROM testdata.partitioned.dated FOR DATES BETWEEN '2020-02-01 00:00' AND '2020-02-28 00:00'", 50, 8, None),
         ("SELECT * FROM testdata.partitioned.dated FOR '2020-02-03 00:00' OFFSET 1", 24, 8, None),
         ("SELECT * FROM testdata.partitioned.dated FOR DATES BETWEEN '2020-02-01 00:00' AND '2020-02-28 00:00' OFFSET 1", 49, 8, None),
+
+        ("SELECT * FROM testdata.partitioned.dated FOR DATES SINCE '2020-02-01'", 50, 8, None),
+        ("SELECT * FROM testdata.partitioned.dated FOR DATES SINCE '2020-02-04 00:00'", 25, 8, None),
 
         ("SELECT * FROM testdata.partitioned.segmented FOR '2020-02-03'", 25, 8, None),
         ("SELECT * FROM $planets FOR '1730-01-01'", 6, 20, None),
@@ -936,6 +938,12 @@ def test_sql_battery(statement, rows, columns, exception):
 
     #    opteryx.register_store("tests", DiskConnector)
     #    opteryx.register_store("mabellabs", AwsS3Connector)
+    from opteryx.connectors import DiskConnector
+    from opteryx.managers.schemes import MabelPartitionScheme
+
+    opteryx.register_store(
+        "testdata.partitioned", DiskConnector, partition_scheme=MabelPartitionScheme
+    )
 
     conn = opteryx.connect()
     cursor = conn.cursor()

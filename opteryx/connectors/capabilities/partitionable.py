@@ -1,8 +1,4 @@
-import datetime
-
 from opteryx.exceptions import InvalidConfigurationError
-
-ONE_HOUR = datetime.timedelta(hours=1)
 
 
 class Partitionable:
@@ -33,13 +29,3 @@ class Partitionable:
 
         self.start_date = None
         self.end_date = None
-
-    def hourly_timestamps(self, start_time: datetime.datetime, end_time: datetime.datetime):
-        """
-        Create a generator of timestamps one hour apart between two datetimes.
-        """
-
-        current_time = start_time.replace(minute=0, second=0, microsecond=0)
-        while current_time <= end_time:
-            yield current_time
-            current_time += ONE_HOUR

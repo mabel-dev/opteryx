@@ -54,11 +54,10 @@ https://blog.devgenius.io/a-query-in-time-introduction-to-sql-server-temporal-ta
 
 This supports the following syntaxes:
 
-- FOR TODAY
-- FOR YESTERDAY
 - FOR <timestamp>
 - FOR DATES BETWEEN <timestamp> AND <timestamp>
 - FOR DATES IN <range>
+- FOR DATES SINCE <timestamp>
 
 """
 
@@ -111,7 +110,7 @@ SQL_PARTS = (
     + COLLECT_TEMPORAL
     + STOP_COLLECTING
     + COLLECT_ALIAS
-    + [r"DATES\sIN\s\w+", r"DATES\sBETWEEN\s[^\r\n\t\f\v]AND\s[^\r\n\t\f\v]"]
+    + [r"DATES\sIN\s\w+", r"DATES\sBETWEEN\s[^\r\n\t\f\v]AND\s[^\r\n\t\f\v]", r"DATES\sSINCE\s\w+"]
 )
 
 COMBINE_WHITESPACE_REGEX = re.compile(r"\r\n\t\f\v+")
@@ -215,16 +214,15 @@ def parse_date(date, end: bool = False):  # pragma: no cover
 
     now = datetime.datetime.utcnow().replace(minute=0, second=0, microsecond=0)
 
-    # the splitter keeps ';' at the end of date literals
-    if date[-1] == ";":
-        date = date[:-1].strip()
-
     if date == "TODAY":
         return now
     if date == "YESTERDAY":
         return (now - datetime.timedelta(days=1)).replace(hour=0)
 
-    parsed = dates.parse_iso(date[1:-1])
+    if date[0] == date[-1] and date[0] in ("'", '"', "`"):
+        date = date[1:-1]
+
+    parsed = dates.parse_iso(date)
     if parsed and end and len(date) <= 12:
         return parsed.replace(hour=23, minute=59)
 
@@ -301,6 +299,8 @@ def _temporal_extration_state_machine(parts):
 
 
 def extract_temporal_filters(sql):  # pragma: no cover
+    import shlex
+
     parts = sql_parts(sql)
 
     # extract the raw temporal information
@@ -323,7 +323,7 @@ def extract_temporal_filters(sql):  # pragma: no cover
                 end_date = end_date.replace(hour=23, minute=59)
 
         elif for_date_string.startswith("DATES BETWEEN "):
-            parts = for_date_string.split(" ")
+            parts = shlex.split(for_date_string)
 
             if len(parts) != 5:
                 raise InvalidTemporalRangeFilterError(
@@ -351,11 +351,11 @@ def extract_temporal_filters(sql):  # pragma: no cover
                 )
 
         elif for_date_string.startswith("DATES IN "):
-            parts = for_date_string.split(" ")
+            parts = shlex.split(for_date_string)
             start_date, end_date = parse_range(parts[2])
 
         elif for_date_string.startswith("DATES SINCE "):
-            parts = for_date_string.split(" ")
+            parts = shlex.split(for_date_string)
             start_date = parse_date(parts[2])
             end_date = datetime.datetime.utcnow().replace(minute=0, second=0, microsecond=0)
 

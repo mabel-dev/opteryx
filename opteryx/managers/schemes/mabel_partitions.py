@@ -13,6 +13,7 @@
 import datetime
 from typing import Callable
 from typing import List
+from typing import Optional
 
 from opteryx.managers.schemes import BasePartitionScheme
 
@@ -38,35 +39,57 @@ class MabelPartitionScheme(BasePartitionScheme):
     """
 
     def get_blobs_in_partition(
-        self, blob_list_getter: Callable, prefix: str, timestamp: datetime.datetime
+        self,
+        *,
+        start_date: Optional[datetime.datetime],
+        end_date: Optional[datetime.datetime],
+        blob_list_getter: Callable,
+        prefix: str,
     ) -> List[str]:
         """filter the blobs acording to the chosen scheme"""
 
-        year = timestamp.year
-        month = timestamp.month
-        day = timestamp.day
-        hour = timestamp.hour
+        def _inner(*, timestamp):
+            year = timestamp.year
+            month = timestamp.month
+            day = timestamp.day
+            hour = timestamp.hour
 
-        date_path = f"{prefix}/year_{year:04d}/month_{month:02d}/day_{day:02d}"
+            date_path = f"{prefix}/year_{year:04d}/month_{month:02d}/day_{day:02d}"
 
-        # Call your method to get the list of blob names
-        blob_names = blob_list_getter(prefix=date_path)
+            # Call your method to get the list of blob names
+            blob_names = blob_list_getter(prefix=date_path)
 
-        # Filter for the specific hour, if hour folders exist
-        if any(f"/by_hour/hour={hour:02d}/" in blob_name for blob_name in blob_names):
-            blob_names = [
-                blob_name for blob_name in blob_names if f"/by_hour/hour={hour:02d}/" in blob_name
-            ]
+            # Filter for the specific hour, if hour folders exist
+            if any(f"/by_hour/hour={hour:02d}/" in blob_name for blob_name in blob_names):
+                blob_names = [
+                    blob_name
+                    for blob_name in blob_names
+                    if f"/by_hour/hour={hour:02d}/" in blob_name
+                ]
 
-        as_ats = sorted({_extract_as_at(blob) for blob in blob_names if "as_at_" in blob})
+            as_ats = sorted({_extract_as_at(blob) for blob in blob_names if "as_at_" in blob})
 
-        # Keep popping from as_ats until a valid frame is found
-        while as_ats:
-            as_at = as_ats.pop()
-            if _is_complete(blob_names, as_at) and not _is_invalid(blob_names, as_at):
-                break
+            # Keep popping from as_ats until a valid frame is found
+            while as_ats:
+                as_at = as_ats.pop()
+                if _is_complete(blob_names, as_at) and not _is_invalid(blob_names, as_at):
+                    break
 
-        if as_ats:
-            return [blob for blob in blob_names if as_at in blob]
+            if as_ats:
+                return [blob for blob in blob_names if as_at in blob]
 
-        return blob_names
+            return blob_names
+
+        start_date = start_date or datetime.datetime.utcnow().replace(
+            hour=0, minute=0, second=0, microsecond=0
+        )
+        end_date = end_date or datetime.datetime.utcnow().replace(
+            hour=23, minute=59, second=0, microsecond=0
+        )
+
+        seen = set()
+        for segment_timeslice in self.hourly_timestamps(start_date, end_date):
+            blobs = _inner(timestamp=segment_timeslice)
+            for blob_name in sorted(set(blobs).difference(seen)):
+                yield blob_name
+                seen.add(blob_name)

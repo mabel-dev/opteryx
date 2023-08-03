@@ -73,19 +73,21 @@ def connector_factory(dataset, **config):
 
         return sample_data.SampleDataConnector(dataset=dataset)
 
-    # otherwise look up the prefix from the registered prefixes
-    prefix = dataset.split(".")[0]
+    # Look up the prefix from the registered prefixes
     connector_entry: dict = config
-    if prefix in _storage_prefixes:
-        connector_entry = _storage_prefixes[prefix].copy()  # type: ignore
-        connector = connector_entry.pop("connector")
-    elif os.path.isfile(dataset):
-        from opteryx.connectors import file_connector
-
-        return file_connector.FileConnector(dataset=dataset)
+    for prefix in _storage_prefixes.keys():
+        if dataset.startswith(prefix):
+            connector_entry = _storage_prefixes[prefix].copy()  # type: ignore
+            connector = connector_entry.pop("connector")
+            break
     else:
-        # fall back to the detault connector (local disk if not set)
-        connector = _storage_prefixes.get("_default", DiskConnector)
+        if os.path.isfile(dataset):
+            from opteryx.connectors import file_connector
+
+            return file_connector.FileConnector(dataset=dataset)
+        else:
+            # fall back to the default connector (local disk if not set)
+            connector = _storage_prefixes.get("_default", DiskConnector)
 
     prefix = connector_entry.pop("prefix", "")
     remove_prefix = connector_entry.pop("remove_prefix", False)

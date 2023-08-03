@@ -13,12 +13,18 @@
 import datetime
 from typing import Callable
 from typing import List
+from typing import Optional
 
 from opteryx.managers.schemes import BasePartitionScheme
 
 
 class DefaultPartitionScheme(BasePartitionScheme):
     def get_blobs_in_partition(
-        self, blob_list_getter: Callable, prefix: str, timestamp: datetime.datetime
+        self,
+        *,
+        start_date: Optional[datetime.datetime],
+        end_date: Optional[datetime.datetime],
+        blob_list_getter: Callable,
+        prefix: str,
     ) -> List[str]:
         return blob_list_getter(prefix=prefix)
