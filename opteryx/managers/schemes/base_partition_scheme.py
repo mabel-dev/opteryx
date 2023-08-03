@@ -10,10 +10,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import datetime
+from typing import Callable
+from typing import List
+
 
 class BasePartitionScheme:
     """Implement a partition scheme"""
 
-    def filter_blobs(self, list_of_blobs, statistics):
+    def get_blobs_in_partition(
+        self, blob_list_getter: Callable, prefix: str, timestamp: datetime.datetime
+    ) -> List[str]:
         """filter the blobs acording to the chosen scheme"""
         raise NotImplementedError()

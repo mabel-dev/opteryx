@@ -91,6 +91,14 @@ class DatasetNotFoundError(ProgrammingError):
         super().__init__(message)
 
 
+class EmptyDatasetError(ProgrammingError):
+    def __init__(self, message=None, dataset=None):
+        if message is None and dataset is not None:
+            self.dataset = dataset
+            message = f"The dataset '{dataset}' appears to exist but contains no underlying data for the search provided."
+        super().__init__(message)
+
+
 class CursorInvalidStateError(ProgrammingError):
     pass
 

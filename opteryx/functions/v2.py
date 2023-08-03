@@ -24,20 +24,13 @@ from enum import Enum
 from enum import auto
 
 import numpy
+from orso.tools import single_item_cache
 from pyarrow import compute
 
 from opteryx.exceptions import DatabaseError
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
-
-try:
-    # added 3.9
-    from functools import cache
-except ImportError:
-    from functools import lru_cache
-
-    cache = lru_cache(1)
 
 CAMEL_TO_SNAKE = re.compile(r"(?<!^)(?=[A-Z])")
 
@@ -46,7 +39,7 @@ def not_implemented(*args, **kwds):
     raise DatabaseError("Subclasses must implement the _func method.")
 
 
-@cache
+@single_item_cache
 def get_functions():
     """so we don't have to manually maintain a list of functions, build it using introspection"""
     functions = {}

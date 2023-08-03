@@ -14,6 +14,7 @@
 Decode files from a raw binary format to a PyArrow Table.
 """
 from enum import Enum
+from typing import Callable
 from typing import List
 
 import numpy
@@ -39,7 +40,8 @@ def convert_arrow_schema_to_orso_schema(arrow_schema):
     )
 
 
-def get_decoder(dataset):
+def get_decoder(dataset: str) -> Callable:
+    """helper routine to get the decoder for a given file"""
     ext = dataset.split(".")[-1].lower()
     if ext not in KNOWN_EXTENSIONS:
         raise UnsupportedFileTypeError(f"Unsupported file type - {ext}")

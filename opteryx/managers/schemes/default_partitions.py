@@ -10,21 +10,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Tuple
-from typing import Union
+import datetime
+from typing import Callable
+from typing import List
 
 from opteryx.managers.schemes import BasePartitionScheme
 
 
 class DefaultPartitionScheme(BasePartitionScheme):
-    def __init__(self, _format: Union[Tuple, str]):
-        if not isinstance(_format, (list, set, tuple)):
-            self._format = [_format]
-        else:
-            self._format = _format  # type:ignore
-
-    def partition_format(self):
-        return "/".join(self._format)
-
-    def filter_blobs(self, list_of_blobs, statistics):
-        return list_of_blobs
+    def get_blobs_in_partition(
+        self, blob_list_getter: Callable, prefix: str, timestamp: datetime.datetime
+    ) -> List[str]:
+        return blob_list_getter(prefix=prefix)

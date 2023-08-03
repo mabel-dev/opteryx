@@ -1,7 +1,7 @@
 hadro
 numpy
 orjson
-orso>=0.0.88
+orso>=0.0.91
 pyarrow>=12.0.1
 typer
 cython

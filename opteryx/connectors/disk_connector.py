@@ -18,16 +18,23 @@ As such it assumes
 """
 import io
 import os
+from typing import List
 
 import pyarrow
+from orso.schema import FlatColumn
 from orso.schema import RelationSchema
+from orso.tools import single_item_cache
 
 from opteryx.connectors.base.base_connector import BaseConnector
 from opteryx.connectors.capabilities import Cacheable
 from opteryx.connectors.capabilities import Partitionable
+from opteryx.exceptions import DatasetNotFoundError
+from opteryx.exceptions import EmptyDatasetError
 from opteryx.exceptions import UnsupportedFileTypeError
-from opteryx.utils.dates import date_range
+from opteryx.utils.file_decoders import KNOWN_EXTENSIONS
 from opteryx.utils.file_decoders import get_decoder
+
+VALID_EXTENSIONS = set(f".{ext}" for ext in KNOWN_EXTENSIONS.keys())
 
 
 class DiskConnector(BaseConnector, Cacheable, Partitionable):
@@ -46,35 +53,34 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable):
             file_stream = file.read()
         return io.BytesIO(file_stream)
 
-    #    @Partitionable.read_partitioned()
-    def read_partition(self, base_folder):
-        # get the list of files in the folder
-        # pass them to the partitionable function to filter in/out blobs
-        # use read_blob to read over the blobs
-        import glob
+    @single_item_cache
+    def get_list_of_blob_names(self, *, prefix: str) -> List[str]:
+        print([(a, b, c) for (a, b, c) in os.walk("testdata/partitioned/dated")])
 
-        for g in glob.iglob(self.dataset + "/**", recursive=True):
-            if not os.path.isfile(g):
-                continue
-            try:
-                decoder = get_decoder(g)
-                contents = self.read_blob(blob_name=g)
-                yield decoder(contents)
-            except UnsupportedFileTypeError:
-                pass
+        files = [
+            os.path.join(root, file)
+            for root, _, files in os.walk(prefix)
+            for file in files
+            if os.path.splitext(file)[1] in VALID_EXTENSIONS
+        ]
+        return files
 
     def read_dataset(self) -> pyarrow.Table:
-        #        seen = set()
-        #        for segment_timeslice in date_range(start, end):
-        #            segment = self.build_segement(segment_timeslice)
-        #            if segment in seen:
-        #                continue
-        #            yield from self.read_partition(segment)
-        #            seen.add(segment)
-
-        print(self.start_date, self.end_date)
-        print(list(date_range(self.start_date, self.end_date, "1h")))
-        yield from self.read_partition(self.dataset)
+        seen = set()
+        for segment_timeslice in self.hourly_timestamps(self.start_date, self.end_date):
+            blobs = self.partition_scheme.get_blobs_in_partition(
+                blob_list_getter=self.get_list_of_blob_names,
+                prefix=self.dataset,
+                timestamp=segment_timeslice,
+            )
+            for blob_name in sorted(set(blobs).difference(seen)):
+                try:
+                    decoder = get_decoder(blob_name)
+                    blob_bytes = self.read_blob(blob_name=blob_name)
+                    yield decoder(blob_bytes)
+                except UnsupportedFileTypeError:
+                    pass
+                seen.add(blob_name)
 
     def get_dataset_schema(self) -> RelationSchema:
         # Try to read the schema from the metastore
@@ -82,14 +88,18 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable):
         if self.schema:
             return self.schema
 
-        import glob
+        record = next(self.read_dataset(), None)
 
-        for g in glob.iglob(self.dataset + "/**", recursive=True):
-            if not os.path.isfile(g):
-                continue
-            try:
-                decoder = get_decoder(g)
-                contents = self.read_blob(blob_name=g)
-                return decoder(contents, just_schema=True)
-            except UnsupportedFileTypeError:
-                pass
+        if record is None:
+            if os.path.isdir(self.dataset):
+                raise DatasetNotFoundError(dataset=self.dataset)
+            raise EmptyDatasetError(dataset=self.dataset)
+
+        arrow_schema = record.schema
+
+        self.schema = RelationSchema(
+            name=self.dataset,
+            columns=[FlatColumn.from_arrow(field) for field in arrow_schema],
+        )
+
+        return self.schema
