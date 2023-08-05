@@ -50,12 +50,14 @@ from opteryx.exceptions import (
     AmbiguousIdentifierError,
     ColumnNotFoundError,
     DatasetNotFoundError,
+    EmptyDatasetError,
     EmptyResultSetError,
     InvalidTemporalRangeFilterError,
     MissingSqlStatement,
     ProgrammingError,
     SqlError,
     UnexpectedDatasetReferenceError,
+    UnsupportedSegementationError,
     UnsupportedSyntaxError,
 )
 from opteryx.utils.formatter import format_sql
@@ -377,7 +379,7 @@ STATEMENTS = [
         ("SELECT * FROM 'testdata/flat/formats/arrow/tweets.arrow'", 100000, 13, None),
         ("SELECT * FROM 'testdata/flat/../flat/formats/arrow/tweets.arrow'", None, None, DatasetNotFoundError),  # don't allow traversal
 
-        ("SELECT * FROM testdata.partitioned.dated", None, None, DatasetNotFoundError),  # it's there, but no partitions for today
+        ("SELECT * FROM testdata.partitioned.dated", None, None, EmptyDatasetError),  # it's there, but no partitions for today
         ("SELECT * FROM testdata.partitioned.dated FOR '2020-02-03' WITH (NO_CACHE)", 25, 8, None),
         ("SELECT * FROM testdata.partitioned.dated FOR '2020-02-03'", 25, 8, None),
         ("SELECT * FROM testdata.partitioned.dated FOR '2020-02-04'", 25, 8, None),
@@ -396,8 +398,9 @@ STATEMENTS = [
         ("SELECT * FROM testdata.partitioned.dated FOR DATES SINCE '2020-02-01'", 50, 8, None),
         ("SELECT * FROM testdata.partitioned.dated FOR DATES SINCE '2020-02-04 00:00'", 25, 8, None),
 
-        ("SELECT * FROM testdata.partitioned.segmented FOR '2020-02-03'", 25, 8, None),
+        ("SELECT * FROM testdata.partitioned.mixed FOR '2020-02-03'", None, None, UnsupportedSegementationError),
         ("SELECT * FROM $planets FOR '1730-01-01'", 6, 20, None),
+        ("SELECT * FROM $planets FOR '1730-01-01 12:45'", 6, 20, None),
         ("SELECT * FROM $planets FOR '1830-01-01'", 7, 20, None),
         ("SELECT * FROM $planets FOR '1930-01-01'", 8, 20, None),
         ("SELECT * FROM $planets FOR '2030-01-01'", 9, 20, None),
@@ -406,7 +409,7 @@ STATEMENTS = [
         ("SELECT * FROM $planets AS pppp FOR '1930-01-01'", 8, 20, None),
         ("SELECT * FROM $planets AS P FOR '2030-01-01'", 9, 20, None),
         ("SELECT * FROM (SELECT * FROM $planets AS D) AS P FOR '2030-01-01'", 9, 20, None),
-        ("SELECT * FROM $planets AS P FOR '1699-01-01' INNER JOIN $satellites FOR '2030-01-01' ON id = planetId;", 131, 28, None),
+        ("SELECT * FROM $planets AS P FOR '1699-01-01' INNER JOIN $satellites FOR '2030-01-01' ON P.id = planetId;", 131, 28, None),
 
         ("SELECT * FROM $astronauts WHERE death_date IS NULL", 305, 19, None),
         ("SELECT * FROM $astronauts WHERE death_date IS NOT NULL", 52, 19, None),

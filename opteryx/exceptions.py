@@ -95,7 +95,7 @@ class EmptyDatasetError(ProgrammingError):
     def __init__(self, message=None, dataset=None):
         if message is None and dataset is not None:
             self.dataset = dataset
-            message = f"The dataset '{dataset}' appears to exist but contains no underlying data for the search provided."
+            message = f"The dataset '{dataset}' exist but has no data in the requested partitions."
         super().__init__(message)
 
 
@@ -161,6 +161,13 @@ class UnexpectedDatasetReferenceError(ProgrammingError):
     def __init__(self, dataset):
         self.dataset = dataset
         message = f"Dataset '{dataset}' referenced in query without FROM or JOIN."
+        super().__init__(message)
+
+
+class UnsupportedSegementationError(ProgrammingError):
+    def __init__(self, dataset):
+        self.dataset = dataset
+        message = f"'{dataset}' cannot be read, only 'by_hour' segments can be read."
         super().__init__(message)
 
 

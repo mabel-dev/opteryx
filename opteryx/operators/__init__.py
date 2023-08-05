@@ -15,7 +15,6 @@ from .base_plan_node import BasePlanNode  # isort: skip
 from .aggregate_and_group_node import AggregateAndGroupNode  # Group is always followed by aggregate
 from .aggregate_node import AGGREGATORS
 from .aggregate_node import AggregateNode  # aggregate data
-from .blob_reader_node import BlobReaderNode  # read file/blob datasets
 from .build_statistics_node import BuildStatisticsNode  # Analyze Tables
 from .collection_reader_node import CollectionReaderNode  # reader NoSQL datsets
 from .column_filter_node import ColumnFilterNode  # filter for SHOW COLUMNS
@@ -23,7 +22,6 @@ from .cross_join_node import CrossJoinNode  # CROSS JOIN
 from .distinct_node import DistinctNode  # remove duplicate records
 from .exit_node import ExitNode
 from .explain_node import ExplainNode  # EXPLAIN queries
-from .file_reader_node import FileReaderNode  # usually on the CLI
 from .function_dataset_node import FunctionDatasetNode  # Dataset Constructors
 from .heap_sort_node import HeapSortNode  # Heap
 from .information_schema_node import InformationSchemaNode  # information_schema
@@ -43,22 +41,6 @@ from .show_value_node import ShowValueNode  # display node for SHOW
 from .show_variables_node import ShowVariablesNode  # SHOW VARIABLES
 from .sort_node import SortNode  # order by selected columns
 from .sql_reader_node import SqlReaderNode  # external SQL databases
-
-# map reader types to their implementation
-_reader_nodes = {
-    "Blob": BlobReaderNode,  # (disk, gcs, minio, s3)
-    "Collection": CollectionReaderNode,  # (mongodb, firestore)
-    "File": FileReaderNode,  # usually the command line
-    "Function": FunctionDatasetNode,
-    "InformationSchema": InformationSchemaNode,
-    "Internal": InternalDatasetNode,
-    "SubQuery": BlobReaderNode,  # ?? <- this shouldn't be a reader
-    "SQL": SqlReaderNode,
-}
-
-
-def reader_factory(mode):
-    return _reader_nodes[mode]
 
 
 def is_aggregator(name):

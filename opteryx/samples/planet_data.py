@@ -38,7 +38,7 @@ from orso.schema import RelationSchema
 from orso.types import OrsoTypes
 
 
-def read(end_date=datetime.datetime.utcnow().date()):
+def read(end_date=None):
     import pyarrow
 
     # fmt:off
@@ -70,15 +70,18 @@ def read(end_date=datetime.datetime.utcnow().date()):
     # fmt: on
     full_set = pyarrow.Table.from_arrays(data, column_names)
 
+    if end_date is None:
+        end_date = datetime.datetime.utcnow()
+
     # Make the planet data act like it supports temporality
     mask = [True, True, True, True, True, True, True, True, True]
-    if end_date < datetime.date(1930, 3, 13):
+    if end_date < datetime.datetime(1930, 3, 13):
         # March 13, 1930 - Pluto discovered by Clyde William Tombaugh
         mask = [True, True, True, True, True, True, True, True, False]
-    if end_date < datetime.date(1846, 11, 13):
+    if end_date < datetime.datetime(1846, 11, 13):
         # November 13, 1846 - Neptune
         mask = [True, True, True, True, True, True, True, False, False]
-    if end_date < datetime.date(1781, 4, 26):
+    if end_date < datetime.datetime(1781, 4, 26):
         # April 26, 1781 - Uranus discovered by Sir William Herschel
         mask = [True, True, True, True, True, True, False, False, False]
 

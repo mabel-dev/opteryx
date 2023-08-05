@@ -29,6 +29,19 @@ def _extract_as_at(path):
     return _extract_part_from_path(path, "as_at_")
 
 
+def _extract_by(path):
+    return _extract_part_from_path(path, "by_")
+
+
+def _safe_get_next_element(lst, item):
+    """get the element from a list which follows a given element"""
+    try:
+        index = lst.index(item)
+        return lst[index + 1]
+    except IndexError:
+        return None
+
+
 _is_complete = lambda blobs, as_at: any(blob for blob in blobs if as_at + "/frame.complete" in blob)
 _is_invalid = lambda blobs, as_at: any(blob for blob in blobs if as_at + "/frame.ignore" in blob)
 
@@ -59,7 +72,12 @@ class MabelPartitionScheme(BasePartitionScheme):
             # Call your method to get the list of blob names
             blob_names = blob_list_getter(prefix=date_path)
 
-            # Filter for the specific hour, if hour folders exist
+            if len({_extract_by(blob) for blob in blob_names} - {"by_hour", None}) > 0:
+                from opteryx.exceptions import UnsupportedSegementationError
+
+                raise UnsupportedSegementationError(dataset=prefix)
+
+            # Filter for the specific hour, if hour folders exist - prefer by_hour segements
             if any(f"/by_hour/hour={hour:02d}/" in blob_name for blob_name in blob_names):
                 blob_names = [
                     blob_name
@@ -67,6 +85,7 @@ class MabelPartitionScheme(BasePartitionScheme):
                     if f"/by_hour/hour={hour:02d}/" in blob_name
                 ]
 
+            as_at = None
             as_ats = sorted({_extract_as_at(blob) for blob in blob_names if "as_at_" in blob})
 
             # Keep popping from as_ats until a valid frame is found
@@ -74,11 +93,14 @@ class MabelPartitionScheme(BasePartitionScheme):
                 as_at = as_ats.pop()
                 if _is_complete(blob_names, as_at) and not _is_invalid(blob_names, as_at):
                     break
+                else:
+                    blob_names = [blob for blob in blob_names if as_at not in blob]
+                as_at = None
 
-            if as_ats:
-                return [blob for blob in blob_names if as_at in blob]
+            if as_at:
+                yield from (blob for blob in blob_names if as_at in blob)
 
-            return blob_names
+            yield from blob_names
 
         start_date = start_date or datetime.datetime.utcnow().replace(
             hour=0, minute=0, second=0, microsecond=0
