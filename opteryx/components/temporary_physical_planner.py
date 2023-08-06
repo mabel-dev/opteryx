@@ -59,6 +59,8 @@ def create_physical_plan(logical_plan):
             node = operators.ProjectionNode(query_properties, projection=logical_node.columns)
         elif node_type == LogicalPlanStepType.Scan:
             node = operators.ScannerNode(query_properties, **node_config)
+        elif node_type == LogicalPlanStepType.Set:
+            node = operators.SetVariableNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Show:
             node = operators.NoOpNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.ShowColumns:

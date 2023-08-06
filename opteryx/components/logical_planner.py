@@ -137,6 +137,8 @@ class LogicalPlanNode(Node):
                 elif self.start_date is not None:
                     date_range = f" FOR '{self.start_date}' TO '{self.end_date}'"
                 return f"SCAN ({self.relation}{' AS ' + self.alias if self.alias else ''}{date_range}{' WITH(' + ','.join(self.hints) + ')' if self.hints else ''})"
+            if node_type == LogicalPlanStepType.Set:
+                return f"SET ({self.variable} to {self.value.value})"
             if node_type == LogicalPlanStepType.Show:
                 return f"SHOW ({', '.join(self.items)})"
             if node_type == LogicalPlanStepType.ShowColumns:
@@ -408,9 +410,7 @@ def create_node_relation(relation):
         from_step = LogicalPlanNode(node_type=LogicalPlanStepType.Scan)
         table = relation["relation"]["Table"]
         from_step.relation = ".".join(part["value"] for part in table["name"])
-        from_step.alias = (
-            from_step.relation if table["alias"] is None else table["alias"]["name"]["value"]
-        )
+        from_step.alias = None if table["alias"] is None else table["alias"]["name"]["value"]
         from_step.hints = [hint["Identifier"]["value"] for hint in table["with_hints"]]
         from_step.start_date = table.get("start_date")
         from_step.end_date = table.get("end_date")
