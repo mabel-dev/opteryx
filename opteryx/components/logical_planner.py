@@ -47,6 +47,7 @@ import os
 import sys
 from enum import Enum
 from enum import auto
+from typing import Tuple
 
 from orso.tools import random_string
 from orso.types import OrsoTypes
@@ -615,7 +616,7 @@ QUERY_BUILDERS = {
 }
 
 
-def do_logical_planning_phase(parsed_statements):
+def do_logical_planning_phase(parsed_statements) -> Tuple[LogicalPlan, dict, dict]:
     # The sqlparser ast is an array of asts
     for parsed_statement in parsed_statements:
         statement_type = next(iter(parsed_statement))

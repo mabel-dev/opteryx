@@ -44,7 +44,7 @@ def create_physical_plan(logical_plan):
         elif node_type == LogicalPlanStepType.Exit:
             node = operators.ExitNode(query_properties, projection=logical_node.columns)
         elif node_type == LogicalPlanStepType.Explain:
-            node = operators.NoOpNode(query_properties, **node_config)
+            node = operators.ExplainNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Filter:
             node = operators.SelectionNode(query_properties, filter=node_config["condition"])
         elif node_type == LogicalPlanStepType.FunctionDataset:

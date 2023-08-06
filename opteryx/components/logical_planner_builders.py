@@ -401,17 +401,17 @@ def between(branch, alias=None, key=None):
 
 def in_subquery(branch, alias=None, key=None):
     # if it's a sub-query we create a plan for it
-    from opteryx.components.query_planner import QueryPlanner
+    from opteryx.components.logical_planner import plan_query
 
     left = build(branch["expr"])
     ast = {}
     ast["Query"] = branch["subquery"]
-    subquery_planner = QueryPlanner()
-    plan = subquery_planner.create_logical_plan(ast)
-    plan = subquery_planner.optimize_plan(plan)
+    subquery_plan = plan_query(ast)
+    exit_node = subquery_plan.get_exit_points()[0]
+    subquery_plan.remove_node(exit_node, heal=True)
     operator = "NotInList" if branch["negated"] else "InList"
 
-    sub_query = Node(NodeType.SUBQUERY, value=plan)
+    sub_query = Node(NodeType.SUBQUERY, value=subquery_plan)
     return Node(
         NodeType.COMPARISON_OPERATOR,
         value=operator,

@@ -60,6 +60,7 @@ import datetime
 import decimal
 
 import numpy
+from orso.tools import random_string
 
 from opteryx.exceptions import ProgrammingError
 
@@ -143,12 +144,77 @@ def temporal_range_binder(ast, filters):
     return ast
 
 
-def do_ast_rewriter(ast: list, temporal_filters: list, paramters: list, connection):
-    query_type = next(iter(ast))
+def rewrite_in_subquery(ast, path=None):
+    if path is None:
+        path = []
 
+    if isinstance(ast, dict):
+        for key, value in ast.items():
+            new_path = path + [key]
+            if key == "InSubquery":
+                subquery_alias = random_string()
+                subquery = value["subquery"]
+                identifier = value["expr"]["Identifier"]
+
+                join_structure = {
+                    "relation": {
+                        "Derived": {
+                            "lateral": False,
+                            "subquery": subquery,
+                            "alias": {
+                                "name": {"value": subquery_alias, "quote_style": None},
+                                "columns": [],
+                            },
+                        }
+                    },
+                    "join_operator": {
+                        "Inner": {
+                            "On": {
+                                "BinaryOp": {
+                                    "left": {"Identifier": identifier},
+                                    "op": "Eq",
+                                    "right": {
+                                        "CompoundIdentifier": [
+                                            {"value": subquery_alias, "quote_style": None},
+                                            {"value": "id", "quote_style": None},
+                                        ]
+                                    },
+                                }
+                            }
+                        }
+                    },
+                }
+
+                # Navigate to the correct part of the AST where you want to insert the join
+                # Modify these keys to match your specific AST structure
+                target_location = ast["InSubquery"]["subquery"]["body"]["Select"]["from"][0]
+
+                # Check if the "joins" key exists and append the join_structure
+                if "joins" in target_location:
+                    target_location["joins"].append(join_structure)
+                else:
+                    target_location["joins"] = [join_structure]
+
+            rewrite_in_subquery(value, new_path)
+    elif isinstance(ast, list):
+        for index, value in enumerate(ast):
+            rewrite_in_subquery(value, path + [index])
+
+
+def do_ast_rewriter(ast: list, temporal_filters: list, paramters: list, connection):
+    # get the query type
+    query_type = next(iter(ast))
+    # bind the temporal ranges, we do that here because the order in the AST matters
     with_temporal_ranges = temporal_range_binder(ast, temporal_filters)
+    # bind the user provided variables, we this that here because we want it after the
+    # AST has been created (to avoid injection flaws) but also because the order
+    # matters
     with_parameters_exchanged = variable_binder(
         with_temporal_ranges, parameter_set=paramters, connection=connection, query_type=query_type
     )
+    # Do some AST rewriting
+    # first eliminate WHERE x IN (subquery) queries
+    rewritten_query = with_parameters_exchanged
+    #    rewritten_query = rewrite_in_subquery(with_parameters_exchanged)
 
-    return with_parameters_exchanged
+    return rewritten_query

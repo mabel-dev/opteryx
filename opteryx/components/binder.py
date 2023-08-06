@@ -187,7 +187,7 @@ def inner_binder(node, schemas) -> typing.Tuple[Node, dict]:
         node.schema_column = schema_column
         node.query_column = node.alias or column_name
 
-    else:
+    elif not node_type == NodeType.SUBQUERY:
         column_name = format_expression(node)
         schema_column = schemas["$derived"].find_column(column_name)
         if schema_column:
