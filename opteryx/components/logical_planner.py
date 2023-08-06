@@ -47,6 +47,7 @@ import os
 import sys
 from enum import Enum
 from enum import auto
+from typing import Tuple
 
 from orso.tools import random_string
 from orso.types import OrsoTypes
@@ -356,6 +357,8 @@ def create_node_relation(relation):
                 sub_plan.add_node(step_id, subquery_step)
 
                 subquery_plan = plan_query(subquery["subquery"])
+                exit_node = subquery_plan.get_exit_points()[0]
+                subquery_plan.remove_node(exit_node, heal=True)
 
                 sub_plan += subquery_plan
                 subquery_entry_id = subquery_plan.get_exit_points()[0]
@@ -464,7 +467,7 @@ def create_node_relation(relation):
     return root_node, sub_plan
 
 
-def plan_explain(statement):
+def plan_explain(statement) -> LogicalPlan:
     plan = LogicalPlan()
     explain_node = LogicalPlanNode(node_type=LogicalPlanStepType.Explain)
     explain_node.analyze = statement["Explain"]["analyze"]
@@ -613,7 +616,7 @@ QUERY_BUILDERS = {
 }
 
 
-def do_logical_planning_phase(parsed_statements):
+def do_logical_planning_phase(parsed_statements) -> Tuple[LogicalPlan, dict, dict]:
     # The sqlparser ast is an array of asts
     for parsed_statement in parsed_statements:
         statement_type = next(iter(parsed_statement))

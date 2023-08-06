@@ -91,6 +91,14 @@ class DatasetNotFoundError(ProgrammingError):
         super().__init__(message)
 
 
+class EmptyDatasetError(ProgrammingError):
+    def __init__(self, message=None, dataset=None):
+        if message is None and dataset is not None:
+            self.dataset = dataset
+            message = f"The dataset '{dataset}' exist but has no data in the requested partitions."
+        super().__init__(message)
+
+
 class CursorInvalidStateError(ProgrammingError):
     pass
 
@@ -156,6 +164,13 @@ class UnexpectedDatasetReferenceError(ProgrammingError):
         super().__init__(message)
 
 
+class UnsupportedSegementationError(ProgrammingError):
+    def __init__(self, dataset):
+        self.dataset = dataset
+        message = f"'{dataset}' cannot be read, only 'by_hour' segments can be read."
+        super().__init__(message)
+
+
 class UnsupportedSyntaxError(ProgrammingError):
     pass
 
@@ -166,3 +181,21 @@ class EmptyResultSetError(Error):
 
 class InvalidTemporalRangeFilterError(SqlError):
     pass
+
+
+class UnsupportedFileTypeError(Exception):
+    pass
+
+
+class InvalidConfigurationError(Exception):
+    def __init__(
+        self, *, config_item: str, provided_value: str, valid_value_description: str = None
+    ):
+        self.config_item = config_item
+        self.provided_value = provided_value
+        self.valid_value_description = valid_value_description
+
+        message = f"Value of '{str(provided_value)[:32]}' for '{config_item}' is not valid."
+        if valid_value_description:
+            message += f" Value should be {valid_value_description}"
+        super().__init__(message)

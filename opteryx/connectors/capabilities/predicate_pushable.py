@@ -14,77 +14,30 @@ from orso.types import OrsoTypes
 from opteryx.exceptions import NotSupportedError
 from opteryx.managers.expression import NodeType
 
-PUSHABLE_OPERATORS = {
-    # these are almost universally supported
-    "Gt": ">",
-    "Lt": "<",
-    "Eq": "==",  # usually ==, sometimes =
-    "NotEq": "!=",  # usually !=, sometimes <>
-    "GtEq": ">=",
-    "LtEq": "<=",
-    "Like": "Like",
-}
-
-
-def to_dnf(root):
-    """
-    Convert a filter to the form used by the selection pushdown
-
-    Version 1 only does simple predicate filters in the form
-        (identifier, operator, literal)
-    although we can form conjuntions (ANDs) by chaining them.
-
-    Return None if we can't convert, or don't support the filter.
-    """
-
-    def _predicate_to_dnf(root):
-        # Reduce look-ahead effort by using Exceptions to control flow
-        if root.node_type == NodeType.AND:
-            left = _predicate_to_dnf(root.left)
-            right = _predicate_to_dnf(root.right)
-            if not isinstance(left, list):
-                left = [left]
-            if not isinstance(right, list):
-                right = [right]
-            left.extend(right)
-            return left
-        if root.node_type != NodeType.COMPARISON_OPERATOR:
-            raise NotSupportedError()
-        if not root.value in PUSHABLE_OPERATORS:
-            # not all operators are universally supported
-            raise NotSupportedError()
-        if root.left.node_type != NodeType.IDENTIFIER:
-            raise NotSupportedError()
-        if root.left.type in (
-            OrsoTypes.DOUBLE,
-            OrsoTypes.INTEGER,
-            OrsoTypes.VARCHAR,
-        ):
-            # not all operands are universally supported
-            raise NotSupportedError()
-        return (root.left.value, PUSHABLE_OPERATORS[root.value], root.right.value)
-
-    try:
-        dnf = _predicate_to_dnf(root)
-        if not isinstance(dnf, list):
-            dnf = [dnf]
-    except NotSupportedError:
-        return None
-    return dnf
-
 
 class PredicatePushable:
     __slots__ = ("_predicates", "supported_ops")
 
-    def __init__(self, *args, **kwargs):
+    # These are the operators this connector supports
+    PUSHABLE_OPERATORS = {
+        "Gt": ">",
+        "Lt": "<",
+        "Eq": "==",  # usually ==, sometimes =
+        "NotEq": "!=",  # usually !=, sometimes <>
+        "GtEq": ">=",
+        "LtEq": "<=",
+        "Like": "Like",
+    }
+
+    def __init__(self, **kwargs):
         self._predicates = []
-        self.supported_ops = list(PUSHABLE_OPERATORS.values())
+        self.supported_ops = list(self.PUSHABLE_OPERATORS.values())
 
     def push_predicate(self, predicate):
         """
         Push the predicate to the set - this creates a set of ANDs
         """
-        dnfed = to_dnf(predicate)
+        dnfed = self.to_dnf(predicate)
         if dnfed is None:
             # we can't push all predicates everywhere
             return False
@@ -92,3 +45,46 @@ class PredicatePushable:
             return False
         self._predicates.extend(dnfed)
         return True
+
+    def to_dnf(self, root):
+        """
+        Convert a filter to the form used by the selection pushdown
+
+        Version 1 only does simple predicate filters in the form
+            (identifier, operator, literal)
+        although we can form conjuntions (ANDs) by chaining them.
+
+        Return None if we can't convert, or don't support the filter.
+        """
+
+        def _predicate_to_dnf(root):
+            # Reduce look-ahead effort by using Exceptions to control flow
+            if root.node_type == NodeType.AND:
+                left = _predicate_to_dnf(root.left)
+                right = _predicate_to_dnf(root.right)
+                if not isinstance(left, list):
+                    left = [left]
+                if not isinstance(right, list):
+                    right = [right]
+                left.extend(right)
+                return left
+            if root.node_type != NodeType.COMPARISON_OPERATOR:
+                raise NotSupportedError()
+            if root.left.node_type != NodeType.IDENTIFIER:
+                raise NotSupportedError()
+            if root.left.type in (
+                OrsoTypes.DOUBLE,
+                OrsoTypes.INTEGER,
+                OrsoTypes.VARCHAR,
+            ):
+                # not all operands are universally supported
+                raise NotSupportedError()
+            return (root.left.value, self.PUSHABLE_OPERATORS[root.value], root.right.value)
+
+        try:
+            dnf = _predicate_to_dnf(root)
+            if not isinstance(dnf, list):
+                dnf = [dnf]
+        except NotSupportedError:
+            return None
+        return dnf

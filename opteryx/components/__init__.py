@@ -81,14 +81,27 @@ def query_planner(operation, parameters, connection):
         )
         # Logical Planner converts ASTs to logical plans
         for logical_plan, ast, ctes in do_logical_planning_phase(parsed_statements):
+            # check user has permission for this query type
+            query_type = next(iter(ast))
+            if query_type not in connection.permissions:
+                from opteryx.exceptions import PermissionsError
+
+                raise PermissionsError(
+                    f"User does not have permission to execute '{query_type}' queries."
+                )
+
             profile_content += (
                 orjson.dumps(logical_plan.depth_first_search(), option=orjson.OPT_INDENT_2).decode()
                 + "\n\n"
             )
             profile_content += logical_plan.draw() + "\n\n"
+
             # The Binder adds schema information to the logical plan
             bound_plan = do_bind_phase(
-                logical_plan, context=connection.context, common_table_expressions=ctes
+                logical_plan,
+                connection=connection.context,
+                cache=connection.cache,
+                common_table_expressions=ctes,
             )
 
             # before we write the new optimizer and execution engine, convert to a V1 plan

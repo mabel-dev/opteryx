@@ -64,6 +64,8 @@ class ExecutionTree(Graph):
         records to feed into the engine (usually reading a data file).
         """
 
+        from opteryx.operators import ExplainNode
+
         def map_operators(nodes):
             """
             We're walking the query plan telling each node where to get the data it
@@ -85,6 +87,10 @@ class ExecutionTree(Graph):
         if len(head) != 1:  # pragma: no cover
             raise DatabaseError(f"Problem executing the query plan - it has {len(head)} heads.")
 
+        if isinstance(self[head[0]], ExplainNode):
+            yield from self.explain()
+            return
+
         map_operators(head)
 
         operator = self[head[0]]
@@ -94,23 +100,21 @@ class ExecutionTree(Graph):
         from opteryx import operators
 
         def _inner_explain(node, depth):
-            if depth == 1:
-                operator = self[node]
-                yield {
-                    "operator": operator.name,
-                    "config": operator.config,
-                    "depth": depth - 1,
-                }
             incoming_operators = self.ingoing_edges(node)
             for operator_name in incoming_operators:
                 operator = self[operator_name[0]]
-                if isinstance(operator, operators.BasePlanNode):
+                if isinstance(
+                    operator, (operators.ExitNode, operators.ExplainNode)
+                ):  # Skip ExitNode
+                    yield from _inner_explain(operator_name[0], depth)
+                    continue
+                elif isinstance(operator, operators.BasePlanNode):
                     yield {
                         "operator": operator.name,
                         "config": operator.config,
                         "depth": depth,
                     }
-                yield from _inner_explain(operator_name[0], depth + 1)
+                    yield from _inner_explain(operator_name[0], depth + 1)
 
         head = list(dict.fromkeys(self.get_exit_points()))
         if len(head) != 1:  # pragma: no cover
@@ -118,7 +122,5 @@ class ExecutionTree(Graph):
         plan = list(_inner_explain(head[0], 1))
 
         table = pyarrow.Table.from_pylist(plan)
-        table = Columns.create_table_metadata(
-            table, table.num_rows, "plan", None, "calculated", "explain"
-        )
+
         yield table

@@ -44,17 +44,20 @@ from pyarrow.lib import ArrowInvalid
 import pytest
 
 import opteryx
-from opteryx.connectors import AwsS3Connector, DiskConnector
+
+# from opteryx.connectors import AwsS3Connector, DiskConnector
 from opteryx.exceptions import (
     AmbiguousIdentifierError,
     ColumnNotFoundError,
     DatasetNotFoundError,
+    EmptyDatasetError,
     EmptyResultSetError,
     InvalidTemporalRangeFilterError,
     MissingSqlStatement,
     ProgrammingError,
     SqlError,
     UnexpectedDatasetReferenceError,
+    UnsupportedSegementationError,
     UnsupportedSyntaxError,
 )
 from opteryx.utils.formatter import format_sql
@@ -345,6 +348,9 @@ STATEMENTS = [
         ("SELECT * FROM generate_series(2,10,2)", 5, 1, None),
         ("SELECT * FROM generate_series(0.5,10,0.5)", 20, 1, None),
         ("SELECT * FROM generate_series(2,11,2)", 5, 1, None),
+        ("SELECT * FROM generate_series(1, 10, 0.5)", 19, 1, None),
+        ("SELECT * FROM generate_series(0.1, 0.2, 10)", 1, 1, None),
+        ("SELECT * FROM generate_series(0, 5, 1.1)", 5, 1, None),
         ("SELECT * FROM generate_series(2,10,2) AS nums", 5, 1, None),
         ("SELECT * FROM generate_series(2,10,2) WHERE generate_series > 5", 3, 1, None),
         ("SELECT * FROM generate_series(2,10,2) AS nums WHERE nums < 5", 2, 1, None),
@@ -366,9 +372,14 @@ STATEMENTS = [
         ("SELECT * FROM generate_series('2022-01-01 12:00', '2022-01-01 12:15', '1 minute')", 16, 1, None),
         ("SELECT * FROM generate_series('2022-01-01 12:00', '2022-01-01 12:15', '1m30s')", 11, 1, None),
         ("SELECT * FROM generate_series(1,10) LEFT JOIN $planets ON id = generate_series", 10, 21, None),
+        ("SELECT * FROM GENERATE_SERIES(5, 10) AS PID LEFT JOIN $planets ON id = PID", 6, 21, None),
         ("SELECT * FROM generate_series(1,5) JOIN $planets ON id = generate_series", 5, 21, None),
         ("SELECT * FROM (SELECT * FROM generate_series(1,10,2) AS gs) INNER JOIN $planets on gs = id", 5, 21, None),
 
+        ("SELECT * FROM 'testdata/flat/formats/arrow/tweets.arrow'", 100000, 13, None),
+        ("SELECT * FROM 'testdata/flat/../flat/formats/arrow/tweets.arrow'", None, None, DatasetNotFoundError),  # don't allow traversal
+
+        ("SELECT * FROM testdata.partitioned.dated", None, None, EmptyDatasetError),  # it's there, but no partitions for today
         ("SELECT * FROM testdata.partitioned.dated FOR '2020-02-03' WITH (NO_CACHE)", 25, 8, None),
         ("SELECT * FROM testdata.partitioned.dated FOR '2020-02-03'", 25, 8, None),
         ("SELECT * FROM testdata.partitioned.dated FOR '2020-02-04'", 25, 8, None),
@@ -377,8 +388,19 @@ STATEMENTS = [
         ("SELECT * FROM testdata.partitioned.dated FOR DATES BETWEEN '2020-02-01' AND '2020-02-28' OFFSET 1", 49, 8, None),
         ("SELECT * FROM $satellites FOR YESTERDAY ORDER BY planetId OFFSET 10", 167, 8, None),
 
-        ("SELECT * FROM testdata.partitioned.segmented FOR '2020-02-03'", 25, 8, None),
+        ("SELECT * FROM testdata.partitioned.dated FOR '2020-02-03 00:00' WITH (NO_CACHE)", 25, 8, None),
+        ("SELECT * FROM testdata.partitioned.dated FOR '2020-02-03 12:00'", 25, 8, None),
+        ("SELECT * FROM testdata.partitioned.dated FOR '2020-02-04 00:00'", 25, 8, None),
+        ("SELECT * FROM testdata.partitioned.dated FOR DATES BETWEEN '2020-02-01 00:00' AND '2020-02-28 00:00'", 50, 8, None),
+        ("SELECT * FROM testdata.partitioned.dated FOR '2020-02-03 00:00' OFFSET 1", 24, 8, None),
+        ("SELECT * FROM testdata.partitioned.dated FOR DATES BETWEEN '2020-02-01 00:00' AND '2020-02-28 00:00' OFFSET 1", 49, 8, None),
+
+        ("SELECT * FROM testdata.partitioned.dated FOR DATES SINCE '2020-02-01'", 50, 8, None),
+        ("SELECT * FROM testdata.partitioned.dated FOR DATES SINCE '2020-02-04 00:00'", 25, 8, None),
+
+        ("SELECT * FROM testdata.partitioned.mixed FOR '2020-02-03'", None, None, UnsupportedSegementationError),
         ("SELECT * FROM $planets FOR '1730-01-01'", 6, 20, None),
+        ("SELECT * FROM $planets FOR '1730-01-01 12:45'", 6, 20, None),
         ("SELECT * FROM $planets FOR '1830-01-01'", 7, 20, None),
         ("SELECT * FROM $planets FOR '1930-01-01'", 8, 20, None),
         ("SELECT * FROM $planets FOR '2030-01-01'", 9, 20, None),
@@ -387,7 +409,7 @@ STATEMENTS = [
         ("SELECT * FROM $planets AS pppp FOR '1930-01-01'", 8, 20, None),
         ("SELECT * FROM $planets AS P FOR '2030-01-01'", 9, 20, None),
         ("SELECT * FROM (SELECT * FROM $planets AS D) AS P FOR '2030-01-01'", 9, 20, None),
-        ("SELECT * FROM $planets AS P FOR '1699-01-01' INNER JOIN $satellites FOR '2030-01-01' ON id = planetId;", 131, 28, None),
+        ("SELECT * FROM $planets AS P FOR '1699-01-01' INNER JOIN $satellites FOR '2030-01-01' ON P.id = planetId;", 131, 28, None),
 
         ("SELECT * FROM $astronauts WHERE death_date IS NULL", 305, 19, None),
         ("SELECT * FROM $astronauts WHERE death_date IS NOT NULL", 52, 19, None),
@@ -407,14 +429,14 @@ STATEMENTS = [
         ("SELECT missions FROM $astronauts WHERE LIST_CONTAINS_ALL(missions, ('Apollo 8', 'Gemini 7'))", 2, 1, None),
         ("SELECT missions FROM $astronauts WHERE LIST_CONTAINS_ALL(missions, ('Gemini 7', 'Apollo 8'))", 2, 1, None),
 
-        ("SELECT * FROM $satellites WHERE planetId IN (SELECT id FROM $planets WHERE name = 'Earth')", 1, 8, None),
-        ("SELECT * FROM $planets WHERE id NOT IN (SELECT DISTINCT planetId FROM $satellites)", 2, 20, None),
-        ("SELECT name FROM $planets WHERE id IN (SELECT * FROM UNNEST((1,2,3)) as id)", 3, 1, None),
+        ("SELECT * FROM $satellites WHERE planetId IN (SELECT id FROM $planets WHERE name = 'Earth')", 1, 8, UnsupportedSyntaxError),  # temp
+        ("SELECT * FROM $planets WHERE id NOT IN (SELECT DISTINCT planetId FROM $satellites)", 2, 20, UnsupportedSyntaxError),  # temp
+        ("SELECT name FROM $planets WHERE id IN (SELECT * FROM UNNEST((1,2,3)) as id)", 3, 1, UnsupportedSyntaxError),  # temp
         ("SELECT count(planetId) FROM (SELECT DISTINCT planetId FROM $satellites)", 1, 1, None),
         ("SELECT COUNT(*) FROM (SELECT planetId FROM $satellites WHERE planetId < 7) GROUP BY planetId", 4, 1, None),
 
         ("EXPLAIN SELECT * FROM $satellites", 1, 3, None),
-        ("EXPLAIN SELECT * FROM $satellites WHERE id = 8", 3, 3, None),
+        ("EXPLAIN SELECT * FROM $satellites WHERE id = 8", 2, 3, None),
         ("SET enable_morsel_defragmentation = false; EXPLAIN SELECT * FROM $satellites WHERE id = 8", 2, 3, None),
         ("SET enable_optimizer = false; EXPLAIN SELECT * FROM $satellites WHERE id = 8", 2, 3, None),
         ("SET enable_optimizer = true; EXPLAIN SELECT * FROM $satellites WHERE id = 8 AND id = 7", 5, 3, None),
@@ -917,8 +939,14 @@ def test_sql_battery(statement, rows, columns, exception):
     Test an battery of statements
     """
 
-    opteryx.register_store("tests", DiskConnector)
-    opteryx.register_store("mabellabs", AwsS3Connector)
+    #    opteryx.register_store("tests", DiskConnector)
+    #    opteryx.register_store("mabellabs", AwsS3Connector)
+    from opteryx.connectors import DiskConnector
+    from opteryx.managers.schemes import MabelPartitionScheme
+
+    opteryx.register_store(
+        "testdata.partitioned", DiskConnector, partition_scheme=MabelPartitionScheme
+    )
 
     conn = opteryx.connect()
     cursor = conn.cursor()

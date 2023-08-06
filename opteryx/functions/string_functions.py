@@ -58,14 +58,13 @@ def split(arr, delimiter=",", limit=None):
 
 
 def soundex(arr):
-    from opteryx.third_party.fuzzy.soundex import Soundex
+    from opteryx.third_party.fuzzy.soundex import soundex
 
-    _soundex = Soundex(4)
     interim = ["0000"] * arr.size
 
     for index, string in enumerate(arr):
         if string:
-            interim[index] = _soundex(string)
+            interim[index] = soundex(string)
         else:
             interim[index] = None
 
@@ -286,7 +285,7 @@ def rtrim(*args):
 
 
 def levenshtein(a, b):
-    from opteryx.third_party.levenshtein.levenshtein import levenshtein as lev
+    from opteryx.third_party.levenshtein import levenshtein as lev
 
     def _outer():
         for index, value in enumerate(a):

@@ -10,4 +10,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from .cacheable import Cacheable
+from .partitionable import Partitionable
 from .predicate_pushable import PredicatePushable
+from .projection_pushable import ProjectionPushable

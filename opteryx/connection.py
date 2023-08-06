@@ -34,6 +34,7 @@ from opteryx.exceptions import MissingSqlStatement
 from opteryx.exceptions import PermissionsError
 from opteryx.managers.kvstores import BaseKeyValueStore
 from opteryx.shared import QueryStatistics
+from opteryx.shared.rolling_log import RollingLog
 from opteryx.shared.variables import SystemVariables
 from opteryx.shared.variables import VariableOwner
 
@@ -42,6 +43,10 @@ PROFILE_LOCATION = config.PROFILE_LOCATION
 ENGINE_VERSION = config.ENGINE_VERSION
 
 HistoryItem = typing.Tuple[str, bool, datetime.datetime]
+
+rolling_log = None
+if PROFILE_LOCATION:
+    rolling_log = RollingLog(PROFILE_LOCATION + ".log", 50, 1024 * 1024)
 
 
 @dataclass
@@ -141,8 +146,10 @@ class Cursor(DataFrame):
             raise CursorInvalidStateError("Cursor can only be executed once")
 
         self._connection.context.history.append((operation, True, datetime.datetime.utcnow()))
-
         plans = query_planner(operation=operation, parameters=params, connection=self._connection)
+
+        if rolling_log:
+            rolling_log.append(operation)
 
         results = None
         for self._plan in plans:

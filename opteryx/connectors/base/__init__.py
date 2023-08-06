@@ -1,2 +1,1 @@
-from .base_blob_storage_adapter import BaseBlobStorageAdapter
-from .base_document_storage_adapter import BaseDocumentStorageAdapter
+from .base_connector import BaseConnector

@@ -10,10 +10,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import datetime
+from typing import Callable
+from typing import List
+
+ONE_HOUR = datetime.timedelta(hours=1)
+
 
 class BasePartitionScheme:
     """Implement a partition scheme"""
 
-    def filter_blobs(self, list_of_blobs, statistics):
+    def hourly_timestamps(self, start_time: datetime.datetime, end_time: datetime.datetime):
+        """
+        Create a generator of timestamps one hour apart between two datetimes.
+        """
+
+        current_time = start_time.replace(minute=0, second=0, microsecond=0)
+        while current_time <= end_time:
+            yield current_time
+            current_time += ONE_HOUR
+
+    def get_blobs_in_partition(
+        self, blob_list_getter: Callable, prefix: str, timestamp: datetime.datetime
+    ) -> List[str]:
         """filter the blobs acording to the chosen scheme"""
         raise NotImplementedError()

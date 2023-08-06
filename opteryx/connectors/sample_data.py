@@ -18,6 +18,7 @@ $planets, $astronauts, and $satellites.
 - $derived is used as a schema to align virtual columns to
 """
 
+import datetime
 import typing
 
 import pyarrow
@@ -26,6 +27,7 @@ from orso.schema import RelationSchema
 from opteryx import samples
 from opteryx.connectors.base.base_connector import BaseConnector
 from opteryx.connectors.base.base_connector import DatasetReader
+from opteryx.connectors.capabilities import Partitionable
 from opteryx.exceptions import DatasetNotFoundError
 
 WELL_KNOWN_DATASETS = {
@@ -51,23 +53,35 @@ def suggest(dataset):
         )
 
 
-class SampleDataConnector(BaseConnector):
+class SampleDataConnector(BaseConnector, Partitionable):
     __mode__ = "Internal"
 
-    def read_dataset(self, dataset_name: str) -> "DatasetReader":
-        return SampleDatasetReader(dataset_name.lower(), config=self.config)
+    def __init__(self, *args, **kwargs):
+        BaseConnector.__init__(self, **kwargs)
+        Partitionable.__init__(self, **kwargs)
+        self.dataset = self.dataset.lower()
 
-    def get_dataset_schema(self, dataset_name: str) -> RelationSchema:
-        data_provider = WELL_KNOWN_DATASETS.get(dataset_name.lower())
+    @property
+    def interal_only(self):
+        return True
+
+    def read_dataset(self) -> "DatasetReader":
+        return SampleDatasetReader(self.dataset, config=self.config, date=self.end_date)
+
+    def get_dataset_schema(self) -> RelationSchema:
+        data_provider = WELL_KNOWN_DATASETS.get(self.dataset)
         if data_provider is None:
-            suggestion = suggest(dataset_name.lower())
-            raise DatasetNotFoundError(message=suggestion, dataset=dataset_name)
+            suggestion = suggest(self.dataset)
+            raise DatasetNotFoundError(message=suggestion, dataset=self.dataset)
         return data_provider.schema
 
 
 class SampleDatasetReader(DatasetReader):
     def __init__(
-        self, dataset_name: str, config: typing.Optional[typing.Dict[str, typing.Any]] = None
+        self,
+        dataset_name: str,
+        config: typing.Optional[typing.Dict[str, typing.Any]] = None,
+        date: typing.Union[datetime.datetime, datetime.date, None] = None,
     ) -> None:
         """
         Initialize the reader with configuration.
@@ -77,6 +91,7 @@ class SampleDatasetReader(DatasetReader):
         """
         super().__init__(dataset_name=dataset_name, config=config)
         self.exhausted = False
+        self.date = date
 
     def __next__(self) -> pyarrow.Table:
         """
@@ -95,4 +110,4 @@ class SampleDatasetReader(DatasetReader):
         if data_provider is None:
             suggestion = suggest(self.dataset_name.lower())
             raise DatasetNotFoundError(message=suggestion, dataset=self.dataset_name)
-        return data_provider.read()
+        return data_provider.read(self.date)

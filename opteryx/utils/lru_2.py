@@ -27,6 +27,7 @@ This can also be used as the index for an external cache (for example in plasma)
 returns the evicted item which the calling function can then evict from the external cache.
 """
 
+import heapq
 import time
 from collections import defaultdict
 
@@ -37,6 +38,8 @@ class LRU2:
         self.size = size
         self.cache = {}
         self.access_history = defaultdict(list)
+        self.removed = set()
+        self.heap = []
         self.hits = 0
         self.misses = 0
         self.evictions = 0
@@ -44,56 +47,59 @@ class LRU2:
     def get(self, key):
         # Check if the key is in the cache
         if key in self.cache:
-            # Update the access history for the key
-            self.access_history[key].append(time.monotonic_ns())
-            if len(self.access_history[key]) > self.k:
-                self.access_history[key].pop(0)
-            # Increment the hit count and return the value
-            self.hits += 1
-            return self.cache[key]
+            value = self.cache[key]
+            self.hits += 1  # Increment the hit count
         else:
-            # Increment the miss count and return None
-            self.misses += 1
-            return None
-
-    def set(self, key, value):
-        # Check if the key is already in the cache
-        if key in self.cache:
-            return None
-
-        # Add the new key-value pair to the cache
-        self.cache[key] = value
+            value = None
+            self.misses += 1  # Increment the miss count
 
         # Update the access history for the key
-        self.access_history[key].append(time.monotonic_ns())
+        if key in self.access_history:
+            # Remove and append the access time to simulate recent access
+            old_entry = self.access_history[key].pop(0)
+            self.access_history[key].append((time.monotonic_ns(), key))
+            # Remove the old access time from the set
+            self.removed.add(old_entry)
 
-        # If the cache is full, evict the least recently used item
-        if len(self.cache) > self.size:
-            # Find the key with the oldest access time and remove it from the cache
-            oldest_key = None
-            oldest_access_time = float("inf")
-            for k in self.cache:
-                if self.access_history[k][0] < oldest_access_time:
-                    oldest_key = k
-                    oldest_access_time = self.access_history[k][0]
-            self.cache.pop(oldest_key)
-            self.access_history.pop(oldest_key)
-            self.evictions += 1
+        # return the value
+        return value
+
+    def set(self, key, value):
+        # If the key is already in the cache, we need to first remove the old entry
+        if key in self.cache:
+            old_entry = self.access_history[key].pop(0)
+            self.removed.add(old_entry)
+        self.cache[key] = value
+        access_time = time.monotonic_ns()
+        self.access_history[key].append(access_time)
+        heapq.heappush(self.heap, (access_time, key))
+        while len(self.cache) > self.size:
+            return self._evict()
+
+    def _evict(self):
+        while self.heap:
+            oldest_access_time, oldest_key = heapq.heappop(self.heap)
+            if (oldest_access_time, oldest_key) not in self.removed:
+                self.cache.pop(oldest_key)
+                self.access_history.pop(oldest_key)
+                self.evictions += 1
+                break
+            self.removed.remove((oldest_access_time, oldest_key))
             return oldest_key
 
-        return None
-
     @property
-    def keys(self):  # pragma: no-cover
+    def keys(self):
         return list(self.cache.keys())
 
     @property
     def stats(self):
-        # return hits, misses, evictions
-        return (self.hits, self.misses, self.evictions)
+        return self.hits, self.misses, self.evictions
 
-    def reset(self, reset_stats: bool = False):
+    def reset(self, reset_stats=False):
         self.cache = {}
+        self.access_history.clear()
+        self.removed.clear()
+        self.heap = []
         if reset_stats:
             self.hits = 0
             self.misses = 0
