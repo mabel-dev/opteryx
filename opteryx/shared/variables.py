@@ -102,13 +102,22 @@ class SystemVariablesContainer:
 
     def __setitem__(self, key: str, value: typing.Any) -> None:
         if key not in self._variables:
-            raise VariableNotFoundError(key)
+            from opteryx.utils import fuzzy_search
+
+            suggestion = fuzzy_search(key, list(self._variables.keys()))
+
+            raise VariableNotFoundError(variable=key, suggestion=suggestion)
         variable_type, _, owner = self._variables[key]
         if owner > self._owner:
             raise PermissionsError(f"User does not have permission to set variable `{key}`")
         if variable_type != value.type:
             raise ValueError(f"Invalid type for `{key}`, {variable_type} expected.")
         self._variables[key] = (variable_type, value.value, owner)
+
+    def details(self, key: str) -> typing.Tuple[str, typing.Any, typing.Any]:
+        if key not in self._variables:
+            raise VariableNotFoundError(key)
+        return self._variables[key]
 
     def __contains__(self, key: str) -> bool:
         return key in self._variables

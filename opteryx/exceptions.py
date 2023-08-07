@@ -141,10 +141,14 @@ class FunctionNotFoundError(ProgrammingError):
 
 
 class VariableNotFoundError(ProgrammingError):
-    def __init__(self, variable=None):
+    def __init__(self, variable: str = None, suggestion: str = None):
         if variable is not None:
             self.variable = variable
-            message = f"System variable could not be found '{variable}'."
+
+            message = f"Variable '{variable}' does not exist."
+            if suggestion is not None:
+                message += f" Did you mean '{suggestion}'?"
+
             super().__init__(message)
         else:
             super().__init__()

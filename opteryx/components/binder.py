@@ -83,7 +83,7 @@ from opteryx.functions import FUNCTIONS
 from opteryx.managers.expression import NodeType
 from opteryx.models.node import Node
 from opteryx.operators.aggregate_node import AGGREGATORS
-from opteryx.samples import derived
+from opteryx.virtual_datasets import derived
 
 COMBINED_FUNCTIONS = {**FUNCTIONS, **AGGREGATORS}
 CAMEL_TO_SNAKE = re.compile(r"(?<!^)(?=[A-Z])")
@@ -375,6 +375,8 @@ class BinderVisitor:
         if hasattr(node.connector, "partitioned"):
             node.connector.start_date = node.start_date
             node.connector.end_date = node.end_date
+        if hasattr(node.connector, "variables"):
+            node.connector.variables = context["connection"].variables
         # get them to tell is the schema of the dataset
         # None means we don't know ahead of time - we can usually get something
         node.schema = node.connector.get_dataset_schema()

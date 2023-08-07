@@ -578,7 +578,8 @@ def plan_show_variables(statement):
     root_node = "ShowVariables"
     plan = LogicalPlan()
 
-    read_step = LogicalPlanNode(node_type=LogicalPlanStepType.Scan, source="$variables")
+    read_step = LogicalPlanNode(node_type=LogicalPlanStepType.Scan)
+    read_step.relation = "$variables"
     step_id = random_string()
     plan.add_node(step_id, read_step)
 
@@ -587,16 +588,24 @@ def plan_show_variables(statement):
         operator = next(iter(predicate))
         select_step = LogicalPlanNode(
             node_type=LogicalPlanStepType.Filter,
-            predicate=Node(
+            condition=Node(
                 node_type=NodeType.COMPARISON_OPERATOR,
                 value=operator,
                 left=Node(node_type=NodeType.IDENTIFIER, value="name"),
-                right=predicate[operator],
+                right=Node(
+                    node_type=NodeType.LITERAL, type=OrsoTypes.VARCHAR, value=predicate[operator]
+                ),
             ),
         )
         previous_step_id, step_id = step_id, random_string()
         plan.add_node(step_id, select_step)
         plan.add_edge(previous_step_id, step_id)
+
+    exit_step = LogicalPlanNode(node_type=LogicalPlanStepType.Exit)
+    exit_step.columns = [Node(node_type=NodeType.WILDCARD)]  # We are always SELECT *
+    previous_step_id, step_id = step_id, random_string()
+    plan.add_node(step_id, exit_step)
+    plan.add_edge(previous_step_id, step_id)
 
     return plan
 
