@@ -35,20 +35,10 @@ class ShowVariablesNode(BasePlanNode):
         return ""
 
     def execute(self) -> Iterable:
-        buffer = SYSTEM_VARIABLES
-
-        for variable, value in self.properties.variables.items():
-            buffer.append({"variable_name": variable, "value": str(value.value)})
+        buffer = []
+        for variable in self.variables:
+            buffer.append({"variable_name": variable, "value": str(self.variables[variable])})
 
         table = pyarrow.Table.from_pylist(buffer)
-        table = Columns.create_table_metadata(
-            table=table,
-            expected_rows=len(buffer),
-            name="show_variables",
-            table_aliases=[],
-            disposition="calculated",
-            path="show_variable",
-        )
 
         yield table
-        return

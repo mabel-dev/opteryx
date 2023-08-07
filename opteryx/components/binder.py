@@ -347,21 +347,6 @@ class BinderVisitor:
         context["schemas"] = merge_dicts(*schemas)
         return node, context
 
-    def visit_scan(self, node, context):
-        from opteryx.connectors import connector_factory
-
-        # work out who will be serving this request
-        node.connector = connector_factory(node.relation, cache=context.get("cache"))
-        if hasattr(node.connector, "partitioned"):
-            node.connector.start_date = node.start_date
-            node.connector.end_date = node.end_date
-        # get them to tell is the schema of the dataset
-        # None means we don't know ahead of time - we can usually get something
-        node.schema = node.connector.get_dataset_schema()
-        context.setdefault("schemas", {})[node.alias] = node.schema
-
-        return node, context
-
     def visit_filter(self, node, context):
         node.condition, context["schemas"] = inner_binder(node.condition, context["schemas"])
 
@@ -380,6 +365,25 @@ class BinderVisitor:
             )
 
         node.order_by = order_by
+        return node, context
+
+    def visit_scan(self, node, context):
+        from opteryx.connectors import connector_factory
+
+        # work out who will be serving this request
+        node.connector = connector_factory(node.relation, cache=context.get("cache"))
+        if hasattr(node.connector, "partitioned"):
+            node.connector.start_date = node.start_date
+            node.connector.end_date = node.end_date
+        # get them to tell is the schema of the dataset
+        # None means we don't know ahead of time - we can usually get something
+        node.schema = node.connector.get_dataset_schema()
+        context.setdefault("schemas", {})[node.alias] = node.schema
+
+        return node, context
+
+    def visit_set(self, node, context):
+        node.variables = context["connection"].variables
         return node, context
 
     def traverse(self, graph, node, context=None):

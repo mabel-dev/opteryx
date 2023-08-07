@@ -17,27 +17,27 @@ This is a SQL Query Execution Plan Node.
 """
 from typing import Iterable
 
-import pyarrow
-
-from opteryx import __version__
+from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
-
-SYSTEM_VARIABLES = [{"variable_name": "version", "value": __version__}]
 
 
 class SetVariableNode(BasePlanNode):
+    def __init__(self, properties: QueryProperties, **config):
+        super().__init__(properties=properties)
+
+        self.variable = config.get("variable")
+        self.value = config.get("value")
+
+        self.variables = config.get("variables")
+
     @property
     def name(self):  # pragma: no cover
         return "Set Variables"
 
     @property
     def config(self):  # pragma: no cover
-        return ""
+        return f"{self.variable} to {self.value}"
 
     def execute(self) -> Iterable:
-        buffer = SYSTEM_VARIABLES
-
-        for variable, value in self.properties.variables.items():
-            buffer.append({"variable_name": variable, "value": str(value.value)})
-
+        self.variables[self.variable] = self.value
         yield None

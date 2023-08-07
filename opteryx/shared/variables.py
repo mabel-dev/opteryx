@@ -22,8 +22,12 @@ Owner meanings:
 import typing
 from enum import Enum
 
+from orso.types import OrsoTypes
+
+from opteryx import __version__
 from opteryx.constants.character_set import CharacterSet
 from opteryx.constants.character_set import Collation
+from opteryx.exceptions import PermissionsError
 from opteryx.exceptions import VariableNotFoundError
 
 
@@ -41,46 +45,47 @@ SYSTEM_VARIABLES_DEFAULTS: typing.Dict[str, VariableSchema] = {
     # name: (type, default, owner, description)
 
     # These are the MySQL set of variables - we don't use all of them
-    "auto_increment_increment": (int, 1, VariableOwner.INTERNAL),
-    "autocommit": (bool, True, VariableOwner.SERVER),
-    "character_set_client": (str, CharacterSet.utf8mb4.name, VariableOwner.SERVER),
-    "character_set_connection": (str, CharacterSet.utf8mb4.name, VariableOwner.SERVER),
-    "character_set_database": (str, CharacterSet.utf8mb4.name, VariableOwner.SERVER),
-    "character_set_results": (str, CharacterSet.utf8mb4.name, VariableOwner.SERVER),
-    "character_set_server": (str, CharacterSet.utf8mb4.name, VariableOwner.SERVER),
-    "collation_connection": (str, Collation.utf8mb4_general_ci.name, VariableOwner.SERVER),
-    "collation_database": (str, Collation.utf8mb4_general_ci.name, VariableOwner.SERVER),
-    "collation_server": (str, Collation.utf8mb4_general_ci.name, VariableOwner.SERVER),
-    "external_user": (str, "", VariableOwner.INTERNAL),
-    "init_connect": (str, "", VariableOwner.SERVER),
-    "interactive_timeout": (int, 28800, VariableOwner.SERVER),
-    "license": (str, "MIT", VariableOwner.SERVER),
-    "lower_case_table_names": (int, 0, VariableOwner.SERVER),
-    "max_allowed_packet": (int, 67108864, VariableOwner.SERVER),
-    "max_execution_time": (int, 0, VariableOwner.SERVER),
-    "net_buffer_length": (int, 16384, VariableOwner.SERVER),
-    "net_write_timeout": (int, 28800, VariableOwner.SERVER),
-    "performance_schema": (bool, False, VariableOwner.SERVER),
-    "sql_auto_is_null": (bool, False, VariableOwner.SERVER),
-    "sql_mode": (str, "ANSI", VariableOwner.SERVER),
-    "sql_select_limit": (int, None, VariableOwner.SERVER),
-    "system_time_zone": (str, "UTC", VariableOwner.SERVER),
-    "time_zone": (str, "UTC", VariableOwner.SERVER),
-    "transaction_read_only": (bool, False, VariableOwner.SERVER),
-    "transaction_isolation": (str, "READ-COMMITTED", VariableOwner.SERVER),
-    "version": (str, "8.0.29", VariableOwner.SERVER),
-    "version_comment": (str, "mesos", VariableOwner.SERVER),
-    "wait_timeout": (int, 28800, VariableOwner.SERVER),
-    "event_scheduler": (str, "OFF", VariableOwner.SERVER),
-    "default_storage_engine": (str, "opteryx", VariableOwner.SERVER),
-    "default_tmp_storage_engine": (str, "opteryx", VariableOwner.SERVER),
+    "auto_increment_increment": (OrsoTypes.INTEGER, 1, VariableOwner.INTERNAL),
+    "autocommit": (OrsoTypes.BOOLEAN, True, VariableOwner.SERVER),
+    "character_set_client": (OrsoTypes.VARCHAR, CharacterSet.utf8mb4.name, VariableOwner.SERVER),
+    "character_set_connection": (OrsoTypes.VARCHAR, CharacterSet.utf8mb4.name, VariableOwner.SERVER),
+    "character_set_database": (OrsoTypes.VARCHAR, CharacterSet.utf8mb4.name, VariableOwner.SERVER),
+    "character_set_results": (OrsoTypes.VARCHAR, CharacterSet.utf8mb4.name, VariableOwner.SERVER),
+    "character_set_server": (OrsoTypes.VARCHAR, CharacterSet.utf8mb4.name, VariableOwner.SERVER),
+    "collation_connection": (OrsoTypes.VARCHAR, Collation.utf8mb4_general_ci.name, VariableOwner.SERVER),
+    "collation_database": (OrsoTypes.VARCHAR, Collation.utf8mb4_general_ci.name, VariableOwner.SERVER),
+    "collation_server": (OrsoTypes.VARCHAR, Collation.utf8mb4_general_ci.name, VariableOwner.SERVER),
+    "external_user": (OrsoTypes.VARCHAR, "", VariableOwner.INTERNAL),
+    "init_connect": (OrsoTypes.VARCHAR, "", VariableOwner.SERVER),
+    "interactive_timeout": (OrsoTypes.INTEGER, 28800, VariableOwner.SERVER),
+    "license": (OrsoTypes.VARCHAR, "MIT", VariableOwner.SERVER),
+    "lower_case_table_names": (OrsoTypes.INTEGER, 0, VariableOwner.SERVER),
+    "max_allowed_packet": (OrsoTypes.INTEGER, 67108864, VariableOwner.SERVER),
+    "max_execution_time": (OrsoTypes.INTEGER, 0, VariableOwner.SERVER),
+    "net_buffer_length": (OrsoTypes.INTEGER, 16384, VariableOwner.SERVER),
+    "net_write_timeout": (OrsoTypes.INTEGER, 28800, VariableOwner.SERVER),
+    "performance_schema": (OrsoTypes.BOOLEAN, False, VariableOwner.SERVER),
+    "sql_auto_is_null": (OrsoTypes.BOOLEAN, False, VariableOwner.SERVER),
+    "sql_mode": (OrsoTypes.VARCHAR, "ANSI", VariableOwner.SERVER),
+    "sql_select_limit": (OrsoTypes.INTEGER, None, VariableOwner.SERVER),
+    "system_time_zone": (OrsoTypes.VARCHAR, "UTC", VariableOwner.SERVER),
+    "time_zone": (OrsoTypes.VARCHAR, "UTC", VariableOwner.SERVER),
+    "transaction_read_only": (OrsoTypes.BOOLEAN, False, VariableOwner.SERVER),
+    "transaction_isolation": (OrsoTypes.VARCHAR, "READ-COMMITTED", VariableOwner.SERVER),
+    "version": (OrsoTypes.VARCHAR, __version__, VariableOwner.SERVER),
+    "version_comment": (OrsoTypes.VARCHAR, "mesos", VariableOwner.SERVER),
+    "wait_timeout": (OrsoTypes.INTEGER, 28800, VariableOwner.SERVER),
+    "event_scheduler": (OrsoTypes.VARCHAR, "OFF", VariableOwner.SERVER),
+    "default_storage_engine": (OrsoTypes.VARCHAR, "opteryx", VariableOwner.SERVER),
+    "default_tmp_storage_engine": (OrsoTypes.VARCHAR, "opteryx", VariableOwner.SERVER),
 
     # these are Opteryx specific variables
-    "max_cache_evictions": (int, 32, VariableOwner.USER),
-    "max_size_single_cache_item": (int, 1024 * 1024, VariableOwner.SERVER),
-    "local_buffer_pool_size": (int, 256, VariableOwner.SERVER),
-    "disable_high_priority": (bool, False, VariableOwner.SERVER),
-    "morsel_size": (int, 64 * 1024 * 1024, VariableOwner.USER)
+    "max_cache_evictions": (OrsoTypes.INTEGER, 32, VariableOwner.USER),
+    "max_size_single_cache_item": (OrsoTypes.INTEGER, 1024 * 1024, VariableOwner.SERVER),
+    "local_buffer_pool_size": (OrsoTypes.INTEGER, 256, VariableOwner.SERVER),
+    "disable_high_priority": (OrsoTypes.BOOLEAN, False, VariableOwner.SERVER),
+    "morsel_size": (OrsoTypes.INTEGER, 64 * 1024 * 1024, VariableOwner.USER),
+    "disable_morsel_defragmentation": (OrsoTypes.BOOLEAN, False, VariableOwner.USER)
 }
 # fmt: on
 
@@ -99,11 +104,11 @@ class SystemVariablesContainer:
         if key not in self._variables:
             raise VariableNotFoundError(key)
         variable_type, _, owner = self._variables[key]
-        if not isinstance(value, variable_type):
-            raise ValueError(f"Invalid type for {key}.")
         if owner > self._owner:
-            raise PermissionError("Not enough permissions to set variable")
-        self._variables[key] = (variable_type, value, owner)
+            raise PermissionsError(f"User does not have permission to set variable `{key}`")
+        if variable_type != value.type:
+            raise ValueError(f"Invalid type for `{key}`, {variable_type} expected.")
+        self._variables[key] = (variable_type, value.value, owner)
 
     def __contains__(self, key: str) -> bool:
         return key in self._variables

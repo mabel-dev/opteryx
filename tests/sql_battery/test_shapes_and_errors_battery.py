@@ -54,6 +54,7 @@ from opteryx.exceptions import (
     EmptyResultSetError,
     InvalidTemporalRangeFilterError,
     MissingSqlStatement,
+    PermissionsError,
     ProgrammingError,
     SqlError,
     UnexpectedDatasetReferenceError,
@@ -437,6 +438,7 @@ STATEMENTS = [
 
         ("EXPLAIN SELECT * FROM $satellites", 1, 3, None),
         ("EXPLAIN SELECT * FROM $satellites WHERE id = 8", 2, 3, None),
+        ("SET version = '1.0';", None, None, PermissionsError),
         ("SET enable_morsel_defragmentation = false; EXPLAIN SELECT * FROM $satellites WHERE id = 8", 2, 3, None),
         ("SET enable_optimizer = false; EXPLAIN SELECT * FROM $satellites WHERE id = 8", 2, 3, None),
         ("SET enable_optimizer = true; EXPLAIN SELECT * FROM $satellites WHERE id = 8 AND id = 7", 5, 3, None),
