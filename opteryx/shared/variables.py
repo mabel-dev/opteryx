@@ -16,6 +16,10 @@ Owner meanings:
     SERVER - can only be set at the server level at start up (set in config)
     INTERNAL - the system can update this as it runs (defaulted in config)
     USER - the user can update this value (defaulted in config)
+
+For variables we're creating and naming, use sensible defaults and if it's a
+feature flag, name the variable for the state the user probably doesn't want - 
+e.g. disable_optimizer (default to False)
 """
 
 
@@ -85,7 +89,8 @@ SYSTEM_VARIABLES_DEFAULTS: typing.Dict[str, VariableSchema] = {
     "local_buffer_pool_size": (OrsoTypes.INTEGER, 256, VariableOwner.SERVER),
     "disable_high_priority": (OrsoTypes.BOOLEAN, False, VariableOwner.SERVER),
     "morsel_size": (OrsoTypes.INTEGER, 64 * 1024 * 1024, VariableOwner.USER),
-    "disable_morsel_defragmentation": (OrsoTypes.BOOLEAN, False, VariableOwner.USER)
+    "disable_morsel_defragmentation": (OrsoTypes.BOOLEAN, False, VariableOwner.USER),
+    "disable_optimizer": (OrsoTypes.BOOLEAN, False, VariableOwner.USER),
 }
 # fmt: on
 

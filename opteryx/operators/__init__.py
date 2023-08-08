@@ -42,7 +42,6 @@ from .set_variable_node import SetVariableNode
 # from .show_databases_node import ShowDatabasesNode  # SHOW DATABASES
 # from .show_functions_node import ShowFunctionsNode  # supported functions
 # from .show_value_node import ShowValueNode  # display node for SHOW
-# from .show_variables_node import ShowVariablesNode  # SHOW VARIABLES
 from .sort_node import SortNode  # order by selected columns
 
 

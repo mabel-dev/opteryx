@@ -32,11 +32,13 @@ from opteryx import utils
 from opteryx.exceptions import CursorInvalidStateError
 from opteryx.exceptions import MissingSqlStatement
 from opteryx.exceptions import PermissionsError
+from opteryx.exceptions import ProgrammingError
 from opteryx.managers.kvstores import BaseKeyValueStore
 from opteryx.shared import QueryStatistics
 from opteryx.shared.rolling_log import RollingLog
 from opteryx.shared.variables import SystemVariables
 from opteryx.shared.variables import VariableOwner
+from opteryx.utils import sql
 
 CURSOR_NOT_RUN: str = "Cursor must be in an executed state"
 PROFILE_LOCATION = config.PROFILE_LOCATION
@@ -44,24 +46,21 @@ ENGINE_VERSION = config.ENGINE_VERSION
 
 HistoryItem = typing.Tuple[str, bool, datetime.datetime]
 
-rolling_log = None
+ROLLING_LOG = None
 if PROFILE_LOCATION:
-    rolling_log = RollingLog(PROFILE_LOCATION + ".log", 50, 1024 * 1024)
+    ROLLING_LOG = RollingLog(PROFILE_LOCATION + ".log")
 
 
 @dataclass
 class ConnectionContext:
-    connection_id: int = field(init=False)
-    connected_at: datetime.datetime = field(init=False)
+    connection_id: int = field(default_factory=random_int, init=False)
+    connected_at: datetime.datetime = field(default_factory=datetime.datetime.utcnow, init=False)
     user: str = None
     schema: str = None
     variables: dict = field(init=False)
-    history: typing.List[HistoryItem] = field(init=False)
+    history: typing.List[HistoryItem] = field(default_factory=list, init=False)
 
     def __post_init__(self):
-        object.__setattr__(self, "connection_id", random_int())
-        object.__setattr__(self, "connected_at", datetime.datetime.utcnow())
-        object.__setattr__(self, "history", [])
         object.__setattr__(self, "variables", SystemVariables.copy(VariableOwner.USER))
 
 
@@ -148,12 +147,12 @@ class Cursor(DataFrame):
         self._connection.context.history.append((operation, True, datetime.datetime.utcnow()))
         plans = query_planner(operation=operation, parameters=params, connection=self._connection)
 
-        if rolling_log:
-            rolling_log.append(operation)
+        if ROLLING_LOG:
+            ROLLING_LOG.append(operation)
 
         results = None
-        for self._plan in plans:
-            results = self._plan.execute()
+        for plan in plans:
+            results = plan.execute()
 
         if results is not None:
             # we can't update tuples directly
@@ -163,14 +162,31 @@ class Cursor(DataFrame):
             )
             return results
 
+    def _execute_statements(self, operation, params=None):
+        statements = sql.remove_comments(operation)
+        statements = sql.clean_statement(statements)
+        statements = sql.split_sql_statements(statements)
+
+        if len(statements) > 1 and params is not None:
+            raise ProgrammingError("Batched queries cannot be parameterized.")
+
+        results = None
+        for index, statement in enumerate(statements):
+            results = self._inner_execute(statement, params)
+            if index < len(statements) - 1:
+                for _ in results:
+                    pass
+
+        return results
+
     def execute(self, operation, params=None):
-        results = self._inner_execute(operation, params)
+        results = self._execute_statements(operation, params)
         if results is not None:
             self._rows, self._schema = converters.from_arrow(results)
             self._cursor = iter(self._rows)
 
     def execute_to_arrow(self, operation, params=None, limit=None):
-        results = self._inner_execute(operation, params)
+        results = self._execute_statements(operation, params)
         if results is not None:
             if limit is not None:
                 results = utils.arrow.limit_records(results, limit)
