@@ -64,7 +64,7 @@ def create_physical_plan(logical_plan):
         elif node_type == LogicalPlanStepType.Show:
             node = operators.NoOpNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.ShowColumns:
-            node = operators.NoOpNode(query_properties, **node_config)
+            node = operators.ShowColumnsNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Subquery:
             node = operators.NoOpNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Union:

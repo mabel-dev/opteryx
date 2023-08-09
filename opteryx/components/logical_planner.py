@@ -138,7 +138,7 @@ class LogicalPlanNode(Node):
                     date_range = f" FOR '{self.start_date}' TO '{self.end_date}'"
                 return f"SCAN ({self.relation}{' AS ' + self.alias if self.alias else ''}{date_range}{' WITH(' + ','.join(self.hints) + ')' if self.hints else ''})"
             if node_type == LogicalPlanStepType.Set:
-                return f"SET ({self.variable} to {self.value.value})"
+                return f"SET ({self.variable} TO {self.value.value})"
             if node_type == LogicalPlanStepType.Show:
                 return f"SHOW ({', '.join(self.items)})"
             if node_type == LogicalPlanStepType.ShowColumns:
@@ -547,20 +547,31 @@ def plan_set_variable(statement):
 def plan_show_columns(statement):
     root_node = "ShowColumns"
     plan = LogicalPlan()
+
+    from_step = LogicalPlanNode(node_type=LogicalPlanStepType.Scan)
+    table = statement[root_node]["table_name"]
+    from_step.relation = ".".join(part["value"] for part in table)
+    from_step.alias = from_step.relation
+    from_step.start_date = table[0].get("start_date")
+    from_step.end_date = table[0].get("end_date")
+    step_id = random_string()
+    plan.add_node(step_id, from_step)
+
     show_step = LogicalPlanNode(node_type=LogicalPlanStepType.ShowColumns)
     show_step.extended = statement[root_node]["extended"]
     show_step.full = statement[root_node]["full"]
-    show_step.relation = ".".join([part["value"] for part in statement[root_node]["table_name"]])
-    show_step_id = random_string()
-    plan.add_node(show_step_id, show_step)
+    show_step.relation = from_step.relation
+    previous_step_id, step_id = step_id, random_string()
+    plan.add_node(step_id, show_step)
+    plan.add_edge(previous_step_id, step_id)
 
     _filter = statement[root_node]["filter"]
     if _filter:
         filter_node = LogicalPlanNode(node_type=LogicalPlanStepType.Filter)
-        filter_node.filter = extract_simple_filter(_filter, "Column")
-        filter_node_id = random_string()
-        plan.add_node(filter_node_id, filter_node)
-        plan.add_edge(filter_node_id, show_step_id)
+        filter_node.condition = extract_simple_filter(_filter, "name")
+        previous_step_id, step_id = step_id, random_string()
+        plan.add_node(step_id, filter_node)
+        plan.add_edge(previous_step_id, step_id)
 
     return plan
 

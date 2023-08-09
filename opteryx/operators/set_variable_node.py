@@ -36,7 +36,7 @@ class SetVariableNode(BasePlanNode):
 
     @property
     def config(self):  # pragma: no cover
-        return f"{self.variable} to {self.value}"
+        return f"{self.variable} TO {self.value}"
 
     def execute(self) -> Iterable:
         self.variables[self.variable] = self.value

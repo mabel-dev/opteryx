@@ -388,6 +388,10 @@ class BinderVisitor:
         node.variables = context["connection"].variables
         return node, context
 
+    def visit_show_columns(self, node, context):
+        node.schema = context["schemas"][node.relation]
+        return node, context
+
     def traverse(self, graph, node, context=None):
         """
         Traverses the given graph starting at the given node and calling the

@@ -44,131 +44,42 @@ def _to_unix_epoch(date):
     return timestamp / 1e6
 
 
-def _simple_collector(morsel):
+def _simple_collector(schema):
     """
-    Collect the very summary type information only, we read only a single morsel to do
-    this so it's pretty quick - helpful if you want to know what fields are available
-    programatically.
+    We've been given the schema, so just translate to a table
     """
-    columns = Columns(morsel)
-
     buffer = []
-    for column in morsel.column_names:
-        column_data = morsel.column(column)
-        _type = column_data.type
-        new_row = {"name": columns.get_preferred_name(column), "type": _type.name}
+    for column in schema.columns:
+        new_row = {
+            "name": column.name,
+            "type": column.type,
+            "nullable": column.nullable,
+            "aliases": column.aliases,
+        }
         buffer.append(new_row)
 
     table = pyarrow.Table.from_pylist(buffer)
-    table = Columns.create_table_metadata(
-        table=table,
-        expected_rows=len(buffer),
-        name="show_columns",
-        table_aliases=[],
-        disposition="calculated",
-        path="show_columns",
-    )
     return table
-
-
-def _full_collector(morsels):
-    """
-    Collect basic count information about columns, to do this we read the entire
-    dataset.
-    """
-
-    empty_profile = orjson.dumps(
-        {
-            "name": None,
-            "type": [],
-            "count": 0,
-            "min": None,
-            "max": None,
-            "missing": 0,
-        }
-    )
-
-    columns = None
-    profile_collector: dict = {}
-
-    for morsel in morsels:
-        if columns is None:
-            columns = Columns(morsel)
-
-        for column in morsel.column_names:
-            column_data = morsel.column(column)
-            profile = profile_collector.get(column, orjson.loads(empty_profile))
-            _type = column_data.type
-            if _type not in profile["type"]:
-                profile["type"].append(_type)
-
-            profile["count"] += len(column_data)
-
-            # calculate the missing count more robustly
-            missing = reduce(
-                lambda x, y: x + 1,
-                (i for i in column_data if i in (None, nan) or not i.is_valid),
-                0,
-            )
-            profile["missing"] += missing
-
-            if _type in (OrsoTypes.INTEGER, OrsoTypes.DOUBLE):
-                if profile["min"]:
-                    profile["min"] = min(profile["min"], nanmin(column_data))
-                    profile["max"] = max(profile["max"], nanmax(column_data))
-                else:
-                    profile["min"] = nanmin(column_data)
-                    profile["max"] = nanmax(column_data)
-
-            profile_collector[column] = profile
-
-    buffer = []
-
-    for column, profile in profile_collector.items():
-        profile["name"] = columns.get_preferred_name(column)
-        profile["type"] = ", ".join(t.name for t in profile["type"])
-        buffer.append(profile)
-
-    table = pyarrow.Table.from_pylist(buffer)
-    table = Columns.create_table_metadata(
-        table=table,
-        expected_rows=len(buffer),
-        name="show_columns",
-        table_aliases=[],
-        disposition="calculated",
-        path="show_columns",
-    )
-    return table
-
-
-def increment(dic: dict, value):
-    if value in dic:
-        dic[value] += 1
-    else:
-        dic[value] = 1
 
 
 def _extended_collector(morsels):
     """
     Collect summary statistics about each column
+
+    We use orso, which means converting to an orso DataFrame and then converting back
+    to a PyArrow table.
     """
     import orso
-    from orso import converters
 
-    from opteryx import utils
+    profile = None
+    for morsel in morsels:
+        df = orso.DataFrame.from_arrow(morsel)
+        if profile is None:
+            profile = df.profile
+        else:
+            profile += df.profile
 
-    rows, schema = converters.from_arrow(utils.arrow.rename_columns(morsels))
-    df = orso.DataFrame(rows=rows, schema=schema)
-    table = df.profile.arrow()
-    table = Columns.create_table_metadata(
-        table=table,
-        expected_rows=table.num_rows,
-        name="show_columns",
-        table_aliases=[],
-        disposition="calculated",
-        path="show_columns",
-    )
-    return table
+    return profile.arrow()
 
 
 class ShowColumnsNode(BasePlanNode):
@@ -176,6 +87,7 @@ class ShowColumnsNode(BasePlanNode):
         super().__init__(properties=properties)
         self._full = config.get("full")
         self._extended = config.get("extended")
+        self._schema = config.get("schema")
 
     @property
     def name(self):  # pragma: no cover
@@ -186,8 +98,6 @@ class ShowColumnsNode(BasePlanNode):
         return ""
 
     def execute(self) -> Iterable:
-        # TODO: [TARCHIA] - use the metastore to get the column statisitcs
-
         if len(self._producers) != 1:  # pragma: no cover
             raise SqlError(f"{self.name} on expects a single producer")
 
@@ -199,12 +109,12 @@ class ShowColumnsNode(BasePlanNode):
         if not (self._full or self._extended):
             # if it's not full or extended, do just get the list of columns and their
             # types
-            yield _simple_collector(next(morsels.execute()))
+            yield _simple_collector(self._schema)
             return
 
         if self._full and not self._extended:
             # we're going to read the full table, so we can count stuff
-            yield _full_collector(morsels.execute())
+            yield _extended_collector(morsels.execute())
             return
 
         if self._extended:

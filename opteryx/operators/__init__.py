@@ -36,8 +36,8 @@ from .projection_node import ProjectionNode  # remove unwanted columns including
 from .scanner_node import ScannerNode
 from .selection_node import SelectionNode  # filter unwanted rows
 from .set_variable_node import SetVariableNode
+from .show_columns_node import ShowColumnsNode  # column details
 
-# from .show_columns_node import ShowColumnsNode  # column details
 # from .show_create_node import ShowCreateNode  # SHOW CREATE TABLE
 # from .show_databases_node import ShowDatabasesNode  # SHOW DATABASES
 # from .show_functions_node import ShowFunctionsNode  # supported functions
