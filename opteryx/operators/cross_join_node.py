@@ -61,12 +61,10 @@ def _cross_join(left, right):
 
     from opteryx.third_party.pyarrow_ops import align_tables
 
-    right_columns = Columns(right)
     left_columns = None
 
     for left_morsel in left.execute():
         if left_columns is None:
-            left_columns = Columns(left_morsel)
             new_columns = left_columns + right_columns
 
         # we break this into small chunks, each cycle will have 500 * rows in the right table

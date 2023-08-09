@@ -335,7 +335,9 @@ class BinderVisitor:
         return node, context
 
     def visit_join(self, node, context):
-        node.on, context["schemas"] = inner_binder(node.on, context["schemas"])
+        if node.on:
+            # cross joins don't have an "on"
+            node.on, context["schemas"] = inner_binder(node.on, context["schemas"])
         return node, context
 
     def visit_project(self, node, context):

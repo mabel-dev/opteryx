@@ -21,13 +21,10 @@ Gen 2 execution engine (a later piece of work)
 from opteryx import operators
 from opteryx.components.logical_planner import LogicalPlanStepType
 from opteryx.models import ExecutionTree
-from opteryx.models import QueryProperties
 
 
-def create_physical_plan(logical_plan):
+def create_physical_plan(logical_plan, query_properties):
     plan = ExecutionTree()
-
-    query_properties = QueryProperties(qid=0)
 
     for nid, logical_node in logical_plan.nodes(data=True):
         node_type = logical_node.node_type
@@ -50,7 +47,11 @@ def create_physical_plan(logical_plan):
         elif node_type == LogicalPlanStepType.FunctionDataset:
             node = operators.FunctionDatasetNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Join:
-            node = operators.JoinNode(query_properties, **node_config)
+            if node_config.get("type") == "Cross Join":
+                # CROSS JOINs are quite different
+                node = operators.CrossJoinNode(query_properties, **node_config)
+            else:
+                node = operators.JoinNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Limit:
             node = operators.LimitNode(query_properties, limit=node_config.get("limit"), offset=node_config.get("offset", 0))
         elif node_type == LogicalPlanStepType.Order:

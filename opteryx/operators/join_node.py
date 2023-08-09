@@ -25,13 +25,11 @@ This is a SQL Query Execution Plan Node.
 """
 from typing import Iterable
 
-import numpy
 import pyarrow
 
 from opteryx.exceptions import SqlError
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
-from opteryx.third_party import pyarrow_ops
 
 INTERNAL_BATCH_SIZE = 500  # config
 
