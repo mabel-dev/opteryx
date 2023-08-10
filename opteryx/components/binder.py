@@ -77,6 +77,7 @@ from opteryx.exceptions import ColumnNotFoundError
 from opteryx.exceptions import DatabaseError
 from opteryx.exceptions import FunctionNotFoundError
 from opteryx.exceptions import UnexpectedDatasetReferenceError
+from opteryx.exceptions import UnsupportedSyntaxError
 
 # from opteryx.functions.v2 import FUNCTIONS
 from opteryx.functions import FUNCTIONS
@@ -336,8 +337,25 @@ class BinderVisitor:
 
     def visit_join(self, node, context):
         if node.on:
-            # cross joins don't have an "on"
+            # cross joins, natural joins and 'using' joins don't have an "on"
             node.on, context["schemas"] = inner_binder(node.on, context["schemas"])
+        if node.using:
+            raise UnsupportedSyntaxError("JOIN USING temporarily not supported")
+            """
+            The unresolved issue is working out which column will be the one that is removed
+            when the tables are joined. It's the one on the right, but that's not always
+            the right table here.
+            """
+            if len(node.using) != 1:
+                raise DatabaseError("JOIN USING syntax currently only supports a single column")
+            condition = Node(node_type=NodeType.COMPARISON_OPERATOR, value="Eq")
+            condition.left = node.using[0].copy()
+            condition.left.source = node.left_relation_name
+            condition.left.source_column = condition.left.value
+            condition.right = node.using[0].copy()
+            condition.right.source = node.right_relation_name
+            condition.right.source_column = condition.right.value
+            node.on, context["schemas"] = inner_binder(condition, context["schemas"])
         return node, context
 
     def visit_project(self, node, context):

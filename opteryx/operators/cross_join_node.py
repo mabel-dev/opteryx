@@ -61,30 +61,26 @@ def _cross_join(left, right):
 
     from opteryx.third_party.pyarrow_ops import align_tables
 
-    left_columns = None
-
     for left_morsel in left.execute():
-        if left_columns is None:
-            new_columns = left_columns + right_columns
-
-        # we break this into small chunks, each cycle will have 500 * rows in the right table
+        # Iterate through left table in chunks of size INTERNAL_BATCH_SIZE
         for left_block in left_morsel.to_batches(max_chunksize=INTERNAL_BATCH_SIZE):
-            # blocks don't have column_names, so we need to wrap in a table
+            # Convert the chunk to a table to retain column names
             left_block = pyarrow.Table.from_batches([left_block], schema=left_morsel.schema)
 
-            # build two lists, 0 to num_rows for each table
+            # Create an array of row indices for each table
             left_array = numpy.arange(left_block.num_rows, dtype=numpy.int64)
             right_array = numpy.arange(right.num_rows, dtype=numpy.int64)
 
-            # build the cartesian product of the two lists
+            # Calculate the cartesian product of the two arrays of row indices
             left_align, right_align = _cartesian_product(left_array, right_array)
 
-            # CROSS JOINs can create huge tables quickly, this is used to limit the
-            # number of records we hold in memory at any time
+            # Further break down the result into manageable chunks of size MAX_JOIN_SIZE
             for left_chunk, right_chunk in _chunker(left_align, right_align, MAX_JOIN_SIZE):
-                # now build the resultant table
+                # Align the tables using the specified chunks of row indices
                 table = align_tables(left_block, right, left_chunk.flatten(), right_chunk.flatten())
-                yield new_columns.apply(table)
+
+                # Yield the resulting table to the caller
+                yield table
 
 
 def _cross_join_unnest(

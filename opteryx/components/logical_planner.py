@@ -410,7 +410,9 @@ def create_node_relation(relation):
         from_step = LogicalPlanNode(node_type=LogicalPlanStepType.Scan)
         table = relation["relation"]["Table"]
         from_step.relation = ".".join(part["value"] for part in table["name"])
-        from_step.alias = None if table["alias"] is None else table["alias"]["name"]["value"]
+        from_step.alias = (
+            from_step.relation if table["alias"] is None else table["alias"]["name"]["value"]
+        )
         from_step.hints = [hint["Identifier"]["value"] for hint in table["with_hints"]]
         from_step.start_date = table.get("start_date")
         from_step.end_date = table.get("end_date")
@@ -451,12 +453,18 @@ def create_node_relation(relation):
                     logical_planner_builders.build({"Identifier": identifier})
                     for identifier in join["join_operator"][join_operator][join_condition]
                 ]
-        join_step_id = random_string()
-        sub_plan.add_node(join_step_id, join_step)
-        # add the other side of the join
 
         right_node_id, right_plan = create_node_relation(join)
+
+        # add the left and right relation names - we sometimes need these later
+        join_step.left_relation_name = sub_plan[sub_plan.get_entry_points()[0]].relation
+        join_step.right_relation_name = right_plan[right_plan.get_entry_points()[0]].relation
+
+        # add the other side of the join
         sub_plan += right_plan
+
+        join_step_id = random_string()
+        sub_plan.add_node(join_step_id, join_step)
 
         # add the from table as the left side of the join
         sub_plan.add_edge(root_node, join_step_id, "left")

@@ -62,6 +62,13 @@ class Node:
         node_params: list = []
         return node_type + " (" + ",".join(node_params) + ")"
 
+    def copy(self):
+        """Return a new Node object with the same attributes as the original."""
+        new_node = Node()
+        for key, value in self._internal.items():
+            setattr(new_node, key, value)
+        return new_node
+
 
 if __name__ == "__main__":  # pragma: no cover
     n = Node(a=3)
