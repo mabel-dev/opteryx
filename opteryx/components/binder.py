@@ -336,11 +336,20 @@ class BinderVisitor:
         return node, context
 
     def visit_join(self, node, context):
+        if node.type == "natural join":
+            left_columns = context["schemas"][node.left_relation_name].column_names
+            right_columns = context["schemas"][node.right_relation_name].column_names
+            node.using = set(left_columns).intersection(right_columns)
+            raise UnsupportedSyntaxError("NATURAL JOINS temporarily not supported")
+            """
+            We use the USING syntax handler for NATURAL JOINs, so what that's fixed
+            this will work 
+            """
         if node.on:
             # cross joins, natural joins and 'using' joins don't have an "on"
             node.on, context["schemas"] = inner_binder(node.on, context["schemas"])
         if node.using:
-            raise UnsupportedSyntaxError("JOIN USING temporarily not supported")
+            raise UnsupportedSyntaxError("JOIN ... USING temporarily not supported")
             """
             The unresolved issue is working out which column will be the one that is removed
             when the tables are joined. It's the one on the right, but that's not always

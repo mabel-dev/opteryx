@@ -209,7 +209,7 @@ def inner_query_planner(ast_branch):
     # If there's any peer relations, they are implicit cross joins
     if len(_relations) > 1:
         join_step = LogicalPlanNode(node_type=LogicalPlanStepType.Join)
-        join_step.type = "Cross Join"
+        join_step.type = "cross join"
         step_id = random_string()
         inner_plan.add_node(step_id, join_step)
         for relation in _relations:
@@ -428,9 +428,9 @@ def create_node_relation(relation):
         # add the join node
         join_step = LogicalPlanNode(node_type=LogicalPlanStepType.Join, join=join["join_operator"])
         if join["join_operator"] == {"Inner": "Natural"}:
-            join_step.type = "Natural Join"
+            join_step.type = "natural join"
         elif join["join_operator"] == "CrossJoin":
-            join_step.type = "Cross Join"
+            join_step.type = "cross join"
         else:
             join_operator = next(iter(join["join_operator"]))
             join_condition = next(iter(join["join_operator"][join_operator]))

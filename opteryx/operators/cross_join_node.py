@@ -182,7 +182,7 @@ class CrossJoinNode(BasePlanNode):
 
     @property
     def config(self):  # pragma: no cover
-        if self._join_type == "CrossJoinUnnest":
+        if self._join_type == "Cross Join Unnest":
             return "UNNEST()"
         return ""
 

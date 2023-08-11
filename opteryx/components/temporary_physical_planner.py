@@ -47,7 +47,7 @@ def create_physical_plan(logical_plan, query_properties):
         elif node_type == LogicalPlanStepType.FunctionDataset:
             node = operators.FunctionDatasetNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Join:
-            if node_config.get("type") == "Cross Join":
+            if node_config.get("type") == "cross join":
                 # CROSS JOINs are quite different
                 node = operators.CrossJoinNode(query_properties, **node_config)
             else:
