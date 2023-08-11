@@ -486,6 +486,7 @@ STATEMENTS = [
 # temp        ("SELECT * FROM $planets LEFT JOIN $planets FOR TODAY USING(id)", 9, 40, None),
 # temp        ("SELECT * FROM $planets LEFT JOIN $planets USING(id, name)", 9, 40, None),
         ("SELECT * FROM $planets INNER JOIN $planets ON id = id AND name = name", 9, 40, None),
+        ("SELECT * FROM $planets NATURAL JOIN generate_series(1, 5) as id", 5, 20, None),
 
         ("SELECT DISTINCT planetId FROM $satellites RIGHT OUTER JOIN $planets ON $satellites.planetId = $planets.id", 8, 1, None),
         ("SELECT DISTINCT planetId FROM $satellites RIGHT JOIN $planets ON $satellites.planetId = $planets.id", 8, 1, None),
