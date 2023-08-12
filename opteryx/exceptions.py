@@ -12,11 +12,34 @@
 
 """
 Bespoke error types for Opteryx and error types and structure as defined in PEP-0249.
+
+Exception Hierarchy:
+
+Exception
+ ├── MissingDependencyError
+ └── Error [PEP-0249] *
+     └── DatabaseError [PEP-0249] *
+         ├── InvalidConfigurationError
+         └── ProgrammingError [PEP-0249] *
+             ├── CursorInvalidStateError
+             ├── SqlError *
+             │   ├── AmbiguousDatasetError
+             │   ├── AmbiguousIdentifierError
+             │   ├── ColumnNotFoundError
+             │   ├── DatasetNotFoundError
+             │   ├── FunctionNotFoundError
+             │   ├── InvalidTemporalRangeFilterError
+             │   ├── UnexpectedDatasetReferenceError
+             │   └── VariableNotFoundError
+             ├── DataError *
+             ├── SecurityError *
+             │   └── PermissionsError
+             └── ExecutionError *
+                 └── FeatureNotSupportedOnArchitectureError
 """
 
-
-class UnsupportedTypeError(Exception):
-    pass
+# =====================================================================================
+# Codebase Errors
 
 
 class MissingDependencyError(Exception):
@@ -26,27 +49,12 @@ class MissingDependencyError(Exception):
         super().__init__(message)
 
 
-class PermissionsError(Exception):
-    pass
+# End Codebase Errors
+# =====================================================================================
 
-
-class UnmetRequirementError(Exception):
-    pass
-
-
-class FeatureNotSupportedOnArchitectureError(Exception):
-    pass
-
-
-class NotSupportedError(Exception):
-    pass
-
-
-class MissingSqlStatement(Exception):
-    pass
-
-
-# PEP-0249
+# =====================================================================================
+# PEP-0249 - none of these should be thrown directly unless explicitly required for
+# standards compliance
 
 
 class Error(Exception):
@@ -77,33 +85,54 @@ class ProgrammingError(DatabaseError):
 
 
 # END PEP-0249
+# =====================================================================================
+
+# =====================================================================================
+# Opteryx Exception Superclasses - none of these should be thrown directly
 
 
 class SqlError(ProgrammingError):
+    """
+    Used as a superclass for errors users can resolve by updating the SQL statement.
+
+    Where possible, SqlErrors in particular, should provide messages appropriate for
+    end-users who may not know, or care, about the underlying SQL platform.
+    """
+
     pass
 
 
-class DatasetNotFoundError(ProgrammingError):
-    def __init__(self, message=None, dataset=None):
-        if message is None and dataset is not None:
-            self.dataset = dataset
-            message = f"The requested dataset, '{dataset}', could not be found."
-        super().__init__(message)
+class DataError(ProgrammingError):
+    """
+    Used as a superclass for errors users relating to data
+    """
 
-
-class EmptyDatasetError(ProgrammingError):
-    def __init__(self, message=None, dataset=None):
-        if message is None and dataset is not None:
-            self.dataset = dataset
-            message = f"The dataset '{dataset}' exist but has no data in the requested partitions."
-        super().__init__(message)
-
-
-class CursorInvalidStateError(ProgrammingError):
     pass
 
 
-class ColumnNotFoundError(ProgrammingError):
+class SecurityError(ProgrammingError):
+    """
+    Used as a superclass for errors caused by security functionality
+    """
+
+    pass
+
+
+class ExecutionError(ProgrammingError):
+    """
+    Used as a superclass for errors in the execution of the query
+    """
+
+    pass
+
+
+# =====================================================================================
+
+
+# =====================================================================================
+
+
+class ColumnNotFoundError(SqlError):
     def __init__(self, message=None, column=None, dataset=None, suggestion=None):
         """
         Return as helpful Column Not Found error as we can by being specific and offering
@@ -123,8 +152,14 @@ class ColumnNotFoundError(ProgrammingError):
             message = "Query contained columns which could not be found."
         super().__init__(message)
 
+class DatasetNotFoundError(SqlError):
+    def __init__(self, message=None, dataset=None):
+        if message is None and dataset is not None:
+            self.dataset = dataset
+            message = f"The requested dataset, '{dataset}', could not be found."
+        super().__init__(message)
 
-class FunctionNotFoundError(ProgrammingError):
+class FunctionNotFoundError(SqlError):
     def __init__(self, function=None, suggestion=None):
         """
         Return as helpful Function Not Found error as we can by being specific and offering
@@ -140,7 +175,7 @@ class FunctionNotFoundError(ProgrammingError):
         super().__init__(message)
 
 
-class VariableNotFoundError(ProgrammingError):
+class VariableNotFoundError(SqlError):
     def __init__(self, variable: str = None, suggestion: str = None):
         if variable is not None:
             self.variable = variable
@@ -154,44 +189,102 @@ class VariableNotFoundError(ProgrammingError):
             super().__init__()
 
 
-class AmbiguousIdentifierError(ProgrammingError):
+class AmbiguousIdentifierError(SqlError):
     def __init__(self, identifier):
         self.identifier = identifier
-        message = f"Identifier reference '{identifier}' is ambiguous."
+        message = f"Identifier reference '{identifier}' is ambiguous; Try adding the databaset name as a prefix e.g. 'dataset.{identifier}'."
         super().__init__(message)
 
 
-class UnexpectedDatasetReferenceError(ProgrammingError):
+class AmbiguousDatasetError(SqlError):
+    def __init__(self, identifier):
+        self.identifier = identifier
+        message = f"Dataset reference '{identifier}' is ambiguous; Datasets referenced multiple times in the same query must be aliased."
+        super().__init__(message)
+
+
+class UnexpectedDatasetReferenceError(SqlError):
     def __init__(self, dataset):
         self.dataset = dataset
-        message = f"Dataset '{dataset}' referenced in query without FROM or JOIN."
+        message = f"Dataset '{dataset}' referenced in query without being referenced in a FROM or JOIN clause."
+        super().__init__(message)
+
+class InvalidTemporalRangeFilterError(SqlError):
+    pass
+
+class UnsupportedSyntaxError(SqlError):
+    pass
+
+
+class PermissionsError(SecurityError):
+    pass
+
+
+class FeatureNotSupportedOnArchitectureError(ExecutionError):
+    pass
+
+
+# =====================================================================================
+
+
+
+
+
+
+
+
+
+class UnsupportedTypeError(Exception):
+    pass
+
+
+class UnmetRequirementError(Exception):
+    pass
+
+
+class NotSupportedError(Exception):
+    pass
+
+
+class MissingSqlStatement(ProgrammingError):
+    pass
+
+
+
+
+
+class EmptyDatasetError(ProgrammingError):
+    def __init__(self, message=None, dataset=None):
+        if message is None and dataset is not None:
+            self.dataset = dataset
+            message = f"The dataset '{dataset}' exist but has no data in the requested partitions."
         super().__init__(message)
 
 
-class UnsupportedSegementationError(ProgrammingError):
+
+
+
+class UnsupportedSegementationError(SqlError):
     def __init__(self, dataset):
         self.dataset = dataset
         message = f"'{dataset}' cannot be read, only 'by_hour' segments can be read."
         super().__init__(message)
 
 
-class UnsupportedSyntaxError(ProgrammingError):
-    pass
-
-
 class EmptyResultSetError(Error):
     pass
 
 
-class InvalidTemporalRangeFilterError(SqlError):
-    pass
+
 
 
 class UnsupportedFileTypeError(Exception):
     pass
 
 
-class InvalidConfigurationError(Exception):
+# =====================================================================================
+
+class InvalidConfigurationError(DatabaseError):
     def __init__(
         self, *, config_item: str, provided_value: str, valid_value_description: str = None
     ):
@@ -203,3 +296,6 @@ class InvalidConfigurationError(Exception):
         if valid_value_description:
             message += f" Value should be {valid_value_description}"
         super().__init__(message)
+
+class CursorInvalidStateError(ProgrammingError):
+    pass
