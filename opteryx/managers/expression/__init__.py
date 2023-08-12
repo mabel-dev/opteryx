@@ -27,7 +27,7 @@ from pyarrow import Table
 from opteryx.exceptions import UnsupportedSyntaxError
 from opteryx.functions.binary_operators import binary_operations
 from opteryx.functions.unary_operations import UNARY_OPERATIONS
-from opteryx.models.node import Node
+from opteryx.models import Node
 from opteryx.third_party.pyarrow_ops.ops import filter_operations
 
 from .formatter import ExpressionColumn

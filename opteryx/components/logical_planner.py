@@ -56,7 +56,7 @@ from opteryx.components import logical_planner_builders
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import format_expression
 from opteryx.managers.expression import get_all_nodes_of_type
-from opteryx.models.node import Node
+from opteryx.models import Node
 from opteryx.third_party.travers import Graph
 
 sys.path.insert(1, os.path.join(sys.path[0], "../../../.."))  # isort:skip
@@ -430,7 +430,18 @@ def create_node_relation(relation):
         if join["join_operator"] == {"Inner": "Natural"}:
             join_step.type = "natural join"
         elif join["join_operator"] == "CrossJoin":
-            join_step.type = "cross join"
+            # CROSS JOIN UNNEST is a special case
+            if join["relation"]["Table"]["name"][0]["value"].upper() == "UNNEST":
+                join_step.type = "cross join unnest"
+                join_step.column = logical_planner_builders.build(
+                    join["relation"]["Table"]["args"][0]
+                )
+                if join["relation"]["Table"]["alias"]:
+                    join_step.alias = join["relation"]["Table"]["alias"]["name"]["value"]
+                else:
+                    join_step.alias = f"UNNEST({join_step.column.value})"
+            else:
+                join_step.type = "cross join"
         else:
             join_operator = next(iter(join["join_operator"]))
             join_condition = next(iter(join["join_operator"][join_operator]))

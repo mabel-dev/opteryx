@@ -26,7 +26,7 @@ from opteryx.exceptions import SqlError
 from opteryx.exceptions import UnsupportedSyntaxError
 from opteryx.functions.binary_operators import BINARY_OPERATORS
 from opteryx.managers.expression import NodeType
-from opteryx.models.node import Node
+from opteryx.models import Node
 from opteryx.utils import dates
 from opteryx.utils import fuzzy_search
 

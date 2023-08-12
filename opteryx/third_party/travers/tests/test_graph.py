@@ -120,10 +120,41 @@ def test_bfs():
     assert len(bfs) == 14
 
 
+def test_incoming_edges():
+    graph = build_graph()
+    incoming = graph.ingoing_edges("Bindoon")
+    assert len(incoming) == 2
+    sources = [s for s, t, r in incoming]
+    assert "Sharlene" in sources
+    assert "Hungry Jacks" in sources
+
+
+def test_node_attributes():
+    graph = build_graph()
+    attrs = graph["Bindoon"]
+    assert attrs["node_type"] == "Locality"
+
+
+def test_edge_deletion():
+    graph = build_graph()
+    graph.remove_edge("Sharlene", "Bindoon", "Lives In")
+    assert ("Sharlene", "Bindoon", "Lives In") not in graph.edges()
+
+
+def test_node_deletion():
+    graph = build_graph()
+    graph.remove_node("Bindoon", True)
+    assert "Bindoon" not in graph.nodes()
+    assert ("Sharlene", "Bindoon", "Lives In") not in graph.edges()
+
+
 if __name__ == "__main__":  # pragma: no cover
     test_graph()
     test_outgoing_edges()
     test_epitomize()
     test_bfs()
-
+    test_incoming_edges()
+    test_node_attributes()
+    test_edge_deletion()
+    test_node_deletion()
     print("okay")

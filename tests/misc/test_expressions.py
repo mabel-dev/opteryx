@@ -11,7 +11,7 @@ from rich import traceback
 import opteryx
 import opteryx.virtual_datasets
 from opteryx.managers.expression import ORSO_TO_NUMPY_MAP, NodeType, evaluate
-from opteryx.models.node import Node
+from opteryx.models import Node
 from opteryx.shared import QueryStatistics
 
 from orso.types import OrsoTypes

@@ -82,7 +82,7 @@ from opteryx.exceptions import UnsupportedSyntaxError
 # from opteryx.functions.v2 import FUNCTIONS
 from opteryx.functions import FUNCTIONS
 from opteryx.managers.expression import NodeType
-from opteryx.models.node import Node
+from opteryx.models import Node
 from opteryx.operators.aggregate_node import AGGREGATORS
 from opteryx.virtual_datasets import derived
 
@@ -289,7 +289,7 @@ class BinderVisitor:
 
         # If it's SELECT * the node doesn't have the fields yet
         if node.columns[0].node_type == NodeType.WILDCARD:
-            from opteryx.models.node import Node
+            from opteryx.models import Node
 
             for schema in schemas:
                 if schema != "$derived":  # we don't want columns we added for things like GROUP BYs
@@ -317,6 +317,9 @@ class BinderVisitor:
             context["schemas"][relation_name] = schema
             node.columns = [column.identity for column in schema.columns]
         elif node.function == "UNNEST":
+            if not node.alias:
+                if node.args[0].node_type == NodeType.IDENTIFIER:
+                    node.alias = f"UNNEST({node.args[0].value})"
             relation_name = f"$unnest-{random_string()}"
             schema = RelationSchema(
                 name=relation_name, columns=[FlatColumn(name=node.alias or "unnest", type=0)]
@@ -340,16 +343,13 @@ class BinderVisitor:
             left_columns = context["schemas"][node.left_relation_name].column_names
             right_columns = context["schemas"][node.right_relation_name].column_names
             node.using = set(left_columns).intersection(right_columns)
-            raise UnsupportedSyntaxError("NATURAL JOINS temporarily not supported")
-            """
-            We use the USING syntax handler for NATURAL JOINs, so what that's fixed
-            this will work 
-            """
         if node.on:
             # cross joins, natural joins and 'using' joins don't have an "on"
             node.on, context["schemas"] = inner_binder(node.on, context["schemas"])
         if node.using:
-            raise UnsupportedSyntaxError("JOIN ... USING temporarily not supported")
+            raise UnsupportedSyntaxError(
+                "JOIN ... USING and NATURAL JOIN temporarily not supported"
+            )
             """
             The unresolved issue is working out which column will be the one that is removed
             when the tables are joined. It's the one on the right, but that's not always
@@ -365,6 +365,23 @@ class BinderVisitor:
             condition.right.source = node.right_relation_name
             condition.right.source_column = condition.right.value
             node.on, context["schemas"] = inner_binder(condition, context["schemas"])
+        if node.column:
+            if not node.alias:
+                node.alias = f"UNNEST({node.column.query_column})"
+            node.source = node.left_relation_name
+            # this is the column which is being unnested
+            node.column, context["schemas"] = inner_binder(node.column, context["schemas"])
+            # this is the column that is being created - find it from it's name
+            node.new_column = None
+            for _, schema in context["schemas"].items():
+                found = schema.find_column(node.alias)
+                if node.new_column:
+                    raise AmbiguousIdentifierError(identifier=node.alias)
+                if found:
+                    node.new_column = found
+            if not node.new_column:
+                raise ColumnNotFoundError(column=node.alias)
+
         return node, context
 
     def visit_project(self, node, context):

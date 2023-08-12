@@ -5,7 +5,7 @@ Test basic functionality of the execution tree
 import os
 import sys
 
-sys.path.insert(1, os.path.join(sys.path[0], ".."))
+sys.path.insert(1, os.path.join(sys.path[0], "../../../.."))
 
 from opteryx.third_party.travers import Graph
 
