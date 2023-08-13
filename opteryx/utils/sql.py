@@ -63,4 +63,4 @@ def split_sql_statements(sql: str) -> list:
     if buffer:
         statements.append("".join(buffer).strip())
 
-    return statements
+    return [s for s in statements if s != ""]

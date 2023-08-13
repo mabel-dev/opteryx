@@ -86,7 +86,7 @@ class SelectionNode(BasePlanNode):
             self.statistics.time_selecting += time.time_ns() - start_selection
 
             # if there's no matching rows, just drop the morsel
-            if mask.size > 0:
+            if mask.size > 0 and not numpy.all(mask == None):
                 yield morsel.take(pyarrow.array(mask))
                 at_least_one = True
 

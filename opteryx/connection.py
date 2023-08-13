@@ -167,6 +167,9 @@ class Cursor(DataFrame):
         statements = sql.clean_statement(statements)
         statements = sql.split_sql_statements(statements)
 
+        if len(statements) == 0:
+            raise MissingSqlStatement("No statement found")
+
         if len(statements) > 1 and params is not None:
             raise UnsupportedSyntaxError("Batched queries cannot be parameterized.")
 
@@ -180,6 +183,8 @@ class Cursor(DataFrame):
         return results
 
     def execute(self, operation, params=None):
+        if hasattr(operation, "decode"):
+            operation = operation.decode()
         results = self._execute_statements(operation, params)
         if results is not None:
             self._rows, self._schema = converters.from_arrow(results)
