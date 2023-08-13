@@ -154,7 +154,13 @@ def process_identifier(node, context):
         column, found_source_relation = find_column_in_loaded_schemas(node.value, schemas)
         if not found_source_relation:
             suggestion = get_fuzzy_search_suggestion(
-                node.value, [schema.all_column_names() for _, schema in schemas.items()]
+                node.value,
+                [
+                    column_name
+                    for _, schema in schemas.items()
+                    for column_name in schema.all_column_names()
+                    if column_name is not None
+                ],
             )
             raise ColumnNotFoundError(column=node.value, suggestion=suggestion)
         if not node.source:
@@ -224,7 +230,8 @@ def inner_binder(node, context) -> typing.Tuple[Node, dict]:
 
             # we need to add this new column to the schema
             column_name = format_expression(node)
-            schema_column = FunctionColumn(name=column_name, type=0, binding=func)
+            aliases = [node.alias] if node.alias else []
+            schema_column = FunctionColumn(name=column_name, type=0, binding=func, aliases=aliases)
             schemas["$derived"].columns.append(schema_column)
             node.function = func
             node.derived_from = []

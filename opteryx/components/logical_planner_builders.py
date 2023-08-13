@@ -625,7 +625,7 @@ def unsupported(branch, alias=None, key=None):
     raise SqlError(f"Unhandled token in Syntax Tree `{key}`")
 
 
-def build(value, alias: list = None, key=None):
+def build(value, alias=None, key=None):
     """
     Extract values from a value node in the AST and create a ExpressionNode for it
 
