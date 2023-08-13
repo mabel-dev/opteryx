@@ -72,10 +72,11 @@ from orso.schema import FunctionColumn
 from orso.schema import RelationSchema
 from orso.tools import random_string
 
+from opteryx.exceptions import AmbiguousDatasetError
 from opteryx.exceptions import AmbiguousIdentifierError
 from opteryx.exceptions import ColumnNotFoundError
-from opteryx.exceptions import DatabaseError
 from opteryx.exceptions import FunctionNotFoundError
+from opteryx.exceptions import InvalidInternalStateError
 from opteryx.exceptions import UnexpectedDatasetReferenceError
 from opteryx.exceptions import UnsupportedSyntaxError
 
@@ -90,20 +91,22 @@ COMBINED_FUNCTIONS = {**FUNCTIONS, **AGGREGATORS}
 CAMEL_TO_SNAKE = re.compile(r"(?<!^)(?=[A-Z])")
 
 
-def merge_dicts(*dicts) -> dict:
+def merge_schemas(*dicts) -> dict:
     """we ned to handle merging lists so have our own merge function"""
     merged_dict: dict = {}
     for dic in dicts:
         if not isinstance(dic, dict):
-            raise DatabaseError("Internal Error - merge_dicts expected dicts")
+            raise InvalidInternalStateError("Internal Error - merge_dicts expected dicts")
         for key, value in dic.items():
             if key in merged_dict:
                 if isinstance(value, list):
                     merged_dict[key].extend(value)
                 elif isinstance(value, dict):
-                    merged_dict[key] = merge_dicts(value, merged_dict[key])
+                    merged_dict[key] = merge_schemas(value, merged_dict[key])
                 elif isinstance(value, RelationSchema):
                     merged_dict[key] += value
+                elif isinstance(value, set):
+                    merged_dict[key] = merged_dict[key].union(value)
                 else:
                     merged_dict[key] = value
             else:
@@ -111,7 +114,57 @@ def merge_dicts(*dicts) -> dict:
     return merged_dict
 
 
-def inner_binder(node, schemas) -> typing.Tuple[Node, dict]:
+def find_column_in_loaded_schemas(value, schemas):
+    found_source_relation = None
+    column = None
+
+    for _, schema in schemas.items():
+        found = schema.find_column(value)
+        if found and column and found_source_relation:
+            raise AmbiguousIdentifierError(identifier=value)
+        if found:
+            found_source_relation = schema
+            column = found
+
+    return column, found_source_relation
+
+
+def get_fuzzy_search_suggestion(value, candidates):
+    from opteryx.utils import fuzzy_search
+
+    return fuzzy_search(value, candidates)
+
+
+def process_identifier(node, context):
+    schemas = context["schemas"]
+    found_source_relation = schemas.get(node.source)
+
+    if node.source:
+        if not found_source_relation:
+            raise UnexpectedDatasetReferenceError(dataset=node.source)
+
+        column = found_source_relation.find_column(node.source_column)
+        if not column:
+            suggestion = get_fuzzy_search_suggestion(
+                node.value, found_source_relation.all_column_names()
+            )
+            raise ColumnNotFoundError(column=node.value, dataset=node.source, suggestion=suggestion)
+
+    else:
+        column, found_source_relation = find_column_in_loaded_schemas(node.value, schemas)
+        if not found_source_relation:
+            suggestion = get_fuzzy_search_suggestion(
+                node.value, [schema.all_column_names() for _, schema in schemas.items()]
+            )
+            raise ColumnNotFoundError(column=node.value, suggestion=suggestion)
+        if not node.source:
+            node.source = found_source_relation.name
+
+    node.schema_column = column
+    return node, context
+
+
+def inner_binder(node, context) -> typing.Tuple[Node, dict]:
     """
     Note, this is a tree within a tree, this is a single step in the execution plan (i.e. the plan
     associated with the relational algebra) which in itself may be an evaluation plan (i.e.
@@ -122,58 +175,12 @@ def inner_binder(node, schemas) -> typing.Tuple[Node, dict]:
 
     # we're already binded
     if node.schema_column is not None:
-        return node, schemas
+        return node, context
 
+    schemas = context["schemas"]
     node_type = node.node_type
     if node_type == NodeType.IDENTIFIER:
-        column = None
-        found_source_relation = schemas.get(node.source)
-
-        if node.source is not None:
-            # The column source is part of the name (e.g. relation.column)
-            if found_source_relation is None:
-                # The relation hasn't been loaded in a FROM or JOIN statement
-                raise UnexpectedDatasetReferenceError(dataset=node.source)
-
-            column = found_source_relation.find_column(node.source_column)
-            if column is None:
-                # The column wasn't in the relation
-                candidates = found_source_relation.all_column_names()
-                from opteryx.utils import fuzzy_search
-
-                suggestion = fuzzy_search(node.value, candidates)
-                raise ColumnNotFoundError(
-                    column=node.value, dataset=node.source, suggestion=suggestion
-                )
-
-        else:
-            # Look for the column in the loaded schemas
-            for _, schema in schemas.items():
-                found = schema.find_column(node.value)
-                if found and column:
-                    # If we've found it again - we're not sure which one to use
-                    if found_source_relation:
-                        raise AmbiguousIdentifierError(identifier=node.value)
-                elif found:
-                    found_source_relation = schema
-                    column = found
-
-        if found_source_relation is None:
-            # If we didn't find the relation, get all of the columns it could have been and
-            # see if we can suggest what the user should have entered in the error message
-            candidates = []
-            for _, schema in schemas.items():
-                candidates.extend(schema.all_column_names())
-            from opteryx.utils import fuzzy_search
-
-            suggestion = fuzzy_search(node.value, candidates)
-            raise ColumnNotFoundError(column=node.value, suggestion=suggestion)
-        elif node.source is None:
-            # we haven't been give a source, so add one here
-            node.source = found_source_relation.name
-
-        # add values to the node to indicate the source of this data
-        node.schema_column = column
+        return process_identifier(node, context)
 
     elif node_type == NodeType.LITERAL:
         column_name = format_expression(node)
@@ -211,9 +218,7 @@ def inner_binder(node, schemas) -> typing.Tuple[Node, dict]:
             func = COMBINED_FUNCTIONS.get(node.value)
             if not func:
                 # v1:
-                from opteryx.utils import fuzzy_search
-
-                suggest = fuzzy_search(node.value, COMBINED_FUNCTIONS.keys())
+                suggest = get_fuzzy_search_suggestion(node.value, COMBINED_FUNCTIONS.keys())
                 # v2: suggest = FUNCTIONS.suggest(node.value)
                 raise FunctionNotFoundError(function=node.value, suggestion=suggest)
 
@@ -236,18 +241,19 @@ def inner_binder(node, schemas) -> typing.Tuple[Node, dict]:
 
     # Now recurse and do this again for all the sub parts of the evaluation plan
     if node.left:
-        node.left, schemas = inner_binder(node.left, schemas)
+        node.left, context = inner_binder(node.left, context)
     if node.right:
-        node.right, schemas = inner_binder(node.right, schemas)
+        node.right, context = inner_binder(node.right, context)
     if node.centre:
-        node.centre, schemas = inner_binder(node.centre, schemas)
+        node.centre, context = inner_binder(node.centre, context)
     if node.parameters:
-        node.parameters, new_schemas = zip(
-            *(inner_binder(parm, schemas) for parm in node.parameters)
+        node.parameters, new_contexts = zip(
+            *(inner_binder(parm, context) for parm in node.parameters)
         )
-        schemas = merge_dicts(*new_schemas)
+        merged_schemas = merge_schemas(*[ctx["schemas"] for ctx in new_contexts])
+        context["schemas"] = merged_schemas
 
-    return node, copy.deepcopy(schemas)
+    return node, copy.deepcopy(context)
 
 
 class BinderVisitor:
@@ -257,7 +263,7 @@ class BinderVisitor:
         visit_method = getattr(self, visit_method_name, self.visit_unsupported)
         return_node, return_context = visit_method(node, context)
         if not isinstance(return_context, dict):
-            raise DatabaseError(
+            raise InvalidInternalStateError(
                 f"Internal Error - function {visit_method_name} didn't return a dict"
             )
         return return_node, return_context
@@ -268,16 +274,18 @@ class BinderVisitor:
 
     def visit_aggregate_and_group(self, node, context):
         if node.groups:
-            node.groups, schemas = zip(
-                *(inner_binder(group, context["schemas"]) for group in node.groups)
+            node.groups, group_contexts = zip(
+                *(inner_binder(group, context) for group in node.groups)
             )
-            context["schemas"] = merge_dicts(*schemas)
+            merged_schemas = merge_schemas(*[ctx["schemas"] for ctx in group_contexts])
+            context["schemas"] = merged_schemas
 
         if node.aggregates:
-            node.aggregates, schemas = zip(
-                *(inner_binder(aggregate, context["schemas"]) for aggregate in node.aggregates)
+            node.aggregates, group_contexts = zip(
+                *(inner_binder(aggregate, context) for aggregate in node.aggregates)
             )
-            context["schemas"] = merge_dicts(*schemas)
+            merged_schemas = merge_schemas(*[ctx["schemas"] for ctx in group_contexts])
+            context["schemas"] = merged_schemas
 
         return node, context
 
@@ -299,10 +307,9 @@ class BinderVisitor:
             node.columns = columns
             return node, context
 
-        node.columns, schemas = zip(
-            *(inner_binder(col, context["schemas"]) for col in node.columns)
-        )
-        context["schemas"] = merge_dicts(*schemas)
+        node.columns, group_contexts = zip(*(inner_binder(col, context) for col in node.columns))
+        merged_schemas = merge_schemas(*[ctx["schemas"] for ctx in group_contexts])
+        context["schemas"] = merged_schemas
 
         return node, context
 
@@ -345,7 +352,7 @@ class BinderVisitor:
             node.using = set(left_columns).intersection(right_columns)
         if node.on:
             # cross joins, natural joins and 'using' joins don't have an "on"
-            node.on, context["schemas"] = inner_binder(node.on, context["schemas"])
+            node.on, context = inner_binder(node.on, context)
         if node.using:
             raise UnsupportedSyntaxError(
                 "JOIN ... USING and NATURAL JOIN temporarily not supported"
@@ -356,7 +363,9 @@ class BinderVisitor:
             the right table here.
             """
             if len(node.using) != 1:
-                raise DatabaseError("JOIN USING syntax currently only supports a single column")
+                raise UnsupportedSyntaxError(
+                    "JOIN USING syntax currently only supports a single column"
+                )
             condition = Node(node_type=NodeType.COMPARISON_OPERATOR, value="Eq")
             condition.left = node.using[0].copy()
             condition.left.source = node.left_relation_name
@@ -364,44 +373,44 @@ class BinderVisitor:
             condition.right = node.using[0].copy()
             condition.right.source = node.right_relation_name
             condition.right.source_column = condition.right.value
-            node.on, context["schemas"] = inner_binder(condition, context["schemas"])
+            node.on, context = inner_binder(condition, context)
         if node.column:
             if not node.alias:
                 node.alias = f"UNNEST({node.column.query_column})"
             node.source = node.left_relation_name
             # this is the column which is being unnested
-            node.column, context["schemas"] = inner_binder(node.column, context["schemas"])
+            node.column, context = inner_binder(node.column, context)
             # this is the column that is being created - find it from it's name
-            node.new_column = None
-            for _, schema in context["schemas"].items():
-                found = schema.find_column(node.alias)
-                if node.new_column:
-                    raise AmbiguousIdentifierError(identifier=node.alias)
-                if found:
-                    node.new_column = found
-            if not node.new_column:
-                raise ColumnNotFoundError(column=node.alias)
+            node.target_column, found_source_relation = find_column_in_loaded_schemas(
+                node.alias, context["schemas"]
+            )
+            if not found_source_relation:
+                suggestion = get_fuzzy_search_suggestion(
+                    node.value,
+                    [schema.all_column_names() for _, schema in context["schemas".items()]],
+                )
+                raise ColumnNotFoundError(column=node.value, suggestion=suggestion)
 
         return node, context
 
     def visit_project(self, node, context):
         # For each of the columns in the projection, identify the relation it
         # will be taken from
-        node.columns, schemas = zip(
-            *(inner_binder(col, context["schemas"]) for col in node.columns)
-        )
-        context["schemas"] = merge_dicts(*schemas)
+        node.columns, group_contexts = zip(*(inner_binder(col, context) for col in node.columns))
+        merged_schemas = merge_schemas(*[ctx["schemas"] for ctx in group_contexts])
+        context["schemas"] = merged_schemas
+
         return node, context
 
     def visit_filter(self, node, context):
-        node.condition, context["schemas"] = inner_binder(node.condition, context["schemas"])
+        node.condition, context = inner_binder(node.condition, context)
 
         return node, context
 
     def visit_order(self, node, context):
         order_by = []
         for column, direction in node.order_by:
-            bound_column, context["schemas"] = inner_binder(column, context["schemas"])
+            bound_column, context = inner_binder(column, context)
 
             order_by.append(
                 (
@@ -416,7 +425,9 @@ class BinderVisitor:
     def visit_scan(self, node, context):
         from opteryx.connectors import connector_factory
 
-        # work out who will be serving this request
+        if node.alias in context["relations"]:
+            raise AmbiguousDatasetError(dataset=node.alias)
+        # work out which connector will be serving this request
         node.connector = connector_factory(node.relation, cache=context.get("cache"))
         if hasattr(node.connector, "partitioned"):
             node.connector.start_date = node.start_date
@@ -427,6 +438,7 @@ class BinderVisitor:
         # None means we don't know ahead of time - we can usually get something
         node.schema = node.connector.get_dataset_schema()
         context.setdefault("schemas", {})[node.alias] = node.schema
+        context["relations"].add(node.alias)
 
         return node, context
 
@@ -459,8 +471,16 @@ class BinderVisitor:
                 returned_graph, child_context = self.traverse(
                     graph, child[0], copy.deepcopy(context)
                 )
-                exit_context = merge_dicts(child_context, exit_context)
-            context = merge_dicts(context, exit_context)
+                # Assuming merge_schemas is a function that merges the schemas from two contexts
+                exit_context["schemas"] = merge_schemas(
+                    child_context["schemas"], exit_context["schemas"]
+                )
+
+                # Update relations if necessary
+                context["relations"] = context["relations"].union(exit_context["relations"])
+
+            context["schemas"] = merge_schemas(context["schemas"], exit_context["schemas"])
+
         # Visit node and return updated context
         return_node, context = self.visit_node(graph[node], context=context)
         graph[node] = return_node
@@ -470,7 +490,12 @@ class BinderVisitor:
 def do_bind_phase(plan, connection=None, cache=None, common_table_expressions=None):
     binder_visitor = BinderVisitor()
     root_node = plan.get_exit_points()
-    context = {"schemas": {"$derived": derived.schema}, "cache": cache, "connection": connection}
+    context = {
+        "schemas": {"$derived": derived.schema},
+        "cache": cache,
+        "connection": connection,
+        "relations": set(),
+    }
     if len(root_node) > 1:
         raise ValueError(f"logical plan has {len(root_node)} heads - this is an error")
     plan, _ = binder_visitor.traverse(plan, root_node[0], context=context)

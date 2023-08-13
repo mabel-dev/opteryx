@@ -118,9 +118,9 @@ class LogicalPlanNode(Node):
                 return f"FILTER ({format_expression(self.condition)})"
             if node_type == LogicalPlanStepType.Join:
                 if self.on:
-                    return f"{self.type.upper()} ({format_expression(self.on)})"
+                    return f"{self.type.upper()} JOIN ({format_expression(self.on)})"
                 if self.using:
-                    return f"{self.type.upper()} (USING {','.join(format_expression(self.using))})"
+                    return f"{self.type.upper()} JOIN (USING {','.join(format_expression(self.using))})"
                 return self.type.upper()
             if node_type == LogicalPlanStepType.Limit:
                 limit_str = f"LIMIT ({self.limit})" if self.limit is not None else ""
@@ -136,7 +136,10 @@ class LogicalPlanNode(Node):
                     date_range = f" FOR '{self.start_date}'"
                 elif self.start_date is not None:
                     date_range = f" FOR '{self.start_date}' TO '{self.end_date}'"
-                return f"SCAN ({self.relation}{' AS ' + self.alias if self.alias else ''}{date_range}{' WITH(' + ','.join(self.hints) + ')' if self.hints else ''})"
+                alias = ""
+                if self.relation != self.alias:
+                    alias = f" AS {self.alias}"
+                return f"SCAN ({self.relation}{alias}{date_range}{' WITH(' + ','.join(self.hints) + ')' if self.hints else ''})"
             if node_type == LogicalPlanStepType.Set:
                 return f"SET ({self.variable} TO {self.value.value})"
             if node_type == LogicalPlanStepType.Show:

@@ -115,7 +115,7 @@ class CrossJoinUnnestNode(BasePlanNode):
     def __init__(self, properties: QueryProperties, **config):
         super().__init__(properties=properties)
         self.source = config.get("column")
-        self.target_column = config.get("new_column")
+        self.target_column = config.get("target_column")
 
     @property
     def name(self):  # pragma: no cover

@@ -106,17 +106,21 @@ class SystemVariablesContainer:
         return self._variables[key][1]
 
     def __setitem__(self, key: str, value: typing.Any) -> None:
-        if key not in self._variables:
-            from opteryx.utils import fuzzy_search
+        if key[0] == "@":
+            variable_type = value.type
+            owner = VariableOwner.USER
+        else:
+            if key not in self._variables:
+                from opteryx.utils import fuzzy_search
 
-            suggestion = fuzzy_search(key, list(self._variables.keys()))
+                suggestion = fuzzy_search(key, list(self._variables.keys()))
 
-            raise VariableNotFoundError(variable=key, suggestion=suggestion)
-        variable_type, _, owner = self._variables[key]
-        if owner > self._owner:
-            raise PermissionsError(f"User does not have permission to set variable `{key}`")
-        if variable_type != value.type:
-            raise ValueError(f"Invalid type for `{key}`, {variable_type} expected.")
+                raise VariableNotFoundError(variable=key, suggestion=suggestion)
+            variable_type, _, owner = self._variables[key]
+            if owner > self._owner:
+                raise PermissionsError(f"User does not have permission to set variable `{key}`")
+            if variable_type != value.type:
+                raise ValueError(f"Invalid type for `{key}`, {variable_type} expected.")
         self._variables[key] = (variable_type, value.value, owner)
 
     def details(self, key: str) -> typing.Tuple[str, typing.Any, typing.Any]:
@@ -135,6 +139,14 @@ class SystemVariablesContainer:
 
     def copy(self, owner: VariableOwner = VariableOwner.USER) -> "SystemVariablesContainer":
         return SystemVariablesContainer(owner)
+
+    def as_node(self, key):
+        """Return a variable as a LITERAL node"""
+        from opteryx.managers.expression import NodeType
+        from opteryx.models import Node
+
+        variable = self[key]
+        return Node(node_type=NodeType.LITERAL, type=variable.type, value=variable.value)
 
 
 # load the base set

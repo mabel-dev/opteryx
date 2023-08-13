@@ -23,8 +23,9 @@ from pyarrow import ArrowNotImplementedError
 from pyarrow import compute
 
 import opteryx
-from opteryx.exceptions import ProgrammingError
-from opteryx.exceptions import SqlError
+from opteryx.exceptions import FunctionNotFoundError
+from opteryx.exceptions import IncorrectTypeError
+from opteryx.exceptions import InvalidFunctionParameterError
 from opteryx.exceptions import UnsupportedSyntaxError
 from opteryx.functions import date_functions
 from opteryx.functions import number_functions
@@ -46,17 +47,17 @@ def _get(value, item):
         return value[int(item)]
     except ValueError as err:
         if isinstance(value, str):
-            raise ProgrammingError(
+            raise IncorrectTypeError(
                 f"VARCHAR values can only be subscripted with NUMERIC values"
             ) from err
         if isinstance(value, dict):
-            raise ProgrammingError(
-                f"STRUCT values must be subscripted with VARCHAR values"
+            raise IncorrectTypeError(
+                "STRUCT values must be subscripted with VARCHAR values"
             ) from err
         if isinstance(value, list):
-            raise ProgrammingError(f"LIST values must be subscripted with NUMERIC values") from err
+            raise IncorrectTypeError("LIST values must be subscripted with NUMERIC values") from err
         else:
-            raise ProgrammingError(f"Cannot subscript {type(value).__name__} values") from err
+            raise IncorrectTypeError(f"Cannot subscript {type(value).__name__} values") from err
     except (KeyError, IndexError, TypeError):
         return None
 
@@ -74,7 +75,7 @@ def cast(_type):
     if _type in VECTORIZED_CASTERS:
         return lambda a: compute.cast(a, VECTORIZED_CASTERS[_type])
 
-    raise SqlError(f"Unable to cast values in column to `{_type}`")
+    raise FunctionNotFoundError(message=f"Internal function to cast values to `{_type}` not found.")
 
 
 def safe(func, *parms):
@@ -101,7 +102,7 @@ def try_cast(_type):
             return [safe(caster, i) for i in arr]
 
         return _inner
-    raise SqlError(f"Unable to cast values in column to `{_type}`")
+    raise FunctionNotFoundError(message=f"Internal function to cast values to `{_type}` not found.")
 
 
 def _repeat_no_parameters(func):

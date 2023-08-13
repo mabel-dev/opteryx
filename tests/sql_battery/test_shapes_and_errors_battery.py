@@ -48,10 +48,12 @@ import opteryx
 # from opteryx.connectors import AwsS3Connector, DiskConnector
 from opteryx.exceptions import (
     AmbiguousIdentifierError,
+    AmbiguousDatasetError,
     ColumnNotFoundError,
     DatasetNotFoundError,
     EmptyDatasetError,
     EmptyResultSetError,
+    IncorrectTypeError,
     InvalidTemporalRangeFilterError,
     MissingSqlStatement,
     PermissionsError,
@@ -119,8 +121,8 @@ STATEMENTS = [
         ("SELECT * FROM $satellites /* comment */ FOR TODAY /* comment */", 177, 8, None),
 
         ("SELECT name, id, planetId FROM $satellites", 177, 3, None),
-        ("SELECT name, name FROM $satellites", 177, 1, SqlError),  # V2 breaking
-        ("SELECT name, id, name, id FROM $satellites", 177, 2, SqlError),  # V2 breaking
+        ("SELECT name, name FROM $satellites", 177, 1, AmbiguousIdentifierError),  # V2 breaking
+        ("SELECT name, id, name, id FROM $satellites", 177, 2, AmbiguousIdentifierError),  # V2 breaking
 
         ("SELECT DISTINCT name FROM $astronauts", 357, 1, None),
         ("SELECT DISTINCT * FROM $astronauts", 357, 19, None),
@@ -485,7 +487,9 @@ STATEMENTS = [
 # temp        ("SELECT * FROM $planets LEFT OUTER JOIN $planets USING(id)", 9, 40, None),
 # temp        ("SELECT * FROM $planets LEFT JOIN $planets FOR TODAY USING(id)", 9, 40, None),
 # temp        ("SELECT * FROM $planets LEFT JOIN $planets USING(id, name)", 9, 40, None),
-        ("SELECT * FROM $planets INNER JOIN $planets ON id = id AND name = name", 9, 40, None),
+        ("SELECT * FROM $planets INNER JOIN $planets ON id = id AND name = name", None, None, AmbiguousDatasetError),
+        ("SELECT P_1.* FROM $planets AS P_1 INNER JOIN $planets AS P_2 ON P_1.id = P_2.id AND P_2.name = P_1.name", 9, 20, None),
+        ("SELECT * FROM $planets AS P_1 INNER JOIN $planets AS P_2 ON P_1.id = P_2.id AND P_2.name = P_1.name", 9, 40, None),
         ("SELECT * FROM $planets NATURAL JOIN generate_series(1, 5) as id", 5, 20, None),
 
         ("SELECT DISTINCT planetId FROM $satellites RIGHT OUTER JOIN $planets ON $satellites.planetId = $planets.id", 8, 1, None),
@@ -666,8 +670,8 @@ STATEMENTS = [
         ("SET @pples = 'b'; SET @ngles = 90; SHOW VARIABLES LIKE '%s'", 2, 2, None),
         ("SET @pples = 'b'; SET @rgon = 90; SHOW VARIABLES LIKE '%gon'", 1, 2, None),
         ("SET @variable = 44; SET @var = 'name'; SHOW VARIABLES LIKE '%ri%';", 1, 2, None),
-        ("SHOW PARAMETER enable_optimizer", 1, 2, None),
-        ("SET enable_optimizer = true; SHOW PARAMETER enable_optimizer;", 1, 2, None),
+        ("SHOW PARAMETER disable_optimizer", 1, 2, None),
+        ("SET disable_optimizer = true; SHOW PARAMETER enable_optimizer;", 1, 2, None),
 
         ("SELECT id FROM $planets WHERE NOT NOT id > 3", 6, 1, None),
         ("SELECT id FROM $planets WHERE NOT NOT id < 3", 2, 1, None),
@@ -676,7 +680,7 @@ STATEMENTS = [
         ("SELECT id FROM $planets WHERE NOT (id < 5 AND id = 3)", 8, 1, None),
         ("SELECT id FROM $planets WHERE NOT NOT (id < 5 AND id = 3)", 1, 1, None),
         ("SELECT id FROM $planets WHERE NOT id = 2 AND NOT NOT (id < 5 AND id = 3)", 1, 1, None),
-        ("SET enable_optimizer = false; SELECT id FROM $planets WHERE NOT id = 2 AND NOT NOT (id < 5 AND id = 3)", 1, 1, None),
+        ("SET disable_optimizer = true; SELECT id FROM $planets WHERE NOT id = 2 AND NOT NOT (id < 5 AND id = 3)", 1, 1, None),
         ("SELECT * FROM $planets WHERE NOT(id = 9 OR id = 8)", 7, 20, None),
         ("SELECT * FROM $planets WHERE NOT(id = 9 OR id = 8) OR True", 9, 20, None),
         ("SELECT * FROM $planets WHERE NOT(id = 9 OR 8 = 8)", 0, 20, None),
@@ -687,10 +691,10 @@ STATEMENTS = [
         ("SHOW CREATE TABLE $satellites", 1, 1, None),
         ("SHOW CREATE TABLE $astronauts", 1, 1, None),
         ("SHOW CREATE TABLE testdata.partitioned.framed FOR '2021-03-28'", 1, 1, None),
-        ("SET enable_optimizer = false;\nSET enable_morsel_defragmentation = true;\nSELECT COUNT(*) FROM $planets WHERE id > 3 AND name ILIKE '%e%'", 1, 1, None),
-        ("SET enable_optimizer = true;\nSET enable_morsel_defragmentation = true;\nSELECT COUNT(*) FROM $planets WHERE id > 3 AND name ILIKE '%e%'", 1, 1, None),
-        ("SET enable_optimizer = true;\nSET enable_morsel_defragmentation = false;\nSELECT COUNT(*) FROM $planets WHERE id > 3 AND name ILIKE '%e%'", 1, 1, None),
-        ("SET enable_optimizer = false;\nSET enable_morsel_defragmentation = false;\nSELECT COUNT(*) FROM $planets WHERE id > 3 AND name ILIKE '%e%'", 1, 1, None),
+        ("SET disable_optimizer = true;\nSET disable_morsel_defragmentation = false;\nSELECT COUNT(*) FROM $planets WHERE id > 3 AND name ILIKE '%e%'", 1, 1, None),
+        ("SET disable_optimizer = false;\nSET disable_morsel_defragmentation = false;\nSELECT COUNT(*) FROM $planets WHERE id > 3 AND name ILIKE '%e%'", 1, 1, None),
+        ("SET disable_optimizer = false;\nSET disable_morsel_defragmentation = true;\nSELECT COUNT(*) FROM $planets WHERE id > 3 AND name ILIKE '%e%'", 1, 1, None),
+        ("SET disable_optimizer = true;\nSET disable_morsel_defragmentation = true;\nSELECT COUNT(*) FROM $planets WHERE id > 3 AND name ILIKE '%e%'", 1, 1, None),
         ("SELECT COUNT(*) FROM $planets WHERE id > 3 AND name ILIKE '%e%' AND id > 1 AND id > 0 AND id > 2 AND name ILIKE '%e%'", 1, 1, None),
 
         ("SELECT planets.* FROM $planets AS planets LEFT JOIN $planets FOR '1600-01-01' AS older ON planets.id = older.id WHERE older.name IS NULL", 3, 20, None),
@@ -910,12 +914,12 @@ STATEMENTS = [
         # 912 - optimized boolean evals were ignored
         ("SELECT * FROM $planets WHERE 1 = PI()", 0, 20, None),
         ("SELECT * FROM $planets WHERE PI() = 1", 0, 20, None),
-        ("SET enable_optimizer = false; SELECT * FROM $planets WHERE 1 = PI()", 0, 20, None),
-        ("SET enable_optimizer = false; SELECT * FROM $planets WHERE PI() = 1", 0, 20, None),
+        ("SET disable_optimizer = true; SELECT * FROM $planets WHERE 1 = PI()", 0, 20, None),
+        ("SET disable_optimizer = true; SELECT * FROM $planets WHERE PI() = 1", 0, 20, None),
         ("SELECT * FROM $planets WHERE 3.141592653589793238462643383279502 = PI()", 9, 20, None),
         ("SELECT * FROM $planets WHERE PI() = 3.141592653589793238462643383279502", 9, 20, None),
-        ("SET enable_optimizer = false; SELECT * FROM $planets WHERE 3.141592653589793238462643383279502 = PI()", 9, 20, None),
-        ("SET enable_optimizer = false; SELECT * FROM $planets WHERE PI() = 3.141592653589793238462643383279502", 9, 20, None),
+        ("SET disable_optimizer = true; SELECT * FROM $planets WHERE 3.141592653589793238462643383279502 = PI()", 9, 20, None),
+        ("SET disable_optimizer = true; SELECT * FROM $planets WHERE PI() = 3.141592653589793238462643383279502", 9, 20, None),
         # found in testing
         ("SELECT * FROM $planets WHERE id = null", 0, 20, None),
         ("SELECT * FROM $planets WHERE id != null", 0, 20, None),
@@ -929,8 +933,8 @@ STATEMENTS = [
         ("SELECT * FROM $planets FOR DATES BETWEEN TODAY OR TOMORROW", None, None, InvalidTemporalRangeFilterError),
         ("SELECT * FROM $planets FOR DATES BETWEEN BEFORE AND TODAY", None, None, InvalidTemporalRangeFilterError),
         # 999 - subscripting
-        ("SELECT name['n'] FROM $planets", None, None, ProgrammingError),
-        ("SELECT id['n'] FROM $planets", None, None, ProgrammingError),
+        ("SELECT name['n'] FROM $planets", None, None, IncorrectTypeError),
+        ("SELECT id['n'] FROM $planets", None, None, IncorrectTypeError),
         # [1008] fuzzy search fails on ints
         ("SELECT * FROM $planets JOIN $planets ON id = 12;", None, None, ColumnNotFoundError),
         ("SELECT * FROM $planets JOIN $planets ON 12 = id;", None, None, ColumnNotFoundError),
@@ -971,12 +975,12 @@ def test_sql_battery(statement, rows, columns, exception):
             columns == actual_columns
         ), f"\n{cursor.display()}\n\033[38;5;203mQuery returned {actual_columns} cols but {columns} were expected.\033[0m\n{statement}"
     except AssertionError as err:
-        print(f"\n{err}", flush=True)
-        quit()
+        raise Exception() from err
     except Exception as err:
-        assert (
-            type(err) == exception
-        ), f"\n{format_sql(statement)}\nQuery failed with error {type(err)} but error {exception} was expected"
+        if type(err) != exception:
+            raise Exception(
+                f"{format_sql(statement)}\nQuery failed with error {type(err)} but error {exception} was expected"
+            ) from err
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -992,6 +996,9 @@ if __name__ == "__main__":  # pragma: no cover
 
     width = shutil.get_terminal_size((80, 20))[0] - 15
 
+    passed = 0
+    failed = 0
+
     nl = "\n"
 
     print(f"RUNNING BATTERY OF {len(STATEMENTS)} SHAPE TESTS")
@@ -1006,7 +1013,20 @@ if __name__ == "__main__":  # pragma: no cover
             end="",
             flush=True,
         )
-        test_sql_battery(statement, rows, cols, err)
-        print(f"\033[0;32m{str(int((time.monotonic_ns() - start)/1e6)).rjust(4)}ms\033[0m ✅")
+        try:
+            test_sql_battery(statement, rows, cols, err)
+            print(
+                f"\033[38;2;26;185;67m{str(int((time.monotonic_ns() - start)/1e6)).rjust(4)}ms\033[0m ✅"
+            )
+            passed += 1
+        except Exception as err:
+            print(f"\033[0;31m{str(int((time.monotonic_ns() - start)/1e6)).rjust(4)}ms\033[0m ❌")
+            print(">", err)
+            failed += 1
 
     print("--- ✅ \033[0;32mdone\033[0m")
+    print(
+        f"\n\033[38;2;139;233;253m\033[3mCOMPLETE\033[0m\n"
+        f"  \033[38;2;26;185;67m{passed} passed\033[0m\n"
+        f"  \033[38;2;255;121;198m{failed} failed\033[0m"
+    )

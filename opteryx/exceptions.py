@@ -19,17 +19,23 @@ Exception
  ├── MissingDependencyError
  └── Error [PEP-0249] *
      └── DatabaseError [PEP-0249] *
+         ├── IncompleteImplementationError
          ├── InvalidConfigurationError
+         ├── InvalidInternalStateError
          └── ProgrammingError [PEP-0249] *
-             ├── CursorInvalidStateError
+             ├── InvalidCursorStateError
+             ├── ParameterError
              ├── SqlError *
              │   ├── AmbiguousDatasetError
              │   ├── AmbiguousIdentifierError
              │   ├── ColumnNotFoundError
              │   ├── DatasetNotFoundError
              │   ├── FunctionNotFoundError
+             │   ├── IncorrectTypeError
+             │   ├── InvalidFunctionParameterError
              │   ├── InvalidTemporalRangeFilterError
              │   ├── UnexpectedDatasetReferenceError
+             │   ├── UnsupportedSyntaxError
              │   └── VariableNotFoundError
              ├── DataError *
              ├── SecurityError *
@@ -152,6 +158,7 @@ class ColumnNotFoundError(SqlError):
             message = "Query contained columns which could not be found."
         super().__init__(message)
 
+
 class DatasetNotFoundError(SqlError):
     def __init__(self, message=None, dataset=None):
         if message is None and dataset is not None:
@@ -159,8 +166,9 @@ class DatasetNotFoundError(SqlError):
             message = f"The requested dataset, '{dataset}', could not be found."
         super().__init__(message)
 
+
 class FunctionNotFoundError(SqlError):
-    def __init__(self, function=None, suggestion=None):
+    def __init__(self, message=None, function=None, suggestion=None):
         """
         Return as helpful Function Not Found error as we can by being specific and offering
         suggestions.
@@ -168,10 +176,11 @@ class FunctionNotFoundError(SqlError):
         self.function = function
         self.suggestion = suggestion
 
-        if suggestion is not None:
-            message = f"Function '{function}' does not exist. Did you mean '{suggestion}'?."
-        else:
-            message = f"Function '{function}' does not exist."
+        if message is None:
+            if suggestion is not None:
+                message = f"Function '{function}' does not exist. Did you mean '{suggestion}'?."
+            else:
+                message = f"Function '{function}' does not exist."
         super().__init__(message)
 
 
@@ -190,16 +199,17 @@ class VariableNotFoundError(SqlError):
 
 
 class AmbiguousIdentifierError(SqlError):
-    def __init__(self, identifier):
+    def __init__(self, message=None, identifier=None):
         self.identifier = identifier
-        message = f"Identifier reference '{identifier}' is ambiguous; Try adding the databaset name as a prefix e.g. 'dataset.{identifier}'."
+        if message is None:
+            message = f"Identifier reference '{identifier}' is ambiguous; Try adding the databaset name as a prefix e.g. 'dataset.{identifier}'."
         super().__init__(message)
 
 
 class AmbiguousDatasetError(SqlError):
-    def __init__(self, identifier):
-        self.identifier = identifier
-        message = f"Dataset reference '{identifier}' is ambiguous; Datasets referenced multiple times in the same query must be aliased."
+    def __init__(self, dataset):
+        self.dataset = dataset
+        message = f"Dataset reference '{dataset}' is ambiguous; Datasets referenced multiple times in the same query must be aliased."
         super().__init__(message)
 
 
@@ -209,10 +219,20 @@ class UnexpectedDatasetReferenceError(SqlError):
         message = f"Dataset '{dataset}' referenced in query without being referenced in a FROM or JOIN clause."
         super().__init__(message)
 
+
 class InvalidTemporalRangeFilterError(SqlError):
     pass
 
+
+class InvalidFunctionParameterError(SqlError):
+    pass
+
+
 class UnsupportedSyntaxError(SqlError):
+    pass
+
+
+class IncorrectTypeError(SqlError):
     pass
 
 
@@ -225,13 +245,6 @@ class FeatureNotSupportedOnArchitectureError(ExecutionError):
 
 
 # =====================================================================================
-
-
-
-
-
-
-
 
 
 class UnsupportedTypeError(Exception):
@@ -250,18 +263,12 @@ class MissingSqlStatement(ProgrammingError):
     pass
 
 
-
-
-
 class EmptyDatasetError(ProgrammingError):
     def __init__(self, message=None, dataset=None):
         if message is None and dataset is not None:
             self.dataset = dataset
             message = f"The dataset '{dataset}' exist but has no data in the requested partitions."
         super().__init__(message)
-
-
-
 
 
 class UnsupportedSegementationError(SqlError):
@@ -275,14 +282,12 @@ class EmptyResultSetError(Error):
     pass
 
 
-
-
-
 class UnsupportedFileTypeError(Exception):
     pass
 
 
 # =====================================================================================
+
 
 class InvalidConfigurationError(DatabaseError):
     def __init__(
@@ -297,5 +302,20 @@ class InvalidConfigurationError(DatabaseError):
             message += f" Value should be {valid_value_description}"
         super().__init__(message)
 
-class CursorInvalidStateError(ProgrammingError):
+
+class InvalidInternalStateError(DatabaseError):
+    """when checks that are like assertions fail"""
+
+    pass
+
+
+class IncompleteImplementationError(DatabaseError):
+    pass
+
+
+class InvalidCursorStateError(ProgrammingError):
+    pass
+
+
+class ParameterError(ProgrammingError):
     pass

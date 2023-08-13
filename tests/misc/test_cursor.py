@@ -6,13 +6,13 @@ import pytest
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import opteryx
-from opteryx.exceptions import CursorInvalidStateError
+from opteryx.exceptions import InvalidCursorStateError
 
 
 def test_execute():
     cursor = opteryx.query("SELECT * FROM $planets")
     assert cursor.query == "SELECT * FROM $planets", cursor.query
-    with pytest.raises(CursorInvalidStateError):
+    with pytest.raises(InvalidCursorStateError):
         cursor.execute("SELECT * FROM $planets")
 
 

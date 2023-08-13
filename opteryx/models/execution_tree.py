@@ -23,7 +23,7 @@ The execution tree contains functionality to:
 
 import pyarrow
 
-from opteryx.exceptions import DatabaseError
+from opteryx.exceptions import InvalidInternalStateError
 from opteryx.third_party.travers import Graph
 
 
@@ -80,12 +80,14 @@ class ExecutionTree(Graph):
 
         # do some basic validation before we try to execute
         if not self.is_acyclic():  # pragma: no cover
-            raise DatabaseError("Problem executing the query plan - it is cyclic.")
+            raise InvalidInternalStateError("Problem executing the query plan - it is cyclic.")
 
         # we get the tail of the query - the first steps
         head = list(dict.fromkeys(self.get_exit_points()))
         if len(head) != 1:  # pragma: no cover
-            raise DatabaseError(f"Problem executing the query plan - it has {len(head)} heads.")
+            raise InvalidInternalStateError(
+                f"Problem executing the query plan - it has {len(head)} heads."
+            )
 
         if isinstance(self[head[0]], ExplainNode):
             yield from self.explain()
@@ -118,7 +120,7 @@ class ExecutionTree(Graph):
 
         head = list(dict.fromkeys(self.get_exit_points()))
         if len(head) != 1:  # pragma: no cover
-            raise DatabaseError(f"Problem with the plan - it has {len(head)} heads.")
+            raise InvalidInternalStateError(f"Problem with the plan - it has {len(head)} heads.")
         plan = list(_inner_explain(head[0], 1))
 
         table = pyarrow.Table.from_pylist(plan)

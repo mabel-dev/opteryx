@@ -29,10 +29,10 @@ from orso.tools import random_int
 
 from opteryx import config
 from opteryx import utils
-from opteryx.exceptions import CursorInvalidStateError
+from opteryx.exceptions import InvalidCursorStateError
 from opteryx.exceptions import MissingSqlStatement
 from opteryx.exceptions import PermissionsError
-from opteryx.exceptions import ProgrammingError
+from opteryx.exceptions import UnsupportedSyntaxError
 from opteryx.managers.kvstores import BaseKeyValueStore
 from opteryx.shared import QueryStatistics
 from opteryx.shared.rolling_log import RollingLog
@@ -142,7 +142,7 @@ class Cursor(DataFrame):
             raise MissingSqlStatement("SQL statement not found")
 
         if self._query is not None:
-            raise CursorInvalidStateError("Cursor can only be executed once")
+            raise InvalidCursorStateError("Cursor can only be executed once")
 
         self._connection.context.history.append((operation, True, datetime.datetime.utcnow()))
         plans = query_planner(operation=operation, parameters=params, connection=self._connection)
@@ -168,7 +168,7 @@ class Cursor(DataFrame):
         statements = sql.split_sql_statements(statements)
 
         if len(statements) > 1 and params is not None:
-            raise ProgrammingError("Batched queries cannot be parameterized.")
+            raise UnsupportedSyntaxError("Batched queries cannot be parameterized.")
 
         results = None
         for index, statement in enumerate(statements):

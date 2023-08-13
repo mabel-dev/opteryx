@@ -25,7 +25,7 @@ This node doesn't do any calculations, it is a pure Projection.
 """
 from typing import Iterable
 
-from opteryx.exceptions import SqlError
+from opteryx.exceptions import AmbiguousIdentifierError
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 
@@ -60,8 +60,8 @@ class ExitNode(BasePlanNode):
 
             duplicates = [column for column, count in Counter(final_columns).items() if count > 1]
             matches = (a for a, b in zip(final_names, final_columns) if b in duplicates)
-            raise SqlError(
-                f"Query result contains multiple instances of the same column - {', '.join(matches)}"
+            raise AmbiguousIdentifierError(
+                message=f"Query result contains multiple instances of the same column - {', '.join(matches)}"
             )
 
         for morsel in morsels.execute():
