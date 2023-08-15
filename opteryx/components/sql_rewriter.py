@@ -247,7 +247,7 @@ def _temporal_extration_state_machine(parts):
         elif transition == [RELATION, RELATION]:
             relation = part
         elif transition == [WAITING, TEMPORAL]:
-            raise SqlError(
+            raise InvalidTemporalRangeFilterError(
                 "Temporal `FOR` statements must directly follow the dataset they apply to."
             )
 

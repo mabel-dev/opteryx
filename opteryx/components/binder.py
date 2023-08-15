@@ -280,19 +280,31 @@ class BinderVisitor:
         return node, context
 
     def visit_aggregate_and_group(self, node, context):
+        """
+        Group by maps the field to the existing schema fields and then disposes of the
+        existing schemas and replaces it with a new $group-by schema.
+        """
         if node.groups:
             node.groups, group_contexts = zip(
                 *(inner_binder(group, context) for group in node.groups)
             )
-            merged_schemas = merge_schemas(*[ctx["schemas"] for ctx in group_contexts])
-            context["schemas"] = merged_schemas
+            node.groups = list(node.groups)
 
         if node.aggregates:
             node.aggregates, group_contexts = zip(
                 *(inner_binder(aggregate, context) for aggregate in node.aggregates)
             )
-            merged_schemas = merge_schemas(*[ctx["schemas"] for ctx in group_contexts])
-            context["schemas"] = merged_schemas
+            node.aggregates = list(node.aggregates)
+
+        columns = [
+            i.schema_column
+            for i in (node.aggregates or []) + (node.groups or [])
+            if i.schema_column
+        ]
+        group_by_relation = f"$group-by-{random_string()}"
+        context["schemas"] = {
+            group_by_relation: RelationSchema(name=group_by_relation, columns=columns)
+        }
 
         return node, context
 
@@ -484,7 +496,11 @@ class BinderVisitor:
                 )
 
                 # Update relations if necessary
-                context["relations"] = context["relations"].union(exit_context["relations"])
+                context["relations"] = (
+                    context["relations"]
+                    .union(exit_context["relations"])
+                    .union(child_context["relations"])
+                )
 
             context["schemas"] = merge_schemas(context["schemas"], exit_context["schemas"])
 
