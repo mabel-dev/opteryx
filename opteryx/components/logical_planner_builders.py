@@ -26,7 +26,7 @@ from opteryx.exceptions import SqlError
 from opteryx.exceptions import UnsupportedSyntaxError
 from opteryx.functions.binary_operators import BINARY_OPERATORS
 from opteryx.managers.expression import NodeType
-from opteryx.models.node import Node
+from opteryx.models import Node
 from opteryx.utils import dates
 from opteryx.utils import fuzzy_search
 
@@ -575,13 +575,12 @@ def case_when(value, alias: list = None, key=None):
 
 
 def array_agg(branch, alias=None, key=None):
-    from opteryx.components.logical_planner import custom_builders
-
     distinct = branch["distinct"]
     expression = build(branch["expr"])
     order = None
     if branch["order_by"]:
-        order = custom_builders.extract_order({"Query": {"order_by": branch["order_by"]}})
+        # order = custom_builders.extract_order({"Query": {"order_by": branch["order_by"]}})
+        order = [(build(item["expr"]), not bool(item["asc"])) for item in branch["order_by"]]
     limit = None
     if branch["limit"]:
         limit = int(build(branch["limit"]).value)
@@ -589,7 +588,7 @@ def array_agg(branch, alias=None, key=None):
     return Node(
         node_type=NodeType.AGGREGATOR,
         value="ARRAY_AGG",
-        expression=expression,
+        parameters=[expression],
         distinct=distinct,
         order=order,
         limit=limit,
@@ -625,7 +624,7 @@ def unsupported(branch, alias=None, key=None):
     raise SqlError(f"Unhandled token in Syntax Tree `{key}`")
 
 
-def build(value, alias: list = None, key=None):
+def build(value, alias=None, key=None):
     """
     Extract values from a value node in the AST and create a ExpressionNode for it
 

@@ -7,16 +7,28 @@ from .helpers import columns_to_array_denulled
 from .helpers import groupify_array
 
 
-def align_tables(t1, t2, l1, l2):
-    # Align tables
-    table = t1.take(l1)
-    # added for opteryx - deal with empty lists
-    if len(l1) == 0 or len(l2) == 0:
-        return table
-    for c in t2.column_names:
-        if c not in t1.column_names:
-            table = table.append_column(c, t2.column(c).take(l2))
-    return table
+def align_tables(source_table, append_table, source_indices, append_indices):
+    # If either source_indices or append_indices is empty, return the source_table taken with source_indices immediately
+    if len(source_indices) == 0 or len(append_indices) == 0:
+        return source_table.take(source_indices)
+
+    # Take the rows from source_table at the specified source_indices
+    aligned_table = source_table.take(source_indices)
+
+    # Create a set of column names from the source table for efficient existence checking
+    source_column_names = set(source_table.column_names)
+
+    # Iterate through the column names of append_table
+    for column_name in append_table.column_names:
+        # If the column_name is not found in source_column_names
+        if column_name not in source_column_names:
+            # Append the column from append_table to aligned_table, taking the elements at the specified append_indices
+            aligned_table = aligned_table.append_column(
+                column_name, append_table.column(column_name).take(append_indices)
+            )
+
+    # Return the aligned table
+    return aligned_table
 
 
 def inner_join(left, right, left_on, right_on):

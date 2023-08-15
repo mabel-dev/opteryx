@@ -47,6 +47,7 @@ PROFILE_LOCATION = config.PROFILE_LOCATION
 
 def query_planner(operation, parameters, connection):
     import orjson
+    from orso.tools import random_int
 
     from opteryx.components.ast_rewriter import do_ast_rewriter
     from opteryx.components.binder import do_bind_phase
@@ -54,6 +55,7 @@ def query_planner(operation, parameters, connection):
     from opteryx.components.sql_rewriter import do_sql_rewrite
     from opteryx.components.temporary_physical_planner import create_physical_plan
     from opteryx.exceptions import SqlError
+    from opteryx.models import QueryProperties
     from opteryx.third_party import sqloxide
 
     if isinstance(operation, bytes):
@@ -64,53 +66,46 @@ def query_planner(operation, parameters, connection):
     # V2: copy for v2 to process, remove this when v2 is the engine
     v2_params = [p for p in parameters or []]
 
-    # try:
-    if True:
-        profile_content = operation + "\n\n"
-        # Parser converts the SQL command into an AST
-        try:
-            parsed_statements = sqloxide.parse_sql(clean_sql, dialect="mysql")
-        except ValueError as parser_error:
-            raise SqlError(parser_error) from parser_error
-        # AST Rewriter adds temporal filters and parameters to the AST
-        parsed_statements = do_ast_rewriter(
-            parsed_statements,
-            temporal_filters=temporal_filters,
-            paramters=v2_params,
-            connection=connection,
+    profile_content = operation + "\n\n"
+    # Parser converts the SQL command into an AST
+    try:
+        parsed_statements = sqloxide.parse_sql(clean_sql, dialect="mysql")
+    except ValueError as parser_error:
+        raise SqlError(parser_error) from parser_error
+    # AST Rewriter adds temporal filters and parameters to the AST
+    parsed_statements = do_ast_rewriter(
+        parsed_statements,
+        temporal_filters=temporal_filters,
+        paramters=v2_params,
+        connection=connection,
+    )
+    # Logical Planner converts ASTs to logical plans
+    for logical_plan, ast, ctes in do_logical_planning_phase(parsed_statements):
+        # check user has permission for this query type
+        query_type = next(iter(ast))
+        if query_type not in connection.permissions:
+            from opteryx.exceptions import PermissionsError
+
+            raise PermissionsError(
+                f"User does not have permission to execute '{query_type}' queries."
+            )
+
+        profile_content += (
+            orjson.dumps(logical_plan.depth_first_search(), option=orjson.OPT_INDENT_2).decode()
+            + "\n\n"
         )
-        # Logical Planner converts ASTs to logical plans
-        for logical_plan, ast, ctes in do_logical_planning_phase(parsed_statements):
-            # check user has permission for this query type
-            query_type = next(iter(ast))
-            if query_type not in connection.permissions:
-                from opteryx.exceptions import PermissionsError
+        profile_content += logical_plan.draw() + "\n\n"
 
-                raise PermissionsError(
-                    f"User does not have permission to execute '{query_type}' queries."
-                )
+        # The Binder adds schema information to the logical plan
+        bound_plan = do_bind_phase(
+            logical_plan,
+            connection=connection.context,
+            cache=connection.cache,
+            common_table_expressions=ctes,
+        )
 
-            profile_content += (
-                orjson.dumps(logical_plan.depth_first_search(), option=orjson.OPT_INDENT_2).decode()
-                + "\n\n"
-            )
-            profile_content += logical_plan.draw() + "\n\n"
-
-            # The Binder adds schema information to the logical plan
-            bound_plan = do_bind_phase(
-                logical_plan,
-                connection=connection.context,
-                cache=connection.cache,
-                common_table_expressions=ctes,
-            )
-
-            # before we write the new optimizer and execution engine, convert to a V1 plan
-            physical_plan = create_physical_plan(bound_plan)
-            yield physical_plan
-
-    # except Exception as err:
-    #    raise err
-    # finally:
-    #    with open(PROFILE_LOCATION, mode="w") as f:
-    #        print(profile_content)
-    #        f.write(profile_content)
+        # before we write the new optimizer and execution engine, convert to a V1 plan
+        query_id = random_int()
+        query_properties = QueryProperties(qid=query_id, variables=connection.context.variables)
+        physical_plan = create_physical_plan(bound_plan, query_properties)
+        yield physical_plan

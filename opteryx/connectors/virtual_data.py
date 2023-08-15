@@ -24,18 +24,19 @@ import typing
 import pyarrow
 from orso.schema import RelationSchema
 
-from opteryx import samples
+from opteryx import virtual_datasets
 from opteryx.connectors.base.base_connector import BaseConnector
 from opteryx.connectors.base.base_connector import DatasetReader
 from opteryx.connectors.capabilities import Partitionable
 from opteryx.exceptions import DatasetNotFoundError
 
 WELL_KNOWN_DATASETS = {
-    "$astronauts": samples.astronauts,
-    "$derived": None,
-    "$no_table": samples.no_table,
-    "$planets": samples.planets,
-    "$satellites": samples.satellites,
+    "$astronauts": (virtual_datasets.astronauts, True),
+    "$planets": (virtual_datasets.planets, True),
+    "$satellites": (virtual_datasets.satellites, True),
+    "$variables": (virtual_datasets.variables, True),
+    "$derived": (virtual_datasets.derived, False),
+    "$no_table": (virtual_datasets.no_table, False),
 }
 
 
@@ -45,7 +46,7 @@ def suggest(dataset):
     """
     from opteryx.utils import fuzzy_search
 
-    known_datasets = (k for k in WELL_KNOWN_DATASETS if k not in ("$no_table", "$derived"))
+    known_datasets = (name for name, suggestable in WELL_KNOWN_DATASETS if suggestable)
     suggestion = fuzzy_search(dataset, known_datasets)
     if suggestion is not None:
         return (
@@ -60,16 +61,19 @@ class SampleDataConnector(BaseConnector, Partitionable):
         BaseConnector.__init__(self, **kwargs)
         Partitionable.__init__(self, **kwargs)
         self.dataset = self.dataset.lower()
+        self.variables = None
 
     @property
     def interal_only(self):
         return True
 
     def read_dataset(self) -> "DatasetReader":
-        return SampleDatasetReader(self.dataset, config=self.config, date=self.end_date)
+        return SampleDatasetReader(
+            self.dataset, config=self.config, date=self.end_date, variables=self.variables
+        )
 
     def get_dataset_schema(self) -> RelationSchema:
-        data_provider = WELL_KNOWN_DATASETS.get(self.dataset)
+        data_provider, _ = WELL_KNOWN_DATASETS.get(self.dataset)
         if data_provider is None:
             suggestion = suggest(self.dataset)
             raise DatasetNotFoundError(message=suggestion, dataset=self.dataset)
@@ -82,6 +86,7 @@ class SampleDatasetReader(DatasetReader):
         dataset_name: str,
         config: typing.Optional[typing.Dict[str, typing.Any]] = None,
         date: typing.Union[datetime.datetime, datetime.date, None] = None,
+        variables: typing.Dict = None,
     ) -> None:
         """
         Initialize the reader with configuration.
@@ -92,6 +97,7 @@ class SampleDatasetReader(DatasetReader):
         super().__init__(dataset_name=dataset_name, config=config)
         self.exhausted = False
         self.date = date
+        self.variables = variables
 
     def __next__(self) -> pyarrow.Table:
         """
@@ -106,8 +112,8 @@ class SampleDatasetReader(DatasetReader):
 
         self.exhausted = True
 
-        data_provider = WELL_KNOWN_DATASETS.get(self.dataset_name)
+        data_provider, _ = WELL_KNOWN_DATASETS.get(self.dataset_name)
         if data_provider is None:
             suggestion = suggest(self.dataset_name.lower())
             raise DatasetNotFoundError(message=suggestion, dataset=self.dataset_name)
-        return data_provider.read(self.date)
+        return data_provider.read(self.date, self.variables)

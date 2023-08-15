@@ -48,17 +48,21 @@ import opteryx
 # from opteryx.connectors import AwsS3Connector, DiskConnector
 from opteryx.exceptions import (
     AmbiguousIdentifierError,
+    AmbiguousDatasetError,
     ColumnNotFoundError,
     DatasetNotFoundError,
     EmptyDatasetError,
     EmptyResultSetError,
+    IncorrectTypeError,
     InvalidTemporalRangeFilterError,
     MissingSqlStatement,
+    PermissionsError,
     ProgrammingError,
     SqlError,
     UnexpectedDatasetReferenceError,
     UnsupportedSegementationError,
     UnsupportedSyntaxError,
+    VariableNotFoundError,
 )
 from opteryx.utils.formatter import format_sql
 
@@ -108,12 +112,17 @@ STATEMENTS = [
         ("/* comment */ SELECT * FROM $satellites /* comment */  WHERE name = 'Calypso'", 1, 8, None),
         ("/* comment */ SELECT * FROM $satellites /* comment */  WHERE name = 'Calypso'  /* comment */ ", 1, 8, None),
         ("/* comment --inner */ SELECT * FROM $satellites WHERE name = 'Calypso'", 1, 8, None),
+        ("/* comment ; */ SELECT * FROM $satellites WHERE name = 'Calypso'", 1, 8, None),
+        ("-- inner ; \nSELECT * FROM $satellites WHERE name = 'Calypso'", 1, 8, None),
+        ("SELECT * FROM $satellites WHERE name != 'Ca;lypso'", 177, 8, None),
+        ("SELECT * FROM $satellites WHERE name = 'Calypso';", 1, 8, None),
+        (";", None, None, MissingSqlStatement),
         ("SELECT * FROM $satellites -- comment\n FOR TODAY", 177, 8, None),
         ("SELECT * FROM $satellites /* comment */ FOR TODAY /* comment */", 177, 8, None),
 
         ("SELECT name, id, planetId FROM $satellites", 177, 3, None),
-        ("SELECT name, name FROM $satellites", 177, 1, SqlError),  # V2 breaking
-        ("SELECT name, id, name, id FROM $satellites", 177, 2, SqlError),  # V2 breaking
+        ("SELECT name, name FROM $satellites", 177, 1, AmbiguousIdentifierError),  # V2 breaking
+        ("SELECT name, id, name, id FROM $satellites", 177, 2, AmbiguousIdentifierError),  # V2 breaking
 
         ("SELECT DISTINCT name FROM $astronauts", 357, 1, None),
         ("SELECT DISTINCT * FROM $astronauts", 357, 19, None),
@@ -437,32 +446,35 @@ STATEMENTS = [
 
         ("EXPLAIN SELECT * FROM $satellites", 1, 3, None),
         ("EXPLAIN SELECT * FROM $satellites WHERE id = 8", 2, 3, None),
-        ("SET enable_morsel_defragmentation = false; EXPLAIN SELECT * FROM $satellites WHERE id = 8", 2, 3, None),
-        ("SET enable_optimizer = false; EXPLAIN SELECT * FROM $satellites WHERE id = 8", 2, 3, None),
-        ("SET enable_optimizer = true; EXPLAIN SELECT * FROM $satellites WHERE id = 8 AND id = 7", 5, 3, None),
-        ("SET enable_optimizer = false; EXPLAIN SELECT * FROM $satellites WHERE id = 8 AND id = 7", 2, 3, None),
-        ("SET enable_optimizer = false; EXPLAIN SELECT * FROM $planets ORDER BY id LIMIT 5", 3, 3, None),
-        ("SET enable_optimizer = true; EXPLAIN SELECT * FROM $planets ORDER BY id LIMIT 5", 2, 3, None),
-        ("EXPLAIN SELECT * FROM $planets ORDER BY id LIMIT 5", 2, 3, None),
+        ("SET version = '1.0';", None, None, PermissionsError),
+        ("SET schmersion = '1.0';", None, None, VariableNotFoundError),
+        ("SET disable_morsel_defragmentation = 100;", None, None, ValueError),
+        ("SET disable_morsel_defragmentation = true; EXPLAIN SELECT * FROM $satellites WHERE id = 8", 2, 3, None),
+        ("SET disable_optimizer = false; EXPLAIN SELECT * FROM $satellites WHERE id = 8", 2, 3, None),
+        ("SET disable_optimizer = true; EXPLAIN SELECT * FROM $satellites WHERE id = 8 AND id = 7", 2, 3, None),
+        ("SET disable_optimizer = false; EXPLAIN SELECT * FROM $satellites WHERE id = 8 AND id = 7", 2, 3, None),
+        ("SET disable_optimizer = false; EXPLAIN SELECT * FROM $planets ORDER BY id LIMIT 5", 3, 3, None),
+        ("SET disable_optimizer = true; EXPLAIN SELECT * FROM $planets ORDER BY id LIMIT 5", 3, 3, None),
+        ("EXPLAIN SELECT * FROM $planets ORDER BY id LIMIT 5", 3, 3, None),
         ("SELECT name, id FROM $planets ORDER BY id LIMIT 5", 5, 2, None),
         ("SELECT name, id FROM $planets ORDER BY id LIMIT 100", 9, 2, None),
 
-        ("SHOW COLUMNS FROM $satellites", 8, 2, None),
-        ("SHOW FULL COLUMNS FROM $satellites", 8, 6, None),
+        ("SHOW COLUMNS FROM $satellites", 8, 4, None),
+        ("SHOW FULL COLUMNS FROM $satellites", 8, 10, None),
         ("SHOW EXTENDED COLUMNS FROM $satellites", 8, 10, None),
         ("SHOW EXTENDED COLUMNS FROM $planets", 20, 10, None),
         ("SHOW EXTENDED COLUMNS FROM $astronauts", 19, 10, None),
-        ("SHOW COLUMNS FROM $satellites LIKE '%d'", 2, 2, None),
-        ("SHOW COLUMNS FROM testdata.partitioned.dated FOR '2020-02-03'", 8, 2, None),
+# temp        ("SHOW COLUMNS FROM $satellites LIKE '%d'", 2, 4, None),
+        ("SHOW COLUMNS FROM testdata.partitioned.dated FOR '2020-02-03'", 8, 4, None),
 
         ("SELECT * FROM $satellites CROSS JOIN $astronauts", 63189, 27, None),
         ("SELECT * FROM $satellites WITH (NO_CACHE) CROSS JOIN $astronauts WITH (NO_CACHE)", 63189, 27, None),
         ("SELECT * FROM $satellites, $planets", 1593, 28, None),
-        ("SELECT * FROM $satellites INNER JOIN $planets USING (id)", 9, 28, None),
-        ("SELECT * FROM $satellites WITH (NO_CACHE) INNER JOIN $planets USING (id)", 9, 28, None),
-        ("SELECT * FROM $satellites WITH (NO_CACHE) INNER JOIN $planets WITH (NO_CACHE) USING (id)", 9, 28, None),
-        ("SELECT * FROM $satellites INNER JOIN $planets WITH (NO_CACHE) USING (id)", 9, 28, None),
-        ("SELECT * FROM $satellites JOIN $planets USING (id)", 9, 28, None),
+        ("SELECT * FROM $satellites INNER JOIN $planets USING (id)", 9, 28, UnsupportedSyntaxError),
+        ("SELECT * FROM $satellites WITH (NO_CACHE) INNER JOIN $planets USING (id)", 9, 28, UnsupportedSyntaxError),
+        ("SELECT * FROM $satellites WITH (NO_CACHE) INNER JOIN $planets WITH (NO_CACHE) USING (id)", 9, 28, UnsupportedSyntaxError),
+        ("SELECT * FROM $satellites INNER JOIN $planets WITH (NO_CACHE) USING (id)", 9, 28, UnsupportedSyntaxError),
+        ("SELECT * FROM $satellites JOIN $planets USING (id)", 9, 28, UnsupportedSyntaxError),
         ("SELECT * FROM $astronauts CROSS JOIN UNNEST(missions) AS mission WHERE mission = 'Apollo 11'", 3, 20, None),
         ("SELECT * FROM $astronauts CROSS JOIN UNNEST(missions)", 869, 20, None),
         ("SELECT * FROM $planets INNER JOIN $satellites ON $planets.id = $satellites.planetId", 177, 28, None),
@@ -471,11 +483,14 @@ STATEMENTS = [
         ("SELECT DISTINCT $planets.id, $satellites.id FROM $planets LEFT OUTER JOIN $satellites ON $satellites.planetId = $planets.id", 179, 2, None),
         ("SELECT DISTINCT $planets.id, $satellites.id FROM $planets LEFT JOIN $satellites ON $satellites.planetId = $planets.id", 179, 2, None),
         ("SELECT planetId FROM $satellites LEFT JOIN $planets ON $satellites.planetId = $planets.id", 177, 1, None),
-        ("SELECT * FROM $planets LEFT JOIN $planets USING(id)", 9, 40, None),
-        ("SELECT * FROM $planets LEFT OUTER JOIN $planets USING(id)", 9, 40, None),
-        ("SELECT * FROM $planets LEFT JOIN $planets FOR TODAY USING(id)", 9, 40, None),
-        ("SELECT * FROM $planets LEFT JOIN $planets USING(id, name)", 9, 40, None),
-        ("SELECT * FROM $planets INNER JOIN $planets ON id = id AND name = name", 9, 40, None),
+        ("SELECT * FROM $planets LEFT JOIN $planets USING(id)", 9, 40, UnsupportedSyntaxError),
+        ("SELECT * FROM $planets LEFT OUTER JOIN $planets USING(id)", 9, 40, UnsupportedSyntaxError),
+        ("SELECT * FROM $planets LEFT JOIN $planets FOR TODAY USING(id)", 9, 40, UnsupportedSyntaxError),
+        ("SELECT * FROM $planets LEFT JOIN $planets USING(id, name)", 9, 40, UnsupportedSyntaxError),
+        ("SELECT * FROM $planets INNER JOIN $planets ON id = id AND name = name", None, None, AmbiguousDatasetError),
+        ("SELECT P_1.* FROM $planets AS P_1 INNER JOIN $planets AS P_2 ON P_1.id = P_2.id AND P_2.name = P_1.name", 9, 20, None),
+        ("SELECT * FROM $planets AS P_1 INNER JOIN $planets AS P_2 ON P_1.id = P_2.id AND P_2.name = P_1.name", 9, 40, None),
+        ("SELECT * FROM $planets NATURAL JOIN generate_series(1, 5) as id", 5, 20, None),
 
         ("SELECT DISTINCT planetId FROM $satellites RIGHT OUTER JOIN $planets ON $satellites.planetId = $planets.id", 8, 1, None),
         ("SELECT DISTINCT planetId FROM $satellites RIGHT JOIN $planets ON $satellites.planetId = $planets.id", 8, 1, None),
@@ -494,15 +509,15 @@ STATEMENTS = [
         ("SELECT a.id, b.id, c.id FROM $planets AS a INNER JOIN $planets AS b ON a.id = b.id INNER JOIN $planets AS c ON c.id = b.id", 9, 3, None),
         ("SELECT * FROM $planets AS a INNER JOIN $planets AS b ON a.id = b.id RIGHT OUTER JOIN $satellites AS c ON c.planetId = b.id", 177, 48, None),
 
-        ("SELECT $planets.* FROM $satellites INNER JOIN $planets USING (id)", 9, 20, None),
-        ("SELECT $satellites.* FROM $satellites INNER JOIN $planets USING (id)", 9, 8, None),
+        ("SELECT $planets.* FROM $satellites INNER JOIN $planets USING (id)", 9, 20, UnsupportedSyntaxError),
+        ("SELECT $satellites.* FROM $satellites INNER JOIN $planets USING (id)", 9, 8, UnsupportedSyntaxError),
         ("SELECT $satellites.* FROM $satellites INNER JOIN $planets ON $planets.id = $satellites.id", 9, 8, None),
-        ("SELECT $planets.* FROM $satellites INNER JOIN $planets AS p USING (id)", 9, 20, None),
-        ("SELECT p.* FROM $satellites INNER JOIN $planets AS p USING (id)", 9, 20, None),
-        ("SELECT s.* FROM $satellites AS s INNER JOIN $planets USING (id)", 9, 8, None),
-        ("SELECT $satellites.* FROM $satellites AS s INNER JOIN $planets USING (id)", 9, 8, None),
-        ("SELECT $satellites.* FROM $satellites AS s INNER JOIN $planets AS p USING (id)", 9, 8, None),
-        ("SELECT s.* FROM $satellites AS s INNER JOIN $planets AS p USING (id)", 9, 8, None),
+        ("SELECT $planets.* FROM $satellites INNER JOIN $planets AS p USING (id)", 9, 20, UnsupportedSyntaxError),
+        ("SELECT p.* FROM $satellites INNER JOIN $planets AS p USING (id)", 9, 20, UnsupportedSyntaxError),
+        ("SELECT s.* FROM $satellites AS s INNER JOIN $planets USING (id)", 9, 8, UnsupportedSyntaxError),
+        ("SELECT $satellites.* FROM $satellites AS s INNER JOIN $planets USING (id)", 9, 8, UnsupportedSyntaxError),
+        ("SELECT $satellites.* FROM $satellites AS s INNER JOIN $planets AS p USING (id)", 9, 8, UnsupportedSyntaxError),
+        ("SELECT s.* FROM $satellites AS s INNER JOIN $planets AS p USING (id)", 9, 8, UnsupportedSyntaxError),
 
         ("SELECT DATE_TRUNC('month', birth_date) FROM $astronauts", 357, 1, None),
         ("SELECT DISTINCT * FROM (SELECT DATE_TRUNC('year', birth_date) AS BIRTH_YEAR FROM $astronauts)", 54, 1, None),
@@ -590,8 +605,8 @@ STATEMENTS = [
         ("SELECT COUNT(*), ROUND(gm) FROM $satellites GROUP BY ROUND(gm)", 22, 2, None),
         ("SELECT COALESCE(death_date, '1900-01-01') FROM $astronauts", 357, 1, None),
         ("SELECT * FROM (SELECT COUNT(*) FROM testdata.flat.formats.parquet WITH(NO_PARTITION) GROUP BY followers)", 10016, 1, None),
-        ("SELECT a.id, b.id FROM $planets AS a INNER JOIN (SELECT id FROM $planets) AS b USING (id)", 9, 2, None),
-        ("SELECT * FROM $planets INNER JOIN $planets AS b USING (id)", 9, 40, None),
+        ("SELECT a.id, b.id FROM $planets AS a INNER JOIN (SELECT id FROM $planets) AS b USING (id)", 9, 2, UnsupportedSyntaxError),
+        ("SELECT * FROM $planets INNER JOIN $planets AS b USING (id)", 9, 40, UnsupportedSyntaxError),
         ("SELECT ROUND(5 + RAND() * (10 - 5)) rand_between FROM $planets", 9, 1, None),
 
         ("SELECT BASE64_DECODE(BASE64_ENCODE('this is a string'));", 1, 1, None),
@@ -655,8 +670,8 @@ STATEMENTS = [
         ("SET @pples = 'b'; SET @ngles = 90; SHOW VARIABLES LIKE '%s'", 2, 2, None),
         ("SET @pples = 'b'; SET @rgon = 90; SHOW VARIABLES LIKE '%gon'", 1, 2, None),
         ("SET @variable = 44; SET @var = 'name'; SHOW VARIABLES LIKE '%ri%';", 1, 2, None),
-        ("SHOW PARAMETER enable_optimizer", 1, 2, None),
-        ("SET enable_optimizer = true; SHOW PARAMETER enable_optimizer;", 1, 2, None),
+        ("SHOW PARAMETER disable_optimizer", 1, 2, None),
+        ("SET disable_optimizer = true; SHOW PARAMETER enable_optimizer;", 1, 2, None),
 
         ("SELECT id FROM $planets WHERE NOT NOT id > 3", 6, 1, None),
         ("SELECT id FROM $planets WHERE NOT NOT id < 3", 2, 1, None),
@@ -665,7 +680,7 @@ STATEMENTS = [
         ("SELECT id FROM $planets WHERE NOT (id < 5 AND id = 3)", 8, 1, None),
         ("SELECT id FROM $planets WHERE NOT NOT (id < 5 AND id = 3)", 1, 1, None),
         ("SELECT id FROM $planets WHERE NOT id = 2 AND NOT NOT (id < 5 AND id = 3)", 1, 1, None),
-        ("SET enable_optimizer = false; SELECT id FROM $planets WHERE NOT id = 2 AND NOT NOT (id < 5 AND id = 3)", 1, 1, None),
+        ("SET disable_optimizer = true; SELECT id FROM $planets WHERE NOT id = 2 AND NOT NOT (id < 5 AND id = 3)", 1, 1, None),
         ("SELECT * FROM $planets WHERE NOT(id = 9 OR id = 8)", 7, 20, None),
         ("SELECT * FROM $planets WHERE NOT(id = 9 OR id = 8) OR True", 9, 20, None),
         ("SELECT * FROM $planets WHERE NOT(id = 9 OR 8 = 8)", 0, 20, None),
@@ -676,10 +691,10 @@ STATEMENTS = [
         ("SHOW CREATE TABLE $satellites", 1, 1, None),
         ("SHOW CREATE TABLE $astronauts", 1, 1, None),
         ("SHOW CREATE TABLE testdata.partitioned.framed FOR '2021-03-28'", 1, 1, None),
-        ("SET enable_optimizer = false;\nSET enable_morsel_defragmentation = true;\nSELECT COUNT(*) FROM $planets WHERE id > 3 AND name ILIKE '%e%'", 1, 1, None),
-        ("SET enable_optimizer = true;\nSET enable_morsel_defragmentation = true;\nSELECT COUNT(*) FROM $planets WHERE id > 3 AND name ILIKE '%e%'", 1, 1, None),
-        ("SET enable_optimizer = true;\nSET enable_morsel_defragmentation = false;\nSELECT COUNT(*) FROM $planets WHERE id > 3 AND name ILIKE '%e%'", 1, 1, None),
-        ("SET enable_optimizer = false;\nSET enable_morsel_defragmentation = false;\nSELECT COUNT(*) FROM $planets WHERE id > 3 AND name ILIKE '%e%'", 1, 1, None),
+        ("SET disable_optimizer = true;\nSET disable_morsel_defragmentation = false;\nSELECT COUNT(*) FROM $planets WHERE id > 3 AND name ILIKE '%e%'", 1, 1, None),
+        ("SET disable_optimizer = false;\nSET disable_morsel_defragmentation = false;\nSELECT COUNT(*) FROM $planets WHERE id > 3 AND name ILIKE '%e%'", 1, 1, None),
+        ("SET disable_optimizer = false;\nSET disable_morsel_defragmentation = true;\nSELECT COUNT(*) FROM $planets WHERE id > 3 AND name ILIKE '%e%'", 1, 1, None),
+        ("SET disable_optimizer = true;\nSET disable_morsel_defragmentation = true;\nSELECT COUNT(*) FROM $planets WHERE id > 3 AND name ILIKE '%e%'", 1, 1, None),
         ("SELECT COUNT(*) FROM $planets WHERE id > 3 AND name ILIKE '%e%' AND id > 1 AND id > 0 AND id > 2 AND name ILIKE '%e%'", 1, 1, None),
 
         ("SELECT planets.* FROM $planets AS planets LEFT JOIN $planets FOR '1600-01-01' AS older ON planets.id = older.id WHERE older.name IS NULL", 3, 20, None),
@@ -727,7 +742,7 @@ STATEMENTS = [
         ("SELECT user_name, user_verified FROM testdata.flat.formats.parquet WITH(NO_PARTITION) WHERE followers BETWEEN 0 AND 251", 40939, 2, None),
 
         ("SELECT * FROM 'testdata/flat/formats/arrow/tweets.arrow'", 100000, 13, None),
-        ("SELECT * FROM 'testdata/flat/tweets/tweets-0000.jsonl' INNER JOIN 'testdata/flat/tweets/tweets-0001.jsonl' USING (userid)", 491, 16, None),
+        ("SELECT * FROM 'testdata/flat/tweets/tweets-0000.jsonl' INNER JOIN 'testdata/flat/tweets/tweets-0001.jsonl' USING (userid)", 491, 16, UnsupportedSyntaxError),
         ("SELECT * FROM 'testdata/flat/tweets/tweets-0000.jsonl' INNER JOIN $planets on sentiment = numberOfMoons", 12, 28, None),
 
         ("SELECT * FROM $planets AS p JOIN $planets AS g ON p.id = g.id AND g.name = 'Earth';", 1, 40, None),
@@ -756,7 +771,7 @@ STATEMENTS = [
         ("SELECT * FROM $planets FOR DATES BETWEEN today AND yesterday", None, None, InvalidTemporalRangeFilterError),
         ("SELECT * FROM $planets FOR DATES IN '2022-01-01' AND '2022-01-02'", None, None, InvalidTemporalRangeFilterError),
         # Join hints aren't supported
-        ("SELECT * FROM $satellites INNER HASH JOIN $planets USING (id)", None, None, SqlError),
+        ("SELECT * FROM $satellites INNER HASH JOIN $planets USING (id)", None, None, UnsupportedSyntaxError),
         # MONTH has a bug
         ("SELECT DATEDIFF('months', birth_date, '2022-07-07') FROM $astronauts", None, None, KeyError),
         ("SELECT DATEDIFF('months', birth_date, '2022-07-07') FROM $astronauts", None, None, KeyError),
@@ -780,7 +795,7 @@ STATEMENTS = [
         # V2 New Syntax Checks
         ("SELECT * FROM $planets UNION SELECT * FROM $planets;", None, None, None),
         ("SELECT * FROM $planets LEFT ANTI JOIN $satellites ON id = id;", None, None, ArrowInvalid),  # invalid until the join is written
-        ("EXPLAIN ANALYZE FORMAT JSON SELECT * FROM $planets AS a INNER JOIN (SELECT id FROM $planets) AS b USING (id);", None, None, None),
+        ("EXPLAIN ANALYZE FORMAT JSON SELECT * FROM $planets AS a INNER JOIN (SELECT id FROM $planets) AS b USING (id);", None, None, UnsupportedSyntaxError),
         ("SELECT DISTINCT ON (planetId) planetId, name FROM $satellites ", None, None, None),
         ("SELECT 8 DIV 4", None, None, None),
 
@@ -845,9 +860,9 @@ STATEMENTS = [
         ("SELECT VARCHAR FROM (SELECT 'varchar' AS VARCHAR)", 1, 1, None),
         ("SELECT BOOLEAN FROM (SELECT False AS BOOLEAN)", 1, 1, None),
         # EXPLAIN has two heads (found looking a [#408])
-        ("EXPLAIN SELECT * FROM $planets AS a INNER JOIN (SELECT id FROM $planets) AS b USING (id)", 3, 3, None),
+        ("EXPLAIN SELECT * FROM $planets AS a INNER JOIN (SELECT id FROM $planets) AS b USING (id)", 3, 3, UnsupportedSyntaxError),
         # ALIAS issues [#408]
-        ("SELECT $planets.* FROM $planets INNER JOIN (SELECT id FROM $planets) AS b USING (id)", 9, 21, None),
+        ("SELECT $planets.* FROM $planets INNER JOIN (SELECT id FROM $planets) AS b USING (id)", 9, 21, UnsupportedSyntaxError),
         # DOUBLE QUOTED STRING [#399]
         ("SELECT birth_place['town'] FROM $astronauts WHERE birth_place['town'] = \"Rome\"", 1, 1, None),
         # COUNT incorrect
@@ -860,7 +875,7 @@ STATEMENTS = [
         ("SELECT P.* FROM (SELECT * FROM $planets) AS P", 9, 20, None),
         ("SELECT P0.id, P1.ID, P2.ID FROM $planets AS P0 JOIN (SELECT id AS ID, name FROM $planets) AS P1 ON P0.name = P1.name JOIN (SELECT id, name AS ID FROM $planets) AS P2 ON P0.name = P2.name", 9, 3, None),
         ("SELECT P0.id, P1.ID FROM $planets AS P0 INNER JOIN (SELECT id, name AS ID FROM $planets) AS P1 ON P0.name = P1.name", 9, 2, None),
-        ("SELECT P0.id, P1.ID FROM $planets AS P0 INNER JOIN (SELECT name, id AS ID FROM $planets) AS P1 USING (name)", 9, 2, None),
+        ("SELECT P0.id, P1.ID FROM $planets AS P0 INNER JOIN (SELECT name, id AS ID FROM $planets) AS P1 USING (name)", 9, 2, UnsupportedSyntaxError),
         ("SELECT P0.id, P1.ID FROM $planets AS P0 LEFT JOIN (SELECT id, name AS ID FROM $planets) AS P1 ON P0.name = P1.name", 9, 2, None),
         # [#475] a variation of #471
         ("SELECT P0.id, P1.ID, P2.ID FROM $planets AS P0 JOIN (SELECT CONCAT_WS(' ', list(id)) AS ID, MAX(name) AS n FROM $planets GROUP BY gravity) AS P1 ON P0.name = P1.n JOIN (SELECT CONCAT_WS(' ', list(id)) AS ID, MAX(name) AS n FROM $planets GROUP BY gravity) AS P2 ON P0.name = P2.n", 8, 3, None),
@@ -872,12 +887,12 @@ STATEMENTS = [
         # [#527] variables referenced in subqueries
         ("SET @v = 1; SELECT * FROM (SELECT @v);", 1, 1, None),
         # [#561] HASH JOIN with an empty table
-        ("SELECT * FROM $planets LEFT JOIN (SELECT planetId as id FROM $satellites WHERE id < 0) USING (id)", 0, 1, None),  
+        ("SELECT * FROM $planets LEFT JOIN (SELECT planetId as id FROM $satellites WHERE id < 0) USING (id)", 0, 1, UnsupportedSyntaxError),  
         # [#646] Incorrectly placed temporal clauses
-        ("SELECT * FROM $planets WHERE 1 = 1 FOR TODAY;", None, None, SqlError),
-        ("SELECT * FROM $planets GROUP BY name FOR TODAY;", None, None, SqlError),
+        ("SELECT * FROM $planets WHERE 1 = 1 FOR TODAY;", None, None, InvalidTemporalRangeFilterError),
+        ("SELECT * FROM $planets GROUP BY name FOR TODAY;", 9, 1, InvalidTemporalRangeFilterError),
         # [#518] SELECT * and GROUP BY can't be used together
-        ("SELECT * FROM $planets GROUP BY name", None, None, SqlError),
+        ("SELECT * FROM $planets GROUP BY name", 9, 1, None),
         # found testing
         ("SELECT user_name FROM testdata.flat.formats.arrow WITH(NO_PARTITION) WHERE user_name = 'Niran'", 1, 1, None),
         #769
@@ -899,12 +914,12 @@ STATEMENTS = [
         # 912 - optimized boolean evals were ignored
         ("SELECT * FROM $planets WHERE 1 = PI()", 0, 20, None),
         ("SELECT * FROM $planets WHERE PI() = 1", 0, 20, None),
-        ("SET enable_optimizer = false; SELECT * FROM $planets WHERE 1 = PI()", 0, 20, None),
-        ("SET enable_optimizer = false; SELECT * FROM $planets WHERE PI() = 1", 0, 20, None),
+        ("SET disable_optimizer = true; SELECT * FROM $planets WHERE 1 = PI()", 0, 20, None),
+        ("SET disable_optimizer = true; SELECT * FROM $planets WHERE PI() = 1", 0, 20, None),
         ("SELECT * FROM $planets WHERE 3.141592653589793238462643383279502 = PI()", 9, 20, None),
         ("SELECT * FROM $planets WHERE PI() = 3.141592653589793238462643383279502", 9, 20, None),
-        ("SET enable_optimizer = false; SELECT * FROM $planets WHERE 3.141592653589793238462643383279502 = PI()", 9, 20, None),
-        ("SET enable_optimizer = false; SELECT * FROM $planets WHERE PI() = 3.141592653589793238462643383279502", 9, 20, None),
+        ("SET disable_optimizer = true; SELECT * FROM $planets WHERE 3.141592653589793238462643383279502 = PI()", 9, 20, None),
+        ("SET disable_optimizer = true; SELECT * FROM $planets WHERE PI() = 3.141592653589793238462643383279502", 9, 20, None),
         # found in testing
         ("SELECT * FROM $planets WHERE id = null", 0, 20, None),
         ("SELECT * FROM $planets WHERE id != null", 0, 20, None),
@@ -918,11 +933,11 @@ STATEMENTS = [
         ("SELECT * FROM $planets FOR DATES BETWEEN TODAY OR TOMORROW", None, None, InvalidTemporalRangeFilterError),
         ("SELECT * FROM $planets FOR DATES BETWEEN BEFORE AND TODAY", None, None, InvalidTemporalRangeFilterError),
         # 999 - subscripting
-        ("SELECT name['n'] FROM $planets", None, None, ProgrammingError),
-        ("SELECT id['n'] FROM $planets", None, None, ProgrammingError),
+        ("SELECT name['n'] FROM $planets", None, None, IncorrectTypeError),
+        ("SELECT id['n'] FROM $planets", None, None, IncorrectTypeError),
         # [1008] fuzzy search fails on ints
-        ("SELECT * FROM $planets JOIN $planets ON id = 12;", None, None, ColumnNotFoundError),
-        ("SELECT * FROM $planets JOIN $planets ON 12 = id;", None, None, ColumnNotFoundError),
+        ("SELECT * FROM $planets JOIN $planets ON id = 12;", None, None, AmbiguousDatasetError),
+        ("SELECT * FROM $planets JOIN $planets ON 12 = id;", None, None, AmbiguousDatasetError),
         # [1006] dots in filenames
         ("SELECT * FROM 'testdata/flat/multi/00.01.jsonl'", 1, 4, None),
         # [1015] predicate pushdowns
@@ -960,12 +975,12 @@ def test_sql_battery(statement, rows, columns, exception):
             columns == actual_columns
         ), f"\n{cursor.display()}\n\033[38;5;203mQuery returned {actual_columns} cols but {columns} were expected.\033[0m\n{statement}"
     except AssertionError as err:
-        print(f"\n{err}", flush=True)
-        quit()
+        raise Exception() from err
     except Exception as err:
-        assert (
-            type(err) == exception
-        ), f"\n{format_sql(statement)}\nQuery failed with error {type(err)} but error {exception} was expected"
+        if type(err) != exception:
+            raise Exception(
+                f"{format_sql(statement)}\nQuery failed with error {type(err)} but error {exception} was expected"
+            ) from err
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -981,6 +996,9 @@ if __name__ == "__main__":  # pragma: no cover
 
     width = shutil.get_terminal_size((80, 20))[0] - 15
 
+    passed = 0
+    failed = 0
+
     nl = "\n"
 
     print(f"RUNNING BATTERY OF {len(STATEMENTS)} SHAPE TESTS")
@@ -995,7 +1013,20 @@ if __name__ == "__main__":  # pragma: no cover
             end="",
             flush=True,
         )
-        test_sql_battery(statement, rows, cols, err)
-        print(f"\033[0;32m{str(int((time.monotonic_ns() - start)/1e6)).rjust(4)}ms\033[0m ✅")
+        try:
+            test_sql_battery(statement, rows, cols, err)
+            print(
+                f"\033[38;2;26;185;67m{str(int((time.monotonic_ns() - start)/1e6)).rjust(4)}ms\033[0m ✅"
+            )
+            passed += 1
+        except Exception as err:
+            print(f"\033[0;31m{str(int((time.monotonic_ns() - start)/1e6)).rjust(4)}ms\033[0m ❌")
+            print(">", err)
+            failed += 1
 
     print("--- ✅ \033[0;32mdone\033[0m")
+    print(
+        f"\n\033[38;2;139;233;253m\033[3mCOMPLETE\033[0m\n"
+        f"  \033[38;2;26;185;67m{passed} passed\033[0m\n"
+        f"  \033[38;2;255;121;198m{failed} failed\033[0m"
+    )

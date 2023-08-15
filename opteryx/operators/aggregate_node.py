@@ -122,7 +122,7 @@ def build_aggregations(aggregators):
             function = AGGREGATORS.get(aggregator.value)
             if aggregator.value == "ARRAY_AGG":
                 # if the array agg is distinct, base off that function instead
-                if aggregator.parameters[1]:
+                if aggregator.distinct:
                     function = "distinct"
             aggs.append((field_name, function, count_options))
             column_map[aggregator.schema_column.identity] = f"{field_name}_{function}".replace(

@@ -56,7 +56,7 @@ from opteryx.components import logical_planner_builders
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import format_expression
 from opteryx.managers.expression import get_all_nodes_of_type
-from opteryx.models.node import Node
+from opteryx.models import Node
 from opteryx.third_party.travers import Graph
 
 sys.path.insert(1, os.path.join(sys.path[0], "../../../.."))  # isort:skip
@@ -118,9 +118,9 @@ class LogicalPlanNode(Node):
                 return f"FILTER ({format_expression(self.condition)})"
             if node_type == LogicalPlanStepType.Join:
                 if self.on:
-                    return f"{self.type.upper()} ({format_expression(self.on)})"
+                    return f"{self.type.upper()} JOIN ({format_expression(self.on)})"
                 if self.using:
-                    return f"{self.type.upper()} (USING {','.join(format_expression(self.using))})"
+                    return f"{self.type.upper()} JOIN (USING {','.join(format_expression(self.using))})"
                 return self.type.upper()
             if node_type == LogicalPlanStepType.Limit:
                 limit_str = f"LIMIT ({self.limit})" if self.limit is not None else ""
@@ -136,7 +136,12 @@ class LogicalPlanNode(Node):
                     date_range = f" FOR '{self.start_date}'"
                 elif self.start_date is not None:
                     date_range = f" FOR '{self.start_date}' TO '{self.end_date}'"
-                return f"SCAN ({self.relation}{' AS ' + self.alias if self.alias else ''}{date_range}{' WITH(' + ','.join(self.hints) + ')' if self.hints else ''})"
+                alias = ""
+                if self.relation != self.alias:
+                    alias = f" AS {self.alias}"
+                return f"SCAN ({self.relation}{alias}{date_range}{' WITH(' + ','.join(self.hints) + ')' if self.hints else ''})"
+            if node_type == LogicalPlanStepType.Set:
+                return f"SET ({self.variable} TO {self.value.value})"
             if node_type == LogicalPlanStepType.Show:
                 return f"SHOW ({', '.join(self.items)})"
             if node_type == LogicalPlanStepType.ShowColumns:
@@ -207,7 +212,7 @@ def inner_query_planner(ast_branch):
     # If there's any peer relations, they are implicit cross joins
     if len(_relations) > 1:
         join_step = LogicalPlanNode(node_type=LogicalPlanStepType.Join)
-        join_step.type = "Cross Join"
+        join_step.type = "cross join"
         step_id = random_string()
         inner_plan.add_node(step_id, join_step)
         for relation in _relations:
@@ -426,9 +431,20 @@ def create_node_relation(relation):
         # add the join node
         join_step = LogicalPlanNode(node_type=LogicalPlanStepType.Join, join=join["join_operator"])
         if join["join_operator"] == {"Inner": "Natural"}:
-            join_step.type = "Natural Join"
+            join_step.type = "natural join"
         elif join["join_operator"] == "CrossJoin":
-            join_step.type = "Cross Join"
+            # CROSS JOIN UNNEST is a special case
+            if join["relation"]["Table"]["name"][0]["value"].upper() == "UNNEST":
+                join_step.type = "cross join unnest"
+                join_step.column = logical_planner_builders.build(
+                    join["relation"]["Table"]["args"][0]
+                )
+                if join["relation"]["Table"]["alias"]:
+                    join_step.alias = join["relation"]["Table"]["alias"]["name"]["value"]
+                else:
+                    join_step.alias = f"UNNEST({join_step.column.value})"
+            else:
+                join_step.type = "cross join"
         else:
             join_operator = next(iter(join["join_operator"]))
             join_condition = next(iter(join["join_operator"][join_operator]))
@@ -451,12 +467,18 @@ def create_node_relation(relation):
                     logical_planner_builders.build({"Identifier": identifier})
                     for identifier in join["join_operator"][join_operator][join_condition]
                 ]
-        join_step_id = random_string()
-        sub_plan.add_node(join_step_id, join_step)
-        # add the other side of the join
 
         right_node_id, right_plan = create_node_relation(join)
+
+        # add the left and right relation names - we sometimes need these later
+        join_step.left_relation_name = sub_plan[sub_plan.get_entry_points()[0]].relation
+        join_step.right_relation_name = right_plan[right_plan.get_entry_points()[0]].relation
+
+        # add the other side of the join
         sub_plan += right_plan
+
+        join_step_id = random_string()
+        sub_plan.add_node(join_step_id, join_step)
 
         # add the from table as the left side of the join
         sub_plan.add_edge(root_node, join_step_id, "left")
@@ -547,20 +569,31 @@ def plan_set_variable(statement):
 def plan_show_columns(statement):
     root_node = "ShowColumns"
     plan = LogicalPlan()
+
+    from_step = LogicalPlanNode(node_type=LogicalPlanStepType.Scan)
+    table = statement[root_node]["table_name"]
+    from_step.relation = ".".join(part["value"] for part in table)
+    from_step.alias = from_step.relation
+    from_step.start_date = table[0].get("start_date")
+    from_step.end_date = table[0].get("end_date")
+    step_id = random_string()
+    plan.add_node(step_id, from_step)
+
     show_step = LogicalPlanNode(node_type=LogicalPlanStepType.ShowColumns)
     show_step.extended = statement[root_node]["extended"]
     show_step.full = statement[root_node]["full"]
-    show_step.relation = ".".join([part["value"] for part in statement[root_node]["table_name"]])
-    show_step_id = random_string()
-    plan.add_node(show_step_id, show_step)
+    show_step.relation = from_step.relation
+    previous_step_id, step_id = step_id, random_string()
+    plan.add_node(step_id, show_step)
+    plan.add_edge(previous_step_id, step_id)
 
     _filter = statement[root_node]["filter"]
     if _filter:
         filter_node = LogicalPlanNode(node_type=LogicalPlanStepType.Filter)
-        filter_node.filter = extract_simple_filter(_filter, "Column")
-        filter_node_id = random_string()
-        plan.add_node(filter_node_id, filter_node)
-        plan.add_edge(filter_node_id, show_step_id)
+        filter_node.condition = extract_simple_filter(_filter, "name")
+        previous_step_id, step_id = step_id, random_string()
+        plan.add_node(step_id, filter_node)
+        plan.add_edge(previous_step_id, step_id)
 
     return plan
 
@@ -578,7 +611,8 @@ def plan_show_variables(statement):
     root_node = "ShowVariables"
     plan = LogicalPlan()
 
-    read_step = LogicalPlanNode(node_type=LogicalPlanStepType.Scan, source="$variables")
+    read_step = LogicalPlanNode(node_type=LogicalPlanStepType.Scan)
+    read_step.relation = "$variables"
     step_id = random_string()
     plan.add_node(step_id, read_step)
 
@@ -587,16 +621,24 @@ def plan_show_variables(statement):
         operator = next(iter(predicate))
         select_step = LogicalPlanNode(
             node_type=LogicalPlanStepType.Filter,
-            predicate=Node(
+            condition=Node(
                 node_type=NodeType.COMPARISON_OPERATOR,
                 value=operator,
                 left=Node(node_type=NodeType.IDENTIFIER, value="name"),
-                right=predicate[operator],
+                right=Node(
+                    node_type=NodeType.LITERAL, type=OrsoTypes.VARCHAR, value=predicate[operator]
+                ),
             ),
         )
         previous_step_id, step_id = step_id, random_string()
         plan.add_node(step_id, select_step)
         plan.add_edge(previous_step_id, step_id)
+
+    exit_step = LogicalPlanNode(node_type=LogicalPlanStepType.Exit)
+    exit_step.columns = [Node(node_type=NodeType.WILDCARD)]  # We are always SELECT *
+    previous_step_id, step_id = step_id, random_string()
+    plan.add_node(step_id, exit_step)
+    plan.add_edge(previous_step_id, step_id)
 
     return plan
 

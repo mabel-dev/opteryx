@@ -27,16 +27,13 @@ import numpy
 from orso.tools import single_item_cache
 from pyarrow import compute
 
-from opteryx.exceptions import DatabaseError
-
-sys.path.insert(1, os.path.join(sys.path[0], "../.."))
-
+from opteryx.exceptions import IncompleteImplementationError
 
 CAMEL_TO_SNAKE = re.compile(r"(?<!^)(?=[A-Z])")
 
 
 def not_implemented(*args, **kwds):
-    raise DatabaseError("Subclasses must implement the _func method.")
+    raise NotImplementedError("Subclasses must implement the _func method.")
 
 
 @single_item_cache
@@ -199,7 +196,9 @@ class _BaseFunction:
                     for return_type in typing.get_args(return_type_hints)
                 ]
             return [TYPE_MAP.get(return_type_hints, "OTHER")]
-        raise DatabaseError(f"{self.__class__.__name__.upper()} hasn't specified its return types")
+        raise IncompleteImplementationError(
+            f"{self.__class__.__name__.upper()} hasn't specified its return types"
+        )
 
     def argument_types(self):
         from orso.dataframe import TYPE_MAP

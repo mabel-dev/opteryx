@@ -11,4 +11,5 @@
 # limitations under the License.
 
 from .execution_tree import ExecutionTree
+from .node import Node
 from .query_properties import QueryProperties

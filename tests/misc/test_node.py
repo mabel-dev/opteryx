@@ -7,7 +7,7 @@ import pytest
 
 
 def test_node():
-    from opteryx.models.node import Node
+    from opteryx.models import Node
 
     # simple usage
     n = Node(a=1)
