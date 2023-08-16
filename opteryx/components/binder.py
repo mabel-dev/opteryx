@@ -114,7 +114,7 @@ def merge_schemas(*dicts) -> dict:
     return merged_dict
 
 
-def find_column_in_loaded_schemas(value, schemas):
+def locate_identifier_in_loaded_schemas(value, schemas):
     found_source_relation = None
     column = None
 
@@ -135,12 +135,31 @@ def get_fuzzy_search_suggestion(value, candidates):
     return fuzzy_search(value, candidates)
 
 
-def process_identifier(node, context):
+def locate_identifier(node, context):
+    """
+    Locate which schema the identifier is defined in. We return a populated node
+    and the context.
+    """
+
+    if node.value[0] == "@":
+        # We're a variable, so load from the variables collection
+        # note, we can only use user (@) variables in queries
+        # We include variables by exchanging them for constant/literals
+        node.schema_column = context["connection"].variables.as_column(node.value)
+        node.node_type = NodeType.LITERAL
+        node.type = node.schema_column.type
+        node.value = node.schema_column.value
+        return node, context
+
     schemas = context["schemas"]
     found_source_relation = schemas.get(node.source)
 
     if node.source:
+        # fully qualified fields (e.g. table.identifier) attest the schema
+        # they're in, so we only look for the field in there
+
         if not found_source_relation:
+            # this is the first we've seen this table
             raise UnexpectedDatasetReferenceError(dataset=node.source)
 
         column = found_source_relation.find_column(node.source_column)
@@ -151,7 +170,7 @@ def process_identifier(node, context):
             raise ColumnNotFoundError(column=node.value, dataset=node.source, suggestion=suggestion)
 
     else:
-        column, found_source_relation = find_column_in_loaded_schemas(node.value, schemas)
+        column, found_source_relation = locate_identifier_in_loaded_schemas(node.value, schemas)
         if not found_source_relation:
             suggestion = get_fuzzy_search_suggestion(
                 node.value,
@@ -186,7 +205,7 @@ def inner_binder(node, context) -> typing.Tuple[Node, dict]:
     schemas = context["schemas"]
     node_type = node.node_type
     if node_type == NodeType.IDENTIFIER:
-        return process_identifier(node, context)
+        return locate_identifier(node, context)
 
     elif node_type == NodeType.LITERAL:
         column_name = format_expression(node)
@@ -204,6 +223,7 @@ def inner_binder(node, context) -> typing.Tuple[Node, dict]:
     elif not node_type == NodeType.SUBQUERY:
         column_name = format_expression(node)
         schema_column = schemas["$derived"].find_column(column_name)
+
         if schema_column:
             schema_column = FlatColumn(
                 name=column_name,
@@ -218,6 +238,8 @@ def inner_binder(node, context) -> typing.Tuple[Node, dict]:
             node.schema_column = schema_column
             node.query_column = node.alias or column_name
             node.node_type = NodeType.IDENTIFIER
+
+            return node, context
 
         elif node_type in (NodeType.FUNCTION, NodeType.AGGREGATOR):
             # we're just going to bind the function into the node
@@ -264,6 +286,16 @@ def inner_binder(node, context) -> typing.Tuple[Node, dict]:
 
 
 class BinderVisitor:
+    """
+    The BinderVisitor visits each node in the query plan and adds catalogue information
+    to each node. This includes:
+
+    - identifiers, bound from the schemas
+    - functions and aggregatros, bound from the function catalogue
+    - variables, bound from the variables collection
+
+    """
+
     def visit_node(self, node, context=None):
         node_type = node.node_type.name
         visit_method_name = f"visit_{CAMEL_TO_SNAKE.sub('_', node_type).lower()}"
@@ -285,13 +317,11 @@ class BinderVisitor:
         existing schemas and replaces it with a new $group-by schema.
         """
         if node.groups:
-            node.groups, group_contexts = zip(
-                *(inner_binder(group, context) for group in node.groups)
-            )
+            node.groups, _ = zip(*(inner_binder(group, context) for group in node.groups))
             node.groups = list(node.groups)
 
         if node.aggregates:
-            node.aggregates, group_contexts = zip(
+            node.aggregates, _ = zip(
                 *(inner_binder(aggregate, context) for aggregate in node.aggregates)
             )
             node.aggregates = list(node.aggregates)
@@ -301,10 +331,10 @@ class BinderVisitor:
             for i in (node.aggregates or []) + (node.groups or [])
             if i.schema_column
         ]
-        group_by_relation = f"$group-by-{random_string()}"
-        context["schemas"] = {
-            group_by_relation: RelationSchema(name=group_by_relation, columns=columns)
-        }
+
+        # although this is now the only dataset, we use $derived as there is logic
+        # specific to that dataset with regards to reevaluating expressions
+        context["schemas"] = {"$derived": RelationSchema(name="$derived", columns=columns)}
 
         return node, context
 
@@ -377,7 +407,7 @@ class BinderVisitor:
                 "JOIN ... USING and NATURAL JOIN temporarily not supported"
             )
             """
-            The unresolved issue is working out which column will be the one that is removed
+            TODO: The unresolved issue is working out which column will be the one that is removed
             when the tables are joined. It's the one on the right, but that's not always
             the right table here.
             """
@@ -400,7 +430,7 @@ class BinderVisitor:
             # this is the column which is being unnested
             node.column, context = inner_binder(node.column, context)
             # this is the column that is being created - find it from it's name
-            node.target_column, found_source_relation = find_column_in_loaded_schemas(
+            node.target_column, found_source_relation = locate_identifier_in_loaded_schemas(
                 node.alias, context["schemas"]
             )
             if not found_source_relation:

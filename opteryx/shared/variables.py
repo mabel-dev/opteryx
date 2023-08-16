@@ -140,13 +140,12 @@ class SystemVariablesContainer:
     def copy(self, owner: VariableOwner = VariableOwner.USER) -> "SystemVariablesContainer":
         return SystemVariablesContainer(owner)
 
-    def as_node(self, key):
-        """Return a variable as a LITERAL node"""
-        from opteryx.managers.expression import NodeType
-        from opteryx.models import Node
+    def as_column(self, key):
+        """Return a variable as a CONSTANT column"""
+        from orso.schema import ConstantColumn
 
-        variable = self[key]
-        return Node(node_type=NodeType.LITERAL, type=variable.type, value=variable.value)
+        variable = self._variables[key]
+        return ConstantColumn(name=key, type=variable[0], value=variable[1])
 
 
 # load the base set
