@@ -892,7 +892,7 @@ STATEMENTS = [
         ("SELECT * FROM $planets WHERE 1 = 1 FOR TODAY;", None, None, InvalidTemporalRangeFilterError),
         ("SELECT * FROM $planets GROUP BY name FOR TODAY;", 9, 1, InvalidTemporalRangeFilterError),
         # [#518] SELECT * and GROUP BY can't be used together
-        ("SELECT * FROM $planets GROUP BY name", 9, 1, None),
+        ("SELECT * FROM $planets GROUP BY name", 9, 1, UnsupportedSyntaxError),
         # found testing
         ("SELECT user_name FROM testdata.flat.formats.arrow WITH(NO_PARTITION) WHERE user_name = 'Niran'", 1, 1, None),
         #769

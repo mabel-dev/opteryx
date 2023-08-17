@@ -53,6 +53,7 @@ from orso.tools import random_string
 from orso.types import OrsoTypes
 
 from opteryx.components import logical_planner_builders
+from opteryx.exceptions import UnsupportedSyntaxError
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import format_expression
 from opteryx.managers.expression import get_all_nodes_of_type
@@ -249,6 +250,11 @@ def inner_query_planner(ast_branch):
     _aggregates = get_all_nodes_of_type(_projection, select_nodes=(NodeType.AGGREGATOR,))
     _groups = logical_planner_builders.build(ast_branch["Select"].get("group_by"))
     if _groups is not None and _groups != []:
+        if any(p.node_type == NodeType.WILDCARD for p in _projection):
+            raise UnsupportedSyntaxError(
+                "SELECT * cannot be used with GROUP BY, fields in the SELECT must be aggregates or in the GROUP BY clause."
+            )
+
         group_step = LogicalPlanNode(node_type=LogicalPlanStepType.AggregateAndGroup)
         group_step.groups = _groups
         group_step.aggregates = _aggregates

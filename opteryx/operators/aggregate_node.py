@@ -27,7 +27,7 @@ from typing import Iterable
 import numpy
 import pyarrow
 
-from opteryx.exceptions import SqlError
+from opteryx.exceptions import InvalidInternalStateError
 from opteryx.exceptions import UnsupportedSyntaxError
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import evaluate_and_append
@@ -110,15 +110,8 @@ def build_aggregations(aggregators):
                 field_name = "*"
                 # count * counts nulls
                 count_options = pyarrow.compute.CountOptions(mode="all")
-            elif field_node.node_type == NodeType.IDENTIFIER:
-                field_name = field_node.schema_column.identity
-            elif field_node.node_type == NodeType.LITERAL:
-                field_name = str(field_node.value)
             else:
-                display_name = field_node.query_column
-                raise SqlError(
-                    f"Invalid identifier or literal provided in aggregator function `{display_name}`"
-                )
+                field_name = field_node.schema_column.identity
             function = AGGREGATORS.get(aggregator.value)
             if aggregator.value == "ARRAY_AGG":
                 # if the array agg is distinct, base off that function instead
@@ -196,8 +189,6 @@ class AggregateNode(BasePlanNode):
 
         self.aggregates = config.get("aggregates", [])
 
-        # we're going to preload some of the evaluation
-
         # get all the columns anywhere in the aggregates
         all_identifiers = [
             node.schema_column.identity
@@ -224,7 +215,7 @@ class AggregateNode(BasePlanNode):
 
     def execute(self) -> Iterable:
         if len(self._producers) != 1:  # pragma: no cover
-            raise SqlError(f"{self.name} on expects a single producer")
+            raise InvalidInternalStateError(f"{self.name} on expects a single producer")
 
         morsels = self._producers[0]  # type:ignore
         if isinstance(morsels, pyarrow.Table):
