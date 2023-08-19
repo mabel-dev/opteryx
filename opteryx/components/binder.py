@@ -237,7 +237,7 @@ def inner_binder(node, context) -> typing.Tuple[Node, dict]:
             schemas["$derived"].columns.append(schema_column)
             node.schema_column = schema_column
             node.query_column = node.alias or column_name
-            node.node_type = NodeType.IDENTIFIER
+            node.node_type = NodeType.EVALUATED
 
             return node, context
 

@@ -952,6 +952,10 @@ STATEMENTS = [
         ("SELECT * FROM $planets WHERE rotationPeriod = lengthOfDay", 3, 20, None),
         ("SELECT * FROM 'testdata.flat.planets.parquet' WITH(NO_PARTITION) WHERE rotationPeriod = lengthOfDay", 3, 20, None),
         ("SELECT * FROM 'testdata/flat/planets/parquet/planets.parquet' WITH(NO_PARTITION) WHERE rotationPeriod = lengthOfDay", 3, 20, None),
+        # memoization flaws
+        ("SELECT LEFT('APPLE', 1), LEFT('APPLE', 1) || 'B'", 1, 2, None),
+        ("SELECT LEFT('APPLE', 1) || 'B', LEFT('APPLE', 1)", 1, 2, None),
+        ("SELECT LEFT('APPLE', 1) || LEFT('APPLE', 1)", 1, 1, None),
 ]
 # fmt:on
 
