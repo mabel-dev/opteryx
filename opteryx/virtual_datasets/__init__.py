@@ -10,8 +10,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import opteryx.samples.astronaut_data as astronauts
-import opteryx.samples.derived_data as derived
-import opteryx.samples.no_table_data as no_table
-import opteryx.samples.planet_data as planets
-import opteryx.samples.satellite_data as satellites
+import opteryx.virtual_datasets.astronaut_data as astronauts
+import opteryx.virtual_datasets.derived_data as derived
+import opteryx.virtual_datasets.no_table_data as no_table
+import opteryx.virtual_datasets.planet_data as planets
+import opteryx.virtual_datasets.satellite_data as satellites
+import opteryx.virtual_datasets.variables_data as variables

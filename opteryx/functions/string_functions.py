@@ -15,7 +15,7 @@ from typing import List
 import numpy
 from pyarrow import compute
 
-from opteryx.exceptions import ProgrammingError
+from opteryx.exceptions import InvalidFunctionParameterError
 
 
 def string_slicer_left(arr, length):
@@ -53,7 +53,9 @@ def split(arr, delimiter=",", limit=None):
     if limit is not None:
         limit = int(limit[0]) - 1
         if limit < 0:
-            raise ProgrammingError("`SPLIT` limit parameter must be greater than zero.")
+            raise InvalidFunctionParameterError(
+                "`SPLIT` limit parameter must be greater than zero."
+            )
     return compute.split_pattern(arr, pattern=delimiter, max_splits=limit)
 
 

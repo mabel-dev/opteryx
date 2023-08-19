@@ -7,7 +7,7 @@ from orso.types import OrsoTypes
 
 from opteryx.managers.expression import format_expression
 from opteryx.managers.expression import NodeType
-from opteryx.models.node import Node
+from opteryx.models import Node
 
 from tests.tools import create_duck_db
 import duckdb

@@ -38,7 +38,7 @@ from orso.schema import RelationSchema
 from orso.types import OrsoTypes
 
 
-def read(end_date=None):
+def read(end_date=None, *args):
     import pyarrow
 
     # fmt:off

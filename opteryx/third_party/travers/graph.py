@@ -71,12 +71,6 @@ class Graph(object):
         self._nodes = {}
         self._edges = {}
 
-    def _make_a_list(self, obj):
-        """internal helper method"""
-        if isinstance(obj, list):
-            return obj
-        return [obj]
-
     def save(self, graph_path):  # pragma: nocover
         """
         Persist a graph to storage. It saves nodes and edges to separate files.
@@ -120,19 +114,15 @@ class Graph(object):
             print("Trying to create edge with undefined nodes")
             return False
 
-        if source not in self._edges:
-            targets = []
-        else:
-            targets = self._edges[source]
+        # Check for existing edges and add the new one
+        existing_edges = list(self._edges.get(source, ()))
 
-        targets.append(
-            (
-                target,
-                relationship,
-            )
-        )
-        self._edges[source] = list(set(targets))
-        return True
+        # Avoid adding duplicate edges
+        edge_to_add = (target, relationship)
+        if edge_to_add not in existing_edges:
+            existing_edges.append(edge_to_add)
+
+        self._edges[source] = tuple(existing_edges)
 
     def add_node(self, nid: str, node):
         """
@@ -183,45 +173,28 @@ class Graph(object):
                 The maximum distance to walk from source
         Returns:
         """
-        # This uses a variation of the algorith used by NetworkX optimized for
-        # the travers data structures.
-        #
-        # https://networkx.org/documentation/networkx-1.10/_modules/networkx/algorithms/traversal/breadth_first_search.html#bfs_tree
-
         from collections import deque
 
-        distance = 0
+        visited = {source}
+        queue = deque([(source, 0)])
 
-        visited = set([source])
-        queue = deque(
-            [
-                (
-                    source,
-                    distance,
-                    self.outgoing_edges(source),
-                )
-            ]
-        )
-
-        new_edges = []
+        traversed_edges = []
 
         while queue:
-            parent, node_distance, children = queue[0]
-            if node_distance < depth:
-                for child in children:
-                    s, t, r = child
-                    new_edges.append(child)
-                    if t not in visited:
-                        visited.add(t)
-                        queue.append(
-                            (
-                                t,
-                                node_distance + 1,
-                                self.outgoing_edges(t),
-                            )
-                        )
-            queue.popleft()
-        return new_edges
+            current_node, current_depth = queue.popleft()
+
+            if current_depth < depth:
+                for edge in self.outgoing_edges(current_node):
+                    _, target, _ = edge
+
+                    # Add the edge to the traversed edges list
+                    traversed_edges.append(edge)
+
+                    if target not in visited:
+                        visited.add(target)
+                        queue.append((target, current_depth + 1))
+
+        return traversed_edges
 
     def depth_first_search(
         self, node: Optional[str] = None, visited: Optional[set] = None, depth: int = 0
@@ -264,7 +237,7 @@ class Graph(object):
         Returns:
             Set of Tuples (Source, Target, Relationship)
         """
-        return [(source, t, r) for t, r in self._edges.get(source, [])]
+        return [(source, t, r) for t, r in self._edges.get(source, tuple())]
 
     def ingoing_edges(self, target) -> List[Tuple]:
         """
@@ -306,25 +279,69 @@ class Graph(object):
             my_edges = new_edges
         return True
 
+    def shortest_path(self, start: str, end: str) -> List[str]:
+        """
+        Compute the shortest path from start to end node.
+
+        Parameters:
+            start: string
+                The starting node ID
+            end: string
+                The target node ID
+
+        Returns:
+            List of node IDs from start to end node that represent the shortest path.
+            Returns an empty list if no path is found.
+        """
+
+        from collections import deque
+
+        visited = set()
+        queue = deque([(start, [start])])  # Each item in the queue is a tuple (node, path_so_far)
+
+        while queue:
+            node, path = queue.popleft()
+
+            if node == end:
+                return path  # Found a path to the end node
+
+            if node not in visited:
+                visited.add(node)
+
+                for _, neighbor, _ in self.outgoing_edges(node):
+                    if neighbor == end:
+                        path.append(neighbor)
+                        return path
+                    if neighbor not in visited:
+                        new_path = list(path)
+                        new_path.append(neighbor)
+                        queue.append((neighbor, new_path))
+
+        return []  # No path found
+
     def get_entry_points(self):
         """
         Get nodes in the Graph with no incoming edges.
         """
         if len(self._nodes) == 1:
             return list(self._nodes.keys())
-        targets = {target for source, target, direction in self.edges()}
-        retval = (source for source, target, direction in self.edges() if source not in targets)
-        return sorted(retval)
+
+        edges = list(self.edges())
+        targets = {target for _, target, _ in edges}
+        sources = {source for source, _, _ in edges}
+        return sorted(sources - targets)
 
     def get_exit_points(self):
         """
         Get nodes in the Graph with no outgoing edges.
         """
-        if len(self._nodes) == 1:  # pragma: no cover
+        if len(self._nodes) == 1:
             return list(self._nodes.keys())
-        sources = self._edges.keys()
-        retval = {target for source, target, direction in self.edges() if target not in sources}
-        return sorted(retval)
+
+        edges = list(self.edges())
+        targets = {target for _, target, _ in edges}
+        sources = set(self._edges.keys())
+        return sorted(targets - sources)
 
     def remove_node(self, nid, heal: bool = False):
         """
@@ -359,6 +376,24 @@ class Graph(object):
             for out_nid in out_going:
                 for in_nid in in_coming:
                     self.add_edge(in_nid[0], out_nid[1], in_nid[1])  # type:ignore
+
+    def remove_edge(self, source, target, relationship):
+        """
+        Remove an edge from the graph.
+        Args:
+        - source (str): The source node of the edge.
+        - target (str): The target node of the edge.
+        - relationship (str): The relationship label of the edge.
+        """
+        if source not in self._edges:
+            return
+        edge_to_remove = (target, relationship)
+        if source in self._edges and edge_to_remove in self._edges[source]:
+            working_set = list(self._edges[source])
+            working_set.remove(edge_to_remove)
+            self._edges[source] = tuple(working_set)
+            if not self._edges[source]:  # If no edges left for the source
+                del self._edges[source]
 
     def insert_node_before(self, nid, node, before_nid):
         """rewrite the plan putting the new node before a given node"""
@@ -398,10 +433,12 @@ class Graph(object):
         self.add_edge(after_nid, nid)
 
     def copy(self):  # pragma: nocover
-        g = Graph()
-        g._nodes = self._nodes.copy()
-        g._edges = self._edges.copy()
-        return g
+        """
+        Create a deep copy of the current object.
+        """
+        import copy
+
+        return copy.deepcopy(self)
 
     def to_networkx(self):  # pragma: nocover
         """

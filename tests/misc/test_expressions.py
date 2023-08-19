@@ -9,9 +9,9 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 from rich import traceback
 
 import opteryx
-import opteryx.samples
+import opteryx.virtual_datasets
 from opteryx.managers.expression import ORSO_TO_NUMPY_MAP, NodeType, evaluate
-from opteryx.models.node import Node
+from opteryx.models import Node
 from opteryx.shared import QueryStatistics
 
 from orso.types import OrsoTypes
@@ -46,7 +46,7 @@ LITERALS = [
 
 @pytest.mark.parametrize("node_type, value_type, value", LITERALS)
 def test_literals(node_type, value_type, value):
-    planets = opteryx.samples.planets.read()
+    planets = opteryx.virtual_datasets.planets.read()
 
     node = Node(node_type, type=value_type, value=value)
     values = evaluate(node, table=planets)
@@ -69,7 +69,7 @@ def test_logical_expressions():
     illogical from a user perspective but technically correct.
     """
 
-    planets = opteryx.samples.planets.read()
+    planets = opteryx.virtual_datasets.planets.read()
 
     true = Node(NodeType.LITERAL, type=OrsoTypes.BOOLEAN, value=True)
     false = Node(NodeType.LITERAL, type=OrsoTypes.BOOLEAN, value=False)
@@ -126,9 +126,9 @@ def test_logical_expressions():
 
 
 def test_reading_identifiers():
-    planets = opteryx.samples.planets.read()
+    planets = opteryx.virtual_datasets.planets.read()
 
-    name_column = opteryx.samples.planets.schema.find_column("name")
+    name_column = opteryx.virtual_datasets.planets.schema.find_column("name")
     names_node = Node(
         NodeType.IDENTIFIER,
         type=OrsoTypes.VARCHAR,
@@ -155,7 +155,7 @@ def test_reading_identifiers():
 
 
 def test_function_operations():
-    planets = opteryx.samples.planets.read()
+    planets = opteryx.virtual_datasets.planets.read()
 
     name = Node(NodeType.IDENTIFIER, value="name")
     concat = Node(
@@ -205,7 +205,7 @@ def test_function_operations():
 
 
 def test_compound_expressions():
-    planets = opteryx.samples.planets.read()
+    planets = opteryx.virtual_datasets.planets.read()
 
     # this builds and tests the following `3.7 * gravity > mass`
 
@@ -236,7 +236,7 @@ def test_compound_expressions():
 
 
 def test_functions():
-    planets = opteryx.samples.planets.read()
+    planets = opteryx.virtual_datasets.planets.read()
 
     gravity = Node(NodeType.IDENTIFIER, value="gravity")
     _round = Node(NodeType.FUNCTION, value="ROUND", parameters=[gravity])

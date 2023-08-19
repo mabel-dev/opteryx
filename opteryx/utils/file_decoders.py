@@ -95,7 +95,7 @@ def parquet_decoder(stream, projection: List = None, selection=None, just_schema
         _select = predicate_pushable.to_dnf(selection)
 
     selected_columns = None
-    if isinstance(projection, (list, set)) and "*" not in projection:
+    if isinstance(projection, (list, set)) and "*" not in projection or just_schema:
         # if we have a pushed down projection, get the list of columns from the file
         # and then only set the reader to read those
         parquet_file = parquet.ParquetFile(stream)

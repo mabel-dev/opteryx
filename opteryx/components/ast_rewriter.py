@@ -62,7 +62,7 @@ import decimal
 import numpy
 from orso.tools import random_string
 
-from opteryx.exceptions import ProgrammingError
+from opteryx.exceptions import ParameterError
 
 
 def _build_literal_node(value):
@@ -95,7 +95,7 @@ def variable_binder(node, parameter_set, connection, query_type):
             if "Placeholder" in node["Value"]:
                 # fmt:off
                 if len(parameter_set) == 0:
-                    raise ProgrammingError("Incorrect number of bindings supplied."
+                    raise ParameterError("Incorrect number of bindings supplied."
                     " More placeholders are provided than parameters.")
                 placeholder_value = parameter_set.pop(0)
                 # prepared statements will have parsed this already

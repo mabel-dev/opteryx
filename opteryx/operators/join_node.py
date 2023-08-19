@@ -25,13 +25,11 @@ This is a SQL Query Execution Plan Node.
 """
 from typing import Iterable
 
-import numpy
 import pyarrow
 
 from opteryx.exceptions import SqlError
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
-from opteryx.third_party import pyarrow_ops
 
 INTERNAL_BATCH_SIZE = 500  # config
 
@@ -57,10 +55,7 @@ class JoinNode(BasePlanNode):
         self._on = config.get("on")
         self._using = config.get("using")
 
-        if self._on is None and self._using is None:
-            raise SqlError("Missing JOIN 'ON' condition.")
-
-        if self._using is not None and self._join_type.lower() != "left outer":
+        if self._using is not None and self._join_type.lower() not in ("inner", "left outer"):
             raise SqlError("JOIN `USING` only valid for `INNER` and `LEFT` joins.")
 
     @property
@@ -98,6 +93,6 @@ class JoinNode(BasePlanNode):
                 keys=[left_column],
                 right_keys=[right_column],
                 join_type=self._join_type,
-                coalesce_keys=False,
+                coalesce_keys=self._using is not None,
             )
             yield new_morsel

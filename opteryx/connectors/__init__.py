@@ -69,9 +69,9 @@ def connector_factory(dataset, **config):
 
     # if it starts with a $, it's a special internal dataset
     if dataset[0] == "$":
-        from opteryx.connectors import sample_data
+        from opteryx.connectors import virtual_data
 
-        return sample_data.SampleDataConnector(dataset=dataset)
+        return virtual_data.SampleDataConnector(dataset=dataset)
 
     # Look up the prefix from the registered prefixes
     connector_entry: dict = config

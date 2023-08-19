@@ -12,61 +12,63 @@
 
 from typing import Any
 
-import orjson
-
 
 class Node:
-    def _is_valid_key(self, key):
+    def __init__(self, node_type: str = None, **kwargs):
+        """
+        Initialize a Node with attributes.
+
+        Args:
+            node_type: The type of the node.
+            **kwargs: Dynamic attributes for the node.
+        """
+        object.__setattr__(self, "_internal", {})  # Directly set _internal using the base method
+        if node_type:
+            self._internal["node_type"] = node_type
+        for k, v in kwargs.items():
+            self._is_valid_key(k)
+            self._internal[k] = v
+
+    def _is_valid_key(self, key: str) -> None:
+        """Check if the key is valid for the node."""
         if key.startswith("_"):
             raise AttributeError("Node cannot have dynamic attributes starting with an underscore")
-
-    def __init__(self, *args, **kwargs):
-        """
-        A Python object with run-time defined attributes.
-        """
-        internal = {}
-        if len(args) == 1:
-            internal["node_type"] = args[0]
-        if len(args) > 1:
-            raise ValueError("Only one position argument can be passed to a Node initializer")
-        if isinstance(kwargs, dict):
-            for k, v in kwargs.items():
-                self._is_valid_key(k)
-                internal[k] = v
-        self.__dict__["_internal"] = internal
 
     @property
     def properties(self):
         return self.__dict__.get("_internal", {})
 
-    def __getattr__(self, __name: str) -> Any:
-        return self.__dict__.get("_internal", {}).get(__name)
+    def __getattr__(self, name: str) -> Any:
+        """Retrieve attribute from the internal dictionary."""
+        return self._internal.get(name)
 
-    def __setattr__(self, __name: str, __value: Any) -> None:
-        internal = self.__dict__.get("_internal", {})
-        if __name != "_internal":
-            self._is_valid_key(__name)
-            if __value is None:
-                internal.pop(__name, None)
+    def __setattr__(self, name: str, value: Any) -> None:
+        """Set attribute in the internal dictionary."""
+        if name == "_internal":
+            self.__dict__[name] = value
+        else:
+            self._is_valid_key(name)
+            if value is None:
+                self._internal.pop(name, None)
             else:
-                internal[__name] = __value
+                self._internal[name] = value
 
     def __str__(self) -> str:
-        internal = self.__dict__.get("_internal", {})
-        return orjson.dumps(internal, default=str).decode()
+        import orjson
+
+        return orjson.dumps(self._internal, default=str).decode()
 
     def __repr__(self) -> str:
-        node_type = str(self.node_type)
+        """Provide a detailed representation for debugging."""
+        node_type = self._internal.get("node_type", "<unspecified>")
+        # Modify based on your specific needs or remove.
         if node_type.startswith("LogicalPlanStepType."):
             node_type = node_type[20:]
-        node_params: list = []
-        return node_type + " (" + ",".join(node_params) + ")"
+        return f"<Node type={node_type}>"
 
-
-if __name__ == "__main__":  # pragma: no cover
-    n = Node(a=3)
-    n.name = "john"
-    print(n.a)
-    print(n.b)
-    print(n.name)
-    print(repr(n))
+    def copy(self) -> "Node":
+        """Create an independent copy of the node."""
+        new_node = Node()
+        for key, value in self._internal.items():
+            setattr(new_node, key, value)
+        return new_node

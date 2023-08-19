@@ -13,7 +13,7 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 import pyarrow
 
 from opteryx.models.planner.operations import DistinctNode
-from opteryx.samples import satellites
+from opteryx.virtual_datasets import satellites
 from opteryx.shared import QueryStatistics
 
 
