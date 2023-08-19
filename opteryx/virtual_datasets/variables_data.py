@@ -39,14 +39,15 @@ def read(end_date=None, variables={}):
     return pyarrow.Table.from_pylist(buffer)
 
 
-# fmt:off
-schema = RelationSchema(
-    name="$variables",
-    columns=[
-        FlatColumn(name="name", type=OrsoTypes.VARCHAR),
-        FlatColumn(name="value", type=OrsoTypes.VARCHAR),
-        FlatColumn(name="type", type=OrsoTypes.VARCHAR),
-        FlatColumn(name="owner", type=OrsoTypes.VARCHAR),
-    ],
-)
-# fmt:on
+def schema():
+    # fmt:off
+    return  RelationSchema(
+        name="$variables",
+        columns=[
+            FlatColumn(name="name", type=OrsoTypes.VARCHAR),
+            FlatColumn(name="value", type=OrsoTypes.VARCHAR),
+            FlatColumn(name="type", type=OrsoTypes.VARCHAR),
+            FlatColumn(name="owner", type=OrsoTypes.VARCHAR),
+        ],
+    )
+    # fmt:on

@@ -344,21 +344,29 @@ class BinderVisitor:
         columns = []
         schemas = context.get("schemas", {})
 
-        # If it's SELECT * the node doesn't have the fields yet
-        if node.columns[0].node_type == NodeType.WILDCARD:
-            from opteryx.models import Node
-
-            for schema in schemas:
-                if schema != "$derived":  # we don't want columns we added for things like GROUP BYs
+        for column in node.columns:
+            if column.node_type == NodeType.WILDCARD:
+                qualified_wildcard = column.value
+                for schema in schemas:
+                    if qualified_wildcard and schema not in qualified_wildcard:
+                        continue
+                    if schema == "$derived":
+                        continue
                     for column in schemas[schema].columns:
-                        column_reference = Node(schema_column=column, query_column=column.name)
+                        column_reference = Node(
+                            node_type=NodeType.IDENTIFIER,
+                            schema_column=column,
+                            type=column.type,
+                            query_column=f"{schema}.{column.name}",
+                        )
                         columns.append(column_reference)
-            node.columns = columns
-            return node, context
 
-        node.columns, group_contexts = zip(*(inner_binder(col, context) for col in node.columns))
-        merged_schemas = merge_schemas(*[ctx["schemas"] for ctx in group_contexts])
-        context["schemas"] = merged_schemas
+            else:
+                bound_column, bound_context = inner_binder(column, context)
+                context["schemas"] = merge_schemas(bound_context["schemas"], context["schemas"])
+                columns.append(bound_column)
+
+        node.columns = columns
 
         return node, context
 
@@ -544,7 +552,7 @@ def do_bind_phase(plan, connection=None, cache=None, common_table_expressions=No
     binder_visitor = BinderVisitor()
     root_node = plan.get_exit_points()
     context = {
-        "schemas": {"$derived": derived.schema},
+        "schemas": {"$derived": derived.schema()},
         "cache": cache,
         "connection": connection,
         "relations": set(),

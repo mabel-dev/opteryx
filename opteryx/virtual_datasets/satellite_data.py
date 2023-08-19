@@ -54,16 +54,18 @@ def read(*args):
     )
 
 
-schema = RelationSchema(
-    name="$satellites",
-    columns=[
-        FlatColumn(name="id", type=OrsoTypes.INTEGER),
-        FlatColumn(name="planetId", type=OrsoTypes.INTEGER, aliases=["planet_id"]),
-        FlatColumn(name="name", type=OrsoTypes.VARCHAR),
-        FlatColumn(name="gm", type=OrsoTypes.DOUBLE),
-        FlatColumn(name="radius", type=OrsoTypes.DOUBLE),
-        FlatColumn(name="density", type=OrsoTypes.DOUBLE),
-        FlatColumn(name="magnitude", type=OrsoTypes.DOUBLE),
-        FlatColumn(name="albedo", type=OrsoTypes.DOUBLE),
-    ],
-)
+def schema():
+    # fmt:off
+    return RelationSchema(
+            name="$satellites",
+            columns=[
+                FlatColumn(name="id", type=OrsoTypes.INTEGER),
+                FlatColumn(name="planetId", type=OrsoTypes.INTEGER, aliases=["planet_id"]),
+                FlatColumn(name="name", type=OrsoTypes.VARCHAR),
+                FlatColumn(name="gm", type=OrsoTypes.DOUBLE),
+                FlatColumn(name="radius", type=OrsoTypes.DOUBLE),
+                FlatColumn(name="density", type=OrsoTypes.DOUBLE),
+                FlatColumn(name="magnitude", type=OrsoTypes.DOUBLE),
+                FlatColumn(name="albedo", type=OrsoTypes.DOUBLE),
+            ],
+        )

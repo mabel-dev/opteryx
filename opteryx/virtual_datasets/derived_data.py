@@ -23,4 +23,5 @@ def read(*args):
     return None
 
 
-schema = RelationSchema(name="$derived", columns=[])
+def schema():
+    return RelationSchema(name="$derived", columns=[])

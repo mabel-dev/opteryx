@@ -26,6 +26,7 @@ This node doesn't do any calculations, it is a pure Projection.
 from typing import Iterable
 
 from opteryx.exceptions import AmbiguousIdentifierError
+from opteryx.exceptions import InvalidInternalStateError
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 
@@ -45,7 +46,7 @@ class ExitNode(BasePlanNode):
 
     def execute(self) -> Iterable:
         if len(self._producers) != 1:  # pragma: no cover
-            raise SqlError(f"{self.name} expects a single producer")
+            raise InvalidInternalStateError(f"{self.name} expects a single producer")
 
         morsels = self._producers[0]  # type:ignore
 
