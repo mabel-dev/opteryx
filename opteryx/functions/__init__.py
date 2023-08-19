@@ -273,7 +273,7 @@ FUNCTIONS = {
     "INT": _iterate_single_parameter(int),
     "INTEGER": _iterate_single_parameter(int),
     "FLOAT": _iterate_single_parameter(float),
-    "POWER": compute.power,
+    "POWER": number_functions.safe_power,
     "LN": compute.ln,
     "LOG10": compute.log10,
     "LOG2": compute.log2,
