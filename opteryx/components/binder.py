@@ -305,6 +305,12 @@ class BinderVisitor:
             raise InvalidInternalStateError(
                 f"Internal Error - function {visit_method_name} didn't return a dict"
             )
+        if not all(
+            isinstance(schema, RelationSchema) for name, schema in context["schemas"].items()
+        ):
+            raise InvalidInternalStateError(
+                f"Internal Error - function {visit_method_name} returned invalid Schemas"
+            )
         return return_node, return_context
 
     def visit_unsupported(self, node, context):
@@ -355,12 +361,12 @@ class BinderVisitor:
                     for column in schemas[schema].columns:
                         column_reference = Node(
                             node_type=NodeType.IDENTIFIER,
+                            name=column.name,
                             schema_column=column,
                             type=column.type,
                             query_column=f"{schema}.{column.name}",
                         )
                         columns.append(column_reference)
-
             else:
                 bound_column, bound_context = inner_binder(column, context)
                 context["schemas"] = merge_schemas(bound_context["schemas"], context["schemas"])
@@ -505,6 +511,17 @@ class BinderVisitor:
 
     def visit_show_columns(self, node, context):
         node.schema = context["schemas"][node.relation]
+        return node, context
+
+    def visit_subquery(self, node, context):
+        # we sack all the tables we previously knew and create a new set of schemas here
+        columns = []
+        for schema in context["schemas"]:
+            columns += context["schemas"][schema].columns
+
+        schema = RelationSchema(name=node.alias, columns=columns)
+
+        context["schemas"] = {"$derived": derived.schema(), node.alias: schema}
         return node, context
 
     def traverse(self, graph, node, context=None):

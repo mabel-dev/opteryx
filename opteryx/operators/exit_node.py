@@ -54,7 +54,7 @@ class ExitNode(BasePlanNode):
         final_names = []
         for column in self.columns:
             final_columns.append(column.schema_column.identity)
-            final_names.append(column.query_column)
+            final_names.append(column.schema_column.name)
 
         if len(final_columns) != len(set(final_columns)):
             from collections import Counter
@@ -66,6 +66,14 @@ class ExitNode(BasePlanNode):
             )
 
         for morsel in morsels.execute():
+            if not set(final_columns).issubset(morsel.column_names):
+                mapping = {int_name: name for name, int_name in zip(final_columns, final_names)}
+                missing_references = [
+                    mapping.get(ref) for ref in final_columns if ref not in morsel.column_names
+                ]
+
+                raise InvalidInternalStateError(f"Problem - {missing_references} not in results")
+
             morsel = morsel.select(final_columns)
             morsel = morsel.rename_columns(final_names)
 
