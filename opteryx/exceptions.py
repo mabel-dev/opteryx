@@ -17,12 +17,17 @@ Exception Hierarchy:
 
 Exception
  ├── MissingDependencyError
+ ├── UnmetRequirementError
  └── Error [PEP-0249] *
      └── DatabaseError [PEP-0249] *
+         ├── UnsupportedTypeError
+         ├── NotSupportedError
+         ├── UnsupportedFileTypeError
          ├── IncompleteImplementationError
          ├── InvalidConfigurationError
          ├── InvalidInternalStateError
          └── ProgrammingError [PEP-0249] *
+             ├── MissingSqlStatement
              ├── InvalidCursorStateError
              ├── ParameterError
              ├── SqlError *
@@ -38,6 +43,8 @@ Exception
              │   ├── UnsupportedSyntaxError
              │   └── VariableNotFoundError
              ├── DataError *
+             │   ├── EmptyDatasetError
+             │   └── EmptyResultSetError
              ├── SecurityError *
              │   └── PermissionsError
              └── ExecutionError *
@@ -247,15 +254,27 @@ class FeatureNotSupportedOnArchitectureError(ExecutionError):
 # =====================================================================================
 
 
-class UnsupportedTypeError(Exception):
+class UnsupportedTypeError(DatabaseError):
+    """Exception raised when an unsupported type is encountered."""
+
     pass
 
 
 class UnmetRequirementError(Exception):
+    """Exception raised when a requirement for operation is not met."""
+
     pass
 
 
-class NotSupportedError(Exception):
+class NotSupportedError(DatabaseError):
+    """Exception raised when an unsupported operation is attempted."""
+
+    pass
+
+
+class UnsupportedFileTypeError(DatabaseError):
+    """Exception raised when an unsupported file type is encountered."""
+
     pass
 
 
@@ -263,7 +282,13 @@ class MissingSqlStatement(ProgrammingError):
     pass
 
 
-class EmptyDatasetError(ProgrammingError):
+class EmptyDatasetError(DataError):
+    pass
+
+
+class EmptyResultSetError(DataError):
+    """Exception raised when a result set is empty."""
+
     def __init__(self, message=None, dataset=None):
         if message is None and dataset is not None:
             self.dataset = dataset
@@ -276,14 +301,6 @@ class UnsupportedSegementationError(SqlError):
         self.dataset = dataset
         message = f"'{dataset}' cannot be read, only 'by_hour' segments can be read."
         super().__init__(message)
-
-
-class EmptyResultSetError(Error):
-    pass
-
-
-class UnsupportedFileTypeError(Exception):
-    pass
 
 
 # =====================================================================================
