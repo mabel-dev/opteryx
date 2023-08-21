@@ -20,9 +20,9 @@ import time
 import typer
 
 import opteryx
-from opteryx.components.sql_rewriter import clean_statement
-from opteryx.components.sql_rewriter import remove_comments
 from opteryx.exceptions import MissingSqlStatement
+from opteryx.utils.sql import clean_statement
+from opteryx.utils.sql import remove_comments
 
 # Define ANSI color codes
 ANSI_RED = "\u001b[31m"
@@ -128,7 +128,7 @@ def main(
             import orjson
             with open(o, mode="wb") as file:
                 for row in result:
-                    file.write(orjson.dumps(row.as_dict) + b"\n")
+                    file.write(orjson.dumps(row.as_dict, default=str) + b"\n")
             print(f"[ {result.rowcount} rows x {result.columncount} columns ]")
             print(f"Written result to '{o}'")
             return
