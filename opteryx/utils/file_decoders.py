@@ -257,3 +257,5 @@ KNOWN_EXTENSIONS = {
     "tsv": (tsv_decoder, ExtentionType.DATA),
     "zstd": (zstd_decoder, ExtentionType.DATA),  # jsonl/zstd
 }
+
+VALID_EXTENSIONS = set(f".{ext}" for ext in KNOWN_EXTENSIONS.keys())
