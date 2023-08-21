@@ -1,5 +1,6 @@
 # These are SQL statement that appear in the documentation
-# ther's nothing special about them other than it's not a good experience if they fail
+# there's nothing special about them other than it's not a good experience if they fail
+# these may be duplicates of tests elsewhere, that doesn't matter
 
 # numerous places
 SELECT * FROM $planets;
@@ -49,3 +50,8 @@ SELECT name FROM $planets WHERE id NOT IN (SELECT DISTINCT planetId FROM $satell
 
 # IP
 SELECT '192.168.0.1' | '192.168.0.0/24';
+
+# ADVANCED STRUCTS
+SELECT birth_place['town'] FROM $astronauts;
+SELECT birth_place['town'], COUNT(*) FROM $astronauts WHERE birth_place['state'] IS NOT NULL GROUP BY birth_place['town'];
+SELECT name, SEARCH(birth_place, 'Italy') FROM $astronauts;

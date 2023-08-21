@@ -347,6 +347,7 @@ class BinderVisitor:
     visit_aggregate = visit_aggregate_and_group
 
     def visit_exit(self, node, context):
+        # LOG: EEEExit
         columns = []
         schemas = context.get("schemas", {})
 
@@ -462,6 +463,12 @@ class BinderVisitor:
         node.columns, group_contexts = zip(*(inner_binder(col, context) for col in node.columns))
         merged_schemas = merge_schemas(*[ctx["schemas"] for ctx in group_contexts])
         context["schemas"] = merged_schemas
+
+        # we create a projection schema
+        schema = RelationSchema(
+            name="$projection", columns=[col.schema_column for col in node.columns]
+        )
+        context["schemas"] = {"$derived": derived.schema(), "$projection": schema}
 
         return node, context
 
