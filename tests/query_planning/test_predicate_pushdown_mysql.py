@@ -34,7 +34,7 @@ def test_predicate_pushdowns_mysql_eq():
 
     # TEST PREDICATE PUSHDOWN
     cur = conn.cursor()
-    cur.execute("SET enable_optimizer = false; SELECT * FROM mysql.planets WHERE name = 'Mercury';")
+    cur.execute("SET disable_optimizer = true; SELECT * FROM mysql.planets WHERE name = 'Mercury';")
     # if we disable pushdown, we read all the rows from the source and we do the filter
     assert cur.rowcount == 1, cur.rowcount
     assert cur.stats.get("rows_read", 0) == 9, cur.stats

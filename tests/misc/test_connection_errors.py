@@ -24,17 +24,17 @@ def test_connection_parameter_mismatch():
     """test substitution binding errors"""
 
     import opteryx
-    from opteryx.exceptions import ProgrammingError
+    from opteryx.exceptions import ParameterError
 
     conn = opteryx.connect()
     cur = conn.cursor()
-    with pytest.raises(ProgrammingError):
+    with pytest.raises(ParameterError):
         cur.execute("SELECT * FROM $planets WHERE id = ?")
-    with pytest.raises(ProgrammingError):
+    with pytest.raises(ParameterError):
         cur.execute("SELECT * FROM $planets WHERE id = ? AND name = ?", [1])
-    with pytest.raises(ProgrammingError):
+    with pytest.raises(ParameterError):
         cur.execute("SELECT * FROM $planets WHERE id = ? AND name = ?", (1,))
-    with pytest.raises(ProgrammingError):
+    with pytest.raises(ParameterError):
         cur.execute("SELECT * FROM $planets WHERE id = ?", (1, 2))
 
 
