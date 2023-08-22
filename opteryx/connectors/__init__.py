@@ -17,6 +17,7 @@ import pyarrow
 from opteryx.connectors.aws_s3_connector import AwsS3Connector
 from opteryx.connectors.disk_connector import DiskConnector
 from opteryx.connectors.gcp_cloudstorage_connector import GcpCloudStorageConnector
+from opteryx.connectors.gcp_firestore_connector import GcpFireStoreConnector
 from opteryx.connectors.sql_connector import SqlConnector
 from opteryx.shared import MaterializedDatasets
 

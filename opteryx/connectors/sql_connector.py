@@ -108,8 +108,6 @@ class SqlConnector(BaseConnector):
         columns = [column[0] for column in result.cursor.description]
         record = result.fetchone()
 
-        print(record)
-
         # Close the result object
         result.close()
 
