@@ -10,10 +10,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pyarrow
 from orso.schema import FlatColumn
 from orso.schema import RelationSchema
-from orso.types import PYTHON_TO_ORSO_MAP
 
 from opteryx import config
 from opteryx.connectors.base.base_connector import INITIAL_CHUNK_SIZE
@@ -98,7 +96,7 @@ class GcpFireStoreConnector(BaseConnector):
             return self.schema
 
         # onlt read one record
-        record = next(self.read_dataset(chunk_size=1))
+        record = next(self.read_dataset(chunk_size=1), None)
 
         if record is None:
             raise DatasetNotFoundError(dataset=self.dataset)
