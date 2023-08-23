@@ -81,6 +81,7 @@ def validate_permissions(permissions):
         raise PermissionsError(
             f"Invalid permissions presented - {PERMISSIONS.difference(permissions)}"
         )
+    return permissions
 
 
 class Connection:
@@ -104,8 +105,7 @@ class Connection:
         self.context = ConnectionContext()
 
         # check the permissions we've been given are valid permissions
-        validate_permissions(permissions)
-        self.permissions = permissions
+        self.permissions = validate_permissions(permissions)
 
     def cursor(self):
         """return a cursor object"""
@@ -166,7 +166,9 @@ class Cursor(DataFrame):
             raise InvalidCursorStateError("Cursor can only be executed once")
 
         self._connection.context.history.append((operation, True, datetime.datetime.utcnow()))
-        plans = query_planner(operation=operation, parameters=params, connection=self._connection)
+        plans = query_planner(
+            operation=operation, parameters=params, connection=self._connection, qid=self.id
+        )
 
         if ROLLING_LOG:
             ROLLING_LOG.append(operation)
@@ -223,6 +225,9 @@ class Cursor(DataFrame):
             self._cursor = iter(self._rows)
 
     def execute_to_arrow(self, operation, params=None, limit=None):
+        """
+        Bypass conversion to Orso and return directly in Arrow format
+        """
         results = self._execute_statements(operation, params)
         if results is not None:
             if limit is not None:

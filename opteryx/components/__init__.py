@@ -45,7 +45,7 @@ from opteryx import config
 PROFILE_LOCATION = config.PROFILE_LOCATION
 
 
-def query_planner(operation, parameters, connection):
+def query_planner(operation: str, parameters: list, connection, qid: str):
     import orjson
     from orso.tools import random_int
 
@@ -105,7 +105,6 @@ def query_planner(operation, parameters, connection):
         )
 
         # before we write the new optimizer and execution engine, convert to a V1 plan
-        query_id = random_int()
-        query_properties = QueryProperties(qid=query_id, variables=connection.context.variables)
+        query_properties = QueryProperties(qid=qid, variables=connection.context.variables)
         physical_plan = create_physical_plan(bound_plan, query_properties)
         yield physical_plan
