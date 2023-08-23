@@ -29,12 +29,12 @@ exec(vers)  # nosec
 
 __build__ = "notset"
 with open(f"{LIBRARY}/__build__.py", mode="r") as v:
-    vers = v.read()
+    build = v.read()
 exec(vers)  # nosec
 
 __author__ = "notset"
 with open(f"{LIBRARY}/__author__.py", mode="r") as v:
-    vers = v.read()
+    author = v.read()
 exec(vers)  # nosec
 
 with open("README.md", mode="r", encoding="UTF8") as rm:
@@ -72,10 +72,10 @@ setup_config = {
     "long_description": long_description,
     "long_description_content_type": "text/markdown",
     "maintainer": "@joocer",
-    "author": "@joocer",
+    "author": __author__,
     "author_email": "justin.joyce@joocer.com",
     "packages": find_packages(include=[LIBRARY, f"{LIBRARY}.*"]),
-    "python_requires": ">=3.8",
+    "python_requires": ">=3.9",
     "url": "https://github.com/mabel-dev/opteryx/",
     "install_requires": required,
     "ext_modules": cythonize(extensions),
