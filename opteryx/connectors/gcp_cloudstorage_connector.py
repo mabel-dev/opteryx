@@ -10,12 +10,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-The 'direct disk' connector provides the reader for when a dataset file is
-given directly in a query.
-
-As such it assumes 
-"""
 import io
 import os
 from typing import List
@@ -29,37 +23,74 @@ from opteryx.connectors.base.base_connector import BaseConnector
 from opteryx.connectors.capabilities import Cacheable
 from opteryx.connectors.capabilities import Partitionable
 from opteryx.exceptions import DatasetNotFoundError
-from opteryx.exceptions import EmptyDatasetError
+from opteryx.exceptions import MissingDependencyError
 from opteryx.exceptions import UnsupportedFileTypeError
+from opteryx.utils import paths
 from opteryx.utils.file_decoders import VALID_EXTENSIONS
 from opteryx.utils.file_decoders import get_decoder
 
 
-class DiskConnector(BaseConnector, Cacheable, Partitionable):
+class GcpCloudStorageConnector(BaseConnector, Cacheable, Partitionable):
     __mode__ = "Blob"
 
-    def __init__(self, **kwargs):
+    def __init__(self, credentials=None, **kwargs):
+        try:
+            from google.auth.credentials import AnonymousCredentials
+            from google.cloud import storage
+        except ImportError as err:
+            raise MissingDependencyError(err.name) from err
+
         BaseConnector.__init__(self, **kwargs)
         Partitionable.__init__(self, **kwargs)
         Cacheable.__init__(self, **kwargs)
 
         self.dataset = self.dataset.replace(".", "/")
+        self.credentials = credentials
+
+    def _get_storage_client(self):
+        from google.cloud import storage
+
+        if os.environ.get("STORAGE_EMULATOR_HOST"):
+            from google.auth.credentials import AnonymousCredentials
+
+            return storage.Client(credentials=AnonymousCredentials())
+        else:  # pragma: no cover
+            return storage.Client()
+
+    def _get_blob(self, bucket: str, blob_name: str):
+        client = self._get_storage_client()
+
+        gcs_bucket = client.get_bucket(bucket)
+        blob = gcs_bucket.get_blob(blob_name)
+        return blob
 
     @Cacheable().read_thru()
     def read_blob(self, *, blob_name):
-        with open(blob_name, mode="br") as file:
-            file_stream = file.read()
-        return io.BytesIO(file_stream)
+        bucket, object_path, name, extension = paths.get_parts(blob_name)
+
+        bucket = bucket.replace("va_data", "va-data")
+        bucket = bucket.replace("data_", "data-")
+
+        blob = self._get_blob(
+            bucket=bucket,
+            blob_name=object_path + "/" + name + extension,
+        )
+        stream = blob.download_as_bytes()
+        return io.BytesIO(stream)
 
     @single_item_cache
     def get_list_of_blob_names(self, *, prefix: str) -> List[str]:
-        files = [
-            os.path.join(root, file)
-            for root, _, files in os.walk(prefix)
-            for file in files
-            if os.path.splitext(file)[1] in VALID_EXTENSIONS
-        ]
-        return files
+        bucket, object_path, _, _ = paths.get_parts(prefix)
+        bucket = bucket.replace("va_data", "va-data")
+        bucket = bucket.replace("data_", "data-")
+
+        client = self._get_storage_client()
+
+        gcs_bucket = client.get_bucket(bucket)
+        blobs = list(client.list_blobs(bucket_or_name=gcs_bucket, prefix=object_path))
+
+        blobs = (bucket + "/" + blob.name for blob in blobs if not blob.name.endswith("/"))
+        return [blob for blob in blobs if ("." + blob.split(".")[-1].lower()) in VALID_EXTENSIONS]
 
     def read_dataset(self) -> pyarrow.Table:
         blob_names = self.partition_scheme.get_blobs_in_partition(
@@ -86,8 +117,6 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable):
         record = next(self.read_dataset(), None)
 
         if record is None:
-            if os.path.isdir(self.dataset):
-                raise EmptyDatasetError(dataset=self.dataset)
             raise DatasetNotFoundError(dataset=self.dataset)
 
         arrow_schema = record.schema

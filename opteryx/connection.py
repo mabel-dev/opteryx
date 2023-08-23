@@ -61,7 +61,26 @@ class ConnectionContext:
     history: typing.List[HistoryItem] = field(default_factory=list, init=False)
 
     def __post_init__(self):
+        # the initializer is a function rather than an empty constructure so we init here
         object.__setattr__(self, "variables", SystemVariables.copy(VariableOwner.USER))
+
+
+def validate_permissions(permissions):
+    """
+    This is checking the validity of the permissions provided, not that the user has the
+    right permissions.
+    """
+    from opteryx.constants.permissions import PERMISSIONS
+
+    if permissions is None:
+        permissions = PERMISSIONS
+    permissions = set(permissions)
+    if permissions.intersection(PERMISSIONS) == set():
+        raise PermissionsError("No valid permissions presented.")
+    if not permissions.issubset(PERMISSIONS):
+        raise PermissionsError(
+            f"Invalid permissions presented - {PERMISSIONS.difference(permissions)}"
+        )
 
 
 class Connection:
@@ -85,17 +104,7 @@ class Connection:
         self.context = ConnectionContext()
 
         # check the permissions we've been given are valid permissions
-        from opteryx.constants.permissions import PERMISSIONS
-
-        if permissions is None:
-            permissions = PERMISSIONS
-        permissions = set(permissions)
-        if permissions.intersection(PERMISSIONS) == set():
-            raise PermissionsError("No valid permissions presented.")
-        if not permissions.issubset(PERMISSIONS):
-            raise PermissionsError(
-                f"Invalid permissions presented - {PERMISSIONS.difference(permissions)}"
-            )
+        validate_permissions(permissions)
         self.permissions = permissions
 
     def cursor(self):
@@ -136,6 +145,18 @@ class Cursor(DataFrame):
         return self._qid
 
     def _inner_execute(self, operation, params=None):
+        """
+        Executes a single SQL operation within the current cursor.
+
+        Parameters:
+            operation: str
+                SQL operation to be executed.
+            params: Union[Dict, Tuple], optional
+                Parameters for the SQL operation, defaults to None.
+        Returns:
+            Results of the query execution.
+        """
+
         from opteryx.components import query_planner
 
         if not operation:
@@ -163,6 +184,17 @@ class Cursor(DataFrame):
             return results
 
     def _execute_statements(self, operation, params=None):
+        """
+        Executes one or more SQL statements, properly handling comments, cleaning, and splitting.
+
+        Parameters:
+            operation: str
+                SQL operation(s) to be executed.
+            params: Union[Dict, Tuple], optional
+                Parameters for the SQL operation(s), defaults to None.
+        Returns:
+            Results of the query execution.
+        """
         statements = sql.remove_comments(operation)
         statements = sql.clean_statement(statements)
         statements = sql.split_sql_statements(statements)

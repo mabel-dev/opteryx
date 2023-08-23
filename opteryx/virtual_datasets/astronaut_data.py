@@ -54,27 +54,28 @@ def read(*args):
     )
 
 
-schema = RelationSchema(
-    name="$astronauts",
-    columns=[
-        FlatColumn(name="name", type=OrsoTypes.VARCHAR),
-        FlatColumn(name="year", type=OrsoTypes.INTEGER),
-        FlatColumn(name="group", type=OrsoTypes.INTEGER),
-        FlatColumn(name="status", type=OrsoTypes.VARCHAR),
-        FlatColumn(name="birth_date", type=OrsoTypes.DATE),
-        FlatColumn(name="birth_place", type=OrsoTypes.STRUCT),
-        FlatColumn(name="gender", type=OrsoTypes.VARCHAR),
-        FlatColumn(name="alma_mater", type=OrsoTypes.ARRAY),
-        FlatColumn(name="undergraduate_major", type=OrsoTypes.VARCHAR),
-        FlatColumn(name="graduate_major", type=OrsoTypes.VARCHAR),
-        FlatColumn(name="military_rank", type=OrsoTypes.VARCHAR),
-        FlatColumn(name="military_branch", type=OrsoTypes.VARCHAR),
-        FlatColumn(name="space_flights", type=OrsoTypes.INTEGER),
-        FlatColumn(name="space_flight_hours", type=OrsoTypes.INTEGER),
-        FlatColumn(name="space_walks", type=OrsoTypes.INTEGER),
-        FlatColumn(name="space_walks_hours", type=OrsoTypes.INTEGER),
-        FlatColumn(name="missions", type=OrsoTypes.ARRAY),
-        FlatColumn(name="death_date", type=OrsoTypes.DATE),
-        FlatColumn(name="death_mission", type=OrsoTypes.VARCHAR),
-    ],
-)
+def schema():
+    return RelationSchema(
+        name="$astronauts",
+        columns=[
+            FlatColumn(name="name", type=OrsoTypes.VARCHAR),
+            FlatColumn(name="year", type=OrsoTypes.INTEGER),
+            FlatColumn(name="group", type=OrsoTypes.INTEGER),
+            FlatColumn(name="status", type=OrsoTypes.VARCHAR),
+            FlatColumn(name="birth_date", type=OrsoTypes.DATE),
+            FlatColumn(name="birth_place", type=OrsoTypes.STRUCT),
+            FlatColumn(name="gender", type=OrsoTypes.VARCHAR),
+            FlatColumn(name="alma_mater", type=OrsoTypes.ARRAY),
+            FlatColumn(name="undergraduate_major", type=OrsoTypes.VARCHAR),
+            FlatColumn(name="graduate_major", type=OrsoTypes.VARCHAR),
+            FlatColumn(name="military_rank", type=OrsoTypes.VARCHAR),
+            FlatColumn(name="military_branch", type=OrsoTypes.VARCHAR),
+            FlatColumn(name="space_flights", type=OrsoTypes.INTEGER),
+            FlatColumn(name="space_flight_hours", type=OrsoTypes.INTEGER),
+            FlatColumn(name="space_walks", type=OrsoTypes.INTEGER),
+            FlatColumn(name="space_walks_hours", type=OrsoTypes.INTEGER),
+            FlatColumn(name="missions", type=OrsoTypes.ARRAY),
+            FlatColumn(name="death_date", type=OrsoTypes.DATE),
+            FlatColumn(name="death_mission", type=OrsoTypes.VARCHAR),
+        ],
+    )

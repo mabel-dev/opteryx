@@ -10,6 +10,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 import os
 
 from orso.logging import get_logger
@@ -24,7 +25,6 @@ from opteryx.connection import Connection
 from opteryx.connectors import register_arrow
 from opteryx.connectors import register_df
 from opteryx.connectors import register_store
-from opteryx.shared import variables
 
 try:
     builtins = __import__("__builtin__")

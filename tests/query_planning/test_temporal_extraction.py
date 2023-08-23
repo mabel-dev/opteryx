@@ -10,7 +10,7 @@ import datetime
 
 import pytest
 
-from opteryx.components.sql_rewriter import clean_statement, remove_comments
+from opteryx.utils.sql import clean_statement, remove_comments
 from opteryx.components.sql_rewriter import extract_temporal_filters
 
 # fmt:off

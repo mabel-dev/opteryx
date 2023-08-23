@@ -11,10 +11,7 @@
 # limitations under the License.
 
 """
-The 'direct disk' connector provides the reader for when a dataset file is
-given directly in a query.
-
-As such it assumes 
+MinIo Reader - also works with AWS
 """
 import io
 import os
@@ -29,37 +26,49 @@ from opteryx.connectors.base.base_connector import BaseConnector
 from opteryx.connectors.capabilities import Cacheable
 from opteryx.connectors.capabilities import Partitionable
 from opteryx.exceptions import DatasetNotFoundError
-from opteryx.exceptions import EmptyDatasetError
+from opteryx.exceptions import MissingDependencyError
+from opteryx.exceptions import UnmetRequirementError
 from opteryx.exceptions import UnsupportedFileTypeError
+from opteryx.utils import paths
 from opteryx.utils.file_decoders import VALID_EXTENSIONS
 from opteryx.utils.file_decoders import get_decoder
 
 
-class DiskConnector(BaseConnector, Cacheable, Partitionable):
+class AwsS3Connector(BaseConnector, Cacheable, Partitionable):
     __mode__ = "Blob"
 
-    def __init__(self, **kwargs):
+    def __init__(self, credentials=None, **kwargs):
+        try:
+            from minio import Minio  # type:ignore
+        except ImportError as err:  # pragma: no cover
+            raise MissingDependencyError(err.name) from err
+
         BaseConnector.__init__(self, **kwargs)
         Partitionable.__init__(self, **kwargs)
         Cacheable.__init__(self, **kwargs)
 
-        self.dataset = self.dataset.replace(".", "/")
+        end_point = os.environ.get("MINIO_END_POINT")
+        access_key = os.environ.get("MINIO_ACCESS_KEY")
+        secret_key = os.environ.get("MINIO_SECRET_KEY")
+        secure = str(os.environ.get("MINIO_SECURE", "TRUE")).lower() == "true"
 
-    @Cacheable().read_thru()
-    def read_blob(self, *, blob_name):
-        with open(blob_name, mode="br") as file:
-            file_stream = file.read()
-        return io.BytesIO(file_stream)
+        if end_point is None:  # pragma: no cover
+            raise UnmetRequirementError(
+                "MinIo (S3) adapter requires MINIO_END_POINT, MINIO_ACCESS_KEY and MINIO_SECRET_KEY set in environment variables."
+            )
+
+        self.minio = Minio(end_point, access_key, secret_key, secure=secure)
+        self.dataset = self.dataset.replace(".", "/")
 
     @single_item_cache
     def get_list_of_blob_names(self, *, prefix: str) -> List[str]:
-        files = [
-            os.path.join(root, file)
-            for root, _, files in os.walk(prefix)
-            for file in files
-            if os.path.splitext(file)[1] in VALID_EXTENSIONS
-        ]
-        return files
+        bucket, object_path, _, _ = paths.get_parts(prefix)
+        blobs = self.minio.list_objects(bucket_name=bucket, prefix=object_path, recursive=True)
+        blobs = (
+            bucket + "/" + blob.object_name for blob in blobs if not blob.object_name.endswith("/")
+        )
+
+        return [blob for blob in blobs if ("." + blob.split(".")[-1].lower()) in VALID_EXTENSIONS]
 
     def read_dataset(self) -> pyarrow.Table:
         blob_names = self.partition_scheme.get_blobs_in_partition(
@@ -86,8 +95,6 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable):
         record = next(self.read_dataset(), None)
 
         if record is None:
-            if os.path.isdir(self.dataset):
-                raise EmptyDatasetError(dataset=self.dataset)
             raise DatasetNotFoundError(dataset=self.dataset)
 
         arrow_schema = record.schema
@@ -98,3 +105,12 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable):
         )
 
         return self.schema
+
+    @Cacheable().read_thru()
+    def read_blob(self, *, blob_name):
+        try:
+            bucket, object_path, name, extension = paths.get_parts(blob_name)
+            stream = self.minio.get_object(bucket, object_path + "/" + name + extension)
+            return io.BytesIO(stream.read())
+        finally:
+            stream.close()

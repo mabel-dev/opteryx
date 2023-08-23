@@ -27,37 +27,30 @@ class BaseDocumentStorageAdapter:
         self.chunk_size = 500
 
     def chunk_dictset(self, dictset: Iterable[dict], morsel_size: int):
-        """
-        Enables paging through a dictset by returning a chunk of records at a time.
-        Parameters:
-            dictset: iterable of dictionaries:
-                The dictset to process
-            chunk_size: integer:
-                The number of bytes per chunk
-        """
         chunk_size = self.chunk_size
-        index = -1
-        chunk: list = [{}] * chunk_size
+        chunk = [{} for _ in range(chunk_size)]
+        first_chunk = True
+
         for index, record in enumerate(dictset):
-            _id = record.pop("_id", None)
+            _id = record.pop("_id", None)  # Inlining the transformation
             record["id"] = None if _id is None else str(_id)
+
+            chunk[index % chunk_size] = record
+
             if index > 0 and index % chunk_size == 0:
                 morsel = pyarrow.Table.from_pylist(chunk)
-                # from 500 records, estimate the number of records to fill the morsel size
-                # in the unlikely event that the right size for chunks is 500, we calculate
-                # this every cycle
-                if chunk_size == 500 and morsel.nbytes > 0:
+
+                if first_chunk and chunk_size == 500 and morsel.nbytes > 0:
                     chunk_size = int(morsel_size // (morsel.nbytes / 500))
                     self.chunk_size = chunk_size
-                # yield after the calculation, as you probably expect this to be set after
-                # the first read, not the second read
+                    first_chunk = False
+                    chunk = [{} for _ in range(chunk_size)]  # Reallocate chunk if size changes
+
                 yield morsel
-                chunk = [{}] * chunk_size
+                chunk = [{} for _ in range(chunk_size)]  # Reallocate chunk
                 chunk[0] = record
-            else:
-                chunk[index % chunk_size] = record
-        morsel = pyarrow.Table.from_pylist(chunk[: (index + 1) % chunk_size])
-        yield morsel
+
+        yield pyarrow.Table.from_pylist(chunk[: (index + 1) % chunk_size])
 
     def get_document_count(self, collection) -> int:  # pragma: no cover
         """

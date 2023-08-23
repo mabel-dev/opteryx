@@ -18,7 +18,7 @@ def test_predicate_pushdowns_blobs_parquet():
     # TEST PREDICATE PUSHDOWN
     cur = conn.cursor()
     cur.execute(
-        "SET enable_optimizer = false; SELECT user_name FROM testdata.flat.formats.parquet WITH(NO_PARTITION) WHERE user_verified = TRUE;"
+        "SET disable_optimizer = true; SELECT user_name FROM testdata.flat.formats.parquet WITH(NO_PARTITION) WHERE user_verified = TRUE;"
     )
     # if we disable pushdown, we read all the rows from the source and we do the filter
     assert cur.rowcount == 711, cur.rowcount

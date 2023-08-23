@@ -62,7 +62,7 @@ import sys
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import opteryx
-from opteryx.utils import random_int, random_string
+from orso.tools import random_int, random_string
 
 SQLS = [
     "SELECT * FROM $astronauts INNER JOIN $astronauts USING (name)",

@@ -237,7 +237,7 @@ def inner_binder(node, context) -> typing.Tuple[Node, dict]:
             schemas["$derived"].columns.append(schema_column)
             node.schema_column = schema_column
             node.query_column = node.alias or column_name
-            node.node_type = NodeType.IDENTIFIER
+            node.node_type = NodeType.EVALUATED
 
             return node, context
 
@@ -305,6 +305,12 @@ class BinderVisitor:
             raise InvalidInternalStateError(
                 f"Internal Error - function {visit_method_name} didn't return a dict"
             )
+        if not all(
+            isinstance(schema, RelationSchema) for name, schema in context["schemas"].items()
+        ):
+            raise InvalidInternalStateError(
+                f"Internal Error - function {visit_method_name} returned invalid Schemas"
+            )
         return return_node, return_context
 
     def visit_unsupported(self, node, context):
@@ -341,24 +347,33 @@ class BinderVisitor:
     visit_aggregate = visit_aggregate_and_group
 
     def visit_exit(self, node, context):
+        # LOG: EEEExit
         columns = []
         schemas = context.get("schemas", {})
 
-        # If it's SELECT * the node doesn't have the fields yet
-        if node.columns[0].node_type == NodeType.WILDCARD:
-            from opteryx.models import Node
-
-            for schema in schemas:
-                if schema != "$derived":  # we don't want columns we added for things like GROUP BYs
+        for column in node.columns:
+            if column.node_type == NodeType.WILDCARD:
+                qualified_wildcard = column.value
+                for schema in schemas:
+                    if qualified_wildcard and schema not in qualified_wildcard:
+                        continue
+                    if schema == "$derived":
+                        continue
                     for column in schemas[schema].columns:
-                        column_reference = Node(schema_column=column, query_column=column.name)
+                        column_reference = Node(
+                            node_type=NodeType.IDENTIFIER,
+                            name=column.name,
+                            schema_column=column,
+                            type=column.type,
+                            query_column=f"{schema}.{column.name}",
+                        )
                         columns.append(column_reference)
-            node.columns = columns
-            return node, context
+            else:
+                bound_column, bound_context = inner_binder(column, context)
+                context["schemas"] = merge_schemas(bound_context["schemas"], context["schemas"])
+                columns.append(bound_column)
 
-        node.columns, group_contexts = zip(*(inner_binder(col, context) for col in node.columns))
-        merged_schemas = merge_schemas(*[ctx["schemas"] for ctx in group_contexts])
-        context["schemas"] = merged_schemas
+        node.columns = columns
 
         return node, context
 
@@ -449,6 +464,12 @@ class BinderVisitor:
         merged_schemas = merge_schemas(*[ctx["schemas"] for ctx in group_contexts])
         context["schemas"] = merged_schemas
 
+        # we create a projection schema
+        schema = RelationSchema(
+            name="$projection", columns=[col.schema_column for col in node.columns]
+        )
+        context["schemas"] = {"$derived": derived.schema(), "$projection": schema}
+
         return node, context
 
     def visit_filter(self, node, context):
@@ -499,6 +520,17 @@ class BinderVisitor:
         node.schema = context["schemas"][node.relation]
         return node, context
 
+    def visit_subquery(self, node, context):
+        # we sack all the tables we previously knew and create a new set of schemas here
+        columns = []
+        for schema in context["schemas"]:
+            columns += context["schemas"][schema].columns
+
+        schema = RelationSchema(name=node.alias, columns=columns)
+
+        context["schemas"] = {"$derived": derived.schema(), node.alias: schema}
+        return node, context
+
     def traverse(self, graph, node, context=None):
         """
         Traverses the given graph starting at the given node and calling the
@@ -544,7 +576,7 @@ def do_bind_phase(plan, connection=None, cache=None, common_table_expressions=No
     binder_visitor = BinderVisitor()
     root_node = plan.get_exit_points()
     context = {
-        "schemas": {"$derived": derived.schema},
+        "schemas": {"$derived": derived.schema()},
         "cache": cache,
         "connection": connection,
         "relations": set(),

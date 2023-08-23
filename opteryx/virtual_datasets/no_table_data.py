@@ -32,4 +32,7 @@ def read(*args):
     return pyarrow.Table.from_arrays([[None]], schema=_schema)
 
 
-schema = RelationSchema(name="$no_table", columns=[FlatColumn(name="name", type=OrsoTypes.INTEGER)])
+def schema():
+    # fmt:off
+    return RelationSchema(name="$no_table", columns=[FlatColumn(name="name", type=OrsoTypes.INTEGER)])
+    # fmt:on

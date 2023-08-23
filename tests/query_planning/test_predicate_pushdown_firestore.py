@@ -18,7 +18,9 @@ def test_predicate_pushdowns_firestore():
 
     # TEST PREDICATE PUSHDOWN
     cur = conn.cursor()
-    cur.execute("SET enable_optimizer = false; SELECT * FROM dwarves WHERE actor = 'Pinto Colvig';")
+    cur.execute(
+        "SET disable_optimizer = false; SELECT * FROM dwarves WHERE actor = 'Pinto Colvig';"
+    )
     # if we disable pushdown, we read all the rows from the source and we do the filter
     assert cur.rowcount == 2, cur.rowcount
     assert cur.stats.get("rows_read", 0) == 7, cur.stats

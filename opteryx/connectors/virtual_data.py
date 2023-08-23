@@ -77,7 +77,7 @@ class SampleDataConnector(BaseConnector, Partitionable):
         if data_provider is None:
             suggestion = suggest(self.dataset)
             raise DatasetNotFoundError(message=suggestion, dataset=self.dataset)
-        return data_provider.schema
+        return data_provider.schema()
 
 
 class SampleDatasetReader(DatasetReader):

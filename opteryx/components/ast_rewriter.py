@@ -103,16 +103,6 @@ def variable_binder(node, parameter_set, connection, query_type):
                     placeholder_value = placeholder_value.value
                 return _build_literal_node(placeholder_value)
                 # fmt:on
-        # replace @variables
-        #        if query_type != "SetVariable" and "Identifier" in node:
-        #            token_name = node["Identifier"]["value"]
-        #            if token_name.startswith("@@"):
-        #                return _build_literal_node(SystemVariables[token_name[2:]])
-        #            elif token_name[0] == "@":
-        #                if token_name not in properties.variables:  # pragma: no cover
-        #                    raise SqlError(f"Undefined variable found in query `{token_name}`.")
-        #                variable_value = properties.variables[token_name]
-        #                return _build_literal_node(variable_value.value)
         return {
             k: variable_binder(v, parameter_set, connection, query_type) for k, v in node.items()
         }

@@ -12,8 +12,8 @@
 
 from hadro import HadroDB
 
-from .base_kv_store import BaseKeyValueStore
-from .kv_firestore import FireStoreKVStore
+from opteryx.managers.kvstores.base_kv_store import BaseKeyValueStore
+from opteryx.managers.kvstores.kv_firestore import FireStoreKVStore
 
 
 def KV_store_factory(store):  # pragma: no-cover

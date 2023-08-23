@@ -27,7 +27,7 @@ def test_predicate_pushdowns_sqlite_eq():
     # TEST PREDICATE PUSHDOWN
     cur = conn.cursor()
     cur.execute(
-        "SET enable_optimizer = false; SELECT * FROM sqlite.planets WHERE name = 'Mercury';"
+        "SET disable_optimizer = true; SELECT * FROM sqlite.planets WHERE name = 'Mercury';"
     )
     # if we disable pushdown, we read all the rows from the source and we do the filter
     assert cur.rowcount == 1, cur.rowcount

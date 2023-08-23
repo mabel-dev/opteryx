@@ -496,6 +496,8 @@ STATEMENTS = [
         ("SELECT * FROM $planets LEFT JOIN $planets FOR TODAY USING(id)", 9, 40, AmbiguousDatasetError),
         ("SELECT * FROM $planets LEFT JOIN $planets USING(id, name)", 9, 40, AmbiguousDatasetError),
         ("SELECT * FROM $planets INNER JOIN $planets ON id = id AND name = name", None, None, AmbiguousDatasetError),
+        ("SELECT P_1.* FROM $planets AS P_1 INNER JOIN $planets AS P_2 ON P_1.id = P_2.id", 9, 20, None),
+        ("SELECT P_2.* FROM $planets AS P_1 INNER JOIN $planets AS P_2 ON P_1.id = P_2.id", 9, 20, None),
         ("SELECT P_1.* FROM $planets AS P_1 INNER JOIN $planets AS P_2 ON P_1.id = P_2.id AND P_2.name = P_1.name", 9, 20, None),
         ("SELECT * FROM $planets AS P_1 INNER JOIN $planets AS P_2 ON P_1.id = P_2.id AND P_2.name = P_1.name", 9, 40, None),
         ("SELECT * FROM $planets NATURAL JOIN generate_series(1, 5) as id", 5, 20, None),
@@ -858,7 +860,8 @@ STATEMENTS = [
         # empty aggregates with other columns, loose the other columns [#281]
 # [#358]       ("SELECT name, COUNT(*) FROM $astronauts WHERE name = 'Jim' GROUP BY name", 1, 2, None),
         # JOIN from subquery regressed [#291]
-        ("SELECT * FROM (SELECT id from $planets) AS ONE LEFT JOIN (SELECT id from $planets) AS TWO ON id = id", 9, 2, None),
+        ("SELECT * FROM (SELECT id from $planets) AS ONE LEFT JOIN (SELECT id from $planets) AS TWO ON id = id", 9, 2, AmbiguousIdentifierError),
+        ("SELECT * FROM (SELECT id FROM $planets AS PONE) AS ONE LEFT JOIN (SELECT id FROM $planets AS PTWO) AS TWO ON ONE.id = TWO.id;", 9, 2, None),
         # JOIN on UNNEST [#382]
         ("SELECT name FROM $planets INNER JOIN UNNEST(('Earth')) AS n on name = n ", 1, 1, None),
         ("SELECT name FROM $planets INNER JOIN UNNEST(('Earth', 'Mars')) AS n on name = n", 2, 1, None),
@@ -952,6 +955,10 @@ STATEMENTS = [
         ("SELECT * FROM $planets WHERE rotationPeriod = lengthOfDay", 3, 20, None),
         ("SELECT * FROM 'testdata.flat.planets.parquet' WITH(NO_PARTITION) WHERE rotationPeriod = lengthOfDay", 3, 20, None),
         ("SELECT * FROM 'testdata/flat/planets/parquet/planets.parquet' WITH(NO_PARTITION) WHERE rotationPeriod = lengthOfDay", 3, 20, None),
+        # memoization flaws
+        ("SELECT LEFT('APPLE', 1), LEFT('APPLE', 1) || 'B'", 1, 2, None),
+        ("SELECT LEFT('APPLE', 1) || 'B', LEFT('APPLE', 1)", 1, 2, None),
+        ("SELECT LEFT('APPLE', 1) || LEFT('APPLE', 1)", 1, 1, None),
 ]
 # fmt:on
 

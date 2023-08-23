@@ -72,6 +72,8 @@ class ScannerNode(BasePlanNode):
         start_clock = time.monotonic_ns()
         reader = self.parameters.get("connector").read_dataset()
         for morsel in reader:
+            self.statistics.rows_read += morsel.num_rows
+            self.statistics.bytes_processed += morsel.nbytes
             self.execution_time += time.monotonic_ns() - start_clock
             yield normalize_morsel(schema, morsel)
             start_clock = time.monotonic_ns()

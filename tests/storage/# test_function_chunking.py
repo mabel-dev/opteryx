@@ -15,10 +15,10 @@ from opteryx.connectors import HadroConnector
 def test_chunking_storage():
     # we're going to access the connector directly rather than through the engine
     # this gives us low-level control to handle what we get back
-    connector = HadroConnector()
+    connector = HadroConnector(dataset="testdata/hadro/tweets_short")
 
+    reader = connector.read_dataset()
     assert connector.chunk_size == 500, connector.chunk_size
-    reader = connector.read_documents("testdata/hadro/tweets_short")
     first_batch = next(reader)
     # we read 500 rows first
     assert first_batch.num_rows == 500

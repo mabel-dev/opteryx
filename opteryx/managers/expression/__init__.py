@@ -18,6 +18,7 @@ It is defined as an expression tree of binary and unary operators, and functions
 Expressions are evaluated against an entire morsel at a time.
 """
 from enum import Enum
+from typing import Optional
 
 import numpy
 import pyarrow
@@ -30,12 +31,13 @@ from opteryx.functions.unary_operations import UNARY_OPERATIONS
 from opteryx.models import Node
 from opteryx.third_party.pyarrow_ops.ops import filter_operations
 
-from .formatter import ExpressionColumn
+from .formatter import ExpressionColumn  # this is used
 from .formatter import format_expression
 
 # These are bit-masks
 LOGICAL_TYPE: int = int("00010000", 2)
 INTERNAL_TYPE: int = int("00100000", 2)
+MAX_COLUMN_BYTE_SIZE: int = 50000000
 
 
 class NodeType(int, Enum):
@@ -73,6 +75,7 @@ class NodeType(int, Enum):
     AGGREGATOR:int = 41  # 0010 1001
     LITERAL:int = 42  # 0010 1010
     EXPRESSION_LIST: int = 43  # 0010 1011 (CASE WHEN)
+    EVALUATED: int = 44  # 0010 1100 - memoize results
 
 
 ORSO_TO_NUMPY_MAP = {
@@ -92,15 +95,54 @@ ORSO_TO_NUMPY_MAP = {
 }
 
 
-def _inner_evaluate(root: Node, table: Table):
+class ExecutionContext:
+    def __init__(self):
+        self.results = {}
+
+    def store(self, identity, result):
+        self.results[identity] = result
+
+    def retrieve(self, identity):
+        return self.results.get(identity)
+
+    def has_result(self, identity):
+        return identity in self.results
+
+    @property
+    def identities(self):
+        return list(self.results.keys())
+
+
+def prioritize_evaluation(expressions):
+    non_dependent_expressions = []
+    dependent_expressions = []
+
+    for expression in expressions:
+        if not get_all_nodes_of_type(expression, (NodeType.EVALUATED,)):
+            non_dependent_expressions.append(expression)
+        else:
+            dependent_expressions.append(expression)
+
+    # Now that we have split the expressions into non-dependent and dependent,
+    # we can return them in the desired order of evaluation.
+    return non_dependent_expressions + dependent_expressions
+
+
+def _inner_evaluate(root: Node, table: Table, context: ExecutionContext):
     node_type = root.node_type
 
     if node_type == NodeType.SUBQUERY:
         raise UnsupportedSyntaxError("IN (<subquery>) temporarily not supported.")
 
+    identity = root.schema_column.identity
+
+    # If already evaluated, return memoized result.
+    if context.has_result(identity):
+        return context.retrieve(identity)
+
     # if we have this column already, just return it
-    if root.schema_column.identity in table.column_names:
-        return table[root.schema_column.identity].to_numpy()
+    if identity in table.column_names:
+        return table[identity].to_numpy()
 
     # LITERAL TYPES
     if node_type == NodeType.LITERAL:
@@ -122,11 +164,11 @@ def _inner_evaluate(root: Node, table: Table):
         left, right, centre = None, None, None
 
         if root.left is not None:
-            left = _inner_evaluate(root.left, table)
+            left = _inner_evaluate(root.left, table, context)
         if root.right is not None:
-            right = _inner_evaluate(root.right, table)
+            right = _inner_evaluate(root.right, table, context)
         if root.centre is not None:
-            centre = _inner_evaluate(root.centre, table)
+            centre = _inner_evaluate(root.centre, table, context)
 
         if node_type == NodeType.AND:
             return pyarrow.compute.and_(left, right)
@@ -149,30 +191,35 @@ def _inner_evaluate(root: Node, table: Table):
     # INTERAL IDENTIFIERS
     if node_type & INTERNAL_TYPE == INTERNAL_TYPE:
         if node_type == NodeType.FUNCTION:
-            parameters = [_inner_evaluate(param, table) for param in root.parameters]
+            parameters = [_inner_evaluate(param, table, context) for param in root.parameters]
             # zero parameter functions get the number of rows as the parameter
             if len(parameters) == 0:
                 parameters = [table.num_rows]
             result = root.function(*parameters)
             if isinstance(result, list):
                 result = numpy.array(result)
+            context.store(identity, result)
             return result
         if node_type in (NodeType.AGGREGATOR,):
             # detected as an aggregator, but here it's an identifier because it
             # will have already been evaluated
-            node_type = NodeType.IDENTIFIER
+            node_type = NodeType.EVALUATED
             root.value = format_expression(root)
-            root.node_type = NodeType.IDENTIFIER
-        if node_type == NodeType.IDENTIFIER:
+            root.node_type = NodeType.EVALUATED
+        if node_type == NodeType.EVALUATED:
             return table[root.schema_column.identity].to_numpy()
         if node_type == NodeType.COMPARISON_OPERATOR:
-            left = _inner_evaluate(root.left, table)
-            right = _inner_evaluate(root.right, table)
-            return filter_operations(left, root.value, right)
+            left = _inner_evaluate(root.left, table, context)
+            right = _inner_evaluate(root.right, table, context)
+            result = filter_operations(left, root.value, right)
+            context.store(identity, result)
+            return result
         if node_type == NodeType.BINARY_OPERATOR:
-            left = _inner_evaluate(root.left, table)
-            right = _inner_evaluate(root.right, table)
-            return binary_operations(left, root.value, right)
+            left = _inner_evaluate(root.left, table, context)
+            right = _inner_evaluate(root.right, table, context)
+            result = binary_operations(left, root.value, right)
+            context.store(identity, result)
+            return result
         if node_type == NodeType.WILDCARD:
             numpy.full(table.num_rows, "*", dtype=numpy.unicode_)
         if node_type == NodeType.SUBQUERY:
@@ -180,17 +227,22 @@ def _inner_evaluate(root: Node, table: Table):
             sub = root.value.execute()
             return pyarrow.concat_tables(sub, promote=True)
         if node_type == NodeType.NESTED:
-            return _inner_evaluate(root.centre, table)
+            return _inner_evaluate(root.centre, table, context)
         if node_type == NodeType.UNARY_OPERATOR:
-            centre = _inner_evaluate(root.centre, table)
-            return UNARY_OPERATIONS[root.value](centre)
+            centre = _inner_evaluate(root.centre, table, context)
+            result = UNARY_OPERATIONS[root.value](centre)
+            context.store(identity, result)
+            return result
         if node_type == NodeType.EXPRESSION_LIST:
-            values = [_inner_evaluate(val, table) for val in root.value]
+            values = [_inner_evaluate(val, table, context) for val in root.value]
             return values
 
 
-def evaluate(expression: Node, table: Table):
-    result = _inner_evaluate(root=expression, table=table)
+def evaluate(expression: Node, table: Table, context: Optional[ExecutionContext] = None):
+    if context is None:
+        context = ExecutionContext()
+
+    result = _inner_evaluate(root=expression, table=table, context=context)
 
     if not isinstance(result, (pyarrow.Array, numpy.ndarray)):
         result = numpy.array(result)
@@ -231,46 +283,66 @@ def evaluate_and_append(expressions, table: Table):
     This needs to be able to deal with and avoid cascading problems where field names
     are duplicated, this is most common when performing many joins on the same table.
     """
+    prioritized_expressions = prioritize_evaluation(expressions)
 
-    for statement in expressions:
+    context = ExecutionContext()
+
+    for statement in prioritized_expressions:
         if statement.schema_column.identity in table.column_names:
             continue
 
-        if statement.node_type in (
-            NodeType.FUNCTION,
-            NodeType.BINARY_OPERATOR,
-            NodeType.COMPARISON_OPERATOR,
-            NodeType.UNARY_OPERATOR,
-            NodeType.NESTED,
-            NodeType.NOT,
-            NodeType.AND,
-            NodeType.OR,
-            NodeType.XOR,
-            NodeType.LITERAL,
-        ):
-            # do the evaluation
-            new_column = evaluate(statement, table)
-
-            # some activities give us masks rather than the values, if we don't have
-            # enough values, assume it's a mask
-            if len(new_column) < table.num_rows or statement.node_type in (
-                NodeType.UNARY_OPERATOR,
-            ):
-                bool_list = numpy.full(table.num_rows, False)
-                bool_list[new_column] = True
-                new_column = bool_list
-
-            # Large arrays appear to have a bug in PyArrow where they're automatically
-            # converted to a chunked array, but the internal functions can't handle
-            # chunked arrays - 50Mb columns are rare when we have 64Mb morsels.
-            if new_column.nbytes > 50000000:
-                new_column = [[i] for i in new_column]
-            else:
-                new_column = [new_column]
-
+        if should_evaluate(statement):
+            new_column = evaluate_statement(statement, table, context)
             table = table.append_column(statement.schema_column.identity, new_column)
+            for identity in context.identities:
+                if identity not in table.column_names:
+                    table = table.append_column(identity, [context.retrieve(identity)])
 
     return table
+
+
+def should_evaluate(statement):
+    """Determine if the given statement should be evaluated."""
+    valid_node_types = {
+        NodeType.FUNCTION,
+        NodeType.BINARY_OPERATOR,
+        NodeType.COMPARISON_OPERATOR,
+        NodeType.UNARY_OPERATOR,
+        NodeType.NESTED,
+        NodeType.NOT,
+        NodeType.AND,
+        NodeType.OR,
+        NodeType.XOR,
+        NodeType.LITERAL,
+    }
+    return statement.node_type in valid_node_types
+
+
+def evaluate_statement(statement, table, context):
+    """Evaluate a statement and return the corresponding column."""
+    new_column = evaluate(statement, table, context)
+    if is_mask(new_column, statement, table):
+        new_column = create_mask(new_column, table.num_rows)
+    return format_column(new_column)
+
+
+def is_mask(new_column, statement, table):
+    """Determine if the given column represents a mask."""
+    return len(new_column) < table.num_rows or statement.node_type == NodeType.UNARY_OPERATOR
+
+
+def create_mask(column, num_rows):
+    """Create a boolean mask based on the given column."""
+    bool_list = numpy.full(num_rows, False)
+    bool_list[column] = True
+    return bool_list
+
+
+def format_column(column):
+    """Format the column based on its size."""
+    if column.nbytes > MAX_COLUMN_BYTE_SIZE:
+        return [[i] for i in column]
+    return [column]
 
 
 def deduplicate_list_of_nodes(nodes):
