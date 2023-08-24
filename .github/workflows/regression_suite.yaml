@@ -38,14 +38,6 @@ jobs:
                        memcached \
                        -m 16
 
-      - name: "Start MongoDB Instance"
-        run: |
-            docker run -d --name test-mongo \
-                       -p 27017:27017 \
-                       -e MONGO_INITDB_ROOT_USERNAME=mongoadmin \
-                       -e MONGO_INITDB_ROOT_PASSWORD=secret \
-                       mongo:latest
-
       - name: "Authenticate to Google Cloud"
         uses: google-github-actions/auth@v0.4.0
         with:
@@ -56,14 +48,13 @@ jobs:
         env:
           AZURE_STORAGE_CONNECTION_STRING: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;QueueEndpoint=http://127.0.0.1:10001/devstoreaccount1;"
           MINIO_END_POINT: "s3.eu-west-2.amazonaws.com"
-          MONGO_CONNECTION: "mongodb://mongoadmin:secret@localhost:27017"
-          MONGO_DATABASE: opteryx
           GCP_PROJECT_ID: mabeldev
           MYSQL_USER: '${{ secrets.MYSQL_USER }}'
           MYSQL_PASSWORD: '${{ secrets.MYSQL_PASSWORD }}'
           POSTGRES_USER: '${{ secrets.POSTGRES_USER }}'
           POSTGRES_PASSWORD: '${{ secrets.POSTGRES_PASSWORD }}'
-          ENGINE_VERSION: 1
+          MONGODB_CONNECTION: '${{ secrets.MONGODB_CONNECTION }}'
+          MONGODB_DATABASE: opteryx
 
       - name: Check Coverage
         run: python -m coverage report --include=opteryx/** --fail-under=80 -m
