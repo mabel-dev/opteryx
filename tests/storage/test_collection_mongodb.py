@@ -13,8 +13,8 @@ import opteryx
 from opteryx.connectors import MongoDbConnector
 
 COLLECTION_NAME = "tweets"
-MONGO_CONNECTION = os.environ.get("MONGO_CONNECTION")
-MONGO_DATABASE = os.environ.get("MONGO_DATABASE")
+MONGO_CONNECTION = os.environ.get("MONGODB_CONNECTION")
+MONGO_DATABASE = os.environ.get("MONGODB_DATABASE")
 
 
 def populate_mongo():
@@ -30,8 +30,9 @@ def populate_mongo():
     collection.insert_many(map(orjson.loads, data.split(b"\n")[:-1]))
 
 
+# skip to reduce contention
 @skip_if(is_arm() or is_windows() or is_mac())
-def test_mongo_storage():
+def test_mongo_storage_environment_variables():
     opteryx.register_store(COLLECTION_NAME, MongoDbConnector)
 
     #    populate_mongo()
@@ -53,10 +54,15 @@ def test_mongo_storage():
     conn.close()
 
 
+# skip to reduce contention
 @skip_if(is_arm() or is_windows() or is_mac())
-def test_mongo_storage_atlas():
+def test_mongo_storage_explicit_parameters():
     opteryx.register_store(
-        "atlas", MongoDbConnector, database="sample_restaurants", remove_prefix=True
+        "atlas",
+        MongoDbConnector,
+        database="sample_restaurants",
+        connection=MONGO_CONNECTION,
+        remove_prefix=True,
     )
 
     conn = opteryx.connect()

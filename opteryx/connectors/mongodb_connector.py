@@ -46,21 +46,21 @@ class MongoDbConnector(BaseConnector):
         if connection:
             self.connection = connection
         else:
-            self.connection = os.environ.get("MONGO_CONNECTION")
+            self.connection = os.environ.get("MONGODB_CONNECTION")
 
         if self.connection is None:  # pragma: no cover
             raise UnmetRequirementError(
-                "MongoDB connector requires 'connection' set in register_store, or MONGO_CONNECTION set in environment variables."
+                "MongoDB connector requires 'connection' set in register_store, or MONGODB_CONNECTION set in environment variables."
             )
 
         if database:
             self.database = database
         else:
-            self.database = os.environ.get("MONGO_DATABASE")
+            self.database = os.environ.get("MONGODB_DATABASE")
 
         if self.database is None:  # pragma: no cover
             raise UnmetRequirementError(
-                "MongoDB connector requires 'database' set in register_stpre or MONGO_DATABASE set in environment variables."
+                "MongoDB connector requires 'database' set in register_stpre or MONGODB_DATABASE set in environment variables."
             )
 
     def read_dataset(self, chunk_size: int = INITIAL_CHUNK_SIZE) -> "DatasetReader":
