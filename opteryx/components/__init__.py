@@ -47,7 +47,6 @@ PROFILE_LOCATION = config.PROFILE_LOCATION
 
 def query_planner(operation: str, parameters: list, connection, qid: str):
     import orjson
-    from orso.tools import random_int
 
     from opteryx.components.ast_rewriter import do_ast_rewriter
     from opteryx.components.binder import do_bind_phase
@@ -63,8 +62,7 @@ def query_planner(operation: str, parameters: list, connection, qid: str):
 
     # SQL Rewriter removes whitespace and comments, and extracts temporal filters
     clean_sql, temporal_filters = do_sql_rewrite(operation)
-    # V2: copy for v2 to process, remove this when v2 is the engine
-    v2_params = [p for p in parameters or []]
+    params = [p for p in parameters or []]
 
     profile_content = operation + "\n\n"
     # Parser converts the SQL command into an AST
@@ -76,7 +74,7 @@ def query_planner(operation: str, parameters: list, connection, qid: str):
     parsed_statements = do_ast_rewriter(
         parsed_statements,
         temporal_filters=temporal_filters,
-        paramters=v2_params,
+        paramters=params,
         connection=connection,
     )
     # Logical Planner converts ASTs to logical plans

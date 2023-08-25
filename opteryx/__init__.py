@@ -60,10 +60,10 @@ def connect(*args, **kwargs):
     return Connection(*args, **kwargs)
 
 
-def query(operation, *args, params: list = None, **kwargs):
+def query(operation, params: list = None, **kwargs):
     """helper routine, create a connection and return an executed cursor"""
     # query is the similar DuckDB function with the same name
-    conn = Connection(*args, **kwargs)
+    conn = Connection(**kwargs)
     curr = conn.cursor()
     curr.execute(operation=operation, params=params)
     return curr
