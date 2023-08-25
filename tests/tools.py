@@ -209,12 +209,14 @@ def create_duck_db():
 
     try:
         os.remove("planets.duckdb")
-    except:
+    except Exception as err:
         # we expect to fail when running in GitHub Actions, but not fail
         # when running locally - just ignore failures here, it's not a
         # meaningful part of the script
-        pass
+        print(err)
+
     conn = duckdb.connect(database="planets.duckdb")
     cur = conn.cursor()
     res = cur.execute(CREATE_DB)
+    res.commit()
     cur.close()
