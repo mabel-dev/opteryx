@@ -164,6 +164,7 @@ class Cursor(DataFrame):
 
         if self._query is not None:
             raise InvalidCursorStateError("Cursor can only be executed once")
+        self._query = operation
 
         self._connection.context.history.append((operation, True, datetime.datetime.utcnow()))
         plans = query_planner(

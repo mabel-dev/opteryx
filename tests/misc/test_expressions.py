@@ -6,7 +6,6 @@ import numpy
 import pytest
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
-from rich import traceback
 
 import opteryx
 import opteryx.virtual_datasets
@@ -15,9 +14,8 @@ from opteryx.models import Node
 from opteryx.shared import QueryStatistics
 
 from orso.types import OrsoTypes
-from orso.schema import FlatColumn
+from orso.schema import FlatColumn, ConstantColumn
 
-traceback.install()
 stats = QueryStatistics()
 
 
@@ -48,7 +46,9 @@ LITERALS = [
 def test_literals(node_type, value_type, value):
     planets = opteryx.virtual_datasets.planets.read()
 
-    node = Node(node_type, type=value_type, value=value)
+    schema_column = ConstantColumn(name="test", value=value, type=value_type)
+
+    node = Node(node_type, type=value_type, value=value, schema_column=schema_column)
     values = evaluate(node, table=planets)
     if value_type != OrsoTypes.ARRAY:
         assert values.dtype == ORSO_TO_NUMPY_MAP[value_type], values
@@ -71,8 +71,18 @@ def test_logical_expressions():
 
     planets = opteryx.virtual_datasets.planets.read()
 
-    true = Node(NodeType.LITERAL, type=OrsoTypes.BOOLEAN, value=True)
-    false = Node(NodeType.LITERAL, type=OrsoTypes.BOOLEAN, value=False)
+    true = Node(
+        NodeType.LITERAL,
+        type=OrsoTypes.BOOLEAN,
+        value=True,
+        schema_column=ConstantColumn(name="true", value=True, type=OrsoTypes.BOOLEAN),
+    )
+    false = Node(
+        NodeType.LITERAL,
+        type=OrsoTypes.BOOLEAN,
+        value=False,
+        schema_column=ConstantColumn(name="false", value=False, type=OrsoTypes.BOOLEAN),
+    )
 
     T_AND_T = Node(NodeType.AND, left=true, right=true)
     T_AND_F = Node(NodeType.AND, left=true, right=false)

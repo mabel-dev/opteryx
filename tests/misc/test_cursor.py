@@ -1,6 +1,6 @@
 import os
 import sys
-
+from decimal import Decimal
 import pytest
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
@@ -35,7 +35,7 @@ def test_fetchone():
         0.33,
         4879,
         5427,
-        3.7,
+        Decimal("3.7"),
         4.3,
         1407.6,
         4222.6,
@@ -55,7 +55,7 @@ def test_fetchone():
 
 def test_fetchmany():
     cursor = opteryx.query("SELECT * FROM $planets")
-    dual = list(cursor.fetchmany(2))
+    dual = cursor.fetchmany(2)
     assert dual == [
         (
             1,
@@ -63,7 +63,7 @@ def test_fetchmany():
             0.33,
             4879,
             5427,
-            3.7,
+            Decimal("3.7"),
             4.3,
             1407.6,
             4222.6,
@@ -85,7 +85,7 @@ def test_fetchmany():
             4.87,
             12104,
             5243,
-            8.9,
+            Decimal("8.9"),
             10.4,
             -5832.5,
             2802.0,

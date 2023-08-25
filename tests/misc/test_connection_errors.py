@@ -17,7 +17,7 @@ def test_connection_warnings():
     cur.execute("SELECT * FROM $planets WITH(_NO_CACHE)")
     cur.fetchone()
 
-    assert len(cur.messages) > 0
+    assert len(cur.messages) > 0, cur.messages
 
 
 def test_connection_parameter_mismatch():

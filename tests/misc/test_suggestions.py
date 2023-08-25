@@ -14,9 +14,7 @@ def test_hint_hints():
     conn = opteryx.connect()
     cur = conn.cursor()
     cur.execute("SELECT * FROM $planets WITH(NO_PARTITIONS)")
-    assert cur.messages == [
-        "Hint `NO_PARTITIONS` is not recognized, did you mean `NO_PARTITION`?"
-    ], cur.messages
+    assert cur.messages == ["All HINTS are currently ignored"], cur.messages
 
 
 if __name__ == "__main__":  # pragma: no cover
