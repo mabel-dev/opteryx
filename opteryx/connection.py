@@ -162,10 +162,6 @@ class Cursor(DataFrame):
         if not operation:
             raise MissingSqlStatement("SQL statement not found")
 
-        if self._query is not None:
-            raise InvalidCursorStateError("Cursor can only be executed once")
-        self._query = operation
-
         self._connection.context.history.append((operation, True, datetime.datetime.utcnow()))
         plans = query_planner(
             operation=operation, parameters=params, connection=self._connection, qid=self.id
@@ -201,6 +197,10 @@ class Cursor(DataFrame):
         statements = sql.remove_comments(operation)
         statements = sql.clean_statement(statements)
         statements = sql.split_sql_statements(statements)
+
+        if self._query is not None:
+            raise InvalidCursorStateError("Cursor can only be executed once")
+        self._query = operation
 
         if len(statements) == 0:
             raise MissingSqlStatement("No statement found")

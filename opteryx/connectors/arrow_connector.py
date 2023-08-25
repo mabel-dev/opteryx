@@ -16,30 +16,39 @@ Arrow Reader
 Used to read datasets registered using the register_arrow or register_df functions.
 """
 
-import typing
-
 import pyarrow
+from orso.schema import FlatColumn
+from orso.schema import RelationSchema
 
-from opteryx import config
-from opteryx.connectors import BaseDocumentStorageAdapter
+from opteryx.connectors.base.base_connector import DEFAULT_MORSEL_SIZE
+from opteryx.connectors.base.base_connector import BaseConnector
 from opteryx.shared import MaterializedDatasets
 
 
-class ArrowConnector(BaseDocumentStorageAdapter):
+class ArrowConnector(BaseConnector):
+    __mode__ = "Internal"
+
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        BaseConnector.__init__(self, **kwargs)
+
+        self.dataset = self.dataset.lower()
         self._datasets = MaterializedDatasets()
 
-    def get_document_count(self, collection) -> int:
-        dataset = self._datasets[collection]
-        return dataset.num_rows
+    def get_dataset_schema(self) -> RelationSchema:
+        dataset = self._datasets[self.dataset]
+        arrow_schema = dataset.schema
 
-    def read_documents(self, collection, morsel_size: typing.Union[int, None] = None):
-        if morsel_size is None:
-            morsel_size = config.MORSEL_SIZE
-        dataset = self._datasets[collection]
+        self.schema = RelationSchema(
+            name=self.dataset,
+            columns=[FlatColumn.from_arrow(field) for field in arrow_schema],
+        )
 
-        batch_size = morsel_size // (dataset.nbytes / dataset.num_rows)
+        return self.schema
+
+    def read_dataset(self, **kwargs) -> pyarrow.Table:
+        dataset = self._datasets[self.dataset]
+
+        batch_size = DEFAULT_MORSEL_SIZE // (dataset.nbytes / dataset.num_rows)
 
         for batch in dataset.to_batches(max_chunksize=batch_size):
             morsel = pyarrow.Table.from_batches([batch], schema=dataset.schema)
