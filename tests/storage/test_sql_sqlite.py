@@ -26,6 +26,8 @@ def test_sqlite_storage():
     assert results.rowcount == 1, results.rowcount
 
 
+test_sqlite_storage()
+
 if __name__ == "__main__":  # pragma: no cover
     from tests.tools import run_tests
 

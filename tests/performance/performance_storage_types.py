@@ -54,7 +54,7 @@ FORMATS = (
 
 
 if __name__ == "__main__":
-    CYCLES = 25
+    CYCLES = 100
 
     opteryx.register_store("tests", DiskConnector)
 
@@ -64,7 +64,6 @@ if __name__ == "__main__":
         with Timer(f"{CYCLES} cycles of {format}"):
             for round in range(CYCLES):
                 cur = conn.cursor()
-                cur.execute(
+                cur.execute_to_arrow(
                     f"SELECT followers FROM testdata.flat.formats.{format} WITH(NO_PARTITION);"
                 )
-                cur.arrow()

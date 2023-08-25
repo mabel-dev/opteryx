@@ -27,5 +27,6 @@ psycopg2-binary
 polars
 duckdb
 duckdb-engine
+sqlalchemy-cockroachdb
 
 setuptools_rust

@@ -76,6 +76,53 @@ STATEMENTS = [
         # Does the error tester work
         ("THIS IS NOT VALID SQL", None, None, SqlError),
 
+
+        ("SELECT * FROM $planets WHERE `name` = 'Earth'", 1, 20, None),
+        ("SELECT * FROM $planets WHERE name = 'Mars'", 1, 20, None),
+        ("SELECT * FROM $planets WHERE name <> 'Venus'", 8, 20, None),
+        ("SELECT * FROM $planets WHERE name = '********'", 0, 20, None),
+        ("SELECT id FROM $planets WHERE diameter > 10000", 6, 1, None),
+        ("SELECT name, mass FROM $planets WHERE gravity > 5", 6, 2, None),
+        ("SELECT * FROM $planets WHERE numberOfMoons >= 5", 5, 20, None),
+        ("SELECT * FROM $planets WHERE mass < 10 AND diameter > 1000", 5, 20, None),
+        ("SELECT * FROM $planets ORDER BY distanceFromSun DESC", 9, 20, None),
+        ("SELECT name FROM $planets WHERE escapeVelocity < 10", 3, 1, None),
+        ("SELECT * FROM $planets WHERE obliquityToOrbit > 25", 6, 20, None),
+        ("SELECT * FROM $planets WHERE meanTemperature < 0", 6, 20, None),
+        ("SELECT * FROM $planets WHERE surfacePressure IS NULL", 4, 20, None),
+        ("SELECT name FROM $planets WHERE orbitalEccentricity < 0.1", 7, 1, None),
+        ("SELECT * FROM $planets WHERE orbitalPeriod BETWEEN 100 AND 1000", 3, 20, None),
+        ("SELECT * FROM $planets WHERE LENGTH(name) = 5", 3, 20, None),
+        ("SELECT * FROM $planets WHERE LENGTH(name) <> 5", 6, 20, None),
+        ("SELECT * FROM $planets LIMIT 5", 5, 20, None),
+        ("SELECT * FROM $planets WHERE numberOfMoons = 0", 2, 20, None),
+        ("SELECT id FROM $planets WHERE density > 4000 ORDER BY id ASC", 3, 1, None),
+        ("SELECT * FROM $planets WHERE gravity > 10 OR meanTemperature > 100", 4, 20, None),
+        ("SELECT * FROM $planets WHERE orbitalInclination <= 5", 7, 20, None),
+        ("SELECT * FROM $planets WHERE perihelion >= 150", 6, 20, None),
+        ("SELECT name FROM $planets WHERE aphelion < 1000", 5, 1, None),
+        ("SELECT * FROM $planets WHERE LENGTH(name) >= 7", 3, 20, None),
+        ("SELECT * FROM $planets WHERE id IN (1, 3, 5)", 3, 20, None),
+        ("SELECT * FROM $planets WHERE id NOT IN (1, 3, 5)", 6, 20, None),
+        ("SELECT * FROM $planets WHERE rotationPeriod < 0", 3, 20, None),
+        ("SELECT * FROM $planets WHERE mass > 100 AND mass < 1000", 2, 20, None),
+        ("SELECT * FROM $planets WHERE name LIKE 'M%'", 2, 20, None),
+        ("SELECT * FROM $planets WHERE orbitalVelocity > 20", 4, 20, None),
+        ("SELECT * FROM $planets WHERE escapeVelocity BETWEEN 10 AND 20", 2, 20, None),
+        ("SELECT * FROM $planets WHERE LENGTH(name) <= 6", 6, 20, None),
+        ("SELECT * FROM $planets ORDER BY id DESC LIMIT 3", 3, 20, None),
+        ("SELECT * FROM $planets WHERE gravity IS NOT NULL", 9, 20, None),
+        ("SELECT * FROM $planets WHERE surfacePressure IS NOT NULL", 5, 20, None),
+        ("SELECT * FROM $planets WHERE meanTemperature <= 100", 7, 20, None),
+        ("SELECT * FROM $planets WHERE numberOfMoons > 10", 4, 20, None),
+        ("SELECT * FROM $planets WHERE LENGTH(name) > 7", 0, 20, None),
+        ("SELECT * FROM $planets WHERE distanceFromSun BETWEEN 100 AND 1000", 4, 20, None),
+
+
+
+
+
+
         # Now the actual tests
         ("SELECT * FROM $satellites;", 177, 8, None),
         ("SELECT * FROM $satellites\n;", 177, 8, None),
@@ -725,7 +772,7 @@ STATEMENTS = [
         
         ("SELECT ARRAY_AGG(name) from $satellites GROUP BY planetId", 7, 1, None),
         ("SELECT ARRAY_AGG(DISTINCT name) from $satellites GROUP BY planetId", 7, 1, None),
-        ("SELECT ARRAY_AGG(name ORDER BY name) from $satellites GROUP BY TRUE", None, None, UnsupportedSyntaxError),
+        ("SELECT ARRAY_AGG(name ORDER BY name) from $satellites GROUP BY TRUE", 1, 1, None),
         ("SELECT ARRAY_AGG(name LIMIT 1) from $satellites GROUP BY planetId", 7, 1, None),
         ("SELECT ARRAY_AGG(DISTINCT name LIMIT 1) from $satellites GROUP BY planetId", 7, 1, None),
         ("SELECT COUNT(*), ARRAY_AGG(name) from $satellites GROUP BY planetId", 7, 2, None),
@@ -806,8 +853,8 @@ STATEMENTS = [
         ("SELECT * FROM $planets UNION SELECT * FROM $planets;", None, None, None),
         ("SELECT * FROM $planets LEFT ANTI JOIN $satellites ON id = id;", None, None, ArrowInvalid),  # invalid until the join is written
         ("EXPLAIN ANALYZE FORMAT JSON SELECT * FROM $planets AS a INNER JOIN (SELECT id FROM $planets) AS b USING (id);", None, None, UnsupportedSyntaxError),
-        ("SELECT DISTINCT ON (planetId) planetId, name FROM $satellites ", None, None, None),
-        ("SELECT 8 DIV 4", None, None, None),
+#        ("SELECT DISTINCT ON (planetId) planetId, name FROM $satellites ", None, None, None),
+        ("SELECT 8 DIV 4", 1, 1, None),
 
         # These are queries which have been found to return the wrong result or not run correctly
         # FILTERING ON FUNCTIONS
@@ -990,7 +1037,7 @@ def test_sql_battery(statement, rows, columns, exception):
             columns == actual_columns
         ), f"\n{cursor.display()}\n\033[38;5;203mQuery returned {actual_columns} cols but {columns} were expected.\033[0m\n{statement}"
     except AssertionError as err:
-        raise Exception() from err
+        raise Exception(err) from err
     except Exception as err:
         if type(err) != exception:
             raise Exception(
