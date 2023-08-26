@@ -42,5 +42,9 @@ class FileConnector(BaseConnector):
             return iter([self.decoder(file)])
 
     def get_dataset_schema(self) -> RelationSchema:
+        if self.schema is not None:
+            return self.schema
+
         with open(self.dataset, mode="br") as file:
-            return self.decoder(file, just_schema=True)
+            self.schema = self.decoder(file, just_schema=True)
+            return self.schema

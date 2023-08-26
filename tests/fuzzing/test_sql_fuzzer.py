@@ -17,7 +17,7 @@ from opteryx.utils.formatter import format_sql
 
 def generate_random_sql_select(columns, table):
     # Generate a list of column names to select
-    column_list = random.choices(columns, k=random.randint(1, len(columns)))
+    column_list = list(set(random.choices(columns, k=random.randint(1, len(columns)))))
     agg_column = None
     # Add DISTINCT keyword with 20% chance
     if random.random() < 0.2:

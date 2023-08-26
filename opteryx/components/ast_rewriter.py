@@ -82,14 +82,14 @@ def _build_literal_node(value):
         return {"Value": {"SingleQuotedString": value.isoformat()}}
 
 
-def variable_binder(node, parameter_set, connection, query_type):
+def parameter_binder(node, parameter_set, connection, query_type):
     """Walk the AST replacing 'Placeholder' nodes, this is recursive"""
     # Replace placeholders with parameters.
     # We do this after the AST has been parsed to remove any chance of the parameter affecting the
     # meaning of any of the other tokens - i.e. to eliminate this feature being used for SQL
     # injection.
     if isinstance(node, list):
-        return [variable_binder(i, parameter_set, connection, query_type) for i in node]
+        return [parameter_binder(i, parameter_set, connection, query_type) for i in node]
     if isinstance(node, dict):
         if "Value" in node:
             if "Placeholder" in node["Value"]:
@@ -104,7 +104,7 @@ def variable_binder(node, parameter_set, connection, query_type):
                 return _build_literal_node(placeholder_value)
                 # fmt:on
         return {
-            k: variable_binder(v, parameter_set, connection, query_type) for k, v in node.items()
+            k: parameter_binder(v, parameter_set, connection, query_type) for k, v in node.items()
         }
     # we're a leaf
     return node
@@ -196,12 +196,14 @@ def do_ast_rewriter(ast: list, temporal_filters: list, paramters: list, connecti
     query_type = next(iter(ast))
     # bind the temporal ranges, we do that here because the order in the AST matters
     with_temporal_ranges = temporal_range_binder(ast, temporal_filters)
-    # bind the user provided variables, we this that here because we want it after the
+    # bind the user provided parameters, we this that here because we want it after the
     # AST has been created (to avoid injection flaws) but also because the order
     # matters
-    with_parameters_exchanged = variable_binder(
+    with_parameters_exchanged = parameter_binder(
         with_temporal_ranges, parameter_set=paramters, connection=connection, query_type=query_type
     )
+    if len(paramters) != 0:
+        raise ParameterError("More parameters were provided than placeholders found in the query.")
     # Do some AST rewriting
     # first eliminate WHERE x IN (subquery) queries
     rewritten_query = with_parameters_exchanged

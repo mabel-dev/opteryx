@@ -17,7 +17,7 @@ def test_connection_warnings():
     cur.execute("SELECT * FROM $planets WITH(_NO_CACHE)")
     cur.fetchone()
 
-    assert len(cur.messages) > 0
+    assert len(cur.messages) > 0, cur.messages
 
 
 def test_connection_parameter_mismatch():
@@ -26,16 +26,14 @@ def test_connection_parameter_mismatch():
     import opteryx
     from opteryx.exceptions import ParameterError
 
-    conn = opteryx.connect()
-    cur = conn.cursor()
     with pytest.raises(ParameterError):
-        cur.execute("SELECT * FROM $planets WHERE id = ?")
+        opteryx.query("SELECT * FROM $planets WHERE id = ?")
     with pytest.raises(ParameterError):
-        cur.execute("SELECT * FROM $planets WHERE id = ? AND name = ?", [1])
+        opteryx.query("SELECT * FROM $planets WHERE id = ? AND name = ?", [1])
     with pytest.raises(ParameterError):
-        cur.execute("SELECT * FROM $planets WHERE id = ? AND name = ?", (1,))
+        opteryx.query("SELECT * FROM $planets WHERE id = ? AND name = ?", (1,))
     with pytest.raises(ParameterError):
-        cur.execute("SELECT * FROM $planets WHERE id = ?", (1, 2))
+        opteryx.query("SELECT * FROM $planets WHERE id = ?", (1, 2))
 
 
 def test_fetching():

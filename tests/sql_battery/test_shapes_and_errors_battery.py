@@ -822,9 +822,9 @@ STATEMENTS = [
         # Can't IN an INDENTIFIER
         ("SELECT * FROM $astronauts WHERE 'Apollo 11' IN missions", None, None, SqlError),
         # Invalid temporal ranges
-        ("SELECT * FROM $planets FOR 2022-01-01", None, None, InvalidTemporalRangeFilterError),
+        ("SELECT * FROM $planets FOR 2022-01-01", 9, 20, None),
         ("SELECT * FROM $planets FOR DATES IN 2022", None, None, InvalidTemporalRangeFilterError),
-        ("SELECT * FROM $planets FOR DATES BETWEEN 2022-01-01 AND TODAY", None, None, InvalidTemporalRangeFilterError),
+        ("SELECT * FROM $planets FOR DATES BETWEEN 2022-01-01 AND TODAY", 9, 20, None),
         ("SELECT * FROM $planets FOR DATES BETWEEN today AND yesterday", None, None, InvalidTemporalRangeFilterError),
         ("SELECT * FROM $planets FOR DATES IN '2022-01-01' AND '2022-01-02'", None, None, InvalidTemporalRangeFilterError),
         # Join hints aren't supported

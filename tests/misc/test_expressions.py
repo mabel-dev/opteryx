@@ -1,4 +1,4 @@
-import decimal
+from decimal import Decimal
 import os
 import sys
 
@@ -6,7 +6,6 @@ import numpy
 import pytest
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
-from rich import traceback
 
 import opteryx
 import opteryx.virtual_datasets
@@ -15,9 +14,8 @@ from opteryx.models import Node
 from opteryx.shared import QueryStatistics
 
 from orso.types import OrsoTypes
-from orso.schema import FlatColumn
+from orso.schema import FlatColumn, ConstantColumn, FunctionColumn
 
-traceback.install()
 stats = QueryStatistics()
 
 
@@ -33,7 +31,7 @@ LITERALS = [
         (NodeType.LITERAL, OrsoTypes.DOUBLE, None),
         (NodeType.LITERAL, OrsoTypes.DOUBLE, 0.1),
         (NodeType.LITERAL, OrsoTypes.DOUBLE, 1e10),
-        (NodeType.LITERAL, OrsoTypes.DECIMAL, decimal.Decimal(4)),
+        (NodeType.LITERAL, OrsoTypes.DECIMAL, Decimal(4)),
         (NodeType.LITERAL, OrsoTypes.INTEGER, int(4)),
         (NodeType.LITERAL, OrsoTypes.DOUBLE, float(4)),
         (NodeType.LITERAL, OrsoTypes.DOUBLE, numpy.float64(4)),
@@ -48,7 +46,9 @@ LITERALS = [
 def test_literals(node_type, value_type, value):
     planets = opteryx.virtual_datasets.planets.read()
 
-    node = Node(node_type, type=value_type, value=value)
+    schema_column = ConstantColumn(name="test", value=value, type=value_type)
+
+    node = Node(node_type, type=value_type, value=value, schema_column=schema_column)
     values = evaluate(node, table=planets)
     if value_type != OrsoTypes.ARRAY:
         assert values.dtype == ORSO_TO_NUMPY_MAP[value_type], values
@@ -71,13 +71,31 @@ def test_logical_expressions():
 
     planets = opteryx.virtual_datasets.planets.read()
 
-    true = Node(NodeType.LITERAL, type=OrsoTypes.BOOLEAN, value=True)
-    false = Node(NodeType.LITERAL, type=OrsoTypes.BOOLEAN, value=False)
+    true = Node(
+        NodeType.LITERAL,
+        type=OrsoTypes.BOOLEAN,
+        value=True,
+        schema_column=ConstantColumn(name="true", value=True, type=OrsoTypes.BOOLEAN),
+    )
+    false = Node(
+        NodeType.LITERAL,
+        type=OrsoTypes.BOOLEAN,
+        value=False,
+        schema_column=ConstantColumn(name="false", value=False, type=OrsoTypes.BOOLEAN),
+    )
 
-    T_AND_T = Node(NodeType.AND, left=true, right=true)
-    T_AND_F = Node(NodeType.AND, left=true, right=false)
-    F_AND_T = Node(NodeType.AND, left=false, right=true)
-    F_AND_F = Node(NodeType.AND, left=false, right=false)
+    T_AND_T = Node(
+        NodeType.AND, left=true, right=true, schema_column=FunctionColumn(name="func", type=0)
+    )
+    T_AND_F = Node(
+        NodeType.AND, left=true, right=false, schema_column=FunctionColumn(name="func", type=0)
+    )
+    F_AND_T = Node(
+        NodeType.AND, left=false, right=true, schema_column=FunctionColumn(name="func", type=0)
+    )
+    F_AND_F = Node(
+        NodeType.AND, left=false, right=false, schema_column=FunctionColumn(name="func", type=0)
+    )
 
     result = evaluate(T_AND_T, table=planets)
     assert all(result)
@@ -88,10 +106,18 @@ def test_logical_expressions():
     result = evaluate(F_AND_F, table=planets)
     assert not any(c.as_py() for c in result)
 
-    T_OR_T = Node(NodeType.OR, left=true, right=true)
-    T_OR_F = Node(NodeType.OR, left=true, right=false)
-    F_OR_T = Node(NodeType.OR, left=false, right=true)
-    F_OR_F = Node(NodeType.OR, left=false, right=false)
+    T_OR_T = Node(
+        NodeType.OR, left=true, right=true, schema_column=FunctionColumn(name="func", type=0)
+    )
+    T_OR_F = Node(
+        NodeType.OR, left=true, right=false, schema_column=FunctionColumn(name="func", type=0)
+    )
+    F_OR_T = Node(
+        NodeType.OR, left=false, right=true, schema_column=FunctionColumn(name="func", type=0)
+    )
+    F_OR_F = Node(
+        NodeType.OR, left=false, right=false, schema_column=FunctionColumn(name="func", type=0)
+    )
 
     result = evaluate(T_OR_T, table=planets)
     assert all(result)
@@ -102,18 +128,26 @@ def test_logical_expressions():
     result = evaluate(F_OR_F, table=planets)
     assert not any(c.as_py() for c in result)
 
-    NOT_T = Node(NodeType.NOT, centre=true)
-    NOT_F = Node(NodeType.NOT, centre=false)
+    NOT_T = Node(NodeType.NOT, centre=true, schema_column=FunctionColumn(name="func", type=0))
+    NOT_F = Node(NodeType.NOT, centre=false, schema_column=FunctionColumn(name="func", type=0))
 
     result = evaluate(NOT_T, table=planets)
     assert not any(result), result
     result = evaluate(NOT_F, table=planets)
     assert all(result)
 
-    T_XOR_T = Node(NodeType.XOR, left=true, right=true)
-    T_XOR_F = Node(NodeType.XOR, left=true, right=false)
-    F_XOR_T = Node(NodeType.XOR, left=false, right=true)
-    F_XOR_F = Node(NodeType.XOR, left=false, right=false)
+    T_XOR_T = Node(
+        NodeType.XOR, left=true, right=true, schema_column=FunctionColumn(name="func", type=0)
+    )
+    T_XOR_F = Node(
+        NodeType.XOR, left=true, right=false, schema_column=FunctionColumn(name="func", type=0)
+    )
+    F_XOR_T = Node(
+        NodeType.XOR, left=false, right=true, schema_column=FunctionColumn(name="func", type=0)
+    )
+    F_XOR_F = Node(
+        NodeType.XOR, left=false, right=false, schema_column=FunctionColumn(name="func", type=0)
+    )
 
     result = evaluate(T_XOR_T, table=planets)
     assert not any(c.as_py() for c in result)
@@ -128,7 +162,9 @@ def test_logical_expressions():
 def test_reading_identifiers():
     planets = opteryx.virtual_datasets.planets.read()
 
-    name_column = opteryx.virtual_datasets.planets.schema.find_column("name")
+    name_column = opteryx.virtual_datasets.planets.schema().find_column("name")
+    name_column.identity = name_column.name
+    assert name_column is not None
     names_node = Node(
         NodeType.IDENTIFIER,
         type=OrsoTypes.VARCHAR,
@@ -136,7 +172,7 @@ def test_reading_identifiers():
         schema_column=name_column,
     )
     names = evaluate(names_node, planets)
-    assert len(names) == 9
+    assert len([n for n in names]) == 9
     assert sorted(names) == [
         "Earth",
         "Jupiter",
@@ -149,30 +185,77 @@ def test_reading_identifiers():
         "Venus",
     ], sorted(names)
 
-    gravity_node = Node(NodeType.IDENTIFIER, type=OrsoTypes.DOUBLE, value="gravity")
+    gravity_column = opteryx.virtual_datasets.planets.schema().find_column("gravity")
+    gravity_column.identity = gravity_column.name
+    assert gravity_column is not None
+    gravity_node = Node(
+        NodeType.IDENTIFIER,
+        type=OrsoTypes.DOUBLE,
+        value=gravity_column.identity,
+        schema_column=gravity_column,
+    )
     gravities = evaluate(gravity_node, planets)
-    assert sorted(gravities) == [0.7, 3.7, 3.7, 8.7, 8.9, 9.0, 9.8, 11.0, 23.1], sorted(gravities)
+    assert sorted(gravities) == [
+        Decimal("0.7"),
+        Decimal("3.7"),
+        Decimal("3.7"),
+        Decimal("8.7"),
+        Decimal("8.9"),
+        Decimal("9.0"),
+        Decimal("9.8"),
+        Decimal("11.0"),
+        Decimal("23.1"),
+    ], sorted(gravities)
 
 
 def test_function_operations():
     planets = opteryx.virtual_datasets.planets.read()
 
-    name = Node(NodeType.IDENTIFIER, value="name")
+    name_column = opteryx.virtual_datasets.planets.schema().find_column("name")
+    name_column.identity = name_column.name
+    assert name_column is not None
+    names_node = Node(
+        NodeType.IDENTIFIER,
+        type=OrsoTypes.VARCHAR,
+        value=name_column.identity,
+        schema_column=name_column,
+    )
     concat = Node(
         NodeType.BINARY_OPERATOR,
         value="StringConcat",
-        left=name,
-        right=name,
+        left=names_node,
+        right=names_node,
+        schema_column=FunctionColumn(name="add", type=OrsoTypes.VARCHAR),
     )
 
-    gravity = Node(NodeType.IDENTIFIER, value="gravity")
-    seven = Node(NodeType.LITERAL, type=OrsoTypes.INTEGER, value=7)
-    plus = Node(NodeType.BINARY_OPERATOR, value="Plus", left=gravity, right=seven)
+    gravity_column = opteryx.virtual_datasets.planets.schema().find_column("gravity")
+    gravity_column.identity = gravity_column.name
+    assert gravity_column is not None
+    gravity_node = Node(
+        NodeType.IDENTIFIER,
+        type=OrsoTypes.DOUBLE,
+        value=gravity_column.identity,
+        schema_column=gravity_column,
+    )
+    seven = Node(
+        NodeType.LITERAL,
+        type=OrsoTypes.INTEGER,
+        value=7,
+        schema_column=ConstantColumn(name="seven", type=OrsoTypes.INTEGER, value=7),
+    )
+    plus = Node(
+        NodeType.BINARY_OPERATOR,
+        value="Plus",
+        left=gravity_node,
+        right=seven,
+        schema_column=FunctionColumn(name="add", type=0),
+    )
     multiply = Node(
         NodeType.BINARY_OPERATOR,
         value="Multiply",
-        left=gravity,
+        left=gravity_node,
         right=seven,
+        schema_column=FunctionColumn(name="times", type=OrsoTypes.DOUBLE),
     )
 
     names = evaluate(concat, planets)
@@ -189,18 +272,30 @@ def test_function_operations():
     ]  # , list(names)
 
     plussed = evaluate(plus, planets)
-    assert set(plussed).issubset([10.7, 15.9, 16.8, 10.7, 30.1, 16, 15.7, 18, 7.7]), plussed
+    assert set(plussed).issubset(
+        [
+            Decimal("10.7"),
+            Decimal("15.9"),
+            Decimal("16.8"),
+            Decimal("10.7"),
+            Decimal("30.1"),
+            Decimal("16.0"),
+            Decimal("15.7"),
+            Decimal("18.0"),
+            Decimal("7.7"),
+        ]
+    ), plussed
 
     timesed = evaluate(multiply, planets)
     assert set(timesed) == {
-        161.70000000000002,
-        68.60000000000001,
-        4.8999999999999995,
-        77.0,
-        25.900000000000002,
-        60.89999999999999,
-        62.300000000000004,
-        63.0,
+        Decimal("62.3"),
+        Decimal("25.9"),
+        Decimal("77.0"),
+        Decimal("60.9"),
+        Decimal("68.6"),
+        Decimal("4.9"),
+        Decimal("161.7"),
+        Decimal("63.0"),
     }, set(timesed)
 
 
@@ -209,15 +304,28 @@ def test_compound_expressions():
 
     # this builds and tests the following `3.7 * gravity > mass`
 
-    gravity = Node(NodeType.IDENTIFIER, value="gravity")
-    three_point_seven = Node(NodeType.LITERAL_FLOAT, value=3.7)
+    gravity_column = opteryx.virtual_datasets.planets.schema().find_column("gravity")
+    gravity_column.identity = gravity_column.name
+    assert gravity_column is not None
+    gravity_node = Node(
+        NodeType.IDENTIFIER,
+        type=OrsoTypes.DOUBLE,
+        value=gravity_column.identity,
+        schema_column=gravity_column,
+    )
+    three_point_seven = Node(
+        NodeType.LITERAL,
+        type=OrsoTypes.DOUBLE,
+        value=3.7,
+        schema_column=ConstantColumn(name="3.7", value=3.7, type=OrsoTypes.DOUBLE),
+    )
     mass = Node(NodeType.IDENTIFIER, value="mass")
 
     multiply = Node(
         NodeType.BINARY_OPERATOR,
         value="Multiply",
         right=three_point_seven,
-        left=gravity,
+        left=gravity_node,
     )
     gt = Node(NodeType.COMPARISON_OPERATOR, value="Gt", left=multiply, right=mass)
 
@@ -238,8 +346,21 @@ def test_compound_expressions():
 def test_functions():
     planets = opteryx.virtual_datasets.planets.read()
 
-    gravity = Node(NodeType.IDENTIFIER, value="gravity")
-    _round = Node(NodeType.FUNCTION, value="ROUND", parameters=[gravity])
+    gravity_column = opteryx.virtual_datasets.planets.schema().find_column("gravity")
+    gravity_column.identity = gravity_column.name
+    assert gravity_column is not None
+    gravity_node = Node(
+        NodeType.IDENTIFIER,
+        type=OrsoTypes.DOUBLE,
+        value=gravity_column.identity,
+        schema_column=gravity_column,
+    )
+    _round = Node(
+        NodeType.FUNCTION,
+        value="ROUND",
+        parameters=[gravity_node],
+        schema_column=FunctionColumn(name="func", type=0),
+    )
 
     rounded = evaluate(_round, planets)
     assert len(rounded) == 9

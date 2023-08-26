@@ -320,7 +320,7 @@ def extract_temporal_filters(sql):  # pragma: no cover
         elif for_date_string.startswith("DATES SINCE "):
             parts = shlex.split(for_date_string)
             start_date = parse_date(parts[2])
-            end_date = datetime.datetime.utcnow().replace(minute=0, second=0, microsecond=0)
+            end_date = datetime.datetime.utcnow().replace(minute=59, second=0, microsecond=0)
 
         elif for_date_string:
             raise InvalidTemporalRangeFilterError(

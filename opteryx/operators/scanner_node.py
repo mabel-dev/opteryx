@@ -42,6 +42,10 @@ class ScannerNode(BasePlanNode):
         super().__init__(properties=properties, **parameters)
         self.start_date = parameters.get("start_date")
         self.end_date = parameters.get("end_date")
+        self.hints = parameters.get("hints", [])
+
+        if len(self.hints) != 0:
+            self.statistics.add_message("All HINTS are currently ignored")
 
     @property
     def name(self):  # pragma: no cover
