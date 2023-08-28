@@ -98,9 +98,9 @@ class MabelPartitionScheme(BasePartitionScheme):
                 as_at = None
 
             if as_at:
-                yield from (blob for blob in blob_names if as_at in blob)
+                return [blob for blob in blob_names if as_at in blob]
 
-            yield from blob_names
+            return blob_names
 
         start_date = start_date or datetime.datetime.utcnow().replace(
             hour=0, minute=0, second=0, microsecond=0
@@ -109,9 +109,10 @@ class MabelPartitionScheme(BasePartitionScheme):
             hour=23, minute=59, second=0, microsecond=0
         )
 
-        seen = set()
+        found = set()
         for segment_timeslice in self.hourly_timestamps(start_date, end_date):
             blobs = _inner(timestamp=segment_timeslice)
-            for blob_name in sorted(set(blobs).difference(seen)):
-                yield blob_name
-                seen.add(blob_name)
+            for blob_name in sorted(set(blobs).difference(found)):
+                found.add(blob_name)
+
+        return list(found)

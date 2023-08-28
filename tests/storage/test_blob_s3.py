@@ -15,7 +15,7 @@ BUCKET_NAME = "mabellabs"
 SECRETS = None
 
 
-@skip_if(is_arm() or is_windows() or is_mac())
+@skip_if(is_arm() or is_windows() or is_mac())  # reduce cost
 def test_minio_storage():
     opteryx.register_store(BUCKET_NAME, AwsS3Connector)
 

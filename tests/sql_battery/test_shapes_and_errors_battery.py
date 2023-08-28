@@ -724,9 +724,9 @@ STATEMENTS = [
         ("SET @id = 3; SELECT name FROM $planets WHERE id < @id OR id > @id;", 8, 1, None),
         ("SET @dob = '1950-01-01'; SELECT name FROM $astronauts WHERE birth_date < @dob;", 149, 1, None),
         ("SET @dob = '1950-01-01'; SET @mission = 'Apollo 11'; SELECT name FROM $astronauts WHERE birth_date < @dob AND @mission IN UNNEST(missions);", 3, 1, None),
-        ("SET @pples = 'b'; SET @ngles = 90; SHOW VARIABLES LIKE '%s'", 2, 2, None),
-        ("SET @pples = 'b'; SET @rgon = 90; SHOW VARIABLES LIKE '%gon'", 1, 2, None),
-        ("SET @variable = 44; SET @var = 'name'; SHOW VARIABLES LIKE '%ri%';", 1, 2, None),
+        ("SET @pples = 'b'; SET @ngles = 90; SHOW VARIABLES LIKE '@%s'", 2, 4, None),
+        ("SET @pples = 'b'; SET @rgon = 90; SHOW VARIABLES LIKE '@%gon'", 1, 4, None),
+        ("SET @variable = 44; SET @var = 'name'; SHOW VARIABLES LIKE '@%ri%';", 1, 4, None),
         ("SHOW PARAMETER disable_optimizer", 1, 2, None),
         ("SET disable_optimizer = true; SHOW PARAMETER enable_optimizer;", 1, 2, None),
 
