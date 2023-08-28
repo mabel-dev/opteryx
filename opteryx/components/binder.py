@@ -404,6 +404,7 @@ class BinderVisitor:
             )
             context["schemas"][relation_name] = schema
             node.columns = [schema.columns[0].identity]
+            node.relation_name = relation_name
         else:
             raise NotImplementedError(f"{node.function} binding isn't written yet")
         return node, context
@@ -515,7 +516,7 @@ class BinderVisitor:
         if Cacheable in connector_capabilities:
             # We add the caching mechanism here if the connector is Cacheable and
             # we've not disable caching
-            if not "NO_CACHE" in node.hints:
+            if not "NO_CACHE" in (node.hints or []):
                 original_read_blob = node.connector.read_blob
                 node.connector.read_blob = read_thru_cache(original_read_blob)
         # get them to tell is the schema of the dataset

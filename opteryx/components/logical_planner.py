@@ -389,7 +389,7 @@ def create_node_relation(relation):
                 values_step.alias = subquery["alias"]["name"]["value"]
                 values_step.columns = tuple(col["value"] for col in subquery["alias"]["columns"])
                 values_step.values = [
-                    tuple(logical_planner_builders.build(value["Value"]) for value in row)
+                    tuple(logical_planner_builders.build(value) for value in row)
                     for row in subquery["subquery"]["body"]["Values"]["rows"]
                 ]
                 step_id = random_string()

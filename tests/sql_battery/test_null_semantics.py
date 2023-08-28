@@ -78,7 +78,54 @@ SELECT * FROM (VALUES (True), (False), (NULL)) AS tristatebooleans(bool) WHERE b
 -- Query 13: SELECT * FROM tristatebooleans WHERE bool IS NOT FALSE;
 -- Expected rows: 2 (True, NULL)
 SELECT * FROM (VALUES (True), (False), (NULL)) AS tristatebooleans(bool) WHERE bool IS NOT FALSE;
-""", {True, None})
+""", {True, None}),(
+"""
+-- Query 1: Expected rows: 1 ("true")
+SELECT * FROM (VALUES ('true'), ('false'), (NULL)) AS tristatebooleans(bool) WHERE bool = 'true';
+""", {'true'}),(
+"""
+-- Query 2: Expected rows: 1 (NULL)
+SELECT * FROM (VALUES ('true'), ('false'), (NULL)) AS tristatebooleans(bool) WHERE bool IS NULL;
+""", {None}),(
+"""
+-- Query 3: Expected rows: 2 ("true", "false")
+SELECT * FROM (VALUES ('true'), ('false'), (NULL)) AS tristatebooleans(bool) WHERE bool IS NOT NULL;
+""", {'true', 'false'}),(
+"""
+-- Query 4: Expected rows: 0
+SELECT * FROM (VALUES ('true'), ('false'), (NULL)) AS tristatebooleans(bool) WHERE bool = NULL;
+""", {}),(
+"""
+-- Query 5: Expected rows: 2 ("true", "false")
+SELECT * FROM (VALUES ('true'), ('false'), (NULL)) AS tristatebooleans(bool) WHERE NOT bool IS NULL;
+""", {'true', 'false'}),(
+"""
+-- Query 6: Expected rows: 1 ("false")
+SELECT * FROM (VALUES ('true'), ('false'), (NULL)) AS tristatebooleans(bool) WHERE NOT bool = "true";
+""", {'false'}),(
+"""
+-- Query 1: Expected rows: 1 (1)
+SELECT * FROM (VALUES (1), (-1), (NULL)) AS tristatebooleans(bool) WHERE bool = 1;
+""", {1}),(
+"""
+-- Query 2: Expected rows: 1 (NULL)
+SELECT * FROM (VALUES (1), (-1), (NULL)) AS tristatebooleans(bool) WHERE bool IS NULL;
+""", {None}),(
+"""
+-- Query 3: Expected rows: 2 (1, -1)
+SELECT * FROM (VALUES (1), (-1), (NULL)) AS tristatebooleans(bool) WHERE bool IS NOT NULL;
+""", {1, -1}),(
+"""
+-- Query 4: Expected rows: 0
+SELECT * FROM (VALUES (1), (-1), (NULL)) AS tristatebooleans(bool) WHERE bool = NULL;
+""", {}),(
+"""
+-- Query 5: Expected rows: 3 (1, -1, NULL)
+SELECT * FROM (VALUES (1), (-1), (NULL)) AS tristatebooleans(bool) WHERE NOT bool IS NULL;
+""", {1, -1})
+
+
+
 ]
 # fmt:on
 

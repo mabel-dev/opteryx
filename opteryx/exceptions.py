@@ -283,7 +283,11 @@ class MissingSqlStatement(ProgrammingError):
 
 
 class EmptyDatasetError(DataError):
-    pass
+    def __init__(self, message=None, dataset=None):
+        if message is None and dataset is not None:
+            self.dataset = dataset
+            message = f"The requested dataset, '{dataset}', appears to exist but no matching partitions were found."
+        super().__init__(message)
 
 
 class EmptyResultSetError(DataError):

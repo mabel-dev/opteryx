@@ -15,21 +15,30 @@ Implement conditions which are essentially unary statements, usually IS statemen
 
 This are executed as functions on arrays rather than functions on elements in arrays.
 """
+from decimal import Decimal
+
 import numpy
 
 
 def _is_null(values: numpy.ndarray) -> numpy.ndarray:
     """
-    Returns a boolean mask where True indicates that the corresponding element in values is null (NaN).
+    Returns a boolean mask where True indicates that the corresponding element in values is null (NaN, NaT, etc.).
 
     Parameters:
         values: numpy.ndarray
-            1D array of boolean and/or null values.
+            1D array of various types.
 
     Returns:
         numpy.ndarray: 1D array of booleans serving as a mask.
     """
-    return numpy.equal(values, None)
+    if values.dtype.kind == "f":  # float
+        return numpy.isnan(values)
+    elif values.dtype.kind == "M":  # datetime64
+        return numpy.isnat(values)
+    elif values.dtype.kind in ["S", "O"]:  # string or object
+        return values == None
+    else:
+        raise TypeError(f"Unsupported dtype for _is_null: {values.dtype}")
 
 
 def _is_not_null(values: numpy.ndarray) -> numpy.ndarray:
@@ -43,7 +52,7 @@ def _is_not_null(values: numpy.ndarray) -> numpy.ndarray:
     Returns:
         numpy.ndarray: 1D array of booleans serving as a mask.
     """
-    return numpy.logical_not(numpy.equal(values, None))
+    return numpy.logical_not(_is_null(values))
 
 
 def _is_true(values: numpy.ndarray) -> numpy.ndarray:
