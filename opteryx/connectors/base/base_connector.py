@@ -18,6 +18,8 @@ import typing
 import pyarrow
 from orso.schema import RelationSchema
 
+from opteryx.shared import QueryStatistics
+
 INITIAL_CHUNK_SIZE: int = 500
 DEFAULT_MORSEL_SIZE: int = 8 * 1024 * 1024
 
@@ -32,7 +34,12 @@ class BaseConnector:
         return False
 
     def __init__(
-        self, *, dataset: str = None, config: typing.Dict[str, typing.Any] = None, **kwargs
+        self,
+        *,
+        dataset: str = None,
+        config: typing.Dict[str, typing.Any] = None,
+        statistics: QueryStatistics,
+        **kwargs,
     ) -> None:
         """
         Initialize the base connector with configuration.
@@ -48,6 +55,7 @@ class BaseConnector:
         self.dataset = dataset
         self.chunk_size = INITIAL_CHUNK_SIZE
         self.schema = None
+        self.statistics = statistics
 
     def get_dataset_schema(self) -> RelationSchema:
         """

@@ -19,8 +19,8 @@ We're using a dictionary and moving items to the top of the dictionary when it's
 accessed. This relies on Python dictionaries being ordered.
 """
 
-import io
 from typing import Iterable
+from typing import Union
 
 from opteryx.managers.kvstores import BaseKeyValueStore
 from opteryx.utils.lru_2 import LRU2
@@ -38,15 +38,13 @@ class MemoryCache(BaseKeyValueStore):
         size = int(kwargs.get("size", 50))
         self._lru2 = LRU2(size=size)
 
-    def get(self, key):
+    def get(self, key: str) -> Union[bytes, None]:
         value = self._lru2.get(key)
         if value:
-            return io.BytesIO(value)
+            return bytes(value)
 
-    def set(self, key, value):
-        value.seek(0, 0)
-        ret = self._lru2.set(key, value.read())
-        value.seek(0, 0)
+    def set(self, key: str, value: bytes) -> None:
+        ret = self._lru2.set(key, value)
         return ret
 
     def contains(self, keys: Iterable) -> Iterable:

@@ -10,12 +10,13 @@ import opteryx
 from opteryx.connectors import SqlConnector
 
 
-def test_sqlalchemy():
+def test_sqlalchemy_configure_connector_with_engine():
     from sqlalchemy import create_engine
 
     connection_string = "sqlite:///testdata/sqlite/database.db"
     engine = create_engine(connection_string)
 
+    # we're passing an engine rather than a connection string
     opteryx.register_store("sqlite", SqlConnector, remove_prefix=True, engine=engine)
 
     results = opteryx.query("SELECT * FROM sqlite.planets")

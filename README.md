@@ -26,7 +26,9 @@ Opteryx is an in-process SQL query engine for analysis of distributed datasets.
 
 ## What is Opteryx?
 
-Opteryx is a Python library designed for data wrangling and analytics. It combines the benefits of in-process database engines like SQLite and DuckDB with query federators like Presto and Trino, providing a flexible and intuitive solution that allows users to seamlessly access and query data from various sources in a unified manner.
+Opteryx simplifies cross-platform data analytics by allowing SQL queries across various data sources, such as Postgres databases and Parquet files. The goal is to enhance your data analytics process by offering a unified way to access and manage different types of data.
+
+Opteryx is a Python library that combines elements of in-process database engines like SQLite and DuckDB with federative features found in systems like Presto and Trino. The result is a versatile tool for querying data from multiple sources in a seamless fashion.
 
 Opteryx offers the following features:
 

@@ -16,7 +16,6 @@ given directly in a query.
 
 As such it assumes 
 """
-import io
 import os
 from typing import List
 
@@ -44,12 +43,13 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable):
         Cacheable.__init__(self, **kwargs)
 
         self.dataset = self.dataset.replace(".", "/")
+        # we're going to cache the first blob as the schema and dataset reader
+        # sometimes both start here
+        self.cached_first_blob = None
 
-    @Cacheable().read_thru()
-    def read_blob(self, *, blob_name):
+    def read_blob(self, *, blob_name, **kwargs):
         with open(blob_name, mode="br") as file:
-            file_stream = file.read()
-        return io.BytesIO(file_stream)
+            return bytes(file.read())
 
     @single_item_cache
     def get_list_of_blob_names(self, *, prefix: str) -> List[str]:
@@ -69,10 +69,16 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable):
             prefix=self.dataset,
         )
 
+        # Check if the first blob was cached earlier
+        if self.cached_first_blob is not None:
+            yield self.cached_first_blob  # Use cached blob
+            blob_names = blob_names[1:]  # Skip first blob
+        self.cached_first_blob = None
+
         for blob_name in blob_names:
             try:
                 decoder = get_decoder(blob_name)
-                blob_bytes = self.read_blob(blob_name=blob_name)
+                blob_bytes = self.read_blob(blob_name=blob_name, statistics=self.statistics)
                 yield decoder(blob_bytes)
             except UnsupportedFileTypeError:
                 pass
@@ -83,7 +89,9 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable):
         if self.schema:
             return self.schema
 
+        # Read first blob for schema inference and cache it
         record = next(self.read_dataset(), None)
+        self.cached_first_blob = record
 
         if record is None:
             if os.path.isdir(self.dataset):

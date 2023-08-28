@@ -50,15 +50,11 @@ into that planand then performs some validation checks.
 These catalogues include:
 - The Data Catalogue (e.g. data schemas)
 - The Function Catalogue (e.g. function inputs and data types)
-- The Variable Catalogue (i.e. the @@ variables)
+- The Variable Catalogue (i.e. the @ variables)
 
-We also bind infromation about '@' variables.
-
-The Binder then performs these activities:
+The Binder performs these activities:
 - schema lookup and propagation (add columns and types, add aliases)
-- type checks (are the ops and functions compatible with the columns)
-? permission enforcement (does the user have the permission to that table, what additional
-  constraints should be added for contextual access)
+
 """
 
 
@@ -494,16 +490,31 @@ class BinderVisitor:
 
     def visit_scan(self, node, context):
         from opteryx.connectors import connector_factory
+        from opteryx.connectors.capabilities import Cacheable
+        from opteryx.connectors.capabilities import Partitionable
+        from opteryx.connectors.capabilities.cacheable import read_thru_cache
+        from opteryx.shared import QueryStatistics
+
+        if "statistics" not in context:
+            context["statistics"] = QueryStatistics(context["qid"])
 
         if node.alias in context["relations"]:
             raise AmbiguousDatasetError(dataset=node.alias)
         # work out which connector will be serving this request
-        node.connector = connector_factory(node.relation, cache=context.get("cache"))
-        if hasattr(node.connector, "partitioned"):
-            node.connector.start_date = node.start_date
-            node.connector.end_date = node.end_date
+        node.connector = connector_factory(node.relation, statistics=context["statistics"])
+        connector_capabilities = node.connector.__class__.mro()
+
         if hasattr(node.connector, "variables"):
             node.connector.variables = context["connection"].variables
+        if Partitionable in connector_capabilities:
+            node.connector.start_date = node.start_date
+            node.connector.end_date = node.end_date
+        if Cacheable in connector_capabilities:
+            # We add the caching mechanism here if the connector is Cacheable and
+            # we've not disable caching
+            if not "NO_CACHE" in node.hints:
+                original_read_blob = node.connector.read_blob
+                node.connector.read_blob = read_thru_cache(original_read_blob)
         # get them to tell is the schema of the dataset
         # None means we don't know ahead of time - we can usually get something
         node.schema = node.connector.get_dataset_schema()
@@ -543,6 +554,9 @@ class BinderVisitor:
             node: The node to start the traversal from.
             context: An optional context object to pass to each visit method.
         """
+        if context is None:
+            raise InvalidInternalStateError("Binder hasn't been provided context")
+
         # Recursively visit children
         children = graph.ingoing_edges(node)
 
@@ -572,16 +586,16 @@ class BinderVisitor:
         return graph, context
 
 
-def do_bind_phase(plan, connection=None, cache=None, common_table_expressions=None):
+def do_bind_phase(plan, connection=None, qid: str = None, common_table_expressions=None):
     binder_visitor = BinderVisitor()
     root_node = plan.get_exit_points()
     context = {
         "schemas": {"$derived": derived.schema()},
-        "cache": cache,
+        "qid": qid,
         "connection": connection,
         "relations": set(),
     }
     if len(root_node) > 1:
-        raise ValueError(f"logical plan has {len(root_node)} heads - this is an error")
+        raise ValueError(f"{qid} - logical plan has {len(root_node)} heads - this is an error")
     plan, _ = binder_visitor.traverse(plan, root_node[0], context=context)
     return plan

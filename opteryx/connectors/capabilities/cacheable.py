@@ -10,13 +10,33 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Dict
-from typing import Optional
+
+from functools import wraps
 
 from orso.cityhash import CityHash64
 
+from opteryx.shared import BufferPool
+
+buffer_pool = BufferPool()
+
+__all__ = ("Cacheable", "read_thru_cache")
+
 
 class Cacheable:
+    """
+    This class is just a marker - it is empty.
+
+    Caching is added in the binding phase.
+    """
+
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def read_blob(self, *, blob_name, **kwargs):
+        pass
+
+
+def read_thru_cache(func):
     """
     This implements a read-thru cache which wraps blob access routines.
 
@@ -25,45 +45,28 @@ class Cacheable:
     expected to be something like MemcacheD or Redis.
 
     This allows Connectors which access file/blob storage to not need to implement
-    anything to take advantage of the caching, except put the @read_thru
-    decorator around the low-level read call.
+    anything to take advantage of the caching, the binder adds this as a wrapper.
     """
 
-    cached = True
+    @wraps(func)
+    def wrapper(*args, statistics, **kwargs):
+        blob_name = kwargs["blob_name"]
+        key = hex(CityHash64(blob_name))
 
-    def __init__(self, cache=None, statistics: Optional[Dict[str, int]] = None, **kwargs):
-        from opteryx.shared import BufferPool
+        # Try to get the result from cache
+        result = buffer_pool.get(key)
 
-        self.buffer_pool = BufferPool()
-        self.statistics = statistics if statistics else {"cache_misses": 0, "cache_hits": 0}
-        self.secondary_cache = cache
+        if result is None:
+            # Key is not in cache, execute the function and store the result in cache
+            result = func(*args, **kwargs)
 
-    def read_thru(self):
-        """
-        The read-thru cache read wraps file and blob-based reads
-        """
+            # Write the result to cache
+            buffer_pool.set(key, result)
 
-        def decorator(func):
-            def wrapper(*args, **kwargs):
-                blob_name = kwargs["blob_name"]
-                key = format(CityHash64(blob_name), "X")
+            statistics.cache_misses += 1
+        else:
+            statistics.cache_hits += 1
 
-                # Try to get the result from cache
-                result = self.buffer_pool.get(key, self.secondary_cache)
+        return result
 
-                if result is None:
-                    # Key is not in cache, execute the function and store the result in cache
-                    result = func(*args, **kwargs)
-
-                    # Write the result to cache
-                    self.buffer_pool.set(key, result, self.secondary_cache)
-
-                    self.statistics["cache_misses"] += 1
-                else:
-                    self.statistics["cache_hits"] += 1
-
-                return result
-
-            return wrapper
-
-        return decorator
+    return wrapper

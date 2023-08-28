@@ -5,10 +5,11 @@ correctly and that we're merging values correctly.
 import os
 import sys
 
-sys.path.insert(1, os.path.join(sys.path[0], "../../.."))
+sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 from opteryx.components.binder import BinderVisitor
 from opteryx.components.logical_planner import LogicalPlan, LogicalPlanNode, LogicalPlanStepType
+from orso.schema import RelationSchema
 
 
 def test_logical_plan_visitor():
@@ -33,28 +34,46 @@ def test_logical_plan_visitor():
     # does this look right?
     print(plan.draw())
 
+    """
+    └─ UNION 
+       ├─ PROJECT
+       │  └─ FILTER (null)
+       │     └─ SCAN (left AS None)
+       └─ SCAN (right AS None)
+    """
+
     class TestBinderVisitor(BinderVisitor):
         def visit_scan(self, node, context):
-            context.setdefault("sources", []).append(node.relation)
+            context.setdefault("schemas", [])[node.relation] = RelationSchema(name="test")
+            node.source = node.relation
             return node, context
 
         def visit_filter(self, node, context):
-            node.sources = context.get("sources")
+            # the filter has the left scan before it
+            node.sources = context.get("schemas")
             return node, context
 
         def visit_union(self, node, context):
-            node.sources = context.get("sources")
+            node.sources = context.get("schemas")
             return node, context
 
         def visit_project(self, node, context):
-            node.sources = context.get("sources")
+            # the project has the left and right scans before it
+            node.sources = context.get("schemas")
             return node, context
 
+    context = {
+        "schemas": {},
+        "cache": None,
+        "connection": None,
+        "relations": set(),
+    }
+
     visitor = TestBinderVisitor()
-    visitor.traverse(plan, 4)
+    visitor.traverse(plan, 4, context)
 
     # this is just on the left branch
-    assert filter_node.sources == ["left"], filter_node.sources
+    assert set(filter_node.sources) == {"left"}, filter_node.sources
     # this is where the left and right branches meet
     assert set(union_node.sources) == {"left", "right"}, union_node.sources
 

@@ -121,11 +121,11 @@ DATASET_PREFIX_MAPPING: dict = get("DATASET_PREFIX_MAPPING", {"_":"disk"})
 # Data Partitioning
 PARTITION_SCHEME: str = get("PARTITION_SCHEME", None)
 # The maximum number of evictions by a single query
-MAX_CACHE_EVICTIONS: int = int(get("MAX_CACHE_EVICTIONS", 25))
+MAX_CACHE_EVICTIONS_PER_QUERY: int = int(get("MAX_CACHE_EVICTIONS_PER_QUERY", 32))
 # Maximum size for items saved to the buffer cache
-MAX_SIZE_SINGLE_CACHE_ITEM: int = get("MAX_SIZE_SINGLE_CACHE_ITEM", 1024 * 1024)
+MAX_CACHEABLE_ITEM_SIZE: int = get("MAX_CACHEABLE_ITEM_SIZE", 1024 * 1024)
 # The local buffer pool size
-LOCAL_BUFFER_POOL_SIZE: int = int(get("LOCAL_BUFFER_POOL_SIZE", 256))
+MAX_LOCAL_BUFFER_CAPACITY: int = int(get("MAX_LOCAL_BUFFER_CAPACITY", 256))
 # don't try to raise the priority of the server process
 DISABLE_HIGH_PRIORITY: bool = bool(get("DISABLE_HIGH_PRIORITY", False))
 # don't output resource (memory) utilization information
@@ -143,5 +143,3 @@ QUERY_LOG_SIZE:int = int(get("QUERY_LOG_SIZE", 100))
 # not currently supported
 METADATA_SERVER: str = None
 # fmt:on
-
-ENGINE_VERSION: int = int(environ.get("ENGINE_VERSION", 1))

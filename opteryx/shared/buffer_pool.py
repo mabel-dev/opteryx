@@ -15,10 +15,23 @@ Global Buffer Pool.
 
 This is little more than a wrapper around the LRU-K(2) cache.
 """
-import io
+from array import array
+from typing import Any
+from typing import Optional
 
-from opteryx import config
 from opteryx.utils.lru_2 import LRU2
+
+
+class NullCacheBackEnd:
+    """
+    We can remove a check in each operation by just having a null service.
+    """
+
+    def get(self, key: str) -> None:
+        return None
+
+    def set(self, key: str, value: Any) -> None:
+        return None
 
 
 class _BufferPool:
@@ -26,38 +39,39 @@ class _BufferPool:
     Buffer Pool is a class implementing a Least Recently Used (LRU) cache of buffers.
     """
 
-    slots = "_lru"
+    slots = "_lru", "_cache_backend", "_max_cacheable_item_size"
 
-    def __init__(self, size):
-        self._lru = LRU2(size=size)
+    def __init__(self, cache_manager):
+        self._cache_backend = cache_manager.cache_backend
+        if not self._cache_backend:
+            self._cache_backend = (
+                NullCacheBackEnd()
+            )  # rather than make decisions - just use a dummy
+        self._max_cacheable_item_size = cache_manager.max_cacheable_item_size
+        self._lru = LRU2(size=cache_manager.max_local_buffer_capacity)
 
-    def get(self, key, cache=None):
+    def get(self, key: str) -> Optional[array]:
         """
         Retrieve an item from the pool, return None if the item isn't found.
         If cache is provided and item is not in pool, attempt to get it from cache.
         """
         value = self._lru.get(key)
         if value is not None:
-            return io.BytesIO(value)
-        elif cache is not None:
-            return cache.get(key)
-        else:
-            return None
+            return value
+        return self._cache_backend.get(key)
 
-    def set(self, key, value, cache=None):
+    def set(self, key, value) -> Optional[str]:
         """
         Put an item into the pool, evict an item if the pool is full.
         If a cache is provided, also set the value in the cache.
         """
-        value.seek(0)
-        evicted = self._lru.set(key, value.read())
-        value.seek(0)
-        if cache is not None:
-            cache.set(key, value)
-        return evicted
+        if len(value) < self._max_cacheable_item_size:
+            evicted = self._lru.set(key, value)
+            self._cache_backend.set(key, value)
+            return evicted
 
     @property
-    def stats(self):
+    def stats(self) -> tuple:
         """
         Return the hit, miss and eviction statistics for the buffer pool.
         """
@@ -81,6 +95,7 @@ class BufferPool(_BufferPool):
     def __new__(cls):
         if cls._instance is None:
             # Import here to avoid circular imports
-            local_buffer_pool_size = config.LOCAL_BUFFER_POOL_SIZE
-            cls._instance = _BufferPool(size=local_buffer_pool_size)
+            from opteryx import cache_manager
+
+            cls._instance = _BufferPool(cache_manager)
         return cls._instance

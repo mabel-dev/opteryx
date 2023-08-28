@@ -8,6 +8,7 @@ import sys
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
+import opteryx
 from tests.tools import is_arm, is_mac, is_windows, skip_if
 
 

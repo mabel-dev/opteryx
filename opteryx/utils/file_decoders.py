@@ -13,6 +13,7 @@
 """
 Decode files from a raw binary format to a PyArrow Table.
 """
+import io
 from enum import Enum
 from typing import Callable
 from typing import List
@@ -51,7 +52,7 @@ def get_decoder(dataset: str) -> Callable:
     return file_decoder
 
 
-def do_nothing(stream, projection=None, just_schema: bool = False):  # pragma: no-cover
+def do_nothing(buffer, projection=None, just_schema: bool = False):  # pragma: no-cover
     """for when you need to look like you're doing something"""
     return False
 
@@ -69,11 +70,13 @@ def filter_records(filter, table):
     return table.filter(mask)
 
 
-def zstd_decoder(stream, projection: List = None, selection=None, just_schema: bool = False):
+def zstd_decoder(buffer, projection: List = None, selection=None, just_schema: bool = False):
     """
     Read zstandard compressed JSONL files
     """
     import zstandard
+
+    stream = io.BytesIO(buffer)
 
     with zstandard.open(stream, "rb") as file:
         return jsonl_decoder(
@@ -81,7 +84,7 @@ def zstd_decoder(stream, projection: List = None, selection=None, just_schema: b
         )
 
 
-def parquet_decoder(stream, projection: List = None, selection=None, just_schema: bool = False):
+def parquet_decoder(buffer, projection: List = None, selection=None, just_schema: bool = False):
     """
     Read parquet formatted files
     """
@@ -93,6 +96,8 @@ def parquet_decoder(stream, projection: List = None, selection=None, just_schema
     _select = None
     if selection is not None:
         _select = predicate_pushable.to_dnf(selection)
+
+    stream = io.BytesIO(buffer)
 
     selected_columns = None
     if isinstance(projection, (list, set)) and "*" not in projection or just_schema:
@@ -119,12 +124,13 @@ def parquet_decoder(stream, projection: List = None, selection=None, just_schema
     return parquet.read_table(stream, columns=selected_columns, pre_buffer=False, filters=_select)
 
 
-def orc_decoder(stream, projection: List = None, selection=None, just_schema: bool = False):
+def orc_decoder(buffer, projection: List = None, selection=None, just_schema: bool = False):
     """
     Read orc formatted files
     """
     import pyarrow.orc as orc
 
+    stream = io.BytesIO(buffer)
     orc_file = orc.ORCFile(stream)
     orc_schema = orc_file.schema
     if just_schema:
@@ -143,8 +149,13 @@ def orc_decoder(stream, projection: List = None, selection=None, just_schema: bo
     return table
 
 
-def jsonl_decoder(stream, projection: List = None, selection=None, just_schema: bool = False):
+def jsonl_decoder(buffer, projection: List = None, selection=None, just_schema: bool = False):
     import pyarrow.json
+
+    if isinstance(buffer, bytes):
+        stream = io.BytesIO(buffer)
+    else:
+        stream = buffer
 
     table = pyarrow.json.read_json(stream)
     schema = table.schema
@@ -164,11 +175,12 @@ def jsonl_decoder(stream, projection: List = None, selection=None, just_schema: 
 
 
 def csv_decoder(
-    stream, projection: List = None, selection=None, delimiter: str = ",", just_schema: bool = False
+    buffer, projection: List = None, selection=None, delimiter: str = ",", just_schema: bool = False
 ):
     import pyarrow.csv
     from pyarrow.csv import ParseOptions
 
+    stream = io.BytesIO(buffer)
     parse_options = ParseOptions(delimiter=delimiter, newlines_in_values=True)
     table = pyarrow.csv.read_csv(stream, parse_options=parse_options)
     schema = table.schema
@@ -187,9 +199,9 @@ def csv_decoder(
     return table
 
 
-def tsv_decoder(stream, projection: List = None, selection=None, just_schema: bool = False):
+def tsv_decoder(buffer, projection: List = None, selection=None, just_schema: bool = False):
     return csv_decoder(
-        stream=stream,
+        buffer=buffer,
         projection=projection,
         selection=selection,
         delimiter="\t",
@@ -197,9 +209,10 @@ def tsv_decoder(stream, projection: List = None, selection=None, just_schema: bo
     )
 
 
-def arrow_decoder(stream, projection: List = None, selection=None, just_schema: bool = False):
+def arrow_decoder(buffer, projection: List = None, selection=None, just_schema: bool = False):
     import pyarrow.feather as pf
 
+    stream = io.BytesIO(buffer)
     table = pf.read_table(stream)
     schema = table.schema
     if just_schema:
@@ -217,7 +230,7 @@ def arrow_decoder(stream, projection: List = None, selection=None, just_schema: 
     return table
 
 
-def avro_decoder(stream, projection: List = None, selection=None, just_schema: bool = False):
+def avro_decoder(buffer, projection: List = None, selection=None, just_schema: bool = False):
     """
     AVRO isn't well supported, it is converted between table types which is
     really slow
@@ -228,6 +241,7 @@ def avro_decoder(stream, projection: List = None, selection=None, just_schema: b
     except ImportError:  # pragma: no-cover
         raise Exception("`avro` is missing, please install or include in your `requirements.txt`.")
 
+    stream = io.BytesIO(buffer)
     reader = DataFileReader(stream, DatumReader())
 
     table = pyarrow.Table.from_pylist(list(reader))

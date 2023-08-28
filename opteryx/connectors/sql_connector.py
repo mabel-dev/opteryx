@@ -16,7 +16,6 @@
 from decimal import Decimal
 
 from orso import DataFrame
-from orso import Row
 from orso.schema import FlatColumn
 from orso.schema import RelationSchema
 from orso.types import PYTHON_TO_ORSO_MAP

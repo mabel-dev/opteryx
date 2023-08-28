@@ -10,7 +10,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import io
 import os
 from typing import List
 
@@ -47,6 +46,10 @@ class GcpCloudStorageConnector(BaseConnector, Cacheable, Partitionable):
         self.dataset = self.dataset.replace(".", "/")
         self.credentials = credentials
 
+        # we're going to cache the first blob as the schema and dataset reader
+        # sometimes both start here
+        self.cached_first_blob = None
+
     def _get_storage_client(self):
         from google.cloud import storage
 
@@ -64,8 +67,7 @@ class GcpCloudStorageConnector(BaseConnector, Cacheable, Partitionable):
         blob = gcs_bucket.get_blob(blob_name)
         return blob
 
-    @Cacheable().read_thru()
-    def read_blob(self, *, blob_name):
+    def read_blob(self, *, blob_name, **kwargs):
         bucket, object_path, name, extension = paths.get_parts(blob_name)
 
         bucket = bucket.replace("va_data", "va-data")
@@ -75,8 +77,7 @@ class GcpCloudStorageConnector(BaseConnector, Cacheable, Partitionable):
             bucket=bucket,
             blob_name=object_path + "/" + name + extension,
         )
-        stream = blob.download_as_bytes()
-        return io.BytesIO(stream)
+        return blob.download_as_bytes()
 
     @single_item_cache
     def get_list_of_blob_names(self, *, prefix: str) -> List[str]:
@@ -100,10 +101,16 @@ class GcpCloudStorageConnector(BaseConnector, Cacheable, Partitionable):
             prefix=self.dataset,
         )
 
+        # Check if the first blob was cached earlier
+        if self.cached_first_blob is not None:
+            yield self.cached_first_blob  # Use cached blob
+            blob_names = blob_names[1:]  # Skip first blob
+        self.cached_first_blob = None
+
         for blob_name in blob_names:
             try:
                 decoder = get_decoder(blob_name)
-                blob_bytes = self.read_blob(blob_name=blob_name)
+                blob_bytes = self.read_blob(blob_name=blob_name, statistics=self.statistics)
                 yield decoder(blob_bytes)
             except UnsupportedFileTypeError:
                 pass
@@ -114,7 +121,9 @@ class GcpCloudStorageConnector(BaseConnector, Cacheable, Partitionable):
         if self.schema:
             return self.schema
 
+        # Read first blob for schema inference and cache it
         record = next(self.read_dataset(), None)
+        self.cached_first_blob = record
 
         if record is None:
             raise DatasetNotFoundError(dataset=self.dataset)
