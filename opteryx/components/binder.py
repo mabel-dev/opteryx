@@ -68,7 +68,6 @@ from orso.schema import FunctionColumn
 from orso.schema import RelationSchema
 from orso.tools import random_string
 
-from opteryx.connectors.capabilities.cacheable import read_thru_cache
 from opteryx.exceptions import AmbiguousDatasetError
 from opteryx.exceptions import AmbiguousIdentifierError
 from opteryx.exceptions import ColumnNotFoundError
@@ -493,6 +492,7 @@ class BinderVisitor:
         from opteryx.connectors import connector_factory
         from opteryx.connectors.capabilities import Cacheable
         from opteryx.connectors.capabilities import Partitionable
+        from opteryx.connectors.capabilities.cacheable import read_thru_cache
         from opteryx.shared import QueryStatistics
 
         if "statistics" not in context:
