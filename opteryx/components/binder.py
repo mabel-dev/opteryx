@@ -218,7 +218,10 @@ def inner_binder(node, context) -> typing.Tuple[Node, dict]:
 
     elif not node_type == NodeType.SUBQUERY:
         column_name = format_expression(node)
-        schema_column = schemas["$derived"].find_column(column_name)
+        if "$projection" in schemas:
+            schema_column = schemas["$projection"].find_column(column_name)
+        else:
+            schema_column = schemas["$derived"].find_column(column_name)
 
         if schema_column:
             schema_column = FlatColumn(

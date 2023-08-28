@@ -11,11 +11,13 @@
 # limitations under the License.
 
 import datetime
+import os
 from typing import Callable
 from typing import List
 from typing import Optional
 
 from opteryx.managers.schemes import BasePartitionScheme
+from opteryx.utils.file_decoders import DATA_EXTENSIONS
 
 
 def _extract_part_from_path(path, prefix):
@@ -31,15 +33,6 @@ def _extract_as_at(path):
 
 def _extract_by(path):
     return _extract_part_from_path(path, "by_")
-
-
-def _safe_get_next_element(lst, item):
-    """get the element from a list which follows a given element"""
-    try:
-        index = lst.index(item)
-        return lst[index + 1]
-    except IndexError:
-        return None
 
 
 _is_complete = lambda blobs, as_at: any(blob for blob in blobs if as_at + "/frame.complete" in blob)
@@ -98,9 +91,15 @@ class MabelPartitionScheme(BasePartitionScheme):
                 as_at = None
 
             if as_at:
-                yield from (blob for blob in blob_names if as_at in blob)
-
-            yield from blob_names
+                yield from (
+                    blob
+                    for blob in blob_names
+                    if as_at in blob and os.path.splitext(blob)[1] in DATA_EXTENSIONS
+                )
+            else:
+                yield from (
+                    blob for blob in blob_names if os.path.splitext(blob)[1] in DATA_EXTENSIONS
+                )
 
         start_date = start_date or datetime.datetime.utcnow().replace(
             hour=0, minute=0, second=0, microsecond=0
@@ -109,9 +108,10 @@ class MabelPartitionScheme(BasePartitionScheme):
             hour=23, minute=59, second=0, microsecond=0
         )
 
-        seen = set()
+        found = set()
+
         for segment_timeslice in self.hourly_timestamps(start_date, end_date):
             blobs = _inner(timestamp=segment_timeslice)
-            for blob_name in sorted(set(blobs).difference(seen)):
-                yield blob_name
-                seen.add(blob_name)
+            found.update(blobs)
+
+        return sorted(found)

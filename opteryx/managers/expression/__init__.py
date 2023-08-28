@@ -175,16 +175,7 @@ def _inner_evaluate(root: Node, table: Table, context: ExecutionContext):
         if node_type == NodeType.OR:
             return pyarrow.compute.or_(left, right)
         if node_type == NodeType.NOT:
-            null_val = pyarrow.compute.is_null(centre, nan_is_null=True)
-            if any(null_val) and isinstance(centre, numpy.ndarray):
-                null_val = numpy.invert(null_val)
-                results_mask = centre.compress(null_val)
-                results_mask = numpy.invert(results_mask)
-                results = numpy.full(len(centre), -1)
-                results[numpy.nonzero(null_val)] = results_mask
-                return [bool(r) if r != -1 else None for r in results]
-            return numpy.invert(centre)
-
+            return pyarrow.compute.invert(centre)
         if node_type == NodeType.XOR:
             return pyarrow.compute.xor(left, right)
 

@@ -16,42 +16,97 @@ Implement conditions which are essentially unary statements, usually IS statemen
 This are executed as functions on arrays rather than functions on elements in arrays.
 """
 import numpy
-from pyarrow import compute
 
 
-def _is_null(values):
-    indicies = numpy.nonzero(compute.is_null(values, nan_is_null=True))[0]
-    mask_array = numpy.zeros(len(values), dtype=bool)
-    mask_array[indicies] = True
-    return mask_array
+def _is_null(values: numpy.ndarray) -> numpy.ndarray:
+    """
+    Returns a boolean mask where True indicates that the corresponding element in values is null (NaN).
+
+    Parameters:
+        values: numpy.ndarray
+            1D array of boolean and/or null values.
+
+    Returns:
+        numpy.ndarray: 1D array of booleans serving as a mask.
+    """
+    return numpy.equal(values, None)
 
 
-def _is_not_null(values):
-    indicies = compute.is_null(values, nan_is_null=True)
-    indicies = numpy.nonzero(numpy.invert(indicies))[0]
-    mask_array = numpy.zeros(len(values), dtype=bool)
-    mask_array[indicies] = True
-    return mask_array
+def _is_not_null(values: numpy.ndarray) -> numpy.ndarray:
+    """
+    Returns a boolean mask where True indicates that the corresponding element in values is not null (NaN).
+
+    Parameters:
+        values: numpy.ndarray
+            1D array of boolean and/or null values.
+
+    Returns:
+        numpy.ndarray: 1D array of booleans serving as a mask.
+    """
+    return numpy.logical_not(numpy.equal(values, None))
 
 
-def _is_true(values):
-    indicies = numpy.nonzero(values)[0]
-    mask_array = numpy.zeros(len(values), dtype=bool)
-    mask_array[indicies] = True
-    return mask_array
+def _is_true(values: numpy.ndarray) -> numpy.ndarray:
+    """
+    Returns a boolean mask where True indicates that the corresponding element in values is True.
+
+    Parameters:
+        values: np.ndarray
+            1D array of boolean and/or null values.
+
+    Returns:
+        np.ndarray: 1D array of booleans serving as a mask.
+    """
+    return values == True
 
 
-def _is_false(values):
-    indicies = numpy.invert(values)
-    indicies = numpy.nonzero(indicies)[0]
-    mask_array = numpy.zeros(len(values), dtype=bool)
-    mask_array[indicies] = True
-    return mask_array
+def _is_false(values: numpy.ndarray) -> numpy.ndarray:
+    """
+    Returns a boolean mask where True indicates that the corresponding element in values is False.
+
+    Parameters:
+        values: np.ndarray
+            1D array of boolean and/or null values.
+
+    Returns:
+        np.ndarray: 1D array of booleans serving as a mask.
+    """
+    return values == False
+
+
+def _is_not_true(values: numpy.ndarray) -> numpy.ndarray:
+    """
+    Returns a boolean mask where True indicates that the corresponding element in values is not True.
+
+    Parameters:
+        values: np.ndarray
+            1D array of boolean and/or null values.
+
+    Returns:
+        np.ndarray: 1D array of booleans serving as a mask.
+    """
+    return values != True
+
+
+def _is_not_false(values: numpy.ndarray) -> numpy.ndarray:
+    """
+    Returns a boolean mask where True indicates that the corresponding element in values is not False.
+
+    Parameters:
+        values: np.ndarray
+            1D array of boolean and/or null values.
+
+    Returns:
+        np.ndarray: 1D array of booleans serving as a mask.
+    """
+    return values != False
 
 
 UNARY_OPERATIONS = {
     "IsNull": _is_null,
+    "IsNotFalse": _is_not_false,
     "IsNotNull": _is_not_null,
+    "IsNotTrue": _is_not_true,
     "IsTrue": _is_true,
     "IsFalse": _is_false,
 }
