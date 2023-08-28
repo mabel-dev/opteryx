@@ -11,7 +11,6 @@
 # limitations under the License.
 
 import os
-from array import array
 from typing import List
 
 import pyarrow
@@ -78,8 +77,7 @@ class GcpCloudStorageConnector(BaseConnector, Cacheable, Partitionable):
             bucket=bucket,
             blob_name=object_path + "/" + name + extension,
         )
-        stream = blob.download_as_bytes()
-        return array("B", stream)
+        return blob.download_as_bytes()
 
     @single_item_cache
     def get_list_of_blob_names(self, *, prefix: str) -> List[str]:

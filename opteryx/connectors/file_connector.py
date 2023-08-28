@@ -14,8 +14,6 @@
 The file connector provides the reader for when a file name is provided as the
 dataset name in a query.
 """
-import os
-from array import array
 from typing import Optional
 
 from orso.schema import RelationSchema
@@ -27,7 +25,7 @@ from opteryx.utils.file_decoders import get_decoder
 
 class FileConnector(BaseConnector):
     __mode__ = "Blob"
-    _byte_array: Optional[array] = None  # Instance attribute to store file bytes
+    _byte_array: Optional[bytes] = None  # Instance attribute to store file bytes
 
     @property
     def interal_only(self):
@@ -45,10 +43,8 @@ class FileConnector(BaseConnector):
         Reads the dataset file and stores its content in _byte_array attribute.
         """
         if self._byte_array is None:
-            file_size = os.stat(self.dataset).st_size
-            self._byte_array = array("B")
             with open(self.dataset, mode="br") as file:
-                self._byte_array.fromfile(file, file_size)
+                self._byte_array = bytes(file.read())
 
     def read_dataset(self) -> iter:
         """

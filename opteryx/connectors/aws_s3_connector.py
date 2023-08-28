@@ -14,7 +14,6 @@
 MinIo Reader - also works with AWS
 """
 import os
-from array import array
 from typing import List
 
 import pyarrow
@@ -122,6 +121,6 @@ class AwsS3Connector(BaseConnector, Cacheable, Partitionable):
         try:
             bucket, object_path, name, extension = paths.get_parts(blob_name)
             stream = self.minio.get_object(bucket, object_path + "/" + name + extension)
-            return array("B", stream.read())
+            return bytes(stream.read())
         finally:
             stream.close()

@@ -17,7 +17,6 @@ given directly in a query.
 As such it assumes 
 """
 import os
-from array import array
 from typing import List
 
 import pyarrow
@@ -50,8 +49,7 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable):
 
     def read_blob(self, *, blob_name, **kwargs):
         with open(blob_name, mode="br") as file:
-            file_stream = file.read()
-        return array("B", file_stream)
+            return bytes(file.read())
 
     @single_item_cache
     def get_list_of_blob_names(self, *, prefix: str) -> List[str]:
