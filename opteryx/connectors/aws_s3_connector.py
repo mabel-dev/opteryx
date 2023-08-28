@@ -13,8 +13,8 @@
 """
 MinIo Reader - also works with AWS
 """
-import io
 import os
+from array import array
 from typing import List
 
 import pyarrow
@@ -60,6 +60,10 @@ class AwsS3Connector(BaseConnector, Cacheable, Partitionable):
         self.minio = Minio(end_point, access_key, secret_key, secure=secure)
         self.dataset = self.dataset.replace(".", "/")
 
+        # we're going to cache the first blob as the schema and dataset reader
+        # sometimes both start here
+        self.cached_first_blob = None
+
     @single_item_cache
     def get_list_of_blob_names(self, *, prefix: str) -> List[str]:
         bucket, object_path, _, _ = paths.get_parts(prefix)
@@ -78,6 +82,12 @@ class AwsS3Connector(BaseConnector, Cacheable, Partitionable):
             prefix=self.dataset,
         )
 
+        # Check if the first blob was cached earlier
+        if self.cached_first_blob is not None:
+            yield self.cached_first_blob  # Use cached blob
+            blob_names = blob_names[1:]  # Skip first blob
+        self.cached_first_blob = None
+
         for blob_name in blob_names:
             try:
                 decoder = get_decoder(blob_name)
@@ -92,7 +102,9 @@ class AwsS3Connector(BaseConnector, Cacheable, Partitionable):
         if self.schema:
             return self.schema
 
+        # Read first blob for schema inference and cache it
         record = next(self.read_dataset(), None)
+        self.cached_first_blob = record
 
         if record is None:
             raise DatasetNotFoundError(dataset=self.dataset)
@@ -106,11 +118,10 @@ class AwsS3Connector(BaseConnector, Cacheable, Partitionable):
 
         return self.schema
 
-    @Cacheable().read_thru()
-    def read_blob(self, *, blob_name):
+    def read_blob(self, *, blob_name, **kwargs):
         try:
             bucket, object_path, name, extension = paths.get_parts(blob_name)
             stream = self.minio.get_object(bucket, object_path + "/" + name + extension)
-            return io.BytesIO(stream.read())
+            return array("B", stream.read())
         finally:
             stream.close()

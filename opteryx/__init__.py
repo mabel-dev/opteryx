@@ -18,6 +18,10 @@ from orso.logging import set_log_name
 
 from opteryx import config
 
+from opteryx.managers.cache.cache_manager import CacheManager  # isort:skip
+
+cache_manager = CacheManager(cache_backend=None)
+
 from opteryx.__author__ import __author__
 from opteryx.__build__ import __build__
 from opteryx.__version__ import __version__
@@ -25,6 +29,7 @@ from opteryx.connection import Connection
 from opteryx.connectors import register_arrow
 from opteryx.connectors import register_df
 from opteryx.connectors import register_store
+
 
 try:
     builtins = __import__("__builtin__")
@@ -57,6 +62,10 @@ paramstyle: str = "qmark"  # pylint: disable=C0103
 
 def connect(*args, **kwargs):
     """define the opteryx.connect function"""
+    if "cache" in kwargs:
+        print(
+            "'cache' is no longer set as a parameter on connect, use opteryx.cache_manager instead"
+        )
     return Connection(*args, **kwargs)
 
 

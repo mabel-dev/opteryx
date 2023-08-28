@@ -1,3 +1,8 @@
+"""
+Test the permissions model is correctly allowing and blocking queries being executed
+
+"""
+
 import os
 import sys
 
@@ -14,7 +19,7 @@ def test_security_permissions_cursor():
 
     # shouldn't have any issues
     curr = conn.cursor()
-    curr.execute("SHOW FUNCTIONS")
+    curr.execute("EXPLAIN SELECT * FROM $planets")
     curr.arrow()
     # shouldn't have any issues
     curr = conn.cursor()
@@ -29,14 +34,14 @@ def test_security_permissions_cursor():
     # should fail
     with pytest.raises(opteryx.exceptions.PermissionsError):
         curr = conn.cursor()
-        curr.execute("SHOW FUNCTIONS")
+        curr.execute("EXPLAIN SELECT * FROM $planets")
         curr.arrow()
 
 
 def test_security_permissions_query():
     """test we can stop users performing some query types"""
     # shouldn't have any issues
-    opteryx.query("SHOW FUNCTIONS").arrow()
+    opteryx.query("EXPLAIN SELECT * FROM $planets").arrow()
     # shouldn't have any issues
     opteryx.query("SELECT * FROM $planets").arrow()
 
@@ -44,7 +49,7 @@ def test_security_permissions_query():
     opteryx.query("SELECT * FROM $planets", permissions={"Query"}).arrow()
     # should fail
     with pytest.raises(opteryx.exceptions.PermissionsError):
-        opteryx.query("SHOW FUNCTIONS", permissions={"Query"}).arrow()
+        opteryx.query("EXPLAIN SELECT * FROM $planets", permissions={"Query"}).arrow()
 
 
 def test_security_permissions_validation():

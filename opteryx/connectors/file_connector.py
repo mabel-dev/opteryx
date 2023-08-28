@@ -14,8 +14,10 @@
 The file connector provides the reader for when a file name is provided as the
 dataset name in a query.
 """
+import os
+from array import array
+from typing import Optional
 
-import pyarrow
 from orso.schema import RelationSchema
 
 from opteryx.connectors.base.base_connector import BaseConnector
@@ -25,6 +27,7 @@ from opteryx.utils.file_decoders import get_decoder
 
 class FileConnector(BaseConnector):
     __mode__ = "Blob"
+    _byte_array: Optional[array] = None  # Instance attribute to store file bytes
 
     @property
     def interal_only(self):
@@ -37,14 +40,36 @@ class FileConnector(BaseConnector):
             raise DatasetNotFoundError(dataset=self.dataset)
         self.decoder = get_decoder(self.dataset)
 
-    def read_dataset(self) -> pyarrow.Table:
-        with open(self.dataset, mode="br") as file:
-            return iter([self.decoder(file)])
+    def _read_file(self) -> None:
+        """
+        Reads the dataset file and stores its content in _byte_array attribute.
+        """
+        if self._byte_array is None:
+            file_size = os.stat(self.dataset).st_size
+            self._byte_array = array("B")
+            with open(self.dataset, mode="br") as file:
+                self._byte_array.fromfile(file, file_size)
+
+    def read_dataset(self) -> iter:
+        """
+        Reads the dataset file and decodes it.
+
+        Returns:
+            An iterator containing a single decoded pyarrow.Table.
+        """
+        self._read_file()
+        return iter([self.decoder(self._byte_array)])
 
     def get_dataset_schema(self) -> RelationSchema:
+        """
+        Retrieves the schema from the dataset file.
+
+        Returns:
+            The schema of the dataset.
+        """
         if self.schema is not None:
             return self.schema
 
-        with open(self.dataset, mode="br") as file:
-            self.schema = self.decoder(file, just_schema=True)
-            return self.schema
+        self._read_file()
+        self.schema = self.decoder(self._byte_array, just_schema=True)
+        return self.schema

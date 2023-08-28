@@ -66,7 +66,7 @@ def register_arrow(name, table):
     register_store(name, ArrowConnector)
 
 
-def connector_factory(dataset, **config):
+def connector_factory(dataset, statistics, **config):
     """
     Work out which connector will service the access to this dataset.
     """
@@ -75,7 +75,7 @@ def connector_factory(dataset, **config):
     if dataset[0] == "$":
         from opteryx.connectors import virtual_data
 
-        return virtual_data.SampleDataConnector(dataset=dataset)
+        return virtual_data.SampleDataConnector(dataset=dataset, statistics=statistics)
 
     # Look up the prefix from the registered prefixes
     connector_entry: dict = config
@@ -88,7 +88,7 @@ def connector_factory(dataset, **config):
         if os.path.isfile(dataset):
             from opteryx.connectors import file_connector
 
-            return file_connector.FileConnector(dataset=dataset)
+            return file_connector.FileConnector(dataset=dataset, statistics=statistics)
         else:
             # fall back to the default connector (local disk if not set)
             connector = _storage_prefixes.get("_default", DiskConnector)
@@ -98,4 +98,4 @@ def connector_factory(dataset, **config):
     if prefix and remove_prefix and dataset.startswith(prefix):
         dataset = dataset[len(prefix) + 1 :]
 
-    return connector(dataset=dataset, **connector_entry)
+    return connector(dataset=dataset, statistics=statistics, **connector_entry)

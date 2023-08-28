@@ -15,6 +15,7 @@ This implements an interface to Memcached
 
 import io
 import os
+from typing import Union
 
 from orso.tools import single_item_cache
 
@@ -72,13 +73,13 @@ class MemcachedCache(BaseKeyValueStore):
         """
         self._server = _memcached_server(**kwargs)
 
-    def get(self, key):
+    def get(self, key: str) -> Union[io.BytesIO, None]:
         if self._server:
             response = self._server.get(key)
             if response:
                 return io.BytesIO(response)
 
-    def set(self, key, value):
+    def set(self, key: str, value: io.BytesIO) -> None:
         if self._server:
             self._server.set(key, value.read())
             value.seek(0)

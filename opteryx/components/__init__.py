@@ -98,7 +98,7 @@ def query_planner(operation: str, parameters: list, connection, qid: str):
         bound_plan = do_bind_phase(
             logical_plan,
             connection=connection.context,
-            cache=connection.cache,
+            qid=qid,
             common_table_expressions=ctes,
         )
 

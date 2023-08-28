@@ -8,28 +8,29 @@ import sys
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import opteryx
-from opteryx.managers.cache import MemoryCache
+from opteryx.managers.cache import MemoryCache, CacheManager
 from opteryx.shared import BufferPool
 
 
 def test_in_memory_cache():
-    cache = MemoryCache(size=5)
     _buffer = BufferPool()
     _buffer.reset(True)
 
+    opteryx.cache_manager = CacheManager(cache_backend=MemoryCache(size=5))
+
     # read the data once, this should populate the cache
-    conn = opteryx.connect(cache=cache)
+    conn = opteryx.connect()
     cur = conn.cursor()
     cur.execute("SELECT * FROM testdata.flat.tweets WITH(NO_PARTITION);")
     cur.arrow()
 
     stats = cur.stats
-    assert stats.get("cache_hits", 0) == 0
+    assert stats.get("cache_hits", 0) == 0, stats.get("cache_hits", 0)
     assert stats["cache_misses"] == 2, stats["cache_misses"]
     conn.close()
 
     # read the data a second time, this should hit the cache
-    conn = opteryx.connect(cache=cache)
+    conn = opteryx.connect()
     cur = conn.cursor()
     cur.execute("SELECT * FROM testdata.flat.tweets WITH(NO_PARTITION);")
     cur.arrow()
@@ -40,7 +41,7 @@ def test_in_memory_cache():
     conn.close()
 
     # read the data with the no cache directive
-    conn = opteryx.connect(cache=cache)
+    conn = opteryx.connect()
     cur = conn.cursor()
     cur.execute("SELECT * FROM testdata.flat.tweets WITH (NO_CACHE, NO_PARTITION);")
     cur.arrow()
@@ -51,14 +52,14 @@ def test_in_memory_cache():
     conn.close()
 
 
-# @skip
 def test_cache_in_subqueries():
-    cache = MemoryCache(size=5)
     _buffer = BufferPool()
     _buffer.reset(True)
 
+    opteryx.cache_manager = CacheManager(cache_backend=MemoryCache(size=5))
+
     # read the data once, this should populate the cache
-    conn = opteryx.connect(cache=cache)
+    conn = opteryx.connect()
     cur = conn.cursor()
     cur.execute("SELECT * FROM (SELECT * FROM testdata.flat.tweets WITH(NO_PARTITION));")
     cur.arrow()
@@ -69,7 +70,7 @@ def test_cache_in_subqueries():
     conn.close()
 
     # read the data a second time, this should hit the cache
-    conn = opteryx.connect(cache=cache)
+    conn = opteryx.connect()
     cur = conn.cursor()
     cur.execute("SELECT * FROM (SELECT * FROM testdata.flat.tweets WITH(NO_PARTITION));")
     cur.arrow()
@@ -80,14 +81,14 @@ def test_cache_in_subqueries():
     conn.close()
 
     # read the data with the no cache directive
-    conn = opteryx.connect(cache=cache)
+    conn = opteryx.connect()
     cur = conn.cursor()
     cur.execute("SELECT * FROM (SELECT * FROM testdata.flat.tweets WITH(NO_CACHE, NO_PARTITION));")
     cur.arrow()
 
     stats = cur.stats
-    assert stats.get("cache_hits", 0) == 0
-    assert stats.get("cache_misses", 0) == 0
+    assert stats.get("cache_hits", 0) == 0, stats.get("cache_hits", 0)
+    assert stats.get("cache_misses", 0) == 0, stats.get("cache_misses", 0)
     conn.close()
 
 

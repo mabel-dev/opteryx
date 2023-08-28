@@ -33,7 +33,6 @@ from opteryx.exceptions import InvalidCursorStateError
 from opteryx.exceptions import MissingSqlStatement
 from opteryx.exceptions import PermissionsError
 from opteryx.exceptions import UnsupportedSyntaxError
-from opteryx.managers.kvstores import BaseKeyValueStore
 from opteryx.shared import QueryStatistics
 from opteryx.shared.rolling_log import RollingLog
 from opteryx.shared.variables import SystemVariables
@@ -42,7 +41,6 @@ from opteryx.utils import sql
 
 CURSOR_NOT_RUN: str = "Cursor must be in an executed state"
 PROFILE_LOCATION = config.PROFILE_LOCATION
-ENGINE_VERSION = config.ENGINE_VERSION
 
 HistoryItem = typing.Tuple[str, bool, datetime.datetime]
 
@@ -92,14 +90,12 @@ class Connection:
     def __init__(
         self,
         *,
-        cache: typing.Union[BaseKeyValueStore, None] = None,
         permissions: typing.Union[typing.Iterable, None] = None,
         **kwargs,
     ):
         """
         A virtual connection to the Opteryx query engine.
         """
-        self.cache = cache
         self._kwargs = kwargs
 
         self.context = ConnectionContext()
