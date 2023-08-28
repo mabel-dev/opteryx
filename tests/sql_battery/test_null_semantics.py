@@ -89,7 +89,7 @@ def compare_sets(set1, set2):
     return set1 == set2
 
 
-@pytest.mark.parametrize("statement, rows, columns, skip", STATEMENTS)
+@pytest.mark.parametrize("statement, expected_result", STATEMENTS)
 def test_null_semantics(statement, expected_result):
     """
     Test an battery of statements
