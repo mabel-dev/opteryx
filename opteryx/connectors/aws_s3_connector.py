@@ -90,7 +90,7 @@ class AwsS3Connector(BaseConnector, Cacheable, Partitionable):
         for blob_name in blob_names:
             try:
                 decoder = get_decoder(blob_name)
-                blob_bytes = self.read_blob(blob_name=blob_name)
+                blob_bytes = self.read_blob(blob_name=blob_name, statistics=self.statistics)
                 yield decoder(blob_bytes)
             except UnsupportedFileTypeError:
                 pass
