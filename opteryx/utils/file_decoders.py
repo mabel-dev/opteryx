@@ -273,3 +273,6 @@ KNOWN_EXTENSIONS = {
 }
 
 VALID_EXTENSIONS = set(f".{ext}" for ext in KNOWN_EXTENSIONS.keys())
+DATA_EXTENSIONS = set(
+    f".{ext}" for ext, conf in KNOWN_EXTENSIONS.items() if conf[1] == ExtentionType.DATA
+)

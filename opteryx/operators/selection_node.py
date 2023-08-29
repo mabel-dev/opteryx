@@ -76,17 +76,14 @@ class SelectionNode(BasePlanNode):
             mask = evaluate(self.filter, morsel)
             self.statistics.time_evaluating += time.time_ns() - start_selection
 
-            # if the mask is a boolean array, we've called a function that
-            # returns booleans
-            if isinstance(mask, pyarrow.lib.BooleanArray) or (
-                isinstance(mask, numpy.ndarray) and mask.dtype == numpy.bool_
-            ):
-                mask = numpy.nonzero(mask)[0]
+            if not isinstance(mask, pyarrow.lib.BooleanArray):
+                mask = pyarrow.array(mask, type=pyarrow.bool_())
+            mask = numpy.nonzero(mask)[0]
 
             self.statistics.time_selecting += time.time_ns() - start_selection
 
             # if there's no matching rows, just drop the morsel
-            if mask.size > 0 and not numpy.all(mask == None):
+            if mask.size > 0 and not numpy.all(mask is None):
                 yield morsel.take(pyarrow.array(mask))
                 at_least_one = True
 
