@@ -74,7 +74,6 @@ from opteryx.exceptions import ColumnNotFoundError
 from opteryx.exceptions import FunctionNotFoundError
 from opteryx.exceptions import InvalidInternalStateError
 from opteryx.exceptions import UnexpectedDatasetReferenceError
-from opteryx.exceptions import UnsupportedSyntaxError
 
 # from opteryx.functions.v2 import FUNCTIONS
 from opteryx.functions import FUNCTIONS
@@ -129,6 +128,112 @@ def get_fuzzy_search_suggestion(value, candidates):
     from opteryx.utils import fuzzy_search
 
     return fuzzy_search(value, candidates)
+
+
+def extract_join_fields(condition_node, left_relation_name, right_relation_name):
+    """
+    Extracts join fields from a condition node that may have multiple ANDed conditions.
+
+    Parameters:
+        condition_node: Node
+            The condition node in the join clause.
+        left_relation_name: str
+            Name of the left relation.
+        right_relation_name: str
+            Name of the right relation.
+
+    Returns:
+        Tuple[List[str], List[str]]
+            Lists of columns participating in the join from the left and right tables.
+    """
+    left_fields = []
+    right_fields = []
+
+    if condition_node.node_type == NodeType.AND:
+        left_fields_1, right_fields_1 = extract_join_fields(
+            condition_node.left, left_relation_name, right_relation_name
+        )
+        left_fields_2, right_fields_2 = extract_join_fields(
+            condition_node.right, left_relation_name, right_relation_name
+        )
+
+        left_fields.extend(left_fields_1)
+        left_fields.extend(left_fields_2)
+
+        right_fields.extend(right_fields_1)
+        right_fields.extend(right_fields_2)
+
+    elif condition_node.node_type == NodeType.COMPARISON_OPERATOR and condition_node.value == "Eq":
+        if (
+            condition_node.left.source == left_relation_name
+            and condition_node.right.source == right_relation_name
+        ):
+            left_fields.append(condition_node.left.schema_column.identity)
+            right_fields.append(condition_node.right.schema_column.identity)
+        elif (
+            condition_node.left.source == right_relation_name
+            and condition_node.right.source == left_relation_name
+        ):
+            right_fields.append(condition_node.left.schema_column.identity)
+            left_fields.append(condition_node.right.schema_column.identity)
+
+    return left_fields, right_fields
+
+
+def convert_using_to_on(using_fields, left_relation_name, right_relation_name):
+    """
+    Converts a USING field to an ON field for JOIN operations.
+
+    Parameters:
+        using_fields: set
+            Set of common fields to use for joining.
+        left_relation_name: str
+            Name of the left relation.
+        right_relation_name: str
+            Name of the right relation.
+
+    Returns:
+        Node
+            The condition node representing the ON clause.
+    """
+    conditions = []
+    for field in using_fields:
+        condition = Node(
+            node_type=NodeType.COMPARISON_OPERATOR, value="Eq", do_not_create_column=True
+        )
+        condition.left = Node(
+            node_type=NodeType.IDENTIFIER,
+            value=field,
+            source=left_relation_name,
+            source_column=field,
+            aliases=[],
+        )
+        condition.right = Node(
+            node_type=NodeType.IDENTIFIER,
+            value=field,
+            source=right_relation_name,
+            source_column=field,
+            aliases=[],
+        )
+        conditions.append(condition)
+
+    if len(conditions) == 1:
+        return conditions[0]
+
+    # Create a tree of ANDed conditions
+    while len(conditions) > 1:
+        new_conditions = []
+        for i in range(0, len(conditions), 2):
+            if i + 1 < len(conditions):
+                and_node = Node(node_type=NodeType.AND, do_not_create_column=True)
+                and_node.left = conditions[i]
+                and_node.right = conditions[i + 1]
+                new_conditions.append(and_node)
+            else:
+                new_conditions.append(conditions[i])
+        conditions = new_conditions
+
+    return conditions[0]
 
 
 def locate_identifier(node, context):
@@ -216,7 +321,7 @@ def inner_binder(node, context) -> typing.Tuple[Node, dict]:
         node.schema_column = schema_column
         node.query_column = node.alias or column_name
 
-    elif not node_type == NodeType.SUBQUERY:
+    elif not node_type == NodeType.SUBQUERY and not node.do_not_create_column:
         column_name = format_expression(node)
         if "$projection" in schemas:
             schema_column = schemas["$projection"].find_column(column_name)
@@ -346,7 +451,7 @@ class BinderVisitor:
     visit_aggregate = visit_aggregate_and_group
 
     def visit_exit(self, node, context):
-        # LOG: EEEExit
+        # LOG: Exit
         columns = []
         schemas = context.get("schemas", {})
 
@@ -409,35 +514,53 @@ class BinderVisitor:
             raise NotImplementedError(f"{node.function} binding isn't written yet")
         return node, context
 
-    def visit_join(self, node, context):
+    def visit_join(self, node, context: dict):
+        """
+        Visits a JOIN node and handles different types of joins.
+
+        Parameters:
+            node: Node
+                The node representing the join operation.
+            context: Dict
+                The context containing relevant information like schemas.
+
+        Returns:
+            Tuple[Node, Dict]
+                Updated node and context.
+        """
+        # Handle 'natural join' by converting to a 'using'
         if node.type == "natural join":
             left_columns = context["schemas"][node.left_relation_name].column_names
             right_columns = context["schemas"][node.right_relation_name].column_names
-            node.using = set(left_columns).intersection(right_columns)
+            node.using = [Node(value=n) for n in set(left_columns).intersection(right_columns)]
+            node.type = "inner"
+        # Handle 'using' by converting to a an 'on'
+        if node.using:
+            node.on = convert_using_to_on(
+                [n.value for n in node.using], node.left_relation_name, node.right_relation_name
+            )
         if node.on:
             # cross joins, natural joins and 'using' joins don't have an "on"
             node.on, context = inner_binder(node.on, context)
-        if node.using:
-            raise UnsupportedSyntaxError(
-                "JOIN ... USING and NATURAL JOIN temporarily not supported"
+            node.left_columns, node.right_columns = extract_join_fields(
+                node.on, node.left_relation_name, node.right_relation_name
             )
-            """
-            TODO: The unresolved issue is working out which column will be the one that is removed
-            when the tables are joined. It's the one on the right, but that's not always
-            the right table here.
-            """
-            if len(node.using) != 1:
-                raise UnsupportedSyntaxError(
-                    "JOIN USING syntax currently only supports a single column"
-                )
-            condition = Node(node_type=NodeType.COMPARISON_OPERATOR, value="Eq")
-            condition.left = node.using[0].copy()
-            condition.left.source = node.left_relation_name
-            condition.left.source_column = condition.left.value
-            condition.right = node.using[0].copy()
-            condition.right.source = node.right_relation_name
-            condition.right.source_column = condition.right.value
-            node.on, context = inner_binder(condition, context)
+
+        if node.using:
+            left_relation = context["schemas"].get(node.left_relation_name)
+            right_relation = context["schemas"].get(node.right_relation_name)
+
+            columns = []
+            for column_name in (n.value for n in node.using):
+                left_column = left_relation.pop_column(column_name)
+                right_column = right_relation.pop_column(column_name)
+
+                left_column.source_relation = None
+                columns.append(right_column)
+
+            context["schemas"][f"$joined-{random_string}"] = RelationSchema(
+                name="$joined", columns=columns
+            )
         if node.column:
             if not node.alias:
                 node.alias = f"UNNEST({node.column.query_column})"

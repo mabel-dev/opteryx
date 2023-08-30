@@ -7,7 +7,8 @@
 <h3 align="center">
 
 
-Opteryx is an in-process SQL query engine for analysis of distributed datasets.
+**Opteryx is an in-process SQL query engine for analysis of distributed datasets.**  
+_One interface, endless possibilities - effortless cross-platform data analytics._
 
 [Documentation](https://opteryx.dev/latest) |
 [Examples](#examples) |
