@@ -474,21 +474,21 @@ def create_node_relation(relation):
                     for identifier in join["join_operator"][join_operator][join_condition]
                 ]
 
-        right_node_id, right_plan = create_node_relation(join)
+        left_node_id, left_plan = create_node_relation(join)
 
         # add the left and right relation names - we sometimes need these later
-        join_step.left_relation_name = sub_plan[sub_plan.get_entry_points()[0]].relation
-        join_step.right_relation_name = right_plan[right_plan.get_entry_points()[0]].relation
+        join_step.right_relation_name = sub_plan[sub_plan.get_entry_points()[0]].alias
+        join_step.left_relation_name = left_plan[left_plan.get_entry_points()[0]].alias
 
         # add the other side of the join
-        sub_plan += right_plan
+        sub_plan += left_plan
 
         join_step_id = random_string()
         sub_plan.add_node(join_step_id, join_step)
 
         # add the from table as the left side of the join
         sub_plan.add_edge(root_node, join_step_id, "left")
-        sub_plan.add_edge(right_node_id, join_step_id, "right")
+        sub_plan.add_edge(left_node_id, join_step_id, "right")
 
         root_node = join_step_id
 

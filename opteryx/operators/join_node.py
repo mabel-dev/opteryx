@@ -55,8 +55,11 @@ class JoinNode(BasePlanNode):
         self._on = config.get("on")
         self._using = config.get("using")
 
-        if self._using is not None and self._join_type.lower() not in ("inner", "left outer"):
-            raise SqlError("JOIN `USING` only valid for `INNER` and `LEFT` joins.")
+        self._left_columns = config.get("left_columns")
+        self._left_relation = config.get("left_relation")
+
+        self._right_columns = config.get("right_columns")
+        self._right_relation = config.get("right_relation")
 
     @property
     def name(self):  # pragma: no cover
@@ -75,23 +78,12 @@ class JoinNode(BasePlanNode):
 
         right_table = pyarrow.concat_tables(right_node.execute(), promote=True)
 
-        if self._on.right.schema_column.identity in right_table.column_names:
-            right_column = self._on.right.schema_column.identity
-            left_column = self._on.left.schema_column.identity
-        else:
-            left_column = self._on.right.schema_column.identity
-            right_column = self._on.left.schema_column.identity
-
         for morsel in left_node.execute():
-            # need to work out which one is left and which one is right
-            # the schema columns say which table they represet
-            # not sure if the tables say which table they are though
-
             # do the join
             new_morsel = morsel.join(
                 right_table,
-                keys=[left_column],
-                right_keys=[right_column],
+                keys=self._right_columns,
+                right_keys=self._left_columns,
                 join_type=self._join_type,
                 coalesce_keys=self._using is not None,
             )
