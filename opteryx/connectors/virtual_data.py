@@ -46,7 +46,7 @@ def suggest(dataset):
     """
     from opteryx.utils import fuzzy_search
 
-    known_datasets = (name for name, suggestable in WELL_KNOWN_DATASETS if suggestable)
+    known_datasets = (name for name, suggestable in WELL_KNOWN_DATASETS.items() if suggestable)
     suggestion = fuzzy_search(dataset, known_datasets)
     if suggestion is not None:
         return (
@@ -73,10 +73,10 @@ class SampleDataConnector(BaseConnector, Partitionable):
         )
 
     def get_dataset_schema(self) -> RelationSchema:
-        data_provider, _ = WELL_KNOWN_DATASETS.get(self.dataset)
-        if data_provider is None:
+        if not self.dataset in WELL_KNOWN_DATASETS:
             suggestion = suggest(self.dataset)
             raise DatasetNotFoundError(message=suggestion, dataset=self.dataset)
+        data_provider, _ = WELL_KNOWN_DATASETS.get(self.dataset)
         return data_provider.schema()
 
 

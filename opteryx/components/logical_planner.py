@@ -158,6 +158,34 @@ class LogicalPlanNode(Node):
         return f"{str(self.node_type)[20:].upper()}"
 
 
+def get_subplan_alias(sub_plan: LogicalPlan) -> str:
+    """
+    Retrieves the alias for a given sub-plan, preferring the exit point over the entry point.
+    Raises an error if multiple or no entry/exit points are found.
+
+    Parameters:
+        sub_plan: LogicalPlan
+            The sub-plan containing entry or exit points.
+
+    Returns:
+        str: The alias or actual name for the sub-plan.
+
+    Raises:
+        ValueError: If multiple or no entry/exit points are found.
+    """
+    for func_name in ["get_exit_points", "get_entry_points"]:
+        points = getattr(sub_plan, func_name)()
+
+        # Check the number of points
+        if len(points) > 1:
+            raise ValueError(f"Expected only one {func_name}, but found {len(points)}")
+        elif len(points) == 1:
+            point = points[0]
+            return getattr(sub_plan[point], "alias", point)
+
+    raise ValueError("No entry or exit points found.")
+
+
 """
 CLAUSE PLANNERS
 """
@@ -360,6 +388,13 @@ def create_node_relation(relation):
                 #
                 # We have the name of the relation (alias), the query is added as a query plan to
                 # the parent plan.
+                if subquery["alias"] is None:
+                    from opteryx.exceptions import UnnamedSubqueryError
+
+                    raise UnnamedSubqueryError(
+                        "Subqueries in FROM or JOIN clauses must be named (AS)."
+                    )
+
                 subquery_step = LogicalPlanNode(node_type=LogicalPlanStepType.Subquery)
                 subquery_step.alias = (
                     None if subquery["alias"] is None else subquery["alias"]["name"]["value"]
@@ -477,8 +512,8 @@ def create_node_relation(relation):
         left_node_id, left_plan = create_node_relation(join)
 
         # add the left and right relation names - we sometimes need these later
-        join_step.right_relation_name = sub_plan[sub_plan.get_entry_points()[0]].alias
-        join_step.left_relation_name = left_plan[left_plan.get_entry_points()[0]].alias
+        join_step.right_relation_name = get_subplan_alias(sub_plan)
+        join_step.left_relation_name = get_subplan_alias(left_plan)
 
         # add the other side of the join
         sub_plan += left_plan

@@ -60,6 +60,7 @@ from opteryx.exceptions import (
     PermissionsError,
     SqlError,
     UnexpectedDatasetReferenceError,
+    UnnamedSubqueryError,
     UnsupportedSegementationError,
     UnsupportedSyntaxError,
     VariableNotFoundError,
@@ -961,9 +962,11 @@ STATEMENTS = [
         # AGG (FUNCTION)
         ("SELECT SUM(IIF(year < 1970, 1, 0)), MAX(year) FROM $astronauts", 1, 2, None),
         # [#527] variables referenced in subqueries
-        ("SET @v = 1; SELECT * FROM (SELECT @v);", 1, 1, None),
+        ("SET @v = 1; SELECT * FROM (SELECT @v) AS S;", 1, 1, None),
         # [#561] HASH JOIN with an empty table
-        ("SELECT * FROM $planets LEFT JOIN (SELECT planetId as id FROM $satellites WHERE id < 0) USING (id)", 0, 1, UnsupportedSyntaxError),  
+        ("SELECT * FROM $planets LEFT JOIN (SELECT planetId as id FROM $satellites WHERE id < 0) USING (id)", 0, 1, UnnamedSubqueryError),  
+        ("SELECT * FROM $planets LEFT JOIN (SELECT planetId as id FROM $satellites WHERE id < 0) AS S USING (id)", 0, 1, None),  
+
         # [#646] Incorrectly placed temporal clauses
         ("SELECT * FROM $planets WHERE 1 = 1 FOR TODAY;", None, None, InvalidTemporalRangeFilterError),
         ("SELECT * FROM $planets GROUP BY name FOR TODAY;", 9, 1, InvalidTemporalRangeFilterError),

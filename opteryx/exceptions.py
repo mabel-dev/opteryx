@@ -20,35 +20,36 @@ Exception
  ├── UnmetRequirementError
  └── Error [PEP-0249] *
      └── DatabaseError [PEP-0249] *
-         ├── UnsupportedTypeError
-         ├── NotSupportedError
-         ├── UnsupportedFileTypeError
          ├── IncompleteImplementationError
          ├── InvalidConfigurationError
          ├── InvalidInternalStateError
+         ├── NotSupportedError
+         ├── UnsupportedFileTypeError
+         ├── UnsupportedTypeError
          └── ProgrammingError [PEP-0249] *
-             ├── MissingSqlStatement
-             ├── InvalidCursorStateError
-             ├── ParameterError
-             ├── SqlError *
-             │   ├── AmbiguousDatasetError
-             │   ├── AmbiguousIdentifierError
-             │   ├── ColumnNotFoundError
-             │   ├── DatasetNotFoundError
-             │   ├── FunctionNotFoundError
-             │   ├── IncorrectTypeError
-             │   ├── InvalidFunctionParameterError
-             │   ├── InvalidTemporalRangeFilterError
-             │   ├── UnexpectedDatasetReferenceError
-             │   ├── UnsupportedSyntaxError
-             │   └── VariableNotFoundError
              ├── DataError *
              │   ├── EmptyDatasetError
              │   └── EmptyResultSetError
+             ├── ExecutionError *
+             │   └── FeatureNotSupportedOnArchitectureError
+             ├── MissingSqlStatement
+             ├── InvalidCursorStateError
+             ├── ParameterError
              ├── SecurityError *
              │   └── PermissionsError
-             └── ExecutionError *
-                 └── FeatureNotSupportedOnArchitectureError
+             └── SqlError *
+                 ├── AmbiguousDatasetError
+                 ├── AmbiguousIdentifierError
+                 ├── ColumnNotFoundError
+                 ├── DatasetNotFoundError
+                 ├── FunctionNotFoundError
+                 ├── IncorrectTypeError
+                 ├── InvalidFunctionParameterError
+                 ├── InvalidTemporalRangeFilterError
+                 ├── UnexpectedDatasetReferenceError
+                 ├── UnnamedSubqueryError
+                 ├── UnsupportedSyntaxError
+                 └── VariableNotFoundError
 """
 
 # =====================================================================================
@@ -305,6 +306,10 @@ class UnsupportedSegementationError(SqlError):
         self.dataset = dataset
         message = f"'{dataset}' cannot be read, only 'by_hour' segments can be read."
         super().__init__(message)
+
+
+class UnnamedSubqueryError(SqlError):
+    pass
 
 
 # =====================================================================================
