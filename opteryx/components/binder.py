@@ -290,7 +290,7 @@ def locate_identifier(node, context):
     return node, context
 
 
-def inner_binder(node, context) -> typing.Tuple[Node, dict]:
+def inner_binder(node: Node, context: dict) -> typing.Tuple[Node, dict]:
     """
     Note, this is a tree within a tree, this is a single step in the execution plan (i.e. the plan
     associated with the relational algebra) which in itself may be an evaluation plan (i.e.
@@ -304,6 +304,22 @@ def inner_binder(node, context) -> typing.Tuple[Node, dict]:
         return node, context
 
     schemas = context["schemas"]
+
+    # First recurse and do this for all the sub parts of the evaluation plan
+    if node.left:
+        node.left, context = inner_binder(node.left, context)
+    if node.right:
+        node.right, context = inner_binder(node.right, context)
+    if node.centre:
+        node.centre, context = inner_binder(node.centre, context)
+    if node.parameters:
+        node.parameters, new_contexts = zip(
+            *(inner_binder(parm, context) for parm in node.parameters)
+        )
+        merged_schemas = merge_schemas(*[ctx["schemas"] for ctx in new_contexts])
+        context["schemas"] = merged_schemas
+
+    # Now do the node we're at
     node_type = node.node_type
     if node_type == NodeType.IDENTIFIER:
         return locate_identifier(node, context)
@@ -371,20 +387,6 @@ def inner_binder(node, context) -> typing.Tuple[Node, dict]:
             schemas["$derived"].columns.append(schema_column)
             node.schema_column = schema_column
             node.query_column = node.alias or column_name
-
-    # Now recurse and do this again for all the sub parts of the evaluation plan
-    if node.left:
-        node.left, context = inner_binder(node.left, context)
-    if node.right:
-        node.right, context = inner_binder(node.right, context)
-    if node.centre:
-        node.centre, context = inner_binder(node.centre, context)
-    if node.parameters:
-        node.parameters, new_contexts = zip(
-            *(inner_binder(parm, context) for parm in node.parameters)
-        )
-        merged_schemas = merge_schemas(*[ctx["schemas"] for ctx in new_contexts])
-        context["schemas"] = merged_schemas
 
     return node, copy.deepcopy(context)
 
