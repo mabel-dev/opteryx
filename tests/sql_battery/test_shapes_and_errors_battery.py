@@ -77,7 +77,7 @@ STATEMENTS = [
         # Does the error tester work
         ("THIS IS NOT VALID SQL", None, None, SqlError),
 
-
+        # Randomly generated but consistently tested queries
         ("SELECT * FROM $planets WHERE `name` = 'Earth'", 1, 20, None),
         ("SELECT * FROM $planets WHERE name = 'Mars'", 1, 20, None),
         ("SELECT * FROM $planets WHERE name <> 'Venus'", 8, 20, None),
@@ -118,11 +118,6 @@ STATEMENTS = [
         ("SELECT * FROM $planets WHERE numberOfMoons > 10", 4, 20, None),
         ("SELECT * FROM $planets WHERE LENGTH(name) > 7", 0, 20, None),
         ("SELECT * FROM $planets WHERE distanceFromSun BETWEEN 100 AND 1000", 4, 20, None),
-
-
-
-
-
 
         # Now the actual tests
         ("SELECT * FROM $satellites;", 177, 8, None),
@@ -439,7 +434,7 @@ STATEMENTS = [
         ("SELECT * FROM generate_series(1,10) LEFT JOIN $planets ON id = generate_series", 10, 21, None),
         ("SELECT * FROM GENERATE_SERIES(5, 10) AS PID LEFT JOIN $planets ON id = PID", 6, 21, None),
         ("SELECT * FROM generate_series(1,5) JOIN $planets ON id = generate_series", 5, 21, None),
-        ("SELECT * FROM (SELECT * FROM generate_series(1,10,2) AS gs) INNER JOIN $planets on gs = id", 5, 21, None),
+        ("SELECT * FROM (SELECT * FROM generate_series(1,10,2) AS gs) AS GS INNER JOIN $planets on gs = id", 5, 21, None),
 
         ("SELECT * FROM 'testdata/flat/formats/arrow/tweets.arrow'", 100000, 13, None),
         ("SELECT * FROM 'testdata/flat/../flat/formats/arrow/tweets.arrow'", None, None, DatasetNotFoundError),  # don't allow traversal
@@ -475,6 +470,20 @@ STATEMENTS = [
         ("SELECT * FROM $planets AS P FOR '2030-01-01'", 9, 20, None),
         ("SELECT * FROM (SELECT * FROM $planets AS D) AS P FOR '2030-01-01'", 9, 20, None),
         ("SELECT * FROM $planets AS P FOR '1699-01-01' INNER JOIN $satellites FOR '2030-01-01' ON P.id = planetId;", 131, 28, None),
+
+        ("SELECT id, name FROM (SELECT id, name FROM $satellites) as S", 2, 177, None),
+        ("SELECT S.id, name FROM (SELECT id, name FROM $satellites) as S", 2, 177, None),
+        ("SELECT S.id, S.name FROM (SELECT id, name FROM $satellites) as S", 2, 177, None),
+        ("SELECT S.id, S.name FROM (SELECT id, name FROM $satellites AS P) as S", 2, 177, None),
+        ("SELECT S.id, S.name FROM (SELECT id, P.name FROM $satellites AS P) as S", 2, 177, None),
+        ("SELECT S.id, S.name FROM (SELECT P.id, P.name FROM $satellites AS P) as S", 2, 177, None),
+        ("SELECT S.id, name FROM (SELECT id, name FROM $satellites AS P) as S", 2, 177, None),
+        ("SELECT id, name FROM (SELECT id, P.name FROM $satellites AS P) as S", 2, 177, None),
+        ("SELECT P.id, name FROM (SELECT P.id, P.name FROM $satellites AS P) as S", 2, 177, UnexpectedDatasetReferenceError),
+        ("SELECT * FROM (SELECT id, name FROM $satellites AS P) as S", 2, 177, None),
+        ("SELECT id, name FROM (SELECT * FROM $satellites AS P) as S", 2, 177, None),
+        ("SELECT id, name FROM (SELECT * FROM $satellites) as S", 2, 177, None),
+        ("SELECT * FROM (SELECT * FROM $satellites) as S", 2, 177, None),
 
         ("SELECT * FROM $astronauts WHERE death_date IS NULL", 305, 19, None),
         ("SELECT * FROM $astronauts WHERE death_date IS NOT NULL", 52, 19, None),
@@ -802,9 +811,9 @@ STATEMENTS = [
         ("SELECT name FROM $satellites WHERE '192.168.0.1' | '192.167.0.0/24'", 0, 1, None),
         ("SELECT name FROM $satellites WHERE 12 | 22", None, None, NotImplementedError),
 
-        ("SELECT COUNT(*), place FROM (SELECT CASE id WHEN 3 THEN 'Earth' WHEN 1 THEN 'Mercury' ELSE 'Elsewhere' END as place FROM $planets) GROUP BY place;", 3, 2, None),
-        ("SELECT COUNT(*), place FROM (SELECT CASE id WHEN 3 THEN 'Earth' WHEN 1 THEN 'Mercury' END as place FROM $planets) GROUP BY place HAVING place IS NULL;", 1, 2, None),
-        ("SELECT COUNT(*), place FROM (SELECT CASE id WHEN 3 THEN 'Earth' WHEN 1 THEN 'Mercury' ELSE 'Elsewhere' END as place FROM $planets) GROUP BY place HAVING place IS NULL;", 0, 2, None),
+        ("SELECT COUNT(*), place FROM (SELECT CASE id WHEN 3 THEN 'Earth' WHEN 1 THEN 'Mercury' ELSE 'Elsewhere' END as place FROM $planets) AS SQ GROUP BY place;", 3, 2, None),
+        ("SELECT COUNT(*), place FROM (SELECT CASE id WHEN 3 THEN 'Earth' WHEN 1 THEN 'Mercury' END as place FROM $planets) AS SQ GROUP BY place HAVING place IS NULL;", 1, 2, None),
+        ("SELECT COUNT(*), place FROM (SELECT CASE id WHEN 3 THEN 'Earth' WHEN 1 THEN 'Mercury' ELSE 'Elsewhere' END as place FROM $planets) AS SQ GROUP BY place HAVING place IS NULL;", 0, 2, None),
 
         ("SELECT TRIM(LEADING 'E' FROM name) FROM $planets;", 9, 1, None),
         ("SELECT * FROM $planets WHERE TRIM(TRAILING 'arth' FROM name) = 'E'", 1, 20, None),
@@ -887,7 +896,7 @@ STATEMENTS = [
         ("SELECT * FROM $planets LEFT JOIN $satellites ON $satellites.planetId = $planets.id WHERE $satellites.id IS NULL", 2, 28, None),
         ("SELECT * FROM $planets LEFT JOIN $satellites ON $satellites.planetId = $planets.id WHERE $satellites.name IS NULL", 2, 28, None),
         # SORT BROKEN
-        ("SELECT * FROM (SELECT * FROM $planets ORDER BY id DESC LIMIT 5) WHERE id > 7", 2, 20, None),
+        ("SELECT * FROM (SELECT * FROM $planets ORDER BY id DESC LIMIT 5) AS SQ WHERE id > 7", 2, 20, None),
         # ORDER OF JOIN CONDITION
         ("SELECT * FROM $planets INNER JOIN $satellites ON $satellites.planetId = $planets.id", 177, 28, None),
         # ORDER BY QUALIFIED IDENTIFIER
@@ -903,7 +912,7 @@ STATEMENTS = [
         ("SELECT * FROM testdata.partitioned.framed FOR DATES BETWEEN '2021-03-29' AND '2021-03-30'", 100000, 1, None),
         ("SELECT * FROM testdata.partitioned.framed FOR DATES BETWEEN '2021-03-28' AND '2021-03-30'", 200000, 1, None),
         # PAGING OF DATASETS AFTER A GROUP BY [#179]
-        ("SELECT * FROM (SELECT COUNT(*), column_1 FROM FAKE(5000,2) GROUP BY column_1 ORDER BY COUNT(*)) LIMIT 5", 5, 2, None),
+        ("SELECT * FROM (SELECT COUNT(*), column_1 FROM FAKE(5000,2) GROUP BY column_1 ORDER BY COUNT(*)) AS SQ LIMIT 5", 5, 2, None),
         # FILTER CREATION FOR 3 OR MORE ANDED PREDICATES FAILS [#182]
         ("SELECT * FROM $astronauts WHERE name LIKE '%o%' AND `year` > 1900 AND gender ILIKE '%ale%' AND group IN (1,2,3,4,5,6)", 41, 19, None),
         # LIKE-ING NULL
@@ -932,10 +941,10 @@ STATEMENTS = [
         ("SELECT name FROM $planets INNER JOIN UNNEST(('Earth')) AS n on name = n ", 1, 1, None),
         ("SELECT name FROM $planets INNER JOIN UNNEST(('Earth', 'Mars')) AS n on name = n", 2, 1, None),
         # SELECT <literal> [#409]
-        ("SELECT DATE FROM (SELECT '1980-10-20' AS DATE)", 1, 1, None),
-        ("SELECT NUMBER FROM (SELECT 1.0 AS NUMBER)", 1, 1, None),
-        ("SELECT VARCHAR FROM (SELECT 'varchar' AS VARCHAR)", 1, 1, None),
-        ("SELECT BOOLEAN FROM (SELECT False AS BOOLEAN)", 1, 1, None),
+        ("SELECT DATE FROM (SELECT '1980-10-20' AS DATE) AS SQ", 1, 1, None),
+        ("SELECT NUMBER FROM (SELECT 1.0 AS NUMBER) AS SQ", 1, 1, None),
+        ("SELECT VARCHAR FROM (SELECT 'varchar' AS VARCHAR) AS SQ", 1, 1, None),
+        ("SELECT BOOLEAN FROM (SELECT False AS BOOLEAN) AS SQ", 1, 1, None),
         # EXPLAIN has two heads (found looking a [#408])
         ("EXPLAIN SELECT * FROM $planets AS a INNER JOIN (SELECT id FROM $planets) AS b USING (id)", 3, 3, None),
         # ALIAS issues [#408]

@@ -14,14 +14,6 @@
 Join Node
 
 This is a SQL Query Execution Plan Node.
-
-
-- I need:
-    - to know if any of the fields in the ON need evaluating
-    - to know what the identity of the columns in the join are
-
-    - to do any evalulations
-    - to do the join
 """
 from typing import Iterable
 

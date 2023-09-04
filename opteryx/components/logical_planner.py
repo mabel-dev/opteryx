@@ -158,7 +158,7 @@ class LogicalPlanNode(Node):
         return f"{str(self.node_type)[20:].upper()}"
 
 
-def get_subplan_alias(sub_plan: LogicalPlan) -> str:
+def get_subplan_alias(sub_plan: Graph) -> str:
     """
     Retrieves the alias for a given sub-plan, preferring the exit point over the entry point.
     Raises an error if multiple or no entry/exit points are found.
@@ -176,12 +176,9 @@ def get_subplan_alias(sub_plan: LogicalPlan) -> str:
     for func_name in ["get_exit_points", "get_entry_points"]:
         points = getattr(sub_plan, func_name)()
 
-        # Check the number of points
-        if len(points) > 1:
-            raise ValueError(f"Expected only one {func_name}, but found {len(points)}")
-        elif len(points) == 1:
-            point = points[0]
-            return getattr(sub_plan[point], "alias", point)
+        for point in points:
+            if sub_plan[point].alias is not None:
+                return sub_plan[point].alias
 
     raise ValueError("No entry or exit points found.")
 

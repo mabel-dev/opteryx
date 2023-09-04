@@ -61,6 +61,7 @@ The Binder performs these activities:
 import copy
 import re
 import typing
+from typing import Optional, Tuple, Dict, Any
 
 from orso.schema import ConstantColumn
 from orso.schema import FlatColumn
@@ -81,6 +82,7 @@ from opteryx.managers.expression import NodeType
 from opteryx.models import Node
 from opteryx.operators.aggregate_node import AGGREGATORS
 from opteryx.virtual_datasets import derived
+from opteryx.third_party.travers import Graph
 
 COMBINED_FUNCTIONS = {**FUNCTIONS, **AGGREGATORS}
 CAMEL_TO_SNAKE = re.compile(r"(?<!^)(?=[A-Z])")
@@ -236,10 +238,14 @@ def convert_using_to_on(using_fields, left_relation_name, right_relation_name):
     return conditions[0]
 
 
-def locate_identifier(node, context):
+def locate_identifier(node: Node, context: Dict) -> Tuple[Node, Dict]:
     """
     Locate which schema the identifier is defined in. We return a populated node
     and the context.
+    
+    Raises:
+        UnexpectedDatasetReferenceError: If the source dataset is not found.
+        ColumnNotFoundError: If the column is not found in the schema.
     """
 
     if node.value[0] == "@":
@@ -402,7 +408,7 @@ class BinderVisitor:
 
     """
 
-    def visit_node(self, node, context=None):
+    def visit_node(self, node:Node, context:Optional[Dict]=None) -> Tuple[Node, Dict]:
         node_type = node.node_type.name
         visit_method_name = f"visit_{CAMEL_TO_SNAKE.sub('_', node_type).lower()}"
         visit_method = getattr(self, visit_method_name, self.visit_unsupported)
@@ -419,11 +425,11 @@ class BinderVisitor:
             )
         return return_node, return_context
 
-    def visit_unsupported(self, node, context):
+    def visit_unsupported(self, node:Node, context:Optional[Dict]=None) -> Tuple[Node, Dict]:
         opteryx_logger.debug(f"No visit method implemented for node type {node.node_type.name}")
         return node, context
 
-    def visit_aggregate_and_group(self, node, context):
+    def visit_aggregate_and_group(self, node:Node, context:Optional[Dict]=None) -> Tuple[Node, Dict]:
         """
         Group by maps the field to the existing schema fields and then disposes of the
         existing schemas and replaces it with a new $group-by schema.
@@ -452,7 +458,7 @@ class BinderVisitor:
 
     visit_aggregate = visit_aggregate_and_group
 
-    def visit_exit(self, node, context):
+    def visit_exit(self, node:Node, context:Optional[Dict]=None) -> Tuple[Node, Dict]:
         # LOG: Exit
         columns = []
         schemas = context.get("schemas", {})
@@ -483,7 +489,7 @@ class BinderVisitor:
 
         return node, context
 
-    def visit_function_dataset(self, node, context):
+    def visit_function_dataset(self, node:Node, context:Optional[Dict]=None) -> Tuple[Node, Dict]:
         # We need to build the schema and add it to the schema collection.
         if node.function == "VALUES":
             relation_name = f"$values-{random_string()}"
@@ -516,7 +522,7 @@ class BinderVisitor:
             raise NotImplementedError(f"{node.function} binding isn't written yet")
         return node, context
 
-    def visit_join(self, node, context: dict):
+    def visit_join(self, node:Node, context:Optional[Dict]=None) -> Tuple[Node, Dict]:
         """
         Visits a JOIN node and handles different types of joins.
 
@@ -530,6 +536,7 @@ class BinderVisitor:
             Tuple[Node, Dict]
                 Updated node and context.
         """
+
         # Handle 'natural join' by converting to a 'using'
         if node.type == "natural join":
             left_columns = context["schemas"][node.left_relation_name].column_names
@@ -582,14 +589,24 @@ class BinderVisitor:
 
         return node, context
 
-    def visit_project(self, node, context):
+    def visit_project(self, node:Node, context:Optional[Dict]=None) -> Tuple[Node, Dict]:
         # For each of the columns in the projection, identify the relation it
         # will be taken from
         node.columns, group_contexts = zip(*(inner_binder(col, context) for col in node.columns))
         merged_schemas = merge_schemas(*[ctx["schemas"] for ctx in group_contexts])
         context["schemas"] = merged_schemas
 
-        # we create a projection schema
+        for column in node.columns:
+            column.source = "$projection"
+            column.value = column.alias or column.value
+            column.query_column = column.value
+            column.alias = None
+            # create the schema of the resultant dataset
+            column.schema_column = column.schema_column.to_flatcolumn()
+            column.schema_column.name = column.value
+            column.schema_column.aliases = []
+
+        # Construct the RelationSchema with new FlatColumn instances
         schema = RelationSchema(
             name="$projection", columns=[col.schema_column for col in node.columns]
         )
@@ -597,12 +614,12 @@ class BinderVisitor:
 
         return node, context
 
-    def visit_filter(self, node, context):
+    def visit_filter(self, node:Node, context:Optional[Dict]=None) -> Tuple[Node, Dict]:
         node.condition, context = inner_binder(node.condition, context)
 
         return node, context
 
-    def visit_order(self, node, context):
+    def visit_order(self, node:Node, context:Optional[Dict]=None) -> Tuple[Node, Dict]:
         order_by = []
         for column, direction in node.order_by:
             bound_column, context = inner_binder(column, context)
@@ -617,7 +634,7 @@ class BinderVisitor:
         node.order_by = order_by
         return node, context
 
-    def visit_scan(self, node, context):
+    def visit_scan(self, node:Node, context:Optional[Dict]=None) -> Tuple[Node, Dict]:
         from opteryx.connectors import connector_factory
         from opteryx.connectors.capabilities import Cacheable
         from opteryx.connectors.capabilities import Partitionable
@@ -652,15 +669,15 @@ class BinderVisitor:
 
         return node, context
 
-    def visit_set(self, node, context):
+    def visit_set(self, node:Node, context:Optional[Dict]=None) -> Tuple[Node, Dict]:
         node.variables = context["connection"].variables
         return node, context
 
-    def visit_show_columns(self, node, context):
+    def visit_show_columns(self, node:Node, context:Optional[Dict]=None) -> Tuple[Node, Dict]:
         node.schema = context["schemas"][node.relation]
         return node, context
 
-    def visit_subquery(self, node, context):
+    def visit_subquery(self, node:Node, context:Optional[Dict]=None) -> Tuple[Node, Dict]:
         # we sack all the tables we previously knew and create a new set of schemas here
         columns = []
         for schema in context["schemas"]:
@@ -671,7 +688,7 @@ class BinderVisitor:
         context["schemas"] = {"$derived": derived.schema(), node.alias: schema}
         return node, context
 
-    def traverse(self, graph, node, context=None):
+    def traverse(self, graph: Graph, node: Node, context: Optional[Dict] = None) -> Tuple[Graph, Dict]:
         """
         Traverses the given graph starting at the given node and calling the
         appropriate visit methods for each node in the graph. This method uses
@@ -682,6 +699,8 @@ class BinderVisitor:
             graph: The graph to traverse.
             node: The node to start the traversal from.
             context: An optional context object to pass to each visit method.
+        Returns:
+            A tuple containing the updated graph and the context.
         """
         if context is None:
             raise InvalidInternalStateError("Binder hasn't been provided context")
