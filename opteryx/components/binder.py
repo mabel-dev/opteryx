@@ -61,7 +61,11 @@ The Binder performs these activities:
 import copy
 import re
 import typing
-from typing import Optional, Tuple, Dict, Any
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Set
+from typing import Tuple
 
 from orso.schema import ConstantColumn
 from orso.schema import FlatColumn
@@ -81,8 +85,8 @@ from opteryx.functions import FUNCTIONS
 from opteryx.managers.expression import NodeType
 from opteryx.models import Node
 from opteryx.operators.aggregate_node import AGGREGATORS
-from opteryx.virtual_datasets import derived
 from opteryx.third_party.travers import Graph
+from opteryx.virtual_datasets import derived
 
 COMBINED_FUNCTIONS = {**FUNCTIONS, **AGGREGATORS}
 CAMEL_TO_SNAKE = re.compile(r"(?<!^)(?=[A-Z])")
@@ -132,7 +136,9 @@ def get_fuzzy_search_suggestion(value, candidates):
     return fuzzy_search(value, candidates)
 
 
-def extract_join_fields(condition_node, left_relation_name, right_relation_name):
+def extract_join_fields(
+    condition_node: Node, left_relation_names: List[str], right_relation_names: List[str]
+) -> Tuple[List[str], List[str]]:
     """
     Extracts join fields from a condition node that may have multiple ANDed conditions.
 
@@ -153,10 +159,10 @@ def extract_join_fields(condition_node, left_relation_name, right_relation_name)
 
     if condition_node.node_type == NodeType.AND:
         left_fields_1, right_fields_1 = extract_join_fields(
-            condition_node.left, left_relation_name, right_relation_name
+            condition_node.left, left_relation_names, right_relation_names
         )
         left_fields_2, right_fields_2 = extract_join_fields(
-            condition_node.right, left_relation_name, right_relation_name
+            condition_node.right, left_relation_names, right_relation_names
         )
 
         left_fields.extend(left_fields_1)
@@ -167,14 +173,14 @@ def extract_join_fields(condition_node, left_relation_name, right_relation_name)
 
     elif condition_node.node_type == NodeType.COMPARISON_OPERATOR and condition_node.value == "Eq":
         if (
-            condition_node.left.source == left_relation_name
-            and condition_node.right.source == right_relation_name
+            condition_node.left.source in left_relation_names
+            and condition_node.right.source in right_relation_names
         ):
             left_fields.append(condition_node.left.schema_column.identity)
             right_fields.append(condition_node.right.schema_column.identity)
         elif (
-            condition_node.left.source == right_relation_name
-            and condition_node.right.source == left_relation_name
+            condition_node.left.source in right_relation_names
+            and condition_node.right.source in left_relation_names
         ):
             right_fields.append(condition_node.left.schema_column.identity)
             left_fields.append(condition_node.right.schema_column.identity)
@@ -182,45 +188,70 @@ def extract_join_fields(condition_node, left_relation_name, right_relation_name)
     return left_fields, right_fields
 
 
-def convert_using_to_on(using_fields, left_relation_name, right_relation_name):
+def convert_using_to_on(
+    using_fields: Set[str], left_relation_names: List[str], right_relation_names: List[str]
+) -> Node:
     """
     Converts a USING field to an ON field for JOIN operations.
 
     Parameters:
-        using_fields: set
+        using_fields: Set[str]
             Set of common fields to use for joining.
-        left_relation_name: str
-            Name of the left relation.
-        right_relation_name: str
-            Name of the right relation.
+        left_relation_names: List[str]
+            Names of the left relations.
+        right_relation_names: List[str]
+            Names of the right relations.
 
     Returns:
         Node
             The condition node representing the ON clause.
     """
-    conditions = []
-    for field in using_fields:
-        condition = Node(
-            node_type=NodeType.COMPARISON_OPERATOR, value="Eq", do_not_create_column=True
-        )
-        condition.left = Node(
-            node_type=NodeType.IDENTIFIER,
-            value=field,
-            source=left_relation_name,
-            source_column=field,
-            aliases=[],
-        )
-        condition.right = Node(
-            node_type=NodeType.IDENTIFIER,
-            value=field,
-            source=right_relation_name,
-            source_column=field,
-            aliases=[],
-        )
-        conditions.append(condition)
+    all_conditions = []
 
-    if len(conditions) == 1:
-        return conditions[0]
+    # Loop through all combinations of left and right relation names
+    for left_relation_name in left_relation_names:
+        for right_relation_name in right_relation_names:
+            conditions = []
+            for field in using_fields:
+                condition = Node(
+                    node_type=NodeType.COMPARISON_OPERATOR, value="Eq", do_not_create_column=True
+                )
+                condition.left = Node(
+                    node_type=NodeType.IDENTIFIER,
+                    value=field,
+                    source=left_relation_name,
+                    source_column=field,
+                    aliases=[],
+                )
+                condition.right = Node(
+                    node_type=NodeType.IDENTIFIER,
+                    value=field,
+                    source=right_relation_name,
+                    source_column=field,
+                    aliases=[],
+                )
+                conditions.append(condition)
+
+            if len(conditions) == 1:
+                all_conditions.append(conditions[0])
+            else:
+                # Create a tree of ANDed conditions
+                while len(conditions) > 1:
+                    new_conditions = []
+                    for i in range(0, len(conditions), 2):
+                        if i + 1 < len(conditions):
+                            and_node = Node(node_type=NodeType.AND, do_not_create_column=True)
+                            and_node.left = conditions[i]
+                            and_node.right = conditions[i + 1]
+                            new_conditions.append(and_node)
+                        else:
+                            new_conditions.append(conditions[i])
+                    conditions = new_conditions
+                all_conditions.append(conditions[0])
+
+    # If there's only one condition, return it directly
+    if len(all_conditions) == 1:
+        return all_conditions[0]
 
     # Create a tree of ANDed conditions
     while len(conditions) > 1:
@@ -242,7 +273,7 @@ def locate_identifier(node: Node, context: Dict) -> Tuple[Node, Dict]:
     """
     Locate which schema the identifier is defined in. We return a populated node
     and the context.
-    
+
     Raises:
         UnexpectedDatasetReferenceError: If the source dataset is not found.
         ColumnNotFoundError: If the column is not found in the schema.
@@ -394,6 +425,7 @@ def inner_binder(node: Node, context: dict) -> typing.Tuple[Node, dict]:
             node.schema_column = schema_column
             node.query_column = node.alias or column_name
 
+    context["schemas"] = schemas
     return node, copy.deepcopy(context)
 
 
@@ -408,7 +440,7 @@ class BinderVisitor:
 
     """
 
-    def visit_node(self, node:Node, context:Optional[Dict]=None) -> Tuple[Node, Dict]:
+    def visit_node(self, node: Node, context: Optional[Dict] = None) -> Tuple[Node, Dict]:
         node_type = node.node_type.name
         visit_method_name = f"visit_{CAMEL_TO_SNAKE.sub('_', node_type).lower()}"
         visit_method = getattr(self, visit_method_name, self.visit_unsupported)
@@ -425,11 +457,13 @@ class BinderVisitor:
             )
         return return_node, return_context
 
-    def visit_unsupported(self, node:Node, context:Optional[Dict]=None) -> Tuple[Node, Dict]:
+    def visit_unsupported(self, node: Node, context: Optional[Dict] = None) -> Tuple[Node, Dict]:
         opteryx_logger.debug(f"No visit method implemented for node type {node.node_type.name}")
         return node, context
 
-    def visit_aggregate_and_group(self, node:Node, context:Optional[Dict]=None) -> Tuple[Node, Dict]:
+    def visit_aggregate_and_group(
+        self, node: Node, context: Optional[Dict] = None
+    ) -> Tuple[Node, Dict]:
         """
         Group by maps the field to the existing schema fields and then disposes of the
         existing schemas and replaces it with a new $group-by schema.
@@ -458,7 +492,7 @@ class BinderVisitor:
 
     visit_aggregate = visit_aggregate_and_group
 
-    def visit_exit(self, node:Node, context:Optional[Dict]=None) -> Tuple[Node, Dict]:
+    def visit_exit(self, node: Node, context: Optional[Dict] = None) -> Tuple[Node, Dict]:
         # LOG: Exit
         columns = []
         schemas = context.get("schemas", {})
@@ -489,7 +523,9 @@ class BinderVisitor:
 
         return node, context
 
-    def visit_function_dataset(self, node:Node, context:Optional[Dict]=None) -> Tuple[Node, Dict]:
+    def visit_function_dataset(
+        self, node: Node, context: Optional[Dict] = None
+    ) -> Tuple[Node, Dict]:
         # We need to build the schema and add it to the schema collection.
         if node.function == "VALUES":
             relation_name = f"$values-{random_string()}"
@@ -522,7 +558,7 @@ class BinderVisitor:
             raise NotImplementedError(f"{node.function} binding isn't written yet")
         return node, context
 
-    def visit_join(self, node:Node, context:Optional[Dict]=None) -> Tuple[Node, Dict]:
+    def visit_join(self, node: Node, context: Optional[Dict] = None) -> Tuple[Node, Dict]:
         """
         Visits a JOIN node and handles different types of joins.
 
@@ -537,35 +573,52 @@ class BinderVisitor:
                 Updated node and context.
         """
 
+        pass
+
         # Handle 'natural join' by converting to a 'using'
         if node.type == "natural join":
-            left_columns = context["schemas"][node.left_relation_name].column_names
-            right_columns = context["schemas"][node.right_relation_name].column_names
+            left_columns = [
+                col
+                for relation_name in node.left_relation_names
+                for col in context["schemas"][relation_name].column_names
+            ]
+            right_columns = [
+                col
+                for relation_name in node.right_relation_names
+                for col in context["schemas"][relation_name].column_names
+            ]
             node.using = [Node(value=n) for n in set(left_columns).intersection(right_columns)]
             node.type = "inner"
         # Handle 'using' by converting to a an 'on'
         if node.using:
             node.on = convert_using_to_on(
-                [n.value for n in node.using], node.left_relation_name, node.right_relation_name
+                [n.value for n in node.using], node.left_relation_names, node.right_relation_names
             )
         if node.on:
             # cross joins, natural joins and 'using' joins don't have an "on"
             node.on, context = inner_binder(node.on, context)
             node.left_columns, node.right_columns = extract_join_fields(
-                node.on, node.left_relation_name, node.right_relation_name
+                node.on, node.left_relation_names, node.right_relation_names
             )
 
         if node.using:
-            left_relation = context["schemas"].get(node.left_relation_name)
-            right_relation = context["schemas"].get(node.right_relation_name)
-
             columns = []
-            for column_name in (n.value for n in node.using):
-                left_column = left_relation.pop_column(column_name)
-                right_column = right_relation.pop_column(column_name)
 
-                left_column.source_relation = None
-                columns.append(right_column)
+            # Loop through all using fields in the node
+            for column_name in (n.value for n in node.using):
+                # Try to pop the column from each left relation until found
+                for left_relation_name in node.left_relation_names:
+                    left_column = context["schemas"][left_relation_name].pop_column(column_name)
+                    if left_column is not None:
+                        left_column.source_relation = None
+                        break
+
+                # Try to pop the column from each right relation until found
+                for right_relation_name in node.right_relation_names:
+                    right_column = context["schemas"][right_relation_name].pop_column(column_name)
+                    if right_column is not None:
+                        columns.append(right_column)
+                        break
 
             context["schemas"][f"$joined-{random_string}"] = RelationSchema(
                 name="$joined", columns=columns
@@ -573,7 +626,11 @@ class BinderVisitor:
         if node.column:
             if not node.alias:
                 node.alias = f"UNNEST({node.column.query_column})"
-            node.source = node.left_relation_name
+            # Find which relation on the left side of the plan the field is in
+            for left_relation_name in node.left_relation_names:
+                if context["schemas"][left_relation_name].find_column(node.column.value):
+                    node.source = left_relation_name
+                    break
             # this is the column which is being unnested
             node.column, context = inner_binder(node.column, context)
             # this is the column that is being created - find it from it's name
@@ -589,7 +646,7 @@ class BinderVisitor:
 
         return node, context
 
-    def visit_project(self, node:Node, context:Optional[Dict]=None) -> Tuple[Node, Dict]:
+    def visit_project(self, node: Node, context: Optional[Dict] = None) -> Tuple[Node, Dict]:
         # For each of the columns in the projection, identify the relation it
         # will be taken from
         node.columns, group_contexts = zip(*(inner_binder(col, context) for col in node.columns))
@@ -599,11 +656,10 @@ class BinderVisitor:
         for column in node.columns:
             column.source = "$projection"
             column.value = column.alias or column.value
-            column.query_column = column.value
             column.alias = None
             # create the schema of the resultant dataset
             column.schema_column = column.schema_column.to_flatcolumn()
-            column.schema_column.name = column.value
+            column.schema_column.name = column.query_column
             column.schema_column.aliases = []
 
         # Construct the RelationSchema with new FlatColumn instances
@@ -614,12 +670,12 @@ class BinderVisitor:
 
         return node, context
 
-    def visit_filter(self, node:Node, context:Optional[Dict]=None) -> Tuple[Node, Dict]:
+    def visit_filter(self, node: Node, context: Optional[Dict] = None) -> Tuple[Node, Dict]:
         node.condition, context = inner_binder(node.condition, context)
 
         return node, context
 
-    def visit_order(self, node:Node, context:Optional[Dict]=None) -> Tuple[Node, Dict]:
+    def visit_order(self, node: Node, context: Optional[Dict] = None) -> Tuple[Node, Dict]:
         order_by = []
         for column, direction in node.order_by:
             bound_column, context = inner_binder(column, context)
@@ -634,7 +690,7 @@ class BinderVisitor:
         node.order_by = order_by
         return node, context
 
-    def visit_scan(self, node:Node, context:Optional[Dict]=None) -> Tuple[Node, Dict]:
+    def visit_scan(self, node: Node, context: Optional[Dict] = None) -> Tuple[Node, Dict]:
         from opteryx.connectors import connector_factory
         from opteryx.connectors.capabilities import Cacheable
         from opteryx.connectors.capabilities import Partitionable
@@ -669,15 +725,15 @@ class BinderVisitor:
 
         return node, context
 
-    def visit_set(self, node:Node, context:Optional[Dict]=None) -> Tuple[Node, Dict]:
+    def visit_set(self, node: Node, context: Optional[Dict] = None) -> Tuple[Node, Dict]:
         node.variables = context["connection"].variables
         return node, context
 
-    def visit_show_columns(self, node:Node, context:Optional[Dict]=None) -> Tuple[Node, Dict]:
+    def visit_show_columns(self, node: Node, context: Optional[Dict] = None) -> Tuple[Node, Dict]:
         node.schema = context["schemas"][node.relation]
         return node, context
 
-    def visit_subquery(self, node:Node, context:Optional[Dict]=None) -> Tuple[Node, Dict]:
+    def visit_subquery(self, node: Node, context: Optional[Dict] = None) -> Tuple[Node, Dict]:
         # we sack all the tables we previously knew and create a new set of schemas here
         columns = []
         for schema in context["schemas"]:
@@ -688,7 +744,9 @@ class BinderVisitor:
         context["schemas"] = {"$derived": derived.schema(), node.alias: schema}
         return node, context
 
-    def traverse(self, graph: Graph, node: Node, context: Optional[Dict] = None) -> Tuple[Graph, Dict]:
+    def traverse(
+        self, graph: Graph, node: Node, context: Optional[Dict] = None
+    ) -> Tuple[Graph, Dict]:
         """
         Traverses the given graph starting at the given node and calling the
         appropriate visit methods for each node in the graph. This method uses

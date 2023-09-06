@@ -95,7 +95,7 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable):
 
         if record is None:
             if os.path.isdir(self.dataset):
-                raise EmptyDatasetError(dataset=self.dataset)
+                raise EmptyDatasetError(dataset=self.dataset.replace("/", "."))
             raise DatasetNotFoundError(dataset=self.dataset)
 
         arrow_schema = record.schema
