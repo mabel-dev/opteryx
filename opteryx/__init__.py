@@ -63,8 +63,12 @@ paramstyle: str = "qmark"  # pylint: disable=C0103
 def connect(*args, **kwargs):
     """define the opteryx.connect function"""
     if "cache" in kwargs:
-        print(
-            "'cache' is no longer set as a parameter on connect, use opteryx.cache_manager instead"
+        import warnings
+
+        warnings.warn(
+            "'cache' can is no longer set via a parameter on connect, use opteryx.cache_manager instead.",
+            DeprecationWarning,
+            stacklevel=2,
         )
     return Connection(*args, **kwargs)
 

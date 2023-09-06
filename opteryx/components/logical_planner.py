@@ -47,6 +47,7 @@ import os
 import sys
 from enum import Enum
 from enum import auto
+from typing import List
 from typing import Tuple
 
 from orso.tools import random_string
@@ -158,32 +159,33 @@ class LogicalPlanNode(Node):
         return f"{str(self.node_type)[20:].upper()}"
 
 
-def get_subplan_alias(sub_plan: LogicalPlan) -> str:
+def get_subplan_schemas(sub_plan: Graph) -> List[str]:
     """
-    Retrieves the alias for a given sub-plan, preferring the exit point over the entry point.
-    Raises an error if multiple or no entry/exit points are found.
+    Retrieves schemas related to exit and entry points within a given sub-plan.
+
+    This function iterates through functions named 'get_exit_points' and 'get_entry_points'
+    in the `sub_plan` object to collect the schemas of the exit and entry points.
 
     Parameters:
-        sub_plan: LogicalPlan
-            The sub-plan containing entry or exit points.
+        sub_plan: Graph
+            The sub-plan object containing the necessary information for processing.
 
     Returns:
-        str: The alias or actual name for the sub-plan.
-
-    Raises:
-        ValueError: If multiple or no entry/exit points are found.
+        List[str]:
+            A list of schemas corresponding to the exit and entry points in the sub-plan.
     """
+    schemas = []
     for func_name in ["get_exit_points", "get_entry_points"]:
         points = getattr(sub_plan, func_name)()
 
-        # Check the number of points
-        if len(points) > 1:
-            raise ValueError(f"Expected only one {func_name}, but found {len(points)}")
-        elif len(points) == 1:
-            point = points[0]
-            return getattr(sub_plan[point], "alias", point)
+        for point in points:
+            if sub_plan[point].alias is not None:
+                schemas.append(sub_plan[point].alias)
 
-    raise ValueError("No entry or exit points found.")
+        if len(schemas) > 0:
+            return schemas
+
+    return schemas
 
 
 """
@@ -512,8 +514,8 @@ def create_node_relation(relation):
         left_node_id, left_plan = create_node_relation(join)
 
         # add the left and right relation names - we sometimes need these later
-        join_step.right_relation_name = get_subplan_alias(sub_plan)
-        join_step.left_relation_name = get_subplan_alias(left_plan)
+        join_step.right_relation_names = get_subplan_schemas(sub_plan)
+        join_step.left_relation_names = get_subplan_schemas(left_plan)
 
         # add the other side of the join
         sub_plan += left_plan
