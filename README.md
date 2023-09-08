@@ -193,18 +193,15 @@ result = opteryx.query("SELECT * FROM 'space_missions.parquet' LIMIT 5;")
 # Display the result.
 # This is useful for quick inspection of the data.
 result.head()
-
 ~~~
 
  ID | Company   | Location                       | Price | Launched_at         | Rocket         | Rocket_Status | Mission        | Mission_Status 
 --- | --------- | ------------------------------ | ----- | ------------------- | -------------- | ------------- | -------------- | --------------- 
-  0 | RVSN USSR | Site 1/5, Baikonur Cosmodrome, |  null | 1957-10-04 19:28:00 | Sputnik 8K71PS | Retired       | Sputnik-1      | Success        
-  1 | RVSN USSR | Site 1/5, Baikonur Cosmodrome, |  null | 1957-11-03 02:30:00 | Sputnik 8K71PS | Retired       | Sputnik-2      | Success        
-  2 | US Navy   | LC-18A, Cape Canaveral AFS, Fl |  null | 1957-12-06 16:44:00 | Vanguard       | Retired       | Vanguard TV3   | Failure        
-  3 | AMBA      | LC-26A, Cape Canaveral AFS, Fl |  null | 1958-02-01 03:48:00 | Juno I         | Retired       | Explorer 1     | Success        
-  4 | US Navy   | LC-18A, Cape Canaveral AFS, Fl |  null | 1958-02-05 07:33:00 | Vanguard       | Retired       | Vanguard TV3BU | Failure        
-
-
+  0 | RVSN USSR | Site 1/5, Baikonur Cosmodrome, | _null_ | 1957-10-04 19:28:00 | Sputnik 8K71PS | Retired       | Sputnik-1      | Success        
+  1 | RVSN USSR | Site 1/5, Baikonur Cosmodrome, | _null_ | 1957-11-03 02:30:00 | Sputnik 8K71PS | Retired       | Sputnik-2      | Success        
+  2 | US Navy   | LC-18A, Cape Canaveral AFS, Fl | _null_ | 1957-12-06 16:44:00 | Vanguard       | Retired       | Vanguard TV3   | Failure        
+  3 | AMBA      | LC-26A, Cape Canaveral AFS, Fl | _null_ | 1958-02-01 03:48:00 | Juno I         | Retired       | Explorer 1     | Success        
+  4 | US Navy   | LC-18A, Cape Canaveral AFS, Fl | _null_ | 1958-02-05 07:33:00 | Vanguard       | Retired       | Vanguard TV3BU | Failure        
 _this example requires a data file, [space_missions.parquet](https://storage.googleapis.com/opteryx/space_missions/space_missions.parquet)._
 
 #### Query Data in SQLite
@@ -232,7 +229,6 @@ result = opteryx.query("SELECT name, mass, diameter, density FROM sql.planets LI
 # Display the result.
 # This is useful for quickly verifying that the query executed correctly.
 result.head()
-
 ~~~
 
 ID | name    |   mass | diameter | density 
@@ -269,17 +265,15 @@ result = opteryx.query("SELECT * FROM opteryx.space_missions LIMIT 5;")
 # Display the result.
 # This is useful for quickly verifying that the query executed correctly.
 result.head()
-
 ~~~
 
  ID | Company   | Location                       | Price | Launched_at         | Rocket         | Rocket_Status | Mission        | Mission_Status 
 --- | --------- | ------------------------------ | ----- | ------------------- | -------------- | ------------- | -------------- | --------------- 
-  0 | RVSN USSR | Site 1/5, Baikonur Cosmodrome, |  null | 1957-10-04 19:28:00 | Sputnik 8K71PS | Retired       | Sputnik-1      | Success        
-  1 | RVSN USSR | Site 1/5, Baikonur Cosmodrome, |  null | 1957-11-03 02:30:00 | Sputnik 8K71PS | Retired       | Sputnik-2      | Success        
-  2 | US Navy   | LC-18A, Cape Canaveral AFS, Fl |  null | 1957-12-06 16:44:00 | Vanguard       | Retired       | Vanguard TV3   | Failure        
-  3 | AMBA      | LC-26A, Cape Canaveral AFS, Fl |  null | 1958-02-01 03:48:00 | Juno I         | Retired       | Explorer 1     | Success        
-  4 | US Navy   | LC-18A, Cape Canaveral AFS, Fl |  null | 1958-02-05 07:33:00 | Vanguard       | Retired       | Vanguard TV3BU | Failure            
-
+  0 | RVSN USSR | Site 1/5, Baikonur Cosmodrome, | _null_ | 1957-10-04 19:28:00 | Sputnik 8K71PS | Retired       | Sputnik-1      | Success        
+  1 | RVSN USSR | Site 1/5, Baikonur Cosmodrome, | _null_ | 1957-11-03 02:30:00 | Sputnik 8K71PS | Retired       | Sputnik-2      | Success        
+  2 | US Navy   | LC-18A, Cape Canaveral AFS, Fl | _null_ | 1957-12-06 16:44:00 | Vanguard       | Retired       | Vanguard TV3   | Failure        
+  3 | AMBA      | LC-26A, Cape Canaveral AFS, Fl | _null_ | 1958-02-01 03:48:00 | Juno I         | Retired       | Explorer 1     | Success        
+  4 | US Navy   | LC-18A, Cape Canaveral AFS, Fl | _null_ | 1958-02-05 07:33:00 | Vanguard       | Retired       | Vanguard TV3BU | Failure            
 _this example is complete and should run as-is_
 
 ## Community
