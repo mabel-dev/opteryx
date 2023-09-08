@@ -202,6 +202,7 @@ result.head()
   2 | US Navy   | LC-18A, Cape Canaveral AFS, Fl | _null_ | 1957-12-06 16:44:00 | Vanguard       | Retired       | Vanguard TV3   | Failure        
   3 | AMBA      | LC-26A, Cape Canaveral AFS, Fl | _null_ | 1958-02-01 03:48:00 | Juno I         | Retired       | Explorer 1     | Success        
   4 | US Navy   | LC-18A, Cape Canaveral AFS, Fl | _null_ | 1958-02-05 07:33:00 | Vanguard       | Retired       | Vanguard TV3BU | Failure        
+
 _this example requires a data file, [space_missions.parquet](https://storage.googleapis.com/opteryx/space_missions/space_missions.parquet)._
 
 #### Query Data in SQLite
@@ -239,7 +240,6 @@ ID | name    |   mass | diameter | density
  4 | Mars    |  0.642 |     6792 |    3933 
  5 | Jupiter | 1898.0 |   142984 |    1326 
 
-
 _this example requires a data file, [database.db](https://storage.googleapis.com/opteryx/planets/database.db)._
 
 #### Query Data on GCS  
@@ -274,6 +274,7 @@ result.head()
   2 | US Navy   | LC-18A, Cape Canaveral AFS, Fl | _null_ | 1957-12-06 16:44:00 | Vanguard       | Retired       | Vanguard TV3   | Failure        
   3 | AMBA      | LC-26A, Cape Canaveral AFS, Fl | _null_ | 1958-02-01 03:48:00 | Juno I         | Retired       | Explorer 1     | Success        
   4 | US Navy   | LC-18A, Cape Canaveral AFS, Fl | _null_ | 1958-02-05 07:33:00 | Vanguard       | Retired       | Vanguard TV3BU | Failure            
+  
 _this example is complete and should run as-is_
 
 ## Community
