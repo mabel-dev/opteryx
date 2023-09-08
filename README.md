@@ -2,6 +2,8 @@
 
 ![Opteryx](https://raw.githubusercontent.com/mabel-dev/opteryx/main/opteryx-word-small.png)
 ## Query your data, where it lives.
+
+_One interface, endless possibilities - effortless cross-platform data analytics._
 </div>
 
 <h3 align="center">
@@ -10,11 +12,10 @@ Unlock your ability to discover insights across your diverse data sources, like 
 
 <div align="center">
 
-_One interface, endless possibilities - effortless cross-platform data analytics._
-
-[Documentation](https://opteryx.dev/latest) |
-[Examples](#examples) |
-[Contributing](https://opteryx.dev/latest/contributing/contributing/)
+[**Documentation**](https://opteryx.dev/latest) |
+[**Install**](#install) |
+[**Examples**](#examples) |
+[**Contributing**](https://opteryx.dev/latest/contributing/contributing/)
 
 [![PyPI Latest Release](https://img.shields.io/pypi/v/opteryx.svg)](https://pypi.org/project/opteryx/)
 [![opteryx](https://snyk.io/advisor/python/opteryx/badge.svg?style=flat-square)](https://snyk.io/advisor/python/opteryx)
@@ -28,7 +29,7 @@ _One interface, endless possibilities - effortless cross-platform data analytics
 
 ## What is Opteryx?
 
-Opteryx simplifies cross-platform data analytics by allowing SQL queries across various data sources, such as Postgres databases and Parquet files. The goal is to enhance your data analytics process by offering a unified way to access and manage different types of data.
+Opteryx simplifies cross-platform data analytics by federating SQL queries across multiple data sources, such as Postgres databases and Parquet files. The goal is to enhance your data analytics process by offering a unified way to access and manage different types of data.
 
 Opteryx is a Python library that combines elements of in-process database engines like SQLite and DuckDB with federative features found in systems like Presto and Trino. The result is a versatile tool for querying data across multiple data sources in a seamless fashion.
 
@@ -56,7 +57,7 @@ Where possible, errors and warnings returned by Opteryx help the user to underst
 
 ![Opteryx](https://github.com/mabel-dev/opteryx.dev/raw/main/assets/data-stores.png)
 
-Opteryx supports multiple query engines, dataframe APIs and storage formats. You can mix-and-match sources in a single query. Opteryx can even `JOIN` datasets stored in different formats and different platforms in the same quert, such as Parquet and MySQL.
+Opteryx supports multiple query engines, dataframe APIs and storage formats. You can mix-and-match sources in a single query. Opteryx can even `JOIN` datasets stored in different formats and different platforms in the same query, such as Parquet and MySQL.
 
 Opteryx allows you to query your data directly in the systems where they are stored, eliminating the need to duplicate data into a common store for analytics. This saves you the cost and effort of maintaining duplicates.
 
@@ -99,6 +100,8 @@ pip install opteryx
 
 To build Opteryx from source, refer to the [contribution guides](https://opteryx.dev/latest/contributing/contributing/).
 
+Opteryx installs with a small set of libraries it uses, such as [Numpy](https://numpy.org/doc/stable/index.html), [PyArrow](https://arrow.apache.org/), and [orjson](https://github.com/ijl/orjson). Some features require additional libraries to be installed, you are notified of tese libraries as they are required.
+
 ## Examples
 
 [Filter a Dataset on the Command Line](#filter-a-dataset-on-the-command-line)  
@@ -125,13 +128,18 @@ _this example is complete and should run as-is_
 In this example, we are showing the basic usage of the Python API by executing a simple query that makes no references to any datasets.
 
 ~~~python
+# Import the Opteryx SQL query engine library.
 import opteryx
 
+# Execute a SQL query to evaluate the expression 4 * 7.
+# The result is stored in the 'result' variable.
 result = opteryx.query("SELECT 4 * 7;")
+
+# Display the first row(s) of the result to verify the query executed correctly.
 result.head()
 ~~~
 
- # |  4 * 7  
+ID |  4 * 7  
 -- | -------
  1 |     28 
 
@@ -142,12 +150,24 @@ _this example is complete and should run as-is_
 In this example, we are running a SQL statement on a pandas DataFrame and returning the result as a new pandas DataFrame.
 
 ~~~python
+# Required imports
 import opteryx
 import pandas
 
+# Read data from the exoplanets.csv file hosted on Google Cloud Storage
+# The resulting DataFrame is stored in the variable `pandas_df`.
 pandas_df = pandas.read_csv("https://storage.googleapis.com/opteryx/exoplanets/exoplanets.csv")
+
+# Register the pandas DataFrame with Opteryx under the alias "exoplanets"
+# This makes the DataFrame available for SQL-like queries.
 opteryx.register_df("exoplanets", pandas_df)
+
+# Perform an SQL query to group the data by `koi_disposition` and count the number
+# of occurrences of each distinct `koi_disposition`.
+# The result is stored in `aggregated_df`.
 aggregated_df = opteryx.query("SELECT koi_disposition, COUNT(*) FROM exoplanets GROUP BY koi_disposition;").pandas()
+
+# Display the aggregated DataFrame to get a preview of the result.
 aggregated_df.head()
 ~~~
 ~~~
@@ -163,13 +183,20 @@ _this example is complete and should run as-is_
 In this example, we are querying and filtering a file directly. This example will not run as written because the file being queried does not exist.
 
 ~~~python
+# Import the Opteryx query engine.
 import opteryx
 
+# Execute a SQL query to select the first 5 rows from the 'space_missions.parquet' table.
+# The result will be stored in the 'result' variable.
 result = opteryx.query("SELECT * FROM 'space_missions.parquet' LIMIT 5;")
+
+# Display the result.
+# This is useful for quick inspection of the data.
 result.head()
+
 ~~~
 
-#   | Company   | Location                       | Price | Launched_at         | Rocket         | Rocket_Status | Mission        | Mission_Status 
+ ID | Company   | Location                       | Price | Launched_at         | Rocket         | Rocket_Status | Mission        | Mission_Status 
 --- | --------- | ------------------------------ | ----- | ------------------- | -------------- | ------------- | -------------- | --------------- 
   0 | RVSN USSR | Site 1/5, Baikonur Cosmodrome, |  null | 1957-10-04 19:28:00 | Sputnik 8K71PS | Retired       | Sputnik-1      | Success        
   1 | RVSN USSR | Site 1/5, Baikonur Cosmodrome, |  null | 1957-11-03 02:30:00 | Sputnik 8K71PS | Retired       | Sputnik-2      | Success        
@@ -185,22 +212,30 @@ _this example requires a data file, [space_missions.parquet](https://storage.goo
 In this example, we are querying a SQLite database via Opteryx. This example will not run as written because the file being queried does not exist.
 
 ~~~python
+# Import the Opteryx query engine and the SqlConnector from its connectors module.
 import opteryx
 from opteryx.connectors import SqlConnector
 
-# Register the store, so we know queries for the 'sql' store should be handled by
-# the SQL Connector
+# Register a new data store with the prefix "sql", specifying the SQL Connector to handle it.
+# This allows queries with the 'sql' prefix to be routed to the appropriate SQL database.
 opteryx.register_store(
-   prefix="sql",
-   connector=SqlConnector, 
-   remove_prefix=True,  # the prefix isn't part of the SQLite table name
-   connection="sqlite:///database.db"  # SQLAlchemy connection string
+   prefix="sql",  # Prefix for distinguishing this particular store
+   connector=SqlConnector,  # Specify the connector to handle queries for this store
+   remove_prefix=True,  # Remove the prefix from the table name when querying SQLite
+   connection="sqlite:///database.db"  # SQLAlchemy connection string for the SQLite database
 )
+
+# Execute a SQL query to select specified columns from the 'planets' table in the SQL store,
+# limiting the output to 5 rows. The result is stored in the 'result' variable.
 result = opteryx.query("SELECT name, mass, diameter, density FROM sql.planets LIMIT 5;")
+
+# Display the result.
+# This is useful for quickly verifying that the query executed correctly.
 result.head()
+
 ~~~
 
- # | name    |   mass | diameter | density 
+ID | name    |   mass | diameter | density 
 -- | ------- | ------ | -------- | -------
  1 | Mercury |   0.33 |     4879 |    5427 
  2 | Venus   |   4.87 |    12104 |    5243 
@@ -216,17 +251,28 @@ _this example requires a data file, [database.db](https://storage.googleapis.com
 In this example, we are to querying a dataset on GCS in a public bucket called 'opteryx'.
 
 ~~~python
+# Import the Opteryx query engine and the GcpCloudStorageConnector from its connectors module.
 import opteryx
 from opteryx.connectors import GcpCloudStorageConnector
 
-# Register the store, so we know queries for this store should be handled by
-# the GCS connector
-opteryx.register_store("opteryx", GcpCloudStorageConnector)
+# Register a new data store named 'opteryx', specifying the GcpCloudStorageConnector to handle it.
+# This allows queries for this particular store to be routed to the appropriate GCP Cloud Storage bucket.
+opteryx.register_store(
+    "opteryx",  # Name of the store to register
+    GcpCloudStorageConnector  # Connector to handle queries for this store
+)
+
+# Execute a SQL query to select all columns from the 'space_missions' table located in the 'opteryx' store,
+# and limit the output to 5 rows. The result is stored in the 'result' variable.
 result = opteryx.query("SELECT * FROM opteryx.space_missions LIMIT 5;")
+
+# Display the result.
+# This is useful for quickly verifying that the query executed correctly.
 result.head()
+
 ~~~
 
-# | Company   | Location                       | Price | Launched_at         | Rocket         | Rocket_Status | Mission        | Mission_Status 
+ ID | Company   | Location                       | Price | Launched_at         | Rocket         | Rocket_Status | Mission        | Mission_Status 
 --- | --------- | ------------------------------ | ----- | ------------------- | -------------- | ------------- | -------------- | --------------- 
   0 | RVSN USSR | Site 1/5, Baikonur Cosmodrome, |  null | 1957-10-04 19:28:00 | Sputnik 8K71PS | Retired       | Sputnik-1      | Success        
   1 | RVSN USSR | Site 1/5, Baikonur Cosmodrome, |  null | 1957-11-03 02:30:00 | Sputnik 8K71PS | Retired       | Sputnik-2      | Success        
@@ -238,13 +284,12 @@ _this example is complete and should run as-is_
 
 ## Community
 
-[![gitter](https://img.shields.io/badge/get%20help%20on-gitter-ED1965.svg?logo=gitter)](https://gitter.im/mabel-opteryx/community)
-[![Twitter Follow](https://img.shields.io/badge/follow%20on-twitter-1DA1F2.svg?logo=twitter)](https://twitter.com/OpteryxSQL)
-<!---[![Discord](https://img.shields.io/badge/discuss%20on-discord-5865F2.svg?logo=discord)](https://discord.gg/PHqKAb9Y)--->
+[![Discord](https://img.shields.io/badge/discuss%20on-discord-5865F2.svg?logo=discord)](https://discord.gg/PHqKAb9Y)
+[![X Follow](https://img.shields.io/badge/follow%20on-x-1DA1F2.svg?logo=X)](https://twitter.com/OpteryxSQL)
 
 **How do I get Support?**
 
-For support ask our [Gitter Community](https://gitter.im/mabel-opteryx/community).
+For support ask our [Discord Server](https://discord.gg/PHqKAb9Y).
 
 **How Can I Contribute?**
 
@@ -267,7 +312,7 @@ See the project [Security Policy](SECURITY.md) for information about reporting v
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/mabel-dev/opteryx/blob/master/LICENSE)
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fmabel-dev%2Fopteryx.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fmabel-dev%2Fopteryx?ref=badge_shield)
 
-Opteryx is licensed under [Apache 2.0](https://github.com/mabel-dev/opteryx/blob/master/LICENSE) unless otherwise noted.
+Opteryx is licensed under [Apache 2.0](https://github.com/mabel-dev/opteryx/blob/master/LICENSE) except where specific module note otherwise.
 
 ## Status
 
@@ -285,5 +330,4 @@ Opteryx is in beta. Beta means different things to different people, to us, bein
 
 - **[orso](https://github.com/mabel-dev/orso)** DataFrame library
 - **[mabel](https://github.com/mabel-dev/mabel)** Streaming data APIs
-- **[HadroDB](https://github.com/mabel-dev/hadrodb)** Data storage engine
 - **[mesos](https://github.com/mabel-dev/mesos)** MySQL connector for Opteryx
