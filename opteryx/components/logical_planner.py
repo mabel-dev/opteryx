@@ -437,11 +437,21 @@ def create_node_relation(relation):
     elif relation["relation"]["Table"]["args"]:
         function = relation["relation"]["Table"]
         function_name = function["name"][0]["value"].upper()
+
+        if function["alias"] is None:
+            from opteryx.exceptions import UnnamedColumnError
+
+            raise UnnamedColumnError(f"Column created by {function_name} has no name.")
+
+        function = relation["relation"]["Table"]
+        function_name = function["name"][0]["value"].upper()
         function_step = LogicalPlanNode(
             node_type=LogicalPlanStepType.FunctionDataset, function=function_name
         )
         function_step.alias = (
-            None if function["alias"] is None else function["alias"]["name"]["value"]
+            f"$function-{random_string()}"
+            if function["alias"] is None
+            else function["alias"]["name"]["value"]
         )
         function_step.args = [logical_planner_builders.build(arg) for arg in function["args"]]
 

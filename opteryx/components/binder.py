@@ -329,16 +329,48 @@ def locate_identifier(node: Node, context: Dict) -> Tuple[Node, Dict]:
 
 def inner_binder(node: Node, context: dict) -> typing.Tuple[Node, dict]:
     """
-    Note, this is a tree within a tree, this is a single step in the execution plan (i.e. the plan
-    associated with the relational algebra) which in itself may be an evaluation plan (i.e.
-    executing comparisons)
+    Note, this is a tree within a tree. This function represents a single step in the execution
+    plan (associated with the relational algebra) which may itself be an evaluation plan
+    (executing comparisons).
     """
+    # Import relevant classes and functions
     from opteryx.managers.expression import ExpressionColumn
     from opteryx.managers.expression import format_expression
 
-    # we're already binded
+    # Retrieve the node type for further processing.
+    node_type = node.node_type
+
+    # Early exit for columns that are already bound.
+    # If the node has a 'schema_column' already set, it doesn't need to be processed again.
+    # This is an optimization to avoid unnecessary work.
     if node.schema_column is not None:
         return node, context
+
+    # Early exit for nodes representing IDENTIFIER types.
+    # If the node is of type IDENTIFIER, it's just a simple look up to bind the node.
+    if node_type == NodeType.IDENTIFIER:
+        return locate_identifier(node, context)
+
+    # Early exit for nodes representing calculated columns.
+    # If the node represents a calculated column, if we're seeing it again it's because it
+    # has appeared earlier in the plan and in that case we don't need to recalcuate, we just
+    # need to treat the result like an IDENTIFIER
+    column_name = node.query_column or format_expression(node)
+    for schema_name, schema in context["schemas"].items():
+        found_column = schema.find_column(column_name)
+
+        # If the column exists in the schema, update node and context accordingly.
+        if found_column:
+            # Convert to a FLATCOLUMN (an IDENTIFIER)
+            node.schema_column = found_column.to_flatcolumn()
+
+            # Remove the column from its original schema as it's already processed.
+            context["schemas"][schema_name].pop_column(found_column.name)
+
+            # Add the schema column to a special "$derived" schema for later use.
+            context["schemas"]["$derived"].columns.append(node.schema_column)
+
+            return node, context
 
     schemas = context["schemas"]
 
@@ -357,11 +389,8 @@ def inner_binder(node: Node, context: dict) -> typing.Tuple[Node, dict]:
         context["schemas"] = merged_schemas
 
     # Now do the node we're at
-    node_type = node.node_type
-    if node_type == NodeType.IDENTIFIER:
-        return locate_identifier(node, context)
 
-    elif node_type == NodeType.LITERAL:
+    if node_type == NodeType.LITERAL:
         column_name = format_expression(node)
         schema_column = ConstantColumn(
             name=column_name,
@@ -426,7 +455,7 @@ def inner_binder(node: Node, context: dict) -> typing.Tuple[Node, dict]:
             node.query_column = node.alias or column_name
 
     context["schemas"] = schemas
-    return node, copy.deepcopy(context)
+    return node, context
 
 
 class BinderVisitor:
@@ -444,7 +473,7 @@ class BinderVisitor:
         node_type = node.node_type.name
         visit_method_name = f"visit_{CAMEL_TO_SNAKE.sub('_', node_type).lower()}"
         visit_method = getattr(self, visit_method_name, self.visit_unsupported)
-        return_node, return_context = visit_method(node, context)
+        return_node, return_context = visit_method(node.copy(), copy.deepcopy(context))
         if not isinstance(return_context, dict):
             raise InvalidInternalStateError(
                 f"Internal Error - function {visit_method_name} didn't return a dict"
@@ -546,14 +575,13 @@ class BinderVisitor:
             context["schemas"][relation_name] = schema
             node.columns = [schema.columns[0].identity]
         elif node.function == "GENERATE_SERIES":
-            relation_name = f"$generate-series-{random_string()}"
             schema = RelationSchema(
-                name=relation_name,
+                name=node.alias,
                 columns=[FlatColumn(name=node.alias or "generate_series", type=0)],
             )
-            context["schemas"][relation_name] = schema
+            context["schemas"][node.alias] = schema
             node.columns = [schema.columns[0].identity]
-            node.relation_name = relation_name
+            node.relation_name = node.alias
         else:
             raise NotImplementedError(f"{node.function} binding isn't written yet")
         return node, context
@@ -572,8 +600,6 @@ class BinderVisitor:
             Tuple[Node, Dict]
                 Updated node and context.
         """
-
-        pass
 
         # Handle 'natural join' by converting to a 'using'
         if node.type == "natural join":
@@ -769,9 +795,8 @@ class BinderVisitor:
         if children:
             exit_context = copy.deepcopy(context)
             for child in children:
-                returned_graph, child_context = self.traverse(
-                    graph, child[0], copy.deepcopy(context)
-                )
+                # Each peer gets the exact copy of the context so they don't affect each other
+                _, child_context = self.traverse(graph, child[0], copy.deepcopy(context))
                 # Assuming merge_schemas is a function that merges the schemas from two contexts
                 exit_context["schemas"] = merge_schemas(
                     child_context["schemas"], exit_context["schemas"]

@@ -47,6 +47,7 @@ Exception
                  ├── InvalidFunctionParameterError
                  ├── InvalidTemporalRangeFilterError
                  ├── UnexpectedDatasetReferenceError
+                 ├── UnnamedColumnError
                  ├── UnnamedSubqueryError
                  ├── UnsupportedSyntaxError
                  └── VariableNotFoundError
@@ -309,6 +310,10 @@ class UnsupportedSegementationError(SqlError):
 
 
 class UnnamedSubqueryError(SqlError):
+    pass
+
+
+class UnnamedColumnError(SqlError):
     pass
 
 
