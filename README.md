@@ -110,7 +110,10 @@ Opteryx installs with a small set of libraries it uses, such as [Numpy](https://
 [Query Data on Local Disk](#query-data-on-local-disk)    
 [Query Data on GCS](#query-data-on-gcs)  
 [Query Data in SQLite](#query-data-in-sqlite)  
-<!---[Further Examples](#further-examples)--->
+
+[Interactive labs](https://github.com/mabel-dev/examples) are available on [Binder](https://mybinder.org/v2/gh/mabel-dev/examples/HEAD).
+
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/mabel-dev/examples/HEAD)
 
 #### Filter a Dataset on the Command Line
 
@@ -274,7 +277,7 @@ result.head()
   2 | US Navy   | LC-18A, Cape Canaveral AFS, Fl | _null_ | 1957-12-06 16:44:00 | Vanguard       | Retired       | Vanguard TV3   | Failure        
   3 | AMBA      | LC-26A, Cape Canaveral AFS, Fl | _null_ | 1958-02-01 03:48:00 | Juno I         | Retired       | Explorer 1     | Success        
   4 | US Navy   | LC-18A, Cape Canaveral AFS, Fl | _null_ | 1958-02-05 07:33:00 | Vanguard       | Retired       | Vanguard TV3BU | Failure            
-  
+
 _this example is complete and should run as-is_
 
 ## Community
