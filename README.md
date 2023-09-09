@@ -111,9 +111,9 @@ Opteryx installs with a small set of libraries it uses, such as [Numpy](https://
 [Query Data on GCS](#query-data-on-gcs)  
 [Query Data in SQLite](#query-data-in-sqlite)  
 
-[Interactive labs](https://github.com/mabel-dev/examples) are available on [Binder](https://mybinder.org/v2/gh/mabel-dev/examples/HEAD).
+[Interactive labs](https://github.com/mabel-dev/labs) are available on [Binder](https://mybinder.org/v2/gh/mabel-dev/labs/HEAD).
 
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/mabel-dev/examples/HEAD)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/mabel-dev/labs/HEAD)
 
 #### Filter a Dataset on the Command Line
 
