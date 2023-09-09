@@ -52,17 +52,9 @@ class SelectionNode(BasePlanNode):
         return "Selection"
 
     def execute(self) -> Iterable:
-        if len(self._producers) != 1:  # pragma: no cover
-            raise SqlError(f"{self.name} on expects a single producer")
-
         morsels = self._producers[0]  # type:ignore
         schema = None
         at_least_one = False
-
-        # we should always have a filter - but no harm in checking
-        if self.filter is None:
-            yield from morsels.execute()
-            return
 
         for morsel in morsels.execute():
             if schema is None:

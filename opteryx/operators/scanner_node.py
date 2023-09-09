@@ -28,10 +28,17 @@ from opteryx.operators import BasePlanNode
 def normalize_morsel(schema, morsel):
     # rename columns for internal use
     target_column_names = []
+    # columns in the data but not in the schema, droppable
+    droppable_columns = []
 
-    for column in morsel.column_names:
-        column_name = str(schema.find_column(column))
-        target_column_names.append(column_name)
+    for i, column in enumerate(morsel.column_names):
+        column_name = schema.find_column(column)
+        if column_name is None:
+            droppable_columns.append(i)
+        target_column_names.append(str(column_name))
+
+    for droppable in droppable_columns:
+        morsel = morsel.remove_column(droppable)
 
     morsel = morsel.rename_columns(target_column_names)
     return morsel
