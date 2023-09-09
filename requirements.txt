@@ -1,4 +1,3 @@
-hadro
 numpy
 orjson
 orso>=0.0.96

@@ -336,9 +336,21 @@ def inner_binder(node: Node, context: dict) -> typing.Tuple[Node, dict]:
     from opteryx.managers.expression import ExpressionColumn
     from opteryx.managers.expression import format_expression
 
-    # we're already binded
+    node_type = node.node_type
+
+    # early exit for already bound columns
     if node.schema_column is not None:
         return node, context
+
+    # early exit for calculated columns
+    column_name = node.query_column or format_expression(node)
+    for schema_name, schema in context["schemas"].items():
+        found_column = schema.find_column(column_name)
+        if found_column:
+            node.schema_column = found_column.to_flatcolumn()
+            context["schemas"][schema_name].pop_column(found_column.name)
+            context["schemas"]["$derived"].columns.append(node.schema_column)
+            return node, context
 
     schemas = context["schemas"]
 
@@ -357,7 +369,7 @@ def inner_binder(node: Node, context: dict) -> typing.Tuple[Node, dict]:
         context["schemas"] = merged_schemas
 
     # Now do the node we're at
-    node_type = node.node_type
+
     if node_type == NodeType.IDENTIFIER:
         return locate_identifier(node, context)
 
@@ -546,14 +558,13 @@ class BinderVisitor:
             context["schemas"][relation_name] = schema
             node.columns = [schema.columns[0].identity]
         elif node.function == "GENERATE_SERIES":
-            relation_name = f"$generate-series-{random_string()}"
             schema = RelationSchema(
-                name=relation_name,
+                name=node.alias,
                 columns=[FlatColumn(name=node.alias or "generate_series", type=0)],
             )
-            context["schemas"][relation_name] = schema
+            context["schemas"][node.alias] = schema
             node.columns = [schema.columns[0].identity]
-            node.relation_name = relation_name
+            node.relation_name = node.alias
         else:
             raise NotImplementedError(f"{node.function} binding isn't written yet")
         return node, context
@@ -572,8 +583,6 @@ class BinderVisitor:
             Tuple[Node, Dict]
                 Updated node and context.
         """
-
-        pass
 
         # Handle 'natural join' by converting to a 'using'
         if node.type == "natural join":
