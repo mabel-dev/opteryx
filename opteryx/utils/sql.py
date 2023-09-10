@@ -1,33 +1,40 @@
 import re
+from typing import List
 
 
-def remove_comments(string):  # pragma: no cover
+def remove_comments(string: str) -> str:
     """
-    Remove comments from the string
+    Remove comments from the string.
+
+    Parameters:
+        string: str
+            The SQL query string from which comments are to be removed.
+
+    Returns:
+        str: The SQL query string with comments removed.
     """
-    # first group captures quoted strings (double, single or back tick)
-    # second group captures comments (//single-line or /* multi-line */)
-    pattern = r"(\"[^\"]\"|\'[^\']\'|\`[^\`]\`)|(/\*[^\*/]*\*/|--[^\r\n]*$)"
+    # First group captures quoted strings (double or single)
+    # Second group captures comments (/* multi-line */ or -- single-line)
+    pattern = r"(\"[^\"]*\"|\'[^\']*\')|(/\*[\s\S]*?\*/|--[^\r\n]*$)"
+
     regex = re.compile(pattern, re.MULTILINE | re.DOTALL)
 
     def _replacer(match):
-        # if the 2nd group (capturing comments) is not None,
-        # it means we have captured a non-quoted (real) comment string.
         if match.group(2) is not None:
-            return ""  # so we will return empty to remove the comment
-        # otherwise, we will return the 1st group
-        return match.group(1)  # captured quoted-string
+            return ""  # Remove the comment
+        else:
+            return match.group(1)  # Keep the quoted string
 
     return regex.sub(_replacer, string)
 
 
-def clean_statement(string):  # pragma: no cover
+def clean_statement(string: str) -> str:
     """
     Remove carriage returns and all whitespace to single spaces.
 
     Avoid removing whitespace in quoted strings.
     """
-    pattern = r"(\"[^\"]\"|\'[^\']\'|\`[^\`]\`)|(\r\n\t\f\v+)"
+    pattern = r"(\"[^\"]*\"|\'[^\']*\'|\`[^\`]*\`)|(\s+)"
     regex = re.compile(pattern, re.MULTILINE | re.DOTALL)
 
     def _replacer(match):
@@ -38,7 +45,17 @@ def clean_statement(string):  # pragma: no cover
     return regex.sub(_replacer, string).strip()
 
 
-def split_sql_statements(sql: str) -> list:
+def split_sql_statements(sql: str) -> List[str]:
+    """
+    Splits multiple SQL statements separated by semicolons into a list.
+
+    Parameters:
+        sql: str
+            A string containing one or more SQL statements.
+
+    Returns:
+        List[str]: A list of individual SQL statements.
+    """
     statements = []
     buffer = []
     in_single_quote = False

@@ -99,7 +99,7 @@ def query_planner(operation: str, parameters: list, connection, qid: str):
             logical_plan,
             connection=connection.context,
             qid=qid,
-            common_table_expressions=ctes,
+            # common_table_expressions=ctes,
         )
 
         # before we write the new optimizer and execution engine, convert to a V1 plan

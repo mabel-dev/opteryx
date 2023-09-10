@@ -19,7 +19,6 @@ This Node eliminates duplicate records.
 """
 from typing import Iterable
 
-from pyarrow import Table
 from pyarrow import concat_tables
 
 from opteryx.exceptions import SqlError
@@ -46,9 +45,6 @@ class DistinctNode(BasePlanNode):
         return "Distinction"
 
     def execute(self) -> Iterable:
-        if len(self._producers) != 1:  # pragma: no cover
-            raise SqlError(f"{self.name} on expects a single producer")
-
         morsels = self._producers[0]  # type:ignore
 
         yield drop_duplicates(concat_tables(morsels.execute()))

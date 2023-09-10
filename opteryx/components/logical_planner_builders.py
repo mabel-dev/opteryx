@@ -28,7 +28,7 @@ from opteryx.functions.binary_operators import BINARY_OPERATORS
 from opteryx.managers.expression import NodeType
 from opteryx.models import Node
 from opteryx.utils import dates
-from opteryx.utils import fuzzy_search
+from opteryx.utils import suggest_alternative
 
 
 def literal_boolean(branch, alias: list = None, key=None):
@@ -183,7 +183,7 @@ def function(branch, alias=None, key=None):
     elif operators.is_aggregator(func):
         node_type = NodeType.AGGREGATOR
     else:  # pragma: no cover
-        likely_match = fuzzy_search(func, operators.aggregators() + functions.functions())
+        likely_match = suggest_alternative(func, operators.aggregators() + functions.functions())
         if likely_match is None:
             raise UnsupportedSyntaxError(f"Unknown function or aggregate '{func}'")
         raise UnsupportedSyntaxError(

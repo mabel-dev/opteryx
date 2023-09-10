@@ -37,9 +37,6 @@ class BuildStatisticsNode(BasePlanNode):
         return ""
 
     def execute(self) -> Iterable:
-        if len(self._producers) != 1:  # pragma: no cover  # pragma: no cover
-            raise SqlError(f"{self.name} on expects a single producer")
-
         morsels = self._producers[0]  # type:ignore
 
         if morsels is None:  # pragma: no cover

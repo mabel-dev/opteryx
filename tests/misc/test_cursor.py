@@ -2,16 +2,27 @@ import os
 import sys
 from decimal import Decimal
 import pytest
+import pyarrow
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import opteryx
-from opteryx.exceptions import InvalidCursorStateError
+from opteryx.exceptions import InvalidCursorStateError, MissingSqlStatement, UnsupportedSyntaxError
+from opteryx.cursor import CursorState
+
+
+def setup_function():
+    # Setup for each test, create a new connection for example
+    conn = opteryx.Connection()
+    cursor = conn.cursor()
+    return cursor
 
 
 def test_execute():
-    cursor = opteryx.query("SELECT * FROM $planets")
-    assert cursor.query == "SELECT * FROM $planets", cursor.query
+    conn = opteryx.Connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM $planets")
+    assert conn.history[-1][0] == "SELECT * FROM $planets", conn.history
     with pytest.raises(InvalidCursorStateError):
         cursor.execute("SELECT * FROM $planets")
 
@@ -116,6 +127,55 @@ def test_execute_error():
     cursor = conn.cursor()
     with pytest.raises(Exception):
         cursor.execute("SELECT * FROM non_existent_table")
+
+
+def test_cursor_init():
+    cursor = setup_function()
+    assert cursor._state == CursorState.INITIALIZED
+
+
+def test_execute_transition_state():
+    cursor = setup_function()
+    cursor.execute("SELECT * FROM $planets")
+    assert cursor._state == CursorState.EXECUTED
+
+
+def test_execute_with_invalid_state():
+    cursor = setup_function()
+    cursor._state = CursorState.EXECUTED  # Manually setting to test
+    with pytest.raises(InvalidCursorStateError):
+        cursor.execute("SELECT * FROM $planets")
+
+
+def test_close_with_invalid_state():
+    cursor = setup_function()
+    with pytest.raises(InvalidCursorStateError):
+        cursor.close()
+
+
+def test_execute_to_arrow_with_invalid_state():
+    cursor = setup_function()
+    cursor.execute_to_arrow("SELECT * FROM $planets")
+    with pytest.raises(InvalidCursorStateError):
+        cursor.execute_to_arrow("SELECT * FROM $planets")
+
+
+def test_execute_to_arrow():
+    cursor = setup_function()
+    results = cursor.execute_to_arrow("SELECT * FROM $planets")
+    assert isinstance(results, pyarrow.Table)
+
+
+def test_execute_missing_sql_statement():
+    cursor = setup_function()
+    with pytest.raises(MissingSqlStatement):
+        cursor.execute("")
+
+
+def test_execute_unsupported_syntax_error():
+    cursor = setup_function()
+    with pytest.raises(UnsupportedSyntaxError):
+        cursor.execute("SELECT * FROM table; SELECT * FROM table2", params=[1])
 
 
 if __name__ == "__main__":  # pragma: no cover

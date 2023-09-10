@@ -72,12 +72,12 @@ class _Functions:
         """return the function with the nearest name match"""
         from itertools import permutations
 
-        from opteryx.utils import fuzzy_search
+        from opteryx.utils import suggest_alternative
 
         available_functions = self._functions.keys()
 
         # try a fuzzy search (typos) first
-        suggestion = fuzzy_search(func, available_functions)
+        suggestion = suggest_alternative(func, available_functions)
 
         # if it probably wasn't a typo, try rearranging the parts of the function names
         if suggestion is None:
@@ -85,7 +85,7 @@ class _Functions:
             combinations = permutations(parts)
             for combination in combinations:
                 candidate = "_".join(combination)
-                suggestion = fuzzy_search(candidate, available_functions)
+                suggestion = suggest_alternative(candidate, available_functions)
                 if suggestion:
                     break
 
