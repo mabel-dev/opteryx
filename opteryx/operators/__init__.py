@@ -18,7 +18,6 @@ from .aggregate_node import AggregateNode  # aggregate data
 
 # from .build_statistics_node import BuildStatisticsNode  # Analyze Tables
 # from .collection_reader_node import CollectionReaderNode  # reader NoSQL datsets
-from .column_filter_node import ColumnFilterNode  # filter for SHOW COLUMNS
 from .cross_join_node import CrossJoinNode  # CROSS JOIN
 from .cross_join_unnest_node import CrossJoinUnnestNode  # CROSS JOIN UNNEST
 from .distinct_node import DistinctNode  # remove duplicate records

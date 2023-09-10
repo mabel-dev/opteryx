@@ -5,7 +5,7 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import pytest
 
-from opteryx.utils import fuzzy_search
+from opteryx.utils import suggest_alternative
 
 # fmt:off
 TESTS = [
@@ -105,8 +105,8 @@ def test_date_parser(string, candidates, expected):
     which is the best match (expected)
     """
     assert (
-        fuzzy_search(string, candidates) == expected
-    ), f"{string}, {candidates}, {expected} != {fuzzy_search(string, candidates)}"
+        suggest_alternative(string, candidates) == expected
+    ), f"{string}, {candidates}, {expected} != {suggest_alternative(string, candidates)}"
 
 
 if __name__ == "__main__":  # pragma: no cover

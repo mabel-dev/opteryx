@@ -17,16 +17,10 @@ This is a SQL Query Execution Plan Node.
 
 Gives information about a dataset's columns
 """
-from functools import reduce
 from typing import Iterable
 
 import numpy
-import orjson
 import pyarrow
-from numpy import nan
-from numpy import nanmax
-from numpy import nanmin
-from orso.types import OrsoTypes
 
 from opteryx.exceptions import SqlError
 from opteryx.models import QueryProperties
@@ -35,13 +29,6 @@ from opteryx.operators import BasePlanNode
 MAX_COLLECTOR: int = 17
 MAX_VARCHAR_SIZE: int = 64  # long strings tend to lose meaning
 MAX_DATA_SIZE: int = 100 * 1024 * 1024
-
-
-def _to_unix_epoch(date):
-    timestamp = date.value
-    if timestamp is None:
-        return numpy.nan
-    return timestamp / 1e6
 
 
 def _simple_collector(schema):
@@ -98,9 +85,6 @@ class ShowColumnsNode(BasePlanNode):
         return ""
 
     def execute(self) -> Iterable:
-        if len(self._producers) != 1:  # pragma: no cover
-            raise SqlError(f"{self.name} on expects a single producer")
-
         morsels = self._producers[0]  # type:ignore
 
         if morsels is None:

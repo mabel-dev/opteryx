@@ -26,13 +26,13 @@ from orso.types import OrsoTypes
 def read(*args):
     import pyarrow
 
-    # Create a PyArrow schema with one column called 'column' of integer type
-    _schema = pyarrow.schema([("column", pyarrow.int64())])
+    # Create a PyArrow schema with one column called '$column' of integer type
+    _schema = pyarrow.schema([("$column", pyarrow.int64())])
     # Create a PyArrow table with the given schema and one row
     return pyarrow.Table.from_arrays([[None]], schema=_schema)
 
 
 def schema():
     # fmt:off
-    return RelationSchema(name="$no_table", columns=[FlatColumn(name="name", type=OrsoTypes.INTEGER)])
+    return RelationSchema(name="$no_table", columns=[FlatColumn(name="$column", type=OrsoTypes.INTEGER)])
     # fmt:on

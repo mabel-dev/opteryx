@@ -23,7 +23,6 @@ from typing import Iterable
 import numpy
 import pyarrow
 
-from opteryx.exceptions import SqlError
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import evaluate
 from opteryx.managers.expression import evaluate_and_append

@@ -11,6 +11,8 @@
 # limitations under the License.
 
 
+from orso.tools import random_string
+
 from opteryx.models import QueryProperties
 from opteryx.shared import QueryStatistics
 
@@ -29,6 +31,7 @@ class BasePlanNode:
         self.parameters = parameters
         self.statistics = QueryStatistics(properties.qid)
         self.execution_time = 0
+        self.identity = random_string()
 
     def set_producers(self, producers):
         self._producers = producers

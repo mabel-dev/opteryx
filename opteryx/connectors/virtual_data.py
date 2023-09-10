@@ -44,10 +44,10 @@ def suggest(dataset):
     """
     Provide suggestions to the user if they gave a table that doesn't exist.
     """
-    from opteryx.utils import fuzzy_search
+    from opteryx.utils import suggest_alternative
 
     known_datasets = (name for name, suggestable in WELL_KNOWN_DATASETS.items() if suggestable)
-    suggestion = fuzzy_search(dataset, known_datasets)
+    suggestion = suggest_alternative(dataset, known_datasets)
     if suggestion is not None:
         return (
             f"The requested dataset, '{dataset}', could not be found. Did you mean '{suggestion}'?"

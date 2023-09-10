@@ -21,7 +21,6 @@ that performs column renames.
 import time
 from typing import Iterable
 
-from opteryx.exceptions import SqlError
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import evaluate_and_append
 from opteryx.models import QueryProperties
@@ -54,9 +53,6 @@ class ProjectionNode(BasePlanNode):
         return "Projection"
 
     def execute(self) -> Iterable:
-        if len(self._producers) != 1:  # pragma: no cover
-            raise SqlError(f"{self.name} expects a single producer")
-
         morsels = self._producers[0]  # type:ignore
 
         for morsel in morsels.execute():

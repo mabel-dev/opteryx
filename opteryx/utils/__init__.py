@@ -43,7 +43,7 @@ def peek(iterable):  # type:ignore
         return first, iter2
 
 
-def fuzzy_search(name, candidates):
+def suggest_alternative(name, candidates):
     """
     Find closest match using a variation of Levenshtein Distance
 

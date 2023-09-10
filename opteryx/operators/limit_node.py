@@ -41,9 +41,6 @@ class LimitNode(BasePlanNode):
         return str(self.limit) + " OFFSET " + str(self.offset)
 
     def execute(self) -> Iterable:
-        if len(self._producers) != 1:  # pragma: no cover
-            raise SqlError(f"{self.name} on expects a single producer")
-
         morsels = self._producers[0]  # type:ignore
         start_time = time.monotonic_ns()
         limited = arrow.limit_records(morsels.execute(), limit=self.limit, offset=self.offset)

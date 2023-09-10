@@ -111,9 +111,9 @@ class SystemVariablesContainer:
             owner = VariableOwner.USER
         else:
             if key not in self._variables:
-                from opteryx.utils import fuzzy_search
+                from opteryx.utils import suggest_alternative
 
-                suggestion = fuzzy_search(key, list(self._variables.keys()))
+                suggestion = suggest_alternative(key, list(self._variables.keys()))
 
                 raise VariableNotFoundError(variable=key, suggestion=suggestion)
             variable_type, _, owner = self._variables[key]
