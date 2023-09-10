@@ -23,7 +23,7 @@ from typing import Set
 
 from opteryx.cursor import Cursor
 from opteryx.exceptions import PermissionsError
-from opteryx.models.connection_context import ConnectionContext
+from opteryx.models import ConnectionContext
 
 
 class Connection:

@@ -555,6 +555,7 @@ A = [
         ("SELECT * FROM $planets AS P FOR '2030-01-01'", 9, 20, None),
         ("SELECT * FROM (SELECT * FROM $planets AS D) AS P FOR '2030-01-01'", 9, 20, None),
         ("SELECT * FROM $planets AS P FOR '1699-01-01' INNER JOIN $satellites FOR '2030-01-01' ON P.id = planetId;", 131, 28, None),
+        ("SELECT today.name FROM $planets FOR TODAY AS today LEFT JOIN $planets FOR '1600-01-01' AS sixteen ON sixteen.id = today.id WHERE sixteen.id IS NULL;", 3, 1, None),
 
         ("SELECT id, name FROM (SELECT id, name FROM $satellites) as S", 177, 2, None),
         ("SELECT S.id, name FROM (SELECT id, name FROM $satellites) as S", 177, 2, None),

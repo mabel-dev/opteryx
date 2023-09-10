@@ -23,6 +23,7 @@ from orso.tools import random_int
 from opteryx.shared.variables import SystemVariables
 from opteryx.shared.variables import VariableOwner
 
+# History Item = [statement, success, execution start]
 HistoryItem = Tuple[str, bool, datetime.datetime]
 
 

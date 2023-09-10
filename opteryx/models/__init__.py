@@ -10,6 +10,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .execution_tree import ExecutionTree
-from .node import Node
-from .query_properties import QueryProperties
+from opteryx.models.connection_context import ConnectionContext
+from opteryx.models.execution_tree import ExecutionTree
+from opteryx.models.node import Node
+from opteryx.models.query_properties import QueryProperties
