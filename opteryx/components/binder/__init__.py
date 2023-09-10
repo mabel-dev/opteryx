@@ -58,8 +58,6 @@ The Binder performs these activities:
 """
 
 
-from typing import Any
-
 from opteryx.components.binder.binder_visitor import BinderVisitor
 from opteryx.components.binder.binding_context import BindingContext
 from opteryx.exceptions import InvalidInternalStateError

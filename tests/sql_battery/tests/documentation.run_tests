@@ -1,6 +1,7 @@
-# These are SQL statement that appear in the documentation
-# there's nothing special about them other than it's not a good experience if they fail
-# these may be duplicates of tests elsewhere, that doesn't matter
+# These are SQL statement that appear in the documentation.
+# There's nothing special about them other than it's not a good experience if they fail
+# These may be duplicates of tests elsewhere, that doesn't matter, if the statement here
+# needs to be updated to pass a test, then we know we need to go update the documentation.
 
 # numerous places
 SELECT * FROM $planets;
@@ -55,3 +56,6 @@ SELECT '192.168.0.1' | '192.168.0.0/24';
 SELECT birth_place['town'] FROM $astronauts;
 SELECT birth_place['town'], COUNT(*) FROM $astronauts WHERE birth_place['state'] IS NOT NULL GROUP BY birth_place['town'];
 SELECT name, SEARCH(birth_place, 'Italy') FROM $astronauts;
+
+# ADVANCED TIME TRAVEL
+SELECT today.name FROM $planets FOR TODAY AS today LEFT JOIN $planets FOR '1600-01-01' AS sixteen ON sixteen.id = today.id WHERE sixteen.id IS NULL;
