@@ -10,19 +10,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# DEBUG: log(f"{__name__}*****************************************************")
+
 import datetime
 import typing
 from os import environ
 from pathlib import Path
 
-# python-dotenv allows us to create an environment file to store secrets. If
-# there is no .env it will fail gracefully.
-try:
-    import dotenv  # type:ignore
-except ImportError:  # pragma: no cover
-    dotenv = None  # type:ignore
-
-_env_path = Path(".") / ".env"
 _config_values: dict = {}
 
 
@@ -84,14 +78,6 @@ def parse_yaml(yaml_str):
                 result[key.strip()] = line_value(value)
     return result
 
-
-#  deepcode ignore PythonSameEvalBinaryExpressiontrue: false +ve, values can be different
-if _env_path.exists() and (dotenv is None):  # pragma: no cover  # nosemgrep
-    # using a logger here will tie us in knots
-    print(f"{datetime.datetime.now()} [LOADER] `.env` file exists but `dotEnv` not installed.")
-elif dotenv is not None:  # pragma: no cover variables from `.env`")
-    dotenv.load_dotenv(dotenv_path=_env_path)
-    print(f"{datetime.datetime.now()} [LOADER] Loading `.env` file.")
 
 try:  # pragma: no cover
     _config_path = Path(".") / "opteryx.yaml"

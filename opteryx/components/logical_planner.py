@@ -155,7 +155,9 @@ class LogicalPlanNode(Node):
 
             # fmt:on
         except Exception as err:
-            opteryx_logger.warning(f"Problem drawing logical plan - {err}")
+            import warnings
+
+            warnings.warn(f"Problem drawing logical plan - {err}")
         return f"{str(self.node_type)[20:].upper()}"
 
 
