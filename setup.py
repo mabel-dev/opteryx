@@ -56,12 +56,12 @@ extensions = [
     Extension(
         name="csoundex",
         sources=["opteryx/third_party/fuzzy/csoundex.pyx"],
-        include_dirs=[numpy.get_include()],
+        extra_compile_args=["-O2"],
     ),
     Extension(
         name="clevenshtein",
         sources=["opteryx/third_party/levenshtein/clevenshtein.pyx"],
-        include_dirs=[numpy.get_include()],
+        extra_compile_args=["-O2"],
     ),
 ]
 

@@ -450,6 +450,11 @@ A = [
         ("SELECT count(*), STR(year) FROM $astronauts GROUP BY STR(year)", 21, 2, None),
         ("SELECT count(*), CAST(year AS VARCHAR) FROM $astronauts GROUP BY CAST(year AS VARCHAR)", 21, 2, None),
 
+        ("SELECT 1", 1, 1, None),
+        ("SELECT 1.0", 1, 1, None),
+        ("SELECT 'a'", 1, 1, None),
+        ("SELECT TRUE", 1, 1, None),
+        ("SELECT NULL", 1, 1, None),
         ("SELECT RANDOM()", 1, 1, None),
         ("SELECT RAND()", 1, 1, None),
         ("SELECT NOW()", 1, 1, None),
