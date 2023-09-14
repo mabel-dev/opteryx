@@ -10,8 +10,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# DEBUG: log(f"{__name__}*****************************************************")
-
 import datetime
 import typing
 from os import environ

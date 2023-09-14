@@ -201,17 +201,19 @@ def inner_binder(node: Node, context: Dict[str, Any], step: str) -> Tuple[Node, 
         # If the column exists in the schema, update node and context accordingly.
         if found_column:
             # Convert to a FLATCOLUMN (an EVALUATED identifier)
-            node.schema_column = found_column.to_flatcolumn()
+            node.schema_column = found_column  # .to_flatcolumn()
+            node.query_column = node.alias or column_name
+            """
             node.node_type = NodeType.EVALUATED
             node.left, node.right, node.centre, node.parameters = None, None, None, None
-            node.query_column = node.alias or column_name
+            
 
             # Remove the column from its original schema as it's already processed.
             context.schemas[schema_name].pop_column(found_column.name)
 
             # Add the schema column to a special "$derived" schema for later use.
             context.schemas["$derived"].columns.append(node.schema_column)
-
+            """
             return node, context
 
     schemas = context.schemas

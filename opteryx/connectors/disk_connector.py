@@ -13,9 +13,8 @@
 """
 The 'direct disk' connector provides the reader for when a dataset file is
 given directly in a query.
-
-As such it assumes 
 """
+
 import os
 from typing import List
 
@@ -38,21 +37,48 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable):
     __mode__ = "Blob"
 
     def __init__(self, **kwargs):
+        """
+        Initialize the DiskConnector, which reads datasets directly from disk.
+
+        Parameters:
+            kwargs: Dict
+                Arbitrary keyword arguments.
+        """
         BaseConnector.__init__(self, **kwargs)
         Partitionable.__init__(self, **kwargs)
         Cacheable.__init__(self, **kwargs)
 
         self.dataset = self.dataset.replace(".", "/")
-        # we're going to cache the first blob as the schema and dataset reader
-        # sometimes both start here
-        self.cached_first_blob = None
+        self.cached_first_blob = None  # Cache for the first blob in the dataset
 
-    def read_blob(self, *, blob_name, **kwargs):
+    def read_blob(self, *, blob_name, **kwargs) -> bytes:
+        """
+        Read a blob (binary large object) from disk.
+
+        Parameters:
+            blob_name: str
+                The name of the blob file to read.
+            kwargs: Dict
+                Arbitrary keyword arguments.
+
+        Returns:
+            The blob as bytes.
+        """
         with open(blob_name, mode="br") as file:
             return bytes(file.read())
 
     @single_item_cache
     def get_list_of_blob_names(self, *, prefix: str) -> List[str]:
+        """
+        List all blob files in the given directory path.
+
+        Parameters:
+            prefix: str
+                The directory path.
+
+        Returns:
+            A list of blob filenames.
+        """
         files = [
             os.path.join(root, file)
             for root, _, files in os.walk(prefix)
@@ -62,6 +88,12 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable):
         return files
 
     def read_dataset(self) -> pyarrow.Table:
+        """
+        Read the entire dataset from disk.
+
+        Yields:
+            Each blob's content as a PyArrow Table.
+        """
         blob_names = self.partition_scheme.get_blobs_in_partition(
             start_date=self.start_date,
             end_date=self.end_date,
@@ -69,10 +101,9 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable):
             prefix=self.dataset,
         )
 
-        # Check if the first blob was cached earlier
         if self.cached_first_blob is not None:
-            yield self.cached_first_blob  # Use cached blob
-            blob_names = blob_names[1:]  # Skip first blob
+            yield self.cached_first_blob
+            blob_names = blob_names[1:]
         self.cached_first_blob = None
 
         for blob_name in blob_names:
@@ -81,15 +112,19 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable):
                 blob_bytes = self.read_blob(blob_name=blob_name, statistics=self.statistics)
                 yield decoder(blob_bytes)
             except UnsupportedFileTypeError:
-                pass
+                pass  # Skip unsupported file types
 
     def get_dataset_schema(self) -> RelationSchema:
-        # Try to read the schema from the metastore
+        """
+        Retrieve the schema of the dataset either from the metastore or infer it from the first blob.
+
+        Returns:
+            The schema of the dataset.
+        """
         self.schema = self.read_schema_from_metastore()
         if self.schema:
             return self.schema
 
-        # Read first blob for schema inference and cache it
         record = next(self.read_dataset(), None)
         self.cached_first_blob = record
 
@@ -99,10 +134,8 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable):
             raise DatasetNotFoundError(dataset=self.dataset)
 
         arrow_schema = record.schema
-
         self.schema = RelationSchema(
             name=self.dataset,
             columns=[FlatColumn.from_arrow(field) for field in arrow_schema],
         )
-
         return self.schema
