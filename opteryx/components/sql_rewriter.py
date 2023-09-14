@@ -63,9 +63,10 @@ This supports the following syntaxes:
 
 import datetime
 import re
+from typing import List
+from typing import Tuple
 
 from opteryx.exceptions import InvalidTemporalRangeFilterError
-from opteryx.exceptions import SqlError
 from opteryx.utils import dates
 
 COLLECT_RELATION = [
@@ -99,6 +100,7 @@ STOP_COLLECTING = [
     r"WITH",
     r"USING",
     r";",
+    r",",
 ]
 
 COLLECT_ALIAS = [r"AS"]
@@ -192,7 +194,18 @@ def parse_date(date, end: bool = False):  # pragma: no cover
     return parsed
 
 
-def _temporal_extration_state_machine(parts):
+def _temporal_extration_state_machine(parts: List[str]) -> Tuple[List[Tuple[str, str]], str]:
+    """
+    Utilizes a state machine to extract the temporal information from the query
+    and maintain the relation to filter information.
+
+    Parameters:
+        parts: List[str]
+            SQL statement parts
+
+    Returns:
+        Tuple containing two lists, first with the temporal filters, second with the remaining SQL parts.
+    """
     """
     we use a four state machine to extract the temporal information from the query
     and maintain the relation to filter information.
@@ -244,6 +257,8 @@ def _temporal_extration_state_machine(parts):
             temporal_range_collector.append((relation, temporal))
             relation = ""
             temporal = ""
+            if comparable_part == ",":
+                state = RELATION
         elif transition == [RELATION, RELATION]:
             relation = part
         elif transition == [WAITING, TEMPORAL]:

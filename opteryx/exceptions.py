@@ -31,7 +31,6 @@ Exception
              │   ├── EmptyDatasetError
              │   └── EmptyResultSetError
              ├── ExecutionError *
-             │   └── FeatureNotSupportedOnArchitectureError
              ├── MissingSqlStatement
              ├── InvalidCursorStateError
              ├── ParameterError
@@ -53,25 +52,22 @@ Exception
                  └── VariableNotFoundError
 """
 
-# =====================================================================================
-# Codebase Errors
+from typing import Optional
 
 
+# ======================== Begin Codebase Errors ========================
 class MissingDependencyError(Exception):
-    def __init__(self, dependency):
+    def __init__(self, dependency: str):
         self.dependency = dependency
         message = f"No module named '{dependency}' can be found, please install or include in requirements.txt"
         super().__init__(message)
 
 
-# End Codebase Errors
-# =====================================================================================
-
-# =====================================================================================
-# PEP-0249 - none of these should be thrown directly unless explicitly required for
-# standards compliance
+# ======================== End Codebase Errors ==========================
 
 
+# ======================== Begin PEP-0249 Exceptions ========================
+# These should not be thrown directly unless explicitly required for standards compliance
 class Error(Exception):
     """
     https://www.python.org/dev/peps/pep-0249/
@@ -99,13 +95,11 @@ class ProgrammingError(DatabaseError):
     """
 
 
-# END PEP-0249
-# =====================================================================================
-
-# =====================================================================================
-# Opteryx Exception Superclasses - none of these should be thrown directly
+# ======================== End PEP-0249 Exceptions ==========================
 
 
+# ======================== Begin Opteryx Superclasses ========================
+# These should not be thrown directly
 class SqlError(ProgrammingError):
     """
     Used as a superclass for errors users can resolve by updating the SQL statement.
@@ -114,41 +108,29 @@ class SqlError(ProgrammingError):
     end-users who may not know, or care, about the underlying SQL platform.
     """
 
-    pass
-
 
 class DataError(ProgrammingError):
-    """
-    Used as a superclass for errors users relating to data
-    """
-
-    pass
+    """Superclass for data-related errors."""
 
 
 class SecurityError(ProgrammingError):
-    """
-    Used as a superclass for errors caused by security functionality
-    """
-
-    pass
+    """Superclass for security-related errors."""
 
 
 class ExecutionError(ProgrammingError):
-    """
-    Used as a superclass for errors in the execution of the query
-    """
-
-    pass
+    """Superclass for execution-related errors."""
 
 
-# =====================================================================================
+# ======================== End Opteryx Superclasses ==========================
 
 
-# =====================================================================================
-
-
+# ======================== Begin SQL-Specific Exceptions ========================
 class ColumnNotFoundError(SqlError):
-    def __init__(self, message=None, column=None, dataset=None, suggestion=None):
+    """Exception raised for Column Not Found errors."""
+
+    def __init__(
+        self, message: str = None, column: str = None, dataset: str = None, suggestion: str = None
+    ):
         """
         Return as helpful Column Not Found error as we can by being specific and offering
         suggestions.
@@ -159,25 +141,29 @@ class ColumnNotFoundError(SqlError):
 
         dataset_message = (f" in '{dataset}'") if dataset else ""
         if column is not None:
+            message = f"Column '{column}' does not exist{dataset_message}."
             if suggestion is not None:
-                message = f"Column '{column}' does not exist{dataset_message}. Did you mean '{suggestion}'?."
-            else:
-                message = f"Column '{column}' does not exist{dataset_message}."
+                message += f" Did you mean '{suggestion}'?."
         if message is None:
             message = "Query contained columns which could not be found."
         super().__init__(message)
 
 
 class DatasetNotFoundError(SqlError):
-    def __init__(self, message=None, dataset=None):
-        if message is None and dataset is not None:
-            self.dataset = dataset
-            message = f"The requested dataset, '{dataset}', could not be found."
+    """Exception raised when a dataset is not found."""
+
+    def __init__(self, dataset: str = None, suggestion: Optional[str] = None):
+        self.dataset = dataset
+        message = f"The requested dataset, '{dataset}', could not be found."
+        if suggestion is not None:
+            message += f" Did you mean '{suggestion}'?"
         super().__init__(message)
 
 
 class FunctionNotFoundError(SqlError):
-    def __init__(self, message=None, function=None, suggestion=None):
+    """Exception raised when a function is not found."""
+
+    def __init__(self, message: str = None, function: str = None, suggestion: Optional[str] = None):
         """
         Return as helpful Function Not Found error as we can by being specific and offering
         suggestions.
@@ -186,15 +172,16 @@ class FunctionNotFoundError(SqlError):
         self.suggestion = suggestion
 
         if message is None:
+            message = f"Function '{function}' does not exist."
             if suggestion is not None:
-                message = f"Function '{function}' does not exist. Did you mean '{suggestion}'?."
-            else:
-                message = f"Function '{function}' does not exist."
+                message += f" Did you mean '{suggestion}'?."
         super().__init__(message)
 
 
 class VariableNotFoundError(SqlError):
-    def __init__(self, variable: str = None, suggestion: str = None):
+    """Exception raised when a variable is not found."""
+
+    def __init__(self, variable: str, suggestion: Optional[str] = None):
         if variable is not None:
             self.variable = variable
 
@@ -208,7 +195,9 @@ class VariableNotFoundError(SqlError):
 
 
 class AmbiguousIdentifierError(SqlError):
-    def __init__(self, message=None, identifier=None):
+    """Exception raised for ambiguous identifier references."""
+
+    def __init__(self, identifier: str, message: str = None):
         self.identifier = identifier
         if message is None:
             message = f"Identifier reference '{identifier}' is ambiguous; Try adding the databaset name as a prefix e.g. 'dataset.{identifier}'."
@@ -216,137 +205,116 @@ class AmbiguousIdentifierError(SqlError):
 
 
 class AmbiguousDatasetError(SqlError):
-    def __init__(self, dataset):
+    """Exception raised for ambiguous dataset references."""
+
+    def __init__(self, dataset: str):
         self.dataset = dataset
         message = f"Dataset reference '{dataset}' is ambiguous; Datasets referenced multiple times in the same query must be aliased."
         super().__init__(message)
 
 
 class UnexpectedDatasetReferenceError(SqlError):
-    def __init__(self, dataset):
+    """Exception raised for unexpected dataset references."""
+
+    def __init__(self, dataset: str):
         self.dataset = dataset
         message = f"Dataset '{dataset}' referenced in query without being referenced in a FROM or JOIN clause."
         super().__init__(message)
 
 
 class InvalidTemporalRangeFilterError(SqlError):
-    pass
+    """Exception raised for invalid temporal range filters."""
 
 
 class InvalidFunctionParameterError(SqlError):
-    pass
+    """Exception raised for invalid function parameters."""
 
 
 class UnsupportedSyntaxError(SqlError):
-    pass
+    """Exception raised for unsupported syntax."""
 
 
 class IncorrectTypeError(SqlError):
-    pass
+    """Exception raised for incorrect types."""
 
 
 class PermissionsError(SecurityError):
-    pass
+    """Exception raised for permissions errors."""
 
 
-class FeatureNotSupportedOnArchitectureError(ExecutionError):
-    pass
+# ======================== End SQL-Specific Exceptions ==========================
 
 
-# =====================================================================================
-
-
+# ======================== Begin Miscellaneous Database Errors ========================
 class UnsupportedTypeError(DatabaseError):
     """Exception raised when an unsupported type is encountered."""
-
-    pass
 
 
 class UnmetRequirementError(Exception):
     """Exception raised when a requirement for operation is not met."""
 
-    pass
-
 
 class NotSupportedError(DatabaseError):
     """Exception raised when an unsupported operation is attempted."""
-
-    pass
 
 
 class UnsupportedFileTypeError(DatabaseError):
     """Exception raised when an unsupported file type is encountered."""
 
-    pass
-
 
 class MissingSqlStatement(ProgrammingError):
-    pass
+    """Exception raised for missing SQL statement."""
 
 
 class EmptyDatasetError(DataError):
-    def __init__(self, message=None, dataset=None):
-        if message is None and dataset is not None:
-            self.dataset = dataset
-            message = f"The requested dataset, '{dataset}', appears to exist but no matching partitions were found."
-        super().__init__(message)
+    """Exception raised when a dataset is empty."""
 
-
-class EmptyResultSetError(DataError):
-    """Exception raised when a result set is empty."""
-
-    def __init__(self, message=None, dataset=None):
-        if message is None and dataset is not None:
-            self.dataset = dataset
-            message = f"The dataset '{dataset}' exist but has no data in the requested partitions."
-        super().__init__(message)
-
-
-class UnsupportedSegementationError(SqlError):
-    def __init__(self, dataset):
+    def __init__(self, dataset: str):
         self.dataset = dataset
-        message = f"'{dataset}' cannot be read, only 'by_hour' segments can be read."
+        message = f"The requested dataset, '{dataset}', appears to exist but no matching partitions were found."
         super().__init__(message)
 
 
 class UnnamedSubqueryError(SqlError):
-    pass
+    """Exception raised for unnamed subqueries."""
 
 
 class UnnamedColumnError(SqlError):
-    pass
+    """Exception raised for unnamed columns."""
 
 
-# =====================================================================================
+# ======================== End Miscellaneous Database Errors ==========================
 
 
+# ======================== Begin Configuration & Internal Errors ========================
 class InvalidConfigurationError(DatabaseError):
+    """Exception raised for invalid configuration."""
+
     def __init__(
         self, *, config_item: str, provided_value: str, valid_value_description: str = None
     ):
+        DISPLAY_LIMIT: int = 32
+
         self.config_item = config_item
         self.provided_value = provided_value
         self.valid_value_description = valid_value_description
 
-        message = f"Value of '{str(provided_value)[:32]}' for '{config_item}' is not valid."
+        message = f"Value of '{str(provided_value)[:DISPLAY_LIMIT]}{'...' if len(provided_value) > DISPLAY_LIMIT else ''}' for '{config_item}' is not valid."
         if valid_value_description:
             message += f" Value should be {valid_value_description}"
         super().__init__(message)
 
 
 class InvalidInternalStateError(DatabaseError):
-    """when checks that are like assertions fail"""
-
-    pass
-
-
-class IncompleteImplementationError(DatabaseError):
-    pass
+    """Exception raised for invalid internal states."""
 
 
 class InvalidCursorStateError(ProgrammingError):
-    pass
+    """Exception raised for invalid cursor states."""
 
 
 class ParameterError(ProgrammingError):
-    pass
+    """Exception raised for parameter errors."""
+
+
+# ======================== End Configuration & Internal Errors ==========================
