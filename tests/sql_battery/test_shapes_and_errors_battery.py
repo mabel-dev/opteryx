@@ -574,6 +574,15 @@ STATEMENTS = [
         ("SELECT id, name FROM (SELECT * FROM $satellites AS P) as S", 177, 2, None),
         ("SELECT id, name FROM (SELECT * FROM $satellites) as S", 177, 2, None),
         ("SELECT * FROM (SELECT id, name FROM $satellites) as S", 177, 2, None),
+        ("SELECT id, name FROM (SELECT id, name FROM (SELECT id, name FROM $satellites) AS T1) AS T2", 177, 2, None),
+        ("SELECT id, name FROM (SELECT id, name FROM (SELECT id, name FROM $satellites) AS T1) AS T2", 177, 2, None),
+        ("SELECT id, name FROM (SELECT id, name FROM (SELECT id, name FROM (SELECT id, name FROM $satellites) AS T0) AS T1) AS T2", 177, 2, None),
+        ("SELECT X.id, X.name FROM (SELECT Y.id, Y.name FROM (SELECT Z.id, Z.name FROM $satellites AS Z) AS Y) AS X", 177, 2, None),
+        ("SELECT id, name FROM (SELECT id, name FROM (SELECT id, name FROM $satellites WHERE id > 100) AS T1 WHERE id < 150) AS T2", 49, 2, None),
+        ("SELECT id, name FROM (SELECT id, name FROM (SELECT id, name FROM $satellites ORDER BY id ASC) AS T1 ORDER BY id DESC) AS T2", 177, 2, None),
+        ("SELECT id, name FROM (SELECT id, name FROM (SELECT id, name FROM $satellites GROUP BY id, name) AS T1) AS T2", 177, 2, None),
+        ("SELECT MAX(id), MIN(name) FROM (SELECT id, name FROM (SELECT id, name FROM $satellites) AS T1) AS T2", 1, 2, None),
+
 ]
 A = [
         ("SELECT * FROM $astronauts WHERE death_date IS NULL", 305, 19, None),
