@@ -425,7 +425,6 @@ class BinderVisitor:
             column.alias = None
             # create the schema of the resultant dataset
             column.schema_column = column.schema_column.to_flatcolumn()
-            column.schema_column.name = column.query_column
             column.schema_column.aliases = []
 
         # Construct the RelationSchema with new FlatColumn instances
