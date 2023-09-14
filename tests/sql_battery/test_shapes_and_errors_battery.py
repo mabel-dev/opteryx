@@ -52,7 +52,6 @@ from opteryx.exceptions import (
     ColumnNotFoundError,
     DatasetNotFoundError,
     EmptyDatasetError,
-    EmptyResultSetError,
     IncorrectTypeError,
     InvalidFunctionParameterError,
     InvalidTemporalRangeFilterError,
@@ -62,11 +61,11 @@ from opteryx.exceptions import (
     UnexpectedDatasetReferenceError,
     UnnamedColumnError,
     UnnamedSubqueryError,
-    UnsupportedSegementationError,
     UnsupportedSyntaxError,
     VariableNotFoundError,
 )
 from opteryx.utils.formatter import format_sql
+from opteryx.managers.schemes.mabel_partitions import UnsupportedSegementationError
 
 # fmt:off
 STATEMENTS = [
@@ -583,8 +582,6 @@ STATEMENTS = [
         ("SELECT id, name FROM (SELECT id, name FROM (SELECT id, name FROM $satellites GROUP BY id, name) AS T1) AS T2", 177, 2, None),
         ("SELECT MAX(id), MIN(name) FROM (SELECT id, name FROM (SELECT id, name FROM $satellites) AS T1) AS T2", 1, 2, None),
 
-]
-A = [
         ("SELECT * FROM $astronauts WHERE death_date IS NULL", 305, 19, None),
         ("SELECT * FROM $astronauts WHERE death_date IS NOT NULL", 52, 19, None),
         ("SELECT * FROM testdata.flat.formats.parquet WITH(NO_PARTITION) WHERE user_verified IS TRUE", 711, 13, None),
@@ -608,7 +605,8 @@ A = [
         ("SELECT name FROM $planets WHERE id IN (SELECT * FROM UNNEST((1,2,3)) as id)", 3, 1, UnsupportedSyntaxError),  # temp
         ("SELECT count(planetId) FROM (SELECT DISTINCT planetId FROM $satellites) AS SQ", 1, 1, None),
         ("SELECT COUNT(*) FROM (SELECT planetId FROM $satellites WHERE planetId < 7) AS SQ GROUP BY planetId", 4, 1, None),
-
+]
+A = [
         ("EXPLAIN SELECT * FROM $satellites", 1, 3, None),
         ("EXPLAIN SELECT * FROM $satellites WHERE id = 8", 2, 3, None),
         ("SET version = '1.0';", None, None, PermissionsError),
@@ -1098,7 +1096,7 @@ A = [
         ("SELECT MAX(density) FROM $planets GROUP BY orbitalInclination, escapeVelocity, orbitalInclination, numberOfMoons, escapeVelocity, density", 9, 1, None),
         ("SELECT COUNT(*) FROM $planets GROUP BY orbitalInclination, orbitalInclination", 9, 1, None),
         # 909 - zero results from pushed predicate
-        ("SELECT * FROM testdata.flat.formats.parquet WITH(NO_PARTITION) WHERE user_id = -1", 0, 13, EmptyResultSetError),
+        ("SELECT * FROM testdata.flat.formats.parquet WITH(NO_PARTITION) WHERE user_id = -1", 0, 13, None),
         # 912 - optimized boolean evals were ignored
         ("SELECT * FROM $planets WHERE 1 = PI()", 0, 20, None),
         ("SELECT * FROM $planets WHERE PI() = 1", 0, 20, None),
@@ -1136,6 +1134,8 @@ A = [
         ("SELECT LEFT('APPLE', 1), LEFT('APPLE', 1) || 'B'", 1, 2, None),
         ("SELECT LEFT('APPLE', 1) || 'B', LEFT('APPLE', 1)", 1, 2, None),
         ("SELECT LEFT('APPLE', 1) || LEFT('APPLE', 1)", 1, 1, None),
+        # 1153 temporal extract from cross joins
+        ("SELECT p.name, s.name FROM $planets as p, $satellites as s WHERE p.id = s.planetId", 177, 2, None),
 ]
 # fmt:on
 

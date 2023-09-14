@@ -16,8 +16,18 @@ from typing import Callable
 from typing import List
 from typing import Optional
 
+from opteryx.exceptions import DataError
 from opteryx.managers.schemes import BasePartitionScheme
 from opteryx.utils.file_decoders import DATA_EXTENSIONS
+
+
+class UnsupportedSegementationError(DataError):
+    """Exception raised for unsupported segmentations."""
+
+    def __init__(self, dataset: str):
+        self.dataset = dataset
+        message = f"'{dataset}' cannot be read, only 'by_hour' segments can be read."
+        super().__init__(message)
 
 
 def _extract_part_from_path(path, prefix):
