@@ -282,12 +282,12 @@ _this example is complete and should run as-is_
 
 ## Community
 
-[![Discord](https://img.shields.io/badge/discuss%20on-discord-5865F2.svg?logo=discord)](https://discord.gg/PHqKAb9Y)
+[![Discord](https://img.shields.io/badge/discuss%20on-discord-5865F2.svg?logo=discord)](https://discord.gg/qpv2tr989x)
 [![X Follow](https://img.shields.io/badge/follow%20on-x-1DA1F2.svg?logo=X)](https://twitter.com/OpteryxSQL)
 
 **How do I get Support?**
 
-For support ask our [Discord Server](https://discord.gg/PHqKAb9Y).
+For support ask our [Discord Server](https://discord.gg/qpv2tr989x).
 
 **How Can I Contribute?**
 

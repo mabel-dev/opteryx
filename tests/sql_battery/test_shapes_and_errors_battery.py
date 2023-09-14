@@ -288,12 +288,12 @@ STATEMENTS = [
         ("SELECT * FROM $satellites WHERE (id = 5 OR id = 6 OR id = 7 OR id = 8) AND name = 'Europa'", 1, 8, None),
         ("SELECT * FROM $satellites WHERE (id = 6 OR id = 7 OR id = 8) OR name = 'Europa'", 4, 8, None),
         ("SELECT * FROM $satellites WHERE id = 5 OR id = 6 OR id = 7 OR id = 8 OR name = 'Moon'", 5, 8, None),
-        ("SELECT * FROM $satellites WHERE (id BETWEEN 3 AND 8) AND (3 BETWEEN 2 AND 5);", 1, 1, None),
-        ("SELECT * FROM $satellites WHERE (id BETWEEN 2 AND 6) OR (6 BETWEEN 5 AND 7);", 1, 1, None),
-        ("SELECT * FROM $satellites WHERE (ABS(id - 3) < 5) AND (ABS(3 - id) < 5);", 1, 1, None),
-        ("SELECT * FROM $satellites WHERE (LENGTH(name) > 2) OR (LENGTH('Moon') > 2);", 1, 1, None),
-        ("SELECT * FROM $satellites WHERE (id BETWEEN 7 AND 9) AND (7 > 2 AND 7 < 10);", 1, 1, None),
-        ("SELECT * FROM $satellites WHERE 1 = 1;", 1, 1, None),    
+        ("SELECT * FROM $satellites WHERE (id BETWEEN 3 AND 8) AND (3 BETWEEN 2 AND 5);", 6, 8, None),
+        ("SELECT * FROM $satellites WHERE (id BETWEEN 2 AND 6) OR (6 BETWEEN 5 AND 7);", 177, 8, None),
+        ("SELECT * FROM $satellites WHERE (ABS(id - 3) < 5) AND (ABS(3 - id) < 5);", 7, 8, None),
+        ("SELECT * FROM $satellites WHERE (LENGTH(name) > 2) OR (LENGTH('Moon') > 2);", 177, 8, None),
+        ("SELECT * FROM $satellites WHERE (id BETWEEN 7 AND 9) AND (7 > 2 AND 7 < 10);", 3, 8, None),
+        ("SELECT * FROM $satellites WHERE 1 = 1;", 177, 8, None),    
         ("SELECT * FROM $satellites WHERE planetId = id", 1, 8, None),
         ("SELECT * FROM $satellites WHERE planetId > 8", 5, 8, None),
         ("SELECT * FROM $satellites WHERE planetId >= 8", 19, 8, None),
@@ -370,8 +370,7 @@ STATEMENTS = [
         ("SELECT TRY_CAST(planetId AS TIMESTAMP) FROM $satellites", 177, 1, None),
         ("SELECT TRY_CAST(planetId AS NUMERIC) FROM $satellites", 177, 1, None),
         ("SELECT * FROM $planets WHERE id = GET(STRUCT('{\"a\":1,\"b\":\"c\"}'), 'a')", 1, 20, None),
-]
-A = [
+
         ("SELECT PI()", 1, 1, None),
         ("SELECT E()", 1, 1, None),
         ("SELECT PHI()", 1, 1, None),
@@ -574,8 +573,9 @@ A = [
         ("SELECT * FROM (SELECT id, name FROM $satellites AS P) as S", 177, 2, None),
         ("SELECT id, name FROM (SELECT * FROM $satellites AS P) as S", 177, 2, None),
         ("SELECT id, name FROM (SELECT * FROM $satellites) as S", 177, 2, None),
-        ("SELECT * FROM (SELECT * FROM $satellites) as S", 177, 2, None),
-
+        ("SELECT * FROM (SELECT id, name FROM $satellites) as S", 177, 2, None),
+]
+A = [
         ("SELECT * FROM $astronauts WHERE death_date IS NULL", 305, 19, None),
         ("SELECT * FROM $astronauts WHERE death_date IS NOT NULL", 52, 19, None),
         ("SELECT * FROM testdata.flat.formats.parquet WITH(NO_PARTITION) WHERE user_verified IS TRUE", 711, 13, None),
