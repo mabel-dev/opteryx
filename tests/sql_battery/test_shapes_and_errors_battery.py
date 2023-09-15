@@ -266,6 +266,10 @@ STATEMENTS = [
         ("SELECT * FROM $satellites WHERE id = (3 * 1) + 2", 1, 8, None),
         ("SELECT * FROM $satellites WHERE id = 6 DIV (3 + 1)", 1, 8, None),
         ("SELECT * FROM $satellites WHERE id BETWEEN 4 AND 6", 3, 8, None),
+        ("SELECT * FROM $satellites WHERE id ^ 1", 176, 8, None),
+        ("SELECT * FROM $satellites WHERE id & 1", 89, 8, None),
+        ("SELECT * FROM $satellites WHERE id | 1", 177, 8, None),
+        ("SELECT * FROM $satellites WHERE id = 0x08", 1, 8, None),
 
         ("SELECT * FROM $satellites WHERE magnitude = 5.29", 1, 8, None),
         ("SELECT * FROM $satellites WHERE id = 5 AND magnitude = 5.29", 1, 8, None),

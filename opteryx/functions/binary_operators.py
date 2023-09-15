@@ -11,6 +11,9 @@
 # limitations under the License.
 
 import datetime
+from typing import Any
+from typing import Dict
+from typing import Union
 
 import numpy
 import pyarrow
@@ -18,21 +21,29 @@ from pyarrow import compute
 
 from opteryx.utils import dates
 
-BINARY_OPERATORS = (
-    "Divide",
-    "Minus",
-    "Modulo",
-    "Multiply",
-    "Plus",
-    "StringConcat",
-    "MyIntegerDivide",
-)
+OPERATOR_FUNCTION_MAP: Dict[str, Any] = {
+    "Divide": numpy.divide,
+    "Minus": numpy.subtract,
+    "Modulo": numpy.mod,
+    "Multiply": numpy.multiply,
+    "Plus": numpy.add,
+    "StringConcat": compute.binary_join_element_wise,
+    "MyIntegerDivide": lambda left, right: numpy.trunc(numpy.divide(left, right)).astype(
+        numpy.int64
+    ),
+    "BitwiseOr": numpy.bitwise_or,
+    "BitwiseAnd": numpy.bitwise_and,
+    "BitwiseXor": numpy.bitwise_xor,
+    "ShiftLeft": numpy.left_shift,
+    "ShiftRight": numpy.right_shift,
+}
+
+BINARY_OPERATORS = set(OPERATOR_FUNCTION_MAP.keys())
+
 INTERVALS = (pyarrow.lib.MonthDayNano, pyarrow.lib.MonthDayNanoIntervalArray)
 
 # Also supported by the AST but not implemented
-# BitwiseOr => ("|"),
-# BitwiseAnd => ("&"),
-# BitwiseXor => ("^"),
+
 # PGBitwiseXor => ("#"), -- not supported in mysql
 # PGBitwiseShiftLeft => ("<<"), -- not supported in mysql
 # PGBitwiseShiftRight => (">>"), -- not supported in mysql
@@ -97,38 +108,36 @@ def _has_intervals(left, right):
     )
 
 
-def binary_operations(left, operator, right):
+def binary_operations(left, operator: str, right) -> Union[numpy.ndarray, pyarrow.Array]:
     """
-    Execute inline operators (e.g. the add in 3 + 4)
+    Execute inline operators (e.g. the add in 3 + 4).
+
+    Parameters:
+        left: Union[numpy.ndarray, pyarrow.Array]
+            The left operand
+        operator: str
+            The operator to be applied
+        right: Union[numpy.ndarray, pyarrow.Array]
+            The right operand
+    Returns:
+        Union[numpy.ndarray, pyarrow.Array]
+            The result of the binary operation
     """
+    operation = OPERATOR_FUNCTION_MAP.get(operator)
 
-    # if all of the values are null
-    #    if (
-    #        compute.is_null(left, nan_is_null=True).false_count == 0
-    #        or compute.is_null(right, nan_is_null=True).false_count == 0
-    #    ):
-    #        return numpy.full(right.size, False)
+    if operation is None:
+        raise NotImplementedError(f"Operator `{operator}` is not implemented!")
 
-    # new operations for Opteryx
-    if operator == "Divide":
-        return numpy.divide(left, right)
-    if operator == "Minus":
+    if operator == "Minus" or operator == "Plus":
         if _has_intervals(left, right):
-            return _date_minus_interval(left, right)
-        return numpy.subtract(left, right)
-    if operator == "Modulo":
-        return numpy.mod(left, right)
-    if operator == "Multiply":
-        return numpy.multiply(left, right)
-    if operator == "Plus":
-        if _has_intervals(left, right):
-            return _date_plus_interval(left, right)
-        return numpy.add(left, right)
+            return (
+                _date_minus_interval(left, right)
+                if operator == "Minus"
+                else _date_plus_interval(left, right)
+            )
+
     if operator == "StringConcat":
         empty = numpy.full(len(left), "")
         joined = compute.binary_join_element_wise(left, right, empty)
         return joined
-    if operator == "MyIntegerDivide":
-        return numpy.trunc(numpy.divide(left, right)).astype(numpy.int64)
-
-    raise NotImplementedError(f"Operator `{operator}` is not implemented!")
+    return operation(left, right)
