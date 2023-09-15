@@ -18,6 +18,8 @@ It is defined as an expression tree of binary and unary operators, and functions
 Expressions are evaluated against an entire morsel at a time.
 """
 from enum import Enum
+from typing import Callable
+from typing import Dict
 from typing import Optional
 
 import numpy
@@ -94,6 +96,12 @@ ORSO_TO_NUMPY_MAP = {
     OrsoTypes.NULL: numpy.dtype("O"),
 }
 
+LOGICAL_OPERATIONS: Dict[NodeType, Callable] = {
+    NodeType.AND: pyarrow.compute.and_,
+    NodeType.OR: pyarrow.compute.or_,
+    NodeType.XOR: pyarrow.compute.xor,
+}
+
 
 class ExecutionContext:
     def __init__(self):
@@ -161,23 +169,14 @@ def _inner_evaluate(root: Node, table: Table, context: ExecutionContext):
 
     # BOOLEAN OPERATORS
     if node_type & LOGICAL_TYPE == LOGICAL_TYPE:
-        left, right, centre = None, None, None
+        if node_type in LOGICAL_OPERATIONS:
+            left = _inner_evaluate(root.left, table, context) if root.left else None
+            right = _inner_evaluate(root.right, table, context) if root.right else None
+            return LOGICAL_OPERATIONS[node_type](left, right)
 
-        if root.left is not None:
-            left = _inner_evaluate(root.left, table, context)
-        if root.right is not None:
-            right = _inner_evaluate(root.right, table, context)
-        if root.centre is not None:
-            centre = _inner_evaluate(root.centre, table, context)
-
-        if node_type == NodeType.AND:
-            return pyarrow.compute.and_(left, right)
-        if node_type == NodeType.OR:
-            return pyarrow.compute.or_(left, right)
         if node_type == NodeType.NOT:
+            centre = _inner_evaluate(root.centre, table, context) if root.centre else None
             return pyarrow.compute.invert(centre)
-        if node_type == NodeType.XOR:
-            return pyarrow.compute.xor(left, right)
 
     # INTERAL IDENTIFIERS
     if node_type & INTERNAL_TYPE == INTERNAL_TYPE:

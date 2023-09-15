@@ -471,6 +471,16 @@ def nested(branch, alias=None, key=None):
     )
 
 
+def hex_literal(branch, alias=None, key=None):
+    value = int(branch, 16)
+    return Node(
+        NodeType.LITERAL,
+        type=OrsoTypes.INTEGER,
+        value=value,
+        #    alias=alias or f"0x{branch}"
+    )
+
+
 def tuple_literal(branch, alias=None, key=None):
     return Node(
         NodeType.LITERAL,
@@ -661,6 +671,7 @@ BUILDERS = {
     "Extract": extract,
     "Floor": floor,
     "Function": function,
+    "HexStringLiteral": hex_literal,
     "Identifier": identifier,
     "ILike": pattern_match,
     "InList": in_list,
