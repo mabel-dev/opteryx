@@ -1,6 +1,6 @@
 [package]
 name = "sqloxide"
-version = "0.25.0"
+version = "0.1.36"
 authors = ["Will Eaton <me@wseaton.com>"]
 edition = "2018"
 
@@ -10,11 +10,12 @@ crate-type = ["cdylib"]
 
 [dependencies]
 pythonize = "0.19"
+serde = "1.0.171"
 
 [dependencies.pyo3]
-version = "0.19.0"
+version = "0.19.1"
 features = ["extension-module"]
 
 [dependencies.sqlparser]
-version = "0.37.0"
-features = ["json_example"]
+version = "0.36.1"
+features = ["serde", "visitor"]

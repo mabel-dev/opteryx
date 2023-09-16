@@ -1,11 +1,17 @@
-use pyo3::exceptions::PyValueError;
-use pyo3::prelude::*;
-use pyo3::wrap_pyfunction;
-
 use pythonize::pythonize;
 
+use pyo3::exceptions::PyValueError;
+use pyo3::prelude::*;
+
+use pyo3::wrap_pyfunction;
+use pythonize::PythonizeError;
+
+use sqlparser::ast::Statement;
 use sqlparser::dialect::*;
 use sqlparser::parser::Parser;
+
+mod visitor;
+use visitor::{extract_expressions, extract_relations, mutate_expressions, mutate_relations};
 
 fn string_to_dialect(dialect: &str) -> Box<dyn Dialect> {
     match dialect.to_lowercase().as_str() {
@@ -51,13 +57,15 @@ fn parse_sql(py: Python, sql: &str, dialect: &str) -> PyResult<PyObject> {
 
     let output = match parse_result {
         Ok(statements) => {
-            pythonize(py, &statements).expect("Internal python serialization failed.")
+            pythonize(py, &statements).map_err(|e| {
+                let msg = e.to_string();
+                PyValueError::new_err(format!("Python object serialization failed.\n\t{msg}"))
+            })?
         }
-        Err(_e) => {
-            let msg = _e.to_string();
+        Err(e) => {
+            let msg = e.to_string();
             return Err(PyValueError::new_err(format!(
-                "Query parsing failed.\n\t{}",
-                msg
+                "Query parsing failed.\n\t{msg}"
             )));
         }
     };
@@ -65,8 +73,36 @@ fn parse_sql(py: Python, sql: &str, dialect: &str) -> PyResult<PyObject> {
     Ok(output)
 }
 
+/// This utility function allows reconstituing a modified AST back into list of SQL queries.
+#[pyfunction]
+#[pyo3(text_signature = "(ast)")]
+fn restore_ast(_py: Python, ast: &PyAny) -> PyResult<Vec<String>> {
+    let parse_result: Result<Vec<Statement>, PythonizeError> = pythonize::depythonize(ast);
+
+    let output = match parse_result {
+        Ok(statements) => statements,
+        Err(e) => {
+            let msg = e.to_string();
+            return Err(PyValueError::new_err(format!(
+                "Query serialization failed.\n\t{msg}"
+            )));
+        }
+    };
+
+    Ok(output
+        .iter()
+        .map(std::string::ToString::to_string)
+        .collect::<Vec<String>>())
+}
+
 #[pymodule]
 fn sqloxide(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(parse_sql, m)?)?;
+    m.add_function(wrap_pyfunction!(restore_ast, m)?)?;
+    // TODO: maybe refactor into seperate module
+    m.add_function(wrap_pyfunction!(extract_relations, m)?)?;
+    m.add_function(wrap_pyfunction!(mutate_relations, m)?)?;
+    m.add_function(wrap_pyfunction!(extract_expressions, m)?)?;
+    m.add_function(wrap_pyfunction!(mutate_expressions, m)?)?;
     Ok(())
 }
