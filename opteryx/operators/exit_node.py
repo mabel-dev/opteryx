@@ -34,7 +34,7 @@ from opteryx.operators import BasePlanNode
 class ExitNode(BasePlanNode):
     def __init__(self, properties: QueryProperties, **config):
         super().__init__(properties=properties)
-        self.columns = config["projection"]
+        self.columns = config.get("columns", [])
 
     @property
     def config(self):  # pragma: no cover
@@ -51,15 +51,15 @@ class ExitNode(BasePlanNode):
         final_names = []
         for column in self.columns:
             final_columns.append(column.schema_column.identity)
-            final_names.append(column.schema_column.name)
+            final_names.append(column.query_column)
 
         if len(final_columns) != len(set(final_columns)):
             from collections import Counter
 
             duplicates = [column for column, count in Counter(final_columns).items() if count > 1]
-            matches = (a for a, b in zip(final_names, final_columns) if b in duplicates)
+            matches = {a for a, b in zip(final_names, final_columns) if b in duplicates}
             raise AmbiguousIdentifierError(
-                message=f"Query result contains multiple instances of the same column - {', '.join(matches)}"
+                message=f"Query result contains multiple instances of the same column(s) - `{'`, `'.join(matches)}`"
             )
 
         for morsel in morsels.execute():

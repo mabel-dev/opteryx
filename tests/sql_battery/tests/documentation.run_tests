@@ -39,6 +39,9 @@ SET @id = 3; SELECT name FROM $planets WHERE id = @id;
 # type strings
 SELECT TIMESTAMP '2022-01-01';
 
+# types
+SELECT INTERVAL '1' YEAR;
+
 # nulls
 SELECT name = null FROM $planets;
 SELECT name FROM $planets WHERE name = null;

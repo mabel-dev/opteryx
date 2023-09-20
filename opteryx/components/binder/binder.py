@@ -126,6 +126,9 @@ def locate_identifier(node: Node, context: Dict[str, Any]) -> Tuple[Node, Dict]:
 
     schemas = context.schemas
     found_source_relation = schemas.get(node.source)
+    if not found_source_relation and "$projection" in schemas:
+        found_source_relation = schemas["$projection"]
+        node.source = "$projection"
 
     # Handle fully qualified fields
     if node.source:
@@ -195,7 +198,7 @@ def inner_binder(node: Node, context: Dict[str, Any], step: str) -> Tuple[Node, 
     # has appeared earlier in the plan and in that case we don't need to recalcuate, we just
     # need to treat the result like an IDENTIFIER
     column_name = node.query_column or format_expression(node)
-    for schema_name, schema in context.schemas.items():
+    for schema in context.schemas.values():
         found_column = schema.find_column(column_name)
 
         # If the column exists in the schema, update node and context accordingly.
@@ -203,17 +206,7 @@ def inner_binder(node: Node, context: Dict[str, Any], step: str) -> Tuple[Node, 
             # Convert to a FLATCOLUMN (an EVALUATED identifier)
             node.schema_column = found_column  # .to_flatcolumn()
             node.query_column = node.alias or column_name
-            """
-            node.node_type = NodeType.EVALUATED
-            node.left, node.right, node.centre, node.parameters = None, None, None, None
-            
 
-            # Remove the column from its original schema as it's already processed.
-            context.schemas[schema_name].pop_column(found_column.name)
-
-            # Add the schema column to a special "$derived" schema for later use.
-            context.schemas["$derived"].columns.append(node.schema_column)
-            """
             return node, context
 
     schemas = context.schemas

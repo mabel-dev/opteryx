@@ -179,6 +179,7 @@ def csv_decoder(
 ):
     import pyarrow.csv
     from pyarrow.csv import ParseOptions
+    from pyarrow.csv import ReadOptions
 
     stream = io.BytesIO(buffer)
     parse_options = ParseOptions(delimiter=delimiter, newlines_in_values=True)

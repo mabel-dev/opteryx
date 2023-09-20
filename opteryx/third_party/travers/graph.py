@@ -17,6 +17,7 @@ limitations under the License.
 """
 
 from pathlib import Path
+from typing import Any
 from typing import List
 from typing import Optional
 from typing import Tuple
@@ -494,3 +495,37 @@ class Graph(object):
     def draw(self):
         tree = self.depth_first_search()
         return "".join(print_tree_inner(tree))
+
+    def copy(self) -> "Graph":
+        """
+        Intelligently make a copy of this Graph, handling situations where Deepcopy
+        does not work.
+        """
+        import copy
+
+        def _inner_copy(obj: Any) -> Any:
+            """
+            Create an independent inner copy of the given object.
+
+            Parameters:
+                obj: Any
+                    The object to be deep copied.
+
+            Returns:
+                Any: The new, independent deep copy.
+            """
+            if isinstance(obj, list):
+                return [_inner_copy(item) for item in obj]
+            if isinstance(obj, tuple):
+                return tuple(_inner_copy(item) for item in obj)
+            if isinstance(obj, set):
+                return {_inner_copy(item) for item in obj}
+            if isinstance(obj, dict):
+                return {key: _inner_copy(value) for key, value in obj.items()}
+            if hasattr(obj, "copy"):
+                return obj.copy()
+            return copy.deepcopy(obj)
+
+        graph = Graph()
+        graph._nodes = _inner_copy(self._nodes)
+        graph._edges = _inner_copy(self._edges)

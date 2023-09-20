@@ -148,11 +148,32 @@ class Node:
         Returns:
             Node: The new, independent deep copy.
         """
+
+        def _inner_copy(obj: Any) -> Any:
+            """
+            Create an independent inner copy of the given object.
+
+            Parameters:
+                obj: Any
+                    The object to be deep copied.
+
+            Returns:
+                Any: The new, independent deep copy.
+            """
+            if isinstance(obj, list):
+                return [_inner_copy(item) for item in obj]
+            if isinstance(obj, tuple):
+                return tuple(_inner_copy(item) for item in obj)
+            if isinstance(obj, set):
+                return {_inner_copy(item) for item in obj}
+            if isinstance(obj, dict):
+                return {key: _inner_copy(value) for key, value in obj.items()}
+            if hasattr(obj, "copy"):
+                return obj.copy()
+            return copy.deepcopy(obj)
+
         new_node = Node()
         for key, value in self._internal.items():
-            if hasattr(value, "copy"):
-                new_value = value.copy()
-            else:
-                new_value = copy.deepcopy(value)
+            new_value = _inner_copy(value)
             setattr(new_node, key, new_value)
         return new_node
