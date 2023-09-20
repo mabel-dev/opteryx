@@ -170,3 +170,4 @@ data/**
 duckdb
 version_2/**
 planets.duckdb
+charts.csv

@@ -39,7 +39,7 @@ def create_physical_plan(logical_plan, query_properties):
         elif node_type == LogicalPlanStepType.Distinct:
             node = operators.DistinctNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Exit:
-            node = operators.ExitNode(query_properties, projection=logical_node.columns)
+            node = operators.ExitNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Explain:
             node = operators.ExplainNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Filter:

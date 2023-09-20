@@ -260,30 +260,27 @@ class BinderVisitor:
 
     def visit_exit(self, node: Node, context: BindingContext) -> Tuple[Node, BindingContext]:
         # LOG: Exit
-        columns = []
-        schemas = context.schemas
 
-        for column in node.columns:
-            if column.node_type == NodeType.WILDCARD:
-                qualified_wildcard = column.value
-                for schema in schemas:
-                    if qualified_wildcard and schema not in qualified_wildcard:
-                        continue
-                    if schema == "$derived":
-                        continue
-                    for column in schemas[schema].columns:
-                        column_reference = Node(
-                            node_type=NodeType.IDENTIFIER,
-                            name=column.name,
-                            schema_column=column,
-                            type=column.type,
-                            query_column=f"{schema}.{column.name}",
-                        )
-                        columns.append(column_reference)
-            else:
-                bound_column, bound_context = inner_binder(column, context, node.identity)
-                context.schemas = merge_schemas(bound_context.schemas, context.schemas)
-                columns.append(bound_column)
+        def get_name(column):
+            #            if column.aliases:
+            #                return max(column.aliases, key=len)
+            return column.name
+
+        columns = []
+
+        # remove the derived schema
+        context.schemas.pop("$derived", None)
+
+        for schema in context.schemas.values():
+            for column in schema.columns:
+                column_reference = Node(
+                    node_type=NodeType.IDENTIFIER,
+                    name=column.name,
+                    schema_column=column,
+                    type=column.type,
+                    query_column=get_name(column),
+                )
+                columns.append(column_reference)
 
         node.columns = columns
 
@@ -419,14 +416,21 @@ class BinderVisitor:
         )
         context.schemas = merge_schemas(*[ctx.schemas for ctx in group_contexts])
 
+        columns = []
         for column in node.columns:
+            column.fqn = f"{column.source}.{column.source_column}"
+            column.schema_column.aliases = [column.fqn, column.source_column]
             column.source = "$projection"
-            column.value = column.alias or column.value
-            column.alias = None
+            column.value = (
+                column.alias or column.value
+            )  #  <- this is using the source name not the alias name
+            #            column.alias = None
             # create the schema of the resultant dataset
+            column.source_column = column.query_column
             column.schema_column = column.schema_column.to_flatcolumn()
-            column.schema_column.aliases = []
+            columns.append(column)
 
+        node.columns = columns
         # Construct the RelationSchema with new FlatColumn instances
         schema = RelationSchema(
             name="$projection", columns=[col.schema_column for col in node.columns]

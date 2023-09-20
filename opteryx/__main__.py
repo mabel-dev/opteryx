@@ -15,6 +15,9 @@
 """
 A command line interface for Opteryx
 """
+import os
+import sys
+import threading
 import time
 
 import typer
@@ -24,9 +27,31 @@ from opteryx.exceptions import MissingSqlStatement
 from opteryx.utils.sql import clean_statement
 from opteryx.utils.sql import remove_comments
 
+sys.path.insert(1, os.path.join(sys.path[0], ".."))
+
+
 # Define ANSI color codes
 ANSI_RED = "\u001b[31m"
 ANSI_RESET = "\u001b[0m"
+
+
+def print_dots(stop_event):
+    """
+    Prints three dots repeatedly until the stop_event is set.
+    """
+    while not stop_event.is_set():
+        print(".", end="", flush=True)
+        time.sleep(0.5)
+        if not stop_event.is_set():
+            print(".", end="", flush=True)
+            time.sleep(0.5)
+        if not stop_event.is_set():
+            print(".", end="", flush=True)
+            time.sleep(0.5)
+        if not stop_event.is_set():
+            print("\r   \r", end="", flush=True)
+            time.sleep(0.5)
+
 
 # fmt:off
 def main(
@@ -72,22 +97,35 @@ def main(
                 print("  .help        Show help text")
                 continue
 
+            # Create a stop event
+            stop_event = threading.Event()
+            # Create and start a thread to print dots
+            dot_thread = threading.Thread(target=print_dots, args=(stop_event,))
+            dot_thread.start()
             try:
                 # Execute the SQL statement and display the results
                 start = time.monotonic_ns()
                 result = opteryx.query(statement)
                 result.materialize()
+                stop_event.set()
                 duration = time.monotonic_ns() - start
+                print("\r   \r", end="", flush=True)
                 print(result.display(limit=-1, display_width=table_width, colorize=color, max_column_width=max_col_width))
                 if stats:
                     print(f"[ {result.rowcount} rows x {result.columncount} columns ] ( {duration/1e9} seconds )")
             except MissingSqlStatement:
+                print("\r   \r", end="", flush=True)
                 print(f"{ANSI_RED}Error{ANSI_RESET}: Expected SQL statement or dot command missing.")
                 print("  Enter '.help' for usage hints")
             except Exception as e:
+                print("\r   \r", end="", flush=True)
                 # Display a friendly error message if an exception occurs
                 print(f"{ANSI_RED}Error{ANSI_RESET}: {e}")
-
+                print("  Enter '.help' for usage hints")
+            finally:
+                # Stop the dot thread
+                stop_event.set()
+                dot_thread.join()
         quit()
 
     # tidy up the statement

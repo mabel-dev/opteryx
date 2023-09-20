@@ -280,10 +280,14 @@ result.head()
 
 _this example is complete and should run as-is_
 
+#### Further Examples
+
+For further examples check out the [Interactive labs](https://github.com/mabel-dev/labs) on [Binder](https://mybinder.org/v2/gh/mabel-dev/labs/HEAD).
+
 ## Community
 
 [![Discord](https://img.shields.io/badge/discuss%20on-discord-5865F2.svg?logo=discord)](https://discord.gg/qpv2tr989x)
-[![X Follow](https://img.shields.io/badge/follow%20on-x-1DA1F2.svg?logo=X)](https://twitter.com/OpteryxSQL)
+[![X Follow](https://img.shields.io/badge/follow%20on-X-1DA1F2.svg?logo=X)](https://twitter.com/OpteryxSQL)
 
 **How do I get Support?**
 
@@ -310,7 +314,7 @@ See the project [Security Policy](SECURITY.md) for information about reporting v
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/mabel-dev/opteryx/blob/master/LICENSE)
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fmabel-dev%2Fopteryx.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fmabel-dev%2Fopteryx?ref=badge_shield)
 
-Opteryx is licensed under [Apache 2.0](https://github.com/mabel-dev/opteryx/blob/master/LICENSE) except where specific module note otherwise.
+Opteryx is licensed under [Apache 2.0](https://github.com/mabel-dev/opteryx/blob/master/LICENSE) except where specific modules note otherwise.
 
 ## Status
 
