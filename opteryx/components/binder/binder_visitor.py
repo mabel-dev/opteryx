@@ -261,24 +261,34 @@ class BinderVisitor:
     def visit_exit(self, node: Node, context: BindingContext) -> Tuple[Node, BindingContext]:
         # LOG: Exit
 
-        def get_name(column):
-            #            if column.aliases:
-            #                return max(column.aliases, key=len)
-            return column.name
-
-        columns = []
-
         # remove the derived schema
         context.schemas.pop("$derived", None)
 
-        for schema in context.schemas.values():
+        columns = []
+
+        seen = set()
+        needs_qualifier = any(
+            column.name in seen or seen.add(column.name) is not None
+            for schema in context.schemas.values()
+            for column in schema.columns
+        )
+
+        def name_column(qualifier, column):
+            if len(context.schemas) > 1 or needs_qualifier:
+                if len(column.aliases) == 1:
+                    return column.aliases[0]
+                return f"{qualifier}.{column.name}"
+            return column.name
+
+        for qualifier, schema in context.schemas.items():
             for column in schema.columns:
+                print(column.name, qualifier)
                 column_reference = Node(
                     node_type=NodeType.IDENTIFIER,
                     name=column.name,
                     schema_column=column,
                     type=column.type,
-                    query_column=get_name(column),
+                    query_column=name_column(qualifier, column),
                 )
                 columns.append(column_reference)
 
@@ -409,33 +419,25 @@ class BinderVisitor:
         return node, context
 
     def visit_project(self, node: Node, context: BindingContext) -> Tuple[Node, BindingContext]:
-        # For each of the columns in the projection, identify the relation it
-        # will be taken from
         node.columns, group_contexts = zip(
             *(inner_binder(col, context, node.identity) for col in node.columns)
         )
         context.schemas = merge_schemas(*[ctx.schemas for ctx in group_contexts])
 
-        columns = []
-        for column in node.columns:
-            column.fqn = f"{column.source}.{column.source_column}"
-            column.schema_column.aliases = [column.fqn, column.source_column]
-            column.source = "$projection"
-            column.value = (
-                column.alias or column.value
-            )  #  <- this is using the source name not the alias name
-            #            column.alias = None
-            # create the schema of the resultant dataset
-            column.source_column = column.query_column
-            column.schema_column = column.schema_column.to_flatcolumn()
-            columns.append(column)
+        all_identities = [c.schema_column.identity for c in node.columns]
 
-        node.columns = columns
-        # Construct the RelationSchema with new FlatColumn instances
-        schema = RelationSchema(
-            name="$projection", columns=[col.schema_column for col in node.columns]
-        )
-        context.schemas = {"$derived": derived.schema(), "$projection": schema}
+        for relation, schema in list(context.schemas.items()):
+            columns = []
+            for column in schema.columns:
+                if column.identity in all_identities:
+                    columns.append(column)
+            if len(columns) == 0:
+                context.schemas.pop(relation)
+            else:
+                schema.columns = columns
+
+        if not "$derived" in context.schemas:
+            context.schemas["$derived"] = derived.schema()
 
         return node, context
 
@@ -487,6 +489,8 @@ class BinderVisitor:
         # None means we don't know ahead of time - we can usually get something
         node.schema = node.connector.get_dataset_schema()
         context.schemas[node.alias] = node.schema
+        for column in node.schema.columns:
+            column.origin = node.alias
         context.relations.add(node.alias)
 
         return node, context
