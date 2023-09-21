@@ -126,9 +126,6 @@ def locate_identifier(node: Node, context: Dict[str, Any]) -> Tuple[Node, Dict]:
 
     schemas = context.schemas
     found_source_relation = schemas.get(node.source)
-    if not found_source_relation and "$projection" in schemas:
-        found_source_relation = schemas["$projection"]
-        node.source = "$projection"
 
     # Handle fully qualified fields
     if node.source:
@@ -242,10 +239,7 @@ def inner_binder(node: Node, context: Dict[str, Any], step: str) -> Tuple[Node, 
 
     elif not node_type == NodeType.SUBQUERY and not node.do_not_create_column:
         column_name = format_expression(node)
-        if "$projection" in schemas:
-            schema_column = schemas["$projection"].find_column(column_name)
-        else:
-            schema_column = schemas["$derived"].find_column(column_name)
+        schema_column = schemas["$derived"].find_column(column_name)
 
         if schema_column:
             schema_column = FlatColumn(
