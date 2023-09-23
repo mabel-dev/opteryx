@@ -47,9 +47,6 @@ elif dotenv is not None:  # pragma: no cover variables from `.env`")
 if os.environ.get("OPTERYX_DEBUG") is not None:
     from opteryx.debugging import OpteryxOrsoImportFinder
 
-from orso.logging import get_logger
-from orso.logging import set_log_name
-
 from opteryx import config
 from opteryx.managers.cache.cache_manager import CacheManager  # isort:skip
 
@@ -60,6 +57,9 @@ from opteryx.connectors import register_arrow
 from opteryx.connectors import register_df
 from opteryx.connectors import register_store
 
+from opteryx.__author__ import __author__
+from opteryx.__build__ import __build__
+from opteryx.__version__ import __version__
 
 __all__ = [
     "apilevel",
@@ -71,6 +71,9 @@ __all__ = [
     "register_arrow",
     "register_df",
     "register_store",
+    "__author__",
+    "__build__",
+    "__version__",
 ]
 
 # PEP-249 specifies these attributes for a Python Database API 2.0 compliant interface
