@@ -16,16 +16,11 @@ BIG_QUERY_PROJECT: str = "mabeldev"
 # skip to reduce billing
 # @skip_if(is_arm() or is_windows() or is_mac())
 def test_bigquery_storage():
-
     from sqlalchemy.engine import create_engine
-    engine = create_engine(f'bigquery://{BIG_QUERY_PROJECT}')
 
-    opteryx.register_store(
-        "bq",
-        SqlConnector,
-        remove_prefix=True,
-        engine=engine
-    )
+    engine = create_engine(f"bigquery://{BIG_QUERY_PROJECT}")
+
+    opteryx.register_store("bq", SqlConnector, remove_prefix=True, engine=engine)
 
     results = opteryx.query("SELECT * FROM bq.public.planets")
     assert results.rowcount == 9, results.rowcount
