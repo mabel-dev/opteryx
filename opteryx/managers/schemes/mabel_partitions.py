@@ -24,9 +24,10 @@ from opteryx.utils.file_decoders import DATA_EXTENSIONS
 class UnsupportedSegementationError(DataError):
     """Exception raised for unsupported segmentations."""
 
-    def __init__(self, dataset: str):
+    def __init__(self, dataset: str, segments: set = None):
         self.dataset = dataset
-        message = f"'{dataset}' cannot be read, only 'by_hour' segments can be read."
+        self.segments = segments
+        message = f"'{dataset}' contains unsupported segmentation (`{'`, `'.join(segments)}`), only 'by_hour' segments are supported."
         super().__init__(message)
 
 
@@ -75,10 +76,9 @@ class MabelPartitionScheme(BasePartitionScheme):
             # Call your method to get the list of blob names
             blob_names = blob_list_getter(prefix=date_path)
 
-            if len({_extract_by(blob) for blob in blob_names} - {"by_hour", None}) > 0:
-                from opteryx.exceptions import UnsupportedSegementationError
-
-                raise UnsupportedSegementationError(dataset=prefix)
+            segments = {_extract_by(blob) for blob in blob_names}
+            if len(segments - {"by_hour", None}) > 0:
+                raise UnsupportedSegementationError(dataset=prefix, segments=segments)
 
             # Filter for the specific hour, if hour folders exist - prefer by_hour segements
             if any(f"/by_hour/hour={hour:02d}/" in blob_name for blob_name in blob_names):
