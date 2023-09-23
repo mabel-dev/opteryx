@@ -53,7 +53,6 @@ Exception
 """
 
 from typing import Optional
-from typing import Union
 
 
 # ======================== Begin Codebase Errors ========================

@@ -13,7 +13,6 @@
 This implements an interface to Memcached
 """
 
-import io
 import os
 from typing import Union
 

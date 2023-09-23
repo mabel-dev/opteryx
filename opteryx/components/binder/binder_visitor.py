@@ -426,18 +426,27 @@ class BinderVisitor:
 
         all_identities = [c.schema_column.identity for c in node.columns]
 
+        columns = []
         for relation, schema in list(context.schemas.items()):
-            columns = []
-            for column in schema.columns:
-                if column.identity in all_identities:
-                    columns.append(column)
-            if len(columns) == 0:
+            schema_columns = [
+                column for column in schema.columns if column.identity in all_identities
+            ]
+            if len(schema_columns) == 0:
                 context.schemas.pop(relation)
             else:
-                schema.columns = columns
+                schema.columns = schema_columns
+                columns += [
+                    column
+                    for column in node.columns
+                    if column.schema_column.identity in [i.identity for i in schema_columns]
+                ]
 
+        if "$derived" in context.schemas:
+            context.schemas["$project"] = context.schemas.pop("$derived")
         if not "$derived" in context.schemas:
             context.schemas["$derived"] = derived.schema()
+
+        node.columns = columns
 
         return node, context
 

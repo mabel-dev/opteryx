@@ -8,6 +8,7 @@ mypy
 pytest
 black
 isort
+pycln
 
 pandas
 pymemcache
