@@ -275,14 +275,13 @@ class BinderVisitor:
 
         def name_column(qualifier, column):
             if len(context.schemas) > 1 or needs_qualifier:
-                if len(column.aliases) == 1:
-                    return column.aliases[0]
+                # if len(column.aliases) == 1:
+                #    return column.aliases[0]
                 return f"{qualifier}.{column.name}"
             return column.name
 
         for qualifier, schema in context.schemas.items():
             for column in schema.columns:
-                print(column.name, qualifier)
                 column_reference = Node(
                     node_type=NodeType.IDENTIFIER,
                     name=column.name,
@@ -425,6 +424,19 @@ class BinderVisitor:
         context.schemas = merge_schemas(*[ctx.schemas for ctx in group_contexts])
 
         all_identities = [c.schema_column.identity for c in node.columns]
+
+        if len(set(all_identities)) != len(all_identities):
+            from collections import Counter
+
+            from opteryx.exceptions import AmbiguousIdentifierError
+
+            duplicates = [column for column, count in Counter(all_identities).items() if count > 1]
+            matches = {
+                c.query_column for c in node.columns if c.schema_column.identity in duplicates
+            }
+            raise AmbiguousIdentifierError(
+                message=f"Query result contains multiple instances of the same column(s) - `{'`, `'.join(matches)}`"
+            )
 
         columns = []
         for relation, schema in list(context.schemas.items()):
