@@ -3,7 +3,7 @@ lint:
 	python -m isort .
 	python -m black .
 
-refresh:
+update:
 	python -m pip install --quiet --upgrade -r requirements.txt
 	python -m pip install --quiet --upgrade -r tests/requirements.txt
 

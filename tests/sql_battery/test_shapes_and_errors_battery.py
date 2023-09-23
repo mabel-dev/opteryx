@@ -611,8 +611,7 @@ STATEMENTS = [
         ("SELECT name FROM $planets WHERE id IN (SELECT * FROM UNNEST((1,2,3)) as id)", 3, 1, UnsupportedSyntaxError),  # temp
         ("SELECT count(planetId) FROM (SELECT DISTINCT planetId FROM $satellites) AS SQ", 1, 1, None),
         ("SELECT COUNT(*) FROM (SELECT planetId FROM $satellites WHERE planetId < 7) AS SQ GROUP BY planetId", 4, 1, None),
-]
-A = [
+
         ("EXPLAIN SELECT * FROM $satellites", 1, 3, None),
         ("EXPLAIN SELECT * FROM $satellites WHERE id = 8", 2, 3, None),
         ("SET version = '1.0';", None, None, PermissionsError),
@@ -673,7 +672,8 @@ A = [
         ("SELECT P_1.* FROM $planets AS P_1 INNER JOIN $satellites AS P_2 ON P_2.id = P_1.id AND P_2.name = P_1.name", 0, 20, None),
         ("SELECT P_1.* FROM $planets AS P_1 INNER JOIN $satellites AS P_2 ON P_1.id = P_2.id AND P_2.name = P_1.name", 0, 20, None),
         ("SELECT P_1.* FROM $planets AS P_1 INNER JOIN $satellites AS P_2 ON P_2.id = P_1.id AND P_1.name = P_2.name", 0, 20, None),
-
+]
+A = [
         ("SELECT * FROM $planets AS P_1 INNER JOIN $planets AS P_2 ON P_1.id = P_2.id AND P_2.name = P_1.name", 9, 40, None),
         ("SELECT * FROM $planets NATURAL JOIN generate_series(1, 5) as id", 5, 20, None),
         ("SELECT * FROM $planets NATURAL JOIN $planets", 5, 20, None),

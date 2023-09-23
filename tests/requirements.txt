@@ -29,5 +29,7 @@ polars
 duckdb
 duckdb-engine
 sqlalchemy-cockroachdb
+sqlalchemy-bigquery
+google-cloud-bigquery-storage
 
 setuptools_rust

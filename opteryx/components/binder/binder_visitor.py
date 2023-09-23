@@ -517,7 +517,7 @@ class BinderVisitor:
         return node, context
 
     def visit_set(self, node: Node, context: BindingContext) -> Tuple[Node, BindingContext]:
-        node.variables = context["connection"].variables
+        node.variables = context.connection.variables
         return node, context
 
     def visit_show_columns(
