@@ -10,7 +10,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .cacheable import Cacheable
-from .partitionable import Partitionable
-from .predicate_pushable import PredicatePushable
-from .projection_pushable import ProjectionPushable
+from opteryx.connectors.capabilities.cacheable import Cacheable
+from opteryx.connectors.capabilities.partitionable import Partitionable
+from opteryx.connectors.capabilities.predicate_pushable import PredicatePushable
+from opteryx.connectors.capabilities.projection_pushable import ProjectionPushable
+
+__all__ = ("Cacheable", "Partitionable", "PredicatePushable", "ProjectionPushable")

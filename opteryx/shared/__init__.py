@@ -10,7 +10,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .buffer_pool import BufferPool
-from .materialized_datasets import MaterializedDatasets
-from .query_statistics import QueryStatistics
-from .rolling_log import RollingLog
+from opteryx.shared.buffer_pool import BufferPool
+from opteryx.shared.materialized_datasets import MaterializedDatasets
+from opteryx.shared.query_statistics import QueryStatistics
+from opteryx.shared.rolling_log import RollingLog
+
+__all__ = ("BufferPool", "MaterializedDatasets", "QueryStatistics", "RollingLog")
