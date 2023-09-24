@@ -50,6 +50,8 @@ def format_expression(root):
                 return f"{root.value.upper()}({distinct}{format_expression(root.expression)}{order}{limit})"
             return f"{root.value.upper()}({distinct}{','.join([format_expression(e) for e in root.parameters])}{order})"
         if node_type == NodeType.WILDCARD:
+            if root.value:
+                return f"{root.value[0]}.*"
             return "*"
         if node_type == NodeType.BINARY_OPERATOR:
             _map = {

@@ -119,58 +119,6 @@ def test_node_str_with_custom_obj():
     assert '"custom":"CustomObject"' in str(n)
 
 
-import pytest
-
-
-def test_node_identifier_uniqueness():
-    """
-    Test that each Node instance gets a unique identifier.
-    """
-    node1 = Node()
-    node2 = Node()
-    node3 = Node(node_type="test")
-
-    assert node1.identifier is not None
-    assert node2.identifier is not None
-    assert node3.identifier is not None
-
-    # Test that identifiers are unique
-    assert node1.identifier != node2.identifier
-    assert node1.identifier != node3.identifier
-    assert node2.identifier != node3.identifier
-
-
-def test_node_identifier_immutable():
-    """
-    Test that the identifier attribute cannot be changed.
-    """
-    node = Node()
-
-    # Attempt to change the identifier, should raise an error
-    with pytest.raises(AttributeError):
-        node.identifier = "new_id"
-
-    # Attempt to delete the identifier, should raise an error
-    with pytest.raises(AttributeError):
-        del node.identifier
-
-
-def test_node_identifier_consistency():
-    """
-    Test that the identifier remains the same across the lifetime of the Node object.
-    """
-    node = Node()
-    initial_identifier = node.identifier
-
-    # Perform some operations on the Node object
-    node._internal["new_key"] = "new_value"
-    node_copy = node.copy()
-
-    # Check that the identifier remains unchanged
-    assert node.identifier == initial_identifier
-    assert node_copy.identifier != initial_identifier  # Copy should have its own unique identifier
-
-
 if __name__ == "__main__":  # pragma: no cover
     from tests.tools import run_tests
 

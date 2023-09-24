@@ -37,7 +37,7 @@ jobs:
           python setup.py build_ext --inplace
 
       - name: "Authenticate to Google Cloud"
-        uses: google-github-actions/auth@v0.4.0
+        uses: google-github-actions/auth@v1
         with:
           credentials_json: '${{ secrets.GCP_KEY }}'
 
