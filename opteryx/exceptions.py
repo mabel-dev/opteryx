@@ -45,6 +45,7 @@ Exception
                  ├── IncorrectTypeError
                  ├── InvalidFunctionParameterError
                  ├── InvalidTemporalRangeFilterError
+                 ├── IncompatibleTypesError
                  ├── UnexpectedDatasetReferenceError
                  ├── UnnamedColumnError
                  ├── UnnamedSubqueryError
@@ -236,6 +237,55 @@ class UnsupportedSyntaxError(SqlError):
 
 class IncorrectTypeError(SqlError):
     """Exception raised for incorrect types."""
+
+
+class IncompatibleTypesError(Exception):
+    """
+    Raised when attempting to join fields of incompatible types.
+
+    Parameters:
+        left_type: str
+            The type of the left field.
+        right_type: str
+            The type of the right field.
+        column: Optional[str]
+            If the incompatibility occurs in a single column
+        left_column: Optional[str]
+            The column name where the error occurs.
+        right_columns: Optional[str]
+            The column name where the error occurs.
+
+    Attributes:
+        left_type (str): The type of the left field.
+        right_type (str): The type of the right field.
+        column (str): The column name where the error occurs.
+        left_column (str): The column name where the error occurs.
+        right_column (str): The column name where the error occurs.
+    """
+
+    def __init__(
+        self,
+        left_type: str,
+        right_type: str,
+        column: Optional[str] = None,
+        left_column: Optional[str] = None,
+        right_column: Optional[str] = None,
+    ):
+        self.left_type = left_type
+        self.right_type = right_type
+        self.column = column
+        self.left_column = left_column
+        self.right_column = right_column
+        if self.column:
+            super().__init__(
+                f"Incompatible types for column '{column}': {left_type} and {right_type}"
+            )
+        elif self.left_column or self.right_column:
+            super().__init__(
+                f"Incompatible types for columns '{left_column}' ({left_type}) and '{right_column}' ({right_type})."
+            )
+        else:
+            super().__init__("Incompatible column types.")
 
 
 class PermissionsError(SecurityError):

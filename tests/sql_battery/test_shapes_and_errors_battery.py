@@ -52,6 +52,7 @@ from opteryx.exceptions import (
     ColumnNotFoundError,
     DatasetNotFoundError,
     EmptyDatasetError,
+    IncompatibleTypesError,
     IncorrectTypeError,
     InvalidFunctionParameterError,
     InvalidTemporalRangeFilterError,
@@ -672,17 +673,18 @@ STATEMENTS = [
         ("SELECT P_1.* FROM $planets AS P_1 INNER JOIN $satellites AS P_2 ON P_2.id = P_1.id AND P_2.name = P_1.name", 0, 20, None),
         ("SELECT P_1.* FROM $planets AS P_1 INNER JOIN $satellites AS P_2 ON P_1.id = P_2.id AND P_2.name = P_1.name", 0, 20, None),
         ("SELECT P_1.* FROM $planets AS P_1 INNER JOIN $satellites AS P_2 ON P_2.id = P_1.id AND P_1.name = P_2.name", 0, 20, None),
-]
-A = [
+
         ("SELECT * FROM $planets AS P_1 INNER JOIN $planets AS P_2 ON P_1.id = P_2.id AND P_2.name = P_1.name", 9, 40, None),
         ("SELECT * FROM $planets NATURAL JOIN generate_series(1, 5) as id", 5, 20, None),
-        ("SELECT * FROM $planets NATURAL JOIN $planets", 5, 20, None),
-        ("SELECT * FROM $planets AS P NATURAL JOIN $satellites AS S", 5, 20, None),
+        ("SELECT * FROM $planets AS P1 NATURAL JOIN $planets AS P2", 5, 20, None),
+        ("SELECT * FROM $satellites AS P1 NATURAL JOIN $satellites AS P2", 170, 8, None),
+        ("SELECT * FROM $planets AS P NATURAL JOIN $satellites AS S", None, None, IncompatibleTypesError),
         ("SELECT id FROM $planets AS P_1 INNER JOIN $planets AS P_2 USING (id)", 9, 1, None),
         ("SELECT id, name FROM $planets AS P_1 INNER JOIN $planets AS P_2 USING (id, name)", 9, 2, None),
         ("SELECT P_1.* FROM $planets AS P_1 INNER JOIN $planets AS P_2 USING (id, name)", 9, 18, None),
         ("SELECT * FROM $satellites AS P_1 INNER JOIN $satellites AS P_2 USING (id, name)", 177, 14, None),
-
+]
+A = [
         ("SELECT DISTINCT planetId FROM $satellites RIGHT OUTER JOIN $planets ON $satellites.planetId = $planets.id", 8, 1, None),
         ("SELECT DISTINCT planetId FROM $satellites RIGHT JOIN $planets ON $satellites.planetId = $planets.id", 8, 1, None),
         ("SELECT planetId FROM $satellites RIGHT JOIN $planets ON $satellites.planetId = $planets.id", 179, 1, None),
