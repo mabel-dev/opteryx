@@ -34,6 +34,37 @@ from opteryx.virtual_datasets import derived
 CAMEL_TO_SNAKE = re.compile(r"(?<!^)(?=[A-Z])")
 
 
+def get_mismatched_condition_column_types(node: Node) -> dict:
+    """
+    Checks that the types of the fields involved a comparison are the same on both sides.
+
+    Parameters:
+        node: Node
+            The condition node representing the condition.
+
+    Returns:
+        a dictionary describing the columns
+    """
+    if node.node_type == NodeType.AND:
+        left_mismatches = get_mismatched_condition_column_types(node.left)
+        right_mismatches = get_mismatched_condition_column_types(node.right)
+        return left_mismatches or right_mismatches
+
+    elif node.node_type == NodeType.COMPARISON_OPERATOR:
+        left_type = node.left.schema_column.type
+        right_type = node.right.schema_column.type
+
+        if left_type != 0 and right_type != 0 and left_type != right_type:
+            return {
+                "left_column": f"{node.left.source}.{node.left.value}",
+                "left_type": left_type.name,
+                "right_column": f"{node.right.source}.{node.right.value}",
+                "right_type": right_type.name,
+            }
+
+    return None  # if we reach here, it means we didn't find any inconsistencies
+
+
 def extract_join_fields(
     condition_node: Node, left_relation_names: List[str], right_relation_names: List[str]
 ) -> Tuple[List[str], List[str]]:
@@ -364,13 +395,21 @@ class BinderVisitor:
                 [n.value for n in node.using], node.left_relation_names, node.right_relation_names
             )
         if node.on:
-            # cross joins, natural joins and 'using' joins don't have an "on"
+            # All except CROSS JOINs have been mapped to have an ON condition
             node.on, context = inner_binder(node.on, context, node.identity)
             node.left_columns, node.right_columns = extract_join_fields(
                 node.on, node.left_relation_names, node.right_relation_names
             )
+            mismatches = get_mismatched_condition_column_types(node.on)
+            if mismatches:
+                from opteryx.exceptions import IncompatibleTypesError
+
+                raise IncompatibleTypesError(**mismatches)
 
         if node.using:
+            # Remove the columns used in the join condition from both relations, they're in
+            # the result set but not belonging to either table. We create a new schema to
+            # put them in, $joined-nnn.
             columns = []
 
             # Loop through all using fields in the node
@@ -389,7 +428,7 @@ class BinderVisitor:
                         columns.append(right_column)
                         break
 
-            context.schemas[f"$joined-{random_string}"] = RelationSchema(
+            context.schemas[f"$joined-{random_string()}"] = RelationSchema(
                 name="$joined", columns=columns
             )
         if node.column:
