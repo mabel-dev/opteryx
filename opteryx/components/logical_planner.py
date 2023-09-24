@@ -306,7 +306,11 @@ def inner_query_planner(ast_branch):
             inner_plan.add_edge(previous_step_id, step_id)
 
     # projection
-    if not (len(_projection) == 1 and _projection[0].node_type == NodeType.WILDCARD):
+    if not (
+        len(_projection) == 1
+        and _projection[0].node_type == NodeType.WILDCARD
+        and _projection[0].value is None
+    ):
         project_step = LogicalPlanNode(node_type=LogicalPlanStepType.Project)
         project_step.columns = _projection
         previous_step_id, step_id = step_id, random_string()
@@ -443,7 +447,9 @@ def create_node_relation(relation):
         if function["alias"] is None:
             from opteryx.exceptions import UnnamedColumnError
 
-            raise UnnamedColumnError(f"Column created by {function_name} has no name.")
+            raise UnnamedColumnError(
+                f"Column created by {function_name} has no name, use AS to name the column."
+            )
 
         function = relation["relation"]["Table"]
         function_name = function["name"][0]["value"].upper()

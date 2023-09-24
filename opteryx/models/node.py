@@ -29,8 +29,6 @@ import copy
 from typing import Any
 from typing import Dict
 
-from orso.tools import random_string
-
 
 class Node:
     def __init__(self, node_type: str = None, **kwargs: Any):
@@ -44,9 +42,6 @@ class Node:
                 Dynamic attributes for the node.
         """
         object.__setattr__(self, "_internal", {})  # Directly set _internal using the base method
-        object.__setattr__(
-            self, "_identity", random_string()
-        )  # Generate and set immutable identifier
         if node_type:
             self._internal["node_type"] = node_type
         for k, v in kwargs.items():
@@ -74,16 +69,6 @@ class Node:
         """
         return self._internal
 
-    @property
-    def identity(self) -> str:
-        """
-        Get the immutable unique identity for the Node.
-
-        Returns:
-            str: The immutable identity.
-        """
-        return self._identity
-
     def __getattr__(self, name: str) -> Any:
         """
         Retrieve attribute from the internal dictionary or the _identity.
@@ -107,9 +92,7 @@ class Node:
             value: Any
                 The value to set.
         """
-        if name == "identity":
-            raise AttributeError("The 'identity' attribute is immutable.")
-        elif name == "_internal":
+        if name == "_internal":
             self._internal = value
         else:
             self._is_valid_key(name)

@@ -395,11 +395,6 @@ class BinderVisitor:
         if node.column:
             if not node.alias:
                 node.alias = f"UNNEST({node.column.query_column})"
-            # Find which relation on the left side of the plan the field is in
-            for left_relation_name in node.left_relation_names:
-                if context.schemas[left_relation_name].find_column(node.column.value):
-                    node.source = left_relation_name
-                    break
             # this is the column which is being unnested
             node.column, context = inner_binder(node.column, context, node.identity)
             # this is the column that is being created - find it from it's name
@@ -418,6 +413,25 @@ class BinderVisitor:
         return node, context
 
     def visit_project(self, node: Node, context: BindingContext) -> Tuple[Node, BindingContext]:
+        columns = []
+        for column in node.columns:
+            if not column.node_type == NodeType.WILDCARD:
+                columns.append(column)
+            else:
+                schema = context.schemas[column.value[0]]
+
+                for schema_column in schema.columns:
+                    column_reference = Node(
+                        node_type=NodeType.IDENTIFIER,
+                        name=schema_column.name,
+                        schema_column=schema_column,
+                        type=schema_column.type,
+                        query_column=f"{column.value[0]}.{schema_column.name}",
+                    )
+                    columns.append(column_reference)
+
+        node.columns = columns
+
         node.columns, group_contexts = zip(
             *(inner_binder(col, context, node.identity) for col in node.columns)
         )

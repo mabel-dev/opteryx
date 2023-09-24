@@ -14,7 +14,7 @@ BIG_QUERY_PROJECT: str = "mabeldev"
 
 
 # skip to reduce billing
-# @skip_if(is_arm() or is_windows() or is_mac())
+@skip_if(is_arm() or is_windows() or is_mac())
 def test_bigquery_storage():
     from sqlalchemy.engine import create_engine
 

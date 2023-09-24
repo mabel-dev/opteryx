@@ -644,7 +644,7 @@ STATEMENTS = [
         ("SELECT * FROM $satellites INNER JOIN $planets WITH (NO_CACHE) USING (id)", 9, 27, None),
         ("SELECT * FROM $satellites JOIN $planets USING (id)", 9, 27, None),
         ("SELECT * FROM $astronauts CROSS JOIN UNNEST(missions) AS mission WHERE mission = 'Apollo 11'", 3, 20, None),
-        ("SELECT * FROM $astronauts CROSS JOIN UNNEST(missions)", 869, 20, None),
+        ("SELECT * FROM $astronauts CROSS JOIN UNNEST(missions) AS m", 869, 20, None),
         ("SELECT * FROM $planets INNER JOIN $satellites ON $planets.id = $satellites.planetId", 177, 28, None),
         ("SELECT DISTINCT planetId FROM $satellites LEFT OUTER JOIN $planets ON $satellites.planetId = $planets.id", 7, 1, None),
         ("SELECT DISTINCT planetId FROM $satellites LEFT JOIN $planets ON $satellites.planetId = $planets.id", 7, 1, None),
