@@ -96,5 +96,6 @@ def format_expression(root):
         return f"{format_expression(root.left)} {_map[node_type]} {format_expression(root.right)}"
     if node_type == NodeType.NESTED:
         return f"({format_expression(root.centre)})"
-
+    if node_type == NodeType.IDENTIFIER:
+        return root.current_name
     return str(root.value)
