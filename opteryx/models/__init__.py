@@ -12,5 +12,8 @@
 
 from opteryx.models.connection_context import ConnectionContext
 from opteryx.models.execution_tree import ExecutionTree
+from opteryx.models.logical_column import LogicalColumn
 from opteryx.models.node import Node
 from opteryx.models.query_properties import QueryProperties
+
+__all__ = ("ConnectionContext", "ExecutionTree", "LogicalColumn", "Node", "QueryProperties")

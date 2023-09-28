@@ -120,7 +120,7 @@ def locate_identifier(node: Node, context: Dict[str, Any]) -> Tuple[Node, Dict]:
         return node
 
     # Check if the identifier is a variable
-    if node.value[0] == "@":
+    if node.current_name[0] == "@":
         node = create_variable_node(node, context)
         return node, context
 
@@ -200,8 +200,7 @@ def inner_binder(node: Node, context: Dict[str, Any], step: str) -> Tuple[Node, 
 
         # If the column exists in the schema, update node and context accordingly.
         if found_column:
-            # Convert to a FLATCOLUMN (an EVALUATED identifier)
-            node.schema_column = found_column  # .to_flatcolumn()
+            node.schema_column = found_column
             node.query_column = node.alias or column_name
 
             return node, context

@@ -306,8 +306,6 @@ class BinderVisitor:
 
         def name_column(qualifier, column):
             if len(context.schemas) > 1 or needs_qualifier:
-                # if len(column.aliases) == 1:
-                #    return column.aliases[0]
                 return f"{qualifier}.{column.name}"
             return column.name
 
@@ -453,6 +451,8 @@ class BinderVisitor:
 
     def visit_project(self, node: Node, context: BindingContext) -> Tuple[Node, BindingContext]:
         columns = []
+
+        # Handle wildcards, including qualified wildcards.
         for column in node.columns:
             if not column.node_type == NodeType.WILDCARD:
                 columns.append(column)
@@ -471,26 +471,26 @@ class BinderVisitor:
 
         node.columns = columns
 
+        # Bind the local columns to physical columns
         node.columns, group_contexts = zip(
             *(inner_binder(col, context, node.identity) for col in node.columns)
         )
         context.schemas = merge_schemas(*[ctx.schemas for ctx in group_contexts])
 
+        # Check for duplicates
         all_identities = [c.schema_column.identity for c in node.columns]
-
         if len(set(all_identities)) != len(all_identities):
             from collections import Counter
 
             from opteryx.exceptions import AmbiguousIdentifierError
 
             duplicates = [column for column, count in Counter(all_identities).items() if count > 1]
-            matches = {
-                c.query_column for c in node.columns if c.schema_column.identity in duplicates
-            }
+            matches = {c.value for c in node.columns if c.schema_column.identity in duplicates}
             raise AmbiguousIdentifierError(
                 message=f"Query result contains multiple instances of the same column(s) - `{'`, `'.join(matches)}`"
             )
 
+        # Remove columns not being projected from the schemas, and remove empty schemas
         columns = []
         for relation, schema in list(context.schemas.items()):
             schema_columns = [
@@ -500,12 +500,20 @@ class BinderVisitor:
                 context.schemas.pop(relation)
             else:
                 schema.columns = schema_columns
-                columns += [
-                    column
-                    for column in node.columns
-                    if column.schema_column.identity in [i.identity for i in schema_columns]
-                ]
+                for column in node.columns:
+                    if column.schema_column.identity in [i.identity for i in schema_columns]:
+                        # If .alias is set, update .value and set .alias to None
+                        if column.alias is not None:
+                            column.value = column.alias
+                            column.query_column = column.alias
+                            current_name = column.schema_column.name
+                            column.schema_column.name = column.alias
+                            context.schemas[relation].pop_column(current_name)
+                            context.schemas[relation].columns.append(column.schema_column)
+                            column.alias = None
+                        columns.append(column)
 
+        # We always have a $derived schema, even if it's empty
         if "$derived" in context.schemas:
             context.schemas["$project"] = context.schemas.pop("$derived")
         if not "$derived" in context.schemas:

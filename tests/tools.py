@@ -158,7 +158,7 @@ def run_tests():
 
     print(
         f"\n\033[38;2;139;233;253m\033[3mCOMPLETE\033[0m\n"
-        f"  \033[38;2;26;185;67m{passed} passed\033[0m\n"
+        f"  \033[38;2;26;185;67m{passed} passed ({(passed * 100) // (passed + failed)}%)\033[0m\n"
         f"  \033[38;2;255;121;198m{failed} failed\033[0m"
     )
 

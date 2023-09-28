@@ -318,7 +318,8 @@ STATEMENTS = [
         ("SELECT * FROM $satellites WHERE name NOT SIMILAR TO '^C.'", 165, 8, None),
         ("SELECT * FROM $satellites WHERE name ~* '^c.'", 12, 8, None),
         ("SELECT * FROM $satellites WHERE name !~* '^c.'", 165, 8, None),
-
+]
+A = [
         ("SELECT COUNT(*) FROM $satellites", 1, 1, None),
         ("SELECT count(*) FROM $satellites", 1, 1, None),
         ("SELECT COUNT (*) FROM $satellites", 1, 1, None),
@@ -683,8 +684,7 @@ STATEMENTS = [
         ("SELECT id, name FROM $planets AS P_1 INNER JOIN $planets AS P_2 USING (id, name)", 9, 2, None),
         ("SELECT P_1.* FROM $planets AS P_1 INNER JOIN $planets AS P_2 USING (id, name)", 9, 18, None),
         ("SELECT * FROM $satellites AS P_1 INNER JOIN $satellites AS P_2 USING (id, name)", 177, 14, None),
-]
-A = [
+
         ("SELECT DISTINCT planetId FROM $satellites RIGHT OUTER JOIN $planets ON $satellites.planetId = $planets.id", 8, 1, None),
         ("SELECT DISTINCT planetId FROM $satellites RIGHT JOIN $planets ON $satellites.planetId = $planets.id", 8, 1, None),
         ("SELECT planetId FROM $satellites RIGHT JOIN $planets ON $satellites.planetId = $planets.id", 179, 1, None),
@@ -692,12 +692,12 @@ A = [
         ("SELECT DISTINCT planetId FROM $satellites FULL JOIN $planets ON $satellites.planetId = $planets.id", 8, 1, None),
         ("SELECT planetId FROM $satellites FULL JOIN $planets ON $satellites.planetId = $planets.id", 179, 1, None),
 
-        ("SELECT pid FROM ( SELECT id AS pid FROM $planets) WHERE pid > 5", 4, 1, None),
-        ("SELECT * FROM ( SELECT id AS pid FROM $planets) WHERE pid > 5", 4, 1, None),
-        ("SELECT * FROM ( SELECT COUNT(planetId) AS moons, planetId FROM $satellites GROUP BY planetId ) WHERE moons > 10", 4, 2, None),
+        ("SELECT pid FROM ( SELECT id AS pid FROM $planets) AS SQ WHERE pid > 5", 4, 1, None),
+        ("SELECT * FROM ( SELECT id AS pid FROM $planets) AS SQ WHERE pid > 5", 4, 1, None),
+        ("SELECT * FROM ( SELECT COUNT(planetId) AS moons, planetId FROM $satellites GROUP BY planetId ) AS SQ WHERE moons > 10", 4, 2, None),
 
         ("SELECT * FROM $planets WHERE id = -1", 0, 20, None),
-        ("SELECT COUNT(*) FROM (SELECT DISTINCT a FROM $astronauts CROSS JOIN UNNEST(alma_mater) AS a ORDER BY a)", 1, 1, None),
+        ("SELECT COUNT(*) FROM (SELECT DISTINCT a FROM $astronauts CROSS JOIN UNNEST(alma_mater) AS a ORDER BY a) AS SQ", 1, 1, None),
 
         ("SELECT a.id, b.id, c.id FROM $planets AS a INNER JOIN $planets AS b ON a.id = b.id INNER JOIN $planets AS c ON c.id = b.id", 9, 3, None),
         ("SELECT * FROM $planets AS a INNER JOIN $planets AS b ON a.id = b.id RIGHT OUTER JOIN $satellites AS c ON c.planetId = b.id", 177, 48, None),
@@ -1144,6 +1144,8 @@ A = [
         ("SELECT LEFT('APPLE', 1) || LEFT('APPLE', 1)", 1, 1, None),
         # 1153 temporal extract from cross joins
         ("SELECT p.name, s.name FROM $planets as p, $satellites as s WHERE p.id = s.planetId", 177, 2, None),
+        # Can't qualify fields used in subscripts
+        ("SELECT d.birth_place['town'] FROM $astronauts AS d", 357, 1),
 ]
 # fmt:on
 
@@ -1194,6 +1196,8 @@ if __name__ == "__main__":  # pragma: no cover
 
     from tests.tools import trunc_printable
 
+    start_suite = time.monotonic_ns()
+
     width = shutil.get_terminal_size((80, 20))[0] - 15
 
     passed = 0
@@ -1226,7 +1230,7 @@ if __name__ == "__main__":  # pragma: no cover
 
     print("--- ✅ \033[0;32mdone\033[0m")
     print(
-        f"\n\033[38;2;139;233;253m\033[3mCOMPLETE\033[0m\n"
-        f"  \033[38;2;26;185;67m{passed} passed\033[0m\n"
+        f"\n\033[38;2;139;233;253m\033[3mCOMPLETE\033[0m ({(time.monotonic_ns() - start_suite) // 1e9} seconds)\n"
+        f"  \033[38;2;26;185;67m{passed} passed ({(passed * 100) // (passed + failed)}%)\033[0m\n"
         f"  \033[38;2;255;121;198m{failed} failed\033[0m"
     )

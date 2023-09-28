@@ -26,6 +26,7 @@ from opteryx.exceptions import SqlError
 from opteryx.exceptions import UnsupportedSyntaxError
 from opteryx.functions.binary_operators import BINARY_OPERATORS
 from opteryx.managers.expression import NodeType
+from opteryx.models import LogicalColumn
 from opteryx.models import Node
 from opteryx.utils import dates
 from opteryx.utils import suggest_alternative
@@ -154,24 +155,20 @@ def qualified_wildcard(branch, alias=None, key=None):
 
 
 def identifier(branch, alias=None, key=None):
-    return Node(
-        node_type=NodeType.IDENTIFIER,
-        value=branch["value"],
-        alias=alias,
-        query_column=branch["value"],
+    """idenitifier doesn't have a qualifier (recorded in source)"""
+    return LogicalColumn(
+        node_type=NodeType.IDENTIFIER,  # column type
+        alias=alias,  # AS alias, if provided
+        source_column=branch["value"],  # the source column
     )
 
 
 def compound_identifier(branch, alias=None, key=None):
-    if alias is None:
-        alias = ".".join(p["value"] for p in branch)
-    return Node(
-        node_type=NodeType.IDENTIFIER,
-        value=".".join(p["value"] for p in branch),
-        alias=alias,
-        query_column=".".join(p["value"] for p in branch),
-        source_column=branch[-1]["value"],
-        source=".".join(p["value"] for p in branch[:-1]),
+    return LogicalColumn(
+        node_type=NodeType.IDENTIFIER,  # column type
+        alias=alias,  # AS alias, if provided
+        source_column=branch[-1]["value"],  # the source column
+        source=".".join(p["value"] for p in branch[:-1]),  # the source relation
     )
 
 
@@ -329,7 +326,7 @@ def extract(branch, alias=None, key=None):
 def map_access(branch, alias=None, key=None):
     # Identifier[key] -> GET(Identifier, key)
 
-    field = branch["column"]["Identifier"]["value"]
+    identifier_node = build(branch["column"])  # ["Identifier"]["value"]
     key_dict = branch["keys"][0]["Value"]
     if "SingleQuotedString" in key_dict:
         key = key_dict["SingleQuotedString"]
@@ -338,12 +335,12 @@ def map_access(branch, alias=None, key=None):
         key = int(key_dict["Number"][0])
         key_node = Node(NodeType.LITERAL, type=OrsoTypes.INTEGER, value=key)
 
-    identifier_node = Node(NodeType.IDENTIFIER, value=field)
     return Node(
         NodeType.FUNCTION,
         value="GET",
         parameters=[identifier_node, key_node],
-        alias=alias or f"{field}[{repr(key) if isinstance(key, str) else key}]",
+        alias=alias
+        or f"{identifier_node.current_name}[{repr(key) if isinstance(key, str) else key}]",
     )
 
 
