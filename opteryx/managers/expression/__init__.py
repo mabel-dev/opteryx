@@ -30,6 +30,7 @@ from pyarrow import Table
 from opteryx.exceptions import UnsupportedSyntaxError
 from opteryx.functions.binary_operators import binary_operations
 from opteryx.functions.unary_operations import UNARY_OPERATIONS
+from opteryx.models import LogicalColumn
 from opteryx.models import Node
 from opteryx.third_party.pyarrow_ops.ops import filter_operations
 
@@ -260,7 +261,7 @@ def get_all_nodes_of_type(root, select_nodes):
             identifiers.extend(get_all_nodes_of_type(node.right, select_nodes))
         if node.parameters:
             for parameter in node.parameters:
-                if isinstance(parameter, Node):
+                if isinstance(parameter, (Node, LogicalColumn)):
                     identifiers.extend(get_all_nodes_of_type(parameter, select_nodes))
 
     return identifiers

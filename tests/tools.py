@@ -106,6 +106,7 @@ def run_tests():
             test_methods.append(obj)
 
     print(f"\n\033[38;2;139;233;253m\033[3mRUNNING SET OF {len(test_methods)} TESTS\033[0m\n")
+    start_suite = time.monotonic_ns()
 
     passed = 0
     failed = 0
@@ -157,7 +158,7 @@ def run_tests():
             )
 
     print(
-        f"\n\033[38;2;139;233;253m\033[3mCOMPLETE\033[0m\n"
+        f"\n\033[38;2;139;233;253m\033[3mCOMPLETE\033[0m ({((time.monotonic_ns() - start_suite) / 1e9):.2f} seconds)\n"
         f"  \033[38;2;26;185;67m{passed} passed ({(passed * 100) // (passed + failed)}%)\033[0m\n"
         f"  \033[38;2;255;121;198m{failed} failed\033[0m"
     )

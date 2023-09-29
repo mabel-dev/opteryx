@@ -265,9 +265,6 @@ def cast(branch, alias=None, key=None):
 def try_cast(branch, alias=None, key="TryCast"):
     # TRY_CAST(<var> AS <type>) - convert to the form <type>(var), e.g. BOOLEAN(on)
     # also: SAFE_CAST
-    if not isinstance(alias, list):
-        alias = [] if alias is None else [alias]
-
     function_name = key.replace("Cast", "_Cast").upper()
     args = [build(branch["expr"])]
     data_type = branch["data_type"]

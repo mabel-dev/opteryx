@@ -318,8 +318,7 @@ STATEMENTS = [
         ("SELECT * FROM $satellites WHERE name NOT SIMILAR TO '^C.'", 165, 8, None),
         ("SELECT * FROM $satellites WHERE name ~* '^c.'", 12, 8, None),
         ("SELECT * FROM $satellites WHERE name !~* '^c.'", 165, 8, None),
-]
-A = [
+
         ("SELECT COUNT(*) FROM $satellites", 1, 1, None),
         ("SELECT count(*) FROM $satellites", 1, 1, None),
         ("SELECT COUNT (*) FROM $satellites", 1, 1, None),
@@ -376,11 +375,26 @@ A = [
         ("SELECT TRY_CAST(planetId AS VARCHAR) FROM $satellites", 177, 1, None),
         ("SELECT TRY_CAST(planetId AS TIMESTAMP) FROM $satellites", 177, 1, None),
         ("SELECT TRY_CAST(planetId AS NUMERIC) FROM $satellites", 177, 1, None),
+        ("SELECT NUMERIC(planetId) AS VALUE FROM $satellites GROUP BY NUMERIC(planetId)", 7, 1, None),
+        ("SELECT INT(planetId) AS VALUE FROM $satellites GROUP BY INT(planetId)", 7, 1, None),
+        ("SELECT INTEGER(planetId) AS VALUE FROM $satellites GROUP BY INTEGER(planetId)", 7, 1, None),
+        ("SELECT FLOAT(planetId) AS VALUE FROM $satellites GROUP BY FLOAT(planetId)", 7, 1, None),
+        ("SELECT CAST(planetId AS BOOLEAN) AS VALUE FROM $satellites", 177, 1, None),
+        ("SELECT CAST(planetId AS VARCHAR) AS VALUE FROM $satellites", 177, 1, None),
+        ("SELECT CAST('2022-01-0' || VARCHAR(planetId) AS TIMESTAMP) AS VALUE FROM $satellites", 177, 1, None),
+        ("SELECT CAST(planetId AS NUMERIC) AS VALUE FROM $satellites", 177, 1, None),
+        ("SELECT TRY_CAST(planetId AS BOOLEAN) AS VALUE FROM $satellites", 177, 1, None),
+        ("SELECT TRY_CAST(planetId AS VARCHAR) AS VALUE FROM $satellites", 177, 1, None),
+        ("SELECT TRY_CAST(planetId AS TIMESTAMP) AS VALUE FROM $satellites", 177, 1, None),
+        ("SELECT TRY_CAST(planetId AS NUMERIC) AS VALUE FROM $satellites", 177, 1, None),
         ("SELECT * FROM $planets WHERE id = GET(STRUCT('{\"a\":1,\"b\":\"c\"}'), 'a')", 1, 20, None),
 
         ("SELECT PI()", 1, 1, None),
         ("SELECT E()", 1, 1, None),
         ("SELECT PHI()", 1, 1, None),
+        ("SELECT PI() AS pi", 1, 1, None),
+        ("SELECT E() AS e", 1, 1, None),
+        ("SELECT PHI() AS Phi", 1, 1, None),
         ("SELECT GET(name, 1) FROM $satellites GROUP BY planetId, GET(name, 1)", 56, 1, None),
         ("SELECT COUNT(*), ROUND(magnitude) FROM $satellites group by ROUND(magnitude)", 22, 2, None),
         ("SELECT ROUND(magnitude) FROM $satellites group by ROUND(magnitude)", 22, 1, None),
@@ -709,7 +723,8 @@ A = [
         ("SELECT s.* FROM $satellites AS s INNER JOIN $planets USING (id)", 9, 7, None),
         ("SELECT s.* FROM $satellites AS s INNER JOIN $planets AS p USING (id)", 9, 8, None),
         ("SELECT s.* FROM $satellites AS s INNER JOIN $planets AS p USING (id)", 9, 8, None),
-
+]
+A = [
         ("SELECT DATE_TRUNC('month', birth_date) FROM $astronauts", 357, 1, None),
         ("SELECT DISTINCT * FROM (SELECT DATE_TRUNC('year', birth_date) AS BIRTH_YEAR FROM $astronauts)", 54, 1, None),
         ("SELECT DISTINCT * FROM (SELECT DATE_TRUNC('month', birth_date) AS BIRTH_YEAR_MONTH FROM $astronauts)", 247, 1, None),
@@ -1230,7 +1245,7 @@ if __name__ == "__main__":  # pragma: no cover
 
     print("--- ✅ \033[0;32mdone\033[0m")
     print(
-        f"\n\033[38;2;139;233;253m\033[3mCOMPLETE\033[0m ({(time.monotonic_ns() - start_suite) // 1e9} seconds)\n"
+        f"\n\033[38;2;139;233;253m\033[3mCOMPLETE\033[0m ({((time.monotonic_ns() - start_suite) / 1e9):.2f} seconds)\n"
         f"  \033[38;2;26;185;67m{passed} passed ({(passed * 100) // (passed + failed)}%)\033[0m\n"
         f"  \033[38;2;255;121;198m{failed} failed\033[0m"
     )
