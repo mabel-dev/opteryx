@@ -27,6 +27,7 @@ from opteryx.exceptions import AmbiguousDatasetError
 from opteryx.exceptions import ColumnNotFoundError
 from opteryx.exceptions import InvalidInternalStateError
 from opteryx.managers.expression import NodeType
+from opteryx.models import LogicalColumn
 from opteryx.models import Node
 from opteryx.third_party.travers import Graph
 from opteryx.virtual_datasets import derived
@@ -145,19 +146,13 @@ def convert_using_to_on(
                 condition = Node(
                     node_type=NodeType.COMPARISON_OPERATOR, value="Eq", do_not_create_column=True
                 )
-                condition.left = Node(
-                    node_type=NodeType.IDENTIFIER,
-                    value=field,
-                    source=left_relation_name,
-                    source_column=field,
-                    aliases=[],
+                condition.left = LogicalColumn(
+                    node_type=NodeType.IDENTIFIER, source=left_relation_name, source_column=field
                 )
-                condition.right = Node(
+                condition.right = LogicalColumn(
                     node_type=NodeType.IDENTIFIER,
-                    value=field,
                     source=right_relation_name,
                     source_column=field,
-                    aliases=[],
                 )
                 conditions.append(condition)
 
@@ -503,9 +498,8 @@ class BinderVisitor:
                 for column in node.columns:
                     if column.schema_column.identity in [i.identity for i in schema_columns]:
                         # If .alias is set, update .value and set .alias to None
-                        if column.alias is not None:
-                            column.value = column.alias
-                            column.query_column = column.alias
+                        if column.alias:
+                            column.source_column = column.alias
                             current_name = column.schema_column.name
                             column.schema_column.name = column.alias
                             context.schemas[relation].pop_column(current_name)

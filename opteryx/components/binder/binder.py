@@ -143,12 +143,14 @@ def locate_identifier(node: Node, context: Dict[str, Any]) -> Tuple[Node, Dict]:
 
     # Handle non-qualified fields
     else:
-        column, found_source_relation = locate_identifier_in_loaded_schemas(node.value, schemas)
+        column, found_source_relation = locate_identifier_in_loaded_schemas(
+            node.source_column, schemas
+        )
         if not found_source_relation:
             from opteryx.utils import suggest_alternative
 
             suggestion = suggest_alternative(
-                node.value,
+                node.source_column,
                 [
                     column_name
                     for _, schema in schemas.items()

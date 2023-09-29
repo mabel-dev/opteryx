@@ -27,7 +27,6 @@ from typing import Iterable
 import numpy
 import pyarrow
 
-from opteryx.exceptions import InvalidInternalStateError
 from opteryx.exceptions import UnsupportedSyntaxError
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import evaluate_and_append
