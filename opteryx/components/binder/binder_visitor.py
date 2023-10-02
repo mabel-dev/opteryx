@@ -401,8 +401,8 @@ class BinderVisitor:
 
         if node.using:
             # Remove the columns used in the join condition from both relations, they're in
-            # the result set but not belonging to either table. We create a new schema to
-            # put them in, $joined-nnn.
+            # the result set but not belonging to either table, whilst still belonging to both.
+            # We create a new schema to put them in, $shared-nnn.
             columns = []
 
             # Loop through all using fields in the node
@@ -421,8 +421,8 @@ class BinderVisitor:
                         columns.append(right_column)
                         break
 
-            context.schemas[f"$joined-{random_string()}"] = RelationSchema(
-                name="$joined", columns=columns
+            context.schemas[f"$shared-{random_string()}"] = RelationSchema(
+                name=f"^{left_relation_name}#^{right_relation_name}#", columns=columns
             )
         if node.column:
             if not node.alias:
@@ -452,17 +452,27 @@ class BinderVisitor:
             if not column.node_type == NodeType.WILDCARD:
                 columns.append(column)
             else:
-                schema = context.schemas[column.value[0]]
+                # Handle qualified wildcards
+                for name, schema in [(name, schema) for name, schema in context.schemas.items()]:
+                    if (
+                        name == column.value[0]
+                        or name.startswith("$shared")
+                        and f"^{column.value[0]}#" in schema.name
+                    ):
+                        for schema_column in schema.columns:
+                            column_reference = LogicalColumn(
+                                node_type=NodeType.IDENTIFIER,  # column type
+                                source_column=schema_column.name,  # the source column
+                                source=column.value[0],  # the source relation
+                                schema_column=schema_column,
+                            )
+                            columns.append(column_reference)
+                        if name.startswith("$shared") and f"^{column.value[0]}#" in schema.name:
+                            context.schemas.pop(name)
 
-                for schema_column in schema.columns:
-                    column_reference = Node(
-                        node_type=NodeType.IDENTIFIER,
-                        name=schema_column.name,
-                        schema_column=schema_column,
-                        type=schema_column.type,
-                        query_column=f"{column.value[0]}.{schema_column.name}",
+                    context.schemas[column.value[0]] = RelationSchema(
+                        name=name, columns=[col.schema_column for col in columns]
                     )
-                    columns.append(column_reference)
 
         node.columns = columns
 

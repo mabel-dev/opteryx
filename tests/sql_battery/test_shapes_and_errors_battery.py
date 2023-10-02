@@ -428,6 +428,27 @@ STATEMENTS = [
         ("SELECT * FROM $satellites order by name desc", 177, 8, None),
         ("SELECT name FROM $satellites order by name", 177, 1, None),
         ("SELECT * FROM $satellites order by magnitude, name", 177, 8, None),
+        ("SELECT name FROM $planets ORDER BY name DESC", 9, 1, None),
+        ("SELECT name FROM $planets ORDER BY name", 9, 1, None),
+        ("SELECT name FROM $planets ORDER BY name ASC", 9, 1, None),
+        ("SELECT name FROM $planets ORDER BY id DESC", 9, 1, None),
+        ("SELECT name FROM $planets ORDER BY name", 9, 1, None),
+        ("SELECT name FROM $planets AS P ORDER BY name", 9, 1, None),
+        ("SELECT name FROM $planets AS P ORDER BY P.name", 9, 1, None),
+        ("SELECT name FROM $planets AS P ORDER BY P.id", 9, 1, None),
+        ("SELECT P.name FROM $planets AS P ORDER BY name", 9, 1, None),
+        ("SELECT P.name FROM $planets AS P ORDER BY P.id", 9, 1, None),
+        ("SELECT name, id FROM $planets ORDER BY name", 9, 2, None),
+        ("SELECT name FROM $planets ORDER BY name, id", 9, 1, None),
+        ("SELECT P1.name FROM $planets AS P1, $planets AS P2 ORDER BY P1.name", 81, 1, None),
+        ("SELECT COUNT(name), AVG(id) FROM $planets ORDER BY AVG(id)", 1, 2, None),
+        ("SELECT name, id*2 AS double_id FROM $planets ORDER BY double_id", 9, 2, None),
+        ("SELECT name, id*2 FROM $planets ORDER BY id*2", 9, 2, None),
+        ("SELECT name FROM (SELECT * FROM $planets) AS sub ORDER BY name", 9, 1, None),
+        ("SELECT name FROM $planets ORDER BY LENGTH(name)", 9, 1, None),
+        ("SELECT name FROM $planets ORDER BY id + 1", 9, 1, None),
+        ("SELECT 1 AS const, name FROM $planets ORDER BY const", 9, 2, None),
+        ("SELECT 1 AS const, name FROM $planets ORDER BY name", 9, 2, None),
 
         ("SELECT planetId as pid FROM $satellites", 177, 1, None),
         ("SELECT planetId as pid, round(magnitude) FROM $satellites", 177, 2, None),
@@ -688,6 +709,19 @@ STATEMENTS = [
         ("SELECT P_1.* FROM $planets AS P_1 INNER JOIN $satellites AS P_2 ON P_2.id = P_1.id AND P_2.name = P_1.name", 0, 20, None),
         ("SELECT P_1.* FROM $planets AS P_1 INNER JOIN $satellites AS P_2 ON P_1.id = P_2.id AND P_2.name = P_1.name", 0, 20, None),
         ("SELECT P_1.* FROM $planets AS P_1 INNER JOIN $satellites AS P_2 ON P_2.id = P_1.id AND P_1.name = P_2.name", 0, 20, None),
+        ("SELECT P_1.id, P_2.name FROM $planets AS P_1 INNER JOIN $planets AS P_2 ON P_1.id = P_2.id", 9, 2, None),
+        ("SELECT P_1.id, P_2.id FROM $planets AS P_1 INNER JOIN $satellites AS P_2 ON P_1.id = P_2.planet_id", 177, 2, None),
+        ("SELECT P_1.* FROM $planets AS P_1 INNER JOIN $planets AS P_2 ON P_1.id = P_2.id WHERE P_1.id > 5", 4, 20, None),
+        ("SELECT P_1.* FROM $planets AS P_1 INNER JOIN $satellites AS P_2 ON P_1.id = P_2.planet_id WHERE P_2.id > 5", 172, 20, None),
+        ("SELECT P_1.* FROM $planets AS P_1 INNER JOIN $planets AS P_2 ON P_1.id = P_2.id ORDER BY P_1.id", 9, 20, None),
+        ("SELECT P_1.* FROM $planets AS P_1 INNER JOIN $satellites AS P_2 ON P_1.id = P_2.planet_id ORDER BY P_2.id", 177, 20, None),
+        ("SELECT COUNT(*) FROM $planets AS P_1 INNER JOIN $planets AS P_2 ON P_1.id = P_2.id", 1, 1, None),
+        ("SELECT COUNT(*) FROM $planets AS P_1 INNER JOIN $satellites AS P_2 ON P_1.id = P_2.planet_id", 1, 1, None),
+        ("SELECT P_1.id, COUNT(P_2.id) FROM $planets AS P_1 INNER JOIN $satellites AS P_2 ON P_1.id = P_2.planet_id GROUP BY P_1.id", 9, 2, None),
+#        ("SELECT P_1.* FROM $planets AS P_1 INNER JOIN $satellites AS P_2 ON P_1.id = P_2.planet_id INNER JOIN $planets AS P_3 ON P_2.planet_id = P_3.id", 9, 20, None),
+#        ("SELECT P_1.* FROM $planets AS P_1 INNER JOIN $planets AS P_2 ON P_1.id = P_2.id AND P_1.id > 2", 7, 20, None),
+#        ("SELECT P_1.* FROM $planets AS P_1 INNER JOIN $satellites AS P_2 ON P_1.id = P_2.planet_id AND P_2.id != 5", 9, 20, None),
+        ("SELECT P_1.* FROM $planets AS P_1 INNER JOIN $planets AS P_2 ON P_1.id = P_2.id AND P_1.name = P_2.name AND P_1.mass = P_2.mass", 9, 20, None),
 
         ("SELECT * FROM $planets AS P_1 INNER JOIN $planets AS P_2 ON P_1.id = P_2.id AND P_2.name = P_1.name", 9, 40, None),
         ("SELECT * FROM $planets NATURAL JOIN generate_series(1, 5) as id", 5, 20, None),
@@ -696,7 +730,7 @@ STATEMENTS = [
         ("SELECT * FROM $planets AS P NATURAL JOIN $satellites AS S", None, None, IncompatibleTypesError),
         ("SELECT id FROM $planets AS P_1 INNER JOIN $planets AS P_2 USING (id)", 9, 1, None),
         ("SELECT id, name FROM $planets AS P_1 INNER JOIN $planets AS P_2 USING (id, name)", 9, 2, None),
-        ("SELECT P_1.* FROM $planets AS P_1 INNER JOIN $planets AS P_2 USING (id, name)", 9, 18, None),
+        ("SELECT P_1.* FROM $planets AS P_1 INNER JOIN $planets AS P_2 USING (id, name)", 9, 20, None),
         ("SELECT * FROM $satellites AS P_1 INNER JOIN $satellites AS P_2 USING (id, name)", 177, 14, None),
 
         ("SELECT DISTINCT planetId FROM $satellites RIGHT OUTER JOIN $planets ON $satellites.planetId = $planets.id", 8, 1, None),
@@ -716,13 +750,16 @@ STATEMENTS = [
         ("SELECT a.id, b.id, c.id FROM $planets AS a INNER JOIN $planets AS b ON a.id = b.id INNER JOIN $planets AS c ON c.id = b.id", 9, 3, None),
         ("SELECT * FROM $planets AS a INNER JOIN $planets AS b ON a.id = b.id RIGHT OUTER JOIN $satellites AS c ON c.planetId = b.id", 177, 48, None),
 
-        ("SELECT $planets.* FROM $satellites INNER JOIN $planets USING (id)", 9, 19, None),
-        ("SELECT $satellites.* FROM $satellites INNER JOIN $planets USING (id)", 9, 7, None),
+        ("SELECT $planets.* FROM $satellites INNER JOIN $planets USING (id)", 9, 20, None),
+        ("SELECT $satellites.* FROM $satellites INNER JOIN $planets USING (id)", 9, 8, None),
         ("SELECT $satellites.* FROM $satellites INNER JOIN $planets ON $planets.id = $satellites.id", 9, 8, None),
-        ("SELECT p.* FROM $satellites INNER JOIN $planets AS p USING (id)", 9, 19, None),
-        ("SELECT s.* FROM $satellites AS s INNER JOIN $planets USING (id)", 9, 7, None),
+        ("SELECT p.* FROM $satellites INNER JOIN $planets AS p USING (id)", 9, 20, None),
+        ("SELECT s.* FROM $satellites AS s INNER JOIN $planets USING (id)", 9, 8, None),
         ("SELECT s.* FROM $satellites AS s INNER JOIN $planets AS p USING (id)", 9, 8, None),
         ("SELECT s.* FROM $satellites AS s INNER JOIN $planets AS p USING (id)", 9, 8, None),
+        ("SELECT s.* FROM $planets AS s INNER JOIN $planets AS p USING (id, name)", 9, 20, None),
+        ("SELECT p.* FROM $planets AS s INNER JOIN $planets AS p USING (id, name)", 9, 20, None),
+        ("SELECT id, name FROM $planets AS s INNER JOIN $planets AS p USING (id, name)", 9, 2, None),
 ]
 A = [
         ("SELECT DATE_TRUNC('month', birth_date) FROM $astronauts", 357, 1, None),
@@ -1094,8 +1131,8 @@ A = [
         # [#527] variables referenced in subqueries
         ("SET @v = 1; SELECT * FROM (SELECT @v) AS S;", 1, 1, None),
         # [#561] HASH JOIN with an empty table
-        ("SELECT * FROM $planets LEFT JOIN (SELECT planetId as id FROM $satellites WHERE id < 0) USING (id)", 0, 1, UnnamedSubqueryError),  
-        ("SELECT * FROM $planets LEFT JOIN (SELECT planetId as id FROM $satellites WHERE id < 0) AS S USING (id)", 0, 1, None),  
+        ("SELECT * FROM $planets LEFT JOIN (SELECT planetId as id FROM $satellites WHERE id < 0) USING (id)", None, None, UnnamedSubqueryError),  
+        ("SELECT * FROM $planets LEFT JOIN (SELECT planetId as id FROM $satellites WHERE id < 0) AS S USING (id)", 9, 20, None),  
 
         # [#646] Incorrectly placed temporal clauses
         ("SELECT * FROM $planets WHERE 1 = 1 FOR TODAY;", None, None, InvalidTemporalRangeFilterError),
@@ -1160,7 +1197,7 @@ A = [
         # 1153 temporal extract from cross joins
         ("SELECT p.name, s.name FROM $planets as p, $satellites as s WHERE p.id = s.planetId", 177, 2, None),
         # Can't qualify fields used in subscripts
-        ("SELECT d.birth_place['town'] FROM $astronauts AS d", 357, 1),
+        ("SELECT d.birth_place['town'] FROM $astronauts AS d", 357, 1, None),
 ]
 # fmt:on
 
