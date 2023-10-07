@@ -342,11 +342,6 @@ STATEMENTS = [
         ("SELECT * FROM $satellites LIMIT 50 OFFSET 150", 27, 8, None),
         ("SELECT * FROM $satellites LIMIT 50 OFFSET 170", 7, 8, None),
         ("SELECT * FROM $satellites ORDER BY name", 177, 8, None),
-        ("SELECT * FROM $satellites ORDER BY 1", 177, 8, None),
-        ("SELECT * FROM $satellites ORDER BY 1 DESC", 177, 8, None),
-        ("SELECT * FROM $satellites ORDER BY 2", 177, 8, None),
-        ("SELECT * FROM $satellites ORDER BY 1, 2", 177, 8, None),
-        ("SELECT * FROM $satellites ORDER BY 1 ASC", 177, 8, None),
         ("SELECT * FROM $satellites ORDER BY RANDOM()", 177, 8, None),
 
         ("SELECT MAX(planetId) FROM $satellites", 1, 1, None),

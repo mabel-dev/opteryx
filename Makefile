@@ -19,3 +19,7 @@ b:
 test:
 	clear
 	python -m pytest
+
+coverage:
+	python -m coverage run -m pytest 
+	python -m coverage report --include=opteryx/** -m

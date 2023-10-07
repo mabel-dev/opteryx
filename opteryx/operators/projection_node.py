@@ -34,7 +34,7 @@ class ProjectionNode(BasePlanNode):
         """
         super().__init__(properties=properties)
 
-        projection = config["projection"]
+        projection = config["projection"] + config.get("order_by_columns", [])
 
         self.projection = []
         for column in projection:

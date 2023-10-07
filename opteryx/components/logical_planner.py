@@ -131,7 +131,8 @@ class LogicalPlanNode(Node):
             if node_type == LogicalPlanStepType.Order:
                 return f"ORDER BY ({', '.join(format_expression(item[0]) + (' DESC' if not item[1] else '') for item in self.order_by)})"
             if node_type == LogicalPlanStepType.Project:
-                return f"PROJECT ({', '.join(format_expression(col) for col in self.columns)})"
+                order_by_indicator = " +" if self.order_by_columns else ""
+                return f"PROJECT ({', '.join(format_expression(col) for col in self.columns)}){order_by_indicator}"
             if node_type == LogicalPlanStepType.Scan:
                 date_range = ""
                 if self.start_date == self.end_date and self.start_date is not None:
@@ -316,6 +317,8 @@ def inner_query_planner(ast_branch):
             )
             for item in _order_by
         ]
+        if any(c[0].node_type == NodeType.LITERAL for c in _order_by):
+            raise UnsupportedSyntaxError("Cannot ORDER BY constant values")
         _order_by_columns_not_in_projection = [exp[0] for exp in _order_by]
 
     # projection
@@ -345,7 +348,8 @@ def inner_query_planner(ast_branch):
                 ]
 
         project_step = LogicalPlanNode(node_type=LogicalPlanStepType.Project)
-        project_step.columns = _projection + _order_by_columns_not_in_projection
+        project_step.columns = _projection
+        project_step.order_by_columns = _order_by_columns_not_in_projection
         previous_step_id, step_id = step_id, random_string()
         inner_plan.add_node(step_id, project_step)
         if previous_step_id is not None:
@@ -383,15 +387,6 @@ def inner_query_planner(ast_branch):
         inner_plan.add_node(step_id, order_step)
         if previous_step_id is not None:
             inner_plan.add_edge(previous_step_id, step_id)
-
-        # do we need to project again?
-        if len(_order_by_columns_not_in_projection) > 0:
-            project_step = LogicalPlanNode(node_type=LogicalPlanStepType.Project)
-            project_step.columns = _projection
-            previous_step_id, step_id = step_id, random_string()
-            inner_plan.add_node(step_id, project_step)
-            if previous_step_id is not None:
-                inner_plan.add_edge(previous_step_id, step_id)
 
     # limit/offset
     _limit = ast_branch.get("limit")

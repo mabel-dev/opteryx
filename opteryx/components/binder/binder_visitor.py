@@ -237,6 +237,11 @@ class BinderVisitor:
                 f"Internal Error - function {visit_method_name} returned invalid Schemas"
             )
 
+        if not all(isinstance(col, (Node, LogicalColumn)) for col in node.columns or []):
+            raise InvalidInternalStateError(
+                f"Internal Error - function {visit_method_name} put unexpected items in 'columns' attribute"
+            )
+
         return return_node, return_context
 
     def visit_aggregate_and_group(
@@ -287,10 +292,8 @@ class BinderVisitor:
     def visit_exit(self, node: Node, context: BindingContext) -> Tuple[Node, BindingContext]:
         # LOG: Exit
 
-        # remove the derived schema
-        context.schemas.pop("$derived", None)
-
-        columns = []
+        # clear the derived schema
+        context.schemas["derived"] = derived.schema()
 
         seen = set()
         needs_qualifier = any(
@@ -304,16 +307,28 @@ class BinderVisitor:
                 return f"{qualifier}.{column.name}"
             return column.name
 
+        def keep_column(column, identities):
+            if len(node.columns) == 1 and node.columns[0].node_type == NodeType.WILDCARD:
+                return True
+            return column.identity in identities
+
+        identities = []
+        for column in (col for col in node.columns if col.node_type != NodeType.WILDCARD):
+            new_col, _ = inner_binder(column, context, node.identity)
+            identities.append(new_col.schema_column.identity)
+
+        columns = []
         for qualifier, schema in context.schemas.items():
             for column in schema.columns:
-                column_reference = Node(
-                    node_type=NodeType.IDENTIFIER,
-                    name=column.name,
-                    schema_column=column,
-                    type=column.type,
-                    query_column=name_column(qualifier, column),
-                )
-                columns.append(column_reference)
+                if keep_column(column, identities):
+                    column_reference = Node(
+                        node_type=NodeType.IDENTIFIER,
+                        name=column.name,
+                        schema_column=column,
+                        type=column.type,
+                        query_column=name_column(qualifier, column),
+                    )
+                    columns.append(column_reference)
 
         node.columns = columns
 
@@ -448,7 +463,7 @@ class BinderVisitor:
         columns = []
 
         # Handle wildcards, including qualified wildcards.
-        for column in node.columns:
+        for column in node.columns + node.order_by_columns:
             if not column.node_type == NodeType.WILDCARD:
                 columns.append(column)
             else:
@@ -512,6 +527,7 @@ class BinderVisitor:
                             column.source_column = column.alias
                             current_name = column.schema_column.name
                             column.schema_column.name = column.alias
+                            column.schema_column.aliases.append(column.qualified_name)
                             context.schemas[relation].pop_column(current_name)
                             context.schemas[relation].columns.append(column.schema_column)
                             column.alias = None
