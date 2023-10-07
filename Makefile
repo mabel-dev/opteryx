@@ -23,3 +23,6 @@ test:
 coverage:
 	python -m coverage run -m pytest 
 	python -m coverage report --include=opteryx/** -m
+
+compile:
+	python setup.py build_ext --inplace

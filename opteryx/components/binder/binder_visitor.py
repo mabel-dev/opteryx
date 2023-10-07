@@ -468,7 +468,7 @@ class BinderVisitor:
                 columns.append(column)
             else:
                 # Handle qualified wildcards
-                for name, schema in [(name, schema) for name, schema in context.schemas.items()]:
+                for name, schema in list(context.schemas.items()):
                     if (
                         name == column.value[0]
                         or name.startswith("$shared")
@@ -522,15 +522,6 @@ class BinderVisitor:
                 schema.columns = schema_columns
                 for column in node.columns:
                     if column.schema_column.identity in [i.identity for i in schema_columns]:
-                        # If .alias is set, update .value and set .alias to None
-                        if column.alias:
-                            column.source_column = column.alias
-                            current_name = column.schema_column.name
-                            column.schema_column.name = column.alias
-                            column.schema_column.aliases.append(column.qualified_name)
-                            context.schemas[relation].pop_column(current_name)
-                            context.schemas[relation].columns.append(column.schema_column)
-                            column.alias = None
                         columns.append(column)
 
         # We always have a $derived schema, even if it's empty
