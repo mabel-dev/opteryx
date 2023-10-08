@@ -32,7 +32,7 @@ from opteryx.utils import series
 
 def _generate_series(**kwargs):
     value_array = series.generate_series(*kwargs["args"])
-    return [{kwargs["columns"][0]: value} for value in value_array]
+    return [{kwargs["columns"][0].schema_column.identity: value} for value in value_array]
 
 
 def _unnest(**kwargs):

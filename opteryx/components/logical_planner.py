@@ -706,6 +706,7 @@ def plan_show_columns(statement):
         previous_step_id, step_id = step_id, random_string()
         plan.add_node(step_id, filter_node)
         plan.add_edge(previous_step_id, step_id)
+        raise UnsupportedSyntaxError("Unable to filter colmns in SHOW COLUMNS")
 
     return plan
 
