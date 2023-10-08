@@ -448,6 +448,8 @@ class BinderVisitor:
             columns = []
 
             # Loop through all using fields in the node
+            left_relation_name = ""
+            right_relation_name = ""
             for column_name in (n.value for n in node.using):
                 # Try to pop the column from each left relation until found
                 for left_relation_name in node.left_relation_names:
@@ -463,6 +465,7 @@ class BinderVisitor:
                         columns.append(right_column)
                         break
 
+            # shared columns exist in both schemas in some uses and in neither in other
             context.schemas[f"$shared-{random_string()}"] = RelationSchema(
                 name=f"^{left_relation_name}#^{right_relation_name}#", columns=columns
             )

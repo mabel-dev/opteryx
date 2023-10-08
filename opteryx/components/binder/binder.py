@@ -164,7 +164,7 @@ def locate_identifier(node: Node, context: Dict[str, Any]) -> Tuple[Node, Dict]:
         node.source = found_source_relation.name
 
     # if we have an alias for a column not known about in the schema, add it
-    if node.alias not in column.all_names:
+    if node.alias and node.alias not in column.all_names:
         column.aliases.append(node.alias)
 
     # Update node.schema_column with the found column
@@ -233,7 +233,7 @@ def inner_binder(node: Node, context: Dict[str, Any], step: str) -> Tuple[Node, 
         column_name = format_expression(node)
         schema_column = ConstantColumn(
             name=column_name,
-            aliases=[node.alias],
+            aliases=[node.alias] if node.alias else [],
             type=node.type,
             value=node.value,
             nullable=False,
@@ -249,7 +249,7 @@ def inner_binder(node: Node, context: Dict[str, Any], step: str) -> Tuple[Node, 
         if schema_column:
             schema_column = FlatColumn(
                 name=column_name,
-                aliases=[schema_column.aliases],
+                aliases=[schema_column.aliases] if schema_column.aliases else None,
                 type=0,
                 identity=schema_column.identity,
             )
@@ -286,7 +286,10 @@ def inner_binder(node: Node, context: Dict[str, Any], step: str) -> Tuple[Node, 
 
         else:
             schema_column = ExpressionColumn(
-                name=column_name, aliases=[node.alias], type=0, expression=node.value
+                name=column_name,
+                aliases=[node.alias] if node.alias else [],
+                type=0,
+                expression=node.value,
             )
             schemas["$derived"].columns.append(schema_column)
             node.schema_column = schema_column
