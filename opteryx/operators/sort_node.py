@@ -25,7 +25,7 @@ from orso.types import OrsoTypes
 from pyarrow import concat_tables
 
 from opteryx.exceptions import ColumnNotFoundError
-from opteryx.exceptions import SqlError
+from opteryx.exceptions import UnsupportedSyntaxError
 from opteryx.managers.expression import NodeType
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
@@ -75,7 +75,9 @@ class SortNode(BasePlanNode):
                     yield table
                     return
 
-                raise SqlError("`ORDER BY` only supports `RAND()` as a functional sort order.")
+                raise UnsupportedSyntaxError(
+                    "`ORDER BY` only supports `RAND()` as a functional sort order."
+                )
 
             elif column.node_type == NodeType.LITERAL and column.type == OrsoTypes.INTEGER:
                 # we have an index rather than a column name, it's a natural

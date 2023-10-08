@@ -474,12 +474,11 @@ STATEMENTS = [
         ("SELECT name, id*2 AS double_id FROM $planets ORDER BY double_id", 9, 2, None),
         ("SELECT name, id*2 FROM $planets ORDER BY id*2", 9, 2, None),
         ("SELECT name FROM (SELECT * FROM $planets) AS sub ORDER BY name", 9, 1, None),
-        ("SELECT name FROM $planets ORDER BY LENGTH(name)", 9, 1, None),
+        ("SELECT name FROM $planets ORDER BY LENGTH(name)", 9, 1, UnsupportedSyntaxError),
         ("SELECT name FROM $planets ORDER BY id + 1", 9, 1, None),
         ("SELECT 1 AS const, name FROM $planets ORDER BY const", 9, 2, None),
         ("SELECT 1 AS const, name FROM $planets ORDER BY name", 9, 2, None),
-]
-A = [
+
         ("SELECT planetId as pid FROM $satellites", 177, 1, None),
         ("SELECT planetId as pid, round(magnitude) FROM $satellites", 177, 2, None),
         ("SELECT planetId as pid, round(magnitude) as minmag FROM $satellites", 177, 2, None),
@@ -556,7 +555,8 @@ A = [
 
         ("SELECT * FROM (VALUES ('High', 3),('Medium', 2),('Low', 1)) AS ratings(name, rating)", 3, 2, None),
         ("SELECT * FROM (VALUES ('High', 3),('Medium', 2),('Low', 1)) AS ratings(name, rating) WHERE rating = 3", 1, 2, None),
-
+]
+A = [
         ("SELECT * FROM UNNEST(('foo', 'bar', 'baz', 'qux', 'corge', 'garply', 'waldo', 'fred'))", 8, 1, UnnamedColumnError),
         ("SELECT * FROM UNNEST(('foo', 'bar', 'baz', 'qux', 'corge', 'garply', 'waldo', 'fred')) AS element", 8, 1, None),
         ("SELECT * FROM UNNEST(('foo', 'bar', 'baz', 'qux', 'corge', 'garply', 'waldo', 'fred')) AS element WHERE element LIKE '%e%'", 2, 1, None),

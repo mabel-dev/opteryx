@@ -46,7 +46,7 @@ def _unnest(**kwargs):
 
 
 def _values(**parameters):
-    columns = parameters["columns"]
+    columns = [col.schema_column.identity for col in parameters["columns"]]
     values_array = parameters["values"]
     return [{columns[i]: value.value for i, value in enumerate(values)} for values in values_array]
 
@@ -95,7 +95,7 @@ class FunctionDatasetNode(BasePlanNode):
         try:
             start_time = time.time_ns()
             data = FUNCTIONS[self.function](**self.parameters)  # type:ignore
-            self.statistics.time_data_read += time.time_ns() - start_time
+            self.statistics.time_evaluate_dataset += time.time_ns() - start_time
         except TypeError as err:  # pragma: no cover
             if str(err).startswith("_unnest() takes 2"):
                 raise SqlError(

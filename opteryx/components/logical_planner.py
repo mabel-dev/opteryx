@@ -309,6 +309,7 @@ def inner_query_planner(ast_branch):
     # pre-process part of the order by before the projection
     _order_by = ast_branch.get("order_by")
     _order_by_columns_not_in_projection = []
+    _order_by_columns = []
     if _order_by:
         _order_by = [
             (
@@ -319,7 +320,7 @@ def inner_query_planner(ast_branch):
         ]
         if any(c[0].node_type == NodeType.LITERAL for c in _order_by):
             raise UnsupportedSyntaxError("Cannot ORDER BY constant values")
-        _order_by_columns_not_in_projection = [exp[0] for exp in _order_by]
+        _order_by_columns = [exp[0] for exp in _order_by]
 
     # projection
     if not (
@@ -327,24 +328,39 @@ def inner_query_planner(ast_branch):
         and _projection[0].node_type == NodeType.WILDCARD
         and _projection[0].value is None
     ):
-        # order by needing to be able to order by columns not in the projection
+        # ORDER BY needing to be able to order by columns not in the projection
         # whilst being able to order by aliases created by the projection means
         # we need to do specific checks
-        if _order_by_columns_not_in_projection:
+        if _order_by_columns:
+            # Collect qualified names and aliases from projection columns
             projection_qualified_names = {
-                pc.qualified_name for pc in _projection if pc.qualified_name
-            }.union({f".{pc.alias}" for pc in _projection if pc.alias})
+                proj_col.qualified_name for proj_col in _projection if proj_col.qualified_name
+            }.union({f".{proj_col.alias}" for proj_col in _projection if proj_col.alias})
+
+            # Collect expression columns from projection
+            projection_expressions = {
+                format_expression(proj_col)
+                for proj_col in _projection
+                if proj_col.node_type != NodeType.IDENTIFIER
+            }
+
+            # Remove columns from ORDER BY that are directly in the projection, aliased, or have the same expression
             _order_by_columns_not_in_projection = [
-                oc
-                for oc in _order_by_columns_not_in_projection
-                if oc.qualified_name not in projection_qualified_names
-                and f".{oc.source_column}" not in projection_qualified_names
-                and oc.qualified_name not in [f".{pcs.source_column}" for pcs in _projection]
+                ord_col
+                for ord_col in _order_by_columns
+                if ord_col.qualified_name not in projection_qualified_names
+                and f".{ord_col.source_column}" not in projection_qualified_names
+                and ord_col.qualified_name
+                not in [f".{proj_col.source_column}" for proj_col in _projection]
+                and format_expression(ord_col) not in projection_expressions
             ]
 
-            for pc in [pc for pc in _projection if pc.node_type == NodeType.WILDCARD]:
+            # Remove columns from ORDER BY that match the source of a wildcard in the projection
+            for proj_col in [pc for pc in _projection if pc.node_type == NodeType.WILDCARD]:
                 _order_by_columns_not_in_projection = [
-                    oc for oc in _order_by_columns_not_in_projection if oc.source != pc.value[0]
+                    ord_col
+                    for ord_col in _order_by_columns_not_in_projection
+                    if ord_col.source != proj_col.value[0]
                 ]
 
         project_step = LogicalPlanNode(node_type=LogicalPlanStepType.Project)

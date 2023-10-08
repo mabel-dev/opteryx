@@ -237,7 +237,7 @@ class BinderVisitor:
                 f"Internal Error - function {visit_method_name} returned invalid Schemas"
             )
 
-        if not all(isinstance(col, (Node, LogicalColumn)) for col in node.columns or []):
+        if not all(isinstance(col, (Node, LogicalColumn)) for col in return_node.columns or []):
             raise InvalidInternalStateError(
                 f"Internal Error - function {visit_method_name} put unexpected items in 'columns' attribute"
             )
@@ -339,13 +339,22 @@ class BinderVisitor:
     ) -> Tuple[Node, BindingContext]:
         # We need to build the schema and add it to the schema collection.
         if node.function == "VALUES":
-            relation_name = f"$values-{random_string()}"
+            relation_name = node.alias or f"$values-{random_string()}"
+            columns = [
+                LogicalColumn(
+                    node_type=NodeType.IDENTIFIER,
+                    source_column=column,
+                    source=relation_name,
+                    schema_column=FlatColumn(name=column, type=0),
+                )
+                for column in node.columns
+            ]
             schema = RelationSchema(
                 name=relation_name,
-                columns=[FlatColumn(name=column, type=0) for column in node.columns],
+                columns=[c.schema_column for c in columns],
             )
             context.schemas[relation_name] = schema
-            node.columns = [column.identity for column in schema.columns]
+            node.columns = columns
         elif node.function == "UNNEST":
             if not node.alias:
                 if node.args[0].node_type == NodeType.IDENTIFIER:
