@@ -293,7 +293,7 @@ class BinderVisitor:
         # LOG: Exit
 
         # clear the derived schema
-        context.schemas["derived"] = derived.schema()
+        context.schemas["$derived"] = derived.schema()
 
         seen = set()
         needs_qualifier = any(

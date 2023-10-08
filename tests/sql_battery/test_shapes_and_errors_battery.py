@@ -377,8 +377,7 @@ STATEMENTS = [
         ("SELECT * FROM $satellites LIMIT 50 OFFSET 170", 7, 8, None),
         ("SELECT * FROM $satellites ORDER BY name", 177, 8, None),
         ("SELECT * FROM $satellites ORDER BY RANDOM()", 177, 8, None),
-]
-A = [
+
         ("SELECT MAX(planetId) FROM $satellites", 1, 1, None),
         ("SELECT MIN(planetId) FROM $satellites", 1, 1, None),
         ("SELECT SUM(planetId) FROM $satellites", 1, 1, None),
@@ -430,18 +429,18 @@ A = [
         ("SELECT ROUND(magnitude) FROM $satellites group by ROUND(magnitude)", 22, 1, None),
         ("SELECT ROUND(magnitude, 1) FROM $satellites group by ROUND(magnitude, 1)", 88, 1, None),
         ("SELECT VARCHAR(planetId), COUNT(*) FROM $satellites GROUP BY 1", 7, 2, ColumnNotFoundError),
-        ("SELECT LEFT(name, 1), COUNT(*) FROM $satellites GROUP BY 1 ORDER BY 2 DESC", 21, 2, ColumnNotFoundError),
-        ("SELECT LEFT(name, 2) as le, COUNT(*) FROM $satellites GROUP BY 1 ORDER BY 2 DESC", 87, 2, ColumnNotFoundError),
-        ("SELECT RIGHT(name, 10), COUNT(*) FROM $satellites GROUP BY 1 ORDER BY 2 DESC", 177, 2, ColumnNotFoundError),
-        ("SELECT RIGHT(name, 2) as le, COUNT(*) FROM $satellites GROUP BY 1 ORDER BY 2 DESC", 91, 2, ColumnNotFoundError),
+        ("SELECT LEFT(name, 1), COUNT(*) FROM $satellites GROUP BY 1 ORDER BY 2 DESC", 21, 2, UnsupportedSyntaxError),
+        ("SELECT LEFT(name, 2) as le, COUNT(*) FROM $satellites GROUP BY 1 ORDER BY 2 DESC", 87, 2, UnsupportedSyntaxError),
+        ("SELECT RIGHT(name, 10), COUNT(*) FROM $satellites GROUP BY 1 ORDER BY 2 DESC", 177, 2, UnsupportedSyntaxError),
+        ("SELECT RIGHT(name, 2) as le, COUNT(*) FROM $satellites GROUP BY 1 ORDER BY 2 DESC", 91, 2, UnsupportedSyntaxError),
         ("SELECT VARCHAR(planetId), COUNT(*) FROM $satellites GROUP BY VARCHAR(planetId)", 7, 2, None),
-        ("SELECT LEFT(name, 1), COUNT(*) FROM $satellites GROUP BY LEFT(name, 1) ORDER BY 2 DESC", 21, 2, None),
-        ("SELECT LEFT(name, 1), COUNT(*) FROM $satellites GROUP BY name ORDER BY 2 DESC", 177, 2, None),
-        ("SELECT LEFT(name, 2) as le, COUNT(*) FROM $satellites GROUP BY LEFT(name, 2) ORDER BY 2 DESC", 87, 2, None),
+        ("SELECT LEFT(name, 1), COUNT(*) FROM $satellites GROUP BY LEFT(name, 1) ORDER BY 2 DESC", 21, 2, UnsupportedSyntaxError),
+        ("SELECT LEFT(name, 1), COUNT(*) FROM $satellites GROUP BY name ORDER BY 2 DESC", 177, 2, UnsupportedSyntaxError),
+        ("SELECT LEFT(name, 2) as le, COUNT(*) FROM $satellites GROUP BY LEFT(name, 2) ORDER BY 2 DESC", 87, 2, UnsupportedSyntaxError),
         ("SELECT LEFT(name, 2) as le, COUNT(*) FROM $satellites GROUP BY LEFT(name, 1)", 87, 2, ColumnNotFoundError),
-        ("SELECT RIGHT(name, 10), COUNT(*) FROM $satellites GROUP BY RIGHT(name, 10) ORDER BY 2 DESC", 177, 2, None),
-        ("SELECT RIGHT(name, 2) as le, COUNT(*) FROM $satellites GROUP BY RIGHT(name, 2) ORDER BY 2 DESC", 91, 2, None),
-        ("SELECT RIGHT(name, 2) as le, COUNT(*) FROM $satellites GROUP BY le ORDER BY 2 DESC", 91, 2, ColumnNotFoundError),
+        ("SELECT RIGHT(name, 10), COUNT(*) FROM $satellites GROUP BY RIGHT(name, 10) ORDER BY 2 DESC", 177, 2, UnsupportedSyntaxError),
+        ("SELECT RIGHT(name, 2) as le, COUNT(*) FROM $satellites GROUP BY RIGHT(name, 2) ORDER BY 2 DESC", 91, 2, UnsupportedSyntaxError),
+        ("SELECT RIGHT(name, 2) as le, COUNT(*) FROM $satellites GROUP BY le ORDER BY 2 DESC", 91, 2, UnsupportedSyntaxError),
         ("SELECT round(magnitude) FROM $satellites group by round(magnitude)", 22, 1, None),
         ("SELECT upper(name) as NAME, id as Identifier FROM $satellites", 177, 2, None),
         ("SELECT upper(name), lower(name), id as Identifier FROM $satellites", 177, 3, None),
@@ -479,7 +478,8 @@ A = [
         ("SELECT name FROM $planets ORDER BY id + 1", 9, 1, None),
         ("SELECT 1 AS const, name FROM $planets ORDER BY const", 9, 2, None),
         ("SELECT 1 AS const, name FROM $planets ORDER BY name", 9, 2, None),
-
+]
+A = [
         ("SELECT planetId as pid FROM $satellites", 177, 1, None),
         ("SELECT planetId as pid, round(magnitude) FROM $satellites", 177, 2, None),
         ("SELECT planetId as pid, round(magnitude) as minmag FROM $satellites", 177, 2, None),
