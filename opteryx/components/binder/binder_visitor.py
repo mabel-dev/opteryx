@@ -356,15 +356,24 @@ class BinderVisitor:
             context.schemas[relation_name] = schema
             node.columns = columns
         elif node.function == "UNNEST":
+            column_to_unnest = node.args[0].value
+            if node.args[0].node_type == NodeType.LITERAL:
+                column_to_unnest = "<value>"
             if not node.alias:
-                if node.args[0].node_type == NodeType.IDENTIFIER:
-                    node.alias = f"UNNEST({node.args[0].value})"
+                node.alias = f"UNNEST({column_to_unnest})"
             relation_name = f"$unnest-{random_string()}"
-            schema = RelationSchema(
-                name=relation_name, columns=[FlatColumn(name=node.alias or "unnest", type=0)]
-            )
+
+            columns = [
+                LogicalColumn(
+                    node_type=NodeType.IDENTIFIER,
+                    source_column=node.alias,
+                    source=relation_name,
+                    schema_column=FlatColumn(name=node.alias, type=0),
+                )
+            ]
+            schema = RelationSchema(name=relation_name, columns=[c.schema_column for c in columns])
             context.schemas[relation_name] = schema
-            node.columns = [schema.columns[0].identity]
+            node.columns = columns
         elif node.function == "GENERATE_SERIES":
             schema = RelationSchema(
                 name=node.alias,

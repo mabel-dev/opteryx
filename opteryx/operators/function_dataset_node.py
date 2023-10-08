@@ -41,7 +41,7 @@ def _unnest(**kwargs):
         list_items = [kwargs["args"][0].centre.value]
     else:
         list_items = kwargs["args"][0].value
-    column_name = kwargs["columns"][0]
+    column_name = kwargs["columns"][0].schema_column.identity
     return [{column_name: row} for row in list_items]
 
 
