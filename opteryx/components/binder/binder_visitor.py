@@ -27,6 +27,7 @@ from opteryx.exceptions import AmbiguousDatasetError
 from opteryx.exceptions import ColumnNotFoundError
 from opteryx.exceptions import InvalidInternalStateError
 from opteryx.managers.expression import NodeType
+from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.models import LogicalColumn
 from opteryx.models import Node
 from opteryx.third_party.travers import Graph
@@ -263,27 +264,45 @@ class BinderVisitor:
             Tuple[Node, Dict[str, Any]]
             The modified node and the updated context.
         """
-        if node.groups:
-            tmp_groups, _ = zip(
-                *(inner_binder(group, context, node.identity) for group in node.groups)
-            )
-            node.groups = list(tmp_groups)
-
         if node.aggregates:
             tmp_aggregates, _ = zip(
                 *(inner_binder(aggregate, context, node.identity) for aggregate in node.aggregates)
             )
             node.aggregates = list(tmp_aggregates)
 
-        columns = [
-            i.schema_column
-            for i in (node.aggregates or []) + (node.groups or [])
-            if i.schema_column
+        # We're going to trim down the schemas to just the columns used in the GROUP BY.
+        # 1) the easy one - the columns explictly in the GROUP BY
+        columns_to_keep = set()
+        if node.groups:
+            tmp_groups, _ = zip(
+                *(inner_binder(group, context, node.identity) for group in node.groups)
+            )
+            columns_to_keep = {col.schema_column.identity for col in tmp_groups}
+        # 2) the columns referenced in the SELECT
+        all_identifiers = [
+            node.schema_column.identity
+            for node in get_all_nodes_of_type(
+                node.aggregates + node.groups, select_nodes=(NodeType.IDENTIFIER,)
+            )
         ]
+        columns_to_keep = columns_to_keep.union(all_identifiers)
+        node.all_identifiers = columns_to_keep
 
-        # although this is now the only dataset, we use $derived as there is logic
-        # specific to that dataset with regards to reevaluating expressions
-        context.schemas = {"$derived": RelationSchema(name="$derived", columns=columns)}
+        for name, schema in list(context.schemas.items()):
+            schema_columns = [
+                column for column in schema.columns if column.identity in columns_to_keep
+            ]
+            if schema_columns:
+                context.schemas[name].columns = schema_columns
+            else:
+                context.schemas.pop(name)
+
+        # we should always have a derived schema
+        if not "$derived" in context.schemas:
+            context.schemas["$derived"] = derived.schema()
+
+        # the aggregates and any calculated expressions in the SELECT should be in $derived
+        context.schemas["$derived"].columns.extend(col.schema_column for col in node.aggregates)
 
         return node, context
 
@@ -309,6 +328,8 @@ class BinderVisitor:
 
         def keep_column(column, identities):
             if len(node.columns) == 1 and node.columns[0].node_type == NodeType.WILDCARD:
+                if node.columns[0].value:
+                    return node.columns[0].value[0] == column.origin
                 return True
             return column.identity in identities
 

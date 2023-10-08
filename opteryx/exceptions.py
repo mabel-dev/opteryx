@@ -40,7 +40,7 @@ Exception
                  ├── AmbiguousDatasetError
                  ├── AmbiguousIdentifierError
                  ├── ColumnNotFoundError
-                 ├── ColumnReferencedBeforeEvaluation
+                 ├── ColumnReferencedBeforeEvaluationError
                  ├── DatasetNotFoundError
                  ├── FunctionNotFoundError
                  ├── IncorrectTypeError
@@ -151,7 +151,7 @@ class ColumnNotFoundError(SqlError):
         super().__init__(message)
 
 
-class ColumnReferencedBeforeEvaluation(SqlError):
+class ColumnReferencedBeforeEvaluationError(SqlError):
     """
     Return an error message when the column reference order is incorrect
     """
