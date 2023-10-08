@@ -561,8 +561,7 @@ STATEMENTS = [
         ("SELECT * FROM UNNEST(('foo', 'bar', 'baz', 'qux', 'corge', 'garply', 'waldo', 'fred')) AS element WHERE element LIKE '%e%'", 2, 1, None),
         ("SELECT * FROM UNNEST(('foo', 'bar', 'baz', 'qux', 'corge', 'garply', 'waldo', 'fred')) AS UN", 8, 1, None),
         ("SELECT * FROM UNNEST(('foo', 'bar', 'baz', 'qux', 'corge', 'garply', 'waldo', 'fred')) AS UN WHERE UN LIKE '%e%'", 2, 1, None),
-]
-A = [
+
         ("SELECT * FROM generate_series(1, 10)", 10, 1, UnnamedColumnError),
         ("SELECT * FROM generate_series(1, 10) AS GS", 10, 1, None),
         ("SELECT * FROM generate_series(-10,10) AS GS", 21, 1, None),
@@ -699,7 +698,7 @@ A = [
         ("SHOW EXTENDED COLUMNS FROM $satellites", 8, 10, None),
         ("SHOW EXTENDED COLUMNS FROM $planets", 20, 10, None),
         ("SHOW EXTENDED COLUMNS FROM $astronauts", 19, 10, None),
-# temp        ("SHOW COLUMNS FROM $satellites LIKE '%d'", 2, 4, None),
+        ("SHOW COLUMNS FROM $satellites LIKE '%d'", 2, 4, UnsupportedSyntaxError),
         ("SHOW COLUMNS FROM testdata.partitioned.dated FOR '2020-02-03'", 8, 4, None),
 
         ("SELECT * FROM $satellites CROSS JOIN $astronauts", 63189, 27, None),
@@ -723,6 +722,7 @@ A = [
         ("SELECT * FROM $planets LEFT JOIN $planets FOR TODAY USING(id)", 9, 40, AmbiguousDatasetError),
         ("SELECT * FROM $planets LEFT JOIN $planets USING(id, name)", 9, 40, AmbiguousDatasetError),
         ("SELECT * FROM $planets INNER JOIN $planets ON id = id AND name = name", None, None, AmbiguousDatasetError),
+
         ("SELECT P_1.* FROM $planets AS P_1 INNER JOIN $planets AS P_2 ON P_1.id = P_2.id", 9, 20, None),
         ("SELECT P_2.* FROM $planets AS P_1 INNER JOIN $planets AS P_2 ON P_1.id = P_2.id", 9, 20, None),
         ("SELECT P_1.* FROM $planets AS P_1 INNER JOIN $planets AS P_2 ON P_2.id = P_1.id", 9, 20, None),
@@ -752,7 +752,8 @@ A = [
 #        ("SELECT P_1.* FROM $planets AS P_1 INNER JOIN $planets AS P_2 ON P_1.id = P_2.id AND P_1.id > 2", 7, 20, None),
 #        ("SELECT P_1.* FROM $planets AS P_1 INNER JOIN $satellites AS P_2 ON P_1.id = P_2.planet_id AND P_2.id != 5", 9, 20, None),
         ("SELECT P_1.* FROM $planets AS P_1 INNER JOIN $planets AS P_2 ON P_1.id = P_2.id AND P_1.name = P_2.name AND P_1.mass = P_2.mass", 9, 20, None),
-
+]
+A = [
         ("SELECT * FROM $planets AS P_1 INNER JOIN $planets AS P_2 ON P_1.id = P_2.id AND P_2.name = P_1.name", 9, 40, None),
         ("SELECT * FROM $planets NATURAL JOIN generate_series(1, 5) as id", 5, 20, None),
         ("SELECT * FROM $planets AS P1 NATURAL JOIN $planets AS P2", 5, 20, None),

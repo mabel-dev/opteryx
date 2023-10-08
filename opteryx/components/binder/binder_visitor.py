@@ -375,15 +375,24 @@ class BinderVisitor:
             context.schemas[relation_name] = schema
             node.columns = columns
         elif node.function == "GENERATE_SERIES":
-            schema = RelationSchema(
-                name=node.alias,
-                columns=[FlatColumn(name=node.alias or "generate_series", type=0)],
-            )
-            context.schemas[node.alias] = schema
-            node.columns = [schema.columns[0].identity]
+            node.alias = node.alias or "generate_series"
             node.relation_name = node.alias
+            columns = [
+                LogicalColumn(
+                    node_type=NodeType.IDENTIFIER,
+                    source_column=node.alias,
+                    source=node.relation_name,
+                    schema_column=FlatColumn(name=node.alias, type=0),
+                )
+            ]
+            schema = RelationSchema(
+                name=node.relation_name,
+                columns=[c.schema_column for c in columns],
+            )
+            context.schemas[node.relation_name] = schema
+            node.columns = columns
         else:
-            raise NotImplementedError(f"{node.function} binding isn't written yet")
+            raise NotImplementedError(f"{node.function} does not exist")
         return node, context
 
     def visit_join(self, node: Node, context: BindingContext) -> Tuple[Node, BindingContext]:
