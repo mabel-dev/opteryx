@@ -27,7 +27,7 @@ import pyarrow
 from orso.types import OrsoTypes
 from pyarrow import Table
 
-from opteryx.exceptions import ColumnReferencedBeforeEvaluation
+from opteryx.exceptions import ColumnReferencedBeforeEvaluationError
 from opteryx.exceptions import UnsupportedSyntaxError
 from opteryx.functions.binary_operators import binary_operations
 from opteryx.functions.unary_operations import UNARY_OPERATIONS
@@ -201,7 +201,7 @@ def _inner_evaluate(root: Node, table: Table, context: ExecutionContext):
         if node_type == NodeType.EVALUATED:
             column = root.schema_column
             if not root.schema_column.identity in table.column_names:
-                raise ColumnReferencedBeforeEvaluation(column=root.schema_column.name)
+                raise ColumnReferencedBeforeEvaluationError(column=root.schema_column.name)
             return table[root.schema_column.identity].to_numpy()
         if node_type == NodeType.COMPARISON_OPERATOR:
             left = _inner_evaluate(root.left, table, context)
