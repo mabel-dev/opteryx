@@ -163,6 +163,10 @@ def locate_identifier(node: Node, context: Dict[str, Any]) -> Tuple[Node, Dict]:
         # Update node.source to the found relation name
         node.source = found_source_relation.name
 
+    # if we have an alias for a column not known about in the schema, add it
+    if node.alias not in column.all_names:
+        column.aliases.append(node.alias)
+
     # Update node.schema_column with the found column
     node.schema_column = column
     return node, context

@@ -40,6 +40,7 @@ Exception
                  ├── AmbiguousDatasetError
                  ├── AmbiguousIdentifierError
                  ├── ColumnNotFoundError
+                 ├── ColumnReferencedBeforeEvaluation
                  ├── DatasetNotFoundError
                  ├── FunctionNotFoundError
                  ├── IncorrectTypeError
@@ -147,6 +148,17 @@ class ColumnNotFoundError(SqlError):
                 message += f" Did you mean '{suggestion}'?."
         if message is None:
             message = "Query contained columns which could not be found."
+        super().__init__(message)
+
+
+class ColumnReferencedBeforeEvaluation(SqlError):
+    """
+    Return an error message when the column reference order is incorrect
+    """
+
+    def __init__(self, column: str):
+        self.column = column
+        message = f"Reference to '{column}' cannot be made here, it hasn't been evaluated yet due to the internal order of query evaluation."
         super().__init__(message)
 
 

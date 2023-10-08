@@ -44,11 +44,14 @@ class LogicalColumn:
     def qualified_name(self) -> str:
         """
         Returns the fully qualified column name based on the logical source and source_column.
+        Return nothing as the table name if it's not set, 'None' may be a table name.
 
         Returns:
             The fully qualified column name as a string.
         """
-        return f"{self.source}.{self.source_column}"
+        if self.source:
+            return f"{self.source}.{self.source_column}"
+        return f".{self.source_column}"
 
     @property
     def current_name(self) -> str:
@@ -75,3 +78,6 @@ class LogicalColumn:
             alias=self.alias,
             schema_column=self.schema_column,
         )
+
+    def __repr__(self) -> str:
+        return f"<LogicalColumn name: '{self.current_name}' fullname: '{self.qualified_name}'>"

@@ -26,6 +26,16 @@ from opteryx.shared import MaterializedDatasets
 # load the base set of prefixes
 _storage_prefixes = {"information_schema": "InformationSchema"}
 
+__all__ = (
+    "ArrowConnector",
+    "AwsS3Connector",
+    "DiskConnector",
+    "GcpCloudStorageConnector",
+    "GcpFireStoreConnector",
+    "MongoDbConnector",
+    "SqlConnector",
+)
+
 
 def register_store(prefix, connector, *, remove_prefix: bool = False, **kwargs):
     """add a prefix"""

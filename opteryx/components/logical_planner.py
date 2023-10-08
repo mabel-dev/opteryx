@@ -131,7 +131,8 @@ class LogicalPlanNode(Node):
             if node_type == LogicalPlanStepType.Order:
                 return f"ORDER BY ({', '.join(format_expression(item[0]) + (' DESC' if not item[1] else '') for item in self.order_by)})"
             if node_type == LogicalPlanStepType.Project:
-                return f"PROJECT ({', '.join(format_expression(col) for col in self.columns)})"
+                order_by_indicator = " +" if self.order_by_columns else ""
+                return f"PROJECT ({', '.join(format_expression(col) for col in self.columns)}){order_by_indicator}"
             if node_type == LogicalPlanStepType.Scan:
                 date_range = ""
                 if self.start_date == self.end_date and self.start_date is not None:
@@ -305,18 +306,72 @@ def inner_query_planner(ast_branch):
         if previous_step_id is not None:
             inner_plan.add_edge(previous_step_id, step_id)
 
+    # pre-process part of the order by before the projection
+    _order_by = ast_branch.get("order_by")
+    _order_by_columns_not_in_projection = []
+    _order_by_columns = []
+    if _order_by:
+        _order_by = [
+            (
+                logical_planner_builders.build(item["expr"]),
+                True if item["asc"] is None else item["asc"],
+            )
+            for item in _order_by
+        ]
+        if any(c[0].node_type == NodeType.LITERAL for c in _order_by):
+            raise UnsupportedSyntaxError("Cannot ORDER BY constant values")
+        _order_by_columns = [exp[0] for exp in _order_by]
+
     # projection
     if not (
         len(_projection) == 1
         and _projection[0].node_type == NodeType.WILDCARD
         and _projection[0].value is None
     ):
+        # ORDER BY needing to be able to order by columns not in the projection
+        # whilst being able to order by aliases created by the projection means
+        # we need to do specific checks
+        if _order_by_columns:
+            # Collect qualified names and aliases from projection columns
+            projection_qualified_names = {
+                proj_col.qualified_name for proj_col in _projection if proj_col.qualified_name
+            }.union({f".{proj_col.alias}" for proj_col in _projection if proj_col.alias})
+
+            # Collect expression columns from projection
+            projection_expressions = {
+                format_expression(proj_col)
+                for proj_col in _projection
+                if proj_col.node_type != NodeType.IDENTIFIER
+            }
+
+            # Remove columns from ORDER BY that are directly in the projection, aliased, or have the same expression
+            _order_by_columns_not_in_projection = [
+                ord_col
+                for ord_col in _order_by_columns
+                if ord_col.qualified_name not in projection_qualified_names
+                and f".{ord_col.source_column}" not in projection_qualified_names
+                and ord_col.qualified_name
+                not in [f".{proj_col.source_column}" for proj_col in _projection]
+                and format_expression(ord_col) not in projection_expressions
+            ]
+
+            # Remove columns from ORDER BY that match the source of a wildcard in the projection
+            for proj_col in [pc for pc in _projection if pc.node_type == NodeType.WILDCARD]:
+                _order_by_columns_not_in_projection = [
+                    ord_col
+                    for ord_col in _order_by_columns_not_in_projection
+                    if ord_col.source != proj_col.value[0]
+                ]
+
         project_step = LogicalPlanNode(node_type=LogicalPlanStepType.Project)
         project_step.columns = _projection
+        project_step.order_by_columns = _order_by_columns_not_in_projection
         previous_step_id, step_id = step_id, random_string()
         inner_plan.add_node(step_id, project_step)
         if previous_step_id is not None:
             inner_plan.add_edge(previous_step_id, step_id)
+    else:
+        _order_by_columns_not_in_projection = []
 
     # having
     _having = logical_planner_builders.build(ast_branch["Select"].get("having"))
@@ -341,13 +396,9 @@ def inner_query_planner(ast_branch):
             inner_plan.add_edge(previous_step_id, step_id)
 
     # order
-    _order_by = ast_branch.get("order_by")
     if _order_by:
         order_step = LogicalPlanNode(node_type=LogicalPlanStepType.Order)
-        order_step.order_by = [
-            (logical_planner_builders.build(item["expr"]), not bool(item["asc"]))
-            for item in _order_by
-        ]
+        order_step.order_by = _order_by
         previous_step_id, step_id = step_id, random_string()
         inner_plan.add_node(step_id, order_step)
         if previous_step_id is not None:

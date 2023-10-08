@@ -26,6 +26,7 @@ from opteryx.exceptions import SqlError
 from opteryx.exceptions import UnsupportedSyntaxError
 from opteryx.functions.binary_operators import BINARY_OPERATORS
 from opteryx.managers.expression import NodeType
+from opteryx.managers.expression import format_expression
 from opteryx.models import LogicalColumn
 from opteryx.models import Node
 from opteryx.utils import dates
@@ -189,7 +190,7 @@ def function(branch, alias=None, key=None):
 
     order_by = [(build(item["expr"]), not bool(item["asc"])) for item in branch.get("order_by", [])]
 
-    return Node(
+    node = Node(
         node_type=node_type,
         value=func,
         parameters=args,
@@ -197,6 +198,8 @@ def function(branch, alias=None, key=None):
         distinct=branch.get("distinct"),
         order=order_by,
     )
+    node.qualified_name = format_expression(node)
+    return node
 
 
 def binary_op(branch, alias=None, key=None):

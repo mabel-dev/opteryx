@@ -50,6 +50,7 @@ from opteryx.exceptions import (
     AmbiguousIdentifierError,
     AmbiguousDatasetError,
     ColumnNotFoundError,
+    ColumnReferencedBeforeEvaluation,
     DatasetNotFoundError,
     EmptyDatasetError,
     IncompatibleTypesError,
@@ -179,6 +180,7 @@ STATEMENTS = [
         ("SELECT * FROM `$satellites` WHERE name = 'Calypso'", 1, 8, None),
         ("SELECT * FROM `$satellites` WHERE `name` = 'Calypso'", 1, 8, None),
         ("SELECT * FROM $satellites WITH (NO_CACHE)", 177, 8, None),
+        # 101
 
         # Do we handle comments 
         ("/* comment */ SELECT * FROM $satellites WHERE name = 'Calypso'", 1, 8, None),
@@ -248,10 +250,41 @@ STATEMENTS = [
         ("SELECT DISTINCT group FROM $astronauts", 21, 1, None),
         ("SELECT DISTINCT name, birth_date, missions, birth_place, group FROM $astronauts", 357, 5, None),
 
+        # alias tests
         ("SELECT name as Name FROM $satellites", 177, 1, None),
         ("SELECT name as Name, id as Identifier FROM $satellites", 177, 2, None),
         ("SELECT name as NAME FROM $satellites WHERE name = 'Calypso'", 1, 1, None),
         ("SELECT name as NAME FROM $satellites GROUP BY name", 177, 1, None),
+        ("SELECT id as id FROM $satellites", 177, 1, None),
+        ("SELECT planetId as planetId FROM $satellites", 177, 1, None),
+        ("SELECT id as ID, planetId as PLANETID FROM $satellites", 177, 2, None),
+        ("SELECT id as iD, name as nAME FROM $satellites WHERE planetId = 5", 67, 2, None),
+        ("SELECT id as ID, planetId as planetId FROM $satellites WHERE name = 'Io'", 1, 2, None),
+        ("SELECT name as NAME, id as ID, planetId as PLANETID FROM $satellites", 177, 3, None),
+        ("SELECT id as ID FROM $satellites GROUP BY id", 177, 1, None),
+        ("SELECT planetId as planetId FROM $satellites GROUP BY planetId", 7, 1, None),
+        ("SELECT name as nAme, id as Id FROM $satellites WHERE planetId = 3", 1, 2, None),
+        ("SELECT id as ID, name as Name FROM $satellites GROUP BY name, id", 177, 2, None),
+        ("SELECT UPPER(name) as NAME FROM $satellites", 177, 1, None),
+        ("SELECT name as n FROM $satellites WHERE n = 'Titan'", None, 1, ColumnNotFoundError),
+        ("SELECT id as Identifier FROM $satellites ORDER BY Identifier", 177, 1, None),
+        ("SELECT name as n FROM $satellites GROUP BY name HAVING COUNT(n) > 1", None, 1, ColumnReferencedBeforeEvaluation),  # TEMP
+        ("SELECT name as Name, name as NAME FROM $satellites", 177, 2, AmbiguousIdentifierError),
+        ("SELECT COUNT(id) as countID, MIN(id) as minID FROM $satellites", 1, 2, None),
+        ("SELECT s.id as satelliteID, p.id as planetID FROM $satellites s JOIN $planets p ON s.planetId = p.id", 177, 2, None),
+        ("SELECT x.id FROM (SELECT id as ID FROM $satellites WHERE id < 10) x", 9, 1, None),
+        ("SELECT name as n as m FROM $satellites", None, 1, SqlError),
+        ("SELECT id*2 as doubleID FROM $satellites", 177, 1, None),
+        ("SELECT id as Identifier FROM $satellites ORDER BY Identifier", 177, 1, None),
+        ("SELECT name as n FROM $satellites GROUP BY name HAVING COUNT(n) > 1", None, 1, ColumnReferencedBeforeEvaluation),
+        ("SELECT name as n FROM $satellites WHERE n = 'Calypso'", None, 1, ColumnNotFoundError),
+        ("SELECT id * 2 as DoubleID FROM $satellites", 177, 1, None),
+        ("SELECT LEFT(name, 3) as newName FROM $satellites", 177, 1, None),
+        ("SELECT name as n, id as i, planetId as p FROM $satellites WHERE planetId = 3 ORDER BY n, i", 1, 3, None),
+        ("SELECT name as n1, name as n2 FROM $satellites", 177, 2, AmbiguousIdentifierError),
+        ("SELECT COUNT(id) as Total FROM $satellites", 1, 1, None),
+        ("SELECT x.id FROM (SELECT id FROM $satellites) as x", 177, 1, None),
+        ("SELECT id as Identifier, name FROM $satellites", 177, 2, None),
 
         # Test infix calculations
         ("SELECT * FROM $satellites WHERE id = 5", 1, 8, None),
@@ -264,6 +297,7 @@ STATEMENTS = [
         ("SELECT * FROM $satellites WHERE id = 15 % 10 AND name = 'Europa'", 1, 8, None),
         ("SELECT * FROM $satellites WHERE id = 15 DIV 4", 1, 8, None),
         ("SELECT * FROM $satellites WHERE id = -5 + 10", 1, 8, None),
+
         ("SELECT * FROM $satellites WHERE id = ABS(-5)", 1, 8, None),
         ("SELECT * FROM $satellites WHERE id = 5 - 3 + 1", 1, 8, None),
         ("SELECT * FROM $satellites WHERE id = (3 * 1) + 2", 1, 8, None),
@@ -342,11 +376,6 @@ STATEMENTS = [
         ("SELECT * FROM $satellites LIMIT 50 OFFSET 150", 27, 8, None),
         ("SELECT * FROM $satellites LIMIT 50 OFFSET 170", 7, 8, None),
         ("SELECT * FROM $satellites ORDER BY name", 177, 8, None),
-        ("SELECT * FROM $satellites ORDER BY 1", 177, 8, None),
-        ("SELECT * FROM $satellites ORDER BY 1 DESC", 177, 8, None),
-        ("SELECT * FROM $satellites ORDER BY 2", 177, 8, None),
-        ("SELECT * FROM $satellites ORDER BY 1, 2", 177, 8, None),
-        ("SELECT * FROM $satellites ORDER BY 1 ASC", 177, 8, None),
         ("SELECT * FROM $satellites ORDER BY RANDOM()", 177, 8, None),
 
         ("SELECT MAX(planetId) FROM $satellites", 1, 1, None),
@@ -400,18 +429,18 @@ STATEMENTS = [
         ("SELECT ROUND(magnitude) FROM $satellites group by ROUND(magnitude)", 22, 1, None),
         ("SELECT ROUND(magnitude, 1) FROM $satellites group by ROUND(magnitude, 1)", 88, 1, None),
         ("SELECT VARCHAR(planetId), COUNT(*) FROM $satellites GROUP BY 1", 7, 2, ColumnNotFoundError),
-        ("SELECT LEFT(name, 1), COUNT(*) FROM $satellites GROUP BY 1 ORDER BY 2 DESC", 21, 2, ColumnNotFoundError),
-        ("SELECT LEFT(name, 2) as le, COUNT(*) FROM $satellites GROUP BY 1 ORDER BY 2 DESC", 87, 2, ColumnNotFoundError),
-        ("SELECT RIGHT(name, 10), COUNT(*) FROM $satellites GROUP BY 1 ORDER BY 2 DESC", 177, 2, ColumnNotFoundError),
-        ("SELECT RIGHT(name, 2) as le, COUNT(*) FROM $satellites GROUP BY 1 ORDER BY 2 DESC", 91, 2, ColumnNotFoundError),
+        ("SELECT LEFT(name, 1), COUNT(*) FROM $satellites GROUP BY 1 ORDER BY 2 DESC", 21, 2, UnsupportedSyntaxError),
+        ("SELECT LEFT(name, 2) as le, COUNT(*) FROM $satellites GROUP BY 1 ORDER BY 2 DESC", 87, 2, UnsupportedSyntaxError),
+        ("SELECT RIGHT(name, 10), COUNT(*) FROM $satellites GROUP BY 1 ORDER BY 2 DESC", 177, 2, UnsupportedSyntaxError),
+        ("SELECT RIGHT(name, 2) as le, COUNT(*) FROM $satellites GROUP BY 1 ORDER BY 2 DESC", 91, 2, UnsupportedSyntaxError),
         ("SELECT VARCHAR(planetId), COUNT(*) FROM $satellites GROUP BY VARCHAR(planetId)", 7, 2, None),
-        ("SELECT LEFT(name, 1), COUNT(*) FROM $satellites GROUP BY LEFT(name, 1) ORDER BY 2 DESC", 21, 2, None),
-        ("SELECT LEFT(name, 1), COUNT(*) FROM $satellites GROUP BY name ORDER BY 2 DESC", 177, 2, None),
-        ("SELECT LEFT(name, 2) as le, COUNT(*) FROM $satellites GROUP BY LEFT(name, 2) ORDER BY 2 DESC", 87, 2, None),
+        ("SELECT LEFT(name, 1), COUNT(*) FROM $satellites GROUP BY LEFT(name, 1) ORDER BY 2 DESC", 21, 2, UnsupportedSyntaxError),
+        ("SELECT LEFT(name, 1), COUNT(*) FROM $satellites GROUP BY name ORDER BY 2 DESC", 177, 2, UnsupportedSyntaxError),
+        ("SELECT LEFT(name, 2) as le, COUNT(*) FROM $satellites GROUP BY LEFT(name, 2) ORDER BY 2 DESC", 87, 2, UnsupportedSyntaxError),
         ("SELECT LEFT(name, 2) as le, COUNT(*) FROM $satellites GROUP BY LEFT(name, 1)", 87, 2, ColumnNotFoundError),
-        ("SELECT RIGHT(name, 10), COUNT(*) FROM $satellites GROUP BY RIGHT(name, 10) ORDER BY 2 DESC", 177, 2, None),
-        ("SELECT RIGHT(name, 2) as le, COUNT(*) FROM $satellites GROUP BY RIGHT(name, 2) ORDER BY 2 DESC", 91, 2, None),
-        ("SELECT RIGHT(name, 2) as le, COUNT(*) FROM $satellites GROUP BY le ORDER BY 2 DESC", 91, 2, ColumnNotFoundError),
+        ("SELECT RIGHT(name, 10), COUNT(*) FROM $satellites GROUP BY RIGHT(name, 10) ORDER BY 2 DESC", 177, 2, UnsupportedSyntaxError),
+        ("SELECT RIGHT(name, 2) as le, COUNT(*) FROM $satellites GROUP BY RIGHT(name, 2) ORDER BY 2 DESC", 91, 2, UnsupportedSyntaxError),
+        ("SELECT RIGHT(name, 2) as le, COUNT(*) FROM $satellites GROUP BY le ORDER BY 2 DESC", 91, 2, UnsupportedSyntaxError),
         ("SELECT round(magnitude) FROM $satellites group by round(magnitude)", 22, 1, None),
         ("SELECT upper(name) as NAME, id as Identifier FROM $satellites", 177, 2, None),
         ("SELECT upper(name), lower(name), id as Identifier FROM $satellites", 177, 3, None),
@@ -428,6 +457,27 @@ STATEMENTS = [
         ("SELECT * FROM $satellites order by name desc", 177, 8, None),
         ("SELECT name FROM $satellites order by name", 177, 1, None),
         ("SELECT * FROM $satellites order by magnitude, name", 177, 8, None),
+        ("SELECT name FROM $planets ORDER BY name DESC", 9, 1, None),
+        ("SELECT name FROM $planets ORDER BY name", 9, 1, None),
+        ("SELECT name FROM $planets ORDER BY name ASC", 9, 1, None),
+        ("SELECT name FROM $planets ORDER BY id DESC", 9, 1, None),
+        ("SELECT name FROM $planets ORDER BY name", 9, 1, None),
+        ("SELECT name FROM $planets AS P ORDER BY name", 9, 1, None),
+        ("SELECT name FROM $planets AS P ORDER BY P.name", 9, 1, None),
+        ("SELECT name FROM $planets AS P ORDER BY P.id", 9, 1, None),
+        ("SELECT P.name FROM $planets AS P ORDER BY name", 9, 1, None),
+        ("SELECT P.name FROM $planets AS P ORDER BY P.id", 9, 1, None),
+        ("SELECT name, id FROM $planets ORDER BY name", 9, 2, None),
+        ("SELECT name FROM $planets ORDER BY name, id", 9, 1, None),
+        ("SELECT P1.name FROM $planets AS P1, $planets AS P2 ORDER BY P1.name", 81, 1, None),
+        ("SELECT COUNT(name), AVG(id) FROM $planets ORDER BY AVG(id)", 1, 2, None),
+        ("SELECT name, id*2 AS double_id FROM $planets ORDER BY double_id", 9, 2, None),
+        ("SELECT name, id*2 FROM $planets ORDER BY id*2", 9, 2, None),
+        ("SELECT name FROM (SELECT * FROM $planets) AS sub ORDER BY name", 9, 1, None),
+        ("SELECT name FROM $planets ORDER BY LENGTH(name)", 9, 1, UnsupportedSyntaxError),
+        ("SELECT name FROM $planets ORDER BY id + 1", 9, 1, None),
+        ("SELECT 1 AS const, name FROM $planets ORDER BY const", 9, 2, None),
+        ("SELECT 1 AS const, name FROM $planets ORDER BY name", 9, 2, None),
 
         ("SELECT planetId as pid FROM $satellites", 177, 1, None),
         ("SELECT planetId as pid, round(magnitude) FROM $satellites", 177, 2, None),
@@ -505,7 +555,8 @@ STATEMENTS = [
 
         ("SELECT * FROM (VALUES ('High', 3),('Medium', 2),('Low', 1)) AS ratings(name, rating)", 3, 2, None),
         ("SELECT * FROM (VALUES ('High', 3),('Medium', 2),('Low', 1)) AS ratings(name, rating) WHERE rating = 3", 1, 2, None),
-
+]
+A = [
         ("SELECT * FROM UNNEST(('foo', 'bar', 'baz', 'qux', 'corge', 'garply', 'waldo', 'fred'))", 8, 1, UnnamedColumnError),
         ("SELECT * FROM UNNEST(('foo', 'bar', 'baz', 'qux', 'corge', 'garply', 'waldo', 'fred')) AS element", 8, 1, None),
         ("SELECT * FROM UNNEST(('foo', 'bar', 'baz', 'qux', 'corge', 'garply', 'waldo', 'fred')) AS element WHERE element LIKE '%e%'", 2, 1, None),
@@ -688,6 +739,19 @@ STATEMENTS = [
         ("SELECT P_1.* FROM $planets AS P_1 INNER JOIN $satellites AS P_2 ON P_2.id = P_1.id AND P_2.name = P_1.name", 0, 20, None),
         ("SELECT P_1.* FROM $planets AS P_1 INNER JOIN $satellites AS P_2 ON P_1.id = P_2.id AND P_2.name = P_1.name", 0, 20, None),
         ("SELECT P_1.* FROM $planets AS P_1 INNER JOIN $satellites AS P_2 ON P_2.id = P_1.id AND P_1.name = P_2.name", 0, 20, None),
+        ("SELECT P_1.id, P_2.name FROM $planets AS P_1 INNER JOIN $planets AS P_2 ON P_1.id = P_2.id", 9, 2, None),
+        ("SELECT P_1.id, P_2.id FROM $planets AS P_1 INNER JOIN $satellites AS P_2 ON P_1.id = P_2.planet_id", 177, 2, None),
+        ("SELECT P_1.* FROM $planets AS P_1 INNER JOIN $planets AS P_2 ON P_1.id = P_2.id WHERE P_1.id > 5", 4, 20, None),
+        ("SELECT P_1.* FROM $planets AS P_1 INNER JOIN $satellites AS P_2 ON P_1.id = P_2.planet_id WHERE P_2.id > 5", 172, 20, None),
+        ("SELECT P_1.* FROM $planets AS P_1 INNER JOIN $planets AS P_2 ON P_1.id = P_2.id ORDER BY P_1.id", 9, 20, None),
+        ("SELECT P_1.* FROM $planets AS P_1 INNER JOIN $satellites AS P_2 ON P_1.id = P_2.planet_id ORDER BY P_2.id", 177, 20, None),
+        ("SELECT COUNT(*) FROM $planets AS P_1 INNER JOIN $planets AS P_2 ON P_1.id = P_2.id", 1, 1, None),
+        ("SELECT COUNT(*) FROM $planets AS P_1 INNER JOIN $satellites AS P_2 ON P_1.id = P_2.planet_id", 1, 1, None),
+        ("SELECT P_1.id, COUNT(P_2.id) FROM $planets AS P_1 INNER JOIN $satellites AS P_2 ON P_1.id = P_2.planet_id GROUP BY P_1.id", 9, 2, None),
+#        ("SELECT P_1.* FROM $planets AS P_1 INNER JOIN $satellites AS P_2 ON P_1.id = P_2.planet_id INNER JOIN $planets AS P_3 ON P_2.planet_id = P_3.id", 9, 20, None),
+#        ("SELECT P_1.* FROM $planets AS P_1 INNER JOIN $planets AS P_2 ON P_1.id = P_2.id AND P_1.id > 2", 7, 20, None),
+#        ("SELECT P_1.* FROM $planets AS P_1 INNER JOIN $satellites AS P_2 ON P_1.id = P_2.planet_id AND P_2.id != 5", 9, 20, None),
+        ("SELECT P_1.* FROM $planets AS P_1 INNER JOIN $planets AS P_2 ON P_1.id = P_2.id AND P_1.name = P_2.name AND P_1.mass = P_2.mass", 9, 20, None),
 
         ("SELECT * FROM $planets AS P_1 INNER JOIN $planets AS P_2 ON P_1.id = P_2.id AND P_2.name = P_1.name", 9, 40, None),
         ("SELECT * FROM $planets NATURAL JOIN generate_series(1, 5) as id", 5, 20, None),
@@ -696,7 +760,7 @@ STATEMENTS = [
         ("SELECT * FROM $planets AS P NATURAL JOIN $satellites AS S", None, None, IncompatibleTypesError),
         ("SELECT id FROM $planets AS P_1 INNER JOIN $planets AS P_2 USING (id)", 9, 1, None),
         ("SELECT id, name FROM $planets AS P_1 INNER JOIN $planets AS P_2 USING (id, name)", 9, 2, None),
-        ("SELECT P_1.* FROM $planets AS P_1 INNER JOIN $planets AS P_2 USING (id, name)", 9, 18, None),
+        ("SELECT P_1.* FROM $planets AS P_1 INNER JOIN $planets AS P_2 USING (id, name)", 9, 20, None),
         ("SELECT * FROM $satellites AS P_1 INNER JOIN $satellites AS P_2 USING (id, name)", 177, 14, None),
 
         ("SELECT DISTINCT planetId FROM $satellites RIGHT OUTER JOIN $planets ON $satellites.planetId = $planets.id", 8, 1, None),
@@ -716,15 +780,17 @@ STATEMENTS = [
         ("SELECT a.id, b.id, c.id FROM $planets AS a INNER JOIN $planets AS b ON a.id = b.id INNER JOIN $planets AS c ON c.id = b.id", 9, 3, None),
         ("SELECT * FROM $planets AS a INNER JOIN $planets AS b ON a.id = b.id RIGHT OUTER JOIN $satellites AS c ON c.planetId = b.id", 177, 48, None),
 
-        ("SELECT $planets.* FROM $satellites INNER JOIN $planets USING (id)", 9, 19, None),
-        ("SELECT $satellites.* FROM $satellites INNER JOIN $planets USING (id)", 9, 7, None),
+        ("SELECT $planets.* FROM $satellites INNER JOIN $planets USING (id)", 9, 20, None),
+        ("SELECT $satellites.* FROM $satellites INNER JOIN $planets USING (id)", 9, 8, None),
         ("SELECT $satellites.* FROM $satellites INNER JOIN $planets ON $planets.id = $satellites.id", 9, 8, None),
-        ("SELECT p.* FROM $satellites INNER JOIN $planets AS p USING (id)", 9, 19, None),
-        ("SELECT s.* FROM $satellites AS s INNER JOIN $planets USING (id)", 9, 7, None),
+        ("SELECT p.* FROM $satellites INNER JOIN $planets AS p USING (id)", 9, 20, None),
+        ("SELECT s.* FROM $satellites AS s INNER JOIN $planets USING (id)", 9, 8, None),
         ("SELECT s.* FROM $satellites AS s INNER JOIN $planets AS p USING (id)", 9, 8, None),
         ("SELECT s.* FROM $satellites AS s INNER JOIN $planets AS p USING (id)", 9, 8, None),
-]
-A = [
+        ("SELECT s.* FROM $planets AS s INNER JOIN $planets AS p USING (id, name)", 9, 20, None),
+        ("SELECT p.* FROM $planets AS s INNER JOIN $planets AS p USING (id, name)", 9, 20, None),
+        ("SELECT id, name FROM $planets AS s INNER JOIN $planets AS p USING (id, name)", 9, 2, None),
+
         ("SELECT DATE_TRUNC('month', birth_date) FROM $astronauts", 357, 1, None),
         ("SELECT DISTINCT * FROM (SELECT DATE_TRUNC('year', birth_date) AS BIRTH_YEAR FROM $astronauts)", 54, 1, None),
         ("SELECT DISTINCT * FROM (SELECT DATE_TRUNC('month', birth_date) AS BIRTH_YEAR_MONTH FROM $astronauts)", 247, 1, None),
@@ -1094,8 +1160,8 @@ A = [
         # [#527] variables referenced in subqueries
         ("SET @v = 1; SELECT * FROM (SELECT @v) AS S;", 1, 1, None),
         # [#561] HASH JOIN with an empty table
-        ("SELECT * FROM $planets LEFT JOIN (SELECT planetId as id FROM $satellites WHERE id < 0) USING (id)", 0, 1, UnnamedSubqueryError),  
-        ("SELECT * FROM $planets LEFT JOIN (SELECT planetId as id FROM $satellites WHERE id < 0) AS S USING (id)", 0, 1, None),  
+        ("SELECT * FROM $planets LEFT JOIN (SELECT planetId as id FROM $satellites WHERE id < 0) USING (id)", None, None, UnnamedSubqueryError),  
+        ("SELECT * FROM $planets LEFT JOIN (SELECT planetId as id FROM $satellites WHERE id < 0) AS S USING (id)", 9, 20, None),  
 
         # [#646] Incorrectly placed temporal clauses
         ("SELECT * FROM $planets WHERE 1 = 1 FOR TODAY;", None, None, InvalidTemporalRangeFilterError),
@@ -1160,7 +1226,7 @@ A = [
         # 1153 temporal extract from cross joins
         ("SELECT p.name, s.name FROM $planets as p, $satellites as s WHERE p.id = s.planetId", 177, 2, None),
         # Can't qualify fields used in subscripts
-        ("SELECT d.birth_place['town'] FROM $astronauts AS d", 357, 1),
+        ("SELECT d.birth_place['town'] FROM $astronauts AS d", 357, 1, None),
 ]
 # fmt:on
 

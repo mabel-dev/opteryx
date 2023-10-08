@@ -237,6 +237,11 @@ class BinderVisitor:
                 f"Internal Error - function {visit_method_name} returned invalid Schemas"
             )
 
+        if not all(isinstance(col, (Node, LogicalColumn)) for col in return_node.columns or []):
+            raise InvalidInternalStateError(
+                f"Internal Error - function {visit_method_name} put unexpected items in 'columns' attribute"
+            )
+
         return return_node, return_context
 
     def visit_aggregate_and_group(
@@ -287,10 +292,8 @@ class BinderVisitor:
     def visit_exit(self, node: Node, context: BindingContext) -> Tuple[Node, BindingContext]:
         # LOG: Exit
 
-        # remove the derived schema
-        context.schemas.pop("$derived", None)
-
-        columns = []
+        # clear the derived schema
+        context.schemas["$derived"] = derived.schema()
 
         seen = set()
         needs_qualifier = any(
@@ -304,16 +307,28 @@ class BinderVisitor:
                 return f"{qualifier}.{column.name}"
             return column.name
 
+        def keep_column(column, identities):
+            if len(node.columns) == 1 and node.columns[0].node_type == NodeType.WILDCARD:
+                return True
+            return column.identity in identities
+
+        identities = []
+        for column in (col for col in node.columns if col.node_type != NodeType.WILDCARD):
+            new_col, _ = inner_binder(column, context, node.identity)
+            identities.append(new_col.schema_column.identity)
+
+        columns = []
         for qualifier, schema in context.schemas.items():
             for column in schema.columns:
-                column_reference = Node(
-                    node_type=NodeType.IDENTIFIER,
-                    name=column.name,
-                    schema_column=column,
-                    type=column.type,
-                    query_column=name_column(qualifier, column),
-                )
-                columns.append(column_reference)
+                if keep_column(column, identities):
+                    column_reference = Node(
+                        node_type=NodeType.IDENTIFIER,
+                        name=column.name,
+                        schema_column=column,
+                        type=column.type,
+                        query_column=name_column(qualifier, column),
+                    )
+                    columns.append(column_reference)
 
         node.columns = columns
 
@@ -324,13 +339,22 @@ class BinderVisitor:
     ) -> Tuple[Node, BindingContext]:
         # We need to build the schema and add it to the schema collection.
         if node.function == "VALUES":
-            relation_name = f"$values-{random_string()}"
+            relation_name = node.alias or f"$values-{random_string()}"
+            columns = [
+                LogicalColumn(
+                    node_type=NodeType.IDENTIFIER,
+                    source_column=column,
+                    source=relation_name,
+                    schema_column=FlatColumn(name=column, type=0),
+                )
+                for column in node.columns
+            ]
             schema = RelationSchema(
                 name=relation_name,
-                columns=[FlatColumn(name=column, type=0) for column in node.columns],
+                columns=[c.schema_column for c in columns],
             )
             context.schemas[relation_name] = schema
-            node.columns = [column.identity for column in schema.columns]
+            node.columns = columns
         elif node.function == "UNNEST":
             if not node.alias:
                 if node.args[0].node_type == NodeType.IDENTIFIER:
@@ -401,8 +425,8 @@ class BinderVisitor:
 
         if node.using:
             # Remove the columns used in the join condition from both relations, they're in
-            # the result set but not belonging to either table. We create a new schema to
-            # put them in, $joined-nnn.
+            # the result set but not belonging to either table, whilst still belonging to both.
+            # We create a new schema to put them in, $shared-nnn.
             columns = []
 
             # Loop through all using fields in the node
@@ -421,8 +445,8 @@ class BinderVisitor:
                         columns.append(right_column)
                         break
 
-            context.schemas[f"$joined-{random_string()}"] = RelationSchema(
-                name="$joined", columns=columns
+            context.schemas[f"$shared-{random_string()}"] = RelationSchema(
+                name=f"^{left_relation_name}#^{right_relation_name}#", columns=columns
             )
         if node.column:
             if not node.alias:
@@ -448,21 +472,31 @@ class BinderVisitor:
         columns = []
 
         # Handle wildcards, including qualified wildcards.
-        for column in node.columns:
+        for column in node.columns + node.order_by_columns:
             if not column.node_type == NodeType.WILDCARD:
                 columns.append(column)
             else:
-                schema = context.schemas[column.value[0]]
+                # Handle qualified wildcards
+                for name, schema in list(context.schemas.items()):
+                    if (
+                        name == column.value[0]
+                        or name.startswith("$shared")
+                        and f"^{column.value[0]}#" in schema.name
+                    ):
+                        for schema_column in schema.columns:
+                            column_reference = LogicalColumn(
+                                node_type=NodeType.IDENTIFIER,  # column type
+                                source_column=schema_column.name,  # the source column
+                                source=column.value[0],  # the source relation
+                                schema_column=schema_column,
+                            )
+                            columns.append(column_reference)
+                        if name.startswith("$shared") and f"^{column.value[0]}#" in schema.name:
+                            context.schemas.pop(name)
 
-                for schema_column in schema.columns:
-                    column_reference = Node(
-                        node_type=NodeType.IDENTIFIER,
-                        name=schema_column.name,
-                        schema_column=schema_column,
-                        type=schema_column.type,
-                        query_column=f"{column.value[0]}.{schema_column.name}",
+                    context.schemas[column.value[0]] = RelationSchema(
+                        name=name, columns=[col.schema_column for col in columns]
                     )
-                    columns.append(column_reference)
 
         node.columns = columns
 
@@ -497,14 +531,6 @@ class BinderVisitor:
                 schema.columns = schema_columns
                 for column in node.columns:
                     if column.schema_column.identity in [i.identity for i in schema_columns]:
-                        # If .alias is set, update .value and set .alias to None
-                        if column.alias:
-                            column.source_column = column.alias
-                            current_name = column.schema_column.name
-                            column.schema_column.name = column.alias
-                            context.schemas[relation].pop_column(current_name)
-                            context.schemas[relation].columns.append(column.schema_column)
-                            column.alias = None
                         columns.append(column)
 
         # We always have a $derived schema, even if it's empty
