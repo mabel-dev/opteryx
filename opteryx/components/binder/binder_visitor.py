@@ -329,7 +329,9 @@ class BinderVisitor:
         def keep_column(column, identities):
             if len(node.columns) == 1 and node.columns[0].node_type == NodeType.WILDCARD:
                 if node.columns[0].value:
-                    return node.columns[0].value[0] == column.origin
+                    if isinstance(column.origin, str):
+                        column.origin = [column.origin]
+                    return node.columns[0].value[0] in column.origin
                 return True
             return column.identity in identities
 
@@ -430,7 +432,6 @@ class BinderVisitor:
             Tuple[Node, Dict]
                 Updated node and context.
         """
-
         # Handle 'natural join' by converting to a 'using'
         if node.type == "natural join":
             left_columns = [
@@ -472,17 +473,15 @@ class BinderVisitor:
             left_relation_name = ""
             right_relation_name = ""
             for column_name in (n.value for n in node.using):
-                # Try to pop the column from each left relation until found
+                # Pop the column from the left relation
                 for left_relation_name in node.left_relation_names:
-                    left_column = context.schemas[left_relation_name].pop_column(column_name)
-                    if left_column is not None:
-                        left_column.source_relation = None
-                        break
+                    context.schemas[left_relation_name].pop_column(column_name)
 
-                # Try to pop the column from each right relation until found
+                # Pop the column from the right relation, keep this one to add to a new relation
                 for right_relation_name in node.right_relation_names:
                     right_column = context.schemas[right_relation_name].pop_column(column_name)
                     if right_column is not None:
+                        right_column.origin = [left_relation_name, right_relation_name]
                         columns.append(right_column)
                         break
 
@@ -533,8 +532,8 @@ class BinderVisitor:
                                 schema_column=schema_column,
                             )
                             columns.append(column_reference)
-                        if name.startswith("$shared") and f"^{column.value[0]}#" in schema.name:
-                            context.schemas.pop(name)
+                    if name.startswith("$shared") and f"^{column.value[0]}#" in schema.name:
+                        context.schemas.pop(name)
 
                     context.schemas[column.value[0]] = RelationSchema(
                         name=name, columns=[col.schema_column for col in columns]
