@@ -790,11 +790,10 @@ STATEMENTS = [
         ("SELECT s.* FROM $planets AS s INNER JOIN $planets AS p USING (id, name)", 9, 20, None),
         ("SELECT p.* FROM $planets AS s INNER JOIN $planets AS p USING (id, name)", 9, 20, None),
         ("SELECT id, name FROM $planets AS s INNER JOIN $planets AS p USING (id, name)", 9, 2, None),
-]
-A = [
+
         ("SELECT DATE_TRUNC('month', birth_date) FROM $astronauts", 357, 1, None),
-        ("SELECT DISTINCT * FROM (SELECT DATE_TRUNC('year', birth_date) AS BIRTH_YEAR FROM $astronauts)", 54, 1, None),
-        ("SELECT DISTINCT * FROM (SELECT DATE_TRUNC('month', birth_date) AS BIRTH_YEAR_MONTH FROM $astronauts)", 247, 1, None),
+        ("SELECT DISTINCT * FROM (SELECT DATE_TRUNC('year', birth_date) AS BIRTH_YEAR FROM $astronauts) AS SQ", 54, 1, None),
+        ("SELECT DISTINCT * FROM (SELECT DATE_TRUNC('month', birth_date) AS BIRTH_YEAR_MONTH FROM $astronauts) AS SQ", 247, 1, None),
         ("SELECT time_bucket(birth_date, 10, 'year') AS decade, count(*) from $astronauts GROUP BY time_bucket(birth_date, 10, 'year')", 6, 2, None),
         ("SELECT time_bucket(birth_date, 6, 'month') AS half, count(*) from $astronauts GROUP BY time_bucket(birth_date, 6, 'month')", 97, 2, None),
     
@@ -802,7 +801,8 @@ A = [
         ("SELECT graduate_major, undergraduate_major FROM $astronauts WHERE COALESCE(graduate_major, undergraduate_major) = 'Aeronautical Engineering'", 41, 2, None),
         ("SELECT COALESCE(death_date, '2030-01-01') FROM $astronauts", 357, 1, None),
         ("SELECT * FROM $astronauts WHERE COALESCE(death_date, '2030-01-01') < '2000-01-01'", 30, 19, None),
-
+]
+A = [
         ("SELECT SEARCH(name, 'al'), name FROM $satellites", 177, 2, None),
         ("SELECT name FROM $satellites WHERE SEARCH(name, 'al')", 18, 1, None),
         ("SELECT SEARCH(missions, 'Apollo 11'), missions FROM $astronauts", 357, 2, None),
