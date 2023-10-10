@@ -165,13 +165,27 @@ def _raise_exception(text):
     raise UnsupportedSyntaxError(text)
 
 
-def _coalesce(*args):
-    """wrap the pyarrow coalesce function because NaN != None"""
-    coerced = []
-    for arg in args:
-        # there's no reasonable test to see if we need to do this before we start
-        coerced.append([None if value != value else value for value in arg])  # nosemgrep
-    return compute.coalesce(*coerced)
+def _coalesce(*arrays):
+    """
+    Element-wise coalesce function for multiple numpy arrays.
+    Selects the first non-None item in each row across the input arrays.
+
+    Parameters:
+        arrays: tuple of numpy arrays
+
+    Returns:
+        numpy array with coalesced values
+    """
+    # Start with an array full of None values
+    result = numpy.array(arrays[0], dtype=object)
+
+    mask = result == None
+
+    for arr in arrays[1:]:
+        mask = numpy.array([None if value != value else value for value in result]) == None
+        numpy.copyto(result, arr, where=mask)
+
+    return result
 
 
 # fmt:off
