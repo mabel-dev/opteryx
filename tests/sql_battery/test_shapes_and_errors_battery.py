@@ -801,8 +801,7 @@ STATEMENTS = [
         ("SELECT graduate_major, undergraduate_major FROM $astronauts WHERE COALESCE(graduate_major, undergraduate_major) = 'Aeronautical Engineering'", 41, 2, None),
         ("SELECT COALESCE(death_date, '2030-01-01') FROM $astronauts", 357, 1, None),
         ("SELECT * FROM $astronauts WHERE COALESCE(death_date, '2030-01-01') < '2000-01-01'", 30, 19, None),
-]
-A = [
+
         ("SELECT SEARCH(name, 'al'), name FROM $satellites", 177, 2, None),
         ("SELECT name FROM $satellites WHERE SEARCH(name, 'al')", 18, 1, None),
         ("SELECT SEARCH(missions, 'Apollo 11'), missions FROM $astronauts", 357, 2, None),
@@ -827,11 +826,9 @@ A = [
         ("SELECT EXTRACT(DOW FROM birth_date) AS DOW, COUNT(*) FROM $astronauts GROUP BY EXTRACT(DOW FROM birth_date) ORDER BY COUNT(*) DESC", 7, 2, None),
 
 # fails on github but not locally
-#        ("SELECT * FROM testdata.schema WITH(NO_PARTITION) ORDER BY 1", 2, 4, None),
-#        ("SELECT * FROM testdata.schema WITH(NO_PARTITION, NO_PUSH_PROJECTION) ORDER BY 1", 2, 4, None),
-        ("SELECT * FROM $planets WITH(NO_PARTITION) ORDER BY 1", 9, 20, None),
-        ("SELECT * FROM $planets WITH(NO_PUSH_PROJECTION) ORDER BY 1", 9, 20, None),
-        ("SELECT * FROM $planets WITH(NO_PARTITION, NO_PUSH_PROJECTION) ORDER BY 1", 9, 20, None),
+        ("SELECT * FROM $planets WITH(NO_PARTITION)", 9, 20, None),
+        ("SELECT * FROM $planets WITH(NO_PUSH_PROJECTION)", 9, 20, None),
+        ("SELECT * FROM $planets WITH(NO_PARTITION, NO_PUSH_PROJECTION)", 9, 20, None),
 
         ("SELECT SQRT(mass) FROM $planets", 9, 1, None),
         ("SELECT FLOOR(mass) FROM $planets", 9, 1, None),
@@ -877,11 +874,12 @@ A = [
         ("SELECT ABSOLUTE(ROUND(gravity) * density * density) FROM $planets", 9, 1, None),
         ("SELECT COUNT(*), ROUND(gm) FROM $satellites GROUP BY ROUND(gm)", 22, 2, None),
         ("SELECT COALESCE(death_date, '1900-01-01') FROM $astronauts", 357, 1, None),
-        ("SELECT * FROM (SELECT COUNT(*) FROM testdata.flat.formats.parquet WITH(NO_PARTITION) GROUP BY followers)", 10016, 1, None),
+        ("SELECT * FROM (SELECT COUNT(*) FROM testdata.flat.formats.parquet WITH(NO_PARTITION) GROUP BY followers) AS SQ", 10016, 1, None),
         ("SELECT a.id, b.id FROM $planets AS a INNER JOIN (SELECT id FROM $planets) AS b USING (id)", 9, 2, None),
         ("SELECT * FROM $planets INNER JOIN $planets AS b USING (id)", 9, 39, None),
         ("SELECT ROUND(5 + RAND() * (10 - 5)) rand_between FROM $planets", 9, 1, None),
-
+]
+A = [
         ("SELECT BASE64_DECODE(BASE64_ENCODE('this is a string'));", 1, 1, None),
         ("SELECT BASE64_ENCODE('this is a string');", 1, 1, None),
         ("SELECT BASE64_DECODE('aGVsbG8=')", 1, 1, None),
