@@ -20,6 +20,7 @@ Gen 2 execution engine (a later piece of work)
 
 from opteryx import operators
 from opteryx.components.logical_planner import LogicalPlanStepType
+from opteryx.exceptions import UnsupportedSyntaxError
 from opteryx.models import ExecutionTree
 
 
@@ -66,7 +67,10 @@ def create_physical_plan(logical_plan, query_properties):
         elif node_type == LogicalPlanStepType.Set:
             node = operators.SetVariableNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Show:
-            node = operators.NoOpNode(query_properties, **node_config)
+            if node_config["items"][0] == "PARAMETER":
+                node = operators.ShowValueNode(query_properties, kind="PARAMETER", value=node_config["items"][1])
+            else:
+                raise UnsupportedSyntaxError("Can only SHOW variables")
         elif node_type == LogicalPlanStepType.ShowColumns:
             node = operators.ShowColumnsNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Subquery:

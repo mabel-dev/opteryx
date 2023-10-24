@@ -41,7 +41,7 @@ from .show_columns_node import ShowColumnsNode  # column details
 # from .show_create_node import ShowCreateNode  # SHOW CREATE TABLE
 # from .show_databases_node import ShowDatabasesNode  # SHOW DATABASES
 # from .show_functions_node import ShowFunctionsNode  # supported functions
-# from .show_value_node import ShowValueNode  # display node for SHOW
+from .show_value_node import ShowValueNode  # display node for SHOW
 from .sort_node import SortNode  # order by selected columns
 
 

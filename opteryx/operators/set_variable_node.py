@@ -17,6 +17,8 @@ This is a SQL Query Execution Plan Node.
 """
 from typing import Iterable
 
+from opteryx.constants import QueryStatus
+from opteryx.models import NonTabularResult
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 
@@ -40,4 +42,4 @@ class SetVariableNode(BasePlanNode):
 
     def execute(self) -> Iterable:
         self.variables[self.variable] = self.value
-        yield None
+        return NonTabularResult(record_count=1, status=QueryStatus.SQL_SUCCESS)

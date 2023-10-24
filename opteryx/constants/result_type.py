@@ -10,18 +10,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from opteryx.models.connection_context import ConnectionContext
-from opteryx.models.execution_tree import ExecutionTree
-from opteryx.models.logical_column import LogicalColumn
-from opteryx.models.node import Node
-from opteryx.models.non_tabular_result import NonTabularResult
-from opteryx.models.query_properties import QueryProperties
+from enum import Enum
+from enum import auto
 
-__all__ = (
-    "ConnectionContext",
-    "ExecutionTree",
-    "LogicalColumn",
-    "Node",
-    "NonTabularResult",
-    "QueryProperties",
-)
+
+class ResultType(Enum):
+    _UNDEFINED = auto()
+    TABULAR = auto()
+    NON_TABULAR = auto()

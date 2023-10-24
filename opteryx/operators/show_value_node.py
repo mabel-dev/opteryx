@@ -19,6 +19,7 @@ from typing import Iterable
 
 import pyarrow
 
+from opteryx.exceptions import SqlError
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 
@@ -26,8 +27,16 @@ from opteryx.operators import BasePlanNode
 class ShowValueNode(BasePlanNode):
     def __init__(self, properties: QueryProperties, **config):
         super().__init__(properties=properties)
-        self._key = config.get("key")
-        self._value = config.get("value")
+
+        self.key = config.get("key")
+        self.kind = config.get("kind")
+        self.value = config.get("value")
+
+        if self.kind == "PARAMETER":
+            if self.value[0] == "@":
+                raise SqlError("PARAMETERS cannot start with '@'")
+            self.key = self.value
+            self.value = properties.variables[self.value]
 
     @property
     def name(self):  # pragma: no cover
@@ -38,17 +47,6 @@ class ShowValueNode(BasePlanNode):
         return ""
 
     def execute(self) -> Iterable:
-        buffer = [{"name": self._key, "value": str(self._value)}]
-
+        buffer = [{"name": self.key, "value": str(self.value)}]
         table = pyarrow.Table.from_pylist(buffer)
-        table = Columns.create_table_metadata(
-            table=table,
-            expected_rows=len(buffer),
-            name="show_value",
-            table_aliases=[],
-            disposition="calculated",
-            path="show_value",
-        )
-
         yield table
-        return

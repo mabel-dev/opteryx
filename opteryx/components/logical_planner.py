@@ -122,7 +122,7 @@ class LogicalPlanNode(Node):
                 if self.on:
                     return f"{self.type.upper()} JOIN ({format_expression(self.on)})"
                 if self.using:
-                    return f"{self.type.upper()} JOIN (USING {','.join(format_expression(self.using))})"
+                    return f"{self.type.upper()} JOIN (USING {','.join(map(format_expression, self.using))})"
                 return self.type.upper()
             if node_type == LogicalPlanStepType.Limit:
                 limit_str = f"LIMIT ({self.limit})" if self.limit is not None else ""

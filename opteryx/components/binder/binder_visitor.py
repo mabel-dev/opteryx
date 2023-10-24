@@ -633,7 +633,7 @@ class BinderVisitor:
         node.schema = node.connector.get_dataset_schema()
         context.schemas[node.alias] = node.schema
         for column in node.schema.columns:
-            column.origin = node.alias
+            column.origin = [node.alias]
         context.relations.add(node.alias)
 
         return node, context
@@ -651,8 +651,13 @@ class BinderVisitor:
     def visit_subquery(self, node: Node, context: BindingContext) -> Tuple[Node, BindingContext]:
         # we sack all the tables we previously knew and create a new set of schemas here
         columns = []
-        for schema in context.schemas.values():
-            columns += schema.columns
+        for name, schema in context.schemas.items():
+            for schema_column in schema.columns:
+                schema_column.origin = [node.alias]
+                columns.append(schema_column)
+            if name[0] != "$" and name in context.relations:
+                context.relations.remove(name)
+        context.relations.add(node.alias)
 
         schema = RelationSchema(name=node.alias, columns=columns)
 
