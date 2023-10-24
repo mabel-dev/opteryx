@@ -875,11 +875,10 @@ STATEMENTS = [
         ("SELECT COUNT(*), ROUND(gm) FROM $satellites GROUP BY ROUND(gm)", 22, 2, None),
         ("SELECT COALESCE(death_date, '1900-01-01') FROM $astronauts", 357, 1, None),
         ("SELECT * FROM (SELECT COUNT(*) FROM testdata.flat.formats.parquet WITH(NO_PARTITION) GROUP BY followers) AS SQ", 10016, 1, None),
-        ("SELECT a.id, b.id FROM $planets AS a INNER JOIN (SELECT id FROM $planets) AS b USING (id)", 9, 2, None),
+        ("SELECT a.id, b.id FROM $planets AS a INNER JOIN (SELECT id FROM $planets) AS b USING (id)", 9, 2, AmbiguousIdentifierError),
         ("SELECT * FROM $planets INNER JOIN $planets AS b USING (id)", 9, 39, None),
         ("SELECT ROUND(5 + RAND() * (10 - 5)) rand_between FROM $planets", 9, 1, None),
-]
-A = [
+
         ("SELECT BASE64_DECODE(BASE64_ENCODE('this is a string'));", 1, 1, None),
         ("SELECT BASE64_ENCODE('this is a string');", 1, 1, None),
         ("SELECT BASE64_DECODE('aGVsbG8=')", 1, 1, None),
@@ -931,7 +930,7 @@ A = [
         ("SELECT birth_date - INTERVAL '1 1' MONTH to DAY, birth_date from $astronauts", 357, 2, None),
         ("SELECT * FROM $astronauts WHERE 'Apollo 11' IN UNNEST(missions)", 3, 19, None),
         ("SELECT * FROM $astronauts WHERE 'Apollo 11' NOT IN UNNEST(missions)", 331, 19, None),
-        ("SELECT * FROM $astronauts WHERE NOT 'Apollo 11' IN UNNEST(missions)", 354, 19, None),
+        ("SELECT * FROM $astronauts WHERE NOT 'Apollo 11' IN UNNEST(missions)", 331, 19, None),
         ("SET @variable = 'Apollo 11'; SELECT * FROM $astronauts WHERE @variable IN UNNEST(missions)", 3, 19, None),
         ("SET @id = 3; SELECT name FROM $planets WHERE id = @id;", 1, 1, None),
         ("SET @id = 3; SELECT name FROM $planets WHERE id < @id;", 2, 1, None),
@@ -942,8 +941,9 @@ A = [
         ("SET @pples = 'b'; SET @rgon = 90; SHOW VARIABLES LIKE '@%gon'", 1, 4, None),
         ("SET @variable = 44; SET @var = 'name'; SHOW VARIABLES LIKE '@%ri%';", 1, 4, None),
         ("SHOW PARAMETER disable_optimizer", 1, 2, None),
-        ("SET disable_optimizer = true; SHOW PARAMETER enable_optimizer;", 1, 2, None),
-
+        ("SET disable_optimizer = true; SHOW PARAMETER disable_optimizer;", 1, 2, None),
+]
+A = [
         ("SELECT id FROM $planets WHERE NOT NOT id > 3", 6, 1, None),
         ("SELECT id FROM $planets WHERE NOT NOT id < 3", 2, 1, None),
         ("SELECT id FROM $planets WHERE NOT id > 3", 3, 1, None),
@@ -1300,11 +1300,16 @@ if __name__ == "__main__":  # pragma: no cover
         try:
             test_sql_battery(statement, rows, cols, err)
             print(
-                f"\033[38;2;26;185;67m{str(int((time.monotonic_ns() - start)/1e6)).rjust(4)}ms\033[0m ✅"
+                f"\033[38;2;26;185;67m{str(int((time.monotonic_ns() - start)/1e6)).rjust(4)}ms\033[0m ✅",
+                end="",
             )
             passed += 1
+            if failed > 1:
+                print(" \033[0;31m*\033[0m")
+            else:
+                print()
         except Exception as err:
-            print(f"\033[0;31m{str(int((time.monotonic_ns() - start)/1e6)).rjust(4)}ms\033[0m ❌")
+            print(f"\033[0;31m{str(int((time.monotonic_ns() - start)/1e6)).rjust(4)}ms ❌ *\033[0m")
             print(">", err)
             failed += 1
 

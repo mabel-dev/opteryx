@@ -29,6 +29,8 @@ from orso import converters
 
 from opteryx import config
 from opteryx import utils
+from opteryx.constants import QueryStatus
+from opteryx.constants import ResultType
 from opteryx.exceptions import InvalidCursorStateError
 from opteryx.exceptions import MissingSqlStatement
 from opteryx.exceptions import UnsupportedSyntaxError
@@ -128,6 +130,9 @@ class Cursor(DataFrame):
         self._qid = str(uuid4())
         self._statistics = QueryStatistics(self._qid)
         self._state = CursorState.INITIALIZED
+        self._query_status = QueryStatus._UNDEFINED
+        self._result_type = ResultType._UNDEFINED
+        self._rowcount = None
         DataFrame.__init__(self, rows=[], schema=[])
 
     @property
@@ -216,6 +221,7 @@ class Cursor(DataFrame):
                 for _ in results:
                     pass
 
+        # we only return the last result set
         return results
 
     @require_state(CursorState.INITIALIZED)
@@ -234,8 +240,38 @@ class Cursor(DataFrame):
             operation = operation.decode()
         results = self._execute_statements(operation, params)
         if results is not None:
-            self._rows, self._schema = converters.from_arrow(results)
-            self._cursor = iter(self._rows)
+            result_data, self._result_type = next(results, (ResultType._UNDEFINED, None))
+            if self._result_type == ResultType.NON_TABULAR:
+                import orso
+
+                meta_dataframe = orso.DataFrame([{"rows_affected": result_data.record_count}])
+                self._rows = meta_dataframe._rows
+                self._schema = meta_dataframe._schema
+
+                self._rowcount = result_data.record_count
+                self._query_status = result_data.status
+            elif self._result_type == ResultType.TABULAR:
+                self._rows, self._schema = converters.from_arrow(result_data)
+                self._cursor = iter(self._rows)
+                self._query_status = QueryStatus.SQL_SUCCESS
+            else:
+                self._query_status = QueryStatus.SQL_FAILURE
+
+    @property
+    def result_type(self) -> ResultType:
+        return self._result_type
+
+    @property
+    def query_status(self) -> QueryStatus:
+        return self._query_status
+
+    @property
+    def rowcount(self) -> int:
+        if self._result_type == ResultType.TABULAR:
+            return super().rowcount
+        if self._result_type == ResultType.NON_TABULAR:
+            return self._rowcount
+        raise InvalidCursorStateError("Cursor not in valid state to return a row count.")
 
     @require_state(CursorState.INITIALIZED)
     @transition_to(CursorState.EXECUTED)

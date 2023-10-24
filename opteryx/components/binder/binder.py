@@ -113,54 +113,56 @@ def locate_identifier(node: Node, context: Dict[str, Any]) -> Tuple[Node, Dict]:
 
     def create_variable_node(node: Node, context: Dict[str, Any]) -> Node:
         """Populates a Node object for a variable."""
-        node.schema_column = context.connection.variables.as_column(node.value)
-        node.node_type = NodeType.LITERAL
-        node.type = node.schema_column.type
-        node.value = node.schema_column.value
-        return node
+        schema_column = context.connection.variables.as_column(node.value)
+        new_node = Node(
+            node_type=NodeType.LITERAL,
+            schema_column=schema_column,
+            type=schema_column.type,
+            value=schema_column.value,
+        )
+        return new_node
 
     # Check if the identifier is a variable
     if node.current_name[0] == "@":
         node = create_variable_node(node, context)
         return node, context
 
-    schemas = context.schemas
-    found_source_relation = schemas.get(node.source)
-
-    # Handle fully qualified fields
+    # get the list of candidate schemas
     if node.source:
-        # If the source relation is not found, raise an error
-        if not found_source_relation:
-            raise UnexpectedDatasetReferenceError(dataset=node.source)
-
-        # Try to find the column in the source relation
-        column = found_source_relation.find_column(node.source_column)
-        if not column:
-            from opteryx.utils import suggest_alternative
-
-            suggestion = suggest_alternative(node.value, found_source_relation.all_column_names())
-            raise ColumnNotFoundError(column=node.value, dataset=node.source, suggestion=suggestion)
-
-    # Handle non-qualified fields
+        candidate_schemas = {
+            name: schema
+            for name, schema in context.schemas.items()
+            if name.startswith("$shared") or name == node.source
+        }
     else:
-        column, found_source_relation = locate_identifier_in_loaded_schemas(
-            node.source_column, schemas
+        candidate_schemas = context.schemas
+
+    # if there are no candidates, we probably don't know the relation
+    if not candidate_schemas:
+        raise UnexpectedDatasetReferenceError(dataset=node.source)
+
+    # look up the column in the candidate schemas
+    column, found_source_relation = locate_identifier_in_loaded_schemas(
+        node.source_column, candidate_schemas
+    )
+
+    # if we didn't find the column, suggest alternatives
+    if not column:
+        from opteryx.utils import suggest_alternative
+
+        suggestion = suggest_alternative(
+            node.source_column,
+            [
+                column_name
+                for _, schema in candidate_schemas.items()
+                for column_name in schema.all_column_names()
+                if column_name is not None
+            ],
         )
-        if not found_source_relation:
-            from opteryx.utils import suggest_alternative
+        raise ColumnNotFoundError(column=node.value, suggestion=suggestion)
 
-            suggestion = suggest_alternative(
-                node.source_column,
-                [
-                    column_name
-                    for _, schema in schemas.items()
-                    for column_name in schema.all_column_names()
-                    if column_name is not None
-                ],
-            )
-            raise ColumnNotFoundError(column=node.value, suggestion=suggestion)
-
-        # Update node.source to the found relation name
+    # Update node.source to the found relation name
+    if not node.source:
         node.source = found_source_relation.name
 
     # if we have an alias for a column not known about in the schema, add it

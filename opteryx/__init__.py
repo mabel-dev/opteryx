@@ -63,14 +63,14 @@ from opteryx.__version__ import __version__
 
 __all__ = [
     "apilevel",
-    "threadsafety",
-    "paramstyle",
     "connect",
-    "query",
     "Connection",
+    "paramstyle",
+    "query",
     "register_arrow",
     "register_df",
     "register_store",
+    "threadsafety",
     "__author__",
     "__build__",
     "__version__",

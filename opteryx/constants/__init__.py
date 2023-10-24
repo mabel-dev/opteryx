@@ -11,5 +11,7 @@
 # limitations under the License.
 
 from opteryx.constants.permissions import PERMISSIONS
+from opteryx.constants.query_status import QueryStatus
+from opteryx.constants.result_type import ResultType
 
-__all__ = ("PERMISSIONS",)
+__all__ = ("PERMISSIONS", "QueryStatus", "ResultType")

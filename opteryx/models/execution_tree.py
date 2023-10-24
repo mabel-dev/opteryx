@@ -21,8 +21,13 @@ The execution tree contains functionality to:
 
 """
 
+from typing import Generator
+from typing import Tuple
+from typing import Union
+
 import pyarrow
 
+from opteryx.constants import ResultType
 from opteryx.exceptions import InvalidInternalStateError
 from opteryx.third_party.travers import Graph
 
@@ -56,47 +61,68 @@ class ExecutionTree(Graph):
 
         return list(_inner(operator))
 
-    def execute(self):
+    def execute(
+        self,
+    ) -> Generator[Tuple[Union[pyarrow.Table, "NonTabularResult"], ResultType], None, None]:
         """
-        This implements a 'pull' model execution engine. It finds the last stage in
-        the plan and pulls records from it - this stage then pulls records from earlier
-        stages in the plan as needed, and so on, until we get to a node that creates
-        records to feed into the engine (usually reading a data file).
-        """
+        Implements a 'pull' model execution engine, pulling records starting from
+        the last stage (head) of the query plan, and working backwards towards the first stage.
 
+        Yields:
+            tuple: The first element is the result (either tabular data or a
+                NonTabularResult object). The second element is a ResultType enum,
+                indicating the type of the result.
+        """
+        from opteryx.models import NonTabularResult
         from opteryx.operators import ExplainNode
 
-        def map_operators(nodes):
+        def map_operators_to_producers(nodes: list) -> None:
             """
-            We're walking the query plan telling each node where to get the data it
-            needs from.
+            Walks through the query plan, linking each operator node with its data producers.
+
+            Parameters:
+                nodes: list
+                    List of operator nodes in the query plan.
             """
             for node in nodes:
                 producers = self.ingoing_edges(node)
                 operator = self[node]
+
                 if producers:
-                    operator.set_producers([self[i[0]] for i in producers])
-                    map_operators(i[0] for i in producers)
+                    operator.set_producers([self[src_node[0]] for src_node in producers])
+                    map_operators_to_producers([src_node[0] for src_node in producers])
 
-        # do some basic validation before we try to execute
-        if not self.is_acyclic():  # pragma: no cover
-            raise InvalidInternalStateError("Problem executing the query plan - it is cyclic.")
+        # Validate query plan to ensure it's acyclic
+        if not self.is_acyclic():
+            raise InvalidInternalStateError("Query plan is cyclic, cannot execute.")
 
-        # we get the tail of the query - the first steps
-        head = list(dict.fromkeys(self.get_exit_points()))
-        if len(head) != 1:  # pragma: no cover
+        # Retrieve the tail of the query plan, which should ideally be a single head node
+        head_nodes = list(set(self.get_exit_points()))
+
+        if len(head_nodes) != 1:
             raise InvalidInternalStateError(
-                f"Problem executing the query plan - it has {len(head)} heads."
+                f"Query plan has {len(head_nodes)} heads, expected exactly 1."
             )
 
-        if isinstance(self[head[0]], ExplainNode):
-            yield from self.explain()
+        head_node = head_nodes[0]
+
+        # Special case handling for 'Explain' queries
+        if isinstance(self[head_node], ExplainNode):
+            yield self.explain(), ResultType.TABULAR
             return
 
-        map_operators(head)
+        # Link operators with their producers
+        map_operators_to_producers([head_node])
 
-        operator = self[head[0]]
-        yield from operator.execute()
+        # Execute the head node's operation
+        operator = self[head_node]
+        results = operator.execute()
+
+        # If the results are non-tabular, handle them accordingly
+        if isinstance(results, NonTabularResult):
+            yield results, ResultType.NON_TABULAR
+        else:
+            yield results, ResultType.TABULAR
 
     def explain(self):
         from opteryx import operators
