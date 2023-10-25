@@ -14,6 +14,8 @@ import array
 import datetime
 from typing import Any
 from typing import Dict
+from typing import List
+from typing import Optional
 from typing import Tuple
 from typing import Union
 
@@ -44,6 +46,7 @@ BINARY_OPERATORS = set(OPERATOR_FUNCTION_MAP.keys())
 
 INTERVALS = (pyarrow.lib.MonthDayNano, pyarrow.lib.MonthDayNanoIntervalArray)
 LISTS = (pyarrow.Array, numpy.ndarray, list, array.ArrayType)
+STRINGS = (str, numpy.str_)
 
 # Also supported by the AST but not implemented
 
@@ -102,15 +105,36 @@ def _date_minus_interval(left, right):
     return result
 
 
-def _has_intervals(left, right):
+def _ip_containment(left: List[Optional[str]], right: List[str]) -> List[Optional[bool]]:
+    """
+    Check if each IP address in 'left' is contained within the network specified in 'right'.
+
+    Parameters:
+        left: List[Optional[str]]
+            List of IP addresses as strings.
+        right: List[str]
+            List containing the network as a string.
+
+    Returns:
+        List[Optional[bool]]:
+            A list of boolean values indicating if each corresponding IP in 'left' is in 'right'.
+    """
+    from ipaddress import IPv4Address
+    from ipaddress import IPv4Network
+
+    network = IPv4Network(right[0], strict=False)
+    return [(IPv4Address(ip) in network) if ip else None for ip in left]
+
+
+def _either_side_is_type(left, right, types):
     def _check_type(obj, types: Union[type, Tuple[type, ...]]) -> bool:
         return any(isinstance(obj, t) for t in types)
 
     return (
-        _check_type(left, INTERVALS)
-        or _check_type(right, INTERVALS)
-        or (_check_type(left, LISTS) and _check_type(left[0], INTERVALS))
-        or (_check_type(right, LISTS) and _check_type(right[0], INTERVALS))
+        _check_type(left, types)
+        or _check_type(right, types)
+        or (_check_type(left, LISTS) and _check_type(left[0], types))
+        or (_check_type(right, LISTS) and _check_type(right[0], types))
     )
 
 
@@ -134,15 +158,19 @@ def binary_operations(left, operator: str, right) -> Union[numpy.ndarray, pyarro
     if operation is None:
         raise NotImplementedError(f"Operator `{operator}` is not implemented!")
 
-    if operator == "Minus" or operator == "Plus":
-        if _has_intervals(left, right):
+    if operator in ["Minus", "Plus"]:
+        if _either_side_is_type(left, right, INTERVALS):
             return (
                 _date_minus_interval(left, right)
                 if operator == "Minus"
                 else _date_plus_interval(left, right)
             )
 
-    if operator == "StringConcat":
+    elif operator == "BitwiseOr":
+        if _either_side_is_type(left, right, STRINGS):
+            return _ip_containment(left, right)
+
+    elif operator == "StringConcat":
         empty = numpy.full(len(left), "")
         joined = compute.binary_join_element_wise(left, right, empty)
         return joined
