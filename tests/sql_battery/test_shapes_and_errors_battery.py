@@ -942,8 +942,7 @@ STATEMENTS = [
         ("SET @variable = 44; SET @var = 'name'; SHOW VARIABLES LIKE '@%ri%';", 1, 4, UnsupportedSyntaxError),
         ("SHOW PARAMETER disable_optimizer", 1, 2, None),
         ("SET disable_optimizer = true; SHOW PARAMETER disable_optimizer;", 1, 2, None),
-]
-A = [
+
         ("SELECT id FROM $planets WHERE NOT NOT id > 3", 6, 1, None),
         ("SELECT id FROM $planets WHERE NOT NOT id < 3", 2, 1, None),
         ("SELECT id FROM $planets WHERE NOT id > 3", 3, 1, None),
@@ -958,10 +957,10 @@ A = [
         ("SELECT * FROM $planets WHERE 1 = 1", 9, 20, None),
         ("SELECT * FROM $planets WHERE NOT 1 = 2", 9, 20, None),
 
-        ("SHOW CREATE TABLE $planets", 1, 1, None),
-        ("SHOW CREATE TABLE $satellites", 1, 1, None),
-        ("SHOW CREATE TABLE $astronauts", 1, 1, None),
-        ("SHOW CREATE TABLE testdata.partitioned.framed FOR '2021-03-28'", 1, 1, None),
+        ("SHOW CREATE TABLE $planets", 1, 1, UnsupportedSyntaxError),
+        ("SHOW CREATE TABLE $satellites", 1, 1, UnsupportedSyntaxError),
+        ("SHOW CREATE TABLE $astronauts", 1, 1, UnsupportedSyntaxError),
+        ("SHOW CREATE TABLE testdata.partitioned.framed FOR '2021-03-28'", 1, 1, UnsupportedSyntaxError),
         ("SET disable_optimizer = true;\nSET disable_morsel_defragmentation = false;\nSELECT COUNT(*) FROM $planets WHERE id > 3 AND name ILIKE '%e%'", 1, 1, None),
         ("SET disable_optimizer = false;\nSET disable_morsel_defragmentation = false;\nSELECT COUNT(*) FROM $planets WHERE id > 3 AND name ILIKE '%e%'", 1, 1, None),
         ("SET disable_optimizer = false;\nSET disable_morsel_defragmentation = true;\nSELECT COUNT(*) FROM $planets WHERE id > 3 AND name ILIKE '%e%'", 1, 1, None),
@@ -969,8 +968,8 @@ A = [
         ("SELECT COUNT(*) FROM $planets WHERE id > 3 AND name ILIKE '%e%' AND id > 1 AND id > 0 AND id > 2 AND name ILIKE '%e%'", 1, 1, None),
 
         ("SELECT planets.* FROM $planets AS planets LEFT JOIN $planets FOR '1600-01-01' AS older ON planets.id = older.id WHERE older.name IS NULL", 3, 20, None),
-        ("SELECT * FROM generate_series(1,10) LEFT JOIN $planets FOR '1600-01-01' ON id = generate_series", 10, 21, None),
-        ("SELECT DISTINCT name FROM generate_series(1,10) LEFT JOIN $planets FOR '1600-01-01' ON id = generate_series", 7, 1, None),
+        ("SELECT * FROM generate_series(1,10) AS GS LEFT JOIN $planets FOR '1600-01-01' ON id = GS", 10, 21, None),
+        ("SELECT DISTINCT name FROM generate_series(1,10) AS GS LEFT JOIN $planets FOR '1600-01-01' ON id = GS", 7, 1, None),
         ("SELECT 1 WHERE ' a  b ' \t = \n\n ' ' || 'a' || ' ' || \n ' b '", 1, 1, None),
         ("SELECT name FROM $planets WHERE SUBSTRING ( name, 1, 1 ) = 'M'", 2, 1, None),
         ("SELECT name FROM $planets WHERE SUBSTRING ( name, 2, 1 ) = 'a'", 3, 1, None),
@@ -980,10 +979,10 @@ A = [
         ("SELECT * FROM $satellites WHERE NULLIF(planetId, 5) IS NULL", 67, 8, None),
         ("SELECT * FROM $satellites WHERE NULLIF(planetId, 5) IS NOT NULL", 110, 8, None),
 
-        ("SHOW STORES LIKE 'apple'", None, None, SqlError),
+        ("SHOW STORES LIKE 'apple'", None, None, UnsupportedSyntaxError),
         ("SELECT name FROM $astronauts WHERE LEFT(name, POSITION(' ' IN name) - 1) = 'Andrew'", 3, 1, None),
         ("SELECT name FROM $astronauts WHERE LEFT(name, POSITION(' ' IN name)) = 'Andrew '", 3, 1, None),
-        
+
         ("SELECT ARRAY_AGG(name) from $satellites GROUP BY planetId", 7, 1, None),
         ("SELECT ARRAY_AGG(DISTINCT name) from $satellites GROUP BY planetId", 7, 1, None),
         ("SELECT ARRAY_AGG(name ORDER BY name) from $satellites GROUP BY TRUE", 1, 1, None),
@@ -995,8 +994,9 @@ A = [
 
         ("SELECT name FROM $satellites WHERE '192.168.0.1' | '192.168.0.0/24'", 177, 1, None),
         ("SELECT name FROM $satellites WHERE '192.168.0.1' | '192.167.0.0/24'", 0, 1, None),
-        ("SELECT name FROM $satellites WHERE 12 | 22", None, None, NotImplementedError),
-
+        ("SELECT name FROM $satellites WHERE 12 | 22", 177, 1, None),
+]
+A = [
         ("SELECT COUNT(*), place FROM (SELECT CASE id WHEN 3 THEN 'Earth' WHEN 1 THEN 'Mercury' ELSE 'Elsewhere' END as place FROM $planets) AS SQ GROUP BY place;", 3, 2, None),
         ("SELECT COUNT(*), place FROM (SELECT CASE id WHEN 3 THEN 'Earth' WHEN 1 THEN 'Mercury' END as place FROM $planets) AS SQ GROUP BY place HAVING place IS NULL;", 1, 2, None),
         ("SELECT COUNT(*), place FROM (SELECT CASE id WHEN 3 THEN 'Earth' WHEN 1 THEN 'Mercury' ELSE 'Elsewhere' END as place FROM $planets) AS SQ GROUP BY place HAVING place IS NULL;", 0, 2, None),

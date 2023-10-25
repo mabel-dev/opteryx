@@ -11,6 +11,7 @@
 # limitations under the License.
 
 from typing import List
+from typing import Union
 
 import numpy
 from pyarrow import compute
@@ -241,24 +242,34 @@ def ends_w(arr, test):
     return compute.ends_with(arr, test[0])
 
 
-def substring(arr, from_pos, count):
+def substring(arr: List[str], from_pos: List[int], count: List[Union[int, float]]) -> List[str]:
+    """
+    Extracts substrings from each string in the 'arr' list.
+
+    Parameters:
+        arr: List[str]
+            List of strings from which substrings will be extracted.
+        from_pos: List[int]
+            List of starting positions for each substring.
+        count: List[Union[int, float]]
+            List of lengths for each substring. Can be a float (NaN) to signify until the end.
+
+    Returns:
+        List[str]
+            List of extracted substrings.
+    """
     if len(arr) == 0:
         return [[]]
 
     def _inner(val, _from, _for):
-        _from = int(_from)
         if _from > 0:
             _from -= 1
-        _for = int(_for) if _for == _for else None  # nosec
+        _for = int(_for) if _for and _for == _for else None  # nosec
         if _for is None:
             return val[_from:]
         return val[_from : _for + _from]
 
-    def _outer():
-        for index, value in enumerate(arr):
-            yield _inner(value, from_pos[index], count[index])
-
-    return list(_outer())
+    return [_inner(val, _from, _for) for val, _from, _for in zip(arr, from_pos, count)]
 
 
 def position(sub, string):

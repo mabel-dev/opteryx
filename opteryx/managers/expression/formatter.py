@@ -36,7 +36,7 @@ def format_expression(root, qualify: bool = False):
         if literal_type == OrsoTypes.VARCHAR:
             return "'" + root.value.replace("'", "'") + "'"
         if literal_type == OrsoTypes.TIMESTAMP:
-            return "'" + str(root) + "'"
+            return "'" + str(root.value) + "'"
         if literal_type == OrsoTypes.INTERVAL:
             return "<INTERVAL>"
         return str(root.value)
