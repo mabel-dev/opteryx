@@ -10,9 +10,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import array
 import datetime
 from typing import Any
 from typing import Dict
+from typing import Tuple
 from typing import Union
 
 import numpy
@@ -41,6 +43,7 @@ OPERATOR_FUNCTION_MAP: Dict[str, Any] = {
 BINARY_OPERATORS = set(OPERATOR_FUNCTION_MAP.keys())
 
 INTERVALS = (pyarrow.lib.MonthDayNano, pyarrow.lib.MonthDayNanoIntervalArray)
+LISTS = (pyarrow.Array, numpy.ndarray, list, array.ArrayType)
 
 # Also supported by the AST but not implemented
 
@@ -51,7 +54,7 @@ INTERVALS = (pyarrow.lib.MonthDayNano, pyarrow.lib.MonthDayNanoIntervalArray)
 
 def _date_plus_interval(left, right):
     # left is the date, right is the interval
-    if type(left) in INTERVALS or (isinstance(left, list) and type(left[0]) in INTERVALS):
+    if isinstance(left, INTERVALS) or (isinstance(left, LISTS) and type(left[0]) in INTERVALS):
         left, right = right, left
 
     result = []
@@ -62,11 +65,11 @@ def _date_plus_interval(left, right):
             interval = interval.value
         months = interval.months
         days = interval.days
-        nano = interval.nanoseconds
+        nanoseconds = interval.nanoseconds
 
         date = dates.parse_iso(date)
-        date = date + datetime.timedelta(days=days)
-        date = date + datetime.timedelta(microseconds=(nano * 1000))
+        # Subtract days and nanoseconds (as microseconds)
+        date += datetime.timedelta(days=days, microseconds=nanoseconds // 1000)
         date = dates.add_months(date, months)
 
         result.append(date)
@@ -76,7 +79,7 @@ def _date_plus_interval(left, right):
 
 def _date_minus_interval(left, right):
     # left is the date, right is the interval
-    if type(left) in INTERVALS or (isinstance(left, list) and type(left[0]) in INTERVALS):
+    if isinstance(left, INTERVALS) or (isinstance(left, LISTS) and type(left[0]) in INTERVALS):
         left, right = right, left
 
     result = []
@@ -87,11 +90,11 @@ def _date_minus_interval(left, right):
             interval = interval.value
         months = interval.months
         days = interval.days
-        nano = interval.nanoseconds
+        nanoseconds = interval.nanoseconds
 
         date = dates.parse_iso(date)
-        date = date - datetime.timedelta(days=days)
-        date = date - datetime.timedelta(microseconds=(nano * 1000))
+        # Subtract days and nanoseconds (as microseconds)
+        date -= datetime.timedelta(days=days, microseconds=nanoseconds // 1000)
         date = dates.add_months(date, (0 - months))
 
         result.append(date)
@@ -100,11 +103,14 @@ def _date_minus_interval(left, right):
 
 
 def _has_intervals(left, right):
+    def _check_type(obj, types: Union[type, Tuple[type, ...]]) -> bool:
+        return any(isinstance(obj, t) for t in types)
+
     return (
-        type(left) in INTERVALS
-        or type(right) in INTERVALS
-        or (isinstance(left, list) and type(left[0]) in INTERVALS)
-        or (isinstance(right, list) and type(right[0]) in INTERVALS)
+        _check_type(left, INTERVALS)
+        or _check_type(right, INTERVALS)
+        or (_check_type(left, LISTS) and _check_type(left[0], INTERVALS))
+        or (_check_type(right, LISTS) and _check_type(right[0], INTERVALS))
     )
 
 

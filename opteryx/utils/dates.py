@@ -32,18 +32,28 @@ TIMEDELTA_PATTERN = re.compile(TIMEDELTA_REGEX, re.IGNORECASE)
 UNIX_EPOCH: datetime.date = datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc)
 
 
-def add_months(start_date, number_of_months):
+def add_months(start_date: datetime.datetime, number_of_months: int):
     """
     Add months to a date, makes assumptions about how to handle the end of the month.
     """
     new_year, new_month = divmod(start_date.month - 1 + number_of_months, 12)
     new_year += start_date.year
     new_month += 1
+    # Ensure the month is valid
+    new_month = min(max(1, new_month), 12)
     last_day_of_month = (
         datetime.datetime(new_year, new_month % 12 + 1, 1) - datetime.timedelta(days=1)
     ).day
     new_day = min(start_date.day, last_day_of_month)
-    return datetime.datetime(new_year, new_month, new_day)
+    return datetime.datetime(
+        new_year,
+        new_month,
+        new_day,
+        start_date.hour,
+        start_date.minute,
+        start_date.second,
+        start_date.microsecond,
+    )
 
 
 def add_interval(

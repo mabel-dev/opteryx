@@ -43,8 +43,6 @@ Converts the AST to a logical query plan.
 The plan does not try to be efficient or clever, at this point it is only trying to be correct.
 """
 
-import os
-import sys
 from enum import Enum
 from enum import auto
 from typing import List
@@ -60,8 +58,6 @@ from opteryx.managers.expression import format_expression
 from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.models import Node
 from opteryx.third_party.travers import Graph
-
-sys.path.insert(1, os.path.join(sys.path[0], "../../../.."))  # isort:skip
 
 
 class LogicalPlanStepType(int, Enum):
@@ -746,6 +742,7 @@ def plan_show_variables(statement):
         previous_step_id, step_id = step_id, random_string()
         plan.add_node(step_id, select_step)
         plan.add_edge(previous_step_id, step_id)
+        raise UnsupportedSyntaxError("Cannot filter by Variable Names")
 
     exit_step = LogicalPlanNode(node_type=LogicalPlanStepType.Exit)
     exit_step.columns = [Node(node_type=NodeType.WILDCARD)]  # We are always SELECT *
