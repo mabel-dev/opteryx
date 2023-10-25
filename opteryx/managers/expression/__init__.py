@@ -164,7 +164,8 @@ def _inner_evaluate(root: Node, table: Table, context: ExecutionContext):
         if literal_type == OrsoTypes.VARCHAR:
             return numpy.array([root.value] * table.num_rows, dtype=numpy.unicode_)
         if literal_type == OrsoTypes.INTERVAL:
-            return pyarrow.array([root.value] * table.num_rows)
+            value = pyarrow.MonthDayNano(root.value)
+            return pyarrow.array([value] * table.num_rows)
         return numpy.full(
             shape=table.num_rows, fill_value=root.value, dtype=ORSO_TO_NUMPY_MAP[literal_type]
         )  # type:ignore
