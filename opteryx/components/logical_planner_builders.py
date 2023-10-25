@@ -144,6 +144,10 @@ def wildcard_filter(branch, alias=None, key=None):
     return Node(NodeType.WILDCARD)
 
 
+def expressions(branch, alias=None, key=None):
+    return [build(part) for part in branch]
+
+
 def expression_with_alias(branch, alias=None, key=None):
     """an alias"""
     return build(branch["expr"], alias=branch["alias"]["value"])
@@ -664,6 +668,7 @@ BUILDERS = {
     "CompoundIdentifier": compound_identifier,
     "DoubleQuotedString": literal_string,
     "Expr": build,
+    "Expressions": expressions,
     "ExprWithAlias": expression_with_alias,
     "Extract": extract,
     "Floor": floor,
