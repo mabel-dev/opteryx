@@ -84,8 +84,9 @@ SYSTEM_VARIABLES_DEFAULTS: typing.Dict[str, VariableSchema] = {
     "default_tmp_storage_engine": (OrsoTypes.VARCHAR, "opteryx", VariableOwner.SERVER),
 
     # these are Opteryx specific variables
+    "cursor_read_size": (OrsoTypes.INTEGER, 100, VariableOwner.USER),  # number of records returned from FETCH
     "max_cache_evictions": (OrsoTypes.INTEGER, 32, VariableOwner.USER),
-    "max_size_single_cache_item": (OrsoTypes.INTEGER, 1024 * 1024, VariableOwner.SERVER),
+    "max_size_single_cache_item": (OrsoTypes.INTEGER, 2 * 1024 * 1024, VariableOwner.SERVER),
     "local_buffer_pool_size": (OrsoTypes.INTEGER, 256, VariableOwner.SERVER),
     "disable_high_priority": (OrsoTypes.BOOLEAN, False, VariableOwner.SERVER),
     "morsel_size": (OrsoTypes.INTEGER, 64 * 1024 * 1024, VariableOwner.USER),

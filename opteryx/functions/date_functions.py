@@ -76,17 +76,40 @@ def date_part(part, arr):
     """
 
     extractors = {
+        "nanosecond": compute.nanosecond,
+        "nanoseconds": compute.nanosecond,
         "microsecond": compute.microsecond,
+        "microseconds": compute.microsecond,
+        "millisecond": compute.millisecond,
+        "milliseconds": compute.millisecond,
         "second": compute.second,
         "minute": compute.minute,
         "hour": compute.hour,
         "day": compute.day,
         "dow": compute.day_of_week,
-        "week": compute.iso_week,
+        "week": compute.week,
         "month": compute.month,
         "quarter": compute.quarter,
         "doy": compute.day_of_year,
         "year": compute.year,
+        "isoyear": compute.iso_year,
+        # ** supported by parser but not by pyarrow
+        # century
+        # date
+        # decade
+        # epoch
+        # isodow
+        # julian
+        # millenium
+        # millennium
+        # timezone
+        # ** future support in parser
+        # dayofweek
+        # dayofyear
+        # isoweek
+        # time
+        # timezonehour
+        # timezoneminute
     }
 
     # if we get a date literal

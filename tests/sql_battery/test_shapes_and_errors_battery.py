@@ -819,6 +819,15 @@ STATEMENTS = [
         ("SELECT EXTRACT(dow FROM birth_date) FROM $astronauts", 357, 1, None),
         ("SELECT EXTRACT(DOW FROM birth_date) FROM $astronauts", 357, 1, None),
         ("SELECT EXTRACT(YEAR FROM '2022-02-02')", 1, 1, None),
+        ("SELECT EXTRACT(ISOYEAR FROM '2022-02-02')", 1, 1, None),
+        ("SELECT EXTRACT(millisecond FROM NOW())", 1, 1, None),
+        ("SELECT EXTRACT(milliseconds FROM NOW())", 1, 1, None),
+        ("SELECT EXTRACT(nanosecond FROM NOW())", 1, 1, None),
+        ("SELECT EXTRACT(millisecond FROM NOW())", 1, 1, None),
+        ("SELECT EXTRACT(nanoseconds FROM NOW())", 1, 1, None),
+        ("SELECT EXTRACT(millisecond FROM NOW())", 1, 1, None),
+        ("SELECT EXTRACT(dayofweek FROM NOW())", 1, 1, SqlError),
+
         ("SELECT DATE_FORMAT(birth_date, '%m-%y') FROM $astronauts", 357, 1, None),
         ("SELECT DATEDIFF('year', '2017-08-25', '2011-08-25') AS DateDiff;", 1, 1, None),
         ("SELECT DATEDIFF('days', '2022-07-07', birth_date) FROM $astronauts", 357, 1, None),
@@ -995,12 +1004,12 @@ STATEMENTS = [
         ("SELECT name FROM $satellites WHERE '192.168.0.1' | '192.168.0.0/24'", 177, 1, None),
         ("SELECT name FROM $satellites WHERE '192.168.0.1' | '192.167.0.0/24'", 0, 1, None),
         ("SELECT name FROM $satellites WHERE 12 | 22", 177, 1, None),
-]
-A = [
+
         ("SELECT COUNT(*), place FROM (SELECT CASE id WHEN 3 THEN 'Earth' WHEN 1 THEN 'Mercury' ELSE 'Elsewhere' END as place FROM $planets) AS SQ GROUP BY place;", 3, 2, None),
         ("SELECT COUNT(*), place FROM (SELECT CASE id WHEN 3 THEN 'Earth' WHEN 1 THEN 'Mercury' END as place FROM $planets) AS SQ GROUP BY place HAVING place IS NULL;", 1, 2, None),
         ("SELECT COUNT(*), place FROM (SELECT CASE id WHEN 3 THEN 'Earth' WHEN 1 THEN 'Mercury' ELSE 'Elsewhere' END as place FROM $planets) AS SQ GROUP BY place HAVING place IS NULL;", 0, 2, None),
-
+]
+A = [
         ("SELECT TRIM(LEADING 'E' FROM name) FROM $planets;", 9, 1, None),
         ("SELECT * FROM $planets WHERE TRIM(TRAILING 'arth' FROM name) = 'E'", 1, 20, None),
         ("SELECT * FROM $planets WHERE TRIM(TRAILING 'ahrt' FROM name) = 'E'", 1, 20, None),
