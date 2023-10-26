@@ -35,7 +35,7 @@ from opteryx.operators.aggregate_node import AGGREGATORS
 COMBINED_FUNCTIONS = {**FUNCTIONS, **AGGREGATORS}
 
 
-def merge_schemas(*dicts: Dict[str, RelationSchema]) -> Dict[str, RelationSchema]:
+def merge_schemas(*schemas: Dict[str, RelationSchema]) -> Dict[str, RelationSchema]:
     """
     Handles the merging of relations, requiring a custom merge function.
 
@@ -47,7 +47,7 @@ def merge_schemas(*dicts: Dict[str, RelationSchema]) -> Dict[str, RelationSchema
         A merged dictionary containing RelationSchemas.
     """
     merged_dict: Dict[str, RelationSchema] = {}
-    for dic in dicts:
+    for dic in schemas:
         if not isinstance(dic, dict):
             raise InvalidInternalStateError("Internal Error - merge_schemas expected dicts")
         for key, value in dic.items():
@@ -197,6 +197,11 @@ def inner_binder(node: Node, context: Dict[str, Any], step: str) -> Tuple[Node, 
     # If the node is of type IDENTIFIER, it's just a simple look up to bind the node.
     if node_type in (NodeType.IDENTIFIER, NodeType.EVALUATED):
         return locate_identifier(node, context)
+
+    if node_type == NodeType.EXPRESSION_LIST:
+        node.value, new_contexts = zip(*(inner_binder(parm, context, step) for parm in node.value))
+        merged_schemas = merge_schemas(*[ctx.schemas for ctx in new_contexts])
+        context.schemas = merged_schemas
 
     # Early exit for nodes representing calculated columns.
     # If the node represents a calculated column, if we're seeing it again it's because it

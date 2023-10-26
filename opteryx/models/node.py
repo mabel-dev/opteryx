@@ -160,3 +160,15 @@ class Node:
             new_value = _inner_copy(value)
             setattr(new_node, key, new_value)
         return new_node
+
+    def __deepcopy__(self, memo):
+        # Check if this object is already in `memo`
+        if id(self) in memo:
+            return memo[id(self)]
+
+        # Copying Nodes is hard, so we already had a helper
+        new_obj = self.copy()
+
+        # Store the new object in `memo` and return it
+        memo[id(self)] = new_obj
+        return new_obj
