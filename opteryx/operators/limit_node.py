@@ -20,7 +20,6 @@ This Node performs the LIMIT and the OFFSET steps
 import time
 from typing import Iterable
 
-from opteryx.exceptions import SqlError
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 from opteryx.utils import arrow

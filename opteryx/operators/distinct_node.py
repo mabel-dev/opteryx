@@ -21,7 +21,6 @@ from typing import Iterable
 
 from pyarrow import concat_tables
 
-from opteryx.exceptions import SqlError
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 from opteryx.third_party.pyarrow_ops import drop_duplicates
@@ -30,7 +29,9 @@ from opteryx.third_party.pyarrow_ops import drop_duplicates
 class DistinctNode(BasePlanNode):
     def __init__(self, properties: QueryProperties, **config):
         super().__init__(properties=properties)
-        self._distinct = config.get("distinct", True)
+        self._distinct_on = config.get("on")
+        if self._distinct_on:
+            self._distinct_on = [col.schema_column.identity for col in self._distinct_on]
 
     @property
     def config(self):  # pragma: no cover
@@ -47,4 +48,4 @@ class DistinctNode(BasePlanNode):
     def execute(self) -> Iterable:
         morsels = self._producers[0]  # type:ignore
 
-        yield drop_duplicates(concat_tables(morsels.execute()))
+        yield drop_duplicates(concat_tables(morsels.execute()), self._distinct_on)

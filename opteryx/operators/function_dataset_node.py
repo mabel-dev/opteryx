@@ -17,7 +17,6 @@ This is a SQL Query Execution Plan Node.
 
 This Node creates datasets based on function calls like VALUES and UNNEST.
 """
-import random
 import time
 from typing import Iterable
 
@@ -51,11 +50,14 @@ def _values(**parameters):
     return [{columns[i]: value.value for i, value in enumerate(values)} for values in values_array]
 
 
-def _fake_data(alias, *args):
-    rows, columns = int(args[0].value), int(args[1].value)
-    return [
-        {f"column_{col}": random.getrandbits(16) for col in range(columns)} for row in range(rows)
-    ]
+def _fake_data(**kwargs):
+    from orso.faker import generate_fake_data
+
+    rows = kwargs["rows"]
+    schema = kwargs["schema"]
+    for column in schema.columns:
+        column.name = column.identity
+    return generate_fake_data(schema, rows)
 
 
 FUNCTIONS = {
@@ -103,7 +105,10 @@ class FunctionDatasetNode(BasePlanNode):
                 )
             raise err
 
-        table = pyarrow.Table.from_pylist(data)
+        if isinstance(data, list):
+            table = pyarrow.Table.from_pylist(data)
+        if hasattr(data, "arrow"):
+            table = data.arrow()
 
         self.statistics.rows_read += table.num_rows
         self.statistics.columns_read += len(table.column_names)

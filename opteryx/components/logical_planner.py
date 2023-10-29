@@ -509,6 +509,7 @@ def create_node_relation(relation):
             else function["alias"]["name"]["value"]
         )
         function_step.args = [logical_planner_builders.build(arg) for arg in function["args"]]
+        function_step.columns = tuple(col["value"] for col in function["alias"]["columns"])
 
         step_id = random_string()
         sub_plan.add_node(step_id, function_step)
@@ -652,6 +653,8 @@ def plan_query(statement):
             plan += parent_plan
             parent_plan_exit_id = parent_plan.get_entry_points()[0]
             plan.add_edge(step_id, parent_plan_exit_id)
+
+        raise UnsupportedSyntaxError("Set operators are not supported")
 
         return plan
 
