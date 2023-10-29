@@ -18,6 +18,7 @@ from typing import Tuple
 from orso.schema import FlatColumn
 from orso.schema import RelationSchema
 from orso.tools import random_string
+from orso.types import OrsoTypes
 
 from opteryx.components.binder.binder import inner_binder
 from opteryx.components.binder.binder import locate_identifier_in_loaded_schemas
@@ -26,6 +27,7 @@ from opteryx.components.binder.binding_context import BindingContext
 from opteryx.exceptions import AmbiguousDatasetError
 from opteryx.exceptions import ColumnNotFoundError
 from opteryx.exceptions import InvalidInternalStateError
+from opteryx.exceptions import UnsupportedSyntaxError
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.models import LogicalColumn
@@ -308,6 +310,16 @@ class BinderVisitor:
 
     visit_aggregate = visit_aggregate_and_group
 
+    def visit_distinct(self, node: Node, context: BindingContext) -> Tuple[Node, BindingContext]:
+        if node.on:
+            # Bind the local columns to physical columns
+            node.on, group_contexts = zip(
+                *(inner_binder(col, context, node.identity) for col in node.on)
+            )
+            context.schemas = merge_schemas(*[ctx.schemas for ctx in group_contexts])
+
+        return node, context
+
     def visit_exit(self, node: Node, context: BindingContext) -> Tuple[Node, BindingContext]:
         # LOG: Exit
 
@@ -398,7 +410,6 @@ class BinderVisitor:
             context.schemas[relation_name] = schema
             node.columns = columns
         elif node.function == "GENERATE_SERIES":
-            node.alias = node.alias or "generate_series"
             node.relation_name = node.alias
             columns = [
                 LogicalColumn(
@@ -414,6 +425,64 @@ class BinderVisitor:
             )
             context.schemas[node.relation_name] = schema
             node.columns = columns
+        elif node.function == "FAKE":
+            from orso.schema import ColumnDisposition
+
+            node.relation_name = node.alias
+            node.rows = int(node.args[0].value)
+
+            if node.args[1].node_type == NodeType.NESTED:
+                column_definition = [node.args[1].centre]
+            else:
+                column_definition = node.args[1].value
+
+            special_handling = {
+                "NAME": (OrsoTypes.VARCHAR, ColumnDisposition.NAME),
+                "AGE": (OrsoTypes.INTEGER, ColumnDisposition.AGE),
+            }
+
+            columns = []
+            if isinstance(column_definition, tuple):
+                for i, column_type in enumerate(column_definition):
+                    name = node.columns[i] if i < len(node.columns) else f"column_{i}"
+                    column_type = str(column_type).upper()
+                    if column_type in special_handling:
+                        actual_type, disposition = special_handling[column_type]
+                        schema_column = FlatColumn(
+                            name=name, type=actual_type, disposition=disposition
+                        )
+                    else:
+                        schema_column = FlatColumn(name=name, type=column_type)
+                    columns.append(
+                        LogicalColumn(
+                            node_type=NodeType.IDENTIFIER,
+                            source_column=schema_column.name,
+                            source=node.alias,
+                            schema_column=schema_column,
+                        )
+                    )
+                node.columns = columns
+            else:
+                column_definition = int(column_definition)
+                names = node.columns + tuple(
+                    f"column_{i}" for i in range(len(node.columns), column_definition)
+                )
+                node.columns = [
+                    LogicalColumn(
+                        node_type=NodeType.IDENTIFIER,
+                        source_column=names[i],
+                        source=node.alias,
+                        schema_column=FlatColumn(name=names[i], type=OrsoTypes.INTEGER),
+                    )
+                    for i in range(column_definition)
+                ]
+
+            schema = RelationSchema(
+                name=node.relation_name,
+                columns=[c.schema_column for c in node.columns],
+            )
+            context.schemas[node.relation_name] = schema
+            node.schema = schema
         else:
             raise NotImplementedError(f"{node.function} does not exist")
         return node, context
@@ -463,6 +532,11 @@ class BinderVisitor:
 
                 raise IncompatibleTypesError(**mismatches)
 
+            if get_all_nodes_of_type(node.on, (NodeType.LITERAL,)):
+                raise UnsupportedSyntaxError(
+                    "JOIN conditions cannot include literal constant values."
+                )
+
         if node.using:
             # Remove the columns used in the join condition from both relations, they're in
             # the result set but not belonging to either table, whilst still belonging to both.
@@ -489,6 +563,15 @@ class BinderVisitor:
             context.schemas[f"$shared-{random_string()}"] = RelationSchema(
                 name=f"^{left_relation_name}#^{right_relation_name}#", columns=columns
             )
+
+        # SEMI and ANTI joins only return columns from one table
+        if node.type in ("left anti", "left semi"):
+            for schema in node.left_relation_names:
+                context.schemas.pop(schema)
+        if node.type in ("right anti", "right semi"):
+            for schema in node.right_relation_names:
+                context.schemas.pop(schema)
+
         if node.column:
             if not node.alias:
                 node.alias = f"UNNEST({node.column.query_column})"
@@ -577,6 +660,7 @@ class BinderVisitor:
         # We always have a $derived schema, even if it's empty
         if "$derived" in context.schemas:
             context.schemas["$project"] = context.schemas.pop("$derived")
+            context.schemas["$project"].name = "$project"
         if not "$derived" in context.schemas:
             context.schemas["$derived"] = derived.schema()
 

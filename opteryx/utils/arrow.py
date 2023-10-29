@@ -33,6 +33,7 @@ def limit_records(
     """
     remaining_rows = limit if limit is not None else float("inf")
     rows_left_to_skip = max(0, offset)
+    at_least_one = False
 
     for morsel in morsels:
         if rows_left_to_skip > 0:
@@ -48,8 +49,15 @@ def limit_records(
         if morsel.num_rows > 0:
             if morsel.num_rows < remaining_rows:
                 yield morsel
+                at_least_one = True
             else:
                 yield morsel.slice(offset=0, length=remaining_rows)
+                at_least_one = True
+
+        if not at_least_one:
+            # make sure we return at least an empty morsel from this function
+            yield morsel.slice(offset=0, length=0)
+            at_least_one = True
 
         remaining_rows -= morsel.num_rows
         if remaining_rows <= 0:

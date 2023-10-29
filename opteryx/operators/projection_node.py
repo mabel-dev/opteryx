@@ -46,7 +46,7 @@ class ProjectionNode(BasePlanNode):
 
     @property
     def config(self):  # pragma: no cover
-        return str(self._projection)
+        return str(self.projection)
 
     @property
     def name(self):  # pragma: no cover

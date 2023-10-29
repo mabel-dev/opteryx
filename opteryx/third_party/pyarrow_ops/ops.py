@@ -8,7 +8,7 @@ import numpy
 import pyarrow
 from pyarrow import compute
 
-from .helpers import columns_to_array
+from opteryx.third_party.pyarrow_ops.helpers import columns_to_array
 
 # Added for Opteryx, comparisons in filter_operators updated to match
 # this set is from sqloxide

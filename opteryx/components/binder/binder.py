@@ -92,7 +92,7 @@ def locate_identifier_in_loaded_schemas(
     return column, found_source_relation
 
 
-def locate_identifier(node: Node, context: Dict[str, Any]) -> Tuple[Node, Dict]:
+def locate_identifier(node: Node, context: "BindingContext") -> Tuple[Node, Dict]:
     """
     Locate which schema the identifier is defined in. We return a populated node
     and the context.
@@ -100,7 +100,7 @@ def locate_identifier(node: Node, context: Dict[str, Any]) -> Tuple[Node, Dict]:
     Parameters:
         node: Node
             The node representing the identifier
-        context: Dict[str, Any]
+        context: BindingContext
             The current query context.
 
     Returns:
@@ -110,8 +110,9 @@ def locate_identifier(node: Node, context: Dict[str, Any]) -> Tuple[Node, Dict]:
         UnexpectedDatasetReferenceError: If the source dataset is not found.
         ColumnNotFoundError: If the column is not found in the schema.
     """
+    from opteryx.components.binder import BindingContext
 
-    def create_variable_node(node: Node, context: Dict[str, Any]) -> Node:
+    def create_variable_node(node: Node, context: BindingContext) -> Node:
         """Populates a Node object for a variable."""
         schema_column = context.connection.variables.as_column(node.value)
         new_node = Node(
@@ -121,11 +122,6 @@ def locate_identifier(node: Node, context: Dict[str, Any]) -> Tuple[Node, Dict]:
             value=schema_column.value,
         )
         return new_node
-
-    # Check if the identifier is a variable
-    if node.current_name[0] == "@":
-        node = create_variable_node(node, context)
-        return node, context
 
     # get the list of candidate schemas
     if node.source:
@@ -148,6 +144,12 @@ def locate_identifier(node: Node, context: Dict[str, Any]) -> Tuple[Node, Dict]:
 
     # if we didn't find the column, suggest alternatives
     if not column:
+        # Check if the identifier is a variable
+        if node.current_name[0] == "@":
+            node = create_variable_node(node, context)
+            context.schemas["$derived"].columns.append(node.schema_column)
+            return node, context
+
         from opteryx.utils import suggest_alternative
 
         suggestion = suggest_alternative(
@@ -198,6 +200,7 @@ def inner_binder(node: Node, context: Dict[str, Any], step: str) -> Tuple[Node, 
     if node_type in (NodeType.IDENTIFIER, NodeType.EVALUATED):
         return locate_identifier(node, context)
 
+    # Expression Lists are part of how CASE statements are represented
     if node_type == NodeType.EXPRESSION_LIST:
         node.value, new_contexts = zip(*(inner_binder(parm, context, step) for parm in node.value))
         merged_schemas = merge_schemas(*[ctx.schemas for ctx in new_contexts])
