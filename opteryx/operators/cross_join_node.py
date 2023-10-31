@@ -22,13 +22,118 @@ import typing
 
 import numpy
 import pyarrow
+from orso.schema import FlatColumn
 
 from opteryx.exceptions import SqlError
+from opteryx.exceptions import UnsupportedTypeError
+from opteryx.managers.expression import NodeType
+from opteryx.models import Node
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 
 INTERNAL_BATCH_SIZE = 100  # config
 MAX_JOIN_SIZE = 500  # config
+
+
+def _cross_join_unnest_column(
+    morsels: typing.Iterable[pyarrow.Table], source: Node, target_column: FlatColumn
+) -> typing.Generator[pyarrow.Table, None, None]:
+    """
+    Perform a cross join on an unnested column of pyarrow tables.
+
+    Args:
+        morsels: An iterable of `pyarrow.Table` objects to be cross joined.
+        source: The source node indicating the column.
+        target_column: The column to be unnested.
+
+    Returns:
+        A generator that yields the resulting `pyarrow.Table` objects.
+    """
+
+    # Check if the source node type is an identifier, raise error otherwise
+    if source.node_type != NodeType.IDENTIFIER:
+        raise NotImplementedError("Can only CROSS JOIN UNNEST on a column")
+
+    column_type = None
+
+    # Loop through each morsel from the morsels execution
+    for left_morsel in morsels.execute():
+        # Break the morsel into batches to avoid memory issues
+        for left_block in left_morsel.to_batches(max_chunksize=INTERNAL_BATCH_SIZE):
+            # Fetch the data of the column to be unnested
+            column_data = left_block[source.schema_column.identity]
+
+            # Set column_type if it hasn't been determined already
+            if column_type is None:
+                column_type = column_data.type.value_type
+
+            # Initialize a dictionary to store new column data
+            columns_data = {name: [] for name in left_block.schema.names}
+            new_column_data = []
+
+            # Loop through each value in the column data
+            for i, value in enumerate(column_data):
+                # Check if value is valid and non-empty
+                if value.is_valid and len(value) != 0:
+                    # Determine how many times a row needs to be repeated based on the length of the unnest value
+                    repeat_count = len(value)
+
+                    # Repeat the data for each column accordingly
+                    for col_name in left_block.schema.names:
+                        columns_data[col_name].extend(
+                            [left_block.column(col_name)[i].as_py()] * repeat_count
+                        )
+
+                    # Extend the new column data with the unnested values
+                    new_column_data.extend(value.as_py())
+                else:
+                    # If value is not valid or empty, just append the existing data
+                    for col_name in left_block.schema.names:
+                        columns_data[col_name].append(left_block.column(col_name)[i].as_py())
+                    new_column_data.append(None)
+
+            # If no new data was generated, skip to next iteration
+            if not columns_data:
+                continue
+
+            # Convert lists to pyarrow arrays for each column
+            for col_name, col_data in columns_data.items():
+                columns_data[col_name] = pyarrow.array(col_data)
+
+            # Convert new column data to pyarrow array and set its type
+            columns_data[target_column.identity] = pyarrow.array(new_column_data, type=column_type)
+
+            # Create a new table from the arrays and yield the result
+            new_block = pyarrow.Table.from_arrays(
+                list(columns_data.values()), names=list(columns_data.keys())
+            )
+            yield new_block
+
+
+def _cross_join_unnest_literal(
+    morsels: typing.Iterable[pyarrow.Table], source: Node, target_column: FlatColumn
+) -> typing.Generator[pyarrow.Table, None, None]:
+    joined_list_size = len(source)
+
+    # Loop through each morsel from the morsels execution
+    for left_morsel in morsels.execute():
+        # Break the morsel into batches to avoid memory issues
+        for left_block in left_morsel.to_batches(max_chunksize=INTERNAL_BATCH_SIZE):
+            left_block = pyarrow.Table.from_batches([left_block], schema=left_morsel.schema)
+            block_size = left_block.num_rows
+
+            # Repeat each row in the table n times
+            repeated_indices = numpy.repeat(numpy.arange(block_size), joined_list_size)
+            appended_table = left_block.take(repeated_indices)
+
+            # Tile the array to match the new number of rows
+            tiled_array = numpy.tile(source, block_size)
+
+            # Convert tiled_array to PyArrow array and append it to the table
+            array_column = pyarrow.array(tiled_array)
+            appended_table = appended_table.append_column(target_column.identity, array_column)
+
+            yield appended_table
 
 
 def _cartesian_product(*arrays):
@@ -89,7 +194,23 @@ class CrossJoinNode(BasePlanNode):
 
     def __init__(self, properties: QueryProperties, **config):
         super().__init__(properties=properties)
-        self.join_type = config["type"]
+
+        self.source = config.get("column")
+
+        # do we have unnest details?
+        self._unnest_column = config.get("unnest_column")
+        self._unnest_target = config.get("unnest_target")
+
+        # handle variation in how the unnested column is represented
+        if self._unnest_column:
+            if self._unnest_column.node_type == NodeType.NESTED:
+                self._unnest_column = self._unnest_column.centre
+            # if we have a literal that's not a tuple, wrap it
+            if self._unnest_column.node_type == NodeType.LITERAL and not isinstance(
+                self._unnest_column.value, tuple
+            ):
+                self._unnest_column.value = tuple([self._unnest_column.value])
+
 
     @property
     def name(self):  # pragma: no cover
@@ -104,4 +225,16 @@ class CrossJoinNode(BasePlanNode):
         right_node = self._producers[1]  # type:ignore
         right_table = pyarrow.concat_tables(right_node.execute(), promote=True)  # type:ignore
 
-        yield from _cross_join(left_node, right_table)
+        if self._unnest_column is None:
+            yield from _cross_join(left_node, right_table)
+
+        elif isinstance(self._unnest_column.value, tuple):
+            yield from _cross_join_unnest_literal(
+                morsels=left_node,
+                source=self._unnest_column.value,
+                target_column=self._unnest_target,
+            )
+        else:
+            yield from _cross_join_unnest_column(
+                morsels=left_node, source=self._unnest_column, target_column=self._unnest_target
+            )

@@ -14,12 +14,14 @@
 Join Node
 
 This is a SQL Query Execution Plan Node.
+
+This handles most of the join types as a wrapper for pyarrow's JOIN functions, 
+only CROSS JOINs are not handled here.
 """
 from typing import Iterable
 
 import pyarrow
 
-from opteryx.exceptions import SqlError
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 

@@ -51,9 +51,6 @@ def create_physical_plan(logical_plan, query_properties):
             if node_config.get("type") == "cross join":
                 # CROSS JOINs are quite different
                 node = operators.CrossJoinNode(query_properties, **node_config)
-            elif node_config.get("type") == "cross join unnest":
-                # CROSS JOIN UNNEST different again
-                node = operators.CrossJoinUnnestNode(query_properties, **node_config)
             else:
                 node = operators.JoinNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Limit:

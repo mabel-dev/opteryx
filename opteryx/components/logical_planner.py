@@ -46,6 +46,7 @@ The plan does not try to be efficient or clever, at this point it is only trying
 from enum import Enum
 from enum import auto
 from typing import List
+from typing import Optional
 from typing import Tuple
 
 from orso.tools import random_string
@@ -430,6 +431,93 @@ STATEMENT PLANNERS
 """
 
 
+def process_join_tree(join: dict) -> LogicalPlanNode:
+    """
+    Processes a join tree from the AST and returns a LogicalPlanNode representing the join.
+    """
+
+    def extract_join_type(join: dict) -> str:
+        """
+        Extracts the type of the join from the AST node representing the join.
+        """
+        join_operator = join["join_operator"]
+
+        if join_operator == {"Inner": "Natural"}:
+            return "natural join"
+        elif join_operator == "CrossJoin":
+            return "cross join"
+
+        join_operator = next(iter(join["join_operator"]))
+
+        return {
+            "FullOuter": "full outer",
+            "Inner": "inner",
+            "LeftAnti": "left anti",
+            "LeftOuter": "left outer",
+            "LeftSemi": "left semi",
+            "RightAnti": "right anti",
+            "RightOuter": "right outer",
+            "RightSemi": "right semi",
+            "CrossJoin": "cross join",  # should never match, here for completeness
+            "Natural": "natural join",  # should never match, here for completeness
+        }.get(join_operator)
+
+    def extract_join_condition(join: dict) -> Tuple[Optional[str], Optional[List[str]]]:
+        """
+        Extracts the join's limiting condition from the AST node representing the join.
+        """
+        join_operator = join["join_operator"]
+        if not isinstance(join_operator, dict):
+            return None, None
+
+        join_on = None
+        join_using = None
+
+        join_operator = next(iter(join_operator))
+        join_condition = next(iter(join["join_operator"][join_operator]))
+        if join_condition == "On":
+            join_on = logical_planner_builders.build(
+                join["join_operator"][join_operator][join_condition]
+            )
+        if join_condition == "Using":
+            join_using = [
+                logical_planner_builders.build({"Identifier": identifier})
+                for identifier in join["join_operator"][join_operator][join_condition]
+            ]
+
+        return join_on, join_using
+
+    def extract_unnest_dataset(join: dict, join_type: str) -> Tuple[Optional[str], Optional[str]]:
+        """
+        Extracts information for an UNNEST dataset from the AST node representing the join.
+        """
+        unnest_column = None
+        unnest_alias = None
+        if (
+            join["relation"].get("Table", {}).get("name", [{}])[0].get("value", "").upper()
+            == "UNNEST"
+        ):
+            if not join_type in ("cross join", "inner"):
+                raise UnsupportedSyntaxError(
+                    "JOIN on UNNEST only supported for CROSS and INNER joins."
+                )
+            unnest_column = logical_planner_builders.build(join["relation"]["Table"]["args"][0])
+            if join["relation"]["Table"]["alias"]:
+                unnest_alias = join["relation"]["Table"]["alias"]["name"]["value"]
+            else:
+                unnest_alias = f"UNNEST({join_step.column.value})"
+
+        return unnest_column, unnest_alias
+
+    join_step = LogicalPlanNode(node_type=LogicalPlanStepType.Join)
+
+    join_step.type = extract_join_type(join)
+    join_step.on, join_step.using = extract_join_condition(join)
+    join_step.unnest_column, join_step.unnest_alias = extract_unnest_dataset(join, join_step.type)
+
+    return join_step
+
+
 def create_node_relation(relation):
     sub_plan = LogicalPlan()
     root_node = None
@@ -538,44 +626,7 @@ def create_node_relation(relation):
     _joins = relation.get("joins", [])
     for join in _joins:
         # add the join node
-        join_step = LogicalPlanNode(node_type=LogicalPlanStepType.Join, join=join["join_operator"])
-        if join["join_operator"] == {"Inner": "Natural"}:
-            join_step.type = "natural join"
-        elif join["join_operator"] == "CrossJoin":
-            # CROSS JOIN UNNEST is a special case
-            if join["relation"]["Table"]["name"][0]["value"].upper() == "UNNEST":
-                join_step.type = "cross join unnest"
-                join_step.column = logical_planner_builders.build(
-                    join["relation"]["Table"]["args"][0]
-                )
-                if join["relation"]["Table"]["alias"]:
-                    join_step.alias = join["relation"]["Table"]["alias"]["name"]["value"]
-                else:
-                    join_step.alias = f"UNNEST({join_step.column.value})"
-            else:
-                join_step.type = "cross join"
-        else:
-            join_operator = next(iter(join["join_operator"]))
-            join_condition = next(iter(join["join_operator"][join_operator]))
-            join_step.type = {
-                "FullOuter": "full outer",
-                "Inner": "inner",
-                "LeftAnti": "left anti",
-                "LeftOuter": "left outer",
-                "LeftSemi": "left semi",
-                "RightAnti": "right anti",
-                "RightOuter": "right outer",
-                "RightSemi": "right semi",
-            }.get(join_operator, join_operator)
-            if join_condition == "On":
-                join_step.on = logical_planner_builders.build(
-                    join["join_operator"][join_operator][join_condition]
-                )
-            elif join_condition == "Using":
-                join_step.using = [
-                    logical_planner_builders.build({"Identifier": identifier})
-                    for identifier in join["join_operator"][join_operator][join_condition]
-                ]
+        join_step = process_join_tree(join)
 
         left_node_id, left_plan = create_node_relation(join)
 
