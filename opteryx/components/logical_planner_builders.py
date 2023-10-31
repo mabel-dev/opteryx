@@ -483,11 +483,9 @@ def hex_literal(branch, alias=None, key=None):
 
 
 def tuple_literal(branch, alias=None, key=None):
-    print(branch)
     values = [build(t).value for t in branch]
     if values and isinstance(values[0], dict):
         values = [build(val["Identifier"]).value for val in values]
-    print(values)
     return Node(NodeType.LITERAL, type=OrsoTypes.ARRAY, value=tuple(values), alias=alias)
 
 

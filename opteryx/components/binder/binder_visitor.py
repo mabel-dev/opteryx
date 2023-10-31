@@ -572,14 +572,14 @@ class BinderVisitor:
             for schema in node.right_relation_names:
                 context.schemas.pop(schema)
 
-        if node.column:
-            if not node.alias:
-                node.alias = f"UNNEST({node.column.query_column})"
+        if node.unnest_column:
+            if not node.unnest_alias:
+                node.unnest_alias = f"UNNEST({node.unnest_column.query_column})"
             # this is the column which is being unnested
-            node.column, context = inner_binder(node.column, context, node.identity)
-            # this is the column that is being created - find it from it's name
-            node.target_column, found_source_relation = locate_identifier_in_loaded_schemas(
-                node.alias, context.schemas
+            node.unnest_column, context = inner_binder(node.unnest_column, context, node.identity)
+            # this is the column that is being created - find it from its name
+            node.unnest_target, found_source_relation = locate_identifier_in_loaded_schemas(
+                node.unnest_alias, context.schemas
             )
             if not found_source_relation:
                 from opteryx.utils import suggest_alternative

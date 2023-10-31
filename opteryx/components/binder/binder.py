@@ -34,6 +34,26 @@ from opteryx.operators.aggregate_node import AGGREGATORS
 
 COMBINED_FUNCTIONS = {**FUNCTIONS, **AGGREGATORS}
 
+def hash_tree(node):
+    from orso.cityhash import CityHash32
+
+    _hash = 0
+
+    # First recurse and do this for all the sub parts of the evaluation plan
+    if node.left:
+        _hash ^= hash_tree(node.left)
+    if node.right:
+        _hash ^= hash_tree(node.right)
+    if node.centre:
+        _hash ^= hash_tree(node.centre)
+    if node.parameters:
+        for parameter in node.parameters:
+            _hash ^= hash_tree(parameter)
+
+    if _hash == 0 and node.identity is not None:
+        return CityHash32(node.identity)
+
+    return _hash
 
 def merge_schemas(*schemas: Dict[str, RelationSchema]) -> Dict[str, RelationSchema]:
     """
@@ -162,6 +182,14 @@ def locate_identifier(node: Node, context: "BindingContext") -> Tuple[Node, Dict
             ],
         )
         raise ColumnNotFoundError(column=node.value, suggestion=suggestion)
+    elif node.current_name[0] == "@":
+        new_node = Node(
+            node_type=NodeType.LITERAL,
+            schema_column=column,
+            type=column.type,
+            value=column.value,
+        )
+        return new_node, context
 
     # Update node.source to the found relation name
     if not node.source:
@@ -215,7 +243,7 @@ def inner_binder(node: Node, context: Dict[str, Any], step: str) -> Tuple[Node, 
         found_column = schema.find_column(column_name)
 
         # If the column exists in the schema, update node and context accordingly.
-        if found_column:
+        if found_column: # and (hash_tree(found_column) == hash_tree(node)):
             node.schema_column = found_column
             node.query_column = node.alias or column_name
 

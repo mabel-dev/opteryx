@@ -1086,6 +1086,11 @@ STATEMENTS = [
         ("SELECT DISTINCT ON (planetId) planetId, name FROM $satellites ", 7, 2, None),
         ("SELECT 8 DIV 4", 1, 1, None),
 
+        # New and improved JOIN UNNESTs
+        ("SELECT * FROM $planets CROSS JOIN UNNEST(('Earth', 'Moon')) AS n", 18, 21, None),
+        ("SELECT * FROM $planets INNER JOIN UNNEST(('Earth', 'Moon')) AS n ON name = n", 1, 21, None),
+        ("SELECT * FROM $astronauts INNER JOIN UNNEST(missions) as mission ON mission = name", 0, 19, None),
+
         # These are queries which have been found to return the wrong result or not run correctly
         # FILTERING ON FUNCTIONS
         ("SELECT DATE(birth_date) FROM $astronauts FOR TODAY WHERE DATE(birth_date) < '1930-01-01'", 14, 1, None),
@@ -1150,7 +1155,7 @@ STATEMENTS = [
         # EXPLAIN has two heads (found looking a [#408])
         ("EXPLAIN SELECT * FROM $planets AS a INNER JOIN (SELECT id FROM $planets) AS b USING (id)", 5, 3, None),
         # ALIAS issues [#408]
-        ("SELECT $planets.* FROM $planets INNER JOIN (SELECT id FROM $planets) AS b USING (id)", 9, 21, None),
+        ("SELECT $planets.* FROM $planets INNER JOIN (SELECT id FROM $planets AS IP) AS b USING (id)", 9, 20, None),
         # DOUBLE QUOTED STRING [#399]
         ("SELECT birth_place['town'] FROM $astronauts WHERE birth_place['town'] = \"Rome\"", 1, 1, None),
         # COUNT incorrect
@@ -1161,12 +1166,12 @@ STATEMENTS = [
         ("SELECT is_reply_to FROM testdata.flat.formats.parquet WITH(NO_PARTITION) WHERE COALESCE(is_reply_to, -1) < 0", 74765, 1, None),
         # Names not found / clashes [#471]
         ("SELECT P.* FROM (SELECT * FROM $planets) AS P", 9, 20, None),
-        ("SELECT P0.id, P1.ID, P2.ID FROM $planets AS P0 JOIN (SELECT id AS ID, name FROM $planets) AS P1 ON P0.name = P1.name JOIN (SELECT id, name AS ID FROM $planets) AS P2 ON P0.name = P2.name", 9, 3, None),
+        ("SELECT P0.id, P1.ID, P2.ID FROM $planets AS P0 JOIN (SELECT id AS ID, name FROM $planets AS ppp) AS P1 ON P0.name = P1.name JOIN (SELECT id, name AS ID FROM $planets AS pppp) AS P2 ON P0.name = P2.name", 9, 3, None),
         ("SELECT P0.id, P1.ID FROM $planets AS P0 INNER JOIN (SELECT id, name AS ID FROM $planets) AS P1 ON P0.name = P1.name", 9, 2, None),
         ("SELECT P0.id, P1.ID FROM $planets AS P0 INNER JOIN (SELECT name, id AS ID FROM $planets) AS P1 USING (name)", 9, 2, UnsupportedSyntaxError),
         ("SELECT P0.id, P1.ID FROM $planets AS P0 LEFT JOIN (SELECT id, name AS ID FROM $planets) AS P1 ON P0.name = P1.name", 9, 2, None),
         # [#475] a variation of #471
-        ("SELECT P0.id, P1.ID, P2.ID FROM $planets AS P0 JOIN (SELECT CONCAT_WS(' ', list(id)) AS ID, MAX(name) AS n FROM $planets GROUP BY gravity) AS P1 ON P0.name = P1.n JOIN (SELECT CONCAT_WS(' ', list(id)) AS ID, MAX(name) AS n FROM $planets GROUP BY gravity) AS P2 ON P0.name = P2.n", 8, 3, None),
+        ("SELECT P0.id, P1.ID, P2.ID FROM $planets AS P0 JOIN (SELECT CONCAT_WS(' ', list(id)) AS ID, MAX(name) AS n FROM $planets AS Q1 GROUP BY gravity) AS P1 ON P0.name = P1.n JOIN (SELECT CONCAT_WS(' ', list(id)) AS ID, MAX(name) AS n FROM $planets AS Q2 GROUP BY gravity) AS P2 ON P0.name = P2.n", 8, 3, None),
         # no issue number - but these two caused a headache
         # FUNCTION (AGG)
         ("SELECT CONCAT(LIST(name)) FROM $planets GROUP BY gravity", 8, 1, None),
