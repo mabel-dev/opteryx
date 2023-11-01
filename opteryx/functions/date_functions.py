@@ -85,28 +85,28 @@ def date_part(part, arr):
         "second": compute.second,
         "minute": compute.minute,
         "hour": compute.hour,
+        "time": lambda x: compute.cast(x, "time64[us]"),
         "day": compute.day,
+        "dayofweek": compute.day_of_week,
         "dow": compute.day_of_week,
+        "date": lambda x: compute.cast(x, "date32"),
         "week": compute.week,
+        "isoweek": compute.iso_week,
         "month": compute.month,
         "quarter": compute.quarter,
+        "dayofyear": compute.day_of_year,
         "doy": compute.day_of_year,
         "year": compute.year,
         "isoyear": compute.iso_year,
+        "decade": lambda x: compute.divide(compute.year(x), 10),
+        "century": lambda x: compute.add(compute.divide(compute.year(x), 100), 1),
+        "epoch": lambda x: compute.divide(compute.cast(x, "int64"), 1000000.00),
         # ** supported by parser but not by pyarrow
-        # century
-        # date
-        # decade
-        # epoch
         # isodow
         # julian
         # millenium
         # millennium
         # timezone
-        # ** future support in parser
-        # dayofweek
-        # dayofyear
-        # isoweek
         # time
         # timezonehour
         # timezoneminute
