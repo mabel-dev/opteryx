@@ -834,6 +834,8 @@ STATEMENTS = [
         ("SELECT EXTRACT(DECADE FROM NOW())", 1, 1, None),
         ("SELECT EXTRACT(CENTURY FROM NOW())", 1, 1, None),
         ("SELECT EXTRACT(EPOCH FROM NOW())", 1, 1, None),
+        ("SELECT EXTRACT(JULIAN FROM NOW())", 1, 1, None),
+        ("SELECT EXTRACT(VANILLA FROM NOW())", 1, 1, ValueError), # InvalidFunctionParameterError),
 
         ("SELECT DATE_FORMAT(birth_date, '%m-%y') FROM $astronauts", 357, 1, None),
         ("SELECT DATEDIFF('year', '2017-08-25', '2011-08-25') AS DateDiff;", 1, 1, None),

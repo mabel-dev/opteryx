@@ -16,7 +16,9 @@ import numpy
 import pyarrow
 from pyarrow import compute
 
+from opteryx.exceptions import InvalidFunctionParameterError
 from opteryx.exceptions import SqlError
+from opteryx.utils import dates
 from opteryx.utils.dates import parse_iso
 
 
@@ -74,7 +76,7 @@ def date_part(part, arr):
     """
     Also the EXTRACT function - we extract a given part from an array of dates
     """
-
+    j2000_scalar = numpy.array([numpy.datetime64("2000-01-01T12:00:00", "us")])
     extractors = {
         "nanosecond": compute.nanosecond,
         "nanoseconds": compute.nanosecond,
@@ -101,9 +103,11 @@ def date_part(part, arr):
         "decade": lambda x: compute.divide(compute.year(x), 10),
         "century": lambda x: compute.add(compute.divide(compute.year(x), 100), 1),
         "epoch": lambda x: compute.divide(compute.cast(x, "int64"), 1000000.00),
+        "julian": lambda x: compute.add(
+            compute.divide(compute.milliseconds_between(x, j2000_scalar), 86400000.0), 2451545.0
+        )
         # ** supported by parser but not by pyarrow
         # isodow
-        # julian
         # millenium
         # millennium
         # timezone
@@ -120,7 +124,16 @@ def date_part(part, arr):
     if part in extractors:
         return extractors[part](arr)
 
-    raise SqlError(f"Date part `{part}` unsupported for EXTRACT")  # pragma: no cover
+    from opteryx.utils import suggest_alternative
+
+    alt = suggest_alternative(part, list(extractors.keys()))
+    if not alt:
+        raise InvalidFunctionParameterError(
+            f"Date part `{part}` unsupported for EXTRACT."
+        )  # pragma: no cover
+    raise InvalidFunctionParameterError(
+        f"Date part `{part}` unsupported for EXTRACT. Did you mean '{alt}'?"
+    )
 
 
 def date_diff(part, start, end):
