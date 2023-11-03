@@ -29,31 +29,41 @@ from opteryx.exceptions import InvalidInternalStateError
 from opteryx.exceptions import UnexpectedDatasetReferenceError
 from opteryx.functions import FUNCTIONS
 from opteryx.managers.expression import NodeType
+from opteryx.managers.expression import format_expression
 from opteryx.models import Node
 from opteryx.operators.aggregate_node import AGGREGATORS
 
 COMBINED_FUNCTIONS = {**FUNCTIONS, **AGGREGATORS}
 
+
 def hash_tree(node):
-    from orso.cityhash import CityHash32
+    from orso.cityhash import CityHash64
 
-    _hash = 0
+    def inner(node):
+        _hash = 0
 
-    # First recurse and do this for all the sub parts of the evaluation plan
-    if node.left:
-        _hash ^= hash_tree(node.left)
-    if node.right:
-        _hash ^= hash_tree(node.right)
-    if node.centre:
-        _hash ^= hash_tree(node.centre)
-    if node.parameters:
-        for parameter in node.parameters:
-            _hash ^= hash_tree(parameter)
+        # First recurse and do this for all the sub parts of the evaluation plan
+        if node.left:
+            _hash ^= inner(node.left)
+        if node.right:
+            _hash ^= inner(node.right)
+        if node.centre:
+            _hash ^= inner(node.centre)
+        if node.parameters:
+            for parameter in node.parameters:
+                _hash ^= inner(parameter)
 
-    if _hash == 0 and node.identity is not None:
-        return CityHash32(node.identity)
+        if _hash == 0 and node.identity is not None:
+            return CityHash64(node.identity)
+        if _hash == 0 and node.value is not None:
+            return CityHash64(str(node.value))
+        if _hash == 0 and node.node_type == NodeType.WILDCARD:
+            return CityHash64(str(node.source) + "*")
+        return _hash
 
-    return _hash
+    _hash = CityHash64(format_expression(node)) ^ inner(node)
+    return hex(_hash)[2:]
+
 
 def merge_schemas(*schemas: Dict[str, RelationSchema]) -> Dict[str, RelationSchema]:
     """
@@ -201,6 +211,10 @@ def locate_identifier(node: Node, context: "BindingContext") -> Tuple[Node, Dict
 
     # Update node.schema_column with the found column
     node.schema_column = column
+    # if may need to map source aliases to the columns if they weren't able to be
+    # mapped before now
+    if column.origin and len(column.origin) == 1:
+        node.source = column.origin[0]
     return node, context
 
 
@@ -243,7 +257,7 @@ def inner_binder(node: Node, context: Dict[str, Any], step: str) -> Tuple[Node, 
         found_column = schema.find_column(column_name)
 
         # If the column exists in the schema, update node and context accordingly.
-        if found_column: # and (hash_tree(found_column) == hash_tree(node)):
+        if found_column:  # and (found_column.identity == hash_tree(node)):
             node.schema_column = found_column
             node.query_column = node.alias or column_name
 
@@ -314,8 +328,11 @@ def inner_binder(node: Node, context: Dict[str, Any], step: str) -> Tuple[Node, 
 
             # we need to add this new column to the schema
             column_name = format_expression(node)
+            identity = hash_tree(node)
             aliases = [node.alias] if node.alias else []
-            schema_column = FunctionColumn(name=column_name, type=0, binding=func, aliases=aliases)
+            schema_column = FunctionColumn(
+                name=column_name, type=0, binding=func, aliases=aliases, identity=identity
+            )
             schemas["$derived"].columns.append(schema_column)
             node.function = func
             node.derived_from = []
@@ -323,11 +340,13 @@ def inner_binder(node: Node, context: Dict[str, Any], step: str) -> Tuple[Node, 
             node.query_column = node.alias or column_name
 
         else:
+            identity = hash_tree(node)
             schema_column = ExpressionColumn(
                 name=column_name,
                 aliases=[node.alias] if node.alias else [],
                 type=0,
                 expression=node.value,
+                identity=identity,
             )
             schemas["$derived"].columns.append(schema_column)
             node.schema_column = schema_column
