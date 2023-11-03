@@ -211,7 +211,6 @@ class CrossJoinNode(BasePlanNode):
             ):
                 self._unnest_column.value = tuple([self._unnest_column.value])
 
-
     @property
     def name(self):  # pragma: no cover
         return "Cross Join"

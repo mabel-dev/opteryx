@@ -586,16 +586,15 @@ def create_node_relation(relation):
                 f"Column created by {function_name} has no name, use AS to name the column."
             )
 
-        function = relation["relation"]["Table"]
-        function_name = function["name"][0]["value"].upper()
         function_step = LogicalPlanNode(
             node_type=LogicalPlanStepType.FunctionDataset, function=function_name
         )
-        function_step.alias = (
-            f"$function-{random_string()}"
-            if function["alias"] is None
-            else function["alias"]["name"]["value"]
-        )
+        if function_name == "UNNEST":
+            function_step.alias = f"$unnest-{random_string()}"
+            function_step.unnest_target = function["alias"]["name"]["value"]
+        else:
+            function_step.alias = function["alias"]["name"]["value"]
+
         function_step.args = [logical_planner_builders.build(arg) for arg in function["args"]]
         function_step.columns = tuple(col["value"] for col in function["alias"]["columns"])
 
@@ -629,6 +628,8 @@ def create_node_relation(relation):
         join_step = process_join_tree(join)
 
         left_node_id, left_plan = create_node_relation(join)
+
+        # ***** if the join is an unnest, the table needs fake name and the alias needs to be the column
 
         # add the left and right relation names - we sometimes need these later
         join_step.right_relation_names = get_subplan_schemas(sub_plan)

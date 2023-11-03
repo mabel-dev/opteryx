@@ -391,19 +391,14 @@ class BinderVisitor:
             context.schemas[relation_name] = schema
             node.columns = columns
         elif node.function == "UNNEST":
-            column_to_unnest = node.args[0].value
-            if node.args[0].node_type == NodeType.LITERAL:
-                column_to_unnest = "<value>"
-            if not node.alias:
-                node.alias = f"UNNEST({column_to_unnest})"
-            relation_name = f"$unnest-{random_string()}"
+            relation_name = node.alias
 
             columns = [
                 LogicalColumn(
                     node_type=NodeType.IDENTIFIER,
-                    source_column=node.alias,
+                    source_column=node.unnest_target,
                     source=relation_name,
-                    schema_column=FlatColumn(name=node.alias, type=0),
+                    schema_column=FlatColumn(name=node.unnest_target, type=0),
                 )
             ]
             schema = RelationSchema(name=relation_name, columns=[c.schema_column for c in columns])
@@ -715,6 +710,7 @@ class BinderVisitor:
         # get them to tell is the schema of the dataset
         # None means we don't know ahead of time - we can usually get something
         node.schema = node.connector.get_dataset_schema()
+        node.schema.aliases.append(node.alias)
         context.schemas[node.alias] = node.schema
         for column in node.schema.columns:
             column.origin = [node.alias]

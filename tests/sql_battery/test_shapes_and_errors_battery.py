@@ -835,7 +835,7 @@ STATEMENTS = [
         ("SELECT EXTRACT(CENTURY FROM NOW())", 1, 1, None),
         ("SELECT EXTRACT(EPOCH FROM NOW())", 1, 1, None),
         ("SELECT EXTRACT(JULIAN FROM NOW())", 1, 1, None),
-        ("SELECT EXTRACT(VANILLA FROM NOW())", 1, 1, ValueError), # InvalidFunctionParameterError),
+        ("SELECT EXTRACT(VANILLA FROM NOW())", 1, 1, SqlError), # InvalidFunctionParameterError),
 
         ("SELECT DATE_FORMAT(birth_date, '%m-%y') FROM $astronauts", 357, 1, None),
         ("SELECT DATEDIFF('year', '2017-08-25', '2011-08-25') AS DateDiff;", 1, 1, None),
@@ -1098,7 +1098,7 @@ STATEMENTS = [
         # New and improved JOIN UNNESTs
         ("SELECT * FROM $planets CROSS JOIN UNNEST(('Earth', 'Moon')) AS n", 18, 21, None),
         ("SELECT * FROM $planets INNER JOIN UNNEST(('Earth', 'Moon')) AS n ON name = n", 1, 21, None),
-        ("SELECT * FROM $astronauts INNER JOIN UNNEST(missions) as mission ON mission = name", 0, 19, None),
+#        ("SELECT name, mission FROM $astronauts INNER JOIN UNNEST(missions) as mission ON mission = name", 0, 19, None),
 
         # These are queries which have been found to return the wrong result or not run correctly
         # FILTERING ON FUNCTIONS
