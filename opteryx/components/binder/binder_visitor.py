@@ -334,6 +334,13 @@ class BinderVisitor:
         )
 
         def name_column(qualifier, column):
+            for projection_column in node.columns:
+                if (
+                    projection_column.schema_column
+                    and projection_column.schema_column.identity == column.identity
+                ):
+                    if projection_column.alias:
+                        return projection_column.alias
             if len(context.schemas) > 1 or needs_qualifier:
                 return f"{qualifier}.{column.name}"
             return column.name
@@ -517,6 +524,7 @@ class BinderVisitor:
             )
         if node.on:
             # All except CROSS JOINs have been mapped to have an ON condition
+            # The JOIN operator only support ON conditions.
             node.on, context = inner_binder(node.on, context, node.identity)
             node.left_columns, node.right_columns = extract_join_fields(
                 node.on, node.left_relation_names, node.right_relation_names
@@ -554,7 +562,7 @@ class BinderVisitor:
                         columns.append(right_column)
                         break
 
-            # shared columns exist in both schemas in some uses and in neither in other
+            # shared columns exist in both schemas in some uses and in neither in others
             context.schemas[f"$shared-{random_string()}"] = RelationSchema(
                 name=f"^{left_relation_name}#^{right_relation_name}#", columns=columns
             )
@@ -567,6 +575,7 @@ class BinderVisitor:
             for schema in node.right_relation_names:
                 context.schemas.pop(schema)
 
+        # If we have an unnest_column, how how it is bound is different to other columns
         if node.unnest_column:
             if not node.unnest_alias:
                 node.unnest_alias = f"UNNEST({node.unnest_column.query_column})"

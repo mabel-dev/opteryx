@@ -314,8 +314,6 @@ def try_cast(branch, alias=None, key="TryCast"):
 
 def extract(branch, alias=None, key=None):
     # EXTRACT(part FROM timestamp)
-    if not isinstance(alias, list):
-        alias = [] if alias is None else [alias]
     datepart = Node(NodeType.LITERAL, type=OrsoTypes.VARCHAR, value=branch["field"])
     value = build(branch["expr"])
 
