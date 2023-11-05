@@ -294,9 +294,10 @@ class Cursor(DataFrame):
         """
         results = self._execute_statements(operation, params)
         if results is not None:
+            result_data, self._result_type = next(results, (ResultType._UNDEFINED, None))
             if limit is not None:
-                results = utils.arrow.limit_records(results, limit)
-        return pyarrow.concat_tables(results, promote=True)
+                result_data = utils.arrow.limit_records(result_data, limit)
+        return pyarrow.concat_tables(result_data, mode="default")
 
     @property
     def stats(self) -> Dict[str, Any]:
