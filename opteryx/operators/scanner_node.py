@@ -88,3 +88,5 @@ class ScannerNode(BasePlanNode):
             self.execution_time += time.monotonic_ns() - start_clock
             yield normalize_morsel(schema, morsel)
             start_clock = time.monotonic_ns()
+        if morsel:
+            self.statistics.columns_read += morsel.num_columns

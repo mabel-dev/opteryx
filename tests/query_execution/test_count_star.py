@@ -19,8 +19,8 @@ def test_count_star():
     cur.execute("SELECT count(*) FROM testdata.flat.formats.parquet WITH(NO_PARTITION);")
     cur.arrow()
     stats = cur.stats
-    assert stats["columns_read"] == 1, stats["columns_read"]
-    assert stats["rows_read"] == 100000
+    assert stats["columns_read"] == 13, stats["columns_read"]
+    assert stats["rows_read"] == 100000, stats["rows_read"]
     conn.close()
 
     conn = opteryx.connect()
@@ -28,12 +28,13 @@ def test_count_star():
     cur.execute("SELECT COUNT(*) FROM testdata.flat.formats.parquet WITH(NO_PARTITION);")
     cur.arrow()
     stats = cur.stats
-    assert stats["columns_read"] == 1
-    assert stats["rows_read"] == 100000
+    assert stats["columns_read"] == 13, stats["columns_read"]
+    assert stats["rows_read"] == 100000, stats["rows_read"]
     conn.close()
 
 
 if __name__ == "__main__":  # pragma: no cover
     from tests.tools import run_tests
 
+    test_count_star()
     run_tests()

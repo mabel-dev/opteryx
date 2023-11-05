@@ -7,7 +7,7 @@ import sys
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
-from opteryx.components.binder.binder_visitor import BinderVisitor
+from opteryx.components.binder.binder_visitor import BinderVisitor, BindingContext
 from opteryx.components.logical_planner import LogicalPlan, LogicalPlanNode, LogicalPlanStepType
 from orso.schema import RelationSchema
 
@@ -44,38 +44,38 @@ def test_logical_plan_visitor():
 
     class TestBinderVisitor(BinderVisitor):
         def visit_scan(self, node, context):
-            context.setdefault("schemas", [])[node.relation] = RelationSchema(name="test")
+            context.schemas[node.relation] = RelationSchema(name="test")
             node.source = node.relation
             return node, context
 
         def visit_filter(self, node, context):
             # the filter has the left scan before it
-            node.sources = context.get("schemas")
+            node.sources = set(context.schemas.keys())
             return node, context
 
         def visit_union(self, node, context):
-            node.sources = context.get("schemas")
+            node.sources = set(context.schemas.keys())
             return node, context
 
         def visit_project(self, node, context):
             # the project has the left and right scans before it
-            node.sources = context.get("schemas")
+            node.sources = set(context.schemas.keys())
             return node, context
 
-    context = {
-        "schemas": {},
-        "cache": None,
-        "connection": None,
-        "relations": set(),
-    }
+    context = BindingContext(
+        schemas={}, qid="12345", connection=None, relations=set(), statistics=None
+    )
 
     visitor = TestBinderVisitor()
-    visitor.traverse(plan, 4, context)
+    bound_plan, bound_context = visitor.traverse(plan, 4, context)
 
-    # this is just on the left branch
-    assert set(filter_node.sources) == {"left"}, filter_node.sources
-    # this is where the left and right branches meet
-    assert set(union_node.sources) == {"left", "right"}, union_node.sources
+    for nid, node in bound_plan.nodes(True):
+        if node.node_type == LogicalPlanStepType.Filter:
+            # this is just on the left branch
+            assert set(node.sources) == {"left"}, node.sources
+        if node.node_type == LogicalPlanStepType.Union:
+            # this is where the left and right branches meet
+            assert set(node.sources) == {"left", "right"}, node.sources
 
 
 if __name__ == "__main__":  # pragma: no cover
