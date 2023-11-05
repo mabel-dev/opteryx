@@ -26,9 +26,9 @@ STATEMENTS = [
         ("SELECT * FROM $astronauts", 357, 19, None),
 
         # Large results can't be added to pages [#453]
-        ("SELECT SHA512(column_0) FROM FAKE(150000, 1)", 150000, 1, None),
+        ("SELECT SHA512(column_0) FROM FAKE(150000, 1) AS FK", 150000, 1, None),
         # Low cardinality INNER JOINS blow memory [#444]
-        ("SELECT COUNT(*) FROM (SELECT * FROM testdata.flat.formats.parquet WITH(NO_PARTITION) LIMIT 50) INNER JOIN testdata.flat.formats.parquet WITH(NO_PARTITION) USING (user_verified)", 1, 1, None),
+        ("SELECT COUNT(*) FROM FAKE(50, (BOOLEAN, INTEGER)) AS L(bool) INNER JOIN FAKE(500000, (BOOLEAN,INTEGER)) AS R(bool) USING (bool)", 1, 1, None),
 ]
 
 

@@ -26,6 +26,7 @@ from opteryx.components.binder.binder import merge_schemas
 from opteryx.components.binder.binding_context import BindingContext
 from opteryx.exceptions import AmbiguousDatasetError
 from opteryx.exceptions import ColumnNotFoundError
+from opteryx.exceptions import InvalidFunctionParameterError
 from opteryx.exceptions import InvalidInternalStateError
 from opteryx.exceptions import UnsupportedSyntaxError
 from opteryx.managers.expression import NodeType
@@ -464,7 +465,12 @@ class BinderVisitor:
                     )
                 node.columns = columns
             else:
-                column_definition = int(column_definition)
+                try:
+                    column_definition = int(column_definition)
+                except TypeError:
+                    raise InvalidFunctionParameterError(
+                        f"Expected number of rows for 'FAKE' function or list of column types. Are you missing parenthesis?"
+                    )
                 names = node.columns + tuple(
                     f"column_{i}" for i in range(len(node.columns), column_definition)
                 )
