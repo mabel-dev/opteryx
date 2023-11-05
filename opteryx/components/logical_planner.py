@@ -547,6 +547,7 @@ def create_node_relation(relation):
 
                 subquery_plan = plan_query(subquery["subquery"])
                 exit_node = subquery_plan.get_exit_points()[0]
+                subquery_step.columns = subquery_plan[exit_node].columns
                 subquery_plan.remove_node(exit_node, heal=True)
 
                 sub_plan += subquery_plan

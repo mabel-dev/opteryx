@@ -51,7 +51,7 @@ class ExitNode(BasePlanNode):
         final_names = []
         for column in self.columns:
             final_columns.append(column.schema_column.identity)
-            final_names.append(column.query_column)
+            final_names.append(column.current_name)
 
         if len(final_columns) != len(set(final_columns)):
             from collections import Counter

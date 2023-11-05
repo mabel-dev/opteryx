@@ -272,7 +272,7 @@ STATEMENTS = [
         ("SELECT name as Name, name as NAME FROM $satellites", 177, 2, AmbiguousIdentifierError),
         ("SELECT COUNT(id) as countID, MIN(id) as minID FROM $satellites", 1, 2, None),
         ("SELECT s.id as satelliteID, p.id as planetID FROM $satellites s JOIN $planets p ON s.planetId = p.id", 177, 2, None),
-        ("SELECT x.id FROM (SELECT id as ID FROM $satellites WHERE id < 10) x", 9, 1, None),
+        ("SELECT x.ID FROM (SELECT id as ID FROM $satellites WHERE id < 10) x", 9, 1, None),
         ("SELECT name as n as m FROM $satellites", None, 1, SqlError),
         ("SELECT id*2 as doubleID FROM $satellites", 177, 1, None),
         ("SELECT id as Identifier FROM $satellites ORDER BY Identifier", 177, 1, None),
@@ -1175,10 +1175,12 @@ STATEMENTS = [
         ("SELECT is_reply_to FROM testdata.flat.formats.parquet WITH(NO_PARTITION) WHERE COALESCE(is_reply_to, -1) < 0", 74765, 1, None),
         # Names not found / clashes [#471]
         ("SELECT P.* FROM (SELECT * FROM $planets) AS P", 9, 20, None),
-        ("SELECT P0.id, P1.ID, P2.ID FROM $planets AS P0 JOIN (SELECT id AS ID, name FROM $planets AS ppp) AS P1 ON P0.name = P1.name JOIN (SELECT id, name AS ID FROM $planets AS pppp) AS P2 ON P0.name = P2.name", 9, 3, None),
-        ("SELECT P0.id, P1.ID FROM $planets AS P0 INNER JOIN (SELECT id, name AS ID FROM $planets) AS P1 ON P0.name = P1.name", 9, 2, None),
+        ("SELECT P0.id, P1.ID, P2.ID FROM $planets AS P0 JOIN (SELECT id AS ID, name FROM $planets AS ppp) AS P1 ON P0.name = P1.name JOIN (SELECT id, name AS ID FROM $planets AS pppp) AS P2 ON P0.name = P2.name", 9, 3, ColumnNotFoundError),
+        ("SELECT P0.id, P1.ID, P2.ID FROM $planets AS P0 JOIN (SELECT id AS ID, name FROM $planets AS ppp) AS P1 ON P0.name = P1.name JOIN (SELECT id, name AS ID FROM $planets AS pppp) AS P2 ON P0.name = P2.ID", 9, 3, ColumnNotFoundError),
+        ("SELECT P0.id, P1.ID FROM $planets AS P0 INNER JOIN (SELECT id, name AS ID FROM $planets) AS P1 ON P0.name = P1.name", 9, 2, ColumnNotFoundError),
+        ("SELECT P0.id, P1.ID FROM $planets AS P0 INNER JOIN (SELECT id, name AS ID FROM $planets) AS P1 ON P0.name = P1.ID", 9, 2, ColumnNotFoundError),
         ("SELECT P0.id, P1.ID FROM $planets AS P0 INNER JOIN (SELECT name, id AS ID FROM $planets) AS P1 USING (name)", 9, 2, UnsupportedSyntaxError),
-        ("SELECT P0.id, P1.ID FROM $planets AS P0 LEFT JOIN (SELECT id, name AS ID FROM $planets) AS P1 ON P0.name = P1.name", 9, 2, None),
+        ("SELECT P0.id, P1.ID FROM $planets AS P0 LEFT JOIN (SELECT id, name AS ID FROM $planets) AS P1 ON P0.name = P1.ID", 9, 2, None),
         # [#475] a variation of #471
         ("SELECT P0.id, P1.ID, P2.ID FROM $planets AS P0 JOIN (SELECT CONCAT_WS(' ', list(id)) AS ID, MAX(name) AS n FROM $planets AS Q1 GROUP BY gravity) AS P1 ON P0.name = P1.n JOIN (SELECT CONCAT_WS(' ', list(id)) AS ID, MAX(name) AS n FROM $planets AS Q2 GROUP BY gravity) AS P2 ON P0.name = P2.n", 8, 3, None),
         # no issue number - but these two caused a headache
