@@ -324,7 +324,7 @@ class BinderVisitor:
         # LOG: Exit
 
         # clear the derived schema
-        context.schemas["$derived"] = derived.schema()
+        context.schemas.pop("$derived", None)
 
         seen = set()
         needs_qualifier = any(
@@ -363,16 +363,19 @@ class BinderVisitor:
         for qualifier, schema in context.schemas.items():
             for column in schema.columns:
                 if keep_column(column, identities):
-                    column_reference = Node(
+                    column_name = name_column(qualifier=qualifier, column=column)
+                    column_reference = LogicalColumn(
                         node_type=NodeType.IDENTIFIER,
-                        name=column.name,
+                        source_column=column_name,
+                        source=None,
+                        alias=None,
                         schema_column=column,
-                        type=column.type,
-                        query_column=name_column(qualifier, column),
                     )
                     columns.append(column_reference)
 
         node.columns = columns
+
+        context.schemas["$derived"] = derived.schema()
 
         return node, context
 
@@ -738,11 +741,29 @@ class BinderVisitor:
         return node, context
 
     def visit_subquery(self, node: Node, context: BindingContext) -> Tuple[Node, BindingContext]:
+        node, context = self.visit_exit(node, context)
+
         # we sack all the tables we previously knew and create a new set of schemas here
         columns = []
         for name, schema in context.schemas.items():
             for schema_column in schema.columns:
+                projection_column = [
+                    column
+                    for column in node.columns
+                    if column.schema_column.identity == schema_column.identity
+                ]
+                if len(projection_column) > 1:
+                    from opteryx.exceptions import AmbiguousIdentifierError
+
+                    raise AmbiguousIdentifierError(
+                        message=f"Sub Query contains multiple instances of the same column."
+                    )
+
                 schema_column.origin = [node.alias]
+                schema_column.name = (
+                    projection_column[0].current_name if projection_column else schema_column.name
+                )
+                schema_column.aliases = []
                 columns.append(schema_column)
             if name[0] != "$" and name in context.relations:
                 context.relations.remove(name)
