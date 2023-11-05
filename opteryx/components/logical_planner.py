@@ -117,7 +117,7 @@ class LogicalPlanNode(Node):
                 return f"FILTER ({format_expression(self.condition)})"
             if node_type == LogicalPlanStepType.Join:
                 if self.on:
-                    return f"{self.type.upper()} JOIN ({format_expression(self.on)})"
+                    return f"{self.type.upper()} JOIN ({format_expression(self.on, True)})"
                 if self.using:
                     return f"{self.type.upper()} JOIN (USING {','.join(map(format_expression, self.using))})"
                 return self.type.upper()
