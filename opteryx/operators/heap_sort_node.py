@@ -112,7 +112,7 @@ class HeapSortNode(BasePlanNode):
             # add what we've collected before to the table
             if collected_rows:  # pragma: no cover
                 self.statistics.morsel_merges += 1
-                morsel = pyarrow.concat_tables([collected_rows, morsel], promote=True)
+                morsel = pyarrow.concat_tables([collected_rows, morsel], mode="default")
 
             morsel = morsel.sort_by(mapped_order)
             collected_rows = morsel.slice(offset=0, length=self.limit)

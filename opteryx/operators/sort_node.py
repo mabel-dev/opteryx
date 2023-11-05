@@ -58,7 +58,7 @@ class SortNode(BasePlanNode):
             yield morsels[0]
             return
 
-        table = concat_tables(morsels, promote=True)
+        table = concat_tables(morsels, mode="default")
 
         start_time = time.time_ns()
 
