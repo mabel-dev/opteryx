@@ -268,7 +268,7 @@ class BinderVisitor:
         """
         if node.aggregates:
             tmp_aggregates, _ = zip(
-                *(inner_binder(aggregate, context, node.identity) for aggregate in node.aggregates)
+                *(inner_binder(aggregate, context) for aggregate in node.aggregates)
             )
             node.aggregates = list(tmp_aggregates)
 
@@ -276,9 +276,7 @@ class BinderVisitor:
         # 1) the easy one - the columns explictly in the GROUP BY
         columns_to_keep = set()
         if node.groups:
-            tmp_groups, _ = zip(
-                *(inner_binder(group, context, node.identity) for group in node.groups)
-            )
+            tmp_groups, _ = zip(*(inner_binder(group, context) for group in node.groups))
             columns_to_keep = {col.schema_column.identity for col in tmp_groups}
         # 2) the columns referenced in the SELECT
         all_identifiers = [
@@ -313,9 +311,7 @@ class BinderVisitor:
     def visit_distinct(self, node: Node, context: BindingContext) -> Tuple[Node, BindingContext]:
         if node.on:
             # Bind the local columns to physical columns
-            node.on, group_contexts = zip(
-                *(inner_binder(col, context, node.identity) for col in node.on)
-            )
+            node.on, group_contexts = zip(*(inner_binder(col, context) for col in node.on))
             context.schemas = merge_schemas(*[ctx.schemas for ctx in group_contexts])
 
         return node, context
@@ -356,7 +352,7 @@ class BinderVisitor:
 
         identities = []
         for column in (col for col in node.columns if col.node_type != NodeType.WILDCARD):
-            new_col, _ = inner_binder(column, context, node.identity)
+            new_col, _ = inner_binder(column, context)
             identities.append(new_col.schema_column.identity)
 
         columns = []
@@ -528,7 +524,7 @@ class BinderVisitor:
         if node.on:
             # All except CROSS JOINs have been mapped to have an ON condition
             # The JOIN operator only support ON conditions.
-            node.on, context = inner_binder(node.on, context, node.identity)
+            node.on, context = inner_binder(node.on, context)
             node.left_columns, node.right_columns = extract_join_fields(
                 node.on, node.left_relation_names, node.right_relation_names
             )
@@ -583,7 +579,7 @@ class BinderVisitor:
             if not node.unnest_alias:
                 node.unnest_alias = f"UNNEST({node.unnest_column.query_column})"
             # this is the column which is being unnested
-            node.unnest_column, context = inner_binder(node.unnest_column, context, node.identity)
+            node.unnest_column, context = inner_binder(node.unnest_column, context)
             # this is the column that is being created - find it from its name
             node.unnest_target, found_source_relation = locate_identifier_in_loaded_schemas(
                 node.unnest_alias, context.schemas
@@ -632,9 +628,7 @@ class BinderVisitor:
         node.columns = columns
 
         # Bind the local columns to physical columns
-        node.columns, group_contexts = zip(
-            *(inner_binder(col, context, node.identity) for col in node.columns)
-        )
+        node.columns, group_contexts = zip(*(inner_binder(col, context) for col in node.columns))
         context.schemas = merge_schemas(*[ctx.schemas for ctx in group_contexts])
 
         # Check for duplicates
@@ -677,14 +671,14 @@ class BinderVisitor:
 
     def visit_filter(self, node: Node, context: BindingContext) -> Tuple[Node, BindingContext]:
         original_context = context.copy()
-        node.condition, context = inner_binder(node.condition, context, node.identity)
+        node.condition, context = inner_binder(node.condition, context)
 
         return node, original_context
 
     def visit_order(self, node: Node, context: BindingContext) -> Tuple[Node, BindingContext]:
         order_by = []
         for column, direction in node.order_by:
-            bound_column, context = inner_binder(column, context, node.identity)
+            bound_column, context = inner_binder(column, context)
 
             order_by.append(
                 (

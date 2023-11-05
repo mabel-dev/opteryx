@@ -103,7 +103,7 @@ def format_expression(root, qualify: bool = False):
     if node_type == NodeType.NESTED:
         return f"({format_expression(root.centre, qualify)})"
     if node_type == NodeType.IDENTIFIER:
-        if qualify:
+        if qualify and root.source:
             return root.qualified_name
         return root.current_name
     return str(root.value)

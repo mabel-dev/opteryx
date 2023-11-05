@@ -55,13 +55,15 @@ def hash_tree(node):
 
         if _hash == 0 and node.identity is not None:
             return CityHash64(node.identity)
+        if _hash == 0 and node.schema_column is not None:
+            return CityHash64(node.schema_column.identity)
         if _hash == 0 and node.value is not None:
             return CityHash64(str(node.value))
         if _hash == 0 and node.node_type == NodeType.WILDCARD:
             return CityHash64(str(node.source) + "*")
         return _hash
 
-    _hash = CityHash64(format_expression(node)) ^ inner(node)
+    _hash = CityHash64(format_expression(node, True)) ^ inner(node)
     return hex(_hash)[2:]
 
 
@@ -218,7 +220,24 @@ def locate_identifier(node: Node, context: "BindingContext") -> Tuple[Node, Dict
     return node, context
 
 
-def inner_binder(node: Node, context: Dict[str, Any], step: str) -> Tuple[Node, Dict[str, Any]]:
+def traversive_recursive_bind(node, context):
+    # First recurse and do this for all the sub parts of the evaluation plan
+    if node.left:
+        node.left, context = inner_binder(node.left, context)
+    if node.right:
+        node.right, context = inner_binder(node.right, context)
+    if node.centre:
+        node.centre, context = inner_binder(node.centre, context)
+    if node.parameters:
+        node.parameters, new_contexts = zip(
+            *(inner_binder(parm, context) for parm in node.parameters)
+        )
+        merged_schemas = merge_schemas(*[ctx.schemas for ctx in new_contexts])
+        context.schemas = merged_schemas
+    return node, context
+
+
+def inner_binder(node: Node, context: Dict[str, Any]) -> Tuple[Node, Dict[str, Any]]:
     """
     Note, this is a tree within a tree. This function represents a single step in the execution
     plan (associated with the relational algebra) which may itself be an evaluation plan
@@ -244,7 +263,7 @@ def inner_binder(node: Node, context: Dict[str, Any], step: str) -> Tuple[Node, 
 
     # Expression Lists are part of how CASE statements are represented
     if node_type == NodeType.EXPRESSION_LIST:
-        node.value, new_contexts = zip(*(inner_binder(parm, context, step) for parm in node.value))
+        node.value, new_contexts = zip(*(inner_binder(parm, context) for parm in node.value))
         merged_schemas = merge_schemas(*[ctx.schemas for ctx in new_contexts])
         context.schemas = merged_schemas
 
@@ -252,12 +271,13 @@ def inner_binder(node: Node, context: Dict[str, Any], step: str) -> Tuple[Node, 
     # If the node represents a calculated column, if we're seeing it again it's because it
     # has appeared earlier in the plan and in that case we don't need to recalcuate, we just
     # need to treat the result like an IDENTIFIER
-    column_name = node.query_column or format_expression(node)
+    # We discard columns not referenced, so this someonetimes holds the only reference to
+    # child columns, e.g. MAX(id), we may not have 'id' next time we see it, only MAX(id)
+    column_name = node.query_column or format_expression(node, True)
     for schema in context.schemas.values():
         found_column = schema.find_column(column_name)
-
         # If the column exists in the schema, update node and context accordingly.
-        if found_column:  # and (found_column.identity == hash_tree(node)):
+        if found_column:
             node.schema_column = found_column
             node.query_column = node.alias or column_name
 
@@ -265,24 +285,11 @@ def inner_binder(node: Node, context: Dict[str, Any], step: str) -> Tuple[Node, 
 
     schemas = context.schemas
 
-    # First recurse and do this for all the sub parts of the evaluation plan
-    if node.left:
-        node.left, context = inner_binder(node.left, context, step)
-    if node.right:
-        node.right, context = inner_binder(node.right, context, step)
-    if node.centre:
-        node.centre, context = inner_binder(node.centre, context, step)
-    if node.parameters:
-        node.parameters, new_contexts = zip(
-            *(inner_binder(parm, context, step) for parm in node.parameters)
-        )
-        merged_schemas = merge_schemas(*[ctx.schemas for ctx in new_contexts])
-        context.schemas = merged_schemas
+    # do the sub trees off this node
+    node, context = traversive_recursive_bind(node, context)
 
     # Now do the node we're at
-
     if node_type == NodeType.LITERAL:
-        column_name = format_expression(node)
         schema_column = ConstantColumn(
             name=column_name,
             aliases=[node.alias] if node.alias else [],
@@ -295,7 +302,6 @@ def inner_binder(node: Node, context: Dict[str, Any], step: str) -> Tuple[Node, 
         node.query_column = node.alias or column_name
 
     elif not node_type == NodeType.SUBQUERY and not node.do_not_create_column:
-        column_name = format_expression(node)
         schema_column = schemas["$derived"].find_column(column_name)
 
         if schema_column:
@@ -327,7 +333,6 @@ def inner_binder(node: Node, context: Dict[str, Any], step: str) -> Tuple[Node, 
                 raise FunctionNotFoundError(function=node.value, suggestion=suggest)
 
             # we need to add this new column to the schema
-            column_name = format_expression(node)
             identity = hash_tree(node)
             aliases = [node.alias] if node.alias else []
             schema_column = FunctionColumn(
