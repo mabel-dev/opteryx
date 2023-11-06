@@ -39,6 +39,8 @@ def format_expression(root, qualify: bool = False):
             return "'" + str(root.value) + "'"
         if literal_type == OrsoTypes.INTERVAL:
             return "<INTERVAL>"
+        if literal_type == OrsoTypes.NULL:
+            return "null"
         return str(root.value)
     # INTERAL IDENTIFIERS
     if node_type & INTERNAL_TYPE == INTERNAL_TYPE:
