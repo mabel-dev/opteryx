@@ -174,18 +174,26 @@ def get_subplan_schemas(sub_plan: Graph) -> List[str]:
         List[str]:
             A list of schemas corresponding to the exit and entry points in the sub-plan.
     """
-    schemas = []
-    for func_name in ["get_exit_points", "get_entry_points"]:
-        points = getattr(sub_plan, func_name)()
+    aliases = set()
 
-        for point in points:
-            if sub_plan[point].alias is not None:
-                schemas.append(sub_plan[point].alias)
+    def traverse(nid: dict):
+        # get the actual node
+        node = sub_plan[nid["name"]]
+        # If this node is a subquery, capture its alias and stop traversing deeper
+        if node.node_type == LogicalPlanStepType.Subquery:
+            aliases.add(node.alias)
+            return  # Stop traversing this branch as it's a separate scope
+        if node.alias:
+            aliases.add(node.alias)
 
-        if len(schemas) > 0:
-            return schemas
+        # Otherwise, continue traversing the children
+        for child in nid.get("children", []):
+            traverse(child)
 
-    return schemas
+    # Start the traversal from the provided node
+    traverse(sub_plan.depth_first_search())
+
+    return list(aliases)
 
 
 """

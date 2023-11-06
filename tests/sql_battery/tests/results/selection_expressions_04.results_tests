@@ -1,5 +1,5 @@
 {
     "summary": "Test NOT",
     "statement": "SELECT NOT 1 = 2 AS V",
-    "result": {"NOT 1.0 = 2.0": [true]}
+    "result": {"NOT 1 = 2": [true]}
 }
