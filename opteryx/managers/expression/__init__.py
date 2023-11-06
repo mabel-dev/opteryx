@@ -179,6 +179,7 @@ def _inner_evaluate(root: Node, table: Table, context: ExecutionContext):
 
         if node_type == NodeType.NOT:
             centre = _inner_evaluate(root.centre, table, context) if root.centre else None
+            centre = pyarrow.array(centre, type=pyarrow.bool_())
             return pyarrow.compute.invert(centre)
 
     # INTERAL IDENTIFIERS
