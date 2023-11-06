@@ -747,22 +747,27 @@ class BinderVisitor:
         columns = []
         for name, schema in context.schemas.items():
             for schema_column in schema.columns:
-                projection_column = [
-                    column
-                    for column in node.columns
-                    if column.schema_column.identity == schema_column.identity
-                ]
-                if len(projection_column) > 1:
-                    from opteryx.exceptions import AmbiguousIdentifierError
-
-                    raise AmbiguousIdentifierError(
-                        message=f"Sub Query contains multiple instances of the same column."
-                    )
-
-                schema_column.origin = [node.alias]
-                schema_column.name = (
-                    projection_column[0].current_name if projection_column else schema_column.name
+                # Find the column in the projection if it exists
+                projection_column = next(
+                    (
+                        column
+                        for column in node.columns
+                        if column.schema_column.identity == schema_column.identity
+                    ),
+                    None,
                 )
+
+                projection_column.source = node.alias
+                schema_column.origin = [node.alias]
+
+                schema_column.name = (
+                    projection_column.current_name if projection_column else schema_column.name
+                )
+
+                if "." in schema_column.name:
+                    # If the column is not in the projection, it should retain its name without any prefix
+                    schema_column.name = schema_column.name.split(".")[-1]
+
                 schema_column.aliases = []
                 columns.append(schema_column)
             if name[0] != "$" and name in context.relations:
@@ -772,6 +777,7 @@ class BinderVisitor:
         schema = RelationSchema(name=node.alias, columns=columns)
 
         context.schemas = {"$derived": derived.schema(), node.alias: schema}
+        context.relations = {node.alias}
         return node, context
 
     def traverse(

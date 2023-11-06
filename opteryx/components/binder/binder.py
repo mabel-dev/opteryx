@@ -29,42 +29,10 @@ from opteryx.exceptions import InvalidInternalStateError
 from opteryx.exceptions import UnexpectedDatasetReferenceError
 from opteryx.functions import FUNCTIONS
 from opteryx.managers.expression import NodeType
-from opteryx.managers.expression import format_expression
 from opteryx.models import Node
 from opteryx.operators.aggregate_node import AGGREGATORS
 
 COMBINED_FUNCTIONS = {**FUNCTIONS, **AGGREGATORS}
-
-
-def hash_tree(node):
-    from orso.cityhash import CityHash64
-
-    def inner(node):
-        _hash = 0
-
-        # First recurse and do this for all the sub parts of the evaluation plan
-        if node.left:
-            _hash ^= inner(node.left)
-        if node.right:
-            _hash ^= inner(node.right)
-        if node.centre:
-            _hash ^= inner(node.centre)
-        if node.parameters:
-            for parameter in node.parameters:
-                _hash ^= inner(parameter)
-
-        if _hash == 0 and node.identity is not None:
-            return CityHash64(node.identity)
-        if _hash == 0 and node.schema_column is not None:
-            return CityHash64(node.schema_column.identity)
-        if _hash == 0 and node.value is not None:
-            return CityHash64(str(node.value))
-        if _hash == 0 and node.node_type == NodeType.WILDCARD:
-            return CityHash64(str(node.source) + "*")
-        return _hash
-
-    _hash = CityHash64(format_expression(node, True)) ^ inner(node)
-    return hex(_hash)[2:]
 
 
 def merge_schemas(*schemas: Dict[str, RelationSchema]) -> Dict[str, RelationSchema]:
@@ -333,11 +301,8 @@ def inner_binder(node: Node, context: Dict[str, Any]) -> Tuple[Node, Dict[str, A
                 raise FunctionNotFoundError(function=node.value, suggestion=suggest)
 
             # we need to add this new column to the schema
-            identity = hash_tree(node)
             aliases = [node.alias] if node.alias else []
-            schema_column = FunctionColumn(
-                name=column_name, type=0, binding=func, aliases=aliases, identity=identity
-            )
+            schema_column = FunctionColumn(name=column_name, type=0, binding=func, aliases=aliases)
             schemas["$derived"].columns.append(schema_column)
             node.function = func
             node.derived_from = []
@@ -345,13 +310,11 @@ def inner_binder(node: Node, context: Dict[str, Any]) -> Tuple[Node, Dict[str, A
             node.query_column = node.alias or column_name
 
         else:
-            identity = hash_tree(node)
             schema_column = ExpressionColumn(
                 name=column_name,
                 aliases=[node.alias] if node.alias else [],
                 type=0,
                 expression=node.value,
-                identity=identity,
             )
             schemas["$derived"].columns.append(schema_column)
             node.schema_column = schema_column
