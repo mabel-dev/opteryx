@@ -19,7 +19,7 @@ def _hash_value(vals, nan=numpy.nan):
             ret.append(
                 functools.reduce(lambda x, y: _hash_value(f"{y}:{x}", 0), val, APOLLO_11_DURATION)
             )
-        elif val != val or val is None:  # nosemgrep
+        elif val != val or val is None:
             # nan is a float, but hash is an int, sometimes we need this to be an int
             ret.append(nan)
         else:
@@ -39,7 +39,7 @@ def _hash_value_new(vals, nan=numpy.nan):
             ret.append(CityHash64("".join(val.values())))
         elif isinstance(val, (list, tuple)):
             ret.append(CityHash64(numpy.array(val)))
-        elif val != val or val is None:  # nosemgrep
+        elif val != val or val is None:
             # nan is a float, but hash is an int, sometimes we need this to be an int
             ret.append(nan)
         else:
