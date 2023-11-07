@@ -142,7 +142,7 @@ def _non_group_aggregates(aggregates, table):
                 aggregate.value == "COUNT"
                 and aggregate.parameters[0].node_type == NodeType.WILDCARD
             ):
-                result["COUNT(*)"] = table.num_rows
+                result[aggregate.schema_column.identity] = table.num_rows
                 continue
             else:
                 raw_column_values = table[column_node.schema_column.identity].to_numpy()
@@ -225,14 +225,15 @@ class AggregateNode(BasePlanNode):
 
         # merge all the morsels together into one table, selecting only the columns
         # we're pretty sure we're going to use - this will fail for datasets
-        # larger than memory
+        # larger than memory until we implement some form of partitioning
         table = pyarrow.concat_tables(
             project(morsels.execute(), self.all_identifiers), mode="default"
         )
 
         # Allow grouping by functions by evaluating them first
         start_time = time.time_ns()
-        table = evaluate_and_append(self.evaluatable_nodes, table)
+        if self.evaluatable_nodes:
+            table = evaluate_and_append(self.evaluatable_nodes, table)
 
         # Add a "*" column, this is an int because when a bool it miscounts
         if "*" not in table.column_names:

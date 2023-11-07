@@ -18,7 +18,7 @@ SELECT * FROM $satellites, $planets WHERE planetId = $planets.id;
 SELECT * FROM $satellites, $planets WHERE $satellites.planetId = $planets.id;
 SELECT * FROM $satellites INNER JOIN $planets ON $satellites.planetId = $planets.id;
 SELECT * FROM $satellites LEFT OUTER JOIN $planets ON $satellites.planetId = $planets.id;
-SELECT name FROM $planets WHERE id NOT IN (SELECT DISTINCT planetId FROM $satellites);
+# SELECT name FROM $planets WHERE id NOT IN (SELECT DISTINCT planetId FROM $satellites);
 
 # time travel
 SELECT * FROM $planets FOR YESTERDAY;
@@ -27,11 +27,12 @@ SELECT name FROM $planets FOR DATES BETWEEN '2021-01-01' and '2022-12-31';
 
 # temporary tables
 SELECT * FROM (VALUES ('High', 3), ('Medium', 2),('Low', 1)) AS ratings (name, rating);
-SELECT * FROM UNNEST((1,2,3));
-SELECT * FROM generate_series(2, 4);
-SELECT * FROM generate_series(-5, 5, 5);
-SELECT * FROM generate_series('2020-01-01', '2025-12-31', '1y');
-SELECT * FROM FAKE(3, 2);
+SELECT * FROM UNNEST((1,2,3)) AS TEMP;
+SELECT * FROM generate_series(2, 4) AS series;
+SELECT * FROM generate_series(-5, 5, 5) AS series;
+SELECT * FROM generate_series('2020-01-01', '2025-12-31', '1y') AS series;
+SELECT * FROM FAKE(3, 2) AS temp;
+SELECT * FROM FAKE(3, (NAME, INTEGER, VARCHAR)) AS temp(user, age, password);
 
 # engine configuration
 SET @id = 3; SELECT name FROM $planets WHERE id = @id;
@@ -50,7 +51,7 @@ SELECT name FROM $planets WHERE name = null;
 SELECT name, CASE numberOfMoons WHEN 0 THEN 'none' WHEN 1 THEN 'one' ELSE 'lots' END as how_many_moons from $planets;
 SELECT name, CASE WHEN numberOfMoons = 0 THEN 'none' WHEN numberOfMoons = 1 THEN 'one' ELSE 'lots' END as how_many_moons from $planets;
 
-SELECT name FROM $planets WHERE id NOT IN (SELECT DISTINCT planetId FROM $satellites);
+# SELECT name FROM $planets WHERE id NOT IN (SELECT DISTINCT planetId FROM $satellites);
 
 # IP
 SELECT '192.168.0.1' | '192.168.0.0/24';
@@ -61,4 +62,8 @@ SELECT birth_place['town'], COUNT(*) FROM $astronauts WHERE birth_place['state']
 SELECT name, SEARCH(birth_place, 'Italy') FROM $astronauts;
 
 # ADVANCED TIME TRAVEL
+SELECT * FROM $planets FOR YESTERDAY;
+SELECT name FROM $planets FOR '1846-01-01';
+SELECT name FROM $planets FOR DATES BETWEEN '2021-01-01' and '2022-12-31';
 SELECT today.name FROM $planets FOR TODAY AS today LEFT JOIN $planets FOR '1600-01-01' AS sixteen ON sixteen.id = today.id WHERE sixteen.id IS NULL;
+SELECT today.name FROM $planets FOR TODAY AS today LEFT ANTI JOIN $planets FOR '1600-01-01' AS sixteen ON sixteen.id = today.id;

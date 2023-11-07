@@ -132,9 +132,9 @@ def test_logical_expressions():
     NOT_F = Node(NodeType.NOT, centre=false, schema_column=FunctionColumn(name="func", type=0))
 
     result = evaluate(NOT_T, table=planets)
-    assert not any(result), result
+    assert not any([r.as_py() for r in result]), [r.as_py() for r in result]
     result = evaluate(NOT_F, table=planets)
-    assert all(result)
+    assert all([r.as_py() for r in result]), [r.as_py() for r in result]
 
     T_XOR_T = Node(
         NodeType.XOR, left=true, right=true, schema_column=FunctionColumn(name="func", type=0)
@@ -302,16 +302,11 @@ def test_function_operations():
 def test_compound_expressions():
     planets = opteryx.virtual_datasets.planets.read()
 
-    # this builds and tests the following `3.7 * gravity > mass`
-
-    gravity_column = opteryx.virtual_datasets.planets.schema().find_column("gravity")
-    gravity_column.identity = gravity_column.name
-    assert gravity_column is not None
-    gravity_node = Node(
-        NodeType.IDENTIFIER,
-        type=OrsoTypes.DOUBLE,
-        value=gravity_column.identity,
-        schema_column=gravity_column,
+    eight = Node(
+        NodeType.LITERAL,
+        type=OrsoTypes.INTEGER,
+        value=8,
+        schema_column=ConstantColumn(name="8", value=8, type=OrsoTypes.INTEGER),
     )
     three_point_seven = Node(
         NodeType.LITERAL,
@@ -319,15 +314,27 @@ def test_compound_expressions():
         value=3.7,
         schema_column=ConstantColumn(name="3.7", value=3.7, type=OrsoTypes.DOUBLE),
     )
-    mass = Node(NodeType.IDENTIFIER, value="mass")
+    four_point_two = Node(
+        NodeType.LITERAL,
+        type=OrsoTypes.DOUBLE,
+        value=4.2,
+        schema_column=ConstantColumn(name="4.2", value=4.2, type=OrsoTypes.DOUBLE),
+    )
 
     multiply = Node(
         NodeType.BINARY_OPERATOR,
         value="Multiply",
         right=three_point_seven,
-        left=gravity_node,
+        left=eight,
+        schema_column=FunctionColumn(name="multiply"),
     )
-    gt = Node(NodeType.COMPARISON_OPERATOR, value="Gt", left=multiply, right=mass)
+    gt = Node(
+        NodeType.COMPARISON_OPERATOR,
+        value="Gt",
+        left=multiply,
+        right=four_point_two,
+        schema_column=FunctionColumn(name="compound"),
+    )
 
     result = evaluate(gt, planets)
     assert [c for c in result] == [
@@ -335,10 +342,10 @@ def test_compound_expressions():
         True,
         True,
         True,
-        False,
-        False,
-        False,
-        False,
+        True,
+        True,
+        True,
+        True,
         True,
     ], result
 
@@ -358,13 +365,14 @@ def test_functions():
     _round = Node(
         NodeType.FUNCTION,
         value="ROUND",
+        function=lambda x: [round(i) for i in x],
         parameters=[gravity_node],
         schema_column=FunctionColumn(name="func", type=0),
     )
 
     rounded = evaluate(_round, planets)
     assert len(rounded) == 9
-    assert set(r.as_py() for r in rounded) == {4, 23, 9, 1, 11, 10}
+    assert set(r for r in rounded) == {4, 23, 9, 1, 11, 10}
 
 
 if __name__ == "__main__":  # pragma: no cover

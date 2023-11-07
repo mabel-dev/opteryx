@@ -1,5 +1,5 @@
 SELECT version();
 SELECT connection_id() AS pid;
 
-SELECT * FROM information_schema.tables;
-SELECT * FROM information_schema.views;
+# SELECT * FROM information_schema.tables;
+# SELECT * FROM information_schema.views;

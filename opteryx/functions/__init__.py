@@ -64,7 +64,9 @@ def _get(value, item):
 
 VECTORIZED_CASTERS = {
     "BOOLEAN": "bool",
-    "NUMERIC": "float64",
+    "DOUBLE": "float64",
+    "INTEGER": "int64",
+    "DECIMAL": pyarrow.decimal128(14),
     "VARCHAR": "string",
     "TIMESTAMP": pyarrow.timestamp("us"),
 }
@@ -88,9 +90,13 @@ def safe(func, *parms):
 
 def try_cast(_type):
     """cast a column to a specified type"""
+    import decimal
+
     casters = {
         "BOOLEAN": bool,
-        "NUMERIC": float,
+        "DOUBLE": float,
+        "INTEGER": int,
+        "DECIMAL": decimal.Decimal,
         "VARCHAR": str,
         "TIMESTAMP": numpy.datetime64,
         "STRUCT": json.loads,
@@ -200,17 +206,23 @@ FUNCTIONS = {
     # TYPE CONVERSION
     "TIMESTAMP": cast("TIMESTAMP"),
     "BOOLEAN": cast("BOOLEAN"),
-    "NUMERIC": cast("NUMERIC"),
+    "NUMERIC": cast("DOUBLE"),
+    "INTEGER": cast("INTEGER"),
+    "DOUBLE": cast("DOUBLE"),
+    "DECIMAL": cast("DECIMAL"),
     "VARCHAR": cast("VARCHAR"),
     "STRING": cast("VARCHAR"),  # alias for VARCHAR
     "STR": cast("VARCHAR"),
     "STRUCT": _iterate_single_parameter(json.loads),
     "TRY_TIMESTAMP": try_cast("TIMESTAMP"),
     "TRY_BOOLEAN": try_cast("BOOLEAN"),
-    "TRY_NUMERIC": try_cast("NUMERIC"),
+    "TRY_NUMERIC": try_cast("DOUBLE"),
     "TRY_VARCHAR": try_cast("VARCHAR"),
     "TRY_STRING": try_cast("VARCHAR"),  # alias for VARCHAR
     "TRY_STRUCT": try_cast("STRUCT"),
+    "TRY_INTEGER": try_cast("INTEGER"),
+    "TRY_DECIMAL": try_cast("DECIMAL"),
+    "TRY_DOUBLE": try_cast("DOUBLE"),
 
     # STRINGS
     "LEN": _iterate_single_parameter(get_len),  # LENGTH(str) -> int
