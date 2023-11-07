@@ -358,7 +358,12 @@ class BinderVisitor:
                 if node.columns[0].value:
                     if isinstance(column.origin, str):
                         column.origin = [column.origin]
-                    return node.columns[0].value[0] in column.origin
+                    if node.columns[0].value[0] in column.origin:
+                        identities.append(column.identity)
+                        return True
+                    else:
+                        return False
+                identities.append(column.identity)
                 return True
             return column.identity in identities
 
@@ -381,7 +386,9 @@ class BinderVisitor:
                     )
                     columns.append(column_reference)
 
-        node.columns = columns
+        # we bound as we came across items in schemas, not the order the user wants them
+        desired_order = {id: index for index, id in enumerate(identities)}
+        node.columns = sorted(columns, key=lambda item: desired_order[item.schema_column.identity])
 
         context.schemas["$derived"] = derived.schema()
 
