@@ -338,8 +338,19 @@ class BinderVisitor:
                 ):
                     if projection_column.alias:
                         return projection_column.alias
-            if len(context.schemas) > 1 or needs_qualifier:
-                return f"{qualifier}.{column.name}"
+
+                    if len(context.relations) > 1 or needs_qualifier:
+                        if isinstance(projection_column, LogicalColumn):
+                            if qualifier:
+                                projection_column.sourcce = qualifier
+                            return projection_column.qualified_name
+                        return f"{qualifier}.{column.name}"
+
+                    if projection_column.query_column:
+                        return str(projection_column.query_column)
+                    if projection_column.current_name:
+                        return projection_column.current_name
+
             return column.name
 
         def keep_column(column, identities):
