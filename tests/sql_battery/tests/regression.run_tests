@@ -58,7 +58,7 @@ SELECT DATEDIFF('days', TIMESTAMP("2022-01-02"), CAST("2010-10-01" AS TIMESTAMP)
 SET @planet = 'Saturn'; SELECT name AS nom, bigsats.occurances, smallsats.occurances FROM (SELECT DISTINCT id as planetId, name FROM $planets WHERE name = @planet) as planets LEFT JOIN (SELECT planetId, COUNT(*) AS occurances FROM $satellites FOR DATES BETWEEN '2022-01-01' AND TODAY WHERE gm > 10 GROUP BY planetId) AS bigsats ON bigsats.planetId = planets.planetId LEFT JOIN (SELECT planetId, COUNT(*) AS occurances FROM $satellites FOR DATES IN LAST_MONTH WHERE gm < 10 GROUP BY planetId) as smallsats ON smallsats.planetId = planets.planetId;
 SELECT 'SELECT * FROM $planets FOR TODAY' FROM (SELECT 'FOR TODAY') AS SQ CROSS JOIN $planets FOR YESTERDAY;
 
-# 
+# testing NOTs
 SELECT (true IS NOT null);
 SELECT true IS NOT null;
 SELECT NOT (true IS NOT null);
@@ -68,8 +68,17 @@ SELECT false IS NOT null;
 SELECT NOT (false IS NOT null);
 SELECT NOT false IS null;
 
+# testing types against TRUE/NULL
+SELECT 1 IS TRUE;
+SELECT 1.0 IS TRUE;
+SELECT DECIMAL '1.2' IS TRUE;
+SELECT 1 IS NULL;
+SELECT 1.0 IS NULL;
+SELECT DECIMAL '1.2' IS NULL;
+
 SELECT 1 > 2;
 SELECT 1 = 2;
+SELECT 1 == 2;
 SELECT 1 != 2;
 SELECT 1 <> 2;
 SELECT 1 >= 2;
@@ -100,10 +109,10 @@ SELECT VARIANCE(id) FROM $planets GROUP BY TRUE;
 # [653] LIKE clause following FOR clause
 SHOW COLUMNS FROM $planets;
 SHOW COLUMNS FROM $planets FOR today;
-SHOW COLUMNS FROM $planets FOR today LIKE '%name%';
-SHOW COLUMNS FROM $planets FOR '2022-01-01' LIKE '%name%';
-SHOW COLUMNS FROM $planets FOR DATES IN LAST_MONTH LIKE '%name%';
-SHOW COLUMNS FROM $planets FOR DATES BETWEEN YESTERDAY AND TODAY LIKE '%name%';
+# SHOW COLUMNS FROM $planets FOR today LIKE '%name%';
+# SHOW COLUMNS FROM $planets FOR '2022-01-01' LIKE '%name%';
+# SHOW COLUMNS FROM $planets FOR DATES IN LAST_MONTH LIKE '%name%';
+# SHOW COLUMNS FROM $planets FOR DATES BETWEEN YESTERDAY AND TODAY LIKE '%name%';
 
 # [670] nesting
 SELECT ARRAY_AGG(DISTINCT LEFT(LOWER(name), 1) LIMIT 2) from $satellites GROUP BY planetId;

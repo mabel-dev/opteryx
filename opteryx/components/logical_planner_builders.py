@@ -294,9 +294,11 @@ def try_cast(branch, alias=None, key="TryCast"):
     elif "Varchar" in data_type:
         data_type = "VARCHAR"
     elif "Decimal" in data_type:
-        data_type = "NUMERIC"
-    elif "Numeric" in data_type:
-        data_type = "NUMERIC"
+        data_type = "DECIMAL"
+    elif "Integer" in data_type:
+        data_type = "INTEGER"
+    elif "Double" in data_type:
+        data_type = "DOUBLE"
     elif "Boolean" in data_type:
         data_type = "BOOLEAN"
     elif "STRUCT" in data_type:

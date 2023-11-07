@@ -30,14 +30,16 @@ def _is_null(values: numpy.ndarray) -> numpy.ndarray:
     Returns:
         numpy.ndarray: 1D array of booleans serving as a mask.
     """
-    if values.dtype.kind == "f":  # float
+    if values.dtype.kind in ("f", "b", "i"):  # float, bool, int
         return numpy.isnan(values)
     elif values.dtype.kind == "M":  # datetime64
         return numpy.isnat(values)
     elif values.dtype.kind in ["S", "O"]:  # string or object
         return values == None
     else:
-        raise TypeError(f"Unsupported dtype for _is_null: {values.dtype}")
+        raise TypeError(
+            f"Unsupported type for none comparison: {values.dtype} ({values.dtype.kind})"
+        )
 
 
 def _is_not_null(values: numpy.ndarray) -> numpy.ndarray:

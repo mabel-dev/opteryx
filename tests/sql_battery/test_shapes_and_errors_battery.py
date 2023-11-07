@@ -399,11 +399,11 @@ STATEMENTS = [
         ("SELECT CAST(planetId AS BOOLEAN) FROM $satellites", 177, 1, None),
         ("SELECT CAST(planetId AS VARCHAR) FROM $satellites", 177, 1, None),
         ("SELECT CAST('2022-01-0' || VARCHAR(planetId) AS TIMESTAMP) FROM $satellites", 177, 1, None),
-        ("SELECT CAST(planetId AS NUMERIC) FROM $satellites", 177, 1, None),
+        ("SELECT CAST(planetId AS INTEGER) FROM $satellites", 177, 1, None),
         ("SELECT TRY_CAST(planetId AS BOOLEAN) FROM $satellites", 177, 1, None),
         ("SELECT TRY_CAST(planetId AS VARCHAR) FROM $satellites", 177, 1, None),
         ("SELECT TRY_CAST(planetId AS TIMESTAMP) FROM $satellites", 177, 1, None),
-        ("SELECT TRY_CAST(planetId AS NUMERIC) FROM $satellites", 177, 1, None),
+        ("SELECT TRY_CAST(planetId AS INTEGER) FROM $satellites", 177, 1, None),
         ("SELECT NUMERIC(planetId) AS VALUE FROM $satellites GROUP BY NUMERIC(planetId)", 7, 1, None),
         ("SELECT INT(planetId) AS VALUE FROM $satellites GROUP BY INT(planetId)", 7, 1, None),
         ("SELECT INTEGER(planetId) AS VALUE FROM $satellites GROUP BY INTEGER(planetId)", 7, 1, None),
@@ -411,11 +411,11 @@ STATEMENTS = [
         ("SELECT CAST(planetId AS BOOLEAN) AS VALUE FROM $satellites", 177, 1, None),
         ("SELECT CAST(planetId AS VARCHAR) AS VALUE FROM $satellites", 177, 1, None),
         ("SELECT CAST('2022-01-0' || VARCHAR(planetId) AS TIMESTAMP) AS VALUE FROM $satellites", 177, 1, None),
-        ("SELECT CAST(planetId AS NUMERIC) AS VALUE FROM $satellites", 177, 1, None),
+        ("SELECT CAST(planetId AS INTEGER) AS VALUE FROM $satellites", 177, 1, None),
         ("SELECT TRY_CAST(planetId AS BOOLEAN) AS VALUE FROM $satellites", 177, 1, None),
         ("SELECT TRY_CAST(planetId AS VARCHAR) AS VALUE FROM $satellites", 177, 1, None),
         ("SELECT TRY_CAST(planetId AS TIMESTAMP) AS VALUE FROM $satellites", 177, 1, None),
-        ("SELECT TRY_CAST(planetId AS NUMERIC) AS VALUE FROM $satellites", 177, 1, None),
+        ("SELECT TRY_CAST(planetId AS DECIMAL) AS VALUE FROM $satellites", 177, 1, None),
         ("SELECT * FROM $planets WHERE id = GET(STRUCT('{\"a\":1,\"b\":\"c\"}'), 'a')", 1, 20, None),
 
         ("SELECT PI()", 1, 1, None),
@@ -1267,6 +1267,8 @@ STATEMENTS = [
         ("SELECT NOT NULL", 1, 1, None),
         # Columns in CAST statements appear to not be bound correctly
         ("SELECT SUM(CASE WHEN gm > 10 THEN 1 ELSE 0 END) AS gm_big_count FROM $satellites", 1, 1, None),
+        # COUNT(*) in non aggregated joins
+        ("SELECT COUNT(*), COUNT_DISTINCT(id) FROM $planets;", 1, 2, None),
 ]
 # fmt:on
 
