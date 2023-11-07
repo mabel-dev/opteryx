@@ -564,14 +564,14 @@ def case_when(value, alias: list = None, key=None):
             )
     if else_result is not None:
         conditions.append(Node(NodeType.LITERAL, type=OrsoTypes.BOOLEAN, value=True))
-    conditions_node = Node(NodeType.EXPRESSION_LIST, value=conditions)
+    conditions_node = Node(NodeType.EXPRESSION_LIST, parameters=conditions)
 
     results = []
     for result in value["results"]:
         results.append(build(result))
     if else_result is not None:
         results.append(else_result)
-    results_node = Node(NodeType.EXPRESSION_LIST, value=results)
+    results_node = Node(NodeType.EXPRESSION_LIST, parameters=results)
 
     return Node(
         NodeType.FUNCTION,

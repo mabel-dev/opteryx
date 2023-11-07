@@ -2,12 +2,48 @@ from dataclasses import dataclass
 from typing import Any
 
 from orso.schema import FlatColumn
+from orso.tools import random_string
 from orso.types import OrsoTypes
 
 
 @dataclass
 class ExpressionColumn(FlatColumn):
     expression: Any = None
+
+
+def _format_interval(value):
+    import datetime
+
+    # MonthDayNano is a superclass of list, do before list
+
+    if isinstance(value, tuple):
+        months, days, seconds = value
+    elif hasattr(value, "days"):
+        days = value.days
+        months = value.months
+        seconds = value.nanoseconds / 1e9
+    elif isinstance(value, datetime.timedelta):
+        days = value.days
+        months = 0
+        seconds = value.microseconds / 1e6 + value.seconds
+
+    hours, seconds = divmod(seconds, 3600)
+    minutes, seconds = divmod(seconds, 60)
+    years, months = divmod(months, 12)
+    parts = []
+    if years >= 1:
+        parts.append(f"{int(years)} YEAR")
+    if months >= 1:
+        parts.append(f"{int(months)} MONTH")
+    if days >= 1:
+        parts.append(f"{int(days)} DAY")
+    if hours >= 1:
+        parts.append(f"{int(hours)} HOUR")
+    if minutes >= 1:
+        parts.append(f"{int(minutes)} MINUTE")
+    if seconds > 0:
+        parts.append(f"{seconds:.2f} SECOND")
+    return " ".join(parts)
 
 
 def format_expression(root, qualify: bool = False):
@@ -38,7 +74,7 @@ def format_expression(root, qualify: bool = False):
         if literal_type == OrsoTypes.TIMESTAMP:
             return "'" + str(root.value) + "'"
         if literal_type == OrsoTypes.INTERVAL:
-            return "<INTERVAL>"
+            return _format_interval(root.value)
         if literal_type == OrsoTypes.NULL:
             return "null"
         return str(root.value)
@@ -46,8 +82,8 @@ def format_expression(root, qualify: bool = False):
     if node_type & INTERNAL_TYPE == INTERNAL_TYPE:
         if node_type in (NodeType.FUNCTION, NodeType.AGGREGATOR):
             if root.value == "CASE":
-                con = [format_expression(a, qualify) for a in root.parameters[0].value]
-                vals = [format_expression(a, qualify) for a in root.parameters[1].value]
+                con = [format_expression(a, qualify) for a in root.parameters[0].parameters]
+                vals = [format_expression(a, qualify) for a in root.parameters[1].parameters]
                 return "CASE " + "".join([f"WHEN {c} THEN {v} " for c, v in zip(con, vals)]) + "END"
             distinct = "DISTINCT " if root.distinct else ""
             order = ""
@@ -77,6 +113,8 @@ def format_expression(root, qualify: bool = False):
                 "ShiftRight": ">>",
             }
             return f"{format_expression(root.left, qualify)} {_map.get(root.value, root.value).upper()} {format_expression(root.right, qualify)}"
+        if node_type == NodeType.EXPRESSION_LIST:
+            return f"<EXPRESSIONS {random_string(4)}>"
     if node_type == NodeType.COMPARISON_OPERATOR:
         _map = {
             "Eq": "=",
