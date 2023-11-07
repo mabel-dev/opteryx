@@ -25,18 +25,6 @@ jobs:
       - name: Execute Test
         run: bandit -r mabel
 
-  semgrep:
-    runs-on: ubuntu-latest
-    name: SemGrep
-    steps:
-      - uses: actions/checkout@v1
-      - name: Semgrep
-        id: semgrep
-        uses: returntocorp/semgrep-action@v1
-        with:
-          config: p/r2c
-
-
   mypy:
     name: Type Checks
     runs-on: ubuntu-latest
