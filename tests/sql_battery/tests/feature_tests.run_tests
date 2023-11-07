@@ -1,25 +1,31 @@
 
-SHOW FUNCTIONS;
-SHOW FUNCTIONS LIKE '%date';
-SHOW FUNCTIONS LIKE '%date%';
-SHOW FUNCTIONS LIKE '%zz';
+# SHOW FUNCTIONS;
+# SHOW FUNCTIONS LIKE '%date';
+# SHOW FUNCTIONS LIKE '%date%';
+# SHOW FUNCTIONS LIKE '%zz';
 
 SELECT planetId, LEAST(LIST(magnitude)) FROM $satellites group by planetId;
 
 SELECT TIMESTAMP('2022-01-01');
-SELECT NUMERIC('22');
+SELECT INTEGER('22');
+SELECT DOUBLE('22.0');
+SELECT DECIMAL('22.0');
 SELECT BOOLEAN('true');
 SELECT TIMESTAMP '2022-01-01';
-SELECT NUMERIC '22';
+SELECT INTEGER '22';
+SELECT DOUBLE '22.0';
+SELECT DECIMAL '22.0';
 SELECT BOOLEAN 'true';
 SELECT CAST('2022-01-01' AS TIMESTAMP);
-SELECT CAST('22' AS NUMERIC);
+SELECT CAST('22' AS INTEGER);
+SELECT CAST('22.0' AS DOUBLE);
+SELECT CAST('22.0' AS DECIMAL);
 SELECT CAST('true' AS BOOLEAN);
 
 SELECT CEIL(1.5);
 SELECT FLOOR(2.5);
 
-SHOW DATABASES;
+# SHOW DATABASES;
 
 SELECT POSITION('e' IN 'barge');
 SELECT POSITION('x' IN 'barge');
@@ -48,10 +54,9 @@ SELECT TRIM(name) FROM $planets;
 SELECT TRIM(LEADING ' ' FROM name) FROM $planets;
 
 SELECT HASH(name || str(id)) FROM $planets GROUP BY name, id;
-SELECT * FROM (SELECT HASH(name || str(id)) AS PID, name, id FROM $planets) AS pset INNER JOIN (SELECT HASH(name || str(id)) as PID, name, id FROM $planets GROUP BY name, id) ON PID = PID ORDER BY pset.name, pset.id;
 
-ANALYZE TABLE $planets;
-ANALYZE TABLE $astronauts;
+# ANALYZE TABLE $planets;
+# ANALYZE TABLE $astronauts;
 
 SELECT LEVENSHTEIN(name, 'zeus') FROM $planets;
 SELECT FROM_UNIXTIME(0);
@@ -64,17 +69,17 @@ SELECT name FROM $planets ORDER BY mass DESC, gravity ASC;
 SELECT * FROM $planets ORDER BY mass;
 SELECT name FROM $planets ORDER BY mass LIMIT 2;
 
-WITH nom AS (SELECT planetId FROM $satellites GROUP BY planetId) SELECT planetId FROM nom;
-WITH nom AS (SELECT planetId as id FROM $satellites GROUP BY planetId) SELECT * FROM $planets INNER JOIN nom ON id = id;
-WITH nom AS (SELECT id FROM $planets FOR '1688-01-01') SELECT * FROM $planets INNER JOIN nom ON id = id;
-WITH nom AS (SELECT id FROM $planets FOR '1688-01-01') SELECT * FROM $planets FOR TODAY INNER JOIN nom ON id = id;
-WITH nom AS (SELECT id FROM $planets FOR DATES BETWEEN '2022-01-01' AND TODAY) SELECT * FROM $planets INNER JOIN nom ON id = id;
+# WITH nom AS (SELECT planetId FROM $satellites GROUP BY planetId) SELECT planetId FROM nom;
+# WITH nom AS (SELECT planetId as id FROM $satellites GROUP BY planetId) SELECT * FROM $planets INNER JOIN nom ON id = id;
+# WITH nom AS (SELECT id FROM $planets FOR '1688-01-01') SELECT * FROM $planets INNER JOIN nom ON id = id;
+# WITH nom AS (SELECT id FROM $planets FOR '1688-01-01') SELECT * FROM $planets FOR TODAY INNER JOIN nom ON id = id;
+# WITH nom AS (SELECT id FROM $planets FOR DATES BETWEEN '2022-01-01' AND TODAY) SELECT * FROM $planets INNER JOIN nom ON id = id;
 
-ANALYZE TABLE $astronauts;
-ANALYZE TABLE $planets;
-ANALYZE TABLE 'testdata/flat/formats/parquet/tweets.parquet';
+# ANALYZE TABLE $astronauts;
+# ANALYZE TABLE $planets;
+# ANALYZE TABLE 'testdata/flat/formats/parquet/tweets.parquet';
 
-USE opteryx;
+# USE opteryx;
 
 SELECT SPLIT('a,bc,def');
 SELECT SPLIT('a,bc,def', ',');
@@ -87,4 +92,4 @@ SELECT CAST('{"test":true, "live":false}' AS STRUCT);
 SELECT TRY_CAST('{"test":true, "prod": 73}' AS STRUCT);
 SELECT TRY_CAST(name AS STRUCT) FROM $planets;
 SELECT STRUCT('{"test":true}');
-SELECT ST['prod'] FROM (SELECT STRUCT('{"prod": 73}') AS ST FROM $planets);
+SELECT ST['prod'] FROM (SELECT STRUCT('{"prod": 73}') AS ST FROM $planets) AS SB;

@@ -15,6 +15,7 @@ This module contains various converters for parts of the AST, this
 helps to ensure new AST-based functionality can be added by adding
 a function and a reference to it in the dictionary.
 """
+import decimal
 
 import numpy
 import pyarrow
@@ -251,9 +252,11 @@ def cast(branch, alias=None, key=None):
     elif "Varchar" in data_type:
         data_type = "VARCHAR"
     elif "Decimal" in data_type:
-        data_type = "NUMERIC"
-    elif "Numeric" in data_type:
-        data_type = "NUMERIC"
+        data_type = "DECIMAL"
+    elif "Integer" in data_type:
+        data_type = "INTEGER"
+    elif "Double" in data_type:
+        data_type = "DOUBLE"
     elif "Boolean" in data_type:
         data_type = "BOOLEAN"
     elif "STRUCT" in data_type:
@@ -519,6 +522,10 @@ def typed_string(branch, alias=None, key=None):
     Datatype_Map = {
         "TIMESTAMP": ("TIMESTAMP", lambda x: numpy.datetime64(x, "us")),
         "DATE": ("DATE", lambda x: numpy.datetime64(x, "D")),
+        "INTEGER": ("INTEGER", numpy.int64),
+        "DOUBLE": ("DOUBLE", numpy.float64),
+        "DECIMAL": ("DECIMAL", decimal.Decimal),
+        "BOOLEAN": ("BOOLEAN", bool),
     }
 
     mapper = Datatype_Map.get(data_type)

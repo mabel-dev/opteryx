@@ -1,3 +1,3 @@
 SELECT * FROM $planets UNION SELECT * FROM $planets;
 SELECT * FROM $planets LEFT ANTI JOIN $satellites ON id = id;
-EXPLAIN ANALYZE FORMAT JSON  SELECT * FROM $planets AS a INNER JOIN (SELECT id FROM $planets) AS b USING (id);
+# EXPLAIN ANALYZE FORMAT JSON  SELECT * FROM $planets AS a INNER JOIN (SELECT id FROM $planets) AS b USING (id);

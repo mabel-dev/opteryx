@@ -21,7 +21,7 @@ SELECT * FROM $planets WHERE TRUE OR FALSE;
 SELECT * FROM $planets WHERE FALSE OR TRUE;
 
 # [#561] HASH JOIN with an empty table
-SELECT * FROM $planets LEFT JOIN (SELECT planetId as id FROM $satellites WHERE id < 0) USING (id);
+SELECT * FROM $planets LEFT JOIN (SELECT planetId as id FROM $satellites WHERE id < 0) AS SQ USING (id);
 
 # Zero results queries
 SELECT name, COUNT(*) FROM $astronauts WHERE name = 'Jim' GROUP BY name;
@@ -56,7 +56,7 @@ SELECT DATEDIFF('days', TIMESTAMP("2022-01-02"), CAST("2010-10-01" AS TIMESTAMP)
 
 # [TEMPORAL FILTER EXTRACTION PROBLEMS]
 SET @planet = 'Saturn'; SELECT name AS nom, bigsats.occurances, smallsats.occurances FROM (SELECT DISTINCT id as planetId, name FROM $planets WHERE name = @planet) as planets LEFT JOIN (SELECT planetId, COUNT(*) AS occurances FROM $satellites FOR DATES BETWEEN '2022-01-01' AND TODAY WHERE gm > 10 GROUP BY planetId) AS bigsats ON bigsats.planetId = planets.planetId LEFT JOIN (SELECT planetId, COUNT(*) AS occurances FROM $satellites FOR DATES IN LAST_MONTH WHERE gm < 10 GROUP BY planetId) as smallsats ON smallsats.planetId = planets.planetId;
-SELECT 'SELECT * FROM $planets FOR TODAY' FROM (SELECT 'FOR TODAY') INNER JOIN $planets FOR YESTERDAY;
+SELECT 'SELECT * FROM $planets FOR TODAY' FROM (SELECT 'FOR TODAY') AS SQ CROSS JOIN $planets FOR YESTERDAY;
 
 # 
 SELECT (true IS NOT null);

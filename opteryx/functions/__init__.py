@@ -64,7 +64,9 @@ def _get(value, item):
 
 VECTORIZED_CASTERS = {
     "BOOLEAN": "bool",
-    "NUMERIC": "float64",
+    "DOUBLE": "float64",
+    "INTEGER": "int64",
+    "DECIMAL": pyarrow.decimal128(14),
     "VARCHAR": "string",
     "TIMESTAMP": pyarrow.timestamp("us"),
 }
@@ -200,7 +202,10 @@ FUNCTIONS = {
     # TYPE CONVERSION
     "TIMESTAMP": cast("TIMESTAMP"),
     "BOOLEAN": cast("BOOLEAN"),
-    "NUMERIC": cast("NUMERIC"),
+    "NUMERIC": cast("DOUBLE"),
+    "INTEGER": cast("INTEGER"),
+    "DOUBLE": cast("DOUBLE"),
+    "DECIMAL": cast("DECIMAL"),
     "VARCHAR": cast("VARCHAR"),
     "STRING": cast("VARCHAR"),  # alias for VARCHAR
     "STR": cast("VARCHAR"),
