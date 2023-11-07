@@ -638,8 +638,6 @@ def create_node_relation(relation):
 
         left_node_id, left_plan = create_node_relation(join)
 
-        # ***** if the join is an unnest, the table needs fake name and the alias needs to be the column
-
         # add the left and right relation names - we sometimes need these later
         join_step.right_relation_names = get_subplan_schemas(sub_plan)
         join_step.left_relation_names = get_subplan_schemas(left_plan)

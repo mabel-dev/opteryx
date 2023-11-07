@@ -1046,6 +1046,9 @@ STATEMENTS = [
         ("SELECT * FROM FAKE(100, (Name, Name)) AS FK", 100, 2, None),
         ("SELECT * FROM FAKE(100, 10) AS FK(nom, nim, nam)", 100, 10, None),
 
+        ("SELECT * FROM $planets WHERE diameter > 10000 AND gravity BETWEEN 0.5 AND 2.0;", 0, 20, None),
+        ("SELECT * FROM $planets WHERE diameter > 100 AND gravity BETWEEN 0.5 AND 2.0;", 1, 20, None),
+
         # virtual dataset doesn't exist
         ("SELECT * FROM $RomanGods", None, None, DatasetNotFoundError),
         # disk dataset doesn't exist
@@ -1257,6 +1260,10 @@ STATEMENTS = [
         ("SELECT p.name, s.name FROM $planets as p, $satellites as s WHERE p.id = s.planetId", 177, 2, None),
         # Can't qualify fields used in subscripts
         ("SELECT d.birth_place['town'] FROM $astronauts AS d", 357, 1, None),
+        # Null columns can't be inverted
+        ("SELECT NOT NULL", 1, 1, None),
+        # Columns in CAST statements appear to not be bound correctly
+        ("SELECT SUM(CASE WHEN gm > 10 THEN 1 ELSE 0 END) AS gm_big_count FROM $satellites", 1, 1, None),
 ]
 # fmt:on
 

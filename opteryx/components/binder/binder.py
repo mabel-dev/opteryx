@@ -229,12 +229,6 @@ def inner_binder(node: Node, context: Dict[str, Any]) -> Tuple[Node, Dict[str, A
     if node_type in (NodeType.IDENTIFIER, NodeType.EVALUATED):
         return locate_identifier(node, context)
 
-    # Expression Lists are part of how CASE statements are represented
-    if node_type == NodeType.EXPRESSION_LIST:
-        node.value, new_contexts = zip(*(inner_binder(parm, context) for parm in node.value))
-        merged_schemas = merge_schemas(*[ctx.schemas for ctx in new_contexts])
-        context.schemas = merged_schemas
-
     # Early exit for nodes representing calculated columns.
     # If the node represents a calculated column, if we're seeing it again it's because it
     # has appeared earlier in the plan and in that case we don't need to recalcuate, we just

@@ -28,7 +28,7 @@ import opteryx
 
 def get_tests(test_type):
     suites = glob.glob(f"**/**.{test_type}", recursive=True)
-    for suite in suites:
+    for suite in sorted(suites):
         with open(suite, mode="r") as test_file:
             try:
                 yield {"file": suite, **orjson.loads(test_file.read())}
@@ -51,7 +51,7 @@ def test_results_tests(test):
     cursor.execute(sql)
     result = cursor.arrow().to_pydict()
 
-    printable_result = orjson.dumps(result).decode()
+    printable_result = orjson.dumps(result, default=str).decode()
     printable_expected = orjson.dumps(test["result"]).decode()
 
     assert (

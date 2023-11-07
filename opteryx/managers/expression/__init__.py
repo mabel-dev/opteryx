@@ -231,7 +231,7 @@ def _inner_evaluate(root: Node, table: Table, context: ExecutionContext):
             context.store(identity, result)
             return result
         if node_type == NodeType.EXPRESSION_LIST:
-            values = [_inner_evaluate(val, table, context) for val in root.value]
+            values = [_inner_evaluate(val, table, context) for val in root.parameters]
             return values
 
 
