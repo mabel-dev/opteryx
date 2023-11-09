@@ -44,6 +44,26 @@ def test_execute():
     assert isinstance(planets, pandas.DataFrame)
 
 
+def test_byte_strings():
+    import opteryx
+
+    cur = opteryx.query(b"SELECT * FROM $planets")
+    assert cur.rowcount == 9
+    assert cur.shape == (9, 20)
+
+    conn = opteryx.connect()
+    cur = conn.cursor()
+    cur.execute(b"SELECT * FROM $planets")
+    assert cur.rowcount == 9
+    assert cur.shape == (9, 20)
+
+    conn = opteryx.connect()
+    cur = conn.cursor()
+    arrow = cur.execute_to_arrow(b"SELECT * FROM $planets")
+    assert arrow.num_rows == 9, cur.rowcount
+    assert arrow.shape == (9, 20)
+
+
 if __name__ == "__main__":  # pragma: no cover
     from tests.tools import run_tests
 

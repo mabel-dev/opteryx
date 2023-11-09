@@ -249,6 +249,8 @@ def cast(branch, alias=None, key=None):
         data_type = branch["data_type"]["Custom"][0][0]["value"].upper()
     if data_type == "Timestamp":
         data_type = "TIMESTAMP"
+    elif data_type == "Date":
+        data_type = "DATE"
     elif "Varchar" in data_type:
         data_type = "VARCHAR"
     elif "Decimal" in data_type:
@@ -291,6 +293,8 @@ def try_cast(branch, alias=None, key="TryCast"):
         data_type = branch["data_type"]["Custom"][0][0]["value"].upper()
     if data_type == "Timestamp":
         data_type = "TIMESTAMP"
+    elif data_type == "Date":
+        data_type = "DATE"
     elif "Varchar" in data_type:
         data_type = "VARCHAR"
     elif "Decimal" in data_type:
@@ -305,9 +309,6 @@ def try_cast(branch, alias=None, key="TryCast"):
         data_type = "STRUCT"
     else:
         raise SqlError(f"Unsupported type for `{function_name}`  - '{data_type}'")
-
-    #    alias.append(f"{function_name}({args[0].value} AS {data_type})")
-    #    alias.append(f"{data_type.upper} {args[0].value}")
 
     return Node(
         NodeType.FUNCTION,

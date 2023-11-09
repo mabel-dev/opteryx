@@ -292,6 +292,8 @@ class Cursor(DataFrame):
         Returns:
             The query results in Arrow table format.
         """
+        if hasattr(operation, "decode"):
+            operation = operation.decode()
         results = self._execute_statements(operation, params)
         if results is not None:
             result_data, self._result_type = next(results, (ResultType._UNDEFINED, None))
