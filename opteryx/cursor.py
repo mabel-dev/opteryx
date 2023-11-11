@@ -163,12 +163,16 @@ class Cursor(DataFrame):
             raise MissingSqlStatement("SQL provided was empty.")
 
         self._connection.context.history.append((operation, True, datetime.datetime.utcnow()))
+
+        start = time.time_ns()
         plans = query_planner(
             operation=operation, parameters=params, connection=self._connection, qid=self.id
         )
 
         try:
+            start = time.time_ns()
             first_item = next(plans)
+            self._statistics.time_planning += time.time_ns() - start
         except RuntimeError:
             raise MissingSqlStatement(
                 "SQL statement provided had no executable part, this may mean the statement was commented out."
@@ -180,8 +184,11 @@ class Cursor(DataFrame):
             ROLLING_LOG.append(operation)
 
         results = None
+        start = time.time_ns()
         for plan in plans:
+            self._statistics.time_planning += time.time_ns() - start
             results = plan.execute()
+            start = time.time_ns()
 
         if results is not None:
             # we can't update tuples directly
@@ -204,6 +211,8 @@ class Cursor(DataFrame):
         Returns:
             Results of the query execution, if any.
         """
+        self._statistics.start_time = time.time_ns()
+
         statements = sql.remove_comments(operation)
         statements = sql.clean_statement(statements)
         statements = sql.split_sql_statements(statements)

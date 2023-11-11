@@ -54,7 +54,7 @@ class _QueryStatistics:
             if k.startswith("time_"):
                 stats_dict[k] = self._ns_to_s(v)
         stats_dict["time_total"] = self._ns_to_s(
-            stats_dict.get("end_time", 0) - stats_dict.get("start_time", 0)
+            stats_dict.pop("end_time", 0) - stats_dict.pop("start_time", 0)
         )
         stats_dict["messages"] = stats_dict.get("messages", [])
         return stats_dict

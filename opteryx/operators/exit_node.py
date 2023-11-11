@@ -23,6 +23,7 @@ This does two things that the projection node doesn't do:
 
 This node doesn't do any calculations, it is a pure Projection.
 """
+import time
 from typing import Iterable
 
 from opteryx.exceptions import AmbiguousIdentifierError
@@ -45,6 +46,7 @@ class ExitNode(BasePlanNode):
         return "Exit"
 
     def execute(self) -> Iterable:
+        start = time.monotonic_ns()
         morsels = self._producers[0]  # type:ignore
 
         final_columns = []
@@ -62,7 +64,9 @@ class ExitNode(BasePlanNode):
                 message=f"Query result contains multiple instances of the same column(s) - `{'`, `'.join(matches)}`"
             )
 
+        self.statistics.time_exiting += time.monotonic_ns() - start
         for morsel in morsels.execute():
+            start = time.monotonic_ns()
             if not set(final_columns).issubset(morsel.column_names):
                 mapping = {int_name: name for name, int_name in zip(final_columns, final_names)}
                 missing_references = [
@@ -76,4 +80,6 @@ class ExitNode(BasePlanNode):
             morsel = morsel.select(final_columns)
             morsel = morsel.rename_columns(final_names)
 
+            self.statistics.time_exiting += time.monotonic_ns() - start
             yield morsel
+            start = time.monotonic_ns()
