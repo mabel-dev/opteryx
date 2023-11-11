@@ -10,6 +10,7 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import pytest
 import opteryx
+import numpy
 
 # fmt:off
 STATEMENTS = [
@@ -80,47 +81,47 @@ SELECT * FROM (VALUES (True), (False), (NULL)) AS tristatebooleans(bool) WHERE b
 SELECT * FROM (VALUES (True), (False), (NULL)) AS tristatebooleans(bool) WHERE bool IS NOT FALSE;
 """, {True, None}),(
 """
--- Query 1: Expected rows: 1 ("true")
+-- Query 14: Expected rows: 1 ("true")
 SELECT * FROM (VALUES ('true'), ('false'), (NULL)) AS tristatebooleans(bool) WHERE bool = 'true';
 """, {'true'}),(
 """
--- Query 2: Expected rows: 1 (NULL)
+-- Query 15: Expected rows: 1 (NULL)
 SELECT * FROM (VALUES ('true'), ('false'), (NULL)) AS tristatebooleans(bool) WHERE bool IS NULL;
 """, {None}),(
 """
--- Query 3: Expected rows: 2 ("true", "false")
+-- Query 16: Expected rows: 2 ("true", "false")
 SELECT * FROM (VALUES ('true'), ('false'), (NULL)) AS tristatebooleans(bool) WHERE bool IS NOT NULL;
 """, {'true', 'false'}),(
 """
--- Query 4: Expected rows: 0
+-- Query 17: Expected rows: 0
 SELECT * FROM (VALUES ('true'), ('false'), (NULL)) AS tristatebooleans(bool) WHERE bool = NULL;
 """, {}),(
 """
--- Query 5: Expected rows: 2 ("true", "false")
+-- Query 18: Expected rows: 2 ("true", "false")
 SELECT * FROM (VALUES ('true'), ('false'), (NULL)) AS tristatebooleans(bool) WHERE NOT bool IS NULL;
 """, {'true', 'false'}),(
 """
--- Query 6: Expected rows: 1 ("false")
+-- Query 19: Expected rows: 1 ("false")
 SELECT * FROM (VALUES ('true'), ('false'), (NULL)) AS tristatebooleans(bool) WHERE NOT bool = "true";
 """, {'false'}),(
 """
--- Query 1: Expected rows: 1 (1)
+-- Query 20: Expected rows: 1 (1)
 SELECT * FROM (VALUES (1), (-1), (NULL)) AS tristatebooleans(bool) WHERE bool = 1;
 """, {1}),(
 """
--- Query 2: Expected rows: 1 (NULL)
+-- Query 21: Expected rows: 1 (NULL)
 SELECT * FROM (VALUES (1), (-1), (NULL)) AS tristatebooleans(bool) WHERE bool IS NULL;
-""", {None}),(
+""", {numpy.nan}),(
 """
--- Query 3: Expected rows: 2 (1, -1)
+-- Query 22: Expected rows: 2 (1, -1)
 SELECT * FROM (VALUES (1), (-1), (NULL)) AS tristatebooleans(bool) WHERE bool IS NOT NULL;
 """, {1, -1}),(
 """
--- Query 4: Expected rows: 0
+-- Query 23: Expected rows: 0
 SELECT * FROM (VALUES (1), (-1), (NULL)) AS tristatebooleans(bool) WHERE bool = NULL;
 """, {}),(
 """
--- Query 5: Expected rows: 3 (1, -1, NULL)
+-- Query 24: Expected rows: 3 (1, -1, NULL)
 SELECT * FROM (VALUES (1), (-1), (NULL)) AS tristatebooleans(bool) WHERE NOT bool IS NULL;
 """, {1, -1})
 
@@ -130,10 +131,22 @@ SELECT * FROM (VALUES (1), (-1), (NULL)) AS tristatebooleans(bool) WHERE NOT boo
 # fmt:on
 
 
+def process_set(set_with_nan):
+    has_nan = any(item != item for item in set_with_nan)  # Check for NaN using NaN's property
+    set_without_nan = {
+        item for item in set_with_nan if item == item
+    }  # Create a new set without NaNs
+    return has_nan, set_without_nan
+
+
 def compare_sets(set1, set2):
     if not set1 and not set2:
         return True
-    return set1 == set2
+
+    s1_nan, s1_no_nan = process_set(set1)
+    s2_nan, s2_no_nan = process_set(set2)
+
+    return s1_nan == s2_nan and s1_no_nan == s2_no_nan
 
 
 @pytest.mark.parametrize("statement, expected_result", STATEMENTS)

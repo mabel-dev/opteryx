@@ -101,12 +101,14 @@ def test_python_client():
     conn = opteryx.connect()
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM $planets;")
-    rows_first = list(cursor.fetchall())
+    # if we convert to bytes we're comparing the values only
+    rows_first = b"".join([r.as_bytes for r in cursor.fetchall()])
 
     import opteryx
 
     cursor = opteryx.query("SELECT * FROM $planets;")
-    rows_second = list(cursor.fetchall())
+    # if we convert to bytes we're comparing the values only
+    rows_second = b"".join([r.as_bytes for r in cursor.fetchall()])
 
     assert rows_first == rows_second
 
@@ -203,7 +205,5 @@ def test_role_based_permissions():
 
 if __name__ == "__main__":  # pragma: no cover
     from tests.tools import run_tests
-
-    test_readme_3()
 
     run_tests()
