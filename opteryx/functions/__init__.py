@@ -319,7 +319,7 @@ FUNCTIONS = {
     "TODAY": _repeat_no_parameters(date_functions.get_today),
     "TIME": _repeat_no_parameters(date_functions.get_time),
     "YESTERDAY": _repeat_no_parameters(date_functions.get_yesterday),
-    "DATE": _iterate_single_parameter(date_functions.get_date),
+    "DATE": lambda x: compute.cast(x, "date32"), #_iterate_single_parameter(date_functions.get_date),
     "YEAR": compute.year,
     "MONTH": compute.month,
     "DAY": compute.day,

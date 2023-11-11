@@ -79,13 +79,15 @@ class ScannerNode(BasePlanNode):
 
     def execute(self) -> Iterable:
         """Perform this step, time how long is spent doing work"""
+        morsel = None
         schema = self.parameters["schema"]
         start_clock = time.monotonic_ns()
         reader = self.parameters.get("connector").read_dataset()
         for morsel in reader:
+            self.statistics.blobs_read += 1
             self.statistics.rows_read += morsel.num_rows
             self.statistics.bytes_processed += morsel.nbytes
-            self.execution_time += time.monotonic_ns() - start_clock
+            self.statistics.time_reading_blobs += time.monotonic_ns() - start_clock
             yield normalize_morsel(schema, morsel)
             start_clock = time.monotonic_ns()
         if morsel:

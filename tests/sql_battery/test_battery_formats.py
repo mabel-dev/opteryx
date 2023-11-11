@@ -48,6 +48,10 @@ STATEMENTS = [
         # tsv - has the same file as csv
         ("SELECT * FROM testdata.flat.formats.tsv WITH (NO_PARTITION)", 33529, 10, False),
         ("SELECT username, user_verified FROM testdata.flat.formats.tsv WITH(NO_PARTITION) WHERE username ILIKE '%cve%'", 2532, 2, False),
+
+        # .json.parquet - appears to be handled incorrectly
+        ("SELECT * FROM testdata.flat.formats.misnamed_parquet WITH (NO_PARTITION)", 100000, 13, False),
+        ("SELECT user_name, user_verified FROM testdata.flat.formats.misnamed_parquet WITH(NO_PARTITION) WHERE user_name ILIKE '%news%'", 122, 2, False),
     ]
 # fmt:on
 

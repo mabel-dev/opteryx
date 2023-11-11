@@ -51,11 +51,11 @@ def test_results_tests(test):
     cursor.execute(sql)
     result = cursor.arrow().to_pydict()
 
-    printable_result = orjson.dumps(result, default=str).decode()
-    printable_expected = orjson.dumps(test["result"]).decode()
+    printable_result = orjson.dumps(result, default=str, option=orjson.OPT_SORT_KEYS).decode()
+    printable_expected = orjson.dumps(test["result"], option=orjson.OPT_SORT_KEYS).decode()
 
     assert (
-        result == test["result"]
+        printable_result == printable_expected
     ), f"Outcome:\n{printable_result}\nExpected:\n{printable_expected}"
 
 
