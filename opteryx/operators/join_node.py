@@ -78,4 +78,18 @@ class JoinNode(BasePlanNode):
                 join_type=self._join_type,
                 coalesce_keys=self._using is not None,
             )
+
+            # need to ensure we put the right column back if we need it
+            if (
+                self._join_type in ("right anti", "right semi")
+                and new_morsel.column_names != right_table.column_names
+            ):
+                columns = [
+                    col
+                    if col not in self._left_columns
+                    else self._right_columns[self._left_columns.index(col)]
+                    for col in new_morsel.column_names
+                ]
+                new_morsel = new_morsel.rename_columns(columns)
+
             yield new_morsel
