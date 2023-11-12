@@ -575,15 +575,19 @@ class BinderVisitor:
             for column_name in (n.value for n in node.using):
                 # Pop the column from the left relation
                 for left_relation_name in node.left_relation_names:
-                    context.schemas[left_relation_name].pop_column(column_name)
+                    left_column = context.schemas[left_relation_name].pop_column(column_name)
 
-                # Pop the column from the right relation, keep this one to add to a new relation
+                # Pop the column from the right relation
                 for right_relation_name in node.right_relation_names:
                     right_column = context.schemas[right_relation_name].pop_column(column_name)
-                    if right_column is not None:
-                        right_column.origin = [left_relation_name, right_relation_name]
-                        columns.append(right_column)
-                        break
+
+                # we need to decide which column we're going to keep
+                if node.type in ("right anti", "right semi"):
+                    left_column.origin = [left_relation_name, right_relation_name]
+                    columns.append(left_column)
+                else:
+                    right_column.origin = [left_relation_name, right_relation_name]
+                    columns.append(right_column)
 
             # shared columns exist in both schemas in some uses and in neither in others
             context.schemas[f"$shared-{random_string()}"] = RelationSchema(

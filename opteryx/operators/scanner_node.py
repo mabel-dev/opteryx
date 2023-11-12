@@ -82,7 +82,7 @@ class ScannerNode(BasePlanNode):
         morsel = None
         schema = self.parameters["schema"]
         start_clock = time.monotonic_ns()
-        reader = self.parameters.get("connector").read_dataset()
+        reader = self.parameters["connector"].read_dataset()
         for morsel in reader:
             self.statistics.blobs_read += 1
             self.statistics.rows_read += morsel.num_rows
