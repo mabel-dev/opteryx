@@ -105,3 +105,28 @@ def restore_null_columns(removed, table):
     for column in removed:  # pragma: no cover
         table = table.append_column(column, pyarrow.array([None] * table.num_rows))
     return table
+
+
+def post_read_projector(table: pyarrow.Table, columns: list) -> pyarrow.Table:
+    """
+    This is the near-read projection for data sources that the projection can't be
+    done as part of the read.
+    """
+    if not columns:
+        # this should happen when there's no relation in the query
+        return table
+
+    schema_columns = table.column_names
+
+    columns_to_keep = []
+    column_names = []
+
+    for projection_column in columns:
+        for schema_column in schema_columns:
+            if schema_column in projection_column.all_names:
+                columns_to_keep.append(schema_column)
+                column_names.append(projection_column.name)
+                break
+
+    table = table.select(columns_to_keep)
+    return table.rename_columns(column_names)

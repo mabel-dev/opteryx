@@ -56,6 +56,8 @@ the main activity we're doing is splitting nodes, individual node rewrites, and 
 """
 from opteryx.components.logical_planner import LogicalPlan
 from opteryx.components.logical_planner import LogicalPlanStepType
+from opteryx.managers.expression import NodeType
+from opteryx.managers.expression import get_all_nodes_of_type
 
 
 # Context object to carry state
@@ -70,7 +72,7 @@ class HeuristicOptimizerContext:
 
         # We collect column identities so we can push column selection as close to the
         # read as possible, including off to remote systems
-        self.collected_identities = []
+        self.collected_identities = set()
 
 
 # Optimizer Visitor
@@ -80,8 +82,13 @@ class HeuristicOptimizerVisitor:
 
     def collect_columns(self, node):
         if node.columns:
-            return [col.schema_column.identity for col in node.columns if col.schema_column]
-        return []
+            return {
+                col.schema_column.identity
+                for column in node.columns
+                for col in get_all_nodes_of_type(column, (NodeType.IDENTIFIER,))
+                if col.schema_column
+            }
+        return set()
 
     def visit(self, parent: str, nid: str, context: HeuristicOptimizerContext):
         # collect column references to push PROJECTION
@@ -93,7 +100,7 @@ class HeuristicOptimizerVisitor:
 
         # do this before any transformations
         if node.node_type != LogicalPlanStepType.Scan:
-            context.collected_identities.extend(self.collect_columns(node))
+            context.collected_identities.union(self.collect_columns(node))
 
         if node.node_type == LogicalPlanStepType.Filter:
             # rewrite predicates, to favor conjuctions and reduce negations
@@ -103,16 +110,10 @@ class HeuristicOptimizerVisitor:
         if node.node_type == LogicalPlanStepType.Scan:
             # push projections
             node_columns = [
-                col
-                for col in node.schema.columns
-                if col.identity in set(context.collected_identities)
+                col for col in node.schema.columns if col.identity in context.collected_identities
             ]
-            #            print("FOUND")
-            #            print(node_columns)
-            #            print("NOT FOUND")
-            #            print([col for col in node.schema.columns if col.identity not in set(context.collected_identities)])
-            # push selections
-            pass
+            # these are the pushed columns
+            node.columns = node_columns
 
         context.optimized_tree.add_node(nid, node)
         if parent:

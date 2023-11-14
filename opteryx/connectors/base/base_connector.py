@@ -85,15 +85,18 @@ class BaseConnector:
     def chunk_dictset(
         self,
         dictset: typing.Iterable[dict],
+        columns: list,
         morsel_size: int = DEFAULT_MORSEL_SIZE,
         initial_chunk_size: int = INITIAL_CHUNK_SIZE,
-    ):
+    ) -> pyarrow.Table:
         chunk = []
         self.chunk_size = initial_chunk_size  # we reset each time
         morsel = None
 
         for index, record in enumerate(dictset):
             _id = record.pop("_id", None)
+            # column selection
+            record = {k: record.get(k) for k in columns}
             record["id"] = None if _id is None else str(_id)
 
             chunk.append(record)

@@ -29,6 +29,7 @@ from opteryx.connectors.base.base_connector import BaseConnector
 from opteryx.connectors.base.base_connector import DatasetReader
 from opteryx.connectors.capabilities import Partitionable
 from opteryx.exceptions import DatasetNotFoundError
+from opteryx.utils import arrow
 
 WELL_KNOWN_DATASETS = {
     "$astronauts": (virtual_datasets.astronauts, True),
@@ -67,9 +68,13 @@ class SampleDataConnector(BaseConnector, Partitionable):
     def interal_only(self):
         return True
 
-    def read_dataset(self) -> "DatasetReader":
+    def read_dataset(self, columns: list = None) -> "DatasetReader":
         return SampleDatasetReader(
-            self.dataset, config=self.config, date=self.end_date, variables=self.variables
+            self.dataset,
+            columns=columns,
+            config=self.config,
+            date=self.end_date,
+            variables=self.variables,
         )
 
     def get_dataset_schema(self) -> RelationSchema:
@@ -84,6 +89,7 @@ class SampleDatasetReader(DatasetReader):
     def __init__(
         self,
         dataset_name: str,
+        columns: list,
         config: typing.Optional[typing.Dict[str, typing.Any]] = None,
         date: typing.Union[datetime.datetime, datetime.date, None] = None,
         variables: typing.Dict = None,
@@ -95,6 +101,7 @@ class SampleDatasetReader(DatasetReader):
             config: Configuration information specific to the reader.
         """
         super().__init__(dataset_name=dataset_name, config=config)
+        self.columns = columns
         self.exhausted = False
         self.date = date
         self.variables = variables
@@ -116,4 +123,5 @@ class SampleDatasetReader(DatasetReader):
         if data_provider is None:
             suggestion = suggest(self.dataset_name.lower())
             raise DatasetNotFoundError(suggestion=suggestion, dataset=self.dataset_name)
-        return data_provider.read(self.date, self.variables)
+        table = data_provider.read(self.date, self.variables)
+        return arrow.post_read_projector(table, self.columns)

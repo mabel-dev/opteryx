@@ -16,6 +16,7 @@ dataset name in a query.
 """
 from typing import Optional
 
+import pyarrow
 from orso.schema import RelationSchema
 
 from opteryx.connectors.base.base_connector import BaseConnector
@@ -46,7 +47,7 @@ class FileConnector(BaseConnector):
             with open(self.dataset, mode="br") as file:
                 self._byte_array = bytes(file.read())
 
-    def read_dataset(self) -> iter:
+    def read_dataset(self, columns: list = None) -> pyarrow.Table:
         """
         Reads the dataset file and decodes it.
 
@@ -54,7 +55,7 @@ class FileConnector(BaseConnector):
             An iterator containing a single decoded pyarrow.Table.
         """
         self._read_file()
-        return iter([self.decoder(self._byte_array)])
+        return iter([self.decoder(self._byte_array, projection=columns)])
 
     def get_dataset_schema(self) -> RelationSchema:
         """

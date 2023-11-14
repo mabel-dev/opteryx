@@ -640,6 +640,24 @@ class BinderVisitor:
 
         return node, context
 
+    def visit_order(self, node: Node, context: BindingContext) -> Tuple[Node, BindingContext]:
+        order_by = []
+        columns = []
+        for column, direction in node.order_by:
+            bound_column, context = inner_binder(column, context)
+
+            order_by.append(
+                (
+                    bound_column,
+                    "ascending" if direction else "descending",
+                )
+            )
+            columns.append(bound_column)
+
+        node.order_by = order_by
+        node.columns = columns
+        return node, context
+
     def visit_project(self, node: Node, context: BindingContext) -> Tuple[Node, BindingContext]:
         columns = []
 
@@ -712,24 +730,6 @@ class BinderVisitor:
 
         node.columns = columns
 
-        return node, context
-
-    def visit_order(self, node: Node, context: BindingContext) -> Tuple[Node, BindingContext]:
-        order_by = []
-        columns = []
-        for column, direction in node.order_by:
-            bound_column, context = inner_binder(column, context)
-
-            order_by.append(
-                (
-                    bound_column,
-                    "ascending" if direction else "descending",
-                )
-            )
-            columns.append(bound_column)
-
-        node.order_by = order_by
-        node.columns = columns
         return node, context
 
     def visit_scan(self, node: Node, context: BindingContext) -> Tuple[Node, BindingContext]:

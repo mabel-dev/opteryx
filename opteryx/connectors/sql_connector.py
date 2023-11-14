@@ -52,7 +52,9 @@ class SqlConnector(BaseConnector):
         self.schema = None
         self.metadata = MetaData()
 
-    def read_dataset(self, chunk_size: int = INITIAL_CHUNK_SIZE) -> "DatasetReader":
+    def read_dataset(
+        self, columns: list = None, chunk_size: int = INITIAL_CHUNK_SIZE
+    ) -> "DatasetReader":
         from sqlalchemy import Table
         from sqlalchemy import select
 
@@ -60,6 +62,7 @@ class SqlConnector(BaseConnector):
 
         # get the schema from the dataset
         table = Table(self.dataset, self.metadata, autoload_with=self._engine)
+        print("SQL push projection")
         query = select(table)
         morsel = DataFrame(schema=self.schema)
 
