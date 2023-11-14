@@ -50,6 +50,7 @@ def query_planner(operation: str, parameters: list, connection, qid: str):
 
     from opteryx.components.ast_rewriter import do_ast_rewriter
     from opteryx.components.binder import do_bind_phase
+    from opteryx.components.heuristic_optimizer import do_heuristic_optimizer
     from opteryx.components.logical_planner import do_logical_planning_phase
     from opteryx.components.sql_rewriter import do_sql_rewrite
     from opteryx.components.temporary_physical_planner import create_physical_plan
@@ -102,7 +103,9 @@ def query_planner(operation: str, parameters: list, connection, qid: str):
             # common_table_expressions=ctes,
         )
 
+        heuristic_optimized_plan = do_heuristic_optimizer(bound_plan)
+
         # before we write the new optimizer and execution engine, convert to a V1 plan
         query_properties = QueryProperties(qid=qid, variables=connection.context.variables)
-        physical_plan = create_physical_plan(bound_plan, query_properties)
+        physical_plan = create_physical_plan(heuristic_optimized_plan, query_properties)
         yield physical_plan
