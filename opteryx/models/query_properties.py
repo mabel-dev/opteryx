@@ -26,6 +26,7 @@ class QueryProperties:
         self.variables: dict[str, Any] = variables
         self.temporal_filters: list = []
         self.date = datetime.datetime.utcnow().date()
+        self.current_time = datetime.datetime.utcnow()
         self.cache = None
         self.qid = qid
         self.ctes: dict = {}

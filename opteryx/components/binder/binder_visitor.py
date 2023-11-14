@@ -224,7 +224,6 @@ class BinderVisitor:
         """
         node_type = node.node_type.name
         visit_method_name = f"visit_{CAMEL_TO_SNAKE.sub('_', node_type).lower()}"
-
         visit_method = getattr(self, visit_method_name, None)
         if visit_method is None:
             return node, context
@@ -233,17 +232,22 @@ class BinderVisitor:
 
         if not isinstance(return_context, BindingContext):
             raise InvalidInternalStateError(
-                f"Internal Error - function {visit_method_name} didn't return a BindingContext"
+                f"Internal Error - function '{visit_method_name}' didn't return a BindingContext"
             )
 
         if not all(isinstance(schema, RelationSchema) for schema in context.schemas.values()):
             raise InvalidInternalStateError(
-                f"Internal Error - function {visit_method_name} returned invalid Schemas"
+                f"Internal Error - function '{visit_method_name}' returned invalid Schemas"
             )
 
         if not all(isinstance(col, (Node, LogicalColumn)) for col in return_node.columns or []):
             raise InvalidInternalStateError(
-                f"Internal Error - function {visit_method_name} put unexpected items in 'columns' attribute"
+                f"Internal Error - function '{visit_method_name}' put unexpected items in 'columns' attribute"
+            )
+
+        if return_node.node_type.name != "Scan" and return_node.columns is None:
+            raise InvalidInternalStateError(
+                f"Internal Error - function {visit_method_name} did not populate 'columns'"
             )
 
         return return_node, return_context
@@ -280,14 +284,11 @@ class BinderVisitor:
             tmp_groups, _ = zip(*(inner_binder(group, context) for group in node.groups))
             columns_to_keep = {col.schema_column.identity for col in tmp_groups}
         # 2) the columns referenced in the SELECT
-        all_identifiers = [
-            node.schema_column.identity
-            for node in get_all_nodes_of_type(
-                node.aggregates + node.groups, select_nodes=(NodeType.IDENTIFIER,)
-            )
-        ]
+        node.columns = get_all_nodes_of_type(
+            node.aggregates + node.groups, select_nodes=(NodeType.IDENTIFIER,)
+        )
+        all_identifiers = [node.schema_column.identity for node in node.columns]
         columns_to_keep = columns_to_keep.union(all_identifiers)
-        node.all_identifiers = columns_to_keep
 
         for name, schema in list(context.schemas.items()):
             schema_columns = [
@@ -310,10 +311,12 @@ class BinderVisitor:
     visit_aggregate = visit_aggregate_and_group
 
     def visit_distinct(self, node: Node, context: BindingContext) -> Tuple[Node, BindingContext]:
+        node.columns = []
         if node.on:
             # Bind the local columns to physical columns
             node.on, group_contexts = zip(*(inner_binder(col, context) for col in node.on))
             context.schemas = merge_schemas(*[ctx.schemas for ctx in group_contexts])
+            node.columns = get_all_nodes_of_type(node.on, (NodeType.IDENTIFIER,))
 
         return node, context
 
@@ -393,6 +396,14 @@ class BinderVisitor:
         context.schemas["$derived"] = derived.schema()
 
         return node, context
+
+    def visit_filter(self, node: Node, context: BindingContext) -> Tuple[Node, BindingContext]:
+        # We don't update the context, otherwise we'd be adding the predicates as columns
+        original_context = context.copy()
+        node.condition, context = inner_binder(node.condition, context)
+        node.columns = get_all_nodes_of_type(node.condition, (NodeType.IDENTIFIER,))
+
+        return node, original_context
 
     def visit_function_dataset(
         self, node: Node, context: BindingContext
@@ -526,6 +537,7 @@ class BinderVisitor:
             Tuple[Node, Dict]
                 Updated node and context.
         """
+        node.columns = []
         # Handle 'natural join' by converting to a 'using'
         if node.type == "natural join":
             left_columns = [
@@ -562,6 +574,10 @@ class BinderVisitor:
                 raise UnsupportedSyntaxError(
                     "JOIN conditions cannot include literal constant values."
                 )
+
+            # we need to put the referenced columns into the columns attribute for the
+            # optimizers
+            node.columns = get_all_nodes_of_type(node.on, (NodeType.IDENTIFIER,))
 
         if node.using:
             # Remove the columns used in the join condition from both relations, they're in
@@ -608,6 +624,7 @@ class BinderVisitor:
                 node.unnest_alias = f"UNNEST({node.unnest_column.query_column})"
             # this is the column which is being unnested
             node.unnest_column, context = inner_binder(node.unnest_column, context)
+            node.columns += [node.unnest_column]
             # this is the column that is being created - find it from its name
             node.unnest_target, found_source_relation = locate_identifier_in_loaded_schemas(
                 node.unnest_alias, context.schemas
@@ -697,14 +714,9 @@ class BinderVisitor:
 
         return node, context
 
-    def visit_filter(self, node: Node, context: BindingContext) -> Tuple[Node, BindingContext]:
-        original_context = context.copy()
-        node.condition, context = inner_binder(node.condition, context)
-
-        return node, original_context
-
     def visit_order(self, node: Node, context: BindingContext) -> Tuple[Node, BindingContext]:
         order_by = []
+        columns = []
         for column, direction in node.order_by:
             bound_column, context = inner_binder(column, context)
 
@@ -714,8 +726,10 @@ class BinderVisitor:
                     "ascending" if direction else "descending",
                 )
             )
+            columns.append(bound_column)
 
         node.order_by = order_by
+        node.columns = columns
         return node, context
 
     def visit_scan(self, node: Node, context: BindingContext) -> Tuple[Node, BindingContext]:
@@ -754,11 +768,13 @@ class BinderVisitor:
 
     def visit_set(self, node: Node, context: BindingContext) -> Tuple[Node, BindingContext]:
         node.variables = context.connection.variables
+        node.columns = []
         return node, context
 
     def visit_show_columns(
         self, node: Node, context: BindingContext
     ) -> Tuple[Node, BindingContext]:
+        node.columns = []
         node.schema = context.schemas[node.relation]
         return node, context
 

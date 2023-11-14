@@ -85,9 +85,10 @@ def locate_identifier_in_loaded_schemas(
         found = schema.find_column(value)
         if found:
             if column and found_source_relation:
+                # test for duplicates
                 raise AmbiguousIdentifierError(identifier=value)
             found_source_relation = schema
-            column = found
+            column = found  # don't exit here, so we can test for duplicates
 
     return column, found_source_relation
 
