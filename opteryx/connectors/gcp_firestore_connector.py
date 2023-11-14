@@ -66,7 +66,9 @@ def _initialize():  # pragma: no cover
 class GcpFireStoreConnector(BaseConnector):
     __mode__ = "Collection"
 
-    def read_dataset(self, chunk_size: int = INITIAL_CHUNK_SIZE) -> "DatasetReader":
+    def read_dataset(
+        self, columns: list = None, chunk_size: int = INITIAL_CHUNK_SIZE
+    ) -> "DatasetReader":
         """
         Return a morsel of documents
         """
@@ -82,7 +84,9 @@ class GcpFireStoreConnector(BaseConnector):
         documents = documents.stream()
 
         for morsel in self.chunk_dictset(
-            ({**doc.to_dict(), "_id": doc.id} for doc in documents), initial_chunk_size=chunk_size
+            ({**doc.to_dict(), "_id": doc.id} for doc in documents),
+            columns=columns,
+            initial_chunk_size=chunk_size,
         ):
             yield morsel
 

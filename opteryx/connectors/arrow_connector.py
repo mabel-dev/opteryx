@@ -23,6 +23,7 @@ from orso.schema import RelationSchema
 from opteryx.connectors.base.base_connector import DEFAULT_MORSEL_SIZE
 from opteryx.connectors.base.base_connector import BaseConnector
 from opteryx.shared import MaterializedDatasets
+from opteryx.utils import arrow
 
 
 class ArrowConnector(BaseConnector):
@@ -45,11 +46,13 @@ class ArrowConnector(BaseConnector):
 
         return self.schema
 
-    def read_dataset(self, **kwargs) -> pyarrow.Table:
+    def read_dataset(self, columns: list = None) -> pyarrow.Table:
         dataset = self._datasets[self.dataset]
 
         batch_size = DEFAULT_MORSEL_SIZE // (dataset.nbytes / dataset.num_rows)
 
         for batch in dataset.to_batches(max_chunksize=batch_size):
             morsel = pyarrow.Table.from_batches([batch], schema=dataset.schema)
+            if columns:
+                morsel = arrow.post_read_projector(morsel, columns)
             yield morsel

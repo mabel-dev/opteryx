@@ -50,6 +50,7 @@ class ScannerNode(BasePlanNode):
         self.start_date = parameters.get("start_date")
         self.end_date = parameters.get("end_date")
         self.hints = parameters.get("hints", [])
+        self.columns = parameters.get("columns", [])
 
         if len(self.hints) != 0:
             self.statistics.add_message("All HINTS are currently ignored")
@@ -82,7 +83,7 @@ class ScannerNode(BasePlanNode):
         morsel = None
         schema = self.parameters["schema"]
         start_clock = time.monotonic_ns()
-        reader = self.parameters["connector"].read_dataset()
+        reader = self.parameters["connector"].read_dataset(columns=self.columns)
         for morsel in reader:
             self.statistics.blobs_read += 1
             self.statistics.rows_read += morsel.num_rows

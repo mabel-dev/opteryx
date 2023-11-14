@@ -87,7 +87,7 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable):
         ]
         return files
 
-    def read_dataset(self) -> pyarrow.Table:
+    def read_dataset(self, columns: list = None) -> pyarrow.Table:
         """
         Read the entire dataset from disk.
 
@@ -110,7 +110,7 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable):
             try:
                 decoder = get_decoder(blob_name)
                 blob_bytes = self.read_blob(blob_name=blob_name, statistics=self.statistics)
-                yield decoder(blob_bytes)
+                yield decoder(blob_bytes, projection=columns)
             except UnsupportedFileTypeError:
                 pass  # Skip unsupported file types
 

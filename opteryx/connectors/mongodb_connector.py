@@ -63,13 +63,15 @@ class MongoDbConnector(BaseConnector):
                 "MongoDB connector requires 'database' set in register_stpre or MONGODB_DATABASE set in environment variables."
             )
 
-    def read_dataset(self, chunk_size: int = INITIAL_CHUNK_SIZE) -> "DatasetReader":
+    def read_dataset(
+        self, columns: list = None, chunk_size: int = INITIAL_CHUNK_SIZE
+    ) -> "DatasetReader":
         import pymongo
 
         client = pymongo.MongoClient(self.connection)  # type:ignore
         database = client[self.database]
         documents = database[self.dataset].find()
-        for morsel in self.chunk_dictset(documents, initial_chunk_size=chunk_size):
+        for morsel in self.chunk_dictset(documents, columns=columns, initial_chunk_size=chunk_size):
             yield morsel
 
     def get_dataset_schema(self) -> RelationSchema:
