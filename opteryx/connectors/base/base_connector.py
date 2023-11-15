@@ -96,7 +96,8 @@ class BaseConnector:
         for index, record in enumerate(dictset):
             _id = record.pop("_id", None)
             # column selection
-            record = {k: record.get(k) for k in columns}
+            if columns:
+                record = {k: record.get(k) for k in columns}
             record["id"] = None if _id is None else str(_id)
 
             chunk.append(record)
