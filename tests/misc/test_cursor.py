@@ -163,6 +163,13 @@ def test_execute_to_arrow_with_invalid_state():
 def test_execute_to_arrow():
     cursor = setup_function()
     results = cursor.execute_to_arrow("SELECT * FROM $planets")
+    assert results.shape == (9, 20)
+    assert isinstance(results, pyarrow.Table)
+
+
+def test_query_to_arrow():
+    results = opteryx.query_to_arrow("SELECT * FROM $planets")
+    assert results.shape == (9, 20)
     assert isinstance(results, pyarrow.Table)
 
 

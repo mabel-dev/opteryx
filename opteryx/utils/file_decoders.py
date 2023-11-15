@@ -22,6 +22,7 @@ import numpy
 import pyarrow
 
 from opteryx.exceptions import UnsupportedFileTypeError
+from opteryx.utils.arrow import post_read_projector
 
 
 class ExtentionType(str, Enum):
@@ -100,24 +101,29 @@ def parquet_decoder(buffer, projection: List = None, selection=None, just_schema
     stream = io.BytesIO(buffer)
 
     selected_columns = None
-    if isinstance(projection, (list, set)) and "*" not in projection or just_schema:
+    if isinstance(projection, list) and "*" not in projection or just_schema:
         # if we have a pushed down projection, get the list of columns from the file
         # and then only set the reader to read those
         parquet_file = parquet.ParquetFile(stream)
         # .schema_arrow appears to be slower than .schema but there are instances of
-        # .schema being incomplete #468 so we pay for the extra time
+        # .schema being incomplete [bug #468] so we pay the extra time for increase reliability
         arrow_schema = parquet_file.schema_arrow
+        schema_columns = arrow_schema.names
 
         if just_schema:
             return convert_arrow_schema_to_orso_schema(arrow_schema)
 
-        if projection == {"count_*"}:
+        if projection == ["count_*"]:
             return pyarrow.Table.from_pydict(
                 {"_": numpy.full(parquet_file.metadata.num_rows, True, dtype=numpy.bool_)}
             )
 
-        selected_columns = list(set(arrow_schema.names).intersection(projection))
-        # if nothing matched, there's been a problem - maybe HINTS confused for columns
+        # work out the selected columns, handling aliases -
+        projection_names = {name for proj_col in projection for name in proj_col.all_names}
+        selected_columns = [
+            schema_col for schema_col in schema_columns if schema_col in projection_names
+        ]
+
         if len(selected_columns) == 0:  # pragma: no-cover
             selected_columns = None
     # don't prebuffer - we're already buffered as an IO Stream
@@ -133,15 +139,19 @@ def orc_decoder(buffer, projection: List = None, selection=None, just_schema: bo
     stream = io.BytesIO(buffer)
     orc_file = orc.ORCFile(stream)
     orc_schema = orc_file.schema
+    schema_columns = orc_schema.names
     if just_schema:
         return convert_arrow_schema_to_orso_schema(orc_schema)
 
-    selected_columns = None
-    if isinstance(projection, (list, set)) and "*" not in projection:
-        selected_columns = list(set(orc_schema.names).intersection(projection))
-        # if nothing matched, there's been a problem - maybe HINTS confused for columns
-        if len(selected_columns) == 0:  # pragma: no-cover
-            selected_columns = None
+    # work out the selected columns, handling aliases
+    selected_columns = []
+    for projection_column in projection:
+        for schema_column in schema_columns:
+            if schema_column in projection_column.all_names:
+                selected_columns.append(schema_column)
+                break
+    if len(selected_columns) == 0:  # pragma: no-cover
+        selected_columns = None
 
     table = orc_file.read(columns=selected_columns)
     if selection is not None:
@@ -162,15 +172,9 @@ def jsonl_decoder(buffer, projection: List = None, selection=None, just_schema: 
     if just_schema:
         return convert_arrow_schema_to_orso_schema(schema)
 
-    # the read doesn't support projection, so do it now
-    if projection and "*" not in projection:
-        selected_columns = list(set(table.column_names).intersection(projection))
-        # if nothing matched, don't do a thing
-        if len(selected_columns) > 0:
-            table = table.select(selected_columns)
+    if projection:
+        table = post_read_projector(table, projection)
 
-    if selection is not None:
-        table = filter_records(selection, table)
     return table
 
 
@@ -188,15 +192,9 @@ def csv_decoder(
     if just_schema:
         return convert_arrow_schema_to_orso_schema(schema)
 
-    # the read doesn't support projection, so do it now
-    if projection and "*" not in projection:
-        selected_columns = list(set(table.column_names).intersection(projection))
-        # if nothing matched, don't do a thing
-        if len(selected_columns) > 0:
-            table = table.select(selected_columns)
+    if projection:
+        table = post_read_projector(table, projection)
 
-    if selection is not None:
-        table = filter_records(selection, table)
     return table
 
 
@@ -219,15 +217,9 @@ def arrow_decoder(buffer, projection: List = None, selection=None, just_schema: 
     if just_schema:
         return convert_arrow_schema_to_orso_schema(schema)
 
-    # we can't get the schema before reading the file, so do selection now
-    if projection and "*" not in projection:
-        selected_columns = list(set(table.column_names).intersection(projection))
-        # if nothing matched, don't do a thing
-        if len(selected_columns) > 0:
-            table = table.select(selected_columns)
+    if projection:
+        table = post_read_projector(table, projection)
 
-    if selection is not None:
-        table = filter_records(selection, table)
     return table
 
 
@@ -250,12 +242,9 @@ def avro_decoder(buffer, projection: List = None, selection=None, just_schema: b
     if just_schema:
         return convert_arrow_schema_to_orso_schema(schema)
 
-    if projection and "*" not in projection:
-        selected_columns = list(set(table.column_names).intersection(projection))
-        if len(selected_columns) > 0:
-            table = table.select(selected_columns)
-    if selection is not None:
-        table = filter_records(selection, table)
+    if projection:
+        table = post_read_projector(table, projection)
+
     return table
 
 

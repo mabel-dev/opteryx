@@ -85,7 +85,11 @@ class HeuristicOptimizerVisitor:
             return {
                 col.schema_column.identity
                 for column in node.columns
-                for col in get_all_nodes_of_type(column, (NodeType.IDENTIFIER,))
+                for col in (
+                    [column]
+                    if column.node_type == NodeType.IDENTIFIER
+                    else get_all_nodes_of_type(column, (NodeType.IDENTIFIER,))
+                )
                 if col.schema_column
             }
         return set()
@@ -100,7 +104,9 @@ class HeuristicOptimizerVisitor:
 
         # do this before any transformations
         if node.node_type != LogicalPlanStepType.Scan:
-            context.collected_identities.union(self.collect_columns(node))
+            context.collected_identities = context.collected_identities.union(
+                self.collect_columns(node)
+            )
 
         if node.node_type == LogicalPlanStepType.Filter:
             # rewrite predicates, to favor conjuctions and reduce negations

@@ -46,20 +46,24 @@ def test_logical_plan_visitor():
         def visit_scan(self, node, context):
             context.schemas[node.relation] = RelationSchema(name="test")
             node.source = node.relation
+            node.columns = []
             return node, context
 
         def visit_filter(self, node, context):
             # the filter has the left scan before it
             node.sources = set(context.schemas.keys())
+            node.columns = []
             return node, context
 
         def visit_union(self, node, context):
             node.sources = set(context.schemas.keys())
+            node.columns = []
             return node, context
 
         def visit_project(self, node, context):
             # the project has the left and right scans before it
             node.sources = set(context.schemas.keys())
+            node.columns = []
             return node, context
 
     context = BindingContext(

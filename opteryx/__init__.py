@@ -23,8 +23,9 @@ to ensure they load correctly.
 
 """
 
-import os
 import datetime
+import os
+import pyarrow
 from pathlib import Path
 
 # python-dotenv allows us to create an environment file to store secrets. If
@@ -67,6 +68,7 @@ __all__ = [
     "Connection",
     "paramstyle",
     "query",
+    "query_to_arrow",
     "register_arrow",
     "register_df",
     "register_store",
@@ -105,7 +107,7 @@ def connect(*args, **kwargs):
     return Connection(*args, **kwargs)
 
 
-def query(operation, params: list = None, **kwargs):
+def query(operation: str, params: list = None, limit: int = None, **kwargs):
     """
     Helper function to execute a query and return a cursor.
 
@@ -132,6 +134,35 @@ def query(operation, params: list = None, **kwargs):
 
     # Return the executed cursor
     return curr
+
+
+def query_to_arrow(
+    operation: str, params: list = None, limit: int = None, **kwargs
+) -> pyarrow.Table:
+    """
+    Helper function to execute a query and return a pyarrow Table.
+
+    This is the fastest way to get a pyarrow table from Opteryx, it bypasses needing
+    orso to create a Dataframe and converting from the Dataframe. This is fast, but
+    not doing it is faster.
+
+    Parameters:
+        operation: SQL query string
+        params: list of parameters to bind into the SQL query (optional)
+        limit: stop after this many rows (optional)
+        kwargs: additional arguments for creating the Connection
+
+    Returns:
+        pyarrow Table
+    """
+    # Create a new database connection
+    conn = Connection(**kwargs)
+
+    # Create a new cursor object using the connection
+    curr = conn.cursor()
+
+    # Execute the SQL query using the cursor
+    return curr.execute_to_arrow(operation=operation, params=params, limit=limit)
 
 
 # Try to increase the priority of the application
