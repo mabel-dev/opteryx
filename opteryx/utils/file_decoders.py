@@ -144,11 +144,12 @@ def orc_decoder(buffer, projection: List = None, selection=None, just_schema: bo
 
     # work out the selected columns, handling aliases
     selected_columns = []
-    for projection_column in projection:
-        for schema_column in schema_columns:
-            if schema_column in projection_column.all_names:
-                selected_columns.append(schema_column)
-                break
+    if projection:
+        for projection_column in projection:
+            for schema_column in schema_columns:
+                if schema_column in projection_column.all_names:
+                    selected_columns.append(schema_column)
+                    break
     if len(selected_columns) == 0:  # pragma: no-cover
         selected_columns = None
 
