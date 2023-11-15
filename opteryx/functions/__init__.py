@@ -209,6 +209,7 @@ FUNCTIONS = {
     "NUMERIC": cast("DOUBLE"),
     "INTEGER": cast("INTEGER"),
     "DOUBLE": cast("DOUBLE"),
+    "FLOAT": cast("DOUBLE"),
     "DECIMAL": cast("DECIMAL"),
     "VARCHAR": cast("VARCHAR"),
     "STRING": cast("VARCHAR"),  # alias for VARCHAR
@@ -297,8 +298,6 @@ FUNCTIONS = {
     "PHI": _repeat_no_parameters(number_functions.phi), # *
     "E": _repeat_no_parameters(number_functions.e), # *
     "INT": _iterate_single_parameter(int),
-    "INTEGER": _iterate_single_parameter(int),
-    "FLOAT": _iterate_single_parameter(float),
     "POWER": number_functions.safe_power,
     "LN": compute.ln,
     "LOG10": compute.log10,
