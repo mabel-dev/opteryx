@@ -24,6 +24,8 @@ import pyarrow
 from opteryx.exceptions import UnsupportedFileTypeError
 from opteryx.utils.arrow import post_read_projector
 
+memory_pool = pyarrow.default_memory_pool()
+
 
 class ExtentionType(str, Enum):
     """labels for the file extentions"""
@@ -87,46 +89,43 @@ def zstd_decoder(buffer, projection: List = None, selection=None, just_schema: b
 
 def parquet_decoder(buffer, projection: List = None, selection=None, just_schema: bool = False):
     """
-    Read parquet formatted files
+    Read parquet formatted files.
     """
     from pyarrow import parquet
 
     from opteryx.connectors.capabilities import predicate_pushable
 
-    # parquet uses DNF filters
-    _select = None
-    if selection is not None:
-        _select = predicate_pushable.to_dnf(selection)
+    # Convert the selection to DNF format if applicable
+    _select = predicate_pushable.to_dnf(selection) if selection is not None else None
 
     stream = io.BytesIO(buffer)
 
-    selected_columns = None
-    if isinstance(projection, list) and "*" not in projection or just_schema:
-        # if we have a pushed down projection, get the list of columns from the file
-        # and then only set the reader to read those
+    if projection or just_schema:
+        # Open the parquet file only once
         parquet_file = parquet.ParquetFile(stream)
-        # .schema_arrow appears to be slower than .schema but there are instances of
-        # .schema being incomplete [bug #468] so we pay the extra time for increase reliability
-        arrow_schema = parquet_file.schema_arrow
-        schema_columns = arrow_schema.names
 
+        # Return just the schema if that's all that's needed
         if just_schema:
-            return convert_arrow_schema_to_orso_schema(arrow_schema)
+            return convert_arrow_schema_to_orso_schema(parquet_file.schema_arrow)
 
+        # Special handling for projection of ["count_*"]
         if projection == ["count_*"]:
             return pyarrow.Table.from_pydict(
                 {"_": numpy.full(parquet_file.metadata.num_rows, True, dtype=numpy.bool_)}
             )
 
-        # work out the selected columns, handling aliases -
+        # Projection processing
+        schema_columns_set = set(parquet_file.schema_arrow.names)
         projection_names = {name for proj_col in projection for name in proj_col.all_names}
-        selected_columns = [
-            schema_col for schema_col in schema_columns if schema_col in projection_names
-        ]
+        selected_columns = list(schema_columns_set.intersection(projection_names))
 
-        if len(selected_columns) == 0:  # pragma: no-cover
+        # If no columns are selected, set to None
+        if not selected_columns:
             selected_columns = None
-    # don't prebuffer - we're already buffered as an IO Stream
+    else:
+        selected_columns = None
+
+    # Read the parquet table with the optimized column list and selection filters
     return parquet.read_table(stream, columns=selected_columns, pre_buffer=False, filters=_select)
 
 

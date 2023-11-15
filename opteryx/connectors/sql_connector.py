@@ -25,6 +25,7 @@ from opteryx.connectors.base.base_connector import INITIAL_CHUNK_SIZE
 from opteryx.connectors.base.base_connector import BaseConnector
 from opteryx.exceptions import MissingDependencyError
 from opteryx.exceptions import UnmetRequirementError
+from opteryx.third_party.query_builder import Query
 
 
 class SqlConnector(BaseConnector):
@@ -55,19 +56,23 @@ class SqlConnector(BaseConnector):
     def read_dataset(
         self, columns: list = None, chunk_size: int = INITIAL_CHUNK_SIZE
     ) -> "DatasetReader":
-        from sqlalchemy import Table
-        from sqlalchemy import select
-
         self.chunk_size = chunk_size
+        result_schema = self.schema
 
-        # get the schema from the dataset
-        table = Table(self.dataset, self.metadata, autoload_with=self._engine)
-        print("SQL push projection")
-        query = select(table)
-        morsel = DataFrame(schema=self.schema)
+        query_builder = Query().FROM(self.dataset)
+
+        # if we're projecting, update the SQL and the target morsel schema
+        if columns:
+            column_names = [col.name for col in columns]
+            query_builder.add("SELECT", *column_names)
+            result_schema.columns = [col for col in self.schema.columns if col.name in column_names]
+        else:
+            query_builder.add("SELECT", "*")
+
+        morsel = DataFrame(schema=result_schema)
 
         with self._engine.connect() as conn:
-            for row in conn.execute(query):
+            for row in conn.execute(str(query_builder)):
                 morsel._rows.append(row)
                 if len(morsel) == self.chunk_size:
                     yield morsel.arrow()
@@ -75,7 +80,7 @@ class SqlConnector(BaseConnector):
                     if morsel.nbytes > 0:
                         self.chunk_size = int(len(morsel) // (morsel.nbytes / DEFAULT_MORSEL_SIZE))
 
-                    morsel = DataFrame(schema=self.schema)
+                    morsel = DataFrame(schema=result_schema)
 
         if len(morsel) > 0:
             yield morsel.arrow()
