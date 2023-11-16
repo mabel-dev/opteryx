@@ -1288,17 +1288,16 @@ def test_sql_battery(statement, rows, columns, exception):
         "testdata.partitioned", DiskConnector, partition_scheme=MabelPartitionScheme
     )
 
-    conn = opteryx.connect()
-    cursor = conn.cursor()
     try:
-        cursor.execute(statement)
-        actual_rows, actual_columns = cursor.shape
+        # query to arrow is the fastest way to query
+        result = opteryx.query_to_arrow(statement)
+        actual_rows, actual_columns = result.shape
         assert (
             rows == actual_rows
-        ), f"\n{cursor.display()}\n\033[38;5;203mQuery returned {actual_rows} rows but {rows} were expected.\033[0m\n{statement}"
+        ), f"\n\033[38;5;203mQuery returned {actual_rows} rows but {rows} were expected.\033[0m\n{statement}"
         assert (
             columns == actual_columns
-        ), f"\n{cursor.display()}\n\033[38;5;203mQuery returned {actual_columns} cols but {columns} were expected.\033[0m\n{statement}"
+        ), f"\n\033[38;5;203mQuery returned {actual_columns} cols but {columns} were expected.\033[0m\n{statement}"
     except AssertionError as err:
         raise Exception(err) from err
     except Exception as err:

@@ -29,6 +29,7 @@ from opteryx.connectors.capabilities import Partitionable
 from opteryx.exceptions import DatasetNotFoundError
 from opteryx.exceptions import EmptyDatasetError
 from opteryx.exceptions import UnsupportedFileTypeError
+from opteryx.utils.arrow import post_read_projector
 from opteryx.utils.file_decoders import VALID_EXTENSIONS
 from opteryx.utils.file_decoders import get_decoder
 
@@ -102,7 +103,10 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable):
         )
 
         if self.cached_first_blob is not None:
-            yield self.cached_first_blob
+            if columns:
+                yield post_read_projector(self.cached_first_blob, columns)
+            else:
+                yield self.cached_first_blob
             blob_names = blob_names[1:]
         self.cached_first_blob = None
 

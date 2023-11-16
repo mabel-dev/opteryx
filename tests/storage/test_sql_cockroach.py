@@ -27,10 +27,17 @@ def test_cockroach_storage():
 
     results = opteryx.query("SELECT * FROM cockroach.planets")
     assert results.rowcount == 9, results.rowcount
+    assert results.columncount == 20
 
     # PROCESS THE DATA IN SOME WAY
     results = opteryx.query("SELECT COUNT(*) FROM cockroach.planets;")
     assert results.rowcount == 1, results.rowcount
+    assert results.columncount == 1
+
+    # PUSH A PROJECTION
+    results = opteryx.query("SELECT name FROM cockroach.planets;")
+    assert results.rowcount == 9, results.rowcount
+    assert results.columncount == 1
 
 
 if __name__ == "__main__":  # pragma: no cover

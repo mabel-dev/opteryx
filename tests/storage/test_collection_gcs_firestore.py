@@ -26,8 +26,7 @@ def test_firestore_storage():
     cur.execute("SELECT actor, COUNT(*) FROM dwarves GROUP BY actor;")
     assert cur.rowcount == 6, cur.rowcount
 
-    print("Predicate PushDown Skipped")
-    #    # TEST PREDICATE PUSHDOWN
+    # TEST PREDICATE PUSHDOWN
     #    cur = conn.cursor()
     #    cur.execute("SELECT * FROM dwarves WHERE actor = 'Pinto Colvig';")
     #    # when pushdown is enabled, we only read the matching rows from the source
