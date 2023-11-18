@@ -50,12 +50,7 @@ def test_run_only_tests(statement):
     These tests are only run, the result is not checked.
     This is useful for parsing checks
     """
-    conn = opteryx.connect()
-    cursor = conn.cursor()
-
-    cursor.execute(statement)
-    # row count doesn't fail if there are no records
-    cursor.rowcount
+    opteryx.query(statement).fetchall()
 
 
 if __name__ == "__main__":  # pragma: no cover

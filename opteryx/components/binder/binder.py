@@ -21,6 +21,7 @@ from orso.schema import ConstantColumn
 from orso.schema import FlatColumn
 from orso.schema import FunctionColumn
 from orso.schema import RelationSchema
+from orso.types import PYTHON_TO_ORSO_MAP
 
 from opteryx.exceptions import AmbiguousIdentifierError
 from opteryx.exceptions import ColumnNotFoundError
@@ -28,6 +29,7 @@ from opteryx.exceptions import FunctionNotFoundError
 from opteryx.exceptions import InvalidInternalStateError
 from opteryx.exceptions import UnexpectedDatasetReferenceError
 from opteryx.functions import FUNCTIONS
+from opteryx.functions import fixed_value_function
 from opteryx.managers.expression import NodeType
 from opteryx.models import Node
 from opteryx.operators.aggregate_node import AGGREGATORS
@@ -243,6 +245,10 @@ def inner_binder(node: Node, context: Dict[str, Any]) -> Tuple[Node, Dict[str, A
         if found_column:
             node.schema_column = found_column
             node.query_column = node.alias or column_name
+            if isinstance(found_column, ConstantColumn):
+                node.node_type = NodeType.LITERAL
+                node.value = found_column.value
+                node.type = found_column.type
 
             return node, context
 
@@ -297,7 +303,22 @@ def inner_binder(node: Node, context: Dict[str, Any]) -> Tuple[Node, Dict[str, A
 
             # we need to add this new column to the schema
             aliases = [node.alias] if node.alias else []
-            schema_column = FunctionColumn(name=column_name, type=0, binding=func, aliases=aliases)
+            result_type, fixed_function_result = fixed_value_function(node.value, context)
+            if result_type:
+                schema_column = ConstantColumn(
+                    name=column_name,
+                    aliases=aliases,
+                    type=result_type,
+                    value=fixed_function_result,
+                    nullable=False,
+                )
+                node.node_type = NodeType.LITERAL
+                node.type = result_type
+                node.value = fixed_function_result
+            else:
+                schema_column = FunctionColumn(
+                    name=column_name, type=0, binding=func, aliases=aliases
+                )
             schemas["$derived"].columns.append(schema_column)
             node.function = func
             node.derived_from = []

@@ -93,3 +93,21 @@ SELECT TRY_CAST('{"test":true, "prod": 73}' AS STRUCT);
 SELECT TRY_CAST(name AS STRUCT) FROM $planets;
 SELECT STRUCT('{"test":true}');
 SELECT ST['prod'] FROM (SELECT STRUCT('{"prod": 73}') AS ST FROM $planets) AS SB;
+
+# Function calls which are actually resolved by the binder
+
+SELECT VERSION();
+SELECT NOW();
+SELECT CURRENT_TIME;
+SELECT UTC_TIMESTAMP()
+SELECT CURRENT_DATE;
+SELECT TODAY();
+SELECT YESTERDAY();
+SELECT CONNECTION_ID();
+SELECT E();
+SELECT PI();
+SELECT PHI();
+SELECT USER();
+SELECT DATABASE();
+SELECT NOW() - birth_date, NOW(), birth_date FROM $astronauts;
+SELECT E() * PI() * PHI();

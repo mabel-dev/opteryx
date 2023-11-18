@@ -1346,7 +1346,7 @@ if __name__ == "__main__":  # pragma: no cover
                 end="",
             )
             passed += 1
-            if failed > 1:
+            if failed > 0:
                 print(" \033[0;31m*\033[0m")
             else:
                 print()
