@@ -14,6 +14,7 @@
 These are a set of functions that can be applied to data.
 """
 
+import datetime
 import json
 
 import numpy
@@ -33,11 +34,6 @@ from opteryx.functions import other_functions
 from opteryx.functions import string_functions
 from opteryx.utils import dates
 from opteryx.utils import series
-
-
-def get_version():
-    """return opteryx version"""
-    return opteryx.__version__
 
 
 def _get(value, item):
@@ -70,6 +66,36 @@ VECTORIZED_CASTERS = {
     "VARCHAR": "string",
     "TIMESTAMP": pyarrow.timestamp("us"),
 }
+
+
+def fixed_value_function(function, context):
+    from orso.types import OrsoTypes
+
+    if function in ("VERSION",):
+        return OrsoTypes.VARCHAR, opteryx.__version__
+    if function in ("NOW", "CURRENT_TIME", "UTC_TIMESTAMP"):
+        return OrsoTypes.TIMESTAMP, numpy.datetime64(context.connection.connected_at)
+    if function in ("CURRENT_DATE", "TODAY"):
+        return OrsoTypes.DATE, numpy.datetime64(context.connection.connected_at.date())
+    if function in ("YESTERDAY",):
+        return OrsoTypes.DATE, numpy.datetime64(
+            context.connection.connected_at.date() - datetime.timedelta(days=1), "D"
+        )
+    if function == "CONNECTION_ID":
+        return OrsoTypes.INTEGER, context.connection.connection_id
+    if function == "DATABASE":
+        return OrsoTypes.VARCHAR, context.connection.schema or "DEFAULT"
+    if function == "USER":
+        return OrsoTypes.VARCHAR, context.connection.user or "ANONYMOUS"
+    if function == "PI":
+        return OrsoTypes.DOUBLE, 3.14159265358979323846264338327950288419716939937510
+    if function == "PHI":
+        """the golden ratio"""
+        return OrsoTypes.DOUBLE, 1.61803398874989484820458683436563811772030917980576
+    if function == "E":
+        """eulers number"""
+        return OrsoTypes.DOUBLE, 2.71828182845904523536028747135266249775724709369995
+    return None, None
 
 
 def cast(_type):
@@ -199,9 +225,10 @@ def _coalesce(*arrays):
 # The type is needed particularly when returning Python objects that
 # the first entry is NONE.
 FUNCTIONS = {
-    "VERSION": _repeat_no_parameters(get_version), # *
-    "CONNECTION_ID": _repeat_no_parameters(get_version),
-    "DATABASE": _repeat_no_parameters(lambda : None),
+    "VERSION": lambda x: None, # *
+    "CONNECTION_ID": lambda x: None, # *
+    "DATABASE": lambda x: None, # *
+    "USER": lambda x: None, # *
 
     # TYPE CONVERSION
     "TIMESTAMP": cast("TIMESTAMP"),
@@ -294,9 +321,9 @@ FUNCTIONS = {
     "SQRT": compute.sqrt,
     "TRUNC": compute.trunc,
     "TRUNCATE": compute.trunc,
-    "PI": _repeat_no_parameters(number_functions.pi), # *
-    "PHI": _repeat_no_parameters(number_functions.phi), # *
-    "E": _repeat_no_parameters(number_functions.e), # *
+    "PI": lambda x: None, # *
+    "PHI": lambda x: None, # *
+    "E": lambda x: None, # *
     "INT": _iterate_single_parameter(int),
     "POWER": number_functions.safe_power,
     "LN": compute.ln,
@@ -311,13 +338,13 @@ FUNCTIONS = {
     "TIMEDIFF": date_functions.time_diff,
     "DATEPART": date_functions.date_part,
     "DATE_FORMAT": date_functions.date_format,
-    "CURRENT_TIME": _repeat_no_parameters(date_functions.get_now), # *
-    "UTC_TIMESTAMP": _repeat_no_parameters(date_functions.get_now),
-    "NOW": _repeat_no_parameters(date_functions.get_now),
-    "CURRENT_DATE": _repeat_no_parameters(date_functions.get_today),
-    "TODAY": _repeat_no_parameters(date_functions.get_today),
-    "TIME": _repeat_no_parameters(date_functions.get_time),
-    "YESTERDAY": _repeat_no_parameters(date_functions.get_yesterday),
+    "CURRENT_TIME": lambda x: None, # *
+    "UTC_TIMESTAMP": lambda x: None, # *
+    "NOW": lambda x: None, # *
+    "CURRENT_DATE": lambda x: None, # *
+    "TODAY": lambda x: None, # *
+#    "TIME": _repeat_no_parameters(date_functions.get_time),
+    "YESTERDAY": lambda x: None, # *
     "DATE": lambda x: compute.cast(x, "date32"), #_iterate_single_parameter(date_functions.get_date),
     "YEAR": compute.year,
     "MONTH": compute.month,

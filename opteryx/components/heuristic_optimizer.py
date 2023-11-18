@@ -120,6 +120,9 @@ class HeuristicOptimizerVisitor:
             ]
             # these are the pushed columns
             node.columns = node_columns
+        if node.node_type == LogicalPlanStepType.Join:
+            # push predicates which reference multiple relations here
+            pass
 
         context.optimized_tree.add_node(nid, node)
         if parent:

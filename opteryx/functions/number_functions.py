@@ -17,20 +17,6 @@ import pyarrow
 from pyarrow import compute
 
 
-def pi():
-    return 3.14159265358979323846264338327950288419716939937510
-
-
-def phi():
-    """the golden ratio"""
-    return 1.61803398874989484820458683436563811772030917980576
-
-
-def e():
-    """eulers number"""
-    return 2.71828182845904523536028747135266249775724709369995
-
-
 def round(*args):
     if len(args) == 1:
         return compute.round(args[0])

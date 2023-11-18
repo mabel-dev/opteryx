@@ -45,6 +45,10 @@ OPERATOR_FUNCTION_MAP: Dict[str, Any] = {
 BINARY_OPERATORS = set(OPERATOR_FUNCTION_MAP.keys())
 
 INTERVALS = (pyarrow.lib.MonthDayNano, pyarrow.lib.MonthDayNanoIntervalArray)
+DATES = (
+    numpy.datetime64,
+    pyarrow.lib.Date32Array,
+)
 LISTS = (pyarrow.Array, numpy.ndarray, list, array.ArrayType)
 STRINGS = (str, numpy.str_)
 
@@ -127,15 +131,29 @@ def _ip_containment(left: List[Optional[str]], right: List[str]) -> List[Optiona
 
 
 def _either_side_is_type(left, right, types):
-    def _check_type(obj, types: Union[type, Tuple[type, ...]]) -> bool:
-        return any(isinstance(obj, t) for t in types)
-
     return (
         _check_type(left, types)
         or _check_type(right, types)
         or (_check_type(left, LISTS) and _check_type(left[0], types))
         or (_check_type(right, LISTS) and _check_type(right[0], types))
     )
+
+
+def _both_sides_are_type(left, right, types):
+    return (
+        _check_type(left, types) or _check_type(left, LISTS) and _check_type(left[0], types)
+    ) and (_check_type(right, types) or _check_type(right, LISTS) and _check_type(right[0], types))
+
+
+def _is_date_only(obj):
+    obj_0 = obj[0]
+    return isinstance(obj_0, pyarrow.lib.Date32Scalar) or (
+        isinstance(obj_0, numpy.datetime64) and obj_0.dtype == "datetime64[D]"
+    )
+
+
+def _check_type(obj, types: Union[type, Tuple[type, ...]]) -> bool:
+    return any(isinstance(obj, t) for t in types)
 
 
 def binary_operations(left, operator: str, right) -> Union[numpy.ndarray, pyarrow.Array]:
@@ -165,6 +183,15 @@ def binary_operations(left, operator: str, right) -> Union[numpy.ndarray, pyarro
                 if operator == "Minus"
                 else _date_plus_interval(left, right)
             )
+        if _both_sides_are_type(left, right, DATES):
+            if _is_date_only(left) and _is_date_only(right):
+                return pyarrow.array(
+                    [
+                        pyarrow.MonthDayNano((0, v.view(numpy.int64), 0))
+                        for v in operation(left, right)
+                    ],
+                    type=pyarrow.month_day_nano_interval(),
+                )
 
     elif operator == "BitwiseOr":
         if _either_side_is_type(left, right, STRINGS):
