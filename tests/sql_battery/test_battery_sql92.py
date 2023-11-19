@@ -223,7 +223,7 @@ def test_sql92(statement, feature):
     """
     Test an battery of statements
     """
-    opteryx.query(statement).fetchall()
+    opteryx.query_to_arrow(statement)
 
 
 if __name__ == "__main__":  # pragma: no cover

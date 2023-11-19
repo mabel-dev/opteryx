@@ -67,17 +67,15 @@ def test_sql_battery(statement, rows, columns, skip):
 
     #    opteryx.register_store("tests", DiskConnector)
 
-    conn = opteryx.connect()
-    cursor = conn.cursor()
-    cursor.execute(statement)
-    actual_rows, actual_columns = cursor.shape
+    result = opteryx.query_to_arrow(statement)
+    actual_rows, actual_columns = result.shape
 
     assert (
         rows == actual_rows
-    ), f"Query returned {actual_rows} rows but {rows} were expected, {statement}\n{cursor.head(10)}"
+    ), f"Query returned {actual_rows} rows but {rows} were expected, {statement}"
     assert (
         columns == actual_columns
-    ), f"Query returned {actual_columns} cols but {columns} were expected, {statement}\n{cursor.head(10)}"
+    ), f"Query returned {actual_columns} cols but {columns} were expected, {statement}"
 
 
 if __name__ == "__main__":  # pragma: no cover

@@ -65,6 +65,7 @@ VECTORIZED_CASTERS = {
     "DECIMAL": pyarrow.decimal128(14),
     "VARCHAR": "string",
     "TIMESTAMP": pyarrow.timestamp("us"),
+    "DATE": pyarrow.date32(),
 }
 
 
@@ -90,10 +91,10 @@ def fixed_value_function(function, context):
     if function == "PI":
         return OrsoTypes.DOUBLE, 3.14159265358979323846264338327950288419716939937510
     if function == "PHI":
-        """the golden ratio"""
+        # the golden ratio
         return OrsoTypes.DOUBLE, 1.61803398874989484820458683436563811772030917980576
     if function == "E":
-        """eulers number"""
+        # eulers number
         return OrsoTypes.DOUBLE, 2.71828182845904523536028747135266249775724709369995
     return None, None
 
@@ -126,6 +127,7 @@ def try_cast(_type):
         "VARCHAR": str,
         "TIMESTAMP": numpy.datetime64,
         "STRUCT": json.loads,
+        "DATE": lambda x: dates.parse_iso(x).date(),
     }
     if _type in casters:
 
@@ -135,15 +137,6 @@ def try_cast(_type):
 
         return _inner
     raise FunctionNotFoundError(message=f"Internal function to cast values to `{_type}` not found.")
-
-
-def _repeat_no_parameters(func):
-    # call once and repeat
-    # these should all be eliminated by the optimizer
-    def _inner(items):
-        return numpy.array([func()] * items)
-
-    return _inner
 
 
 def _iterate_single_parameter(func):
@@ -242,6 +235,7 @@ FUNCTIONS = {
     "STRING": cast("VARCHAR"),  # alias for VARCHAR
     "STR": cast("VARCHAR"),
     "STRUCT": _iterate_single_parameter(json.loads),
+    "DATE":  cast("DATE"),
     "TRY_TIMESTAMP": try_cast("TIMESTAMP"),
     "TRY_BOOLEAN": try_cast("BOOLEAN"),
     "TRY_NUMERIC": try_cast("DOUBLE"),
@@ -251,6 +245,7 @@ FUNCTIONS = {
     "TRY_INTEGER": try_cast("INTEGER"),
     "TRY_DECIMAL": try_cast("DECIMAL"),
     "TRY_DOUBLE": try_cast("DOUBLE"),
+    "TRY_DATE": try_cast("DATE"),
 
     # STRINGS
     "LEN": _iterate_single_parameter(get_len),  # LENGTH(str) -> int
@@ -305,7 +300,7 @@ FUNCTIONS = {
     "GREATEST": _iterate_single_parameter(numpy.nanmax),
     "LEAST": _iterate_single_parameter(numpy.nanmin),
     "IIF": other_functions.iif,
-    "GENERATE_SERIES": series.generate_series,
+#    "GENERATE_SERIES": series.generate_series,
     "NULLIF": other_functions.null_if,
     "CASE": other_functions.case_when,
 
@@ -345,7 +340,7 @@ FUNCTIONS = {
     "TODAY": lambda x: None, # *
 #    "TIME": _repeat_no_parameters(date_functions.get_time),
     "YESTERDAY": lambda x: None, # *
-    "DATE": lambda x: compute.cast(x, "date32"), #_iterate_single_parameter(date_functions.get_date),
+#    "DATE": lambda x: compute.cast(x, "date32"), #_iterate_single_parameter(date_functions.get_date),
     "YEAR": compute.year,
     "MONTH": compute.month,
     "DAY": compute.day,
