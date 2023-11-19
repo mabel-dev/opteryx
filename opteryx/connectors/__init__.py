@@ -51,7 +51,7 @@ def register_store(prefix, connector, *, remove_prefix: bool = False, **kwargs):
 
 
 def register_df(name, frame):
-    """register a pandas or Polars dataframe"""
+    """register a orso, pandas or Polars dataframe"""
     # polars (maybe others) - the polars to arrow API is a mess
     if hasattr(frame, "_df"):
         frame = frame._df
@@ -59,6 +59,11 @@ def register_df(name, frame):
         arrow = frame.to_arrow()
         if not isinstance(arrow, pyarrow.Table):
             arrow = pyarrow.Table.from_batches(arrow)
+        register_arrow(name, arrow)
+        return
+    # orso
+    if hasattr(frame, "arrow"):
+        arrow = frame.arrow()
         register_arrow(name, arrow)
         return
     # pandas
@@ -89,9 +94,9 @@ def connector_factory(dataset, statistics, **config):
 
     # Look up the prefix from the registered prefixes
     connector_entry: dict = config
-    for prefix in _storage_prefixes.keys():
-        if dataset.startswith(prefix):
-            connector_entry = _storage_prefixes[prefix].copy()  # type: ignore
+    for prefix, storage_details in _storage_prefixes.items():
+        if dataset == prefix or dataset.startswith(prefix + "."):
+            connector_entry = storage_details.copy()  # type: ignore
             connector = connector_entry.pop("connector")
             break
     else:
@@ -99,9 +104,9 @@ def connector_factory(dataset, statistics, **config):
             from opteryx.connectors import file_connector
 
             return file_connector.FileConnector(dataset=dataset, statistics=statistics)
-        else:
-            # fall back to the default connector (local disk if not set)
-            connector = _storage_prefixes.get("_default", DiskConnector)
+
+        # fall back to the default connector (local disk if not set)
+        connector = _storage_prefixes.get("_default", DiskConnector)
 
     prefix = connector_entry.pop("prefix", "")
     remove_prefix = connector_entry.pop("remove_prefix", False)
