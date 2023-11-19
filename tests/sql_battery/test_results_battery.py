@@ -43,13 +43,8 @@ RESULTS_TESTS = list(get_tests("results_tests"))
 @pytest.mark.parametrize("test", RESULTS_TESTS)
 def test_results_tests(test):
     """ """
-    conn = opteryx.connect()
-    cursor = conn.cursor()
-
     sql = test["statement"]
-
-    cursor.execute(sql)
-    result = cursor.arrow().to_pydict()
+    result = opteryx.query_to_arrow(sql).to_pydict()
 
     printable_result = orjson.dumps(result, default=str, option=orjson.OPT_SORT_KEYS).decode()
     printable_expected = orjson.dumps(test["result"], option=orjson.OPT_SORT_KEYS).decode()

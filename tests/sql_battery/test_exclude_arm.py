@@ -41,20 +41,18 @@ def test_sql_battery(statement, rows, columns, exception):
 
     opteryx.register_store("tests", DiskConnector)
 
-    conn = opteryx.connect()
-    cursor = conn.cursor()
     try:
-        cursor.execute(statement)
-        actual_rows, actual_columns = cursor.shape
+        result = opteryx.query_to_arrow(statement)
+        actual_rows, actual_columns = result.shape
 
         assert (
             rows == actual_rows
         ), f"Query returned {actual_rows} rows but {rows} were expected"
-        f" ({actual_columns} vs {columns})\n{statement}\n{cursor.head(10)}"
+        f" ({actual_columns} vs {columns})\n{statement}"
         assert (
             columns == actual_columns
         ), f"Query returned {actual_columns} cols but {columns} were"
-        f" expected\n{statement}\n{cursor.head(10)}"
+        f" expected\n{statement}"
     except Exception as err:  # pragma: no cover
         assert type(err) == exception, f"Query failed with error {type(err)}"
         f" but error {exception} was expected"

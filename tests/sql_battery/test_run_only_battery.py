@@ -50,7 +50,7 @@ def test_run_only_tests(statement):
     These tests are only run, the result is not checked.
     This is useful for parsing checks
     """
-    opteryx.query(statement).fetchall()
+    opteryx.query_to_arrow(statement)
 
 
 if __name__ == "__main__":  # pragma: no cover
