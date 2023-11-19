@@ -3,11 +3,14 @@ Test the connection example from the documentation
 """
 import os
 import sys
+import pytest
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import opteryx
 from opteryx.connectors import GcpFireStoreConnector, SqlConnector, register_store
+from sqlalchemy.exc import NoSuchTableError
+from opteryx.exceptions import DatasetNotFoundError
 
 register_store(
     "sqlite",
@@ -44,7 +47,25 @@ def test_connector_prefixes():
     assert cur.rowcount == 7, cur.rowcount
 
 
+def test_connector_prefixes_negative_tests():
+    with pytest.raises(NoSuchTableError):
+        # this should be the SQLAlchemy error
+        opteryx.query("SELECT * from planets.planets")
+
+    with pytest.raises(DatasetNotFoundError):
+        # this should NOT be the SQLAlchemy error
+        opteryx.query("SELECT * FROM planetsplanets.planets")
+
+    with pytest.raises(DatasetNotFoundError):
+        # this should NOT be the SQLAlchemy error
+        opteryx.query("SELECT * FROM planets_planets.planets")
+
+    with pytest.raises(DatasetNotFoundError):
+        opteryx.query("SELECT * FROM fsu.til")
+
+
 if __name__ == "__main__":  # pragma: no cover
     from tests.tools import run_tests
 
+    test_connector_prefixes_negative_tests()
     run_tests()

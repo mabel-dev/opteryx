@@ -16,12 +16,11 @@ Optimization Rule - Split Conjunctive Predicates (ANDs)
 Type: Heuristic
 Goal: Reduce rows
 """
-from opteryx import operators
+
 from opteryx.managers.expression import NodeType
-from opteryx.utils import random_string
 
 
-def split_conjunctive_predicates(plan, properties):
+def rule_split_conjunctive_predicates(node):
     """
     Conjunctive Predicates (ANDs) can be split and executed in any order to get the
     same result. This means we can split them into separate steps in the plan.
@@ -37,38 +36,14 @@ def split_conjunctive_predicates(plan, properties):
         the check (a numeric check is faster than a string check)
     """
 
-    def _inner_split(plan, nid, operator):
-        selection = operator.filter
-        if selection.node_type != NodeType.AND:
-            return plan
+    def _inner_split(node):
+        if node.node_type != NodeType.AND:
+            return [node]
 
         # get the left and right filters
-        left_node = operators.SelectionNode(filter=selection.left, properties=properties)
-        right_node = operators.SelectionNode(filter=selection.right, properties=properties)
-        # insert them into the plan and remove the old node
-        # we're chaining the new operators
-        uid = random_string()  # avoid collisions
-        plan.insert_node_before(f"{nid}-{uid}-right", right_node, nid)
-        plan.insert_node_before(f"{nid}-{uid}-left", left_node, f"{nid}-{uid}-right")
-        plan.remove_node(nid, heal=True)
+        left_nodes = _inner_split(node.left)
+        right_nodes = _inner_split(node.right)
 
-        # recurse until we get to a non-AND condition
-        plan = _inner_split(plan, f"{nid}-{uid}-right", right_node)
-        plan = _inner_split(plan, f"{nid}-{uid}-left", left_node)
+        return left_nodes + right_nodes
 
-        return plan
-
-    # find the in-scope nodes
-    selection_nodes = plan.get_nodes_of_type(operators.SelectionNode)
-
-    # killer questions - if any aren't met, bail
-    if selection_nodes is None:
-        return plan
-
-    # HAVING and WHERE are selection nodes
-    for nid in selection_nodes:
-        # get the node from the node_id
-        operator = plan[nid]
-        plan = _inner_split(plan, nid, operator)
-
-    return plan
+    return _inner_split(node.condition)

@@ -54,10 +54,15 @@ This is written as a Visitor, unlike the binder which is working from the scanne
 the projection, this starts at the projection and works toward the scanners. This works well because
 the main activity we're doing is splitting nodes, individual node rewrites, and push downs.
 """
+from orso.tools import random_string
+
 from opteryx.components.logical_planner import LogicalPlan
+from opteryx.components.logical_planner import LogicalPlanNode
 from opteryx.components.logical_planner import LogicalPlanStepType
+from opteryx.components.rules import heuristic_optimizer
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import get_all_nodes_of_type
+from opteryx.models import Node
 
 
 # Context object to carry state
@@ -111,36 +116,70 @@ class HeuristicOptimizerVisitor:
         if node.node_type == LogicalPlanStepType.Filter:
             # rewrite predicates, to favor conjuctions and reduce negations
             # split conjunctions
+            nodes = heuristic_optimizer.rule_split_conjunctive_predicates(node)
+            # deduplicate the nodes - note this 'randomizes' the order
+            nodes = _unique_nodes(nodes)
+
+            previous = parent
+            for predicate_node in nodes:
+                predicate_nid = random_string()
+                plan_node = LogicalPlanNode(
+                    node_type=LogicalPlanStepType.Filter, condition=predicate_node
+                )
+                context.optimized_tree.add_node(predicate_nid, plan_node)
+                context.optimized_tree.add_edge(predicate_nid, previous)
+                previous = predicate_nid
+
             # collect predicates
-            pass
-        if node.node_type == LogicalPlanStepType.Scan:
-            # push projections
-            node_columns = [
-                col for col in node.schema.columns if col.identity in context.collected_identities
-            ]
-            # these are the pushed columns
-            node.columns = node_columns
-        if node.node_type == LogicalPlanStepType.Join:
-            # push predicates which reference multiple relations here
-            pass
 
-        context.optimized_tree.add_node(nid, node)
-        if parent:
-            context.optimized_tree.add_edge(nid, parent)
+            return previous, context
 
-        return context
+        else:
+            if node.node_type == LogicalPlanStepType.Scan:
+                # push projections
+                node_columns = [
+                    col
+                    for col in node.schema.columns
+                    if col.identity in context.collected_identities
+                ]
+                # these are the pushed columns
+                node.columns = node_columns
+            elif node.node_type == LogicalPlanStepType.Join:
+                # push predicates which reference multiple relations here
+                pass
+
+            context.optimized_tree.add_node(nid, LogicalPlanNode(**node.properties))
+            if parent:
+                context.optimized_tree.add_edge(nid, parent)
+
+        return None, context
 
     def traverse(self, tree: LogicalPlan):
         root = tree.get_exit_points().pop()
         context = HeuristicOptimizerContext(tree)
 
         def _inner(parent, node, context):
-            context = self.visit(parent, node, context)
+            parent, context = self.visit(parent, node, context)
             for child, _, _ in tree.ingoing_edges(node):
-                _inner(node, child, context)
+                _inner(parent or node, child, context)
 
         _inner(None, root, context)
+        # print(context.optimized_tree.draw())
         return context.optimized_tree
+
+
+def _unique_nodes(nodes: list) -> list:
+    seen_identities = {}
+
+    for node in nodes:
+        identity = node.schema_column.identity
+        if identity not in seen_identities:
+            seen_identities[identity] = node
+        else:
+            if node.left.schema_column and node.right.schema_column:
+                seen_identities[identity] = node
+
+    return list(seen_identities.values())
 
 
 def do_heuristic_optimizer(plan: LogicalPlan) -> LogicalPlan:
