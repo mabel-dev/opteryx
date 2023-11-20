@@ -1,5 +1,6 @@
 lint:
-	python -m pip install --quiet --upgrade pycln isort black
+	python -m pip install --quiet --upgrade pycln isort black yamllint
+#	python -m yamllint .
 	python -m pycln .
 	python -m isort .
 	python -m black .

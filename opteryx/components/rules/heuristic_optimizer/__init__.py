@@ -1,1 +1,2 @@
+from .order_predicates import rule_order_predicates
 from .split_conjuctive_predicates import rule_split_conjunctive_predicates
