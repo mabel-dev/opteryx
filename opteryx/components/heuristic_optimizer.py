@@ -119,6 +119,8 @@ class HeuristicOptimizerVisitor:
             nodes = heuristic_optimizer.rule_split_conjunctive_predicates(node)
             # deduplicate the nodes - note this 'randomizes' the order
             nodes = _unique_nodes(nodes)
+            # order the predicates
+            nodes = heuristic_optimizer.rule_order_predicates(nodes)
 
             previous = parent
             for predicate_node in nodes:
