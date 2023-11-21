@@ -6,7 +6,7 @@ import sys
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
-from tests.tools import is_arm, is_mac, is_windows, skip_if
+from tests.tools import is_arm, is_mac, is_windows, is_version, skip_if
 
 import opteryx
 from opteryx.connectors import SqlConnector
@@ -23,8 +23,7 @@ opteryx.register_store(
 )
 
 
-# skip to reduce contention
-@skip_if(is_arm() or is_windows() or is_mac())
+@skip_if(is_arm() or is_mac() or is_windows() or not is_version("3.9"))
 def test_predicate_pushdowns_postgres_eq():
     """
     This is the same test as the collection pushdown - but on a different dataset

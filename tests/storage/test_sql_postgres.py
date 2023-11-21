@@ -8,11 +8,13 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import opteryx
 from opteryx.connectors import SqlConnector
+from tests.tools import is_arm, is_mac, is_windows, is_version, skip_if
 
 POSTGRES_PASSWORD = os.environ.get("POSTGRES_PASSWORD")
 POSTGRES_USER = os.environ.get("POSTGRES_USER")
 
 
+@skip_if(is_arm() or is_mac() or is_windows() or not is_version("3.9"))
 def test_postgres_storage():
     opteryx.register_store(
         "pg",
