@@ -18,6 +18,17 @@ def is_pypy():  # pragma: no cover
     return platform.python_implementation() == "PyPy"
 
 
+def is_version(version):
+    import sys
+
+    if len(version) == 0:
+        raise Exception("is_version needs a version")
+    if version[-1] != ".":
+        version += "."
+    print(sys.version)
+    return (sys.version.split(" ")[0] + ".").startswith(version)
+
+
 def skip(func):  # pragma: no cover
     @wraps(func)
     def wrapper(*args, **kwargs):
