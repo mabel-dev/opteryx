@@ -305,7 +305,7 @@ class BinderVisitor:
 
         # the aggregates and any calculated expressions in the SELECT should be in $derived
         context.schemas["$derived"].columns.extend(col.schema_column for col in node.aggregates)
-
+        node.schema = context.schemas["$derived"]
         return node, context
 
     visit_aggregate = visit_aggregate_and_group
@@ -426,6 +426,7 @@ class BinderVisitor:
             )
             context.schemas[relation_name] = schema
             node.columns = columns
+            node.schema = schema
         elif node.function == "UNNEST":
             relation_name = node.alias
 
@@ -440,6 +441,7 @@ class BinderVisitor:
             schema = RelationSchema(name=relation_name, columns=[c.schema_column for c in columns])
             context.schemas[relation_name] = schema
             node.columns = columns
+            node.schema = schema
         elif node.function == "GENERATE_SERIES":
             node.relation_name = node.alias
             columns = [
@@ -456,6 +458,7 @@ class BinderVisitor:
             )
             context.schemas[node.relation_name] = schema
             node.columns = columns
+            node.schema = schema
         elif node.function == "FAKE":
             from orso.schema import ColumnDisposition
 
@@ -492,7 +495,12 @@ class BinderVisitor:
                             schema_column=schema_column,
                         )
                     )
+                schema = RelationSchema(
+                    name=node.alias,
+                    columns=[c.schema_column for c in columns],
+                )
                 node.columns = columns
+                node.schema = schema
             else:
                 try:
                     column_definition = int(column_definition)
@@ -783,6 +791,7 @@ class BinderVisitor:
 
         # we sack all the tables we previously knew and create a new set of schemas here
         columns = []
+        source_relations = []
         for name, schema in context.schemas.items():
             for schema_column in schema.columns:
                 # Find the column in the projection if it exists
@@ -794,7 +803,7 @@ class BinderVisitor:
                     ),
                     None,
                 )
-
+                source_relations.extend(schema_column.origin or [])
                 projection_column.source = node.alias
                 schema_column.origin = [node.alias]
 
@@ -816,6 +825,8 @@ class BinderVisitor:
 
         context.schemas = {"$derived": derived.schema(), node.alias: schema}
         context.relations = {node.alias}
+        node.schema = schema
+        node.source_relations = set(source_relations)
         return node, context
 
     def traverse(
