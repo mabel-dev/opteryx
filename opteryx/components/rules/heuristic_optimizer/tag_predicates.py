@@ -11,7 +11,7 @@
 # limitations under the License.
 
 """
-Optimization Rule - Order Predicates
+Optimization Rule - Tag Predicates
 
 Type: Heuristic
 Goal: Reduce rows
@@ -33,31 +33,43 @@ NODE_ORDER = {
 }
 
 
-def rule_order_predicates(nodes):
+def tag_predicates(nodes):
     """
-    Ordering of predicates based on rules, this is mostly useful for situations where
-    we do not have statistics to make cost-based decisions.
+    Here we add tags to the predicates to assist with optimization.
 
-    We're going to start with arbitrary numbers, we need to find a way to refine these
-    over time.
+    Weighting of predicates based on rules, this is mostly useful for situations where
+    we do not have statistics to make cost-based decisions. We're going to start with
+    arbitrary numbers, we need to find a way to refine these over time. The logic is
+    roughly:
+        - 35 is something that is expensive (we're running function)
+        - 32 is where we're doing a complex comparison
     """
 
     for node in nodes:
+        node.weight = 0
+        node.simple = True
+        node.relations = set()
+
         if not node.node_type == NodeType.COMPARISON_OPERATOR:
-            node.score = 25
+            node.weight += 35
+            node.simple = False
             continue
         node.score = NODE_ORDER.get(node.value, 12)
         if node.left.node_type == NodeType.LITERAL:
-            node.score += 1
+            node.weight += 1
         elif node.left.node_type == NodeType.IDENTIFIER:
-            node.score += 3
+            node.weight += 3
+            node.relations.add(node.left.source)
         else:
-            node.score += 10
+            node.weight += 10
+            node.simple = False
         if node.right.node_type == NodeType.LITERAL:
-            node.score += 1
+            node.weight += 1
         elif node.right.node_type == NodeType.IDENTIFIER:
-            node.score += 3
+            node.weight += 3
+            node.relations.add(node.right.source)
         else:
-            node.score += 10
+            node.weight += 10
+            node.simple = False
 
-    return sorted(nodes, key=lambda node: node.score)
+    return sorted(nodes, key=lambda node: node.weight)

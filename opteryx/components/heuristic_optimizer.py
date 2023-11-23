@@ -119,11 +119,16 @@ class HeuristicOptimizerVisitor:
             nodes = heuristic_optimizer.rule_split_conjunctive_predicates(node)
             # deduplicate the nodes - note this 'randomizes' the order
             nodes = _unique_nodes(nodes)
-            # order the predicates
-            nodes = heuristic_optimizer.rule_order_predicates(nodes)
+            # tag & collect the predicates, ones we can't push, leave here
+            non_pushed_predicates = []
+            for node in heuristic_optimizer.tag_predicates(nodes):
+                if node.simple and len(node.relations) > 0:
+                    context.collected_predicates.append(node)
+                else:
+                    non_pushed_predicates.append(node)
 
             previous = parent
-            for predicate_node in nodes:
+            for predicate_node in non_pushed_predicates:
                 predicate_nid = random_string()
                 plan_node = LogicalPlanNode(
                     node_type=LogicalPlanStepType.Filter, condition=predicate_node
@@ -137,7 +142,11 @@ class HeuristicOptimizerVisitor:
             return previous, context
 
         else:
-            if node.node_type == LogicalPlanStepType.Scan:
+            if node.node_type in (
+                LogicalPlanStepType.Scan,
+                LogicalPlanStepType.FunctionDataset,
+                LogicalPlanStepType.Subquery,
+            ):
                 # push projections
                 node_columns = [
                     col
@@ -146,9 +155,77 @@ class HeuristicOptimizerVisitor:
                 ]
                 # these are the pushed columns
                 node.columns = node_columns
+
+                previous = parent
+                remaining_predicates = []
+                for predicate in context.collected_predicates:
+                    if len(predicate.relations) == 1:
+                        if predicate.relations.intersection((node.relation, node.alias)):
+                            predicate_nid = random_string()
+                            plan_node = LogicalPlanNode(
+                                node_type=LogicalPlanStepType.Filter, condition=predicate
+                            )
+                            context.optimized_tree.add_node(predicate_nid, plan_node)
+                            context.optimized_tree.add_edge(predicate_nid, previous)
+                            previous = predicate_nid
+                            continue
+                    remaining_predicates.append(predicate)
+                context.collected_predicates = remaining_predicates
+                parent = previous
             elif node.node_type == LogicalPlanStepType.Join:
                 # push predicates which reference multiple relations here
-                pass
+
+                if node.type == "cross join" and node.unnest_column:
+                    # if it's a CROSS JOIN UNNEST - don't try to push any further
+                    previous = parent
+                    for predicate in context.collected_predicates:
+                        predicate_nid = random_string()
+                        plan_node = LogicalPlanNode(
+                            node_type=LogicalPlanStepType.Filter, condition=predicate
+                        )
+                        context.optimized_tree.add_node(predicate_nid, plan_node)
+                        context.optimized_tree.add_edge(predicate_nid, previous)
+                        previous = predicate_nid
+                        continue
+                    context.collected_predicates = []
+                    parent = previous
+                elif node.type == "cross join":
+                    # we may be able to rewrite as an inner join
+                    remaining_predicates = []
+                    for predicate in context.collected_predicates:
+                        if len(predicate.relations) == 2 and set(
+                            node.right_relation_names + node.left_relation_names
+                        ) == set(predicate.relations):
+                            from opteryx.components.binder.binder_visitor import extract_join_fields
+                            from opteryx.components.binder.binder_visitor import (
+                                get_mismatched_condition_column_types,
+                            )
+
+                            node.type = "inner"
+                            node.on = _add_condition(node.on, predicate)
+
+                            node.left_columns, node.right_columns = extract_join_fields(
+                                node.on, node.left_relation_names, node.right_relation_names
+                            )
+                            mismatches = get_mismatched_condition_column_types(node.on)
+                            if mismatches:
+                                from opteryx.exceptions import IncompatibleTypesError
+
+                                raise IncompatibleTypesError(**mismatches)
+                        else:
+                            remaining_predicates.append(predicate)
+                    context.collected_predicates = remaining_predicates
+
+                for predicate in context.collected_predicates:
+                    remaining_predicates = []
+                    for predicate in context.collected_predicates:
+                        if len(predicate.relations) == 2 and set(
+                            node.right_relation_names + node.left_relation_names
+                        ) == set(predicate.relations):
+                            node.condition = _add_condition(node.condition, predicate)
+                        else:
+                            remaining_predicates.append(predicate)
+                    context.collected_predicates = remaining_predicates
 
             context.optimized_tree.add_node(nid, LogicalPlanNode(**node.properties))
             if parent:
@@ -166,7 +243,19 @@ class HeuristicOptimizerVisitor:
                 _inner(parent or node, child, context)
 
         _inner(None, root, context)
-        # print(context.optimized_tree.draw())
+        # DEBUG: log (context.optimized_tree.draw())
+
+        # anything we couldn't push, we need to put back
+        if context.collected_predicates:
+            context.collected_predicates.reverse()
+            exit = context.optimized_tree.get_exit_points()[0]
+            for predicate in context.collected_predicates:
+                plan_node = LogicalPlanNode(
+                    node_type=LogicalPlanStepType.Filter, condition=predicate
+                )
+                context.optimized_tree.insert_node_before(random_string(), plan_node, exit)
+
+        # DEBUG: log (context.optimized_tree.draw())
         return context.optimized_tree
 
 
@@ -182,6 +271,15 @@ def _unique_nodes(nodes: list) -> list:
                 seen_identities[identity] = node
 
     return list(seen_identities.values())
+
+
+def _add_condition(existing_condition, new_condition):
+    if not existing_condition:
+        return new_condition
+    _and = Node(node_type=NodeType.AND)
+    _and.left = new_condition
+    _and.right = existing_condition
+    return _and
 
 
 def do_heuristic_optimizer(plan: LogicalPlan) -> LogicalPlan:

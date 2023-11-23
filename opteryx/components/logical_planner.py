@@ -238,6 +238,12 @@ def extract_simple_filter(filters, identifier: str = "Name"):
         return root
 
 
+def _table_name(branch):
+    if branch["relation"]["Table"]["alias"]:
+        return branch["relation"]["Table"]["alias"]["name"]["value"]
+    return ".".join(part["value"] for part in branch["relation"]["Table"]["name"])
+
+
 def inner_query_planner(ast_branch):
     inner_plan = LogicalPlan()
     step_id = None
@@ -252,6 +258,10 @@ def inner_query_planner(ast_branch):
     if len(_relations) > 1:
         join_step = LogicalPlanNode(node_type=LogicalPlanStepType.Join)
         join_step.type = "cross join"
+
+        join_step.right_relation_names = [_table_name(_relations[0])]
+        join_step.left_relation_names = [_table_name(_relations[1])]
+
         step_id = random_string()
         inner_plan.add_node(step_id, join_step)
         for relation in _relations:
