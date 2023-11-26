@@ -16,6 +16,8 @@ helps to ensure new AST-based functionality can be added by adding
 a function and a reference to it in the dictionary.
 """
 import decimal
+from typing import List
+from typing import Optional
 
 import numpy
 import pyarrow
@@ -34,62 +36,318 @@ from opteryx.utils import dates
 from opteryx.utils import suggest_alternative
 
 
-def literal_boolean(branch, alias: list = None, key=None):
+def array_agg(branch, alias: Optional[List[str]] = None, key=None):
+    distinct = branch["distinct"]
+    expression = build(branch["expr"])
+    order = None
+    if branch["order_by"]:
+        # order = custom_builders.extract_order({"Query": {"order_by": branch["order_by"]}})
+        order = [(build(item["expr"]), not bool(item["asc"])) for item in branch["order_by"]]
+    limit = None
+    if branch["limit"]:
+        limit = int(build(branch["limit"]).value)
+
+    return Node(
+        node_type=NodeType.AGGREGATOR,
+        value="ARRAY_AGG",
+        parameters=[expression],
+        distinct=distinct,
+        order=order,
+        limit=limit,
+        alias=alias,
+    )
+
+
+def between(branch, alias: Optional[List[str]] = None, key=None):
+    expr = build(branch["expr"])
+    low = build(branch["low"])
+    high = build(branch["high"])
+    inverted = branch["negated"]
+
+    if inverted:
+        # LEFT <= LOW AND LEFT >= HIGH (not between)
+        left_node = Node(
+            NodeType.COMPARISON_OPERATOR,
+            value="Lt",
+            left=expr,
+            right=low,
+        )
+        right_node = Node(
+            NodeType.COMPARISON_OPERATOR,
+            value="Gt",
+            left=expr,
+            right=high,
+        )
+
+        return Node(NodeType.OR, left=left_node, right=right_node)
+    else:
+        # LEFT > LOW and LEFT < HIGH (between)
+        left_node = Node(
+            NodeType.COMPARISON_OPERATOR,
+            value="GtEq",
+            left=expr,
+            right=low,
+        )
+        right_node = Node(
+            NodeType.COMPARISON_OPERATOR,
+            value="LtEq",
+            left=expr,
+            right=high,
+        )
+
+        return Node(NodeType.AND, left=left_node, right=right_node)
+
+
+def binary_op(branch, alias: Optional[List[str]] = None, key=None):
+    left = build(branch["left"])
+    operator = branch["op"]
+    right = build(branch["right"])
+
+    operator_type = NodeType.COMPARISON_OPERATOR
+    if operator in BINARY_OPERATORS:
+        operator_type = NodeType.BINARY_OPERATOR
+    if operator == "And":
+        operator_type = NodeType.AND
+    if operator == "Or":
+        operator_type = NodeType.OR
+    if operator == "Xor":
+        operator_type = NodeType.XOR
+
+    return Node(
+        operator_type,
+        value=operator,
+        left=left,
+        right=right,
+        alias=alias,
+    )
+
+
+def case_when(value, alias: Optional[List[str]] = None, key=None):
+    fixed_operand = build(value["operand"])
+    else_result = build(value["else_result"])
+
+    conditions = []
+    for condition in value["conditions"]:
+        operand = build(condition)
+        if fixed_operand is None:
+            conditions.append(operand)
+        else:
+            conditions.append(
+                Node(
+                    NodeType.COMPARISON_OPERATOR,
+                    value="Eq",
+                    left=fixed_operand,
+                    right=operand,
+                )
+            )
+    if else_result is not None:
+        conditions.append(Node(NodeType.LITERAL, type=OrsoTypes.BOOLEAN, value=True))
+    conditions_node = Node(NodeType.EXPRESSION_LIST, parameters=conditions)
+
+    results = []
+    for result in value["results"]:
+        results.append(build(result))
+    if else_result is not None:
+        results.append(else_result)
+    results_node = Node(NodeType.EXPRESSION_LIST, parameters=results)
+
+    return Node(
+        NodeType.FUNCTION,
+        value="CASE",
+        parameters=[conditions_node, results_node],
+        alias=alias,
+    )
+
+
+def cast(branch, alias: Optional[List[str]] = None, key=None):
+    # CAST(<var> AS <type>) - convert to the form <type>(var), e.g. BOOLEAN(on)
+
+    args = [build(branch["expr"])]
+    data_type = branch["data_type"]
+    if isinstance(data_type, dict):
+        # timestamps have the timezone as a value
+        type_key = next(iter(data_type))
+        if type_key == "Timestamp" and data_type[type_key] not in (
+            (None, "None"),
+            (None, "WithoutTimeZone"),
+        ):
+            raise UnsupportedSyntaxError("TIMESTAMPS do not support `TIME ZONE`")
+        data_type = type_key
+    if "Custom" in data_type:
+        data_type = branch["data_type"]["Custom"][0][0]["value"].upper()
+    if data_type == "Timestamp":
+        data_type = "TIMESTAMP"
+    elif data_type == "Date":
+        data_type = "DATE"
+    elif "Varchar" in data_type:
+        data_type = "VARCHAR"
+    elif "Decimal" in data_type:
+        data_type = "DECIMAL"
+    elif "Integer" in data_type:
+        data_type = "INTEGER"
+    elif "Double" in data_type:
+        data_type = "DOUBLE"
+    elif "Boolean" in data_type:
+        data_type = "BOOLEAN"
+    elif "STRUCT" in data_type:
+        data_type = "STRUCT"
+    else:
+        raise SqlError(f"Unsupported type for CAST  - '{data_type}'")
+
+    return Node(
+        NodeType.FUNCTION,
+        value=data_type.upper(),
+        parameters=args,
+        alias=alias,
+    )
+
+
+def ceiling(value, alias: Optional[List[str]] = None, key=None):
+    data_value = build(value["expr"])
+    return Node(NodeType.FUNCTION, value="CEIL", parameters=[data_value], alias=alias)
+
+
+def compound_identifier(branch, alias: Optional[List[str]] = None, key=None):
+    return LogicalColumn(
+        node_type=NodeType.IDENTIFIER,  # column type
+        alias=alias,  # AS alias, if provided
+        source_column=branch[-1]["value"],  # the source column
+        source=".".join(p["value"] for p in branch[:-1]),  # the source relation
+    )
+
+
+def expression_with_alias(branch, alias: Optional[List[str]] = None, key=None):
+    """an alias"""
+    return build(branch["expr"], alias=branch["alias"]["value"])
+
+
+def expressions(branch, alias: Optional[List[str]] = None, key=None):
+    return [build(part) for part in branch]
+
+
+def extract(branch, alias: Optional[List[str]] = None, key=None):
+    # EXTRACT(part FROM timestamp)
+    datepart = Node(NodeType.LITERAL, type=OrsoTypes.VARCHAR, value=branch["field"])
+    value = build(branch["expr"])
+
+    return Node(
+        NodeType.FUNCTION,
+        value="DATEPART",
+        parameters=[datepart, value],
+        alias=alias,
+    )
+
+
+def floor(value, alias: Optional[List[str]] = None, key=None):
+    data_value = build(value["expr"])
+    return Node(NodeType.FUNCTION, value="FLOOR", parameters=[data_value], alias=alias)
+
+
+def function(branch, alias: Optional[List[str]] = None, key=None):
+    func = branch["name"][0]["value"].upper()
+    args = [build(a) for a in branch["args"]]
+    if functions.is_function(func):
+        node_type = NodeType.FUNCTION
+    elif operators.is_aggregator(func):
+        node_type = NodeType.AGGREGATOR
+    else:  # pragma: no cover
+        likely_match = suggest_alternative(func, operators.aggregators() + functions.functions())
+        if likely_match is None:
+            raise UnsupportedSyntaxError(f"Unknown function or aggregate '{func}'")
+        raise UnsupportedSyntaxError(
+            f"Unknown function or aggregate '{func}'. Did you mean '{likely_match}'?"
+        )
+
+    order_by = [(build(item["expr"]), not bool(item["asc"])) for item in branch.get("order_by", [])]
+
+    node = Node(
+        node_type=node_type,
+        value=func,
+        parameters=args,
+        alias=alias,
+        distinct=branch.get("distinct"),
+        order=order_by,
+    )
+    node.qualified_name = format_expression(node)
+    return node
+
+
+def hex_literal(branch, alias: Optional[List[str]] = None, key=None):
+    value = int(branch, 16)
+    return Node(
+        NodeType.LITERAL,
+        type=OrsoTypes.INTEGER,
+        value=value,
+        #    alias=alias or f"0x{branch}"
+    )
+
+
+def identifier(branch, alias: Optional[List[str]] = None, key=None):
+    """idenitifier doesn't have a qualifier (recorded in source)"""
+    return LogicalColumn(
+        node_type=NodeType.IDENTIFIER,  # column type
+        alias=alias,  # AS alias, if provided
+        source_column=branch["value"],  # the source column
+    )
+
+
+def in_list(branch, alias: Optional[List[str]] = None, key=None):
+    left_node = build(branch["expr"])
+    list_values = {build(v).value for v in branch["list"]}
+    operator = "NotInList" if branch["negated"] else "InList"
+    right_node = Node(node_type=NodeType.LITERAL, type=OrsoTypes.ARRAY, value=list_values)
+    return Node(
+        node_type=NodeType.COMPARISON_OPERATOR,
+        value=operator,
+        left=left_node,
+        right=right_node,
+    )
+
+
+def in_subquery(branch, alias: Optional[List[str]] = None, key=None):
+    # if it's a sub-query we create a plan for it
+    from opteryx.components.logical_planner import plan_query
+
+    left = build(branch["expr"])
+    ast = {}
+    ast["Query"] = branch["subquery"]
+    subquery_plan = plan_query(ast)
+    exit_node = subquery_plan.get_exit_points()[0]
+    subquery_plan.remove_node(exit_node, heal=True)
+    operator = "NotInList" if branch["negated"] else "InList"
+
+    sub_query = Node(NodeType.SUBQUERY, value=subquery_plan)
+    return Node(
+        NodeType.COMPARISON_OPERATOR,
+        value=operator,
+        left=left,
+        right=sub_query,
+    )
+
+
+def in_unnest(branch, alias: Optional[List[str]] = None, key=None):
+    left_node = build(branch["expr"])
+    operator = "NotContains" if branch["negated"] else "Contains"
+    right_node = build(branch["array_expr"])
+    return Node(
+        node_type=NodeType.COMPARISON_OPERATOR,
+        value=operator,
+        left=left_node,
+        right=right_node,
+    )
+
+
+def is_compare(branch, alias: Optional[List[str]] = None, key=None):
+    centre = build(branch)
+    return Node(NodeType.UNARY_OPERATOR, value=key, centre=centre)
+
+
+def literal_boolean(branch, alias: Optional[List[str]] = None, key=None):
     """create node for a literal boolean branch"""
     return Node(NodeType.LITERAL, type=OrsoTypes.BOOLEAN, value=branch, alias=alias)
 
 
-def literal_null(branch, alias: list = None, key=None):
-    """create node for a literal null branch"""
-    return Node(NodeType.LITERAL, type=OrsoTypes.NULL, alias=alias)
-
-
-def literal_number(branch, alias: list = None, key=None):
-    """create node for a literal number branch"""
-    # we have one internal numeric type
-
-    value = branch[0]
-    try:
-        # Try converting to int first
-        value = int(value)
-        return Node(
-            NodeType.LITERAL,
-            type=OrsoTypes.INTEGER,
-            value=numpy.int64(branch[0]),  # value
-            alias=alias,
-        )
-    except ValueError:
-        # If int conversion fails, try converting to float
-        value = float(value)
-        return Node(
-            NodeType.LITERAL,
-            type=OrsoTypes.DOUBLE,
-            value=numpy.float64(branch[0]),  # value
-            alias=alias,
-        )
-
-
-def literal_string(branch, alias: list = None, key=None):
-    """create node for a string branch, this is either a date or a string"""
-    dte_value = dates.parse_iso(branch)
-    if dte_value:
-        if len(branch) <= 10:
-            return Node(
-                NodeType.LITERAL,
-                type=OrsoTypes.DATE,
-                value=numpy.datetime64(dte_value, "D"),
-                alias=alias,
-            )
-        return Node(
-            NodeType.LITERAL,
-            type=OrsoTypes.TIMESTAMP,
-            value=numpy.datetime64(dte_value, "us"),
-            alias=alias,
-        )
-    return Node(NodeType.LITERAL, type=OrsoTypes.VARCHAR, value=branch, alias=alias)
-
-
-def literal_interval(branch, alias: list = None, key=None):
+def literal_interval(branch, alias: Optional[List[str]] = None, key=None):
     """
     Create node for a time literal.
 
@@ -140,141 +398,154 @@ def literal_interval(branch, alias: list = None, key=None):
     return Node(NodeType.LITERAL, type=OrsoTypes.INTERVAL, value=interval, alias=alias)
 
 
-def wildcard_filter(branch, alias=None, key=None):
-    """a wildcard"""
-    return Node(NodeType.WILDCARD)
+def literal_null(branch, alias: Optional[List[str]] = None, key=None):
+    """create node for a literal null branch"""
+    return Node(NodeType.LITERAL, type=OrsoTypes.NULL, alias=alias)
 
 
-def expressions(branch, alias=None, key=None):
-    return [build(part) for part in branch]
+def literal_number(branch, alias: Optional[List[str]] = None, key=None):
+    """create node for a literal number branch"""
+    # we have one internal numeric type
+
+    value = branch[0]
+    try:
+        # Try converting to int first
+        value = int(value)
+        return Node(
+            NodeType.LITERAL,
+            type=OrsoTypes.INTEGER,
+            value=numpy.int64(branch[0]),  # value
+            alias=alias,
+        )
+    except ValueError:
+        # If int conversion fails, try converting to float
+        value = float(value)
+        return Node(
+            NodeType.LITERAL,
+            type=OrsoTypes.DOUBLE,
+            value=numpy.float64(branch[0]),  # value
+            alias=alias,
+        )
 
 
-def expression_with_alias(branch, alias=None, key=None):
-    """an alias"""
-    return build(branch["expr"], alias=branch["alias"]["value"])
+def literal_string(branch, alias: Optional[List[str]] = None, key=None):
+    """create node for a string branch, this is either a date or a string"""
+    dte_value = dates.parse_iso(branch)
+    if dte_value:
+        if len(branch) <= 10:
+            return Node(
+                NodeType.LITERAL,
+                type=OrsoTypes.DATE,
+                value=numpy.datetime64(dte_value, "D"),
+                alias=alias,
+            )
+        return Node(
+            NodeType.LITERAL,
+            type=OrsoTypes.TIMESTAMP,
+            value=numpy.datetime64(dte_value, "us"),
+            alias=alias,
+        )
+    return Node(NodeType.LITERAL, type=OrsoTypes.VARCHAR, value=branch, alias=alias)
 
 
-def qualified_wildcard(branch, alias=None, key=None):
+def map_access(branch, alias: Optional[List[str]] = None, key=None):
+    # Identifier[key] -> GET(Identifier, key)
+
+    identifier_node = build(branch["column"])  # ["Identifier"]["value"]
+    key_dict = branch["keys"][0]["Value"]
+    if "SingleQuotedString" in key_dict:
+        key = key_dict["SingleQuotedString"]
+        key_node = Node(NodeType.LITERAL, type=OrsoTypes.VARCHAR, value=key)
+    if "Number" in key_dict:
+        key = int(key_dict["Number"][0])
+        key_node = Node(NodeType.LITERAL, type=OrsoTypes.INTEGER, value=key)
+
+    return Node(
+        NodeType.FUNCTION,
+        value="GET",
+        parameters=[identifier_node, key_node],
+        alias=alias
+        or f"{identifier_node.current_name}[{repr(key) if isinstance(key, str) else key}]",
+    )
+
+
+def nested(branch, alias: Optional[List[str]] = None, key=None):
+    return Node(
+        node_type=NodeType.NESTED,
+        centre=build(branch),
+    )
+
+
+def pattern_match(branch, alias: Optional[List[str]] = None, key=None):
+    negated = branch["negated"]
+    left = build(branch["expr"])
+    right = build(branch["pattern"])
+    if negated:
+        key = f"Not{key}"
+    return Node(
+        NodeType.COMPARISON_OPERATOR,
+        value=key,
+        left=left,
+        right=right,
+    )
+
+
+def position(value, alias: Optional[List[str]] = None, key=None):
+    sub = build(value["expr"])
+    string = build(value["in"])
+    return Node(NodeType.FUNCTION, value="POSITION", parameters=[sub, string], alias=alias)
+
+
+def qualified_wildcard(branch, alias: Optional[List[str]] = None, key=None):
     parts = [part["value"] for part in [node for node in branch if isinstance(node, list)][0]]
     qualifier = (".".join(parts),)
     return Node(NodeType.WILDCARD, value=qualifier, alias=alias)
 
 
-def identifier(branch, alias=None, key=None):
-    """idenitifier doesn't have a qualifier (recorded in source)"""
-    return LogicalColumn(
-        node_type=NodeType.IDENTIFIER,  # column type
-        alias=alias,  # AS alias, if provided
-        source_column=branch["value"],  # the source column
-    )
-
-
-def compound_identifier(branch, alias=None, key=None):
-    return LogicalColumn(
-        node_type=NodeType.IDENTIFIER,  # column type
-        alias=alias,  # AS alias, if provided
-        source_column=branch[-1]["value"],  # the source column
-        source=".".join(p["value"] for p in branch[:-1]),  # the source relation
-    )
-
-
-def function(branch, alias=None, key=None):
-    func = branch["name"][0]["value"].upper()
-    args = [build(a) for a in branch["args"]]
-    if functions.is_function(func):
-        node_type = NodeType.FUNCTION
-    elif operators.is_aggregator(func):
-        node_type = NodeType.AGGREGATOR
-    else:  # pragma: no cover
-        likely_match = suggest_alternative(func, operators.aggregators() + functions.functions())
-        if likely_match is None:
-            raise UnsupportedSyntaxError(f"Unknown function or aggregate '{func}'")
-        raise UnsupportedSyntaxError(
-            f"Unknown function or aggregate '{func}'. Did you mean '{likely_match}'?"
-        )
-
-    order_by = [(build(item["expr"]), not bool(item["asc"])) for item in branch.get("order_by", [])]
-
-    node = Node(
-        node_type=node_type,
-        value=func,
-        parameters=args,
-        alias=alias,
-        distinct=branch.get("distinct"),
-        order=order_by,
-    )
-    node.qualified_name = format_expression(node)
-    return node
-
-
-def binary_op(branch, alias=None, key=None):
-    left = build(branch["left"])
-    operator = branch["op"]
-    right = build(branch["right"])
-
-    operator_type = NodeType.COMPARISON_OPERATOR
-    if operator in BINARY_OPERATORS:
-        operator_type = NodeType.BINARY_OPERATOR
-    if operator == "And":
-        operator_type = NodeType.AND
-    if operator == "Or":
-        operator_type = NodeType.OR
-    if operator == "Xor":
-        operator_type = NodeType.XOR
-
+def substring(branch, alias: Optional[List[str]] = None, key=None):
+    node_node = Node(NodeType.LITERAL, type=OrsoTypes.NULL, value=None)
+    string = build(branch["expr"])
+    substring_from = build(branch["substring_from"]) or node_node
+    substring_for = build(branch["substring_for"]) or node_node
     return Node(
-        operator_type,
-        value=operator,
-        left=left,
-        right=right,
+        NodeType.FUNCTION,
+        value="SUBSTRING",
+        parameters=[string, substring_from, substring_for],
         alias=alias,
     )
 
 
-def cast(branch, alias=None, key=None):
-    # CAST(<var> AS <type>) - convert to the form <type>(var), e.g. BOOLEAN(on)
+def trim_string(branch, alias: Optional[List[str]] = None, key=None):
+    who = build(branch["trim_what"])
+    what = build(branch["expr"])
+    where = branch["trim_where"] or "Both"
 
-    args = [build(branch["expr"])]
-    data_type = branch["data_type"]
-    if isinstance(data_type, dict):
-        # timestamps have the timezone as a value
-        type_key = next(iter(data_type))
-        if type_key == "Timestamp" and data_type[type_key] not in (
-            (None, "None"),
-            (None, "WithoutTimeZone"),
-        ):
-            raise UnsupportedSyntaxError("TIMESTAMPS do not support `TIME ZONE`")
-        data_type = type_key
-    if "Custom" in data_type:
-        data_type = branch["data_type"]["Custom"][0][0]["value"].upper()
-    if data_type == "Timestamp":
-        data_type = "TIMESTAMP"
-    elif data_type == "Date":
-        data_type = "DATE"
-    elif "Varchar" in data_type:
-        data_type = "VARCHAR"
-    elif "Decimal" in data_type:
-        data_type = "DECIMAL"
-    elif "Integer" in data_type:
-        data_type = "INTEGER"
-    elif "Double" in data_type:
-        data_type = "DOUBLE"
-    elif "Boolean" in data_type:
-        data_type = "BOOLEAN"
-    elif "STRUCT" in data_type:
-        data_type = "STRUCT"
-    else:
-        raise SqlError(f"Unsupported type for CAST  - '{data_type}'")
+    function = "TRIM"
+    if where == "Leading":
+        function = "LTRIM"
+    if where == "Trailing":
+        function = "RTRIM"
+
+    parameters = [what]
+    if who is not None:
+        parameters.append(who)
 
     return Node(
         NodeType.FUNCTION,
-        value=data_type.upper(),
-        parameters=args,
+        value=function,
+        parameters=parameters,
         alias=alias,
     )
 
 
-def try_cast(branch, alias=None, key="TryCast"):
+def tuple_literal(branch, alias: Optional[List[str]] = None, key=None):
+    values = [build(t).value for t in branch]
+    if values and isinstance(values[0], dict):
+        values = [build(val["Identifier"]).value for val in values]
+    return Node(NodeType.LITERAL, type=OrsoTypes.ARRAY, value=tuple(values), alias=alias)
+
+
+def try_cast(branch, alias: Optional[List[str]] = None, key="TryCast"):
     # TRY_CAST(<var> AS <type>) - convert to the form <type>(var), e.g. BOOLEAN(on)
     # also: SAFE_CAST
     function_name = key.replace("Cast", "_Cast").upper()
@@ -318,195 +589,7 @@ def try_cast(branch, alias=None, key="TryCast"):
     )
 
 
-def extract(branch, alias=None, key=None):
-    # EXTRACT(part FROM timestamp)
-    datepart = Node(NodeType.LITERAL, type=OrsoTypes.VARCHAR, value=branch["field"])
-    value = build(branch["expr"])
-
-    return Node(
-        NodeType.FUNCTION,
-        value="DATEPART",
-        parameters=[datepart, value],
-        alias=alias,
-    )
-
-
-def map_access(branch, alias=None, key=None):
-    # Identifier[key] -> GET(Identifier, key)
-
-    identifier_node = build(branch["column"])  # ["Identifier"]["value"]
-    key_dict = branch["keys"][0]["Value"]
-    if "SingleQuotedString" in key_dict:
-        key = key_dict["SingleQuotedString"]
-        key_node = Node(NodeType.LITERAL, type=OrsoTypes.VARCHAR, value=key)
-    if "Number" in key_dict:
-        key = int(key_dict["Number"][0])
-        key_node = Node(NodeType.LITERAL, type=OrsoTypes.INTEGER, value=key)
-
-    return Node(
-        NodeType.FUNCTION,
-        value="GET",
-        parameters=[identifier_node, key_node],
-        alias=alias
-        or f"{identifier_node.current_name}[{repr(key) if isinstance(key, str) else key}]",
-    )
-
-
-def unary_op(branch, alias=None, key=None):
-    if branch["op"] == "Not":
-        centre = build(branch["expr"])
-        return Node(node_type=NodeType.NOT, centre=centre)
-    if branch["op"] == "Minus":
-        node = literal_number(branch["expr"]["Value"]["Number"], alias=alias)
-        node.value = 0 - node.value
-        return node
-    if branch["op"] == "Plus":
-        return literal_number(branch["expr"]["Value"]["Number"], alias=alias)
-
-
-def between(branch, alias=None, key=None):
-    expr = build(branch["expr"])
-    low = build(branch["low"])
-    high = build(branch["high"])
-    inverted = branch["negated"]
-
-    if inverted:
-        # LEFT <= LOW AND LEFT >= HIGH (not between)
-        left_node = Node(
-            NodeType.COMPARISON_OPERATOR,
-            value="Lt",
-            left=expr,
-            right=low,
-        )
-        right_node = Node(
-            NodeType.COMPARISON_OPERATOR,
-            value="Gt",
-            left=expr,
-            right=high,
-        )
-
-        return Node(NodeType.OR, left=left_node, right=right_node)
-    else:
-        # LEFT > LOW and LEFT < HIGH (between)
-        left_node = Node(
-            NodeType.COMPARISON_OPERATOR,
-            value="GtEq",
-            left=expr,
-            right=low,
-        )
-        right_node = Node(
-            NodeType.COMPARISON_OPERATOR,
-            value="LtEq",
-            left=expr,
-            right=high,
-        )
-
-        return Node(NodeType.AND, left=left_node, right=right_node)
-
-
-def in_subquery(branch, alias=None, key=None):
-    # if it's a sub-query we create a plan for it
-    from opteryx.components.logical_planner import plan_query
-
-    left = build(branch["expr"])
-    ast = {}
-    ast["Query"] = branch["subquery"]
-    subquery_plan = plan_query(ast)
-    exit_node = subquery_plan.get_exit_points()[0]
-    subquery_plan.remove_node(exit_node, heal=True)
-    operator = "NotInList" if branch["negated"] else "InList"
-
-    sub_query = Node(NodeType.SUBQUERY, value=subquery_plan)
-    return Node(
-        NodeType.COMPARISON_OPERATOR,
-        value=operator,
-        left=left,
-        right=sub_query,
-    )
-
-
-def is_compare(branch, alias=None, key=None):
-    centre = build(branch)
-    return Node(NodeType.UNARY_OPERATOR, value=key, centre=centre)
-
-
-def pattern_match(branch, alias=None, key=None):
-    negated = branch["negated"]
-    left = build(branch["expr"])
-    right = build(branch["pattern"])
-    if negated:
-        key = f"Not{key}"
-    return Node(
-        NodeType.COMPARISON_OPERATOR,
-        value=key,
-        left=left,
-        right=right,
-    )
-
-
-def in_list(branch, alias=None, key=None):
-    left_node = build(branch["expr"])
-    list_values = {build(v).value for v in branch["list"]}
-    operator = "NotInList" if branch["negated"] else "InList"
-    right_node = Node(node_type=NodeType.LITERAL, type=OrsoTypes.ARRAY, value=list_values)
-    return Node(
-        node_type=NodeType.COMPARISON_OPERATOR,
-        value=operator,
-        left=left_node,
-        right=right_node,
-    )
-
-
-def in_unnest(branch, alias=None, key=None):
-    left_node = build(branch["expr"])
-    operator = "NotContains" if branch["negated"] else "Contains"
-    right_node = build(branch["array_expr"])
-    return Node(
-        node_type=NodeType.COMPARISON_OPERATOR,
-        value=operator,
-        left=left_node,
-        right=right_node,
-    )
-
-
-def nested(branch, alias=None, key=None):
-    return Node(
-        node_type=NodeType.NESTED,
-        centre=build(branch),
-    )
-
-
-def hex_literal(branch, alias=None, key=None):
-    value = int(branch, 16)
-    return Node(
-        NodeType.LITERAL,
-        type=OrsoTypes.INTEGER,
-        value=value,
-        #    alias=alias or f"0x{branch}"
-    )
-
-
-def tuple_literal(branch, alias=None, key=None):
-    values = [build(t).value for t in branch]
-    if values and isinstance(values[0], dict):
-        values = [build(val["Identifier"]).value for val in values]
-    return Node(NodeType.LITERAL, type=OrsoTypes.ARRAY, value=tuple(values), alias=alias)
-
-
-def substring(branch, alias=None, key=None):
-    node_node = Node(NodeType.LITERAL, type=OrsoTypes.NULL, value=None)
-    string = build(branch["expr"])
-    substring_from = build(branch["substring_from"]) or node_node
-    substring_for = build(branch["substring_for"]) or node_node
-    return Node(
-        NodeType.FUNCTION,
-        value="SUBSTRING",
-        parameters=[string, substring_from, substring_for],
-        alias=alias,
-    )
-
-
-def typed_string(branch, alias=None, key=None):
+def typed_string(branch, alias: Optional[List[str]] = None, key=None):
     data_type = branch["data_type"]
 
     if isinstance(data_type, dict):
@@ -538,110 +621,32 @@ def typed_string(branch, alias=None, key=None):
     return Node(NodeType.LITERAL, type=mapper[0], value=mapper[1](data_value), alias=alias)
 
 
-def ceiling(value, alias: list = None, key=None):
-    data_value = build(value["expr"])
-    return Node(NodeType.FUNCTION, value="CEIL", parameters=[data_value], alias=alias)
+def unary_op(branch, alias: Optional[List[str]] = None, key=None):
+    if branch["op"] == "Not":
+        centre = build(branch["expr"])
+        return Node(node_type=NodeType.NOT, centre=centre)
+    if branch["op"] == "Minus":
+        node = literal_number(branch["expr"]["Value"]["Number"], alias=alias)
+        node.value = 0 - node.value
+        return node
+    if branch["op"] == "Plus":
+        return literal_number(branch["expr"]["Value"]["Number"], alias=alias)
 
 
-def floor(value, alias: list = None, key=None):
-    data_value = build(value["expr"])
-    return Node(NodeType.FUNCTION, value="FLOOR", parameters=[data_value], alias=alias)
+def wildcard_filter(branch, alias: Optional[List[str]] = None, key=None):
+    """a wildcard"""
+    return Node(NodeType.WILDCARD)
 
 
-def position(value, alias: list = None, key=None):
-    sub = build(value["expr"])
-    string = build(value["in"])
-    return Node(NodeType.FUNCTION, value="POSITION", parameters=[sub, string], alias=alias)
+# ----------
 
 
-def case_when(value, alias: list = None, key=None):
-    fixed_operand = build(value["operand"])
-    else_result = build(value["else_result"])
-
-    conditions = []
-    for condition in value["conditions"]:
-        operand = build(condition)
-        if fixed_operand is None:
-            conditions.append(operand)
-        else:
-            conditions.append(
-                Node(
-                    NodeType.COMPARISON_OPERATOR,
-                    value="Eq",
-                    left=fixed_operand,
-                    right=operand,
-                )
-            )
-    if else_result is not None:
-        conditions.append(Node(NodeType.LITERAL, type=OrsoTypes.BOOLEAN, value=True))
-    conditions_node = Node(NodeType.EXPRESSION_LIST, parameters=conditions)
-
-    results = []
-    for result in value["results"]:
-        results.append(build(result))
-    if else_result is not None:
-        results.append(else_result)
-    results_node = Node(NodeType.EXPRESSION_LIST, parameters=results)
-
-    return Node(
-        NodeType.FUNCTION,
-        value="CASE",
-        parameters=[conditions_node, results_node],
-        alias=alias,
-    )
-
-
-def array_agg(branch, alias=None, key=None):
-    distinct = branch["distinct"]
-    expression = build(branch["expr"])
-    order = None
-    if branch["order_by"]:
-        # order = custom_builders.extract_order({"Query": {"order_by": branch["order_by"]}})
-        order = [(build(item["expr"]), not bool(item["asc"])) for item in branch["order_by"]]
-    limit = None
-    if branch["limit"]:
-        limit = int(build(branch["limit"]).value)
-
-    return Node(
-        node_type=NodeType.AGGREGATOR,
-        value="ARRAY_AGG",
-        parameters=[expression],
-        distinct=distinct,
-        order=order,
-        limit=limit,
-        alias=alias,
-    )
-
-
-def trim_string(branch, alias=None, key=None):
-    who = build(branch["trim_what"])
-    what = build(branch["expr"])
-    where = branch["trim_where"] or "Both"
-
-    function = "TRIM"
-    if where == "Leading":
-        function = "LTRIM"
-    if where == "Trailing":
-        function = "RTRIM"
-
-    parameters = [what]
-    if who is not None:
-        parameters.append(who)
-
-    return Node(
-        NodeType.FUNCTION,
-        value=function,
-        parameters=parameters,
-        alias=alias,
-    )
-
-
-def unsupported(branch, alias=None, key=None):
+def unsupported(branch, alias: Optional[List[str]] = None, key=None):
     """raise an error"""
     raise SqlError(f"Unhandled token in Syntax Tree `{key}`")
 
 
-def build(value, alias=None, key=None):
+def build(value, alias: Optional[List[str]] = None, key=None):
     """
     Extract values from a value node in the AST and create a ExpressionNode for it
 
