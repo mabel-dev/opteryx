@@ -41,14 +41,14 @@ This is the AST rewriter, it sits between the Parser and the Logical Planner.
    └───────────┘      └───────────┘      └───────────┘
 ~~~
 
-It's primary role is to bind information to the AST which is provided in the order they appear
+The primary role is to bind information to the AST which is provided in the order they appear
 in the AST. For example, parameter substitutions and temporal ranges. Both of these require the
 AST to be in the same order as the SQL provided by the user, which we can't guarantee after the
 logical planner.
 
 The parameter substitution is done after the AST is parsed to limit the possibility of the values
 in the parameters affecting how the SQL is parsed (i.e. to prevent injection attacks). For similar
-reasons, we do variable subsitutions here aswell. Although these are not sensitive to ordering, 
+reasons, we do variable subsitutions here as well. Although these are not sensitive to ordering, 
 we should remove any opportunity for them to be used for injection attacks so we bind them after
 the building of the AST.
 
@@ -58,56 +58,80 @@ here.
 """
 import datetime
 import decimal
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Union
 
 import numpy
-from orso.tools import random_string
 
 from opteryx.exceptions import ParameterError
 
+LiteralNode = Dict[str, Any]
 
-def _build_literal_node(value):
-    """for a given literal, write the AST node for it"""
+
+def _build_literal_node(value: Any) -> LiteralNode:
+    """
+    Construct the AST node for a given literal value.
+
+    Parameters:
+        value: The literal value to be converted into an AST node.
+
+    Returns:
+        A dictionary representing the AST node for the given literal.
+    """
     if value is None:
         return {"Value": "Null"}
-    if isinstance(value, (bool)):
-        # boolean must be before numeric
+    elif isinstance(value, bool):
         return {"Value": {"Boolean": value}}
-    if isinstance(value, (str)):
+    elif isinstance(value, str):
         return {"Value": {"SingleQuotedString": value}}
-    if isinstance(value, (int, float, decimal.Decimal)):
+    elif isinstance(value, (int, float, decimal.Decimal)):
         return {"Value": {"Number": [value, False]}}
-    if isinstance(value, (numpy.datetime64)):
+    elif isinstance(value, numpy.datetime64):
         return {"Value": {"SingleQuotedString": value.item().isoformat()}}
-    if isinstance(value, (datetime.date, datetime.datetime, datetime.time)):
+    elif isinstance(value, (datetime.date, datetime.datetime, datetime.time)):
         return {"Value": {"SingleQuotedString": value.isoformat()}}
+    else:
+        raise ValueError(f"Unsupported literal type: {type(value)}")
 
 
-def parameter_binder(node, parameter_set, connection, query_type):
-    """Walk the AST replacing 'Placeholder' nodes, this is recursive"""
-    # Replace placeholders with parameters.
-    # We do this after the AST has been parsed to remove any chance of the parameter affecting the
-    # meaning of any of the other tokens - i.e. to eliminate this feature being used for SQL
-    # injection.
+def parameter_binder(
+    node: Union[Dict, List], parameter_set: List[Any], connection, query_type
+) -> Union[Dict, List]:
+    """
+    Recursively walk the AST replacing 'Placeholder' nodes with parameters.
+
+    Parameters:
+        node: The AST node or list of nodes.
+        parameter_set: The list of parameters to bind.
+        connection: The database connection.
+        query_type: The type of the query.
+
+    Returns:
+        The AST with parameters bound.
+
+    Raises:
+        ParameterError: If the number of placeholders and parameters do not match.
+    """
     if isinstance(node, list):
-        return [parameter_binder(i, parameter_set, connection, query_type) for i in node]
+        return [parameter_binder(child, parameter_set, connection, query_type) for child in node]
+
     if isinstance(node, dict):
-        if "Value" in node:
-            if "Placeholder" in node["Value"]:
-                # fmt:off
-                if len(parameter_set) == 0:
-                    raise ParameterError("Incorrect number of bindings supplied."
-                    " More placeholders are provided than parameters.")
-                placeholder_value = parameter_set.pop(0)
-                # prepared statements will have parsed this already
-                if hasattr(placeholder_value, "value"):
-                    placeholder_value = placeholder_value.value
-                return _build_literal_node(placeholder_value)
-                # fmt:on
+        if "Value" in node and "Placeholder" in node["Value"]:
+            if not parameter_set:
+                raise ParameterError(
+                    "Incorrect number of bindings supplied. More placeholders than parameters."
+                )
+            placeholder_value = parameter_set.pop(0)
+            if hasattr(placeholder_value, "value"):
+                placeholder_value = placeholder_value.value
+            return _build_literal_node(placeholder_value)
         return {
             k: parameter_binder(v, parameter_set, connection, query_type) for k, v in node.items()
         }
-    # we're a leaf
-    return node
+
+    return node  # Leaf node
 
 
 def temporal_range_binder(ast, filters):
