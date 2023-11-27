@@ -32,7 +32,6 @@ class ProjectionPushdownStrategy(OptimizationStrategy):
             node.node_type
             in (
                 LogicalPlanStepType.Scan,
-                LogicalPlanStepType.FunctionDataset,
                 LogicalPlanStepType.Subquery,
             )
             and hasattr(node, "schema")

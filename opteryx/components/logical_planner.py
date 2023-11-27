@@ -139,7 +139,10 @@ class LogicalPlanNode(Node):
                 alias = ""
                 if self.relation != self.alias:
                     alias = f" AS {self.alias}"
-                return f"SCAN ({self.relation}{alias}{date_range}{' WITH(' + ','.join(self.hints) + ')' if self.hints else ''})"
+                columns = ""
+                if self.columns:
+                    columns = " [" + ", ".join(c.name for c in self.columns) + "]"
+                return f"SCAN ({self.relation}{alias}{date_range}{' WITH(' + ','.join(self.hints) + ')' if self.hints else ''}){columns}"
             if node_type == LogicalPlanStepType.Set:
                 return f"SET ({self.variable} TO {self.value.value})"
             if node_type == LogicalPlanStepType.Show:

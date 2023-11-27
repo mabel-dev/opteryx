@@ -26,6 +26,12 @@ def test_sqlalchemy_configure_connector_with_engine():
     results = opteryx.query("SELECT COUNT(*) FROM sqlite.planets;")
     assert results.rowcount == 1, results.rowcount
 
+    # JOIN ON A NON SQL TABLE
+    results = opteryx.query(
+        "SELECT * FROM sqlite.planets INNER JOIN $satellites ON sqlite.planets.id = $satellites.planetId;"
+    )
+    assert results.rowcount == 177, results.rowcount
+
 
 if __name__ == "__main__":  # pragma: no cover
     from tests.tools import run_tests

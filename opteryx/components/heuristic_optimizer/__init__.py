@@ -65,13 +65,13 @@ __all__ = "do_heuristic_optimizer"
 
 class HeuristicOptimizerVisitor:
     def __init__(self):
-        from .strategies import PredicateRewriteStrategy
+        from .strategies import PredicatePushdownStrategy
         from .strategies import ProjectionPushdownStrategy
         from .strategies import SplitConjunctivePredicatesStrategy
 
         self.strategies = [
-            # SplitConjunctivePredicatesStrategy(),
-            # PredicateRewriteStrategy(),
+            SplitConjunctivePredicatesStrategy(),
+            #            PredicatePushdownStrategy(),
             ProjectionPushdownStrategy(),
         ]
 

@@ -36,6 +36,13 @@ def test_bigquery_storage():
     assert results.rowcount == 9, results.rowcount
     assert results.columncount == 1
 
+    # JOIN ON A NON SQL TABLE
+    results = opteryx.query(
+        "SELECT * FROM bq.public.planets INNER JOIN $satellites ON bq.public.planets.id = $satellites.planetId;"
+    )
+    assert results.rowcount == 177, results.rowcount
+    assert results.columncount == 28, results.columncount
+
 
 if __name__ == "__main__":  # pragma: no cover
     from tests.tools import run_tests
