@@ -72,6 +72,7 @@ class SqlConnector(BaseConnector):
         morsel = DataFrame(schema=result_schema)
 
         with self._engine.connect() as conn:
+            # DEBUG: log ("READ DATASET\n", str(query_builder))
             for row in conn.execute(str(query_builder)):
                 morsel._rows.append(row)
                 if len(morsel) == self.chunk_size:
@@ -97,6 +98,7 @@ class SqlConnector(BaseConnector):
             return self.schema
 
         # get the schema from the dataset
+        # DEBUG: log ("GET SQL SCHEMA:", self.dataset)
         table = Table(self.dataset, self.metadata, autoload_with=self._engine)
 
         self.schema = RelationSchema(

@@ -7,6 +7,7 @@ class HeuristicOptimizerContext:
     def __init__(self, tree: LogicalPlan):
         self.node_id = None
         self.parent_nid = None
+        self.last_nid = None
         self.pre_optimized_tree = tree
         self.optimized_plan = LogicalPlan()
 

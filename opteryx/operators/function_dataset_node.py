@@ -31,7 +31,7 @@ from opteryx.utils import series
 
 def _generate_series(**kwargs):
     value_array = series.generate_series(*kwargs["args"])
-    return [{kwargs["columns"][0].identity: value} for value in value_array]
+    return [{kwargs["columns"][0].schema_column.identity: value} for value in value_array]
 
 
 def _unnest(**kwargs):
@@ -40,12 +40,12 @@ def _unnest(**kwargs):
         list_items = [kwargs["args"][0].centre.value]
     else:
         list_items = kwargs["args"][0].value
-    column_name = kwargs["columns"][0].identity
+    column_name = kwargs["columns"][0].schema_column.identity
     return [{column_name: row} for row in list_items]
 
 
 def _values(**parameters):
-    columns = [col.identity for col in parameters["columns"]]
+    columns = [col.schema_column.identity for col in parameters["columns"]]
     values_array = parameters["values"]
     return [{columns[i]: value.value for i, value in enumerate(values)} for values in values_array]
 

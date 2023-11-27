@@ -10,61 +10,6 @@ from opteryx.models import Node
 from .optimization_strategy import HeuristicOptimizerContext
 from .optimization_strategy import OptimizationStrategy
 
-NODE_ORDER = {
-    "Eq": 1,
-    "NotEq": 1,
-    "Gt": 2,
-    "GtEq": 2,
-    "Lt": 2,
-    "LtEq": 2,
-    "Like": 4,
-    "ILike": 4,
-    "NotLike": 4,
-    "NotILike": 4,
-}
-
-
-def tag_predicates(nodes):
-    """
-    Here we add tags to the predicates to assist with optimization.
-
-    Weighting of predicates based on rules, this is mostly useful for situations where
-    we do not have statistics to make cost-based decisions. We're going to start with
-    arbitrary numbers, we need to find a way to refine these over time. The logic is
-    roughly:
-        - 35 is something that is expensive (we're running function)
-        - 32 is where we're doing a complex comparison
-    """
-
-    for node in nodes:
-        node.weight = 0
-        node.simple = True
-        node.relations = set()
-
-        if not node.node_type == NodeType.COMPARISON_OPERATOR:
-            node.weight += 35
-            node.simple = False
-            continue
-        node.score = NODE_ORDER.get(node.value, 12)
-        if node.left.node_type == NodeType.LITERAL:
-            node.weight += 1
-        elif node.left.node_type == NodeType.IDENTIFIER:
-            node.weight += 3
-            node.relations.add(node.left.source)
-        else:
-            node.weight += 10
-            node.simple = False
-        if node.right.node_type == NodeType.LITERAL:
-            node.weight += 1
-        elif node.right.node_type == NodeType.IDENTIFIER:
-            node.weight += 3
-            node.relations.add(node.right.source)
-        else:
-            node.weight += 10
-            node.simple = False
-
-    return sorted(nodes, key=lambda node: node.weight)
-
 
 def _unique_nodes(nodes: list) -> list:
     seen_identities = {}
@@ -89,8 +34,10 @@ def _add_condition(existing_condition, new_condition):
     return _and
 
 
-class PredicateRewriteStrategy(OptimizationStrategy):
-    def optimize(self, node, context):
+class PredicatePushdownStrategy(OptimizationStrategy):
+    def visit(
+        self, node: LogicalPlanNode, context: HeuristicOptimizerContext
+    ) -> HeuristicOptimizerContext:
         if node.node_type in (
             LogicalPlanStepType.Scan,
             LogicalPlanStepType.FunctionDataset,
@@ -99,49 +46,39 @@ class PredicateRewriteStrategy(OptimizationStrategy):
             # Handle predicates specific to node types
             context = self._handle_predicates(node, context)
 
+            context.optimized_plan.add_node(context.node_id, LogicalPlanNode(**node.properties))
+            if context.last_nid:
+                context.optimized_plan.add_edge(context.node_id, context.last_nid)
+
         elif node.node_type == LogicalPlanStepType.Filter:
-            # rewrite predicates, to favor conjuctions and reduce negations
-            # split conjunctions
-            nodes = heuristic_optimizer.rule_split_conjunctive_predicates(node)
-            # deduplicate the nodes - note this 'randomizes' the order
-            nodes = _unique_nodes(nodes)
             # tag & collect the predicates, ones we can't push, leave here
-            non_pushed_predicates = []
-            for node in heuristic_optimizer.tag_predicates(nodes):
-                if node.simple and len(node.relations) > 0:
-                    context.collected_predicates.append(node)
-                else:
-                    non_pushed_predicates.append(node)
 
-            previous = context.previous_node_id
-            for predicate_node in non_pushed_predicates:
-                predicate_nid = random_string()
-                plan_node = LogicalPlanNode(
-                    node_type=LogicalPlanStepType.Filter, condition=predicate_node
-                )
-                context.optimized_tree.add_node(predicate_nid, plan_node)
-                context.optimized_tree.add_edge(predicate_nid, previous)
-                previous = predicate_nid
-
-            return previous, context
+            if node.simple and len(node.relations) > 0:
+                context.collected_predicates.append(node)
+            else:
+                context.optimized_plan.add_node(context.node_id, LogicalPlanNode(**node.properties))
+                if context.last_nid:
+                    context.optimized_plan.add_edge(context.node_id, context.last_nid)
+                context.last_nid = context.node_id
 
         elif node.node_type == LogicalPlanStepType.Join:
             # push predicates which reference multiple relations here
 
             if node.type == "cross join" and node.unnest_column:
-                # if it's a CROSS JOIN UNNEST - don't try to push any further
-                previous = parent
+                # if it's a CROSS JOIN UNNEST - if we're filtering on the unnested column,
+                # don't try to push any further
+                previous = context.last_nid
                 for predicate in context.collected_predicates:
                     predicate_nid = random_string()
                     plan_node = LogicalPlanNode(
                         node_type=LogicalPlanStepType.Filter, condition=predicate
                     )
-                    context.optimized_tree.add_node(predicate_nid, plan_node)
-                    context.optimized_tree.add_edge(predicate_nid, previous)
+                    context.optimized_plan.add_node(predicate_nid, plan_node)
+                    context.optimized_plan.add_edge(predicate_nid, previous)
                     previous = predicate_nid
                     continue
                 context.collected_predicates = []
-                parent = previous
+                context.last_nid = previous
             elif node.type == "cross join":
                 # we may be able to rewrite as an inner join
                 remaining_predicates = []
@@ -155,7 +92,7 @@ class PredicateRewriteStrategy(OptimizationStrategy):
                         )
 
                         node.type = "inner"
-                        node.on = _add_condition(node.on, predicate)
+                        node.on = _add_condition(node.on, predicate.condition)
 
                         node.left_columns, node.right_columns = extract_join_fields(
                             node.on, node.left_relation_names, node.right_relation_names
@@ -165,9 +102,15 @@ class PredicateRewriteStrategy(OptimizationStrategy):
                             from opteryx.exceptions import IncompatibleTypesError
 
                             raise IncompatibleTypesError(**mismatches)
+                        node.columns = get_all_nodes_of_type(node.on, (NodeType.IDENTIFIER,))
                     else:
                         remaining_predicates.append(predicate)
                 context.collected_predicates = remaining_predicates
+
+                context.optimized_plan.add_node(context.node_id, LogicalPlanNode(**node.properties))
+                if context.last_nid:
+                    context.optimized_plan.add_edge(context.node_id, context.last_nid)
+                context.last_nid = context.node_id
 
             for predicate in context.collected_predicates:
                 remaining_predicates = []
@@ -180,35 +123,41 @@ class PredicateRewriteStrategy(OptimizationStrategy):
                         remaining_predicates.append(predicate)
                 context.collected_predicates = remaining_predicates
 
-        return None, context
+        else:
+            context.optimized_plan.add_node(context.node_id, LogicalPlanNode(**node.properties))
+            if context.last_nid:
+                context.optimized_plan.add_edge(context.node_id, context.last_nid)
+            context.last_nid = context.node_id
+        # DEBUG: log (context.optimized_plan.draw())
+        return context
 
-    def complete(self, plan, context):
+    def complete(self, plan: LogicalPlan, context: HeuristicOptimizerContext) -> LogicalPlan:
         # anything we couldn't push, we need to put back
         if context.collected_predicates:
             context.collected_predicates.reverse()
-            exit_node = context.optimized_tree.get_exit_points()[0]
+            exit_node = context.optimized_plan.get_exit_points()[0]
             for predicate in context.collected_predicates:
                 plan_node = LogicalPlanNode(
                     node_type=LogicalPlanStepType.Filter, condition=predicate
                 )
-                context.optimized_tree.insert_node_before(random_string(), plan_node, exit_node)
+                context.optimized_plan.insert_node_before(random_string(), plan_node, exit_node)
+        return context.optimized_plan
 
-    def _handle_predicates(self, node, context):
-        previous = context.previous_node_id
+    def _handle_predicates(
+        self, node: LogicalPlanNode, context: HeuristicOptimizerContext
+    ) -> HeuristicOptimizerContext:
+        previous = context.last_nid
         remaining_predicates = []
         for predicate in context.collected_predicates:
             if len(predicate.relations) == 1 and predicate.relations.intersection(
                 (node.relation, node.alias)
             ):
                 predicate_nid = random_string()
-                plan_node = LogicalPlanNode(
-                    node_type=LogicalPlanStepType.Filter, condition=predicate
-                )
-                context.optimized_tree.add_node(predicate_nid, plan_node)
-                context.optimized_tree.add_edge(predicate_nid, previous)
+                context.optimized_plan.add_node(predicate_nid, predicate)
+                context.optimized_plan.add_edge(predicate_nid, previous)
                 previous = predicate_nid
                 continue
             remaining_predicates.append(predicate)
         context.collected_predicates = remaining_predicates
-        context.previous_node_id = previous
+        context.last_nid = previous
         return context
