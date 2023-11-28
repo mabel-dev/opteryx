@@ -99,20 +99,39 @@ class SqlConnector(BaseConnector):
 
         # get the schema from the dataset
         # DEBUG: log ("GET SQL SCHEMA:", self.dataset)
-        table = Table(self.dataset, self.metadata, autoload_with=self._engine)
+        try:
+            table = Table(self.dataset, self.metadata, autoload_with=self._engine)
 
-        self.schema = RelationSchema(
-            name=table.name,
-            columns=[
-                FlatColumn(
-                    name=column.name,
-                    type=PYTHON_TO_ORSO_MAP[column.type.python_type],
-                    precision=None if column.type.python_type != Decimal else column.type.precision,
-                    scale=None if column.type.python_type != Decimal else column.type.scale,
-                    nullable=column.nullable,
+            self.schema = RelationSchema(
+                name=table.name,
+                columns=[
+                    FlatColumn(
+                        name=column.name,
+                        type=PYTHON_TO_ORSO_MAP[column.type.python_type],
+                        precision=None
+                        if column.type.python_type != Decimal
+                        else column.type.precision,
+                        scale=None if column.type.python_type != Decimal else column.type.scale,
+                        nullable=column.nullable,
+                    )
+                    for column in table.columns
+                ],
+            )
+        except Exception as err:
+            # Fall back to getting the schema from the first row, this is the column names, and where
+            # possible, column types.
+            # DEBUG: log ("APPROXIMATING SCHEMA OF {self.dataset} BECAUSE OF {err}")
+            with self._engine.connect() as conn:
+                row = conn.execute(f"SELECT * FROM `{self.dataset}`").fetchone()
+                self.schema = RelationSchema(
+                    name=self.dataset,
+                    columns=[
+                        FlatColumn(
+                            name=column,
+                            type=0 if value is None else PYTHON_TO_ORSO_MAP[type(value)],
+                        )
+                        for column, value in row.items()
+                    ],
                 )
-                for column in table.columns
-            ],
-        )
 
         return self.schema

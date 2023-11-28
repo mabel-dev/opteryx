@@ -34,6 +34,8 @@ def _tag_predicates(nodes):
         - 35 is something that is expensive (we're running function)
         - 32 is where we're doing a complex comparison
         ...
+        - 7 are IS/IS NOT filters
+        - 5 is doing an eqi comparison on a column and a literal
         - 3 is doing an eqi comparison on two literals (don't actually do that in a filter)
     """
 
@@ -42,6 +44,10 @@ def _tag_predicates(nodes):
         node.simple = True
         node.relations = set()
 
+        if node.condition.node_type == NodeType.UNARY_OPERATOR:
+            # these are IS/IS NOT filters
+            node.weight += 7
+            continue
         if not node.condition.node_type == NodeType.COMPARISON_OPERATOR:
             node.weight += 35
             node.simple = False
