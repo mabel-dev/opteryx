@@ -1087,6 +1087,8 @@ STATEMENTS = [
         ("SELECT CAST('abc' AS LIST)", None, None, SqlError),
         ("SELECT TRY_CAST('abc' AS LIST)", None, None, SqlError),
 
+        ("SELECT STRUCT(dict) FROM testdata.flat.struct", 3, 1, None),
+
         # V2 Negative Tests
         ("SELECT $planets.id, name FROM $planets INNER JOIN $satellites ON planetId = $planets.id", None, None, AmbiguousIdentifierError),
         ("SELECT $planets.id FROM $satellites", None, None, UnexpectedDatasetReferenceError),

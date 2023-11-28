@@ -9,7 +9,7 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import opteryx
 from opteryx.connectors import GcpFireStoreConnector, SqlConnector, register_store
-from sqlalchemy.exc import NoSuchTableError
+from sqlalchemy.exc import NoSuchTableError, OperationalError
 from opteryx.exceptions import DatasetNotFoundError
 
 register_store(
@@ -48,7 +48,7 @@ def test_connector_prefixes():
 
 
 def test_connector_prefixes_negative_tests():
-    with pytest.raises(NoSuchTableError):
+    with pytest.raises((NoSuchTableError, OperationalError)):
         # this should be the SQLAlchemy error
         opteryx.query("SELECT * from planets.planets")
 

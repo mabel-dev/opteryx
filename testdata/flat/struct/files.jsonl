@@ -1,0 +1,3 @@
+{"dict": "{\"string\": \"string\"}"}
+{"dict": "{\"string\": \"string\", \"float\": 1.2, \"once\":\"true\"}"}
+{"dict": "{\"int\": 1, \"float\": 1.2, \"once\":\"true\"}"}
