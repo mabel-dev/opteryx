@@ -40,7 +40,7 @@ _env_path = Path(".") / ".env"
 #  deepcode ignore PythonSameEvalBinaryExpressiontrue: false +ve, values can be different
 if _env_path.exists() and (dotenv is None):  # pragma: no cover
     # using a logger here will tie us in knots
-    print(f"{datetime.datetime.now()} [LOADER] `.env` file exists but `dotEnv` not installed.")
+    print(f"{datetime.datetime.now()} [LOADER] `.env` file exists but `pydotenv` not installed.")
 elif dotenv is not None:  # pragma: no cover variables from `.env`")
     dotenv.load_dotenv(dotenv_path=_env_path)
     print(f"{datetime.datetime.now()} [LOADER] Loading `.env` file.")

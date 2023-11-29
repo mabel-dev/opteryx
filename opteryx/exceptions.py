@@ -28,6 +28,7 @@ Exception
          ├── UnsupportedTypeError
          └── ProgrammingError [PEP-0249] *
              ├── DataError *
+             │   ├── InconsistentSchemaError
              │   ├── EmptyDatasetError
              │   └── EmptyResultSetError
              ├── ExecutionError *
@@ -326,6 +327,10 @@ class UnsupportedFileTypeError(DatabaseError):
 
 class MissingSqlStatement(ProgrammingError):
     """Exception raised for missing SQL statement."""
+
+
+class InconsistentSchemaError(DataError):
+    """Raised whem, despite efforts, we can't get a consistent schema."""
 
 
 class EmptyDatasetError(DataError):

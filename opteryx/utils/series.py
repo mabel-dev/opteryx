@@ -27,8 +27,10 @@ def generate_series(*args):
         OrsoTypes.INTEGER,
         OrsoTypes.DOUBLE,
     ):
-        if arg_len not in (2, 3):
-            raise SqlError("generate_series for numbers takes 2 or 3 parameters.")
+        if arg_len not in (1, 2, 3):
+            raise SqlError(
+                "generate_series for numbers takes 1 (stop), 2 (start, stop) or 3 (start, stop, interval) parameters."
+            )
         return numeric_range(*arg_vals)
 
     # if the params are timestamps, we create time intervals
@@ -59,7 +61,7 @@ def numeric_range(*args) -> numpy.array:
         generate_range(1, 5, 0.5)
     """
     # Define defaults
-    start, step, dtype = numpy.int64(0), numpy.int64(1), numpy.float64
+    start, step, dtype = numpy.int64(1), numpy.int64(1), numpy.float64
 
     # Process arguments
     if len(args) == 1:

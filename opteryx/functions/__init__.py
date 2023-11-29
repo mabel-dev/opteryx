@@ -15,9 +15,9 @@ These are a set of functions that can be applied to data.
 """
 
 import datetime
-import json
 
 import numpy
+import orjson
 import pyarrow
 from orso.cityhash import CityHash64
 from pyarrow import ArrowNotImplementedError
@@ -26,7 +26,6 @@ from pyarrow import compute
 import opteryx
 from opteryx.exceptions import FunctionNotFoundError
 from opteryx.exceptions import IncorrectTypeError
-from opteryx.exceptions import InvalidFunctionParameterError
 from opteryx.exceptions import UnsupportedSyntaxError
 from opteryx.functions import date_functions
 from opteryx.functions import number_functions
@@ -126,7 +125,7 @@ def try_cast(_type):
         "DECIMAL": decimal.Decimal,
         "VARCHAR": str,
         "TIMESTAMP": numpy.datetime64,
-        "STRUCT": json.loads,
+        "STRUCT": orjson.loads,
         "DATE": lambda x: dates.parse_iso(x).date(),
     }
     if _type in casters:
@@ -141,7 +140,7 @@ def try_cast(_type):
 
 def _iterate_single_parameter(func):
     def _inner(array):
-        return numpy.array([func(item) for item in array])
+        return numpy.array(list(map(func, array)))
 
     return _inner
 
@@ -234,7 +233,7 @@ FUNCTIONS = {
     "VARCHAR": cast("VARCHAR"),
     "STRING": cast("VARCHAR"),  # alias for VARCHAR
     "STR": cast("VARCHAR"),
-    "STRUCT": _iterate_single_parameter(json.loads),
+    "STRUCT": _iterate_single_parameter(lambda x: orjson.loads(str(x))),
     "DATE":  cast("DATE"),
     "TRY_TIMESTAMP": try_cast("TIMESTAMP"),
     "TRY_BOOLEAN": try_cast("BOOLEAN"),

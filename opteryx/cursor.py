@@ -31,6 +31,7 @@ from opteryx import config
 from opteryx import utils
 from opteryx.constants import QueryStatus
 from opteryx.constants import ResultType
+from opteryx.exceptions import InconsistentSchemaError
 from opteryx.exceptions import InvalidCursorStateError
 from opteryx.exceptions import MissingSqlStatement
 from opteryx.exceptions import UnsupportedSyntaxError
@@ -308,7 +309,19 @@ class Cursor(DataFrame):
             result_data, self._result_type = next(results, (ResultType._UNDEFINED, None))
             if limit is not None:
                 result_data = utils.arrow.limit_records(result_data, limit)
-        return pyarrow.concat_tables(result_data, mode="default")
+        try:
+            return pyarrow.concat_tables(
+                result_data, promote_optionsstr="permissive", mode="default"
+            )
+        except pyarrow.ArrowInvalid as err:
+            print(dir(err))
+            if "struct" in str(err):
+                raise InconsistentSchemaError(
+                    "Unable to resolve different schemas, most likely related to a STRUCT column."
+                )
+            raise InconsistentSchemaError(
+                "Unable to resolve different schemas, this may be due to uncoercible column types."
+            )
 
     @property
     def stats(self) -> Dict[str, Any]:
