@@ -465,6 +465,11 @@ class BinderVisitor:
             node.relation_name = node.alias
             node.rows = int(node.args[0].value)
 
+            if len(node.args) < 2:
+                raise InvalidFunctionParameterError(
+                    f"FAKE function expects at least two parameters, the number of rows, and then either the number of columns, or an array of the column types."
+                )
+
             if node.args[1].node_type == NodeType.NESTED:
                 column_definition = [node.args[1].centre]
             else:

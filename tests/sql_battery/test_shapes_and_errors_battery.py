@@ -53,6 +53,7 @@ from opteryx.exceptions import (
     ColumnReferencedBeforeEvaluationError,
     DatasetNotFoundError,
     EmptyDatasetError,
+    InconsistentSchemaError,
     IncompatibleTypesError,
     IncorrectTypeError,
     InvalidFunctionParameterError,
@@ -1087,7 +1088,7 @@ STATEMENTS = [
         ("SELECT CAST('abc' AS LIST)", None, None, SqlError),
         ("SELECT TRY_CAST('abc' AS LIST)", None, None, SqlError),
 
-        ("SELECT STRUCT(dict) FROM testdata.flat.struct", 3, 1, None),
+        ("SELECT STRUCT(dict) FROM testdata.flat.struct", 3, 1, InconsistentSchemaError),
 
         # V2 Negative Tests
         ("SELECT $planets.id, name FROM $planets INNER JOIN $satellites ON planetId = $planets.id", None, None, AmbiguousIdentifierError),
