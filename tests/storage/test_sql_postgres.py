@@ -14,6 +14,7 @@ POSTGRES_PASSWORD = os.environ.get("POSTGRES_PASSWORD")
 POSTGRES_USER = os.environ.get("POSTGRES_USER")
 
 
+# limit contention on very low spec resources
 @skip_if(is_arm() or is_mac() or is_windows() or not is_version("3.9"))
 def test_postgres_storage():
     opteryx.register_store(

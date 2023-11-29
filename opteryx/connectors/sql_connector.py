@@ -120,9 +120,10 @@ class SqlConnector(BaseConnector):
         except Exception as err:
             # Fall back to getting the schema from the first row, this is the column names, and where
             # possible, column types.
-            # DEBUG: log ("APPROXIMATING SCHEMA OF {self.dataset} BECAUSE OF {err}")
+            # DEBUG: log (f"APPROXIMATING SCHEMA OF {self.dataset} BECAUSE OF {err}")
             with self._engine.connect() as conn:
-                row = conn.execute(f"SELECT * FROM `{self.dataset}`").fetchone()
+                query = Query().SELECT("*").FROM(self.dataset).LIMIT("1")
+                row = conn.execute(str(query)).fetchone()
                 self.schema = RelationSchema(
                     name=self.dataset,
                     columns=[
