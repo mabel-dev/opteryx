@@ -72,6 +72,9 @@ class Graph(object):
         self._nodes = {}
         self._edges = {}
 
+    def __bool__(self) -> bool:
+        return len(self._nodes) != 0 or len(self._edges) != 0
+
     def save(self, graph_path):  # pragma: nocover
         """
         Persist a graph to storage. It saves nodes and edges to separate files.

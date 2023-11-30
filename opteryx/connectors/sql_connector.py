@@ -56,6 +56,8 @@ class SqlConnector(BaseConnector):
     def read_dataset(
         self, columns: list = None, chunk_size: int = INITIAL_CHUNK_SIZE
     ) -> "DatasetReader":
+        from sqlalchemy.sql import text
+
         self.chunk_size = chunk_size
         result_schema = self.schema
 
@@ -73,7 +75,7 @@ class SqlConnector(BaseConnector):
 
         with self._engine.connect() as conn:
             # DEBUG: log ("READ DATASET\n", str(query_builder))
-            for row in conn.execute(str(query_builder)):
+            for row in conn.execute(text(str(query_builder))):
                 morsel._rows.append(row)
                 if len(morsel) == self.chunk_size:
                     yield morsel.arrow()
@@ -121,9 +123,11 @@ class SqlConnector(BaseConnector):
             # Fall back to getting the schema from the first row, this is the column names, and where
             # possible, column types.
             # DEBUG: log (f"APPROXIMATING SCHEMA OF {self.dataset} BECAUSE OF {err}")
+            from sqlalchemy.sql import text
+
             with self._engine.connect() as conn:
                 query = Query().SELECT("*").FROM(self.dataset).LIMIT("1")
-                row = conn.execute(str(query)).fetchone()
+                row = conn.execute(text(str(query))).fetchone()
                 self.schema = RelationSchema(
                     name=self.dataset,
                     columns=[
