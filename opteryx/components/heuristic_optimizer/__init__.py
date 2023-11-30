@@ -71,7 +71,7 @@ class HeuristicOptimizerVisitor:
 
         self.strategies = [
             SplitConjunctivePredicatesStrategy(),
-            #            PredicatePushdownStrategy(),
+            # PredicatePushdownStrategy(),
             ProjectionPushdownStrategy(),
         ]
 

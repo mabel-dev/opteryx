@@ -47,6 +47,7 @@ def _tag_predicates(nodes):
         if node.condition.node_type == NodeType.UNARY_OPERATOR:
             # these are IS/IS NOT filters
             node.weight += 7
+            node.relations.add(node.condition.centre.source)
             continue
         if not node.condition.node_type == NodeType.COMPARISON_OPERATOR:
             node.weight += 35
