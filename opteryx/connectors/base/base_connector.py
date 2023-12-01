@@ -13,7 +13,10 @@
 """
 The BaseConnector provides a common interface for all storage connectors.
 """
-import typing
+from typing import Any
+from typing import Dict
+from typing import Iterable
+from typing import Optional
 
 import pyarrow
 from orso.schema import RelationSchema
@@ -25,6 +28,20 @@ DEFAULT_MORSEL_SIZE: int = 8 * 1024 * 1024
 
 
 class BaseConnector:
+    PUSHABLE_OPS: Dict[str, bool] = {
+        "Eq": False,
+        "NotEq": False,
+        "Gt": False,
+        "GtEq": False,
+        "Lt": False,
+        "LtEq": False,
+        "Like": False,
+        "NotLike": False,
+    }
+
+    def can_push(self, operator) -> bool:
+        return self.PUSHABLE_OPS.get(operator, False)
+
     @property
     def __mode__(self):
         raise NotImplementedError("__mode__ not defined")
@@ -37,7 +54,7 @@ class BaseConnector:
         self,
         *,
         dataset: str = None,
-        config: typing.Dict[str, typing.Any] = None,
+        config: Dict[str, Any] = None,
         statistics: QueryStatistics,
         **kwargs,
     ) -> None:
@@ -84,7 +101,7 @@ class BaseConnector:
 
     def chunk_dictset(
         self,
-        dictset: typing.Iterable[dict],
+        dictset: Iterable[dict],
         columns: list,
         morsel_size: int = DEFAULT_MORSEL_SIZE,
         initial_chunk_size: int = INITIAL_CHUNK_SIZE,
@@ -120,9 +137,7 @@ class BaseConnector:
 
 
 class DatasetReader:
-    def __init__(
-        self, dataset_name: str, config: typing.Optional[typing.Dict[str, typing.Any]] = None
-    ) -> None:
+    def __init__(self, dataset_name: str, config: Optional[Dict[str, Any]] = None) -> None:
         """
         Initialize the reader with configuration.
 

@@ -20,9 +20,10 @@ zstandard
 avro
 firebase-admin
 google-cloud-storage
+google-cloud-bigquery-storage
 minio
 pymongo
-sqlalchemy
+sqlalchemy>=2.0.0
 pymysql
 psycopg2-binary
 polars
@@ -30,6 +31,6 @@ duckdb
 duckdb-engine
 sqlalchemy-cockroachdb
 sqlalchemy-bigquery
-google-cloud-bigquery-storage
+
 
 setuptools_rust

@@ -1,5 +1,7 @@
 from orso.tools import random_string
 
+from opteryx.components.binder.binder_visitor import extract_join_fields
+from opteryx.components.binder.binder_visitor import get_mismatched_condition_column_types
 from opteryx.components.logical_planner import LogicalPlan
 from opteryx.components.logical_planner import LogicalPlanNode
 from opteryx.components.logical_planner import LogicalPlanStepType
@@ -25,7 +27,7 @@ class PredicatePushdownStrategy(OptimizationStrategy):
         self, node: LogicalPlanNode, context: HeuristicOptimizerContext
     ) -> HeuristicOptimizerContext:
         if not context.optimized_plan:
-            context.optimized_plan = context.pre_optimized_tree
+            context.optimized_plan = context.pre_optimized_tree.copy()
 
         if node.node_type in (
             LogicalPlanStepType.Scan,
@@ -52,33 +54,44 @@ class PredicatePushdownStrategy(OptimizationStrategy):
                 # if it's a CROSS JOIN UNNEST - don't try to push any further
                 # IMPROVE: we should push everything that doesn't reference the unnested column
                 context = self._handle_predicates(node, context)
-            elif node.type == "cross join":
+            elif node.type in ("cross join", "inner"):
                 # we may be able to rewrite as an inner join
                 remaining_predicates = []
                 for predicate in context.collected_predicates:
                     if len(predicate.relations) == 2 and set(
                         node.right_relation_names + node.left_relation_names
                     ) == set(predicate.relations):
-                        from opteryx.components.binder.binder_visitor import extract_join_fields
-                        from opteryx.components.binder.binder_visitor import (
-                            get_mismatched_condition_column_types,
-                        )
-
                         node.type = "inner"
                         node.on = _add_condition(node.on, predicate.condition)
-
-                        node.left_columns, node.right_columns = extract_join_fields(
-                            node.on, node.left_relation_names, node.right_relation_names
-                        )
-                        mismatches = get_mismatched_condition_column_types(node.on)
-                        if mismatches:
-                            from opteryx.exceptions import IncompatibleTypesError
-
-                            raise IncompatibleTypesError(**mismatches)
-                        node.columns = get_all_nodes_of_type(node.on, (NodeType.IDENTIFIER,))
                     else:
                         remaining_predicates.append(predicate)
+
+                    new_left_columns, new_right_columns = extract_join_fields(
+                        node.on, node.left_relation_names, node.right_relation_names
+                    )
+
+                    if not node.right_columns:
+                        node.right_columns = []
+                    node.right_columns.extend(new_right_columns)
+                    if not node.left_columns:
+                        node.left_columns = []
+                    node.left_columns.extend(new_left_columns)
+
+                mismatches = get_mismatched_condition_column_types(node.on)
+                if mismatches:
+                    from opteryx.exceptions import IncompatibleTypesError
+
+                    raise IncompatibleTypesError(**mismatches)
+                node.columns = get_all_nodes_of_type(node.on, (NodeType.IDENTIFIER,))
                 context.collected_predicates = remaining_predicates
+
+            else:
+                # IMPROVE, allow pushing past OUTER, SEMI, ANTI joins on one leg
+                for predicate in context.collected_predicates:
+                    context.optimized_plan.insert_node_after(
+                        random_string(), predicate, context.node_id
+                    )
+                context.collected_predicates = []
 
             for predicate in context.collected_predicates:
                 remaining_predicates = []
@@ -92,6 +105,7 @@ class PredicatePushdownStrategy(OptimizationStrategy):
                 context.collected_predicates = remaining_predicates
 
         # DEBUG: log (context.optimized_plan.draw())
+        context.optimized_plan.add_node(context.node_id, node)
         return context
 
     def complete(self, plan: LogicalPlan, context: HeuristicOptimizerContext) -> LogicalPlan:
@@ -111,7 +125,7 @@ class PredicatePushdownStrategy(OptimizationStrategy):
             if len(predicate.relations) == 1 and predicate.relations.intersection(
                 (node.relation, node.alias)
             ):
-                context.optimized_plan.insert_node_before(
+                context.optimized_plan.insert_node_after(
                     random_string(), predicate, context.node_id
                 )
                 continue

@@ -153,7 +153,10 @@ class Node:
                 return {key: _inner_copy(value) for key, value in obj.items()}
             if hasattr(obj, "copy"):
                 return obj.copy()
-            return copy.deepcopy(obj)
+            try:
+                return copy.deepcopy(obj)
+            except:
+                return obj
 
         new_node = Node()
         for key, value in self._internal.items():
