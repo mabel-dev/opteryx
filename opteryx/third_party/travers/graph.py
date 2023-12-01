@@ -436,14 +436,6 @@ class Graph(object):
         # add an edge from the new nid to the old one
         self.add_edge(after_nid, nid)
 
-    def copy(self):  # pragma: nocover
-        """
-        Create a deep copy of the current object.
-        """
-        import copy
-
-        return copy.deepcopy(self)
-
     def to_networkx(self):  # pragma: nocover
         """
         Convert a travers graph to a NetworkX graph
@@ -527,8 +519,13 @@ class Graph(object):
                 return {key: _inner_copy(value) for key, value in obj.items()}
             if hasattr(obj, "copy"):
                 return obj.copy()
-            return copy.deepcopy(obj)
+            try:
+                return copy.deepcopy(obj)
+            except:
+                return obj
 
         graph = Graph()
         graph._nodes = _inner_copy(self._nodes)
         graph._edges = _inner_copy(self._edges)
+
+        return graph

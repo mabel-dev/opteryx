@@ -314,7 +314,6 @@ class Cursor(DataFrame):
                 result_data, promote_optionsstr="permissive", mode="default"
             )
         except pyarrow.ArrowInvalid as err:
-            print(dir(err))
             if "struct" in str(err):
                 raise InconsistentSchemaError(
                     "Unable to resolve different schemas, most likely related to a STRUCT column."
@@ -352,3 +351,15 @@ class Cursor(DataFrame):
         Closes the cursor, releasing any resources and closing the associated connection.
         """
         self._connection.close()
+
+    def __repr__(self):
+        """
+        Override the Orso repr
+        """
+        return f"<opteryx.Cursor {self._state}>"
+
+    def __bool__(self):
+        """
+        Truthy if executed, Falsy if not executed or error
+        """
+        return self._state == CursorState.EXECUTED

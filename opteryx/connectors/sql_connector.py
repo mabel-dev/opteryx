@@ -122,12 +122,14 @@ class SqlConnector(BaseConnector):
         except Exception as err:
             # Fall back to getting the schema from the first row, this is the column names, and where
             # possible, column types.
-            # DEBUG: log (f"APPROXIMATING SCHEMA OF {self.dataset} BECAUSE OF {err}")
+            # DEBUG: log (f"APPROXIMATING SCHEMA OF {self.dataset} BECAUSE OF {type(err).__name__}({err})")
             from sqlalchemy.sql import text
 
             with self._engine.connect() as conn:
                 query = Query().SELECT("*").FROM(self.dataset).LIMIT("1")
-                row = conn.execute(text(str(query))).fetchone()
+                # DEBUG: log ("READ ROW\n", str(query))
+                row = conn.execute(text(str(query))).fetchone()._asdict()
+                # DEBUG: log ("ROW:", row)
                 self.schema = RelationSchema(
                     name=self.dataset,
                     columns=[
