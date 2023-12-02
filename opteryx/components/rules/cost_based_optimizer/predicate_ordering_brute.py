@@ -18,21 +18,34 @@ This is only used for small numbers of adjacent predicates - up to five. That is
 
 import itertools
 
+def calculate_predicate_costs(predicate_selectivity, predicate_execution_time):
+    # Generate all possible predicate arrangements
+    predicate_arrangements = list(itertools.permutations(range(len(predicate_selectivity))))
+
+    # Evaluate execution time for each arrangement considering selectivity
+    arrangement_costs = {}
+    for arrangement in predicate_arrangements:
+        cumulative_data_size = 1.0  # Assume initial data size is 1.0 (100%)
+        execution_time = 0.0
+        for i in arrangement:
+            execution_time += predicate_execution_time[i] * cumulative_data_size
+            cumulative_data_size *= predicate_selectivity[i]  # Reduce data size based on selectivity
+        arrangement_costs[arrangement] = execution_time
+    
+    return arrangement_costs
+
+def print_arrangement_costs(arrangement_costs):
+    for arrangement, cost in arrangement_costs.items():
+        print(f"Arrangement {arrangement}: Execution Time = {cost}")
+
 # Sample predicate selectivity and execution time estimates
-predicate_selectivity = [0.8, 0.5, 0.3]
-predicate_execution_time = [0.1, 0.2, 0.3]
+predicate_selectivity = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
+predicate_execution_time = [0.8, 0.2, 0.5, 0.1, 0.1, 0.4, 0.7]
 
-# Generate all possible predicate arrangements
-predicate_arrangements = list(itertools.permutations(range(len(predicate_selectivity))))
+# Calculate the costs for each arrangement
+arrangement_costs = calculate_predicate_costs(predicate_selectivity, predicate_execution_time)
 
-# Evaluate execution time for each arrangement
-execution_times = []
-for arrangement in predicate_arrangements:
-    execution_time = sum(predicate_execution_time[i] for i in arrangement)
-    execution_times.append(execution_time)
+# Print the costs
+print_arrangement_costs(arrangement_costs)
 
-# Find the optimal arrangement with the lowest execution time
-optimal_arrangement = predicate_arrangements[execution_times.index(min(execution_times))]
 
-print("Optimal Predicate Arrangement:", optimal_arrangement)
-print("Estimated Execution Time:", min(execution_times))
