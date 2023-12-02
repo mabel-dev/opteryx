@@ -116,6 +116,6 @@ class AggregateAndGroupNode(BasePlanNode):
         groups = groups.select(list(self.column_map.values()) + self.group_by_columns)
         groups = groups.rename_columns(list(self.column_map.keys()) + self.group_by_columns)
 
-        self.statistics.time_fgrouping += time.time_ns() - start_time
+        self.statistics.time_grouping += time.time_ns() - start_time
 
         yield groups

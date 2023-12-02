@@ -314,13 +314,14 @@ class Cursor(DataFrame):
                 result_data, promote_optionsstr="permissive", mode="default"
             )
         except pyarrow.ArrowInvalid as err:
+            # DEBUG: log (err)
             if "struct" in str(err):
                 raise InconsistentSchemaError(
                     "Unable to resolve different schemas, most likely related to a STRUCT column."
-                )
+                ) from err
             raise InconsistentSchemaError(
                 "Unable to resolve different schemas, this may be due to uncoercible column types."
-            )
+            ) from err
 
     @property
     def stats(self) -> Dict[str, Any]:
