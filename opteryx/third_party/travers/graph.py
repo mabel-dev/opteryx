@@ -487,6 +487,9 @@ class Graph(object):
         self._nodes.update(other._nodes)
         return self
 
+    def __contains__(self, nid: str) -> bool:
+        return nid in self._nodes
+
     def draw(self):
         tree = self.depth_first_search()
         return "".join(print_tree_inner(tree))
@@ -526,6 +529,46 @@ class Graph(object):
 
         graph = Graph()
         graph._nodes = _inner_copy(self._nodes)
-        graph._edges = _inner_copy(self._edges)
+        graph._edges = self.copy_edges()
 
         return graph
+
+    def copy_edges(self):
+        """
+        Creates an independent copy of the edges in the graph.
+
+        Returns:
+            A new dictionary representing the edges in the graph.
+        """
+        new_edges = {}
+        for source, target, relationship in self.edges():
+            if source not in new_edges:
+                new_edges[source] = []
+            new_edges[source].append((target, relationship))
+        return new_edges
+
+    def trace_to_root(self, nid: str) -> list:
+        """
+        Traces the path from this node to the root of the tree, recording each node along the way.
+
+        Args:
+            tree: The tree structure containing the nodes and edges.
+        """
+        route = []
+        current_node_id = nid
+        while True:
+            # Get the node before the current node
+            outgoing_edges = self.outgoing_edges(current_node_id)
+            if not outgoing_edges:
+                break  # Reached the root
+
+            # Assuming the first element of the first tuple in ingoing_edges is the previous node's ID
+            previous_node_id = outgoing_edges[0][1]
+
+            # Record this node in the chain
+            route.append(previous_node_id)
+
+            # Move to the previous node
+            current_node_id = previous_node_id
+
+        return route

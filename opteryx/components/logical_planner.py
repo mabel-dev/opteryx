@@ -89,6 +89,9 @@ class LogicalPlan(Graph):
 
 
 class LogicalPlanNode(Node):
+    def copy(self) -> "Node":
+        return LogicalPlanNode(**super().copy().properties)
+
     def __str__(self):
         try:
             # fmt:off

@@ -138,7 +138,7 @@ class SystemVariablesContainer:
     def __len__(self):
         return len(self._variables)
 
-    def copy(self, owner: VariableOwner = VariableOwner.USER) -> "SystemVariablesContainer":
+    def snapshot(self, owner: VariableOwner = VariableOwner.USER) -> "SystemVariablesContainer":
         return SystemVariablesContainer(owner)
 
     def as_column(self, key: str):
