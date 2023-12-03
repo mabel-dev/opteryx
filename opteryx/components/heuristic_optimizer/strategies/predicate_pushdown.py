@@ -10,8 +10,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from orso.tools import random_string
-
 from opteryx.components.binder.binder_visitor import extract_join_fields
 from opteryx.components.binder.binder_visitor import get_mismatched_condition_column_types
 from opteryx.components.logical_planner import LogicalPlan
@@ -41,7 +39,7 @@ class PredicatePushdownStrategy(OptimizationStrategy):
         if not context.optimized_plan:
             context.optimized_plan = context.pre_optimized_tree.copy()
 
-        if False and node.node_type in (
+        if node.node_type in (
             LogicalPlanStepType.Scan,
             LogicalPlanStepType.FunctionDataset,
             LogicalPlanStepType.Subquery,
@@ -62,14 +60,27 @@ class PredicatePushdownStrategy(OptimizationStrategy):
                 context.collected_predicates.append(node)
                 context.optimized_plan.remove_node(context.node_id, heal=True)
 
-        elif False and node.node_type == LogicalPlanStepType.Join and context.collected_predicates:
+        elif node.node_type == LogicalPlanStepType.Join and context.collected_predicates:
             # push predicates which reference multiple relations here
 
-            if node.type == "cross join" and node.unnest_column:
+            if node.type not in ("cross join", "inner"):
+                # dump all the predicates
+                # IMPROVE: push past LEFT, SEMI and ANTI joins
+                for predicate in context.collected_predicates:
+                    context.optimized_plan.insert_node_after(
+                        predicate.nid, predicate, context.node_id
+                    )
+                context.collected_predicates = []
+            elif node.type == "cross join" and node.unnest_column:
                 # if it's a CROSS JOIN UNNEST - don't try to push any further
                 # IMPROVE: we should push everything that doesn't reference the unnested column
-                context = self._handle_predicates(node, context)
+                for predicate in context.collected_predicates:
+                    context.optimized_plan.insert_node_after(
+                        predicate.nid, predicate, context.node_id
+                    )
+                context.collected_predicates = []
             elif node.type in ("cross join",):  # , "inner"):
+                # IMPROVE: add predicates to INNER JOIN conditions
                 # we may be able to rewrite as an inner join
                 remaining_predicates = []
                 for predicate in context.collected_predicates:
@@ -81,13 +92,9 @@ class PredicatePushdownStrategy(OptimizationStrategy):
                     else:
                         remaining_predicates.append(predicate)
 
-                print("LEFT", node.left_columns, node.left_relation_names)
-                print("RIGHT", node.right_columns, node.right_relation_names)
                 node.left_columns, node.right_columns = extract_join_fields(
                     node.on, node.left_relation_names, node.right_relation_names
                 )
-                print("LEFT", node.left_columns, node.left_relation_names)
-                print("RIGHT", node.right_columns, node.right_relation_names)
 
                 mismatches = get_mismatched_condition_column_types(node.on)
                 if mismatches:
@@ -96,14 +103,6 @@ class PredicatePushdownStrategy(OptimizationStrategy):
                     raise IncompatibleTypesError(**mismatches)
                 node.columns = get_all_nodes_of_type(node.on, (NodeType.IDENTIFIER,))
                 context.collected_predicates = remaining_predicates
-
-            elif context.collected_predicates:
-                # IMPROVE, allow pushing past OUTER, SEMI, ANTI joins on one leg
-                for predicate in context.collected_predicates:
-                    context.optimized_plan.insert_node_after(
-                        random_string(), predicate, context.node_id
-                    )
-                context.collected_predicates = []
 
             for predicate in context.collected_predicates:
                 remaining_predicates = []

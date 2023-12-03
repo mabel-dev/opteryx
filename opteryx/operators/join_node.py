@@ -69,10 +69,11 @@ class JoinNode(BasePlanNode):
 
         right_table = pyarrow.concat_tables(right_node.execute(), mode="default")
 
-        print("O_LEFT", self._left_columns, self._left_relation)
-        print("O_RIGHT", self._right_columns, self._right_relation)
-
         for morsel in left_node.execute():
+            # in place until #1295 resolved
+            if not self._right_columns[0] in morsel.column_names:
+                self._right_columns, self._left_columns = self._left_columns, self._right_columns
+
             # do the join
             new_morsel = morsel.join(
                 right_table,
