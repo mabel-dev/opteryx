@@ -18,6 +18,7 @@ This is only used for small numbers of adjacent predicates - up to five. That is
 
 import itertools
 
+
 def calculate_predicate_costs(predicate_selectivity, predicate_execution_time):
     # Generate all possible predicate arrangements
     predicate_arrangements = list(itertools.permutations(range(len(predicate_selectivity))))
@@ -29,14 +30,18 @@ def calculate_predicate_costs(predicate_selectivity, predicate_execution_time):
         execution_time = 0.0
         for i in arrangement:
             execution_time += predicate_execution_time[i] * cumulative_data_size
-            cumulative_data_size *= predicate_selectivity[i]  # Reduce data size based on selectivity
+            cumulative_data_size *= predicate_selectivity[
+                i
+            ]  # Reduce data size based on selectivity
         arrangement_costs[arrangement] = execution_time
-    
+
     return arrangement_costs
+
 
 def print_arrangement_costs(arrangement_costs):
     for arrangement, cost in arrangement_costs.items():
         print(f"Arrangement {arrangement}: Execution Time = {cost}")
+
 
 # Sample predicate selectivity and execution time estimates
 predicate_selectivity = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
@@ -47,5 +52,3 @@ arrangement_costs = calculate_predicate_costs(predicate_selectivity, predicate_e
 
 # Print the costs
 print_arrangement_costs(arrangement_costs)
-
-

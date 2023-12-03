@@ -59,4 +59,4 @@ class ConnectionContext:
         Initializes additional attributes after the object has been created.
         """
         # The initializer is a function rather than an empty constructor so we init here
-        object.__setattr__(self, "variables", SystemVariables.copy(VariableOwner.USER))
+        object.__setattr__(self, "variables", SystemVariables.snapshot(VariableOwner.USER))

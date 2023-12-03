@@ -50,10 +50,10 @@ class JoinNode(BasePlanNode):
         self._using = config.get("using")
 
         self._left_columns = config.get("left_columns")
-        self._left_relation = config.get("left_relation")
+        self._left_relation = config.get("left_relation_names")
 
         self._right_columns = config.get("right_columns")
-        self._right_relation = config.get("right_relation")
+        self._right_relation = config.get("right_relation_names")
 
     @property
     def name(self):  # pragma: no cover
@@ -68,6 +68,9 @@ class JoinNode(BasePlanNode):
         right_node = self._producers[1]  # type:ignore
 
         right_table = pyarrow.concat_tables(right_node.execute(), mode="default")
+
+        print("O_LEFT", self._left_columns, self._left_relation)
+        print("O_RIGHT", self._right_columns, self._right_relation)
 
         for morsel in left_node.execute():
             # do the join

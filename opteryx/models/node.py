@@ -143,17 +143,17 @@ class Node:
             Returns:
                 Any: The new, independent deep copy.
             """
-            if isinstance(obj, list):
-                return [_inner_copy(item) for item in obj]
-            if isinstance(obj, tuple):
-                return tuple(_inner_copy(item) for item in obj)
-            if isinstance(obj, set):
-                return {_inner_copy(item) for item in obj}
-            if isinstance(obj, dict):
-                return {key: _inner_copy(value) for key, value in obj.items()}
-            if hasattr(obj, "copy"):
-                return obj.copy()
             try:
+                if isinstance(obj, list):
+                    return [_inner_copy(item) for item in obj]
+                if isinstance(obj, tuple):
+                    return tuple(_inner_copy(item) for item in obj)
+                if isinstance(obj, set):
+                    return {_inner_copy(item) for item in obj}
+                if isinstance(obj, dict):
+                    return {key: _inner_copy(value) for key, value in obj.items()}
+                if hasattr(obj, "copy"):
+                    return obj.copy()
                 return copy.deepcopy(obj)
             except:
                 return obj

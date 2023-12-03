@@ -1,3 +1,15 @@
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from orso.tools import random_string
 
 from opteryx.components.binder.binder_visitor import extract_join_fields
@@ -29,7 +41,7 @@ class PredicatePushdownStrategy(OptimizationStrategy):
         if not context.optimized_plan:
             context.optimized_plan = context.pre_optimized_tree.copy()
 
-        if node.node_type in (
+        if False and node.node_type in (
             LogicalPlanStepType.Scan,
             LogicalPlanStepType.FunctionDataset,
             LogicalPlanStepType.Subquery,
@@ -44,17 +56,20 @@ class PredicatePushdownStrategy(OptimizationStrategy):
         elif node.node_type == LogicalPlanStepType.Filter:
             # collect predicates we can probably push
             if node.simple and len(node.relations) > 0:
+                # record where the node was, so we can put it back
+                node.nid = context.node_id
+                node.plan_path = context.optimized_plan.trace_to_root(context.node_id)
                 context.collected_predicates.append(node)
                 context.optimized_plan.remove_node(context.node_id, heal=True)
 
-        elif node.node_type == LogicalPlanStepType.Join:
+        elif False and node.node_type == LogicalPlanStepType.Join and context.collected_predicates:
             # push predicates which reference multiple relations here
 
             if node.type == "cross join" and node.unnest_column:
                 # if it's a CROSS JOIN UNNEST - don't try to push any further
                 # IMPROVE: we should push everything that doesn't reference the unnested column
                 context = self._handle_predicates(node, context)
-            elif node.type in ("cross join", "inner"):
+            elif node.type in ("cross join",):  # , "inner"):
                 # we may be able to rewrite as an inner join
                 remaining_predicates = []
                 for predicate in context.collected_predicates:
@@ -66,16 +81,13 @@ class PredicatePushdownStrategy(OptimizationStrategy):
                     else:
                         remaining_predicates.append(predicate)
 
-                    new_left_columns, new_right_columns = extract_join_fields(
-                        node.on, node.left_relation_names, node.right_relation_names
-                    )
-
-                    if not node.right_columns:
-                        node.right_columns = []
-                    node.right_columns.extend(new_right_columns)
-                    if not node.left_columns:
-                        node.left_columns = []
-                    node.left_columns.extend(new_left_columns)
+                print("LEFT", node.left_columns, node.left_relation_names)
+                print("RIGHT", node.right_columns, node.right_relation_names)
+                node.left_columns, node.right_columns = extract_join_fields(
+                    node.on, node.left_relation_names, node.right_relation_names
+                )
+                print("LEFT", node.left_columns, node.left_relation_names)
+                print("RIGHT", node.right_columns, node.right_relation_names)
 
                 mismatches = get_mismatched_condition_column_types(node.on)
                 if mismatches:
@@ -85,7 +97,7 @@ class PredicatePushdownStrategy(OptimizationStrategy):
                 node.columns = get_all_nodes_of_type(node.on, (NodeType.IDENTIFIER,))
                 context.collected_predicates = remaining_predicates
 
-            else:
+            elif context.collected_predicates:
                 # IMPROVE, allow pushing past OUTER, SEMI, ANTI joins on one leg
                 for predicate in context.collected_predicates:
                     context.optimized_plan.insert_node_after(
@@ -104,17 +116,18 @@ class PredicatePushdownStrategy(OptimizationStrategy):
                         remaining_predicates.append(predicate)
                 context.collected_predicates = remaining_predicates
 
+            context.optimized_plan.add_node(context.node_id, node)
+
         # DEBUG: log (context.optimized_plan.draw())
-        context.optimized_plan.add_node(context.node_id, node)
         return context
 
     def complete(self, plan: LogicalPlan, context: HeuristicOptimizerContext) -> LogicalPlan:
         # anything we couldn't push, we need to put back
-        if context.collected_predicates:
-            context.collected_predicates.reverse()
-            exit_node_id = context.optimized_plan.get_exit_points()[0]
-            for predicate in context.collected_predicates:
-                context.optimized_plan.insert_node_before(random_string(), predicate, exit_node_id)
+        for predicate in context.collected_predicates:
+            for nid in predicate.plan_path:
+                if nid in context.optimized_plan:
+                    context.optimized_plan.insert_node_before(predicate.nid, predicate, nid)
+                    break
         return context.optimized_plan
 
     def _handle_predicates(
@@ -125,9 +138,7 @@ class PredicatePushdownStrategy(OptimizationStrategy):
             if len(predicate.relations) == 1 and predicate.relations.intersection(
                 (node.relation, node.alias)
             ):
-                context.optimized_plan.insert_node_after(
-                    random_string(), predicate, context.node_id
-                )
+                context.optimized_plan.insert_node_after(predicate.nid, predicate, context.node_id)
                 continue
             remaining_predicates.append(predicate)
         context.collected_predicates = remaining_predicates

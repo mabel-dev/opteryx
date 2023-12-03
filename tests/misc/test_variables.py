@@ -13,7 +13,7 @@ from orso.types import OrsoTypes
 
 def test_connection_variables():
     # Create a clone of the system variables object
-    connection_vars = SystemVariables.copy()
+    connection_vars = SystemVariables.snapshot()
 
     # Verify that the clone has the same values as the original
     assert connection_vars["max_cache_evictions"] == 32
@@ -26,7 +26,7 @@ def test_connection_variables():
 
 def test_variables_permissions():
     # Create a clone of the system variables object
-    connection_vars = SystemVariables.copy()
+    connection_vars = SystemVariables.snapshot()
 
     # we shouldn't be able to change the licence
     with pytest.raises(PermissionsError):
@@ -44,7 +44,7 @@ def test_variables_permissions():
 
 def test_variable_types():
     # Create a clone of the system variables object
-    connection_vars = SystemVariables.copy()
+    connection_vars = SystemVariables.snapshot()
 
     # max_cache_evictions is a numeric field, so should fail if we try
     # to set to a string
