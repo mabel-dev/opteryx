@@ -59,6 +59,12 @@ class _QueryStatistics:
         stats_dict["messages"] = stats_dict.get("messages", [])
         return stats_dict
 
+    def copy(self):
+        return self
+
+    def __deepcopy__(self):
+        return self
+
 
 class QueryStatistics(_QueryStatistics):
     slots = "_instances"

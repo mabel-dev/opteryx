@@ -1109,6 +1109,12 @@ STATEMENTS = [
         ("SELECT * FROM $planets INNER JOIN UNNEST(('Earth', 'Moon')) AS n ON name = n", 1, 21, None),
 #        ("SELECT name, mission FROM $astronauts INNER JOIN UNNEST(missions) as mission ON mission = name", 0, 19, None),
 
+        # PUSHDOWN (the result should be the same without pushdown)
+        ("SELECT p.name, s.name FROM $planets p, $satellites s WHERE p.id = s.planetId AND p.mass > 1000 AND s.gm < 500;", 63, 2, None),
+        ("SELECT p.name, sub.name FROM $planets p CROSS JOIN (SELECT name, planetId FROM $satellites WHERE gm < 1000) AS sub WHERE p.id = sub.planetId;", 170, 2, None),
+        ("SELECT p.name, s.name FROM $planets p, $satellites s WHERE p.id = s.planetId AND p.id = s.id;", 1, 2, None),
+        ("SELECT p.name, COUNT(s.id) FROM $planets p JOIN $satellites s ON p.id = s.planetId GROUP BY p.name HAVING COUNT(s.id) > 3;", 5, 2, None),
+
         # These are queries which have been found to return the wrong result or not run correctly
         # FILTERING ON FUNCTIONS
         ("SELECT DATE(birth_date) FROM $astronauts FOR TODAY WHERE DATE(birth_date) < '1930-01-01'", 14, 1, None),
