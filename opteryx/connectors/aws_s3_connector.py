@@ -73,7 +73,7 @@ class AwsS3Connector(BaseConnector, Cacheable, Partitionable):
 
         return [blob for blob in blobs if ("." + blob.split(".")[-1].lower()) in VALID_EXTENSIONS]
 
-    def read_dataset(self, columns: list = None) -> pyarrow.Table:
+    def read_dataset(self, columns: list = None, **kwargs) -> pyarrow.Table:
         blob_names = self.partition_scheme.get_blobs_in_partition(
             start_date=self.start_date,
             end_date=self.end_date,

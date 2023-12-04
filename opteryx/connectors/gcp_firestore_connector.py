@@ -67,7 +67,7 @@ class GcpFireStoreConnector(BaseConnector):
     __mode__ = "Collection"
 
     def read_dataset(
-        self, columns: list = None, chunk_size: int = INITIAL_CHUNK_SIZE
+        self, columns: list = None, chunk_size: int = INITIAL_CHUNK_SIZE, **kwargs
     ) -> "DatasetReader":
         """
         Return a morsel of documents

@@ -47,7 +47,7 @@ class FileConnector(BaseConnector):
             with open(self.dataset, mode="br") as file:
                 self._byte_array = bytes(file.read())
 
-    def read_dataset(self, columns: list = None) -> pyarrow.Table:
+    def read_dataset(self, columns: list = None, **kwargs) -> pyarrow.Table:
         """
         Reads the dataset file and decodes it.
 

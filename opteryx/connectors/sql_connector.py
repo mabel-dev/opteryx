@@ -15,6 +15,7 @@ The SQL Connector downloads data from remote servers and converts them
 to pyarrow tables so they can be processed as per any other data source.
 """
 from decimal import Decimal
+from typing import Dict
 from typing import Generator
 
 import pyarrow
@@ -29,11 +30,34 @@ from opteryx.connectors.base.base_connector import INITIAL_CHUNK_SIZE
 from opteryx.connectors.base.base_connector import BaseConnector
 from opteryx.exceptions import MissingDependencyError
 from opteryx.exceptions import UnmetRequirementError
+from opteryx.managers.expression import NodeType
 from opteryx.third_party.query_builder import Query
 
 
 class SqlConnector(BaseConnector):
     __mode__ = "Sql"
+
+    PUSHABLE_OPS: Dict[str, bool] = {
+        "Eq": True,
+        "NotEq": True,
+        "Gt": True,
+        "GtEq": True,
+        "Lt": True,
+        "LtEq": True,
+        "Like": True,
+        "NotLike": True,
+    }
+
+    OPS_XLAT: Dict[str, str] = {
+        "Eq": "=",
+        "NotEq": "!=",
+        "Gt": ">",
+        "GtEq": ">=",
+        "Lt": "<",
+        "LtEq": "<=",
+        "Like": "LIKE",
+        "NotLike": "NOT LIKE",
+    }
 
     def __init__(self, *args, connection: str = None, engine=None, **kwargs):
         super().__init__(*args, **kwargs)
@@ -58,7 +82,7 @@ class SqlConnector(BaseConnector):
         self.metadata = MetaData()
 
     def read_dataset(
-        self, columns: list = None, chunk_size: int = INITIAL_CHUNK_SIZE
+        self, columns: list = None, predicates: list = None, chunk_size: int = INITIAL_CHUNK_SIZE
     ) -> Generator[pyarrow.Table, None, None]:
         from sqlalchemy.sql import text
 
@@ -67,7 +91,7 @@ class SqlConnector(BaseConnector):
 
         query_builder = Query().FROM(self.dataset)
 
-        # Update the SQL and the target morsel schema if projecting
+        # Update the SQL and the target morsel schema if we've pushed a projection
         if columns:
             column_names = [col.name for col in columns]
             query_builder.add("SELECT", *column_names)
@@ -75,15 +99,41 @@ class SqlConnector(BaseConnector):
         else:
             query_builder.add("SELECT", "*")
 
+        # Update SQL if we've pushed predicates
+        parameters = {}
+        for index, predicate in enumerate(predicates):
+            identifier = predicate.left
+            operator = self.OPS_XLAT[predicate.value]
+            literal = predicate.right
+
+            if identifier.node_type != NodeType.IDENTIFIER:
+                identifier, literal = literal, identifier
+
+            identifier = identifier.source_column
+            literal = literal.value
+
+            # Parameterize the query -
+            # a) Meduces SQL Injection and
+            # b) Makes escaping types SqlAlchemy's problem
+            placeholder = f"param_{index}"
+            parameters[placeholder] = literal
+
+            if isinstance(literal, str):
+                literal = "'" + literal + "'"
+
+            query_builder.WHERE(f"{identifier} {operator} :{placeholder}")
+
         # Use orso as an intermediatary, it's row-based so is well suited to processing
         # records coming back from a SQL query, and it has a well-optimized to arrow
         # converter to create pyarrow Tables
         morsel = DataFrame(schema=result_schema)
         row_factory = Row.create_class(result_schema, tuples_only=True)
+        at_least_once = False
 
         with self._engine.connect() as conn:
             # DEBUG: log ("READ DATASET\n", str(query_builder))
-            result = conn.execute(text(str(query_builder)))
+            # DEBUG: log ("PARAMETERS\n", parameters)
+            result = conn.execute(text(str(query_builder)), parameters=parameters)
 
             while True:
                 batch_rows = result.fetchmany(self.chunk_size)
@@ -94,6 +144,7 @@ class SqlConnector(BaseConnector):
                 for row in batch_rows:
                     morsel._rows.append(row_factory(row))
                 yield morsel.arrow()
+                at_least_once = True
 
                 # Dynamically adjust chunk size based on the data size, we start by downloading
                 # 500 records to get an idea of the row size, assuming these 500 are
@@ -105,6 +156,9 @@ class SqlConnector(BaseConnector):
                     # DEBUG: log (f"CHANGING CHUNK SIZE TO {self.chunk_size} was {INITIAL_CHUNK_SIZE}.")
 
                 morsel = DataFrame(schema=result_schema)
+
+        if not at_least_once:
+            yield morsel.arrow()
 
     def get_dataset_schema(self) -> RelationSchema:
         from sqlalchemy import Table

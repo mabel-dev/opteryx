@@ -46,7 +46,7 @@ class ArrowConnector(BaseConnector):
 
         return self.schema
 
-    def read_dataset(self, columns: list = None) -> pyarrow.Table:
+    def read_dataset(self, columns: list = None, **kwargs) -> pyarrow.Table:
         dataset = self._datasets[self.dataset]
 
         batch_size = DEFAULT_MORSEL_SIZE // (dataset.nbytes / dataset.num_rows)

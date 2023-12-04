@@ -68,7 +68,7 @@ class SampleDataConnector(BaseConnector, Partitionable):
     def interal_only(self):
         return True
 
-    def read_dataset(self, columns: list = None) -> "DatasetReader":
+    def read_dataset(self, columns: list = None, **kwargs) -> "DatasetReader":
         return SampleDatasetReader(
             self.dataset,
             columns=columns,
