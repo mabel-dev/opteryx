@@ -13,18 +13,19 @@ from opteryx.connectors import SqlConnector
 
 MYSQL_PASSWORD = os.environ.get("MYSQL_PASSWORD")
 MYSQL_USER = os.environ.get("MYSQL_USER")
+CONNECTION = f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}@mysql-3c28af34-joocer-9765.a.aivencloud.com:10067/defaultdb?charset=utf8mb4"
 
 
 opteryx.register_store(
     "mysql",
     SqlConnector,
     remove_prefix=True,
-    connection=f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}@mysql.ci.opteryx.info/opteryx?charset=utf8mb4",
+    connection=CONNECTION,
 )
 
 
 # skip to reduce contention
-@skip_if(is_arm() or is_windows() or is_mac())
+# @skip_if(is_arm() or is_windows() or is_mac())
 def test_predicate_pushdowns_mysql_eq():
     """
     This is the same test as the collection pushdown - but on a different dataset

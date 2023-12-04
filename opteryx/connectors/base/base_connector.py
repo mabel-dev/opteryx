@@ -40,7 +40,7 @@ class BaseConnector:
     }
 
     def can_push(self, operator) -> bool:
-        return self.PUSHABLE_OPS.get(operator, False)
+        return self.PUSHABLE_OPS.get(operator.condition.value, False)
 
     @property
     def __mode__(self):
@@ -73,6 +73,7 @@ class BaseConnector:
         self.chunk_size = INITIAL_CHUNK_SIZE
         self.schema = None
         self.statistics = statistics
+        self.pushed_predicates = []
 
     def get_dataset_schema(self) -> RelationSchema:
         """

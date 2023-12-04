@@ -64,7 +64,7 @@ class MongoDbConnector(BaseConnector):
             )
 
     def read_dataset(
-        self, columns: list = None, chunk_size: int = INITIAL_CHUNK_SIZE
+        self, columns: list = None, chunk_size: int = INITIAL_CHUNK_SIZE, **kwargs
     ) -> "DatasetReader":
         import pymongo
 

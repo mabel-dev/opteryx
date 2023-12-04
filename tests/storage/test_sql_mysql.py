@@ -38,6 +38,13 @@ def test_mysql_storage():
     assert results.rowcount == 177, results.rowcount
     assert results.columncount == 28, results.columncount
 
+    # PUSH - CHECK STATS THE PUSHES WORKED
+    results = opteryx.query("SELECT name FROM mysql.planets WHERE name LIKE 'Earth';")
+    assert results.rowcount == 1, results.rowcount
+    assert results.columncount == 1
+    assert results.stats["rows_read"] == 1
+    assert results.stats["columns_read"] == 1
+
 
 if __name__ == "__main__":  # pragma: no cover
     from tests.tools import run_tests

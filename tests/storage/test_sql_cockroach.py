@@ -40,11 +40,19 @@ def test_cockroach_storage():
     assert results.columncount == 1
 
     # JOIN ON A NON SQL TABLE
+    results = opteryx.query(
+        "SELECT * FROM cockroach.planets AS P INNER JOIN $satellites ON P.id = $satellites.planetId;"
+    )
+    #    assert results.rowcount == 177, results.rowcount
+    #    assert results.columncount == 28, results.columncount
 
+    # PUSH - CHECK STATS THE PUSHES WORKED
+    results = opteryx.query("SELECT name FROM cockroach.planets WHERE name LIKE 'Earth';")
+    assert results.rowcount == 1, results.rowcount
+    assert results.columncount == 1
+    assert results.stats["rows_read"] == 1
+    assert results.stats["columns_read"] == 1
 
-#    results = opteryx.query("SELECT * FROM cockroach.planets INNER JOIN $satellites ON cockroach.planets.id = $satellites.planetId;")
-#    assert results.rowcount == 177, results.rowcount
-#    assert results.columncount == 28, results.columncount
 
 if __name__ == "__main__":  # pragma: no cover
     from tests.tools import run_tests

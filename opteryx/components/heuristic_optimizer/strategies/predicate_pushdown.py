@@ -137,7 +137,14 @@ class PredicatePushdownStrategy(OptimizationStrategy):
             if len(predicate.relations) == 1 and predicate.relations.intersection(
                 (node.relation, node.alias)
             ):
-                context.optimized_plan.insert_node_after(predicate.nid, predicate, context.node_id)
+                if node.connector and node.connector.can_push(predicate):
+                    if not node.predicates:
+                        node.predicates = []
+                    node.predicates.append(predicate.condition)
+                else:
+                    context.optimized_plan.insert_node_after(
+                        predicate.nid, predicate, context.node_id
+                    )
                 continue
             remaining_predicates.append(predicate)
         context.collected_predicates = remaining_predicates

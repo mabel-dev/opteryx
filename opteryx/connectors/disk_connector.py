@@ -88,7 +88,7 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable):
         ]
         return files
 
-    def read_dataset(self, columns: list = None) -> pyarrow.Table:
+    def read_dataset(self, columns: list = None, **kwargs) -> pyarrow.Table:
         """
         Read the entire dataset from disk.
 
