@@ -1,5 +1,3 @@
-from orso.types import OrsoTypes
-
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -11,50 +9,60 @@ from orso.types import OrsoTypes
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+"""
+This is both a marker and a wrapper for key functionality to support predicate/filter
+pushdowns. This is where we a sending filters to the thing that is acquiring the data
+for the query. For example sending filters to remote database servers, or to pyarrow
+readers. This allows for data to be prefiltered before reaching Opteryc - this is 
+almost always going to be faster than reading, loading and filtering.
+
+Note that for some file types, although we accept the pushdown, we fake it by reading,
+loading and filtering. We do this because we have a single file interface and some
+accept filters and others don't so we 'fake' the read-time filtering.
+"""
+
+from typing import Dict
+
+from orso.types import OrsoTypes
+
 from opteryx.exceptions import NotSupportedError
 from opteryx.managers.expression import NodeType
 
 
 class PredicatePushable:
-    __slots__ = ("_predicates", "supported_ops")
-
-    # These are the operators this connector supports
-    PUSHABLE_OPERATORS = {
-        "Gt": ">",
-        "Lt": "<",
-        "Eq": "==",  # usually ==, sometimes =
-        "NotEq": "!=",  # usually !=, sometimes <>
-        "GtEq": ">=",
-        "LtEq": "<=",
-        "Like": "Like",
+    PUSHABLE_OPS: Dict[str, bool] = {
+        "Eq": False,
+        "NotEq": False,
+        "Gt": False,
+        "GtEq": False,
+        "Lt": False,
+        "LtEq": False,
+        "Like": False,
+        "NotLike": False,
     }
 
+    OPS_XLAT: Dict[str, str] = {
+        "Eq": "=",
+        "NotEq": "!=",
+        "Gt": ">",
+        "GtEq": ">=",
+        "Lt": "<",
+        "LtEq": "<=",
+        "Like": "LIKE",
+        "NotLike": "NOT LIKE",
+    }
+
+    def can_push(self, operator) -> bool:
+        return self.PUSHABLE_OPS.get(operator.condition.value, False)
+
     def __init__(self, **kwargs):
-        self._predicates = []
-        self.supported_ops = list(self.PUSHABLE_OPERATORS.values())
+        pass
 
-    def push_predicate(self, predicate):
+    @staticmethod
+    def to_dnf(root):
         """
-        Push the predicate to the set - this creates a set of ANDs
-        """
-        dnfed = self.to_dnf(predicate)
-        if dnfed is None:
-            # we can't push all predicates everywhere
-            return False
-        if not all(d[1] in self.supported_ops for d in dnfed):
-            return False
-        self._predicates.extend(dnfed)
-        return True
-
-    def to_dnf(self, root):
-        """
-        Convert a filter to the form used by the selection pushdown
-
-        Version 1 only does simple predicate filters in the form
-            (identifier, operator, literal)
-        although we can form conjuntions (ANDs) by chaining them.
-
-        Return None if we can't convert, or don't support the filter.
+        Convert a filter to DNF form, this is the form used by pyarrow
         """
 
         def _predicate_to_dnf(root):
@@ -79,12 +87,12 @@ class PredicatePushable:
             ):
                 # not all operands are universally supported
                 raise NotSupportedError()
-            return (root.left.value, self.PUSHABLE_OPERATORS[root.value], root.right.value)
+            return (root.left.value, PredicatePushable.OPS_XLAT[root.value], root.right.value)
 
         try:
-            dnf = _predicate_to_dnf(root)
-            if not isinstance(dnf, list):
-                dnf = [dnf]
+            if not isinstance(root, list):
+                root = [root]
+            dnf = [_predicate_to_dnf(n) for n in root]
         except NotSupportedError:
             return None
         return dnf

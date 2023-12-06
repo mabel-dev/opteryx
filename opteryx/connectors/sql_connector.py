@@ -15,26 +15,44 @@ The SQL Connector downloads data from remote servers and converts them
 to pyarrow tables so they can be processed as per any other data source.
 """
 from decimal import Decimal
+from typing import Any
 from typing import Dict
 from typing import Generator
+from typing import Tuple
 
 import pyarrow
 from orso import DataFrame
 from orso import Row
 from orso.schema import FlatColumn
 from orso.schema import RelationSchema
+from orso.tools import random_string
 from orso.types import PYTHON_TO_ORSO_MAP
 
 from opteryx.connectors.base.base_connector import DEFAULT_MORSEL_SIZE
 from opteryx.connectors.base.base_connector import INITIAL_CHUNK_SIZE
 from opteryx.connectors.base.base_connector import BaseConnector
+from opteryx.connectors.capabilities import PredicatePushable
 from opteryx.exceptions import MissingDependencyError
 from opteryx.exceptions import UnmetRequirementError
+from opteryx.managers.expression import Node
 from opteryx.managers.expression import NodeType
 from opteryx.third_party.query_builder import Query
 
 
-class SqlConnector(BaseConnector):
+def _handle_operand(operand: Node, parameters: dict) -> Tuple[Any, dict]:
+    if operand.node_type == NodeType.IDENTIFIER:
+        return operand.source_column, parameters
+
+    literal = operand.value
+    if hasattr(literal, "item"):
+        literal = literal.item()
+
+    name = random_string(8)
+    parameters[name] = literal
+    return f":{name}", parameters
+
+
+class SqlConnector(BaseConnector, PredicatePushable):
     __mode__ = "Sql"
 
     PUSHABLE_OPS: Dict[str, bool] = {
@@ -60,10 +78,13 @@ class SqlConnector(BaseConnector):
     }
 
     def __init__(self, *args, connection: str = None, engine=None, **kwargs):
-        super().__init__(*args, **kwargs)
+        BaseConnector.__init__(self, **kwargs)
+        PredicatePushable.__init__(self, **kwargs)
+
         try:
             from sqlalchemy import MetaData
             from sqlalchemy import create_engine
+            from sqlalchemy.pool import NullPool
         except ImportError as err:  # pragma: nocover
             raise MissingDependencyError(err.name) from err
 
@@ -74,7 +95,7 @@ class SqlConnector(BaseConnector):
 
         # create the SqlAlchemy engine
         if engine is None:
-            self._engine = create_engine(connection)
+            self._engine = create_engine(connection, poolclass=NullPool)
         else:
             self._engine = engine
 
@@ -102,26 +123,14 @@ class SqlConnector(BaseConnector):
         # Update SQL if we've pushed predicates
         parameters = {}
         for index, predicate in enumerate(predicates):
-            identifier = predicate.left
+            left_operand = predicate.left
+            right_operand = predicate.right
             operator = self.OPS_XLAT[predicate.value]
-            literal = predicate.right
 
-            if identifier.node_type != NodeType.IDENTIFIER:
-                identifier, literal = literal, identifier
+            left_value, parameters = _handle_operand(left_operand, parameters)
+            right_value, parameters = _handle_operand(right_operand, parameters)
 
-            identifier = identifier.source_column
-            literal = literal.value
-
-            # Parameterize the query -
-            # a) Meduces SQL Injection and
-            # b) Makes escaping types SqlAlchemy's problem
-            placeholder = f"param_{index}"
-            parameters[placeholder] = literal
-
-            if isinstance(literal, str):
-                literal = "'" + literal + "'"
-
-            query_builder.WHERE(f"{identifier} {operator} :{placeholder}")
+            query_builder.WHERE(f"{left_value} {operator} {right_value}")
 
         # Use orso as an intermediatary, it's row-based so is well suited to processing
         # records coming back from a SQL query, and it has a well-optimized to arrow
@@ -133,7 +142,10 @@ class SqlConnector(BaseConnector):
         with self._engine.connect() as conn:
             # DEBUG: log ("READ DATASET\n", str(query_builder))
             # DEBUG: log ("PARAMETERS\n", parameters)
-            result = conn.execute(text(str(query_builder)), parameters=parameters)
+            # Execution Options allows us to handle datasets larger than memory
+            result = conn.execution_options(stream_results=True, max_row_buffer=500).execute(
+                text(str(query_builder)), parameters=parameters
+            )
 
             while True:
                 batch_rows = result.fetchmany(self.chunk_size)

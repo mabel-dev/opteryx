@@ -28,20 +28,6 @@ DEFAULT_MORSEL_SIZE: int = 8 * 1024 * 1024
 
 
 class BaseConnector:
-    PUSHABLE_OPS: Dict[str, bool] = {
-        "Eq": False,
-        "NotEq": False,
-        "Gt": False,
-        "GtEq": False,
-        "Lt": False,
-        "LtEq": False,
-        "Like": False,
-        "NotLike": False,
-    }
-
-    def can_push(self, operator) -> bool:
-        return self.PUSHABLE_OPS.get(operator.condition.value, False)
-
     @property
     def __mode__(self):
         raise NotImplementedError("__mode__ not defined")

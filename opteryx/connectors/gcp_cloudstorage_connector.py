@@ -11,6 +11,7 @@
 # limitations under the License.
 
 import os
+from typing import Dict
 from typing import List
 
 import pyarrow
@@ -21,6 +22,7 @@ from orso.tools import single_item_cache
 from opteryx.connectors.base.base_connector import BaseConnector
 from opteryx.connectors.capabilities import Cacheable
 from opteryx.connectors.capabilities import Partitionable
+from opteryx.connectors.capabilities import PredicatePushable
 from opteryx.exceptions import DatasetNotFoundError
 from opteryx.exceptions import MissingDependencyError
 from opteryx.exceptions import UnsupportedFileTypeError
@@ -29,8 +31,17 @@ from opteryx.utils.file_decoders import VALID_EXTENSIONS
 from opteryx.utils.file_decoders import get_decoder
 
 
-class GcpCloudStorageConnector(BaseConnector, Cacheable, Partitionable):
+class GcpCloudStorageConnector(BaseConnector, Cacheable, Partitionable, PredicatePushable):
     __mode__ = "Blob"
+
+    PUSHABLE_OPS: Dict[str, bool] = {
+        "Eq": True,
+        "NotEq": True,
+        "Gt": True,
+        "GtEq": True,
+        "Lt": True,
+        "LtEq": True,
+    }
 
     def __init__(self, credentials=None, **kwargs):
         try:
@@ -42,6 +53,7 @@ class GcpCloudStorageConnector(BaseConnector, Cacheable, Partitionable):
         BaseConnector.__init__(self, **kwargs)
         Partitionable.__init__(self, **kwargs)
         Cacheable.__init__(self, **kwargs)
+        PredicatePushable.__init__(self, **kwargs)
 
         self.dataset = self.dataset.replace(".", "/")
         self.credentials = credentials
@@ -93,7 +105,9 @@ class GcpCloudStorageConnector(BaseConnector, Cacheable, Partitionable):
         blobs = (bucket + "/" + blob.name for blob in blobs if not blob.name.endswith("/"))
         return [blob for blob in blobs if ("." + blob.split(".")[-1].lower()) in VALID_EXTENSIONS]
 
-    def read_dataset(self, columns: list = None, **kwargs) -> pyarrow.Table:
+    def read_dataset(
+        self, columns: list = None, predicates: list = None, **kwargs
+    ) -> pyarrow.Table:
         blob_names = self.partition_scheme.get_blobs_in_partition(
             start_date=self.start_date,
             end_date=self.end_date,
@@ -102,16 +116,16 @@ class GcpCloudStorageConnector(BaseConnector, Cacheable, Partitionable):
         )
 
         # Check if the first blob was cached earlier
-        if self.cached_first_blob is not None:
-            yield self.cached_first_blob  # Use cached blob
-            blob_names = blob_names[1:]  # Skip first blob
-        self.cached_first_blob = None
+        #        if self.cached_first_blob is not None:
+        #            yield self.cached_first_blob  # Use cached blob
+        #            blob_names = blob_names[1:]  # Skip first blob
+        #        self.cached_first_blob = None
 
         for blob_name in blob_names:
             try:
                 decoder = get_decoder(blob_name)
                 blob_bytes = self.read_blob(blob_name=blob_name, statistics=self.statistics)
-                yield decoder(blob_bytes, projection=columns)
+                yield decoder(blob_bytes, projection=columns, selection=predicates)
             except UnsupportedFileTypeError:
                 pass
 

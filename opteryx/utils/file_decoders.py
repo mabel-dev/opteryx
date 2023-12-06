@@ -67,9 +67,20 @@ def filter_records(filter, table):
     """
     # notes:
     #   at this point we've not renamed any columns, this may affect some filters
+    from opteryx.managers.expression import ORSO_TO_NUMPY_MAP
+    from opteryx.managers.expression import NodeType
     from opteryx.managers.expression import evaluate
+    from opteryx.models import Node
 
-    mask = evaluate(filter, table, False)
+    if isinstance(filter, list) and filter:
+        filter_copy = [p for p in filter]
+        root = filter_copy.pop()
+        while filter_copy:
+            root = Node(NodeType.AND, left=root, right=filter_copy.pop())
+    else:
+        root = filter
+
+    mask = evaluate(root, table)
     return table.filter(mask)
 
 
@@ -93,10 +104,10 @@ def parquet_decoder(buffer, projection: List = None, selection=None, just_schema
     """
     from pyarrow import parquet
 
-    from opteryx.connectors.capabilities import predicate_pushable
+    from opteryx.connectors.capabilities import PredicatePushable
 
     # Convert the selection to DNF format if applicable
-    _select = predicate_pushable.to_dnf(selection) if selection is not None else None
+    _select = PredicatePushable.to_dnf(selection) if selection else None
 
     stream = io.BytesIO(buffer)
 
@@ -172,6 +183,8 @@ def jsonl_decoder(buffer, projection: List = None, selection=None, just_schema: 
     if just_schema:
         return convert_arrow_schema_to_orso_schema(schema)
 
+    if selection is not None:
+        table = filter_records(selection, table)
     if projection:
         table = post_read_projector(table, projection)
 
@@ -192,6 +205,8 @@ def csv_decoder(
     if just_schema:
         return convert_arrow_schema_to_orso_schema(schema)
 
+    if selection is not None:
+        table = filter_records(selection, table)
     if projection:
         table = post_read_projector(table, projection)
 
@@ -217,6 +232,8 @@ def arrow_decoder(buffer, projection: List = None, selection=None, just_schema: 
     if just_schema:
         return convert_arrow_schema_to_orso_schema(schema)
 
+    if selection is not None:
+        table = filter_records(selection, table)
     if projection:
         table = post_read_projector(table, projection)
 
@@ -242,6 +259,8 @@ def avro_decoder(buffer, projection: List = None, selection=None, just_schema: b
     if just_schema:
         return convert_arrow_schema_to_orso_schema(schema)
 
+    if selection is not None:
+        table = filter_records(selection, table)
     if projection:
         table = post_read_projector(table, projection)
 

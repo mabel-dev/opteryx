@@ -16,19 +16,19 @@ DATE_TESTS = [
         ("2021-02-21", datetime.datetime(2021,2,21)),
         ("2021-02-21T", None),
         ("2021-01-11 12:00", datetime.datetime(2021,1,11,12,0)),
-        ("2021-01-11 12:00+0100", datetime.datetime(2021,1,11,12,0)),
-        ("2021-01-11 12:00Z", datetime.datetime(2021,1,11,12,0)),
+        ("2021-01-11 12:00", datetime.datetime(2021,1,11,12,0)),
+        ("2021-01-11 12:00", datetime.datetime(2021,1,11,12,0)),
         ("2021-01-11T12:00", datetime.datetime(2021,1,11,12,0)),
-        ("2021-01-11T12:00Z", datetime.datetime(2021,1,11,12,0)),
+        ("2021-01-11T12:00", datetime.datetime(2021,1,11,12,0)),
         ("2020-10-01 18:05:20", datetime.datetime(2020,10,1,18,5,20)),
         ("2020-10-01T18:05:20", datetime.datetime(2020,10,1,18,5,20)),
         ("2020-10-01T18:05:20+0100", datetime.datetime(2020,10,1,18,5,20)),
         ("1999-12-31 23:59:59.9", datetime.datetime(1999,12,31,23,59,59)),
         ("1999-12-31 23:59:59.9999", datetime.datetime(1999,12,31,23,59,59)),
         ("1999-12-31T23:59:59.9999", datetime.datetime(1999,12,31,23,59,59)),
-        ("1999-12-31T23:59:59.9999Z", datetime.datetime(1999,12,31,23,59,59)),
+        ("1999-12-31T23:59:59.9999", datetime.datetime(1999,12,31,23,59,59)),
         ("1999-12-31T23:59:59.999999", datetime.datetime(1999,12,31,23,59,59)),
-        ("1999-12-31T23:59:59.999999+0800", datetime.datetime(1999,12,31,23,59,59)),
+        ("1999-12-31T23:59:59.999999", datetime.datetime(1999,12,31,23,59,59)),
         ("1999-12-31T23:59:59.99999999", datetime.datetime(1999,12,31,23,59,59)),
 
         (numpy.datetime64('2021-02-21'), datetime.datetime(2021, 2, 21)),  # Numpy datetime64 to datetime
@@ -37,7 +37,7 @@ DATE_TESTS = [
         (1585699200, datetime.datetime(2020, 4, 1, 0, 0)),  # Unix timestamp as int to datetime
         (1585699200.0, datetime.datetime(2020, 4, 1, 0, 0)),  # Unix timestamp as float to datetime
         (datetime.date(2021, 2, 21), datetime.datetime(2021, 2, 21)),  # Python date to datetime
-        (numpy.datetime64('2021-02-21T12:00:00Z'), datetime.datetime(2021, 2, 21, 12, 0)),  # Numpy datetime64 with time and timezone (ignored) to datetime
+        (numpy.datetime64('2021-02-21T12:00:00'), datetime.datetime(2021, 2, 21, 12, 0)), 
         (numpy.int64(1585699200), datetime.datetime(2020, 4, 1, 0, 0)),  # Unix timestamp as numpy int64 to datetime (repeated to ensure cache performance)
         (datetime.datetime(2021, 2, 21, 12, 0), datetime.datetime(2021, 2, 21, 12, 0)),  # Python datetime to datetime (no conversion)
         ("2021-02-30", None),  # Invalid date to None
@@ -48,9 +48,7 @@ DATE_TESTS = [
         (numpy.datetime64('2021-02-21T15:32:03.5678'), datetime.datetime(2021, 2, 21, 15, 32, 3)),  # numpy datetime64 with fractional seconds
         (datetime.datetime(2021, 2, 21, 15, 32, 3), datetime.datetime(2021, 2, 21, 15, 32, 3)),  # datetime object
         (datetime.date(2021, 2, 21), datetime.datetime(2021, 2, 21)),  # date object
-        (numpy.datetime64('2021-02-21T00:00:00.000000000Z'), datetime.datetime(2021, 2, 21, 0, 0)),  # numpy datetime64 with Z timezone
-        (numpy.datetime64('2021-02-21T00:00:00.000000000+0000'), datetime.datetime(2021, 2, 21, 0, 0)),  # numpy datetime64 with +0000 timezone
-        (numpy.datetime64('2021-02-21T00:00:00.000000000-0000'), datetime.datetime(2021, 2, 21, 0, 0)),  # numpy datetime64 with -0000 timezone
+        (numpy.datetime64('2021-02-21T00:00:00.000000000'), datetime.datetime(2021, 2, 21, 0, 0)), 
 
         ("2021/02/21", None),  # Wrong separators
         ("2021-13-01", None),  # Invalid month

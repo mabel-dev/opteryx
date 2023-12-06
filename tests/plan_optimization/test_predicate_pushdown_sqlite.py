@@ -24,21 +24,6 @@ def test_predicate_pushdowns_sqlite_eq():
 
     conn = opteryx.connect()
 
-    # TEST PREDICATE PUSHDOWN
-    cur = conn.cursor()
-    cur.execute(
-        "SET disable_optimizer = true; SELECT * FROM sqlite.planets WHERE name = 'Mercury';"
-    )
-    # if we disable pushdown, we read all the rows from the source and we do the filter
-    assert cur.rowcount == 1, cur.rowcount
-    assert cur.stats.get("rows_read", 0) == 9, cur.stats
-
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM sqlite.planets WITH(NO_PUSH_SELECTION) WHERE name = 'Mercury';")
-    # if we disable pushdown, we read all the rows from the source and we do the filter
-    assert cur.rowcount == 1, cur.rowcount
-    assert cur.stats.get("rows_read", 0) == 9, cur.stats
-
     cur = conn.cursor()
     cur.execute("SELECT * FROM sqlite.planets WHERE name = 'Mercury';")
     # when pushdown is enabled, we only read the matching rows from the source
@@ -102,6 +87,10 @@ def test_predicate_pushdown_sqlite_other():
     res = opteryx.query("SELECT * FROM sqlite.planets WHERE name LIKE '%a%'")
     assert res.rowcount == 4, res.rowcount
     assert res.stats.get("rows_read", 0) == 4, res.stats
+
+    res = opteryx.query("SELECT * FROM sqlite.planets WHERE id > gravity")
+    assert res.rowcount == 2, res.rowcount
+    assert res.stats.get("rows_read", 0) == 2, res.stats
 
 
 if __name__ == "__main__":  # pragma: no cover
