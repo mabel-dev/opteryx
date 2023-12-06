@@ -29,7 +29,7 @@ Unlock your ability to discover insights across your diverse data sources, like 
 
 ## What is Opteryx?
 
-Opteryx simplifies cross-platform data analytics by federating SQL queries across multiple data sources, such as Postgres databases and Parquet files. The goal is to enhance your data analytics process by offering a unified way to access and manage different types of data.
+Opteryx champions the SQL-on-everything approach, streamlining cross-platform data analytics by federating SQL queries across diverse data sources, including database systems like Postgres and datalake file formats like Parquet. The goal is to enhance your data analytics process by offering a unified way to access data from across your organization.
 
 Opteryx is a Python library that combines elements of in-process database engines like SQLite and DuckDB with federative features found in systems like Presto and Trino. The result is a versatile tool for querying data across multiple data sources in a seamless fashion.
 

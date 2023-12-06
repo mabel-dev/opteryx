@@ -15,6 +15,7 @@ from opteryx.components.binder.binder_visitor import get_mismatched_condition_co
 from opteryx.components.logical_planner import LogicalPlan
 from opteryx.components.logical_planner import LogicalPlanNode
 from opteryx.components.logical_planner import LogicalPlanStepType
+from opteryx.connectors.capabilities import PredicatePushable
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.models import Node
@@ -137,14 +138,16 @@ class PredicatePushdownStrategy(OptimizationStrategy):
             if len(predicate.relations) == 1 and predicate.relations.intersection(
                 (node.relation, node.alias)
             ):
-                if node.connector and node.connector.can_push(predicate):
-                    if not node.predicates:
-                        node.predicates = []
-                    node.predicates.append(predicate.condition)
-                else:
-                    context.optimized_plan.insert_node_after(
-                        predicate.nid, predicate, context.node_id
-                    )
+                if node.connector:
+                    connector_capabilities = node.connector.__class__.mro()
+                    if PredicatePushable in connector_capabilities and node.connector.can_push(
+                        predicate
+                    ):
+                        if not node.predicates:
+                            node.predicates = []
+                        node.predicates.append(predicate.condition)
+                        continue
+                context.optimized_plan.insert_node_after(predicate.nid, predicate, context.node_id)
                 continue
             remaining_predicates.append(predicate)
         context.collected_predicates = remaining_predicates

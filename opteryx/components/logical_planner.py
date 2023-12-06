@@ -352,6 +352,14 @@ def inner_query_planner(ast_branch):
         and _projection[0].node_type == NodeType.WILDCARD
         and _projection[0].value is None
     ):
+        for column in _projection:
+            if column.node_type == NodeType.LITERAL and column.type == OrsoTypes.ARRAY:
+                if ast_branch["Select"].get("distinct"):
+                    raise UnsupportedSyntaxError(
+                        "Values cannot be parenthesised in the SELECT clause. Did you mean DISTINCT ON(cols) cols FROM ?"
+                    )
+                raise UnsupportedSyntaxError("Values cannot be parenthesised in the SELECT clause.")
+
         # ORDER BY needing to be able to order by columns not in the projection
         # whilst being able to order by aliases created by the projection means
         # we need to do specific checks
@@ -418,6 +426,12 @@ def inner_query_planner(ast_branch):
         inner_plan.add_node(step_id, distinct_step)
         if previous_step_id is not None:
             inner_plan.add_edge(previous_step_id, step_id)
+
+        if distinct_step.on and _projection[0].source_column == "FROM":
+            cols = ", ".join([format_expression(c) for c in distinct_step.on])
+            raise UnsupportedSyntaxError(
+                f"Did you mean 'SELECT DISTINCT ON ({cols}) {cols} FROM {_projection[0].alias};'?"
+            )
 
     # order
     if _order_by:

@@ -56,16 +56,20 @@ def read_thru_cache(func):
         # Try to get the result from cache
         result = buffer_pool.get(key)
 
-        if result is None:
-            # Key is not in cache, execute the function and store the result in cache
-            result = func(*args, **kwargs)
-
-            # Write the result to cache
-            buffer_pool.set(key, result)
-
-            statistics.cache_misses += 1
-        else:
+        if result is not None:
             statistics.cache_hits += 1
+            return result
+
+        # Key is not in cache, execute the function and store the result in cache
+        result = func(*args, **kwargs)
+
+        # Write the result to cache
+        if len(result) < buffer_pool.max_cacheable_item_size:
+            buffer_pool.set(key, result)
+        else:
+            statistics.cache_oversize += 1
+
+        statistics.cache_misses += 1
 
         return result
 

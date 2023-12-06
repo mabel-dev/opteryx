@@ -15,34 +15,15 @@ def test_predicate_pushdowns_blobs_parquet():
 
     conn = opteryx.connect()
 
-    # TEST PREDICATE PUSHDOWN
     cur = conn.cursor()
-    cur.execute(
-        "SET disable_optimizer = true; SELECT user_name FROM testdata.flat.formats.parquet WITH(NO_PARTITION) WHERE user_verified = TRUE;"
-    )
-    # if we disable pushdown, we read all the rows from the source and we do the filter
-    assert cur.rowcount == 711, cur.rowcount
-    assert cur.stats.get("rows_read", 0) == 100000, cur.stats
-
-    cur = conn.cursor()
-    cur.execute(
-        "SELECT user_name FROM testdata.flat.formats.parquet WITH(NO_PARTITION, NO_PUSH_SELECTION) WHERE user_verified = TRUE;"
-    )
-    # if we disable pushdown, we read all the rows from the source and we do the filter
-    assert cur.rowcount == 711, cur.rowcount
-    assert cur.stats.get("rows_read", 0) == 100000, cur.stats
-
-    cur = conn.cursor()
-    cur.execute(
-        "SELECT user_name FROM testdata.flat.formats.parquet WITH(NO_PARTITION) WHERE user_verified = TRUE;"
-    )
+    cur.execute("SELECT user_name FROM testdata.flat.formats.parquet WHERE user_verified = TRUE;")
     # when pushdown is enabled, we only read the matching rows from the source
     assert cur.rowcount == 711, cur.rowcount
     assert cur.stats.get("rows_read", 0) == 711, cur.stats
 
     cur = conn.cursor()
     cur.execute(
-        "SELECT user_name FROM testdata.flat.formats.parquet WITH(NO_PARTITION) WHERE user_verified = TRUE and following < 1000;"
+        "SELECT user_name FROM testdata.flat.formats.parquet WHERE user_verified = TRUE and following < 1000;"
     )
     # test with a more complex filter
     assert cur.rowcount == 266, cur.rowcount

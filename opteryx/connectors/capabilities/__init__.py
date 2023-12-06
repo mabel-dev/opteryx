@@ -13,6 +13,5 @@
 from opteryx.connectors.capabilities.cacheable import Cacheable
 from opteryx.connectors.capabilities.partitionable import Partitionable
 from opteryx.connectors.capabilities.predicate_pushable import PredicatePushable
-from opteryx.connectors.capabilities.projection_pushable import ProjectionPushable
 
-__all__ = ("Cacheable", "Partitionable", "PredicatePushable", "ProjectionPushable")
+__all__ = ("Cacheable", "Partitionable", "PredicatePushable")

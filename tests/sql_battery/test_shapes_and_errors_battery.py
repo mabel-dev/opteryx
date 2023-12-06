@@ -40,7 +40,6 @@ import sys
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
-from pyarrow.lib import ArrowInvalid
 import pytest
 
 import opteryx
@@ -77,6 +76,7 @@ STATEMENTS = [
         ("SELECT * FROM $planets", 9, 20, None),
         ("SELECT * FROM $astronauts", 357, 19, None),
         ("SELECT * FROM $no_table", 1, 1, None),
+        ("SELECT * FROM sqlite.planets", 9, 20, None),
 
         # Does the error tester work
         ("THIS IS NOT VALID SQL", None, None, SqlError),
@@ -1090,6 +1090,14 @@ STATEMENTS = [
 
         ("SELECT STRUCT(dict) FROM testdata.flat.struct", 3, 1, InconsistentSchemaError),
 
+        # Test the order of the predicates shouldn't matter
+        ("SELECT * FROM sqlite.planets WHERE id > gravity", 2, 20, None),
+        ("SELECT * FROM sqlite.planets WHERE 1 > gravity", 1, 20, None),
+        ("SELECT * FROM sqlite.planets WHERE id > 1", 8, 20, None),
+
+        ("SELECT DISTINCT ON (id) FROM $planets;", None, None, UnsupportedSyntaxError),
+        ("SELECT (name, id) FROM $planets;", None, None, UnsupportedSyntaxError),
+
         # V2 Negative Tests
         ("SELECT $planets.id, name FROM $planets INNER JOIN $satellites ON planetId = $planets.id", None, None, AmbiguousIdentifierError),
         ("SELECT $planets.id FROM $satellites", None, None, UnexpectedDatasetReferenceError),
@@ -1278,6 +1286,8 @@ STATEMENTS = [
         ("SELECT SUM(CASE WHEN gm > 10 THEN 1 ELSE 0 END) AS gm_big_count FROM $satellites", 1, 1, None),
         # COUNT(*) in non aggregated joins
         ("SELECT COUNT(*), COUNT_DISTINCT(id) FROM $planets;", 1, 2, None),
+        # NUMPY typles not handled by sqlalchemy
+        ("SELECT P_1.* FROM sqlite.planets AS P_1 CROSS JOIN $satellites AS P_2 WHERE P_1.id = P_2.planetId AND P_1.name LIKE '%a%' AND lengthOfDay > 0", 91, 20, None),
 ]
 # fmt:on
 
@@ -1291,10 +1301,17 @@ def test_sql_battery(statement, rows, columns, exception):
     #    opteryx.register_store("tests", DiskConnector)
     #    opteryx.register_store("mabellabs", AwsS3Connector)
     from opteryx.connectors import DiskConnector
+    from opteryx.connectors import SqlConnector
     from opteryx.managers.schemes import MabelPartitionScheme
 
     opteryx.register_store(
         "testdata.partitioned", DiskConnector, partition_scheme=MabelPartitionScheme
+    )
+    opteryx.register_store(
+        "sqlite",
+        SqlConnector,
+        remove_prefix=True,
+        connection="sqlite:///testdata/sqlite/database.db",
     )
 
     try:

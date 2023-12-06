@@ -47,7 +47,7 @@ class _BufferPool:
             self._cache_backend = (
                 NullCacheBackEnd()
             )  # rather than make decisions - just use a dummy
-        self._max_cacheable_item_size = cache_manager.max_cacheable_item_size
+        self.max_cacheable_item_size = cache_manager.max_cacheable_item_size
         self._lru = LRU2(size=cache_manager.max_local_buffer_capacity)
 
     def get(self, key: str) -> Optional[array]:
@@ -65,10 +65,9 @@ class _BufferPool:
         Put an item into the pool, evict an item if the pool is full.
         If a cache is provided, also set the value in the cache.
         """
-        if len(value) < self._max_cacheable_item_size:
-            evicted = self._lru.set(key, value)
-            self._cache_backend.set(key, value)
-            return evicted
+        evicted = self._lru.set(key, value)
+        self._cache_backend.set(key, value)
+        return evicted
 
     @property
     def stats(self) -> tuple:
