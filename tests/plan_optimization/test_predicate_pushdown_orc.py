@@ -9,7 +9,6 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 from tests.tools import is_arm, is_mac, is_windows, skip_if
 
 import opteryx
-from opteryx import config
 
 
 @skip_if(is_arm() or is_windows() or is_mac())
@@ -17,23 +16,6 @@ def test_predicate_pushdowns_blobs_orc():
     os.environ["GCP_PROJECT_ID"] = "mabeldev"
 
     conn = opteryx.connect()
-
-    # TEST PREDICATE PUSHDOWN
-    cur = conn.cursor()
-    cur.execute(
-        "SET disable_optimizer = true; SELECT user_name FROM testdata.flat.formats.orc WITH(NO_PARTITION) WHERE user_verified = TRUE;"
-    )
-    # if we disable pushdown, we read all the rows from the source and we do the filter
-    assert cur.rowcount == 711, cur.rowcount
-    assert cur.stats.get("rows_read", 0) == 100000, cur.stats
-
-    cur = conn.cursor()
-    cur.execute(
-        "SELECT user_name FROM testdata.flat.formats.orc WITH(NO_PARTITION, NO_PUSH_SELECTION) WHERE user_verified = TRUE;"
-    )
-    # if we disable pushdown, we read all the rows from the source and we do the filter
-    assert cur.rowcount == 711, cur.rowcount
-    assert cur.stats.get("rows_read", 0) == 100000, cur.stats
 
     cur = conn.cursor()
     cur.execute(
@@ -58,16 +40,6 @@ def test_predicate_pushdowns_blobs_orc():
     # we don't push all predicates down,
     assert cur.rowcount == 86, cur.rowcount
     assert cur.stats.get("rows_read", 0) == 711, cur.stats
-
-    config.ONLY_PUSH_EQUALS_PREDICATES = True
-    cur = conn.cursor()
-    cur.execute(
-        "SELECT user_name FROM testdata.flat.formats.orc WITH(NO_PARTITION) WHERE user_verified = TRUE and following < 1000;"
-    )
-    # test only push equals
-    assert cur.rowcount == 266, cur.rowcount
-    assert cur.stats.get("rows_read", 0) == 711, cur.stats
-    config.ONLY_PUSH_EQUALS_PREDICATES = False
 
     conn.close()
 

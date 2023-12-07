@@ -14,32 +14,14 @@ def test_parquet_projection_pushdown():
     opteryx.register_store("tests", DiskConnector)
 
     # with pushdown
-    conn = opteryx.connect()
-    cur = conn.cursor()
-    cur.execute(f"SELECT following FROM testdata.flat.formats.parquet;")
-    cur.arrow()
+    cur = opteryx.query("SELECT following FROM testdata.flat.formats.parquet;")
     assert cur.stats["columns_read"] == 1, cur.stats
 
-    conn = opteryx.connect()
-    cur = conn.cursor()
-    cur.execute(f"SELECT MAX(following), MAX(followers) FROM testdata.flat.formats.parquet;")
-    [a for a in cur.fetchall()]
+    cur = opteryx.query("SELECT MAX(following), MAX(followers) FROM testdata.flat.formats.parquet;")
     assert cur.stats["columns_read"] == 2
 
-    # with pushdown disabled
-    #    conn = opteryx.connect()
-    #    cur = conn.cursor()
-    #    cur.execute(
-    #        f"SELECT MAX(following) FROM testdata.flat.formats.parquet WITH(NO_PARTITION, NO_PUSH_PROJECTION);"
-    #    )
-    #    [a for a in cur.fetchall()]
-    #    assert cur.stats["columns_read"] == 13
-
     # without pushdown
-    conn = opteryx.connect()
-    cur = conn.cursor()
-    cur.execute(f"SELECT * FROM testdata.flat.formats.parquet WITH(NO_PARTITION);")
-    [a for a in cur.fetchall()]
+    cur = opteryx.query("SELECT * FROM testdata.flat.formats.parquet;")
     assert cur.stats["columns_read"] == 13
 
 
