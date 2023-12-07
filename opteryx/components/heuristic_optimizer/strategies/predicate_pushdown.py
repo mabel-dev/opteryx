@@ -117,8 +117,6 @@ class PredicatePushdownStrategy(OptimizationStrategy):
                 context.collected_predicates = remaining_predicates
 
             context.optimized_plan.add_node(context.node_id, node)
-
-        # DEBUG: log (context.optimized_plan.draw())
         return context
 
     def complete(self, plan: LogicalPlan, context: HeuristicOptimizerContext) -> LogicalPlan:

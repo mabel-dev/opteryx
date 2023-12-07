@@ -79,6 +79,10 @@ class PredicatePushable:
             if root.node_type != NodeType.COMPARISON_OPERATOR:
                 raise NotSupportedError()
             if root.left.node_type != NodeType.IDENTIFIER:
+                root.left, root.right = root.right, root.left
+            if root.left.node_type != NodeType.IDENTIFIER:
+                raise NotSupportedError()
+            if root.right.node_type != NodeType.LITERAL:
                 raise NotSupportedError()
             if root.left.type in (
                 OrsoTypes.DOUBLE,
@@ -89,10 +93,14 @@ class PredicatePushable:
                 raise NotSupportedError()
             return (root.left.value, PredicatePushable.OPS_XLAT[root.value], root.right.value)
 
-        try:
-            if not isinstance(root, list):
-                root = [root]
-            dnf = [_predicate_to_dnf(n) for n in root]
-        except NotSupportedError:
-            return None
-        return dnf
+        not_converted = []
+        dnf = []
+        if not isinstance(root, list):
+            root = [root]
+        for predicate in root:
+            try:
+                converted = _predicate_to_dnf(predicate)
+                dnf.append(converted)
+            except NotSupportedError:
+                not_converted.append(predicate)
+        return dnf if dnf else None, not_converted

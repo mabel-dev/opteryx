@@ -23,6 +23,7 @@ from orso.schema import RelationSchema
 
 from opteryx.shared import QueryStatistics
 
+MIN_CHUNK_SIZE: int = 500
 INITIAL_CHUNK_SIZE: int = 500
 DEFAULT_MORSEL_SIZE: int = 8 * 1024 * 1024
 

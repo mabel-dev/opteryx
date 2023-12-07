@@ -50,6 +50,18 @@ def test_mysql_storage():
     assert results.stats.get("rows_read", 0) == 2, results.stats
 
 
+def test_database_paging():
+    opteryx.register_store("mysql", SqlConnector, remove_prefix=True, connection=CONNECTION)
+
+    results = opteryx.query("SELECT * FROM mysql.twitter")
+    assert results.rowcount == 10001, results.rowcount
+    assert results.columncount == 9
+
+    results = opteryx.query("SELECT * FROM mysql.twitter WHERE idx < 140574")
+    assert results.rowcount == 9, results.rowcount
+    assert results.columncount == 9
+
+
 if __name__ == "__main__":  # pragma: no cover
     from tests.tools import run_tests
 

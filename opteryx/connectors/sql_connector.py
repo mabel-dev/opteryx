@@ -30,6 +30,7 @@ from orso.types import PYTHON_TO_ORSO_MAP
 
 from opteryx.connectors.base.base_connector import DEFAULT_MORSEL_SIZE
 from opteryx.connectors.base.base_connector import INITIAL_CHUNK_SIZE
+from opteryx.connectors.base.base_connector import MIN_CHUNK_SIZE
 from opteryx.connectors.base.base_connector import BaseConnector
 from opteryx.connectors.capabilities import PredicatePushable
 from opteryx.exceptions import MissingDependencyError
@@ -164,7 +165,11 @@ class SqlConnector(BaseConnector, PredicatePushable):
                 # Don't keep recalculating, this is not a cheap operation and it's predicting
                 # the future so isn't going to ever be 100% correct
                 if self.chunk_size == INITIAL_CHUNK_SIZE and morsel.nbytes() > 0:
-                    self.chunk_size = int(len(morsel) // (morsel.nbytes() / DEFAULT_MORSEL_SIZE))
+                    self.chunk_size = (
+                        int(len(morsel) // (morsel.nbytes() / DEFAULT_MORSEL_SIZE)) + 1
+                    )
+                    self.chunk_size = (self.chunk_size // MIN_CHUNK_SIZE) * MIN_CHUNK_SIZE
+                    self.chunk_size = max(self.chunk_size, MIN_CHUNK_SIZE)
                     # DEBUG: log (f"CHANGING CHUNK SIZE TO {self.chunk_size} was {INITIAL_CHUNK_SIZE}.")
 
                 morsel = DataFrame(schema=result_schema)

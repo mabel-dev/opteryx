@@ -25,7 +25,7 @@ def test_in_memory_cache():
     cur.arrow()
 
     stats = cur.stats
-    assert stats.get("cache_hits", 0) == 0, stats.get("cache_hits", 0)
+    assert stats.get("cache_hits", 0) == 1, stats.get("cache_hits", 0)
     assert stats["cache_misses"] == 2, stats["cache_misses"]
     conn.close()
 
@@ -36,7 +36,7 @@ def test_in_memory_cache():
     cur.arrow()
 
     stats = cur.stats
-    assert stats["cache_hits"] == 2, stats["cache_hits"]
+    assert stats["cache_hits"] == 3, stats["cache_hits"]
     assert stats.get("cache_misses", 0) == 0
     conn.close()
 
@@ -65,7 +65,7 @@ def test_cache_in_subqueries():
     cur.arrow()
 
     stats = cur.stats
-    assert stats.get("cache_hits", 0) == 0, stats["cache_hits"]
+    assert stats.get("cache_hits", 0) == 1, stats["cache_hits"]
     assert stats["cache_misses"] == 2, stats["cache_misses"]
     conn.close()
 
@@ -76,7 +76,7 @@ def test_cache_in_subqueries():
     cur.arrow()
 
     stats = cur.stats
-    assert stats["cache_hits"] == 2, stats["cache_hits"]
+    assert stats["cache_hits"] == 3, stats["cache_hits"]
     assert stats.get("cache_misses", 0) == 0
     conn.close()
 
