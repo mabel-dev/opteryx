@@ -163,25 +163,16 @@ def orc_decoder(buffer, projection: List = None, selection=None, just_schema: bo
 
     stream = io.BytesIO(buffer)
     orc_file = orc.ORCFile(stream)
-    orc_schema = orc_file.schema
-    schema_columns = orc_schema.names
+
     if just_schema:
+        orc_schema = orc_file.schema
         return convert_arrow_schema_to_orso_schema(orc_schema)
 
-    # work out the selected columns, handling aliases
-    selected_columns = []
-    if projection:
-        for projection_column in projection:
-            for schema_column in schema_columns:
-                if schema_column in projection_column.all_names:
-                    selected_columns.append(schema_column)
-                    break
-    if len(selected_columns) == 0:  # pragma: no-cover
-        selected_columns = None
-
-    table = orc_file.read(columns=selected_columns)
+    table = orc_file.read()
     if selection:
         table = filter_records(selection, table)
+    if projection:
+        table = post_read_projector(table, projection)
     return table
 
 

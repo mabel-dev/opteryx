@@ -18,6 +18,12 @@ def is_pypy():  # pragma: no cover
     return platform.python_implementation() == "PyPy"
 
 
+def manual():  # pragma: no cover
+    import os
+
+    return os.environ.get("MANUAL_TEST") is not None
+
+
 def is_version(version):
     import sys
 
@@ -43,7 +49,7 @@ def skip_if(is_true: bool = True):
     def decorate(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            if is_true:
+            if is_true and not manual():
                 import warnings
 
                 warnings.warn(f"Skipping {func.__name__} because of conditional execution.")
@@ -106,6 +112,10 @@ def run_tests():
     import shutil
     import time
     import traceback
+    import os
+
+    manual_test = os.environ.get("MANUAL_TEST")
+    os.environ["MANUAL_TEST"] = "1"
 
     display_width = shutil.get_terminal_size((80, 20))[0]
 
