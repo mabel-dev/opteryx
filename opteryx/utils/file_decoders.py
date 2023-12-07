@@ -20,11 +20,10 @@ from typing import List
 
 import numpy
 import pyarrow
+from orso.tools import random_string
 
 from opteryx.exceptions import UnsupportedFileTypeError
 from opteryx.utils.arrow import post_read_projector
-
-memory_pool = pyarrow.default_memory_pool()
 
 
 class ExtentionType(str, Enum):
@@ -75,8 +74,21 @@ def filter_records(filter, table):
     if isinstance(filter, list) and filter:
         filter_copy = [p for p in filter]
         root = filter_copy.pop()
+
+        if root.left.node_type == NodeType.IDENTIFIER:
+            root.left.schema_column.identity = root.left.source_column
+        if root.right.node_type == NodeType.IDENTIFIER:
+            root.right.schema_column.identity = root.right.source_column
+
         while filter_copy:
-            root = Node(NodeType.AND, left=root, right=filter_copy.pop())
+            right = filter_copy.pop()
+            if right.left.node_type == NodeType.IDENTIFIER:
+                right.left.schema_column.identity = right.left.source_column
+            if right.right.node_type == NodeType.IDENTIFIER:
+                right.right.schema_column.identity = right.right.source_column
+            root = Node(
+                NodeType.AND, left=root, right=right, schema_column=Node(identity=random_string())
+            )
     else:
         root = filter
 
@@ -107,7 +119,7 @@ def parquet_decoder(buffer, projection: List = None, selection=None, just_schema
     from opteryx.connectors.capabilities import PredicatePushable
 
     # Convert the selection to DNF format if applicable
-    _select = PredicatePushable.to_dnf(selection) if selection else None
+    _select, selection = PredicatePushable.to_dnf(selection) if selection else (None, None)
 
     stream = io.BytesIO(buffer)
 
@@ -137,7 +149,10 @@ def parquet_decoder(buffer, projection: List = None, selection=None, just_schema
         selected_columns = None
 
     # Read the parquet table with the optimized column list and selection filters
-    return parquet.read_table(stream, columns=selected_columns, pre_buffer=False, filters=_select)
+    table = parquet.read_table(stream, columns=selected_columns, pre_buffer=False, filters=_select)
+    if selection:
+        table = filter_records(selection, table)
+    return table
 
 
 def orc_decoder(buffer, projection: List = None, selection=None, just_schema: bool = False):
@@ -165,7 +180,7 @@ def orc_decoder(buffer, projection: List = None, selection=None, just_schema: bo
         selected_columns = None
 
     table = orc_file.read(columns=selected_columns)
-    if selection is not None:
+    if selection:
         table = filter_records(selection, table)
     return table
 
@@ -183,7 +198,7 @@ def jsonl_decoder(buffer, projection: List = None, selection=None, just_schema: 
     if just_schema:
         return convert_arrow_schema_to_orso_schema(schema)
 
-    if selection is not None:
+    if selection:
         table = filter_records(selection, table)
     if projection:
         table = post_read_projector(table, projection)
@@ -205,7 +220,7 @@ def csv_decoder(
     if just_schema:
         return convert_arrow_schema_to_orso_schema(schema)
 
-    if selection is not None:
+    if selection:
         table = filter_records(selection, table)
     if projection:
         table = post_read_projector(table, projection)
@@ -232,7 +247,7 @@ def arrow_decoder(buffer, projection: List = None, selection=None, just_schema: 
     if just_schema:
         return convert_arrow_schema_to_orso_schema(schema)
 
-    if selection is not None:
+    if selection:
         table = filter_records(selection, table)
     if projection:
         table = post_read_projector(table, projection)
@@ -259,7 +274,7 @@ def avro_decoder(buffer, projection: List = None, selection=None, just_schema: b
     if just_schema:
         return convert_arrow_schema_to_orso_schema(schema)
 
-    if selection is not None:
+    if selection:
         table = filter_records(selection, table)
     if projection:
         table = post_read_projector(table, projection)

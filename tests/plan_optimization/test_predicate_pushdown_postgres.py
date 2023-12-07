@@ -24,7 +24,7 @@ opteryx.register_store(
 
 
 # skip to reduce contention
-# @skip_if(is_arm() or is_windows() or is_mac())
+@skip_if(is_arm() or is_windows() or is_mac() or not is_version("3.9"))
 def test_predicate_pushdown_postgres_other():
     res = opteryx.query("SELECT * FROM pg.planets WHERE gravity <= 3.7")
     assert res.rowcount == 3, res.rowcount

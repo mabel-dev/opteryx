@@ -99,13 +99,14 @@ class HeuristicOptimizerVisitor:
 
         _inner(root_nid, None, context)
         optimized_plan = strategy.complete(context.optimized_plan, context)
-        # DEBUG: log (optimized_plan.draw())
         return optimized_plan
 
     def optimize(self, plan: LogicalPlan) -> LogicalPlan:
         current_plan = plan
         for strategy in self.strategies:
             current_plan = self.traverse(current_plan, strategy)
+        # DEBUG: log ("AFTER OPTIMIZATION")
+        # DEBUG: log (current_plan.draw())
         return current_plan
 
 

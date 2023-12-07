@@ -16,6 +16,7 @@ given directly in a query.
 """
 
 import os
+from typing import Dict
 from typing import List
 
 import pyarrow
@@ -26,6 +27,7 @@ from orso.tools import single_item_cache
 from opteryx.connectors.base.base_connector import BaseConnector
 from opteryx.connectors.capabilities import Cacheable
 from opteryx.connectors.capabilities import Partitionable
+from opteryx.connectors.capabilities import PredicatePushable
 from opteryx.exceptions import DatasetNotFoundError
 from opteryx.exceptions import EmptyDatasetError
 from opteryx.exceptions import UnsupportedFileTypeError
@@ -34,8 +36,17 @@ from opteryx.utils.file_decoders import VALID_EXTENSIONS
 from opteryx.utils.file_decoders import get_decoder
 
 
-class DiskConnector(BaseConnector, Cacheable, Partitionable):
+class DiskConnector(BaseConnector, Cacheable, Partitionable, PredicatePushable):
     __mode__ = "Blob"
+
+    PUSHABLE_OPS: Dict[str, bool] = {
+        "Eq": True,
+        "NotEq": True,
+        "Gt": True,
+        "GtEq": True,
+        "Lt": True,
+        "LtEq": True,
+    }
 
     def __init__(self, **kwargs):
         """
@@ -48,6 +59,7 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable):
         BaseConnector.__init__(self, **kwargs)
         Partitionable.__init__(self, **kwargs)
         Cacheable.__init__(self, **kwargs)
+        PredicatePushable.__init__(self, **kwargs)
 
         self.dataset = self.dataset.replace(".", "/")
         self.cached_first_blob = None  # Cache for the first blob in the dataset
@@ -88,7 +100,9 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable):
         ]
         return files
 
-    def read_dataset(self, columns: list = None, **kwargs) -> pyarrow.Table:
+    def read_dataset(
+        self, columns: list = None, predicates: list = None, **kwargs
+    ) -> pyarrow.Table:
         """
         Read the entire dataset from disk.
 
@@ -102,19 +116,19 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable):
             prefix=self.dataset,
         )
 
-        if self.cached_first_blob is not None:
-            if columns:
-                yield post_read_projector(self.cached_first_blob, columns)
-            else:
-                yield self.cached_first_blob
-            blob_names = blob_names[1:]
-        self.cached_first_blob = None
+        # if self.cached_first_blob is not None:
+        #    if columns:
+        #        yield post_read_projector(self.cached_first_blob, columns)
+        #    else:
+        #        yield self.cached_first_blob
+        #    blob_names = blob_names[1:]
+        # self.cached_first_blob = None
 
         for blob_name in blob_names:
             try:
                 decoder = get_decoder(blob_name)
                 blob_bytes = self.read_blob(blob_name=blob_name, statistics=self.statistics)
-                yield decoder(blob_bytes, projection=columns)
+                yield decoder(blob_bytes, projection=columns, selection=predicates)
             except UnsupportedFileTypeError:
                 pass  # Skip unsupported file types
 

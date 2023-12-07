@@ -15,7 +15,7 @@ Unlock your ability to discover insights across your diverse data sources, like 
 [**Documentation**](https://opteryx.dev/latest) |
 [**Install**](#install) |
 [**Examples**](#examples) |
-[**Contributing**](https://opteryx.dev/latest/contributing/contributing/)
+[**Get Involved**](#community)
 
 [![PyPI Latest Release](https://img.shields.io/pypi/v/opteryx.svg)](https://pypi.org/project/opteryx/)
 [![opteryx](https://snyk.io/advisor/python/opteryx/badge.svg?style=flat-square)](https://snyk.io/advisor/python/opteryx)
@@ -111,7 +111,7 @@ Opteryx installs with a small set of libraries it uses, such as [Numpy](https://
 [Query Data on GCS](#query-data-on-gcs)  
 [Query Data in SQLite](#query-data-in-sqlite)  
 
-[Interactive labs](https://github.com/mabel-dev/labs) are available on [Binder](https://mybinder.org/v2/gh/mabel-dev/labs/HEAD).
+Try Opteryx now using our [interactive labs](https://github.com/mabel-dev/labs) on [Binder](https://mybinder.org/v2/gh/mabel-dev/labs/HEAD).
 
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/mabel-dev/labs/HEAD)
 
@@ -282,24 +282,20 @@ _this example is complete and should run as-is_
 
 #### Further Examples
 
-For further examples check out the [Interactive labs](https://github.com/mabel-dev/labs) on [Binder](https://mybinder.org/v2/gh/mabel-dev/labs/HEAD).
+For further examples, check out the [interactive labs](https://github.com/mabel-dev/labs) on [Binder](https://mybinder.org/v2/gh/mabel-dev/labs/HEAD).
 
 ## Community
 
 [![Discord](https://img.shields.io/badge/discuss%20on-discord-5865F2.svg?logo=discord)](https://discord.gg/qpv2tr989x)
 [![X Follow](https://img.shields.io/badge/follow%20on-X-1DA1F2.svg?logo=X)](https://twitter.com/OpteryxSQL)
 
-**How do I get Support?**
+**Get Involved**
 
-For support ask our [Discord Server](https://discord.gg/qpv2tr989x).
-
-**How Can I Contribute?**
-
-We are looking for volunteers to help build and direct Opteryx. If you are interested please use the Issues to let use know.
-
-All contributions, [bug reports](https://github.com/mabel-dev/opteryx/issues/new/choose), documentation improvements, enhancements, and [ideas](https://github.com/mabel-dev/opteryx/discussions) are welcome.
-
-Want to help build Opteryx? See the [Contribution](https://opteryx.dev/latest/contributing/contributing/) and [Set Up](https://opteryx.dev/latest/contributing/set-up-guides/debian/) Guides.
+* Star this repo
+* [Contribute](https://opteryx.dev/latest/contributing/contributing/) — join us in building Opteryx, through writing code, or inspiring others to use it.
+* Let us know [your ideas](https://github.com/mabel-dev/opteryx/discussions), how you are using Opteryx, or report a [bug or feature request]((https://github.com/mabel-dev/opteryx/issues/new/choose)).
+* See the [contributor documentation](https://opteryx.dev/latest/contributing/contributing/) for Opteryx. It's easy to get started, and we're really friendly if you need any help!
+* If you're interested in contributing to the code now, check out [GitHub issues](https://github.com/mabel-dev/opteryx/issues). Feel free to ask questions or open a draft PR.
 
 ## Security
 
