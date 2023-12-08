@@ -203,7 +203,6 @@ def csv_decoder(
     import pyarrow.csv
     from pyarrow.csv import ParseOptions
 
-
     stream = io.BytesIO(buffer)
     parse_options = ParseOptions(delimiter=delimiter, newlines_in_values=True)
     table = pyarrow.csv.read_csv(stream, parse_options=parse_options)

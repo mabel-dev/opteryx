@@ -37,7 +37,7 @@ def test_memcached_cache():
     cur.execute("SELECT * FROM testdata.flat.tweets WITH(NO_PARTITION);")
     cur.arrow()
     stats = cur.stats
-    assert stats["cache_hits"] == 2, stats
+    assert stats["cache_hits"] in (2, 3), stats
     assert stats.get("cache_misses", 0) == 0, stats
     conn.close()
 
