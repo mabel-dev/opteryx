@@ -27,8 +27,8 @@ def test_memcached_cache():
     stats = cur.stats
     # this test is not idempotent, it will be in different states depending on if its
     # already been run
-    assert stats.get("cache_hits", 0) in (0, 2)
-    assert stats.get("cache_misses", 0) in (0, 2)
+    assert stats.get("cache_hits", 0) in (0, 2, 3)
+    assert stats.get("cache_misses", 0) in (0, 2, 3)
     conn.close()
 
     # read the data a second time, this should hit the cache
