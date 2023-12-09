@@ -25,6 +25,7 @@ from pyarrow import compute
 
 from opteryx.utils import dates
 
+# fmt:off
 OPERATOR_FUNCTION_MAP: Dict[str, Any] = {
     "Divide": numpy.divide,
     "Minus": numpy.subtract,
@@ -32,9 +33,7 @@ OPERATOR_FUNCTION_MAP: Dict[str, Any] = {
     "Multiply": numpy.multiply,
     "Plus": numpy.add,
     "StringConcat": compute.binary_join_element_wise,
-    "MyIntegerDivide": lambda left, right: numpy.trunc(numpy.divide(left, right)).astype(
-        numpy.int64
-    ),
+    "MyIntegerDivide": lambda left, right: numpy.trunc(numpy.divide(left, right)).astype(numpy.int64),
     "BitwiseOr": numpy.bitwise_or,
     "BitwiseAnd": numpy.bitwise_and,
     "BitwiseXor": numpy.bitwise_xor,
@@ -45,12 +44,10 @@ OPERATOR_FUNCTION_MAP: Dict[str, Any] = {
 BINARY_OPERATORS = set(OPERATOR_FUNCTION_MAP.keys())
 
 INTERVALS = (pyarrow.lib.MonthDayNano, pyarrow.lib.MonthDayNanoIntervalArray)
-DATES = (
-    numpy.datetime64,
-    pyarrow.lib.Date32Array,
-)
+DATES = (numpy.datetime64, pyarrow.lib.Date32Array)
 LISTS = (pyarrow.Array, numpy.ndarray, list, array.ArrayType)
 STRINGS = (str, numpy.str_)
+# fmt:on
 
 # Also supported by the AST but not implemented
 
@@ -123,11 +120,19 @@ def _ip_containment(left: List[Optional[str]], right: List[str]) -> List[Optiona
         List[Optional[bool]]:
             A list of boolean values indicating if each corresponding IP in 'left' is in 'right'.
     """
+    from ipaddress import AddressValueError
     from ipaddress import IPv4Address
     from ipaddress import IPv4Network
 
-    network = IPv4Network(right[0], strict=False)
-    return [(IPv4Address(ip) in network) if ip else None for ip in left]
+    try:
+        network = IPv4Network(right[0], strict=False)
+        return [(IPv4Address(ip) in network) if ip is not None else None for ip in left]
+    except AddressValueError as err:
+        from opteryx.exceptions import IncorrectTypeError
+
+        raise IncorrectTypeError(
+            "The `|` operator can be used as bitwise OR or IP address containment only."
+        ) from err
 
 
 def _either_side_is_type(left, right, types):
