@@ -68,14 +68,14 @@ class ExitNode(BasePlanNode):
         for morsel in morsels.execute():
             start = time.monotonic_ns()
             if not set(final_columns).issubset(morsel.column_names):
-                mapping = {int_name: name for name, int_name in zip(final_columns, final_names)}
-                missing_references = [
-                    f"{mapping.get(ref)} {ref}"
-                    for ref in final_columns
-                    if ref not in morsel.column_names
-                ]
+                mapping = {name: int_name for name, int_name in zip(final_columns, final_names)}
+                missing_references = {
+                    mapping.get(ref): ref for ref in final_columns if ref not in morsel.column_names
+                }
 
-                raise InvalidInternalStateError(f"Problem - {missing_references} not in results")
+                raise InvalidInternalStateError(
+                    f"The following fields were not in the resultset - {', '.join(missing_references.keys())}"
+                )
 
             morsel = morsel.select(final_columns)
             morsel = morsel.rename_columns(final_names)

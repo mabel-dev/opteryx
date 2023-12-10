@@ -131,6 +131,8 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable, PredicatePushable):
                 yield decoder(blob_bytes, projection=columns, selection=predicates)
             except UnsupportedFileTypeError:
                 pass  # Skip unsupported file types
+            except pyarrow.ArrowInvalid:
+                self.statistics.unreadable_data_blobs += 1
 
     def get_dataset_schema(self) -> RelationSchema:
         """

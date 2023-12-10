@@ -19,7 +19,7 @@ def test_count_star():
     cur.execute("SELECT count(*) FROM testdata.flat.formats.parquet WITH(NO_PARTITION);")
     cur.arrow()
     stats = cur.stats
-    assert stats["columns_read"] == 13, stats["columns_read"]
+    assert stats["columns_read"] == 1, stats["columns_read"]
     assert stats["rows_read"] == 100000, stats["rows_read"]
     conn.close()
 
@@ -28,7 +28,7 @@ def test_count_star():
     cur.execute("SELECT COUNT(*) FROM testdata.flat.formats.parquet WITH(NO_PARTITION);")
     cur.arrow()
     stats = cur.stats
-    assert stats["columns_read"] == 13, stats["columns_read"]
+    assert stats["columns_read"] == 1, stats["columns_read"]
     assert stats["rows_read"] == 100000, stats["rows_read"]
     conn.close()
 

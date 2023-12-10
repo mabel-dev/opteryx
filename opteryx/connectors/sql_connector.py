@@ -23,6 +23,7 @@ from typing import Tuple
 import pyarrow
 from orso import DataFrame
 from orso import Row
+from orso.schema import ConstantColumn
 from orso.schema import FlatColumn
 from orso.schema import RelationSchema
 from orso.tools import random_string
@@ -118,12 +119,15 @@ class SqlConnector(BaseConnector, PredicatePushable):
             column_names = [col.name for col in columns]
             query_builder.add("SELECT", *column_names)
             result_schema.columns = [col for col in self.schema.columns if col.name in column_names]
-        else:
+        elif self.schema.columns:
             query_builder.add("SELECT", "*")
+        else:
+            query_builder.add("SELECT", "1")
+            self.schema.columns.append(ConstantColumn(name="1", value=1))
 
         # Update SQL if we've pushed predicates
         parameters = {}
-        for index, predicate in enumerate(predicates):
+        for predicate in predicates:
             left_operand = predicate.left
             right_operand = predicate.right
             operator = self.OPS_XLAT[predicate.value]
