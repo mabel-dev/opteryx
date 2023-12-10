@@ -989,7 +989,8 @@ STATEMENTS = [
         ("SELECT planets.* FROM $planets AS planets LEFT JOIN $planets FOR '1600-01-01' AS older ON planets.id = older.id WHERE older.name IS NULL", 3, 20, None),
         ("SELECT * FROM generate_series(1,10) AS GS LEFT JOIN $planets FOR '1600-01-01' ON id = GS", 10, 21, None),
         ("SELECT DISTINCT name FROM generate_series(1,10) AS GS LEFT JOIN $planets FOR '1600-01-01' ON id = GS", 7, 1, None),
-        ("SELECT 1 WHERE ' a  b ' \t = \n\n ' ' || 'a' || ' ' || \n ' b '", 1, 1, None),
+        ("SELECT 1 WHERE ' a  b ' \t = \n\n ' ' || 'a' || ' ' || \n ' b '", 1, 1, UnsupportedSyntaxError),
+        ("SELECT 1 FROM $planets WHERE ' a  b ' \t = \n\n ' ' || 'a' || ' ' || \n ' b '", 9, 1, UnsupportedSyntaxError),
         ("SELECT name FROM $planets WHERE SUBSTRING ( name, 1, 1 ) = 'M'", 2, 1, None),
         ("SELECT name FROM $planets WHERE SUBSTRING ( name, 2, 1 ) = 'a'", 3, 1, None),
         ("SELECT name FROM $planets WHERE SUBSTRING ( name, 3 ) = 'rth'", 1, 1, None),
@@ -1036,6 +1037,13 @@ STATEMENTS = [
         ("SELECT '192.168.1.*' | '192.168.1.1'", None, None, IncorrectTypeError),
         ("SELECT '!!' | '192.168.1.1'", None, None, IncorrectTypeError),
         ("SELECT null | '192.168.1.1'", 1, 1, None),
+
+        ("SELECT * FROM testdata.flat.different", 196902, 15, None),
+        ("SELECT * FROM testdata.flat.different WHERE following < 10", 7814, 15, None),
+        ("SELECT is_quoting, COUNT(*) FROM testdata.flat.different GROUP BY is_quoting", 13995, 2, None),
+        ("SELECT is_quoting FROM testdata.flat.different", 196902, 1, None),
+        ("SELECT * FROM testdata.flat.different WHERE following IS NULL", 9, 15, None),
+        ("SELECT name FROM testdata.flat.different", None, None, ColumnNotFoundError),
 
         ("SELECT COUNT(*), place FROM (SELECT CASE id WHEN 3 THEN 'Earth' WHEN 1 THEN 'Mercury' ELSE 'Elsewhere' END as place FROM $planets) AS SQ GROUP BY place;", 3, 2, None),
         ("SELECT COUNT(*), place FROM (SELECT CASE id WHEN 3 THEN 'Earth' WHEN 1 THEN 'Mercury' END as place FROM $planets) AS SQ GROUP BY place HAVING place IS NULL;", 1, 2, None),

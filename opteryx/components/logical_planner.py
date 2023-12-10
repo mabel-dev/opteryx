@@ -295,6 +295,8 @@ def inner_query_planner(ast_branch):
     # selection
     _selection = logical_planner_builders.build(ast_branch["Select"].get("selection"))
     if _selection:
+        if len(_relations) == 0:
+            raise UnsupportedSyntaxError("Statement has a WHERE clause but no FROM clause.")
         selection_step = LogicalPlanNode(node_type=LogicalPlanStepType.Filter)
         selection_step.condition = _selection
         previous_step_id, step_id = step_id, random_string()

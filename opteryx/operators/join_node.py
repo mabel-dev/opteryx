@@ -74,14 +74,29 @@ class JoinNode(BasePlanNode):
             if not self._right_columns[0] in morsel.column_names:
                 self._right_columns, self._left_columns = self._left_columns, self._right_columns
 
-            # do the join
-            new_morsel = morsel.join(
-                right_table,
-                keys=self._right_columns,
-                right_keys=self._left_columns,
-                join_type=self._join_type,
-                coalesce_keys=self._using is not None,
-            )
+            try:
+                # do the join
+                new_morsel = morsel.join(
+                    right_table,
+                    keys=self._right_columns,
+                    right_keys=self._left_columns,
+                    join_type=self._join_type,
+                    coalesce_keys=self._using is not None,
+                )
+            except pyarrow.ArrowInvalid as err:
+                last_token = str(err).split(" ")[-1]
+                column = None
+                for col in left_node.columns:
+                    if last_token == col.identity:
+                        column = col.name
+                        break
+                for col in right_node.columns:
+                    if last_token == col.identity:
+                        column = col.name
+                        break
+                if column:
+                    raise pyarrow.ArrowInvalid(err.replace(last_token, column))
+                raise err
 
             # need to ensure we put the right column back if we need it
             if (

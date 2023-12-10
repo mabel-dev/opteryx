@@ -787,8 +787,16 @@ class BinderVisitor:
     def visit_show_columns(
         self, node: Node, context: BindingContext
     ) -> Tuple[Node, BindingContext]:
-        node.columns = []
         node.schema = context.schemas[node.relation]
+        node.columns = []
+        for schema_column in node.schema.columns:
+            column_reference = LogicalColumn(
+                node_type=NodeType.IDENTIFIER,  # column type
+                source_column=schema_column.name,  # the source column
+                source=node.relation,  # the source relation
+                schema_column=schema_column,
+            )
+            node.columns.append(column_reference)
         return node, context
 
     def visit_subquery(self, node: Node, context: BindingContext) -> Tuple[Node, BindingContext]:

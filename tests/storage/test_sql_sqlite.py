@@ -51,8 +51,6 @@ def test_sqlite_storage():
     assert results.stats.get("rows_read", 0) == 2, results.stats
 
 
-test_sqlite_storage()
-
 if __name__ == "__main__":  # pragma: no cover
     from tests.tools import run_tests
 

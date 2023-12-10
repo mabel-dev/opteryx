@@ -21,27 +21,48 @@ normalizes the data into the format for internal processing.
 import time
 from typing import Iterable
 
+import pyarrow
+from orso.schema import RelationSchema
+
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 
 
-def normalize_morsel(schema, morsel):
+def normalize_morsel(schema: RelationSchema, morsel: pyarrow.Table) -> pyarrow.Table:
+    if len(schema.columns) == 0:
+        one_column = pyarrow.array([1] * morsel.num_rows, type=pyarrow.int8())
+        morsel = morsel.append_column("*", one_column)
+        return morsel.select(["*"])
+
     # rename columns for internal use
     target_column_names = []
     # columns in the data but not in the schema, droppable
     droppable_columns = []
 
+    # find which columns to drop and which columns we already have
     for i, column in enumerate(morsel.column_names):
         column_name = schema.find_column(column)
         if column_name is None:
             droppable_columns.append(i)
-        target_column_names.append(str(column_name))
+        else:
+            target_column_names.append(str(column_name))
 
+    # remove from the end otherwise we'll remove the wrong columns after the first one
+    droppable_columns.reverse()
     for droppable in droppable_columns:
         morsel = morsel.remove_column(droppable)
 
+    # remane columns to the internal names (identities)
     morsel = morsel.rename_columns(target_column_names)
-    return morsel
+
+    # add columns we don't have
+    for column in schema.columns:
+        if column.identity not in target_column_names:
+            null_column = pyarrow.array([None] * morsel.num_rows)
+            morsel = morsel.append_column(column.identity, null_column)
+
+    # ensure the columns are in the right order
+    return morsel.select([col.identity for col in schema.columns])
 
 
 class ScannerNode(BasePlanNode):
@@ -82,7 +103,13 @@ class ScannerNode(BasePlanNode):
     def execute(self) -> Iterable:
         """Perform this step, time how long is spent doing work"""
         morsel = None
-        schema = self.parameters["schema"]
+        orso_schema = self.parameters["schema"]
+        orso_schema_cols = []
+        for col in orso_schema.columns:
+            if col.identity in [c.identity for c in self.columns]:
+                orso_schema_cols.append(col)
+        orso_schema.columns = orso_schema_cols
+        arrow_schema = None
         start_clock = time.monotonic_ns()
         reader = self.parameters["connector"].read_dataset(
             columns=self.columns, predicates=self.predicates
@@ -92,7 +119,12 @@ class ScannerNode(BasePlanNode):
             self.statistics.rows_read += morsel.num_rows
             self.statistics.bytes_processed += morsel.nbytes
             self.statistics.time_reading_blobs += time.monotonic_ns() - start_clock
-            yield normalize_morsel(schema, morsel)
+            morsel = normalize_morsel(orso_schema, morsel)
+            if arrow_schema:
+                yield morsel.cast(arrow_schema)
+            else:
+                arrow_schema = morsel.schema
+                yield morsel
             start_clock = time.monotonic_ns()
         if morsel:
             self.statistics.columns_read += morsel.num_columns
