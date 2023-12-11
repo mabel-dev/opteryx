@@ -47,7 +47,7 @@ elif dotenv is not None:  # pragma: no cover variables from `.env`")
     dotenv.load_dotenv(dotenv_path=_env_path)
     print(f"{datetime.datetime.now()} [LOADER] Loading `.env` file.")
 
-if os.environ.get("OPTERYX_DEBUG") is not None:
+if os.environ.get("OPTERYX_DEBUG") is not None:  # pragma: no cover
     from opteryx.debugging import OpteryxOrsoImportFinder
 
 from opteryx import config
@@ -95,7 +95,7 @@ def connect(*args, **kwargs):
     described in PEP0249 for Python Database API Specification v2.0.
     """
     # Check for deprecated 'cache' parameter
-    if "cache" in kwargs:
+    if "cache" in kwargs:  # pragma: no cover
         # Import the warnings module here to minimize dependencies
         import warnings
 

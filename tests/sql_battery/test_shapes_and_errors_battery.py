@@ -52,6 +52,7 @@ from opteryx.exceptions import (
     ColumnReferencedBeforeEvaluationError,
     DatasetNotFoundError,
     EmptyDatasetError,
+    FunctionNotFoundError,
     InconsistentSchemaError,
     IncompatibleTypesError,
     IncorrectTypeError,
@@ -77,6 +78,7 @@ STATEMENTS = [
         ("SELECT * FROM $astronauts", 357, 19, None),
         ("SELECT * FROM $no_table", 1, 1, None),
         ("SELECT * FROM sqlite.planets", 9, 20, None),
+        ("SELECT * FROM $variables", 41, 4, None),
 
         # Does the error tester work
         ("THIS IS NOT VALID SQL", None, None, SqlError),
@@ -803,6 +805,8 @@ STATEMENTS = [
         ("SELECT COALESCE(death_date, '2030-01-01') FROM $astronauts", 357, 1, None),
         ("SELECT * FROM $astronauts WHERE COALESCE(death_date, '2030-01-01') < '2000-01-01'", 30, 19, None),
 
+        ("SELECT TOUNT(*) FROM $planets", None, None, FunctionNotFoundError),
+
         ("SELECT SEARCH(name, 'al'), name FROM $satellites", 177, 2, None),
         ("SELECT name FROM $satellites WHERE SEARCH(name, 'al')", 18, 1, None),
         ("SELECT SEARCH(missions, 'Apollo 11'), missions FROM $astronauts", 357, 2, None),
@@ -844,7 +848,6 @@ STATEMENTS = [
         ("SELECT DATEDIFF('minutes', birth_date, '2022-07-07') FROM $astronauts", 357, 1, None),
         ("SELECT EXTRACT(DOW FROM birth_date) AS DOW, COUNT(*) FROM $astronauts GROUP BY EXTRACT(DOW FROM birth_date) ORDER BY COUNT(*) DESC", 7, 2, None),
 
-# fails on github but not locally
         ("SELECT * FROM $planets WITH(NO_PARTITION)", 9, 20, None),
         ("SELECT * FROM $planets WITH(NO_PUSH_PROJECTION)", 9, 20, None),
         ("SELECT * FROM $planets WITH(NO_PARTITION, NO_PUSH_PROJECTION)", 9, 20, None),
@@ -961,6 +964,7 @@ STATEMENTS = [
         ("SET @variable = 44; SET @var = 'name'; SHOW VARIABLES LIKE '@%ri%';", 1, 4, UnsupportedSyntaxError),
         ("SHOW PARAMETER disable_optimizer", 1, 2, None),
         ("SET disable_optimizer = true; SHOW PARAMETER disable_optimizer;", 1, 2, None),
+        ("SET disable_optimizer TO true; SHOW PARAMETER disable_optimizer;", 1, 2, None),
 
         ("SELECT id FROM $planets WHERE NOT NOT id > 3", 6, 1, None),
         ("SELECT id FROM $planets WHERE NOT NOT id < 3", 2, 1, None),
@@ -1080,6 +1084,15 @@ STATEMENTS = [
         ("SELECT * FROM $planets WHERE diameter > 10000 AND gravity BETWEEN 0.5 AND 2.0;", 0, 20, None),
         ("SELECT * FROM $planets WHERE diameter > 100 AND gravity BETWEEN 0.5 AND 2.0;", 1, 20, None),
 
+        ("SELECT * FROM $planets INNER JOIN $satellites ON $planets.name <> $satellites.name", 0, 28, UnsupportedSyntaxError),
+        ("SELECT * FROM $planets CROSS JOIN $satellites WHERE $planets.name != $satellites.name", 1593, 28, None),
+        ("SELECT * FROM $planets INNER JOIN $satellites WHERE $planets.name != $satellites.name", None, None, SqlError),
+        ("SELECT * FROM $planets INNER JOIN $satellites ON $planets.name != $satellites.name", 0, 28, UnsupportedSyntaxError),
+        ("SELECT a.name, b.name FROM sqlite.planets a JOIN sqlite.planets b ON a.numberOfMoons = b.numberOfMoons WHERE a.name <> b.name", 2, 2, None),
+
+        ("SELECT VARCHAR(birth_place) FROM $astronauts", 357, 1, None),
+        ("SELECT name FROM $astronauts WHERE GET(STRUCT(VARCHAR(birth_place)), 'state') = birth_place['state']", 357, 1, None),
+
         # 10-way join
         ("SELECT p1.name AS planet1_name, p2.name AS planet2_name, p3.name AS planet3_name, p4.name AS planet4_name, p5.name AS planet5_name, p6.name AS planet6_name, p7.name AS planet7_name, p8.name AS planet8_name, p9.name AS planet9_name, p10.name AS planet10_name, p1.diameter AS planet1_diameter, p2.gravity AS planet2_gravity, p3.orbitalPeriod AS planet3_orbitalPeriod, p4.numberOfMoons AS planet4_numberOfMoons, p5.meanTemperature AS planet5_meanTemperature FROM $planets p1 JOIN $planets p2 ON p1.id = p2.id JOIN $planets p3 ON p1.id = p3.id JOIN $planets p4 ON p1.id = p4.id JOIN $planets p5 ON p1.id = p5.id JOIN $planets p6 ON p1.id = p6.id JOIN $planets p7 ON p1.id = p7.id JOIN $planets p8 ON p1.id = p8.id JOIN $planets p9 ON p1.id = p9.id JOIN $planets p10 ON p1.id = p10.id WHERE p1.diameter > 10000 ORDER BY p1.name, p2.name, p3.name, p4.name, p5.name;", 6, 15, None),
 
@@ -1107,8 +1120,6 @@ STATEMENTS = [
         ("SELECT DATEDIFF('months', birth_date, '2022-07-07') FROM $astronauts", None, None, KeyError),
         ("SELECT DATEDIFF(MONTH, birth_date, '2022-07-07') FROM $astronauts", None, None, ColumnNotFoundError),
         ("SELECT DATEDIFF(MONTHS, birth_date, '2022-07-07') FROM $astronauts", None, None, ColumnNotFoundError),
-        # DISTINCT ON detects as a function call for function ON
-#        ("SELECT DISTINCT ON (name) name FROM $astronauts ORDER BY 1", None, None, UnsupportedSyntaxError),
         # SELECT EXCEPT isn't supported
         # https://towardsdatascience.com/4-bigquery-sql-shortcuts-that-can-simplify-your-queries-30f94666a046
         ("SELECT * EXCEPT (id) FROM $satellites", None, None, SqlError),

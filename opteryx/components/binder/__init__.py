@@ -65,23 +65,6 @@ from opteryx.third_party.travers import Graph
 from opteryx.virtual_datasets import derived
 
 
-def do_bind_phase(plan, connection=None, qid: str = None, common_table_expressions=None):
-    binder_visitor = BinderVisitor()
-    root_node = plan.get_exit_points()
-    context = {
-        "schemas": {"$derived": derived.schema()},
-        "qid": qid,
-        "connection": connection,
-        "relations": set(),
-    }
-    if len(root_node) > 1:
-        raise InvalidInternalStateError(
-            f"{qid} - logical plan has {len(root_node)} heads - this is an error"
-        )
-    plan, _ = binder_visitor.traverse(plan, root_node[0], context=context)
-    return plan
-
-
 def do_bind_phase(plan: Graph, connection=None, qid: str = None) -> Graph:
     """
     Execute the bind phase of the query engine.
@@ -108,4 +91,5 @@ def do_bind_phase(plan: Graph, connection=None, qid: str = None) -> Graph:
         )
 
     plan, _ = binder_visitor.traverse(plan, root_node[0], context=context)
+
     return plan

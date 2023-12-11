@@ -39,7 +39,7 @@ def print_dots(stop_event):
     """
     Prints three dots repeatedly until the stop_event is set.
     """
-    while not stop_event.is_set():
+    while not stop_event.is_set():  # pragma: no cover
         print(".", end="", flush=True)
         time.sleep(0.5)
         if not stop_event.is_set():

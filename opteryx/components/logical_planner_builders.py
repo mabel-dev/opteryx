@@ -251,10 +251,12 @@ def function(branch, alias: Optional[List[str]] = None, key=None):
     elif operators.is_aggregator(func):
         node_type = NodeType.AGGREGATOR
     else:  # pragma: no cover
+        from opteryx.exceptions import FunctionNotFoundError
+
         likely_match = suggest_alternative(func, operators.aggregators() + functions.functions())
         if likely_match is None:
             raise UnsupportedSyntaxError(f"Unknown function or aggregate '{func}'")
-        raise UnsupportedSyntaxError(
+        raise FunctionNotFoundError(
             f"Unknown function or aggregate '{func}'. Did you mean '{likely_match}'?"
         )
 

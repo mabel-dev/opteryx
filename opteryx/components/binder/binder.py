@@ -191,7 +191,9 @@ def locate_identifier(node: Node, context: "BindingContext") -> Tuple[Node, Dict
     return node, context
 
 
-def traversive_recursive_bind(node, context):
+def traversive_recursive_bind(
+    node: Node, context: "BindingContext"
+) -> Tuple[Node, "BindingContext"]:
     # First recurse and do this for all the sub parts of the evaluation plan
     if node.left:
         node.left, context = inner_binder(node.left, context)
@@ -236,15 +238,20 @@ def inner_binder(node: Node, context: Dict[str, Any]) -> Tuple[Node, Dict[str, A
     # If the node represents a calculated column, if we're seeing it again it's because it
     # has appeared earlier in the plan and in that case we don't need to recalcuate, we just
     # need to treat the result like an IDENTIFIER
-    # We discard columns not referenced, so this someonetimes holds the only reference to
+    # We discard columns not referenced, so this sometimes holds the only reference to
     # child columns, e.g. MAX(id), we may not have 'id' next time we see it, only MAX(id)
     column_name = node.query_column or format_expression(node, True)
     for schema in context.schemas.values():
         found_column = schema.find_column(column_name)
         # If the column exists in the schema, update node and context accordingly.
         if found_column:
+            found_identity = found_column.identity
+            # node, _ = traversive_recursive_bind(node, context)
+
             node.schema_column = found_column
             node.query_column = node.alias or column_name
+            node.fully_bound = False
+
             if isinstance(found_column, ConstantColumn):
                 node.node_type = NodeType.LITERAL
                 node.value = found_column.value
@@ -271,40 +278,15 @@ def inner_binder(node: Node, context: Dict[str, Any]) -> Tuple[Node, Dict[str, A
         node.query_column = node.alias or column_name
 
     elif not node_type == NodeType.SUBQUERY and not node.do_not_create_column:
-        schema_column = schemas["$derived"].find_column(column_name)
-
-        if schema_column:
-            schema_column = FlatColumn(
-                name=column_name,
-                aliases=[schema_column.aliases] if schema_column.aliases else None,
-                type=0,
-                identity=schema_column.identity,
-            )
-            schemas["$derived"].columns = [
-                col for col in schemas["$derived"].columns if col.identity != schema_column.identity
-            ]
-            schemas["$derived"].columns.append(schema_column)
-            node.schema_column = schema_column
-            node.query_column = node.alias or column_name
-            node.node_type = NodeType.EVALUATED
-
-            return node, context
-
-        elif node_type in (NodeType.FUNCTION, NodeType.AGGREGATOR):
+        if node_type in (NodeType.FUNCTION, NodeType.AGGREGATOR):
             # we're just going to bind the function into the node
             func = COMBINED_FUNCTIONS.get(node.value)
-            if not func:
-                # v1:
-                from opteryx.utils import suggest_alternative
-
-                suggest = suggest_alternative(node.value, COMBINED_FUNCTIONS.keys())
-                # v2: suggest = FUNCTIONS.suggest(node.value)
-                raise FunctionNotFoundError(function=node.value, suggestion=suggest)
 
             # we need to add this new column to the schema
             aliases = [node.alias] if node.alias else []
             result_type, fixed_function_result = fixed_value_function(node.value, context)
             if result_type:
+                # Some functions return constants, so return the constant
                 schema_column = ConstantColumn(
                     name=column_name,
                     aliases=aliases,

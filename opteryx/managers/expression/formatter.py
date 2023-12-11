@@ -6,7 +6,7 @@ from orso.tools import random_string
 from orso.types import OrsoTypes
 
 
-@dataclass
+@dataclass(init=False)
 class ExpressionColumn(FlatColumn):
     expression: Any = None
 

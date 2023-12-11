@@ -85,32 +85,39 @@ class PredicatePushdownStrategy(OptimizationStrategy):
                 # we may be able to rewrite as an inner join
                 remaining_predicates = []
                 for predicate in context.collected_predicates:
-                    if len(predicate.relations) == 2 and set(
-                        node.right_relation_names + node.left_relation_names
-                    ) == set(predicate.relations):
+                    if (
+                        len(predicate.relations) == 2
+                        and predicate.condition.value == "Eq"
+                        and set(node.right_relation_names + node.left_relation_names)
+                        == set(predicate.relations)
+                    ):
                         node.type = "inner"
                         node.on = _add_condition(node.on, predicate.condition)
                     else:
                         remaining_predicates.append(predicate)
 
-                node.left_columns, node.right_columns = extract_join_fields(
-                    node.on, node.left_relation_names, node.right_relation_names
-                )
+                if node.on:
+                    node.left_columns, node.right_columns = extract_join_fields(
+                        node.on, node.left_relation_names, node.right_relation_names
+                    )
 
-                mismatches = get_mismatched_condition_column_types(node.on)
-                if mismatches:
-                    from opteryx.exceptions import IncompatibleTypesError
+                    mismatches = get_mismatched_condition_column_types(node.on)
+                    if mismatches:
+                        from opteryx.exceptions import IncompatibleTypesError
 
-                    raise IncompatibleTypesError(**mismatches)
-                node.columns = get_all_nodes_of_type(node.on, (NodeType.IDENTIFIER,))
-                context.collected_predicates = remaining_predicates
+                        raise IncompatibleTypesError(**mismatches)
+                    node.columns = get_all_nodes_of_type(node.on, (NodeType.IDENTIFIER,))
+                    context.collected_predicates = remaining_predicates
 
             for predicate in context.collected_predicates:
                 remaining_predicates = []
                 for predicate in context.collected_predicates:
-                    if len(predicate.relations) == 2 and set(
-                        node.right_relation_names + node.left_relation_names
-                    ) == set(predicate.relations):
+                    if (
+                        len(predicate.relations) == 2
+                        and predicate.condition.value == "Eq"
+                        and set(node.right_relation_names + node.left_relation_names)
+                        == set(predicate.relations)
+                    ):
                         node.condition = _add_condition(node.condition, predicate)
                     else:
                         remaining_predicates.append(predicate)
