@@ -57,19 +57,32 @@ def _get(value, item):
         return None
 
 
-VECTORIZED_CASTERS = {
-    "BOOLEAN": "bool",
-    "DOUBLE": "float64",
-    "INTEGER": "int64",
-    "DECIMAL": pyarrow.decimal128(14),
-    "VARCHAR": "string",
-    "TIMESTAMP": pyarrow.timestamp("us"),
-    "DATE": pyarrow.date32(),
-}
+def cast_varchar(arr):
+    if len(arr) > 0:
+        if all(i is None or type(i) == dict for i in arr):
+            return [orjson.dumps(n).decode() if n is not None else None for n in arr]
+    return compute.cast(arr, "string")
 
 
 def fixed_value_function(function, context):
     from orso.types import OrsoTypes
+
+    if function not in {
+        "CONNECTION_ID",
+        "CURRENT_DATE",
+        "CURRENT_TIME",
+        "DATABASE",
+        "E",
+        "NOW",
+        "PHI",
+        "PI",
+        "TODAY",
+        "USER",
+        "UTC_TIMESTAMP",
+        "VERSION",
+        "YESTERDAY",
+    }:
+        return None, None
 
     if function in ("VERSION",):
         return OrsoTypes.VARCHAR, opteryx.__version__
@@ -96,14 +109,6 @@ def fixed_value_function(function, context):
         # eulers number
         return OrsoTypes.DOUBLE, 2.71828182845904523536028747135266249775724709369995
     return None, None
-
-
-def cast(_type):
-    """cast a column to a specified type"""
-    if _type in VECTORIZED_CASTERS:
-        return lambda a: compute.cast(a, VECTORIZED_CASTERS[_type])
-
-    raise FunctionNotFoundError(message=f"Internal function to cast values to `{_type}` not found.")
 
 
 def safe(func, *parms):
@@ -223,18 +228,18 @@ FUNCTIONS = {
     "USER": lambda x: None, # *
 
     # TYPE CONVERSION
-    "TIMESTAMP": cast("TIMESTAMP"),
-    "BOOLEAN": cast("BOOLEAN"),
-    "NUMERIC": cast("DOUBLE"),
-    "INTEGER": cast("INTEGER"),
-    "DOUBLE": cast("DOUBLE"),
-    "FLOAT": cast("DOUBLE"),
-    "DECIMAL": cast("DECIMAL"),
-    "VARCHAR": cast("VARCHAR"),
-    "STRING": cast("VARCHAR"),  # alias for VARCHAR
-    "STR": cast("VARCHAR"),
+    "TIMESTAMP": lambda x: compute.cast(x, pyarrow.timestamp("us")),
+    "BOOLEAN": lambda x: compute.cast(x, "bool"),
+    "NUMERIC": lambda x: compute.cast(x, "float64"),
+    "INTEGER": lambda x: compute.cast(x, "int64"),
+    "DOUBLE": lambda x: compute.cast(x, "float64"),
+    "FLOAT": lambda x: compute.cast(x, "float64"),
+    "DECIMAL": lambda x: compute.cast(x, pyarrow.decimal128(14)),
+    "VARCHAR": cast_varchar,
+    "STRING": cast_varchar,
+    "STR": cast_varchar,
     "STRUCT": _iterate_single_parameter(lambda x: orjson.loads(str(x))),
-    "DATE":  cast("DATE"),
+    "DATE":  lambda x: compute.cast(x, pyarrow.date32()),
     "TRY_TIMESTAMP": try_cast("TIMESTAMP"),
     "TRY_BOOLEAN": try_cast("BOOLEAN"),
     "TRY_NUMERIC": try_cast("DOUBLE"),

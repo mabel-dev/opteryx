@@ -19,9 +19,12 @@ b:
 
 test:
 	clear
+	export MANUAL_TEST=1
 	python -m pytest
 
 coverage:
+	clear
+	export MANUAL_TEST=1
 	python -m coverage run -m pytest 
 	python -m coverage report --include=opteryx/** -m
 

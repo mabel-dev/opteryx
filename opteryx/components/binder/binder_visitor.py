@@ -573,6 +573,12 @@ class BinderVisitor:
         if node.on:
             # All except CROSS JOINs have been mapped to have an ON condition
             # The JOIN operator only support ON conditions.
+            comparisons = get_all_nodes_of_type(node.on, (NodeType.COMPARISON_OPERATOR,))
+            if not all(com.value == "Eq" for com in comparisons):
+                from opteryx.exceptions import UnsupportedSyntaxError
+
+                raise UnsupportedSyntaxError("Only JOINs with equals comparisons supported")
+
             node.on, context = inner_binder(node.on, context)
             node.left_columns, node.right_columns = extract_join_fields(
                 node.on, node.left_relation_names, node.right_relation_names
@@ -584,6 +590,8 @@ class BinderVisitor:
                 raise IncompatibleTypesError(**mismatches)
 
             if get_all_nodes_of_type(node.on, (NodeType.LITERAL,)):
+                from opteryx.exceptions import UnsupportedSyntaxError
+
                 raise UnsupportedSyntaxError(
                     "JOIN conditions cannot include literal constant values."
                 )
@@ -650,6 +658,11 @@ class BinderVisitor:
                     [schema.all_column_names() for schema in context.schemas.values()],
                 )
                 raise ColumnNotFoundError(column=node.value, suggestion=suggestion)
+
+        if node.type == "inner" and node.on is None:
+            from opteryx.exceptions import SqlError
+
+            raise SqlError("INNER and NATURAL joins must have a either an ON or USING condition.")
 
         return node, context
 
