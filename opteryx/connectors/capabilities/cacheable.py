@@ -15,10 +15,6 @@ from functools import wraps
 
 from orso.cityhash import CityHash64
 
-from opteryx.shared import BufferPool
-
-buffer_pool = BufferPool()
-
 __all__ = ("Cacheable", "read_thru_cache")
 
 
@@ -38,18 +34,26 @@ class Cacheable:
 
 def read_thru_cache(func):
     """
-    This implements a read-thru cache which wraps blob access routines.
+    Decorator to implement a read-thru cache.
 
     It intercepts requests to read blobs and first looks them up in the in-memory
-    cache (the BufferPool) and optionally looks them up in a secondary cache -
-    expected to be something like MemcacheD or Redis.
-
-    This allows Connectors which access file/blob storage to not need to implement
-    anything to take advantage of the caching, the binder adds this as a wrapper.
+    cache (BufferPool) and optionally in a secondary cache (like MemcacheD or Redis).
     """
 
+    # Capture the max_evictions value at decoration time
+    from opteryx import get_cache_manager
+    from opteryx.shared import BufferPool
+
+    cache_manager = get_cache_manager()
+    max_evictions = cache_manager.max_evictions_per_query
+
+    buffer_pool = BufferPool()
+
     @wraps(func)
-    def wrapper(*args, statistics, **kwargs):
+    def wrapper(*args, **kwargs):
+        nonlocal max_evictions
+
+        statistics = kwargs.get("statistics")
         blob_name = kwargs["blob_name"]
         key = hex(CityHash64(blob_name))
 
@@ -57,19 +61,25 @@ def read_thru_cache(func):
         result = buffer_pool.get(key)
 
         if result is not None:
-            statistics.cache_hits += 1
+            if statistics:
+                statistics.cache_hits += 1
             return result
 
         # Key is not in cache, execute the function and store the result in cache
         result = func(*args, **kwargs)
 
         # Write the result to cache
-        if len(result) < buffer_pool.max_cacheable_item_size:
-            buffer_pool.set(key, result)
-        else:
-            statistics.cache_oversize += 1
+        if max_evictions:
+            if len(result) < buffer_pool.max_cacheable_item_size:
+                evicted = buffer_pool.set(key, result)
+                if evicted:
+                    statistics.cache_evictions += 1
+                    max_evictions -= 1
+            elif statistics:
+                statistics.cache_oversize += 1
 
-        statistics.cache_misses += 1
+        if statistics:
+            statistics.cache_misses += 1
 
         return result
 

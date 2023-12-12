@@ -53,8 +53,6 @@ if os.environ.get("OPTERYX_DEBUG") is not None:  # pragma: no cover
 from opteryx import config
 from opteryx.managers.cache.cache_manager import CacheManager  # isort:skip
 
-cache_manager = CacheManager(cache_backend=None)
-
 from opteryx.connection import Connection
 from opteryx.connectors import register_arrow
 from opteryx.connectors import register_df
@@ -184,3 +182,25 @@ if not config.DISABLE_HIGH_PRIORITY and hasattr(os, "nice"):  # pragma: no cover
 # Log resource usage
 if config.ENABLE_RESOURCE_LOGGING:  # pragma: no cover
     from opteryx.utils.resource_monitor import ResourceMonitor
+
+
+_cache_manager = CacheManager(cache_backend=None)
+
+
+def get_cache_manager():
+    """Function to get the current cache manager."""
+    return _cache_manager
+
+
+def set_cache_manager(new_cache_manager):
+    """Function to set a new cache manager and trigger custom functionality."""
+    global _cache_manager
+    _cache_manager = new_cache_manager
+
+    # if we change the cache config, reset the BufferPool
+    from opteryx.shared import BufferPool
+
+    BufferPool.reset()
+
+
+cache_manager = get_cache_manager()

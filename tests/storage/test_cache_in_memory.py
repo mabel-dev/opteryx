@@ -16,7 +16,7 @@ def test_in_memory_cache():
     _buffer = BufferPool()
     _buffer.reset(True)
 
-    opteryx.cache_manager = CacheManager(cache_backend=MemoryCache(size=5))
+    opteryx.set_cache_manager(CacheManager(cache_backend=MemoryCache(size=5)))
 
     # read the data once, this should populate the cache
     conn = opteryx.connect()
@@ -56,7 +56,7 @@ def test_cache_in_subqueries():
     _buffer = BufferPool()
     _buffer.reset(True)
 
-    opteryx.cache_manager = CacheManager(cache_backend=MemoryCache(size=5))
+    opteryx.set_cache_manager(CacheManager(cache_backend=MemoryCache(size=5)))
 
     # read the data once, this should populate the cache
     conn = opteryx.connect()

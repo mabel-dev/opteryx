@@ -12,6 +12,7 @@ pycln
 
 pandas
 pymemcache
+redis
 requests
 rich
 zstandard

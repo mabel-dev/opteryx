@@ -12,12 +12,12 @@ from tests.tools import is_arm, is_mac, is_windows, skip_if
 
 
 @skip_if(is_arm() or is_windows() or is_mac())
-def test_memcached_cache():
+def test_redis_cache():
     import opteryx
-    from opteryx.managers.cache import MemcachedCache
+    from opteryx.managers.cache import RedisCache
     from opteryx import CacheManager
 
-    cache = MemcachedCache(server="localhost:11211")
+    cache = RedisCache()
     opteryx.set_cache_manager(
         CacheManager(cache_backend=cache, max_local_buffer_capacity=1, max_evictions_per_query=4)
     )

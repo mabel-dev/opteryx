@@ -25,6 +25,13 @@ the .set call to determine if an item was evicted from the cache.
 
 This can also be used as the index for an external cache (for example in plasma), where the set()
 returns the evicted item which the calling function can then evict from the external cache.
+
+This is a variation of LRU-K, where an item has fewer than K accesses, it is not evicted unless
+all items have fewer than K accesses. Not being evicted adds an access to age out single-hit items
+from the cache. The resulting cache provides opportunity for novel items to prove their value before
+being evicted.
+
+If n+1 items are put into the cache, it acts like a FIFO, 
 """
 
 import heapq
@@ -45,47 +52,57 @@ class LRU2:
         self.evictions = 0
 
     def get(self, key):
-        # Check if the key is in the cache
         if key in self.cache:
             value = self.cache[key]
-            self.hits += 1  # Increment the hit count
+            self.hits += 1
+            self._update_access_history(key)
         else:
             value = None
-            self.misses += 1  # Increment the miss count
-
-        # Update the access history for the key
-        if key in self.access_history:
-            # Remove and append the access time to simulate recent access
-            old_entry = self.access_history[key].pop(0)
-            self.access_history[key].append((time.monotonic_ns(), key))
-            # Remove the old access time from the set
-            self.removed.add(old_entry)
-
-        # return the value
+            self.misses += 1
         return value
 
     def set(self, key, value):
-        # If the key is already in the cache, we need to first remove the old entry
         if key in self.cache:
+            self.cache[key] = value  # Update the value
+            self._update_access_history(key)
+        else:
+            self.cache[key] = value
+            self._update_access_history(key)
+            if len(self.cache) > self.size:
+                return self._evict()
+        return None
+
+    def _update_access_history(self, key):
+        access_time = time.monotonic_ns()
+        if len(self.access_history[key]) == self.k:
             old_entry = self.access_history[key].pop(0)
             self.removed.add(old_entry)
-        self.cache[key] = value
-        access_time = time.monotonic_ns()
-        self.access_history[key].append(access_time)
+        self.access_history[key].append((access_time, key))
         heapq.heappush(self.heap, (access_time, key))
-        while len(self.cache) > self.size:
-            return self._evict()
 
     def _evict(self):
         while self.heap:
             oldest_access_time, oldest_key = heapq.heappop(self.heap)
-            if (oldest_access_time, oldest_key) not in self.removed:
-                self.cache.pop(oldest_key)
-                self.access_history.pop(oldest_key)
-                self.evictions += 1
-                break
-            self.removed.remove((oldest_access_time, oldest_key))
+            if (oldest_access_time, oldest_key) in self.removed:
+                self.removed.remove((oldest_access_time, oldest_key))
+                continue
+
+            if len(self.access_history[oldest_key]) == 1:
+                # Synthetic access to give a grace period
+                new_access_time = time.monotonic_ns()
+                self.access_history[oldest_key].append((new_access_time, oldest_key))
+                heapq.heappush(self.heap, (new_access_time, oldest_key))
+                continue
+
+            # Evict the key with the oldest k-th access
+            if oldest_key not in self.cache:
+                continue
+            self.cache.pop(oldest_key)
+            self.access_history.pop(oldest_key)
+            self.evictions += 1
             return oldest_key
+
+        return None  # No item was evicted
 
     @property
     def keys(self):

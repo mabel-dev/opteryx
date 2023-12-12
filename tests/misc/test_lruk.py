@@ -62,7 +62,7 @@ def test_lru2():
     cache.set("key2", "value2")
 
     # make sure they are in cache
-    assert cache.get("key1") == "value1"
+    assert cache.get("key1") == "value1", cache.get("key1")
     assert cache.get("key2") == "value2"
 
     # add another item - this should trigger an eviction of the least recently used item
@@ -184,6 +184,147 @@ def test_handle_non_string_keys():
     assert lru.get(1) == "a"
     assert lru.get(2) == "b"
     assert lru.get(3) == "c"
+
+
+def test_evict_as_last_resort():
+    """
+    we only evict items with less than K accesses if we need to evict someting
+    """
+    lru = LRU2(size=3)
+
+    for item in ("a", "b", "c", "d", "e", "f"):
+        lru.set(item, item)
+
+    # Check the values
+    assert lru.get("a") is None
+    assert lru.get("b") is None
+    assert lru.get("c") is None
+    assert lru.get("d") == "d"
+    assert lru.get("e") == "e"
+    assert lru.get("f") == "f"
+
+
+def test_lru2_eviction_based_on_penultimate_access():
+    lru = LRU2(k=2, size=3)
+
+    # Add 3 items to the cache
+    lru.set("a", 1)
+    lru.set("b", 2)
+    lru.set("c", 3)
+
+    # Access "a" and "b" twice to update their access history
+    lru.get("a")  # First access for "a"
+    lru.get("b")  # First access for "b"
+    lru.get("a")  # Second access for "a"
+    lru.get("b")  # Second access for "b"
+
+    # Add another item; "a" should be evicted since its penultimate access is the oldest
+    # Note it's not "c" that is evicted
+    evicted = lru.set("d", 4)
+
+    # Verify that "c" was evicted and "a", "b", and "d" are in the cache
+    assert evicted == "a", evicted
+    assert lru.get("a") == None
+    assert lru.get("b") == 2
+    assert lru.get("c") is 3
+    assert lru.get("d") == 4
+
+
+def test_lru4_eviction_based_on_fourth_last_access():
+    lru = LRU2(k=4, size=5)
+
+    # Add 5 items to the cache
+    lru.set("a", 1)
+    lru.set("b", 2)
+    lru.set("c", 3)
+    lru.set("d", 4)
+    lru.set("e", 5)
+
+    # Access "a", "b", "c", and "d" multiple times to update their access history
+    for _ in range(3):
+        lru.get("a")
+        lru.get("b")
+        lru.get("c")
+        lru.get("d")
+
+    # Fourth access for "a" and "b", third for "c" and "d", and "e" is still at its first access
+    lru.get("a")
+    lru.get("b")
+
+    # Add another item; "c" should be evicted as its fourth-most recent access is the oldest
+    # This is NOT evicted "e", it only has one access at this point
+    evicted = lru.set("f", 6)
+
+    # Verify that "c" was evicted and the others are in the cache
+    assert evicted == "c"
+    assert lru.get("a") == 1
+    assert lru.get("b") == 2
+    assert lru.get("c") is None
+    assert lru.get("d") == 4
+    assert lru.get("e") == 5
+    assert lru.get("f") == 6
+
+
+def test_lru4_synthetic_access_on_eviction():
+    lru = LRU2(k=4, size=5)
+
+    # Add 5 items to the cache
+    lru.set("a", "a")
+    lru.set("b", "b")
+    lru.set("c", "c")
+    lru.set("d", "d")
+    lru.set("e", "e")
+
+    # Access "a", "b", "c", and "d" three times each
+    for _ in range(3):
+        lru.get("a")
+        lru.get("b")
+        lru.get("c")
+        lru.get("d")
+
+    # "e" has only one access at this point, "a" has the oldest fourth access
+    # Add another item, triggering eviction check, evicting "a"
+    # "e" isn't evicted yet as it's only have one access, but we add a "synthetic" access
+    # so now it looks like it's had two accesses
+    evicted = lru.set("f", "f")
+    assert evicted == "a"
+    assert lru.get("e") == "e"
+    # Verify that no other item was evicted
+    assert all(lru.get(key) is not None for key in ["b", "c", "d", "e"])
+
+    # Add items and check items, triggering eviction checks and access updates
+    # we're accessing "b" often, and never accessing "e"
+    for item in ("b", "c", "b", "d", "b", "f", "b", "g", "b", "h", "b", "i", "b", "j"):
+        lru.set(item, item)
+        lru.get(item)
+
+    # Now "e" should be evicted as it would have reached 4 accesses including synthetic ones
+    assert lru.get("e") is None
+    # "b" shouldn't be evicted because it's accessed often and never gets to the bottom
+    # of the list to evict
+    assert lru.get("b") == "b"
+
+
+def test_fifo():
+    """
+    we only evict items with less than K accesses if we need to evict someting
+    """
+    lru = LRU2(size=2)
+
+    for item in ("a", "b", "c"):
+        lru.set(item, item)
+    lru.get("b")
+    lru.get("b")
+    for item in ("d", "e", "f"):
+        lru.set(item, item)
+
+    # Check the values
+    assert lru.get("a") is None
+    assert lru.get("b") is None
+    assert lru.get("c") is None
+    assert lru.get("d") is None
+    assert lru.get("e") == "e"
+    assert lru.get("f") == "f"
 
 
 if __name__ == "__main__":  # pragma: no cover

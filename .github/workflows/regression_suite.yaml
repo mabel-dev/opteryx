@@ -58,6 +58,7 @@ jobs:
           MONGODB_DATABASE: opteryx
           COCKROACH_USER: '${{ secrets.COCKROACH_USER }}'
           COCKROACH_PASSWORD: '${{ secrets.COCKROACH_PASSWORD }}'
+          REDIS_CONNECTION: '${{ secrets.REDIS_CONNECTION }}'
 
       - name: Check Coverage
         run: python -m coverage report --include=opteryx/** --fail-under=80 -m
