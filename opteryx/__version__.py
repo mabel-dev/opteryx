@@ -1,3 +1,4 @@
+__build__ = "notset"
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -16,12 +17,6 @@ Store the version here so:
 2) we can import it in setup.py for the same reason
 """
 from enum import Enum
-
-__build__ = "notset"
-with open(f"__build__.py", mode="r") as v:
-    build = v.read()
-exec(build)  # nosec
-
 
 class VersionStatus(Enum):
     ALPHA = "alpha"
