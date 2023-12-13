@@ -19,7 +19,7 @@ def test_memcached_cache():
 
     cache = MemcachedCache(servers="localhost:11211")
     opteryx.set_cache_manager(
-        CacheManager(cache_backend=cache, max_local_buffer_capacity=1, max_evictions_per_query=1)
+        CacheManager(cache_backend=cache, max_local_buffer_capacity=1, max_evictions_per_query=4)
     )
 
     # read the data five times, this should populate the cache if it hasn't already
