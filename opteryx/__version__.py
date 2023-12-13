@@ -16,7 +16,8 @@ Store the version here so:
 1) we don't load dependencies by storing it in __init__.py
 2) we can import it in setup.py for the same reason
 """
-from enum import Enum
+from enum import Enum  # isort: skip
+
 
 class VersionStatus(Enum):
     ALPHA = "alpha"

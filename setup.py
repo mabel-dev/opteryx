@@ -27,11 +27,6 @@ with open(f"{LIBRARY}/__version__.py", mode="r") as v:
     vers = v.read()
 exec(vers)  # nosec
 
-__build__ = "notset"
-with open(f"{LIBRARY}/__build__.py", mode="r") as v:
-    build = v.read()
-exec(build)  # nosec
-
 __author__ = "notset"
 with open(f"{LIBRARY}/__author__.py", mode="r") as v:
     author = v.read()
