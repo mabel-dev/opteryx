@@ -1,5 +1,5 @@
 """
-Test the memcached cache by executing the same query twice. The first time we ensure
+Test the memcached cache by executing the same query repwtedly. The first time we ensure
 the files are in the cache (they may or may not be) for the second time to definitely 
 'hit' the cache.
 """

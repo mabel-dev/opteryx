@@ -32,13 +32,6 @@ jobs:
           python -m pip install --upgrade -r $GITHUB_WORKSPACE/tests/requirements.txt
           python setup.py build_ext --inplace
 
-      - name: "Start Memcached Instance"
-        run: |
-            docker run -d --name my-memcached \
-                       -p 11211:11211 \
-                       memcached \
-                       -m 16
-
       - name: "Authenticate to Google Cloud"
         uses: google-github-actions/auth@v1
         with:
