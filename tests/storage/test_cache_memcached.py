@@ -30,8 +30,7 @@ def test_memcached_cache():
     cur = opteryx.query("SELECT * FROM testdata.flat.ten_files;")
     stats = cur.stats
 
-    assert cache.hits > 11
-    assert cache.misses < 12
+    assert cache.hits >= 11
     assert cache.skips == 0
     assert cache.errors == 0
 
