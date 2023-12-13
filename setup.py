@@ -30,12 +30,12 @@ exec(vers)  # nosec
 __build__ = "notset"
 with open(f"{LIBRARY}/__build__.py", mode="r") as v:
     build = v.read()
-exec(vers)  # nosec
+exec(build)  # nosec
 
 __author__ = "notset"
 with open(f"{LIBRARY}/__author__.py", mode="r") as v:
     author = v.read()
-exec(vers)  # nosec
+exec(author)  # nosec
 
 with open("README.md", mode="r", encoding="UTF8") as rm:
     long_description = rm.read()
