@@ -57,15 +57,24 @@ class RedisCache(BaseKeyValueStore):
                 the value will be obtained from the OS environment.
         """
         self._server = _redis_server(**kwargs)
-        self._consecutive_failures: int = 0
+        if self._server is None:
+            self._consecutive_failures: int = MAXIMUM_CONSECUTIVE_FAILURES
+        else:
+            self._consecutive_failures: int = 0
+        self.hits: int = 0
+        self.misses: int = 0
+        self.skips: int = 0
+        self.errors: int = 0
 
     def get(self, key: str) -> Union[bytes, None]:
         if self._consecutive_failures >= MAXIMUM_CONSECUTIVE_FAILURES:
+            self.skips += 1
             return None
         try:
             response = self._server.get(key)
             self._consecutive_failures = 0
             if response:
+                self.hits += 1
                 return bytes(response)
         except Exception as err:
             self._consecutive_failures += 1
@@ -75,6 +84,11 @@ class RedisCache(BaseKeyValueStore):
                 print(
                     f"{datetime.datetime.now()} [CACHE] Disabling remote Redis cache due to persistent errors ({err})."
                 )
+            self.errors += 1
+            return None
+
+        self.misses += 1
+        return None
 
     def set(self, key: str, value: bytes) -> None:
         if self._consecutive_failures < MAXIMUM_CONSECUTIVE_FAILURES:
