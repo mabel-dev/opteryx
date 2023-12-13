@@ -17,7 +17,10 @@ Store the version here so:
 """
 from enum import Enum
 
-from .__build__ import __build__
+__build__ = "notset"
+with open(f"__build__.py", mode="r") as v:
+    build = v.read()
+exec(build)  # nosec
 
 
 class VersionStatus(Enum):
