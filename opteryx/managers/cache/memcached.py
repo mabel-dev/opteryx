@@ -32,33 +32,17 @@ def _memcached_server(**kwargs):
     Handling connecting to Memcached
     """
     # the server must be set in the environment
-    memcached_config = kwargs.get("server", os.environ.get("MEMCACHED_SERVER"))
-    if memcached_config is None:
-        return None
-
-    # expect either SERVER or SERVER:PORT entries
-    memcached_config = memcached_config.split(":")
-    if len(memcached_config) == 1:
-        # the default memcached port
-        memcached_config.append(11211)
-
-    # we need the server and the port
-    if len(memcached_config) != 2:
-        return None
+    memcached_servers = kwargs.get("servers", os.environ.get("MEMCACHED_SERVERS", "")).split(",")
+    memcached_username = kwargs.get("username", os.environ.get("MEMCACHED_USERNAME", ""))
+    memcached_password = kwargs.get("password", os.environ.get("MEMCACHED_PASSWORD", ""))
 
     try:
-        from pymemcache.client import base
+        import bmemcached
     except ImportError as err:
         raise MissingDependencyError(err.name) from err
 
-    # wait 1 second to try to connect, it's not worthwhile as a cache if it's slow
-    return base.Client(
-        (
-            memcached_config[0],
-            memcached_config[1],
-        ),
-        connect_timeout=1,
-        timeout=1,
+    return bmemcached.Client(
+        memcached_servers, username=memcached_username, password=memcached_password
     )
 
 
