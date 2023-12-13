@@ -1,7 +1,7 @@
 name: Count Action Executions
 
 on:
-  pull
+  push
 
 jobs:
   count_executions:
