@@ -15,6 +15,22 @@ Store the version here so:
 1) we don't load dependencies by storing it in __init__.py
 2) we can import it in setup.py for the same reason
 """
+from enum import Enum
 
-# __version__ = "0.4.0-alpha.6"
-__version__ = "0.12.0-beta.12"
+from .__build__ import __build__
+
+
+class VersionStatus(Enum):
+    ALPHA = "alpha"
+    BETA = "beta"
+    RELEASE = "release"
+
+
+_major = 0
+_minor = 12
+_revision = 0
+_status = VersionStatus.BETA
+
+__version__ = f"{_major}.{_minor}.{_revision}" + (
+    f"-{_status.value}.{__build__}" if _status != VersionStatus.RELEASE else ""
+)
