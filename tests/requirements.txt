@@ -11,7 +11,8 @@ isort
 pycln
 
 pandas
-pymemcache
+python-binary-memcached
+redis
 requests
 rich
 zstandard

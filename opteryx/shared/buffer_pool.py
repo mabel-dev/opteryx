@@ -93,8 +93,22 @@ class BufferPool(_BufferPool):
 
     def __new__(cls):
         if cls._instance is None:
-            # Import here to avoid circular imports
-            from opteryx import cache_manager
-
-            cls._instance = _BufferPool(cache_manager)
+            cls._instance = cls._create_instance()
         return cls._instance
+
+    @classmethod
+    def _create_instance(cls):
+        # Import here to avoid circular imports
+        from opteryx import get_cache_manager
+
+        cache_manager = get_cache_manager()
+
+        return _BufferPool(cache_manager)
+
+    @classmethod
+    def reset(cls):
+        """
+        Reset the BufferPool singleton instance. This is useful when the configuration changes.
+        """
+        cls._instance = None
+        cls._instance = cls._create_instance()

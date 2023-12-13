@@ -10,7 +10,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-This implements an interface to Memcached
+This implements an interface to REDIS
 
 If we have 10 failures in a row, stop trying to use the cache.
 """
@@ -27,35 +27,24 @@ MAXIMUM_CONSECUTIVE_FAILURES: int = 10
 
 
 @single_item_cache
-def _memcached_server(**kwargs):
+def _redis_server(**kwargs):
     """
-    Handling connecting to Memcached
+    Handling connecting to REDIS
     """
     # the server must be set in the environment
-    memcached_servers = kwargs.get("servers", os.environ.get("MEMCACHED_SERVERS", "")).split(",")
-    memcached_username = kwargs.get("username", os.environ.get("MEMCACHED_USERNAME", ""))
-    memcached_password = kwargs.get("password", os.environ.get("MEMCACHED_PASSWORD", ""))
+    redis_config = kwargs.get("server", os.environ.get("REDIS_CONNECTION"))
+    if redis_config is None:
+        return None
 
     try:
-        import bmemcached
+        import redis
     except ImportError as err:
         raise MissingDependencyError(err.name) from err
 
-    try:
-        cache = bmemcached.Client(
-            memcached_servers,
-            username=memcached_username,
-            password=memcached_password,
-            socket_timeout=1,
-        )
-    except Exception as err:
-        print("[CACHE] Unable to create remote cache", err)
-        cache = None
-
-    return cache
+    return redis.from_url(redis_config)
 
 
-class MemcachedCache(BaseKeyValueStore):
+class RedisCache(BaseKeyValueStore):
     """
     Cache object
     """
@@ -63,11 +52,11 @@ class MemcachedCache(BaseKeyValueStore):
     def __init__(self, **kwargs):
         """
         Parameters:
-            servers: string (optional)
+            server: string (optional)
                 Sets the memcached server and port (server:port). If not provided
                 the value will be obtained from the OS environment.
         """
-        self._server = _memcached_server(**kwargs)
+        self._server = _redis_server(**kwargs)
         if self._server is None:
             self._consecutive_failures: int = MAXIMUM_CONSECUTIVE_FAILURES
         else:
@@ -93,7 +82,7 @@ class MemcachedCache(BaseKeyValueStore):
                 import datetime
 
                 print(
-                    f"{datetime.datetime.now()} [CACHE] Disabling remote Memcached cache due to persistent errors ({err})."
+                    f"{datetime.datetime.now()} [CACHE] Disabling remote Redis cache due to persistent errors ({err})."
                 )
             self.errors += 1
             return None

@@ -10,13 +10,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-This implements an in-memory cache.
+This implements an in-memory cache - this is mainly useful for testing as this
+uses the exact same class as the buffer pool, so if you wanted a larger in memory
+cache, one would just have a larger buffer pool.
 
-We use an LRU-K(2) to maintain the size of the cache, this is a variation of the naive
-LRU algorithm.
-
-We're using a dictionary and moving items to the top of the dictionary when it's
-accessed. This relies on Python dictionaries being ordered.
+We use an modified LRU-K(2) to maintain the size of the cache.
 """
 
 from typing import Iterable
