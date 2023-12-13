@@ -42,7 +42,7 @@ def _memcached_server(**kwargs):
         raise MissingDependencyError(err.name) from err
 
     return bmemcached.Client(
-        memcached_servers, username=memcached_username, password=memcached_password
+        memcached_servers, username=memcached_username, password=memcached_password, socket_timeout=1
     )
 
 
@@ -54,7 +54,7 @@ class MemcachedCache(BaseKeyValueStore):
     def __init__(self, **kwargs):
         """
         Parameters:
-            server: string (optional)
+            servers: string (optional)
                 Sets the memcached server and port (server:port). If not provided
                 the value will be obtained from the OS environment.
         """
