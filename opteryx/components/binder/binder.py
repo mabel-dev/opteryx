@@ -308,6 +308,16 @@ def inner_binder(node: Node, context: Dict[str, Any]) -> Tuple[Node, Dict[str, A
             node.query_column = node.alias or column_name
 
         else:
+            from opteryx.components.binder.binder_visitor import (
+                get_mismatched_condition_column_types,
+            )
+
+            mismatches = get_mismatched_condition_column_types(node, relaxed_numeric=True)
+            if mismatches:
+                from opteryx.exceptions import IncompatibleTypesError
+
+                raise IncompatibleTypesError(**mismatches)
+
             schema_column = ExpressionColumn(
                 name=column_name,
                 aliases=[node.alias] if node.alias else [],

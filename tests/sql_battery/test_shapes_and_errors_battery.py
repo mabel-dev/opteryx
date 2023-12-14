@@ -1089,6 +1089,8 @@ STATEMENTS = [
         ("SELECT * FROM $planets INNER JOIN $satellites WHERE $planets.name != $satellites.name", None, None, SqlError),
         ("SELECT * FROM $planets INNER JOIN $satellites ON $planets.name != $satellites.name", 0, 28, UnsupportedSyntaxError),
         ("SELECT a.name, b.name FROM sqlite.planets a JOIN sqlite.planets b ON a.numberOfMoons = b.numberOfMoons WHERE a.name <> b.name", 2, 2, None),
+        ("SELECT * FROM $planets INNER JOIN $satellites ON INTEGER($planets.id) = INTEGER($satellites.planetId)", None, None, UnsupportedSyntaxError),
+        ("SELECT alma_mater LIKE '%a%' FROM $astronauts", None, None, IncompatibleTypesError),
 
         ("SELECT VARCHAR(birth_place) FROM $astronauts", 357, 1, None),
         ("SELECT name FROM $astronauts WHERE GET(STRUCT(VARCHAR(birth_place)), 'state') = birth_place['state']", 357, 1, None),
