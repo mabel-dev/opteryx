@@ -59,8 +59,9 @@ from opteryx.connectors import register_df
 from opteryx.connectors import register_store
 
 from opteryx.__author__ import __author__
-from opteryx.__build__ import __build__
+from opteryx.__version__ import __build__
 from opteryx.__version__ import __version__
+
 
 __all__ = [
     "apilevel",
