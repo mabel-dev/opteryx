@@ -55,6 +55,7 @@ Exception
                  └── VariableNotFoundError
 """
 
+from typing import Any
 from typing import Optional
 
 
@@ -283,7 +284,16 @@ class IncompatibleTypesError(Exception):
         column: Optional[str] = None,
         left_column: Optional[str] = None,
         right_column: Optional[str] = None,
+        left_node: Optional[Any] = None,
+        right_node: Optional[Any] = None,
     ):
+        def _format_col(_type, _node, _name):
+            if _node.node_type == 42:
+                return f"literal '{_node.value}' ({_type})"
+            if _node.node_type == 38:
+                return f"column '{_name}' ({_type})"
+            return _name
+
         self.left_type = left_type
         self.right_type = right_type
         self.column = column
@@ -295,7 +305,7 @@ class IncompatibleTypesError(Exception):
             )
         elif self.left_column or self.right_column:
             super().__init__(
-                f"Incompatible types for columns '{left_column}' ({left_type}) and '{right_column}' ({right_type})."
+                f"Incompatible types for {_format_col(left_type, left_node, left_column)} and {_format_col(right_type, right_node, right_column)}. Using `CAST(column AS type)` may help resolve."
             )
         else:
             super().__init__("Incompatible column types.")

@@ -39,7 +39,7 @@ from opteryx.virtual_datasets import derived
 CAMEL_TO_SNAKE = re.compile(r"(?<!^)(?=[A-Z])")
 
 
-def get_mismatched_condition_column_types(node: Node) -> dict:
+def get_mismatched_condition_column_types(node: Node, relaxed_numeric: bool = False) -> dict:
     """
     Checks that the types of the fields involved a comparison are the same on both sides.
 
@@ -50,21 +50,29 @@ def get_mismatched_condition_column_types(node: Node) -> dict:
     Returns:
         a dictionary describing the columns
     """
-    if node.node_type == NodeType.AND:
-        left_mismatches = get_mismatched_condition_column_types(node.left)
-        right_mismatches = get_mismatched_condition_column_types(node.right)
+    if node.node_type in (NodeType.AND, NodeType.OR):
+        left_mismatches = get_mismatched_condition_column_types(node.left, relaxed_numeric)
+        right_mismatches = get_mismatched_condition_column_types(node.right, relaxed_numeric)
         return left_mismatches or right_mismatches
 
     elif node.node_type == NodeType.COMPARISON_OPERATOR:
-        left_type = node.left.schema_column.type
-        right_type = node.right.schema_column.type
+        if node.value in ("InList", "NotInList", "Contains", "NotContains"):
+            return None  # ARRAY ops are meant to have different types
+        left_type = node.left.schema_column.type if node.left.schema_column else None
+        right_type = node.right.schema_column.type if node.right.schema_column else None
 
         if left_type != 0 and right_type != 0 and left_type != right_type:
+            if relaxed_numeric and left_type.is_numeric() and right_type.is_numeric():
+                return None
+            if left_type == OrsoTypes.NULL or right_type == OrsoTypes.NULL:
+                return None  # None comparisons are allowed
             return {
                 "left_column": f"{node.left.source}.{node.left.value}",
                 "left_type": left_type.name,
+                "left_node": node.left,
                 "right_column": f"{node.right.source}.{node.right.value}",
                 "right_type": right_type.name,
+                "right_node": node.right,
             }
 
     return None  # if we reach here, it means we didn't find any inconsistencies
@@ -106,6 +114,13 @@ def extract_join_fields(
         right_fields.extend(right_fields_2)
 
     elif condition_node.node_type == NodeType.COMPARISON_OPERATOR and condition_node.value == "Eq":
+        if any(
+            [
+                condition_node.left.node_type != NodeType.IDENTIFIER,
+                condition_node.right.node_type != NodeType.IDENTIFIER,
+            ]
+        ):
+            raise UnsupportedSyntaxError("JOIN conditions only support column comparisons.")
         if (
             condition_node.left.source in left_relation_names
             and condition_node.right.source in right_relation_names
