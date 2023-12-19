@@ -84,5 +84,7 @@ if __name__ == "__main__":  # pragma: no cover
     print(f"RUNNING BATTERY OF {len(TESTS)} TESTS")
     for a, b, distance in TESTS:
         test_levenshtien_battery(a, b, distance)
+        print("\033[38;2;26;185;67m.\033[0m", end="")
 
+    print()
     print("✅ okay")

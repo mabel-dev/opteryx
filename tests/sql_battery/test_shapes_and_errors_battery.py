@@ -350,6 +350,8 @@ STATEMENTS = [
         ("SELECT * FROM $satellites WHERE name NOT LIKE '%c%'", 166, 8, None),
         ("SELECT * FROM $satellites WHERE name NOT ILIKE '%c%'", 154, 8, None),
         ("SELECT * FROM $satellites WHERE name ~ '^C.'", 12, 8, None),
+        ("SELECT * FROM $planets WHERE name NOT RLIKE '^E.+h$'", 8, 20, None),
+        ("SELECT * FROM $planets WHERE name RLIKE '^E.+h$'", 1, 20, None),
         ("SELECT * FROM $satellites WHERE name SIMILAR TO '^C.'", 12, 8, None),
         ("SELECT * FROM $satellites WHERE name !~ '^C.'", 165, 8, None),
         ("SELECT * FROM $satellites WHERE name NOT SIMILAR TO '^C.'", 165, 8, None),

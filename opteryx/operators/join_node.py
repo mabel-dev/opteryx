@@ -95,7 +95,7 @@ class JoinNode(BasePlanNode):
                         column = col.name
                         break
                 if column:
-                    raise pyarrow.ArrowInvalid(err.replace(last_token, column))
+                    raise pyarrow.ArrowInvalid(str(err).replace(last_token, f"'{column}'"))
                 raise err
 
             # need to ensure we put the right column back if we need it
