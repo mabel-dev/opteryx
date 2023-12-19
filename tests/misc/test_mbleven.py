@@ -156,7 +156,7 @@ def test_compare_delete_char(s):
 if __name__ == "__main__":  # pragma: no cover
     print(f"RUNNING BATTERY OF {len(TESTS)} TESTS")
     for str1, str2, score in TESTS:
-        print(".", end="")
+        print("\033[38;2;26;185;67m.\033[0m", end="")
         test_level_battery(str1, str2, score)
 
     print("")

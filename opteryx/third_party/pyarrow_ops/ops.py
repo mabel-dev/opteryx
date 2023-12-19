@@ -137,12 +137,12 @@ def _inner_filter_operations(arr, operator, value):
         # MODIFIED FOR OPTERYX - see comment above
         matches = compute.match_like(arr, value[0], ignore_case=True)  # [#325]
         return numpy.invert(matches)
-    if operator in ("PGRegexMatch", "SimilarTo"):
+    if operator in ("PGRegexMatch", "SimilarTo", "RLike"):
         # MODIFIED FOR OPTERYX - see comment above
         return (
             compute.match_substring_regex(arr, value[0]).to_numpy(False).astype(dtype=bool)
         )  # [#325]
-    if operator in ("PGRegexNotMatch", "NotSimilarTo"):
+    if operator in ("PGRegexNotMatch", "NotSimilarTo", "NotRLike"):
         # MODIFIED FOR OPTERYX - see comment above
         matches = compute.match_substring_regex(arr, value[0])  # [#325]
         return numpy.invert(matches)

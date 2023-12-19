@@ -7,14 +7,14 @@ _One interface, endless possibilities - effortless cross-platform data analytics
 </div>
 
 <h3 align="center">
-Unlock your ability to discover insights across your diverse data sources, like Postgres and S3, all via a single, unified SQL interface.
+Unlock your ability to discover insights across your diverse data sources, from blob stores to databases, all via a single, unified SQL interface.
 </h3>
 
 <div align="center">
 
-[**Documentation**](https://opteryx.dev/latest) |
-[**Install**](#install) |
-[**Examples**](#examples) |
+[**Documentation**](https://opteryx.dev/latest) •
+[**Install**](#install) •
+[**Examples**](#examples) •
 [**Get Involved**](#community)
 
 [![PyPI Latest Release](https://img.shields.io/pypi/v/opteryx.svg)](https://pypi.org/project/opteryx/)
@@ -24,7 +24,6 @@ Unlock your ability to discover insights across your diverse data sources, like 
 [![codecov](https://codecov.io/gh/mabel-dev/opteryx/branch/main/graph/badge.svg?token=sIgKpzzd95)](https://codecov.io/gh/mabel-dev/opteryx)
 [![PyPI Latest Release](https://img.shields.io/badge/Python-3.9%20%7C%203.10%20%7C%203.11-blue?logo=python)](https://pypi.org/project/opteryx/)
 
-[![Tweet](https://img.shields.io/twitter/url/http/shields.io.svg?style=social)](https://twitter.com/intent/tweet?text=Easily%20query%20your%data%20with%20Opteryx&url=https://mabel-dev.github.io/opteryx/&hashtags=python,sql)
 </div>
 
 ## What is Opteryx?
@@ -100,7 +99,7 @@ pip install opteryx
 
 To build Opteryx from source, refer to the [contribution guides](https://opteryx.dev/latest/contributing/contributing/).
 
-Opteryx installs with a small set of libraries it uses, such as [Numpy](https://numpy.org/doc/stable/index.html), [PyArrow](https://arrow.apache.org/), and [orjson](https://github.com/ijl/orjson). Some features require additional libraries to be installed, you are notified of tese libraries as they are required.
+Opteryx installs with a small set of libraries it needs for core functionality, such as [Numpy](https://numpy.org/doc/stable/index.html), [PyArrow](https://arrow.apache.org/), and [orjson](https://github.com/ijl/orjson). Some features require additional libraries to be installed, you are notified of these libraries as they are required.
 
 ## Examples
 
