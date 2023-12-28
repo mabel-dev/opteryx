@@ -6,6 +6,7 @@ lint:
 	python -m black .
 
 update:
+	python -m pip install --upgrade pip
 	python -m pip install --upgrade -r requirements.txt
 	python -m pip install --upgrade -r tests/requirements.txt
 

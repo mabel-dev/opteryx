@@ -1,10 +1,10 @@
 # cython: language_level=3
 import cython
-import numpy as np
-from cython import Py_ssize_t
-
+import numpy
 cimport numpy as cnp
-from numpy cimport int64_t, ndarray
+from cython import Py_ssize_t
+from numpy cimport int64_t
+from numpy cimport ndarray
 
 cnp.import_array()
 
@@ -28,7 +28,7 @@ def cython_inner_join(
             rc = right_counts[i]
             rows += lc * rc
 
-    left_align, right_align = np.empty(rows, dtype=np.int64), np.empty(rows, dtype=np.int64)
+    left_align, right_align = numpy.empty(rows, dtype=numpy.int64), numpy.empty(rows, dtype=numpy.int64)
 
     with nogil:
         for i in range(cats):
@@ -72,7 +72,7 @@ def cython_left_join(
             else:
                 rows += lc
 
-    left_align, right_align = np.empty(rows, dtype=np.int64), np.empty(rows, dtype=np.int64)
+    left_align, right_align = numpy.empty(rows, dtype=numpy.int64), numpy.empty(rows, dtype=numpy.int64)
 
     with nogil:
         for i in range(cats):
@@ -105,3 +105,4 @@ def cython_left_join(
             py_right_align[i] = None
 
     return left_align, py_right_align
+

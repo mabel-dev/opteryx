@@ -58,6 +58,28 @@ extensions = [
         sources=["opteryx/third_party/levenshtein/clevenshtein.pyx"],
         extra_compile_args=["-O2"],
     ),
+    Extension(
+        name="cython_any_ops",
+        sources=[
+            "opteryx/compiled/any_ops/cython_any_ops.pyx",
+        ],
+        include_dirs=[numpy.get_include()],
+        extra_compile_args=["-O2"],
+    ),
+    Extension(
+        name="cython_all_ops",
+        sources=[
+            "opteryx/compiled/all_ops/cython_all_ops.pyx",
+        ],
+        include_dirs=[numpy.get_include()],
+        extra_compile_args=["-O2"],
+    ),
+    Extension(
+        name="cython_cross_join",
+        sources=["opteryx/compiled/cross_join/cython_cross_join.pyx"],
+        include_dirs=[numpy.get_include()],
+        extra_compile_args=["-O2"],
+    ),
 ]
 
 setup_config = {

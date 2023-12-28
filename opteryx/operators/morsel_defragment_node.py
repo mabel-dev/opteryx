@@ -39,6 +39,7 @@ from typing import Iterable
 
 import pyarrow
 
+from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 
 MORSEL_SIZE_BYTES: int = 64 * 1024 * 1024  # 64Mb
@@ -48,6 +49,9 @@ LOW_WATER: float = 0.75  # Merge morsels under 75% of MORSEL_SIZE
 
 
 class MorselDefragmentNode(BasePlanNode):
+    def __init__(self, properties: QueryProperties, **config):
+        super().__init__(properties=properties)
+
     @property
     def name(self):  # pragma: no cover
         return "Morsel Defragment"
@@ -58,11 +62,6 @@ class MorselDefragmentNode(BasePlanNode):
 
     def execute(self) -> Iterable:
         morsels = self._producers[0]  # type:ignore
-
-        # we can disable this function in the properties
-        if not self.properties.enable_morsel_defragmentation:
-            yield from morsels
-            return
 
         row_counter = 0
         collected_rows = None

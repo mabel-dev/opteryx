@@ -158,6 +158,30 @@ def _inner_filter_operations(arr, operator, value):
         matches = compute.match_substring_regex(arr, value[0], ignore_case=True)  # [#325]
         return numpy.invert(matches)
 
+    if operator == "AnyOpEq":
+        from opteryx.compiled import any_ops
+
+        return any_ops.cython_anyop_eq(arr[0], value)
+    if operator == "AnyOpNotEq":
+        from opteryx.compiled import any_ops
+
+        return any_ops.cython_anyop_neq(arr[0], value)
+    if operator == "AnyOpGt":
+        from opteryx.compiled import any_ops
+
+        return any_ops.cython_anyop_gt(arr[0], value)
+    if operator == "AnyOpLt":
+        from opteryx.compiled import any_ops
+
+        return any_ops.cython_anyop_lt(arr[0], value)
+    if operator == "AllOpEq":
+        from opteryx.compiled import all_ops
+
+        return all_ops.cython_allop_eq(arr[0], value)
+    if operator == "AllOpNotEq":
+        from opteryx.compiled import all_ops
+
+        return all_ops.cython_allop_neq(arr[0], value)
     raise NotImplementedError(f"Operator {operator} is not implemented!")  # pragma: no cover
 
 

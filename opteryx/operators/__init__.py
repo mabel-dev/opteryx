@@ -17,7 +17,6 @@ from .aggregate_node import AGGREGATORS
 from .aggregate_node import AggregateNode  # aggregate data
 
 # from .build_statistics_node import BuildStatisticsNode  # Analyze Tables
-# from .collection_reader_node import CollectionReaderNode  # reader NoSQL datsets
 from .cross_join_node import CrossJoinNode  # CROSS JOIN
 from .distinct_node import DistinctNode  # remove duplicate records
 from .exit_node import ExitNode
@@ -28,8 +27,7 @@ from .function_dataset_node import FunctionDatasetNode  # Dataset Constructors
 # from .information_schema_node import InformationSchemaNode  # information_schema
 from .join_node import JoinNode
 from .limit_node import LimitNode  # select the first N records
-
-# from .morsel_defragment_node import MorselDefragmentNode  # consolidate small morsels
+from .morsel_defragment_node import MorselDefragmentNode  # consolidate small morsels
 from .noop_node import NoOpNode  # No Operation
 from .projection_node import ProjectionNode  # remove unwanted columns including renames
 from .scanner_node import ScannerNode

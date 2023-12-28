@@ -78,6 +78,7 @@ class LogicalPlanStepType(int, Enum):
     Order = auto()  # order by
     Distinct = auto()
     Exit = auto()
+    Defragment = auto()
 
     CTE = auto()
     Subquery = auto()
