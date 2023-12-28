@@ -112,14 +112,6 @@ def _inner_filter_operations(arr, operator, value):
     if operator == "NotInList":
         # MODIFIED FOR OPTERYX - see comment above
         return numpy.array([a not in value[0] for a in arr], dtype=numpy.bool_)  # [#325]?
-    if operator == "Contains":
-        # ADDED FOR OPTERYX
-        return numpy.array([None if v is None else (arr[0] in v) for v in value], dtype=numpy.bool_)
-    if operator == "NotContains":
-        # ADDED FOR OPTERYX
-        return numpy.array(
-            [None if v is None else (arr[0] not in v) for v in value], dtype=numpy.bool_
-        )  # [#325]?
     if operator == "Like":
         # MODIFIED FOR OPTERYX
         # null input emits null output, which should be false/0
