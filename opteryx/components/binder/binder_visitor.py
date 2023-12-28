@@ -57,7 +57,7 @@ def get_mismatched_condition_column_types(node: Node, relaxed_numeric: bool = Fa
 
     elif node.node_type == NodeType.COMPARISON_OPERATOR:
         if (
-            node.value in ("InList", "NotInList", "Contains", "NotContains")
+            node.value in ("InList", "NotInList")
             or node.value.startswith("AllOp")
             or node.value.startswith("AnyOp")
         ):

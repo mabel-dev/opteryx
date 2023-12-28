@@ -355,7 +355,7 @@ def in_subquery(branch, alias: Optional[List[str]] = None, key=None):
 
 def in_unnest(branch, alias: Optional[List[str]] = None, key=None):
     left_node = build(branch["expr"])
-    operator = "NotContains" if branch["negated"] else "Contains"
+    operator = "AnyOpNotEq" if branch["negated"] else "AnyOpEq"
     right_node = build(branch["array_expr"])
     return Node(
         node_type=NodeType.COMPARISON_OPERATOR,

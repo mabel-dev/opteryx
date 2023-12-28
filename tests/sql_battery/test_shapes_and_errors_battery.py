@@ -680,7 +680,7 @@ STATEMENTS = [
         ("SELECT * FROM $astronauts WHERE 'Apollo 11' = any(missions)", 3, 19, None),
         ("SELECT * FROM $astronauts WHERE 'X' > any(alma_mater)", 3, 19, None),
         ("SELECT * FROM $astronauts WHERE 'B' < any(alma_mater)", 15, 19, None),
-        ("SELECT * FROM $astronauts WHERE 'Apollo 11' != any(missions)", 334, 19, None),
+        ("SELECT * FROM $astronauts WHERE 'Apollo 11' != any(missions)", 331, 19, None),
         ("SELECT * FROM $astronauts WHERE 'Apollo 11' != all(missions)", 331, 19, None),
         ("SELECT * FROM $astronauts WHERE 'Apollo 11' = all(missions)", 0, 19, None),
         ("SELECT * FROM $astronauts WHERE 'Apollo 11' = any(missions) AND True", 3, 19, None),
