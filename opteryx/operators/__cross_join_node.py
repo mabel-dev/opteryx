@@ -24,13 +24,15 @@ import numpy
 import pyarrow
 from orso.schema import FlatColumn
 
+from opteryx.exceptions import SqlError
+from opteryx.exceptions import UnsupportedTypeError
 from opteryx.managers.expression import NodeType
 from opteryx.models import Node
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 
-INTERNAL_BATCH_SIZE: int = 1000  # config
-MAX_JOIN_SIZE: int = 500  # config
+INTERNAL_BATCH_SIZE = 100  # config
+MAX_JOIN_SIZE = 500  # config
 
 
 def _cross_join_unnest_column(
@@ -53,12 +55,11 @@ def _cross_join_unnest_column(
         raise NotImplementedError("Can only CROSS JOIN UNNEST on a column")
 
     column_type = None
-    batch_size: int = INTERNAL_BATCH_SIZE
 
     # Loop through each morsel from the morsels execution
     for left_morsel in morsels.execute():
         # Break the morsel into batches to avoid memory issues
-        for left_block in left_morsel.to_batches(max_chunksize=batch_size):
+        for left_block in left_morsel.to_batches(max_chunksize=INTERNAL_BATCH_SIZE):
             # Fetch the data of the column to be unnested
             column_data = left_block[source.schema_column.identity]
 
@@ -66,21 +67,47 @@ def _cross_join_unnest_column(
             if column_type is None:
                 column_type = column_data.type.value_type
 
-            from opteryx.compiled import build_rows_indices_and_column
+            # Initialize a dictionary to store new column data
+            columns_data = {name: [] for name in left_block.schema.names}
+            new_column_data = []
 
-            indices, new_column_data = build_rows_indices_and_column(column_data)
+            # Loop through each value in the column data
+            for i, value in enumerate(column_data):
+                # Check if value is valid and non-empty
+                if value.is_valid and len(value) != 0:
+                    # Determine how many times a row needs to be repeated based on the length of the unnest value
+                    repeat_count = len(value)
+
+                    # Repeat the data for each column accordingly
+                    for col_name in left_block.schema.names:
+                        columns_data[col_name].extend(
+                            [left_block.column(col_name)[i].as_py()] * repeat_count
+                        )
+
+                    # Extend the new column data with the unnested values
+                    new_column_data.extend(value.as_py())
+                else:
+                    # If value is not valid or empty, just append the existing data
+                    for col_name in left_block.schema.names:
+                        columns_data[col_name].append(left_block.column(col_name)[i].as_py())
+                    new_column_data.append(None)
 
             # If no new data was generated, skip to next iteration
-            if not new_column_data:
+            if not columns_data:
                 continue
 
-            new_block = left_morsel.take(indices)
-            new_block = new_block.append_column(target_column.identity, [new_column_data])
-            yield new_block
+            # Convert lists to pyarrow arrays for each column
+            for col_name, col_data in columns_data.items():
+                columns_data[col_name] = pyarrow.array(col_data)
 
-            if batch_size == INTERNAL_BATCH_SIZE:
-                # we size the batches based on observations
-                batch_size = int((INTERNAL_BATCH_SIZE / new_block.nbytes) * 8 * 1024 * 1024)
+            # Convert new column data to pyarrow array and set its type
+            columns_data[target_column.identity] = pyarrow.array(new_column_data, type=column_type)
+
+            # Create a new table from the arrays and yield the result
+            new_block = pyarrow.Table.from_arrays(
+                list(columns_data.values()), names=list(columns_data.keys())
+            )
+            yield new_block
 
 
 def _cross_join_unnest_literal(

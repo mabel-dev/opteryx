@@ -677,6 +677,19 @@ STATEMENTS = [
         ("SELECT missions FROM $astronauts WHERE LIST_CONTAINS_ALL(missions, ('Apollo 8', 'Gemini 7'))", 2, 1, None),
         ("SELECT missions FROM $astronauts WHERE LIST_CONTAINS_ALL(missions, ('Gemini 7', 'Apollo 8'))", 2, 1, None),
 
+        ("SELECT * FROM $astronauts WHERE 'Apollo 11' = any(missions)", 3, 19, None),
+        ("SELECT * FROM $astronauts WHERE 'X' > any(alma_mater)", 3, 19, None),
+        ("SELECT * FROM $astronauts WHERE 'B' < any(alma_mater)", 15, 19, None),
+        ("SELECT * FROM $astronauts WHERE 'Apollo 11' != any(missions)", 334, 19, None),
+        ("SELECT * FROM $astronauts WHERE 'Apollo 11' != all(missions)", 331, 19, None),
+        ("SELECT * FROM $astronauts WHERE 'Apollo 11' = all(missions)", 0, 19, None),
+        ("SELECT * FROM $astronauts WHERE 'Apollo 11' = any(missions) AND True", 3, 19, None),
+        ("SELECT * FROM $astronauts WHERE 'X' > any(alma_mater) OR 'Z' > any(alma_mater)", 3, 19, None),
+        ("SELECT * FROM $astronauts WHERE name != 'Brian' AND 'B' < any(alma_mater)", 15, 19, None),
+        ("SELECT * FROM $astronauts WHERE name != 'Brian' OR 'Apollo 11' != any(missions)", 334, 19, None),
+        ("SELECT * FROM $astronauts WHERE 'Apollo 11' != all(missions) AND name != 'Brian'", 331, 19, None),
+        ("SELECT * FROM $astronauts WHERE name != 'Brian' AND 'Apollo 11' = all(missions)", 0, 19, None),
+
         ("SELECT * FROM $satellites WHERE planetId IN (SELECT id FROM $planets WHERE name = 'Earth')", 1, 8, UnsupportedSyntaxError),  # temp
         ("SELECT * FROM $planets WHERE id NOT IN (SELECT DISTINCT planetId FROM $satellites)", 2, 20, UnsupportedSyntaxError),  # temp
         ("SELECT name FROM $planets WHERE id IN (SELECT * FROM UNNEST((1,2,3)) as id)", 3, 1, UnsupportedSyntaxError),  # temp
@@ -715,7 +728,7 @@ STATEMENTS = [
         ("SELECT * FROM $satellites INNER JOIN $planets WITH (NO_CACHE) USING (id)", 9, 27, None),
         ("SELECT * FROM $satellites JOIN $planets USING (id)", 9, 27, None),
         ("SELECT * FROM $astronauts CROSS JOIN UNNEST(missions) AS mission WHERE mission = 'Apollo 11'", 3, 20, None),
-        ("SELECT * FROM $astronauts CROSS JOIN UNNEST(missions) AS m", 869, 20, None),
+        ("SELECT * FROM $astronauts CROSS JOIN UNNEST(missions) AS m", 846, 20, None),
         ("SELECT * FROM $planets INNER JOIN $satellites ON $planets.id = $satellites.planetId", 177, 28, None),
         ("SELECT DISTINCT planetId FROM $satellites LEFT OUTER JOIN $planets ON $satellites.planetId = $planets.id", 7, 1, None),
         ("SELECT DISTINCT planetId FROM $satellites LEFT JOIN $planets ON $satellites.planetId = $planets.id", 7, 1, None),
@@ -1188,7 +1201,7 @@ STATEMENTS = [
         # NAMED SUBQUERIES
         ("SELECT P.name FROM ( SELECT * FROM $planets ) AS P", 9, 1, None),
         # UNNEST
-        ("SELECT * FROM testdata.partitioned.unnest_test FOR '2000-01-01' CROSS JOIN UNNEST (values) AS value ", 15, 3, None),
+        ("SELECT * FROM testdata.partitioned.unnest_test FOR '2000-01-01' CROSS JOIN UNNEST (values) AS value ", 11, 3, None),
         # FRAME HANDLING
         ("SELECT * FROM testdata.partitioned.framed FOR '2021-03-28'", 100000, 1, None),
         ("SELECT * FROM testdata.partitioned.framed FOR '2021-03-29'", 100000, 1, None),

@@ -72,8 +72,8 @@ SQLS = [
     "SELECT * FROM $astronauts INNER JOIN $astronauts USING (missions)",
 ]
 SQLS = [
-    "SELECT A.user_name FROM (SELECT user_name FROM testdata.flat.formats.parquet WITH(NO_PARTITION)) AS A INNER JOIN (SELECT user_name FROM testdata.flat.formats.parquet WITH(NO_PARTITION)) USING (user_name) -- ON user_name = user_name",
-    "SELECT A.followers FROM (SELECT followers FROM testdata.flat.formats.parquet WITH(NO_PARTITION)) AS A INNER JOIN (SELECT followers FROM testdata.flat.formats.parquet WITH(NO_PARTITION)) USING (followers) -- ON followers = followers",
+    "SELECT A.user_name FROM (SELECT user_name FROM testdata.flat.formats.parquet WITH(NO_PARTITION)) AS A INNER JOIN (SELECT user_name FROM testdata.flat.formats.parquet WITH(NO_PARTITION)) AS B USING (user_name) -- ON user_name = user_name",
+    "SELECT A.followers FROM (SELECT followers FROM testdata.flat.formats.parquet WITH(NO_PARTITION)) AS A INNER JOIN (SELECT followers FROM testdata.flat.formats.parquet WITH(NO_PARTITION)) AS B USING (followers) -- ON followers = followers",
 ]
 
 

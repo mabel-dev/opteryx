@@ -36,6 +36,32 @@ from opteryx.utils import dates
 from opteryx.utils import suggest_alternative
 
 
+def any_op(branch, alias: Optional[List[str]] = None, key=None):
+    return Node(
+        NodeType.COMPARISON_OPERATOR,
+        value="AnyOp" + branch.get("compare_op", "Unsupported"),
+        left=build(branch["left"]),
+        right=build(branch["right"]),
+    )
+
+
+def all_op(branch, alias: Optional[List[str]] = None, key=None):
+    return Node(
+        NodeType.COMPARISON_OPERATOR,
+        value="AllOp" + branch.get("compare_op", "Unsupported"),
+        left=build(branch["left"]),
+        right=build(branch["right"]),
+    )
+
+
+def array(branch, alias: Optional[List[str]] = None, key=None):
+    return Node(
+        node_type=NodeType.LITERAL,
+        type=OrsoTypes.ARRAY,
+        value=[build(elem) for elem in branch["elem"]],
+    )
+
+
 def array_agg(branch, alias: Optional[List[str]] = None, key=None):
     distinct = branch["distinct"]
     expression = build(branch["expr"])
@@ -671,6 +697,9 @@ def build(value, alias: Optional[List[str]] = None, key=None):
 
 # parts to build the literal parts of a query
 BUILDERS = {
+    "AnyOp": any_op,
+    "AllOp": all_op,
+    "Array": array,  # not actually implemented
     "ArrayAgg": array_agg,
     "Between": between,
     "BinaryOp": binary_op,
@@ -706,6 +735,7 @@ BUILDERS = {
     "Number": literal_number,
     "Position": position,
     "QualifiedWildcard": qualified_wildcard,
+    "RLike": pattern_match,
     "SafeCast": try_cast,
     "SingleQuotedString": literal_string,
     "SimilarTo": pattern_match,

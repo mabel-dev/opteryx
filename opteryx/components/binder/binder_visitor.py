@@ -56,7 +56,11 @@ def get_mismatched_condition_column_types(node: Node, relaxed_numeric: bool = Fa
         return left_mismatches or right_mismatches
 
     elif node.node_type == NodeType.COMPARISON_OPERATOR:
-        if node.value in ("InList", "NotInList", "Contains", "NotContains"):
+        if (
+            node.value in ("InList", "NotInList", "Contains", "NotContains")
+            or node.value.startswith("AllOp")
+            or node.value.startswith("AnyOp")
+        ):
             return None  # ARRAY ops are meant to have different types
         left_type = node.left.schema_column.type if node.left.schema_column else None
         right_type = node.right.schema_column.type if node.right.schema_column else None

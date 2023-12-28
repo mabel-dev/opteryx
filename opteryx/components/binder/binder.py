@@ -245,7 +245,7 @@ def inner_binder(node: Node, context: Dict[str, Any]) -> Tuple[Node, Dict[str, A
         found_column = schema.find_column(column_name)
         # If the column exists in the schema, update node and context accordingly.
         if found_column:
-            found_identity = found_column.identity
+            # found_identity = found_column.identity
             # node, _ = traversive_recursive_bind(node, context)
 
             node.schema_column = found_column
@@ -307,6 +307,14 @@ def inner_binder(node: Node, context: Dict[str, Any]) -> Tuple[Node, Dict[str, A
             node.schema_column = schema_column
             node.query_column = node.alias or column_name
 
+        elif node.value and node.value.startswith("AnyOp"):
+            # IMPROVE: check types here
+            schema_column = ExpressionColumn(name=column_name, type=0)
+            node.schema_column = schema_column
+        elif node.value and node.value.startswith("AllOp"):
+            # IMPROVE: check types here
+            schema_column = ExpressionColumn(name=column_name, type=0)
+            node.schema_column = schema_column
         else:
             from opteryx.components.binder.binder_visitor import (
                 get_mismatched_condition_column_types,
