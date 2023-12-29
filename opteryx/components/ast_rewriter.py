@@ -88,8 +88,6 @@ def _build_literal_node(value: Any) -> LiteralNode:
         return {"Value": {"SingleQuotedString": value}}
     elif isinstance(value, (int, float, decimal.Decimal)):
         return {"Value": {"Number": [value, False]}}
-    elif isinstance(value, numpy.datetime64):
-        return {"Value": {"SingleQuotedString": value.item().isoformat()}}
     elif isinstance(value, (datetime.date, datetime.datetime, datetime.time)):
         return {"Value": {"SingleQuotedString": value.isoformat()}}
     else:

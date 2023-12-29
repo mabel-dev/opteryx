@@ -549,7 +549,7 @@ def process_join_tree(join: dict) -> LogicalPlanNode:
             if join["relation"]["Table"]["alias"]:
                 unnest_alias = join["relation"]["Table"]["alias"]["name"]["value"]
             else:
-                unnest_alias = f"UNNEST({join_step.column.value})"
+                unnest_alias = f"UNNEST({unnest_column.current_name})"
 
         return unnest_column, unnest_alias
 

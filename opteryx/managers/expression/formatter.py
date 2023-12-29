@@ -91,7 +91,7 @@ def format_expression(root, qualify: bool = False):
                 order = f" ORDER BY {', '.join(item[0].value + (' DESC' if not item[1] else '') for item in (root.order or []))}"
             if root.value == "ARRAY_AGG":
                 limit = f" LIMIT {root.limit}" if root.limit else ""
-                return f"{root.value.upper()}({distinct}{format_expression(root.expression, qualify)}{order}{limit})"
+                return f"{root.value.upper()}({distinct}{root.parameters[0].current_name}{order}{limit})"
             return f"{root.value.upper()}({distinct}{','.join([format_expression(e, qualify) for e in root.parameters])}{order})"
         if node_type == NodeType.WILDCARD:
             if root.value:

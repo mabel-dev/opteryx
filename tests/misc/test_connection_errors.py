@@ -22,7 +22,7 @@ def test_connection_warnings():
 
 def test_connection_parameter_mismatch():
     """test substitution binding errors"""
-
+    import datetime
     import opteryx
     from opteryx.exceptions import ParameterError
 
@@ -34,6 +34,11 @@ def test_connection_parameter_mismatch():
         opteryx.query("SELECT * FROM $planets WHERE id = ? AND name = ?", (1,))
     with pytest.raises(ParameterError):
         opteryx.query("SELECT * FROM $planets WHERE id = ?", (1, 2))
+
+    opteryx.query(
+        "SELECT * FROM $astronauts WHERE birth_date < ?", [datetime.datetime.today().date()]
+    )
+    opteryx.query("SELECT * FROM $astronauts WHERE birth_date < ?", [None])
 
 
 def test_fetching():

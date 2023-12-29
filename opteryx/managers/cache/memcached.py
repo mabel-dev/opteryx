@@ -38,6 +38,7 @@ def _memcached_server(**kwargs):
 
     try:
         import bmemcached
+        import pymemcache
     except ImportError as err:
         raise MissingDependencyError(err.name) from err
 
@@ -48,6 +49,9 @@ def _memcached_server(**kwargs):
             password=memcached_password,
             socket_timeout=1,
         )
+        cache.enable_retry_delay(True)
+        cache.set(memcached_username, memcached_password)
+        print(cache.get("key"))
     except Exception as err:
         print("[CACHE] Unable to create remote cache", err)
         cache = None

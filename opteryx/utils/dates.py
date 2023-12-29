@@ -79,7 +79,7 @@ def add_interval(
         if parts:
             return current_date + datetime.timedelta(**parts)
         return current_date
-    raise ValueError(f"Unable to interpret interval - {interval}")
+    raise ValueError(f"Unable to interpret interval - {interval}")  # pragma: no cover
 
 
 def date_range(start_date, end_date, interval: str):
@@ -87,11 +87,11 @@ def date_range(start_date, end_date, interval: str):
     start_date = parse_iso(start_date)
     end_date = parse_iso(end_date)
 
-    if start_date > end_date:
+    if start_date > end_date:  # pragma: no cover
         raise ValueError("Cannot create an series with the provided start and end dates")
 
     # if the dates are the same, return that date
-    if start_date == end_date:
+    if start_date == end_date:  # pragme: no cover
         yield start_date
         return
 

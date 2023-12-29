@@ -46,15 +46,15 @@ def convert_arrow_schema_to_orso_schema(arrow_schema):
 def get_decoder(dataset: str) -> Callable:
     """helper routine to get the decoder for a given file"""
     ext = dataset.split(".")[-1].lower()
-    if ext not in KNOWN_EXTENSIONS:
+    if ext not in KNOWN_EXTENSIONS:  # pragma: no cover
         raise UnsupportedFileTypeError(f"Unsupported file type - {ext}")
     file_decoder, file_type = KNOWN_EXTENSIONS[ext]
-    if file_type != ExtentionType.DATA:
+    if file_type != ExtentionType.DATA:  # pragma: no cover
         raise UnsupportedFileTypeError(f"File is not a data file - {ext}")
     return file_decoder
 
 
-def do_nothing(buffer, projection=None, just_schema: bool = False):  # pragma: no-cover
+def do_nothing(buffer, projection=None, just_schema: bool = False):  # pragma: no cover
     """for when you need to look like you're doing something"""
     return False
 
@@ -66,7 +66,6 @@ def filter_records(filter, table):
     """
     # notes:
     #   at this point we've not renamed any columns, this may affect some filters
-    from opteryx.managers.expression import ORSO_TO_NUMPY_MAP
     from opteryx.managers.expression import NodeType
     from opteryx.managers.expression import evaluate
     from opteryx.models import Node

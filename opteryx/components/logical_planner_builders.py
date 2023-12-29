@@ -67,8 +67,10 @@ def array_agg(branch, alias: Optional[List[str]] = None, key=None):
     expression = build(branch["expr"])
     order = None
     if branch["order_by"]:
-        # order = custom_builders.extract_order({"Query": {"order_by": branch["order_by"]}})
-        order = [(build(item["expr"]), not bool(item["asc"])) for item in branch["order_by"]]
+        order = [
+            (build(item["expr"]), False if item["asc"] is None else not (item["asc"]))
+            for item in branch["order_by"]
+        ]
     limit = None
     if branch["limit"]:
         limit = int(build(branch["limit"]).value)

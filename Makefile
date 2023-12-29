@@ -23,6 +23,9 @@ test:
 	export MANUAL_TEST=1
 	python -m pytest
 
+mypy:
+	mypy --ignore-missing-imports --python-version 3.10 --no-strict-optional --check-untyped-defs opteryx
+
 coverage:
 	clear
 	export MANUAL_TEST=1

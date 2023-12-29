@@ -17,6 +17,9 @@ This is a SQL Query Execution Plan Node.
 
 This handles most of the join types as a wrapper for pyarrow's JOIN functions, 
 only CROSS JOINs are not handled here.
+
+This is a faster implementation that the pyarrow_ops implementation, but hashes
+the right table every call so carries a penalty.
 """
 from typing import Iterable
 
@@ -24,22 +27,6 @@ import pyarrow
 
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
-
-INTERNAL_BATCH_SIZE = 500  # config
-
-
-def calculate_batch_size(cardinality):
-    """dynamically work out the processing batch size for the USING JOIN"""
-    # - HIGH_CARDINALITY_BATCH_SIZE (over 90% unique) = INTERNAL_BATCH_SIZE
-    # - MEDIUM_CARDINALITY_BATCH_SIZE (5% > n < 90%) = INTERNAL_BATCH_SIZE * n
-    # - LOW_CARDINALITY_BATCH_SIZE (less than 5% unique) = 5
-    # These numbers have had very little science put into them, they are unlikely
-    # to be optimal
-    if cardinality < 0.05:
-        return 5
-    if cardinality > 0.9:
-        return INTERNAL_BATCH_SIZE
-    return INTERNAL_BATCH_SIZE * cardinality
 
 
 class JoinNode(BasePlanNode):
@@ -83,7 +70,7 @@ class JoinNode(BasePlanNode):
                     join_type=self._join_type,
                     coalesce_keys=self._using is not None,
                 )
-            except pyarrow.ArrowInvalid as err:
+            except pyarrow.ArrowInvalid as err:  # pragma: no cover
                 last_token = str(err).split(" ")[-1]
                 column = None
                 for col in left_node.columns:
@@ -97,18 +84,5 @@ class JoinNode(BasePlanNode):
                 if column:
                     raise pyarrow.ArrowInvalid(str(err).replace(last_token, f"'{column}'"))
                 raise err
-
-            # need to ensure we put the right column back if we need it
-            if (
-                self._join_type in ("right anti", "right semi")
-                and new_morsel.column_names != right_table.column_names
-            ):
-                columns = [
-                    col
-                    if col not in self._left_columns
-                    else self._right_columns[self._left_columns.index(col)]
-                    for col in new_morsel.column_names
-                ]
-                new_morsel = new_morsel.rename_columns(columns)
 
             yield new_morsel

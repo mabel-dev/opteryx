@@ -13,7 +13,6 @@
 """
 Functions to help with handling file paths
 """
-import datetime
 import pathlib
 
 
@@ -43,41 +42,6 @@ def get_parts(path_string: str):
         parts = ""
 
     return str(bucket), str(parts), stem, suffix
-
-
-def build_path(path: str, date: datetime.date = None):  # pragma: no cover
-    if not path:
-        raise ValueError("build_path: path must have a value")
-
-    if not path[-1] in ["/"]:
-        # process the path
-        bucket, path_string, filename, extension = get_parts(path)
-        if path_string != "/":
-            path_string = bucket + "/" + path_string
-    else:
-        path_string = path
-
-    return date_format(path_string, date)
-
-
-def date_format(path_string: str, date: datetime.date = None):
-    if not date:  # pragma: no cover
-        date = datetime.datetime.utcnow()
-
-    # convert dates to datetimes - so we can extract HH:MM:SS information
-    args = date.timetuple()[:6]
-    date = datetime.datetime(*args)
-
-    path_string = str(path_string)
-
-    path_string = path_string.replace("{yyyy}", f"{date.year}")
-    path_string = path_string.replace("{mm}", f"{date.month:02d}")
-    path_string = path_string.replace("{dd}", f"{date.day:02d}")
-    path_string = path_string.replace("{HH}", f"{date.hour:02d}")
-    path_string = path_string.replace("{MM}", f"{date.minute:02d}")
-    path_string = path_string.replace("{SS}", f"{date.second:02d}")
-
-    return path_string
 
 
 def is_file(path):
