@@ -38,7 +38,6 @@ def _memcached_server(**kwargs):
 
     try:
         import bmemcached
-        import pymemcache
     except ImportError as err:
         raise MissingDependencyError(err.name) from err
 
