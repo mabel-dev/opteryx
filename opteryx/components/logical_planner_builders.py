@@ -16,8 +16,11 @@ helps to ensure new AST-based functionality can be added by adding
 a function and a reference to it in the dictionary.
 """
 import decimal
+from typing import Callable
+from typing import Dict
 from typing import List
 from typing import Optional
+from typing import Tuple
 
 import numpy
 import pyarrow
@@ -236,9 +239,10 @@ def ceiling(value, alias: Optional[List[str]] = None, key=None):
 
 
 def compound_identifier(branch, alias: Optional[List[str]] = None, key=None):
+    node_alias = None if alias is None else alias[0]
     return LogicalColumn(
         node_type=NodeType.IDENTIFIER,  # column type
-        alias=alias,  # AS alias, if provided
+        alias=node_alias,  # AS alias, if provided
         source_column=branch[-1]["value"],  # the source column
         source=".".join(p["value"] for p in branch[:-1]),  # the source relation
     )
@@ -314,9 +318,10 @@ def hex_literal(branch, alias: Optional[List[str]] = None, key=None):
 
 def identifier(branch, alias: Optional[List[str]] = None, key=None):
     """idenitifier doesn't have a qualifier (recorded in source)"""
+    node_alias = None if alias is None else alias[0]
     return LogicalColumn(
         node_type=NodeType.IDENTIFIER,  # column type
-        alias=alias,  # AS alias, if provided
+        alias=node_alias,  # AS alias, if provided
         source_column=branch["value"],  # the source column
     )
 
@@ -635,7 +640,7 @@ def typed_string(branch, alias: Optional[List[str]] = None, key=None):
 
     data_value = branch["value"]
 
-    Datatype_Map = {
+    Datatype_Map: Dict[str, Tuple[str, Callable]] = {
         "TIMESTAMP": ("TIMESTAMP", lambda x: numpy.datetime64(x, "us")),
         "DATE": ("DATE", lambda x: numpy.datetime64(x, "D")),
         "INTEGER": ("INTEGER", numpy.int64),

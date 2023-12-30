@@ -27,7 +27,6 @@ import numpy
 import pyarrow
 from orso.types import OrsoTypes
 
-from opteryx.exceptions import SqlError
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import evaluate_and_append
 from opteryx.managers.expression import get_all_nodes_of_type
@@ -73,7 +72,7 @@ class AggregateAndGroupNode(BasePlanNode):
 
     @property
     def config(self):  # pragma: no cover
-        return str(self._aggregates)
+        return str(self.aggregates)
 
     @property
     def greedy(self):  # pragma: no cover

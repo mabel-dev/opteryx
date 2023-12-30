@@ -42,4 +42,4 @@ class SetVariableNode(BasePlanNode):
 
     def execute(self) -> Iterable:
         self.variables[self.variable] = self.value
-        return NonTabularResult(record_count=1, status=QueryStatus.SQL_SUCCESS)
+        return NonTabularResult(record_count=1, status=QueryStatus.SQL_SUCCESS)  # type: ignore

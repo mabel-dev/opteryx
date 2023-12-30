@@ -356,8 +356,19 @@ class Cursor(DataFrame):
     def __repr__(self):
         """
         Override the Orso repr
+
+        In notebooks we should return a table
         """
-        return f"<opteryx.Cursor {self._state}>"
+        in_a_notebook = False
+        try:
+            from IPython import get_ipython
+
+            in_a_notebook = get_ipython() is not None
+            if not in_a_notebook:
+                return f"<opteryx.Cursor {self._state}>"
+        except Exception:
+            pass
+        return str(self)
 
     def __bool__(self):
         """
