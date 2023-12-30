@@ -21,7 +21,7 @@ from .optimization_strategy import HeuristicOptimizerContext
 from .optimization_strategy import OptimizationStrategy
 
 
-class DefragmentMorselsStrategy(OptimizationStrategy):
+class DefragmentMorselsStrategy(OptimizationStrategy):  # pragma: no cover
     def visit(
         self, node: LogicalPlanNode, context: HeuristicOptimizerContext
     ) -> HeuristicOptimizerContext:

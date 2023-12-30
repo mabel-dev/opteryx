@@ -100,15 +100,8 @@ class PredicatePushdownStrategy(OptimizationStrategy):
                     node.left_columns, node.right_columns = extract_join_fields(
                         node.on, node.left_relation_names, node.right_relation_names
                     )
-
-                    mismatches = get_mismatched_condition_column_types(node.on)
-                    if mismatches:
-                        from opteryx.exceptions import IncompatibleTypesError
-
-                        raise IncompatibleTypesError(**mismatches)
                     node.columns = get_all_nodes_of_type(node.on, (NodeType.IDENTIFIER,))
                     context.collected_predicates = remaining_predicates
-
             for predicate in context.collected_predicates:
                 remaining_predicates = []
                 for predicate in context.collected_predicates:

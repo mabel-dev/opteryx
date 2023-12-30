@@ -79,6 +79,7 @@ STATEMENTS = [
         ("SELECT * FROM $no_table", 1, 1, None),
         ("SELECT * FROM sqlite.planets", 9, 20, None),
         ("SELECT * FROM $variables", 41, 4, None),
+        (b"SELECT * FROM $satellites", 177, 8, None),
 
         # Does the error tester work
         ("THIS IS NOT VALID SQL", None, None, SqlError),
@@ -566,6 +567,7 @@ STATEMENTS = [
         ("SELECT * FROM UNNEST(('foo', 'bar', 'baz', 'qux', 'corge', 'garply', 'waldo', 'fred')) AS element WHERE element LIKE '%e%'", 2, 1, None),
         ("SELECT * FROM UNNEST(('foo', 'bar', 'baz', 'qux', 'corge', 'garply', 'waldo', 'fred')) AS UN", 8, 1, None),
         ("SELECT * FROM UNNEST(('foo', 'bar', 'baz', 'qux', 'corge', 'garply', 'waldo', 'fred')) AS UN WHERE UN LIKE '%e%'", 2, 1, None),
+        ("SELECT * FROM $astronauts LEFT JOIN UNNEST(missions) as s", None, None, UnsupportedSyntaxError),
 
         ("SELECT * FROM generate_series(1, 10)", 10, 1, UnnamedColumnError),
         ("SELECT * FROM generate_series(1, 10) AS GS", 10, 1, None),
@@ -1030,6 +1032,10 @@ STATEMENTS = [
         ("SELECT COUNT(*), ARRAY_AGG(name) from $satellites GROUP BY planetId", 7, 2, None),
         ("SELECT planetId, COUNT(*), ARRAY_AGG(name) from $satellites GROUP BY planetId", 7, 3, None),
         ("SELECT ARRAY_AGG(DISTINCT LEFT(name, 1)) from $satellites GROUP BY planetId", 7, 1, None),
+        ("SELECT ARRAY_AGG(name ORDER BY name LIMIT 2) FROM $satellites GROUP BY planetId", 7, 1, None),
+        ("SELECT ARRAY_AGG(name ORDER BY name DESC LIMIT 2) FROM $satellites GROUP BY planetId", 7, 1, None),
+        ("SELECT ARRAY_AGG(name ORDER BY id) FROM $satellites GROUP BY planetId", None, None, UnsupportedSyntaxError),
+        ("SELECT ARRAY_AGG(name ORDER BY name, name) FROM $satellites GROUP BY planetId", None, None, UnsupportedSyntaxError),
 
         ("SELECT name FROM $satellites WHERE '192.168.0.1' | '192.168.0.0/24'", 177, 1, None),
         ("SELECT name FROM $satellites WHERE '192.168.0.1' | '192.167.0.0/24'", 0, 1, None),
@@ -1095,6 +1101,7 @@ STATEMENTS = [
         ("SELECT * FROM FAKE(100, (Name, Name)) AS FK(nom)", 100, 2, None),
         ("SELECT * FROM FAKE(100, (Name, Name)) AS FK", 100, 2, None),
         ("SELECT * FROM FAKE(100, 10) AS FK(nom, nim, nam)", 100, 10, None),
+        ("SELECT * FROM FAKE(10, (Age)) AS FK", None, None, InvalidFunctionParameterError),
 
         ("SELECT * FROM $planets WHERE diameter > 10000 AND gravity BETWEEN 0.5 AND 2.0;", 0, 20, None),
         ("SELECT * FROM $planets WHERE diameter > 100 AND gravity BETWEEN 0.5 AND 2.0;", 1, 20, None),
@@ -1106,6 +1113,8 @@ STATEMENTS = [
         ("SELECT a.name, b.name FROM sqlite.planets a JOIN sqlite.planets b ON a.numberOfMoons = b.numberOfMoons WHERE a.name <> b.name", 2, 2, None),
         ("SELECT * FROM $planets INNER JOIN $satellites ON INTEGER($planets.id) = INTEGER($satellites.planetId)", None, None, UnsupportedSyntaxError),
         ("SELECT alma_mater LIKE '%a%' FROM $astronauts", None, None, IncompatibleTypesError),
+        ("SELECT * FROM $planets INNER JOIN $satellites ON gm = 4", None, None, UnsupportedSyntaxError),
+        ("SELECT * FROM $planets CROSS JOIN UNNEST(name) AS G", None, None, IncorrectTypeError),
 
         ("SELECT VARCHAR(birth_place) FROM $astronauts", 357, 1, None),
         ("SELECT name FROM $astronauts WHERE GET(STRUCT(VARCHAR(birth_place)), 'state') = birth_place['state']", 357, 1, None),

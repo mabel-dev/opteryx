@@ -248,27 +248,8 @@ class AggregateNode(BasePlanNode):
         aggregates = _non_group_aggregates(self.aggregates, table)
         del table
 
-        # do the secondary activities for ARRAY_AGG
-        for node in get_all_nodes_of_type(self.aggregates, select_nodes=(NodeType.AGGREGATOR,)):
-            if node.value == "ARRAY_AGG":
-                _, _, order, limit = node.parameters
-                if order or limit:
-                    # rip the column out of the table
-                    column_name = self.column_map[format_expression(node)]
-                    column_def = groups.field(column_name)  # this is used
-                    column = groups.column(column_name).to_pylist()
-                    groups = groups.drop([column_name])
-                    # order
-                    if order:
-                        pass
-                    if limit:
-                        column = [c[:limit] for c in column]
-                    # put the new column into the table
-                    groups = groups.append_column(column_def, [column])
-
         # name the aggregate fields and add them to the Columns data
         aggregates = aggregates.select(list(self.column_map.keys()))
-        #        aggregates = aggregates.rename_columns(list(self.column_map.keys()))
 
         self.statistics.time_aggregating += time.time_ns() - start_time
 

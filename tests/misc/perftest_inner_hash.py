@@ -28,6 +28,8 @@ def _hash_value(vals, nan=numpy.nan):
 
 
 def _hash_value_new(vals, nan=numpy.nan):
+    if numpy.issubdtype(vals.dtype, numpy.character):
+        return numpy.array([nan if s != s else CityHash64(s.encode()) for s in vals], numpy.uint64)
     ret = []
     for val in vals:
         # Added for Opteryx - Original code had bugs relating to distinct and nulls
@@ -77,7 +79,7 @@ SQLS = [
 ]
 
 
-vals = numpy.array([random_string(random_int() % 20 + 20) for i in range(10000)])
+vals = numpy.array([random_string(random_int() % 20 + 20) for i in range(100000)])
 # vals = numpy.array([random_int() for i in range(10000)])
 print(vals.dtype)
 

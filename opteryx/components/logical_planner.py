@@ -546,10 +546,7 @@ def process_join_tree(join: dict) -> LogicalPlanNode:
                     "JOIN on UNNEST only supported for CROSS and INNER joins."
                 )
             unnest_column = logical_planner_builders.build(join["relation"]["Table"]["args"][0])
-            if join["relation"]["Table"]["alias"]:
-                unnest_alias = join["relation"]["Table"]["alias"]["name"]["value"]
-            else:
-                unnest_alias = f"UNNEST({join_step.column.value})"
+            unnest_alias = join["relation"]["Table"]["alias"]["name"]["value"]
 
         return unnest_column, unnest_alias
 
@@ -618,7 +615,7 @@ def create_node_relation(relation):
                 step_id = random_string()
                 sub_plan.add_node(step_id, values_step)
                 root_node = step_id
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(relation["relation"]["Derived"])
     elif relation["relation"]["Table"]["args"]:
         function = relation["relation"]["Table"]

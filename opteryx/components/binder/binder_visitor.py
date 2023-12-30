@@ -196,23 +196,6 @@ def convert_using_to_on(
                     conditions = new_conditions
                 all_conditions.append(conditions[0])
 
-    # If there's only one condition, return it directly
-    if len(all_conditions) == 1:
-        return all_conditions[0]
-
-    # Create a tree of ANDed conditions
-    while len(conditions) > 1:
-        new_conditions = []
-        for i in range(0, len(conditions), 2):
-            if i + 1 < len(conditions):
-                and_node = Node(node_type=NodeType.AND, do_not_create_column=True)
-                and_node.left = conditions[i]
-                and_node.right = conditions[i + 1]
-                new_conditions.append(and_node)
-            else:
-                new_conditions.append(conditions[i])
-        conditions = new_conditions
-
     return conditions[0]
 
 
@@ -290,6 +273,7 @@ class BinderVisitor:
             Tuple[Node, Dict[str, Any]]
             The modified node and the updated context.
         """
+        tmp_aggregates = []
         if node.aggregates:
             tmp_aggregates, _ = zip(
                 *(inner_binder(aggregate, context) for aggregate in node.aggregates)
@@ -317,6 +301,17 @@ class BinderVisitor:
                 context.schemas[name].columns = schema_columns
             else:
                 context.schemas.pop(name)
+
+        for array_agg in [agg for agg in tmp_aggregates if agg.value == "ARRAY_AGG"]:
+            if array_agg.order:
+                if len(array_agg.order) > 1:
+                    raise UnsupportedSyntaxError(
+                        "ARRAY_AGG can only ORDER BY the aggregated column."
+                    )
+                if array_agg.order[0][0].current_name != array_agg.parameters[0].current_name:
+                    raise UnsupportedSyntaxError(
+                        "ARRAY_AGG can only ORDER BY the aggregated column."
+                    )
 
         # we should always have a derived schema
         if not "$derived" in context.schemas:
@@ -660,8 +655,6 @@ class BinderVisitor:
 
         # If we have an unnest_column, how how it is bound is different to other columns
         if node.unnest_column:
-            if not node.unnest_alias:
-                node.unnest_alias = f"UNNEST({node.unnest_column.query_column})"
             # this is the column which is being unnested
             node.unnest_column, context = inner_binder(node.unnest_column, context)
             node.columns += [node.unnest_column]
@@ -669,14 +662,10 @@ class BinderVisitor:
             node.unnest_target, found_source_relation = locate_identifier_in_loaded_schemas(
                 node.unnest_alias, context.schemas
             )
-            if not found_source_relation:
-                from opteryx.utils import suggest_alternative
+            if node.unnest_column.schema_column.type not in (0, OrsoTypes.ARRAY):
+                from opteryx.exceptions import IncorrectTypeError
 
-                suggestion = suggest_alternative(
-                    node.value,
-                    [schema.all_column_names() for schema in context.schemas.values()],
-                )
-                raise ColumnNotFoundError(column=node.value, suggestion=suggestion)
+                raise IncorrectTypeError("CROSS JOIN UNNEST requires an ARRAY type column.")
 
         if node.type == "inner" and node.on is None:
             from opteryx.exceptions import SqlError

@@ -1,5 +1,3 @@
-import functools
-
 import numpy
 
 APOLLO_11_DURATION: int = 703115  # we need a constant to use as a seed
@@ -24,8 +22,8 @@ def _hash_value(val, nan=numpy.nan):
     if isinstance(val, dict):
         return _hash_value(tuple(val.values()))
     if isinstance(val, (list, numpy.ndarray, tuple)):
-        # XOR is faster however, x ^ x == y ^ y but x != y, so we don't use it
-        return functools.reduce(lambda x, y: _hash_value(f"{y}:{x}", 0), val, APOLLO_11_DURATION)
+        # not perfect but tries to eliminate some of the flaws in other approaches
+        return hash(".".join(str(i) + str(v) for i, v in enumerate(val)))
     if val != val or val is None:
         # nan is a float, but hash is an int, sometimes we need this to be an int
         return nan
@@ -43,6 +41,15 @@ def columns_to_array(table, columns):
         # FIX https://github.com/mabel-dev/opteryx/issues/285
         # null isn't able to be sorted - replace with nan
         column_values = table.column(columns[0]).to_numpy()
+
+        if numpy.issubdtype(column_values.dtype, numpy.character):
+            # optimize handling string columns
+            from orso.cityhash import CityHash64
+
+            return numpy.array(
+                [numpy.nan if s != s else CityHash64(s.encode()) for s in column_values],
+                numpy.uint64,
+            )
         return numpy.array([_hash_value(el) for el in column_values])
 
     columns = sorted(set(table.column_names).intersection(columns))

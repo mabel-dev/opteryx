@@ -14,7 +14,7 @@ def tokenize_string(string):
     return tokens
 
 
-def format_sql(sql):
+def format_sql(sql):  # pragma: no cover
     """
     Adds colorization to SQL statements to make it easier to find keywords and literals
     """
@@ -103,6 +103,7 @@ def format_sql(sql):
             "<>",
             "LIKE",
             "ILIKE",
+            "RLIKE",
             "NOT",
             "AND",
             "OR",

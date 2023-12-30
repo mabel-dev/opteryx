@@ -10,38 +10,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import itertools
-
-import numpy
-from orso.cityhash import CityHash64
-
-
-def hasher(vals):
-    """
-    Quickly hash a list of string or numerics (i.e. intended for join hash table)
-
-    This is roughly 2x faster than the previous implementation for lists of strings.
-
-    Do note though, if you're micro-optimizing, this is faster to create but is
-    slower for some Python functions to handle the result of, like 'sorted'.
-    """
-    if numpy.issubdtype(vals.dtype, numpy.character):
-        return numpy.array([CityHash64(s.encode()) for s in vals], numpy.uint64)
-    return vals
-
-
-def peek(iterable):  # type:ignore
-    """
-    peek an item off a generator
-    """
-    iter1, iter2 = itertools.tee(iterable)
-    try:
-        first = next(iter1)
-    except StopIteration:
-        return None, iter([])
-    else:
-        return first, iter2
-
 
 def suggest_alternative(name, candidates):
     """
@@ -75,10 +43,3 @@ def suggest_alternative(name, candidates):
             best_match_column = raw
 
     return best_match_column
-
-
-def is_arm():
-    """am I running on an ARM CPU?"""
-    import platform
-
-    return platform.machine() in ("armv7l", "aarch64")

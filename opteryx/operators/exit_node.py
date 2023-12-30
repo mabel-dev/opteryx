@@ -55,7 +55,7 @@ class ExitNode(BasePlanNode):
             final_columns.append(column.schema_column.identity)
             final_names.append(column.current_name)
 
-        if len(final_columns) != len(set(final_columns)):
+        if len(final_columns) != len(set(final_columns)):  # pragma: no cover
             from collections import Counter
 
             duplicates = [column for column, count in Counter(final_columns).items() if count > 1]
@@ -67,7 +67,7 @@ class ExitNode(BasePlanNode):
         self.statistics.time_exiting += time.monotonic_ns() - start
         for morsel in morsels.execute():
             start = time.monotonic_ns()
-            if not set(final_columns).issubset(morsel.column_names):
+            if not set(final_columns).issubset(morsel.column_names):  # pragma: no cover
                 mapping = {name: int_name for name, int_name in zip(final_columns, final_names)}
                 missing_references = {
                     mapping.get(ref): ref for ref in final_columns if ref not in morsel.column_names
