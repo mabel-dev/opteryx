@@ -22,7 +22,7 @@ This is a greedy operator - it consumes all the data before responding.
 This is built around the pyarrow table grouping functionality.
 """
 import time
-from typing import Iterable
+from typing import Generator
 
 import numpy
 import pyarrow
@@ -30,7 +30,6 @@ import pyarrow
 from opteryx.exceptions import UnsupportedSyntaxError
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import evaluate_and_append
-from opteryx.managers.expression import format_expression
 from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
@@ -212,7 +211,7 @@ class AggregateNode(BasePlanNode):
     def name(self):  # pragma: no cover
         return "Aggregation"
 
-    def execute(self) -> Iterable:
+    def execute(self) -> Generator[pyarrow.Table, None, None]:
         morsels = self._producers[0]  # type:ignore
         if isinstance(morsels, pyarrow.Table):
             morsels = (morsels,)

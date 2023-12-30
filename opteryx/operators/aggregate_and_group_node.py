@@ -21,7 +21,7 @@ the aggregation node doesn't need the grouping node.
 
 """
 import time
-from typing import Iterable
+from typing import Generator
 
 import numpy
 import pyarrow
@@ -82,7 +82,7 @@ class AggregateAndGroupNode(BasePlanNode):
     def name(self):  # pragma: no cover
         return "Group"
 
-    def execute(self) -> Iterable:
+    def execute(self) -> Generator[pyarrow.Table, None, None]:
         morsels = self._producers[0]  # type:ignore
 
         # merge all the morsels together into one table, selecting only the columns

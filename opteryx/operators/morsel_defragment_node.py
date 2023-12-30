@@ -35,7 +35,7 @@ This is a SQL Query Execution Plan Node.
     arrays into ChunkedArrays which behave differently to Arrays in some circumstances.
 """
 import time
-from typing import Iterable
+from typing import Generator
 
 import pyarrow
 
@@ -60,7 +60,7 @@ class MorselDefragmentNode(BasePlanNode):
     def config(self):  # pragma: no cover
         return ""
 
-    def execute(self) -> Iterable:  # pragma: no cover
+    def execute(self) -> Generator:  # pragma: no cover
         morsels = self._producers[0]  # type:ignore
 
         row_counter = 0

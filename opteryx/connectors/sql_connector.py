@@ -101,12 +101,16 @@ class SqlConnector(BaseConnector, PredicatePushable):
         else:
             self._engine = engine
 
-        self.schema = None
+        self.schema = None  # type: ignore
         self.metadata = MetaData()
 
-    def read_dataset(
-        self, columns: list = None, predicates: list = None, chunk_size: int = INITIAL_CHUNK_SIZE
-    ) -> Generator[pyarrow.Table, None, None]:
+    def read_dataset(  # type:ignore
+        self,
+        *,
+        columns: list = None,
+        predicates: list = None,
+        chunk_size: int = INITIAL_CHUNK_SIZE,  # type:ignore
+    ) -> Generator[pyarrow.Table, None, None]:  # type:ignore
         from sqlalchemy.sql import text
 
         self.chunk_size = chunk_size
@@ -118,15 +122,17 @@ class SqlConnector(BaseConnector, PredicatePushable):
         if columns:
             column_names = [col.name for col in columns]
             query_builder.add("SELECT", *column_names)
-            result_schema.columns = [col for col in self.schema.columns if col.name in column_names]
-        elif self.schema.columns:
+            result_schema.columns = [  # type:ignore
+                col for col in self.schema.columns if col.name in column_names  # type:ignore
+            ]
+        elif self.schema.columns:  # type:ignore
             query_builder.add("SELECT", "*")
         else:
             query_builder.add("SELECT", "1")
-            self.schema.columns.append(ConstantColumn(name="1", value=1))
+            self.schema.columns.append(ConstantColumn(name="1", value=1))  # type:ignore
 
         # Update SQL if we've pushed predicates
-        parameters = {}
+        parameters: dict = {}
         for predicate in predicates:
             left_operand = predicate.left
             right_operand = predicate.right
@@ -205,8 +211,10 @@ class SqlConnector(BaseConnector, PredicatePushable):
                         type=PYTHON_TO_ORSO_MAP[column.type.python_type],
                         precision=None
                         if column.type.python_type != Decimal
-                        else column.type.precision,
-                        scale=None if column.type.python_type != Decimal else column.type.scale,
+                        else column.type.precision,  # type:ignore
+                        scale=None
+                        if column.type.python_type != Decimal
+                        else column.type.scale,  # type:ignore
                         nullable=column.nullable,
                     )
                     for column in table.columns

@@ -15,7 +15,7 @@ Show Variables Node
 
 This is a SQL Query Execution Plan Node.
 """
-from typing import Iterable
+from typing import Generator
 
 from opteryx.constants import QueryStatus
 from opteryx.models import NonTabularResult
@@ -40,6 +40,6 @@ class SetVariableNode(BasePlanNode):
     def config(self):  # pragma: no cover
         return f"{self.variable} TO {self.value}"
 
-    def execute(self) -> Iterable:
+    def execute(self) -> Generator:
         self.variables[self.variable] = self.value
         return NonTabularResult(record_count=1, status=QueryStatus.SQL_SUCCESS)  # type: ignore

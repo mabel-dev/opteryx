@@ -19,7 +19,7 @@ It wraps different internal readers (e.g. GCP Blob reader, SQL Reader),
 normalizes the data into the format for internal processing. 
 """
 import time
-from typing import Iterable
+from typing import Generator
 
 import pyarrow
 from orso.schema import RelationSchema
@@ -100,7 +100,7 @@ class ScannerNode(BasePlanNode):
             f"{' WITH(' + ','.join(self.parameters.get('hints')) + ')' if self.parameters.get('hints') else ''})"
         )
 
-    def execute(self) -> Iterable:
+    def execute(self) -> Generator:
         """Perform this step, time how long is spent doing work"""
         morsel = None
         orso_schema = self.parameters["schema"]

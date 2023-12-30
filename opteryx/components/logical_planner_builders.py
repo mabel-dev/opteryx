@@ -239,10 +239,9 @@ def ceiling(value, alias: Optional[List[str]] = None, key=None):
 
 
 def compound_identifier(branch, alias: Optional[List[str]] = None, key=None):
-    node_alias = None if alias is None else alias[0]
     return LogicalColumn(
         node_type=NodeType.IDENTIFIER,  # column type
-        alias=node_alias,  # AS alias, if provided
+        alias=alias,  # type: ignore
         source_column=branch[-1]["value"],  # the source column
         source=".".join(p["value"] for p in branch[:-1]),  # the source relation
     )
@@ -318,10 +317,9 @@ def hex_literal(branch, alias: Optional[List[str]] = None, key=None):
 
 def identifier(branch, alias: Optional[List[str]] = None, key=None):
     """idenitifier doesn't have a qualifier (recorded in source)"""
-    node_alias = None if alias is None else alias[0]
     return LogicalColumn(
         node_type=NodeType.IDENTIFIER,  # column type
-        alias=node_alias,  # AS alias, if provided
+        alias=alias,  # type: ignore
         source_column=branch["value"],  # the source column
     )
 

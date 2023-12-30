@@ -21,7 +21,7 @@ only CROSS JOINs are not handled here.
 This is a faster implementation that the pyarrow_ops implementation, but hashes
 the right table every call so carries a penalty.
 """
-from typing import Iterable
+from typing import Generator
 
 import pyarrow
 
@@ -50,7 +50,7 @@ class JoinNode(BasePlanNode):
     def config(self):  # pragma: no cover
         return ""
 
-    def execute(self) -> Iterable:
+    def execute(self) -> Generator:
         left_node = self._producers[0]  # type:ignore
         right_node = self._producers[1]  # type:ignore
 

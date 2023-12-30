@@ -15,7 +15,7 @@ Show Variables Node
 
 This is a SQL Query Execution Plan Node.
 """
-from typing import Iterable
+from typing import Generator
 
 import pyarrow
 
@@ -46,7 +46,7 @@ class ShowValueNode(BasePlanNode):
     def config(self):  # pragma: no cover
         return ""
 
-    def execute(self) -> Iterable:
+    def execute(self) -> Generator:
         buffer = [{"name": self.key, "value": str(self.value)}]
         table = pyarrow.Table.from_pylist(buffer)
         yield table

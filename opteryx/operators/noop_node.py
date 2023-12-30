@@ -15,9 +15,8 @@ No Operation
 
 This is a SQL Query Execution Plan Node.
 """
-from typing import Iterable
+from typing import Generator
 
-from opteryx.exceptions import SqlError
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 
@@ -34,7 +33,7 @@ class NoOpNode(BasePlanNode):
     def config(self):  # pragma: no cover
         return ""
 
-    def execute(self) -> Iterable:
+    def execute(self) -> Generator:
         # nodes generally have 0 (scan), 1 (most) or 2 (join, union) producers
         if self._producers:
             for morsels in self._producers:

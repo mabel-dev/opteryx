@@ -18,7 +18,9 @@ This is a SQL Query Execution Plan Node.
 This Node performs the LIMIT and the OFFSET steps
 """
 import time
-from typing import Iterable
+from typing import Generator
+
+import pyarrow
 
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
@@ -39,9 +41,9 @@ class LimitNode(BasePlanNode):
     def config(self):  # pragma: no cover
         return str(self.limit) + " OFFSET " + str(self.offset)
 
-    def execute(self) -> Iterable:
+    def execute(self) -> Generator[pyarrow.Table, None, None]:
         morsels = self._producers[0]  # type:ignore
         start_time = time.monotonic_ns()
         limited = arrow.limit_records(morsels.execute(), limit=self.limit, offset=self.offset)
         self.statistics.time_limiting += time.monotonic_ns() - start_time
-        return limited
+        return limited  # type: ignore

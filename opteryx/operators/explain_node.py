@@ -17,7 +17,7 @@ This is a SQL Query Execution Plan Node.
 
 This writes out a query plan
 """
-from typing import Iterable
+from typing import Generator
 
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
@@ -36,6 +36,6 @@ class ExplainNode(BasePlanNode):
     def config(self):
         return ""
 
-    def execute(self) -> Iterable:
+    def execute(self) -> Generator:
         if self._query_plan:
             yield from self._query_plan.explain()

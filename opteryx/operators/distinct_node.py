@@ -17,8 +17,9 @@ This is a SQL Query Execution Plan Node.
 
 This Node eliminates duplicate records.
 """
-from typing import Iterable
+from typing import Generator
 
+import pyarrow
 from pyarrow import concat_tables
 
 from opteryx.models import QueryProperties
@@ -45,7 +46,7 @@ class DistinctNode(BasePlanNode):
     def name(self):  # pragma: no cover
         return "Distinction"
 
-    def execute(self) -> Iterable:
+    def execute(self) -> Generator[pyarrow.Table, None, None]:
         morsels = self._producers[0]  # type:ignore
 
         yield drop_duplicates(concat_tables(morsels.execute()), self._distinct_on)
