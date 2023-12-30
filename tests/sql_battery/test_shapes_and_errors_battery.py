@@ -79,6 +79,7 @@ STATEMENTS = [
         ("SELECT * FROM $no_table", 1, 1, None),
         ("SELECT * FROM sqlite.planets", 9, 20, None),
         ("SELECT * FROM $variables", 41, 4, None),
+        (b"SELECT * FROM $satellites", 177, 8, None),
 
         # Does the error tester work
         ("THIS IS NOT VALID SQL", None, None, SqlError),
