@@ -16,7 +16,9 @@ Decode files from a raw binary format to a PyArrow Table.
 import io
 from enum import Enum
 from typing import Callable
+from typing import Dict
 from typing import List
+from typing import Tuple
 
 import numpy
 import pyarrow
@@ -272,7 +274,7 @@ def avro_decoder(buffer, projection: List = None, selection=None, just_schema: b
 
 
 # for types we know about, set up how we handle them
-KNOWN_EXTENSIONS = {
+KNOWN_EXTENSIONS: Dict[str, Tuple[Callable, str]] = {
     "avro": (avro_decoder, ExtentionType.DATA),
     "complete": (do_nothing, ExtentionType.CONTROL),
     "ignore": (do_nothing, ExtentionType.CONTROL),

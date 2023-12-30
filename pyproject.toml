@@ -16,3 +16,6 @@ float_to_top = true
 
 [tool.pylint.messages_control]
 disable = "C0103,C0415"
+
+[tool.mypy]
+exclude = ["bench", "#"]

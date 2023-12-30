@@ -10,12 +10,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Generator
+
 from orso.schema import FlatColumn
 from orso.schema import RelationSchema
 
 from opteryx import config
 from opteryx.connectors.base.base_connector import INITIAL_CHUNK_SIZE
 from opteryx.connectors.base.base_connector import BaseConnector
+from opteryx.connectors.base.base_connector import DatasetReader
 from opteryx.exceptions import DatasetNotFoundError
 from opteryx.exceptions import MissingDependencyError
 from opteryx.exceptions import UnmetRequirementError
@@ -68,7 +71,7 @@ class GcpFireStoreConnector(BaseConnector):
 
     def read_dataset(
         self, columns: list = None, chunk_size: int = INITIAL_CHUNK_SIZE, **kwargs
-    ) -> "DatasetReader":
+    ) -> Generator:
         """
         Return a morsel of documents
         """

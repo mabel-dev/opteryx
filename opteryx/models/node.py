@@ -28,10 +28,11 @@ Noteworthy features and design choices:
 import copy
 from typing import Any
 from typing import Dict
+from typing import Union
 
 
 class Node:
-    def __init__(self, node_type: str = None, **kwargs: Any):
+    def __init__(self, node_type: Union[str, int, None] = None, **kwargs: Any):
         """
         Initialize a Node with attributes.
 

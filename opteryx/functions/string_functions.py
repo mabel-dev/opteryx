@@ -242,7 +242,9 @@ def ends_w(arr, test):
     return compute.ends_with(arr, test[0])
 
 
-def substring(arr: List[str], from_pos: List[int], count: List[Union[int, float]]) -> List[str]:
+def substring(
+    arr: List[str], from_pos: List[int], count: List[Union[int, float]]
+) -> List[List[str]]:
     """
     Extracts substrings from each string in the 'arr' list.
 

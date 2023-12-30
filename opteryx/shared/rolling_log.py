@@ -48,7 +48,7 @@ class RollingLog:
         with open(self.log_file, "r", encoding="UTF8") as log_file:  # type:ignore
             # read the current position in the circular buffer
             while True:
-                chunk = log_file.read(self.block_size)
+                chunk = log_file.read(self.block_size)  # type:ignore
                 if not chunk:
                     break
                 lines = chunk.split("\n")

@@ -40,6 +40,7 @@ class MemoryCache(BaseKeyValueStore):
         value = self._lru2.get(key)
         if value:
             return bytes(value)
+        return None
 
     def set(self, key: str, value: bytes) -> None:
         ret = self._lru2.set(key, value)

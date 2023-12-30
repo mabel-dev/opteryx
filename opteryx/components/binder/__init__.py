@@ -60,12 +60,11 @@ The Binder performs these activities:
 
 from opteryx.components.binder.binder_visitor import BinderVisitor
 from opteryx.components.binder.binding_context import BindingContext
+from opteryx.components.logical_planner import LogicalPlan
 from opteryx.exceptions import InvalidInternalStateError
-from opteryx.third_party.travers import Graph
-from opteryx.virtual_datasets import derived
 
 
-def do_bind_phase(plan: Graph, connection=None, qid: str = None) -> Graph:
+def do_bind_phase(plan: LogicalPlan, connection=None, qid: str = None) -> LogicalPlan:
     """
     Execute the bind phase of the query engine.
 

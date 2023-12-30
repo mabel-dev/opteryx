@@ -540,7 +540,7 @@ class Graph(object):
         Returns:
             A new dictionary representing the edges in the graph.
         """
-        new_edges = {}
+        new_edges: dict = {}
         for source, target, relationship in self.edges():
             if source not in new_edges:
                 new_edges[source] = []

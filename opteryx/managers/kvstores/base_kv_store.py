@@ -15,7 +15,7 @@ This is a Base class for KV Value Storage adapter.
 This is used by the metadata store and in-memory buffer cache. 
 """
 from typing import Iterable
-from typing import Optional
+from typing import Union
 
 
 class BaseKeyValueStore:
@@ -26,14 +26,14 @@ class BaseKeyValueStore:
     def __init__(self, location):
         self._location = location
 
-    def get(self, key: bytes) -> Optional[bytes]:
+    def get(self, key: str) -> Union[bytes, None]:
         """
         Overwrite this method to retrieve a value from the cache, or None if the
         value is not in the cache.
         """
         raise NotImplementedError("`get` method on cache object not overridden.")
 
-    def set(self, key: bytes, value: bytes):
+    def set(self, key: str, value: bytes) -> None:
         """
         Overwrite this method to place a value in the cache.
         """

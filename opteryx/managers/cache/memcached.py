@@ -74,7 +74,7 @@ class MemcachedCache(BaseKeyValueStore):
         if self._server is None:
             self._consecutive_failures: int = MAXIMUM_CONSECUTIVE_FAILURES
         else:
-            self._consecutive_failures: int = 0
+            self._consecutive_failures = 0
         self.hits: int = 0
         self.misses: int = 0
         self.skips: int = 0

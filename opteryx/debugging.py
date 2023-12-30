@@ -26,7 +26,6 @@ import datetime
 import importlib.abc
 import importlib.util
 import sys
-from typing import Union
 
 
 class OpteryxOrsoImportFinder(importlib.abc.MetaPathFinder):
@@ -62,7 +61,7 @@ class OpteryxOrsoImportLoader(importlib.abc.SourceLoader):
     def get_filename(self, fullname):
         return self.original_loader.get_filename(fullname)
 
-    def get_data(self, filepath: str) -> Union[str, bytes]:
+    def get_data(self, filepath: str) -> bytes:
         # Delayed import to minimize startup overhead
         from pathlib import Path
 

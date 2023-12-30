@@ -12,7 +12,6 @@
 
 
 import copy
-from typing import Any
 from typing import Dict
 from typing import Optional
 from typing import Tuple
@@ -210,7 +209,7 @@ def traversive_recursive_bind(
     return node, context
 
 
-def inner_binder(node: Node, context: Dict[str, Any]) -> Tuple[Node, Dict[str, Any]]:
+def inner_binder(node: Node, context: "BindingContext") -> Tuple[Node, "BindingContext"]:
     """
     Note, this is a tree within a tree. This function represents a single step in the execution
     plan (associated with the relational algebra) which may itself be an evaluation plan

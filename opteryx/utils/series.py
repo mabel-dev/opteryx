@@ -42,7 +42,7 @@ def generate_series(*args):
     raise SqlError("Unsupported value for GENERATE_SERIES")
 
 
-def numeric_range(*args) -> numpy.array:
+def numeric_range(*args) -> numpy.ndarray:
     """
     Generate a numeric range of vales
 
@@ -75,13 +75,13 @@ def numeric_range(*args) -> numpy.array:
 
     # Determine dtype
     if all(numpy.issubdtype(arg, numpy.integer) for arg in [start, stop, step]):
-        dtype = numpy.int64
+        dtype = numpy.int64  # type: ignore
 
     # Compute range
     num_range = numpy.arange(start, stop + step, step, dtype=dtype)
 
     # Check last value, remove if it doesn't fall on a step boundary or is over the stop value
-    if not numpy.isclose(num_range[-1], stop, atol=step / 2) or num_range[-1] > stop:
+    if not numpy.isclose(num_range[-1], stop, atol=step / 2) or num_range[-1] > stop:  # type: ignore
         num_range = num_range[:-1]
 
     return num_range

@@ -21,7 +21,7 @@ class QueryProperties:
     Hints and properties to use when executing queries.
     """
 
-    def __init__(self, qid: int, variables):
+    def __init__(self, qid: str, variables):
         # this is empty unless it's set as part of the query
         self.variables: dict[str, Any] = variables
         self.temporal_filters: list = []

@@ -21,6 +21,7 @@ The execution tree contains functionality to:
 
 """
 
+from typing import Any
 from typing import Generator
 from typing import Tuple
 from typing import Union
@@ -40,7 +41,7 @@ class ExecutionTree(Graph):
 
     def execute(
         self,
-    ) -> Generator[Tuple[Union[pyarrow.Table, "NonTabularResult"], ResultType], None, None]:
+    ) -> Generator[Tuple[Union[pyarrow.Table, Any], ResultType], None, None]:
         """
         Implements a 'pull' model execution engine, pulling records starting from
         the last stage (head) of the query plan, and working backwards towards the first stage.
