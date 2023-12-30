@@ -20,12 +20,14 @@ https://github.com/mabel-dev/mabel/blob/6bcd978b90870187d5eff939be3f5845a3cdf900
 """
 
 import os
+from typing import Generator
 
 from orso.schema import FlatColumn
 from orso.schema import RelationSchema
 
 from opteryx.connectors.base.base_connector import INITIAL_CHUNK_SIZE
 from opteryx.connectors.base.base_connector import BaseConnector
+from opteryx.connectors.base.base_connector import DatasetReader
 from opteryx.exceptions import DatasetNotFoundError
 from opteryx.exceptions import MissingDependencyError
 from opteryx.exceptions import UnmetRequirementError
@@ -65,7 +67,7 @@ class MongoDbConnector(BaseConnector):
 
     def read_dataset(
         self, columns: list = None, chunk_size: int = INITIAL_CHUNK_SIZE, **kwargs
-    ) -> "DatasetReader":
+    ) -> Generator:
         import pymongo
 
         client = pymongo.MongoClient(self.connection)  # type:ignore

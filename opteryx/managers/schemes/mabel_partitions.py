@@ -58,10 +58,10 @@ class MabelPartitionScheme(BasePartitionScheme):
     def get_blobs_in_partition(
         self,
         *,
-        start_date: Optional[datetime.datetime],
-        end_date: Optional[datetime.datetime],
         blob_list_getter: Callable,
         prefix: str,
+        start_date: Optional[datetime.datetime],
+        end_date: Optional[datetime.datetime],
     ) -> List[str]:
         """filter the blobs acording to the chosen scheme"""
 

@@ -18,7 +18,7 @@ This is a SQL Query Execution Plan Node.
 This node orders a dataset
 """
 import time
-from typing import Iterable
+from typing import Generator
 
 import numpy
 from orso.types import OrsoTypes
@@ -48,7 +48,7 @@ class SortNode(BasePlanNode):
     def name(self):  # pragma: no cover
         return "Sort"
 
-    def execute(self) -> Iterable:
+    def execute(self) -> Generator:
         morsels = self._producers[0]  # type:ignore
         morsels = morsels.execute()
         morsels = tuple(morsels)

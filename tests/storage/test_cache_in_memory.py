@@ -8,7 +8,7 @@ import sys
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import opteryx
-from opteryx.managers.cache import MemoryCache, CacheManager
+from opteryx.managers.cache import CacheManager, MemoryCache
 from opteryx.shared import BufferPool
 
 

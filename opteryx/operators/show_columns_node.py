@@ -17,12 +17,10 @@ This is a SQL Query Execution Plan Node.
 
 Gives information about a dataset's columns
 """
-from typing import Iterable
+from typing import Generator
 
-import numpy
 import pyarrow
 
-from opteryx.exceptions import SqlError
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 
@@ -84,7 +82,7 @@ class ShowColumnsNode(BasePlanNode):
     def config(self):  # pragma: no cover
         return ""
 
-    def execute(self) -> Iterable:
+    def execute(self) -> Generator:
         morsels = self._producers[0]  # type:ignore
 
         if morsels is None:

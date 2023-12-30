@@ -60,7 +60,7 @@ class BaseConnector:
         self.chunk_size = INITIAL_CHUNK_SIZE
         self.schema = None
         self.statistics = statistics
-        self.pushed_predicates = []
+        self.pushed_predicates: list = []
 
     def get_dataset_schema(self) -> RelationSchema:
         """
@@ -71,7 +71,7 @@ class BaseConnector:
         """
         raise NotImplementedError("Subclasses must implement get_dataset_schema method.")
 
-    def read_dataset(self, **kwargs) -> "DatasetReader":
+    def read_dataset(self, **kwargs) -> Iterable:
         """
         Read a dataset and return a reader object.
 

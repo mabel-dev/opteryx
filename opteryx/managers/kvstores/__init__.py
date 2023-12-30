@@ -12,14 +12,3 @@
 
 from opteryx.managers.kvstores.base_kv_store import BaseKeyValueStore
 from opteryx.managers.kvstores.kv_firestore import FireStoreKVStore
-
-
-def KV_store_factory(store):  # pragma: no-cover
-    """
-    A factory method for getting KV Store instances
-    """
-    stores = {
-        "firestore": FireStoreKVStore,
-    }
-
-    return stores.get(store.lower(), FireStoreKVStore)

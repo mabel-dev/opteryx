@@ -13,6 +13,7 @@
 import datetime
 from typing import Callable
 from typing import List
+from typing import Optional
 
 ONE_HOUR = datetime.timedelta(hours=1)
 
@@ -31,7 +32,12 @@ class BasePartitionScheme:
             current_time += ONE_HOUR
 
     def get_blobs_in_partition(
-        self, blob_list_getter: Callable, prefix: str, timestamp: datetime.datetime
+        self,
+        *,
+        blob_list_getter: Callable,
+        prefix: str,
+        start_date: Optional[datetime.datetime],
+        end_date: Optional[datetime.datetime],
     ) -> List[str]:
         """filter the blobs acording to the chosen scheme"""
         raise NotImplementedError()

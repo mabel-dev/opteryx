@@ -24,11 +24,11 @@ class HeuristicOptimizerContext:
         self.optimized_plan = LogicalPlan()
 
         # We collect predicates we should be able to push to reads and joins
-        self.collected_predicates = []
+        self.collected_predicates: list = []
 
         # We collect column identities so we can push column selection as close to the
         # read as possible, including off to remote systems
-        self.collected_identities = set()
+        self.collected_identities: set = set()
 
 
 class OptimizationStrategy:

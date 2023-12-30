@@ -27,7 +27,7 @@ def get_parts(path_string: str):
 
     if len(path.parts) == 1:  # pragma: no cover
         bucket = ""
-        parts = pathlib.PurePosixPath("")
+        parts: pathlib.PurePosixPath = pathlib.PurePosixPath("")
         stem = path.stem
         suffix = path.suffix
     elif path.suffix == "":
@@ -39,7 +39,7 @@ def get_parts(path_string: str):
         stem = path.stem
         suffix = path.suffix
     if len(parts.parts) == 0:
-        parts = ""
+        parts = ""  # type:ignore
 
     return str(bucket), str(parts), stem, suffix
 

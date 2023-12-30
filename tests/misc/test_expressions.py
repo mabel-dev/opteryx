@@ -1,20 +1,20 @@
-from decimal import Decimal
 import os
 import sys
+from decimal import Decimal
 
 import numpy
 import pytest
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
+from orso.schema import ConstantColumn, FlatColumn, FunctionColumn
+from orso.types import OrsoTypes
+
 import opteryx
 import opteryx.virtual_datasets
 from opteryx.managers.expression import ORSO_TO_NUMPY_MAP, NodeType, evaluate
 from opteryx.models import Node
 from opteryx.shared import QueryStatistics
-
-from orso.types import OrsoTypes
-from orso.schema import FlatColumn, ConstantColumn, FunctionColumn
 
 stats = QueryStatistics()
 

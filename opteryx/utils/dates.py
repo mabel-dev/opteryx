@@ -57,7 +57,7 @@ def add_months(start_date: datetime.datetime, number_of_months: int):
 
 
 def add_interval(
-    current_date: Union[datetime.date, datetime.datetime], interval: str
+    current_date: datetime.datetime, interval: str
 ) -> Union[datetime.date, datetime.datetime]:
     """
     Parses a human readable timedelta (3d5h19m) into a datetime.timedelta.

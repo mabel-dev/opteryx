@@ -23,6 +23,7 @@ def test_connection_warnings():
 def test_connection_parameter_mismatch():
     """test substitution binding errors"""
     import datetime
+
     import opteryx
     from opteryx.exceptions import ParameterError
 

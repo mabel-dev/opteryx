@@ -57,7 +57,7 @@ def split_sql_statements(sql: str) -> List[str]:
         List[str]: A list of individual SQL statements.
     """
     statements = []
-    buffer = []
+    buffer: list = []
     in_single_quote = False
     in_double_quote = False
     in_backtick_quote = False

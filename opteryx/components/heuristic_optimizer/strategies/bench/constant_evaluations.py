@@ -17,13 +17,12 @@ Type: Heuristic
 Goal: Reduce complexity
 """
 import datetime
-import decimal
 
 import numpy
+from orso.types import OrsoTypes
 
 from opteryx import operators
 from opteryx.functions.binary_operators import binary_operations
-from opteryx.managers.expression import LITERAL_TYPE
 from opteryx.managers.expression import NodeType
 from opteryx.models.node import Node
 from opteryx.third_party.pyarrow_ops.ops import filter_operations
@@ -39,18 +38,18 @@ def eliminate_constant_evaluations(plan, properties):
         if hasattr(value, "as_py"):
             value = value.as_py()
         if value is None:
-            return Node(NodeType.LITERAL_NONE, alias=[])
+            return Node(NodeType.LITERAL, type=OrsoTypes.NULL, alias=[])
         if isinstance(value, (bool, numpy.bool_)):
             # boolean must be before numeric
-            return Node(NodeType.LITERAL_BOOLEAN, value=value, alias=[])
+            return Node(NodeType.LITERAL, type=OrsoTypes.BOOLEAN, value=value, alias=[])
         if isinstance(value, (str)):
-            return Node(NodeType.LITERAL_VARCHAR, value=value, alias=[])
-        if isinstance(value, (int, float, decimal.Decimal)):
-            return Node(NodeType.LITERAL_NUMERIC, value=value, alias=[])
-        if isinstance(value, (numpy.datetime64)):
-            return Node(NodeType.LITERAL_TIMESTAMP, value=value, alias=[])
-        if isinstance(value, (datetime.date, datetime.datetime)):
-            return Node(NodeType.LITERAL_TIMESTAMP, value=numpy.datetime64(value), alias=[])
+            return Node(NodeType.LITERAL, type=OrsoTypes.VARCHAR, value=value, alias=[])
+        if isinstance(value, int):
+            return Node(NodeType.LITERAL, type=OrsoTypes.INTEGER, value=value, alias=[])
+        if isinstance(value, (numpy.datetime64, datetime.datetime)):
+            return Node(NodeType.LITERAL, type=OrsoTypes.TIMESTAMP, value=value, alias=[])
+        if isinstance(value, (datetime.date)):
+            return Node(NodeType.LITERAL, type=OrsoTypes.DATE, value=numpy.datetime64(value), alias=[])
         # fmt:on
 
     def update_expression_tree(node):
@@ -69,8 +68,8 @@ def eliminate_constant_evaluations(plan, properties):
             ]
 
         # this is the main work of this action
-        if (node.left and node.left.node_type & LITERAL_TYPE == LITERAL_TYPE) and (
-            node.right and node.right.node_type & LITERAL_TYPE == LITERAL_TYPE
+        if (node.left and node.left.node_type == NodeType.LITERAL) and (
+            node.right and node.right.node_type == NodeType.LITERAL
         ):
             if node.node_type == NodeType.COMPARISON_OPERATOR:
                 value = filter_operations([node.left.value], node.value, [node.right.value])[0]

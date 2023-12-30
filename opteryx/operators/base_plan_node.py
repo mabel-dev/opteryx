@@ -11,6 +11,9 @@
 # limitations under the License.
 
 
+from typing import Generator
+
+import pyarrow
 from orso.tools import random_string
 
 from opteryx.models import QueryProperties
@@ -56,3 +59,6 @@ class BasePlanNode:
         Configuration for this node, used when showing execution plans
         """
         return "<not set>"
+
+    def execute(self) -> Generator[pyarrow.Table, None, None]:
+        pass

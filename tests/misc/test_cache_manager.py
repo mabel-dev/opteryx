@@ -6,8 +6,8 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 import pytest
 
 from opteryx.exceptions import InvalidConfigurationError
-from opteryx.managers.kvstores import BaseKeyValueStore
 from opteryx.managers.cache.cache_manager import CacheManager
+from opteryx.managers.kvstores import BaseKeyValueStore
 
 
 class DummyKVStore(BaseKeyValueStore):

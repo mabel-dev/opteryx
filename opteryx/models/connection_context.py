@@ -13,14 +13,13 @@
 import datetime
 from dataclasses import dataclass
 from dataclasses import field
-from typing import Any
-from typing import Dict
 from typing import List
 from typing import Tuple
 
 from orso.tools import random_int
 
 from opteryx.shared.variables import SystemVariables
+from opteryx.shared.variables import SystemVariablesContainer
 from opteryx.shared.variables import VariableOwner
 
 # History Item = [statement, success, execution start]
@@ -51,7 +50,7 @@ class ConnectionContext:
     connected_at: datetime.datetime = field(default_factory=datetime.datetime.utcnow, init=False)
     user: str = None
     schema: str = None
-    variables: Dict[str, Any] = field(init=False)
+    variables: SystemVariablesContainer = field(init=False)
     history: List[HistoryItem] = field(default_factory=list, init=False)
 
     def __post_init__(self):

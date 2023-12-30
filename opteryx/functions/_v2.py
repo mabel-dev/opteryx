@@ -26,8 +26,6 @@ import numpy
 from orso.tools import single_item_cache
 from pyarrow import compute
 
-from opteryx.exceptions import IncompleteImplementationError
-
 CAMEL_TO_SNAKE = re.compile(r"(?<!^)(?=[A-Z])")
 
 
@@ -195,7 +193,7 @@ class _BaseFunction:
                     for return_type in typing.get_args(return_type_hints)
                 ]
             return [TYPE_MAP.get(return_type_hints, "OTHER")]
-        raise IncompleteImplementationError(
+        raise NotImplementedError(
             f"{self.__class__.__name__.upper()} hasn't specified its return types"
         )
 

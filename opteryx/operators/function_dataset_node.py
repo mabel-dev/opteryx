@@ -18,7 +18,7 @@ This is a SQL Query Execution Plan Node.
 This Node creates datasets based on function calls like VALUES and UNNEST.
 """
 import time
-from typing import Iterable
+from typing import Generator
 
 import pyarrow
 
@@ -93,7 +93,7 @@ class FunctionDatasetNode(BasePlanNode):
     def can_push_selection(self):
         return False
 
-    def execute(self) -> Iterable:
+    def execute(self) -> Generator:
         try:
             start_time = time.time_ns()
             data = FUNCTIONS[self.function](**self.parameters)  # type:ignore

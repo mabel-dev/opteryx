@@ -24,7 +24,7 @@ This does two things that the projection node doesn't do:
 This node doesn't do any calculations, it is a pure Projection.
 """
 import time
-from typing import Iterable
+from typing import Generator
 
 from opteryx.exceptions import AmbiguousIdentifierError
 from opteryx.exceptions import InvalidInternalStateError
@@ -45,7 +45,7 @@ class ExitNode(BasePlanNode):
     def name(self):  # pragma: no cover
         return "Exit"
 
-    def execute(self) -> Iterable:
+    def execute(self) -> Generator:
         start = time.monotonic_ns()
         morsels = self._producers[0]  # type:ignore
 

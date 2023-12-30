@@ -19,7 +19,7 @@ This Node eliminates columns that are not needed in a Relation. This is also the
 that performs column renames.
 """
 import time
-from typing import Iterable
+from typing import Generator
 
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import evaluate_and_append
@@ -52,7 +52,7 @@ class ProjectionNode(BasePlanNode):
     def name(self):  # pragma: no cover
         return "Projection"
 
-    def execute(self) -> Iterable:
+    def execute(self) -> Generator:
         morsels = self._producers[0]  # type:ignore
 
         for morsel in morsels.execute():

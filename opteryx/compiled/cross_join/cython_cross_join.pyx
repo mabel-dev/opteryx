@@ -1,13 +1,16 @@
 # cython: language_level=3
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+
 import cython
 import numpy
+
 cimport numpy as cnp
-from cython.parallel import prange
+
 from cython import Py_ssize_t
-from libc.stdlib cimport malloc
-from libc.stdlib cimport free
-from numpy cimport int64_t
-from numpy cimport ndarray
+from cython.parallel import prange
+
+from libc.stdlib cimport free, malloc
+from numpy cimport int64_t, ndarray
 
 cnp.import_array()
 

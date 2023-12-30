@@ -157,7 +157,7 @@ def _is_date_only(obj):
     )
 
 
-def _check_type(obj, types: Union[type, Tuple[type, ...]]) -> bool:
+def _check_type(obj, types: Tuple[type, ...]) -> bool:
     return any(isinstance(obj, t) for t in types)
 
 

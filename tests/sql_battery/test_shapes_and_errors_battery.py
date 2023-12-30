@@ -46,15 +46,15 @@ import opteryx
 
 # from opteryx.connectors import AwsS3Connector, DiskConnector
 from opteryx.exceptions import (
-    AmbiguousIdentifierError,
     AmbiguousDatasetError,
+    AmbiguousIdentifierError,
     ColumnNotFoundError,
     ColumnReferencedBeforeEvaluationError,
     DatasetNotFoundError,
     EmptyDatasetError,
     FunctionNotFoundError,
-    InconsistentSchemaError,
     IncompatibleTypesError,
+    InconsistentSchemaError,
     IncorrectTypeError,
     InvalidFunctionParameterError,
     InvalidTemporalRangeFilterError,
@@ -67,8 +67,8 @@ from opteryx.exceptions import (
     UnsupportedSyntaxError,
     VariableNotFoundError,
 )
-from opteryx.utils.formatter import format_sql
 from opteryx.managers.schemes.mabel_partitions import UnsupportedSegementationError
+from opteryx.utils.formatter import format_sql
 
 # fmt:off
 STATEMENTS = [
@@ -858,6 +858,7 @@ STATEMENTS = [
         ("SELECT EXTRACT(EPOCH FROM NOW())", 1, 1, None),
         ("SELECT EXTRACT(JULIAN FROM NOW())", 1, 1, None),
         ("SELECT EXTRACT(VANILLA FROM NOW())", 1, 1, SqlError), # InvalidFunctionParameterError),
+        ("SELECT EXTRACT(millenium FROM NOW())", None, None, InvalidFunctionParameterError),
 
         ("SELECT DATE_FORMAT(birth_date, '%m-%y') FROM $astronauts", 357, 1, None),
         ("SELECT DATEDIFF('year', '2017-08-25', '2011-08-25') AS DateDiff;", 1, 1, None),
@@ -1367,8 +1368,7 @@ def test_sql_battery(statement, rows, columns, exception):
 
     #    opteryx.register_store("tests", DiskConnector)
     #    opteryx.register_store("mabellabs", AwsS3Connector)
-    from opteryx.connectors import DiskConnector
-    from opteryx.connectors import SqlConnector
+    from opteryx.connectors import DiskConnector, SqlConnector
     from opteryx.managers.schemes import MabelPartitionScheme
 
     opteryx.register_store(

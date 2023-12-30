@@ -18,7 +18,8 @@ This is a SQL Query Execution Plan Node.
 This performs a CROSS JOIN - CROSS JOIN is not natively supported by PyArrow so this is written
 here rather than calling the join() functions
 """
-import typing
+from typing import Generator
+from typing import Tuple
 
 import numpy
 import pyarrow
@@ -34,8 +35,8 @@ MAX_JOIN_SIZE: int = 500  # config
 
 
 def _cross_join_unnest_column(
-    morsels: typing.Iterable[pyarrow.Table], source: Node, target_column: FlatColumn
-) -> typing.Generator[pyarrow.Table, None, None]:
+    morsels: BasePlanNode, source: Node, target_column: FlatColumn
+) -> Generator[pyarrow.Table, None, None]:
     """
     Perform a cross join on an unnested column of pyarrow tables.
 
@@ -84,8 +85,8 @@ def _cross_join_unnest_column(
 
 
 def _cross_join_unnest_literal(
-    morsels: typing.Iterable[pyarrow.Table], source: Node, target_column: FlatColumn
-) -> typing.Generator[pyarrow.Table, None, None]:
+    morsels: BasePlanNode, source: Tuple, target_column: FlatColumn
+) -> Generator[pyarrow.Table, None, None]:
     joined_list_size = len(source)
 
     # Loop through each morsel from the morsels execution
@@ -192,7 +193,7 @@ class CrossJoinNode(BasePlanNode):
     def config(self):  # pragma: no cover
         return ""
 
-    def execute(self) -> typing.Iterable:
+    def execute(self) -> Generator:
         left_node = self._producers[0]  # type:ignore
         right_node = self._producers[1]  # type:ignore
         right_table = pyarrow.concat_tables(right_node.execute(), mode="default")  # type:ignore

@@ -14,8 +14,8 @@ from tests.tools import is_arm, is_mac, is_windows, skip_if
 @skip_if(is_arm() or is_windows() or is_mac())
 def test_redis_cache():
     import opteryx
-    from opteryx.managers.cache import RedisCache
     from opteryx import CacheManager
+    from opteryx.managers.cache import RedisCache
 
     cache = RedisCache()
     opteryx.set_cache_manager(

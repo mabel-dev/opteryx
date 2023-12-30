@@ -23,8 +23,11 @@ e.g. disable_optimizer (default to False)
 """
 
 
-import typing
 from enum import Enum
+from typing import Any
+from typing import Dict
+from typing import Tuple
+from typing import Type
 
 from orso.types import OrsoTypes
 
@@ -42,10 +45,10 @@ class VariableOwner(int, Enum):
     USER = 10
 
 
-VariableSchema = typing.Tuple[typing.Type, typing.Any, VariableOwner]
+VariableSchema = Tuple[Type, Any, VariableOwner]
 
 # fmt: off
-SYSTEM_VARIABLES_DEFAULTS: typing.Dict[str, VariableSchema] = {
+SYSTEM_VARIABLES_DEFAULTS: Dict[str, VariableSchema] = {
     # name: (type, default, owner, description)
 
     # These are the MySQL set of variables - we don't use all of them
@@ -101,12 +104,12 @@ class SystemVariablesContainer:
         self._variables = SYSTEM_VARIABLES_DEFAULTS.copy()
         self._owner = owner
 
-    def __getitem__(self, key: str) -> typing.Any:
+    def __getitem__(self, key: str) -> Any:
         if key not in self._variables:
             raise VariableNotFoundError(key)
         return self._variables[key][1]
 
-    def __setitem__(self, key: str, value: typing.Any) -> None:
+    def __setitem__(self, key: str, value: Any) -> None:
         if key[0] == "@":
             variable_type = value.type
             owner = VariableOwner.USER
@@ -124,7 +127,7 @@ class SystemVariablesContainer:
                 raise ValueError(f"Invalid type for `{key}`, {variable_type} expected.")
         self._variables[key] = (variable_type, value.value, owner)
 
-    def details(self, key: str) -> typing.Tuple[str, typing.Any, typing.Any]:
+    def details(self, key: str) -> VariableSchema:
         if key not in self._variables:
             raise VariableNotFoundError(key)
         return self._variables[key]

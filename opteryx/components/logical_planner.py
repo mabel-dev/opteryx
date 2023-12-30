@@ -45,6 +45,7 @@ The plan does not try to be efficient or clever, at this point it is only trying
 
 from enum import Enum
 from enum import auto
+from typing import Generator
 from typing import List
 from typing import Optional
 from typing import Tuple
@@ -863,7 +864,7 @@ QUERY_BUILDERS = {
 }
 
 
-def do_logical_planning_phase(parsed_statements) -> Tuple[LogicalPlan, dict, dict]:
+def do_logical_planning_phase(parsed_statements) -> Generator:
     # The sqlparser ast is an array of asts
     for parsed_statement in parsed_statements:
         statement_type = next(iter(parsed_statement))

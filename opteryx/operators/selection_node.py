@@ -18,7 +18,7 @@ This is a SQL Query Execution Plan Node.
 This node is responsible for applying filters to datasets.
 """
 import time
-from typing import Iterable
+from typing import Generator
 
 import numpy
 import pyarrow
@@ -50,7 +50,7 @@ class SelectionNode(BasePlanNode):
     def name(self):  # pragma: no cover
         return "Selection"
 
-    def execute(self) -> Iterable:
+    def execute(self) -> Generator:
         morsels = self._producers[0]  # type:ignore
         schema = None
         at_least_one = False

@@ -40,17 +40,21 @@
 ~~~
 """
 
+from typing import Iterable
+from typing import Union
+
 from opteryx import config
 
 PROFILE_LOCATION = config.PROFILE_LOCATION
 
 
-def query_planner(operation: str, parameters: list, connection, qid: str):
+def query_planner(operation: str, parameters: Union[Iterable, None], connection, qid: str):
     import orjson
 
     from opteryx.components.ast_rewriter import do_ast_rewriter
     from opteryx.components.binder import do_bind_phase
     from opteryx.components.heuristic_optimizer import do_heuristic_optimizer
+    from opteryx.components.logical_planner import LogicalPlan
     from opteryx.components.logical_planner import do_logical_planning_phase
     from opteryx.components.sql_rewriter import do_sql_rewrite
     from opteryx.components.temporary_physical_planner import create_physical_plan
@@ -75,8 +79,12 @@ def query_planner(operation: str, parameters: list, connection, qid: str):
         paramters=params,
         connection=connection,
     )
+
+    logical_plan: LogicalPlan = None
+    ast: dict = {}
+
     # Logical Planner converts ASTs to logical plans
-    for logical_plan, ast, ctes in do_logical_planning_phase(parsed_statements):
+    for logical_plan, ast, ctes in do_logical_planning_phase(parsed_statements):  # type: ignore
         # check user has permission for this query type
         query_type = next(iter(ast))
         if query_type not in connection.permissions:

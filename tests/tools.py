@@ -108,11 +108,11 @@ def trunc_printable(value, width, full_line: bool = True):
 def run_tests():
     import contextlib
     import inspect
-    from io import StringIO
+    import os
     import shutil
     import time
     import traceback
-    import os
+    from io import StringIO
 
     manual_test = os.environ.get("MANUAL_TEST")
     os.environ["MANUAL_TEST"] = "1"
@@ -229,6 +229,7 @@ def create_duck_db():
     bypass the need to track versions.
     """
     import os
+
     import duckdb
 
     try:

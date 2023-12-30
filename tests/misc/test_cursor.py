@@ -1,14 +1,15 @@
 import os
 import sys
 from decimal import Decimal
-import pytest
+
 import pyarrow
+import pytest
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import opteryx
-from opteryx.exceptions import InvalidCursorStateError, MissingSqlStatement, UnsupportedSyntaxError
 from opteryx.cursor import CursorState
+from opteryx.exceptions import InvalidCursorStateError, MissingSqlStatement, UnsupportedSyntaxError
 
 
 def setup_function():

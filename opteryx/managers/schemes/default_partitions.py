@@ -22,9 +22,9 @@ class DefaultPartitionScheme(BasePartitionScheme):
     def get_blobs_in_partition(
         self,
         *,
-        start_date: Optional[datetime.datetime],
-        end_date: Optional[datetime.datetime],
         blob_list_getter: Callable,
         prefix: str,
+        start_date: Optional[datetime.datetime],
+        end_date: Optional[datetime.datetime],
     ) -> List[str]:
         return blob_list_getter(prefix=prefix)

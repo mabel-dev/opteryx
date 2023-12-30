@@ -13,10 +13,10 @@ import sys
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import pytest
-from tests.tools import is_arm, skip_if
 
 import opteryx
 from opteryx.connectors import DiskConnector
+from tests.tools import is_arm, skip_if
 
 # fmt:off
 STATEMENTS = [

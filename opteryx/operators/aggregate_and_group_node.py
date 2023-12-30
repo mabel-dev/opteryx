@@ -21,13 +21,12 @@ the aggregation node doesn't need the grouping node.
 
 """
 import time
-from typing import Iterable
+from typing import Generator
 
 import numpy
 import pyarrow
 from orso.types import OrsoTypes
 
-from opteryx.exceptions import SqlError
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import evaluate_and_append
 from opteryx.managers.expression import get_all_nodes_of_type
@@ -73,7 +72,7 @@ class AggregateAndGroupNode(BasePlanNode):
 
     @property
     def config(self):  # pragma: no cover
-        return str(self._aggregates)
+        return str(self.aggregates)
 
     @property
     def greedy(self):  # pragma: no cover
@@ -83,7 +82,7 @@ class AggregateAndGroupNode(BasePlanNode):
     def name(self):  # pragma: no cover
         return "Group"
 
-    def execute(self) -> Iterable:
+    def execute(self) -> Generator[pyarrow.Table, None, None]:
         morsels = self._producers[0]  # type:ignore
 
         # merge all the morsels together into one table, selecting only the columns

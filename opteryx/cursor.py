@@ -214,9 +214,9 @@ class Cursor(DataFrame):
         """
         self._statistics.start_time = time.time_ns()
 
-        statements = sql.remove_comments(operation)
-        statements = sql.clean_statement(statements)
-        statements = sql.split_sql_statements(statements)
+        operation = sql.remove_comments(operation)
+        operation = sql.clean_statement(operation)
+        statements = sql.split_sql_statements(operation)
 
         if len(statements) == 0:
             raise MissingSqlStatement("No statement found")
@@ -254,12 +254,12 @@ class Cursor(DataFrame):
             if self._result_type == ResultType.NON_TABULAR:
                 import orso
 
-                meta_dataframe = orso.DataFrame([{"rows_affected": result_data.record_count}])
+                meta_dataframe = orso.DataFrame([{"rows_affected": result_data.record_count}])  # type: ignore
                 self._rows = meta_dataframe._rows
                 self._schema = meta_dataframe._schema
 
-                self._rowcount = result_data.record_count
-                self._query_status = result_data.status
+                self._rowcount = result_data.record_count  # type: ignore
+                self._query_status = result_data.status  # type: ignore
             elif self._result_type == ResultType.TABULAR:
                 self._rows, self._schema = converters.from_arrow(result_data)
                 self._cursor = iter(self._rows)
@@ -308,7 +308,7 @@ class Cursor(DataFrame):
         if results is not None:
             result_data, self._result_type = next(results, (ResultType._UNDEFINED, None))
             if limit is not None:
-                result_data = utils.arrow.limit_records(result_data, limit)
+                result_data = utils.arrow.limit_records(result_data, limit)  # type: ignore
         try:
             return pyarrow.concat_tables(
                 result_data, promote_optionsstr="permissive", mode="default"
@@ -356,8 +356,19 @@ class Cursor(DataFrame):
     def __repr__(self):
         """
         Override the Orso repr
+
+        In notebooks we should return a table
         """
-        return f"<opteryx.Cursor {self._state}>"
+        in_a_notebook = False
+        try:
+            from IPython import get_ipython
+
+            in_a_notebook = get_ipython() is not None
+            if not in_a_notebook:
+                return f"<opteryx.Cursor {self._state}>"
+        except Exception:
+            pass
+        return str(self)
 
     def __bool__(self):
         """
