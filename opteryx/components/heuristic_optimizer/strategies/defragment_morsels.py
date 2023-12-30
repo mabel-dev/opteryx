@@ -26,7 +26,7 @@ class DefragmentMorselsStrategy(OptimizationStrategy):  # pragma: no cover
         self, node: LogicalPlanNode, context: HeuristicOptimizerContext
     ) -> HeuristicOptimizerContext:
         if not context.optimized_plan:
-            context.optimized_plan = context.pre_optimized_tree.copy()
+            context.optimized_plan = context.pre_optimized_tree.copy()  # type: ignore
 
         if node.node_type in (LogicalPlanStepType.Join,):
             for node, _, _ in context.optimized_plan.ingoing_edges(context.node_id):

@@ -24,8 +24,8 @@ from opteryx.components.binder.binder import inner_binder
 from opteryx.components.binder.binder import locate_identifier_in_loaded_schemas
 from opteryx.components.binder.binder import merge_schemas
 from opteryx.components.binder.binding_context import BindingContext
+from opteryx.components.logical_planner import LogicalPlan
 from opteryx.exceptions import AmbiguousDatasetError
-from opteryx.exceptions import ColumnNotFoundError
 from opteryx.exceptions import InvalidFunctionParameterError
 from opteryx.exceptions import InvalidInternalStateError
 from opteryx.exceptions import UnsupportedSyntaxError
@@ -33,7 +33,6 @@ from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.models import LogicalColumn
 from opteryx.models import Node
-from opteryx.third_party.travers import Graph
 from opteryx.virtual_datasets import derived
 
 CAMEL_TO_SNAKE = re.compile(r"(?<!^)(?=[A-Z])")
@@ -864,8 +863,8 @@ class BinderVisitor:
         return node, context
 
     def traverse(
-        self, graph: Graph, node: Node, context: BindingContext
-    ) -> Tuple[Graph, BindingContext]:
+        self, graph: LogicalPlan, node: Node, context: BindingContext
+    ) -> Tuple[LogicalPlan, BindingContext]:
         """
         Traverses the given graph starting at the given node and calling the
         appropriate visit methods for each node in the graph. This method uses

@@ -38,7 +38,7 @@ class PredicatePushdownStrategy(OptimizationStrategy):
         self, node: LogicalPlanNode, context: HeuristicOptimizerContext
     ) -> HeuristicOptimizerContext:
         if not context.optimized_plan:
-            context.optimized_plan = context.pre_optimized_tree.copy()
+            context.optimized_plan = context.pre_optimized_tree.copy()  # type: ignore
 
         if node.node_type in (
             LogicalPlanStepType.Scan,
