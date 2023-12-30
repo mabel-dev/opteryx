@@ -38,29 +38,6 @@ class ExecutionTree(Graph):
     complex code which is the planner from the tree that describes the plan.
     """
 
-    def get_nodes_of_type(self, operator):
-        """
-        Traverse the plan looking for nodes of a given type or set of types.
-
-        Parameters:
-            operator: BaseOperator or Iterable of BaseOperator
-                The operator type(s) to match.
-        Yields:
-            string
-                nids of matching nodes.
-        """
-
-        def _inner(operator):
-            if not isinstance(operator, (list, set)):
-                operator = tuple([operator])
-            if not isinstance(operator, tuple):
-                operator = tuple(operator)
-            for nid, item in list(self._nodes.items()):
-                if isinstance(item, operator):
-                    yield nid
-
-        return list(_inner(operator))
-
     def execute(
         self,
     ) -> Generator[Tuple[Union[pyarrow.Table, "NonTabularResult"], ResultType], None, None]:

@@ -51,27 +51,6 @@ def get_yesterday():
     return numpy.datetime64(yesterday)
 
 
-def get_date(timestamp):
-    """
-    Convert input to a datetime object and extract the Date part
-    """
-    # if it's a string, parse it (to a datetime)
-    if isinstance(timestamp, str):
-        timestamp = parse_iso(timestamp)
-    # if it's a numpy datetime, convert it to a date
-    if isinstance(timestamp, (numpy.datetime64)):
-        timestamp = timestamp.astype("M8[D]").astype("O")
-    # if it's a datetime, convert it to a date
-    if isinstance(timestamp, datetime.datetime):
-        timestamp = timestamp.date()
-    # set it to midnight that day to make it a datetime
-    # even though we're getting the date, the supported column type is datetime
-    if isinstance(timestamp, datetime.date):
-        date = datetime.datetime.combine(timestamp, datetime.time.min)
-        return numpy.datetime64(date)
-    return None
-
-
 def date_part(part, arr):
     """
     Also the EXTRACT function - we extract a given part from an array of dates

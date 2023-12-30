@@ -91,7 +91,7 @@ class MemcachedCache(BaseKeyValueStore):
             if response:
                 self.hits += 1
                 return bytes(response)
-        except Exception as err:
+        except Exception as err:  # pragma: no cover
             self._consecutive_failures += 1
             if self._consecutive_failures >= MAXIMUM_CONSECUTIVE_FAILURES:
                 import datetime

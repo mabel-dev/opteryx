@@ -567,6 +567,7 @@ STATEMENTS = [
         ("SELECT * FROM UNNEST(('foo', 'bar', 'baz', 'qux', 'corge', 'garply', 'waldo', 'fred')) AS element WHERE element LIKE '%e%'", 2, 1, None),
         ("SELECT * FROM UNNEST(('foo', 'bar', 'baz', 'qux', 'corge', 'garply', 'waldo', 'fred')) AS UN", 8, 1, None),
         ("SELECT * FROM UNNEST(('foo', 'bar', 'baz', 'qux', 'corge', 'garply', 'waldo', 'fred')) AS UN WHERE UN LIKE '%e%'", 2, 1, None),
+        ("SELECT * FROM $astronauts LEFT JOIN UNNEST(missions) as s", None, None, UnsupportedSyntaxError),
 
         ("SELECT * FROM generate_series(1, 10)", 10, 1, UnnamedColumnError),
         ("SELECT * FROM generate_series(1, 10) AS GS", 10, 1, None),

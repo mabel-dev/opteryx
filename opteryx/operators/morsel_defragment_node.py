@@ -60,7 +60,7 @@ class MorselDefragmentNode(BasePlanNode):
     def config(self):  # pragma: no cover
         return ""
 
-    def execute(self) -> Iterable:
+    def execute(self) -> Iterable:  # pragma: no cover
         morsels = self._producers[0]  # type:ignore
 
         row_counter = 0
