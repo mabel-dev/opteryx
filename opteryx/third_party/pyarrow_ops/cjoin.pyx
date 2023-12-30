@@ -1,10 +1,12 @@
 # cython: language_level=3
 import cython
 import numpy
+
 cimport numpy as cnp
+
 from cython import Py_ssize_t
-from numpy cimport int64_t
-from numpy cimport ndarray
+
+from numpy cimport int64_t, ndarray
 
 cnp.import_array()
 

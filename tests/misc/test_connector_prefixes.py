@@ -3,13 +3,15 @@ Test the connection example from the documentation
 """
 import os
 import sys
+
 import pytest
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
+from sqlalchemy.exc import NoSuchTableError, OperationalError
+
 import opteryx
 from opteryx.connectors import GcpFireStoreConnector, SqlConnector, register_store
-from sqlalchemy.exc import NoSuchTableError, OperationalError
 from opteryx.exceptions import DatasetNotFoundError
 
 register_store(

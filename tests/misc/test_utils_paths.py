@@ -7,7 +7,6 @@ import pytest
 
 from opteryx.utils import paths
 
-
 # fmt:off
 PATH_PARTS_TEST = [
         ("C:/users/opteryx/file.ext", ("C:", "users/opteryx", "file", ".ext"), None),

@@ -272,7 +272,7 @@ class BinderVisitor:
             Tuple[Node, Dict[str, Any]]
             The modified node and the updated context.
         """
-        tmp_aggregates = []
+        tmp_aggregates: tuple = tuple()
         if node.aggregates:
             tmp_aggregates, _ = zip(
                 *(inner_binder(aggregate, context) for aggregate in node.aggregates)
@@ -341,7 +341,7 @@ class BinderVisitor:
 
         seen = set()
         needs_qualifier = any(
-            column.name in seen or seen.add(column.name) is not None
+            column.name in seen or seen.add(column.name) is not None  # type: ignore
             for schema in context.schemas.values()
             for column in schema.columns
         )
@@ -358,7 +358,7 @@ class BinderVisitor:
                     if len(context.relations) > 1 or needs_qualifier:
                         if isinstance(projection_column, LogicalColumn):
                             if qualifier:
-                                projection_column.sourcce = qualifier
+                                projection_column.source = qualifier
                             return projection_column.qualified_name
                         return f"{qualifier}.{column.name}"
 
@@ -521,13 +521,13 @@ class BinderVisitor:
                 node.schema = schema
             else:
                 try:
-                    column_definition = int(column_definition)
+                    column_definition = int(column_definition)  # type: ignore
                 except TypeError:
                     raise InvalidFunctionParameterError(
                         f"Expected number of rows for 'FAKE' function or list of column types. Are you missing parenthesis?"
                     )
                 names = node.columns + tuple(
-                    f"column_{i}" for i in range(len(node.columns), column_definition)
+                    f"column_{i}" for i in range(len(node.columns), column_definition)  # type: ignore
                 )
                 node.columns = [
                     LogicalColumn(
@@ -536,7 +536,7 @@ class BinderVisitor:
                         source=node.alias,
                         schema_column=FlatColumn(name=names[i], type=OrsoTypes.INTEGER),
                     )
-                    for i in range(column_definition)
+                    for i in range(column_definition)  # type: ignore
                 ]
 
             schema = RelationSchema(
@@ -581,7 +581,7 @@ class BinderVisitor:
         # Handle 'using' by converting to a an 'on'
         if node.using:
             node.on = convert_using_to_on(
-                [n.value for n in node.using], node.left_relation_names, node.right_relation_names
+                {n.value for n in node.using}, node.left_relation_names, node.right_relation_names
             )
         if node.on:
             # All except CROSS JOINs have been mapped to have an ON condition
@@ -823,8 +823,8 @@ class BinderVisitor:
         node, context = self.visit_exit(node, context)
 
         # we sack all the tables we previously knew and create a new set of schemas here
-        columns = []
-        source_relations = []
+        columns: list = []
+        source_relations: list = []
         for name, schema in context.schemas.items():
             for schema_column in schema.columns:
                 # Find the column in the projection if it exists

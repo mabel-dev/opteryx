@@ -10,8 +10,8 @@ import datetime
 
 import pytest
 
-from opteryx.utils.sql import clean_statement, remove_comments
 from opteryx.components.sql_rewriter import extract_temporal_filters
+from opteryx.utils.sql import clean_statement, remove_comments
 
 # fmt:off
 THIS_MORNING = datetime.datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)

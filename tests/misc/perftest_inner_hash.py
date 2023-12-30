@@ -2,7 +2,6 @@ import functools
 import time
 
 import numpy
-
 from orso.cityhash import CityHash32, CityHash64
 
 APOLLO_11_DURATION: int = 1023123
@@ -63,8 +62,9 @@ import sys
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
-import opteryx
 from orso.tools import random_int, random_string
+
+import opteryx
 
 SQLS = [
     "SELECT * FROM $astronauts INNER JOIN $astronauts USING (name)",

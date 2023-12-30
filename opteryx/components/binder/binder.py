@@ -12,6 +12,7 @@
 
 
 import copy
+from typing import Any
 from typing import Dict
 from typing import Optional
 from typing import Tuple
@@ -20,11 +21,9 @@ from orso.schema import ConstantColumn
 from orso.schema import FlatColumn
 from orso.schema import FunctionColumn
 from orso.schema import RelationSchema
-from orso.types import PYTHON_TO_ORSO_MAP
 
 from opteryx.exceptions import AmbiguousIdentifierError
 from opteryx.exceptions import ColumnNotFoundError
-from opteryx.exceptions import FunctionNotFoundError
 from opteryx.exceptions import InvalidInternalStateError
 from opteryx.exceptions import UnexpectedDatasetReferenceError
 from opteryx.functions import FUNCTIONS
@@ -66,7 +65,7 @@ def merge_schemas(*schemas: Dict[str, RelationSchema]) -> Dict[str, RelationSche
 
 def locate_identifier_in_loaded_schemas(
     value: str, schemas: Dict[str, RelationSchema]
-) -> Tuple[Optional[str], Optional[RelationSchema]]:
+) -> Tuple[Optional[FlatColumn], Optional[RelationSchema]]:
     """
     Locate a given identifier in a set of loaded schemas.
 
@@ -94,7 +93,7 @@ def locate_identifier_in_loaded_schemas(
     return column, found_source_relation
 
 
-def locate_identifier(node: Node, context: "BindingContext") -> Tuple[Node, Dict]:
+def locate_identifier(node: Node, context: Any) -> Tuple[Node, Dict]:
     """
     Locate which schema the identifier is defined in. We return a populated node
     and the context.
@@ -190,9 +189,7 @@ def locate_identifier(node: Node, context: "BindingContext") -> Tuple[Node, Dict
     return node, context
 
 
-def traversive_recursive_bind(
-    node: Node, context: "BindingContext"
-) -> Tuple[Node, "BindingContext"]:
+def traversive_recursive_bind(node: Node, context: Any) -> Tuple[Node, Any]:
     # First recurse and do this for all the sub parts of the evaluation plan
     if node.left:
         node.left, context = inner_binder(node.left, context)
@@ -209,7 +206,7 @@ def traversive_recursive_bind(
     return node, context
 
 
-def inner_binder(node: Node, context: "BindingContext") -> Tuple[Node, "BindingContext"]:
+def inner_binder(node: Node, context: Any) -> Tuple[Node, Any]:
     """
     Note, this is a tree within a tree. This function represents a single step in the execution
     plan (associated with the relational algebra) which may itself be an evaluation plan

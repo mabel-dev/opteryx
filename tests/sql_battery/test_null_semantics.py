@@ -8,9 +8,10 @@ import sys
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
-import pytest
-import opteryx
 import numpy
+import pytest
+
+import opteryx
 
 # fmt:off
 STATEMENTS = [

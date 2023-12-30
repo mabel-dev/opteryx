@@ -4,6 +4,7 @@ more than it was when we last reviewed this test.
 """
 import os
 import sys
+
 import pytest
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))

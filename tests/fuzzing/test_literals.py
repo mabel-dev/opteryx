@@ -12,9 +12,9 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import hypothesis.strategies as st
 from hypothesis import given, settings
-from tests.tools import is_arm, is_mac, is_windows, skip_if
 
 import opteryx
+from tests.tools import is_arm, is_mac, is_windows, skip_if
 
 # allows us to run short CI and longer scheduled tests
 TEST_ITERATIONS = int(os.environ.get("TEST_ITERATIONS", 100))

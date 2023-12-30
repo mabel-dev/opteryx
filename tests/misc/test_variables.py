@@ -4,11 +4,11 @@ import sys
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import pytest
+from orso.types import OrsoTypes
 
 from opteryx.exceptions import PermissionsError
-from opteryx.shared.variables import SystemVariables
 from opteryx.models import Node
-from orso.types import OrsoTypes
+from opteryx.shared.variables import SystemVariables
 
 
 def test_connection_variables():

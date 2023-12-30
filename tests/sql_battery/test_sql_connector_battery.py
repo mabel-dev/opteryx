@@ -10,9 +10,9 @@ import sys
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import pytest
+from sqlalchemy import create_engine
 
 import opteryx
-from sqlalchemy import create_engine
 from opteryx.connectors import SqlConnector
 
 expected_rows = -1
@@ -103,8 +103,8 @@ if __name__ == "__main__":  # pragma: no cover
 
     import shutil
     import time
-    from opteryx.utils.formatter import format_sql
 
+    from opteryx.utils.formatter import format_sql
     from tests.tools import trunc_printable
 
     start_suite = time.monotonic_ns()

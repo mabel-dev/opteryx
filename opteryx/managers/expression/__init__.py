@@ -340,15 +340,3 @@ def format_column(column):
     if column.nbytes > MAX_COLUMN_BYTE_SIZE:
         return [[i] for i in column]
     return [column]
-
-
-def deduplicate_list_of_nodes(nodes):
-    seen = set()
-    deduped = []
-    for column in nodes:
-        if column.value not in seen:
-            deduped.append(column)
-            seen.add(column.value)
-            if column.alias:
-                seen.update(column.alias)
-    return deduped
