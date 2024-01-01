@@ -18,6 +18,7 @@ import pyarrow
 from orso.schema import FlatColumn
 from orso.schema import RelationSchema
 from orso.tools import single_item_cache
+from orso.types import OrsoTypes
 
 from opteryx.connectors.base.base_connector import BaseConnector
 from opteryx.connectors.capabilities import Cacheable
@@ -41,6 +42,13 @@ class GcpCloudStorageConnector(BaseConnector, Cacheable, Partitionable, Predicat
         "GtEq": True,
         "Lt": True,
         "LtEq": True,
+    }
+
+    PUSHABLE_TYPES = {
+        OrsoTypes.BOOLEAN,
+        OrsoTypes.DOUBLE,
+        OrsoTypes.INTEGER,
+        OrsoTypes.VARCHAR
     }
 
     def __init__(self, credentials=None, **kwargs):

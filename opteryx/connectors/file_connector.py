@@ -19,6 +19,7 @@ from typing import Optional
 
 import pyarrow
 from orso.schema import RelationSchema
+from orso.types import OrsoTypes
 
 from opteryx.connectors.base.base_connector import BaseConnector
 from opteryx.connectors.capabilities import PredicatePushable
@@ -37,6 +38,13 @@ class FileConnector(BaseConnector, PredicatePushable):
         "GtEq": True,
         "Lt": True,
         "LtEq": True,
+    }
+
+    PUSHABLE_TYPES = {
+        OrsoTypes.BOOLEAN,
+        OrsoTypes.DOUBLE,
+        OrsoTypes.INTEGER,
+        OrsoTypes.VARCHAR
     }
 
     @property
