@@ -11,7 +11,6 @@
 # limitations under the License.
 
 from opteryx.components.binder.binder_visitor import extract_join_fields
-from opteryx.components.binder.binder_visitor import get_mismatched_condition_column_types
 from opteryx.components.logical_planner import LogicalPlan
 from opteryx.components.logical_planner import LogicalPlanNode
 from opteryx.components.logical_planner import LogicalPlanStepType
@@ -138,8 +137,13 @@ class PredicatePushdownStrategy(OptimizationStrategy):
             ):
                 if node.connector:
                     connector_capabilities = node.connector.__class__.mro()
+                    types = set()
+                    if predicate.condition.left and predicate.condition.left.schema_column:
+                        types.add(predicate.condition.left.schema_column.type)
+                    if predicate.condition.right and predicate.condition.right.schema_column:
+                        types.add(predicate.condition.right.schema_column.type)
                     if PredicatePushable in connector_capabilities and node.connector.can_push(
-                        predicate
+                        predicate, types
                     ):
                         if not node.predicates:
                             node.predicates = []

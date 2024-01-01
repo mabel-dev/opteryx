@@ -23,6 +23,7 @@ import pyarrow
 from orso.schema import FlatColumn
 from orso.schema import RelationSchema
 from orso.tools import single_item_cache
+from orso.types import OrsoTypes
 
 from opteryx.connectors.base.base_connector import BaseConnector
 from opteryx.connectors.capabilities import Cacheable
@@ -31,7 +32,6 @@ from opteryx.connectors.capabilities import PredicatePushable
 from opteryx.exceptions import DatasetNotFoundError
 from opteryx.exceptions import EmptyDatasetError
 from opteryx.exceptions import UnsupportedFileTypeError
-from opteryx.utils.arrow import post_read_projector
 from opteryx.utils.file_decoders import VALID_EXTENSIONS
 from opteryx.utils.file_decoders import get_decoder
 
@@ -46,6 +46,13 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable, PredicatePushable):
         "GtEq": True,
         "Lt": True,
         "LtEq": True,
+    }
+
+    PUSHABLE_TYPES = {
+        OrsoTypes.BOOLEAN,
+        OrsoTypes.DOUBLE,
+        OrsoTypes.INTEGER,
+        OrsoTypes.VARCHAR
     }
 
     def __init__(self, **kwargs):
