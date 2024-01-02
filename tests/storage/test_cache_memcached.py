@@ -41,5 +41,4 @@ def test_memcached_cache():
 if __name__ == "__main__":  # pragma: no cover
     from tests.tools import run_tests
 
-    test_memcached_cache()
     run_tests()
