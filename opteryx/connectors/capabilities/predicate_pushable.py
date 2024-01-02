@@ -53,9 +53,9 @@ class PredicatePushable:
         "NotLike": "NOT LIKE",
     }
 
-    PUSHABLE_TYPES:set = {t for t in OrsoTypes}
+    PUSHABLE_TYPES: set = {t for t in OrsoTypes}
 
-    def can_push(self, operator:str, types:set = None) -> bool:
+    def can_push(self, operator: str, types: set = None) -> bool:
         if types and not types.issubset(self.PUSHABLE_TYPES):
             return False
         return self.PUSHABLE_OPS.get(operator.condition.value, False)

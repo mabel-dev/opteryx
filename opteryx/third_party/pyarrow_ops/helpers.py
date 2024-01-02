@@ -1,4 +1,5 @@
 import numpy
+from orso.cityhash import CityHash64
 
 APOLLO_11_DURATION: int = 703115  # we need a constant to use as a seed
 
@@ -23,7 +24,7 @@ def _hash_value(val, nan=numpy.nan):
         return _hash_value(tuple(val.values()))
     if isinstance(val, (list, numpy.ndarray, tuple)):
         # not perfect but tries to eliminate some of the flaws in other approaches
-        return hash(".".join(str(i) + str(v) for i, v in enumerate(val)))
+        return hash(".".join(f"{i}:{v}" for i, v in enumerate(val)))
     if val != val or val is None:
         # nan is a float, but hash is an int, sometimes we need this to be an int
         return nan
@@ -54,18 +55,4 @@ def columns_to_array(table, columns):
 
     columns = sorted(set(table.column_names).intersection(columns))
     values = (c.to_numpy() for c in table.select(columns).itercolumns())
-    return numpy.array([_hash_value(x) for x in zip(*values)])
-
-
-def columns_to_array_denulled(table, columns):
-    """added for Opteryx"""
-    # Used for joins - nulls don't join so we can remove them
-    # The columns need to be read in the order provided, so don't set() or order()
-    # them anywhere here.
-    columns = [columns] if isinstance(columns, str) else columns
-    if len(columns) == 1:
-        column_values = table.column(columns[0]).drop_null().to_numpy()
-        return numpy.array([_hash_value(el) for el in column_values])
-
-    values = (c.to_numpy() for c in table.select(columns).drop_null().itercolumns())
     return numpy.array([_hash_value(x) for x in zip(*values)])

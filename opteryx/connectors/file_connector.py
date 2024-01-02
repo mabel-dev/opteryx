@@ -40,12 +40,7 @@ class FileConnector(BaseConnector, PredicatePushable):
         "LtEq": True,
     }
 
-    PUSHABLE_TYPES = {
-        OrsoTypes.BOOLEAN,
-        OrsoTypes.DOUBLE,
-        OrsoTypes.INTEGER,
-        OrsoTypes.VARCHAR
-    }
+    PUSHABLE_TYPES = {OrsoTypes.BOOLEAN, OrsoTypes.DOUBLE, OrsoTypes.INTEGER, OrsoTypes.VARCHAR}
 
     @property
     def interal_only(self):
