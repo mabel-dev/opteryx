@@ -11,7 +11,7 @@ isort
 pycln
 
 pandas
-python-binary-memcached
+pymemcache
 redis
 requests
 rich

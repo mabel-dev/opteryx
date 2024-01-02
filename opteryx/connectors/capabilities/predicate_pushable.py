@@ -28,6 +28,7 @@ from orso.types import OrsoTypes
 
 from opteryx.exceptions import NotSupportedError
 from opteryx.managers.expression import NodeType
+from opteryx.models import Node
 
 
 class PredicatePushable:
@@ -55,7 +56,7 @@ class PredicatePushable:
 
     PUSHABLE_TYPES: set = {t for t in OrsoTypes}
 
-    def can_push(self, operator: str, types: set = None) -> bool:
+    def can_push(self, operator: Node, types: set = None) -> bool:
         if types and not types.issubset(self.PUSHABLE_TYPES):
             return False
         return self.PUSHABLE_OPS.get(operator.condition.value, False)

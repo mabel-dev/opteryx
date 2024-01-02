@@ -17,7 +17,7 @@ def test_memcached_cache():
     from opteryx import CacheManager
     from opteryx.managers.cache import MemcachedCache
 
-    cache = MemcachedCache(servers="localhost:11211")
+    cache = MemcachedCache(server="localhost:11211")
     opteryx.set_cache_manager(
         CacheManager(cache_backend=cache, max_local_buffer_capacity=1, max_evictions_per_query=4)
     )
@@ -41,5 +41,4 @@ def test_memcached_cache():
 if __name__ == "__main__":  # pragma: no cover
     from tests.tools import run_tests
 
-    test_memcached_cache()
     run_tests()
