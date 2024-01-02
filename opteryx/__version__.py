@@ -28,7 +28,7 @@ class VersionStatus(Enum):
 _major = 0
 _minor = 12
 _revision = 0
-_status = VersionStatus.BETA
+_status = VersionStatus.RELEASE
 
 __version__ = f"{_major}.{_minor}.{_revision}" + (
     f"-{_status.value}.{__build__}" if _status != VersionStatus.RELEASE else ""
