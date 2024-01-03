@@ -359,6 +359,17 @@ STATEMENTS = [
         ("SELECT * FROM $satellites WHERE name ~* '^c.'", 12, 8, None),
         ("SELECT * FROM $satellites WHERE name !~* '^c.'", 165, 8, None),
 
+        ("SELECT * FROM $satellites WHERE (id = 5 OR name = 'Europa') AND TRUE;", 1, 8, None),
+        ("SELECT * FROM $satellites WHERE (id = 5 OR name = 'Europa') OR FALSE;", 1, 8, None),
+        ("SELECT * FROM $satellites WHERE id = 5 OR (name = 'Europa' AND TRUE);", 1, 8, None),
+        ("SELECT * FROM $satellites WHERE (id = 5 AND TRUE) OR name = 'Europa';", 1, 8, None),
+        ("SELECT * FROM $satellites WHERE (id = 5 OR FALSE) OR name = 'Europa';", 1, 8, None),
+        ("SELECT * FROM $satellites WHERE id = 5 OR (name = 'Europa' OR FALSE);", 1, 8, None),
+        ("SELECT * FROM $satellites WHERE (id = 5 OR name = 'Europa') AND (1=1);", 1, 8, None),
+        ("SELECT * FROM $satellites WHERE (id = 5 AND (2>1)) OR name = 'Europa';", 1, 8, None),
+        ("SELECT * FROM $satellites WHERE id = 5 OR (name = 'Europa' AND ('a'='a'));", 1, 8, None),
+        ("SELECT * FROM $satellites WHERE (id = 5 OR (3=4)) OR name = 'Europa';", 1, 8, None),
+
         ("SELECT COUNT(*) FROM $satellites", 1, 1, None),
         ("SELECT count(*) FROM $satellites", 1, 1, None),
         ("SELECT COUNT (*) FROM $satellites", 1, 1, None),
