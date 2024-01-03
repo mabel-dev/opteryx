@@ -17,6 +17,7 @@ from opteryx.components.logical_planner import LogicalPlanNode
 from opteryx.components.logical_planner import LogicalPlanStepType
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import get_all_nodes_of_type
+from opteryx.models import Node
 
 from .optimization_strategy import HeuristicOptimizerContext
 from .optimization_strategy import OptimizationStrategy
@@ -52,6 +53,9 @@ def _tag_predicates(nodes):
     """
 
     for node in nodes:
+        while node.node_type == NodeType.NESTED and node.centre:
+            node = node.centre
+
         node.weight = 0
         node.simple = True
         node.relations = set()
@@ -87,6 +91,26 @@ def _tag_predicates(nodes):
 
 
 def _inner_split(node):
+    while node.node_type == NodeType.NESTED:
+        node = node.centre
+
+    if node.node_type == NodeType.OR:
+        sides = _tag_predicates(
+            [
+                Node(node.left.node_type, condition=node.left),
+                Node(node.right.node_type, condition=node.right),
+            ]
+        )
+        sides.reverse()
+        node = Node(
+            NodeType.OR,
+            left=sides[0].condition,
+            right=sides[1].condition,
+            schema_column=node.schema_column,
+        )
+
+        return [node]
+
     if node.node_type != NodeType.AND:
         return [node]
 

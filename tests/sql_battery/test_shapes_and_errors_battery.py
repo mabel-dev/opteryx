@@ -359,6 +359,17 @@ STATEMENTS = [
         ("SELECT * FROM $satellites WHERE name ~* '^c.'", 12, 8, None),
         ("SELECT * FROM $satellites WHERE name !~* '^c.'", 165, 8, None),
 
+        ("SELECT * FROM $satellites WHERE (id = 5 OR name = 'Europa') AND TRUE;", 1, 8, None),
+        ("SELECT * FROM $satellites WHERE (id = 5 OR name = 'Europa') OR FALSE;", 1, 8, None),
+        ("SELECT * FROM $satellites WHERE id = 5 OR (name = 'Europa' AND TRUE);", 1, 8, None),
+        ("SELECT * FROM $satellites WHERE (id = 5 AND TRUE) OR name = 'Europa';", 1, 8, None),
+        ("SELECT * FROM $satellites WHERE (id = 5 OR FALSE) OR name = 'Europa';", 1, 8, None),
+        ("SELECT * FROM $satellites WHERE id = 5 OR (name = 'Europa' OR FALSE);", 1, 8, None),
+        ("SELECT * FROM $satellites WHERE (id = 5 OR name = 'Europa') AND (1=1);", 1, 8, None),
+        ("SELECT * FROM $satellites WHERE (id = 5 AND (2>1)) OR name = 'Europa';", 1, 8, None),
+        ("SELECT * FROM $satellites WHERE id = 5 OR (name = 'Europa' AND ('a'='a'));", 1, 8, None),
+        ("SELECT * FROM $satellites WHERE (id = 5 OR (3=4)) OR name = 'Europa';", 1, 8, None),
+
         ("SELECT COUNT(*) FROM $satellites", 1, 1, None),
         ("SELECT count(*) FROM $satellites", 1, 1, None),
         ("SELECT COUNT (*) FROM $satellites", 1, 1, None),
@@ -688,7 +699,7 @@ STATEMENTS = [
         ("SELECT * FROM $astronauts WHERE 'Apollo 11' = any(missions) AND True", 3, 19, None),
         ("SELECT * FROM $astronauts WHERE 'X' > any(alma_mater) OR 'Z' > any(alma_mater)", 3, 19, None),
         ("SELECT * FROM $astronauts WHERE name != 'Brian' AND 'B' < any(alma_mater)", 15, 19, None),
-        ("SELECT * FROM $astronauts WHERE name != 'Brian' OR 'Apollo 11' != any(missions)", 334, 19, None),
+        ("SELECT * FROM $astronauts WHERE name != 'Brian' OR 'Apollo 11' != any(missions)", 357, 19, None),
         ("SELECT * FROM $astronauts WHERE 'Apollo 11' != all(missions) AND name != 'Brian'", 331, 19, None),
         ("SELECT * FROM $astronauts WHERE name != 'Brian' AND 'Apollo 11' = all(missions)", 0, 19, None),
 
