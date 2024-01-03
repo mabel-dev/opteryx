@@ -126,7 +126,7 @@ def test_logical_expressions():
     result = evaluate(F_OR_T, table=planets)
     assert all(result)
     result = evaluate(F_OR_F, table=planets)
-    assert not any(c.as_py() for c in result)
+    assert not any(c for c in result)
 
     NOT_T = Node(NodeType.NOT, centre=true, schema_column=FunctionColumn(name="func", type=0))
     NOT_F = Node(NodeType.NOT, centre=false, schema_column=FunctionColumn(name="func", type=0))

@@ -123,6 +123,32 @@ class ExecutionContext:
         return list(self.results.keys())
 
 
+def short_cut_or(root, table, context):
+    # Assuming table.num_rows returns the number of rows in the table
+    false_indices = numpy.arange(table.num_rows)
+
+    # Evaluate left expression
+    left_result = numpy.array(evaluate(root.left, table, context), dtype=numpy.bool_)
+
+    # Filter out indices where left_result is TRUE
+    subset_indices = false_indices[~left_result]
+
+    if subset_indices.size == 0:
+        return left_result
+
+    # Create a subset table for evaluating the right expression
+    subset_table = table.take(subset_indices)
+
+    # Evaluate right expression on the subset table
+    right_result = numpy.array(evaluate(root.right, subset_table, context), dtype=numpy.bool_)
+
+    # Combine results
+    # Update left_result with the right_result where left_result was False
+    left_result[subset_indices] = left_result[subset_indices] | right_result
+
+    return left_result
+
+
 def prioritize_evaluation(expressions):
     non_dependent_expressions = []
     dependent_expressions = []
@@ -172,6 +198,9 @@ def _inner_evaluate(root: Node, table: Table, context: ExecutionContext):
 
     # BOOLEAN OPERATORS
     if node_type & LOGICAL_TYPE == LOGICAL_TYPE:
+        if node_type == NodeType.OR:
+            return short_cut_or(root, table, context)
+
         if node_type in LOGICAL_OPERATIONS:
             left = _inner_evaluate(root.left, table, context) if root.left else None
             right = _inner_evaluate(root.right, table, context) if root.right else None
