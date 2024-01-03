@@ -15,3 +15,9 @@ if build_number:
         f.write("\n".join(contents))
 
     print(f"Build Number: {build_number}")
+
+__version__ = "notset"
+with open(f"{LIBRARY}/__version__.py", mode="r") as v:
+    vers = v.read()
+exec(vers)  # nosec
+os.environ["OPTERYX_VERSION"] = __version__

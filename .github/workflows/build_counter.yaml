@@ -33,5 +33,5 @@ jobs:
         git config --global user.name "XB500"
         git config --global user.email "XB500@users.noreply.github.com"
         git add $GITHUB_WORKSPACE/opteryx/__version__.py
-        git commit -m "Update Build Number to $GITHUB_RUN_NUMBER"
+        git commit -m "Opteryx Version $OPTERYX_VERSION"
         git push
