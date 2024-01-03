@@ -369,6 +369,26 @@ STATEMENTS = [
         ("SELECT * FROM $satellites WHERE (id = 5 AND (2>1)) OR name = 'Europa';", 1, 8, None),
         ("SELECT * FROM $satellites WHERE id = 5 OR (name = 'Europa' AND ('a'='a'));", 1, 8, None),
         ("SELECT * FROM $satellites WHERE (id = 5 OR (3=4)) OR name = 'Europa';", 1, 8, None),
+        ("SELECT * FROM $satellites WHERE ((id = 5 AND (1=1)) OR (name = 'Europa' AND (TRUE OR FALSE)));", 1, 8, None),
+        ("SELECT * FROM $satellites WHERE (id = 5 OR (name = 'Europa' AND (TRUE AND (2>1))));", 1, 8, None),
+        ("SELECT * FROM $satellites WHERE ((id = 5 OR FALSE) AND TRUE) OR (name = 'Europa' AND ('x'='x'));", 1, 8, None),
+        ("SELECT * FROM $satellites WHERE ((id = 5 OR (4=5)) AND (6!=7)) OR (name = 'Europa');", 1, 8, None),
+        ("SELECT * FROM $satellites WHERE (id = 5 AND (NOT FALSE)) OR (name = 'Europa' OR (7=8));", 1, 8, None),
+        ("SELECT * FROM $satellites WHERE ((id = 5 AND ((8<>8) OR TRUE)) OR name = 'Europa');", 1, 8, None),
+        ("SELECT * FROM $satellites WHERE (id = 5 OR (name = 'Europa' AND (FALSE AND TRUE)));", 1, 8, None),
+        ("SELECT * FROM $satellites WHERE ((id = 5 OR (9>10)) AND ('a'!='b')) OR name = 'Europa';", 1, 8, None),
+        ("SELECT * FROM $satellites WHERE (id = 5 OR (name = 'Europa' AND ('x'='x' OR (10=11))));", 1, 8, None),
+        ("SELECT * FROM $satellites WHERE (id = 5 OR ((11<12) AND name = 'Europa'));", 1, 8, None),
+        ("SELECT * FROM $satellites WHERE ((id = 5 AND (TRUE AND (1=1))) OR (name = 'Europa' AND (FALSE OR (2!=2))));", 1, 8, None),
+        ("SELECT * FROM $satellites WHERE (id = 5 OR ((name = 'Europa' OR (TRUE AND FALSE)) AND (3>3)));", 1, 8, None),
+        ("SELECT * FROM $satellites WHERE (((id = 5 OR FALSE) AND (TRUE OR (4<4))) OR (name = 'Europa' AND ('x'='y')));", 1, 8, None),
+        ("SELECT * FROM $satellites WHERE ((id = 5 AND ((5=6) OR TRUE)) OR (name = 'Europa' AND (FALSE OR (6=7))));", 1, 8, None),
+        ("SELECT * FROM $satellites WHERE (id = 5 OR (name = 'Europa' AND (TRUE OR (7!=7) AND FALSE)));", 1, 8, None),
+        ("SELECT * FROM $satellites WHERE ((id = 5 AND (NOT (8=8))) OR (name = 'Europa' AND (9>10 OR TRUE)));", 1, 8, None),
+        ("SELECT * FROM $satellites WHERE (((id = 5 OR (10<11)) AND ('a'='b')) OR (name = 'Europa' AND (TRUE AND (11=11))));", 1, 8, None),
+        ("SELECT * FROM $satellites WHERE (id = 5 OR ((name = 'Europa' OR (FALSE AND TRUE)) AND (12>13)));", 1, 8, None),
+        ("SELECT * FROM $satellites WHERE (((id = 5 AND (14=14)) OR FALSE) AND ((name = 'Europa' OR (14<15)) AND ('x'='x')));", 1, 8, None),
+        ("SELECT * FROM $satellites WHERE ((id = 5 OR (name = 'Europa' AND ((15=16) OR FALSE))) AND (TRUE AND (16!=17)));", 1, 8, None),
 
         ("SELECT COUNT(*) FROM $satellites", 1, 1, None),
         ("SELECT count(*) FROM $satellites", 1, 1, None),
@@ -1431,6 +1451,8 @@ if __name__ == "__main__":  # pragma: no cover
 
     nl = "\n"
 
+    failures = []
+
     print(f"RUNNING BATTERY OF {len(STATEMENTS)} SHAPE TESTS")
     for index, (statement, rows, cols, err) in enumerate(STATEMENTS):
         start = time.monotonic_ns()
@@ -1458,6 +1480,7 @@ if __name__ == "__main__":  # pragma: no cover
             print(f"\033[0;31m{str(int((time.monotonic_ns() - start)/1e6)).rjust(4)}ms ❌ *\033[0m")
             print(">", err)
             failed += 1
+            failures.append((statement, err))
 
     print("--- ✅ \033[0;32mdone\033[0m")
     print(
@@ -1465,3 +1488,7 @@ if __name__ == "__main__":  # pragma: no cover
         f"  \033[38;2;26;185;67m{passed} passed ({(passed * 100) // (passed + failed)}%)\033[0m\n"
         f"  \033[38;2;255;121;198m{failed} failed\033[0m"
     )
+    if failed > 0:
+        print("\n\033[38;2;139;233;253m\033[3mFAILURES\033[0m")
+        for statement, err in failures:
+            print(err)

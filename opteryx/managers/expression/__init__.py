@@ -123,6 +123,33 @@ class ExecutionContext:
         return list(self.results.keys())
 
 
+def short_cut_and(root, table, context):
+    # Convert to NumPy arrays
+    true_indices = numpy.arange(table.num_rows)
+
+    # Evaluate left expression
+    left_result = numpy.array(evaluate(root.left, table, context))
+
+    # If all values in left_result are False, no need to evaluate the right expression
+    if not left_result.any():
+        return left_result
+
+    # Filter out indices where left_result is FALSE
+    subset_indices = true_indices[left_result]
+
+    # Create a subset table for evaluating the right expression
+    subset_table = table.take(subset_indices)
+
+    # Evaluate right expression on the subset table
+    right_result = numpy.array(evaluate(root.right, subset_table, context))
+
+    # Combine results
+    # Iterate over subset_indices and update left_result at those positions
+    left_result[subset_indices] = right_result
+
+    return left_result
+
+
 def short_cut_or(root, table, context):
     # Assuming table.num_rows returns the number of rows in the table
     false_indices = numpy.arange(table.num_rows)
@@ -200,6 +227,8 @@ def _inner_evaluate(root: Node, table: Table, context: ExecutionContext):
     if node_type & LOGICAL_TYPE == LOGICAL_TYPE:
         if node_type == NodeType.OR:
             return short_cut_or(root, table, context)
+        if node_type == NodeType.AND:
+            return short_cut_and(root, table, context)
 
         if node_type in LOGICAL_OPERATIONS:
             left = _inner_evaluate(root.left, table, context) if root.left else None
