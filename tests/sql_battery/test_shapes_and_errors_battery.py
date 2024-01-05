@@ -1202,7 +1202,7 @@ STATEMENTS = [
         ("SELECT $planets.id FROM $satellites", None, None, UnexpectedDatasetReferenceError),
 
         # V2 New Syntax Checks
-        ("SELECT * FROM $planets AS P1 UNION SELECT * FROM $planets AS P2;", None, None, UnsupportedSyntaxError),
+        ("SELECT * FROM $planets AS P1 UNION SELECT * FROM $planets AS P2;", 9, 20, UnsupportedSyntaxError),
         ("SELECT * FROM $planets AS P LEFT ANTI JOIN $satellites AS S ON S.id = P.id;", 0, 20, None),
         ("SELECT * FROM $planets AS P RIGHT ANTI JOIN $satellites AS S ON S.id = P.id;", 168, 8, None),
         ("SELECT * FROM $planets AS P LEFT SEMI JOIN $satellites AS S ON S.id = P.id;", 9, 20, None),
@@ -1210,6 +1210,40 @@ STATEMENTS = [
         ("EXPLAIN ANALYZE FORMAT JSON SELECT * FROM $planets AS a INNER JOIN (SELECT id FROM $planets) AS b USING (id);", 5, 3, None),
         ("SELECT DISTINCT ON (planetId) planetId, name FROM $satellites ", 7, 2, None),
         ("SELECT 8 DIV 4", 1, 1, None),
+
+        # Test cases for UNION
+        ("SELECT name FROM $planets AS p1 UNION SELECT name FROM $planets AS p2", 9, 1, None),
+        ("SELECT name FROM $planets p1 UNION SELECT name FROM $planets p2 WHERE p2.name != 'Earth'", 9, 1, None),
+        ("SELECT name FROM $planets UNION SELECT name FROM $planets", 18, 1, AmbiguousDatasetError),
+        ("SELECT name FROM $planets AS p1 UNION ALL SELECT name FROM $planets AS p2", 18, 1, None),
+        ("SELECT name FROM $planets p1 UNION ALL SELECT name FROM $planets p2 WHERE p2.name = 'Mars'", 10, 1, None),
+        ("SELECT name AS planet_name FROM $planets p1 UNION SELECT name FROM $planets p2", 9, 1, None),
+        ("SELECT name FROM $planets p1 UNION ALL SELECT name AS planet_name FROM $planets p2", 18, 1, None),
+        ("SELECT name FROM $planets AS p1 WHERE name LIKE 'M%' UNION SELECT name FROM $planets AS p2 WHERE name LIKE 'V%'", 3, 1, None),
+        ("SELECT name FROM $planets P1 WHERE name LIKE 'E%' UNION ALL SELECT name FROM $planets P2 WHERE name LIKE 'M%'", 3, 1, None),
+        ("SELECT name FROM $planets P1 INTERSECT SELECT name FROM $planets P2", 0, 0, UnsupportedSyntaxError),
+        ("SELECT name FROM $planets p1 EXCEPT SELECT name FROM $planets p2", 0, 0, UnsupportedSyntaxError),
+        ("(SELECT name FROM $planets AS p1) UNION (SELECT name FROM $planets) LIMIT 5", 5, 1, None),
+        ("(SELECT name FROM $planets AS p1) UNION (SELECT name FROM $planets) LIMIT 5 OFFSET 4", 5, 1, None),
+        ("(SELECT name FROM $planets AS p1) UNION (SELECT name FROM $planets) LIMIT 3 OFFSET 6", 3, 1, None),
+        ("(SELECT name FROM $planets AS p1 LIMIT 3) UNION ALL (SELECT name FROM $planets LIMIT 2)", 5, 1, None),
+        ("(SELECT name FROM $planets AS p1 OFFSET 2) UNION ALL (SELECT name FROM $planets OFFSET 3)", 4, 1, None),
+        ("(SELECT name FROM $planets AS p1 LIMIT 4 OFFSET 1) UNION ALL (SELECT name FROM $planets LIMIT 3 OFFSET 2)", 6, 1, None),
+        ("(SELECT name FROM $planets AS p1) UNION ALL (SELECT name FROM $planets) LIMIT 10", 10, 1, None),
+        ("(SELECT name FROM $planets AS p1) UNION ALL (SELECT name FROM $planets) OFFSET 8", 10, 1, None),
+        ("(SELECT name FROM $planets AS p1 LIMIT 5) UNION ALL (SELECT name FROM $planets OFFSET 3)", 11, 1, None),
+        ("(SELECT name FROM $planets AS p1 LIMIT 4 OFFSET 2) UNION ALL (SELECT name FROM $planets LIMIT 3 OFFSET 1) LIMIT 5 OFFSET 3", 5, 1, None),
+        ("SELECT mass FROM $planets AS p1 UNION SELECT diameter FROM $planets", 9, 1, None),
+        ("SELECT mass AS m FROM $planets AS p1 UNION SELECT mass FROM $planets", 9, 1, None),
+        ("SELECT name FROM $planets AS p1 WHERE mass IS NULL UNION SELECT name FROM $planets WHERE diameter IS NULL", 0, 1, None),
+        ("SELECT name FROM $planets AS p1 UNION ALL SELECT name FROM $planets", 18, 1, None),  # Assuming no large data set available
+        ("SELECT name FROM (SELECT name FROM $planets P1 UNION SELECT name FROM $planets) AS subquery", 9, 1, None),
+        ("SELECT a.name FROM $planets a JOIN (SELECT name FROM $planets AS P1 UNION SELECT name FROM $planets) b ON a.name = b.name", 9, 1, None),
+        ("(SELECT name FROM $planets AS P1  ORDER BY mass DESC) UNION (SELECT name FROM $planets ORDER BY diameter ASC)", 9, 1, None),
+        ("SELECT gravity FROM $planets AS P1 UNION SELECT gravity FROM $planets", 8, 1, None),  # Assuming two planets have the same gravity
+        ("(SELECT name FROM $planets AS p1 LIMIT 3) UNION ALL (SELECT name FROM $planets OFFSET 2)", 10, 1, None),
+        ("SELECT AVG(mass) FROM $planets AS p1 UNION SELECT SUM(diameter) FROM $planets", 2, 1, None),
+        ("SELECT name FROM $planets AS p1 WHERE mass > 1.5 OR diameter < 10000 UNION SELECT name FROM $planets WHERE gravity = 3.7", 9, 1, None),
 
         # New and improved JOIN UNNESTs
         ("SELECT * FROM $planets CROSS JOIN UNNEST(('Earth', 'Moon')) AS n", 18, 21, None),

@@ -75,7 +75,7 @@ def create_physical_plan(logical_plan, query_properties):
         elif node_type == LogicalPlanStepType.Subquery:
             node = operators.NoOpNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Union:
-            node = operators.NoOpNode(query_properties, **node_config)
+            node = operators.UnionNode(query_properties, **node_config)
 
         else:
             raise Exception(f"something unexpected happed - {node_type.name}")

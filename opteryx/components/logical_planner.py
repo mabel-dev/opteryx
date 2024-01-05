@@ -256,6 +256,11 @@ def _table_name(branch):
 
 
 def inner_query_planner(ast_branch):
+    if "Query" in ast_branch:
+        # Sometimes we get a full query plan here (e.g. when queries in set
+        # functions are in parenthesis)
+        return plan_query(ast_branch)
+
     inner_plan = LogicalPlan()
     step_id = None
 
@@ -722,7 +727,8 @@ def plan_query(statement):
         if set_operation["op"] == "Union":
             set_op_node = LogicalPlanNode(node_type=LogicalPlanStepType.Union)
         else:
-            raise NotImplementedError(f"Unsupported SET operator {set_operation['op']}")
+            raise UnsupportedSyntaxError(f"Unsupported SET operator '{set_operation['op']}'")
+
         set_op_node.modifier = (
             None if set_operation["set_quantifier"] == "None" else set_operation["set_quantifier"]
         )
@@ -730,24 +736,22 @@ def plan_query(statement):
         plan = LogicalPlan()
         plan.add_node(step_id, set_op_node)
 
+        if set_op_node.modifier != "All":
+            # UNION returns distinct records if used without ALL
+            distinct = LogicalPlanNode(node_type=LogicalPlanStepType.Distinct)
+            distinct_id = random_string()
+            plan.add_node(distinct_id, distinct)
+            plan.add_edge(step_id, distinct_id)
+
         left_plan = inner_query_planner(set_operation["left"])
         plan += left_plan
         subquery_entry_id = left_plan.get_exit_points()[0]
         plan.add_edge(subquery_entry_id, step_id)
 
-        right_plan = inner_query_planner(set_operation["left"])
+        right_plan = inner_query_planner(set_operation["right"])
         plan += right_plan
         subquery_entry_id = right_plan.get_exit_points()[0]
         plan.add_edge(subquery_entry_id, step_id)
-
-        root_node["Select"] = {}
-        parent_plan = inner_query_planner(root_node)
-        if len(parent_plan) > 0:
-            plan += parent_plan
-            parent_plan_exit_id = parent_plan.get_entry_points()[0]
-            plan.add_edge(step_id, parent_plan_exit_id)
-
-        raise UnsupportedSyntaxError("Set operators are not supported")
 
         return plan
 
