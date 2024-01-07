@@ -308,6 +308,8 @@ def get_all_nodes_of_type(root, select_nodes):
     """
     Walk a expression tree collecting all the nodes of a specified type.
     """
+    from opteryx.third_party.travers import Graph
+
     if root is None:
         return []
     if not isinstance(root, (set, tuple, list)):

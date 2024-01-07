@@ -27,7 +27,6 @@ from opteryx.components.binder.binding_context import BindingContext
 from opteryx.components.logical_planner import LogicalPlan
 from opteryx.exceptions import AmbiguousDatasetError
 from opteryx.exceptions import InvalidFunctionParameterError
-from opteryx.exceptions import InvalidInternalStateError
 from opteryx.exceptions import UnsupportedSyntaxError
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import get_all_nodes_of_type
@@ -231,25 +230,27 @@ class BinderVisitor:
 
         return_node, return_context = visit_method(node.copy(), context.copy())
 
-        if not isinstance(return_context, BindingContext):
-            raise InvalidInternalStateError(
-                f"Internal Error - function '{visit_method_name}' didn't return a BindingContext"
-            )
-
-        if not all(isinstance(schema, RelationSchema) for schema in context.schemas.values()):
-            raise InvalidInternalStateError(
-                f"Internal Error - function '{visit_method_name}' returned invalid Schemas"
-            )
-
-        if not all(isinstance(col, (Node, LogicalColumn)) for col in return_node.columns or []):
-            raise InvalidInternalStateError(
-                f"Internal Error - function '{visit_method_name}' put unexpected items in 'columns' attribute"
-            )
-
-        if return_node.node_type.name != "Scan" and return_node.columns is None:
-            raise InvalidInternalStateError(
-                f"Internal Error - function {visit_method_name} did not populate 'columns'"
-            )
+        # DEBUG: from opteryx.exceptions import InvalidInternalStateError
+        # DEBUG:
+        # DEBUG: if not isinstance(return_context, BindingContext):
+        # DEBUG:     raise InvalidInternalStateError(
+        # DEBUG:         f"Internal Error - function '{visit_method_name}' didn't return a BindingContext"
+        # DEBUG:     )
+        # DEBUG:
+        # DEBUG: if not all(isinstance(schema, RelationSchema) for schema in context.schemas.values()):
+        # DEBUG:     raise InvalidInternalStateError(
+        # DEBUG:         f"Internal Error - function '{visit_method_name}' returned invalid Schemas"
+        # DEBUG:     )
+        # DEBUG:
+        # DEBUG: if not all(isinstance(col, (Node, LogicalColumn)) for col in return_node.columns or []):
+        # DEBUG:     raise InvalidInternalStateError(
+        # DEBUG:         f"Internal Error - function '{visit_method_name}' put unexpected items in 'columns' attribute"
+        # DEBUG:     )
+        # DEBUG:
+        # DEBUG: if return_node.node_type.name != "Scan" and return_node.columns is None:
+        # DEBUG:     raise InvalidInternalStateError(
+        # DEBUG:         f"Internal Error - function {visit_method_name} did not populate 'columns'"
+        # DEBUG:     )
 
         return return_node, return_context
 
@@ -334,8 +335,6 @@ class BinderVisitor:
         return node, context
 
     def visit_exit(self, node: Node, context: BindingContext) -> Tuple[Node, BindingContext]:
-        # LOG: Exit
-
         # clear the derived schema
         context.schemas.pop("$derived", None)
 
@@ -860,6 +859,27 @@ class BinderVisitor:
         context.relations = {node.alias}
         node.schema = schema
         node.source_relations = set(source_relations)
+        return node, context
+
+    def visit_union(self, node: Node, context: BindingContext) -> Tuple[Node, BindingContext]:
+        for relation in node.right_relation_names:
+            context.schemas.pop(relation, None)
+        context.relations = set(node.right_relation_names)
+
+        schema_name = f"$union-{random_string()}"
+        columns = []
+        for name, schema in context.schemas.items():
+            for schema_column in schema.columns:
+                column_reference = LogicalColumn(
+                    node_type=NodeType.IDENTIFIER,  # column type
+                    source_column=schema_column.name,  # the source column
+                    source=schema_name,
+                    schema_column=schema_column,
+                )
+                columns.append(column_reference)
+
+        node.columns = columns
+        node, context = self.visit_exit(node, context)
         return node, context
 
     def traverse(

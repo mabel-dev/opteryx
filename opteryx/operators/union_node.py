@@ -24,6 +24,8 @@ from opteryx.operators import BasePlanNode
 class UnionNode(BasePlanNode):
     def __init__(self, properties: QueryProperties, **config):
         super().__init__(properties=properties)
+        self.columns = config.get("columns", [])
+        self.column_ids = [c.schema_column.identity for c in self.columns]
 
     @property
     def name(self):  # pragma: no cover
@@ -47,4 +49,4 @@ class UnionNode(BasePlanNode):
                     else:
                         morsel = morsel.rename_columns(schema.names)
                         morsel = morsel.cast(schema)
-                    yield morsel
+                    yield morsel.select(self.column_ids)

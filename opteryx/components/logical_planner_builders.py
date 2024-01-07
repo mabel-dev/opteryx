@@ -676,6 +676,7 @@ def wildcard_filter(branch, alias: Optional[List[str]] = None, key=None):
 
 def unsupported(branch, alias: Optional[List[str]] = None, key=None):
     """raise an error"""
+    print("[INTERNAL]", branch)
     raise SqlError(f"Unhandled token in Syntax Tree `{key}`")
 
 

@@ -735,23 +735,66 @@ def plan_query(statement):
         step_id = random_string()
         plan = LogicalPlan()
         plan.add_node(step_id, set_op_node)
-
-        if set_op_node.modifier != "All":
-            # UNION returns distinct records if used without ALL
-            distinct = LogicalPlanNode(node_type=LogicalPlanStepType.Distinct)
-            distinct_id = random_string()
-            plan.add_node(distinct_id, distinct)
-            plan.add_edge(step_id, distinct_id)
+        head_nid = step_id
 
         left_plan = inner_query_planner(set_operation["left"])
         plan += left_plan
         subquery_entry_id = left_plan.get_exit_points()[0]
         plan.add_edge(subquery_entry_id, step_id)
+        # remove the exit node
+        plan.remove_node(subquery_entry_id, heal=True)
 
         right_plan = inner_query_planner(set_operation["right"])
         plan += right_plan
         subquery_entry_id = right_plan.get_exit_points()[0]
         plan.add_edge(subquery_entry_id, step_id)
+        # remove the exit node
+        plan.remove_node(subquery_entry_id, heal=True)
+
+        # UNION ALL
+        if set_op_node.modifier != "All":
+            distinct = LogicalPlanNode(node_type=LogicalPlanStepType.Distinct)
+            head_nid, step_id = step_id, random_string()
+            plan.add_node(step_id, distinct)
+            plan.add_edge(head_nid, step_id)
+
+        # limit/offset
+        _limit = root_node.get("limit")
+        _offset = root_node.get("offset")
+        if _offset:
+            _offset = _offset.get("value")
+        if _limit or _offset:
+            limit_step = LogicalPlanNode(node_type=LogicalPlanStepType.Limit)
+            limit_step.limit = (
+                None if _limit is None else logical_planner_builders.build(_limit).value
+            )
+            limit_step.offset = (
+                None if _offset is None else logical_planner_builders.build(_offset).value
+            )
+            head_nid, step_id = step_id, random_string()
+            plan.add_node(step_id, limit_step)
+            if head_nid is not None:
+                plan.add_edge(head_nid, step_id)
+
+        # add the exit node
+        exit_node = LogicalPlanNode(node_type=LogicalPlanStepType.Exit)
+        _projection_nodes = [
+            left_plan[nid]
+            for nid in left_plan.nodes()
+            if left_plan[nid].node_type in (LogicalPlanStepType.Project,)
+        ]
+        columns = [LogicalPlanNode(NodeType.WILDCARD, value=(None,))]
+        if _projection_nodes:
+            columns = _projection_nodes[0].columns
+        exit_node.columns = columns
+        head_nid, step_id = step_id, random_string()
+        plan.add_node(step_id, exit_node)
+        if head_nid is not None:
+            plan.add_edge(head_nid, step_id)
+
+        set_op_node.columns = columns
+        set_op_node.left_relation_names = get_subplan_schemas(left_plan)
+        set_op_node.right_relation_names = get_subplan_schemas(right_plan)
 
         return plan
 
