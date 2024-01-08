@@ -864,21 +864,21 @@ class BinderVisitor:
     def visit_union(self, node: Node, context: BindingContext) -> Tuple[Node, BindingContext]:
         for relation in node.right_relation_names:
             context.schemas.pop(relation, None)
-        context.relations = set(node.right_relation_names)
+        context.relations = set(node.left_relation_names)
 
-        schema_name = f"$union-{random_string()}"
-        columns = []
-        for name, schema in context.schemas.items():
-            for schema_column in schema.columns:
-                column_reference = LogicalColumn(
-                    node_type=NodeType.IDENTIFIER,  # column type
-                    source_column=schema_column.name,  # the source column
-                    source=schema_name,
-                    schema_column=schema_column,
-                )
-                columns.append(column_reference)
+        if len(node.columns) == 1 and node.columns[0].node_type == NodeType.WILDCARD:
+            columns = []
+            for schema_name in node.left_relation_names:
+                for schema_column in context.schemas[schema_name].columns:
+                    columns.append(
+                        LogicalColumn(
+                            node_type=NodeType.IDENTIFIER,  # column type
+                            source_column=schema_column.name,  # the source column
+                            schema_column=schema_column,
+                        )
+                    )
+            node.columns = columns
 
-        node.columns = columns
         node, context = self.visit_exit(node, context)
         return node, context
 

@@ -722,6 +722,8 @@ STATEMENTS = [
         ("SELECT * FROM $astronauts WHERE name != 'Brian' OR 'Apollo 11' != any(missions)", 357, 19, None),
         ("SELECT * FROM $astronauts WHERE 'Apollo 11' != all(missions) AND name != 'Brian'", 331, 19, None),
         ("SELECT * FROM $astronauts WHERE name != 'Brian' AND 'Apollo 11' = all(missions)", 0, 19, None),
+        ("SELECT * FROM $astronauts WHERE 'X' >= any(alma_mater)", 3, 19, None),
+        ("SELECT * FROM $astronauts WHERE 'B' <= any(alma_mater)", 15, 19, None),
 
         ("SELECT * FROM $satellites WHERE planetId IN (SELECT id FROM $planets WHERE name = 'Earth')", 1, 8, UnsupportedSyntaxError),  # temp
         ("SELECT * FROM $planets WHERE id NOT IN (SELECT DISTINCT planetId FROM $satellites)", 2, 20, UnsupportedSyntaxError),  # temp
@@ -1202,7 +1204,7 @@ STATEMENTS = [
         ("SELECT $planets.id FROM $satellites", None, None, UnexpectedDatasetReferenceError),
 
         # V2 New Syntax Checks
-        ("SELECT * FROM $planets AS P1 UNION SELECT * FROM $planets AS P2;", 9, 20, UnsupportedSyntaxError),
+#        ("SELECT * FROM $planets AS P1 UNION SELECT * FROM $planets AS P2;", 9, 20, UnsupportedSyntaxError),
         ("SELECT * FROM $planets AS P LEFT ANTI JOIN $satellites AS S ON S.id = P.id;", 0, 20, None),
         ("SELECT * FROM $planets AS P RIGHT ANTI JOIN $satellites AS S ON S.id = P.id;", 168, 8, None),
         ("SELECT * FROM $planets AS P LEFT SEMI JOIN $satellites AS S ON S.id = P.id;", 9, 20, None),

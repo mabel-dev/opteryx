@@ -36,19 +36,17 @@ class ProjectionPushdownStrategy(OptimizationStrategy):
         Returns:
             A tuple containing the potentially modified node and the updated context.
         """
-        if (node.node_type) == LogicalPlanStepType.Union:
-            pass
-
-        elif node.columns:  # Assumes node.columns is an iterable or None
+        if node.columns:  # Assumes node.columns is an iterable or None
             collected_columns = self.collect_columns(node)
             context.collected_identities.update(collected_columns)
 
         if (
-            node.node_type in (LogicalPlanStepType.Scan, LogicalPlanStepType.Subquery)
+            node.node_type
+            in (LogicalPlanStepType.Scan, LogicalPlanStepType.Subquery, LogicalPlanStepType.Union)
             and hasattr(node, "schema")
             and hasattr(node.schema, "columns")
         ):
-            # Push projections
+            # Push all of the projections
             node_columns = [
                 col for col in node.schema.columns if col.identity in context.collected_identities
             ]

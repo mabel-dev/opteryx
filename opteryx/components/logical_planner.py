@@ -160,7 +160,10 @@ class LogicalPlanNode(Node):
             if node_type == LogicalPlanStepType.Subquery:
                 return f"SUBQUERY{' AS ' + self.alias if self.alias else ''}"
             if node_type == LogicalPlanStepType.Union:
-                return f"UNION {'' if self.modifier is None else self.modifier.upper()}"
+                columns = ""
+                if self.columns:
+                    columns = " [" + ", ".join(c.qualified_name for c in self.columns) + "]"
+                return f"UNION {'' if self.modifier is None else self.modifier.upper()}{columns}"
 
             # fmt:on
         except Exception as err:
