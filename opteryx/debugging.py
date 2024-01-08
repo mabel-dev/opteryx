@@ -69,7 +69,6 @@ class OpteryxOrsoImportLoader(importlib.abc.SourceLoader):
             file_extension = Path(filepath).suffix
 
             if file_extension != ".py":
-                print(f"{filepath} Not a .py file. Delegating to original loader.")
                 return self.original_loader.get_data(filepath)
 
             with open(filepath, "r", encoding="utf-8") as f:
@@ -83,7 +82,9 @@ class OpteryxOrsoImportLoader(importlib.abc.SourceLoader):
             return None
 
     def _remove_comments(self, source: str) -> str:
-        return source.replace("# DEBUG: log", "print")
+        debug_mode_enabled = source.replace("# DEBUG: log", "print")
+        debug_mode_enabled = debug_mode_enabled.replace("# DEBUG: ", "")
+        return debug_mode_enabled
 
 
 # Register the custom MetaPathFinder

@@ -42,14 +42,11 @@ class ProjectionPushdownStrategy(OptimizationStrategy):
 
         if (
             node.node_type
-            in (
-                LogicalPlanStepType.Scan,
-                LogicalPlanStepType.Subquery,
-            )
+            in (LogicalPlanStepType.Scan, LogicalPlanStepType.Subquery, LogicalPlanStepType.Union)
             and hasattr(node, "schema")
             and hasattr(node.schema, "columns")
         ):
-            # Push projections
+            # Push all of the projections
             node_columns = [
                 col for col in node.schema.columns if col.identity in context.collected_identities
             ]

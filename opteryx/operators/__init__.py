@@ -40,6 +40,7 @@ from .show_columns_node import ShowColumnsNode  # column details
 # from .show_functions_node import ShowFunctionsNode  # supported functions
 from .show_value_node import ShowValueNode  # display node for SHOW
 from .sort_node import SortNode  # order by selected columns
+from .union_node import UnionNode
 
 
 def is_aggregator(name):

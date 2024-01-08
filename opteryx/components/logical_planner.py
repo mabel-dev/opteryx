@@ -160,7 +160,10 @@ class LogicalPlanNode(Node):
             if node_type == LogicalPlanStepType.Subquery:
                 return f"SUBQUERY{' AS ' + self.alias if self.alias else ''}"
             if node_type == LogicalPlanStepType.Union:
-                return f"UNION {'' if self.modifier is None else self.modifier.upper()}"
+                columns = ""
+                if self.columns:
+                    columns = " [" + ", ".join(c.qualified_name for c in self.columns) + "]"
+                return f"UNION {'' if self.modifier is None else self.modifier.upper()}{columns}"
 
             # fmt:on
         except Exception as err:
@@ -256,6 +259,11 @@ def _table_name(branch):
 
 
 def inner_query_planner(ast_branch):
+    if "Query" in ast_branch:
+        # Sometimes we get a full query plan here (e.g. when queries in set
+        # functions are in parenthesis)
+        return plan_query(ast_branch)
+
     inner_plan = LogicalPlan()
     step_id = None
 
@@ -722,32 +730,74 @@ def plan_query(statement):
         if set_operation["op"] == "Union":
             set_op_node = LogicalPlanNode(node_type=LogicalPlanStepType.Union)
         else:
-            raise NotImplementedError(f"Unsupported SET operator {set_operation['op']}")
+            raise UnsupportedSyntaxError(f"Unsupported SET operator '{set_operation['op']}'")
+
         set_op_node.modifier = (
             None if set_operation["set_quantifier"] == "None" else set_operation["set_quantifier"]
         )
         step_id = random_string()
         plan = LogicalPlan()
         plan.add_node(step_id, set_op_node)
+        head_nid = step_id
 
         left_plan = inner_query_planner(set_operation["left"])
         plan += left_plan
         subquery_entry_id = left_plan.get_exit_points()[0]
         plan.add_edge(subquery_entry_id, step_id)
+        # remove the exit node
+        plan.remove_node(subquery_entry_id, heal=True)
 
-        right_plan = inner_query_planner(set_operation["left"])
+        right_plan = inner_query_planner(set_operation["right"])
         plan += right_plan
         subquery_entry_id = right_plan.get_exit_points()[0]
         plan.add_edge(subquery_entry_id, step_id)
+        # remove the exit node
+        plan.remove_node(subquery_entry_id, heal=True)
 
-        root_node["Select"] = {}
-        parent_plan = inner_query_planner(root_node)
-        if len(parent_plan) > 0:
-            plan += parent_plan
-            parent_plan_exit_id = parent_plan.get_entry_points()[0]
-            plan.add_edge(step_id, parent_plan_exit_id)
+        # UNION ALL
+        if set_op_node.modifier != "All":
+            distinct = LogicalPlanNode(node_type=LogicalPlanStepType.Distinct)
+            head_nid, step_id = step_id, random_string()
+            plan.add_node(step_id, distinct)
+            plan.add_edge(head_nid, step_id)
 
-        raise UnsupportedSyntaxError("Set operators are not supported")
+        # limit/offset
+        _limit = root_node.get("limit")
+        _offset = root_node.get("offset")
+        if _offset:
+            _offset = _offset.get("value")
+        if _limit or _offset:
+            limit_step = LogicalPlanNode(node_type=LogicalPlanStepType.Limit)
+            limit_step.limit = (
+                None if _limit is None else logical_planner_builders.build(_limit).value
+            )
+            limit_step.offset = (
+                None if _offset is None else logical_planner_builders.build(_offset).value
+            )
+            head_nid, step_id = step_id, random_string()
+            plan.add_node(step_id, limit_step)
+            if head_nid is not None:
+                plan.add_edge(head_nid, step_id)
+
+        # add the exit node
+        exit_node = LogicalPlanNode(node_type=LogicalPlanStepType.Exit)
+        _projection_nodes = [
+            left_plan[nid]
+            for nid in left_plan.nodes()
+            if left_plan[nid].node_type in (LogicalPlanStepType.Project,)
+        ]
+        columns = [LogicalPlanNode(NodeType.WILDCARD, value=(None,))]
+        if _projection_nodes:
+            columns = _projection_nodes[0].columns
+        exit_node.columns = columns
+        head_nid, step_id = step_id, random_string()
+        plan.add_node(step_id, exit_node)
+        if head_nid is not None:
+            plan.add_edge(head_nid, step_id)
+
+        set_op_node.columns = columns
+        set_op_node.left_relation_names = get_subplan_schemas(left_plan)
+        set_op_node.right_relation_names = get_subplan_schemas(right_plan)
 
         return plan
 

@@ -166,6 +166,14 @@ def _inner_filter_operations(arr, operator, value):
         from opteryx.compiled import any_ops
 
         return any_ops.cython_anyop_lt(arr[0], value)
+    if operator == "AnyOpGtEq":
+        from opteryx.compiled import any_ops
+
+        return any_ops.cython_anyop_gte(arr[0], value)
+    if operator == "AnyOpLtEq":
+        from opteryx.compiled import any_ops
+
+        return any_ops.cython_anyop_lte(arr[0], value)
     if operator == "AllOpEq":
         from opteryx.compiled import all_ops
 
