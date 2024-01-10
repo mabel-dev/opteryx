@@ -312,11 +312,12 @@ def inner_binder(node: Node, context: Any) -> Tuple[Node, Any]:
             schema_column = ExpressionColumn(name=column_name, type=0)
             node.schema_column = schema_column
         else:
+            # fmt:off
             from opteryx.components.binder.binder_visitor import (
-                get_mismatched_condition_column_types,
-            )
+                get_mismatched_condition_column_types,)
 
-            mismatches = get_mismatched_condition_column_types(node, relaxed_numeric=True)
+            # fmt:on
+            mismatches = get_mismatched_condition_column_types(node, relaxed=True)
             if mismatches:
                 from opteryx.exceptions import IncompatibleTypesError
 

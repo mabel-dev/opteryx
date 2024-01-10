@@ -37,7 +37,7 @@ from opteryx.virtual_datasets import derived
 CAMEL_TO_SNAKE = re.compile(r"(?<!^)(?=[A-Z])")
 
 
-def get_mismatched_condition_column_types(node: Node, relaxed_numeric: bool = False) -> dict:
+def get_mismatched_condition_column_types(node: Node, relaxed: bool = False) -> dict:
     """
     Checks that the types of the fields involved a comparison are the same on both sides.
 
@@ -49,8 +49,8 @@ def get_mismatched_condition_column_types(node: Node, relaxed_numeric: bool = Fa
         a dictionary describing the columns
     """
     if node.node_type in (NodeType.AND, NodeType.OR):
-        left_mismatches = get_mismatched_condition_column_types(node.left, relaxed_numeric)
-        right_mismatches = get_mismatched_condition_column_types(node.right, relaxed_numeric)
+        left_mismatches = get_mismatched_condition_column_types(node.left, relaxed)
+        right_mismatches = get_mismatched_condition_column_types(node.right, relaxed)
         return left_mismatches or right_mismatches
 
     elif node.node_type == NodeType.COMPARISON_OPERATOR:
@@ -64,7 +64,11 @@ def get_mismatched_condition_column_types(node: Node, relaxed_numeric: bool = Fa
         right_type = node.right.schema_column.type if node.right.schema_column else None
 
         if left_type != 0 and right_type != 0 and left_type != right_type:
-            if relaxed_numeric and left_type.is_numeric() and right_type.is_numeric():
+            if (
+                relaxed
+                and (left_type.is_numeric() and right_type.is_numeric())
+                or (left_type.is_temporal() and right_type.is_temporal())
+            ):
                 return None
             if left_type == OrsoTypes.NULL or right_type == OrsoTypes.NULL:
                 return None  # None comparisons are allowed

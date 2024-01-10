@@ -1423,6 +1423,11 @@ STATEMENTS = [
         ("SELECT COUNT(*), COUNT_DISTINCT(id) FROM $planets;", 1, 2, None),
         # NUMPY typles not handled by sqlalchemy
         ("SELECT P_1.* FROM sqlite.planets AS P_1 CROSS JOIN $satellites AS P_2 WHERE P_1.id = P_2.planetId AND P_1.name LIKE '%a%' AND lengthOfDay > 0", 91, 20, None),
+        # 1370, issues coercing DATE and TIMESTAMPS
+        ("SELECT * FROM $planets WHERE TIMESTAMP '2023-01-01' = DATE '2023-01-01'", 9, 20, None),
+        ("SELECT * FROM $planets WHERE 1 = 1.0", 9, 20, None),
+        ("SELECT * FROM $planets WHERE DATE '2023-01-01' + INTERVAL '1' MONTH", 9, 20, None),
+        ("SELECT * FROM $planets WHERE TIMESTAMP '2023-01-01' + INTERVAL '1' MONTH", 9, 20, None),
 ]
 # fmt:on
 

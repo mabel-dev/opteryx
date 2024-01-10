@@ -12,7 +12,7 @@ if build_number:
     # Save the build number to the build.py file
     with open("opteryx/__version__.py", "w") as f:
         f.write(f"__build__ = {build_number}\n")
-        f.write("\n".join(contents))
+        f.write("\n".join(contents) + "\n")
 
 __version__ = "notset"
 with open(f"opteryx/__version__.py", mode="r") as v:

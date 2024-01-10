@@ -390,6 +390,8 @@ def literal_interval(branch, alias: Optional[List[str]] = None, key=None):
     """
     parts = ("Year", "Month", "Day", "Hour", "Minute", "Second")
 
+    if not "Value" in branch["value"]:
+        raise SqlError("Invalid INTERVAL, expected format `INTERVAL '1' MONTH`")
     values = build(branch["value"]["Value"]).value
     if not isinstance(values, str):
         raise SqlError(f"Invalid INTERVAL, values must be provided as a VARCHAR.")
