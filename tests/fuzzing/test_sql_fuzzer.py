@@ -34,7 +34,7 @@ def generate_random_sql_select(columns, table):
     if random.random() < 0.7:
         where_column = random.choice(columns[2:])
         where_operator = random.choice(["=", "!=", "<", "<=", ">", ">="])
-        where_value = str(random.randint(1, 100))
+        where_value = str(random.randint(1, 1000) / 10)
         where_clause = f"{where_column} {where_operator} {where_value}"
         select_clause = f"{select_clause} WHERE {where_clause}"
         # add an abitrary number of additional conditions

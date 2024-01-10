@@ -129,6 +129,7 @@ def short_cut_and(root, table, context):
 
     # Evaluate left expression
     left_result = numpy.array(evaluate(root.left, table, context))
+    left_result = numpy.asarray(left_result, dtype=bool)
 
     # If all values in left_result are False, no need to evaluate the right expression
     if not left_result.any():
