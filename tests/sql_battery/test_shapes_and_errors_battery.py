@@ -523,6 +523,8 @@ STATEMENTS = [
 
         ("SELECT GET(birth_place, 'town') FROM $astronauts", 357, 1, None),
         ("SELECT GET(missions, 0) FROM $astronauts", 357, 1, None),
+        ("SELECT name FROM $astronauts WHERE GET(missions, 0) IS NOT NULL", 334, 1, None),
+        ("SELECT name FROM $astronauts WHERE GET(missions, 5) IS NOT NULL", 7, 1, None),
         ("SELECT GET(birth_place, 'town') FROM $astronauts WHERE GET(birth_place, 'town') = 'Warsaw'", 1, 1, None),
         ("SELECT COUNT(*), GET(birth_place, 'town') FROM $astronauts GROUP BY GET(birth_place, 'town')", 264, 2, None),
         ("SELECT birth_place['town'] FROM $astronauts", 357, 1, None),
