@@ -100,11 +100,11 @@ def test_logical_expressions():
     result = evaluate(T_AND_T, table=planets)
     assert all(result)
     result = evaluate(T_AND_F, table=planets)
-    assert not any(c.as_py() for c in result)
+    assert not any(c for c in result)
     result = evaluate(F_AND_T, table=planets)
-    assert not any(c.as_py() for c in result)
+    assert not any(c for c in result)
     result = evaluate(F_AND_F, table=planets)
-    assert not any(c.as_py() for c in result)
+    assert not any(c for c in result)
 
     T_OR_T = Node(
         NodeType.OR, left=true, right=true, schema_column=FunctionColumn(name="func", type=0)

@@ -65,6 +65,7 @@ __all__ = "do_heuristic_optimizer"
 
 class HeuristicOptimizerVisitor:
     def __init__(self):
+        from .strategies import ConstantFoldingStrategy
         from .strategies import DefragmentMorselsStrategy
         from .strategies import PredicatePushdownStrategy
         from .strategies import ProjectionPushdownStrategy
@@ -72,6 +73,7 @@ class HeuristicOptimizerVisitor:
 
         self.strategies = [
             #            DefragmentMorselsStrategy(),
+            ConstantFoldingStrategy(),
             SplitConjunctivePredicatesStrategy(),
             PredicatePushdownStrategy(),
             ProjectionPushdownStrategy(),

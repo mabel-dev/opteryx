@@ -259,7 +259,6 @@ def _inner_evaluate(root: Node, table: Table, context: ExecutionContext):
             root.value = format_expression(root)
             root.node_type = NodeType.EVALUATED
         if node_type == NodeType.EVALUATED:
-            column = root.schema_column
             if not root.schema_column.identity in table.column_names:
                 raise ColumnReferencedBeforeEvaluationError(column=root.schema_column.name)
             return table[root.schema_column.identity].to_numpy()
@@ -308,8 +307,6 @@ def get_all_nodes_of_type(root, select_nodes):
     """
     Walk a expression tree collecting all the nodes of a specified type.
     """
-    from opteryx.third_party.travers import Graph
-
     if root is None:
         return []
     if not isinstance(root, (set, tuple, list)):

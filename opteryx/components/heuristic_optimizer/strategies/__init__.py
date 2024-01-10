@@ -1,3 +1,4 @@
+from .constant_folding import ConstantFoldingStrategy
 from .defragment_morsels import DefragmentMorselsStrategy
 from .predicate_pushdown import PredicatePushdownStrategy
 from .projection_pushdown import ProjectionPushdownStrategy

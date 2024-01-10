@@ -76,12 +76,7 @@ Designed for data analytics in environments where decisions need to be replayabl
 
 ### __Fast__
 
-Benchmarks on M1 Pro Mac running an ad hoc `GROUP BY` over a 1Gb parquet file via the CLI in ~1/5th of a second, from a cold start. _(different systems will have different performance characteristics)_
-
-Rows    | Columns | File Size | Query Time
-------- | ------- | --------- | ----------
-561225  |      81 |       1Gb | 0.22sec
-1064539 |      81 |       2Gb | 0.27sec
+Benchmarks on M2 Pro Mac running an ad hoc `GROUP BY` over a 6 million row parquet file via the CLI in ~1/4th of a second from a cold start (no caching and predefined schema). _(different systems will have different performance characteristics)_
 
 ### __Instant Elasticity__
 
