@@ -32,29 +32,30 @@ from opteryx.functions import number_functions
 from opteryx.functions import other_functions
 from opteryx.functions import string_functions
 from opteryx.utils import dates
-from opteryx.utils import series
 
 
-def _get(value, item):
-    try:
-        if isinstance(value, dict):
-            return value.get(item)
-        return value[int(item)]
-    except ValueError as err:
-        if isinstance(value, str):
-            raise IncorrectTypeError(
-                f"VARCHAR values can only be subscripted with NUMERIC values"
-            ) from err
-        if isinstance(value, dict):
-            raise IncorrectTypeError(
-                "STRUCT values must be subscripted with VARCHAR values"
-            ) from err
-        if isinstance(value, list):
-            raise IncorrectTypeError("LIST values must be subscripted with NUMERIC values") from err
-        else:
-            raise IncorrectTypeError(f"Cannot subscript {type(value).__name__} values") from err
-    except (KeyError, IndexError, TypeError):
-        return None
+def _get(array, key):
+    # Determine the type of the first element (assuming homogeneous array)
+    if array is None or len(array) == 0:
+        return [None]  # Return an array of None if input is empty
+    key = key[0]
+
+    first_element = array[0]
+
+    if isinstance(first_element, dict):
+        # Handle dict type
+        return [item.get(key) for item in array]
+    elif isinstance(first_element, (list, numpy.ndarray, str)):
+        # Handle list type
+        try:
+            index = int(key)
+            return [
+                item[index] if item is not None and len(item) > index else None for item in array
+            ]
+        except ValueError:
+            raise IncorrectTypeError("LIST values must be subscripted with NUMERIC values")
+    else:
+        raise IncorrectTypeError(f"Cannot subscript {type(first_element).__name__} values")
 
 
 def cast_varchar(arr):
@@ -293,7 +294,7 @@ FUNCTIONS = {
     "HEX_DECODE": _iterate_single_parameter(string_functions.get_hex_decode),
 
     # OTHER
-    "GET": _iterate_double_parameter(_get),  # GET(LIST, index) => LIST[index] or GET(STRUCT, accessor) => STRUCT[accessor]
+    "GET": _get,
     "LIST_CONTAINS": _iterate_double_parameter(other_functions.list_contains),
     "LIST_CONTAINS_ANY": _iterate_double_parameter(other_functions.list_contains_any),
     "LIST_CONTAINS_ALL": _iterate_double_parameter(other_functions.list_contains_all),
