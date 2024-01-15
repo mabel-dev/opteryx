@@ -15,7 +15,7 @@ __all__ = [
 def _tag_predicates(nodes):
     from opteryx.managers.expression import NodeType
 
-    NODE_ORDER = {}
+    NODE_ORDER: dict = {}
     """
     Here we add tags to the predicates to assist with optimization.
 
