@@ -197,7 +197,6 @@ def _inner_evaluate(root: Node, table: Table, context: ExecutionContext):
     node_type = root.node_type
 
     if node_type == NodeType.SUBQUERY:
-        results = root.value.execute()
         raise UnsupportedSyntaxError("IN (<subquery>) temporarily not supported.")
 
     if root.schema_column:
