@@ -64,6 +64,7 @@ class GcpCloudStorageConnector(BaseConnector, Cacheable, Partitionable, Predicat
         # we're going to cache the first blob as the schema and dataset reader
         # sometimes both start here
         self.cached_first_blob = None
+        self.client = self._get_storage_client()
 
     def _get_storage_client(self):
         from google.cloud import storage
@@ -76,9 +77,7 @@ class GcpCloudStorageConnector(BaseConnector, Cacheable, Partitionable, Predicat
             return storage.Client()
 
     def _get_blob(self, bucket: str, blob_name: str):
-        client = self._get_storage_client()
-
-        gcs_bucket = client.get_bucket(bucket)
+        gcs_bucket = self.client.get_bucket(bucket)
         blob = gcs_bucket.get_blob(blob_name)
         return blob
 
@@ -100,10 +99,8 @@ class GcpCloudStorageConnector(BaseConnector, Cacheable, Partitionable, Predicat
         bucket = bucket.replace("va_data", "va-data")
         bucket = bucket.replace("data_", "data-")
 
-        client = self._get_storage_client()
-
-        gcs_bucket = client.get_bucket(bucket)
-        blobs = client.list_blobs(bucket_or_name=gcs_bucket, prefix=object_path)
+        gcs_bucket = self.client.get_bucket(bucket)
+        blobs = self.client.list_blobs(bucket_or_name=gcs_bucket, prefix=object_path, fields="items(name)")
         blobs = (bucket + "/" + blob.name for blob in blobs if not blob.name.endswith("/"))
         return [blob for blob in blobs if ("." + blob.split(".")[-1].lower()) in VALID_EXTENSIONS]
 
@@ -116,12 +113,6 @@ class GcpCloudStorageConnector(BaseConnector, Cacheable, Partitionable, Predicat
             blob_list_getter=self.get_list_of_blob_names,
             prefix=self.dataset,
         )
-
-        # Check if the first blob was cached earlier
-        #        if self.cached_first_blob is not None:
-        #            yield self.cached_first_blob  # Use cached blob
-        #            blob_names = blob_names[1:]  # Skip first blob
-        #        self.cached_first_blob = None
 
         for blob_name in blob_names:
             try:
