@@ -418,6 +418,7 @@ class BinderVisitor:
         original_context = context.copy()
         node.condition, context = inner_binder(node.condition, context)
         node.columns = get_all_nodes_of_type(node.condition, (NodeType.IDENTIFIER,))
+        node.relations = node.condition.relations or {}
 
         return node, original_context
 

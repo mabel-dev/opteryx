@@ -121,6 +121,7 @@ def locate_identifier(node: Node, context: Any) -> Tuple[Node, Dict]:
             schema_column=schema_column,
             type=schema_column.type,
             value=schema_column.value,
+            relations={},
         )
         return new_node
 
@@ -215,6 +216,7 @@ def inner_binder(node: Node, context: Any) -> Tuple[Node, Any]:
     # Import relevant classes and functions
     from opteryx.managers.expression import ExpressionColumn
     from opteryx.managers.expression import format_expression
+    from opteryx.managers.expression import get_all_nodes_of_type
 
     # Retrieve the node type for further processing.
     node_type = node.node_type
@@ -332,6 +334,9 @@ def inner_binder(node: Node, context: Any) -> Tuple[Node, Any]:
             schemas["$derived"].columns.append(schema_column)
             node.schema_column = schema_column
             node.query_column = node.alias or column_name
+
+    identifiers = get_all_nodes_of_type(node, (NodeType.IDENTIFIER,))
+    node.relations = {col.source for col in identifiers if col.source is not None}
 
     context.schemas = schemas
     return node, context

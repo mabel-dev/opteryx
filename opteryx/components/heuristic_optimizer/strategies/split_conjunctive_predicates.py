@@ -17,7 +17,6 @@ from opteryx.components.logical_planner import LogicalPlanNode
 from opteryx.components.logical_planner import LogicalPlanStepType
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import get_all_nodes_of_type
-from opteryx.models import Node
 
 from .optimization_strategy import HeuristicOptimizerContext
 from .optimization_strategy import OptimizationStrategy
@@ -36,80 +35,9 @@ NODE_ORDER = {
 }
 
 
-def _tag_predicates(nodes):
-    """
-    Here we add tags to the predicates to assist with optimization.
-
-    Weighting of predicates based on naive rules, this is mostly useful for situations where
-    we do not have statistics to make cost-based decisions later. We're going to start with
-    arbitrary numbers, we need to find a way to refine these over time. The logic is
-    roughly:
-        - 35 is something that is expensive (we're running function)
-        - 32 is where we're doing a complex comparison
-        ...
-        - 7 are IS/IS NOT filters
-        - 5 is doing an eqi comparison on a column and a literal
-        - 3 is doing an eqi comparison on two literals (don't actually do that in a filter)
-    """
-
-    for node in nodes:
-        while node.node_type == NodeType.NESTED and node.centre:
-            node = node.centre
-
-        node.weight = 0
-        node.simple = True
-        node.relations = set()
-
-        if node.condition.node_type == NodeType.UNARY_OPERATOR:
-            # these are IS/IS NOT filters
-            node.weight += 7
-            node.relations.add(node.condition.centre.source)
-            continue
-        if not node.condition.node_type == NodeType.COMPARISON_OPERATOR:
-            node.weight += 35
-            node.simple = False
-            continue
-        node.weight = NODE_ORDER.get(node.condition.value, 12)
-        if node.condition.left.node_type == NodeType.LITERAL:
-            node.weight += 1
-        elif node.condition.left.node_type == NodeType.IDENTIFIER:
-            node.weight += 3
-            node.relations.add(node.condition.left.source)
-        else:
-            node.weight += 10
-            node.simple = False
-        if node.condition.right.node_type == NodeType.LITERAL:
-            node.weight += 1
-        elif node.condition.right.node_type == NodeType.IDENTIFIER:
-            node.weight += 3
-            node.relations.add(node.condition.right.source)
-        else:
-            node.weight += 10
-            node.simple = False
-
-    return sorted(nodes, key=lambda node: node.weight, reverse=True)
-
-
 def _inner_split(node):
     while node.node_type == NodeType.NESTED:
         node = node.centre
-
-    if node.node_type == NodeType.OR:
-        sides = _tag_predicates(
-            [
-                Node(node.left.node_type, condition=node.left),
-                Node(node.right.node_type, condition=node.right),
-            ]
-        )
-        sides.reverse()
-        node = Node(
-            NodeType.OR,
-            left=sides[0].condition,
-            right=sides[1].condition,
-            schema_column=node.schema_column,
-        )
-
-        return [node]
 
     if node.node_type != NodeType.AND:
         return [node]
@@ -119,23 +47,6 @@ def _inner_split(node):
     right_nodes = _inner_split(node.right)
 
     return left_nodes + right_nodes
-
-
-def _unique_nodes(nodes: list) -> list:
-    seen_identities = {}
-
-    for node in nodes:
-        if node.condition:
-            identity = node.condition.schema_column.identity
-            if identity not in seen_identities:
-                # if it's the first time we've seen it, capture it
-                seen_identities[identity] = node
-            elif node.condition.left.schema_column and node.condition.right.schema_column:
-                # if we're seeing it again AND it has left and right columns, it's probably
-                # the complete node so replace what we captured before
-                seen_identities[identity] = node
-
-    return list(seen_identities.values())
 
 
 class SplitConjunctivePredicatesStrategy(OptimizationStrategy):
@@ -167,8 +78,6 @@ class SplitConjunctivePredicatesStrategy(OptimizationStrategy):
                     node.condition, select_nodes=(NodeType.IDENTIFIER,)
                 )
                 new_nodes.append(new_node)
-            new_nodes = _unique_nodes(new_nodes)
-            new_nodes = _tag_predicates(new_nodes)
         else:
             new_nodes = [node]
 

@@ -1428,8 +1428,12 @@ STATEMENTS = [
         # 1370, issues coercing DATE and TIMESTAMPS
         ("SELECT * FROM $planets WHERE TIMESTAMP '2023-01-01' = DATE '2023-01-01'", 9, 20, None),
         ("SELECT * FROM $planets WHERE 1 = 1.0", 9, 20, None),
-        ("SELECT * FROM $planets WHERE DATE '2023-01-01' + INTERVAL '1' MONTH", 9, 20, None),
-        ("SELECT * FROM $planets WHERE TIMESTAMP '2023-01-01' + INTERVAL '1' MONTH", 9, 20, None),
+        ("SELECT * FROM $planets WHERE DATE '2023-01-01' + INTERVAL '1' MONTH", 9, 20, SqlError),
+        ("SELECT * FROM $planets WHERE TIMESTAMP '2023-01-01' + INTERVAL '1' MONTH", 9, 20, SqlError),
+        ("SELECT DATE '2023-01-01' + INTERVAL '1' MONTH FROM $planets", 9, 1, None),
+        ("SELECT TIMESTAMP '2023-01-01' + INTERVAL '1' MONTH FROM $planets", 9, 1, None),
+        ("SELECT * FROM $planets WHERE DATE '2023-01-01' + INTERVAL '1' MONTH < current_time", 9, 20, None),
+        ("SELECT * FROM $planets WHERE TIMESTAMP '2023-01-01' + INTERVAL '1' MONTH < current_time", 9, 20, None),
 ]
 # fmt:on
 
