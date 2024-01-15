@@ -24,6 +24,7 @@ from typing import Optional
 
 import numpy
 import pyarrow
+from orso.tools import random_string
 from orso.types import OrsoTypes
 from pyarrow import Table
 
@@ -196,9 +197,13 @@ def _inner_evaluate(root: Node, table: Table, context: ExecutionContext):
     node_type = root.node_type
 
     if node_type == NodeType.SUBQUERY:
+        results = root.value.execute()
         raise UnsupportedSyntaxError("IN (<subquery>) temporarily not supported.")
 
-    identity = root.schema_column.identity
+    if root.schema_column:
+        identity = root.schema_column.identity
+    else:
+        identity = random_string()
 
     # If already evaluated, return memoized result.
     if context.has_result(identity):

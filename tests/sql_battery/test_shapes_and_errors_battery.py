@@ -735,6 +735,8 @@ STATEMENTS = [
 
         ("EXPLAIN SELECT * FROM $satellites", 1, 3, None),
         ("EXPLAIN SELECT * FROM $satellites WHERE id = 8", 2, 3, None),
+        ("EXPLAIN SELECT * FROM $planets WHERE TRUE", 1, 3, None),
+        ("EXPLAIN SELECT * FROM $planets WHERE 1 > 1", 2, 3, None),
         ("SET version = '1.0';", None, None, PermissionsError),
         ("SET schmersion = '1.0';", None, None, VariableNotFoundError),
         ("SET disable_morsel_defragmentation = 100;", None, None, ValueError),
@@ -1259,6 +1261,7 @@ STATEMENTS = [
         ("SELECT p.name, sub.name FROM $planets p CROSS JOIN (SELECT name, planetId FROM $satellites WHERE gm < 1000) AS sub WHERE p.id = sub.planetId;", 170, 2, None),
         ("SELECT p.name, s.name FROM $planets p, $satellites s WHERE p.id = s.planetId AND p.id = s.id;", 1, 2, None),
         ("SELECT p.name, COUNT(s.id) FROM $planets p JOIN $satellites s ON p.id = s.planetId GROUP BY p.name HAVING COUNT(s.id) > 3;", 5, 2, None),
+        ("SELECT COUNT(*) FROM testdata.tpch.lineitem WHERE TRUE AND 3 = 2 AND 3 > 2", 1, 1, None),
 
         # These are queries which have been found to return the wrong result or not run correctly
         # FILTERING ON FUNCTIONS

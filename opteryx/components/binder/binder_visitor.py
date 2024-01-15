@@ -63,7 +63,7 @@ def get_mismatched_condition_column_types(node: Node, relaxed: bool = False) -> 
         left_type = node.left.schema_column.type if node.left.schema_column else None
         right_type = node.right.schema_column.type if node.right.schema_column else None
 
-        if left_type != 0 and right_type != 0 and left_type != right_type:
+        if left_type and right_type and left_type != right_type:
             if (
                 relaxed
                 and (left_type.is_numeric() and right_type.is_numeric())

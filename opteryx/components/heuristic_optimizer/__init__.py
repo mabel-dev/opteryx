@@ -72,10 +72,8 @@ __all__ = "do_heuristic_optimizer"
 class HeuristicOptimizerVisitor:
     def __init__(self):
         self.strategies = [
-            #            strategies.DefragmentMorselsStrategy(),
-            ConstantFoldingStrategy(),
             SplitConjunctivePredicatesStrategy(),
-            #            InSubQueryToJoinStrategy(),
+            ConstantFoldingStrategy(),
         ]
 
     def traverse(self, plan: LogicalPlan, strategy) -> LogicalPlan:

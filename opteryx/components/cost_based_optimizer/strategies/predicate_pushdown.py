@@ -53,7 +53,9 @@ class PredicatePushdownStrategy(OptimizationStrategy):
 
         elif node.node_type == LogicalPlanStepType.Filter:
             # collect predicates we can probably push
-            if len(node.relations) > 0 and not get_all_nodes_of_type(node.condition, (NodeType.AGGREGATOR,)):
+            if len(node.relations) > 0 and not get_all_nodes_of_type(
+                node.condition, (NodeType.AGGREGATOR,)
+            ):
                 # record where the node was, so we can put it back
                 node.nid = context.node_id
                 node.plan_path = context.optimized_plan.trace_to_root(context.node_id)
