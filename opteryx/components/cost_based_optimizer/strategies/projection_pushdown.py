@@ -18,14 +18,14 @@ from opteryx.components.logical_planner import LogicalPlanStepType
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import get_all_nodes_of_type
 
-from .optimization_strategy import HeuristicOptimizerContext
+from .optimization_strategy import CostBasedOptimizerContext
 from .optimization_strategy import OptimizationStrategy
 
 
 class ProjectionPushdownStrategy(OptimizationStrategy):
     def visit(
-        self, node: LogicalPlanNode, context: HeuristicOptimizerContext
-    ) -> HeuristicOptimizerContext:
+        self, node: LogicalPlanNode, context: CostBasedOptimizerContext
+    ) -> CostBasedOptimizerContext:
         """
         Optimize the given node by pushing projections down in the plan.
 
@@ -59,7 +59,7 @@ class ProjectionPushdownStrategy(OptimizationStrategy):
 
         return context
 
-    def complete(self, plan: LogicalPlan, context: HeuristicOptimizerContext) -> LogicalPlan:
+    def complete(self, plan: LogicalPlan, context: CostBasedOptimizerContext) -> LogicalPlan:
         # No finalization needed for this strategy
         return plan
 

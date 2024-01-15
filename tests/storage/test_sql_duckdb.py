@@ -4,6 +4,7 @@ Test we can read from DuckDB - this is a basic exercise of the SQL Connector
 import os
 import sys
 
+os.environ["OPTERYX_DEBUG"] = "1"
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import opteryx

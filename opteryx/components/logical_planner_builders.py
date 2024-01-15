@@ -347,7 +347,7 @@ def in_subquery(branch, alias: Optional[List[str]] = None, key=None):
     subquery_plan = plan_query(ast)
     exit_node = subquery_plan.get_exit_points()[0]
     subquery_plan.remove_node(exit_node, heal=True)
-    operator = "NotInList" if branch["negated"] else "InList"
+    operator = "NotInSubQuery" if branch["negated"] else "InSubQuery"
 
     sub_query = Node(NodeType.SUBQUERY, value=subquery_plan)
     return Node(

@@ -24,21 +24,26 @@ This is the AST rewriter, it sits between the Parser and the Logical Planner.
    │ SQL       │                               │
    │  Rewriter │                               │
    └─────┬─────┘                               │
-         │SQL                                  │Plan
+         │SQL                                  │Results
    ┌─────▼─────┐                         ┌─────┴─────┐
    │           │                         │           │
    │ Parser    │                         │ Executor  │
    └─────┬─────┘                         └─────▲─────┘
          │AST                                  │Plan
-   ╔═════▼═════╗      ┌───────────┐      ┌─────┴─────┐
-   ║ AST       ║      │           │Stats │Cost-Based │
-   ║ Rewriter  ║      │ Catalogue ├──────► Optimizer │
-   ╚═════╦═════╝      └─────┬─────┘      └─────▲─────┘
-         │AST               │Schemas           │Plan
-   ┌─────▼─────┐      ┌─────▼─────┐      ┌─────┴─────┐
-   │ Logical   │ Plan │           │ Plan │ Heuristic │
-   │   Planner ├──────► Binder    ├──────► Optimizer │
-   └───────────┘      └───────────┘      └───────────┘
+   ┌─────▼─────┐                         ╔═══════════╗
+   │ AST       │                         ║Cost-Based ║
+   │ Rewriter  │                         ║ Optimizer ║
+   └─────┬─────┘                         ╚═════▲═════╝
+         │AST                                  │Plan
+   ┌─────▼─────┐      ┌───────────┐      ┌─────┴─────┐
+   │ Logical   │ Plan │ Heuristic │ Plan │           │
+   │   Planner ├──────► Optimizer ├──────► Binder    │
+   └───────────┘      └───────────┘      └─────▲─────┘
+                                               │Schemas
+                                         ┌─────┴─────┐
+                                         │           │
+                                         │ Catalogue │
+                                         └───────────┘
 ~~~
 
 The primary role is to bind information to the AST which is provided in the order they appear
@@ -62,8 +67,6 @@ from typing import Any
 from typing import Dict
 from typing import List
 from typing import Union
-
-import numpy
 
 from opteryx.exceptions import ParameterError
 

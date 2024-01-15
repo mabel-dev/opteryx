@@ -43,39 +43,25 @@
                                          │ Catalogue │
                                          └───────────┘
 ~~~
-
-The plan rewriter does basic heuristic rewrites of the plan, this is an evolution of the old optimizer.
-
-Do things like:
-- split predicates into as many AND conditions as possible
-- push predicates close to the reads
-- push projections close to the reads
-- reduce negations
-
-New things:
-- replace subqueries with joins
-
 This is written as a Visitor, unlike the binder which is working from the scanners up to
 the projection, this starts at the projection and works toward the scanners. This works well because
 the main activity we're doing is splitting nodes, individual node rewrites, and push downs.
 """
 
 
-from opteryx.components.heuristic_optimizer.strategies import *
+from opteryx.components.cost_based_optimizer.strategies import *
 from opteryx.components.logical_planner import LogicalPlan
 
-from .strategies.optimization_strategy import HeuristicOptimizerContext
+from .strategies.optimization_strategy import CostBasedOptimizerContext
 
-__all__ = "do_heuristic_optimizer"
+__all__ = "do_cost_based_optimizer"
 
 
-class HeuristicOptimizerVisitor:
+class CostBasedOptimizerVisitor:
     def __init__(self):
         self.strategies = [
-            #            strategies.DefragmentMorselsStrategy(),
-            ConstantFoldingStrategy(),
-            SplitConjunctivePredicatesStrategy(),
-            #            InSubQueryToJoinStrategy(),
+            PredicatePushdownStrategy(),
+            ProjectionPushdownStrategy(),
         ]
 
     def traverse(self, plan: LogicalPlan, strategy) -> LogicalPlan:
@@ -89,7 +75,7 @@ class HeuristicOptimizerVisitor:
             The optimized logical plan tree.
         """
         root_nid = plan.get_exit_points().pop()
-        context = HeuristicOptimizerContext(plan)
+        context = CostBasedOptimizerContext(plan)
 
         def _inner(nid, parent_nid, context):
             node = context.pre_optimized_tree[nid]
@@ -108,11 +94,11 @@ class HeuristicOptimizerVisitor:
         current_plan = plan
         for strategy in self.strategies:
             current_plan = self.traverse(current_plan, strategy)
-        # DEBUG: log ("AFTER RULE OPTIMIZATION")
+        # DEBUG: log ("AFTER COST OPTIMIZATION")
         # DEBUG: log (current_plan.draw())
         return current_plan
 
 
-def do_heuristic_optimizer(plan: LogicalPlan) -> LogicalPlan:
-    optimizer = HeuristicOptimizerVisitor()
+def do_cost_based_optimizer(plan: LogicalPlan) -> LogicalPlan:
+    optimizer = CostBasedOptimizerVisitor()
     return optimizer.optimize(plan)

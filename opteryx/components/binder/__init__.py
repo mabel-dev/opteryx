@@ -24,21 +24,26 @@ This is Binder, it sits between the Logical Planner and the Optimizers.
    │ SQL       │                               │
    │  Rewriter │                               │
    └─────┬─────┘                               │
-         │SQL                                  │Plan
+         │SQL                                  │Results
    ┌─────▼─────┐                         ┌─────┴─────┐
    │           │                         │           │
    │ Parser    │                         │ Executor  │
    └─────┬─────┘                         └─────▲─────┘
          │AST                                  │Plan
+   ┌─────▼─────┐                         ╔═══════════╗
+   │ AST       │                         ║Cost-Based ║
+   │ Rewriter  │                         ║ Optimizer ║
+   └─────┬─────┘                         ╚═════▲═════╝
+         │AST                                  │Plan
    ┌─────▼─────┐      ┌───────────┐      ┌─────┴─────┐
-   │ AST       │      │           │Stats │Cost-Based │
-   │ Rewriter  │      │ Catalogue ├──────► Optimizer │
-   └─────┬─────┘      └─────┬─────┘      └─────▲─────┘
-         │AST               │Schemas           │Plan
-   ┌─────▼─────┐      ╔═════▼═════╗      ┌─────┴─────┐
-   │ Logical   │ Plan ║           ║ Plan │ Heuristic │
-   │   Planner ├──────►   Binder  ║──────► Optimizer │
-   └───────────┘      ╚═══════════╝      └───────────┘
+   │ Logical   │ Plan │ Heuristic │ Plan │           │
+   │   Planner ├──────► Optimizer ├──────► Binder    │
+   └───────────┘      └───────────┘      └─────▲─────┘
+                                               │Schemas
+                                         ┌─────┴─────┐
+                                         │           │
+                                         │ Catalogue │
+                                         └───────────┘
 ~~~
 
 The Binder is responsible for adding information about the database and engine into the

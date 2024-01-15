@@ -22,21 +22,26 @@
    │ SQL       │                               │
    │  Rewriter │                               │
    └─────┬─────┘                               │
-         │SQL                                  │Plan
+         │SQL                                  │Results
    ┌─────▼─────┐                         ┌─────┴─────┐
    │           │                         │           │
    │ Parser    │                         │ Executor  │
    └─────┬─────┘                         └─────▲─────┘
          │AST                                  │Plan
+   ┌─────▼─────┐                         ╔═══════════╗
+   │ AST       │                         ║Cost-Based ║
+   │ Rewriter  │                         ║ Optimizer ║
+   └─────┬─────┘                         ╚═════▲═════╝
+         │AST                                  │Plan
    ┌─────▼─────┐      ┌───────────┐      ┌─────┴─────┐
-   │ AST       │      │           │Stats │Cost-Based │
-   │ Rewriter  │      │ Catalogue ├──────► Optimizer │
-   └─────┬─────┘      └─────┬─────┘      └─────▲─────┘
-         │AST               │Schemas           │Plan
-   ╔═════▼═════╗      ┌─────▼─────┐      ┌─────┴─────┐
-   ║ Logical   ║ Plan │           │ Plan │ Heuristic │
-   ║   Planner ║──────► Binder    ├──────► Optimizer │
-   ╚═══════════╝      └───────────┘      └───────────┘
+   │ Logical   │ Plan │ Heuristic │ Plan │           │
+   │   Planner ├──────► Optimizer ├──────► Binder    │
+   └───────────┘      └───────────┘      └─────▲─────┘
+                                               │Schemas
+                                         ┌─────┴─────┐
+                                         │           │
+                                         │ Catalogue │
+                                         └───────────┘
 ~~~
 Converts the AST to a logical query plan.
 

@@ -19,7 +19,7 @@ from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.models import Node
 
-from .optimization_strategy import HeuristicOptimizerContext
+from .optimization_strategy import CostBasedOptimizerContext
 from .optimization_strategy import OptimizationStrategy
 
 
@@ -34,8 +34,8 @@ def _add_condition(existing_condition, new_condition):
 
 class PredicatePushdownStrategy(OptimizationStrategy):
     def visit(
-        self, node: LogicalPlanNode, context: HeuristicOptimizerContext
-    ) -> HeuristicOptimizerContext:
+        self, node: LogicalPlanNode, context: CostBasedOptimizerContext
+    ) -> CostBasedOptimizerContext:
         if not context.optimized_plan:
             context.optimized_plan = context.pre_optimized_tree.copy()  # type: ignore
 
@@ -53,7 +53,7 @@ class PredicatePushdownStrategy(OptimizationStrategy):
 
         elif node.node_type == LogicalPlanStepType.Filter:
             # collect predicates we can probably push
-            if node.simple and len(node.relations) > 0:
+            if len(node.relations) > 0 and not get_all_nodes_of_type(node.condition, (NodeType.AGGREGATOR,)):
                 # record where the node was, so we can put it back
                 node.nid = context.node_id
                 node.plan_path = context.optimized_plan.trace_to_root(context.node_id)
@@ -118,7 +118,7 @@ class PredicatePushdownStrategy(OptimizationStrategy):
             context.optimized_plan.add_node(context.node_id, node)
         return context
 
-    def complete(self, plan: LogicalPlan, context: HeuristicOptimizerContext) -> LogicalPlan:
+    def complete(self, plan: LogicalPlan, context: CostBasedOptimizerContext) -> LogicalPlan:
         # anything we couldn't push, we need to put back
         for predicate in context.collected_predicates:
             for nid in predicate.plan_path:
@@ -128,8 +128,8 @@ class PredicatePushdownStrategy(OptimizationStrategy):
         return context.optimized_plan
 
     def _handle_predicates(
-        self, node: LogicalPlanNode, context: HeuristicOptimizerContext
-    ) -> HeuristicOptimizerContext:
+        self, node: LogicalPlanNode, context: CostBasedOptimizerContext
+    ) -> CostBasedOptimizerContext:
         remaining_predicates = []
         for predicate in context.collected_predicates:
             if len(predicate.relations) == 1 and predicate.relations.intersection(

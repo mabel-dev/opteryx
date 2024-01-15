@@ -23,6 +23,7 @@ from typing import Generator
 import numpy
 import pyarrow
 
+from opteryx.exceptions import SqlError
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import evaluate
 from opteryx.managers.expression import evaluate_and_append
@@ -68,7 +69,12 @@ class SelectionNode(BasePlanNode):
             self.statistics.time_evaluating += time.time_ns() - start_selection
 
             if not isinstance(mask, pyarrow.lib.BooleanArray):
-                mask = pyarrow.array(mask, type=pyarrow.bool_())
+                try:
+                    mask = pyarrow.array(mask, type=pyarrow.bool_())
+                except Exception as err:
+                    raise SqlError(
+                        f"Unable to filter on expression '{format_expression(self.filter)}'."
+                    )
             mask = numpy.nonzero(mask)[0]
 
             self.statistics.time_selecting += time.time_ns() - start_selection
