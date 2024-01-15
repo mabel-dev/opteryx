@@ -100,7 +100,9 @@ class GcpCloudStorageConnector(BaseConnector, Cacheable, Partitionable, Predicat
         bucket = bucket.replace("data_", "data-")
 
         gcs_bucket = self.client.get_bucket(bucket)
-        blobs = self.client.list_blobs(bucket_or_name=gcs_bucket, prefix=object_path, fields="items(name)")
+        blobs = self.client.list_blobs(
+            bucket_or_name=gcs_bucket, prefix=object_path, fields="items(name)"
+        )
         blobs = (bucket + "/" + blob.name for blob in blobs if not blob.name.endswith("/"))
         return [blob for blob in blobs if ("." + blob.split(".")[-1].lower()) in VALID_EXTENSIONS]
 

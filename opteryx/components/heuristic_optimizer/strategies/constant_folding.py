@@ -34,7 +34,6 @@ def build_literal_node(value: Any, root: Node):
     if hasattr(value, "as_py"):
         value = value.as_py()
 
-    root.schema_column = root.schema_column.to_flatcolumn()
     root.value = value
     root.node_type = NodeType.LITERAL
     if value is None:
@@ -63,8 +62,9 @@ def fold_constants(root: Node) -> Node:
         try:
             result = evaluate(root, table, None)[0]
             return build_literal_node(result, root)
-        except:
+        except Exception as err:
             # what ever the reason, just skip
+            # DEBUG:log (err)
             pass
     return root
 
