@@ -78,6 +78,7 @@ class FunctionDatasetNode(BasePlanNode):
         self.alias = config.get("alias")
         self.function = config["function"]
         self.parameters = config
+        self.columns = config.get("columns", [])
 
     @property
     def config(self):  # pragma: no cover

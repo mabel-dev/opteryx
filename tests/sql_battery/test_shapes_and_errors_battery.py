@@ -1437,6 +1437,10 @@ STATEMENTS = [
         ("SELECT TIMESTAMP '2023-01-01' + INTERVAL '1' MONTH FROM $planets", 9, 1, None),
         ("SELECT * FROM $planets WHERE DATE '2023-01-01' + INTERVAL '1' MONTH < current_time", 9, 20, None),
         ("SELECT * FROM $planets WHERE TIMESTAMP '2023-01-01' + INTERVAL '1' MONTH < current_time", 9, 20, None),
+        # 1380
+        ("SELECT * FROM $planets INNER JOIN (SELECT * FROM UNNEST((1, 2, 3)) AS id) AS PID USING(id)", 3, 20, None),
+        ("SELECT * FROM $planets INNER JOIN UNNEST((1, 2, 3)) AS id USING(id)", 3, 20, None),
+        ("SELECT * FROM UNNEST((1, 2, 3)) AS id INNER JOIN $planets USING(id)", 3, 20, None),
 ]
 # fmt:on
 

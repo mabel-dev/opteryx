@@ -646,7 +646,7 @@ def create_node_relation(relation):
             node_type=LogicalPlanStepType.FunctionDataset, function=function_name
         )
         if function_name == "UNNEST":
-            function_step.alias = f"$unnest-{random_string()}"
+            function_step.alias = f"$unnest-{random_string(4)}"
             function_step.unnest_target = function["alias"]["name"]["value"]
         else:
             function_step.alias = function["alias"]["name"]["value"]
