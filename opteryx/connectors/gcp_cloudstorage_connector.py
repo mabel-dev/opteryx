@@ -108,7 +108,9 @@ class GcpCloudStorageConnector(BaseConnector, Cacheable, Partitionable, Predicat
 
         url = f"https://storage.googleapis.com/storage/v1/b/{bucket}/o/{object_full_path}?alt=media"
 
-        response = self.session.get(url, headers={"Authorization": f"Bearer {self.access_token}"})
+        response = self.session.get(
+            url, headers={"Authorization": f"Bearer {self.access_token}"}, timeout=30
+        )
         return response.content
 
     @single_item_cache
