@@ -11,10 +11,13 @@
 # limitations under the License.
 
 import os
+import urllib.request
 from typing import Dict
 from typing import List
 
 import pyarrow
+import requests
+from google.auth.transport.requests import Request
 from orso.schema import FlatColumn
 from orso.schema import RelationSchema
 from orso.tools import single_item_cache
@@ -65,6 +68,17 @@ class GcpCloudStorageConnector(BaseConnector, Cacheable, Partitionable, Predicat
         # sometimes both start here
         self.cached_first_blob = None
         self.client = self._get_storage_client()
+        self.client_credentials = self.client._credentials
+
+        # Cache access tokens for accessing GCS
+        if not self.client_credentials.valid:
+            request = Request()
+            self.client_credentials.refresh(request)
+            self.access_token = self.client_credentials.token
+
+        # Create a HTTP connection session to reduce effort for
+        # each fetch
+        self.session = requests.Session()
 
     def _get_storage_client(self):
         from google.cloud import storage
@@ -76,22 +90,25 @@ class GcpCloudStorageConnector(BaseConnector, Cacheable, Partitionable, Predicat
         else:  # pragma: no cover
             return storage.Client()
 
-    def _get_blob(self, bucket: str, blob_name: str):
-        gcs_bucket = self.client.get_bucket(bucket)
-        blob = gcs_bucket.get_blob(blob_name)
-        return blob
-
     def read_blob(self, *, blob_name, **kwargs):
-        bucket, object_path, name, extension = paths.get_parts(blob_name)
+        # For performance we use the GCS API directly, this is roughly 10%
+        # faster than using the SDK.
+        bucket, _, _, _ = paths.get_parts(blob_name)
+
+        # Ensure the credentials are valid, refreshing them if necessary
+        if not self.client_credentials.valid:
+            request = Request()
+            self.client_credentials.refresh(request)
+            self.access_token = self.client_credentials.token
 
         bucket = bucket.replace("va_data", "va-data")
         bucket = bucket.replace("data_", "data-")
+        object_full_path = urllib.parse.quote(blob_name[(len(bucket) + 1) :], safe="")
 
-        blob = self._get_blob(
-            bucket=bucket,
-            blob_name=object_path + "/" + name + extension,
-        )
-        return blob.download_as_bytes()
+        url = f"https://storage.googleapis.com/storage/v1/b/{bucket}/o/{object_full_path}?alt=media"
+
+        response = self.session.get(url, headers={"Authorization": f"Bearer {self.access_token}"})
+        return response.content
 
     @single_item_cache
     def get_list_of_blob_names(self, *, prefix: str) -> List[str]:
