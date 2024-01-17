@@ -92,7 +92,8 @@ class GcpCloudStorageConnector(BaseConnector, Cacheable, Partitionable, Predicat
 
     def read_blob(self, *, blob_name, **kwargs):
         # For performance we use the GCS API directly, this is roughly 10%
-        # faster than using the SDK.
+        # faster than using the SDK. As one of the slowest parts of the system
+        # 10% can be measured in seconds.
         bucket, _, _, _ = paths.get_parts(blob_name)
 
         # Ensure the credentials are valid, refreshing them if necessary
@@ -107,7 +108,9 @@ class GcpCloudStorageConnector(BaseConnector, Cacheable, Partitionable, Predicat
 
         url = f"https://storage.googleapis.com/storage/v1/b/{bucket}/o/{object_full_path}?alt=media"
 
-        response = self.session.get(url, headers={"Authorization": f"Bearer {self.access_token}"})
+        response = self.session.get(
+            url, headers={"Authorization": f"Bearer {self.access_token}"}, timeout=30
+        )
         return response.content
 
     @single_item_cache
@@ -124,7 +127,7 @@ class GcpCloudStorageConnector(BaseConnector, Cacheable, Partitionable, Predicat
         return [blob for blob in blobs if ("." + blob.split(".")[-1].lower()) in VALID_EXTENSIONS]
 
     def read_dataset(
-        self, columns: list = None, predicates: list = None, **kwargs
+        self, columns: list = None, predicates: list = None, just_schema: bool = False, **kwargs
     ) -> pyarrow.Table:
         blob_names = self.partition_scheme.get_blobs_in_partition(
             start_date=self.start_date,
@@ -137,7 +140,9 @@ class GcpCloudStorageConnector(BaseConnector, Cacheable, Partitionable, Predicat
             try:
                 decoder = get_decoder(blob_name)
                 blob_bytes = self.read_blob(blob_name=blob_name, statistics=self.statistics)
-                yield decoder(blob_bytes, projection=columns, selection=predicates)
+                yield decoder(
+                    blob_bytes, projection=columns, selection=predicates, just_schema=just_schema
+                )
             except UnsupportedFileTypeError:
                 pass
 
@@ -148,17 +153,9 @@ class GcpCloudStorageConnector(BaseConnector, Cacheable, Partitionable, Predicat
             return self.schema
 
         # Read first blob for schema inference and cache it
-        record = next(self.read_dataset(), None)
-        self.cached_first_blob = record
+        self.schema = next(self.read_dataset(just_schema=True), None)
 
-        if record is None:
+        if self.schema is None:
             raise DatasetNotFoundError(dataset=self.dataset)
-
-        arrow_schema = record.schema
-
-        self.schema = RelationSchema(
-            name=self.dataset,
-            columns=[FlatColumn.from_arrow(field) for field in arrow_schema],
-        )
 
         return self.schema
