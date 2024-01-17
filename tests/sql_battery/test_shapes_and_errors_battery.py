@@ -1537,12 +1537,14 @@ if __name__ == "__main__":  # pragma: no cover
             failures.append((statement, err))
 
     print("--- ✅ \033[0;32mdone\033[0m")
+
+    if failed > 0:
+        print("\n\033[38;2;139;233;253m\033[3mFAILURES\033[0m")
+        for statement, err in failures:
+            print(err)
+
     print(
         f"\n\033[38;2;139;233;253m\033[3mCOMPLETE\033[0m ({((time.monotonic_ns() - start_suite) / 1e9):.2f} seconds)\n"
         f"  \033[38;2;26;185;67m{passed} passed ({(passed * 100) // (passed + failed)}%)\033[0m\n"
         f"  \033[38;2;255;121;198m{failed} failed\033[0m"
     )
-    if failed > 0:
-        print("\n\033[38;2;139;233;253m\033[3mFAILURES\033[0m")
-        for statement, err in failures:
-            print(err)
