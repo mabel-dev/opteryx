@@ -18,7 +18,6 @@ from typing import List
 import pyarrow
 import requests
 from google.auth.transport.requests import Request
-from orso.schema import FlatColumn
 from orso.schema import RelationSchema
 from orso.tools import single_item_cache
 from orso.types import OrsoTypes

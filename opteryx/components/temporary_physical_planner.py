@@ -46,7 +46,7 @@ def create_physical_plan(logical_plan, query_properties):
         elif node_type == LogicalPlanStepType.Explain:
             node = operators.ExplainNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Filter:
-            node = operators.SelectionNode(query_properties, filter=node_config["condition"])
+            node = operators.SelectionNode(query_properties, predicates=node_config["condition_list"], junction=node_config.get("junction"))
         elif node_type == LogicalPlanStepType.FunctionDataset:
             node = operators.FunctionDatasetNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Join:

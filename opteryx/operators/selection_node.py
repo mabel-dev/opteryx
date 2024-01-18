@@ -33,19 +33,47 @@ from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 
 
+def short_cut_and(predicates, table):
+    # Initialize indices for all rows
+    indices = numpy.arange(table.num_rows)
+
+    for predicate in predicates:
+        # Evaluate the current predicate
+        predicate_result = numpy.array(evaluate(predicate, table.take(indices), None), dtype=bool)
+
+        # Update indices for rows that passed the current predicate
+        indices = indices[predicate_result]
+
+        # If no rows left, stop evaluating further
+        if not indices.size:
+            return numpy.zeros(table.num_rows, dtype=bool)
+
+    # Create final result array
+    final_result = numpy.zeros(table.num_rows, dtype=bool)
+    final_result[indices] = True
+
+    return final_result
+
+
 class SelectionNode(BasePlanNode):
     def __init__(self, properties: QueryProperties, **config):
         super().__init__(properties=properties)
-        self.filter = config.get("filter")
+        self.predicates = config.get("predicates")
+        self.junction = config.get("junction")
 
-        self.function_evaluations = get_all_nodes_of_type(
-            self.filter,
-            select_nodes=(NodeType.FUNCTION,),
-        )
+        self.function_evaluations = []
+
+        for predicate in self.predicates:
+            self.function_evaluations.extend(
+                get_all_nodes_of_type(
+                    predicate,
+                    select_nodes=(NodeType.FUNCTION,),
+                )
+            )
 
     @property
     def config(self):  # pragma: no cover
-        return format_expression(self.filter)
+        return " AND ".join(format_expression(p) for p in self.predicates)
 
     @property
     def name(self):  # pragma: no cover
@@ -65,7 +93,12 @@ class SelectionNode(BasePlanNode):
 
             start_selection = time.time_ns()
             morsel = evaluate_and_append(self.function_evaluations, morsel)
-            mask = evaluate(self.filter, morsel)
+
+            if self.junction == NodeType.AND:
+                mask = short_cut_and(self.predicates, morsel)
+            else:
+                mask = evaluate(self.predicates, morsel)
+
             self.statistics.time_evaluating += time.time_ns() - start_selection
 
             if not isinstance(mask, pyarrow.lib.BooleanArray):

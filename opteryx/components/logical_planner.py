@@ -124,7 +124,10 @@ class LogicalPlanNode(Node):
                 if self.function == "UNNEST":
                     return f"UNNEST ({', '.join(format_expression(arg) for arg in self.args)}{' AS ' + self.alias if self.alias else ''})"
             if node_type == LogicalPlanStepType.Filter:
-                return f"FILTER ({format_expression(self.condition)})"
+                if self.condition:
+                    return f"FILTER ({format_expression(self.condition)})"
+                if self.condition_list:
+                    return f"FILTER ({' AND '.join(format_expression(c) for c in self.condition_list)})"
             if node_type == LogicalPlanStepType.Join:
                 if self.on:
                     return f"{self.type.upper()} JOIN ({format_expression(self.on, True)})"

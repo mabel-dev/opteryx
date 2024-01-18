@@ -60,8 +60,10 @@ __all__ = "do_cost_based_optimizer"
 class CostBasedOptimizerVisitor:
     def __init__(self):
         self.strategies = [
+            ConstantFoldingStrategy(),
             PredicatePushdownStrategy(),
             ProjectionPushdownStrategy(),
+            FlattenPlanStrategy(),
         ]
 
     def traverse(self, plan: LogicalPlan, strategy) -> LogicalPlan:

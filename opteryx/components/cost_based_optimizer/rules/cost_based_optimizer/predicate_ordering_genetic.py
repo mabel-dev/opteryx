@@ -78,15 +78,13 @@ def genetic_algorithm(predicates, cost_model, population_size, num_generations, 
 
         # Sort the population by cost in ascending order
         population = [x for _, x in sorted(zip(costs, population))]
+        fastest_so_far = population.pop(0)
+        population = [fastest_so_far]
 
-        # Perform mutations on a subset of the population
+        # Mutate the current cheapest
         for _ in range(num_mutations):
-            idx = random.randint(0, len(population) - 1)
-            mutated_individual = mutate(population[idx])
+            mutated_individual = mutate(fastest_so_far)
             population.append(mutated_individual)
-
-        # Trim the population to the original size
-        population = population[:population_size]
 
     # Return the best arrangement found
     best_arrangement = population[0]
@@ -96,7 +94,13 @@ def genetic_algorithm(predicates, cost_model, population_size, num_generations, 
 
 
 # Example usage
-predicates = ["pred1", "pred2", "pred3", "pred4", "pred5"]  # List of predicates
+predicates = [
+    (100, 0.5),
+    (5000, 0.1),
+    (1000000, 0.01),
+    (1000, 0.2),
+    (10, 0.9),
+]  # List of predicates (time, selectivity)
 population_size = mutations(len(predicates))
 num_generations = generations(len(predicates)) + 1
 num_mutations = population_size
@@ -105,7 +109,14 @@ num_mutations = population_size
 def cost_model(arrangement):
     # Define your cost model here
     # Calculate the cost of the arrangement based on your specific criteria
-    return ...
+    print(arrangement)
+    approx_records = 1000000
+    cost = 0
+    for time, selectivity in arrangement:
+        cost += time * (time / approx_records)
+        approx_records *= selectivity
+    print(cost, approx_records)
+    return cost
 
 
 best_arrangement, best_cost = genetic_algorithm(
