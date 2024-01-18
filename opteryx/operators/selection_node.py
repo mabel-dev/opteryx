@@ -94,10 +94,10 @@ class SelectionNode(BasePlanNode):
             start_selection = time.time_ns()
             morsel = evaluate_and_append(self.function_evaluations, morsel)
 
-            if self.junction == NodeType.AND:
+            if self.junction == NodeType.AND and len(self.predicates) > 1:
                 mask = short_cut_and(self.predicates, morsel)
             else:
-                mask = evaluate(self.predicates, morsel)
+                mask = evaluate(self.predicates[0], morsel)
 
             self.statistics.time_evaluating += time.time_ns() - start_selection
 
