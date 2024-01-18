@@ -115,16 +115,16 @@ class ScannerNode(BasePlanNode):
             columns=self.columns, predicates=self.predicates
         )
         for morsel in reader:
+            morsel = normalize_morsel(orso_schema, morsel)
+            if arrow_schema:
+                morsel = morsel.cast(arrow_schema)
+            else:
+                arrow_schema = morsel.schema
+            self.statistics.time_reading_blobs += time.monotonic_ns() - start_clock
             self.statistics.blobs_read += 1
             self.statistics.rows_read += morsel.num_rows
             self.statistics.bytes_processed += morsel.nbytes
-            self.statistics.time_reading_blobs += time.monotonic_ns() - start_clock
-            morsel = normalize_morsel(orso_schema, morsel)
-            if arrow_schema:
-                yield morsel.cast(arrow_schema)
-            else:
-                arrow_schema = morsel.schema
-                yield morsel
+            yield morsel
             start_clock = time.monotonic_ns()
         if morsel:
             self.statistics.columns_read += morsel.num_columns

@@ -1,7 +1,9 @@
+from .constant_folding import ConstantFoldingStrategy
 from .predicate_pushdown import PredicatePushdownStrategy
 from .projection_pushdown import ProjectionPushdownStrategy
 
 __all__ = [
+    "ConstantFoldingStrategy",
     "PredicatePushdownStrategy",
     "ProjectionPushdownStrategy",
 ]

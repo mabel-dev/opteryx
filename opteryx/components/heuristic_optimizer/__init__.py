@@ -73,7 +73,6 @@ class HeuristicOptimizerVisitor:
     def __init__(self):
         self.strategies = [
             SplitConjunctivePredicatesStrategy(),
-            ConstantFoldingStrategy(),
         ]
 
     def traverse(self, plan: LogicalPlan, strategy) -> LogicalPlan:
