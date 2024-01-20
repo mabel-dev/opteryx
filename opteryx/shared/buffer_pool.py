@@ -27,10 +27,10 @@ class NullCacheBackEnd:
     We can remove a check in each operation by just having a null service.
     """
 
-    def get(self, key: str) -> None:
+    def get(self, key: bytes) -> None:
         return None
 
-    def set(self, key: str, value: Any) -> None:
+    def set(self, key: bytes, value: Any) -> None:
         return None
 
 
@@ -50,7 +50,7 @@ class _BufferPool:
         self.max_cacheable_item_size = cache_manager.max_cacheable_item_size
         self._lru = LRU2(size=cache_manager.max_local_buffer_capacity)
 
-    def get(self, key: str) -> Optional[array]:
+    def get(self, key: bytes) -> Optional[array]:
         """
         Retrieve an item from the pool, return None if the item isn't found.
         If cache is provided and item is not in pool, attempt to get it from cache.
@@ -60,7 +60,7 @@ class _BufferPool:
             return value
         return self._cache_backend.get(key)
 
-    def set(self, key, value) -> Optional[str]:
+    def set(self, key: bytes, value) -> Optional[str]:
         """
         Put an item into the pool, evict an item if the pool is full.
         If a cache is provided, also set the value in the cache.

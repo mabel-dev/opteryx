@@ -90,7 +90,7 @@ class MemcachedCache(BaseKeyValueStore):
         self.skips: int = 0
         self.errors: int = 0
 
-    def get(self, key: str) -> Union[bytes, None]:
+    def get(self, key: bytes) -> Union[bytes, None]:
         if self._consecutive_failures >= MAXIMUM_CONSECUTIVE_FAILURES:
             self.skips += 1
             return None
@@ -114,6 +114,6 @@ class MemcachedCache(BaseKeyValueStore):
         self.misses += 1
         return None
 
-    def set(self, key: str, value: bytes) -> None:
+    def set(self, key: bytes, value: bytes) -> None:
         if self._consecutive_failures < MAXIMUM_CONSECUTIVE_FAILURES:
             self._server.set(key, value)

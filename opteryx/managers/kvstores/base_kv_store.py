@@ -26,14 +26,14 @@ class BaseKeyValueStore:
     def __init__(self, location):
         self._location = location
 
-    def get(self, key: str) -> Union[bytes, None]:
+    def get(self, key: bytes) -> Union[bytes, None]:
         """
         Overwrite this method to retrieve a value from the cache, or None if the
         value is not in the cache.
         """
         raise NotImplementedError("`get` method on cache object not overridden.")
 
-    def set(self, key: str, value: bytes) -> None:
+    def set(self, key: bytes, value: bytes) -> None:
         """
         Overwrite this method to place a value in the cache.
         """

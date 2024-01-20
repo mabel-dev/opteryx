@@ -36,13 +36,13 @@ class MemoryCache(BaseKeyValueStore):
         size = int(kwargs.get("size", 50))
         self._lru2 = LRU2(size=size)
 
-    def get(self, key: str) -> Union[bytes, None]:
+    def get(self, key: bytes) -> Union[bytes, None]:
         value = self._lru2.get(key)
         if value:
             return bytes(value)
         return None
 
-    def set(self, key: str, value: bytes) -> None:
+    def set(self, key: bytes, value: bytes) -> None:
         ret = self._lru2.set(key, value)
         return ret
 

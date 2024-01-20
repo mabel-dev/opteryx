@@ -122,8 +122,12 @@ class GcpCloudStorageConnector(BaseConnector, Cacheable, Partitionable, Predicat
         blobs = self.client.list_blobs(
             bucket_or_name=gcs_bucket, prefix=object_path, fields="items(name)"
         )
-        blobs = (bucket + "/" + blob.name for blob in blobs if not blob.name.endswith("/"))
-        return [blob for blob in blobs if ("." + blob.split(".")[-1].lower()) in VALID_EXTENSIONS]
+        return [
+            bucket + "/" + blob.name
+            for blob in blobs
+            if not blob.name.endswith("/")
+            and ("." + blob.name.split(".")[-1].lower()) in VALID_EXTENSIONS
+        ]
 
     def read_dataset(
         self, columns: list = None, predicates: list = None, just_schema: bool = False, **kwargs
