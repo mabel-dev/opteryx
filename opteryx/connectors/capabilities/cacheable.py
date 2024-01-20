@@ -50,23 +50,20 @@ def read_thru_cache(func):
     buffer_pool = BufferPool()
 
     @wraps(func)
-    def wrapper(*args, **kwargs):
+    def wrapper(blob_name, statistics, **kwargs):
         nonlocal max_evictions
 
-        statistics = kwargs.get("statistics")
-        blob_name = kwargs["blob_name"]
-        key = hex(CityHash64(blob_name))
+        key = hex(CityHash64(blob_name)).encode()
 
         # Try to get the result from cache
         result = buffer_pool.get(key)
 
         if result is not None:
-            if statistics:
-                statistics.cache_hits += 1
+            statistics.cache_hits += 1
             return result
 
         # Key is not in cache, execute the function and store the result in cache
-        result = func(*args, **kwargs)
+        result = func(blob_name=blob_name, **kwargs)
 
         # Write the result to cache
         if max_evictions:
@@ -75,11 +72,10 @@ def read_thru_cache(func):
                 if evicted:
                     statistics.cache_evictions += 1
                     max_evictions -= 1
-            elif statistics:
+            else:
                 statistics.cache_oversize += 1
 
-        if statistics:
-            statistics.cache_misses += 1
+        statistics.cache_misses += 1
 
         return result
 

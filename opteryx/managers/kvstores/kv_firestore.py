@@ -50,7 +50,7 @@ def _initialize():  # pragma: no cover
 
 
 class FireStoreKVStore(BaseKeyValueStore):
-    def get(self, key: str) -> Union[bytes, None]:
+    def get(self, key: bytes) -> Union[bytes, None]:
         from firebase_admin import firestore
 
         _initialize()
@@ -60,7 +60,7 @@ class FireStoreKVStore(BaseKeyValueStore):
             return document.to_dict()
         return None
 
-    def set(self, key: str, value: bytes) -> None:
+    def set(self, key: bytes, value: bytes) -> None:
         _initialize()
         from firebase_admin import firestore
 

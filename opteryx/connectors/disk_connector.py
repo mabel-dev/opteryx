@@ -20,7 +20,6 @@ from typing import Dict
 from typing import List
 
 import pyarrow
-from orso.schema import FlatColumn
 from orso.schema import RelationSchema
 from orso.tools import single_item_cache
 from orso.types import OrsoTypes
@@ -70,6 +69,11 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable, PredicatePushable):
         """
         Read a blob (binary large object) from disk.
 
+        We're using the low-level read, on the whole it's about 5% faster - not
+        much faster considering the effort to bench-mark different disk access
+        methods, but as one of the slowest parts of the system we wanted to find
+        if there was a faster way.
+
         Parameters:
             blob_name: str
                 The name of the blob file to read.
@@ -79,8 +83,11 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable, PredicatePushable):
         Returns:
             The blob as bytes.
         """
-        with open(blob_name, mode="br") as file:
-            return bytes(file.read())
+        file_descriptor = os.open(blob_name, os.O_RDONLY)
+        try:
+            return os.read(file_descriptor, os.path.getsize(blob_name))
+        finally:
+            os.close(file_descriptor)
 
     @single_item_cache
     def get_list_of_blob_names(self, *, prefix: str) -> List[str]:
@@ -94,16 +101,15 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable, PredicatePushable):
         Returns:
             A list of blob filenames.
         """
-        files = [
+        return [
             os.path.join(root, file)
             for root, _, files in os.walk(prefix)
             for file in files
             if os.path.splitext(file)[1] in VALID_EXTENSIONS
         ]
-        return files
 
     def read_dataset(
-        self, columns: list = None, predicates: list = None, **kwargs
+        self, columns: list = None, predicates: list = None, just_schema: bool = False, **kwargs
     ) -> pyarrow.Table:
         """
         Read the entire dataset from disk.
@@ -118,19 +124,13 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable, PredicatePushable):
             prefix=self.dataset,
         )
 
-        # if self.cached_first_blob is not None:
-        #    if columns:
-        #        yield post_read_projector(self.cached_first_blob, columns)
-        #    else:
-        #        yield self.cached_first_blob
-        #    blob_names = blob_names[1:]
-        # self.cached_first_blob = None
-
         for blob_name in blob_names:
             try:
                 decoder = get_decoder(blob_name)
                 blob_bytes = self.read_blob(blob_name=blob_name, statistics=self.statistics)
-                yield decoder(blob_bytes, projection=columns, selection=predicates)
+                yield decoder(
+                    blob_bytes, projection=columns, selection=predicates, just_schema=just_schema
+                )
             except UnsupportedFileTypeError:
                 pass  # Skip unsupported file types
             except pyarrow.ArrowInvalid:
@@ -147,17 +147,11 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable, PredicatePushable):
         if self.schema:
             return self.schema
 
-        record = next(self.read_dataset(), None)
-        self.cached_first_blob = record
+        self.schema = next(self.read_dataset(just_schema=True), None)
 
-        if record is None:
+        if self.schema is None:
             if os.path.isdir(self.dataset):
                 raise EmptyDatasetError(dataset=self.dataset.replace("/", "."))
             raise DatasetNotFoundError(dataset=self.dataset)
 
-        arrow_schema = record.schema
-        self.schema = RelationSchema(
-            name=self.dataset,
-            columns=[FlatColumn.from_arrow(field) for field in arrow_schema],
-        )
         return self.schema
