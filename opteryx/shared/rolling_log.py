@@ -20,7 +20,7 @@ import os
 class RollingLog:
     _instance = None
 
-    def __new__(cls, log_file: str, max_entries: int = 100, block_size: int = 1024 * 1024):
+    def __new__(cls, log_file: str, max_entries: int = 100, block_size: int = 8 * 1024 * 1024):
         if cls._instance is None:
             cls._instance = super().__new__(cls)
             cls._instance.log_file = log_file  # type:ignore
@@ -31,17 +31,18 @@ class RollingLog:
         return cls._instance
 
     def append(self, entry):
-        # open the log file in binary mode
-        with open(self.log_file, "a", encoding="UTF8") as log_file:  # type:ignore
+        # Append the new entry
+        with open(self.log_file, "a", encoding="UTF8") as log_file:
             log_file.write(entry + "\n")
-        if sum(1 for _ in self.scan()) > self.max_entries:  # type:ignore
-            with open(self.log_file, "r+b") as f:  # type:ignore
-                while f.read(1) != b"\n":
-                    pass
-                remaining_data = f.read()
-                f.seek(0)
-                f.write(remaining_data)
-                f.truncate()
+
+        # Check if max entries exceeded and remove the first entry if needed
+        lines = None
+        with open(self.log_file, "r", encoding="UTF8") as f:
+            lines = f.readlines()
+
+        if len(lines) > self.max_entries:
+            with open(self.log_file, "w", encoding="UTF8") as f:
+                f.writelines(lines[1:])  # Write all lines except the first
 
     def scan(self):
         # open the log file in binary mode

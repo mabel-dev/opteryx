@@ -37,8 +37,15 @@ def extract_prefix(path, prefix):
     return path[start_index : end_index if end_index != -1 else None]
 
 
-_is_complete = lambda blobs, as_at: any(blob for blob in blobs if as_at + "/frame.complete" in blob)
-_is_invalid = lambda blobs, as_at: any(blob for blob in blobs if as_at + "/frame.ignore" in blob)
+def is_complete_and_not_invalid(blobs, as_at):
+    complete_suffix = as_at + "/frame.complete"
+    invalid_suffix = as_at + "/frame.ignore"
+
+    complete, ignore = zip(
+        *((complete_suffix in blob, invalid_suffix in blob) for blob in blobs if "/frame." in blob)
+    )
+
+    return any(complete) and not any(ignore)
 
 
 class MabelPartitionScheme(BasePartitionScheme):
@@ -86,7 +93,7 @@ class MabelPartitionScheme(BasePartitionScheme):
             # Keep popping from as_ats until a valid frame is found
             while as_ats:
                 as_at = as_ats.pop()
-                if _is_complete(blob_names, as_at) and not _is_invalid(blob_names, as_at):
+                if is_complete_and_not_invalid(blob_names, as_at):
                     break
                 else:
                     blob_names = [blob for blob in blob_names if as_at not in blob]
