@@ -31,19 +31,10 @@ class UnsupportedSegementationError(DataError):
         super().__init__(message)
 
 
-def _extract_part_from_path(path, prefix):
-    """Extract the part of the path starting with a specific prefix"""
-    for part in path.split("/"):
-        if part.startswith(prefix):
-            return part
-
-
-def _extract_as_at(path):
-    return _extract_part_from_path(path, "as_at_")
-
-
-def _extract_by(path):
-    return _extract_part_from_path(path, "by_")
+def extract_prefix(path, prefix):
+    start_index = path.find(prefix)
+    end_index = path.find("/", start_index)
+    return path[start_index : end_index if end_index != -1 else None]
 
 
 _is_complete = lambda blobs, as_at: any(blob for blob in blobs if as_at + "/frame.complete" in blob)
@@ -65,31 +56,32 @@ class MabelPartitionScheme(BasePartitionScheme):
     ) -> List[str]:
         """filter the blobs acording to the chosen scheme"""
 
+        midnight = datetime.datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+
         def _inner(*, timestamp):
             year = timestamp.year
             month = timestamp.month
             day = timestamp.day
             hour = timestamp.hour
 
+            hour_label = f"/by_hour/hour={hour:02d}/"
             date_path = f"{prefix}/year_{year:04d}/month_{month:02d}/day_{day:02d}"
 
             # Call your method to get the list of blob names
             blob_names = blob_list_getter(prefix=date_path)
 
-            segments = {_extract_by(blob) for blob in blob_names}
+            segments = {extract_prefix(blob, "by_") for blob in blob_names if "/by_" in blob}
             if len(segments - {"by_hour", None}) > 0:
                 raise UnsupportedSegementationError(dataset=prefix, segments=segments)
 
             # Filter for the specific hour, if hour folders exist - prefer by_hour segements
-            if any(f"/by_hour/hour={hour:02d}/" in blob_name for blob_name in blob_names):
-                blob_names = [
-                    blob_name
-                    for blob_name in blob_names
-                    if f"/by_hour/hour={hour:02d}/" in blob_name
-                ]
+            if any(hour_label in blob_name for blob_name in blob_names):
+                blob_names = [blob_name for blob_name in blob_names if hour_label in blob_name]
 
             as_at = None
-            as_ats = sorted({_extract_as_at(blob) for blob in blob_names if "as_at_" in blob})
+            as_ats = sorted(
+                {extract_prefix(blob, "as_at_") for blob in blob_names if "/as_at_" in blob}
+            )
 
             # Keep popping from as_ats until a valid frame is found
             while as_ats:
@@ -111,12 +103,8 @@ class MabelPartitionScheme(BasePartitionScheme):
                     blob for blob in blob_names if os.path.splitext(blob)[1] in DATA_EXTENSIONS
                 )
 
-        start_date = start_date or datetime.datetime.utcnow().replace(
-            hour=0, minute=0, second=0, microsecond=0
-        )
-        end_date = end_date or datetime.datetime.utcnow().replace(
-            hour=23, minute=59, second=0, microsecond=0
-        )
+        start_date = start_date or midnight
+        end_date = end_date or midnight.replace(hour=23, minute=59)
 
         found = set()
 
