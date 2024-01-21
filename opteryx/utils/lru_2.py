@@ -52,24 +52,19 @@ class LRU2:
         self.evictions = 0
 
     def get(self, key: bytes):
-        if key in self.cache:
-            value = self.cache[key]
+        value = self.cache.get(key)
+        if value is not None:
             self.hits += 1
             self._update_access_history(key)
         else:
-            value = None
             self.misses += 1
         return value
 
     def set(self, key: bytes, value):
-        if key in self.cache:
-            self.cache[key] = value  # Update the value
-            self._update_access_history(key)
-        else:
-            self.cache[key] = value
-            self._update_access_history(key)
-            if len(self.cache) > self.size:
-                return self._evict()
+        self.cache[key] = value
+        self._update_access_history(key)
+        if len(self.cache) > self.size:
+            return self._evict()
         return None
 
     def _update_access_history(self, key: bytes):
