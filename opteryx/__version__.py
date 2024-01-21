@@ -28,7 +28,7 @@ class VersionStatus(Enum):
 
 _major = 0
 _minor = 12
-_revision = 3
+_revision = 4
 _status = VersionStatus.BETA
 
 __version__ = f"{_major}.{_minor}.{_revision}" + (

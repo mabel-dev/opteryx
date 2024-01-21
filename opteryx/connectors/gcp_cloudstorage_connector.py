@@ -62,10 +62,10 @@ class GcpCloudStorageConnector(BaseConnector, Cacheable, Partitionable, Predicat
 
         self.dataset = self.dataset.replace(".", "/")
         self.credentials = credentials
+        self.bucket, _, _, _ = paths.get_parts(self.dataset)
 
         # we're going to cache the first blob as the schema and dataset reader
         # sometimes both start here
-        self.cached_first_blob = None
         self.client = self._get_storage_client()
         self.client_credentials = self.client._credentials
 
@@ -118,16 +118,31 @@ class GcpCloudStorageConnector(BaseConnector, Cacheable, Partitionable, Predicat
         bucket = bucket.replace("va_data", "va-data")
         bucket = bucket.replace("data_", "data-")
 
-        gcs_bucket = self.client.get_bucket(bucket)
-        blobs = self.client.list_blobs(
-            bucket_or_name=gcs_bucket, prefix=object_path, fields="items(name)"
-        )
-        return [
-            bucket + "/" + blob.name
-            for blob in blobs
-            if not blob.name.endswith("/")
-            and ("." + blob.name.split(".")[-1].lower()) in VALID_EXTENSIONS
+        object_path = urllib.parse.quote(object_path, safe="")
+        bucket = urllib.parse.quote(bucket, safe="")  # Ensure bucket name is URL-safe
+        url = f"https://storage.googleapis.com/storage/v1/b/{bucket}/o?prefix={object_path}&fields=items(name)"
+
+        # Ensure the credentials are valid, refreshing them if necessary
+        if not self.client_credentials.valid:
+            request = Request()
+            self.client_credentials.refresh(request)
+            self.access_token = self.client_credentials.token
+
+        headers = {"Authorization": f"Bearer {self.access_token}"}
+        response = self.session.get(url, headers=headers, timeout=30)
+
+        if response.status_code != 200:
+            raise Exception(f"Error fetching blob list: {response.text}")
+
+        blob_data = response.json()
+        blob_names = [
+            f"{bucket}/{blob['name']}"
+            for blob in blob_data.get("items", [])
+            if not blob["name"].endswith("/")
+            and any(blob["name"].endswith(ext) for ext in VALID_EXTENSIONS)
         ]
+
+        return blob_names
 
     def read_dataset(
         self, columns: list = None, predicates: list = None, just_schema: bool = False, **kwargs
