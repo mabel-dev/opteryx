@@ -13,6 +13,7 @@
 import numpy
 from orso.types import OrsoTypes
 
+from opteryx.exceptions import InvalidFunctionParameterError
 from opteryx.exceptions import SqlError
 from opteryx.utils import dates
 
@@ -39,7 +40,9 @@ def generate_series(*args):
             raise SqlError("generate_series for dates needs start, end, and interval parameters")
         return dates.date_range(*arg_vals)
 
-    raise SqlError("Unsupported value for GENERATE_SERIES")
+    raise InvalidFunctionParameterError(
+        "Unsupported value for GENERATE_SERIES, must be date or numeric series."
+    )
 
 
 def numeric_range(*args) -> numpy.ndarray:
