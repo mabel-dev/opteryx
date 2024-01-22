@@ -26,10 +26,9 @@ from orso.types import OrsoTypes
 def read(*args):
     import pyarrow
 
-    # Create a PyArrow schema with one column called '$column' of integer type
-    _schema = pyarrow.schema([("$column", pyarrow.int64())])
-    # Create a PyArrow table with the given schema and one row
-    return pyarrow.Table.from_arrays([[None]], schema=_schema)
+    # Create a PyArrow table with one column and one row
+
+    return pyarrow.Table.from_arrays([[0]], ["$column"])  # schema=_schema)
 
 
 def schema():

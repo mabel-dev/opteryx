@@ -31,7 +31,8 @@ from opteryx.utils import series
 
 def _generate_series(**kwargs):
     value_array = series.generate_series(*kwargs["args"])
-    return [{kwargs["columns"][0].schema_column.identity: value} for value in value_array]
+    column_name = kwargs["columns"][0].schema_column.identity
+    return pyarrow.Table.from_arrays([value_array], [column_name])
 
 
 def _unnest(**kwargs):
@@ -41,7 +42,8 @@ def _unnest(**kwargs):
     else:
         list_items = kwargs["args"][0].value
     column_name = kwargs["columns"][0].schema_column.identity
-    return [{column_name: row} for row in list_items]
+
+    return pyarrow.Table.from_arrays([list_items], [column_name])
 
 
 def _values(**parameters):
@@ -108,8 +110,10 @@ class FunctionDatasetNode(BasePlanNode):
 
         if isinstance(data, list):
             table = pyarrow.Table.from_pylist(data)
-        if hasattr(data, "arrow"):
+        elif hasattr(data, "arrow"):
             table = data.arrow()
+        else:
+            table = data
 
         self.statistics.rows_read += table.num_rows
         self.statistics.columns_read += len(table.column_names)
