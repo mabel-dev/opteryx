@@ -25,6 +25,7 @@ from typing import Generator
 
 import pyarrow
 
+from opteryx.exceptions import UnsupportedSyntaxError
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 
@@ -82,7 +83,11 @@ class JoinNode(BasePlanNode):
                         column = col.name
                         break
                 if column:
-                    raise pyarrow.ArrowInvalid(str(err).replace(last_token, f"'{column}'"))
-                raise err
+                    raise UnsupportedSyntaxError(
+                        f"Unable to JOIN with unsupported column types in table, '{column}'."
+                    ) from err
+                raise UnsupportedSyntaxError(
+                    "Unable to JOIN with unsupported column types in table."
+                ) from err
 
             yield new_morsel
