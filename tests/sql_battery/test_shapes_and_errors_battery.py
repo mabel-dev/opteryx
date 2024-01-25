@@ -615,7 +615,7 @@ STATEMENTS = [
         ("SELECT * FROM generate_series(2,10,2) AS GS WHERE GS > 5", 3, 1, None),
         ("SELECT * FROM generate_series(2,10,2) AS nums WHERE nums < 5", 2, 1, None),
         ("SELECT * FROM generate_series(2) AS GS WITH (NO_CACHE)", 2, 1, SqlError),
-        ("SELECT * FROM generate_series('192.168.0.0/24') AS GS WITH (NO_CACHE)", 2, 1, SqlError),
+        ("SELECT * FROM generate_series('192.168.0.0/24') AS GS WITH (NO_CACHE)", 2, 1, InvalidFunctionParameterError),
 
         ("SELECT * FROM generate_series('2022-01-01', '2022-12-31', '1 month') AS GS", 12, 1, None),
         ("SELECT * FROM generate_series('2022-01-01', '2022-12-31', '1 mon') AS GS", 12, 1, None),
@@ -1254,7 +1254,7 @@ STATEMENTS = [
         # New and improved JOIN UNNESTs
         ("SELECT * FROM $planets CROSS JOIN UNNEST(('Earth', 'Moon')) AS n", 18, 21, None),
         ("SELECT * FROM $planets INNER JOIN UNNEST(('Earth', 'Moon')) AS n ON name = n", 1, 21, None),
-#        ("SELECT name, mission FROM $astronauts INNER JOIN UNNEST(missions) as mission ON mission = name", 0, 19, None),
+        ("SELECT name, mission FROM $astronauts INNER JOIN UNNEST(missions) as mission ON mission = name", 0, 19, UnsupportedSyntaxError),
 
         # PUSHDOWN (the result should be the same without pushdown)
         ("SELECT p.name, s.name FROM $planets p, $satellites s WHERE p.id = s.planetId AND p.mass > 1000 AND s.gm < 500;", 63, 2, None),
