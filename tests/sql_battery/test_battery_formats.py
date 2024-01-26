@@ -3,6 +3,7 @@ The best way to test a SQL engine is to throw queries at it.
 
 This tests the various format readers.
 """
+
 import os
 import sys
 

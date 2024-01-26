@@ -1,6 +1,7 @@
 """
 Test the connection example from the documentation
 """
+
 import os
 import sys
 

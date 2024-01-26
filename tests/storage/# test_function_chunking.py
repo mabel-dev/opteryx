@@ -4,6 +4,7 @@ Test that the chunking feature of the collection readers works as expected.
 It reads 500 records initially, and then uses the average size of those records to read in
 batches of 64Mb.
 """
+
 import os
 import sys
 

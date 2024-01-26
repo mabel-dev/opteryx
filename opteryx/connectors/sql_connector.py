@@ -209,12 +209,12 @@ class SqlConnector(BaseConnector, PredicatePushable):
                     FlatColumn(
                         name=column.name,
                         type=PYTHON_TO_ORSO_MAP[column.type.python_type],
-                        precision=None
-                        if column.type.python_type != Decimal
-                        else column.type.precision,  # type:ignore
-                        scale=None
-                        if column.type.python_type != Decimal
-                        else column.type.scale,  # type:ignore
+                        precision=(
+                            None if column.type.python_type != Decimal else column.type.precision
+                        ),  # type:ignore
+                        scale=(
+                            None if column.type.python_type != Decimal else column.type.scale
+                        ),  # type:ignore
                         nullable=column.nullable,
                     )
                     for column in table.columns

@@ -21,6 +21,7 @@ We don't know if the query parsed correctly or if the result is correct.
 It currently takes less than a second to run the whole set, and it gives us some
 confidence in the function of the engine.
 """
+
 import glob
 import os
 import sys

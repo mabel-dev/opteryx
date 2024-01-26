@@ -35,6 +35,7 @@ response is right.
 These tests only test the shape of the response, more specific tests would be needed to
 test the body of the response.
 """
+
 import os
 import sys
 

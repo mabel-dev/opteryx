@@ -18,6 +18,7 @@ Best of three runs, lower is better
 500 cycles  jsonl took      18.6 seconds    ██▍
 500 cycles  jsonl_zstd      23.5 seconds    ████
 """
+
 import os
 import sys
 

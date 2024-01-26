@@ -3,6 +3,7 @@ The best way to test a SQL engine is to throw queries at it.
 
 This tests the way NULLs are handled in filter conditions.
 """
+
 import os
 import sys
 

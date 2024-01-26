@@ -1,6 +1,7 @@
 """
 Test we can read from S3
 """
+
 import os
 import sys
 

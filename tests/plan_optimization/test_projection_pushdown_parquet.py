@@ -1,6 +1,7 @@
 """
 Test we can read from MinIO
 """
+
 import os
 import sys
 

@@ -2,6 +2,7 @@
 Touch Test Only:
 We test the CLI runs when we touch it, we're not checking the outputs.
 """
+
 import os
 import sys
 
