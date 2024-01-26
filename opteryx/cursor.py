@@ -310,9 +310,7 @@ class Cursor(DataFrame):
             if limit is not None:
                 result_data = utils.arrow.limit_records(result_data, limit)  # type: ignore
         try:
-            return pyarrow.concat_tables(
-                result_data, promote_optionsstr="permissive", mode="default"
-            )
+            return pyarrow.concat_tables(result_data, promote_options="none")
         except pyarrow.ArrowInvalid as err:
             # DEBUG: log (err)
             if "struct" in str(err):

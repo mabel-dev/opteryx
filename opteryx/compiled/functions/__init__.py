@@ -1,0 +1,1 @@
+from cython_functions import numpy_array_get_element

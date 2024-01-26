@@ -49,4 +49,6 @@ class DistinctNode(BasePlanNode):
     def execute(self) -> Generator[pyarrow.Table, None, None]:
         morsels = self._producers[0]  # type:ignore
 
-        yield drop_duplicates(concat_tables(morsels.execute()), self._distinct_on)
+        yield drop_duplicates(
+            concat_tables(morsels.execute(), promote_options="none"), self._distinct_on
+        )

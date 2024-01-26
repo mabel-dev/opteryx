@@ -196,7 +196,9 @@ class CrossJoinNode(BasePlanNode):
     def execute(self) -> Generator:
         left_node = self._producers[0]  # type:ignore
         right_node = self._producers[1]  # type:ignore
-        right_table = pyarrow.concat_tables(right_node.execute(), mode="default")  # type:ignore
+        right_table = pyarrow.concat_tables(
+            right_node.execute(), promote_options="none"
+        )  # type:ignore
 
         if self._unnest_column is None:
             yield from _cross_join(left_node, right_table)

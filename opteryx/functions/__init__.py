@@ -40,22 +40,29 @@ def _get(array, key):
         return [None]  # Return an array of None if input is empty
     key = key[0]
 
-    first_element = array[0]
+    first_element = next((item for item in array if item is not None), None)
+    if first_element is None:
+        return numpy.full(len(array), None)
 
     if isinstance(first_element, dict):
         # Handle dict type
         return [item.get(key) for item in array]
-    elif isinstance(first_element, (list, numpy.ndarray, str)):
+
+    try:
+        index = int(key)
+    except Exception:
+        raise IncorrectTypeError("VARCHAR and ARRAY values must be subscripted with NUMERIC values")
+    if isinstance(first_element, numpy.ndarray):
+        # NumPy-specific optimization
+        from opteryx.compiled.functions import numpy_array_get_element
+
+        return numpy_array_get_element(array, key)
+
+    if isinstance(first_element, (list, str, pyarrow.ListScalar)):
         # Handle list type
-        try:
-            index = int(key)
-            return [
-                item[index] if item is not None and len(item) > index else None for item in array
-            ]
-        except ValueError:
-            raise IncorrectTypeError("LIST values must be subscripted with NUMERIC values")
-    else:
-        raise IncorrectTypeError(f"Cannot subscript {type(first_element).__name__} values")
+        return [item[index] if item is not None and len(item) > index else None for item in array]
+
+    raise IncorrectTypeError(f"Cannot subscript {type(first_element).__name__} values")
 
 
 def cast_varchar(arr):

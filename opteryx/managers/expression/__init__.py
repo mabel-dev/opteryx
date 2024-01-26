@@ -284,7 +284,7 @@ def _inner_evaluate(root: Node, table: Table, context: ExecutionContext):
         if node_type == NodeType.SUBQUERY:
             # we should have a query plan here
             sub = root.value.execute()
-            return pyarrow.concat_tables(sub, mode="default")
+            return pyarrow.concat_tables(sub, promote_options="none")
         if node_type == NodeType.NESTED:
             return _inner_evaluate(root.centre, table, context)
         if node_type == NodeType.UNARY_OPERATOR:

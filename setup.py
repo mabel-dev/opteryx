@@ -80,6 +80,12 @@ extensions = [
         include_dirs=[numpy.get_include()],
         extra_compile_args=["-O2"],
     ),
+    Extension(
+        name="cython_functions",
+        sources=["opteryx/compiled/functions/cython_functions.pyx"],
+        include_dirs=[numpy.get_include()],
+        extra_compile_args=["-O2"],
+    ),
 ]
 
 setup_config = {
