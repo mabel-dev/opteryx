@@ -11,8 +11,8 @@
 # limitations under the License.
 
 """
-The 'direct disk' connector provides the reader for when a dataset file is
-given directly in a query.
+The 'direct disk' connector provides the reader for when a dataset is
+given as a folder on local disk
 """
 
 import os
