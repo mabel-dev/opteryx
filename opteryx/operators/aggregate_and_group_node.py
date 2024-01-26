@@ -48,9 +48,11 @@ class AggregateAndGroupNode(BasePlanNode):
 
         # Replace offset based GROUP BYs with their column
         self.groups = [
-            group
-            if not (group.node_type == NodeType.LITERAL and group.type == OrsoTypes.INTEGER)
-            else projection[group.value - 1]
+            (
+                group
+                if not (group.node_type == NodeType.LITERAL and group.type == OrsoTypes.INTEGER)
+                else projection[group.value - 1]
+            )
             for group in self.groups
         ]
 

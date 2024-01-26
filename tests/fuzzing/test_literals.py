@@ -5,6 +5,7 @@ all test cases by hand.
 We're testing string functions (in this particular case, HASH) can accept fuzzed
 inputs, HASH was chosen because it's a single parameter function.
 """
+
 import os
 import sys
 

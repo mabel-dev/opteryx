@@ -13,6 +13,7 @@ and shape-checking, this is also the most time consuming to write and maintain.
 
 This suite executes a statement and confirms the output matches what was expected.
 """
+
 import glob
 import os
 import sys

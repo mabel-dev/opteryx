@@ -1,6 +1,7 @@
 """
 Test we can read from Sqlite - this is a basic exercise of the SQL Connector
 """
+
 import os
 import sys
 

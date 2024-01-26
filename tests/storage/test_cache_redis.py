@@ -3,6 +3,7 @@ Test the memcached cache by executing the same query twice. The first time we en
 the files are in the cache (they may or may not be) for the second time to definitely 
 'hit' the cache.
 """
+
 import os
 import sys
 

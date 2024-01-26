@@ -1,6 +1,7 @@
 """
 Test predicate pushdown using the document collections
 """
+
 import os
 import sys
 

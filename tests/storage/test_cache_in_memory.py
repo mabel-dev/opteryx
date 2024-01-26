@@ -2,6 +2,7 @@
 Test the in memory cache by executing the same query twice. The first time we 'miss'
 the cache and load the files into the cache for the second time to 'hit'.
 """
+
 import os
 import sys
 

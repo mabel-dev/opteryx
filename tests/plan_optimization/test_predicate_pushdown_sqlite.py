@@ -1,6 +1,7 @@
 """
 Test predicate pushdown using the sql connector
 """
+
 import os
 import sys
 

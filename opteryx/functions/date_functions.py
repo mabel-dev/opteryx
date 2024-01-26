@@ -84,7 +84,7 @@ def date_part(part, arr):
         "epoch": lambda x: compute.divide(compute.cast(x, "int64"), 1000000.00),
         "julian": lambda x: compute.add(
             compute.divide(compute.milliseconds_between(x, j2000_scalar), 86400000.0), 2451545.0
-        )
+        ),
         # ** supported by parser but not by pyarrow
         # isodow
         # millenium

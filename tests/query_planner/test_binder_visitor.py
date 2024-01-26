@@ -2,6 +2,7 @@
 Test we're traversing the DAG in the correct order, that we're passing values between operators
 correctly and that we're merging values correctly.
 """
+
 import os
 import sys
 

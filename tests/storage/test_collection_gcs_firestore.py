@@ -1,6 +1,7 @@
 """
 Test we can read from GCS
 """
+
 import os
 import sys
 

@@ -1,6 +1,7 @@
 """
 Original code modified for Opteryx.
 """
+
 import numpy
 import pyarrow
 from pyarrow import compute

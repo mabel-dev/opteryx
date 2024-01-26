@@ -1,6 +1,7 @@
 """
 Tests to help confirm conformity to SQL-92
 """
+
 import os
 import sys
 
