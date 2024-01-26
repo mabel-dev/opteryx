@@ -19,11 +19,13 @@ import os
 
 class RollingLog:
     _instance = None
+    log_file: str = None
+    max_entries: int = 100
 
     def __new__(cls, log_file: str, max_entries: int = 100, block_size: int = 8 * 1024 * 1024):
         if cls._instance is None:
             cls._instance = super().__new__(cls)
-            cls._instance.log_file = log_file  # type:ignore
+            cls._instance.log_file = log_file
             cls._instance.max_entries = max_entries  # type:ignore
             cls._instance.block_size = block_size  # type:ignore
             if not os.path.exists(log_file):
