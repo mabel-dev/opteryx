@@ -135,12 +135,12 @@ class GcpCloudStorageConnector(BaseConnector, Cacheable, Partitionable, Predicat
             raise Exception(f"Error fetching blob list: {response.text}")
 
         blob_data = response.json()
-        blob_names = [
+        blob_names = sorted(
             f"{bucket}/{blob['name']}"
             for blob in blob_data.get("items", [])
             if not blob["name"].endswith("/")
             and any(blob["name"].endswith(ext) for ext in VALID_EXTENSIONS)
-        ]
+        )
 
         return blob_names
 
