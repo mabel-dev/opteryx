@@ -71,7 +71,9 @@ class AwsS3Connector(BaseConnector, Cacheable, Partitionable):
             bucket + "/" + blob.object_name for blob in blobs if not blob.object_name.endswith("/")
         )
 
-        return [blob for blob in blobs if ("." + blob.split(".")[-1].lower()) in VALID_EXTENSIONS]
+        return sorted(
+            blob for blob in blobs if ("." + blob.split(".")[-1].lower()) in VALID_EXTENSIONS
+        )
 
     def read_dataset(self, columns: list = None, **kwargs) -> pyarrow.Table:
         blob_names = self.partition_scheme.get_blobs_in_partition(

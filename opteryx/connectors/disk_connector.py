@@ -101,12 +101,12 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable, PredicatePushable):
         Returns:
             A list of blob filenames.
         """
-        return [
+        return sorted(
             os.path.join(root, file)
             for root, _, files in os.walk(prefix)
             for file in files
             if os.path.splitext(file)[1] in VALID_EXTENSIONS
-        ]
+        )
 
     def read_dataset(
         self, columns: list = None, predicates: list = None, just_schema: bool = False, **kwargs
