@@ -16,16 +16,21 @@ from the log file.
 """
 import os
 
+EIGHT_MEGABYTES: int = 8 * 1024 * 1024
+
 
 class RollingLog:
     _instance = None
+    log_file: str = None
+    max_entries: int = 100
+    block_size: int = EIGHT_MEGABYTES
 
-    def __new__(cls, log_file: str, max_entries: int = 100, block_size: int = 8 * 1024 * 1024):
+    def __new__(cls, log_file: str, max_entries: int = 100, block_size: int = EIGHT_MEGABYTES):
         if cls._instance is None:
             cls._instance = super().__new__(cls)
-            cls._instance.log_file = log_file  # type:ignore
-            cls._instance.max_entries = max_entries  # type:ignore
-            cls._instance.block_size = block_size  # type:ignore
+            cls._instance.log_file = log_file
+            cls._instance.max_entries = max_entries
+            cls._instance.block_size = block_size
             if not os.path.exists(log_file):
                 open(log_file, "wb")
         return cls._instance
@@ -46,10 +51,10 @@ class RollingLog:
 
     def scan(self):
         # open the log file in binary mode
-        with open(self.log_file, "r", encoding="UTF8") as log_file:  # type:ignore
+        with open(self.log_file, "r", encoding="UTF8") as log_file:
             # read the current position in the circular buffer
             while True:
-                chunk = log_file.read(self.block_size)  # type:ignore
+                chunk = log_file.read(self.block_size)
                 if not chunk:
                     break
                 lines = chunk.split("\n")
