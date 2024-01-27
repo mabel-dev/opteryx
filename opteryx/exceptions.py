@@ -40,6 +40,7 @@ Exception
              └── SqlError *
                  ├── AmbiguousDatasetError
                  ├── AmbiguousIdentifierError
+                 ├── ArrayWithMixedTypesError
                  ├── ColumnNotFoundError
                  ├── ColumnReferencedBeforeEvaluationError
                  ├── DatasetNotFoundError
@@ -309,6 +310,10 @@ class IncompatibleTypesError(Exception):
             )
         else:
             super().__init__("Incompatible column types.")
+
+
+class ArrayWithMixedTypesError(SqlError):
+    """Exception raised when arrays have mixed types."""
 
 
 class PermissionsError(SecurityError):

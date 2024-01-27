@@ -21,19 +21,6 @@ from opteryx.managers.expression import get_all_nodes_of_type
 from .optimization_strategy import HeuristicOptimizerContext
 from .optimization_strategy import OptimizationStrategy
 
-NODE_ORDER = {
-    "Eq": 1,
-    "NotEq": 1,
-    "Gt": 2,
-    "GtEq": 2,
-    "Lt": 2,
-    "LtEq": 2,
-    "Like": 4,
-    "ILike": 4,
-    "NotLike": 4,
-    "NotILike": 4,
-}
-
 
 def _inner_split(node):
     while node.node_type == NodeType.NESTED:
