@@ -9,11 +9,6 @@ __all__ = [
 ]
 
 
-# correlated filtering (if joining on a column with a filter - apply the filter to the other leg)
-# join ordering
-# filter ordering
-
-
 def _tag_predicates(nodes):
     from opteryx.managers.expression import NodeType
 

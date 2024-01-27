@@ -49,6 +49,7 @@ import opteryx
 from opteryx.exceptions import (
     AmbiguousDatasetError,
     AmbiguousIdentifierError,
+    ArrayWithMixedTypesError,
     ColumnNotFoundError,
     ColumnReferencedBeforeEvaluationError,
     DatasetNotFoundError,
@@ -1217,6 +1218,10 @@ STATEMENTS = [
         ("EXPLAIN ANALYZE FORMAT JSON SELECT * FROM $planets AS a INNER JOIN (SELECT id FROM $planets) AS b USING (id);", 5, 3, None),
         ("SELECT DISTINCT ON (planetId) planetId, name FROM $satellites ", 7, 2, None),
         ("SELECT 8 DIV 4", 1, 1, None),
+
+        ("SELECT * FROM $planets WHERE id IN (1)", 1, 20, None),
+        ("SELECT * FROM $planets WHERE id NOT IN (1)", 8, 20, None),
+        ("SELECT * FROM $planets WHERE id IN (1, 'one')", None, None, ArrayWithMixedTypesError),
 
         # Test cases for UNION
         ("SELECT name FROM $planets AS p1 UNION SELECT name FROM $planets AS p2", 9, 1, None),

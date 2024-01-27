@@ -73,6 +73,7 @@ class HeuristicOptimizerVisitor:
     def __init__(self):
         self.strategies = [
             SplitConjunctivePredicatesStrategy(),
+            RewriteInWithSingleComparitorStrategy(),
         ]
 
     def traverse(self, plan: LogicalPlan, strategy) -> LogicalPlan:
