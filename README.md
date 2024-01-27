@@ -1,14 +1,10 @@
 <div align="center">
 
 ![Opteryx](https://raw.githubusercontent.com/mabel-dev/opteryx/main/opteryx-word-small.png)
-## Query your data, where it lives.
+### Query your data, where it lives.
 
-_One interface, endless possibilities - effortless cross-platform data analytics._
+_A unified SQL interface to unlock insights across your diverse data sources, from blobs stores to databases - **effortless cross-platform data analytics**._
 </div>
-
-<h3 align="center">
-Unlock your ability to discover insights across your diverse data sources, from blob stores to databases, all via a single, unified SQL interface.
-</h3>
 
 <div align="center">
 
