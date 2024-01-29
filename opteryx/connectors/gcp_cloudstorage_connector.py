@@ -33,6 +33,8 @@ from opteryx.utils import paths
 from opteryx.utils.file_decoders import VALID_EXTENSIONS
 from opteryx.utils.file_decoders import get_decoder
 
+OS_SEP = os.sep
+
 
 class GcpCloudStorageConnector(BaseConnector, Cacheable, Partitionable, PredicatePushable):
     __mode__ = "Blob"
@@ -60,7 +62,7 @@ class GcpCloudStorageConnector(BaseConnector, Cacheable, Partitionable, Predicat
         Cacheable.__init__(self, **kwargs)
         PredicatePushable.__init__(self, **kwargs)
 
-        self.dataset = self.dataset.replace(".", "/")
+        self.dataset = self.dataset.replace(".", OS_SEP)
         self.credentials = credentials
         self.bucket, _, _, _ = paths.get_parts(self.dataset)
 

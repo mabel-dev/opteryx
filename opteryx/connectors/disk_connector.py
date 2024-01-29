@@ -34,6 +34,8 @@ from opteryx.exceptions import UnsupportedFileTypeError
 from opteryx.utils.file_decoders import VALID_EXTENSIONS
 from opteryx.utils.file_decoders import get_decoder
 
+OS_SEP = os.sep
+
 
 class DiskConnector(BaseConnector, Cacheable, Partitionable, PredicatePushable):
     __mode__ = "Blob"
@@ -62,7 +64,7 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable, PredicatePushable):
         Cacheable.__init__(self, **kwargs)
         PredicatePushable.__init__(self, **kwargs)
 
-        self.dataset = self.dataset.replace(".", "/")
+        self.dataset = self.dataset.replace(".", OS_SEP)
         self.cached_first_blob = None  # Cache for the first blob in the dataset
 
     def read_blob(self, *, blob_name, **kwargs) -> bytes:
