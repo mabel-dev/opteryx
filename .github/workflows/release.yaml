@@ -256,3 +256,55 @@ jobs:
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
         password: ${{ secrets.PYPI_API_TOKEN }}
+
+  build_wheels:
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    env:
+      CIBW_BEFORE_ALL: "pip install --upgrade cython wheel numpy"
+      CIBW_SKIP: "*-musllinux*"
+      MACOSX_DEPLOYMENT_TARGET: "10.12"
+      MPL_DISABLE_FH4: "yes"
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-20.04
+            cibw_archs: "aarch64"
+          - os: macos-11
+            cibw_archs: "arm64"
+
+    steps:
+      - name: Set up QEMU
+        if: matrix.cibw_archs == 'aarch64'
+        uses: docker/setup-qemu-action@v2
+        with:
+          platforms: arm64
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Build wheels for CPython 3.11
+        uses: pypa/cibuildwheel@v2.12.1
+        env:
+          CIBW_BUILD: "cp311-*"
+          CIBW_ARCHS: ${{ matrix.cibw_archs }}
+
+      - name: Build wheels for CPython 3.10
+        uses: pypa/cibuildwheel@v2.12.1
+        env:
+          CIBW_BUILD: "cp310-*"
+          CIBW_ARCHS: ${{ matrix.cibw_archs }}
+
+      - name: Build wheels for CPython 3.9
+        if: matrix.os != 'macos-11'
+        uses: pypa/cibuildwheel@v2.12.1
+        env:
+          CIBW_BUILD: "cp39-*"
+          CIBW_ARCHS: ${{ matrix.cibw_archs }}
+
+      - name: Publish distribution 📦 to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
+          packages_dir: wheelhouse
+  
