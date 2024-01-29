@@ -39,8 +39,13 @@ def test_paths_parts(string, expected, error):
 
 if __name__ == "__main__":  # pragma: no cover
     print(f"RUNNING BATTERY OF {len(PATH_PARTS_TEST)} PATH PART TESTS")
-    for string, expected, error in PATH_PARTS_TEST:
-        print(".", end="")
-        test_paths_parts(string, expected, error)
+    import time
+
+    t = time.monotonic_ns()
+    for i in range(57):
+        for string, expected, error in PATH_PARTS_TEST:
+            print(".", end="")
+            test_paths_parts(string, expected, error)
     print()
     print("✅ okay")
+    print(time.monotonic_ns() - t)

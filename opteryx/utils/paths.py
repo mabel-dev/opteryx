@@ -13,37 +13,40 @@
 """
 Functions to help with handling file paths
 """
-import pathlib
+import os
 
 
 def get_parts(path_string: str):
-    if not path_string:  # pragma: no cover
+    if not path_string:
         raise ValueError("get_parts: path_string must have a value")
-    if ".." in path_string or "~" in path_string:
-        raise ValueError("get_parts: paths cannot traverse the folder structure")
 
-    path = pathlib.PurePosixPath(path_string)
-    bucket = path.parts[0]
+    # Validate against path traversal and home directory references
+    if ".." in path_string or path_string.startswith("~"):
+        raise ValueError(
+            "get_parts: paths cannot traverse the folder structure or use home directory shortcuts"
+        )
 
-    if len(path.parts) == 1:  # pragma: no cover
-        bucket = ""
-        parts: pathlib.PurePosixPath = pathlib.PurePosixPath("")
-        stem = path.stem
-        suffix = path.suffix
-    elif path.suffix == "":
-        parts = pathlib.PurePosixPath("/".join(path.parts[1:-1])) / path.stem
-        stem = ""
-        suffix = ""
+    # Split the path into parts
+    parts = path_string.split("/")
+
+    # Handle Windows paths which may contain drive letters
+    bucket = ""
+    if len(parts) > 1:
+        bucket = parts.pop(0)
+
+    # Identify if the last part contains a filename with an extension
+    if "." in parts[-1]:
+        file_name_part = parts.pop(-1)
+        file_name, suffix = file_name_part.rsplit(".", 1)
+        suffix = "." + suffix  # Prepend '.' to ensure the suffix starts with a dot
     else:
-        parts = pathlib.PurePosixPath("/".join(path.parts[1:-1]))
-        stem = path.stem
-        suffix = path.suffix
-    if len(parts.parts) == 0:
-        parts = ""  # type:ignore
+        file_name = ""
+        suffix = ""
 
-    return str(bucket), str(parts), stem, suffix
+    parts_path = "/".join(parts)
+
+    return bucket, parts_path, file_name, suffix
 
 
 def is_file(path):
-    path = pathlib.Path(path)
-    return path.is_file()
+    return os.path.isfile(path)

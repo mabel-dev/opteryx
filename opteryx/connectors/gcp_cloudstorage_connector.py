@@ -30,7 +30,7 @@ from opteryx.exceptions import DatasetNotFoundError
 from opteryx.exceptions import MissingDependencyError
 from opteryx.exceptions import UnsupportedFileTypeError
 from opteryx.utils import paths
-from opteryx.utils.file_decoders import VALID_EXTENSIONS
+from opteryx.utils.file_decoders import TUPLE_OF_VALID_EXTENSIONS
 from opteryx.utils.file_decoders import get_decoder
 
 OS_SEP = os.sep
@@ -138,10 +138,9 @@ class GcpCloudStorageConnector(BaseConnector, Cacheable, Partitionable, Predicat
 
         blob_data = response.json()
         blob_names = sorted(
-            f"{bucket}/{blob['name']}"
-            for blob in blob_data.get("items", [])
-            if not blob["name"].endswith("/")
-            and any(blob["name"].endswith(ext) for ext in VALID_EXTENSIONS)
+            f"{bucket}/{name}"
+            for name in (blob["name"] for blob in blob_data.get("items", []))
+            if name.endswith(TUPLE_OF_VALID_EXTENSIONS)
         )
 
         return blob_names
