@@ -107,7 +107,6 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable, PredicatePushable):
             os.path.join(root, file)
             for root, _, files in os.walk(prefix)
             for file in files
-            for file in files
             if file.endswith(TUPLE_OF_VALID_EXTENSIONS)
         )
 
