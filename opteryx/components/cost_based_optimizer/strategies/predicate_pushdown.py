@@ -10,11 +10,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from orso.tools import random_string
+
 from opteryx.components.binder.binder_visitor import extract_join_fields
 from opteryx.components.logical_planner import LogicalPlan
 from opteryx.components.logical_planner import LogicalPlanNode
 from opteryx.components.logical_planner import LogicalPlanStepType
 from opteryx.connectors.capabilities import PredicatePushable
+from opteryx.exceptions import UnsupportedSyntaxError
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.models import Node
@@ -62,62 +65,105 @@ class PredicatePushdownStrategy(OptimizationStrategy):
                 context.collected_predicates.append(node)
                 context.optimized_plan.remove_node(context.node_id, heal=True)
 
-        elif node.node_type == LogicalPlanStepType.Join and context.collected_predicates:
-            # push predicates which reference multiple relations here
+        elif node.node_type == LogicalPlanStepType.Join:
 
-            if node.type not in ("cross join", "inner"):
-                # dump all the predicates
-                # IMPROVE: push past LEFT, SEMI and ANTI joins
-                for predicate in context.collected_predicates:
-                    context.optimized_plan.insert_node_after(
-                        predicate.nid, predicate, context.node_id
-                    )
-                context.collected_predicates = []
-            elif node.type == "cross join" and node.unnest_column:
-                # if it's a CROSS JOIN UNNEST - don't try to push any further
-                # IMPROVE: we should push everything that doesn't reference the unnested column
-                for predicate in context.collected_predicates:
-                    context.optimized_plan.insert_node_after(
-                        predicate.nid, predicate, context.node_id
-                    )
-                context.collected_predicates = []
-            elif node.type in ("cross join",):  # , "inner"):
-                # IMPROVE: add predicates to INNER JOIN conditions
-                # we may be able to rewrite as an inner join
-                remaining_predicates = []
-                for predicate in context.collected_predicates:
-                    if (
-                        len(predicate.relations) == 2
-                        and predicate.condition.value == "Eq"
-                        and set(node.right_relation_names + node.left_relation_names)
-                        == set(predicate.relations)
-                    ):
-                        node.type = "inner"
-                        node.on = _add_condition(node.on, predicate.condition)
-                    else:
-                        remaining_predicates.append(predicate)
+            def _inner(node):
+                # if we're an AND, check each leg
+                if node.node_type == NodeType.AND:
+                    # if one of the sides of an AND is a collectable condition,
+                    # collect it and replace the AND with the other side only.
+                    collected_left, _ = _inner(node.left)
+                    collected_right, _ = _inner(node.right)
+                    if collected_left:
+                        return collected_left, node.right
+                    if collected_right:
+                        return collected_right, node.left
+                    return [], node
+                # if we're a predicate, check it, left first
+                if len(get_all_nodes_of_type(node.left, (NodeType.IDENTIFIER,))) == 0:
+                    return [node], None
+                if len(get_all_nodes_of_type(node.right, (NodeType.IDENTIFIER,))) == 0:
+                    return [node], None
 
-                if node.on:
-                    node.left_columns, node.right_columns = extract_join_fields(
-                        node.on, node.left_relation_names, node.right_relation_names
+                return [], node
+
+            if node.on:
+                new_predicates, node.on = _inner(node.on)
+                context.collected_predicates.extend(
+                    LogicalPlanNode(
+                        LogicalPlanStepType.Filter,
+                        condition=node,
+                        nid=random_string(),
+                        relations={
+                            n.source for n in get_all_nodes_of_type(node, (NodeType.IDENTIFIER,))
+                        },
                     )
-                    node.columns = get_all_nodes_of_type(node.on, (NodeType.IDENTIFIER,))
+                    for node in new_predicates
+                )
+
+            if context.collected_predicates:
+                # push predicates which reference multiple relations here
+
+                if node.type not in ("cross join", "inner"):
+                    # dump all the predicates
+                    # IMPROVE: push past LEFT, SEMI and ANTI joins
+                    for predicate in context.collected_predicates:
+                        context.optimized_plan.insert_node_after(
+                            predicate.nid, predicate, context.node_id
+                        )
+                    context.collected_predicates = []
+                elif node.type == "cross join" and node.unnest_column:
+                    # if it's a CROSS JOIN UNNEST - don't try to push any further
+                    # IMPROVE: we should push everything that doesn't reference the unnested column
+                    for predicate in context.collected_predicates:
+                        context.optimized_plan.insert_node_after(
+                            predicate.nid, predicate, context.node_id
+                        )
+                    context.collected_predicates = []
+                elif node.type in ("cross join",):  # , "inner"):
+                    # IMPROVE: add predicates to INNER JOIN conditions
+                    # we may be able to rewrite as an inner join
+                    remaining_predicates = []
+                    for predicate in context.collected_predicates:
+                        if (
+                            len(predicate.relations) == 2
+                            and predicate.condition.value == "Eq"
+                            and set(node.right_relation_names + node.left_relation_names)
+                            == set(predicate.relations)
+                        ):
+                            node.type = "inner"
+                            node.on = _add_condition(node.on, predicate.condition)
+                        else:
+                            remaining_predicates.append(predicate)
+
+                    if node.on:
+                        node.left_columns, node.right_columns = extract_join_fields(
+                            node.on, node.left_relation_names, node.right_relation_names
+                        )
+                        node.columns = get_all_nodes_of_type(node.on, (NodeType.IDENTIFIER,))
+                        context.collected_predicates = remaining_predicates
+
+                for predicate in context.collected_predicates:
+                    remaining_predicates = []
+                    for predicate in context.collected_predicates:
+                        if (
+                            len(predicate.relations) == 2
+                            and predicate.condition.value == "Eq"
+                            and set(node.right_relation_names + node.left_relation_names)
+                            == set(predicate.relations)
+                        ):
+                            node.condition = _add_condition(node.condition, predicate)
+                        else:
+                            remaining_predicates.append(predicate)
                     context.collected_predicates = remaining_predicates
-            for predicate in context.collected_predicates:
-                remaining_predicates = []
-                for predicate in context.collected_predicates:
-                    if (
-                        len(predicate.relations) == 2
-                        and predicate.condition.value == "Eq"
-                        and set(node.right_relation_names + node.left_relation_names)
-                        == set(predicate.relations)
-                    ):
-                        node.condition = _add_condition(node.condition, predicate)
-                    else:
-                        remaining_predicates.append(predicate)
-                context.collected_predicates = remaining_predicates
 
-            context.optimized_plan.add_node(context.node_id, node)
+                context.optimized_plan.add_node(context.node_id, node)
+
+            if node.on is None and node.type == ("inner"):
+                raise UnsupportedSyntaxError(
+                    "INNER JOIN has no conditions, did you mean to use a CROSS JOIN?"
+                )
+
         return context
 
     def complete(self, plan: LogicalPlan, context: CostBasedOptimizerContext) -> LogicalPlan:

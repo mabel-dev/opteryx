@@ -32,6 +32,8 @@ from opteryx.utils import paths
 from opteryx.utils.file_decoders import VALID_EXTENSIONS
 from opteryx.utils.file_decoders import get_decoder
 
+OS_SEP = os.sep
+
 
 class AwsS3Connector(BaseConnector, Cacheable, Partitionable):
     __mode__ = "Blob"
@@ -57,7 +59,7 @@ class AwsS3Connector(BaseConnector, Cacheable, Partitionable):
             )
 
         self.minio = Minio(end_point, access_key, secret_key, secure=secure)
-        self.dataset = self.dataset.replace(".", "/")
+        self.dataset = self.dataset.replace(".", OS_SEP)
 
         # we're going to cache the first blob as the schema and dataset reader
         # sometimes both start here

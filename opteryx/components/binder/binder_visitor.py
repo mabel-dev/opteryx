@@ -122,8 +122,8 @@ def extract_join_fields(
     elif condition_node.node_type == NodeType.COMPARISON_OPERATOR and condition_node.value == "Eq":
         if any(
             [
-                condition_node.left.node_type != NodeType.IDENTIFIER,
-                condition_node.right.node_type != NodeType.IDENTIFIER,
+                condition_node.left.node_type not in (NodeType.IDENTIFIER, NodeType.LITERAL),
+                condition_node.right.node_type not in (NodeType.IDENTIFIER, NodeType.LITERAL),
             ]
         ):
             raise UnsupportedSyntaxError("JOIN conditions only support column comparisons.")
@@ -605,13 +605,6 @@ class BinderVisitor:
                 from opteryx.exceptions import IncompatibleTypesError
 
                 raise IncompatibleTypesError(**mismatches)
-
-            if get_all_nodes_of_type(node.on, (NodeType.LITERAL,)):
-                from opteryx.exceptions import UnsupportedSyntaxError
-
-                raise UnsupportedSyntaxError(
-                    "JOIN conditions cannot include literal constant values."
-                )
 
             # we need to put the referenced columns into the columns attribute for the
             # optimizers

@@ -1129,10 +1129,14 @@ STATEMENTS = [
         ("SELECT * FROM 'testdata/flat/tweets/tweets-0000.jsonl' INNER JOIN 'testdata/flat/tweets/tweets-0001.jsonl' USING (userid)", 491, 15, UnsupportedSyntaxError),
         ("SELECT * FROM 'testdata/flat/tweets/tweets-0000.jsonl' INNER JOIN $planets on sentiment = numberOfMoons", 12, 28, IncompatibleTypesError),
 
-        ("SELECT * FROM $planets AS p JOIN $planets AS g ON p.id = g.id AND g.name = 'Earth';", 1, 40, UnsupportedSyntaxError),
-        ("SELECT * FROM $planets AS p JOIN $planets AS g ON p.id = g.id AND p.name = 'Earth';", 1, 40, UnsupportedSyntaxError),
-        ("SELECT * FROM $planets AS p JOIN $planets AS g ON g.name = 'Earth' AND p.id = g.id;", 1, 40, UnsupportedSyntaxError),
-        ("SELECT * FROM $planets AS p JOIN $planets AS g ON p.name = 'Earth' AND p.id = g.id;", 1, 40, UnsupportedSyntaxError),
+        ("SELECT * FROM $planets AS p JOIN $planets AS g ON p.id = g.id AND g.name = 'Earth';", 1, 40, None),
+        ("SELECT * FROM $planets AS p JOIN $planets AS g ON p.id = g.id AND p.name = 'Earth';", 1, 40, None),
+        ("SELECT * FROM $planets AS p JOIN $planets AS g ON g.name = 'Earth' AND p.id = g.id;", 1, 40, None),
+        ("SELECT * FROM $planets AS p JOIN $planets AS g ON p.name = 'Earth' AND p.id = g.id;", 1, 40, None),
+        ("SELECT * FROM $planets AS p JOIN $planets AS g ON p.id = g.id AND 'Earth' = g.name;", 1, 40, None),
+        ("SELECT * FROM $planets AS p JOIN $planets AS g ON p.id = g.id AND 'Earth' = p.name;", 1, 40, None),
+        ("SELECT * FROM $planets AS p JOIN $planets AS g ON 'Earth' = g.name AND p.id = g.id;", 1, 40, None),
+        ("SELECT * FROM $planets AS p JOIN $planets AS g ON 'Earth' = p.name AND p.id = g.id;", 1, 40, None),
 
         ("SELECT SPLIT(name, ' ', 0) FROM $astronauts", None, None, InvalidFunctionParameterError),
         ("SELECT SPLIT(name, ' ', 1) FROM $astronauts", 357, 1, None),
@@ -1153,7 +1157,8 @@ STATEMENTS = [
         ("SELECT a.name, b.name FROM sqlite.planets a JOIN sqlite.planets b ON a.numberOfMoons = b.numberOfMoons WHERE a.name <> b.name", 2, 2, None),
         ("SELECT * FROM $planets INNER JOIN $satellites ON INTEGER($planets.id) = INTEGER($satellites.planetId)", None, None, UnsupportedSyntaxError),
         ("SELECT alma_mater LIKE '%a%' FROM $astronauts", None, None, IncompatibleTypesError),
-        ("SELECT * FROM $planets INNER JOIN $satellites ON gm = 4", None, None, UnsupportedSyntaxError),
+        ("SELECT * FROM $planets INNER JOIN $satellites ON gm = 4", None, None, IncompatibleTypesError),
+        ("SELECT * FROM $planets INNER JOIN $satellites ON $planets.id = 4", None, None, UnsupportedSyntaxError),
         ("SELECT * FROM $planets CROSS JOIN UNNEST(name) AS G", None, None, IncorrectTypeError),
 
         ("SELECT VARCHAR(birth_place) FROM $astronauts", 357, 1, None),

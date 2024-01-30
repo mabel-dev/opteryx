@@ -31,8 +31,10 @@ from opteryx.connectors.capabilities import PredicatePushable
 from opteryx.exceptions import DatasetNotFoundError
 from opteryx.exceptions import EmptyDatasetError
 from opteryx.exceptions import UnsupportedFileTypeError
-from opteryx.utils.file_decoders import VALID_EXTENSIONS
+from opteryx.utils.file_decoders import TUPLE_OF_VALID_EXTENSIONS
 from opteryx.utils.file_decoders import get_decoder
+
+OS_SEP = os.sep
 
 
 class DiskConnector(BaseConnector, Cacheable, Partitionable, PredicatePushable):
@@ -62,7 +64,7 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable, PredicatePushable):
         Cacheable.__init__(self, **kwargs)
         PredicatePushable.__init__(self, **kwargs)
 
-        self.dataset = self.dataset.replace(".", "/")
+        self.dataset = self.dataset.replace(".", OS_SEP)
         self.cached_first_blob = None  # Cache for the first blob in the dataset
 
     def read_blob(self, *, blob_name, **kwargs) -> bytes:
@@ -105,7 +107,7 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable, PredicatePushable):
             os.path.join(root, file)
             for root, _, files in os.walk(prefix)
             for file in files
-            if os.path.splitext(file)[1] in VALID_EXTENSIONS
+            if file.endswith(TUPLE_OF_VALID_EXTENSIONS)
         )
 
     def read_dataset(

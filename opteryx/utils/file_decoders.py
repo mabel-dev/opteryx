@@ -288,6 +288,7 @@ KNOWN_EXTENSIONS: Dict[str, Tuple[Callable, str]] = {
 }
 
 VALID_EXTENSIONS = set(f".{ext}" for ext in KNOWN_EXTENSIONS.keys())
+TUPLE_OF_VALID_EXTENSIONS = tuple(VALID_EXTENSIONS)
 DATA_EXTENSIONS = set(
     f".{ext}" for ext, conf in KNOWN_EXTENSIONS.items() if conf[1] == ExtentionType.DATA
 )
