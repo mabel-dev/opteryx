@@ -22,15 +22,11 @@ def rust_build(setup_kwargs: Dict[str, Any]) -> None:
     )
 
 
+__author__ = "notset"
 __version__ = "notset"
 with open(f"{LIBRARY}/__version__.py", mode="r") as v:
     vers = v.read()
 exec(vers)  # nosec
-
-__author__ = "notset"
-with open(f"{LIBRARY}/__author__.py", mode="r") as v:
-    author = v.read()
-exec(author)  # nosec
 
 with open("README.md", mode="r", encoding="UTF8") as rm:
     long_description = rm.read()
@@ -47,44 +43,37 @@ extensions = [
         name="cjoin",
         sources=["opteryx/third_party/pyarrow_ops/cjoin.pyx"],
         include_dirs=[numpy.get_include()],
+        extra_compile_args=["-O2", "-march=native"],
     ),
     Extension(
         name="csoundex",
         sources=["opteryx/third_party/fuzzy/csoundex.pyx"],
-        extra_compile_args=["-O2"],
+        extra_compile_args=["-O2", "-march=native"],
     ),
     Extension(
         name="clevenshtein",
         sources=["opteryx/third_party/levenshtein/clevenshtein.pyx"],
-        extra_compile_args=["-O2"],
+        extra_compile_args=["-O2", "-march=native"],
     ),
     Extension(
-        name="cython_any_ops",
+        name="cython_list_ops",
         sources=[
-            "opteryx/compiled/any_ops/cython_any_ops.pyx",
+            "opteryx/compiled/list_ops/cython_list_ops.pyx",
         ],
         include_dirs=[numpy.get_include()],
-        extra_compile_args=["-O2"],
-    ),
-    Extension(
-        name="cython_all_ops",
-        sources=[
-            "opteryx/compiled/all_ops/cython_all_ops.pyx",
-        ],
-        include_dirs=[numpy.get_include()],
-        extra_compile_args=["-O2"],
+        extra_compile_args=["-O2", "-march=native"],
     ),
     Extension(
         name="cython_cross_join",
         sources=["opteryx/compiled/cross_join/cython_cross_join.pyx"],
         include_dirs=[numpy.get_include()],
-        extra_compile_args=["-O2"],
+        extra_compile_args=["-O2", "-march=native"],
     ),
     Extension(
         name="cython_functions",
         sources=["opteryx/compiled/functions/cython_functions.pyx"],
         include_dirs=[numpy.get_include()],
-        extra_compile_args=["-O2"],
+        extra_compile_args=["-O2", "-march=native"],
     ),
 ]
 

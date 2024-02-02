@@ -1,3 +1,5 @@
+from cython_all_ops import cython_allop_eq
+from cython_all_ops import cython_allop_neq
 from cython_any_ops import cython_anyop_eq
 from cython_any_ops import cython_anyop_gt
 from cython_any_ops import cython_anyop_gte

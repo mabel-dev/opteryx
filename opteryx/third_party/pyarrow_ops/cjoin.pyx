@@ -6,15 +6,17 @@ cimport numpy as cnp
 
 from cython import Py_ssize_t
 
-from numpy cimport int64_t, ndarray
+from numpy cimport int64_t, ndarray, uint64_t
 
 cnp.import_array()
 
 @cython.boundscheck(False)
+@cython.nonecheck(False)
+@cython.wraparound(False)
 def cython_inner_join(
         const int64_t[:] left_idxs, const int64_t[:] right_idxs, 
-        const int64_t[:] left_counts, const int64_t[:] right_counts, 
-        const int64_t[:] left_bidxs, const int64_t[:] right_bidxs):
+        const uint64_t[:] left_counts, const uint64_t[:] right_counts, 
+        const uint64_t[:] left_bidxs, const uint64_t[:] right_bidxs):
 
     """ this is referred to as the HASH join in Opteryx """
 
@@ -36,18 +38,18 @@ def cython_inner_join(
         for i in range(cats):
             lc = left_counts[i]
             rc = right_counts[i]
-            if lc > 0 and rc > 0:
-                lbi = left_bidxs[i]
-                for li in range(lc):
-                    rbi = right_bidxs[i]
-                    for ri in range(rc):
-                        lp = left_idxs[lbi]
-                        rp = right_idxs[rbi]
-                        left_align[p] = lp
-                        right_align[p] = rp
-                        rbi += 1
-                        p += 1
-                    lbi += 1
+
+            lbi = left_bidxs[i]
+            for li in range(lc):
+                rbi = right_bidxs[i]
+                for ri in range(rc):
+                    lp = left_idxs[lbi]
+                    rp = right_idxs[rbi]
+                    left_align[p] = lp
+                    right_align[p] = rp
+                    rbi += 1
+                    p += 1
+                lbi += 1
     return left_align, right_align
                             
 

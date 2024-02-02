@@ -36,14 +36,11 @@ from opteryx.utils import dates
 
 def _get(array, key):
     # Determine the type of the first element (assuming homogeneous array)
-    if array is None or len(array) == 0:
-        return [None]  # Return an array of None if input is empty
-    key = key[0]
-
     first_element = next((item for item in array if item is not None), None)
     if first_element is None:
         return numpy.full(len(array), None)
 
+    key = key[0]
     if isinstance(first_element, dict):
         # Handle dict type
         return [item.get(key) for item in array]
@@ -225,6 +222,32 @@ def _coalesce(*arrays):
     return result
 
 
+def select_values(boolean_arrays, value_arrays):
+    """
+    Build a result array based on boolean conditions and corresponding value arrays.
+
+    Parameters:
+    - boolean_arrays: List[np.ndarray], list of boolean arrays representing conditions.
+    - value_arrays: List[np.ndarray], list of arrays with values corresponding to each condition.
+
+    Returns:
+    - np.ndarray: Result array with selected values or False where no condition is met.
+    """
+    # Ensure the input lists are not empty and have the same length
+    if not boolean_arrays or not value_arrays or len(boolean_arrays) != len(value_arrays):
+        raise ValueError("Input lists must be non-empty and of the same length.")
+
+    # Initialize the result array with False, assuming no condition will be met
+    result = numpy.full(len(boolean_arrays[0]), None)
+
+    # Iterate over pairs of boolean and value arrays
+    for condition, values in zip(reversed(boolean_arrays), reversed(value_arrays)):
+        # Update the result array where the condition is True
+        numpy.putmask(result, condition, values)
+
+    return result
+
+
 # fmt:off
 # Function definitions optionally include the type and the function.
 # The type is needed particularly when returning Python objects that
@@ -314,7 +337,7 @@ FUNCTIONS = {
     "IIF": other_functions.iif,
 #    "GENERATE_SERIES": series.generate_series,
     "NULLIF": other_functions.null_if,
-    "CASE": other_functions.case_when,
+    "CASE": select_values, #other_functions.case_when,
 
     # NUMERIC
     "ROUND": number_functions.round,
