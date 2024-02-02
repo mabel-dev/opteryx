@@ -6,7 +6,9 @@ import numpy
 import pyarrow
 from pyarrow import compute
 
+from opteryx.compiled import list_ops
 from opteryx.third_party.pyarrow_ops.helpers import columns_to_array
+from opteryx.third_party.pyarrow_ops.helpers import handle_nulls_for_distinct
 
 # Added for Opteryx, comparisons in filter_operators updated to match
 # this set is from sqloxide
@@ -44,31 +46,34 @@ def filter_operations(arr, operator, value):
 
     # if the input is a table, get the first column
     if isinstance(value, pyarrow.Table):  # pragma: no cover
-        value = [value.columns[0].to_numpy()]
+        value = value.column(0).to_numpy()
 
-    # work out which rows we're going to actually evaluate
-    # we're working out if either array has a null value so we can exclude them
-    # from the actual evaluation.
-    #   True = values, False = null
-    record_count = len(arr)
-    null_arr = compute.is_null(arr, nan_is_null=True)
-    null_val = compute.is_null(value, nan_is_null=True)
-    null_positions = numpy.logical_or(null_arr, null_val)
+    morsel_size = len(arr)
 
-    # if there's no non-null values, stop here
-    if all(null_positions):
-        return numpy.full(record_count, None)
+    # compute null positions
+    null_positions = numpy.logical_or(
+        compute.is_null(arr, nan_is_null=True),
+        compute.is_null(value, nan_is_null=True),
+    )
 
-    any_null = any(null_positions)
-    null_positions = numpy.invert(null_positions)
+    # Early exit if all values are null
+    if null_positions.all():
+        return pyarrow.array([None] * morsel_size, type=pyarrow.bool_())
+
+    # Prepare for null-excluded evaluation
+    valid_positions = ~null_positions
 
     compressed = False
-    if any_null and isinstance(arr, numpy.ndarray) and isinstance(value, numpy.ndarray):
+    if (
+        valid_positions.any()
+        and isinstance(arr, numpy.ndarray)
+        and isinstance(value, numpy.ndarray)
+    ):
         # if we have nulls and both columns are numpy arrays, we can speed things
         # up by removing the nulls from the calculations, we add the rows back in
         # later
-        arr = arr.compress(null_positions)
-        value = value.compress(null_positions)
+        arr = arr.compress(valid_positions)
+        value = value.compress(valid_positions)
         compressed = True
 
     # do the evaluation
@@ -76,10 +81,11 @@ def filter_operations(arr, operator, value):
 
     if compressed:
         # fill the result set
-        results = numpy.full(record_count, -1, numpy.int8)
-        results[numpy.nonzero(null_positions)] = results_mask
+        results = numpy.array([None] * morsel_size, dtype=object)
+        numpy.place(results, valid_positions, results_mask)
+
         # build tri-state response, PyArrow supports tristate, numpy does not
-        return pyarrow.array((bool(r) if r != -1 else None for r in results), type=pyarrow.bool_())
+        return pyarrow.array(results, type=pyarrow.bool_())
 
     return results_mask
 
@@ -152,37 +158,21 @@ def _inner_filter_operations(arr, operator, value):
         return numpy.invert(matches)
 
     if operator == "AnyOpEq":
-        from opteryx.compiled import any_ops
-
-        return any_ops.cython_anyop_eq(arr[0], value)
+        return list_ops.cython_anyop_eq(arr[0], value)
     if operator == "AnyOpNotEq":
-        from opteryx.compiled import any_ops
-
-        return any_ops.cython_anyop_neq(arr[0], value)
+        return list_ops.cython_anyop_neq(arr[0], value)
     if operator == "AnyOpGt":
-        from opteryx.compiled import any_ops
-
-        return any_ops.cython_anyop_gt(arr[0], value)
+        return list_ops.cython_anyop_gt(arr[0], value)
     if operator == "AnyOpLt":
-        from opteryx.compiled import any_ops
-
-        return any_ops.cython_anyop_lt(arr[0], value)
+        return list_ops.cython_anyop_lt(arr[0], value)
     if operator == "AnyOpGtEq":
-        from opteryx.compiled import any_ops
-
-        return any_ops.cython_anyop_gte(arr[0], value)
+        return list_ops.cython_anyop_gte(arr[0], value)
     if operator == "AnyOpLtEq":
-        from opteryx.compiled import any_ops
-
-        return any_ops.cython_anyop_lte(arr[0], value)
+        return list_ops.cython_anyop_lte(arr[0], value)
     if operator == "AllOpEq":
-        from opteryx.compiled import all_ops
-
-        return all_ops.cython_allop_eq(arr[0], value)
+        return list_ops.cython_allop_eq(arr[0], value)
     if operator == "AllOpNotEq":
-        from opteryx.compiled import all_ops
-
-        return all_ops.cython_allop_neq(arr[0], value)
+        return list_ops.cython_allop_neq(arr[0], value)
     raise NotImplementedError(f"Operator {operator} is not implemented!")  # pragma: no cover
 
 
@@ -194,7 +184,9 @@ def drop_duplicates(table, columns=None):
     MODIFIED FOR OPTERYX
     """
     # Gather columns to arr
-    arr = columns_to_array(table, (columns if columns else table.column_names))
+    columns_of_interest = columns if columns else table.column_names
+    table = handle_nulls_for_distinct(table, columns_of_interest)
+    arr = columns_to_array(table, columns_of_interest)
     values, indices = numpy.unique(arr, return_index=True)
     del values
     return table.take(indices)

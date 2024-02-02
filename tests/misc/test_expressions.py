@@ -337,17 +337,7 @@ def test_compound_expressions():
     )
 
     result = evaluate(gt, planets)
-    assert [c for c in result] == [
-        True,
-        True,
-        True,
-        True,
-        True,
-        True,
-        True,
-        True,
-        True,
-    ], result
+    assert all(result), result
 
 
 def test_functions():

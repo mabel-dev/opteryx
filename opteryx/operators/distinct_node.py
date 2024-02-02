@@ -17,6 +17,7 @@ This is a SQL Query Execution Plan Node.
 
 This Node eliminates duplicate records.
 """
+import time
 from typing import Generator
 
 import pyarrow
@@ -49,6 +50,10 @@ class DistinctNode(BasePlanNode):
     def execute(self) -> Generator[pyarrow.Table, None, None]:
         morsels = self._producers[0]  # type:ignore
 
-        yield drop_duplicates(
+        start = time.monotonic_ns()
+        dropped = drop_duplicates(
             concat_tables(morsels.execute(), promote_options="none"), self._distinct_on
         )
+        self.statistics.time_distincting += time.monotonic_ns() - start
+
+        yield dropped

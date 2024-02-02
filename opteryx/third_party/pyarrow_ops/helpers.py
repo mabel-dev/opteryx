@@ -1,5 +1,6 @@
 import numpy
-from orso.cityhash import CityHash64
+import pyarrow
+import pyarrow.compute
 
 APOLLO_11_DURATION: int = 703115  # we need a constant to use as a seed
 
@@ -15,19 +16,19 @@ def groupify_array(arr):
     # UPDATED FOR OPTERYX
     dic, counts = numpy.unique(arr, return_counts=True, equal_nan=True)
     sort_idx = numpy.argsort(arr)
-    return dic, counts, sort_idx, [0] + numpy.cumsum(counts)[:-1].tolist()
+    begin_indexes = numpy.zeros_like(counts)
+    begin_indexes[1:] = numpy.cumsum(counts)[:-1]
+    return dic, counts, sort_idx, begin_indexes
 
 
-def _hash_value(val, nan=numpy.nan):
+def _hash_value(val):
     # Added for Opteryx - Original code had bugs relating to distinct and nulls
-    if isinstance(val, dict):
+    t = type(val)
+    if t == dict:
         return _hash_value(tuple(val.values()))
-    if isinstance(val, (list, numpy.ndarray, tuple)):
+    if t in (list, numpy.ndarray, tuple):
         # not perfect but tries to eliminate some of the flaws in other approaches
         return hash(".".join(f"{i}:{v}" for i, v in enumerate(val)))
-    if val != val or val is None:
-        # nan is a float, but hash is an int, sometimes we need this to be an int
-        return nan
     return hash(val)
 
 
@@ -37,10 +38,6 @@ def columns_to_array(table, columns):
     columns = [columns] if isinstance(columns, str) else list(dict.fromkeys(columns))
 
     if len(columns) == 1:
-        # FIX https://github.com/mabel-dev/opteryx/issues/98
-        # hashing NULL doesn't result in the same value each time
-        # FIX https://github.com/mabel-dev/opteryx/issues/285
-        # null isn't able to be sorted - replace with nan
         column_values = table.column(columns[0]).to_numpy()
 
         if numpy.issubdtype(column_values.dtype, numpy.character):
@@ -48,11 +45,91 @@ def columns_to_array(table, columns):
             from orso.cityhash import CityHash64
 
             return numpy.array(
-                [numpy.nan if s != s else CityHash64(s.encode()) for s in column_values],
+                [CityHash64(s.encode()) for s in column_values],
                 numpy.uint64,
             )
-        return numpy.array([_hash_value(el) for el in column_values])
+        return numpy.array([_hash_value(el) for el in column_values], dtype=numpy.uint64)
 
     columns = sorted(set(table.column_names).intersection(columns))
     values = (c.to_numpy() for c in table.select(columns).itercolumns())
     return numpy.array([_hash_value(x) for x in zip(*values)])
+
+
+def filter_rows_with_nulls(table, columns_of_interest):
+    """
+    ADDED FOR OPTERYX
+
+    Filters out rows from a PyArrow table where any of the specified columns have null values.
+
+    Parameters:
+    - table (pyarrow.Table): The PyArrow table to filter.
+    - columns_of_interest (list of str): Column names to check for nulls.
+
+    Returns:
+    - pyarrow.Table: A new PyArrow table with rows containing nulls in the specified columns removed.
+    """
+
+    # Validate that all specified columns exist in the table
+    for col_name in columns_of_interest:
+        if col_name not in table.column_names:
+            raise ValueError(f"Column '{col_name}' not found in the table.")
+
+    # Create a combined mask for null values in the specified columns
+    null_masks = [
+        pyarrow.compute.is_null(table.column(col_name)) for col_name in columns_of_interest
+    ]
+    combined_mask = null_masks.pop()  # Start with the mask for the first column
+
+    # If more than one column, combine the masks using logical OR
+    for mask in null_masks:
+        combined_mask = pyarrow.compute.or_(combined_mask, mask)
+
+    # Invert the mask to select rows that are NOT null in the specified columns
+    keep_mask = pyarrow.compute.invert(combined_mask)
+
+    # Filter the table to remove rows with nulls in the specified columns
+    filtered_table = table.filter(keep_mask)
+
+    return filtered_table
+
+
+def handle_nulls_for_distinct(table, columns_of_interest):
+    """
+    ADDED FOR OPTERYX
+
+    Distinct keeps one null and discards the rest
+
+    Parameters:
+    - table (pyarrow.Table): The PyArrow table to filter.
+    - columns_of_interest (list of str): Column names to check for nulls.
+
+    Returns:
+    - pyarrow.Table: A new PyArrow table with rows containing nulls in the specified columns removed.
+    """
+
+    # Create a combined mask for null values in the specified columns
+    null_masks = [
+        pyarrow.compute.is_null(table.column(col_name)) for col_name in columns_of_interest
+    ]
+    combined_mask = null_masks.pop()  # Start with the mask for the first column
+
+    # If more than one column, combine the masks using logical AND
+    for mask in null_masks:
+        combined_mask = pyarrow.compute.and_(combined_mask, mask)
+
+    # if we have nulls, we need to keep one
+    if any(combined_mask):
+        for i, v in enumerate(combined_mask):
+            if v.as_py():
+                # convert to a numpy array so we can edit the value
+                combined_mask = combined_mask.to_numpy()
+                combined_mask[i] = False
+                break
+
+    # Invert the mask to select rows that are NOT null in the specified columns
+    combined_mask = pyarrow.compute.invert(combined_mask)
+
+    # Filter the table to remove rows with nulls in the specified columns
+    filtered_table = table.filter(combined_mask)
+
+    return filtered_table

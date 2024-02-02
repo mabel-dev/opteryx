@@ -49,7 +49,7 @@ class FileConnector(BaseConnector, PredicatePushable):
     def __init__(self, *args, **kwargs):
         BaseConnector.__init__(self, **kwargs)
         PredicatePushable.__init__(self, **kwargs)
-        if ".." in self.dataset or self.dataset[0] in ("/", "~"):
+        if ".." in self.dataset or self.dataset[0] in ("\\", "/", "~"):
             # Don't find any datasets which look like path traversal
             raise DatasetNotFoundError(dataset=self.dataset)
         self.decoder = get_decoder(self.dataset)
