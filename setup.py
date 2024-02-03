@@ -1,3 +1,4 @@
+import platform
 from typing import Any
 from typing import Dict
 
@@ -9,6 +10,16 @@ from setuptools import setup
 from setuptools_rust import RustExtension
 
 LIBRARY = "opteryx"
+
+
+def is_mac():  # pragma: no cover
+    return platform.system().lower() == "darwin"
+
+
+if is_mac():
+    COMPILE_FLAGS = ["-O2"]
+else:
+    COMPILE_FLAGS = ["-O2", "-march=native"]
 
 
 def rust_build(setup_kwargs: Dict[str, Any]) -> None:
@@ -43,17 +54,17 @@ extensions = [
         name="cjoin",
         sources=["opteryx/third_party/pyarrow_ops/cjoin.pyx"],
         include_dirs=[numpy.get_include()],
-        extra_compile_args=["-O2", "-march=native"],
+        extra_compile_args=COMPILE_FLAGS,
     ),
     Extension(
         name="csoundex",
         sources=["opteryx/third_party/fuzzy/csoundex.pyx"],
-        extra_compile_args=["-O2", "-march=native"],
+        extra_compile_args=COMPILE_FLAGS,
     ),
     Extension(
         name="clevenshtein",
         sources=["opteryx/third_party/levenshtein/clevenshtein.pyx"],
-        extra_compile_args=["-O2", "-march=native"],
+        extra_compile_args=COMPILE_FLAGS,
     ),
     Extension(
         name="cython_list_ops",
@@ -61,19 +72,19 @@ extensions = [
             "opteryx/compiled/list_ops/cython_list_ops.pyx",
         ],
         include_dirs=[numpy.get_include()],
-        extra_compile_args=["-O2", "-march=native"],
+        extra_compile_args=COMPILE_FLAGS,
     ),
     Extension(
         name="cython_cross_join",
         sources=["opteryx/compiled/cross_join/cython_cross_join.pyx"],
         include_dirs=[numpy.get_include()],
-        extra_compile_args=["-O2", "-march=native"],
+        extra_compile_args=COMPILE_FLAGS,
     ),
     Extension(
         name="cython_functions",
         sources=["opteryx/compiled/functions/cython_functions.pyx"],
         include_dirs=[numpy.get_include()],
-        extra_compile_args=["-O2", "-march=native"],
+        extra_compile_args=COMPILE_FLAGS,
     ),
 ]
 
