@@ -16,8 +16,6 @@ from typing import Dict
 from typing import List
 
 import pyarrow
-import requests
-from google.auth.transport.requests import Request
 from orso.schema import RelationSchema
 from orso.tools import single_item_cache
 from orso.types import OrsoTypes
@@ -52,8 +50,8 @@ class GcpCloudStorageConnector(BaseConnector, Cacheable, Partitionable, Predicat
 
     def __init__(self, credentials=None, **kwargs):
         try:
-            from google.auth.credentials import AnonymousCredentials
-            from google.cloud import storage
+            import requests
+            from google.auth.transport.requests import Request
         except ImportError as err:
             raise MissingDependencyError(err.name) from err
 
@@ -82,7 +80,10 @@ class GcpCloudStorageConnector(BaseConnector, Cacheable, Partitionable, Predicat
         self.session = requests.Session()
 
     def _get_storage_client(self):
-        from google.cloud import storage
+        try:
+            from google.cloud import storage
+        except ImportError as err:
+            raise MissingDependencyError(err.name) from err
 
         if os.environ.get("STORAGE_EMULATOR_HOST"):
             from google.auth.credentials import AnonymousCredentials
@@ -99,6 +100,8 @@ class GcpCloudStorageConnector(BaseConnector, Cacheable, Partitionable, Predicat
 
         # Ensure the credentials are valid, refreshing them if necessary
         if not self.client_credentials.valid:
+            from google.auth.transport.requests import Request
+
             request = Request()
             self.client_credentials.refresh(request)
             self.access_token = self.client_credentials.token
@@ -126,6 +129,8 @@ class GcpCloudStorageConnector(BaseConnector, Cacheable, Partitionable, Predicat
 
         # Ensure the credentials are valid, refreshing them if necessary
         if not self.client_credentials.valid:
+            from google.auth.transport.requests import Request
+
             request = Request()
             self.client_credentials.refresh(request)
             self.access_token = self.client_credentials.token
