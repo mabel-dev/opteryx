@@ -48,6 +48,7 @@ def _cross_join_unnest_column(
     Returns:
         A generator that yields the resulting `pyarrow.Table` objects.
     """
+    from opteryx.compiled import build_rows_indices_and_column
 
     # Check if the source node type is an identifier, raise error otherwise
     if source.node_type != NodeType.IDENTIFIER:
@@ -62,20 +63,26 @@ def _cross_join_unnest_column(
         for left_block in left_morsel.to_batches(max_chunksize=batch_size):
             # Fetch the data of the column to be unnested
             column_data = left_block[source.schema_column.identity]
-
+            # we need the offsets before we drop the rows
+            valid_offsets = column_data.is_valid()
+            column_data = column_data.drop_null()
+            # if there's no valid records, continue to the next record
+            if len(column_data) == 0:
+                continue
+            # drop the rows here, wait until we know we need to
+            left_block = left_block.filter(valid_offsets)
             # Set column_type if it hasn't been determined already
             if column_type is None:
                 column_type = column_data.type.value_type
 
-            from opteryx.compiled import build_rows_indices_and_column
-
-            indices, new_column_data = build_rows_indices_and_column(column_data)
+            indices, new_column_data = build_rows_indices_and_column(column_data.to_numpy(False))
 
             # If no new data was generated, skip to next iteration
-            if not new_column_data:
+            if len(new_column_data) == 0:
                 continue
 
-            new_block = left_morsel.take(indices)
+            new_block = left_block.take(indices)
+            new_block = pyarrow.Table.from_batches([new_block], schema=left_morsel.schema)
             new_block = new_block.append_column(target_column.identity, [new_column_data])
             yield new_block
 
