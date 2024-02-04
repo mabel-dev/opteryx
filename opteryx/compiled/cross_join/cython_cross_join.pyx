@@ -1,58 +1,43 @@
-# cython: language_level=3
-#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
-
-import cython
-import numpy
-
+from libc.stdlib cimport malloc, free
+import numpy as np
 cimport numpy as cnp
-
-from cython import Py_ssize_t
-from cython.parallel import prange
-
-from libc.stdlib cimport free, malloc
-from numpy cimport int64_t, ndarray
-
-cnp.import_array()
-
+import cython
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-cpdef build_rows_indices_and_column(object column_data):
-    cdef int i, j, total_size = 0
-    cdef object item
+cpdef build_rows_indices_and_column(cnp.ndarray column_data):
+    cdef Py_ssize_t i, total_size = 0
+    cdef Py_ssize_t length
+    cdef cnp.ndarray flat_data, indices
+    # Use Py_ssize_t for compatibility with Python/Cython sizes and indices
+    cdef Py_ssize_t *lengths = <Py_ssize_t *>malloc(len(column_data) * sizeof(Py_ssize_t))
+    if lengths is NULL:
+        raise MemoryError("Failed to allocate memory for lengths array.")
 
-    # Calculate the total size
-    for arr in column_data:
-        if arr is not None and arr.is_valid:
-            total_size += len(arr)
-
-    # Allocate memory for indices
-    cdef int* indices = <int*>malloc(total_size * sizeof(int))
-    if not indices:
-        raise MemoryError("Failed to allocate memory for indices")
-
-    # Prepare new column data list
-    new_column_data = []
-
-    # Fill indices and new column data
-    cdef int idx = 0
+    # Iterate over the column_data to calculate total_size and lengths of sub-arrays
     for i in range(len(column_data)):
-        arr = column_data[i]
-        if arr is not None and arr.is_valid:
-            for item in arr:
-                indices[idx] = i
-                new_column_data.append(item)
-                idx += 1
+        length = column_data[i].shape[0]
+        lengths[i] = length
+        total_size += length
 
-    if idx == 0:
-        return ([], [])
+    # If total_size is 0, handle the empty case
+    if total_size == 0:
+        free(lengths)  # Remember to free the allocated memory to avoid memory leaks
+        return (np.array([], dtype=np.int64), np.array([], dtype=object))
 
-    # Convert indices to a numpy array
-    cdef int[:] indices_view = <int[:total_size]>indices
-    cdef cnp.ndarray indices_array = numpy.asarray(indices_view)
+    # Initialize the flat_data and indices arrays
+    flat_data = np.empty(total_size, dtype=object)
+    indices = np.empty(total_size, dtype=np.int64)
 
-    # Free the allocated memory
-    # free(indices)
+    # Fill flat_data and indices
+    cdef Py_ssize_t start = 0
+    for i in range(len(column_data)):
+        if column_data[i] is not None:
+            end = start + lengths[i]
+            flat_data[start:end] = column_data[i]
+            indices[start:end] = i
+            start = end
 
-    # Return a Python tuple containing the numpy array and the new column data list
-    return (indices_array, new_column_data)
+    free(lengths)  # Free the lengths array after use
+
+    return (indices, flat_data)
