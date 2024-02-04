@@ -1,7 +1,9 @@
 name: Count Action Executions
 
 on:
-  push
+  push:
+    branches-ignore:
+      - main
 
 jobs:
   count_executions:
