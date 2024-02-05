@@ -153,7 +153,7 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable, PredicatePushable):
 
         if self.schema is None:
             if os.path.isdir(self.dataset):
-                raise EmptyDatasetError(dataset=self.dataset.replace("/", "."))
+                raise EmptyDatasetError(dataset=self.dataset.replace(OS_SEP, "."))
             raise DatasetNotFoundError(dataset=self.dataset)
 
         return self.schema
