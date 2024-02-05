@@ -36,6 +36,10 @@ from opteryx.utils.file_decoders import get_decoder
 
 OS_SEP = os.sep
 
+# Define os.O_BINARY for non-Windows platforms if it's not already defined
+if not hasattr(os, "O_BINARY"):
+    os.O_BINARY = 0  # Value has no effect on non-Windows platforms
+
 
 class DiskConnector(BaseConnector, Cacheable, Partitionable, PredicatePushable):
     __mode__ = "Blob"
@@ -85,7 +89,7 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable, PredicatePushable):
         Returns:
             The blob as bytes.
         """
-        file_descriptor = os.open(blob_name, os.O_RDONLY)
+        file_descriptor = os.open(blob_name, os.O_RDONLY | os.O_BINARY)
         try:
             return os.read(file_descriptor, os.path.getsize(blob_name))
         finally:
