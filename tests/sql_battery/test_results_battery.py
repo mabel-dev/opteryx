@@ -26,6 +26,8 @@ import orjson
 
 import opteryx
 
+OS_SEP = os.sep
+
 
 def get_tests(test_type):
     suites = glob.glob(f"**/**.{test_type}", recursive=True)
@@ -66,7 +68,7 @@ if __name__ == "__main__":  # pragma: no cover
         start = time.monotonic_ns()
         print(
             f"\033[0;36m{(index + 1):04}\033[0m {test['statement'][0:width - 1].ljust(width)}",
-            "\033[0;35m" + test["file"].split("/")[-1].split(".")[0][0:25].ljust(25) + "\033[0m",
+            "\033[0;35m" + test["file"].split(OS_SEP)[-1].split(".")[0][0:25].ljust(25) + "\033[0m",
             end="",
         )
 

@@ -15,6 +15,8 @@ Functions to help with handling file paths
 """
 import os
 
+OS_SEP = os.sep
+
 
 def get_parts(path_string: str):
     if not path_string:
@@ -27,7 +29,7 @@ def get_parts(path_string: str):
         )
 
     # Split the path into parts
-    parts = path_string.split("/")
+    parts = path_string.split(OS_SEP)
 
     # Handle Windows paths which may contain drive letters
     bucket = ""
@@ -43,7 +45,7 @@ def get_parts(path_string: str):
         file_name = ""
         suffix = ""
 
-    parts_path = "/".join(parts)
+    parts_path = OS_SEP.join(parts)
 
     return bucket, parts_path, file_name, suffix
 

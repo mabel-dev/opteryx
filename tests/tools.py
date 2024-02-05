@@ -114,6 +114,8 @@ def run_tests():
     import traceback
     from io import StringIO
 
+    OS_SEP = os.sep
+
     manual_test = os.environ.get("MANUAL_TEST")
     os.environ["MANUAL_TEST"] = "1"
 
@@ -157,7 +159,7 @@ def run_tests():
         if error:
             traceback_details = traceback.extract_tb(error.__traceback__)
             file_name, line_number, function_name, code_line = traceback_details[-1]
-            file_name = file_name.split("/")[-1]
+            file_name = file_name.split(OS_SEP)[-1]
             print(
                 f"  \033[38;2;255;121;198m{error.__class__.__name__}\033[0m"
                 + f" {error}\n"

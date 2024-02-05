@@ -14,6 +14,7 @@
 The file connector provides the reader for when a file name is provided as the
 dataset name in a query.
 """
+import os
 from typing import Dict
 from typing import Optional
 
@@ -25,6 +26,10 @@ from opteryx.connectors.base.base_connector import BaseConnector
 from opteryx.connectors.capabilities import PredicatePushable
 from opteryx.exceptions import DatasetNotFoundError
 from opteryx.utils.file_decoders import get_decoder
+
+# Define os.O_BINARY for non-Windows platforms if it's not already defined
+if not hasattr(os, "O_BINARY"):
+    os.O_BINARY = 0  # Value has no effect on non-Windows platforms
 
 
 class FileConnector(BaseConnector, PredicatePushable):
@@ -59,8 +64,12 @@ class FileConnector(BaseConnector, PredicatePushable):
         Reads the dataset file and stores its content in _byte_array attribute.
         """
         if self._byte_array is None:
-            with open(self.dataset, mode="br") as file:
-                self._byte_array = bytes(file.read())
+
+            file_descriptor = os.open(self.dataset, os.O_RDONLY | os.O_BINARY)
+            try:
+                self._byte_array = os.read(file_descriptor, os.path.getsize(self.dataset))
+            finally:
+                os.close(file_descriptor)
 
     def read_dataset(
         self, columns: list = None, predicates: list = None, **kwargs

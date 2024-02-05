@@ -20,6 +20,8 @@ from opteryx.exceptions import DataError
 from opteryx.managers.schemes import BasePartitionScheme
 from opteryx.utils.file_decoders import DATA_EXTENSIONS
 
+OS_SEP = os.sep
+
 
 class UnsupportedSegementationError(DataError):
     """Exception raised for unsupported segmentations."""
@@ -33,16 +35,20 @@ class UnsupportedSegementationError(DataError):
 
 def extract_prefix(path, prefix):
     start_index = path.find(prefix)
-    end_index = path.find("/", start_index)
+    end_index = path.find(OS_SEP, start_index)
     return path[start_index : end_index if end_index != -1 else None]
 
 
 def is_complete_and_not_invalid(blobs, as_at):
-    complete_suffix = as_at + "/frame.complete"
-    invalid_suffix = as_at + "/frame.ignore"
+    complete_suffix = f"{as_at}{OS_SEP}frame.complete"
+    invalid_suffix = f"{as_at}{OS_SEP}frame.ignore"
 
     complete, ignore = zip(
-        *((complete_suffix in blob, invalid_suffix in blob) for blob in blobs if "/frame." in blob)
+        *(
+            (complete_suffix in blob, invalid_suffix in blob)
+            for blob in blobs
+            if f"{OS_SEP}frame." in blob
+        )
     )
 
     return any(complete) and not any(ignore)
@@ -71,13 +77,17 @@ class MabelPartitionScheme(BasePartitionScheme):
             day = timestamp.day
             hour = timestamp.hour
 
-            hour_label = f"/by_hour/hour={hour:02d}/"
-            date_path = f"{prefix}/year_{year:04d}/month_{month:02d}/day_{day:02d}"
+            hour_label = f"{OS_SEP}by_hour{OS_SEP}hour={hour:02d}/"
+            date_path = (
+                f"{prefix}{OS_SEP}year_{year:04d}{OS_SEP}month_{month:02d}{OS_SEP}day_{day:02d}"
+            )
 
             # Call your method to get the list of blob names
             blob_names = blob_list_getter(prefix=date_path)
 
-            segments = {extract_prefix(blob, "by_") for blob in blob_names if "/by_" in blob}
+            segments = {
+                extract_prefix(blob, "by_") for blob in blob_names if f"{OS_SEP}by_" in blob
+            }
             if len(segments - {"by_hour", None}) > 0:
                 raise UnsupportedSegementationError(dataset=prefix, segments=segments)
 
@@ -87,7 +97,7 @@ class MabelPartitionScheme(BasePartitionScheme):
 
             as_at = None
             as_ats = sorted(
-                {extract_prefix(blob, "as_at_") for blob in blob_names if "/as_at_" in blob}
+                {extract_prefix(blob, "as_at_") for blob in blob_names if f"{OS_SEP}as_at_" in blob}
             )
 
             # Keep popping from as_ats until a valid frame is found

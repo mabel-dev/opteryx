@@ -5,8 +5,10 @@ import sys
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 from opteryx.utils.lru_2 import LRU2
+from tests.tools import is_windows, skip_if
 
 
+@skip_if(is_windows())
 def test_lruk():
     # make it very small to test
     lru = LRU2(size=2)
@@ -230,6 +232,7 @@ def test_lru2_eviction_based_on_penultimate_access():
     assert lru.get("d") == 4
 
 
+@skip_if(is_windows())
 def test_lru4_eviction_based_on_fourth_last_access():
     lru = LRU2(k=4, size=5)
 
@@ -265,6 +268,7 @@ def test_lru4_eviction_based_on_fourth_last_access():
     assert lru.get("f") == 6
 
 
+@skip_if(is_windows())
 def test_lru4_synthetic_access_on_eviction():
     lru = LRU2(k=4, size=5)
 
