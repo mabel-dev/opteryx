@@ -6,6 +6,8 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 import pytest
 
 from opteryx.utils import paths
+from tests.tools import is_windows, skip_if
+
 
 # fmt:off
 PATH_PARTS_TEST = [
@@ -26,6 +28,7 @@ PATH_PARTS_TEST = [
 # fmt:on
 
 
+@skip_if(is_windows())
 @pytest.mark.parametrize("string, expected, error", PATH_PARTS_TEST)
 def test_paths_parts(string, expected, error):
     if error is not None:
