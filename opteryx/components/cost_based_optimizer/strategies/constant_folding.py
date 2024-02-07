@@ -25,8 +25,8 @@ from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.models import Node
 from opteryx.virtual_datasets import no_table_data
 
-from .optimization_strategy import CostBasedOptimizerContext
 from .optimization_strategy import OptimizationStrategy
+from .optimization_strategy import OptimizerContext
 
 
 def build_literal_node(value: Any, root: Node):
@@ -70,9 +70,7 @@ def fold_constants(root: Node) -> Node:
 
 
 class ConstantFoldingStrategy(OptimizationStrategy):
-    def visit(
-        self, node: LogicalPlanNode, context: CostBasedOptimizerContext
-    ) -> CostBasedOptimizerContext:
+    def visit(self, node: LogicalPlanNode, context: OptimizerContext) -> OptimizerContext:
         """
         Constant Folding is when we precalculate expressions (or sub expressions)
         which contain only constant or literal or literal values. These don't
@@ -91,6 +89,6 @@ class ConstantFoldingStrategy(OptimizationStrategy):
 
         return context
 
-    def complete(self, plan: LogicalPlan, context: CostBasedOptimizerContext) -> LogicalPlan:
+    def complete(self, plan: LogicalPlan, context: OptimizerContext) -> LogicalPlan:
         # No finalization needed for this strategy
         return plan

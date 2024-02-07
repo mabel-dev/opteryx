@@ -22,8 +22,8 @@ from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.models import Node
 
-from .optimization_strategy import CostBasedOptimizerContext
 from .optimization_strategy import OptimizationStrategy
+from .optimization_strategy import OptimizerContext
 
 
 def _add_condition(existing_condition, new_condition):
@@ -36,9 +36,7 @@ def _add_condition(existing_condition, new_condition):
 
 
 class PredicatePushdownStrategy(OptimizationStrategy):
-    def visit(
-        self, node: LogicalPlanNode, context: CostBasedOptimizerContext
-    ) -> CostBasedOptimizerContext:
+    def visit(self, node: LogicalPlanNode, context: OptimizerContext) -> OptimizerContext:
         if not context.optimized_plan:
             context.optimized_plan = context.pre_optimized_tree.copy()  # type: ignore
 
@@ -166,7 +164,7 @@ class PredicatePushdownStrategy(OptimizationStrategy):
 
         return context
 
-    def complete(self, plan: LogicalPlan, context: CostBasedOptimizerContext) -> LogicalPlan:
+    def complete(self, plan: LogicalPlan, context: OptimizerContext) -> LogicalPlan:
         # anything we couldn't push, we need to put back
         for predicate in context.collected_predicates:
             for nid in predicate.plan_path:
@@ -176,8 +174,8 @@ class PredicatePushdownStrategy(OptimizationStrategy):
         return context.optimized_plan
 
     def _handle_predicates(
-        self, node: LogicalPlanNode, context: CostBasedOptimizerContext
-    ) -> CostBasedOptimizerContext:
+        self, node: LogicalPlanNode, context: OptimizerContext
+    ) -> OptimizerContext:
         remaining_predicates = []
         for predicate in context.collected_predicates:
             if len(predicate.relations) == 1 and predicate.relations.intersection(

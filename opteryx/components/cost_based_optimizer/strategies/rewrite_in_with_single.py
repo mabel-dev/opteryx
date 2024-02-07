@@ -10,18 +10,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from orso.tools import random_string
-from orso.types import PYTHON_TO_ORSO_MAP
 
 from opteryx.components.logical_planner import LogicalPlan
 from opteryx.components.logical_planner import LogicalPlanNode
 from opteryx.components.logical_planner import LogicalPlanStepType
-from opteryx.managers.expression import ORSO_TO_NUMPY_MAP
 from opteryx.managers.expression import NodeType
-from opteryx.managers.expression import get_all_nodes_of_type
 
-from .optimization_strategy import HeuristicOptimizerContext
 from .optimization_strategy import OptimizationStrategy
+from .optimization_strategy import OptimizerContext
 
 REWRITES = {"InList": "Eq", "NotInList": "NotEq"}
 
@@ -43,9 +39,7 @@ def _rewriter(node):
 
 
 class RewriteInWithSingleComparitorStrategy(OptimizationStrategy):
-    def visit(
-        self, node: LogicalPlanNode, context: HeuristicOptimizerContext
-    ) -> HeuristicOptimizerContext:
+    def visit(self, node: LogicalPlanNode, context: OptimizerContext) -> OptimizerContext:
         """
         Rewrite IN conditions with a single comparitor, e.g. a IN (1), to
         an Equals condition (or Not Equals). Equals conditions can be
@@ -61,6 +55,6 @@ class RewriteInWithSingleComparitorStrategy(OptimizationStrategy):
 
         return context
 
-    def complete(self, plan: LogicalPlan, context: HeuristicOptimizerContext) -> LogicalPlan:
+    def complete(self, plan: LogicalPlan, context: OptimizerContext) -> LogicalPlan:
         # No finalization needed for this strategy
         return plan

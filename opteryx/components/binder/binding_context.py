@@ -76,6 +76,6 @@ class BindingContext:
             schemas=deepcopy(self.schemas),
             qid=self.qid,
             connection=self.connection,
-            relations=deepcopy(self.relations),
+            relations=set(self.relations),
             statistics=self.statistics,
         )
