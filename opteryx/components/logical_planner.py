@@ -74,6 +74,7 @@ class LogicalPlanStepType(int, Enum):
     Explain = auto()  # EXPLAIN
     Difference = auto()  # relation interection
     Join = auto()  # all joins
+    #    Containment = auto() # IN (maybe also EXISTS?)
     AggregateAndGroup = auto()  # group by
     Aggregate = auto()
     Scan = auto()  # read a dataset
@@ -84,7 +85,7 @@ class LogicalPlanStepType(int, Enum):
     Order = auto()  # order by
     Distinct = auto()
     Exit = auto()
-    Defragment = auto()
+    Defragment = auto()  # TODO: not currently used
 
     CTE = auto()
     Subquery = auto()

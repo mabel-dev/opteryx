@@ -54,7 +54,6 @@ def query_planner(operation: str, parameters: Union[Iterable, None], connection,
     from opteryx.components.ast_rewriter import do_ast_rewriter
     from opteryx.components.binder import do_bind_phase
     from opteryx.components.cost_based_optimizer import do_cost_based_optimizer
-    from opteryx.components.heuristic_optimizer import do_heuristic_optimizer
     from opteryx.components.logical_planner import LogicalPlan
     from opteryx.components.logical_planner import do_logical_planning_phase
     from opteryx.components.sql_rewriter import do_sql_rewrite
@@ -101,11 +100,9 @@ def query_planner(operation: str, parameters: Union[Iterable, None], connection,
         )
         profile_content += logical_plan.draw() + "\n\n"
 
-        heuristic_optimized_plan = do_heuristic_optimizer(logical_plan)
-
         # The Binder adds schema information to the logical plan
         bound_plan = do_bind_phase(
-            heuristic_optimized_plan,
+            logical_plan,
             connection=connection.context,
             qid=qid,
             # common_table_expressions=ctes,

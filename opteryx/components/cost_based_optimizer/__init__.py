@@ -52,7 +52,7 @@ the main activity we're doing is splitting nodes, individual node rewrites, and 
 from opteryx.components.cost_based_optimizer.strategies import *
 from opteryx.components.logical_planner import LogicalPlan
 
-from .strategies.optimization_strategy import CostBasedOptimizerContext
+from .strategies.optimization_strategy import OptimizerContext
 
 __all__ = "do_cost_based_optimizer"
 
@@ -61,6 +61,9 @@ class CostBasedOptimizerVisitor:
     def __init__(self):
         self.strategies = [
             ConstantFoldingStrategy(),
+            BooleanSimplificationStrategy(),
+            SplitConjunctivePredicatesStrategy(),
+            RewriteInWithSingleComparitorStrategy(),
             PredicatePushdownStrategy(),
             ProjectionPushdownStrategy(),
         ]
@@ -76,7 +79,7 @@ class CostBasedOptimizerVisitor:
             The optimized logical plan tree.
         """
         root_nid = plan.get_exit_points().pop()
-        context = CostBasedOptimizerContext(plan)
+        context = OptimizerContext(plan)
 
         def _inner(nid, parent_nid, context):
             node = context.pre_optimized_tree[nid]

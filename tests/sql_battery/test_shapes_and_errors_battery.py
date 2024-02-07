@@ -1045,7 +1045,7 @@ STATEMENTS = [
         ("SET disable_optimizer = false;\nSET disable_morsel_defragmentation = false;\nSELECT COUNT(*) FROM $planets WHERE id > 3 AND name ILIKE '%e%'", 1, 1, None),
         ("SET disable_optimizer = false;\nSET disable_morsel_defragmentation = true;\nSELECT COUNT(*) FROM $planets WHERE id > 3 AND name ILIKE '%e%'", 1, 1, None),
         ("SET disable_optimizer = true;\nSET disable_morsel_defragmentation = true;\nSELECT COUNT(*) FROM $planets WHERE id > 3 AND name ILIKE '%e%'", 1, 1, None),
-        ("SELECT COUNT(*) FROM $planets WHERE id > 3 AND name ILIKE '%e%' AND id > 1 AND id > 0 AND id > 2 AND name ILIKE '%e%'", 1, 1, None),
+        ("SELECT COUNT(*) FROM $planets WHERE id > 3 AND name LIKE '%e%' AND id > 1 AND id > 0 AND id > 2 AND name ILIKE '%e%'", 1, 1, None),
 
         ("SELECT planets.* FROM $planets AS planets LEFT JOIN $planets FOR '1600-01-01' AS older ON planets.id = older.id WHERE older.name IS NULL", 3, 20, None),
         ("SELECT * FROM generate_series(1,10) AS GS LEFT JOIN $planets FOR '1600-01-01' ON id = GS", 10, 21, None),
@@ -1227,6 +1227,11 @@ STATEMENTS = [
         ("SELECT * FROM $planets WHERE id IN (1)", 1, 20, None),
         ("SELECT * FROM $planets WHERE id NOT IN (1)", 8, 20, None),
         ("SELECT * FROM $planets WHERE id IN (1, 'one')", None, None, ArrayWithMixedTypesError),
+
+        # hitting the boolean rewriter
+        ("SELECT * FROM $planets WHERE not(not(id = 7))", 1, 20, None),
+        ("SELECT name from sqlite.planets WHERE NOT (id = 1 or id = 9)", 7, 1, None),
+        ("SELECT name from sqlite.planets WHERE NOT (id != 1)", 1, 1, None),
 
         # Test cases for UNION
         ("SELECT name FROM $planets AS p1 UNION SELECT name FROM $planets AS p2", 9, 1, None),

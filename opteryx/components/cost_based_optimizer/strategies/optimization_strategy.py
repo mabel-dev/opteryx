@@ -15,7 +15,7 @@ from opteryx.components.logical_planner import LogicalPlanNode
 
 
 # Context object to carry state
-class CostBasedOptimizerContext:
+class OptimizerContext:
     def __init__(self, tree: LogicalPlan):
         self.node_id = None
         self.parent_nid = None
@@ -32,14 +32,12 @@ class CostBasedOptimizerContext:
 
 
 class OptimizationStrategy:
-    def visit(
-        self, node: LogicalPlanNode, context: CostBasedOptimizerContext
-    ) -> CostBasedOptimizerContext:
+    def visit(self, node: LogicalPlanNode, context: OptimizerContext) -> OptimizerContext:
         raise NotImplementedError(
             "Visit method must be implemented in OptimizationStrategy classes."
         )
 
-    def complete(self, plan: LogicalPlan, context: CostBasedOptimizerContext) -> LogicalPlan:
+    def complete(self, plan: LogicalPlan, context: OptimizerContext) -> LogicalPlan:
         raise NotImplementedError(
             "Complete method must be implemented in OptimizationStrategy classes."
         )

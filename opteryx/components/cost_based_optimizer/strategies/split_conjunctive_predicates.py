@@ -18,8 +18,8 @@ from opteryx.components.logical_planner import LogicalPlanStepType
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import get_all_nodes_of_type
 
-from .optimization_strategy import HeuristicOptimizerContext
 from .optimization_strategy import OptimizationStrategy
+from .optimization_strategy import OptimizerContext
 
 
 def _inner_split(node):
@@ -37,9 +37,7 @@ def _inner_split(node):
 
 
 class SplitConjunctivePredicatesStrategy(OptimizationStrategy):
-    def visit(
-        self, node: LogicalPlanNode, context: HeuristicOptimizerContext
-    ) -> HeuristicOptimizerContext:
+    def visit(self, node: LogicalPlanNode, context: OptimizerContext) -> OptimizerContext:
         """
         Conjunctive Predicates (ANDs) can be split and executed in any order to get the
         same result. This means we can split them into separate steps in the plan.
@@ -64,6 +62,7 @@ class SplitConjunctivePredicatesStrategy(OptimizationStrategy):
                 new_node.columns = get_all_nodes_of_type(
                     node.condition, select_nodes=(NodeType.IDENTIFIER,)
                 )
+                new_node.relations = node.relations
                 new_nodes.append(new_node)
         else:
             new_nodes = [node]
@@ -77,6 +76,6 @@ class SplitConjunctivePredicatesStrategy(OptimizationStrategy):
 
         return context
 
-    def complete(self, plan: LogicalPlan, context: HeuristicOptimizerContext) -> LogicalPlan:
+    def complete(self, plan: LogicalPlan, context: OptimizerContext) -> LogicalPlan:
         # No finalization needed for this strategy
         return plan
