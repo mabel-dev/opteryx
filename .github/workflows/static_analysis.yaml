@@ -23,7 +23,7 @@ jobs:
           pip install --upgrade bandit
 
       - name: Execute Test
-        run: bandit -r mabel
+        run: bandit -r opteryx
 
   mypy:
     name: Type Checks
