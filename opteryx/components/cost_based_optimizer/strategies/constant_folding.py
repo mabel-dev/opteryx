@@ -62,7 +62,7 @@ def fold_constants(root: Node) -> Node:
         try:
             result = evaluate(root, table, None)[0]
             return build_literal_node(result, root)
-        except Exception as err:
+        except Exception as err:  # nosec
             # what ever the reason, just skip
             # DEBUG:log (err)
             pass

@@ -885,7 +885,7 @@ class BinderVisitor:
         # The binder skips calculated fields when it performs binding because
         # sometimes it doesn't have access to all of the fields used in the
         # calculation - so we bind these now
-        seen = {}
+        seen: dict = {}
 
         def _inner(branch):
             if branch.fully_bound == False:
