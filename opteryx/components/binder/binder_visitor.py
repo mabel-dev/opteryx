@@ -341,6 +341,7 @@ class BinderVisitor:
     def visit_exit(self, node: Node, context: BindingContext) -> Tuple[Node, BindingContext]:
         # clear the derived schema
         context.schemas.pop("$derived", None)
+        context.schemas["$derived"] = derived.schema()
 
         seen = set()
         needs_qualifier = any(
@@ -880,6 +881,32 @@ class BinderVisitor:
         node, context = self.visit_exit(node, context)
         return node, context
 
+    def post_bind(self, node):
+        # The binder skips calculated fields when it performs binding because
+        # sometimes it doesn't have access to all of the fields used in the
+        # calculation - so we bind these now
+        seen = {}
+
+        def _inner(branch):
+            if branch.fully_bound == False:
+                if branch.schema_column.identity in seen:
+                    branch = seen[branch.schema_column.identity]
+            elif branch.schema_column:
+                seen[branch.schema_column.identity] = branch.copy()
+            for attr in ("left", "right", "centre"):
+                if hasattr(branch, attr) and getattr(branch, attr) is not None:
+                    setattr(branch, attr, _inner(getattr(branch, attr)))
+            if branch.parameters:
+                branch.parameters = [_inner(p) for p in branch.parameters]
+            return branch
+
+        if node.condition:
+            node.condition = _inner(node.condition)
+        if node.columns:
+            # if it doesn't have a schema column here - we can remove it
+            node.columns = [_inner(c) for c in node.columns if c.schema_column is not None]
+        return node
+
     def traverse(
         self, graph: LogicalPlan, node: Node, context: BindingContext
     ) -> Tuple[LogicalPlan, BindingContext]:
@@ -916,5 +943,6 @@ class BinderVisitor:
 
         # Visit node and return updated context
         return_node, context = self.visit_node(graph[node], context=context)
+        return_node = self.post_bind(return_node)
         graph[node] = return_node
         return graph, context

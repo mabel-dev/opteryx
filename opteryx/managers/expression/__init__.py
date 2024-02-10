@@ -143,7 +143,7 @@ def short_cut_and(root, table, context):
     subset_table = table.take(subset_indices)
 
     # Evaluate right expression on the subset table
-    right_result = numpy.array(evaluate(root.right, subset_table, context))
+    right_result = numpy.array(evaluate(root.right, subset_table, None))
 
     # Combine results
     # Iterate over subset_indices and update left_result at those positions
@@ -169,7 +169,7 @@ def short_cut_or(root, table, context):
     subset_table = table.take(subset_indices)
 
     # Evaluate right expression on the subset table
-    right_result = numpy.array(evaluate(root.right, subset_table, context), dtype=numpy.bool_)
+    right_result = numpy.array(evaluate(root.right, subset_table, None), dtype=numpy.bool_)
 
     # Combine results
     # Update left_result with the right_result where left_result was False
@@ -236,8 +236,8 @@ def _inner_evaluate(root: Node, table: Table, context: ExecutionContext):
             return short_cut_and(root, table, context)
 
         if node_type in LOGICAL_OPERATIONS:
-            left = _inner_evaluate(root.left, table, context) if root.left else None
-            right = _inner_evaluate(root.right, table, context) if root.right else None
+            left = _inner_evaluate(root.left, table, context) if root.left else [None]
+            right = _inner_evaluate(root.right, table, context) if root.right else [None]
             return LOGICAL_OPERATIONS[node_type](left, right)
 
         if node_type == NodeType.NOT:
