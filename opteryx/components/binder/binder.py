@@ -192,12 +192,10 @@ def locate_identifier(node: Node, context: Any) -> Tuple[Node, Dict]:
 
 def traversive_recursive_bind(node: Node, context: Any) -> Tuple[Node, Any]:
     # First recurse and do this for all the sub parts of the evaluation plan
-    if node.left:
-        node.left, context = inner_binder(node.left, context)
-    if node.right:
-        node.right, context = inner_binder(node.right, context)
-    if node.centre:
-        node.centre, context = inner_binder(node.centre, context)
+    for attr in ("left", "right", "centre"):
+        if hasattr(node, attr) and getattr(node, attr) is not None:
+            value, context = inner_binder(getattr(node, attr), context)
+            setattr(node, attr, value)
     if node.parameters:
         node.parameters, new_contexts = zip(
             *(inner_binder(parm, context) for parm in node.parameters)
@@ -244,7 +242,10 @@ def inner_binder(node: Node, context: Any) -> Tuple[Node, Any]:
         # If the column exists in the schema, update node and context accordingly.
         if found_column:
             # found_identity = found_column.identity
-            # node, _ = traversive_recursive_bind(node, context)
+            try:
+                node, _ = traversive_recursive_bind(node, context)
+            except:
+                pass
 
             node.schema_column = found_column
             node.query_column = node.alias or column_name

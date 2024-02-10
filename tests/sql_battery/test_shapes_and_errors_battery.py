@@ -1232,6 +1232,17 @@ STATEMENTS = [
         ("SELECT * FROM $planets WHERE not(not(id = 7))", 1, 20, None),
         ("SELECT name from sqlite.planets WHERE NOT (id = 1 or id = 9)", 7, 1, None),
         ("SELECT name from sqlite.planets WHERE NOT (id != 1)", 1, 1, None),
+        ("SELECT * FROM $planets WHERE (id = 2 AND id = 3) OR (id = 4 AND id = 5)", 0, 20, None),
+        ("SELECT * FROM $planets WHERE NOT (id < 3 OR id > 7)", 5, 20, None),
+        ("SELECT * FROM $planets WHERE id >= 1 AND id <= 9", 9, 20, None),
+        ("SELECT * FROM $planets WHERE id = 4 OR NOT (id = 4)", 9, 20, None),
+        ("SELECT * FROM $planets WHERE id > 0", 9, 20, None),
+        ("SELECT * FROM $planets WHERE id <= 9", 9, 20, None),
+        ("SELECT * FROM $planets WHERE (id = 2 OR id = 4) AND NOT (id = 3 OR id = 5)", 2, 20, None),
+        ("SELECT * FROM $planets WHERE (id = 1) XOR (id = 2)", 2, 20, None),
+        ("SELECT * FROM $planets WHERE NOT (id < 3 AND id > 7)", 9, 20, None),
+        ("SELECT * FROM $planets WHERE (id = 3 AND NOT (id = 3))", 0, 20, None),
+        ("SELECT * FROM $planets WHERE (id = 6 OR id != 6)", 9, 20, None),
 
         # Test cases for UNION
         ("SELECT name FROM $planets AS p1 UNION SELECT name FROM $planets AS p2", 9, 1, None),
@@ -1459,6 +1470,8 @@ STATEMENTS = [
         ("SELECT * FROM $planets INNER JOIN (SELECT * FROM UNNEST((1, 2, 3)) AS id) AS PID USING(id)", 3, 20, None),
         ("SELECT * FROM $planets INNER JOIN UNNEST((1, 2, 3)) AS id USING(id)", 3, 20, None),
         ("SELECT * FROM UNNEST((1, 2, 3)) AS id INNER JOIN $planets USING(id)", 3, 20, None),
+        # 1320
+        ("SELECT * FROM $planets WHERE LENGTH(name) BETWEEN 4 AND 6", 6, 20, None),
 ]
 # fmt:on
 
