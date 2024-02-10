@@ -52,7 +52,7 @@ class GcpCloudStorageConnector(BaseConnector, Cacheable, Partitionable, Predicat
         try:
             import requests
             from google.auth.transport.requests import Request
-        except ImportError as err:
+        except ImportError as err:  # pragma: no cover
             raise MissingDependencyError(err.name) from err
 
         BaseConnector.__init__(self, **kwargs)
@@ -82,10 +82,10 @@ class GcpCloudStorageConnector(BaseConnector, Cacheable, Partitionable, Predicat
     def _get_storage_client(self):
         try:
             from google.cloud import storage
-        except ImportError as err:
+        except ImportError as err:  # pragma: no cover
             raise MissingDependencyError(err.name) from err
 
-        if os.environ.get("STORAGE_EMULATOR_HOST"):
+        if os.environ.get("STORAGE_EMULATOR_HOST"):  # pragma: no cover
             from google.auth.credentials import AnonymousCredentials
 
             return storage.Client(credentials=AnonymousCredentials())
@@ -99,7 +99,7 @@ class GcpCloudStorageConnector(BaseConnector, Cacheable, Partitionable, Predicat
         bucket, _, _, _ = paths.get_parts(blob_name)
 
         # Ensure the credentials are valid, refreshing them if necessary
-        if not self.client_credentials.valid:
+        if not self.client_credentials.valid:  # pragma: no cover
             from google.auth.transport.requests import Request
 
             request = Request()
@@ -128,7 +128,7 @@ class GcpCloudStorageConnector(BaseConnector, Cacheable, Partitionable, Predicat
         url = f"https://storage.googleapis.com/storage/v1/b/{bucket}/o?prefix={object_path}&fields=items(name)"
 
         # Ensure the credentials are valid, refreshing them if necessary
-        if not self.client_credentials.valid:
+        if not self.client_credentials.valid:  # pragma: no cover
             from google.auth.transport.requests import Request
 
             request = Request()
@@ -138,7 +138,7 @@ class GcpCloudStorageConnector(BaseConnector, Cacheable, Partitionable, Predicat
         headers = {"Authorization": f"Bearer {self.access_token}"}
         response = self.session.get(url, headers=headers, timeout=30)
 
-        if response.status_code != 200:
+        if response.status_code != 200:  # pragma: no cover
             raise Exception(f"Error fetching blob list: {response.text}")
 
         blob_data = response.json()
@@ -167,7 +167,7 @@ class GcpCloudStorageConnector(BaseConnector, Cacheable, Partitionable, Predicat
                 yield decoder(
                     blob_bytes, projection=columns, selection=predicates, just_schema=just_schema
                 )
-            except UnsupportedFileTypeError:
+            except UnsupportedFileTypeError:  # pragma: no cover
                 pass
 
     def get_dataset_schema(self) -> RelationSchema:
