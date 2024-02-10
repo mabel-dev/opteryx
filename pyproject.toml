@@ -18,3 +18,11 @@ disable = "C0103,C0415"
 
 [tool.mypy]
 exclude = ["bench", "#"]
+
+[tool.bandit]
+exclude_dirs = ["**/test_*.py",]
+skips = ["B101", "B105", "B324", "B608"]
+# B101 - Use of ASSERT
+# B105 - Hardcoded passwords
+# B324 - Use of weak crypto
+# B608 - Hardcoded SQL

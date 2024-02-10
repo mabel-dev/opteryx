@@ -364,7 +364,7 @@ class Cursor(DataFrame):
             in_a_notebook = get_ipython() is not None
             if not in_a_notebook:
                 return f"<opteryx.Cursor {self._state}>"
-        except Exception:
+        except Exception:  # nosec
             pass
         return str(self)
 
