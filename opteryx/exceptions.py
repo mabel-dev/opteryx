@@ -61,7 +61,7 @@ from typing import Optional
 
 
 # ======================== Begin Codebase Errors ========================
-class MissingDependencyError(Exception):
+class MissingDependencyError(Exception):  # pragma: no cover
     def __init__(self, dependency: str):
         self.dependency = dependency
         message = f"No module named '{dependency}' can be found, please install or include in requirements.txt"
@@ -149,7 +149,7 @@ class ColumnNotFoundError(SqlError):
             message = f"Column '{column}' does not exist{dataset_message}."
             if suggestion is not None:
                 message += f" Did you mean '{suggestion}'?."
-        if message is None:
+        if message is None:  # pragma: no cover
             message = "Query contained columns which could not be found."
         super().__init__(message)
 

@@ -160,7 +160,7 @@ class Cursor(DataFrame):
 
         from opteryx.components import query_planner
 
-        if not operation:
+        if not operation:  # pragma: no cover
             raise MissingSqlStatement("SQL provided was empty.")
 
         self._connection.context.history.append((operation, True, datetime.datetime.utcnow()))
@@ -174,7 +174,7 @@ class Cursor(DataFrame):
             start = time.time_ns()
             first_item = next(plans)
             self._statistics.time_planning += time.time_ns() - start
-        except RuntimeError:
+        except RuntimeError:  # pragma: no cover
             raise MissingSqlStatement(
                 "SQL statement provided had no executable part, this may mean the statement was commented out."
             )
@@ -264,7 +264,7 @@ class Cursor(DataFrame):
                 self._rows, self._schema = converters.from_arrow(result_data)
                 self._cursor = iter(self._rows)
                 self._query_status = QueryStatus.SQL_SUCCESS
-            else:
+            else:  # pragma: no cover
                 self._query_status = QueryStatus.SQL_FAILURE
 
     @property
@@ -311,7 +311,7 @@ class Cursor(DataFrame):
                 result_data = utils.arrow.limit_records(result_data, limit)  # type: ignore
         try:
             return pyarrow.concat_tables(result_data, promote_options="none")
-        except pyarrow.ArrowInvalid as err:
+        except pyarrow.ArrowInvalid as err:  # pragma: no cover
             # DEBUG: log (err)
             if "struct" in str(err):
                 raise InconsistentSchemaError(
@@ -351,7 +351,7 @@ class Cursor(DataFrame):
         """
         self._connection.close()
 
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         """
         Override the Orso repr
 

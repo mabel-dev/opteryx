@@ -18,37 +18,7 @@ from pyarrow import compute
 
 from opteryx.exceptions import InvalidFunctionParameterError
 from opteryx.exceptions import SqlError
-from opteryx.utils import dates
 from opteryx.utils.dates import parse_iso
-
-
-def get_time():
-    """
-    Get the current time
-    """
-    return datetime.datetime.utcnow().time()
-
-
-def get_today():
-    """get today"""
-    today = datetime.datetime.utcnow().date()
-    today = datetime.datetime.combine(today, datetime.time.min)
-    return numpy.datetime64(today)
-
-
-def get_now():
-    """get now"""
-    now = datetime.datetime.utcnow()
-    return numpy.datetime64(now)
-
-
-def get_yesterday():
-    """
-    calculate yesterday
-    """
-    yesterday = datetime.datetime.utcnow().date() - datetime.timedelta(days=1)
-    yesterday = datetime.datetime.combine(yesterday, datetime.time.min)
-    return numpy.datetime64(yesterday)
 
 
 def date_part(part, arr):

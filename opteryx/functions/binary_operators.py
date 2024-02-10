@@ -207,8 +207,4 @@ def binary_operations(left, operator: str, right) -> Union[numpy.ndarray, pyarro
         joined = compute.binary_join_element_wise(left, right, empty)
         return joined
 
-    elif operator in ("Gt", "Lt"):
-        if _both_sides_are_type(left, right, LISTS):
-            pass
-
     return operation(left, right)

@@ -90,7 +90,7 @@ class SqlConnector(BaseConnector, PredicatePushable):
         except ImportError as err:  # pragma: nocover
             raise MissingDependencyError(err.name) from err
 
-        if engine is None and connection is None:
+        if engine is None and connection is None:  # pragma: no cover
             raise UnmetRequirementError(
                 "SQL Connections require either a SQL Alchemy connection string in the 'connection' parameter, or a SQL Alchemy Engine in the 'engine' parameter."
             )

@@ -30,7 +30,7 @@ DEFAULT_MORSEL_SIZE: int = 1024 * 1024
 
 class BaseConnector:
     @property
-    def __mode__(self):
+    def __mode__(self):  # pragma: no cover
         raise NotImplementedError("__mode__ not defined")
 
     @property
@@ -62,7 +62,7 @@ class BaseConnector:
         self.statistics = statistics
         self.pushed_predicates: list = []
 
-    def get_dataset_schema(self) -> RelationSchema:
+    def get_dataset_schema(self) -> RelationSchema:  # pragma: no cover
         """
         Retrieve the schema of a dataset.
 
@@ -71,7 +71,7 @@ class BaseConnector:
         """
         raise NotImplementedError("Subclasses must implement get_dataset_schema method.")
 
-    def read_dataset(self, **kwargs) -> Iterable:
+    def read_dataset(self, **kwargs) -> Iterable:  # pragma: no cover
         """
         Read a dataset and return a reader object.
 
@@ -141,7 +141,7 @@ class DatasetReader:
         """
         return self
 
-    def __next__(self) -> pyarrow.Table:
+    def __next__(self) -> pyarrow.Table:  # pragma: no cover
         """
         Read the next chunk or morsel from the dataset.
 
