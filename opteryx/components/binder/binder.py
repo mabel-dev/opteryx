@@ -244,7 +244,7 @@ def inner_binder(node: Node, context: Any) -> Tuple[Node, Any]:
             # found_identity = found_column.identity
             try:
                 node, _ = traversive_recursive_bind(node, context)
-            except:
+            except:  # nosec
                 pass
 
             node.schema_column = found_column
