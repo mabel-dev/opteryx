@@ -7,8 +7,6 @@ import pyarrow
 from pyarrow import compute
 
 from opteryx.compiled import list_ops
-from opteryx.third_party.pyarrow_ops.helpers import columns_to_array
-from opteryx.third_party.pyarrow_ops.helpers import handle_nulls_for_distinct
 
 # Added for Opteryx, comparisons in filter_operators updated to match
 # this set is from sqloxide
@@ -174,19 +172,3 @@ def _inner_filter_operations(arr, operator, value):
     if operator == "AllOpNotEq":
         return list_ops.cython_allop_neq(arr[0], value)
     raise NotImplementedError(f"Operator {operator} is not implemented!")  # pragma: no cover
-
-
-# Drop duplicates
-def drop_duplicates(table, columns=None):
-    """
-    drops duplicates, keeps the first of the set
-
-    MODIFIED FOR OPTERYX
-    """
-    # Gather columns to arr
-    columns_of_interest = columns if columns else table.column_names
-    table = handle_nulls_for_distinct(table, columns_of_interest)
-    arr = columns_to_array(table, columns_of_interest)
-    values, indices = numpy.unique(arr, return_index=True)
-    del values
-    return table.take(indices)

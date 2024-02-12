@@ -259,9 +259,13 @@ def extract_simple_filter(filters, identifier: str = "Name"):
 
 
 def _table_name(branch):
-    if branch["relation"]["Table"]["alias"]:
-        return branch["relation"]["Table"]["alias"]["name"]["value"]
-    return ".".join(part["value"] for part in branch["relation"]["Table"]["name"])
+    keys = ("Table", "Derived")
+    for key in keys:
+        if key in branch["relation"]:
+            break
+    if branch["relation"][key]["alias"]:
+        return branch["relation"][key]["alias"]["name"]["value"]
+    return ".".join(part["value"] for part in branch["relation"][key]["name"])
 
 
 def inner_query_planner(ast_branch):

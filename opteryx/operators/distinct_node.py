@@ -21,11 +21,10 @@ import time
 from typing import Generator
 
 import pyarrow
-from pyarrow import concat_tables
+import pyarrow.compute
 
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
-from opteryx.third_party.pyarrow_ops import drop_duplicates
 
 
 class DistinctNode(BasePlanNode):
@@ -48,12 +47,28 @@ class DistinctNode(BasePlanNode):
         return "Distinction"
 
     def execute(self) -> Generator[pyarrow.Table, None, None]:
+
+        from opteryx.compiled.functions import HashSet
+        from opteryx.compiled.functions import distinct
+
+        # We create a HashSet outside the distinct call, this allows us to pass
+        # the hash to each run of the distinct which means we don't need to concat
+        # all of the tables together to return a result.
+        # The Cython distinct is about 8x faster on a 10 million row dataset with
+        # approx 85k distinct entries (4.8sec vs 0.8sec) and faster on a 177 record
+        # dataset with 7 distinct entries.
+        # Being able to run morsel-by-morsel means if we have a LIMIT clause, we can
+        # limit processing
+        hash_set = HashSet()
+
         morsels = self._producers[0]  # type:ignore
 
         start = time.monotonic_ns()
-        dropped = drop_duplicates(
-            concat_tables(morsels.execute(), promote_options="none"), self._distinct_on
-        )
-        self.statistics.time_distincting += time.monotonic_ns() - start
-
-        yield dropped
+        for morsel in morsels.execute():
+            deduped, hash_set = distinct(
+                morsel, columns=self._distinct_on, seen_hashes=hash_set, return_seen_hashes=True
+            )
+            if deduped.num_rows > 0:
+                self.statistics.time_distincting += time.monotonic_ns() - start
+                yield deduped
+                start = time.monotonic_ns()

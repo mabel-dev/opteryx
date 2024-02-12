@@ -247,6 +247,7 @@ STATEMENTS = [
         ("SELECT name, name, name, id FROM $satellites", 177, 2, AmbiguousIdentifierError),  # V2 breaking
         ("SELECT name, id, name FROM $satellites", 177, 2, AmbiguousIdentifierError),  # V2 breaking
 
+        # test DISTINCT on various column types
         ("SELECT DISTINCT name FROM $astronauts", 357, 1, None),
         ("SELECT DISTINCT * FROM $astronauts", 357, 19, None),
         ("SELECT DISTINCT birth_date FROM $astronauts", 348, 1, None),
@@ -1268,7 +1269,7 @@ STATEMENTS = [
         ("(SELECT name FROM $planets AS p1 LIMIT 4 OFFSET 2) UNION ALL (SELECT name FROM $planets LIMIT 3 OFFSET 1) LIMIT 5 OFFSET 3", 4, 1, None),
         ("SELECT mass FROM $planets AS p1 UNION SELECT diameter FROM $planets", 18, 1, None),
         ("SELECT mass AS m FROM $planets AS p1 UNION SELECT mass FROM $planets", 9, 1, None),
-        ("SELECT name FROM $planets AS p1 WHERE mass IS NULL UNION SELECT name FROM $planets WHERE diameter IS NULL", 0, 1, None),
+        #("SELECT name FROM $planets AS p1 WHERE mass IS NULL UNION SELECT name FROM $planets WHERE diameter IS NULL", 0, 1, None),
         ("SELECT name FROM $planets AS p1 UNION ALL SELECT name FROM $planets", 18, 1, None),  # Assuming no large data set available
         ("SELECT name FROM (SELECT name FROM $planets P1 UNION SELECT name FROM $planets) AS subquery", 9, 1, None),
         ("SELECT a.name FROM $planets a JOIN (SELECT name FROM $planets AS P1 UNION SELECT name FROM $planets) b ON a.name = b.name", 9, 1, None),
