@@ -6,7 +6,7 @@
         "depends": [],
         "extra_compile_args": [
             "-O2",
-            "-std=c++11"
+            "-std=c++14"
         ],
         "include_dirs": [
             "/Users/justin/.pyenv/versions/3.11.6/lib/python3.11/site-packages/numpy/core/include"
@@ -1521,7 +1521,7 @@ struct __pyx_obj_10hash_table_HashTable;
 struct __pyx_obj_10hash_table_HashSet;
 struct __pyx_opt_args_10hash_table_distinct;
 
-/* "hash_table.pyx":82
+/* "hash_table.pyx":81
  *         return column.to_numpy()
  * 
  * cpdef distinct(table, HashSet seen_hashes=None, list columns=None, bint return_seen_hashes=False):             # <<<<<<<<<<<<<<
@@ -5464,8 +5464,8 @@ static PyObject *__pyx_pf_10hash_table_recast_column(CYTHON_UNUSED PyObject *__p
  *         for i in range(n):
  *             # Directly convert each element to a Python string
  *             result_list[i] = str(column[i].as_py())             # <<<<<<<<<<<<<<
- *         # Convert the list of strings to a NumPy array of dtype 'object'
  *         return numpy.array(result_list, dtype=numpy.str_)
+ *     else:
  */
       __pyx_t_3 = __Pyx_GetItemInt(__pyx_v_column, __pyx_v_i, Py_ssize_t, 1, PyInt_FromSsize_t, 0, 0, 0); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 75, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_3);
@@ -5501,34 +5501,34 @@ static PyObject *__pyx_pf_10hash_table_recast_column(CYTHON_UNUSED PyObject *__p
       __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     }
 
-    /* "hash_table.pyx":77
+    /* "hash_table.pyx":76
+ *             # Directly convert each element to a Python string
  *             result_list[i] = str(column[i].as_py())
- *         # Convert the list of strings to a NumPy array of dtype 'object'
  *         return numpy.array(result_list, dtype=numpy.str_)             # <<<<<<<<<<<<<<
  *     else:
  *         # Use PyArrow's to_numpy() for efficient conversion for other column types
  */
     __Pyx_XDECREF(__pyx_r);
-    __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_n_s_numpy); if (unlikely(!__pyx_t_4)) __PYX_ERR(1, 77, __pyx_L1_error)
+    __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_n_s_numpy); if (unlikely(!__pyx_t_4)) __PYX_ERR(1, 76, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_n_s_array); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 77, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_n_s_array); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 76, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) __PYX_ERR(1, 77, __pyx_L1_error)
+    __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) __PYX_ERR(1, 76, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_INCREF(__pyx_v_result_list);
     __Pyx_GIVEREF(__pyx_v_result_list);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_v_result_list)) __PYX_ERR(1, 77, __pyx_L1_error);
-    __pyx_t_3 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 77, __pyx_L1_error)
+    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_v_result_list)) __PYX_ERR(1, 76, __pyx_L1_error);
+    __pyx_t_3 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 76, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __Pyx_GetModuleGlobalName(__pyx_t_5, __pyx_n_s_numpy); if (unlikely(!__pyx_t_5)) __PYX_ERR(1, 77, __pyx_L1_error)
+    __Pyx_GetModuleGlobalName(__pyx_t_5, __pyx_n_s_numpy); if (unlikely(!__pyx_t_5)) __PYX_ERR(1, 76, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
-    __pyx_t_11 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_str); if (unlikely(!__pyx_t_11)) __PYX_ERR(1, 77, __pyx_L1_error)
+    __pyx_t_11 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_str); if (unlikely(!__pyx_t_11)) __PYX_ERR(1, 76, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_11);
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-    if (PyDict_SetItem(__pyx_t_3, __pyx_n_s_dtype, __pyx_t_11) < 0) __PYX_ERR(1, 77, __pyx_L1_error)
+    if (PyDict_SetItem(__pyx_t_3, __pyx_n_s_dtype, __pyx_t_11) < 0) __PYX_ERR(1, 76, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
-    __pyx_t_11 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_t_4, __pyx_t_3); if (unlikely(!__pyx_t_11)) __PYX_ERR(1, 77, __pyx_L1_error)
+    __pyx_t_11 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_t_4, __pyx_t_3); if (unlikely(!__pyx_t_11)) __PYX_ERR(1, 76, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_11);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
@@ -5546,7 +5546,7 @@ static PyObject *__pyx_pf_10hash_table_recast_column(CYTHON_UNUSED PyObject *__p
  */
   }
 
-  /* "hash_table.pyx":80
+  /* "hash_table.pyx":79
  *     else:
  *         # Use PyArrow's to_numpy() for efficient conversion for other column types
  *         return column.to_numpy()             # <<<<<<<<<<<<<<
@@ -5555,7 +5555,7 @@ static PyObject *__pyx_pf_10hash_table_recast_column(CYTHON_UNUSED PyObject *__p
  */
   /*else*/ {
     __Pyx_XDECREF(__pyx_r);
-    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_column, __pyx_n_s_to_numpy); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 80, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_column, __pyx_n_s_to_numpy); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 79, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __pyx_t_4 = NULL;
     __pyx_t_6 = 0;
@@ -5575,7 +5575,7 @@ static PyObject *__pyx_pf_10hash_table_recast_column(CYTHON_UNUSED PyObject *__p
       PyObject *__pyx_callargs[2] = {__pyx_t_4, NULL};
       __pyx_t_11 = __Pyx_PyObject_FastCall(__pyx_t_3, __pyx_callargs+1-__pyx_t_6, 0+__pyx_t_6);
       __Pyx_XDECREF(__pyx_t_4); __pyx_t_4 = 0;
-      if (unlikely(!__pyx_t_11)) __PYX_ERR(1, 80, __pyx_L1_error)
+      if (unlikely(!__pyx_t_11)) __PYX_ERR(1, 79, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_11);
       __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     }
@@ -5608,7 +5608,7 @@ static PyObject *__pyx_pf_10hash_table_recast_column(CYTHON_UNUSED PyObject *__p
   return __pyx_r;
 }
 
-/* "hash_table.pyx":82
+/* "hash_table.pyx":81
  *         return column.to_numpy()
  * 
  * cpdef distinct(table, HashSet seen_hashes=None, list columns=None, bint return_seen_hashes=False):             # <<<<<<<<<<<<<<
@@ -5666,7 +5666,7 @@ static PyObject *__pyx_f_10hash_table_distinct(PyObject *__pyx_v_table, CYTHON_U
   }
   __Pyx_INCREF((PyObject *)__pyx_v_seen_hashes);
 
-  /* "hash_table.pyx":86
+  /* "hash_table.pyx":85
  *     Perform a distinct operation on the given table using an external SeenHashSet.
  *     """
  *     if seen_hashes is None:             # <<<<<<<<<<<<<<
@@ -5676,19 +5676,19 @@ static PyObject *__pyx_f_10hash_table_distinct(PyObject *__pyx_v_table, CYTHON_U
   __pyx_t_1 = (((PyObject *)__pyx_v_seen_hashes) == Py_None);
   if (__pyx_t_1) {
 
-    /* "hash_table.pyx":87
+    /* "hash_table.pyx":86
  *     """
  *     if seen_hashes is None:
  *         seen_hashes = HashSet()             # <<<<<<<<<<<<<<
  * 
  *     if columns is None:
  */
-    __pyx_t_2 = __Pyx_PyObject_CallNoArg(((PyObject *)__pyx_ptype_10hash_table_HashSet)); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 87, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_CallNoArg(((PyObject *)__pyx_ptype_10hash_table_HashSet)); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 86, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
     __Pyx_DECREF_SET(__pyx_v_seen_hashes, ((struct __pyx_obj_10hash_table_HashSet *)__pyx_t_2));
     __pyx_t_2 = 0;
 
-    /* "hash_table.pyx":86
+    /* "hash_table.pyx":85
  *     Perform a distinct operation on the given table using an external SeenHashSet.
  *     """
  *     if seen_hashes is None:             # <<<<<<<<<<<<<<
@@ -5697,7 +5697,7 @@ static PyObject *__pyx_f_10hash_table_distinct(PyObject *__pyx_v_table, CYTHON_U
  */
   }
 
-  /* "hash_table.pyx":89
+  /* "hash_table.pyx":88
  *         seen_hashes = HashSet()
  * 
  *     if columns is None:             # <<<<<<<<<<<<<<
@@ -5707,19 +5707,19 @@ static PyObject *__pyx_f_10hash_table_distinct(PyObject *__pyx_v_table, CYTHON_U
   __pyx_t_1 = (__pyx_v_columns == ((PyObject*)Py_None));
   if (__pyx_t_1) {
 
-    /* "hash_table.pyx":90
+    /* "hash_table.pyx":89
  * 
  *     if columns is None:
  *         columns_of_interest = table.column_names             # <<<<<<<<<<<<<<
  *     else:
  *         columns_of_interest = columns
  */
-    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_table, __pyx_n_s_column_names); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 90, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_table, __pyx_n_s_column_names); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 89, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
     __pyx_v_columns_of_interest = __pyx_t_2;
     __pyx_t_2 = 0;
 
-    /* "hash_table.pyx":89
+    /* "hash_table.pyx":88
  *         seen_hashes = HashSet()
  * 
  *     if columns is None:             # <<<<<<<<<<<<<<
@@ -5729,7 +5729,7 @@ static PyObject *__pyx_f_10hash_table_distinct(PyObject *__pyx_v_table, CYTHON_U
     goto __pyx_L4;
   }
 
-  /* "hash_table.pyx":92
+  /* "hash_table.pyx":91
  *         columns_of_interest = table.column_names
  *     else:
  *         columns_of_interest = columns             # <<<<<<<<<<<<<<
@@ -5742,19 +5742,19 @@ static PyObject *__pyx_f_10hash_table_distinct(PyObject *__pyx_v_table, CYTHON_U
   }
   __pyx_L4:;
 
-  /* "hash_table.pyx":94
+  /* "hash_table.pyx":93
  *         columns_of_interest = columns
  * 
  *     cdef list keep = []             # <<<<<<<<<<<<<<
  *     values = [recast_column(c) for c in table.select(columns_of_interest).itercolumns()]
  * 
  */
-  __pyx_t_2 = PyList_New(0); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 94, __pyx_L1_error)
+  __pyx_t_2 = PyList_New(0); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 93, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_v_keep = ((PyObject*)__pyx_t_2);
   __pyx_t_2 = 0;
 
-  /* "hash_table.pyx":95
+  /* "hash_table.pyx":94
  * 
  *     cdef list keep = []
  *     values = [recast_column(c) for c in table.select(columns_of_interest).itercolumns()]             # <<<<<<<<<<<<<<
@@ -5762,9 +5762,9 @@ static PyObject *__pyx_f_10hash_table_distinct(PyObject *__pyx_v_table, CYTHON_U
  *     cdef int64_t hashed_value
  */
   { /* enter inner scope */
-    __pyx_t_2 = PyList_New(0); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 95, __pyx_L7_error)
+    __pyx_t_2 = PyList_New(0); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 94, __pyx_L7_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_v_table, __pyx_n_s_select); if (unlikely(!__pyx_t_5)) __PYX_ERR(1, 95, __pyx_L7_error)
+    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_v_table, __pyx_n_s_select); if (unlikely(!__pyx_t_5)) __PYX_ERR(1, 94, __pyx_L7_error)
     __Pyx_GOTREF(__pyx_t_5);
     __pyx_t_6 = NULL;
     __pyx_t_7 = 0;
@@ -5784,11 +5784,11 @@ static PyObject *__pyx_f_10hash_table_distinct(PyObject *__pyx_v_table, CYTHON_U
       PyObject *__pyx_callargs[2] = {__pyx_t_6, __pyx_v_columns_of_interest};
       __pyx_t_4 = __Pyx_PyObject_FastCall(__pyx_t_5, __pyx_callargs+1-__pyx_t_7, 1+__pyx_t_7);
       __Pyx_XDECREF(__pyx_t_6); __pyx_t_6 = 0;
-      if (unlikely(!__pyx_t_4)) __PYX_ERR(1, 95, __pyx_L7_error)
+      if (unlikely(!__pyx_t_4)) __PYX_ERR(1, 94, __pyx_L7_error)
       __Pyx_GOTREF(__pyx_t_4);
       __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
     }
-    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_n_s_itercolumns); if (unlikely(!__pyx_t_5)) __PYX_ERR(1, 95, __pyx_L7_error)
+    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_n_s_itercolumns); if (unlikely(!__pyx_t_5)) __PYX_ERR(1, 94, __pyx_L7_error)
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     __pyx_t_4 = NULL;
@@ -5809,7 +5809,7 @@ static PyObject *__pyx_f_10hash_table_distinct(PyObject *__pyx_v_table, CYTHON_U
       PyObject *__pyx_callargs[2] = {__pyx_t_4, NULL};
       __pyx_t_3 = __Pyx_PyObject_FastCall(__pyx_t_5, __pyx_callargs+1-__pyx_t_7, 0+__pyx_t_7);
       __Pyx_XDECREF(__pyx_t_4); __pyx_t_4 = 0;
-      if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 95, __pyx_L7_error)
+      if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 94, __pyx_L7_error)
       __Pyx_GOTREF(__pyx_t_3);
       __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
     }
@@ -5818,9 +5818,9 @@ static PyObject *__pyx_f_10hash_table_distinct(PyObject *__pyx_v_table, CYTHON_U
       __pyx_t_8 = 0;
       __pyx_t_9 = NULL;
     } else {
-      __pyx_t_8 = -1; __pyx_t_5 = PyObject_GetIter(__pyx_t_3); if (unlikely(!__pyx_t_5)) __PYX_ERR(1, 95, __pyx_L7_error)
+      __pyx_t_8 = -1; __pyx_t_5 = PyObject_GetIter(__pyx_t_3); if (unlikely(!__pyx_t_5)) __PYX_ERR(1, 94, __pyx_L7_error)
       __Pyx_GOTREF(__pyx_t_5);
-      __pyx_t_9 = __Pyx_PyObject_GetIterNextFunc(__pyx_t_5); if (unlikely(!__pyx_t_9)) __PYX_ERR(1, 95, __pyx_L7_error)
+      __pyx_t_9 = __Pyx_PyObject_GetIterNextFunc(__pyx_t_5); if (unlikely(!__pyx_t_9)) __PYX_ERR(1, 94, __pyx_L7_error)
     }
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     for (;;) {
@@ -5829,28 +5829,28 @@ static PyObject *__pyx_f_10hash_table_distinct(PyObject *__pyx_v_table, CYTHON_U
           {
             Py_ssize_t __pyx_temp = __Pyx_PyList_GET_SIZE(__pyx_t_5);
             #if !CYTHON_ASSUME_SAFE_MACROS
-            if (unlikely((__pyx_temp < 0))) __PYX_ERR(1, 95, __pyx_L7_error)
+            if (unlikely((__pyx_temp < 0))) __PYX_ERR(1, 94, __pyx_L7_error)
             #endif
             if (__pyx_t_8 >= __pyx_temp) break;
           }
           #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-          __pyx_t_3 = PyList_GET_ITEM(__pyx_t_5, __pyx_t_8); __Pyx_INCREF(__pyx_t_3); __pyx_t_8++; if (unlikely((0 < 0))) __PYX_ERR(1, 95, __pyx_L7_error)
+          __pyx_t_3 = PyList_GET_ITEM(__pyx_t_5, __pyx_t_8); __Pyx_INCREF(__pyx_t_3); __pyx_t_8++; if (unlikely((0 < 0))) __PYX_ERR(1, 94, __pyx_L7_error)
           #else
-          __pyx_t_3 = __Pyx_PySequence_ITEM(__pyx_t_5, __pyx_t_8); __pyx_t_8++; if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 95, __pyx_L7_error)
+          __pyx_t_3 = __Pyx_PySequence_ITEM(__pyx_t_5, __pyx_t_8); __pyx_t_8++; if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 94, __pyx_L7_error)
           __Pyx_GOTREF(__pyx_t_3);
           #endif
         } else {
           {
             Py_ssize_t __pyx_temp = __Pyx_PyTuple_GET_SIZE(__pyx_t_5);
             #if !CYTHON_ASSUME_SAFE_MACROS
-            if (unlikely((__pyx_temp < 0))) __PYX_ERR(1, 95, __pyx_L7_error)
+            if (unlikely((__pyx_temp < 0))) __PYX_ERR(1, 94, __pyx_L7_error)
             #endif
             if (__pyx_t_8 >= __pyx_temp) break;
           }
           #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-          __pyx_t_3 = PyTuple_GET_ITEM(__pyx_t_5, __pyx_t_8); __Pyx_INCREF(__pyx_t_3); __pyx_t_8++; if (unlikely((0 < 0))) __PYX_ERR(1, 95, __pyx_L7_error)
+          __pyx_t_3 = PyTuple_GET_ITEM(__pyx_t_5, __pyx_t_8); __Pyx_INCREF(__pyx_t_3); __pyx_t_8++; if (unlikely((0 < 0))) __PYX_ERR(1, 94, __pyx_L7_error)
           #else
-          __pyx_t_3 = __Pyx_PySequence_ITEM(__pyx_t_5, __pyx_t_8); __pyx_t_8++; if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 95, __pyx_L7_error)
+          __pyx_t_3 = __Pyx_PySequence_ITEM(__pyx_t_5, __pyx_t_8); __pyx_t_8++; if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 94, __pyx_L7_error)
           __Pyx_GOTREF(__pyx_t_3);
           #endif
         }
@@ -5860,7 +5860,7 @@ static PyObject *__pyx_f_10hash_table_distinct(PyObject *__pyx_v_table, CYTHON_U
           PyObject* exc_type = PyErr_Occurred();
           if (exc_type) {
             if (likely(__Pyx_PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) PyErr_Clear();
-            else __PYX_ERR(1, 95, __pyx_L7_error)
+            else __PYX_ERR(1, 94, __pyx_L7_error)
           }
           break;
         }
@@ -5868,7 +5868,7 @@ static PyObject *__pyx_f_10hash_table_distinct(PyObject *__pyx_v_table, CYTHON_U
       }
       __Pyx_XDECREF_SET(__pyx_8genexpr1__pyx_v_c, __pyx_t_3);
       __pyx_t_3 = 0;
-      __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_n_s_recast_column); if (unlikely(!__pyx_t_4)) __PYX_ERR(1, 95, __pyx_L7_error)
+      __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_n_s_recast_column); if (unlikely(!__pyx_t_4)) __PYX_ERR(1, 94, __pyx_L7_error)
       __Pyx_GOTREF(__pyx_t_4);
       __pyx_t_6 = NULL;
       __pyx_t_7 = 0;
@@ -5888,11 +5888,11 @@ static PyObject *__pyx_f_10hash_table_distinct(PyObject *__pyx_v_table, CYTHON_U
         PyObject *__pyx_callargs[2] = {__pyx_t_6, __pyx_8genexpr1__pyx_v_c};
         __pyx_t_3 = __Pyx_PyObject_FastCall(__pyx_t_4, __pyx_callargs+1-__pyx_t_7, 1+__pyx_t_7);
         __Pyx_XDECREF(__pyx_t_6); __pyx_t_6 = 0;
-        if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 95, __pyx_L7_error)
+        if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 94, __pyx_L7_error)
         __Pyx_GOTREF(__pyx_t_3);
         __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
       }
-      if (unlikely(__Pyx_ListComp_Append(__pyx_t_2, (PyObject*)__pyx_t_3))) __PYX_ERR(1, 95, __pyx_L7_error)
+      if (unlikely(__Pyx_ListComp_Append(__pyx_t_2, (PyObject*)__pyx_t_3))) __PYX_ERR(1, 94, __pyx_L7_error)
       __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     }
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
@@ -5906,7 +5906,7 @@ static PyObject *__pyx_f_10hash_table_distinct(PyObject *__pyx_v_table, CYTHON_U
   __pyx_v_values = ((PyObject*)__pyx_t_2);
   __pyx_t_2 = 0;
 
-  /* "hash_table.pyx":98
+  /* "hash_table.pyx":97
  * 
  *     cdef int64_t hashed_value
  *     cdef int i = 0             # <<<<<<<<<<<<<<
@@ -5915,27 +5915,27 @@ static PyObject *__pyx_f_10hash_table_distinct(PyObject *__pyx_v_table, CYTHON_U
  */
   __pyx_v_i = 0;
 
-  /* "hash_table.pyx":100
+  /* "hash_table.pyx":99
  *     cdef int i = 0
  * 
  *     if len(columns_of_interest) > 1:             # <<<<<<<<<<<<<<
  *         for value_tuple in zip(*values):
  *             hashed_value = hash(value_tuple)
  */
-  __pyx_t_8 = PyObject_Length(__pyx_v_columns_of_interest); if (unlikely(__pyx_t_8 == ((Py_ssize_t)-1))) __PYX_ERR(1, 100, __pyx_L1_error)
+  __pyx_t_8 = PyObject_Length(__pyx_v_columns_of_interest); if (unlikely(__pyx_t_8 == ((Py_ssize_t)-1))) __PYX_ERR(1, 99, __pyx_L1_error)
   __pyx_t_1 = (__pyx_t_8 > 1);
   if (__pyx_t_1) {
 
-    /* "hash_table.pyx":101
+    /* "hash_table.pyx":100
  * 
  *     if len(columns_of_interest) > 1:
  *         for value_tuple in zip(*values):             # <<<<<<<<<<<<<<
  *             hashed_value = hash(value_tuple)
  *             if not seen_hashes.contains(hashed_value):
  */
-    __pyx_t_2 = PySequence_Tuple(__pyx_v_values); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 101, __pyx_L1_error)
+    __pyx_t_2 = PySequence_Tuple(__pyx_v_values); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 100, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_5 = __Pyx_PyObject_Call(__pyx_builtin_zip, __pyx_t_2, NULL); if (unlikely(!__pyx_t_5)) __PYX_ERR(1, 101, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyObject_Call(__pyx_builtin_zip, __pyx_t_2, NULL); if (unlikely(!__pyx_t_5)) __PYX_ERR(1, 100, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
     if (likely(PyList_CheckExact(__pyx_t_5)) || PyTuple_CheckExact(__pyx_t_5)) {
@@ -5943,9 +5943,9 @@ static PyObject *__pyx_f_10hash_table_distinct(PyObject *__pyx_v_table, CYTHON_U
       __pyx_t_8 = 0;
       __pyx_t_9 = NULL;
     } else {
-      __pyx_t_8 = -1; __pyx_t_2 = PyObject_GetIter(__pyx_t_5); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 101, __pyx_L1_error)
+      __pyx_t_8 = -1; __pyx_t_2 = PyObject_GetIter(__pyx_t_5); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 100, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_2);
-      __pyx_t_9 = __Pyx_PyObject_GetIterNextFunc(__pyx_t_2); if (unlikely(!__pyx_t_9)) __PYX_ERR(1, 101, __pyx_L1_error)
+      __pyx_t_9 = __Pyx_PyObject_GetIterNextFunc(__pyx_t_2); if (unlikely(!__pyx_t_9)) __PYX_ERR(1, 100, __pyx_L1_error)
     }
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
     for (;;) {
@@ -5954,28 +5954,28 @@ static PyObject *__pyx_f_10hash_table_distinct(PyObject *__pyx_v_table, CYTHON_U
           {
             Py_ssize_t __pyx_temp = __Pyx_PyList_GET_SIZE(__pyx_t_2);
             #if !CYTHON_ASSUME_SAFE_MACROS
-            if (unlikely((__pyx_temp < 0))) __PYX_ERR(1, 101, __pyx_L1_error)
+            if (unlikely((__pyx_temp < 0))) __PYX_ERR(1, 100, __pyx_L1_error)
             #endif
             if (__pyx_t_8 >= __pyx_temp) break;
           }
           #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-          __pyx_t_5 = PyList_GET_ITEM(__pyx_t_2, __pyx_t_8); __Pyx_INCREF(__pyx_t_5); __pyx_t_8++; if (unlikely((0 < 0))) __PYX_ERR(1, 101, __pyx_L1_error)
+          __pyx_t_5 = PyList_GET_ITEM(__pyx_t_2, __pyx_t_8); __Pyx_INCREF(__pyx_t_5); __pyx_t_8++; if (unlikely((0 < 0))) __PYX_ERR(1, 100, __pyx_L1_error)
           #else
-          __pyx_t_5 = __Pyx_PySequence_ITEM(__pyx_t_2, __pyx_t_8); __pyx_t_8++; if (unlikely(!__pyx_t_5)) __PYX_ERR(1, 101, __pyx_L1_error)
+          __pyx_t_5 = __Pyx_PySequence_ITEM(__pyx_t_2, __pyx_t_8); __pyx_t_8++; if (unlikely(!__pyx_t_5)) __PYX_ERR(1, 100, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_5);
           #endif
         } else {
           {
             Py_ssize_t __pyx_temp = __Pyx_PyTuple_GET_SIZE(__pyx_t_2);
             #if !CYTHON_ASSUME_SAFE_MACROS
-            if (unlikely((__pyx_temp < 0))) __PYX_ERR(1, 101, __pyx_L1_error)
+            if (unlikely((__pyx_temp < 0))) __PYX_ERR(1, 100, __pyx_L1_error)
             #endif
             if (__pyx_t_8 >= __pyx_temp) break;
           }
           #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-          __pyx_t_5 = PyTuple_GET_ITEM(__pyx_t_2, __pyx_t_8); __Pyx_INCREF(__pyx_t_5); __pyx_t_8++; if (unlikely((0 < 0))) __PYX_ERR(1, 101, __pyx_L1_error)
+          __pyx_t_5 = PyTuple_GET_ITEM(__pyx_t_2, __pyx_t_8); __Pyx_INCREF(__pyx_t_5); __pyx_t_8++; if (unlikely((0 < 0))) __PYX_ERR(1, 100, __pyx_L1_error)
           #else
-          __pyx_t_5 = __Pyx_PySequence_ITEM(__pyx_t_2, __pyx_t_8); __pyx_t_8++; if (unlikely(!__pyx_t_5)) __PYX_ERR(1, 101, __pyx_L1_error)
+          __pyx_t_5 = __Pyx_PySequence_ITEM(__pyx_t_2, __pyx_t_8); __pyx_t_8++; if (unlikely(!__pyx_t_5)) __PYX_ERR(1, 100, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_5);
           #endif
         }
@@ -5985,7 +5985,7 @@ static PyObject *__pyx_f_10hash_table_distinct(PyObject *__pyx_v_table, CYTHON_U
           PyObject* exc_type = PyErr_Occurred();
           if (exc_type) {
             if (likely(__Pyx_PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) PyErr_Clear();
-            else __PYX_ERR(1, 101, __pyx_L1_error)
+            else __PYX_ERR(1, 100, __pyx_L1_error)
           }
           break;
         }
@@ -5994,51 +5994,51 @@ static PyObject *__pyx_f_10hash_table_distinct(PyObject *__pyx_v_table, CYTHON_U
       __Pyx_XDECREF_SET(__pyx_v_value_tuple, __pyx_t_5);
       __pyx_t_5 = 0;
 
-      /* "hash_table.pyx":102
+      /* "hash_table.pyx":101
  *     if len(columns_of_interest) > 1:
  *         for value_tuple in zip(*values):
  *             hashed_value = hash(value_tuple)             # <<<<<<<<<<<<<<
  *             if not seen_hashes.contains(hashed_value):
  *                 seen_hashes.insert(hashed_value)
  */
-      __pyx_t_10 = PyObject_Hash(__pyx_v_value_tuple); if (unlikely(__pyx_t_10 == ((Py_hash_t)-1))) __PYX_ERR(1, 102, __pyx_L1_error)
+      __pyx_t_10 = PyObject_Hash(__pyx_v_value_tuple); if (unlikely(__pyx_t_10 == ((Py_hash_t)-1))) __PYX_ERR(1, 101, __pyx_L1_error)
       __pyx_v_hashed_value = __pyx_t_10;
 
-      /* "hash_table.pyx":103
+      /* "hash_table.pyx":102
  *         for value_tuple in zip(*values):
  *             hashed_value = hash(value_tuple)
  *             if not seen_hashes.contains(hashed_value):             # <<<<<<<<<<<<<<
  *                 seen_hashes.insert(hashed_value)
  *                 keep.append(i)
  */
-      __pyx_t_1 = ((struct __pyx_vtabstruct_10hash_table_HashSet *)__pyx_v_seen_hashes->__pyx_vtab)->contains(__pyx_v_seen_hashes, __pyx_v_hashed_value); if (unlikely(PyErr_Occurred())) __PYX_ERR(1, 103, __pyx_L1_error)
+      __pyx_t_1 = ((struct __pyx_vtabstruct_10hash_table_HashSet *)__pyx_v_seen_hashes->__pyx_vtab)->contains(__pyx_v_seen_hashes, __pyx_v_hashed_value); if (unlikely(PyErr_Occurred())) __PYX_ERR(1, 102, __pyx_L1_error)
       __pyx_t_11 = (!__pyx_t_1);
       if (__pyx_t_11) {
 
-        /* "hash_table.pyx":104
+        /* "hash_table.pyx":103
  *             hashed_value = hash(value_tuple)
  *             if not seen_hashes.contains(hashed_value):
  *                 seen_hashes.insert(hashed_value)             # <<<<<<<<<<<<<<
  *                 keep.append(i)
  *             i += 1
  */
-        __pyx_t_5 = ((struct __pyx_vtabstruct_10hash_table_HashSet *)__pyx_v_seen_hashes->__pyx_vtab)->insert(__pyx_v_seen_hashes, __pyx_v_hashed_value); if (unlikely(!__pyx_t_5)) __PYX_ERR(1, 104, __pyx_L1_error)
+        __pyx_t_5 = ((struct __pyx_vtabstruct_10hash_table_HashSet *)__pyx_v_seen_hashes->__pyx_vtab)->insert(__pyx_v_seen_hashes, __pyx_v_hashed_value); if (unlikely(!__pyx_t_5)) __PYX_ERR(1, 103, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_5);
         __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
 
-        /* "hash_table.pyx":105
+        /* "hash_table.pyx":104
  *             if not seen_hashes.contains(hashed_value):
  *                 seen_hashes.insert(hashed_value)
  *                 keep.append(i)             # <<<<<<<<<<<<<<
  *             i += 1
  *     else:
  */
-        __pyx_t_5 = __Pyx_PyInt_From_int(__pyx_v_i); if (unlikely(!__pyx_t_5)) __PYX_ERR(1, 105, __pyx_L1_error)
+        __pyx_t_5 = __Pyx_PyInt_From_int(__pyx_v_i); if (unlikely(!__pyx_t_5)) __PYX_ERR(1, 104, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_5);
-        __pyx_t_12 = __Pyx_PyList_Append(__pyx_v_keep, __pyx_t_5); if (unlikely(__pyx_t_12 == ((int)-1))) __PYX_ERR(1, 105, __pyx_L1_error)
+        __pyx_t_12 = __Pyx_PyList_Append(__pyx_v_keep, __pyx_t_5); if (unlikely(__pyx_t_12 == ((int)-1))) __PYX_ERR(1, 104, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
 
-        /* "hash_table.pyx":103
+        /* "hash_table.pyx":102
  *         for value_tuple in zip(*values):
  *             hashed_value = hash(value_tuple)
  *             if not seen_hashes.contains(hashed_value):             # <<<<<<<<<<<<<<
@@ -6047,7 +6047,7 @@ static PyObject *__pyx_f_10hash_table_distinct(PyObject *__pyx_v_table, CYTHON_U
  */
       }
 
-      /* "hash_table.pyx":106
+      /* "hash_table.pyx":105
  *                 seen_hashes.insert(hashed_value)
  *                 keep.append(i)
  *             i += 1             # <<<<<<<<<<<<<<
@@ -6056,7 +6056,7 @@ static PyObject *__pyx_f_10hash_table_distinct(PyObject *__pyx_v_table, CYTHON_U
  */
       __pyx_v_i = (__pyx_v_i + 1);
 
-      /* "hash_table.pyx":101
+      /* "hash_table.pyx":100
  * 
  *     if len(columns_of_interest) > 1:
  *         for value_tuple in zip(*values):             # <<<<<<<<<<<<<<
@@ -6066,7 +6066,7 @@ static PyObject *__pyx_f_10hash_table_distinct(PyObject *__pyx_v_table, CYTHON_U
     }
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-    /* "hash_table.pyx":100
+    /* "hash_table.pyx":99
  *     cdef int i = 0
  * 
  *     if len(columns_of_interest) > 1:             # <<<<<<<<<<<<<<
@@ -6076,7 +6076,7 @@ static PyObject *__pyx_f_10hash_table_distinct(PyObject *__pyx_v_table, CYTHON_U
     goto __pyx_L12;
   }
 
-  /* "hash_table.pyx":108
+  /* "hash_table.pyx":107
  *             i += 1
  *     else:
  *         for value_tuple in values[0]:             # <<<<<<<<<<<<<<
@@ -6084,16 +6084,16 @@ static PyObject *__pyx_f_10hash_table_distinct(PyObject *__pyx_v_table, CYTHON_U
  *                 hashed_value = -14556480 # Apollo 11 Launch, Unix Epoch
  */
   /*else*/ {
-    __pyx_t_2 = __Pyx_GetItemInt_List(__pyx_v_values, 0, long, 1, __Pyx_PyInt_From_long, 1, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 108, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_GetItemInt_List(__pyx_v_values, 0, long, 1, __Pyx_PyInt_From_long, 1, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 107, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
     if (likely(PyList_CheckExact(__pyx_t_2)) || PyTuple_CheckExact(__pyx_t_2)) {
       __pyx_t_5 = __pyx_t_2; __Pyx_INCREF(__pyx_t_5);
       __pyx_t_8 = 0;
       __pyx_t_9 = NULL;
     } else {
-      __pyx_t_8 = -1; __pyx_t_5 = PyObject_GetIter(__pyx_t_2); if (unlikely(!__pyx_t_5)) __PYX_ERR(1, 108, __pyx_L1_error)
+      __pyx_t_8 = -1; __pyx_t_5 = PyObject_GetIter(__pyx_t_2); if (unlikely(!__pyx_t_5)) __PYX_ERR(1, 107, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_5);
-      __pyx_t_9 = __Pyx_PyObject_GetIterNextFunc(__pyx_t_5); if (unlikely(!__pyx_t_9)) __PYX_ERR(1, 108, __pyx_L1_error)
+      __pyx_t_9 = __Pyx_PyObject_GetIterNextFunc(__pyx_t_5); if (unlikely(!__pyx_t_9)) __PYX_ERR(1, 107, __pyx_L1_error)
     }
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
     for (;;) {
@@ -6102,28 +6102,28 @@ static PyObject *__pyx_f_10hash_table_distinct(PyObject *__pyx_v_table, CYTHON_U
           {
             Py_ssize_t __pyx_temp = __Pyx_PyList_GET_SIZE(__pyx_t_5);
             #if !CYTHON_ASSUME_SAFE_MACROS
-            if (unlikely((__pyx_temp < 0))) __PYX_ERR(1, 108, __pyx_L1_error)
+            if (unlikely((__pyx_temp < 0))) __PYX_ERR(1, 107, __pyx_L1_error)
             #endif
             if (__pyx_t_8 >= __pyx_temp) break;
           }
           #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-          __pyx_t_2 = PyList_GET_ITEM(__pyx_t_5, __pyx_t_8); __Pyx_INCREF(__pyx_t_2); __pyx_t_8++; if (unlikely((0 < 0))) __PYX_ERR(1, 108, __pyx_L1_error)
+          __pyx_t_2 = PyList_GET_ITEM(__pyx_t_5, __pyx_t_8); __Pyx_INCREF(__pyx_t_2); __pyx_t_8++; if (unlikely((0 < 0))) __PYX_ERR(1, 107, __pyx_L1_error)
           #else
-          __pyx_t_2 = __Pyx_PySequence_ITEM(__pyx_t_5, __pyx_t_8); __pyx_t_8++; if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 108, __pyx_L1_error)
+          __pyx_t_2 = __Pyx_PySequence_ITEM(__pyx_t_5, __pyx_t_8); __pyx_t_8++; if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 107, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_2);
           #endif
         } else {
           {
             Py_ssize_t __pyx_temp = __Pyx_PyTuple_GET_SIZE(__pyx_t_5);
             #if !CYTHON_ASSUME_SAFE_MACROS
-            if (unlikely((__pyx_temp < 0))) __PYX_ERR(1, 108, __pyx_L1_error)
+            if (unlikely((__pyx_temp < 0))) __PYX_ERR(1, 107, __pyx_L1_error)
             #endif
             if (__pyx_t_8 >= __pyx_temp) break;
           }
           #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-          __pyx_t_2 = PyTuple_GET_ITEM(__pyx_t_5, __pyx_t_8); __Pyx_INCREF(__pyx_t_2); __pyx_t_8++; if (unlikely((0 < 0))) __PYX_ERR(1, 108, __pyx_L1_error)
+          __pyx_t_2 = PyTuple_GET_ITEM(__pyx_t_5, __pyx_t_8); __Pyx_INCREF(__pyx_t_2); __pyx_t_8++; if (unlikely((0 < 0))) __PYX_ERR(1, 107, __pyx_L1_error)
           #else
-          __pyx_t_2 = __Pyx_PySequence_ITEM(__pyx_t_5, __pyx_t_8); __pyx_t_8++; if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 108, __pyx_L1_error)
+          __pyx_t_2 = __Pyx_PySequence_ITEM(__pyx_t_5, __pyx_t_8); __pyx_t_8++; if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 107, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_2);
           #endif
         }
@@ -6133,7 +6133,7 @@ static PyObject *__pyx_f_10hash_table_distinct(PyObject *__pyx_v_table, CYTHON_U
           PyObject* exc_type = PyErr_Occurred();
           if (exc_type) {
             if (likely(__Pyx_PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) PyErr_Clear();
-            else __PYX_ERR(1, 108, __pyx_L1_error)
+            else __PYX_ERR(1, 107, __pyx_L1_error)
           }
           break;
         }
@@ -6142,19 +6142,19 @@ static PyObject *__pyx_f_10hash_table_distinct(PyObject *__pyx_v_table, CYTHON_U
       __Pyx_XDECREF_SET(__pyx_v_value_tuple, __pyx_t_2);
       __pyx_t_2 = 0;
 
-      /* "hash_table.pyx":109
+      /* "hash_table.pyx":108
  *     else:
  *         for value_tuple in values[0]:
  *             if value_tuple != value_tuple:             # <<<<<<<<<<<<<<
  *                 hashed_value = -14556480 # Apollo 11 Launch, Unix Epoch
  *             else:
  */
-      __pyx_t_2 = PyObject_RichCompare(__pyx_v_value_tuple, __pyx_v_value_tuple, Py_NE); __Pyx_XGOTREF(__pyx_t_2); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 109, __pyx_L1_error)
-      __pyx_t_11 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely((__pyx_t_11 < 0))) __PYX_ERR(1, 109, __pyx_L1_error)
+      __pyx_t_2 = PyObject_RichCompare(__pyx_v_value_tuple, __pyx_v_value_tuple, Py_NE); __Pyx_XGOTREF(__pyx_t_2); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 108, __pyx_L1_error)
+      __pyx_t_11 = __Pyx_PyObject_IsTrue(__pyx_t_2); if (unlikely((__pyx_t_11 < 0))) __PYX_ERR(1, 108, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
       if (__pyx_t_11) {
 
-        /* "hash_table.pyx":110
+        /* "hash_table.pyx":109
  *         for value_tuple in values[0]:
  *             if value_tuple != value_tuple:
  *                 hashed_value = -14556480 # Apollo 11 Launch, Unix Epoch             # <<<<<<<<<<<<<<
@@ -6163,7 +6163,7 @@ static PyObject *__pyx_f_10hash_table_distinct(PyObject *__pyx_v_table, CYTHON_U
  */
         __pyx_v_hashed_value = -14556480L;
 
-        /* "hash_table.pyx":109
+        /* "hash_table.pyx":108
  *     else:
  *         for value_tuple in values[0]:
  *             if value_tuple != value_tuple:             # <<<<<<<<<<<<<<
@@ -6173,7 +6173,7 @@ static PyObject *__pyx_f_10hash_table_distinct(PyObject *__pyx_v_table, CYTHON_U
         goto __pyx_L19;
       }
 
-      /* "hash_table.pyx":112
+      /* "hash_table.pyx":111
  *                 hashed_value = -14556480 # Apollo 11 Launch, Unix Epoch
  *             else:
  *                 hashed_value = hash(value_tuple)             # <<<<<<<<<<<<<<
@@ -6181,46 +6181,46 @@ static PyObject *__pyx_f_10hash_table_distinct(PyObject *__pyx_v_table, CYTHON_U
  *                 seen_hashes.insert(hashed_value)
  */
       /*else*/ {
-        __pyx_t_10 = PyObject_Hash(__pyx_v_value_tuple); if (unlikely(__pyx_t_10 == ((Py_hash_t)-1))) __PYX_ERR(1, 112, __pyx_L1_error)
+        __pyx_t_10 = PyObject_Hash(__pyx_v_value_tuple); if (unlikely(__pyx_t_10 == ((Py_hash_t)-1))) __PYX_ERR(1, 111, __pyx_L1_error)
         __pyx_v_hashed_value = __pyx_t_10;
       }
       __pyx_L19:;
 
-      /* "hash_table.pyx":113
+      /* "hash_table.pyx":112
  *             else:
  *                 hashed_value = hash(value_tuple)
  *             if not seen_hashes.contains(hashed_value):             # <<<<<<<<<<<<<<
  *                 seen_hashes.insert(hashed_value)
  *                 keep.append(i)
  */
-      __pyx_t_11 = ((struct __pyx_vtabstruct_10hash_table_HashSet *)__pyx_v_seen_hashes->__pyx_vtab)->contains(__pyx_v_seen_hashes, __pyx_v_hashed_value); if (unlikely(PyErr_Occurred())) __PYX_ERR(1, 113, __pyx_L1_error)
+      __pyx_t_11 = ((struct __pyx_vtabstruct_10hash_table_HashSet *)__pyx_v_seen_hashes->__pyx_vtab)->contains(__pyx_v_seen_hashes, __pyx_v_hashed_value); if (unlikely(PyErr_Occurred())) __PYX_ERR(1, 112, __pyx_L1_error)
       __pyx_t_1 = (!__pyx_t_11);
       if (__pyx_t_1) {
 
-        /* "hash_table.pyx":114
+        /* "hash_table.pyx":113
  *                 hashed_value = hash(value_tuple)
  *             if not seen_hashes.contains(hashed_value):
  *                 seen_hashes.insert(hashed_value)             # <<<<<<<<<<<<<<
  *                 keep.append(i)
  *             i += 1
  */
-        __pyx_t_2 = ((struct __pyx_vtabstruct_10hash_table_HashSet *)__pyx_v_seen_hashes->__pyx_vtab)->insert(__pyx_v_seen_hashes, __pyx_v_hashed_value); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 114, __pyx_L1_error)
+        __pyx_t_2 = ((struct __pyx_vtabstruct_10hash_table_HashSet *)__pyx_v_seen_hashes->__pyx_vtab)->insert(__pyx_v_seen_hashes, __pyx_v_hashed_value); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 113, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_2);
         __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-        /* "hash_table.pyx":115
+        /* "hash_table.pyx":114
  *             if not seen_hashes.contains(hashed_value):
  *                 seen_hashes.insert(hashed_value)
  *                 keep.append(i)             # <<<<<<<<<<<<<<
  *             i += 1
  * 
  */
-        __pyx_t_2 = __Pyx_PyInt_From_int(__pyx_v_i); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 115, __pyx_L1_error)
+        __pyx_t_2 = __Pyx_PyInt_From_int(__pyx_v_i); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 114, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_2);
-        __pyx_t_12 = __Pyx_PyList_Append(__pyx_v_keep, __pyx_t_2); if (unlikely(__pyx_t_12 == ((int)-1))) __PYX_ERR(1, 115, __pyx_L1_error)
+        __pyx_t_12 = __Pyx_PyList_Append(__pyx_v_keep, __pyx_t_2); if (unlikely(__pyx_t_12 == ((int)-1))) __PYX_ERR(1, 114, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-        /* "hash_table.pyx":113
+        /* "hash_table.pyx":112
  *             else:
  *                 hashed_value = hash(value_tuple)
  *             if not seen_hashes.contains(hashed_value):             # <<<<<<<<<<<<<<
@@ -6229,7 +6229,7 @@ static PyObject *__pyx_f_10hash_table_distinct(PyObject *__pyx_v_table, CYTHON_U
  */
       }
 
-      /* "hash_table.pyx":116
+      /* "hash_table.pyx":115
  *                 seen_hashes.insert(hashed_value)
  *                 keep.append(i)
  *             i += 1             # <<<<<<<<<<<<<<
@@ -6238,7 +6238,7 @@ static PyObject *__pyx_f_10hash_table_distinct(PyObject *__pyx_v_table, CYTHON_U
  */
       __pyx_v_i = (__pyx_v_i + 1);
 
-      /* "hash_table.pyx":108
+      /* "hash_table.pyx":107
  *             i += 1
  *     else:
  *         for value_tuple in values[0]:             # <<<<<<<<<<<<<<
@@ -6250,25 +6250,25 @@ static PyObject *__pyx_f_10hash_table_distinct(PyObject *__pyx_v_table, CYTHON_U
   }
   __pyx_L12:;
 
-  /* "hash_table.pyx":118
+  /* "hash_table.pyx":117
  *             i += 1
  * 
  *     if len(keep) > 0:             # <<<<<<<<<<<<<<
  *         distinct_table = table.take(keep)
  *     else:
  */
-  __pyx_t_8 = __Pyx_PyList_GET_SIZE(__pyx_v_keep); if (unlikely(__pyx_t_8 == ((Py_ssize_t)-1))) __PYX_ERR(1, 118, __pyx_L1_error)
+  __pyx_t_8 = __Pyx_PyList_GET_SIZE(__pyx_v_keep); if (unlikely(__pyx_t_8 == ((Py_ssize_t)-1))) __PYX_ERR(1, 117, __pyx_L1_error)
   __pyx_t_1 = (__pyx_t_8 > 0);
   if (__pyx_t_1) {
 
-    /* "hash_table.pyx":119
+    /* "hash_table.pyx":118
  * 
  *     if len(keep) > 0:
  *         distinct_table = table.take(keep)             # <<<<<<<<<<<<<<
  *     else:
  *         distinct_table = table.slice(0, 0)
  */
-    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_table, __pyx_n_s_take); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 119, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_table, __pyx_n_s_take); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 118, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
     __pyx_t_3 = NULL;
     __pyx_t_7 = 0;
@@ -6288,14 +6288,14 @@ static PyObject *__pyx_f_10hash_table_distinct(PyObject *__pyx_v_table, CYTHON_U
       PyObject *__pyx_callargs[2] = {__pyx_t_3, __pyx_v_keep};
       __pyx_t_5 = __Pyx_PyObject_FastCall(__pyx_t_2, __pyx_callargs+1-__pyx_t_7, 1+__pyx_t_7);
       __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
-      if (unlikely(!__pyx_t_5)) __PYX_ERR(1, 119, __pyx_L1_error)
+      if (unlikely(!__pyx_t_5)) __PYX_ERR(1, 118, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_5);
       __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
     }
     __pyx_v_distinct_table = __pyx_t_5;
     __pyx_t_5 = 0;
 
-    /* "hash_table.pyx":118
+    /* "hash_table.pyx":117
  *             i += 1
  * 
  *     if len(keep) > 0:             # <<<<<<<<<<<<<<
@@ -6305,7 +6305,7 @@ static PyObject *__pyx_f_10hash_table_distinct(PyObject *__pyx_v_table, CYTHON_U
     goto __pyx_L22;
   }
 
-  /* "hash_table.pyx":121
+  /* "hash_table.pyx":120
  *         distinct_table = table.take(keep)
  *     else:
  *         distinct_table = table.slice(0, 0)             # <<<<<<<<<<<<<<
@@ -6313,9 +6313,9 @@ static PyObject *__pyx_f_10hash_table_distinct(PyObject *__pyx_v_table, CYTHON_U
  *     if return_seen_hashes:
  */
   /*else*/ {
-    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_v_table, __pyx_n_s_slice); if (unlikely(!__pyx_t_5)) __PYX_ERR(1, 121, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_v_table, __pyx_n_s_slice); if (unlikely(!__pyx_t_5)) __PYX_ERR(1, 120, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
-    __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_5, __pyx_tuple_, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 121, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_5, __pyx_tuple_, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 120, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
     __pyx_v_distinct_table = __pyx_t_2;
@@ -6323,7 +6323,7 @@ static PyObject *__pyx_f_10hash_table_distinct(PyObject *__pyx_v_table, CYTHON_U
   }
   __pyx_L22:;
 
-  /* "hash_table.pyx":123
+  /* "hash_table.pyx":122
  *         distinct_table = table.slice(0, 0)
  * 
  *     if return_seen_hashes:             # <<<<<<<<<<<<<<
@@ -6332,7 +6332,7 @@ static PyObject *__pyx_f_10hash_table_distinct(PyObject *__pyx_v_table, CYTHON_U
  */
   if (__pyx_v_return_seen_hashes) {
 
-    /* "hash_table.pyx":124
+    /* "hash_table.pyx":123
  * 
  *     if return_seen_hashes:
  *         return distinct_table, seen_hashes             # <<<<<<<<<<<<<<
@@ -6340,19 +6340,19 @@ static PyObject *__pyx_f_10hash_table_distinct(PyObject *__pyx_v_table, CYTHON_U
  *         return distinct_table
  */
     __Pyx_XDECREF(__pyx_r);
-    __pyx_t_2 = PyTuple_New(2); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 124, __pyx_L1_error)
+    __pyx_t_2 = PyTuple_New(2); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 123, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
     __Pyx_INCREF(__pyx_v_distinct_table);
     __Pyx_GIVEREF(__pyx_v_distinct_table);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_2, 0, __pyx_v_distinct_table)) __PYX_ERR(1, 124, __pyx_L1_error);
+    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_2, 0, __pyx_v_distinct_table)) __PYX_ERR(1, 123, __pyx_L1_error);
     __Pyx_INCREF((PyObject *)__pyx_v_seen_hashes);
     __Pyx_GIVEREF((PyObject *)__pyx_v_seen_hashes);
-    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_2, 1, ((PyObject *)__pyx_v_seen_hashes))) __PYX_ERR(1, 124, __pyx_L1_error);
+    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_2, 1, ((PyObject *)__pyx_v_seen_hashes))) __PYX_ERR(1, 123, __pyx_L1_error);
     __pyx_r = __pyx_t_2;
     __pyx_t_2 = 0;
     goto __pyx_L0;
 
-    /* "hash_table.pyx":123
+    /* "hash_table.pyx":122
  *         distinct_table = table.slice(0, 0)
  * 
  *     if return_seen_hashes:             # <<<<<<<<<<<<<<
@@ -6361,7 +6361,7 @@ static PyObject *__pyx_f_10hash_table_distinct(PyObject *__pyx_v_table, CYTHON_U
  */
   }
 
-  /* "hash_table.pyx":126
+  /* "hash_table.pyx":125
  *         return distinct_table, seen_hashes
  *     else:
  *         return distinct_table             # <<<<<<<<<<<<<<
@@ -6373,7 +6373,7 @@ static PyObject *__pyx_f_10hash_table_distinct(PyObject *__pyx_v_table, CYTHON_U
     goto __pyx_L0;
   }
 
-  /* "hash_table.pyx":82
+  /* "hash_table.pyx":81
  *         return column.to_numpy()
  * 
  * cpdef distinct(table, HashSet seen_hashes=None, list columns=None, bint return_seen_hashes=False):             # <<<<<<<<<<<<<<
@@ -6468,33 +6468,33 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
           (void)__Pyx_Arg_NewRef_FASTCALL(values[0]);
           kw_args--;
         }
-        else if (unlikely(PyErr_Occurred())) __PYX_ERR(1, 82, __pyx_L3_error)
+        else if (unlikely(PyErr_Occurred())) __PYX_ERR(1, 81, __pyx_L3_error)
         else goto __pyx_L5_argtuple_error;
         CYTHON_FALLTHROUGH;
         case  1:
         if (kw_args > 0) {
           PyObject* value = __Pyx_GetKwValue_FASTCALL(__pyx_kwds, __pyx_kwvalues, __pyx_n_s_seen_hashes);
           if (value) { values[1] = __Pyx_Arg_NewRef_FASTCALL(value); kw_args--; }
-          else if (unlikely(PyErr_Occurred())) __PYX_ERR(1, 82, __pyx_L3_error)
+          else if (unlikely(PyErr_Occurred())) __PYX_ERR(1, 81, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  2:
         if (kw_args > 0) {
           PyObject* value = __Pyx_GetKwValue_FASTCALL(__pyx_kwds, __pyx_kwvalues, __pyx_n_s_columns);
           if (value) { values[2] = __Pyx_Arg_NewRef_FASTCALL(value); kw_args--; }
-          else if (unlikely(PyErr_Occurred())) __PYX_ERR(1, 82, __pyx_L3_error)
+          else if (unlikely(PyErr_Occurred())) __PYX_ERR(1, 81, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  3:
         if (kw_args > 0) {
           PyObject* value = __Pyx_GetKwValue_FASTCALL(__pyx_kwds, __pyx_kwvalues, __pyx_n_s_return_seen_hashes);
           if (value) { values[3] = __Pyx_Arg_NewRef_FASTCALL(value); kw_args--; }
-          else if (unlikely(PyErr_Occurred())) __PYX_ERR(1, 82, __pyx_L3_error)
+          else if (unlikely(PyErr_Occurred())) __PYX_ERR(1, 81, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
         const Py_ssize_t kwd_pos_args = __pyx_nargs;
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values + 0, kwd_pos_args, "distinct") < 0)) __PYX_ERR(1, 82, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values + 0, kwd_pos_args, "distinct") < 0)) __PYX_ERR(1, 81, __pyx_L3_error)
       }
     } else {
       switch (__pyx_nargs) {
@@ -6513,14 +6513,14 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
     __pyx_v_seen_hashes = ((struct __pyx_obj_10hash_table_HashSet *)values[1]);
     __pyx_v_columns = ((PyObject*)values[2]);
     if (values[3]) {
-      __pyx_v_return_seen_hashes = __Pyx_PyObject_IsTrue(values[3]); if (unlikely((__pyx_v_return_seen_hashes == (int)-1) && PyErr_Occurred())) __PYX_ERR(1, 82, __pyx_L3_error)
+      __pyx_v_return_seen_hashes = __Pyx_PyObject_IsTrue(values[3]); if (unlikely((__pyx_v_return_seen_hashes == (int)-1) && PyErr_Occurred())) __PYX_ERR(1, 81, __pyx_L3_error)
     } else {
       __pyx_v_return_seen_hashes = ((int)0);
     }
   }
   goto __pyx_L6_skip;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("distinct", 0, 1, 4, __pyx_nargs); __PYX_ERR(1, 82, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("distinct", 0, 1, 4, __pyx_nargs); __PYX_ERR(1, 81, __pyx_L3_error)
   __pyx_L6_skip:;
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L3_error:;
@@ -6534,8 +6534,8 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_seen_hashes), __pyx_ptype_10hash_table_HashSet, 1, "seen_hashes", 0))) __PYX_ERR(1, 82, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_columns), (&PyList_Type), 1, "columns", 1))) __PYX_ERR(1, 82, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_seen_hashes), __pyx_ptype_10hash_table_HashSet, 1, "seen_hashes", 0))) __PYX_ERR(1, 81, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_columns), (&PyList_Type), 1, "columns", 1))) __PYX_ERR(1, 81, __pyx_L1_error)
   __pyx_r = __pyx_pf_10hash_table_2distinct(__pyx_self, __pyx_v_table, __pyx_v_seen_hashes, __pyx_v_columns, __pyx_v_return_seen_hashes);
 
   /* function exit code */
@@ -6567,7 +6567,7 @@ static PyObject *__pyx_pf_10hash_table_2distinct(CYTHON_UNUSED PyObject *__pyx_s
   __pyx_t_2.seen_hashes = __pyx_v_seen_hashes;
   __pyx_t_2.columns = __pyx_v_columns;
   __pyx_t_2.return_seen_hashes = __pyx_v_return_seen_hashes;
-  __pyx_t_1 = __pyx_f_10hash_table_distinct(__pyx_v_table, 0, &__pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 82, __pyx_L1_error)
+  __pyx_t_1 = __pyx_f_10hash_table_distinct(__pyx_v_table, 0, &__pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 81, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
@@ -7438,7 +7438,7 @@ static int __Pyx_CreateStringTabAndInitStrings(void) {
 static CYTHON_SMALL_CODE int __Pyx_InitCachedBuiltins(void) {
   __pyx_builtin_TypeError = __Pyx_GetBuiltinName(__pyx_n_s_TypeError); if (!__pyx_builtin_TypeError) __PYX_ERR(0, 2, __pyx_L1_error)
   __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) __PYX_ERR(1, 73, __pyx_L1_error)
-  __pyx_builtin_zip = __Pyx_GetBuiltinName(__pyx_n_s_zip); if (!__pyx_builtin_zip) __PYX_ERR(1, 101, __pyx_L1_error)
+  __pyx_builtin_zip = __Pyx_GetBuiltinName(__pyx_n_s_zip); if (!__pyx_builtin_zip) __PYX_ERR(1, 100, __pyx_L1_error)
   __pyx_builtin_MemoryError = __Pyx_GetBuiltinName(__pyx_n_s_MemoryError); if (!__pyx_builtin_MemoryError) __PYX_ERR(0, 68, __pyx_L1_error)
   return 0;
   __pyx_L1_error:;
@@ -7450,14 +7450,14 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__Pyx_InitCachedConstants", 0);
 
-  /* "hash_table.pyx":121
+  /* "hash_table.pyx":120
  *         distinct_table = table.take(keep)
  *     else:
  *         distinct_table = table.slice(0, 0)             # <<<<<<<<<<<<<<
  * 
  *     if return_seen_hashes:
  */
-  __pyx_tuple_ = PyTuple_Pack(2, __pyx_int_0, __pyx_int_0); if (unlikely(!__pyx_tuple_)) __PYX_ERR(1, 121, __pyx_L1_error)
+  __pyx_tuple_ = PyTuple_Pack(2, __pyx_int_0, __pyx_int_0); if (unlikely(!__pyx_tuple_)) __PYX_ERR(1, 120, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple_);
   __Pyx_GIVEREF(__pyx_tuple_);
 
@@ -7559,18 +7559,18 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
   __Pyx_GIVEREF(__pyx_tuple__18);
   __pyx_codeobj__19 = (PyObject*)__Pyx_PyCode_New(1, 0, 0, 4, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__18, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_opteryx_compiled_functions_hash, __pyx_n_s_recast_column, 62, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__19)) __PYX_ERR(1, 62, __pyx_L1_error)
 
-  /* "hash_table.pyx":82
+  /* "hash_table.pyx":81
  *         return column.to_numpy()
  * 
  * cpdef distinct(table, HashSet seen_hashes=None, list columns=None, bint return_seen_hashes=False):             # <<<<<<<<<<<<<<
  *     """
  *     Perform a distinct operation on the given table using an external SeenHashSet.
  */
-  __pyx_tuple__20 = PyTuple_Pack(4, __pyx_n_s_table, __pyx_n_s_seen_hashes, __pyx_n_s_columns, __pyx_n_s_return_seen_hashes); if (unlikely(!__pyx_tuple__20)) __PYX_ERR(1, 82, __pyx_L1_error)
+  __pyx_tuple__20 = PyTuple_Pack(4, __pyx_n_s_table, __pyx_n_s_seen_hashes, __pyx_n_s_columns, __pyx_n_s_return_seen_hashes); if (unlikely(!__pyx_tuple__20)) __PYX_ERR(1, 81, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__20);
   __Pyx_GIVEREF(__pyx_tuple__20);
-  __pyx_codeobj__21 = (PyObject*)__Pyx_PyCode_New(4, 0, 0, 4, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__20, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_opteryx_compiled_functions_hash, __pyx_n_s_distinct, 82, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__21)) __PYX_ERR(1, 82, __pyx_L1_error)
-  __pyx_tuple__22 = PyTuple_Pack(3, Py_None, Py_None, Py_False); if (unlikely(!__pyx_tuple__22)) __PYX_ERR(1, 82, __pyx_L1_error)
+  __pyx_codeobj__21 = (PyObject*)__Pyx_PyCode_New(4, 0, 0, 4, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__20, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_opteryx_compiled_functions_hash, __pyx_n_s_distinct, 81, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__21)) __PYX_ERR(1, 81, __pyx_L1_error)
+  __pyx_tuple__22 = PyTuple_Pack(3, Py_None, Py_None, Py_False); if (unlikely(!__pyx_tuple__22)) __PYX_ERR(1, 81, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__22);
   __Pyx_GIVEREF(__pyx_tuple__22);
 
@@ -8139,17 +8139,17 @@ if (!__Pyx_RefNanny) {
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_recast_column, __pyx_t_2) < 0) __PYX_ERR(1, 62, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "hash_table.pyx":82
+  /* "hash_table.pyx":81
  *         return column.to_numpy()
  * 
  * cpdef distinct(table, HashSet seen_hashes=None, list columns=None, bint return_seen_hashes=False):             # <<<<<<<<<<<<<<
  *     """
  *     Perform a distinct operation on the given table using an external SeenHashSet.
  */
-  __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_10hash_table_3distinct, 0, __pyx_n_s_distinct, NULL, __pyx_n_s_hash_table, __pyx_d, ((PyObject *)__pyx_codeobj__21)); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 82, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_CyFunction_New(&__pyx_mdef_10hash_table_3distinct, 0, __pyx_n_s_distinct, NULL, __pyx_n_s_hash_table, __pyx_d, ((PyObject *)__pyx_codeobj__21)); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 81, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_CyFunction_SetDefaultsTuple(__pyx_t_2, __pyx_tuple__22);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_distinct, __pyx_t_2) < 0) __PYX_ERR(1, 82, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_distinct, __pyx_t_2) < 0) __PYX_ERR(1, 81, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
   /* "(tree fragment)":1

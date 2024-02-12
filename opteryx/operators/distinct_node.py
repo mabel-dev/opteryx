@@ -29,10 +29,13 @@ from opteryx.operators import BasePlanNode
 
 class DistinctNode(BasePlanNode):
     def __init__(self, properties: QueryProperties, **config):
+        from opteryx.compiled.functions import HashSet
+
         super().__init__(properties=properties)
         self._distinct_on = config.get("on")
         if self._distinct_on:
             self._distinct_on = [col.schema_column.identity for col in self._distinct_on]
+        self.hash_set = HashSet()
 
     @property
     def config(self):  # pragma: no cover
@@ -48,7 +51,6 @@ class DistinctNode(BasePlanNode):
 
     def execute(self) -> Generator[pyarrow.Table, None, None]:
 
-        from opteryx.compiled.functions import HashSet
         from opteryx.compiled.functions import distinct
 
         # We create a HashSet outside the distinct call, this allows us to pass
@@ -59,14 +61,16 @@ class DistinctNode(BasePlanNode):
         # dataset with 7 distinct entries.
         # Being able to run morsel-by-morsel means if we have a LIMIT clause, we can
         # limit processing
-        hash_set = HashSet()
 
         morsels = self._producers[0]  # type:ignore
 
         for morsel in morsels.execute():
             start = time.monotonic_ns()
-            deduped, hash_set = distinct(
-                morsel, columns=self._distinct_on, seen_hashes=hash_set, return_seen_hashes=True
+            deduped, self.hash_set = distinct(
+                morsel,
+                columns=self._distinct_on,
+                seen_hashes=self.hash_set,
+                return_seen_hashes=True,
             )
             self.statistics.time_distincting += time.monotonic_ns() - start
             if deduped.num_rows > 0:

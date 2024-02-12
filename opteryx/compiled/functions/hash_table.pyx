@@ -73,7 +73,6 @@ def recast_column(column):
         for i in range(n):
             # Directly convert each element to a Python string
             result_list[i] = str(column[i].as_py())
-        # Convert the list of strings to a NumPy array of dtype 'object'
         return numpy.array(result_list, dtype=numpy.str_)
     else:
         # Use PyArrow's to_numpy() for efficient conversion for other column types
