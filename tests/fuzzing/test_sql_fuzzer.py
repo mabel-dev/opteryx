@@ -20,12 +20,6 @@ from orso.tools import random_int, random_string
 import opteryx
 from opteryx.utils.formatter import format_sql
 
-seed = int(time.time())
-random.seed(seed)
-
-# Log the seed value
-print(f"Random seed: {seed}")
-
 
 def random_value(t):
     if t == OrsoTypes.VARCHAR:
@@ -124,9 +118,15 @@ TEST_CYCLES: int = 250
 
 @pytest.mark.parametrize("i", range(TEST_CYCLES))
 def test_sql_fuzzing(i):
+
+    seed = random_int()
+    random.seed(seed)
+    print(f"Seed: {seed}")
+
     table = TABLES[random.choice(range(len(TABLES)))]
     statement = generate_random_sql_select(table["fields"], table["name"])
     formatted_statement = format_sql(statement)
+
     print(formatted_statement)
 
     start_time = time.time()  # Start timing the query execution
