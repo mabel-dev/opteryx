@@ -20,6 +20,8 @@ from orso.schema import FlatColumn
 from orso.schema import RelationSchema
 from orso.types import OrsoTypes
 
+__all__ = ("read", "schema")
+
 
 def read(end_date=None, variables={}):
     import pyarrow

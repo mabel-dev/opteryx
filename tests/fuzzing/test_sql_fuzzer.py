@@ -9,105 +9,144 @@ import sys
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
+import datetime
+import pytest
 import random
+import time
+
+from orso.types import OrsoTypes
+from orso.tools import random_int, random_string
 
 import opteryx
 from opteryx.utils.formatter import format_sql
 
+seed = int(time.time())
+random.seed(seed)
+
+# Log the seed value
+print(f"Random seed: {seed}")
+
+
+def random_value(t):
+    if t == OrsoTypes.VARCHAR:
+        return f"'{random_string(4)}'"
+    if t in (OrsoTypes.DATE, OrsoTypes.TIMESTAMP):
+        return f"'{datetime.datetime.now() + datetime.timedelta(seconds=random_int())}'"
+    if random.random() < 0.5:
+        return random_int()
+    return random_int() / 1000
+
+
+def generate_condition(columns):
+    where_column = columns[random.choice(range(len(columns)))]
+    while where_column.type in (OrsoTypes.ARRAY, OrsoTypes.STRUCT):
+        where_column = columns[random.choice(range(len(columns)))]
+    if random.random() < 0.1:
+        where_operator = random.choice(["IS", "IS NOT"])
+        where_value = random.choice(["TRUE", "FALSE", "NULL"])
+    elif where_column.type == OrsoTypes.VARCHAR and random.random() < 0.5:
+        where_operator = random.choice(
+            ["LIKE", "ILIKE", "NOT LIKE", "NOT ILIKE", "RLIKE", "NOT RLIKE"]
+        )
+        where_value = (
+            "'" + random_string(8).replace("1", "%").replace("A", "%").replace("6", "_") + "'"
+        )
+    else:
+        where_operator = random.choice(["=", "!=", "<", "<=", ">", ">="])
+        where_value = f"{str(random_value(where_column.type))}"
+    return f"{where_column.name} {where_operator} {where_value}"
+
 
 def generate_random_sql_select(columns, table):
     # Generate a list of column names to select
-    column_list = list(set(random.choices(columns, k=random.randint(1, len(columns)))))
+    column_list = list(set(random.choices(range(len(columns)))))
+    column_list = [columns[i] for i in column_list]
     agg_column = None
     # Add DISTINCT keyword with 20% chance
     if random.random() < 0.2:
-        select_clause = "SELECT DISTINCT " + ", ".join(column_list)
+        select_clause = "SELECT DISTINCT " + ", ".join(c.name for c in column_list)
     elif random.random() < 0.3:
-        agg_func = random.choice(["AVG", "SUM", "MIN", "MAX"])
-        agg_column = random.choice(columns[2:])
-        select_clause = "SELECT " + agg_func + "(" + agg_column + ")"
+        agg_func = random.choice(["MIN", "MAX"])
+        agg_column = columns[random.choice(range(len(columns)))]
+        while agg_column.type in (OrsoTypes.ARRAY, OrsoTypes.STRUCT, OrsoTypes.VARCHAR):
+            agg_column = columns[random.choice(range(len(columns)))]
+        select_clause = "SELECT " + agg_func + "(" + agg_column.name + ")"
+
+        column_list = [c for c in column_list if c.type not in (OrsoTypes.ARRAY, OrsoTypes.STRUCT)]
+    elif random.random() < 0.8:
+        select_clause = "SELECT " + ", ".join(c.name for c in column_list)
     else:
-        select_clause = "SELECT " + ", ".join(column_list)
+        select_clause = "SELECT *"
     # Add table name
     select_clause = select_clause + " FROM " + table
     # Generate a WHERE clause with 70% chance
     if random.random() < 0.7:
-        where_column = random.choice(columns[2:])
-        where_operator = random.choice(["=", "!=", "<", "<=", ">", ">="])
-        where_value = str(random.randint(1, 1000) / 10)
-        where_clause = f"{where_column} {where_operator} {where_value}"
+        where_clause = generate_condition(columns)
         select_clause = f"{select_clause} WHERE {where_clause}"
         # add an abitrary number of additional conditions
         while random.random() < 0.3:
             linking_condition = random.choice(["AND", "OR", "AND NOT"])
-            where_column = random.choice(columns[2:])
-            where_operator = random.choice(["=", "!=", "<", "<=", ">", ">="])
-            where_value = str(random.randint(1, 100))
-            where_clause = f"{where_column} {where_operator} {where_value}"
+            where_clause = generate_condition(columns)
             select_clause = f"{select_clause} {linking_condition} {where_clause}"
     # Add GROUP BY clause with 40% chance
     if agg_column and random.random() < 0.4:
-        select_clause = select_clause + " GROUP BY " + ", ".join(column_list + [agg_column])
+        column_list = [c.name for c in column_list]
+        select_clause = select_clause + " GROUP BY " + ", ".join(column_list + [agg_column.name])
     # Add ORDER BY clause with 60% chance
     if not agg_column and random.random() < 0.6:
-        order_column = random.choice(column_list)
-        order_direction = random.choice(["ASC", "DESC"])
-        select_clause = select_clause + " ORDER BY " + order_column + " " + order_direction
+        order_column = columns[random.choice(range(len(columns)))]
+        if order_column.type not in (OrsoTypes.ARRAY, OrsoTypes.STRUCT):
+            order_direction = random.choice(["ASC", "DESC", ""])
+            select_clause = select_clause + " ORDER BY " + order_column.name + " " + order_direction
 
     return select_clause
 
 
+from opteryx import virtual_datasets
+
 TABLES = [
     {
-        "name": "$planets",
-        "fields": [
-            "id",
-            "name",
-            "mass",
-            "diameter",
-            "density",
-            "gravity",
-            "escapeVelocity",
-            "rotationPeriod",
-            "lengthOfDay",
-            "distanceFromSun",
-            "perihelion",
-            "aphelion",
-            "orbitalPeriod",
-            "orbitalVelocity",
-            "orbitalInclination",
-            "orbitalEccentricity",
-            "obliquityToOrbit",
-            "meanTemperature",
-            "surfacePressure",
-            "numberOfMoons",
-        ],
+        "name": virtual_datasets.planets.schema().name,
+        "fields": virtual_datasets.planets.schema().columns,
     },
     {
-        "name": "$satellites",
-        "fields": ["id", "name", "planetId", "gm", "radius", "density", "magnitude", "albedo"],
+        "name": virtual_datasets.satellites.schema().name,
+        "fields": virtual_datasets.satellites.schema().columns,
+    },
+    {
+        "name": virtual_datasets.astronauts.schema().name,
+        "fields": virtual_datasets.astronauts.schema().columns,
     },
 ]
 
 TEST_CYCLES: int = 250
 
 
-def test_sql_fuzzing():
-    for i in range(TEST_CYCLES):
-        table = TABLES[random.choice(range(len(TABLES)))]
-        statement = generate_random_sql_select(table["fields"], table["name"])
-        print(format_sql(statement))
+@pytest.mark.parametrize("i", range(TEST_CYCLES))
+def test_sql_fuzzing(i):
+    table = TABLES[random.choice(range(len(TABLES)))]
+    statement = generate_random_sql_select(table["fields"], table["name"])
+    formatted_statement = format_sql(statement)
+    print(formatted_statement)
+
+    start_time = time.time()  # Start timing the query execution
+    try:
         res = opteryx.query(statement)
-        try:
-            print(res.shape)
-        except Exception as e:
-            print()
-            print(e)
-            raise e
-    print("")
+        execution_time = time.time() - start_time  # Measure execution time
+        print(f"Shape: {res.shape}, Execution Time: {execution_time:.2f} seconds")
+        # Additional success criteria checks can be added here
+    except Exception as e:
+        import traceback
+
+        print(f"\033[0;31mError in Test Cycle {i+1}\033[0m: {e}")
+        print(traceback.print_exc())
+        # Log failing statement and error for analysis
+        raise e
+    print()
 
 
 if __name__ == "__main__":  # pragma: no cover
-    test_sql_fuzzing()
+    for i in range(TEST_CYCLES):
+        test_sql_fuzzing(i)
 
     print("✅ okay")
