@@ -63,12 +63,11 @@ class DistinctNode(BasePlanNode):
 
         morsels = self._producers[0]  # type:ignore
 
-        start = time.monotonic_ns()
         for morsel in morsels.execute():
+            start = time.monotonic_ns()
             deduped, hash_set = distinct(
                 morsel, columns=self._distinct_on, seen_hashes=hash_set, return_seen_hashes=True
             )
+            self.statistics.time_distincting += time.monotonic_ns() - start
             if deduped.num_rows > 0:
-                self.statistics.time_distincting += time.monotonic_ns() - start
                 yield deduped
-                start = time.monotonic_ns()
