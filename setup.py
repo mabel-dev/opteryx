@@ -86,6 +86,13 @@ extensions = [
         include_dirs=[numpy.get_include()],
         extra_compile_args=COMPILE_FLAGS,
     ),
+    Extension(
+        name="hash_table",
+        sources=["opteryx/compiled/functions/hash_table.pyx"],
+        include_dirs=[numpy.get_include()],
+        language="c++",
+        extra_compile_args=COMPILE_FLAGS + ["-std=c++11"],
+    ),
 ]
 
 setup_config = {

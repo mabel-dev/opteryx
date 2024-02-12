@@ -1,4 +1,5 @@
 import numpy as np
+import pyarrow
 
 from cjoin import cython_inner_join
 from cjoin import cython_left_join
@@ -10,7 +11,16 @@ from .helpers import groupify_array
 def align_tables(source_table, append_table, source_indices, append_indices):
     # If either source_indices or append_indices is empty, return the source_table taken with source_indices immediately
     if len(source_indices) == 0 or len(append_indices) == 0:
-        return source_table.take(source_indices)
+        # Combine schemas from both tables
+        combined_schema = pyarrow.schema([])
+        for field in source_table.schema:
+            combined_schema = combined_schema.append(field)
+        for field in append_table.schema:
+            if field.name not in combined_schema.names:
+                combined_schema = combined_schema.append(field)
+
+        # Create and return an empty table with the combined schema
+        return pyarrow.Table.from_arrays([[] * len(combined_schema)], schema=combined_schema)
 
     # Take the rows from source_table at the specified source_indices
     aligned_table = source_table.take(source_indices)
