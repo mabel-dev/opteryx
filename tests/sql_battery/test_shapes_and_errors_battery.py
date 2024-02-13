@@ -1473,6 +1473,8 @@ STATEMENTS = [
         ("SELECT * FROM UNNEST((1, 2, 3)) AS id INNER JOIN $planets USING(id)", 3, 20, None),
         # 1320
         ("SELECT * FROM $planets WHERE LENGTH(name) BETWEEN 4 AND 6", 6, 20, None),
+        # 1438
+        ("SELECT * FROM $planets, $satellites, $astronauts", None, None, UnsupportedSyntaxError),
 ]
 # fmt:on
 

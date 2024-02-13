@@ -284,6 +284,8 @@ def inner_query_planner(ast_branch):
         inner_plan += sub_plan
 
     # If there's any peer relations, they are implicit cross joins
+    if len(_relations) > 2:
+        raise UnsupportedSyntaxError("Cannot CROSS JOIN more than two relations.")
     if len(_relations) > 1:
         join_step = LogicalPlanNode(node_type=LogicalPlanStepType.Join)
         join_step.type = "cross join"

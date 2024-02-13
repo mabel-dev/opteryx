@@ -36,6 +36,8 @@ from orso.schema import FlatColumn
 from orso.schema import RelationSchema
 from orso.types import OrsoTypes
 
+__all__ = ("read", "schema")
+
 
 def read(*args):
     import base64

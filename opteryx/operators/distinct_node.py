@@ -63,6 +63,7 @@ class DistinctNode(BasePlanNode):
         # limit processing
 
         morsels = self._producers[0]  # type:ignore
+        at_least_one = False
 
         for morsel in morsels.execute():
             start = time.monotonic_ns()
@@ -73,5 +74,6 @@ class DistinctNode(BasePlanNode):
                 return_seen_hashes=True,
             )
             self.statistics.time_distincting += time.monotonic_ns() - start
-            if deduped.num_rows > 0:
+            if not at_least_one or deduped.num_rows > 0:
                 yield deduped
+                at_least_one = True
