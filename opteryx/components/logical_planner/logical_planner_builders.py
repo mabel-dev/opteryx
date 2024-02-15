@@ -353,7 +353,7 @@ def in_list(branch, alias: Optional[List[str]] = None, key=None):
 
 def in_subquery(branch, alias: Optional[List[str]] = None, key=None):
     # if it's a sub-query we create a plan for it
-    from opteryx.components.logical_planner import plan_query
+    from opteryx.components.logical_planner.logical_planner import plan_query
 
     left = build(branch["expr"])
     ast = {}
