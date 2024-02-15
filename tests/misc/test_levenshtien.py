@@ -5,7 +5,7 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import pytest
 
-from opteryx.third_party.levenshtein import levenshtein
+from opteryx.compiled.levenshtein import levenshtein
 
 # fmt:off
 TESTS = [

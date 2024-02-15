@@ -300,10 +300,11 @@ def rtrim(*args):
 
 
 def levenshtein(a, b):
-    from opteryx.third_party.levenshtein import levenshtein as lev
+    from opteryx.compiled.levenshtein import levenshtein as lev
 
-    def _outer():
-        for index, value in enumerate(a):
-            yield lev(value, b[index])
+    # Convert numpy arrays to lists
+    a_list = a.tolist()
+    b_list = b.tolist()
 
-    return list(_outer())
+    # Use zip to iterate over pairs of elements from a and b
+    return [lev(value_a, value_b) for value_a, value_b in zip(a_list, b_list)]
