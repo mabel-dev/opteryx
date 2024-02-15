@@ -1475,6 +1475,8 @@ STATEMENTS = [
         ("SELECT * FROM $planets WHERE LENGTH(name) BETWEEN 4 AND 6", 6, 20, None),
         # 1438
         ("SELECT * FROM $planets, $satellites, $astronauts", None, None, UnsupportedSyntaxError),
+        # 1448
+        ("SELECT COUNT(*), planetId FROM $satellites", None, None, SqlError),
 ]
 # fmt:on
 

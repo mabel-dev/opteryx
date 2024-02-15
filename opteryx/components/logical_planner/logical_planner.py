@@ -58,7 +58,7 @@ from typing import Tuple
 from orso.tools import random_string
 from orso.types import OrsoTypes
 
-from opteryx.components import logical_planner_builders
+from opteryx.components.logical_planner import logical_planner_builders
 from opteryx.exceptions import UnsupportedSyntaxError
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import format_expression
@@ -349,6 +349,17 @@ def inner_query_planner(ast_branch):
         aggregate_step = LogicalPlanNode(node_type=LogicalPlanStepType.Aggregate)
         aggregate_step.groups = _groups
         aggregate_step.aggregates = _aggregates
+
+        known_columns = set(get_all_nodes_of_type(_groups + _aggregates, (NodeType.IDENTIFIER,)))
+        project_columns = set(get_all_nodes_of_type(_projection, (NodeType.IDENTIFIER,)))
+
+        if project_columns - known_columns:
+            from opteryx.exceptions import SqlError
+
+            column = (project_columns - known_columns).pop().source_column
+            error = f"Column '{column}' must appear in the `GROUP BY` clause or must be part of an aggregate function. Either add it to the `GROUP BY` list, or add an aggregation such as `MIN({column})`."
+            raise SqlError(error)
+
         previous_step_id, step_id = step_id, random_string()
         inner_plan.add_node(step_id, aggregate_step)
         if previous_step_id is not None:
