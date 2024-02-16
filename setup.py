@@ -87,6 +87,12 @@ extensions = [
         extra_compile_args=COMPILE_FLAGS,
     ),
     Extension(
+        name="ip_address",
+        sources=["opteryx/compiled/functions/ip_address.pyx"],
+        include_dirs=[numpy.get_include()],
+        extra_compile_args=COMPILE_FLAGS,
+    ),
+    Extension(
         name="hash_table",
         sources=["opteryx/compiled/functions/hash_table.pyx"],
         include_dirs=[numpy.get_include()],

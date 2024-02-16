@@ -120,14 +120,12 @@ def _ip_containment(left: List[Optional[str]], right: List[str]) -> List[Optiona
         List[Optional[bool]]:
             A list of boolean values indicating if each corresponding IP in 'left' is in 'right'.
     """
-    from ipaddress import AddressValueError
-    from ipaddress import IPv4Address
-    from ipaddress import IPv4Network
+
+    from opteryx.compiled.functions import ip_in_cidr
 
     try:
-        network = IPv4Network(right[0], strict=False)
-        return [(IPv4Address(ip) in network) if ip is not None else None for ip in left]
-    except AddressValueError as err:
+        return ip_in_cidr(left, str(right[0]))
+    except (IndexError, AttributeError, ValueError) as err:
         from opteryx.exceptions import IncorrectTypeError
 
         raise IncorrectTypeError(
