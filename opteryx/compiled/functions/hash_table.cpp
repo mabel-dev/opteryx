@@ -6,7 +6,7 @@
         "depends": [],
         "extra_compile_args": [
             "-O2",
-            "-std=c++14"
+            "-std=c++11"
         ],
         "include_dirs": [
             "/Users/justin/.pyenv/versions/3.11.6/lib/python3.11/site-packages/numpy/core/include"

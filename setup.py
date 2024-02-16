@@ -63,7 +63,7 @@ extensions = [
     ),
     Extension(
         name="clevenshtein",
-        sources=["opteryx/third_party/levenshtein/clevenshtein.pyx"],
+        sources=["opteryx/compiled/levenshtein/clevenshtein.pyx"],
         extra_compile_args=COMPILE_FLAGS,
     ),
     Extension(
