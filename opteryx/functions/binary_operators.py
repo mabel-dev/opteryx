@@ -179,7 +179,7 @@ def binary_operations(left, operator: str, right) -> Union[numpy.ndarray, pyarro
     if operation is None:
         raise NotImplementedError(f"Operator `{operator}` is not implemented!")
 
-    if operator in ["Minus", "Plus"]:
+    if operator in ("Minus", "Plus"):
         if _either_side_is_type(left, right, INTERVALS):
             return (
                 _date_minus_interval(left, right)
