@@ -18,8 +18,6 @@ from typing import Iterator
 from typing import Optional
 
 import pyarrow
-from orjson import dumps
-from orjson import loads
 
 INTERNAL_BATCH_SIZE = 500
 

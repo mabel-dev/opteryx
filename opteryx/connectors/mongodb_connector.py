@@ -12,8 +12,7 @@
 
 """
 A MongoDB Reader
-This is a light-weight MongoDB reader to fulfil a specific purpose,
-it needs some work to make it fully reusable.
+This is a light-weight MongoDB reader.
 
 Based on the now deprecated Mabel MongoDB reader
 https://github.com/mabel-dev/mabel/blob/6bcd978b90870187d5eff939be3f5845a3cdf900/mabel/adapters/mongo/mongodb_reader.py
@@ -27,7 +26,6 @@ from orso.schema import RelationSchema
 
 from opteryx.connectors.base.base_connector import INITIAL_CHUNK_SIZE
 from opteryx.connectors.base.base_connector import BaseConnector
-from opteryx.connectors.base.base_connector import DatasetReader
 from opteryx.exceptions import DatasetNotFoundError
 from opteryx.exceptions import MissingDependencyError
 from opteryx.exceptions import UnmetRequirementError
