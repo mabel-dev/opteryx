@@ -30,6 +30,7 @@ should work in our favour.
 This is a hash join, this is completely rewritten from the earlier
 pyarrow_ops implementation which was a variation of a sort-merge join.
 """
+import time
 from typing import Generator
 
 import pyarrow
@@ -112,6 +113,8 @@ class InnerJoinNode(BasePlanNode):
         left_node = self._producers[0]  # type:ignore
         right_node = self._producers[1]  # type:ignore
 
+        start = time.monotonic_ns()
+
         left_relation = pyarrow.concat_tables(left_node.execute(), promote_options="none")
         # in place until #1295 resolved
         if not self._left_columns[0] in left_relation.column_names:
@@ -127,6 +130,6 @@ class InnerJoinNode(BasePlanNode):
                 join_columns=self._right_columns,
                 hash_table=left_hash,
             )
-            #                    coalesce_keys=self._using is not None,
-
+            self.statistics.time_inner_join += time.monotonic_ns() - start
             yield new_morsel
+            start = time.monotonic_ns()
