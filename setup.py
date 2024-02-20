@@ -51,12 +51,6 @@ except:
 
 extensions = [
     Extension(
-        name="cjoin",
-        sources=["opteryx/third_party/pyarrow_ops/cjoin.pyx"],
-        include_dirs=[numpy.get_include()],
-        extra_compile_args=COMPILE_FLAGS,
-    ),
-    Extension(
         name="csoundex",
         sources=["opteryx/third_party/fuzzy/csoundex.pyx"],
         extra_compile_args=COMPILE_FLAGS,
