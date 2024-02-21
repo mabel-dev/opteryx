@@ -273,6 +273,32 @@ def avro_decoder(buffer, projection: List = None, selection=None, just_schema: b
     return table
 
 
+def ipc_decoder(buffer, projection: List = None, selection=None, just_schema: bool = False):
+    from itertools import chain
+
+    from pyarrow import ipc
+
+    stream = io.BytesIO(buffer)
+    reader = ipc.open_stream(stream)
+
+    batch_one = next(reader, None)
+    if batch_one is None:
+        return None
+
+    schema = batch_one.schema
+
+    if just_schema:
+        return convert_arrow_schema_to_orso_schema(schema)
+
+    table = pyarrow.Table.from_batches([batch for batch in chain([batch_one], reader)])
+    if selection:
+        table = filter_records(selection, table)
+    if projection:
+        table = post_read_projector(table, projection)
+
+    return table
+
+
 # for types we know about, set up how we handle them
 KNOWN_EXTENSIONS: Dict[str, Tuple[Callable, str]] = {
     "avro": (avro_decoder, ExtentionType.DATA),
@@ -280,6 +306,7 @@ KNOWN_EXTENSIONS: Dict[str, Tuple[Callable, str]] = {
     "ignore": (do_nothing, ExtentionType.CONTROL),
     "arrow": (arrow_decoder, ExtentionType.DATA),  # feather
     "csv": (csv_decoder, ExtentionType.DATA),
+    "ipc": (ipc_decoder, ExtentionType.DATA),
     "jsonl": (jsonl_decoder, ExtentionType.DATA),
     "orc": (orc_decoder, ExtentionType.DATA),
     "parquet": (parquet_decoder, ExtentionType.DATA),
