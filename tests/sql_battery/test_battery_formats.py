@@ -53,6 +53,10 @@ STATEMENTS = [
         # .json.parquet - appears to be handled incorrectly
         ("SELECT * FROM testdata.flat.formats.misnamed_parquet WITH (NO_PARTITION)", 100000, 13, False),
         ("SELECT user_name, user_verified FROM testdata.flat.formats.misnamed_parquet WITH(NO_PARTITION) WHERE user_name ILIKE '%news%'", 122, 2, False),
+
+        # PyArrow IPC streams
+        ("SELECT * FROM testdata.flat.formats.ipc", 100000, 13, False),
+        ("SELECT user_name, user_verified FROM testdata.flat.formats.ipc WHERE user_name ILIKE '%news%'", 122, 2, False),
     ]
 # fmt:on
 
