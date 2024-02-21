@@ -43,13 +43,15 @@ def is_complete_and_not_invalid(blobs, as_at):
     complete_suffix = f"{as_at}{OS_SEP}frame.complete"
     invalid_suffix = f"{as_at}{OS_SEP}frame.ignore"
 
-    complete, ignore = zip(
-        *(
-            (complete_suffix in blob, invalid_suffix in blob)
-            for blob in blobs
-            if f"{OS_SEP}frame." in blob
-        )
+    frame_blobs = (
+        (complete_suffix in blob, invalid_suffix in blob)
+        for blob in blobs
+        if f"{as_at}{OS_SEP}frame." in blob
     )
+
+    first_item = next(frame_blobs, (False, False))
+
+    complete, ignore = zip(first_item, *frame_blobs)
 
     return any(complete) and not any(ignore)
 

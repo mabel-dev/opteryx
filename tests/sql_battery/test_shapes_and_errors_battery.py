@@ -1478,6 +1478,8 @@ STATEMENTS = [
         ("SELECT * FROM $planets, $satellites, $astronauts", None, None, UnsupportedSyntaxError),
         # 1448
         ("SELECT COUNT(*), planetId FROM $satellites", None, None, SqlError),
+        # 1462 - unhandled exception when working with empty datasets
+        ("SELECT * FROM testdata.partitioned.empty FOR '2000-01-01'", None, None, EmptyDatasetError),
 ]
 # fmt:on
 

@@ -353,7 +353,9 @@ class EmptyDatasetError(DataError):
 
     def __init__(self, dataset: str):
         self.dataset = dataset
-        message = f"The requested dataset, '{dataset}', appears to exist but no matching partitions were found."
+        message = (
+            f"The requested dataset, '{dataset}', was found, but there was no valid partition."
+        )
         super().__init__(message)
 
 
