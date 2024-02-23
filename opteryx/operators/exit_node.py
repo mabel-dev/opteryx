@@ -64,6 +64,14 @@ class ExitNode(BasePlanNode):
                 message=f"Query result contains multiple instances of the same column(s) - `{'`, `'.join(matches)}`"
             )
 
+        if len(set(final_names)) != len(final_names):  # we have duplicate names
+            final_names = []
+            for column in self.columns:
+                if column.schema_column.origin:
+                    final_names.append(f"{column.schema_column.origin[0]}.{column.current_name}")
+                else:
+                    final_names.append(column.qualified_name)
+
         self.statistics.time_exiting += time.monotonic_ns() - start
         for morsel in morsels.execute():
             start = time.monotonic_ns()
