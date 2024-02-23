@@ -35,6 +35,33 @@ def _add_condition(existing_condition, new_condition):
     return _and
 
 
+IN_REWRITES = {"InList": "Eq", "NotInList": "NotEq"}
+LIKE_REWRITES = {"Like": "Eq", "NotList": "NotEq"}
+
+
+def _rewrite_predicate(predicate):
+    """
+    Rewrite individual predicates
+    """
+    if predicate.value in LIKE_REWRITES:
+        if (
+            predicate.right.node_type == NodeType.LITERAL
+            and "%" not in predicate.right.value
+            and "_" not in predicate.right.value
+        ):
+            predicate.value = LIKE_REWRITES[predicate.value]
+            return predicate
+    if predicate.value in IN_REWRITES:
+        if predicate.right.node_type == NodeType.LITERAL and len(predicate.right.value) == 1:
+            predicate.value = IN_REWRITES[predicate.value]
+            predicate.right.value = predicate.right.value.pop()
+            predicate.right.type = predicate.right.sub_type
+            predicate.right.sub_type = None
+            return predicate
+
+    return predicate
+
+
 class PredicatePushdownStrategy(OptimizationStrategy):
     def visit(self, node: LogicalPlanNode, context: OptimizerContext) -> OptimizerContext:
         if not context.optimized_plan:
@@ -60,6 +87,9 @@ class PredicatePushdownStrategy(OptimizationStrategy):
                 # record where the node was, so we can put it back
                 node.nid = context.node_id
                 node.plan_path = context.optimized_plan.trace_to_root(context.node_id)
+
+                node.condition = _rewrite_predicate(node.condition)
+
                 context.collected_predicates.append(node)
                 context.optimized_plan.remove_node(context.node_id, heal=True)
 
