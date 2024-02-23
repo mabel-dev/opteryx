@@ -13,13 +13,13 @@ jobs:
   build_wheels:
     name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-    fail-fast: false
     env:
       CIBW_BEFORE_ALL: "pip install --upgrade cython wheel numpy"
       CIBW_SKIP: "*-musllinux*"
       MACOSX_DEPLOYMENT_TARGET: "10.12"
       MPL_DISABLE_FH4: "yes"
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: ubuntu-20.04
