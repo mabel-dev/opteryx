@@ -13,7 +13,7 @@
 """
 Ordering of adjacent predicates using brute-force.
 
-This is only used for small numbers of adjacent predicates - up to five. That is only 16 variations to test.
+This is only used for small numbers of adjacent predicates - up to four. That is only 16 variations to test.
 """
 
 import itertools
