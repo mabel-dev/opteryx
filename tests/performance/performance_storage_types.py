@@ -8,6 +8,8 @@ differences in this test are unlikely to be meaningful in real world situations.
 
 Best of three runs, lower is better
 
+(results in Debian)
+
 500 cycles  orc_zstd        1.38 seconds    ▏
 500 cycles  parquet_zstd    1.57 seconds    ▎
 500 cycles  orc_snappy      1.64 seconds    ▎
@@ -17,6 +19,22 @@ Best of three runs, lower is better
 500 cycles  arrow_zstd      9.67 seconds    █▎
 500 cycles  jsonl took      18.6 seconds    ██▍
 500 cycles  jsonl_zstd      23.5 seconds    ████
+
+(results on M2 Mac)
+500 cycles  parquet_zstd    2.63 seconds
+500 cycles  parquet_snappy  2.78 seconds
+500 cycles  parquet_lz4     2.89 seconds
+500 cycles  ipc             5.67 seconds  ** new
+500 cycles  arrow_lz4       11.1 seconds
+500 cycles  ipc_zstd        12.4 seconds  ** new
+500 cycles  orc_snappy      13.8 seconds
+500 cycles  arrow           15.4 seconds
+500 cycles  orc_zstd        15.4 seconds
+500 cycles  ipc_lz4         17.0 seconds  ** new
+500 cycles  jsonl           35.2 seconds
+500 cycles  jsonl_zstd      43.8 seconds
+
+
 """
 
 import os
@@ -51,11 +69,14 @@ FORMATS = (
     "parquet_snappy",
     "parquet_lz4",
     "zstd",
+    "ipc",  # no compression
+    "ipc_lz4",
+    "ipc_zstd",
 )
 
 
 if __name__ == "__main__":
-    CYCLES = 100
+    CYCLES = 500
 
     opteryx.register_store("tests", DiskConnector)
 

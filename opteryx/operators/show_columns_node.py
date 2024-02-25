@@ -64,7 +64,7 @@ def _extended_collector(morsels):
         else:
             profile += df.profile
 
-    return profile.arrow()
+    return profile.to_dicts()
 
 
 class ShowColumnsNode(BasePlanNode):
@@ -73,6 +73,7 @@ class ShowColumnsNode(BasePlanNode):
         self._full = config.get("full")
         self._extended = config.get("extended")
         self._schema = config.get("schema")
+        self._column_map = {c.schema_column.identity: c.source_column for c in config["columns"]}
 
     @property
     def name(self):  # pragma: no cover
@@ -81,6 +82,10 @@ class ShowColumnsNode(BasePlanNode):
     @property
     def config(self):  # pragma: no cover
         return ""
+
+    def rename_column(self, dic: dict, renames) -> dict:
+        dic["name"] = renames[dic["name"]]
+        return dic
 
     def execute(self) -> Generator:
         morsels = self._producers[0]  # type:ignore
@@ -96,10 +101,14 @@ class ShowColumnsNode(BasePlanNode):
 
         if self._full and not self._extended:
             # we're going to read the full table, so we can count stuff
-            yield _extended_collector(morsels.execute())
+            dicts = _extended_collector(morsels.execute())
+            dicts = [self.rename_column(d, self._column_map) for d in dicts]
+            yield pyarrow.Table.from_pylist(dicts)
             return
 
         if self._extended:
             # get everything we can reasonable get
-            yield _extended_collector(morsels.execute())
+            dicts = _extended_collector(morsels.execute())
+            dicts = [self.rename_column(d, self._column_map) for d in dicts]
+            yield pyarrow.Table.from_pylist(dicts)
             return
