@@ -68,6 +68,8 @@ from typing import Dict
 from typing import List
 from typing import Union
 
+import numpy
+
 from opteryx.exceptions import ParameterError
 
 LiteralNode = Dict[str, Any]
@@ -89,7 +91,7 @@ def _build_literal_node(value: Any) -> LiteralNode:
         return {"Value": {"Boolean": value}}
     elif isinstance(value, str):
         return {"Value": {"SingleQuotedString": value}}
-    elif isinstance(value, (int, float, decimal.Decimal)):
+    elif isinstance(value, (int, float, decimal.Decimal, numpy.int64)):
         return {"Value": {"Number": [value, False]}}
     elif isinstance(value, (datetime.date, datetime.datetime, datetime.time)):
         return {"Value": {"SingleQuotedString": value.isoformat()}}

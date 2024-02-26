@@ -62,7 +62,7 @@ def query_planner(operation: str, parameters: Union[Iterable, None], connection,
     from opteryx.models import QueryProperties
     from opteryx.third_party import sqloxide
 
-    # SQL Rewriter removes whitespace and comments, and extracts temporal filters
+    # SQL Rewriter extracts temporal filters
     clean_sql, temporal_filters = do_sql_rewrite(operation)
     params = [p for p in parameters or []]
 
