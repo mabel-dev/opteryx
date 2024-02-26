@@ -113,16 +113,16 @@ class InnerJoinNode(BasePlanNode):
         left_node = self._producers[0]  # type:ignore
         right_node = self._producers[1]  # type:ignore
 
-        start = time.monotonic_ns()
-
         left_relation = pyarrow.concat_tables(left_node.execute(), promote_options="none")
         # in place until #1295 resolved
         if not self._left_columns[0] in left_relation.column_names:
             self._right_columns, self._left_columns = self._left_columns, self._right_columns
 
+        start = time.monotonic_ns()
         left_hash = preprocess_left(left_relation, self._left_columns)
-
+        self.statistics.time_inner_join += time.monotonic_ns() - start
         for morsel in right_node.execute():
+            start = time.monotonic_ns()
             # do the join
             new_morsel = inner_join_with_preprocessed_left_side(
                 left_relation=left_relation,
@@ -132,4 +132,3 @@ class InnerJoinNode(BasePlanNode):
             )
             self.statistics.time_inner_join += time.monotonic_ns() - start
             yield new_morsel
-            start = time.monotonic_ns()
