@@ -328,6 +328,10 @@ def inner_query_planner(ast_branch):
 
     # groups
     _projection = logical_planner_builders.build(ast_branch["Select"].get("projection")) or []
+    if len(_projection) > 1 and any(p.node_type == NodeType.WILDCARD for p in _projection):
+        from opteryx.exceptions import SqlError
+
+        raise SqlError("SELECT * cannot coexist with additional columns.")
     _aggregates = get_all_nodes_of_type(_projection, select_nodes=(NodeType.AGGREGATOR,))
     _groups = logical_planner_builders.build(ast_branch["Select"].get("group_by"))
     if _groups is not None and _groups != []:
