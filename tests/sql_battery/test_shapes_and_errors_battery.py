@@ -1480,6 +1480,9 @@ STATEMENTS = [
         ("SELECT COUNT(*), planetId FROM $satellites", None, None, SqlError),
         # 1462 - unhandled exception when working with empty datasets
         ("SELECT * FROM testdata.partitioned.empty FOR '2000-01-01'", None, None, EmptyDatasetError),
+        # 1474
+        ("SELECT *, id FROM $planets;", None, None, SqlError),
+        ("SELECT id, * FROM $planets;", None, None, SqlError),
 ]
 # fmt:on
 
