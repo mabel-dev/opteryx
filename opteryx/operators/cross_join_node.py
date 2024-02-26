@@ -18,6 +18,7 @@ This is a SQL Query Execution Plan Node.
 This performs a CROSS JOIN - CROSS JOIN is not natively supported by PyArrow so this is written
 here rather than calling the join() functions
 """
+import time
 from typing import Generator
 from typing import Tuple
 
@@ -208,15 +209,27 @@ class CrossJoinNode(BasePlanNode):
         )  # type:ignore
 
         if self._unnest_column is None:
-            yield from _cross_join(left_node, right_table)
+            start = time.monotonic_ns()
+            for morsel in _cross_join(left_node, right_table):
+                self.statistics.time_cross_join += time.monotonic_ns() - start
+                yield morsel
+                start = time.monotonic_ns()
 
         elif isinstance(self._unnest_column.value, tuple):
-            yield from _cross_join_unnest_literal(
+            start = time.monotonic_ns()
+            for morsel in _cross_join_unnest_literal(
                 morsels=left_node,
                 source=self._unnest_column.value,
                 target_column=self._unnest_target,
-            )
+            ):
+                self.statistics.time_cross_join_literal += time.monotonic_ns() - start
+                yield morsel
+                start = time.monotonic_ns()
         else:
-            yield from _cross_join_unnest_column(
+            start = time.monotonic_ns()
+            for morsel in _cross_join_unnest_column(
                 morsels=left_node, source=self._unnest_column, target_column=self._unnest_target
-            )
+            ):
+                self.statistics.time_cross_join_unnest += time.monotonic_ns() - start
+                yield morsel
+                start = time.monotonic_ns()
