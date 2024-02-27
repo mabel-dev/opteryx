@@ -1556,7 +1556,7 @@ if __name__ == "__main__":  # pragma: no cover
 
     print(f"RUNNING BATTERY OF {len(STATEMENTS)} SHAPE TESTS")
     for index, (statement, rows, cols, err) in enumerate(STATEMENTS):
-        start = time.monotonic_ns()
+
         printable = statement
         if hasattr(printable, "decode"):
             printable = printable.decode()
@@ -1567,6 +1567,7 @@ if __name__ == "__main__":  # pragma: no cover
             flush=True,
         )
         try:
+            start = time.monotonic_ns()
             test_sql_battery(statement, rows, cols, err)
             print(
                 f"\033[38;2;26;185;67m{str(int((time.monotonic_ns() - start)/1e6)).rjust(4)}ms\033[0m ✅",

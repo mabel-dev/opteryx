@@ -53,6 +53,20 @@ def test_predicate_pushdowns_sqlite_eq():
     assert cur.rowcount == 1, cur.rowcount
     assert cur.stats.get("rows_read", 0) == 2, cur.stats
 
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM sqlite.planets WHERE surfacePressure IS NULL;")
+    # We push unary ops to SQL
+    assert cur.rowcount == 4, cur.rowcount
+    assert cur.stats.get("rows_read", 0) == 4, cur.stats
+
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT * FROM sqlite.planets WHERE orbitalInclination IS FALSE AND name IN ('Earth', 'Mars');"
+    )
+    # We push unary ops to SQL
+    assert cur.rowcount == 1, cur.rowcount
+    assert cur.stats.get("rows_read", 0) == 1, cur.stats
+
     conn.close()
 
 

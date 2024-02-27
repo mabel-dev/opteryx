@@ -77,6 +77,12 @@ class SqlConnector(BaseConnector, PredicatePushable):
         "LtEq": "<=",
         "Like": "LIKE",
         "NotLike": "NOT LIKE",
+        "IsTrue": "IS TRUE",
+        "IsNotTrue": "IS NOT TRUE",
+        "IsFalse": "IS FALSE",
+        "IsNotFalse": "IS NOT FALSE",
+        "IsNull": "IS NULL",
+        "IsNotNull": "IS NOT NULL",
     }
 
     def __init__(self, *args, connection: str = None, engine=None, **kwargs):
@@ -103,6 +109,11 @@ class SqlConnector(BaseConnector, PredicatePushable):
 
         self.schema = None  # type: ignore
         self.metadata = MetaData()
+
+    def can_push(self, operator: Node, types: set = None) -> bool:
+        if super().can_push(operator, types):
+            return True
+        return operator.condition.node_type == NodeType.UNARY_OPERATOR
 
     def read_dataset(  # type:ignore
         self,
@@ -134,14 +145,20 @@ class SqlConnector(BaseConnector, PredicatePushable):
         # Update SQL if we've pushed predicates
         parameters: dict = {}
         for predicate in predicates:
-            left_operand = predicate.left
-            right_operand = predicate.right
-            operator = self.OPS_XLAT[predicate.value]
+            if predicate.node_type == NodeType.UNARY_OPERATOR:
+                operand = predicate.centre.current_name
+                operator = self.OPS_XLAT[predicate.value]
 
-            left_value, parameters = _handle_operand(left_operand, parameters)
-            right_value, parameters = _handle_operand(right_operand, parameters)
+                query_builder.WHERE(f"{operand} {operator}")
+            else:
+                left_operand = predicate.left
+                right_operand = predicate.right
+                operator = self.OPS_XLAT[predicate.value]
 
-            query_builder.WHERE(f"{left_value} {operator} {right_value}")
+                left_value, parameters = _handle_operand(left_operand, parameters)
+                right_value, parameters = _handle_operand(right_operand, parameters)
+
+                query_builder.WHERE(f"{left_value} {operator} {right_value}")
 
         # Use orso as an intermediatary, it's row-based so is well suited to processing
         # records coming back from a SQL query, and it has a well-optimized to arrow
@@ -154,7 +171,7 @@ class SqlConnector(BaseConnector, PredicatePushable):
             # DEBUG: log ("READ DATASET\n", str(query_builder))
             # DEBUG: log ("PARAMETERS\n", parameters)
             # Execution Options allows us to handle datasets larger than memory
-            result = conn.execution_options(stream_results=True, max_row_buffer=500).execute(
+            result = conn.execution_options(stream_results=True, max_row_buffer=5000).execute(
                 text(str(query_builder)), parameters=parameters
             )
 
@@ -171,7 +188,7 @@ class SqlConnector(BaseConnector, PredicatePushable):
 
                 # Dynamically adjust chunk size based on the data size, we start by downloading
                 # 500 records to get an idea of the row size, assuming these 500 are
-                # representative, we work out how many rows fit into 8Mb.
+                # representative, we work out how many rows fit into 16Mb (check setting).
                 # Don't keep recalculating, this is not a cheap operation and it's predicting
                 # the future so isn't going to ever be 100% correct
                 if self.chunk_size == INITIAL_CHUNK_SIZE and morsel.nbytes() > 0:
