@@ -726,6 +726,56 @@ def create_node_relation(relation):
     return root_node, sub_plan
 
 
+def plan_execute_query(statement) -> LogicalPlan:
+
+    import orjson
+
+    from opteryx.components.ast_rewriter import do_ast_rewriter
+    from opteryx.components.logical_planner import do_logical_planning_phase
+    from opteryx.components.sql_rewriter import do_sql_rewrite
+    from opteryx.exceptions import SqlError
+    from opteryx.third_party import sqloxide
+    from opteryx.utils import sql
+
+    statement_name = statement["Execute"]["name"]["value"]
+    parameters = [
+        logical_planner_builders.build(p["Value"]) for p in statement["Execute"]["parameters"]
+    ]
+    try:
+        with open("prepared_statements.json", "r") as ps:
+            prepared_statatements = orjson.loads(ps.read())
+    except OSError:
+        prepared_statatements = {}
+
+    # we have an inbuilt statements as a fallback
+    prepared_statatements["planets_by_id"] = "SELECT * FROM $planets WHERE id = ?"
+    prepared_statatements["version"] = "SELECT version()"
+
+    if statement_name not in prepared_statatements:
+        raise SqlError("Unable to EXECUTE prepared statement, '{statement_name}' not defined.")
+    operation = prepared_statatements[statement_name]
+
+    operation = sql.remove_comments(operation)
+    operation = sql.clean_statement(operation)
+    statements = sql.split_sql_statements(operation)
+    if len(statements) > 1:
+        raise UnsupportedSyntaxError("EXECUTE cannot run multi-part and batch prepared statements.")
+
+    clean_sql, temporal_filters = do_sql_rewrite(operation)
+    try:
+        parsed_statements = sqloxide.parse_sql(clean_sql, dialect="mysql")
+    except ValueError as parser_error:
+        raise SqlError(parser_error) from parser_error
+
+    parsed_statements = do_ast_rewriter(
+        parsed_statements,
+        temporal_filters=temporal_filters,
+        paramters=parameters,
+        connection=None,
+    )
+    return list(do_logical_planning_phase(parsed_statements))[0][0]
+
+
 def plan_explain(statement) -> LogicalPlan:
     plan = LogicalPlan()
     explain_node = LogicalPlanNode(node_type=LogicalPlanStepType.Explain)
@@ -928,7 +978,7 @@ def plan_show_variables(statement):
 
 QUERY_BUILDERS = {
     #    "Analyze": analyze_query,
-    #    "Execute": plan_execute_query,
+    "Execute": plan_execute_query,
     "Explain": plan_explain,
     "Query": plan_query,
     "SetVariable": plan_set_variable,

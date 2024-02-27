@@ -1294,6 +1294,11 @@ STATEMENTS = [
 
         ("SELECT missions[0] as m FROM $astronauts CROSS JOIN FAKE(1, 1) AS F order by m", 357, 1, None),
 
+        ("EXECUTE planets_by_id (1)", 1, 20, None),  # simple case
+        ("EXECUTE version", 1, 1, None),  # no paramters
+        ("EXECUTE get_satellites_by_planet_name('Jupiter')", 67, 1, None),  # string param
+        ("EXECUTE multiply_two_numbers (1.0, 9.9)", 1, 1, None),  # multiple params
+
         # These are queries which have been found to return the wrong result or not run correctly
         # FILTERING ON FUNCTIONS
         ("SELECT DATE(birth_date) FROM $astronauts FOR TODAY WHERE DATE(birth_date) < '1930-01-01'", 14, 1, None),

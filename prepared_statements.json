@@ -1,3 +1,4 @@
 {
-    "get_planet_by_id": "SELECT id, name FROM $planets WHERE id = ?"
+    "get_satellites_by_planet_name": "/* A test case FOR the EXECUTE query functionality */ SELECT s.name AS satellite_name FROM $satellites AS s INNER JOIN $planets AS p ON p.id = s.planetId WHERE p.name = ?",
+    "multiply_two_numbers": "SELECT ? * ?"
 }
