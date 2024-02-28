@@ -18,6 +18,7 @@ def _format_interval(value):
 
     if isinstance(value, tuple):
         months, days, seconds = value
+        seconds = seconds / 1e9
     elif hasattr(value, "days"):
         days = value.days
         months = value.months

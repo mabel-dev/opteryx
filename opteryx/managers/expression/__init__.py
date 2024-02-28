@@ -223,7 +223,7 @@ def _inner_evaluate(root: Node, table: Table, context: ExecutionContext):
             return numpy.array([root.value] * table.num_rows, dtype=numpy.unicode_)
         if literal_type == OrsoTypes.INTERVAL:
             value = pyarrow.MonthDayNano(root.value)
-            return pyarrow.array([value] * table.num_rows)
+            return pyarrow.array([value])
         return numpy.full(
             shape=table.num_rows, fill_value=root.value, dtype=ORSO_TO_NUMPY_MAP[literal_type]
         )  # type:ignore
@@ -257,7 +257,7 @@ def _inner_evaluate(root: Node, table: Table, context: ExecutionContext):
                 result = numpy.array(result)
             context.store(identity, result)
             return result
-        if node_type in (NodeType.AGGREGATOR,):
+        if node_type == NodeType.AGGREGATOR:
             # detected as an aggregator, but here it's an identifier because it
             # will have already been evaluated
             node_type = NodeType.EVALUATED
