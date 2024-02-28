@@ -11,7 +11,6 @@
 # limitations under the License.
 
 import array
-import datetime
 from typing import Any
 from typing import Dict
 from typing import List
@@ -56,52 +55,79 @@ STRINGS = (str, numpy.str_)
 # PGBitwiseShiftRight => (">>"), -- not supported in mysql
 
 
-def _date_plus_interval(left, right):
-    # left is the date, right is the interval
+def add_months_numpy(dates, months_to_add):
+    """
+    Adds a specified number of months to dates in a numpy array, adjusting for end-of-month overflow.
+
+    Parameters:
+    - dates: np.ndarray of dates (numpy.datetime64)
+    - months_to_add: int, the number of months to add to each date
+
+    Returns:
+    - np.ndarray: Adjusted dates
+    """
+    # Convert dates to 'M' (month) granularity for addition
+    months = dates.astype("datetime64[M]")
+
+    # Add months (broadcasts the scalar value across the array)
+    new_dates = months + numpy.timedelta64(months_to_add, "M")
+
+    # Calculate the last day of the new month for each date
+    last_day_of_new_month = new_dates + numpy.timedelta64(1, "M") - numpy.timedelta64(1, "D")
+
+    # Calculate the day of the month for each original date
+    day_of_month = dates - months
+
+    # Adjust dates that would overflow their new month
+    overflow_mask = day_of_month > (last_day_of_new_month - new_dates)
+    adjusted_dates = numpy.where(overflow_mask, last_day_of_new_month, new_dates + day_of_month)
+
+    return adjusted_dates.astype("datetime64[us]")
+
+
+def _date_plus_interval(left: numpy.ndarray, right):
+
     if isinstance(left, INTERVALS) or (isinstance(left, LISTS) and type(left[0]) in INTERVALS):
         left, right = right, left
 
-    result = []
+    # Prepare an empty array for the result, with the same shape as `left`
+    result = numpy.copy(left)
 
-    for index, date in enumerate(left):
-        interval = right[index]
-        if hasattr(interval, "value"):
-            interval = interval.value
-        months = interval.months
-        days = interval.days
-        nanoseconds = interval.nanoseconds
+    days = right[0].value.days
+    months = right[0].value.months
+    microseconds = right[0].value.nanoseconds // 1000
 
-        date = dates.parse_iso(date)
-        # Subtract days and nanoseconds (as microseconds)
-        date += datetime.timedelta(days=days, microseconds=nanoseconds // 1000)
-        date = dates.add_months(date, months)
+    if days:
+        result = result + numpy.timedelta64(days, "D")
+    if microseconds:
+        result = result + numpy.timedelta64(microseconds, "us")
 
-        result.append(date)
+    if months:
+        for index in range(len(result)):
+            result[index] = add_months_numpy(result[index], months)
 
     return result
 
 
 def _date_minus_interval(left, right):
-    # left is the date, right is the interval
     if isinstance(left, INTERVALS) or (isinstance(left, LISTS) and type(left[0]) in INTERVALS):
         left, right = right, left
 
-    result = []
+    # Prepare an empty array for the result, with the same shape as `left`
+    result = numpy.copy(left)
 
-    for index, date in enumerate(left):
-        interval = right[index]
-        if hasattr(interval, "value"):
-            interval = interval.value
-        months = interval.months
-        days = interval.days
-        nanoseconds = interval.nanoseconds
+    days = right[0].value.days
+    months = 0 - right[0].value.months
+    microseconds = right[0].value.nanoseconds // 1000
 
-        date = dates.parse_iso(date)
-        # Subtract days and nanoseconds (as microseconds)
-        date -= datetime.timedelta(days=days, microseconds=nanoseconds // 1000)
-        date = dates.add_months(date, (0 - months))
+    if days:
+        result = result - numpy.timedelta64(days, "D")
+    if microseconds:
+        result = result - numpy.timedelta64(microseconds, "us")
 
-        result.append(date)
+    if months:
+        for index in range(len(result)):
+            result[index] = add_months_numpy(result[index], months)
 
     return result
 
