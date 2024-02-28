@@ -86,25 +86,20 @@ def add_months_numpy(dates, months_to_add):
 
 
 def _date_plus_interval(left: numpy.ndarray, right):
-
+    """
+    Adds intervals to dates, utilizing integer arithmetic for performance improvements.
+    """
     if isinstance(left, INTERVALS) or (isinstance(left, LISTS) and type(left[0]) in INTERVALS):
         left, right = right, left
 
-    # Prepare an empty array for the result, with the same shape as `left`
-    result = numpy.copy(left)
+    interval = right[0].value
+    delta = (interval.days * 24 * 3600 * 1_000_000_000) + interval.nanoseconds
+    result = left.astype("datetime64[ns]") + delta
 
-    days = right[0].value.days
-    months = right[0].value.months
-    microseconds = right[0].value.nanoseconds // 1000
-
-    if days:
-        result = result + numpy.timedelta64(days, "D")
-    if microseconds:
-        result = result + numpy.timedelta64(microseconds, "us")
-
-    if months:
+    # Handle months separately, requiring special logic
+    if interval.months:
         for index in range(len(result)):
-            result[index] = add_months_numpy(result[index], months)
+            result[index] = add_months_numpy(result[index], interval.months)
 
     return result
 
@@ -113,21 +108,14 @@ def _date_minus_interval(left, right):
     if isinstance(left, INTERVALS) or (isinstance(left, LISTS) and type(left[0]) in INTERVALS):
         left, right = right, left
 
-    # Prepare an empty array for the result, with the same shape as `left`
-    result = numpy.copy(left)
+    interval = right[0].value
+    delta = (interval.days * 24 * 3600 * 1_000_000_000) + interval.nanoseconds
+    result = left.astype("datetime64[ns]") - delta
 
-    days = right[0].value.days
-    months = 0 - right[0].value.months
-    microseconds = right[0].value.nanoseconds // 1000
-
-    if days:
-        result = result - numpy.timedelta64(days, "D")
-    if microseconds:
-        result = result - numpy.timedelta64(microseconds, "us")
-
-    if months:
+    # Handle months separately, requiring special logic
+    if interval.months:
         for index in range(len(result)):
-            result[index] = add_months_numpy(result[index], months)
+            result[index] = add_months_numpy(result[index], 0 - interval.months)
 
     return result
 
