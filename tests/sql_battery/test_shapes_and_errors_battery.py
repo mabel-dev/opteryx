@@ -1488,6 +1488,13 @@ STATEMENTS = [
         # 1474
         ("SELECT *, id FROM $planets;", None, None, SqlError),
         ("SELECT id, * FROM $planets;", None, None, SqlError),
+        # 1487
+        ("SELECT * FROM $planets AS p INNER JOIN $satellites AS s ON p.id = s.planet_id WHERE p.name = 'Jupiter' AND s.radius = 1.0", 25, 28, None),
+        ("SELECT * FROM $planets AS p INNER JOIN $satellites AS s ON p.id = s.planet_id WHERE p.name = 'Jupiter'", 67, 28, None),
+        ("SELECT * FROM $planets AS p INNER JOIN $planets AS s ON p.id = s.id WHERE p.name = 'Jupiter' AND p.id = 1.0", 0, 40, None),
+        ("SELECT * FROM sqlite.planets AS p INNER JOIN sqlite.planets AS s ON p.id = s.id WHERE p.name RLIKE 'Jupiter' AND s.id = 1.0", 0, 40, None),
+        ("SELECT * FROM sqlite.planets AS p INNER JOIN sqlite.planets AS s ON p.id = s.id WHERE p.name RLIKE 'Jupiter' AND s.name RLIKE 'Jupiter'", 1, 40, None),
+
 ]
 # fmt:on
 
