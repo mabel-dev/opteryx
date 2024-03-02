@@ -56,13 +56,12 @@ class SplitConjunctivePredicatesStrategy(OptimizationStrategy):
             split_predicates = _inner_split(node.condition)
             new_nodes = []
             for predicate in split_predicates:
-                new_node = LogicalPlanNode(
-                    node_type=LogicalPlanStepType.Filter, condition=predicate
-                )
+                new_node = LogicalPlanNode(node_type=LogicalPlanStepType.Filter)
+                new_node.condition = predicate
                 new_node.columns = get_all_nodes_of_type(
-                    node.condition, select_nodes=(NodeType.IDENTIFIER,)
+                    predicate, select_nodes=(NodeType.IDENTIFIER,)
                 )
-                new_node.relations = node.relations
+                new_node.relations = {c.source for c in new_node.columns}
                 new_nodes.append(new_node)
         else:
             new_nodes = [node]
