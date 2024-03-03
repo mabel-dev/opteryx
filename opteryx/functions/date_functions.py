@@ -152,6 +152,6 @@ def from_unixtimestamp(values):
 
 def unixtime(*args):
     if isinstance(args[0], int):
-        now = datetime.datetime.now(datetime.UTC).timestamp()
+        now = datetime.datetime.utcnow().timestamp()
         return numpy.full(args[0], now, numpy.int64)
     return [numpy.nan if d != d else d.astype(numpy.int64) for d in args[0]]
