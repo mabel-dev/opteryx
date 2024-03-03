@@ -12,22 +12,10 @@ class ExpressionColumn(FlatColumn):
 
 
 def _format_interval(value):
-    import datetime
 
-    # MonthDayNano is a superclass of list, do before list
+    months, seconds = value
 
-    if isinstance(value, tuple):
-        months, days, seconds = value
-        seconds = seconds / 1e9
-    elif hasattr(value, "days"):
-        days = value.days
-        months = value.months
-        seconds = value.nanoseconds / 1e9
-    elif isinstance(value, datetime.timedelta):
-        days = value.days
-        months = 0
-        seconds = value.microseconds / 1e6 + value.seconds
-
+    days, seconds = divmod(seconds, 86400)
     hours, seconds = divmod(seconds, 3600)
     minutes, seconds = divmod(seconds, 60)
     years, months = divmod(months, 12)

@@ -4,6 +4,7 @@ Original code modified for Opteryx.
 
 import numpy
 import pyarrow
+from orso.types import OrsoTypes
 from pyarrow import compute
 
 from opteryx.compiled import list_ops
@@ -22,10 +23,6 @@ FILTER_OPERATORS = {
     "NotLike",
     "NotILike",
     "InList",
-    "SimilarTo",
-    "NotSimilarTo",
-    "PGRegexMatch",
-    "NotPGRegexMatch",
     "PGRegexNotMatch",
     "PGRegexIMatch",  # "~*"
     "NotPGRegexIMatch",  # "!~*"
@@ -34,7 +31,7 @@ FILTER_OPERATORS = {
 }
 
 
-def filter_operations(arr, operator, value):
+def filter_operations(arr, left_type, operator, value, right_type):
     """
     Wrapped for Opteryx added to correctly handle null semantics.
 
@@ -74,8 +71,21 @@ def filter_operations(arr, operator, value):
         value = value.compress(valid_positions)
         compressed = True
 
-    # do the evaluation
-    results_mask = _inner_filter_operations(arr, operator, value)
+    if OrsoTypes.INTERVAL in (left_type, right_type):
+        from opteryx.custom_types.intervals import INTERVAL_KERNELS
+
+        function = INTERVAL_KERNELS.get((left_type, right_type, operator))
+        if function is None:
+            from opteryx.exceptions import UnsupportedTypeError
+
+            raise UnsupportedTypeError(
+                f"Cannot perform {operator.upper()} on {left_type} and {right_type}."
+            )
+
+        results_mask = function(arr, left_type, value, right_type, operator)
+    else:
+        # do the evaluation
+        results_mask = _inner_filter_operations(arr, operator, value)
 
     if compressed:
         # fill the result set
@@ -134,12 +144,12 @@ def _inner_filter_operations(arr, operator, value):
         # MODIFIED FOR OPTERYX - see comment above
         matches = compute.match_like(arr, value[0], ignore_case=True)  # [#325]
         return numpy.invert(matches)
-    if operator in ("PGRegexMatch", "SimilarTo", "RLike"):
+    if operator == "RLike":
         # MODIFIED FOR OPTERYX - see comment above
         return (
             compute.match_substring_regex(arr, value[0]).to_numpy(False).astype(dtype=bool)
         )  # [#325]
-    if operator in ("PGRegexNotMatch", "NotSimilarTo", "NotRLike"):
+    if operator == "NotRLike":
         # MODIFIED FOR OPTERYX - see comment above
         matches = compute.match_substring_regex(arr, value[0])  # [#325]
         return numpy.invert(matches)

@@ -171,7 +171,7 @@ class SqlConnector(BaseConnector, PredicatePushable):
             # DEBUG: log ("READ DATASET\n", str(query_builder))
             # DEBUG: log ("PARAMETERS\n", parameters)
             # Execution Options allows us to handle datasets larger than memory
-            result = conn.execution_options(stream_results=True, max_row_buffer=5000).execute(
+            result = conn.execution_options(stream_results=True, max_row_buffer=10000).execute(
                 text(str(query_builder)), parameters=parameters
             )
 

@@ -659,7 +659,10 @@ class BinderVisitor:
             node.unnest_target, found_source_relation = locate_identifier_in_loaded_schemas(
                 node.unnest_alias, context.schemas
             )
-            if node.unnest_column.schema_column.type not in (0, OrsoTypes.ARRAY):
+            if node.unnest_column.schema_column.type not in (
+                OrsoTypes._MISSING_TYPE,
+                OrsoTypes.ARRAY,
+            ):
                 from opteryx.exceptions import IncorrectTypeError
 
                 raise IncorrectTypeError("CROSS JOIN UNNEST requires an ARRAY type column.")
