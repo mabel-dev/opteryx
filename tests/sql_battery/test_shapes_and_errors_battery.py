@@ -1008,6 +1008,11 @@ STATEMENTS = [
         ("SELECT INTERVAL '100' YEAR + birth_date, birth_date from $astronauts", 357, 2, None),
         ("SELECT INTERVAL '1 1' MONTH to DAY + birth_date, birth_date from $astronauts", 357, 2, None),
         ("SELECT birth_date - INTERVAL '1 1' MONTH to DAY, birth_date from $astronauts", 357, 2, None),
+        ("SELECT birth_date, death_date FROM $astronauts WHERE death_date - birth_date > INTERVAL '1' DAY", 51, 2, None),
+        ("SELECT birth_date, death_date FROM $astronauts WHERE birth_date + INTERVAL '50' YEAR > death_date", 26, 2, None),
+        ("SELECT birth_date, death_date FROM $astronauts WHERE birth_date + INTERVAL '50' YEAR = death_date", 0, 2, None),
+        ("SELECT birth_date, death_date FROM $astronauts WHERE death_date - birth_date > INTERVAL '50' YEAR", None, None, UnsupportedSyntaxError),
+
         ("SELECT * FROM $astronauts WHERE 'Apollo 11' IN UNNEST(missions)", 3, 19, None),
         ("SELECT * FROM $astronauts WHERE 'Apollo 11' NOT IN UNNEST(missions)", 331, 19, None),
         ("SELECT * FROM $astronauts WHERE NOT 'Apollo 11' IN UNNEST(missions)", 331, 19, None),
@@ -1353,7 +1358,7 @@ STATEMENTS = [
         ("SELECT * FROM (SELECT id from $planets AS PO) AS ONE LEFT JOIN (SELECT id from $planets AS PT) AS TWO ON id = id", 9, 2, AmbiguousIdentifierError),
         ("SELECT * FROM (SELECT id FROM $planets AS PONE) AS ONE LEFT JOIN (SELECT id FROM $planets AS PTWO) AS TWO ON ONE.id = TWO.id;", 9, 2, None),
         # JOIN on UNNEST [#382]
-        ("SELECT name FROM $planets INNER JOIN UNNEST(('Earth')) AS n on name = n ", 1, 1, None),
+        ("SELECT name FROM $planets INNER JOIN UNNEST(('Earth', 'X')) AS n on name = n ", 1, 1, None),
         ("SELECT name FROM $planets INNER JOIN UNNEST(('Earth', 'Mars')) AS n on name = n", 2, 1, None),
         # SELECT <literal> [#409]
         ("SELECT DATE FROM (SELECT '1980-10-20' AS DATE) AS SQ", 1, 1, None),

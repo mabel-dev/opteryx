@@ -222,8 +222,7 @@ def _inner_evaluate(root: Node, table: Table, context: ExecutionContext):
         if literal_type == OrsoTypes.VARCHAR:
             return numpy.array([root.value] * table.num_rows, dtype=numpy.unicode_)
         if literal_type == OrsoTypes.INTERVAL:
-            value = pyarrow.MonthDayNano(root.value)
-            return pyarrow.array([value])
+            return pyarrow.array([root.value] * table.num_rows)
         return numpy.full(
             shape=table.num_rows, fill_value=root.value, dtype=ORSO_TO_NUMPY_MAP[literal_type]
         )  # type:ignore
@@ -270,13 +269,17 @@ def _inner_evaluate(root: Node, table: Table, context: ExecutionContext):
         if node_type == NodeType.COMPARISON_OPERATOR:
             left = _inner_evaluate(root.left, table, context)
             right = _inner_evaluate(root.right, table, context)
-            result = filter_operations(left, root.value, right)
+            result = filter_operations(
+                left, root.left.schema_column.type, root.value, right, root.right.schema_column.type
+            )
             context.store(identity, result)
             return result
         if node_type == NodeType.BINARY_OPERATOR:
             left = _inner_evaluate(root.left, table, context)
             right = _inner_evaluate(root.right, table, context)
-            result = binary_operations(left, root.value, right)
+            result = binary_operations(
+                left, root.left.schema_column.type, root.value, right, root.right.schema_column.type
+            )
             context.store(identity, result)
             return result
         if node_type == NodeType.WILDCARD:

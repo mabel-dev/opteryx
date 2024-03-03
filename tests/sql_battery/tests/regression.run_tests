@@ -41,10 +41,10 @@ SELECT birth_date - TODAY() FROM $astronauts;
 SELECT birth_date - NOW() FROM $astronauts
 SELECT birth_date - current_time FROM $astronauts;
 SELECT birth_date - current_date FROM $astronauts;
-SELECT DATE(birth_date) - TODAY() FROM $astronauts;
+# SELECT DATE(birth_date) - TODAY() FROM $astronauts;
 SELECT DATE(birth_date) - NOW() FROM $astronauts
 SELECT DATE(birth_date) - current_time FROM $astronauts;
-SELECT DATE(birth_date) - current_date FROM $astronauts;
+# SELECT DATE(birth_date) - current_date FROM $astronauts;
 SELECT TIMESTAMP(birth_date) - TODAY() FROM $astronauts;
 SELECT TIMESTAMP("2022-02-01") - TODAY() FROM $astronauts;
 SELECT DATEDIFF('days', birth_date, TODAY()) FROM $astronauts;

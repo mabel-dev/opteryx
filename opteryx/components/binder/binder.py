@@ -21,7 +21,9 @@ from orso.schema import ConstantColumn
 from orso.schema import FlatColumn
 from orso.schema import FunctionColumn
 from orso.schema import RelationSchema
+from orso.types import OrsoTypes
 
+from opteryx.components.binder.operator_map import determine_type
 from opteryx.exceptions import AmbiguousIdentifierError
 from opteryx.exceptions import ColumnNotFoundError
 from opteryx.exceptions import InvalidInternalStateError
@@ -308,11 +310,11 @@ def inner_binder(node: Node, context: Any) -> Tuple[Node, Any]:
 
         elif node.value and node.value.startswith("AnyOp"):
             # IMPROVE: check types here
-            schema_column = ExpressionColumn(name=column_name, type=0)
+            schema_column = ExpressionColumn(name=column_name, type=OrsoTypes.BOOLEAN)
             node.schema_column = schema_column
         elif node.value and node.value.startswith("AllOp"):
             # IMPROVE: check types here
-            schema_column = ExpressionColumn(name=column_name, type=0)
+            schema_column = ExpressionColumn(name=column_name, type=OrsoTypes.BOOLEAN)
             node.schema_column = schema_column
         else:
             # fmt:off
@@ -329,7 +331,7 @@ def inner_binder(node: Node, context: Any) -> Tuple[Node, Any]:
             schema_column = ExpressionColumn(
                 name=column_name,
                 aliases=[node.alias] if node.alias else [],
-                type=0,
+                type=determine_type(node),
                 expression=node.value,
             )
             schemas["$derived"].columns.append(schema_column)

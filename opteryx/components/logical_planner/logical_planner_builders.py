@@ -23,7 +23,6 @@ from typing import Optional
 from typing import Tuple
 
 import numpy
-import pyarrow
 from orso.types import OrsoTypes
 
 from opteryx import functions
@@ -140,6 +139,11 @@ def binary_op(branch, alias: Optional[List[str]] = None, key=None):
     left = build(branch["left"])
     operator = branch["op"]
     right = build(branch["right"])
+
+    if operator in ("PGRegexMatch", "SimilarTo"):
+        operator = "RLike"
+    if operator in ("PGRegexNotMatch", "NotSimilarTo"):
+        operator = "NotRLike"
 
     operator_type = NodeType.COMPARISON_OPERATOR
     if operator in BINARY_OPERATORS:
@@ -418,7 +422,7 @@ def literal_interval(branch, alias: Optional[List[str]] = None, key=None):
 
     unit_index = parts.index(leading_unit)
 
-    month, day, nano = (0, 0, 0)
+    month, seconds = (0, 0)
 
     for index, value in enumerate(values):
         value = int(value)
@@ -428,21 +432,15 @@ def literal_interval(branch, alias: Optional[List[str]] = None, key=None):
         if unit == "Month":
             month += value
         if unit == "Day":
-            day = value
+            seconds = value * 24 * 60 * 60
         if unit == "Hour":
-            nano += value * 60 * 60 * 1000000000
+            seconds += value * 60 * 60
         if unit == "Minute":
-            nano += value * 60 * 1000000000
+            seconds += value * 60
         if unit == "Second":
-            nano += value * 1000000000
+            seconds += value
 
-    interval = pyarrow.MonthDayNano(
-        (
-            month,
-            day,
-            nano,
-        )
-    )
+    interval = (month, seconds)
 
     return Node(NodeType.LITERAL, type=OrsoTypes.INTERVAL, value=interval, alias=alias)
 
@@ -529,6 +527,8 @@ def pattern_match(branch, alias: Optional[List[str]] = None, key=None):
     negated = branch["negated"]
     left = build(branch["expr"])
     right = build(branch["pattern"])
+    if key in ("PGRegexMatch", "SimilarTo"):
+        key = "RLike"
     if negated:
         key = f"Not{key}"
     return Node(

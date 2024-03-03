@@ -61,8 +61,6 @@ The Binder performs these activities:
 - schema lookup and propagation (add columns and types, add aliases)
 
 """
-
-
 from opteryx.components.binder.binder_visitor import BinderVisitor
 from opteryx.components.binder.binding_context import BindingContext
 from opteryx.components.logical_planner import LogicalPlan
