@@ -1,3 +1,4 @@
+from typing import Callable
 from typing import Dict
 from typing import NamedTuple
 from typing import Optional
@@ -10,7 +11,7 @@ from opteryx.managers.expression import NodeType
 
 class OperatorMapType(NamedTuple):
     result_type: OrsoTypes
-    operation_function: Optional[callable] = None
+    operation_function: Optional[Callable] = None
     cost_estimate: float = 100.0
 
 
