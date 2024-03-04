@@ -752,7 +752,7 @@ def plan_execute_query(statement) -> LogicalPlan:
     prepared_statatements["version"] = "SELECT version()"
 
     if statement_name not in prepared_statatements:
-        raise SqlError("Unable to EXECUTE prepared statement, '{statement_name}' not defined.")
+        raise SqlError(f"Unable to EXECUTE prepared statement, '{statement_name}' not defined.")
     operation = prepared_statatements[statement_name]
 
     operation = sql.remove_comments(operation)

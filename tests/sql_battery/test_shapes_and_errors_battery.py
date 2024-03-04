@@ -991,7 +991,7 @@ STATEMENTS = [
         ("SELECT LEAST(LIST(name)) as NAMES FROM $satellites GROUP BY planetId", 7, 1, None),
         ("SELECT LEAST(LIST(gm)) as MASSES FROM $satellites GROUP BY planetId", 7, 1, None),
         ("SELECT IIF(SEARCH(missions, 'Apollo 13'), 1, 0), SEARCH(missions, 'Apollo 13'), missions FROM $astronauts", 357, 3, None),
-        ("SELECT IIF(year = 1960, 1, 0), year FROM $astronauts", 357, 2, None),
+        ("SELECT IIF(year > 1960, 1, 0), year FROM $astronauts", 357, 2, None),
         ("SELECT SUM(IIF(year < 1970, 1, 0)), MAX(year) FROM $astronauts", 1, 2, None),
         ("SELECT SUM(IIF(year < 1970, 1, 0)), year FROM $astronauts GROUP BY year ORDER BY year ASC", 21, 2, None),
         ("SELECT SUM(id) + id FROM $planets GROUP BY id", 9, 1, None),

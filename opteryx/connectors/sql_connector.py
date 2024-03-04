@@ -23,7 +23,6 @@ from typing import Tuple
 
 import pyarrow
 from orso import DataFrame
-from orso import Row
 from orso.schema import ConstantColumn
 from orso.schema import FlatColumn
 from orso.schema import RelationSchema
@@ -161,11 +160,6 @@ class SqlConnector(BaseConnector, PredicatePushable):
 
                 query_builder.WHERE(f"{left_value} {operator} {right_value}")
 
-        # Use orso as an intermediatary, it's row-based so is well suited to processing
-        # records coming back from a SQL query, and it has a well-optimized to arrow
-        # converter to create pyarrow Tables
-        morsel = DataFrame(schema=result_schema)
-        row_factory = Row.create_class(result_schema, tuples_only=True)
         at_least_once = False
 
         convert_time = 0.0
@@ -183,13 +177,11 @@ class SqlConnector(BaseConnector, PredicatePushable):
                 if not batch_rows:
                     break
 
-                # convert each SqlAlchemy Row to an orso Row
+                # convert the SqlAlchemy Results to Arrow using Orso
                 b = time.monotonic_ns()
-                for row in batch_rows:
-                    morsel._rows.append(row_factory(row))
-                arr = morsel.arrow()
+                morsel = DataFrame(schema=result_schema, rows=batch_rows).arrow()
                 convert_time += time.monotonic_ns() - b
-                yield arr
+                yield morsel
                 at_least_once = True
 
                 # Dynamically adjust chunk size based on the data size, we start by downloading
@@ -197,18 +189,14 @@ class SqlConnector(BaseConnector, PredicatePushable):
                 # representative, we work out how many rows fit into 16Mb (check setting).
                 # Don't keep recalculating, this is not a cheap operation and it's predicting
                 # the future so isn't going to ever be 100% correct
-                if self.chunk_size == INITIAL_CHUNK_SIZE and morsel.nbytes() > 0:
-                    self.chunk_size = (
-                        int(len(morsel) // (morsel.nbytes() / DEFAULT_MORSEL_SIZE)) + 1
-                    )
+                if self.chunk_size == INITIAL_CHUNK_SIZE and morsel.nbytes > 0:
+                    self.chunk_size = int(len(morsel) // (morsel.nbytes / DEFAULT_MORSEL_SIZE)) + 1
                     self.chunk_size = (self.chunk_size // MIN_CHUNK_SIZE) * MIN_CHUNK_SIZE
                     self.chunk_size = max(self.chunk_size, MIN_CHUNK_SIZE)
                     # DEBUG: log (f"CHANGING CHUNK SIZE TO {self.chunk_size} was {INITIAL_CHUNK_SIZE}.")
 
-                morsel = DataFrame(schema=result_schema)
-
         if not at_least_once:
-            yield morsel.arrow()
+            yield DataFrame(schema=result_schema).arrow()
 
         # DEBUG: log (f"time spent converting: {convert_time/1e9}s")
 
