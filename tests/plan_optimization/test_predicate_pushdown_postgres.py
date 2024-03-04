@@ -34,8 +34,9 @@ test_cases = [
     ("SELECT * FROM pg.planets WHERE gravity > 3.7", 6, 6),
     ("SELECT * FROM pg.planets WHERE gravity >= 3.7", 8, 8),
     ("SELECT * FROM pg.planets WHERE name LIKE '%a%'", 4, 4),
-    ("SELECT * FROM pg.planets WHERE id > gravity", 2, 2),
+    ("SELECT * FROM pg.planets WHERE id > gravity", 2, 9),
     ("SELECT * FROM pg.planets WHERE surface_pressure IS NULL", 4, 4),
+    ("SELECT * FROM pg.planets WHERE gravity - mass > 10", 0, 9),
 ]
 
 

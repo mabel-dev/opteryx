@@ -55,7 +55,7 @@ def test_postgres_storage():
 
     results = opteryx.query("SELECT * FROM pg.planets WHERE id > gravity")
     assert results.rowcount == 2, results.rowcount
-    assert results.stats.get("rows_read", 0) == 2, results.stats
+    assert results.stats.get("rows_read", 0) == 9, results.stats
 
 
 if __name__ == "__main__":  # pragma: no cover

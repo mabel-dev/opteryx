@@ -25,6 +25,9 @@ from opteryx.models import Node
 from .optimization_strategy import OptimizationStrategy
 from .optimization_strategy import OptimizerContext
 
+IN_REWRITES = {"InList": "Eq", "NotInList": "NotEq"}
+LIKE_REWRITES = {"Like": "Eq", "NotList": "NotEq"}
+
 
 def _add_condition(existing_condition, new_condition):
     if not existing_condition:
@@ -33,10 +36,6 @@ def _add_condition(existing_condition, new_condition):
     _and.left = new_condition
     _and.right = existing_condition
     return _and
-
-
-IN_REWRITES = {"InList": "Eq", "NotInList": "NotEq"}
-LIKE_REWRITES = {"Like": "Eq", "NotList": "NotEq"}
 
 
 def _rewrite_predicate(predicate):
@@ -62,6 +61,18 @@ def _rewrite_predicate(predicate):
     return predicate
 
 
+def _tag_predicate(predicate):
+    """
+    Add flags, tags, labels, and notes to predicates
+    """
+
+    # predicate.relations = set()
+    # add label for if a predicate is a filter or a join
+    # add in nominal per-row cost information / time to execute 1 million times
+
+    return predicate
+
+
 class PredicatePushdownStrategy(OptimizationStrategy):
     def visit(self, node: LogicalPlanNode, context: OptimizerContext) -> OptimizerContext:
         if not context.optimized_plan:
@@ -81,8 +92,10 @@ class PredicatePushdownStrategy(OptimizationStrategy):
 
         elif node.node_type == LogicalPlanStepType.Filter:
             # collect predicates we can probably push
-            if len(node.relations) > 0 and not get_all_nodes_of_type(
-                node.condition, (NodeType.AGGREGATOR,)
+            if (
+                len(node.relations) > 0
+                and not get_all_nodes_of_type(node.condition, (NodeType.AGGREGATOR,))
+                and len(get_all_nodes_of_type(node.condition, (NodeType.IDENTIFIER,))) == 1
             ):
                 # record where the node was, so we can put it back
                 node.nid = context.node_id
