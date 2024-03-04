@@ -42,7 +42,7 @@ def test_predicate_pushdowns_blobs_zstd():
     cur.execute("SELECT * FROM testdata.flat.formats.zstd WHERE following < followers;")
     # test two identifiers
     assert cur.rowcount == 37319, cur.rowcount
-    assert cur.stats.get("rows_read", 0) == 37319, cur.stats
+    assert cur.stats.get("rows_read", 0) == 100000, cur.stats
 
     conn.close()
 

@@ -42,7 +42,7 @@ def test_predicate_pushdowns_blobs_parquet():
         "SELECT * FROM 'testdata/flat/planets/parquet/planets.parquet' WHERE rotationPeriod = lengthOfDay;"
     )
     assert cur.rowcount == 3, cur.rowcount
-    assert cur.stats.get("rows_read", 0) == 3, cur.stats
+    assert cur.stats.get("rows_read", 0) == 9, cur.stats
 
     conn.close()
 

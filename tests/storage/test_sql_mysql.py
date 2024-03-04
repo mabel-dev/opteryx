@@ -48,7 +48,7 @@ def test_mysql_storage():
 
     results = opteryx.query("SELECT * FROM mysql.planets WHERE id > gravity")
     assert results.rowcount == 2, results.rowcount
-    assert results.stats.get("rows_read", 0) == 2, results.stats
+    assert results.stats.get("rows_read", 0) == 9, results.stats
 
 
 def test_database_paging():

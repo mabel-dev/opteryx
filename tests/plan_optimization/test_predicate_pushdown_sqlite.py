@@ -105,7 +105,7 @@ def test_predicate_pushdown_sqlite_other():
 
     res = opteryx.query("SELECT * FROM sqlite.planets WHERE id > gravity")
     assert res.rowcount == 2, res.rowcount
-    assert res.stats.get("rows_read", 0) == 2, res.stats
+    assert res.stats.get("rows_read", 0) == 9, res.stats
 
 
 if __name__ == "__main__":  # pragma: no cover

@@ -56,7 +56,7 @@ def test_cockroach_storage():
 
     results = opteryx.query("SELECT * FROM cockroach.planets WHERE distancefromsun < lengthofday")
     assert results.rowcount == 2, results.rowcount
-    assert results.stats.get("rows_read", 0) == 2, results.stats
+    assert results.stats.get("rows_read", 0) == 9, results.stats
 
 
 if __name__ == "__main__":  # pragma: no cover

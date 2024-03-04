@@ -14,6 +14,7 @@
 The SQL Connector downloads data from remote servers and converts them
 to pyarrow tables so they can be processed as per any other data source.
 """
+import time
 from decimal import Decimal
 from typing import Any
 from typing import Dict
@@ -167,6 +168,8 @@ class SqlConnector(BaseConnector, PredicatePushable):
         row_factory = Row.create_class(result_schema, tuples_only=True)
         at_least_once = False
 
+        convert_time = 0.0
+
         with self._engine.connect() as conn:
             # DEBUG: log ("READ DATASET\n", str(query_builder))
             # DEBUG: log ("PARAMETERS\n", parameters)
@@ -181,9 +184,12 @@ class SqlConnector(BaseConnector, PredicatePushable):
                     break
 
                 # convert each SqlAlchemy Row to an orso Row
+                b = time.monotonic_ns()
                 for row in batch_rows:
                     morsel._rows.append(row_factory(row))
-                yield morsel.arrow()
+                arr = morsel.arrow()
+                convert_time += time.monotonic_ns() - b
+                yield arr
                 at_least_once = True
 
                 # Dynamically adjust chunk size based on the data size, we start by downloading
@@ -203,6 +209,8 @@ class SqlConnector(BaseConnector, PredicatePushable):
 
         if not at_least_once:
             yield morsel.arrow()
+
+        # DEBUG: log (f"time spent converting: {convert_time/1e9}s")
 
     def get_dataset_schema(self) -> RelationSchema:
         from sqlalchemy import Table
