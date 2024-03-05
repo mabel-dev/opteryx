@@ -14,6 +14,7 @@
 The SQL Connector downloads data from remote servers and converts them
 to pyarrow tables so they can be processed as per any other data source.
 """
+import os
 import time
 from decimal import Decimal
 from typing import Any
@@ -39,6 +40,8 @@ from opteryx.exceptions import UnmetRequirementError
 from opteryx.managers.expression import Node
 from opteryx.managers.expression import NodeType
 from opteryx.third_party.query_builder import Query
+
+DEBUG_ENABLED = os.environ.get("OPTERYX_DEBUG") is not None
 
 
 def _handle_operand(operand: Node, parameters: dict) -> Tuple[Any, dict]:
@@ -103,7 +106,7 @@ class SqlConnector(BaseConnector, PredicatePushable):
 
         # create the SqlAlchemy engine
         if engine is None:
-            self._engine = create_engine(connection, poolclass=NullPool)
+            self._engine = create_engine(connection, poolclass=NullPool, echo=DEBUG_ENABLED)
         else:
             self._engine = engine
 
@@ -168,7 +171,7 @@ class SqlConnector(BaseConnector, PredicatePushable):
             # DEBUG: log ("READ DATASET\n", str(query_builder))
             # DEBUG: log ("PARAMETERS\n", parameters)
             # Execution Options allows us to handle datasets larger than memory
-            result = conn.execution_options(stream_results=True, max_row_buffer=10000).execute(
+            result = conn.execution_options(stream_results=True, max_row_buffer=25000).execute(
                 text(str(query_builder)), parameters=parameters
             )
 
