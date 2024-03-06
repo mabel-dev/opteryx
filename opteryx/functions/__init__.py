@@ -62,6 +62,14 @@ def _get(array, key):
     raise IncorrectTypeError(f"Cannot subscript {type(first_element).__name__} values")
 
 
+def _get_string(array, key):
+    key = key[0]
+    return pyarrow.array(
+        [None if i != i else str(i) for i in (item.get(key) for item in array)],
+        type=pyarrow.string(),
+    )
+
+
 def cast_varchar(arr):
     if len(arr) > 0:
         if all(i is None or type(i) == dict for i in arr):
@@ -325,6 +333,7 @@ FUNCTIONS = {
 
     # OTHER
     "GET": _get,
+    "GET_STRING": _get_string,
     "LIST_CONTAINS": _iterate_double_parameter(other_functions.list_contains),
     "LIST_CONTAINS_ANY": _iterate_double_parameter(other_functions.list_contains_any),
     "LIST_CONTAINS_ALL": _iterate_double_parameter(other_functions.list_contains_all),

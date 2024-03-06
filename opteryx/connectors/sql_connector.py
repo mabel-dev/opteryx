@@ -196,6 +196,7 @@ class SqlConnector(BaseConnector, PredicatePushable):
                     self.chunk_size = int(len(morsel) // (morsel.nbytes / DEFAULT_MORSEL_SIZE)) + 1
                     self.chunk_size = (self.chunk_size // MIN_CHUNK_SIZE) * MIN_CHUNK_SIZE
                     self.chunk_size = max(self.chunk_size, MIN_CHUNK_SIZE)
+                    self.chunk_size = min(self.chunk_size, 1000000)  # cap at 1 million
                     # DEBUG: log (f"CHANGING CHUNK SIZE TO {self.chunk_size} was {INITIAL_CHUNK_SIZE}.")
 
         if not at_least_once:
