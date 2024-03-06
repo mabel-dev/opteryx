@@ -737,6 +737,12 @@ def plan_execute_query(statement) -> LogicalPlan:
     from opteryx.third_party import sqloxide
     from opteryx.utils import sql
 
+    # the parser allows USING, but we want EXECUTE function (parmeters)
+    if statement["Execute"].get("using"):
+        raise UnsupportedSyntaxError(
+            "EXECUTE does not support USING syntax, please provide parameters in parenthesis."
+        )
+
     statement_name = statement["Execute"]["name"]["value"]
     parameters = [
         logical_planner_builders.build(p["Value"]) for p in statement["Execute"]["parameters"]
