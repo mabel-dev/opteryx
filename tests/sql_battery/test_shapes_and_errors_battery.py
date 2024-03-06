@@ -457,6 +457,7 @@ STATEMENTS = [
         ("SELECT TRY_CAST(planetId AS TIMESTAMP) AS VALUE FROM $satellites", 177, 1, None),
         ("SELECT TRY_CAST(planetId AS DECIMAL) AS VALUE FROM $satellites", 177, 1, None),
         ("SELECT * FROM $planets WHERE id = GET(STRUCT('{\"a\":1,\"b\":\"c\"}'), 'a')", 1, 20, None),
+        ("SELECT * FROM $planets WHERE id = STRUCT('{\"a\":1,\"b\":\"c\"}')->'a'", 1, 20, None),
 
         ("SELECT PI()", 1, 1, None),
         ("SELECT E()", 1, 1, None),
@@ -530,9 +531,14 @@ STATEMENTS = [
         ("SELECT name FROM $astronauts WHERE GET(missions, 5) IS NOT NULL", 7, 1, None),
         ("SELECT GET(birth_place, 'town') FROM $astronauts WHERE GET(birth_place, 'town') = 'Warsaw'", 1, 1, None),
         ("SELECT COUNT(*), GET(birth_place, 'town') FROM $astronauts GROUP BY GET(birth_place, 'town')", 264, 2, None),
+        ("SELECT birth_place->'town' FROM $astronauts", 357, 1, None),
+        ("SELECT birth_place->'town' FROM $astronauts WHERE birth_place->'town' = 'Warsaw'", 1, 1, UnsupportedSyntaxError),
+        ("SELECT COUNT(*), birth_place->'town' FROM $astronauts GROUP BY birth_place->'town'", 264, 2, None),
+        ("SELECT birth_place->>'town' FROM $astronauts", 357, 1, None),
+        ("SELECT birth_place->>'town' FROM $astronauts WHERE birth_place->>'town' = 'Warsaw'", 1, 1, UnsupportedSyntaxError),
+        ("SELECT COUNT(*), birth_place->>'town' FROM $astronauts GROUP BY birth_place->>'town'", 264, 2, None),
         ("SELECT birth_place['town'] FROM $astronauts", 357, 1, None),
         ("SELECT missions[0] FROM $astronauts", 357, 1, None),
-
         ("SELECT birth_place['town'] FROM $astronauts WHERE birth_place['town'] = 'Warsaw'", 1, 1, None),
         ("SELECT birth_place['town'] AS TOWN FROM $astronauts WHERE birth_place['town'] = 'Warsaw'", 1, 1, None),
         ("SELECT COUNT(*), birth_place['town'] FROM $astronauts GROUP BY birth_place['town']", 264, 2, None),
@@ -617,7 +623,7 @@ STATEMENTS = [
         ("SELECT * FROM generate_series(2,10,2) AS nums", 5, 1, None),
         ("SELECT * FROM generate_series(2,10,2) AS GS WHERE GS > 5", 3, 1, None),
         ("SELECT * FROM generate_series(2,10,2) AS nums WHERE nums < 5", 2, 1, None),
-        ("SELECT * FROM generate_series(2) AS GS WITH (NO_CACHE)", 2, 1, SqlError),
+        ("SELECT * FROM generate_series(2) AS GS WITH (NO_CACHE)", 2, 1, None),
         ("SELECT * FROM generate_series('192.168.0.0/24') AS GS WITH (NO_CACHE)", 2, 1, InvalidFunctionParameterError),
 
         ("SELECT * FROM generate_series('2022-01-01', '2022-12-31', '1 month') AS GS", 12, 1, None),
@@ -1057,7 +1063,7 @@ STATEMENTS = [
         ("SELECT * FROM generate_series(1,10) AS GS LEFT JOIN $planets FOR '1600-01-01' ON id = GS", 10, 21, None),
         ("SELECT DISTINCT name FROM generate_series(1,10) AS GS LEFT JOIN $planets FOR '1600-01-01' ON id = GS", 7, 1, None),
         ("SELECT 1 WHERE ' a  b ' \t = \n\n ' ' || 'a' || ' ' || \n ' b '", 1, 1, UnsupportedSyntaxError),
-        ("SELECT 1 FROM $planets WHERE ' a  b ' \t = \n\n ' ' || 'a' || ' ' || \n ' b '", 9, 1, UnsupportedSyntaxError),
+        ("SELECT 1 FROM $planets WHERE ' a  b ' \t = \n\n ' ' || 'a' || ' ' || \n ' b '", 9, 1, None),
         ("SELECT name FROM $planets WHERE SUBSTRING ( name, 1, 1 ) = 'M'", 2, 1, None),
         ("SELECT name FROM $planets WHERE SUBSTRING ( name, 2, 1 ) = 'a'", 3, 1, None),
         ("SELECT name FROM $planets WHERE SUBSTRING ( name, 3 ) = 'rth'", 1, 1, None),
@@ -1133,7 +1139,7 @@ STATEMENTS = [
         ("SELECT user_name, user_verified FROM testdata.flat.formats.parquet WITH(NO_PARTITION) WHERE followers BETWEEN 0 AND 251", 40939, 2, None),
 
         ("SELECT * FROM 'testdata/flat/formats/arrow/tweets.arrow'", 100000, 13, None),
-        ("SELECT * FROM 'testdata/flat/tweets/tweets-0000.jsonl' INNER JOIN 'testdata/flat/tweets/tweets-0001.jsonl' USING (userid)", 491, 15, UnsupportedSyntaxError),
+        ("SELECT * FROM 'testdata/flat/tweets/tweets-0000.jsonl' INNER JOIN 'testdata/flat/tweets/tweets-0001.jsonl' USING (userid)", 491, 15, None),
         ("SELECT * FROM 'testdata/flat/tweets/tweets-0000.jsonl' INNER JOIN $planets on sentiment = numberOfMoons", 12, 28, IncompatibleTypesError),
 
         ("SELECT * FROM $planets AS p JOIN $planets AS g ON p.id = g.id AND g.name = 'Earth';", 1, 40, None),
@@ -1380,10 +1386,10 @@ STATEMENTS = [
         # Names not found / clashes [#471]
         ("SELECT P.* FROM (SELECT * FROM $planets) AS P", 9, 20, None),
         ("SELECT P0.id, P1.ID, P2.ID FROM $planets AS P0 JOIN (SELECT id AS ID, name FROM $planets AS ppp) AS P1 ON P0.name = P1.name JOIN (SELECT id, name AS ID FROM $planets AS pppp) AS P2 ON P0.name = P2.name", 9, 3, ColumnNotFoundError),
-        ("SELECT P0.id, P1.ID, P2.ID FROM $planets AS P0 JOIN (SELECT id AS ID, name FROM $planets AS ppp) AS P1 ON P0.name = P1.name JOIN (SELECT id, name AS ID FROM $planets AS pppp) AS P2 ON P0.name = P2.ID", 9, 3, ColumnNotFoundError),
+        ("SELECT P0.id, P1.ID, P2.ID FROM $planets AS P0 JOIN (SELECT id AS ID, name FROM $planets AS ppp) AS P1 ON P0.name = P1.name JOIN (SELECT id, name AS ID FROM $planets AS pppp) AS P2 ON P0.name = P2.ID", 9, 3, None),
         ("SELECT P0.id, P1.ID FROM $planets AS P0 INNER JOIN (SELECT id, name AS ID FROM $planets) AS P1 ON P0.name = P1.name", 9, 2, ColumnNotFoundError),
-        ("SELECT P0.id, P1.ID FROM $planets AS P0 INNER JOIN (SELECT id, name AS ID FROM $planets) AS P1 ON P0.name = P1.ID", 9, 2, ColumnNotFoundError),
-        ("SELECT P0.id, P1.ID FROM $planets AS P0 INNER JOIN (SELECT name, id AS ID FROM $planets) AS P1 USING (name)", 9, 2, UnsupportedSyntaxError),
+        ("SELECT P0.id, P1.ID FROM $planets AS P0 INNER JOIN (SELECT id, name AS ID FROM $planets) AS P1 ON P0.name = P1.ID", 9, 2, None),
+        ("SELECT P0.id, P1.ID FROM $planets AS P0 INNER JOIN (SELECT name, id AS ID FROM $planets) AS P1 USING (name)", 9, 2, None),
         ("SELECT P0.id, P1.ID FROM $planets AS P0 LEFT JOIN (SELECT id, name AS ID FROM $planets) AS P1 ON P0.name = P1.ID", 9, 2, None),
         # [#475] a variation of #471
         ("SELECT P0.id, P1.ID, P2.ID FROM $planets AS P0 JOIN (SELECT CONCAT_WS(' ', list(id)) AS ID, MAX(name) AS n FROM $planets AS Q1 GROUP BY gravity) AS P1 ON P0.name = P1.n JOIN (SELECT CONCAT_WS(' ', list(id)) AS ID, MAX(name) AS n FROM $planets AS Q2 GROUP BY gravity) AS P2 ON P0.name = P2.n", 8, 3, None),
@@ -1472,8 +1478,8 @@ STATEMENTS = [
         # 1370, issues coercing DATE and TIMESTAMPS
         ("SELECT * FROM $planets WHERE TIMESTAMP '2023-01-01' = DATE '2023-01-01'", 9, 20, None),
         ("SELECT * FROM $planets WHERE 1 = 1.0", 9, 20, None),
-        ("SELECT * FROM $planets WHERE DATE '2023-01-01' + INTERVAL '1' MONTH", 9, 20, SqlError),
-        ("SELECT * FROM $planets WHERE TIMESTAMP '2023-01-01' + INTERVAL '1' MONTH", 9, 20, SqlError),
+        ("SELECT * FROM $planets WHERE DATE '2023-01-01' + INTERVAL '1' MONTH", 9, 20, None),
+        ("SELECT * FROM $planets WHERE TIMESTAMP '2023-01-01' + INTERVAL '1' MONTH", 9, 20, None),
         ("SELECT DATE '2023-01-01' + INTERVAL '1' MONTH FROM $planets", 9, 1, None),
         ("SELECT TIMESTAMP '2023-01-01' + INTERVAL '1' MONTH FROM $planets", 9, 1, None),
         ("SELECT * FROM $planets WHERE DATE '2023-01-01' + INTERVAL '1' MONTH < current_time", 9, 20, None),
@@ -1535,6 +1541,9 @@ def test_sql_battery(statement, rows, columns, exception):
         assert (
             columns == actual_columns
         ), f"\n\033[38;5;203mQuery returned {actual_columns} cols but {columns} were expected.\033[0m\n{statement}"
+        assert (
+            exception is None
+        ), f"Exception {exception} not raised but expected\n{format_sql(statement)}"
     except AssertionError as err:
         raise Exception(err) from err
     except Exception as err:

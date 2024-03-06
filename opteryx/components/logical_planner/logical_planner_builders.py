@@ -393,6 +393,29 @@ def is_compare(branch, alias: Optional[List[str]] = None, key=None):
     return Node(NodeType.UNARY_OPERATOR, value=key, centre=centre)
 
 
+def json_access(branch, alias: Optional[List[str]] = None, key=None):
+    left_node = build(branch["left"])
+    operator = branch["operator"]
+    right_node = build(branch["right"])
+
+    if right_node.node_type not in (NodeType.LITERAL, NodeType.IDENTIFIER):
+        raise UnsupportedSyntaxError(f"JsonAccessor not fully supported.")
+
+    OPERATORS = {"Arrow": ("GET", "->"), "LongArrow": ("GET_STRING", "->>")}
+
+    func, symbol = OPERATORS.get(operator, (None, None))
+
+    if func is None:
+        raise UnsupportedSyntaxError(f"JsonAccessor {operator} is not available.")
+
+    return Node(
+        NodeType.FUNCTION,
+        value=func,
+        parameters=[left_node, right_node],
+        alias=alias or f"{left_node.current_name}{symbol}'{right_node.value}'",
+    )
+
+
 def literal_boolean(branch, alias: Optional[List[str]] = None, key=None):
     """create node for a literal boolean branch"""
     return Node(NodeType.LITERAL, type=OrsoTypes.BOOLEAN, value=branch, alias=alias)
@@ -750,6 +773,7 @@ BUILDERS = {
     "IsNotTrue": is_compare,
     "IsNull": is_compare,
     "IsTrue": is_compare,
+    "JsonAccess": json_access,
     "Like": pattern_match,
     "MapAccess": map_access,
     "Nested": nested,
