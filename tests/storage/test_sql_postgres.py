@@ -4,6 +4,7 @@ Test we can read from Sqlite - this is a basic exercise of the SQL Connector
 
 import os
 import sys
+import time
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
@@ -25,19 +26,26 @@ def test_postgres_storage():
         connection=f"postgresql+psycopg2://{POSTGRES_USER}:{POSTGRES_PASSWORD}@trumpet.db.elephantsql.com/{POSTGRES_USER}",
     )
 
+    t = time.monotonic_ns()
     results = opteryx.query("SELECT * FROM pg.planets")
     assert results.rowcount == 9, results.rowcount
     assert results.columncount == 20
+    print((time.monotonic_ns() - t) / 1e9)
+    t = time.monotonic_ns()
 
     # PROCESS THE DATA IN SOME WAY
     results = opteryx.query("SELECT COUNT(*) FROM pg.planets;")
     assert results.rowcount == 1, results.rowcount
     assert results.columncount == 1
+    print((time.monotonic_ns() - t) / 1e9)
+    t = time.monotonic_ns()
 
     # PUSH A PROJECTION
     results = opteryx.query("SELECT name FROM pg.planets;")
     assert results.rowcount == 9, results.rowcount
     assert results.columncount == 1
+    print((time.monotonic_ns() - t) / 1e9)
+    t = time.monotonic_ns()
 
     # JOIN ON A NON SQL TABLE
     results = opteryx.query(
@@ -45,6 +53,8 @@ def test_postgres_storage():
     )
     assert results.rowcount == 177, results.rowcount
     assert results.columncount == 28, results.columncount
+    print((time.monotonic_ns() - t) / 1e9)
+    t = time.monotonic_ns()
 
     # PUSH - CHECK STATS THE PUSHES WORKED
     results = opteryx.query("SELECT name FROM pg.planets WHERE name LIKE 'Earth';")
@@ -52,10 +62,14 @@ def test_postgres_storage():
     assert results.columncount == 1
     assert results.stats["rows_read"] == 1
     assert results.stats["columns_read"] == 1
+    print((time.monotonic_ns() - t) / 1e9)
+    t = time.monotonic_ns()
 
     results = opteryx.query("SELECT * FROM pg.planets WHERE id > gravity")
     assert results.rowcount == 2, results.rowcount
     assert results.stats.get("rows_read", 0) == 9, results.stats
+    print((time.monotonic_ns() - t) / 1e9)
+    t = time.monotonic_ns()
 
 
 if __name__ == "__main__":  # pragma: no cover

@@ -81,6 +81,7 @@ STATEMENTS = [
         ("SELECT * FROM $no_table", 1, 1, None),
         ("SELECT * FROM sqlite.planets", 9, 20, None),
         ("SELECT * FROM $variables", 41, 4, None),
+        ("SELECT * FROM $missions", 4630, 8, None),
         (b"SELECT * FROM $satellites", 177, 8, None),
 
         # Does the error tester work
@@ -1179,6 +1180,8 @@ STATEMENTS = [
 
         # 10-way join
         ("SELECT p1.name AS planet1_name, p2.name AS planet2_name, p3.name AS planet3_name, p4.name AS planet4_name, p5.name AS planet5_name, p6.name AS planet6_name, p7.name AS planet7_name, p8.name AS planet8_name, p9.name AS planet9_name, p10.name AS planet10_name, p1.diameter AS planet1_diameter, p2.gravity AS planet2_gravity, p3.orbitalPeriod AS planet3_orbitalPeriod, p4.numberOfMoons AS planet4_numberOfMoons, p5.meanTemperature AS planet5_meanTemperature FROM $planets p1 JOIN $planets p2 ON p1.id = p2.id JOIN $planets p3 ON p1.id = p3.id JOIN $planets p4 ON p1.id = p4.id JOIN $planets p5 ON p1.id = p5.id JOIN $planets p6 ON p1.id = p6.id JOIN $planets p7 ON p1.id = p7.id JOIN $planets p8 ON p1.id = p8.id JOIN $planets p9 ON p1.id = p9.id JOIN $planets p10 ON p1.id = p10.id WHERE p1.diameter > 10000 ORDER BY p1.name, p2.name, p3.name, p4.name, p5.name;", 6, 15, None),
+
+        ("SELECT mission, LIST(name) FROM $missions INNER JOIN (SELECT * FROM $astronauts CROSS JOIN UNNEST(missions) AS mission) AS astronauts ON Mission = mission GROUP BY mission", 16, 2, None),
 
         # virtual dataset doesn't exist
         ("SELECT * FROM $RomanGods", None, None, DatasetNotFoundError),
