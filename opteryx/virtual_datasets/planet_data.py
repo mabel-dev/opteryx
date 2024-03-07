@@ -35,11 +35,13 @@ import decimal
 
 from orso.schema import FlatColumn
 from orso.schema import RelationSchema
+from orso.tools import single_item_cache
 from orso.types import OrsoTypes
 
 __all__ = ("read", "schema")
 
 
+@single_item_cache
 def read(end_date=None, *args):
     import pyarrow
 

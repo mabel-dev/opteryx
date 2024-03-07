@@ -34,6 +34,7 @@ from opteryx.utils import arrow
 WELL_KNOWN_DATASETS = {
     "$astronauts": (virtual_datasets.astronauts, True),
     "$planets": (virtual_datasets.planets, True),
+    "$missions": (virtual_datasets.missions, True),
     "$satellites": (virtual_datasets.satellites, True),
     "$variables": (virtual_datasets.variables, True),
     "$derived": (virtual_datasets.derived, False),
