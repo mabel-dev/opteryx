@@ -26,13 +26,24 @@ def list_contains(array, item):
     return item in set(array)
 
 
-def list_contains_any(array, items):
+def list_contains_any(array: numpy.ndarray, items: numpy.ndarray) -> numpy.ndarray:
     """
-    does array contain any of the items in items
+    Check if any element in each sub-array of 'array' is present in 'items'.
+
+    Parameters:
+        array (numpy.ndarray): A 1D array where each element is an iterable (e.g., list, set).
+        items (numpy.ndarray): An array of items to check against each sub-array in 'array'.
+
+    Returns:
+        numpy.ndarray: A boolean array where each element indicates whether any item
+                       from 'items' is found in the corresponding sub-array of 'array'.
     """
-    if array is None:
-        return False
-    return set(array).intersection(items) != set()
+    items_set = set(items[0])
+    res = numpy.empty(array.size, dtype=bool)
+    for i, test_set in enumerate(array):
+        # Using not to correctly capture overlap (isdisjoint is True when no common elements)
+        res[i] = not items_set.isdisjoint(test_set) if test_set is not None else False
+    return res
 
 
 def list_contains_all(array, items):
