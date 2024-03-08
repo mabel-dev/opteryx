@@ -335,7 +335,7 @@ FUNCTIONS = {
     "GET": _get,
     "GET_STRING": _get_string,
     "LIST_CONTAINS": _iterate_double_parameter(other_functions.list_contains),
-    "LIST_CONTAINS_ANY": _iterate_double_parameter(other_functions.list_contains_any),
+    "LIST_CONTAINS_ANY": other_functions.list_contains_any,
     "LIST_CONTAINS_ALL": _iterate_double_parameter(other_functions.list_contains_all),
     "SEARCH": other_functions.search,
     "COALESCE": _coalesce,
