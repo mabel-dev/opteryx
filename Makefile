@@ -14,6 +14,10 @@ t:
 	clear
 	python tests/sql_battery/test_shapes_and_errors_battery.py
 
+s:
+	clear
+	python tests/storage/test_sql_sqlite.py
+
 b:
 	clear
 	python scratch/brace.py

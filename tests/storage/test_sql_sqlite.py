@@ -21,7 +21,7 @@ import opteryx
 from opteryx.connectors import SqlConnector
 from opteryx.utils.formatter import format_sql
 
-#fmt: off
+# fmt: off
 STATEMENTS = [
     ("SELECT * FROM sqlite.planets", 9, 20, None),
     ("SELECT * FROM sqlite.satellites", 177, 8, None),
@@ -29,6 +29,10 @@ STATEMENTS = [
     ("SELECT COUNT(*) FROM sqlite.planets;", 1, 1, None),
     ("SELECT COUNT(*) FROM sqlite.satellites;", 1, 1, None),
     ("SELECT COUNT(*) FROM sqlite_tweets.tweets", 1, 1, None),
+    ("SELECT COUNT(*) FROM (SELECT * FROM sqlite.planets) AS p", 1, 1, None),
+    ("SELECT COUNT(*) FROM (SELECT COUNT(*) FROM sqlite.planets) AS p", 1, 1, None),
+    ("SELECT COUNT(*) FROM (SELECT * FROM sqlite.planets WHERE id > 4) AS p", 1, 1, None),
+    ("SELECT COUNT(*) FROM (SELECT * FROM sqlite.planets) AS p WHERE id > 4", 1, 1, None),
     ("SELECT name FROM sqlite.planets;", 9, 1, None),
     ("SELECT name FROM sqlite.satellites;", 177, 1, None),
     ("SELECT user_name FROM sqlite_tweets.tweets;", 100000, 1, None),
@@ -46,7 +50,8 @@ STATEMENTS = [
     ("SELECT * FROM sqlite.planets, sqlite.satellites WHERE sqlite.planets.id - sqlite.satellites.planetId != 0;", 1416, 28, None),
     ("SELECT * FROM sqlite.planets WHERE sqlite.planets.id - sqlite.planets.numberOfMoons < 0;", 4, 20, None),
 ]
-#fmt: on
+# fmt: on
+
 
 @pytest.mark.parametrize("statement, rows, columns, exception", STATEMENTS)
 def test_sql_battery(statement, rows, columns, exception):

@@ -132,12 +132,6 @@ def parquet_decoder(buffer, projection: List = None, selection=None, just_schema
         if just_schema:
             return convert_arrow_schema_to_orso_schema(parquet_file.schema_arrow)
 
-        # Special handling for projection of ["count_*"]
-        if projection == ["count_*"]:
-            return pyarrow.Table.from_pydict(
-                {"_": numpy.full(parquet_file.metadata.num_rows, True, dtype=numpy.bool_)}
-            )
-
         # Projection processing
         schema_columns_set = set(parquet_file.schema_arrow.names)
         projection_names = {name for proj_col in projection for name in proj_col.all_names}
@@ -146,6 +140,12 @@ def parquet_decoder(buffer, projection: List = None, selection=None, just_schema
         # If no columns are selected, set to None
         if not selected_columns:
             selected_columns = None
+    # Special handling for projection of [] (usually means COUNT(*))
+    if projection == []:
+        parquet_file = parquet.ParquetFile(stream)
+        return pyarrow.Table.from_pydict(
+            {"_": numpy.full(parquet_file.metadata.num_rows, True, dtype=numpy.bool_)}
+        )
     else:
         selected_columns = None
 

@@ -139,11 +139,9 @@ class SqlConnector(BaseConnector, PredicatePushable):
             result_schema.columns = [  # type:ignore
                 col for col in self.schema.columns if col.name in column_names  # type:ignore
             ]
-        elif self.schema.columns:  # type:ignore
-            query_builder.add("SELECT", "*")
         else:
             query_builder.add("SELECT", "1")
-            self.schema.columns.append(ConstantColumn(name="1", value=1))  # type:ignore
+            self.schema.columns = [ConstantColumn(name="1", value=1)]  # type:ignore
 
         # Update SQL if we've pushed predicates
         parameters: dict = {}
