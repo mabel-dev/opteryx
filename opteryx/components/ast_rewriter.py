@@ -99,7 +99,7 @@ def _build_literal_node(value: Any) -> LiteralNode:
         raise ValueError(f"Unsupported literal type: {type(value)}")
 
 
-def parameter_binder(
+def parameter_list_binder(
     node: Union[Dict, List], parameter_set: List[Any], connection, query_type
 ) -> Union[Dict, List]:
     """
@@ -118,10 +118,14 @@ def parameter_binder(
         ParameterError: If the number of placeholders and parameters do not match.
     """
     if isinstance(node, list):
-        return [parameter_binder(child, parameter_set, connection, query_type) for child in node]
+        return [
+            parameter_list_binder(child, parameter_set, connection, query_type) for child in node
+        ]
 
     if isinstance(node, dict):
         if "Value" in node and "Placeholder" in node["Value"]:
+            if node["Value"]["Placeholder"] != "?":
+                raise ParameterError("Parameter lists are only used with qmark (?) parameters.")
             if not parameter_set:
                 raise ParameterError(
                     "Incorrect number of bindings supplied. More placeholders than parameters."
@@ -131,10 +135,37 @@ def parameter_binder(
                 placeholder_value = placeholder_value.value
             return _build_literal_node(placeholder_value)
         return {
-            k: parameter_binder(v, parameter_set, connection, query_type) for k, v in node.items()
+            k: parameter_list_binder(v, parameter_set, connection, query_type)
+            for k, v in node.items()
         }
 
     return node  # Leaf node
+
+
+def parameter_dict_binder(
+    node: Union[Dict, List], parameter_set: Dict[str, Any], connection, query_type
+) -> Union[Dict, List]:
+
+    if isinstance(node, list):
+        return [
+            parameter_dict_binder(child, parameter_set, connection, query_type) for child in node
+        ]
+
+    if isinstance(node, dict):
+        if "Placeholder" in node:
+            placeholder_name = node["Placeholder"]
+            if hasattr(placeholder_name, "value"):
+                placeholder_name = placeholder_name.value
+            placeholder_name = placeholder_name[1:]
+            if placeholder_name not in parameter_set:
+                raise ParameterError(f"Parameter not defined - {placeholder_name}")
+            placeholder_value = parameter_set[placeholder_name]
+            return _build_literal_node(placeholder_value)
+        return {
+            k: parameter_dict_binder(v, parameter_set, connection, query_type)
+            for k, v in node.items()
+        }
+    return node
 
 
 def temporal_range_binder(ast, filters):
@@ -161,7 +192,7 @@ def temporal_range_binder(ast, filters):
     return ast
 
 
-def do_ast_rewriter(ast: list, temporal_filters: list, paramters: list, connection):
+def do_ast_rewriter(ast: list, temporal_filters: list, parameters: list, connection):
     # get the query type
     query_type = next(iter(ast))
     # bind the temporal ranges, we do that here because the order in the AST matters
@@ -169,11 +200,27 @@ def do_ast_rewriter(ast: list, temporal_filters: list, paramters: list, connecti
     # bind the user provided parameters, we this that here because we want it after the
     # AST has been created (to avoid injection flaws) but also because the order
     # matters
-    with_parameters_exchanged = parameter_binder(
-        with_temporal_ranges, parameter_set=paramters, connection=connection, query_type=query_type
-    )
-    if len(paramters) != 0:
-        raise ParameterError("More parameters were provided than placeholders found in the query.")
+    if isinstance(parameters, list) and len(parameters) > 0:
+        with_parameters_exchanged = parameter_list_binder(
+            with_temporal_ranges,
+            parameter_set=parameters,
+            connection=connection,
+            query_type=query_type,
+        )
+        if len(parameters) != 0:
+            raise ParameterError(
+                "More parameters were provided than placeholders found in the query."
+            )
+    elif isinstance(parameters, dict):
+        with_parameters_exchanged = parameter_dict_binder(
+            with_temporal_ranges,
+            parameter_set=parameters,
+            connection=connection,
+            query_type=query_type,
+        )
+    else:
+        with_parameters_exchanged = with_temporal_ranges
+
     # Do some AST rewriting
     # first eliminate WHERE x IN (subquery) queries
     rewritten_query = with_parameters_exchanged

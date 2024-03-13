@@ -61,6 +61,7 @@ from opteryx.exceptions import (
     InvalidFunctionParameterError,
     InvalidTemporalRangeFilterError,
     MissingSqlStatement,
+    ParameterError,
     PermissionsError,
     SqlError,
     UnexpectedDatasetReferenceError,
@@ -1308,10 +1309,14 @@ STATEMENTS = [
 
         ("SELECT missions[0] as m FROM $astronauts CROSS JOIN FAKE(1, 1) AS F order by m", 357, 1, None),
 
-        ("EXECUTE planets_by_id (1)", 1, 20, None),  # simple case
-        ("EXECUTE version", 1, 1, None),  # no paramters
-        ("EXECUTE get_satellites_by_planet_name('Jupiter')", 67, 1, None),  # string param
-        ("EXECUTE multiply_two_numbers (1.0, 9.9)", 1, 1, None),  # multiple params
+        ("EXECUTE PLANETS_BY_ID (id=1)", 1, 20, None),  # simple case
+        ("EXECUTE PLANETS_BY_ID (1)", None, None, ParameterError),  # simple case)
+        ("EXECUTE PLANETS_BY_ID (name=1)", None, None, ParameterError),  # simple case)
+        ("EXECUTE VERSION", 1, 1, None),  # no paramters
+        ("EXECUTE VERSION()", 1, 1, SqlError),  # no paramters
+        ("EXECUTE get_satellites_by_planet_name(name='Jupiter')", 67, 1, None),  # string param
+        ("EXECUTE GET_SATELLITES_BY_PLANET_NAME(name='Jupiter')", 67, 1, SqlError),  # string param
+        ("EXECUTE multiply_two_numbers (one=1.0, two=9.9)", 1, 1, None),  # multiple params
 
         # These are queries which have been found to return the wrong result or not run correctly
         # FILTERING ON FUNCTIONS

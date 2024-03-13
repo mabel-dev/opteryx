@@ -737,6 +737,18 @@ def plan_execute_query(statement) -> LogicalPlan:
     from opteryx.third_party import sqloxide
     from opteryx.utils import sql
 
+    def build_parm(node):
+        if "BinaryOp" in node:
+            op = node["BinaryOp"]
+            if "op" in op and op["op"] == "Eq":
+                return (
+                    logical_planner_builders.build(op["left"]).value,
+                    logical_planner_builders.build(op["right"]).value,
+                )
+        from opteryx.exceptions import ParameterError
+
+        raise ParameterError("EXECUTE paramters must be named, e.g. 'paramter=value'")
+
     # the parser allows USING, but we want EXECUTE function (parmeters)
     if statement["Execute"].get("using"):
         raise UnsupportedSyntaxError(
@@ -744,9 +756,7 @@ def plan_execute_query(statement) -> LogicalPlan:
         )
 
     statement_name = statement["Execute"]["name"]["value"]
-    parameters = [
-        logical_planner_builders.build(p["Value"]) for p in statement["Execute"]["parameters"]
-    ]
+    parameters = dict(build_parm(p) for p in statement["Execute"]["parameters"])
     try:
         with open("prepared_statements.json", "r") as ps:
             prepared_statatements = orjson.loads(ps.read())
@@ -754,12 +764,14 @@ def plan_execute_query(statement) -> LogicalPlan:
         prepared_statatements = {}
 
     # we have an inbuilt statements as a fallback
-    prepared_statatements["planets_by_id"] = "SELECT * FROM $planets WHERE id = ?"
-    prepared_statatements["version"] = "SELECT version()"
-
+    prepared_statatements["PLANETS_BY_ID"] = {
+        "statement": "SELECT * FROM $planets WHERE id = :id",
+        "parameters": [{"id": "name", "type": "INTEGER"}],
+    }
+    prepared_statatements["VERSION"] = {"statement": "SELECT version()", "parameters": []}
     if statement_name not in prepared_statatements:
         raise SqlError(f"Unable to EXECUTE prepared statement, '{statement_name}' not defined.")
-    operation = prepared_statatements[statement_name]
+    operation = prepared_statatements[statement_name]["statement"]
 
     operation = sql.remove_comments(operation)
     operation = sql.clean_statement(operation)
@@ -776,7 +788,7 @@ def plan_execute_query(statement) -> LogicalPlan:
     parsed_statements = do_ast_rewriter(
         parsed_statements,
         temporal_filters=temporal_filters,
-        paramters=parameters,
+        parameters=parameters,
         connection=None,
     )
     return list(do_logical_planning_phase(parsed_statements))[0][0]

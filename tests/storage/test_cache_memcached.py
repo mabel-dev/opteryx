@@ -18,7 +18,7 @@ def test_memcached_cache():
     from opteryx import CacheManager
     from opteryx.managers.cache import MemcachedCache
 
-    cache = MemcachedCache(server="localhost:11211")
+    cache = MemcachedCache()
     opteryx.set_cache_manager(
         CacheManager(cache_backend=cache, max_local_buffer_capacity=1, max_evictions_per_query=4)
     )
@@ -31,15 +31,17 @@ def test_memcached_cache():
     cur = opteryx.query("SELECT * FROM testdata.flat.ten_files;")
     stats = cur.stats
 
-    # assert cache.hits >= 11, cache.hits
+    assert cache.hits >= 11, cache.hits
     assert cache.skips == 0
     assert cache.errors == 0
 
-    # assert stats["cache_hits"] >= stats["blobs_read"], stats
+    assert stats["cache_hits"] >= stats["blobs_read"], stats
     # assert stats.get("cache_misses", 0) == 0, stats
 
 
 if __name__ == "__main__":  # pragma: no cover
     from tests.tools import run_tests
+
+    test_memcached_cache()
 
     run_tests()

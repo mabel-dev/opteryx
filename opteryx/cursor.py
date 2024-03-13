@@ -21,6 +21,7 @@ from typing import Dict
 from typing import Iterable
 from typing import List
 from typing import Optional
+from typing import Union
 from uuid import uuid4
 
 import pyarrow
@@ -145,14 +146,14 @@ class Cursor(DataFrame):
         """
         return self._qid
 
-    def _inner_execute(self, operation: str, params: Optional[Iterable] = None) -> Any:
+    def _inner_execute(self, operation: str, params: Union[Iterable, Dict, None] = None) -> Any:
         """
         Executes a single SQL operation within the current cursor.
 
         Parameters:
             operation: str
                 SQL operation to be executed.
-            params: Iterable, optional
+            params: Iterable/Dictionary, optional
                 Parameters for the SQL operation, defaults to None.
         Returns:
             Results of the query execution.
@@ -221,8 +222,15 @@ class Cursor(DataFrame):
         if len(statements) == 0:
             raise MissingSqlStatement("No statement found")
 
-        if len(statements) > 1 and params is not None:
-            raise UnsupportedSyntaxError("Batched queries cannot be parameterized.")
+        if (
+            len(statements) > 1
+            and params is not None
+            and not isinstance(params, dict)
+            and len(params) > 0
+        ):
+            raise UnsupportedSyntaxError(
+                "Batched queries cannot be parameterized with parameter lists, use named parameters."
+            )
 
         results = None
         for index, statement in enumerate(statements):

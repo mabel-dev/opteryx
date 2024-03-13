@@ -1,4 +1,24 @@
 {
-    "get_satellites_by_planet_name": "/* A test case FOR the EXECUTE query functionality */ SELECT s.name AS satellite_name FROM $satellites AS s INNER JOIN $planets AS p ON p.id = s.planetId WHERE p.name = ?",
-    "multiply_two_numbers": "SELECT ? * ?"
+    "get_satellites_by_planet_name": {
+        "statement": "/* A test case FOR the EXECUTE query functionality */ SELECT s.name AS satellite_name FROM $satellites AS s INNER JOIN $planets AS p ON p.id = s.planetId WHERE p.name = :name",
+        "parameters": [
+            {
+                "name": "name",
+                "type": "VARCHAR"
+            }
+        ]
+    },
+    "multiply_two_numbers": {
+        "statement": "SELECT :one * :two",
+        "parameters": [
+            {
+                "name": "one",
+                "type": "INTEGER"
+            },
+            {
+                "name": "two",
+                "type": "INTEGER"
+            }
+        ]
+    }
 }

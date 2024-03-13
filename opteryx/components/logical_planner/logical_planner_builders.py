@@ -562,6 +562,12 @@ def pattern_match(branch, alias: Optional[List[str]] = None, key=None):
     )
 
 
+def placeholder(value, alias: Optional[List[str]] = None, key=None):
+    from opteryx.exceptions import ParameterError
+
+    raise ParameterError("Unresolved parameter in query.")
+
+
 def position(value, alias: Optional[List[str]] = None, key=None):
     sub = build(value["expr"])
     string = build(value["in"])
@@ -779,6 +785,7 @@ BUILDERS = {
     "Nested": nested,
     "Null": literal_null,
     "Number": literal_number,
+    "Placeholder": placeholder,
     "Position": position,
     "QualifiedWildcard": qualified_wildcard,
     "RLike": pattern_match,
