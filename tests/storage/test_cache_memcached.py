@@ -24,16 +24,22 @@ def test_memcached_cache():
     )
 
     # read the data five times, this should populate the cache if it hasn't already
-    for i in range(5):
+    for i in range(10):
         cur = opteryx.query("SELECT * FROM testdata.flat.ten_files;")
 
     # read the data again time, this should hit the cache
     cur = opteryx.query("SELECT * FROM testdata.flat.ten_files;")
     stats = cur.stats
 
-    assert cache.hits >= 11, cache.hits
-    assert cache.skips == 0
-    assert cache.errors == 0
+    assert (
+        cache.hits >= 11
+    ), f"hits: {cache.hits}, misses: {cache.misses}, skips: {cache.skips}, errors: {cache.errors}"
+    assert (
+        cache.skips == 0
+    ), f"hits: {cache.hits}, misses: {cache.misses}, skips: {cache.skips}, errors: {cache.errors}"
+    assert (
+        cache.errors == 0
+    ), f"hits: {cache.hits}, misses: {cache.misses}, skips: {cache.skips}, errors: {cache.errors}"
 
     assert stats["cache_hits"] >= stats["blobs_read"], stats
     # assert stats.get("cache_misses", 0) == 0, stats
