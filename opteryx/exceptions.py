@@ -29,6 +29,7 @@ Exception
          └── ProgrammingError [PEP-0249] *
              ├── DataError *
              │   ├── InconsistentSchemaError
+             │   ├── DatasetReadError
              │   ├── EmptyDatasetError
              │   └── EmptyResultSetError
              ├── ExecutionError *
@@ -345,7 +346,11 @@ class MissingSqlStatement(ProgrammingError):
 
 
 class InconsistentSchemaError(DataError):
-    """Raised whem, despite efforts, we can't get a consistent schema."""
+    """Raised when, despite efforts, we can't get a consistent schema."""
+
+
+class DatasetReadError(DataError):
+    """Raised when we can't read the data we're pretty sure is there"""
 
 
 class EmptyDatasetError(DataError):

@@ -25,6 +25,7 @@ from opteryx.connectors.capabilities import Cacheable
 from opteryx.connectors.capabilities import Partitionable
 from opteryx.connectors.capabilities import PredicatePushable
 from opteryx.exceptions import DatasetNotFoundError
+from opteryx.exceptions import DatasetReadError
 from opteryx.exceptions import MissingDependencyError
 from opteryx.exceptions import UnsupportedFileTypeError
 from opteryx.utils import paths
@@ -106,8 +107,9 @@ class GcpCloudStorageConnector(BaseConnector, Cacheable, Partitionable, Predicat
             self.client_credentials.refresh(request)
             self.access_token = self.client_credentials.token
 
-        bucket = bucket.replace("va_data", "va-data")
-        bucket = bucket.replace("data_", "data-")
+        if "kh" not in bucket:
+            bucket = bucket.replace("va_data", "va-data")
+            bucket = bucket.replace("data_", "data-")
         object_full_path = urllib.parse.quote(blob_name[(len(bucket) + 1) :], safe="")
 
         url = f"https://storage.googleapis.com/storage/v1/b/{bucket}/o/{object_full_path}?alt=media"
@@ -115,6 +117,9 @@ class GcpCloudStorageConnector(BaseConnector, Cacheable, Partitionable, Predicat
         response = self.session.get(
             url, headers={"Authorization": f"Bearer {self.access_token}"}, timeout=30
         )
+        if response.status_code != 200:
+            raise DatasetReadError(f"Unable to read '{blob_name}' - {response.status_code}")
+
         return response.content
 
     @single_item_cache
