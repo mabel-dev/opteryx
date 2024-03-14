@@ -40,6 +40,7 @@
 ~~~
 """
 
+from typing import Dict
 from typing import Iterable
 from typing import Union
 
@@ -48,7 +49,7 @@ from opteryx import config
 PROFILE_LOCATION = config.PROFILE_LOCATION
 
 
-def query_planner(operation: str, parameters: Union[Iterable, None], connection, qid: str):
+def query_planner(operation: str, parameters: Union[Iterable, Dict, None], connection, qid: str):
     import orjson
 
     from opteryx.components.ast_rewriter import do_ast_rewriter
@@ -64,7 +65,12 @@ def query_planner(operation: str, parameters: Union[Iterable, None], connection,
 
     # SQL Rewriter extracts temporal filters
     clean_sql, temporal_filters = do_sql_rewrite(operation)
-    params = [p for p in parameters or []]
+    if parameters is None:
+        params = []
+    elif isinstance(parameters, dict):
+        params = parameters.copy()
+    else:
+        params = [p for p in parameters or []]
 
     profile_content = operation + "\n\n"
     # Parser converts the SQL command into an AST
@@ -76,7 +82,7 @@ def query_planner(operation: str, parameters: Union[Iterable, None], connection,
     parsed_statements = do_ast_rewriter(
         parsed_statements,
         temporal_filters=temporal_filters,
-        paramters=params,
+        parameters=params,
         connection=connection,
     )
 

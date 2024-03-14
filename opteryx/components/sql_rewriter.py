@@ -189,6 +189,25 @@ def parse_date(date, end: bool = False):  # pragma: no cover
     if date == "YESTERDAY":
         return (now - datetime.timedelta(days=1)).replace(hour=0)
 
+    weekdays = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"]
+    if date in weekdays:
+        # Find the weekday number (0=Monday, 1=Tuesday, ..., 6=Sunday)
+        target_weekday = weekdays.index(date)
+        # Find the current weekday number
+        current_weekday = now.weekday()
+
+        # Calculate how many days to subtract to get the last occurrence of the target weekday
+        days_to_subtract = (current_weekday - target_weekday) % 7
+        if days_to_subtract == 0:
+            # If today is the target weekday, adjust to get the last week's same day
+            days_to_subtract = 7
+
+        # Calculate the most recent date for the target weekday
+        most_recent_day = (now - datetime.timedelta(days=days_to_subtract)).replace(
+            hour=0, minute=0, second=0, microsecond=0
+        )
+        return most_recent_day
+
     if date[0] == date[-1] and date[0] in ("'", '"', "`"):
         date = date[1:-1]
 

@@ -59,9 +59,7 @@ jobs:
           COCKROACH_USER: '${{ secrets.COCKROACH_USER }}'
           COCKROACH_PASSWORD: '${{ secrets.COCKROACH_PASSWORD }}'
           REDIS_CONNECTION: '${{ secrets.REDIS_CONNECTION }}'
-          MEMCACHED_SERVERS: '${{ secrets.MEMCACHED_SERVERS }}'
-          MEMCACHED_USERNAME: '${{ secrets.MEMCACHED_USERNAME }}'
-          MEMCACHED_PASSWORD: '${{ secrets.MEMCACHED_PASSWORD }}'
+          MEMCACHED_SERVER: 'localhost:11211'
 
       - name: Check Coverage
         run: python -m coverage report --include=opteryx/** --fail-under=80 -m
