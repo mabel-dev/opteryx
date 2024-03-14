@@ -900,7 +900,13 @@ def plan_query(statement):
     root_node["body"]["limit"] = root_node.get("limit", None)
     root_node["body"]["offset"] = (root_node.get("offset") or {}).get("value")
     root_node["body"]["order_by"] = root_node.get("order_by", None)
-    return inner_query_planner(root_node["body"])
+
+    planned_query = inner_query_planner(root_node["body"])
+
+    # DEBUG: log ("LOGICAL PLAN")
+    # DEBUG: log (planned_query.draw())
+
+    return planned_query
 
 
 def plan_set_variable(statement):

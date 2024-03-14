@@ -192,7 +192,7 @@ def temporal_range_binder(ast, filters):
     return ast
 
 
-def do_ast_rewriter(ast: list, temporal_filters: list, parameters: list, connection):
+def do_ast_rewriter(ast: list, temporal_filters: list, parameters: Union[list, dict], connection):
     # get the query type
     query_type = next(iter(ast))
     # bind the temporal ranges, we do that here because the order in the AST matters

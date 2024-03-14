@@ -65,6 +65,7 @@ def query_planner(operation: str, parameters: Union[Iterable, Dict, None], conne
 
     # SQL Rewriter extracts temporal filters
     clean_sql, temporal_filters = do_sql_rewrite(operation)
+    params: Union[list, dict, None] = None
     if parameters is None:
         params = []
     elif isinstance(parameters, dict):
