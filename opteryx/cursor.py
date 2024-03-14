@@ -226,7 +226,7 @@ class Cursor(DataFrame):
             len(statements) > 1
             and params is not None
             and not isinstance(params, dict)
-            and len(params) > 0
+            and params > 0
         ):
             raise UnsupportedSyntaxError(
                 "Batched queries cannot be parameterized with parameter lists, use named parameters."
