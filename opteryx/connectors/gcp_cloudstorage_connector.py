@@ -120,8 +120,9 @@ class GcpCloudStorageConnector(BaseConnector, Cacheable, Partitionable, Predicat
     @single_item_cache
     def get_list_of_blob_names(self, *, prefix: str) -> List[str]:
         bucket, object_path, _, _ = paths.get_parts(prefix)
-        bucket = bucket.replace("va_data", "va-data")
-        bucket = bucket.replace("data_", "data-")
+        if "kh" not in bucket:
+            bucket = bucket.replace("va_data", "va-data")
+            bucket = bucket.replace("data_", "data-")
 
         # DEBUG: log (f"[GCS] bucket: '{bucket}', path: '{object_path}'")
 
