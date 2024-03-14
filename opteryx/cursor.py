@@ -222,12 +222,7 @@ class Cursor(DataFrame):
         if len(statements) == 0:
             raise MissingSqlStatement("No statement found")
 
-        if (
-            len(statements) > 1
-            and params is not None
-            and not isinstance(params, dict)
-            and len(params) > 0
-        ):
+        if len(statements) > 1 and params is not None and not isinstance(params, dict) and params:
             raise UnsupportedSyntaxError(
                 "Batched queries cannot be parameterized with parameter lists, use named parameters."
             )
