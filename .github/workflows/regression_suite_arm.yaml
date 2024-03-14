@@ -50,4 +50,4 @@ jobs:
           MYSQL_PASSWORD: '${{ secrets.MYSQL_PASSWORD }}'
           POSTGRES_USER: '${{ secrets.POSTGRES_USER }}'
           POSTGRES_PASSWORD: '${{ secrets.POSTGRES_PASSWORD }}'
-          MEMCACHED_SERVER: 'localhost:12211'
+          MEMCACHED_SERVER: 'localhost:11211'
