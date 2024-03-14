@@ -123,6 +123,8 @@ class GcpCloudStorageConnector(BaseConnector, Cacheable, Partitionable, Predicat
         bucket = bucket.replace("va_data", "va-data")
         bucket = bucket.replace("data_", "data-")
 
+        # DEBUG: log (f"[GCS] bucket: '{bucket}', path: '{object_path}'")
+
         object_path = urllib.parse.quote(object_path, safe="")
         bucket = urllib.parse.quote(bucket, safe="")  # Ensure bucket name is URL-safe
         url = f"https://storage.googleapis.com/storage/v1/b/{bucket}/o?prefix={object_path}&fields=items(name)"
