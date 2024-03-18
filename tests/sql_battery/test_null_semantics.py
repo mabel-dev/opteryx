@@ -113,7 +113,7 @@ SELECT * FROM (VALUES (1), (-1), (NULL)) AS tristatebooleans(bool) WHERE bool = 
 """
 -- Query 21: Expected rows: 1 (NULL)
 SELECT * FROM (VALUES (1), (-1), (NULL)) AS tristatebooleans(bool) WHERE bool IS NULL;
-""", {numpy.nan}),(
+""", {None}),(
 """
 -- Query 22: Expected rows: 2 (1, -1)
 SELECT * FROM (VALUES (1), (-1), (NULL)) AS tristatebooleans(bool) WHERE bool IS NOT NULL;

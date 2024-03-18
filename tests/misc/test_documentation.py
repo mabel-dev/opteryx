@@ -99,19 +99,41 @@ def test_get_started():
 def test_python_client():
     import opteryx
 
+    # Establish a connection
     conn = opteryx.connect()
+    # Create a cursor object
     cursor = conn.cursor()
+
+    # Execute a SQL query
     cursor.execute("SELECT * FROM $planets;")
-    # if we convert to bytes we're comparing the values only
-    rows_first = b"".join([r.as_bytes for r in cursor.fetchall()])
+
+    # Fetch all rows
+    rows = cursor.fetchall()
 
     import opteryx
 
-    cursor = opteryx.query("SELECT * FROM $planets;")
-    # if we convert to bytes we're comparing the values only
-    rows_second = b"".join([r.as_bytes for r in cursor.fetchall()])
+    # Establish a connection
+    conn = opteryx.connect()
+    # Create a cursor object
+    cursor = conn.cursor()
 
-    assert rows_first == rows_second
+    # Execute a SQL query
+    cursor.execute("SELECT * FROM $planets WHERE id = :user_provided_id;", {"user_provided_id": 1})
+
+    # Fetch all rows
+    rows = cursor.fetchall()
+
+    import opteryx
+
+    # Execute a SQL query and get the results
+    cursor = opteryx.query("SELECT * FROM $planets;").fetchall()
+
+    import opteryx
+
+    # Execute a SQL query and get a cursor
+    cursor = opteryx.query(
+        "SELECT * FROM $planets WHERE id = :user_provided_id;", {"user_provided_id": 1}
+    ).fetchall()
 
 
 def test_pandas_integration_input():

@@ -303,6 +303,7 @@ def ipc_decoder(buffer, projection: List = None, selection=None, just_schema: bo
 KNOWN_EXTENSIONS: Dict[str, Tuple[Callable, str]] = {
     "avro": (avro_decoder, ExtentionType.DATA),
     "complete": (do_nothing, ExtentionType.CONTROL),
+    "manifest": (do_nothing, ExtentionType.CONTROL),
     "ignore": (do_nothing, ExtentionType.CONTROL),
     "arrow": (arrow_decoder, ExtentionType.DATA),  # feather
     "csv": (csv_decoder, ExtentionType.DATA),
