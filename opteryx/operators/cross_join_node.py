@@ -87,10 +87,6 @@ def _cross_join_unnest_column(
             new_block = new_block.append_column(target_column.identity, [new_column_data])
             yield new_block
 
-            if batch_size == INTERNAL_BATCH_SIZE:
-                # we size the batches based on observations
-                batch_size = int((INTERNAL_BATCH_SIZE / new_block.nbytes) * 8 * 1024 * 1024)
-
 
 def _cross_join_unnest_literal(
     morsels: BasePlanNode, source: Tuple, target_column: FlatColumn
