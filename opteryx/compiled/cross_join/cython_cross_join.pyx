@@ -41,4 +41,8 @@ cpdef build_rows_indices_and_column(cnp.ndarray column_data):
     free(lengths)
 
     cdef cnp.int32_t[:] mv = <cnp.int32_t[:total_size]>indices
-    return (np.asarray(mv), flat_data)
+    # Create a NumPy array that is a copy of the memoryview, 
+    # which in turn makes it safe to free the original indices memory.
+    np_array = np.array(mv, copy=True)
+    free(indices)  # Now it's safe to free indices since np_array has its own copy.
+    return (np_array, flat_data)
