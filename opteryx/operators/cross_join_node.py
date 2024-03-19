@@ -36,7 +36,7 @@ MAX_JOIN_SIZE: int = 1000  # config
 
 
 def _cross_join_unnest_column(
-    morsels: BasePlanNode, source: Node, target_column: FlatColumn
+    morsels: BasePlanNode, source: Node, target_column: FlatColumn, statistics
 ) -> Generator[pyarrow.Table, None, None]:
     """
     Perform a cross join on an unnested column of pyarrow tables.
@@ -60,6 +60,7 @@ def _cross_join_unnest_column(
 
     # Loop through each morsel from the morsels execution
     for left_morsel in morsels.execute():
+        start = time.monotonic_ns()
         # Break the morsel into batches to avoid memory issues
         for left_block in left_morsel.to_batches(max_chunksize=batch_size):
             # Fetch the data of the column to be unnested
@@ -85,7 +86,10 @@ def _cross_join_unnest_column(
             new_block = left_block.take(indices)
             new_block = pyarrow.Table.from_batches([new_block], schema=left_morsel.schema)
             new_block = new_block.append_column(target_column.identity, [new_column_data])
+
+            statistics.time_cross_join_unnest += time.monotonic_ns() - start
             yield new_block
+            start = time.monotonic_ns()
 
 
 def _cross_join_unnest_literal(
@@ -224,8 +228,9 @@ class CrossJoinNode(BasePlanNode):
         else:
             start = time.monotonic_ns()
             for morsel in _cross_join_unnest_column(
-                morsels=left_node, source=self._unnest_column, target_column=self._unnest_target
+                morsels=left_node,
+                source=self._unnest_column,
+                target_column=self._unnest_target,
+                statistics=self.statistics,
             ):
-                self.statistics.time_cross_join_unnest += time.monotonic_ns() - start
                 yield morsel
-                start = time.monotonic_ns()

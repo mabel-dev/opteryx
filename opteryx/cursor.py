@@ -261,7 +261,7 @@ class Cursor(DataFrame):
                 import orso
 
                 meta_dataframe = orso.DataFrame(
-                    rows=[(result_data.record_count,)],
+                    rows=[(result_data.record_count,)],  # type: ignore
                     schema=RelationSchema(
                         name="table",
                         columns=[FlatColumn(name="rows_affected", type=OrsoTypes.INTEGER)],
