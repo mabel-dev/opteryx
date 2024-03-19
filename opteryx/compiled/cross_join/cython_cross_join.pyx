@@ -4,7 +4,6 @@ cimport numpy as cnp
 cimport cython
 from libc.stdint cimport int32_t
 
-
 @cython.boundscheck(False)
 @cython.wraparound(False)
 cpdef build_rows_indices_and_column(cnp.ndarray column_data):
@@ -30,8 +29,10 @@ cpdef build_rows_indices_and_column(cnp.ndarray column_data):
     if indices is NULL:
         raise MemoryError("Failed to allocate memory.")
 
-    cdef Py_ssize_t start, end = 0
-    cdef Py_ssize_t j
+    cdef Py_ssize_t start = 0
+    cdef Py_ssize_t end = 0
+    cdef Py_ssize_t j = 0
+
     for i in range(row_count):
         end = start + lengths[i]
         for j in range(start, end):
