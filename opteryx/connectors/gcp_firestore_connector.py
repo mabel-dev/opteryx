@@ -18,7 +18,6 @@ from orso.schema import RelationSchema
 from opteryx import config
 from opteryx.connectors.base.base_connector import INITIAL_CHUNK_SIZE
 from opteryx.connectors.base.base_connector import BaseConnector
-from opteryx.connectors.base.base_connector import DatasetReader
 from opteryx.exceptions import DatasetNotFoundError
 from opteryx.exceptions import MissingDependencyError
 from opteryx.exceptions import UnmetRequirementError
