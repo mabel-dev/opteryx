@@ -31,8 +31,8 @@ from opteryx.models import Node
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 
-INTERNAL_BATCH_SIZE: int = 10  # config
-MAX_JOIN_SIZE: int = 500  # config
+INTERNAL_BATCH_SIZE: int = 5000  # config
+MAX_JOIN_SIZE: int = 1000  # config
 
 
 def _cross_join_unnest_column(
