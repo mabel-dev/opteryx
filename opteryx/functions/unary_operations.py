@@ -35,7 +35,7 @@ def _is_null(values: numpy.ndarray) -> numpy.ndarray:
     elif values.dtype.kind == "M":  # datetime64
         return numpy.isnat(values)
     elif values.dtype.kind in ["S", "O"]:  # string or object
-        return values == None
+        return numpy.vectorize(lambda x: x is None)(values)
     else:
         raise TypeError(
             f"Unsupported type for none comparison: {values.dtype} ({values.dtype.kind})"

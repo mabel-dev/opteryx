@@ -31,7 +31,7 @@ from opteryx.models import Node
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 
-INTERNAL_BATCH_SIZE: int = 1000  # config
+INTERNAL_BATCH_SIZE: int = 10  # config
 MAX_JOIN_SIZE: int = 500  # config
 
 
@@ -86,10 +86,6 @@ def _cross_join_unnest_column(
             new_block = pyarrow.Table.from_batches([new_block], schema=left_morsel.schema)
             new_block = new_block.append_column(target_column.identity, [new_column_data])
             yield new_block
-
-            if batch_size == INTERNAL_BATCH_SIZE:
-                # we size the batches based on observations
-                batch_size = int((INTERNAL_BATCH_SIZE / new_block.nbytes) * 8 * 1024 * 1024)
 
 
 def _cross_join_unnest_literal(

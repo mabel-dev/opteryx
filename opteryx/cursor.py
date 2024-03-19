@@ -27,6 +27,9 @@ from uuid import uuid4
 import pyarrow
 from orso import DataFrame
 from orso import converters
+from orso.schema import FlatColumn
+from orso.schema import RelationSchema
+from orso.types import OrsoTypes
 
 from opteryx import config
 from opteryx import utils
@@ -257,7 +260,13 @@ class Cursor(DataFrame):
             if self._result_type == ResultType.NON_TABULAR:
                 import orso
 
-                meta_dataframe = orso.DataFrame([{"rows_affected": result_data.record_count}])  # type: ignore
+                meta_dataframe = orso.DataFrame(
+                    rows=[(result_data.record_count,)],
+                    schema=RelationSchema(
+                        name="table",
+                        columns=[FlatColumn(name="rows_affected", type=OrsoTypes.INTEGER)],
+                    ),
+                )  # type: ignore
                 self._rows = meta_dataframe._rows
                 self._schema = meta_dataframe._schema
 
