@@ -12,7 +12,9 @@ jobs:
 
   build_wheels:
     name: Build wheels on ${{ matrix.os }}
-    runs-on: buildjet-2vcpu-ubuntu-2204-arm
+    runs-on: raspberry
+    container:
+      image: ubuntu:22.04
     env:
       CIBW_BEFORE_ALL: "pip install --upgrade cython wheel numpy"
       CIBW_SKIP: "*-musllinux*"
