@@ -10,6 +10,10 @@ jobs:
       matrix:
         python-version: ['3.11']
     runs-on: buildjet-2vcpu-ubuntu-2204-arm
+    #runs-on: raspberry
+    #container:
+      # Runner docker image
+    #  image: ubuntu:22.04
     steps:
 
       - name: Checkout code
