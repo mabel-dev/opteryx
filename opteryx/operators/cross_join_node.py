@@ -31,7 +31,7 @@ from opteryx.models import Node
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 
-INTERNAL_BATCH_SIZE: int = 1000  # config
+INTERNAL_BATCH_SIZE: int = 10  # config
 MAX_JOIN_SIZE: int = 500  # config
 
 
