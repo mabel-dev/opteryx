@@ -12,7 +12,7 @@ jobs:
 
   build_wheels:
     name: Build wheels on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
+    runs-on: buildjet-2vcpu-ubuntu-2204-arm
     env:
       CIBW_BEFORE_ALL: "pip install --upgrade cython wheel numpy"
       CIBW_SKIP: "*-musllinux*"
@@ -28,11 +28,6 @@ jobs:
 #            cibw_archs: "arm64"
 
     steps:
-      - name: Set up QEMU
-        if: matrix.cibw_archs == 'aarch64'
-        uses: docker/setup-qemu-action@v2
-        with:
-          platforms: arm64
 
       - uses: actions/checkout@v3
         with:
