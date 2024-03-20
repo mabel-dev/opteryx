@@ -7,11 +7,11 @@ from libc.stdint cimport int32_t
 @cython.boundscheck(False)
 @cython.wraparound(False)
 cpdef build_rows_indices_and_column(cnp.ndarray column_data):
-    cdef Py_ssize_t i, total_size = 0
-    cdef Py_ssize_t length
+    cdef int32_t i, total_size = 0
+    cdef int32_t length
     cdef list flat_data
-    cdef Py_ssize_t row_count = len(column_data)
-    cdef Py_ssize_t *lengths = <Py_ssize_t *>malloc(row_count * sizeof(Py_ssize_t))
+    cdef int32_t row_count = len(column_data)
+    cdef int32_t *lengths = <int32_t *>malloc(row_count * sizeof(int32_t))
     if lengths is NULL:
         raise MemoryError("Failed to allocate memory for lengths array.")
 
@@ -29,9 +29,9 @@ cpdef build_rows_indices_and_column(cnp.ndarray column_data):
     if indices is NULL:
         raise MemoryError("Failed to allocate memory.")
 
-    cdef Py_ssize_t start = 0
-    cdef Py_ssize_t end = 0
-    cdef Py_ssize_t j = 0
+    cdef int32_t start = 0
+    cdef int32_t end = 0
+    cdef int32_t j = 0
 
     for i in range(row_count):
         end = start + lengths[i]
