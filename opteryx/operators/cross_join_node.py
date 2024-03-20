@@ -31,7 +31,7 @@ from opteryx.models import Node
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 
-INTERNAL_BATCH_SIZE: int = 5000  # config
+INTERNAL_BATCH_SIZE: int = 2500  # config
 MAX_JOIN_SIZE: int = 1000  # config
 
 
@@ -93,12 +93,13 @@ def _cross_join_unnest_column(
 
 
 def _cross_join_unnest_literal(
-    morsels: BasePlanNode, source: Tuple, target_column: FlatColumn
+    morsels: BasePlanNode, source: Tuple, target_column: FlatColumn, statistics
 ) -> Generator[pyarrow.Table, None, None]:
     joined_list_size = len(source)
 
     # Loop through each morsel from the morsels execution
     for left_morsel in morsels.execute():
+        start = time.monotonic_ns()
         # Break the morsel into batches to avoid memory issues
         for left_block in left_morsel.to_batches(max_chunksize=INTERNAL_BATCH_SIZE):
             left_block = pyarrow.Table.from_batches([left_block], schema=left_morsel.schema)
@@ -115,7 +116,9 @@ def _cross_join_unnest_literal(
             array_column = pyarrow.array(tiled_array)
             appended_table = appended_table.append_column(target_column.identity, array_column)
 
+            statistics.time_cross_join_unnest += time.monotonic_ns() - start
             yield appended_table
+            start = time.monotonic_ns()
 
 
 def _cartesian_product(*arrays):
@@ -129,7 +132,7 @@ def _cartesian_product(*arrays):
     return numpy.hsplit(arr.reshape(-1, array_count), array_count)
 
 
-def _cross_join(left, right):
+def _cross_join(left, right, statistics):
     """
     A cross join is the cartesian product of two tables - this usually isn't very
     useful, but it does allow you to the theta joins (non-equi joins)
@@ -148,6 +151,7 @@ def _cross_join(left, right):
     from opteryx.third_party.pyarrow_ops import align_tables
 
     for left_morsel in left.execute():
+        start = time.monotonic_ns()
         # Iterate through left table in chunks of size INTERNAL_BATCH_SIZE
         for left_block in left_morsel.to_batches(max_chunksize=INTERNAL_BATCH_SIZE):
             # Convert the chunk to a table to retain column names
@@ -166,7 +170,9 @@ def _cross_join(left, right):
                 table = align_tables(left_block, right, left_chunk.flatten(), right_chunk.flatten())
 
                 # Yield the resulting table to the caller
+                statistics.time_cross_join_unnest += time.monotonic_ns() - start
                 yield table
+                start = time.monotonic_ns()
 
 
 class CrossJoinNode(BasePlanNode):
@@ -209,28 +215,19 @@ class CrossJoinNode(BasePlanNode):
         )  # type:ignore
 
         if self._unnest_column is None:
-            start = time.monotonic_ns()
-            for morsel in _cross_join(left_node, right_table):
-                self.statistics.time_cross_join += time.monotonic_ns() - start
-                yield morsel
-                start = time.monotonic_ns()
+            yield from _cross_join(left_node, right_table, self.statistics)
 
         elif isinstance(self._unnest_column.value, tuple):
-            start = time.monotonic_ns()
-            for morsel in _cross_join_unnest_literal(
+            yield from _cross_join_unnest_literal(
                 morsels=left_node,
                 source=self._unnest_column.value,
                 target_column=self._unnest_target,
-            ):
-                self.statistics.time_cross_join_literal += time.monotonic_ns() - start
-                yield morsel
-                start = time.monotonic_ns()
+                statistics=self.statistics,
+            )
         else:
-            start = time.monotonic_ns()
-            for morsel in _cross_join_unnest_column(
+            yield from _cross_join_unnest_column(
                 morsels=left_node,
                 source=self._unnest_column,
                 target_column=self._unnest_target,
                 statistics=self.statistics,
-            ):
-                yield morsel
+            )
