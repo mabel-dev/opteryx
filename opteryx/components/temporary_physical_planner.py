@@ -51,11 +51,16 @@ def create_physical_plan(logical_plan, query_properties):
             node = operators.FunctionDatasetNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Join:
             if node_config.get("type") == "inner":
+                # We use our own implementation of INNER JOIN
                 node = operators.InnerJoinNode(query_properties, **node_config)
+            elif node_config.get("type") == "left outer":
+                # We use out own implementation of LEFT JOIN
+                node = operators.LeftJoinNode(query_properties, **node_config)
             elif node_config.get("type") == "cross join":
-                # CROSS JOINs are quite different
+                # Pyarrow doesn't have a CROSS JOIN
                 node = operators.CrossJoinNode(query_properties, **node_config)
             else:
+                # Use Pyarrow for all other joins
                 node = operators.JoinNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Limit:
             node = operators.LimitNode(query_properties, limit=node_config.get("limit"), offset=node_config.get("offset", 0))
@@ -78,7 +83,8 @@ def create_physical_plan(logical_plan, query_properties):
             node = operators.NoOpNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Union:
             node = operators.UnionNode(query_properties, **node_config)
-
+        elif node_type == LogicalPlanStepType.MetadataWriter:
+            node = operators.MetadataWriterNode(query_properties, **node_config)
         else:
             raise Exception(f"something unexpected happed - {node_type.name}")
         # fmt: on

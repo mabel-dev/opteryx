@@ -90,6 +90,7 @@ class LogicalPlanStepType(int, Enum):
     CTE = auto()
     Subquery = auto()
     FunctionDataset = auto()  # Unnest, GenerateSeries, values + Fake
+    MetadataWriter = auto()
 
 
 class LogicalPlan(Graph):
@@ -726,6 +727,31 @@ def create_node_relation(relation):
     return root_node, sub_plan
 
 
+def analyze_query(statement) -> LogicalPlan:
+
+    print(statement)
+
+    root_node = "Analyze"
+    plan = LogicalPlan()
+
+    from_step = LogicalPlanNode(node_type=LogicalPlanStepType.Scan)
+    table = statement[root_node]["table_name"]
+    from_step.relation = ".".join(part["value"] for part in table)
+    from_step.alias = from_step.relation
+    from_step.start_date = table[0].get("start_date")
+    from_step.end_date = table[0].get("end_date")
+    step_id = random_string()
+    plan.add_node(step_id, from_step)
+
+    metadata_step = LogicalPlanNode(node_type=LogicalPlanStepType.MetadataWriter)
+    previous_step_id, step_id = step_id, random_string()
+    plan.add_node(step_id, metadata_step)
+    plan.add_edge(previous_step_id, step_id)
+
+    return plan
+    # write manifest
+
+
 def plan_execute_query(statement) -> LogicalPlan:
 
     import orjson
@@ -1001,7 +1027,7 @@ def plan_show_variables(statement):
 
 
 QUERY_BUILDERS = {
-    #    "Analyze": analyze_query,
+    "Analyze": analyze_query,
     "Execute": plan_execute_query,
     "Explain": plan_explain,
     "Query": plan_query,

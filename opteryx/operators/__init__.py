@@ -27,7 +27,9 @@ from .function_dataset_node import FunctionDatasetNode  # Dataset Constructors
 # from .information_schema_node import InformationSchemaNode  # information_schema
 from .inner_join_node import InnerJoinNode
 from .join_node import JoinNode
+from .left_join_node import LeftJoinNode
 from .limit_node import LimitNode  # select the first N records
+from .metadata_writer_node import MetadataWriterNode
 from .morsel_defragment_node import MorselDefragmentNode  # consolidate small morsels
 from .noop_node import NoOpNode  # No Operation
 from .projection_node import ProjectionNode  # remove unwanted columns including renames

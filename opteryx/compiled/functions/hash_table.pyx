@@ -52,10 +52,10 @@ cdef class HashSet:
     def __cinit__(self):
         self.c_set = unordered_set[int64_t]()
 
-    cdef insert(self, int64_t value):
+    def insert(self, int64_t value):
         self.c_set.insert(value)
 
-    cdef bint contains(self, int64_t value):
+    def contains(self, int64_t value):
         return self.c_set.find(value) != self.c_set.end()
 
 

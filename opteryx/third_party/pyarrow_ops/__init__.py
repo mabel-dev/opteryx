@@ -16,8 +16,14 @@ def align_tables(source_table, append_table, source_indices, append_indices):
         empty_arrays = [pyarrow.array([]) for field in combined_schema]
         return pyarrow.Table.from_arrays(empty_arrays, schema=combined_schema)
 
-    # Take the rows from source_table at the specified source_indices
-    aligned_table = source_table.take(source_indices)
+    if all(s is None for s in source_indices):
+        empty_arrays = [
+            pyarrow.nulls(len(source_indices), type=field.type) for field in source_table.schema
+        ]
+        aligned_table = pyarrow.Table.from_arrays(empty_arrays, schema=source_table.schema)
+    else:
+        # Take the rows from source_table at the specified source_indices
+        aligned_table = source_table.take(source_indices)
 
     # Create a set of column names from the source table for efficient existence checking
     source_column_names = set(source_table.column_names)
