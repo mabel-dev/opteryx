@@ -101,8 +101,8 @@ class GcpFireStoreConnector(BaseConnector):
         if self.schema:
             return self.schema
 
-        # onlt read one record
-        record = next(self.read_dataset(chunk_size=1), None)
+        # only read one record
+        record = next(self.read_dataset(chunk_size=10), None)
 
         if record is None:
             raise DatasetNotFoundError(dataset=self.dataset)

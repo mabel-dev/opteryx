@@ -172,3 +172,4 @@ version_2/**
 planets.duckdb
 charts.csv
 testdata/tpch/**/**.parquet
+**.cpp

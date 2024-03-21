@@ -15,10 +15,10 @@ Inner Join Node
 
 This is a SQL Query Execution Plan Node.
 
-PyArrow has a good INNER JOIN implementation, but it errors when the
+PyArrow has a good LEFT JOIN implementation, but it errors when the
 relations being joined contain STRUCT or ARRAY columns, this is true
 for all of the JOIN types, however we've only written our own INNER
-JOIN.
+and LEFT JOINs.
 
 It is comparible performance to the PyArrow INNER JOIN, in benchmarks
 sometimes native is faster, sometimes PyArrow is faster. Generally

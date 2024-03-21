@@ -24,6 +24,7 @@ from pyarrow import ArrowNotImplementedError
 from pyarrow import compute
 
 import opteryx
+from opteryx.compiled.functions import array_encode_utf8
 from opteryx.exceptions import FunctionNotFoundError
 from opteryx.exceptions import IncorrectTypeError
 from opteryx.exceptions import UnsupportedSyntaxError
@@ -279,6 +280,7 @@ FUNCTIONS = {
     "STR": cast_varchar,
     "STRUCT": _iterate_single_parameter(lambda x: orjson.loads(str(x))),
     "DATE":  lambda x: compute.cast(x, pyarrow.date32()),
+    "BLOB": array_encode_utf8,
     "TRY_TIMESTAMP": try_cast("TIMESTAMP"),
     "TRY_BOOLEAN": try_cast("BOOLEAN"),
     "TRY_NUMERIC": try_cast("DOUBLE"),
