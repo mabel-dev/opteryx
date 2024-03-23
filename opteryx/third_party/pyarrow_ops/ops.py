@@ -38,38 +38,38 @@ def filter_operations(arr, left_type, operator, value, right_type):
     This returns an array with tri-state boolean (tue/false/none);
     if being used for display use as is, if being used for filtering, none is false.
     """
-
     # if the input is a table, get the first column
     if isinstance(value, pyarrow.Table):  # pragma: no cover
         value = value.column(0).to_numpy()
 
-    morsel_size = len(arr)
-
-    # compute null positions
-    null_positions = numpy.logical_or(
-        compute.is_null(arr, nan_is_null=True),
-        compute.is_null(value, nan_is_null=True),
-    )
-
-    # Early exit if all values are null
-    if null_positions.all():
-        return pyarrow.array([None] * morsel_size, type=pyarrow.bool_())
-
-    # Prepare for null-excluded evaluation
-    valid_positions = ~null_positions
-
     compressed = False
-    if (
-        valid_positions.any()
-        and isinstance(arr, numpy.ndarray)
-        and isinstance(value, numpy.ndarray)
-    ):
-        # if we have nulls and both columns are numpy arrays, we can speed things
-        # up by removing the nulls from the calculations, we add the rows back in
-        # later
-        arr = arr.compress(valid_positions)
-        value = value.compress(valid_positions)
-        compressed = True
+
+    if operator not in ("InList", "NotInList"):
+        # compressing ARRAY columns is VERY SLOW
+        morsel_size = len(arr)
+
+        # compute null positions
+        null_positions = numpy.logical_or(
+            compute.is_null(arr, nan_is_null=True),
+            compute.is_null(value, nan_is_null=True),
+        )
+
+        # Early exit if all values are null
+        if null_positions.all():
+            return pyarrow.array([None] * morsel_size, type=pyarrow.bool_())
+
+        if (
+            null_positions.any()
+            and isinstance(arr, numpy.ndarray)
+            and isinstance(value, numpy.ndarray)
+        ):
+            # if we have nulls and both columns are numpy arrays, we can speed things
+            # up by removing the nulls from the calculations, we add the rows back in
+            # later
+            valid_positions = ~null_positions
+            arr = arr.compress(valid_positions)
+            value = value.compress(valid_positions)
+            compressed = True
 
     if OrsoTypes.INTERVAL in (left_type, right_type):
         from opteryx.custom_types.intervals import INTERVAL_KERNELS
@@ -120,10 +120,8 @@ def _inner_filter_operations(arr, operator, value):
         return compute.greater_equal(arr, value).to_numpy(False).astype(dtype=bool)
     if operator == "InList":
         # MODIFIED FOR OPTERYX
-        # some of the lists are saved as sets, which are faster than searching numpy
-        # arrays, even with numpy's native functionality - choosing the right algo
-        # is almost always faster than choosing a fast language.
-        return numpy.array([a in value[0] for a in arr], dtype=numpy.bool_)  # [#325]?
+        val = set(value[0])
+        return numpy.array([a in val for a in arr], dtype=numpy.bool_)  # [#325]?
     if operator == "NotInList":
         # MODIFIED FOR OPTERYX - see comment above
         return numpy.array([a not in value[0] for a in arr], dtype=numpy.bool_)  # [#325]?
