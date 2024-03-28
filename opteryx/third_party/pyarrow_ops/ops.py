@@ -120,11 +120,12 @@ def _inner_filter_operations(arr, operator, value):
         return compute.greater_equal(arr, value).to_numpy(False).astype(dtype=bool)
     if operator == "InList":
         # MODIFIED FOR OPTERYX
-        val = set(value[0])
-        return numpy.array([a in val for a in arr], dtype=numpy.bool_)  # [#325]?
+        values = set(value[0])
+        return numpy.array([a in values for a in arr], dtype=numpy.bool_)  # [#325]?
     if operator == "NotInList":
         # MODIFIED FOR OPTERYX - see comment above
-        return numpy.array([a not in value[0] for a in arr], dtype=numpy.bool_)  # [#325]?
+        values = set(value[0])
+        return numpy.array([a not in values for a in arr], dtype=numpy.bool_)  # [#325]?
     if operator == "Like":
         # MODIFIED FOR OPTERYX
         # null input emits null output, which should be false/0

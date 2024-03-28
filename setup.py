@@ -26,7 +26,7 @@ def rust_build(setup_kwargs: Dict[str, Any]) -> None:
     setup_kwargs.update(
         {
             "rust_extensions": [
-                RustExtension("opteryx.third_party.sqloxide.sqloxide", "Cargo.toml", debug=False)
+                RustExtension("opteryx.compute", "Cargo.toml", debug=False)
             ],
             "zip_safe": False,
         }
@@ -92,6 +92,11 @@ extensions = [
         include_dirs=[numpy.get_include()],
         language="c++",
         extra_compile_args=COMPILE_FLAGS + ["-std=c++11"],
+    ),
+    Extension(
+        name="bloom_filter",
+        sources=["opteryx/compiled/bloom_filter/bloom_filter.pyx"],
+        extra_compile_args=COMPILE_FLAGS,
     ),
     Extension(
         name="varchar_array",
