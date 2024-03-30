@@ -18,6 +18,7 @@ def test_commit_insufficient_space():
     ref = mp.commit(b"This is too long")
     assert ref is None
 
+
 def test_commit_exact_space():
     mp = MemoryPool(size=11)
     ref = mp.commit(b"Hello World")
@@ -80,10 +81,10 @@ def test_pool_exhaustion_and_compaction():
     ref3 = mp.commit(b"123456")
 
     ref = mp.commit(b"123")
-    assert ref is None # failed to commit
+    assert ref is None  # failed to commit
     mp.release(ref1)
     ref = mp.commit(b"123456789")
-    assert ref is None # failed to commit
+    assert ref is None  # failed to commit
     ref4 = mp.commit(b"12345678")  # This should succeed because of compaction (L2)
     assert mp.l2_compaction > 0, mp.l2_compaction
 

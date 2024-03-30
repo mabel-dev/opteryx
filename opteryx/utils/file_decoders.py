@@ -15,6 +15,7 @@ Decode files from a raw binary format to a PyArrow Table.
 """
 import io
 from enum import Enum
+from typing import BinaryIO
 from typing import Callable
 from typing import Dict
 from typing import List
@@ -104,6 +105,7 @@ def zstd_decoder(buffer, projection: List = None, selection=None, just_schema: b
     """
     import zstandard
 
+    stream: BinaryIO = None
     if isinstance(buffer, memoryview):
         stream = MemoryViewStream(buffer)
     else:
@@ -126,6 +128,7 @@ def parquet_decoder(buffer, projection: List = None, selection=None, just_schema
     # Convert the selection to DNF format if applicable
     _select, selection = PredicatePushable.to_dnf(selection) if selection else (None, None)
 
+    stream: BinaryIO = None
     if isinstance(buffer, memoryview):
         stream = MemoryViewStream(buffer)
     else:
@@ -169,6 +172,7 @@ def orc_decoder(buffer, projection: List = None, selection=None, just_schema: bo
     """
     import pyarrow.orc as orc
 
+    stream: BinaryIO = None
     if isinstance(buffer, memoryview):
         stream = MemoryViewStream(buffer)
     else:
@@ -190,6 +194,7 @@ def orc_decoder(buffer, projection: List = None, selection=None, just_schema: bo
 def jsonl_decoder(buffer, projection: List = None, selection=None, just_schema: bool = False):
     import pyarrow.json
 
+    stream: BinaryIO = None
     if isinstance(buffer, memoryview):
         stream = MemoryViewStream(buffer)
     elif isinstance(buffer, bytes):
@@ -216,6 +221,7 @@ def csv_decoder(
     import pyarrow.csv
     from pyarrow.csv import ParseOptions
 
+    stream: BinaryIO = None
     if isinstance(buffer, memoryview):
         stream = MemoryViewStream(buffer)
     else:
@@ -247,6 +253,7 @@ def tsv_decoder(buffer, projection: List = None, selection=None, just_schema: bo
 def arrow_decoder(buffer, projection: List = None, selection=None, just_schema: bool = False):
     import pyarrow.feather as pf
 
+    stream: BinaryIO = None
     if isinstance(buffer, memoryview):
         stream = MemoryViewStream(buffer)
     else:
@@ -275,6 +282,7 @@ def avro_decoder(buffer, projection: List = None, selection=None, just_schema: b
     except ImportError:  # pragma: no-cover
         raise Exception("`avro` is missing, please install or include in your `requirements.txt`.")
 
+    stream: BinaryIO = None
     if isinstance(buffer, memoryview):
         stream = MemoryViewStream(buffer)
     else:
@@ -299,6 +307,7 @@ def ipc_decoder(buffer, projection: List = None, selection=None, just_schema: bo
 
     from pyarrow import ipc
 
+    stream: BinaryIO = None
     if isinstance(buffer, memoryview):
         stream = MemoryViewStream(buffer)
     else:

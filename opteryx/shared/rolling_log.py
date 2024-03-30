@@ -49,7 +49,7 @@ class RollingLog:
             with open(self.log_file, "w", encoding="UTF8") as f:
                 f.writelines(lines[1:])  # Write all lines except the first
 
-    def scan(self):
+    def scan(self):  # pragma: no cover
         # open the log file in binary mode
         with open(self.log_file, "r", encoding="UTF8") as log_file:
             # read the current position in the circular buffer
