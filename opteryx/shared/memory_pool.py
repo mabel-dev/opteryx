@@ -1,4 +1,17 @@
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from multiprocessing import Lock
+from typing import Dict
 
 from orso.tools import random_int
 
@@ -29,7 +42,7 @@ class MemoryPool:
         self.pool = bytearray(size)
         self.size = size
         self.free_segments = [MemorySegment(0, size)]  # the whole pool is free
-        self.used_segments = {}
+        self.used_segments: Dict[int, MemorySegment] = {}
         self.name = name
         # statistics
         self.commits = 0
@@ -90,8 +103,7 @@ class MemoryPool:
         self.commits += 1
         len_data = len(data)
         # always acquire a lock to write
-        # with self.lock:
-        if True:
+        with self.lock:
             segment_index = self._find_free_segment(len_data)
             if segment_index == -1:
                 # avoid trying to compact if it won't release enough space anyway

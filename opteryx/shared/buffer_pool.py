@@ -41,7 +41,7 @@ class _BufferPool:
             name="BufferPool", size=cache_manager.max_local_buffer_capacity
         )
 
-    def get(self, key: bytes) -> Optional[array]:
+    def get(self, key: bytes) -> bytes:
         """
         Retrieve an item from the pool, return None if the item isn't found.
         If cache is provided and item is not in pool, attempt to get it from cache.

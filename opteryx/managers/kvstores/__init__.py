@@ -11,4 +11,3 @@
 # limitations under the License.
 
 from opteryx.managers.kvstores.base_kv_store import BaseKeyValueStore
-from opteryx.managers.kvstores.kv_firestore import FireStoreKVStore
