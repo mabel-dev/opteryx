@@ -11,7 +11,9 @@
 # limitations under the License.
 
 """
-LRU-K evicts the morsel whose K-th most recent access is furthest in the past.
+LRU-K evicts the morsel whose K-th most recent access is furthest in the past. Note, the
+LRU doesn't evict, it has no "size", the caller decides when the cache is full, this
+could be slot/count based (100 items), or this could be volume-based (32Mb).
 
 This is a basic implementation of LRU-2, which evicts entries according to the time of their
 penultimate access. The main benefit of this approach is to prevent a problem when the items being
@@ -31,7 +33,8 @@ all items have fewer than K accesses. Not being evicted adds an access to age ou
 from the cache. The resulting cache provides opportunity for novel items to prove their value before
 being evicted.
 
-If n+1 items are put into the cache, it acts like a FIFO, 
+If n+1 items are put into the cache in the same 'transaction', it acts like a FIFO - although
+the BufferPool implements limit to only evict up to 32 items per 'transaction'
 """
 
 import heapq
@@ -40,19 +43,23 @@ from collections import defaultdict
 
 
 class LRU2:
-    def __init__(self, k=2, size=50):
+    def __init__(self, k=2):
         self.k = k
-        self.size = size
-        self.cache = {}
+        self.slots = {}
         self.access_history = defaultdict(list)
         self.removed = set()
         self.heap = []
+
         self.hits = 0
         self.misses = 0
         self.evictions = 0
+        self.inserts = 0
+
+    def __len__(self):
+        return len(self.slots)
 
     def get(self, key: bytes):
-        value = self.cache.get(key)
+        value = self.slots.get(key)
         if value is not None:
             self.hits += 1
             self._update_access_history(key)
@@ -61,10 +68,9 @@ class LRU2:
         return value
 
     def set(self, key: bytes, value):
-        self.cache[key] = value
+        self.inserts += 1
+        self.slots[key] = value
         self._update_access_history(key)
-        if len(self.cache) > self.size:
-            return self._evict()
         return None
 
     def _update_access_history(self, key: bytes):
@@ -75,7 +81,7 @@ class LRU2:
         self.access_history[key].append((access_time, key))
         heapq.heappush(self.heap, (access_time, key))
 
-    def _evict(self):
+    def evict(self, details=False):
         while self.heap:
             oldest_access_time, oldest_key = heapq.heappop(self.heap)
             if (oldest_access_time, oldest_key) in self.removed:
@@ -90,25 +96,29 @@ class LRU2:
                 continue
 
             # Evict the key with the oldest k-th access
-            if oldest_key not in self.cache:
+            if oldest_key not in self.slots:
                 continue
-            self.cache.pop(oldest_key)
+            value = self.slots.pop(oldest_key)
             self.access_history.pop(oldest_key)
             self.evictions += 1
+            if details:
+                return oldest_key, value
             return oldest_key
 
-        return None  # No item was evicted
+        if details:
+            return None, None  # No item was evicted
+        return None
 
     @property
     def keys(self):
-        return list(self.cache.keys())
+        return list(self.slots.keys())
 
     @property
     def stats(self):
-        return self.hits, self.misses, self.evictions
+        return self.hits, self.misses, self.evictions, self.inserts
 
     def reset(self, reset_stats=False):
-        self.cache = {}
+        self.slots = {}
         self.access_history.clear()
         self.removed.clear()
         self.heap = []
@@ -116,3 +126,4 @@ class LRU2:
             self.hits = 0
             self.misses = 0
             self.evictions = 0
+            self.inserts = 0

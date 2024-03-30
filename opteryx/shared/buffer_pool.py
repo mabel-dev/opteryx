@@ -13,51 +13,42 @@
 """
 Global Buffer Pool.
 
-This is little more than a wrapper around the LRU-K(2) cache.
+This is uses an LRU-K2 policy to determine what to keep and what to evict and is
+backed by a MemoryPool.
 """
 from array import array
-from typing import Any
 from typing import Optional
 
+from opteryx.managers.cache import NullCache
+from opteryx.shared.memory_pool import MemoryPool
 from opteryx.utils.lru_2 import LRU2
-
-
-class NullCacheBackEnd:
-    """
-    We can remove a check in each operation by just having a null service.
-    """
-
-    def get(self, key: bytes) -> None:
-        return None
-
-    def set(self, key: bytes, value: Any) -> None:
-        return None
 
 
 class _BufferPool:
     """
-    Buffer Pool is a class implementing a Least Recently Used (LRU) cache of buffers.
+    Buffer Pool is a class implementing a Least Recently Used (LRU) policy.
     """
 
-    slots = "_lru", "_cache_backend", "_max_cacheable_item_size"
+    slots = "_lru", "_cache_backend", "_max_cacheable_item_size", "_memory_pool"
 
     def __init__(self, cache_manager):
         self._cache_backend = cache_manager.cache_backend
         if not self._cache_backend:
-            self._cache_backend = (
-                NullCacheBackEnd()
-            )  # rather than make decisions - just use a dummy
+            self._cache_backend = NullCache()  # rather than make decisions - just use a dummy
         self.max_cacheable_item_size = cache_manager.max_cacheable_item_size
-        self._lru = LRU2(size=cache_manager.max_local_buffer_capacity)
+        self._lru = LRU2()
+        self._memory_pool = MemoryPool(
+            name="BufferPool", size=cache_manager.max_local_buffer_capacity
+        )
 
     def get(self, key: bytes) -> Optional[array]:
         """
         Retrieve an item from the pool, return None if the item isn't found.
         If cache is provided and item is not in pool, attempt to get it from cache.
         """
-        value = self._lru.get(key)
-        if value is not None:
-            return value
+        mp_key = self._lru.get(key)
+        if mp_key is not None:
+            return self._memory_pool.read(mp_key)
         return self._cache_backend.get(key)
 
     def set(self, key: bytes, value) -> Optional[str]:
@@ -65,9 +56,23 @@ class _BufferPool:
         Put an item into the pool, evict an item if the pool is full.
         If a cache is provided, also set the value in the cache.
         """
-        evicted = self._lru.set(key, value)
+        # always try to save to the cache backend
         self._cache_backend.set(key, value)
-        return evicted
+
+        # try to save in the buffer pool, if we fail, release
+        # an item from the pool (LRUK2) and try again
+        evicted_key = None
+        mp_key = self._memory_pool.commit(value)
+        if mp_key is None:
+            evicted_key, evicted_value = self._lru.evict(True)
+            if evicted_key:
+                self._memory_pool.release(evicted_value)
+                mp_key = self._memory_pool.commit(value)
+                if mp_key is None:
+                    return None
+        else:
+            self._lru.set(key, mp_key)
+        return evicted_key
 
     @property
     def stats(self) -> tuple:

@@ -778,10 +778,10 @@ STATEMENTS = [
         ("SELECT name, id FROM $planets ORDER BY id LIMIT 100", 9, 2, None),
 
         ("SHOW COLUMNS FROM $satellites", 8, 4, None),
-        ("SHOW FULL COLUMNS FROM $satellites", 8, 10, None),
-        ("SHOW EXTENDED COLUMNS FROM $satellites", 8, 10, None),
-        ("SHOW EXTENDED COLUMNS FROM $planets", 20, 10, None),
-        ("SHOW EXTENDED COLUMNS FROM $astronauts", 19, 10, None),
+        ("SHOW FULL COLUMNS FROM $satellites", 8, 12, None),
+        ("SHOW EXTENDED COLUMNS FROM $satellites", 8, 12, None),
+        ("SHOW EXTENDED COLUMNS FROM $planets", 20, 12, None),
+        ("SHOW EXTENDED COLUMNS FROM $astronauts", 19, 12, None),
         ("SHOW COLUMNS FROM $satellites LIKE '%d'", 2, 4, UnsupportedSyntaxError),
         ("SHOW COLUMNS FROM testdata.partitioned.dated FOR '2020-02-03'", 8, 4, None),
 

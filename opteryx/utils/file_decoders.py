@@ -26,6 +26,7 @@ from orso.tools import random_string
 
 from opteryx.exceptions import UnsupportedFileTypeError
 from opteryx.utils.arrow import post_read_projector
+from opteryx.utils.memory_view_stream import MemoryViewStream
 
 
 class ExtentionType(str, Enum):
@@ -103,7 +104,10 @@ def zstd_decoder(buffer, projection: List = None, selection=None, just_schema: b
     """
     import zstandard
 
-    stream = io.BytesIO(buffer)
+    if isinstance(buffer, memoryview):
+        stream = MemoryViewStream(buffer)
+    else:
+        stream = io.BytesIO(buffer)
 
     with zstandard.open(stream, "rb") as file:
         return jsonl_decoder(
@@ -122,7 +126,10 @@ def parquet_decoder(buffer, projection: List = None, selection=None, just_schema
     # Convert the selection to DNF format if applicable
     _select, selection = PredicatePushable.to_dnf(selection) if selection else (None, None)
 
-    stream = io.BytesIO(buffer)
+    if isinstance(buffer, memoryview):
+        stream = MemoryViewStream(buffer)
+    else:
+        stream = io.BytesIO(buffer)
 
     if projection or just_schema:
         # Open the parquet file only once
@@ -162,7 +169,10 @@ def orc_decoder(buffer, projection: List = None, selection=None, just_schema: bo
     """
     import pyarrow.orc as orc
 
-    stream = io.BytesIO(buffer)
+    if isinstance(buffer, memoryview):
+        stream = MemoryViewStream(buffer)
+    else:
+        stream = io.BytesIO(buffer)
     orc_file = orc.ORCFile(stream)
 
     if just_schema:
@@ -180,7 +190,9 @@ def orc_decoder(buffer, projection: List = None, selection=None, just_schema: bo
 def jsonl_decoder(buffer, projection: List = None, selection=None, just_schema: bool = False):
     import pyarrow.json
 
-    if isinstance(buffer, bytes):
+    if isinstance(buffer, memoryview):
+        stream = MemoryViewStream(buffer)
+    elif isinstance(buffer, bytes):
         stream = io.BytesIO(buffer)
     else:
         stream = buffer
@@ -204,7 +216,10 @@ def csv_decoder(
     import pyarrow.csv
     from pyarrow.csv import ParseOptions
 
-    stream = io.BytesIO(buffer)
+    if isinstance(buffer, memoryview):
+        stream = MemoryViewStream(buffer)
+    else:
+        stream = io.BytesIO(buffer)
     parse_options = ParseOptions(delimiter=delimiter, newlines_in_values=True)
     table = pyarrow.csv.read_csv(stream, parse_options=parse_options)
     schema = table.schema
@@ -232,7 +247,10 @@ def tsv_decoder(buffer, projection: List = None, selection=None, just_schema: bo
 def arrow_decoder(buffer, projection: List = None, selection=None, just_schema: bool = False):
     import pyarrow.feather as pf
 
-    stream = io.BytesIO(buffer)
+    if isinstance(buffer, memoryview):
+        stream = MemoryViewStream(buffer)
+    else:
+        stream = io.BytesIO(buffer)
     table = pf.read_table(stream)
     schema = table.schema
     if just_schema:
@@ -257,7 +275,10 @@ def avro_decoder(buffer, projection: List = None, selection=None, just_schema: b
     except ImportError:  # pragma: no-cover
         raise Exception("`avro` is missing, please install or include in your `requirements.txt`.")
 
-    stream = io.BytesIO(buffer)
+    if isinstance(buffer, memoryview):
+        stream = MemoryViewStream(buffer)
+    else:
+        stream = io.BytesIO(buffer)
     reader = DataFileReader(stream, DatumReader())
 
     table = pyarrow.Table.from_pylist(list(reader))
@@ -278,7 +299,10 @@ def ipc_decoder(buffer, projection: List = None, selection=None, just_schema: bo
 
     from pyarrow import ipc
 
-    stream = io.BytesIO(buffer)
+    if isinstance(buffer, memoryview):
+        stream = MemoryViewStream(buffer)
+    else:
+        stream = io.BytesIO(buffer)
     reader = ipc.open_stream(stream)
 
     batch_one = next(reader, None)

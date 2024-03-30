@@ -11,53 +11,60 @@ from tests.tools import is_windows, skip_if
 @skip_if(is_windows())
 def test_lruk():
     # make it very small to test
-    lru = LRU2(size=2)
+    lru = LRU2()
     hits = 0
     misses = 0
     evictions = 0
+    inserts = 0
 
-    assert lru.stats == (hits, misses, evictions), lru.stats
+    assert lru.stats == (hits, misses, evictions, inserts), lru.stats
 
     # if we get from an empty, we'll miss
     lru.get("two")
     misses += 1
-    assert lru.stats == (hits, misses, evictions), lru.stats
+    assert lru.stats == (hits, misses, evictions, inserts), lru.stats
 
     # if we put something in, we won't change the stats
     lru.set("one", io.BytesIO(b"1"))
-    assert lru.stats == (hits, misses, evictions), lru.stats
+    inserts += 1
+    assert lru.stats == (hits, misses, evictions, inserts), lru.stats
 
     # if we get something we put in, we should get it back and inc the hit count
     assert lru.get("one").read() == b"1"
     hits += 1
-    assert lru.stats == (hits, misses, evictions), lru.stats
+    assert lru.stats == (hits, misses, evictions, inserts), lru.stats
 
     # if we put two new things in, we should evict 'one'
     lru.set("two", io.BytesIO(b"2"))
     lru.set("three", io.BytesIO(b"3"))
+    inserts += 2
+    evicted = lru.evict()
     evictions += 1
-    assert lru.stats == (hits, misses, evictions), lru.stats
+    assert evicted == "one"
+    assert lru.stats == (hits, misses, evictions, inserts), lru.stats
 
     # confirm 'one' was evicted
     lru.get("one")
     misses += 1
-    assert lru.stats == (hits, misses, evictions), lru.stats
+    assert lru.stats == (hits, misses, evictions, inserts), lru.stats
 
     # if we get 'two' it's the LRU, but not the LRU-K(2)
     # so if we add 'one', it should evict 'three'
     assert lru.get("two").read() == b"2"
     hits += 1
     lru.set("one", io.BytesIO(b"1"))
+    inserts += 1
+    evicted = lru.evict()
     evictions += 1
-    assert lru.stats == (hits, misses, evictions), lru.stats
+    assert lru.stats == (hits, misses, evictions, inserts), lru.stats
+    assert evicted == "two"
     lru.get("two")
     misses += 1
-    assert lru.stats == (hits, misses, evictions), lru.stats
+    assert lru.stats == (hits, misses, evictions, inserts), lru.stats
 
 
 def test_lru2():
-    # initialize cache with size 2
-    cache = LRU2(size=2)
+    cache = LRU2()
 
     # add two items
     cache.set("key1", "value1")
@@ -69,8 +76,10 @@ def test_lru2():
 
     # add another item - this should trigger an eviction of the least recently used item
     cache.set("key3", "value3")
+    evicted = cache.evict()
 
     # make sure the least recently used item was evicted
+    assert evicted == "key1"
     assert cache.get("key1") is None
     assert cache.get("key2") == "value2"
     assert cache.get("key3") == "value3"
@@ -78,6 +87,7 @@ def test_lru2():
     # add items until we exceed the cache size, this should trigger multiple evictions
     for i in range(4, 7):
         cache.set(f"key{i}", f"value{i}")
+        cache.evict()
 
     # check that the least recently used items were evicted
     assert cache.get("key2") is None
@@ -87,7 +97,7 @@ def test_lru2():
     assert cache.get("key6") == "value6"
 
     # check the cache stats
-    assert cache.stats == (6, 4, 4), cache.stats
+    assert cache.stats == (6, 4, 4, 6), cache.stats
 
     # reset the cache and make sure it's empty
     cache.reset()
@@ -97,11 +107,11 @@ def test_lru2():
     # test that reset_stats works
     cache.set("key1", "value1")
     cache.reset(reset_stats=True)
-    assert cache.stats == (0, 0, 0)
+    assert cache.stats == (0, 0, 0, 0)
 
 
 def test_lru_cache_eviction():
-    lru = LRU2(size=3)
+    lru = LRU2()
 
     # Add 3 items to the cache
     lru.set("a", 1)
@@ -115,6 +125,7 @@ def test_lru_cache_eviction():
 
     # Add a fourth item to the cache, which should trigger an eviction of the least recently used item
     lru.set("d", 4)
+    lru.evict()
 
     # Check that the least recently used item 'a' has been evicted
     assert lru.get("a") is None
@@ -124,6 +135,7 @@ def test_lru_cache_eviction():
 
     # Add a fifth item to the cache, which should trigger another eviction
     lru.set("e", 5)
+    lru.evict()
 
     # Check that the least recently used item 'b' has been evicted
     assert lru.get("a") is None
@@ -134,6 +146,7 @@ def test_lru_cache_eviction():
 
     # Add a sixth item to the cache, which should trigger another eviction
     lru.set("f", 6)
+    lru.evict()
 
     # Check that the least recently used item 'c' has been evicted
     assert lru.get("a") is None
@@ -145,7 +158,7 @@ def test_lru_cache_eviction():
 
 
 def test_get_non_existing_key_after_eviction():
-    lru = LRU2(size=3)
+    lru = LRU2()
 
     # Add 3 items to the cache
     lru.set("a", 1)
@@ -154,13 +167,14 @@ def test_get_non_existing_key_after_eviction():
 
     # Add a fourth item to the cache, which should trigger an eviction of the least recently used item
     lru.set("d", 4)
+    lru.evict()
 
     # Try to get a non-existing key
     assert lru.get("e") is None
 
 
 def test_overwrite_existing_key():
-    lru = LRU2(size=3)
+    lru = LRU2()
 
     # Add 3 items to the cache
     lru.set("a", 1)
@@ -175,7 +189,7 @@ def test_overwrite_existing_key():
 
 
 def test_handle_non_string_keys():
-    lru = LRU2(size=3)
+    lru = LRU2()
 
     # Add 3 items to the cache with integer keys
     lru.set(1, "a")
@@ -192,10 +206,14 @@ def test_evict_as_last_resort():
     """
     we only evict items with less than K accesses if we need to evict someting
     """
-    lru = LRU2(size=3)
+    lru = LRU2()
 
     for item in ("a", "b", "c", "d", "e", "f"):
         lru.set(item, item)
+
+    lru.evict()
+    lru.evict()
+    lru.evict()
 
     # Check the values
     assert lru.get("a") is None
@@ -207,7 +225,7 @@ def test_evict_as_last_resort():
 
 
 def test_lru2_eviction_based_on_penultimate_access():
-    lru = LRU2(k=2, size=3)
+    lru = LRU2(k=2)
 
     # Add 3 items to the cache
     lru.set("a", 1)
@@ -222,7 +240,8 @@ def test_lru2_eviction_based_on_penultimate_access():
 
     # Add another item; "a" should be evicted since its penultimate access is the oldest
     # Note it's not "c" that is evicted
-    evicted = lru.set("d", 4)
+    lru.set("d", 4)
+    evicted = lru.evict()
 
     # Verify that "c" was evicted and "a", "b", and "d" are in the cache
     assert evicted == "a", evicted
@@ -234,7 +253,7 @@ def test_lru2_eviction_based_on_penultimate_access():
 
 @skip_if(is_windows())
 def test_lru4_eviction_based_on_fourth_last_access():
-    lru = LRU2(k=4, size=5)
+    lru = LRU2(k=4)
 
     # Add 5 items to the cache
     lru.set("a", 1)
@@ -256,7 +275,8 @@ def test_lru4_eviction_based_on_fourth_last_access():
 
     # Add another item; "c" should be evicted as its fourth-most recent access is the oldest
     # This is NOT evicted "e", it only has one access at this point
-    evicted = lru.set("f", 6)
+    lru.set("f", 6)
+    evicted = lru.evict()
 
     # Verify that "c" was evicted and the others are in the cache
     assert evicted == "c"
@@ -270,7 +290,7 @@ def test_lru4_eviction_based_on_fourth_last_access():
 
 @skip_if(is_windows())
 def test_lru4_synthetic_access_on_eviction():
-    lru = LRU2(k=4, size=5)
+    lru = LRU2(k=4)
 
     # Add 5 items to the cache
     lru.set("a", "a")
@@ -290,7 +310,8 @@ def test_lru4_synthetic_access_on_eviction():
     # Add another item, triggering eviction check, evicting "a"
     # "e" isn't evicted yet as it's only have one access, but we add a "synthetic" access
     # so now it looks like it's had two accesses
-    evicted = lru.set("f", "f")
+    lru.set("f", "f")
+    evicted = lru.evict()
     assert evicted == "a"
     assert lru.get("e") == "e"
     # Verify that no other item was evicted
@@ -301,6 +322,8 @@ def test_lru4_synthetic_access_on_eviction():
     for item in ("b", "c", "b", "d", "b", "f", "b", "g", "b", "h", "b", "i", "b", "j"):
         lru.set(item, item)
         lru.get(item)
+        if len(lru) > 5:
+            lru.evict()
 
     # Now "e" should be evicted as it would have reached 4 accesses including synthetic ones
     assert lru.get("e") is None
@@ -313,14 +336,18 @@ def test_fifo():
     """
     we only evict items with less than K accesses if we need to evict someting
     """
-    lru = LRU2(size=2)
+    lru = LRU2()
 
     for item in ("a", "b", "c"):
         lru.set(item, item)
+        if len(lru) > 2:
+            lru.evict()
     lru.get("b")
     lru.get("b")
     for item in ("d", "e", "f"):
         lru.set(item, item)
+        if len(lru) > 2:
+            lru.evict()
 
     # Check the values
     assert lru.get("a") is None

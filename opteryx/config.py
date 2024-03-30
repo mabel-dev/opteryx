@@ -100,22 +100,16 @@ def get(key, default=None):
 
 # GCP project ID - for Google Cloud Data
 GCP_PROJECT_ID: str = get("GCP_PROJECT_ID")
-# Mapping prefixes to readers - the default is to use disk
-DATASET_PREFIX_MAPPING: dict = get("DATASET_PREFIX_MAPPING", {"_":"disk"})
-# Data Partitioning
-PARTITION_SCHEME: str = get("PARTITION_SCHEME", None)
 # The maximum number of evictions by a single query
 MAX_CACHE_EVICTIONS_PER_QUERY: int = int(get("MAX_CACHE_EVICTIONS_PER_QUERY", 32))
 # Maximum size for items saved to the buffer cache
 MAX_CACHEABLE_ITEM_SIZE: int = int(get("MAX_CACHEABLE_ITEM_SIZE", 1024 * 1024))
-# The local buffer pool size
-MAX_LOCAL_BUFFER_CAPACITY: int = int(get("MAX_LOCAL_BUFFER_CAPACITY", 256))
+# The local buffer pool size in bytes
+MAX_LOCAL_BUFFER_CAPACITY: int = int(get("MAX_LOCAL_BUFFER_CAPACITY", 256 * 1024 * 1024))
 # don't try to raise the priority of the server process
 DISABLE_HIGH_PRIORITY: bool = bool(get("DISABLE_HIGH_PRIORITY", False))
 # don't output resource (memory) utilization information
 ENABLE_RESOURCE_LOGGING: bool = bool(get("ENABLE_RESOURCE_LOGGING", False))
-# only push equals predicates
-ONLY_PUSH_EQUALS_PREDICATES: bool = bool(get("ONLY_PUSH_EQUALS_PREDICATES", False))
 # size of morsels to push between steps
 MORSEL_SIZE: int = int(get("MORSEL_SIZE", 64 * 1024 * 1024))
 
