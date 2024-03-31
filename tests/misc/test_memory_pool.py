@@ -4,7 +4,7 @@ import pytest
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
-from opteryx.shared.memory_pool import MemoryPool
+from opteryx.shared import MemoryPool
 
 
 def test_commit_and_read():

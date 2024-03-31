@@ -30,9 +30,9 @@ from opteryx import operators
 from opteryx.exceptions import ArrayWithMixedTypesError
 from opteryx.exceptions import SqlError
 from opteryx.exceptions import UnsupportedSyntaxError
-from opteryx.functions.binary_operators import BINARY_OPERATORS
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import format_expression
+from opteryx.managers.expression.binary_operators import BINARY_OPERATORS
 from opteryx.models import LogicalColumn
 from opteryx.models import Node
 from opteryx.utils import dates

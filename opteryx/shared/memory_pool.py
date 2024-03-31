@@ -18,7 +18,7 @@ from orso.tools import random_int
 """
 Memory Pool is used to manage access to arbitrary blocks of memory.
 
-This is designed to be thread-safe.
+This is designed to be thread-safe with non-blocking reads.
 """
 
 
@@ -48,6 +48,7 @@ class MemoryPool:
         self.commits = 0
         self.failed_commits = 0
         self.reads = 0
+        self.read_locks = 0
         self.l1_compaction = 0
         self.l2_compaction = 0
         self.releases = 0
@@ -151,16 +152,16 @@ class MemoryPool:
         If it has changed, we acquire a lock and try again. The buffer pool is
         read heavy, so optimized reads are preferred.
         """
-        self.reads += 1
-
         if ref_id not in self.used_segments:
-            raise ValueError("Invalid reference id.")
+            raise ValueError("Invalid reference ID.")
+        self.reads += 1
         segment = self.used_segments[ref_id]
         view = memoryview(self.pool)[segment.start : segment.start + segment.length]
         if segment != self.used_segments[ref_id]:
             with self.lock:
                 if ref_id not in self.used_segments:
-                    raise ValueError("Invalid reference id.")
+                    raise ValueError("Invalid reference ID.")
+                self.read_locks += 1
                 segment = self.used_segments[ref_id]
                 view = memoryview(self.pool)[segment.start : segment.start + segment.length]
         return view

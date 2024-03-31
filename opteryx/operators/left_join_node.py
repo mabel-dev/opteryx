@@ -28,7 +28,7 @@ import pyarrow
 from opteryx.compiled.functions import HashTable
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
-from opteryx.third_party.pyarrow_ops import align_tables
+from opteryx.utils.arrow import align_tables
 
 
 def left_join(left_relation, right_relation, left_columns, right_columns):

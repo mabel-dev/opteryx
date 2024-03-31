@@ -30,11 +30,11 @@ from pyarrow import Table
 
 from opteryx.exceptions import ColumnReferencedBeforeEvaluationError
 from opteryx.exceptions import UnsupportedSyntaxError
-from opteryx.functions.binary_operators import binary_operations
-from opteryx.functions.unary_operations import UNARY_OPERATIONS
+from opteryx.managers.expression.binary_operators import binary_operations
+from opteryx.managers.expression.ops import filter_operations
+from opteryx.managers.expression.unary_operations import UNARY_OPERATIONS
 from opteryx.models import LogicalColumn
 from opteryx.models import Node
-from opteryx.third_party.pyarrow_ops.ops import filter_operations
 
 from .formatter import ExpressionColumn  # this is used
 from .formatter import format_expression

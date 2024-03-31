@@ -148,7 +148,7 @@ def _cross_join(left, right, statistics):
             (seq_1[pos : pos + size], seq_2[pos : pos + size]) for pos in range(0, len(seq_1), size)
         )
 
-    from opteryx.third_party.pyarrow_ops import align_tables
+    from opteryx.utils.arrow import align_tables
 
     for left_morsel in left.execute():
         start = time.monotonic_ns()
