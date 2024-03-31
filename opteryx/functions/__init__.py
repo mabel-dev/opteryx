@@ -398,8 +398,6 @@ FUNCTIONS = {
     "FROM_UNIXTIME": date_functions.from_unixtimestamp,
     "UNIXTIME": date_functions.unixtime,
 
-    "ON": lambda x: _raise_exception("`DISTINCT ON` is not supported"),
-
 }
 # fmt:on
 

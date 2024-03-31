@@ -38,7 +38,7 @@ import pyarrow
 from opteryx.compiled.functions import HashTable
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
-from opteryx.third_party.pyarrow_ops import align_tables
+from opteryx.utils.arrow import align_tables
 
 
 def preprocess_left(relation, join_columns):

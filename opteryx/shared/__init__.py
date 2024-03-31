@@ -12,7 +12,8 @@
 
 from opteryx.shared.buffer_pool import BufferPool
 from opteryx.shared.materialized_datasets import MaterializedDatasets
+from opteryx.shared.memory_pool import MemoryPool
 from opteryx.shared.query_statistics import QueryStatistics
 from opteryx.shared.rolling_log import RollingLog
 
-__all__ = ("BufferPool", "MaterializedDatasets", "QueryStatistics", "RollingLog")
+__all__ = ("BufferPool", "MaterializedDatasets", "MemoryPool", "QueryStatistics", "RollingLog")

@@ -60,7 +60,7 @@ def _date_plus_interval(left, left_type, right, right_type, operator):
 
 
 def _simple_interval_op(left, left_type, right, right_type, operator):
-    from opteryx.third_party.pyarrow_ops.ops import _inner_filter_operations
+    from opteryx.managers.expression.ops import _inner_filter_operations
 
     left_months = pyarrow.compute.list_element(left, 0)
     left_seconds = pyarrow.compute.list_element(left, 1)
