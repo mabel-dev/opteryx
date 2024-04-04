@@ -32,6 +32,9 @@ from typing import Union
 
 
 class Node:
+
+    __slots__ = ("_internal", "node_type")
+
     def __init__(self, node_type: Union[str, int, None] = None, **kwargs: Any):
         """
         Initialize a Node with attributes.
@@ -42,23 +45,10 @@ class Node:
             **kwargs: Any
                 Dynamic attributes for the node.
         """
-        object.__setattr__(self, "_internal", {})  # Directly set _internal using the base method
-        if node_type:
-            self._internal["node_type"] = node_type
-        for k, v in kwargs.items():
-            self._is_valid_key(k)
-            self._internal[k] = v
-
-    def _is_valid_key(self, key: str) -> None:
-        """
-        Check if the key is valid for the node.
-
-        Parameters:
-            key: str
-                The key to check.
-        """
-        if key.startswith("_"):
-            raise AttributeError("Node cannot have dynamic attributes starting with an underscore")
+        object.__setattr__(
+            self, "_internal", kwargs
+        )  # Directly set _internal using the base method
+        self.node_type = node_type
 
     @property
     def properties(self) -> Dict[str, Any]:
@@ -81,7 +71,9 @@ class Node:
         Returns:
             Any: The attribute value.
         """
-        return self._internal.get(name)
+        if name in self._internal:
+            return self._internal[name]
+        return None
 
     def __setattr__(self, name: str, value: Any) -> None:
         """
@@ -96,7 +88,6 @@ class Node:
         if name == "_internal":
             self._internal = value
         else:
-            self._is_valid_key(name)
             if value is None:
                 self._internal.pop(name, None)
             else:
@@ -120,7 +111,7 @@ class Node:
         Returns:
             str: A string representation useful for debugging.
         """
-        node_type = str(self._internal.get("node_type", "<unspecified>"))
+        node_type = str(self.node_type)
         if node_type.startswith("LogicalPlanStepType."):
             node_type = node_type[20:]
         return f"<Node type={node_type}>"
@@ -144,23 +135,16 @@ class Node:
             Returns:
                 Any: The new, independent deep copy.
             """
-            try:
-                if isinstance(obj, list):
-                    return [_inner_copy(item) for item in obj]
-                if isinstance(obj, tuple):
-                    return tuple(_inner_copy(item) for item in obj)
-                if isinstance(obj, set):
-                    return {_inner_copy(item) for item in obj}
-                if isinstance(obj, dict):
-                    return {key: _inner_copy(value) for key, value in obj.items()}
-                if hasattr(obj, "copy"):
-                    return obj.copy()
+            obj_type = type(obj)
+            if obj_type in (list, tuple, set):
+                return obj_type(_inner_copy(item) for item in obj)
+            if obj_type == dict:
+                return {key: _inner_copy(value) for key, value in obj.items()}
+            if hasattr(obj, "copy"):
+                return obj.copy()
+            if hasattr(obj, "deepcopy"):
                 return copy.deepcopy(obj)
-            except:
-                return obj
+            return obj
 
-        new_node = Node()
-        for key, value in self._internal.items():
-            new_value = _inner_copy(value)
-            setattr(new_node, key, new_value)
+        new_node = Node(**{key: _inner_copy(value) for key, value in self._internal.items()})
         return new_node
