@@ -35,25 +35,36 @@ class UnsupportedSegementationError(DataError):
 
 def extract_prefix(path, prefix):
     start_index = path.find(prefix)
+    if start_index == -1:
+        return None
     end_index = path.find(OS_SEP, start_index)
-    return path[start_index : end_index if end_index != -1 else None]
+    if end_index == -1:
+        return None
+    return path[start_index:end_index]
 
 
 def is_complete_and_not_invalid(blobs, as_at):
+    # Directly initialize flags to False.
+    complete = False
+    ignore = False
+
+    # Search suffix strings are constant for each call, so define them once.
     complete_suffix = f"{as_at}{OS_SEP}frame.complete"
     invalid_suffix = f"{as_at}{OS_SEP}frame.ignore"
 
-    frame_blobs = (
-        (complete_suffix in blob, invalid_suffix in blob)
-        for blob in blobs
-        if f"{as_at}{OS_SEP}frame." in blob
-    )
+    # Iterate over blobs once, checking conditions.
+    for blob in blobs:
 
-    first_item = next(frame_blobs, (False, False))
+        if complete_suffix in blob:
+            complete = True
+            if complete and ignore:
+                break
+        elif invalid_suffix in blob:
+            ignore = True
+            if complete and ignore:
+                break
 
-    complete, ignore = zip(first_item, *frame_blobs)
-
-    return any(complete) and not any(ignore)
+    return complete and not ignore
 
 
 class MabelPartitionScheme(BasePartitionScheme):
@@ -74,23 +85,24 @@ class MabelPartitionScheme(BasePartitionScheme):
         midnight = datetime.datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
 
         def _inner(*, timestamp):
-            year = timestamp.year
-            month = timestamp.month
-            day = timestamp.day
-            hour = timestamp.hour
-
-            hour_label = f"{OS_SEP}by_hour{OS_SEP}hour={hour:02d}/"
-            date_path = (
-                f"{prefix}{OS_SEP}year_{year:04d}{OS_SEP}month_{month:02d}{OS_SEP}day_{day:02d}"
-            )
+            date_path = f"{prefix}{OS_SEP}year_{timestamp.year:04d}{OS_SEP}month_{timestamp.month:02d}{OS_SEP}day_{timestamp.day:02d}"
+            hour_label = f"{OS_SEP}by_hour{OS_SEP}hour={timestamp.hour:02d}/"
+            by_label = f"{OS_SEP}by_"
+            as_at_label = f"{OS_SEP}as_at"
 
             # Call your method to get the list of blob names
             blob_names = blob_list_getter(prefix=date_path)
+            if len(blob_names) == 0:
+                return []
+            control_blobs = [
+                blob for blob in blob_names if os.path.splitext(blob)[1] not in DATA_EXTENSIONS
+            ]
+            blob_names = [
+                blob for blob in blob_names if os.path.splitext(blob)[1] in DATA_EXTENSIONS
+            ]
 
-            segments = {
-                extract_prefix(blob, "by_") for blob in blob_names if f"{OS_SEP}by_" in blob
-            }
-            if len(segments - {"by_hour", None}) > 0:
+            segments = {extract_prefix(blob, "by_") for blob in blob_names if by_label in blob}
+            if segments - {"by_hour", None}:
                 raise UnsupportedSegementationError(dataset=prefix, segments=segments)
 
             # Filter for the specific hour, if hour folders exist - prefer by_hour segements
@@ -99,28 +111,22 @@ class MabelPartitionScheme(BasePartitionScheme):
 
             as_at = None
             as_ats = sorted(
-                {extract_prefix(blob, "as_at_") for blob in blob_names if f"{OS_SEP}as_at_" in blob}
+                {extract_prefix(blob, "as_at_") for blob in blob_names if as_at_label in blob}
             )
 
             # Keep popping from as_ats until a valid frame is found
             while as_ats:
                 as_at = as_ats.pop()
-                if is_complete_and_not_invalid(blob_names, as_at):
+                if as_at is None:
+                    continue
+                if is_complete_and_not_invalid(control_blobs, as_at):
+                    blob_names = (blob for blob in blob_names if as_at in blob)
                     break
                 else:
                     blob_names = [blob for blob in blob_names if as_at not in blob]
                 as_at = None
 
-            if as_at:
-                yield from (
-                    blob
-                    for blob in blob_names
-                    if as_at in blob and os.path.splitext(blob)[1] in DATA_EXTENSIONS
-                )
-            else:
-                yield from (
-                    blob for blob in blob_names if os.path.splitext(blob)[1] in DATA_EXTENSIONS
-                )
+            return blob_names
 
         start_date = start_date or midnight
         end_date = end_date or midnight.replace(hour=23, minute=59)

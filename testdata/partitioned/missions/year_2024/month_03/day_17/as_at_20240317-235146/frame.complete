@@ -1,0 +1,9053 @@
+{
+  "records": 357,
+  "format": "parquet",
+  "schema": {
+    "name": "arrow",
+    "aliases": [],
+    "columns": [
+      {
+        "name": "name",
+        "type": "VARCHAR",
+        "description": null,
+        "disposition": null,
+        "aliases": [],
+        "nullable": true,
+        "expectations": [],
+        "identity": "edce141ff5624737",
+        "precision": null,
+        "scale": null,
+        "origin": null,
+        "statistics": {}
+      },
+      {
+        "name": "year",
+        "type": "INTEGER",
+        "description": null,
+        "disposition": null,
+        "aliases": [],
+        "nullable": true,
+        "expectations": [],
+        "identity": "7f8827215b16714e",
+        "precision": null,
+        "scale": null,
+        "origin": null,
+        "statistics": {}
+      },
+      {
+        "name": "group",
+        "type": "INTEGER",
+        "description": null,
+        "disposition": null,
+        "aliases": [],
+        "nullable": true,
+        "expectations": [],
+        "identity": "ebd071433e29b9cb",
+        "precision": null,
+        "scale": null,
+        "origin": null,
+        "statistics": {}
+      },
+      {
+        "name": "status",
+        "type": "VARCHAR",
+        "description": null,
+        "disposition": null,
+        "aliases": [],
+        "nullable": true,
+        "expectations": [],
+        "identity": "7aa625cad5aaed35",
+        "precision": null,
+        "scale": null,
+        "origin": null,
+        "statistics": {}
+      },
+      {
+        "name": "birth_date",
+        "type": "DATE",
+        "description": null,
+        "disposition": null,
+        "aliases": [],
+        "nullable": true,
+        "expectations": [],
+        "identity": "b4bba5e9a488e16e",
+        "precision": null,
+        "scale": null,
+        "origin": null,
+        "statistics": {}
+      },
+      {
+        "name": "birth_place",
+        "type": "STRUCT",
+        "description": null,
+        "disposition": null,
+        "aliases": [],
+        "nullable": true,
+        "expectations": [],
+        "identity": "9b03497c88e3a6ff",
+        "precision": null,
+        "scale": null,
+        "origin": null,
+        "statistics": {}
+      },
+      {
+        "name": "gender",
+        "type": "VARCHAR",
+        "description": null,
+        "disposition": null,
+        "aliases": [],
+        "nullable": true,
+        "expectations": [],
+        "identity": "53c772973e24ced9",
+        "precision": null,
+        "scale": null,
+        "origin": null,
+        "statistics": {}
+      },
+      {
+        "name": "alma_mater",
+        "type": "ARRAY",
+        "description": null,
+        "disposition": null,
+        "aliases": [],
+        "nullable": true,
+        "expectations": [],
+        "identity": "a2de7455ca047a89",
+        "precision": null,
+        "scale": null,
+        "origin": null,
+        "statistics": {}
+      },
+      {
+        "name": "undergraduate_major",
+        "type": "VARCHAR",
+        "description": null,
+        "disposition": null,
+        "aliases": [],
+        "nullable": true,
+        "expectations": [],
+        "identity": "660fe08c133b67d5",
+        "precision": null,
+        "scale": null,
+        "origin": null,
+        "statistics": {}
+      },
+      {
+        "name": "graduate_major",
+        "type": "VARCHAR",
+        "description": null,
+        "disposition": null,
+        "aliases": [],
+        "nullable": true,
+        "expectations": [],
+        "identity": "2cba624b0c01429d",
+        "precision": null,
+        "scale": null,
+        "origin": null,
+        "statistics": {}
+      },
+      {
+        "name": "military_rank",
+        "type": "VARCHAR",
+        "description": null,
+        "disposition": null,
+        "aliases": [],
+        "nullable": true,
+        "expectations": [],
+        "identity": "d6292f48d708bd42",
+        "precision": null,
+        "scale": null,
+        "origin": null,
+        "statistics": {}
+      },
+      {
+        "name": "military_branch",
+        "type": "VARCHAR",
+        "description": null,
+        "disposition": null,
+        "aliases": [],
+        "nullable": true,
+        "expectations": [],
+        "identity": "dcb5396811302c1d",
+        "precision": null,
+        "scale": null,
+        "origin": null,
+        "statistics": {}
+      },
+      {
+        "name": "space_flights",
+        "type": "INTEGER",
+        "description": null,
+        "disposition": null,
+        "aliases": [],
+        "nullable": true,
+        "expectations": [],
+        "identity": "ff03c26f846383d2",
+        "precision": null,
+        "scale": null,
+        "origin": null,
+        "statistics": {}
+      },
+      {
+        "name": "space_flight_hours",
+        "type": "INTEGER",
+        "description": null,
+        "disposition": null,
+        "aliases": [],
+        "nullable": true,
+        "expectations": [],
+        "identity": "526d7e2c793d8802",
+        "precision": null,
+        "scale": null,
+        "origin": null,
+        "statistics": {}
+      },
+      {
+        "name": "space_walks",
+        "type": "INTEGER",
+        "description": null,
+        "disposition": null,
+        "aliases": [],
+        "nullable": true,
+        "expectations": [],
+        "identity": "0701a34ae8f2c48e",
+        "precision": null,
+        "scale": null,
+        "origin": null,
+        "statistics": {}
+      },
+      {
+        "name": "space_walks_hours",
+        "type": "INTEGER",
+        "description": null,
+        "disposition": null,
+        "aliases": [],
+        "nullable": true,
+        "expectations": [],
+        "identity": "09b66313b19e7631",
+        "precision": null,
+        "scale": null,
+        "origin": null,
+        "statistics": {}
+      },
+      {
+        "name": "missions",
+        "type": "ARRAY",
+        "description": null,
+        "disposition": null,
+        "aliases": [],
+        "nullable": true,
+        "expectations": [],
+        "identity": "2a5f4722fc511b1b",
+        "precision": null,
+        "scale": null,
+        "origin": null,
+        "statistics": {}
+      },
+      {
+        "name": "death_date",
+        "type": "DATE",
+        "description": null,
+        "disposition": null,
+        "aliases": [],
+        "nullable": true,
+        "expectations": [],
+        "identity": "071344ff8fe2dee1",
+        "precision": null,
+        "scale": null,
+        "origin": null,
+        "statistics": {}
+      },
+      {
+        "name": "death_mission",
+        "type": "VARCHAR",
+        "description": null,
+        "disposition": null,
+        "aliases": [],
+        "nullable": true,
+        "expectations": [],
+        "identity": "23bceb0b0679519e",
+        "precision": null,
+        "scale": null,
+        "origin": null,
+        "statistics": {}
+      }
+    ],
+    "statistics": {}
+  },
+  "manifest": {
+    "missions/year_2024/month_03/day_17/as_at_20240317-235146/17bdb253bea5a160-be07cbede566-bc95.jsonl.parquet": [
+      {
+        "name": "name",
+        "type": "VARCHAR",
+        "count": 69,
+        "missing": 0,
+        "maximum": 6446462436716650564,
+        "minimum": 4714250035566226976,
+        "most_frequent_values": [
+          "Joseph M. Acaba",
+          "Loren W. Acton",
+          "James C. Adamson",
+          "Thomas D. Akers",
+          "Buzz Aldrin",
+          "Andrew M. Allen",
+          "Joseph P. Allen",
+          "Scott D. Altman",
+          "William A. Anders",
+          "Clayton C. Anderson",
+          "Michael P. Anderson",
+          "Dominic A. Antonelli",
+          "Jerome Apt III ",
+          "Lee J. Archambault",
+          "Neil A. Armstrong",
+          "Richard R. Arnold II ",
+          "Jeffrey S. Ashby",
+          "Serena M. Aunon",
+          "James P. Bagian",
+          "Ellen S. Baker",
+          "Michael A. Baker",
+          "Michael R. Barratt",
+          "Daniel T. Barry",
+          "John-David F. Bartoe",
+          "Charles A. Bassett II ",
+          "Alan L. Bean",
+          "Robert L. Behnken",
+          "John E. Blaha",
+          "Michael J. Bloomfield",
+          "Guion S. Bluford Jr. ",
+          "Karol J. Bobko",
+          "Eric A. Boe"
+        ],
+        "most_frequent_counts": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "histogram": [],
+        "kmv_hashes": [
+          5241780,
+          93601999,
+          134135115,
+          134229476,
+          178633869,
+          361156343,
+          365928477,
+          437451175,
+          539929956,
+          631298918,
+          657693100,
+          680237639,
+          710133823,
+          820559181,
+          828877863,
+          847772814,
+          1057502236,
+          1162940265,
+          1206754120,
+          1322020998,
+          1384069198,
+          1446487630,
+          1490811644,
+          1544352946,
+          1545736777,
+          1595641618,
+          1667496471,
+          1668701260,
+          1749097717,
+          1799709371,
+          1839247407,
+          1881105609
+        ]
+      },
+      {
+        "name": "year",
+        "type": "INTEGER",
+        "count": 69,
+        "missing": 4,
+        "maximum": 2009,
+        "minimum": 1959,
+        "most_frequent_values": [
+          "1984",
+          "1963",
+          "1996",
+          "1995",
+          "2000",
+          "1980",
+          "2004",
+          "1987",
+          "1998",
+          "1985",
+          "1978",
+          "1966",
+          "1967",
+          "1962",
+          "1992",
+          "1990",
+          "2009",
+          "1969",
+          "1959"
+        ],
+        "most_frequent_counts": [
+          6,
+          6,
+          6,
+          5,
+          5,
+          5,
+          4,
+          4,
+          4,
+          3,
+          3,
+          3,
+          2,
+          2,
+          2,
+          2,
+          1,
+          1,
+          1
+        ],
+        "histogram": [
+          [
+            1959.0,
+            1
+          ],
+          [
+            1962.0,
+            2
+          ],
+          [
+            1963.0,
+            6
+          ],
+          [
+            1966.0,
+            3
+          ],
+          [
+            1967.0,
+            2
+          ],
+          [
+            1969.0,
+            1
+          ],
+          [
+            1978.0,
+            3
+          ],
+          [
+            1980.0,
+            5
+          ],
+          [
+            1984.0,
+            6
+          ],
+          [
+            1985.0,
+            3
+          ],
+          [
+            1987.0,
+            4
+          ],
+          [
+            1990.0,
+            2
+          ],
+          [
+            1992.0,
+            2
+          ],
+          [
+            1995.0,
+            5
+          ],
+          [
+            1996.0,
+            6
+          ],
+          [
+            1998.0,
+            4
+          ],
+          [
+            2000.0,
+            5
+          ],
+          [
+            2004.0,
+            4
+          ],
+          [
+            2008.0,
+            1
+          ]
+        ],
+        "kmv_hashes": [
+          169245913,
+          184114467,
+          200156436,
+          239659138,
+          958771436,
+          1684469742,
+          1796166482,
+          1804966033,
+          2126892077,
+          2332005969,
+          2384667512,
+          2679555641,
+          2800713512,
+          2859765384,
+          3041579641,
+          3266833675,
+          4192783076,
+          4253956717,
+          4281069234
+        ]
+      },
+      {
+        "name": "group",
+        "type": "INTEGER",
+        "count": 69,
+        "missing": 4,
+        "maximum": 20,
+        "minimum": 1,
+        "most_frequent_values": [
+          "10",
+          "3",
+          "16",
+          "15",
+          "18",
+          "9",
+          "19",
+          "12",
+          "17",
+          "11",
+          "8",
+          "5",
+          "6",
+          "2",
+          "14",
+          "13",
+          "20",
+          "7",
+          "1"
+        ],
+        "most_frequent_counts": [
+          6,
+          6,
+          6,
+          5,
+          5,
+          5,
+          4,
+          4,
+          4,
+          3,
+          3,
+          3,
+          2,
+          2,
+          2,
+          2,
+          1,
+          1,
+          1
+        ],
+        "histogram": [
+          [
+            1.0,
+            1
+          ],
+          [
+            1.76,
+            2
+          ],
+          [
+            2.9,
+            6
+          ],
+          [
+            4.8,
+            3
+          ],
+          [
+            5.94,
+            2
+          ],
+          [
+            6.7,
+            1
+          ],
+          [
+            7.84,
+            3
+          ],
+          [
+            8.98,
+            5
+          ],
+          [
+            9.74,
+            6
+          ],
+          [
+            10.88,
+            3
+          ],
+          [
+            11.64,
+            4
+          ],
+          [
+            12.78,
+            2
+          ],
+          [
+            13.92,
+            2
+          ],
+          [
+            14.68,
+            5
+          ],
+          [
+            15.82,
+            6
+          ],
+          [
+            16.96,
+            4
+          ],
+          [
+            17.72,
+            5
+          ],
+          [
+            18.86,
+            4
+          ],
+          [
+            19.62,
+            1
+          ]
+        ],
+        "kmv_hashes": [
+          913076911,
+          1207737243,
+          1457483473,
+          1701030680,
+          1846462603,
+          2040537583,
+          2055754937,
+          2105171476,
+          2142237589,
+          2145497649,
+          2182078663,
+          2853623652,
+          2953695184,
+          3400903514,
+          3505157723,
+          3595208919,
+          3984726652,
+          4005763522,
+          4017435920
+        ]
+      },
+      {
+        "name": "status",
+        "type": "VARCHAR",
+        "count": 69,
+        "missing": 0,
+        "maximum": 5937279679997502464,
+        "minimum": 4711737631466389504,
+        "most_frequent_values": [
+          "Retired",
+          "Active",
+          "Deceased",
+          "Management"
+        ],
+        "most_frequent_counts": [
+          40,
+          13,
+          10,
+          6
+        ],
+        "histogram": [],
+        "kmv_hashes": [
+          1133133137,
+          1868272879,
+          2348961586,
+          3368621532
+        ]
+      },
+      {
+        "name": "birth_date",
+        "type": "DATE",
+        "count": 69,
+        "missing": 0,
+        "maximum": 197856000,
+        "minimum": -1409702400,
+        "most_frequent_values": [
+          "-82944000",
+          "-1067299200",
+          "-752112000",
+          "-587606400",
+          "-1260662400",
+          "-454809600",
+          "-1026086400",
+          "-327628800",
+          "-1142640000",
+          "-342576000",
+          "-316224000",
+          "-74476800",
+          "-653443200",
+          "-295142400",
+          "-1243641600",
+          "-192499200",
+          "-491875200",
+          "197856000",
+          "-563587200",
+          "-526435200",
+          "-510624000",
+          "-338083200",
+          "-505094400",
+          "-792806400",
+          "-1199404800",
+          "-1192838400",
+          "17971200",
+          "-863136000",
+          "-340761600",
+          "-855532800",
+          "-1010620800",
+          "-165715200"
+        ],
+        "most_frequent_counts": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "histogram": [
+          [
+            -1409702400.0,
+            1
+          ],
+          [
+            -1345400064.0,
+            1
+          ],
+          [
+            -1281097728.0,
+            1
+          ],
+          [
+            -1248946560.0,
+            2
+          ],
+          [
+            -1216795392.0,
+            2
+          ],
+          [
+            -1184644224.0,
+            1
+          ],
+          [
+            -1152493056.0,
+            2
+          ],
+          [
+            -1120341888.0,
+            3
+          ],
+          [
+            -1088190720.0,
+            1
+          ],
+          [
+            -1056039552.0,
+            1
+          ],
+          [
+            -1023888384.0,
+            1
+          ],
+          [
+            -895283712.0,
+            1
+          ],
+          [
+            -863132544.0,
+            4
+          ],
+          [
+            -798830208.0,
+            2
+          ],
+          [
+            -766679040.0,
+            2
+          ],
+          [
+            -734527872.0,
+            1
+          ],
+          [
+            -670225536.0,
+            3
+          ],
+          [
+            -638074368.0,
+            2
+          ],
+          [
+            -605923200.0,
+            2
+          ],
+          [
+            -573772032.0,
+            3
+          ],
+          [
+            -541620864.0,
+            2
+          ],
+          [
+            -509469696.0,
+            2
+          ],
+          [
+            -477318528.0,
+            1
+          ],
+          [
+            -445167360.0,
+            4
+          ],
+          [
+            -413016192.0,
+            2
+          ],
+          [
+            -380865024.0,
+            1
+          ],
+          [
+            -348713856.0,
+            5
+          ],
+          [
+            -316562688.0,
+            3
+          ],
+          [
+            -284411520.0,
+            2
+          ],
+          [
+            -252260352.0,
+            1
+          ],
+          [
+            -220109184.0,
+            1
+          ],
+          [
+            -187958016.0,
+            2
+          ],
+          [
+            -91504512.0,
+            3
+          ],
+          [
+            -27202176.0,
+            2
+          ],
+          [
+            4948992.0,
+            1
+          ],
+          [
+            165704832.0,
+            1
+          ]
+        ],
+        "kmv_hashes": [
+          33213378,
+          55470662,
+          202639329,
+          258384683,
+          365237231,
+          465417650,
+          481782522,
+          606324251,
+          638491858,
+          708624185,
+          929413582,
+          943444334,
+          974623758,
+          989684690,
+          1072463062,
+          1160375935,
+          1173363278,
+          1224645093,
+          1266248664,
+          1274656656,
+          1292324665,
+          1412508897,
+          1473936518,
+          1563024461,
+          1648510906,
+          1692129455,
+          1885570269,
+          1969119694,
+          2001203759,
+          2020830846,
+          2064657853,
+          2138858604
+        ]
+      },
+      {
+        "name": "birth_place",
+        "type": "STRUCT",
+        "count": 69,
+        "missing": 0,
+        "maximum": null,
+        "minimum": null,
+        "most_frequent_values": [],
+        "most_frequent_counts": [],
+        "histogram": [],
+        "kmv_hashes": []
+      },
+      {
+        "name": "gender",
+        "type": "VARCHAR",
+        "count": 69,
+        "missing": 0,
+        "maximum": 5575856994708881408,
+        "minimum": 5072580820500545536,
+        "most_frequent_values": [
+          "Male",
+          "Female"
+        ],
+        "most_frequent_counts": [
+          64,
+          5
+        ],
+        "histogram": [],
+        "kmv_hashes": [
+          25245947,
+          1074177100
+        ]
+      },
+      {
+        "name": "alma_mater",
+        "type": "ARRAY",
+        "count": 69,
+        "missing": 0,
+        "maximum": null,
+        "minimum": null,
+        "most_frequent_values": [],
+        "most_frequent_counts": [],
+        "histogram": [],
+        "kmv_hashes": []
+      },
+      {
+        "name": "undergraduate_major",
+        "type": "VARCHAR",
+        "count": 69,
+        "missing": 3,
+        "maximum": 6516549697344600320,
+        "minimum": 4711718965522363497,
+        "most_frequent_values": [
+          "Electrical Engineering",
+          "Mechanical Engineering",
+          "Aeronautical Engineering",
+          "Aerospace Engineering",
+          "Physics",
+          "Aeronautical & Astronautical Engineering",
+          "Engineering Science",
+          "Mathematics",
+          "Geology",
+          "Mathematics & Physics",
+          "Aeronautics & Astronautics",
+          "Chemistry",
+          "Engineering Physics",
+          "Engineering",
+          "Applied Mathematics",
+          "Nuclear Engineering",
+          "Physics & Astronomy",
+          "Accounting",
+          "Zoology",
+          "Physics & Mechanical Engineering",
+          "Engineering Mechanics",
+          "Electrical Science",
+          "Business Management; Aeronautical Engineering",
+          "Biology",
+          "Biochemistry",
+          "Aerospace Engineering & Mechanics",
+          "Physics & Mathematics",
+          "Chemical Engineering"
+        ],
+        "most_frequent_counts": [
+          9,
+          8,
+          7,
+          5,
+          4,
+          3,
+          3,
+          3,
+          2,
+          2,
+          2,
+          2,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "histogram": [],
+        "kmv_hashes": [
+          42382919,
+          46962102,
+          422349452,
+          651812696,
+          729412432,
+          1018972902,
+          1136148580,
+          1147340265,
+          1225023721,
+          1291308191,
+          1472261304,
+          1575077152,
+          1753042161,
+          1929383410,
+          1946052562,
+          2116200645,
+          2352748790,
+          2814355670,
+          2929903294,
+          2982362483,
+          3233426484,
+          3286600456,
+          3586178895,
+          3667235836,
+          3873076818,
+          3929471697,
+          3986537138,
+          4256677419
+        ]
+      },
+      {
+        "name": "graduate_major",
+        "type": "VARCHAR",
+        "count": 69,
+        "missing": 9,
+        "maximum": 6014965721085080352,
+        "minimum": 4712298408031909236,
+        "most_frequent_values": [
+          "Aerospace Engineering",
+          "Medicine",
+          "Aeronautical Engineering",
+          "Physics",
+          "Astronautics",
+          "Business Administration",
+          "Aviation Systems",
+          "Mechanical Engineering",
+          "Astronautical Engineering",
+          "Engineering Management",
+          "Ocean Engineering",
+          "Geology",
+          "Solar Physics",
+          "Applied Mathematics",
+          "Nuclear Engineering",
+          "Aeronautics & Astronautics",
+          "Aeronautical & Astronautical Engineering",
+          "Environmental Science",
+          "Medicine; Public Health",
+          "Medicine; Aerospace Medicine",
+          "Electrical Engineering; Computer Science; Medicine",
+          "Aerospace Engineering; Business Administration",
+          "Electrical Engineering",
+          "Systems Management",
+          "Aeronautical Engineering Systems",
+          "Aeronautical Science",
+          "Engineering Science",
+          "Physical Chemistry",
+          "Engineering Science; Aerospace Engineering",
+          "Aeronautics & Astronautics; Business Administration",
+          "Aerospace Engineering; Electrical Engineering",
+          "Aeronautical Engineering; Aeronautics & Astronautics"
+        ],
+        "most_frequent_counts": [
+          6,
+          6,
+          5,
+          4,
+          3,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "histogram": [],
+        "kmv_hashes": [
+          46962102,
+          122076992,
+          253910228,
+          468651840,
+          541268317,
+          651812696,
+          729412432,
+          978732147,
+          1018972902,
+          1074229725,
+          1102854527,
+          1136148580,
+          1225023721,
+          1291308191,
+          1366198329,
+          1421121449,
+          1477074265,
+          1605384607,
+          1946052562,
+          2116200645,
+          2411726212,
+          2479120305,
+          2669255435,
+          2681326589,
+          2725864760,
+          2788183604,
+          2814355670,
+          2929903294,
+          3255007137,
+          3384681098,
+          3826819713,
+          3845921640
+        ]
+      },
+      {
+        "name": "military_rank",
+        "type": "VARCHAR",
+        "count": 69,
+        "missing": 25,
+        "maximum": 5575854840550016869,
+        "minimum": 4855285518434921984,
+        "most_frequent_values": [
+          "Colonel",
+          "Captain",
+          "Lieutenant Colonel",
+          "Major General",
+          "Commander",
+          "Lieutenant Commander"
+        ],
+        "most_frequent_counts": [
+          20,
+          14,
+          3,
+          3,
+          3,
+          1
+        ],
+        "histogram": [],
+        "kmv_hashes": [
+          121371002,
+          921872641,
+          1702378241,
+          2393917899,
+          2712290819,
+          3981298631
+        ]
+      },
+      {
+        "name": "military_branch",
+        "type": "VARCHAR",
+        "count": 69,
+        "missing": 24,
+        "maximum": 6148293437305551136,
+        "minimum": 6148293381604909126,
+        "most_frequent_values": [
+          "US Air Force (Retired)",
+          "US Navy (Retired)",
+          "US Navy",
+          "US Marine Corps (Retired)",
+          "US Air Force",
+          "US Army (Retired)",
+          "US Air Force Reserves (Retired)",
+          "US Marine Corps Reserves",
+          "US Marine Corps",
+          "US Coast Guard (Retired)"
+        ],
+        "most_frequent_counts": [
+          12,
+          9,
+          7,
+          6,
+          6,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "histogram": [],
+        "kmv_hashes": [
+          10491265,
+          72357135,
+          1516703043,
+          1847009690,
+          1947465960,
+          2737625198,
+          3124956499,
+          3400079155,
+          3430137857,
+          3755866000
+        ]
+      },
+      {
+        "name": "space_flights",
+        "type": "INTEGER",
+        "count": 69,
+        "missing": 0,
+        "maximum": 7,
+        "minimum": 0,
+        "most_frequent_values": [
+          "2",
+          "1",
+          "4",
+          "3",
+          "0",
+          "5",
+          "6",
+          "7"
+        ],
+        "most_frequent_counts": [
+          19,
+          17,
+          13,
+          10,
+          6,
+          2,
+          1,
+          1
+        ],
+        "histogram": [
+          [
+            0.0,
+            6
+          ],
+          [
+            0.9800000000000001,
+            17
+          ],
+          [
+            1.9600000000000002,
+            19
+          ],
+          [
+            2.9400000000000004,
+            10
+          ],
+          [
+            3.9200000000000004,
+            13
+          ],
+          [
+            4.9,
+            2
+          ],
+          [
+            5.880000000000001,
+            1
+          ],
+          [
+            6.86,
+            1
+          ]
+        ],
+        "kmv_hashes": [
+          868795117,
+          1678875853,
+          1892174151,
+          2520797803,
+          2552028077,
+          2762651575,
+          3594265378,
+          3946386795
+        ]
+      },
+      {
+        "name": "space_flight_hours",
+        "type": "INTEGER",
+        "count": 69,
+        "missing": 0,
+        "maximum": 5503,
+        "minimum": 0,
+        "most_frequent_values": [
+          "0",
+          "190",
+          "3307",
+          "334",
+          "814",
+          "289",
+          "906",
+          "313",
+          "1236",
+          "147",
+          "4005",
+          "594",
+          "579",
+          "847",
+          "639",
+          "205",
+          "307",
+          "655",
+          "337",
+          "686",
+          "965",
+          "5075",
+          "733",
+          "1671",
+          "708",
+          "3861",
+          "779",
+          "689",
+          "386",
+          "687",
+          "680",
+          "477"
+        ],
+        "most_frequent_counts": [
+          7,
+          3,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "histogram": [
+          [
+            0.0,
+            8
+          ],
+          [
+            110.06,
+            7
+          ],
+          [
+            220.12,
+            6
+          ],
+          [
+            330.18,
+            7
+          ],
+          [
+            440.24,
+            2
+          ],
+          [
+            550.3,
+            6
+          ],
+          [
+            660.36,
+            8
+          ],
+          [
+            770.4200000000001,
+            5
+          ],
+          [
+            880.48,
+            4
+          ],
+          [
+            1210.66,
+            1
+          ],
+          [
+            1320.72,
+            1
+          ],
+          [
+            1540.8400000000001,
+            1
+          ],
+          [
+            1650.9,
+            1
+          ],
+          [
+            1981.08,
+            1
+          ],
+          [
+            3301.8,
+            1
+          ],
+          [
+            3852.1,
+            1
+          ],
+          [
+            3962.16,
+            1
+          ],
+          [
+            4292.34,
+            1
+          ],
+          [
+            4402.4,
+            1
+          ],
+          [
+            4512.46,
+            1
+          ],
+          [
+            4732.58,
+            1
+          ],
+          [
+            5062.76,
+            2
+          ],
+          [
+            5392.9400000000005,
+            2
+          ]
+        ],
+        "kmv_hashes": [
+          85389338,
+          121211218,
+          209193633,
+          324486842,
+          378665894,
+          428920738,
+          431941261,
+          457994661,
+          539261704,
+          567995954,
+          605970152,
+          651593053,
+          811591404,
+          868795117,
+          924213268,
+          1076815237,
+          1216196066,
+          1300124103,
+          1303759262,
+          1337905336,
+          1470790663,
+          1501615209,
+          1565811853,
+          1638133893,
+          1645129387,
+          1646005491,
+          1714790431,
+          1844386152,
+          1853395676,
+          1919384984,
+          2015263015,
+          2116505988
+        ]
+      },
+      {
+        "name": "space_walks",
+        "type": "INTEGER",
+        "count": 69,
+        "missing": 0,
+        "maximum": 7,
+        "minimum": 0,
+        "most_frequent_values": [
+          "0",
+          "2",
+          "6",
+          "3",
+          "4",
+          "1",
+          "7"
+        ],
+        "most_frequent_counts": [
+          45,
+          9,
+          4,
+          4,
+          3,
+          3,
+          1
+        ],
+        "histogram": [
+          [
+            0.0,
+            45
+          ],
+          [
+            0.9800000000000001,
+            3
+          ],
+          [
+            1.9600000000000002,
+            9
+          ],
+          [
+            2.9400000000000004,
+            4
+          ],
+          [
+            3.9200000000000004,
+            3
+          ],
+          [
+            5.880000000000001,
+            4
+          ],
+          [
+            6.86,
+            1
+          ]
+        ],
+        "kmv_hashes": [
+          868795117,
+          1678875853,
+          2520797803,
+          2552028077,
+          2762651575,
+          3594265378,
+          3946386795
+        ]
+      },
+      {
+        "name": "space_walks_hours",
+        "type": "INTEGER",
+        "count": 69,
+        "missing": 0,
+        "maximum": 47,
+        "minimum": 0,
+        "most_frequent_values": [
+          "0",
+          "12",
+          "13",
+          "29",
+          "8",
+          "38",
+          "11",
+          "2",
+          "5",
+          "26",
+          "10",
+          "37",
+          "47",
+          "7",
+          "23",
+          "16",
+          "31",
+          "24",
+          "19",
+          "36"
+        ],
+        "most_frequent_counts": [
+          45,
+          4,
+          3,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "histogram": [
+          [
+            0.0,
+            45
+          ],
+          [
+            1.88,
+            1
+          ],
+          [
+            4.699999999999999,
+            1
+          ],
+          [
+            6.58,
+            1
+          ],
+          [
+            7.52,
+            1
+          ],
+          [
+            9.399999999999999,
+            1
+          ],
+          [
+            10.34,
+            1
+          ],
+          [
+            11.28,
+            4
+          ],
+          [
+            12.219999999999999,
+            3
+          ],
+          [
+            15.979999999999999,
+            1
+          ],
+          [
+            18.799999999999997,
+            1
+          ],
+          [
+            22.56,
+            1
+          ],
+          [
+            23.5,
+            1
+          ],
+          [
+            25.38,
+            1
+          ],
+          [
+            28.2,
+            1
+          ],
+          [
+            30.08,
+            1
+          ],
+          [
+            35.72,
+            1
+          ],
+          [
+            36.66,
+            1
+          ],
+          [
+            37.599999999999994,
+            1
+          ],
+          [
+            46.059999999999995,
+            1
+          ]
+        ],
+        "kmv_hashes": [
+          265908631,
+          322323961,
+          1167520406,
+          1217615230,
+          1892174151,
+          1994110679,
+          2762651575,
+          2800823541,
+          3077321446,
+          3142066591,
+          3197310156,
+          3453230792,
+          3594265378,
+          3683232565,
+          3690826460,
+          3816507630,
+          3946386795,
+          4031857839,
+          4218808201,
+          4248819158
+        ]
+      },
+      {
+        "name": "missions",
+        "type": "ARRAY",
+        "count": 69,
+        "missing": 6,
+        "maximum": null,
+        "minimum": null,
+        "most_frequent_values": [],
+        "most_frequent_counts": [],
+        "histogram": [],
+        "kmv_hashes": []
+      },
+      {
+        "name": "death_date",
+        "type": "DATE",
+        "count": 69,
+        "missing": 59,
+        "maximum": 1345852800,
+        "minimum": -121219200,
+        "most_frequent_values": [
+          "1044057600",
+          "1345852800",
+          "-121219200",
+          "1153612800",
+          "1218412800",
+          "1254528000",
+          "670809600",
+          "-92448000"
+        ],
+        "most_frequent_counts": [
+          3,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "histogram": [
+          [
+            -121219200.0,
+            2
+          ],
+          [
+            641658240.0,
+            1
+          ],
+          [
+            1023096960.0,
+            3
+          ],
+          [
+            1140462720.0,
+            1
+          ],
+          [
+            1199145600.0,
+            1
+          ],
+          [
+            1228487040.0,
+            1
+          ],
+          [
+            1316511360.0,
+            1
+          ]
+        ],
+        "kmv_hashes": [
+          369860851,
+          390932998,
+          705825315,
+          2121162881,
+          2748222968,
+          3435778525,
+          4097478038,
+          4224827654
+        ]
+      },
+      {
+        "name": "death_mission",
+        "type": "VARCHAR",
+        "count": 69,
+        "missing": 65,
+        "maximum": 6004515656755590944,
+        "minimum": 4715391321323282481,
+        "most_frequent_values": [
+          "STS-107 (Columbia)",
+          "Apollo 1"
+        ],
+        "most_frequent_counts": [
+          3,
+          1
+        ],
+        "histogram": [],
+        "kmv_hashes": [
+          1989770383,
+          3467677652
+        ]
+      }
+    ],
+    "missions/year_2024/month_03/day_17/as_at_20240317-235146/17bdb253bef7a960-be07cbede566-bc95.jsonl.parquet": [
+      {
+        "name": "name",
+        "type": "VARCHAR",
+        "count": 70,
+        "missing": 0,
+        "maximum": 6298684766734609696,
+        "minimum": 4714273105141318190,
+        "most_frequent_values": [
+          "Kevin P. Chilton",
+          "Laurel B. Clark",
+          "Mary L. Cleave",
+          "Michael R. Clifford",
+          "Michael L. Coats",
+          "Kenneth D. Cockrell",
+          "Catherine G. Coleman",
+          "Eileen M. Collins",
+          "Michael Collins",
+          "Charles Conrad Jr. ",
+          "L. Gordon Cooper Jr. ",
+          "Richard O. Covey",
+          "Timothy J. Creamer",
+          "John O. Creighton",
+          "Robert L. Crippen",
+          "Roger K. Crouch",
+          "Frank L. Culbertson Jr. ",
+          "Walter Cunningham",
+          "Robert L. Curbeam Jr. ",
+          "Nancy J. Currie",
+          "N. Jan Davis",
+          "Lawrence J. Delucas",
+          "Alvin B. Drew Jr. ",
+          "Brian Duffy",
+          "Charles M. Duke Jr. ",
+          "Bonnie J. Dunbar",
+          "Samuel T. Durrance",
+          "James P. Dutton Jr. ",
+          "Joe F. Edwards Jr. ",
+          "Donn F. Eisele",
+          "Anthony W. England",
+          "Joe H. Engle"
+        ],
+        "most_frequent_counts": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "histogram": [],
+        "kmv_hashes": [
+          96141406,
+          151702824,
+          461843282,
+          549137554,
+          616847403,
+          713888834,
+          775257330,
+          841130354,
+          866489163,
+          913269382,
+          938657294,
+          980587765,
+          1037381228,
+          1050084342,
+          1057107008,
+          1074965436,
+          1157600951,
+          1177234419,
+          1267978337,
+          1282336635,
+          1333200216,
+          1365346110,
+          1372736126,
+          1381377636,
+          1476229008,
+          1548824004,
+          1623882686,
+          1674834024,
+          1777399108,
+          1778015203,
+          1873274425,
+          1891004604
+        ]
+      },
+      {
+        "name": "year",
+        "type": "INTEGER",
+        "count": 70,
+        "missing": 6,
+        "maximum": 2009,
+        "minimum": 1959,
+        "most_frequent_values": [
+          "1978",
+          "1980",
+          "1990",
+          "1963",
+          "2000",
+          "1996",
+          "1998",
+          "1966",
+          "1987",
+          "1995",
+          "1985",
+          "1965",
+          "1992",
+          "1959",
+          "1969",
+          "2009",
+          "1962",
+          "1984",
+          "2004",
+          "1967"
+        ],
+        "most_frequent_counts": [
+          8,
+          5,
+          5,
+          5,
+          5,
+          4,
+          4,
+          4,
+          3,
+          3,
+          3,
+          3,
+          2,
+          2,
+          2,
+          2,
+          1,
+          1,
+          1,
+          1
+        ],
+        "histogram": [
+          [
+            1959.0,
+            2
+          ],
+          [
+            1962.0,
+            1
+          ],
+          [
+            1963.0,
+            5
+          ],
+          [
+            1965.0,
+            3
+          ],
+          [
+            1966.0,
+            4
+          ],
+          [
+            1967.0,
+            1
+          ],
+          [
+            1969.0,
+            2
+          ],
+          [
+            1978.0,
+            8
+          ],
+          [
+            1980.0,
+            5
+          ],
+          [
+            1984.0,
+            1
+          ],
+          [
+            1985.0,
+            3
+          ],
+          [
+            1987.0,
+            3
+          ],
+          [
+            1990.0,
+            5
+          ],
+          [
+            1992.0,
+            2
+          ],
+          [
+            1995.0,
+            3
+          ],
+          [
+            1996.0,
+            4
+          ],
+          [
+            1998.0,
+            4
+          ],
+          [
+            2000.0,
+            5
+          ],
+          [
+            2004.0,
+            1
+          ],
+          [
+            2008.0,
+            2
+          ]
+        ],
+        "kmv_hashes": [
+          169245913,
+          184114467,
+          200156436,
+          239659138,
+          958771436,
+          1684469742,
+          1796166482,
+          1804966033,
+          2126892077,
+          2332005969,
+          2384667512,
+          2679555641,
+          2800713512,
+          2859765384,
+          3041579641,
+          3049244778,
+          3266833675,
+          4192783076,
+          4253956717,
+          4281069234
+        ]
+      },
+      {
+        "name": "group",
+        "type": "INTEGER",
+        "count": 70,
+        "missing": 6,
+        "maximum": 20,
+        "minimum": 1,
+        "most_frequent_values": [
+          "8",
+          "9",
+          "13",
+          "3",
+          "18",
+          "16",
+          "17",
+          "5",
+          "12",
+          "15",
+          "11",
+          "4",
+          "14",
+          "1",
+          "7",
+          "20",
+          "2",
+          "10",
+          "19",
+          "6"
+        ],
+        "most_frequent_counts": [
+          8,
+          5,
+          5,
+          5,
+          5,
+          4,
+          4,
+          4,
+          3,
+          3,
+          3,
+          3,
+          2,
+          2,
+          2,
+          2,
+          1,
+          1,
+          1,
+          1
+        ],
+        "histogram": [
+          [
+            1.0,
+            2
+          ],
+          [
+            1.76,
+            1
+          ],
+          [
+            2.9,
+            5
+          ],
+          [
+            3.66,
+            3
+          ],
+          [
+            4.8,
+            4
+          ],
+          [
+            5.94,
+            1
+          ],
+          [
+            6.7,
+            2
+          ],
+          [
+            7.84,
+            8
+          ],
+          [
+            8.98,
+            5
+          ],
+          [
+            9.74,
+            1
+          ],
+          [
+            10.88,
+            3
+          ],
+          [
+            11.64,
+            3
+          ],
+          [
+            12.78,
+            5
+          ],
+          [
+            13.92,
+            2
+          ],
+          [
+            14.68,
+            3
+          ],
+          [
+            15.82,
+            4
+          ],
+          [
+            16.96,
+            4
+          ],
+          [
+            17.72,
+            5
+          ],
+          [
+            18.86,
+            1
+          ],
+          [
+            19.62,
+            2
+          ]
+        ],
+        "kmv_hashes": [
+          913076911,
+          1207737243,
+          1457483473,
+          1701030680,
+          1846462603,
+          2040537583,
+          2055754937,
+          2105171476,
+          2142237589,
+          2145497649,
+          2182078663,
+          2853623652,
+          2953695184,
+          3400903514,
+          3505157723,
+          3595208919,
+          3984726652,
+          4005763522,
+          4017435920,
+          4258219837
+        ]
+      },
+      {
+        "name": "status",
+        "type": "VARCHAR",
+        "count": 70,
+        "missing": 0,
+        "maximum": 5937279679997502464,
+        "minimum": 4711737631466389504,
+        "most_frequent_values": [
+          "Retired",
+          "Management",
+          "Active",
+          "Deceased"
+        ],
+        "most_frequent_counts": [
+          43,
+          11,
+          9,
+          7
+        ],
+        "histogram": [],
+        "kmv_hashes": [
+          1133133137,
+          1868272879,
+          2348961586,
+          3368621532
+        ]
+      },
+      {
+        "name": "birth_date",
+        "type": "DATE",
+        "count": 70,
+        "missing": 0,
+        "maximum": 128131200,
+        "minimum": -1529193600,
+        "most_frequent_values": [
+          "-498960000",
+          "-278121600",
+          "-722822400",
+          "-543369600",
+          "-756086400",
+          "-622684800",
+          "-285552000",
+          "-319334400",
+          "-1236124800",
+          "-1251849600",
+          "-1351468800",
+          "-739065600",
+          "-319680000",
+          "-841968000",
+          "-1019520000",
+          "-924739200",
+          "-651110400",
+          "-1192752000",
+          "-247017600",
+          "-347414400",
+          "-510192000",
+          "-614649600",
+          "-225849600",
+          "-521769600",
+          "-1080777600",
+          "-657417600",
+          "-829699200",
+          "-35164800",
+          "-375840000",
+          "-1250035200",
+          "-872035200",
+          "-1178668800"
+        ],
+        "most_frequent_counts": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "histogram": [
+          [
+            -1529193600.0,
+            1
+          ],
+          [
+            -1363461120.0,
+            1
+          ],
+          [
+            -1297168128.0,
+            1
+          ],
+          [
+            -1264021632.0,
+            6
+          ],
+          [
+            -1230875136.0,
+            1
+          ],
+          [
+            -1197728640.0,
+            3
+          ],
+          [
+            -1164582144.0,
+            1
+          ],
+          [
+            -1098289152.0,
+            1
+          ],
+          [
+            -1065142656.0,
+            2
+          ],
+          [
+            -1031996160.0,
+            1
+          ],
+          [
+            -998849664.0,
+            1
+          ],
+          [
+            -932556672.0,
+            2
+          ],
+          [
+            -899410176.0,
+            1
+          ],
+          [
+            -866263680.0,
+            1
+          ],
+          [
+            -833117184.0,
+            1
+          ],
+          [
+            -799970688.0,
+            1
+          ],
+          [
+            -766824192.0,
+            4
+          ],
+          [
+            -733677696.0,
+            2
+          ],
+          [
+            -700531200.0,
+            1
+          ],
+          [
+            -667384704.0,
+            4
+          ],
+          [
+            -634238208.0,
+            2
+          ],
+          [
+            -567945216.0,
+            2
+          ],
+          [
+            -534798720.0,
+            2
+          ],
+          [
+            -501652224.0,
+            1
+          ],
+          [
+            -468505728.0,
+            1
+          ],
+          [
+            -435359232.0,
+            5
+          ],
+          [
+            -402212736.0,
+            4
+          ],
+          [
+            -369066240.0,
+            1
+          ],
+          [
+            -335919744.0,
+            2
+          ],
+          [
+            -302773248.0,
+            3
+          ],
+          [
+            -269626752.0,
+            4
+          ],
+          [
+            -236480256.0,
+            2
+          ],
+          [
+            -170187264.0,
+            1
+          ],
+          [
+            -103894272.0,
+            1
+          ],
+          [
+            -37601280.0,
+            1
+          ],
+          [
+            -4454784.0,
+            1
+          ],
+          [
+            94984704.0,
+            1
+          ]
+        ],
+        "kmv_hashes": [
+          33370772,
+          102927868,
+          140176667,
+          280019575,
+          318131990,
+          370021493,
+          586459529,
+          593274887,
+          858186124,
+          892977360,
+          904649502,
+          909249449,
+          1008988404,
+          1022450452,
+          1102248007,
+          1103887818,
+          1138945583,
+          1244990007,
+          1301783730,
+          1334069576,
+          1433483949,
+          1449744956,
+          1455436180,
+          1514734140,
+          1559583125,
+          1560629799,
+          1569300766,
+          1687036367,
+          1692442832,
+          1705664086,
+          1749575461,
+          1787592362
+        ]
+      },
+      {
+        "name": "birth_place",
+        "type": "STRUCT",
+        "count": 70,
+        "missing": 0,
+        "maximum": null,
+        "minimum": null,
+        "most_frequent_values": [],
+        "most_frequent_counts": [],
+        "histogram": [],
+        "kmv_hashes": []
+      },
+      {
+        "name": "gender",
+        "type": "VARCHAR",
+        "count": 70,
+        "missing": 0,
+        "maximum": 5575856994708881408,
+        "minimum": 5072580820500545536,
+        "most_frequent_values": [
+          "Male",
+          "Female"
+        ],
+        "most_frequent_counts": [
+          60,
+          10
+        ],
+        "histogram": [],
+        "kmv_hashes": [
+          25245947,
+          1074177100
+        ]
+      },
+      {
+        "name": "alma_mater",
+        "type": "ARRAY",
+        "count": 70,
+        "missing": 0,
+        "maximum": null,
+        "minimum": null,
+        "most_frequent_values": [],
+        "most_frequent_counts": [],
+        "histogram": [],
+        "kmv_hashes": []
+      },
+      {
+        "name": "undergraduate_major",
+        "type": "VARCHAR",
+        "count": 70,
+        "missing": 8,
+        "maximum": 6516549697344600320,
+        "minimum": 4712298408031909236,
+        "most_frequent_values": [
+          "Aerospace Engineering",
+          "Physics",
+          "Mechanical Engineering",
+          "Engineering Science",
+          "Chemistry",
+          "Aeronautical Engineering",
+          "Engineering",
+          "Biological Science",
+          "Naval Sciences",
+          "Astronautical Engineering",
+          "Electrical Engineering",
+          "Zoology",
+          "Mathematics & Economics",
+          "Applied Biology; Mechanical Engineering",
+          "Chemistry; Physiological Optics",
+          "Physics & Astronautical Engineering",
+          "Mathematics",
+          "Ceramic Engineering",
+          "Astronautics",
+          "Geology",
+          "Animal Nutrition",
+          "Solid Earth Sciences",
+          "Aeronautics & Astronautics; Earth, Atmospheric & Planetary Scien",
+          "Applied Science & Engineering",
+          "Psychology",
+          "Business Economics",
+          "Engineering Physics",
+          "Engineering Sciences; Astronautics & Mathematics",
+          "Business Finance",
+          "Mathematics & Physics",
+          "Ocean Engineering"
+        ],
+        "most_frequent_counts": [
+          8,
+          6,
+          5,
+          4,
+          4,
+          4,
+          3,
+          2,
+          2,
+          2,
+          2,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "histogram": [],
+        "kmv_hashes": [
+          42382919,
+          387674893,
+          422349452,
+          449791106,
+          468651840,
+          478437338,
+          651812696,
+          1074229725,
+          1131322186,
+          1134722071,
+          1136148580,
+          1225023721,
+          1291308191,
+          1310320837,
+          1329211920,
+          1378534262,
+          1786339942,
+          1914306058,
+          1929383410,
+          2116200645,
+          2352748790,
+          2479120305,
+          2929903294,
+          2941785535,
+          2982362483,
+          3286600456,
+          3445477896,
+          3873076818,
+          4012491655,
+          4182630690,
+          4242011218
+        ]
+      },
+      {
+        "name": "graduate_major",
+        "type": "VARCHAR",
+        "count": 70,
+        "missing": 14,
+        "maximum": 6014965721085080352,
+        "minimum": 4712298408031909236,
+        "most_frequent_values": [
+          "Aeronautical Engineering",
+          "Physics",
+          "Mechanical Engineering",
+          "Aerospace Engineering",
+          "Aeronautics & Astronautics",
+          "Medicine",
+          "Aviation Systems",
+          "Astronautics",
+          "Microbial Ecology; Environmental Engineering",
+          "Science & Technology Administration; Aeronautical Engineering",
+          "Aeronautical Systems",
+          "Polymer Science & Engineering",
+          "Operations Research; Space Systems Management",
+          "Science & Technology Administration",
+          "Aerospace Engineering; Aeronautical & Astronautical Engineering",
+          "Safety Engineering; Industrial Engineering",
+          "Chemistry; Biochemistry; Optometry",
+          "Aerospace Science; Political Science",
+          "Systems Management",
+          "Aeronautics",
+          "Ceramic Engineering; Biomedical Engineering",
+          "Physics; Astrogeophysics",
+          "Geology; Geophysics",
+          "Aerospace Engineering; Aeronautics & Astronautics",
+          "Physiology",
+          "Geophysics; Seismology",
+          "Aeronautics & Astronautics; Physical Sciences",
+          "Chemistry; Medicine",
+          "Engineering; Medicine",
+          "Laboratory Astrophysics",
+          "International Relations; Aerospace Engineering; Astronautical En",
+          "Mechanical & Aerospace Engineering"
+        ],
+        "most_frequent_counts": [
+          5,
+          4,
+          3,
+          3,
+          3,
+          2,
+          2,
+          2,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "histogram": [],
+        "kmv_hashes": [
+          253910228,
+          422349452,
+          461340564,
+          468651840,
+          531117929,
+          728822902,
+          742729539,
+          802693262,
+          932493930,
+          989396443,
+          1038625718,
+          1102854527,
+          1136148580,
+          1147761064,
+          1193638701,
+          1225023721,
+          1432746205,
+          1946052562,
+          2065074366,
+          2116200645,
+          2146766943,
+          2215239534,
+          2241493340,
+          2314044602,
+          2779365904,
+          2929903294,
+          3135450583,
+          3327191639,
+          3341472425,
+          3503254480,
+          3663151667,
+          3733612976
+        ]
+      },
+      {
+        "name": "military_rank",
+        "type": "VARCHAR",
+        "count": 70,
+        "missing": 24,
+        "maximum": 5575854840550016869,
+        "minimum": 4788005246584777061,
+        "most_frequent_values": [
+          "Colonel",
+          "Captain",
+          "Lieutenant Colonel",
+          "Brigadier General",
+          "Commander",
+          "Major General",
+          "Major"
+        ],
+        "most_frequent_counts": [
+          22,
+          16,
+          3,
+          2,
+          1,
+          1,
+          1
+        ],
+        "histogram": [],
+        "kmv_hashes": [
+          121371002,
+          664381002,
+          921872641,
+          1702378241,
+          2712290819,
+          3736898555,
+          3981298631
+        ]
+      },
+      {
+        "name": "military_branch",
+        "type": "VARCHAR",
+        "count": 70,
+        "missing": 21,
+        "maximum": 6148293437305551136,
+        "minimum": 6148293381604909126,
+        "most_frequent_values": [
+          "US Air Force (Retired)",
+          "US Navy (Retired)",
+          "US Air Force",
+          "US Army (Retired)",
+          "US Navy",
+          "US Naval Reserves",
+          "US Air Force Reserves",
+          "US Marine Corps Reserves",
+          "US Air Force Reserves (Retired)",
+          "US Army",
+          "US Marine Corps (Retired)"
+        ],
+        "most_frequent_counts": [
+          17,
+          15,
+          6,
+          4,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "histogram": [],
+        "kmv_hashes": [
+          10491265,
+          72357135,
+          1516703043,
+          1847009690,
+          2046673617,
+          2737625198,
+          3124956499,
+          3400079155,
+          3430137857,
+          4019476449,
+          4067177357
+        ]
+      },
+      {
+        "name": "space_flights",
+        "type": "INTEGER",
+        "count": 70,
+        "missing": 0,
+        "maximum": 6,
+        "minimum": 0,
+        "most_frequent_values": [
+          "2",
+          "1",
+          "3",
+          "4",
+          "0",
+          "5",
+          "6"
+        ],
+        "most_frequent_counts": [
+          19,
+          18,
+          14,
+          10,
+          5,
+          3,
+          1
+        ],
+        "histogram": [
+          [
+            0.0,
+            5
+          ],
+          [
+            0.96,
+            18
+          ],
+          [
+            1.92,
+            19
+          ],
+          [
+            3.0,
+            14
+          ],
+          [
+            3.96,
+            10
+          ],
+          [
+            4.92,
+            3
+          ],
+          [
+            5.88,
+            1
+          ]
+        ],
+        "kmv_hashes": [
+          868795117,
+          1678875853,
+          1892174151,
+          2520797803,
+          2552028077,
+          3594265378,
+          3946386795
+        ]
+      },
+      {
+        "name": "space_flight_hours",
+        "type": "INTEGER",
+        "count": 70,
+        "missing": 0,
+        "maximum": 9159,
+        "minimum": 0,
+        "most_frequent_values": [
+          "0",
+          "382",
+          "260",
+          "336",
+          "218",
+          "700",
+          "262",
+          "666",
+          "463",
+          "1548",
+          "4324",
+          "890",
+          "266",
+          "1179",
+          "225",
+          "645",
+          "3917",
+          "404",
+          "565",
+          "471",
+          "3446",
+          "902",
+          "999",
+          "673",
+          "331",
+          "613",
+          "977",
+          "265",
+          "1207",
+          "614",
+          "362",
+          "211"
+        ],
+        "most_frequent_counts": [
+          5,
+          2,
+          2,
+          2,
+          2,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "histogram": [
+          [
+            0.0,
+            7
+          ],
+          [
+            183.18,
+            20
+          ],
+          [
+            366.36,
+            7
+          ],
+          [
+            549.54,
+            13
+          ],
+          [
+            732.72,
+            3
+          ],
+          [
+            915.9000000000001,
+            6
+          ],
+          [
+            1099.08,
+            3
+          ],
+          [
+            1465.44,
+            1
+          ],
+          [
+            1648.6200000000001,
+            1
+          ],
+          [
+            2014.98,
+            1
+          ],
+          [
+            3297.2400000000002,
+            1
+          ],
+          [
+            3663.6000000000004,
+            1
+          ],
+          [
+            3846.78,
+            1
+          ],
+          [
+            4213.14,
+            2
+          ],
+          [
+            4579.5,
+            1
+          ],
+          [
+            8792.64,
+            1
+          ],
+          [
+            8975.82,
+            1
+          ]
+        ],
+        "kmv_hashes": [
+          144292449,
+          196394315,
+          281014038,
+          335998834,
+          364939984,
+          379282011,
+          415733874,
+          651593053,
+          708551779,
+          909200244,
+          917234112,
+          928037733,
+          976398060,
+          1001019471,
+          1281797672,
+          1300124103,
+          1302139313,
+          1323527749,
+          1373949114,
+          1401963987,
+          1504976213,
+          1683649567,
+          1761336999,
+          1792569621,
+          1844748200,
+          1947582211,
+          1949138468,
+          2031697543,
+          2145806526,
+          2149755870,
+          2218812005,
+          2248546951
+        ]
+      },
+      {
+        "name": "space_walks",
+        "type": "INTEGER",
+        "count": 70,
+        "missing": 0,
+        "maximum": 9,
+        "minimum": 0,
+        "most_frequent_values": [
+          "0",
+          "4",
+          "1",
+          "2",
+          "3",
+          "7",
+          "6",
+          "9",
+          "5"
+        ],
+        "most_frequent_counts": [
+          47,
+          6,
+          5,
+          4,
+          3,
+          2,
+          1,
+          1,
+          1
+        ],
+        "histogram": [
+          [
+            0.0,
+            47
+          ],
+          [
+            0.8999999999999999,
+            5
+          ],
+          [
+            1.98,
+            4
+          ],
+          [
+            2.88,
+            3
+          ],
+          [
+            3.96,
+            6
+          ],
+          [
+            4.859999999999999,
+            1
+          ],
+          [
+            5.9399999999999995,
+            1
+          ],
+          [
+            6.84,
+            2
+          ],
+          [
+            8.82,
+            1
+          ]
+        ],
+        "kmv_hashes": [
+          868795117,
+          1678875853,
+          1892174151,
+          2520797803,
+          2552028077,
+          2762651575,
+          3184923214,
+          3594265378,
+          3946386795
+        ]
+      },
+      {
+        "name": "space_walks_hours",
+        "type": "INTEGER",
+        "count": 70,
+        "missing": 1,
+        "maximum": 48,
+        "minimum": 0,
+        "most_frequent_values": [
+          "0",
+          "12",
+          "1",
+          "48",
+          "6",
+          "5",
+          "45",
+          "13",
+          "20",
+          "42",
+          "22",
+          "32",
+          "25",
+          "27",
+          "14",
+          "23",
+          "15",
+          "10",
+          "30"
+        ],
+        "most_frequent_counts": [
+          47,
+          3,
+          2,
+          2,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "histogram": [
+          [
+            0.0,
+            47
+          ],
+          [
+            0.96,
+            2
+          ],
+          [
+            4.8,
+            1
+          ],
+          [
+            5.76,
+            1
+          ],
+          [
+            9.6,
+            1
+          ],
+          [
+            11.52,
+            3
+          ],
+          [
+            12.48,
+            1
+          ],
+          [
+            13.44,
+            1
+          ],
+          [
+            14.399999999999999,
+            1
+          ],
+          [
+            19.2,
+            1
+          ],
+          [
+            21.119999999999997,
+            1
+          ],
+          [
+            22.08,
+            1
+          ],
+          [
+            24.96,
+            1
+          ],
+          [
+            26.88,
+            1
+          ],
+          [
+            29.759999999999998,
+            1
+          ],
+          [
+            31.68,
+            1
+          ],
+          [
+            41.28,
+            1
+          ],
+          [
+            44.16,
+            1
+          ],
+          [
+            47.04,
+            2
+          ]
+        ],
+        "kmv_hashes": [
+          29382307,
+          367638466,
+          519162370,
+          913076911,
+          1207737243,
+          1317565191,
+          1414898785,
+          1846462603,
+          1847538797,
+          1924026699,
+          2105171476,
+          2182078663,
+          2693844799,
+          2953695184,
+          3242578051,
+          3400903514,
+          3505157723,
+          3984726652,
+          4117541031
+        ]
+      },
+      {
+        "name": "missions",
+        "type": "ARRAY",
+        "count": 70,
+        "missing": 5,
+        "maximum": null,
+        "minimum": null,
+        "most_frequent_values": [],
+        "most_frequent_counts": [],
+        "histogram": [],
+        "kmv_hashes": []
+      },
+      {
+        "name": "death_date",
+        "type": "DATE",
+        "count": 70,
+        "missing": 63,
+        "maximum": 1096848000,
+        "minimum": -163123200,
+        "most_frequent_values": [
+          "1044057600",
+          "931392000",
+          "1096848000",
+          "565401600",
+          "639360000",
+          "-163123200",
+          "-81216000"
+        ],
+        "most_frequent_counts": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "histogram": [
+          [
+            -163123200.0,
+            1
+          ],
+          [
+            -87524928.0,
+            1
+          ],
+          [
+            542460672.0,
+            1
+          ],
+          [
+            618058944.0,
+            1
+          ],
+          [
+            920452032.0,
+            1
+          ],
+          [
+            1021249728.0,
+            1
+          ],
+          [
+            1071648576.0,
+            1
+          ]
+        ],
+        "kmv_hashes": [
+          12815211,
+          445731842,
+          705825315,
+          962262454,
+          2125764099,
+          2219410172,
+          3760989371
+        ]
+      },
+      {
+        "name": "death_mission",
+        "type": "VARCHAR",
+        "count": 70,
+        "missing": 69,
+        "maximum": 6004515656755590944,
+        "minimum": 6004515656755590944,
+        "most_frequent_values": [
+          "STS-107 (Columbia)"
+        ],
+        "most_frequent_counts": [
+          1
+        ],
+        "histogram": [],
+        "kmv_hashes": [
+          1989770383
+        ]
+      }
+    ],
+    "missions/year_2024/month_03/day_17/as_at_20240317-235146/17bdb253bf385fc8-be07cbede566-bc95.jsonl.parquet": [
+      {
+        "name": "name",
+        "type": "VARCHAR",
+        "count": 68,
+        "missing": 0,
+        "maximum": 6298684766734609696,
+        "minimum": 4784355997557875744,
+        "most_frequent_values": [
+          "S. David Griggs",
+          "Virgil I. Grissom",
+          "John M. Grunsfeld",
+          "Sidney M. Gutierrez",
+          "Fred W. Haise Jr. ",
+          "James D. Halsell Jr. ",
+          "Kenneth T. Ham",
+          "L. Blaine Hammond Jr. ",
+          "Gregory J. Harbaugh",
+          "Bernard A. Harris Jr. ",
+          "Terry J. Hart",
+          "Henry W. Hartsfield Jr. ",
+          "Frederick H. Hauck",
+          "Steven A. Hawley",
+          "Susan J. Helms",
+          "Karl G. Henize",
+          "Thomas J. Hennen",
+          "Terence T. Henricks",
+          "Jose M. Hernandez",
+          "John B. Herrington",
+          "Richard J. Hieb",
+          "Joan E. Higginbotham",
+          "David C. Hilmers",
+          "Kathryn P. Hire",
+          "Charles O. Hobaugh",
+          "Jeffrey A. Hoffman",
+          "Donald L. Holmquest",
+          "Michael S. Hopkins",
+          "Scott J. Horowitz",
+          "Millie Hughes-Fulford",
+          "Douglas G. Hurley",
+          "Rick D. Husband"
+        ],
+        "most_frequent_counts": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "histogram": [],
+        "kmv_hashes": [
+          35687159,
+          60151630,
+          87021549,
+          247536174,
+          259138451,
+          264432012,
+          276994854,
+          303567775,
+          346046428,
+          389244967,
+          435436338,
+          621176909,
+          658785958,
+          824645769,
+          857064240,
+          1151208695,
+          1274666822,
+          1341629956,
+          1476677163,
+          1520391529,
+          1530782977,
+          1539811991,
+          1735849705,
+          1838820223,
+          1887297050,
+          1888531032,
+          1920854372,
+          1956173443,
+          2024819035,
+          2054577409,
+          2089314559,
+          2104783783
+        ]
+      },
+      {
+        "name": "year",
+        "type": "INTEGER",
+        "count": 68,
+        "missing": 6,
+        "maximum": 2009,
+        "minimum": 1959,
+        "most_frequent_values": [
+          "1992",
+          "1996",
+          "1978",
+          "1995",
+          "1984",
+          "1966",
+          "1990",
+          "1967",
+          "1998",
+          "1985",
+          "1980",
+          "1987",
+          "2004",
+          "2009",
+          "2000",
+          "1959",
+          "1969",
+          "1965"
+        ],
+        "most_frequent_counts": [
+          8,
+          8,
+          5,
+          5,
+          4,
+          4,
+          4,
+          4,
+          3,
+          3,
+          3,
+          2,
+          2,
+          2,
+          2,
+          1,
+          1,
+          1
+        ],
+        "histogram": [
+          [
+            1959.0,
+            1
+          ],
+          [
+            1965.0,
+            1
+          ],
+          [
+            1966.0,
+            4
+          ],
+          [
+            1967.0,
+            4
+          ],
+          [
+            1969.0,
+            1
+          ],
+          [
+            1978.0,
+            5
+          ],
+          [
+            1980.0,
+            3
+          ],
+          [
+            1984.0,
+            4
+          ],
+          [
+            1985.0,
+            3
+          ],
+          [
+            1987.0,
+            2
+          ],
+          [
+            1990.0,
+            4
+          ],
+          [
+            1992.0,
+            8
+          ],
+          [
+            1995.0,
+            5
+          ],
+          [
+            1996.0,
+            8
+          ],
+          [
+            1998.0,
+            3
+          ],
+          [
+            2000.0,
+            2
+          ],
+          [
+            2004.0,
+            2
+          ],
+          [
+            2008.0,
+            2
+          ]
+        ],
+        "kmv_hashes": [
+          169245913,
+          184114467,
+          200156436,
+          239659138,
+          958771436,
+          1684469742,
+          1796166482,
+          2126892077,
+          2332005969,
+          2679555641,
+          2800713512,
+          2859765384,
+          3041579641,
+          3049244778,
+          3266833675,
+          4192783076,
+          4253956717,
+          4281069234
+        ]
+      },
+      {
+        "name": "group",
+        "type": "INTEGER",
+        "count": 68,
+        "missing": 6,
+        "maximum": 20,
+        "minimum": 1,
+        "most_frequent_values": [
+          "14",
+          "16",
+          "8",
+          "15",
+          "10",
+          "5",
+          "13",
+          "6",
+          "17",
+          "11",
+          "9",
+          "12",
+          "19",
+          "20",
+          "18",
+          "1",
+          "7",
+          "4"
+        ],
+        "most_frequent_counts": [
+          8,
+          8,
+          5,
+          5,
+          4,
+          4,
+          4,
+          4,
+          3,
+          3,
+          3,
+          2,
+          2,
+          2,
+          2,
+          1,
+          1,
+          1
+        ],
+        "histogram": [
+          [
+            1.0,
+            1
+          ],
+          [
+            3.66,
+            1
+          ],
+          [
+            4.8,
+            4
+          ],
+          [
+            5.94,
+            4
+          ],
+          [
+            6.7,
+            1
+          ],
+          [
+            7.84,
+            5
+          ],
+          [
+            8.98,
+            3
+          ],
+          [
+            9.74,
+            4
+          ],
+          [
+            10.88,
+            3
+          ],
+          [
+            11.64,
+            2
+          ],
+          [
+            12.78,
+            4
+          ],
+          [
+            13.92,
+            8
+          ],
+          [
+            14.68,
+            5
+          ],
+          [
+            15.82,
+            8
+          ],
+          [
+            16.96,
+            3
+          ],
+          [
+            17.72,
+            2
+          ],
+          [
+            18.86,
+            2
+          ],
+          [
+            19.62,
+            2
+          ]
+        ],
+        "kmv_hashes": [
+          913076911,
+          1207737243,
+          1457483473,
+          1701030680,
+          1846462603,
+          2040537583,
+          2055754937,
+          2105171476,
+          2142237589,
+          2145497649,
+          2182078663,
+          2953695184,
+          3400903514,
+          3505157723,
+          3595208919,
+          3984726652,
+          4017435920,
+          4258219837
+        ]
+      },
+      {
+        "name": "status",
+        "type": "VARCHAR",
+        "count": 68,
+        "missing": 0,
+        "maximum": 5937279679997502464,
+        "minimum": 4711737631466389504,
+        "most_frequent_values": [
+          "Retired",
+          "Deceased",
+          "Management",
+          "Active"
+        ],
+        "most_frequent_counts": [
+          46,
+          8,
+          7,
+          7
+        ],
+        "histogram": [],
+        "kmv_hashes": [
+          1133133137,
+          1868272879,
+          2348961586,
+          3368621532
+        ]
+      },
+      {
+        "name": "birth_date",
+        "type": "DATE",
+        "count": 68,
+        "missing": 0,
+        "maximum": 96595200,
+        "minimum": -1380585600,
+        "most_frequent_values": [
+          "-184982400",
+          "-956793600",
+          "-1380585600",
+          "-354326400",
+          "-584323200",
+          "-1140220800",
+          "-418348800",
+          "-159494400",
+          "-566784000",
+          "-432777600",
+          "-426556800",
+          "-731548800",
+          "-1139616000",
+          "-906508800",
+          "-569808000",
+          "-373852800",
+          "-1363564800",
+          "-548294400",
+          "-552009600",
+          "-233625600",
+          "-356572800",
+          "-450662400",
+          "-170812800",
+          "-628819200",
+          "-326678400",
+          "-257385600",
+          "-794102400",
+          "-970012800",
+          "-31881600",
+          "-403142400",
+          "-758332800",
+          "-100915200"
+        ],
+        "most_frequent_counts": [
+          2,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "histogram": [
+          [
+            -1380585600.0,
+            2
+          ],
+          [
+            -1262411136.0,
+            2
+          ],
+          [
+            -1203323904.0,
+            1
+          ],
+          [
+            -1173780288.0,
+            1
+          ],
+          [
+            -1144236672.0,
+            2
+          ],
+          [
+            -1085149440.0,
+            1
+          ],
+          [
+            -996518592.0,
+            2
+          ],
+          [
+            -966974976.0,
+            1
+          ],
+          [
+            -907887744.0,
+            1
+          ],
+          [
+            -819256896.0,
+            2
+          ],
+          [
+            -760169664.0,
+            3
+          ],
+          [
+            -701082432.0,
+            1
+          ],
+          [
+            -671538816.0,
+            1
+          ],
+          [
+            -641995200.0,
+            1
+          ],
+          [
+            -612451584.0,
+            2
+          ],
+          [
+            -582907968.0,
+            3
+          ],
+          [
+            -553364352.0,
+            3
+          ],
+          [
+            -494277120.0,
+            3
+          ],
+          [
+            -464733504.0,
+            1
+          ],
+          [
+            -435189888.0,
+            6
+          ],
+          [
+            -405646272.0,
+            4
+          ],
+          [
+            -376102656.0,
+            5
+          ],
+          [
+            -346559040.0,
+            4
+          ],
+          [
+            -317015424.0,
+            2
+          ],
+          [
+            -287471808.0,
+            1
+          ],
+          [
+            -257928192.0,
+            3
+          ],
+          [
+            -228384576.0,
+            1
+          ],
+          [
+            -198840960.0,
+            4
+          ],
+          [
+            -169297344.0,
+            1
+          ],
+          [
+            -110210112.0,
+            2
+          ],
+          [
+            -51122880.0,
+            1
+          ],
+          [
+            67051584.0,
+            1
+          ]
+        ],
+        "kmv_hashes": [
+          2081312,
+          90293278,
+          107061337,
+          121165134,
+          145253437,
+          196082325,
+          260484595,
+          307082869,
+          316496668,
+          374705930,
+          397756683,
+          448340731,
+          474140008,
+          507632347,
+          518476168,
+          605498346,
+          653743254,
+          670007064,
+          677766848,
+          739835950,
+          771979845,
+          802361922,
+          806216665,
+          976472249,
+          1155230057,
+          1208701771,
+          1372303698,
+          1397717737,
+          1453534557,
+          1519841668,
+          1541828961,
+          1607621422
+        ]
+      },
+      {
+        "name": "birth_place",
+        "type": "STRUCT",
+        "count": 68,
+        "missing": 0,
+        "maximum": null,
+        "minimum": null,
+        "most_frequent_values": [],
+        "most_frequent_counts": [],
+        "histogram": [],
+        "kmv_hashes": []
+      },
+      {
+        "name": "gender",
+        "type": "VARCHAR",
+        "count": 68,
+        "missing": 0,
+        "maximum": 5575856994708881408,
+        "minimum": 5072580820500545536,
+        "most_frequent_values": [
+          "Male",
+          "Female"
+        ],
+        "most_frequent_counts": [
+          58,
+          10
+        ],
+        "histogram": [],
+        "kmv_hashes": [
+          25245947,
+          1074177100
+        ]
+      },
+      {
+        "name": "alma_mater",
+        "type": "ARRAY",
+        "count": 68,
+        "missing": 0,
+        "maximum": null,
+        "minimum": null,
+        "most_frequent_values": [],
+        "most_frequent_counts": [],
+        "histogram": [],
+        "kmv_hashes": []
+      },
+      {
+        "name": "undergraduate_major",
+        "type": "VARCHAR",
+        "count": 68,
+        "missing": 3,
+        "maximum": 6014965721085080352,
+        "minimum": 4712298408031909236,
+        "most_frequent_values": [
+          "Aerospace Engineering",
+          "Aeronautical Engineering",
+          "Electrical Engineering",
+          "Physics",
+          "Mechanical Engineering",
+          "Engineering",
+          "Engineering Science",
+          "Mathematics",
+          "Civil Engineering",
+          "Astronautical Engineering",
+          "Biology",
+          "Mathematics & Physics",
+          "Chemical Engineering",
+          "Chemistry",
+          "Aeronautical & Astronautical Engineering",
+          "Physics & Astronomy",
+          "Applied Mathematics",
+          "Engineering Management",
+          "Astronomy",
+          "Chemistry & Biology",
+          "Naval Sciences",
+          "Marine Engineering & Nautical Science",
+          "Philosophy",
+          "Computer Science",
+          "Ocean Engineering",
+          "Bioscience",
+          "Animal Science",
+          "Systems Engineering"
+        ],
+        "most_frequent_counts": [
+          8,
+          6,
+          6,
+          5,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          2,
+          2,
+          2,
+          2,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "histogram": [],
+        "kmv_hashes": [
+          46962102,
+          297869494,
+          382064434,
+          422349452,
+          651812696,
+          729412432,
+          1074229725,
+          1136148580,
+          1225023721,
+          1271966602,
+          1329211920,
+          1929383410,
+          2116200645,
+          2308338640,
+          2352748790,
+          2479120305,
+          2537898040,
+          2814355670,
+          2827410194,
+          2929903294,
+          2973819354,
+          2982362483,
+          3233426484,
+          3551227323,
+          3759006917,
+          3845921640,
+          3873076818,
+          3929471697
+        ]
+      },
+      {
+        "name": "graduate_major",
+        "type": "VARCHAR",
+        "count": 68,
+        "missing": 8,
+        "maximum": 6225510038969609825,
+        "minimum": 4712298408031909236,
+        "most_frequent_values": [
+          "Aeronautical Engineering",
+          "Aerospace Engineering",
+          "Medicine",
+          "Public Administration",
+          "Electrical Engineering",
+          "Engineering Science",
+          "Mechanical Engineering",
+          "Chemistry",
+          "Business Administration",
+          "Physics",
+          "Business Management",
+          "Business Management; Space Operations",
+          "Physical Science",
+          "Mechanical Engineering; Electrical Engineering",
+          "Nuclear Engineering",
+          "Astronomy & Astrophysics",
+          "Aeronautics & Astronautics",
+          "Astronomy",
+          "Electrical & Computer Engineering",
+          "Business Management; Space Systems",
+          "Space Technology",
+          "Materials Science; Astrophysics",
+          "Physiology; Medicine; Law",
+          "Engineering Science; Astronomy",
+          "Flight Structures Engineering; Business Administration",
+          "Planetary Science",
+          "Aviation Systems",
+          "Operations Research",
+          "Aerospace Engineering; Strategic Studies",
+          "Ocean Engineering",
+          "Meteorology",
+          "Mechanical Engineering; Biomedical Engineering"
+        ],
+        "most_frequent_counts": [
+          9,
+          6,
+          3,
+          3,
+          3,
+          2,
+          2,
+          2,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "histogram": [],
+        "kmv_hashes": [
+          50127206,
+          253910228,
+          297869494,
+          314735325,
+          651812696,
+          738353528,
+          800635932,
+          940632749,
+          1018972902,
+          1074229725,
+          1136148580,
+          1211465431,
+          1215159380,
+          1215411652,
+          1225023721,
+          1628303690,
+          1946052562,
+          2056273770,
+          2116200645,
+          2352748790,
+          2406022747,
+          2465702655,
+          2484113284,
+          2514823014,
+          2646526191,
+          2695150581,
+          2929903294,
+          2966636005,
+          3010154936,
+          3255007137,
+          3291423982,
+          3337031860
+        ]
+      },
+      {
+        "name": "military_rank",
+        "type": "VARCHAR",
+        "count": 68,
+        "missing": 30,
+        "maximum": 5506043574575525473,
+        "minimum": 4855285518434921984,
+        "most_frequent_values": [
+          "Colonel",
+          "Captain",
+          "Commander",
+          "Lieutenant Colonel",
+          "Lieutenant General",
+          "Chief Warrant Officer"
+        ],
+        "most_frequent_counts": [
+          21,
+          12,
+          2,
+          1,
+          1,
+          1
+        ],
+        "histogram": [],
+        "kmv_hashes": [
+          121371002,
+          561868332,
+          822456144,
+          921872641,
+          2712290819,
+          3981298631
+        ]
+      },
+      {
+        "name": "military_branch",
+        "type": "VARCHAR",
+        "count": 68,
+        "missing": 30,
+        "maximum": 6148293437305551136,
+        "minimum": 6148293381604909126,
+        "most_frequent_values": [
+          "US Air Force (Retired)",
+          "US Navy (Retired)",
+          "US Air Force",
+          "US Marine Corps (Retired)",
+          "US Army (Retired)",
+          "US Navy",
+          "US Naval Reserves",
+          "US Marine Corps",
+          "US Army"
+        ],
+        "most_frequent_counts": [
+          12,
+          12,
+          4,
+          4,
+          2,
+          1,
+          1,
+          1,
+          1
+        ],
+        "histogram": [],
+        "kmv_hashes": [
+          10491265,
+          72357135,
+          1516703043,
+          1847009690,
+          3124956499,
+          3430137857,
+          3755866000,
+          4019476449,
+          4067177357
+        ]
+      },
+      {
+        "name": "space_flights",
+        "type": "INTEGER",
+        "count": 68,
+        "missing": 0,
+        "maximum": 5,
+        "minimum": 0,
+        "most_frequent_values": [
+          "1",
+          "2",
+          "4",
+          "3",
+          "5",
+          "0"
+        ],
+        "most_frequent_counts": [
+          19,
+          17,
+          12,
+          9,
+          8,
+          3
+        ],
+        "histogram": [
+          [
+            0.0,
+            3
+          ],
+          [
+            1.0,
+            19
+          ],
+          [
+            2.0,
+            17
+          ],
+          [
+            3.0,
+            9
+          ],
+          [
+            4.0,
+            12
+          ],
+          [
+            4.9,
+            8
+          ]
+        ],
+        "kmv_hashes": [
+          868795117,
+          1678875853,
+          1892174151,
+          2552028077,
+          3594265378,
+          3946386795
+        ]
+      },
+      {
+        "name": "space_flight_hours",
+        "type": "INTEGER",
+        "count": 68,
+        "missing": 0,
+        "maximum": 12490,
+        "minimum": 0,
+        "most_frequent_values": [
+          "0",
+          "167",
+          "190",
+          "5",
+          "1407",
+          "488",
+          "142",
+          "1258",
+          "612",
+          "462",
+          "817",
+          "438",
+          "482",
+          "435",
+          "770",
+          "5063",
+          "166",
+          "1026",
+          "332",
+          "330",
+          "766",
+          "308",
+          "494",
+          "711",
+          "873",
+          "1211",
+          "3990",
+          "1137",
+          "218",
+          "683",
+          "617",
+          "295"
+        ],
+        "most_frequent_counts": [
+          4,
+          2,
+          2,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "histogram": [
+          [
+            0.0,
+            14
+          ],
+          [
+            249.8,
+            16
+          ],
+          [
+            499.6,
+            8
+          ],
+          [
+            749.4000000000001,
+            7
+          ],
+          [
+            999.2,
+            5
+          ],
+          [
+            1249.0,
+            8
+          ],
+          [
+            1498.8000000000002,
+            2
+          ],
+          [
+            3247.4,
+            2
+          ],
+          [
+            3497.2000000000003,
+            1
+          ],
+          [
+            3747.0,
+            1
+          ],
+          [
+            4996.0,
+            1
+          ],
+          [
+            5745.400000000001,
+            1
+          ],
+          [
+            5995.200000000001,
+            1
+          ],
+          [
+            12240.2,
+            1
+          ]
+        ],
+        "kmv_hashes": [
+          45906808,
+          80658768,
+          123164449,
+          268810835,
+          276783607,
+          280990854,
+          281014038,
+          380153008,
+          384721507,
+          474034398,
+          578371940,
+          589893372,
+          633820017,
+          682132919,
+          706962237,
+          843716981,
+          920204326,
+          976398060,
+          1047032818,
+          1083322437,
+          1138758364,
+          1193229651,
+          1279667937,
+          1355090862,
+          1394749663,
+          1458104170,
+          1496765872,
+          1499323451,
+          1509546489,
+          1638133893,
+          1756352191,
+          1892174151
+        ]
+      },
+      {
+        "name": "space_walks",
+        "type": "INTEGER",
+        "count": 68,
+        "missing": 0,
+        "maximum": 10,
+        "minimum": 0,
+        "most_frequent_values": [
+          "0",
+          "1",
+          "3",
+          "4",
+          "2",
+          "8",
+          "6",
+          "10"
+        ],
+        "most_frequent_counts": [
+          45,
+          7,
+          7,
+          3,
+          3,
+          1,
+          1,
+          1
+        ],
+        "histogram": [
+          [
+            0.0,
+            45
+          ],
+          [
+            1.0,
+            7
+          ],
+          [
+            2.0,
+            3
+          ],
+          [
+            3.0,
+            7
+          ],
+          [
+            4.0,
+            3
+          ],
+          [
+            6.0,
+            1
+          ],
+          [
+            8.0,
+            1
+          ],
+          [
+            9.8,
+            1
+          ]
+        ],
+        "kmv_hashes": [
+          868795117,
+          1167520406,
+          1678875853,
+          2520797803,
+          2552028077,
+          3142066591,
+          3594265378,
+          3946386795
+        ]
+      },
+      {
+        "name": "space_walks_hours",
+        "type": "INTEGER",
+        "count": 68,
+        "missing": 0,
+        "maximum": 67,
+        "minimum": 0,
+        "most_frequent_values": [
+          "0",
+          "3",
+          "18",
+          "20",
+          "5",
+          "25",
+          "13",
+          "58",
+          "9",
+          "8",
+          "26",
+          "15",
+          "43",
+          "67",
+          "11"
+        ],
+        "most_frequent_counts": [
+          45,
+          3,
+          3,
+          3,
+          2,
+          2,
+          2,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "histogram": [
+          [
+            0.0,
+            45
+          ],
+          [
+            2.68,
+            3
+          ],
+          [
+            4.0200000000000005,
+            2
+          ],
+          [
+            6.7,
+            1
+          ],
+          [
+            8.040000000000001,
+            1
+          ],
+          [
+            10.72,
+            1
+          ],
+          [
+            12.06,
+            2
+          ],
+          [
+            14.74,
+            1
+          ],
+          [
+            17.42,
+            3
+          ],
+          [
+            18.76,
+            3
+          ],
+          [
+            24.12,
+            2
+          ],
+          [
+            25.46,
+            1
+          ],
+          [
+            42.88,
+            1
+          ],
+          [
+            57.620000000000005,
+            1
+          ],
+          [
+            65.66000000000001,
+            1
+          ]
+        ],
+        "kmv_hashes": [
+          542767868,
+          633083157,
+          866262775,
+          1095112462,
+          1217615230,
+          1678875853,
+          1892174151,
+          2800823541,
+          3142066591,
+          3184923214,
+          3594265378,
+          3972575079,
+          4013174500,
+          4035679619,
+          4218808201
+        ]
+      },
+      {
+        "name": "missions",
+        "type": "ARRAY",
+        "count": 68,
+        "missing": 3,
+        "maximum": null,
+        "minimum": null,
+        "most_frequent_values": [],
+        "most_frequent_counts": [],
+        "histogram": [],
+        "kmv_hashes": []
+      },
+      {
+        "name": "death_date",
+        "type": "DATE",
+        "count": 68,
+        "missing": 60,
+        "maximum": 1345939200,
+        "minimum": -92448000,
+        "most_frequent_values": [
+          "614044800",
+          "-92448000",
+          "749779200",
+          "1044057600",
+          "681609600",
+          "507254400",
+          "1345939200",
+          "1298937600"
+        ],
+        "most_frequent_counts": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "histogram": [
+          [
+            -92448000.0,
+            1
+          ],
+          [
+            482906880.0,
+            1
+          ],
+          [
+            597977856.0,
+            1
+          ],
+          [
+            655513344.0,
+            1
+          ],
+          [
+            741816576.0,
+            1
+          ],
+          [
+            1029494016.0,
+            1
+          ],
+          [
+            1288403712.0,
+            1
+          ],
+          [
+            1317171456.0,
+            1
+          ]
+        ],
+        "kmv_hashes": [
+          705825315,
+          1016350577,
+          1734752060,
+          2215844531,
+          2271858417,
+          2884734998,
+          3548768333,
+          4097478038
+        ]
+      },
+      {
+        "name": "death_mission",
+        "type": "VARCHAR",
+        "count": 68,
+        "missing": 65,
+        "maximum": 6004515656755590944,
+        "minimum": 4715391321323282481,
+        "most_frequent_values": [
+          "Apollo 1",
+          "STS-107 (Columbia)",
+          "STS 51-L (Challenger)"
+        ],
+        "most_frequent_counts": [
+          1,
+          1,
+          1
+        ],
+        "histogram": [],
+        "kmv_hashes": [
+          1851202857,
+          1989770383,
+          3467677652
+        ]
+      }
+    ],
+    "missions/year_2024/month_03/day_17/as_at_20240317-235146/17bdb253bf7ba288-be07cbede566-bc95.jsonl.parquet": [
+      {
+        "name": "name",
+        "type": "VARCHAR",
+        "count": 68,
+        "missing": 0,
+        "maximum": 6298684766734609696,
+        "minimum": 4714250035565899296,
+        "most_frequent_values": [
+          "Stanley G. Love",
+          "James A. Lovell Jr. ",
+          "G. David Low",
+          "Edward T. Lu",
+          "Shannon W. Lucid",
+          "Sandra H. Magnus",
+          "Thomas H. Marshburn",
+          "Michael J. Massimino",
+          "Richard A. Mastracchio",
+          "Thomas K. Mattingly II ",
+          "K. Megan McArthur",
+          "William S. McArthur Jr. ",
+          "S. Christa McAuliffe",
+          "Jon A. McBride",
+          "Bruce McCandless II ",
+          "William C. McCool",
+          "Michael J. McCulley",
+          "James A. McDivitt",
+          "Donald R. McMonagle",
+          "Ronald E. McNair",
+          "Carl J. Meade",
+          "Bruce E. Melnick",
+          "Pamela A. Melroy",
+          "Leland D. Melvin",
+          "Dorothy M. Metcalf-Lindenberger",
+          "F. Curtis Michel",
+          "Edgar D. Mitchell",
+          "Barbara R. Morgan",
+          "Lee M. Morin",
+          "Richard M. Mullane",
+          "Story Musgrave",
+          "Steven R. Nagel"
+        ],
+        "most_frequent_counts": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "histogram": [],
+        "kmv_hashes": [
+          64189882,
+          84085233,
+          100322298,
+          120286813,
+          174935941,
+          453993501,
+          461673988,
+          553049064,
+          570217862,
+          747018053,
+          789741213,
+          847426717,
+          938700284,
+          1258267110,
+          1280773684,
+          1298209936,
+          1400240818,
+          1412777034,
+          1438757459,
+          1475018797,
+          1497655624,
+          1841781040,
+          1842171017,
+          1914646634,
+          1949559058,
+          1991527482,
+          2185760037,
+          2217054658,
+          2294755279,
+          2336186208,
+          2397591042,
+          2425980106
+        ]
+      },
+      {
+        "name": "year",
+        "type": "INTEGER",
+        "count": 68,
+        "missing": 6,
+        "maximum": 2004,
+        "minimum": 1962,
+        "most_frequent_values": [
+          "1996",
+          "1978",
+          "1998",
+          "1995",
+          "1966",
+          "1990",
+          "1987",
+          "1984",
+          "1967",
+          "2004",
+          "2000",
+          "1985",
+          "1980",
+          "1969",
+          "1962",
+          "1965",
+          "1992"
+        ],
+        "most_frequent_counts": [
+          10,
+          9,
+          8,
+          4,
+          4,
+          4,
+          4,
+          3,
+          3,
+          2,
+          2,
+          2,
+          2,
+          2,
+          1,
+          1,
+          1
+        ],
+        "histogram": [
+          [
+            1962.0,
+            1
+          ],
+          [
+            1964.52,
+            1
+          ],
+          [
+            1965.36,
+            4
+          ],
+          [
+            1966.2,
+            3
+          ],
+          [
+            1968.72,
+            2
+          ],
+          [
+            1977.96,
+            9
+          ],
+          [
+            1979.64,
+            2
+          ],
+          [
+            1983.84,
+            3
+          ],
+          [
+            1984.68,
+            2
+          ],
+          [
+            1986.36,
+            4
+          ],
+          [
+            1989.72,
+            4
+          ],
+          [
+            1991.4,
+            1
+          ],
+          [
+            1994.76,
+            4
+          ],
+          [
+            1995.6,
+            10
+          ],
+          [
+            1997.28,
+            8
+          ],
+          [
+            1999.8,
+            2
+          ],
+          [
+            2003.16,
+            2
+          ]
+        ],
+        "kmv_hashes": [
+          169245913,
+          184114467,
+          200156436,
+          239659138,
+          958771436,
+          1684469742,
+          1796166482,
+          2126892077,
+          2332005969,
+          2384667512,
+          2679555641,
+          2859765384,
+          3041579641,
+          3049244778,
+          3266833675,
+          4192783076,
+          4281069234
+        ]
+      },
+      {
+        "name": "group",
+        "type": "INTEGER",
+        "count": 68,
+        "missing": 6,
+        "maximum": 19,
+        "minimum": 2,
+        "most_frequent_values": [
+          "16",
+          "8",
+          "17",
+          "15",
+          "5",
+          "12",
+          "6",
+          "13",
+          "2",
+          "10",
+          "19",
+          "18",
+          "11",
+          "9",
+          "7",
+          "3",
+          "4",
+          "14"
+        ],
+        "most_frequent_counts": [
+          10,
+          9,
+          8,
+          4,
+          4,
+          4,
+          3,
+          3,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          1,
+          1,
+          1
+        ],
+        "histogram": [
+          [
+            2.0,
+            2
+          ],
+          [
+            2.68,
+            1
+          ],
+          [
+            3.7,
+            1
+          ],
+          [
+            4.720000000000001,
+            4
+          ],
+          [
+            5.74,
+            3
+          ],
+          [
+            6.760000000000001,
+            2
+          ],
+          [
+            7.78,
+            9
+          ],
+          [
+            8.8,
+            2
+          ],
+          [
+            9.82,
+            2
+          ],
+          [
+            10.84,
+            2
+          ],
+          [
+            11.860000000000001,
+            4
+          ],
+          [
+            12.88,
+            3
+          ],
+          [
+            13.9,
+            1
+          ],
+          [
+            14.920000000000002,
+            4
+          ],
+          [
+            15.940000000000001,
+            10
+          ],
+          [
+            16.96,
+            8
+          ],
+          [
+            17.98,
+            2
+          ],
+          [
+            18.66,
+            2
+          ]
+        ],
+        "kmv_hashes": [
+          913076911,
+          1207737243,
+          1457483473,
+          1701030680,
+          2040537583,
+          2055754937,
+          2105171476,
+          2142237589,
+          2145497649,
+          2182078663,
+          2853623652,
+          2953695184,
+          3400903514,
+          3505157723,
+          3595208919,
+          4005763522,
+          4017435920,
+          4258219837
+        ]
+      },
+      {
+        "name": "status",
+        "type": "VARCHAR",
+        "count": 68,
+        "missing": 0,
+        "maximum": 5937279679997502464,
+        "minimum": 4711737631466389504,
+        "most_frequent_values": [
+          "Retired",
+          "Deceased",
+          "Management",
+          "Active"
+        ],
+        "most_frequent_counts": [
+          44,
+          11,
+          7,
+          6
+        ],
+        "histogram": [],
+        "kmv_hashes": [
+          1133133137,
+          1868272879,
+          2348961586,
+          3368621532
+        ]
+      },
+      {
+        "name": "birth_date",
+        "type": "DATE",
+        "count": 68,
+        "missing": 0,
+        "maximum": 168220800,
+        "minimum": -1318204800,
+        "most_frequent_values": [
+          "-144115200",
+          "-1318204800",
+          "-437616000",
+          "-205286400",
+          "-850953600",
+          "-163209600",
+          "-294796800",
+          "-232588800",
+          "-312076800",
+          "-1066435200",
+          "52358400",
+          "-581817600",
+          "-673142400",
+          "-832636800",
+          "-1027728000",
+          "-261100800",
+          "-833500800",
+          "-1280016000",
+          "-556502400",
+          "-605836800",
+          "-603590400",
+          "-633484800",
+          "-261619200",
+          "-185500800",
+          "168220800",
+          "-1122681600",
+          "-1239926400",
+          "-571017600",
+          "-546307200",
+          "-767145600",
+          "-1084665600",
+          "-731548800"
+        ],
+        "most_frequent_counts": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "histogram": [
+          [
+            -1318204800.0,
+            1
+          ],
+          [
+            -1288476288.0,
+            2
+          ],
+          [
+            -1258747776.0,
+            1
+          ],
+          [
+            -1169562240.0,
+            1
+          ],
+          [
+            -1139833728.0,
+            1
+          ],
+          [
+            -1110105216.0,
+            1
+          ],
+          [
+            -1080376704.0,
+            2
+          ],
+          [
+            -1050648192.0,
+            2
+          ],
+          [
+            -961462656.0,
+            1
+          ],
+          [
+            -872277120.0,
+            2
+          ],
+          [
+            -842548608.0,
+            2
+          ],
+          [
+            -783091584.0,
+            1
+          ],
+          [
+            -753363072.0,
+            4
+          ],
+          [
+            -693906048.0,
+            2
+          ],
+          [
+            -664177536.0,
+            1
+          ],
+          [
+            -634449024.0,
+            3
+          ],
+          [
+            -604720512.0,
+            7
+          ],
+          [
+            -574992000.0,
+            5
+          ],
+          [
+            -515534976.0,
+            1
+          ],
+          [
+            -485806464.0,
+            2
+          ],
+          [
+            -456077952.0,
+            2
+          ],
+          [
+            -426349440.0,
+            1
+          ],
+          [
+            -396620928.0,
+            1
+          ],
+          [
+            -337163904.0,
+            2
+          ],
+          [
+            -307435392.0,
+            2
+          ],
+          [
+            -277706880.0,
+            4
+          ],
+          [
+            -247978368.0,
+            1
+          ],
+          [
+            -218249856.0,
+            2
+          ],
+          [
+            -188521344.0,
+            4
+          ],
+          [
+            -158792832.0,
+            2
+          ],
+          [
+            -129064320.0,
+            1
+          ],
+          [
+            -69607296.0,
+            1
+          ],
+          [
+            -10150272.0,
+            1
+          ],
+          [
+            49306752.0,
+            1
+          ],
+          [
+            138492288.0,
+            1
+          ]
+        ],
+        "kmv_hashes": [
+          52881763,
+          151385957,
+          156039243,
+          185394518,
+          206264894,
+          440288348,
+          637274661,
+          665604858,
+          670007064,
+          755129509,
+          841995929,
+          901308514,
+          947429246,
+          980836531,
+          1377033864,
+          1390008907,
+          1461394962,
+          1465551945,
+          1517610639,
+          1567185272,
+          1607166861,
+          1713726225,
+          1754377748,
+          1792494917,
+          1827899758,
+          1970132890,
+          2116970429,
+          2141748041,
+          2224877432,
+          2374735358,
+          2425930984,
+          2457174873
+        ]
+      },
+      {
+        "name": "birth_place",
+        "type": "STRUCT",
+        "count": 68,
+        "missing": 0,
+        "maximum": null,
+        "minimum": null,
+        "most_frequent_values": [],
+        "most_frequent_counts": [],
+        "histogram": [],
+        "kmv_hashes": []
+      },
+      {
+        "name": "gender",
+        "type": "VARCHAR",
+        "count": 68,
+        "missing": 0,
+        "maximum": 5575856994708881408,
+        "minimum": 5072580820500545536,
+        "most_frequent_values": [
+          "Male",
+          "Female"
+        ],
+        "most_frequent_counts": [
+          56,
+          12
+        ],
+        "histogram": [],
+        "kmv_hashes": [
+          25245947,
+          1074177100
+        ]
+      },
+      {
+        "name": "alma_mater",
+        "type": "ARRAY",
+        "count": 68,
+        "missing": 0,
+        "maximum": null,
+        "minimum": null,
+        "most_frequent_values": [],
+        "most_frequent_counts": [],
+        "histogram": [],
+        "kmv_hashes": []
+      },
+      {
+        "name": "undergraduate_major",
+        "type": "VARCHAR",
+        "count": 68,
+        "missing": 4,
+        "maximum": 5794014457208468283,
+        "minimum": 4712298408031909236,
+        "most_frequent_values": [
+          "Physics",
+          "Aerospace Engineering",
+          "Electrical Engineering",
+          "Aeronautical Engineering",
+          "Astronautical Engineering",
+          "Engineering",
+          "Mechanical Engineering",
+          "Chemistry",
+          "Education",
+          "Physics & Astronomy",
+          "Computer Science",
+          "Chemical Engineering",
+          "Physics & Engineering",
+          "Industrial Engineering",
+          "Electrical Engineering; Computer Science",
+          "Applied Science & Engineering",
+          "Naval Sciences",
+          "Metallurgical Engineering",
+          "Electronics Engineering",
+          "Geology",
+          "Industrial Management",
+          "Human Biology",
+          "Mathematical & Electrical Science",
+          "Military Engineering",
+          "Mathematics & Statistics; Chemistry",
+          "Biology",
+          "Biology & Psychology",
+          "Mathematics; Russian",
+          "Aeronautical & Astronautical Engineering",
+          "Geosciences",
+          "Economics",
+          "Physics; English"
+        ],
+        "most_frequent_counts": [
+          11,
+          8,
+          3,
+          3,
+          3,
+          3,
+          3,
+          2,
+          2,
+          2,
+          2,
+          2,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "histogram": [],
+        "kmv_hashes": [
+          46962102,
+          229010485,
+          290517322,
+          422349452,
+          591483670,
+          600169725,
+          706061185,
+          1136148580,
+          1165869684,
+          1225023721,
+          1271966602,
+          1291308191,
+          1309515008,
+          1329211920,
+          1520243638,
+          1832808162,
+          2116200645,
+          2154527476,
+          2182203923,
+          2327034575,
+          2352748790,
+          2430511520,
+          2479120305,
+          2659011456,
+          2814355670,
+          2929903294,
+          3233426484,
+          3289889787,
+          3445477896,
+          3804705061,
+          3873076818,
+          3929471697
+        ]
+      },
+      {
+        "name": "graduate_major",
+        "type": "VARCHAR",
+        "count": 68,
+        "missing": 8,
+        "maximum": 6081376172014267503,
+        "minimum": 4712298408031909236,
+        "most_frequent_values": [
+          "Astronomy",
+          "Physics",
+          "Mechanical  Engineering",
+          "Aeronautical Systems",
+          "Aeronautical Engineering",
+          "Aerospace Engineering",
+          "Mechanical Engineering",
+          "Electrical Engineering",
+          "Mechanical Engineering; Aeronautics & Astronautics",
+          "Applied Physics",
+          "Biochemistry",
+          "Electrical Engineering; Materials Science & Engineering",
+          "Engineering Physics; Medicine; Medical Science",
+          "Technology & Policy; Mechanical Engineering",
+          "Electrical Engineering; Physical Sciences",
+          "Oceanography",
+          "Education",
+          "Electrical Engineering; Business Administration",
+          "Computer Science; Aeronautical Engineering",
+          "Metallurgical Engineering",
+          "Electronics Engineering",
+          "Earth & Planetary Sciences",
+          "Materials Science Engineering",
+          "Aeronautical Engineering; Aeronautics & Astronautics",
+          "Public Health; Biochemistry; Medicine; Microbiology",
+          "Business Administration; Physiology; Literature; Medicine",
+          "Law",
+          "Computer Science; Space Systems Operations",
+          "Aviation Systems",
+          "Mechanical  Engineering; Mechanical  Engineering & Materials Sci",
+          "Aeronautics",
+          "Computer Science"
+        ],
+        "most_frequent_counts": [
+          5,
+          4,
+          3,
+          3,
+          3,
+          2,
+          2,
+          2,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "histogram": [],
+        "kmv_hashes": [
+          46962102,
+          253910228,
+          297869494,
+          728822902,
+          745064023,
+          1001384818,
+          1018972902,
+          1136148580,
+          1147340265,
+          1165869684,
+          1184553136,
+          1225023721,
+          1271966602,
+          1363155369,
+          1605384607,
+          1713718423,
+          1832808162,
+          1888347594,
+          2116200645,
+          2182203923,
+          2226781926,
+          2288915287,
+          2327034575,
+          2556283196,
+          2574815527,
+          2781136776,
+          2814355670,
+          2836914788,
+          2859958111,
+          2929903294,
+          2967651244,
+          2982362483
+        ]
+      },
+      {
+        "name": "military_rank",
+        "type": "VARCHAR",
+        "count": 68,
+        "missing": 35,
+        "maximum": 5937258826553189485,
+        "minimum": 4788005246584777061,
+        "most_frequent_values": [
+          "Captain",
+          "Colonel",
+          "Commander",
+          "Lieutenant Colonel",
+          "Rear Admiral",
+          "Brigadier General",
+          "Major"
+        ],
+        "most_frequent_counts": [
+          13,
+          12,
+          3,
+          2,
+          1,
+          1,
+          1
+        ],
+        "histogram": [],
+        "kmv_hashes": [
+          121371002,
+          664381002,
+          921872641,
+          2576369920,
+          2712290819,
+          3736898555,
+          3981298631
+        ]
+      },
+      {
+        "name": "military_branch",
+        "type": "VARCHAR",
+        "count": 68,
+        "missing": 35,
+        "maximum": 6148293437305551136,
+        "minimum": 6148293381604909126,
+        "most_frequent_values": [
+          "US Navy (Retired)",
+          "US Air Force (Retired)",
+          "US Navy",
+          "US Marine Corps (Retired)",
+          "US Army (Retired)",
+          "US Air Force",
+          "US Coast Guard (Retired)",
+          "US Naval Reserves (Retired)"
+        ],
+        "most_frequent_counts": [
+          11,
+          10,
+          3,
+          3,
+          2,
+          2,
+          1,
+          1
+        ],
+        "histogram": [],
+        "kmv_hashes": [
+          10491265,
+          10937779,
+          72357135,
+          1516703043,
+          1847009690,
+          1947465960,
+          3124956499,
+          3430137857
+        ]
+      },
+      {
+        "name": "space_flights",
+        "type": "INTEGER",
+        "count": 68,
+        "missing": 0,
+        "maximum": 6,
+        "minimum": 0,
+        "most_frequent_values": [
+          "2",
+          "1",
+          "3",
+          "4",
+          "5",
+          "0",
+          "6"
+        ],
+        "most_frequent_counts": [
+          21,
+          19,
+          15,
+          8,
+          2,
+          2,
+          1
+        ],
+        "histogram": [
+          [
+            0.0,
+            2
+          ],
+          [
+            0.96,
+            19
+          ],
+          [
+            1.92,
+            21
+          ],
+          [
+            3.0,
+            15
+          ],
+          [
+            3.96,
+            8
+          ],
+          [
+            4.92,
+            2
+          ],
+          [
+            5.88,
+            1
+          ]
+        ],
+        "kmv_hashes": [
+          868795117,
+          1678875853,
+          1892174151,
+          2520797803,
+          2552028077,
+          3594265378,
+          3946386795
+        ]
+      },
+      {
+        "name": "space_flight_hours",
+        "type": "INTEGER",
+        "count": 68,
+        "missing": 0,
+        "maximum": 8872,
+        "minimum": 0,
+        "most_frequent_values": [
+          "0",
+          "306",
+          "73",
+          "715",
+          "714",
+          "4962",
+          "5354",
+          "3776",
+          "3871",
+          "571",
+          "5461",
+          "508",
+          "309",
+          "5398",
+          "197",
+          "312",
+          "382",
+          "119",
+          "338",
+          "605",
+          "191",
+          "712",
+          "311",
+          "914",
+          "565",
+          "362",
+          "216",
+          "305",
+          "259",
+          "356",
+          "1281",
+          "721"
+        ],
+        "most_frequent_counts": [
+          3,
+          2,
+          2,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "histogram": [
+          [
+            0.0,
+            10
+          ],
+          [
+            177.44,
+            16
+          ],
+          [
+            354.88,
+            9
+          ],
+          [
+            532.3199999999999,
+            8
+          ],
+          [
+            709.76,
+            7
+          ],
+          [
+            887.2,
+            5
+          ],
+          [
+            1242.08,
+            2
+          ],
+          [
+            1951.84,
+            1
+          ],
+          [
+            2484.16,
+            1
+          ],
+          [
+            3726.24,
+            2
+          ],
+          [
+            4258.5599999999995,
+            1
+          ],
+          [
+            4790.88,
+            2
+          ],
+          [
+            5323.2,
+            3
+          ],
+          [
+            8694.56,
+            1
+          ]
+        ],
+        "kmv_hashes": [
+          40355060,
+          51071335,
+          81062153,
+          94525457,
+          103748762,
+          144292449,
+          203972533,
+          224214508,
+          237527815,
+          338026894,
+          380153008,
+          394100671,
+          457994661,
+          555431753,
+          567995954,
+          576860173,
+          682132919,
+          693870100,
+          985242062,
+          1074693611,
+          1083322437,
+          1216188403,
+          1308144607,
+          1323527749,
+          1419591457,
+          1434625311,
+          1464650053,
+          1476050556,
+          1510778320,
+          1565811853,
+          1580113441,
+          1645129387
+        ]
+      },
+      {
+        "name": "space_walks",
+        "type": "INTEGER",
+        "count": 68,
+        "missing": 0,
+        "maximum": 9,
+        "minimum": 0,
+        "most_frequent_values": [
+          "0",
+          "2",
+          "1",
+          "4",
+          "3",
+          "5",
+          "9",
+          "6",
+          "7"
+        ],
+        "most_frequent_counts": [
+          42,
+          7,
+          7,
+          4,
+          3,
+          2,
+          1,
+          1,
+          1
+        ],
+        "histogram": [
+          [
+            0.0,
+            42
+          ],
+          [
+            0.8999999999999999,
+            7
+          ],
+          [
+            1.98,
+            7
+          ],
+          [
+            2.88,
+            3
+          ],
+          [
+            3.96,
+            4
+          ],
+          [
+            4.859999999999999,
+            2
+          ],
+          [
+            5.9399999999999995,
+            1
+          ],
+          [
+            6.84,
+            1
+          ],
+          [
+            8.82,
+            1
+          ]
+        ],
+        "kmv_hashes": [
+          868795117,
+          1678875853,
+          1892174151,
+          2520797803,
+          2552028077,
+          2762651575,
+          3184923214,
+          3594265378,
+          3946386795
+        ]
+      },
+      {
+        "name": "space_walks_hours",
+        "type": "INTEGER",
+        "count": 68,
+        "missing": 0,
+        "maximum": 53,
+        "minimum": 0,
+        "most_frequent_values": [
+          "0",
+          "6",
+          "24",
+          "13",
+          "15",
+          "30",
+          "53",
+          "1",
+          "12",
+          "9",
+          "14",
+          "26",
+          "10",
+          "43",
+          "19",
+          "34",
+          "47",
+          "18",
+          "4",
+          "5",
+          "31",
+          "21"
+        ],
+        "most_frequent_counts": [
+          42,
+          4,
+          2,
+          2,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "histogram": [
+          [
+            0.0,
+            43
+          ],
+          [
+            3.18,
+            1
+          ],
+          [
+            4.24,
+            1
+          ],
+          [
+            5.300000000000001,
+            4
+          ],
+          [
+            8.48,
+            1
+          ],
+          [
+            9.540000000000001,
+            1
+          ],
+          [
+            11.66,
+            1
+          ],
+          [
+            12.72,
+            2
+          ],
+          [
+            13.780000000000001,
+            1
+          ],
+          [
+            14.84,
+            1
+          ],
+          [
+            16.96,
+            1
+          ],
+          [
+            18.02,
+            1
+          ],
+          [
+            20.14,
+            1
+          ],
+          [
+            23.32,
+            2
+          ],
+          [
+            25.44,
+            1
+          ],
+          [
+            29.68,
+            1
+          ],
+          [
+            30.740000000000002,
+            1
+          ],
+          [
+            33.92,
+            1
+          ],
+          [
+            42.400000000000006,
+            1
+          ],
+          [
+            46.64,
+            1
+          ],
+          [
+            51.940000000000005,
+            1
+          ]
+        ],
+        "kmv_hashes": [
+          279825038,
+          322323961,
+          866262775,
+          868795117,
+          1167520406,
+          1217615230,
+          1423790768,
+          1892174151,
+          1994110679,
+          2243723895,
+          2438851989,
+          2520797803,
+          2552028077,
+          2800823541,
+          3184923214,
+          3197310156,
+          3594265378,
+          3683232565,
+          3816507630,
+          3840436614,
+          3972575079,
+          4035679619
+        ]
+      },
+      {
+        "name": "missions",
+        "type": "ARRAY",
+        "count": 68,
+        "missing": 2,
+        "maximum": null,
+        "minimum": null,
+        "most_frequent_values": [],
+        "most_frequent_counts": [],
+        "histogram": [],
+        "kmv_hashes": []
+      },
+      {
+        "name": "death_date",
+        "type": "DATE",
+        "count": 68,
+        "missing": 57,
+        "maximum": 1343001600,
+        "minimum": 507254400,
+        "most_frequent_values": [
+          "507254400",
+          "1205539200",
+          "1044057600",
+          "1311811200",
+          "827452800",
+          "1210291200",
+          "1341100800",
+          "1343001600"
+        ],
+        "most_frequent_counts": [
+          4,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "histogram": [
+          [
+            507254400.0,
+            4
+          ],
+          [
+            824838336.0,
+            1
+          ],
+          [
+            1042132608.0,
+            1
+          ],
+          [
+            1192567104.0,
+            1
+          ],
+          [
+            1209282048.0,
+            1
+          ],
+          [
+            1309571712.0,
+            1
+          ],
+          [
+            1326286656.0,
+            2
+          ]
+        ],
+        "kmv_hashes": [
+          705825315,
+          845890785,
+          979171251,
+          2271858417,
+          2304674584,
+          2931653359,
+          3656409683,
+          3974616687
+        ]
+      },
+      {
+        "name": "death_mission",
+        "type": "VARCHAR",
+        "count": 68,
+        "missing": 63,
+        "maximum": 6004515656755590944,
+        "minimum": 6004515600988187980,
+        "most_frequent_values": [
+          "STS 51-L (Challenger)",
+          "STS-107 (Columbia)"
+        ],
+        "most_frequent_counts": [
+          4,
+          1
+        ],
+        "histogram": [],
+        "kmv_hashes": [
+          1851202857,
+          1989770383
+        ]
+      }
+    ],
+    "missions/year_2024/month_03/day_17/as_at_20240317-235146/17bdb253bfbcaee0-be07cbede566-bc95.jsonl.parquet": [
+      {
+        "name": "name",
+        "type": "VARCHAR",
+        "count": 72,
+        "missing": 0,
+        "maximum": 6298686996008103456,
+        "minimum": 4714250035565571616,
+        "most_frequent_values": [
+          "Patricia Hilliard Robertson",
+          "Stephen K. Robinson",
+          "Kent V. Rominger",
+          "Stuart A. Roosa",
+          "Jerry L. Ross",
+          "Kathleen Rubins",
+          "Mario Runco Jr. ",
+          "Albert Sacco Jr.",
+          "Robert L. Satcher Jr. ",
+          "Walter M. Schirra Jr. ",
+          "Harrison H. Schmitt",
+          "Russell L. Schweickart",
+          "Francis R. Scobee",
+          "David R. Scott",
+          "Winston E. Scott",
+          "Paul D. Scully-Power",
+          "Richard A. Searfoss",
+          "Margaret Rhea Seddon",
+          "Elliot M. See Jr. ",
+          "Ronald M. Sega",
+          "Piers J. Sellers",
+          "Brewster H. Shaw Jr. ",
+          "Alan B. Shepard Jr. ",
+          "William M. Shepherd",
+          "Loren J. Shriver",
+          "Donald K. Slayton",
+          "Michael J. Smith",
+          "Steven L. Smith",
+          "Sherwood C. Spring",
+          "Robert C. Springer",
+          "Thomas P. Stafford",
+          "Heidemarie M. Stefanyshyn-Piper"
+        ],
+        "most_frequent_counts": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "histogram": [],
+        "kmv_hashes": [
+          4254439,
+          67383197,
+          72219888,
+          78386317,
+          85751239,
+          177742621,
+          335156830,
+          404562065,
+          648378885,
+          666172219,
+          762767639,
+          843212574,
+          882631308,
+          911469326,
+          993498704,
+          1085636296,
+          1172820654,
+          1276926989,
+          1310425865,
+          1450701447,
+          1483121184,
+          1510578504,
+          1620919829,
+          1655784681,
+          1692987361,
+          1747945528,
+          1788015048,
+          1831423841,
+          1900937209,
+          1968678177,
+          1979409769,
+          2007727854
+        ]
+      },
+      {
+        "name": "year",
+        "type": "INTEGER",
+        "count": 72,
+        "missing": 5,
+        "maximum": 2009,
+        "minimum": 1959,
+        "most_frequent_values": [
+          "1978",
+          "1992",
+          "1990",
+          "1996",
+          "1980",
+          "1984",
+          "1998",
+          "1966",
+          "2009",
+          "1959",
+          "1963",
+          "1962",
+          "1995",
+          "1987",
+          "2004",
+          "2000",
+          "1985",
+          "1965",
+          "1967",
+          "1969"
+        ],
+        "most_frequent_counts": [
+          10,
+          6,
+          6,
+          6,
+          4,
+          4,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          2,
+          2,
+          2,
+          2,
+          2,
+          1,
+          1,
+          1
+        ],
+        "histogram": [
+          [
+            1959.0,
+            3
+          ],
+          [
+            1962.0,
+            3
+          ],
+          [
+            1963.0,
+            3
+          ],
+          [
+            1965.0,
+            1
+          ],
+          [
+            1966.0,
+            3
+          ],
+          [
+            1967.0,
+            1
+          ],
+          [
+            1969.0,
+            1
+          ],
+          [
+            1978.0,
+            10
+          ],
+          [
+            1980.0,
+            4
+          ],
+          [
+            1984.0,
+            4
+          ],
+          [
+            1985.0,
+            2
+          ],
+          [
+            1987.0,
+            2
+          ],
+          [
+            1990.0,
+            6
+          ],
+          [
+            1992.0,
+            6
+          ],
+          [
+            1995.0,
+            2
+          ],
+          [
+            1996.0,
+            6
+          ],
+          [
+            1998.0,
+            3
+          ],
+          [
+            2000.0,
+            2
+          ],
+          [
+            2004.0,
+            2
+          ],
+          [
+            2008.0,
+            3
+          ]
+        ],
+        "kmv_hashes": [
+          169245913,
+          184114467,
+          200156436,
+          239659138,
+          958771436,
+          1684469742,
+          1796166482,
+          1804966033,
+          2126892077,
+          2332005969,
+          2384667512,
+          2679555641,
+          2800713512,
+          2859765384,
+          3041579641,
+          3049244778,
+          3266833675,
+          4192783076,
+          4253956717,
+          4281069234
+        ]
+      },
+      {
+        "name": "group",
+        "type": "INTEGER",
+        "count": 72,
+        "missing": 5,
+        "maximum": 20,
+        "minimum": 1,
+        "most_frequent_values": [
+          "8",
+          "14",
+          "13",
+          "16",
+          "9",
+          "10",
+          "17",
+          "5",
+          "20",
+          "1",
+          "3",
+          "2",
+          "15",
+          "12",
+          "19",
+          "18",
+          "11",
+          "4",
+          "6",
+          "7"
+        ],
+        "most_frequent_counts": [
+          10,
+          6,
+          6,
+          6,
+          4,
+          4,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          2,
+          2,
+          2,
+          2,
+          2,
+          1,
+          1,
+          1
+        ],
+        "histogram": [
+          [
+            1.0,
+            3
+          ],
+          [
+            1.76,
+            3
+          ],
+          [
+            2.9,
+            3
+          ],
+          [
+            3.66,
+            1
+          ],
+          [
+            4.8,
+            3
+          ],
+          [
+            5.94,
+            1
+          ],
+          [
+            6.7,
+            1
+          ],
+          [
+            7.84,
+            10
+          ],
+          [
+            8.98,
+            4
+          ],
+          [
+            9.74,
+            4
+          ],
+          [
+            10.88,
+            2
+          ],
+          [
+            11.64,
+            2
+          ],
+          [
+            12.78,
+            6
+          ],
+          [
+            13.92,
+            6
+          ],
+          [
+            14.68,
+            2
+          ],
+          [
+            15.82,
+            6
+          ],
+          [
+            16.96,
+            3
+          ],
+          [
+            17.72,
+            2
+          ],
+          [
+            18.86,
+            2
+          ],
+          [
+            19.62,
+            3
+          ]
+        ],
+        "kmv_hashes": [
+          913076911,
+          1207737243,
+          1457483473,
+          1701030680,
+          1846462603,
+          2040537583,
+          2055754937,
+          2105171476,
+          2142237589,
+          2145497649,
+          2182078663,
+          2853623652,
+          2953695184,
+          3400903514,
+          3505157723,
+          3595208919,
+          3984726652,
+          4005763522,
+          4017435920,
+          4258219837
+        ]
+      },
+      {
+        "name": "status",
+        "type": "VARCHAR",
+        "count": 72,
+        "missing": 0,
+        "maximum": 5937279679997502464,
+        "minimum": 4711737631466389504,
+        "most_frequent_values": [
+          "Retired",
+          "Deceased",
+          "Active",
+          "Management"
+        ],
+        "most_frequent_counts": [
+          41,
+          15,
+          11,
+          5
+        ],
+        "histogram": [],
+        "kmv_hashes": [
+          1133133137,
+          1868272879,
+          2348961586,
+          3368621532
+        ]
+      },
+      {
+        "name": "birth_date",
+        "type": "DATE",
+        "count": 72,
+        "missing": 0,
+        "maximum": 277171200,
+        "minimum": -1477180800,
+        "most_frequent_values": [
+          "-797558400",
+          "-214876800",
+          "-447638400",
+          "-422928000",
+          "-1147996800",
+          "-692668800",
+          "277171200",
+          "-565920000",
+          "-652147200",
+          "-134956800",
+          "-1477180800",
+          "-1088726400",
+          "-1078876800",
+          "-966384000",
+          "-1185667200",
+          "-612403200",
+          "-807753600",
+          "-428371200",
+          "-698976000",
+          "-1339459200",
+          "-538876800",
+          "-464745600",
+          "-777254400",
+          "-1455494400",
+          "-644889600",
+          "-1446508800",
+          "-778636800",
+          "-347328000",
+          "-871516800",
+          "-1239926400",
+          "-217728000",
+          "-864259200"
+        ],
+        "most_frequent_counts": [
+          2,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "histogram": [
+          [
+            -1477180800.0,
+            3
+          ],
+          [
+            -1371919680.0,
+            1
+          ],
+          [
+            -1301745600.0,
+            1
+          ],
+          [
+            -1266658560.0,
+            2
+          ],
+          [
+            -1231571520.0,
+            1
+          ],
+          [
+            -1196484480.0,
+            4
+          ],
+          [
+            -1161397440.0,
+            1
+          ],
+          [
+            -1091223360.0,
+            2
+          ],
+          [
+            -1021049280.0,
+            1
+          ],
+          [
+            -985962240.0,
+            1
+          ],
+          [
+            -950875200.0,
+            1
+          ],
+          [
+            -880701120.0,
+            2
+          ],
+          [
+            -845614080.0,
+            1
+          ],
+          [
+            -810527040.0,
+            8
+          ],
+          [
+            -705265920.0,
+            3
+          ],
+          [
+            -670178880.0,
+            4
+          ],
+          [
+            -635091840.0,
+            2
+          ],
+          [
+            -600004800.0,
+            3
+          ],
+          [
+            -564917760.0,
+            4
+          ],
+          [
+            -494743680.0,
+            3
+          ],
+          [
+            -459656640.0,
+            3
+          ],
+          [
+            -424569600.0,
+            2
+          ],
+          [
+            -389482560.0,
+            2
+          ],
+          [
+            -354395520.0,
+            1
+          ],
+          [
+            -319308480.0,
+            3
+          ],
+          [
+            -284221440.0,
+            2
+          ],
+          [
+            -249134400.0,
+            5
+          ],
+          [
+            -178960320.0,
+            1
+          ],
+          [
+            -143873280.0,
+            2
+          ],
+          [
+            -108786240.0,
+            1
+          ],
+          [
+            -73699200.0,
+            1
+          ],
+          [
+            242084160.0,
+            1
+          ]
+        ],
+        "kmv_hashes": [
+          52881763,
+          75078029,
+          127827478,
+          133006815,
+          169232708,
+          203489453,
+          360472315,
+          369357949,
+          481601129,
+          496494728,
+          701318784,
+          772425069,
+          799437996,
+          949033551,
+          1021962492,
+          1164012362,
+          1181524854,
+          1289058905,
+          1321652108,
+          1375637169,
+          1395075451,
+          1475283310,
+          1511480728,
+          1607548534,
+          1630043347,
+          1705664086,
+          1709034802,
+          1712589055,
+          1768618594,
+          1791198834,
+          1881505223,
+          1918452344
+        ]
+      },
+      {
+        "name": "birth_place",
+        "type": "STRUCT",
+        "count": 72,
+        "missing": 0,
+        "maximum": null,
+        "minimum": null,
+        "most_frequent_values": [],
+        "most_frequent_counts": [],
+        "histogram": [],
+        "kmv_hashes": []
+      },
+      {
+        "name": "gender",
+        "type": "VARCHAR",
+        "count": 72,
+        "missing": 0,
+        "maximum": 5575856994708881408,
+        "minimum": 5072580820500545536,
+        "most_frequent_values": [
+          "Male",
+          "Female"
+        ],
+        "most_frequent_counts": [
+          61,
+          11
+        ],
+        "histogram": [],
+        "kmv_hashes": [
+          25245947,
+          1074177100
+        ]
+      },
+      {
+        "name": "alma_mater",
+        "type": "ARRAY",
+        "count": 72,
+        "missing": 0,
+        "maximum": null,
+        "minimum": null,
+        "most_frequent_values": [],
+        "most_frequent_counts": [],
+        "histogram": [],
+        "kmv_hashes": []
+      },
+      {
+        "name": "undergraduate_major",
+        "type": "VARCHAR",
+        "count": 72,
+        "missing": 4,
+        "maximum": 6012412582065885288,
+        "minimum": 4712298408031909236,
+        "most_frequent_values": [
+          "Mechanical Engineering",
+          "Aeronautical Engineering",
+          "Physics",
+          "Naval Sciences",
+          "Chemical Engineering",
+          "Aerospace Engineering",
+          "Mathematics",
+          "Civil Engineering",
+          "Engineering",
+          "Engineering Science",
+          "Applied Science & Engineering",
+          "Biology",
+          "Mechanical & Aeronautical Engineering",
+          "Molecular Biology",
+          "Earth & Planetary Science",
+          "Geology",
+          "Aeronautics & Astronautics",
+          "Music",
+          "Applied Mathematics",
+          "Physiology",
+          "Physics & Mathematics",
+          "Ecological Science",
+          "Engineering Mechanics",
+          "Electrical Engineering",
+          "Earth Sciences",
+          "Engineering Physics",
+          "Engineering Management",
+          "Aeronautical & Astronautical Engineering",
+          "Space Physics",
+          "Chemistry & Biology"
+        ],
+        "most_frequent_counts": [
+          11,
+          7,
+          7,
+          5,
+          4,
+          4,
+          3,
+          2,
+          2,
+          2,
+          2,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "histogram": [],
+        "kmv_hashes": [
+          42382919,
+          46962102,
+          422349452,
+          500681728,
+          651812696,
+          729412432,
+          929280937,
+          1136148580,
+          1225023721,
+          1291308191,
+          1329211920,
+          1946052562,
+          1958495292,
+          2065074366,
+          2116200645,
+          2537898040,
+          2814355670,
+          2929903294,
+          2973819354,
+          2982362483,
+          3445477896,
+          3484939199,
+          3586178895,
+          3667235836,
+          3703603163,
+          3845921640,
+          3873076818,
+          3929471697,
+          4099978078,
+          4228046383
+        ]
+      },
+      {
+        "name": "graduate_major",
+        "type": "VARCHAR",
+        "count": 72,
+        "missing": 19,
+        "maximum": 6014965721085080352,
+        "minimum": 4712298408031909236,
+        "most_frequent_values": [
+          "Aeronautical Engineering",
+          "Mechanical Engineering",
+          "Medicine",
+          "Aerospace Engineering",
+          "Mechanical  Engineering",
+          "Aeronautics & Astronautics",
+          "Aeronautics",
+          "Physics",
+          "Cancer Biology",
+          "Atmospheric Physics",
+          "Chemical Engineering",
+          "Chemical Engineering; Medicine",
+          "Geology",
+          "Engineering",
+          "Physics; Electrical Engineering",
+          "Biometeorology",
+          "Engineering Mechanics",
+          "Astronautical Engineering",
+          "Electrical Engineering",
+          "Operations Research",
+          "Engineering Management",
+          "Earth Sciences; Geology",
+          "Computer Systems; Computer Science",
+          "Aerospace Science; Business Administration",
+          "Engineering Science; Medicine",
+          "Materials Science",
+          "Systems Management",
+          "Applied Science",
+          "Hydraulic Engineering; Fluid Mechanics",
+          "Applied Physics",
+          "Aerospace Engineering Sciences",
+          "Electrical Engineering; Aeronautics & Astronautics"
+        ],
+        "most_frequent_counts": [
+          5,
+          4,
+          3,
+          3,
+          2,
+          2,
+          2,
+          2,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "histogram": [],
+        "kmv_hashes": [
+          55856171,
+          229010485,
+          376034913,
+          422349452,
+          670430757,
+          688199648,
+          723832644,
+          745064023,
+          978732147,
+          1102854527,
+          1136148580,
+          1147340265,
+          1225023721,
+          1268975428,
+          1291308191,
+          1355582269,
+          1628303690,
+          1946052562,
+          2116200645,
+          2162951568,
+          2260613019,
+          2396019741,
+          2436191436,
+          2479120305,
+          2595900025,
+          2814355670,
+          2929903294,
+          3015560131,
+          3577407939,
+          3667235836,
+          3806625801,
+          3845921640
+        ]
+      },
+      {
+        "name": "military_rank",
+        "type": "VARCHAR",
+        "count": 72,
+        "missing": 33,
+        "maximum": 6226617245800424557,
+        "minimum": 4788005246584777061,
+        "most_frequent_values": [
+          "Colonel",
+          "Captain",
+          "Major",
+          "Lieutenant Commander",
+          "Commander",
+          "Rear Admiral",
+          "Lieutenant General",
+          "Brigadier General",
+          "Vice Admiral",
+          "Lieutenant Colonel"
+        ],
+        "most_frequent_counts": [
+          17,
+          10,
+          3,
+          2,
+          2,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "histogram": [],
+        "kmv_hashes": [
+          121371002,
+          664381002,
+          822456144,
+          921872641,
+          2393917899,
+          2576369920,
+          2712290819,
+          3380063652,
+          3736898555,
+          3981298631
+        ]
+      },
+      {
+        "name": "military_branch",
+        "type": "VARCHAR",
+        "count": 72,
+        "missing": 33,
+        "maximum": 6148293437305551136,
+        "minimum": 6148293381604909126,
+        "most_frequent_values": [
+          "US Navy (Retired)",
+          "US Air Force (Retired)",
+          "US Navy",
+          "US Army (Retired)",
+          "US Air Force",
+          "US Marine Corps (Retired)",
+          "US Army",
+          "US Air Force Reserves (Retired)",
+          "US Air Force Reserves",
+          "US Marine Corps"
+        ],
+        "most_frequent_counts": [
+          11,
+          9,
+          5,
+          4,
+          3,
+          2,
+          2,
+          1,
+          1,
+          1
+        ],
+        "histogram": [],
+        "kmv_hashes": [
+          10491265,
+          72357135,
+          1516703043,
+          1847009690,
+          2046673617,
+          3124956499,
+          3400079155,
+          3430137857,
+          3755866000,
+          4067177357
+        ]
+      },
+      {
+        "name": "space_flights",
+        "type": "INTEGER",
+        "count": 72,
+        "missing": 0,
+        "maximum": 7,
+        "minimum": 0,
+        "most_frequent_values": [
+          "2",
+          "1",
+          "3",
+          "4",
+          "0",
+          "5",
+          "7",
+          "6"
+        ],
+        "most_frequent_counts": [
+          19,
+          14,
+          14,
+          13,
+          6,
+          4,
+          1,
+          1
+        ],
+        "histogram": [
+          [
+            0.0,
+            6
+          ],
+          [
+            0.9800000000000001,
+            14
+          ],
+          [
+            1.9600000000000002,
+            19
+          ],
+          [
+            2.9400000000000004,
+            14
+          ],
+          [
+            3.9200000000000004,
+            13
+          ],
+          [
+            4.9,
+            4
+          ],
+          [
+            5.880000000000001,
+            1
+          ],
+          [
+            6.86,
+            1
+          ]
+        ],
+        "kmv_hashes": [
+          868795117,
+          1678875853,
+          1892174151,
+          2520797803,
+          2552028077,
+          2762651575,
+          3594265378,
+          3946386795
+        ]
+      },
+      {
+        "name": "space_flight_hours",
+        "type": "INTEGER",
+        "count": 72,
+        "missing": 0,
+        "maximum": 12818,
+        "minimum": 0,
+        "most_frequent_values": [
+          "0",
+          "216",
+          "168",
+          "1162",
+          "1611",
+          "1393",
+          "2762",
+          "551",
+          "381",
+          "259",
+          "295",
+          "301",
+          "241",
+          "167",
+          "546",
+          "590",
+          "197",
+          "939",
+          "722",
+          "420",
+          "839",
+          "533",
+          "3823",
+          "386",
+          "217",
+          "960",
+          "165",
+          "237",
+          "507",
+          "663",
+          "289",
+          "2477"
+        ],
+        "most_frequent_counts": [
+          7,
+          2,
+          2,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "histogram": [
+          [
+            0.0,
+            20
+          ],
+          [
+            256.36,
+            14
+          ],
+          [
+            512.72,
+            9
+          ],
+          [
+            769.08,
+            7
+          ],
+          [
+            1025.44,
+            5
+          ],
+          [
+            1281.8000000000002,
+            1
+          ],
+          [
+            1538.16,
+            2
+          ],
+          [
+            2307.2400000000002,
+            1
+          ],
+          [
+            2563.6000000000004,
+            1
+          ],
+          [
+            3076.32,
+            1
+          ],
+          [
+            3332.6800000000003,
+            1
+          ],
+          [
+            3589.04,
+            1
+          ],
+          [
+            3845.4,
+            1
+          ],
+          [
+            4101.76,
+            2
+          ],
+          [
+            4614.4800000000005,
+            2
+          ],
+          [
+            4870.84,
+            1
+          ],
+          [
+            5383.56,
+            1
+          ],
+          [
+            11536.2,
+            1
+          ],
+          [
+            12561.640000000001,
+            1
+          ]
+        ],
+        "kmv_hashes": [
+          146042502,
+          160468099,
+          195905325,
+          242337372,
+          263688384,
+          270466958,
+          281014038,
+          288795941,
+          335998834,
+          338026894,
+          474034398,
+          478357746,
+          555431753,
+          886187343,
+          936625283,
+          944702808,
+          1046834059,
+          1125092038,
+          1303759262,
+          1315914213,
+          1390903050,
+          1440806995,
+          1460267951,
+          1509810701,
+          1516309355,
+          1662557314,
+          1683649567,
+          1698753735,
+          1765169325,
+          1833253486,
+          1916971510,
+          2025781187
+        ]
+      },
+      {
+        "name": "space_walks",
+        "type": "INTEGER",
+        "count": 72,
+        "missing": 0,
+        "maximum": 9,
+        "minimum": 0,
+        "most_frequent_values": [
+          "0",
+          "3",
+          "2",
+          "1",
+          "4",
+          "6",
+          "7",
+          "5",
+          "9"
+        ],
+        "most_frequent_counts": [
+          40,
+          7,
+          6,
+          6,
+          3,
+          3,
+          3,
+          3,
+          1
+        ],
+        "histogram": [
+          [
+            0.0,
+            40
+          ],
+          [
+            0.8999999999999999,
+            6
+          ],
+          [
+            1.98,
+            6
+          ],
+          [
+            2.88,
+            7
+          ],
+          [
+            3.96,
+            3
+          ],
+          [
+            4.859999999999999,
+            3
+          ],
+          [
+            5.9399999999999995,
+            3
+          ],
+          [
+            6.84,
+            3
+          ],
+          [
+            8.82,
+            1
+          ]
+        ],
+        "kmv_hashes": [
+          868795117,
+          1678875853,
+          1892174151,
+          2520797803,
+          2552028077,
+          2762651575,
+          3184923214,
+          3594265378,
+          3946386795
+        ]
+      },
+      {
+        "name": "space_walks_hours",
+        "type": "INTEGER",
+        "count": 72,
+        "missing": 1,
+        "maximum": 58,
+        "minimum": 0,
+        "most_frequent_values": [
+          "0",
+          "12",
+          "22",
+          "19",
+          "6",
+          "46",
+          "20",
+          "58",
+          "13",
+          "1",
+          "41",
+          "9",
+          "49",
+          "33",
+          "3",
+          "28",
+          "39",
+          "21",
+          "17",
+          "18",
+          "36",
+          "2",
+          "43",
+          "32"
+        ],
+        "most_frequent_counts": [
+          40,
+          3,
+          3,
+          3,
+          2,
+          2,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "histogram": [
+          [
+            0.0,
+            41
+          ],
+          [
+            1.16,
+            1
+          ],
+          [
+            2.32,
+            1
+          ],
+          [
+            5.8,
+            2
+          ],
+          [
+            8.12,
+            1
+          ],
+          [
+            11.6,
+            3
+          ],
+          [
+            12.76,
+            1
+          ],
+          [
+            16.24,
+            1
+          ],
+          [
+            17.4,
+            1
+          ],
+          [
+            18.56,
+            3
+          ],
+          [
+            19.72,
+            1
+          ],
+          [
+            20.88,
+            4
+          ],
+          [
+            27.839999999999996,
+            1
+          ],
+          [
+            31.319999999999997,
+            1
+          ],
+          [
+            32.48,
+            1
+          ],
+          [
+            35.96,
+            1
+          ],
+          [
+            38.279999999999994,
+            1
+          ],
+          [
+            40.599999999999994,
+            1
+          ],
+          [
+            42.919999999999995,
+            1
+          ],
+          [
+            45.239999999999995,
+            2
+          ],
+          [
+            48.72,
+            1
+          ],
+          [
+            56.839999999999996,
+            1
+          ]
+        ],
+        "kmv_hashes": [
+          146233485,
+          605833848,
+          742786470,
+          913076911,
+          945968784,
+          1079804017,
+          1317565191,
+          1457483473,
+          1846462603,
+          1924026699,
+          2099108086,
+          2142237589,
+          2160466906,
+          2609153314,
+          2716499821,
+          2853623652,
+          2953695184,
+          3400903514,
+          3578360061,
+          3595208919,
+          3984726652,
+          4005763522,
+          4017435920,
+          4117541031
+        ]
+      },
+      {
+        "name": "missions",
+        "type": "ARRAY",
+        "count": 72,
+        "missing": 6,
+        "maximum": null,
+        "minimum": null,
+        "most_frequent_values": [],
+        "most_frequent_counts": [],
+        "histogram": [],
+        "kmv_hashes": []
+      },
+      {
+        "name": "death_date",
+        "type": "DATE",
+        "count": 72,
+        "missing": 56,
+        "maximum": 1328486400,
+        "minimum": -62125920000,
+        "most_frequent_values": [
+          "507254400",
+          "990662400",
+          "787190400",
+          "-62125920000",
+          "1178064000",
+          "-121219200",
+          "900979200",
+          "739929600",
+          "409795200",
+          "517276800",
+          "812678400",
+          "1328486400",
+          "987984000",
+          "-92448000",
+          "-70761600"
+        ],
+        "most_frequent_counts": [
+          2,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "histogram": [
+          [
+            -62125920000.0,
+            1
+          ],
+          [
+            -1209689856.0,
+            3
+          ],
+          [
+            59398272.0,
+            12
+          ]
+        ],
+        "kmv_hashes": [
+          835797653,
+          923631280,
+          951337987,
+          1566845929,
+          2271858417,
+          2865875716,
+          2964129857,
+          3048710212,
+          3345581349,
+          3577949340,
+          3606809802,
+          3869881889,
+          3986672593,
+          4097478038,
+          4224827654
+        ]
+      },
+      {
+        "name": "death_mission",
+        "type": "VARCHAR",
+        "count": 72,
+        "missing": 69,
+        "maximum": 6004515600988187980,
+        "minimum": 4715391321323282481,
+        "most_frequent_values": [
+          "STS 51-L (Challenger)",
+          "Apollo 1"
+        ],
+        "most_frequent_counts": [
+          2,
+          1
+        ],
+        "histogram": [],
+        "kmv_hashes": [
+          1851202857,
+          3467677652
+        ]
+      }
+    ],
+    "missions/year_2024/month_03/day_17/as_at_20240317-235146/17bdb253bfe38c18-be07cbede566-bc95.jsonl.parquet": [
+      {
+        "name": "name",
+        "type": "VARCHAR",
+        "count": 10,
+        "missing": 0,
+        "maximum": 6013834276626309196,
+        "minimum": 4714255551463432269,
+        "most_frequent_values": [
+          "Sunita L. Williams",
+          "Barry E. Wilmore",
+          "Stephanie D. Wilson",
+          "G. Reid Wiseman",
+          "Peter J. K. Wisoff",
+          "David A. Wolf",
+          "Neil W. Woodward III ",
+          "Alfred M. Worden",
+          "John W. Young",
+          "George D. Zamka"
+        ],
+        "most_frequent_counts": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "histogram": [],
+        "kmv_hashes": [
+          766658481,
+          869522406,
+          987966677,
+          1084807901,
+          1901309532,
+          2306574511,
+          2474637507,
+          3055412753,
+          3526281817,
+          3956363793
+        ]
+      },
+      {
+        "name": "year",
+        "type": "INTEGER",
+        "count": 10,
+        "missing": 0,
+        "maximum": 2009,
+        "minimum": 1962,
+        "most_frequent_values": [
+          "1998",
+          "1990",
+          "2000",
+          "1996",
+          "2009",
+          "1966",
+          "1962"
+        ],
+        "most_frequent_counts": [
+          3,
+          2,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "histogram": [
+          [
+            1962.0,
+            1
+          ],
+          [
+            1965.76,
+            1
+          ],
+          [
+            1989.26,
+            2
+          ],
+          [
+            1995.84,
+            1
+          ],
+          [
+            1997.72,
+            3
+          ],
+          [
+            1999.6,
+            1
+          ],
+          [
+            2008.06,
+            1
+          ]
+        ],
+        "kmv_hashes": [
+          236383467,
+          1380764540,
+          2239057626,
+          2590052757,
+          2746036193,
+          3316952942,
+          4106895421
+        ]
+      },
+      {
+        "name": "group",
+        "type": "INTEGER",
+        "count": 10,
+        "missing": 0,
+        "maximum": 20,
+        "minimum": 2,
+        "most_frequent_values": [
+          "17",
+          "13",
+          "18",
+          "16",
+          "20",
+          "5",
+          "2"
+        ],
+        "most_frequent_counts": [
+          3,
+          2,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "histogram": [
+          [
+            2.0,
+            1
+          ],
+          [
+            4.88,
+            1
+          ],
+          [
+            12.799999999999999,
+            2
+          ],
+          [
+            15.68,
+            1
+          ],
+          [
+            16.759999999999998,
+            3
+          ],
+          [
+            17.84,
+            1
+          ],
+          [
+            19.64,
+            1
+          ]
+        ],
+        "kmv_hashes": [
+          265908631,
+          433492693,
+          633083157,
+          1217615230,
+          1892174151,
+          3946386795,
+          3972575079
+        ]
+      },
+      {
+        "name": "status",
+        "type": "VARCHAR",
+        "count": 10,
+        "missing": 0,
+        "maximum": 5937279679997502464,
+        "minimum": 4711737631466389504,
+        "most_frequent_values": [
+          "Retired",
+          "Active"
+        ],
+        "most_frequent_counts": [
+          6,
+          4
+        ],
+        "histogram": [],
+        "kmv_hashes": [
+          1868272879,
+          3368621532
+        ]
+      },
+      {
+        "name": "birth_date",
+        "type": "DATE",
+        "count": 10,
+        "missing": 0,
+        "maximum": 184896000,
+        "minimum": -1239321600,
+        "most_frequent_values": [
+          "-135216000",
+          "-221184000",
+          "-102988800",
+          "184896000",
+          "-359078400",
+          "-421545600",
+          "-234662400",
+          "-1196035200",
+          "-1239321600",
+          "-236995200"
+        ],
+        "most_frequent_counts": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "histogram": [
+          [
+            -1239321600.0,
+            1
+          ],
+          [
+            -1210837248.0,
+            1
+          ],
+          [
+            -441759744.0,
+            1
+          ],
+          [
+            -384791040.0,
+            1
+          ],
+          [
+            -242369280.0,
+            3
+          ],
+          [
+            -156916224.0,
+            1
+          ],
+          [
+            -128431872.0,
+            1
+          ],
+          [
+            156411648.0,
+            1
+          ]
+        ],
+        "kmv_hashes": [
+          1086397117,
+          1164927149,
+          1257036421,
+          1765266587,
+          1883170104,
+          1924385081,
+          2309504510,
+          2884925906,
+          3091860016,
+          3657500712
+        ]
+      },
+      {
+        "name": "birth_place",
+        "type": "STRUCT",
+        "count": 10,
+        "missing": 0,
+        "maximum": null,
+        "minimum": null,
+        "most_frequent_values": [],
+        "most_frequent_counts": [],
+        "histogram": [],
+        "kmv_hashes": []
+      },
+      {
+        "name": "gender",
+        "type": "VARCHAR",
+        "count": 10,
+        "missing": 0,
+        "maximum": 5575856994708881408,
+        "minimum": 5072580820500545536,
+        "most_frequent_values": [
+          "Male",
+          "Female"
+        ],
+        "most_frequent_counts": [
+          8,
+          2
+        ],
+        "histogram": [],
+        "kmv_hashes": [
+          25245947,
+          1074177100
+        ]
+      },
+      {
+        "name": "alma_mater",
+        "type": "ARRAY",
+        "count": 10,
+        "missing": 0,
+        "maximum": null,
+        "minimum": null,
+        "most_frequent_values": [],
+        "most_frequent_counts": [],
+        "histogram": [],
+        "kmv_hashes": []
+      },
+      {
+        "name": "undergraduate_major",
+        "type": "VARCHAR",
+        "count": 10,
+        "missing": 0,
+        "maximum": 5794014457208468224,
+        "minimum": 4712298408031909236,
+        "most_frequent_values": [
+          "Electrical Engineering",
+          "Physics",
+          "Physical Science",
+          "Engineering Science",
+          "Computer & Systems Engineering",
+          "Military Science",
+          "Aeronautical Engineering",
+          "Mathematics"
+        ],
+        "most_frequent_counts": [
+          2,
+          2,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "histogram": [],
+        "kmv_hashes": [
+          241156136,
+          651812696,
+          775040549,
+          1136148580,
+          1225023721,
+          2929903294,
+          2982362483,
+          3604004243
+        ]
+      },
+      {
+        "name": "graduate_major",
+        "type": "VARCHAR",
+        "count": 10,
+        "missing": 1,
+        "maximum": 6014965721085080352,
+        "minimum": 4712298408031909236,
+        "most_frequent_values": [
+          "Engineering Management",
+          "Electrical Engineering; Aviation Systems",
+          "Aerospace Engineering",
+          "Systems Engineering",
+          "Applied Physics",
+          "Medicine",
+          "Physics; Business Management",
+          "Aeronautical & Astronautical Engineering"
+        ],
+        "most_frequent_counts": [
+          2,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "histogram": [],
+        "kmv_hashes": [
+          46962102,
+          2116200645,
+          2706561415,
+          2827410194,
+          3845921640,
+          4060133773,
+          4106717700,
+          4162208960
+        ]
+      },
+      {
+        "name": "military_rank",
+        "type": "VARCHAR",
+        "count": 10,
+        "missing": 3,
+        "maximum": 4859222839509541989,
+        "minimum": 4855285518434921984,
+        "most_frequent_values": [
+          "Captain",
+          "Commander",
+          "Colonel"
+        ],
+        "most_frequent_counts": [
+          3,
+          2,
+          2
+        ],
+        "histogram": [],
+        "kmv_hashes": [
+          921872641,
+          2712290819,
+          3981298631
+        ]
+      },
+      {
+        "name": "military_branch",
+        "type": "VARCHAR",
+        "count": 10,
+        "missing": 3,
+        "maximum": 6148293437305551136,
+        "minimum": 6148293381604909126,
+        "most_frequent_values": [
+          "US Navy",
+          "US Air Force (Retired)",
+          "US Navy (Retired)",
+          "US Marine Corps (Retired)"
+        ],
+        "most_frequent_counts": [
+          4,
+          1,
+          1,
+          1
+        ],
+        "histogram": [],
+        "kmv_hashes": [
+          10491265,
+          72357135,
+          1847009690,
+          3124956499
+        ]
+      },
+      {
+        "name": "space_flights",
+        "type": "INTEGER",
+        "count": 10,
+        "missing": 0,
+        "maximum": 6,
+        "minimum": 0,
+        "most_frequent_values": [
+          "2",
+          "3",
+          "1",
+          "4",
+          "0",
+          "6"
+        ],
+        "most_frequent_counts": [
+          3,
+          2,
+          2,
+          1,
+          1,
+          1
+        ],
+        "histogram": [
+          [
+            0.0,
+            1
+          ],
+          [
+            0.96,
+            2
+          ],
+          [
+            1.92,
+            3
+          ],
+          [
+            3.0,
+            2
+          ],
+          [
+            3.96,
+            1
+          ],
+          [
+            5.88,
+            1
+          ]
+        ],
+        "kmv_hashes": [
+          868795117,
+          1678875853,
+          2520797803,
+          2552028077,
+          3594265378,
+          3946386795
+        ]
+      },
+      {
+        "name": "space_flight_hours",
+        "type": "INTEGER",
+        "count": 10,
+        "missing": 0,
+        "maximum": 7721,
+        "minimum": 0,
+        "most_frequent_values": [
+          "7721",
+          "4272",
+          "1031",
+          "3968",
+          "1064",
+          "4044",
+          "0",
+          "295",
+          "835",
+          "692"
+        ],
+        "most_frequent_counts": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "histogram": [
+          [
+            0.0,
+            1
+          ],
+          [
+            154.42,
+            1
+          ],
+          [
+            617.68,
+            1
+          ],
+          [
+            772.0999999999999,
+            1
+          ],
+          [
+            926.52,
+            2
+          ],
+          [
+            3860.4999999999995,
+            1
+          ],
+          [
+            4014.9199999999996,
+            1
+          ],
+          [
+            4169.339999999999,
+            1
+          ],
+          [
+            7566.579999999999,
+            1
+          ]
+        ],
+        "kmv_hashes": [
+          34351077,
+          300019676,
+          474034398,
+          1612522200,
+          1632855102,
+          2239080843,
+          2578418971,
+          3102320498,
+          3594265378,
+          3678413710
+        ]
+      },
+      {
+        "name": "space_walks",
+        "type": "INTEGER",
+        "count": 10,
+        "missing": 0,
+        "maximum": 7,
+        "minimum": 0,
+        "most_frequent_values": [
+          "0",
+          "7",
+          "3",
+          "4",
+          "2",
+          "1"
+        ],
+        "most_frequent_counts": [
+          3,
+          2,
+          2,
+          1,
+          1,
+          1
+        ],
+        "histogram": [
+          [
+            0.0,
+            3
+          ],
+          [
+            0.9800000000000001,
+            1
+          ],
+          [
+            1.9600000000000002,
+            1
+          ],
+          [
+            2.9400000000000004,
+            2
+          ],
+          [
+            3.9200000000000004,
+            1
+          ],
+          [
+            6.86,
+            2
+          ]
+        ],
+        "kmv_hashes": [
+          868795117,
+          1678875853,
+          2552028077,
+          2762651575,
+          3594265378,
+          3946386795
+        ]
+      },
+      {
+        "name": "space_walks_hours",
+        "type": "INTEGER",
+        "count": 10,
+        "missing": 1,
+        "maximum": 50,
+        "minimum": 0,
+        "most_frequent_values": [
+          "0",
+          "20",
+          "50",
+          "25",
+          "13",
+          "41"
+        ],
+        "most_frequent_counts": [
+          3,
+          2,
+          1,
+          1,
+          1,
+          1
+        ],
+        "histogram": [
+          [
+            0.0,
+            3
+          ],
+          [
+            13.0,
+            1
+          ],
+          [
+            20.0,
+            2
+          ],
+          [
+            25.0,
+            1
+          ],
+          [
+            41.0,
+            1
+          ],
+          [
+            49.0,
+            1
+          ]
+        ],
+        "kmv_hashes": [
+          519162370,
+          605833848,
+          1846462603,
+          1924026699,
+          2040019331,
+          3400903514
+        ]
+      },
+      {
+        "name": "missions",
+        "type": "ARRAY",
+        "count": 10,
+        "missing": 1,
+        "maximum": null,
+        "minimum": null,
+        "most_frequent_values": [],
+        "most_frequent_counts": [],
+        "histogram": [],
+        "kmv_hashes": []
+      },
+      {
+        "name": "death_date",
+        "type": "DATE",
+        "count": 10,
+        "missing": 10,
+        "maximum": null,
+        "minimum": null,
+        "most_frequent_values": [],
+        "most_frequent_counts": [],
+        "histogram": [],
+        "kmv_hashes": []
+      },
+      {
+        "name": "death_mission",
+        "type": "VARCHAR",
+        "count": 10,
+        "missing": 0,
+        "maximum": null,
+        "minimum": null,
+        "most_frequent_values": [],
+        "most_frequent_counts": [],
+        "histogram": [],
+        "kmv_hashes": []
+      }
+    ]
+  },
+  "versions": {
+    "mabel": "0.6.19",
+    "orso": "0.0.145"
+  }
+}
