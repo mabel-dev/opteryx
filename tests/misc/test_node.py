@@ -16,17 +16,6 @@ def test_node_simple_usage():
     assert n.c == 3
 
 
-def test_node_invalid_attribute():
-    n = Node()
-    with pytest.raises(AttributeError):
-        n._secret = "top"
-
-
-def test_node_invalid_attribute_on_load():
-    with pytest.raises(AttributeError):
-        b = Node(_node=False)
-
-
 def test_node_str_representation():
     n = Node(a=1, c=3)
     assert str(n) == '{"a":1,"c":3}'

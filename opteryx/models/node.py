@@ -111,7 +111,7 @@ class Node:
         Returns:
             str: A string representation useful for debugging.
         """
-        node_type = self.node_type
+        node_type = str(self.node_type)
         if node_type.startswith("LogicalPlanStepType."):
             node_type = node_type[20:]
         return f"<Node type={node_type}>"
