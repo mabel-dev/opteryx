@@ -90,7 +90,7 @@ class BaseConnector:
     def chunk_dictset(
         self,
         dictset: Iterable[dict],
-        columns: list,
+        columns: Optional[list] = None,
         morsel_size: int = DEFAULT_MORSEL_SIZE,
         initial_chunk_size: int = INITIAL_CHUNK_SIZE,
     ) -> pyarrow.Table:

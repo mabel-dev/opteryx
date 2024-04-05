@@ -44,6 +44,10 @@ jobs:
         with:
           credentials_json: '${{ secrets.GCP_KEY }}'
 
+      - name: Decode Astra (DataStax/Cassandra) Secure Connect Bundle
+        run: |
+          echo "${{ secrets.ASTRA_SECURE_BUNDLE_BASE64 }}" | base64 -d > secure-connect.zip
+
       - name: Run Regression Tests
         run: python -m coverage run -m pytest --color=yes
         env:
@@ -60,6 +64,8 @@ jobs:
           COCKROACH_PASSWORD: '${{ secrets.COCKROACH_PASSWORD }}'
           REDIS_CONNECTION: '${{ secrets.REDIS_CONNECTION }}'
           MEMCACHED_SERVER: 'localhost:11211'
+          DATASTAX_CLIENT_ID: '${{ secrets.DATASTAX_CLIENT_ID }}'
+          DATASTAX_CLIENT_SECRET: '${{ secrets.DATASTAX_CLIENT_SECRET }}'
 
       - name: Check Coverage
         run: python -m coverage report --include=opteryx/** --fail-under=80 -m
