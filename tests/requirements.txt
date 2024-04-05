@@ -33,5 +33,6 @@ duckdb-engine
 sqlalchemy-cockroachdb
 sqlalchemy-bigquery
 pyodbc
+cassandra-driver
 
 setuptools_rust
