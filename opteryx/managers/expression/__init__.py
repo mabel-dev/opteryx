@@ -194,7 +194,7 @@ def prioritize_evaluation(expressions):
 
 
 def _inner_evaluate(root: Node, table: Table, context: ExecutionContext):
-    node_type = root.node_type
+    node_type = root.node_type  # type:ignore
 
     if node_type == NodeType.SUBQUERY:
         raise UnsupportedSyntaxError("IN (<subquery>) temporarily not supported.")
@@ -228,7 +228,7 @@ def _inner_evaluate(root: Node, table: Table, context: ExecutionContext):
         )  # type:ignore
 
     # BOOLEAN OPERATORS
-    if node_type & LOGICAL_TYPE == LOGICAL_TYPE:
+    if node_type & LOGICAL_TYPE == LOGICAL_TYPE:  # type:ignore
         if node_type == NodeType.OR:
             return short_cut_or(root, table, context)
         if node_type == NodeType.AND:
@@ -237,7 +237,7 @@ def _inner_evaluate(root: Node, table: Table, context: ExecutionContext):
         if node_type in LOGICAL_OPERATIONS:
             left = _inner_evaluate(root.left, table, context) if root.left else [None]
             right = _inner_evaluate(root.right, table, context) if root.right else [None]
-            return LOGICAL_OPERATIONS[node_type](left, right)
+            return LOGICAL_OPERATIONS[node_type](left, right)  # type:ignore
 
         if node_type == NodeType.NOT:
             centre = _inner_evaluate(root.centre, table, context) if root.centre else [None]
@@ -245,7 +245,7 @@ def _inner_evaluate(root: Node, table: Table, context: ExecutionContext):
             return pyarrow.compute.invert(centre)
 
     # INTERAL IDENTIFIERS
-    if node_type & INTERNAL_TYPE == INTERNAL_TYPE:
+    if node_type & INTERNAL_TYPE == INTERNAL_TYPE:  # type:ignore
         if node_type == NodeType.FUNCTION:
             parameters = [_inner_evaluate(param, table, context) for param in root.parameters]
             # zero parameter functions get the number of rows as the parameter
