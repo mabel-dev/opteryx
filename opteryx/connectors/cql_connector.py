@@ -39,7 +39,7 @@ from opteryx.managers.expression import NodeType
 from opteryx.third_party.query_builder import Query
 
 
-def _handle_operand(operand: Node, parameters: list) -> Tuple[Any, dict]:
+def _handle_operand(operand: Node, parameters: list) -> Tuple[Any, list]:
     if operand.node_type == NodeType.IDENTIFIER:
         return f'"{operand.source_column}"', parameters
 
@@ -140,7 +140,7 @@ class CqlConnector(BaseConnector, PredicatePushable):
                 col for col in self.schema.columns if f'"{col.name}"' in column_names  # type:ignore
             ]
         else:
-            query_builder.add("SELECT", f'"{self.single_column.name}"')
+            query_builder.add("SELECT", f'"{self.single_column.name}"')  # type:ignore
             self.schema.columns = [self.single_column]  # type:ignore
 
         # Update SQL if we've pushed predicates
@@ -211,6 +211,6 @@ class CqlConnector(BaseConnector, PredicatePushable):
             ],
         )
 
-        self.single_column = self.schema.columns[0]
+        self.single_column = self.schema.columns[0]  # type:ignore
 
         return self.schema

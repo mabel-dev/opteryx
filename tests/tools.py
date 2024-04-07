@@ -439,7 +439,7 @@ def create_duck_db():
     try:
         res = cur.execute(CREATE_DATABASE)
     except:
-        pass
+        return -1
     finally:
         if res is not None:
             res.commit()

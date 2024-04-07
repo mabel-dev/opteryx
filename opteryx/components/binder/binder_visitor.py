@@ -226,7 +226,7 @@ class BinderVisitor:
             Tuple[Node, Dict]
             The node and context after binding.
         """
-        node_type = node.node_type.name
+        node_type = node.node_type.name  # type:ignore
         visit_method_name = f"visit_{CAMEL_TO_SNAKE.sub('_', node_type).lower()}"
         visit_method = getattr(self, visit_method_name, None)
         if visit_method is None:
