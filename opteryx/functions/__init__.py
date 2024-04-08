@@ -354,6 +354,9 @@ FUNCTIONS = {
     "NULLIF": other_functions.null_if,
     "CASE": select_values, #other_functions.case_when,
 
+    # Vector
+    "COSINE_SIMILARITY": other_functions.cosine_similarity,
+
     # NUMERIC
     "ROUND": number_functions.round,
     "FLOOR": compute.floor,
