@@ -1,0 +1,5 @@
+{
+    "summary": "Pushing Filters and Count optimizations were run in the wrong order",
+    "statement": "SELECT count(*) AS ten_followers FROM testdata.flat.formats.parquet WHERE followers = 10;",
+    "result": {"ten_followers": [353]}
+}

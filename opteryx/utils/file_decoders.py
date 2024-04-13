@@ -127,6 +127,7 @@ def parquet_decoder(buffer, projection: List = None, selection=None, just_schema
 
     # Convert the selection to DNF format if applicable
     _select, selection = PredicatePushable.to_dnf(selection) if selection else (None, None)
+    selected_columns = None
 
     stream: BinaryIO = None
     if isinstance(buffer, memoryview):
@@ -150,19 +151,17 @@ def parquet_decoder(buffer, projection: List = None, selection=None, just_schema
         # If no columns are selected, set to None
         if not selected_columns:
             selected_columns = None
+
     # Special handling for projection of [] (usually means COUNT(*))
     if projection == []:
-        parquet_file = parquet.ParquetFile(stream)
-        return pyarrow.Table.from_pydict(
-            {"_": numpy.full(parquet_file.metadata.num_rows, True, dtype=numpy.bool_)}
-        )
-    else:
-        selected_columns = None
+        selected_columns = []
 
     # Read the parquet table with the optimized column list and selection filters
     table = parquet.read_table(stream, columns=selected_columns, pre_buffer=False, filters=_select)
     if selection:
         table = filter_records(selection, table)
+    if projection == []:
+        return pyarrow.Table.from_pydict({"_": numpy.full(table.num_rows, True, dtype=numpy.bool_)})
     return table
 
 
