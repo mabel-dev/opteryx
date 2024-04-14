@@ -152,40 +152,41 @@ def cosine_similarity(arr, val):
     import re
     import string
 
-    import numpy as np
-
     from opteryx.compiled.functions import vectorize
-
-    # import time
-
-    if len(val) == 0:
-        return []
-    # print(len(val))
+    from opteryx.virtual_datasets.stop_words import STOP_WORDS
 
     # Compile a regular expression pattern that matches any punctuation
     punctuation_pattern = re.compile(r"[{}]".format(re.escape(string.punctuation)))
 
-    def cosine_similarity(vec1: np.ndarray, vec2: np.ndarray, vec2_norm: np.float32) -> float:
-        vec1 = vec1.astype(np.float32)
-        return np.dot(vec1, vec2) / (np.linalg.norm(vec1) * vec2_norm)
+    def cosine_similarity(
+        vec1: numpy.ndarray, vec2: numpy.ndarray, vec2_norm: numpy.float32
+    ) -> float:
+        vec1 = vec1.astype(numpy.float32)
+        return numpy.dot(vec1, vec2) / (numpy.linalg.norm(vec1) * vec2_norm)
 
     def tokenize_and_remove_punctuation(arr):
         # Replace each punctuation mark with a space
         no_punctuation = punctuation_pattern.sub(" ", arr)
         # Split the modified string into tokens by spaces and filter out empty tokens
-        tokens = [token for token in no_punctuation.lower().split(" ") if token]
-        return tokens
+        return [token for token in no_punctuation.lower().split(" ") if token not in STOP_WORDS]
+
+    # import time
+
+    if len(val) == 0:
+        return []
+    tokenized_literal = list(tokenize_and_remove_punctuation(val[0]))
+    if len(tokenized_literal) == 0:
+        return []
+    # print(len(val))
 
     # t = time.monotonic_ns()
-    tokenized_strings = [tokenize_and_remove_punctuation(s) for s in arr] + [
-        tokenize_and_remove_punctuation(val[0])
-    ]
+    tokenized_strings = [tokenize_and_remove_punctuation(s) for s in arr] + [tokenized_literal]
     # print("time tokenizing ", time.monotonic_ns() - t)
     # t = time.monotonic_ns()
     vectors = [vectorize(tokens) for tokens in tokenized_strings]
     # print("time vectorizing", time.monotonic_ns() - t)
-    comparison_vector = vectors[-1].astype(np.float32)
-    comparison_vector_norm = np.linalg.norm(comparison_vector)
+    comparison_vector = vectors[-1].astype(numpy.float32)
+    comparison_vector_norm = numpy.linalg.norm(comparison_vector)
 
     # t = time.monotonic_ns()
     similarities = [

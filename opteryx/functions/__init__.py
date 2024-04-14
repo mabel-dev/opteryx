@@ -317,6 +317,7 @@ FUNCTIONS = {
     "RTRIM": string_functions.rtrim,
     "LEVENSHTEIN": string_functions.levenshtein,
     "SPLIT": string_functions.split,
+    "MATCH_AGAINST": string_functions.match_against,
 
     # HASHING & ENCODING
     "HASH": _iterate_single_parameter(lambda x: hex(CityHash64(str(x)))[2:]),

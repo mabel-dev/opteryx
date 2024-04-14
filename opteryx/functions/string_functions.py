@@ -308,3 +308,34 @@ def levenshtein(a, b):
 
     # Use zip to iterate over pairs of elements from a and b
     return [lev(value_a, value_b) for value_a, value_b in zip(a_list, b_list)]
+
+
+def match_against(arr, val):
+
+    import re
+    import string
+
+    from opteryx.compiled.functions import possible_match
+    from opteryx.compiled.functions import vectorize
+    from opteryx.virtual_datasets.stop_words import STOP_WORDS
+
+    # Compile a regular expression pattern that matches any punctuation
+    punctuation_pattern = re.compile(r"[{}]".format(re.escape(string.punctuation)))
+
+    def tokenize_and_remove_punctuation(arr):
+        # Replace each punctuation mark with a space
+        no_punctuation = punctuation_pattern.sub(" ", arr)
+        # Split the modified string into tokens by spaces and filter out empty tokens
+        return [token for token in no_punctuation.lower().split(" ") if token not in STOP_WORDS]
+
+    if len(val) == 0:
+        return []
+    tokenized_literal = list(tokenize_and_remove_punctuation(val[0]))
+    if len(tokenized_literal) == 0:
+        return []
+
+    tokenized_strings = [tokenize_and_remove_punctuation(s) for s in arr]
+    return [
+        possible_match(tokenized_literal, vectorize(tok)) and set(tokenized_literal).issubset(tok)
+        for tok in tokenized_strings
+    ]
