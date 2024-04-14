@@ -539,6 +539,22 @@ def map_access(branch, alias: Optional[List[str]] = None, key=None):
     )
 
 
+def match_against(branch, alias: Optional[List[str]] = None, key=None):
+
+    print(branch)
+
+    columns = [identifier(col) for col in branch["columns"]]
+    match_to = build(branch["match_value"])
+    mode = branch["opt_search_modifier"]
+
+    return Node(
+        NodeType.FUNCTION,
+        value="MATCH_AGAINST",
+        parameters=[columns[0], match_to],
+        alias=alias or f"MATCH ({columns[0].value}) AGAINST ({match_to.value})",
+    )
+
+
 def nested(branch, alias: Optional[List[str]] = None, key=None):
     return Node(
         node_type=NodeType.NESTED,
@@ -782,6 +798,7 @@ BUILDERS = {
     "JsonAccess": json_access,
     "Like": pattern_match,
     "MapAccess": map_access,
+    "MatchAgainst": match_against,
     "Nested": nested,
     "Null": literal_null,
     "Number": literal_number,

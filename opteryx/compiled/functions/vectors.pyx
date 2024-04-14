@@ -33,17 +33,38 @@ cdef uint64_t djb2_hash(char* byte_array, uint64_t length) nogil:
     return hash_value
 
 
+
 def vectorize(list tokens):
     cdef cnp.ndarray[cnp.uint16_t, ndim=1] vector = np.zeros(VECTOR_SIZE, dtype=np.uint16)
     cdef uint32_t hash_1
     cdef uint32_t hash_2
     cdef bytes token_bytes
+    cdef uint32_t token_size
     
     for token in tokens:
         token_bytes = PyUnicode_AsUTF8String(token)
-        hash_1 = djb2_hash(token_bytes, PyBytes_GET_SIZE(token_bytes)) & (VECTOR_SIZE - 1)
-        hash_2 = <int32_t>(hash_1 * GOLDEN_RATIO_APPROX) & (VECTOR_SIZE - 1)
-        vector[hash_1] += 1
-        vector[hash_2] += 1
+        token_size = PyBytes_GET_SIZE(token_bytes)
+        if token_size > 1:
+            hash_1 = djb2_hash(token_bytes, token_size) & (VECTOR_SIZE - 1)
+            hash_2 = <int32_t>(hash_1 * GOLDEN_RATIO_APPROX) & (VECTOR_SIZE - 1)
+            vector[hash_1] += 1
+            vector[hash_2] += 1
 
     return vector
+
+
+def possible_match(list query_tokens, cnp.ndarray[cnp.uint16_t, ndim=1] vector):
+    cdef uint32_t hash_1
+    cdef uint32_t hash_2
+    cdef bytes token_bytes
+    cdef uint32_t token_size
+    
+    for token in query_tokens:
+        token_bytes = PyUnicode_AsUTF8String(token)
+        token_size = PyBytes_GET_SIZE(token_bytes)
+        if token_size > 1:
+            hash_1 = djb2_hash(token_bytes, token_size) & (VECTOR_SIZE - 1)
+            hash_2 = <int32_t>(hash_1 * GOLDEN_RATIO_APPROX) & (VECTOR_SIZE - 1)
+            if vector[hash_1] == 0 or vector[hash_2] == 0:
+                return False  # If either position is zero, the token cannot be present
+    return True
