@@ -152,6 +152,7 @@ def cosine_similarity(arr, val):
     import re
     import string
 
+    from opteryx.compiled.functions import tokenize_and_remove_punctuation
     from opteryx.compiled.functions import vectorize
     from opteryx.virtual_datasets.stop_words import STOP_WORDS
 
@@ -164,23 +165,19 @@ def cosine_similarity(arr, val):
         vec1 = vec1.astype(numpy.float32)
         return numpy.dot(vec1, vec2) / (numpy.linalg.norm(vec1) * vec2_norm)
 
-    def tokenize_and_remove_punctuation(arr):
-        # Replace each punctuation mark with a space
-        no_punctuation = punctuation_pattern.sub(" ", arr)
-        # Split the modified string into tokens by spaces and filter out empty tokens
-        return [token for token in no_punctuation.lower().split(" ") if token not in STOP_WORDS]
-
     # import time
 
     if len(val) == 0:
         return []
-    tokenized_literal = list(tokenize_and_remove_punctuation(val[0]))
+    tokenized_literal = list(tokenize_and_remove_punctuation(str(val[0]), STOP_WORDS))
     if len(tokenized_literal) == 0:
         return []
     # print(len(val))
 
     # t = time.monotonic_ns()
-    tokenized_strings = [tokenize_and_remove_punctuation(s) for s in arr] + [tokenized_literal]
+    tokenized_strings = [tokenize_and_remove_punctuation(s, STOP_WORDS) for s in arr] + [
+        tokenized_literal
+    ]
     # print("time tokenizing ", time.monotonic_ns() - t)
     # t = time.monotonic_ns()
     vectors = [vectorize(tokens) for tokens in tokenized_strings]
