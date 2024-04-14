@@ -326,7 +326,7 @@ def match_against(arr, val):
     2 indexes)
     """
 
-    from opteryx.compiled.functions import possible_match
+    from opteryx.compiled.functions import possible_match_indices
     from opteryx.compiled.functions import tokenize_and_remove_punctuation
     from opteryx.compiled.functions import vectorize
     from opteryx.virtual_datasets.stop_words import STOP_WORDS
@@ -334,11 +334,15 @@ def match_against(arr, val):
     if len(val) == 0:
         return []
     tokenized_literal = tokenize_and_remove_punctuation(str(val[0]), STOP_WORDS)
+    literal_offsets = numpy.nonzero(vectorize(tokenized_literal))[0].astype(numpy.uint16)
+
     if len(tokenized_literal) == 0:
         return [False] * len(arr)
 
-    tokenized_strings = [tokenize_and_remove_punctuation(s, STOP_WORDS) for s in arr]
+    tokenized_strings = (tokenize_and_remove_punctuation(s, STOP_WORDS) for s in arr)
+
     return [
-        possible_match(tokenized_literal, vectorize(tok)) and set(tokenized_literal).issubset(tok)
+        possible_match_indices(literal_offsets, vectorize(tok))
+        and set(tokenized_literal).issubset(tok)
         for tok in tokenized_strings
     ]
