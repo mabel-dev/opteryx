@@ -311,30 +311,33 @@ def levenshtein(a, b):
 
 
 def match_against(arr, val):
+    """
+    This is a PoV implementation
+    This builds the index during execution which is very slow
 
-    import re
-    import string
+    This is using the vector index for COSINE SIMILARITY as a
+    bloom filter. If we get to a point when this is prebuilt for
+    the similarity searches, we will benefit here as then it's just
+    the bloom filter match.
+
+    Because bloom filters are probabilistic, we also do a setwise
+    match, but we should avoid needing to do that 99% of the time
+    for false positives (we have a 1024 slot bloom filter with
+    2 indexes)
+    """
 
     from opteryx.compiled.functions import possible_match
+    from opteryx.compiled.functions import tokenize_and_remove_punctuation
     from opteryx.compiled.functions import vectorize
     from opteryx.virtual_datasets.stop_words import STOP_WORDS
 
-    # Compile a regular expression pattern that matches any punctuation
-    punctuation_pattern = re.compile(r"[{}]".format(re.escape(string.punctuation)))
-
-    def tokenize_and_remove_punctuation(arr):
-        # Replace each punctuation mark with a space
-        no_punctuation = punctuation_pattern.sub(" ", arr)
-        # Split the modified string into tokens by spaces and filter out empty tokens
-        return [token for token in no_punctuation.lower().split(" ") if token not in STOP_WORDS]
-
     if len(val) == 0:
         return []
-    tokenized_literal = list(tokenize_and_remove_punctuation(val[0]))
+    tokenized_literal = tokenize_and_remove_punctuation(str(val[0]), STOP_WORDS)
     if len(tokenized_literal) == 0:
-        return []
+        return [False] * len(arr)
 
-    tokenized_strings = [tokenize_and_remove_punctuation(s) for s in arr]
+    tokenized_strings = [tokenize_and_remove_punctuation(s, STOP_WORDS) for s in arr]
     return [
         possible_match(tokenized_literal, vectorize(tok)) and set(tokenized_literal).issubset(tok)
         for tok in tokenized_strings
