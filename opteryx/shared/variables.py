@@ -31,7 +31,7 @@ from typing import Type
 
 from orso.types import OrsoTypes
 
-from opteryx import __version__
+from opteryx.__version__ import __version__
 from opteryx.constants.character_set import CharacterSet
 from opteryx.constants.character_set import Collation
 from opteryx.exceptions import PermissionsError
@@ -95,6 +95,7 @@ SYSTEM_VARIABLES_DEFAULTS: Dict[str, VariableSchema] = {
     "morsel_size": (OrsoTypes.INTEGER, 64 * 1024 * 1024, VariableOwner.USER),
     "disable_morsel_defragmentation": (OrsoTypes.BOOLEAN, False, VariableOwner.USER),
     "disable_optimizer": (OrsoTypes.BOOLEAN, False, VariableOwner.USER),
+    "user_memberships": (OrsoTypes.ARRAY, [], VariableOwner.SERVER),
 }
 # fmt: on
 

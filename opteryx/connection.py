@@ -23,6 +23,7 @@ from typing import Set
 
 from opteryx.cursor import Cursor
 from opteryx.exceptions import PermissionsError
+from opteryx.exceptions import ProgrammingError
 from opteryx.models import ConnectionContext
 
 
@@ -34,7 +35,9 @@ class Connection:
     def __init__(
         self,
         *,
-        permissions: Optional[Iterable] = None,
+        user: Optional[str] = None,
+        permissions: Optional[Iterable[str]] = None,
+        memberships: Optional[Iterable[str]] = None,
         **kwargs,
     ):
         """
@@ -42,7 +45,17 @@ class Connection:
         """
         self._kwargs = kwargs
 
-        self.context = ConnectionContext()
+        if memberships:
+            if not all(isinstance(v, str) for v in memberships):
+                raise ProgrammingError("Invalid memberships provided to Connection")
+        if permissions:
+            if not all(isinstance(v, str) for v in permissions):
+                raise ProgrammingError("Invalid permissions provided to Connection")
+        if user:
+            if not isinstance(user, str):
+                raise ProgrammingError("Invalid user provided to Connection")
+
+        self.context = ConnectionContext(user=user, memberships=memberships)
 
         # check the permissions we've been given are valid permissions
         self.permissions = self.validate_permissions(permissions)

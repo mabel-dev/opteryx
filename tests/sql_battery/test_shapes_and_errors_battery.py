@@ -81,7 +81,7 @@ STATEMENTS = [
         ("SELECT * FROM $astronauts", 357, 19, None),
         ("SELECT * FROM $no_table", 1, 1, None),
         ("SELECT * FROM sqlite.planets", 9, 20, None),
-        ("SELECT * FROM $variables", 41, 4, None),
+        ("SELECT * FROM $variables", 42, 4, None),
         ("SELECT * FROM $missions", 4630, 8, None),
         ("SELECT * FROM $stop_words", 305, 1, None),
         (b"SELECT * FROM $satellites", 177, 8, None),
@@ -1329,6 +1329,9 @@ STATEMENTS = [
         ("SELECT COUNT(*) FROM $planets WHERE TRUE AND 3 = 2 AND 3 > 2", 1, 1, None),
 
         ("SELECT missions[0] as m FROM $astronauts CROSS JOIN FAKE(1, 1) AS F order by m", 357, 1, None),
+        ("SELECT name[id] as m FROM $planets", None, None, UnsupportedSyntaxError),
+        ("SELECT * FROM $astronauts WHERE LIST_CONTAINS_ANY(missions, @@user_memberships)", 3, 19, None),
+        ("SELECT $missions.* FROM $missions INNER JOIN $user ON Mission = value WHERE attribute = 'membership'", 1, 8, None),
 
         ("EXECUTE PLANETS_BY_ID (id=1)", 1, 20, None),  # simple case
         ("EXECUTE PLANETS_BY_ID (1)", None, None, ParameterError),  # simple case)
@@ -1562,7 +1565,7 @@ def test_sql_battery(statement, rows, columns, exception):
 
     try:
         # query to arrow is the fastest way to query
-        result = opteryx.query_to_arrow(statement)
+        result = opteryx.query_to_arrow(statement, memberships=["Apollo 11"])
         actual_rows, actual_columns = result.shape
         assert (
             rows == actual_rows

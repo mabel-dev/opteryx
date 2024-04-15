@@ -17,6 +17,7 @@ from typing import List
 from typing import Tuple
 
 from orso.tools import random_int
+from orso.types import OrsoTypes
 
 from opteryx.shared.variables import SystemVariables
 from opteryx.shared.variables import SystemVariablesContainer
@@ -50,6 +51,7 @@ class ConnectionContext:
     connected_at: datetime.datetime = field(default_factory=datetime.datetime.utcnow, init=False)
     user: str = None
     schema: str = None
+    memberships: str = None
     variables: SystemVariablesContainer = field(init=False)
     history: List[HistoryItem] = field(default_factory=list, init=False)
 
@@ -59,3 +61,8 @@ class ConnectionContext:
         """
         # The initializer is a function rather than an empty constructor so we init here
         object.__setattr__(self, "variables", SystemVariables.snapshot(VariableOwner.USER))
+        self.variables._variables["user_memberships"] = (
+            OrsoTypes.ARRAY,
+            self.memberships or [],
+            VariableOwner.SERVER,
+        )
