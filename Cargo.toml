@@ -9,10 +9,10 @@ name = "compute"
 crate-type = ["cdylib"]
 
 [dependencies]
-pyo3 = { version = "0.20", features = ["extension-module"] }
-numpy = "0.20"
+pyo3 = { version = "0.21", features = ["extension-module"] }
+numpy = "0.21"
 ndarray = "0.15.3"
-pythonize = "0.20"
+pythonize = "0.21"
 serde = "1.0.171"
 
 [dependencies.sqlparser]
