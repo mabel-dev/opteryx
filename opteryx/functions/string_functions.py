@@ -308,3 +308,41 @@ def levenshtein(a, b):
 
     # Use zip to iterate over pairs of elements from a and b
     return [lev(value_a, value_b) for value_a, value_b in zip(a_list, b_list)]
+
+
+def match_against(arr, val):
+    """
+    This is a PoV implementation
+    This builds the index during execution which is very slow
+
+    This is using the vector index for COSINE SIMILARITY as a
+    bloom filter. If we get to a point when this is prebuilt for
+    the similarity searches, we will benefit here as then it's just
+    the bloom filter match.
+
+    Because bloom filters are probabilistic, we also do a setwise
+    match, but we should avoid needing to do that 99% of the time
+    for false positives (we have a 1024 slot bloom filter with
+    2 indexes)
+    """
+
+    from opteryx.compiled.functions import possible_match_indices
+    from opteryx.compiled.functions import tokenize_and_remove_punctuation
+    from opteryx.compiled.functions import vectorize
+    from opteryx.virtual_datasets.stop_words import STOP_WORDS
+
+    if len(val) == 0:
+        return []
+    tokenized_literal = tokenize_and_remove_punctuation(str(val[0]), STOP_WORDS)
+    literal_offsets = numpy.nonzero(vectorize(tokenized_literal))[0].astype(numpy.uint16)
+
+    if len(tokenized_literal) == 0:
+        return [False] * len(arr)
+
+    tokenized_strings = (tokenize_and_remove_punctuation(s, STOP_WORDS) for s in arr)
+
+    return [
+        possible_match_indices(literal_offsets, vectorize(tok))
+        and set(tokenized_literal).issubset(tok)
+        for tok in tokenized_strings
+    ]

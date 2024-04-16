@@ -24,7 +24,6 @@ from pyarrow import ArrowNotImplementedError
 from pyarrow import compute
 
 import opteryx
-from opteryx.compiled.functions import array_encode_utf8
 from opteryx.exceptions import FunctionNotFoundError
 from opteryx.exceptions import IncorrectTypeError
 from opteryx.exceptions import UnsupportedSyntaxError
@@ -33,6 +32,11 @@ from opteryx.functions import number_functions
 from opteryx.functions import other_functions
 from opteryx.functions import string_functions
 from opteryx.utils import dates
+
+
+def array_encode_utf8(arr):
+    # this is not the fastest way to do this, orso has a Cython method
+    return [None if s is None else s.encode() for s in arr]
 
 
 def _get(array, key):
@@ -313,6 +317,7 @@ FUNCTIONS = {
     "RTRIM": string_functions.rtrim,
     "LEVENSHTEIN": string_functions.levenshtein,
     "SPLIT": string_functions.split,
+    "MATCH_AGAINST": string_functions.match_against,
 
     # HASHING & ENCODING
     "HASH": _iterate_single_parameter(lambda x: hex(CityHash64(str(x)))[2:]),
@@ -349,6 +354,9 @@ FUNCTIONS = {
 #    "GENERATE_SERIES": series.generate_series,
     "NULLIF": other_functions.null_if,
     "CASE": select_values, #other_functions.case_when,
+
+    # Vector
+    "COSINE_SIMILARITY": other_functions.cosine_similarity,
 
     # NUMERIC
     "ROUND": number_functions.round,

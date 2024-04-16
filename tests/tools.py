@@ -435,6 +435,12 @@ def create_duck_db():
 
     conn = duckdb.connect(database="planets.duckdb")
     cur = conn.cursor()
-    res = cur.execute(CREATE_DATABASE)
-    res.commit()
-    cur.close()
+    res = None
+    try:
+        res = cur.execute(CREATE_DATABASE)
+    except:
+        return -1
+    finally:
+        if res is not None:
+            res.commit()
+        cur.close()

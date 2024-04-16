@@ -16,6 +16,7 @@ import pyarrow
 
 from opteryx.connectors.arrow_connector import ArrowConnector
 from opteryx.connectors.aws_s3_connector import AwsS3Connector
+from opteryx.connectors.cql_connector import CqlConnector
 from opteryx.connectors.disk_connector import DiskConnector
 from opteryx.connectors.gcp_cloudstorage_connector import GcpCloudStorageConnector
 from opteryx.connectors.gcp_firestore_connector import GcpFireStoreConnector
@@ -29,6 +30,7 @@ _storage_prefixes = {"information_schema": "InformationSchema"}
 __all__ = (
     "ArrowConnector",
     "AwsS3Connector",
+    "CqlConnector",
     "DiskConnector",
     "GcpCloudStorageConnector",
     "GcpFireStoreConnector",

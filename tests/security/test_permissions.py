@@ -71,6 +71,18 @@ def test_security_permissions_validation():
         opteryx.query("SELECT * FROM $planets", permissions={"Query", "Select"}).arrow()
 
 
+def test_security_permissions_invalid_values():
+    with pytest.raises(opteryx.exceptions.ProgrammingError):
+        # invalid permission
+        opteryx.query("SELECT * FROM $planets", permissions=[1]).arrow()
+    with pytest.raises(opteryx.exceptions.ProgrammingError):
+        # invalid permission
+        opteryx.query("SELECT * FROM $planets", memberships=[1]).arrow()
+    with pytest.raises(opteryx.exceptions.ProgrammingError):
+        # invalid permission
+        opteryx.query("SELECT * FROM $planets", user=1).arrow()
+
+
 if __name__ == "__main__":  # pragma: no cover
     from tests.tools import run_tests
 

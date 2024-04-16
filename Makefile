@@ -29,7 +29,8 @@ test:
 
 mypy:
 	clear
-	mypy --ignore-missing-imports --python-version 3.10 --no-strict-optional --check-untyped-defs opteryx
+	python -m pip install --upgrade mypy
+	python -m mypy --ignore-missing-imports --python-version 3.10 --no-strict-optional --check-untyped-defs opteryx
 
 coverage:
 	clear

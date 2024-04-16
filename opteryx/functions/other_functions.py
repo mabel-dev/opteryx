@@ -143,3 +143,53 @@ def case_when(conditions, values):
         else:
             res.append(None)
     return res
+
+
+def cosine_similarity(arr, val):
+    """
+    ad hoc cosine similarity function, slow.
+    """
+    import re
+    import string
+
+    from opteryx.compiled.functions import tokenize_and_remove_punctuation
+    from opteryx.compiled.functions import vectorize
+    from opteryx.virtual_datasets.stop_words import STOP_WORDS
+
+    # Compile a regular expression pattern that matches any punctuation
+    punctuation_pattern = re.compile(r"[{}]".format(re.escape(string.punctuation)))
+
+    def cosine_similarity(
+        vec1: numpy.ndarray, vec2: numpy.ndarray, vec2_norm: numpy.float32
+    ) -> float:
+        vec1 = vec1.astype(numpy.float32)
+        return numpy.dot(vec1, vec2) / (numpy.linalg.norm(vec1) * vec2_norm)
+
+    # import time
+
+    if len(val) == 0:
+        return []
+    tokenized_literal = list(tokenize_and_remove_punctuation(str(val[0]), STOP_WORDS))
+    if len(tokenized_literal) == 0:
+        return []
+    # print(len(val))
+
+    # t = time.monotonic_ns()
+    tokenized_strings = [tokenize_and_remove_punctuation(s, STOP_WORDS) for s in arr] + [
+        tokenized_literal
+    ]
+    # print("time tokenizing ", time.monotonic_ns() - t)
+    # t = time.monotonic_ns()
+    vectors = [vectorize(tokens) for tokens in tokenized_strings]
+    # print("time vectorizing", time.monotonic_ns() - t)
+    comparison_vector = vectors[-1].astype(numpy.float32)
+    comparison_vector_norm = numpy.linalg.norm(comparison_vector)
+
+    # t = time.monotonic_ns()
+    similarities = [
+        cosine_similarity(vector, comparison_vector, comparison_vector_norm)
+        for vector in vectors[:-1]
+    ]
+    # print("time comparing  ", time.monotonic_ns() - t)
+
+    return similarities

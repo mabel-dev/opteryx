@@ -39,6 +39,8 @@ WELL_KNOWN_DATASETS = {
     "$variables": (virtual_datasets.variables, True),
     "$derived": (virtual_datasets.derived, False),
     "$no_table": (virtual_datasets.no_table, False),
+    "$stop_words": (virtual_datasets.stop_words, True),
+    "$user": (virtual_datasets.user, True),
 }
 
 

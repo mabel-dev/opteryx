@@ -32,7 +32,11 @@ test_cases = [
 
 
 def test_duckdb_storage():
-    create_duck_db()
+    # We have some problems with creating duckdb, particularly in GitHub Actions
+    # we're going to brute force.
+    for i in range(5):
+        if create_duck_db() is None:
+            break
 
     opteryx.register_store(
         "duckdb",
@@ -55,7 +59,11 @@ def test_duckdb_storage():
 def test_duckdb_battery():
     from opteryx.utils.formatter import format_sql
 
-    create_duck_db()
+    # We have some problems with creating duckdb, particularly in GitHub Actions
+    # we're going to brute force.
+    for i in range(5):
+        if create_duck_db() is None:
+            break
 
     opteryx.register_store(
         "duckdb",

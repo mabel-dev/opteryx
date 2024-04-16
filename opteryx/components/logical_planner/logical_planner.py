@@ -729,8 +729,6 @@ def create_node_relation(relation):
 
 def analyze_query(statement) -> LogicalPlan:
 
-    print(statement)
-
     root_node = "Analyze"
     plan = LogicalPlan()
 

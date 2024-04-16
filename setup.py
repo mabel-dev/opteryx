@@ -92,13 +92,8 @@ extensions = [
         extra_compile_args=COMPILE_FLAGS + ["-std=c++11"],
     ),
     Extension(
-        name="bloom_filter",
-        sources=["opteryx/compiled/bloom_filter/bloom_filter.pyx"],
-        extra_compile_args=COMPILE_FLAGS,
-    ),
-    Extension(
-        name="varchar_array",
-        sources=["opteryx/compiled/functions/varchar_array.pyx"],
+        name="vectors",
+        sources=["opteryx/compiled/functions/vectors.pyx"],
         include_dirs=[numpy.get_include()],
         language="c++",
         extra_compile_args=COMPILE_FLAGS + ["-std=c++11"],

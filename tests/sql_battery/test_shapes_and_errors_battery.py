@@ -81,8 +81,9 @@ STATEMENTS = [
         ("SELECT * FROM $astronauts", 357, 19, None),
         ("SELECT * FROM $no_table", 1, 1, None),
         ("SELECT * FROM sqlite.planets", 9, 20, None),
-        ("SELECT * FROM $variables", 41, 4, None),
+        ("SELECT * FROM $variables", 42, 4, None),
         ("SELECT * FROM $missions", 4630, 8, None),
+        ("SELECT * FROM $stop_words", 305, 1, None),
         (b"SELECT * FROM $satellites", 177, 8, None),
 
         # Does the error tester work
@@ -847,6 +848,8 @@ STATEMENTS = [
         ("SELECT P_1.* FROM $planets AS P_1 INNER JOIN $planets AS P_2 USING (id, name)", 9, 20, None),
         ("SELECT * FROM $satellites AS P_1 INNER JOIN $satellites AS P_2 USING (id, name)", 177, 14, None),
 
+        ("SELECT * FROM $missions WHERE COSINE_SIMILARITY(Location, 'LC-18A, Cape Canaveral AFS, Florida, USA') > 0.7", 658, 8, None),
+
         ("SELECT DISTINCT planetId FROM $satellites RIGHT OUTER JOIN $planets ON $satellites.planetId = $planets.id", 8, 1, None),
         ("SELECT DISTINCT planetId FROM $satellites RIGHT JOIN $planets ON $satellites.planetId = $planets.id", 8, 1, None),
         ("SELECT planetId FROM $satellites RIGHT JOIN $planets ON $satellites.planetId = $planets.id", 179, 1, None),
@@ -1195,6 +1198,8 @@ STATEMENTS = [
         ("SELECT VARCHAR(birth_place) FROM $astronauts", 357, 1, None),
         ("SELECT name FROM $astronauts WHERE GET(STRUCT(VARCHAR(birth_place)), 'state') = birth_place['state']", 357, 1, None),
 
+        ("SELECT * FROM $missions WHERE MATCH (Location) AGAINST ('Florida USA')", 911, 8, None),
+
         # 10-way join
         ("SELECT p1.name AS planet1_name, p2.name AS planet2_name, p3.name AS planet3_name, p4.name AS planet4_name, p5.name AS planet5_name, p6.name AS planet6_name, p7.name AS planet7_name, p8.name AS planet8_name, p9.name AS planet9_name, p10.name AS planet10_name, p1.diameter AS planet1_diameter, p2.gravity AS planet2_gravity, p3.orbitalPeriod AS planet3_orbitalPeriod, p4.numberOfMoons AS planet4_numberOfMoons, p5.meanTemperature AS planet5_meanTemperature FROM $planets p1 JOIN $planets p2 ON p1.id = p2.id JOIN $planets p3 ON p1.id = p3.id JOIN $planets p4 ON p1.id = p4.id JOIN $planets p5 ON p1.id = p5.id JOIN $planets p6 ON p1.id = p6.id JOIN $planets p7 ON p1.id = p7.id JOIN $planets p8 ON p1.id = p8.id JOIN $planets p9 ON p1.id = p9.id JOIN $planets p10 ON p1.id = p10.id WHERE p1.diameter > 10000 ORDER BY p1.name, p2.name, p3.name, p4.name, p5.name;", 6, 15, None),
 
@@ -1324,6 +1329,9 @@ STATEMENTS = [
         ("SELECT COUNT(*) FROM $planets WHERE TRUE AND 3 = 2 AND 3 > 2", 1, 1, None),
 
         ("SELECT missions[0] as m FROM $astronauts CROSS JOIN FAKE(1, 1) AS F order by m", 357, 1, None),
+        ("SELECT name[id] as m FROM $planets", None, None, UnsupportedSyntaxError),
+        ("SELECT * FROM $astronauts WHERE LIST_CONTAINS_ANY(missions, @@user_memberships)", 3, 19, None),
+        ("SELECT $missions.* FROM $missions INNER JOIN $user ON Mission = value WHERE attribute = 'membership'", 1, 8, None),
 
         ("EXECUTE PLANETS_BY_ID (id=1)", 1, 20, None),  # simple case
         ("EXECUTE PLANETS_BY_ID (1)", None, None, ParameterError),  # simple case)
@@ -1557,7 +1565,7 @@ def test_sql_battery(statement, rows, columns, exception):
 
     try:
         # query to arrow is the fastest way to query
-        result = opteryx.query_to_arrow(statement)
+        result = opteryx.query_to_arrow(statement, memberships=["Apollo 11"])
         actual_rows, actual_columns = result.shape
         assert (
             rows == actual_rows

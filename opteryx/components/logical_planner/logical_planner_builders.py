@@ -269,13 +269,16 @@ def expressions(branch, alias: Optional[List[str]] = None, key=None):
 
 def extract(branch, alias: Optional[List[str]] = None, key=None):
     # EXTRACT(part FROM timestamp)
-    datepart = Node(NodeType.LITERAL, type=OrsoTypes.VARCHAR, value=branch["field"])
-    value = build(branch["expr"])
+    datepart_value = branch["field"]
+    if isinstance(datepart_value, dict):
+        datepart_value = list(datepart_value)[0]
+    datepart = Node(NodeType.LITERAL, type=OrsoTypes.VARCHAR, value=datepart_value)
+    identifier = build(branch["expr"])
 
     return Node(
         NodeType.FUNCTION,
         value="DATEPART",
-        parameters=[datepart, value],
+        parameters=[datepart, identifier],
         alias=alias,
     )
 
@@ -522,13 +525,11 @@ def map_access(branch, alias: Optional[List[str]] = None, key=None):
     # Identifier[key] -> GET(Identifier, key)
 
     identifier_node = build(branch["column"])  # ["Identifier"]["value"]
-    key_dict = branch["keys"][0]["Value"]
-    if "SingleQuotedString" in key_dict:
-        key = key_dict["SingleQuotedString"]
-        key_node = Node(NodeType.LITERAL, type=OrsoTypes.VARCHAR, value=key)
-    if "Number" in key_dict:
-        key = int(key_dict["Number"][0])
-        key_node = Node(NodeType.LITERAL, type=OrsoTypes.INTEGER, value=key)
+    # key_dict = branch["keys"][0]["key"]["Value"]
+    key_node = build(branch["keys"][0]["key"])
+
+    if key_node.node_type != NodeType.LITERAL:
+        raise UnsupportedSyntaxError("Subscript values must be literals")
 
     return Node(
         NodeType.FUNCTION,
@@ -536,6 +537,20 @@ def map_access(branch, alias: Optional[List[str]] = None, key=None):
         parameters=[identifier_node, key_node],
         alias=alias
         or f"{identifier_node.current_name}[{repr(key) if isinstance(key, str) else key}]",
+    )
+
+
+def match_against(branch, alias: Optional[List[str]] = None, key=None):
+
+    columns = [identifier(col) for col in branch["columns"]]
+    match_to = build(branch["match_value"])
+    mode = branch["opt_search_modifier"]
+
+    return Node(
+        NodeType.FUNCTION,
+        value="MATCH_AGAINST",
+        parameters=[columns[0], match_to],
+        alias=alias or f"MATCH ({columns[0].value}) AGAINST ({match_to.value})",
     )
 
 
@@ -782,6 +797,7 @@ BUILDERS = {
     "JsonAccess": json_access,
     "Like": pattern_match,
     "MapAccess": map_access,
+    "MatchAgainst": match_against,
     "Nested": nested,
     "Null": literal_null,
     "Number": literal_number,

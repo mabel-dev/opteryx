@@ -173,3 +173,4 @@ planets.duckdb
 charts.csv
 testdata/tpch/**/**.parquet
 **.cpp
+secure-connect.zip
