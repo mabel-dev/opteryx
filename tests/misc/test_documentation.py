@@ -226,6 +226,35 @@ def test_role_based_permissions():
     assert perms == {"Query", "Execute", "Analyze"}
 
 
+def test_membership_permissions():
+    import opteryx
+
+    conn = opteryx.connect(memberships=["Apollo 11"])
+    curr = conn.cursor()
+
+    # the missions field is an ARRAY
+    curr.execute("SELECT * FROM $astronauts WHERE ARRAY_CONTAINS_ANY(missions, @@user_memberships)")
+    assert curr.rowcount == 3
+
+    res = opteryx.query(
+        "SELECT * FROM $astronauts WHERE ARRAY_CONTAINS_ANY(missions, @@user_memberships)",
+        memberships=["Apollo 11"],
+    )
+    assert res.rowcount == 3
+
+    curr = conn.cursor()
+    curr.execute(
+        "SELECT $missions.* FROM $missions INNER JOIN $user ON Mission = value WHERE attribute = 'membership'"
+    )
+    assert curr.rowcount == 1
+
+    res = opteryx.query(
+        "SELECT $missions.* FROM $missions INNER JOIN $user ON Mission = value WHERE attribute = 'membership'",
+        memberships=["Apollo 11"],
+    )
+    assert res.rowcount == 1
+
+
 if __name__ == "__main__":  # pragma: no cover
     from tests.tools import run_tests
 

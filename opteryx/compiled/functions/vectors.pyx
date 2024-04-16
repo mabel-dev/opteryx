@@ -15,6 +15,128 @@ from cpython.bytes cimport PyBytes_AsString
 cdef double GOLDEN_RATIO_APPROX = 1.618033988749895
 cdef uint32_t VECTOR_SIZE = 1024
 
+cdef dict irregular_lemmas = {
+    b'are': b'is',
+    b'arose': b'arise',
+    b'awoke': b'awake',
+    b'was': b'be',
+    b'were': b'be',
+    b'born': b'bear',
+    b'bore': b'bear',
+    b'be': b'is',
+    b'became': b'become',
+    b'began': b'begin',
+    b'bent': b'bend',
+    b'best': b'good',
+    b'better': b'good',
+    b'bit': b'bite',
+    b'bled': b'bleed',
+    b'blew': b'blow',
+    b'broke': b'break',
+    b'bred': b'breed',
+    b'brought': b'bring',
+    b'built': b'build',
+    b'burnt': b'burn',
+    b'burst': b'burst',
+    b'bought': b'buy',
+    b'caught': b'catch',
+    b'chose': b'choose',
+    b'clung': b'cling',
+    b'came': b'come',
+    b'crept': b'creep',
+    b'dealt': b'deal',
+    b'dug': b'dig',
+    b'did': b'do',
+    b'done': b'do',
+    b'drew': b'draw',
+    b'drank': b'drink',
+    b'drove': b'drive',
+    b'ate': b'eat',
+    b'famous': b'famous',
+    b'fell': b'fall',
+    b'fed': b'feed',
+    b'felt': b'feel',
+    b'fought': b'fight',
+    b'found': b'find',
+    b'fled': b'flee',
+    b'flung': b'fling',
+    b'flew': b'fly',
+    b'forbade': b'forbid',
+    b'forgot': b'forget',
+    b'forgave': b'forgive',
+    b'froze': b'freeze',
+    b'got': b'get',
+    b'gave': b'give',
+    b'went': b'go',
+    b'grew': b'grow',
+    b'had': b'have',
+    b'heard': b'hear',
+    b'hid': b'hide',
+    b'his': b'his',
+    b'held': b'hold',
+    b'kept': b'keep',
+    b'knew': b'know',
+    b'knelt': b'kneel',
+    b'knew': b'know',
+    b'led': b'lead',
+    b'leapt': b'leap',
+    b'learnt': b'learn',
+    b'left': b'leave',
+    b'lent': b'lend',
+    b'lay': b'lie',
+    b'lit': b'light',
+    b'lost': b'lose',
+    b'made': b'make',
+    b'meant': b'mean',
+    b'met': b'meet',
+    b'men': b'man',
+    b'paid': b'pay',
+    b'people': b'person',
+    b'rode': b'ride',
+    b'rang': b'ring',
+    b'rose': b'rise',
+    b'ran': b'run',
+    b'said': b'say',
+    b'saw': b'see',
+    b'sold': b'sell',
+    b'sent': b'send',
+    b'shone': b'shine',
+    b'shot': b'shoot',
+    b'showed': b'show',
+    b'sang': b'sing',
+    b'sank': b'sink',
+    b'sat': b'sit',
+    b'slept': b'sleep',
+    b'spoke': b'speak',
+    b'spent': b'spend',
+    b'spun': b'spin',
+    b'stood': b'stand',
+    b'stole': b'steal',
+    b'stuck': b'stick',
+    b'strove': b'strive',
+    b'sung': b'sing',
+    b'swore': b'swear',
+    b'swept': b'sweep',
+    b'swam': b'swim',
+    b'swung': b'swing',
+    b'took': b'take',
+    b'taught': b'teach',
+    b'tore': b'tear',
+    b'told': b'tell',
+    b'thought': b'think',
+    b'threw': b'throw',
+    b'trod': b'tread',
+    b'understood': b'understand',
+    b'went': b'go',
+    b'woke': b'wake',
+    b'wore': b'wear',
+    b'won': b'win',
+    b'wove': b'weave',
+    b'wept': b'weep',
+    b'would': b'will',
+    b'wrote': b'write'
+}
+
 cdef inline uint16_t djb2_hash(char* byte_array, uint64_t length) nogil:
     """
     Hashes a byte array using the djb2 algorithm, designed to be called without
@@ -126,21 +248,73 @@ cpdef list tokenize_and_remove_punctuation(str text, set stop_words):
             i = 0
             j = 0
             while token[i] != 0:
-                if 97 <= token[i] <= 122:
+                if 97 <= token[i] <= 122 or 48 <= token[i] <= 57:
                     word[j] = token[i]
                     j += 1
                 elif 65 <= token[i] <= 90:
                     # Convert to lowercase if it's uppercase
                     word[j] = token[i] + 32
                     j += 1
+                elif token[i] == 45 and j > 0:
+                    word[j] = token[i]
+                    j += 1
                 i += 1
             word[j] = 0
             if j > 1:
-                if word not in stop_words:
-                    tokens.append(word)
+                if word in irregular_lemmas:
+                    lemma = strdup(irregular_lemmas[word])
+                else:
+                    # Perform lemmatization
+                    lemma = lemmatize(word, j)
+
+                # Append the lemma if it's not a stop word
+                if lemma not in stop_words:
+                    tokens.append(lemma)
+
             free(word)
             token = strtok(NULL, " ")
     finally:
         free(c_text)
 
     return tokens
+
+
+from libc.string cimport strlen, strncmp, strcpy, strcat
+
+
+from libc.string cimport strlen, strncmp
+
+cpdef inline bytes lemmatize(char* word, int word_len):
+
+    # Check 'ing' suffix
+    if word_len > 5 and strncmp(word + word_len - 3, b"ing", 3) == 0:
+        if word[word_len - 4] == word[word_len - 5]:  # Double consonant
+            return word[:word_len - 4]
+        return word[:word_len - 3]
+
+    # Check 'ed' suffix
+    if word_len > 4 and strncmp(word + word_len - 2, b"ed", 2) == 0:
+        if word[word_len - 3] == word[word_len - 4]:
+            return word[:word_len - 3]
+        return word[:word_len - 2]
+
+    # Check 'ly' suffix
+    if word_len > 5 and strncmp(word + word_len - 2, b"ly", 2) == 0:
+        if word[word_len - 3] == word[word_len - 4]:
+            return word[:word_len - 3]
+        return word[:word_len - 2]
+
+    # Check 'ation' suffix
+    if word_len > 8 and strncmp(word + word_len - 5, b"ation", 5) == 0:
+        return word[:word_len - 5] + b'e'
+
+    # Check 'ment' suffix
+    if word_len > 8 and strncmp(word + word_len - 4, b"ation", 4) == 0:
+        return word[:word_len - 4]
+
+    # Check 's' suffix
+    if word_len > 2 and strncmp(word + word_len - 1, b"s", 1) == 0:
+        return word[:word_len - 1]
+
+    return word  # Return the original if no suffix matches
+
