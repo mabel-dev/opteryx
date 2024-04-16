@@ -149,29 +149,30 @@ def cosine_similarity(arr, val):
     """
     ad hoc cosine similarity function, slow.
     """
-    import re
-    import string
 
     from opteryx.compiled.functions import tokenize_and_remove_punctuation
     from opteryx.compiled.functions import vectorize
     from opteryx.virtual_datasets.stop_words import STOP_WORDS
 
-    # Compile a regular expression pattern that matches any punctuation
-    punctuation_pattern = re.compile(r"[{}]".format(re.escape(string.punctuation)))
-
     def cosine_similarity(
         vec1: numpy.ndarray, vec2: numpy.ndarray, vec2_norm: numpy.float32
     ) -> float:
         vec1 = vec1.astype(numpy.float32)
-        return numpy.dot(vec1, vec2) / (numpy.linalg.norm(vec1) * vec2_norm)
+        vec1_norm = numpy.linalg.norm(vec1)
+
+        product = vec1_norm * vec2_norm
+        if product == 0:
+            return 0
+
+        return numpy.dot(vec1, vec2) / product
 
     # import time
 
     if len(val) == 0:
         return []
-    tokenized_literal = list(tokenize_and_remove_punctuation(str(val[0]), STOP_WORDS))
+    tokenized_literal = tokenize_and_remove_punctuation(str(val[0]), STOP_WORDS)
     if len(tokenized_literal) == 0:
-        return []
+        return [0.0] * len(arr)
     # print(len(val))
 
     # t = time.monotonic_ns()
@@ -184,6 +185,9 @@ def cosine_similarity(arr, val):
     # print("time vectorizing", time.monotonic_ns() - t)
     comparison_vector = vectors[-1].astype(numpy.float32)
     comparison_vector_norm = numpy.linalg.norm(comparison_vector)
+
+    if comparison_vector_norm == 0.0:
+        return [0.0] * len(val)
 
     # t = time.monotonic_ns()
     similarities = [
