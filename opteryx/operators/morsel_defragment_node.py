@@ -72,7 +72,7 @@ class MorselDefragmentNode(BasePlanNode):
                 start = time.monotonic_ns()
                 # add what we've collected before to the table
                 if collected_rows:  # pragma: no cover
-                    self.statistics.chunk_merges += 1
+                    self.statistics.morsel_merges += 1
                     morsel = pyarrow.concat_tables([collected_rows, morsel], promote_options="none")
                     collected_rows = None
                 self.statistics.time_defragmenting += time.monotonic_ns() - start
@@ -93,7 +93,7 @@ class MorselDefragmentNode(BasePlanNode):
                         int(MORSEL_SIZE_BYTES / average_record_size), MORSEL_SIZE_COUNT
                     )
                     row_counter += new_row_count
-                    self.statistics.chunk_splits += 1
+                    self.statistics.morsel_splits += 1
                     new_morsel = morsel.slice(offset=0, length=new_row_count)
                     at_least_one_morsel = True
                     collected_rows = morsel.slice(offset=new_row_count)

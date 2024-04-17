@@ -77,7 +77,9 @@ class AwsS3Connector(BaseConnector, Cacheable, Partitionable):
             blob for blob in blobs if ("." + blob.split(".")[-1].lower()) in VALID_EXTENSIONS
         )
 
-    def read_dataset(self, columns: list = None, **kwargs) -> pyarrow.Table:
+    def read_dataset(
+        self, columns: list = None, just_schema: bool = False, **kwargs
+    ) -> pyarrow.Table:
         blob_names = self.partition_scheme.get_blobs_in_partition(
             start_date=self.start_date,
             end_date=self.end_date,
@@ -95,7 +97,11 @@ class AwsS3Connector(BaseConnector, Cacheable, Partitionable):
             try:
                 decoder = get_decoder(blob_name)
                 blob_bytes = self.read_blob(blob_name=blob_name, statistics=self.statistics)
-                yield decoder(blob_bytes, projection=columns)
+                decoded = decoder(blob_bytes, projection=columns, just_schema=just_schema)
+                if not just_schema:
+                    num_rows, num_columns, decoded = decoded
+                    self.statistics.rows_seen += num_rows
+                yield decoded
             except UnsupportedFileTypeError:
                 pass
 
@@ -106,18 +112,10 @@ class AwsS3Connector(BaseConnector, Cacheable, Partitionable):
             return self.schema
 
         # Read first blob for schema inference and cache it
-        record = next(self.read_dataset(), None)
-        self.cached_first_blob = record
+        self.schema = next(self.read_dataset(just_schema=True), None)
 
-        if record is None:
+        if self.schema is None:
             raise DatasetNotFoundError(dataset=self.dataset)
-
-        arrow_schema = record.schema
-
-        self.schema = RelationSchema(
-            name=self.dataset,
-            columns=[FlatColumn.from_arrow(field) for field in arrow_schema],
-        )
 
         return self.schema
 

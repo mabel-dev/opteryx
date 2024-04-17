@@ -81,7 +81,11 @@ class FileConnector(BaseConnector, PredicatePushable):
             An iterator containing a single decoded pyarrow.Table.
         """
         self._read_file()
-        return iter([self.decoder(self._byte_array, projection=columns, selection=predicates)])
+        num_rows, num_columns, decoded = self.decoder(
+            self._byte_array, projection=columns, selection=predicates
+        )
+        self.statistics.rows_seen += num_rows
+        yield decoded
 
     def get_dataset_schema(self) -> RelationSchema:
         """

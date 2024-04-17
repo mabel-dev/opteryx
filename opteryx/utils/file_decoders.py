@@ -135,9 +135,9 @@ def parquet_decoder(buffer, projection: List = None, selection=None, just_schema
     else:
         stream = io.BytesIO(buffer)
 
+    # Open the parquet file only once
+    parquet_file = parquet.ParquetFile(stream)
     if projection or just_schema:
-        # Open the parquet file only once
-        parquet_file = parquet.ParquetFile(stream)
 
         # Return just the schema if that's all that's needed
         if just_schema:
@@ -161,8 +161,12 @@ def parquet_decoder(buffer, projection: List = None, selection=None, just_schema
     if selection:
         table = filter_records(selection, table)
     if projection == []:
-        return pyarrow.Table.from_pydict({"_": numpy.full(table.num_rows, True, dtype=numpy.bool_)})
-    return table
+        return (
+            parquet_file.metadata.num_rows,
+            parquet_file.metadata.num_columns,
+            pyarrow.Table.from_pydict({"_": numpy.full(table.num_rows, True, dtype=numpy.bool_)}),
+        )
+    return (parquet_file.metadata.num_rows, parquet_file.metadata.num_columns, table)
 
 
 def orc_decoder(buffer, projection: List = None, selection=None, just_schema: bool = False):
@@ -183,11 +187,12 @@ def orc_decoder(buffer, projection: List = None, selection=None, just_schema: bo
         return convert_arrow_schema_to_orso_schema(orc_schema)
 
     table = orc_file.read()
+    full_shape = table.shape
     if selection:
         table = filter_records(selection, table)
     if projection:
         table = post_read_projector(table, projection)
-    return table
+    return *full_shape, table
 
 
 def jsonl_decoder(buffer, projection: List = None, selection=None, just_schema: bool = False):
@@ -206,12 +211,13 @@ def jsonl_decoder(buffer, projection: List = None, selection=None, just_schema: 
     if just_schema:
         return convert_arrow_schema_to_orso_schema(schema)
 
+    full_shape = table.shape
     if selection:
         table = filter_records(selection, table)
     if projection:
         table = post_read_projector(table, projection)
 
-    return table
+    return *full_shape, table
 
 
 def csv_decoder(
@@ -231,12 +237,13 @@ def csv_decoder(
     if just_schema:
         return convert_arrow_schema_to_orso_schema(schema)
 
+    full_shape = table.shape
     if selection:
         table = filter_records(selection, table)
     if projection:
         table = post_read_projector(table, projection)
 
-    return table
+    return *full_shape, table
 
 
 def tsv_decoder(buffer, projection: List = None, selection=None, just_schema: bool = False):
@@ -262,12 +269,13 @@ def arrow_decoder(buffer, projection: List = None, selection=None, just_schema: 
     if just_schema:
         return convert_arrow_schema_to_orso_schema(schema)
 
+    full_shape = table.shape
     if selection:
         table = filter_records(selection, table)
     if projection:
         table = post_read_projector(table, projection)
 
-    return table
+    return *full_shape, table
 
 
 def avro_decoder(buffer, projection: List = None, selection=None, just_schema: bool = False):
@@ -293,12 +301,13 @@ def avro_decoder(buffer, projection: List = None, selection=None, just_schema: b
     if just_schema:
         return convert_arrow_schema_to_orso_schema(schema)
 
+    full_shape = table.shape
     if selection:
         table = filter_records(selection, table)
     if projection:
         table = post_read_projector(table, projection)
 
-    return table
+    return *full_shape, table
 
 
 def ipc_decoder(buffer, projection: List = None, selection=None, just_schema: bool = False):
@@ -323,12 +332,13 @@ def ipc_decoder(buffer, projection: List = None, selection=None, just_schema: bo
         return convert_arrow_schema_to_orso_schema(schema)
 
     table = pyarrow.Table.from_batches([batch for batch in chain([batch_one], reader)])
+    full_shape = table.shape
     if selection:
         table = filter_records(selection, table)
     if projection:
         table = post_read_projector(table, projection)
 
-    return table
+    return *full_shape, table
 
 
 # for types we know about, set up how we handle them

@@ -120,7 +120,9 @@ class GcpCloudStorageConnector(BaseConnector, Cacheable, Partitionable, Predicat
         if response.status_code != 200:
             raise DatasetReadError(f"Unable to read '{blob_name}' - {response.status_code}")
 
-        return response.content
+        content = response.content
+        self.statistics.bytes_read += len(content)
+        return content
 
     @single_item_cache
     def get_list_of_blob_names(self, *, prefix: str) -> List[str]:
@@ -172,9 +174,13 @@ class GcpCloudStorageConnector(BaseConnector, Cacheable, Partitionable, Predicat
             try:
                 decoder = get_decoder(blob_name)
                 blob_bytes = self.read_blob(blob_name=blob_name, statistics=self.statistics)
-                yield decoder(
+                decoded = decoder(
                     blob_bytes, projection=columns, selection=predicates, just_schema=just_schema
                 )
+                if not just_schema:
+                    num_rows, num_columns, decoded = decoded
+                    self.statistics.rows_seen += num_rows
+                yield decoded
             except UnsupportedFileTypeError:  # pragma: no cover
                 pass
 

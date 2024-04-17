@@ -174,7 +174,9 @@ class SqlConnector(BaseConnector, PredicatePushable):
             )
 
             while True:
+                t = time.monotonic_ns()
                 batch_rows = result.fetchmany(self.chunk_size)
+                self.statistics.time_waiting_sql = time.monotonic_ns() - t
                 if not batch_rows:
                     break
 

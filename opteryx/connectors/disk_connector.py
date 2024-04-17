@@ -91,7 +91,9 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable, PredicatePushable):
         """
         file_descriptor = os.open(blob_name, os.O_RDONLY | os.O_BINARY)
         try:
-            return os.read(file_descriptor, os.path.getsize(blob_name))
+            size = os.path.getsize(blob_name)
+            self.statistics.bytes_read += size
+            return os.read(file_descriptor, size)
         finally:
             os.close(file_descriptor)
 
@@ -134,9 +136,13 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable, PredicatePushable):
             try:
                 decoder = get_decoder(blob_name)
                 blob_bytes = self.read_blob(blob_name=blob_name, statistics=self.statistics)
-                yield decoder(
+                decoded = decoder(
                     blob_bytes, projection=columns, selection=predicates, just_schema=just_schema
                 )
+                if not just_schema:
+                    num_rows, num_columns, decoded = decoded
+                    self.statistics.rows_seen += num_rows
+                yield decoded
             except UnsupportedFileTypeError:
                 pass  # Skip unsupported file types
             except pyarrow.ArrowInvalid:
