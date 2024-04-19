@@ -40,9 +40,10 @@ def _add_condition(existing_condition, new_condition):
 
 def _rewrite_predicate(predicate):
     """
-    Rewrite individual predicates
+    Rewrite individual predicates to forms able to push to more places
     """
     if predicate.value in LIKE_REWRITES:
+        # LIKE conditions with no wildcards => Eq
         if (
             predicate.right.node_type == NodeType.LITERAL
             and "%" not in predicate.right.value
@@ -51,6 +52,7 @@ def _rewrite_predicate(predicate):
             predicate.value = LIKE_REWRITES[predicate.value]
             return predicate
     if predicate.value in IN_REWRITES:
+        # IN conditions on single values => Eq
         if predicate.right.node_type == NodeType.LITERAL and len(predicate.right.value) == 1:
             predicate.value = IN_REWRITES[predicate.value]
             predicate.right.value = predicate.right.value.pop()
@@ -156,11 +158,24 @@ class PredicatePushdownStrategy(OptimizationStrategy):
                 elif node.type == "cross join" and node.unnest_column:
                     # if it's a CROSS JOIN UNNEST - don't try to push any further
                     # IMPROVE: we should push everything that doesn't reference the unnested column
+                    # don't push filters we can't resolve here though
+                    remaining_predicates = []
                     for predicate in context.collected_predicates:
-                        context.optimized_plan.insert_node_after(
-                            predicate.nid, predicate, context.node_id
-                        )
-                    context.collected_predicates = []
+                        known_columns = set(col.schema_column.identity for col in predicate.columns)
+                        query_columns = {
+                            predicate.condition.left.schema_column.identity,
+                            predicate.condition.right.schema_column.identity,
+                        }
+                        if (
+                            query_columns == (known_columns)
+                            or node.unnest_target.identity in query_columns
+                        ):
+                            context.optimized_plan.insert_node_after(
+                                predicate.nid, predicate, context.node_id
+                            )
+                        else:
+                            remaining_predicates.append(predicate)
+                    context.collected_predicates = remaining_predicates
                 elif node.type in ("cross join",):  # , "inner"):
                     # IMPROVE: add predicates to INNER JOIN conditions
                     # we may be able to rewrite as an inner join

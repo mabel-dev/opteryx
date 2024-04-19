@@ -73,9 +73,7 @@ class ConstantFoldingStrategy(OptimizationStrategy):
     def visit(self, node: LogicalPlanNode, context: OptimizerContext) -> OptimizerContext:
         """
         Constant Folding is when we precalculate expressions (or sub expressions)
-        which contain only constant or literal or literal values. These don't
-        tend to happen IRL, but it's a simple enough strategy so should be
-        included.
+        which contain only constant or literal values.
         """
         if not context.optimized_plan:
             context.optimized_plan = context.pre_optimized_tree.copy()  # type: ignore

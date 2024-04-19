@@ -298,6 +298,11 @@ def _inner_evaluate(root: Node, table: Table, context: ExecutionContext):
         if node_type == NodeType.EXPRESSION_LIST:
             values = [_inner_evaluate(val, table, context) for val in root.parameters]
             return values
+        from opteryx.exceptions import ColumnNotFoundError
+
+        raise ColumnNotFoundError(
+            message=f"Unable to locate column '{root.source_column}' this is likely due to differences in SELECT and GROUP BY clauses."
+        )
 
 
 def evaluate(expression: Node, table: Table, context: Optional[ExecutionContext] = None):
