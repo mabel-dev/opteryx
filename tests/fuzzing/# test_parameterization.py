@@ -14,7 +14,7 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 import hypothesis.strategies as st
 from hypothesis import given, settings
 
-from opteryx.components.query_planner import QueryPlanner
+from opteryx.planner.query_planner import QueryPlanner
 
 # allows us to run short CI and longer scheduled tests
 TEST_ITERATIONS = int(os.environ.get("TEST_ITERATIONS", 100))

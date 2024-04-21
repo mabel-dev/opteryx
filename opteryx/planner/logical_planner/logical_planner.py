@@ -58,12 +58,12 @@ from typing import Tuple
 from orso.tools import random_string
 from orso.types import OrsoTypes
 
-from opteryx.components.logical_planner import logical_planner_builders
 from opteryx.exceptions import UnsupportedSyntaxError
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import format_expression
 from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.models import Node
+from opteryx.planner.logical_planner import logical_planner_builders
 from opteryx.third_party.travers import Graph
 
 
@@ -128,11 +128,14 @@ class LogicalPlanNode(Node):
             if node_type == LogicalPlanStepType.Filter:
                 return f"FILTER ({format_expression(self.condition)})"
             if node_type == LogicalPlanStepType.Join:
+                filters = ""
+                if self.filters:
+                    filters = f"({self.unnest_alias} IN ({', '.join(self.filters)}))"
                 if self.on:
-                    return f"{self.type.upper()} JOIN ({format_expression(self.on, True)})"
+                    return f"{self.type.upper()} JOIN ({format_expression(self.on, True)}){filters}"
                 if self.using:
-                    return f"{self.type.upper()} JOIN (USING {','.join(map(format_expression, self.using))})"
-                return self.type.upper()
+                    return f"{self.type.upper()} JOIN (USING {','.join(map(format_expression, self.using))}){filters}"
+                return f"{self.type.upper()} {filters}"
             if node_type == LogicalPlanStepType.Limit:
                 limit_str = f"LIMIT ({self.limit})" if self.limit is not None else ""
                 offset_str = f" OFFSET ({self.offset})" if self.offset is not None else ""
@@ -754,10 +757,10 @@ def plan_execute_query(statement) -> LogicalPlan:
 
     import orjson
 
-    from opteryx.components.ast_rewriter import do_ast_rewriter
-    from opteryx.components.logical_planner import do_logical_planning_phase
-    from opteryx.components.sql_rewriter import do_sql_rewrite
     from opteryx.exceptions import SqlError
+    from opteryx.planner.ast_rewriter import do_ast_rewriter
+    from opteryx.planner.logical_planner import do_logical_planning_phase
+    from opteryx.planner.sql_rewriter import do_sql_rewrite
     from opteryx.third_party import sqloxide
     from opteryx.utils import sql
 

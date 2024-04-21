@@ -10,8 +10,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from opteryx.components.logical_planner import LogicalPlan
-from opteryx.components.logical_planner import LogicalPlanNode
+from opteryx.planner.logical_planner import LogicalPlan
+from opteryx.planner.logical_planner import LogicalPlanNode
 
 
 # Context object to carry state

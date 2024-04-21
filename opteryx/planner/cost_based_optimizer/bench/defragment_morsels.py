@@ -13,9 +13,9 @@
 
 from orso.tools import random_string
 
-from opteryx.components.logical_planner import LogicalPlan
-from opteryx.components.logical_planner import LogicalPlanNode
-from opteryx.components.logical_planner import LogicalPlanStepType
+from opteryx.planner.logical_planner import LogicalPlan
+from opteryx.planner.logical_planner import LogicalPlanNode
+from opteryx.planner.logical_planner import LogicalPlanStepType
 
 from .optimization_strategy import HeuristicOptimizerContext
 from .optimization_strategy import OptimizationStrategy

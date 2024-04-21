@@ -20,11 +20,6 @@ from orso.schema import RelationSchema
 from orso.tools import random_string
 from orso.types import OrsoTypes
 
-from opteryx.components.binder.binder import inner_binder
-from opteryx.components.binder.binder import locate_identifier_in_loaded_schemas
-from opteryx.components.binder.binder import merge_schemas
-from opteryx.components.binder.binding_context import BindingContext
-from opteryx.components.logical_planner import LogicalPlan
 from opteryx.exceptions import AmbiguousDatasetError
 from opteryx.exceptions import InvalidFunctionParameterError
 from opteryx.exceptions import UnsupportedSyntaxError
@@ -32,6 +27,11 @@ from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.models import LogicalColumn
 from opteryx.models import Node
+from opteryx.planner.binder.binder import inner_binder
+from opteryx.planner.binder.binder import locate_identifier_in_loaded_schemas
+from opteryx.planner.binder.binder import merge_schemas
+from opteryx.planner.binder.binding_context import BindingContext
+from opteryx.planner.logical_planner import LogicalPlan
 from opteryx.virtual_datasets import derived
 
 CAMEL_TO_SNAKE = re.compile(r"(?<!^)(?=[A-Z])")

@@ -23,7 +23,6 @@ from orso.schema import FunctionColumn
 from orso.schema import RelationSchema
 from orso.types import OrsoTypes
 
-from opteryx.components.binder.operator_map import determine_type
 from opteryx.exceptions import AmbiguousIdentifierError
 from opteryx.exceptions import ColumnNotFoundError
 from opteryx.exceptions import InvalidInternalStateError
@@ -33,6 +32,7 @@ from opteryx.functions import fixed_value_function
 from opteryx.managers.expression import NodeType
 from opteryx.models import Node
 from opteryx.operators.aggregate_node import AGGREGATORS
+from opteryx.planner.binder.operator_map import determine_type
 
 COMBINED_FUNCTIONS = {**FUNCTIONS, **AGGREGATORS}
 
@@ -113,7 +113,7 @@ def locate_identifier(node: Node, context: Any) -> Tuple[Node, Dict]:
         UnexpectedDatasetReferenceError: If the source dataset is not found.
         ColumnNotFoundError: If the column is not found in the schema.
     """
-    from opteryx.components.binder import BindingContext
+    from opteryx.planner.binder import BindingContext
 
     def create_variable_node(node: Node, context: BindingContext) -> Node:
         """Populates a Node object for a variable."""
@@ -318,8 +318,7 @@ def inner_binder(node: Node, context: Any) -> Tuple[Node, Any]:
             node.schema_column = schema_column
         else:
             # fmt:off
-            from opteryx.components.binder.binder_visitor import (
-                get_mismatched_condition_column_types,)
+            from opteryx.planner.binder.binder_visitor import get_mismatched_condition_column_types
 
             # fmt:on
             mismatches = get_mismatched_condition_column_types(node, relaxed=True)

@@ -91,7 +91,7 @@ def test_node_copy_with_node_type():
 
 def test_node_repr():
     """Test __repr__ method output."""
-    from opteryx.components.logical_planner import LogicalPlanStepType
+    from opteryx.planner.logical_planner import LogicalPlanStepType
 
     n = Node(node_type=LogicalPlanStepType.Distinct)
     assert repr(n) == "<Node type=Distinct>", repr(n)

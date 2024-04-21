@@ -11,8 +11,6 @@
 # limitations under the License.
 
 """
-This is Binder, it sits between the Logical Planner and the Optimizers.
-
 ~~~
                       ┌───────────┐
                       │   USER    │
@@ -45,56 +43,65 @@ This is Binder, it sits between the Logical Planner and the Optimizers.
                                          │ Catalogue │
                                          └───────────┘
 ~~~
-
-The Binder is responsible for adding information about the database and engine into the
-Logical Plan.
-
-The binder takes the the logical plan, and adds information from various catalogues
-into that planand then performs some validation checks.
-
-These catalogues include:
-- The Data Catalogue (e.g. data schemas)
-- The Function Catalogue (e.g. function inputs and data types)
-- The Variable Catalogue (i.e. the @ variables)
-
-The Binder performs these activities:
-- schema lookup and propagation (add columns and types, add aliases)
-
+This is written as a Visitor, unlike the binder which is working from the scanners up to
+the projection, this starts at the projection and works toward the scanners. This works well because
+the main activity we're doing is splitting nodes, individual node rewrites, and push downs.
 """
-from opteryx.components.binder.binder_visitor import BinderVisitor
-from opteryx.components.binder.binding_context import BindingContext
-from opteryx.components.logical_planner import LogicalPlan
-from opteryx.exceptions import InvalidInternalStateError
 
 
-def do_bind_phase(plan: LogicalPlan, connection=None, qid: str = None) -> LogicalPlan:
-    """
-    Execute the bind phase of the query engine.
+from opteryx.planner.cost_based_optimizer.strategies import *
+from opteryx.planner.logical_planner import LogicalPlan
 
-    Parameters:
-        plan: Any
-            The logical plan.
-        context: BindingContext
-            The context needed for the binding phase.
+from .strategies.optimization_strategy import OptimizerContext
 
-    Returns:
-        Modified logical plan after the binding phase.
+__all__ = "do_cost_based_optimizer"
 
-    Raises:
-        InvalidInternalStateError: Raised when the logical plan has more than one root node.
-    """
-    binder_visitor = BinderVisitor()
-    root_node = plan.get_exit_points()
-    context = BindingContext.initialize(qid=qid, connection=connection)
 
-    if len(root_node) > 1:
-        raise InvalidInternalStateError(
-            f"{context.qid} - logical plan has {len(root_node)} heads - this is an error"
-        )
+class CostBasedOptimizerVisitor:
+    def __init__(self):
+        self.strategies = [
+            ConstantFoldingStrategy(),
+            BooleanSimplificationStrategy(),
+            SplitConjunctivePredicatesStrategy(),
+            PredicatePushdownStrategy(),
+            ProjectionPushdownStrategy(),
+        ]
 
-    plan, _ = binder_visitor.traverse(plan, root_node[0], context=context)
+    def traverse(self, plan: LogicalPlan, strategy) -> LogicalPlan:
+        """
+        Traverse the logical plan tree and apply optimizations.
 
-    # DEBUG: log ("AFTER BINDING")
-    # DEBUG: log (plan.draw())
+        Args:
+            tree: The logical plan tree to optimize.
 
-    return plan
+        Returns:
+            The optimized logical plan tree.
+        """
+        root_nid = plan.get_exit_points().pop()
+        context = OptimizerContext(plan)
+
+        def _inner(nid, parent_nid, context):
+            node = context.pre_optimized_tree[nid]
+            context.node_id = nid
+            context.parent_nid = parent_nid
+            context = strategy.visit(node, context)
+
+            for child, _, _ in plan.ingoing_edges(nid):
+                _inner(child, nid, context)
+
+        _inner(root_nid, None, context)
+        optimized_plan = strategy.complete(context.optimized_plan, context)
+        return optimized_plan
+
+    def optimize(self, plan: LogicalPlan) -> LogicalPlan:
+        current_plan = plan
+        for strategy in self.strategies:
+            current_plan = self.traverse(current_plan, strategy)
+        # DEBUG: log ("AFTER COST OPTIMIZATION")
+        # DEBUG: log (current_plan.draw())
+        return current_plan
+
+
+def do_cost_based_optimizer(plan: LogicalPlan) -> LogicalPlan:
+    optimizer = CostBasedOptimizerVisitor()
+    return optimizer.optimize(plan)
