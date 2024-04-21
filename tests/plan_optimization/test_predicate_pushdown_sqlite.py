@@ -4,11 +4,13 @@ Test predicate pushdown using the sql connector
 
 import os
 import sys
+import time
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import opteryx
 from opteryx.connectors import SqlConnector
+from opteryx.utils.formatter import format_sql
 
 opteryx.register_store(
     "sqlite",
@@ -17,98 +19,91 @@ opteryx.register_store(
     connection="sqlite:///testdata/sqlite/database.db",
 )
 
-
-def test_predicate_pushdowns_sqlite_eq():
-    """
-    This is the same test as the collection pushdown - but on a different dataset
-    """
-
-    conn = opteryx.connect()
-
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM sqlite.planets WHERE name = 'Mercury';")
-    # when pushdown is enabled, we only read the matching rows from the source
-    assert cur.rowcount == 1, cur.rowcount
-    assert cur.stats.get("rows_read", 0) == 1, cur.stats
-
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM sqlite.planets WHERE name = 'Mercury' AND gravity = 3.7;")
-    # test with a two part filter
-    assert cur.rowcount == 1, cur.rowcount
-    assert cur.stats.get("rows_read", 0) == 1, cur.stats
-
-    cur = conn.cursor()
-    cur.execute(
-        "SELECT * FROM sqlite.planets WHERE name = 'Mercury' AND gravity = 3.7 AND escapeVelocity = 5.0;"
-    )
-    # test with A three part filter
-    assert cur.rowcount == 0, cur.rowcount
-    assert cur.stats.get("rows_read", 0) == 0, cur.stats
-
-    cur = conn.cursor()
-    cur.execute(
-        "SELECT * FROM sqlite.planets WHERE gravity = 3.7 AND name IN ('Mercury', 'Venus');"
-    )
-    # we don't push all predicates down,
-    assert cur.rowcount == 1, cur.rowcount
-    assert cur.stats.get("rows_read", 0) == 2, cur.stats
-
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM sqlite.planets WHERE surfacePressure IS NULL;")
-    # We push unary ops to SQL
-    assert cur.rowcount == 4, cur.rowcount
-    assert cur.stats.get("rows_read", 0) == 4, cur.stats
-
-    cur = conn.cursor()
-    cur.execute(
-        "SELECT * FROM sqlite.planets WHERE orbitalInclination IS FALSE AND name IN ('Earth', 'Mars');"
-    )
-    # We push unary ops to SQL
-    assert cur.rowcount == 1, cur.rowcount
-    assert cur.stats.get("rows_read", 0) == 1, cur.stats
-
-    conn.close()
+test_cases = [
+    ("SELECT * FROM sqlite.planets WHERE name = 'Mercury';", 1, 1),
+    ("SELECT * FROM sqlite.planets WHERE name = 'Mercury' AND gravity = 3.7;", 1, 1),
+    (
+        "SELECT * FROM sqlite.planets WHERE name = 'Mercury' AND gravity = 3.7 AND escapeVelocity = 5.0;",
+        0,
+        0,
+    ),
+    ("SELECT * FROM sqlite.planets WHERE gravity = 3.7 AND name IN ('Mercury', 'Venus');", 1, 2),
+    ("SELECT * FROM sqlite.planets WHERE surfacePressure IS NULL;", 4, 4),
+    (
+        "SELECT * FROM sqlite.planets WHERE orbitalInclination IS FALSE AND name IN ('Earth', 'Mars');",
+        1,
+        1,
+    ),
+    ("SELECT * FROM (SELECT name FROM sqlite.planets) AS $temp WHERE name = 'Earth';", 1, 1),
+    ("SELECT * FROM sqlite.planets WHERE gravity <= 3.7", 3, 3),
+    ("SELECT * FROM sqlite.planets WHERE name != 'Earth'", 8, 8),
+    ("SELECT * FROM sqlite.planets WHERE name != 'E\"arth'", 9, 9),
+    ("SELECT * FROM sqlite.planets WHERE gravity != 3.7", 7, 7),
+    ("SELECT * FROM sqlite.planets WHERE gravity < 3.7", 1, 1),
+    ("SELECT * FROM sqlite.planets WHERE gravity > 3.7", 6, 6),
+    ("SELECT * FROM sqlite.planets WHERE gravity >= 3.7", 8, 8),
+    ("SELECT * FROM sqlite.planets WHERE name LIKE '%a%'", 4, 4),
+    ("SELECT * FROM sqlite.planets WHERE id > gravity", 2, 9),
+]
 
 
-def test_predicate_pushdown_sqlite_other():
-    res = opteryx.query("SELECT * FROM sqlite.planets WHERE gravity <= 3.7")
-    assert res.rowcount == 3, res.rowcount
-    assert res.stats.get("rows_read", 0) == 3, res.stats
+import pytest
 
-    res = opteryx.query("SELECT * FROM sqlite.planets WHERE name != 'Earth'")
-    assert res.rowcount == 8, res.rowcount
-    assert res.stats.get("rows_read", 0) == 8, res.stats
 
-    res = opteryx.query("SELECT * FROM sqlite.planets WHERE name != 'E\"arth'")
-    assert res.rowcount == 9, res.rowcount
-    assert res.stats.get("rows_read", 0) == 9, res.stats
-
-    res = opteryx.query("SELECT * FROM sqlite.planets WHERE gravity != 3.7")
-    assert res.rowcount == 7, res.rowcount
-    assert res.stats.get("rows_read", 0) == 7, res.stats
-
-    res = opteryx.query("SELECT * FROM sqlite.planets WHERE gravity < 3.7")
-    assert res.rowcount == 1, res.rowcount
-    assert res.stats.get("rows_read", 0) == 1, res.stats
-
-    res = opteryx.query("SELECT * FROM sqlite.planets WHERE gravity > 3.7")
-    assert res.rowcount == 6, res.rowcount
-    assert res.stats.get("rows_read", 0) == 6, res.stats
-
-    res = opteryx.query("SELECT * FROM sqlite.planets WHERE gravity >= 3.7")
-    assert res.rowcount == 8, res.rowcount
-    assert res.stats.get("rows_read", 0) == 8, res.stats
-
-    res = opteryx.query("SELECT * FROM sqlite.planets WHERE name LIKE '%a%'")
-    assert res.rowcount == 4, res.rowcount
-    assert res.stats.get("rows_read", 0) == 4, res.stats
-
-    res = opteryx.query("SELECT * FROM sqlite.planets WHERE id > gravity")
-    assert res.rowcount == 2, res.rowcount
-    assert res.stats.get("rows_read", 0) == 9, res.stats
+@pytest.mark.parametrize("statement,expected_rowcount,expected_rows_read", test_cases)
+def test_predicate_pushdown_postgres_parameterized(
+    statement, expected_rowcount, expected_rows_read
+):
+    res = opteryx.query(statement)
+    assert res.rowcount == expected_rowcount, f"Expected {expected_rowcount}, got {res.rowcount}"
+    assert (
+        res.stats.get("rows_read", 0) == expected_rows_read
+    ), f"Expected {expected_rows_read}, got {res.stats.get('rows_read', 0)}"
 
 
 if __name__ == "__main__":  # pragma: no cover
-    from tests.tools import run_tests
+    import shutil
 
-    run_tests()
+    from tests.tools import trunc_printable
+
+    start_suite = time.monotonic_ns()
+    passed = 0
+    failed = 0
+
+    width = shutil.get_terminal_size((80, 20))[0] - 15
+
+    print(f"RUNNING BATTERY OF {len(test_cases)} TESTS")
+    for index, (statement, returned_rows, read_rows) in enumerate(test_cases):
+        print(
+            f"\033[38;2;255;184;108m{(index + 1):04}\033[0m"
+            f" {trunc_printable(format_sql(statement), width - 1)}",
+            end="",
+            flush=True,
+        )
+        try:
+            start = time.monotonic_ns()
+            test_predicate_pushdown_postgres_parameterized(statement, returned_rows, read_rows)
+            print(
+                f"\033[38;2;26;185;67m{str(int((time.monotonic_ns() - start)/1e6)).rjust(4)}ms\033[0m ✅",
+                end="",
+            )
+            passed += 1
+            if failed > 0:
+                print(" \033[0;31m*\033[0m")
+            else:
+                print()
+        except Exception as err:
+            print(f"\033[0;31m{str(int((time.monotonic_ns() - start)/1e6)).rjust(4)}ms ❌ *\033[0m")
+            print(">", err)
+            failed += 1
+
+    print("--- ✅ \033[0;32mdone\033[0m")
+
+    if failed > 0:
+        print("\n\033[38;2;139;233;253m\033[3mFAILURES\033[0m")
+
+    print(
+        f"\n\033[38;2;139;233;253m\033[3mCOMPLETE\033[0m ({((time.monotonic_ns() - start_suite) / 1e9):.2f} seconds)\n"
+        f"  \033[38;2;26;185;67m{passed} passed ({(passed * 100) // (passed + failed)}%)\033[0m\n"
+        f"  \033[38;2;255;121;198m{failed} failed\033[0m"
+    )

@@ -13,6 +13,7 @@
 import datetime
 from dataclasses import dataclass
 from dataclasses import field
+from typing import Iterable
 from typing import List
 from typing import Tuple
 
@@ -51,7 +52,7 @@ class ConnectionContext:
     connected_at: datetime.datetime = field(default_factory=datetime.datetime.utcnow, init=False)
     user: str = None
     schema: str = None
-    memberships: str = None
+    memberships: Iterable[str] = None
     variables: SystemVariablesContainer = field(init=False)
     history: List[HistoryItem] = field(default_factory=list, init=False)
 
