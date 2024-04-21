@@ -1,7 +1,7 @@
 cython
-numpy
+numpy==1.*
 orjson
-orso>=0.0.147
+orso>=0.0.151
 pyarrow>=12.0.1
 typer==0.11.*
 

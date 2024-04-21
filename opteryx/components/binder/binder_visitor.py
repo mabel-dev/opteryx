@@ -837,9 +837,11 @@ class BinderVisitor:
                     ),
                     None,
                 )
+                if not schema_column.origin:
+                    schema_column.origin = []
                 source_relations.extend(schema_column.origin or [])
                 projection_column.source = node.alias
-                schema_column.origin = [node.alias]
+                schema_column.origin += [node.alias]
 
                 schema_column.name = (
                     projection_column.current_name if projection_column else schema_column.name
@@ -858,7 +860,7 @@ class BinderVisitor:
         schema = RelationSchema(name=node.alias, columns=columns)
 
         context.schemas = {"$derived": derived.schema(), node.alias: schema}
-        context.relations = {node.alias}
+        context.relations.add(node.alias)
         node.schema = schema
         node.source_relations = set(source_relations)
         return node, context

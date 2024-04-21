@@ -61,7 +61,14 @@ class SplitConjunctivePredicatesStrategy(OptimizationStrategy):
                 new_node.columns = get_all_nodes_of_type(
                     predicate, select_nodes=(NodeType.IDENTIFIER,)
                 )
-                new_node.relations = {c.source for c in new_node.columns}
+
+                sources = []
+                for col in new_node.columns:
+                    if col.source is not None:
+                        sources.append(col.source)
+                    if col.schema_column is not None:
+                        sources.extend(col.schema_column.origin)
+                new_node.relations = set(sources)
                 new_nodes.append(new_node)
         else:
             new_nodes = [node]

@@ -80,11 +80,7 @@ class PredicatePushdownStrategy(OptimizationStrategy):
         if not context.optimized_plan:
             context.optimized_plan = context.pre_optimized_tree.copy()  # type: ignore
 
-        if node.node_type in (
-            LogicalPlanStepType.Scan,
-            LogicalPlanStepType.FunctionDataset,
-            LogicalPlanStepType.Subquery,
-        ):
+        if node.node_type in (LogicalPlanStepType.Scan, LogicalPlanStepType.FunctionDataset):
             # Handle predicates specific to node types
             context = self._handle_predicates(node, context)
 
@@ -236,7 +232,7 @@ class PredicatePushdownStrategy(OptimizationStrategy):
     ) -> OptimizerContext:
         remaining_predicates = []
         for predicate in context.collected_predicates:
-            if len(predicate.relations) == 1 and predicate.relations.intersection(
+            if len(predicate.relations) >= 1 and predicate.relations.intersection(
                 (node.relation, node.alias)
             ):
                 if node.connector:

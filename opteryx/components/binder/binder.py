@@ -339,7 +339,13 @@ def inner_binder(node: Node, context: Any) -> Tuple[Node, Any]:
             node.query_column = node.alias or column_name
 
     identifiers = get_all_nodes_of_type(node, (NodeType.IDENTIFIER,))
-    node.relations = {col.source for col in identifiers if col.source is not None}
+    sources = []
+    for col in identifiers:
+        if col.source is not None:
+            sources.append(col.source)
+        if col.schema_column is not None:
+            sources.extend(col.schema_column.origin)
+    node.relations = set(sources)
 
     context.schemas = schemas
     return node, context
