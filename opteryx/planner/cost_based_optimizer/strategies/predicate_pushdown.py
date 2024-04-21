@@ -164,7 +164,9 @@ class PredicatePushdownStrategy(OptimizationStrategy):
                             predicate.condition.right.schema_column.identity,
                         }
 
-                        # we can push filters into the UNNEST
+                        # Here we're pushing filters into the UNNEST - this means that
+                        # CROSS JOIN UNNEST will produce fewer rows... it still does
+                        # the equality check, but all in one step which is generally faster
                         if (
                             len(predicate.columns) == 1
                             and predicate.columns[0].value == node.unnest_alias
