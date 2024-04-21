@@ -57,6 +57,11 @@ def build_literal_node(value: Any, root: Node):
 
 def fold_constants(root: Node) -> Node:
     identifiers = get_all_nodes_of_type(root, (NodeType.IDENTIFIER, NodeType.WILDCARD))
+    functions = get_all_nodes_of_type(root, (NodeType.FUNCTION,))
+
+    if any(func.value in {"RANDOM", "RAND", "NORMAL", "RANDOM_STRING"} for func in functions):
+        return root
+
     if len(identifiers) == 0:
         table = no_table_data.read()
         try:
