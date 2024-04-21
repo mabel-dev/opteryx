@@ -16,13 +16,13 @@ from typing import Any
 import numpy
 from orso.types import OrsoTypes
 
-from opteryx.components.logical_planner import LogicalPlan
-from opteryx.components.logical_planner import LogicalPlanNode
-from opteryx.components.logical_planner import LogicalPlanStepType
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import evaluate
 from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.models import Node
+from opteryx.planner.logical_planner import LogicalPlan
+from opteryx.planner.logical_planner import LogicalPlanNode
+from opteryx.planner.logical_planner import LogicalPlanStepType
 from opteryx.virtual_datasets import no_table_data
 
 from .optimization_strategy import OptimizationStrategy

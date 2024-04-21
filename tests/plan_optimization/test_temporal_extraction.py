@@ -11,7 +11,7 @@ import datetime
 
 import pytest
 
-from opteryx.components.sql_rewriter import extract_temporal_filters
+from opteryx.planner.sql_rewriter import extract_temporal_filters
 from opteryx.utils.sql import clean_statement, remove_comments
 
 # fmt:off

@@ -16,11 +16,11 @@ Optimization Rule - Demorgan's Laws
 Type: Heuristic
 Goal: Preposition for following actions
 """
-from opteryx.components.logical_planner import LogicalPlan
-from opteryx.components.logical_planner import LogicalPlanNode
-from opteryx.components.logical_planner import LogicalPlanStepType
 from opteryx.managers.expression import NodeType
 from opteryx.models.node import Node
+from opteryx.planner.logical_planner import LogicalPlan
+from opteryx.planner.logical_planner import LogicalPlanNode
+from opteryx.planner.logical_planner import LogicalPlanStepType
 
 from .optimization_strategy import OptimizationStrategy
 from .optimization_strategy import OptimizerContext

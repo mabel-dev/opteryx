@@ -20,6 +20,7 @@ here rather than calling the join() functions
 """
 import time
 from typing import Generator
+from typing import Set
 from typing import Tuple
 
 import numpy
@@ -33,10 +34,15 @@ from opteryx.operators import BasePlanNode
 
 INTERNAL_BATCH_SIZE: int = 2500  # config
 MAX_JOIN_SIZE: int = 1000  # config
+MORSEL_SIZE_BYTES: int = 32 * 1024 * 1024
 
 
 def _cross_join_unnest_column(
-    morsels: BasePlanNode, source: Node, target_column: FlatColumn, statistics
+    morsels: BasePlanNode = None,
+    source: Node = None,
+    target_column: FlatColumn = None,
+    filters: Set = None,
+    statistics=None,
 ) -> Generator[pyarrow.Table, None, None]:
     """
     Perform a cross join on an unnested column of pyarrow tables.
@@ -49,7 +55,8 @@ def _cross_join_unnest_column(
     Returns:
         A generator that yields the resulting `pyarrow.Table` objects.
     """
-    from opteryx.compiled import build_rows_indices_and_column
+    from opteryx.compiled.cross_join import build_filtered_rows_indices_and_column
+    from opteryx.compiled.cross_join import build_rows_indices_and_column
 
     # Check if the source node type is an identifier, raise error otherwise
     if source.node_type != NodeType.IDENTIFIER:
@@ -57,6 +64,8 @@ def _cross_join_unnest_column(
 
     column_type = None
     batch_size: int = INTERNAL_BATCH_SIZE
+    return_morsel: pyarrow.Table = None
+    at_least_once = False
 
     # Loop through each morsel from the morsels execution
     for left_morsel in morsels.execute():
@@ -77,19 +86,39 @@ def _cross_join_unnest_column(
             if column_type is None:
                 column_type = column_data.type.value_type
 
-            indices, new_column_data = build_rows_indices_and_column(column_data.to_numpy(False))
-
-            # If no new data was generated, skip to next iteration
-            if len(new_column_data) == 0:
-                continue
+            if filters is None:
+                indices, new_column_data = build_rows_indices_and_column(
+                    column_data.to_numpy(False)
+                )
+            else:
+                indices, new_column_data = build_filtered_rows_indices_and_column(
+                    column_data.to_numpy(False), filters
+                )
 
             new_block = left_block.take(indices)
             new_block = pyarrow.Table.from_batches([new_block], schema=left_morsel.schema)
             new_block = new_block.append_column(target_column.identity, [new_column_data])
 
             statistics.time_cross_join_unnest += time.monotonic_ns() - start
-            yield new_block
+
+            if return_morsel is None or return_morsel.num_rows == 0:
+                return_morsel = new_block
+            elif new_block.num_rows > 0:
+                return_morsel = pyarrow.concat_tables(
+                    [return_morsel, new_block], promote_options="none"
+                )
+                if return_morsel.nbytes > MORSEL_SIZE_BYTES:
+                    yield return_morsel
+                    at_least_once = True
+                    return_morsel = None
             start = time.monotonic_ns()
+
+    if return_morsel.num_rows > 0:
+        at_least_once = True
+        yield return_morsel
+
+    if not at_least_once:
+        yield new_block.slice()
 
 
 def _cross_join_unnest_literal(
@@ -188,6 +217,7 @@ class CrossJoinNode(BasePlanNode):
         # do we have unnest details?
         self._unnest_column = config.get("unnest_column")
         self._unnest_target = config.get("unnest_target")
+        self._filters = config.get("filters")
 
         # handle variation in how the unnested column is represented
         if self._unnest_column:
@@ -229,5 +259,6 @@ class CrossJoinNode(BasePlanNode):
                 morsels=left_node,
                 source=self._unnest_column,
                 target_column=self._unnest_target,
+                filters=self._filters,
                 statistics=self.statistics,
             )

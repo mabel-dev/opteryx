@@ -12,15 +12,15 @@
 
 from orso.tools import random_string
 
-from opteryx.components.binder.binder_visitor import extract_join_fields
-from opteryx.components.logical_planner import LogicalPlan
-from opteryx.components.logical_planner import LogicalPlanNode
-from opteryx.components.logical_planner import LogicalPlanStepType
 from opteryx.connectors.capabilities import PredicatePushable
 from opteryx.exceptions import UnsupportedSyntaxError
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.models import Node
+from opteryx.planner.binder.binder_visitor import extract_join_fields
+from opteryx.planner.logical_planner import LogicalPlan
+from opteryx.planner.logical_planner import LogicalPlanNode
+from opteryx.planner.logical_planner import LogicalPlanStepType
 
 from .optimization_strategy import OptimizationStrategy
 from .optimization_strategy import OptimizerContext
@@ -157,12 +157,28 @@ class PredicatePushdownStrategy(OptimizationStrategy):
                     # don't push filters we can't resolve here though
                     remaining_predicates = []
                     for predicate in context.collected_predicates:
+
                         known_columns = set(col.schema_column.identity for col in predicate.columns)
                         query_columns = {
                             predicate.condition.left.schema_column.identity,
                             predicate.condition.right.schema_column.identity,
                         }
+
+                        # we can push filters into the UNNEST
                         if (
+                            len(predicate.columns) == 1
+                            and predicate.columns[0].value == node.unnest_alias
+                        ):
+                            if predicate.condition.value in {"Eq", "InList"}:
+                                filters = node.filters or []
+                                new_values = predicate.condition.right.value
+                                if not isinstance(new_values, (list, set, tuple)):
+                                    new_values = [new_values]
+                                else:
+                                    new_values = list(new_values)
+                                node.filters = set(filters + new_values)
+
+                        elif (
                             query_columns == (known_columns)
                             or node.unnest_target.identity in query_columns
                         ):

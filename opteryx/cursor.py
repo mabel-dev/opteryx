@@ -162,7 +162,7 @@ class Cursor(DataFrame):
             Results of the query execution.
         """
 
-        from opteryx.components import query_planner
+        from opteryx.planner import query_planner
 
         if not operation:  # pragma: no cover
             raise MissingSqlStatement("SQL provided was empty.")

@@ -52,15 +52,15 @@ PROFILE_LOCATION = config.PROFILE_LOCATION
 def query_planner(operation: str, parameters: Union[Iterable, Dict, None], connection, qid: str):
     import orjson
 
-    from opteryx.components.ast_rewriter import do_ast_rewriter
-    from opteryx.components.binder import do_bind_phase
-    from opteryx.components.cost_based_optimizer import do_cost_based_optimizer
-    from opteryx.components.logical_planner import LogicalPlan
-    from opteryx.components.logical_planner import do_logical_planning_phase
-    from opteryx.components.sql_rewriter import do_sql_rewrite
-    from opteryx.components.temporary_physical_planner import create_physical_plan
     from opteryx.exceptions import SqlError
     from opteryx.models import QueryProperties
+    from opteryx.planner.ast_rewriter import do_ast_rewriter
+    from opteryx.planner.binder import do_bind_phase
+    from opteryx.planner.cost_based_optimizer import do_cost_based_optimizer
+    from opteryx.planner.logical_planner import LogicalPlan
+    from opteryx.planner.logical_planner import do_logical_planning_phase
+    from opteryx.planner.sql_rewriter import do_sql_rewrite
+    from opteryx.planner.temporary_physical_planner import create_physical_plan
     from opteryx.third_party import sqloxide
 
     # SQL Rewriter extracts temporal filters

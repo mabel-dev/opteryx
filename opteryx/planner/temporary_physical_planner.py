@@ -19,9 +19,9 @@ Gen 2 execution engine (a later piece of work)
 """
 
 from opteryx import operators
-from opteryx.components.logical_planner import LogicalPlanStepType
 from opteryx.exceptions import UnsupportedSyntaxError
 from opteryx.models import ExecutionTree
+from opteryx.planner.logical_planner import LogicalPlanStepType
 
 
 def create_physical_plan(logical_plan, query_properties):
