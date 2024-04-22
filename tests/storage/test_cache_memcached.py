@@ -41,7 +41,7 @@ def test_memcached_cache():
         cache.errors == 0
     ), f"hits: {cache.hits}, misses: {cache.misses}, skips: {cache.skips}, errors: {cache.errors}"
 
-    assert stats["cache_hits"] >= stats["blobs_read"], stats
+    assert stats["remote_cache_hits"] >= stats["blobs_read"], stats
     # assert stats.get("cache_misses", 0) == 0, stats
 
 
