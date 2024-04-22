@@ -24,7 +24,6 @@ The Buffer Pool is a global resource and used across all Connections and Cursors
 """
 from typing import Optional
 
-from opteryx.managers.cache import NullCache
 from opteryx.shared.memory_pool import MemoryPool
 from opteryx.utils.lru_2 import LRU2
 
@@ -37,10 +36,12 @@ class _BufferPool:
 
     slots = "_lru", "_cache_backend", "_max_cacheable_item_size", "_memory_pool"
 
-    def __init__(self, cache_manager):
-        self._cache_backend = cache_manager.cache_backend
-        if not self._cache_backend:
-            self._cache_backend = NullCache()  # rather than make decisions - just use a dummy
+    def __init__(self):
+        # Import here to avoid circular imports
+        from opteryx import get_cache_manager
+
+        cache_manager = get_cache_manager()
+
         self.max_cacheable_item_size = cache_manager.max_cacheable_item_size
         self._lru = LRU2()
         self._memory_pool = MemoryPool(
@@ -55,30 +56,37 @@ class _BufferPool:
         mp_key = self._lru.get(key)
         if mp_key is not None:
             return self._memory_pool.read(mp_key)
-        return self._cache_backend.get(key)
 
     def set(self, key: bytes, value) -> Optional[str]:
         """
-        Put an item into the pool, evict an item if the pool is full.
-        If a cache is provided, also set the value in the cache.
-        """
-        # always try to save to the cache backend
-        self._cache_backend.set(key, value)
+        Attempt to save a value to the buffer pool. Check first if there is space to commit the value.
+        If not, evict the least recently used item and try again.
 
-        # try to save in the buffer pool, if we fail, release
-        # an item from the pool (LRUK2) and try again
-        evicted_key = None
-        mp_key = self._memory_pool.commit(value)
-        if mp_key is None:
-            evicted_key, evicted_value = self._lru.evict(True)
+        Args:
+            key: The key associated with the value to commit.
+            value: The value to commit to the buffer pool.
+
+        Returns:
+            The key of the evicted item if eviction occurred, otherwise None.
+        """
+        # First check if we can commit the value to the memory pool
+        if not self._memory_pool.can_commit(value):
+            evicted_key, evicted_value = self._lru.evict(details=True)
             if evicted_key:
                 self._memory_pool.release(evicted_value)
-                mp_key = self._memory_pool.commit(value)
-                if mp_key is None:
-                    return None
-        else:
-            self._lru.set(key, mp_key)
-        return evicted_key
+            else:
+                return None  # Return None if no item could be evicted
+
+        # Try to commit the value to the memory pool
+        memory_pool_key = self._memory_pool.commit(value)
+        if memory_pool_key is None:
+            return None  # Return None if commit still fails after eviction
+
+        # Update LRU cache with the new key and memory pool key if commit succeeds
+        self._lru.set(key, memory_pool_key)
+
+        # Return the evicted key if an eviction occurred, otherwise return None
+        return evicted_key if "evicted_key" in locals() else None
 
     @property
     def stats(self) -> tuple:
@@ -109,12 +117,7 @@ class BufferPool(_BufferPool):
 
     @classmethod
     def _create_instance(cls):
-        # Import here to avoid circular imports
-        from opteryx import get_cache_manager
-
-        cache_manager = get_cache_manager()
-
-        return _BufferPool(cache_manager)
+        return _BufferPool()
 
     @classmethod
     def reset(cls):

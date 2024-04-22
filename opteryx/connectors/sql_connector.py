@@ -69,6 +69,12 @@ class SqlConnector(BaseConnector, PredicatePushable):
         "LtEq": True,
         "Like": True,
         "NotLike": True,
+        "IsTrue": True,
+        "IsNotTrue": True,
+        "IsFalse": True,
+        "IsNotFalse": True,
+        "IsNull": True,
+        "IsNotNull": True,
     }
 
     OPS_XLAT: Dict[str, str] = {

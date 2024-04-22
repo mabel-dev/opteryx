@@ -36,7 +36,7 @@ def test_redis_cache():
     assert cache.errors == 0
 
     stats = cur.stats
-    assert stats["cache_hits"] >= stats["blobs_read"]
+    assert stats["remote_cache_hits"] >= stats["blobs_read"], stats
     assert stats.get("cache_misses", 0) == 0, stats
 
 

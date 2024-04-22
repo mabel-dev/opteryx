@@ -109,6 +109,9 @@ class MemoryPool:
             segment.start = new_start
             offset += segment.length
 
+    def can_commit(self, data: bytes) -> bool:
+        return sum(segment.length for segment in self.free_segments) > len(data)
+
     def commit(self, data: bytes) -> int:
         """
         Add an item to the pool and return its reference.
@@ -117,7 +120,6 @@ class MemoryPool:
         first we combine adjacent free blocks into larger blocks. If that's
         not enough, we consolidate all of the free blocks together.
         """
-        self.commits += 1
         len_data = len(data)
         # always acquire a lock to write
         with self.lock:
@@ -126,9 +128,11 @@ class MemoryPool:
                 # avoid trying to compact if it won't release enough space anyway
                 total_free_space = sum(segment.length for segment in self.free_segments)
                 if total_free_space < len_data:
+                    self.failed_commits += 1
                     return None
                 # avoid trying to compact, if we're already compacted
                 if len(self.free_segments) <= 1:
+                    self.failed_commits += 1
                     return None
                 # combine adjacent free space (should be pretty quick)
                 self._level1_compaction()
@@ -157,6 +161,7 @@ class MemoryPool:
 
             ref_id = random_int()
             self.used_segments[ref_id] = new_segment
+            self.commits += 1
             return ref_id
 
     def read(self, ref_id: int) -> bytes:
@@ -193,6 +198,20 @@ class MemoryPool:
                 raise ValueError(f"Invalid reference ID - {ref_id}.")
             segment = self.used_segments.pop(ref_id)
             self.free_segments.append(segment)
+
+    @property
+    def stats(self) -> dict:
+        return {
+            "free_segments": len(self.free_segments),
+            "used_segments": len(self.used_segments),
+            "commits": self.commits,
+            "failed_commits": self.failed_commits,
+            "reads": self.reads,
+            "read_locks": self.read_locks,
+            "l1_compaction": self.l1_compaction,
+            "l2_compaction": self.l2_compaction,
+            "releases": self.releases,
+        }
 
     def __del__(self):
         """

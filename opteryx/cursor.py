@@ -39,7 +39,7 @@ from opteryx.exceptions import InconsistentSchemaError
 from opteryx.exceptions import InvalidCursorStateError
 from opteryx.exceptions import MissingSqlStatement
 from opteryx.exceptions import UnsupportedSyntaxError
-from opteryx.shared import QueryStatistics
+from opteryx.models import QueryStatistics
 from opteryx.shared.rolling_log import RollingLog
 from opteryx.utils import sql
 
