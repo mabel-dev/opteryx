@@ -21,7 +21,7 @@ from typing import Optional
 import pyarrow
 from orso.schema import RelationSchema
 
-from opteryx.shared import QueryStatistics
+from opteryx.models import QueryStatistics
 
 MIN_CHUNK_SIZE: int = 500
 INITIAL_CHUNK_SIZE: int = 500

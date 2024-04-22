@@ -14,7 +14,7 @@ import opteryx
 import opteryx.virtual_datasets
 from opteryx.managers.expression import ORSO_TO_NUMPY_MAP, NodeType, evaluate
 from opteryx.models import Node
-from opteryx.shared import QueryStatistics
+from opteryx.models import QueryStatistics
 
 stats = QueryStatistics()
 
