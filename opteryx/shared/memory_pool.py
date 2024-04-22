@@ -121,6 +121,14 @@ class MemoryPool:
         not enough, we consolidate all of the free blocks together.
         """
         len_data = len(data)
+        # special case for 0 byte segments
+        if len_data == 0:
+            new_segment = MemorySegment(0, 0)
+            ref_id = random_int()
+            self.used_segments[ref_id] = new_segment
+            self.commits += 1
+            return ref_id
+
         # always acquire a lock to write
         with self.lock:
             segment_index = self._find_free_segment(len_data)
