@@ -10,16 +10,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from multiprocessing import Lock
-from typing import Dict
-
-from orso.tools import random_int
-
 """
 Memory Pool is used to manage access to arbitrary blocks of memory.
 
 This is designed to be thread-safe with non-blocking reads.
 """
+
+
+from multiprocessing import Lock
+from typing import Dict
+
+from orso.tools import random_int
 
 
 class MemorySegment:
@@ -60,7 +61,11 @@ class MemoryPool:
         return -1
 
     def _level1_compaction(self):
-        """Merges adjacent free segments (Level 1 compaction)."""
+        """
+        Merges adjacent free segments (Level 1 compaction).
+
+        This is intended to a fast way to get larger contiguous blocks.
+        """
         self.l1_compaction += 1
         if not self.free_segments:
             return
@@ -81,7 +86,11 @@ class MemoryPool:
         self.free_segments = new_free_segments
 
     def _level2_compaction(self):
-        """Aggressively compacts by pushing all free memory to the end (Level 2 compaction)."""
+        """
+        Aggressively compacts by pushing all free memory to the end (Level 2 compaction).
+
+        This is slower, but ensures we get the maximum free space.
+        """
         self.l2_compaction += 1
 
         total_free_space = sum(segment.length for segment in self.free_segments)
@@ -101,6 +110,13 @@ class MemoryPool:
             offset += segment.length
 
     def commit(self, data: bytes) -> int:
+        """
+        Add an item to the pool and return its reference.
+
+        If we can't find a free block large enough we perform compaction,
+        first we combine adjacent free blocks into larger blocks. If that's
+        not enough, we consolidate all of the free blocks together.
+        """
         self.commits += 1
         len_data = len(data)
         # always acquire a lock to write
@@ -147,10 +163,11 @@ class MemoryPool:
         """
         We're using an optimistic locking strategy where we do not acquire
         a lock, perform the read and then check that the metadata hasn't changed
-        and if it's the same, we assume no writes have updated it.
+        and if it's the same, we assume no writes have updated it. If it has
+        changed, we acquire a lock and try again.
 
-        If it has changed, we acquire a lock and try again. The buffer pool is
-        read heavy, so optimized reads are preferred.
+        We use this approach because locks are expensive and memory pools are
+        likely to be read heavy.
         """
         if ref_id not in self.used_segments:
             raise ValueError("Invalid reference ID.")
@@ -167,6 +184,9 @@ class MemoryPool:
         return view
 
     def release(self, ref_id: int):
+        """
+        Remove an item from the pool
+        """
         self.releases += 1
         with self.lock:
             if ref_id not in self.used_segments:
@@ -175,5 +195,8 @@ class MemoryPool:
             self.free_segments.append(segment)
 
     def __del__(self):
+        """
+        This function exists just to wrap the debug logging
+        """
         pass
         # DEBUG: log (f"Memory Pool ({self.name}) <size={self.size}, commits={self.commits}, reads={self.reads}, releases={self.releases}, L1={self.l1_compaction}, L2={self.l2_compaction}>")

@@ -17,7 +17,7 @@ import pyarrow
 from orso.tools import random_string
 
 from opteryx.models import QueryProperties
-from opteryx.shared import QueryStatistics
+from opteryx.models import QueryStatistics
 
 
 class BasePlanNode:

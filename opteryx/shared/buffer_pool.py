@@ -19,6 +19,8 @@ backed by a MemoryPool.
 The buffer pool is has no slot limit, it is a given volume of memory, the pool
 will try to evict when full. This is different to a classic Buffer Pool which
 is slot-based.
+
+The Buffer Pool is a global resource and used across all Connections and Cursors.
 """
 from typing import Optional
 
@@ -29,7 +31,8 @@ from opteryx.utils.lru_2 import LRU2
 
 class _BufferPool:
     """
-    Buffer Pool is a class implementing a Least Recently Used (LRU) policy.
+    Buffer Pool is a class implementing a Least Recently Used (LRU) policy for
+    eviction.
     """
 
     slots = "_lru", "_cache_backend", "_max_cacheable_item_size", "_memory_pool"

@@ -17,7 +17,7 @@ from typing import Dict
 from typing import Set
 
 from opteryx.models import ConnectionContext
-from opteryx.shared import QueryStatistics
+from opteryx.models import QueryStatistics
 from opteryx.virtual_datasets import derived
 
 

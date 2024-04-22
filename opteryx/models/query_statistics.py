@@ -19,7 +19,7 @@ class _QueryStatistics:
         self._stats: dict = defaultdict(int)
         self._stats["messages"] = []
 
-    def _ns_to_s(self, nano_seconds):
+    def _ns_to_s(self, nano_seconds: int) -> float:
         """convert elapsed ns to s"""
         if nano_seconds == 0:
             return 0
