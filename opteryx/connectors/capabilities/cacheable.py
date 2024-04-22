@@ -42,36 +42,55 @@ def read_thru_cache(func):
 
     # Capture the max_evictions value at decoration time
     from opteryx import get_cache_manager
+    from opteryx.managers.cache import NullCache
     from opteryx.shared import BufferPool
 
     cache_manager = get_cache_manager()
     max_evictions = cache_manager.max_evictions_per_query
+    remote_cache = cache_manager.cache_backend
+    if not remote_cache:
+        # rather than make decisions - just use a dummy
+        remote_cache = NullCache()
 
     buffer_pool = BufferPool()
+
+    my_keys = set()
 
     @wraps(func)
     def wrapper(blob_name, statistics, **kwargs):
         nonlocal max_evictions
 
         key = hex(CityHash64(blob_name)).encode()
+        my_keys.add(key)
 
-        # Try to get the result from cache
+        # try the buffer pool first
         result = buffer_pool.get(key)
-
         if result is not None:
-            statistics.cache_hits += 1
+            statistics.bufferpool_hits += 1
+            return result
+
+        # try the remote cache next
+        result = remote_cache.get(key)
+        if result is not None:
+            statistics.remote_cache_hits += 1
             return result
 
         # Key is not in cache, execute the function and store the result in cache
         result = func(blob_name=blob_name, **kwargs)
 
-        # Write the result to cache
+        # Write the result to caches
         if max_evictions:
+            # we set a per-query eviction limit
             if len(result) < buffer_pool.max_cacheable_item_size:
                 evicted = buffer_pool.set(key, result)
+                remote_cache.set(key, result)
                 if evicted:
+                    # if we're evicting items we're putting into the cache
+                    if evicted in my_keys:
+                        max_evictions = 0
+                    else:
+                        max_evictions -= 1
                     statistics.cache_evictions += 1
-                    max_evictions -= 1
             else:
                 statistics.cache_oversize += 1
 

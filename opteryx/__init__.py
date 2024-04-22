@@ -83,7 +83,7 @@ __all__ = [
 # For more details, see: https://www.python.org/dev/peps/pep-0249/
 apilevel: str = "1.0"  # Compliance level with DB API 2.0
 threadsafety: int = 0  # Thread safety level, 0 means not thread-safe
-paramstyle: str = "qmark"  # Parameter placeholder style, qmark means '?' for placeholders
+paramstyle: str = "named"  # Parameter placeholder style, named means :name for placeholders
 
 
 def connect(*args, **kwargs):
@@ -171,7 +171,6 @@ if not config.DISABLE_HIGH_PRIORITY and hasattr(os, "nice"):  # pragma: no cover
     nice_value = os.nice(0)
     try:
         os.nice(-20 + nice_value)
-        print(f"{datetime.datetime.now()} [LOADER] Process priority set to {os.nice(0)}.")
     except PermissionError:
         display_nice = str(nice_value)
         if nice_value == 0:
@@ -179,10 +178,6 @@ if not config.DISABLE_HIGH_PRIORITY and hasattr(os, "nice"):  # pragma: no cover
         print(
             f"{datetime.datetime.now()} [LOADER] Cannot update process priority. Currently set to {display_nice}."
         )
-
-# Log resource usage
-if config.ENABLE_RESOURCE_LOGGING:  # pragma: no cover
-    from opteryx.utils.resource_monitor import ResourceMonitor
 
 
 _cache_manager = CacheManager(cache_backend=None)
@@ -205,3 +200,7 @@ def set_cache_manager(new_cache_manager):
 
 
 cache_manager = get_cache_manager()
+
+# Log resource usage
+if config.ENABLE_RESOURCE_LOGGING:  # pragma: no cover
+    from opteryx.utils.resource_monitor import ResourceMonitor

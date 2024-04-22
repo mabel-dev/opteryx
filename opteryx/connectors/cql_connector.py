@@ -61,25 +61,17 @@ class CqlConnector(BaseConnector, PredicatePushable):
         "GtEq": True,
         "Lt": True,
         "LtEq": True,
-        "Like": True,
-        "NotLike": True,
     }
 
     OPS_XLAT: Dict[str, str] = {
-        "Eq": "=",
-        "NotEq": "!=",
-        "Gt": ">",
-        "GtEq": ">=",
-        "Lt": "<",
-        "LtEq": "<=",
-        "Like": "LIKE",
-        "NotLike": "NOT LIKE",
-        "IsTrue": "IS TRUE",
-        "IsNotTrue": "IS NOT TRUE",
-        "IsFalse": "IS FALSE",
-        "IsNotFalse": "IS NOT FALSE",
-        "IsNull": "IS NULL",
-        "IsNotNull": "IS NOT NULL",
+        "Eq": ":left = :right",
+        "NotEq": ":left != :right",
+        "Gt": ":left > :right",
+        "GtEq": ":left >= :right",
+        "Lt": ":left < :right",
+        "LtEq": ":left <= :right",
+        "Like": ":left LIKE :right",
+        "NotLike": "NOT (:left LIKE :right)",
     }
 
     def __init__(
@@ -113,11 +105,6 @@ class CqlConnector(BaseConnector, PredicatePushable):
 
         self.single_column = None
 
-    def can_push(self, operator: Node, types: set = None) -> bool:
-        if super().can_push(operator, types):
-            return True
-        return operator.condition.node_type == NodeType.UNARY_OPERATOR
-
     def read_dataset(  # type:ignore
         self,
         *,
@@ -147,10 +134,11 @@ class CqlConnector(BaseConnector, PredicatePushable):
         parameters: list = []
         for predicate in predicates:
             if predicate.node_type == NodeType.UNARY_OPERATOR:
-                operand = predicate.centre.current_name
                 operator = self.OPS_XLAT[predicate.value]
+                operand, parameters = _handle_operand(predicate.centre, parameters)
+                operator = operator.replace(":operand", operand)
 
-                query_builder.WHERE(f"{operand} {operator}")
+                query_builder.WHERE(operator)
             else:
                 left_operand = predicate.left
                 right_operand = predicate.right
@@ -159,7 +147,10 @@ class CqlConnector(BaseConnector, PredicatePushable):
                 left_value, parameters = _handle_operand(left_operand, parameters)
                 right_value, parameters = _handle_operand(right_operand, parameters)
 
-                query_builder.WHERE(f"{left_value} {operator} {right_value}")
+                operator = operator.replace(":left", left_value)
+                operator = operator.replace(":right", right_value)
+
+                query_builder.WHERE(operator)
 
         session = self.cluster.connect()
         # DEBUG: log ("READ DATASET\n", str(query_builder))
