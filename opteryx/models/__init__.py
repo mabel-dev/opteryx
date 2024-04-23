@@ -10,10 +10,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from opteryx.compiled.functions.node import Node
 from opteryx.models.connection_context import ConnectionContext
 from opteryx.models.execution_tree import ExecutionTree
 from opteryx.models.logical_column import LogicalColumn
-from opteryx.models.node import Node
 from opteryx.models.non_tabular_result import NonTabularResult
 from opteryx.models.query_properties import QueryProperties
 from opteryx.models.query_statistics import QueryStatistics

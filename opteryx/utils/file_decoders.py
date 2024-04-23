@@ -90,7 +90,10 @@ def filter_records(filter, table):
             if right.right.node_type == NodeType.IDENTIFIER:
                 right.right.schema_column.identity = right.right.source_column
             root = Node(
-                NodeType.AND, left=root, right=right, schema_column=Node(identity=random_string())
+                NodeType.AND,
+                left=root,
+                right=right,
+                schema_column=Node("schema_column", identity=random_string()),
             )
     else:
         root = filter

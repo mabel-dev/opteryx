@@ -49,17 +49,17 @@ except:
 
 extensions = [
     Extension(
-        name="csoundex",
+        name="opteryx.third_party.fuzzy.csoundex",
         sources=["opteryx/third_party/fuzzy/csoundex.pyx"],
         extra_compile_args=COMPILE_FLAGS,
     ),
     Extension(
-        name="clevenshtein",
+        name="opteryx.compiled.clevenshtein",
         sources=["opteryx/compiled/levenshtein/clevenshtein.pyx"],
         extra_compile_args=COMPILE_FLAGS,
     ),
     Extension(
-        name="cython_list_ops",
+        name="opteryx.compiled.list_ops.cython_list_ops",
         sources=[
             "opteryx/compiled/list_ops/cython_list_ops.pyx",
         ],
@@ -67,36 +67,41 @@ extensions = [
         extra_compile_args=COMPILE_FLAGS,
     ),
     Extension(
-        name="cython_cross_join",
+        name="opteryx.compiled.cross_join.cython_cross_join",
         sources=["opteryx/compiled/cross_join/cython_cross_join.pyx"],
         include_dirs=[numpy.get_include()],
         extra_compile_args=COMPILE_FLAGS,
     ),
     Extension(
-        name="cython_functions",
+        name="opteryx.compiled.functions.cython_functions",
         sources=["opteryx/compiled/functions/cython_functions.pyx"],
         include_dirs=[numpy.get_include()],
         extra_compile_args=COMPILE_FLAGS,
     ),
     Extension(
-        name="ip_address",
+        name="opteryx.compiled.functions.ip_address",
         sources=["opteryx/compiled/functions/ip_address.pyx"],
         include_dirs=[numpy.get_include()],
         extra_compile_args=COMPILE_FLAGS,
     ),
     Extension(
-        name="hash_table",
+        name="opteryx.compiled.functions.hash_table",
         sources=["opteryx/compiled/functions/hash_table.pyx"],
         include_dirs=[numpy.get_include()],
         language="c++",
         extra_compile_args=COMPILE_FLAGS + ["-std=c++11"],
     ),
     Extension(
-        name="vectors",
+        name="opteryx.compiled.functions.vectors",
         sources=["opteryx/compiled/functions/vectors.pyx"],
         include_dirs=[numpy.get_include()],
         language="c++",
         extra_compile_args=COMPILE_FLAGS + ["-std=c++11"],
+    ),
+    Extension(
+        name="opteryx.compiled.functions.node",
+        sources=["opteryx/compiled/functions/node.pyx"],
+        extra_compile_args=COMPILE_FLAGS,
     ),
 ]
 

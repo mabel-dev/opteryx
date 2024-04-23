@@ -9,7 +9,7 @@ from opteryx.models import Node
 
 
 def test_node_simple_usage():
-    n = Node(a=1)
+    n = Node("", a=1)
     n.c = 3
     assert n.a == 1
     assert n.b is None
@@ -17,18 +17,18 @@ def test_node_simple_usage():
 
 
 def test_node_str_representation():
-    n = Node(a=1, c=3)
-    assert str(n) == '{"a":1,"c":3}'
+    n = Node("", a=1, c=3)
+    assert str(n) == '{"node_type":"","a":1,"c":3}'
 
 
 def test_node_properties():
-    n = Node(a=1, c=3)
+    n = Node("", a=1, c=3)
     n_properties = n.properties
-    assert n_properties == {"a": 1, "c": 3}
+    assert n_properties == {"node_type": "", "a": 1, "c": 3}
 
 
 def test_node_copying():
-    n = Node(a=1, c=3)
+    n = Node("", a=1, c=3)
     o = n.copy()
     assert o.a == 1
     assert o.c == 3
@@ -36,7 +36,7 @@ def test_node_copying():
 
 
 def test_node_deleting_attribute():
-    n = Node(a=1)
+    n = Node("", a=1)
     n.a = None
     assert n.a is None
     assert "a" not in n.properties
@@ -50,7 +50,7 @@ def test_node_custom_object_attribute():
         def copy(self):
             return Custom(self.x)
 
-    n = Node()
+    n = Node("")
     custom_obj = Custom(10)
     n.custom = custom_obj
     p = n.copy()
@@ -59,8 +59,8 @@ def test_node_custom_object_attribute():
 
 
 def test_node_deep_copy_with_nested_object():
-    n = Node()
-    n.inner = Node(d=4)
+    n = Node("")
+    n.inner = Node("", d=4)
     q = n.copy()
     assert q.inner.d == 4
     assert q.inner is not n.inner
@@ -68,10 +68,10 @@ def test_node_deep_copy_with_nested_object():
 
 def test_node_reassign_value():
     """Test reassigning an existing attribute."""
-    n = Node(a=1)
+    n = Node("", a=1)
     n.a = 2
     assert n.a == 2
-    assert n.properties == {"a": 2}
+    assert n.properties == {"node_type": "", "a": 2}
 
 
 def test_node_node_type():
@@ -104,7 +104,7 @@ def test_node_str_with_custom_obj():
         def __str__(self):
             return "CustomObject"
 
-    n = Node()
+    n = Node("")
     n.custom = Custom()
     assert '"custom":"CustomObject"' in str(n)
 
