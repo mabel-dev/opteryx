@@ -54,7 +54,7 @@ extensions = [
         extra_compile_args=COMPILE_FLAGS,
     ),
     Extension(
-        name="opteryx.compiled.clevenshtein",
+        name="opteryx.compiled.levenshtein.clevenshtein",
         sources=["opteryx/compiled/levenshtein/clevenshtein.pyx"],
         extra_compile_args=COMPILE_FLAGS,
     ),

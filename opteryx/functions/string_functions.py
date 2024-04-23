@@ -61,7 +61,7 @@ def split(arr, delimiter=",", limit=None):
 
 
 def soundex(arr):
-    from opteryx.third_party.fuzzy.soundex import soundex
+    from opteryx.third_party.fuzzy import soundex
 
     interim = ["0000"] * arr.size
 

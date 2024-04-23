@@ -1,1 +1,1 @@
-from clevenshtein import levenshtein
+from .clevenshtein import levenshtein
