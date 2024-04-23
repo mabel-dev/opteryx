@@ -581,7 +581,9 @@ class BinderVisitor:
                 for relation_name in node.right_relation_names
                 for col in context.schemas[relation_name].column_names
             ]
-            node.using = [Node(value=n) for n in set(left_columns).intersection(right_columns)]
+            node.using = [
+                Node("temp", value=n) for n in set(left_columns).intersection(right_columns)
+            ]
             node.type = "inner"
         # Handle 'using' by converting to a an 'on'
         if node.using:
