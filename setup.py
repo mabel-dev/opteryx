@@ -85,8 +85,8 @@ extensions = [
         extra_compile_args=COMPILE_FLAGS,
     ),
     Extension(
-        name="opteryx.compiled.functions.hash_table",
-        sources=["opteryx/compiled/functions/hash_table.pyx"],
+        name="opteryx.compiled.structures.hash_table",
+        sources=["opteryx/compiled/structures/hash_table.pyx"],
         include_dirs=[numpy.get_include()],
         language="c++",
         extra_compile_args=COMPILE_FLAGS + ["-std=c++11"],
@@ -99,8 +99,8 @@ extensions = [
         extra_compile_args=COMPILE_FLAGS + ["-std=c++11"],
     ),
     Extension(
-        name="opteryx.compiled.functions.node",
-        sources=["opteryx/compiled/functions/node.pyx"],
+        name="opteryx.compiled.structures.node",
+        sources=["opteryx/compiled/structures/node.pyx"],
         extra_compile_args=COMPILE_FLAGS,
     ),
 ]

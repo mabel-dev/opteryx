@@ -1541,6 +1541,10 @@ STATEMENTS = [
         # 1587
         ("SELECT name, Mission_Status, Mission FROM $astronauts CROSS JOIN UNNEST (missions) AS mission_names INNER JOIN $missions ON Mission = mission_names WHERE mission_names = 'Apollo 11'", 3, 3, None),
         ("SELECT name, Mission_Status, Mission FROM $astronauts CROSS JOIN UNNEST (missions) AS mission_names INNER JOIN $missions ON Mission = mission_names WHERE Mission = 'Apollo 11'", 3, 3, None),
+        # 1607
+        ("SELECT birth_place['town'], birth_place['state'] FROM $astronauts;", 357, 2, None),
+        ("SELECT birth_place->'town', birth_place->'state' FROM $astronauts;", 357, 2, None),
+        ("SELECT birth_place->>'town', birth_place->>'state' FROM $astronauts;", 357, 2, None),
 ]
 # fmt:on
 
