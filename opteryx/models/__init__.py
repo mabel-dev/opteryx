@@ -10,7 +10,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from opteryx.compiled.functions.node import Node
+from opteryx.compiled.structures.node import Node
 from opteryx.models.connection_context import ConnectionContext
 from opteryx.models.execution_tree import ExecutionTree
 from opteryx.models.logical_column import LogicalColumn

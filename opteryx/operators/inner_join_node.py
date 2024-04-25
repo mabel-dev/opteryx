@@ -35,7 +35,7 @@ from typing import Generator
 
 import pyarrow
 
-from opteryx.compiled.functions import HashTable
+from opteryx.compiled.structures import HashTable
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 from opteryx.utils.arrow import align_tables

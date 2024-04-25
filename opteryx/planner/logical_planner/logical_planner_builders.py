@@ -524,9 +524,11 @@ def literal_string(branch, alias: Optional[List[str]] = None, key=None):
 def map_access(branch, alias: Optional[List[str]] = None, key=None):
     # Identifier[key] -> GET(Identifier, key)
 
-    identifier_node = build(branch["column"])  # ["Identifier"]["value"]
-    # key_dict = branch["keys"][0]["key"]["Value"]
+    identifier_node = build(branch["column"])
     key_node = build(branch["keys"][0]["key"])
+    key_value = key_node.value
+    if isinstance(key_value, str):
+        key_value = f"'{key_value}'"
 
     if key_node.node_type != NodeType.LITERAL:
         raise UnsupportedSyntaxError("Subscript values must be literals")
@@ -535,8 +537,7 @@ def map_access(branch, alias: Optional[List[str]] = None, key=None):
         NodeType.FUNCTION,
         value="GET",
         parameters=[identifier_node, key_node],
-        alias=alias
-        or f"{identifier_node.current_name}[{repr(key) if isinstance(key, str) else key}]",
+        alias=alias or f"{identifier_node.current_name}[{key_value}]",
     )
 
 

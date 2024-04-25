@@ -29,7 +29,7 @@ from opteryx.operators import BasePlanNode
 
 class DistinctNode(BasePlanNode):
     def __init__(self, properties: QueryProperties, **config):
-        from opteryx.compiled.functions import HashSet
+        from opteryx.compiled.structures import HashSet
 
         super().__init__(properties=properties)
         self._distinct_on = config.get("on")
@@ -51,7 +51,7 @@ class DistinctNode(BasePlanNode):
 
     def execute(self) -> Generator[pyarrow.Table, None, None]:
 
-        from opteryx.compiled.functions import distinct
+        from opteryx.compiled.structures import distinct
 
         # We create a HashSet outside the distinct call, this allows us to pass
         # the hash to each run of the distinct which means we don't need to concat
