@@ -254,29 +254,29 @@ jobs:
         name: dist-linux-3.12
     - run: mv -v dist-linux-3.12/* dist/
 
-    - name: Stage macos 3.9
-      uses: actions/download-artifact@v1
-      with:
-        name: dist-macos-3.9
-    - run: mv -v dist-macos-3.9/* dist/
+#    - name: Stage macos 3.9
+#      uses: actions/download-artifact@v1
+#      with:
+#        name: dist-macos-3.9
+#    - run: mv -v dist-macos-3.9/* dist/
 
-    - name: Stage macos 3.10
-      uses: actions/download-artifact@v1
-      with:
-        name: dist-macos-3.10
-    - run: mv -v dist-macos-3.10/* dist/
+#    - name: Stage macos 3.10
+#      uses: actions/download-artifact@v1
+#      with:
+#        name: dist-macos-3.10
+#    - run: mv -v dist-macos-3.10/* dist/
 
-    - name: Stage macos 3.11
-      uses: actions/download-artifact@v1
-      with:
-        name: dist-macos-3.11
-    - run: mv -v dist-macos-3.11/* dist/
+#    - name: Stage macos 3.11
+#      uses: actions/download-artifact@v1
+#      with:
+#        name: dist-macos-3.11
+#    - run: mv -v dist-macos-3.11/* dist/
 
-    - name: Stage macos 3.12
-      uses: actions/download-artifact@v1
-      with:
-        name: dist-macos-3.12
-    - run: mv -v dist-macos-3.12/* dist/
+#    - name: Stage macos 3.12
+#      uses: actions/download-artifact@v1
+#      with:
+#        name: dist-macos-3.12
+#    - run: mv -v dist-macos-3.12/* dist/
 
     - name: Stage windows 3.9
       uses: actions/download-artifact@v1
