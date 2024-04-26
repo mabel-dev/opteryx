@@ -161,7 +161,7 @@ def test_null_semantics(statement, expected_result):
     result = {v[0] for v in cursor.fetchall()}
     assert compare_sets(
         result, expected_result
-    ), f"Query returned {result} rows but {expected_result} was expected.\n{statement}"
+    ), f"Query returned {result} but {expected_result} was expected.\n{statement}"
 
 
 if __name__ == "__main__":  # pragma: no cover

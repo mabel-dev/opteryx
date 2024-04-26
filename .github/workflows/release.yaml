@@ -208,8 +208,9 @@ jobs:
         name: dist-windows-${{ matrix.python-version }}
         path: dist
 
+  # build-macos, 
   upload:
-    needs: [build-linux-cp39, build-linux-cp310, build-linux-cp311, build-linux-cp312, build-macos, build-windows]
+    needs: [build-linux-cp39, build-linux-cp310, build-linux-cp311, build-linux-cp312, build-windows]
     runs-on: ubuntu-latest
 
     steps:

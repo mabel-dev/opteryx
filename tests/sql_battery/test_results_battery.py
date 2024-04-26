@@ -58,28 +58,6 @@ def test_results_tests(test):
     ), f"Outcome:\n{printable_result}\nExpected:\n{printable_expected}"
 
 
-if __name__ == "__dmain__":  # pragma: no cover
-    import shutil
-    import time
-
-    width = shutil.get_terminal_size((80, 20))[0] - 40
-
-    print(f"RUNNING BATTERY OF {len(RESULTS_TESTS)} RESULTS TESTS")
-    for index, test in enumerate(RESULTS_TESTS):
-        start = time.monotonic_ns()
-        print(
-            f"\033[0;36m{(index + 1):04}\033[0m {test['statement'][0:width - 1].ljust(width)}",
-            "\033[0;35m" + test["file"].split(OS_SEP)[-1].split(".")[0][0:25].ljust(25) + "\033[0m",
-            end="",
-        )
-
-        test_results_tests(test)
-
-        print(f"\033[0;32m{str(int((time.monotonic_ns() - start)/1000000)).rjust(4)}ms\033[0m ✅")
-
-    print("--- ✅ \033[0;32mdone\033[0m")
-
-
 if __name__ == "__main__":  # pragma: no cover
     """
     Running in the IDE we do some formatting - it's not functional but helps
@@ -93,7 +71,7 @@ if __name__ == "__main__":  # pragma: no cover
 
     start_suite = time.monotonic_ns()
 
-    width = shutil.get_terminal_size((80, 20))[0] - 45
+    width = shutil.get_terminal_size((80, 20))[0] - 40
 
     passed = 0
     failed = 0
