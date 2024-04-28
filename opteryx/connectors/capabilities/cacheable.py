@@ -135,8 +135,7 @@ def async_read_thru_cache(func):
 
             ref = await pool.commit(result)
             while ref is None:
-                print("*", end="", flush=True)
-                await asyncio.sleep(1)
+                await asyncio.sleep(0.1)
                 ref = await pool.commit(result)
                 statistics.bytes_read += len(result)
             return ref
@@ -147,8 +146,7 @@ def async_read_thru_cache(func):
             statistics.remote_cache_hits += 1
             ref = await pool.commit(result)
             while ref is None:
-                print("@", end="", flush=True)
-                await asyncio.sleep(1)
+                await asyncio.sleep(0.1)
                 ref = await pool.commit(result)
                 statistics.bytes_read += len(result)
             return ref
@@ -163,7 +161,6 @@ def async_read_thru_cache(func):
         if max_evictions:
             # we set a per-query eviction limit
             buffer = await pool.read(result)
-            buffer = buffer.tobytes()
             if len(buffer) < buffer_pool.max_cacheable_item_size:
                 evicted = buffer_pool.set(key, buffer)
                 remote_cache.set(key, buffer)

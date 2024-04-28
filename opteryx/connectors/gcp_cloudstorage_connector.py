@@ -16,10 +16,8 @@ import urllib.request
 from typing import Dict
 from typing import List
 
-import aiohttp
 import pyarrow
 from orso.schema import RelationSchema
-from orso.tools import single_item_cache
 from orso.types import OrsoTypes
 
 from opteryx.connectors.base.base_connector import BaseConnector
@@ -82,9 +80,12 @@ class GcpCloudStorageConnector(
             self.client_credentials.refresh(request)
             self.access_token = self.client_credentials.token
 
-        # Create a HTTP connection session to reduce effort for
-        # each fetch
+        # Create a HTTP connection session to reduce effort for each fetch
+        # synchronous only
         self.session = requests.Session()
+
+        # cache so we only fetch this once
+        self.blob_list = {}
 
     def _get_storage_client(self):
         try:
@@ -131,12 +132,9 @@ class GcpCloudStorageConnector(
         return content
 
     async def async_read_blob(self, *, blob_name, pool, session, statistics, **kwargs):
-        # For performance we use the GCS API directly, this is roughly 10%
-        # faster than using the SDK. As one of the slowest parts of the system
-        # 10% can be measured in seconds.
 
         bucket, _, _, _ = paths.get_parts(blob_name)
-        print("READ   ", blob_name)
+        # DEBUG: log ("READ   ", blob_name)
 
         # Ensure the credentials are valid, refreshing them if necessary
         if not self.client_credentials.valid:  # pragma: no cover
@@ -149,6 +147,7 @@ class GcpCloudStorageConnector(
         if "kh" not in bucket:
             bucket = bucket.replace("va_data", "va-data")
             bucket = bucket.replace("data_", "data-")
+
         object_full_path = urllib.parse.quote(blob_name[(len(bucket) + 1) :], safe="")
 
         url = f"https://storage.googleapis.com/storage/v1/b/{bucket}/o/{object_full_path}?alt=media"
@@ -161,14 +160,19 @@ class GcpCloudStorageConnector(
             data = await response.read()
             ref = await pool.commit(data)
             while ref is None:
-                print(".", end="", flush=True)
-                await asyncio.sleep(1)
+                # DEBUG: log (".", end="", flush=True)
+                statistics.write_to_buffer_stalls += 1
+                await asyncio.sleep(0.5)
                 ref = await pool.commit(data)
-                statistics.bytes_read += len(data)
+            statistics.bytes_read += len(data)
             return ref
 
-    @single_item_cache
     def get_list_of_blob_names(self, *, prefix: str) -> List[str]:
+
+        # only fetch once per prefix (partition)
+        if prefix in self.blob_list:
+            return self.blob_list[prefix]
+
         bucket, object_path, _, _ = paths.get_parts(prefix)
         if "kh" not in bucket:
             bucket = bucket.replace("va_data", "va-data")
@@ -201,6 +205,7 @@ class GcpCloudStorageConnector(
             if name.endswith(TUPLE_OF_VALID_EXTENSIONS)
         )
 
+        self.blob_list[prefix] = blob_names
         return blob_names
 
     def read_dataset(

@@ -18,6 +18,7 @@ This is designed to be thread-safe with non-blocking reads.
 This module includes an async wrapper around the memory pool
 """
 
+import asyncio
 from multiprocessing import Lock
 from typing import Dict
 
@@ -245,25 +246,35 @@ class MemoryPool:
         This function exists just to wrap the debug logging
         """
         pass
-        # DEBUG: log (f"Memory Pool ({self.name}) <size={self.size}, commits={self.commits}, reads={self.reads}, releases={self.releases}, L1={self.l1_compaction}, L2={self.l2_compaction}>")
+        # DEBUG: log (f"Memory Pool ({self.name}) <size={self.size}, commits={self.commits} ({self.failed_commits}), reads={self.reads}, releases={self.releases}, L1={self.l1_compaction}, L2={self.l2_compaction}>")
 
 
 class AsyncMemoryPool:
     def __init__(self, pool: MemoryPool):
         self.pool: MemoryPool = pool
+        self.lock = asyncio.Lock()
 
     async def commit(self, data: bytes) -> int:
-        return self.pool.commit(data)
+        async with self.lock:
+            return self.pool.commit(data)
 
     async def read(self, ref_id: int) -> bytes:
-        return self.pool.read(ref_id)
+        """
+        In an async environment, we much more certain the bytes will be overwritten
+        if we don't materialize them
+        """
+        async with self.lock:
+            return bytes(self.pool.read(ref_id))
 
     async def release(self, ref_id: int):
-        self.pool.release(ref_id)
+        async with self.lock:
+            self.pool.release(ref_id)
 
     async def can_commit(self, data: bytes) -> bool:
-        self.pool.can_commit(data=data)
+        async with self.lock:
+            return self.pool.can_commit(data)
 
     @property
-    def stats(self):
-        return self.pool.stats
+    async def stats(self):
+        async with self.lock:
+            return self.pool.stats

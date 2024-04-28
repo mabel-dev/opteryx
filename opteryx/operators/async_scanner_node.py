@@ -75,26 +75,23 @@ def normalize_morsel(schema: RelationSchema, morsel: pyarrow.Table) -> pyarrow.T
     return morsel.select([col.identity for col in schema.columns])
 
 
-async def fetch_data(blob_names, pool, reader, queue, statistics):
-    semaphore = asyncio.Semaphore(
-        CONCURRENT_READS
-    )  # Adjust based on memory and expected data sizes
-
+async def fetch_data(blob_names, pool, reader, reply_queue, statistics):
+    semaphore = asyncio.Semaphore(CONCURRENT_READS)
     session = aiohttp.ClientSession()
 
     async def fetch_and_process(blob_name):
         async with semaphore:
-            start_clock = time.monotonic_ns()
+            start_per_blob = time.monotonic_ns()
             reference = await reader(
                 blob_name=blob_name, pool=pool, session=session, statistics=statistics
             )
-            statistics.time_reading_blobs += time.monotonic_ns() - start_clock
-            queue.put((blob_name, reference))  # Put data onto the queue
+            reply_queue.put((blob_name, reference))  # Put data onto the queue
+            statistics.time_reading_blobs += time.monotonic_ns() - start_per_blob
 
     tasks = (fetch_and_process(blob) for blob in blob_names)
 
     await asyncio.gather(*tasks)
-    queue.put(None)
+    reply_queue.put(None)
     await session.close()
 
 
@@ -115,8 +112,6 @@ class AsyncScannerNode(ScannerNode):
             if col.identity in [c.identity for c in self.columns]:
                 orso_schema_cols.append(col)
         orso_schema.columns = orso_schema_cols
-        arrow_schema = None
-        start_clock = time.monotonic_ns()
 
         morsel = None
 
@@ -129,7 +124,6 @@ class AsyncScannerNode(ScannerNode):
 
         data_queue = queue.Queue()
 
-        t = time.monotonic()
         loop = asyncio.new_event_loop()
         threading.Thread(
             target=lambda: loop.run_until_complete(
@@ -153,7 +147,7 @@ class AsyncScannerNode(ScannerNode):
             decoder = get_decoder(blob_name)
             blob_bytes = self.pool.read_and_release(reference)
             decoded = decoder(blob_bytes, projection=self.columns, selection=self.predicates)
-            num_rows, num_columns, morsel = decoded
+            num_rows, _, morsel = decoded
             self.statistics.rows_seen += num_rows
 
             morsel = normalize_morsel(orso_schema, morsel)
@@ -166,5 +160,3 @@ class AsyncScannerNode(ScannerNode):
 
         if morsel:
             self.statistics.columns_read += morsel.num_columns
-
-        print(time.monotonic() - t)
