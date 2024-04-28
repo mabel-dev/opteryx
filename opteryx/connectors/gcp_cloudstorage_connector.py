@@ -23,6 +23,7 @@ from orso.tools import single_item_cache
 from orso.types import OrsoTypes
 
 from opteryx.connectors.base.base_connector import BaseConnector
+from opteryx.connectors.capabilities import Asynchronous
 from opteryx.connectors.capabilities import Cacheable
 from opteryx.connectors.capabilities import Partitionable
 from opteryx.connectors.capabilities import PredicatePushable
@@ -37,7 +38,9 @@ from opteryx.utils.file_decoders import get_decoder
 OS_SEP = os.sep
 
 
-class GcpCloudStorageConnector(BaseConnector, Cacheable, Partitionable, PredicatePushable):
+class GcpCloudStorageConnector(
+    BaseConnector, Cacheable, Partitionable, PredicatePushable, Asynchronous
+):
     __mode__ = "Blob"
 
     PUSHABLE_OPS: Dict[str, bool] = {
@@ -62,6 +65,7 @@ class GcpCloudStorageConnector(BaseConnector, Cacheable, Partitionable, Predicat
         Partitionable.__init__(self, **kwargs)
         Cacheable.__init__(self, **kwargs)
         PredicatePushable.__init__(self, **kwargs)
+        Asynchronous.__init__(self, **kwargs)
 
         self.dataset = self.dataset.replace(".", OS_SEP)
         self.credentials = credentials
@@ -126,7 +130,7 @@ class GcpCloudStorageConnector(BaseConnector, Cacheable, Partitionable, Predicat
         self.statistics.bytes_read += len(content)
         return content
 
-    async def async_read_blob(self, *, blob_name, pool, session, **kwargs):
+    async def async_read_blob(self, *, blob_name, pool, session, statistics, **kwargs):
         # For performance we use the GCS API directly, this is roughly 10%
         # faster than using the SDK. As one of the slowest parts of the system
         # 10% can be measured in seconds.
@@ -160,7 +164,7 @@ class GcpCloudStorageConnector(BaseConnector, Cacheable, Partitionable, Predicat
                 print(".", end="", flush=True)
                 await asyncio.sleep(1)
                 ref = await pool.commit(data)
-                self.statistics.bytes_read += len(data)
+                statistics.bytes_read += len(data)
             return ref
 
     @single_item_cache

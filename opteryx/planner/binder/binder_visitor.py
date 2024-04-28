@@ -770,8 +770,10 @@ class BinderVisitor:
 
     def visit_scan(self, node: Node, context: BindingContext) -> Tuple[Node, BindingContext]:
         from opteryx.connectors import connector_factory
+        from opteryx.connectors.capabilities import Asynchronous
         from opteryx.connectors.capabilities import Cacheable
         from opteryx.connectors.capabilities import Partitionable
+        from opteryx.connectors.capabilities.cacheable import async_read_thru_cache
         from opteryx.connectors.capabilities.cacheable import read_thru_cache
 
         if node.alias in context.relations:
@@ -788,7 +790,12 @@ class BinderVisitor:
         if Cacheable in connector_capabilities:
             # We add the caching mechanism here if the connector is Cacheable and
             # we've not disable caching
-            if not "NO_CACHE" in (node.hints or []):
+            if "NO_CACHE" in (node.hints or []):
+                pass
+            if Asynchronous in connector_capabilities:
+                original_read_blob = node.connector.async_read_blob
+                node.connector.async_read_blob = async_read_thru_cache(original_read_blob)
+            else:
                 original_read_blob = node.connector.read_blob
                 node.connector.read_blob = read_thru_cache(original_read_blob)
         # get them to tell is the schema of the dataset

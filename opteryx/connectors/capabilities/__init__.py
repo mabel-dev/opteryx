@@ -10,8 +10,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from opteryx.connectors.capabilities.asynchronous import Asynchronous
 from opteryx.connectors.capabilities.cacheable import Cacheable
 from opteryx.connectors.capabilities.partitionable import Partitionable
 from opteryx.connectors.capabilities.predicate_pushable import PredicatePushable
 
-__all__ = ("Cacheable", "Partitionable", "PredicatePushable")
+__all__ = ("Asynchronous", "Cacheable", "Partitionable", "PredicatePushable")

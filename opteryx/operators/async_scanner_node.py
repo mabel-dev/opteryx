@@ -85,7 +85,9 @@ async def fetch_data(blob_names, pool, reader, queue, statistics):
     async def fetch_and_process(blob_name):
         async with semaphore:
             start_clock = time.monotonic_ns()
-            reference = await reader(blob_name=blob_name, pool=pool, session=session)
+            reference = await reader(
+                blob_name=blob_name, pool=pool, session=session, statistics=statistics
+            )
             statistics.time_reading_blobs += time.monotonic_ns() - start_clock
             queue.put((blob_name, reference))  # Put data onto the queue
 
