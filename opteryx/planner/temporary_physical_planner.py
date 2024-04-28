@@ -69,7 +69,11 @@ def create_physical_plan(logical_plan, query_properties):
         elif node_type == LogicalPlanStepType.Project:
             node = operators.ProjectionNode(query_properties, projection=logical_node.columns)
         elif node_type == LogicalPlanStepType.Scan:
-            node = operators.ScannerNode(query_properties, **node_config)
+            connector = node_config.get("connector")
+            if connector and hasattr(connector, "async_read_blob"):
+                node = operators.AsyncScannerNode(query_properties, **node_config)
+            else:
+                node = operators.ScannerNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Set:
             node = operators.SetVariableNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Show:

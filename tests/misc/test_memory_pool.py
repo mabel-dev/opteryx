@@ -8,6 +8,8 @@ import threading
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 from opteryx.shared import MemoryPool
+
+# from opteryx.compiled.structures import MemoryPool
 from orso.tools import random_string
 
 
@@ -123,6 +125,7 @@ def test_repeated_commits_and_releases():
         mp.release(ref)
     # Optional: Check internal state to ensure all resources are available again
     mp._level1_compaction()
+
     assert (
         mp.free_segments[0].length == mp.size
     ), "Memory leak detected after repeated commits and releases."
@@ -142,8 +145,7 @@ def test_stress_with_random_sized_data():
         for ref, _ in refs:
             mp.release(ref)
     # Ensure that the pool is not fragmented or leaking
-    mp_available_space = sum(segment.length for segment in mp.free_segments)
-    assert mp_available_space >= mp.size - sum(
+    assert mp.available_space() >= mp.size - sum(
         size for _, size in refs if size < mp.size
     ), "Memory fragmentation or leak detected."
 
@@ -183,8 +185,7 @@ def test_repeated_zero_length_commits():
             mp.release(ref)
 
     # Optional: Verify if the memory pool is back to its initial state.
-    mp_available_space = sum(segment.length for segment in mp.free_segments)
-    assert mp_available_space == mp.size, "Memory pool did not recover fully after releases."
+    assert mp.available_space() == mp.size, "Memory pool did not recover fully after releases."
 
 
 def test_rapid_commit_release():
@@ -194,8 +195,7 @@ def test_rapid_commit_release():
         assert ref is not None, "Failed to commit data."
         mp.release(ref)
     # Verify memory integrity and state post rapid operations
-    mp_available_space = sum(segment.length for segment in mp.free_segments)
-    assert mp_available_space == mp.size, "Memory pool did not return to full availability."
+    assert mp.available_space() == mp.size, "Memory pool did not return to full availability."
 
 
 def test_commit_max_capacity():
@@ -204,8 +204,7 @@ def test_commit_max_capacity():
     ref = mp.commit(data)
     assert ref is not None, "Failed to commit data that exactly matches the pool capacity."
     mp.release(ref)
-    mp_available_space = sum(segment.length for segment in mp.free_segments)
-    assert mp_available_space == mp.size, "Memory pool did not correctly free up space."
+    assert mp.available_space() == mp.size, "Memory pool did not correctly free up space."
 
 
 def test_sequential_commits_without_space():
@@ -230,8 +229,7 @@ def test_stress_with_variable_data_sizes():
         for ref in refs:
             mp.release(ref)
     # Ensure all space is reclaimed
-    mp_available_space = sum(segment.length for segment in mp.free_segments)
-    assert mp_available_space == mp.size, "Memory leakage detected with variable data sizes."
+    assert mp.available_space() == mp.size, "Memory leakage detected with variable data sizes."
 
 
 def test_zero_byte_commit_on_full_pool():
@@ -249,9 +247,8 @@ def test_random_release_order():
     random.shuffle(refs)  # Randomize the order of releases
     for ref in refs:
         mp.release(ref)
-    mp_available_space = sum(segment.length for segment in mp.free_segments)
     assert (
-        mp_available_space == mp.size
+        mp.available_space() == mp.size
     ), "Memory pool failed to reclaim space correctly after random releases."
 
 
@@ -294,5 +291,4 @@ def test_concurrent_access():
 if __name__ == "__main__":  # pragma: no cover
     from tests.tools import run_tests
 
-    test_concurrent_access()
     run_tests()

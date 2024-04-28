@@ -14,8 +14,9 @@
 Memory Pool is used to manage access to arbitrary blocks of memory.
 
 This is designed to be thread-safe with non-blocking reads.
-"""
 
+This module includes an async wrapper around the memory pool
+"""
 
 from multiprocessing import Lock
 from typing import Dict
@@ -112,6 +113,9 @@ class MemoryPool:
     def can_commit(self, data: bytes) -> bool:
         return sum(segment.length for segment in self.free_segments) > len(data)
 
+    def available_space(self) -> int:
+        return sum(segment.length for segment in self.free_segments)
+
     def commit(self, data: bytes) -> int:
         """
         Add an item to the pool and return its reference.
@@ -207,6 +211,21 @@ class MemoryPool:
             segment = self.used_segments.pop(ref_id)
             self.free_segments.append(segment)
 
+    def read_and_release(self, ref_id: int):
+        """
+        Combine two steps together, we lock everytime here
+        """
+        with self.lock:
+            self.reads += 1
+            self.releases += 1
+            if ref_id not in self.used_segments:
+                raise ValueError("Invalid reference ID.")
+            self.read_locks += 1
+            segment = self.used_segments.pop(ref_id)
+            view = memoryview(self.pool)[segment.start : segment.start + segment.length]
+            self.free_segments.append(segment)
+            return view
+
     @property
     def stats(self) -> dict:
         return {
@@ -227,3 +246,24 @@ class MemoryPool:
         """
         pass
         # DEBUG: log (f"Memory Pool ({self.name}) <size={self.size}, commits={self.commits}, reads={self.reads}, releases={self.releases}, L1={self.l1_compaction}, L2={self.l2_compaction}>")
+
+
+class AsyncMemoryPool:
+    def __init__(self, pool: MemoryPool):
+        self.pool: MemoryPool = pool
+
+    async def commit(self, data: bytes) -> int:
+        return self.pool.commit(data)
+
+    async def read(self, ref_id: int) -> bytes:
+        return self.pool.read(ref_id)
+
+    async def release(self, ref_id: int):
+        self.pool.release(ref_id)
+
+    async def can_commit(self, data: bytes) -> bool:
+        self.pool.can_commit(data=data)
+
+    @property
+    def stats(self):
+        return self.pool.stats
