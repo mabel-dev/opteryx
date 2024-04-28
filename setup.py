@@ -103,6 +103,12 @@ extensions = [
         sources=["opteryx/compiled/structures/node.pyx"],
         extra_compile_args=COMPILE_FLAGS,
     ),
+    Extension(
+        name="opteryx.compiled.structures.memory_pool",
+        sources=["opteryx/compiled/structures/memory_pool.pyx"],
+        language="c++",
+        extra_compile_args=COMPILE_FLAGS,
+    ),
 ]
 
 setup_config = {
