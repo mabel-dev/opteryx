@@ -36,3 +36,5 @@ pyodbc
 cassandra-driver
 
 setuptools_rust
+
+aiohttp
