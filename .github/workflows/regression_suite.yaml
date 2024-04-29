@@ -1,8 +1,8 @@
 name: Regression Suite
 
 on:
-  - push
-  - schedule:
+  push:
+  schedule:
     - cron: "0 4 * * *"
 
 jobs:
