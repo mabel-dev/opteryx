@@ -39,7 +39,7 @@
    └───────────┘      └───────────┘      └───────────┘
 ~~~
 """
-
+import time
 from typing import Dict
 from typing import Iterable
 from typing import Union
@@ -49,7 +49,9 @@ from opteryx import config
 PROFILE_LOCATION = config.PROFILE_LOCATION
 
 
-def query_planner(operation: str, parameters: Union[Iterable, Dict, None], connection, qid: str):
+def query_planner(
+    operation: str, parameters: Union[Iterable, Dict, None], connection, qid: str, statistics
+):
     import orjson
 
     from opteryx.exceptions import SqlError
@@ -64,7 +66,10 @@ def query_planner(operation: str, parameters: Union[Iterable, Dict, None], conne
     from opteryx.third_party import sqloxide
 
     # SQL Rewriter extracts temporal filters
+    start = time.monotonic_ns()
     clean_sql, temporal_filters = do_sql_rewrite(operation)
+    statistics.time_planning_sql_rewriter += time.monotonic_ns() - start
+
     params: Union[list, dict, None] = None
     if parameters is None:
         params = []
@@ -80,12 +85,14 @@ def query_planner(operation: str, parameters: Union[Iterable, Dict, None], conne
     except ValueError as parser_error:
         raise SqlError(parser_error) from parser_error
     # AST Rewriter adds temporal filters and parameters to the AST
+    start = time.monotonic_ns()
     parsed_statements = do_ast_rewriter(
         parsed_statements,
         temporal_filters=temporal_filters,
         parameters=params,
         connection=connection,
     )
+    statistics.time_planning_ast_rewriter += time.monotonic_ns() - start
 
     logical_plan: LogicalPlan = None
     ast: dict = {}
@@ -108,16 +115,22 @@ def query_planner(operation: str, parameters: Union[Iterable, Dict, None], conne
         profile_content += logical_plan.draw() + "\n\n"
 
         # The Binder adds schema information to the logical plan
+        start = time.monotonic_ns()
         bound_plan = do_bind_phase(
             logical_plan,
             connection=connection.context,
             qid=qid,
             # common_table_expressions=ctes,
         )
+        statistics.time_planning_binder += time.monotonic_ns() - start
 
+        start = time.monotonic_ns()
         optimized_plan = do_cost_based_optimizer(bound_plan)
+        statistics.time_planning_optimizer += time.monotonic_ns() - start
 
         # before we write the new optimizer and execution engine, convert to a V1 plan
+        start = time.monotonic_ns()
         query_properties = QueryProperties(qid=qid, variables=connection.context.variables)
         physical_plan = create_physical_plan(optimized_plan, query_properties)
+        statistics.time_planning_physical_planner += time.monotonic_ns() - start
         yield physical_plan

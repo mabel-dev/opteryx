@@ -34,6 +34,27 @@ from opteryx.utils.file_decoders import TUPLE_OF_VALID_EXTENSIONS
 from opteryx.utils.file_decoders import get_decoder
 
 OS_SEP = os.sep
+_storage_client = None
+
+
+def get_storage_credentials():
+    global _storage_client
+
+    if _storage_client is not None:
+        return _storage_client._credentials
+
+    try:
+        from google.cloud import storage
+    except ImportError as err:  # pragma: no cover
+        raise MissingDependencyError(err.name) from err
+
+    if os.environ.get("STORAGE_EMULATOR_HOST"):  # pragma: no cover
+        from google.auth.credentials import AnonymousCredentials
+
+        _storage_client = storage.Client(credentials=AnonymousCredentials())
+    else:  # pragma: no cover
+        _storage_client = storage.Client()
+    return _storage_client._credentials
 
 
 class GcpCloudStorageConnector(
@@ -71,14 +92,13 @@ class GcpCloudStorageConnector(
 
         # we're going to cache the first blob as the schema and dataset reader
         # sometimes both start here
-        self.client = self._get_storage_client()
-        self.client_credentials = self.client._credentials
+        self.client_credentials = get_storage_credentials()
 
         # Cache access tokens for accessing GCS
         if not self.client_credentials.valid:
             request = Request()
             self.client_credentials.refresh(request)
-            self.access_token = self.client_credentials.token
+        self.access_token = self.client_credentials.token
 
         # Create a HTTP connection session to reduce effort for each fetch
         # synchronous only
@@ -86,19 +106,6 @@ class GcpCloudStorageConnector(
 
         # cache so we only fetch this once
         self.blob_list = {}
-
-    def _get_storage_client(self):
-        try:
-            from google.cloud import storage
-        except ImportError as err:  # pragma: no cover
-            raise MissingDependencyError(err.name) from err
-
-        if os.environ.get("STORAGE_EMULATOR_HOST"):  # pragma: no cover
-            from google.auth.credentials import AnonymousCredentials
-
-            return storage.Client(credentials=AnonymousCredentials())
-        else:  # pragma: no cover
-            return storage.Client()
 
     def read_blob(self, *, blob_name, **kwargs):
         # For performance we use the GCS API directly, this is roughly 10%

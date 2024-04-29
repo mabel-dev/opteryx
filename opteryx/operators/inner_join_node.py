@@ -33,6 +33,7 @@ pyarrow_ops implementation which was a variation of a sort-merge join.
 import time
 from typing import Generator
 
+import numpy
 import pyarrow
 
 from opteryx.compiled.structures import HashTable
@@ -53,11 +54,42 @@ def preprocess_left(relation, join_columns):
         A HashTable where keys are hashes of the join column entries and
         values are lists of row indices corresponding to each hash key.
     """
-
     ht = HashTable()
-    values = relation.select(join_columns).drop_null().itercolumns()
-    for i, value_tuple in enumerate(zip(*values)):
-        ht.insert(hash(value_tuple), i)
+    values = relation.select(join_columns)
+    num_rows = values.num_rows
+
+    # Prepare to track nulls across all relevant columns
+    combined_nulls = numpy.zeros(num_rows, dtype=bool)
+
+    # Process each column to update the combined null bitmap
+    for column_name in join_columns:
+        column = values.column(column_name)
+        if column.null_count > 0:
+            # Get the null bitmap for the current column, ensure it's in a single chunk first
+            bitmap_buffer = column.combine_chunks().buffers()[0]
+            if bitmap_buffer is not None:
+                # Update combined nulls bitmap
+                bitmap_buffer = numpy.bitwise_not(bitmap_buffer)
+                combined_nulls = numpy.logical_or(
+                    combined_nulls,
+                    [((byte >> bit) & 1) for byte in bitmap_buffer for bit in range(8)][:num_rows],
+                )
+
+                # buffer_as_bytes = numpy.frombuffer(bitmap_buffer, dtype=numpy.uint8)
+                # unpacked_bits = numpy.unpackbits(buffer_as_bytes)[:num_rows]
+                # inverted_bits = numpy.logical_not(unpacked_bits)  # True where bits are 0 (nulls)
+                # combined_nulls = numpy.logical_or(combined_nulls, inverted_bits)
+
+    # Determine row indices that have nulls in any of the considered columns
+    null_indices = numpy.nonzero(combined_nulls)[0]
+
+    # Create a set for faster lookup
+    null_indices_set = set(null_indices)
+
+    # Process values to insert into the hash table
+    for i, value_tuple in enumerate(zip(*values.itercolumns())):
+        if i not in null_indices_set:
+            ht.insert(hash(value_tuple), i)
 
     return ht
 
@@ -78,7 +110,7 @@ def inner_join_with_preprocessed_left_side(left_relation, right_relation, join_c
     left_indexes = []
     right_indexes = []
 
-    right_values = right_relation.select(join_columns).drop_null().itercolumns()
+    right_values = right_relation.select(join_columns).itercolumns()
     for i, value_tuple in enumerate(zip(*right_values)):
         rows = hash_table.get(hash(value_tuple))
         if rows:

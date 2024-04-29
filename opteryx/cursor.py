@@ -171,7 +171,11 @@ class Cursor(DataFrame):
 
         start = time.time_ns()
         plans = query_planner(
-            operation=operation, parameters=params, connection=self._connection, qid=self.id
+            operation=operation,
+            parameters=params,
+            connection=self._connection,
+            qid=self.id,
+            statistics=self._statistics,
         )
 
         try:

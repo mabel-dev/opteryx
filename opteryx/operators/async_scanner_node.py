@@ -146,17 +146,22 @@ class AsyncScannerNode(ScannerNode):
 
             decoder = get_decoder(blob_name)
             blob_bytes = self.pool.read_and_release(reference)
-            decoded = decoder(blob_bytes, projection=self.columns, selection=self.predicates)
-            num_rows, _, morsel = decoded
-            self.statistics.rows_seen += num_rows
+            try:
+                decoded = decoder(blob_bytes, projection=self.columns, selection=self.predicates)
+                num_rows, _, morsel = decoded
+                self.statistics.rows_seen += num_rows
 
-            morsel = normalize_morsel(orso_schema, morsel)
+                morsel = normalize_morsel(orso_schema, morsel)
 
-            self.statistics.blobs_read += 1
-            self.statistics.rows_read += morsel.num_rows
-            self.statistics.bytes_processed += morsel.nbytes
+                self.statistics.blobs_read += 1
+                self.statistics.rows_read += morsel.num_rows
+                self.statistics.bytes_processed += morsel.nbytes
 
-            yield morsel
+                yield morsel
+            except Exception as err:
+                self.statistics.add_message(f"failed to read {blob_name}")
+                self.statistics.failed_reads += 1
+                print(f"[READER] Cannot read blob {blob_name} due to {err}")
 
         if morsel:
             self.statistics.columns_read += morsel.num_columns
