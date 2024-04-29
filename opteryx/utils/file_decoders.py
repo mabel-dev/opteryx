@@ -160,7 +160,9 @@ def parquet_decoder(buffer, projection: List = None, selection=None, just_schema
         selected_columns = []
 
     # Read the parquet table with the optimized column list and selection filters
-    table = parquet.read_table(stream, columns=selected_columns, pre_buffer=False, filters=_select)
+    table = parquet.read_table(
+        stream, columns=selected_columns, pre_buffer=False, filters=_select, use_threads=False
+    )
     if selection:
         table = filter_records(selection, table)
     if projection == []:
