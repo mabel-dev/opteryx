@@ -1,7 +1,9 @@
 name: Regression Suite
 
 on:
-  push
+  push:
+  schedule:
+    - cron: "0 4 * * *"
 
 jobs:
   regression_matrix:

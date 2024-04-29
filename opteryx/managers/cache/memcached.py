@@ -12,7 +12,8 @@
 """
 This implements an interface to Memcached
 
-If we have 10 failures in a row, stop trying to use the cache.
+If we have 10 failures in a row, stop trying to use the cache. We have some
+scenarios where we assume the remote server is down and stop immediately.
 """
 
 import os
@@ -116,4 +117,8 @@ class MemcachedCache(BaseKeyValueStore):
 
     def set(self, key: bytes, value: bytes) -> None:
         if self._consecutive_failures < MAXIMUM_CONSECUTIVE_FAILURES:
-            self._server.set(key, value)
+            try:
+                self._server.set(key, value)
+            except:
+                # if we fail to set, stop trying
+                self._consecutive_failures = MAXIMUM_CONSECUTIVE_FAILURES
