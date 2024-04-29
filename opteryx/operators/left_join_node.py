@@ -50,7 +50,7 @@ def left_join(left_relation, right_relation, left_columns, right_columns):
     """
 
     hash_table = HashTable()
-    non_null_right_values = right_relation.select(right_columns).drop_null().itercolumns()
+    non_null_right_values = right_relation.select(right_columns).itercolumns()
     for i, value_tuple in enumerate(zip(*non_null_right_values)):
         hash_table.insert(hash(value_tuple), i)
 

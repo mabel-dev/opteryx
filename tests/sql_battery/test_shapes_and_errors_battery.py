@@ -1545,6 +1545,8 @@ STATEMENTS = [
         ("SELECT birth_place['town'], birth_place['state'] FROM $astronauts;", 357, 2, None),
         ("SELECT birth_place->'town', birth_place->'state' FROM $astronauts;", 357, 2, None),
         ("SELECT birth_place->>'town', birth_place->>'state' FROM $astronauts;", 357, 2, None),
+        # 1622
+        ("SELECT * FROM (SELECT p.Price AS pri, s.escapeVelocity FROM $missions AS p INNER JOIN $planets AS s ON p.Price = s.escapeVelocity) AS SV WHERE IFNULL(null, pri) = pri", 5, 2, None),
 ]
 # fmt:on
 
