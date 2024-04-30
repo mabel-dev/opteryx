@@ -178,7 +178,7 @@ class MemoryPool:
             self.commits += 1
             return ref_id
 
-    def read(self, ref_id: int, zero_copy: bool = True) -> Union[bytes | memoryview]:
+    def read(self, ref_id: int, zero_copy: bool = True) -> Union[bytes, memoryview]:
         """
         We're using an optimistic locking strategy where we do not acquire
         a lock, perform the read and then check that the metadata hasn't changed
@@ -215,7 +215,7 @@ class MemoryPool:
             segment = self.used_segments.pop(ref_id)
             self.free_segments.append(segment)
 
-    def read_and_release(self, ref_id: int, zero_copy: bool = True) -> Union[bytes | memoryview]:
+    def read_and_release(self, ref_id: int, zero_copy: bool = True) -> Union[bytes, memoryview]:
         """
         Combine two steps together, we lock everytime here
         """
