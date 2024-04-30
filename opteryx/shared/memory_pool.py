@@ -21,6 +21,7 @@ This module includes an async wrapper around the memory pool
 import asyncio
 from multiprocessing import Lock
 from typing import Dict
+from typing import Union
 
 from orso.tools import random_int
 
@@ -177,7 +178,7 @@ class MemoryPool:
             self.commits += 1
             return ref_id
 
-    def read(self, ref_id: int) -> bytes:
+    def read(self, ref_id: int, zero_copy: bool = True) -> Union[bytes, memoryview]:
         """
         We're using an optimistic locking strategy where we do not acquire
         a lock, perform the read and then check that the metadata hasn't changed
@@ -199,7 +200,9 @@ class MemoryPool:
                 self.read_locks += 1
                 segment = self.used_segments[ref_id]
                 view = memoryview(self.pool)[segment.start : segment.start + segment.length]
-        return view
+        if zero_copy:
+            return view
+        return bytes(view)
 
     def release(self, ref_id: int):
         """
@@ -212,7 +215,7 @@ class MemoryPool:
             segment = self.used_segments.pop(ref_id)
             self.free_segments.append(segment)
 
-    def read_and_release(self, ref_id: int):
+    def read_and_release(self, ref_id: int, zero_copy: bool = True) -> Union[bytes, memoryview]:
         """
         Combine two steps together, we lock everytime here
         """
@@ -225,7 +228,9 @@ class MemoryPool:
             segment = self.used_segments.pop(ref_id)
             view = memoryview(self.pool)[segment.start : segment.start + segment.length]
             self.free_segments.append(segment)
-            return view
+            if zero_copy:
+                return view
+            return bytes(view)
 
     @property
     def stats(self) -> dict:

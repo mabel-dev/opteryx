@@ -145,7 +145,9 @@ class AsyncScannerNode(ScannerNode):
             blob_name, reference = item
 
             decoder = get_decoder(blob_name)
-            blob_bytes = self.pool.read_and_release(reference)
+            # This pool is being used by async processes in another thread, using
+            # zero copy versions occassionally results in data getting corrupted
+            blob_bytes = self.pool.read_and_release(reference, zero_copy=False)
             try:
                 decoded = decoder(blob_bytes, projection=self.columns, selection=self.predicates)
                 num_rows, _, morsel = decoded
