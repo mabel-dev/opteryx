@@ -35,6 +35,12 @@ Opteryx offers the following features:
 - Embeddable as a low-cost engine, enabling portability and allowing for hundreds of analysts to leverage ad hoc databases with ease
 - Unified and federated access to data on disk, in the cloud, and in on-premises databases, not only through the same interface but in the same query
 
+## How Does it Work?
+
+Opteryx processes queries by first determining the appropriate language to interact with various downstream data platforms. It translates your query into SQL, CQL, or a suitable query format for document stores like MongoDB, depending on the data source. This allows Opteryx to efficiently retrieve the necessary data from systems such as MySQL or MongoDB to respond to your query.
+
+![Opteryx](https://raw.githubusercontent.com/mabel-dev/opteryx.dev/main/assets/sankeymatic_20240501_224124_1600x1200.png)
+
 ## Why Use Opteryx?
 
 ### __Familiar Interface__
@@ -46,18 +52,6 @@ Opteryx supports key parts of the [Python DBAPI](https://peps.python.org/pep-024
 Opteryx creates a common SQL-layer over multiple data platforms, allowing backend systems to be upgraded, migrated or consolidated without changing any Opteryx code.
 
 Where possible, errors and warnings returned by Opteryx help the user to understand how to fix their statement to reduce time-to-success for even novice SQL users.
-
-### __Bring your own Data__
-
-![Opteryx](https://github.com/mabel-dev/opteryx.dev/raw/main/assets/data-stores.png)
-
-Opteryx supports multiple query engines, dataframe APIs and storage formats. You can mix-and-match sources in a single query. Opteryx can even `JOIN` datasets stored in different formats and different platforms in the same query, such as Parquet and MySQL.
-
-Opteryx allows you to query your data directly in the systems where they are stored, eliminating the need to duplicate data into a common store for analytics. This saves you the cost and effort of maintaining duplicates.
-
-Opteryx can push parts of your query to the source query engine, allowing queries to run at the speed of the backend, rather than your local computer.
-
-And if there's not a connector in the box for your data platform; bespoke connectors can be added.
 
 ### __Consumption-Based Billing Friendly__
 
@@ -79,6 +73,17 @@ Benchmarks on M2 Pro Mac running an ad hoc `GROUP BY` over a 6 million row parqu
 
 Designed to run in Knative and similar environments like Google Cloud Run, Opteryx can scale down to zero, and scale up to respond to thousands of concurrent queries within seconds.
 
+### __Bring your own Data__
+
+![Opteryx](https://github.com/mabel-dev/opteryx.dev/raw/main/assets/data-stores.png)
+
+Opteryx supports multiple query engines, dataframe APIs and storage formats. You can mix-and-match sources in a single query. Opteryx can even `JOIN` datasets stored in different formats and different platforms in the same query, such as Parquet and MySQL.
+
+Opteryx allows you to query your data directly in the systems where they are stored, eliminating the need to duplicate data into a common store for analytics. This saves you the cost and effort of maintaining duplicates.
+
+Opteryx can push parts of your query to the source query engine, allowing queries to run at the speed of the backend, rather than your local computer.
+
+And if there's not a connector in the box for your data platform; bespoke connectors can be added.
 ## Install
 
 Installing from PyPI is recommended.
