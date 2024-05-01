@@ -139,9 +139,18 @@ class AsyncScannerNode(ScannerNode):
         ).start()
 
         while True:
-            item = data_queue.get()
+            try:
+                # Attempt to get an item with a timeout.
+                item = data_queue.get(timeout=0.1)
+            except queue.Empty:
+                # Increment stall count if the queue is empty.
+                self.statistics.stalls_reading_from_read_buffer += 1
+                continue  # Skip the rest of the loop and try to get an item again.
+
             if item is None:
+                # Break out of the loop if the item is None, indicating a termination condition.
                 break
+
             blob_name, reference = item
 
             decoder = get_decoder(blob_name)
@@ -149,7 +158,10 @@ class AsyncScannerNode(ScannerNode):
             # zero copy versions occassionally results in data getting corrupted
             blob_bytes = self.pool.read_and_release(reference, zero_copy=False)
             try:
+                start = time.monotonic_ns()
+                # the sync readers include the decode time as part of the read time
                 decoded = decoder(blob_bytes, projection=self.columns, selection=self.predicates)
+                self.statistics.time_reading_blobs += time.monotonic_ns() - start
                 num_rows, _, morsel = decoded
                 self.statistics.rows_seen += num_rows
 

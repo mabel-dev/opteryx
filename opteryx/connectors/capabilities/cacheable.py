@@ -103,7 +103,16 @@ def read_thru_cache(func):
 
 
 def async_read_thru_cache(func):
+    """
+    This is added to the reader by the binder.
 
+    We check the faster buffer pool (local memory), then the cache (usually
+    remote cache like memcached) before fetching from source.
+
+    The async readers don't return the bytes, instead they return the
+    read buffer reference for the bytes, which means we need to populate
+    the read buffer and return the ref for these items.
+    """
     # Capture the max_evictions value at decoration time
     from opteryx import get_cache_manager
     from opteryx.managers.cache import NullCache
@@ -136,6 +145,7 @@ def async_read_thru_cache(func):
             ref = await pool.commit(result)
             while ref is None:
                 await asyncio.sleep(0.1)
+                statistics.stalls_writing_to_read_buffer += 1
                 ref = await pool.commit(result)
                 statistics.bytes_read += len(result)
             return ref
@@ -147,6 +157,7 @@ def async_read_thru_cache(func):
             ref = await pool.commit(result)
             while ref is None:
                 await asyncio.sleep(0.1)
+                statistics.stalls_writing_to_read_buffer += 1
                 ref = await pool.commit(result)
                 statistics.bytes_read += len(result)
             return ref

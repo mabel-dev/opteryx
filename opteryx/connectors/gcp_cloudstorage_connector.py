@@ -167,9 +167,8 @@ class GcpCloudStorageConnector(
             data = await response.read()
             ref = await pool.commit(data)
             while ref is None:
-                # DEBUG: log (".", end="", flush=True)
-                statistics.write_to_buffer_stalls += 1
-                await asyncio.sleep(0.5)
+                statistics.stalls_writing_to_read_buffer += 1
+                await asyncio.sleep(0.1)
                 ref = await pool.commit(data)
             statistics.bytes_read += len(data)
             return ref
@@ -200,17 +199,26 @@ class GcpCloudStorageConnector(
             self.access_token = self.client_credentials.token
 
         headers = {"Authorization": f"Bearer {self.access_token}"}
-        response = self.session.get(url, headers=headers, timeout=30)
 
-        if response.status_code != 200:  # pragma: no cover
-            raise Exception(f"Error fetching blob list: {response.text}")
+        params = None
+        blob_names = []
+        while True:
+            response = self.session.get(url, headers=headers, timeout=30, params=params)
 
-        blob_data = response.json()
-        blob_names = sorted(
-            f"{bucket}/{name}"
-            for name in (blob["name"] for blob in blob_data.get("items", []))
-            if name.endswith(TUPLE_OF_VALID_EXTENSIONS)
-        )
+            if response.status_code != 200:  # pragma: no cover
+                raise Exception(f"Error fetching blob list: {response.text}")
+
+            blob_data = response.json()
+            blob_names.extend(
+                f"{bucket}/{name}"
+                for name in (blob["name"] for blob in blob_data.get("items", []))
+                if name.endswith(TUPLE_OF_VALID_EXTENSIONS)
+            )
+
+            page_token = blob_data.get("nextPageToken")
+            if not page_token:
+                break
+            params["pageToken"] = page_token
 
         self.blob_list[prefix] = blob_names
         return blob_names
