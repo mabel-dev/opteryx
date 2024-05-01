@@ -75,11 +75,6 @@ def preprocess_left(relation, join_columns):
                     [((byte >> bit) & 1) for byte in bitmap_buffer for bit in range(8)][:num_rows],
                 )
 
-                # buffer_as_bytes = numpy.frombuffer(bitmap_buffer, dtype=numpy.uint8)
-                # unpacked_bits = numpy.unpackbits(buffer_as_bytes)[:num_rows]
-                # inverted_bits = numpy.logical_not(unpacked_bits)  # True where bits are 0 (nulls)
-                # combined_nulls = numpy.logical_or(combined_nulls, inverted_bits)
-
     # Determine row indices that have nulls in any of the considered columns
     null_indices = numpy.nonzero(combined_nulls)[0]
 

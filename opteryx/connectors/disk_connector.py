@@ -14,7 +14,7 @@
 The 'direct disk' connector provides the reader for when a dataset is
 given as a folder on local disk
 """
-
+import asyncio
 import os
 from typing import Dict
 from typing import List
@@ -25,6 +25,7 @@ from orso.tools import single_item_cache
 from orso.types import OrsoTypes
 
 from opteryx.connectors.base.base_connector import BaseConnector
+from opteryx.connectors.capabilities import Asynchronous
 from opteryx.connectors.capabilities import Cacheable
 from opteryx.connectors.capabilities import Partitionable
 from opteryx.connectors.capabilities import PredicatePushable
@@ -41,7 +42,7 @@ if not hasattr(os, "O_BINARY"):
     os.O_BINARY = 0  # Value has no effect on non-Windows platforms
 
 
-class DiskConnector(BaseConnector, Cacheable, Partitionable, PredicatePushable):
+class DiskConnector(BaseConnector, Cacheable, Partitionable, PredicatePushable, Asynchronous):
     __mode__ = "Blob"
 
     PUSHABLE_OPS: Dict[str, bool] = {
@@ -67,9 +68,11 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable, PredicatePushable):
         Partitionable.__init__(self, **kwargs)
         Cacheable.__init__(self, **kwargs)
         PredicatePushable.__init__(self, **kwargs)
+        Asynchronous.__init__(self, **kwargs)
 
         self.dataset = self.dataset.replace(".", OS_SEP)
         self.cached_first_blob = None  # Cache for the first blob in the dataset
+        self.blob_list = {}
 
     def read_blob(self, *, blob_name, **kwargs) -> bytes:
         """
@@ -97,7 +100,19 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable, PredicatePushable):
         finally:
             os.close(file_descriptor)
 
-    @single_item_cache
+    async def async_read_blob(self, *, blob_name, pool, statistics, **kwargs):
+
+        # DEBUG: log ("READ   ", blob_name)
+        with open(blob_name, "rb") as file:
+            data = file.read()
+            ref = await pool.commit(data)
+            while ref is None:
+                statistics.stalls_writing_to_read_buffer += 1
+                await asyncio.sleep(0.1)
+                ref = await pool.commit(data)
+            statistics.bytes_read += len(data)
+            return ref
+
     def get_list_of_blob_names(self, *, prefix: str) -> List[str]:
         """
         List all blob files in the given directory path.
@@ -109,12 +124,19 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable, PredicatePushable):
         Returns:
             A list of blob filenames.
         """
-        return sorted(
+        # only fetch once per prefix (partition)
+        if prefix in self.blob_list:
+            return self.blob_list[prefix]
+
+        blobs = sorted(
             os.path.join(root, file)
             for root, _, files in os.walk(prefix)
             for file in files
             if file.endswith(TUPLE_OF_VALID_EXTENSIONS)
         )
+
+        self.blob_list[prefix] = blobs
+        return blobs
 
     def read_dataset(
         self, columns: list = None, predicates: list = None, just_schema: bool = False, **kwargs

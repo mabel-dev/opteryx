@@ -9,7 +9,6 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 from opteryx.shared import MemoryPool
 
-# from opteryx.compiled.structures import MemoryPool
 from orso.tools import random_string
 
 
@@ -127,27 +126,41 @@ def test_repeated_commits_and_releases():
     mp._level1_compaction()
 
     assert (
-        mp.free_segments[0].length == mp.size
-    ), "Memory leak detected after repeated commits and releases."
+        mp.free_segments[0]["length"] == mp.size
+    ), f"Memory leak detected after repeated commits and releases. {mp.free_segments[0]['length']} != {mp.size}\n{mp.free_segments}"
 
 
 def test_stress_with_random_sized_data():
-    mp = MemoryPool(size=500 * 200)
-    refs = []
+    """
+    This is designed to create situations where we have fragmentation and
+    many removes and adds.
+
+    This has been the most useful test in finding edge cases.
+    """
+    mp = MemoryPool(size=1000 * 200)
+    refs = set()
     try:
-        for _ in range(500):
-            size = random.randint(20, 200)  # Random data size between 20 and 200 bytes
+        for _ in range(100000):
+            size = random.randint(20, 50)  # Random data size between 20 and 200 bytes
             data = bytes(size)
             ref = mp.commit(data)
             if ref is not None:
-                refs.append((ref, size))
+                refs.add(ref)
+            else:
+                selected = random.sample(list(refs), random.randint(1, len(refs) // 10))
+                for ref in selected:
+                    refs.discard(ref)
+                    mp.release(ref)
     finally:
-        for ref, _ in refs:
-            mp.release(ref)
-    # Ensure that the pool is not fragmented or leaking
-    assert mp.available_space() >= mp.size - sum(
-        size for _, size in refs if size < mp.size
-    ), "Memory fragmentation or leak detected."
+        for ref in list(refs):
+            mp.read_and_release(ref)
+            refs.discard(ref)
+    # Ensure that the pool or leaking
+    assert mp.available_space() >= mp.size, "Memory fragmentation or leak detected."
+
+    mp._level1_compaction()
+    assert len(mp.free_segments) == 1
+    assert len(mp.used_segments) == 0
 
 
 def test_compaction_effectiveness():

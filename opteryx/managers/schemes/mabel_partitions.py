@@ -10,6 +10,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import concurrent.futures
 import datetime
 import os
 from typing import Callable
@@ -83,31 +84,43 @@ class MabelPartitionScheme(BasePartitionScheme):
         """filter the blobs acording to the chosen scheme"""
 
         midnight = datetime.datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+        by_label = f"{OS_SEP}by_"
+        as_at_label = f"{OS_SEP}as_at"
 
         def _inner(*, timestamp):
             date_path = f"{prefix}{OS_SEP}year_{timestamp.year:04d}{OS_SEP}month_{timestamp.month:02d}{OS_SEP}day_{timestamp.day:02d}"
             hour_label = f"{OS_SEP}by_hour{OS_SEP}hour={timestamp.hour:02d}/"
-            by_label = f"{OS_SEP}by_"
-            as_at_label = f"{OS_SEP}as_at"
 
             # Call your method to get the list of blob names
             blob_names = blob_list_getter(prefix=date_path)
             if len(blob_names) == 0:
                 return []
-            control_blobs = [
-                blob for blob in blob_names if os.path.splitext(blob)[1] not in DATA_EXTENSIONS
-            ]
-            blob_names = [
-                blob for blob in blob_names if os.path.splitext(blob)[1] in DATA_EXTENSIONS
-            ]
 
-            segments = {extract_prefix(blob, "by_") for blob in blob_names if by_label in blob}
+            control_blobs = []
+            data_blobs = []
+            segments = set()
+            hour_blobs = []
+
+            for blob in blob_names:
+                extension = os.path.splitext(blob)[1]
+                if extension not in DATA_EXTENSIONS:
+                    control_blobs.append(blob)
+                else:
+                    data_blobs.append(blob)
+
+                # Collect segments
+                if by_label in blob:
+                    segments.add(extract_prefix(blob, "by_"))
+
+                    # Collect hour specific blobs
+                    if hour_label in blob:
+                        hour_blobs.append(blob)
+
+            if hour_blobs:
+                data_blobs = hour_blobs
+
             if segments - {"by_hour", None}:
                 raise UnsupportedSegementationError(dataset=prefix, segments=segments)
-
-            # Filter for the specific hour, if hour folders exist - prefer by_hour segements
-            if any(hour_label in blob_name for blob_name in blob_names):
-                blob_names = [blob_name for blob_name in blob_names if hour_label in blob_name]
 
             as_at = None
             as_ats = sorted(
@@ -122,8 +135,7 @@ class MabelPartitionScheme(BasePartitionScheme):
                 if is_complete_and_not_invalid(control_blobs, as_at):
                     blob_names = (blob for blob in blob_names if as_at in blob)
                     break
-                else:
-                    blob_names = [blob for blob in blob_names if as_at not in blob]
+                blob_names = [blob for blob in blob_names if as_at not in blob]
                 as_at = None
 
             return blob_names
@@ -133,8 +145,15 @@ class MabelPartitionScheme(BasePartitionScheme):
 
         found = set()
 
-        for segment_timeslice in self.hourly_timestamps(start_date, end_date):
-            blobs = _inner(timestamp=segment_timeslice)
-            found.update(blobs)
+        # Use a ThreadPoolExecutor to parallelize fetching blobs for each hour
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            # Prepare a list of future tasks
+            futures = [
+                executor.submit(_inner, **{"timestamp": ts})
+                for ts in self.hourly_timestamps(start_date, end_date)
+            ]
+            # Wait for all futures to complete and collect results
+            for future in concurrent.futures.as_completed(futures):
+                found.update(future.result())
 
         return sorted(found)
