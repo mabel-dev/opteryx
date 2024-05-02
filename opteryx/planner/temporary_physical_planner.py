@@ -46,7 +46,7 @@ def create_physical_plan(logical_plan, query_properties):
         elif node_type == LogicalPlanStepType.Explain:
             node = operators.ExplainNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Filter:
-            node = operators.SelectionNode(query_properties, filter=node_config["condition"])
+            node = operators.FilterNode(query_properties, filter=node_config["condition"])
         elif node_type == LogicalPlanStepType.FunctionDataset:
             node = operators.FunctionDatasetNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Join:
@@ -71,9 +71,9 @@ def create_physical_plan(logical_plan, query_properties):
         elif node_type == LogicalPlanStepType.Scan:
             connector = node_config.get("connector")
             if connector and hasattr(connector, "async_read_blob"):
-                node = operators.AsyncScannerNode(query_properties, **node_config)
+                node = operators.AsyncReaderNode(query_properties, **node_config)
             else:
-                node = operators.ScannerNode(query_properties, **node_config)
+                node = operators.ReaderNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Set:
             node = operators.SetVariableNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Show:

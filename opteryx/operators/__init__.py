@@ -15,7 +15,7 @@ from .base_plan_node import BasePlanNode  # isort: skip
 from .aggregate_and_group_node import AggregateAndGroupNode  # Group is always followed by aggregate
 from .aggregate_node import AGGREGATORS
 from .aggregate_node import AggregateNode  # aggregate data
-from .async_scanner_node import AsyncScannerNode
+from .async_read_node import AsyncReaderNode
 
 # from .build_statistics_node import BuildStatisticsNode  # Analyze Tables
 from .cross_join_node import CrossJoinNode  # CROSS JOIN
@@ -34,8 +34,8 @@ from .metadata_writer_node import MetadataWriterNode
 from .morsel_defragment_node import MorselDefragmentNode  # consolidate small morsels
 from .noop_node import NoOpNode  # No Operation
 from .projection_node import ProjectionNode  # remove unwanted columns including renames
-from .scanner_node import ScannerNode
-from .selection_node import SelectionNode  # filter unwanted rows
+from .read_node import ReaderNode
+from .filter_node import FilterNode  # filter unwanted rows
 from .set_variable_node import SetVariableNode
 from .show_columns_node import ShowColumnsNode  # column details
 

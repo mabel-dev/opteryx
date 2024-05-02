@@ -29,7 +29,7 @@ import pyarrow
 import pyarrow.parquet
 from orso.schema import RelationSchema
 
-from opteryx.operators.scanner_node import ScannerNode
+from opteryx.operators.read_node import ReaderNode
 from opteryx.shared import AsyncMemoryPool
 from opteryx.shared import MemoryPool
 from opteryx.utils.file_decoders import get_decoder
@@ -95,7 +95,7 @@ async def fetch_data(blob_names, pool, reader, reply_queue, statistics):
     await session.close()
 
 
-class AsyncScannerNode(ScannerNode):
+class AsyncReaderNode(ReaderNode):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

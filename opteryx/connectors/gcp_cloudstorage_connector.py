@@ -218,7 +218,7 @@ class GcpCloudStorageConnector(
             page_token = blob_data.get("nextPageToken")
             if not page_token:
                 break
-            params["pageToken"] = page_token
+            params = {"pageToken": page_token}
 
         self.blob_list[prefix] = blob_names
         return blob_names

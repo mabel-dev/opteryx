@@ -65,7 +65,7 @@ def normalize_morsel(schema: RelationSchema, morsel: pyarrow.Table) -> pyarrow.T
     return morsel.select([col.identity for col in schema.columns])
 
 
-class ScannerNode(BasePlanNode):
+class ReaderNode(BasePlanNode):
     def __init__(self, properties: QueryProperties, **parameters):
         super().__init__(properties=properties, **parameters)
         self.start_date = parameters.get("start_date")
@@ -74,13 +74,29 @@ class ScannerNode(BasePlanNode):
         self.columns = parameters.get("columns", [])
         self.predicates = parameters.get("predicates", [])
 
+        self.connector = parameters.get("connector")
+        self.schema = parameters.get("schema")
+
         if len(self.hints) != 0:
             self.statistics.add_message("All HINTS are currently ignored")
+
+    def to_dict(self) -> dict:
+        return {
+            "identity": f"read-{self.identity}", 
+            "opterator": "ReadNode",
+            "schema": self.columns,
+            "projection": self.columns,
+            "filters": self.predicates,
+        }
+    
+    @classmethod
+    def from_dict(cls, dic: dict) -> "BasePlanNode":
+        raise NotImplementedError()
 
     @property
     def name(self):  # pragma: no cover
         """friendly name for this step"""
-        return "Scan"
+        return "Read"
 
     @property  # pragma: no cover
     def config(self):
@@ -103,7 +119,7 @@ class ScannerNode(BasePlanNode):
     def execute(self) -> Generator:
         """Perform this step, time how long is spent doing work"""
         morsel = None
-        orso_schema = self.parameters["schema"]
+        orso_schema = self.schema
         orso_schema_cols = []
         for col in orso_schema.columns:
             if col.identity in [c.identity for c in self.columns]:
@@ -111,7 +127,7 @@ class ScannerNode(BasePlanNode):
         orso_schema.columns = orso_schema_cols
         arrow_schema = None
         start_clock = time.monotonic_ns()
-        reader = self.parameters["connector"].read_dataset(
+        reader = self.connector.read_dataset(
             columns=self.columns, predicates=self.predicates
         )
         for morsel in reader:

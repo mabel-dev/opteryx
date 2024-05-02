@@ -133,12 +133,12 @@ class MabelPartitionScheme(BasePartitionScheme):
                 if as_at is None:
                     continue
                 if is_complete_and_not_invalid(control_blobs, as_at):
-                    blob_names = (blob for blob in blob_names if as_at in blob)
+                    data_blobs = (blob for blob in data_blobs if as_at in blob)
                     break
-                blob_names = [blob for blob in blob_names if as_at not in blob]
+                data_blobs = [blob for blob in data_blobs if as_at not in blob]
                 as_at = None
 
-            return blob_names
+            return data_blobs
 
         start_date = start_date or midnight
         end_date = end_date or midnight.replace(hour=23, minute=59)

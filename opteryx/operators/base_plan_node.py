@@ -19,9 +19,15 @@ from orso.tools import random_string
 from opteryx.models import QueryProperties
 from opteryx.models import QueryStatistics
 
-
 class BasePlanNode:
     _producers = None
+
+    def to_dict(self) -> dict:
+        raise NotImplementedError()
+    
+    @classmethod
+    def from_dict(cls, dic: dict) -> "BasePlanNode":
+        raise NotImplementedError()
 
     def __init__(self, properties: QueryProperties, **parameters):
         """
