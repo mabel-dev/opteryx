@@ -133,24 +133,18 @@ class CqlConnector(BaseConnector, PredicatePushable):
         # Update SQL if we've pushed predicates
         parameters: list = []
         for predicate in predicates:
-            if predicate.node_type == NodeType.UNARY_OPERATOR:
-                operator = self.OPS_XLAT[predicate.value]
-                operand, parameters = _handle_operand(predicate.centre, parameters)
-                operator = operator.replace(":operand", operand)
 
-                query_builder.WHERE(operator)
-            else:
-                left_operand = predicate.left
-                right_operand = predicate.right
-                operator = self.OPS_XLAT[predicate.value]
+            left_operand = predicate.left
+            right_operand = predicate.right
+            operator = self.OPS_XLAT[predicate.value]
 
-                left_value, parameters = _handle_operand(left_operand, parameters)
-                right_value, parameters = _handle_operand(right_operand, parameters)
+            left_value, parameters = _handle_operand(left_operand, parameters)
+            right_value, parameters = _handle_operand(right_operand, parameters)
 
-                operator = operator.replace(":left", left_value)
-                operator = operator.replace(":right", right_value)
+            operator = operator.replace(":left", left_value)
+            operator = operator.replace(":right", right_value)
 
-                query_builder.WHERE(operator)
+            query_builder.WHERE(operator)
 
         session = self.cluster.connect()
         # DEBUG: log ("READ DATASET\n", str(query_builder))

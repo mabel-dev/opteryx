@@ -91,7 +91,7 @@ class AggregateAndGroupNode(BasePlanNode):
         # we're pretty sure we're going to use - this will fail for datasets
         # larger than memory
         table = pyarrow.concat_tables(
-            project(morsels.execute(), self.all_identifiers), promote_options="none"
+            project(morsels.execute(), self.all_identifiers), promote_options="permissive"
         )
 
         # Allow grouping by functions by evaluating them first

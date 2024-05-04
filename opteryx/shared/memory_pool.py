@@ -40,7 +40,7 @@ class MemoryPool:
         size: int,
         name: str = "Memory Pool",
     ):
-        if size <= 0:
+        if size <= 0:  # pragma: no cover
             raise ValueError("MemoryPool size must be a positive integer")
         self.lock = Lock()
         self.pool = bytearray(size)
@@ -188,12 +188,12 @@ class MemoryPool:
         We use this approach because locks are expensive and memory pools are
         likely to be read heavy.
         """
-        if ref_id not in self.used_segments:
+        if ref_id not in self.used_segments:  # pragma: no cover
             raise ValueError("Invalid reference ID.")
         self.reads += 1
         segment = self.used_segments[ref_id]
         view = memoryview(self.pool)[segment.start : segment.start + segment.length]
-        if segment != self.used_segments[ref_id]:
+        if segment != self.used_segments[ref_id]:  # pragma: no cover
             with self.lock:
                 if ref_id not in self.used_segments:
                     raise ValueError("Invalid reference ID.")
@@ -210,7 +210,7 @@ class MemoryPool:
         """
         self.releases += 1
         with self.lock:
-            if ref_id not in self.used_segments:
+            if ref_id not in self.used_segments:  # pragma: no cover
                 raise ValueError(f"Invalid reference ID - {ref_id}.")
             segment = self.used_segments.pop(ref_id)
             self.free_segments.append(segment)
@@ -222,7 +222,7 @@ class MemoryPool:
         with self.lock:
             self.reads += 1
             self.releases += 1
-            if ref_id not in self.used_segments:
+            if ref_id not in self.used_segments:  # pragma: no cover
                 raise ValueError("Invalid reference ID.")
             self.read_locks += 1
             segment = self.used_segments.pop(ref_id)
@@ -233,7 +233,7 @@ class MemoryPool:
             return bytes(view)
 
     @property
-    def stats(self) -> dict:
+    def stats(self) -> dict:  # pragma: no cover
         return {
             "free_segments": len(self.free_segments),
             "used_segments": len(self.used_segments),
@@ -274,12 +274,3 @@ class AsyncMemoryPool:
     async def release(self, ref_id: int):
         async with self.lock:
             self.pool.release(ref_id)
-
-    async def can_commit(self, data: bytes) -> bool:
-        async with self.lock:
-            return self.pool.can_commit(data)
-
-    @property
-    async def stats(self):
-        async with self.lock:
-            return self.pool.stats

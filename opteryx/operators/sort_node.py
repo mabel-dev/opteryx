@@ -98,7 +98,7 @@ class SortNode(BasePlanNode):
                             direction,
                         )
                     )
-                except ColumnNotFoundError as cnfe:
+                except ColumnNotFoundError as cnfe:  # pragma: no cover
                     raise ColumnNotFoundError(
                         f"`ORDER BY` must reference columns as they appear in the `SELECT` clause. {cnfe}"
                     )

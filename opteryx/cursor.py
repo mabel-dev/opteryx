@@ -326,8 +326,8 @@ class Cursor(DataFrame):
             if limit is not None:
                 result_data = utils.arrow.limit_records(result_data, limit)  # type: ignore
         try:
-            return pyarrow.concat_tables(result_data, promote_options="none")
-        except pyarrow.ArrowInvalid as err:  # pragma: no cover
+            return pyarrow.concat_tables(result_data, promote_options="permissive")
+        except (pyarrow.ArrowInvalid, pyarrow.ArrowTypeError) as err:  # pragma: no cover
             # DEBUG: log (err)
             if "struct" in str(err):
                 raise InconsistentSchemaError(

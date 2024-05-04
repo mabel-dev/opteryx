@@ -5,6 +5,8 @@ import random
 import time
 import threading
 
+os.environ["OPTERYX_DEBUG"] = "1"
+
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 from opteryx.shared import MemoryPool
@@ -126,7 +128,7 @@ def test_repeated_commits_and_releases():
     mp._level1_compaction()
 
     assert (
-        mp.free_segments[0]["length"] == mp.size
+        mp.free_segments[0].length == mp.size
     ), f"Memory leak detected after repeated commits and releases. {mp.free_segments[0]['length']} != {mp.size}\n{mp.free_segments}"
 
 
@@ -156,7 +158,10 @@ def test_stress_with_random_sized_data():
             mp.read_and_release(ref)
             refs.discard(ref)
     # Ensure that the pool or leaking
-    assert mp.available_space() >= mp.size, "Memory fragmentation or leak detected."
+    mp._level1_compaction()
+    assert (
+        mp.available_space() == mp.size
+    ), f"Memory fragmentation or leak detected.\n{mp.available_space()} != {mp.size}"
 
     mp._level1_compaction()
     assert len(mp.free_segments) == 1

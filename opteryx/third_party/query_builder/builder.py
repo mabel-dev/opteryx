@@ -45,7 +45,7 @@ class Query:
         target = self.data[keyword]
 
         if flag:
-            if target.flag:
+            if target.flag:  # pragma: no cover
                 raise ValueError(f"{keyword} already has flag: {flag!r}")
             target.flag = flag
 
@@ -69,7 +69,7 @@ class Query:
     def _resolve_flags(self, keyword):
         prefix, _, flag = keyword.partition(" ")
         if prefix in self.flag_keywords:
-            if flag and flag not in self.flag_keywords[prefix]:
+            if flag and flag not in self.flag_keywords[prefix]:  # pragma: no cover
                 raise ValueError(f"invalid flag for {prefix}: {flag!r}")
             return prefix, flag
         return keyword, ""
@@ -134,7 +134,7 @@ class _Thing(NamedTuple):
             alias, value = "", arg
         elif len(arg) == 2:
             alias, value = arg
-        else:
+        else:  # pragma: no cover
             raise ValueError(f"invalid arg: {arg!r}")
         return cls(_clean_up(value), _clean_up(alias), **kwargs)
 

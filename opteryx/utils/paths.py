@@ -19,8 +19,6 @@ OS_SEP = os.sep
 
 
 def get_parts(path_string: str):
-    if not path_string:
-        raise ValueError("get_parts: path_string must have a value")
 
     # Validate against path traversal and home directory references
     if ".." in path_string or path_string.startswith("~"):
@@ -48,7 +46,3 @@ def get_parts(path_string: str):
     parts_path = OS_SEP.join(parts)
 
     return bucket, parts_path, file_name, suffix
-
-
-def is_file(path):
-    return os.path.isfile(path)

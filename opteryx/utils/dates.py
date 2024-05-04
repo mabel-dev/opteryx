@@ -91,7 +91,7 @@ def date_range(start_date, end_date, interval: str):
         raise ValueError("Cannot create an series with the provided start and end dates")
 
     # if the dates are the same, return that date
-    if start_date == end_date:  # pragme: no cover
+    if start_date == end_date:  # pragma: no cover
         yield start_date
         return
 
@@ -222,6 +222,6 @@ def date_trunc(truncate_to, date_value):
         return datetime.datetime(date_value.year, date_value.month, date_value.day, date_value.hour, date_value.minute, tzinfo=date_value.tzinfo)
     elif truncate_to == "second":
         return datetime.datetime(date_value.year, date_value.month, date_value.day, date_value.hour, date_value.minute, date_value.second, tzinfo=date_value.tzinfo)
-    else:
+    else:  # pragma: no cover
         raise ValueError("Invalid unit: {}".format(truncate_to))
     # fmt:on

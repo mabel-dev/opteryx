@@ -85,26 +85,23 @@ class MemoryViewStream(BinaryIO):
     def fileno(self) -> int:
         return -1
 
-    def flush(self) -> None:
+    def flush(self) -> None:  # pragma: no cover
         raise io.UnsupportedOperation()
 
     def isatty(self) -> bool:
         return False
 
-    def readline(self, limit: int = -1):
+    def readline(self, limit: int = -1):  # pragma: no cover
         raise io.UnsupportedOperation()
 
-    def readlines(self, hint: int = -1) -> list:
+    def readlines(self, hint: int = -1) -> list:  # pragma: no cover
         raise io.UnsupportedOperation()
 
-    def truncate(self):
-
+    def truncate(self):  # pragma: no cover
         raise io.UnsupportedOperation()
 
-    def write(self):
-
+    def write(self):  # pragma: no cover
         raise io.UnsupportedOperation()
 
-    def writelines(self):
-
+    def writelines(self):  # pragma: no cover
         raise io.UnsupportedOperation()

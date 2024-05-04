@@ -29,7 +29,7 @@ import pyarrow
 import pyarrow.parquet
 from orso.schema import RelationSchema
 
-from opteryx.operators.scanner_node import ScannerNode
+from opteryx.operators.read_node import ReaderNode
 from opteryx.shared import AsyncMemoryPool
 from opteryx.shared import MemoryPool
 from opteryx.utils.file_decoders import get_decoder
@@ -95,7 +95,7 @@ async def fetch_data(blob_names, pool, reader, reply_queue, statistics):
     await session.close()
 
 
-class AsyncScannerNode(ScannerNode):
+class AsyncReaderNode(ReaderNode):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -122,7 +122,7 @@ class AsyncScannerNode(ScannerNode):
             prefix=reader.dataset,
         )
 
-        data_queue = queue.Queue()
+        data_queue: queue.Queue = queue.Queue()
 
         loop = asyncio.new_event_loop()
         threading.Thread(
@@ -176,6 +176,7 @@ class AsyncScannerNode(ScannerNode):
                 self.statistics.add_message(f"failed to read {blob_name}")
                 self.statistics.failed_reads += 1
                 print(f"[READER] Cannot read blob {blob_name} due to {err}")
+                raise err
 
         if morsel:
             self.statistics.columns_read += morsel.num_columns

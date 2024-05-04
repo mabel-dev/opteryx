@@ -17,7 +17,6 @@ This module contains support functions for working with PyArrow
 from typing import Iterator
 from typing import Optional
 
-import orjson
 import pyarrow
 
 INTERNAL_BATCH_SIZE = 500
@@ -97,17 +96,6 @@ def post_read_projector(table: pyarrow.Table, columns: list) -> pyarrow.Table:
 
     table = table.select(columns_to_keep)
     return table.rename_columns(column_names)
-
-
-def update_metadata(table: pyarrow.Table, metadata: dict) -> pyarrow.Table:
-    table_metadata = table.schema.metadata or {}
-    for k, v in metadata.items():
-        table_metadata[k] = orjson.dumps(v)
-
-    schema = pyarrow.schema(
-        [table.field(name) for name in table.schema.names], metadata=table_metadata
-    )
-    return table.cast(schema)
 
 
 def align_tables(source_table, append_table, source_indices, append_indices):

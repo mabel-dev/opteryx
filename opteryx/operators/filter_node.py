@@ -33,7 +33,7 @@ from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 
 
-class SelectionNode(BasePlanNode):
+class FilterNode(BasePlanNode):
     def __init__(self, properties: QueryProperties, **config):
         super().__init__(properties=properties)
         self.filter = config.get("filter")

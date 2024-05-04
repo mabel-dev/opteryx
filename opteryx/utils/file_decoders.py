@@ -26,6 +26,8 @@ import pyarrow
 from orso.tools import random_string
 
 from opteryx.exceptions import UnsupportedFileTypeError
+from opteryx.managers.expression import NodeType
+from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.utils.arrow import post_read_projector
 from opteryx.utils.memory_view_stream import MemoryViewStream
 
@@ -128,8 +130,10 @@ def parquet_decoder(buffer, projection: List = None, selection=None, just_schema
 
     from opteryx.connectors.capabilities import PredicatePushable
 
+    columns_in_filters = {c.value for c in get_all_nodes_of_type(selection, (NodeType.IDENTIFIER,))}
+
     # Convert the selection to DNF format if applicable
-    _select, selection = PredicatePushable.to_dnf(selection) if selection else (None, None)
+    dnf_filter, selection = PredicatePushable.to_dnf(selection) if selection else (None, None)
     selected_columns = None
 
     stream: BinaryIO = None
@@ -154,6 +158,23 @@ def parquet_decoder(buffer, projection: List = None, selection=None, just_schema
         # If no columns are selected, set to None
         if not selected_columns:
             selected_columns = None
+        if not columns_in_filters.issubset(schema_columns_set):
+            if selected_columns is None:
+                selected_columns = list(schema_columns_set)
+            fields = [pyarrow.field(name, pyarrow.string()) for name in selected_columns]
+            schema = pyarrow.schema(fields)
+
+            # Create an empty table with the schema
+            empty_table = pyarrow.Table.from_arrays(
+                [pyarrow.array([], type=schema.field(i).type) for i in range(len(fields))],
+                schema=schema,
+            )
+
+            return (
+                parquet_file.metadata.num_rows,
+                parquet_file.metadata.num_columns,
+                empty_table,
+            )
 
     # Special handling for projection of [] (usually means COUNT(*))
     if projection == []:
@@ -161,7 +182,7 @@ def parquet_decoder(buffer, projection: List = None, selection=None, just_schema
 
     # Read the parquet table with the optimized column list and selection filters
     table = parquet.read_table(
-        stream, columns=selected_columns, pre_buffer=False, filters=_select, use_threads=False
+        stream, columns=selected_columns, pre_buffer=False, filters=dnf_filter, use_threads=False
     )
     if selection:
         table = filter_records(selection, table)
@@ -291,7 +312,7 @@ def avro_decoder(buffer, projection: List = None, selection=None, just_schema: b
     try:
         from avro.datafile import DataFileReader
         from avro.io import DatumReader
-    except ImportError:  # pragma: no-cover
+    except ImportError:  # pragma: no cover
         raise Exception("`avro` is missing, please install or include in your `requirements.txt`.")
 
     stream: BinaryIO = None
