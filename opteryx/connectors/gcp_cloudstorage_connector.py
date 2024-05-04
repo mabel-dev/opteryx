@@ -201,7 +201,7 @@ class GcpCloudStorageConnector(
         headers = {"Authorization": f"Bearer {self.access_token}"}
 
         params = None
-        blob_names = []
+        blob_names: List[str] = []
         while True:
             response = self.session.get(url, headers=headers, timeout=30, params=params)
 

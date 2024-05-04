@@ -37,8 +37,8 @@ def create_physical_plan(logical_plan, query_properties):
             node = operators.AggregateNode(query_properties, aggregates=node_config["aggregates"])
         elif node_type == LogicalPlanStepType.AggregateAndGroup:
             node = operators.AggregateAndGroupNode(query_properties, groups=node_config["groups"], aggregates=node_config["aggregates"], projection=node_config["projection"])
-        elif node_type == LogicalPlanStepType.Defragment:
-            node = operators.MorselDefragmentNode(query_properties, **node_config)
+#        elif node_type == LogicalPlanStepType.Defragment:
+#            node = operators.MorselDefragmentNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Distinct:
             node = operators.DistinctNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Exit:
@@ -87,9 +87,9 @@ def create_physical_plan(logical_plan, query_properties):
             node = operators.NoOpNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Union:
             node = operators.UnionNode(query_properties, **node_config)
-        elif node_type == LogicalPlanStepType.MetadataWriter:
-            node = operators.MetadataWriterNode(query_properties, **node_config)
-        else:
+#        elif node_type == LogicalPlanStepType.MetadataWriter:
+#            node = operators.MetadataWriterNode(query_properties, **node_config)
+        else:  # pragma: no cover
             raise Exception(f"something unexpected happed - {node_type.name}")
         # fmt: on
         plan.add_node(nid, node)
