@@ -82,13 +82,13 @@ class ReaderNode(BasePlanNode):
 
     def to_dict(self) -> dict:
         return {
-            "identity": f"read-{self.identity}", 
+            "identity": f"read-{self.identity}",
             "opterator": "ReadNode",
             "schema": self.columns,
             "projection": self.columns,
             "filters": self.predicates,
         }
-    
+
     @classmethod
     def from_dict(cls, dic: dict) -> "BasePlanNode":
         raise NotImplementedError()
@@ -127,9 +127,7 @@ class ReaderNode(BasePlanNode):
         orso_schema.columns = orso_schema_cols
         arrow_schema = None
         start_clock = time.monotonic_ns()
-        reader = self.connector.read_dataset(
-            columns=self.columns, predicates=self.predicates
-        )
+        reader = self.connector.read_dataset(columns=self.columns, predicates=self.predicates)
         for morsel in reader:
             morsel = normalize_morsel(orso_schema, morsel)
             if arrow_schema:

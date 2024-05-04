@@ -28,7 +28,7 @@ def generate_series(*args):
         OrsoTypes.INTEGER,
         OrsoTypes.DOUBLE,
     ):
-        if arg_len not in (1, 2, 3):
+        if arg_len not in (1, 2, 3):  # pragma: no cover
             raise SqlError(
                 "generate_series for numbers takes 1 (stop), 2 (start, stop) or 3 (start, stop, interval) parameters."
             )
@@ -36,7 +36,7 @@ def generate_series(*args):
 
     # if the params are timestamps, we create time intervals
     if args[0].type in (OrsoTypes.DATE, OrsoTypes.TIMESTAMP):
-        if arg_len != 3:
+        if arg_len != 3:  # pragma: no cover
             raise SqlError("generate_series for dates needs start, end, and interval parameters")
         return dates.date_range(*arg_vals)
 
@@ -73,7 +73,7 @@ def numeric_range(*args) -> numpy.ndarray:
         start, stop = args
     elif len(args) == 3:
         start, stop, step = args
-    else:
+    else:  # pragma: no cover
         raise ValueError("Invalid number of arguments. Expected 1, 2, or 3: start, stop [, step].")
 
     # Determine dtype

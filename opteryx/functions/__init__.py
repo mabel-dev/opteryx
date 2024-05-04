@@ -282,7 +282,7 @@ FUNCTIONS = {
     "VARCHAR": cast_varchar,
     "STRING": cast_varchar,
     "STR": cast_varchar,
-    "STRUCT": _iterate_single_parameter(lambda x: orjson.loads(str(x))),
+    "STRUCT": _iterate_single_parameter(lambda x: orjson.loads(str(x)) if x is not None else None),
     "DATE":  lambda x: compute.cast(x, pyarrow.date32()),
     "BLOB": array_encode_utf8,
     "TRY_TIMESTAMP": try_cast("TIMESTAMP"),

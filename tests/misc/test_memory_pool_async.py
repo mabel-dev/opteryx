@@ -60,6 +60,7 @@ async def stress_with_random_sized_data():
         await mp.release(ref)
 
     # Ensure all memory is accounted for
+    bmp._level1_compaction()
     assert bmp.available_space() == bmp.size, "Memory leak or fragmentation detected."
 
 

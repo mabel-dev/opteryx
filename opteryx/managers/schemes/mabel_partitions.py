@@ -133,7 +133,7 @@ class MabelPartitionScheme(BasePartitionScheme):
                 if as_at is None:
                     continue
                 if is_complete_and_not_invalid(control_blobs, as_at):
-                    data_blobs = (blob for blob in data_blobs if as_at in blob)
+                    data_blobs = (blob for blob in data_blobs if as_at in blob)  # type: ignore
                     break
                 data_blobs = [blob for blob in data_blobs if as_at not in blob]
                 as_at = None

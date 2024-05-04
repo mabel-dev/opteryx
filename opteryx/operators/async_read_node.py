@@ -122,7 +122,7 @@ class AsyncReaderNode(ReaderNode):
             prefix=reader.dataset,
         )
 
-        data_queue = queue.Queue()
+        data_queue: queue.Queue = queue.Queue()
 
         loop = asyncio.new_event_loop()
         threading.Thread(
@@ -176,6 +176,7 @@ class AsyncReaderNode(ReaderNode):
                 self.statistics.add_message(f"failed to read {blob_name}")
                 self.statistics.failed_reads += 1
                 print(f"[READER] Cannot read blob {blob_name} due to {err}")
+                raise err
 
         if morsel:
             self.statistics.columns_read += morsel.num_columns

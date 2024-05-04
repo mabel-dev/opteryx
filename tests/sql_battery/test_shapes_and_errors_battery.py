@@ -657,23 +657,23 @@ STATEMENTS = [
         ("SELECT * FROM 'testdata/flat/../flat/formats/arrow/tweets.arrow'", None, None, DatasetNotFoundError),  # don't allow traversal
 
         ("SELECT * FROM testdata.partitioned.dated", None, None, EmptyDatasetError),  # it's there, but no partitions for today
-        ("SELECT * FROM testdata.partitioned.dated FOR '2020-02-03' WITH (NO_CACHE)", 25, 8, None),
-        ("SELECT * FROM testdata.partitioned.dated FOR '2020-02-03'", 25, 8, None),
-        ("SELECT * FROM testdata.partitioned.dated FOR '2020-02-04'", 25, 8, None),
-        ("SELECT * FROM testdata.partitioned.dated FOR DATES BETWEEN '2020-02-01' AND '2020-02-28'", 50, 8, None),
-        ("SELECT * FROM testdata.partitioned.dated FOR '2020-02-03' OFFSET 1", 24, 8, None),
-        ("SELECT * FROM testdata.partitioned.dated FOR DATES BETWEEN '2020-02-01' AND '2020-02-28' OFFSET 1", 49, 8, None),
+        ("SELECT * FROM testdata.partitioned.dated FOR '2024-02-03' WITH (NO_CACHE)", 25, 8, None),
+        ("SELECT * FROM testdata.partitioned.dated FOR '2024-02-03'", 25, 8, None),
+        ("SELECT * FROM testdata.partitioned.dated FOR '2024-02-04'", 25, 8, None),
+        ("SELECT * FROM testdata.partitioned.dated FOR DATES BETWEEN '2024-02-01' AND '2024-02-28'", 50, 8, None),
+        ("SELECT * FROM testdata.partitioned.dated FOR '2024-02-03' OFFSET 1", 24, 8, None),
+        ("SELECT * FROM testdata.partitioned.dated FOR DATES BETWEEN '2024-02-01' AND '2024-02-28' OFFSET 1", 49, 8, None),
         ("SELECT * FROM $satellites FOR YESTERDAY ORDER BY planetId OFFSET 10", 167, 8, None),
 
-        ("SELECT * FROM testdata.partitioned.dated FOR '2020-02-03 00:00' WITH (NO_CACHE)", 25, 8, None),
-        ("SELECT * FROM testdata.partitioned.dated FOR '2020-02-03 12:00'", 25, 8, None),
-        ("SELECT * FROM testdata.partitioned.dated FOR '2020-02-04 00:00'", 25, 8, None),
-        ("SELECT * FROM testdata.partitioned.dated FOR DATES BETWEEN '2020-02-01 00:00' AND '2020-02-28 00:00'", 50, 8, None),
-        ("SELECT * FROM testdata.partitioned.dated FOR '2020-02-03 00:00' OFFSET 1", 24, 8, None),
-        ("SELECT * FROM testdata.partitioned.dated FOR DATES BETWEEN '2020-02-01 00:00' AND '2020-02-28 00:00' OFFSET 1", 49, 8, None),
+        ("SELECT * FROM testdata.partitioned.dated FOR '2024-02-03 00:00' WITH (NO_CACHE)", 25, 8, None),
+        ("SELECT * FROM testdata.partitioned.dated FOR '2024-02-03 12:00'", 25, 8, None),
+        ("SELECT * FROM testdata.partitioned.dated FOR '2024-02-04 00:00'", 25, 8, None),
+        ("SELECT * FROM testdata.partitioned.dated FOR DATES BETWEEN '2024-02-01 00:00' AND '2024-02-28 00:00'", 50, 8, None),
+        ("SELECT * FROM testdata.partitioned.dated FOR '2024-02-03 00:00' OFFSET 1", 24, 8, None),
+        ("SELECT * FROM testdata.partitioned.dated FOR DATES BETWEEN '2024-02-01 00:00' AND '2024-02-28 00:00' OFFSET 1", 49, 8, None),
 
-        ("SELECT * FROM testdata.partitioned.dated FOR DATES SINCE '2020-02-01'", 50, 8, None),
-        ("SELECT * FROM testdata.partitioned.dated FOR DATES SINCE '2020-02-04 00:00'", 25, 8, None),
+        ("SELECT * FROM testdata.partitioned.dated FOR DATES SINCE '2024-02-01'", 50, 8, None),
+        ("SELECT * FROM testdata.partitioned.dated FOR DATES SINCE '2024-02-04 00:00'", 25, 8, None),
 
         ("SELECT * FROM testdata.partitioned.mixed FOR '2020-02-03'", None, None, UnsupportedSegementationError),
         ("SELECT * FROM $planets FOR '1730-01-01'", 6, 20, None),
@@ -784,7 +784,7 @@ STATEMENTS = [
         ("SHOW EXTENDED COLUMNS FROM $planets", 20, 12, None),
         ("SHOW EXTENDED COLUMNS FROM $astronauts", 19, 12, None),
         ("SHOW COLUMNS FROM $satellites LIKE '%d'", 2, 4, UnsupportedSyntaxError),
-        ("SHOW COLUMNS FROM testdata.partitioned.dated FOR '2020-02-03'", 8, 4, None),
+        ("SHOW COLUMNS FROM testdata.partitioned.dated FOR '2024-02-03'", 8, 4, None),
 
         ("SELECT * FROM $satellites CROSS JOIN $astronauts", 63189, 27, None),
         ("SELECT * FROM $satellites WITH (NO_CACHE) CROSS JOIN $astronauts WITH (NO_CACHE)", 63189, 27, None),

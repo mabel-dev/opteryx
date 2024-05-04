@@ -22,6 +22,7 @@ from .cross_join_node import CrossJoinNode  # CROSS JOIN
 from .distinct_node import DistinctNode  # remove duplicate records
 from .exit_node import ExitNode
 from .explain_node import ExplainNode  # EXPLAIN queries
+from .filter_node import FilterNode  # filter unwanted rows
 from .function_dataset_node import FunctionDatasetNode  # Dataset Constructors
 
 # from .heap_sort_node import HeapSortNode  # Heap
@@ -30,12 +31,12 @@ from .inner_join_node import InnerJoinNode
 from .join_node import JoinNode
 from .left_join_node import LeftJoinNode
 from .limit_node import LimitNode  # select the first N records
-from .metadata_writer_node import MetadataWriterNode
-from .morsel_defragment_node import MorselDefragmentNode  # consolidate small morsels
+
+# from .metadata_writer_node import MetadataWriterNode
+# from .morsel_defragment_node import MorselDefragmentNode  # consolidate small morsels
 from .noop_node import NoOpNode  # No Operation
 from .projection_node import ProjectionNode  # remove unwanted columns including renames
 from .read_node import ReaderNode
-from .filter_node import FilterNode  # filter unwanted rows
 from .set_variable_node import SetVariableNode
 from .show_columns_node import ShowColumnsNode  # column details
 
