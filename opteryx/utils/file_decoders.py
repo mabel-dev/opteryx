@@ -312,7 +312,7 @@ def avro_decoder(buffer, projection: List = None, selection=None, just_schema: b
     try:
         from avro.datafile import DataFileReader
         from avro.io import DatumReader
-    except ImportError:  # pragma: no-cover
+    except ImportError:  # pragma: no cover
         raise Exception("`avro` is missing, please install or include in your `requirements.txt`.")
 
     stream: BinaryIO = None

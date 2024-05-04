@@ -72,7 +72,7 @@ class PredicatePushable:
 
         def _predicate_to_dnf(root):
             # Reduce look-ahead effort by using Exceptions to control flow
-            if root.node_type == NodeType.AND:
+            if root.node_type == NodeType.AND:  # pragma: no cover
                 left = _predicate_to_dnf(root.left)
                 right = _predicate_to_dnf(root.right)
                 if not isinstance(left, list):

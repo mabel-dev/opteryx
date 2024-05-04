@@ -23,11 +23,11 @@ from opteryx.models import QueryStatistics
 class BasePlanNode:
     _producers = None
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict:  # pragma: no cover
         raise NotImplementedError()
 
     @classmethod
-    def from_dict(cls, dic: dict) -> "BasePlanNode":
+    def from_dict(cls, dic: dict) -> "BasePlanNode":  # pragma: no cover
         raise NotImplementedError()
 
     def __init__(self, properties: QueryProperties, **parameters):
@@ -67,5 +67,5 @@ class BasePlanNode:
         """
         return "<not set>"
 
-    def execute(self) -> Generator[pyarrow.Table, None, None]:
+    def execute(self) -> Generator[pyarrow.Table, None, None]:  # pragma: no cover
         pass
