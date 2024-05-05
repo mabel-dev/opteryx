@@ -1,4 +1,4 @@
-__build__ = 471
+__build__ = 472
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -27,8 +27,8 @@ class VersionStatus(Enum):
 
 
 _major = 0
-_minor = 14
-_revision = 2
+_minor = 15
+_revision = 0
 _status = VersionStatus.BETA
 
 __author__ = "@joocer"
