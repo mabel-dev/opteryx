@@ -96,10 +96,11 @@ class MabelPartitionScheme(BasePartitionScheme):
             if len(blob_names) == 0:
                 return []
 
-            control_blobs = []
-            data_blobs = []
+            control_blobs: List[str] = []
+            data_blobs: List[str] = []
             segments = set()
-            hour_blobs = []
+            as_ats = set()
+            hour_blobs: List[str] = []
 
             for blob in blob_names:
                 extension = os.path.splitext(blob)[1]
@@ -107,14 +108,16 @@ class MabelPartitionScheme(BasePartitionScheme):
                     control_blobs.append(blob)
                 else:
                     data_blobs.append(blob)
+                    # Collect hour specific blobs, but only data blobs
+                    if hour_label in blob:
+                        hour_blobs.append(blob)
 
                 # Collect segments
                 if by_label in blob:
                     segments.add(extract_prefix(blob, "by_"))
 
-                    # Collect hour specific blobs
-                    if hour_label in blob:
-                        hour_blobs.append(blob)
+                if as_at_label in blob:
+                    as_ats.add(extract_prefix(blob, "as_at_"))
 
             if hour_blobs:
                 data_blobs = hour_blobs
@@ -123,9 +126,7 @@ class MabelPartitionScheme(BasePartitionScheme):
                 raise UnsupportedSegementationError(dataset=prefix, segments=segments)
 
             as_at = None
-            as_ats = sorted(
-                {extract_prefix(blob, "as_at_") for blob in blob_names if as_at_label in blob}
-            )
+            as_ats = sorted(as_ats)
 
             # Keep popping from as_ats until a valid frame is found
             while as_ats:
@@ -133,7 +134,7 @@ class MabelPartitionScheme(BasePartitionScheme):
                 if as_at is None:
                     continue
                 if is_complete_and_not_invalid(control_blobs, as_at):
-                    data_blobs = (blob for blob in data_blobs if as_at in blob)  # type: ignore
+                    data_blobs = [blob for blob in data_blobs if as_at in blob]
                     break
                 data_blobs = [blob for blob in data_blobs if as_at not in blob]
                 as_at = None
