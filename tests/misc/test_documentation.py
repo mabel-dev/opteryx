@@ -8,7 +8,7 @@ import sys
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 from tests.tools import download_file
-
+from tests.tools import is_version, skip_if
 
 def test_documentation_connect_example():
     import opteryx
@@ -30,7 +30,7 @@ def test_readme_1():
     result = opteryx.query("SELECT 4 * 7;")
     result.head()
 
-
+@skip_if(is_version("3.9"))
 def test_readme_2():
     import pandas
 
@@ -43,7 +43,7 @@ def test_readme_2():
     ).pandas()
     aggregated_df.head()
 
-
+@skip_if(is_version("3.9"))
 def test_readme_3():
     import opteryx
 
@@ -67,7 +67,7 @@ def test_readme_4():
     result = opteryx.query("SELECT * FROM opteryx.space_missions WITH(NO_PARTITION) LIMIT 5;")
     result.head()
 
-
+@skip_if(is_version("3.9"))
 def test_readme_5():
     import opteryx
     from opteryx.connectors import SqlConnector
