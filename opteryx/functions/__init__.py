@@ -48,7 +48,9 @@ def _get(array, key):
     key = key[0]
     if isinstance(first_element, dict):
         # Handle dict type
-        return [item.get(key) for item in array]
+        from opteryx.compiled.list_ops import cython_arrow_op
+
+        return cython_arrow_op(array, key)
 
     try:
         index = int(key)
@@ -56,9 +58,9 @@ def _get(array, key):
         raise IncorrectTypeError("VARCHAR and ARRAY values must be subscripted with NUMERIC values")
     if isinstance(first_element, numpy.ndarray):
         # NumPy-specific optimization
-        from opteryx.compiled.functions import numpy_array_get_element
+        from opteryx.compiled.list_ops import cython_get_element_op
 
-        return numpy_array_get_element(array, key)
+        return cython_get_element_op(array, key)
 
     if isinstance(first_element, (list, str, pyarrow.ListScalar)):
         # Handle list type

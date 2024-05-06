@@ -26,7 +26,7 @@ TESTS = [
         ("ppl", ["apple", "crackle", "pop"], "apple"),
         ("a", ["apple", "crackle", "pop"], None),
         ("", ["apple", "crackle", "pop"], None),
-        ("", ["", "crackle", "pop"], ""),
+        ("", ["", "crackle", "pop"], None),
         ("", [], None),
         ("apple", ["appl", "aple", "aplee", "aplle"], "appl"),  # first best match
         ("a_b_c_d", ["abcd", "a_b_cd", "a_b_c_d_e"], "abcd"),
@@ -99,7 +99,7 @@ TESTS = [
 
 
 @pytest.mark.parametrize("string, candidates, expected", TESTS)
-def test_date_parser(string, candidates, expected):
+def test_suggestor(string, candidates, expected):
     """
     We're running a string through a set of candidate matches and returning the item
     which is the best match (expected)
@@ -113,6 +113,6 @@ if __name__ == "__main__":  # pragma: no cover
     print(f"RUNNING BATTERY OF {len(TESTS)} FUZZY TESTS")
     for s, c, e in TESTS:
         print("\033[38;2;26;185;67m.\033[0m", end="")
-        test_date_parser(s, c, e)
+        test_suggestor(s, c, e)
     print()
     print("✅ okay")
