@@ -33,6 +33,7 @@ from opteryx.managers.expression import evaluate_and_append
 from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
+from opteryx.operators import OperatorType
 
 COUNT_STAR: str = "COUNT(*)"
 
@@ -182,6 +183,9 @@ def extract_evaluations(aggregates):
 
 
 class AggregateNode(BasePlanNode):
+
+    operator_type = OperatorType.BLOCKING
+
     def __init__(self, properties: QueryProperties, **config):
         super().__init__(properties=properties)
 
@@ -199,13 +203,16 @@ class AggregateNode(BasePlanNode):
 
         self.column_map, self.aggregate_functions = build_aggregations(self.aggregates)
 
+    def to_dict(self) -> dict:  # pragma: no cover
+        raise NotImplementedError()
+
+    @classmethod
+    def from_dict(cls, dic: dict) -> "BasePlanNode":  # pragma: no cover
+        raise NotImplementedError()
+
     @property
     def config(self):  # pragma: no cover
         return str(self.aggregates)
-
-    @property
-    def greedy(self):  # pragma: no cover
-        return True
 
     @property
     def name(self):  # pragma: no cover

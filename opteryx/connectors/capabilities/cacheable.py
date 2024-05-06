@@ -138,10 +138,9 @@ def async_read_thru_cache(func):
         my_keys.add(key)
 
         # try the buffer pool first
-        result = buffer_pool.get(key)
+        result = buffer_pool.get(key, zero_copy=False)
         if result is not None:
             statistics.bufferpool_hits += 1
-
             ref = await pool.commit(result)  # type: ignore
             while ref is None:
                 await asyncio.sleep(0.1)
@@ -177,6 +176,8 @@ def async_read_thru_cache(func):
                 remote_cache.set(key, buffer)
                 if evicted:
                     # if we're evicting items we're putting into the cache
+                    # stop putting more stuff into the cache, otherwise we're
+                    # just thrashing
                     if evicted in my_keys:
                         max_evictions = 0
                     else:

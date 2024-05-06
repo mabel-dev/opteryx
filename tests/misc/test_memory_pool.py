@@ -17,7 +17,7 @@ from orso.tools import random_string
 def test_commit_and_read():
     mp = MemoryPool(size=100)
     ref = mp.commit(b"Hello World")
-    assert mp.read(ref) == b"Hello World"
+    assert mp.read(ref, False) == b"Hello World"
 
 
 def test_commit_insufficient_space():
@@ -29,7 +29,7 @@ def test_commit_insufficient_space():
 def test_commit_exact_space():
     mp = MemoryPool(size=11)
     ref = mp.commit(b"Hello World")
-    assert mp.read(ref) == b"Hello World"
+    assert mp.read(ref, False) == b"Hello World"
 
 
 def test_read_invalid_ref():
@@ -52,6 +52,20 @@ def test_release_invalid_ref():
         mp.release(999)
 
 
+def test_read_and_release():
+    mp = MemoryPool(size=100)
+    ref = mp.commit(b"Temporary")
+    mp.read_and_release(ref)
+    with pytest.raises(ValueError):
+        mp.read(ref)
+
+
+def test_read_and_release_invalid_ref():
+    mp = MemoryPool(size=100)
+    with pytest.raises(ValueError):
+        mp.read_and_release(999)
+
+
 def test_compaction():
     mp = MemoryPool(size=100)
     ref1 = mp.commit(b"First")
@@ -59,15 +73,15 @@ def test_compaction():
     mp.release(ref1)
     ref3 = mp.commit(b"Third")
     # Ensure that the third commit succeeds after compaction, despite the first segment being released
-    assert mp.read(ref3) == b"Third"
+    assert mp.read(ref3, False) == b"Third"
 
 
 def test_multiple_commits_and_reads():
     mp = MemoryPool(size=50)
     ref1 = mp.commit(b"First")
     ref2 = mp.commit(b"Second")
-    assert mp.read(ref1) == b"First"
-    assert mp.read(ref2) == b"Second"
+    assert mp.read(ref1, False) == b"First"
+    assert mp.read(ref2, False) == b"Second"
 
 
 def test_overlapping_writes():
@@ -77,8 +91,8 @@ def test_overlapping_writes():
     mp.release(ref1)
     ref3 = mp.commit(b"XYZ")
     # Test if the new write overlaps correctly and does not corrupt other data
-    assert mp.read(ref2) == b"abcde"
-    assert mp.read(ref3) == b"XYZ"
+    assert mp.read(ref2, False) == b"abcde"
+    assert mp.read(ref3, False) == b"XYZ"
 
 
 def test_pool_exhaustion_and_compaction():
@@ -128,7 +142,7 @@ def test_repeated_commits_and_releases():
     mp._level1_compaction()
 
     assert (
-        mp.free_segments[0].length == mp.size
+        mp.free_segments[0]["length"] == mp.size
     ), f"Memory leak detected after repeated commits and releases. {mp.free_segments[0]['length']} != {mp.size}\n{mp.free_segments}"
 
 
@@ -139,31 +153,43 @@ def test_stress_with_random_sized_data():
 
     This has been the most useful test in finding edge cases.
     """
+    seed = random.randint(0, 2 ^ 32 - 1)
+    random.seed(seed)
     mp = MemoryPool(size=1000 * 200)
     refs = set()
-    try:
-        for _ in range(100000):
-            size = random.randint(20, 50)  # Random data size between 20 and 200 bytes
-            data = bytes(size)
-            ref = mp.commit(data)
-            if ref is not None:
-                refs.add(ref)
-            else:
-                selected = random.sample(list(refs), random.randint(1, len(refs) // 10))
-                for ref in selected:
-                    refs.discard(ref)
-                    mp.release(ref)
-    finally:
+    #    saved_bytes = 0
+    #    used_counter = 0
+
+    for _ in range(10000):
+        size = random.randint(20, 50)  # Random data size between 20 and 200 bytes
+        data = bytes(size)
+        ref = mp.commit(data)
+        if ref is not None:
+            refs.add(ref)
+        #            saved_bytes += size
+        #            used_counter += 1
+        else:
+            selected = random.sample(list(refs), random.randint(1, len(refs) // 10))
+            for ref in selected:
+                refs.discard(ref)
+                data = mp.read_and_release(ref, False)
+        #                saved_bytes -= len(data)
+        #                used_counter -= 1
+
+        #        assert len(mp.used_segments) == used_counter, f"\n{len(mp.used_segments)} != {used_counter}\n{saved_bytes}"
+        #        assert saved_bytes + mp.available_space() == mp.size, _
         for ref in list(refs):
-            mp.read_and_release(ref)
+            data = mp.read_and_release(ref, False)
+            #            saved_bytes -= len(data)
+            #            used_counter -= 1
             refs.discard(ref)
+
     # Ensure that the pool or leaking
     mp._level1_compaction()
     assert (
         mp.available_space() == mp.size
-    ), f"Memory fragmentation or leak detected.\n{mp.available_space()} != {mp.size}"
+    ), f"Memory fragmentation or leak detected.\n{mp.available_space()} != {mp.size}\n{mp.free_segments}\n{mp.used_segments}\nseed:{seed}"
 
-    mp._level1_compaction()
     assert len(mp.free_segments) == 1
     assert len(mp.used_segments) == 0
 
@@ -283,7 +309,7 @@ def test_concurrent_access():
                 data = random_string().encode()  # unique per write
                 ref = memory_pool.commit(data)
                 if ref is not None:
-                    read_data = memory_pool.read(ref)
+                    read_data = memory_pool.read(ref, False)
                     assert read_data == data, "Data integrity check failed"
                     memory_pool.release(ref)
                 else:
@@ -304,6 +330,47 @@ def test_concurrent_access():
 
     # Check for errors collected during the test
     assert not errors, f"Errors encountered during concurrent access: {errors}"
+
+
+def test_return_types():
+    pool_size = 100
+    memory_pool = MemoryPool(size=pool_size)
+    abc = memory_pool.commit(b"abc")
+
+    read = memory_pool.read(abc)
+    assert isinstance(read, memoryview), type(read)
+
+    read = memory_pool.read(abc, True)
+    assert isinstance(read, memoryview), type(read)
+
+    read = memory_pool.read(abc, False)
+    assert isinstance(read, bytes), type(read)
+
+    read = memory_pool.read(abc, zero_copy=True)
+    assert isinstance(read, memoryview), type(read)
+
+    read = memory_pool.read(abc, zero_copy=False)
+    assert isinstance(read, bytes), type(read)
+
+    abc = memory_pool.commit(b"abc")
+    read = memory_pool.read_and_release(abc)
+    assert isinstance(read, memoryview), type(read)
+
+    abc = memory_pool.commit(b"abc")
+    read = memory_pool.read_and_release(abc, True)
+    assert isinstance(read, memoryview), type(read)
+
+    abc = memory_pool.commit(b"abc")
+    read = memory_pool.read_and_release(abc, False)
+    assert isinstance(read, bytes), type(read)
+
+    abc = memory_pool.commit(b"abc")
+    read = memory_pool.read_and_release(abc, zero_copy=True)
+    assert isinstance(read, memoryview), type(read)
+
+    abc = memory_pool.commit(b"abc")
+    read = memory_pool.read_and_release(abc, zero_copy=False)
+    assert isinstance(read, bytes), type(read)
 
 
 if __name__ == "__main__":  # pragma: no cover

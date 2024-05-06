@@ -25,9 +25,13 @@ from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import evaluate_and_append
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
+from opteryx.operators import OperatorType
 
 
 class ProjectionNode(BasePlanNode):
+
+    operator_type = OperatorType.PASSTHRU
+
     def __init__(self, properties: QueryProperties, **config):
         """
         Attribute Projection, remove unwanted columns and performs column renames.
@@ -43,6 +47,13 @@ class ProjectionNode(BasePlanNode):
         self.evaluations = [
             column for column in projection if column.node_type != NodeType.IDENTIFIER
         ]
+
+    def to_dict(self) -> dict:  # pragma: no cover
+        raise NotImplementedError()
+
+    @classmethod
+    def from_dict(cls, dic: dict) -> "BasePlanNode":  # pragma: no cover
+        raise NotImplementedError()
 
     @property
     def config(self):  # pragma: no cover

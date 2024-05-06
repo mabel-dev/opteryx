@@ -23,10 +23,7 @@ import pyarrow
 
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
-
-MAX_COLLECTOR: int = 17
-MAX_VARCHAR_SIZE: int = 64  # long strings tend to lose meaning
-MAX_DATA_SIZE: int = 100 * 1024 * 1024
+from opteryx.operators import OperatorType
 
 
 def _simple_collector(schema):
@@ -68,12 +65,22 @@ def _extended_collector(morsels):
 
 
 class ShowColumnsNode(BasePlanNode):
+
+    operator_type = OperatorType.PRODUCER
+
     def __init__(self, properties: QueryProperties, **config):
         super().__init__(properties=properties)
         self._full = config.get("full")
         self._extended = config.get("extended")
         self._schema = config.get("schema")
         self._column_map = {c.schema_column.identity: c.source_column for c in config["columns"]}
+
+    def to_dict(self) -> dict:  # pragma: no cover
+        raise NotImplementedError()
+
+    @classmethod
+    def from_dict(cls, dic: dict) -> "BasePlanNode":  # pragma: no cover
+        raise NotImplementedError()
 
     @property
     def name(self):  # pragma: no cover

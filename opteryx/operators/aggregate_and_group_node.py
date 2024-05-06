@@ -32,12 +32,16 @@ from opteryx.managers.expression import evaluate_and_append
 from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
+from opteryx.operators import OperatorType
 from opteryx.operators.aggregate_node import build_aggregations
 from opteryx.operators.aggregate_node import extract_evaluations
 from opteryx.operators.aggregate_node import project
 
 
 class AggregateAndGroupNode(BasePlanNode):
+
+    operator_type = OperatorType.BLOCKING
+
     def __init__(self, properties: QueryProperties, **config):
         super().__init__(properties=properties)
         self.groups = list(config["groups"])
@@ -72,13 +76,16 @@ class AggregateAndGroupNode(BasePlanNode):
         self.group_by_columns = list({node.schema_column.identity for node in self.groups})
         self.column_map, self.aggregate_functions = build_aggregations(self.aggregates)
 
+    def to_dict(self) -> dict:  # pragma: no cover
+        raise NotImplementedError()
+
+    @classmethod
+    def from_dict(cls, dic: dict) -> "BasePlanNode":  # pragma: no cover
+        raise NotImplementedError()
+
     @property
     def config(self):  # pragma: no cover
         return str(self.aggregates)
-
-    @property
-    def greedy(self):  # pragma: no cover
-        return True
 
     @property
     def name(self):  # pragma: no cover

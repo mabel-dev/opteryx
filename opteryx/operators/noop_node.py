@@ -19,11 +19,22 @@ from typing import Generator
 
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
+from opteryx.operators import OperatorType
 
 
 class NoOpNode(BasePlanNode):
+
+    operator_type = OperatorType.PASSTHRU
+
     def __init__(self, properties: QueryProperties, **config):
         super().__init__(properties=properties)
+
+    def to_dict(self) -> dict:  # pragma: no cover
+        raise NotImplementedError()
+
+    @classmethod
+    def from_dict(cls, dic: dict) -> "BasePlanNode":  # pragma: no cover
+        raise NotImplementedError()
 
     @property
     def name(self):  # pragma: no cover

@@ -29,6 +29,7 @@ import pyarrow
 import pyarrow.parquet
 from orso.schema import RelationSchema
 
+from opteryx.operators.base_plan_node import OperatorType
 from opteryx.operators.read_node import ReaderNode
 from opteryx.shared import AsyncMemoryPool
 from opteryx.shared import MemoryPool
@@ -99,7 +100,16 @@ class AsyncReaderNode(ReaderNode):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.pool = MemoryPool(MAX_BUFFER_SIZE_MB * 1024 * 1024, "read_buffer")
+        self.pool = MemoryPool(
+            MAX_BUFFER_SIZE_MB * 1024 * 1024, f"ReadBuffer <{self.parameters['alias']}>"
+        )
+
+    def to_dict(self) -> dict:  # pragma: no cover
+        raise NotImplementedError()
+
+    @classmethod
+    def from_dict(cls, dic: dict) -> "BasePlanNode":  # pragma: no cover
+        raise NotImplementedError()
 
     def execute(self) -> Generator:
         """Perform this step, time how long is spent doing work"""

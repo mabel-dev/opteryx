@@ -24,14 +24,25 @@ import pyarrow
 
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
+from opteryx.operators import OperatorType
 from opteryx.utils import arrow
 
 
 class LimitNode(BasePlanNode):
+
+    operator_type = OperatorType.PASSTHRU
+
     def __init__(self, properties: QueryProperties, **config):
         super().__init__(properties=properties)
         self.limit = config.get("limit")
         self.offset = config.get("offset", 0)
+
+    def to_dict(self) -> dict:  # pragma: no cover
+        raise NotImplementedError()
+
+    @classmethod
+    def from_dict(cls, dic: dict) -> "BasePlanNode":  # pragma: no cover
+        raise NotImplementedError()
 
     @property
     def name(self):  # pragma: no cover

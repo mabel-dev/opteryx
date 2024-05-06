@@ -26,6 +26,7 @@ from opteryx.exceptions import SqlError
 from opteryx.managers.expression import NodeType
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
+from opteryx.operators import OperatorType
 from opteryx.utils import series
 
 
@@ -71,6 +72,9 @@ FUNCTIONS = {
 
 
 class FunctionDatasetNode(BasePlanNode):
+
+    operator_type = OperatorType.PRODUCER
+
     def __init__(self, properties: QueryProperties, **config):
         """
         The Blob Reader Node is responsible for reading the relevant blobs
@@ -81,6 +85,13 @@ class FunctionDatasetNode(BasePlanNode):
         self.function = config["function"]
         self.parameters = config
         self.columns = config.get("columns", [])
+
+    def to_dict(self) -> dict:  # pragma: no cover
+        raise NotImplementedError()
+
+    @classmethod
+    def from_dict(cls, dic: dict) -> "BasePlanNode":  # pragma: no cover
+        raise NotImplementedError()
 
     @property
     def config(self):  # pragma: no cover

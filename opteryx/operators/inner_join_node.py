@@ -39,6 +39,7 @@ import pyarrow
 from opteryx.compiled.structures import HashTable
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
+from opteryx.operators import OperatorType
 from opteryx.utils.arrow import align_tables
 
 
@@ -116,6 +117,9 @@ def inner_join_with_preprocessed_left_side(left_relation, right_relation, join_c
 
 
 class InnerJoinNode(BasePlanNode):
+
+    operator_type = OperatorType.PASSTHRU
+
     def __init__(self, properties: QueryProperties, **config):
         super().__init__(properties=properties)
         self._join_type = config["type"]
@@ -128,9 +132,16 @@ class InnerJoinNode(BasePlanNode):
         self._right_columns = config.get("right_columns")
         self._right_relation = config.get("right_relation_names")
 
+    def to_dict(self) -> dict:  # pragma: no cover
+        raise NotImplementedError()
+
+    @classmethod
+    def from_dict(cls, dic: dict) -> "BasePlanNode":  # pragma: no cover
+        raise NotImplementedError()
+
     @property
     def name(self):  # pragma: no cover
-        return f"Inner Join"
+        return "Inner Join"
 
     @property
     def config(self):  # pragma: no cover

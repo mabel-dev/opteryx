@@ -47,6 +47,7 @@ async def stress_with_random_sized_data():
                 ref = random.choice(list(refs.keys()))
                 correct_data = refs.pop(ref)
                 data_removed = await mp.read(ref)
+                data_removed = await mp.read(ref)
                 await mp.release(ref)
                 assert data_removed == correct_data, "Data integrity check failed"
 

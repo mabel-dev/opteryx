@@ -25,9 +25,13 @@ import pyarrow.compute
 
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
+from opteryx.operators import OperatorType
 
 
 class DistinctNode(BasePlanNode):
+
+    operator_type = OperatorType.PASSTHRU
+
     def __init__(self, properties: QueryProperties, **config):
         from opteryx.compiled.structures import HashSet
 
@@ -37,13 +41,16 @@ class DistinctNode(BasePlanNode):
             self._distinct_on = [col.schema_column.identity for col in self._distinct_on]
         self.hash_set = HashSet()
 
+    def to_dict(self) -> dict:  # pragma: no cover
+        raise NotImplementedError()
+
+    @classmethod
+    def from_dict(cls, dic: dict) -> "BasePlanNode":  # pragma: no cover
+        raise NotImplementedError()
+
     @property
     def config(self):  # pragma: no cover
         return ""
-
-    @property
-    def greedy(self):  # pragma: no cover
-        return True
 
     @property
     def name(self):  # pragma: no cover
