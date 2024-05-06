@@ -71,30 +71,6 @@ def array(branch, alias: Optional[List[str]] = None, key=None):
     )
 
 
-def array_agg(branch, alias: Optional[List[str]] = None, key=None):
-    distinct = branch["distinct"]
-    expression = build(branch["expr"])
-    order = None
-    if branch["order_by"]:
-        order = [
-            (build(item["expr"]), False if item["asc"] is None else not (item["asc"]))
-            for item in branch["order_by"]
-        ]
-    limit = None
-    if branch["limit"]:
-        limit = int(build(branch["limit"]).value)
-
-    return Node(
-        node_type=NodeType.AGGREGATOR,
-        value="ARRAY_AGG",
-        parameters=[expression],
-        distinct=distinct,
-        order=order,
-        limit=limit,
-        alias=alias,
-    )
-
-
 def between(branch, alias: Optional[List[str]] = None, key=None):
     expr = build(branch["expr"])
     low = build(branch["low"])
@@ -720,7 +696,6 @@ BUILDERS = {
     "AnyOp": any_op,
     "AllOp": all_op,
     "Array": array,  # not actually implemented
-    "ArrayAgg": array_agg,
     "Between": between,
     "BinaryOp": binary_op,
     "Boolean": literal_boolean,
