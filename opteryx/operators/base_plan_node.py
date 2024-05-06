@@ -57,6 +57,9 @@ class BasePlanNode:
     def set_producers(self, producers):
         self._producers = producers
 
+    def config(self) -> str:
+        return ""
+
     @property
     def name(self):  # pragma: no cover
         """

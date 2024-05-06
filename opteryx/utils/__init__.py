@@ -12,13 +12,13 @@
 
 
 from itertools import permutations
-from typing import List
+from typing import Iterable
 from typing import Optional
 
 from opteryx.third_party.mbleven import compare
 
 
-def suggest_alternative(value: str, candidates: List[str]) -> Optional[str]:
+def suggest_alternative(value: str, candidates: Iterable[str]) -> Optional[str]:
     """
     Find closest match using a variation of Levenshtein Distance with additional
     handling for rearranging function name parts.

@@ -108,7 +108,7 @@ class AsyncReaderNode(ReaderNode):
         raise NotImplementedError()
 
     @classmethod
-    def from_dict(cls, dic: dict) -> "BasePlanNode":  # pragma: no cover
+    def from_dict(cls, dic: dict) -> "AsyncReaderNode":  # pragma: no cover
         raise NotImplementedError()
 
     def execute(self) -> Generator:

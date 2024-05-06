@@ -126,11 +126,11 @@ class MabelPartitionScheme(BasePartitionScheme):
                 raise UnsupportedSegementationError(dataset=prefix, segments=segments)
 
             as_at = None
-            as_ats = sorted(as_ats)
+            as_at_list = sorted(as_ats)
 
             # Keep popping from as_ats until a valid frame is found
-            while as_ats:
-                as_at = as_ats.pop()
+            while as_at_list:
+                as_at = as_at_list.pop()
                 if as_at is None:
                     continue
                 if is_complete_and_not_invalid(control_blobs, as_at):
