@@ -31,6 +31,7 @@ from opteryx.managers.expression import NodeType
 from opteryx.models import Node
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
+from opteryx.operators import OperatorType
 
 INTERNAL_BATCH_SIZE: int = 2500  # config
 MAX_JOIN_SIZE: int = 1000  # config
@@ -209,6 +210,8 @@ class CrossJoinNode(BasePlanNode):
     Implements a SQL CROSS JOIN
     """
 
+    operator_type = OperatorType.PASSTHRU
+
     def __init__(self, properties: QueryProperties, **config):
         super().__init__(properties=properties)
 
@@ -228,6 +231,13 @@ class CrossJoinNode(BasePlanNode):
                 self._unnest_column.value, tuple
             ):
                 self._unnest_column.value = tuple([self._unnest_column.value])
+
+    def to_dict(self) -> dict:  # pragma: no cover
+        raise NotImplementedError()
+
+    @classmethod
+    def from_dict(cls, dic: dict) -> "BasePlanNode":  # pragma: no cover
+        raise NotImplementedError()
 
     @property
     def name(self):  # pragma: no cover

@@ -26,6 +26,7 @@ import pyarrow
 from opteryx.exceptions import DatasetNotFoundError
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
+from opteryx.operators import OperatorType
 
 
 def information_schema_routines():
@@ -148,6 +149,9 @@ def information_schema_tables():
 
 
 class InformationSchemaNode(BasePlanNode):
+
+    operator_type = OperatorType.PRODUCER
+
     def __init__(self, properties: QueryProperties, **config):
         super().__init__(properties=properties)
 
@@ -156,6 +160,13 @@ class InformationSchemaNode(BasePlanNode):
 
         # pushed down selection/filter
         self._selection = config.get("selection")
+
+    def to_dict(self) -> dict:  # pragma: no cover
+        raise NotImplementedError()
+
+    @classmethod
+    def from_dict(cls, dic: dict) -> "BasePlanNode":  # pragma: no cover
+        raise NotImplementedError()
 
     @property
     def config(self):  # pragma: no cover

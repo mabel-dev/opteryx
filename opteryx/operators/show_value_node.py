@@ -22,9 +22,13 @@ import pyarrow
 from opteryx.exceptions import SqlError
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
+from opteryx.operators import OperatorType
 
 
 class ShowValueNode(BasePlanNode):
+
+    operator_type = OperatorType.PRODUCER
+
     def __init__(self, properties: QueryProperties, **config):
         super().__init__(properties=properties)
 
@@ -37,6 +41,13 @@ class ShowValueNode(BasePlanNode):
                 raise SqlError("PARAMETERS cannot start with '@'")
             self.key = self.value
             self.value = properties.variables[self.value]
+
+    def to_dict(self) -> dict:  # pragma: no cover
+        raise NotImplementedError()
+
+    @classmethod
+    def from_dict(cls, dic: dict) -> "BasePlanNode":  # pragma: no cover
+        raise NotImplementedError()
 
     @property
     def name(self):  # pragma: no cover

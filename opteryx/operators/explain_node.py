@@ -21,9 +21,13 @@ from typing import Generator
 
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
+from opteryx.operators import OperatorType
 
 
 class ExplainNode(BasePlanNode):
+
+    operator_type = OperatorType.PRODUCER
+
     def __init__(self, properties: QueryProperties, **config):
         super().__init__(properties=properties)
         self._query_plan = config.get("query_plan")
@@ -35,6 +39,13 @@ class ExplainNode(BasePlanNode):
     @property  # pragma: no cover
     def config(self):
         return ""
+
+    def to_dict(self) -> dict:  # pragma: no cover
+        raise NotImplementedError()
+
+    @classmethod
+    def from_dict(cls, dic: dict) -> "BasePlanNode":  # pragma: no cover
+        raise NotImplementedError()
 
     def execute(self) -> Generator:
         if self._query_plan:

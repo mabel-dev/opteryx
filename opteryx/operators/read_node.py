@@ -26,6 +26,7 @@ from orso.schema import RelationSchema
 
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
+from opteryx.operators import OperatorType
 
 
 def normalize_morsel(schema: RelationSchema, morsel: pyarrow.Table) -> pyarrow.Table:
@@ -66,6 +67,9 @@ def normalize_morsel(schema: RelationSchema, morsel: pyarrow.Table) -> pyarrow.T
 
 
 class ReaderNode(BasePlanNode):
+
+    operator_type = OperatorType.PRODUCER
+
     def __init__(self, properties: QueryProperties, **parameters):
         super().__init__(properties=properties, **parameters)
         self.start_date = parameters.get("start_date")
