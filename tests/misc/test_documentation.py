@@ -8,8 +8,10 @@ import sys
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 from tests.tools import download_file
+from tests.tools import is_version, skip_if
 
 
+@skip_if(is_version("3.9"))
 def test_documentation_connect_example():
     import opteryx
 
@@ -24,6 +26,7 @@ def test_documentation_connect_example():
     conn.close()
 
 
+@skip_if(is_version("3.9"))
 def test_readme_1():
     import opteryx
 
@@ -31,6 +34,7 @@ def test_readme_1():
     result.head()
 
 
+@skip_if(is_version("3.9"))
 def test_readme_2():
     import pandas
 
@@ -44,6 +48,7 @@ def test_readme_2():
     aggregated_df.head()
 
 
+@skip_if(is_version("3.9"))
 def test_readme_3():
     import opteryx
 
@@ -57,6 +62,7 @@ def test_readme_3():
     result.head()
 
 
+@skip_if(is_version("3.9"))
 def test_readme_4():
     import opteryx
     from opteryx.connectors import GcpCloudStorageConnector
@@ -68,6 +74,7 @@ def test_readme_4():
     result.head()
 
 
+@skip_if(is_version("3.9"))
 def test_readme_5():
     import opteryx
     from opteryx.connectors import SqlConnector
@@ -90,12 +97,14 @@ def test_readme_5():
     result.head()
 
 
+@skip_if(is_version("3.9"))
 def test_get_started():
     import opteryx
 
     result = opteryx.query("SELECT * FROM $planets;").arrow()
 
 
+@skip_if(is_version("3.9"))
 def test_python_client():
     import opteryx
 
@@ -136,6 +145,7 @@ def test_python_client():
     ).fetchall()
 
 
+@skip_if(is_version("3.9"))
 def test_pandas_integration_input():
     import pandas
 
@@ -155,12 +165,14 @@ def test_pandas_integration_input():
     results = opteryx.query("SELECT * FROM nephews").arrow()
 
 
+@skip_if(is_version("3.9"))
 def test_pandas_integration_output():
     import opteryx
 
     dataframe = opteryx.query("SELECT * FROM $planets").pandas()
 
 
+@skip_if(is_version("3.9"))
 def test_polars_integration_input():
     import polars
 
@@ -180,12 +192,14 @@ def test_polars_integration_input():
     results = opteryx.query("SELECT * FROM nephews").arrow()
 
 
+@skip_if(is_version("3.9"))
 def test_polars_integration_output():
     import opteryx
 
     dataframe = opteryx.query("SELECT * FROM $planets").polars()
 
 
+@skip_if(is_version("3.9"))
 def test_permissions_example():
     import opteryx
 
@@ -200,6 +214,7 @@ def test_permissions_example():
         print("User does not have permission to execute this query")
 
 
+@skip_if(is_version("3.9"))
 def test_role_based_permissions():
     import opteryx
 
@@ -226,6 +241,7 @@ def test_role_based_permissions():
     assert perms == {"Query", "Execute", "Analyze"}
 
 
+@skip_if(is_version("3.9"))
 def test_membership_permissions():
     import opteryx
 

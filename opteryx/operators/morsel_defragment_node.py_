@@ -40,7 +40,7 @@ from typing import Generator
 import pyarrow
 
 from opteryx.models import QueryProperties
-from opteryx.operators import BasePlanNode
+from opteryx.operators import BasePlanNode, OperatorType
 
 MORSEL_SIZE_BYTES: int = 64 * 1024 * 1024  # 64Mb
 MORSEL_SIZE_COUNT: int = 500000  # hard record count limit, half a million
@@ -49,8 +49,19 @@ LOW_WATER: float = 0.75  # Merge morsels under 75% of MORSEL_SIZE
 
 
 class MorselDefragmentNode(BasePlanNode):
+
+    operator_type = OperatorType.PASSTHRU
+
     def __init__(self, properties: QueryProperties, **config):
         super().__init__(properties=properties)
+
+
+    def to_dict(self) -> dict:  # pragma: no cover
+        raise NotImplementedError()
+
+    @classmethod
+    def from_dict(cls, dic: dict) -> "BasePlanNode":  # pragma: no cover
+        raise NotImplementedError()
 
     @property
     def name(self):  # pragma: no cover

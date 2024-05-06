@@ -41,17 +41,24 @@ from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import format_expression
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
+from opteryx.operators import OperatorType
 
 
 class HeapSortNode(BasePlanNode):
+
+    operator_type = OperatorType.BLOCKING
+
     def __init__(self, properties: QueryProperties, **config):
         super().__init__(properties=properties)
         self.order = config.get("order", [])
         self.limit: int = config.get("limit", -1)
 
-    @property
-    def greedy(self):  # pragma: no cover
-        return True
+    def to_dict(self) -> dict:  # pragma: no cover
+        raise NotImplementedError()
+
+    @classmethod
+    def from_dict(cls, dic: dict) -> "BasePlanNode":  # pragma: no cover
+        raise NotImplementedError()
 
     @property
     def config(self):  # pragma: no cover

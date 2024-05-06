@@ -11,6 +11,8 @@
 # limitations under the License.
 
 
+from enum import Enum
+from enum import auto
 from typing import Generator
 
 import pyarrow
@@ -20,15 +22,17 @@ from opteryx.models import QueryProperties
 from opteryx.models import QueryStatistics
 
 
+class OperatorType(int, Enum):
+    PRODUCER = auto()
+    PASSTHRU = auto()
+    BLOCKING = auto()
+    _UNKNOWN = auto()
+
+
 class BasePlanNode:
+
     _producers = None
-
-    def to_dict(self) -> dict:  # pragma: no cover
-        raise NotImplementedError()
-
-    @classmethod
-    def from_dict(cls, dic: dict) -> "BasePlanNode":  # pragma: no cover
-        raise NotImplementedError()
+    operator_type = OperatorType._UNKNOWN
 
     def __init__(self, properties: QueryProperties, **parameters):
         """
@@ -43,15 +47,15 @@ class BasePlanNode:
         self.execution_time = 0
         self.identity = random_string()
 
+    def to_dict(self) -> dict:  # pragma: no cover
+        raise NotImplementedError()
+
+    @classmethod
+    def from_dict(cls, dic: dict) -> "BasePlanNode":  # pragma: no cover
+        raise NotImplementedError()
+
     def set_producers(self, producers):
         self._producers = producers
-
-    @property
-    def greedy(self):  # pragma: no cover
-        """
-        Returns True if this node needs all of the data before it can return
-        """
-        return False
 
     @property
     def name(self):  # pragma: no cover
@@ -59,13 +63,6 @@ class BasePlanNode:
         Friendly Name of this node
         """
         return "no name"
-
-    @property
-    def config(self):  # pragma: no cover
-        """
-        Configuration for this node, used when showing execution plans
-        """
-        return "<not set>"
 
     def execute(self) -> Generator[pyarrow.Table, None, None]:  # pragma: no cover
         pass

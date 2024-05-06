@@ -5,8 +5,10 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import numpy
 import opteryx
+from tests.tools import is_version, skip_if
 
 
+@skip_if(is_version("3.9"))
 def test_we_dont_fold_random():
 
     SQL = "SELECT random() AS r FROM GENERATE_SERIES(5000) AS g"

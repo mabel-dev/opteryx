@@ -48,14 +48,13 @@ class _BufferPool:
             name="BufferPool", size=cache_manager.max_local_buffer_capacity
         )
 
-    def get(self, key: bytes) -> Optional[bytes]:
+    def get(self, key: bytes, zero_copy: bool = True) -> Optional[bytes]:
         """
         Retrieve an item from the pool, return None if the item isn't found.
-        If cache is provided and item is not in pool, attempt to get it from cache.
         """
         mp_key = self._lru.get(key)
         if mp_key is not None:
-            return self._memory_pool.read(mp_key)
+            return self._memory_pool.read(mp_key, zero_copy=zero_copy)
         return None
 
     def set(self, key: bytes, value) -> Optional[str]:
@@ -71,7 +70,7 @@ class _BufferPool:
             The key of the evicted item if eviction occurred, otherwise None.
         """
         # First check if we can commit the value to the memory pool
-        if not self._memory_pool.can_commit(value):
+        if not self._memory_pool.available_space() >= len(value):
             evicted_key, evicted_value = self._lru.evict(details=True)
             if evicted_key:
                 self._memory_pool.release(evicted_value)

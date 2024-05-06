@@ -11,7 +11,7 @@
 # limitations under the License.
 
 """
-Show Variables Node
+Set Variables Node
 
 This is a SQL Query Execution Plan Node.
 """
@@ -21,9 +21,13 @@ from opteryx.constants import QueryStatus
 from opteryx.models import NonTabularResult
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
+from opteryx.operators import OperatorType
 
 
 class SetVariableNode(BasePlanNode):
+
+    operator_type = OperatorType.PRODUCER
+
     def __init__(self, properties: QueryProperties, **config):
         super().__init__(properties=properties)
 
@@ -31,6 +35,13 @@ class SetVariableNode(BasePlanNode):
         self.value = config.get("value")
 
         self.variables = config.get("variables")
+
+    def to_dict(self) -> dict:  # pragma: no cover
+        raise NotImplementedError()
+
+    @classmethod
+    def from_dict(cls, dic: dict) -> "BasePlanNode":  # pragma: no cover
+        raise NotImplementedError()
 
     @property
     def name(self):  # pragma: no cover

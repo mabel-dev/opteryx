@@ -11,6 +11,7 @@
 # limitations under the License.
 
 from .base_plan_node import BasePlanNode  # isort: skip
+from .base_plan_node import OperatorType  # isort: skip
 
 from .aggregate_and_group_node import AggregateAndGroupNode  # Group is always followed by aggregate
 from .aggregate_node import AGGREGATORS

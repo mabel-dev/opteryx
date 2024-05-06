@@ -31,9 +31,13 @@ from opteryx.managers.expression import format_expression
 from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
+from opteryx.operators import OperatorType
 
 
 class FilterNode(BasePlanNode):
+
+    operator_type = OperatorType.PASSTHRU
+
     def __init__(self, properties: QueryProperties, **config):
         super().__init__(properties=properties)
         self.filter = config.get("filter")
@@ -43,13 +47,20 @@ class FilterNode(BasePlanNode):
             select_nodes=(NodeType.FUNCTION,),
         )
 
+    def to_dict(self) -> dict:  # pragma: no cover
+        raise NotImplementedError()
+
+    @classmethod
+    def from_dict(cls, dic: dict) -> "BasePlanNode":  # pragma: no cover
+        raise NotImplementedError()
+
     @property
     def config(self):  # pragma: no cover
         return format_expression(self.filter)
 
     @property
     def name(self):  # pragma: no cover
-        return "Selection"
+        return "Filter"
 
     def execute(self) -> Generator:
         morsels = self._producers[0]  # type:ignore
