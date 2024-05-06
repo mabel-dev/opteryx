@@ -98,7 +98,6 @@ class MabelPartitionScheme(BasePartitionScheme):
 
             control_blobs: List[str] = []
             data_blobs: List[str] = []
-            segments = set()
             as_ats = set()
             hour_blobs: List[str] = []
 
@@ -112,18 +111,18 @@ class MabelPartitionScheme(BasePartitionScheme):
                     if hour_label in blob:
                         hour_blobs.append(blob)
 
-                # Collect segments
-                if by_label in blob:
-                    segments.add(extract_prefix(blob, "by_"))
-
-                if as_at_label in blob:
-                    as_ats.add(extract_prefix(blob, "as_at_"))
-
             if hour_blobs:
                 data_blobs = hour_blobs
 
-            if segments - {"by_hour", None}:
-                raise UnsupportedSegementationError(dataset=prefix, segments=segments)
+            for blob in blob_names:
+                # Collect segments
+                if by_label in blob:
+                    segment = extract_prefix(blob, "by_")
+                    if segment != "by_hour":
+                        raise UnsupportedSegementationError(dataset=prefix, segments=[segment])
+
+                if as_at_label in blob:
+                    as_ats.add(extract_prefix(blob, "as_at_"))
 
             as_at = None
             as_at_list = sorted(as_ats)
