@@ -73,12 +73,6 @@ extensions = [
         extra_compile_args=COMPILE_FLAGS,
     ),
     Extension(
-        name="opteryx.compiled.functions.cython_functions",
-        sources=["opteryx/compiled/functions/cython_functions.pyx"],
-        include_dirs=[numpy.get_include()],
-        extra_compile_args=COMPILE_FLAGS,
-    ),
-    Extension(
         name="opteryx.compiled.functions.ip_address",
         sources=["opteryx/compiled/functions/ip_address.pyx"],
         include_dirs=[numpy.get_include()],

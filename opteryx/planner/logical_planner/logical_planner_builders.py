@@ -71,30 +71,6 @@ def array(branch, alias: Optional[List[str]] = None, key=None):
     )
 
 
-def array_agg(branch, alias: Optional[List[str]] = None, key=None):
-    distinct = branch["distinct"]
-    expression = build(branch["expr"])
-    order = None
-    if branch["order_by"]:
-        order = [
-            (build(item["expr"]), False if item["asc"] is None else not (item["asc"]))
-            for item in branch["order_by"]
-        ]
-    limit = None
-    if branch["limit"]:
-        limit = int(build(branch["limit"]).value)
-
-    return Node(
-        node_type=NodeType.AGGREGATOR,
-        value="ARRAY_AGG",
-        parameters=[expression],
-        distinct=distinct,
-        order=order,
-        limit=limit,
-        alias=alias,
-    )
-
-
 def between(branch, alias: Optional[List[str]] = None, key=None):
     expr = build(branch["expr"])
     low = build(branch["low"])
@@ -205,6 +181,7 @@ def cast(branch, alias: Optional[List[str]] = None, key=None):
     # CAST(<var> AS <type>) - convert to the form <type>(var), e.g. BOOLEAN(on)
 
     args = [build(branch["expr"])]
+    kind = branch["kind"]
     data_type = branch["data_type"]
     if isinstance(data_type, dict):
         # timestamps have the timezone as a value
@@ -235,6 +212,9 @@ def cast(branch, alias: Optional[List[str]] = None, key=None):
         data_type = "STRUCT"
     else:
         raise SqlError(f"Unsupported type for CAST  - '{data_type}'")
+
+    if kind in {"TryCast", "SafeCast"}:
+        data_type = "TRY_" + data_type
 
     return Node(
         NodeType.FUNCTION,
@@ -290,7 +270,24 @@ def floor(value, alias: Optional[List[str]] = None, key=None):
 
 def function(branch, alias: Optional[List[str]] = None, key=None):
     func = branch["name"][0]["value"].upper()
-    args = [build(a) for a in branch["args"]]
+
+    order_by = None
+    limit = None
+    args = []
+
+    if branch["args"] != "None":
+        args = [build(a) for a in branch["args"]["List"]["args"]]
+
+        for clause in branch["args"]["List"]["clauses"]:
+            if "OrderBy" in clause:
+                order_by = [
+                    (build(item["expr"]), not bool(item["asc"])) for item in clause["OrderBy"]
+                ]
+            elif "Limit" in clause:
+                limit = build(clause["Limit"]).value
+            else:
+                print("***", clause)
+
     if functions.is_function(func):
         node_type = NodeType.FUNCTION
     elif operators.is_aggregator(func):
@@ -305,8 +302,6 @@ def function(branch, alias: Optional[List[str]] = None, key=None):
             f"Unknown function or aggregate '{func}'. Did you mean '{likely_match}'?"
         )
 
-    order_by = [(build(item["expr"]), not bool(item["asc"])) for item in branch.get("order_by", [])]
-
     node = Node(
         node_type=node_type,
         value=func,
@@ -314,6 +309,7 @@ def function(branch, alias: Optional[List[str]] = None, key=None):
         alias=alias,
         distinct=branch.get("distinct"),
         order=order_by,
+        limit=limit,
     )
     node.qualified_name = format_expression(node)
     return node
@@ -394,29 +390,6 @@ def in_unnest(branch, alias: Optional[List[str]] = None, key=None):
 def is_compare(branch, alias: Optional[List[str]] = None, key=None):
     centre = build(branch)
     return Node(NodeType.UNARY_OPERATOR, value=key, centre=centre)
-
-
-def json_access(branch, alias: Optional[List[str]] = None, key=None):
-    left_node = build(branch["left"])
-    operator = branch["operator"]
-    right_node = build(branch["right"])
-
-    if right_node.node_type not in (NodeType.LITERAL, NodeType.IDENTIFIER):
-        raise UnsupportedSyntaxError(f"JsonAccessor not fully supported.")
-
-    OPERATORS = {"Arrow": ("GET", "->"), "LongArrow": ("GET_STRING", "->>")}
-
-    func, symbol = OPERATORS.get(operator, (None, None))
-
-    if func is None:
-        raise UnsupportedSyntaxError(f"JsonAccessor {operator} is not available.")
-
-    return Node(
-        NodeType.FUNCTION,
-        value=func,
-        parameters=[left_node, right_node],
-        alias=alias or f"{left_node.current_name}{symbol}'{right_node.value}'",
-    )
 
 
 def literal_boolean(branch, alias: Optional[List[str]] = None, key=None):
@@ -639,50 +612,6 @@ def tuple_literal(branch, alias: Optional[List[str]] = None, key=None):
     return Node(NodeType.LITERAL, type=OrsoTypes.ARRAY, value=tuple(values), alias=alias)
 
 
-def try_cast(branch, alias: Optional[List[str]] = None, key="TryCast"):
-    # TRY_CAST(<var> AS <type>) - convert to the form <type>(var), e.g. BOOLEAN(on)
-    # also: SAFE_CAST
-    function_name = key.replace("Cast", "_Cast").upper()
-    args = [build(branch["expr"])]
-    data_type = branch["data_type"]
-    if isinstance(data_type, dict):
-        # timestamps have the timezone as a value
-        type_key = next(iter(data_type))
-        if type_key == "Timestamp" and data_type[type_key] not in (
-            (None, "None"),
-            (None, "WithoutTimeZone"),
-        ):
-            raise UnsupportedSyntaxError("TIMESTAMPS do not support `TIME ZONE`")
-        data_type = type_key
-    if "Custom" in data_type:
-        data_type = branch["data_type"]["Custom"][0][0]["value"].upper()
-    if data_type == "Timestamp":
-        data_type = "TIMESTAMP"
-    elif data_type == "Date":
-        data_type = "DATE"
-    elif "Varchar" in data_type:
-        data_type = "VARCHAR"
-    elif "Decimal" in data_type:
-        data_type = "DECIMAL"
-    elif "Integer" in data_type:
-        data_type = "INTEGER"
-    elif "Double" in data_type:
-        data_type = "DOUBLE"
-    elif "Boolean" in data_type:
-        data_type = "BOOLEAN"
-    elif "STRUCT" in data_type:
-        data_type = "STRUCT"
-    else:
-        raise SqlError(f"Unsupported type for `{function_name}`  - '{data_type}'")
-
-    return Node(
-        NodeType.FUNCTION,
-        value=f"TRY_{data_type.upper()}",
-        parameters=args,
-        alias=alias,
-    )
-
-
 def typed_string(branch, alias: Optional[List[str]] = None, key=None):
     data_type = branch["data_type"]
 
@@ -767,7 +696,6 @@ BUILDERS = {
     "AnyOp": any_op,
     "AllOp": all_op,
     "Array": array,  # not actually implemented
-    "ArrayAgg": array_agg,
     "Between": between,
     "BinaryOp": binary_op,
     "Boolean": literal_boolean,
@@ -795,7 +723,6 @@ BUILDERS = {
     "IsNotTrue": is_compare,
     "IsNull": is_compare,
     "IsTrue": is_compare,
-    "JsonAccess": json_access,
     "Like": pattern_match,
     "MapAccess": map_access,
     "MatchAgainst": match_against,
@@ -806,13 +733,11 @@ BUILDERS = {
     "Position": position,
     "QualifiedWildcard": qualified_wildcard,
     "RLike": pattern_match,
-    "SafeCast": try_cast,
     "SingleQuotedString": literal_string,
     "SimilarTo": pattern_match,
     "Substring": substring,
     "Tuple": tuple_literal,
     "Trim": trim_string,
-    "TryCast": try_cast,
     "TypedString": typed_string,
     "UnaryOp": unary_op,
     "Unnamed": build,

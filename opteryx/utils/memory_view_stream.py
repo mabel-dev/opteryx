@@ -64,7 +64,7 @@ class MemoryViewStream(BinaryIO):
         return self._closed
 
     @property
-    def mode(self) -> str:
+    def mode(self) -> str:  # pragma: no cover
         return "rb"
 
     def __enter__(self) -> BinaryIO:
@@ -82,13 +82,13 @@ class MemoryViewStream(BinaryIO):
         self.offset += 1
         return bytes([self.mv[self.offset]])
 
-    def fileno(self) -> int:
+    def fileno(self) -> int:  # pragma: no cover
         return -1
 
     def flush(self) -> None:  # pragma: no cover
         raise io.UnsupportedOperation()
 
-    def isatty(self) -> bool:
+    def isatty(self) -> bool:  # pragma: no cover
         return False
 
     def readline(self, limit: int = -1):  # pragma: no cover

@@ -180,4 +180,8 @@ def _inner_filter_operations(arr, operator, value):
         return list_ops.cython_allop_eq(arr[0], value)
     if operator == "AllOpNotEq":
         return list_ops.cython_allop_neq(arr[0], value)
+    if operator == "Arrow":
+        return list_ops.cython_arrow_op(arr, value[0])
+    if operator == "LongArrow":
+        return list_ops.cython_long_arrow_op(arr, value[0])
     raise NotImplementedError(f"Operator {operator} is not implemented!")  # pragma: no cover

@@ -113,6 +113,8 @@ def format_expression(root, qualify: bool = False):
             "BitwiseOr": "|",
             "LtEq": "<=",
             "GtEq": ">=",
+            "Arrow": "->",
+            "LongArrow": "->>",
         }
         return f"{format_expression(root.left, qualify)} {_map.get(root.value, root.value).upper()} {format_expression(root.right, qualify)}"
     if node_type == NodeType.UNARY_OPERATOR:

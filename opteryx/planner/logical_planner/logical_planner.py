@@ -323,6 +323,9 @@ def inner_query_planner(ast_branch):
     if _selection:
         if len(_relations) == 0:
             raise UnsupportedSyntaxError("Statement has a WHERE clause but no FROM clause.")
+        all_ops = get_all_nodes_of_type(_selection, (NodeType.COMPARISON_OPERATOR,))
+        if any(op.value in ("Arrow", "LongArrow") for op in all_ops):
+            raise UnsupportedSyntaxError("JSON Accessors (->, ->>) cannot be used in filters.")
         selection_step = LogicalPlanNode(node_type=LogicalPlanStepType.Filter)
         selection_step.condition = _selection
         previous_step_id, step_id = step_id, random_string()
