@@ -19,6 +19,7 @@ from typing import Optional
 
 from opteryx.exceptions import DataError
 from opteryx.managers.schemes import BasePartitionScheme
+from opteryx.utils.dates import date_range
 from opteryx.utils.file_decoders import DATA_EXTENSIONS
 
 OS_SEP = os.sep
@@ -36,12 +37,8 @@ class UnsupportedSegementationError(DataError):
 
 def extract_prefix(path, prefix):
     start_index = path.find(prefix)
-    if start_index == -1:
-        return None
-    end_index = path.find(OS_SEP, start_index)
-    if end_index == -1:
-        return None
-    return path[start_index:end_index]
+    end_index = path.find(OS_SEP, start_index) if start_index != -1 else -1
+    return path[start_index:end_index] if end_index != -1 else None
 
 
 def is_complete_and_not_invalid(blobs, as_at):
@@ -87,9 +84,28 @@ class MabelPartitionScheme(BasePartitionScheme):
         by_label = f"{OS_SEP}by_"
         as_at_label = f"{OS_SEP}as_at"
 
-        def _inner(*, timestamp):
-            date_path = f"{prefix}{OS_SEP}year_{timestamp.year:04d}{OS_SEP}month_{timestamp.month:02d}{OS_SEP}day_{timestamp.day:02d}"
-            hour_label = f"{OS_SEP}by_hour{OS_SEP}hour={timestamp.hour:02d}/"
+        def process_as_ats(blobs, as_at_label, control_blobs):
+            as_ats = sorted(
+                {extract_prefix(blob, "as_at_") for blob in blobs if as_at_label in blob}
+            )
+            if len(as_ats) == 0:
+                return blobs
+            valid_blobs = []
+            while as_ats:
+                as_at = as_ats.pop()
+                if as_at is None:
+                    continue
+                if is_complete_and_not_invalid(control_blobs, as_at):
+                    valid_blobs = [blob for blob in blobs if as_at in blob]
+                    break
+                else:
+                    blobs = [blob for blob in blobs if as_at not in blob]
+            return valid_blobs
+
+        def _inner(*, date, start, end):
+            date_path = f"{prefix}{OS_SEP}year_{date.year:04d}{OS_SEP}month_{date.month:02d}{OS_SEP}day_{date.day:02d}"
+            by_label = f"{OS_SEP}by_"
+            as_at_label = f"{OS_SEP}as_at"
 
             # Call your method to get the list of blob names
             blob_names = blob_list_getter(prefix=date_path)
@@ -98,47 +114,41 @@ class MabelPartitionScheme(BasePartitionScheme):
 
             control_blobs: List[str] = []
             data_blobs: List[str] = []
-            as_ats = set()
-            hour_blobs: List[str] = []
 
             for blob in blob_names:
-                extension = os.path.splitext(blob)[1]
-                if extension not in DATA_EXTENSIONS:
+                ext = os.path.splitext(blob)[1]
+                if ext not in DATA_EXTENSIONS:
                     control_blobs.append(blob)
                 else:
                     data_blobs.append(blob)
-                    # Collect hour specific blobs, but only data blobs
-                    if hour_label in blob:
-                        hour_blobs.append(blob)
+                    if by_label in blob:
+                        segment = extract_prefix(blob, "by_")
+                        if segment != "by_hour":
+                            raise UnsupportedSegementationError(dataset=prefix, segments=[segment])
 
-            if hour_blobs:
-                data_blobs = hour_blobs
+            if any(f"{OS_SEP}by_hour{OS_SEP}" in blob_name for blob_name in data_blobs):
 
-            for blob in blob_names:
-                # Collect segments
-                if by_label in blob:
-                    segment = extract_prefix(blob, "by_")
-                    if segment != "by_hour":
-                        raise UnsupportedSegementationError(dataset=prefix, segments=[segment])
+                if start > date:
+                    start = date
+                if end < date:
+                    end = date
 
-                if as_at_label in blob:
-                    as_ats.add(extract_prefix(blob, "as_at_"))
+                selected_blobs = []
 
-            as_at = None
-            as_at_list = sorted(as_ats)
+                for hour in date_range(start, end, "1h"):
+                    hour_label = f"{OS_SEP}by_hour{OS_SEP}hour={hour.hour:02d}/"
+                    # Filter for the specific hour, if hour folders exist
+                    if any(hour_label in blob_name for blob_name in data_blobs):
+                        hours_blobs = [
+                            blob_name for blob_name in data_blobs if hour_label in blob_name
+                        ]
+                        selected_blobs.extend(
+                            process_as_ats(hours_blobs, as_at_label, control_blobs)
+                        )
+            else:
+                selected_blobs = process_as_ats(data_blobs, "as_at_", control_blobs)
 
-            # Keep popping from as_ats until a valid frame is found
-            while as_at_list:
-                as_at = as_at_list.pop()
-                if as_at is None:
-                    continue
-                if is_complete_and_not_invalid(control_blobs, as_at):
-                    data_blobs = [blob for blob in data_blobs if as_at in blob]
-                    break
-                data_blobs = [blob for blob in data_blobs if as_at not in blob]
-                as_at = None
-
-            return data_blobs
+            return selected_blobs
 
         start_date = start_date or midnight
         end_date = end_date or midnight.replace(hour=23, minute=59)
@@ -146,11 +156,11 @@ class MabelPartitionScheme(BasePartitionScheme):
         found = set()
 
         # Use a ThreadPoolExecutor to parallelize fetching blobs for each hour
-        with concurrent.futures.ThreadPoolExecutor() as executor:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
             # Prepare a list of future tasks
             futures = [
-                executor.submit(_inner, **{"timestamp": ts})
-                for ts in self.hourly_timestamps(start_date, end_date)
+                executor.submit(_inner, **{"date": date, "start": start_date, "end": end_date})
+                for date in date_range(start_date, end_date, "1d")
             ]
             # Wait for all futures to complete and collect results
             for future in concurrent.futures.as_completed(futures):
