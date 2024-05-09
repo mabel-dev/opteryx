@@ -128,8 +128,8 @@ class MabelPartitionScheme(BasePartitionScheme):
 
             if any(f"{OS_SEP}by_hour{OS_SEP}" in blob_name for blob_name in data_blobs):
 
-                start = max(start, date)
-                end = min(end, date)
+                start = min(start, date)
+                end = max(end, date)
 
                 selected_blobs = []
 
