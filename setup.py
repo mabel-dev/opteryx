@@ -122,6 +122,9 @@ setup_config = {
     "entry_points": {
         "console_scripts": ["opteryx=opteryx.command:main"],
     },
+    "package_data": {
+        "": ["*.pyx", "*.pxd"],
+    },
 }
 
 rust_build(setup_config)

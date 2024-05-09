@@ -26,3 +26,7 @@ skips = ["B101", "B105", "B324", "B608"]
 # B105 - Hardcoded passwords
 # B324 - Use of weak crypto
 # B608 - Hardcoded SQL
+
+[build-system]
+requires = ["setuptools>=42", "wheel", "Cython", "numpy"]
+build-backend = "setuptools.build_meta"
