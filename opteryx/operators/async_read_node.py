@@ -36,7 +36,7 @@ from opteryx.shared import MemoryPool
 from opteryx.utils.file_decoders import get_decoder
 
 CONCURRENT_READS = 4
-MAX_BUFFER_SIZE_MB = 256
+MAX_BUFFER_SIZE_MB = 512
 
 
 def normalize_morsel(schema: RelationSchema, morsel: pyarrow.Table) -> pyarrow.Table:

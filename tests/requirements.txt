@@ -38,3 +38,4 @@ cassandra-driver
 setuptools_rust
 
 aiohttp
+psutil

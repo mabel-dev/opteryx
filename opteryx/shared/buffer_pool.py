@@ -24,7 +24,7 @@ The Buffer Pool is a global resource and used across all Connections and Cursors
 """
 from typing import Optional
 
-from opteryx.shared.memory_pool import MemoryPool
+from opteryx.shared import MemoryPool
 from opteryx.utils.lru_2 import LRU2
 
 
