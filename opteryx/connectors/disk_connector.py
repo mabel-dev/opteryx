@@ -105,6 +105,8 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable, PredicatePushable, 
         # DEBUG: log ("READ   ", blob_name)
         with open(blob_name, "rb") as file:
             data = file.read()
+            if len(data) > pool.size():
+                raise ValueError(f"File {blob_name} is too large for read buffer")
             ref = await pool.commit(data)
             while ref is None:
                 statistics.stalls_writing_to_read_buffer += 1

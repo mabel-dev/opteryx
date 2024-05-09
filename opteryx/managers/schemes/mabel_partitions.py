@@ -28,10 +28,10 @@ OS_SEP = os.sep
 class UnsupportedSegementationError(DataError):
     """Exception raised for unsupported segmentations."""
 
-    def __init__(self, dataset: str, segments: set = None):
+    def __init__(self, dataset: str, segment: str):
         self.dataset = dataset
-        self.segments = segments
-        message = f"'{dataset}' contains unsupported segmentation (`{'`, `'.join(segments)}`), only 'by_hour' segments are supported."
+        self.segment = segment
+        message = f"'{dataset}' contains unsupported segmentation (found `{segment}`), only 'by_hour' segments are supported."
         super().__init__(message)
 
 
@@ -124,14 +124,12 @@ class MabelPartitionScheme(BasePartitionScheme):
                     if by_label in blob:
                         segment = extract_prefix(blob, "by_")
                         if segment != "by_hour":
-                            raise UnsupportedSegementationError(dataset=prefix, segments=[segment])
+                            raise UnsupportedSegementationError(dataset=prefix, segment=segment)
 
             if any(f"{OS_SEP}by_hour{OS_SEP}" in blob_name for blob_name in data_blobs):
 
-                if start > date:
-                    start = date
-                if end < date:
-                    end = date
+                start = max(start, date)
+                end = min(end, date)
 
                 selected_blobs = []
 

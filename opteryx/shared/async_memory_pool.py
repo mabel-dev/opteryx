@@ -39,3 +39,6 @@ class AsyncMemoryPool:
     async def release(self, ref_id: int):
         async with self.lock:
             self.pool.release(ref_id)
+
+    def size(self):
+        return self.pool.size
