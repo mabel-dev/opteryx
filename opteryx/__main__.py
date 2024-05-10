@@ -60,6 +60,7 @@ def main(
     table_width: bool = typer.Option(default=True, help="Limit console display to the screen width."),
     max_col_width: int = typer.Option(default=30, help="Maximum column width"),
     stats: bool = typer.Option(default=True, help="Report statistics."),
+    cycles: int = typer.Option(default=1, help="Repeat Execution."),
     sql: str = typer.Argument(None, show_default=False, help="Execute SQL statement and quit."),
 ):
 # fmt:on
@@ -70,6 +71,8 @@ def main(
         max_col_width = max_col_width.default
     if hasattr(table_width, "default"):
         table_width = table_width.default
+    if hasattr(cycles, "default"):
+        cycles = cycles.default
 
     if sql is None:  # pragma: no cover
 
@@ -131,53 +134,50 @@ def main(
     # tidy up the statement
     sql = clean_statement(remove_comments(sql))
 
-    print()
+    for i in range(cycles):
 
-    start = time.monotonic_ns()
-    result = opteryx.query(sql)
-    result.materialize()
-    duration = time.monotonic_ns() - start
+        print()
 
-    if o == "console":
-        print(result.display(limit=-1, display_width=table_width, colorize=color, max_column_width=max_col_width))
-        if stats:
-            print(f"[ {result.rowcount} rows x {result.columncount} columns ] ( {duration/1e9} seconds )")
-        return
-    else:
-        table = result.arrow()
+        start = time.monotonic_ns()
+        result = opteryx.query(sql)
+        result.materialize()
+        duration = time.monotonic_ns() - start
 
-        ext = o.lower().split(".")[-1]
+        if o == "console":
+            print(result.display(limit=-1, display_width=table_width, colorize=color, max_column_width=max_col_width))
+            if stats:
+                print(f"[ {result.rowcount} rows x {result.columncount} columns ] ( {duration/1e9} seconds )")
+        else:
+            table = result.arrow()
 
-        if ext == "parquet":
-            from pyarrow import parquet
+            ext = o.lower().split(".")[-1]
 
-            parquet.write_table(table, o)
-            print(f"[ {result.rowcount} rows x {result.columncount} columns ]")
-            print(f"Written result to '{o}'")
-            return
-        if ext == "csv":
-            from pyarrow import csv
+            if ext == "parquet":
+                from pyarrow import parquet
 
-            csv.write_csv(table, o)
-            print(f"[ {result.rowcount} rows x {result.columncount} columns ]")
-            print(f"Written result to '{o}'")
-            return
-        if ext == "jsonl":
-            import orjson
-            with open(o, mode="wb") as file:
-                for row in result:
-                    file.write(orjson.dumps(row.as_dict, default=str) + b"\n")
-            print(f"[ {result.rowcount} rows x {result.columncount} columns ]")
-            print(f"Written result to '{o}'")
-            return
-        if ext == "md":
-            with open(o, mode="w") as file:
-                file.write(result.markdown(limit=-1))
-            print(f"[ {result.rowcount} rows x {result.columncount} columns ]")
-            print(f"Written result to '{o}'")
-            return
+                parquet.write_table(table, o)
+                print(f"[ {result.rowcount} rows x {result.columncount} columns ] ( {duration/1e9} seconds )")
+                print(f"Written result to '{o}'")
+            elif ext == "csv":
+                from pyarrow import csv
 
-    raise ValueError(f"Unknown output format '{ext}'")  # pragma: no cover
+                csv.write_csv(table, o)
+                print(f"[ {result.rowcount} rows x {result.columncount} columns ] ( {duration/1e9} seconds )")
+                print(f"Written result to '{o}'")
+            elif ext == "jsonl":
+                import orjson
+                with open(o, mode="wb") as file:
+                    for row in result:
+                        file.write(orjson.dumps(row.as_dict, default=str) + b"\n")
+                print(f"[ {result.rowcount} rows x {result.columncount} columns ] ( {duration/1e9} seconds )")
+                print(f"Written result to '{o}'")
+            elif ext == "md":
+                with open(o, mode="w") as file:
+                    file.write(result.markdown(limit=-1))
+                print(f"[ {result.rowcount} rows x {result.columncount} columns ] ( {duration/1e9} seconds )")
+                print(f"Written result to '{o}'")
+            else:
+                raise ValueError(f"Unknown output format '{ext}'")  # pragma: no cover
 
 
 if __name__ == "__main__":  # pragma: no cover
