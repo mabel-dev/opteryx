@@ -11,7 +11,7 @@
 # limitations under the License.
 
 """
-Explain Node
+Read Node
 
 This is the SQL Query Execution Plan Node responsible for the reading of data.
 
