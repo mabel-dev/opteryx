@@ -113,17 +113,8 @@ class AsyncReaderNode(ReaderNode):
 
     def execute(self) -> Generator:
         """Perform this step, time how long is spent doing work"""
-        morsel = None
         orso_schema = self.parameters["schema"]
         reader = self.parameters["connector"]
-
-        orso_schema_cols = []
-        for col in orso_schema.columns:
-            if col.identity in [c.identity for c in self.columns]:
-                orso_schema_cols.append(col)
-        orso_schema.columns = orso_schema_cols
-
-        morsel = None
 
         blob_names = reader.partition_scheme.get_blobs_in_partition(
             start_date=reader.start_date,
@@ -147,6 +138,15 @@ class AsyncReaderNode(ReaderNode):
             ),
             daemon=True,
         ).start()
+
+        orso_schema_cols = []
+        for col in orso_schema.columns:
+            if col.identity in [c.identity for c in self.columns]:
+                orso_schema_cols.append(col)
+        orso_schema.columns = orso_schema_cols
+
+        morsel = None
+        arrow_schema = None
 
         while True:
             try:
@@ -176,6 +176,10 @@ class AsyncReaderNode(ReaderNode):
                 self.statistics.rows_seen += num_rows
 
                 morsel = normalize_morsel(orso_schema, morsel)
+                if arrow_schema:
+                    morsel = morsel.cast(arrow_schema)
+                else:
+                    arrow_schema = morsel.schema
 
                 self.statistics.blobs_read += 1
                 self.statistics.rows_read += morsel.num_rows

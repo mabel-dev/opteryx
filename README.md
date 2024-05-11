@@ -37,7 +37,7 @@ Opteryx offers the following features:
 
 ## How Does it Work?
 
-Opteryx processes queries by first determining the appropriate language to interact with various downstream data platforms. It translates your query into SQL, CQL, or a suitable query format for document stores like MongoDB, depending on the data source. This allows Opteryx to efficiently retrieve the necessary data from systems such as MySQL or MongoDB to respond to your query.
+Opteryx processes queries by first determining the appropriate query language to interact with different downstream data platforms. It translates your query into SQL, CQL, or another suitable format for document stores like MongoDB, based on the data source. This enables Opteryx to efficiently retrieve the necessary data from systems such as MySQL or MongoDB to respond to your query.
 
 ![Opteryx](https://raw.githubusercontent.com/mabel-dev/opteryx.dev/main/assets/sankeymatic_20240501_224124_1600x1200.png)
 
@@ -83,7 +83,8 @@ Opteryx allows you to query your data directly in the systems where they are sto
 
 Opteryx can push parts of your query to the source query engine, allowing queries to run at the speed of the backend, rather than your local computer.
 
-And if there's not a connector in the box for your data platform; bespoke connectors can be added.
+And if there's not a connector in the box for your data platform; feel free to submit a pull request to add one.
+
 ## Install
 
 Installing from PyPI is recommended.
@@ -282,6 +283,8 @@ For further examples, check out the [interactive labs](https://github.com/mabel-
 
 [![Discord](https://img.shields.io/badge/discuss%20on-discord-5865F2.svg?logo=discord)](https://discord.gg/qpv2tr989x)
 [![X Follow](https://img.shields.io/badge/follow%20on-X-1DA1F2.svg?logo=X)](https://twitter.com/OpteryxSQL)
+[![Medium](https://img.shields.io/badge/Read%20on-Medium-5865F2.svg?logo=medium)](https://medium.com/opteryx)
+
 
 **Get Involved**
 
@@ -322,4 +325,3 @@ Opteryx is in beta. Beta means different things to different people, to us, bein
 
 - **[orso](https://github.com/mabel-dev/orso)** DataFrame library
 - **[mabel](https://github.com/mabel-dev/mabel)** Streaming data APIs
-- **[mesos](https://github.com/mabel-dev/mesos)** MySQL connector for Opteryx
