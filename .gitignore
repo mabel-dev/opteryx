@@ -174,3 +174,4 @@ charts.csv
 testdata/tpch/**/**.parquet
 **.cpp
 secure-connect.zip
+hits/*.parquet
