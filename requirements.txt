@@ -1,7 +1,7 @@
 cython
 numpy==1.*
 orjson
-orso>=0.0.151
+orso>=0.0.158
 pyarrow>=12.0.1
 typer==0.11.*
 aiohttp

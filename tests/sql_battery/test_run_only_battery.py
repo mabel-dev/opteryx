@@ -57,6 +57,8 @@ def test_run_only_tests(statement):
 if __name__ == "__main__":  # pragma: no cover
     import shutil
     import time
+    from opteryx.utils.formatter import format_sql
+    from tests.tools import trunc_printable
 
     width = shutil.get_terminal_size((80, 20))[0] - 15
 
@@ -66,8 +68,10 @@ if __name__ == "__main__":  # pragma: no cover
     for index, statement in enumerate(RUN_ONLY_TESTS):
         start = time.monotonic_ns()
         print(
-            f"\033[0;36m{(index + 1):04}\033[0m {statement[0:width - 1].ljust(width)}",
+            f"\033[38;2;255;184;108m{(index + 1):04}\033[0m"
+            f" {trunc_printable(format_sql(statement), width - 1)}",
             end="",
+            flush=True,
         )
 
         test_run_only_tests(statement)

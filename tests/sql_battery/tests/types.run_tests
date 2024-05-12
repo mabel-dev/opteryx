@@ -1,0 +1,5 @@
+SELECT BLOB('apple') = 'apple';
+SELECT 'apple' = BLOB('apple');
+SELECT BLOB('apple') > 'banana';
+SELECT 'banana' > BLOB('apple');
+SELECT BLOB('apple') LIKE 'a%ple';

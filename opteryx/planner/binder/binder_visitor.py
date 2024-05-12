@@ -68,6 +68,7 @@ def get_mismatched_condition_column_types(node: Node, relaxed: bool = False) -> 
                 relaxed
                 and (left_type.is_numeric() and right_type.is_numeric())
                 or (left_type.is_temporal() and right_type.is_temporal())
+                or (left_type.is_large_object() and right_type.is_large_object())
             ):
                 return None
             if left_type == OrsoTypes.NULL or right_type == OrsoTypes.NULL:
