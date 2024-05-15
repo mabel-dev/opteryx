@@ -42,7 +42,13 @@ class ExitNode(BasePlanNode):
         self.columns = config.get("columns", [])
 
     def to_dict(self) -> dict:  # pragma: no cover
-        raise NotImplementedError()
+
+        return {
+            "node": self.__class__.__name__,
+            "identity": self.identity,
+            "query_id": self.properties.qid,
+            "configuration": {"columns": self.columns},
+        }
 
     @classmethod
     def from_dict(cls, dic: dict) -> "BasePlanNode":  # pragma: no cover
