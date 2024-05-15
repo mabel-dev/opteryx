@@ -104,7 +104,7 @@ class AsyncReaderNode(ReaderNode):
             MAX_BUFFER_SIZE_MB * 1024 * 1024, f"ReadBuffer <{self.parameters['alias']}>"
         )
 
-    def to_dict(self) -> dict:  # pragma: no cover
+    def to_json(self) -> dict:  # pragma: no cover
         raise NotImplementedError()
 
     @classmethod

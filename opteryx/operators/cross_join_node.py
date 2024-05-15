@@ -232,11 +232,11 @@ class CrossJoinNode(BasePlanNode):
             ):
                 self._unnest_column.value = tuple([self._unnest_column.value])
 
-    def to_dict(self) -> dict:  # pragma: no cover
+    def to_json(self) -> dict:  # pragma: no cover
         raise NotImplementedError()
 
     @classmethod
-    def from_dict(cls, dic: dict) -> "BasePlanNode":  # pragma: no cover
+    def from_json(cls, json_obj: str) -> "BasePlanNode":  # pragma: no cover
         raise NotImplementedError()
 
     @property
