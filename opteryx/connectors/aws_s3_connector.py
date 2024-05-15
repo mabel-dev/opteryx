@@ -17,7 +17,6 @@ import os
 from typing import List
 
 import pyarrow
-from orso.schema import FlatColumn
 from orso.schema import RelationSchema
 from orso.tools import single_item_cache
 

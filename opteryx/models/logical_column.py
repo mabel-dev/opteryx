@@ -81,3 +81,15 @@ class LogicalColumn:
 
     def __repr__(self) -> str:
         return f"<LogicalColumn name: '{self.current_name}' fullname: '{self.qualified_name}'>"
+
+    def to_dict(self) -> str:
+        from dataclasses import asdict
+
+        return {
+            "class": "LogicalColumn",
+            "node_type": self.node_type,
+            "source_column": self.source_column,
+            "source": self.source,
+            "alias": self.alias,
+            "schema_column": asdict(self.schema_column),
+        }

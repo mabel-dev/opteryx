@@ -41,17 +41,21 @@ class ExitNode(BasePlanNode):
         super().__init__(properties=properties)
         self.columns = config.get("columns", [])
 
-    def to_dict(self) -> dict:  # pragma: no cover
+    def to_json(self) -> dict:  # pragma: no cover
 
-        return {
-            "node": self.__class__.__name__,
-            "identity": self.identity,
-            "query_id": self.properties.qid,
-            "configuration": {"columns": self.columns},
-        }
+        import orjson
+
+        return orjson.dumps(
+            {
+                "node": self.__class__.__name__,
+                "identity": self.identity,
+                "query_id": self.properties.qid,
+                "configuration": {"columns": [c.to_dict() for c in self.columns]},
+            }
+        )
 
     @classmethod
-    def from_dict(cls, dic: dict) -> "BasePlanNode":  # pragma: no cover
+    def from_json(cls, json_obj: str) -> "BasePlanNode":  # pragma: no cover
         raise NotImplementedError()
 
     @property

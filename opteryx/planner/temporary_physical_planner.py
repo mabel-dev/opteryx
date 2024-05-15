@@ -96,7 +96,7 @@ def create_physical_plan(logical_plan, query_properties):
         # DEBUG: from opteryx.exceptions import InvalidInternalStateError
         # DEBUG:
         # DEBUG: try:
-        # DEBUG:    config = node.to_dict()
+        # DEBUG:    config = node.to_json()
         # DEBUG:    print(config)
         # DEBUG: except Exception as err:
         # DEBUG:    message = f"Internal Error - node '{node}' unable to be serialized"
