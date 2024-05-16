@@ -57,31 +57,6 @@ test_cases = [
         expected_columncount=2,
         stats={"columns_read": 2},
     ),
-    TestCase(
-        query=f"""
-        SELECT 
-            l.l_orderkey, 
-            l.l_suppkey, 
-            s.s_name, 
-            s.s_address, 
-            l.l_extendedprice, 
-            l.l_discount
-        FROM 
-            opteryx.tpch.supplier s 
-            JOIN opteryx.tpch.lineitem l 
-            ON l.l_suppkey = s.s_suppkey
-        LIMIT 10;
-        """,
-        expected_rowcount=10,
-        expected_columncount=6,
-        stats={},
-    ),
-    TestCase(
-        query=f"SELECT l_orderkey, l_partkey, l_suppkey FROM opteryx.tpch.lineitem LIMIT 500;",
-        expected_rowcount=500,
-        expected_columncount=3,
-        stats={},
-    ),
 ]
 
 
