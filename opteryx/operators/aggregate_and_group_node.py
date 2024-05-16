@@ -21,6 +21,7 @@ the aggregation node doesn't need the grouping node.
 
 """
 import time
+from dataclasses import dataclass
 from typing import Generator
 
 import numpy
@@ -36,6 +37,18 @@ from opteryx.operators import OperatorType
 from opteryx.operators.aggregate_node import build_aggregations
 from opteryx.operators.aggregate_node import extract_evaluations
 from opteryx.operators.aggregate_node import project
+from opteryx.operators.base_plan_node import BasePlanDataObject
+
+
+@dataclass
+class AggregateAndGroupDataObject(BasePlanDataObject):
+    groups: list = None
+    aggregates: list = None
+    all_identifiers: list = None
+    evaluatable_nodes: list = None
+    group_by_columns: list = None
+    column_map: list = None
+    aggregate_functions: list = None
 
 
 class AggregateAndGroupNode(BasePlanNode):
@@ -76,8 +89,7 @@ class AggregateAndGroupNode(BasePlanNode):
         self.group_by_columns = list({node.schema_column.identity for node in self.groups})
         self.column_map, self.aggregate_functions = build_aggregations(self.aggregates)
 
-    def to_json(self) -> dict:  # pragma: no cover
-        raise NotImplementedError()
+        self.do = AggregateAndGroupDataObject()
 
     @classmethod
     def from_json(cls, json_obj: str) -> "BasePlanNode":  # pragma: no cover

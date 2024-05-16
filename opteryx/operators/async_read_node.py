@@ -22,6 +22,7 @@ import asyncio
 import queue
 import threading
 import time
+from dataclasses import dataclass
 from typing import Generator
 
 import aiohttp
@@ -29,7 +30,7 @@ import pyarrow
 import pyarrow.parquet
 from orso.schema import RelationSchema
 
-from opteryx.operators.base_plan_node import OperatorType
+from opteryx.operators.base_plan_node import BasePlanDataObject
 from opteryx.operators.read_node import ReaderNode
 from opteryx.shared import AsyncMemoryPool
 from opteryx.shared import MemoryPool
@@ -96,6 +97,11 @@ async def fetch_data(blob_names, pool, reader, reply_queue, statistics):
     await session.close()
 
 
+@dataclass
+class AsyncReaderDataObject(BasePlanDataObject):
+    pass
+
+
 class AsyncReaderNode(ReaderNode):
 
     def __init__(self, *args, **kwargs):
@@ -104,8 +110,7 @@ class AsyncReaderNode(ReaderNode):
             MAX_BUFFER_SIZE_MB * 1024 * 1024, f"ReadBuffer <{self.parameters['alias']}>"
         )
 
-    def to_json(self) -> dict:  # pragma: no cover
-        raise NotImplementedError()
+        self.do = AsyncReaderDataObject()
 
     @classmethod
     def from_dict(cls, dic: dict) -> "AsyncReaderNode":  # pragma: no cover

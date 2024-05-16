@@ -87,8 +87,6 @@ def create_physical_plan(logical_plan, query_properties):
             node = operators.NoOpNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Union:
             node = operators.UnionNode(query_properties, **node_config)
-#        elif node_type == LogicalPlanStepType.MetadataWriter:
-#            node = operators.MetadataWriterNode(query_properties, **node_config)
         else:  # pragma: no cover
             raise Exception(f"something unexpected happed - {node_type.name}")
         # fmt: on

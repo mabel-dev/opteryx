@@ -161,9 +161,6 @@ class InformationSchemaNode(BasePlanNode):
         # pushed down selection/filter
         self._selection = config.get("selection")
 
-    def to_json(self) -> dict:  # pragma: no cover
-        raise NotImplementedError()
-
     @classmethod
     def from_json(cls, json_obj: str) -> "BasePlanNode":  # pragma: no cover
         raise NotImplementedError()

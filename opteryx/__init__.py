@@ -36,18 +36,21 @@ except ImportError:  # pragma: no cover
     dotenv = None  # type:ignore
 
 _env_path = Path(".") / ".env"
+OPTERYX_DEBUG = os.environ.get("OPTERYX_DEBUG") is not None
 
 #  deepcode ignore PythonSameEvalBinaryExpressiontrue: false +ve, values can be different
 if _env_path.exists() and (dotenv is None):  # pragma: no cover
     # using a logger here will tie us in knots
-    print(
-        f"{datetime.datetime.now()} [LOADER] `.env` file exists but `python-dotenv` not installed."
-    )
+    if OPTERYX_DEBUG:
+        print(
+            f"{datetime.datetime.now()} [LOADER] `.env` file exists but `python-dotenv` not installed."
+        )
 elif dotenv is not None:  # pragma: no cover variables from `.env`")
     dotenv.load_dotenv(dotenv_path=_env_path)
-    print(f"{datetime.datetime.now()} [LOADER] Loading `.env` file.")
+    if OPTERYX_DEBUG:
+        print(f"{datetime.datetime.now()} [LOADER] Loading `.env` file.")
 
-if os.environ.get("OPTERYX_DEBUG") is not None:  # pragma: no cover
+if OPTERYX_DEBUG:  # pragma: no cover
     from opteryx.debugging import OpteryxOrsoImportFinder
 
 from opteryx import config
@@ -77,6 +80,7 @@ __all__ = [
     "__author__",
     "__build__",
     "__version__",
+    "OPTERYX_DEBUG",
 ]
 
 # PEP-249 specifies these attributes for a Python Database API 2.0 compliant interface
@@ -175,9 +179,10 @@ if not config.DISABLE_HIGH_PRIORITY and hasattr(os, "nice"):  # pragma: no cover
         display_nice = str(nice_value)
         if nice_value == 0:
             display_nice = "0 (normal)"
-        print(
-            f"{datetime.datetime.now()} [LOADER] Cannot update process priority. Currently set to {display_nice}."
-        )
+        if OPTERYX_DEBUG:
+            print(
+                f"{datetime.datetime.now()} [LOADER] Cannot update process priority. Currently set to {display_nice}."
+            )
 
 
 _cache_manager = CacheManager(cache_backend=None)

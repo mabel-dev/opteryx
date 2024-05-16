@@ -19,6 +19,7 @@ This performs a CROSS JOIN - CROSS JOIN is not natively supported by PyArrow so 
 here rather than calling the join() functions
 """
 import time
+from dataclasses import dataclass
 from typing import Generator
 from typing import Set
 from typing import Tuple
@@ -32,6 +33,7 @@ from opteryx.models import Node
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 from opteryx.operators import OperatorType
+from opteryx.operators.base_plan_node import BasePlanDataObject
 
 INTERNAL_BATCH_SIZE: int = 2500  # config
 MAX_JOIN_SIZE: int = 1000  # config
@@ -205,6 +207,14 @@ def _cross_join(left, right, statistics):
                 start = time.monotonic_ns()
 
 
+@dataclass
+class CrossJoinDataObject(BasePlanDataObject):
+    source: str = None
+    _unnest_column: str = None
+    _unnest_target: str = None
+    _filters: str = None
+
+
 class CrossJoinNode(BasePlanNode):
     """
     Implements a SQL CROSS JOIN
@@ -231,9 +241,6 @@ class CrossJoinNode(BasePlanNode):
                 self._unnest_column.value, tuple
             ):
                 self._unnest_column.value = tuple([self._unnest_column.value])
-
-    def to_json(self) -> dict:  # pragma: no cover
-        raise NotImplementedError()
 
     @classmethod
     def from_json(cls, json_obj: str) -> "BasePlanNode":  # pragma: no cover

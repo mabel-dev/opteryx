@@ -1,4 +1,5 @@
 # distutils: language = c++
+# cython: language_level=3
 
 from libcpp.unordered_map cimport unordered_map
 from libcpp.unordered_set cimport unordered_set

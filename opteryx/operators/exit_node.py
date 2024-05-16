@@ -24,13 +24,23 @@ This does two things that the projection node doesn't do:
 This node doesn't do any calculations, it is a pure Projection.
 """
 import time
+from dataclasses import dataclass
+from dataclasses import field
 from typing import Generator
+from typing import List
 
 from opteryx.exceptions import AmbiguousIdentifierError
 from opteryx.exceptions import InvalidInternalStateError
+from opteryx.models import LogicalColumn
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 from opteryx.operators import OperatorType
+from opteryx.operators.base_plan_node import BasePlanDataObject
+
+
+@dataclass
+class ExitDataObject(BasePlanDataObject):
+    columns: List[LogicalColumn] = field(default_factory=list)
 
 
 class ExitNode(BasePlanNode):
@@ -41,18 +51,7 @@ class ExitNode(BasePlanNode):
         super().__init__(properties=properties)
         self.columns = config.get("columns", [])
 
-    def to_json(self) -> dict:  # pragma: no cover
-
-        import orjson
-
-        return orjson.dumps(
-            {
-                "node": self.__class__.__name__,
-                "identity": self.identity,
-                "query_id": self.properties.qid,
-                "configuration": {"columns": [c.to_dict() for c in self.columns]},
-            }
-        )
+        self.do = ExitDataObject(columns=self.columns)
 
     @classmethod
     def from_json(cls, json_obj: str) -> "BasePlanNode":  # pragma: no cover

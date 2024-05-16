@@ -11,6 +11,7 @@
 # limitations under the License.
 
 
+from enum import Enum
 from itertools import permutations
 from typing import Iterable
 from typing import Optional
@@ -73,3 +74,17 @@ def suggest_alternative(value: str, candidates: Iterable[str]) -> Optional[str]:
                 return result
 
     return best_match_column  # Return the best match found, or None if no suitable match is found.
+
+
+def dataclass_to_dict(instance):
+    if isinstance(instance, Enum):
+        return instance.name
+    elif hasattr(instance, "to_dict"):
+        return instance.to_dict()
+    elif hasattr(instance, "__dataclass_fields__"):
+        print(instance.__dataclass_fields__)
+        return {k: dataclass_to_dict(getattr(instance, k)) for k in instance.__dataclass_fields__}
+    elif isinstance(instance, (list, tuple)):
+        return [dataclass_to_dict(k) for k in instance]
+    else:
+        return instance

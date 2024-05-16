@@ -11,9 +11,11 @@
 # limitations under the License.
 
 
+from dataclasses import dataclass
 from enum import Enum
 from enum import auto
 from typing import Generator
+from typing import Optional
 
 import pyarrow
 from orso.tools import random_string
@@ -27,6 +29,21 @@ class OperatorType(int, Enum):
     PASSTHRU = auto()
     BLOCKING = auto()
     _UNKNOWN = auto()
+
+
+@dataclass
+class BasePlanDataObject:
+    operation: Optional[str] = None
+    operator_type: OperatorType = OperatorType._UNKNOWN
+    query_id: str = None
+    identity: str = None
+
+    def __post_init__(self):
+        # Perform actions after initialization
+        if self.identity is None:
+            self.identity = random_string()
+        if self.operation is None:
+            self.operation = self.__class__.__name__.replace("DataObject", "Node")
 
 
 class BasePlanNode:
@@ -48,7 +65,12 @@ class BasePlanNode:
         self.identity = random_string()
 
     def to_json(self) -> dict:  # pragma: no cover
-        raise NotImplementedError()
+
+        import orjson
+
+        from opteryx.utils import dataclass_to_dict
+
+        return orjson.dumps(dataclass_to_dict(self.do))
 
     @classmethod
     def from_json(cls, json_obj: str) -> "BasePlanNode":  # pragma: no cover

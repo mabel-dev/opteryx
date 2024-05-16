@@ -31,9 +31,6 @@ class ShowDatabasesNode(BasePlanNode):
     def __init__(self, properties: QueryProperties, **config):
         super().__init__(properties=properties)
 
-    def to_json(self) -> dict:  # pragma: no cover
-        raise NotImplementedError()
-
     @classmethod
     def from_json(cls, json_obj: str) -> "BasePlanNode":  # pragma: no cover
         raise NotImplementedError()

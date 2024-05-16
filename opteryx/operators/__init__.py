@@ -10,6 +10,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from .base_plan_node import BasePlanDataObject  # isort: skip
 from .base_plan_node import BasePlanNode  # isort: skip
 from .base_plan_node import OperatorType  # isort: skip
 

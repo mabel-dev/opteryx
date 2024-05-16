@@ -22,6 +22,7 @@ This is a greedy operator - it consumes all the data before responding.
 This is built around the pyarrow table grouping functionality.
 """
 import time
+from dataclasses import dataclass
 from typing import Generator
 
 import numpy
@@ -34,6 +35,7 @@ from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 from opteryx.operators import OperatorType
+from opteryx.operators.base_plan_node import BasePlanDataObject
 
 COUNT_STAR: str = "COUNT(*)"
 
@@ -182,6 +184,15 @@ def extract_evaluations(aggregates):
     return evaluatable_nodes
 
 
+@dataclass
+class AggregateDataObject(BasePlanDataObject):
+    aggregates: list = None
+    all_identifiers: list = None
+    evaluatable_nodes: list = None
+    column_map: list = None
+    aggregate_functions: list = None
+
+
 class AggregateNode(BasePlanNode):
 
     operator_type = OperatorType.BLOCKING
@@ -203,8 +214,7 @@ class AggregateNode(BasePlanNode):
 
         self.column_map, self.aggregate_functions = build_aggregations(self.aggregates)
 
-    def to_json(self) -> dict:  # pragma: no cover
-        raise NotImplementedError()
+        self.do = AggregateDataObject()
 
     @classmethod
     def from_json(cls, json_obj: str) -> "BasePlanNode":  # pragma: no cover
