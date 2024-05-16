@@ -134,50 +134,55 @@ def main(
     # tidy up the statement
     sql = clean_statement(remove_comments(sql))
 
-    for i in range(cycles):
+    if cycles > 1:
+        # this is useful for benchmarking
+        print("[", end="")
+        for i in range(cycles):
+            start = time.monotonic_ns()
+            result = opteryx.query_to_arrow(sql)
+            print((time.monotonic_ns() - start) / 1e9, flush=True, end=("," if (i+1) < cycles else "]\n"))
+        return
 
-        print()
+    start = time.monotonic_ns()
+    result = opteryx.query(sql)
+    result.materialize()
+    duration = time.monotonic_ns() - start
 
-        start = time.monotonic_ns()
-        result = opteryx.query(sql)
-        result.materialize()
-        duration = time.monotonic_ns() - start
+    if o == "console":
+        print(result.display(limit=-1, display_width=table_width, colorize=color, max_column_width=max_col_width))
+        if stats:
+            print(f"[ {result.rowcount} rows x {result.columncount} columns ] ( {duration/1e9} seconds )")
+    else:
+        table = result.arrow()
 
-        if o == "console":
-            print(result.display(limit=-1, display_width=table_width, colorize=color, max_column_width=max_col_width))
-            if stats:
-                print(f"[ {result.rowcount} rows x {result.columncount} columns ] ( {duration/1e9} seconds )")
+        ext = o.lower().split(".")[-1]
+
+        if ext == "parquet":
+            from pyarrow import parquet
+
+            parquet.write_table(table, o)
+            print(f"[ {result.rowcount} rows x {result.columncount} columns ] ( {duration/1e9} seconds )")
+            print(f"Written result to '{o}'")
+        elif ext == "csv":
+            from pyarrow import csv
+
+            csv.write_csv(table, o)
+            print(f"[ {result.rowcount} rows x {result.columncount} columns ] ( {duration/1e9} seconds )")
+            print(f"Written result to '{o}'")
+        elif ext == "jsonl":
+            import orjson
+            with open(o, mode="wb") as file:
+                for row in result:
+                    file.write(orjson.dumps(row.as_dict, default=str) + b"\n")
+            print(f"[ {result.rowcount} rows x {result.columncount} columns ] ( {duration/1e9} seconds )")
+            print(f"Written result to '{o}'")
+        elif ext == "md":
+            with open(o, mode="w") as file:
+                file.write(result.markdown(limit=-1))
+            print(f"[ {result.rowcount} rows x {result.columncount} columns ] ( {duration/1e9} seconds )")
+            print(f"Written result to '{o}'")
         else:
-            table = result.arrow()
-
-            ext = o.lower().split(".")[-1]
-
-            if ext == "parquet":
-                from pyarrow import parquet
-
-                parquet.write_table(table, o)
-                print(f"[ {result.rowcount} rows x {result.columncount} columns ] ( {duration/1e9} seconds )")
-                print(f"Written result to '{o}'")
-            elif ext == "csv":
-                from pyarrow import csv
-
-                csv.write_csv(table, o)
-                print(f"[ {result.rowcount} rows x {result.columncount} columns ] ( {duration/1e9} seconds )")
-                print(f"Written result to '{o}'")
-            elif ext == "jsonl":
-                import orjson
-                with open(o, mode="wb") as file:
-                    for row in result:
-                        file.write(orjson.dumps(row.as_dict, default=str) + b"\n")
-                print(f"[ {result.rowcount} rows x {result.columncount} columns ] ( {duration/1e9} seconds )")
-                print(f"Written result to '{o}'")
-            elif ext == "md":
-                with open(o, mode="w") as file:
-                    file.write(result.markdown(limit=-1))
-                print(f"[ {result.rowcount} rows x {result.columncount} columns ] ( {duration/1e9} seconds )")
-                print(f"Written result to '{o}'")
-            else:
-                raise ValueError(f"Unknown output format '{ext}'")  # pragma: no cover
+            raise ValueError(f"Unknown output format '{ext}'")  # pragma: no cover
 
 
 if __name__ == "__main__":  # pragma: no cover

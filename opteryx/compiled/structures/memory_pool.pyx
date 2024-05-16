@@ -1,4 +1,5 @@
-# memory_pool.pyx
+# cython: language_level=3
+
 from libc.stdlib cimport malloc, free
 from libc.string cimport memcpy
 from cpython.bytes cimport PyBytes_AsString, PyBytes_FromStringAndSize

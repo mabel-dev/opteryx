@@ -86,9 +86,6 @@ class FunctionDatasetNode(BasePlanNode):
         self.parameters = config
         self.columns = config.get("columns", [])
 
-    def to_json(self) -> dict:  # pragma: no cover
-        raise NotImplementedError()
-
     @classmethod
     def from_json(cls, json_obj: str) -> "BasePlanNode":  # pragma: no cover
         raise NotImplementedError()

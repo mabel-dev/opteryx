@@ -42,9 +42,6 @@ class ShowValueNode(BasePlanNode):
             self.key = self.value
             self.value = properties.variables[self.value]
 
-    def to_json(self) -> dict:  # pragma: no cover
-        raise NotImplementedError()
-
     @classmethod
     def from_json(cls, json_obj: str) -> "BasePlanNode":  # pragma: no cover
         raise NotImplementedError()

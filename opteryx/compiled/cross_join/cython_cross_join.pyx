@@ -1,3 +1,5 @@
+# cython: language_level=3
+
 from libc.stdlib cimport malloc, free
 import numpy as np
 cimport numpy as cnp

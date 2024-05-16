@@ -14,7 +14,6 @@
 The SQL Connector downloads data from remote servers and converts them
 to pyarrow tables so they can be processed as per any other data source.
 """
-import os
 import time
 from decimal import Decimal
 from typing import Any
@@ -30,6 +29,7 @@ from orso.schema import RelationSchema
 from orso.tools import random_string
 from orso.types import PYTHON_TO_ORSO_MAP
 
+from opteryx import OPTERYX_DEBUG
 from opteryx.connectors.base.base_connector import DEFAULT_MORSEL_SIZE
 from opteryx.connectors.base.base_connector import INITIAL_CHUNK_SIZE
 from opteryx.connectors.base.base_connector import MIN_CHUNK_SIZE
@@ -40,8 +40,6 @@ from opteryx.exceptions import UnmetRequirementError
 from opteryx.managers.expression import Node
 from opteryx.managers.expression import NodeType
 from opteryx.third_party.query_builder import Query
-
-DEBUG_ENABLED = os.environ.get("OPTERYX_DEBUG") is not None
 
 
 def _handle_operand(operand: Node, parameters: dict) -> Tuple[Any, dict]:
@@ -112,7 +110,7 @@ class SqlConnector(BaseConnector, PredicatePushable):
 
         # create the SqlAlchemy engine
         if engine is None:
-            self._engine = create_engine(connection, poolclass=NullPool, echo=DEBUG_ENABLED)
+            self._engine = create_engine(connection, poolclass=NullPool, echo=OPTERYX_DEBUG)
         else:
             self._engine = engine
 
