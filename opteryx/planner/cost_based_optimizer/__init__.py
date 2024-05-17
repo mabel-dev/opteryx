@@ -65,6 +65,7 @@ class CostBasedOptimizerVisitor:
             SplitConjunctivePredicatesStrategy(),
             PredicatePushdownStrategy(),
             ProjectionPushdownStrategy(),
+            OperatorFusionStrategy(),
         ]
 
     def traverse(self, plan: LogicalPlan, strategy) -> LogicalPlan:

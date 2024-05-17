@@ -86,6 +86,7 @@ class LogicalPlanStepType(int, Enum):
     Distinct = auto()
     Exit = auto()
     Defragment = auto()  # TODO: not currently used
+    HeapSort = auto()
 
     CTE = auto()
     Subquery = auto()
@@ -136,12 +137,14 @@ class LogicalPlanNode(Node):
                 if self.using:
                     return f"{self.type.upper()} JOIN (USING {','.join(map(format_expression, self.using))}){filters}"
                 return f"{self.type.upper()} {filters}"
+            if node_type == LogicalPlanStepType.HeapSort:
+                return f"HEAP SORT (LIMIT {self.limit}, ORDER BY {', '.join(format_expression(item[0]) + (' DESC' if item[1] =='descending' else '') for item in self.order_by)})"
             if node_type == LogicalPlanStepType.Limit:
                 limit_str = f"LIMIT ({self.limit})" if self.limit is not None else ""
                 offset_str = f" OFFSET ({self.offset})" if self.offset is not None else ""
                 return (limit_str + offset_str).strip()
             if node_type == LogicalPlanStepType.Order:
-                return f"ORDER BY ({', '.join(format_expression(item[0]) + (' DESC' if not item[1] else '') for item in self.order_by)})"
+                return f"ORDER BY ({', '.join(format_expression(item[0]) + (' DESC' if item[1] =='descending' else '') for item in self.order_by)})"
             if node_type == LogicalPlanStepType.Project:
                 order_by_indicator = " +" if self.order_by_columns else ""
                 return f"PROJECT ({', '.join(format_expression(col) for col in self.columns)}){order_by_indicator}"

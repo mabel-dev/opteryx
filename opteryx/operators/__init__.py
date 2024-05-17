@@ -26,8 +26,8 @@ from .exit_node import ExitNode
 from .explain_node import ExplainNode  # EXPLAIN queries
 from .filter_node import FilterNode  # filter unwanted rows
 from .function_dataset_node import FunctionDatasetNode  # Dataset Constructors
+from .heap_sort_node import HeapSortNode  # Heap
 
-# from .heap_sort_node import HeapSortNode  # Heap
 # from .information_schema_node import InformationSchemaNode  # information_schema
 from .inner_join_node import InnerJoinNode
 from .join_node import JoinNode
