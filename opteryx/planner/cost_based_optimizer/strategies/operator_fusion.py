@@ -45,7 +45,7 @@ class OperatorFusionStrategy(OptimizationStrategy):
             if len(edges) == 1:
                 next_node_id = edges[0][1]
                 next_node = context.optimized_plan[next_node_id]
-                if next_node.node_type == LogicalPlanStepType.Limit:
+                if next_node.node_type == LogicalPlanStepType.Limit and not next_node.offset:
                     new_node = LogicalPlanNode(node_type=LogicalPlanStepType.HeapSort)
                     new_node.limit = next_node.limit
                     new_node.order_by = node.order_by

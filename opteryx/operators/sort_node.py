@@ -38,7 +38,7 @@ class SortNode(BasePlanNode):
 
     def __init__(self, properties: QueryProperties, **config):
         super().__init__(properties=properties)
-        self.order = config.get("order", [])
+        self.order_by = config.get("order", [])
 
     @classmethod
     def from_json(cls, json_obj: str) -> "BasePlanNode":  # pragma: no cover
@@ -46,7 +46,7 @@ class SortNode(BasePlanNode):
 
     @property
     def config(self):  # pragma: no cover
-        return ", ".join([f"{i[0].value} {i[1][0:3].upper()}" for i in self.order])
+        return ", ".join([f"{i[0].value} {i[1][0:3].upper()}" for i in self.order_by])
 
     @property
     def name(self):  # pragma: no cover
@@ -66,7 +66,7 @@ class SortNode(BasePlanNode):
 
         start_time = time.time_ns()
 
-        for column, direction in self.order:
+        for column, direction in self.order_by:
             if column.node_type == NodeType.FUNCTION:
                 # ORDER BY RAND() shuffles the results
                 # we create a random list, sort that then take the rows from the
