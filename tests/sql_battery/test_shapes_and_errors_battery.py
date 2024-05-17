@@ -777,9 +777,9 @@ STATEMENTS = [
         ("SET disable_optimizer = false; EXPLAIN SELECT * FROM $satellites WHERE id = 8", 2, 3, None),
         ("SET disable_optimizer = true; EXPLAIN SELECT * FROM $satellites WHERE id = 8 AND id = 7", 3, 3, None),
         ("SET disable_optimizer = false; EXPLAIN SELECT * FROM $satellites WHERE id = 8 AND id = 7", 3, 3, None),
-        ("SET disable_optimizer = false; EXPLAIN SELECT * FROM $planets ORDER BY id LIMIT 5", 3, 3, None),
-        ("SET disable_optimizer = true; EXPLAIN SELECT * FROM $planets ORDER BY id LIMIT 5", 3, 3, None),
-        ("EXPLAIN SELECT * FROM $planets ORDER BY id LIMIT 5", 3, 3, None),
+        ("SET disable_optimizer = false; EXPLAIN SELECT * FROM $planets ORDER BY id LIMIT 5", 2, 3, None),
+        ("SET disable_optimizer = true; EXPLAIN SELECT * FROM $planets ORDER BY id LIMIT 5", 2, 3, None),
+        ("EXPLAIN SELECT * FROM $planets ORDER BY id LIMIT 5", 2, 3, None),
         ("SELECT name, id FROM $planets ORDER BY id LIMIT 5", 5, 2, None),
         ("SELECT name, id FROM $planets ORDER BY id LIMIT 100", 9, 2, None),
 

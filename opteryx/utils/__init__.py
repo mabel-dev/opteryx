@@ -82,7 +82,6 @@ def dataclass_to_dict(instance):
     elif hasattr(instance, "to_dict"):
         return instance.to_dict()
     elif hasattr(instance, "__dataclass_fields__"):
-        print(instance.__dataclass_fields__)
         return {k: dataclass_to_dict(getattr(instance, k)) for k in instance.__dataclass_fields__}
     elif isinstance(instance, (list, tuple)):
         return [dataclass_to_dict(k) for k in instance]

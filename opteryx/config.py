@@ -16,6 +16,7 @@ from os import environ
 from pathlib import Path
 
 _config_values: dict = {}
+OPTERYX_DEBUG = environ.get("OPTERYX_DEBUG") is not None
 
 
 def parse_yaml(yaml_str):
@@ -82,9 +83,13 @@ try:  # pragma: no cover
     if _config_path.exists():
         with open(_config_path, "r") as _config_file:
             _config_values = parse_yaml(_config_file.read())
-        print(f"{datetime.datetime.now()} [LOADER] Loading config from {_config_path}")
+        if OPTERYX_DEBUG:
+            print(f"{datetime.datetime.now()} [LOADER] Loading config from {_config_path}")
 except Exception as exception:  # pragma: no cover # it doesn't matter why - just use the defaults
-    print(f"{datetime.datetime.now()} [LOADER] Config file {_config_path} not used - {exception}")
+    if OPTERYX_DEBUG:
+        print(
+            f"{datetime.datetime.now()} [LOADER] Config file {_config_path} not used - {exception}"
+        )
 
 
 def get(key, default=None):

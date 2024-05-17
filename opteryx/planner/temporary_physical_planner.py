@@ -49,6 +49,8 @@ def create_physical_plan(logical_plan, query_properties):
             node = operators.FilterNode(query_properties, filter=node_config["condition"])
         elif node_type == LogicalPlanStepType.FunctionDataset:
             node = operators.FunctionDatasetNode(query_properties, **node_config)
+        elif node_type == LogicalPlanStepType.HeapSort:
+            node = operators.HeapSortNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Join:
             if node_config.get("type") == "inner":
                 # We use our own implementation of INNER JOIN
@@ -95,7 +97,7 @@ def create_physical_plan(logical_plan, query_properties):
         # DEBUG:
         # DEBUG: try:
         # DEBUG:    config = node.to_json()
-        # DEBUG:    print(config)
+        ## DEBUG:    print(config)
         # DEBUG: except Exception as err:
         # DEBUG:    message = f"Internal Error - node '{node}' unable to be serialized"
         # DEBUG:    print(message)
