@@ -26,15 +26,25 @@ cdef class MemoryPool:
         public long commits, failed_commits, reads, read_locks, l1_compaction, l2_compaction, releases
         object lock
 
-    def __cinit__(self, int size, str name="Memory Pool"):
+    def __cinit__(self, long size, str name="Memory Pool"):
         if size <= 0:
             raise ValueError("MemoryPool size must be a positive integer")
+        
         self.size = size
-        self.pool = <unsigned char*>malloc(size * sizeof(unsigned char))
+        attempt_size = size
+
+        while attempt_size > 0:
+            self.pool = <unsigned char*>malloc(attempt_size * sizeof(unsigned char))
+            if self.pool:
+                break
+            attempt_size >>= 1  # Bit shift to halve the size and try again
+
         if not self.pool:
             raise MemoryError("Failed to allocate memory pool")
+
+        self.size = attempt_size
         self.name = name
-        self.free_segments = [MemorySegment(0, size)]
+        self.free_segments = [MemorySegment(0, self.size)]
         self.used_segments = {}
         self.lock = Lock()
 
@@ -151,6 +161,7 @@ cdef class MemoryPool:
 
             memcpy(self.pool + segment.start, PyBytes_AsString(data), len_data)
             self.used_segments[ref_id] = MemorySegment(segment.start, len_data)
+            self.commits += 1
             return ref_id
 
     def read(self, long ref_id, int zero_copy = 1):

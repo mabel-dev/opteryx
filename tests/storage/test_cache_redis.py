@@ -14,14 +14,16 @@ from tests.tools import is_arm, is_mac, is_windows, skip_if
 
 @skip_if(is_arm() or is_windows() or is_mac())
 def test_redis_cache():
+
+    os.environ["MAX_LOCAL_BUFFER_CAPACITY"] = "1"
+    os.environ["MAX_CACHE_EVICTIONS_PER_QUERY"] = "4"
+
     import opteryx
     from opteryx import CacheManager
     from opteryx.managers.cache import RedisCache
 
     cache = RedisCache()
-    opteryx.set_cache_manager(
-        CacheManager(cache_backend=cache, max_local_buffer_capacity=1, max_evictions_per_query=4)
-    )
+    opteryx.set_cache_manager(CacheManager(cache_backend=cache))
 
     # read the data once, this should populate the cache if it hasn't already
     cur = opteryx.query("SELECT * FROM testdata.flat.ten_files;")

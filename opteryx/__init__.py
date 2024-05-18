@@ -36,6 +36,9 @@ except ImportError:  # pragma: no cover
     dotenv = None  # type:ignore
 
 _env_path = Path(".") / ".env"
+
+# we do a separate check for debug mode here so we don't loaf the config
+# module just yet
 OPTERYX_DEBUG = os.environ.get("OPTERYX_DEBUG") is not None
 
 #  deepcode ignore PythonSameEvalBinaryExpressiontrue: false +ve, values can be different

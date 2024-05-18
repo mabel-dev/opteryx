@@ -29,7 +29,7 @@ from orso.schema import RelationSchema
 from orso.tools import random_string
 from orso.types import PYTHON_TO_ORSO_MAP
 
-from opteryx import OPTERYX_DEBUG
+from opteryx.config import OPTERYX_DEBUG
 from opteryx.connectors.base.base_connector import DEFAULT_MORSEL_SIZE
 from opteryx.connectors.base.base_connector import INITIAL_CHUNK_SIZE
 from opteryx.connectors.base.base_connector import MIN_CHUNK_SIZE
