@@ -14,14 +14,16 @@ from tests.tools import is_arm, is_mac, is_windows, skip_if
 
 @skip_if(is_arm() or is_windows() or is_mac())
 def test_memcached_cache():
+
+    os.environ["MAX_LOCAL_BUFFER_CAPACITY"] = "1"
+    os.environ["MAX_CACHE_EVICTIONS_PER_QUERY"] = "4"
+
     import opteryx
     from opteryx import CacheManager
     from opteryx.managers.cache import MemcachedCache
 
     cache = MemcachedCache()
-    opteryx.set_cache_manager(
-        CacheManager(cache_backend=cache, max_local_buffer_capacity=1, max_evictions_per_query=4)
-    )
+    opteryx.set_cache_manager(CacheManager(cache_backend=cache))
 
     # read the data five times, this should populate the cache if it hasn't already
     for i in range(10):
@@ -47,7 +49,5 @@ def test_memcached_cache():
 
 if __name__ == "__main__":  # pragma: no cover
     from tests.tools import run_tests
-
-    test_memcached_cache()
 
     run_tests()

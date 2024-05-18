@@ -30,14 +30,15 @@ import pyarrow
 import pyarrow.parquet
 from orso.schema import RelationSchema
 
+from opteryx import config
 from opteryx.operators.base_plan_node import BasePlanDataObject
 from opteryx.operators.read_node import ReaderNode
 from opteryx.shared import AsyncMemoryPool
 from opteryx.shared import MemoryPool
 from opteryx.utils.file_decoders import get_decoder
 
-CONCURRENT_READS = 4
-MAX_BUFFER_SIZE_MB = 512
+CONCURRENT_READS = config.CONCURRENT_READS
+MAX_READ_BUFFER_CAPACITY = config.MAX_READ_BUFFER_CAPACITY
 
 
 def normalize_morsel(schema: RelationSchema, morsel: pyarrow.Table) -> pyarrow.Table:
@@ -106,9 +107,7 @@ class AsyncReaderNode(ReaderNode):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.pool = MemoryPool(
-            MAX_BUFFER_SIZE_MB * 1024 * 1024, f"ReadBuffer <{self.parameters['alias']}>"
-        )
+        self.pool = MemoryPool(MAX_READ_BUFFER_CAPACITY, f"ReadBuffer <{self.parameters['alias']}>")
 
         self.do = AsyncReaderDataObject()
 

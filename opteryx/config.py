@@ -15,8 +15,34 @@ import typing
 from os import environ
 from pathlib import Path
 
+import psutil
+
 _config_values: dict = {}
+
+
 OPTERYX_DEBUG = environ.get("OPTERYX_DEBUG") is not None
+
+
+def memory_allocation_calculation(allocation) -> int:
+    """
+    Configure the memory allocation for the database based on the input.
+    If the allocation is between 0 and 1, it's treated as a percentage of the total system memory.
+    If the allocation is greater than 1, it's treated as an absolute value in megabytes.
+
+    Parameters:
+        allocation (float|int): Memory allocation value which could be a percentage or an absolute value.
+
+    Returns:
+        int: Memory size in bytes to be allocated.
+    """
+    total_memory = psutil.virtual_memory().total  # Convert bytes to megabytes
+
+    if 0 < allocation < 1:  # Treat as a percentage
+        return int(total_memory * allocation)
+    elif allocation >= 1:  # Treat as an absolute value in MB
+        return int(allocation)
+    else:
+        raise ValueError("Invalid memory allocation value. Must be a positive number.")
 
 
 def parse_yaml(yaml_str):
@@ -104,25 +130,30 @@ def get(key, default=None):
 # These are 'protected' properties which cannot be overridden by a single query
 
 # GCP project ID - for Google Cloud Data
-GCP_PROJECT_ID: str = get("GCP_PROJECT_ID")
+GCP_PROJECT_ID: str = get("GCP_PROJECT_ID") 
 # The maximum number of evictions by a single query
 MAX_CACHE_EVICTIONS_PER_QUERY: int = int(get("MAX_CACHE_EVICTIONS_PER_QUERY", 32))
 # Maximum size for items saved to the buffer cache
-MAX_CACHEABLE_ITEM_SIZE: int = int(get("MAX_CACHEABLE_ITEM_SIZE", 1024 * 1024))
-# The local buffer pool size in bytes
-MAX_LOCAL_BUFFER_CAPACITY: int = int(get("MAX_LOCAL_BUFFER_CAPACITY", 256 * 1024 * 1024))
+MAX_CACHEABLE_ITEM_SIZE: int = int(get("MAX_CACHEABLE_ITEM_SIZE", 2 * 1024 * 1024))
+# The local buffer pool size in either bytes or fraction of system memory
+MAX_LOCAL_BUFFER_CAPACITY: int = memory_allocation_calculation(float(get("MAX_LOCAL_BUFFER_CAPACITY", 0.2)))
+# The read buffer pool size in either bytes or fraction of system memory
+MAX_READ_BUFFER_CAPACITY: int = memory_allocation_calculation(float(get("MAX_READ_BUFFER_CAPACITY", 0.1)))
 # don't try to raise the priority of the server process
 DISABLE_HIGH_PRIORITY: bool = bool(get("DISABLE_HIGH_PRIORITY", False))
 # don't output resource (memory) utilization information
 ENABLE_RESOURCE_LOGGING: bool = bool(get("ENABLE_RESOURCE_LOGGING", False))
 # size of morsels to push between steps
 MORSEL_SIZE: int = int(get("MORSEL_SIZE", 64 * 1024 * 1024))
-
-# not GA
-PROFILE_LOCATION:str = get("PROFILE_LOCATION")
+# debug mode
+OPTERYX_DEBUG: bool = bool(get("OPTERYX_DEBUG", False))
+# number of read loops per data source
+CONCURRENT_READS: int = int(get("CONCURRENT_READS", 4))
 # query log
 QUERY_LOG_LOCATION:str = get("QUERY_LOG_LOCATION", False)
 QUERY_LOG_SIZE:int = int(get("QUERY_LOG_SIZE", 100))
-# not currently supported
-METADATA_SERVER: str = None
+
+
+# not GA
+PROFILE_LOCATION:str = get("PROFILE_LOCATION")
 # fmt:on

@@ -44,11 +44,13 @@ from opteryx.shared.rolling_log import RollingLog
 from opteryx.utils import sql
 
 PROFILE_LOCATION = config.PROFILE_LOCATION
+QUERY_LOG_LOCATION = config.QUERY_LOG_LOCATION
+QUERY_LOG_SIZE = config.QUERY_LOG_SIZE
 
 
 ROLLING_LOG = None
-if PROFILE_LOCATION:
-    ROLLING_LOG = RollingLog(PROFILE_LOCATION + ".log")
+if QUERY_LOG_LOCATION:
+    ROLLING_LOG = RollingLog(QUERY_LOG_LOCATION, max_entries=QUERY_LOG_SIZE)
 
 
 class CursorState(Enum):

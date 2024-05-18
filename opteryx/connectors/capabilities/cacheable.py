@@ -16,6 +16,9 @@ from functools import wraps
 
 from orso.cityhash import CityHash64
 
+from opteryx.config import MAX_CACHE_EVICTIONS_PER_QUERY
+from opteryx.config import MAX_CACHEABLE_ITEM_SIZE
+
 __all__ = ("Cacheable", "read_thru_cache")
 
 
@@ -47,7 +50,7 @@ def read_thru_cache(func):
     from opteryx.shared import BufferPool
 
     cache_manager = get_cache_manager()
-    max_evictions = cache_manager.max_evictions_per_query
+    max_evictions = MAX_CACHE_EVICTIONS_PER_QUERY
     remote_cache = cache_manager.cache_backend
     if not remote_cache:
         # rather than make decisions - just use a dummy
@@ -81,17 +84,19 @@ def read_thru_cache(func):
 
         # Write the result to caches
         if max_evictions:
-            # we set a per-query eviction limit
-            if len(result) < buffer_pool.max_cacheable_item_size:
+
+            if len(result) < buffer_pool.size // 10:
                 evicted = buffer_pool.set(key, result)
-                remote_cache.set(key, result)
                 if evicted:
-                    # if we're evicting items we're putting into the cache
+                    # if we're evicting items we just put in the cache, stop
                     if evicted in my_keys:
                         max_evictions = 0
                     else:
                         max_evictions -= 1
                     statistics.cache_evictions += 1
+
+            if len(result) < MAX_CACHEABLE_ITEM_SIZE:
+                remote_cache.set(key, result)
             else:
                 statistics.cache_oversize += 1
 
@@ -120,7 +125,7 @@ def async_read_thru_cache(func):
     from opteryx.shared import MemoryPool
 
     cache_manager = get_cache_manager()
-    max_evictions = cache_manager.max_evictions_per_query
+    max_evictions = MAX_CACHE_EVICTIONS_PER_QUERY
     remote_cache = cache_manager.cache_backend
     if not remote_cache:
         # rather than make decisions - just use a dummy
@@ -171,18 +176,19 @@ def async_read_thru_cache(func):
         if max_evictions:
             # we set a per-query eviction limit
             buffer = await pool.read(result)  # type: ignore
-            if len(buffer) < buffer_pool.max_cacheable_item_size:
+
+            if len(buffer) < buffer_pool.size // 10:
                 evicted = buffer_pool.set(key, buffer)
-                remote_cache.set(key, buffer)
                 if evicted:
-                    # if we're evicting items we're putting into the cache
-                    # stop putting more stuff into the cache, otherwise we're
-                    # just thrashing
+                    # if we're evicting items we just put in the cache, stop
                     if evicted in my_keys:
                         max_evictions = 0
                     else:
                         max_evictions -= 1
                     statistics.cache_evictions += 1
+
+            if len(buffer) < MAX_CACHEABLE_ITEM_SIZE:
+                remote_cache.set(key, buffer)
             else:
                 statistics.cache_oversize += 1
 

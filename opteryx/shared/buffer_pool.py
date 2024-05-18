@@ -24,6 +24,7 @@ The Buffer Pool is a global resource and used across all Connections and Cursors
 """
 from typing import Optional
 
+from opteryx.config import MAX_LOCAL_BUFFER_CAPACITY
 from opteryx.shared import MemoryPool
 from opteryx.utils.lru_2 import LRU2
 
@@ -34,19 +35,12 @@ class _BufferPool:
     eviction.
     """
 
-    slots = "_lru", "_cache_backend", "_max_cacheable_item_size", "_memory_pool"
+    slots = "_lru", "_memory_pool", "size"
 
     def __init__(self):
-        # Import here to avoid circular imports
-        from opteryx import get_cache_manager
-
-        cache_manager = get_cache_manager()
-
-        self.max_cacheable_item_size = cache_manager.max_cacheable_item_size
         self._lru = LRU2()
-        self._memory_pool = MemoryPool(
-            name="BufferPool", size=cache_manager.max_local_buffer_capacity
-        )
+        self._memory_pool = MemoryPool(name="BufferPool", size=MAX_LOCAL_BUFFER_CAPACITY)
+        self.size = self._memory_pool.size
 
     def get(self, key: bytes, zero_copy: bool = True) -> Optional[bytes]:
         """
