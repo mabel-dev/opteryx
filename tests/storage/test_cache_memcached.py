@@ -15,7 +15,8 @@ from tests.tools import is_arm, is_mac, is_windows, skip_if
 @skip_if(is_arm() or is_windows() or is_mac())
 def test_memcached_cache():
 
-    os.environ["MAX_LOCAL_BUFFER_CAPACITY"] = "1"
+    os.environ["OPTERYX_DEBUG"] = "1"
+    os.environ["MAX_LOCAL_BUFFER_CAPACITY"] = "100"
     os.environ["MAX_CACHE_EVICTIONS_PER_QUERY"] = "4"
 
     import opteryx
