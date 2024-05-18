@@ -63,9 +63,9 @@ class BasePlanNode:
         self.statistics = QueryStatistics(properties.qid)
         self.execution_time = 0
         self.identity = random_string()
-        self.do = None
+        self.do: Optional[BasePlanDataObject] = None
 
-    def to_json(self) -> dict:  # pragma: no cover
+    def to_json(self) -> bytes:  # pragma: no cover
 
         import orjson
 

@@ -23,6 +23,7 @@ def test_memcached_cache():
     from opteryx.managers.cache import MemcachedCache
 
     cache = MemcachedCache()
+    cache._server.flush_all()
     opteryx.set_cache_manager(CacheManager(cache_backend=cache))
 
     # read the data five times, this should populate the cache if it hasn't already
@@ -44,7 +45,7 @@ def test_memcached_cache():
     ), f"hits: {cache.hits}, misses: {cache.misses}, skips: {cache.skips}, errors: {cache.errors}"
 
     assert stats["remote_cache_hits"] >= stats["blobs_read"], stats
-    # assert stats.get("cache_misses", 0) == 0, stats
+    assert stats.get("cache_misses", 0) == 0, stats
 
 
 if __name__ == "__main__":  # pragma: no cover

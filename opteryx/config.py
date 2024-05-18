@@ -19,8 +19,8 @@ import psutil
 
 _config_values: dict = {}
 
-
-OPTERYX_DEBUG = environ.get("OPTERYX_DEBUG") is not None
+# we need a preliminary version of this variable
+_OPTERYX_DEBUG = environ.get("OPTERYX_DEBUG") is not None
 
 
 def memory_allocation_calculation(allocation) -> int:
@@ -109,10 +109,10 @@ try:  # pragma: no cover
     if _config_path.exists():
         with open(_config_path, "r") as _config_file:
             _config_values = parse_yaml(_config_file.read())
-        if OPTERYX_DEBUG:
+        if _OPTERYX_DEBUG:
             print(f"{datetime.datetime.now()} [LOADER] Loading config from {_config_path}")
 except Exception as exception:  # pragma: no cover # it doesn't matter why - just use the defaults
-    if OPTERYX_DEBUG:
+    if _OPTERYX_DEBUG:
         print(
             f"{datetime.datetime.now()} [LOADER] Config file {_config_path} not used - {exception}"
         )

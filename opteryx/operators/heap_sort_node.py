@@ -25,8 +25,9 @@ sorting smaller chunks over and over again.
 """
 import time
 from dataclasses import dataclass
-from typing import Iterable
+from typing import Generator
 
+import pyarrow
 from pyarrow import concat_tables
 
 from opteryx.exceptions import ColumnNotFoundError
@@ -67,7 +68,7 @@ class HeapSortNode(BasePlanNode):
     def name(self):  # pragma: no cover
         return "Heap Sort"
 
-    def execute(self) -> Iterable:
+    def execute(self) -> Generator[pyarrow.Table, None, None]:  # pragma: no cover
         table = None
         morsels = self._producers[0]  # type:ignore
 
