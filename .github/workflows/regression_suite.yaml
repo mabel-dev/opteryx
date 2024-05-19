@@ -50,6 +50,11 @@ jobs:
         run: |
           echo "${{ secrets.ASTRA_SECURE_BUNDLE_BASE64 }}" | base64 -d > secure-connect.zip
 
+      - name: run memchache test
+        run: python tests/storage/test_cache_memcached.py
+        env:
+          MEMCACHED_SERVER: 'localhost:11211'
+
       - name: Run Regression Tests
         run: python -m coverage run -m pytest --color=yes
         env:
@@ -70,7 +75,7 @@ jobs:
           DATASTAX_CLIENT_SECRET: '${{ secrets.DATASTAX_CLIENT_SECRET }}'
 
       - name: Check Coverage
-        run: python -m coverage report --include=opteryx/** --fail-under=80 -m
+        run: python -m coverage report --include=opteryx/** --fail-under=90 -m
 
       - name: "Upload coverage to Codecov"
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.10'
