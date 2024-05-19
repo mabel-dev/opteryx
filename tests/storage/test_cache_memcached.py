@@ -27,23 +27,27 @@ def test_memcached_cache():
     cache._server.flush_all()
     opteryx.set_cache_manager(CacheManager(cache_backend=cache))
 
-    # read the data five times, this should populate the cache if it hasn't already
+    conn = opteryx.Connection()
+
+    # read the data ten times, this should populate the cache if it hasn't already
     for i in range(10):
-        cur = opteryx.query("SELECT * FROM testdata.flat.ten_files;")
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM testdata.flat.ten_files;")
 
     # read the data again time, this should hit the cache
-    cur = opteryx.query("SELECT * FROM testdata.flat.ten_files;")
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM testdata.flat.ten_files;")
     stats = cur.stats
 
     assert (
         cache.hits >= 11
-    ), f"hits: {cache.hits}, misses: {cache.misses}, skips: {cache.skips}, errors: {cache.errors}"
+    ), f"hits: {cache.hits}, misses: {cache.misses}, skips: {cache.skips}, errors: {cache.errors}, sets: {cache.sets}"
     assert (
         cache.skips == 0
-    ), f"hits: {cache.hits}, misses: {cache.misses}, skips: {cache.skips}, errors: {cache.errors}"
+    ), f"hits: {cache.hits}, misses: {cache.misses}, skips: {cache.skips}, errors: {cache.errors}, sets: {cache.sets}"
     assert (
         cache.errors == 0
-    ), f"hits: {cache.hits}, misses: {cache.misses}, skips: {cache.skips}, errors: {cache.errors}"
+    ), f"hits: {cache.hits}, misses: {cache.misses}, skips: {cache.skips}, errors: {cache.errors}, sets: {cache.sets}"
 
     assert stats["remote_cache_hits"] >= stats["blobs_read"], stats
     assert stats.get("cache_misses", 0) == 0, stats

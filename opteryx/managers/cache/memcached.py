@@ -108,7 +108,7 @@ class MemcachedCache(BaseKeyValueStore):
                 import datetime
 
                 print(
-                    f"{datetime.datetime.now()} [CACHE] Disabling remote Memcached cache due to persistent errors ({err})."
+                    f"{datetime.datetime.now()} [CACHE] Disabling remote Memcached cache due to persistent errors ({err}) [GET]."
                 )
             self.errors += 1
             return None
@@ -121,10 +121,17 @@ class MemcachedCache(BaseKeyValueStore):
             try:
                 self._server.set(key, value)
                 self.sets += 1
-            except:
+            except Exception as err:
                 # if we fail to set, stop trying
                 self._consecutive_failures = MAXIMUM_CONSECUTIVE_FAILURES
                 self.errors += 1
+                import datetime
+
+                print(
+                    f"{datetime.datetime.now()} [CACHE] Disabling remote Memcached cache due to persistent errors ({err}) [SET]."
+                )
+        else:
+            self.skips += 1
 
     def __del__(self):
         pass
