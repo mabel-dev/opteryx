@@ -21,7 +21,6 @@ from typing import List
 
 import pyarrow
 from orso.schema import RelationSchema
-from orso.tools import single_item_cache
 from orso.types import OrsoTypes
 
 from opteryx.connectors.base.base_connector import BaseConnector
