@@ -73,6 +73,9 @@ jobs:
           MEMCACHED_SERVER: 'localhost:11211'
           DATASTAX_CLIENT_ID: '${{ secrets.DATASTAX_CLIENT_ID }}'
           DATASTAX_CLIENT_SECRET: '${{ secrets.DATASTAX_CLIENT_SECRET }}'
+          OPTERYX_DEBUG: 1
+          MAX_LOCAL_BUFFER_CAPACITY: 100
+          MAX_CACHE_EVICTIONS_PER_QUERY: 4
 
       - name: Check Coverage
         run: python -m coverage report --include=opteryx/** --fail-under=90 -m
