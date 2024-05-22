@@ -50,11 +50,6 @@ jobs:
         run: |
           echo "${{ secrets.ASTRA_SECURE_BUNDLE_BASE64 }}" | base64 -d > secure-connect.zip
 
-      - name: run memchache test
-        run: python tests/storage/test_cache_memcached.py
-        env:
-          MEMCACHED_SERVER: 'localhost:11211'
-
       - name: Run Regression Tests
         run: python -m coverage run -m pytest --color=yes
         env:
