@@ -310,7 +310,6 @@ def evaluate(expression: Node, table: Table, context: Optional[ExecutionContext]
         context = ExecutionContext()
 
     result = _inner_evaluate(root=expression, table=table, context=context)
-
     if not isinstance(result, (pyarrow.Array, numpy.ndarray)):
         result = numpy.array(result)
     return result
@@ -360,6 +359,9 @@ def evaluate_and_append(expressions, table: Table):
 
         if should_evaluate(statement):
             new_column = evaluate_statement(statement, table, context)
+
+            if isinstance(new_column, pyarrow.ChunkedArray):
+                new_column = new_column.combine_chunks()
             table = table.append_column(statement.schema_column.identity, new_column)
             for identity in context.identities:
                 if identity not in table.column_names:
