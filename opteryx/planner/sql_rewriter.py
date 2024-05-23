@@ -139,12 +139,19 @@ def sql_parts(string):
         + r")",
         re.IGNORECASE,
     )
-    quoted_strings = re.compile(r"(\"(?:\\.|[^\"])*\"|\'(?:\\.|[^\'])*\'|`(?:\\.|[^`])*`)")
+    # Match ", ', b", b', `
+    # We match b prefixes separately after the non-prefix versions
+    quoted_strings = re.compile(
+        r"(\"(?:\\.|[^\"])*\"|\'(?:\\.|[^\'])*\'|\b[bB]\"(?:\\.|[^\"])*\"|\b[bB]\'(?:\\.|[^\'])*\'|`(?:\\.|[^`])*`)"
+    )
 
     parts = []
     for part in quoted_strings.split(string):
         if part and part[-1] in ("'", '"', "`"):
-            parts.append(part)
+            if part[0] in ("b", "B"):
+                parts.append(f"blob({part[1:]})")
+            else:
+                parts.append(part)
         else:
             for subpart in keywords.split(part):
                 subpart = subpart.strip()
@@ -230,15 +237,13 @@ def _temporal_extration_state_machine(parts: List[str]) -> Tuple[List[Tuple[str,
     Returns:
         Tuple containing two lists, first with the temporal filters, second with the remaining SQL parts.
     """
-    """
-    we use a four state machine to extract the temporal information from the query
-    and maintain the relation to filter information.
-
-    We separate out the two key parts of the algorithm, first we determine the state,
-    then we work out if the state transition means we should do something.
-
-    We're essentially using a bit mask to record state and transitions.
-    """
+    # We use a four state machine to extract the temporal information from the query
+    # and maintain the relation to filter information.
+    #
+    # We separate out the two key parts of the algorithm, first we determine the state,
+    # then we work out if the state transition means we should do something.
+    #
+    # We're essentially using a bit mask to record state and transitions.
 
     state = WAITING
     relation = ""
@@ -376,6 +381,33 @@ def extract_temporal_filters(sql):  # pragma: no cover
 
     # we've rewritten the sql so make it sqlparser-rs compatible
     return sql, final_collector
+
+
+def replace_b_strings(text: str) -> str:
+    """
+    Replaces occurrences of b'...' or B"..." with inline_blob('...') or inline_blob("...").
+
+    Parameters:
+        text: str
+            The input text containing the strings to be replaced.
+
+    Returns:
+        The modified text with the replacements.
+    """
+    # Define the regex pattern to match b'...' or B"..." (case insensitive)
+    pattern = re.compile(r"\b([bB]?)(['\"])((?:\\.|[^\2])*?)\2")
+
+    def replacer(match):
+        prefix = match.group(1)
+        quote = match.group(2)
+        content = match.group(3)
+        # Only replace if there's a b or B prefix
+        if prefix.lower() == "b":
+            return f"blob({quote}{content}{quote})"
+        return match.group(0)
+
+    # Use re.sub with the replacer function
+    return pattern.sub(replacer, text)
 
 
 def do_sql_rewrite(statement):
