@@ -133,7 +133,7 @@ jobs:
         path: dist
 
   build-macos:
-    runs-on: macos-latest
+    runs-on: macos-13
     strategy:
       max-parallel: 4
       matrix:

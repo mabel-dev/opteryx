@@ -383,32 +383,5 @@ def extract_temporal_filters(sql):  # pragma: no cover
     return sql, final_collector
 
 
-def replace_b_strings(text: str) -> str:
-    """
-    Replaces occurrences of b'...' or B"..." with inline_blob('...') or inline_blob("...").
-
-    Parameters:
-        text: str
-            The input text containing the strings to be replaced.
-
-    Returns:
-        The modified text with the replacements.
-    """
-    # Define the regex pattern to match b'...' or B"..." (case insensitive)
-    pattern = re.compile(r"\b([bB]?)(['\"])((?:\\.|[^\2])*?)\2")
-
-    def replacer(match):
-        prefix = match.group(1)
-        quote = match.group(2)
-        content = match.group(3)
-        # Only replace if there's a b or B prefix
-        if prefix.lower() == "b":
-            return f"blob({quote}{content}{quote})"
-        return match.group(0)
-
-    # Use re.sub with the replacer function
-    return pattern.sub(replacer, text)
-
-
 def do_sql_rewrite(statement):
     return extract_temporal_filters(statement)

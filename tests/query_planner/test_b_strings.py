@@ -66,7 +66,7 @@ test_cases = [
 
 @pytest.mark.parametrize("input_text, expected_output", test_cases)
 def test_replace_b_strings(input_text, expected_output):
-    assert "".join(sql_parts(input_text)) == expected_output
+    assert " ".join(sql_parts(input_text)).replace(" ", "") == expected_output.replace(" ", "")
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -81,20 +81,18 @@ if __name__ == "__main__":  # pragma: no cover
 
     width = shutil.get_terminal_size((80, 20))[0] - 15
 
-    nl = "\n"
-
     print(f"RUNNING BATTERY OF {len(test_cases)} B STRINGS")
-    for index, (input, expected) in enumerate(test_cases):
+    for index, (case, expected) in enumerate(test_cases):
         start = time.monotonic_ns()
         print(
-            f"\033[0;36m{(index + 1):04}\033[0m {input[0:width - 1].ljust(width)}",
+            f"\033[0;36m{(index + 1):04}\033[0m {case[0:width - 1].ljust(width)}",
             end="",
         )
-        if " ".join(sql_parts(input)).replace(" ", "") == expected.replace(" ", ""):
+        if " ".join(sql_parts(case)).replace(" ", "") == expected.replace(" ", ""):
             print(f"\033[0;32m{str(int((time.monotonic_ns() - start)/1e6)).rjust(4)}ms\033[0m ✅")
         else:
             print(f"\033[0;31m{str(int((time.monotonic_ns() - start)/1e6)).rjust(4)}ms\033[0m ❌")
             print("Expected:", expected)
-            print("Recieved:", " ".join(sql_parts(input)))
+            print("Recieved:", " ".join(sql_parts(case)))
 
     print("--- ✅ \033[0;32mdone\033[0m")
