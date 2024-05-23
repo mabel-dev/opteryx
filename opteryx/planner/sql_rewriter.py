@@ -139,12 +139,19 @@ def sql_parts(string):
         + r")",
         re.IGNORECASE,
     )
-    quoted_strings = re.compile(r"(\"(?:\\.|[^\"])*\"|\'(?:\\.|[^\'])*\'|`(?:\\.|[^`])*`)")
+    # Match ", ', b", b', `
+    # We match b prefixes separately after the non-prefix versions
+    quoted_strings = re.compile(
+        r"(\"(?:\\.|[^\"])*\"|\'(?:\\.|[^\'])*\'|\b[bB]\"(?:\\.|[^\"])*\"|\b[bB]\'(?:\\.|[^\'])*\'|`(?:\\.|[^`])*`)"
+    )
 
     parts = []
     for part in quoted_strings.split(string):
         if part and part[-1] in ("'", '"', "`"):
-            parts.append(part)
+            if part[0] in ("b", "B"):
+                parts.append(f"blob({part[1:]})")
+            else:
+                parts.append(part)
         else:
             for subpart in keywords.split(part):
                 subpart = subpart.strip()
@@ -230,15 +237,13 @@ def _temporal_extration_state_machine(parts: List[str]) -> Tuple[List[Tuple[str,
     Returns:
         Tuple containing two lists, first with the temporal filters, second with the remaining SQL parts.
     """
-    """
-    we use a four state machine to extract the temporal information from the query
-    and maintain the relation to filter information.
-
-    We separate out the two key parts of the algorithm, first we determine the state,
-    then we work out if the state transition means we should do something.
-
-    We're essentially using a bit mask to record state and transitions.
-    """
+    # We use a four state machine to extract the temporal information from the query
+    # and maintain the relation to filter information.
+    #
+    # We separate out the two key parts of the algorithm, first we determine the state,
+    # then we work out if the state transition means we should do something.
+    #
+    # We're essentially using a bit mask to record state and transitions.
 
     state = WAITING
     relation = ""

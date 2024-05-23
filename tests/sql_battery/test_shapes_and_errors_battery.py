@@ -453,6 +453,7 @@ STATEMENTS = [
         ("SELECT CAST('2022-01-0' || planetId::VARCHAR AS TIMESTAMP) FROM $satellites", 177, 1, None),
         ("SELECT planetId::INTEGER FROM $satellites", 177, 1, None),
         ("SELECT planetId::DOUBLE FROM $satellites", 177, 1, None),
+        ("SELECT 1::double", 1, 1, None),
         ("SELECT TRY_CAST(planetId AS BOOLEAN) FROM $satellites", 177, 1, None),
         ("SELECT TRY_CAST(planetId AS VARCHAR) FROM $satellites", 177, 1, None),
         ("SELECT TRY_CAST(planetId AS TIMESTAMP) FROM $satellites", 177, 1, None),
@@ -471,6 +472,9 @@ STATEMENTS = [
         ("SELECT TRY_CAST(planetId AS DECIMAL) AS VALUE FROM $satellites", 177, 1, None),
         ("SELECT * FROM $planets WHERE id = GET(STRUCT('{\"a\":1,\"b\":\"c\"}'), 'a')", 1, 20, None),
 #        ("SELECT * FROM $planets WHERE id = STRUCT('{\"a\":1,\"b\":\"c\"}')->'a'", 1, 20, None),
+        ("SELECT b'binary'", 1, 1, None),
+        ("SELECT B'binary'", 1, 1, None),
+        ("SELECT * FROM $planets WHERE name = b'Earth';", 1, 20, None),
 
         ("SELECT PI()", 1, 1, None),
         ("SELECT E()", 1, 1, None),
