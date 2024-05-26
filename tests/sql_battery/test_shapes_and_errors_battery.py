@@ -1346,6 +1346,7 @@ STATEMENTS = [
         ("SELECT * FROM $astronauts WHERE LIST_CONTAINS_ANY(missions, @@user_memberships)", 3, 19, None),
         ("SELECT $missions.* FROM $missions INNER JOIN $user ON Mission = value WHERE attribute = 'membership'", 1, 8, None),
 
+        # TEST FUNCTIONS
         ("EXECUTE PLANETS_BY_ID (id=1)", 1, 20, None),  # simple case
         ("EXECUTE PLANETS_BY_ID (1)", None, None, ParameterError),  # simple case)
         ("EXECUTE PLANETS_BY_ID (name=1)", None, None, ParameterError),  # simple case)
@@ -1354,6 +1355,20 @@ STATEMENTS = [
         ("EXECUTE get_satellites_by_planet_name(name='Jupiter')", 67, 1, None),  # string param
         ("EXECUTE GET_SATELLITES_BY_PLANET_NAME(name='Jupiter')", 67, 1, SqlError),  # string param
         ("EXECUTE multiply_two_numbers (one=1.0, two=9.9)", 1, 1, None),  # multiple params
+
+        # TEST VIEWS
+        ("SELECT * FROM mission_reports", 177, 1, None),
+        ("SELECT * FROM mission_reports AS MR", 177, 1, None),
+        ("SELECT MR.* FROM mission_reports AS MR", 177, 1, None),
+        ("SELECT satellite_name FROM mission_reports", 177, 1, None),
+        ("SELECT MR.satellite_name FROM mission_reports AS MR", 177, 1, None),
+        ("SELECT satellite_name FROM mission_reports AS MR WHERE satellite_name ILIKE '%a%'", 90, 1, None),
+        ("SELECT satellite_name FROM mission_reports AS MR WHERE satellite_name ILIKE '%a%'", 90, 1, None),
+        ("SELECT * FROM mission_reports INNER JOIN $satellites ON satellite_name = name", 177, 9, None),
+        ("SELECT * FROM my_mission_reports", 3, 19, None),
+        ("SELECT * FROM my_mission_reports WHERE year = 1963", 2, 19, None),
+        ("SELECT * FROM my_mission_reports ORDER BY name", 3, 19, None),
+        ("SELECT name, status FROM my_mission_reports", 3, 2, None),
 
         # These are queries which have been found to return the wrong result or not run correctly
         # FILTERING ON FUNCTIONS

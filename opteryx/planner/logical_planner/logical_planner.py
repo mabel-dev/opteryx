@@ -64,6 +64,8 @@ from opteryx.managers.expression import format_expression
 from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.models import Node
 from opteryx.planner.logical_planner import logical_planner_builders
+from opteryx.planner.views import is_view
+from opteryx.planner.views import view_as_plan
 from opteryx.third_party.travers import Graph
 
 
@@ -663,6 +665,28 @@ def create_node_relation(relation):
                 root_node = step_id
         else:  # pragma: no cover
             raise NotImplementedError(relation["relation"]["Derived"])
+    elif is_view(relation["relation"]["Table"]["name"][0]["value"]):
+        # We're a view, we need to add it to the plan as a subquery
+        view_name = relation["relation"]["Table"]["name"][0]["value"]
+        sub_plan = view_as_plan(view_name=view_name)
+        plan_head = sub_plan.get_exit_points()[0]
+
+        # Replace the exit node with a subquery node
+        # We call the subquery the name of the view if we don't have an alias
+        # and we use the colums from the exit node
+        subquery_node = LogicalPlanNode(node_type=LogicalPlanStepType.Subquery)
+        subquery_node.alias = (
+            view_name
+            if relation["relation"]["Table"]["alias"] is None
+            else relation["relation"]["Table"]["alias"]["name"]["value"]
+        )
+        subquery_node.columns = sub_plan[plan_head].columns
+        sub_plan[plan_head] = subquery_node
+        root_node = plan_head
+
+        # DEBUG: log (f"VIEW PLAN")
+        # DEBUG: log (sub_plan)
+
     elif relation["relation"]["Table"]["args"]:
         function = relation["relation"]["Table"]
         function_name = function["name"][0]["value"].upper()

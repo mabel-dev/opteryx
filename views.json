@@ -1,0 +1,8 @@
+{
+    "mission_reports": {
+        "statement": "/* A test case for VIEW functionality */ SELECT s.name AS satellite_name FROM $satellites AS s INNER JOIN $planets AS p ON p.id = s.planetId"
+    },
+    "my_mission_reports": {
+        "statement": "/* A test case for row-permissions functionality */ SELECT * FROM $astronauts WHERE LIST_CONTAINS_ANY(missions, @@user_memberships)"
+    }
+}

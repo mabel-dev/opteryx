@@ -106,7 +106,6 @@ def connector_factory(dataset, statistics, **config):
             from opteryx.connectors import file_connector
 
             return file_connector.FileConnector(dataset=dataset, statistics=statistics)
-
         # fall back to the default connector (local disk if not set)
         connector = _storage_prefixes.get("_default", DiskConnector)
 
