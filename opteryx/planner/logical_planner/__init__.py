@@ -1,3 +1,32 @@
+"""
+                      ┌───────────┐
+                      │   USER    │
+         ┌────────────┤           ◄────────────┐
+         │SQL         └───────────┘            │
+  ───────┼─────────────────────────────────────┼──────
+         │                                     │
+   ┌─────▼─────┐                               │
+   │ SQL       │                               │
+   │ Rewriter  │                               │
+   └─────┬─────┘                               │
+         │SQL                                  │Results
+   ┌─────▼─────┐                         ┌─────┴─────┐
+   │           │                         │           │
+   │ Parser    │                         │ Executor  │
+   └─────┬─────┘                         └─────▲─────┘
+         │AST                                  │Plan
+   ┌─────▼─────┐      ┌───────────┐      ┌─────┴─────┐
+   │ AST       │      │           │      │ Physical  │
+   │ Rewriter  │      │ Catalogue │      │ Planner   │
+   └─────┬─────┘      └───────────┘      └─────▲─────┘
+         │AST               │Schemas           │Plan
+   ┌─────▼─────┐      ┌─────▼─────┐      ┌─────┴─────┐
+   │ Logical   │ Plan │           │ Plan │           │
+   │   Planner ├──────► Binder    ├──────► Optimizer │
+   └───────────┘      └───────────┘      └───────────┘
+                
+"""
+
 from opteryx.planner.logical_planner.logical_planner import LogicalPlan
 from opteryx.planner.logical_planner.logical_planner import LogicalPlanNode
 from opteryx.planner.logical_planner.logical_planner import LogicalPlanStepType

@@ -20,23 +20,24 @@
          │                                     │
    ┌─────▼─────┐                               │
    │ SQL       │                               │
-   │  Rewriter │                               │
+   │ Rewriter  │                               │
    └─────┬─────┘                               │
-         │SQL                                  │Plan
+         │SQL                                  │Results
    ┌─────▼─────┐                         ┌─────┴─────┐
    │           │                         │           │
    │ Parser    │                         │ Executor  │
    └─────┬─────┘                         └─────▲─────┘
          │AST                                  │Plan
    ┌─────▼─────┐      ┌───────────┐      ┌─────┴─────┐
-   │ AST       │      │           │Stats │Cost-Based │
-   │ Rewriter  │      │ Catalogue ├──────► Optimizer │
-   └─────┬─────┘      └─────┬─────┘      └─────▲─────┘
+   │ AST       │      │           │      │ Physical  │
+   │ Rewriter  │      │ Catalogue │      │ Planner   │
+   └─────┬─────┘      └───────────┘      └─────▲─────┘
          │AST               │Schemas           │Plan
    ┌─────▼─────┐      ┌─────▼─────┐      ┌─────┴─────┐
-   │ Logical   │ Plan │           │ Plan │ Heuristic │
+   │ Logical   │ Plan │           │ Plan │           │
    │   Planner ├──────► Binder    ├──────► Optimizer │
    └───────────┘      └───────────┘      └───────────┘
+                
 ~~~
 """
 import time
