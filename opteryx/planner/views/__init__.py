@@ -12,8 +12,6 @@
 
 import orjson
 
-from opteryx.planner.logical_planner import LogicalPlan
-
 
 def _load_views():
     try:
@@ -31,7 +29,7 @@ def is_view(view_name: str) -> bool:
     return view_name in VIEWS
 
 
-def view_as_plan(view_name: str) -> LogicalPlan:
+def view_as_plan(view_name: str):
     from opteryx.planner.logical_planner import do_logical_planning_phase
     from opteryx.third_party import sqloxide
     from opteryx.utils.sql import clean_statement
