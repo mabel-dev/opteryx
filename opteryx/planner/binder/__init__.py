@@ -22,7 +22,7 @@ This is Binder, it sits between the Logical Planner and the Optimizers.
          │                                     │
    ┌─────▼─────┐                               │
    │ SQL       │                               │
-   │  Rewriter │                               │
+   │ Rewriter  │                               │
    └─────┬─────┘                               │
          │SQL                                  │Results
    ┌─────▼─────┐                         ┌─────┴─────┐
@@ -30,20 +30,16 @@ This is Binder, it sits between the Logical Planner and the Optimizers.
    │ Parser    │                         │ Executor  │
    └─────┬─────┘                         └─────▲─────┘
          │AST                                  │Plan
-   ┌─────▼─────┐                         ╔═══════════╗
-   │ AST       │                         ║Cost-Based ║
-   │ Rewriter  │                         ║ Optimizer ║
-   └─────┬─────┘                         ╚═════▲═════╝
-         │AST                                  │Plan
    ┌─────▼─────┐      ┌───────────┐      ┌─────┴─────┐
-   │ Logical   │ Plan │ Heuristic │ Plan │           │
-   │   Planner ├──────► Optimizer ├──────► Binder    │
-   └───────────┘      └───────────┘      └─────▲─────┘
-                                               │Schemas
-                                         ┌─────┴─────┐
-                                         │           │
-                                         │ Catalogue │
-                                         └───────────┘
+   │ AST       │      │           │      │ Physical  │
+   │ Rewriter  │      │ Catalogue │      │ Planner   │
+   └─────┬─────┘      └───────────┘      └─────▲─────┘
+         │AST               │Schemas           │Plan
+   ┌─────▼─────┐      ┌─────▼─────┐      ┌─────┴─────┐
+   │ Logical   │ Plan │           │ Plan │           │
+   │   Planner ├──────► Binder    ├──────► Optimizer │
+   └───────────┘      └───────────┘      └───────────┘
+
 ~~~
 
 The Binder is responsible for adding information about the database and engine into the

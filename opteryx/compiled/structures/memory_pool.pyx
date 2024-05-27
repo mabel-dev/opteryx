@@ -1,4 +1,6 @@
 # cython: language_level=3
+# cython: nonecheck=False
+# cython: cdivision=True
 
 from libc.stdlib cimport malloc, free
 from libc.string cimport memcpy

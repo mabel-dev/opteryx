@@ -11,38 +11,6 @@
 # limitations under the License.
 
 """
-~~~
-                      ┌───────────┐
-                      │   USER    │
-         ┌────────────┤           ◄────────────┐
-         │SQL         └───────────┘            │
-  ───────┼─────────────────────────────────────┼──────
-         │                                     │
-   ┌─────▼─────┐                               │
-   │ SQL       │                               │
-   │  Rewriter │                               │
-   └─────┬─────┘                               │
-         │SQL                                  │Results
-   ┌─────▼─────┐                         ┌─────┴─────┐
-   │           │                         │           │
-   │ Parser    │                         │ Executor  │
-   └─────┬─────┘                         └─────▲─────┘
-         │AST                                  │Plan
-   ┌─────▼─────┐                         ╔═══════════╗
-   │ AST       │                         ║Cost-Based ║
-   │ Rewriter  │                         ║ Optimizer ║
-   └─────┬─────┘                         ╚═════▲═════╝
-         │AST                                  │Plan
-   ┌─────▼─────┐      ┌───────────┐      ┌─────┴─────┐
-   │ Logical   │ Plan │ Heuristic │ Plan │           │
-   │   Planner ├──────► Optimizer ├──────► Binder    │
-   └───────────┘      └───────────┘      └─────▲─────┘
-                                               │Schemas
-                                         ┌─────┴─────┐
-                                         │           │
-                                         │ Catalogue │
-                                         └───────────┘
-~~~
 Converts the AST to a logical query plan.
 
 The plan does not try to be efficient or clever, at this point it is only trying to be correct.

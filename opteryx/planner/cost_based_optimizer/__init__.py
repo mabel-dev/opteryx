@@ -20,7 +20,7 @@
          │                                     │
    ┌─────▼─────┐                               │
    │ SQL       │                               │
-   │  Rewriter │                               │
+   │ Rewriter  │                               │
    └─────┬─────┘                               │
          │SQL                                  │Results
    ┌─────▼─────┐                         ┌─────┴─────┐
@@ -28,24 +28,39 @@
    │ Parser    │                         │ Executor  │
    └─────┬─────┘                         └─────▲─────┘
          │AST                                  │Plan
-   ┌─────▼─────┐                         ╔═══════════╗
-   │ AST       │                         ║Cost-Based ║
-   │ Rewriter  │                         ║ Optimizer ║
-   └─────┬─────┘                         ╚═════▲═════╝
-         │AST                                  │Plan
    ┌─────▼─────┐      ┌───────────┐      ┌─────┴─────┐
-   │ Logical   │ Plan │ Heuristic │ Plan │           │
-   │   Planner ├──────► Optimizer ├──────► Binder    │
-   └───────────┘      └───────────┘      └─────▲─────┘
-                                               │Schemas
-                                         ┌─────┴─────┐
-                                         │           │
-                                         │ Catalogue │
-                                         └───────────┘
+   │ AST       │      │           │      │ Physical  │
+   │ Rewriter  │      │ Catalogue │      │ Planner   │
+   └─────┬─────┘      └───────────┘      └─────▲─────┘
+         │AST               │Schemas           │Plan
+   ┌─────▼─────┐      ┌─────▼─────┐      ┌─────┴─────┐
+   │ Logical   │ Plan │           │ Plan │           │
+   │   Planner ├──────► Binder    ├──────► Optimizer │
+   └───────────┘      └───────────┘      └───────────┘
+                              
 ~~~
-This is written as a Visitor, unlike the binder which is working from the scanners up to
-the projection, this starts at the projection and works toward the scanners. This works well because
-the main activity we're doing is splitting nodes, individual node rewrites, and push downs.
+
+This module implements a cost-based query optimizer using the Visitor pattern. Unlike the binder, 
+which processes the logical plan from the scanners up to the projection, this optimizer starts at 
+the projection and traverses down towards the scanners. This top-down approach is effective for 
+the primary activities involved in optimization, such as splitting nodes, performing individual 
+node rewrites, and pushing down predicates and projections.
+
+The optimizer applies a series of strategies, each encapsulating a specific optimization rule. 
+These strategies are applied sequentially, allowing for incremental improvements to the logical plan.
+
+Key Concepts:
+- Visitor Pattern: Used to traverse and modify the logical plan.
+- Strategies: Encapsulate individual optimization rules, applied either per-node or per-plan.
+- Context: Maintains the state during optimization, including the pre-optimized and optimized plans.
+
+The `CostBasedOptimizerVisitor` class orchestrates the optimization process by applying each strategy 
+in sequence. The `do_cost_based_optimizer` function serves as the entry point for optimizing a logical plan.
+
+Example Usage:
+    optimized_plan = do_cost_based_optimizer(logical_plan)
+
+This module aims to enhance query performance through systematic and incremental optimization steps.
 """
 
 
@@ -59,6 +74,10 @@ __all__ = "do_cost_based_optimizer"
 
 class CostBasedOptimizerVisitor:
     def __init__(self):
+        """
+        Initialize the CostBasedOptimizerVisitor with a list of optimization strategies.
+        Each strategy encapsulates a specific optimization rule.
+        """
         self.strategies = [
             ConstantFoldingStrategy(),
             BooleanSimplificationStrategy(),
@@ -70,13 +89,14 @@ class CostBasedOptimizerVisitor:
 
     def traverse(self, plan: LogicalPlan, strategy) -> LogicalPlan:
         """
-        Traverse the logical plan tree and apply optimizations.
+        Traverse the logical plan tree and apply the given optimization strategy.
 
-        Args:
-            tree: The logical plan tree to optimize.
+        Parameters:
+            plan (LogicalPlan): The logical plan to optimize.
+            strategy: The optimization strategy to apply.
 
         Returns:
-            The optimized logical plan tree.
+            LogicalPlan: The optimized logical plan.
         """
         root_nid = plan.get_exit_points().pop()
         context = OptimizerContext(plan)
@@ -95,6 +115,15 @@ class CostBasedOptimizerVisitor:
         return optimized_plan
 
     def optimize(self, plan: LogicalPlan) -> LogicalPlan:
+        """
+        Optimize the logical plan by applying all registered strategies in sequence.
+
+        Parameters:
+            plan (LogicalPlan): The logical plan to optimize.
+
+        Returns:
+            LogicalPlan: The fully optimized logical plan.
+        """
         current_plan = plan
         for strategy in self.strategies:
             current_plan = self.traverse(current_plan, strategy)
@@ -104,5 +133,14 @@ class CostBasedOptimizerVisitor:
 
 
 def do_cost_based_optimizer(plan: LogicalPlan) -> LogicalPlan:
+    """
+    Perform cost-based optimization on the given logical plan.
+
+    Parameters:
+        plan (LogicalPlan): The logical plan to optimize.
+
+    Returns:
+        LogicalPlan: The optimized logical plan.
+    """
     optimizer = CostBasedOptimizerVisitor()
     return optimizer.optimize(plan)

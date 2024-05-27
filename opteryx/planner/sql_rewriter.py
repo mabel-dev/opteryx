@@ -20,7 +20,7 @@
          │                                     │
    ┌─────▼─────┐                               │
    │ SQL       │                               │
-   │  Rewriter │                               │
+   │ Rewriter  │                               │
    └─────┬─────┘                               │
          │SQL                                  │Results
    ┌─────▼─────┐                         ┌─────┴─────┐
@@ -28,20 +28,16 @@
    │ Parser    │                         │ Executor  │
    └─────┬─────┘                         └─────▲─────┘
          │AST                                  │Plan
-   ┌─────▼─────┐                         ╔═══════════╗
-   │ AST       │                         ║Cost-Based ║
-   │ Rewriter  │                         ║ Optimizer ║
-   └─────┬─────┘                         ╚═════▲═════╝
-         │AST                                  │Plan
    ┌─────▼─────┐      ┌───────────┐      ┌─────┴─────┐
-   │ Logical   │ Plan │ Heuristic │ Plan │           │
-   │   Planner ├──────► Optimizer ├──────► Binder    │
-   └───────────┘      └───────────┘      └─────▲─────┘
-                                               │Schemas
-                                         ┌─────┴─────┐
-                                         │           │
-                                         │ Catalogue │
-                                         └───────────┘
+   │ AST       │      │           │      │ Physical  │
+   │ Rewriter  │      │ Catalogue │      │ Planner   │
+   └─────┬─────┘      └───────────┘      └─────▲─────┘
+         │AST               │Schemas           │Plan
+   ┌─────▼─────┐      ┌─────▼─────┐      ┌─────┴─────┐
+   │ Logical   │ Plan │           │ Plan │           │
+   │   Planner ├──────► Binder    ├──────► Optimizer │
+   └───────────┘      └───────────┘      └───────────┘
+                
 ~~~
 
 The SQL Rewriter does the following:
