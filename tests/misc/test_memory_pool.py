@@ -73,7 +73,8 @@ def test_compaction():
     mp.release(ref1)
     ref3 = mp.commit(b"Third")
     # Ensure that the third commit succeeds after compaction, despite the first segment being released
-    assert mp.read(ref3, False) == b"Third"
+    data = mp.read(ref3, False)
+    assert data == b"Third"
 
 
 def test_multiple_commits_and_reads():
@@ -93,6 +94,119 @@ def test_overlapping_writes():
     # Test if the new write overlaps correctly and does not corrupt other data
     assert mp.read(ref2, False) == b"abcde"
     assert mp.read(ref3, False) == b"XYZ"
+
+def test_overlapping_writes_memcopy():
+    mp = MemoryPool(size=20)
+    ref1 = mp.commit(b"12345")
+    ref2 = mp.commit(b"abcde")
+    mp.release(ref1)
+    ref3 = mp.commit(b"XYZ")
+    # Test if the new write overlaps correctly and does not corrupt other data
+    r2_memcopy = bytes(mp.read(ref2, True))
+    r2_no_memcopy = mp.read(ref2, False)
+    r3_memcopy = bytes(mp.read(ref3, True))
+    r3_no_memcopy = mp.read(ref3, False)
+
+    assert r2_memcopy == r2_no_memcopy == b"abcde", f"{r2_memcopy} / {r2_no_memcopy} / abcde"
+    assert r3_memcopy == r3_no_memcopy ==  b"XYZ", f"{r3_memcopy} / {r3_no_memcopy} / XYZ"
+
+def test_zero_copy_vs_copy_reads():
+    mp = MemoryPool(size=30)
+    
+    # Initial commits
+    ref1 = mp.commit(b"12345")
+    ref2 = mp.commit(b"abcde")
+    ref3 = mp.commit(b"ABCDE")
+    
+    # Release one segment to create free space
+    mp.release(ref1)
+    
+    # Commit more data to fill the pool
+    ref4 = mp.commit(b"XYZ")
+    ref5 = mp.commit(b"7890")
+    
+    # Additional activity
+    ref6 = mp.commit(b"LMNOP")
+    mp.release(ref3)
+    ref7 = mp.commit(b"qrst")
+    mp.release(ref2)
+    ref8 = mp.commit(b"uvwxyz")
+    
+    # Reading segments with and without zero-copy
+    r4_memcopy = bytes(mp.read(ref4, True))
+    r4_no_memcopy = mp.read(ref4, False)
+    r5_memcopy = bytes(mp.read(ref5, True))
+    r5_no_memcopy = mp.read(ref5, False)
+    r6_memcopy = bytes(mp.read(ref6, True))
+    r6_no_memcopy = mp.read(ref6, False)
+    r7_memcopy = bytes(mp.read(ref7, True))
+    r7_no_memcopy = mp.read(ref7, False)
+    r8_memcopy = bytes(mp.read(ref8, True))
+    r8_no_memcopy = mp.read(ref8, False)
+
+    assert r4_memcopy == r4_no_memcopy == b"XYZ", f"{r4_memcopy} / {r4_no_memcopy} / XYZ"
+    assert r5_memcopy == r5_no_memcopy == b"7890", f"{r5_memcopy} / {r5_no_memcopy} / 7890"
+    assert r6_memcopy == r6_no_memcopy == b"LMNOP", f"{r6_memcopy} / {r6_no_memcopy} / LMNOP"
+    assert r7_memcopy == r7_no_memcopy == b"qrst", f"{r7_memcopy} / {r7_no_memcopy} / qrst"
+    assert r8_memcopy == r8_no_memcopy == b"uvwxyz", f"{r8_memcopy} / {r8_no_memcopy} / uvwxyz"
+
+
+def test_zero_copy_vs_copy_reads_and_release():
+    mp = MemoryPool(size=30)
+    
+    # Initial commits
+    ref1 = mp.commit(b"12345")
+    ref2 = mp.commit(b"abcde")
+    ref3 = mp.commit(b"ABCDE")
+    
+    # Release one segment to create free space
+    mp.release(ref1)
+    
+    # Commit more data to fill the pool
+    ref4 = mp.commit(b"XYZ")
+    ref5 = mp.commit(b"7890")
+    
+    # Additional activity
+    ref6 = mp.commit(b"LMNOP")
+    mp.release(ref3)
+    ref7 = mp.commit(b"qrst")
+    mp.release(ref2)
+    ref8 = mp.commit(b"uvwxyz")
+    
+    # Reading segments with and without zero-copy, alternating read and read_and_release
+    # read no zero copy, release zero copy
+    r4_read_no_memcopy = bytes(mp.read(ref4, False))
+    r4_release_memcopy = bytes(mp.read_and_release(ref4, True))
+    
+    # read zero copy, release no zero copy
+    r5_read_memcopy = bytes(mp.read(ref5, True))
+    r5_release_no_memcopy = bytes(mp.read_and_release(ref5, False))
+    
+    # read zero copy, release zero copy
+    r6_read_memcopy = bytes(mp.read(ref6, True))
+    r6_release_memcopy = bytes(mp.read_and_release(ref6, True))
+    
+    # read no zero copy, release no zero copy
+    r7_read_no_memcopy = bytes(mp.read(ref7, False))
+    r7_release_no_memcopy = bytes(mp.read_and_release(ref7, False))
+    
+    # read zero copy, release zero copy
+    r8_read_memcopy = bytes(mp.read(ref8, True))
+    r8_release_memcopy = bytes(mp.read_and_release(ref8, True))
+    
+    assert r4_read_no_memcopy == r4_release_memcopy == b"XYZ", f"{r4_read_no_memcopy} / {r4_release_memcopy} / XYZ"
+    assert r5_read_memcopy == r5_release_no_memcopy == b"7890", f"{r5_read_memcopy} / {r5_release_no_memcopy} / 7890"
+    assert r6_read_memcopy == r6_release_memcopy == b"LMNOP", f"{r6_read_memcopy} / {r6_release_memcopy} / LMNOP"
+    assert r7_read_no_memcopy == r7_release_no_memcopy == b"qrst", f"{r7_read_no_memcopy} / {r7_release_no_memcopy} / qrst"
+    assert r8_read_memcopy == r8_release_memcopy == b"uvwxyz", f"{r8_read_memcopy} / {r8_release_memcopy} / uvwxyz"
+
+    # Ensure that the segments are released and available for new commits
+    ref9 = mp.commit(b"newdata")
+    r9_memcopy = bytes(mp.read(ref9, True))
+    r9_no_memcopy = mp.read(ref9, False)
+
+    assert r9_memcopy == r9_no_memcopy == b"newdata", f"{r9_memcopy} / {r9_no_memcopy} / newdata"
+
 
 
 def test_pool_exhaustion_and_compaction():
@@ -375,5 +489,5 @@ def test_return_types():
 
 if __name__ == "__main__":  # pragma: no cover
     from tests.tools import run_tests
-
+    test_compaction_effectiveness()
     run_tests()

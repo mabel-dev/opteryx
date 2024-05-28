@@ -1,6 +1,10 @@
 # cython: language_level=3
 # cython: nonecheck=False
 # cython: cdivision=True
+# cython: initializedcheck=False
+# cython: infer_types=True
+# cython: wraparound=True
+# cython: boundscheck=False
 
 from libc.stdlib cimport malloc, free
 from libc.string cimport memcpy
@@ -81,23 +85,25 @@ cdef class MemoryPool:
         cdef vector[MemorySegment] sorted_segments
 
         self.l1_compaction += 1
-        i = 1
         n = len(self.free_segments)
+        if n <= 1:
+            return
 
-        sorted_segments = sorted(self.free_segments, key=lambda x: x["start"])
-        new_free_segments = [sorted_segments[0]]
+        # Sort the free segments by start attribute
+        self.free_segments = sorted(self.free_segments, key=lambda x: x["start"])
+        new_free_segments = [self.free_segments[0]]
 
-        for segment in sorted_segments[1:]:
+        for segment in self.free_segments[1:]:
             last_segment = new_free_segments[-1]
             if last_segment.start + last_segment.length == segment.start:
                 # If adjacent, merge by extending the last segment
-                last_segment.length += segment.length
-                new_free_segments[-1] = last_segment
+                new_free_segments[-1] = MemorySegment(last_segment.start, last_segment.length + segment.length)
             else:
                 # If not adjacent, just add the segment to the new list
                 new_free_segments.append(segment)
 
         self.free_segments = new_free_segments
+
 
     def _level2_compaction(self):
         """
@@ -134,7 +140,6 @@ cdef class MemoryPool:
         # special case for 0 byte segments
         if len_data == 0:
             new_segment = MemorySegment(0, 0)
-            ref_id = random_int()
             self.used_segments[ref_id] = new_segment
             self.commits += 1
             return ref_id
@@ -179,7 +184,7 @@ cdef class MemoryPool:
         segment = self.used_segments[ref_id]
 
         if zero_copy != 0:
-            raw_data = <char[:segment.length]> char_ptr
+            raw_data = <char[:segment.length]> (char_ptr + segment.start)
             data = memoryview(raw_data)  # Create a memoryview from the raw data
         else:
             data = PyBytes_FromStringAndSize(char_ptr + segment.start, segment.length)
@@ -188,7 +193,6 @@ cdef class MemoryPool:
             raise ValueError("Invalid reference ID.")
         post_read_segment = self.used_segments[ref_id]
         if post_read_segment.start != segment.start or post_read_segment.length != segment.length:
-
             with self.lock:
                 self.read_locks += 1
 
@@ -197,11 +201,10 @@ cdef class MemoryPool:
                 segment = self.used_segments[ref_id]
                 
                 if zero_copy != 0:
-                    raw_data = <char[:segment.length]> char_ptr
+                    raw_data = <char[:segment.length]> (char_ptr + segment.start)
                     data = memoryview(raw_data)  # Create a memoryview from the raw data
                 else:
                     return PyBytes_FromStringAndSize(char_ptr + segment.start, segment.length)
-
         return data
 
     def read_and_release(self, long ref_id, int zero_copy = 1):
@@ -219,7 +222,7 @@ cdef class MemoryPool:
             self.free_segments.push_back(segment)
 
             if zero_copy != 0:
-                raw_data = <char[:segment.length]> char_ptr
+                raw_data = <char[:segment.length]> (char_ptr + segment.start)
                 return memoryview(raw_data)  # Create a memoryview from the raw data
             else:
                 return PyBytes_FromStringAndSize(char_ptr + segment.start, segment.length)
