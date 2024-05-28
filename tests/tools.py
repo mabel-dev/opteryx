@@ -137,7 +137,7 @@ def run_tests():
     for index, method in enumerate(test_methods):
         start_time = time.monotonic_ns()
         test_name = f"\033[38;2;255;184;108m{(index + 1):04}\033[0m \033[38;2;189;147;249m{str(method.__name__)}\033[0m"
-        print(test_name.ljust(display_width - 20), end="")
+        print(test_name.ljust(display_width - 20), end="", flush=True)
         error = None
         output = ""
         try:
