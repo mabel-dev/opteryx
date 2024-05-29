@@ -55,7 +55,7 @@ def list_contains_all(array, items):
     return set(array).issuperset(items)
 
 
-def search(array, item):
+def search(array, item, ignore_case=[True]):
     """
     `search` provides a way to look for values across different field types, rather
     than doing a LIKE on a string, IN on a list, `search` adapts to the field type.
@@ -82,9 +82,9 @@ def search(array, item):
     else:
         return numpy.array([False], dtype=numpy.bool_)
 
-    if array_type == str:
+    if array_type in (str, bytes):
         # return True if the value is in the string
-        results_mask = compute.match_substring(array, pattern=item, ignore_case=True)
+        results_mask = compute.match_substring(array, pattern=item, ignore_case=ignore_case[0])
     elif array_type == numpy.ndarray:
         # converting to a set is faster for a handful of items which is what we're
         # almost definitely working with here - note compute.index is about 50x slower
@@ -92,7 +92,7 @@ def search(array, item):
     elif array_type == dict:
         results_mask = numpy.array([item in record.values() for record in array], dtype=numpy.bool_)
     else:
-        raise SqlError("SEARCH can only be used with VARCHAR, LIST and STRUCT.")
+        raise SqlError("SEARCH can only be used with VARCHAR, BLOB, LIST and STRUCT.")
 
     if compressed:
         # fill the result set
