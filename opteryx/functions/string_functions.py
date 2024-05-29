@@ -234,12 +234,12 @@ def concat_ws(separator, list_values):
     return result
 
 
-def starts_w(arr, test):
-    return compute.starts_with(arr, test[0])
+def starts_w(arr, test, ignore_case=[False]):
+    return compute.starts_with(arr, test[0], ignore_case=ignore_case[0])
 
 
-def ends_w(arr, test):
-    return compute.ends_with(arr, test[0])
+def ends_w(arr, test, ignore_case=[False]):
+    return compute.ends_with(arr, test[0], ignore_case=ignore_case[0])
 
 
 def substring(
