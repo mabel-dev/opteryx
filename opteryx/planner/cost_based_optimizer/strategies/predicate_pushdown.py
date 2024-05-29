@@ -68,7 +68,8 @@ def _rewrite_predicate(predicate):
         ):
             predicate.value = LIKE_REWRITES[predicate.value]
             return predicate
-    if predicate.value == "Like" and predicate.right.value:
+    if predicate.value in {"Like", "ILike"} and predicate.right.value:
+        ignore_case = predicate.value == "ILike"
         # Rewrite LIKEs as STARTS_WITH
         if (
             predicate.right.node_type == NodeType.LITERAL
@@ -79,7 +80,15 @@ def _rewrite_predicate(predicate):
             predicate.right.value = predicate.right.value[:-1]
             predicate.node_type = NodeType.FUNCTION
             predicate.value = "STARTS_WITH"
-            predicate.parameters = [predicate.left, predicate.right]
+            predicate.parameters = [
+                predicate.left,
+                predicate.right,
+                Node(
+                    node_type=NodeType.LITERAL,
+                    type=OrsoTypes.BOOLEAN,
+                    value=ignore_case,
+                ),
+            ]
             return predicate
         # Rewrite LIKEs as ENDS_WITH
         if (
@@ -91,7 +100,15 @@ def _rewrite_predicate(predicate):
             predicate.right.value = predicate.right.value[1:]
             predicate.node_type = NodeType.FUNCTION
             predicate.value = "ENDS_WITH"
-            predicate.parameters = [predicate.left, predicate.right]
+            predicate.parameters = [
+                predicate.left,
+                predicate.right,
+                Node(
+                    node_type=NodeType.LITERAL,
+                    type=OrsoTypes.BOOLEAN,
+                    value=ignore_case,
+                ),
+            ]
             return predicate
         if (
             predicate.right.node_type == NodeType.LITERAL
@@ -106,7 +123,11 @@ def _rewrite_predicate(predicate):
             predicate.parameters = [
                 predicate.left,
                 predicate.right,
-                Node(node_type=NodeType.LITERAL, type=OrsoTypes.BOOLEAN, value=False),
+                Node(
+                    node_type=NodeType.LITERAL,
+                    type=OrsoTypes.BOOLEAN,
+                    value=ignore_case,
+                ),
             ]
             return predicate
     if predicate.value in IN_REWRITES:
