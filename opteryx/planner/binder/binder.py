@@ -280,9 +280,6 @@ def inner_binder(node: Node, context: Any) -> Tuple[Node, Any]:
 
     elif not node_type == NodeType.SUBQUERY and not node.do_not_create_column:
         if node_type in (NodeType.FUNCTION, NodeType.AGGREGATOR):
-            # we're just going to bind the function into the node
-            func = COMBINED_FUNCTIONS.get(node.value)
-
             # we need to add this new column to the schema
             aliases = [node.alias] if node.alias else []
             result_type, fixed_function_result = fixed_value_function(node.value, context)
@@ -299,11 +296,8 @@ def inner_binder(node: Node, context: Any) -> Tuple[Node, Any]:
                 node.type = result_type
                 node.value = fixed_function_result
             else:
-                schema_column = FunctionColumn(
-                    name=column_name, type=0, binding=func, aliases=aliases
-                )
+                schema_column = FunctionColumn(name=column_name, type=0, aliases=aliases)
             schemas["$derived"].columns.append(schema_column)
-            node.function = func
             node.derived_from = []
             node.schema_column = schema_column
             node.query_column = node.alias or column_name
