@@ -10,10 +10,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+This is the predicate push-down strategy and also includes the predicate
+rewriter.
+
+"""
+import re
+
 from orso.tools import random_string
+from orso.types import OrsoTypes
 
 from opteryx.connectors.capabilities import PredicatePushable
 from opteryx.exceptions import UnsupportedSyntaxError
+from opteryx.functions import FUNCTIONS
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.models import Node
@@ -40,8 +49,16 @@ def _add_condition(existing_condition, new_condition):
 
 def _rewrite_predicate(predicate):
     """
-    Rewrite individual predicates to forms able to push to more places
+    Rewrite individual predicates to forms able to push to more places or that
+    are just faster.
     """
+    # remove adjacent wildcards
+    if (
+        predicate.value in {"Like", "ILike", "NotLike", "NotILike"}
+        and "%%" in predicate.right.value
+    ):
+        predicate.right.value = re.sub(r"%+", "%", predicate.right.value)
+
     if predicate.value in LIKE_REWRITES:
         # LIKE conditions with no wildcards => Eq
         if (
@@ -50,6 +67,50 @@ def _rewrite_predicate(predicate):
             and "_" not in predicate.right.value
         ):
             predicate.value = LIKE_REWRITES[predicate.value]
+            return predicate
+    if predicate.value == "Like" and predicate.right.value:
+        # Rewrite LIKEs as STARTS_WITH
+        if (
+            predicate.right.node_type == NodeType.LITERAL
+            and predicate.right.value[-1] == "%"
+            and predicate.right.value.count("%") == 1
+            and "_" not in predicate.right.value
+        ):
+            predicate.right.value = predicate.right.value[:-1]
+            predicate.node_type = NodeType.FUNCTION
+            predicate.value = "STARTS_WITH"
+            predicate.function = FUNCTIONS["STARTS_WITH"]
+            predicate.parameters = [predicate.left, predicate.right]
+            return predicate
+        # Rewrite LIKEs as ENDS_WITH
+        if (
+            predicate.right.node_type == NodeType.LITERAL
+            and predicate.right.value[0] == "%"
+            and predicate.right.value.count("%") == 1
+            and "_" not in predicate.right.value
+        ):
+            predicate.right.value = predicate.right.value[1:]
+            predicate.node_type = NodeType.FUNCTION
+            predicate.value = "ENDS_WITH"
+            predicate.function = FUNCTIONS["ENDS_WITH"]
+            predicate.parameters = [predicate.left, predicate.right]
+            return predicate
+        if (
+            predicate.right.node_type == NodeType.LITERAL
+            and predicate.right.value[0] == "%"
+            and predicate.right.value[-1] == "%"
+            and predicate.right.value.count("%") == 2
+            and "_" not in predicate.right.value
+        ):
+            predicate.right.value = predicate.right.value[1:-1]
+            predicate.node_type = NodeType.FUNCTION
+            predicate.value = "SEARCH"
+            predicate.function = FUNCTIONS["SEARCH"]
+            predicate.parameters = [
+                predicate.left,
+                predicate.right,
+                Node(node_type=NodeType.LITERAL, type=OrsoTypes.BOOLEAN, value=False),
+            ]
             return predicate
     if predicate.value in IN_REWRITES:
         # IN conditions on single values => Eq
