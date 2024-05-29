@@ -102,7 +102,7 @@ class BaseConnector:
             _id = record.pop("_id", None)
             # column selection
             if columns:
-                record = {k.name: record.get(k.name) for k in columns}
+                record = {k.source_column: record.get(k.source_column) for k in columns}
             record["id"] = None if _id is None else str(_id)
 
             chunk.append(record)

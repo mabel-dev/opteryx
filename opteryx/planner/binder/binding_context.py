@@ -14,7 +14,6 @@ from copy import deepcopy
 from dataclasses import dataclass
 from typing import Any
 from typing import Dict
-from typing import Set
 
 from opteryx.models import ConnectionContext
 from opteryx.models import QueryStatistics
@@ -40,7 +39,7 @@ class BindingContext:
     schemas: Dict[str, Any]
     qid: str
     connection: ConnectionContext
-    relations: Set
+    relations: Dict[str, str]
     statistics: QueryStatistics
 
     @classmethod
@@ -61,7 +60,7 @@ class BindingContext:
             schemas={"$derived": derived.schema()},  # Replace with the actual schema
             qid=qid,
             connection=connection,
-            relations=set(),
+            relations={},
             statistics=QueryStatistics(qid),
         )
 
@@ -76,6 +75,6 @@ class BindingContext:
             schemas=deepcopy(self.schemas),
             qid=self.qid,
             connection=self.connection,
-            relations=set(self.relations),
+            relations={k: v for k, v in self.relations.items()},
             statistics=self.statistics,
         )

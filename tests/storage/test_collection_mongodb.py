@@ -1,5 +1,5 @@
 """
-Test we can read from MinIO
+Test we can read from Mongo
 """
 
 import os
