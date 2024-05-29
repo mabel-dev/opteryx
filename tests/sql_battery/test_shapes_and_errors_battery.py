@@ -1270,7 +1270,7 @@ STATEMENTS = [
         ("SELECT * FROM $planets AS P RIGHT ANTI JOIN $satellites AS S ON S.id = P.id;", 168, 8, None),
         ("SELECT * FROM $planets AS P LEFT SEMI JOIN $satellites AS S ON S.id = P.id;", 9, 20, None),
         ("SELECT * FROM $planets AS P RIGHT SEMI JOIN $satellites AS S ON S.id = P.id;", 9, 8, None),
-        ("EXPLAIN ANALYZE FORMAT JSON SELECT * FROM $planets AS a INNER JOIN (SELECT id FROM $planets) AS b USING (id);", 5, 3, None),
+        ("EXPLAIN ANALYZE FORMAT JSON SELECT * FROM $planets AS a INNER JOIN (SELECT id FROM $planets) AS b USING (id);", 3, 3, None),
         ("SELECT DISTINCT ON (planetId) planetId, name FROM $satellites ", 7, 2, None),
         ("SELECT 8 DIV 4", 1, 1, None),
 
@@ -1432,7 +1432,7 @@ STATEMENTS = [
         ("SELECT VARCHAR FROM (SELECT 'varchar' AS VARCHAR) AS SQ", 1, 1, None),
         ("SELECT BOOLEAN FROM (SELECT False AS BOOLEAN) AS SQ", 1, 1, None),
         # EXPLAIN has two heads (found looking a [#408])
-        ("EXPLAIN SELECT * FROM $planets AS a INNER JOIN (SELECT id FROM $planets) AS b USING (id)", 5, 3, None),
+        ("EXPLAIN SELECT * FROM $planets AS a INNER JOIN (SELECT id FROM $planets) AS b USING (id)", 3, 3, None),
         # ALIAS issues [#408]
         ("SELECT $planets.* FROM $planets INNER JOIN (SELECT id FROM $planets AS IP) AS b USING (id)", 9, 20, None),
         # DOUBLE QUOTED STRING [#399]

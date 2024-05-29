@@ -129,11 +129,11 @@ class LogicalPlanNode(Node):
                     alias = f" AS {self.alias}"
                 columns = ""
                 if self.columns:
-                    columns = " [" + ", ".join(c.name for c in self.columns) + "]"
+                    columns = " [" + ", ".join(c.source_column for c in self.columns) + "]"
                 predicates = ""
                 if self.predicates:
                     predicates = " (" + " AND ".join(map(format_expression, self.predicates)) + ")"
-                return f"SCAN ({self.relation}{alias}{date_range}{' WITH(' + ','.join(self.hints) + ')' if self.hints else ''}){columns}{predicates}"
+                return f"READ ({self.relation}{alias}{date_range}{' WITH(' + ','.join(self.hints) + ')' if self.hints else ''}){columns}{predicates}"
             if node_type == LogicalPlanStepType.Set:
                 return f"SET ({self.variable} TO {self.value.value})"
             if node_type == LogicalPlanStepType.Show:

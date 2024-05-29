@@ -64,6 +64,7 @@ This module aims to enhance query performance through systematic and incremental
 """
 
 
+from opteryx.config import DISABLE_OPTIMIZER
 from opteryx.planner.cost_based_optimizer.strategies import *
 from opteryx.planner.logical_planner import LogicalPlan
 
@@ -85,6 +86,7 @@ class CostBasedOptimizerVisitor:
             PredicatePushdownStrategy(),
             ProjectionPushdownStrategy(),
             OperatorFusionStrategy(),
+            RedundantOperationsStrategy(),
         ]
 
     def traverse(self, plan: LogicalPlan, strategy) -> LogicalPlan:
@@ -142,5 +144,8 @@ def do_cost_based_optimizer(plan: LogicalPlan) -> LogicalPlan:
     Returns:
         LogicalPlan: The optimized logical plan.
     """
+    if DISABLE_OPTIMIZER:
+        print("[OPTERYX] The optimizer has been disabled, 'DISABLE_OPTIMIZER' setting is TRUE.")
+        return plan
     optimizer = CostBasedOptimizerVisitor()
     return optimizer.optimize(plan)

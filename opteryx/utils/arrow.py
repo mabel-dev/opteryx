@@ -84,9 +84,9 @@ def post_read_projector(table: pyarrow.Table, columns: list) -> pyarrow.Table:
 
     # Using a dictionary to map all_names to the projection_column's name for quick lookup
     name_mapping = {
-        name: projection_column.name
+        name: projection_column.schema_column.name
         for projection_column in columns
-        for name in projection_column.all_names
+        for name in projection_column.schema_column.all_names
     }
 
     columns_to_keep = [
