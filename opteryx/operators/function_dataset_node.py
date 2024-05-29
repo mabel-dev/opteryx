@@ -63,7 +63,7 @@ def _fake_data(**kwargs):
     return generate_fake_data(schema, rows)
 
 
-FUNCTIONS = {
+DATASET_FUNCTIONS = {
     "FAKE": _fake_data,
     "GENERATE_SERIES": _generate_series,
     "UNNEST": _unnest,
@@ -107,7 +107,7 @@ class FunctionDatasetNode(BasePlanNode):
     def execute(self) -> Generator:
         try:
             start_time = time.time_ns()
-            data = FUNCTIONS[self.function](**self.parameters)  # type:ignore
+            data = DATASET_FUNCTIONS[self.function](**self.parameters)  # type:ignore
             self.statistics.time_evaluate_dataset += time.time_ns() - start_time
         except TypeError as err:  # pragma: no cover
             if str(err).startswith("_unnest() takes 2"):

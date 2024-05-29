@@ -79,7 +79,6 @@ def _rewrite_predicate(predicate):
             predicate.right.value = predicate.right.value[:-1]
             predicate.node_type = NodeType.FUNCTION
             predicate.value = "STARTS_WITH"
-            predicate.function = FUNCTIONS["STARTS_WITH"]
             predicate.parameters = [predicate.left, predicate.right]
             return predicate
         # Rewrite LIKEs as ENDS_WITH
@@ -92,7 +91,6 @@ def _rewrite_predicate(predicate):
             predicate.right.value = predicate.right.value[1:]
             predicate.node_type = NodeType.FUNCTION
             predicate.value = "ENDS_WITH"
-            predicate.function = FUNCTIONS["ENDS_WITH"]
             predicate.parameters = [predicate.left, predicate.right]
             return predicate
         if (
@@ -105,7 +103,6 @@ def _rewrite_predicate(predicate):
             predicate.right.value = predicate.right.value[1:-1]
             predicate.node_type = NodeType.FUNCTION
             predicate.value = "SEARCH"
-            predicate.function = FUNCTIONS["SEARCH"]
             predicate.parameters = [
                 predicate.left,
                 predicate.right,

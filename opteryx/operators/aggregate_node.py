@@ -113,7 +113,7 @@ def build_aggregations(aggregators):
                 count_options = pyarrow.compute.CountOptions(mode="all")
             else:
                 field_name = field_node.schema_column.identity
-            function = aggregator.function
+            function = AGGREGATORS[aggregator.value]
             if aggregator.value == "ARRAY_AGG":
                 # if the array agg is distinct, base off that function instead
                 if aggregator.distinct:
