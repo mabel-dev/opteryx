@@ -145,7 +145,7 @@ class AsyncReaderNode(ReaderNode):
 
         orso_schema_cols = []
         for col in orso_schema.columns:
-            if col.identity in [c.identity for c in self.columns]:
+            if col.identity in [c.schema_column.identity for c in self.columns]:
                 orso_schema_cols.append(col)
         orso_schema.columns = orso_schema_cols
 

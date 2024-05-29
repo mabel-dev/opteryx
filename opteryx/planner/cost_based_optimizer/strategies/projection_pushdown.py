@@ -14,6 +14,7 @@ from typing import Set
 
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import get_all_nodes_of_type
+from opteryx.models import LogicalColumn
 from opteryx.planner.logical_planner import LogicalPlan
 from opteryx.planner.logical_planner import LogicalPlanNode
 from opteryx.planner.logical_planner import LogicalPlanStepType
@@ -46,7 +47,14 @@ class ProjectionPushdownStrategy(OptimizationStrategy):
         ):
             # Push all of the projections
             node_columns = [
-                col for col in node.schema.columns if col.identity in context.collected_identities
+                LogicalColumn(
+                    node_type=NodeType.IDENTIFIER,
+                    source_column=col.name,
+                    source=col.origin[0],
+                    schema_column=col,
+                )
+                for col in node.schema.columns
+                if col.identity in context.collected_identities
             ]
             # Update the node with the pushed columns
             node.columns = node_columns

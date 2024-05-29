@@ -129,31 +129,39 @@ def get(key, default=None):
 
 # These are 'protected' properties which cannot be overridden by a single query
 
+DISABLE_OPTIMIZER: bool = bool(get("DISABLE_OPTIMIZER", False))
+"""**DANGEROUS** This will cause most queries to fail."""
+
+OPTERYX_DEBUG: bool = bool(get("OPTERYX_DEBUG", False))
+"""Diagnostic and debug mode."""
+
+MAX_CACHE_EVICTIONS_PER_QUERY: int = int(get("MAX_CACHE_EVICTIONS_PER_QUERY", 64))
+"""Maximum number of buffer pool evictions by a single query."""
+
+MAX_CACHEABLE_ITEM_SIZE: int = int(get("MAX_CACHEABLE_ITEM_SIZE", 2 * 1024 * 1024))
+"""Maximum size for items saved to the remote buffer."""
+
+MAX_LOCAL_BUFFER_CAPACITY: int = memory_allocation_calculation(float(get("MAX_LOCAL_BUFFER_CAPACITY", 0.2)))
+"""Local buffer pool size in either bytes or fraction of system memory."""
+
+MAX_READ_BUFFER_CAPACITY: int = memory_allocation_calculation(float(get("MAX_READ_BUFFER_CAPACITY", 0.1)))
+"""Read buffer pool size in either bytes or fraction of system memory."""
+
+CONCURRENT_READS: int = int(get("CONCURRENT_READS", 4))
+"""Number of read workers per data source."""
+
+
 # GCP project ID - for Google Cloud Data
 GCP_PROJECT_ID: str = get("GCP_PROJECT_ID") 
-# The maximum number of evictions by a single query
-MAX_CACHE_EVICTIONS_PER_QUERY: int = int(get("MAX_CACHE_EVICTIONS_PER_QUERY", 64))
-# Maximum size for items saved to the buffer cache
-MAX_CACHEABLE_ITEM_SIZE: int = int(get("MAX_CACHEABLE_ITEM_SIZE", 2 * 1024 * 1024))
-# The local buffer pool size in either bytes or fraction of system memory
-MAX_LOCAL_BUFFER_CAPACITY: int = memory_allocation_calculation(float(get("MAX_LOCAL_BUFFER_CAPACITY", 0.2)))
-# The read buffer pool size in either bytes or fraction of system memory
-MAX_READ_BUFFER_CAPACITY: int = memory_allocation_calculation(float(get("MAX_READ_BUFFER_CAPACITY", 0.1)))
 # don't try to raise the priority of the server process
 DISABLE_HIGH_PRIORITY: bool = bool(get("DISABLE_HIGH_PRIORITY", False))
 # don't output resource (memory) utilization information
 ENABLE_RESOURCE_LOGGING: bool = bool(get("ENABLE_RESOURCE_LOGGING", False))
 # size of morsels to push between steps
 MORSEL_SIZE: int = int(get("MORSEL_SIZE", 64 * 1024 * 1024))
-# debug mode
-OPTERYX_DEBUG: bool = bool(get("OPTERYX_DEBUG", False))
-# number of read loops per data source
-CONCURRENT_READS: int = int(get("CONCURRENT_READS", 4))
 # query log
 QUERY_LOG_LOCATION:str = get("QUERY_LOG_LOCATION", False)
 QUERY_LOG_SIZE:int = int(get("QUERY_LOG_SIZE", 100))
-
-
 # not GA
 PROFILE_LOCATION:str = get("PROFILE_LOCATION")
 # fmt:on

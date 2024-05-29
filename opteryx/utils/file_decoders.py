@@ -152,7 +152,9 @@ def parquet_decoder(buffer, projection: List = None, selection=None, just_schema
 
         # Projection processing
         schema_columns_set = set(parquet_file.schema_arrow.names)
-        projection_names = {name for proj_col in projection for name in proj_col.all_names}
+        projection_names = {
+            name for proj_col in projection for name in proj_col.schema_column.all_names
+        }
         selected_columns = list(schema_columns_set.intersection(projection_names))
 
         # If no columns are selected, set to None

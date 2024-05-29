@@ -3,6 +3,7 @@ from .constant_folding import ConstantFoldingStrategy
 from .operator_fusion import OperatorFusionStrategy
 from .predicate_pushdown import PredicatePushdownStrategy
 from .projection_pushdown import ProjectionPushdownStrategy
+from .redundant_operators import RedundantOperationsStrategy
 from .split_conjunctive_predicates import SplitConjunctivePredicatesStrategy
 
 __all__ = [
@@ -11,5 +12,6 @@ __all__ = [
     "OperatorFusionStrategy",
     "PredicatePushdownStrategy",
     "ProjectionPushdownStrategy",
+    "RedundantOperationsStrategy",
     "SplitConjunctivePredicatesStrategy",
 ]

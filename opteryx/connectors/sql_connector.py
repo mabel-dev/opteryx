@@ -138,7 +138,7 @@ class SqlConnector(BaseConnector, PredicatePushable):
 
         # Update the SQL and the target morsel schema if we've pushed a projection
         if columns:
-            column_names = [col.name for col in columns]
+            column_names = [col.schema_column.name for col in columns]
             query_builder.add("SELECT", *column_names)
             result_schema.columns = [  # type:ignore
                 col for col in self.schema.columns if col.name in column_names  # type:ignore
