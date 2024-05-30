@@ -56,7 +56,7 @@ class CqlConnector(BaseConnector, PredicatePushable):
 
     PUSHABLE_OPS: Dict[str, bool] = {
         "Eq": True,
-        "NotEq": True,
+        # "NotEq": True,
         "Gt": True,
         "GtEq": True,
         "Lt": True,
@@ -65,7 +65,7 @@ class CqlConnector(BaseConnector, PredicatePushable):
 
     OPS_XLAT: Dict[str, str] = {
         "Eq": ":left = :right",
-        "NotEq": ":left != :right",
+        # "NotEq": ":left not in (:right)",
         "Gt": ":left > :right",
         "GtEq": ":left >= :right",
         "Lt": ":left < :right",

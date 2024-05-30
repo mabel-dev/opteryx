@@ -71,6 +71,25 @@ STATEMENTS = [
     ("SELECT name FROM sqlite.planets WHERE surfacePressure IS NOT NULL", 5, 1, None),
     ("SELECT name FROM sqlite.planets WHERE numberOfMoons IS NOT TRUE", 2, 1, None),
     ("SELECT name FROM sqlite.planets WHERE numberOfMoons IS TRUE", 7, 1, None),
+    ("SELECT name FROM sqlite.planets WHERE name LIKE 'M%';", 2, 1, None),  # Mars, Mercury
+    ("SELECT name FROM sqlite.planets WHERE name NOT LIKE 'M%';", 7, 1, None),  # All except Mars and Mercury
+    ("SELECT name FROM sqlite.planets WHERE name LIKE '%e%';", 5, 1, None),  # Earth, Jupiter, Neptune, Mercury, Venus
+    ("SELECT name FROM sqlite.planets WHERE name NOT LIKE '%e%';", 4, 1, None),  # Mars, Saturn, Uranus, Pluto
+    ("SELECT name FROM sqlite.planets WHERE name ILIKE 'p%';", 1, 1, None),  # Pluto
+    ("SELECT name FROM sqlite.planets WHERE name NOT ILIKE 'p%';", 8, 1, None),  # All except Pluto
+    ("SELECT name FROM sqlite.planets WHERE name ILIKE '%U%';", 7, 1, None),
+    ("SELECT name FROM sqlite.planets WHERE name NOT ILIKE '%U%';", 2, 1, None),
+    ("SELECT name FROM sqlite.planets WHERE name LIKE '__r%';", 3, 1, None),  # Earth, Uranus
+    ("SELECT name FROM sqlite.planets WHERE name NOT LIKE '__r%';", 6, 1, None), 
+    ("SELECT name FROM sqlite.planets WHERE name LIKE '%t';", 0, 1, None), 
+    ("SELECT name FROM sqlite.planets WHERE name NOT LIKE '%t';", 9, 1, None), 
+    ("SELECT name FROM sqlite.planets WHERE name ILIKE '_a%';", 3, 1, None),  # Mars, Saturn, Uranus
+    ("SELECT name FROM sqlite.planets WHERE name NOT ILIKE '_a%';", 6, 1, None),  # All except Mars, Saturn, Uranus
+    ("SELECT name FROM sqlite.planets WHERE name LIKE '____';", 1, 1, None), 
+    ("SELECT name FROM sqlite.planets WHERE name NOT LIKE '____';", 8, 1, None),  # All except Mars, Earth
+    ("SELECT name FROM sqlite.planets WHERE name ILIKE '%o';", 1, 1, None),  # Pluto
+    ("SELECT name FROM sqlite.planets WHERE name NOT ILIKE '%o';", 8, 1, None)  # All except Pluto
+
 ]
 # fmt: on
 
@@ -169,7 +188,7 @@ if __name__ == "__main__":  # pragma: no cover
             failed += 1
             failures.append((statement, err))
 
-    print("--- ✅ \033[0;32mdone\033[0m")
+    print("#- ✅ \033[0;32mdone\033[0m")
 
     if failed > 0:
         print("\n\033[38;2;139;233;253m\033[3mFAILURES\033[0m")
