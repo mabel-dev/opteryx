@@ -8,8 +8,6 @@ import os
 import sys
 import pytest
 
-# os.environ["OPTERYX_DEBUG"] = "1"
-
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import opteryx
