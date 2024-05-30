@@ -362,7 +362,7 @@ def test_functions():
 
     rounded = evaluate(_round, planets)
     assert len(rounded) == 9
-    assert set(r for r in rounded) == {4, 23, 9, 1, 11, 10}
+    assert set(r.as_py() for r in rounded) == {4, 23, 9, 1, 11, 10}, list(rounded)
 
 
 if __name__ == "__main__":  # pragma: no cover

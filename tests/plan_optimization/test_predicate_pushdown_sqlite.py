@@ -19,21 +19,14 @@ opteryx.register_store(
     connection="sqlite:///testdata/sqlite/database.db",
 )
 
+# fmt: off
 test_cases = [
     ("SELECT * FROM sqlite.planets WHERE name = 'Mercury';", 1, 1),
     ("SELECT * FROM sqlite.planets WHERE name = 'Mercury' AND gravity = 3.7;", 1, 1),
-    (
-        "SELECT * FROM sqlite.planets WHERE name = 'Mercury' AND gravity = 3.7 AND escapeVelocity = 5.0;",
-        0,
-        0,
-    ),
+    ("SELECT * FROM sqlite.planets WHERE name = 'Mercury' AND gravity = 3.7 AND escapeVelocity = 5.0;", 0, 0),
     ("SELECT * FROM sqlite.planets WHERE gravity = 3.7 AND name IN ('Mercury', 'Venus');", 1, 2),
     ("SELECT * FROM sqlite.planets WHERE surfacePressure IS NULL;", 4, 4),
-    (
-        "SELECT * FROM sqlite.planets WHERE orbitalInclination IS FALSE AND name IN ('Earth', 'Mars');",
-        1,
-        1,
-    ),
+    ("SELECT * FROM sqlite.planets WHERE orbitalInclination IS FALSE AND name IN ('Earth', 'Mars');", 1, 1),
     ("SELECT * FROM (SELECT name FROM sqlite.planets) AS $temp WHERE name = 'Earth';", 1, 1),
     ("SELECT * FROM sqlite.planets WHERE gravity <= 3.7", 3, 3),
     ("SELECT * FROM sqlite.planets WHERE name != 'Earth'", 8, 8),
@@ -45,7 +38,7 @@ test_cases = [
     ("SELECT * FROM sqlite.planets WHERE name LIKE '%a%'", 4, 4),
     ("SELECT * FROM sqlite.planets WHERE id > gravity", 2, 9),
 ]
-
+# fmt:on
 
 import pytest
 

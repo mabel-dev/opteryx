@@ -22,7 +22,6 @@ from orso.types import OrsoTypes
 
 from opteryx.connectors.capabilities import PredicatePushable
 from opteryx.exceptions import UnsupportedSyntaxError
-from opteryx.functions import FUNCTIONS
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.models import Node
@@ -68,7 +67,11 @@ def _rewrite_predicate(predicate):
         ):
             predicate.value = LIKE_REWRITES[predicate.value]
             return predicate
-    if predicate.value in {"Like", "ILike"} and predicate.right.value:
+    if (
+        predicate.value in {"Like", "ILike"}
+        and predicate.right.value
+        and predicate.left.source_connector.isdisjoint({"Sql", "Cql"})
+    ):
         ignore_case = predicate.value == "ILike"
         # Rewrite LIKEs as STARTS_WITH
         if (

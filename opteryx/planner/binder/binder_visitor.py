@@ -806,7 +806,7 @@ class BinderVisitor:
         context.schemas[node.alias] = node.schema
         for column in node.schema.columns:
             column.origin = [node.alias]
-        context.relations.add(node.alias)
+        context.relations[node.alias] = node.connector.__mode__
 
         return node, context
 
@@ -864,13 +864,13 @@ class BinderVisitor:
                 schema_column.aliases = []
                 columns.append(schema_column)
             if name[0] != "$" and name in context.relations:
-                context.relations.remove(name)
-        context.relations.add(node.alias)
+                context.relations.pop(name)
+        context.relations[node.alias] = "subquery"
 
         schema = RelationSchema(name=node.alias, columns=columns)
 
         context.schemas = {"$derived": derived.schema(), node.alias: schema}
-        context.relations.add(node.alias)
+        context.relations[node.alias] = "subquery"
         node.schema = schema
         node.source_relations = set(source_relations)
         return node, context
@@ -878,7 +878,7 @@ class BinderVisitor:
     def visit_union(self, node: Node, context: BindingContext) -> Tuple[Node, BindingContext]:
         for relation in node.right_relation_names:
             context.schemas.pop(relation, None)
-        context.relations = set(node.left_relation_names)
+        context.relations = {n: "union" for n in node.left_relation_names}
 
         if len(node.columns) == 1 and node.columns[0].node_type == NodeType.WILDCARD:
             columns = []
@@ -950,9 +950,12 @@ class BinderVisitor:
                 exit_context.schemas = merge_schemas(child_context.schemas, exit_context.schemas)
 
                 # Update relations if necessary
-                context.relations = context.relations.union(exit_context.relations).union(
-                    child_context.relations
-                )
+                merged_relations = {
+                    **context.relations,
+                    **exit_context.relations,
+                    **child_context.relations,
+                }
+                context.relations = merged_relations
 
             context.schemas = merge_schemas(context.schemas, exit_context.schemas)
 

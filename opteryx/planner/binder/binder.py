@@ -185,6 +185,9 @@ def locate_identifier(node: Node, context: Any) -> Tuple[Node, Dict]:
 
     # Update node.schema_column with the found column
     node.schema_column = column
+    node.source_connector = {context.relations.get(a) for a in found_source_relation.aliases} - {
+        None
+    }
     # if may need to map source aliases to the columns if they weren't able to be
     # mapped before now
     if column.origin and len(column.origin) == 1:

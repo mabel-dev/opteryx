@@ -30,12 +30,14 @@ class LogicalColumn:
         self,
         node_type,
         source_column: str,
+        source_connector: Optional[str] = None,
         source: Optional[str] = None,
         alias: Optional[str] = None,
         schema_column=None,
     ):
         self.node_type = node_type
         self.source_column = source_column
+        self.source_connector = source_connector
         self.source = source
         self.alias = alias
         self.schema_column = schema_column
@@ -89,6 +91,7 @@ class LogicalColumn:
             "class": "LogicalColumn",
             "node_type": self.node_type.name,
             "source_column": self.source_column,
+            "source_connector": self.source_connector,
             "source": self.source,
             "alias": self.alias,
             "schema_column": dataclass_to_dict(self.schema_column),
