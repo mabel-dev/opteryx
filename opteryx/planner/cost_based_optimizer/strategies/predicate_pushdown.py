@@ -143,6 +143,11 @@ dispatcher: Dict[str, Callable] = {
 
 # Dispatcher conditions
 def _rewrite_predicate(predicate):
+
+    if predicate.node_type in {NodeType.AND, NodeType.OR}:
+        predicate.left = _rewrite_predicate(predicate.left)
+        predicate.right = _rewrite_predicate(predicate.right)
+
     if predicate.value in {"Like", "ILike", "NotLike", "NotILike"}:
         if "%%" in predicate.right.value:
             predicate = dispatcher["remove_adjacent_wildcards"](predicate)
@@ -216,6 +221,9 @@ class PredicatePushdownStrategy(OptimizationStrategy):
 
                 context.collected_predicates.append(node)
                 context.optimized_plan.remove_node(context.node_id, heal=True)
+            else:
+                node.condition = _rewrite_predicate(node.condition)
+                context.optimized_plan[context.node_id] = node
 
         elif node.node_type == LogicalPlanStepType.Join:
 

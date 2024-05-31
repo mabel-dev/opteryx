@@ -87,6 +87,7 @@ class CostBasedOptimizerVisitor:
             ProjectionPushdownStrategy(),
             OperatorFusionStrategy(),
             RedundantOperationsStrategy(),
+            ConstantFoldingStrategy(),
         ]
 
     def traverse(self, plan: LogicalPlan, strategy) -> LogicalPlan:
