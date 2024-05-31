@@ -320,6 +320,7 @@ FUNCTIONS = {
     "LEVENSHTEIN": string_functions.levenshtein,
     "SPLIT": string_functions.split,
     "MATCH_AGAINST": string_functions.match_against,
+    "REGEXP_REPLACE": string_functions.regex_replace,
 
     # HASHING & ENCODING
     "HASH": _iterate_single_parameter(lambda x: hex(CityHash64(str(x)))[2:]),
