@@ -346,3 +346,10 @@ def match_against(arr, val):
         and set(tokenized_literal).issubset(tok)
         for tok in tokenized_strings
     ]
+
+def regex_replace(array, _pattern, _replacement):
+
+    pattern = _pattern[0]
+    replacement = _replacement[0]
+
+    return compute.replace_substring_regex(array, pattern, replacement)
