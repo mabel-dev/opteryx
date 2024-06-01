@@ -1346,6 +1346,9 @@ STATEMENTS = [
         ("SELECT * FROM $astronauts WHERE LIST_CONTAINS_ANY(missions, @@user_memberships)", 3, 19, None),
         ("SELECT $missions.* FROM $missions INNER JOIN $user ON Mission = value WHERE attribute = 'membership'", 1, 8, None),
         ("SELECT * FROM $planets WHERE name = any(@@user_memberships)", 0, 20, None),
+        ("SELECT name FROM $planets WHERE 'Apollo 11' = ANY(@@user_memberships) OR name = 'Saturn'", 9, 1, None),
+        ("SELECT name FROM $planets WHERE 'Apollo 11' = ANY(@@user_memberships) AND name = 'Saturn'", 1, 1, None),
+        ("SELECT name FROM $planets WHERE 'Apollo 11' = ANY(@@user_memberships)", 9, 1, None),
         ("SELECT name FROM sqlite.planets WHERE name = ANY(('Earth', 'Mars'))", 2, 1, None),
         ("SELECT name FROM $planets WHERE REGEXP_REPLACE(name, '^E', 'G') == 'Garth'", 1, 1, None),
 

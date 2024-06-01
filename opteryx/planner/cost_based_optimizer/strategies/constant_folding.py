@@ -56,6 +56,13 @@ def build_literal_node(value: Any, root: Node):
 
 
 def fold_constants(root: Node) -> Node:
+
+    if root.node_type in {NodeType.AND, NodeType.OR}:
+        root.left = fold_constants(root.left)
+        root.right = fold_constants(root.right)
+
+        return root
+
     identifiers = get_all_nodes_of_type(root, (NodeType.IDENTIFIER, NodeType.WILDCARD))
     functions = get_all_nodes_of_type(root, (NodeType.FUNCTION,))
 
