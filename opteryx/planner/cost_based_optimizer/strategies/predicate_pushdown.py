@@ -144,7 +144,7 @@ dispatcher: Dict[str, Callable] = {
 # Dispatcher conditions
 def _rewrite_predicate(predicate):
 
-    if predicate.node_type in {NodeType.AND, NodeType.OR}:
+    if predicate.node_type in {NodeType.AND, NodeType.OR, NodeType.XOR}:
         predicate.left = _rewrite_predicate(predicate.left)
         predicate.right = _rewrite_predicate(predicate.right)
 

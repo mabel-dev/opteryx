@@ -19,7 +19,7 @@ from orso.cityhash import CityHash64
 from opteryx.config import MAX_CACHE_EVICTIONS_PER_QUERY
 from opteryx.config import MAX_CACHEABLE_ITEM_SIZE
 
-__all__ = ("Cacheable", "read_thru_cache")
+__all__ = ("Cacheable", "read_thru_cache", "async_read_thru_cache")
 
 
 class Cacheable:
@@ -71,6 +71,7 @@ def read_thru_cache(func):
         result = buffer_pool.get(key)
         if result is not None:
             statistics.bufferpool_hits += 1
+            remote_cache.touch(key)  # help the remote cache track LRU
             return result
 
         # try the remote cache next
@@ -145,6 +146,7 @@ def async_read_thru_cache(func):
         # try the buffer pool first
         result = buffer_pool.get(key, zero_copy=False)
         if result is not None:
+            remote_cache.touch(key)  # help the remote cache track LRU
             statistics.bufferpool_hits += 1
             ref = await pool.commit(result)  # type: ignore
             while ref is None:
