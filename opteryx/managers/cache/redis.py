@@ -65,6 +65,7 @@ class RedisCache(BaseKeyValueStore):
         self.misses: int = 0
         self.skips: int = 0
         self.errors: int = 0
+        self.sets: int = 0
 
     def get(self, key: bytes) -> Union[bytes, None]:
         if self._consecutive_failures >= MAXIMUM_CONSECUTIVE_FAILURES:
@@ -92,4 +93,21 @@ class RedisCache(BaseKeyValueStore):
 
     def set(self, key: bytes, value: bytes) -> None:
         if self._consecutive_failures < MAXIMUM_CONSECUTIVE_FAILURES:
-            self._server.set(key, value)
+            try:
+                self._server.set(key, value)
+                self.sets += 1
+            except Exception as err:
+                # if we fail to set, stop trying
+                self._consecutive_failures = MAXIMUM_CONSECUTIVE_FAILURES
+                self.errors += 1
+                import datetime
+
+                print(
+                    f"{datetime.datetime.now()} [CACHE] Disabling remote Redis cache due to persistent errors ({err}) [SET]."
+                )
+        else:
+            self.skips += 1
+
+    def __del__(self):
+        pass
+        # DEBUG: log(f"Redis <hits={self.hits} misses={self.misses} sets={self.sets} skips={self.skips} errors={self.errors}>")

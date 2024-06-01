@@ -91,6 +91,7 @@ class MemcachedCache(BaseKeyValueStore):
         self.skips: int = 0
         self.errors: int = 0
         self.sets: int = 0
+        self.touches: int = 0
 
     def get(self, key: bytes) -> Union[bytes, None]:
         if self._consecutive_failures >= MAXIMUM_CONSECUTIVE_FAILURES:
@@ -133,6 +134,16 @@ class MemcachedCache(BaseKeyValueStore):
         else:
             self.skips += 1
 
+    def touch(self, key: bytes):
+        if self._consecutive_failures < MAXIMUM_CONSECUTIVE_FAILURES:
+            try:
+                self._server.touch(key)
+                self.touches += 1
+            except Exception as err:  # nosec
+                # DEBUG: log(f"Unable to 'touch' Memcache cache {err}")
+                self.errors += 1
+                pass
+
     def __del__(self):
         pass
-        # DEBUG: log(f"Memcached <hits={self.hits} misses={self.misses} sets={self.sets} skips={self.skips} errors={self.errors}>")
+        # DEBUG: log(f"Memcached <hits={self.hits} misses={self.misses} sets={self.sets} skips={self.skips} errors={self.errors} touches={self.touches}>")

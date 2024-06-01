@@ -46,3 +46,6 @@ class BaseKeyValueStore:
         """
         # default to returning no matches
         return []
+
+    def touch(self, key: bytes):
+        return None
