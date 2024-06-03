@@ -19,6 +19,6 @@ sqlalchemy
 pymysql
 psycopg2-binary
 duckdb==0.10.3  # 1040
-duckdb-engine==0.12.1  # 1040
+duckdb-engine==0.13.0  # 1040
 
 setuptools_rust
