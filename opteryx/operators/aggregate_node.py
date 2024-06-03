@@ -11,15 +11,11 @@
 # limitations under the License.
 
 """
-Grouping Node
+Aggregation Node
 
 This is a SQL Query Execution Plan Node.
 
-This performs aggregations, both of grouped and non-grouped data.
-
-This is a greedy operator - it consumes all the data before responding.
-
-This is built around the pyarrow table grouping functionality.
+This node performs aggregates without performing groupings.
 """
 import time
 from dataclasses import dataclass
