@@ -939,7 +939,7 @@ def plan_set_variable(statement):
     plan = LogicalPlan()
     set_step = LogicalPlanNode(
         node_type=LogicalPlanStepType.Set,
-        variable=extract_variable(statement[root_node]["variable"]),
+        variable=extract_variable(statement[root_node]["variables"]["One"]),
         value=extract_value(statement[root_node]["value"]),
     )
     plan.add_node(random_string(), set_step)

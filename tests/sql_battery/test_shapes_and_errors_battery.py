@@ -1622,7 +1622,6 @@ def test_sql_battery(statement, rows, columns, exception):
         raise Exception(err) from err
     except Exception as err:
         if type(err) != exception:
-            quit()
             raise Exception(
                 f"{format_sql(statement)}\nQuery failed with error {type(err)} but error {exception} was expected"
             ) from err
