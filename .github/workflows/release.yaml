@@ -132,11 +132,6 @@ jobs:
         name: dist-linux-3.12
         path: dist
 
-name: Build and Release
-
-on: [push, pull_request]
-
-jobs:
   build-macos:
     runs-on: macos-latest
     strategy:
