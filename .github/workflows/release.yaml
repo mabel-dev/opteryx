@@ -166,6 +166,11 @@ jobs:
         MACOSX_DEPLOYMENT_TARGET: '10.15'
         ARCHFLAGS: -arch x86_64 -arch arm64
         PYO3_CROSS_LIB_DIR: /Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/${{ matrix.python-version }}/lib
+        PYO3_CROSS: 1
+        PYO3_CROSS_PYTHON_VERSION: ${{ matrix.python-version }}
+        PYO3_CROSS_PYTHON_IMPLEMENTATION: CPython
+        PYO3_NO_PYTHON: 1
+        RUST_BACKTRACE: 1
       run: python setup.py bdist_wheel
 
     - name: Archive dist artifacts
