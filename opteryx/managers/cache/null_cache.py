@@ -21,5 +21,5 @@ class NullCache:
     def set(self, key: bytes, value: Any) -> None:
         return None
 
-    def touch(self, key:str):
+    def touch(self, key: str):
         pass
