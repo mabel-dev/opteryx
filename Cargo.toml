@@ -9,7 +9,7 @@ name = "compute"
 crate-type = ["cdylib"]
 
 [dependencies]
-pyo3 = { version = "0.20", features = ["extension-module"] }
+pyo3 = { version = "0.20.3", features = ["extension-module", "abi3-py310"] }
 numpy = "0.20"
 ndarray = "0.15.3"
 pythonize = "0.20"
