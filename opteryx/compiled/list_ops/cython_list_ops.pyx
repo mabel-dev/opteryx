@@ -206,7 +206,7 @@ cpdef cnp.ndarray cython_long_arrow_op(cnp.ndarray arr, object key):
     return result
 
 
-cpdef cython_get_element_op(cnp.ndarray[object, ndim=1] array, int key):
+cpdef cnp.ndarray cython_get_element_op(cnp.ndarray[object, ndim=1] array, int key):
     """
     Fetches elements from each sub-array of a NumPy array at a given index.
 
