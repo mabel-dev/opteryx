@@ -809,15 +809,10 @@ class BinderVisitor:
         # None means we don't know ahead of time - we can usually get something
         node.schema = node.connector.get_dataset_schema()
         node.schema.aliases.append(node.alias)
-        if "." in node.relation:
-            node.schema.aliases.append(node.relation.split(".")[-1])
-            if node.alias == node.relation:
-                node.alias = node.relation.split(".")[-1]
         context.schemas[node.alias] = node.schema
         for column in node.schema.columns:
-            column.origin = node.schema.aliases
-        for alias in node.schema.aliases:
-            context.relations[alias] = node.connector.__mode__
+            column.origin = [node.alias]
+        context.relations[node.alias] = node.connector.__mode__
 
         return node, context
 
