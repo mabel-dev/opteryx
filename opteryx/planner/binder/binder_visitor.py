@@ -291,6 +291,8 @@ class BinderVisitor:
         if node.groups:
             tmp_groups, _ = zip(*(inner_binder(group, context) for group in node.groups))
             columns_to_keep = {col.schema_column.identity for col in tmp_groups}
+        # remove literals in the GROUP BY clause, they form one group
+        node.groups = [g for g in node.groups if g.node_type != NodeType.LITERAL]
         # 2) the columns referenced in the SELECT
         node.columns = get_all_nodes_of_type(
             node.aggregates + node.groups, select_nodes=(NodeType.IDENTIFIER,)
@@ -308,6 +310,10 @@ class BinderVisitor:
                 context.schemas.pop(name)
 
         for array_agg in [agg for agg in tmp_aggregates if agg.value == "ARRAY_AGG"]:
+            if not node.groups:
+                raise UnsupportedSyntaxError(
+                    "ARRAY_AGG requires a GROUP BY clause, and cannot GROUP BY a literal value."
+                )
             if array_agg.order:
                 if len(array_agg.order) > 1:
                     raise UnsupportedSyntaxError(

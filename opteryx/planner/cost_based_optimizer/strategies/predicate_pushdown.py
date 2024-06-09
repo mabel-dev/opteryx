@@ -206,6 +206,15 @@ class PredicatePushdownStrategy(OptimizationStrategy):
             if context.last_nid:
                 context.optimized_plan.add_edge(context.node_id, context.last_nid)
 
+        elif node.node_type == LogicalPlanStepType.Limit:
+            # don't push filters past limits
+
+            for predicate in context.collected_predicates:
+                context.optimized_plan.insert_node_after(
+                    random_string(), predicate, context.node_id
+                )
+            context.collected_predicates = []
+
         elif node.node_type == LogicalPlanStepType.Filter:
             # collect predicates we can probably push
             if (

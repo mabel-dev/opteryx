@@ -1108,7 +1108,7 @@ STATEMENTS = [
 
         ("SELECT ARRAY_AGG(name) from $satellites GROUP BY planetId", 7, 1, None),
         ("SELECT ARRAY_AGG(DISTINCT name) from $satellites GROUP BY planetId", 7, 1, None),
-        ("SELECT ARRAY_AGG(name ORDER BY name) from $satellites GROUP BY TRUE", 1, 1, None),
+        ("SELECT ARRAY_AGG(name ORDER BY name) from $satellites GROUP BY TRUE", 1, 1, UnsupportedSyntaxError),
         ("SELECT ARRAY_AGG(name LIMIT 1) from $satellites GROUP BY planetId", 7, 1, None),
         ("SELECT ARRAY_AGG(DISTINCT name LIMIT 1) from $satellites GROUP BY planetId", 7, 1, None),
         ("SELECT COUNT(*), ARRAY_AGG(name) from $satellites GROUP BY planetId", 7, 2, None),
@@ -1580,6 +1580,8 @@ STATEMENTS = [
         ("SELECT birth_place->>'town', birth_place->>'state' FROM $astronauts;", 357, 2, None),
         # 1622
         ("SELECT * FROM (SELECT p.Price AS pri, s.escapeVelocity FROM $missions AS p INNER JOIN $planets AS s ON p.Price = s.escapeVelocity) AS SV WHERE IFNULL(null, pri) = pri", 5, 2, None),
+        # 1696
+        ("SELECT name FROM (SELECT * FROM $planets LIMIT 5) AS S WHERE name != 'Mars'", 4, 1, None),
 ]
 # fmt:on
 
