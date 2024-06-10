@@ -18,6 +18,7 @@ This is used to prepresent no table.
 
 It actually is a table, with one row and one column.
 """
+
 from orso.schema import FlatColumn
 from orso.schema import RelationSchema
 from orso.types import OrsoTypes

@@ -39,7 +39,7 @@ This is the AST rewriter, it sits between the Parser and the Logical Planner.
    │ Logical   │ Plan │           │ Plan │           │
    │   Planner ├──────► Binder    ├──────► Optimizer │
    └───────────┘      └───────────┘      └───────────┘
-                
+
 ~~~
 
 The primary role is to bind information to the AST which is provided in the order they appear
@@ -49,7 +49,7 @@ logical planner.
 
 The parameter substitution is done after the AST is parsed to limit the possibility of the values
 in the parameters affecting how the SQL is parsed (i.e. to prevent injection attacks). For similar
-reasons, we do variable subsitutions here as well. Although these are not sensitive to ordering, 
+reasons, we do variable subsitutions here as well. Although these are not sensitive to ordering,
 we should remove any opportunity for them to be used for injection attacks so we bind them after
 the building of the AST.
 
@@ -57,6 +57,7 @@ The temporal range binding is done here because it is a non-standard extention n
 the AST parser, so we strip the temporal ranges out in the SQL rewriter, and add them to the AST
 here.
 """
+
 import datetime
 import decimal
 from typing import Any
@@ -141,7 +142,6 @@ def parameter_list_binder(
 def parameter_dict_binder(
     node: Union[Dict, List], parameter_set: Dict[str, Any], connection, query_type
 ) -> Union[Dict, List]:
-
     if isinstance(node, list):
         return [
             parameter_dict_binder(child, parameter_set, connection, query_type) for child in node

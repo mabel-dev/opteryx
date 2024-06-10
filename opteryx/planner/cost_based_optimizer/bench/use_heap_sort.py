@@ -16,6 +16,7 @@ Optimization Rule - Combine Operators for Effeciency
 Type: Heuristic
 Goal: Reduce rows
 """
+
 from opteryx import operators
 from opteryx.models.execution_tree import ExecutionTree
 from opteryx.utils import random_string

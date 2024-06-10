@@ -14,6 +14,7 @@
 The SQL Connector downloads data from remote servers and converts them
 to pyarrow tables so they can be processed as per any other data source.
 """
+
 import time
 from decimal import Decimal
 from typing import Any
@@ -141,7 +142,9 @@ class SqlConnector(BaseConnector, PredicatePushable):
             column_names = [col.schema_column.name for col in columns]
             query_builder.add("SELECT", *column_names)
             result_schema.columns = [  # type:ignore
-                col for col in self.schema.columns if col.name in column_names  # type:ignore
+                col
+                for col in self.schema.columns
+                if col.name in column_names  # type:ignore
             ]
         else:
             query_builder.add("SELECT", "1")
@@ -231,14 +234,10 @@ class SqlConnector(BaseConnector, PredicatePushable):
                         name=column.name,
                         type=PYTHON_TO_ORSO_MAP[column.type.python_type],
                         precision=(
-                            None
-                            if column.type.python_type != Decimal
-                            else column.type.precision  # type:ignore
+                            None if column.type.python_type != Decimal else column.type.precision  # type:ignore
                         ),
                         scale=(
-                            None
-                            if column.type.python_type != Decimal
-                            else column.type.scale  # type:ignore
+                            None if column.type.python_type != Decimal else column.type.scale  # type:ignore
                         ),
                         nullable=column.nullable,
                     )

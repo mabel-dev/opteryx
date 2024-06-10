@@ -15,12 +15,13 @@ Join Node
 
 This is a SQL Query Execution Plan Node.
 
-This handles most of the join types as a wrapper for pyarrow's JOIN functions, 
+This handles most of the join types as a wrapper for pyarrow's JOIN functions,
 except for INNER JOIN and CROSS JOIN. PyArrow has a very good set of JOIN
 implementations which use here, we don't use the INNER JOIN because PyArrow
 has limitations on the column types allowed in the relations, so we use our
 own INNER JOIN algo.
 """
+
 from typing import Generator
 
 import pyarrow
@@ -32,7 +33,6 @@ from opteryx.operators import OperatorType
 
 
 class JoinNode(BasePlanNode):
-
     operator_type = OperatorType.PASSTHRU
 
     def __init__(self, properties: QueryProperties, **config):
@@ -68,7 +68,10 @@ class JoinNode(BasePlanNode):
         for morsel in left_node.execute():
             # in place until #1295 resolved
             if not self._right_columns[0] in morsel.column_names:
-                self._right_columns, self._left_columns = self._left_columns, self._right_columns
+                self._right_columns, self._left_columns = (
+                    self._left_columns,
+                    self._right_columns,
+                )
 
             try:
                 # do the join

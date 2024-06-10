@@ -1,6 +1,6 @@
 """
 {
-    "fields": 
+    "fields":
         [
             {
                 "name"

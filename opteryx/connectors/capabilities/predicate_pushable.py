@@ -14,7 +14,7 @@
 This is both a marker and a wrapper for key functionality to support predicate/filter
 pushdowns. This is where we a sending filters to the thing that is acquiring the data
 for the query. For example sending filters to remote database servers, or to pyarrow
-readers. This allows for data to be prefiltered before reaching Opteryx - this is 
+readers. This allows for data to be prefiltered before reaching Opteryx - this is
 almost always going to be faster than reading, loading and filtering.
 
 Note that for some file types, although we accept the pushdown, we fake it by reading,
@@ -96,7 +96,11 @@ class PredicatePushable:
             ):
                 # not all operands are universally supported
                 raise NotSupportedError()
-            return (root.left.value, PredicatePushable.OPS_XLAT[root.value], root.right.value)
+            return (
+                root.left.value,
+                PredicatePushable.OPS_XLAT[root.value],
+                root.right.value,
+            )
 
         not_converted = []
         dnf = []

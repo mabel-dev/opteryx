@@ -17,6 +17,7 @@ It is defined as an expression tree of binary and unary operators, and functions
 
 Expressions are evaluated against an entire morsel at a time.
 """
+
 from enum import Enum
 from typing import Callable
 from typing import Dict
@@ -225,7 +226,9 @@ def _inner_evaluate(root: Node, table: Table, context: ExecutionContext):
         if literal_type == OrsoTypes.INTERVAL:
             return pyarrow.array([root.value] * table.num_rows)
         return numpy.full(
-            shape=table.num_rows, fill_value=root.value, dtype=ORSO_TO_NUMPY_MAP[literal_type]
+            shape=table.num_rows,
+            fill_value=root.value,
+            dtype=ORSO_TO_NUMPY_MAP[literal_type],
         )  # type:ignore
 
     # BOOLEAN OPERATORS
@@ -272,7 +275,11 @@ def _inner_evaluate(root: Node, table: Table, context: ExecutionContext):
             left = _inner_evaluate(root.left, table, context)
             right = _inner_evaluate(root.right, table, context)
             result = filter_operations(
-                left, root.left.schema_column.type, root.value, right, root.right.schema_column.type
+                left,
+                root.left.schema_column.type,
+                root.value,
+                right,
+                root.right.schema_column.type,
             )
             context.store(identity, result)
             return result
@@ -280,7 +287,11 @@ def _inner_evaluate(root: Node, table: Table, context: ExecutionContext):
             left = _inner_evaluate(root.left, table, context)
             right = _inner_evaluate(root.right, table, context)
             result = binary_operations(
-                left, root.left.schema_column.type, root.value, right, root.right.schema_column.type
+                left,
+                root.left.schema_column.type,
+                root.value,
+                right,
+                root.right.schema_column.type,
             )
             context.store(identity, result)
             return result

@@ -30,6 +30,7 @@ should work in our favour.
 This is a hash join, this is completely rewritten from the earlier
 pyarrow_ops implementation which was a variation of a sort-merge join.
 """
+
 import time
 from typing import Generator
 
@@ -117,7 +118,6 @@ def inner_join_with_preprocessed_left_side(left_relation, right_relation, join_c
 
 
 class InnerJoinNode(BasePlanNode):
-
     operator_type = OperatorType.PASSTHRU
 
     def __init__(self, properties: QueryProperties, **config):
@@ -151,7 +151,10 @@ class InnerJoinNode(BasePlanNode):
         left_relation = pyarrow.concat_tables(left_node.execute(), promote_options="none")
         # in place until #1295 resolved
         if not self._left_columns[0] in left_relation.column_names:
-            self._right_columns, self._left_columns = self._left_columns, self._right_columns
+            self._right_columns, self._left_columns = (
+                self._left_columns,
+                self._right_columns,
+            )
 
         start = time.monotonic_ns()
         left_hash = preprocess_left(left_relation, self._left_columns)

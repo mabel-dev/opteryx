@@ -729,7 +729,6 @@ def create_node_relation(relation):
 
 
 def analyze_query(statement) -> LogicalPlan:
-
     root_node = "Analyze"
     plan = LogicalPlan()
 
@@ -752,7 +751,6 @@ def analyze_query(statement) -> LogicalPlan:
 
 
 def plan_execute_query(statement) -> LogicalPlan:
-
     import orjson
 
     from opteryx.exceptions import SqlError
@@ -793,7 +791,10 @@ def plan_execute_query(statement) -> LogicalPlan:
         "statement": "SELECT * FROM $planets WHERE id = :id",
         "parameters": [{"id": "name", "type": "INTEGER"}],
     }
-    prepared_statatements["VERSION"] = {"statement": "SELECT version()", "parameters": []}
+    prepared_statatements["VERSION"] = {
+        "statement": "SELECT version()",
+        "parameters": [],
+    }
     if statement_name not in prepared_statatements:
         raise SqlError(f"Unable to EXECUTE prepared statement, '{statement_name}' not defined.")
     operation = prepared_statatements[statement_name]["statement"]
@@ -1007,7 +1008,9 @@ def plan_show_variables(statement):
                 value=operator,
                 left=Node(node_type=NodeType.IDENTIFIER, value="name"),
                 right=Node(
-                    node_type=NodeType.LITERAL, type=OrsoTypes.VARCHAR, value=predicate[operator]
+                    node_type=NodeType.LITERAL,
+                    type=OrsoTypes.VARCHAR,
+                    value=predicate[operator],
                 ),
             ),
         )

@@ -35,7 +35,8 @@ class Partitionable:
 
         if not issubclass(partition_scheme, BasePartitionScheme):
             raise InvalidConfigurationError(
-                config_item="partition_scheme", provided_value=str(partition_scheme.__name__)
+                config_item="partition_scheme",
+                provided_value=str(partition_scheme.__name__),
             )
 
         self.partition_scheme = partition_scheme()

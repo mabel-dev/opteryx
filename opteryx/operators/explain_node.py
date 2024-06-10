@@ -17,6 +17,7 @@ This is a SQL Query Execution Plan Node.
 
 This writes out a query plan
 """
+
 from typing import Generator
 
 from opteryx.models import QueryProperties
@@ -25,7 +26,6 @@ from opteryx.operators import OperatorType
 
 
 class ExplainNode(BasePlanNode):
-
     operator_type = OperatorType.PRODUCER
 
     def __init__(self, properties: QueryProperties, **config):

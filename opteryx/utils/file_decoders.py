@@ -13,6 +13,7 @@
 """
 Decode files from a raw binary format to a PyArrow Table.
 """
+
 import io
 from enum import Enum
 from typing import BinaryIO
@@ -145,7 +146,6 @@ def parquet_decoder(buffer, projection: List = None, selection=None, just_schema
     # Open the parquet file only once
     parquet_file = parquet.ParquetFile(stream)
     if projection or just_schema:
-
         # Return just the schema if that's all that's needed
         if just_schema:
             return convert_arrow_schema_to_orso_schema(parquet_file.schema_arrow)
@@ -184,7 +184,11 @@ def parquet_decoder(buffer, projection: List = None, selection=None, just_schema
 
     # Read the parquet table with the optimized column list and selection filters
     table = parquet.read_table(
-        stream, columns=selected_columns, pre_buffer=False, filters=dnf_filter, use_threads=False
+        stream,
+        columns=selected_columns,
+        pre_buffer=False,
+        filters=dnf_filter,
+        use_threads=False,
     )
     if selection:
         table = filter_records(selection, table)
@@ -249,7 +253,11 @@ def jsonl_decoder(buffer, projection: List = None, selection=None, just_schema: 
 
 
 def csv_decoder(
-    buffer, projection: List = None, selection=None, delimiter: str = ",", just_schema: bool = False
+    buffer,
+    projection: List = None,
+    selection=None,
+    delimiter: str = ",",
+    just_schema: bool = False,
 ):
     import pyarrow.csv
     from pyarrow.csv import ParseOptions

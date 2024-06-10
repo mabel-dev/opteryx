@@ -37,9 +37,10 @@
    │ Logical   │ Plan │           │ Plan │           │
    │   Planner ├──────► Binder    ├──────► Optimizer │
    └───────────┘      └───────────┘      └───────────┘
-                
+
 ~~~
 """
+
 import time
 from typing import Dict
 from typing import Iterable
@@ -51,7 +52,11 @@ PROFILE_LOCATION = config.PROFILE_LOCATION
 
 
 def query_planner(
-    operation: str, parameters: Union[Iterable, Dict, None], connection, qid: str, statistics
+    operation: str,
+    parameters: Union[Iterable, Dict, None],
+    connection,
+    qid: str,
+    statistics,
 ):
     import orjson
 

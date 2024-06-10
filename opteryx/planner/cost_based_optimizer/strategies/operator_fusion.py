@@ -45,5 +45,4 @@ class OperatorFusionStrategy(OptimizationStrategy):
         return context
 
     def complete(self, plan: LogicalPlan, context: OptimizerContext) -> LogicalPlan:
-
         return plan

@@ -17,6 +17,7 @@ This is a SQL Query Execution Plan Node.
 
 This Node creates datasets based on function calls like VALUES and UNNEST.
 """
+
 import time
 from typing import Generator
 
@@ -72,7 +73,6 @@ DATASET_FUNCTIONS = {
 
 
 class FunctionDatasetNode(BasePlanNode):
-
     operator_type = OperatorType.PRODUCER
 
     def __init__(self, properties: QueryProperties, **config):

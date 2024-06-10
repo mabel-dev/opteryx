@@ -13,6 +13,7 @@
 """
 The BaseConnector provides a common interface for all storage connectors.
 """
+
 from typing import Any
 from typing import Dict
 from typing import Iterable

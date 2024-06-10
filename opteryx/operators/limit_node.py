@@ -17,6 +17,7 @@ This is a SQL Query Execution Plan Node.
 
 This Node performs the LIMIT and the OFFSET steps
 """
+
 import time
 from typing import Generator
 
@@ -29,7 +30,6 @@ from opteryx.utils import arrow
 
 
 class LimitNode(BasePlanNode):
-
     operator_type = OperatorType.PASSTHRU
 
     def __init__(self, properties: QueryProperties, **config):

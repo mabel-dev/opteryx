@@ -16,7 +16,6 @@ stores, it is not compliant with the standard:
 https://www.python.org/dev/peps/pep-0249/
 """
 
-
 from typing import Iterable
 from typing import Optional
 from typing import Set

@@ -12,7 +12,6 @@
 
 
 class Asynchronous:
-
     def __init__(self, **kwargs):
         pass
 

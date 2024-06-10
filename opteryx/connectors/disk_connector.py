@@ -14,6 +14,7 @@
 The 'direct disk' connector provides the reader for when a dataset is
 given as a folder on local disk
 """
+
 import asyncio
 import os
 from typing import Dict
@@ -106,7 +107,6 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable, PredicatePushable, 
             os.close(file_descriptor)
 
     async def async_read_blob(self, *, blob_name, pool, statistics, **kwargs):
-
         # DEBUG: log ("READ   ", blob_name)
         with open(blob_name, "rb") as file:
             data = file.read()
@@ -146,7 +146,11 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable, PredicatePushable, 
         return blobs
 
     def read_dataset(
-        self, columns: list = None, predicates: list = None, just_schema: bool = False, **kwargs
+        self,
+        columns: list = None,
+        predicates: list = None,
+        just_schema: bool = False,
+        **kwargs,
     ) -> pyarrow.Table:
         """
         Read the entire dataset from disk.
@@ -166,7 +170,10 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable, PredicatePushable, 
                 decoder = get_decoder(blob_name)
                 blob_bytes = self.read_blob(blob_name=blob_name, statistics=self.statistics)
                 decoded = decoder(
-                    blob_bytes, projection=columns, selection=predicates, just_schema=just_schema
+                    blob_bytes,
+                    projection=columns,
+                    selection=predicates,
+                    just_schema=just_schema,
                 )
                 if not just_schema:
                     num_rows, num_columns, decoded = decoded

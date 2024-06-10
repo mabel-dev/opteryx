@@ -15,6 +15,7 @@ Set Variables Node
 
 This is a SQL Query Execution Plan Node.
 """
+
 from typing import Generator
 
 from opteryx.constants import QueryStatus
@@ -25,7 +26,6 @@ from opteryx.operators import OperatorType
 
 
 class SetVariableNode(BasePlanNode):
-
     operator_type = OperatorType.PRODUCER
 
     def __init__(self, properties: QueryProperties, **config):

@@ -10,7 +10,6 @@ from tests.tools import is_version, skip_if
 
 @skip_if(is_version("3.9"))
 def test_we_dont_fold_random():
-
     SQL = "SELECT random() AS r FROM GENERATE_SERIES(5000) AS g"
     df = opteryx.query(SQL)["r"]
     p25, p50, p75, p95, p99 = numpy.percentile(df, [25, 50, 75, 95, 99])

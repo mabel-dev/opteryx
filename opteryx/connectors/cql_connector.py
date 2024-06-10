@@ -16,6 +16,7 @@ to pyarrow tables so they can be processed as per any other data source.
 
 CQL is Cassandra Query Language, it looks at lot like SQL.
 """
+
 from typing import Any
 from typing import Dict
 from typing import Generator
@@ -112,7 +113,6 @@ class CqlConnector(BaseConnector, PredicatePushable):
         predicates: list = None,
         chunk_size: int = INITIAL_CHUNK_SIZE,  # type:ignore
     ) -> Generator[pyarrow.Table, None, None]:  # type:ignore
-
         self.chunk_size = chunk_size
 
         result_schema = self.schema
@@ -124,7 +124,9 @@ class CqlConnector(BaseConnector, PredicatePushable):
             column_names = [f'"{col.source_column}"' for col in columns]
             query_builder.add("SELECT", *column_names)
             result_schema.columns = [  # type:ignore
-                col for col in self.schema.columns if f'"{col.name}"' in column_names  # type:ignore
+                col
+                for col in self.schema.columns
+                if f'"{col.name}"' in column_names  # type:ignore
             ]
         else:
             query_builder.add("SELECT", f'"{self.single_column.name}"')  # type:ignore
@@ -133,7 +135,6 @@ class CqlConnector(BaseConnector, PredicatePushable):
         # Update SQL if we've pushed predicates
         parameters: list = []
         for predicate in predicates:
-
             left_operand = predicate.left
             right_operand = predicate.right
             operator = self.OPS_XLAT[predicate.value]
@@ -165,7 +166,6 @@ class CqlConnector(BaseConnector, PredicatePushable):
             yield DataFrame(schema=result_schema).arrow()
 
     def get_dataset_schema(self) -> RelationSchema:
-
         if self.schema:
             return self.schema
 

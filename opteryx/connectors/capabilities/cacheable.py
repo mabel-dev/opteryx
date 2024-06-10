@@ -85,7 +85,6 @@ def read_thru_cache(func):
 
         # Write the result to caches
         if max_evictions:
-
             if len(result) < buffer_pool.size // 10:
                 evicted = buffer_pool.set(key, result)
                 if evicted:

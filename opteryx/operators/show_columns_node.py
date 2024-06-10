@@ -17,6 +17,7 @@ This is a SQL Query Execution Plan Node.
 
 Gives information about a dataset's columns
 """
+
 from typing import Generator
 
 import pyarrow
@@ -65,7 +66,6 @@ def _extended_collector(morsels):
 
 
 class ShowColumnsNode(BasePlanNode):
-
     operator_type = OperatorType.PRODUCER
 
     def __init__(self, properties: QueryProperties, **config):

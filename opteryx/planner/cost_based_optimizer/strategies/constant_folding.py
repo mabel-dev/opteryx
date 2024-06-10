@@ -56,7 +56,6 @@ def build_literal_node(value: Any, root: Node):
 
 
 def fold_constants(root: Node) -> Node:
-
     if root.node_type in {NodeType.AND, NodeType.OR, NodeType.XOR}:
         root.left = fold_constants(root.left)
         root.right = fold_constants(root.right)

@@ -2,7 +2,7 @@
 Stress test the memory pool in an asynchronous execution environment.
 
 We add and remove items from the pool in quick succession, random sizes
-and random items removed, to see how it responds to random concurrent 
+and random items removed, to see how it responds to random concurrent
 access. This is targetting the async wrapper, but that is a relatively
 thin layer over the memory pool.
 """

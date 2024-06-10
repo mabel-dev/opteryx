@@ -32,7 +32,6 @@ or you can instantiate a AstronautData() class and use it like a pyarrow Table.
 
 """
 
-
 from orso.schema import FlatColumn
 from orso.schema import RelationSchema
 from orso.types import OrsoTypes

@@ -16,6 +16,7 @@ Optimization Rule - Demorgan's Laws
 Type: Heuristic
 Goal: Preposition for following actions
 """
+
 from opteryx.managers.expression import NodeType
 from opteryx.models import Node
 from opteryx.planner.logical_planner import LogicalPlan
@@ -85,7 +86,6 @@ class BooleanSimplificationStrategy(OptimizationStrategy):  # pragma: no cover
 
 
 def update_expression_tree(node):
-
     # break out of nests
     if node.node_type == NodeType.NESTED:
         return update_expression_tree(node.centre)

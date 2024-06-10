@@ -14,12 +14,12 @@
 This optimization runs toward the end of the set, it removes operators which
 were useful during planning and optimization.
 
-- Some projections are redundant (relecting down to the columns which the 
+- Some projections are redundant (relecting down to the columns which the
   providing operation has already limited down to).
-- SubQuery nodes are useful for planning and optimization, but don't do 
+- SubQuery nodes are useful for planning and optimization, but don't do
   anything during execution, we can remove them here.
 
-Both of these operations are cheap to execute, the benefit for this 
+Both of these operations are cheap to execute, the benefit for this
 optimization isn't expected to be realized until we implement multiprocessing
 and there is work associated with IPC which we are avoiding by removing
 impotent steps.

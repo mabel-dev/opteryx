@@ -135,7 +135,11 @@ class ColumnNotFoundError(SqlError):
     """Exception raised for Column Not Found errors."""
 
     def __init__(
-        self, message: str = None, column: str = None, dataset: str = None, suggestion: str = None
+        self,
+        message: str = None,
+        column: str = None,
+        dataset: str = None,
+        suggestion: str = None,
     ):
         """
         Return as helpful Column Not Found error as we can by being specific and offering
@@ -180,7 +184,12 @@ class DatasetNotFoundError(SqlError):
 class FunctionNotFoundError(SqlError):
     """Exception raised when a function is not found."""
 
-    def __init__(self, message: str = None, function: str = None, suggestion: Optional[str] = None):
+    def __init__(
+        self,
+        message: str = None,
+        function: str = None,
+        suggestion: Optional[str] = None,
+    ):
         """
         Return as helpful Function Not Found error as we can by being specific and offering
         suggestions.
@@ -380,7 +389,11 @@ class InvalidConfigurationError(DatabaseError):
     """Exception raised for invalid configuration."""
 
     def __init__(
-        self, *, config_item: str, provided_value: str, valid_value_description: str = None
+        self,
+        *,
+        config_item: str,
+        provided_value: str,
+        valid_value_description: str = None,
     ):
         DISPLAY_LIMIT: int = 32
 

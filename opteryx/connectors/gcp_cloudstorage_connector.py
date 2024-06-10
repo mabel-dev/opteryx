@@ -145,7 +145,6 @@ class GcpCloudStorageConnector(
         return content
 
     async def async_read_blob(self, *, blob_name, pool, session, statistics, **kwargs):
-
         bucket, _, _, _ = paths.get_parts(blob_name)
         # DEBUG: log ("READ   ", blob_name)
 
@@ -180,7 +179,6 @@ class GcpCloudStorageConnector(
             return ref
 
     def get_list_of_blob_names(self, *, prefix: str) -> List[str]:
-
         # only fetch once per prefix (partition)
         if prefix in self.blob_list:
             return self.blob_list[prefix]
@@ -230,7 +228,11 @@ class GcpCloudStorageConnector(
         return blob_names
 
     def read_dataset(
-        self, columns: list = None, predicates: list = None, just_schema: bool = False, **kwargs
+        self,
+        columns: list = None,
+        predicates: list = None,
+        just_schema: bool = False,
+        **kwargs,
     ) -> pyarrow.Table:
         blob_names = self.partition_scheme.get_blobs_in_partition(
             start_date=self.start_date,
@@ -244,7 +246,10 @@ class GcpCloudStorageConnector(
                 decoder = get_decoder(blob_name)
                 blob_bytes = self.read_blob(blob_name=blob_name, statistics=self.statistics)
                 decoded = decoder(
-                    blob_bytes, projection=columns, selection=predicates, just_schema=just_schema
+                    blob_bytes,
+                    projection=columns,
+                    selection=predicates,
+                    just_schema=just_schema,
                 )
                 if not just_schema:
                     num_rows, num_columns, decoded = decoded

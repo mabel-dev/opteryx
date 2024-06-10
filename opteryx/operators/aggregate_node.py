@@ -17,6 +17,7 @@ This is a SQL Query Execution Plan Node.
 
 This node performs aggregates without performing groupings.
 """
+
 import time
 from dataclasses import dataclass
 from typing import Generator
@@ -190,7 +191,6 @@ class AggregateDataObject(BasePlanDataObject):
 
 
 class AggregateNode(BasePlanNode):
-
     operator_type = OperatorType.BLOCKING
 
     def __init__(self, properties: QueryProperties, **config):
@@ -231,7 +231,8 @@ class AggregateNode(BasePlanNode):
 
         if _is_count_star(self.aggregates):
             yield from _count_star(
-                morsel_promise=morsels, column_name=self.aggregates[0].schema_column.identity
+                morsel_promise=morsels,
+                column_name=self.aggregates[0].schema_column.identity,
             )
             return
 

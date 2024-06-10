@@ -30,6 +30,7 @@ can instantiate a PlanetData() class and use it like a Relation.
 
 This has a companion dataset, $satellites, to help test joins.
 """
+
 import datetime
 import decimal
 

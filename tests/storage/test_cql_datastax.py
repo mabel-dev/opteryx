@@ -47,7 +47,6 @@ test_cases = [
     "query, expected_rowcount, expected_columncount, expected_stats", test_cases
 )
 def test_datastax_storage(query, expected_rowcount, expected_columncount, expected_stats):
-
     from cassandra.cluster import Cluster
     from cassandra.auth import PlainTextAuthProvider
 
@@ -110,7 +109,6 @@ if __name__ == "__main__":  # pragma: no cover
 
     print(f"RUNNING BATTERY OF {len(test_cases)} DATASTAX TESTS")
     for index, (statement, rows, cols, expected_stats) in enumerate(test_cases):
-
         printable = statement
         if hasattr(printable, "decode"):
             printable = printable.decode()

@@ -27,7 +27,6 @@ def format_value(value):
 
 
 def creator(name, con: sqlite3.Connection, dataset):
-
     create_sql = "\n".join(create_table_statement(name, dataset.schema))
     print(create_sql)
     con.execute(create_sql)

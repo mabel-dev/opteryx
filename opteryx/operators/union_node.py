@@ -15,6 +15,7 @@ Union Node
 
 This is a SQL Query Execution Plan Node.
 """
+
 from typing import Generator
 
 from opteryx.models import QueryProperties
@@ -23,7 +24,6 @@ from opteryx.operators import OperatorType
 
 
 class UnionNode(BasePlanNode):
-
     operator_type = OperatorType.PASSTHRU
 
     def __init__(self, properties: QueryProperties, **config):
