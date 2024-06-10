@@ -1,9 +1,9 @@
 lint:
-	python -m pip install --quiet --upgrade pycln isort black yamllint
+	python -m pip install --quiet --upgrade pycln isort ruff yamllint
 #	python -m yamllint .
 	python -m pycln .
 	python -m isort .
-	python -m black .
+	python -m ruff format opteryx
 
 update:
 	python -m pip install --upgrade pip

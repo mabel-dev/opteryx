@@ -86,7 +86,6 @@ if __name__ == "__main__":  # pragma: no cover
 
     print(f"RUNNING BATTERY OF {len(STATEMENTS)} testdata TESTS")
     for index, (statement, rows, cols, err) in enumerate(STATEMENTS):
-
         printable = statement
         if hasattr(printable, "decode"):
             printable = printable.decode()

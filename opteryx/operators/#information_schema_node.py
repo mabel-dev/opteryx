@@ -149,7 +149,6 @@ def information_schema_tables():
 
 
 class InformationSchemaNode(BasePlanNode):
-
     operator_type = OperatorType.PRODUCER
 
     def __init__(self, properties: QueryProperties, **config):

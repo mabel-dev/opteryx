@@ -12,7 +12,6 @@ class ExpressionColumn(FlatColumn):
 
 
 def _format_interval(value):
-
     months, seconds = value
 
     days, seconds = divmod(seconds, 86400)

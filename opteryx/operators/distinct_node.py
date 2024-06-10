@@ -17,6 +17,7 @@ This is a SQL Query Execution Plan Node.
 
 This Node eliminates duplicate records.
 """
+
 import time
 from typing import Generator
 
@@ -29,7 +30,6 @@ from opteryx.operators import OperatorType
 
 
 class DistinctNode(BasePlanNode):
-
     operator_type = OperatorType.PASSTHRU
 
     def __init__(self, properties: QueryProperties, **config):
@@ -54,7 +54,6 @@ class DistinctNode(BasePlanNode):
         return "Distinction"
 
     def execute(self) -> Generator[pyarrow.Table, None, None]:
-
         from opteryx.compiled.structures import distinct
 
         # We create a HashSet outside the distinct call, this allows us to pass

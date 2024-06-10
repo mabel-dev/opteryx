@@ -11,10 +11,11 @@
 # limitations under the License.
 
 """
-This module contains various converters for parts of the AST, this 
+This module contains various converters for parts of the AST, this
 helps to ensure new AST-based functionality can be added by adding
 a function and a reference to it in the dictionary.
 """
+
 import decimal
 from typing import Callable
 from typing import Dict
@@ -58,7 +59,6 @@ def all_op(branch, alias: Optional[List[str]] = None, key=None):
 
 
 def array(branch, alias: Optional[List[str]] = None, key=None):
-
     value_nodes = [build(elem) for elem in branch["elem"]]
     value_list = {v.value for v in value_nodes}
     list_value_type = {v.type for v in value_nodes}
@@ -67,7 +67,10 @@ def array(branch, alias: Optional[List[str]] = None, key=None):
     list_value_type = list_value_type.pop()
 
     return Node(
-        node_type=NodeType.LITERAL, type=OrsoTypes.ARRAY, value=value_list, sub_type=list_value_type
+        node_type=NodeType.LITERAL,
+        type=OrsoTypes.ARRAY,
+        value=value_list,
+        sub_type=list_value_type,
     )
 
 
@@ -344,7 +347,10 @@ def in_list(branch, alias: Optional[List[str]] = None, key=None):
     list_value_type = list_value_type.pop()
     operator = "NotInList" if branch["negated"] else "InList"
     right_node = Node(
-        node_type=NodeType.LITERAL, type=OrsoTypes.ARRAY, value=value_list, sub_type=list_value_type
+        node_type=NodeType.LITERAL,
+        type=OrsoTypes.ARRAY,
+        value=value_list,
+        sub_type=list_value_type,
     )
     return Node(
         node_type=NodeType.COMPARISON_OPERATOR,
@@ -515,7 +521,6 @@ def map_access(branch, alias: Optional[List[str]] = None, key=None):
 
 
 def match_against(branch, alias: Optional[List[str]] = None, key=None):
-
     columns = [identifier(col) for col in branch["columns"]]
     match_to = build(branch["match_value"])
     mode = branch["opt_search_modifier"]

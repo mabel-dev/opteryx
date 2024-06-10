@@ -20,6 +20,7 @@ relations being joined contain STRUCT or ARRAY columns, this is true
 for all of the JOIN types, however we've only written our own INNER
 and LEFT JOINs.
 """
+
 import time
 from typing import Generator
 
@@ -79,7 +80,6 @@ def left_join(left_relation, right_relation, left_columns, right_columns):
 
 
 class LeftJoinNode(BasePlanNode):
-
     operator_type = OperatorType.PASSTHRU
 
     def __init__(self, properties: QueryProperties, **config):
@@ -115,7 +115,10 @@ class LeftJoinNode(BasePlanNode):
         join_provider = providers.get(self._join_type)
         # in place until #1295 resolved
         if not self._left_columns[0] in left_relation.column_names:
-            self._right_columns, self._left_columns = self._left_columns, self._right_columns
+            self._right_columns, self._left_columns = (
+                self._left_columns,
+                self._right_columns,
+            )
 
         start = time.monotonic_ns()
         for morsel in join_provider(

@@ -18,10 +18,9 @@ Owner meanings:
     USER - the user can update this value (defaulted in config)
 
 For variables we're creating and naming, use sensible defaults and if it's a
-feature flag, name the variable for the state the user probably doesn't want - 
+feature flag, name the variable for the state the user probably doesn't want -
 e.g. disable_optimizer (default to False)
 """
-
 
 from enum import Enum
 from typing import Any

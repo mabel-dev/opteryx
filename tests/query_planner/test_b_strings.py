@@ -70,7 +70,6 @@ def test_replace_b_strings(input_text, expected_output):
 
 
 if __name__ == "__main__":  # pragma: no cover
-
     """
     Running in the IDE we do some formatting - it's not functional but helps
     when reading the outputs.

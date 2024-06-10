@@ -16,9 +16,7 @@ except ImportError:  # pragma: no cover
 
 
 class ResourceMonitor:  # pragma: no cover
-
     def __init__(self, frequency=1.0):  # pragma: no cover
-
         from opteryx.shared import BufferPool
 
         self.frequency = frequency

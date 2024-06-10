@@ -17,6 +17,7 @@ This is a SQL Query Execution Plan Node.
 
 This node is responsible for applying filters to datasets.
 """
+
 import time
 from typing import Generator
 
@@ -35,7 +36,6 @@ from opteryx.operators import OperatorType
 
 
 class FilterNode(BasePlanNode):
-
     operator_type = OperatorType.PASSTHRU
 
     def __init__(self, properties: QueryProperties, **config):

@@ -15,6 +15,7 @@ Show Stores Node
 
 This is a SQL Query Execution Plan Node.
 """
+
 from typing import Iterable
 
 import pyarrow
@@ -25,7 +26,6 @@ from opteryx.operators import OperatorType
 
 
 class ShowDatabasesNode(BasePlanNode):
-
     operator_type = OperatorType.PRODUCER
 
     def __init__(self, properties: QueryProperties, **config):

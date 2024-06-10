@@ -57,6 +57,7 @@ The Binder performs these activities:
 - schema lookup and propagation (add columns and types, add aliases)
 
 """
+
 from opteryx.exceptions import InvalidInternalStateError
 from opteryx.planner.binder.binder_visitor import BinderVisitor
 from opteryx.planner.binder.binding_context import BindingContext

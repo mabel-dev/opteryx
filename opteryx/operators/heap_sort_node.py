@@ -23,6 +23,7 @@ batches which we order and then discard the excess items.
 This is faster, particularly when working with large datasets even though we're now
 sorting smaller chunks over and over again.
 """
+
 import time
 from dataclasses import dataclass
 from typing import Generator
@@ -44,7 +45,6 @@ class HeapSortDataObject(BasePlanDataObject):
 
 
 class HeapSortNode(BasePlanNode):
-
     operator_type = OperatorType.BLOCKING
 
     def __init__(self, properties: QueryProperties, **config):
@@ -75,7 +75,6 @@ class HeapSortNode(BasePlanNode):
         mapped_order = []
 
         for column, direction in self.order_by:
-
             try:
                 mapped_order.append(
                     (
@@ -89,7 +88,6 @@ class HeapSortNode(BasePlanNode):
                 )
 
         for morsel in morsels.execute():
-
             start_time = time.time_ns()
 
             if morsel.num_rows > self.limit:

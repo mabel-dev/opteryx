@@ -41,7 +41,11 @@ class ProjectionPushdownStrategy(OptimizationStrategy):
 
         if (
             node.node_type
-            in (LogicalPlanStepType.Scan, LogicalPlanStepType.Subquery, LogicalPlanStepType.Union)
+            in (
+                LogicalPlanStepType.Scan,
+                LogicalPlanStepType.Subquery,
+                LogicalPlanStepType.Union,
+            )
             and hasattr(node, "schema")
             and hasattr(node.schema, "columns")
         ):

@@ -21,6 +21,7 @@ Fro 100 predicates, we do 8 generations of 51 variations (408 rather 10,000)
 
 This may not find the _best_ solution, but it should find a better than average solution
 """
+
 import random
 
 

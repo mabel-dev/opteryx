@@ -20,6 +20,7 @@ the aggregation node doesn't need the grouping node.
 
 
 """
+
 import time
 from dataclasses import dataclass
 from typing import Generator
@@ -52,7 +53,6 @@ class AggregateAndGroupDataObject(BasePlanDataObject):
 
 
 class AggregateAndGroupNode(BasePlanNode):
-
     operator_type = OperatorType.BLOCKING
 
     def __init__(self, properties: QueryProperties, **config):
@@ -110,7 +110,8 @@ class AggregateAndGroupNode(BasePlanNode):
         # we're pretty sure we're going to use - this will fail for datasets
         # larger than memory
         table = pyarrow.concat_tables(
-            project(morsels.execute(), self.all_identifiers), promote_options="permissive"
+            project(morsels.execute(), self.all_identifiers),
+            promote_options="permissive",
         )
 
         # Allow grouping by functions by evaluating them first

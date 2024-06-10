@@ -27,7 +27,7 @@ These are supplimented with a few physical tables to test conditions unable to b
 tested with the in-memory tables.
 
 We test the shape in this battery because if the shape isn't right, the response isn't
-going to be right, and testing shape of an in-memory dataset is quick, so we can do 
+going to be right, and testing shape of an in-memory dataset is quick, so we can do
 bulk testing of 100s of queries in a few seconds and have some confidence the changes
 have not broken existing functionality. Note that testing the shape doesn't mean the
 response is right.
@@ -1653,7 +1653,6 @@ if __name__ == "__main__":  # pragma: no cover
 
     print(f"RUNNING BATTERY OF {len(STATEMENTS)} SHAPE TESTS")
     for index, (statement, rows, cols, err) in enumerate(STATEMENTS):
-
         printable = statement
         if hasattr(printable, "decode"):
             printable = printable.decode()

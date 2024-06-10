@@ -37,7 +37,7 @@
    │ Logical   │ Plan │           │ Plan │           │
    │   Planner ├──────► Binder    ├──────► Optimizer │
    └───────────┘      └───────────┘      └───────────┘
-                
+
 ~~~
 
 The SQL Rewriter does the following:
@@ -113,7 +113,11 @@ SQL_PARTS = (
     + COLLECT_TEMPORAL
     + STOP_COLLECTING
     + COLLECT_ALIAS
-    + [r"DATES\sIN\s\w+", r"DATES\sBETWEEN\s[^\r\n\t\f\v]AND\s[^\r\n\t\f\v]", r"DATES\sSINCE\s\w+"]
+    + [
+        r"DATES\sIN\s\w+",
+        r"DATES\sBETWEEN\s[^\r\n\t\f\v]AND\s[^\r\n\t\f\v]",
+        r"DATES\sSINCE\s\w+",
+    ]
 )
 
 COMBINE_WHITESPACE_REGEX = re.compile(r"\r\n\t\f\v+")
@@ -192,7 +196,15 @@ def parse_date(date, end: bool = False):  # pragma: no cover
     if date == "YESTERDAY":
         return (now - datetime.timedelta(days=1)).replace(hour=0)
 
-    weekdays = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"]
+    weekdays = [
+        "MONDAY",
+        "TUESDAY",
+        "WEDNESDAY",
+        "THURSDAY",
+        "FRIDAY",
+        "SATURDAY",
+        "SUNDAY",
+    ]
     if date in weekdays:
         # Find the weekday number (0=Monday, 1=Tuesday, ..., 6=Sunday)
         target_weekday = weekdays.index(date)
@@ -221,7 +233,9 @@ def parse_date(date, end: bool = False):  # pragma: no cover
     return parsed
 
 
-def _temporal_extration_state_machine(parts: List[str]) -> Tuple[List[Tuple[str, str]], str]:
+def _temporal_extration_state_machine(
+    parts: List[str],
+) -> Tuple[List[Tuple[str, str]], str]:
     """
     Utilizes a state machine to extract the temporal information from the query
     and maintain the relation to filter information.

@@ -31,7 +31,6 @@ can instantiate a SatelliteData() class and use it like a Relation.
 This has a companion dataset, $planets, to help test joins.
 """
 
-
 from orso.schema import FlatColumn
 from orso.schema import RelationSchema
 from orso.types import OrsoTypes

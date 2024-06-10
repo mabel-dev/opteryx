@@ -13,13 +13,13 @@
 """
 Functions to help with handling file paths
 """
+
 import os
 
 OS_SEP = os.sep
 
 
 def get_parts(path_string: str):
-
     # Validate against path traversal and home directory references
     if ".." in path_string or path_string.startswith("~"):
         raise ValueError(

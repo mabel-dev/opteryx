@@ -37,16 +37,16 @@
    │ Logical   │ Plan │           │ Plan │           │
    │   Planner ├──────► Binder    ├──────► Optimizer │
    └───────────┘      └───────────┘      └───────────┘
-                              
+
 ~~~
 
-This module implements a cost-based query optimizer using the Visitor pattern. Unlike the binder, 
-which processes the logical plan from the scanners up to the projection, this optimizer starts at 
-the projection and traverses down towards the scanners. This top-down approach is effective for 
-the primary activities involved in optimization, such as splitting nodes, performing individual 
+This module implements a cost-based query optimizer using the Visitor pattern. Unlike the binder,
+which processes the logical plan from the scanners up to the projection, this optimizer starts at
+the projection and traverses down towards the scanners. This top-down approach is effective for
+the primary activities involved in optimization, such as splitting nodes, performing individual
 node rewrites, and pushing down predicates and projections.
 
-The optimizer applies a series of strategies, each encapsulating a specific optimization rule. 
+The optimizer applies a series of strategies, each encapsulating a specific optimization rule.
 These strategies are applied sequentially, allowing for incremental improvements to the logical plan.
 
 Key Concepts:
@@ -54,7 +54,7 @@ Key Concepts:
 - Strategies: Encapsulate individual optimization rules, applied either per-node or per-plan.
 - Context: Maintains the state during optimization, including the pre-optimized and optimized plans.
 
-The `CostBasedOptimizerVisitor` class orchestrates the optimization process by applying each strategy 
+The `CostBasedOptimizerVisitor` class orchestrates the optimization process by applying each strategy
 in sequence. The `do_cost_based_optimizer` function serves as the entry point for optimizing a logical plan.
 
 Example Usage:
@@ -62,7 +62,6 @@ Example Usage:
 
 This module aims to enhance query performance through systematic and incremental optimization steps.
 """
-
 
 from opteryx.config import DISABLE_OPTIMIZER
 from opteryx.planner.cost_based_optimizer.strategies import *

@@ -22,7 +22,6 @@ This is a sample dataset build into the engine, this simplifies a few things:
 Space Mission dataset acquired from [Kaggle](https://www.kaggle.com/datasets/agirlcoding/all-space-missions-from-1957).
 """
 
-
 from orso.schema import FlatColumn
 from orso.schema import RelationSchema
 from orso.types import OrsoTypes

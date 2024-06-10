@@ -15,9 +15,10 @@ Read Node
 
 This is the SQL Query Execution Plan Node responsible for the reading of data.
 
-It wraps different internal readers (e.g. GCP Blob reader, SQL Reader), 
-normalizes the data into the format for internal processing. 
+It wraps different internal readers (e.g. GCP Blob reader, SQL Reader),
+normalizes the data into the format for internal processing.
 """
+
 import time
 from typing import Generator
 
@@ -67,7 +68,6 @@ def normalize_morsel(schema: RelationSchema, morsel: pyarrow.Table) -> pyarrow.T
 
 
 class ReaderNode(BasePlanNode):
-
     operator_type = OperatorType.PRODUCER
 
     def __init__(self, properties: QueryProperties, **parameters):

@@ -14,7 +14,6 @@ from typing import Any
 
 
 class NullCache:
-
     def get(self, key: bytes) -> None:
         return None
 

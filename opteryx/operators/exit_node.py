@@ -23,6 +23,7 @@ This does two things that the projection node doesn't do:
 
 This node doesn't do any calculations, it is a pure Projection.
 """
+
 import time
 from dataclasses import dataclass
 from dataclasses import field
@@ -44,7 +45,6 @@ class ExitDataObject(BasePlanDataObject):
 
 
 class ExitNode(BasePlanNode):
-
     operator_type = OperatorType.PASSTHRU
 
     def __init__(self, properties: QueryProperties, **config):

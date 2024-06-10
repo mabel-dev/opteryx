@@ -22,6 +22,7 @@ is slot-based.
 
 The Buffer Pool is a global resource and used across all Connections and Cursors.
 """
+
 from typing import Optional
 
 from opteryx.config import MAX_LOCAL_BUFFER_CAPACITY

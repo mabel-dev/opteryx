@@ -349,7 +349,6 @@ def match_against(arr, val):
 
 
 def regex_replace(array, _pattern, _replacement):
-
     pattern = _pattern[0]
     replacement = _replacement[0]
 

@@ -122,7 +122,6 @@ TEST_CYCLES: int = 250
 
 @pytest.mark.parametrize("i", range(TEST_CYCLES))
 def test_sql_fuzzing(i):
-
     seed = random_int()
     random.seed(seed)
     print(f"Seed: {seed}")

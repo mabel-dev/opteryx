@@ -14,6 +14,7 @@
 The file connector provides the reader for when a file name is provided as the
 dataset name in a query.
 """
+
 import os
 from typing import Dict
 from typing import Optional
@@ -70,7 +71,6 @@ class FileConnector(BaseConnector, PredicatePushable):
         Reads the dataset file and stores its content in _byte_array attribute.
         """
         if self._byte_array is None:
-
             file_descriptor = os.open(self.dataset, os.O_RDONLY | os.O_BINARY)
             try:
                 self._byte_array = os.read(file_descriptor, os.path.getsize(self.dataset))

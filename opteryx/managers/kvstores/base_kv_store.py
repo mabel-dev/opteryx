@@ -12,8 +12,9 @@
 """
 This is a Base class for KV Value Storage adapter.
 
-This is used by the metadata store and in-memory buffer cache. 
+This is used by the metadata store and in-memory buffer cache.
 """
+
 from typing import Iterable
 from typing import Union
 

@@ -304,7 +304,10 @@ class Cursor(DataFrame):
     @require_state(CursorState.INITIALIZED)
     @transition_to(CursorState.EXECUTED)
     def execute_to_arrow(
-        self, operation: str, params: Optional[Iterable] = None, limit: Optional[int] = None
+        self,
+        operation: str,
+        params: Optional[Iterable] = None,
+        limit: Optional[int] = None,
     ) -> pyarrow.Table:
         """
         Executes the SQL operation, bypassing conversion to Orso and returning directly in Arrow format.
@@ -329,7 +332,10 @@ class Cursor(DataFrame):
                 result_data = utils.arrow.limit_records(result_data, limit)  # type: ignore
         try:
             return pyarrow.concat_tables(result_data, promote_options="permissive")
-        except (pyarrow.ArrowInvalid, pyarrow.ArrowTypeError) as err:  # pragma: no cover
+        except (
+            pyarrow.ArrowInvalid,
+            pyarrow.ArrowTypeError,
+        ) as err:  # pragma: no cover
             # DEBUG: log (err)
             if "struct" in str(err):
                 raise InconsistentSchemaError(

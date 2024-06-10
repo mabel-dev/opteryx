@@ -110,7 +110,6 @@ if __name__ == "__main__":  # pragma: no cover
 
     print(f"RUNNING BATTERY OF {len(test_cases)} Google Cloud Storage TESTS")
     for index, test_case in enumerate(test_cases):
-
         (statement, rows, cols, stats) = test_case
 
         printable = statement

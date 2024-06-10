@@ -15,6 +15,7 @@
 """
 A command line interface for Opteryx
 """
+
 import os
 import sys
 import threading

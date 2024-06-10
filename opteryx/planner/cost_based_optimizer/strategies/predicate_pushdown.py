@@ -15,6 +15,7 @@ This is the predicate push-down strategy and also includes the predicate
 rewriter.
 
 """
+
 import re
 from typing import Callable
 from typing import Dict
@@ -143,7 +144,6 @@ dispatcher: Dict[str, Callable] = {
 
 # Dispatcher conditions
 def _rewrite_predicate(predicate):
-
     if predicate.node_type in {NodeType.AND, NodeType.OR, NodeType.XOR}:
         predicate.left = _rewrite_predicate(predicate.left)
         predicate.right = _rewrite_predicate(predicate.right)
@@ -198,7 +198,10 @@ class PredicatePushdownStrategy(OptimizationStrategy):
         if not context.optimized_plan:
             context.optimized_plan = context.pre_optimized_tree.copy()  # type: ignore
 
-        if node.node_type in (LogicalPlanStepType.Scan, LogicalPlanStepType.FunctionDataset):
+        if node.node_type in (
+            LogicalPlanStepType.Scan,
+            LogicalPlanStepType.FunctionDataset,
+        ):
             # Handle predicates specific to node types
             context = self._handle_predicates(node, context)
 
@@ -287,7 +290,6 @@ class PredicatePushdownStrategy(OptimizationStrategy):
                     # don't push filters we can't resolve here though
                     remaining_predicates = []
                     for predicate in context.collected_predicates:
-
                         known_columns = set(col.schema_column.identity for col in predicate.columns)
                         query_columns = {
                             predicate.condition.left.schema_column.identity,

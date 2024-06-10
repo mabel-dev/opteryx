@@ -86,7 +86,9 @@ def get_mismatched_condition_column_types(node: Node, relaxed: bool = False) -> 
 
 
 def extract_join_fields(
-    condition_node: Node, left_relation_names: List[str], right_relation_names: List[str]
+    condition_node: Node,
+    left_relation_names: List[str],
+    right_relation_names: List[str],
 ) -> Tuple[List[str], List[str]]:
     """
     Extracts join fields from a condition node that may have multiple ANDed conditions.
@@ -145,7 +147,9 @@ def extract_join_fields(
 
 
 def convert_using_to_on(
-    using_fields: Set[str], left_relation_names: List[str], right_relation_names: List[str]
+    using_fields: Set[str],
+    left_relation_names: List[str],
+    right_relation_names: List[str],
 ) -> Node:
     """
     Converts a USING field to an ON field for JOIN operations.
@@ -170,10 +174,14 @@ def convert_using_to_on(
             conditions = []
             for field in using_fields:
                 condition = Node(
-                    node_type=NodeType.COMPARISON_OPERATOR, value="Eq", do_not_create_column=True
+                    node_type=NodeType.COMPARISON_OPERATOR,
+                    value="Eq",
+                    do_not_create_column=True,
                 )
                 condition.left = LogicalColumn(
-                    node_type=NodeType.IDENTIFIER, source=left_relation_name, source_column=field
+                    node_type=NodeType.IDENTIFIER,
+                    source=left_relation_name,
+                    source_column=field,
                 )
                 condition.right = LogicalColumn(
                     node_type=NodeType.IDENTIFIER,
@@ -539,7 +547,8 @@ class BinderVisitor:
                         f"Expected number of rows for 'FAKE' function or list of column types. Are you missing parenthesis?"
                     )
                 names = node.columns + tuple(
-                    f"column_{i}" for i in range(len(node.columns), column_definition)  # type: ignore
+                    f"column_{i}"
+                    for i in range(len(node.columns), column_definition)  # type: ignore
                 )
                 node.columns = [
                     LogicalColumn(
@@ -595,7 +604,9 @@ class BinderVisitor:
         # Handle 'using' by converting to a an 'on'
         if node.using:
             node.on = convert_using_to_on(
-                {n.value for n in node.using}, node.left_relation_names, node.right_relation_names
+                {n.value for n in node.using},
+                node.left_relation_names,
+                node.right_relation_names,
             )
         if node.on:
             # All except CROSS JOINs have been mapped to have an ON condition

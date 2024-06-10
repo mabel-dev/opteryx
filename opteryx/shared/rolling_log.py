@@ -14,6 +14,7 @@
 Write to a log with a fixed number of entries, as the log fills the older entries are removed
 from the log file.
 """
+
 import os
 
 EIGHT_MEGABYTES: int = 8 * 1024 * 1024

@@ -8,7 +8,7 @@ This is part of a suite of tests which are based on running many SQL statements.
  >  Results Checking
     Compare to DuckDB
 
-This is higher value than the other CI-executed SQL tests, the others being run-only 
+This is higher value than the other CI-executed SQL tests, the others being run-only
 and shape-checking, this is also the most time consuming to write and maintain.
 
 This suite executes a statement and confirms the output matches what was expected.
@@ -82,7 +82,6 @@ if __name__ == "__main__":  # pragma: no cover
 
     print(f"RUNNING BATTERY OF {len(RESULTS_TESTS)} RESULTS TESTS")
     for index, test in enumerate(RESULTS_TESTS):
-
         printable = test["statement"]
         test_id = test["file"].split(OS_SEP)[-1].split(".")[0][0:25].ljust(25)
         if hasattr(printable, "decode"):

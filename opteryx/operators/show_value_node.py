@@ -15,6 +15,7 @@ Show Variables Node
 
 This is a SQL Query Execution Plan Node.
 """
+
 from typing import Generator
 
 import pyarrow
@@ -26,7 +27,6 @@ from opteryx.operators import OperatorType
 
 
 class ShowValueNode(BasePlanNode):
-
     operator_type = OperatorType.PRODUCER
 
     def __init__(self, properties: QueryProperties, **config):

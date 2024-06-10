@@ -3,7 +3,7 @@ Test we can read from SQLite.
 
 SQLite is also used to test the SQLConnector harder than the other
 SQL sources. We use SQLite for this because the file is local and therefore
-we're not going to cause contention with remote services. 
+we're not going to cause contention with remote services.
 
 Note: DuckDB also has additional tests to the standard battery but because
 DuckDB doesn't have a stable file format, it only covers a subset of
@@ -160,7 +160,6 @@ if __name__ == "__main__":  # pragma: no cover
 
     print(f"RUNNING BATTERY OF {len(STATEMENTS)} SQLITE TESTS")
     for index, (statement, rows, cols, err) in enumerate(STATEMENTS):
-
         printable = statement
         if hasattr(printable, "decode"):
             printable = printable.decode()

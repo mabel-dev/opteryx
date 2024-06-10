@@ -47,7 +47,6 @@ class BasePlanDataObject:
 
 
 class BasePlanNode:
-
     _producers = None
     operator_type = OperatorType._UNKNOWN
 
@@ -66,7 +65,6 @@ class BasePlanNode:
         self.do: Optional[BasePlanDataObject] = None
 
     def to_json(self) -> bytes:  # pragma: no cover
-
         import orjson
 
         from opteryx.utils import dataclass_to_dict

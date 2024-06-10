@@ -14,7 +14,7 @@
 This is a temporary step, which takes logical plans from the V2 planner
 and converts them to modified-V1 physical plans.
 
-This should look different when the operators are rewritten for the 
+This should look different when the operators are rewritten for the
 Gen 2 execution engine (a later piece of work)
 """
 
@@ -37,8 +37,8 @@ def create_physical_plan(logical_plan, query_properties):
             node = operators.AggregateNode(query_properties, aggregates=node_config["aggregates"])
         elif node_type == LogicalPlanStepType.AggregateAndGroup:
             node = operators.AggregateAndGroupNode(query_properties, groups=node_config["groups"], aggregates=node_config["aggregates"], projection=node_config["projection"])
-#        elif node_type == LogicalPlanStepType.Defragment:
-#            node = operators.MorselDefragmentNode(query_properties, **node_config)
+        #        elif node_type == LogicalPlanStepType.Defragment:
+        #            node = operators.MorselDefragmentNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Distinct:
             node = operators.DistinctNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Exit:

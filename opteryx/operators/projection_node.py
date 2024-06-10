@@ -18,6 +18,7 @@ This is a SQL Query Execution Plan Node.
 This Node eliminates columns that are not needed in a Relation. This is also the Node
 that performs column renames.
 """
+
 import time
 from typing import Generator
 
@@ -29,7 +30,6 @@ from opteryx.operators import OperatorType
 
 
 class ProjectionNode(BasePlanNode):
-
     operator_type = OperatorType.PASSTHRU
 
     def __init__(self, properties: QueryProperties, **config):

@@ -52,7 +52,6 @@ def is_complete_and_not_invalid(blobs, as_at):
 
     # Iterate over blobs once, checking conditions.
     for blob in blobs:
-
         if complete_suffix in blob:
             complete = True
             if complete and ignore:
@@ -127,7 +126,6 @@ class MabelPartitionScheme(BasePartitionScheme):
                             raise UnsupportedSegementationError(dataset=prefix, segment=segment)
 
             if any(f"{OS_SEP}by_hour{OS_SEP}" in blob_name for blob_name in data_blobs):
-
                 start = min(start, date)
                 end = max(end, date)
 

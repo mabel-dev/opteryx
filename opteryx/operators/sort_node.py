@@ -17,6 +17,7 @@ This is a SQL Query Execution Plan Node.
 
 This node orders a dataset
 """
+
 import time
 from typing import Generator
 
@@ -33,7 +34,6 @@ from opteryx.operators import OperatorType
 
 
 class SortNode(BasePlanNode):
-
     operator_type = OperatorType.BLOCKING
 
     def __init__(self, properties: QueryProperties, **config):
