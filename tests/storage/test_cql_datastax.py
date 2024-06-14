@@ -6,14 +6,15 @@ This is our only Cassandra Test.
 
 import os
 import sys
+
 import pytest
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import opteryx
 from opteryx.connectors import CqlConnector
-from tests.tools import is_arm, is_mac, is_windows, skip_if
 from opteryx.utils.formatter import format_sql
+from tests.tools import is_arm, is_mac, is_windows, skip_if
 
 # fmt:off
 test_cases = [
@@ -47,8 +48,8 @@ test_cases = [
     "query, expected_rowcount, expected_columncount, expected_stats", test_cases
 )
 def test_datastax_storage(query, expected_rowcount, expected_columncount, expected_stats):
-    from cassandra.cluster import Cluster
     from cassandra.auth import PlainTextAuthProvider
+    from cassandra.cluster import Cluster
 
     # We're connecting to DataStax
     cloud_config = {"secure_connect_bundle": "secure-connect.zip"}

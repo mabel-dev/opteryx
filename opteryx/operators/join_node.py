@@ -67,7 +67,7 @@ class JoinNode(BasePlanNode):
 
         for morsel in left_node.execute():
             # in place until #1295 resolved
-            if not self._right_columns[0] in morsel.column_names:
+            if self._right_columns[0] not in morsel.column_names:
                 self._right_columns, self._left_columns = (
                     self._left_columns,
                     self._right_columns,

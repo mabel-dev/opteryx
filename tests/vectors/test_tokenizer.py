@@ -6,7 +6,6 @@ Test the permissions model is correctly allowing and blocking queries being exec
 import os
 import sys
 
-
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 from opteryx.compiled.functions import tokenize_and_remove_punctuation

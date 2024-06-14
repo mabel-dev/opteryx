@@ -153,7 +153,7 @@ def run_tests():
                 status = "\033[38;2;26;185;67m pass"
             else:
                 failed += 1
-                status = f"\033[38;2;255;121;198m fail"
+                status = "\033[38;2;255;121;198m fail"
         time_taken = int((time.monotonic_ns() - start_time) / 1e6)
         print(f"\033[0;32m{str(time_taken).rjust(8)}ms {status}\033[0m")
         if error:
@@ -164,7 +164,7 @@ def run_tests():
                 f"  \033[38;2;255;121;198m{error.__class__.__name__}\033[0m"
                 + f" {error}\n"
                 + f"  \033[38;2;241;250;140m{file_name}\033[0m"
-                + f"\033[38;2;98;114;164m:\033[0m"
+                + "\033[38;2;98;114;164m:\033[0m"
                 + f"\033[38;2;26;185;67m{line_number}\033[0m"
                 + f" \033[38;2;98;114;164m{code_line}\033[0m"
             )

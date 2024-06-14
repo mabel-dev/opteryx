@@ -4,9 +4,7 @@ import pyarrow
 from orso.types import OrsoTypes
 
 import opteryx
-from opteryx.managers.expression import ORSO_TO_NUMPY_MAP
 from opteryx.managers.expression import NodeType
-from opteryx.managers.expression import _inner_evaluate
 from opteryx.managers.expression import evaluate
 from opteryx.managers.expression.ops import filter_operations
 from opteryx.models import Node

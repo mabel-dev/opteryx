@@ -81,7 +81,7 @@ class SampleDataConnector(BaseConnector, Partitionable):
         )
 
     def get_dataset_schema(self) -> RelationSchema:
-        if not self.dataset in WELL_KNOWN_DATASETS:
+        if self.dataset not in WELL_KNOWN_DATASETS:
             suggestion = suggest(self.dataset)
             raise DatasetNotFoundError(suggestion=suggestion, dataset=self.dataset)
         data_provider, _ = WELL_KNOWN_DATASETS.get(self.dataset)

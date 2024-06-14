@@ -1,6 +1,7 @@
-from collections import namedtuple
 import os
 import sys
+from collections import namedtuple
+
 import pytest
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))

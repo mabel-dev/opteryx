@@ -13,3 +13,5 @@
 # limitations under the License.
 
 from opteryx.__main__ import main
+
+__all__ = "main"

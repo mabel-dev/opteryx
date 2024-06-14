@@ -70,13 +70,13 @@ def test_mongo_storage_explicit_parameters():
 
     # SELECT EVERYTHING
     cur = conn.cursor()
-    cur.execute(f"SELECT * FROM atlas.restaurants;")
+    cur.execute("SELECT * FROM atlas.restaurants;")
     rows = cur.arrow()
     assert rows.num_rows == 25359, rows.num_rows
 
     # PROCESS THE DATA IN SOME WAY
     cur = conn.cursor()
-    cur.execute(f"SELECT cuisine, COUNT(*) FROM atlas.restaurants GROUP BY cuisine;")
+    cur.execute("SELECT cuisine, COUNT(*) FROM atlas.restaurants GROUP BY cuisine;")
 
     rows = list(cur.fetchall())
     assert len(rows) == 85

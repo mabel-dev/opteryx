@@ -557,7 +557,7 @@ def process_join_tree(join: dict) -> LogicalPlanNode:
             join["relation"].get("Table", {}).get("name", [{}])[0].get("value", "").upper()
             == "UNNEST"
         ):
-            if not join_type in ("cross join", "inner"):
+            if join_type not in ("cross join", "inner"):
                 raise UnsupportedSyntaxError(
                     "JOIN on UNNEST only supported for CROSS and INNER joins."
                 )
@@ -1047,7 +1047,7 @@ def do_logical_planning_phase(parsed_statements) -> Generator:
     # The sqlparser ast is an array of asts
     for parsed_statement in parsed_statements:
         statement_type = next(iter(parsed_statement))
-        if not statement_type in QUERY_BUILDERS:
+        if statement_type not in QUERY_BUILDERS:
             from opteryx.exceptions import UnsupportedSyntaxError
 
             raise UnsupportedSyntaxError(

@@ -7,8 +7,7 @@ import sys
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
-from tests.tools import download_file
-from tests.tools import is_version, skip_if
+from tests.tools import download_file, is_version, skip_if
 
 
 @skip_if(is_version("3.9"))

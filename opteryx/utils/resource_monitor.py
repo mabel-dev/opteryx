@@ -27,7 +27,6 @@ class ResourceMonitor:  # pragma: no cover
     def resource_usage(self):  # pragma: no cover
         while True:
             print(".")
-            import opteryx
 
             report = {}
             if RESOURCE_LIB == "resource":

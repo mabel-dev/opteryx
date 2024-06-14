@@ -79,9 +79,9 @@ class FilterNode(BasePlanNode):
             if not isinstance(mask, pyarrow.lib.BooleanArray):
                 try:
                     mask = pyarrow.array(mask, type=pyarrow.bool_())
-                except Exception as err:
+                except Exception as err:  # nosec
                     raise SqlError(
-                        f"Unable to filter on expression '{format_expression(self.filter)}'."
+                        f"Unable to filter on expression '{format_expression(self.filter)} {err}'."
                     )
             mask = numpy.nonzero(mask)[0]
 

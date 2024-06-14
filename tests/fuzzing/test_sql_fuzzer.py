@@ -10,12 +10,12 @@ import sys
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import datetime
-import pytest
 import random
 import time
 
-from orso.types import OrsoTypes
+import pytest
 from orso.tools import random_int, random_string
+from orso.types import OrsoTypes
 
 import opteryx
 from opteryx.utils.formatter import format_sql

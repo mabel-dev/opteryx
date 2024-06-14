@@ -333,7 +333,7 @@ class BinderVisitor:
                     )
 
         # we should always have a derived schema
-        if not "$derived" in context.schemas:
+        if "$derived" not in context.schemas:
             context.schemas["$derived"] = derived.schema()
 
         # the aggregates and any calculated expressions in the SELECT should be in $derived
@@ -500,7 +500,7 @@ class BinderVisitor:
 
             if len(node.args) < 2:
                 raise InvalidFunctionParameterError(
-                    f"FAKE function expects at least two parameters, the number of rows, and then either the number of columns, or an array of the column types."
+                    "FAKE function expects at least two parameters, the number of rows, and then either the number of columns, or an array of the column types."
                 )
 
             if node.args[1].node_type == NodeType.NESTED:
@@ -544,7 +544,7 @@ class BinderVisitor:
                     column_definition = int(column_definition)  # type: ignore
                 except TypeError:
                     raise InvalidFunctionParameterError(
-                        f"Expected number of rows for 'FAKE' function or list of column types. Are you missing parenthesis?"
+                        "Expected number of rows for 'FAKE' function or list of column types. Are you missing parenthesis?"
                     )
                 names = node.columns + tuple(
                     f"column_{i}"
@@ -717,7 +717,7 @@ class BinderVisitor:
 
         # Handle wildcards, including qualified wildcards.
         for column in node.columns + node.order_by_columns:
-            if not column.node_type == NodeType.WILDCARD:
+            if column.node_type != NodeType.WILDCARD:
                 columns.append(column)
             else:
                 # Handle qualified wildcards
@@ -779,7 +779,7 @@ class BinderVisitor:
         if "$derived" in context.schemas:
             context.schemas["$project"] = context.schemas.pop("$derived")
             context.schemas["$project"].name = "$project"
-        if not "$derived" in context.schemas:
+        if "$derived" not in context.schemas:
             context.schemas["$derived"] = derived.schema()
 
         node.columns = columns

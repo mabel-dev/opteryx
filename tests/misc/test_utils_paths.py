@@ -8,7 +8,6 @@ import pytest
 from opteryx.utils import paths
 from tests.tools import is_windows, skip_if
 
-
 # fmt:off
 PATH_PARTS_TEST = [
         ("C:/users/opteryx/file.ext", ("C:", "users/opteryx", "file", ".ext"), None),

@@ -140,6 +140,8 @@ class MemcachedCache(BaseKeyValueStore):
                 self._server.touch(key)
                 self.touches += 1
             except Exception as err:  # nosec
+                if not err:
+                    pass
                 # DEBUG: log(f"Unable to 'touch' Memcache cache {err}")
                 self.errors += 1
                 pass

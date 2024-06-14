@@ -27,7 +27,7 @@ class _QueryStatistics:
 
     def __getattr__(self, attr):
         if attr == "messages":
-            if not "messages" in self._stats:
+            if "messages" not in self._stats:
                 return []
         return self._stats[attr]
 
@@ -39,7 +39,7 @@ class _QueryStatistics:
 
     def add_message(self, message: str):
         """collect warnings"""
-        if not "messages" in self._stats:
+        if "messages" not in self._stats:
             self._stats["messages"] = [message]
         else:
             self._stats["messages"].append(message)

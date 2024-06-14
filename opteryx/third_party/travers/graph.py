@@ -478,7 +478,7 @@ class Graph(object):
         return self._nodes.get(nid, None)
 
     def __setitem__(self, nid, node):
-        if not nid in self._nodes:
+        if nid not in self._nodes:
             raise ValueError("Cannot create nodes with [] syntax")
         self._nodes[nid] = node
 

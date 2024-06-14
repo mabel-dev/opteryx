@@ -77,7 +77,6 @@ def main(
 
     if sql is None:  # pragma: no cover
 
-        import readline  # importing has impact, even when not referenced again
 
         if o != "console":
             raise ValueError("Cannot specify output location and not provide a SQL statement.")

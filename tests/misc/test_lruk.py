@@ -247,7 +247,7 @@ def test_lru2_eviction_based_on_penultimate_access():
     assert evicted == "a", evicted
     assert lru.get("a") == None
     assert lru.get("b") == 2
-    assert lru.get("c") is 3
+    assert lru.get("c") == 3
     assert lru.get("d") == 4
 
 
