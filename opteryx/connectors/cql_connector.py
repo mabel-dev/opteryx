@@ -125,7 +125,7 @@ class CqlConnector(BaseConnector, PredicatePushable):
             query_builder.add("SELECT", *column_names)
             result_schema.columns = [  # type:ignore
                 col
-                for col in self.schema.columns
+                for col in self.schema.columns  # type:ignore
                 if f'"{col.name}"' in column_names  # type:ignore
             ]
         else:

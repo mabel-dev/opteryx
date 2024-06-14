@@ -143,7 +143,7 @@ class SqlConnector(BaseConnector, PredicatePushable):
             query_builder.add("SELECT", *column_names)
             result_schema.columns = [  # type:ignore
                 col
-                for col in self.schema.columns
+                for col in self.schema.columns  # type:ignore
                 if col.name in column_names  # type:ignore
             ]
         else:
@@ -245,6 +245,8 @@ class SqlConnector(BaseConnector, PredicatePushable):
                 ],
             )
         except Exception as err:
+            if not err:
+                pass
             # Fall back to getting the schema from the first row, this is the column names, and where
             # possible, column types.
             # DEBUG: log (f"APPROXIMATING SCHEMA OF {self.dataset} BECAUSE OF {type(err).__name__}({err})")

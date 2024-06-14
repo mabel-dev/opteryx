@@ -268,7 +268,7 @@ def _inner_evaluate(root: Node, table: Table, context: ExecutionContext):
             root.value = format_expression(root)
             root.node_type = NodeType.EVALUATED
         if node_type == NodeType.EVALUATED:
-            if not root.schema_column.identity in table.column_names:
+            if root.schema_column.identity not in table.column_names:
                 raise ColumnReferencedBeforeEvaluationError(column=root.schema_column.name)
             return table[root.schema_column.identity].to_numpy()
         if node_type == NodeType.COMPARISON_OPERATOR:

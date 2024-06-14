@@ -46,7 +46,6 @@ def main():
     conn.execute("PRAGMA locking_mode = EXCLUSIVE;")
     conn.execute("PRAGMA temp_store = MEMORY;")
 
-    import opteryx
 
     # dataset = opteryx.query("SELECT tweet_id, text, timestamp, user_id, user_verified, user_name, followers, following, tweets_by_user FROM testdata.flat.formats.parquet;")
     # creator("tweets", conn, dataset)

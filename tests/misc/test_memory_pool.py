@@ -1,17 +1,18 @@
 import os
-import sys
-import pytest
 import random
-import time
+import sys
 import threading
+import time
+
+import pytest
 
 os.environ["OPTERYX_DEBUG"] = "1"
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
-from opteryx.shared import MemoryPool
-
 from orso.tools import random_string
+
+from opteryx.shared import MemoryPool
 
 
 def test_commit_and_read():

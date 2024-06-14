@@ -57,6 +57,7 @@ def test_run_only_tests(statement):
 if __name__ == "__main__":  # pragma: no cover
     import shutil
     import time
+
     from opteryx.utils.formatter import format_sql
     from tests.tools import trunc_printable
 

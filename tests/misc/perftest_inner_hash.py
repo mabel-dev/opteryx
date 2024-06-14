@@ -2,7 +2,7 @@ import functools
 import time
 
 import numpy
-from orso.cityhash import CityHash32, CityHash64
+from orso.cityhash import CityHash64
 
 APOLLO_11_DURATION: int = 1023123
 

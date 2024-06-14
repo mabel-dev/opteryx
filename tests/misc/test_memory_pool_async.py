@@ -8,18 +8,16 @@ thin layer over the memory pool.
 """
 
 import os
-import sys
 import random
+import sys
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 os.environ["OPTERYX_DEBUG"] = "1"
 
-from opteryx.shared import MemoryPool, AsyncMemoryPool
-
-
 import asyncio
-import random
+
+from opteryx.shared import AsyncMemoryPool, MemoryPool
 
 
 async def stress_with_random_sized_data():

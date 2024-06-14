@@ -114,7 +114,7 @@ class LeftJoinNode(BasePlanNode):
         right_relation = pyarrow.concat_tables(right_node.execute(), promote_options="none")
         join_provider = providers.get(self._join_type)
         # in place until #1295 resolved
-        if not self._left_columns[0] in left_relation.column_names:
+        if self._left_columns[0] not in left_relation.column_names:
             self._right_columns, self._left_columns = (
                 self._left_columns,
                 self._right_columns,

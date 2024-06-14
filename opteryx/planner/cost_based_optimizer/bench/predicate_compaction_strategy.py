@@ -15,26 +15,22 @@ class ValueRange:
     untrackable: bool = False
 
     def update_with_predicate(self, operator: str, value: int):
-        if self.untrackable or not operator in ("=", ">=", "<=", ">", "<"):
+        if self.untrackable or operator not in ("=", ">=", "<=", ">", "<"):
             self.untrackable = True
             return
 
         new_limit = Limit(value, inclusive=operator in ("=", ">=", "<="))
 
         if operator in ("=", ">=", ">"):
-            if self.lower is None:
-                self.lower = new_limit
-            # Update lower limit if the new one is more restrictive
-            elif new_limit.value > self.lower.value or (
-                new_limit.value == self.lower.value and new_limit.inclusive
+            if self.lower is None or (
+                new_limit.value > self.lower.value
+                or (new_limit.value == self.lower.value and new_limit.inclusive)
             ):
                 self.lower = new_limit
         if operator in ("=", "<=", "<"):
-            if self.upper is None:
-                self.upper = new_limit
-            # Update upper limit if the new one is more restrictive
-            elif new_limit.value < self.upper.value or (
-                new_limit.value == self.upper.value and new_limit.inclusive
+            if self.upper is None or (
+                new_limit.value < self.upper.value
+                or (new_limit.value == self.upper.value and new_limit.inclusive)
             ):
                 self.upper = new_limit
 

@@ -4,6 +4,7 @@ import sys
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import numpy
+
 import opteryx
 from tests.tools import is_version, skip_if
 

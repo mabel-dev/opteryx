@@ -17,7 +17,9 @@ def _load_views():
     try:
         with open("views.json", "rb") as defs:
             return orjson.loads(defs.read())
-    except Exception as err:
+    except Exception as err:  # nosec
+        if not err:
+            pass
         # DEBUG:: log (f"[OPTERYX] Unable to open views definition file. {err}")
         return {}
 

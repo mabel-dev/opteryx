@@ -68,7 +68,7 @@ def search_osv(library, version):
         data = {"version": version, "package": {"name": library, "ecosystem": "PyPI"}}
         resp = requests.post(url=url, data=json.dumps(data))
         return resp.content
-    except Exception as e:
+    except Exception:
         return b"{}"
 
 

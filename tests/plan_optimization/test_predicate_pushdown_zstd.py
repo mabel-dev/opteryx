@@ -8,7 +8,6 @@ import sys
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import opteryx
-from opteryx import config
 
 
 def test_predicate_pushdowns_blobs_zstd():

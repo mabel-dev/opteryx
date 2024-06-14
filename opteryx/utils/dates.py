@@ -187,7 +187,7 @@ def parse_iso(value):
                         )
                     )
         return None
-    except (ValueError, TypeError) as r:
+    except (ValueError, TypeError):
         return None
 
 

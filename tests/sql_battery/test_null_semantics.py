@@ -9,7 +9,6 @@ import sys
 
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
-import numpy
 import pytest
 
 import opteryx

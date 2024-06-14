@@ -281,7 +281,7 @@ def inner_binder(node: Node, context: Any) -> Tuple[Node, Any]:
         node.schema_column = schema_column
         node.query_column = node.alias or column_name
 
-    elif not node_type == NodeType.SUBQUERY and not node.do_not_create_column:
+    elif node_type != NodeType.SUBQUERY and not node.do_not_create_column:
         if node_type in (NodeType.FUNCTION, NodeType.AGGREGATOR):
             # we need to add this new column to the schema
             aliases = [node.alias] if node.alias else []
@@ -305,11 +305,12 @@ def inner_binder(node: Node, context: Any) -> Tuple[Node, Any]:
             node.schema_column = schema_column
             node.query_column = node.alias or column_name
 
-        elif node.value and node.value.startswith("AnyOp"):
-            # IMPROVE: check types here
-            schema_column = ExpressionColumn(name=column_name, type=OrsoTypes.BOOLEAN)
-            node.schema_column = schema_column
-        elif node.value and node.value.startswith("AllOp"):
+        elif node.value and node.value.startswith(
+            (
+                "AnyOp",
+                "AllOp",
+            )
+        ):
             # IMPROVE: check types here
             schema_column = ExpressionColumn(name=column_name, type=OrsoTypes.BOOLEAN)
             node.schema_column = schema_column
