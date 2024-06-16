@@ -37,6 +37,14 @@ test_cases = [
     ("SELECT * FROM sqlite.planets WHERE gravity >= 3.7", 8, 8),
     ("SELECT * FROM sqlite.planets WHERE name LIKE '%a%'", 4, 4),
     ("SELECT * FROM sqlite.planets WHERE id > gravity", 2, 9),
+    ("SELECT * FROM sqlite.planets WHERE surfacePressure IS NOT NULL;", 5, 5),
+    ("SELECT * FROM sqlite.planets WHERE NOT surfacePressure IS NULL;", 5, 9),
+    ("SELECT * FROM sqlite.planets WHERE name ILIKE '%a%'", 4, 9),
+    ("SELECT * FROM sqlite.planets WHERE name NOT LIKE '%a%'", 5, 5),
+    ("SELECT * FROM sqlite.planets WHERE name IS TRUE", 0, 0),
+    ("SELECT * FROM sqlite.planets WHERE name = 'Mercury' OR gravity = 3.7;", 2, 9),
+    ("SELECT * FROM (SELECT name FROM sqlite.planets WHERE gravity = 3.7) AS $temp WHERE name = 'Mercury';", 1, 1),
+    ("SELECT * FROM (SELECT name FROM sqlite.planets WHERE gravity != 9.8) AS $temp WHERE name = 'Mercury';", 1, 1),
 ]
 # fmt:on
 
@@ -48,10 +56,10 @@ def test_predicate_pushdown_postgres_parameterized(
     statement, expected_rowcount, expected_rows_read
 ):
     res = opteryx.query(statement)
-    assert res.rowcount == expected_rowcount, f"Expected {expected_rowcount}, got {res.rowcount}"
+    assert res.rowcount == expected_rowcount, f"Expected result with {expected_rowcount} rows, got {res.rowcount}"
     assert (
         res.stats.get("rows_read", 0) == expected_rows_read
-    ), f"Expected {expected_rows_read}, got {res.stats.get('rows_read', 0)}"
+    ), f"Expected remote read of {expected_rows_read} rows, got {res.stats.get('rows_read', 0)}"
 
 
 if __name__ == "__main__":  # pragma: no cover
