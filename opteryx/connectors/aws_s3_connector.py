@@ -14,6 +14,7 @@
 MinIo Reader - also works with AWS
 """
 
+import asyncio
 import os
 from typing import List
 
@@ -22,6 +23,7 @@ from orso.schema import RelationSchema
 from orso.tools import single_item_cache
 
 from opteryx.connectors.base.base_connector import BaseConnector
+from opteryx.connectors.capabilities import Asynchronous
 from opteryx.connectors.capabilities import Cacheable
 from opteryx.connectors.capabilities import Partitionable
 from opteryx.exceptions import DatasetNotFoundError
@@ -31,11 +33,12 @@ from opteryx.exceptions import UnsupportedFileTypeError
 from opteryx.utils import paths
 from opteryx.utils.file_decoders import VALID_EXTENSIONS
 from opteryx.utils.file_decoders import get_decoder
+from opteryx.utils.memory_view_stream import MemoryViewStream
 
 OS_SEP = os.sep
 
 
-class AwsS3Connector(BaseConnector, Cacheable, Partitionable):
+class AwsS3Connector(BaseConnector, Cacheable, Partitionable, Asynchronous):
     __mode__ = "Blob"
 
     def __init__(self, credentials=None, **kwargs):
@@ -47,11 +50,14 @@ class AwsS3Connector(BaseConnector, Cacheable, Partitionable):
         BaseConnector.__init__(self, **kwargs)
         Partitionable.__init__(self, **kwargs)
         Cacheable.__init__(self, **kwargs)
+        Asynchronous.__init__(self, **kwargs)
 
-        end_point = os.environ.get("MINIO_END_POINT")
-        access_key = os.environ.get("MINIO_ACCESS_KEY")
-        secret_key = os.environ.get("MINIO_SECRET_KEY")
-        secure = str(os.environ.get("MINIO_SECURE", "TRUE")).lower() == "true"
+        # fmt:off
+        end_point = kwargs.get("S3_END_POINT", os.environ.get("MINIO_END_POINT"))
+        access_key = kwargs.get("S3_ACCESS_KEY", os.environ.get("MINIO_ACCESS_KEY"))
+        secret_key = kwargs.get("S3_SECRET_KEY", os.environ.get("MINIO_SECRET_KEY"))
+        secure = kwargs.get("S3_SECURE", str(os.environ.get("MINIO_SECURE", "TRUE")).lower() == "true")
+        # fmt:on
 
         if end_point is None:  # pragma: no cover
             raise UnmetRequirementError(
@@ -119,10 +125,28 @@ class AwsS3Connector(BaseConnector, Cacheable, Partitionable):
 
         return self.schema
 
+    async def async_read_blob(self, *, blob_name, pool, statistics, **kwargs):
+        try:
+            bucket, object_path, name, extension = paths.get_parts(blob_name)
+            stream = self.minio.get_object(bucket, object_path + "/" + name + extension)
+            data = stream.read()
+
+            ref = await pool.commit(data)
+            while ref is None:
+                statistics.stalls_writing_to_read_buffer += 1
+                await asyncio.sleep(0.1)
+                ref = await pool.commit(data)
+            statistics.bytes_read += len(data)
+            return ref
+        finally:
+            stream.close()
+
     def read_blob(self, *, blob_name, **kwargs):
         try:
             bucket, object_path, name, extension = paths.get_parts(blob_name)
             stream = self.minio.get_object(bucket, object_path + "/" + name + extension)
-            return bytes(stream.read())
+            content = stream.read()
+            self.statistics.bytes_read += len(content)
+            return content
         finally:
             stream.close()

@@ -131,7 +131,6 @@ dmypy.json
 
 **/_temp/**
 sample_data/**
-**.lzma
 **.
 .dccache
 scratch/**

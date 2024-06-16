@@ -99,18 +99,8 @@ Opteryx installs with a small set of libraries it needs for core functionality, 
 
 ## Examples
 
-[Filter a Dataset on the Command Line](#filter-a-dataset-on-the-command-line)  
-[Execute a Simple Query in Python](#execute-a-simple-query-in-python)   
-[Execute SQL on a pandas DataFrame](#execute-sql-on-a-pandas-dataframe)   
-[Query Data on Local Disk](#query-data-on-local-disk)    
-[Query Data on GCS](#query-data-on-gcs)  
-[Query Data in SQLite](#query-data-in-sqlite)  
-
-Try Opteryx now using our [interactive labs](https://github.com/mabel-dev/labs) on [Binder](https://mybinder.org/v2/gh/mabel-dev/labs/HEAD).
-
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/mabel-dev/labs/HEAD)
-
-#### Filter a Dataset on the Command Line
+<details>
+<summary>Filter a Dataset on the Command Line</summary>
 
 In this example, we are running Opteryx from the command line to filter one of the internal example datasets and display the results on the console.
 
@@ -120,8 +110,10 @@ python -m opteryx "SELECT * FROM \$astronauts WHERE 'Apollo 11' IN UNNEST(missio
 
 ![Opteryx](https://github.com/mabel-dev/opteryx.dev/raw/main/assets/cli.png)
 _this example is complete and should run as-is_
+</details>
 
-#### Execute a Simple Query in Python  
+<details>
+<summary>Execute a Simple Query in Python</summary>  
 
 In this example, we are showing the basic usage of the Python API by executing a simple query that makes no references to any datasets.
 
@@ -143,7 +135,10 @@ ID |  4 * 7
 
 _this example is complete and should run as-is_
 
-#### Execute SQL on a pandas DataFrame
+</details>
+
+<details>
+<summary>Execute SQL on a pandas DataFrame</summary>
 
 In this example, we are running a SQL statement on a pandas DataFrame and returning the result as a new pandas DataFrame.
 
@@ -176,7 +171,10 @@ aggregated_df.head()
 ~~~
 _this example is complete and should run as-is_
 
-#### Query Data on Local Disk
+</details>
+
+<details>
+<summary>Query Data on Local Disk</summary>
 
 In this example, we are querying and filtering a file directly. This example will not run as written because the file being queried does not exist.
 
@@ -203,7 +201,10 @@ result.head()
 
 _this example requires a data file, [space_missions.parquet](https://storage.googleapis.com/opteryx/space_missions/space_missions.parquet)._
 
-#### Query Data in SQLite
+</details>
+
+<details>
+<summary>Query Data in SQLite</summary>
 
 In this example, we are querying a SQLite database via Opteryx. This example will not run as written because the file being queried does not exist.
 
@@ -240,7 +241,10 @@ ID | name    |   mass | diameter | density
 
 _this example requires a data file, [database.db](https://storage.googleapis.com/opteryx/planets/database.db)._
 
-#### Query Data on GCS  
+</details>
+
+<details>
+<summary>Query Data on GCS</summary>
 
 In this example, we are to querying a dataset on GCS in a public bucket called 'opteryx'.
 
@@ -275,9 +279,12 @@ result.head()
 
 _this example is complete and should run as-is_
 
-#### Further Examples
+</details>
+<br />
 
-For further examples, check out the [interactive labs](https://github.com/mabel-dev/labs) on [Binder](https://mybinder.org/v2/gh/mabel-dev/labs/HEAD).
+You can also try Opteryx right now using our [interactive labs](https://github.com/mabel-dev/labs) on [Binder](https://mybinder.org/v2/gh/mabel-dev/labs/HEAD).
+
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/mabel-dev/labs/HEAD)
 
 ## Community
 
@@ -288,7 +295,7 @@ For further examples, check out the [interactive labs](https://github.com/mabel-
 
 **Get Involved**
 
-* Star this repo
+* :star: Star this repo
 * [Contribute](https://opteryx.dev/latest/contributing/contributing/) — join us in building Opteryx, through writing code, or inspiring others to use it.
 * Let us know [your ideas](https://github.com/mabel-dev/opteryx/discussions), how you are using Opteryx, or report a [bug or feature request]((https://github.com/mabel-dev/opteryx/issues/new/choose)).
 * See the [contributor documentation](https://opteryx.dev/latest/contributing/contributing/) for Opteryx. It's easy to get started, and we're really friendly if you need any help!
@@ -325,3 +332,4 @@ Opteryx is in beta. Beta means different things to different people, to us, bein
 
 - **[orso](https://github.com/mabel-dev/orso)** DataFrame library
 - **[mabel](https://github.com/mabel-dev/mabel)** Streaming data APIs
+- **[tarchia](https://github.com/mabel-dev/mabel)** Data Catalog  
