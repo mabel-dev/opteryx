@@ -65,6 +65,10 @@ STATEMENTS = [
         # PyArrow IPC streams
         ("SELECT * FROM testdata.flat.formats.ipc_zstd", 100000, 13, False),
         ("SELECT user_name, user_verified FROM testdata.flat.formats.ipc WHERE user_name ILIKE '%news%'", 122, 2, False),
+        
+        # Mabel legacy LZMA compressed JSONL format (different input file)
+        ("SELECT * FROM testdata.flat.formats.lzma", 71981, 14, False),
+        ("SELECT user_name, user_verified FROM testdata.flat.formats.lzma WHERE user_name ILIKE '%news%'", 112, 2, False),
     ]
 # fmt:on
 

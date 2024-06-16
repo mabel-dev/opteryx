@@ -475,6 +475,9 @@ STATEMENTS = [
         ("SELECT b'binary'", 1, 1, None),
         ("SELECT B'binary'", 1, 1, None),
         ("SELECT * FROM $planets WHERE name = b'Earth';", 1, 20, None),
+        ("SELECT TIMESTAMP(1700000000000000)", 1, 1, None),
+        ("SELECT CAST(1700000000000000 AS TIMESTAMP)", 1, 1, None),
+        ("SELECT 1700000000000000::TIMESTAMP", 1, 1, None),
 
         ("SELECT PI()", 1, 1, None),
         ("SELECT E()", 1, 1, None),

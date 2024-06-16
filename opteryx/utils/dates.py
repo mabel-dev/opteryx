@@ -121,6 +121,10 @@ def parse_iso(value):
     try:
         input_type = type(value)
 
+        if input_type == str and value.isdigit():
+            value = int(value)
+            input_type = int
+
         if input_type == numpy.datetime64:
             # this can create dates rather than datetimes, so don't return yet
             value = value.astype(datetime.datetime)
