@@ -44,15 +44,12 @@ class Connection:
         """
         self._kwargs = kwargs
 
-        if memberships:
-            if not all(isinstance(v, str) for v in memberships):
-                raise ProgrammingError("Invalid memberships provided to Connection")
-        if permissions:
-            if not all(isinstance(v, str) for v in permissions):
-                raise ProgrammingError("Invalid permissions provided to Connection")
-        if user:
-            if not isinstance(user, str):
-                raise ProgrammingError("Invalid user provided to Connection")
+        if memberships and not all(isinstance(v, str) for v in memberships):
+            raise ProgrammingError("Invalid memberships provided to Connection")
+        if permissions and not all(isinstance(v, str) for v in permissions):
+            raise ProgrammingError("Invalid permissions provided to Connection")
+        if user and not isinstance(user, str):
+            raise ProgrammingError("Invalid user provided to Connection")
 
         self.context = ConnectionContext(user=user, memberships=memberships)
 

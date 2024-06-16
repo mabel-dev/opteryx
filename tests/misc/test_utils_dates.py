@@ -13,7 +13,7 @@ from opteryx.utils import dates
 # fmt:off
 DATE_TESTS = [
         ("NOT A DATE", None),
-        ("2021001011", None),
+        ("2021001011", datetime.datetime(2034,1,16,5,10,11)),
         ("2021-02-21", datetime.datetime(2021,2,21)),
         ("2021-02-21T", None),
         ("2021-01-11 12:00", datetime.datetime(2021,1,11,12,0)),

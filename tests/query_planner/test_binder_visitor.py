@@ -53,18 +53,18 @@ def test_logical_plan_visitor():
 
         def visit_filter(self, node, context):
             # the filter has the left scan before it
-            node.sources = {a: "test" for a in context.schemas.keys()}
+            node.sources = {a: "test" for a in context.schemas}
             node.columns = []
             return node, context
 
         def visit_union(self, node, context):
-            node.sources = {a: "test" for a in context.schemas.keys()}
+            node.sources = {a: "test" for a in context.schemas}
             node.columns = []
             return node, context
 
         def visit_project(self, node, context):
             # the project has the left and right scans before it
-            node.sources = {a: "test" for a in context.schemas.keys()}
+            node.sources = {a: "test" for a in context.schemas}
             node.columns = []
             return node, context
 

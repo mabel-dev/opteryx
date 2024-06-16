@@ -163,9 +163,8 @@ class CurrencyTest:
                 vuln_details=known_vulns.get(package.project_name),
             )
 
-            if package_result["state"] == "VULNERABLE":
-                if package_result["installed_version"] == package_result["latest_version"]:
-                    package_result["state"] = "NO PATCH"
+            if package_result["state"] == "VULNERABLE" and package_result["installed_version"] == package_result["latest_version"]:
+                package_result["state"] = "NO PATCH"
 
             results.append(package_result["state"])
             logger.info(

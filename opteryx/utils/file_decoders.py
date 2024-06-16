@@ -112,12 +112,24 @@ def zstd_decoder(buffer, projection: List = None, selection=None, just_schema: b
     import zstandard
 
     stream: BinaryIO = None
-    if isinstance(buffer, memoryview):
-        stream = MemoryViewStream(buffer)
-    else:
-        stream = io.BytesIO(buffer)
+    stream = MemoryViewStream(buffer) if isinstance(buffer, memoryview) else io.BytesIO(buffer)
 
     with zstandard.open(stream, "rb") as file:
+        return jsonl_decoder(
+            file, projection=projection, selection=selection, just_schema=just_schema
+        )
+
+
+def lzma_decoder(buffer, projection: List = None, selection=None, just_schema: bool = False):
+    """
+    Read lzma compressed JSONL files
+    """
+    import lzma
+
+    stream: BinaryIO = None
+    stream = MemoryViewStream(buffer) if isinstance(buffer, memoryview) else io.BytesIO(buffer)
+
+    with lzma.open(stream, "rb") as file:
         return jsonl_decoder(
             file, projection=projection, selection=selection, just_schema=just_schema
         )
@@ -138,10 +150,7 @@ def parquet_decoder(buffer, projection: List = None, selection=None, just_schema
     selected_columns = None
 
     stream: BinaryIO = None
-    if isinstance(buffer, memoryview):
-        stream = MemoryViewStream(buffer)
-    else:
-        stream = io.BytesIO(buffer)
+    stream = MemoryViewStream(buffer) if isinstance(buffer, memoryview) else io.BytesIO(buffer)
 
     # Open the parquet file only once
     parquet_file = parquet.ParquetFile(stream)
@@ -208,10 +217,7 @@ def orc_decoder(buffer, projection: List = None, selection=None, just_schema: bo
     import pyarrow.orc as orc
 
     stream: BinaryIO = None
-    if isinstance(buffer, memoryview):
-        stream = MemoryViewStream(buffer)
-    else:
-        stream = io.BytesIO(buffer)
+    stream = MemoryViewStream(buffer) if isinstance(buffer, memoryview) else io.BytesIO(buffer)
     orc_file = orc.ORCFile(stream)
 
     if just_schema:
@@ -263,10 +269,7 @@ def csv_decoder(
     from pyarrow.csv import ParseOptions
 
     stream: BinaryIO = None
-    if isinstance(buffer, memoryview):
-        stream = MemoryViewStream(buffer)
-    else:
-        stream = io.BytesIO(buffer)
+    stream = MemoryViewStream(buffer) if isinstance(buffer, memoryview) else io.BytesIO(buffer)
     parse_options = ParseOptions(delimiter=delimiter, newlines_in_values=True)
     table = pyarrow.csv.read_csv(stream, parse_options=parse_options)
     schema = table.schema
@@ -296,10 +299,7 @@ def arrow_decoder(buffer, projection: List = None, selection=None, just_schema: 
     import pyarrow.feather as pf
 
     stream: BinaryIO = None
-    if isinstance(buffer, memoryview):
-        stream = MemoryViewStream(buffer)
-    else:
-        stream = io.BytesIO(buffer)
+    stream = MemoryViewStream(buffer) if isinstance(buffer, memoryview) else io.BytesIO(buffer)
     table = pf.read_table(stream)
     schema = table.schema
     if just_schema:
@@ -326,10 +326,7 @@ def avro_decoder(buffer, projection: List = None, selection=None, just_schema: b
         raise Exception("`avro` is missing, please install or include in your `requirements.txt`.")
 
     stream: BinaryIO = None
-    if isinstance(buffer, memoryview):
-        stream = MemoryViewStream(buffer)
-    else:
-        stream = io.BytesIO(buffer)
+    stream = MemoryViewStream(buffer) if isinstance(buffer, memoryview) else io.BytesIO(buffer)
     reader = DataFileReader(stream, DatumReader())
 
     table = pyarrow.Table.from_pylist(list(reader))
@@ -352,10 +349,7 @@ def ipc_decoder(buffer, projection: List = None, selection=None, just_schema: bo
     from pyarrow import ipc
 
     stream: BinaryIO = None
-    if isinstance(buffer, memoryview):
-        stream = MemoryViewStream(buffer)
-    else:
-        stream = io.BytesIO(buffer)
+    stream = MemoryViewStream(buffer) if isinstance(buffer, memoryview) else io.BytesIO(buffer)
     reader = ipc.open_stream(stream)
 
     batch_one = next(reader, None)
@@ -391,6 +385,7 @@ KNOWN_EXTENSIONS: Dict[str, Tuple[Callable, str]] = {
     "parquet": (parquet_decoder, ExtentionType.DATA),
     "tsv": (tsv_decoder, ExtentionType.DATA),
     "zstd": (zstd_decoder, ExtentionType.DATA),  # jsonl/zstd
+    "lzma": (lzma_decoder, ExtentionType.DATA),  # jsonl/lzma
 }
 
 VALID_EXTENSIONS = set(f".{ext}" for ext in KNOWN_EXTENSIONS)

@@ -26,9 +26,8 @@ class _QueryStatistics:
         return nano_seconds / 1e9
 
     def __getattr__(self, attr):
-        if attr == "messages":
-            if "messages" not in self._stats:
-                return []
+        if attr == "messages" and "messages" not in self._stats:
+            return []
         return self._stats[attr]
 
     def __setattr__(self, attr, value):

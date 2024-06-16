@@ -135,19 +135,18 @@ class AggregateAndGroupNode(BasePlanNode):
 
         # do the secondary activities for ARRAY_AGG
         for node in get_all_nodes_of_type(self.aggregates, select_nodes=(NodeType.AGGREGATOR,)):
-            if node.value == "ARRAY_AGG":
-                if node.order or node.limit:
-                    # rip the column out of the table
-                    column_name = self.column_map[node.schema_column.identity]
-                    column_def = groups.field(column_name)  # this is used
-                    column = groups.column(column_name).to_pylist()
-                    groups = groups.drop([column_name])
-                    if node.order:
-                        column = [sorted(c, reverse=bool(node.order[0][1])) for c in column]
-                    if node.limit:
-                        column = [c[: node.limit] for c in column]
-                    # put the new column into the table
-                    groups = groups.append_column(column_def, [column])
+            if node.value == "ARRAY_AGG" and node.order or node.limit:
+                # rip the column out of the table
+                column_name = self.column_map[node.schema_column.identity]
+                column_def = groups.field(column_name)  # this is used
+                column = groups.column(column_name).to_pylist()
+                groups = groups.drop([column_name])
+                if node.order:
+                    column = [sorted(c, reverse=bool(node.order[0][1])) for c in column]
+                if node.limit:
+                    column = [c[: node.limit] for c in column]
+                # put the new column into the table
+                groups = groups.append_column(column_def, [column])
 
         # project to the desired column names from the pyarrow names
         groups = groups.select(list(self.column_map.values()) + self.group_by_columns)
