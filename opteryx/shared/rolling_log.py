@@ -33,7 +33,8 @@ class RollingLog:
             cls._instance.max_entries = max_entries
             cls._instance.block_size = block_size
             if not os.path.exists(log_file):
-                open(log_file, "wb")
+                with open(log_file, "wb"):
+                    pass
         return cls._instance
 
     def append(self, entry):

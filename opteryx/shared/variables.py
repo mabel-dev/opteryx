@@ -148,11 +148,8 @@ class SystemVariablesContainer:
         """Return a variable as a CONSTANT column"""
         from orso.schema import ConstantColumn
 
-        if key.startswith("@@"):
-            # system variables aren't stored with the @@
-            variable = self._variables[key[2:]]
-        else:
-            variable = self._variables[key]
+        # system variables aren't stored with the @@
+        variable = self._variables[key[2:]] if key.startswith("@@") else self._variables[key]
         return ConstantColumn(name=key, type=variable[0], value=variable[1])
 
 

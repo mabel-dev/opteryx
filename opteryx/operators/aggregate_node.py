@@ -111,10 +111,9 @@ def build_aggregations(aggregators):
             else:
                 field_name = field_node.schema_column.identity
             function = AGGREGATORS[aggregator.value]
-            if aggregator.value == "ARRAY_AGG":
-                # if the array agg is distinct, base off that function instead
-                if aggregator.distinct:
-                    function = "distinct"
+            # if the array agg is distinct, base off that function instead
+            if aggregator.value == "ARRAY_AGG" and aggregator.distinct:
+                function = "distinct"
             aggs.append((field_name, function, count_options))
             column_map[aggregator.schema_column.identity] = f"{field_name}_{function}".replace(
                 "_hash_", "_"

@@ -188,7 +188,7 @@ if __name__ == "__main__":  # pragma: no cover
             failed += 1
             failures.append((statement, err))
 
-    print("#- ✅ \033[0;32mdone\033[0m")
+    print("- ✅ \033[0;32mdone\033[0m")
 
     if failed > 0:
         print("\n\033[38;2;139;233;253m\033[3mFAILURES\033[0m")

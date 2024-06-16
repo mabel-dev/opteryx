@@ -12,6 +12,7 @@
 
 
 import copy
+from contextlib import suppress
 from typing import Any
 from typing import Dict
 from typing import Optional
@@ -247,10 +248,8 @@ def inner_binder(node: Node, context: Any) -> Tuple[Node, Any]:
         # If the column exists in the schema, update node and context accordingly.
         if found_column:
             # found_identity = found_column.identity
-            try:
+            with suppress(Exception):
                 node, _ = traversive_recursive_bind(node, context)
-            except:  # nosec
-                pass
 
             node.schema_column = found_column
             node.query_column = node.alias or column_name

@@ -16,11 +16,7 @@ def is_mac():  # pragma: no cover
     return platform.system().lower() == "darwin"
 
 
-if is_mac():
-    COMPILE_FLAGS = ["-O2"]
-else:
-    COMPILE_FLAGS = ["-O2", "-march=native"]
-
+COMPILE_FLAGS = ["-O2"] if is_mac() else ["-O2", "-march=native"]
 
 def rust_build(setup_kwargs: Dict[str, Any]) -> None:
     setup_kwargs.update(
