@@ -58,10 +58,6 @@ class SortNode(BasePlanNode):
         morsels = tuple(morsels)
         mapped_order = []
 
-        if len([morsel for morsel in morsels if morsel.num_rows == 0]) > 0:
-            yield morsels[0]
-            return
-
         table = concat_tables(morsels, promote_options="permissive")
 
         start_time = time.time_ns()
