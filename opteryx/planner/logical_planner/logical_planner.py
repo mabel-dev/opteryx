@@ -254,6 +254,12 @@ def inner_query_planner(ast_branch):
     inner_plan = LogicalPlan()
     step_id = None
 
+    # TOP used?
+    if ast_branch["Select"].get("top") is not None:
+        raise UnsupportedSyntaxError(
+            "SELECT TOP to limit number of returned records not supported, use LIMIT instead."
+        )
+
     # from
     _relations = ast_branch["Select"].get("from", [])
     for relation in _relations:

@@ -1585,6 +1585,8 @@ STATEMENTS = [
         ("SELECT * FROM (SELECT p.Price AS pri, s.escapeVelocity FROM $missions AS p INNER JOIN $planets AS s ON p.Price = s.escapeVelocity) AS SV WHERE IFNULL(null, pri) = pri", 5, 2, None),
         # 1696
         ("SELECT name FROM (SELECT * FROM $planets LIMIT 5) AS S WHERE name != 'Mars'", 4, 1, None),
+        # 1753
+        ("SELECT TOP 5 * FROM $planets", None, None, UnsupportedSyntaxError),
 ]
 # fmt:on
 
