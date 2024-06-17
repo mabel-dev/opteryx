@@ -55,7 +55,8 @@ class _QueryStatistics:
         stats_dict["time_total"] = self._ns_to_s(
             stats_dict.pop("end_time", 0) - stats_dict.pop("start_time", 0)
         )
-        stats_dict["messages"] = stats_dict.get("messages", [])
+        stats_dict = {key: stats_dict[key] for key in sorted(stats_dict)}
+        stats_dict["messages"] = stats_dict.pop("messages", [])
         return stats_dict
 
     def copy(self):
