@@ -181,7 +181,26 @@ def _inner_filter_operations(arr, operator, value):
     if operator == "AllOpNotEq":
         return list_ops.cython_allop_neq(arr[0], value)
     if operator == "Arrow":
-        return list_ops.cython_arrow_op(arr, value[0])
+        # if it's dicts, extract the value from the dict
+        if len(arr) > 0 and isinstance(arr[0], dict):
+            return list_ops.cython_arrow_op(arr, value[0])
+
+        # if it's a string, parse and extract, we don't need a dict (dicts are s_l_o_w)
+        # so we can use a library which allows us to 
+        import simdjson
+
+        item = value[0]
+        parser = simdjson.Parser()
+        return [None if item not in d else parser.parse(d).get(item) for d in arr]
+
     if operator == "LongArrow":
-        return list_ops.cython_long_arrow_op(arr, value[0])
+        if len(arr) > 0 and isinstance(arr[0], dict):
+            return list_ops.cython_long_arrow_op(arr, value[0])
+
+        import simdjson
+
+        item = value[0]
+        parser = simdjson.Parser()
+        return [None if item not in d else str(parser.parse(d).get(item)) for d in arr]
+
     raise NotImplementedError(f"Operator {operator} is not implemented!")  # pragma: no cover

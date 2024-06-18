@@ -135,6 +135,7 @@ jobs:
   build-macos:
     runs-on: macos-latest
     strategy:
+      fail-fast: false
       max-parallel: 4
       matrix:
         python-version: ['3.9', '3.10', '3.11', '3.12']
