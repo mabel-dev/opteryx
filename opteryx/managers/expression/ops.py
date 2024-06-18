@@ -186,12 +186,11 @@ def _inner_filter_operations(arr, operator, value):
             return list_ops.cython_arrow_op(arr, value[0])
 
         # if it's a string, parse and extract, we don't need a dict (dicts are s_l_o_w)
-        # so we can use a library which allows us to 
+        # so we can use a library which allows us to access the values directly
         import simdjson
 
         item = value[0]
-        parser = simdjson.Parser()
-        return [None if item not in d else parser.parse(d).get(item) for d in arr]
+        return [None if item not in d else simdjson.Parser().parse(d).get(item) for d in arr]
 
     if operator == "LongArrow":
         if len(arr) > 0 and isinstance(arr[0], dict):
@@ -200,7 +199,6 @@ def _inner_filter_operations(arr, operator, value):
         import simdjson
 
         item = value[0]
-        parser = simdjson.Parser()
-        return [None if item not in d else str(parser.parse(d).get(item)) for d in arr]
+        return [None if item not in d else str(simdjson.Parser().parse(d).get(item)) for d in arr]
 
     raise NotImplementedError(f"Operator {operator} is not implemented!")  # pragma: no cover
