@@ -4,5 +4,6 @@ orjson
 orso>=0.0.158
 psutil
 pyarrow>=12.0.1
+pysimdjson
 typer==0.11.*
 aiohttp
