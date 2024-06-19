@@ -181,9 +181,11 @@ def _inner_filter_operations(arr, operator, value):
     if operator == "AllOpNotEq":
         return list_ops.cython_allop_neq(arr[0], value)
     if operator == "Arrow":
+        element = value[0]
+
         # if it's dicts, extract the value from the dict
         if len(arr) > 0 and isinstance(arr[0], dict):
-            return list_ops.cython_arrow_op(arr, value[0])
+            return list_ops.cython_arrow_op(arr, element)
 
         # if it's a string, parse and extract, we don't need a dict (dicts are s_l_o_w)
         # so we can use a library which allows us to access the values directly
@@ -199,12 +201,13 @@ def _inner_filter_operations(arr, operator, value):
                 return value.as_dict()
             return value
 
-        item = value[0]
-        return pyarrow.array([extract(d, item) for d in arr])
+        return pyarrow.array([extract(d, element) for d in arr])
 
     if operator == "LongArrow":
+        element = value[0]
+
         if len(arr) > 0 and isinstance(arr[0], dict):
-            return list_ops.cython_long_arrow_op(arr, value[0])
+            return list_ops.cython_long_arrow_op(arr, element)
 
         import simdjson
 
@@ -218,7 +221,16 @@ def _inner_filter_operations(arr, operator, value):
                 return value.mini
             return str(value).encode()
 
-        item = value[0]
-        return [extract(d, item) for d in arr]
+        return [extract(d, element) for d in arr]
+
+    if operator == "AtQuestion":
+        element = value[0]
+
+        if len(arr) > 0 and isinstance(arr[0], dict):
+            return [element in d for d in arr]
+
+        import simdjson
+
+        return [element in simdjson.Parser().parse(doc).keys() for doc in arr]
 
     raise NotImplementedError(f"Operator {operator} is not implemented!")  # pragma: no cover
