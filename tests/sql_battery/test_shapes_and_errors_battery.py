@@ -560,6 +560,7 @@ STATEMENTS = [
         ("SELECT BP->'state' FROM (SELECT VARCHAR(birth_place) AS BP FROM $astronauts) AS I", 357, 1, None),
         ("SELECT BP->>'state' FROM (SELECT VARCHAR(birth_place) AS BP FROM $astronauts) AS I", 357, 1, None),
         ("SELECT BP->>'address' FROM (SELECT VARCHAR(birth_place) AS BP FROM $astronauts) AS I", 357, 1, None),
+        ("SELECT dict->>'list', dict->'list' AS thisisalongercolumnname, STRUCT(dict)->'list', dict->>'once', dict->'once' FROM testdata.flat.struct", 6, 5, None),
         ("SELECT birth_place['town'] FROM $astronauts", 357, 1, None),
         ("SELECT missions[0] FROM $astronauts", 357, 1, None),
         ("SELECT birth_place['town'] FROM $astronauts WHERE birth_place['town'] = 'Warsaw'", 1, 1, None),

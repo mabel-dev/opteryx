@@ -189,8 +189,18 @@ def _inner_filter_operations(arr, operator, value):
         # so we can use a library which allows us to access the values directly
         import simdjson
 
+        def extract(doc, elem):
+            if not elem in doc:
+                return None
+            value = simdjson.Parser().parse(doc).get(elem)
+            if hasattr(value, "as_list"):
+                return value.as_list()
+            if hasattr(value, "as_dict"):
+                return value.as_dict()
+            return value
+
         item = value[0]
-        return [None if item not in d else simdjson.Parser().parse(d).get(item) for d in arr]
+        return pyarrow.array([extract(d, item) for d in arr])
 
     if operator == "LongArrow":
         if len(arr) > 0 and isinstance(arr[0], dict):
@@ -198,7 +208,17 @@ def _inner_filter_operations(arr, operator, value):
 
         import simdjson
 
+        def extract(doc, elem):
+            if not elem in doc:
+                return None
+            value = simdjson.Parser().parse(doc).get(elem)
+            if hasattr(value, "as_list"):
+                return value.mini
+            if hasattr(value, "as_dict"):
+                return value.mini
+            return str(value).encode()
+
         item = value[0]
-        return [None if item not in d else str(simdjson.Parser().parse(d).get(item)) for d in arr]
+        return [extract(d, item) for d in arr]
 
     raise NotImplementedError(f"Operator {operator} is not implemented!")  # pragma: no cover
