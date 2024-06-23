@@ -14,6 +14,7 @@ import datetime
 import typing
 from os import environ
 from pathlib import Path
+from typing import Optional
 
 import psutil
 
@@ -150,6 +151,11 @@ MAX_READ_BUFFER_CAPACITY: int = memory_allocation_calculation(float(get("MAX_REA
 CONCURRENT_READS: int = int(get("CONCURRENT_READS", 4))
 """Number of read workers per data source."""
 
+DATA_CATALOG_PROVIDER: str = get("CATALOG_PROVIDER")
+"""Data Catalog provider."""
+
+DATA_CATALOG_CONFIGURATION: Optional[str] = get("DATA_CATALOG")
+"""Data Catalog configuration, different catalogs have different config formats."""
 
 # GCP project ID - for Google Cloud Data
 GCP_PROJECT_ID: str = get("GCP_PROJECT_ID") 

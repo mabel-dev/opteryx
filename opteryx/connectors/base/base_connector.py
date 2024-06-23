@@ -84,10 +84,6 @@ class BaseConnector:
         """
         raise NotImplementedError("Subclasses must implement read_dataset method.")
 
-    def read_schema_from_metastore(self):
-        # to be implemented
-        return None
-
     def chunk_dictset(
         self,
         dictset: Iterable[dict],

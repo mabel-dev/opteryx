@@ -231,6 +231,7 @@ def _inner_filter_operations(arr, operator, value):
 
         import simdjson
 
-        return [element in simdjson.Parser().parse(doc).keys() for doc in arr]
+        # Don't warn on rule SIM118, the object isn't actually a dictionary
+        return [element in simdjson.Parser().parse(doc).keys() for doc in arr]  # noqa: SIM118
 
     raise NotImplementedError(f"Operator {operator} is not implemented!")  # pragma: no cover

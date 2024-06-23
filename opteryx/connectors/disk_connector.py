@@ -191,7 +191,6 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable, PredicatePushable, 
         Returns:
             The schema of the dataset.
         """
-        self.schema = self.read_schema_from_metastore()
         if self.schema:
             return self.schema
 

@@ -1,0 +1,92 @@
+{
+    "name": "planets",
+    "location": "testdata.planets",
+    "table_schema": {
+        "columns": [
+            {
+                "name": "id",
+                "type": "INTEGER"
+            },
+            {
+                "name": "name",
+                "type": "VARCHAR"
+            },
+            {
+                "name": "mass",
+                "type": "DOUBLE"
+            },
+            {
+                "name": "diameter",
+                "type": "INTEGER"
+            },
+            {
+                "name": "density",
+                "type": "INTEGER"
+            },
+            {
+                "name": "gravity",
+                "type": "DECIMAL"
+            },
+            {
+                "name": "escapeVelocity",
+                "type": "DOUBLE"
+            },
+            {
+                "name": "rotationPeriod",
+                "type": "DOUBLE"
+            },
+            {
+                "name": "lengthOfDay",
+                "type": "DOUBLE"
+            },
+            {
+                "name": "distanceFromSun",
+                "type": "DOUBLE"
+            },
+            {
+                "name": "perihelion",
+                "type": "DOUBLE"
+            },
+            {
+                "name": "aphelion",
+                "type": "DOUBLE"
+            },
+            {
+                "name": "orbitalPeriod",
+                "type": "DOUBLE"
+            },
+            {
+                "name": "orbitalVelocity",
+                "type": "DOUBLE"
+            },
+            {
+                "name": "orbitalInclination",
+                "type": "DOUBLE"
+            },
+            {
+                "name": "orbitalEccentricity",
+                "type": "DOUBLE"
+            },
+            {
+                "name": "obliquityToOrbit",
+                "type": "DOUBLE"
+            },
+            {
+                "name": "meanTemperature",
+                "type": "INTEGER"
+            },
+            {
+                "name": "surfacePressure",
+                "type": "DOUBLE"
+            },
+            {
+                "name": "numberOfMoons",
+                "type": "INTEGER"
+            }
+        ]
+    },
+    "partitioning": [],
+    "disposition": "SNAPSHOT",
+    "permissions": [],
+    "metadata": {}
+}

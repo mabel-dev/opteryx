@@ -260,7 +260,6 @@ class GcpCloudStorageConnector(
 
     def get_dataset_schema(self) -> RelationSchema:
         # Try to read the schema from the metastore
-        self.schema = self.read_schema_from_metastore()
         if self.schema:
             return self.schema
 
