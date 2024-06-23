@@ -1,17 +1,13 @@
-<div align="center">
-
-![Opteryx](https://raw.githubusercontent.com/mabel-dev/opteryx/main/opteryx-word-small.png)
+# Opteryx
 ### Query your data, where it lives.
 
 _A unified SQL interface to unlock insights across your diverse data sources, from blobs stores to databases - **effortless cross-platform data analytics**._
-</div>
 
-<div align="center">
-
-[**Documentation**](https://opteryx.dev/latest) •
-[**Install**](#install) •
-[**Examples**](#examples) •
-[**Get Involved**](#community)
+Resource      | Location
+------------- | -------------
+Source Code   | https://github.com/mabel-dev/opteryx
+Documentation | https://opteryx.dev/
+Download      | https://pypi.org/project/opteryx/
 
 [![PyPI Latest Release](https://img.shields.io/pypi/v/opteryx.svg)](https://pypi.org/project/opteryx/)
 [![Downloads](https://static.pepy.tech/badge/opteryx)](https://pepy.tech/project/opteryx)
@@ -19,7 +15,9 @@ _A unified SQL interface to unlock insights across your diverse data sources, fr
 [![opteryx](https://snyk.io/advisor/python/opteryx/badge.svg?style=flat-square)](https://snyk.io/advisor/python/opteryx)
 [![PyPI Latest Release](https://img.shields.io/badge/Python-3.9%20%7C%203.10%20%7C%203.11%20%7C%203.12-blue?logo=python)](https://pypi.org/project/opteryx/)
 
-</div>
+[**Install**](#install) •
+[**Examples**](#examples) •
+[**Get Involved**](#community)
 
 ## What is Opteryx?
 

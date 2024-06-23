@@ -112,8 +112,6 @@ class AwsS3Connector(BaseConnector, Cacheable, Partitionable, Asynchronous):
                 pass
 
     def get_dataset_schema(self) -> RelationSchema:
-        # Try to read the schema from the metastore
-        self.schema = self.read_schema_from_metastore()
         if self.schema:
             return self.schema
 
@@ -128,6 +126,7 @@ class AwsS3Connector(BaseConnector, Cacheable, Partitionable, Asynchronous):
     async def async_read_blob(self, *, blob_name, pool, statistics, **kwargs):
         try:
             bucket, object_path, name, extension = paths.get_parts(blob_name)
+            # DEBUG: log ("READ   ", name)
             stream = self.minio.get_object(bucket, object_path + "/" + name + extension)
             data = stream.read()
 

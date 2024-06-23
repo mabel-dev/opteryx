@@ -78,11 +78,6 @@ class MongoDbConnector(BaseConnector):
         if self.schema:
             return self.schema
 
-        # Try to read the schema from the metastore
-        self.schema = self.read_schema_from_metastore()
-        if self.schema:
-            return self.schema
-
         # onlt read one record
         record = next(self.read_dataset(chunk_size=1), None)
 

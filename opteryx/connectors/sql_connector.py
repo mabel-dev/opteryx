@@ -217,11 +217,6 @@ class SqlConnector(BaseConnector, PredicatePushable):
         if self.schema:
             return self.schema
 
-        # Try to read the schema from the metastore
-        self.schema = self.read_schema_from_metastore()
-        if self.schema:
-            return self.schema
-
         # get the schema from the dataset
         # DEBUG: log ("GET SQL SCHEMA:", self.dataset)
         try:
