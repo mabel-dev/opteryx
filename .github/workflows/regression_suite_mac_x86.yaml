@@ -50,3 +50,6 @@ jobs:
           POSTGRES_USER: '${{ secrets.POSTGRES_USER }}'
           POSTGRES_PASSWORD: '${{ secrets.POSTGRES_PASSWORD }}'
           MEMCACHED_SERVER: 'localhost:11211'
+          DATA_CATALOG_PROVIDER: 'TARCHIA'
+          DATA_CATALOG_CONFIGURATION: '${{ secrets.DATA_CATALOG_CONFIGURATION }}'
+          TARCHIA_KEY: '${{ secrets.TARCHIA_KEY }}'

@@ -54,11 +54,13 @@ def get_mismatched_condition_column_types(node: Node, relaxed: bool = False) -> 
         return left_mismatches or right_mismatches
 
     elif node.node_type == NodeType.COMPARISON_OPERATOR:
-        if (
-            node.value in ("InList", "NotInList", "Arrow", "LongArrow", "AtQuestion")
-            or node.value.startswith("AllOp")
-            or node.value.startswith("AnyOp")
-        ):
+        if node.value in (
+            "InList",
+            "NotInList",
+            "Arrow",
+            "LongArrow",
+            "AtQuestion",
+        ) or node.value.startswith(("AllOp", "AnyOp")):
             return None  # Some ops are meant to have different types
         left_type = node.left.schema_column.type if node.left.schema_column else None
         right_type = node.right.schema_column.type if node.right.schema_column else None
@@ -793,11 +795,22 @@ class BinderVisitor:
         from opteryx.connectors.capabilities import Partitionable
         from opteryx.connectors.capabilities.cacheable import async_read_thru_cache
         from opteryx.connectors.capabilities.cacheable import read_thru_cache
+        from opteryx.managers.catalog import catalog_factory
 
         if node.alias in context.relations:
             raise AmbiguousDatasetError(dataset=node.alias)
-        # work out which connector will be serving this request
-        node.connector = connector_factory(node.relation, statistics=context.statistics)
+
+        catalog_table = None
+        if node.relation.count(".") == 1:
+            catalog_provider = catalog_factory()
+            catalog_table = catalog_provider.get_table(node.relation)
+            if catalog_table:
+                node.connector = connector_factory(
+                    catalog_table["location"], statistics=context.statistics
+                )
+        if not catalog_table:
+            # work out which connector will be serving this request
+            node.connector = connector_factory(node.relation, statistics=context.statistics)
         connector_capabilities = node.connector.__class__.mro()
 
         if hasattr(node.connector, "variables"):
@@ -818,11 +831,19 @@ class BinderVisitor:
                 node.connector.read_blob = read_thru_cache(original_read_blob)
         # get them to tell is the schema of the dataset
         # None means we don't know ahead of time - we can usually get something
-        node.schema = node.connector.get_dataset_schema()
+        if catalog_table:
+            catalog_schema = catalog_table.get("current_schema", {})
+            catalog_schema["name"] = catalog_table["location"]
+            node.schema = RelationSchema.from_dict(catalog_schema)
+            node.connector.schema = node.schema
+        else:
+            node.schema = node.connector.get_dataset_schema()
         node.schema.aliases.append(node.alias)
         context.schemas[node.alias] = node.schema
         for column in node.schema.columns:
             column.origin = [node.alias]
+            if catalog_table:
+                column.origin.append(catalog_table["location"])
         context.relations[node.alias] = node.connector.__mode__
 
         return node, context
