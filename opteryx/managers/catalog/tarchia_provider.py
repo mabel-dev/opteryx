@@ -24,7 +24,8 @@ class TarchiaCatalogProvider:  # CatalogProvider):
         Returns:
             List[Dict[str, Any]]: A list of dataset metadata.
         """
-        response = requests.get(f"{self.BASE_URL}/joocer/tables", timeout=10)
+        owner, table = "table".split(".")
+        response = requests.get(f"{self.BASE_URL}/{owner}/tables", timeout=10)
         response.raise_for_status()
         return response.json()
 
@@ -42,23 +43,31 @@ class TarchiaCatalogProvider:  # CatalogProvider):
         Returns:
             Dict[str, Any]: The dataset metadata.
         """
-        if "." not in table:
-            owner = "we should get the 'database' at this point"
-        elif table.count(".") != 1:
-            # definitely not in the data catalog
+        import os
+
+        cookies = {"AUTH_TOKEN": os.environ.get("TARCHIA_KEY")}
+        if table.count(".") != 1:
+            # not in the data catalog
             return None
         else:
             owner, table = table.split(".")
 
-        url = f"{self.BASE_URL}/tables/{owner}/{table}"
+        url = f"{self.BASE_URL}/v1/tables/{owner}/{table}"
 
         params = {}
         if as_at:
             params["as_at"] = as_at
         if snapshot:
             url += f"/snapshots/{snapshot}"
-        response = requests.get(url, params=params, timeout=10)
-        response.raise_for_status()
+
+        response = requests.get(
+            url,
+            params=params,
+            timeout=10,
+            cookies=cookies,
+        )
+        if response.status_code != 200:
+            return None
         return response.json()
 
     def get_blobs_in_table(
@@ -78,7 +87,8 @@ class TarchiaCatalogProvider:  # CatalogProvider):
         Returns:
             List[Dict[str, Any]]: A list of blobs metadata.
         """
-        url = f"{self.BASE_URL}/joocer/{table_identifier}/snapshots/{snapshot_identifier}/blobs"
+        owner, table = table.split(".")
+        url = f"{self.BASE_URL}/v1/{owner}/{table_identifier}/snapshots/{snapshot_identifier}/blobs"
         response = requests.get(url, params=filters, timeout=10)
         response.raise_for_status()
         return response.json()
@@ -93,19 +103,8 @@ class TarchiaCatalogProvider:  # CatalogProvider):
         Returns:
             Dict[str, Any]: The view metadata.
         """
-        url = f"{self.BASE_URL}/views/{view_name}"
+        owner, view_name = view_name.split(".")
+        url = f"{self.BASE_URL}/v1/{owner}/views/{view_name}"
         response = requests.get(url, timeout=10)
         response.raise_for_status()
         return response.json()
-
-
-if __name__ == "__main__":
-    tc = TarchiaCatalogProvider("http://localhost:8080/v1")
-    table = tc.get_table("joocer.planets")
-
-    schema = table.get("current_schema")
-    schema["name"] = "planets"
-    from orso.schema import RelationSchema
-
-    os = RelationSchema.from_dict(schema)
-    print(os)

@@ -1,6 +1,7 @@
 {
     "name": "planets",
     "location": "testdata.planets",
+    "steward": "billy",
     "table_schema": {
         "columns": [
             {

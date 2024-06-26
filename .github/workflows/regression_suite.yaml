@@ -71,6 +71,9 @@ jobs:
           OPTERYX_DEBUG: 1
           MAX_LOCAL_BUFFER_CAPACITY: 100
           MAX_CACHE_EVICTIONS_PER_QUERY: 4
+          DATA_CATALOG_PROVIDER: 'TARCHIA'
+          DATA_CATALOG_CONFIGURATION: '${{ secrets.DATA_CATALOG_CONFIGURATION }}'
+          TARCHIA_KEY: '${{ secrets.TARCHIA_KEY }}'
 
       - name: Check Coverage
         run: python -m coverage report --include=opteryx/** --fail-under=90 -m
