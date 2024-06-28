@@ -87,8 +87,8 @@ class TarchiaCatalogProvider:  # CatalogProvider):
         Returns:
             List[Dict[str, Any]]: A list of blobs metadata.
         """
-        owner, table = table.split(".")
-        url = f"{self.BASE_URL}/v1/{owner}/{table_identifier}/snapshots/{snapshot_identifier}/blobs"
+        owner, table = table_identifier.split(".")
+        url = f"{self.BASE_URL}/v1/{owner}/{table}/snapshots/{snapshot_identifier}/blobs"
         response = requests.get(url, params=filters, timeout=10)
         response.raise_for_status()
         return response.json()

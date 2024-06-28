@@ -45,7 +45,7 @@ jobs:
           MACOSX_DEPLOYMENT_TARGET: "10.15"
           ARCHFLAGS: -arch x86_64 -arch arm64
           PYO3_CROSS_PYTHON_VERSION: ${{ matrix.python-version }}
-        run: poetry run python setup.py bdist_wheel && poetry install
+        run: python setup.py build_ext --inplace
 
       - name: "Authenticate to Google Cloud"
         uses: google-github-actions/auth@v1

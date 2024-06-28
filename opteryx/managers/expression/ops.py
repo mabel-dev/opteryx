@@ -194,7 +194,7 @@ def _inner_filter_operations(arr, operator, value):
         def extract(doc, elem):
             if not elem in doc:
                 return None
-            value = simdjson.Parser().parse(doc).get(elem)
+            value = simdjson.Parser().parse(doc).get(elem)  # type:ignore
             if hasattr(value, "as_list"):
                 return value.as_list()
             if hasattr(value, "as_dict"):
@@ -214,11 +214,9 @@ def _inner_filter_operations(arr, operator, value):
         def extract(doc, elem):
             if not elem in doc:
                 return None
-            value = simdjson.Parser().parse(doc).get(elem)
-            if hasattr(value, "as_list"):
-                return value.mini
-            if hasattr(value, "as_dict"):
-                return value.mini
+            value = simdjson.Parser().parse(doc).get(elem)  # type:ignore
+            if hasattr(value, "mini"):
+                return value.mini  # type:ignore
             return str(value).encode()
 
         return [extract(d, element) for d in arr]
@@ -232,6 +230,6 @@ def _inner_filter_operations(arr, operator, value):
         import simdjson
 
         # Don't warn on rule SIM118, the object isn't actually a dictionary
-        return [element in simdjson.Parser().parse(doc).keys() for doc in arr]  # noqa: SIM118
+        return [element in simdjson.Parser().parse(doc).keys() for doc in arr]  # type:ignore
 
     raise NotImplementedError(f"Operator {operator} is not implemented!")  # pragma: no cover

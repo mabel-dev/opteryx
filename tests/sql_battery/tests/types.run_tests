@@ -13,3 +13,18 @@ SELECT b'apple' = BLOB('apple');
 SELECT BLOB('apple') > b'banana';
 SELECT b'banana' > BLOB('apple');
 SELECT BLOB('apple') LIKE b'a%ple';
+
+SELECT * FROM $astronauts WHERE birth_date - current_time > INTERVAL '1' DAY;
+SELECT * FROM $astronauts WHERE current_time - birth_date > INTERVAL '1' DAY;
+SELECT * FROM $astronauts WHERE birth_date + INTERVAL '1' DAY < current_time;
+SELECT * FROM $astronauts WHERE current_time + INTERVAL '1' DAY > birth_date;
+SELECT * FROM $astronauts WHERE birth_date - INTERVAL '1' DAY < current_time;
+SELECT * FROM $astronauts WHERE current_time - INTERVAL '1' DAY > birth_date;
+#SELECT * FROM $astronauts WHERE (birth_date + INTERVAL '1' DAY) - current_time > INTERVAL '1' DAY;
+#SELECT * FROM $astronauts WHERE (current_time + INTERVAL '1' DAY) - birth_date > INTERVAL '1' DAY;
+#SELECT * FROM $astronauts WHERE (birth_date - current_time) + INTERVAL '1' DAY > INTERVAL '1' DAY;
+#SELECT * FROM $astronauts WHERE (current_time - birth_date) + INTERVAL '1' DAY > INTERVAL '1' DAY;
+SELECT * FROM $astronauts WHERE current_time + INTERVAL '1' DAY = birth_date;
+SELECT * FROM $astronauts WHERE birth_date + INTERVAL '1' DAY = current_time;
+SELECT * FROM $astronauts WHERE current_time - INTERVAL '1' DAY = birth_date;
+SELECT * FROM $astronauts WHERE birth_date - INTERVAL '1' DAY = current_time;
