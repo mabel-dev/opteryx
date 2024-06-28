@@ -160,13 +160,16 @@ jobs:
     - name: Install Rust aarch64-apple-darwin target
       run: rustup target add aarch64-apple-darwin
 
+    - name: Install Rust x86_64-apple-darwin
+      run: rustup target add x86_64-apple-darwin
+
     - name: Build on macOS universal2
       shell: bash
       env:
         DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
         MACOSX_DEPLOYMENT_TARGET: '10.15'
         ARCHFLAGS: -arch x86_64 -arch arm64
-        PYO3_CROSS_LIB_DIR: /Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/${{ matrix.python-version }}/lib
+        PYO3_CROSS_PYTHON_VERSION: ${{ matrix.python-version }}
       run: python setup.py bdist_wheel
 
     - name: Archive dist artifacts
