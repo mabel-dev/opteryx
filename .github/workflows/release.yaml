@@ -170,7 +170,7 @@ jobs:
         MACOSX_DEPLOYMENT_TARGET: "10.15"
         ARCHFLAGS: -arch x86_64 -arch arm64
         PYO3_CROSS_PYTHON_VERSION: ${{ matrix.python-version }}
-      run: python setup.py build_ext --inplace
+      run: python setup.py bdist_wheel
 
     - name: Archive dist artifacts
       uses: actions/upload-artifact@v1
