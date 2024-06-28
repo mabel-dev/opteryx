@@ -167,10 +167,10 @@ jobs:
       shell: bash
       env:
         DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
-        MACOSX_DEPLOYMENT_TARGET: '10.15'
+        MACOSX_DEPLOYMENT_TARGET: "10.15"
         ARCHFLAGS: -arch x86_64 -arch arm64
         PYO3_CROSS_PYTHON_VERSION: ${{ matrix.python-version }}
-      run: python setup.py bdist_wheel
+      run: python setup.py build_ext --inplace
 
     - name: Archive dist artifacts
       uses: actions/upload-artifact@v1
