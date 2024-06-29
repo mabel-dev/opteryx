@@ -21,7 +21,7 @@ def test_linear_execution_tree():
     tree.add_edge("p", "m")
 
     assert len(tree.nodes()) == 2
-    assert ["m", "p"] == sorted(tree._nodes.keys())
+    assert sorted(tree._nodes.keys()) == ["m", "p"]
     assert tree["p"] == print
     assert len(tree._edges) == 1
     assert tree.get_entry_points() == ["p"]
@@ -34,7 +34,7 @@ def test_linear_execution_tree():
     tree.add_edge("m", "n")
 
     assert len(tree.nodes()) == 3
-    assert ["m", "n", "p"] == sorted(tree._nodes.keys())
+    assert sorted(tree._nodes.keys()) == ["m", "n", "p"]
     assert len(tree._edges) == 2
 
 

@@ -132,6 +132,10 @@ def rewrite_in_to_eq(predicate):
     return predicate
 
 
+def reorder_interval_calc(predicate):
+    return predicate
+
+
 # Define dispatcher conditions and actions
 dispatcher: Dict[str, Callable] = {
     "remove_adjacent_wildcards": remove_adjacent_wildcards,
@@ -139,6 +143,7 @@ dispatcher: Dict[str, Callable] = {
     "rewrite_to_ends_with": rewrite_to_ends_with,
     "rewrite_to_search": rewrite_to_search,
     "rewrite_in_to_eq": rewrite_in_to_eq,
+    "reorder_interval_calc": reorder_interval_calc,
 }
 
 
@@ -177,6 +182,19 @@ def _rewrite_predicate(predicate):
     if predicate.value in IN_REWRITES:
         if predicate.right.node_type == NodeType.LITERAL and len(predicate.right.value) == 1:
             return dispatcher["rewrite_in_to_eq"](predicate)
+
+    if (
+        predicate.node_type == NodeType.COMPARISON_OPERATOR
+        and predicate.left.node_type == NodeType.BINARY_OPERATOR
+    ):
+        from opteryx.planner.binder.operator_map import determine_type
+
+        if (
+            determine_type(predicate.left) == OrsoTypes.INTERVAL
+            and determine_type(predicate.right) == OrsoTypes.INTERVAL
+        ):
+            pass
+            # TODO: finish this rewrite rule
 
     return predicate
 
@@ -363,7 +381,7 @@ class PredicatePushdownStrategy(OptimizationStrategy):
 
             if node.on is None and node.type == ("inner"):
                 raise UnsupportedSyntaxError(
-                    "INNER JOIN has no conditions, did you mean to use a CROSS JOIN?"
+                    "INNER JOIN has no valid conditions, did you mean CROSS JOIN?"
                 )
 
         return context

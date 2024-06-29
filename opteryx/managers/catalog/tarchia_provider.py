@@ -17,18 +17,6 @@ class TarchiaCatalogProvider:  # CatalogProvider):
         else:
             self.BASE_URL = config
 
-    def list_tables(self) -> List[Dict[str, Any]]:
-        """
-        Retrieve the list of all available datasets.
-
-        Returns:
-            List[Dict[str, Any]]: A list of dataset metadata.
-        """
-        owner, table = "table".split(".")
-        response = requests.get(f"{self.BASE_URL}/{owner}/tables", timeout=10)
-        response.raise_for_status()
-        return response.json()
-
     def get_table(
         self, table: str, snapshot: Optional[str] = None, as_at: Optional[int] = None
     ) -> Dict[str, Any]:
@@ -63,7 +51,7 @@ class TarchiaCatalogProvider:  # CatalogProvider):
         response = requests.get(
             url,
             params=params,
-            timeout=10,
+            timeout=5,
             cookies=cookies,
         )
         if response.status_code != 200:
@@ -87,8 +75,8 @@ class TarchiaCatalogProvider:  # CatalogProvider):
         Returns:
             List[Dict[str, Any]]: A list of blobs metadata.
         """
-        owner, table = table.split(".")
-        url = f"{self.BASE_URL}/v1/{owner}/{table_identifier}/snapshots/{snapshot_identifier}/blobs"
+        owner, table = table_identifier.split(".")
+        url = f"{self.BASE_URL}/v1/{owner}/{table}/snapshots/{snapshot_identifier}/blobs"
         response = requests.get(url, params=filters, timeout=10)
         response.raise_for_status()
         return response.json()
