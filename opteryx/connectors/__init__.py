@@ -83,6 +83,10 @@ def register_arrow(name, table):
     register_store(name, ArrowConnector)
 
 
+def known_prefix(prefix) -> bool:
+    return prefix in _storage_prefixes
+
+
 def connector_factory(dataset, statistics, **config):
     """
     Work out which connector will service the access to this dataset.

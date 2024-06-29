@@ -48,6 +48,11 @@ def get_mismatched_condition_column_types(node: Node, relaxed: bool = False) -> 
     Returns:
         a dictionary describing the columns
     """
+    #   from .operator_map import determine_type
+
+    #    if determine_type(node) != 0:
+    #        return None
+
     if node.node_type in (NodeType.AND, NodeType.OR):
         left_mismatches = get_mismatched_condition_column_types(node.left, relaxed)
         right_mismatches = get_mismatched_condition_column_types(node.right, relaxed)
@@ -71,6 +76,7 @@ def get_mismatched_condition_column_types(node: Node, relaxed: bool = False) -> 
                 and (left_type.is_numeric() and right_type.is_numeric())
                 or (left_type.is_temporal() and right_type.is_temporal())
                 or (left_type.is_large_object() and right_type.is_large_object())
+                or (left_type == 0 or right_type == 0)
             ):
                 return None
             if left_type == OrsoTypes.NULL or right_type == OrsoTypes.NULL:
@@ -790,6 +796,7 @@ class BinderVisitor:
 
     def visit_scan(self, node: Node, context: BindingContext) -> Tuple[Node, BindingContext]:
         from opteryx.connectors import connector_factory
+        from opteryx.connectors import known_prefix
         from opteryx.connectors.capabilities import Asynchronous
         from opteryx.connectors.capabilities import Cacheable
         from opteryx.connectors.capabilities import Partitionable
@@ -802,12 +809,13 @@ class BinderVisitor:
 
         catalog_table = None
         if node.relation.count(".") == 1:
-            catalog_provider = catalog_factory()
-            catalog_table = catalog_provider.get_table(node.relation)
-            if catalog_table:
-                node.connector = connector_factory(
-                    catalog_table["location"], statistics=context.statistics
-                )
+            if not known_prefix(node.relation.split(".")[0]):
+                catalog_provider = catalog_factory()
+                catalog_table = catalog_provider.get_table(node.relation)
+                if catalog_table:
+                    node.connector = connector_factory(
+                        catalog_table["location"], statistics=context.statistics
+                    )
         if not catalog_table:
             # work out which connector will be serving this request
             node.connector = connector_factory(node.relation, statistics=context.statistics)
