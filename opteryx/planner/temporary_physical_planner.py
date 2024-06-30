@@ -18,6 +18,8 @@ This should look different when the operators are rewritten for the
 Gen 2 execution engine (a later piece of work)
 """
 
+from orso.schema import OrsoTypes
+
 from opteryx import operators
 from opteryx.exceptions import UnsupportedSyntaxError
 from opteryx.models import ExecutionTree
@@ -54,7 +56,10 @@ def create_physical_plan(logical_plan, query_properties):
         elif node_type == LogicalPlanStepType.Join:
             if node_config.get("type") == "inner":
                 # We use our own implementation of INNER JOIN
-                node = operators.InnerJoinNode(query_properties, **node_config)
+                if len(node_config["left_columns"]) == 1 and node_config["columns"][0].schema_column.type in {OrsoTypes.INTEGER, OrsoTypes.VARCHAR}:
+                    node = operators.InnerJoinSingleNode(query_properties, **node_config)
+                else:
+                    node = operators.InnerJoinNode(query_properties, **node_config)
             elif node_config.get("type") == "left outer":
                 # We use out own implementation of LEFT JOIN
                 node = operators.LeftJoinNode(query_properties, **node_config)

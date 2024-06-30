@@ -315,7 +315,7 @@ def _temporal_extration_state_machine(
     return temporal_range_collector, " ".join(query_collector)
 
 
-def extract_temporal_filters(sql):  # pragma: no cover
+def extract_temporal_filters(sql: str):  # pragma: no cover
     import shlex
 
     parts = sql_parts(sql)
