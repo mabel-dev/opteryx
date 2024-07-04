@@ -133,7 +133,44 @@ def rewrite_in_to_eq(predicate):
 
 
 def reorder_interval_calc(predicate):
-    return predicate
+    """
+    rewrite: end - start > interval => start + interval > end
+
+    This is because comparing a Date with a Date is faster than
+    comparing in Interval with an Interval.
+    """
+    from opteryx.managers.expression import ExpressionColumn
+    from opteryx.managers.expression import format_expression
+
+    date_start = predicate.left.right
+    date_end = predicate.left.left
+    interval = predicate.right
+
+    # Check if the operation is date - date
+    if predicate.left.value == "Minus":
+        # Create a new binary operator node for date + interval
+        new_binary_op = Node(
+            node_type=NodeType.BINARY_OPERATOR,
+            value="Plus",
+            left=date_start,
+            right=interval,
+        )
+        binary_op_column_name = format_expression(new_binary_op, True)
+        new_binary_op.schema_column = ExpressionColumn(
+            name=binary_op_column_name, type=OrsoTypes.TIMESTAMP
+        )
+
+        # Create a new comparison operator node for date > date
+        predicate.node_type = NodeType.COMPARISON_OPERATOR
+        predicate.right = new_binary_op
+        predicate.left = date_end
+
+        predicate_column_name = format_expression(predicate, True)
+        predicate.schema_column = ExpressionColumn(
+            name=predicate_column_name, type=OrsoTypes.BOOLEAN
+        )
+
+        return predicate
 
 
 # Define dispatcher conditions and actions
@@ -193,8 +230,7 @@ def _rewrite_predicate(predicate):
             determine_type(predicate.left) == OrsoTypes.INTERVAL
             and determine_type(predicate.right) == OrsoTypes.INTERVAL
         ):
-            pass
-            # TODO: finish this rewrite rule
+            predicate = dispatcher["reorder_interval_calc"](predicate)
 
     return predicate
 

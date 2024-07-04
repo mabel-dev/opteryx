@@ -71,9 +71,7 @@ def _is_count_star(aggregates):
         return False
     if aggregates[0].value != "COUNT":
         return False
-    if aggregates[0].parameters[0].node_type != NodeType.WILDCARD:
-        return False
-    return True
+    return aggregates[0].parameters[0].node_type == NodeType.WILDCARD
 
 
 def _count_star(morsel_promise, column_name):
