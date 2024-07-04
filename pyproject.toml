@@ -43,3 +43,7 @@ docstring-code-line-length = 100
 [tool.ruff.lint]
 select = ["SIM"]
 ignore = []
+
+[tool.ruff.lint.per-file-ignores]
+"**/cost_based_optimizer/**" = ["SIM102"]
+"opteryx/managers/expression/ops.py" = ["SIM118"]

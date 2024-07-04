@@ -58,7 +58,7 @@ def register_df(name, frame):
     if hasattr(frame, "_df"):
         frame = frame._df
     if hasattr(frame, "to_arrow"):
-        arrow = frame.to_arrow()
+        arrow = frame.to_arrow(future=False)
         if not isinstance(arrow, pyarrow.Table):
             arrow = pyarrow.Table.from_batches(arrow)
         register_arrow(name, arrow)

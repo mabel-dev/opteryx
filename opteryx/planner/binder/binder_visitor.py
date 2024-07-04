@@ -808,14 +808,13 @@ class BinderVisitor:
             raise AmbiguousDatasetError(dataset=node.alias)
 
         catalog_table = None
-        if node.relation.count(".") == 1:
-            if not known_prefix(node.relation.split(".")[0]):
-                catalog_provider = catalog_factory()
-                catalog_table = catalog_provider.get_table(node.relation)
-                if catalog_table:
-                    node.connector = connector_factory(
-                        catalog_table["location"], statistics=context.statistics
-                    )
+        if node.relation.count(".") == 1 and not known_prefix(node.relation.split(".")[0]):
+            catalog_provider = catalog_factory()
+            catalog_table = catalog_provider.get_table(node.relation)
+            if catalog_table:
+                node.connector = connector_factory(
+                    catalog_table["location"], statistics=context.statistics
+                )
         if not catalog_table:
             # work out which connector will be serving this request
             node.connector = connector_factory(node.relation, statistics=context.statistics)

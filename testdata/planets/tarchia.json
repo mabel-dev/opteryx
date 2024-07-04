@@ -89,5 +89,6 @@
     "partitioning": [],
     "disposition": "SNAPSHOT",
     "permissions": [],
-    "metadata": {}
+    "metadata": {},
+    "encryption_details": null
 }
