@@ -14,7 +14,7 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 import opteryx
 from opteryx.connectors import CqlConnector
 from opteryx.utils.formatter import format_sql
-from tests.tools import is_arm, is_mac, is_windows, skip_if
+from tests.tools import is_arm, is_mac, is_windows, skip_if, is_version
 
 # fmt:off
 test_cases = [
@@ -43,7 +43,7 @@ test_cases = [
 
 
 # skip to reduce billing
-@skip_if(is_arm() or is_windows() or is_mac())
+@skip_if(is_arm() or is_windows() or is_mac() or is_version("3.10"))
 @pytest.mark.parametrize(
     "query, expected_rowcount, expected_columncount, expected_stats", test_cases
 )
