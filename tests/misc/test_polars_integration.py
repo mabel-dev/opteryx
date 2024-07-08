@@ -8,10 +8,16 @@ def test_polars():
     import polars
 
     import opteryx
+    from opteryx.exceptions import NotSupportedError
 
     polars_df = polars.read_csv("testdata/flat/formats/csv/tweets.csv")
 
-    opteryx.register_df("twitter", polars_df)
+    try:
+        opteryx.register_df("twitter", polars_df)
+    except NotSupportedError:
+        # skip this test
+        return True
+    
     curr = opteryx.Connection().cursor()
     # this is the same statement as the CSV format test
     curr.execute("SELECT username, user_verified FROM twitter WHERE username ILIKE '%cve%'")

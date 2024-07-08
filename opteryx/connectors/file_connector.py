@@ -25,6 +25,7 @@ from orso.types import OrsoTypes
 
 from opteryx.connectors.base.base_connector import BaseConnector
 from opteryx.connectors.capabilities import PredicatePushable
+from opteryx.exceptions import DataError
 from opteryx.exceptions import DatasetNotFoundError
 from opteryx.utils.file_decoders import get_decoder
 
@@ -87,9 +88,14 @@ class FileConnector(BaseConnector, PredicatePushable):
             An iterator containing a single decoded pyarrow.Table.
         """
         self._read_file()
-        num_rows, num_columns, decoded = self.decoder(
-            self._byte_array, projection=columns, selection=predicates
-        )
+
+        try:
+            num_rows, num_columns, decoded = self.decoder(
+                self._byte_array, projection=columns, selection=predicates
+            )
+        except Exception as err:
+            raise DataError(f"Unable to read file ({err})") from err
+
         self.statistics.rows_seen += num_rows
         yield decoded
 

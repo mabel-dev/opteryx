@@ -38,6 +38,7 @@ from opteryx.constants import ResultType
 from opteryx.exceptions import InconsistentSchemaError
 from opteryx.exceptions import InvalidCursorStateError
 from opteryx.exceptions import MissingSqlStatement
+from opteryx.exceptions import SqlError
 from opteryx.exceptions import UnsupportedSyntaxError
 from opteryx.models import QueryStatistics
 from opteryx.shared.rolling_log import RollingLog
@@ -184,10 +185,8 @@ class Cursor(DataFrame):
             start = time.time_ns()
             first_item = next(plans)
             self._statistics.time_planning += time.time_ns() - start
-        except RuntimeError:  # pragma: no cover
-            raise MissingSqlStatement(
-                "SQL statement provided had no executable part, this may mean the statement was commented out."
-            )
+        except RuntimeError as err:  # pragma: no cover
+            raise SqlError(f"Error Executing SQL Statement ({err})") from err
 
         plans = chain([first_item], plans)
 

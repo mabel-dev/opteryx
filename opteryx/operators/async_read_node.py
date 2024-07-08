@@ -32,6 +32,7 @@ import pyarrow.parquet
 from orso.schema import RelationSchema
 
 from opteryx import config
+from opteryx.exceptions import DataError
 from opteryx.operators.base_plan_node import BasePlanDataObject
 from opteryx.operators.read_node import ReaderNode
 from opteryx.shared import AsyncMemoryPool
@@ -174,7 +175,12 @@ class AsyncReaderNode(ReaderNode):
             try:
                 start = time.monotonic_ns()
                 # the sync readers include the decode time as part of the read time
-                decoded = decoder(blob_bytes, projection=self.columns, selection=self.predicates)
+                try:
+                    decoded = decoder(
+                        blob_bytes, projection=self.columns, selection=self.predicates
+                    )
+                except Exception as err:
+                    raise DataError(f"Unable to read blob {blob_name} - error {err}") from err
                 self.statistics.time_reading_blobs += time.monotonic_ns() - start
                 num_rows, _, morsel = decoded
                 self.statistics.rows_seen += num_rows

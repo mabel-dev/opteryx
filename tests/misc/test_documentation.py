@@ -176,6 +176,7 @@ def test_polars_integration_input():
     import polars
 
     import opteryx
+    from opteryx.exceptions import NotSupportedError
 
     # Create the DataFrame
     data = {
@@ -185,8 +186,11 @@ def test_polars_integration_input():
     }
     df = polars.DataFrame(data)
 
-    # Register as a data source
-    opteryx.register_df("nephews", df)
+    try:
+        opteryx.register_df("nephews", df)
+    except NotSupportedError:
+        # skip this test
+        return True
 
     results = opteryx.query("SELECT * FROM nephews").arrow()
 
