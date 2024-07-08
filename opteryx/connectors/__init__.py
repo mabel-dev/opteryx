@@ -57,8 +57,18 @@ def register_df(name, frame):
     # polars (maybe others) - the polars to arrow API is a mess
     if hasattr(frame, "_df"):
         frame = frame._df
+    if "PyDataFrame" in str(type(frame)):
+        arrow = frame.to_arrow(compat_level=1)
+        if not isinstance(arrow, pyarrow.Table):
+            from opteryx.exceptions import NotSupportedError
+
+            raise NotSupportedError(
+                "Polars not supported whilst changes are being made to the Polars to Arrow APIs"
+            )
+        register_arrow(name, arrow)
+        return
     if hasattr(frame, "to_arrow"):
-        arrow = frame.to_arrow(future=False)
+        arrow = frame.to_arrow()
         if not isinstance(arrow, pyarrow.Table):
             arrow = pyarrow.Table.from_batches(arrow)
         register_arrow(name, arrow)
