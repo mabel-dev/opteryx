@@ -186,10 +186,6 @@ def test_polars_integration_input():
     }
     df = polars.DataFrame(data)
 
-    # Register as a data source
-    opteryx.register_df("nephews", df)
-
-
     try:
         opteryx.register_df("nephews", df)
     except NotSupportedError:
