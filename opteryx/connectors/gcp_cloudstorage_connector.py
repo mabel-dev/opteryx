@@ -25,6 +25,7 @@ from opteryx.connectors.capabilities import Asynchronous
 from opteryx.connectors.capabilities import Cacheable
 from opteryx.connectors.capabilities import Partitionable
 from opteryx.connectors.capabilities import PredicatePushable
+from opteryx.exceptions import DataError
 from opteryx.exceptions import DatasetNotFoundError
 from opteryx.exceptions import DatasetReadError
 from opteryx.exceptions import MissingDependencyError
@@ -245,12 +246,17 @@ class GcpCloudStorageConnector(
             try:
                 decoder = get_decoder(blob_name)
                 blob_bytes = self.read_blob(blob_name=blob_name, statistics=self.statistics)
-                decoded = decoder(
-                    blob_bytes,
-                    projection=columns,
-                    selection=predicates,
-                    just_schema=just_schema,
-                )
+
+                try:
+                    decoded = decoder(
+                        blob_bytes,
+                        projection=columns,
+                        selection=predicates,
+                        just_schema=just_schema,
+                    )
+                except Exception as err:
+                    raise DataError(f"Unable to read file {blob_name} ({err})") from err
+
                 if not just_schema:
                     num_rows, num_columns, decoded = decoded
                     self.statistics.rows_seen += num_rows

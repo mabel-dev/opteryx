@@ -1,14 +1,44 @@
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from typing import Any
 from typing import Dict
-from typing import List
 from typing import Optional
 
 import requests
 
-# from .catalog_provider import CatalogProvider
+from .catalog_provider import CatalogProvider
 
 
-class TarchiaCatalogProvider:  # CatalogProvider):
+def is_valid_url(url: str) -> bool:
+    """
+    Check if the given string is a valid URL.
+
+    Parameters:
+        url (str): The input string to be checked.
+
+    Returns:
+        bool: True if the input string is a valid URL, False otherwise.
+    """
+    from urllib.parse import urlparse
+
+    try:
+        result = urlparse(url)
+        return all([result.scheme, result.netloc])
+    except ValueError:
+        return False
+
+
+class TarchiaCatalogProvider(CatalogProvider):
     def __init__(self, config: Optional[str] = None):
         if config is None:
             from opteryx.config import DATA_CATALOG_CONFIGURATION
@@ -16,6 +46,9 @@ class TarchiaCatalogProvider:  # CatalogProvider):
             self.BASE_URL = DATA_CATALOG_CONFIGURATION
         else:
             self.BASE_URL = config
+
+        if not is_valid_url(self.BASE_URL):
+            self.BASE_URL = None
 
     def get_table(
         self, table: str, snapshot: Optional[str] = None, as_at: Optional[int] = None
@@ -31,15 +64,18 @@ class TarchiaCatalogProvider:  # CatalogProvider):
         Returns:
             Dict[str, Any]: The dataset metadata.
         """
+        if self.BASE_URL is None:
+            return None
+
         import os
 
-        cookies = {"AUTH_TOKEN": os.environ.get("TARCHIA_KEY")}
-        if table.count(".") != 1:
+        if table.count(".") != 1 or not table.replace(".", "").isidentifier():
             # not in the data catalog
             return None
         else:
             owner, table = table.split(".")
 
+        cookies = {"AUTH_TOKEN": os.environ.get("TARCHIA_KEY")}
         url = f"{self.BASE_URL}/v1/tables/{owner}/{table}"
 
         params = {}
@@ -56,29 +92,6 @@ class TarchiaCatalogProvider:  # CatalogProvider):
         )
         if response.status_code != 200:
             return None
-        return response.json()
-
-    def get_blobs_in_table(
-        self,
-        table_identifier: str,
-        snapshot_identifier: str,
-        filters: Optional[Dict[str, Any]] = None,
-    ) -> List[Dict[str, Any]]:
-        """
-        Retrieve the blobs in a table for a given snapshot identifier.
-
-        Parameters:
-            table_identifier (str): The identifier of the table.
-            snapshot_identifier (str): The identifier of the snapshot.
-            filters (Optional[Dict[str, Any]]): Optional filters to apply.
-
-        Returns:
-            List[Dict[str, Any]]: A list of blobs metadata.
-        """
-        owner, table = table_identifier.split(".")
-        url = f"{self.BASE_URL}/v1/{owner}/{table}/snapshots/{snapshot_identifier}/blobs"
-        response = requests.get(url, params=filters, timeout=10)
-        response.raise_for_status()
         return response.json()
 
     def get_view(self, view_name: str) -> Dict[str, Any]:
