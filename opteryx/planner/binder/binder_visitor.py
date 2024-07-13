@@ -808,9 +808,9 @@ class BinderVisitor:
             raise AmbiguousDatasetError(dataset=node.alias)
 
         catalog_table = None
-        if node.relation.count(".") == 1 and not known_prefix(node.relation.split(".")[0]):
+        if node.relation.count(".") == 1:
             catalog_provider = catalog_factory()
-            catalog_table = catalog_provider.get_table(node.relation)
+            catalog_table = catalog_provider.table_exists(node.relation)
             if catalog_table:
                 node.connector = connector_factory(
                     catalog_table["location"], statistics=context.statistics

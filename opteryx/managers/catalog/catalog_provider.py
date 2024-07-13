@@ -15,6 +15,9 @@ class CatalogProvider:
     def list_tables(self):
         pass
 
+    def table_exists(self, table):
+        pass
+
     def get_table(self, table_identifier, as_at):
         pass
 

@@ -9,7 +9,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import os
 from typing import Any
 from typing import Dict
 from typing import Optional
@@ -50,9 +50,7 @@ class TarchiaCatalogProvider(CatalogProvider):
         if not is_valid_url(self.BASE_URL):
             self.BASE_URL = None
 
-    def get_table(
-        self, table: str, snapshot: Optional[str] = None, as_at: Optional[int] = None
-    ) -> Dict[str, Any]:
+    def table_exists(self, table: str) -> bool:
         """
         Retrieve the current or past instance of a dataset.
 
@@ -67,32 +65,26 @@ class TarchiaCatalogProvider(CatalogProvider):
         if self.BASE_URL is None:
             return None
 
-        import os
-
-        if table.count(".") != 1 or not table.replace(".", "").isidentifier():
+        if table.count(".") != 1 or not all(p.isidentifier() for p in table.split(".")):
             # not in the data catalog
             return None
-        else:
-            owner, table = table.split(".")
+
+        owner, table = table.split(".")
 
         cookies = {"AUTH_TOKEN": os.environ.get("TARCHIA_KEY")}
         url = f"{self.BASE_URL}/v1/tables/{owner}/{table}"
 
-        params = {}
-        if as_at:
-            params["as_at"] = as_at
-        if snapshot:
-            url += f"/snapshots/{snapshot}"
-
         response = requests.get(
             url,
-            params=params,
             timeout=5,
             cookies=cookies,
         )
         if response.status_code != 200:
             return None
         return response.json()
+
+    def get_table(self, table_identifier, as_at):
+        return super().get_table(table_identifier, as_at)
 
     def get_view(self, view_name: str) -> Dict[str, Any]:
         """
