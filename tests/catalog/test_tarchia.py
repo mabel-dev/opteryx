@@ -9,7 +9,7 @@ import pytest
 def test_basic_tarchia():
     import opteryx
 
-    SQL = "SELECT * FROM joocer.planets;"
+    SQL = "SELECT * FROM opteryx.planets;"
     results = opteryx.query(SQL)
     assert results.shape == (9, 20)
 
@@ -17,7 +17,7 @@ def test_valid_namespace_invalid_dataset():
     import opteryx
     from opteryx.exceptions import DatasetNotFoundError
 
-    SQL = "SELECT * FROM joocer.no;"
+    SQL = "SELECT * FROM opteryx.no;"
         
     with pytest.raises(DatasetNotFoundError):
         results = opteryx.query(SQL)
@@ -26,7 +26,7 @@ def test_wrong_dotted_dataset():
     import opteryx
     from opteryx.exceptions import DatasetNotFoundError
 
-    SQL = "SELECT * FROM joocer.no.planets;"
+    SQL = "SELECT * FROM opteryx.no.planets;"
         
     with pytest.raises(DatasetNotFoundError):
         results = opteryx.query(SQL)
