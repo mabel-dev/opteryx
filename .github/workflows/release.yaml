@@ -10,7 +10,7 @@ jobs:
 
   build-linux-cp39:
     runs-on: ubuntu-latest
-    container: quay.io/pypa/manylinux2014_x86_64
+    container: quay.io/pypa/manylinux2014_x86_64@sha256:7faa424c478d774a3ac17baacb5fa6b59e7c75dae47a6cb84f23df757d83469e
 
     steps:
     - uses: actions/checkout@v4
@@ -41,7 +41,7 @@ jobs:
 
   build-linux-cp310:
     runs-on: ubuntu-latest
-    container: quay.io/pypa/manylinux2014_x86_64
+    container: quay.io/pypa/manylinux2014_x86_64@sha256:7faa424c478d774a3ac17baacb5fa6b59e7c75dae47a6cb84f23df757d83469e
 
     steps:
     - uses: actions/checkout@v4
@@ -72,7 +72,7 @@ jobs:
 
   build-linux-cp311:
     runs-on: ubuntu-latest
-    container: quay.io/pypa/manylinux2014_x86_64
+    container: quay.io/pypa/manylinux2014_x86_64@sha256:7faa424c478d774a3ac17baacb5fa6b59e7c75dae47a6cb84f23df757d83469e
 
     steps:
     - uses: actions/checkout@v4
@@ -103,7 +103,7 @@ jobs:
 
   build-linux-cp312:
     runs-on: ubuntu-latest
-    container: quay.io/pypa/manylinux2014_x86_64
+    container: quay.io/pypa/manylinux2014_x86_64@sha256:7faa424c478d774a3ac17baacb5fa6b59e7c75dae47a6cb84f23df757d83469e
 
     steps:
     - uses: actions/checkout@v4
