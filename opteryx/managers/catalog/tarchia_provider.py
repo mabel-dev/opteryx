@@ -92,7 +92,7 @@ class TarchiaCatalogProvider(CatalogProvider):
                     return None
                 return response.json()
             except (ConnectionError, Timeout) as err:
-                # DEBUG: log ("table_exists failed", err)
+                # DEBUG: log (f"Tarchia Table Exists failed {err}, retrying")
                 tries -= 1
             except Exception as err:
                 raise err
@@ -129,7 +129,7 @@ class TarchiaCatalogProvider(CatalogProvider):
                 response_dict = response.json()
                 return response_dict.get("blobs")
             except (ConnectionError, Timeout) as err:
-                # DEBUG: log ("get_blobs_in_table failed", err)
+                # DEBUG: log (f"Tarchia Read Commit failed {err}, retrying")
                 tries -= 1
             except Exception as err:
                 raise err
