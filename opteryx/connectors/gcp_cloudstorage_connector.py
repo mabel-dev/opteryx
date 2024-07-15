@@ -240,6 +240,7 @@ class GcpCloudStorageConnector(
             end_date=self.end_date,
             blob_list_getter=self.get_list_of_blob_names,
             prefix=self.dataset,
+            predicates=predicates,
         )
 
         for blob_name in blob_names:

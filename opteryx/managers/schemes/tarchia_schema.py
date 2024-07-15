@@ -10,22 +10,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import datetime
-from typing import Callable
+
 from typing import List
-from typing import Optional
 
 from opteryx.managers.schemes import BasePartitionScheme
 
 
-class DefaultPartitionScheme(BasePartitionScheme):
+class TarchiaScheme(BasePartitionScheme):
+    """
+    Handle reading data using the Tarchia scheme.
+    """
+
     def get_blobs_in_partition(
         self,
         *,
-        blob_list_getter: Callable,
         prefix: str,
-        start_date: Optional[datetime.datetime],
-        end_date: Optional[datetime.datetime],
+        predicates: List,
         **kwargs,
     ) -> List[str]:
-        return blob_list_getter(prefix=prefix)
+        from opteryx.managers.catalog.tarchia_provider import TarchiaCatalogProvider
+
+        provider = TarchiaCatalogProvider()
+
+        blobs = provider.get_blobs_in_table(prefix, filters=predicates)
+
+        return sorted(b["path"].split("://")[1] for b in blobs)

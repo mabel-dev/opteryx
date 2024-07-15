@@ -111,6 +111,7 @@ class AsyncReaderNode(ReaderNode):
         self.pool = MemoryPool(MAX_READ_BUFFER_CAPACITY, f"ReadBuffer <{self.parameters['alias']}>")
 
         self.do = AsyncReaderDataObject()
+        self.predicates = kwargs.get("predicates")
 
     @classmethod
     def from_dict(cls, dic: dict) -> "AsyncReaderNode":  # pragma: no cover
@@ -126,6 +127,7 @@ class AsyncReaderNode(ReaderNode):
             end_date=reader.end_date,
             blob_list_getter=reader.get_list_of_blob_names,
             prefix=reader.dataset,
+            predicates=self.predicates,
         )
 
         data_queue: queue.Queue = queue.Queue()

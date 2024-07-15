@@ -796,28 +796,45 @@ class BinderVisitor:
 
     def visit_scan(self, node: Node, context: BindingContext) -> Tuple[Node, BindingContext]:
         from opteryx.connectors import connector_factory
-        from opteryx.connectors import known_prefix
         from opteryx.connectors.capabilities import Asynchronous
         from opteryx.connectors.capabilities import Cacheable
         from opteryx.connectors.capabilities import Partitionable
         from opteryx.connectors.capabilities.cacheable import async_read_thru_cache
         from opteryx.connectors.capabilities.cacheable import read_thru_cache
         from opteryx.managers.catalog import catalog_factory
+        from opteryx.managers.schemes.tarchia_schema import TarchiaScheme
 
         if node.alias in context.relations:
             raise AmbiguousDatasetError(dataset=node.alias)
 
         catalog_table = None
+        node.found_in_catalog = False
+
         if node.relation.count(".") == 1:
             catalog_provider = catalog_factory()
             catalog_table = catalog_provider.table_exists(node.relation)
             if catalog_table:
-                node.connector = connector_factory(
-                    catalog_table["location"], statistics=context.statistics
-                )
+                node.found_in_catalog = True
+                node.disposition = catalog_table.get("disposition")
+                node.location = catalog_table["location"]
+
+                if node.disposition == "EXTERNAL":
+                    # explicitly told it's external
+                    node.connector = connector_factory(node.location, statistics=context.statistics)
+                else:
+                    node.connector = connector_factory(
+                        node.location, statistics=context.statistics, partition_scheme=TarchiaScheme
+                    )
+                    node.connector.dataset = node.relation
+
+                catalog_schema = catalog_table.get("current_schema", {})
+                catalog_schema["name"] = catalog_table["location"]
+                node.schema = RelationSchema.from_dict(catalog_schema)
+
         if not catalog_table:
             # work out which connector will be serving this request
             node.connector = connector_factory(node.relation, statistics=context.statistics)
+
         connector_capabilities = node.connector.__class__.mro()
 
         if hasattr(node.connector, "variables"):
@@ -836,14 +853,8 @@ class BinderVisitor:
             else:
                 original_read_blob = node.connector.read_blob
                 node.connector.read_blob = read_thru_cache(original_read_blob)
-        # get them to tell is the schema of the dataset
-        # None means we don't know ahead of time - we can usually get something
-        if catalog_table:
-            catalog_schema = catalog_table.get("current_schema", {})
-            catalog_schema["name"] = catalog_table["location"]
-            node.schema = RelationSchema.from_dict(catalog_schema)
-            node.connector.schema = node.schema
-        else:
+
+        if not node.found_in_catalog:
             node.schema = node.connector.get_dataset_schema()
         node.schema.aliases.append(node.alias)
         context.schemas[node.alias] = node.schema

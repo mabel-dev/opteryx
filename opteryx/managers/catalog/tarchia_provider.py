@@ -9,6 +9,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+
 import os
 from typing import Any
 from typing import Dict
@@ -50,7 +52,7 @@ class TarchiaCatalogProvider(CatalogProvider):
         if not is_valid_url(self.BASE_URL):
             self.BASE_URL = None
 
-    def table_exists(self, table: str) -> bool:
+    def table_exists(self, table: str) -> dict:
         """
         Retrieve the current or past instance of a dataset.
 
@@ -83,8 +85,31 @@ class TarchiaCatalogProvider(CatalogProvider):
             return None
         return response.json()
 
-    def get_table(self, table_identifier, as_at):
-        return super().get_table(table_identifier, as_at)
+    def get_blobs_in_table(self, table: str, commit: str = "latest", filters: Optional[str] = None):
+        if self.BASE_URL is None:
+            return None
+
+        if table.count(".") != 1 or not all(p.isidentifier() for p in table.split(".")):
+            # not in the data catalog
+            return None
+
+        owner, table = table.split(".")
+
+        cookies = {"AUTH_TOKEN": os.environ.get("TARCHIA_KEY")}
+        url = f"{self.BASE_URL}/v1/tables/{owner}/{table}/commits/{commit}"
+
+        if filters:
+            url += "?{filters}"
+
+        response = requests.get(
+            url,
+            timeout=5,
+            cookies=cookies,
+        )
+        if response.status_code != 200:
+            return None
+        response_dict = response.json()
+        return response_dict.get("blobs")
 
     def get_view(self, view_name: str) -> Dict[str, Any]:
         """
