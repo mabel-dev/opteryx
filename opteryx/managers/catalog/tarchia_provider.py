@@ -17,6 +17,8 @@ from typing import Dict
 from typing import Optional
 
 import requests
+from requests.exceptions import ConnectionError
+from requests.exceptions import Timeout
 
 from .catalog_provider import CatalogProvider
 
@@ -76,14 +78,25 @@ class TarchiaCatalogProvider(CatalogProvider):
         cookies = {"AUTH_TOKEN": os.environ.get("TARCHIA_KEY")}
         url = f"{self.BASE_URL}/v1/tables/{owner}/{table}"
 
-        response = requests.get(
-            url,
-            timeout=5,
-            cookies=cookies,
-        )
-        if response.status_code != 200:
-            return None
-        return response.json()
+        # DEBUG: log (f"[GET] {url}")
+
+        tries = 2
+        while tries > 0:
+            try:
+                response = requests.get(
+                    url,
+                    timeout=5,
+                    cookies=cookies,
+                )
+                if response.status_code != 200:
+                    return None
+                return response.json()
+            except (ConnectionError, Timeout) as err:
+                # DEBUG: log ("table_exists failed", err)
+                tries -= 1
+            except Exception as err:
+                raise err
+        return None
 
     def get_blobs_in_table(self, table: str, commit: str = "latest", filters: Optional[str] = None):
         if self.BASE_URL is None:
@@ -99,17 +112,28 @@ class TarchiaCatalogProvider(CatalogProvider):
         url = f"{self.BASE_URL}/v1/tables/{owner}/{table}/commits/{commit}"
 
         if filters:
-            url += "?{filters}"
+            url += f"?filters={filters}"
 
-        response = requests.get(
-            url,
-            timeout=5,
-            cookies=cookies,
-        )
-        if response.status_code != 200:
-            return None
-        response_dict = response.json()
-        return response_dict.get("blobs")
+        # DEBUG: log (f"[GET] {url}")
+
+        tries = 2
+        while tries > 0:
+            try:
+                response = requests.get(
+                    url,
+                    timeout=5,
+                    cookies=cookies,
+                )
+                if response.status_code != 200:
+                    return None
+                response_dict = response.json()
+                return response_dict.get("blobs")
+            except (ConnectionError, Timeout) as err:
+                # DEBUG: log ("get_blobs_in_table failed", err)
+                tries -= 1
+            except Exception as err:
+                raise err
+        return None
 
     def get_view(self, view_name: str) -> Dict[str, Any]:
         """
