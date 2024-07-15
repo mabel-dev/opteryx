@@ -3,30 +3,34 @@ name: Build and Test
 on: [push, pull_request]
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        python-version: [3.9, 3.10, 3.11, 3.12]
+  build-linux-cp39:
+    runs-on: ubuntu-latest
+    container: quay.io/pypa/manylinux2014_x86_64
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+    - uses: actions/checkout@v3.5.3
 
-    - name: Build Docker image
-      run: docker build -t my-custom-image .
+    - name: Install rust toolchain
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
 
-    - name: Build for Python ${{ matrix.python-version }}
-      run: |
-        docker run --rm -v ${{ github.workspace }}:/workspace my-custom-image /bin/bash -c "
-        python${{ matrix.python-version }} -m pip install --upgrade setuptools wheel && \
-        python${{ matrix.python-version }} setup.py bdist_wheel && \
-        auditwheel repair -w dist dist/* && \
-        rm dist/*-linux_x86_64.whl"
+    - name: Install Python package dependencies
+      run: /opt/python/cp39-cp39/bin/python -m pip install --upgrade cython wheel numpy setuptools_rust
+
+    - name: Build binary wheel
+      run: /opt/python/cp39-cp39/bin/python setup.py bdist_wheel
+
+    - name: Apply auditwheel for manylinux wheel
+      run: auditwheel repair -w dist dist/*
+
+    - name: Remove linux wheel
+      run: rm dist/*-linux_x86_64.whl
 
     - name: Archive dist artifacts
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v1
       with:
-        name: dist-linux-${{ matrix.python-version }}
+        name: dist-linux-3.9
         path: dist
