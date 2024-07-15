@@ -1,0 +1,40 @@
+name: Build and Test
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: quay.io/pypa/manylinux2014_x86_64@sha256:7faa424c478d774a3ac17baacb5fa6b59e7c75dae47a6cb84f23df757d83469e
+
+    strategy:
+      matrix:
+        python-version: [cp39-cp39, cp310-cp310, cp311-cp311, cp312-cp312]
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Install rust toolchain
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+
+    - name: Install Python package dependencies
+      run: /opt/python/${{ matrix.python-version }}/bin/python -m pip install --upgrade cython wheel numpy setuptools_rust
+
+    - name: Build binary wheel
+      run: /opt/python/${{ matrix.python-version }}/bin/python setup.py bdist_wheel
+
+    - name: Apply auditwheel for manylinux wheel
+      run: auditwheel repair -w dist dist/*
+
+    - name: Remove linux wheel
+      run: rm dist/*-linux_x86_64.whl
+
+    - name: Archive dist artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: dist-linux-${{ matrix.python-version }}
+        path: dist
