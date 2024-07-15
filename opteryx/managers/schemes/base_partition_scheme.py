@@ -38,6 +38,7 @@ class BasePartitionScheme:
         prefix: str,
         start_date: Optional[datetime.datetime],
         end_date: Optional[datetime.datetime],
+        **kwargs,
     ) -> List[str]:
         """filter the blobs acording to the chosen scheme"""
         raise NotImplementedError()

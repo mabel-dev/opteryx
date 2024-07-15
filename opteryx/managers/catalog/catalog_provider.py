@@ -10,15 +10,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Optional
+
 
 class CatalogProvider:
-    def list_tables(self):
-        pass
-
     def table_exists(self, table):
         pass
 
-    def get_table(self, table_identifier, as_at):
+    def get_blobs_in_table(self, table: str, commit: str = "latest", filters: Optional[str] = None):
         pass
 
     def get_view(self, view_name):

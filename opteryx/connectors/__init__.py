@@ -22,10 +22,19 @@ from opteryx.connectors.gcp_cloudstorage_connector import GcpCloudStorageConnect
 from opteryx.connectors.gcp_firestore_connector import GcpFireStoreConnector
 from opteryx.connectors.mongodb_connector import MongoDbConnector
 from opteryx.connectors.sql_connector import SqlConnector
+from opteryx.managers.schemes.tarchia_schema import TarchiaScheme
 from opteryx.shared import MaterializedDatasets
 
 # load the base set of prefixes
-_storage_prefixes = {"information_schema": "InformationSchema"}
+# fmt:off
+_storage_prefixes = {
+    "information_schema": "InformationSchema",
+    "gs:": {"connector": GcpCloudStorageConnector, "prefix": "gs://", "remove_prefix": True},
+    "s3:": {"connector": AwsS3Connector, "prefix": "s3://", "remove_prefix": True},
+    "minio:": {"connector": AwsS3Connector, "prefix": "minio://", "remove_prefix": True},
+    "file:": {"connector": DiskConnector, "prefix": "file://", "remove_prefix": True},
+}
+# fmt:on
 
 __all__ = (
     "ArrowConnector",
@@ -111,8 +120,12 @@ def connector_factory(dataset, statistics, **config):
     # Look up the prefix from the registered prefixes
     connector_entry: dict = config
     for prefix, storage_details in _storage_prefixes.items():
-        if dataset == prefix or dataset.startswith(prefix + "."):
-            connector_entry = storage_details.copy()  # type: ignore
+        if (
+            dataset == prefix
+            or dataset.startswith(prefix + ".")
+            or dataset.startswith(prefix + "//")
+        ):
+            connector_entry.update(storage_details.copy())  # type: ignore
             connector = connector_entry.pop("connector")
             break
     else:
