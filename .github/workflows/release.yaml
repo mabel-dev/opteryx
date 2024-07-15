@@ -13,6 +13,11 @@ jobs:
     container: quay.io/pypa/manylinux2014_x86_64@sha256:7faa424c478d774a3ac17baacb5fa6b59e7c75dae47a6cb84f23df757d83469e
 
     steps:
+    - name: Install required libraries
+      run: |
+        yum update -y
+        yum install -y glibc libstdc++
+
     - uses: actions/checkout@v4
 
     - name: Install rust toolchain
