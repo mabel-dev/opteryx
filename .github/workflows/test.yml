@@ -8,7 +8,7 @@ jobs:
     strategy:
       matrix:
         python-version: ['3.9', '3.10', '3.11', '3.12']
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     steps:
 
       - name: Checkout code
@@ -37,11 +37,11 @@ jobs:
       - name: Build binary wheel
         run: python setup.py bdist_wheel
 
-      - name: Apply auditwheel for manylinux wheel
-        run: python -m auditwheel repair -w dist dist/*
+#      - name: Apply auditwheel for manylinux wheel
+#        run: python -m auditwheel repair -w dist dist/*
 
-      - name: Remove linux wheel
-        run: rm dist/*-linux_x86_64.whl
+#      - name: Remove linux wheel
+#        run: rm dist/*-linux_x86_64.whl
 
       - name: Archive dist artifacts
         uses: actions/upload-artifact@v1
