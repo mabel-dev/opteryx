@@ -30,7 +30,7 @@ jobs:
       - name: Install Requirements
         run: |
           python -m pip install --upgrade pip
-          python -m pip install --upgrade numpy cython wheel numpy setuptools_rust
+          python -m pip install --upgrade numpy cython wheel numpy setuptools_rust auditwheel
           python -m pip install --upgrade -r $GITHUB_WORKSPACE/requirements.txt
           python -m pip install --upgrade -r $GITHUB_WORKSPACE/tests/requirements.txt
 
@@ -38,7 +38,7 @@ jobs:
         run: python setup.py bdist_wheel
 
       - name: Apply auditwheel for manylinux wheel
-        run: auditwheel repair -w dist dist/*
+        run: python -m auditwheel repair -w dist dist/*
 
       - name: Remove linux wheel
         run: rm dist/*-linux_x86_64.whl
