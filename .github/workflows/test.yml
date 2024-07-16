@@ -34,14 +34,12 @@ jobs:
           python -m pip install --upgrade -r $GITHUB_WORKSPACE/requirements.txt
           python -m pip install --upgrade -r $GITHUB_WORKSPACE/tests/requirements.txt
 
-      - name: Build binary wheel
-        run: python setup.py bdist_wheel
+      - name: Install cibuildwheel
+        run: python -m pip install cibuildwheel
 
-      - name: Apply auditwheel for manylinux wheel
-        run: python -m auditwheel repair -w dist dist/*
-
-      - name: Remove linux wheel
-        run: rm dist/*-linux_x86_64.whl
+      - name: Build wheels
+        run: |
+          cibuildwheel --output-dir wheelhouse
 
       - name: Archive dist artifacts
         uses: actions/upload-artifact@v1
