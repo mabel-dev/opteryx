@@ -5,50 +5,46 @@ on: [push, pull_request]
 jobs:
 
   build-linux:
-    runs-on: ubuntu-latest
-
     strategy:
-      max-parallel: 4
-      fail-fast: false
       matrix:
         python-version: ['3.10', '3.11', '3.12']
-        os: [ubuntu-latest]
-    runs-on: ${{ matrix.os }}
-
+    runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4.1.7
 
-    - name: Install rust toolchain
-      uses: actions-rs/toolchain@v1
-      with:
-        toolchain: stable
-        override: true
+      - name: Checkout code
+        uses: actions/checkout@v4.1.7
 
-    - name: Set up Python ${{ matrix.python-version }} x64
-      if: matrix.os == 'ubuntu-latest'
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ matrix.python-version }}
-        architecture: x64
+      - name: Install rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
 
-    - name: Install Requirements
-      run: |
-        python -m pip install --upgrade pip
-        python -m pip install --upgrade numpy cython wheel numpy setuptools_rust
-        python -m pip install --upgrade -r $GITHUB_WORKSPACE/requirements.txt
-        python -m pip install --upgrade -r $GITHUB_WORKSPACE/tests/requirements.txt
+      - name: Set up Python ${{ matrix.python-version }} x64
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          architecture: x64
 
-    - name: Build binary wheel
-      run: python setup.py bdist_wheel
+      - name: Install Requirements
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install --upgrade numpy cython wheel numpy setuptools_rust
+          python -m pip install --upgrade -r $GITHUB_WORKSPACE/requirements.txt
+          python -m pip install --upgrade -r $GITHUB_WORKSPACE/tests/requirements.txt
 
-    - name: Apply auditwheel for manylinux wheel
-      run: auditwheel repair -w dist dist/*
+      - name: Build binary wheel
+        run: python setup.py bdist_wheel
 
-    - name: Remove linux wheel
-      run: rm dist/*-linux_x86_64.whl
+      - name: Apply auditwheel for manylinux wheel
+        run: auditwheel repair -w dist dist/*
 
-    - name: Archive dist artifacts
-      uses: actions/upload-artifact@v1
-      with:
-        name: dist-linux-${{ matrix.python-version }}
-        path: dist
+      - name: Remove linux wheel
+        run: rm dist/*-linux_x86_64.whl
+
+      - name: Archive dist artifacts
+        uses: actions/upload-artifact@v1
+        with:
+          name: dist-linux-${{ matrix.python-version }}
+          path: dist
