@@ -50,6 +50,8 @@ class Connection:
             raise ProgrammingError("Invalid permissions provided to Connection")
         if user and not isinstance(user, str):
             raise ProgrammingError("Invalid user provided to Connection")
+        if memberships is None:
+            memberships = ["opteryx"]
 
         self.context = ConnectionContext(user=user, memberships=memberships)
 

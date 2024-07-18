@@ -78,6 +78,8 @@ class GcpCloudStorageConnector(
         OrsoTypes.DOUBLE,
         OrsoTypes.INTEGER,
         OrsoTypes.VARCHAR,
+        OrsoTypes.TIMESTAMP,
+        OrsoTypes.DATE,
     }
 
     def __init__(self, credentials=None, **kwargs):

@@ -85,6 +85,8 @@ class PredicatePushable:
                 raise NotSupportedError()
             if root.left.node_type != NodeType.IDENTIFIER:
                 root.left, root.right = root.right, root.left
+            if root.right.type in (OrsoTypes.DATE, OrsoTypes.TIMESTAMP):
+                root.right.value = root.right.value.astype("datetime64[us]")
             if root.left.node_type != NodeType.IDENTIFIER:
                 raise NotSupportedError()
             if root.right.node_type != NodeType.LITERAL:
