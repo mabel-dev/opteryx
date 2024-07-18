@@ -248,7 +248,7 @@ def test_role_based_permissions():
 def test_membership_permissions():
     import opteryx
 
-    conn = opteryx.connect(memberships=["Apollo 11"])
+    conn = opteryx.connect(memberships=["Apollo 11", "opteryx"])
     curr = conn.cursor()
 
     # the missions field is an ARRAY
@@ -257,7 +257,7 @@ def test_membership_permissions():
 
     res = opteryx.query(
         "SELECT * FROM $astronauts WHERE ARRAY_CONTAINS_ANY(missions, @@user_memberships)",
-        memberships=["Apollo 11"],
+        memberships=["Apollo 11", "opteryx"],
     )
     assert res.rowcount == 3
 
@@ -269,7 +269,7 @@ def test_membership_permissions():
 
     res = opteryx.query(
         "SELECT $missions.* FROM $missions INNER JOIN $user ON Mission = value WHERE attribute = 'membership'",
-        memberships=["Apollo 11"],
+        memberships=["Apollo 11", "opteryx"],
     )
     assert res.rowcount == 1
 
