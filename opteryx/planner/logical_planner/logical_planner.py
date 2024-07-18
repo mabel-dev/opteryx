@@ -319,7 +319,7 @@ def inner_query_planner(ast_branch):
 
         raise SqlError("SELECT * cannot coexist with additional columns.")
     _aggregates = get_all_nodes_of_type(_projection, select_nodes=(NodeType.AGGREGATOR,))
-    _groups = logical_planner_builders.build(ast_branch["Select"].get("group_by"))
+    _groups = logical_planner_builders.build(ast_branch["Select"].get("group_by"))[0]
     if _groups is not None and _groups != []:
         if any(p.node_type == NodeType.WILDCARD for p in _projection):
             raise UnsupportedSyntaxError(

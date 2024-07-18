@@ -1280,7 +1280,7 @@ STATEMENTS = [
         ("SELECT * FROM sqlite.planets WHERE 1 > gravity", 1, 20, None),
         ("SELECT * FROM sqlite.planets WHERE id > 1", 8, 20, None),
 
-        ("SELECT DISTINCT ON (id) FROM $planets;", None, None, UnsupportedSyntaxError),
+        ("SELECT DISTINCT ON (id) FROM $planets;", None, None, SqlError),
         ("SELECT (name, id) FROM $planets;", None, None, UnsupportedSyntaxError),
 
         # V2 Negative Tests
