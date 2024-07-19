@@ -1356,6 +1356,14 @@ STATEMENTS = [
         ("SELECT * FROM $planets INNER JOIN UNNEST(('Earth', 'Moon')) AS n ON name = n", 1, 21, None),
         ("SELECT name, mission FROM $astronauts INNER JOIN UNNEST(missions) as mission ON mission = name", 0, 2, None),
         ("SELECT * FROM $astronauts CROSS JOIN UNNEST(missions) AS mission WHERE mission IN ('Apollo 11', 'Apollo 12')", 6, 20, None),
+        ("SELECT * FROM (SELECT ARRAY_AGG(name) as n FROM $astronauts GROUP BY group) AS alma CROSS JOIN UNNEST(n) AS nn", 357, 2, None),
+        ("SELECT * FROM (SELECT ARRAY_AGG(name) as n FROM $astronauts WHERE status = 'Retired' GROUP BY group) AS alma CROSS JOIN UNNEST(n) AS nn", 220, 2, None),
+        ("SELECT number FROM $astronauts CROSS JOIN UNNEST((1, 2, 3, 4, 5)) AS number", 1785, 1, None),
+        ("SELECT * FROM (SELECT ARRAY_AGG(name) as n FROM $astronauts WHERE birth_date < '1960-01-01' GROUP BY group) AS alma CROSS JOIN UNNEST(n) AS nn", 269, 2, None),
+        ("SELECT * FROM (SELECT ARRAY_AGG(name) as n FROM $astronauts WHERE status = 'Active' AND birth_date > '1970-01-01' GROUP BY group) AS alma CROSS JOIN UNNEST(n) AS nn", 10, 2, None),
+        ("SELECT group, nn FROM (SELECT group, ARRAY_AGG(name) as n FROM $astronauts GROUP BY group) AS alma CROSS JOIN UNNEST(n) AS nn", 357, 2, None),
+        ("SELECT * FROM (SELECT ARRAY_AGG(CASE WHEN LENGTH(alma_mater) > 10 THEN alma_mater ELSE NULL END) as alma_mater_arr FROM $astronauts GROUP BY group) AS alma CROSS JOIN UNNEST(alma_mater_arr) AS alma", 357, 2, None),
+        ("SELECT * FROM (SELECT ARRAY_AGG(1) as num_arr FROM $astronauts GROUP BY group) AS numbers CROSS JOIN UNNEST(num_arr) AS number", 357, 2, None),
 
         # PUSHDOWN (the result should be the same without pushdown)
         ("SELECT p.name, s.name FROM $planets p, $satellites s WHERE p.id = s.planetId AND p.mass > 1000 AND s.gm < 500;", 63, 2, None),
@@ -1607,6 +1615,9 @@ STATEMENTS = [
         ("SELECT name FROM (SELECT * FROM $planets LIMIT 5) AS S WHERE name != 'Mars'", 4, 1, None),
         # 1753
         ("SELECT TOP 5 * FROM $planets", None, None, UnsupportedSyntaxError),
+        # 1801 CROSS JOIN UNNEST after WHERE
+        ("SELECT alma, birth_date FROM $astronauts CROSS JOIN UNNEST(alma_mater) as alma WHERE birth_date > '1950-05-22'", 415, 2, None),
+        ("SELECT alma, birth_date FROM $astronauts CROSS JOIN UNNEST(alma_mater) as alma", 681, 2, None),
 ]
 # fmt:on
 

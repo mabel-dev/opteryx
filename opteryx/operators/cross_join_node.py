@@ -258,9 +258,9 @@ class CrossJoinNode(BasePlanNode):
     def execute(self) -> Generator:
         left_node = self._producers[0]  # type:ignore
         right_node = self._producers[1]  # type:ignore
-        right_table = pyarrow.concat_tables(right_node.execute(), promote_options="none")  # type:ignore
 
         if self._unnest_column is None:
+            right_table = pyarrow.concat_tables(right_node.execute(), promote_options="none")  # type:ignore
             yield from _cross_join(left_node, right_table, self.statistics)
 
         elif isinstance(self._unnest_column.value, tuple):
@@ -271,6 +271,8 @@ class CrossJoinNode(BasePlanNode):
                 statistics=self.statistics,
             )
         else:
+            if hasattr(left_node, "function") and left_node.function == "UNNEST":
+                left_node = right_node
             yield from _cross_join_unnest_column(
                 morsels=left_node,
                 source=self._unnest_column,

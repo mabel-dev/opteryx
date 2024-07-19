@@ -557,18 +557,16 @@ def process_join_tree(join: dict) -> LogicalPlanNode:
         """
         Extracts information for an UNNEST dataset from the AST node representing the join.
         """
-        unnest_column = None
-        unnest_alias = None
         if (
             join["relation"].get("Table", {}).get("name", [{}])[0].get("value", "").upper()
-            == "UNNEST"
+            != "UNNEST"
         ):
-            if join_type not in ("cross join", "inner"):
-                raise UnsupportedSyntaxError(
-                    "JOIN on UNNEST only supported for CROSS and INNER joins."
-                )
-            unnest_column = logical_planner_builders.build(join["relation"]["Table"]["args"][0])
-            unnest_alias = join["relation"]["Table"]["alias"]["name"]["value"]
+            return None, None
+
+        if join_type not in ("cross join", "inner"):
+            raise UnsupportedSyntaxError("JOIN on UNNEST only supported for CROSS and INNER joins.")
+        unnest_column = logical_planner_builders.build(join["relation"]["Table"]["args"][0])
+        unnest_alias = join["relation"]["Table"]["alias"]["name"]["value"]
 
         return unnest_column, unnest_alias
 

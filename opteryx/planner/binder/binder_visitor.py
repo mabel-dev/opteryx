@@ -690,10 +690,13 @@ class BinderVisitor:
             if node.unnest_column.schema_column.type not in (
                 OrsoTypes._MISSING_TYPE,
                 OrsoTypes.ARRAY,
+                0,
             ):
                 from opteryx.exceptions import IncorrectTypeError
 
-                raise IncorrectTypeError("CROSS JOIN UNNEST requires an ARRAY type column.")
+                raise IncorrectTypeError(
+                    f"CROSS JOIN UNNEST requires an ARRAY type column, not {node.unnest_column.schema_column.type}."
+                )
 
         if node.type == "inner" and node.on is None:
             from opteryx.exceptions import SqlError
