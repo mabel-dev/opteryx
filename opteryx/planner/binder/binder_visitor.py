@@ -805,6 +805,7 @@ class BinderVisitor:
         from opteryx.connectors.capabilities.cacheable import async_read_thru_cache
         from opteryx.connectors.capabilities.cacheable import read_thru_cache
         from opteryx.managers.catalog import catalog_factory
+        from opteryx.managers.permissions import can_read_table
         from opteryx.managers.schemes.tarchia_schema import TarchiaScheme
 
         if node.alias in context.relations:
@@ -837,6 +838,10 @@ class BinderVisitor:
         if not catalog_table:
             # work out which connector will be serving this request
             node.connector = connector_factory(node.relation, statistics=context.statistics)
+
+        # ensure this user can read the table
+        if not can_read_table(context.connection.memberships, node.relation):
+            raise PermissionError(f"User does not have permission to read {node.relation}")
 
         connector_capabilities = node.connector.__class__.mro()
 

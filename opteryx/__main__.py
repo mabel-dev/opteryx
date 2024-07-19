@@ -108,7 +108,7 @@ def main(
             try:
                 # Execute the SQL statement and display the results
                 start = time.monotonic_ns()
-                result = opteryx.query(statement)
+                result = opteryx.query(statement, memberships=["opteryx"])
                 result.materialize()
                 stop_event.set()
                 duration = time.monotonic_ns() - start

@@ -1645,7 +1645,7 @@ def test_sql_battery(statement, rows, columns, exception):
 
     try:
         # query to arrow is the fastest way to query
-        result = opteryx.query_to_arrow(statement, memberships=["Apollo 11"])
+        result = opteryx.query_to_arrow(statement, memberships=["Apollo 11", "opteryx"])
         actual_rows, actual_columns = result.shape
         assert (
             rows == actual_rows
