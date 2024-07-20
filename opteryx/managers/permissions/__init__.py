@@ -14,8 +14,10 @@ def load_permissions() -> List[Dict]:
                 {"role": "opteryx", "permission": "READ", "table": "*"}
             ]
         return _permissions
-    except Exception as e:
-        print(f"Failed to load permissions: {e}")
+    except FileNotFoundError:
+        return [{"role": "opteryx", "permission": "READ", "table": "*"}]
+    except Exception as err:
+        print(f"[OPTERYX] Failed to load permissions: {err}")
         return [{"role": "opteryx", "permission": "READ", "table": "*"}]
 
 
