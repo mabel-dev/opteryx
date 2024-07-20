@@ -8,7 +8,7 @@ cd $GITHUB_WORKSPACE/io
 cd io
 
 for PYBIN in /opt/python/cp{39,310,311,312}*/bin; do
-    "${PYBIN}/pip" install -U setuptools wheel setuptools-rust
+    "${PYBIN}/pip" install -U setuptools wheel setuptools-rust numpy==1.* cython
     "${PYBIN}/python" setup.py bdist_wheel
 done
 
