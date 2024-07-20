@@ -8,167 +8,37 @@ on:
 
 jobs:
 
-  build-linux-not-manylinux:
+  manylinux-build:
     strategy:
+      fail-fast: false
       matrix:
         python-version: ['3.9', '3.10', '3.11', '3.12']
     runs-on: ubuntu-latest
     steps:
-
-      - name: Checkout code
+      - name: Check out repository
         uses: actions/checkout@v4.1.7
-
-      - name: Install rust toolchain
-        uses: actions-rs/toolchain@v1
         with:
-          toolchain: stable
-          override: true
+          path: io
 
-      - name: Set up Python ${{ matrix.python-version }} x64
-        uses: actions/setup-python@v5
+      - name: Set permissions for build-wheels.sh
+        run: chmod +x io/build-wheels.sh
+
+      - name: Build Wheels
+        run: >-
+          docker run --rm
+          -e PLAT=manylinux2014_x86_64
+          -e PACKAGE_NAME=opteryx
+          -e PYTHON_VERSION=${{ matrix.python-version }}
+          -v `pwd`:/io
+          --workdir /io
+          quay.io/pypa/manylinux2014_x86_64
+          io/build-wheels.sh
+
+      - name: Archive Wheels
+        uses: actions/upload-artifact@v2
         with:
-          python-version: ${{ matrix.python-version }}
-          architecture: x64
-
-      - name: Install Requirements
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install --upgrade numpy cython wheel numpy setuptools_rust auditwheel
-          python -m pip install --upgrade -r $GITHUB_WORKSPACE/requirements.txt
-          python -m pip install --upgrade -r $GITHUB_WORKSPACE/tests/requirements.txt
-
-      - name: Build binary wheel
-        run: python setup.py bdist_wheel
-
-      - name: Archive dist artifacts
-        uses: actions/upload-artifact@v1
-        with:
-          name: dist-linux-${{ matrix.python-version }}
-          path: dist
-
-  build-linux-cp39:
-    runs-on: ubuntu-latest
-    container: quay.io/pypa/manylinux2014_x86_64@sha256:7faa424c478d774a3ac17baacb5fa6b59e7c75dae47a6cb84f23df757d83469e
-
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Install rust toolchain
-      uses: actions-rs/toolchain@v1
-      with:
-        toolchain: stable
-        override: true
-
-    - name: Install Python package dependencies
-      run: /opt/python/cp39-cp39/bin/python -m pip install --upgrade cython wheel numpy setuptools_rust
-
-    - name: Build binary wheel
-      run: /opt/python/cp39-cp39/bin/python setup.py bdist_wheel
-
-    - name: Apply auditwheel for manylinux wheel
-      run: auditwheel repair -w dist dist/*
-
-    - name: Remove linux wheel
-      run: rm dist/*-linux_x86_64.whl
-
-    - name: Archive dist artifacts
-      uses: actions/upload-artifact@v1
-      with:
-        name: dist-mlinux-3.9
-        path: dist
-
-  build-linux-cp310:
-    runs-on: ubuntu-latest
-    container: quay.io/pypa/manylinux2014_x86_64@sha256:7faa424c478d774a3ac17baacb5fa6b59e7c75dae47a6cb84f23df757d83469e
-
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Install rust toolchain
-      uses: actions-rs/toolchain@v1
-      with:
-        toolchain: stable
-        override: true
-
-    - name: Install Python package dependencies
-      run: /opt/python/cp310-cp310/bin/python -m pip install --upgrade cython wheel numpy setuptools_rust
-
-    - name: Build binary wheel
-      run: /opt/python/cp310-cp310/bin/python setup.py bdist_wheel
-
-    - name: Apply auditwheel for manylinux wheel
-      run: auditwheel repair -w dist dist/*
-
-    - name: Remove linux wheel
-      run: rm dist/*-linux_x86_64.whl
-
-    - name: Archive dist artifacts
-      uses: actions/upload-artifact@v1
-      with:
-        name: dist-mlinux-3.10
-        path: dist
-
-  build-linux-cp311:
-    runs-on: ubuntu-latest
-    container: quay.io/pypa/manylinux2014_x86_64@sha256:7faa424c478d774a3ac17baacb5fa6b59e7c75dae47a6cb84f23df757d83469e
-
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Install rust toolchain
-      uses: actions-rs/toolchain@v1
-      with:
-        toolchain: stable
-        override: true
-
-    - name: Install Python package dependencies
-      run: /opt/python/cp311-cp311/bin/python -m pip install --upgrade cython wheel numpy setuptools_rust
-
-    - name: Build binary wheel
-      run: /opt/python/cp311-cp311/bin/python setup.py bdist_wheel
-
-    - name: Apply auditwheel for manylinux wheel
-      run: auditwheel repair -w dist dist/*
-
-    - name: Remove linux wheel
-      run: rm dist/*-linux_x86_64.whl
-
-    - name: Archive dist artifacts
-      uses: actions/upload-artifact@v1
-      with:
-        name: dist-mlinux-3.11
-        path: dist
-
-  build-linux-cp312:
-    runs-on: ubuntu-latest
-    container: quay.io/pypa/manylinux2014_x86_64@sha256:7faa424c478d774a3ac17baacb5fa6b59e7c75dae47a6cb84f23df757d83469e
-
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Install rust toolchain
-      uses: actions-rs/toolchain@v1
-      with:
-        toolchain: stable
-        override: true
-
-    - name: Install Python package dependencies
-      run: /opt/python/cp312-cp312/bin/python -m pip install --upgrade cython wheel numpy setuptools_rust
-
-    - name: Build binary wheel
-      run: /opt/python/cp312-cp312/bin/python setup.py bdist_wheel
-
-    - name: Apply auditwheel for manylinux wheel
-      run: auditwheel repair -w dist dist/*
-
-    - name: Remove linux wheel
-      run: rm dist/*-linux_x86_64.whl
-
-    - name: Archive dist artifacts
-      uses: actions/upload-artifact@v1
-      with:
-        name: dist-mlinux-3.12
-        path: dist
+          name: wheels
+          path: io/dist/*manylinux2014_x86_64.whl
 
   build-macos:
     runs-on: macos-latest
@@ -251,23 +121,8 @@ jobs:
         path: dist
 
   upload:
-    # build-linux-cp39, build-linux-cp310, build-linux-cp311, build-linux-cp312
-    needs: [build-linux-not-manylinux, build-macos, build-windows]
+    needs: [manylinux-build, build-macos, build-windows]
     runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: 3.11
-
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        python -m pip install --upgrade cython wheel numpy setuptools_rust
-        python -m pip install --upgrade -r requirements.txt
 
     - name: Create source dist
       run: python setup.py sdist
