@@ -11,6 +11,9 @@ jobs:
         with:
           path: io
 
+      - name: Set permissions for build-wheels.sh
+        run: chmod +x io/build-wheels.sh
+
       - name: Build Wheels
         run: >-
           docker run --rm
