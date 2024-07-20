@@ -8,7 +8,7 @@ cd $GITHUB_WORKSPACE/io
 cd io
 
 # Only build for the specified Python version
-PYBIN="/opt/python/cp${PYTHON_VERSION//.}/bin"
+PYBIN="/opt/python/cp${PYTHON_VERSION//.}-cp${PYTHON_VERSION//.}/bin"
 
 # Install necessary packages
 "${PYBIN}/python" -m pip install -U setuptools wheel setuptools-rust numpy==1.* cython
