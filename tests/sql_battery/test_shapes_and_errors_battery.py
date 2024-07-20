@@ -1364,6 +1364,8 @@ STATEMENTS = [
         ("SELECT group, nn FROM (SELECT group, ARRAY_AGG(name) as n FROM $astronauts GROUP BY group) AS alma CROSS JOIN UNNEST(n) AS nn", 357, 2, None),
         ("SELECT * FROM (SELECT ARRAY_AGG(CASE WHEN LENGTH(alma_mater) > 10 THEN alma_mater ELSE NULL END) as alma_mater_arr FROM $astronauts GROUP BY group) AS alma CROSS JOIN UNNEST(alma_mater_arr) AS alma", 357, 2, None),
         ("SELECT * FROM (SELECT ARRAY_AGG(1) as num_arr FROM $astronauts GROUP BY group) AS numbers CROSS JOIN UNNEST(num_arr) AS number", 357, 2, None),
+        ("SELECT * FROM $astronauts INNER JOIN UNNEST(alma_mater) AS n ON name = n", 0, 20, None),
+        ("SELECT * FROM $astronauts INNER JOIN UNNEST(alma_mater) AS n ON name = n WHERE group = 10", 0, 20, None),
 
         # PUSHDOWN (the result should be the same without pushdown)
         ("SELECT p.name, s.name FROM $planets p, $satellites s WHERE p.id = s.planetId AND p.mass > 1000 AND s.gm < 500;", 63, 2, None),
