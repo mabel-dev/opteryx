@@ -7,15 +7,16 @@ export PATH="$HOME/.cargo/bin:$PATH"
 cd $GITHUB_WORKSPACE/io
 cd io
 
-PYTHON_VERSIONS=("cp39" "cp310" "cp311" "cp312")
+# Only build for the specified Python version
+PYBIN="/opt/python/cp${PYTHON_VERSION//.}/bin"
 
-for PYBIN in /opt/python/${PYTHON_VERSIONS[@]/#/cp}/bin; do
-    if [[ "${PYBIN}" == *"${PYTHON_VERSION}"* ]]; then
-        "${PYBIN}/pip" install -U setuptools wheel setuptools-rust numpy==1.* cython
-        "${PYBIN}/python" setup.py bdist_wheel
-    fi
-done
+# Install necessary packages
+"${PYBIN}/pip" install -U setuptools wheel setuptools-rust numpy==1.* cython
 
+# Build the wheel
+"${PYBIN}/python" setup.py bdist_wheel
+
+# Repair the wheel using auditwheel
 for whl in dist/*.whl; do
     auditwheel repair "$whl" -w dist/
 done
