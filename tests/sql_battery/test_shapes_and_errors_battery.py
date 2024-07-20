@@ -1410,6 +1410,35 @@ STATEMENTS = [
         ("SELECT * FROM my_mission_reports ORDER BY name", 3, 19, None),
         ("SELECT name, status FROM my_mission_reports", 3, 2, None),
 
+        ("SELECT id, CASE WHEN id = 1 THEN 'Mercury' WHEN id = 3 THEN 'Earth' ELSE 'Elsewhere' END as place FROM $planets", 9, 2, None),
+        ("SELECT IFNULL(NULL, 'default') as result", 1, 1, None),
+        ("SELECT IFNULL('value', 'default') as result", 1, 1, None),
+        ("SELECT IFNULL(NULL, NULL) as result", 1, 1, None),
+        ("SELECT LENGTH(name) FROM $planets", 9, 1, None),
+        ("SELECT LENGTH(name) FROM $astronauts WHERE LENGTH(name) > 15", 248, 1, None),
+        ("SELECT planetId, COUNT(*) FROM $satellites GROUP BY planetId HAVING COUNT(*) > 10", 4, 2, None),
+        ("SELECT planetId, MIN(magnitude) FROM $satellites GROUP BY planetId HAVING MIN(magnitude) < 5", 2, 2, None),
+        ("SELECT ABS(-5) as abs_value", 1, 1, None),
+        ("SELECT ROUND(3.14159, 2) as rounded_value", 1, 1, None),
+        ("SELECT CEIL(3.14159) as ceil_value", 1, 1, None),
+        ("SELECT FLOOR(3.14159) as floor_value", 1, 1, None),
+        ("SELECT UPPER(name) FROM $planets", 9, 1, None),
+#        ("SELECT LOWER(name) FROM $astronauts WHERE UPPER(name) LIKE 'A%'", 50, 1, None),
+        ("SELECT REVERSE(name) FROM $planets", 9, 1, None),
+        ("SELECT CAST(id AS VARCHAR) FROM $planets", 9, 1, None),
+#        ("SELECT CAST(magnitude AS INTEGER) FROM $satellites WHERE magnitude IS NOT NULL", 176, 1, None),
+        ("SELECT CAST('2022-01-01' AS DATE)", 1, 1, None),
+        ("SELECT id + 1 FROM $planets", 9, 1, None),
+        ("SELECT id - 1 FROM $planets", 9, 1, None),
+        ("SELECT id * 2 FROM $planets", 9, 1, None),
+        ("SELECT id / 2 FROM $planets", 9, 1, None),
+        ("SELECT id % 2 FROM $planets", 9, 1, None),
+        ("SELECT * FROM $planets WHERE id = 1 AND name = 'Mercury'", 1, 20, None),
+        ("SELECT * FROM $planets WHERE id = 1 OR id = 2", 2, 20, None),
+        ("SELECT * FROM $planets WHERE NOT (id = 1)", 8, 20, None),
+
+        # ****************************************************************************************
+
         # These are queries which have been found to return the wrong result or not run correctly
         # FILTERING ON FUNCTIONS
         ("SELECT DATE(birth_date) FROM $astronauts FOR TODAY WHERE DATE(birth_date) < '1930-01-01'", 14, 1, None),
