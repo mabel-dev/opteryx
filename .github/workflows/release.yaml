@@ -123,83 +123,78 @@ jobs:
     needs: [build-manylinux, build-macos, build-windows]
     runs-on: ubuntu-latest
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v4.1.7
-
-      - name: Create source dist
-        run: python setup.py sdist
 
       - name: Stage linux 3.9
         uses: actions/download-artifact@v3
         with:
           name: dist-linux-3.9
-        run: mv -v dist-linux-3.9/* dist/
+      - run: mv -v dist-linux-3.9/* dist/
 
       - name: Stage linux 3.10
         uses: actions/download-artifact@v3
         with:
           name: dist-linux-3.10
-        run: mv -v dist-linux-3.10/* dist/
+      - run: mv -v dist-linux-3.10/* dist/
 
       - name: Stage linux 3.11
         uses: actions/download-artifact@v3
         with:
           name: dist-linux-3.11
-        run: mv -v dist-linux-3.11/* dist/
+      - run: mv -v dist-linux-3.11/* dist/
 
       - name: Stage linux 3.12
         uses: actions/download-artifact@v3
         with:
           name: dist-linux-3.12
-        run: mv -v dist-linux-3.12/* dist/
+      - run: mv -v dist-linux-3.12/* dist/
 
       - name: Stage macos 3.9
         uses: actions/download-artifact@v3
         with:
           name: dist-macos-3.9
-        run: mv -v dist-macos-3.9/* dist/
+      - run: mv -v dist-macos-3.9/* dist/
 
       - name: Stage macos 3.10
         uses: actions/download-artifact@v3
         with:
           name: dist-macos-3.10
-        run: mv -v dist-macos-3.10/* dist/
+      - run: mv -v dist-macos-3.10/* dist/
 
       - name: Stage macos 3.11
         uses: actions/download-artifact@v3
         with:
           name: dist-macos-3.11
-        run: mv -v dist-macos-3.11/* dist/
+      - run: mv -v dist-macos-3.11/* dist/
 
       - name: Stage macos 3.12
         uses: actions/download-artifact@v3
         with:
           name: dist-macos-3.12
-        run: mv -v dist-macos-3.12/* dist/
+      - run: mv -v dist-macos-3.12/* dist/
 
       - name: Stage windows 3.9
         uses: actions/download-artifact@v3
         with:
           name: dist-windows-3.9
-        run: mv -v dist-windows-3.9/* dist/
+      - run: mv -v dist-windows-3.9/* dist/
 
       - name: Stage windows 3.10
         uses: actions/download-artifact@v3
         with:
           name: dist-windows-3.10
-        run: mv -v dist-windows-3.10/* dist/
+      - run: mv -v dist-windows-3.10/* dist/
 
       - name: Stage windows 3.11
         uses: actions/download-artifact@v3
         with:
           name: dist-windows-3.11
-        run: mv -v dist-windows-3.11/* dist/
+      - run: mv -v dist-windows-3.11/* dist/
 
       - name: Stage windows 3.12
         uses: actions/download-artifact@v3
         with:
           name: dist-windows-3.12
-        run: mv -v dist-windows-3.12/* dist/
+      - run: mv -v dist-windows-3.12/* dist/
 
       - name: Publish distribution 📦 to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
