@@ -1366,6 +1366,7 @@ STATEMENTS = [
         ("SELECT * FROM (SELECT ARRAY_AGG(1) as num_arr FROM $astronauts GROUP BY group) AS numbers CROSS JOIN UNNEST(num_arr) AS number", 357, 2, None),
         ("SELECT * FROM $astronauts INNER JOIN UNNEST(alma_mater) AS n ON name = n", 0, 20, None),
         ("SELECT * FROM $astronauts INNER JOIN UNNEST(alma_mater) AS n ON name = n WHERE group = 10", 0, 20, None),
+        ("SELECT name, group, astronaut_year, LEAST(year_list) FROM (SELECT ARRAY_AGG(year) as year_list, name, group FROM $astronauts WHERE status = 'Retired' and year is not null GROUP BY group, name) AS alma CROSS JOIN UNNEST(year_list) AS astronaut_year", 196, 4, None),
 
         # PUSHDOWN (the result should be the same without pushdown)
         ("SELECT p.name, s.name FROM $planets p, $satellites s WHERE p.id = s.planetId AND p.mass > 1000 AND s.gm < 500;", 63, 2, None),

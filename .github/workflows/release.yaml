@@ -7,8 +7,7 @@ on:
       - 'main'
 
 jobs:
-
-  manylinux-build:
+  build-manylinux:
     strategy:
       fail-fast: false
       matrix:
@@ -24,7 +23,7 @@ jobs:
         run: chmod +x io/build-wheels.sh
 
       - name: Build Wheels
-        run: >-
+        run: >
           docker run --rm
           -e PLAT=manylinux2014_x86_64
           -e PACKAGE_NAME=opteryx
@@ -35,9 +34,9 @@ jobs:
           io/build-wheels.sh
 
       - name: Archive Wheels
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
-          name: wheels
+          name: dist-linux-${{ matrix.python-version }}
           path: io/dist/*manylinux2014_x86_64.whl
 
   build-macos:
@@ -49,42 +48,42 @@ jobs:
         python-version: ['3.9', '3.10', '3.11', '3.12']
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Install rust toolchain
-      uses: actions-rs/toolchain@v1
-      with:
-        toolchain: stable
-        override: true
+      - name: Install rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
 
-    - name: Set up Python ${{ matrix.python-version }} x64
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ matrix.python-version }}
+      - name: Set up Python ${{ matrix.python-version }} x64
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
 
-    - name: Install Python package dependencies
-      run: python -m pip install --upgrade cython wheel numpy setuptools_rust
+      - name: Install Python package dependencies
+        run: python -m pip install --upgrade cython wheel numpy setuptools_rust
 
-    - name: Install Rust aarch64-apple-darwin target
-      run: rustup target add aarch64-apple-darwin
+      - name: Install Rust aarch64-apple-darwin target
+        run: rustup target add aarch64-apple-darwin
 
-    - name: Install Rust x86_64-apple-darwin
-      run: rustup target add x86_64-apple-darwin
+      - name: Install Rust x86_64-apple-darwin
+        run: rustup target add x86_64-apple-darwin
 
-    - name: Build on macOS universal2
-      shell: bash
-      env:
-        DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
-        MACOSX_DEPLOYMENT_TARGET: "10.15"
-        ARCHFLAGS: -arch x86_64 -arch arm64
-        PYO3_CROSS_PYTHON_VERSION: ${{ matrix.python-version }}
-      run: python setup.py bdist_wheel
+      - name: Build on macOS universal2
+        shell: bash
+        env:
+          DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
+          MACOSX_DEPLOYMENT_TARGET: "10.15"
+          ARCHFLAGS: -arch x86_64 -arch arm64
+          PYO3_CROSS_PYTHON_VERSION: ${{ matrix.python-version }}
+        run: python setup.py bdist_wheel
 
-    - name: Archive dist artifacts
-      uses: actions/upload-artifact@v1
-      with:
-        name: dist-macos-${{ matrix.python-version }}
-        path: dist
+      - name: Archive dist artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: dist-macos-${{ matrix.python-version }}
+          path: dist
 
   build-windows:
     runs-on: windows-latest
@@ -94,112 +93,115 @@ jobs:
         python-version: ['3.9', '3.10', '3.11', '3.12']
 
     steps:
-    - uses: actions/checkout@master
+      - uses: actions/checkout@v4
 
-    - name: Download Build Tools for Visual Studio 2019
-      run: Invoke-WebRequest -Uri https://aka.ms/vs/16/release/vs_buildtools.exe -OutFile vs_buildtools.exe
+      - name: Download Build Tools for Visual Studio 2019
+        run: Invoke-WebRequest -Uri https://aka.ms/vs/16/release/vs_buildtools.exe -OutFile vs_buildtools.exe
 
-    - name: Run vs_buildtools.exe install
-      run: ./vs_buildtools.exe --quiet --wait --norestart --nocache --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Component.VC.v141.x86.x64 --add Microsoft.VisualStudio.Component.VC.140 --includeRecommended
+      - name: Run vs_buildtools.exe install
+        run: ./vs_buildtools.exe --quiet --wait --norestart --nocache --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Component.VC.v141.x86.x64 --add Microsoft.VisualStudio.Component.VC.140 --includeRecommended
 
-    - name: Set up Python ${{ matrix.python-version }} x64
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ matrix.python-version }}
-        architecture: x64
+      - name: Set up Python ${{ matrix.python-version }} x64
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          architecture: x64
 
-    - name: Install Python package dependencies
-      run: python -m pip install --upgrade cython wheel numpy setuptools_rust
+      - name: Install Python package dependencies
+        run: python -m pip install --upgrade cython wheel numpy setuptools_rust
 
-    - name: Build binary wheel
-      run: python setup.py bdist_wheel
+      - name: Build binary wheel
+        run: python setup.py bdist_wheel
 
-    - name: Archive dist artifacts
-      uses: actions/upload-artifact@v1
-      with:
-        name: dist-windows-${{ matrix.python-version }}
-        path: dist
+      - name: Archive dist artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: dist-windows-${{ matrix.python-version }}
+          path: dist
 
   upload:
-    needs: [manylinux-build, build-macos, build-windows]
+    needs: [build-manylinux, build-macos, build-windows]
     runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4.1.7
 
-    - name: Create source dist
-      run: python setup.py sdist
+      - name: Create source dist
+        run: python setup.py sdist
 
-    - name: Stage linux 3.9
-      uses: actions/download-artifact@v1
-      with:
-        name: dist-linux-3.9
-    - run: mv -v dist-linux-3.9/* dist/
+      - name: Stage linux 3.9
+        uses: actions/download-artifact@v3
+        with:
+          name: dist-linux-3.9
+        run: mv -v dist-linux-3.9/* dist/
 
-    - name: Stage linux 3.10
-      uses: actions/download-artifact@v1
-      with:
-        name: dist-linux-3.10
-    - run: mv -v dist-linux-3.10/* dist/
+      - name: Stage linux 3.10
+        uses: actions/download-artifact@v3
+        with:
+          name: dist-linux-3.10
+        run: mv -v dist-linux-3.10/* dist/
 
-    - name: Stage linux 3.11
-      uses: actions/download-artifact@v1
-      with:
-        name: dist-linux-3.11
-    - run: mv -v dist-linux-3.11/* dist/
+      - name: Stage linux 3.11
+        uses: actions/download-artifact@v3
+        with:
+          name: dist-linux-3.11
+        run: mv -v dist-linux-3.11/* dist/
 
-    - name: Stage linux 3.12
-      uses: actions/download-artifact@v1
-      with:
-        name: dist-linux-3.12
-    - run: mv -v dist-linux-3.12/* dist/
+      - name: Stage linux 3.12
+        uses: actions/download-artifact@v3
+        with:
+          name: dist-linux-3.12
+        run: mv -v dist-linux-3.12/* dist/
 
-    - name: Stage macos 3.9
-      uses: actions/download-artifact@v1
-      with:
-        name: dist-macos-3.9
-    - run: mv -v dist-macos-3.9/* dist/
+      - name: Stage macos 3.9
+        uses: actions/download-artifact@v3
+        with:
+          name: dist-macos-3.9
+        run: mv -v dist-macos-3.9/* dist/
 
-    - name: Stage macos 3.10
-      uses: actions/download-artifact@v1
-      with:
-        name: dist-macos-3.10
-    - run: mv -v dist-macos-3.10/* dist/
+      - name: Stage macos 3.10
+        uses: actions/download-artifact@v3
+        with:
+          name: dist-macos-3.10
+        run: mv -v dist-macos-3.10/* dist/
 
-    - name: Stage macos 3.11
-      uses: actions/download-artifact@v1
-      with:
-        name: dist-macos-3.11
-    - run: mv -v dist-macos-3.11/* dist/
+      - name: Stage macos 3.11
+        uses: actions/download-artifact@v3
+        with:
+          name: dist-macos-3.11
+        run: mv -v dist-macos-3.11/* dist/
 
-    - name: Stage macos 3.12
-      uses: actions/download-artifact@v1
-      with:
-        name: dist-macos-3.12
-    - run: mv -v dist-macos-3.12/* dist/
+      - name: Stage macos 3.12
+        uses: actions/download-artifact@v3
+        with:
+          name: dist-macos-3.12
+        run: mv -v dist-macos-3.12/* dist/
 
-    - name: Stage windows 3.9
-      uses: actions/download-artifact@v1
-      with:
-        name: dist-windows-3.9
-    - run: mv -v dist-windows-3.9/* dist/
+      - name: Stage windows 3.9
+        uses: actions/download-artifact@v3
+        with:
+          name: dist-windows-3.9
+        run: mv -v dist-windows-3.9/* dist/
 
-    - name: Stage windows 3.10
-      uses: actions/download-artifact@v1
-      with:
-        name: dist-windows-3.10
-    - run: mv -v dist-windows-3.10/* dist/
+      - name: Stage windows 3.10
+        uses: actions/download-artifact@v3
+        with:
+          name: dist-windows-3.10
+        run: mv -v dist-windows-3.10/* dist/
 
-    - name: Stage windows 3.11
-      uses: actions/download-artifact@v1
-      with:
-        name: dist-windows-3.11
-    - run: mv -v dist-windows-3.11/* dist/
+      - name: Stage windows 3.11
+        uses: actions/download-artifact@v3
+        with:
+          name: dist-windows-3.11
+        run: mv -v dist-windows-3.11/* dist/
 
-    - name: Stage windows 3.12
-      uses: actions/download-artifact@v1
-      with:
-        name: dist-windows-3.12
-    - run: mv -v dist-windows-3.12/* dist/
+      - name: Stage windows 3.12
+        uses: actions/download-artifact@v3
+        with:
+          name: dist-windows-3.12
+        run: mv -v dist-windows-3.12/* dist/
 
-    - name: Publish distribution 📦 to PyPI
-      uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        password: ${{ secrets.PYPI_API_TOKEN }}
+      - name: Publish distribution 📦 to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
