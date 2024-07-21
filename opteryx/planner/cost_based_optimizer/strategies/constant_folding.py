@@ -10,6 +10,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+Optimization Rule - Constant Folding
+
+Type: Heuristic
+Goal: Evaluate Once
+
+We identify branches in expressions where there are no identifiers, these usually
+mean we can evaluate them once, in the optimization phase, and replace them with a
+constant for handling in the execution phase, reducing the amount of work done by
+the execution engine.
+
+We run this strategy twice, once at the beginning, which primarily handles user
+entered expressions we can optimize, and again at the end which handles where
+we've rewritten expressions at part of other optimizations which can be folded.
+"""
+
 import datetime
 from typing import Any
 
@@ -57,6 +73,7 @@ def build_literal_node(value: Any, root: Node):
 
 def fold_constants(root: Node) -> Node:
     if root.node_type in {NodeType.AND, NodeType.OR, NodeType.XOR}:
+        # traverse the left and right of logical operators
         root.left = fold_constants(root.left)
         root.right = fold_constants(root.right)
 
@@ -66,6 +83,7 @@ def fold_constants(root: Node) -> Node:
     functions = get_all_nodes_of_type(root, (NodeType.FUNCTION,))
 
     if any(func.value in {"RANDOM", "RAND", "NORMAL", "RANDOM_STRING"} for func in functions):
+        # although they have no params, these need to evaluate every time
         return root
 
     if len(identifiers) == 0:

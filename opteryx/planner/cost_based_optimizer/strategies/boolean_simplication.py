@@ -57,7 +57,7 @@ class BooleanSimplificationStrategy(OptimizationStrategy):  # pragma: no cover
      2) Express conditions in ways that other strategies can act on, e.g. pushing
         predicates.
 
-    The core of this action taking advantage of the following:
+    The core of this action takes advantage of the following:
 
         Demorgan's Law
             not (A or B) = (not A) and (not B)
