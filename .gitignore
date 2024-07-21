@@ -174,3 +174,6 @@ testdata/tpch/**/**.parquet
 **.cpp
 secure-connect.zip
 hits/*.parquet
+space_missions.parquet
+**.del
+**.disabled
