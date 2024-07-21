@@ -14,6 +14,30 @@
 This is the predicate push-down strategy and also includes the predicate
 rewriter.
 
+PUSH DOWN
+One main heuristic strategy is it eliminate rows to be processed as early
+as possible, to do that we try to push filter conditions to as close to the
+read step as much as possible, including pushing to the system actually
+performing the read.
+
+This eliminates rows to be processed as early as possible to reduce the
+number of steps and processes each row goes through.
+
+We also push filters into JOIN conditions, the more restrictive and fewer
+the number of rows returned from a JOIN the better, so rather than filter
+after a join, we add conditions to the JOIN.
+
+PREDICATE REWRITER
+We rewrite some conditions to a more optimal form; for example if doing a
+LIKE comparison and the pattern contains no wildcards, we rewrite to be an
+equals check.
+
+There are two desired effects of predicate rewrites, each is worth the
+improvement.
+
+1) Rewrite to a form which can be pushed to the reader (e.g. pushed to SQL or
+pushed to the parquet decoder)
+2) Rewrite to a form which is just faster, even if it can't be pushed
 """
 
 import re
@@ -199,7 +223,9 @@ def _rewrite_predicate(predicate):
             predicate.value = LIKE_REWRITES[predicate.value]
 
     if predicate.value in {"Like", "ILike"}:
-        if predicate.left.source_connector.isdisjoint({"Sql", "Cql"}):
+        if predicate.left.source_connector and predicate.left.source_connector.isdisjoint(
+            {"Sql", "Cql"}
+        ):
             if predicate.right.node_type == NodeType.LITERAL:
                 if predicate.right.value[-1] == "%" and predicate.right.value.count("%") == 1:
                     return dispatcher["rewrite_to_starts_with"](predicate)
@@ -231,18 +257,6 @@ def _rewrite_predicate(predicate):
             and determine_type(predicate.right) == OrsoTypes.INTERVAL
         ):
             predicate = dispatcher["reorder_interval_calc"](predicate)
-
-    return predicate
-
-
-def _tag_predicate(predicate):
-    """
-    Add flags, tags, labels, and notes to predicates
-    """
-
-    # predicate.relations = set()
-    # add label for if a predicate is a filter or a join
-    # add in nominal per-row cost information / time to execute 1 million times
 
     return predicate
 

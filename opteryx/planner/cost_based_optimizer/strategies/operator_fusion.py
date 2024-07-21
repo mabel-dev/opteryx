@@ -11,10 +11,17 @@
 # limitations under the License.
 
 """
-Some operators have can be fused to be faster.
+Some operators can be fused to be faster.
+
+'Fused' opertors are when physical operations perform multiple logical operations.
 
 Initially we fused Limit and Order operators, this allows us to use a heap sort
-algorithm (basically we dicard records we know aren't going to be kept early)
+algorithm (basically we dicard records we know aren't going to be kept early).
+
+Note that predicate and projection pushdowns may also fuse operators. Most commonly
+we fuse the READ operator with SELECTION and PROJECTION operators, we also push into
+JOINs, this is sometimes as part of the join condition, but we also push SELECTIONs
+into joins.
 """
 
 from opteryx.planner.logical_planner import LogicalPlan

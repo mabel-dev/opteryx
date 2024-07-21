@@ -14,7 +14,7 @@
 This optimization runs toward the end of the set, it removes operators which
 were useful during planning and optimization.
 
-- Some projections are redundant (relecting down to the columns which the
+- Some projections are redundant (reselecting down to the columns which the
   providing operation has already limited down to).
 - SubQuery nodes are useful for planning and optimization, but don't do
   anything during execution, we can remove them here.
