@@ -30,7 +30,7 @@ def random_number(size):
 def random_normal(size):
     from numpy.random import default_rng
 
-    rng = default_rng()
+    rng = default_rng(831835)  # 8 days, 3 hours, 18 minutes, 35 seconds
     return rng.standard_normal(size)
 
 

@@ -141,9 +141,7 @@ def sql_parts(string):
     )
     # Match ", ', b", b', `
     # We match b prefixes separately after the non-prefix versions
-    quoted_strings = re.compile(
-        r"(\"(?:\\.|[^\"])*\"|\'(?:\\.|[^\'])*\'|\b[bB]\"(?:\\.|[^\"])*\"|\b[bB]\'(?:\\.|[^\'])*\'|`(?:\\.|[^`])*`)"
-    )
+    quoted_strings = re.compile(r'("[^"]*"|\'[^\']*\'|\b[bB]"[^"]*"|\b[bB]\'[^\']*\'|`[^`]*`)')
 
     parts = []
     for part in quoted_strings.split(string):
