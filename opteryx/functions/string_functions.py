@@ -310,6 +310,26 @@ def levenshtein(a, b):
     return [lev(value_a, value_b) for value_a, value_b in zip(a_list, b_list)]
 
 
+def to_char(arr) -> List[str]:
+    return [chr(a) for a in arr]
+
+
+def to_ascii(arr) -> List[int]:
+    return [ord(a) for a in arr]
+
+
+def left_pad(arr, width, fill):
+    width = width[0]
+    fill = fill[0]
+    return [str(a).rjust(width, fill) for a in arr]
+
+
+def right_pad(arr, width, fill):
+    width = width[0]
+    fill = fill[0]
+    return [str(a).ljust(width, fill) for a in arr]
+
+
 def match_against(arr, val):
     """
     This is a PoV implementation

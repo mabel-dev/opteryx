@@ -502,5 +502,4 @@ def test_return_types():
 if __name__ == "__main__":  # pragma: no cover
     from tests.tools import run_tests
 
-    test_compaction_effectiveness()
     run_tests()
