@@ -276,7 +276,7 @@ FUNCTIONS = {
     "TIMESTAMP": lambda x: compute.cast(x, pyarrow.timestamp("us")),
     "BOOLEAN": lambda x: compute.cast(x, "bool"),
     "NUMERIC": lambda x: compute.cast(x, "float64"),
-    "INTEGER": lambda x: compute.cast(x, "int64"),
+    "INTEGER": lambda x: compute.cast(x, "int64", safe=False),
     "DOUBLE": lambda x: compute.cast(x, "float64"),
     "FLOAT": lambda x: compute.cast(x, "float64"),
     "DECIMAL": lambda x: compute.cast(x, pyarrow.decimal128(14)),

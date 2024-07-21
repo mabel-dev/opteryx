@@ -212,3 +212,23 @@ cache_manager = get_cache_manager()
 # Log resource usage
 if config.ENABLE_RESOURCE_LOGGING:  # pragma: no cover
     from opteryx.utils.resource_monitor import ResourceMonitor
+
+
+# if we're running in a notebook, register a magick
+try:
+    from IPython import get_ipython
+    from IPython.core.magic import Magics, magics_class, cell_magic
+
+    @magics_class
+    class OpteryxMagics(Magics):
+        @cell_magic
+        def opteryx(self, line, cell):
+            self.shell.run_cell(
+                'import opteryx\nopteryx.query("' + cell.replace("\n", "") + '")',
+                store_history=True,
+            )
+
+    ip = get_ipython()
+    ip.register_magics(OpteryxMagics)
+except Exception as err:  # no sec
+    pass

@@ -1427,7 +1427,7 @@ STATEMENTS = [
         ("SELECT CEIL(3.14159) as ceil_value", 1, 1, None),
         ("SELECT FLOOR(3.14159) as floor_value", 1, 1, None),
         ("SELECT UPPER(name) FROM $planets", 9, 1, None),
-#        ("SELECT LOWER(name) FROM $astronauts WHERE UPPER(name) LIKE 'A%'", 50, 1, None),
+        ("SELECT LOWER(name) FROM $astronauts WHERE UPPER(name) LIKE 'A%'", 11, 1, None),
         ("SELECT REVERSE(name) FROM $planets", 9, 1, None),
         ("SELECT TRIM('   space   ') as trimmed", 1, 1, None),
         ("SELECT SUBSTRING('planet', 1, 3) as substring", 1, 1, None),
@@ -1435,13 +1435,14 @@ STATEMENTS = [
         ("SELECT RPAD(name, 10, '-') FROM $planets", 9, 1, None),
         ("SELECT SEARCH(name, 'a') FROM $planets", 9, 1, None),
         ("SELECT CAST(id AS VARCHAR) FROM $planets", 9, 1, None),
-#        ("SELECT CAST(magnitude AS INTEGER) FROM $satellites WHERE magnitude IS NOT NULL", 176, 1, None),
+        ("SELECT CAST(magnitude AS INTEGER) FROM $satellites WHERE magnitude IS NOT NULL", 171, 1, None),
         ("SELECT CAST('2022-01-01' AS DATE)", 1, 1, None),
 #        ("SELECT DATE_ADD('2022-01-01', INTERVAL 1 DAY)", 1, 1, None),
 #        ("SELECT DATE_SUB('2022-01-01', INTERVAL 1 DAY)", 1, 1, None),
 #        ("SELECT DATE_DIFF('2022-01-01', '2021-12-31', DAY)", 1, 1, None),
 #        ("SELECT CONCAT(name, ' is a planet') FROM $planets", 9, 1, None),
 #        ("SELECT CONCAT('Astronaut: ', name) FROM $astronauts WHERE LENGTH(name) > 20", 10, 1, None),
+#        ("SELECT CONCAT('Hello', ' ', 'World') as concatenated", 1, 1, None),
         ("SELECT id + 1 FROM $planets", 9, 1, None),
         ("SELECT id - 1 FROM $planets", 9, 1, None),
         ("SELECT id * 2 FROM $planets", 9, 1, None),
@@ -1456,7 +1457,6 @@ STATEMENTS = [
         ("SELECT * FROM $planets WHERE NOT (id = 1)", 8, 20, None),
         ("SELECT ASCII('A') as ascii_value", 1, 1, None),
         ("SELECT CHAR(65) as char_value", 1, 1, None),
-#        ("SELECT CONCAT('Hello', ' ', 'World') as concatenated", 1, 1, None),
 
         # ****************************************************************************************
 
