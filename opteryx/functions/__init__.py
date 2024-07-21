@@ -297,6 +297,10 @@ FUNCTIONS = {
     "TRY_DOUBLE": try_cast("DOUBLE"),
     "TRY_DATE": try_cast("DATE"),
 
+    # CHARS
+    "CHAR": string_functions.to_char,
+    "ASCII": string_functions.to_ascii,
+
     # STRINGS
     "LEN": _iterate_single_parameter(get_len),  # LENGTH(str) -> int
     "LENGTH": _iterate_single_parameter(get_len),  # LENGTH(str) -> int
@@ -316,6 +320,8 @@ FUNCTIONS = {
     "TRIM": string_functions.trim,
     "LTRIM": string_functions.ltrim,
     "RTRIM": string_functions.rtrim,
+    "LPAD": string_functions.left_pad,
+    "RPAD": string_functions.right_pad,
     "LEVENSHTEIN": string_functions.levenshtein,
     "SPLIT": string_functions.split,
     "MATCH_AGAINST": string_functions.match_against,
