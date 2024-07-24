@@ -28,7 +28,7 @@ class VersionStatus(Enum):
 
 _major = 0
 _minor = 16
-_revision = 2
+_revision = 3
 _status = VersionStatus.RELEASE
 
 __author__ = "@joocer"

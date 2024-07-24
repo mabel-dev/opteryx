@@ -41,6 +41,7 @@ OS_SEP = os.sep
 
 class AwsS3Connector(BaseConnector, Cacheable, Partitionable, Asynchronous):
     __mode__ = "Blob"
+    __type__ = "S3"
 
     def __init__(self, credentials=None, **kwargs):
         try:

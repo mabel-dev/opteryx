@@ -45,6 +45,7 @@ if not hasattr(os, "O_BINARY"):
 
 class DiskConnector(BaseConnector, Cacheable, Partitionable, PredicatePushable, Asynchronous):
     __mode__ = "Blob"
+    __type__ = "LOCAL"
 
     PUSHABLE_OPS: Dict[str, bool] = {
         "Eq": True,
@@ -61,6 +62,8 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable, PredicatePushable, 
         OrsoTypes.DOUBLE,
         OrsoTypes.INTEGER,
         OrsoTypes.VARCHAR,
+        OrsoTypes.TIMESTAMP,
+        OrsoTypes.DATE,
     }
 
     def __init__(self, **kwargs):

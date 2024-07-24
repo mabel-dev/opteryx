@@ -67,6 +67,7 @@ def _initialize():  # pragma: no cover
 
 class GcpFireStoreConnector(BaseConnector):
     __mode__ = "Collection"
+    __type__ = "FIRESTORE"
 
     def read_dataset(
         self, columns: list = None, chunk_size: int = INITIAL_CHUNK_SIZE, **kwargs

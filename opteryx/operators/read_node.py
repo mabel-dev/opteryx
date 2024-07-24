@@ -114,6 +114,7 @@ class ReaderNode(BasePlanNode):
                 f" FOR '{self.parameters.get('start_date')}' TO '{self.parameters.get('end_date')}'"
             )
         return (
+            f"{self.connector.__type__} "
             f"({self.parameters.get('relation')}"
             f"{' AS ' + self.parameters.get('alias') if self.parameters.get('alias') else ''}"
             f"{date_range}"

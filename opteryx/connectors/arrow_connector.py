@@ -28,6 +28,7 @@ from opteryx.utils import arrow
 
 class ArrowConnector(BaseConnector):
     __mode__ = "Internal"
+    __type__ = "ARROW"
 
     def __init__(self, *args, **kwargs):
         BaseConnector.__init__(self, **kwargs)

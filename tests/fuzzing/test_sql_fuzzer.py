@@ -115,6 +115,18 @@ TABLES = [
         "name": virtual_datasets.missions.schema().name,
         "fields": virtual_datasets.missions.schema().columns,
     },
+    {
+        "name": "testdata.planets",
+        "fields": virtual_datasets.planets.schema().columns,
+    },
+    {
+        "name": "testdata.satellites",
+        "fields": virtual_datasets.satellites.schema().columns,
+    },
+    {
+        "name": "testdata.missions",
+        "fields": virtual_datasets.missions.schema().columns,
+    },
 ]
 
 TEST_CYCLES: int = 250

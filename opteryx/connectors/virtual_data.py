@@ -60,6 +60,7 @@ def suggest(dataset):
 
 class SampleDataConnector(BaseConnector, Partitionable):
     __mode__ = "Internal"
+    __type__ = "SAMPLE"
 
     def __init__(self, *args, **kwargs):
         BaseConnector.__init__(self, **kwargs)

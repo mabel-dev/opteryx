@@ -36,6 +36,7 @@ if not hasattr(os, "O_BINARY"):
 
 class FileConnector(BaseConnector, PredicatePushable):
     __mode__ = "Blob"
+    __type__ = "FILE"
     _byte_array: Optional[bytes] = None  # Instance attribute to store file bytes
 
     PUSHABLE_OPS: Dict[str, bool] = {
@@ -53,6 +54,8 @@ class FileConnector(BaseConnector, PredicatePushable):
         OrsoTypes.DOUBLE,
         OrsoTypes.INTEGER,
         OrsoTypes.VARCHAR,
+        OrsoTypes.TIMESTAMP,
+        OrsoTypes.DATE,
     }
 
     @property

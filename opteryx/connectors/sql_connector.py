@@ -58,6 +58,7 @@ def _handle_operand(operand: Node, parameters: dict) -> Tuple[Any, dict]:
 
 class SqlConnector(BaseConnector, PredicatePushable):
     __mode__ = "Sql"
+    __type__ = "SQL"
 
     PUSHABLE_OPS: Dict[str, bool] = {
         "Eq": True,
