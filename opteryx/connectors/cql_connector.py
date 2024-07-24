@@ -54,6 +54,7 @@ def _handle_operand(operand: Node, parameters: list) -> Tuple[Any, list]:
 
 class CqlConnector(BaseConnector, PredicatePushable):
     __mode__ = "Cql"
+    __type__ = "CQL"
 
     PUSHABLE_OPS: Dict[str, bool] = {
         "Eq": True,

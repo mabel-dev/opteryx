@@ -37,11 +37,12 @@ test the body of the response.
 """
 
 import os
+import pytest
 import sys
 
-sys.path.insert(1, os.path.join(sys.path[0], "../.."))
+from typing import Optional
 
-import pytest
+sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import opteryx
 
@@ -85,6 +86,9 @@ STATEMENTS = [
         ("SELECT * FROM $missions", 4630, 8, None),
         ("SELECT * FROM $stop_words", 305, 1, None),
         (b"SELECT * FROM $satellites", 177, 8, None),
+        ("SELECT * FROM testdata.missions", 4630, 8, None),
+        ("SELECT * FROM testdata.satellites", 177, 8, None),
+        ("SELECT * FROM testdata.planets", 9, 20, None),
 
         # Does the error tester work
         ("THIS IS NOT VALID SQL", None, None, SqlError),
@@ -135,6 +139,54 @@ STATEMENTS = [
         ("SELECT * FROM $planets WHERE numberOfMoons > 10", 4, 20, None),
         ("SELECT * FROM $planets WHERE LENGTH(name) > 7", 0, 20, None),
         ("SELECT * FROM $planets WHERE distanceFromSun BETWEEN 100 AND 1000", 4, 20, None),
+
+        # Randomly generated but consistently tested queries
+        # the same queries as above, but against parquet
+        ("SELECT * FROM testdata.planets WHERE `name` = 'Earth'", 1, 20, None),
+        ("SELECT * FROM testdata.planets WHERE name = 'Mars'", 1, 20, None),
+        ("SELECT * FROM testdata.planets WHERE name <> 'Venus'", 8, 20, None),
+        ("SELECT * FROM testdata.planets WHERE name = '********'", 0, 20, None),
+        ("SELECT id FROM testdata.planets WHERE diameter > 10000", 6, 1, None),
+        ("SELECT name, mass FROM testdata.planets WHERE gravity > 5", 6, 2, None),
+        ("SELECT * FROM testdata.planets WHERE numberOfMoons >= 5", 5, 20, None),
+        ("SELECT * FROM testdata.planets WHERE mass < 10 AND diameter > 1000", 5, 20, None),
+        ("SELECT * FROM testdata.planets ORDER BY distanceFromSun DESC", 9, 20, None),
+        ("SELECT name FROM testdata.planets WHERE escapeVelocity < 10", 3, 1, None),
+        ("SELECT * FROM testdata.planets WHERE obliquityToOrbit > 25", 6, 20, None),
+        ("SELECT * FROM testdata.planets WHERE meanTemperature < 0", 6, 20, None),
+        ("SELECT * FROM testdata.planets WHERE surfacePressure IS NULL", 4, 20, None),
+        ("SELECT name FROM testdata.planets WHERE orbitalEccentricity < 0.1", 7, 1, None),
+        ("SELECT * FROM testdata.planets WHERE orbitalPeriod BETWEEN 100 AND 1000", 3, 20, None),
+        ("SELECT * FROM testdata.planets WHERE LENGTH(name) = 5", 3, 20, None),
+        ("SELECT * FROM testdata.planets WHERE LENGTH(name) <> 5", 6, 20, None),
+        ("SELECT * FROM testdata.planets WHERE LENGTH(name) == 5", 3, 20, None),
+        ("SELECT * FROM testdata.planets WHERE LENGTH(name) != 5", 6, 20, None),
+        ("SELECT * FROM testdata.planets WHERE LENGTH(name) = 5", 3, 20, None),
+        ("SELECT * FROM testdata.planets WHERE NOT LENGTH(name) = 5", 6, 20, None),
+        ("SELECT * FROM testdata.planets WHERE NOT LENGTH(name) == 5", 6, 20, None),
+        ("SELECT * FROM testdata.planets LIMIT 5", 5, 20, None),
+        ("SELECT * FROM testdata.planets WHERE numberOfMoons = 0", 2, 20, None),
+        ("SELECT id FROM testdata.planets WHERE density > 4000 ORDER BY id ASC", 3, 1, None),
+        ("SELECT * FROM testdata.planets WHERE gravity > 10 OR meanTemperature > 100", 4, 20, None),
+        ("SELECT * FROM testdata.planets WHERE orbitalInclination <= 5", 7, 20, None),
+        ("SELECT * FROM testdata.planets WHERE perihelion >= 150", 6, 20, None),
+        ("SELECT name FROM testdata.planets WHERE aphelion < 1000", 5, 1, None),
+        ("SELECT * FROM testdata.planets WHERE LENGTH(name) >= 7", 3, 20, None),
+        ("SELECT * FROM testdata.planets WHERE id IN (1, 3, 5)", 3, 20, None),
+        ("SELECT * FROM testdata.planets WHERE id NOT IN (1, 3, 5)", 6, 20, None),
+        ("SELECT * FROM testdata.planets WHERE rotationPeriod < 0", 3, 20, None),
+        ("SELECT * FROM testdata.planets WHERE mass > 100 AND mass < 1000", 2, 20, None),
+        ("SELECT * FROM testdata.planets WHERE name LIKE 'M%'", 2, 20, None),
+        ("SELECT * FROM testdata.planets WHERE orbitalVelocity > 20", 4, 20, None),
+        ("SELECT * FROM testdata.planets WHERE escapeVelocity BETWEEN 10 AND 20", 2, 20, None),
+        ("SELECT * FROM testdata.planets WHERE LENGTH(name) <= 6", 6, 20, None),
+        ("SELECT * FROM testdata.planets ORDER BY id DESC LIMIT 3", 3, 20, None),
+        ("SELECT * FROM testdata.planets WHERE gravity IS NOT NULL", 9, 20, None),
+        ("SELECT * FROM testdata.planets WHERE surfacePressure IS NOT NULL", 5, 20, None),
+        ("SELECT * FROM testdata.planets WHERE meanTemperature <= 100", 7, 20, None),
+        ("SELECT * FROM testdata.planets WHERE numberOfMoons > 10", 4, 20, None),
+        ("SELECT * FROM testdata.planets WHERE LENGTH(name) > 7", 0, 20, None),
+        ("SELECT * FROM testdata.planets WHERE distanceFromSun BETWEEN 100 AND 1000", 4, 20, None),
 
         # Now the actual tests, we'll start with some formatting tests
         ("SELECT * FROM $satellites;", 177, 8, None),
@@ -1675,12 +1727,14 @@ STATEMENTS = [
         # 1801 CROSS JOIN UNNEST after WHERE
         ("SELECT alma, birth_date FROM $astronauts CROSS JOIN UNNEST(alma_mater) as alma WHERE birth_date > '1950-05-22'", 415, 2, None),
         ("SELECT alma, birth_date FROM $astronauts CROSS JOIN UNNEST(alma_mater) as alma", 681, 2, None),
+        # date pushdowns for parquet
+        ("SELECT Location FROM testdata.missions WHERE Lauched_at BETWEEN '1950-01-01' AND '1975-01-01'", 1311, 1, None),
 ]
 # fmt:on
 
 
 @pytest.mark.parametrize("statement, rows, columns, exception", STATEMENTS)
-def test_sql_battery(statement, rows, columns, exception):
+def test_sql_battery(statement:str, rows:int, columns:int, exception: Optional[Exception]):
     """
     Test an battery of statements
     """
@@ -1713,20 +1767,17 @@ def test_sql_battery(statement, rows, columns, exception):
         assert (
             exception is None
         ), f"Exception {exception} not raised but expected\n{format_sql(statement)}"
-    except AssertionError as err:
-        raise Exception(err) from err
-    except Exception as err:
-        if type(err) != exception:
-            raise Exception(
-                f"{format_sql(statement)}\nQuery failed with error {type(err)} but error {exception} was expected"
-            ) from err
+    except AssertionError as error:
+        raise error
+    except Exception as error:
+        if not type(error) == exception:
+            raise ValueError(
+                f"{format_sql(statement)}\nQuery failed with error {type(error)} but error {exception} was expected"
+            ) from error
 
 
 if __name__ == "__main__":  # pragma: no cover
-    """
-    Running in the IDE we do some formatting - it's not functional but helps
-    when reading the outputs.
-    """
+    # Running in the IDE we do some formatting - it's not functional but helps when reading the outputs.
 
     import shutil
     import time
@@ -1734,14 +1785,10 @@ if __name__ == "__main__":  # pragma: no cover
     from tests.tools import trunc_printable
 
     start_suite = time.monotonic_ns()
-
     width = shutil.get_terminal_size((80, 20))[0] - 15
-
-    passed = 0
-    failed = 0
-
-    nl = "\n"
-
+    passed:int = 0
+    failed:int = 0
+    nl:str = "\n"
     failures = []
 
     print(f"RUNNING BATTERY OF {len(STATEMENTS)} SHAPE TESTS")

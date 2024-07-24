@@ -33,6 +33,7 @@ from opteryx.exceptions import UnmetRequirementError
 
 class MongoDbConnector(BaseConnector):
     __mode__ = "Collection"
+    __type__ = "MONGODB"
 
     def __init__(self, *args, database: str = None, connection: str = None, **kwargs):
         super().__init__(*args, **kwargs)

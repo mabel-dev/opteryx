@@ -33,7 +33,7 @@ test_cases = [
     (
         "SELECT * FROM testdata.flat.space_missions WHERE Lauched_at < '2000-01-01';",
         3014,
-        4630
+        3014
     ),
     (
         "SELECT * FROM 'testdata/flat/planets/parquet/planets.parquet' WHERE rotationPeriod = lengthOfDay;",

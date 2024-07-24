@@ -143,11 +143,10 @@ def parquet_decoder(buffer, projection: List = None, selection=None, just_schema
 
     from opteryx.connectors.capabilities import PredicatePushable
 
-    columns_in_filters = {c.value for c in get_all_nodes_of_type(selection, (NodeType.IDENTIFIER,))}
-
     # Convert the selection to DNF format if applicable
-    dnf_filter, selection = PredicatePushable.to_dnf(selection) if selection else (None, None)
     selected_columns = None
+    if selection is None:
+        selection = []
 
     stream: BinaryIO = None
     stream = MemoryViewStream(buffer) if isinstance(buffer, memoryview) else io.BytesIO(buffer)
@@ -159,16 +158,21 @@ def parquet_decoder(buffer, projection: List = None, selection=None, just_schema
         if just_schema:
             return convert_arrow_schema_to_orso_schema(parquet_file.schema_arrow)
 
+        columns_in_filters = {
+            c.value for c in get_all_nodes_of_type(selection, (NodeType.IDENTIFIER,))
+        }
+
         # Projection processing
         schema_columns_set = set(parquet_file.schema_arrow.names)
         projection_names = {
             name for proj_col in projection for name in proj_col.schema_column.all_names
-        }
+        }.union(columns_in_filters)
         selected_columns = list(schema_columns_set.intersection(projection_names))
 
         # If no columns are selected, set to None
         if not selected_columns:
             selected_columns = None
+
         if not columns_in_filters.issubset(schema_columns_set):
             if selected_columns is None:
                 selected_columns = list(schema_columns_set)
@@ -186,6 +190,8 @@ def parquet_decoder(buffer, projection: List = None, selection=None, just_schema
                 parquet_file.metadata.num_columns,
                 empty_table,
             )
+
+    dnf_filter, selection = PredicatePushable.to_dnf(selection) if selection else (None, None)
 
     # Special handling for projection of [] (usually means COUNT(*))
     if projection == []:

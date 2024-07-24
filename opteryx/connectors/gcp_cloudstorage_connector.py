@@ -62,6 +62,7 @@ class GcpCloudStorageConnector(
     BaseConnector, Cacheable, Partitionable, PredicatePushable, Asynchronous
 ):
     __mode__ = "Blob"
+    __type__ = "GCS"
 
     PUSHABLE_OPS: Dict[str, bool] = {
         "Eq": True,

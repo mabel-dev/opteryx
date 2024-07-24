@@ -57,7 +57,7 @@ def schema():
                 FlatColumn(name="Company", type=OrsoTypes.VARCHAR),
                 FlatColumn(name="Location", type=OrsoTypes.VARCHAR),
                 FlatColumn(name="Price", type=OrsoTypes.DOUBLE),
-                FlatColumn(name="Launched_at", type=OrsoTypes.TIMESTAMP, aliases=["Lauched_at"]),
+                FlatColumn(name="Lauched_at", type=OrsoTypes.TIMESTAMP, aliases=["Launched_at"]),
                 FlatColumn(name="Rocket", type=OrsoTypes.VARCHAR),
                 FlatColumn(name="Rocket_Status", type=OrsoTypes.VARCHAR),
                 FlatColumn(name="Mission", type=OrsoTypes.VARCHAR),
