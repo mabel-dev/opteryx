@@ -365,6 +365,7 @@ FUNCTIONS = {
 #    "GENERATE_SERIES": series.generate_series,
     "NULLIF": other_functions.null_if,
     "CASE": select_values, #other_functions.case_when,
+    "JSONB_OBJECT_KEYS": other_functions.jsonb_object_keys,
 
     # Vector
     "COSINE_SIMILARITY": other_functions.cosine_similarity,

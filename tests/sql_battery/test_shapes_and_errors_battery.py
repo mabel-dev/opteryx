@@ -627,6 +627,10 @@ STATEMENTS = [
         ("SELECT COUNT(*), birth_place['town'] FROM $astronauts GROUP BY birth_place['town']", 264, 2, None),
         ('SELECT LENGTH(missions) FROM $astronauts', 357, 1, None),
         ('SELECT LENGTH(missions) FROM $astronauts WHERE LENGTH(missions) > 6', 2, 1, None),
+        ("SELECT jsonb_object_keys(birth_place) FROM $astronauts", 357, 1, None),
+        ("SELECT DISTINCT key FROM (SELECT jsonb_object_keys(birth_place) as keys FROM $astronauts) AS set CROSS JOIN UNNEST(keys) AS key", 2, 1, None),
+        ("SELECT jsonb_object_keys(dict) FROM testdata.flat.struct", 6, 1, None),
+        ("SELECT DISTINCT key FROM (SELECT jsonb_object_keys(dict) as keys FROM testdata.flat.struct) AS set CROSS JOIN UNNEST(keys) AS key", 5, 1, None),
 
         ("SELECT birth_date FROM $astronauts", 357, 1, None),
         ("SELECT YEAR(birth_date) FROM $astronauts", 357, 1, None),

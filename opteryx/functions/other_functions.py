@@ -197,3 +197,18 @@ def cosine_similarity(arr, val):
     # print("time comparing  ", time.monotonic_ns() - t)
 
     return similarities
+
+
+def jsonb_object_keys(arr):
+    if len(arr) == 0:
+        return []
+    if isinstance(arr[0], dict):
+        result = [[str(key) for key in row] for row in arr]
+    if isinstance(arr[0], (str, bytes)):
+        import simdjson
+
+        def keys(doc):
+            return simdjson.Parser().parse(doc).keys()  # type:ignore
+
+        result = [[str(key) for key in keys(row)] for row in arr]
+    return pyarrow.array(result)
