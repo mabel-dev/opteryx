@@ -64,11 +64,22 @@ def _fake_data(**kwargs):
     return generate_fake_data(schema, rows)
 
 
+def _http(**kwargs):
+    aliases = kwargs.get("schema")
+    data = kwargs.get("data")
+
+    renames = [aliases.column(column).identity for column in data.column_names]
+    data = data.rename_columns(renames)
+
+    return data
+
+
 DATASET_FUNCTIONS = {
     "FAKE": _fake_data,
     "GENERATE_SERIES": _generate_series,
     "UNNEST": _unnest,
     "VALUES": _values,
+    "HTTP": _http,
 }
 
 

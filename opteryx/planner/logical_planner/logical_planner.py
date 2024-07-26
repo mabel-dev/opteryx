@@ -97,6 +97,8 @@ class LogicalPlanNode(Node):
                     return f"VALUES (({', '.join(self.columns)}) x {len(self.values)} AS {self.alias})"
                 if self.function == "UNNEST":
                     return f"UNNEST ({', '.join(format_expression(arg) for arg in self.args)}{' AS ' + self.unnest_target if self.unnest_target else ''})"
+                if self.function == "HTTP":
+                    return f"HTTP ({self.url}) AS {self.alias}"
             if node_type == LogicalPlanStepType.Filter:
                 return f"FILTER ({format_expression(self.condition)})"
             if node_type == LogicalPlanStepType.Join:
@@ -672,7 +674,7 @@ def create_node_relation(relation):
             from opteryx.exceptions import UnnamedColumnError
 
             raise UnnamedColumnError(
-                f"Column created by {function_name} has no name, use AS to name the column."
+                f"Column or Relation created by {function_name} has no name, use AS to give it a name."
             )
 
         function_step = LogicalPlanNode(

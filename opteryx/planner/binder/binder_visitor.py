@@ -500,6 +500,29 @@ class BinderVisitor:
             context.schemas[node.relation_name] = schema
             node.columns = columns
             node.schema = schema
+        elif node.function == "HTTP":
+            node.relation_name = node.alias
+            node.url = node.args[0].value
+
+            import requests
+
+            from opteryx.utils.file_decoders import get_decoder
+
+            decoder = get_decoder(node.url)
+            response = requests.get(node.url, timeout=60)
+
+            response.raise_for_status()
+            row_count, column_count, data = decoder(response.content)
+
+            schema = RelationSchema(
+                name=node.relation_name,
+                columns=[FlatColumn.from_arrow(field) for field in data.schema],
+            )
+
+            context.schemas[node.relation_name] = schema
+
+            node.data = data
+            node.schema = schema
         elif node.function == "FAKE":
             from orso.schema import ColumnDisposition
 
