@@ -26,6 +26,7 @@ from typing import Tuple
 from orso.tools import random_string
 from orso.types import OrsoTypes
 
+from opteryx.exceptions import UnnamedColumnError
 from opteryx.exceptions import UnsupportedSyntaxError
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import format_expression
@@ -566,6 +567,10 @@ def process_join_tree(join: dict) -> LogicalPlanNode:
         if join_type not in ("cross join", "inner"):
             raise UnsupportedSyntaxError("JOIN on UNNEST only supported for CROSS and INNER joins.")
         unnest_column = logical_planner_builders.build(join["relation"]["Table"]["args"][0])
+        if join["relation"]["Table"].get("alias") is None:
+            raise UnnamedColumnError(
+                "Column created by UNNEST has no name, use AS to name the column."
+            )
         unnest_alias = join["relation"]["Table"]["alias"]["name"]["value"]
 
         return unnest_column, unnest_alias

@@ -2,6 +2,8 @@
     "name": "planets",
     "location": "testdata.planets",
     "steward": "billy",
+    "freshness_life_in_days": -1,
+    "retention_in_days": -1,
     "table_schema": {
         "columns": [
             {
@@ -86,9 +88,15 @@
             }
         ]
     },
+    "visibility": "PUBLIC",
     "partitioning": [],
     "disposition": "SNAPSHOT",
-    "permissions": [],
-    "metadata": {},
-    "encryption_details": null
-}
+    "permissions": [
+      {
+        "role": "*",
+        "permission": "READ"
+      }
+    ],
+    "encryption": null,
+    "metadata": {}
+  }
