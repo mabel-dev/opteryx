@@ -1452,6 +1452,11 @@ STATEMENTS = [
         ("EXECUTE GET_SATELLITES_BY_PLANET_NAME(name='Jupiter')", 67, 1, SqlError),  # string param
         ("EXECUTE multiply_two_numbers (one=1.0, two=9.9)", 1, 1, None),  # multiple params
 
+        ("SELECT HEX FROM HTTP('https://storage.googleapis.com/opteryx/color_srgb.csv') AS colors", 16, 1, None),
+        ("SELECT * FROM HTTP('https://storage.googleapis.com/opteryx/space_missions/space_missions.parquet') as missions", 4630, 8, None),
+        ("SELECT * FROM HTTP('https://storage.googleapis.com/opteryx/color_srgb.csv') AS colors ORDER BY Name", 16, 3, None),
+        ("SELECT * FROM HTTP('https://storage.googleapis.com/opteryx/color_srgb.csv')", None, None, UnnamedColumnError),
+
         # TEST VIEWS
         ("SELECT * FROM mission_reports", 177, 1, None),
         ("SELECT * FROM mission_reports AS MR", 177, 1, None),
