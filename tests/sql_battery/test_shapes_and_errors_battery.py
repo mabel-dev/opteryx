@@ -1729,6 +1729,9 @@ STATEMENTS = [
         ("SELECT alma, birth_date FROM $astronauts CROSS JOIN UNNEST(alma_mater) as alma", 681, 2, None),
         # date pushdowns for parquet
         ("SELECT Location FROM testdata.missions WHERE Lauched_at BETWEEN '1950-01-01' AND '1975-01-01'", 1311, 1, None),
+        # 1837
+        ("SELECT * FROM $astronauts CROSS JOIN UNNEST(missions) AS mission", None, None, UnnamedColumnError),
+        ("SELECT * FROM $astronauts INNER JOIN UNNEST(missions) ON name = name", None, None, UnnamedColumnError),
 ]
 # fmt:on
 
