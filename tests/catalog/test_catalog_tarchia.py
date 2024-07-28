@@ -13,6 +13,7 @@ import pytest
 
 import opteryx
 from opteryx.exceptions import DatasetNotFoundError
+from opteryx.utils.formatter import format_sql
 
 # fmt:off
 STATEMENTS = [
@@ -70,7 +71,6 @@ if __name__ == "__main__":  # pragma: no cover
     import shutil
     import time
 
-    from opteryx.utils.formatter import format_sql
     from tests.tools import trunc_printable
 
     start_suite = time.monotonic_ns()
