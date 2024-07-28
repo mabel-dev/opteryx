@@ -598,7 +598,7 @@ class BinderVisitor:
             context.schemas[node.relation_name] = schema
             node.schema = schema
         else:
-            raise NotImplementedError(f"{node.function} does not exist")
+            raise UnsupportedSyntaxError(f"{node.function} cannot be used in place of a table.")
         return node, context
 
     def visit_join(self, node: Node, context: BindingContext) -> Tuple[Node, BindingContext]:

@@ -692,6 +692,7 @@ def create_node_relation(relation):
         step_id = random_string()
         sub_plan.add_node(step_id, function_step)
         root_node = step_id
+        relation["step_id"] = step_id
     else:
         # SCAN nodes are where we read relations; these can be from memory, disk or a remote
         # system. This has many physical implementations but at this point all we have is the
