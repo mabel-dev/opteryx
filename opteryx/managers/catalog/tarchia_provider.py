@@ -16,9 +16,15 @@ from typing import Any
 from typing import Dict
 from typing import Optional
 
+import orjson
 import requests
+from orso.tools import lru_cache_with_expiry
 from requests.exceptions import ConnectionError
 from requests.exceptions import Timeout
+
+from opteryx.exceptions import InvalidConfigurationError
+from opteryx.exceptions import InvalidInternalStateError
+from opteryx.exceptions import RemoteConnectionError
 
 from .catalog_provider import CatalogProvider
 
@@ -42,7 +48,7 @@ def is_valid_url(url: str) -> bool:
         return False
 
 
-class TarchiaCatalogProvider(CatalogProvider):
+class _TarchiaCatalogProvider(CatalogProvider):
     def __init__(self, config: Optional[str] = None):
         if config is None:
             from opteryx.config import DATA_CATALOG_CONFIGURATION
@@ -53,10 +59,17 @@ class TarchiaCatalogProvider(CatalogProvider):
 
         if not is_valid_url(self.BASE_URL):
             self.BASE_URL = None
+        else:
+            self.session = requests.Session()
+            cookies = {"AUTH_TOKEN": os.environ.get("TARCHIA_KEY")}
+            self.session.cookies.update(cookies)
 
+    @lru_cache_with_expiry(max_size=5, valid_for_seconds=300)
     def table_exists(self, table: str) -> dict:
         """
-        Retrieve the current or past instance of a dataset.
+        Does a table exist in the catalog.
+
+        To reduce load to the remote server we cache the result for up to 5 minutes.
 
         Parameters:
             table_identifier (str): The identifier of the table.
@@ -69,46 +82,56 @@ class TarchiaCatalogProvider(CatalogProvider):
         if self.BASE_URL is None:
             return None
 
-        if table.count(".") != 1 or not all(p.isidentifier() for p in table.split(".")):
-            # not in the data catalog
+        if table.count(".") != 1:
+            # not the right format for the catalog
             return None
 
         owner, table = table.split(".")
+        if not (owner.isidentifier() and table.isidentifier()):
+            # not the right format for the catalog
+            return None
 
-        cookies = {"AUTH_TOKEN": os.environ.get("TARCHIA_KEY")}
         url = f"{self.BASE_URL}/v1/tables/{owner}/{table}"
-
         # DEBUG: log (f"[GET] {url}")
 
         tries = 2
         while tries > 0:
             try:
-                response = requests.get(
-                    url,
-                    timeout=5,
-                    cookies=cookies,
-                )
+                response = self.session.get(url, timeout=5)
                 if response.status_code != 200:
                     return None
-                return response.json()
+
+                content = response.content
+                return orjson.loads(content)
+
             except (ConnectionError, Timeout) as err:
                 # DEBUG: log (f"Tarchia Table Exists failed {err}, retrying")
                 tries -= 1
             except Exception as err:
                 raise err
-        return None
+        return None  # we could error here, but we're going to make a Not Found style return
 
-    def get_blobs_in_table(self, table: str, commit: str = "latest", filters: Optional[str] = None):
+    def get_blobs_in_table(self, table: str, commit: str = "head", filters: Optional[str] = None):
         if self.BASE_URL is None:
-            return None
+            raise InvalidConfigurationError(
+                config_item="BASE_URL",
+                provided_value="None",
+                valid_value_description="URL of Tarchia-compatible Catalog Server",
+            )
 
-        if table.count(".") != 1 or not all(p.isidentifier() for p in table.split(".")):
-            # not in the data catalog
-            return None
+        if table.count(".") != 1:
+            # not the right format for the catalog
+            raise InvalidInternalStateError(
+                f"Attempting to read Tarchia for an invalid table name - {table}"
+            )
 
         owner, table = table.split(".")
+        if not (owner.isidentifier() and table.isidentifier()):
+            # not the right format for the catalog
+            raise InvalidInternalStateError(
+                f"Attempting to read Tarchia for an invalid table name - {table}"
+            )
 
-        cookies = {"AUTH_TOKEN": os.environ.get("TARCHIA_KEY")}
         url = f"{self.BASE_URL}/v1/tables/{owner}/{table}/commits/{commit}"
 
         if filters:
@@ -119,21 +142,19 @@ class TarchiaCatalogProvider(CatalogProvider):
         tries = 2
         while tries > 0:
             try:
-                response = requests.get(
-                    url,
-                    timeout=5,
-                    cookies=cookies,
-                )
+                response = self.session.get(url, timeout=5)
                 if response.status_code != 200:
                     return None
-                response_dict = response.json()
-                return response_dict.get("blobs")
+
+                content = response.content
+
+                return orjson.loads(content).get("blobs")
             except (ConnectionError, Timeout) as err:
                 # DEBUG: log (f"Tarchia Read Commit failed {err}, retrying")
                 tries -= 1
             except Exception as err:
                 raise err
-        return None
+        raise RemoteConnectionError("Remote catalog server did not reply in time.")
 
     def get_view(self, view_name: str) -> Dict[str, Any]:
         """
@@ -150,3 +171,20 @@ class TarchiaCatalogProvider(CatalogProvider):
         response = requests.get(url, timeout=10)
         response.raise_for_status()
         return response.json()
+
+
+class TarchiaCatalogProvider(_TarchiaCatalogProvider):
+    """
+    Singleton wrapper for the _TarchiaCatalogProvider class.
+    """
+
+    _instance = None
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = cls._create_instance()
+        return cls._instance
+
+    @classmethod
+    def _create_instance(cls):
+        return _TarchiaCatalogProvider()

@@ -21,11 +21,14 @@ from typing import Callable
 from typing import Dict
 from typing import List
 from typing import Tuple
+from typing import Union
 
 import numpy
 import pyarrow
 from orso.tools import random_string
+from pyarrow import parquet
 
+from opteryx.connectors.capabilities import PredicatePushable
 from opteryx.exceptions import UnsupportedFileTypeError
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import get_all_nodes_of_type
@@ -78,7 +81,7 @@ def filter_records(filter, table):
     from opteryx.models import Node
 
     if isinstance(filter, list) and filter:
-        filter_copy = [p for p in filter]
+        filter_copy = list(filter)
         root = filter_copy.pop()
 
         if root.left.node_type == NodeType.IDENTIFIER:
@@ -105,7 +108,12 @@ def filter_records(filter, table):
     return table.filter(mask)
 
 
-def zstd_decoder(buffer, projection: List = None, selection=None, just_schema: bool = False):
+def zstd_decoder(
+    buffer: Union[memoryview, bytes],
+    projection: List = None,
+    selection=None,
+    just_schema: bool = False,
+) -> Tuple[int, int, pyarrow.Table]:
     """
     Read zstandard compressed JSONL files
     """
@@ -120,7 +128,12 @@ def zstd_decoder(buffer, projection: List = None, selection=None, just_schema: b
         )
 
 
-def lzma_decoder(buffer, projection: List = None, selection=None, just_schema: bool = False):
+def lzma_decoder(
+    buffer: Union[memoryview, bytes],
+    projection: List = None,
+    selection=None,
+    just_schema: bool = False,
+) -> Tuple[int, int, pyarrow.Table]:
     """
     Read lzma compressed JSONL files
     """
@@ -135,47 +148,61 @@ def lzma_decoder(buffer, projection: List = None, selection=None, just_schema: b
         )
 
 
-def parquet_decoder(buffer, projection: List = None, selection=None, just_schema: bool = False):
+def parquet_decoder(
+    buffer: Union[memoryview, bytes],
+    projection: List = None,
+    selection=None,
+    just_schema: bool = False,
+) -> Tuple[int, int, pyarrow.Table]:
     """
     Read parquet formatted files.
+
+    Parameters:
+        buffer: Union[memoryview, bytes]
+            The input buffer containing the parquet file data.
+        projection: List, optional
+            List of columns to project.
+        selection: optional
+            The selection filter.
+        just_schema: bool, optional
+            Flag to indicate if only schema is needed.
+    Returns:
+        Tuple containing number of rows, number of columns, and the table or schema.
     """
-    from pyarrow import parquet
-
-    from opteryx.connectors.capabilities import PredicatePushable
-
     # Convert the selection to DNF format if applicable
     selected_columns = None
     if selection is None:
         selection = []
 
-    stream: BinaryIO = None
-    stream = MemoryViewStream(buffer) if isinstance(buffer, memoryview) else io.BytesIO(buffer)
+    stream: BinaryIO = (
+        MemoryViewStream(buffer) if isinstance(buffer, memoryview) else io.BytesIO(buffer)
+    )
 
     # Open the parquet file only once
     parquet_file = parquet.ParquetFile(stream)
+
     if projection or just_schema:
         # Return just the schema if that's all that's needed
         if just_schema:
             return convert_arrow_schema_to_orso_schema(parquet_file.schema_arrow)
 
+        # Projection processing
         columns_in_filters = {
             c.value for c in get_all_nodes_of_type(selection, (NodeType.IDENTIFIER,))
         }
-
-        # Projection processing
-        schema_columns_set = set(parquet_file.schema_arrow.names)
+        arrow_schema_columns_set = set(parquet_file.schema_arrow.names)
         projection_names = {
             name for proj_col in projection for name in proj_col.schema_column.all_names
         }.union(columns_in_filters)
-        selected_columns = list(schema_columns_set.intersection(projection_names))
+        selected_columns = list(arrow_schema_columns_set.intersection(projection_names))
 
         # If no columns are selected, set to None
         if not selected_columns:
             selected_columns = None
 
-        if not columns_in_filters.issubset(schema_columns_set):
+        if not columns_in_filters.issubset(arrow_schema_columns_set):
             if selected_columns is None:
-                selected_columns = list(schema_columns_set)
+                selected_columns = list(arrow_schema_columns_set)
             fields = [pyarrow.field(name, pyarrow.string()) for name in selected_columns]
             schema = pyarrow.schema(fields)
 
@@ -205,8 +232,10 @@ def parquet_decoder(buffer, projection: List = None, selection=None, just_schema
         filters=dnf_filter,
         use_threads=False,
     )
+    # Any filters we couldn't push to PyArrow to read we run here
     if selection:
         table = filter_records(selection, table)
+
     if projection == []:
         return (
             parquet_file.metadata.num_rows,
@@ -216,7 +245,12 @@ def parquet_decoder(buffer, projection: List = None, selection=None, just_schema
     return (parquet_file.metadata.num_rows, parquet_file.metadata.num_columns, table)
 
 
-def orc_decoder(buffer, projection: List = None, selection=None, just_schema: bool = False):
+def orc_decoder(
+    buffer: Union[memoryview, bytes],
+    projection: List = None,
+    selection=None,
+    just_schema: bool = False,
+) -> Tuple[int, int, pyarrow.Table]:
     """
     Read orc formatted files
     """
@@ -239,7 +273,12 @@ def orc_decoder(buffer, projection: List = None, selection=None, just_schema: bo
     return *full_shape, table
 
 
-def jsonl_decoder(buffer, projection: List = None, selection=None, just_schema: bool = False):
+def jsonl_decoder(
+    buffer: Union[memoryview, bytes],
+    projection: List = None,
+    selection=None,
+    just_schema: bool = False,
+) -> Tuple[int, int, pyarrow.Table]:
     import pyarrow.json
 
     stream: BinaryIO = None
@@ -265,12 +304,12 @@ def jsonl_decoder(buffer, projection: List = None, selection=None, just_schema: 
 
 
 def csv_decoder(
-    buffer,
+    buffer: Union[memoryview, bytes],
     projection: List = None,
     selection=None,
-    delimiter: str = ",",
     just_schema: bool = False,
-):
+    delimiter: str = ",",
+) -> Tuple[int, int, pyarrow.Table]:
     import pyarrow.csv
     from pyarrow.csv import ParseOptions
 
@@ -291,7 +330,12 @@ def csv_decoder(
     return *full_shape, table
 
 
-def tsv_decoder(buffer, projection: List = None, selection=None, just_schema: bool = False):
+def tsv_decoder(
+    buffer: Union[memoryview, bytes],
+    projection: List = None,
+    selection=None,
+    just_schema: bool = False,
+) -> Tuple[int, int, pyarrow.Table]:
     return csv_decoder(
         buffer=buffer,
         projection=projection,
@@ -301,7 +345,12 @@ def tsv_decoder(buffer, projection: List = None, selection=None, just_schema: bo
     )
 
 
-def arrow_decoder(buffer, projection: List = None, selection=None, just_schema: bool = False):
+def arrow_decoder(
+    buffer: Union[memoryview, bytes],
+    projection: List = None,
+    selection=None,
+    just_schema: bool = False,
+) -> Tuple[int, int, pyarrow.Table]:
     import pyarrow.feather as pf
 
     stream: BinaryIO = None
@@ -320,7 +369,12 @@ def arrow_decoder(buffer, projection: List = None, selection=None, just_schema: 
     return *full_shape, table
 
 
-def avro_decoder(buffer, projection: List = None, selection=None, just_schema: bool = False):
+def avro_decoder(
+    buffer: Union[memoryview, bytes],
+    projection: List = None,
+    selection=None,
+    just_schema: bool = False,
+) -> Tuple[int, int, pyarrow.Table]:
     """
     AVRO isn't well supported, it is converted between table types which is
     really slow
@@ -349,7 +403,12 @@ def avro_decoder(buffer, projection: List = None, selection=None, just_schema: b
     return *full_shape, table
 
 
-def ipc_decoder(buffer, projection: List = None, selection=None, just_schema: bool = False):
+def ipc_decoder(
+    buffer: Union[memoryview, bytes],
+    projection: List = None,
+    selection=None,
+    just_schema: bool = False,
+) -> Tuple[int, int, pyarrow.Table]:
     from itertools import chain
 
     from pyarrow import ipc
