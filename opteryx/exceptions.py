@@ -33,6 +33,7 @@ Exception
              │   ├── EmptyDatasetError
              │   └── EmptyResultSetError
              ├── ExecutionError *
+             │   └── RemoteConnectionError
              ├── MissingSqlStatement
              ├── InvalidCursorStateError
              ├── ParameterError
@@ -128,6 +129,10 @@ class ExecutionError(ProgrammingError):
 
 
 # ======================== End Opteryx Superclasses ==========================
+
+
+class RemoteConnectionError(ExecutionError):
+    """Exception raised when remote systems don't repond in a timely manner"""
 
 
 # ======================== Begin SQL-Specific Exceptions ========================

@@ -843,7 +843,7 @@ class BinderVisitor:
             if catalog_table:
                 node.found_in_catalog = True
                 node.disposition = catalog_table.get("disposition")
-                node.location = catalog_table["location"]
+                node.location = catalog_table.get("location")
 
                 if node.disposition == "EXTERNAL":
                     # explicitly told it's external
@@ -854,8 +854,8 @@ class BinderVisitor:
                     )
                     node.connector.dataset = node.relation
 
-                catalog_schema = catalog_table.get("current_schema", {})
-                catalog_schema["name"] = catalog_table["location"]
+                catalog_schema = catalog_table.get("schema", {})
+                catalog_schema["name"] = catalog_table.get("location")
                 node.schema = RelationSchema.from_dict(catalog_schema)
 
         if not catalog_table:
