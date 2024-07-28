@@ -12,6 +12,9 @@ sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 import pytest
 
 import opteryx
+from opteryx.exceptions import DatasetNotFoundError
+from opteryx.utils.formatter import format_sql
+
 # fmt:off
 STATEMENTS = [
         ("SELECT * FROM opteryx.satellites", 177, 8, None),
@@ -19,6 +22,17 @@ STATEMENTS = [
         ("SELECT * FROM opteryx.astronauts", 357, 19, None),
         ("SELECT * FROM opteryx.missions", 4630, 8, None),
         ("SELECT * FROM opteryx.nvd", 256979, 16, None),
+
+        ("SELECT * FROM opteryx.no;", None, None, DatasetNotFoundError),
+        ("SELECT * FROM opteryx.no.planets;", None, None, DatasetNotFoundError),
+
+        ("SELECT * FROM opteryx.planets WHERE id = 0", 0, 20, None),
+        ("SELECT * FROM opteryx.nvd WHERE CVE = 'CVE-2017-0144'", 1, 16, None),
+        ("SELECT * FROM opteryx.nvd WHERE CVE < 'CVE-2000-0000'", 1579, 16, None),
+        ("SELECT * FROM opteryx.nvd WHERE CVE > 'CVE-2000-0000'", 255400, 16, None),
+        ("SELECT * FROM opteryx.nvd WHERE CVE < 'CVE-2000-0000' AND CVE > 'CVE-2024-0000'", 0, 16, None),
+        ("SELECT * FROM opteryx.nvd WHERE published < '2000-01-01'", 1607, 16, None),
+        ("SELECT * FROM opteryx.nvd WHERE CVE = 'unassigned'", 0, 16, None),
 ]
 
 
@@ -57,7 +71,6 @@ if __name__ == "__main__":  # pragma: no cover
     import shutil
     import time
 
-    from opteryx.utils.formatter import format_sql
     from tests.tools import trunc_printable
 
     start_suite = time.monotonic_ns()
