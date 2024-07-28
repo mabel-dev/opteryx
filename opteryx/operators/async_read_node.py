@@ -122,6 +122,12 @@ class AsyncReaderNode(ReaderNode):
         orso_schema = self.parameters["schema"]
         reader = self.parameters["connector"]
 
+        orso_schema_cols = []
+        for col in orso_schema.columns:
+            if col.identity in [c.schema_column.identity for c in self.columns]:
+                orso_schema_cols.append(col)
+        orso_schema.columns = orso_schema_cols
+
         blob_names = reader.partition_scheme.get_blobs_in_partition(
             start_date=reader.start_date,
             end_date=reader.end_date,
@@ -129,6 +135,15 @@ class AsyncReaderNode(ReaderNode):
             prefix=reader.dataset,
             predicates=self.predicates,
         )
+
+        if len(blob_names) == 0:
+            # if we don't have any matching blobs, create an empty dataset
+            from orso import DataFrame
+
+            as_arrow = DataFrame(rows=[], schema=orso_schema).arrow()
+            renames = [orso_schema.column(col).identity for col in as_arrow.column_names]
+            as_arrow = as_arrow.rename_columns(renames)
+            yield as_arrow
 
         data_queue: queue.Queue = queue.Queue()
 
@@ -145,12 +160,6 @@ class AsyncReaderNode(ReaderNode):
             ),
             daemon=True,
         ).start()
-
-        orso_schema_cols = []
-        for col in orso_schema.columns:
-            if col.identity in [c.schema_column.identity for c in self.columns]:
-                orso_schema_cols.append(col)
-        orso_schema.columns = orso_schema_cols
 
         morsel = None
         arrow_schema = None
