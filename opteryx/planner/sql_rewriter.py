@@ -102,6 +102,7 @@ STOP_COLLECTING = [
     r"USING",
     r";",
     r",",
+    r"UNION",
 ]
 
 COLLECT_ALIAS = [r"AS"]
