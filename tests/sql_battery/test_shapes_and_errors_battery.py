@@ -1741,8 +1741,12 @@ STATEMENTS = [
         # 1837
         ("SELECT * FROM $astronauts CROSS JOIN UNNEST(missions)", None, None, UnnamedColumnError),
         ("SELECT * FROM $astronauts INNER JOIN UNNEST(missions) ON name = name", None, None, UnnamedColumnError),
-        #1841
+        # 1841
         ("SELECT * FROM $astronauts, jsonb_object_keys(birth_place) as keys", None, None, UnsupportedSyntaxError),
+        # 1848
+        ("SELECT name is null from (SELECT name from $planets where id = 90) as s", 0, 1, None),
+        ("SELECT * from (SELECT name from $planets where id = 90) as s WHERE name is null", 0, 1, None),
+        ("SELECT * from (SELECT * from $planets where id = 90) as s WHERE name is not true", 0, 20, None),
 ]
 # fmt:on
 
