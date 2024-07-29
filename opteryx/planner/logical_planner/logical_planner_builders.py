@@ -64,7 +64,7 @@ def array(branch, alias: Optional[List[str]] = None, key=None):
     list_value_type = {v.type for v in value_nodes}
     if len(list_value_type) > 1:
         raise ArrayWithMixedTypesError("Literal ARRAY has values with mixed types.")
-    list_value_type = list_value_type.pop()
+    list_value_type = list_value_type.pop() if len(list_value_type) == 1 else OrsoTypes.VARCHAR
 
     return Node(
         node_type=NodeType.LITERAL,

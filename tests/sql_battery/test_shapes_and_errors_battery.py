@@ -1749,6 +1749,9 @@ STATEMENTS = [
         ("SELECT * from (SELECT * from $planets where id = 90) as s WHERE name is not true", 0, 20, None),
         # 1849
         ("SELECT name FROM $planets FOR '1600-01-01' UNION SELECT name FROM $satellites", 183, 1, None),
+        # 1850
+        ("SELECT IFNULL(alma_mater, null) FROM $astronauts", 357, 1, None),
+        ("SELECT IFNULL(alma_mater, []) FROM $astronauts", 357, 1, None),
 ]
 # fmt:on
 
