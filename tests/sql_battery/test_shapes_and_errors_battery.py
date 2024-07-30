@@ -1752,6 +1752,9 @@ STATEMENTS = [
         # 1850
         ("SELECT IFNULL(alma_mater, null) FROM $astronauts", 357, 1, None),
         ("SELECT IFNULL(alma_mater, []) FROM $astronauts", 357, 1, None),
+        # 1854
+        ("SELECT s,e FROM generate_series('2024-01-01', '2025-01-01', '1mo') as s, generate_series('2024-01-01', '2025-01-01', '1mo') as e", 169, 2, None),
+        ("SELECT * from $planets, $satellites", 1593, 28, None),
 ]
 # fmt:on
 

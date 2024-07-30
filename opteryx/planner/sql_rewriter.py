@@ -128,6 +128,7 @@ WAITING: int = 1
 RELATION: int = 4
 TEMPORAL: int = 16
 ALIAS: int = 64
+FUNCTION_RELATION: int = 128
 
 
 def sql_parts(string):
@@ -259,6 +260,7 @@ def _temporal_extration_state_machine(
     temporal = ""
     query_collector = []
     temporal_range_collector = []
+    open_count = 0
     for part in parts:
         # record the current state
         transition = [state]
@@ -266,9 +268,21 @@ def _temporal_extration_state_machine(
 
         # work out what our current state is
         if comparable_part in BOUNDARIES:
-            state = WAITING
+            if relation == "":
+                state = WAITING
+            else:
+                # function relations, like FAKE(234,234) need the items between the
+                # brackets be be consumed
+                state = FUNCTION_RELATION
+                if comparable_part == "(":
+                    open_count += 1
+                if comparable_part == ")":
+                    open_count -= 1
         if comparable_part in STOP_COLLECTING:
-            state = WAITING
+            if state == FUNCTION_RELATION and open_count > 0:
+                pass
+            else:
+                state = WAITING
         if comparable_part in COLLECT_RELATION:
             state = RELATION
         if comparable_part in COLLECT_TEMPORAL:
@@ -289,6 +303,7 @@ def _temporal_extration_state_machine(
                 [RELATION, WAITING],
                 [ALIAS, RELATION],
                 [ALIAS, WAITING],  # probably
+                [FUNCTION_RELATION, RELATION],
             )
             and relation
         ):
@@ -303,6 +318,8 @@ def _temporal_extration_state_machine(
             raise InvalidTemporalRangeFilterError(
                 "Temporal `FOR` statements must directly follow the dataset they apply to."
             )
+        else:
+            pass
 
         if state != TEMPORAL:
             query_collector.append(part)
