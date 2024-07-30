@@ -362,13 +362,13 @@ def inner_query_planner(ast_branch):
     _order_by = ast_branch.get("order_by")
     _order_by_columns_not_in_projection = []
     _order_by_columns = []
-    if _order_by:
+    if _order_by and _order_by.get("exprs"):
         _order_by = [
             (
                 logical_planner_builders.build(item["expr"]),
                 True if item["asc"] is None else item["asc"],
             )
-            for item in _order_by
+            for item in _order_by["exprs"]
         ]
         if any(c[0].node_type == NodeType.LITERAL for c in _order_by):
             raise UnsupportedSyntaxError("Cannot ORDER BY constant values")
