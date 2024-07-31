@@ -97,7 +97,9 @@ class AggregateAndGroupNode(BasePlanNode):
 
     @property
     def config(self):  # pragma: no cover
-        return str(self.aggregates)
+        from opteryx.managers.expression import format_expression
+
+        return f"AGGREGATE ({', '.join(format_expression(col) for col in self.aggregates)}) GROUP BY ({', '.join(format_expression(col) for col in self.groups)})"
 
     @property
     def name(self):  # pragma: no cover
