@@ -81,6 +81,11 @@ def get_mismatched_condition_column_types(node: Node, relaxed: bool = False) -> 
                 return None
             if left_type == OrsoTypes.NULL or right_type == OrsoTypes.NULL:
                 return None  # None comparisons are allowed
+            if (
+                node.left.node_type == NodeType.COMPARISON_OPERATOR
+                or node.right.node_type == NodeType.COMPARISON_OPERATOR
+            ):
+                return None  # it's compound so don't make a decision here
             return {
                 "left_column": f"{node.left.source}.{node.left.value}",
                 "left_type": left_type.name,

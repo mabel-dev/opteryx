@@ -48,13 +48,17 @@ class ProjectionNode(BasePlanNode):
             column for column in projection if column.node_type != NodeType.IDENTIFIER
         ]
 
+        self.columns = config["projection"]
+
     @classmethod
     def from_json(cls, json_obj: str) -> "BasePlanNode":  # pragma: no cover
         raise NotImplementedError()
 
     @property
     def config(self):  # pragma: no cover
-        return str(self.projection)
+        from opteryx.managers.expression import format_expression
+
+        return ", ".join(format_expression(col) for col in self.columns)
 
     @property
     def name(self):  # pragma: no cover
