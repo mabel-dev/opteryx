@@ -344,9 +344,20 @@ class PredicatePushdownStrategy(OptimizationStrategy):
             if context.collected_predicates:
                 # push predicates which reference multiple relations here
 
-                if node.type not in ("cross join", "inner"):
+                if node.type == "left outer":
+                    for predicate in context.collected_predicates:
+                        identifiers = get_all_nodes_of_type(
+                            predicate.condition, (NodeType.IDENTIFIER,)
+                        )
+                        if any(i.source in node.right_relation_names for i in identifiers):
+                            for predicate in context.collected_predicates:
+                                context.optimized_plan.insert_node_after(
+                                    predicate.nid, predicate, context.node_id
+                                )
+                            context.collected_predicates = []
+                elif node.type not in ("cross join", "inner"):
                     # dump all the predicates
-                    # IMPROVE: push past LEFT, SEMI and ANTI joins
+                    # IMPROVE: push past SEMI and ANTI joins
                     for predicate in context.collected_predicates:
                         context.optimized_plan.insert_node_after(
                             predicate.nid, predicate, context.node_id

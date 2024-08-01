@@ -166,7 +166,9 @@ class Graph(object):
         for source, records in self._edges.items():
             yield from ((source, target, relationship) for target, relationship in records)
 
-    def breadth_first_search(self, source: str, depth: int = 100):  # pragma: nocover
+    def breadth_first_search(
+        self, source: str, depth: int = 100, reverse: bool = False
+    ):  # pragma: nocover
         """
         Search a tree for nodes we can walk to from a given node.
 
@@ -181,6 +183,7 @@ class Graph(object):
 
         visited = {source}
         queue = deque([(source, 0)])
+        seeker = self.ingoing_edges if reverse else self.outgoing_edges
 
         traversed_edges = []
 
@@ -188,7 +191,7 @@ class Graph(object):
             current_node, current_depth = queue.popleft()
 
             if current_depth < depth:
-                for edge in self.outgoing_edges(current_node):
+                for edge in seeker(current_node):
                     _, target, _ = edge
 
                     # Add the edge to the traversed edges list

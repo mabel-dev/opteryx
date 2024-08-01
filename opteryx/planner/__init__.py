@@ -58,8 +58,6 @@ def query_planner(
     qid: str,
     statistics,
 ):
-    import orjson
-
     from opteryx.exceptions import SqlError
     from opteryx.models import QueryProperties
     from opteryx.planner.ast_rewriter import do_ast_rewriter
@@ -84,7 +82,6 @@ def query_planner(
     else:
         params = [p for p in parameters or []]
 
-    profile_content = operation + "\n\n"
     # Parser converts the SQL command into an AST
     try:
         parsed_statements = sqloxide.parse_sql(clean_sql, dialect="mysql")
@@ -113,12 +110,6 @@ def query_planner(
             raise PermissionsError(
                 f"User does not have permission to execute '{query_type}' queries."
             )
-
-        profile_content += (
-            orjson.dumps(logical_plan.depth_first_search(), option=orjson.OPT_INDENT_2).decode()
-            + "\n\n"
-        )
-        profile_content += logical_plan.draw() + "\n\n"
 
         # The Binder adds schema information to the logical plan
         start = time.monotonic_ns()

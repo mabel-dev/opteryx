@@ -61,7 +61,7 @@ def create_physical_plan(logical_plan, query_properties):
                     node = operators.InnerJoinSingleNode(query_properties, **node_config)
                 else:
                     node = operators.InnerJoinNode(query_properties, **node_config)
-            elif node_config.get("type") == "left outer":
+            elif node_config.get("type") in ("left outer", "full outer", "right outer"):
                 # We use out own implementation of LEFT JOIN
                 node = operators.LeftJoinNode(query_properties, **node_config)
             elif node_config.get("type") == "cross join":

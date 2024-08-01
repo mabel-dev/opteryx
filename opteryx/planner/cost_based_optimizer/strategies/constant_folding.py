@@ -32,6 +32,7 @@ from typing import Any
 import numpy
 from orso.types import OrsoTypes
 
+from opteryx.exceptions import InvalidInternalStateError
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import evaluate
 from opteryx.managers.expression import get_all_nodes_of_type
@@ -66,7 +67,7 @@ def build_literal_node(value: Any, root: Node):
     elif isinstance(value, (datetime.date)):
         root.type=OrsoTypes.DATE
     else:
-        raise Exception("Unable to fold expression")
+        raise ValueError("Unable to fold expression")
     return root
     # fmt:on
 
@@ -91,12 +92,11 @@ def fold_constants(root: Node) -> Node:
         try:
             result = evaluate(root, table, None)[0]
             return build_literal_node(result, root)
-        except Exception as err:  # nosec
+        except (ValueError, TypeError, KeyError) as err:  # nosec
             if not err:
                 pass
             # what ever the reason, just skip
             # DEBUG:log (err)
-            pass
     return root
 
 

@@ -930,6 +930,7 @@ STATEMENTS = [
         ("SELECT id, name FROM $planets AS P_1 INNER JOIN $planets AS P_2 USING (id, name)", 9, 2, None),
         ("SELECT P_1.* FROM $planets AS P_1 INNER JOIN $planets AS P_2 USING (id, name)", 9, 20, None),
         ("SELECT * FROM $satellites AS P_1 INNER JOIN $satellites AS P_2 USING (id, name)", 177, 14, None),
+        ("SELECT $satellites.name, $planets.name from $planets LEFT JOIN $satellites USING (id) WHERE $planets.name != 'Earth'", 8, 2, None),
 
         ("SELECT * FROM $missions WHERE COSINE_SIMILARITY(Location, 'LC-18A, Cape Canaveral AFS, Florida, USA') > 0.7", 658, 8, None),
 
