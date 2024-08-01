@@ -15,6 +15,7 @@ These are a set of functions that can be applied to data.
 """
 
 import datetime
+import decimal
 
 import numpy
 import orjson
@@ -134,21 +135,40 @@ def safe(func, *parms):
     """execute a function, return None if fails"""
     try:
         return func(*parms)
-    except (ValueError, IndexError, TypeError, ArrowNotImplementedError):
+    except (
+        ValueError,
+        IndexError,
+        TypeError,
+        ArrowNotImplementedError,
+        AttributeError,
+        decimal.InvalidOperation,
+    ):
         return None
 
 
 def try_cast(_type):
     """cast a column to a specified type"""
-    import decimal
+
+    BOOLS = {
+        "TRUE": True,
+        "FALSE": False,
+        "ON": True,
+        "OFF": False,
+        "YES": True,
+        "NO": False,
+        "1": True,
+        "0": False,
+        "1.0": True,
+        "0.0": False,
+    }
 
     casters = {
-        "BOOLEAN": bool,
+        "BOOLEAN": lambda x: BOOLS.get(str(x).upper()),
         "DOUBLE": float,
-        "INTEGER": int,
+        "INTEGER": lambda x: int(float(x)),
         "DECIMAL": decimal.Decimal,
-        "VARCHAR": str,
-        "TIMESTAMP": numpy.datetime64,
+        "VARCHAR": lambda x: str(x) if x is not None else x,
+        "TIMESTAMP": dates.parse_iso,
         "STRUCT": orjson.loads,
         "DATE": lambda x: dates.parse_iso(x).date(),
     }
