@@ -11,15 +11,9 @@
 # limitations under the License.
 
 """
-Join Node
+Anti Join Node
 
 This is a SQL Query Execution Plan Node.
-
-This handles most of the join types as a wrapper for pyarrow's JOIN functions,
-except for INNER JOIN and CROSS JOIN. PyArrow has a very good set of JOIN
-implementations which use here, we don't use the INNER JOIN because PyArrow
-has limitations on the column types allowed in the relations, so we use our
-own INNER JOIN algo.
 """
 
 from typing import Generator
@@ -63,25 +57,29 @@ class JoinNode(BasePlanNode):
         left_node = self._producers[0]  # type:ignore
         right_node = self._producers[1]  # type:ignore
 
-        right_table = pyarrow.concat_tables(right_node.execute(), promote_options="none")
+        left_table = pyarrow.concat_tables(left_node.execute(), promote_options="none")
 
-        for morsel in left_node.execute():
-            # in place until #1295 resolved
-            if self._right_columns[0] not in morsel.column_names:
-                self._right_columns, self._left_columns = (
-                    self._left_columns,
-                    self._right_columns,
-                )
-
+        for morsel in right_node.execute():
             try:
-                # do the join
-                new_morsel = morsel.join(
-                    right_table,
-                    keys=self._right_columns,
-                    right_keys=self._left_columns,
-                    join_type=self._join_type,
-                    coalesce_keys=self._using is not None,
-                )
+                if self._join_type in ("right anti", "right semi"):
+                    # Perform the RIGHT ANTI JOIN operation
+                    new_morsel = left_table.join(
+                        morsel,
+                        keys=self._left_columns,
+                        right_keys=self._right_columns,
+                        join_type=self._join_type,
+                        coalesce_keys=self._using is not None,
+                    )
+                elif self._join_type in ("left anti", "left semi"):
+                    # Perform the LEFT ANTI JOIN operation
+                    new_morsel = morsel.join(
+                        left_table,
+                        keys=self._right_columns,
+                        right_keys=self._left_columns,
+                        join_type=self._join_type,
+                        coalesce_keys=self._using is not None,
+                    )
+
             except pyarrow.ArrowInvalid as err:  # pragma: no cover
                 last_token = str(err).split(" ")[-1]
                 column = None

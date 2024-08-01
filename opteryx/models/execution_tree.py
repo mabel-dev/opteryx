@@ -54,7 +54,7 @@ class ExecutionTree(Graph):
         from opteryx.models import NonTabularResult
         from opteryx.operators import ExplainNode
 
-        def map_operators_to_producers(nodes: list) -> None:
+        def _map_operators_to_producers(nodes: list) -> None:
             """
             Walks through the query plan, linking each operator node with its data producers.
 
@@ -69,6 +69,59 @@ class ExecutionTree(Graph):
                 if producers:
                     operator.set_producers([self[src_node[0]] for src_node in producers])
                     map_operators_to_producers([src_node[0] for src_node in producers])
+
+        def map_operators_to_producers(nodes: list) -> None:
+            """
+            Walks through the query plan, linking each operator node with its data producers.
+
+            Parameters:
+                nodes: list
+                    List of operator nodes in the query plan.
+            """
+
+            for node in nodes:
+                producers = self.ingoing_edges(node)
+                operator = self[node]
+
+                if len(producers) == 1:
+                    # If there is only one producer, set it directly
+                    operator.set_producers([self[producers[0][0]]])
+                elif len(producers) == 2 and hasattr(operator, "_left_relation"):
+                    left_producer = None
+                    right_producer = None
+
+                    left_relation = operator._left_relation
+                    right_relation = operator._right_relation
+                    for source, target, relation in producers:
+                        for s, t, r in self.breadth_first_search(source, reverse=True) + [
+                            (source, target, relation)
+                        ]:
+                            if set(left_relation).intersection(
+                                {
+                                    self[s].parameters.get("alias"),
+                                    self[s].parameters.get("relation"),
+                                }
+                            ):
+                                left_producer = self[source]
+                            elif set(right_relation).intersection(
+                                {
+                                    self[s].parameters.get("alias"),
+                                    self[s].parameters.get("relation"),
+                                }
+                            ):
+                                right_producer = self[source]
+
+                    if left_producer and right_producer:
+                        operator.set_producers([left_producer, right_producer])
+                    else:
+                        # Default to setting producers as in the current method if left and right cannot be determined
+                        operator.set_producers([self[src_node[0]] for src_node in producers])
+                else:
+                    # Handle cases with more than two producers if applicable
+                    operator.set_producers([self[src_node[0]] for src_node in producers])
+
+                # Recursively process the producers
+                map_operators_to_producers([src_node[0] for src_node in producers])
 
         # Validate query plan to ensure it's acyclic
         if not self.is_acyclic():

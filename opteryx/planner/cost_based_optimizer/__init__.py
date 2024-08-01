@@ -113,6 +113,8 @@ class CostBasedOptimizerVisitor:
                 _inner(child, nid, context)
 
         _inner(root_nid, None, context)
+        # some strategies operate on the entire plan at once, or need to be told
+        # there's no more nodes, we handle both with the .complete
         optimized_plan = strategy.complete(context.optimized_plan, context)
         return optimized_plan
 

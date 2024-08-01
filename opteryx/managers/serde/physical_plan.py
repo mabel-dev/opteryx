@@ -17,5 +17,3 @@
 }
 
 """
-
-from orso.types import OrsoTypes
