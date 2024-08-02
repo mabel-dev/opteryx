@@ -11,9 +11,10 @@
 # limitations under the License.
 
 """
-Anti Join Node
+Join Node
 
-This is a SQL Query Execution Plan Node.
+We have our own implementations of INNER and OUTER joins, this uses PyArrow
+to implement less-common joins of ANTI and SEMI joins.
 """
 
 from typing import Generator
@@ -51,52 +52,46 @@ class JoinNode(BasePlanNode):
 
     @property
     def config(self):  # pragma: no cover
-        return ""
+        from opteryx.managers.expression import format_expression
+
+        if self._on:
+            return f"{self._join_type.upper()} JOIN ({format_expression(self._on, True)})"
+        if self._using:
+            return f"{self._join_type.upper()} JOIN (USING {','.join(map(format_expression, self._using))})"
+        return f"{self._join_type.upper()}"
 
     def execute(self) -> Generator:
         left_node = self._producers[0]  # type:ignore
         right_node = self._producers[1]  # type:ignore
 
         left_table = pyarrow.concat_tables(left_node.execute(), promote_options="none")
+        right_table = pyarrow.concat_tables(right_node.execute(), promote_options="none")
 
-        for morsel in right_node.execute():
-            try:
-                if self._join_type in ("right anti", "right semi"):
-                    # Perform the RIGHT ANTI JOIN operation
-                    new_morsel = left_table.join(
-                        morsel,
-                        keys=self._left_columns,
-                        right_keys=self._right_columns,
-                        join_type=self._join_type,
-                        coalesce_keys=self._using is not None,
-                    )
-                elif self._join_type in ("left anti", "left semi"):
-                    # Perform the LEFT ANTI JOIN operation
-                    new_morsel = morsel.join(
-                        left_table,
-                        keys=self._right_columns,
-                        right_keys=self._left_columns,
-                        join_type=self._join_type,
-                        coalesce_keys=self._using is not None,
-                    )
-
-            except pyarrow.ArrowInvalid as err:  # pragma: no cover
-                last_token = str(err).split(" ")[-1]
-                column = None
-                for col in left_node.columns:
-                    if last_token == col.identity:
-                        column = col.name
-                        break
-                for col in right_node.columns:
-                    if last_token == col.identity:
-                        column = col.name
-                        break
-                if column:
-                    raise UnsupportedSyntaxError(
-                        f"Unable to JOIN with unsupported column types in table, '{column}'."
-                    ) from err
+        try:
+            new_morsel = left_table.join(
+                right_table,
+                keys=self._left_columns,
+                right_keys=self._right_columns,
+                join_type=self._join_type,
+                coalesce_keys=self._using is not None,
+            )
+        except pyarrow.ArrowInvalid as err:  # pragma: no cover
+            last_token = str(err).split(" ")[-1]
+            column = None
+            for col in left_node.columns:
+                if last_token == col.identity:
+                    column = col.name
+                    break
+            for col in right_node.columns:
+                if last_token == col.identity:
+                    column = col.name
+                    break
+            if column:
                 raise UnsupportedSyntaxError(
-                    "Unable to JOIN with unsupported column types in table."
+                    f"Unable to ANTI/SEMI JOIN with unsupported column types in table, '{column}'."
                 ) from err
+            raise UnsupportedSyntaxError(
+                "Unable to ANTI/SEMI JOIN with unsupported column types in table."
+            ) from err
 
-            yield new_morsel
+        yield new_morsel

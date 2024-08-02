@@ -32,12 +32,12 @@ from .heap_sort_node import HeapSortNode  # Heap
 from .inner_join_node import InnerJoinNode
 from .inner_join_node_single import InnerJoinSingleNode
 from .join_node import JoinNode
-from .left_join_node import LeftJoinNode
 from .limit_node import LimitNode  # select the first N records
 
 # from .metadata_writer_node import MetadataWriterNode
 # from .morsel_defragment_node import MorselDefragmentNode  # consolidate small morsels
 from .noop_node import NoOpNode  # No Operation
+from .outer_join_node import OuterJoinNode
 from .projection_node import ProjectionNode  # remove unwanted columns including renames
 from .read_node import ReaderNode
 from .set_variable_node import SetVariableNode

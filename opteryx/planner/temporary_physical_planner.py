@@ -61,9 +61,9 @@ def create_physical_plan(logical_plan, query_properties):
                     node = operators.InnerJoinSingleNode(query_properties, **node_config)
                 else:
                     node = operators.InnerJoinNode(query_properties, **node_config)
-            elif node_config.get("type") in ("left outer", "full outer", "right outer"):
+            elif node_config.get("type") in ("left outer", "full outer", "right outer", "left anti", "left semi"):
                 # We use out own implementation of LEFT JOIN
-                node = operators.LeftJoinNode(query_properties, **node_config)
+                node = operators.OuterJoinNode(query_properties, **node_config)
             elif node_config.get("type") == "cross join":
                 # Pyarrow doesn't have a CROSS JOIN
                 node = operators.CrossJoinNode(query_properties, **node_config)
@@ -112,6 +112,6 @@ def create_physical_plan(logical_plan, query_properties):
         plan.add_node(nid, node)
 
     for source, destination, relation in logical_plan.edges():
-        plan.add_edge(source, destination)
+        plan.add_edge(source, destination, relation)
 
     return plan

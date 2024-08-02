@@ -11,14 +11,16 @@
 # limitations under the License.
 
 """
-Left Join Node
+Outer Join Node
 
 This is a SQL Query Execution Plan Node.
 
-PyArrow has a good LEFT JOIN implementation, but it errors when the
-relations being joined contain STRUCT or ARRAY columns, this is true
-for all of the JOIN types, however we've only written our own INNER
-and LEFT JOINs.
+PyArrow has LEFT/RIGHT/FULL OUTER JOIN implementations, but they error when the
+relations being joined contain STRUCT or ARRAY columns so we've written our own
+OUTER JOIN implementations.
+
+We also have our own INNER JOIN implementations, it's really just the less
+popular SEMI and ANTI joins we leave to PyArrow for now.
 """
 
 import time
@@ -164,7 +166,96 @@ def right_join(left_relation, right_relation, left_columns: List[str], right_col
             yield align_tables(left_relation, right_chunk, left_indexes, right_indexes)
 
 
-class LeftJoinNode(BasePlanNode):
+def left_anti_join(
+    left_relation, right_relation, left_columns: List[str], right_columns: List[str]
+):
+    """
+    Perform a LEFT ANTI JOIN.
+
+    This implementation ensures that all rows from the left table are included in the result set,
+    where there are no matching rows in the right table based on the join columns.
+
+    Parameters:
+        left_relation (pyarrow.Table): The left pyarrow.Table to join.
+        right_relation (pyarrow.Table): The right pyarrow.Table to join.
+        left_columns (list of str): Column names from the left table to join on.
+        right_columns (list of str): Column names from the right table to join on.
+
+    Returns:
+        A pyarrow.Table containing the result of the LEFT ANTI JOIN operation.
+    """
+    right_relation = pyarrow.concat_tables(right_relation.execute(), promote_options="none")
+
+    hash_table = HashTable()
+    non_null_right_values = right_relation.select(right_columns).itercolumns()
+    for i, value_tuple in enumerate(zip(*non_null_right_values)):
+        hash_table.insert(hash(value_tuple), i)
+
+    at_least_once = False
+    # Iterate over the left_relation in chunks
+    for left_batch in left_relation.execute():
+        left_indexes = []
+        left_values = left_batch.select(left_columns).itercolumns()
+        for i, value_tuple in enumerate(zip(*left_values)):
+            rows = hash_table.get(hash(value_tuple))
+            if not rows:  # Only include left rows that have no match in the right table
+                left_indexes.append(i)
+
+        # Filter the left_chunk based on the anti join condition
+        if left_indexes:
+            yield left_batch.take(left_indexes)
+            at_least_once = True
+
+    if not at_least_once:
+        yield left_batch.slice(0, 0)
+
+
+def left_semi_join(
+    left_relation, right_relation, left_columns: List[str], right_columns: List[str]
+):
+    """
+    Perform a LEFT SEMI JOIN.
+
+    This implementation ensures that all rows from the left table that have a matching row in the right table
+    based on the join columns are included in the result set.
+
+    Parameters:
+        left_relation (pyarrow.Table): The left pyarrow.Table to join.
+        right_relation (pyarrow.Table): The right pyarrow.Table to join.
+        left_columns (list of str): Column names from the left table to join on.
+        right_columns (list of str): Column names from the right table to join on.
+
+    Returns:
+        A pyarrow.Table containing the result of the LEFT SEMI JOIN operation.
+    """
+    right_relation = pyarrow.concat_tables(right_relation.execute(), promote_options="none")
+
+    hash_table = HashTable()
+    non_null_right_values = right_relation.select(right_columns).itercolumns()
+    for i, value_tuple in enumerate(zip(*non_null_right_values)):
+        hash_table.insert(hash(value_tuple), i)
+
+    at_least_once = False
+    # Iterate over the left_relation in chunks
+    for left_batch in left_relation.execute():
+        left_indexes = []
+        left_values = left_batch.select(left_columns).itercolumns()
+
+        for i, value_tuple in enumerate(zip(*left_values)):
+            rows = hash_table.get(hash(value_tuple))
+            if rows:  # Only include left rows that have a match in the right table
+                left_indexes.append(i)
+
+        # Filter the left_chunk based on the anti join condition
+        if left_indexes:
+            yield left_batch.take(left_indexes)
+            at_least_once = True
+
+    if not at_least_once:
+        yield left_batch.slice(0, 0)
+
+
+class OuterJoinNode(BasePlanNode):
     operator_type = OperatorType.PASSTHRU
 
     def __init__(self, properties: QueryProperties, **config):
@@ -189,7 +280,13 @@ class LeftJoinNode(BasePlanNode):
 
     @property
     def config(self):  # pragma: no cover
-        return ""
+        from opteryx.managers.expression import format_expression
+
+        if self._on:
+            return f"{self._join_type.upper()} JOIN ({format_expression(self._on, True)})"
+        if self._using:
+            return f"{self._join_type.upper()} JOIN (USING {','.join(map(format_expression, self._using))})"
+        return f"{self._join_type.upper()}"
 
     def execute(self) -> Generator:
         left_node = self._producers[0]  # type:ignore
@@ -209,4 +306,10 @@ class LeftJoinNode(BasePlanNode):
             start = time.monotonic_ns()
 
 
-providers = {"left outer": left_join, "full outer": full_join, "right outer": right_join}
+providers = {
+    "left outer": left_join,
+    "full outer": full_join,
+    "right outer": right_join,
+    "left anti": left_anti_join,
+    "left semi": left_semi_join,
+}
