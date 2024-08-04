@@ -54,6 +54,7 @@ def left_join(left_relation, right_relation, left_columns: List[str], right_colu
         A pyarrow.Table containing the result of the LEFT JOIN operation.
     """
     chunk_size = 1000
+    at_least_once = False
     right_relation = pyarrow.concat_tables(right_relation.execute(), promote_options="none")
 
     hash_table = HashTable()
@@ -80,6 +81,9 @@ def left_join(left_relation, right_relation, left_columns: List[str], right_colu
 
             # Yield the aligned chunk
             yield align_tables(right_relation, left_chunk, right_indexes, left_indexes)
+            at_least_once = True
+    if not at_least_once:
+        yield align_tables(right_relation, left_batch, [], [])
 
 
 def full_join(left_relation, right_relation, left_columns: List[str], right_columns: List[str]):
