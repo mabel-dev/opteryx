@@ -19,7 +19,7 @@ from enum import Enum
 from typing import BinaryIO
 from typing import Callable
 from typing import Dict
-from typing import List
+from typing import Optional
 from typing import Tuple
 from typing import Union
 
@@ -110,8 +110,8 @@ def filter_records(filter, table):
 
 def zstd_decoder(
     buffer: Union[memoryview, bytes],
-    projection: List = None,
-    selection=None,
+    projection: Optional[list] = None,
+    selection: Optional[list] = None,
     just_schema: bool = False,
 ) -> Tuple[int, int, pyarrow.Table]:
     """
@@ -130,8 +130,8 @@ def zstd_decoder(
 
 def lzma_decoder(
     buffer: Union[memoryview, bytes],
-    projection: List = None,
-    selection=None,
+    projection: Optional[list] = None,
+    selection: Optional[list] = None,
     just_schema: bool = False,
 ) -> Tuple[int, int, pyarrow.Table]:
     """
@@ -150,8 +150,8 @@ def lzma_decoder(
 
 def parquet_decoder(
     buffer: Union[memoryview, bytes],
-    projection: List = None,
-    selection=None,
+    projection: Optional[list] = None,
+    selection: Optional[list] = None,
     just_schema: bool = False,
 ) -> Tuple[int, int, pyarrow.Table]:
     """
@@ -169,11 +169,13 @@ def parquet_decoder(
     Returns:
         Tuple containing number of rows, number of columns, and the table or schema.
     """
-    # Convert the selection to DNF format if applicable
     selected_columns = None
-    if selection is None:
-        selection = []
 
+    # we need to work out if we have a selection which may force us
+    # fetching columns just for filtering
+    dnf_filter, selection = PredicatePushable.to_dnf(selection) if selection else (None, None)
+
+    # try to avoid turning a memoryview buffer into bytes, it's quite slow
     stream: BinaryIO = (
         MemoryViewStream(buffer) if isinstance(buffer, memoryview) else io.BytesIO(buffer)
     )
@@ -181,7 +183,7 @@ def parquet_decoder(
     # Open the parquet file only once
     parquet_file = parquet.ParquetFile(stream)
 
-    if projection or just_schema:
+    if projection or just_schema or selection:
         # Return just the schema if that's all that's needed
         if just_schema:
             return convert_arrow_schema_to_orso_schema(parquet_file.schema_arrow)
@@ -218,12 +220,6 @@ def parquet_decoder(
                 empty_table,
             )
 
-    dnf_filter, selection = PredicatePushable.to_dnf(selection) if selection else (None, None)
-
-    # Special handling for projection of [] (usually means COUNT(*))
-    if projection == []:
-        selected_columns = []
-
     # Read the parquet table with the optimized column list and selection filters
     table = parquet.read_table(
         stream,
@@ -247,8 +243,8 @@ def parquet_decoder(
 
 def orc_decoder(
     buffer: Union[memoryview, bytes],
-    projection: List = None,
-    selection=None,
+    projection: Optional[list] = None,
+    selection: Optional[list] = None,
     just_schema: bool = False,
 ) -> Tuple[int, int, pyarrow.Table]:
     """
@@ -275,8 +271,8 @@ def orc_decoder(
 
 def jsonl_decoder(
     buffer: Union[memoryview, bytes],
-    projection: List = None,
-    selection=None,
+    projection: Optional[list] = None,
+    selection: Optional[list] = None,
     just_schema: bool = False,
 ) -> Tuple[int, int, pyarrow.Table]:
     import pyarrow.json
@@ -305,8 +301,8 @@ def jsonl_decoder(
 
 def csv_decoder(
     buffer: Union[memoryview, bytes],
-    projection: List = None,
-    selection=None,
+    projection: Optional[list] = None,
+    selection: Optional[list] = None,
     just_schema: bool = False,
     delimiter: str = ",",
 ) -> Tuple[int, int, pyarrow.Table]:
@@ -332,8 +328,8 @@ def csv_decoder(
 
 def tsv_decoder(
     buffer: Union[memoryview, bytes],
-    projection: List = None,
-    selection=None,
+    projection: Optional[list] = None,
+    selection: Optional[list] = None,
     just_schema: bool = False,
 ) -> Tuple[int, int, pyarrow.Table]:
     return csv_decoder(
@@ -347,8 +343,8 @@ def tsv_decoder(
 
 def arrow_decoder(
     buffer: Union[memoryview, bytes],
-    projection: List = None,
-    selection=None,
+    projection: Optional[list] = None,
+    selection: Optional[list] = None,
     just_schema: bool = False,
 ) -> Tuple[int, int, pyarrow.Table]:
     import pyarrow.feather as pf
@@ -371,8 +367,8 @@ def arrow_decoder(
 
 def avro_decoder(
     buffer: Union[memoryview, bytes],
-    projection: List = None,
-    selection=None,
+    projection: Optional[list] = None,
+    selection: Optional[list] = None,
     just_schema: bool = False,
 ) -> Tuple[int, int, pyarrow.Table]:
     """
@@ -405,8 +401,8 @@ def avro_decoder(
 
 def ipc_decoder(
     buffer: Union[memoryview, bytes],
-    projection: List = None,
-    selection=None,
+    projection: Optional[list] = None,
+    selection: Optional[list] = None,
     just_schema: bool = False,
 ) -> Tuple[int, int, pyarrow.Table]:
     from itertools import chain
