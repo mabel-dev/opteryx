@@ -53,6 +53,7 @@ from opteryx.exceptions import (
     ArrayWithMixedTypesError,
     ColumnNotFoundError,
     ColumnReferencedBeforeEvaluationError,
+    DataError,
     DatasetNotFoundError,
     EmptyDatasetError,
     FunctionNotFoundError,
@@ -1235,7 +1236,7 @@ STATEMENTS = [
         ("SELECT null | '192.168.1.1/8'", 1, 1, IncorrectTypeError),
 
         ("SELECT * FROM testdata.flat.different", 196902, 15, None),
-        ("SELECT * FROM testdata.flat.different WHERE following < 10", 7814, 15, None),
+        ("SELECT * FROM testdata.flat.different WHERE following < 10", 7814, 15, DataError),
         ("SELECT is_quoting, COUNT(*) FROM testdata.flat.different GROUP BY is_quoting", 13995, 2, None),
         ("SELECT is_quoting FROM testdata.flat.different", 196902, 1, None),
         ("SELECT * FROM testdata.flat.different WHERE following IS NULL", 9, 15, None),
@@ -1772,6 +1773,8 @@ STATEMENTS = [
         # 1854
         ("SELECT s,e FROM generate_series('2024-01-01', '2025-01-01', '1mo') as s, generate_series('2024-01-01', '2025-01-01', '1mo') as e", 169, 2, None),
         ("SELECT * from $planets, $satellites", 1593, 28, None),
+        # 1865
+        ("SELECT COUNT(*) FROM testdata.missions WHERE Lauched_at < '1970-01-01'", 1, 1, None),
 ]
 # fmt:on
 

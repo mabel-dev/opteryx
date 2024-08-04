@@ -182,6 +182,7 @@ class AsyncReaderNode(ReaderNode):
             decoder = get_decoder(blob_name)
             # This pool is being used by async processes in another thread, using
             # zero copy versions occassionally results in data getting corrupted
+            # due to a read-after-free type error
             blob_bytes = self.pool.read_and_release(reference, zero_copy=False)
             try:
                 start = time.monotonic_ns()
@@ -191,6 +192,12 @@ class AsyncReaderNode(ReaderNode):
                         blob_bytes, projection=self.columns, selection=self.predicates
                     )
                 except Exception as err:
+                    from pyarrow import ArrowInvalid
+
+                    if isinstance(err, ArrowInvalid) and "No match for" in str(err):
+                        raise DataError(
+                            f"Unable to read blob {blob_name} - this error is likely caused by a blob having an significantly different schema to previously handled blobs, or the data catalog."
+                        )
                     raise DataError(f"Unable to read blob {blob_name} - error {err}") from err
                 self.statistics.time_reading_blobs += time.monotonic_ns() - start
                 num_rows, _, morsel = decoded
