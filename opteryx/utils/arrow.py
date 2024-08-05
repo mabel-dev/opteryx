@@ -125,14 +125,29 @@ def align_tables(source_table, append_table, source_indices, append_indices):
     # Create a set of column names from the source table for efficient existence checking
     source_column_names = set(source_table.column_names)
 
-    # Iterate through the column names of append_table
-    for column_name in append_table.column_names:
-        # If the column_name is not found in source_column_names
-        if column_name not in source_column_names:
-            # Append the column from append_table to aligned_table, taking the elements at the specified append_indices
-            aligned_table = aligned_table.append_column(
-                column_name, append_table.column(column_name).take(append_indices)
-            )
+    # Check if append_indices is all nulls
+    if all(v is None for v in append_indices):
+        # Iterate through the column names of append_table
+        for column_name in append_table.column_names:
+            # If the column_name is not found in source_column_names
+            if column_name not in source_column_names:
+                # Get the type of the column in append_table
+                column_field = append_table.schema.field(column_name)
+                column_type = column_field.type
+                # Create an array of nulls with the correct type
+                null_column = pyarrow.array([None] * len(aligned_table), type=column_type)
+                # Append the null column to aligned_table with the correct field
+                aligned_table = aligned_table.append_column(column_field, null_column)
+    else:
+        # Iterate through the column names of append_table
+        for column_name in append_table.column_names:
+            # If the column_name is not found in source_column_names
+            if column_name not in source_column_names:
+                # Append the column from append_table to aligned_table, taking the elements at the specified append_indices
+                column_field = append_table.schema.field(column_name)
+                aligned_table = aligned_table.append_column(
+                    column_field, append_table.column(column_name).take(append_indices)
+                )
 
     # Return the aligned table
     return aligned_table
