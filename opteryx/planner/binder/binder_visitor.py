@@ -517,7 +517,7 @@ class BinderVisitor:
             response = requests.get(node.url, timeout=60)
 
             response.raise_for_status()
-            row_count, column_count, data = decoder(response.content)
+            row_count, column_count, data = decoder(response.content, force_read=True)
 
             schema = RelationSchema(
                 name=node.relation_name,
