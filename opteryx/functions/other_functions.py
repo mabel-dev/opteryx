@@ -121,12 +121,31 @@ def iif(mask, true_values, false_values):
 
 
 def if_null(values, replacement):
+    """
+    Replace null values in the input array with corresponding values from the replacement array.
+
+    Parameters:
+        values: Union[numpy.ndarray, pyarrow.Array]
+            The input array which may contain null values.
+        replacement: numpy.ndarray
+            The array with replacement values corresponding to the null positions in the input array.
+
+    Returns:
+        numpy.ndarray
+            The input array with null values replaced by corresponding values from the replacement array.
+    """
     from opteryx.managers.expression.unary_operations import _is_null
 
-    response = values
-    for index, is_null in enumerate(_is_null(values)):
+    # Check if the values array is a pyarrow array and convert it to a numpy array if necessary
+    if isinstance(values, pyarrow.Array):
+        values = values.to_numpy(False)
+
+    response = values.copy()  # Create a copy of the array to avoid modifying the original
+    is_null_array = _is_null(values)
+    for index, is_null in enumerate(is_null_array):
         if is_null:
             response[index] = replacement[index]
+
     return response
 
 

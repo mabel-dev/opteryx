@@ -148,7 +148,7 @@ class AsyncReaderNode(ReaderNode):
         data_queue: queue.Queue = queue.Queue()
 
         loop = asyncio.new_event_loop()
-        threading.Thread(
+        read_thread = threading.Thread(
             target=lambda: loop.run_until_complete(
                 fetch_data(
                     blob_names,
@@ -159,7 +159,8 @@ class AsyncReaderNode(ReaderNode):
                 )
             ),
             daemon=True,
-        ).start()
+        )
+        read_thread.start()
 
         morsel = None
         arrow_schema = None
@@ -219,6 +220,9 @@ class AsyncReaderNode(ReaderNode):
                 self.statistics.failed_reads += 1
                 print(f"[READER] Cannot read blob {blob_name} due to {err}")
                 raise err
+
+        # Ensure the thread is closed
+        read_thread.join()
 
         if morsel:
             self.statistics.columns_read += morsel.num_columns
