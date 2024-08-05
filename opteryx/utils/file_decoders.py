@@ -19,6 +19,7 @@ from enum import Enum
 from typing import BinaryIO
 from typing import Callable
 from typing import Dict
+from typing import List
 from typing import Optional
 from typing import Tuple
 from typing import Union
@@ -64,12 +65,12 @@ def get_decoder(dataset: str) -> Callable:
     return file_decoder
 
 
-def do_nothing(buffer, projection=None, just_schema: bool = False):  # pragma: no cover
+def do_nothing(buffer: Union[memoryview, bytes], **kwargs):  # pragma: no cover
     """for when you need to look like you're doing something"""
     return False
 
 
-def filter_records(filter, table):
+def filter_records(filter: Optional[Union[List, Tuple]], table: pyarrow.Table):
     """
     When we can't push predicates to the actual read, use this to filter records
     just after the read.
@@ -110,9 +111,11 @@ def filter_records(filter, table):
 
 def zstd_decoder(
     buffer: Union[memoryview, bytes],
+    *,
     projection: Optional[list] = None,
     selection: Optional[list] = None,
     just_schema: bool = False,
+    **kwargs,
 ) -> Tuple[int, int, pyarrow.Table]:
     """
     Read zstandard compressed JSONL files
@@ -130,9 +133,11 @@ def zstd_decoder(
 
 def lzma_decoder(
     buffer: Union[memoryview, bytes],
+    *,
     projection: Optional[list] = None,
     selection: Optional[list] = None,
     just_schema: bool = False,
+    **kwargs,
 ) -> Tuple[int, int, pyarrow.Table]:
     """
     Read lzma compressed JSONL files
@@ -150,9 +155,11 @@ def lzma_decoder(
 
 def parquet_decoder(
     buffer: Union[memoryview, bytes],
+    *,
     projection: Optional[list] = None,
     selection: Optional[list] = None,
     just_schema: bool = False,
+    force_read: bool = False,
 ) -> Tuple[int, int, pyarrow.Table]:
     """
     Read parquet formatted files.
@@ -166,6 +173,8 @@ def parquet_decoder(
             The selection filter.
         just_schema: bool, optional
             Flag to indicate if only schema is needed.
+        force_read: bool, optional
+            Flag to skip some optimizations.
     Returns:
         Tuple containing number of rows, number of columns, and the table or schema.
     """
@@ -220,6 +229,9 @@ def parquet_decoder(
                 empty_table,
             )
 
+    if selected_columns is None and not force_read:
+        selected_columns = []
+
     # Read the parquet table with the optimized column list and selection filters
     table = parquet.read_table(
         stream,
@@ -232,20 +244,16 @@ def parquet_decoder(
     if selection:
         table = filter_records(selection, table)
 
-    if projection == []:
-        return (
-            parquet_file.metadata.num_rows,
-            parquet_file.metadata.num_columns,
-            pyarrow.Table.from_pydict({"_": numpy.full(table.num_rows, True, dtype=numpy.bool_)}),
-        )
     return (parquet_file.metadata.num_rows, parquet_file.metadata.num_columns, table)
 
 
 def orc_decoder(
     buffer: Union[memoryview, bytes],
+    *,
     projection: Optional[list] = None,
     selection: Optional[list] = None,
     just_schema: bool = False,
+    **kwargs,
 ) -> Tuple[int, int, pyarrow.Table]:
     """
     Read orc formatted files
@@ -271,9 +279,11 @@ def orc_decoder(
 
 def jsonl_decoder(
     buffer: Union[memoryview, bytes],
+    *,
     projection: Optional[list] = None,
     selection: Optional[list] = None,
     just_schema: bool = False,
+    **kwargs,
 ) -> Tuple[int, int, pyarrow.Table]:
     import pyarrow.json
 
@@ -301,10 +311,12 @@ def jsonl_decoder(
 
 def csv_decoder(
     buffer: Union[memoryview, bytes],
+    *,
     projection: Optional[list] = None,
     selection: Optional[list] = None,
     just_schema: bool = False,
     delimiter: str = ",",
+    **kwargs,
 ) -> Tuple[int, int, pyarrow.Table]:
     import pyarrow.csv
     from pyarrow.csv import ParseOptions
@@ -328,9 +340,11 @@ def csv_decoder(
 
 def tsv_decoder(
     buffer: Union[memoryview, bytes],
+    *,
     projection: Optional[list] = None,
     selection: Optional[list] = None,
     just_schema: bool = False,
+    **kwargs,
 ) -> Tuple[int, int, pyarrow.Table]:
     return csv_decoder(
         buffer=buffer,
@@ -343,9 +357,11 @@ def tsv_decoder(
 
 def arrow_decoder(
     buffer: Union[memoryview, bytes],
+    *,
     projection: Optional[list] = None,
     selection: Optional[list] = None,
     just_schema: bool = False,
+    **kwargs,
 ) -> Tuple[int, int, pyarrow.Table]:
     import pyarrow.feather as pf
 
@@ -367,9 +383,11 @@ def arrow_decoder(
 
 def avro_decoder(
     buffer: Union[memoryview, bytes],
+    *,
     projection: Optional[list] = None,
     selection: Optional[list] = None,
     just_schema: bool = False,
+    **kwargs,
 ) -> Tuple[int, int, pyarrow.Table]:
     """
     AVRO isn't well supported, it is converted between table types which is
@@ -401,9 +419,11 @@ def avro_decoder(
 
 def ipc_decoder(
     buffer: Union[memoryview, bytes],
+    *,
     projection: Optional[list] = None,
     selection: Optional[list] = None,
     just_schema: bool = False,
+    **kwargs,
 ) -> Tuple[int, int, pyarrow.Table]:
     from itertools import chain
 
