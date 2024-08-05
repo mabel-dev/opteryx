@@ -139,6 +139,8 @@ def if_null(values, replacement):
     # Check if the values array is a pyarrow array and convert it to a numpy array if necessary
     if isinstance(values, pyarrow.Array):
         values = values.to_numpy(False)
+    if isinstance(values, list):
+        values = numpy.array(values)
 
     response = values.copy()  # Create a copy of the array to avoid modifying the original
     is_null_array = _is_null(values)
