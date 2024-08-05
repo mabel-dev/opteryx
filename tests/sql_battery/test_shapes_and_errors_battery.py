@@ -1775,6 +1775,9 @@ STATEMENTS = [
         ("SELECT * from $planets, $satellites", 1593, 28, None),
         # 1865
         ("SELECT COUNT(*) FROM testdata.missions WHERE Lauched_at < '1970-01-01'", 1, 1, None),
+        # 1875 - can't replicate error with test data, these are similar cases
+        ("SELECT * FROM $astronauts WHERE IFNULL(birth_place->'state', 'home') == 'CA'", 25, 19, None),
+        ("SELECT * FROM $astronauts WHERE IFNULL(GET(birth_place,'state'), 'home') == 'CA'", 25, 19, None),
 ]
 # fmt:on
 
