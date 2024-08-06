@@ -11,7 +11,8 @@
 # limitations under the License.
 
 """
-This is the async wrapper around the memory pool.
+This is the async wrapper around the memory pool, it is used by the
+async blob readers to move data to the synchronous code.
 """
 
 import asyncio

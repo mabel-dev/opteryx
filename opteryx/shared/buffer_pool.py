@@ -16,7 +16,7 @@ Global Buffer Pool.
 This is uses an LRU-K2 policy to determine what to keep and what to evict and is
 backed by a MemoryPool.
 
-The buffer pool is has no slot limit, it is a given volume of memory, the pool
+The buffer pool has no slot limit, it is a given volume of memory, the pool
 will try to evict when full. This is different to a classic Buffer Pool which
 is slot-based.
 

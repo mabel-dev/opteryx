@@ -54,22 +54,6 @@ class ExecutionTree(Graph):
         from opteryx.models import NonTabularResult
         from opteryx.operators import ExplainNode
 
-        def _map_operators_to_producers(nodes: list) -> None:
-            """
-            Walks through the query plan, linking each operator node with its data producers.
-
-            Parameters:
-                nodes: list
-                    List of operator nodes in the query plan.
-            """
-            for node in nodes:
-                producers = self.ingoing_edges(node)
-                operator = self[node]
-
-                if producers:
-                    operator.set_producers([self[src_node[0]] for src_node in producers])
-                    map_operators_to_producers([src_node[0] for src_node in producers])
-
         def map_operators_to_producers(nodes: list) -> None:
             """
             Walks through the query plan, linking each operator node with its data producers.

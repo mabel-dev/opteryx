@@ -96,6 +96,7 @@ class FunctionDatasetNode(BasePlanNode):
         self.function = config["function"]
         self.parameters = config
         self.columns = config.get("columns", [])
+        self.args = config.get("args", [])
 
     @classmethod
     def from_json(cls, json_obj: str) -> "BasePlanNode":  # pragma: no cover
@@ -103,9 +104,18 @@ class FunctionDatasetNode(BasePlanNode):
 
     @property
     def config(self):  # pragma: no cover
-        if self.alias:
-            return f"{self.function} => {self.alias}"
-        return f"{self.function}"
+        from opteryx.managers.expression import format_expression
+
+        if self.function == "FAKE":
+            return f"FAKE ({', '.join(format_expression(arg) for arg in self.args)}{' AS ' + self.alias if self.alias else ''})"
+        if self.function == "GENERATE_SERIES":
+            return f"GENERATE SERIES ({', '.join(format_expression(arg) for arg in self.args)}){' AS ' + self.alias if self.alias else ''}"
+        if self.function == "VALUES":
+            return f"VALUES (({', '.join(self.columns)}) x {len(self.values)} AS {self.alias})"
+        if self.function == "UNNEST":
+            return f"UNNEST ({', '.join(format_expression(arg) for arg in self.args)}{' AS ' + self.parameters.get('unnest_target', '')})"
+        if self.function == "HTTP":
+            return f"HTTP ({self.url}) AS {self.alias}"
 
     @property
     def name(self):  # pragma: no cover

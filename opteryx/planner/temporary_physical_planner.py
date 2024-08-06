@@ -26,7 +26,7 @@ from opteryx.models import ExecutionTree
 from opteryx.planner.logical_planner import LogicalPlanStepType
 
 
-def create_physical_plan(logical_plan, query_properties):
+def create_physical_plan(logical_plan, query_properties) -> ExecutionTree:
     plan = ExecutionTree()
 
     for nid, logical_node in logical_plan.nodes(data=True):
@@ -62,7 +62,7 @@ def create_physical_plan(logical_plan, query_properties):
                 else:
                     node = operators.InnerJoinNode(query_properties, **node_config)
             elif node_config.get("type") in ("left outer", "full outer", "right outer", "left anti", "left semi"):
-                # We use out own implementation of LEFT JOIN
+                # We use out own implementation of OUTER JOINS
                 node = operators.OuterJoinNode(query_properties, **node_config)
             elif node_config.get("type") == "cross join":
                 # Pyarrow doesn't have a CROSS JOIN

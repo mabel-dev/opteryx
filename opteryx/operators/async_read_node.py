@@ -218,8 +218,9 @@ class AsyncReaderNode(ReaderNode):
             except Exception as err:
                 self.statistics.add_message(f"failed to read {blob_name}")
                 self.statistics.failed_reads += 1
-                print(f"[READER] Cannot read blob {blob_name} due to {err}")
-                raise err
+                import warnings
+
+                warnings.warn(f"failed to read {blob_name} - {err}")
 
         # Ensure the thread is closed
         read_thread.join()

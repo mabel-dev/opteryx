@@ -243,13 +243,13 @@ class SqlConnector(BaseConnector, PredicatePushable):
         except Exception as err:
             if not err:
                 pass
-            # Fall back to getting the schema from the first row, this is the column names, and where
-            # possible, column types.
+            # Fall back to getting the schema from the first few rows, this is the column names,
+            # and where possible, column types.
             # DEBUG: log (f"APPROXIMATING SCHEMA OF {self.dataset} BECAUSE OF {type(err).__name__}({err})")
             from sqlalchemy.sql import text
 
             with self._engine.connect() as conn:
-                query = Query().SELECT("*").FROM(self.dataset).LIMIT("1")
+                query = Query().SELECT("*").FROM(self.dataset).LIMIT("10")
                 # DEBUG: log ("READ ROW\n", str(query))
                 row = conn.execute(text(str(query))).fetchone()._asdict()
                 # DEBUG: log ("ROW:", row)
