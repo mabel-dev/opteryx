@@ -17,6 +17,7 @@ A command line interface for Opteryx
 """
 
 import os
+import readline
 import sys
 import threading
 import time
@@ -30,6 +31,8 @@ from opteryx.utils.sql import remove_comments
 
 sys.path.insert(1, os.path.join(sys.path[0], ".."))
 
+if readline:
+    pass
 
 # Define ANSI color codes
 ANSI_RED = "\u001b[31m"
@@ -38,7 +41,7 @@ ANSI_RESET = "\u001b[0m"
 
 def print_dots(stop_event):
     """
-    Prints three dots repeatedly until the stop_event is set.
+    Prints five dots repeatedly until the stop_event is set.
     """
     while not stop_event.is_set():  # pragma: no cover
         print(".", end="", flush=True)
@@ -52,6 +55,12 @@ def print_dots(stop_event):
         if not stop_event.is_set():
             print("\r   \r", end="", flush=True)
             time.sleep(0.5)
+        if not stop_event.is_set():
+            print("\r   \r", end="", flush=True)
+            time.sleep(0.5)
+        if not stop_event.is_set():
+            print("\r   \r", end="", flush=True)
+            time.sleep(0.5)
 
 
 # fmt:off
@@ -59,7 +68,7 @@ def main(
     o: str = typer.Option(default="console", help="Output location (ignored by REPL)", ),
     color: bool = typer.Option(default=True, help="Colorize the table displayed to the console."),
     table_width: bool = typer.Option(default=True, help="Limit console display to the screen width."),
-    max_col_width: int = typer.Option(default=30, help="Maximum column width"),
+    max_col_width: int = typer.Option(default=64, help="Maximum column width"),
     stats: bool = typer.Option(default=True, help="Report statistics."),
     cycles: int = typer.Option(default=1, help="Repeat Execution."),
     sql: str = typer.Argument(None, show_default=False, help="Execute SQL statement and quit."),

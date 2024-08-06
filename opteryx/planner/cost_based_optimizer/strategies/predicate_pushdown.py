@@ -378,18 +378,24 @@ class PredicatePushdownStrategy(OptimizationStrategy):
                         # Here we're pushing filters into the UNNEST - this means that
                         # CROSS JOIN UNNEST will produce fewer rows... it still does
                         # the equality check, but all in one step which is generally faster
+                        # Note: there are a lot of things that need to be true to push the
+                        # filter into the UNNEST function
                         if (
                             len(predicate.columns) == 1
+                            and predicate.condition.left.node_type
+                            in (NodeType.LITERAL, NodeType.IDENTIFIER)
+                            and predicate.condition.right.node_type
+                            in (NodeType.LITERAL, NodeType.IDENTIFIER)
                             and predicate.columns[0].value == node.unnest_alias
+                            and predicate.condition.value in {"Eq", "InList"}
                         ):
-                            if predicate.condition.value in {"Eq", "InList"}:
-                                filters = node.filters or []
-                                new_values = predicate.condition.right.value
-                                if not isinstance(new_values, (list, set, tuple)):
-                                    new_values = [new_values]
-                                else:
-                                    new_values = list(new_values)
-                                node.filters = set(filters + new_values)
+                            filters = node.filters or []
+                            new_values = predicate.condition.right.value
+                            if not isinstance(new_values, (list, set, tuple)):
+                                new_values = [new_values]
+                            else:
+                                new_values = list(new_values)
+                            node.filters = set(filters + new_values)
 
                         elif (
                             query_columns == (known_columns)

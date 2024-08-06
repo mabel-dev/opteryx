@@ -10,6 +10,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import List
+from typing import Optional
+
 import numpy
 import pyarrow
 from pyarrow import compute
@@ -55,7 +58,7 @@ def list_contains_all(array, items):
     return set(array).issuperset(items)
 
 
-def search(array, item, ignore_case=[True]):
+def search(array, item, ignore_case: Optional[List[bool]] = None):
     """
     `search` provides a way to look for values across different field types, rather
     than doing a LIKE on a string, IN on a list, `search` adapts to the field type.
@@ -63,6 +66,9 @@ def search(array, item, ignore_case=[True]):
     This performs a pre-filter of the data to remove nulls - this means that the
     checks should generally be faster.
     """
+
+    if ignore_case is None:
+        ignore_case = [True]
 
     item = item[0]  # [#325]
     record_count = array.size

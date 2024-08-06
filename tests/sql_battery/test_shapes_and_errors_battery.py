@@ -1236,7 +1236,7 @@ STATEMENTS = [
         ("SELECT null | '192.168.1.1/8'", 1, 1, IncorrectTypeError),
 
         ("SELECT * FROM testdata.flat.different", 196902, 15, None),
-        ("SELECT * FROM testdata.flat.different WHERE following < 10", 7814, 15, DataError),
+        ("SELECT * FROM testdata.flat.different WHERE following < 10", 7814, 15, None),
         ("SELECT is_quoting, COUNT(*) FROM testdata.flat.different GROUP BY is_quoting", 13995, 2, None),
         ("SELECT is_quoting FROM testdata.flat.different", 196902, 1, None),
         ("SELECT * FROM testdata.flat.different WHERE following IS NULL", 9, 15, None),
@@ -1778,6 +1778,17 @@ STATEMENTS = [
         # 1875 - can't replicate error with test data, these are similar cases
         ("SELECT * FROM $astronauts WHERE IFNULL(birth_place->'state', 'home') == 'CA'", 25, 19, None),
         ("SELECT * FROM $astronauts WHERE IFNULL(GET(birth_place,'state'), 'home') == 'CA'", 25, 19, None),
+        # 1880
+        ("SELECT name, mission FROM (SELECT name, missions FROM $astronauts) as nauts CROSS JOIN UNNEST (nauts.missions) AS mission WHERE mission != 'Apollo 11'", 843, 2, None),
+        ("SELECT name, mission FROM (SELECT name, missions FROM $astronauts) as nauts CROSS JOIN UNNEST (nauts.missions) AS mission WHERE mission > 'Apollo 11'", 837, 2, None),
+        ("SELECT name, mission FROM (SELECT name, missions FROM $astronauts) as nauts CROSS JOIN UNNEST (nauts.missions) AS mission WHERE mission >= 'Apollo 11'", 840, 2, None),
+        ("SELECT name, mission FROM (SELECT name, missions FROM $astronauts) as nauts CROSS JOIN UNNEST (nauts.missions) AS mission WHERE mission LIKE 'Apollo 11'", 3, 2, None),
+        ("SELECT name, mission FROM (SELECT name, missions FROM $astronauts) as nauts CROSS JOIN UNNEST (nauts.missions) AS mission WHERE mission = 'Apollo 11'", 3, 2, None),
+        ("SELECT name, mission FROM (SELECT name, missions FROM $astronauts) as nauts CROSS JOIN UNNEST (nauts.missions) AS mission WHERE mission LIKE 'Apollo%11'", 3, 2, None),
+        ("SELECT name, mission FROM (SELECT name, missions FROM $astronauts) as nauts CROSS JOIN UNNEST (nauts.missions) AS mission WHERE mission not in ('Apollo 11')", 843, 2, None),
+        ("SELECT name, mission FROM (SELECT name, missions FROM $astronauts) as nauts CROSS JOIN UNNEST (nauts.missions) AS mission WHERE NOT mission LIKE 'Apollo 11'", 843, 2, None),
+#        ("SELECT name, mission FROM (SELECT name, missions FROM $astronauts) as nauts CROSS JOIN UNNEST (nauts.missions) AS mission WHERE VARCHAR(mission) = 'Apollo 11'", 3, 2, None),
+
 ]
 # fmt:on
 

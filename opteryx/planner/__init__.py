@@ -42,11 +42,14 @@
 """
 
 import time
+from typing import Any
 from typing import Dict
+from typing import Generator
 from typing import Iterable
 from typing import Union
 
 from opteryx import config
+from opteryx.models import ExecutionTree
 
 PROFILE_LOCATION = config.PROFILE_LOCATION
 
@@ -57,7 +60,7 @@ def query_planner(
     connection,
     qid: str,
     statistics,
-):
+) -> Generator[ExecutionTree, Any, Any]:
     from opteryx.exceptions import SqlError
     from opteryx.models import QueryProperties
     from opteryx.planner.ast_rewriter import do_ast_rewriter

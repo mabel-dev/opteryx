@@ -45,7 +45,7 @@ def _cross_join_unnest_column(
     morsels: BasePlanNode = None,
     source: Node = None,
     target_column: FlatColumn = None,
-    filters: Set = None,
+    conditions: Set = None,
     statistics=None,
 ) -> Generator[pyarrow.Table, None, None]:
     """
@@ -90,13 +90,13 @@ def _cross_join_unnest_column(
             if column_type is None:
                 column_type = column_data.type.value_type
 
-            if filters is None:
+            if conditions is None:
                 indices, new_column_data = build_rows_indices_and_column(
                     column_data.to_numpy(False)
                 )
             else:
                 indices, new_column_data = build_filtered_rows_indices_and_column(
-                    column_data.to_numpy(False), filters
+                    column_data.to_numpy(False), conditions
                 )
 
             new_block = left_block.take(indices)
@@ -117,12 +117,27 @@ def _cross_join_unnest_column(
                     return_morsel = None
             start = time.monotonic_ns()
 
-    if return_morsel.num_rows > 0:
+        statistics.time_cross_join_unnest += time.monotonic_ns() - start
+
+    if return_morsel and return_morsel.num_rows > 0:
         at_least_once = True
         yield return_morsel
 
     if not at_least_once:
-        yield new_block.slice()
+        # Get the current schema
+        schema = left_morsel.schema
+
+        # Define the new column as a VARCHAR (string)
+        new_column = pyarrow.field(target_column.identity, pyarrow.string())
+
+        # Create a new schema including the new column
+        new_schema = pyarrow.schema(list(schema) + [new_column])
+
+        # Create an empty table with the new schema
+        new_block = pyarrow.Table.from_batches([], schema=new_schema)
+
+        # Yield the new table
+        yield new_block
 
 
 def _cross_join_unnest_literal(
@@ -228,6 +243,9 @@ class CrossJoinNode(BasePlanNode):
 
         self.source = config.get("column")
 
+        self._left_relation = config.get("left_relation_names")
+        self._right_relation = config.get("right_relation_names")
+
         # do we have unnest details?
         self._unnest_column = config.get("unnest_column")
         self._unnest_target = config.get("unnest_target")
@@ -253,7 +271,10 @@ class CrossJoinNode(BasePlanNode):
 
     @property
     def config(self):  # pragma: no cover
-        return ""
+        filters = ""
+        if self._filters:
+            filters = f"({self._unnest_target.name} IN ({', '.join(self._filters)}))"
+        return f"CROSS JOIN {filters}"
 
     def execute(self) -> Generator:
         left_node = self._producers[0]  # type:ignore
@@ -277,6 +298,6 @@ class CrossJoinNode(BasePlanNode):
                 morsels=left_node,
                 source=self._unnest_column,
                 target_column=self._unnest_target,
-                filters=self._filters,
+                conditions=self._filters,
                 statistics=self.statistics,
             )

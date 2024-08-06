@@ -56,7 +56,6 @@ class LogicalPlanStepType(int, Enum):
     Order = auto()  # order by
     Distinct = auto()
     Exit = auto()
-    Defragment = auto()  # TODO: not currently used
     HeapSort = auto()
 
     CTE = auto()
