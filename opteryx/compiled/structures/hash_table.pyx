@@ -8,6 +8,7 @@ from libc.stdint cimport int64_t
 from libcpp.pair cimport pair
 
 cimport cython
+cimport numpy as cnp
 
 import numpy
 import pyarrow
@@ -77,7 +78,7 @@ def recast_column(column):
         return numpy.array(result_list, dtype=numpy.str_)
     else:
         # Use PyArrow's to_numpy() for efficient conversion for other column types
-        return column.to_numpy()
+        return column
 
 cpdef distinct(table, HashSet seen_hashes=None, list columns=None, bint return_seen_hashes=False):
     """
@@ -92,28 +93,23 @@ cpdef distinct(table, HashSet seen_hashes=None, list columns=None, bint return_s
         columns_of_interest = columns
 
     cdef list keep = []
-    values = [recast_column(c) for c in table.select(columns_of_interest).itercolumns()]
+    cdef list values = [recast_column(c) for c in table.select(columns_of_interest).itercolumns()]
 
     cdef int64_t hashed_value
     cdef int i = 0
 
     if len(columns_of_interest) > 1:
-        for value_tuple in zip(*values):
+        for i, value_tuple in enumerate(zip(*values)):
             hashed_value = hash(value_tuple)
             if not seen_hashes.contains(hashed_value):
                 seen_hashes.insert(hashed_value)
                 keep.append(i)
-            i += 1
     else:
-        for value_tuple in values[0]:
-            if value_tuple != value_tuple:
-                hashed_value = -14556480 # Apollo 11 Launch, Unix Epoch
-            else:
-                hashed_value = hash(value_tuple)
+        for i, value_tuple in enumerate(values[0]):
+            hashed_value = hash(value_tuple)
             if not seen_hashes.contains(hashed_value):
                 seen_hashes.insert(hashed_value)
                 keep.append(i)
-            i += 1
 
     if len(keep) > 0:
         distinct_table = table.take(keep)
