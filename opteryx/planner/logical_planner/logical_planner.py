@@ -571,12 +571,14 @@ def process_join_tree(join: dict) -> LogicalPlanNode:
             )
         unnest_alias = join["relation"]["Table"]["alias"]["name"]["value"]
 
+        # return the column we're going to UNNEST and what the new column is called
         return unnest_column, unnest_alias
 
     join_step = LogicalPlanNode(node_type=LogicalPlanStepType.Join)
 
     join_step.type = extract_join_type(join)
     join_step.on, join_step.using = extract_join_condition(join)
+    # At this stage, CROSS JOIN UNNEST are represented in a single JOIN node
     join_step.unnest_column, join_step.unnest_alias = extract_unnest_dataset(join, join_step.type)
 
     return join_step
@@ -663,6 +665,7 @@ def create_node_relation(relation):
         # DEBUG: log (sub_plan)
 
     elif relation["relation"]["Table"]["args"]:
+        # If we have args, we're a function dataset (like FAKE or UNNEST)
         function = relation["relation"]["Table"]
         function_name = function["name"][0]["value"].upper()
 
@@ -677,7 +680,8 @@ def create_node_relation(relation):
             node_type=LogicalPlanStepType.FunctionDataset, function=function_name
         )
         if function_name == "UNNEST":
-            function_step.alias = f"$unnest-{random_string(4)}"
+            function_step.alias = f"$unnest-{random_string(6)}"
+            function_step.relation = function_step.alias
             function_step.unnest_target = function["alias"]["name"]["value"]
         else:
             function_step.alias = function["alias"]["name"]["value"]

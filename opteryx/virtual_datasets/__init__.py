@@ -17,5 +17,6 @@ import opteryx.virtual_datasets.planet_data as planets
 import opteryx.virtual_datasets.satellite_data as satellites
 import opteryx.virtual_datasets.variables_data as variables
 from opteryx.virtual_datasets import missions
+from opteryx.virtual_datasets import statistics
 from opteryx.virtual_datasets import stop_words
 from opteryx.virtual_datasets import user
