@@ -244,7 +244,7 @@ cpdef cnp.ndarray array_encode_utf8(cnp.ndarray inp):
     A new ndarray of bytes objects is returned.
 
     This converts about 5 million short strings (twitter user names) per second,
-    and 3 million tweets per second. Raw python is about 
+    and 3 million tweets per second. Raw python is many times slower 
 
     Parameters:
         inp: list or ndarray
