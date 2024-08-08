@@ -25,9 +25,9 @@ from pyarrow import ArrowNotImplementedError
 from pyarrow import compute
 
 import opteryx
+from opteryx.compiled.list_ops import array_encode_utf8 as to_blob
 from opteryx.exceptions import FunctionNotFoundError
 from opteryx.exceptions import IncorrectTypeError
-from opteryx.exceptions import UnsupportedSyntaxError
 from opteryx.functions import date_functions
 from opteryx.functions import number_functions
 from opteryx.functions import other_functions
@@ -36,8 +36,11 @@ from opteryx.utils import dates
 
 
 def array_encode_utf8(arr):
-    # this is not the fastest way to do this, orso has a Cython method
-    return [None if s is None else s.encode() for s in arr]
+    try:
+        # array_encode_utf8 is fast but brittle
+        return to_blob(arr)
+    except:
+        return [None if s is None else str(s).encode() for s in arr]
 
 
 def _get(array, key):
@@ -149,7 +152,7 @@ def safe(func, *parms):
 def try_cast(_type):
     """cast a column to a specified type"""
 
-    BOOLS = {
+    bools = {
         "TRUE": True,
         "FALSE": False,
         "ON": True,
@@ -163,8 +166,9 @@ def try_cast(_type):
     }
 
     casters = {
-        "BOOLEAN": lambda x: BOOLS.get(str(x).upper()),
+        "BOOLEAN": lambda x: bools.get(str(x).upper()),
         "DOUBLE": float,
+        "BLOB": lambda x: str(x).encode() if x is not None and not isinstance(x, bytes) else x,
         "INTEGER": lambda x: int(float(x)),
         "DECIMAL": decimal.Decimal,
         "VARCHAR": lambda x: str(x) if x is not None else x,
@@ -227,10 +231,6 @@ def get_len(obj):
     if hasattr(obj, "__len__"):
         return len(obj)
     return None
-
-
-def _raise_exception(text):
-    raise UnsupportedSyntaxError(text)
 
 
 def _coalesce(*arrays):
@@ -310,6 +310,7 @@ FUNCTIONS = {
     "TRY_BOOLEAN": try_cast("BOOLEAN"),
     "TRY_NUMERIC": try_cast("DOUBLE"),
     "TRY_VARCHAR": try_cast("VARCHAR"),
+    "TRY_BLOB": try_cast("BLOB"),
     "TRY_STRING": try_cast("VARCHAR"),  # alias for VARCHAR
     "TRY_STRUCT": try_cast("STRUCT"),
     "TRY_INTEGER": try_cast("INTEGER"),
