@@ -213,6 +213,8 @@ def cast(branch, alias: Optional[List[str]] = None, key=None):
         data_type = "BOOLEAN"
     elif "STRUCT" in data_type:
         data_type = "STRUCT"
+    elif "Blob" in data_type:
+        data_type = "BLOB"
     else:
         raise SqlError(f"Unsupported type for CAST  - '{data_type}'")
 

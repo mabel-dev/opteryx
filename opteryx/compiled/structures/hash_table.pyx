@@ -14,7 +14,7 @@ import numpy
 import pyarrow
 
 cdef class HashTable:
-    cdef unordered_map[int64_t, vector[int64_t]] hash_table
+    cdef public unordered_map[int64_t, vector[int64_t]] hash_table
 
     def __init__(self):
         self.hash_table = unordered_map[int64_t, vector[int64_t]]()
@@ -35,18 +35,6 @@ cdef class HashTable:
         else:
             return vector[int64_t]()
 
-    def to_jagged_array(self):
-        # Initialize an empty Python list to hold the lists of row IDs
-        cdef list jagged_array = []
-
-        # Iterate over the hash table
-        cdef pair[int64_t, vector[int64_t]] item
-        for item in self.hash_table:
-            # Convert each vector<int64_t> to a Python list and append it to the jagged_array
-            jagged_array.append([row_id for row_id in item.second])
-
-        return jagged_array
-
 
 cdef class HashSet:
     cdef unordered_set[int64_t] c_set
@@ -54,31 +42,21 @@ cdef class HashSet:
     def __cinit__(self):
         self.c_set = unordered_set[int64_t]()
 
-    def insert(self, int64_t value):
+    cdef inline void insert(self, int64_t value):
         self.c_set.insert(value)
 
-    def contains(self, int64_t value):
+    cdef inline bint contains(self, int64_t value):
         return self.c_set.find(value) != self.c_set.end()
 
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def recast_column(column):
-    cdef:
-        Py_ssize_t i, n
-        list result_list = []
+cdef inline object recast_column(column):
+    cdef column_type = column.type
 
-    if pyarrow.types.is_struct(column.type) or pyarrow.types.is_list(column.type):
-        n = len(column)
-        # Pre-allocate the list for performance
-        result_list = [None] * n
-        for i in range(n):
-            # Directly convert each element to a Python string
-            result_list[i] = str(column[i].as_py())
-        return numpy.array(result_list, dtype=numpy.str_)
-    else:
-        # Use PyArrow's to_numpy() for efficient conversion for other column types
-        return column
+    if pyarrow.types.is_struct(column_type) or pyarrow.types.is_list(column_type):
+        return numpy.array([str(a) for a in column.to_pylist()], dtype=numpy.str_)
+    return column
 
 cpdef distinct(table, HashSet seen_hashes=None, list columns=None, bint return_seen_hashes=False):
     """
@@ -96,7 +74,7 @@ cpdef distinct(table, HashSet seen_hashes=None, list columns=None, bint return_s
     cdef list values = [recast_column(c) for c in table.select(columns_of_interest).itercolumns()]
 
     cdef int64_t hashed_value
-    cdef int i = 0
+    cdef int64_t i = 0
 
     if len(columns_of_interest) > 1:
         for i, value_tuple in enumerate(zip(*values)):

@@ -1,3 +1,4 @@
+from .cython_list_ops import array_encode_utf8
 from .cython_list_ops import cython_allop_eq
 from .cython_list_ops import cython_allop_neq
 from .cython_list_ops import cython_anyop_eq
