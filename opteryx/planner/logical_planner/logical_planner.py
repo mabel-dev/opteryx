@@ -601,13 +601,11 @@ def create_node_relation(relation):
                     from opteryx.exceptions import UnnamedSubqueryError
 
                     raise UnnamedSubqueryError(
-                        "Subqueries in FROM or JOIN clauses must be named (AS)."
+                        "Ensure you provide a name for all subqueries in FROM or JOIN clauses by using AS)."
                     )
 
                 subquery_step = LogicalPlanNode(node_type=LogicalPlanStepType.Subquery)
-                subquery_step.alias = (
-                    None if subquery["alias"] is None else subquery["alias"]["name"]["value"]
-                )
+                subquery_step.alias = subquery["alias"]["name"]["value"]
                 step_id = random_string()
                 sub_plan.add_node(step_id, subquery_step)
 

@@ -1886,7 +1886,14 @@ STATEMENTS = [
         # 1881 - found when working on 1880 but different enough for a new bug
 #        ("SELECT name, mission FROM (SELECT name, missions FROM $astronauts) as nauts CROSS JOIN UNNEST (nauts.missions) AS mission WHERE VARCHAR(mission) = 'Apollo 11'", 3, 2, None),
 #        ("SELECT name, mission FROM $astronauts CROSS JOIN UNNEST (missions) AS mission WHERE LEFT(mission, 2) = 'Apollo 11'", 0, 0, None),
-
+        # 1887
+        ("SELECT * FROM (SELECT * FROM $satellites LEFT JOIN (SELECT * FROM $planets) AS p ON $satellites.planetId = p.id) AS mapped WHERE mass > 1", 170, 28, None),
+        ("SELECT * FROM (SELECT * FROM $satellites LEFT JOIN $planets AS p ON $satellites.planetId = p.id) AS mapped WHERE mass > 1", 170, 28, None),
+        ("SELECT * FROM $satellites LEFT JOIN $planets AS p ON $satellites.planetId = p.id WHERE mass > 1", 170, 28, None),
+#        ("SELECT * FROM (SELECT * FROM (SELECT * FROM $satellites) AS s LEFT JOIN $planets AS p ON s.planetId = p.id) AS mapped WHERE mass > 1", 170, 28, None),
+        ("SELECT * FROM (SELECT * FROM $satellites) AS s LEFT JOIN (SELECT * FROM $planets) AS p ON s.planetId = p.id WHERE mass > 1", 170, 28, None),
+        ("SELECT * FROM $satellites LEFT JOIN (SELECT * FROM (SELECT * FROM $planets) AS p) AS planets ON $satellites.planetId = planets.id WHERE mass > 1", 170, 28, None),
+        ("SELECT * FROM (SELECT * FROM (SELECT * FROM $satellites LEFT JOIN $planets AS p ON $satellites.planetId = p.id) AS joined) AS mapped WHERE mass > 1", 170, 28, None),
 ]
 # fmt:on
 
