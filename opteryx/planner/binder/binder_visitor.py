@@ -1053,6 +1053,22 @@ class BinderVisitor:
 
         # Visit node and return updated context
         return_node, context = self.visit_node(graph[node], context=context)
+
+        return_node.all_relations = {
+            value for value in [return_node.relation, return_node.alias] if value is not None
+        }
+        sub_plan = {
+            x for (s, t, r) in graph.breadth_first_search(node, reverse=True) for x in (s, t)
+        }
+        for plan_node_id in sub_plan:
+            plan_node = graph[plan_node_id]
+            if plan_node.alias:
+                return_node.all_relations.add(plan_node.alias)
+            if plan_node.relation:
+                return_node.all_relations.add(plan_node.relation)
+            if plan_node.all_relations:
+                return_node.all_relations.update(plan_node.all_relations)
+
         return_node = self.post_bind(return_node)
         graph[node] = return_node
         return graph, context

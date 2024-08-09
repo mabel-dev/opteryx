@@ -344,12 +344,18 @@ class PredicatePushdownStrategy(OptimizationStrategy):
             if context.collected_predicates:
                 # push predicates which reference multiple relations here
 
-                if node.type == "left outer":
+                if node.type.startswith("left"):
                     for predicate in context.collected_predicates:
                         identifiers = get_all_nodes_of_type(
                             predicate.condition, (NodeType.IDENTIFIER,)
                         )
-                        if any(i.source in node.right_relation_names for i in identifiers):
+                        # 1887 - add avoid pushing not only if it's on the right side, but also
+                        # if we don't know where the relation came from (usually subqueries)
+                        if any(
+                            i.source in node.right_relation_names
+                            or i.source not in node.all_relations
+                            for i in identifiers
+                        ):
                             for predicate in context.collected_predicates:
                                 context.optimized_plan.insert_node_after(
                                     predicate.nid, predicate, context.node_id
