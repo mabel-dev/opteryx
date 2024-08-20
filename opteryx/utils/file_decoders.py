@@ -445,12 +445,13 @@ def avro_decoder(
     if just_schema:
         # FastAvro exposes a schema we can convert without reading all the rows
         return convert_avro_schema_to_orso_schema(reader.schema)
+
     if projection:
         # It's almost always faster to avoid creating the column to convert in arrow
         # than creating and then removing them - although that would probably the fastest step
         projection = {c.value for c in projection}
         table = pyarrow.Table.from_pylist(
-            [{k: v for r in reader for k, v in r.items() if k in projection}]
+            [{k: v for k, v in row.items() if k in projection} for row in reader]
         )
     elif projection == []:
         # Empty table, we don't know the number of rows up front
