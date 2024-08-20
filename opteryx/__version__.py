@@ -28,8 +28,8 @@ class VersionStatus(Enum):
 
 _major = 0
 _minor = 16
-_revision = 5
-_status = VersionStatus.RELEASE
+_revision = 6
+_status = VersionStatus.ALPHA
 
 __author__ = "@joocer"
 __version__ = f"{_major}.{_minor}.{_revision}" + (
