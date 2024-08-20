@@ -34,7 +34,6 @@ from opteryx.exceptions import UnsupportedFileTypeError
 from opteryx.utils import paths
 from opteryx.utils.file_decoders import VALID_EXTENSIONS
 from opteryx.utils.file_decoders import get_decoder
-from opteryx.utils.memory_view_stream import MemoryViewStream
 
 OS_SEP = os.sep
 

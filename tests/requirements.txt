@@ -18,7 +18,7 @@ rich
 zstandard
 
 # different storage providers
-avro
+fastavro
 firebase-admin
 google-cloud-storage
 google-cloud-bigquery-storage

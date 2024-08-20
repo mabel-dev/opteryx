@@ -249,7 +249,7 @@ class SqlConnector(BaseConnector, PredicatePushable):
             from sqlalchemy.sql import text
 
             with self._engine.connect() as conn:
-                query = Query().SELECT("*").FROM(self.dataset).LIMIT("10")
+                query = Query().SELECT("*").FROM(self.dataset).LIMIT("25")
                 # DEBUG: log ("READ ROW\n", str(query))
                 row = conn.execute(text(str(query))).fetchone()._asdict()
                 # DEBUG: log ("ROW:", row)
@@ -263,5 +263,6 @@ class SqlConnector(BaseConnector, PredicatePushable):
                         for column, value in row.items()
                     ],
                 )
+                # DEBUG: log ("SCHEMA:", self.schema)
 
         return self.schema
