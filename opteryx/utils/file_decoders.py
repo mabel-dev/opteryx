@@ -24,9 +24,9 @@ from typing import Optional
 from typing import Tuple
 from typing import Union
 
-import numpy
 import pyarrow
 from orso.tools import random_string
+from orso.types import OrsoTypes
 from pyarrow import parquet
 
 from opteryx.connectors.capabilities import PredicatePushable
@@ -42,6 +42,40 @@ class ExtentionType(str, Enum):
 
     DATA = "DATA"
     CONTROL = "CONTROL"
+
+
+def convert_avro_schema_to_orso_schema(avro_schema):
+    from orso.schema import FlatColumn
+    from orso.schema import RelationSchema
+
+    avro_to_orso: Dict[str, OrsoTypes] = {
+        "long": OrsoTypes.INTEGER,
+        "string": OrsoTypes.VARCHAR,
+        "timestamp": OrsoTypes.TIMESTAMP,
+        "boolean": OrsoTypes.BOOLEAN,
+        "array": OrsoTypes.ARRAY,
+        "float": OrsoTypes.DOUBLE,
+        "double": OrsoTypes.DOUBLE,
+        "bytes": OrsoTypes.BLOB,
+    }
+
+    columns = []
+
+    for column in avro_schema["fields"]:
+        ct = None
+        act = column.get("type")
+        if isinstance(act, str):
+            ct = avro_to_orso.get(act)
+        if isinstance(act, list):
+            types = [avro_to_orso.get(t) for t in act if t != "null"]
+            if len(types) > 0:
+                ct = types[0]
+        if isinstance(act, dict):
+            ct = avro_to_orso.get(act.get("type"))
+        fc = FlatColumn(name=column.get("name"), type=ct)
+        columns.append(fc)
+
+    return RelationSchema(name=avro_schema.get("name"), columns=columns)
 
 
 def convert_arrow_schema_to_orso_schema(arrow_schema):
@@ -390,29 +424,45 @@ def avro_decoder(
     **kwargs,
 ) -> Tuple[int, int, pyarrow.Table]:
     """
-    AVRO isn't well supported, it is converted between table types which is
-    really slow
+    AVRO has a number of optimizations to make it faster than a naive implementation;
+    the sample test script runs about 7x faster following these changes (the schema
+    converter and selecting before convering to pyarrow).
+
+    AVRO is still many many times slower than Parquet - it's not recommended as a
+    bulk data format.
     """
     try:
-        from avro.datafile import DataFileReader
-        from avro.io import DatumReader
+        import fastavro
     except ImportError:  # pragma: no cover
-        raise Exception("`avro` is missing, please install or include in your `requirements.txt`.")
+        from opteryx.exceptions import MissingDependencyError
+
+        raise MissingDependencyError("fastavro")
 
     stream: BinaryIO = None
     stream = MemoryViewStream(buffer) if isinstance(buffer, memoryview) else io.BytesIO(buffer)
-    reader = DataFileReader(stream, DatumReader())
+    reader = fastavro.reader(stream)
 
-    table = pyarrow.Table.from_pylist(list(reader))
-    schema = table.schema
     if just_schema:
-        return convert_arrow_schema_to_orso_schema(schema)
+        # FastAvro exposes a schema we can convert without reading all the rows
+        return convert_avro_schema_to_orso_schema(reader.schema)
+    if projection:
+        # It's almost always faster to avoid creating the column to convert in arrow
+        # than creating and then removing them - although that would probably the fastest step
+        projection = {c.value for c in projection}
+        table = pyarrow.Table.from_pylist(
+            [{k: v for r in reader for k, v in r.items() if k in projection}]
+        )
+    elif projection == []:
+        # Empty table, we don't know the number of rows up front
+        table = pyarrow.Table.from_arrays([[0 for r in reader]], ["_"])
+    else:
+        # Probably never run, convert every row and column to Arrow
+        table = pyarrow.Table.from_pylist(list(reader))
 
     full_shape = table.shape
     if selection:
+        # We can't push filters in Fast Avro, so filter here
         table = filter_records(selection, table)
-    if projection:
-        table = post_read_projector(table, projection)
 
     return *full_shape, table
 

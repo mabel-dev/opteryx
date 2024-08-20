@@ -60,18 +60,19 @@ class Timer(object):
 
 
 FORMATS = (
-    "arrow",
-    "arrow_lz4",
-    "jsonl",
+#    "arrow",
+#    "arrow_lz4",
+#    "jsonl",
     "orc",
     "orc_snappy",
     "parquet",
     "parquet_snappy",
     "parquet_lz4",
-    "zstd",
+#    "zstd",
     "ipc",  # no compression
     "ipc_lz4",
     "ipc_zstd",
+    "avro",
 )
 
 
