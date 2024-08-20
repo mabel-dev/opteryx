@@ -84,7 +84,7 @@ STATEMENTS = [
         ("SELECT * FROM sqlite.planets", 9, 20, None),
         ("SELECT * FROM $variables", 42, 4, None),
         ("SELECT * FROM $missions", 4630, 8, None),
-        ("SELECT * FROM $statistics", 10, 2, None),
+        ("SELECT * FROM $statistics", 14, 2, None),
         ("SELECT * FROM $stop_words", 305, 1, None),
         (b"SELECT * FROM $satellites", 177, 8, None),
         ("SELECT * FROM testdata.missions", 4630, 8, None),
