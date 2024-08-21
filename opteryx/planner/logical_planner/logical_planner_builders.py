@@ -231,7 +231,11 @@ def cast(branch, alias: Optional[List[str]] = None, key=None):
 
 def ceiling(value, alias: Optional[List[str]] = None, key=None):
     data_value = build(value["expr"])
-    return Node(NodeType.FUNCTION, value="CEIL", parameters=[data_value], alias=alias)
+    if "Scale" in value["field"]:
+        scale = build(value["field"]["Scale"])
+    else:
+        scale = literal_number([0])
+    return Node(NodeType.FUNCTION, value="CEIL", parameters=[data_value, scale], alias=alias)
 
 
 def compound_identifier(branch, alias: Optional[List[str]] = None, key=None):
@@ -270,7 +274,11 @@ def extract(branch, alias: Optional[List[str]] = None, key=None):
 
 def floor(value, alias: Optional[List[str]] = None, key=None):
     data_value = build(value["expr"])
-    return Node(NodeType.FUNCTION, value="FLOOR", parameters=[data_value], alias=alias)
+    if "Scale" in value["field"]:
+        scale = build(value["field"]["Scale"])
+    else:
+        scale = literal_number([0])
+    return Node(NodeType.FUNCTION, value="FLOOR", parameters=[data_value, scale], alias=alias)
 
 
 def function(branch, alias: Optional[List[str]] = None, key=None):
@@ -452,7 +460,7 @@ def literal_interval(branch, alias: Optional[List[str]] = None, key=None):
     return Node(NodeType.LITERAL, type=OrsoTypes.INTERVAL, value=interval, alias=alias)
 
 
-def literal_null(branch, alias: Optional[List[str]] = None, key=None):
+def literal_null(branch=None, alias: Optional[List[str]] = None, key=None):
     """create node for a literal null branch"""
     return Node(NodeType.LITERAL, type=OrsoTypes.NULL, alias=alias)
 

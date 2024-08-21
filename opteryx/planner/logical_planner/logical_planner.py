@@ -564,7 +564,7 @@ def process_join_tree(join: dict) -> LogicalPlanNode:
 
         if join_type not in ("cross join", "inner"):
             raise UnsupportedSyntaxError("JOIN on UNNEST only supported for CROSS and INNER joins.")
-        unnest_column = logical_planner_builders.build(join["relation"]["Table"]["args"][0])
+        unnest_column = logical_planner_builders.build(join["relation"]["Table"]["args"]["args"][0])
         if join["relation"]["Table"].get("alias") is None:
             raise UnnamedColumnError(
                 "Column created by UNNEST has no name, use AS to name the column."
@@ -684,7 +684,9 @@ def create_node_relation(relation):
         else:
             function_step.alias = function["alias"]["name"]["value"]
 
-        function_step.args = [logical_planner_builders.build(arg) for arg in function["args"]]
+        function_step.args = [
+            logical_planner_builders.build(arg) for arg in function["args"]["args"]
+        ]
         function_step.columns = tuple(col["value"] for col in function["alias"]["columns"])
 
         step_id = random_string()

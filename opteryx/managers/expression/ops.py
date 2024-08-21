@@ -192,8 +192,6 @@ def _inner_filter_operations(arr, operator, value):
         import simdjson
 
         def extract(doc, elem):
-            if not elem in doc:
-                return None
             value = simdjson.Parser().parse(doc).get(elem)  # type:ignore
             if hasattr(value, "as_list"):
                 return value.as_list()
@@ -201,7 +199,7 @@ def _inner_filter_operations(arr, operator, value):
                 return value.as_dict()
             return value
 
-        return pyarrow.array([extract(d, element) for d in arr])
+        return pyarrow.array([None if d is None else extract(d, element) for d in arr])
 
     if operator == "LongArrow":
         element = value[0]
@@ -212,14 +210,12 @@ def _inner_filter_operations(arr, operator, value):
         import simdjson
 
         def extract(doc, elem):
-            if not elem in doc:
-                return None
             value = simdjson.Parser().parse(doc).get(elem)  # type:ignore
             if hasattr(value, "mini"):
                 return value.mini  # type:ignore
             return str(value).encode()
 
-        return [extract(d, element) for d in arr]
+        return [None if d is None else extract(d, element) for d in arr]
 
     if operator == "AtQuestion":
         element = value[0]

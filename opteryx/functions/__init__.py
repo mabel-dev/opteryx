@@ -55,7 +55,23 @@ def _get(array, key):
         from opteryx.compiled.list_ops import cython_arrow_op
 
         return cython_arrow_op(array, key)
+    if isinstance(key, str):
+        import simdjson
 
+        def extract(doc, elem):
+            value = simdjson.Parser().parse(doc).get(elem)  # type:ignore
+            if hasattr(value, "as_list"):
+                return value.as_list()
+            if hasattr(value, "as_dict"):
+                return value.as_dict()
+            return value
+
+        try:
+            return pyarrow.array([None if d is None else extract(d, key) for d in array])
+        except ValueError:
+            raise IncorrectTypeError(
+                "VARCHAR subscripts can only be used on STRUCT or columns with valid JSON documents."
+            )
     try:
         index = int(key)
     except Exception:
@@ -393,9 +409,9 @@ FUNCTIONS = {
 
     # NUMERIC
     "ROUND": number_functions.round,
-    "FLOOR": compute.floor,
-    "CEIL": compute.ceil,
-    "CEILING": compute.ceil,
+    "FLOOR": number_functions.floor,
+    "CEIL": number_functions.ceiling,
+    "CEILING": number_functions.ceiling,
     "ABS": compute.abs,
     "ABSOLUTE": compute.abs,
     "SIGN": compute.sign,

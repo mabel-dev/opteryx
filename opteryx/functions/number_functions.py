@@ -11,6 +11,7 @@
 # limitations under the License.
 
 import random
+from typing import List
 
 import numpy
 from pyarrow import compute
@@ -72,3 +73,29 @@ def safe_power(base_array, exponent_array):
         result = compute.power(base_array.astype(numpy.float64), exponent_array)
 
     return result
+
+
+def ceiling(values, scales=[0]) -> List:
+    """
+    Performs a 'ceiling' with a scale factor
+    """
+    if len(scales) == 0:
+        return []
+    scale = scales[0]
+    if scale == 0:
+        return numpy.ceil(values)
+    scale = 10**scale
+    return numpy.ceil(values * scale) / scale
+
+
+def floor(values, scales=[0]) -> List:
+    """
+    Performs a 'ceiling' with a scale factor
+    """
+    if len(scales) == 0:
+        return []
+    scale = scales[0]
+    if scale == 0:
+        return numpy.floor(values)
+    scale = 10**scale
+    return numpy.floor(values * scale) / scale

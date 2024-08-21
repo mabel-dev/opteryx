@@ -569,7 +569,31 @@ INSERT INTO satellites (id, planetId, name, gm, radius, density, magnitude, albe
 (174, 9, 'Nix', 0.0013, 23.0, 2.1, 23.4, 0.35),
 (175, 9, 'Hydra', 0.0065, 30.5, 0.8, 22.9, 0.35),
 (176, 9, 'Kerberos', 0.0011, 14.0, 1.4, 26.1, 0.35),
-(177, 9, 'Styx', 0.0, 10.0, null, 27.0, 0.35),
+(177, 9, 'Styx', 0.0, 10.0, null, 27.0, 0.35);
+
+CREATE TABLE struct_tests (
+    id INTEGER,
+    details STRUCT(
+        int_field INTEGER,
+        varchar_field VARCHAR,
+        list_field VARCHAR[],
+        timestamp_field TIMESTAMP
+    )
+);
+
+
+INSERT INTO struct_tests VALUES
+(1, {int_field: NULL, varchar_field: 'row1', list_field: ['a', 'b'], timestamp_field: TIMESTAMP '2023-01-01 10:00:00'}),
+(2, {int_field: 20, varchar_field: 'row2', list_field: ['c', 'd'], timestamp_field: TIMESTAMP '2023-01-02 10:00:00'}),
+(3, {int_field: 30, varchar_field: 'row3', list_field: ['e', 'f'], timestamp_field: TIMESTAMP '2023-01-03 10:00:00'}),
+(4, {int_field: 40, varchar_field: 'row4', list_field: ['g', 'h'], timestamp_field: TIMESTAMP '2023-01-04 10:00:00'}),
+(5, {int_field: 50, varchar_field: 'row5', list_field: ['i', 'j'], timestamp_field: TIMESTAMP '2023-01-05 10:00:00'}),
+(6, {int_field: 60, varchar_field: 'row6', list_field: ['k', 'l'], timestamp_field: TIMESTAMP '2023-01-06 10:00:00'}),
+(7, {int_field: 70, varchar_field: 'row7', list_field: ['m', 'n'], timestamp_field: TIMESTAMP '2023-01-07 10:00:00'}),
+(8, {int_field: 80, varchar_field: 'row8', list_field: ['o', 'p'], timestamp_field: TIMESTAMP '2023-01-08 10:00:00'}),
+(9, {int_field: 90, varchar_field: 'row9', list_field: ['q', 'r'], timestamp_field: TIMESTAMP '2023-01-09 10:00:00'}),
+(10, {int_field: NULL, varchar_field: 'row10', list_field: ['s', 't'], timestamp_field: TIMESTAMP '2023-01-10 10:00:00'});
+
 """
 
 
@@ -595,7 +619,8 @@ def create_duck_db():
     res = None
     try:
         res = cur.execute(CREATE_DATABASE)
-    except:
+    except Exception as err:
+        print(err)
         return -1
     finally:
         if res is not None:
