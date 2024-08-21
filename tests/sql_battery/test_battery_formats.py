@@ -19,40 +19,40 @@ STATEMENTS = [
         # values that have been read.
 
         # arrow (feather)
-        ("SELECT * FROM 'testdata/flat/formats/arrow' WITH (NO_PARTITION)", 100000, 13, False),
-        ("SELECT user_name, user_verified FROM 'testdata/flat/formats/arrow' WITH(NO_PARTITION) WHERE user_name ILIKE '%news%'", 122, 2, False),
+        ("SELECT * FROM 'testdata/flat/formats/arrow'", 100000, 13, False),
+        ("SELECT user_name, user_verified FROM 'testdata/flat/formats/arrow' WHERE user_name ILIKE '%news%'", 122, 2, False),
 
         # avro
-        ("SELECT * FROM testdata.flat.formats.avro WITH (NO_PARTITION)", 100000, 13, False),
-        ("SELECT user_name, user_verified FROM testdata.flat.formats.avro WITH(NO_PARTITION) WHERE user_name ILIKE '%news%'", 122, 2, False),
+        ("SELECT * FROM testdata.flat.formats.avro", 100000, 13, False),
+        ("SELECT user_name, user_verified FROM testdata.flat.formats.avro WHERE user_name ILIKE '%news%'", 122, 2, False),
 
         # jsonl
-        ("SELECT * FROM testdata.flat.formats.jsonl WITH (NO_PARTITION)", 100000, 13, False),
-        ("SELECT user_name, user_verified FROM testdata.flat.formats.jsonl WITH(NO_PARTITION) WHERE user_name ILIKE '%news%'", 122, 2, False),
+        ("SELECT * FROM testdata.flat.formats.jsonl", 100000, 13, False),
+        ("SELECT user_name, user_verified FROM testdata.flat.formats.jsonl WHERE user_name ILIKE '%news%'", 122, 2, False),
 
         # orc
-        ("SELECT * FROM testdata.flat.formats.orc WITH (NO_PARTITION)", 100000, 13, is_windows() or is_pypy()),
-        ("SELECT user_name, user_verified FROM testdata.flat.formats.orc WITH(NO_PARTITION) WHERE user_name ILIKE '%news%'", 122, 2, is_windows() or is_pypy()),
+        ("SELECT * FROM testdata.flat.formats.orc", 100000, 13, is_windows() or is_pypy()),
+        ("SELECT user_name, user_verified FROM testdata.flat.formats.orc WHERE user_name ILIKE '%news%'", 122, 2, is_windows() or is_pypy()),
 
         # parquet
-        ("SELECT * FROM testdata.flat.formats.parquet WITH (NO_PARTITION)", 100000, 13, False),
-        ("SELECT user_name, user_verified FROM testdata.flat.formats.parquet WITH(NO_PARTITION) WHERE user_name ILIKE '%news%'", 122, 2, False),
+        ("SELECT * FROM testdata.flat.formats.parquet", 100000, 13, False),
+        ("SELECT user_name, user_verified FROM testdata.flat.formats.parquet WHERE user_name ILIKE '%news%'", 122, 2, False),
 
         # zstandard jsonl
-        ("SELECT * FROM testdata.flat.formats.zstd WITH (NO_PARTITION)", 100000, 13, False),
-        ("SELECT user_name, user_verified FROM testdata.flat.formats.zstd WITH(NO_PARTITION) WHERE user_name ILIKE '%news%'", 122, 2, False),
+        ("SELECT * FROM testdata.flat.formats.zstd", 100000, 13, False),
+        ("SELECT user_name, user_verified FROM testdata.flat.formats.zstd WHERE user_name ILIKE '%news%'", 122, 2, False),
 
         # csv - has a different input file
-        ("SELECT * FROM testdata.flat.formats.csv WITH (NO_PARTITION)", 33529, 10, False),
-        ("SELECT username, user_verified FROM testdata.flat.formats.csv WITH(NO_PARTITION) WHERE username ILIKE '%cve%'", 2532, 2, False),
+        ("SELECT * FROM testdata.flat.formats.csv", 33529, 10, False),
+        ("SELECT username, user_verified FROM testdata.flat.formats.csv WHERE username ILIKE '%cve%'", 2532, 2, False),
 
         # tsv - has the same file as csv
-        ("SELECT * FROM testdata.flat.formats.tsv WITH (NO_PARTITION)", 33529, 10, False),
-        ("SELECT username, user_verified FROM testdata.flat.formats.tsv WITH(NO_PARTITION) WHERE username ILIKE '%cve%'", 2532, 2, False),
+        ("SELECT * FROM testdata.flat.formats.tsv", 33529, 10, False),
+        ("SELECT username, user_verified FROM testdata.flat.formats.tsv WHERE username ILIKE '%cve%'", 2532, 2, False),
 
         # .json.parquet - appears to be handled incorrectly
-        ("SELECT * FROM testdata.flat.formats.misnamed_parquet WITH (NO_PARTITION)", 100000, 13, False),
-        ("SELECT user_name, user_verified FROM testdata.flat.formats.misnamed_parquet WITH(NO_PARTITION) WHERE user_name ILIKE '%news%'", 122, 2, False),
+        ("SELECT * FROM testdata.flat.formats.misnamed_parquet", 100000, 13, False),
+        ("SELECT user_name, user_verified FROM testdata.flat.formats.misnamed_parquet WHERE user_name ILIKE '%news%'", 122, 2, False),
 
         # PyArrow IPC streams
         ("SELECT * FROM testdata.flat.formats.ipc", 100000, 13, False),
