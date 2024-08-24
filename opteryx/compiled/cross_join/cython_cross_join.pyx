@@ -8,7 +8,7 @@ from libc.stdint cimport int32_t
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-cpdef build_rows_indices_and_column(cnp.ndarray column_data):
+cpdef tuple build_rows_indices_and_column(cnp.ndarray column_data):
     cdef int32_t i, total_size = 0
     cdef int32_t length
     cdef list flat_data
