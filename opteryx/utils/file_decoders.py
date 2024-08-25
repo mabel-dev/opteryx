@@ -389,6 +389,23 @@ def tsv_decoder(
     )
 
 
+def psv_decoder(
+    buffer: Union[memoryview, bytes],
+    *,
+    projection: Optional[list] = None,
+    selection: Optional[list] = None,
+    just_schema: bool = False,
+    **kwargs,
+) -> Tuple[int, int, pyarrow.Table]:
+    return csv_decoder(
+        buffer=buffer,
+        projection=projection,
+        selection=selection,
+        delimiter="|",
+        just_schema=just_schema,
+    )
+
+
 def arrow_decoder(
     buffer: Union[memoryview, bytes],
     *,
@@ -516,6 +533,7 @@ KNOWN_EXTENSIONS: Dict[str, Tuple[Callable, str]] = {
     "orc": (orc_decoder, ExtentionType.DATA),
     "parquet": (parquet_decoder, ExtentionType.DATA),
     "tsv": (tsv_decoder, ExtentionType.DATA),
+    "psv": (psv_decoder, ExtentionType.DATA),
     "zstd": (zstd_decoder, ExtentionType.DATA),  # jsonl/zstd
     "lzma": (lzma_decoder, ExtentionType.DATA),  # jsonl/lzma
 }
