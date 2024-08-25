@@ -9,21 +9,21 @@ from orso.types import OrsoTypes
 from opteryx.exceptions import PermissionsError
 from opteryx.models import Node
 from opteryx.shared.variables import SystemVariables
-
+from opteryx.config import MAX_CACHE_EVICTIONS_PER_QUERY
 
 def test_connection_variables():
     # Create a clone of the system variables object
     connection_vars = SystemVariables.snapshot()
 
     # Verify that the clone has the same values as the original
-    assert connection_vars["max_cache_evictions"] == 32
+    assert connection_vars["max_cache_evictions_per_query"] == MAX_CACHE_EVICTIONS_PER_QUERY
 
     # Modify the clone and verify that the original is unchanged
-    connection_vars["max_cache_evictions"] = Node(
+    connection_vars["max_cache_evictions_per_query"] = Node(
         node_type="VARIABLE", type=OrsoTypes.INTEGER, value=8
     )
-    assert connection_vars["max_cache_evictions"] == 8
-    assert SystemVariables["max_cache_evictions"] == 32
+    assert connection_vars["max_cache_evictions_per_query"] == 8
+    assert SystemVariables["max_cache_evictions_per_query"] == MAX_CACHE_EVICTIONS_PER_QUERY
 
 
 def test_variables_permissions():
@@ -47,7 +47,7 @@ def test_variables_permissions():
         )
 
     # we should be able to set the evictions
-    connection_vars["max_cache_evictions"] = Node(
+    connection_vars["max_cache_evictions_per_query"] = Node(
         node_type="VARIABLE", type=OrsoTypes.INTEGER, value=32
     )
 
@@ -59,10 +59,10 @@ def test_variable_types():
     # max_cache_evictions is a numeric field, so should fail if we try
     # to set to a string
     with pytest.raises(ValueError):
-        connection_vars["max_cache_evictions"] = Node(
+        connection_vars["max_cache_evictions_per_query"] = Node(
             node_type="VARIABLE", type=OrsoTypes.VARCHAR, value="1"
         )
-    connection_vars["max_cache_evictions"] = Node(
+    connection_vars["max_cache_evictions_per_query"] = Node(
         node_type="VARIABLE", type=OrsoTypes.INTEGER, value=12
     )
 

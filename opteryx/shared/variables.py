@@ -51,7 +51,7 @@ VariableSchema = Tuple[Type, Any, VariableOwner]
 SYSTEM_VARIABLES_DEFAULTS: Dict[str, VariableSchema] = {
     # name: (type, default, owner, description)
 
-    # These are the MySQL set of variables - we don't use all of them
+    # These are the MySQL set of variables - we don't use all of them but have them for compatibility
     "auto_increment_increment": (OrsoTypes.INTEGER, 1, VariableOwner.INTERNAL),
     "autocommit": (OrsoTypes.BOOLEAN, True, VariableOwner.SERVER),
     "character_set_client": (OrsoTypes.VARCHAR, CharacterSet.utf8mb4.name, VariableOwner.SERVER),
@@ -87,14 +87,14 @@ SYSTEM_VARIABLES_DEFAULTS: Dict[str, VariableSchema] = {
     "default_tmp_storage_engine": (OrsoTypes.VARCHAR, "opteryx", VariableOwner.SERVER),
 
     # these are Opteryx specific variables
-    "max_cache_evictions_per_query": (OrsoTypes.INTEGER, config.MAX_CACHE_EVICTIONS_PER_QUERY, VariableOwner.SERVER),
+    "max_cache_evictions_per_query": (OrsoTypes.INTEGER, config.MAX_CACHE_EVICTIONS_PER_QUERY, VariableOwner.USER),
     "max_cacheable_item_size": (OrsoTypes.INTEGER, config.MAX_CACHEABLE_ITEM_SIZE, VariableOwner.SERVER),
     "max_local_buffer_capacity": (OrsoTypes.INTEGER, config.MAX_LOCAL_BUFFER_CAPACITY, VariableOwner.SERVER),
     "max_read_buffer_capacity": (OrsoTypes.INTEGER, config.MAX_READ_BUFFER_CAPACITY, VariableOwner.SERVER),
     "disable_optimizer": (OrsoTypes.BOOLEAN, config.DISABLE_OPTIMIZER, VariableOwner.USER),
     "disable_high_priority": (OrsoTypes.BOOLEAN, config.DISABLE_HIGH_PRIORITY, VariableOwner.SERVER),
     "concurrent_reads": (OrsoTypes.BOOLEAN, config.CONCURRENT_READS, VariableOwner.SERVER),
-    "user_memberships": (OrsoTypes.ARRAY, [], VariableOwner.SERVER),
+    "user_memberships": (OrsoTypes.ARRAY, [], VariableOwner.INTERNAL),
     "morsel_size": (OrsoTypes.INTEGER, config.MORSEL_SIZE, VariableOwner.SERVER),
 }
 # fmt: on
@@ -126,7 +126,9 @@ class SystemVariablesContainer:
                 raise PermissionsError(f"User does not have permission to set variable `{key}`")
             if variable_type != value.type:
                 raise ValueError(f"Invalid type for `{key}`, {variable_type} expected.")
+            
         self._variables[key] = (variable_type, value.value, owner)
+
 
     def details(self, key: str) -> VariableSchema:
         if key not in self._variables:
