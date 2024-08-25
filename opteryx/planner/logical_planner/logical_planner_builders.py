@@ -231,10 +231,7 @@ def cast(branch, alias: Optional[List[str]] = None, key=None):
 
 def ceiling(value, alias: Optional[List[str]] = None, key=None):
     data_value = build(value["expr"])
-    if "Scale" in value["field"]:
-        scale = build(value["field"]["Scale"])
-    else:
-        scale = literal_number([0])
+    scale = build(value["field"]["Scale"]) if "Scale" in value["field"] else literal_number([0])
     return Node(NodeType.FUNCTION, value="CEIL", parameters=[data_value, scale], alias=alias)
 
 
@@ -274,10 +271,7 @@ def extract(branch, alias: Optional[List[str]] = None, key=None):
 
 def floor(value, alias: Optional[List[str]] = None, key=None):
     data_value = build(value["expr"])
-    if "Scale" in value["field"]:
-        scale = build(value["field"]["Scale"])
-    else:
-        scale = literal_number([0])
+    scale = build(value["field"]["Scale"]) if "Scale" in value["field"] else literal_number([0])
     return Node(NodeType.FUNCTION, value="FLOOR", parameters=[data_value, scale], alias=alias)
 
 

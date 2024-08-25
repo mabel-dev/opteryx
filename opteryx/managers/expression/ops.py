@@ -2,6 +2,9 @@
 Original code modified for Opteryx.
 """
 
+from typing import Any
+from typing import Union
+
 import numpy
 import pyarrow
 from orso.types import OrsoTypes
@@ -191,7 +194,7 @@ def _inner_filter_operations(arr, operator, value):
         # so we can use a library which allows us to access the values directly
         import simdjson
 
-        def extract(doc, elem):
+        def extract(doc: bytes, elem: Union[bytes, str]) -> Any:
             value = simdjson.Parser().parse(doc).get(elem)  # type:ignore
             if hasattr(value, "as_list"):
                 return value.as_list()
@@ -199,7 +202,7 @@ def _inner_filter_operations(arr, operator, value):
                 return value.as_dict()
             return value
 
-        return pyarrow.array([None if d is None else extract(d, element) for d in arr])
+        return numpy.array([extract(d, element) for d in arr])
 
     if operator == "LongArrow":
         element = value[0]
@@ -209,13 +212,13 @@ def _inner_filter_operations(arr, operator, value):
 
         import simdjson
 
-        def extract(doc, elem):
+        def extract(doc: bytes, elem: Union[bytes, str]) -> bytes:
             value = simdjson.Parser().parse(doc).get(elem)  # type:ignore
             if hasattr(value, "mini"):
                 return value.mini  # type:ignore
             return str(value).encode()
 
-        return [None if d is None else extract(d, element) for d in arr]
+        return numpy.array([extract(d, element) for d in arr], dtype=numpy.bytes_)
 
     if operator == "AtQuestion":
         element = value[0]
@@ -226,6 +229,8 @@ def _inner_filter_operations(arr, operator, value):
         import simdjson
 
         # Don't warn on rule SIM118, the object isn't actually a dictionary
-        return [element in simdjson.Parser().parse(doc).keys() for doc in arr]  # type:ignore
+        return numpy.array(
+            [element in simdjson.Parser().parse(doc).keys() for doc in arr], dtype=numpy.bool_
+        )  # type:ignore
 
     raise NotImplementedError(f"Operator {operator} is not implemented!")  # pragma: no cover
