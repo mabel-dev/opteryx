@@ -147,7 +147,7 @@ def do_cost_based_optimizer(plan: LogicalPlan) -> LogicalPlan:
         LogicalPlan: The optimized logical plan.
     """
     if DISABLE_OPTIMIZER:
-        print("[OPTERYX] The optimizer has been disabled, 'DISABLE_OPTIMIZER' setting is TRUE.")
+        print("[OPTERYX] The optimizer has been disabled, 'DISABLE_OPTIMIZER' variable is TRUE.")
         return plan
     optimizer = CostBasedOptimizerVisitor()
     return optimizer.optimize(plan)
