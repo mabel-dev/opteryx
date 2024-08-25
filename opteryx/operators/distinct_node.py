@@ -59,9 +59,7 @@ class DistinctNode(BasePlanNode):
         # We create a HashSet outside the distinct call, this allows us to pass
         # the hash to each run of the distinct which means we don't need to concat
         # all of the tables together to return a result.
-        # The Cython distinct is about 8x faster on a 10 million row dataset with
-        # approx 85k distinct entries (4.8sec vs 0.8sec) and faster on a 177 record
-        # dataset with 7 distinct entries.
+        #
         # Being able to run morsel-by-morsel means if we have a LIMIT clause, we can
         # limit processing
 
@@ -70,13 +68,17 @@ class DistinctNode(BasePlanNode):
 
         for morsel in morsels.execute():
             start = time.monotonic_ns()
-            deduped, self.hash_set = distinct(
-                morsel,
-                columns=self._distinct_on,
-                seen_hashes=self.hash_set,
-                return_seen_hashes=True,
+            unique_indexes, self.hash_set = distinct(
+                morsel, columns=self._distinct_on, seen_hashes=self.hash_set
             )
-            self.statistics.time_distincting += time.monotonic_ns() - start
-            if not at_least_one or deduped.num_rows > 0:
-                yield deduped
+
+            if len(unique_indexes) > 0:
+                distinct_table = morsel.take(unique_indexes)
+                self.statistics.time_distincting += time.monotonic_ns() - start
+                yield distinct_table
+                at_least_one = True
+            elif not at_least_one:
+                distinct_table = morsel.slice(0, 0)
+                self.statistics.time_distincting += time.monotonic_ns() - start
+                yield distinct_table
                 at_least_one = True

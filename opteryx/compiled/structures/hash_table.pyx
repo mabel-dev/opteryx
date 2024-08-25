@@ -58,10 +58,18 @@ cdef inline object recast_column(column):
         return numpy.array([str(a) for a in column.to_pylist()], dtype=numpy.str_)
     return column
 
-cpdef distinct(table, HashSet seen_hashes=None, list columns=None, bint return_seen_hashes=False):
+@cython.boundscheck(False)
+@cython.wraparound(False)
+cpdef tuple distinct(table, HashSet seen_hashes=None, list columns=None):
     """
     Perform a distinct operation on the given table using an external SeenHashSet.
     """
+
+    cdef int64_t hashed_value
+    cdef int64_t i = 0
+    cdef tuple value_tuple
+    cdef object value
+
     if seen_hashes is None:
         seen_hashes = HashSet()
 
@@ -71,30 +79,23 @@ cpdef distinct(table, HashSet seen_hashes=None, list columns=None, bint return_s
         columns_of_interest = columns
 
     cdef list keep = []
-    cdef list values = [recast_column(c) for c in table.select(columns_of_interest).itercolumns()]
-
-    cdef int64_t hashed_value
-    cdef int64_t i = 0
+    cdef cnp.ndarray values = numpy.array([recast_column(column) for column in table.select(columns_of_interest).itercolumns()], dtype=object)
 
     if len(columns_of_interest) > 1:
-        for i, value_tuple in enumerate(zip(*values)):
+        for i in range(values.shape[1]):
+            value_tuple = tuple([v if v == v else None for v in values[:, i]])
             hashed_value = hash(value_tuple)
             if not seen_hashes.contains(hashed_value):
                 seen_hashes.insert(hashed_value)
                 keep.append(i)
     else:
-        for i, value_tuple in enumerate(values[0]):
-            hashed_value = hash(value_tuple)
+        for i, value in enumerate(values[0]):
+            if value != value:
+                hashed_value = hash(None)
+            else:
+                hashed_value = hash(value)
             if not seen_hashes.contains(hashed_value):
                 seen_hashes.insert(hashed_value)
                 keep.append(i)
 
-    if len(keep) > 0:
-        distinct_table = table.take(keep)
-    else:
-        distinct_table = table.slice(0, 0)
-
-    if return_seen_hashes:
-        return distinct_table, seen_hashes
-    else:
-        return distinct_table
+    return (keep, seen_hashes)
