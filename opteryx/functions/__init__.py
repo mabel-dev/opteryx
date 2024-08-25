@@ -103,6 +103,12 @@ def cast_varchar(arr):
     return compute.cast(arr, "string")
 
 
+def cast_blob(arr):
+    if len(arr) > 0 and all(i is None or type(i) == bytes for i in arr):
+        return arr
+    return compute.cast(arr, "binary")
+
+
 def fixed_value_function(function, context):
     from orso.types import OrsoTypes
 
@@ -321,7 +327,7 @@ FUNCTIONS = {
     "STR": cast_varchar,
     "STRUCT": _iterate_single_parameter(lambda x: orjson.loads(str(x)) if x is not None else None),
     "DATE":  lambda x: compute.cast(x, pyarrow.date32()),
-    "BLOB": array_encode_utf8,
+    "BLOB": cast_blob,
     "TRY_TIMESTAMP": try_cast("TIMESTAMP"),
     "TRY_BOOLEAN": try_cast("BOOLEAN"),
     "TRY_NUMERIC": try_cast("DOUBLE"),
