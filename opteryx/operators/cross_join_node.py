@@ -36,7 +36,7 @@ from opteryx.operators import BasePlanNode
 from opteryx.operators import OperatorType
 from opteryx.operators.base_plan_node import BasePlanDataObject
 
-INTERNAL_BATCH_SIZE: int = 2500  # config
+INTERNAL_BATCH_SIZE: int = 5000  # config
 MAX_JOIN_SIZE: int = 1000  # config
 MORSEL_SIZE_BYTES: int = 32 * 1024 * 1024
 
@@ -68,7 +68,6 @@ def _cross_join_unnest_column(
 
     column_type = None
     batch_size: int = INTERNAL_BATCH_SIZE
-    return_morsel: pyarrow.Table = None
     at_least_once = False
 
     # Loop through each morsel from the morsels execution
@@ -78,18 +77,19 @@ def _cross_join_unnest_column(
         for left_block in left_morsel.to_batches(max_chunksize=batch_size):
             # Fetch the data of the column to be unnested
             column_data = left_block[source.schema_column.identity]
-            # we need the offsets before we drop the rows
+
+            # Filter out null values
             valid_offsets = column_data.is_valid()
             column_data = column_data.drop_null()
-            # if there's no valid records, continue to the next record
             if len(column_data) == 0:
                 continue
-            # drop the rows here, wait until we know we need to
             left_block = left_block.filter(valid_offsets)
+
             # Set column_type if it hasn't been determined already
             if column_type is None:
                 column_type = column_data.type.value_type
 
+            # Build indices and new column data
             if conditions is None:
                 indices, new_column_data = build_rows_indices_and_column(
                     column_data.to_numpy(False)
@@ -99,44 +99,23 @@ def _cross_join_unnest_column(
                     column_data.to_numpy(False), conditions
                 )
 
+            # Rebuild the block with the new column data
             new_block = left_block.take(indices)
             new_block = pyarrow.Table.from_batches([new_block], schema=left_morsel.schema)
             new_block = new_block.append_column(target_column.identity, [new_column_data])
 
             statistics.time_cross_join_unnest += time.monotonic_ns() - start
-
-            if return_morsel is None or return_morsel.num_rows == 0:
-                return_morsel = new_block
-            elif new_block.num_rows > 0:
-                return_morsel = pyarrow.concat_tables(
-                    [return_morsel, new_block], promote_options="none"
-                )
-                if return_morsel.nbytes > MORSEL_SIZE_BYTES:
-                    yield return_morsel
-                    at_least_once = True
-                    return_morsel = None
+            if new_block.num_rows > 0:
+                yield new_block
+                at_least_once = True
             start = time.monotonic_ns()
 
-        statistics.time_cross_join_unnest += time.monotonic_ns() - start
-
-    if return_morsel and return_morsel.num_rows > 0:
-        at_least_once = True
-        yield return_morsel
-
     if not at_least_once:
-        # Get the current schema
-        schema = left_morsel.schema
-
-        # Define the new column as a VARCHAR (string)
-        new_column = pyarrow.field(target_column.identity, pyarrow.string())
-
-        # Create a new schema including the new column
-        new_schema = pyarrow.schema(list(schema) + [new_column])
-
         # Create an empty table with the new schema
+        schema = left_morsel.schema
+        new_column = pyarrow.field(target_column.identity, pyarrow.string())
+        new_schema = pyarrow.schema(list(schema) + [new_column])
         new_block = pyarrow.Table.from_batches([], schema=new_schema)
-
-        # Yield the new table
         yield new_block
 
 
