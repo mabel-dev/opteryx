@@ -30,6 +30,7 @@ from typing import Type
 
 from orso.types import OrsoTypes
 
+from opteryx import config
 from opteryx.__version__ import __version__
 from opteryx.constants.character_set import CharacterSet
 from opteryx.constants.character_set import Collation
@@ -86,15 +87,15 @@ SYSTEM_VARIABLES_DEFAULTS: Dict[str, VariableSchema] = {
     "default_tmp_storage_engine": (OrsoTypes.VARCHAR, "opteryx", VariableOwner.SERVER),
 
     # these are Opteryx specific variables
-    "cursor_read_size": (OrsoTypes.INTEGER, 100, VariableOwner.USER),  # number of records returned from FETCH
-    "max_cache_evictions": (OrsoTypes.INTEGER, 32, VariableOwner.USER),
-    "max_size_single_cache_item": (OrsoTypes.INTEGER, 2 * 1024 * 1024, VariableOwner.SERVER),
-    "local_buffer_pool_size": (OrsoTypes.INTEGER, 256, VariableOwner.SERVER),
-    "disable_high_priority": (OrsoTypes.BOOLEAN, False, VariableOwner.SERVER),
-    "morsel_size": (OrsoTypes.INTEGER, 64 * 1024 * 1024, VariableOwner.USER),
-    "disable_morsel_defragmentation": (OrsoTypes.BOOLEAN, False, VariableOwner.USER),
-    "disable_optimizer": (OrsoTypes.BOOLEAN, False, VariableOwner.USER),
+    "max_cache_evictions_per_query": (OrsoTypes.INTEGER, config.MAX_CACHE_EVICTIONS_PER_QUERY, VariableOwner.SERVER),
+    "max_cacheable_item_size": (OrsoTypes.INTEGER, config.MAX_CACHEABLE_ITEM_SIZE, VariableOwner.SERVER),
+    "max_local_buffer_capacity": (OrsoTypes.INTEGER, config.MAX_LOCAL_BUFFER_CAPACITY, VariableOwner.SERVER),
+    "max_read_buffer_capacity": (OrsoTypes.INTEGER, config.MAX_READ_BUFFER_CAPACITY, VariableOwner.SERVER),
+    "disable_optimizer": (OrsoTypes.BOOLEAN, config.DISABLE_OPTIMIZER, VariableOwner.USER),
+    "disable_high_priority": (OrsoTypes.BOOLEAN, config.DISABLE_HIGH_PRIORITY, VariableOwner.SERVER),
+    "concurrent_reads": (OrsoTypes.BOOLEAN, config.CONCURRENT_READS, VariableOwner.SERVER),
     "user_memberships": (OrsoTypes.ARRAY, [], VariableOwner.SERVER),
+    "morsel_size": (OrsoTypes.INTEGER, config.MORSEL_SIZE, VariableOwner.SERVER),
 }
 # fmt: on
 
