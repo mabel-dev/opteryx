@@ -195,6 +195,14 @@ def rewrite_json_accessors(node: Dict[str, Any]) -> Dict[str, Any]:
     """
     Traverse the AST represented as a dictionary and rewrite accessors.
 
+    This is needed because the AST represents these activities incorrectly. For example
+
+        document -> 'element' = 'value'
+
+    Is in the plan as `document -> ('element' = 'value')` instead of
+    `(document -> 'element') = 'value'`, so we need to rewrite this part of the plan
+    to ensure the correct interpretation.
+
     Parameters:
         node (Dict[str, Any]): The current AST node.
 
@@ -213,17 +221,47 @@ def rewrite_json_accessors(node: Dict[str, Any]) -> Dict[str, Any]:
         right_node = node["BinaryOp"]["right"]
 
         if "BinaryOp" in right_node:
-            child = right_node["BinaryOp"]["left"]
+            element = right_node["BinaryOp"]["left"]
             comparitor = right_node["BinaryOp"]["right"]
             operator = right_node["BinaryOp"]["op"]
 
             return {
                 "BinaryOp": {
                     "left": {
-                        "BinaryOp": {"left": document, "op": accessor, "right": child},
+                        "BinaryOp": {"left": document, "op": accessor, "right": element},
                     },
                     "op": operator,
                     "right": comparitor,
+                }
+            }
+
+        operator = next(iter(right_node))
+        if operator in (
+            "Like",
+            "ILike",
+            "NotLike",
+            "NotILike",
+            "RLike",
+            "NotRLike",
+        ):
+            element = right_node[operator]["expr"]
+            comparitor = right_node[operator]["pattern"]
+
+            return {
+                "BinaryOp": {
+                    "left": {
+                        "BinaryOp": {"left": document, "op": accessor, "right": element},
+                    },
+                    "op": operator,
+                    "right": comparitor,
+                }
+            }
+        if operator in ("IsNull", "IsNotFalse", "IsNotNull", "IsNotTrue", "IsTrue", "IsFalse"):
+            element = right_node[operator]["Value"]
+
+            return {
+                operator: {
+                    "Nested": {"BinaryOp": {"left": document, "op": accessor, "right": element}}
                 }
             }
 
