@@ -73,8 +73,6 @@ class _TarchiaCatalogProvider(CatalogProvider):
 
         Parameters:
             table_identifier (str): The identifier of the table.
-            snaphot (Optional[str]): A snapshot identifier.
-            as_at (Optional[int]): The date to retrieve the dataset as at (optional).
 
         Returns:
             Dict[str, Any]: The dataset metadata.

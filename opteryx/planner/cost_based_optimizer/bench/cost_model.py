@@ -21,7 +21,7 @@ OPERATORS = [
     "NotLike",
     "NotILike",
     "InList",
-    "RList",
+    "RLike",
     "NotRLike",
 ]
 
