@@ -69,6 +69,10 @@ STATEMENTS = [
         # Mabel legacy LZMA compressed JSONL format (different input file)
         ("SELECT * FROM testdata.flat.formats.lzma", 71981, 14, False),
         ("SELECT user_name, user_verified FROM testdata.flat.formats.lzma WHERE user_name ILIKE '%news%'", 112, 2, False),
+
+        # Pipe (|) Separated Values (different input file)
+        ("SELECT * FROM testdata.flat.formats.psv", 586, 16, False),
+        ("SELECT L_SHIPINSTRUCT, L_LINESTATUS FROM testdata.flat.formats.psv WHERE L_SHIPMODE ILIKE '%O%'", 90, 2, False),
     ]
 # fmt:on
 
