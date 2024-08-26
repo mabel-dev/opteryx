@@ -16,7 +16,6 @@ to pyarrow tables so they can be processed as per any other data source.
 """
 
 import time
-from decimal import Decimal
 from typing import Any
 from typing import Dict
 from typing import Generator
@@ -230,11 +229,9 @@ class SqlConnector(BaseConnector, PredicatePushable):
                         name=column.name,
                         type=PYTHON_TO_ORSO_MAP[column.type.python_type],
                         precision=(
-                            None if column.type.python_type != Decimal else column.type.precision  # type:ignore
+                            column.type.precision if column.type.precision is not None else 38
                         ),
-                        scale=(
-                            None if column.type.python_type != Decimal else column.type.scale  # type:ignore
-                        ),
+                        scale=(column.type.scale if column.type.scale is not None else 14),
                         nullable=column.nullable,
                     )
                     for column in table.columns
@@ -259,6 +256,8 @@ class SqlConnector(BaseConnector, PredicatePushable):
                         FlatColumn(
                             name=column,
                             type=0 if value is None else PYTHON_TO_ORSO_MAP[type(value)],
+                            precision=38,
+                            scale=14,
                         )
                         for column, value in row.items()
                     ],

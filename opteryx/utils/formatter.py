@@ -68,6 +68,7 @@ def format_sql(sql):  # pragma: no cover
             "GROUP",
             "HAVING",
             "INNER",
+            "INTERVAL",
             "JOIN",
             "LEFT",
             "LIMIT",
@@ -89,7 +90,7 @@ def format_sql(sql):  # pragma: no cover
             "YESTERDAY",
         }:
             formatted_sql += "\033[38;2;139;233;253m" + word.upper() + "\033[0m "
-        elif word.upper() in ("TRUE", "FALSE", "NULL"):
+        elif word.upper() in ("TRUE", "FALSE", "NULL", "DAY", "MONTH", "MINUTE"):
             formatted_sql += "\033[38;2;255;184;108m" + word.upper() + "\033[0m "
         elif (i + 1) < len(words) and words[i + 1] == "(":
             formatted_sql += "\033[38;2;80;250;123m" + word.upper() + "\033[0m"
@@ -101,6 +102,8 @@ def format_sql(sql):  # pragma: no cover
             "<",
             ">",
             "<>",
+            "-",
+            "+",
             "LIKE",
             "ILIKE",
             "RLIKE",

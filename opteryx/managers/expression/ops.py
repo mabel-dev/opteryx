@@ -202,7 +202,7 @@ def _inner_filter_operations(arr, operator, value):
                 return value.as_dict()
             return value
 
-        return numpy.array([extract(d, element) for d in arr])
+        return pyarrow.array([extract(d, element) for d in arr])
 
     if operator == "LongArrow":
         element = value[0]
@@ -218,7 +218,9 @@ def _inner_filter_operations(arr, operator, value):
                 return value.mini  # type:ignore
             return str(value).encode()
 
-        return numpy.array([extract(d, element) for d in arr], dtype=numpy.bytes_)
+        return pyarrow.array(
+            [None if d is None else extract(d, element) for d in arr], type=pyarrow.binary()
+        )
 
     if operator == "AtQuestion":
         element = value[0]
@@ -229,8 +231,8 @@ def _inner_filter_operations(arr, operator, value):
         import simdjson
 
         # Don't warn on rule SIM118, the object isn't actually a dictionary
-        return numpy.array(
-            [element in simdjson.Parser().parse(doc).keys() for doc in arr], dtype=numpy.bool_
+        return pyarrow.array(
+            [element in simdjson.Parser().parse(doc).keys() for doc in arr], type=pyarrow.bool_()
         )  # type:ignore
 
     raise NotImplementedError(f"Operator {operator} is not implemented!")  # pragma: no cover

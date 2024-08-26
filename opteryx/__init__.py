@@ -25,8 +25,15 @@ to ensure they load correctly.
 
 import datetime
 import os
-import pyarrow
+
 from pathlib import Path
+from decimal import getcontext
+
+import pyarrow
+
+# Set Decimal precision to 28 globally
+getcontext().prec = 28
+
 
 # python-dotenv allows us to create an environment file to store secrets. If
 # there is no .env it will fail gracefully.

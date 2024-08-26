@@ -17,6 +17,7 @@ This are executed as functions on arrays rather than functions on elements in ar
 """
 
 import numpy
+import pyarrow
 
 
 def _is_null(values: numpy.ndarray) -> numpy.ndarray:
@@ -30,6 +31,10 @@ def _is_null(values: numpy.ndarray) -> numpy.ndarray:
     Returns:
         numpy.ndarray: 1D array of booleans serving as a mask.
     """
+    if isinstance(values, pyarrow.Array):
+        from pyarrow import compute
+
+        return compute.is_null(values)
     if values.dtype.kind in ("f", "b", "i"):  # float, bool, int
         return numpy.isnan(values)
     elif values.dtype.kind == "M":  # datetime64
@@ -67,6 +72,8 @@ def _is_true(values: numpy.ndarray) -> numpy.ndarray:
     Returns:
         np.ndarray: 1D array of booleans serving as a mask.
     """
+    if isinstance(values, pyarrow.Array):
+        values = values.to_numpy(False)
     return values == True
 
 
@@ -81,6 +88,8 @@ def _is_false(values: numpy.ndarray) -> numpy.ndarray:
     Returns:
         np.ndarray: 1D array of booleans serving as a mask.
     """
+    if isinstance(values, pyarrow.Array):
+        values = values.to_numpy(False)
     return values == False
 
 
@@ -95,6 +104,8 @@ def _is_not_true(values: numpy.ndarray) -> numpy.ndarray:
     Returns:
         np.ndarray: 1D array of booleans serving as a mask.
     """
+    if isinstance(values, pyarrow.Array):
+        values = values.to_numpy(False)
     return values != True
 
 
@@ -109,6 +120,8 @@ def _is_not_false(values: numpy.ndarray) -> numpy.ndarray:
     Returns:
         np.ndarray: 1D array of booleans serving as a mask.
     """
+    if isinstance(values, pyarrow.Array):
+        values = values.to_numpy(False)
     return values != False
 
 

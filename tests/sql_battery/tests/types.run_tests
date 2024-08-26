@@ -1,18 +1,146 @@
+# Comparisons with BLOB and String Literal
 SELECT BLOB('apple') = 'apple';
 SELECT 'apple' = BLOB('apple');
 SELECT BLOB('apple') > 'banana';
 SELECT 'banana' > BLOB('apple');
 SELECT BLOB('apple') LIKE 'a%ple';
-SELECT b'apple' = 'apple';
-SELECT 'apple' = b'apple'b;
-SELECT b'apple' > 'banana';
-SELECT 'banana' > b'apple';
-SELECT b'apple' LIKE 'a%ple';
+SELECT BLOB('apple') != 'apple';
+SELECT 'apple' != BLOB('apple');
+SELECT BLOB('apple') < 'banana';
+SELECT 'banana' < BLOB('apple');
+SELECT BLOB('apple') <= 'banana';
+SELECT 'banana' <= BLOB('apple');
+SELECT BLOB('apple') >= 'banana';
+SELECT 'banana' >= BLOB('apple');
+SELECT BLOB('apple') NOT LIKE 'a%ple';
+
+# Comparisons with BLOB and b'' Literal
 SELECT BLOB('apple') = b'apple';
 SELECT b'apple' = BLOB('apple');
 SELECT BLOB('apple') > b'banana';
 SELECT b'banana' > BLOB('apple');
 SELECT BLOB('apple') LIKE b'a%ple';
+SELECT BLOB('apple') != b'apple';
+SELECT b'apple' != BLOB('apple');
+SELECT BLOB('apple') < b'banana';
+SELECT b'banana' < BLOB('apple');
+SELECT BLOB('apple') <= b'banana';
+SELECT b'banana' <= BLOB('apple');
+SELECT BLOB('apple') >= b'banana';
+SELECT b'banana' >= BLOB('apple');
+SELECT BLOB('apple') NOT LIKE b'a%ple';
+
+# Comparisons with b'' Literal and String Literal
+SELECT b'apple' = 'apple';
+SELECT 'apple' = b'apple';
+SELECT b'apple' > 'banana';
+SELECT 'banana' > b'apple';
+SELECT b'apple' LIKE 'a%ple';
+SELECT b'apple' != 'apple';
+SELECT 'apple' != b'apple';
+SELECT b'apple' < 'banana';
+SELECT 'banana' < b'apple';
+SELECT b'apple' <= 'banana';
+SELECT 'banana' <= b'apple';
+SELECT b'apple' >= 'banana';
+SELECT 'banana' >= b'apple';
+SELECT b'apple' NOT LIKE 'a%ple';
+
+# Comparisons between b'' Literals
+SELECT b'apple' = b'banana';
+SELECT b'apple' > b'banana';
+SELECT b'banana' = b'apple';
+SELECT b'apple' LIKE b'a%ple';
+SELECT b'apple' != b'banana';
+SELECT b'apple' < b'banana';
+SELECT b'apple' <= b'banana';
+SELECT b'apple' >= b'banana';
+SELECT b'apple' NOT LIKE b'a%ple';
+
+# Comparisons between BLOBs
+SELECT BLOB('apple') = BLOB('banana');
+SELECT BLOB('apple') > BLOB('banana');
+SELECT BLOB('banana') = BLOB('apple');
+SELECT BLOB('apple') LIKE BLOB('a%ple');
+SELECT BLOB('apple') != BLOB('banana');
+SELECT BLOB('apple') < BLOB('banana');
+SELECT BLOB('apple') <= BLOB('banana');
+SELECT BLOB('apple') >= BLOB('banana');
+SELECT BLOB('apple') NOT LIKE BLOB('a%ple');
+
+# Explicit Type Casting 
+SELECT CAST(BLOB('apple') AS VARCHAR) = 'apple';
+SELECT 'apple' = CAST(BLOB('apple') AS VARCHAR);
+SELECT CAST(BLOB('apple') AS BLOB) = b'apple';
+
+# Case Sensitivity
+SELECT BLOB('apple') ILIKE 'a%ple';
+SELECT b'apple' ILIKE b'a%ple';
+
+# RegEx
+SELECT BLOB('apple') RLIKE 'a%ple';
+SELECT b'apple' RLIKE b'a%ple';
+
+
+# INTEGER Comparisons
+SELECT 42 = 42;        -- True
+SELECT 42 != 43;       -- True
+SELECT 42 > 41;        -- True
+SELECT 42 >= 42;       -- True
+SELECT 42 < 43;        -- True
+SELECT 42 <= 42;       -- True
+
+# INTEGER Comparisons with Different Values
+SELECT 42 = 43;        -- False
+SELECT 42 != 42;       -- False
+SELECT 42 > 43;        -- False
+SELECT 42 >= 43;       -- False
+SELECT 42 < 42;        -- False
+SELECT 42 <= 41;       -- False
+
+# DOUBLE Comparisons
+SELECT 42.0 = 42.0;    -- True
+SELECT 42.0 != 43.0;   -- True
+SELECT 42.0 > 41.0;    -- True
+SELECT 42.0 >= 42.0;   -- True
+SELECT 42.0 < 43.0;    -- True
+SELECT 42.0 <= 42.0;   -- True
+
+# DOUBLE Comparisons with Different Values
+SELECT 42.0 = 43.0;    -- False
+SELECT 42.0 != 42.0;   -- False
+SELECT 42.0 > 43.0;    -- False
+SELECT 42.0 >= 43.0;   -- False
+SELECT 42.0 < 42.0;    -- False
+SELECT 42.0 <= 41.0;   -- False
+
+# INTEGER and DOUBLE Comparisons
+SELECT 42 = 42.0;      -- True
+SELECT 42.0 = 42;      -- True
+SELECT 42 != 42.0;     -- False
+SELECT 42.0 != 42;     -- False
+SELECT 42 > 41.0;      -- True
+SELECT 42.0 < 43;      -- True
+
+# Edge Case Comparisons
+SELECT 0 = 0.0;        -- True
+SELECT -1 = -1.0;      -- True
+SELECT 42 < 42.0001;   -- True
+SELECT 42.0 > 41.9999; -- True
+SELECT 42.0 < 42.0001; -- True
+
+# Arithmetic Operations with Comparisons
+SELECT 21 * 2 = 42;    -- True
+SELECT 21.0 * 2 = 42.0; -- True
+SELECT 21 + 21 = 42;   -- True
+SELECT 42 / 2 = 21;    -- True
+SELECT 42 / 2.0 = 21.0; -- True
+SELECT 43 / 2.0 = 21.5; -- True
+
+# Arithmetic Operations with Type Mixing
+#1937 SELECT 21 + 21.0 = 42; -- True
+SELECT 21 * 2.0 = 42.0; -- True
+SELECT 42.0 / 2 = 21.0; -- True
 
 SELECT * FROM $astronauts WHERE birth_date - current_time > INTERVAL '1' DAY;
 SELECT * FROM $astronauts WHERE current_time - birth_date > INTERVAL '1' DAY;
@@ -20,11 +148,17 @@ SELECT * FROM $astronauts WHERE birth_date + INTERVAL '1' DAY < current_time;
 SELECT * FROM $astronauts WHERE current_time + INTERVAL '1' DAY > birth_date;
 SELECT * FROM $astronauts WHERE birth_date - INTERVAL '1' DAY < current_time;
 SELECT * FROM $astronauts WHERE current_time - INTERVAL '1' DAY > birth_date;
-#SELECT * FROM $astronauts WHERE (birth_date + INTERVAL '1' DAY) - current_time > INTERVAL '1' DAY;
-#SELECT * FROM $astronauts WHERE (current_time + INTERVAL '1' DAY) - birth_date > INTERVAL '1' DAY;
-#SELECT * FROM $astronauts WHERE (birth_date - current_time) + INTERVAL '1' DAY > INTERVAL '1' DAY;
-#SELECT * FROM $astronauts WHERE (current_time - birth_date) + INTERVAL '1' DAY > INTERVAL '1' DAY;
+SELECT * FROM $astronauts WHERE (birth_date + INTERVAL '1' DAY) - current_time > INTERVAL '1' DAY;
+SELECT * FROM $astronauts WHERE (current_time + INTERVAL '1' DAY) - birth_date > INTERVAL '1' DAY;
+# SELECT * FROM $astronauts WHERE (birth_date - current_time) + INTERVAL '1' DAY > INTERVAL '1' DAY;
+# SELECT * FROM $astronauts WHERE (current_time - birth_date) + INTERVAL '1' DAY > INTERVAL '1' DAY;
+SELECT * FROM $astronauts WHERE birth_date + INTERVAL '1' DAY > INTERVAL '1' DAY - current_time;
+SELECT * FROM $astronauts WHERE (current_time + INTERVAL '1' DAY) - birth_date > INTERVAL '1' DAY;
+# SELECT * FROM $astronauts WHERE (birth_date - current_time) + INTERVAL '1' DAY > INTERVAL '1' DAY;
+# SELECT * FROM $astronauts WHERE (current_time - birth_date) + INTERVAL '1' DAY > INTERVAL '1' DAY;
 SELECT * FROM $astronauts WHERE current_time + INTERVAL '1' DAY = birth_date;
 SELECT * FROM $astronauts WHERE birth_date + INTERVAL '1' DAY = current_time;
 SELECT * FROM $astronauts WHERE current_time - INTERVAL '1' DAY = birth_date;
 SELECT * FROM $astronauts WHERE birth_date - INTERVAL '1' DAY = current_time;
+SELECT * FROM $astronauts WHERE INTERVAL '1' DAY + current_time = birth_date;
+SELECT * FROM $astronauts WHERE INTERVAL '1' DAY + birth_date = current_time;

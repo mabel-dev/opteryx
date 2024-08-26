@@ -80,7 +80,7 @@ class MongoDbConnector(BaseConnector):
             return self.schema
 
         # onlt read one record
-        record = next(self.read_dataset(chunk_size=1), None)
+        record = next(self.read_dataset(chunk_size=25), None)
 
         if record is None:
             raise DatasetNotFoundError(dataset=self.dataset)
