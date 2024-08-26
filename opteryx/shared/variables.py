@@ -126,9 +126,8 @@ class SystemVariablesContainer:
                 raise PermissionsError(f"User does not have permission to set variable `{key}`")
             if variable_type != value.type:
                 raise ValueError(f"Invalid type for `{key}`, {variable_type} expected.")
-            
-        self._variables[key] = (variable_type, value.value, owner)
 
+        self._variables[key] = (variable_type, value.value, owner)
 
     def details(self, key: str) -> VariableSchema:
         if key not in self._variables:

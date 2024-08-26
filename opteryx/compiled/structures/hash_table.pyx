@@ -41,13 +41,16 @@ cdef class HashSet:
 
     def __cinit__(self):
         self.c_set = unordered_set[int64_t]()
+        self.c_set.reserve(1_048_576)  # try to prevent needing to resize
 
-    cdef inline void insert(self, int64_t value):
+    cdef inline bint insert(self, int64_t value):
+        if self.c_set.find(value) != self.c_set.end():
+            return False
         self.c_set.insert(value)
+        return True
 
     cdef inline bint contains(self, int64_t value):
         return self.c_set.find(value) != self.c_set.end()
-
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
@@ -66,6 +69,7 @@ cpdef tuple distinct(table, HashSet seen_hashes=None, list columns=None):
     """
 
     cdef int64_t hashed_value
+    cdef int64_t null_hash = hash(None)
     cdef int64_t i = 0
     cdef tuple value_tuple
     cdef object value
@@ -85,17 +89,15 @@ cpdef tuple distinct(table, HashSet seen_hashes=None, list columns=None):
         for i in range(values.shape[1]):
             value_tuple = tuple([v if v == v else None for v in values[:, i]])
             hashed_value = hash(value_tuple)
-            if not seen_hashes.contains(hashed_value):
-                seen_hashes.insert(hashed_value)
+            if seen_hashes.insert(hashed_value):
                 keep.append(i)
     else:
         for i, value in enumerate(values[0]):
             if value != value:
-                hashed_value = hash(None)
+                hashed_value = null_hash
             else:
                 hashed_value = hash(value)
-            if not seen_hashes.contains(hashed_value):
-                seen_hashes.insert(hashed_value)
+            if seen_hashes.insert(hashed_value):
                 keep.append(i)
 
     return (keep, seen_hashes)

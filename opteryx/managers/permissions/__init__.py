@@ -4,8 +4,6 @@ from typing import List
 
 import orjson
 
-permissions: List[Dict] = None
-
 
 def load_permissions() -> List[Dict]:
     try:
@@ -21,20 +19,21 @@ def load_permissions() -> List[Dict]:
         return [{"role": "opteryx", "permission": "READ", "table": "*"}]
 
 
-def can_read_table(roles: List[str], table: str) -> bool:
-    global permissions
+PERMISSIONS: List[Dict] = load_permissions()
 
-    if permissions is None:
-        permissions = load_permissions()
-    if permissions == []:
+
+def can_read_table(roles: List[str], table: str) -> bool:
+    if PERMISSIONS == []:
         # No permissions means no restrictions
         return True
 
-    for entry in permissions:
+    for entry in PERMISSIONS:
         if (
             entry["permission"] == "READ"
             and entry["role"] in roles
             and fnmatch.fnmatch(table, entry["table"])
         ):
             return True
+
+    # DEBUG: log (f"Permission check failed, table = {table}, provided roles = {roles}, permissions = {permissions} ")
     return False

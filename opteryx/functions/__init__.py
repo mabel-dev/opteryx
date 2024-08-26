@@ -98,15 +98,27 @@ def _get_string(array, key):
 
 
 def cast_varchar(arr):
-    if len(arr) > 0 and all(i is None or type(i) == dict for i in arr):
+    if len(arr) > 0 and all(i is None or isinstance(i, dict) for i in arr[:100]):
         return [orjson.dumps(n).decode() if n is not None else None for n in arr]
     return compute.cast(arr, "string")
 
 
 def cast_blob(arr):
-    if len(arr) > 0 and all(i is None or type(i) == bytes for i in arr):
+    """
+    Checks if the first 100 elements of arr are either None or bytes.
+    If true, returns the original array. Otherwise, converts all elements
+    to strings and then encodes them to bytes.
+
+    Parameters:
+    arr (list): The input list to be checked and potentially converted.
+
+    Returns:
+    list: The original list if all elements in the first 100 are None or bytes,
+          otherwise a new list with all elements converted to bytes.
+    """
+    if len(arr) > 0 and all(i is None or isinstance(i, bytes) for i in arr[:100]):
         return arr
-    return compute.cast(arr, "binary")
+    return [None if a is None else str(a).encode() for a in arr]
 
 
 def fixed_value_function(function, context):

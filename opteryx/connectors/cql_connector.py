@@ -173,7 +173,7 @@ class CqlConnector(BaseConnector, PredicatePushable):
         # get the schema from the dataset
 
         session = self.cluster.connect()
-        query = Query().SELECT("*").FROM(self.dataset).LIMIT("1")
+        query = Query().SELECT("*").FROM(self.dataset).LIMIT("25")
         statement = session.prepare(str(query))
         # DEBUG: log ("READ 1 ROWS\n", str(query))
         results = session.execute(statement)[0]
