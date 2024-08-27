@@ -34,61 +34,13 @@ pyarrow_ops implementation which was a variation of a sort-merge join.
 import time
 from typing import Generator
 
-import numpy
 import pyarrow
 
-from opteryx.compiled.structures import HashTable
+from opteryx.compiled.structures.hash_table import hash_join_map
 from opteryx.models import QueryProperties
 from opteryx.operators import BasePlanNode
 from opteryx.operators import OperatorType
 from opteryx.utils.arrow import align_tables
-
-
-def preprocess_left(relation, join_columns):
-    """
-    Build a hash table for the left side of the join operation.
-
-    Parameters:
-        relation: The left pyarrow.Table to preprocess.
-        join_columns: A list of column names to join on.
-
-    Returns:
-        A HashTable where keys are hashes of the join column entries and
-        values are lists of row indices corresponding to each hash key.
-    """
-    ht = HashTable()
-    values = relation.select(join_columns)
-    num_rows = values.num_rows
-
-    # Prepare to track nulls across all relevant columns
-    combined_nulls = numpy.zeros(num_rows, dtype=bool)
-
-    # Process each column to update the combined null bitmap
-    for column_name in join_columns:
-        column = values.column(column_name)
-        if column.null_count > 0:
-            # Get the null bitmap for the current column, ensure it's in a single chunk first
-            bitmap_buffer = column.combine_chunks().buffers()[0]
-            if bitmap_buffer is not None:
-                # Update combined nulls bitmap
-                bitmap_buffer = numpy.bitwise_not(bitmap_buffer)
-                combined_nulls = numpy.logical_or(
-                    combined_nulls,
-                    [((byte >> bit) & 1) for byte in bitmap_buffer for bit in range(8)][:num_rows],
-                )
-
-    # Determine row indices that have nulls in any of the considered columns
-    null_indices = numpy.nonzero(combined_nulls)[0]
-
-    # Create a set for faster lookup
-    null_indices_set = set(null_indices)
-
-    # Process values to insert into the hash table
-    for i, value_tuple in enumerate(zip(*values.itercolumns())):
-        if i not in null_indices_set:
-            ht.insert(hash(value_tuple), i)
-
-    return ht
 
 
 def inner_join_with_preprocessed_left_side(left_relation, right_relation, join_columns, hash_table):
@@ -104,17 +56,22 @@ def inner_join_with_preprocessed_left_side(left_relation, right_relation, join_c
     Returns:
         A tuple containing lists of matching row indices from the left and right relations.
     """
-    left_indexes = []
-    right_indexes = []
+    from collections import deque
 
-    right_values = right_relation.select(join_columns).itercolumns()
-    for i, value_tuple in enumerate(zip(*right_values)):
-        rows = hash_table.get(hash(value_tuple))
-        if rows:
-            left_indexes.extend(rows)
-            right_indexes.extend([i] * len(rows))
+    left_indexes = deque()
+    right_indexes = deque()
 
-    return align_tables(right_relation, left_relation, right_indexes, left_indexes)
+    right_hash = hash_join_map(right_relation, join_columns)
+
+    for h, right_rows in right_hash.hash_table.items():
+        left_rows = hash_table.get(h)
+        if left_rows:
+            for l in left_rows:
+                for r in right_rows:
+                    left_indexes.append(l)
+                    right_indexes.append(r)
+
+    return align_tables(right_relation, left_relation, list(right_indexes), list(left_indexes))
 
 
 class InnerJoinNode(BasePlanNode):
@@ -157,7 +114,8 @@ class InnerJoinNode(BasePlanNode):
             )
 
         start = time.monotonic_ns()
-        left_hash = preprocess_left(left_relation, self._left_columns)
+        left_hash = hash_join_map(left_relation, self._left_columns)
+
         self.statistics.time_inner_join += time.monotonic_ns() - start
         for morsel in right_node.execute():
             start = time.monotonic_ns()

@@ -4,7 +4,7 @@
 from libcpp.unordered_map cimport unordered_map
 from libcpp.unordered_set cimport unordered_set
 from libcpp.vector cimport vector
-from libc.stdint cimport int64_t
+from libc.stdint cimport int64_t, uint8_t
 from libcpp.pair cimport pair
 
 cimport cython
@@ -32,8 +32,7 @@ cdef class HashTable:
         # Return the list of row IDs for the given key, or an empty list if the key is not found.
         if self.hash_table.find(key) != self.hash_table.end():
             return self.hash_table[key]
-        else:
-            return vector[int64_t]()
+        return vector[int64_t]()
 
 
 cdef class HashSet:
@@ -73,6 +72,7 @@ cpdef tuple distinct(table, HashSet seen_hashes=None, list columns=None):
     cdef int64_t i = 0
     cdef tuple value_tuple
     cdef object value
+    cdef int64_t num_columns
 
     if seen_hashes is None:
         seen_hashes = HashSet()
@@ -81,13 +81,14 @@ cpdef tuple distinct(table, HashSet seen_hashes=None, list columns=None):
         columns_of_interest = table.column_names
     else:
         columns_of_interest = columns
+    num_columns = len(columns_of_interest)
 
     cdef list keep = []
     cdef cnp.ndarray values = numpy.array([recast_column(column) for column in table.select(columns_of_interest).itercolumns()], dtype=object)
 
-    if len(columns_of_interest) > 1:
+    if num_columns > 1:
         for i in range(values.shape[1]):
-            value_tuple = tuple([v if v == v else None for v in values[:, i]])
+            value_tuple = tuple([v if v == v else None for v in [values[j, i] for j in range(num_columns)]])
             hashed_value = hash(value_tuple)
             if seen_hashes.insert(hashed_value):
                 keep.append(i)
@@ -101,3 +102,68 @@ cpdef tuple distinct(table, HashSet seen_hashes=None, list columns=None):
                 keep.append(i)
 
     return (keep, seen_hashes)
+
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+cpdef HashTable hash_join_map(relation, list join_columns):
+    """
+    Build a hash table for the join operations.
+
+    Parameters:
+        relation: The pyarrow.Table to preprocess.
+        join_columns: A list of column names to join on.
+
+    Returns:
+        A HashTable where keys are hashes of the join column entries and
+        values are lists of row indices corresponding to each hash key.
+    """
+    cdef HashTable ht = HashTable()
+    cdef cnp.ndarray[uint8_t, ndim=1] bitmap_array
+
+    # Selecting columns
+    cdef int64_t num_rows = relation.num_rows
+    cdef int64_t num_columns = len(join_columns)
+
+    # Allocate memory for the combined nulls array
+    cdef cnp.ndarray[uint8_t, ndim=1] combined_nulls = numpy.full(num_rows, 1, dtype=numpy.uint8)
+
+    # Process each column to update the combined null bitmap
+    cdef int64_t i, col_index
+    cdef str column_name
+    cdef object column, bitmap_buffer
+    cdef uint8_t bit, byte
+
+    for column_name in join_columns:
+        column = relation.column(column_name)
+        if column.null_count > 0:
+            # Get the null bitmap for the current column, ensure it's in a single chunk first
+            bitmap_buffer = column.combine_chunks().buffers()[0]
+            if bitmap_buffer is not None:
+                # Convert the bitmap to uint8
+                bitmap_array = numpy.frombuffer(bitmap_buffer, dtype=numpy.uint8)
+                for i in range(num_rows):
+                    byte = bitmap_array[i // 8]
+                    bit = 1 if byte & (1 << (i % 8)) else 0
+                    combined_nulls[i] |= bit
+
+    # Determine row indices that have nulls in any of the considered columns
+    cdef cnp.ndarray non_null_indices = numpy.nonzero(combined_nulls)[0]
+
+    # Convert selected columns to a numpy array of object dtype, skipping null cols
+    cdef cnp.ndarray values_array = numpy.array([relation.column(column).take(non_null_indices) for column in join_columns], dtype=object)
+    cdef int64_t hash_value
+    cdef tuple value_tuple
+
+    if num_columns > 1:
+        for i in range(values_array.shape[1]):
+            # Create a tuple of values across the columns for the current row
+            value_tuple = tuple(values_array[:, i])
+            hash_value = <int64_t>hash(value_tuple)
+            ht.insert(hash_value, non_null_indices[i])
+    else:
+        for i, value in enumerate(values_array[0]):
+            hash_value = <int64_t>hash(value)
+            ht.insert(hash_value, non_null_indices[i])
+
+    return ht
