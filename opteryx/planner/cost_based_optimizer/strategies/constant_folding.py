@@ -32,7 +32,6 @@ from typing import Any
 import numpy
 from orso.types import OrsoTypes
 
-from opteryx.exceptions import InvalidInternalStateError
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import evaluate
 from opteryx.managers.expression import get_all_nodes_of_type
@@ -77,6 +76,93 @@ def fold_constants(root: Node) -> Node:
         # traverse the left and right of logical operators
         root.left = fold_constants(root.left)
         root.right = fold_constants(root.right)
+
+        # is we have a logical expression and one side is a constant, 
+        # we simplify the expression
+        if root.node_type == NodeType.OR:
+            if (
+                root.left.node_type == NodeType.LITERAL
+                and root.left.type == OrsoTypes.BOOLEAN
+                and root.left.value
+            ):
+                # True OR anything is True
+                return root.left
+            if (
+                root.right.node_type == NodeType.LITERAL
+                and root.right.type == OrsoTypes.BOOLEAN
+                and root.right.value
+            ):
+                # True OR anything is True
+                return root.right
+            if (
+                root.left.node_type == NodeType.LITERAL
+                and root.left.type == OrsoTypes.BOOLEAN
+                and not root.left.value
+            ):
+                # False OR x is x
+                return root.right
+            if (
+                root.right.node_type == NodeType.LITERAL
+                and root.right.type == OrsoTypes.BOOLEAN
+                and not root.right.value
+            ):
+                return root.left
+
+        elif root.node_type == NodeType.AND:
+            if (
+                root.left.node_type == NodeType.LITERAL
+                and root.left.type == OrsoTypes.BOOLEAN
+                and not root.left.value
+            ):
+                # False AND anything is False
+                return root.left
+            if (
+                root.right.node_type == NodeType.LITERAL
+                and root.right.type == OrsoTypes.BOOLEAN
+                and not root.right.value
+            ):
+                return root.right
+            if (
+                root.left.node_type == NodeType.LITERAL
+                and root.left.type == OrsoTypes.BOOLEAN
+                and root.left.value
+            ):
+                # True AND x is x
+                return root.right
+            if (
+                root.right.node_type == NodeType.LITERAL
+                and root.right.type == OrsoTypes.BOOLEAN
+                and root.right.value
+            ):
+                return root.left
+
+        elif root.node_type == NodeType.XOR:
+            if (
+                root.left.node_type == NodeType.LITERAL
+                and root.left.type == OrsoTypes.BOOLEAN
+                and root.left.value
+            ):
+                # True XOR x is NOT x
+                return Node(NodeType.NOT, root.right)
+            if (
+                root.right.node_type == NodeType.LITERAL
+                and root.right.type == OrsoTypes.BOOLEAN
+                and root.right.value
+            ):
+                return Node(NodeType.NOT, root.left)
+            if (
+                root.left.node_type == NodeType.LITERAL
+                and root.left.type == OrsoTypes.BOOLEAN
+                and not root.left.value
+            ):
+                # False XOR x is x
+                return root.right
+            if (
+                root.right.node_type == NodeType.LITERAL
+                and root.right.type == OrsoTypes.BOOLEAN
+                and not root.right.value
+            ):
+                return root.left
 
         return root
 
