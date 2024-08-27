@@ -53,37 +53,45 @@ def left_join(left_relation, right_relation, left_columns: List[str], right_colu
     Returns:
         A pyarrow.Table containing the result of the LEFT JOIN operation.
     """
-    chunk_size = 1000
-    at_least_once = False
+    from collections import deque
+
+    from opteryx.compiled.structures.hash_table import hash_join_map
+
+    left_indexes = deque()
+    right_indexes = deque()
+
     right_relation = pyarrow.concat_tables(right_relation.execute(), promote_options="none")
+    right_hash = hash_join_map(right_relation, right_columns)
 
-    hash_table = HashTable()
-    non_null_right_values = right_relation.select(right_columns).itercolumns()
-    for i, value_tuple in enumerate(zip(*non_null_right_values)):
-        hash_table.insert(hash(value_tuple), i)
-
-    # Iterate over the left_relation in chunks
-    left_batches = left_relation.execute()
-    for left_batch in left_batches:
-        for left_chunk in left_batch.to_batches(chunk_size):
-            left_indexes = []
-            right_indexes = []
-
-            left_values = left_chunk.select(left_columns).itercolumns()
-            for i, value_tuple in enumerate(zip(*left_values)):
-                rows = hash_table.get(hash(value_tuple))
-                if rows:
-                    right_indexes.extend(rows)
-                    left_indexes.extend([i] * len(rows))
-                else:
+    for left_batch in left_relation.execute():
+        left_hash = hash_join_map(left_batch, left_columns)
+        for hash_value, left_rows in left_hash.hash_table.items():
+            right_rows = right_hash.get(hash_value)
+            if right_rows:
+                for l in left_rows:
+                    for r in right_rows:
+                        left_indexes.append(l)
+                        right_indexes.append(r)
+            else:
+                for l in left_rows:
+                    left_indexes.append(l)
                     right_indexes.append(None)
-                    left_indexes.append(i)
 
-            # Yield the aligned chunk
-            yield align_tables(right_relation, left_chunk, right_indexes, left_indexes)
-            at_least_once = True
-    if not at_least_once:
-        yield align_tables(right_relation, left_batch, [], [])
+            if len(left_indexes) > 50_000:
+                table = align_tables(
+                    right_relation, left_batch, list(right_indexes), list(left_indexes)
+                )
+                yield table
+                left_indexes.clear()
+                right_indexes.clear()
+
+        if len(left_indexes) > 0:
+            table = align_tables(
+                right_relation, left_batch, list(right_indexes), list(left_indexes)
+            )
+            yield table
+            left_indexes.clear()
+            right_indexes.clear()
 
 
 def full_join(left_relation, right_relation, left_columns: List[str], right_columns: List[str]):

@@ -15,7 +15,9 @@ This module contains support functions for working with PyArrow
 """
 
 from typing import Iterator
+from typing import List
 from typing import Optional
+from typing import Union
 
 import pyarrow
 
@@ -98,56 +100,82 @@ def post_read_projector(table: pyarrow.Table, columns: list) -> pyarrow.Table:
     return table.rename_columns(column_names)
 
 
-def align_tables(source_table, append_table, source_indices, append_indices):
-    # If either source_indices or append_indices is empty, return the source_table taken with source_indices immediately
-    if len(source_indices) == 0 or len(append_indices) == 0:
-        # Combine schemas from both tables
-        combined_schema = pyarrow.schema([])
-        for field in source_table.schema:
-            combined_schema = combined_schema.append(field)
-        for field in append_table.schema:
-            if field.name not in combined_schema.names:
-                combined_schema = combined_schema.append(field)
+def align_tables(
+    source_table: pyarrow.Table,
+    append_table: pyarrow.Table,
+    source_indices: Union[List[int], pyarrow.Array],
+    append_indices: Union[List[int], pyarrow.Array],
+) -> pyarrow.Table:
+    """
+    Aligns two tables based on provided indices, ensuring that the resulting table
+    contains columns from both source_table and append_table.
 
-        # Create and return an empty table with the combined schema
+    Parameters:
+        source_table: The pyarrow.Table to align.
+        append_table: The pyarrow.Table to align with the source_table.
+        source_indices: The indices to take from the source_table.
+        append_indices: The indices to take from the append_table.
+
+    Returns:
+        A pyarrow.Table with aligned columns and data.
+    """
+
+    # If either source_indices or append_indices is empty, return an empty table with a combined schema
+    if len(source_indices) == 0 or len(append_indices) == 0:
+        combined_schema = pyarrow.schema(
+            [
+                *source_table.schema,
+                *[
+                    field
+                    for field in append_table.schema
+                    if field.name not in source_table.schema.names
+                ],
+            ]
+        )
         empty_arrays = [pyarrow.array([]) for field in combined_schema]
         return pyarrow.Table.from_arrays(empty_arrays, schema=combined_schema)
 
-    if all(s is None for s in source_indices):
-        empty_arrays = [
+    # Convert indices to PyArrow arrays for efficient null checking
+    source_indices_array = pyarrow.array(source_indices)
+    append_indices_array = pyarrow.array(append_indices)
+
+    # Check if all source_indices are nulls
+    if source_indices_array.null_count == len(source_indices):
+        null_columns = [
             pyarrow.nulls(len(source_indices), type=field.type) for field in source_table.schema
         ]
-        aligned_table = pyarrow.Table.from_arrays(empty_arrays, schema=source_table.schema)
+        aligned_table = pyarrow.Table.from_arrays(null_columns, schema=source_table.schema)
     else:
-        # Take the rows from source_table at the specified source_indices
-        aligned_table = source_table.take(source_indices)
+        # Take rows from source_table based on source_indices
+        aligned_table = source_table.take(source_indices_array)
 
-    # Create a set of column names from the source table for efficient existence checking
+    # Set of column names from source_table for quick lookup
     source_column_names = set(source_table.column_names)
 
-    # Check if append_indices is all nulls
-    if all(v is None for v in append_indices):
-        # Iterate through the column names of append_table
-        for column_name in append_table.column_names:
-            # If the column_name is not found in source_column_names
-            if column_name not in source_column_names:
-                # Get the type of the column in append_table
-                column_field = append_table.schema.field(column_name)
-                column_type = column_field.type
-                # Create an array of nulls with the correct type
-                null_column = pyarrow.array([None] * len(aligned_table), type=column_type)
-                # Append the null column to aligned_table with the correct field
-                aligned_table = aligned_table.append_column(column_field, null_column)
-    else:
-        # Iterate through the column names of append_table
-        for column_name in append_table.column_names:
-            # If the column_name is not found in source_column_names
-            if column_name not in source_column_names:
-                # Append the column from append_table to aligned_table, taking the elements at the specified append_indices
-                column_field = append_table.schema.field(column_name)
-                aligned_table = aligned_table.append_column(
-                    column_field, append_table.column(column_name).take(append_indices)
-                )
+    # Check if all append_indices are nulls
+    append_is_all_nulls = append_indices_array.null_count == len(append_indices)
 
-    # Return the aligned table
+    new_columns = []
+    new_fields = []
+
+    # Collect all columns that need to be appended in one go
+    for column_name, column_field in zip(append_table.column_names, append_table.schema):
+        if column_name not in source_column_names:
+            if append_is_all_nulls:
+                # Create a column of nulls if all append indices are null
+                null_column = pyarrow.nulls(len(aligned_table), type=column_field.type)
+                new_columns.append(null_column)
+            else:
+                # Take the corresponding rows from append_table
+                column_data = append_table.column(column_name).take(append_indices_array)
+                new_columns.append(column_data)
+            new_fields.append(column_field)
+
+    # Combine original and new columns
+    aligned_columns = aligned_table.columns + new_columns
+    combined_schema = pyarrow.schema([*source_table.schema, *new_fields])
+
+    # Create the final aligned table with all columns at once
+    aligned_table = pyarrow.Table.from_arrays(aligned_columns, schema=combined_schema)
+
     return aligned_table
