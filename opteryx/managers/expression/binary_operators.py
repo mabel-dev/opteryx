@@ -21,25 +21,48 @@ import pyarrow
 from orso.types import OrsoTypes
 from pyarrow import compute
 
-# fmt:off
-OPERATOR_FUNCTION_MAP: Dict[str, Any] = {
-    "Divide": numpy.divide,
-    "Minus": numpy.subtract,
-    "Modulo": numpy.mod,
-    "Multiply": numpy.multiply,
-    "Plus": numpy.add,
-    "StringConcat": compute.binary_join_element_wise,
-    "MyIntegerDivide": lambda left, right: numpy.trunc(numpy.divide(left, right)).astype(numpy.int64),
-    "BitwiseOr": numpy.bitwise_or,
-    "BitwiseAnd": numpy.bitwise_and,
-    "BitwiseXor": numpy.bitwise_xor,
-    "ShiftLeft": numpy.left_shift,
-    "ShiftRight": numpy.right_shift,
-}
+from opteryx.compiled import list_ops
 
-BINARY_OPERATORS = set(OPERATOR_FUNCTION_MAP.keys())
 
-# fmt:on
+def ArrowOp(documents, elements) -> pyarrow.Array:
+    element = elements[0]
+
+    # if it's dicts, extract the value from the dict
+    if len(documents) > 0 and isinstance(documents[0], dict):
+        return list_ops.cython_arrow_op(documents, element)
+
+    # if it's a string, parse and extract, we don't need a dict (dicts are s_l_o_w)
+    # so we can use a library which allows us to access the values directly
+    import simdjson
+
+    def extract(doc: bytes, elem: Union[bytes, str]) -> Any:
+        value = simdjson.Parser().parse(doc).get(elem)  # type:ignore
+        if hasattr(value, "as_list"):
+            return value.as_list()
+        if hasattr(value, "as_dict"):
+            return value.as_dict()
+        return value
+
+    return pyarrow.array([extract(d, element) for d in documents])
+
+
+def LongArrowOp(documents, elements) -> pyarrow.Array:
+    element = elements[0]
+
+    if len(documents) > 0 and isinstance(documents[0], dict):
+        return list_ops.cython_long_arrow_op(documents, element)
+
+    import simdjson
+
+    def extract(doc: bytes, elem: Union[bytes, str]) -> bytes:
+        value = simdjson.Parser().parse(doc).get(elem)  # type:ignore
+        if hasattr(value, "mini"):
+            return value.mini  # type:ignore
+        return str(value).encode()
+
+    return pyarrow.array(
+        [None if d is None else extract(d, element) for d in documents], type=pyarrow.binary()
+    )
 
 
 def _ip_containment(left: List[Optional[str]], right: List[str]) -> List[Optional[bool]]:
@@ -131,3 +154,26 @@ def binary_operations(
         return joined
 
     return operation(left, right)
+
+
+# fmt:off
+OPERATOR_FUNCTION_MAP: Dict[str, Any] = {
+    "Divide": numpy.divide,
+    "Minus": numpy.subtract,
+    "Modulo": numpy.mod,
+    "Multiply": numpy.multiply,
+    "Plus": numpy.add,
+    "StringConcat": compute.binary_join_element_wise,
+    "MyIntegerDivide": lambda left, right: numpy.trunc(numpy.divide(left, right)).astype(numpy.int64),
+    "BitwiseOr": numpy.bitwise_or,
+    "BitwiseAnd": numpy.bitwise_and,
+    "BitwiseXor": numpy.bitwise_xor,
+    "ShiftLeft": numpy.left_shift,
+    "ShiftRight": numpy.right_shift,
+    "Arrow": ArrowOp,
+    "LongArrow": LongArrowOp
+}
+
+BINARY_OPERATORS = set(OPERATOR_FUNCTION_MAP.keys())
+
+# fmt:on
