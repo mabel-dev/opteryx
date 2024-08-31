@@ -17,11 +17,17 @@ cnp.import_array()
 
 cpdef cnp.ndarray[cnp.npy_bool, ndim=1] cython_allop_eq(object literal, cnp.ndarray arr):
     cdef:
-        int i, j
+        Py_ssize_t i, j
         cnp.ndarray[cnp.npy_bool, ndim=1] result = numpy.full(arr.shape[0], False, dtype=bool)
+        cnp.ndarray row
 
     for i in range(arr.shape[0]):
         row = arr[i]
+
+        if row is None: 
+            result[i] = False
+            break
+
         if len(row) == 0:
             result[i] = False
             continue
@@ -36,46 +42,57 @@ cpdef cnp.ndarray[cnp.npy_bool, ndim=1] cython_allop_eq(object literal, cnp.ndar
 
 cpdef cnp.ndarray[cnp.npy_bool, ndim=1] cython_allop_neq(object literal, cnp.ndarray arr):
     cdef:
-        int i, j
+        Py_ssize_t i, j
         cnp.ndarray[cnp.npy_bool, ndim=1] result = numpy.full(arr.shape[0], True, dtype=bool)
+        cnp.ndarray row
 
     for i in range(arr.shape[0]):
         row = arr[i]
-
-        for j in range(row.shape[0]):
-            if row[j] == literal:
-                result[i] = False
-                break
+        if row is not None:
+            for j in range(row.shape[0]):
+                if row[j] == literal:
+                    result[i] = False
+                    break
+        else:
+            result[i] = False
 
     return result
 
 
 cpdef cnp.ndarray[cnp.npy_bool, ndim=1] cython_anyop_eq(object literal, cnp.ndarray arr):
     cdef:
-        Py_ssize_t i, j
-        cnp.ndarray[cnp.npy_bool, ndim=1] result = numpy.full(arr.shape[0], False, dtype=bool)
+        cdef Py_ssize_t i, j
+        cdef Py_ssize_t num_rows = arr.shape[0]
+        cnp.ndarray[cnp.npy_bool, ndim=1] result = numpy.zeros(num_rows, dtype=numpy.uint8)
+        cnp.ndarray row
 
-    for i in range(arr.shape[0]):
+    for i in range(num_rows):
         row = arr[i]
-        for j in range(row.shape[0]):
-            if row[j] == literal:
-                result[i] = True
-                break
+        if row is not None:
+            for j in range(row.shape[0]):
+                if row[j] == literal:
+                    result[i] = 1
+                    break
 
     return result
 
 
 cpdef cnp.ndarray[cnp.npy_bool, ndim=1] cython_anyop_neq(object literal, cnp.ndarray arr):
     cdef:
-        int i, j
+        Py_ssize_t i, j
         cnp.ndarray[cnp.npy_bool, ndim=1] result = numpy.ones(arr.shape[0], dtype=bool)  # Default to True
+        cnp.ndarray row
 
     for i in range(arr.shape[0]):
         row = arr[i]
+        if row is None:
+            result[i] = False
+            continue
+
         if row.size == 0:
             continue  # Keep result[i] as True for empty rows
 
-        for j in range(row.shape[0]):
+        for j in range(row.size):
             if row[j] == literal:
                 result[i] = False  # Found a match, set to False
                 break  # No need to check the rest of the elements in this row
@@ -85,60 +102,68 @@ cpdef cnp.ndarray[cnp.npy_bool, ndim=1] cython_anyop_neq(object literal, cnp.nda
 
 cpdef cnp.ndarray[cnp.npy_bool, ndim=1] cython_anyop_gt(object literal, cnp.ndarray arr):
     cdef:
-        int i, j
+        Py_ssize_t i, j
         cnp.ndarray[cnp.npy_bool, ndim=1] result = numpy.full(arr.shape[0], False, dtype=bool)
+        cnp.ndarray row
 
     for i in range(arr.shape[0]):
         row = arr[i]
-        for j in range(row.shape[0]):
-            if row[j] > literal:
-                result[i] = True
-                break
+        if row is not None:
+            for j in range(row.shape[0]):
+                if row[j] > literal:
+                    result[i] = True
+                    break
 
     return result
 
 
 cpdef cnp.ndarray[cnp.npy_bool, ndim=1] cython_anyop_lt(object literal, cnp.ndarray arr):
     cdef:
-        int i, j
+        Py_ssize_t i, j
         cnp.ndarray[cnp.npy_bool, ndim=1] result = numpy.full(arr.shape[0], False, dtype=bool)
+        cnp.ndarray row
 
     for i in range(arr.shape[0]):
         row = arr[i]
-        for j in range(row.shape[0]):
-            if row[j] < literal:
-                result[i] = True
-                break
+        if row is not None:
+            for j in range(row.shape[0]):
+                if row[j] < literal:
+                    result[i] = True
+                    break
 
     return result
 
 
 cpdef cnp.ndarray[cnp.npy_bool, ndim=1] cython_anyop_lte(object literal, cnp.ndarray arr):
     cdef:
-        int i, j
+        Py_ssize_t i, j
         cnp.ndarray[cnp.npy_bool, ndim=1] result = numpy.full(arr.shape[0], False, dtype=bool)
+        cnp.ndarray row
 
     for i in range(arr.shape[0]):
         row = arr[i]
-        for j in range(row.shape[0]):
-            if row[j] <= literal:
-                result[i] = True
-                break
+        if row is not None:
+            for j in range(row.shape[0]):
+                if row[j] <= literal:
+                    result[i] = True
+                    break
 
     return result
 
 
 cpdef cnp.ndarray[cnp.npy_bool, ndim=1] cython_anyop_gte(object literal, cnp.ndarray arr):
     cdef:
-        int i, j
+        Py_ssize_t i, j
         cnp.ndarray[cnp.npy_bool, ndim=1] result = numpy.full(arr.shape[0], False, dtype=bool)
+        cnp.ndarray row
 
     for i in range(arr.shape[0]):
         row = arr[i]
-        for j in range(row.shape[0]):
-            if row[j] >= literal:
-                result[i] = True
-                break
+        if row is not None:
+            for j in range(row.shape[0]):
+                if row[j] >= literal:
+                    result[i] = True
+                    break
 
     return result
 
@@ -158,19 +183,22 @@ cpdef cnp.ndarray cython_arrow_op(cnp.ndarray arr, object key):
                      or None where the key does not exist.
     """
     # Determine the number of items in the input list
-    cdef int n = len(arr)
+    cdef Py_ssize_t n = len(arr)
     # Prepare an object array to store the results
     cdef cnp.ndarray result = numpy.empty(n, dtype=object)
+    cdef dict document
     
-    cdef int i
+    cdef Py_ssize_t i
     # Iterate over the list of dictionaries
     for i in range(n):
         # Check if the key exists in the dictionary
-        if key in arr[i]:
-            result[i] = arr[i][key]
-        else:
-            # Assign None if the key does not exist
-            result[i] = None
+        document = arr[i]
+        if document is not None:
+            if key in document:
+                result[i] = document[key]
+            else:
+                # Assign None if the key does not exist
+                result[i] = None
 
     return result
 
@@ -190,11 +218,11 @@ cpdef cnp.ndarray cython_long_arrow_op(cnp.ndarray arr, object key):
                      or None where the key does not exist.
     """
     # Determine the number of items in the input list
-    cdef int n = len(arr)
+    cdef Py_ssize_t n = len(arr)
     # Prepare an object array to store the results
     cdef cnp.ndarray result = numpy.empty(n, dtype=object)
     
-    cdef int i
+    cdef Py_ssize_t i
     # Iterate over the list of dictionaries
     for i in range(n):
         # Check if the key exists in the dictionary
@@ -227,7 +255,7 @@ cpdef cnp.ndarray cython_get_element_op(cnp.ndarray[object, ndim=1] array, int k
     cdef cnp.ndarray result = numpy.empty(array.size, dtype=object)
 
     # Iterate over the array using memory views for efficient access
-    cdef int i = 0
+    cdef Py_ssize_t i = 0
     for sub_array in array:
         if sub_array is not None and len(sub_array) > key:
             result[i] = sub_array[key]
