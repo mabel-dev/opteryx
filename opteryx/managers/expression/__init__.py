@@ -108,30 +108,12 @@ LOGICAL_OPERATIONS: Dict[NodeType, Callable] = {
 }
 
 
-class ExecutionContext:
-    def __init__(self):
-        self.results = {}
-
-    def store(self, identity, result):
-        self.results[identity] = result
-
-    def retrieve(self, identity):
-        return self.results.get(identity)
-
-    def has_result(self, identity):
-        return identity in self.results
-
-    @property
-    def identities(self):
-        return list(self.results.keys())
-
-
-def short_cut_and(root, table, context):
+def short_cut_and(root, table):
     # Convert to NumPy arrays
     true_indices = numpy.arange(table.num_rows)
 
     # Evaluate left expression
-    left_result = numpy.array(evaluate(root.left, table, context))
+    left_result = numpy.array(evaluate(root.left, table))
     left_result = numpy.asarray(left_result, dtype=bool)
 
     # If all values in left_result are False, no need to evaluate the right expression
@@ -145,7 +127,7 @@ def short_cut_and(root, table, context):
     subset_table = table.take(subset_indices)
 
     # Evaluate right expression on the subset table
-    right_result = numpy.array(evaluate(root.right, subset_table, None))
+    right_result = numpy.array(evaluate(root.right, subset_table))
 
     # Combine results
     # Iterate over subset_indices and update left_result at those positions
@@ -154,12 +136,12 @@ def short_cut_and(root, table, context):
     return left_result
 
 
-def short_cut_or(root, table, context):
+def short_cut_or(root, table):
     # Assuming table.num_rows returns the number of rows in the table
     false_indices = numpy.arange(table.num_rows)
 
     # Evaluate left expression
-    left_result = numpy.array(evaluate(root.left, table, context), dtype=numpy.bool_)
+    left_result = numpy.array(evaluate(root.left, table), dtype=numpy.bool_)
 
     # Filter out indices where left_result is TRUE
     subset_indices = false_indices[~left_result]
@@ -171,7 +153,7 @@ def short_cut_or(root, table, context):
     subset_table = table.take(subset_indices)
 
     # Evaluate right expression on the subset table
-    right_result = numpy.array(evaluate(root.right, subset_table, None), dtype=numpy.bool_)
+    right_result = numpy.array(evaluate(root.right, subset_table), dtype=numpy.bool_)
 
     # Combine results
     # Update left_result with the right_result where left_result was False
@@ -195,17 +177,13 @@ def prioritize_evaluation(expressions):
     return non_dependent_expressions + dependent_expressions
 
 
-def _inner_evaluate(root: Node, table: Table, context: ExecutionContext):
+def _inner_evaluate(root: Node, table: Table):
     node_type = root.node_type  # type:ignore
 
     if node_type == NodeType.SUBQUERY:
         raise UnsupportedSyntaxError("IN (<subquery>) temporarily not supported.")
 
     identity = root.schema_column.identity if root.schema_column else random_string()
-
-    # If already evaluated, return memoized result.
-    if context.has_result(identity):
-        return context.retrieve(identity)
 
     # if we have this column already, just return it
     if identity in table.column_names:
@@ -220,6 +198,8 @@ def _inner_evaluate(root: Node, table: Table, context: ExecutionContext):
             return numpy.array([root.value] * table.num_rows)
         if literal_type == OrsoTypes.VARCHAR:
             return numpy.array([root.value] * table.num_rows, dtype=numpy.unicode_)
+        if literal_type == OrsoTypes.BLOB:
+            return numpy.array([root.value] * table.num_rows, dtype=numpy.bytes_)
         if literal_type == OrsoTypes.INTERVAL:
             return pyarrow.array([root.value] * table.num_rows)
         return numpy.full(
@@ -231,24 +211,24 @@ def _inner_evaluate(root: Node, table: Table, context: ExecutionContext):
     # BOOLEAN OPERATORS
     if node_type & LOGICAL_TYPE == LOGICAL_TYPE:  # type:ignore
         if node_type == NodeType.OR:
-            return short_cut_or(root, table, context)
+            return short_cut_or(root, table)
         if node_type == NodeType.AND:
-            return short_cut_and(root, table, context)
+            return short_cut_and(root, table)
 
         if node_type in LOGICAL_OPERATIONS:
-            left = _inner_evaluate(root.left, table, context) if root.left else [None]
-            right = _inner_evaluate(root.right, table, context) if root.right else [None]
+            left = _inner_evaluate(root.left, table) if root.left else [None]
+            right = _inner_evaluate(root.right, table) if root.right else [None]
             return LOGICAL_OPERATIONS[node_type](left, right)  # type:ignore
 
         if node_type == NodeType.NOT:
-            centre = _inner_evaluate(root.centre, table, context) if root.centre else [None]
+            centre = _inner_evaluate(root.centre, table) if root.centre else [None]
             centre = pyarrow.array(centre, type=pyarrow.bool_())
             return pyarrow.compute.invert(centre)
 
     # INTERAL IDENTIFIERS
     if node_type & INTERNAL_TYPE == INTERNAL_TYPE:  # type:ignore
         if node_type == NodeType.FUNCTION:
-            parameters = [_inner_evaluate(param, table, context) for param in root.parameters]
+            parameters = [_inner_evaluate(param, table) for param in root.parameters]
             # zero parameter functions get the number of rows as the parameter
             if len(parameters) == 0:
                 parameters = [table.num_rows]
@@ -256,7 +236,6 @@ def _inner_evaluate(root: Node, table: Table, context: ExecutionContext):
             result = func(*parameters)
             if isinstance(result, list):
                 result = numpy.array(result)
-            context.store(identity, result)
             return result
         if node_type == NodeType.AGGREGATOR:
             # detected as an aggregator, but here it's an identifier because it
@@ -269,8 +248,8 @@ def _inner_evaluate(root: Node, table: Table, context: ExecutionContext):
                 raise ColumnReferencedBeforeEvaluationError(column=root.schema_column.name)
             return table[root.schema_column.identity].to_numpy()
         if node_type == NodeType.COMPARISON_OPERATOR:
-            left = _inner_evaluate(root.left, table, context)
-            right = _inner_evaluate(root.right, table, context)
+            left = _inner_evaluate(root.left, table)
+            right = _inner_evaluate(root.right, table)
             result = filter_operations(
                 left,
                 root.left.schema_column.type,
@@ -278,11 +257,10 @@ def _inner_evaluate(root: Node, table: Table, context: ExecutionContext):
                 right,
                 root.right.schema_column.type,
             )
-            context.store(identity, result)
             return result
         if node_type == NodeType.BINARY_OPERATOR:
-            left = _inner_evaluate(root.left, table, context)
-            right = _inner_evaluate(root.right, table, context)
+            left = _inner_evaluate(root.left, table)
+            right = _inner_evaluate(root.right, table)
             result = binary_operations(
                 left,
                 root.left.schema_column.type,
@@ -290,7 +268,6 @@ def _inner_evaluate(root: Node, table: Table, context: ExecutionContext):
                 right,
                 root.right.schema_column.type,
             )
-            context.store(identity, result)
             return result
         if node_type == NodeType.WILDCARD:
             numpy.full(table.num_rows, "*", dtype=numpy.unicode_)
@@ -299,14 +276,13 @@ def _inner_evaluate(root: Node, table: Table, context: ExecutionContext):
             sub = root.value.execute()
             return pyarrow.concat_tables(sub, promote_options="none")
         if node_type == NodeType.NESTED:
-            return _inner_evaluate(root.centre, table, context)
+            return _inner_evaluate(root.centre, table)
         if node_type == NodeType.UNARY_OPERATOR:
-            centre = _inner_evaluate(root.centre, table, context)
+            centre = _inner_evaluate(root.centre, table)
             result = UNARY_OPERATIONS[root.value](centre)
-            context.store(identity, result)
             return result
         if node_type == NodeType.EXPRESSION_LIST:
-            values = [_inner_evaluate(val, table, context) for val in root.parameters]
+            values = [_inner_evaluate(val, table) for val in root.parameters]
             return values
         from opteryx.exceptions import ColumnNotFoundError
 
@@ -315,11 +291,8 @@ def _inner_evaluate(root: Node, table: Table, context: ExecutionContext):
         )
 
 
-def evaluate(expression: Node, table: Table, context: Optional[ExecutionContext] = None):
-    if context is None:
-        context = ExecutionContext()
-
-    result = _inner_evaluate(root=expression, table=table, context=context)
+def evaluate(expression: Node, table: Table):
+    result = _inner_evaluate(root=expression, table=table)
     if not isinstance(result, (pyarrow.Array, numpy.ndarray)):
         result = numpy.array(result)
     return result
@@ -361,15 +334,13 @@ def evaluate_and_append(expressions, table: Table):
     """
     prioritized_expressions = prioritize_evaluation(expressions)
 
-    context = ExecutionContext()
-
     for statement in prioritized_expressions:
         if statement.schema_column.identity in table.column_names:
             continue
 
         if should_evaluate(statement):
             if table.num_rows > 0:
-                new_column = evaluate_statement(statement, table, context)
+                new_column = evaluate_statement(statement, table)
             else:
                 new_column = numpy.array(
                     [], dtype=ORSO_TO_NUMPY_MAP.get(statement.schema_column.type, OrsoTypes.VARCHAR)
@@ -379,9 +350,6 @@ def evaluate_and_append(expressions, table: Table):
             if isinstance(new_column, pyarrow.ChunkedArray):
                 new_column = new_column.combine_chunks()
             table = table.append_column(statement.schema_column.identity, new_column)
-            for identity in context.identities:
-                if identity not in table.column_names:
-                    table = table.append_column(identity, [context.retrieve(identity)])
 
     return table
 
@@ -403,9 +371,9 @@ def should_evaluate(statement):
     return statement.node_type in valid_node_types
 
 
-def evaluate_statement(statement, table, context):
+def evaluate_statement(statement, table):
     """Evaluate a statement and return the corresponding column."""
-    new_column = evaluate(statement, table, context)
+    new_column = evaluate(statement, table)
     if is_mask(new_column, statement, table):
         new_column = create_mask(new_column, table.num_rows)
     return format_column(new_column)
