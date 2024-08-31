@@ -82,6 +82,7 @@ class CostBasedOptimizerVisitor:
             ConstantFoldingStrategy(),
             BooleanSimplificationStrategy(),
             SplitConjunctivePredicatesStrategy(),
+            PredicateRewriteStrategy(),
             PredicatePushdownStrategy(),
             ProjectionPushdownStrategy(),
             OperatorFusionStrategy(),
