@@ -791,12 +791,12 @@ def plan_execute_query(statement) -> LogicalPlan:
             "EXECUTE does not support USING syntax, please provide parameters in parenthesis."
         )
 
-    statement_name = statement["Execute"]["name"]["value"]
+    statement_name = statement["Execute"]["name"]["value"].upper()
     parameters = dict(build_parm(p) for p in statement["Execute"]["parameters"])
     try:
         with open("prepared_statements.json", "r") as ps:
-            prepared_statatements = orjson.loads(ps.read())
-    except OSError:
+            prepared_statatements = {str(k).upper(): v for k, v in orjson.loads(ps.read()).items()}
+    except (OSError, ValueError):
         prepared_statatements = {}
 
     # we have an inbuilt statements as a fallback

@@ -138,7 +138,7 @@ SELECT 42 / 2.0 = 21.0; -- True
 SELECT 43 / 2.0 = 21.5; -- True
 
 # Arithmetic Operations with Type Mixing
-#1937 SELECT 21 + 21.0 = 42; -- True
+SELECT 21 + 21.0 = 42; -- True
 SELECT 21 * 2.0 = 42.0; -- True
 SELECT 42.0 / 2 = 21.0; -- True
 

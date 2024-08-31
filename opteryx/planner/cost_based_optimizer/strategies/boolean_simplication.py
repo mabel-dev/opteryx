@@ -33,16 +33,10 @@ HALF_INVERSIONS: dict = {
     "GtEq": "Lt",
     "Like": "NotLike",
     "ILike": "NotILike",
-    "SimilarTo": "NotSimilarTo",
-    "PGRegexMatch": "NotPGRegexMatch",
-    "PGRegexIMatch": "PGRegexIMatch",
-    # "AnyOpEq": "AnyOpNotEq",
-    # "IsFalse": is_compare,
-    # "IsNotFalse": is_compare,
-    # "IsNotNull": is_compare,
-    # "IsNotTrue": is_compare,
-    # "IsNull": is_compare,
-    # "IsTrue": is_compare,
+    "RLike": "NotRLike",
+    "AnyOpEq": "AnyOpNotEq",
+    "AnyOpGtEq": "AnyOpLt",
+    "AnyOpLtEq": "AnyOpGt",
 }
 
 INVERSIONS = {**HALF_INVERSIONS, **{v: k for k, v in HALF_INVERSIONS.items()}}
