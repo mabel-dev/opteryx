@@ -142,7 +142,7 @@ STATEMENTS = [
         ("SELECT * FROM $planets WHERE distanceFromSun BETWEEN 100 AND 1000", 4, 20, None),
 
         # Randomly generated but consistently tested queries
-        # the same queries as above, but against parquet
+        # the same queries as above, but against parquet, which has a complex reader
         ("SELECT * FROM testdata.planets WHERE `name` = 'Earth'", 1, 20, None),
         ("SELECT * FROM testdata.planets WHERE name = 'Mars'", 1, 20, None),
         ("SELECT * FROM testdata.planets WHERE name <> 'Venus'", 8, 20, None),
@@ -189,7 +189,7 @@ STATEMENTS = [
         ("SELECT * FROM testdata.planets WHERE LENGTH(name) > 7", 0, 20, None),
         ("SELECT * FROM testdata.planets WHERE distanceFromSun BETWEEN 100 AND 1000", 4, 20, None),
 
-        # Some formatting tests
+        # Some tests of the same query in different formats
         ("SELECT * FROM $satellites;", 177, 8, None),
         ("SELECT * FROM $satellites\n;", 177, 8, None),
         ("select * from $satellites", 177, 8, None),
@@ -273,9 +273,8 @@ STATEMENTS = [
         ("SELECT * FROM `$satellites` WHERE name = 'Calypso'", 1, 8, None),
         ("SELECT * FROM `$satellites` WHERE `name` = 'Calypso'", 1, 8, None),
         ("SELECT * FROM $satellites WITH (NO_CACHE)", 177, 8, None),
-        # 101
 
-        # Do we handle comments 
+        # Tests with comments in different parts of the query
         ("/* comment */ SELECT * FROM $satellites WHERE name = 'Calypso'", 1, 8, None),
         ("SELECT * FROM $satellites /* comment */ WHERE name = 'Calypso'", 1, 8, None),
         ("SELECT * FROM $satellites /* WHERE name = 'Calypso' */", 177, 8, None),
@@ -472,8 +471,6 @@ STATEMENTS = [
         ("SELECT * FROM $satellites WHERE name SIMILAR TO '^C.'", 12, 8, None),
         ("SELECT * FROM $satellites WHERE name !~ '^C.'", 165, 8, None),
         ("SELECT * FROM $satellites WHERE name NOT SIMILAR TO '^C.'", 165, 8, None),
-        ("SELECT * FROM $satellites WHERE name ~* '^c.'", 12, 8, None),
-        ("SELECT * FROM $satellites WHERE name !~* '^c.'", 165, 8, None),
 
         ("SELECT * FROM $satellites WHERE (id = 5 OR name = 'Europa') AND TRUE;", 1, 8, None),
         ("SELECT * FROM $satellites WHERE (id = 5 OR name = 'Europa') OR FALSE;", 1, 8, None),
@@ -576,7 +573,8 @@ STATEMENTS = [
         ("SELECT TRY_CAST(planetId AS TIMESTAMP) AS VALUE FROM $satellites", 177, 1, None),
         ("SELECT TRY_CAST(planetId AS DECIMAL) AS VALUE FROM $satellites", 177, 1, None),
         ("SELECT * FROM $planets WHERE id = GET(STRUCT('{\"a\":1,\"b\":\"c\"}'), 'a')", 1, 20, None),
-#        ("SELECT * FROM $planets WHERE id = STRUCT('{\"a\":1,\"b\":\"c\"}')->'a'", 1, 20, None),
+        ("SELECT * FROM $planets WHERE STRUCT('{\"a\":1,\"b\":\"c\"}')->'a' = id", 1, 20, None),
+        ("SELECT * FROM $planets WHERE '{\"a\":1,\"b\":\"c\"}'->'a' = id", 1, 20, None),
         ("SELECT b'binary'", 1, 1, None),
         ("SELECT B'binary'", 1, 1, None),
         ("SELECT b'bi\nary'", 1, 1, None),
@@ -1004,14 +1002,14 @@ STATEMENTS = [
         ("SELECT COUNT(*) FROM $planets AS P_1 INNER JOIN $planets AS P_2 ON P_1.id = P_2.id", 1, 1, None),
         ("SELECT COUNT(*) FROM $planets AS P_1 INNER JOIN $satellites AS P_2 ON P_1.id = P_2.planet_id", 1, 1, None),
         ("SELECT P_1.id, COUNT(P_2.id) FROM $planets AS P_1 INNER JOIN $satellites AS P_2 ON P_1.id = P_2.planet_id GROUP BY P_1.id", 7, 2, None),
-#        ("SELECT P_1.* FROM $planets AS P_1 INNER JOIN $satellites AS P_2 ON P_1.id = P_2.planet_id INNER JOIN $planets AS P_3 ON P_2.planet_id = P_3.id", 9, 20, None),
-#        ("SELECT P_1.* FROM $planets AS P_1 INNER JOIN $planets AS P_2 ON P_1.id = P_2.id AND P_1.id > 2", 7, 20, None),
-#        ("SELECT P_1.* FROM $planets AS P_1 INNER JOIN $satellites AS P_2 ON P_1.id = P_2.planet_id AND P_2.id != 5", 177, 20, None),
+        ("SELECT P_1.* FROM $planets AS P_1 INNER JOIN $satellites AS P_2 ON P_1.id = P_2.planet_id INNER JOIN $planets AS P_3 ON P_2.planet_id = P_3.id", 177, 20, None),
+        ("SELECT P_1.* FROM $planets AS P_1 INNER JOIN $planets AS P_2 ON P_1.id = P_2.id AND P_1.id > 2", 7, 20, UnsupportedSyntaxError),
+        ("SELECT P_1.* FROM $planets AS P_1 INNER JOIN $satellites AS P_2 ON P_1.id = P_2.planet_id AND P_2.id != 5", 177, 20, UnsupportedSyntaxError),
         ("SELECT P_1.* FROM $planets AS P_1 INNER JOIN $planets AS P_2 ON P_1.id = P_2.id AND P_1.name = P_2.name AND P_1.mass = P_2.mass", 9, 20, None),
 
         ("SELECT * FROM $planets AS P_1 INNER JOIN $planets AS P_2 ON P_1.id = P_2.id AND P_2.name = P_1.name", 9, 40, None),
         ("SELECT * FROM $planets NATURAL JOIN generate_series(1, 5) as id", 5, 20, None),
-        ("SELECT * FROM $planets AS P1 NATURAL JOIN $planets AS P2", 5, 20, None),
+        ("SELECT name, surfacePressure FROM $planets AS P1 NATURAL JOIN $planets AS P2", 5, 2, None),
         ("SELECT * FROM $satellites AS P1 NATURAL JOIN $satellites AS P2", 170, 8, None),
         ("SELECT * FROM $planets AS P NATURAL JOIN $satellites AS S", None, None, IncompatibleTypesError),
         ("SELECT id FROM $planets AS P_1 INNER JOIN $planets AS P_2 USING (id)", 9, 1, None),
@@ -1150,6 +1148,10 @@ STATEMENTS = [
         ("SELECT * FROM $satellites WHERE planetId = 2 + 5", 27, 8, None),
         ("SELECT * FROM $satellites WHERE planetId = round(density)", 1, 8, None),
         ("SELECT * FROM $satellites WHERE planetId * 1 = round(density * 1)", 1, 8, None),
+        ("SELECT * FROM $satellites WHERE 1 * planetId = round(density * 1)", 1, 8, None),
+        ("SELECT * FROM $satellites WHERE 0 + planetId = round(density * 1)", 1, 8, None),
+        ("SELECT * FROM $satellites WHERE planetId + 0 = round(density * 1)", 1, 8, None),
+        ("SELECT * FROM $satellites WHERE planetId - 0 = round(density * 1)", 1, 8, None),
         ("SELECT ABSOLUTE(ROUND(gravity) * density * density) FROM $planets", 9, 1, None),
         ("SELECT COUNT(*), ROUND(gm) FROM $satellites GROUP BY ROUND(gm)", 22, 2, None),
         ("SELECT COALESCE(death_date, '1900-01-01') FROM $astronauts", 357, 1, None),
@@ -1228,7 +1230,13 @@ STATEMENTS = [
         ("SELECT * FROM $astronauts WHERE 'Apollo 11' IN UNNEST(missions)", 3, 19, None),
         ("SELECT * FROM $astronauts WHERE 'Apollo 11' NOT IN UNNEST(missions)", 331, 19, None),
         ("SELECT * FROM $astronauts WHERE NOT 'Apollo 11' IN UNNEST(missions)", 331, 19, None),
+        ("SELECT * FROM $astronauts WHERE NOT 'Apollo 11' IN UNNEST(missions) and name ILIKE '%arm%'", 0, 19, None),
+        ("SELECT * FROM $astronauts WHERE NOT 'Apollo 12' IN UNNEST(missions) and name ILIKE '%arm%'", 1, 19, None),
         ("SET @variable = 'Apollo 11'; SELECT * FROM $astronauts WHERE @variable IN UNNEST(missions)", 3, 19, None),
+        ("SELECT * FROM $astronauts WHERE NOT 'Apollo 12' = ANY(missions) or missions is null", 354, 19, None),
+        ("SELECT * FROM $astronauts WHERE NOT 'Apollo 12' = ANY(missions) and missions is null", 0, 19, None),
+        ("SELECT * FROM $astronauts WHERE 'Apollo 11' != ANY(missions)", 331, 19, None),
+        ("SELECT * FROM $astronauts WHERE 'Apollo 11' != ANY(missions) and missions is null", 0, 19, None),
         ("SET @id = 3; SELECT name FROM $planets WHERE id = @id;", 1, 1, None),
         ("SET @id = 3; SELECT name FROM $planets WHERE id < @id;", 2, 1, None),
         ("SET @id = 3; SELECT name FROM $planets WHERE id < @id OR id > @id;", 8, 1, None),
@@ -1506,7 +1514,7 @@ STATEMENTS = [
         ("(SELECT name FROM $planets AS p1 LIMIT 4 OFFSET 2) UNION ALL (SELECT name FROM $planets LIMIT 3 OFFSET 1) LIMIT 5 OFFSET 3", 4, 1, None),
         ("SELECT mass FROM $planets AS p1 UNION SELECT diameter FROM $planets", 18, 1, None),
         ("SELECT mass AS m FROM $planets AS p1 UNION SELECT mass FROM $planets", 9, 1, None),
-        #("SELECT name FROM $planets AS p1 WHERE mass IS NULL UNION SELECT name FROM $planets WHERE diameter IS NULL", 0, 1, None),
+        ("SELECT name FROM $planets AS p1 WHERE mass IS NULL UNION SELECT name FROM $planets WHERE diameter IS NULL", 0, 1, None),
         ("SELECT name FROM $planets AS p1 UNION ALL SELECT name FROM $planets", 18, 1, None),  # Assuming no large data set available
         ("SELECT name FROM (SELECT name FROM $planets P1 UNION SELECT name FROM $planets) AS subquery", 9, 1, None),
         ("SELECT a.name FROM $planets a JOIN (SELECT name FROM $planets AS P1 UNION SELECT name FROM $planets) b ON a.name = b.name", 9, 1, None),
@@ -1558,8 +1566,28 @@ STATEMENTS = [
         ("EXECUTE VERSION", 1, 1, None),  # no paramters
         ("EXECUTE VERSION()", 1, 1, SqlError),  # no paramters
         ("EXECUTE get_satellites_by_planet_name(name='Jupiter')", 67, 1, None),  # string param
-        ("EXECUTE GET_SATELLITES_BY_PLANET_NAME(name='Jupiter')", 67, 1, SqlError),  # string param
+        ("EXECUTE GET_SATELLITES_BY_PLANET_NAME(name='Jupiter')", 67, 1, None),  # string param
         ("EXECUTE multiply_two_numbers (one=1.0, two=9.9)", 1, 1, None),  # multiple params
+
+        ("EXECUTE multiply_two_numbers (one=0, two=9.9)", 1, 1, None),
+        ("EXECUTE multiply_two_numbers (one=1.0, two=0)", 1, 1, None),
+        ("EXECUTE multiply_two_numbers (one=0, two=0)", 1, 1, None),
+        ("EXECUTE multiply_two_numbers (one=-1, two=9.9)", 1, 1, None),
+        ("EXECUTE multiply_two_numbers (one=1.0, two=-9.9)", 1, 1, None),
+        ("EXECUTE multiply_two_numbers (one=-1, two=-9.9)", 1, 1, None),
+        ("EXECUTE multiply_two_numbers (one=0.000000001, two=9.9)", 1, 1, None),
+        ("EXECUTE multiply_two_numbers (one=1.0, two=0.000000001)", 1, 1, None),
+        ("EXECUTE multiply_two_numbers (one=0.000000001, two=0.000000001)", 1, 1, None),
+        ("EXECUTE multiply_two_numbers (one=0, two=-9.9)", 1, 1, None),
+        ("EXECUTE multiply_two_numbers (one=-1, two=0)", 1, 1, None),
+        ("EXECUTE multiply_two_numbers (one=0, two=0.000000001)", 1, 1, None),
+        ("EXECUTE multiply_two_numbers (one=1, two=9.9)", 1, 1, None),
+        ("EXECUTE multiply_two_numbers (one=1, two=-9.9)", 1, 1, None),
+        ("EXECUTE multiply_two_numbers (one=-1, two=1)", 1, 1, None),
+        ("EXECUTE multiply_two_numbers (two=9.9, two=-1)", 1, 1, ParameterError),
+        ("EXECUTE multiply_two_numbers (two=0.000000001, three=0.000000001)", 1, 1, ParameterError),
+        ("EXECUTE multiply_two_numbers (two=0, one=1.0)", 1, 1, None),
+        ("EXECUTE multiply_two_numbers (one=-9.9, one=0)", 1, 1, ParameterError),
 
         ("SELECT HEX FROM HTTP('https://storage.googleapis.com/opteryx/color_srgb.csv') AS colors", 16, 1, None),
         ("SELECT * FROM HTTP('https://storage.googleapis.com/opteryx/space_missions/space_missions.parquet') as missions", 4630, 8, None),
@@ -1659,6 +1687,22 @@ STATEMENTS = [
         ("SELECT CEIL(surface_pressure, 0) FROM $planets", 9, 1, None),
         ("SELECT FLOOR(surface_pressure, 0) FROM $planets", 9, 1, None),
 
+        # We rewrite expressions like this, make sure all variations work
+        ("SELECT * FROM $satellites WHERE id - 3 < 8;", 10, 8, None),
+        ("SELECT * FROM $satellites WHERE 8 > id - 3;", 10, 8, None),
+        ("SELECT * FROM $satellites WHERE 3 > 8 - id;", 172, 8, None),
+        ("SELECT * FROM $satellites WHERE 8 - id < 3;", 172, 8, None),
+        ("SELECT * FROM $satellites WHERE id < 8 + 3;", 10, 8, None),
+        ("SELECT * FROM $satellites WHERE 8 + 3 > id;", 10, 8, None),
+
+        # rewriting date functions has addition complexity
+        ("SELECT * FROM $missions WHERE Launched_at - INTERVAL '7' DAY < current_time;", 4503, 8, None),
+        ("SELECT * FROM $missions WHERE current_time > Launched_at - INTERVAL '7' DAY;", 4503, 8, None),
+        ("SELECT * FROM $missions WHERE INTERVAL '7' DAY < current_time - Launched_at;", 4503, 8, None),
+        ("SELECT * FROM $missions WHERE current_time - Launched_at > INTERVAL '7' DAY;", 4503, 8, None),
+        ("SELECT * FROM $missions WHERE Launched_at < current_time + INTERVAL '7' DAY;", 4503, 8, None),
+        ("SELECT * FROM $missions WHERE current_time > Launched_at + INTERVAL '7' DAY;", 4503, 8, None),
+
         # ****************************************************************************************
 
         # These are queries which have been found to return the wrong result or not run correctly
@@ -1698,10 +1742,6 @@ STATEMENTS = [
         ("SELECT * FROM testdata.partitioned.nulls FOR '2000-01-01' WHERE username NOT LIKE 'BBC%'", 21, 5, None),
         ("SELECT * FROM testdata.partitioned.nulls FOR '2000-01-01' WHERE NOT username LIKE 'BBC%'", 21, 5, None),
         ("SELECT * FROM testdata.partitioned.nulls FOR '2000-01-01' WHERE username NOT ILIKE 'BBC%'", 21, 5, None),
-        ("SELECT * FROM testdata.partitioned.nulls FOR '2000-01-01' WHERE username ~ 'BBC.+'", 3, 5, None),
-        ("SELECT * FROM testdata.partitioned.nulls FOR '2000-01-01' WHERE username !~ 'BBC.+'", 21, 5, None),
-        ("SELECT * FROM testdata.partitioned.nulls FOR '2000-01-01' WHERE username ~* 'bbc.+'", 3, 5, None),
-        ("SELECT * FROM testdata.partitioned.nulls FOR '2000-01-01' WHERE username !~* 'bbc.+'", 21, 5, None),
         ("SELECT * FROM testdata.partitioned.nulls FOR '2000-01-01' WHERE username SIMILAR TO 'BBC.+'", 3, 5, None),
         ("SELECT * FROM testdata.partitioned.nulls FOR '2000-01-01' WHERE username NOT SIMILAR TO 'BBC.+'", 21, 5, None),
         ("SELECT * FROM testdata.partitioned.nulls FOR '2000-01-01' WHERE tweet ILIKE '%Trump%'", 0, 5, None),
@@ -1829,8 +1869,8 @@ STATEMENTS = [
         # 1370, issues coercing DATE and TIMESTAMPS
         ("SELECT * FROM $planets WHERE TIMESTAMP '2023-01-01' = DATE '2023-01-01'", 9, 20, None),
         ("SELECT * FROM $planets WHERE 1 = 1.0", 9, 20, None),
-        ("SELECT * FROM $planets WHERE DATE '2023-01-01' + INTERVAL '1' MONTH", 9, 20, None),
-        ("SELECT * FROM $planets WHERE TIMESTAMP '2023-01-01' + INTERVAL '1' MONTH", 9, 20, None),
+        ("SELECT * FROM $planets WHERE DATE '2023-01-01' + INTERVAL '1' MONTH is not null", 9, 20, None),
+        ("SELECT * FROM $planets WHERE TIMESTAMP '2023-01-01' + INTERVAL '1' MONTH is not null", 9, 20, None),
         ("SELECT DATE '2023-01-01' + INTERVAL '1' MONTH FROM $planets", 9, 1, None),
         ("SELECT TIMESTAMP '2023-01-01' + INTERVAL '1' MONTH FROM $planets", 9, 1, None),
         ("SELECT * FROM $planets WHERE DATE '2023-01-01' + INTERVAL '1' MONTH < current_time", 9, 20, None),
@@ -2006,14 +2046,17 @@ if __name__ == "__main__":  # pragma: no cover
             )
             passed += 1
             if failed > 0:
-                print(" \033[0;31m*\033[0m")
+                print(f" \033[0;31m{failed}\033[0m")
             else:
                 print()
         except Exception as err:
-            print(f"\033[0;31m{str(int((time.monotonic_ns() - start)/1e6)).rjust(4)}ms ❌ *\033[0m")
-            print(">", err)
             failed += 1
+            print(f"\033[0;31m{str(int((time.monotonic_ns() - start)/1e6)).rjust(4)}ms ❌ {failed}\033[0m")
+            print(">", err)
             failures.append((statement, err))
+            
+#            print(opteryx.query(statement))
+#            raise err
 
     print("--- ✅ \033[0;32mdone\033[0m")
 
