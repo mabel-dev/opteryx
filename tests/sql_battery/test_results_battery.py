@@ -71,7 +71,7 @@ if __name__ == "__main__":  # pragma: no cover
 
     start_suite = time.monotonic_ns()
 
-    width = shutil.get_terminal_size((80, 20))[0] - 40
+    width = shutil.get_terminal_size((80, 20))[0] - 42
 
     passed = 0
     failed = 0
