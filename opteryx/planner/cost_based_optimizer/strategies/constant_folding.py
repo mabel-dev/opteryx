@@ -53,9 +53,17 @@ def build_literal_node(value: Any, root: Node, suggested_type: OrsoTypes):
     if hasattr(value, "as_py"):
         value = value.as_py()
 
+    if value is None:
+        # Matching None has complications
+        root.value = None
+        root.node_type = NodeType.LITERAL
+        root.type = OrsoTypes.NULL
+        root.left = None
+        root.right = None
+        return root
+
     # Define a mapping of types to OrsoTypes
     type_mapping = {
-        None: OrsoTypes.NULL,
         bool: OrsoTypes.BOOLEAN,
         numpy.bool_: OrsoTypes.BOOLEAN,
         str: OrsoTypes.VARCHAR,
