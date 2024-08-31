@@ -2,36 +2,12 @@
 Original code modified for Opteryx.
 """
 
-from typing import Any
-from typing import Union
-
 import numpy
 import pyarrow
 from orso.types import OrsoTypes
 from pyarrow import compute
 
 from opteryx.compiled import list_ops
-
-# Added for Opteryx, comparisons in filter_operators updated to match
-# this set is from sqloxide
-FILTER_OPERATORS = {
-    "Eq",
-    "NotEq",
-    "Gt",
-    "GtEq",
-    "Lt",
-    "LtEq",
-    "Like",
-    "ILike",
-    "NotLike",
-    "NotILike",
-    "InList",
-    "PGRegexNotMatch",
-    "PGRegexIMatch",  # "~*"
-    "NotPGRegexIMatch",  # "!~*"
-    "PGRegexNotIMatch",  # "!~*"
-    "BitwiseOr",  # |
-}
 
 
 def filter_operations(arr, left_type, operator, value, right_type):
@@ -47,7 +23,18 @@ def filter_operations(arr, left_type, operator, value, right_type):
 
     compressed = False
 
-    if operator not in ("InList", "NotInList"):
+    if operator not in (
+        "InList",
+        "NotInList",
+        "AnyOpEq",
+        "AnyOpNotEq",
+        "AnyOpGt",
+        "AnyOpGtEq",
+        "AnyOpLt",
+        "AnyOpLtEq",
+        "AllOpEq",
+        "AllOpNotEq",
+    ):
         # compressing ARRAY columns is VERY SLOW
         morsel_size = len(arr)
 
@@ -155,18 +142,6 @@ def _inner_filter_operations(arr, operator, value):
         # MODIFIED FOR OPTERYX - see comment above
         matches = compute.match_substring_regex(arr, value[0])  # [#325]
         return numpy.invert(matches)
-    if operator == "PGRegexIMatch":
-        # MODIFIED FOR OPTERYX - see comment above
-        return (
-            compute.match_substring_regex(arr, value[0], ignore_case=True)
-            .to_numpy(False)
-            .astype(dtype=bool)
-        )  # [#325]
-    if operator == "PGRegexNotIMatch":
-        # MODIFIED FOR OPTERYX - see comment above
-        matches = compute.match_substring_regex(arr, value[0], ignore_case=True)  # [#325]
-        return numpy.invert(matches)
-
     if operator == "AnyOpEq":
         return list_ops.cython_anyop_eq(arr[0], value)
     if operator == "AnyOpNotEq":
@@ -183,44 +158,6 @@ def _inner_filter_operations(arr, operator, value):
         return list_ops.cython_allop_eq(arr[0], value)
     if operator == "AllOpNotEq":
         return list_ops.cython_allop_neq(arr[0], value)
-    if operator == "Arrow":
-        element = value[0]
-
-        # if it's dicts, extract the value from the dict
-        if len(arr) > 0 and isinstance(arr[0], dict):
-            return list_ops.cython_arrow_op(arr, element)
-
-        # if it's a string, parse and extract, we don't need a dict (dicts are s_l_o_w)
-        # so we can use a library which allows us to access the values directly
-        import simdjson
-
-        def extract(doc: bytes, elem: Union[bytes, str]) -> Any:
-            value = simdjson.Parser().parse(doc).get(elem)  # type:ignore
-            if hasattr(value, "as_list"):
-                return value.as_list()
-            if hasattr(value, "as_dict"):
-                return value.as_dict()
-            return value
-
-        return pyarrow.array([extract(d, element) for d in arr])
-
-    if operator == "LongArrow":
-        element = value[0]
-
-        if len(arr) > 0 and isinstance(arr[0], dict):
-            return list_ops.cython_long_arrow_op(arr, element)
-
-        import simdjson
-
-        def extract(doc: bytes, elem: Union[bytes, str]) -> bytes:
-            value = simdjson.Parser().parse(doc).get(elem)  # type:ignore
-            if hasattr(value, "mini"):
-                return value.mini  # type:ignore
-            return str(value).encode()
-
-        return pyarrow.array(
-            [None if d is None else extract(d, element) for d in arr], type=pyarrow.binary()
-        )
 
     if operator == "AtQuestion":
         element = value[0]
