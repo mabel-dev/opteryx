@@ -263,7 +263,7 @@ def fold_constants(root: Node) -> Node:
     if len(identifiers) == 0 and len(aggregators) == 0:
         table = no_table_data.read()
         try:
-            result = evaluate(root, table, None)[0]
+            result = evaluate(root, table)[0]
             return build_literal_node(result, root, root.schema_column.type)
         except (ValueError, TypeError, KeyError) as err:  # nosec
             if not err:
