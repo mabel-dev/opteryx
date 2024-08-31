@@ -45,40 +45,143 @@ from .optimization_strategy import OptimizationStrategy
 from .optimization_strategy import OptimizerContext
 
 
-def build_literal_node(value: Any, root: Node):
-    # fmt:off
+def build_literal_node(value: Any, root: Node, suggested_type: OrsoTypes):
+    """
+    Build a literal node with the appropriate type based on the value.
+    """
+    # Convert value if it has `as_py` method (e.g., from PyArrow)
     if hasattr(value, "as_py"):
         value = value.as_py()
 
-    root.value = value
-    root.node_type = NodeType.LITERAL
-    if value is None:
-        root.type=OrsoTypes.NULL
-    elif isinstance(value, (bool, numpy.bool_)):
-        # boolean must be before numeric
-        root.type=OrsoTypes.BOOLEAN
-    elif isinstance(value, (str)):
-        root.type=OrsoTypes.VARCHAR
-    elif isinstance(value, (int, numpy.int64)):
-        root.type=OrsoTypes.INTEGER
-    elif isinstance(value, (numpy.datetime64, datetime.datetime)):
-        root.type=OrsoTypes.TIMESTAMP
-    elif isinstance(value, (datetime.date)):
-        root.type=OrsoTypes.DATE
-    else:
-        raise ValueError("Unable to fold expression")
+    # Define a mapping of types to OrsoTypes
+    type_mapping = {
+        None: OrsoTypes.NULL,
+        bool: OrsoTypes.BOOLEAN,
+        numpy.bool_: OrsoTypes.BOOLEAN,
+        str: OrsoTypes.VARCHAR,
+        numpy.str_: OrsoTypes.VARCHAR,
+        bytes: OrsoTypes.BLOB,
+        numpy.bytes_: OrsoTypes.BLOB,
+        int: OrsoTypes.INTEGER,
+        numpy.int64: OrsoTypes.INTEGER,
+        float: OrsoTypes.DOUBLE,
+        numpy.float64: OrsoTypes.DOUBLE,
+        numpy.datetime64: OrsoTypes.TIMESTAMP,
+        datetime.datetime: OrsoTypes.TIMESTAMP,
+        datetime.time: OrsoTypes.TIME,
+        datetime.date: OrsoTypes.DATE,
+    }
+
+    value_type = type(value)
+    # Determine the type from the value using the mapping
+    if value_type in type_mapping or suggested_type not in (OrsoTypes._MISSING_TYPE, 0, None):
+        root.value = value
+        root.node_type = NodeType.LITERAL
+        root.type = (
+            suggested_type
+            if suggested_type not in (OrsoTypes._MISSING_TYPE, 0, None)
+            else type_mapping[value_type]
+        )
+        root.left = None
+        root.right = None
+
+    # DEBUG:log (f"Unable to create literal node for {value}, of type {value_type}")
     return root
-    # fmt:on
 
 
 def fold_constants(root: Node) -> Node:
-    if root.node_type in {NodeType.AND, NodeType.OR, NodeType.XOR}:
-        # traverse the left and right of logical operators
+    if root.node_type == NodeType.LITERAL:
+        # if we're already a literal (constant), we can't fold
+        return root
+
+    if root.node_type in {NodeType.COMPARISON_OPERATOR, NodeType.BINARY_OPERATOR}:
+        # if we have a binary expression, try to fold each side
         root.left = fold_constants(root.left)
         root.right = fold_constants(root.right)
 
-        # is we have a logical expression and one side is a constant, 
-        # we simplify the expression
+        # some expressions we can simplify to x or 0.
+        if root.node_type == NodeType.BINARY_OPERATOR:
+            if (
+                root.value == "Multiply"
+                and root.left.node_type == NodeType.LITERAL
+                and root.right.node_type == NodeType.IDENTIFIER
+                and root.left.value == 0
+            ):
+                # 0 * anything = 0
+                root.left.schema_column = root.schema_column
+                return root.left  # 0
+            if (
+                root.value == "Multiply"
+                and root.right.node_type == NodeType.LITERAL
+                and root.left.node_type == NodeType.IDENTIFIER
+                and root.right.value == 0
+            ):
+                # anything * 0 = 0
+                root.right.schema_column = root.schema_column
+                return root.right  # 0
+            if (
+                root.value == "Multiply"
+                and root.left.node_type == NodeType.LITERAL
+                and root.right.node_type == NodeType.IDENTIFIER
+                and root.left.value == 1
+            ):
+                # 1 * anything = anything
+                root.right.query_column = root.query_column
+                return root.right  # anything
+            if (
+                root.value == "Multiply"
+                and root.right.node_type == NodeType.LITERAL
+                and root.left.node_type == NodeType.IDENTIFIER
+                and root.right.value == 1
+            ):
+                # anything * 1 = anything
+                root.left.query_column = root.query_column
+                return root.left  # anything
+            if (
+                root.value in "Plus"
+                and root.left.node_type == NodeType.LITERAL
+                and root.right.node_type == NodeType.IDENTIFIER
+                and root.left.value == 0
+            ):
+                # 0 + anything = anything
+                root.right.query_column = root.query_column
+                return root.right  # anything
+            if (
+                root.value in ("Plus", "Minus")
+                and root.right.node_type == NodeType.LITERAL
+                and root.left.node_type == NodeType.IDENTIFIER
+                and root.right.value == 0
+            ):
+                # anything +/- 0 = anything
+                root.left.query_column = root.query_column
+                return root.left  # anything
+            if (
+                root.value == "Divide"
+                and root.right.node_type == NodeType.LITERAL
+                and root.left.node_type == NodeType.IDENTIFIER
+                and root.right.value == 1
+            ):
+                # anything / 1 = anything
+                root.left.schema_column = root.schema_column
+                return root.left  # anything
+            if (
+                root.value == "Divide"
+                and root.right.node_type == NodeType.IDENTIFIER
+                and root.left.node_type == NodeType.IDENTIFIER
+                and root.right.schema_column.identity == root.left.schema_column.identity
+            ):
+                # anything / itself = 1 (0 is an exception)
+                node = build_literal_node(1, root, OrsoTypes.INTEGER)
+                node.schema_column = root.schema_column
+                return node
+
+    if root.node_type in {NodeType.AND, NodeType.OR, NodeType.XOR}:
+        # try to fold each side of logical operators
+        root.left = fold_constants(root.left)
+        root.right = fold_constants(root.right)
+
+        # If we have a logical expression and one side is a constant,
+        # we can simplify further
         if root.node_type == NodeType.OR:
             if (
                 root.left.node_type == NodeType.LITERAL
@@ -86,26 +189,31 @@ def fold_constants(root: Node) -> Node:
                 and root.left.value
             ):
                 # True OR anything is True
+                root.left.schema_column = root.schema_column
                 return root.left
             if (
                 root.right.node_type == NodeType.LITERAL
                 and root.right.type == OrsoTypes.BOOLEAN
                 and root.right.value
             ):
-                # True OR anything is True
+                # anything OR True is True
+                root.right.schema_column = root.schema_column
                 return root.right
             if (
                 root.left.node_type == NodeType.LITERAL
                 and root.left.type == OrsoTypes.BOOLEAN
                 and not root.left.value
             ):
-                # False OR x is x
+                # False OR anything is anything
+                root.right.schema_column = root.schema_column
                 return root.right
             if (
                 root.right.node_type == NodeType.LITERAL
                 and root.right.type == OrsoTypes.BOOLEAN
                 and not root.right.value
             ):
+                # anything OR False is anything
+                root.left.schema_column = root.schema_column
                 return root.left
 
         elif root.node_type == NodeType.AND:
@@ -115,69 +223,48 @@ def fold_constants(root: Node) -> Node:
                 and not root.left.value
             ):
                 # False AND anything is False
+                root.left.schema_column = root.schema_column
                 return root.left
             if (
                 root.right.node_type == NodeType.LITERAL
                 and root.right.type == OrsoTypes.BOOLEAN
                 and not root.right.value
             ):
+                # anything AND False is False
+                root.right.schema_column = root.schema_column
                 return root.right
             if (
                 root.left.node_type == NodeType.LITERAL
                 and root.left.type == OrsoTypes.BOOLEAN
                 and root.left.value
             ):
-                # True AND x is x
+                # True AND anything is anything
+                root.right.schema_column = root.schema_column
                 return root.right
             if (
                 root.right.node_type == NodeType.LITERAL
                 and root.right.type == OrsoTypes.BOOLEAN
                 and root.right.value
             ):
-                return root.left
-
-        elif root.node_type == NodeType.XOR:
-            if (
-                root.left.node_type == NodeType.LITERAL
-                and root.left.type == OrsoTypes.BOOLEAN
-                and root.left.value
-            ):
-                # True XOR x is NOT x
-                return Node(NodeType.NOT, root.right)
-            if (
-                root.right.node_type == NodeType.LITERAL
-                and root.right.type == OrsoTypes.BOOLEAN
-                and root.right.value
-            ):
-                return Node(NodeType.NOT, root.left)
-            if (
-                root.left.node_type == NodeType.LITERAL
-                and root.left.type == OrsoTypes.BOOLEAN
-                and not root.left.value
-            ):
-                # False XOR x is x
-                return root.right
-            if (
-                root.right.node_type == NodeType.LITERAL
-                and root.right.type == OrsoTypes.BOOLEAN
-                and not root.right.value
-            ):
+                # anything AND True is anything
+                root.left.schema_column = root.schema_column
                 return root.left
 
         return root
 
     identifiers = get_all_nodes_of_type(root, (NodeType.IDENTIFIER, NodeType.WILDCARD))
     functions = get_all_nodes_of_type(root, (NodeType.FUNCTION,))
+    aggregators = get_all_nodes_of_type(root, (NodeType.AGGREGATOR,))
 
     if any(func.value in {"RANDOM", "RAND", "NORMAL", "RANDOM_STRING"} for func in functions):
-        # although they have no params, these need to evaluate every time
+        # Although they have no params, these are evaluated per row
         return root
 
-    if len(identifiers) == 0:
+    if len(identifiers) == 0 and len(aggregators) == 0:
         table = no_table_data.read()
         try:
             result = evaluate(root, table, None)[0]
-            return build_literal_node(result, root)
+            return build_literal_node(result, root, root.schema_column.type)
         except (ValueError, TypeError, KeyError) as err:  # nosec
             if not err:
                 pass
@@ -195,12 +282,17 @@ class ConstantFoldingStrategy(OptimizationStrategy):
         if not context.optimized_plan:
             context.optimized_plan = context.pre_optimized_tree.copy()  # type: ignore
 
+        # fold constants when referenced in filter clauses (WHERE/HAVING)
         if node.node_type == LogicalPlanStepType.Filter:
             node.condition = fold_constants(node.condition)
             if node.condition.node_type == NodeType.LITERAL and node.condition.value:
                 context.optimized_plan.remove_node(context.node_id, heal=True)
             else:
                 context.optimized_plan[context.node_id] = node
+        # fold constants when referenced in the SELECT clause
+        if node.node_type == LogicalPlanStepType.Project:
+            node.columns = [fold_constants(c) for c in node.columns]
+            context.optimized_plan[context.node_id] = node
 
         return context
 
