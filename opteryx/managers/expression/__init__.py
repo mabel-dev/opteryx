@@ -21,7 +21,6 @@ Expressions are evaluated against an entire morsel at a time.
 from enum import Enum
 from typing import Callable
 from typing import Dict
-from typing import Optional
 
 import numpy
 import pyarrow
