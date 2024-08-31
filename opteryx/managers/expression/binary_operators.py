@@ -58,7 +58,7 @@ def LongArrowOp(documents, elements) -> pyarrow.Array:
         value = simdjson.Parser().parse(doc).get(elem)  # type:ignore
         if hasattr(value, "mini"):
             return value.mini  # type:ignore
-        return str(value).encode()
+        return None if value is None else str(value).encode()
 
     return pyarrow.array(
         [None if d is None else extract(d, element) for d in documents], type=pyarrow.binary()
