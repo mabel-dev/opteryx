@@ -63,7 +63,7 @@ cpdef cnp.ndarray[cnp.npy_bool, ndim=1] cython_anyop_eq(object literal, cnp.ndar
     cdef:
         cdef Py_ssize_t i, j
         cdef Py_ssize_t num_rows = arr.shape[0]
-        cnp.ndarray[cnp.npy_bool, ndim=1] result = numpy.zeros(num_rows, dtype=numpy.uint8)
+        cnp.ndarray[cnp.npy_bool, ndim=1] result = numpy.full(num_rows, False, dtype=bool)
         cnp.ndarray row
 
     for i in range(num_rows):
@@ -71,7 +71,7 @@ cpdef cnp.ndarray[cnp.npy_bool, ndim=1] cython_anyop_eq(object literal, cnp.ndar
         if row is not None:
             for j in range(row.shape[0]):
                 if row[j] == literal:
-                    result[i] = 1
+                    result[i] = True
                     break
 
     return result
