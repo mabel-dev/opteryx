@@ -145,7 +145,7 @@ cpdef HashTable hash_join_map(relation, list join_columns):
                 for i in range(num_rows):
                     byte = bitmap_array[i // 8]
                     bit = 1 if byte & (1 << (i % 8)) else 0
-                    combined_nulls[i] |= bit
+                    combined_nulls[i] &= bit
 
     # Determine row indices that have nulls in any of the considered columns
     cdef cnp.ndarray non_null_indices = numpy.nonzero(combined_nulls)[0]
