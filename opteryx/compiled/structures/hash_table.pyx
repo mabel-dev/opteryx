@@ -103,6 +103,16 @@ cpdef tuple distinct(table, HashSet seen_hashes=None, list columns=None):
 
     return (keep, seen_hashes)
 
+@cython.boundscheck(False)
+@cython.wraparound(False)
+cpdef tuple list_distinct(list values, cnp.ndarray indices, HashSet seen_hashes=None):
+    new_indices = []
+    new_values = []
+    for i, v in enumerate(values):
+        if seen_hashes.insert(hash(v)):
+            new_values.append(v)
+            new_indices.append(indices[i])
+    return new_values, new_indices, seen_hashes
 
 @cython.boundscheck(False)
 @cython.wraparound(False)

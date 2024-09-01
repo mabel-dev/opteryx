@@ -35,6 +35,7 @@ class ProjectionPushdownStrategy(OptimizationStrategy):
         Returns:
             A tuple containing the potentially modified node and the updated context.
         """
+        node.pre_update_columns = set(context.collected_identities)
         if node.columns:  # Assumes node.columns is an iterable or None
             collected_columns = self.collect_columns(node)
             context.collected_identities.update(collected_columns)

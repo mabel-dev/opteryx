@@ -101,14 +101,13 @@ class LogicalPlanNode(Node):
             if node_type == LogicalPlanStepType.Filter:
                 return f"FILTER ({format_expression(self.condition)})"
             if node_type == LogicalPlanStepType.Join:
-                filters = ""
-                if self.filters:
-                    filters = f"({self.unnest_alias} IN ({', '.join(self.filters)}))"
+                distinct = " DISTINCT" if self.distinct else ""
+                filters = f"({self.unnest_alias} IN ({', '.join(self.filters)}))" if self.filters else ""
                 if self.on:
-                    return f"{self.type.upper()} JOIN ({format_expression(self.on, True)}){filters}"
+                    return f"{self.type.upper()} JOIN{distinct} ({format_expression(self.on, True)}){filters}"
                 if self.using:
-                    return f"{self.type.upper()} JOIN (USING {','.join(map(format_expression, self.using))}){filters}"
-                return f"{self.type.upper()} {filters}"
+                    return f"{self.type.upper()} JOIN{distinct} (USING {','.join(map(format_expression, self.using))}){filters}"
+                return f"{self.type.upper()}{distinct} {filters}"
             if node_type == LogicalPlanStepType.HeapSort:
                 return f"HEAP SORT (LIMIT {self.limit}, ORDER BY {', '.join(format_expression(item[0]) + (' DESC' if item[1] =='descending' else '') for item in self.order_by)})"
             if node_type == LogicalPlanStepType.Limit:
