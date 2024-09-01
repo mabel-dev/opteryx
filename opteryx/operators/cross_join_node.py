@@ -47,6 +47,8 @@ def _cross_join_unnest_column(
     target_column: FlatColumn = None,
     conditions: Set = None,
     statistics=None,
+    distinct: bool = False,
+    single_column: bool = False,
 ) -> Generator[pyarrow.Table, None, None]:
     """
     Perform a cross join on an unnested column of pyarrow tables.
@@ -61,6 +63,10 @@ def _cross_join_unnest_column(
     """
     from opteryx.compiled.cross_join import build_filtered_rows_indices_and_column
     from opteryx.compiled.cross_join import build_rows_indices_and_column
+    from opteryx.compiled.structures import HashSet
+    from opteryx.compiled.structures import list_distinct
+
+    hash_set = HashSet()
 
     # Check if the source node type is an identifier, raise error otherwise
     if source.node_type != NodeType.IDENTIFIER:
@@ -99,16 +105,33 @@ def _cross_join_unnest_column(
                     column_data.to_numpy(False), conditions
                 )
 
-            # Rebuild the block with the new column data
-            new_block = left_block.take(indices)
-            new_block = pyarrow.Table.from_batches([new_block], schema=left_morsel.schema)
-            new_block = new_block.append_column(target_column.identity, [new_column_data])
+            if single_column and distinct and indices.size > 0:
+                # if the unnest target is the only field in the SELECT and we're DISTINCTING
+                new_column_data, indices, hash_set = list_distinct(
+                    new_column_data, indices, hash_set
+                )
 
-            statistics.time_cross_join_unnest += time.monotonic_ns() - start
-            if new_block.num_rows > 0:
-                yield new_block
-                at_least_once = True
-            start = time.monotonic_ns()
+            if len(indices) > 0:
+                if single_column:
+                    schema = pyarrow.schema(
+                        [
+                            pyarrow.field(
+                                name=target_column.identity, type=target_column.arrow_field.type
+                            )
+                        ]
+                    )
+                    new_block = pyarrow.Table.from_arrays([new_column_data], schema=schema)
+                else:
+                    # Rebuild the block with the new column data if we have any rows to build for
+                    new_block = left_block.take(indices)
+                    new_block = pyarrow.Table.from_batches([new_block], schema=left_morsel.schema)
+                    new_block = new_block.append_column(target_column.identity, [new_column_data])
+
+                statistics.time_cross_join_unnest += time.monotonic_ns() - start
+                if new_block.num_rows > 0:
+                    yield new_block
+                    at_least_once = True
+                start = time.monotonic_ns()
 
     if not at_least_once:
         # Create an empty table with the new schema
@@ -208,6 +231,7 @@ class CrossJoinDataObject(BasePlanDataObject):
     _unnest_column: str = None
     _unnest_target: str = None
     _filters: str = None
+    _distinct: bool = False
 
 
 class CrossJoinNode(BasePlanNode):
@@ -229,6 +253,7 @@ class CrossJoinNode(BasePlanNode):
         self._unnest_column = config.get("unnest_column")
         self._unnest_target = config.get("unnest_target")
         self._filters = config.get("filters")
+        self._distinct = config.get("distinct", False)
 
         # handle variation in how the unnested column is represented
         if self._unnest_column:
@@ -239,6 +264,10 @@ class CrossJoinNode(BasePlanNode):
                 self._unnest_column.value, tuple
             ):
                 self._unnest_column.value = tuple([self._unnest_column.value])
+
+            self._single_column = config.get("pre_update_columns", set()) == {
+                self._unnest_target.identity,
+            }
 
     @classmethod
     def from_json(cls, json_obj: str) -> "BasePlanNode":  # pragma: no cover
@@ -279,4 +308,6 @@ class CrossJoinNode(BasePlanNode):
                 target_column=self._unnest_target,
                 conditions=self._filters,
                 statistics=self.statistics,
+                distinct=self._distinct,
+                single_column=self._single_column,
             )

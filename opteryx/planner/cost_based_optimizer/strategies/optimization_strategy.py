@@ -14,8 +14,9 @@ from opteryx.planner.logical_planner import LogicalPlan
 from opteryx.planner.logical_planner import LogicalPlanNode
 
 
-# Context object to carry state
 class OptimizerContext:
+    """Context object to carry state"""
+
     def __init__(self, tree: LogicalPlan):
         self.node_id = None
         self.parent_nid = None
@@ -23,12 +24,14 @@ class OptimizerContext:
         self.pre_optimized_tree = tree
         self.optimized_plan = LogicalPlan()
 
-        # We collect predicates we should be able to push to reads and joins
         self.collected_predicates: list = []
+        """We collect predicates we should be able to push to reads and joins"""
 
-        # We collect column identities so we can push column selection as close to the
-        # read as possible, including off to remote systems
         self.collected_identities: set = set()
+        """We collect column identities so we can push column selection as close to the read as possible, including off to remote systems"""
+
+        self.collected_distincts: list = []
+        """We collect distincts to try to eliminate records earlier"""
 
 
 class OptimizationStrategy:
