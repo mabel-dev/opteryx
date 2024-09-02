@@ -48,11 +48,6 @@ def get_mismatched_condition_column_types(node: Node, relaxed: bool = False) -> 
     Returns:
         a dictionary describing the columns
     """
-    #   from .operator_map import determine_type
-
-    #    if determine_type(node) != 0:
-    #        return None
-
     if node.node_type in (NodeType.AND, NodeType.OR, NodeType.XOR):
         left_mismatches = get_mismatched_condition_column_types(node.left, relaxed)
         right_mismatches = get_mismatched_condition_column_types(node.right, relaxed)

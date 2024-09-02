@@ -137,10 +137,49 @@ SELECT 42 / 2 = 21;    -- True
 SELECT 42 / 2.0 = 21.0; -- True
 SELECT 43 / 2.0 = 21.5; -- True
 
-# Arithmetic Operations with Type Mixing
-SELECT 21 + 21.0 = 42; -- True
+# Arithmetic Operations with Type Mixing (Addition)
+SELECT 21 + 21 = 42; -- True
+SELECT 21 + 21.0 = 42.0; -- True
+SELECT 21 + 21::DECIMAL = 42; -- True
+SELECT 21.0 + 21 = 42.0; -- True
+SELECT 21.0 + 21.0 = 42.0; -- True
+# SELECT 21.0 + 21::DECIMAL = 42.0; -- True
+SELECT 21::DECIMAL + 21 = 42; -- True
+# SELECT 21::DECIMAL + 21.0 = 42.0; -- True
+SELECT 21::DECIMAL + 21::DECIMAL = 42; -- True
+
+# Arithmetic Operations with Type Mixing (Subtraction)
+SELECT 42 - 21 = 21; -- True
+SELECT 42 - 21.0 = 21.0; -- True
+SELECT 42 - 21::DECIMAL = 21; -- True
+SELECT 42.0 - 21 = 21.0; -- True
+SELECT 42.0 - 21.0 = 21.0; -- True
+# SELECT 42.0 - 21::DECIMAL = 21.0; -- True
+SELECT 42::DECIMAL - 21 = 21; -- True
+# SELECT 42::DECIMAL - 21.0 = 21.0; -- True
+SELECT 42::DECIMAL - 21::DECIMAL = 21; -- True
+
+# Arithmetic Operations with Type Mixing (Multiplication)
+SELECT 21 * 2 = 42; -- True
 SELECT 21 * 2.0 = 42.0; -- True
+SELECT 21 * 2::DECIMAL = 42; -- True
+SELECT 21.0 * 2 = 42.0; -- True
+SELECT 21.0 * 2.0 = 42.0; -- True
+# SELECT 21.0 * 2::DECIMAL = 42.0; -- True
+SELECT 21::DECIMAL * 2 = 42; -- True
+# SELECT 21::DECIMAL * 2.0 = 42.0; -- True
+SELECT 21::DECIMAL * 2::DECIMAL = 42; -- True
+
+# Arithmetic Operations with Type Mixing (Division)
+SELECT 42 / 2 = 21; -- True
+SELECT 42 / 2.0 = 21.0; -- True
+SELECT 42 / 2::DECIMAL = 21; -- True
 SELECT 42.0 / 2 = 21.0; -- True
+SELECT 42.0 / 2.0 = 21.0; -- True
+# SELECT 42.0 / 2::DECIMAL = 21.0; -- True
+SELECT 42::DECIMAL / 2 = 21; -- True
+# SELECT 42::DECIMAL / 2.0 = 21.0; -- True
+SELECT 42::DECIMAL / 2::DECIMAL = 21; -- True
 
 SELECT * FROM $astronauts WHERE birth_date - current_time > INTERVAL '1' DAY;
 SELECT * FROM $astronauts WHERE current_time - birth_date > INTERVAL '1' DAY;

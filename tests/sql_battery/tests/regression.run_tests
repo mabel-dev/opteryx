@@ -256,3 +256,7 @@ SELECT * FROM $astronauts WHERE IFNULL(birth_place @? 'state', 'Jake') IS TRUE A
 SELECT * FROM $astronauts WHERE IFNULL(birth_place @? 'state', 'Jake') IS NOT TRUE AND name != 'Finn';
 SELECT * FROM $astronauts WHERE IFNULL(birth_place @? 'state', 'Jake') IS FALSE AND name != 'Finn';
 SELECT * FROM $astronauts WHERE IFNULL(birth_place @? 'state', 'Jake') IS NOT FALSE AND name != 'Finn';
+
+select * from testdata.tpch_tiny.lineitem, testdata.tpch_tiny.part where (p_partkey = l_partkey and p_brand = 'Brand#32' and p_container in ('SM CASE', 'SM BOX', 'SM PACK', 'SM PKG') and l_quantity >= 7 and l_quantity <= 7 + 10 and p_size between 1 and 5 and l_shipmode in ('AIR', 'AIR REG') and l_shipinstruct = 'DELIVER IN PERSON')
+select * from testdata.tpch_tiny.lineitem, testdata.tpch_tiny.part where (p_partkey = l_partkey and l_quantity >= 7 and l_quantity <= 7 + 10 and l_shipmode in ('AIR', 'AIR REG') and l_shipinstruct = 'DELIVER IN PERSON')
+select * from testdata.tpch_tiny.lineitem, testdata.tpch_tiny.part where (p_partkey = l_partkey and p_brand = 'Brand#32' and p_container in ('SM CASE', 'SM BOX', 'SM PACK', 'SM PKG') and l_quantity >= 7 and l_quantity <= 7 + 10 and p_size between 1 and 5 and l_shipmode in ('AIR', 'AIR REG') and l_shipinstruct = 'DELIVER IN PERSON')

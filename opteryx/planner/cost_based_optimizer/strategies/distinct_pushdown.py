@@ -20,11 +20,6 @@ Rules:
     - DISTINCT ON can't get pushed
 """
 
-from orso.tools import random_string
-
-from opteryx.managers.expression import NodeType
-from opteryx.managers.expression import get_all_nodes_of_type
-from opteryx.models import LogicalColumn
 from opteryx.planner.logical_planner import LogicalPlan
 from opteryx.planner.logical_planner import LogicalPlanNode
 from opteryx.planner.logical_planner import LogicalPlanStepType
@@ -32,7 +27,6 @@ from opteryx.planner.logical_planner import LogicalPlanStepType
 from .optimization_strategy import OptimizationStrategy
 from .optimization_strategy import OptimizerContext
 
-PASSABLE_AGGREGATIONS = ("MIN", "MAX")
 """
 Aggregations we can push the DISTINCT past
 """
@@ -40,15 +34,12 @@ Aggregations we can push the DISTINCT past
 
 class DistinctPushdownStrategy(OptimizationStrategy):
     def visit(self, node: LogicalPlanNode, context: OptimizerContext) -> OptimizerContext:
-        """ """
         if not context.optimized_plan:
             context.optimized_plan = context.pre_optimized_tree.copy()  # type: ignore
 
         if (node.node_type == LogicalPlanStepType.Distinct) and node.on is None:
             node.nid = context.node_id
-            node.plan_path = context.optimized_plan.trace_to_root(context.node_id)
             context.collected_distincts.append(node)
-            context.optimized_plan.remove_node(context.node_id, heal=True)
             return context
 
         if (
@@ -59,6 +50,8 @@ class DistinctPushdownStrategy(OptimizationStrategy):
         ):
             node.distinct = True
             context.optimized_plan[context.node_id] = node
+            for distict_node in context.collected_distincts:
+                context.optimized_plan.remove_node(distict_node.nid, heal=True)
             context.collected_distincts.clear()
             return context
 
@@ -67,14 +60,10 @@ class DistinctPushdownStrategy(OptimizationStrategy):
             LogicalPlanStepType.Scan,
             LogicalPlanStepType.AggregateAndGroup,
             LogicalPlanStepType.Aggregate,
+            LogicalPlanStepType.Subquery,
         ):
-            # anything we couldn't push, we need to put back
-            for distinct in context.collected_distincts:
-                for nid in distinct.plan_path:
-                    if nid in context.optimized_plan:
-                        context.optimized_plan.insert_node_before(distinct.nid, distinct, nid)
-                        break
-            return context
+            # we don't push past here
+            context.collected_distincts.clear()
 
         return context
 
