@@ -25,6 +25,7 @@ from opteryx.compiled import list_ops
 
 
 def ArrowOp(documents, elements) -> pyarrow.Array:
+    """JSON Selector"""
     element = elements[0]
 
     # if it's dicts, extract the value from the dict
@@ -43,10 +44,11 @@ def ArrowOp(documents, elements) -> pyarrow.Array:
             return value.as_dict()
         return value
 
-    return pyarrow.array([extract(d, element) for d in documents])
+    return pyarrow.array([None if d is None else extract(d, element) for d in documents])
 
 
 def LongArrowOp(documents, elements) -> pyarrow.Array:
+    """JSON Selector (as byte string)"""
     element = elements[0]
 
     if len(documents) > 0 and isinstance(documents[0], dict):

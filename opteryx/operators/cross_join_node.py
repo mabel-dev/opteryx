@@ -200,7 +200,13 @@ def _cross_join(left, right, statistics):
 
     from opteryx.utils.arrow import align_tables
 
+    at_least_once = False
+    left_schema = None
+    right_schema = right.schema
+
     for left_morsel in left.execute():
+        if left_schema is None:
+            left_schema = left_morsel.schema
         start = time.monotonic_ns()
         # Iterate through left table in chunks of size INTERNAL_BATCH_SIZE
         for left_block in left_morsel.to_batches(max_chunksize=INTERNAL_BATCH_SIZE):
@@ -222,7 +228,17 @@ def _cross_join(left, right, statistics):
                 # Yield the resulting table to the caller
                 statistics.time_cross_join_unnest += time.monotonic_ns() - start
                 yield table
+                at_least_once = True
                 start = time.monotonic_ns()
+
+    if not at_least_once:
+        fields = [pyarrow.field(name=f.name, type=f.type) for f in right_schema] + [
+            pyarrow.field(name=f.name, type=f.type) for f in left_schema
+        ]
+        combined_schemas = pyarrow.schema(fields)
+        yield pyarrow.Table.from_arrays(
+            [pyarrow.array([]) for _ in combined_schemas], schema=combined_schemas
+        )
 
 
 @dataclass

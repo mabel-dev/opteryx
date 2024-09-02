@@ -333,7 +333,7 @@ FUNCTIONS = {
     "INTEGER": lambda x: compute.cast(x, "int64", safe=False),
     "DOUBLE": lambda x: compute.cast(x, "float64"),
     "FLOAT": lambda x: compute.cast(x, "float64"),
-    "DECIMAL": lambda x: compute.cast(x, pyarrow.decimal128(14)),
+    "DECIMAL": lambda x: compute.cast(x, pyarrow.decimal128(19)),
     "VARCHAR": cast_varchar,
     "STRING": cast_varchar,
     "STR": cast_varchar,

@@ -33,7 +33,7 @@ EXPECTED_OUTCOME = {
     "query16.sql": False,
     "query17.sql": False,
     "query18.sql": False,
-    "query19.sql": False,
+    "query19.sql": True,
     "query20.sql": False,
     "query21.sql": False,
     "query22.sql": False,

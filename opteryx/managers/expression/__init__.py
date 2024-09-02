@@ -342,7 +342,7 @@ def evaluate_and_append(expressions, table: Table):
                 new_column = evaluate_statement(statement, table)
             else:
                 new_column = numpy.array(
-                    [], dtype=ORSO_TO_NUMPY_MAP.get(statement.schema_column.type, OrsoTypes.VARCHAR)
+                    [], dtype=ORSO_TO_NUMPY_MAP.get(statement.schema_column.type, numpy.str_)
                 )
                 new_column = pyarrow.array(new_column)
 

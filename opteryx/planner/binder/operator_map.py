@@ -6,6 +6,7 @@ from typing import Tuple
 
 from orso.types import OrsoTypes
 
+from opteryx.exceptions import IncorrectTypeError
 from opteryx.managers.expression import NodeType
 
 
@@ -31,9 +32,18 @@ OPERATOR_MAP: Dict[Tuple[OrsoTypes, OrsoTypes, str], OperatorMapType] = {
     (OrsoTypes.BLOB, OrsoTypes.VARCHAR, "NotRLike"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
     (OrsoTypes.BLOB, OrsoTypes.VARCHAR, "BitwiseOr"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
     (OrsoTypes.BLOB, OrsoTypes.VARCHAR, "StringConcat"): OperatorMapType(OrsoTypes.BLOB, None, 100.0),
+    (OrsoTypes.BLOB, OrsoTypes.VARCHAR, "Arrow"): OperatorMapType(OrsoTypes._MISSING_TYPE, None, 100.0),
+    (OrsoTypes.BLOB, OrsoTypes.VARCHAR, "LongArrow"): OperatorMapType(OrsoTypes.VARCHAR, None, 100.0),
+    (OrsoTypes.BLOB, OrsoTypes.VARCHAR, "AtQuestion"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
+    (OrsoTypes.BLOB, OrsoTypes.BLOB, "Arrow"): OperatorMapType(OrsoTypes._MISSING_TYPE, None, 100.0),
+    (OrsoTypes.BLOB, OrsoTypes.BLOB, "LongArrow"): OperatorMapType(OrsoTypes.VARCHAR, None, 100.0),
+    (OrsoTypes.BLOB, OrsoTypes.BLOB, "AtQuestion"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
     (OrsoTypes.BOOLEAN, OrsoTypes.ARRAY, "InList"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
     (OrsoTypes.BOOLEAN, OrsoTypes.ARRAY, "NotInList"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
     (OrsoTypes.BOOLEAN, OrsoTypes.BOOLEAN, "Or"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
+    (OrsoTypes.BOOLEAN, OrsoTypes.BOOLEAN, "And"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
+    (OrsoTypes.BOOLEAN, OrsoTypes.BOOLEAN, "Eq"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
+    (OrsoTypes.BOOLEAN, OrsoTypes.BOOLEAN, "NotEq"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
     (OrsoTypes.DATE, OrsoTypes.ARRAY, "InList"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
     (OrsoTypes.DATE, OrsoTypes.ARRAY, "NotInList"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
     (OrsoTypes.DATE, OrsoTypes.DATE, "Minus"): OperatorMapType(OrsoTypes.INTERVAL, None, 100.0),
@@ -62,14 +72,20 @@ OPERATOR_MAP: Dict[Tuple[OrsoTypes, OrsoTypes, str], OperatorMapType] = {
     (OrsoTypes.DECIMAL, OrsoTypes.DECIMAL, "GtEq"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
     (OrsoTypes.DECIMAL, OrsoTypes.DECIMAL, "Lt"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
     (OrsoTypes.DECIMAL, OrsoTypes.DECIMAL, "LtEq"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
+    (OrsoTypes.DECIMAL, OrsoTypes.DECIMAL, "Divide"): OperatorMapType(OrsoTypes.DECIMAL, None, 100.0),
+    (OrsoTypes.DECIMAL, OrsoTypes.DECIMAL, "Multiply"): OperatorMapType(OrsoTypes.DECIMAL, None, 100.0),
     (OrsoTypes.DECIMAL, OrsoTypes.DOUBLE, "Eq"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
     (OrsoTypes.DECIMAL, OrsoTypes.DOUBLE, "NotEq"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
     (OrsoTypes.DECIMAL, OrsoTypes.DOUBLE, "Gt"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
     (OrsoTypes.DECIMAL, OrsoTypes.DOUBLE, "GtEq"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
     (OrsoTypes.DECIMAL, OrsoTypes.DOUBLE, "Lt"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
     (OrsoTypes.DECIMAL, OrsoTypes.DOUBLE, "LtEq"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
-    (OrsoTypes.DECIMAL, OrsoTypes.DECIMAL, "Divide"): OperatorMapType(OrsoTypes.DECIMAL, None, 100.0),
-    (OrsoTypes.DECIMAL, OrsoTypes.DECIMAL, "Multiply"): OperatorMapType(OrsoTypes.DECIMAL, None, 100.0),
+    (OrsoTypes.DECIMAL, OrsoTypes.INTEGER, "Eq"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
+    (OrsoTypes.DECIMAL, OrsoTypes.INTEGER, "NotEq"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
+    (OrsoTypes.DECIMAL, OrsoTypes.INTEGER, "Gt"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
+    (OrsoTypes.DECIMAL, OrsoTypes.INTEGER, "GtEq"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
+    (OrsoTypes.DECIMAL, OrsoTypes.INTEGER, "Lt"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
+    (OrsoTypes.DECIMAL, OrsoTypes.INTEGER, "LtEq"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
     (OrsoTypes.DOUBLE, OrsoTypes.ARRAY, "InList"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
     (OrsoTypes.DOUBLE, OrsoTypes.ARRAY, "NotInList"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
     (OrsoTypes.DOUBLE, OrsoTypes.DECIMAL, "Eq"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
@@ -96,6 +112,8 @@ OPERATOR_MAP: Dict[Tuple[OrsoTypes, OrsoTypes, str], OperatorMapType] = {
     (OrsoTypes.DOUBLE, OrsoTypes.INTEGER, "LtEq"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
     (OrsoTypes.DOUBLE, OrsoTypes.INTEGER, "Divide"): OperatorMapType(OrsoTypes.DOUBLE, None, 100.0),
     (OrsoTypes.DOUBLE, OrsoTypes.INTEGER, "Multiply"): OperatorMapType(OrsoTypes.DOUBLE, None, 100.0),
+    (OrsoTypes.DOUBLE, OrsoTypes.INTEGER, "Plus"): OperatorMapType(OrsoTypes.DOUBLE, None, 100.0),
+    (OrsoTypes.DOUBLE, OrsoTypes.INTEGER, "Minus"): OperatorMapType(OrsoTypes.DOUBLE, None, 100.0),
     (OrsoTypes.INTEGER, OrsoTypes.ARRAY, "InList"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
     (OrsoTypes.INTEGER, OrsoTypes.ARRAY, "NotInList"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
     (OrsoTypes.INTEGER, OrsoTypes.DOUBLE, "Eq"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
@@ -106,6 +124,8 @@ OPERATOR_MAP: Dict[Tuple[OrsoTypes, OrsoTypes, str], OperatorMapType] = {
     (OrsoTypes.INTEGER, OrsoTypes.DOUBLE, "LtEq"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
     (OrsoTypes.INTEGER, OrsoTypes.DOUBLE, "Divide"): OperatorMapType(OrsoTypes.DOUBLE, None, 100.0),
     (OrsoTypes.INTEGER, OrsoTypes.DOUBLE, "Multiply"): OperatorMapType(OrsoTypes.DOUBLE, None, 100.0),
+    (OrsoTypes.INTEGER, OrsoTypes.DOUBLE, "Plus"): OperatorMapType(OrsoTypes.DOUBLE, None, 100.0),
+    (OrsoTypes.INTEGER, OrsoTypes.DOUBLE, "Minus"): OperatorMapType(OrsoTypes.DOUBLE, None, 100.0),
     (OrsoTypes.INTEGER, OrsoTypes.INTEGER, "Plus"): OperatorMapType(OrsoTypes.INTEGER, None, 100.0),
     (OrsoTypes.INTEGER, OrsoTypes.INTEGER, "Minus"): OperatorMapType(OrsoTypes.INTEGER, None, 100.0),
     (OrsoTypes.INTEGER, OrsoTypes.INTEGER, "Eq"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
@@ -123,6 +143,12 @@ OPERATOR_MAP: Dict[Tuple[OrsoTypes, OrsoTypes, str], OperatorMapType] = {
     (OrsoTypes.INTEGER, OrsoTypes.INTEGER, "BitwiseXor"): OperatorMapType(OrsoTypes.INTEGER, None, 100.0),
     (OrsoTypes.INTEGER, OrsoTypes.INTEGER, "ShiftLeft"): OperatorMapType(OrsoTypes.INTEGER, None, 100.0),
     (OrsoTypes.INTEGER, OrsoTypes.INTEGER, "ShiftRight"): OperatorMapType(OrsoTypes.INTEGER, None, 100.0),
+    (OrsoTypes.INTEGER, OrsoTypes.DECIMAL, "Eq"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
+    (OrsoTypes.INTEGER, OrsoTypes.DECIMAL, "NotEq"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
+    (OrsoTypes.INTEGER, OrsoTypes.DECIMAL, "Gt"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
+    (OrsoTypes.INTEGER, OrsoTypes.DECIMAL, "GtEq"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
+    (OrsoTypes.INTEGER, OrsoTypes.DECIMAL, "Lt"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
+    (OrsoTypes.INTEGER, OrsoTypes.DECIMAL, "LtEq"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
     (OrsoTypes.INTERVAL, OrsoTypes.INTERVAL, "Plus"): OperatorMapType(OrsoTypes.INTERVAL, None, 100.0),
     (OrsoTypes.INTERVAL, OrsoTypes.INTERVAL, "Minus"): OperatorMapType(OrsoTypes.INTERVAL, None, 100.0),
     (OrsoTypes.INTERVAL, OrsoTypes.INTERVAL, "Eq"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
@@ -135,6 +161,12 @@ OPERATOR_MAP: Dict[Tuple[OrsoTypes, OrsoTypes, str], OperatorMapType] = {
     (OrsoTypes.INTERVAL, OrsoTypes.TIMESTAMP, "Minus"): OperatorMapType(OrsoTypes.TIMESTAMP, None, 100.0),
     (OrsoTypes.INTERVAL, OrsoTypes.DATE, "Plus"): OperatorMapType(OrsoTypes.TIMESTAMP, None, 100.0),
     (OrsoTypes.INTERVAL, OrsoTypes.DATE, "Minus"): OperatorMapType(OrsoTypes.TIMESTAMP, None, 100.0),
+    (OrsoTypes.STRUCT, OrsoTypes.VARCHAR, "Arrow"): OperatorMapType(OrsoTypes._MISSING_TYPE, None, 100.0),
+    (OrsoTypes.STRUCT, OrsoTypes.VARCHAR, "LongArrow"): OperatorMapType(OrsoTypes.VARCHAR, None, 100.0),
+    (OrsoTypes.STRUCT, OrsoTypes.VARCHAR, "AtQuestion"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
+    (OrsoTypes.STRUCT, OrsoTypes.BLOB, "Arrow"): OperatorMapType(OrsoTypes._MISSING_TYPE, None, 100.0),
+    (OrsoTypes.STRUCT, OrsoTypes.BLOB, "LongArrow"): OperatorMapType(OrsoTypes.VARCHAR, None, 100.0),
+    (OrsoTypes.STRUCT, OrsoTypes.BLOB, "AtQuestion"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
     (OrsoTypes.TIMESTAMP, OrsoTypes.ARRAY, "InList"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
     (OrsoTypes.TIMESTAMP, OrsoTypes.ARRAY, "NotInList"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
     (OrsoTypes.TIMESTAMP, OrsoTypes.DATE, "Eq"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
@@ -180,9 +212,16 @@ OPERATOR_MAP: Dict[Tuple[OrsoTypes, OrsoTypes, str], OperatorMapType] = {
     (OrsoTypes.VARCHAR, OrsoTypes.VARCHAR, "ILike"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
     (OrsoTypes.VARCHAR, OrsoTypes.VARCHAR, "NotILike"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
     (OrsoTypes.VARCHAR, OrsoTypes.VARCHAR, "RLike"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
-   (OrsoTypes.VARCHAR, OrsoTypes.VARCHAR, "NotRLike"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
+    (OrsoTypes.VARCHAR, OrsoTypes.VARCHAR, "NotRLike"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
     (OrsoTypes.VARCHAR, OrsoTypes.VARCHAR, "BitwiseOr"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
     (OrsoTypes.VARCHAR, OrsoTypes.VARCHAR, "StringConcat"): OperatorMapType(OrsoTypes.VARCHAR, None, 100.0),
+    (OrsoTypes.VARCHAR, OrsoTypes.BLOB, "Arrow"): OperatorMapType(OrsoTypes._MISSING_TYPE, None, 100.0),
+    (OrsoTypes.VARCHAR, OrsoTypes.BLOB, "LongArrow"): OperatorMapType(OrsoTypes.VARCHAR, None, 100.0),
+    (OrsoTypes.VARCHAR, OrsoTypes.BLOB, "AtQuestion"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
+    (OrsoTypes.VARCHAR, OrsoTypes.VARCHAR, "Arrow"): OperatorMapType(OrsoTypes._MISSING_TYPE, None, 100.0),
+    (OrsoTypes.VARCHAR, OrsoTypes.VARCHAR, "LongArrow"): OperatorMapType(OrsoTypes.VARCHAR, None, 100.0),
+    (OrsoTypes.VARCHAR, OrsoTypes.VARCHAR, "AtQuestion"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
+
 }
 # fmt:on
 
@@ -192,7 +231,7 @@ def determine_type(node) -> OrsoTypes:
     if node.node_type in (
         NodeType.UNARY_OPERATOR,
         NodeType.AND,
-        NodeType.NOT,
+        NodeType.OR,
         NodeType.NOT,
         NodeType.XOR,
     ):
@@ -215,22 +254,26 @@ def determine_type(node) -> OrsoTypes:
         left_type = node.left.type
     elif node.left.schema_column:
         left_type = node.left.schema_column.type
-    else:
-        return OrsoTypes._MISSING_TYPE
 
     if node.right.node_type == NodeType.LITERAL:
         right_type = node.right.type
     elif node.right.schema_column:
         right_type = node.right.schema_column.type
-    else:
-        return OrsoTypes._MISSING_TYPE
 
     operator = node.value
+
+    if left_type in (0, OrsoTypes._MISSING_TYPE, OrsoTypes.NULL):
+        return OrsoTypes._MISSING_TYPE
+    if right_type in (0, OrsoTypes._MISSING_TYPE, OrsoTypes.NULL):
+        return OrsoTypes._MISSING_TYPE
 
     result = OPERATOR_MAP.get((left_type, right_type, operator))
 
     if result is None:
-        # print(left_type, right_type, operator)
-        return OrsoTypes._MISSING_TYPE
+        from opteryx.managers.expression import format_expression
+
+        raise IncorrectTypeError(
+            f"Unable to perform `{format_expression(node)}` because the values are not acceptable types for this operation. {left_type} and {right_type} were provided, you may need to cast one or both values to acceptable types."
+        )
 
     return result.result_type
