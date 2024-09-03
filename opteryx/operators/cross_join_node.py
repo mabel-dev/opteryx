@@ -36,7 +36,7 @@ from opteryx.operators import BasePlanNode
 from opteryx.operators import OperatorType
 from opteryx.operators.base_plan_node import BasePlanDataObject
 
-INTERNAL_BATCH_SIZE: int = 5000  # config
+INTERNAL_BATCH_SIZE: int = 7500  # config
 MAX_JOIN_SIZE: int = 1000  # config
 MORSEL_SIZE_BYTES: int = 32 * 1024 * 1024
 
@@ -127,7 +127,7 @@ def _cross_join_unnest_column(
                         new_block = pyarrow.Table.from_arrays(
                             [single_column_collector], schema=schema
                         )
-                        single_column_collector = []
+                        single_column_collector.clear()
                 else:
                     # Rebuild the block with the new column data if we have any rows to build for
                     new_block = left_block.take(indices)
