@@ -16,8 +16,15 @@ Optimization Rule - Distinct Pushdown
 Type: Heuristic
 Goal: Reduce Rows
 
-Rules:
-    - DISTINCT ON can't get pushed
+This is a very specific rule, on a CROSS JOIN UNNEST, if the result
+is the only column in a DISTINCT clause, we push the DISTINCT into
+the JOIN.
+
+We've written as a Optimization rule rather than in the JOIN code
+as it is expected other instances of pushing DISTINCT may be found.
+
+Order:
+    This plan must run after the Projection Pushdown
 """
 
 from opteryx.planner.logical_planner import LogicalPlan
@@ -47,6 +54,7 @@ class DistinctPushdownStrategy(OptimizationStrategy):
             and context.collected_distincts
             and node.type == "cross join"
             and node.unnest_target is not None
+            and node.pre_update_columns == node.unnest_target.identity
         ):
             node.distinct = True
             context.optimized_plan[context.node_id] = node
