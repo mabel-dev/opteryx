@@ -1964,6 +1964,11 @@ STATEMENTS = [
         ("SELECT * FROM (SELECT * FROM $satellites) AS s LEFT JOIN (SELECT * FROM $planets) AS p ON s.planetId = p.id WHERE mass > 1", 170, 28, None),
         ("SELECT * FROM $satellites LEFT JOIN (SELECT * FROM (SELECT * FROM $planets) AS p) AS planets ON $satellites.planetId = planets.id WHERE mass > 1", 170, 28, None),
         ("SELECT * FROM (SELECT * FROM (SELECT * FROM $satellites LEFT JOIN $planets AS p ON $satellites.planetId = p.id) AS joined) AS mapped WHERE mass > 1", 170, 28, None),
+        # 1977
+        ("SELECT s, e FROM GENERATE_SERIES('2024-01-01', '2025-01-01', '1mth') AS s CROSS JOIN GENERATE_SERIES('2024-01-01', '2025-01-01', '1mth') AS e WHERE s = e + INTERVAL '1' MONTH", 12, 2, None),
+        ("SELECT s, e FROM GENERATE_SERIES('2024-01-01', '2025-01-01', '1mth') AS s CROSS JOIN GENERATE_SERIES('2024-01-01', '2025-01-01', '1mth') AS e WHERE s + INTERVAL '1' MONTH = e", 12, 2, None),
+        ("SELECT s, e FROM GENERATE_SERIES('2024-01-01', '2025-01-01', '1mth') AS s CROSS JOIN GENERATE_SERIES('2024-01-01', '2025-01-01', '1mth') AS e WHERE s = e - INTERVAL '1' MONTH", 12, 2, None),
+        ("SELECT s, e FROM GENERATE_SERIES('2024-01-01', '2025-01-01', '1mth') AS s CROSS JOIN GENERATE_SERIES('2024-01-01', '2025-01-01', '1mth') AS e WHERE s - INTERVAL '1' MONTH = e", 12, 2, None),
 ]
 # fmt:on
 

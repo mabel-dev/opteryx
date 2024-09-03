@@ -92,8 +92,25 @@ def _simple_interval_op(left, left_type, right, right_type, operator):
     #    months_eq = _inner_filter_operations(left_months, "Eq", right_months)
     seconds = _inner_filter_operations(left_seconds, operator, right_seconds)
 
-    #    res = [milliseconds[i] if (months[i] or months_eq[i]) else False for i in range(len(months))]
     return seconds
+
+
+def _work_out_the_kernel(left, left_type, right, right_type, operator):
+    if left_type in (OrsoTypes._MISSING_TYPE, 0) and len(left) > 0:
+        sample = left[0]
+        if isinstance(sample, numpy.datetime64):
+            left_type = OrsoTypes.TIMESTAMP
+
+    if right_type in (OrsoTypes._MISSING_TYPE, 0) and len(right) > 0:
+        sample = right[0]
+        if isinstance(sample, numpy.datetime64):
+            right_type = OrsoTypes.TIMESTAMP
+
+    if left_type == OrsoTypes.INTERVAL and right_type in (OrsoTypes.DATE, OrsoTypes.TIMESTAMP):
+        return _date_plus_interval(left, left_type, right, right_type, operator)
+    if right_type == OrsoTypes.INTERVAL and left_type in (OrsoTypes.DATE, OrsoTypes.TIMESTAMP):
+        return _date_plus_interval(left, left_type, right, right_type, operator)
+    return _simple_interval_op(left, left_type, right, right_type, operator)
 
 
 INTERVAL_KERNELS: Dict[Tuple[OrsoTypes, OrsoTypes, str], Optional[Callable]] = {
@@ -114,20 +131,20 @@ INTERVAL_KERNELS: Dict[Tuple[OrsoTypes, OrsoTypes, str], Optional[Callable]] = {
     (OrsoTypes.DATE, OrsoTypes.INTERVAL, "Plus"): _date_plus_interval,
     (OrsoTypes.DATE, OrsoTypes.INTERVAL, "Minus"): _date_plus_interval,
     # we need to type the outcome of calcs better
-    (0, OrsoTypes.INTERVAL, "Plus"): _simple_interval_op,
-    (0, OrsoTypes.INTERVAL, "Minus"): _simple_interval_op,
-    (0, OrsoTypes.INTERVAL, "Eq"): _simple_interval_op,
-    (0, OrsoTypes.INTERVAL, "NotEq"): _simple_interval_op,
-    (0, OrsoTypes.INTERVAL, "Gt"): _simple_interval_op,
-    (0, OrsoTypes.INTERVAL, "GtEq"): _simple_interval_op,
-    (0, OrsoTypes.INTERVAL, "Lt"): _simple_interval_op,
-    (0, OrsoTypes.INTERVAL, "LtEq"): _simple_interval_op,
-    (OrsoTypes.INTERVAL, 0, "Plus"): _simple_interval_op,
-    (OrsoTypes.INTERVAL, 0, "Minus"): _simple_interval_op,
-    (OrsoTypes.INTERVAL, 0, "Eq"): _simple_interval_op,
-    (OrsoTypes.INTERVAL, 0, "NotEq"): _simple_interval_op,
-    (OrsoTypes.INTERVAL, 0, "Gt"): _simple_interval_op,
-    (OrsoTypes.INTERVAL, 0, "GtEq"): _simple_interval_op,
-    (OrsoTypes.INTERVAL, 0, "Lt"): _simple_interval_op,
-    (OrsoTypes.INTERVAL, 0, "LtEq"): _simple_interval_op,
+    (0, OrsoTypes.INTERVAL, "Plus"): _work_out_the_kernel,
+    (0, OrsoTypes.INTERVAL, "Minus"): _work_out_the_kernel,
+    (0, OrsoTypes.INTERVAL, "Eq"): _work_out_the_kernel,
+    (0, OrsoTypes.INTERVAL, "NotEq"): _work_out_the_kernel,
+    (0, OrsoTypes.INTERVAL, "Gt"): _work_out_the_kernel,
+    (0, OrsoTypes.INTERVAL, "GtEq"): _work_out_the_kernel,
+    (0, OrsoTypes.INTERVAL, "Lt"): _work_out_the_kernel,
+    (0, OrsoTypes.INTERVAL, "LtEq"): _work_out_the_kernel,
+    (OrsoTypes.INTERVAL, 0, "Plus"): _work_out_the_kernel,
+    (OrsoTypes.INTERVAL, 0, "Minus"): _work_out_the_kernel,
+    (OrsoTypes.INTERVAL, 0, "Eq"): _work_out_the_kernel,
+    (OrsoTypes.INTERVAL, 0, "NotEq"): _work_out_the_kernel,
+    (OrsoTypes.INTERVAL, 0, "Gt"): _work_out_the_kernel,
+    (OrsoTypes.INTERVAL, 0, "GtEq"): _work_out_the_kernel,
+    (OrsoTypes.INTERVAL, 0, "Lt"): _work_out_the_kernel,
+    (OrsoTypes.INTERVAL, 0, "LtEq"): _work_out_the_kernel,
 }
