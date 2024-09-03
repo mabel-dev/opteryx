@@ -82,7 +82,6 @@ def _cross_join_unnest_column(
         start = time.monotonic_ns()
         # Break the morsel into batches to avoid memory issues
         for left_block in left_morsel.to_batches(max_chunksize=batch_size):
-
             new_block = None
             # Fetch the data of the column to be unnested
             column_data = left_block[source.schema_column.identity]
@@ -125,7 +124,9 @@ def _cross_join_unnest_column(
                                 )
                             ]
                         )
-                        new_block = pyarrow.Table.from_arrays([single_column_collector], schema=schema)
+                        new_block = pyarrow.Table.from_arrays(
+                            [single_column_collector], schema=schema
+                        )
                         single_column_collector = []
                 else:
                     # Rebuild the block with the new column data if we have any rows to build for
@@ -141,11 +142,7 @@ def _cross_join_unnest_column(
 
     if single_column_collector:
         schema = pyarrow.schema(
-            [
-                pyarrow.field(
-                    name=target_column.identity, type=target_column.arrow_field.type
-                )
-            ]
+            [pyarrow.field(name=target_column.identity, type=target_column.arrow_field.type)]
         )
         new_block = pyarrow.Table.from_arrays([single_column_collector], schema=schema)
         yield new_block
