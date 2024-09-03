@@ -75,12 +75,14 @@ def _cross_join_unnest_column(
     column_type = None
     batch_size: int = INTERNAL_BATCH_SIZE
     at_least_once = False
+    single_column_collector = []
 
     # Loop through each morsel from the morsels execution
     for left_morsel in morsels.execute():
         start = time.monotonic_ns()
         # Break the morsel into batches to avoid memory issues
         for left_block in left_morsel.to_batches(max_chunksize=batch_size):
+            new_block = None
             # Fetch the data of the column to be unnested
             column_data = left_block[source.schema_column.identity]
 
@@ -113,14 +115,19 @@ def _cross_join_unnest_column(
 
             if len(indices) > 0:
                 if single_column:
-                    schema = pyarrow.schema(
-                        [
-                            pyarrow.field(
-                                name=target_column.identity, type=target_column.arrow_field.type
-                            )
-                        ]
-                    )
-                    new_block = pyarrow.Table.from_arrays([new_column_data], schema=schema)
+                    single_column_collector.extend(new_column_data)
+                    if len(single_column_collector) > INTERNAL_BATCH_SIZE:
+                        schema = pyarrow.schema(
+                            [
+                                pyarrow.field(
+                                    name=target_column.identity, type=target_column.arrow_field.type
+                                )
+                            ]
+                        )
+                        new_block = pyarrow.Table.from_arrays(
+                            [single_column_collector], schema=schema
+                        )
+                        single_column_collector = []
                 else:
                     # Rebuild the block with the new column data if we have any rows to build for
                     new_block = left_block.take(indices)
@@ -128,10 +135,18 @@ def _cross_join_unnest_column(
                     new_block = new_block.append_column(target_column.identity, [new_column_data])
 
                 statistics.time_cross_join_unnest += time.monotonic_ns() - start
-                if new_block.num_rows > 0:
+                if new_block and new_block.num_rows > 0:
                     yield new_block
                     at_least_once = True
                 start = time.monotonic_ns()
+
+    if single_column_collector:
+        schema = pyarrow.schema(
+            [pyarrow.field(name=target_column.identity, type=target_column.arrow_field.type)]
+        )
+        new_block = pyarrow.Table.from_arrays([single_column_collector], schema=schema)
+        yield new_block
+        at_least_once = True
 
     if not at_least_once:
         # Create an empty table with the new schema

@@ -80,12 +80,12 @@ class CostBasedOptimizerVisitor:
         """
         self.strategies = [
             ConstantFoldingStrategy(),
-            DistinctPushdownStrategy(),
             BooleanSimplificationStrategy(),
             SplitConjunctivePredicatesStrategy(),
             PredicateRewriteStrategy(),
             PredicatePushdownStrategy(),
             ProjectionPushdownStrategy(),
+            DistinctPushdownStrategy(),
             OperatorFusionStrategy(),
             RedundantOperationsStrategy(),
             ConstantFoldingStrategy(),
