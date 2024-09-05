@@ -30,6 +30,7 @@ import aiohttp
 import pyarrow
 import pyarrow.parquet
 from orso.schema import RelationSchema
+from orso.schema import convert_orso_schema_to_arrow_schema
 
 from opteryx import config
 from opteryx.exceptions import DataError
@@ -228,3 +229,9 @@ class AsyncReaderNode(ReaderNode):
 
         if morsel:
             self.statistics.columns_read += morsel.num_columns
+        else:
+            self.statistics.empty_datasets += 1
+            arrow_schema = convert_orso_schema_to_arrow_schema(orso_schema, use_identities=True)
+            yield pyarrow.Table.from_arrays(
+                [pyarrow.array([]) for _ in arrow_schema], schema=arrow_schema
+            )
