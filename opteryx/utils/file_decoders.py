@@ -226,7 +226,7 @@ def parquet_decoder(
     # Open the parquet file only once
     parquet_file = parquet.ParquetFile(stream)
 
-    if projection or just_schema or selection:
+    if projection or just_schema:  # or selection:
         # Return just the schema if that's all that's needed
         if just_schema:
             return convert_arrow_schema_to_orso_schema(parquet_file.schema_arrow)
@@ -245,24 +245,6 @@ def parquet_decoder(
         if not selected_columns:
             selected_columns = None
 
-        if not columns_in_filters.issubset(arrow_schema_columns_set):
-            if selected_columns is None:
-                selected_columns = list(arrow_schema_columns_set)
-            fields = [pyarrow.field(name, pyarrow.string()) for name in selected_columns]
-            schema = pyarrow.schema(fields)
-
-            # Create an empty table with the schema
-            empty_table = pyarrow.Table.from_arrays(
-                [pyarrow.array([], type=schema.field(i).type) for i in range(len(fields))],
-                schema=schema,
-            )
-
-            return (
-                parquet_file.metadata.num_rows,
-                parquet_file.metadata.num_columns,
-                empty_table,
-            )
-
     if selected_columns is None and not force_read:
         selected_columns = []
 
@@ -274,6 +256,7 @@ def parquet_decoder(
         filters=dnf_filter,
         use_threads=False,
     )
+
     # Any filters we couldn't push to PyArrow to read we run here
     if selection:
         table = filter_records(selection, table)

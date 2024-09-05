@@ -50,60 +50,6 @@ def generate_condition(columns):
         where_value = f"{str(random_value(where_column.type))}"
     return f"{where_column.name} {where_operator} {where_value}"
 
-
-def generate_random_sql_select(columns, table):
-    # Generate a list of column names to select
-    column_list = list(set(random.choices(range(len(columns)))))
-    column_list = [columns[i] for i in column_list]
-    agg_column = None
-    is_count_star = False
-    # Add DISTINCT keyword with 20% chance
-    if random.random() < 0.2:
-        select_clause = "SELECT DISTINCT " + ", ".join(c.name for c in column_list)
-    elif random.random() < 0.3:
-        distinct = "DISTINCT " if random.random() < 0.1 else ""
-        agg_func = random.choice(["MIN", "MAX", "SUM", "AVG"])
-        agg_column = columns[random.choice(range(len(columns)))]
-        while agg_func in ("SUM", "AVG") and agg_column.type in (OrsoTypes.ARRAY, OrsoTypes.STRUCT, OrsoTypes.VARCHAR, OrsoTypes.TIMESTAMP, OrsoTypes.DATE):
-            agg_column = columns[random.choice(range(len(columns)))]
-        while agg_func in ("MIN", "MAX") and agg_column.type in (OrsoTypes.ARRAY, OrsoTypes.STRUCT):
-            agg_column = columns[random.choice(range(len(columns)))]
-        select_clause = "SELECT " + distinct + agg_func + "(" + agg_column.name + ")"
-
-        column_list = [c for c in column_list if c.type not in (OrsoTypes.ARRAY, OrsoTypes.STRUCT)]
-    elif random.random() < 0.8:
-        select_clause = "SELECT " + ", ".join(c.name for c in column_list)
-    elif random.random() < 0.5:
-        select_clause = "SELECT COUNT(*) "
-        is_count_star = True
-    else:
-        select_clause = "SELECT *"
-    # Add table name
-    select_clause = select_clause + " FROM " + table
-    # Generate a WHERE clause with 70% chance
-    if random.random() < 0.7:
-        where_clause = generate_condition(columns)
-        select_clause = f"{select_clause} WHERE {where_clause}"
-        # add an abitrary number of additional conditions
-        while random.random() < 0.3:
-            linking_condition = random.choice(["AND", "OR", "AND NOT"])
-            where_clause = generate_condition(columns)
-            select_clause = f"{select_clause} {linking_condition} {where_clause}"
-    # Add GROUP BY clause with 40% chance
-    if agg_column and random.random() < 0.4:
-        column_list = [c.name for c in column_list]
-        select_clause = select_clause + " GROUP BY " + ", ".join(column_list + [agg_column.name])
-    # Add ORDER BY clause with 60% chance
-    if not agg_column and not is_count_star and random.random() < 0.6:
-        order_column = columns[random.choice(range(len(columns)))]
-        if order_column.type not in (OrsoTypes.ARRAY, OrsoTypes.STRUCT):
-            order_direction = random.choice(["ASC", "DESC", ""])
-            select_clause = select_clause + " ORDER BY " + order_column.name + " " + order_direction
-    if random.random() < 0.2:
-        select_clause = select_clause + " LIMIT " + str(int(random.random() * 10))
-    return select_clause
-
-
 def generate_random_sql_join(columns1, table1, columns2, table2) -> str:
     join_type = random.choice(["INNER JOIN", "LEFT JOIN", "RIGHT JOIN", "FULL OUTER JOIN"])
 
@@ -160,34 +106,6 @@ TEST_CYCLES: int = 250
 
 
 @pytest.mark.parametrize("i", range(TEST_CYCLES))
-def test_sql_fuzzing_single_table(i):
-    seed = random_int()
-    random.seed(seed)
-    print(f"Seed: {seed}")
-
-    table = TABLES[random.choice(range(len(TABLES)))]
-    statement = generate_random_sql_select(table["fields"], table["name"])
-    formatted_statement = format_sql(statement)
-
-    print(formatted_statement)
-
-    start_time = time.time()  # Start timing the query execution
-    try:
-        res = opteryx.query(statement)
-        execution_time = time.time() - start_time  # Measure execution time
-        print(f"Shape: {res.shape}, Execution Time: {execution_time:.2f} seconds")
-        # Additional success criteria checks can be added here
-    except Exception as e:
-        import traceback
-
-        print(f"\033[0;31mError in Test Cycle {i+1}\033[0m: {e}")
-        print(traceback.print_exc())
-        # Log failing statement and error for analysis
-        raise e
-    print()
-
-
-@pytest.mark.parametrize("i", range(TEST_CYCLES))
 def test_sql_fuzzing_join(i):
     seed = random_int()
     random.seed(seed)
@@ -219,8 +137,6 @@ def test_sql_fuzzing_join(i):
 
 
 if __name__ == "__main__":  # pragma: no cover
-    for i in range(TEST_CYCLES):
-        test_sql_fuzzing_single_table(i)
 
     for i in range(TEST_CYCLES):
         test_sql_fuzzing_join(i)

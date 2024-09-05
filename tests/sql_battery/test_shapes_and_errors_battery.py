@@ -142,7 +142,8 @@ STATEMENTS = [
         ("SELECT * FROM $planets WHERE distanceFromSun BETWEEN 100 AND 1000", 4, 20, None),
 
         # Randomly generated but consistently tested queries
-        # the same queries as above, but against parquet, which has a complex reader
+        # the same queries as above, but against parquet, which has a complex reader and
+        # is the most used in active deployments
         ("SELECT * FROM testdata.planets WHERE `name` = 'Earth'", 1, 20, None),
         ("SELECT * FROM testdata.planets WHERE name = 'Mars'", 1, 20, None),
         ("SELECT * FROM testdata.planets WHERE name <> 'Venus'", 8, 20, None),

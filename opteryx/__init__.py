@@ -25,6 +25,7 @@ to ensure they load correctly.
 
 import datetime
 import os
+import warnings
 
 from pathlib import Path
 from decimal import getcontext
@@ -239,3 +240,6 @@ try:
     ip.register_magics(OpteryxMagics)
 except Exception as err:  # no sec
     pass
+
+# Enable all warnings, including DeprecationWarning
+warnings.simplefilter("once", DeprecationWarning)
