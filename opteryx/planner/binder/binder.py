@@ -28,14 +28,11 @@ from opteryx.exceptions import AmbiguousIdentifierError
 from opteryx.exceptions import ColumnNotFoundError
 from opteryx.exceptions import InvalidInternalStateError
 from opteryx.exceptions import UnexpectedDatasetReferenceError
-from opteryx.functions import FUNCTIONS
+from opteryx.functions import DEPRECATED_FUNCTIONS
 from opteryx.functions import fixed_value_function
 from opteryx.managers.expression import NodeType
 from opteryx.models import Node
-from opteryx.operators.aggregate_node import AGGREGATORS
 from opteryx.planner.binder.operator_map import determine_type
-
-COMBINED_FUNCTIONS = {**FUNCTIONS, **AGGREGATORS}
 
 
 def merge_schemas(*schemas: Dict[str, RelationSchema]) -> Dict[str, RelationSchema]:
@@ -211,7 +208,7 @@ def traversive_recursive_bind(node: Node, context: Any) -> Tuple[Node, Any]:
     return node, context
 
 
-def inner_binder(node: Node, context: Any) -> Tuple[Node, Any]:
+def inner_binder(node: Node, context: any) -> Tuple[Node, Any]:
     """
     Note, this is a tree within a tree. This function represents a single step in the execution
     plan (associated with the relational algebra) which may itself be an evaluation plan
@@ -282,6 +279,13 @@ def inner_binder(node: Node, context: Any) -> Tuple[Node, Any]:
 
     elif node_type != NodeType.SUBQUERY and not node.do_not_create_column:
         if node_type in (NodeType.FUNCTION, NodeType.AGGREGATOR):
+            if node.value in DEPRECATED_FUNCTIONS:
+                import warnings
+
+                message = f"Function '{node.value}' is deprecated and will be removed in a future version. Use '{DEPRECATED_FUNCTIONS[node.value]}' instead."
+                context.statistics.add_message(message)
+                warnings.warn(message, category=DeprecationWarning, stacklevel=2)
+
             # we need to add this new column to the schema
             aliases = [node.alias] if node.alias else []
             result_type, fixed_function_result = fixed_value_function(node.value, context)

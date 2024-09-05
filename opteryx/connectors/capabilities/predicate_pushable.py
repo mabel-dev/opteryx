@@ -22,6 +22,7 @@ loading and filtering. We do this because we have a single file interface and so
 accept filters and others don't so we 'fake' the read-time filtering.
 """
 
+import datetime
 from typing import Dict
 
 from orso.types import OrsoTypes
@@ -67,7 +68,9 @@ class PredicatePushable:
     @staticmethod
     def to_dnf(root):
         """
-        Convert a filter to DNF form, this is the form used by pyarrow
+        Convert a filter to DNF form, this is the form used by PyArrow.
+
+        This is specifically opinionated for the Parquet reader for PyArrow.
         """
 
         def _predicate_to_dnf(root):
@@ -85,18 +88,14 @@ class PredicatePushable:
                 raise NotSupportedError()
             if root.left.node_type != NodeType.IDENTIFIER:
                 root.left, root.right = root.right, root.left
-            if root.right.type in (OrsoTypes.DATE, OrsoTypes.TIMESTAMP):
-                raise NotSupportedError()
+            if root.right.type in (OrsoTypes.DATE):
+                date_val = root.right.value
+                if hasattr(date_val, "item"):
+                    date_val = date_val.item()
+                root.right.value = datetime.datetime.combine(date_val, datetime.time.min)
             if root.left.node_type != NodeType.IDENTIFIER:
                 raise NotSupportedError()
             if root.right.node_type != NodeType.LITERAL:
-                raise NotSupportedError()
-            if root.left.type in (
-                OrsoTypes.DOUBLE,
-                OrsoTypes.INTEGER,
-                OrsoTypes.VARCHAR,
-            ):
-                # not all operands are universally supported
                 raise NotSupportedError()
             return (
                 root.left.value,

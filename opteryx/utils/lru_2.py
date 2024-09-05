@@ -101,11 +101,11 @@ class LRU2:
             value = self.slots.pop(oldest_key)
             self.access_history.pop(oldest_key)
             self.evictions += 1
-            if details:
+            if details:  # pragma: no cover
                 return oldest_key, value
             return oldest_key
 
-        if details:
+        if details:  # pragma: no cover
             return None, None  # No item was evicted
         return None
 

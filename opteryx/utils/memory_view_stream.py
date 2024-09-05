@@ -76,7 +76,7 @@ class MemoryViewStream(BinaryIO):
     def __iter__(self) -> Iterator:
         return iter(self.mv)
 
-    def __next__(self) -> bytes:
+    def __next__(self) -> bytes:  # pragma: no cover
         if self.offset >= len(self.mv):
             raise StopIteration()
         self.offset += 1

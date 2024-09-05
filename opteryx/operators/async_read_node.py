@@ -138,6 +138,7 @@ class AsyncReaderNode(ReaderNode):
 
         if len(blob_names) == 0:
             # if we don't have any matching blobs, create an empty dataset
+            # TODO: rewrite
             from orso import DataFrame
 
             as_arrow = DataFrame(rows=[], schema=orso_schema).arrow()

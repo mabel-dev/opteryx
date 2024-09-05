@@ -316,6 +316,17 @@ def select_values(boolean_arrays, value_arrays):
     return result
 
 
+DEPRECATED_FUNCTIONS = {
+    "LIST": "ARRAY_AGG",  # deprecated, remove 0.19.0
+    "MAXIMUM": "MAX",  # deprecated, remove 0.19.0
+    "MINIMUM": "MIN",  # deprecated, remove 0.19.0
+    "AVERAGE": "AVG",  # deprecated, remove 0.19.0
+    "NUMERIC": "DOUBLE",  # deprecated, remove 0.19.0
+    "CEILING": "CEIL",  # deprecated, remove 0.19.0
+    "ABSOLUTE": "ABS",  # deprecated, remove 0.19.0
+    "TRUNCATE": "TRUNC",  # deprecated, remove 0.19.0
+}
+
 # fmt:off
 # Function definitions optionally include the type and the function.
 # The type is needed particularly when returning Python objects that
@@ -429,14 +440,14 @@ FUNCTIONS = {
     "ROUND": number_functions.round,
     "FLOOR": number_functions.floor,
     "CEIL": number_functions.ceiling,
-    "CEILING": number_functions.ceiling,
+    "CEILING": number_functions.ceiling, # deprecated, remove 0.19.0
     "ABS": compute.abs,
-    "ABSOLUTE": compute.abs,
+    "ABSOLUTE": compute.abs, # deprecated, remove 0.19.0
     "SIGN": compute.sign,
     "SIGNUM": compute.sign,
     "SQRT": compute.sqrt,
     "TRUNC": compute.trunc,
-    "TRUNCATE": compute.trunc,
+    "TRUNCATE": compute.trunc,  # deprecated, remove 0.19.0
     "PI": lambda x: None, # *
     "PHI": lambda x: None, # *
     "E": lambda x: None, # *

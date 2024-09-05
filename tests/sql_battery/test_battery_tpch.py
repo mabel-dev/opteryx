@@ -26,7 +26,7 @@ EXPECTED_OUTCOME = {
     "query09.sql": False,
     "query10.sql": False,
     "query11.sql": False,
-    "query12.sql": False,
+    "query12.sql": True,
     "query13.sql": False,
     "query14.sql": True,
     "query15.sql": False,
