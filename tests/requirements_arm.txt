@@ -13,7 +13,7 @@ pandas
 polars
 
 # different storage providers
-avro
+fastavro
 firebase-admin
 sqlalchemy
 pymysql

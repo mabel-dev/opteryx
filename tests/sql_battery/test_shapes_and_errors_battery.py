@@ -1704,6 +1704,15 @@ STATEMENTS = [
         ("SELECT * FROM $missions WHERE Launched_at < current_time + INTERVAL '7' DAY;", 4503, 8, None),
         ("SELECT * FROM $missions WHERE current_time > Launched_at + INTERVAL '7' DAY;", 4503, 8, None),
 
+        ("SELECT ARRAY_AGG(id) FROM $satellites GROUP BY planetId", 7, 1, None),
+        ("SELECT * FROM (SELECT ARRAY_AGG(id) AS pids FROM $satellites GROUP BY planetId) AS sats", 7, 1, None),
+        ("SELECT * FROM (SELECT ARRAY_AGG(id) AS pids, planetId FROM $satellites GROUP BY planetId) AS sats", 7, 2, None),
+        ("SELECT * FROM $planets INNER JOIN (SELECT ARRAY_AGG(id) AS pids, planetId FROM $satellites GROUP BY planetId) AS sats ON sats.planetId = $planets.id", 7, 22, None),
+        ("SELECT * FROM $planets LEFT JOIN (SELECT ARRAY_AGG(id) AS pids, planetId FROM $satellites GROUP BY planetId) AS sats ON sats.planetId = $planets.id", 9, 22, None),
+        ("SELECT * FROM (SELECT * FROM $planets LEFT JOIN (SELECT ARRAY_AGG(id) AS pids, planetId FROM $satellites GROUP BY planetId) AS sats ON sats.planetId = $planets.id) as satellites", 9, 22, None),
+        ("SELECT pids FROM (SELECT * FROM $planets LEFT JOIN (SELECT ARRAY_AGG(id) AS pids, planetId FROM $satellites GROUP BY planetId) AS sats ON sats.planetId = $planets.id) as satellites", 9, 1, None),
+        ("SELECT pid FROM (SELECT * FROM $planets LEFT JOIN (SELECT ARRAY_AGG(id) AS pids, planetId FROM $satellites GROUP BY planetId) AS sats ON sats.planetId = $planets.id) as satellites CROSS JOIN UNNEST(pids) AS pid", 177, 1, None),
+
         # ****************************************************************************************
 
         # These are queries which have been found to return the wrong result or not run correctly
