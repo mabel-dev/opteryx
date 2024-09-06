@@ -144,7 +144,10 @@ def _cross_join_unnest_column(
         schema = pyarrow.schema(
             [pyarrow.field(name=target_column.identity, type=target_column.arrow_field.type)]
         )
-        new_block = pyarrow.Table.from_arrays([single_column_collector], schema=schema)
+        arrow_array = pyarrow.array(single_column_collector)
+        if arrow_array.type != target_column.arrow_field.type:
+            arrow_array = arrow_array.cast(target_column.arrow_field.type)
+        new_block = pyarrow.Table.from_arrays([arrow_array], schema=schema)
         yield new_block
         at_least_once = True
 
