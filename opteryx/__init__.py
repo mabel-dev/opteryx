@@ -237,7 +237,8 @@ try:
             )
 
     ip = get_ipython()
-    ip.register_magics(OpteryxMagics)
+    if ip:
+        ip.register_magics(OpteryxMagics)
 except Exception as err:  # no sec
     pass
 
