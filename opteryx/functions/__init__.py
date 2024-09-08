@@ -325,6 +325,8 @@ DEPRECATED_FUNCTIONS = {
     "CEILING": "CEIL",  # deprecated, remove 0.19.0
     "ABSOLUTE": "ABS",  # deprecated, remove 0.19.0
     "TRUNCATE": "TRUNC",  # deprecated, remove 0.19.0
+    "LIST_CONTAINS_ANY": "ARRAY_CONTAINS_ANY",  # deprecated, remove 0.20.0
+    "LIST_CONTAINS_ALL": "ARRAY_CONTAINS_ALL",  # deprecated, remove 0.20.0
 }
 
 # fmt:off
@@ -495,6 +497,8 @@ def apply_function(function: str = None, *parameters):
         "IFNULL",
         "LIST_CONTAINS_ANY",
         "LIST_CONTAINS_ALL",
+        "ARRAY_CONTAINS_ANY",
+        "ARRAY_CONTAINS_ALL",
         "CONCAT",
         "CONCAT_WS",
         "IIF",
