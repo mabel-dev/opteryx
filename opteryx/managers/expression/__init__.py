@@ -30,7 +30,7 @@ from pyarrow import Table
 
 from opteryx.exceptions import ColumnReferencedBeforeEvaluationError
 from opteryx.exceptions import UnsupportedSyntaxError
-from opteryx.functions import FUNCTIONS
+from opteryx.functions import apply_function
 from opteryx.managers.expression.binary_operators import binary_operations
 from opteryx.managers.expression.ops import filter_operations
 from opteryx.managers.expression.unary_operations import UNARY_OPERATIONS
@@ -231,8 +231,7 @@ def _inner_evaluate(root: Node, table: Table):
             # zero parameter functions get the number of rows as the parameter
             if len(parameters) == 0:
                 parameters = [table.num_rows]
-            func = FUNCTIONS[root.value]
-            result = func(*parameters)
+            result = apply_function(root.value, *parameters)
             if isinstance(result, list):
                 result = numpy.array(result)
             return result
