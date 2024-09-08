@@ -1979,6 +1979,8 @@ STATEMENTS = [
         ("SELECT s, e FROM GENERATE_SERIES('2024-01-01', '2025-01-01', '1mth') AS s CROSS JOIN GENERATE_SERIES('2024-01-01', '2025-01-01', '1mth') AS e WHERE s + INTERVAL '1' MONTH = e", 12, 2, None),
         ("SELECT s, e FROM GENERATE_SERIES('2024-01-01', '2025-01-01', '1mth') AS s CROSS JOIN GENERATE_SERIES('2024-01-01', '2025-01-01', '1mth') AS e WHERE s = e - INTERVAL '1' MONTH", 12, 2, None),
         ("SELECT s, e FROM GENERATE_SERIES('2024-01-01', '2025-01-01', '1mth') AS s CROSS JOIN GENERATE_SERIES('2024-01-01', '2025-01-01', '1mth') AS e WHERE s - INTERVAL '1' MONTH = e", 12, 2, None),
+        # 1981
+        ("SELECT name FROM $planets WHERE VARCHAR(surface_pressure) = 'nan'", 0, 1, None),
 ]
 # fmt:on
 

@@ -488,6 +488,52 @@ FUNCTIONS = {
 # fmt:on
 
 
+def apply_function(function: str = None, *parameters):
+    compressed = False
+
+    if not isinstance(parameters[0], int) and function not in (
+        "IFNULL",
+        "LIST_CONTAINS_ANY",
+        "LIST_CONTAINS_ALL",
+        "CONCAT",
+        "CONCAT_WS",
+        "IIF",
+        "COALESCE",
+        "SUBSTRING",
+    ):
+        morsel_size = len(parameters[0])
+        null_positions = numpy.zeros(morsel_size, dtype=numpy.bool_)
+
+        for parameter in parameters:
+            # compute null positions
+            null_positions = numpy.logical_or(
+                null_positions,
+                compute.is_null(parameter, nan_is_null=True),
+            )
+
+        # Early exit if all values are null
+        if null_positions.all():
+            return numpy.array([None] * morsel_size)
+
+        if null_positions.any():
+            # if we have nulls and both columns are numpy arrays, we can speed things
+            # up by removing the nulls from the calculations, we add the rows back in
+            # later
+            valid_positions = ~null_positions
+            parameters = [arr.compress(valid_positions) for arr in parameters]
+            compressed = True
+
+    interim_results = FUNCTIONS[function](*parameters)
+
+    if compressed:
+        # fill the result set
+        results = numpy.array([None] * morsel_size, dtype=object)
+        numpy.place(results, valid_positions, interim_results)
+        return results
+
+    return interim_results
+
+
 def is_function(name):
     """
     sugar
