@@ -231,6 +231,7 @@ class AsyncReaderNode(ReaderNode):
             self.statistics.columns_read += morsel.num_columns
         else:
             self.statistics.empty_datasets += 1
+            self.statistics.columns_read = len(orso_schema.columns)
             arrow_schema = convert_orso_schema_to_arrow_schema(orso_schema, use_identities=True)
             yield pyarrow.Table.from_arrays(
                 [pyarrow.array([]) for _ in arrow_schema], schema=arrow_schema

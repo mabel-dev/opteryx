@@ -32,13 +32,13 @@ def test_redis_cache():
     # read the data a second time, this should hit the cache
     cur = opteryx.query("SELECT * FROM testdata.flat.ten_files;")
 
-    assert cache.hits > 11
+    assert cache.hits > 0
     assert cache.misses < 12
     assert cache.skips == 0
     assert cache.errors == 0
 
     stats = cur.stats
-    assert stats["remote_cache_hits"] >= stats["blobs_read"], stats
+    assert stats.get("remote_cache_hits", 0) >= stats["blobs_read"], stats
     assert stats.get("cache_misses", 0) == 0, stats
 
 

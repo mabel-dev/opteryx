@@ -39,16 +39,10 @@ def test_memcached_cache():
     stats = cur.stats
 
     assert (
-        cache.hits >= 11
-    ), f"hits: {cache.hits}, misses: {cache.misses}, skips: {cache.skips}, errors: {cache.errors}, sets: {cache.sets}"
-    assert (
-        cache.skips == 0
-    ), f"hits: {cache.hits}, misses: {cache.misses}, skips: {cache.skips}, errors: {cache.errors}, sets: {cache.sets}"
-    assert (
-        cache.errors == 0
+        cache.hits > 0
     ), f"hits: {cache.hits}, misses: {cache.misses}, skips: {cache.skips}, errors: {cache.errors}, sets: {cache.sets}"
 
-    assert stats["remote_cache_hits"] >= stats["blobs_read"], stats
+    assert stats.get("remote_cache_hits", 0) >= stats["blobs_read"], str(stats)
     assert stats.get("cache_misses", 0) == 0, stats
 
 

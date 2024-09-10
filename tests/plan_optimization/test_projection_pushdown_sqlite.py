@@ -32,6 +32,7 @@ STATEMENTS = [
 @pytest.mark.parametrize("query, expected_columns", STATEMENTS)
 def test_parquet_projection_pushdown(query, expected_columns):
     cur = opteryx.query(query)
+    cur.materialize()
     assert cur.stats["columns_read"] == expected_columns, cur.stats
 
 

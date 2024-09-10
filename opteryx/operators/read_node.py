@@ -214,3 +214,5 @@ class ReaderNode(BasePlanNode):
             start_clock = time.monotonic_ns()
         if morsel:
             self.statistics.columns_read += morsel.num_columns
+        else:
+            self.statistics.columns_read += len(orso_schema.columns)
