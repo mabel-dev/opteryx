@@ -137,64 +137,68 @@ def async_read_thru_cache(func):
 
     @wraps(func)
     async def wrapper(blob_name: str, statistics, pool: MemoryPool, **kwargs):
-        nonlocal max_evictions
-
-        key = hex(CityHash64(blob_name)).encode()
-        my_keys.add(key)
-
-        # try the buffer pool first
-        result = buffer_pool.get(key, zero_copy=False)
-        if result is not None:
-            remote_cache.touch(key)  # help the remote cache track LRU
-            statistics.bufferpool_hits += 1
-            ref = await pool.commit(result)  # type: ignore
-            while ref is None:
-                await asyncio.sleep(0.1)
-                statistics.stalls_writing_to_read_buffer += 1
-                ref = await pool.commit(result)  # type: ignore
-                statistics.bytes_read += len(result)
-            return ref
-
-        # try the remote cache next
-        result = remote_cache.get(key)
-        if result is not None:
-            statistics.remote_cache_hits += 1
-            ref = await pool.commit(result)  # type: ignore
-            while ref is None:
-                await asyncio.sleep(0.1)
-                statistics.stalls_writing_to_read_buffer += 1
-                ref = await pool.commit(result)  # type: ignore
-                statistics.bytes_read += len(result)
-            return ref
-
         try:
-            result = await func(blob_name=blob_name, statistics=statistics, pool=pool, **kwargs)
-        except Exception as e:
-            print(f"Error in {func.__name__}: {e}")
-            raise  # Optionally re-raise the error after logging it
+            nonlocal max_evictions
 
-        # Write the result to caches
-        if max_evictions:
-            # we set a per-query eviction limit
-            buffer = await pool.read(result)  # type: ignore
+            key = hex(CityHash64(blob_name)).encode()
+            read_buffer_ref = None
+            payload = None
+            my_keys.add(key)
 
-            if len(buffer) < buffer_pool.size // 10:
-                evicted = buffer_pool.set(key, buffer)
-                if evicted:
-                    # if we're evicting items we just put in the cache, stop
-                    if evicted in my_keys:
-                        max_evictions = 0
-                    else:
-                        max_evictions -= 1
-                    statistics.cache_evictions += 1
+            # try the buffer pool first
+            payload = buffer_pool.get(key, zero_copy=False)
+            if payload is not None:
+                remote_cache.touch(key)  # help the remote cache track LRU
+                statistics.bufferpool_hits += 1
+                read_buffer_ref = await pool.commit(payload)  # type: ignore
+                while read_buffer_ref is None:
+                    await asyncio.sleep(0.1)
+                    statistics.stalls_writing_to_read_buffer += 1
+                    read_buffer_ref = await pool.commit(payload)  # type: ignore
+                    statistics.bytes_read += len(payload)
+                return read_buffer_ref
 
-            if len(buffer) < MAX_CACHEABLE_ITEM_SIZE:
-                remote_cache.set(key, buffer)
-            else:
-                statistics.cache_oversize += 1
+            # try the remote cache next
+            payload = remote_cache.get(key)
+            if payload is not None:
+                statistics.remote_cache_hits += 1
+                read_buffer_ref = await pool.commit(payload)  # type: ignore
+                while read_buffer_ref is None:
+                    await asyncio.sleep(0.1)
+                    statistics.stalls_writing_to_read_buffer += 1
+                    read_buffer_ref = await pool.commit(payload)  # type: ignore
+                    statistics.bytes_read += len(payload)
+                return read_buffer_ref
 
-        statistics.cache_misses += 1
+            try:
+                read_buffer_ref = await func(
+                    blob_name=blob_name, statistics=statistics, pool=pool, **kwargs
+                )
+                statistics.cache_misses += 1
+                return read_buffer_ref
+            except Exception as e:
+                print(f"Error in {func.__name__}: {e}")
+                raise  # Optionally re-raise the error after logging it
 
-        return result
+        finally:
+            # Write the result to caches
+            if max_evictions:
+                # we set a per-query eviction limit
+                payload = await pool.read(read_buffer_ref)  # type: ignore
+
+                if len(payload) < buffer_pool.size // 10:
+                    evicted = buffer_pool.set(key, payload)
+                    if evicted:
+                        # if we're evicting items we just put in the cache, stop
+                        if evicted in my_keys:
+                            max_evictions = 0
+                        else:
+                            max_evictions -= 1
+                        statistics.cache_evictions += 1
+
+                if len(payload) < MAX_CACHEABLE_ITEM_SIZE:
+                    remote_cache.set(key, payload)
+                else:
+                    statistics.cache_oversize += 1
 
     return wrapper

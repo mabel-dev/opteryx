@@ -5,7 +5,6 @@ import pytest
 sys.path.insert(1, os.path.join(sys.path[0], "../.."))
 
 import opteryx
-from opteryx.connectors import DiskConnector
 
 STATEMENTS = [
     ("SELECT name FROM testdata.planets;", 1),
@@ -25,6 +24,7 @@ STATEMENTS = [
 def test_parquet_projection_pushdown(query, expected_columns):
 
     cur = opteryx.query(query)
+    cur.materialize()
     assert cur.stats["columns_read"] == expected_columns, cur.stats
 
 

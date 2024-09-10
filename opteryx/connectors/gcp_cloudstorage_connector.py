@@ -25,7 +25,6 @@ from opteryx.connectors.capabilities import Asynchronous
 from opteryx.connectors.capabilities import Cacheable
 from opteryx.connectors.capabilities import Partitionable
 from opteryx.connectors.capabilities import PredicatePushable
-from opteryx.exceptions import DataError
 from opteryx.exceptions import DatasetNotFoundError
 from opteryx.exceptions import DatasetReadError
 from opteryx.exceptions import MissingDependencyError
@@ -214,7 +213,7 @@ class GcpCloudStorageConnector(
             response = self.session.get(url, headers=headers, timeout=30, params=params)
 
             if response.status_code != 200:  # pragma: no cover
-                raise Exception(f"Error fetching blob list: {response.text}")
+                raise DatasetReadError(f"Error fetching blob list: {response.text}")
 
             blob_data = response.json()
             blob_names.extend(
@@ -259,7 +258,7 @@ class GcpCloudStorageConnector(
                         just_schema=just_schema,
                     )
                 except Exception as err:
-                    raise DataError(f"Unable to read file {blob_name} ({err})") from err
+                    raise DatasetReadError(f"Unable to read file {blob_name} ({err})") from err
 
                 if not just_schema:
                     num_rows, num_columns, decoded = decoded
