@@ -21,6 +21,7 @@ def test_redis_cache():
     import opteryx
     from opteryx import CacheManager
     from opteryx.managers.cache import RedisCache
+    from opteryx.shared import BufferPool
 
     cache = RedisCache()
     opteryx.set_cache_manager(CacheManager(cache_backend=cache))
@@ -28,6 +29,9 @@ def test_redis_cache():
     # read the data once, this should populate the cache if it hasn't already
     cur = opteryx.query("SELECT * FROM testdata.flat.ten_files;")
     stats = cur.stats
+
+    buffer = BufferPool()
+    buffer.reset()
 
     # read the data a second time, this should hit the cache
     cur = opteryx.query("SELECT * FROM testdata.flat.ten_files;")
