@@ -98,12 +98,14 @@ class MemcachedCache(BaseKeyValueStore):
             self.skips += 1
             return None
         try:
-            response = self._server.get(key, None)
+            print(key)
+            response = self._server.get(bytes(key))
             self._consecutive_failures = 0
             if response:
                 self.hits += 1
                 return bytes(response)
         except Exception as err:  # pragma: no cover
+            # DEBUG: log(f"Unable to 'get' Memcache cache {type(err)}")
             self._consecutive_failures += 1
             if self._consecutive_failures >= MAXIMUM_CONSECUTIVE_FAILURES:
                 import datetime
@@ -120,10 +122,11 @@ class MemcachedCache(BaseKeyValueStore):
     def set(self, key: bytes, value: bytes) -> None:
         if self._consecutive_failures < MAXIMUM_CONSECUTIVE_FAILURES:
             try:
-                self._server.set(key, value)
+                self._server.set(bytes(key), value)
                 self.sets += 1
             except Exception as err:
                 # if we fail to set, stop trying
+                # DEBUG: log(f"Unable to 'set' Memcache cache {err}")
                 self._consecutive_failures = MAXIMUM_CONSECUTIVE_FAILURES
                 self.errors += 1
                 import datetime
@@ -137,7 +140,7 @@ class MemcachedCache(BaseKeyValueStore):
     def touch(self, key: bytes):
         if self._consecutive_failures < MAXIMUM_CONSECUTIVE_FAILURES:
             try:
-                self._server.touch(key)
+                self._server.touch(bytes(key))
                 self.touches += 1
             except Exception as err:  # nosec
                 if not err:
