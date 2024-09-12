@@ -17,7 +17,7 @@ jobs:
                   fetch-depth: 0
 
             - uses: microsoft/ApplicationInspector-Action@v1
-            - uses: actions/upload-artifact@v2
+            - uses: actions/upload-artifact@v4
               with:
                   name: AppInspectorResults
                   path: AppInspectorResults.json
