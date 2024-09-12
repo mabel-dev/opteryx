@@ -10,14 +10,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Dict
 from typing import Generator
 
 from orso.schema import FlatColumn
 from orso.schema import RelationSchema
+from orso.types import OrsoTypes
 
 from opteryx import config
 from opteryx.connectors.base.base_connector import INITIAL_CHUNK_SIZE
 from opteryx.connectors.base.base_connector import BaseConnector
+from opteryx.connectors.capabilities import PredicatePushable
 from opteryx.exceptions import DatasetNotFoundError
 from opteryx.exceptions import MissingDependencyError
 from opteryx.exceptions import UnmetRequirementError
@@ -52,37 +55,48 @@ def _get_project_id():  # pragma: no cover
 def _initialize():  # pragma: no cover
     """Create the connection to Firebase"""
     try:
-        import firebase_admin
-        from firebase_admin import credentials
+        from google.cloud import firestore
     except ImportError as err:  # pragma: no cover
         raise MissingDependencyError(err.name) from err
-    if not firebase_admin._apps:
-        # if we've not been given the ID, fetch it
-        project_id = GCP_PROJECT_ID
-        if project_id is None:
-            project_id = _get_project_id()
-        creds = credentials.ApplicationDefault()
-        firebase_admin.initialize_app(creds, {"projectId": project_id, "httpTimeout": 10})
+
+    project_id = GCP_PROJECT_ID
+    if project_id is None:
+        project_id = _get_project_id()
+    return firestore.Client(project=project_id)
 
 
-class GcpFireStoreConnector(BaseConnector):
+class GcpFireStoreConnector(BaseConnector, PredicatePushable):
     __mode__ = "Collection"
     __type__ = "FIRESTORE"
 
+    PUSHABLE_OPS: Dict[str, bool] = {"Eq": True}
+
+    PUSHABLE_TYPES = {OrsoTypes.BOOLEAN, OrsoTypes.DOUBLE, OrsoTypes.INTEGER, OrsoTypes.VARCHAR}
+
+    def __init__(self, **kwargs):
+        BaseConnector.__init__(self, **kwargs)
+        PredicatePushable.__init__(self, **kwargs)
+
     def read_dataset(
-        self, columns: list = None, chunk_size: int = INITIAL_CHUNK_SIZE, **kwargs
+        self,
+        columns: list = None,
+        chunk_size: int = INITIAL_CHUNK_SIZE,
+        predicates: list = None,
+        **kwargs,
     ) -> Generator:
         """
         Return a morsel of documents
         """
-        from firebase_admin import firestore
+        from google.cloud.firestore_v1.base_query import FieldFilter
 
-        _initialize()
-        database = firestore.client()
+        database = _initialize()
         documents = database.collection(self.dataset)
 
-        #        for predicate in self._predicates:
-        #            documents = documents.where(*predicate)
+        if predicates:
+            for predicate in predicates:
+                documents = documents.where(
+                    filter=FieldFilter(predicate.left.source_column, "==", predicate.right.value)
+                )
 
         documents = documents.stream()
 

@@ -19,7 +19,7 @@ zstandard
 
 # different storage providers
 fastavro
-firebase-admin
+firestore
 google-cloud-storage
 google-cloud-bigquery-storage
 minio
