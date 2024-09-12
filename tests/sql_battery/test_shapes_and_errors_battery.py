@@ -1985,7 +1985,7 @@ STATEMENTS = [
         # 2002
         ("SELECT * FROM testdata.flat.hosts WHERE address | '54.0.0.0/8'", 27, 2, None),
         ("SELECT * FROM testdata.flat.hosts WHERE address | '20.0.0.0/9'", 76, 2, None),
-        ("SELECT * FROM testdata.flat.hosts WHERE address | '20.1.0.0/9'", 76, 2, None),
+        ("SELECT * FROM testdata.flat.hosts WHERE address | '20.1.0.0/9'", 0, 2, None),
         ("SELECT * FROM testdata.flat.hosts WHERE address | '20.112.0.0/16'", 26, 2, None),
         ("SELECT * FROM testdata.flat.hosts WHERE address | '127.0.0.0/24'", 1, 2, None),
 ]

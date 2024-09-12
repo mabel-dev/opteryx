@@ -60,21 +60,22 @@ def test_context_manager():
     assert stream.closed
 
 
-@pytest.mark.parametrize(
-    "offset, whence, expected_offset",
-    [
+def test_seek():
+    def inner(offset, whence, expected_offset):
+        data = b"Hello, World!"
+        mv = memoryview(data)
+        stream = MemoryViewStream(mv)
+        stream.seek(offset, whence)
+        assert stream.tell() == expected_offset
+
+    params = [
         (5, 0, 5),  # Absolute positioning
         (2, 1, 2),  # Relative to current position
         (-3, 2, 10),  # Relative to file's end
-    ],
-)
-def test_seek_variants(offset, whence, expected_offset):
-    data = b"Hello, World!"
-    mv = memoryview(data)
-    stream = MemoryViewStream(mv)
-    stream.seek(offset, whence)
-    assert stream.tell() == expected_offset
+    ]
 
+    for param in params:
+        inner(*param)
 
 def test_unsupported_operations():
     data = b"Hello, World!"
@@ -111,3 +112,8 @@ def test_other_attributes():
 
     assert stream.fileno() == -1
     assert not stream.isatty()
+
+if __name__ == "__main__":  # pragma: no cover
+    from tests.tools import run_tests
+
+    run_tests()
