@@ -239,7 +239,7 @@ try:
     ip = get_ipython()
     if ip:
         ip.register_magics(OpteryxMagics)
-except Exception as err:  # no sec
+except Exception as err:  # nosec
     pass
 
 # Enable all warnings, including DeprecationWarning
