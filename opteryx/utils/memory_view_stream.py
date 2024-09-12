@@ -36,7 +36,7 @@ class MemoryViewStream(BinaryIO):
         self.offset += n
         return result.tobytes()
 
-    def seek(self, offset: int, whence: int = 0) -> int:
+    def seek(self, offset: int, whence: int = 0, expected_offset: int = 0) -> int:
         if whence == 0:  # Absolute file positioning
             self.offset = min(max(offset, 0), len(self.mv))
         elif whence == 1:  # Seek relative to the current position
@@ -104,5 +104,5 @@ class MemoryViewStream(BinaryIO):
     def write(self, buffer: bytes = None):  # pragma: no cover
         raise io.UnsupportedOperation()
 
-    def writelines(self, buffer: Iterable[bytes]):  # pragma: no cover
+    def writelines(self, buffer: Iterable[bytes] = None):  # pragma: no cover
         raise io.UnsupportedOperation()
