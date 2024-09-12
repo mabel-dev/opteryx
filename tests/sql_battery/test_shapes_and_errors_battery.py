@@ -1982,6 +1982,12 @@ STATEMENTS = [
         ("SELECT s, e FROM GENERATE_SERIES('2024-01-01', '2025-01-01', '1mth') AS s CROSS JOIN GENERATE_SERIES('2024-01-01', '2025-01-01', '1mth') AS e WHERE s - INTERVAL '1' MONTH = e", 12, 2, None),
         # 1981
         ("SELECT name FROM $planets WHERE VARCHAR(surface_pressure) = 'nan'", 0, 1, None),
+        # 2002
+        ("SELECT * FROM testdata.flat.hosts WHERE address | '54.0.0.0/8'", 27, 2, None),
+        ("SELECT * FROM testdata.flat.hosts WHERE address | '20.0.0.0/9'", 76, 2, None),
+        ("SELECT * FROM testdata.flat.hosts WHERE address | '20.1.0.0/9'", 76, 2, None),
+        ("SELECT * FROM testdata.flat.hosts WHERE address | '20.112.0.0/16'", 26, 2, None),
+        ("SELECT * FROM testdata.flat.hosts WHERE address | '127.0.0.0/24'", 1, 2, None),
 ]
 # fmt:on
 

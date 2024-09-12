@@ -19,6 +19,7 @@ tests - it's not intended to be correct for usage outside Opteryx.
 
 import io
 from typing import BinaryIO
+from typing import Iterable
 from typing import Iterator
 
 
@@ -97,11 +98,11 @@ class MemoryViewStream(BinaryIO):
     def readlines(self, hint: int = -1) -> list:  # pragma: no cover
         raise io.UnsupportedOperation()
 
-    def truncate(self):  # pragma: no cover
+    def truncate(self, pos: int = None):  # pragma: no cover
         raise io.UnsupportedOperation()
 
-    def write(self):  # pragma: no cover
+    def write(self, buffer: bytes = None):  # pragma: no cover
         raise io.UnsupportedOperation()
 
-    def writelines(self):  # pragma: no cover
+    def writelines(self, buffer: Iterable[bytes]):  # pragma: no cover
         raise io.UnsupportedOperation()

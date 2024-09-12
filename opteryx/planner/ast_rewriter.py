@@ -144,7 +144,7 @@ def parameter_list_binder(
 
 def parameter_dict_binder(
     node: Union[Dict, List], parameter_set: Dict[str, Any], connection, query_type
-) -> Union[Dict, List]:
+) -> Dict[str, Any]:
     if isinstance(node, list):
         return [
             parameter_dict_binder(child, parameter_set, connection, query_type) for child in node
