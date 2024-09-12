@@ -14,7 +14,7 @@ polars
 
 # different storage providers
 fastavro
-firebase-admin
+firestore
 sqlalchemy
 pymysql
 psycopg2-binary

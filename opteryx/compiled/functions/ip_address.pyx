@@ -1,18 +1,22 @@
 # cython: language_level=3
+# cython: boundscheck=False
+# cython: wraparound=False
+# cython: nonecheck=False
+# cython: overflowcheck=False
 
-from libc.stdint cimport uint32_t
+from libc.stdint cimport uint32_t, int8_t
 from libc.stdlib cimport strtol
 from libc.string cimport strchr
 from libc.string cimport strlen
 from libc.string cimport memset
 import numpy as np
 cimport numpy as cnp
+from cpython cimport PyUnicode_AsUTF8String, PyBytes_GET_SIZE
 
 import cython
 
-@cython.boundscheck(False)
-@cython.wraparound(False)
-cdef uint32_t ip_to_int(char* ip):
+
+cdef inline uint32_t ip_to_int(const char* ip):
 
     # Check if the input string is at least 7 characters long
     if strlen(ip) < 7:
@@ -20,7 +24,7 @@ cdef uint32_t ip_to_int(char* ip):
 
     cdef uint32_t result = 0
     cdef uint32_t num = 0
-    cdef int shift = 24  # Start with the leftmost byte
+    cdef int8_t shift = 24  # Start with the leftmost byte
     cdef char* end
 
     # Convert each part of the IP to an integer
@@ -39,8 +43,6 @@ cdef uint32_t ip_to_int(char* ip):
 
     return result
 
-@cython.boundscheck(False)
-@cython.wraparound(False)
 def ip_in_cidr(cnp.ndarray ip_addresses, str cidr):
 
     # CIDR validation...
@@ -51,16 +53,20 @@ def ip_in_cidr(cnp.ndarray ip_addresses, str cidr):
     cdef int mask_size
     cdef str base_ip_str
     cdef list cidr_parts = cidr.split('/')
+    cdef bytes ip_byte_string
+    cdef uint32_t arr_len = ip_addresses.shape[0]
 
     base_ip_str, mask_size = cidr_parts[0], int(cidr_parts[1])
     netmask = (0xFFFFFFFF << (32 - mask_size)) & 0xFFFFFFFF
 
-    base_ip = ip_to_int(base_ip_str.encode('utf-8'))
+    base_ip = ip_to_int(PyUnicode_AsUTF8String(base_ip_str))
 
-    cdef unsigned char[:] result = np.zeros(ip_addresses.shape[0], dtype=np.bool_)
+    cdef unsigned char[:] result = np.zeros(arr_len, dtype=np.bool_)
 
-    for i in range(ip_addresses.shape[0]):
-        ip_int = ip_to_int(ip_addresses[i].encode('utf-8'))
-        result[i] = (ip_int & netmask) == base_ip
+    for i in range(arr_len):
+        ip_address = ip_addresses[i]
+        if ip_address is not None:
+            ip_int = ip_to_int(PyUnicode_AsUTF8String(ip_address))
+            result[i] = (ip_int & netmask) == base_ip
 
     return np.asarray(result, dtype=bool)
