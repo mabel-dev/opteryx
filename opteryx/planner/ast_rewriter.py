@@ -182,7 +182,7 @@ def temporal_range_binder(ast, filters):
             ast["table_name"][0]["start_date"] = temporal_range[1]
             ast["table_name"][0]["end_date"] = temporal_range[2]
             return ast
-        if "ShowCreate" in ast:
+        if "ShowCreate" in ast and filters:
             temporal_range = filters.pop(0)
             ast["ShowCreate"]["start_date"] = temporal_range[1]
             ast["ShowCreate"]["end_date"] = temporal_range[2]

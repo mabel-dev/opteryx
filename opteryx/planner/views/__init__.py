@@ -44,3 +44,7 @@ def view_as_plan(view_name: str):
     logical_plan, _, _ = next(do_logical_planning_phase(parsed_statements))
 
     return logical_plan
+
+
+def view_as_sql(view_name: str):
+    return VIEWS.get(view_name)["statement"]

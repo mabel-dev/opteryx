@@ -85,10 +85,12 @@ def create_physical_plan(logical_plan, query_properties) -> ExecutionTree:
         elif node_type == LogicalPlanStepType.Set:
             node = operators.SetVariableNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Show:
-            if node_config["items"][0] == "PARAMETER":
-                node = operators.ShowValueNode(query_properties, kind="PARAMETER", value=node_config["items"][1])
+            if node_config["object_type"] == "VARIABLE":
+                node = operators.ShowValueNode(query_properties, kind=node_config["items"][1], value=node_config["items"][1])
+            elif node_config["object_type"] == "VIEW":
+                node = operators.ShowCreateNode(query_properties, **node_config)
             else:
-                raise UnsupportedSyntaxError("Can only SHOW variables")
+                raise UnsupportedSyntaxError(f"Unsupported SHOW type '{node_config['object_type']}'")
         elif node_type == LogicalPlanStepType.ShowColumns:
             node = operators.ShowColumnsNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Subquery:
