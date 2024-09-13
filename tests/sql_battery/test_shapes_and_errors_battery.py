@@ -1714,6 +1714,10 @@ STATEMENTS = [
         ("SELECT pids FROM (SELECT * FROM $planets LEFT JOIN (SELECT ARRAY_AGG(id) AS pids, planetId FROM $satellites GROUP BY planetId) AS sats ON sats.planetId = $planets.id) as satellites", 9, 1, None),
         ("SELECT pid FROM (SELECT * FROM $planets LEFT JOIN (SELECT ARRAY_AGG(id) AS pids, planetId FROM $satellites GROUP BY planetId) AS sats ON sats.planetId = $planets.id) as satellites CROSS JOIN UNNEST(pids) AS pid", 177, 1, None),
 
+        ("SHOW CREATE VIEW mission_reports", 1, 1, None),
+        ("SHOW CREATE VIEW mission.reports", 1, 1, DatasetNotFoundError),
+        ("SHOW CREATE TABLE mission_reports", 1, 1, UnsupportedSyntaxError),
+
         # ****************************************************************************************
 
         # These are queries which have been found to return the wrong result or not run correctly

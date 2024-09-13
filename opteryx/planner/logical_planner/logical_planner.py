@@ -138,7 +138,10 @@ class LogicalPlanNode(Node):
             if node_type == LogicalPlanStepType.Set:
                 return f"SET ({self.variable} TO {self.value.value})"
             if node_type == LogicalPlanStepType.Show:
-                return f"SHOW ({', '.join(self.items)})"
+                if self.object_type == "VARIABLE":
+                    return f"SHOW ({' '.join(self.items)})"
+                if self.object_type == "VIEW":
+                    return f"SHOW (CREATE VIEW {self.object_name})"
             if node_type == LogicalPlanStepType.ShowColumns:
                 return f"SHOW{' FULL' if self.full else ''}{' EXTENDED' if self.extended else ''} COLUMNS ({self.relation})"
             if node_type == LogicalPlanStepType.Subquery:
@@ -996,7 +999,24 @@ def plan_show_variable(statement):
     root_node = "ShowVariable"
     plan = LogicalPlan()
     show_step = LogicalPlanNode(node_type=LogicalPlanStepType.Show)
+    show_step.object_type = "VARIABLE"
     show_step.items = extract_variable(statement[root_node]["variable"])
+
+    if show_step.items[0] not in ("PARAMETER",):
+        raise UnsupportedSyntaxError(f"SHOW {show_step.items[0]} is not supported.")
+
+    plan.add_node(random_string(), show_step)
+    return plan
+
+
+def plan_show_create_query(statement):
+    root_node = "ShowCreate"
+    plan = LogicalPlan()
+    show_step = LogicalPlanNode(node_type=LogicalPlanStepType.Show)
+    show_step.object_type = statement[root_node]["obj_type"].upper()
+    show_step.object_name = extract_variable(statement[root_node]["obj_name"])
+    if isinstance(show_step.object_name, list):
+        show_step.object_name = ".".join(show_step.object_name)
     plan.add_node(random_string(), show_step)
     return plan
 
@@ -1047,7 +1067,7 @@ QUERY_BUILDERS = {
     "Query": plan_query,
     "SetVariable": plan_set_variable,
     "ShowColumns": plan_show_columns,
-    #    "ShowCreate": show_create_query,
+    "ShowCreate": plan_show_create_query,
     #    "ShowFunctions": show_functions_query,
     "ShowVariable": plan_show_variable,  # generic SHOW handler
     "ShowVariables": plan_show_variables,
