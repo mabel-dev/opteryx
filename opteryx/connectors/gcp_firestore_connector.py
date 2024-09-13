@@ -69,7 +69,9 @@ class GcpFireStoreConnector(BaseConnector, PredicatePushable):
     __mode__ = "Collection"
     __type__ = "FIRESTORE"
 
-    PUSHABLE_OPS: Dict[str, bool] = {"Eq": True}
+    PUSHABLE_OPS: Dict[str, bool] = {"Eq": True, "NotEq": True}
+
+    OPS_XLAT: Dict[str, str] = {"Eq": "==", "NotEq": "!="}
 
     PUSHABLE_TYPES = {OrsoTypes.BOOLEAN, OrsoTypes.DOUBLE, OrsoTypes.INTEGER, OrsoTypes.VARCHAR}
 
@@ -89,13 +91,27 @@ class GcpFireStoreConnector(BaseConnector, PredicatePushable):
         """
         from google.cloud.firestore_v1.base_query import FieldFilter
 
+        from opteryx.utils.file_decoders import filter_records
+
         database = _initialize()
         documents = database.collection(self.dataset)
 
+        collected_predicates = []
+        have_pushed_a_negative = False
+
         if predicates:
             for predicate in predicates:
+                if have_pushed_a_negative and predicate.value == "NotEq":
+                    collected_predicates.append(predicate)
+                    continue
+                if predicate.value == "NotEq":
+                    have_pushed_a_negative = True
                 documents = documents.where(
-                    filter=FieldFilter(predicate.left.source_column, "==", predicate.right.value)
+                    filter=FieldFilter(
+                        predicate.left.source_column,
+                        self.OPS_XLAT[predicate.value],
+                        predicate.right.value,
+                    )
                 )
 
         documents = documents.stream()
@@ -105,6 +121,8 @@ class GcpFireStoreConnector(BaseConnector, PredicatePushable):
             columns=columns,
             initial_chunk_size=chunk_size,
         ):
+            if collected_predicates:
+                morsel = filter_records(collected_predicates, morsel)
             yield morsel
 
     def get_dataset_schema(self) -> RelationSchema:
