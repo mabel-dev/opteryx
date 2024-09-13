@@ -187,6 +187,11 @@ class ReaderNode(BasePlanNode):
 
     def execute(self) -> Generator:
         """Perform this step, time how long is spent doing work"""
+
+        self.statistics.blobs_read += 0
+        self.statistics.rows_read += 0
+        self.statistics.bytes_processed += 0
+
         morsel = None
         orso_schema = self.schema
         orso_schema_cols = []

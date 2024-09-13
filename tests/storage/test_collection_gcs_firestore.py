@@ -53,7 +53,53 @@ def test_predicate_pushdown_not_equals():
     cur = conn.cursor()
     cur.execute("SELECT * FROM dwarves WHERE actor != 'Pinto Colvig';")
     assert cur.rowcount == 5, cur.rowcount
-    assert cur.stats["rows_read"] == 7, cur.stats
+    assert cur.stats["rows_read"] == 5, cur.stats
+
+
+def test_predicate_pushdown_multiple_not_equals():
+    """we don't push these, we get 5 records by Opteryx does the filtering not the source"""
+    opteryx.register_store("dwarves", GcpFireStoreConnector)
+    os.environ["GCP_PROJECT_ID"] = "mabeldev"
+
+    conn = opteryx.connect()
+    
+    # TEST PREDICATE PUSHDOWN
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM dwarves WHERE actor != 'Pinto Colvig' and actor != 'Sleepy';")
+    assert cur.rowcount == 5, cur.rowcount
+    assert cur.stats["rows_read"] == 5, cur.stats
+
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM dwarves WHERE actor != 'Pinto Colvig' and name != 'Sneezy';")
+    assert cur.rowcount == 4, cur.rowcount
+    assert cur.stats["rows_read"] == 4, cur.stats
+
+def test_predicate_pushdown_multiple_equals():
+    """we don't push these, we get 5 records by Opteryx does the filtering not the source"""
+    opteryx.register_store("dwarves", GcpFireStoreConnector)
+    os.environ["GCP_PROJECT_ID"] = "mabeldev"
+
+    conn = opteryx.connect()
+    
+    # TEST PREDICATE PUSHDOWN
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM dwarves WHERE actor == 'Pinto Colvig' and actor == 'Sleepy';")
+    assert cur.rowcount == 0, cur.rowcount
+    assert cur.stats["rows_read"] == 0, cur.stats
+
+def test_predicate_pushdown_multiple_mixed():
+    """we don't push these, we get 5 records by Opteryx does the filtering not the source"""
+    opteryx.register_store("dwarves", GcpFireStoreConnector)
+    os.environ["GCP_PROJECT_ID"] = "mabeldev"
+
+    conn = opteryx.connect()
+    
+    # TEST PREDICATE PUSHDOWN
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM dwarves WHERE actor == 'Pinto Colvig' and actor != 'Sleepy';")
+    assert cur.rowcount == 2, cur.rowcount
+    assert cur.stats["rows_read"] == 2, cur.stats
+
 
 
 if __name__ == "__main__":  # pragma: no cover
