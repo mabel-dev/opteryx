@@ -37,15 +37,18 @@ def test_memcached_cache():
     for i in range(10):
         cur = conn.cursor()
         time.sleep(0.01)
-        cur.execute("SELECT * FROM testdata.flat.ten_files;")
+        cur.execute("SELECT count(*) FROM testdata.flat.ten_files;")
 
     print(f"hits: {cache.hits}, misses: {cache.misses}, skips: {cache.skips}, errors: {cache.errors}, sets: {cache.sets}")
 
-    # read the data again time, this should hit the cache
-    buffer = BufferPool()
-    buffer.reset()
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM testdata.flat.ten_files;")
+    for i in range(10):
+        # read the data again time, this should hit the cache
+        buffer = BufferPool()
+        buffer.reset()
+
+        cur = conn.cursor()
+        cur.execute("SELECT count(*) FROM testdata.flat.ten_files;")
+
     stats = cur.stats
 
     print(f"hits: {cache.hits}, misses: {cache.misses}, skips: {cache.skips}, errors: {cache.errors}, sets: {cache.sets}")
