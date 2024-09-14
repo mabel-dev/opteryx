@@ -98,7 +98,6 @@ class MemcachedCache(BaseKeyValueStore):
             self.skips += 1
             return None
         try:
-            print(key)
             response = self._server.get(bytes(key))
             self._consecutive_failures = 0
             if response:
