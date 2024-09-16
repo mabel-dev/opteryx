@@ -54,14 +54,14 @@ def limit_records(
                 yield morsel.slice(offset=0, length=remaining_rows)
                 at_least_one = True
 
-        if not at_least_one:
-            # make sure we return at least an empty morsel from this function
-            yield morsel.slice(offset=0, length=0)
-            at_least_one = True
-
         remaining_rows -= morsel.num_rows
         if remaining_rows <= 0:
             break
+
+    if not at_least_one:
+        # make sure we return at least an empty morsel from this function
+        yield morsel.slice(offset=0, length=0)
+        at_least_one = True
 
     if not remaining_rows:
         return None

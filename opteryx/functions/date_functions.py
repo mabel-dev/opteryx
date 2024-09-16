@@ -21,6 +21,45 @@ from opteryx.exceptions import SqlError
 from opteryx.utils.dates import parse_iso
 
 
+def convert_int64_array_to_pyarrow_datetime(values: numpy.ndarray) -> pyarrow.Array:
+    """
+    Convert an array of int64 timestamps to a PyArrow TimestampArray based on their range.
+
+    Parameters:
+        values: numpy.ndarray
+            An array of integer values representing timestamps.
+
+    Returns:
+        PyArrow Array
+            The converted timestamps in PyArrow compatible format.
+    """
+    if not isinstance(values, numpy.ndarray):
+        raise ValueError("Input must be a numpy ndarray of int64 values.")
+
+    if values.dtype != numpy.int64:
+        raise ValueError("Input array must have dtype of int64.")
+
+    # Determine the range of the values to infer timestamp precision
+    min_value = numpy.min(values)
+    max_value = numpy.max(values)
+
+    # Convert based on inferred precision
+    if 1e9 <= min_value < 1e10 and 1e9 <= max_value < 1e10:  # Likely seconds
+        timestamps = values.astype("datetime64[s]")
+        return pyarrow.array(timestamps)
+    elif 1e12 <= min_value < 1e13 and 1e12 <= max_value < 1e13:  # Likely milliseconds
+        timestamps = values.astype("datetime64[ms]")
+        return pyarrow.array(timestamps)
+    elif 1e15 <= min_value < 1e16 and 1e15 <= max_value < 1e16:  # Likely microseconds
+        timestamps = values.astype("datetime64[us]")
+        return pyarrow.array(timestamps)
+    elif min_value >= 1e18 and max_value >= 1e18:  # Likely nanoseconds
+        timestamps = values.astype("datetime64[ns]")
+        return pyarrow.array(timestamps)
+    else:
+        raise ValueError("Unable to determine the timestamp precision for the provided values.")
+
+
 def date_part(part, arr):
     """
     Also the EXTRACT function - we extract a given part from an array of dates
@@ -69,6 +108,9 @@ def date_part(part, arr):
     # if we get a date literal
     if not hasattr(arr, "__iter__"):
         arr = numpy.array([arr])
+
+    if arr.dtype == numpy.int64():
+        arr = convert_int64_array_to_pyarrow_datetime(arr)
 
     part = part[0].lower()  # [#325]
     if part in extractors:
