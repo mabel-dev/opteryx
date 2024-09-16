@@ -26,6 +26,7 @@ to ensure they load correctly.
 import datetime
 import os
 import warnings
+import platform
 
 from pathlib import Path
 from decimal import getcontext
@@ -34,6 +35,16 @@ import pyarrow
 
 # Set Decimal precision to 28 globally
 getcontext().prec = 28
+
+
+def is_mac():  # pragma: no cover
+    """
+    Check if the current platform is macOS.
+
+    Returns:
+        bool: True if the platform is macOS, False otherwise.
+    """
+    return platform.system().lower() == "darwin"
 
 
 # python-dotenv allows us to create an environment file to store secrets. If
@@ -66,6 +77,14 @@ if OPTERYX_DEBUG:  # pragma: no cover
 
 from opteryx import config
 from opteryx.managers.cache.cache_manager import CacheManager  # isort:skip
+
+_cache_manager = CacheManager(cache_backend=None)
+
+
+def get_cache_manager():
+    """Function to get the current cache manager."""
+    return _cache_manager
+
 
 from opteryx.connection import Connection
 from opteryx.connectors import register_arrow
@@ -185,7 +204,8 @@ def query_to_arrow(
 if not config.DISABLE_HIGH_PRIORITY and hasattr(os, "nice"):  # pragma: no cover
     nice_value = os.nice(0)
     try:
-        os.nice(-20 + nice_value)
+        if not is_mac():
+            os.nice(-20 + nice_value)
     except PermissionError:
         display_nice = str(nice_value)
         if nice_value == 0:
@@ -194,14 +214,6 @@ if not config.DISABLE_HIGH_PRIORITY and hasattr(os, "nice"):  # pragma: no cover
             print(
                 f"{datetime.datetime.now()} [LOADER] Cannot update process priority. Currently set to {display_nice}."
             )
-
-
-_cache_manager = CacheManager(cache_backend=None)
-
-
-def get_cache_manager():
-    """Function to get the current cache manager."""
-    return _cache_manager
 
 
 def set_cache_manager(new_cache_manager):

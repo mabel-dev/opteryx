@@ -70,6 +70,8 @@ def get_mismatched_condition_column_types(node: Node, relaxed: bool = False) -> 
                 relaxed
                 and (left_type.is_numeric() and right_type.is_numeric())
                 or (left_type.is_temporal() and right_type.is_temporal())
+                or (left_type.is_numeric() and right_type.is_temporal())
+                or (left_type.is_temporal() and right_type.is_numeric())
                 or (left_type.is_large_object() and right_type.is_large_object())
                 or (left_type == 0 or right_type == 0)
             ):
@@ -806,6 +808,13 @@ class BinderVisitor:
             if len(schema_columns) == 0:
                 context.schemas.pop(relation)
             else:
+                for column in schema_columns:
+                    node_column = [
+                        n for n in node.columns if n.schema_column.identity == column.identity
+                    ][0]
+                    if node_column.alias:
+                        node_column.schema_column.aliases.append(node_column.alias)
+                        column.aliases.append(node_column.alias)
                 schema.columns = schema_columns
                 for column in node.columns:
                     if column.schema_column.identity in [i.identity for i in schema_columns]:

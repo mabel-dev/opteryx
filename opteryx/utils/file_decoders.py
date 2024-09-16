@@ -226,24 +226,21 @@ def parquet_decoder(
     # Open the parquet file only once
     parquet_file = parquet.ParquetFile(stream)
 
-    if projection or just_schema:  # or selection:
-        # Return just the schema if that's all that's needed
-        if just_schema:
-            return convert_arrow_schema_to_orso_schema(parquet_file.schema_arrow)
+    # Return just the schema if that's all that's needed
+    if just_schema:
+        return convert_arrow_schema_to_orso_schema(parquet_file.schema_arrow)
 
-        # Projection processing
-        columns_in_filters = {
-            c.value for c in get_all_nodes_of_type(selection, (NodeType.IDENTIFIER,))
-        }
-        arrow_schema_columns_set = set(parquet_file.schema_arrow.names)
-        projection_names = {
-            name for proj_col in projection for name in proj_col.schema_column.all_names
-        }.union(columns_in_filters)
-        selected_columns = list(arrow_schema_columns_set.intersection(projection_names))
+    # Projection processing
+    columns_in_filters = {c.value for c in get_all_nodes_of_type(selection, (NodeType.IDENTIFIER,))}
+    arrow_schema_columns_set = set(parquet_file.schema_arrow.names)
+    projection_names = {
+        name for proj_col in projection for name in proj_col.schema_column.all_names
+    }.union(columns_in_filters)
+    selected_columns = list(arrow_schema_columns_set.intersection(projection_names))
 
-        # If no columns are selected, set to None
-        if not selected_columns:
-            selected_columns = None
+    # If no columns are selected, set to None
+    if not selected_columns:
+        selected_columns = None
 
     if selected_columns is None and not force_read:
         selected_columns = []

@@ -61,6 +61,16 @@ def filter_operations(arr, left_type, operator, value, right_type):
             value = value.compress(valid_positions)
             compressed = True
 
+    if (
+        OrsoTypes.TIMESTAMP in (left_type, right_type) or OrsoTypes.DATE in (left_type, right_type)
+    ) and OrsoTypes.INTEGER in (left_type, right_type):
+        from opteryx.functions.date_functions import convert_int64_array_to_pyarrow_datetime
+
+        if left_type == OrsoTypes.INTEGER:
+            arr = convert_int64_array_to_pyarrow_datetime(arr)
+        if right_type == OrsoTypes.INTEGER:
+            value = convert_int64_array_to_pyarrow_datetime(value)
+
     if OrsoTypes.INTERVAL in (left_type, right_type):
         from opteryx.custom_types.intervals import INTERVAL_KERNELS
 
