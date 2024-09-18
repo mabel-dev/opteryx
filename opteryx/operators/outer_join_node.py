@@ -61,6 +61,10 @@ def left_join(left_relation, right_relation, left_columns: List[str], right_colu
     right_indexes = deque()
 
     right_relation = pyarrow.concat_tables(right_relation.execute(), promote_options="none")
+
+    if len(set(left_columns) & set(right_relation.column_names)) > 0:
+        left_columns, right_columns = right_columns, left_columns
+
     right_hash = hash_join_map(right_relation, right_columns)
 
     for left_batch in left_relation.execute():

@@ -398,6 +398,8 @@ class BinderVisitor:
                     if projection_column.current_name:
                         return projection_column.current_name
 
+            if needs_qualifier:
+                return f"{qualifier}.{column.name}"
             return column.name
 
         def keep_column(column, identities):
@@ -930,6 +932,20 @@ class BinderVisitor:
 
     def visit_subquery(self, node: Node, context: BindingContext) -> Tuple[Node, BindingContext]:
         node, context = self.visit_exit(node, context)
+
+        # Extract the column names to check for duplicates
+        column_names = [n.schema_column.name for n in node.columns]
+        seen = set()
+        duplicates = [name for name in column_names if name in seen or seen.add(name)]
+
+        # Now you can check if there are any duplicates and take action accordingly
+        if duplicates:
+            from opteryx.exceptions import AmbiguousIdentifierError
+
+            raise AmbiguousIdentifierError(
+                identifier=duplicates,
+                message=f"Column name collision in subquery '{node.alias}'; Column(s) {', '.join(duplicates)} is ambiguous in the outer query, use AS to provide unique names for these columns.",
+            )
 
         # we sack all the tables we previously knew and create a new set of schemas here
         columns: list = []
