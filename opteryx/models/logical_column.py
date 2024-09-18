@@ -78,7 +78,9 @@ class LogicalColumn:
             source_column=self.source_column,
             source=self.source,
             alias=self.alias,
-            schema_column=self.schema_column,
+            schema_column=None
+            if self.schema_column is None
+            else self.schema_column.to_flatcolumn(),
         )
 
     def __repr__(self) -> str:

@@ -161,13 +161,14 @@ TEST_CYCLES: int = 500
 def test_sql_fuzzing_single_table(i):
     seed = random_int()
     random.seed(seed)
-    print(f"Seed: {seed}")
 
     table = TABLES[random.choice(range(len(TABLES)))]
     statement = generate_random_sql_select(table["fields"], table["name"])
     formatted_statement = format_sql(statement)
 
     print(formatted_statement)
+
+    print(f"Seed: {seed}, Cycle: {i}, ", end="")
 
     start_time = time.time()  # Start timing the query execution
     try:
@@ -183,9 +184,24 @@ def test_sql_fuzzing_single_table(i):
         # Log failing statement and error for analysis
         raise e
     print()
+    return execution_time, statement
 
 if __name__ == "__main__":  # pragma: no cover
-    for i in range(TEST_CYCLES):
-        test_sql_fuzzing_single_table(i)
+    import heapq
 
-    print("✅ okay")
+    top_n: int = 5
+    slowest_executions = []
+
+    for i in range(TEST_CYCLES):
+        et, st = test_sql_fuzzing_single_table(i)
+
+        # Use a heap to maintain only the top N slowest executions
+        if len(slowest_executions) < top_n:
+            # If we have less than `top_n` elements, add the current result
+            heapq.heappush(slowest_executions, (et, i, st))
+        else:
+            # If we already have `top_n` elements, replace the smallest one if the current one is larger
+            heapq.heappushpop(slowest_executions, (et, i, st))
+
+    print("✅ okay\n")
+    print("\n".join(f"{s[1]:03} {s[0]:.4f} {format_sql(s[2])}" for s in sorted(slowest_executions, key=lambda x: x[0], reverse=True)))
