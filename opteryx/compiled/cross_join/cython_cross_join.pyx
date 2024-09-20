@@ -1,4 +1,11 @@
+# distutils: language = c++
 # cython: language_level=3
+# cython: nonecheck=False
+# cython: cdivision=True
+# cython: initializedcheck=False
+# cython: infer_types=True
+# cython: wraparound=True
+# cython: boundscheck=False
 
 from libc.stdlib cimport malloc, free
 import numpy as np
@@ -6,8 +13,6 @@ cimport numpy as cnp
 cimport cython
 from libc.stdint cimport int32_t
 
-@cython.boundscheck(False)
-@cython.wraparound(False)
 cpdef tuple build_rows_indices_and_column(cnp.ndarray column_data):
     cdef int32_t i, total_size = 0
     cdef int32_t length
@@ -57,8 +62,7 @@ cimport numpy as cnp
 cimport cython
 from libc.stdint cimport int32_t
 
-@cython.boundscheck(False)
-@cython.wraparound(False)
+
 cpdef tuple build_filtered_rows_indices_and_column(cnp.ndarray column_data, set valid_values):
     """
     Build row indices and flattened column data for matching values from a column of array-like elements.

@@ -362,9 +362,6 @@ class MissingSqlStatement(ProgrammingError):
 class InconsistentSchemaError(DataError):
     """Raised when, despite efforts, we can't get a consistent schema."""
 
-    def __init__(*args, **kwargs):
-        pass
-
 
 class DatasetReadError(DataError):
     """Raised when we can't read the data we're pretty sure is there"""
