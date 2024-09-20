@@ -38,7 +38,8 @@ from opteryx.operators.base_plan_node import BasePlanDataObject
 
 INTERNAL_BATCH_SIZE: int = 7500  # config
 MAX_JOIN_SIZE: int = 1000  # config
-MORSEL_SIZE_BYTES: int = 32 * 1024 * 1024
+MORSEL_SIZE_BYTES: int = 16 * 1024 * 1024
+CROSS_JOIN_UNNEST_BATCH_SIZE = 10000
 
 
 def _cross_join_unnest_column(
@@ -128,17 +129,35 @@ def _cross_join_unnest_column(
                             [single_column_collector], schema=schema
                         )
                         single_column_collector.clear()
+                        statistics.time_cross_join_unnest += time.monotonic_ns() - start
+                        yield new_block
+                        at_least_once = True
                 else:
                     # Rebuild the block with the new column data if we have any rows to build for
-                    new_block = left_block.take(indices)
-                    new_block = pyarrow.Table.from_batches([new_block], schema=left_morsel.schema)
-                    new_block = new_block.append_column(target_column.identity, [new_column_data])
 
-                statistics.time_cross_join_unnest += time.monotonic_ns() - start
-                if new_block and new_block.num_rows > 0:
-                    yield new_block
-                    at_least_once = True
-                start = time.monotonic_ns()
+                    total_rows = len(indices)  # Both arrays have the same length
+                    block_size = MORSEL_SIZE_BYTES / (left_block.nbytes / left_block.num_rows)
+                    block_size = int(block_size // 1000) * 1000
+
+                    for start in range(0, total_rows, block_size):
+                        # Compute the end index for the current chunk
+                        end = min(start + block_size, total_rows)
+
+                        # Slice the current chunk of indices and new_column_data
+                        indices_chunk = indices[start:end]
+                        new_column_data_chunk = new_column_data[start:end]
+
+                        # Create a new block using the chunk of indices
+                        new_block = left_block.take(indices_chunk)
+                        new_block = pyarrow.Table.from_batches([new_block], schema=left_morsel.schema)
+
+                        # Append the corresponding chunk of new_column_data to the block
+                        new_block = new_block.append_column(target_column.identity, pyarrow.array(new_column_data_chunk))
+
+                        statistics.time_cross_join_unnest += time.monotonic_ns() - start
+                        yield new_block
+                        at_least_once = True
+                        start = time.monotonic_ns()
 
     if single_column_collector:
         schema = pyarrow.schema(
@@ -148,6 +167,7 @@ def _cross_join_unnest_column(
         if arrow_array.type != target_column.arrow_field.type:
             arrow_array = arrow_array.cast(target_column.arrow_field.type)
         new_block = pyarrow.Table.from_arrays([arrow_array], schema=schema)
+
         yield new_block
         at_least_once = True
 
@@ -244,7 +264,7 @@ def _cross_join(left, right, statistics):
                 table = align_tables(left_block, right, left_chunk.flatten(), right_chunk.flatten())
 
                 # Yield the resulting table to the caller
-                statistics.time_cross_join_unnest += time.monotonic_ns() - start
+                statistics.time_cross_join += time.monotonic_ns() - start
                 yield table
                 at_least_once = True
                 start = time.monotonic_ns()

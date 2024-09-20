@@ -1,5 +1,11 @@
 # distutils: language = c++
 # cython: language_level=3
+# cython: nonecheck=False
+# cython: cdivision=True
+# cython: initializedcheck=False
+# cython: infer_types=True
+# cython: wraparound=True
+# cython: boundscheck=False
 
 from libcpp.unordered_map cimport unordered_map
 from libcpp.unordered_set cimport unordered_set
@@ -19,7 +25,7 @@ cdef class HashTable:
     def __init__(self):
         self.hash_table = unordered_map[int64_t, vector[int64_t]]()
 
-    def insert(self, int64_t key, int64_t row_id) -> bool:
+    cpdef bint insert(self, int64_t key, int64_t row_id):
         # If the key is already in the hash table, append the row_id to the existing list.
         # Otherwise, create a new list with the row_id.
         if self.hash_table.find(key) != self.hash_table.end():
@@ -28,7 +34,7 @@ cdef class HashTable:
         self.hash_table[key] = vector[int64_t](1, row_id)
         return True
 
-    def get(self, int64_t key) -> list:
+    cpdef vector[int64_t] get(self, int64_t key):
         # Return the list of row IDs for the given key, or an empty list if the key is not found.
         if self.hash_table.find(key) != self.hash_table.end():
             return self.hash_table[key]
