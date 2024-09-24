@@ -149,10 +149,14 @@ def _cross_join_unnest_column(
 
                         # Create a new block using the chunk of indices
                         new_block = left_block.take(indices_chunk)
-                        new_block = pyarrow.Table.from_batches([new_block], schema=left_morsel.schema)
+                        new_block = pyarrow.Table.from_batches(
+                            [new_block], schema=left_morsel.schema
+                        )
 
                         # Append the corresponding chunk of new_column_data to the block
-                        new_block = new_block.append_column(target_column.identity, pyarrow.array(new_column_data_chunk))
+                        new_block = new_block.append_column(
+                            target_column.identity, pyarrow.array(new_column_data_chunk)
+                        )
 
                         statistics.time_cross_join_unnest += time.monotonic_ns() - start
                         yield new_block
