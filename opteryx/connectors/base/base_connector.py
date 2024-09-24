@@ -59,7 +59,7 @@ class BaseConnector:
             self.config = config.copy()
         self.dataset = dataset
         self.chunk_size = INITIAL_CHUNK_SIZE
-        self.schema = None
+        self.schema: RelationSchema = None
         self.statistics = statistics
         self.pushed_predicates: list = []
 
