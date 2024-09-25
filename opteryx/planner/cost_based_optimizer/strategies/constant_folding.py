@@ -26,16 +26,13 @@ entered expressions we can optimize, and again at the end which handles where
 we've rewritten expressions at part of other optimizations which can be folded.
 """
 
-import datetime
-from typing import Any
-
-import numpy
 from orso.types import OrsoTypes
 
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import evaluate
 from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.models import Node
+from opteryx.planner import build_literal_node
 from opteryx.planner.logical_planner import LogicalPlan
 from opteryx.planner.logical_planner import LogicalPlanNode
 from opteryx.planner.logical_planner import LogicalPlanStepType
@@ -43,58 +40,6 @@ from opteryx.virtual_datasets import no_table_data
 
 from .optimization_strategy import OptimizationStrategy
 from .optimization_strategy import OptimizerContext
-
-
-def build_literal_node(value: Any, root: Node, suggested_type: OrsoTypes):
-    """
-    Build a literal node with the appropriate type based on the value.
-    """
-    # Convert value if it has `as_py` method (e.g., from PyArrow)
-    if hasattr(value, "as_py"):
-        value = value.as_py()
-
-    if value is None:
-        # Matching None has complications
-        root.value = None
-        root.node_type = NodeType.LITERAL
-        root.type = OrsoTypes.NULL
-        root.left = None
-        root.right = None
-        return root
-
-    # Define a mapping of types to OrsoTypes
-    type_mapping = {
-        bool: OrsoTypes.BOOLEAN,
-        numpy.bool_: OrsoTypes.BOOLEAN,
-        str: OrsoTypes.VARCHAR,
-        numpy.str_: OrsoTypes.VARCHAR,
-        bytes: OrsoTypes.BLOB,
-        numpy.bytes_: OrsoTypes.BLOB,
-        int: OrsoTypes.INTEGER,
-        numpy.int64: OrsoTypes.INTEGER,
-        float: OrsoTypes.DOUBLE,
-        numpy.float64: OrsoTypes.DOUBLE,
-        numpy.datetime64: OrsoTypes.TIMESTAMP,
-        datetime.datetime: OrsoTypes.TIMESTAMP,
-        datetime.time: OrsoTypes.TIME,
-        datetime.date: OrsoTypes.DATE,
-    }
-
-    value_type = type(value)
-    # Determine the type from the value using the mapping
-    if value_type in type_mapping or suggested_type not in (OrsoTypes._MISSING_TYPE, 0, None):
-        root.value = value
-        root.node_type = NodeType.LITERAL
-        root.type = (
-            suggested_type
-            if suggested_type not in (OrsoTypes._MISSING_TYPE, 0, None)
-            else type_mapping[value_type]
-        )
-        root.left = None
-        root.right = None
-
-    # DEBUG:log (f"Unable to create literal node for {value}, of type {value_type}")
-    return root
 
 
 def fold_constants(root: Node) -> Node:

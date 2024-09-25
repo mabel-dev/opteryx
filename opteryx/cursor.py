@@ -152,7 +152,12 @@ class Cursor(DataFrame):
         """
         return self._qid
 
-    def _inner_execute(self, operation: str, params: Union[Iterable, Dict, None] = None) -> Any:
+    def _inner_execute(
+        self,
+        operation: str,
+        params: Union[Iterable, Dict, None] = None,
+        visibility_filters: Optional[Dict[str, Any]] = None,
+    ) -> Any:
         """
         Executes a single SQL operation within the current cursor.
 
@@ -176,6 +181,7 @@ class Cursor(DataFrame):
         plans = query_planner(
             operation=operation,
             parameters=params,
+            visibility_filters=visibility_filters,
             connection=self._connection,
             qid=self.id,
             statistics=self._statistics,
@@ -208,7 +214,12 @@ class Cursor(DataFrame):
             )
             return results
 
-    def _execute_statements(self, operation, params: Optional[Iterable] = None):
+    def _execute_statements(
+        self,
+        operation,
+        params: Optional[Iterable] = None,
+        visibility_filters: Optional[Dict[str, Any]] = None,
+    ):
         """
         Executes one or more SQL statements, properly handling comments, cleaning, and splitting.
 
@@ -237,7 +248,7 @@ class Cursor(DataFrame):
 
         results = None
         for index, statement in enumerate(statements):
-            results = self._inner_execute(statement, params)
+            results = self._inner_execute(statement, params, visibility_filters)
             if index < len(statements) - 1:
                 for _ in results:
                     pass
@@ -247,7 +258,12 @@ class Cursor(DataFrame):
 
     @require_state(CursorState.INITIALIZED)
     @transition_to(CursorState.EXECUTED)
-    def execute(self, operation: str, params: Optional[Iterable] = None):
+    def execute(
+        self,
+        operation: str,
+        params: Optional[Iterable] = None,
+        visibility_filters: Optional[Dict[str, Any]] = None,
+    ):
         """
         Executes the provided SQL operation, converting results to internal DataFrame format.
 
@@ -259,7 +275,7 @@ class Cursor(DataFrame):
         """
         if hasattr(operation, "decode"):
             operation = operation.decode()
-        results = self._execute_statements(operation, params)
+        results = self._execute_statements(operation, params, visibility_filters)
         if results is not None:
             result_data, self._result_type = next(results, (ResultType._UNDEFINED, None))
             if self._result_type == ResultType.NON_TABULAR:
@@ -307,6 +323,7 @@ class Cursor(DataFrame):
         operation: str,
         params: Optional[Iterable] = None,
         limit: Optional[int] = None,
+        visibility_filters: Optional[Dict[str, Any]] = None,
     ) -> pyarrow.Table:
         """
         Executes the SQL operation, bypassing conversion to Orso and returning directly in Arrow format.
@@ -324,7 +341,7 @@ class Cursor(DataFrame):
         """
         if hasattr(operation, "decode"):
             operation = operation.decode()
-        results = self._execute_statements(operation, params)
+        results = self._execute_statements(operation, params, visibility_filters)
         if results is not None:
             result_data, self._result_type = next(results, (ResultType._UNDEFINED, None))
             if limit is not None:
