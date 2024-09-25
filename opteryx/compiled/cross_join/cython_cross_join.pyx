@@ -1,4 +1,3 @@
-# distutils: language = c++
 # cython: language_level=3
 # cython: nonecheck=False
 # cython: cdivision=True
