@@ -90,19 +90,14 @@ class HeapSortNode(BasePlanNode):
         for morsel in morsels.execute():
             start_time = time.time_ns()
 
-            if morsel.num_rows > self.limit:
-                # not much point doing this here if we're not eliminating rows
-                morsel = morsel.sort_by(mapped_order)
-                morsel = morsel.slice(offset=0, length=self.limit)
-
             if table:
-                # Concatenate the current morsel with the previously accumulated table
-                morsel = concat_tables([morsel, table], promote_options="permissive")
+                # Concatenate the accumulated table with the new morsel
+                table = concat_tables([table, morsel], promote_options="permissive")
+            else:
+                table = morsel
 
             # Sort and slice the concatenated table to maintain the limit
-            morsel = morsel.sort_by(mapped_order)
-            morsel = morsel.slice(offset=0, length=self.limit)
-            table = morsel
+            table = table.sort_by(mapped_order).slice(offset=0, length=self.limit)
 
             self.statistics.time_heap_sorting += time.time_ns() - start_time
 

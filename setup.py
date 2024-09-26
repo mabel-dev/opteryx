@@ -1,5 +1,6 @@
 import os
 import platform
+from distutils.sysconfig import get_config_var
 from typing import Any
 from typing import Dict
 
@@ -9,8 +10,6 @@ from setuptools import Extension
 from setuptools import find_packages
 from setuptools import setup
 from setuptools_rust import RustExtension
-from distutils.sysconfig import get_config_var
-
 
 LIBRARY = "opteryx"
 
