@@ -22,7 +22,7 @@ def is_mac():  # pragma: no cover
 COMPILE_FLAGS = ["-O2"] if is_mac() else ["-O2", "-march=native"]
 
 # Dynamically get the default include paths
-include_dirs = []
+include_dirs = [numpy.get_include()]
 
 # Get the C++ include directory
 includedir = get_config_var('INCLUDEDIR')
@@ -78,19 +78,19 @@ extensions = [
         sources=[
             "opteryx/compiled/list_ops/cython_list_ops.pyx",
         ],
-        include_dirs=[numpy.get_include()],
+        include_dirs=include_dirs,
         extra_compile_args=COMPILE_FLAGS,
     ),
     Extension(
         name="opteryx.compiled.cross_join.cython_cross_join",
         sources=["opteryx/compiled/cross_join/cython_cross_join.pyx"],
-        include_dirs=[numpy.get_include()],
+        include_dirs=include_dirs,
         extra_compile_args=COMPILE_FLAGS,
     ),
     Extension(
         name="opteryx.compiled.functions.ip_address",
         sources=["opteryx/compiled/functions/ip_address.pyx"],
-        include_dirs=[numpy.get_include()],
+        include_dirs=include_dirs,
         extra_compile_args=COMPILE_FLAGS,
     ),
     Extension(
@@ -103,7 +103,7 @@ extensions = [
     Extension(
         name="opteryx.compiled.functions.vectors",
         sources=["opteryx/compiled/functions/vectors.pyx"],
-        include_dirs=[numpy.get_include()],
+        include_dirs=include_dirs,
         language="c++",
         extra_compile_args=COMPILE_FLAGS + ["-std=c++17"],
     ),
