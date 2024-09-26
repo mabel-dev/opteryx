@@ -30,6 +30,7 @@ import platform
 
 from pathlib import Path
 from decimal import getcontext
+from typing import Optional, Union, Dict, Any, List
 
 import pyarrow
 
@@ -37,7 +38,7 @@ import pyarrow
 getcontext().prec = 28
 
 
-def is_mac():  # pragma: no cover
+def is_mac() -> bool:  # pragma: no cover
     """
     Check if the current platform is macOS.
 
@@ -81,7 +82,7 @@ from opteryx.managers.cache.cache_manager import CacheManager  # isort:skip
 _cache_manager = CacheManager(cache_backend=None)
 
 
-def get_cache_manager():
+def get_cache_manager() -> CacheManager:
     """Function to get the current cache manager."""
     return _cache_manager
 
@@ -120,7 +121,7 @@ threadsafety: int = 0  # Thread safety level, 0 means not thread-safe
 paramstyle: str = "named"  # Parameter placeholder style, named means :name for placeholders
 
 
-def connect(*args, **kwargs):
+def connect(*args, **kwargs) -> Connection:
     """
     Establish a new database connection and return a Connection object.
 
@@ -142,7 +143,12 @@ def connect(*args, **kwargs):
     return Connection(*args, **kwargs)
 
 
-def query(operation: str, params: list = None, limit: int = None, **kwargs):
+def query(
+    operation: str,
+    params: Union[list, Dict, None] = None,
+    visibility_filters: Optional[Dict[str, Any]] = None,
+    **kwargs,
+):
     """
     Helper function to execute a query and return a cursor.
 
@@ -165,14 +171,18 @@ def query(operation: str, params: list = None, limit: int = None, **kwargs):
     curr = conn.cursor()
 
     # Execute the SQL query using the cursor
-    curr.execute(operation=operation, params=params)
+    curr.execute(operation=operation, params=params, visibility_filters=visibility_filters)
 
     # Return the executed cursor
     return curr
 
 
 def query_to_arrow(
-    operation: str, params: list = None, limit: int = None, **kwargs
+    operation: str,
+    params: Union[List, Dict, None] = None,
+    visibility_filters: Optional[Dict[str, Any]] = None,
+    limit: int = None,
+    **kwargs,
 ) -> pyarrow.Table:
     """
     Helper function to execute a query and return a pyarrow Table.
@@ -197,7 +207,9 @@ def query_to_arrow(
     curr = conn.cursor()
 
     # Execute the SQL query using the cursor
-    return curr.execute_to_arrow(operation=operation, params=params, limit=limit)
+    return curr.execute_to_arrow(
+        operation=operation, params=params, visibility_filters=visibility_filters, limit=limit
+    )
 
 
 # Try to increase the priority of the application

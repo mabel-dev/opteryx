@@ -1,3 +1,4 @@
+import os
 import platform
 from typing import Any
 from typing import Dict
@@ -8,6 +9,8 @@ from setuptools import Extension
 from setuptools import find_packages
 from setuptools import setup
 from setuptools_rust import RustExtension
+from distutils.sysconfig import get_config_var
+
 
 LIBRARY = "opteryx"
 
@@ -17,6 +20,22 @@ def is_mac():  # pragma: no cover
 
 
 COMPILE_FLAGS = ["-O2"] if is_mac() else ["-O2", "-march=native"]
+
+# Dynamically get the default include paths
+include_dirs = [numpy.get_include()]
+
+# Get the C++ include directory
+includedir = get_config_var('INCLUDEDIR')
+if includedir:
+    include_dirs.append(os.path.join(includedir, 'c++', 'v1'))  # C++ headers path
+
+# Get the Python include directory
+includepy = get_config_var('INCLUDEPY')
+if includepy:
+    include_dirs.append(includepy)
+
+# Check if paths exist
+include_dirs = [p for p in include_dirs if os.path.exists(p)]
 
 def rust_build(setup_kwargs: Dict[str, Any]) -> None:
     setup_kwargs.update(
@@ -59,34 +78,34 @@ extensions = [
         sources=[
             "opteryx/compiled/list_ops/cython_list_ops.pyx",
         ],
-        include_dirs=[numpy.get_include()],
+        include_dirs=include_dirs,
         extra_compile_args=COMPILE_FLAGS,
     ),
     Extension(
         name="opteryx.compiled.cross_join.cython_cross_join",
         sources=["opteryx/compiled/cross_join/cython_cross_join.pyx"],
-        include_dirs=[numpy.get_include()],
+        include_dirs=include_dirs,
         extra_compile_args=COMPILE_FLAGS,
     ),
     Extension(
         name="opteryx.compiled.functions.ip_address",
         sources=["opteryx/compiled/functions/ip_address.pyx"],
-        include_dirs=[numpy.get_include()],
+        include_dirs=include_dirs,
         extra_compile_args=COMPILE_FLAGS,
     ),
     Extension(
         name="opteryx.compiled.structures.hash_table",
         sources=["opteryx/compiled/structures/hash_table.pyx"],
-        include_dirs=[numpy.get_include()],
+        include_dirs=include_dirs,
         language="c++",
-        extra_compile_args=COMPILE_FLAGS + ["-std=c++11"],
+        extra_compile_args=COMPILE_FLAGS + ["-std=c++17"],
     ),
     Extension(
         name="opteryx.compiled.functions.vectors",
         sources=["opteryx/compiled/functions/vectors.pyx"],
-        include_dirs=[numpy.get_include()],
+        include_dirs=include_dirs,
         language="c++",
-        extra_compile_args=COMPILE_FLAGS + ["-std=c++11"],
+        extra_compile_args=COMPILE_FLAGS + ["-std=c++17"],
     ),
     Extension(
         name="opteryx.compiled.structures.node",

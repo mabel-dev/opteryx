@@ -31,7 +31,9 @@ from opteryx.exceptions import UnsupportedSyntaxError
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import format_expression
 from opteryx.managers.expression import get_all_nodes_of_type
+from opteryx.models import LogicalColumn
 from opteryx.models import Node
+from opteryx.planner import build_literal_node
 from opteryx.planner.logical_planner import logical_planner_builders
 from opteryx.planner.views import is_view
 from opteryx.planner.views import view_as_plan
@@ -1073,6 +1075,78 @@ QUERY_BUILDERS = {
     "ShowVariables": plan_show_variables,
     # "Use": plan_use
 }
+
+
+def apply_visibility_filters(logical_plan: LogicalPlan, visibility_filters: dict) -> LogicalPlan:
+    def build_expression_tree(relation, dnf_list):
+        """
+        Recursively build an expression tree from a DNF list structure.
+        The DNF list consists of ORs of ANDs of simple predicates.
+        """
+        if isinstance(dnf_list[0], list):
+            # This means we have a list of lists, so it's a disjunction (OR)
+            or_node = None
+            for conjunction in dnf_list:
+                and_node = None
+                for predicate in conjunction:
+                    # Unpack the predicate (assume it comes as [identifier, operator, value])
+                    identifier, operator, value = predicate
+                    comparison_node = Node(
+                        node_type=NodeType.COMPARISON_OPERATOR,
+                        value=operator,
+                        left=LogicalColumn(
+                            NodeType.IDENTIFIER, source_column=identifier, source=relation
+                        ),
+                        right=build_literal_node(value),
+                    )
+                    if and_node is None:
+                        and_node = comparison_node
+                    else:
+                        # Build a new AND node
+                        and_node = Node(
+                            node_type=NodeType.AND, left=and_node, right=comparison_node
+                        )
+                if or_node is None:
+                    or_node = and_node
+                else:
+                    # Build a new OR node
+                    or_node = Node(node_type=NodeType.OR, left=or_node, right=and_node)
+            return or_node
+        else:
+            # Single conjunction (list of predicates)
+            and_node = None
+            for predicate in dnf_list:
+                identifier, operator, value = predicate
+                comparison_node = Node(
+                    node_type=NodeType.COMPARISON_OPERATOR,
+                    value=operator,
+                    left=LogicalColumn(
+                        NodeType.IDENTIFIER, source_column=identifier, source=relation
+                    ),
+                    right=build_literal_node(value),
+                )
+                if and_node is None:
+                    and_node = comparison_node
+                else:
+                    # Build a new AND node
+                    and_node = Node(node_type=NodeType.AND, left=and_node, right=comparison_node)
+            return and_node
+
+    for nid, node in list(logical_plan.nodes(True)):
+        if node.node_type == LogicalPlanStepType.Scan:
+            filter_dnf = visibility_filters.get(node.relation)
+            if filter_dnf:
+                # Apply the transformation from DNF to an expression tree
+                expression_tree = build_expression_tree(node.alias, filter_dnf)
+
+                filter_node = LogicalPlanNode(
+                    node_type=LogicalPlanStepType.Filter,
+                    condition=expression_tree,  # Use the built expression tree
+                )
+
+                logical_plan.insert_node_after(random_string(), filter_node, nid)
+
+    return logical_plan
 
 
 def do_logical_planning_phase(parsed_statements) -> Generator:
