@@ -1718,6 +1718,8 @@ STATEMENTS = [
         ("SHOW CREATE VIEW mission.reports", 1, 1, DatasetNotFoundError),
         ("SHOW CREATE TABLE mission_reports", 1, 1, UnsupportedSyntaxError),
 
+        ("SELECT name FROM (SELECT MD5(name) AS hash, name FROM $planets) AS S", 9, 1, None),
+
         # ****************************************************************************************
 
         # These are queries which have been found to return the wrong result or not run correctly
