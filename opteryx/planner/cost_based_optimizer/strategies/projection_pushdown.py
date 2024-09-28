@@ -36,9 +36,21 @@ class ProjectionPushdownStrategy(OptimizationStrategy):
             A tuple containing the potentially modified node and the updated context.
         """
         node.pre_update_columns = set(context.collected_identities)
-        if node.columns:  # Assumes node.columns is an iterable or None
-            collected_columns = self.collect_columns(node)
-            context.collected_identities.update(collected_columns)
+
+        # If we're at a project, we only keep the columns that are referenced
+        # this is mainly when we have columns in a subquery which aren't used
+        # in the outer query
+        # 1984
+        #        if node.node_type == LogicalPlanStepType.Project:
+        #            node.columns = [
+        #                n for n in node.columns if n.schema_column.identity in context.collected_identities
+        #            ]
+
+        # Subqueries act like all columns are referenced
+        if node.node_type != LogicalPlanStepType.Subquery:
+            if node.columns:  # Assumes node.columns is an iterable or None
+                collected_columns = self.collect_columns(node)
+                context.collected_identities.update(collected_columns)
 
         if (
             node.node_type

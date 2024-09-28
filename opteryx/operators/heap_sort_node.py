@@ -28,7 +28,9 @@ import time
 from dataclasses import dataclass
 from typing import Generator
 
+import numpy
 import pyarrow
+import pyarrow.compute
 from pyarrow import concat_tables
 
 from opteryx.exceptions import ColumnNotFoundError
@@ -96,8 +98,51 @@ class HeapSortNode(BasePlanNode):
             else:
                 table = morsel
 
-            # Sort and slice the concatenated table to maintain the limit
-            table = table.sort_by(mapped_order).slice(offset=0, length=self.limit)
+            # Determine if any columns are string-based
+            use_pyarrow_sort = any(
+                pyarrow.types.is_string(table.column(column_name).type)
+                or pyarrow.types.is_binary(table.column(column_name).type)
+                for column_name, _ in mapped_order
+            )
+
+            # strings are sorted faster user pyarrow, single columns faster using compute
+            if len(mapped_order) == 1 and use_pyarrow_sort:
+                column_name, sort_direction = mapped_order[0]
+                column = table.column(column_name)
+                if sort_direction == "ascending":
+                    sort_indices = pyarrow.compute.sort_indices(column)
+                else:
+                    sort_indices = pyarrow.compute.sort_indices(column)[::-1]
+                table = table.take(sort_indices[: self.limit])
+            # strings are sorted faster using pyarrow
+            elif use_pyarrow_sort:
+                table = table.sort_by(mapped_order).slice(offset=0, length=self.limit)
+            # single column sort using numpy
+            elif len(mapped_order) == 1:
+                # Single-column sort using mergesort to take advantage of partially sorted data
+                column_name, sort_direction = mapped_order[0]
+                column = table.column(column_name).to_numpy()
+                if sort_direction == "ascending":
+                    sort_indices = numpy.argsort(column)
+                else:
+                    sort_indices = numpy.argsort(column)[::-1]  # Reverse for descending
+                # Slice the sorted table
+                table = table.take(sort_indices[: self.limit])
+            # multi column sort using numpy
+            else:
+                # Multi-column sort using lexsort
+                columns_for_sorting = []
+                directions = []
+                for column_name, sort_direction in mapped_order:
+                    column = table.column(column_name).to_numpy()
+                    columns_for_sorting.append(column)
+                    directions.append(1 if sort_direction == "ascending" else -1)
+
+                sort_indices = numpy.lexsort(
+                    [col[::direction] for col, direction in zip(columns_for_sorting, directions)]
+                )
+                # Slice the sorted table
+                table = table.take(sort_indices[: self.limit])
 
             self.statistics.time_heap_sorting += time.time_ns() - start_time
 

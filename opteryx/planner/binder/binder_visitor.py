@@ -789,36 +789,58 @@ class BinderVisitor:
         context.schemas = merge_schemas(*[ctx.schemas for ctx in group_contexts])
 
         # Check for duplicates
-        all_identities = [c.schema_column.identity for c in node.columns]
-        if len(set(all_identities)) != len(all_identities):
+        all_top_level_identities = [c.schema_column.identity for c in node.columns]
+        if len(set(all_top_level_identities)) != len(all_top_level_identities):
             from collections import Counter
 
             from opteryx.exceptions import AmbiguousIdentifierError
 
-            duplicates = [column for column, count in Counter(all_identities).items() if count > 1]
+            duplicates = [
+                column for column, count in Counter(all_top_level_identities).items() if count > 1
+            ]
             matches = {c.value for c in node.columns if c.schema_column.identity in duplicates}
             raise AmbiguousIdentifierError(
                 message=f"Query result contains multiple instances of the same column(s) - `{'`, `'.join(matches)}`"
             )
 
+        # get any column or field from a realtion referenced
+        # 1984
+        all_identities = set(
+            [
+                item.schema_column.identity
+                for sublist in [
+                    get_all_nodes_of_type(c, (NodeType.IDENTIFIER,)) for c in node.columns
+                ]
+                for item in sublist
+            ]
+            + all_top_level_identities
+        )
+
         # Remove columns not being projected from the schemas, and remove empty schemas
         columns = []
         for relation, schema in list(context.schemas.items()):
             schema_columns = [
-                column for column in schema.columns if column.identity in all_identities
+                column for column in schema.columns if column.identity in all_top_level_identities
             ]
             if len(schema_columns) == 0:
                 context.schemas.pop(relation)
             else:
                 for column in schema_columns:
-                    node_column = [
-                        n for n in node.columns if n.schema_column.identity == column.identity
-                    ][0]
-                    if node_column.alias:
-                        node_column.schema_column.aliases.append(node_column.alias)
-                        column.aliases.append(node_column.alias)
+                    # for each column in the schema, try to find the node's columns
+                    node_column = next(
+                        (n for n in node.columns if n.schema_column.identity == column.identity),
+                        None,
+                    )
+                    if node_column:
+                        # update the column reference with any AS aliases
+                        if node_column.alias:
+                            node_column.schema_column.aliases.append(node_column.alias)
+                            column.aliases.append(node_column.alias)
+                # update the schema with columns we have references to, removing redundant columns
                 schema.columns = schema_columns
                 for column in node.columns:
+                    # indirect references are when we're keeping a column for a function or sort
+                    # 1984                    column.direct_reference = column.identity in all_top_level_identities
                     if column.schema_column.identity in [i.identity for i in schema_columns]:
                         columns.append(column)
 
@@ -964,7 +986,8 @@ class BinderVisitor:
                 if not schema_column.origin:
                     schema_column.origin = []
                 source_relations.extend(schema_column.origin or [])
-                projection_column.source = node.alias
+                if projection_column:
+                    projection_column.source = node.alias
                 schema_column.origin += [node.alias]
 
                 schema_column.name = (
