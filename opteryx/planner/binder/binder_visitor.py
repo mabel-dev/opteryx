@@ -860,7 +860,6 @@ class BinderVisitor:
         from opteryx.connectors.capabilities import Cacheable
         from opteryx.connectors.capabilities import Partitionable
         from opteryx.connectors.capabilities.cacheable import async_read_thru_cache
-        from opteryx.connectors.capabilities.cacheable import read_thru_cache
         from opteryx.managers.catalog import catalog_factory
         from opteryx.managers.permissions import can_read_table
         from opteryx.managers.schemes.tarchia_schema import TarchiaScheme
@@ -916,8 +915,9 @@ class BinderVisitor:
                 original_read_blob = node.connector.async_read_blob
                 node.connector.async_read_blob = async_read_thru_cache(original_read_blob)
             else:
-                original_read_blob = node.connector.read_blob
-                node.connector.read_blob = read_thru_cache(original_read_blob)
+                from opteryx.exceptions import InvalidInternalStateError
+
+                raise InvalidInternalStateError("Connector is Cachable but not Async")
 
         if not node.found_in_catalog:
             node.schema = node.connector.get_dataset_schema()
