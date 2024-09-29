@@ -244,6 +244,14 @@ def parquet_decoder(
     if just_schema:
         return convert_arrow_schema_to_orso_schema(parquet_file.schema_arrow)
 
+    if projection == [] and selection is None:
+        # Create a boolean array with True values, one for each column in the Parquet file
+        bool_array = pyarrow.array([True] * parquet_file.metadata.num_rows, type=pyarrow.bool_())
+        # Create a PyArrow Table with the column name '*'
+        table = pyarrow.Table.from_arrays([bool_array], ["*"])
+
+        return (parquet_file.metadata.num_rows, 0, table)
+
     # Determine the columns needed for projection and filtering
     projection_set = set(p.source_column for p in projection or [])
     filter_columns = {
@@ -260,7 +268,7 @@ def parquet_decoder(
     # Read the parquet table with the optimized column list and selection filters
     table = parquet.read_table(
         stream,
-        columns=selected_columns if selected_columns else None,
+        columns=selected_columns,
         pre_buffer=False,
         filters=dnf_filter,
         use_threads=False,
