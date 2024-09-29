@@ -15,43 +15,54 @@ from libc.stdint cimport int32_t
 cpdef tuple build_rows_indices_and_column(cnp.ndarray column_data):
     cdef int32_t i, total_size = 0
     cdef int32_t length
-    cdef list flat_data
     cdef int32_t row_count = len(column_data)
     cdef int32_t *lengths = <int32_t *>malloc(row_count * sizeof(int32_t))
     if lengths is NULL:
         raise MemoryError("Failed to allocate memory for lengths array.")
 
+    # Calculate the total size and fill lengths array
     for i in range(row_count):
-        length = len(column_data[i])
+        length = column_data[i].shape[0]
         lengths[i] = length
         total_size += length
 
+    # If the total size is zero, return empty arrays
     if total_size == 0:
         free(lengths)
         return (np.array([], dtype=np.int32), np.array([], dtype=object))
 
-    flat_data = [''] * total_size
+    # Determine the dtype of the elements in the arrays, handling the case where the first element is None
+    element_dtype = object
+    for i in range(row_count):
+        if column_data[i] is not None:
+            element_dtype = column_data[i].dtype
+            break
+
+    # Preallocate arrays for indices and flat data
+    flat_data = np.empty(total_size, dtype=element_dtype)  # More efficient than list
     cdef int32_t *indices = <int32_t *>malloc(total_size * sizeof(int32_t))
     if indices is NULL:
-        raise MemoryError("Failed to allocate memory.")
+        free(lengths)
+        raise MemoryError("Failed to allocate memory for indices.")
 
     cdef int32_t start = 0
     cdef int32_t end = 0
-    cdef int32_t j = 0
 
+    # Flatten the data and fill indices
     for i in range(row_count):
         end = start + lengths[i]
+        flat_data[start:end] = column_data[i]  # NumPy handles the slicing and copying
         for j in range(start, end):
-            indices[j] = i 
-            flat_data[j] = column_data[i][j - start]
+            indices[j] = i
         start = end
-    free(lengths)
 
+    free(lengths)  # Free the lengths array
+
+    # Create a NumPy array from indices
     cdef cnp.int32_t[:] mv = <cnp.int32_t[:total_size]>indices
-    # Create a NumPy array that is a copy of the memoryview, 
-    # which in turn makes it safe to free the original indices memory.
-    np_array = np.array(mv, copy=True)
-    free(indices)  # Now it's safe to free indices since np_array has its own copy.
+    np_array = np.array(mv, copy=True)  # Copy the memoryview into a NumPy array
+    free(indices)  # Free the indices memory now that we've copied it
+
     return (np_array, flat_data)
 
 
@@ -78,20 +89,35 @@ cpdef tuple build_filtered_rows_indices_and_column(cnp.ndarray column_data, set 
     """
     cdef int32_t i, index = 0, allocated_size
     cdef int32_t row_count = len(column_data)
-    cdef int32_t initial_alloc_size = 500
+    cdef int32_t initial_alloc_size = row_count * 2
     allocated_size = initial_alloc_size
     cdef int32_t *indices = <int32_t *>malloc(allocated_size * sizeof(int32_t))
-    cdef list flat_data = [None] * allocated_size
+    cdef int32_t *new_indices
+
     if indices is NULL:
         raise MemoryError("Failed to allocate memory for indices.")
+
+    # Determine the dtype of the elements in the arrays, handling the case where the first element is None
+    element_dtype = object
+    for i in range(row_count):
+        if column_data[i] is not None:
+            element_dtype = column_data[i].dtype
+            break
+
+    cdef flat_data = np.empty(allocated_size, dtype=element_dtype)
 
     for i in range(row_count):
         for value in column_data[i]:
             if value in valid_values:
                 if index == allocated_size:  # Check if we need to expand the memory allocation
-                    allocated_size += initial_alloc_size
-                    indices = <int32_t *>realloc(indices, allocated_size * sizeof(int32_t))
-                    flat_data.extend([None] * initial_alloc_size)  # Extend flat_data by the same amount
+                    allocated_size = allocated_size * 2  # Double the allocation size to reduce reallocations
+                    # Handle realloc for indices safely
+                    new_indices = <int32_t *>realloc(indices, allocated_size * sizeof(int32_t))
+                    if new_indices is NULL:
+                        free(indices)  # Free previously allocated memory to avoid memory leak
+                        raise MemoryError("Failed to reallocate memory for indices.")
+                    indices = new_indices
+                    flat_data = np.resize(flat_data, allocated_size)
                     if indices is NULL:
                         raise MemoryError("Failed to reallocate memory for indices.")
                 flat_data[index] = value

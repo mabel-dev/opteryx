@@ -831,11 +831,10 @@ class BinderVisitor:
                         (n for n in node.columns if n.schema_column.identity == column.identity),
                         None,
                     )
-                    if node_column:
-                        # update the column reference with any AS aliases
-                        if node_column.alias:
-                            node_column.schema_column.aliases.append(node_column.alias)
-                            column.aliases.append(node_column.alias)
+                    # update the column reference with any AS aliases
+                    if node_column and node_column.alias:
+                        node_column.schema_column.aliases.append(node_column.alias)
+                        column.aliases.append(node_column.alias)
                 # update the schema with columns we have references to, removing redundant columns
                 schema.columns = schema_columns
                 for column in node.columns:

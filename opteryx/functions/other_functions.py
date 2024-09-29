@@ -45,7 +45,7 @@ def list_contains_any(array: numpy.ndarray, items: numpy.ndarray) -> numpy.ndarr
     res = numpy.empty(array.size, dtype=bool)
     for i, test_set in enumerate(array):
         # Using not to correctly capture overlap (isdisjoint is True when no common elements)
-        res[i] = not items_set.isdisjoint(test_set) if test_set is not None else False
+        res[i] = bool(set(test_set) & items_set) if test_set is not None else False
     return res
 
 
