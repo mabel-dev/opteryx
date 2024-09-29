@@ -125,12 +125,15 @@ def _cross_join_unnest_column(
                                 )
                             ]
                         )
-                        new_block = pyarrow.Table.from_arrays(
-                            [single_column_collector], schema=schema
-                        )
+                        arrow_array = pyarrow.array(single_column_collector)
+                        if arrow_array.type != target_column.arrow_field.type:
+                            arrow_array = arrow_array.cast(target_column.arrow_field.type)
+                        new_block = pyarrow.Table.from_arrays([arrow_array], schema=schema)
                         single_column_collector.clear()
+                        del arrow_array
                         statistics.time_cross_join_unnest += time.monotonic_ns() - start
                         yield new_block
+                        start = time.monotonic_ns()
                         at_least_once = True
                 else:
                     # Rebuild the block with the new column data if we have any rows to build for
@@ -139,13 +142,13 @@ def _cross_join_unnest_column(
                     block_size = MORSEL_SIZE_BYTES / (left_block.nbytes / left_block.num_rows)
                     block_size = int(block_size // 1000) * 1000
 
-                    for start in range(0, total_rows, block_size):
+                    for start_block in range(0, total_rows, block_size):
                         # Compute the end index for the current chunk
-                        end = min(start + block_size, total_rows)
+                        end_block = min(start_block + block_size, total_rows)
 
                         # Slice the current chunk of indices and new_column_data
-                        indices_chunk = indices[start:end]
-                        new_column_data_chunk = new_column_data[start:end]
+                        indices_chunk = indices[start_block:end_block]
+                        new_column_data_chunk = new_column_data[start_block:end_block]
 
                         # Create a new block using the chunk of indices
                         new_block = left_block.take(indices_chunk)
@@ -171,9 +174,10 @@ def _cross_join_unnest_column(
         if arrow_array.type != target_column.arrow_field.type:
             arrow_array = arrow_array.cast(target_column.arrow_field.type)
         new_block = pyarrow.Table.from_arrays([arrow_array], schema=schema)
-
+        statistics.time_cross_join_unnest += time.monotonic_ns() - start
         yield new_block
         at_least_once = True
+        start = time.monotonic_ns()
 
     if not at_least_once:
         # Create an empty table with the new schema
@@ -181,6 +185,7 @@ def _cross_join_unnest_column(
         new_column = pyarrow.field(target_column.identity, pyarrow.string())
         new_schema = pyarrow.schema(list(schema) + [new_column])
         new_block = pyarrow.Table.from_batches([], schema=new_schema)
+        statistics.time_cross_join_unnest += time.monotonic_ns() - start
         yield new_block
 
 
