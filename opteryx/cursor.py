@@ -170,6 +170,7 @@ class Cursor(DataFrame):
             Results of the query execution.
         """
 
+        from opteryx import system_statistics
         from opteryx.planner import query_planner
 
         if not operation:  # pragma: no cover
@@ -205,6 +206,8 @@ class Cursor(DataFrame):
             self._statistics.time_planning += time.time_ns() - start
             results = plan.execute()
             start = time.time_ns()
+
+        system_statistics.queries_executed += 1
 
         if results is not None:
             # we can't update tuples directly

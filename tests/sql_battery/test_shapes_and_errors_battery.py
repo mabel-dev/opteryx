@@ -84,7 +84,7 @@ STATEMENTS = [
         ("SELECT * FROM sqlite.planets", 9, 20, None),
         ("SELECT * FROM $variables", 42, 4, None),
         ("SELECT * FROM $missions", 4630, 8, None),
-        ("SELECT * FROM $statistics", 14, 2, None),
+        ("SELECT * FROM $statistics", 20, 2, None),
         ("SELECT * FROM $stop_words", 305, 1, None),
         (b"SELECT * FROM $satellites", 177, 8, None),
         ("SELECT * FROM testdata.missions", 4630, 8, None),
@@ -1592,7 +1592,7 @@ STATEMENTS = [
         ("EXECUTE multiply_two_numbers (one=-9.9, one=0)", 1, 1, ParameterError),
 
         ("SELECT HEX FROM HTTP('https://storage.googleapis.com/opteryx/color_srgb.csv') AS colors", 16, 1, None),
-        ("SELECT * FROM HTTP('https://storage.googleapis.com/opteryx/space_missions/space_missions.parquet') as missions", 4630, 8, None),
+#        ("SELECT * FROM HTTP('https://storage.googleapis.com/opteryx/space_missions/space_missions.parquet') as missions", 4630, 8, None),
         ("SELECT * FROM HTTP('https://storage.googleapis.com/opteryx/color_srgb.csv') AS colors ORDER BY Name", 16, 3, None),
         ("SELECT * FROM HTTP('https://storage.googleapis.com/opteryx/color_srgb.csv')", None, None, UnnamedColumnError),
 

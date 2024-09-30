@@ -148,6 +148,8 @@ class GcpCloudStorageConnector(
         return content
 
     async def async_read_blob(self, *, blob_name, pool, session, statistics, **kwargs):
+        from opteryx import system_statistics
+
         bucket, _, _, _ = paths.get_parts(blob_name)
         # DEBUG: log ("READ   ", blob_name)
 
@@ -176,6 +178,7 @@ class GcpCloudStorageConnector(
             ref = await pool.commit(data)
             while ref is None:
                 statistics.stalls_writing_to_read_buffer += 1
+                system_statistics.cpu_wait_seconds += 0.1
                 await asyncio.sleep(0.1)
                 ref = await pool.commit(data)
             statistics.bytes_read += len(data)

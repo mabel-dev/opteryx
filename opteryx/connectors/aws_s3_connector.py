@@ -128,6 +128,8 @@ class AwsS3Connector(BaseConnector, Cacheable, Partitionable, Asynchronous):
         return self.schema
 
     async def async_read_blob(self, *, blob_name, pool, statistics, **kwargs):
+        from opteryx import system_statistics
+
         try:
             bucket, object_path, name, extension = paths.get_parts(blob_name)
             # DEBUG: log ("READ   ", name)
@@ -138,6 +140,7 @@ class AwsS3Connector(BaseConnector, Cacheable, Partitionable, Asynchronous):
             while ref is None:
                 statistics.stalls_writing_to_read_buffer += 1
                 await asyncio.sleep(0.1)
+                system_statistics.cpu_wait_seconds += 0.1
                 ref = await pool.commit(data)
             statistics.bytes_read += len(data)
             return ref

@@ -25,6 +25,7 @@ to ensure they load correctly.
 
 import datetime
 import os
+import time
 import warnings
 import platform
 
@@ -268,3 +269,8 @@ except Exception as err:  # nosec
 
 # Enable all warnings, including DeprecationWarning
 warnings.simplefilter("once", DeprecationWarning)
+
+from opteryx.models import QueryStatistics
+
+system_statistics = QueryStatistics("system")
+system_statistics.start_time = time.time_ns()

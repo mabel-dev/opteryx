@@ -111,6 +111,8 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable, PredicatePushable, 
             os.close(file_descriptor)
 
     async def async_read_blob(self, *, blob_name, pool, statistics, **kwargs):
+        from opteryx import system_statistics
+
         # DEBUG: log ("READ   ", blob_name)
         with open(blob_name, "rb") as file:
             data = file.read()
@@ -120,6 +122,7 @@ class DiskConnector(BaseConnector, Cacheable, Partitionable, PredicatePushable, 
             while ref is None:
                 statistics.stalls_writing_to_read_buffer += 1
                 await asyncio.sleep(0.1)
+                system_statistics.cpu_wait_seconds += 0.1
                 ref = await pool.commit(data)
             statistics.bytes_read += len(data)
             return ref

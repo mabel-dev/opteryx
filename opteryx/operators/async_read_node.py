@@ -119,6 +119,8 @@ class AsyncReaderNode(ReaderNode):
         raise NotImplementedError()
 
     def execute(self) -> Generator:
+        from opteryx import system_statistics
+
         """Perform this step, time how long is spent doing work"""
         orso_schema = self.parameters["schema"]
         reader = self.parameters["connector"]
@@ -174,6 +176,7 @@ class AsyncReaderNode(ReaderNode):
             except queue.Empty:
                 # Increment stall count if the queue is empty.
                 self.statistics.stalls_reading_from_read_buffer += 1
+                system_statistics.io_wait_seconds += 0.1
                 continue  # Skip the rest of the loop and try to get an item again.
 
             if item is None:

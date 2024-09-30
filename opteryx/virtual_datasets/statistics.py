@@ -14,6 +14,8 @@
 This is a virtual dataset which is calculated at access time.
 """
 
+import time
+
 from orso.schema import FlatColumn
 from orso.schema import RelationSchema
 from orso.types import OrsoTypes
@@ -24,6 +26,7 @@ __all__ = ("read", "schema")
 def read(end_date=None, variables={}):
     import pyarrow
 
+    from opteryx import system_statistics
     from opteryx.shared.buffer_pool import BufferPool
 
     bufferpool = BufferPool()
@@ -32,6 +35,7 @@ def read(end_date=None, variables={}):
 
     pool = bufferpool._memory_pool
 
+    # fmt:off
     buffer = [
         {"key": "bufferpool_commits", "value": str(pool.commits)},
         {"key": "bufferpool_failed_commits", "value": str(pool.failed_commits)},
@@ -47,7 +51,14 @@ def read(end_date=None, variables={}):
         {"key": "lru_misses", "value": str(lru_misses)},
         {"key": "lru_evictions", "value": str(lru_evictions)},
         {"key": "lru_inserts", "value": str(lru_inserts)},
+        {"key": "queries_executed", "value": str(system_statistics.queries_executed)},
+        {"key": "uptime_seconds","value": str((time.time_ns() - system_statistics.start_time) / 1e9)},
+        {"key": "io_wait_seconds", "value": str(system_statistics.io_wait_seconds)},
+        {"key": "cpu_wait_seconds", "value": str(system_statistics.cpu_wait_seconds)},
+        {"key": "origin_reads", "value": str(system_statistics.origin_reads)},
+        {"key": "remote_cache_reads", "value": str(system_statistics.remote_cache_reads)},
     ]
+    # fmt:on
 
     return pyarrow.Table.from_pylist(buffer)
 

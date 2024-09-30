@@ -74,7 +74,9 @@ class QueryStatistics(_QueryStatistics):
     def __new__(cls, qid=""):
         if cls._instances.get(qid) is None:
             cls._instances[qid] = _QueryStatistics()
-            if len(cls._instances.keys()) > 50:
-                # don't keep collecting these things
-                cls._instances.pop(next(iter(cls._instances)))
+            if len(cls._instances.keys()) > 10:
+                # find the first key that is not "system"
+                key_to_remove = next((key for key in cls._instances if key != "system"), None)
+                if key_to_remove:
+                    cls._instances.pop(key_to_remove)
         return cls._instances[qid]
