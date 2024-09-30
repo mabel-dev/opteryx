@@ -21,6 +21,11 @@ from opteryx.config import MAX_CACHEABLE_ITEM_SIZE
 
 __all__ = ("Cacheable", "async_read_thru_cache")
 
+SOURCE_NOT_FOUND = 0
+SOURCE_BUFFER_POOL = 1
+SOURCE_REMOTE_CACHE = 2
+SOURCE_ORIGIN = 3
+
 
 class Cacheable:
     """
@@ -47,14 +52,15 @@ def async_read_thru_cache(func):
     read buffer reference for the bytes, which means we need to populate
     the read buffer and return the ref for these items.
     """
-    # Capture the max_evictions value at decoration time
+    # Capture the evictions_remaining value at decoration time
     from opteryx import get_cache_manager
+    from opteryx import system_statistics
     from opteryx.managers.cache import NullCache
     from opteryx.shared import BufferPool
     from opteryx.shared import MemoryPool
 
     cache_manager = get_cache_manager()
-    max_evictions = MAX_CACHE_EVICTIONS_PER_QUERY
+    evictions_remaining = MAX_CACHE_EVICTIONS_PER_QUERY
     remote_cache = cache_manager.cache_backend
     if not remote_cache:
         # rather than make decisions - just use a dummy
@@ -67,8 +73,9 @@ def async_read_thru_cache(func):
     @wraps(func)
     async def wrapper(blob_name: str, statistics, pool: MemoryPool, **kwargs):
         try:
-            nonlocal max_evictions
+            nonlocal evictions_remaining
 
+            source = SOURCE_NOT_FOUND
             key = hex(CityHash64(blob_name)).encode()
             read_buffer_ref = None
             payload = None
@@ -77,6 +84,7 @@ def async_read_thru_cache(func):
             # try the buffer pool first
             payload = buffer_pool.get(key, zero_copy=False)
             if payload is not None:
+                source = SOURCE_BUFFER_POOL
                 remote_cache.touch(key)  # help the remote cache track LRU
                 statistics.bufferpool_hits += 1
                 read_buffer_ref = await pool.commit(payload)  # type: ignore
@@ -85,49 +93,57 @@ def async_read_thru_cache(func):
                     statistics.stalls_writing_to_read_buffer += 1
                     read_buffer_ref = await pool.commit(payload)  # type: ignore
                     statistics.bytes_read += len(payload)
+                    system_statistics.cpu_wait_seconds += 0.1
                 return read_buffer_ref
 
             # try the remote cache next
             payload = remote_cache.get(key)
             if payload is not None:
+                source = SOURCE_REMOTE_CACHE
                 statistics.remote_cache_hits += 1
+                system_statistics.remote_cache_reads += 1
                 read_buffer_ref = await pool.commit(payload)  # type: ignore
                 while read_buffer_ref is None:
                     await asyncio.sleep(0.1)
                     statistics.stalls_writing_to_read_buffer += 1
                     read_buffer_ref = await pool.commit(payload)  # type: ignore
                     statistics.bytes_read += len(payload)
+                    system_statistics.cpu_wait_seconds += 0.1
                 return read_buffer_ref
 
             try:
                 read_buffer_ref = await func(
                     blob_name=blob_name, statistics=statistics, pool=pool, **kwargs
                 )
+                source = SOURCE_ORIGIN
                 statistics.cache_misses += 1
+                system_statistics.origin_reads += 1
                 return read_buffer_ref
             except Exception as e:
                 print(f"Error in {func.__name__}: {e}")
                 raise  # Optionally re-raise the error after logging it
 
         finally:
-            # Write the result to caches
-            if max_evictions:
+            # If we found the file, see if we need to write it to the caches
+            if source != SOURCE_NOT_FOUND and evictions_remaining > 0:
                 # we set a per-query eviction limit
                 payload = await pool.read(read_buffer_ref)  # type: ignore
 
-                if len(payload) < buffer_pool.size // 10:
+                if source != SOURCE_BUFFER_POOL and len(payload) < buffer_pool.size // 10:
+                    # if we didn't get it from the buffer pool (origin or remote cache) we add it
                     evicted = buffer_pool.set(key, payload)
                     if evicted:
                         # if we're evicting items we just put in the cache, stop
                         if evicted in my_keys:
-                            max_evictions = 0
+                            evictions_remaining = 0
                         else:
-                            max_evictions -= 1
+                            evictions_remaining -= 1
                         statistics.cache_evictions += 1
 
-                if len(payload) < MAX_CACHEABLE_ITEM_SIZE:
-                    remote_cache.set(key, payload)
-                else:
-                    statistics.cache_oversize += 1
+            if source == SOURCE_ORIGIN and len(payload) < MAX_CACHEABLE_ITEM_SIZE:
+                # If we read from the source, it's not in the remote cache
+                remote_cache.set(key, payload)
+            else:
+                statistics.cache_oversize += 1
 
     return wrapper
