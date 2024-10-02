@@ -56,8 +56,8 @@ def create_physical_plan(logical_plan, query_properties) -> ExecutionTree:
         elif node_type == LogicalPlanStepType.Join:
             if node_config.get("type") == "inner":
                 # We use our own implementation of INNER JOIN
-                # We have optimized INTEGER and VARCHAR versions
-                if len(node_config["left_columns"]) == 1 and node_config["columns"][0].schema_column.type in {OrsoTypes.INTEGER, OrsoTypes.VARCHAR}:
+                # We have optimized VARCHAR version
+                if len(node_config["left_columns"]) == 1 and node_config["columns"][0].schema_column.type == OrsoTypes.VARCHAR:
                     node = operators.InnerJoinSingleNode(query_properties, **node_config)
                 else:
                     node = operators.InnerJoinNode(query_properties, **node_config)
