@@ -53,13 +53,23 @@ def generate_condition(columns):
 def generate_random_sql_join(columns1, table1, columns2, table2) -> str:
     join_type = random.choice(["INNER JOIN", "LEFT JOIN", "RIGHT JOIN", "FULL OUTER JOIN"])
 
-    left_column = columns1[random.choice(range(len(columns1)))]
-    right_column = columns2[random.choice(range(len(columns2)))]
-    while left_column.type != right_column.type:
+    last_value = -1
+    this_value = random.random()
+    conditions = []
+    while this_value > last_value:
+        last_value = this_value
+        this_value = random.random()
+
         left_column = columns1[random.choice(range(len(columns1)))]
         right_column = columns2[random.choice(range(len(columns2)))]
+        while left_column.type != right_column.type:
+            left_column = columns1[random.choice(range(len(columns1)))]
+            right_column = columns2[random.choice(range(len(columns2)))]
 
-    join_condition = f"{table1}.{left_column.name} = {table2}.{right_column.name}"
+        condition = f"{table1}.{left_column.name} = {table2}.{right_column.name}"
+        conditions.append(condition)
+
+    join_condition = " AND ".join(conditions)
     selected_columns = [f"{table1}.{col.name}" for col in columns1 if random.random() < 0.2] + [f"{table2}.{col.name}" for col in columns2 if random.random() < 0.2]
     if len(selected_columns) == 0:
         selected_columns = ["*"]
@@ -109,7 +119,6 @@ TEST_CYCLES: int = 250
 def test_sql_fuzzing_join(i):
     seed = random_int()
     random.seed(seed)
-    print(f"Seed: {seed}")
 
     table1 = TABLES[random.choice(range(len(TABLES)))]
     table2 = TABLES[random.choice(range(len(TABLES)))]
@@ -124,7 +133,7 @@ def test_sql_fuzzing_join(i):
     try:
         res = opteryx.query(statement)
         execution_time = time.time() - start_time  # Measure execution time
-        print(f"Shape: {res.shape}, Execution Time: {execution_time:.2f} seconds")
+        print(f"Shape: {res.shape}, Execution Time: {execution_time:.2f} seconds, Seed: {seed}")
         # Additional success criteria checks can be added here
     except Exception as e:
         import traceback

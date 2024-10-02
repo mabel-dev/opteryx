@@ -54,8 +54,11 @@ class DistinctPushdownStrategy(OptimizationStrategy):
             and context.collected_distincts
             and node.type == "cross join"
             and node.unnest_target is not None
-            and node.pre_update_columns == node.unnest_target.identity
+            and node.pre_update_columns == {node.unnest_target.identity}
         ):
+            # Very specifically testing for a DISTINCT on the unnested column, only.
+            # In this situation we do the DISTINCT on the intermediate results of the CJU,
+            # this means we create smaller tables out of the CROSS JOIN => faster
             node.distinct = True
             context.optimized_plan[context.node_id] = node
             for distict_node in context.collected_distincts:
