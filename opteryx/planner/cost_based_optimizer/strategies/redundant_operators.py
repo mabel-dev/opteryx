@@ -44,10 +44,11 @@ class RedundantOperationsStrategy(OptimizationStrategy):
             providers = context.pre_optimized_tree.ingoing_edges(context.node_id)
             if len(providers) == 1:
                 provider_node = context.pre_optimized_tree[providers[0][0]]
-                provider_columns = {c.schema_column.identity for c in provider_node.columns}
-                my_columns = {c.schema_column.identity for c in node.columns}
-                if provider_columns == my_columns:
-                    context.optimized_plan.remove_node(context.node_id, heal=True)
+                if provider_node.node_type != LogicalPlanStepType.Subquery:
+                    provider_columns = {c.schema_column.identity for c in provider_node.columns}
+                    my_columns = {c.schema_column.identity for c in node.columns}
+                    if provider_columns == my_columns:
+                        context.optimized_plan.remove_node(context.node_id, heal=True)
 
         # Subqueries are useful for planning but not needed for execution
         if node.node_type == LogicalPlanStepType.Subquery:

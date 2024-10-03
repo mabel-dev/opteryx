@@ -2002,6 +2002,12 @@ STATEMENTS = [
         ("SELECT * FROM (SELECT * FROM (SELECT * FROM $satellites LEFT JOIN $planets AS p ON $satellites.planetId = p.id) AS joined) AS mapped WHERE mass > 1", 170, 28, AmbiguousIdentifierError),
         ("SELECT * FROM (SELECT * FROM $satellites LEFT JOIN (SELECT * FROM $planets) AS p ON $satellites.planetId = p.id) AS mapped WHERE mass > 1", 170, 28, AmbiguousIdentifierError),
         ("SELECT * FROM (SELECT * FROM $satellites LEFT JOIN $planets AS p ON $satellites.planetId = p.id) AS mapped WHERE mass > 1", 170, 28, AmbiguousIdentifierError),
+        #2042
+        ("SELECT DISTINCT Company FROM launches", 62, 1, None),
+        ("SELECT Company FROM launches", 4630, 1, None),
+        ("SELECT * FROM launches", 4630, 2, None),
+        ("SELECT DISTINCT Company FROM launches ORDER BY Company", 62, 1, None),
+        ("SELECT DISTINCT Mission FROM launches", 4556, 1, None)
 ]
 # fmt:on
 
