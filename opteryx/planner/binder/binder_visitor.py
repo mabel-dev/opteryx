@@ -803,19 +803,6 @@ class BinderVisitor:
                 message=f"Query result contains multiple instances of the same column(s) - `{'`, `'.join(matches)}`"
             )
 
-        # get any column or field from a realtion referenced
-        # 1984
-        all_identities = set(
-            [
-                item.schema_column.identity
-                for sublist in [
-                    get_all_nodes_of_type(c, (NodeType.IDENTIFIER,)) for c in node.columns
-                ]
-                for item in sublist
-            ]
-            + all_top_level_identities
-        )
-
         # Remove columns not being projected from the schemas, and remove empty schemas
         columns = []
         for relation, schema in list(context.schemas.items()):
@@ -838,8 +825,6 @@ class BinderVisitor:
                 # update the schema with columns we have references to, removing redundant columns
                 schema.columns = schema_columns
                 for column in node.columns:
-                    # indirect references are when we're keeping a column for a function or sort
-                    # 1984                    column.direct_reference = column.identity in all_top_level_identities
                     if column.schema_column.identity in [i.identity for i in schema_columns]:
                         columns.append(column)
 

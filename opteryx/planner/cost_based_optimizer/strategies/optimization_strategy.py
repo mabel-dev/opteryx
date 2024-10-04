@@ -24,6 +24,9 @@ class OptimizerContext:
         self.pre_optimized_tree = tree
         self.optimized_plan = LogicalPlan()
 
+        self.seen_projections: int = 0
+        self.seen_unions: int = 0
+
         self.collected_predicates: list = []
         """We collect predicates we should be able to push to reads and joins"""
 

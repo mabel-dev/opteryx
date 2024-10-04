@@ -18,6 +18,17 @@ STATEMENTS = [
     ("SELECT obliquityToOrbit, meanTemperature, surfacePressure FROM testdata.planets;", 3),
     ("SELECT numberOfMoons, name FROM testdata.planets;", 2),
 
+    # Pushing past subqueries (we're using a view here)
+    ("SELECT DISTINCT Company FROM launches", 1),
+    ("SELECT Company FROM launches", 1),
+    ("SELECT * FROM launches", 3),
+    ("SELECT DISTINCT Company FROM launches ORDER BY Company", 1),
+    ("SELECT DISTINCT Mission FROM launches", 1),
+    ("SELECT LL FROM launches", 1),
+    ("SELECT LOG2(LL) FROM launches", 1),
+    ("SELECT LEN(Company) > LL from launches", 2),
+    ("SELECT LL from launches WHERE LEN(Company) < LL", 2)
+
 ]
 
 @pytest.mark.parametrize("query, expected_columns", STATEMENTS)

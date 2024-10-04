@@ -37,14 +37,18 @@ class ProjectionPushdownStrategy(OptimizationStrategy):
         """
         node.pre_update_columns = set(context.collected_identities)
 
-        # If we're at a project, we only keep the columns that are referenced
-        # this is mainly when we have columns in a subquery which aren't used
-        # in the outer query
-        # 1984
-        #        if node.node_type == LogicalPlanStepType.Project:
-        #            node.columns = [
-        #                n for n in node.columns if n.schema_column.identity in context.collected_identities
-        #            ]
+        # If we're at the something other than the top project (e.g. in a subquery) in a plan we
+        # may be able to remove some columns (and potentially some evaluations) if the columns
+        # aren't referenced in the outer query.
+        if node.node_type == LogicalPlanStepType.Union:
+            context.seen_unions += 1
+        if node.node_type == LogicalPlanStepType.Project:
+            if context.seen_unions == 0 and context.seen_projections > 0:
+                node.columns = [
+                    n for n in node.columns if n.schema_column.identity in node.pre_update_columns
+                ]
+            if context.seen_unions == 0:
+                context.seen_projections += 1
 
         # Subqueries act like all columns are referenced
         if node.node_type != LogicalPlanStepType.Subquery:
