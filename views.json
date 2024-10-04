@@ -6,6 +6,6 @@
         "statement": "/* A test case for row-permissions functionality */ SELECT * FROM $astronauts WHERE LIST_CONTAINS_ANY(missions, @@user_memberships)"
     },
     "launches": {
-        "statement": "/* regression test */ SELECT Company, Mission FROM $missions" 
+        "statement": "/* regression test */ SELECT Company, Mission, LEN(Location) AS LL FROM $missions" 
     }
 }

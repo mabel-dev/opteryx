@@ -2005,7 +2005,7 @@ STATEMENTS = [
         #2042
         ("SELECT DISTINCT Company FROM launches", 62, 1, None),
         ("SELECT Company FROM launches", 4630, 1, None),
-        ("SELECT * FROM launches", 4630, 2, None),
+        ("SELECT * FROM launches", 4630, 3, None),
         ("SELECT DISTINCT Company FROM launches ORDER BY Company", 62, 1, None),
         ("SELECT DISTINCT Mission FROM launches", 4556, 1, None)
 ]
