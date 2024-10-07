@@ -21,6 +21,7 @@ The execution tree contains functionality to:
 
 """
 
+import gc
 from typing import Any
 from typing import Generator
 from typing import Tuple
@@ -131,7 +132,9 @@ class ExecutionTree(Graph):
 
         # Execute the head node's operation
         operator = self[head_node]
+        gc.disable()
         results = operator.execute()
+        gc.enable()
 
         # If the results are non-tabular, handle them accordingly
         if isinstance(results, NonTabularResult):

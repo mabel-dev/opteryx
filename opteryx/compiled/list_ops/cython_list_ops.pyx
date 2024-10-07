@@ -290,3 +290,23 @@ cpdef cnp.ndarray array_encode_utf8(cnp.ndarray inp):
         inp_view[i] = PyUnicode_AsUTF8String(inp_view[i])
 
     return inp
+
+
+cpdef cnp.ndarray list_contains_any(cnp.ndarray array, cnp.ndarray items):
+    """
+    Cython optimized version that works with object arrays.
+    """
+    cdef set items_set = set(items[0])
+    cdef Py_ssize_t size = array.size
+    cdef cnp.ndarray res = numpy.zeros(size, dtype=numpy.bool_)
+    cdef Py_ssize_t i
+    cdef object test_set, el
+
+    for i in range(size):
+        test_set = array[i]
+        if test_set is not None:
+            for el in test_set:
+                if el in items_set:
+                    res[i] = True
+                    break
+    return res

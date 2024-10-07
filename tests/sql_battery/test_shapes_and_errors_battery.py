@@ -35,7 +35,6 @@ response is right.
 These tests only test the shape of the response, more specific tests would be needed to
 test the body of the response.
 """
-
 import os
 import pytest
 import sys
@@ -2002,12 +2001,18 @@ STATEMENTS = [
         ("SELECT * FROM (SELECT * FROM (SELECT * FROM $satellites LEFT JOIN $planets AS p ON $satellites.planetId = p.id) AS joined) AS mapped WHERE mass > 1", 170, 28, AmbiguousIdentifierError),
         ("SELECT * FROM (SELECT * FROM $satellites LEFT JOIN (SELECT * FROM $planets) AS p ON $satellites.planetId = p.id) AS mapped WHERE mass > 1", 170, 28, AmbiguousIdentifierError),
         ("SELECT * FROM (SELECT * FROM $satellites LEFT JOIN $planets AS p ON $satellites.planetId = p.id) AS mapped WHERE mass > 1", 170, 28, AmbiguousIdentifierError),
-        #2042
+        # 2042
         ("SELECT DISTINCT Company FROM launches", 62, 1, None),
         ("SELECT Company FROM launches", 4630, 1, None),
         ("SELECT * FROM launches", 4630, 3, None),
         ("SELECT DISTINCT Company FROM launches ORDER BY Company", 62, 1, None),
-        ("SELECT DISTINCT Mission FROM launches", 4556, 1, None)
+        ("SELECT DISTINCT Mission FROM launches", 4556, 1, None),
+        # 2050
+        ("SELECT RANDOM_STRING() FROM $planets", 9, 1, None),
+        ("SELECT RANDOM_STRING(24) FROM $planets", 9, 1, None),
+        # 2051
+        ("SELECT CASE WHEN surfacePressure = 0 THEN -1 WHEN surfacePressure IS NULL THEN 0 ELSE -2 END FROM $planets", 9, 1, None),
+        ("SELECT CASE WHEN surfacePressure = 0 THEN -1 ELSE -2 END FROM $planets", 9, 1, None),
 ]
 # fmt:on
 

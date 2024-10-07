@@ -38,6 +38,9 @@ class OptimizerContext:
 
 
 class OptimizationStrategy:
+    def __init__(self, statistics):
+        self.statistics = statistics
+
     def visit(self, node: LogicalPlanNode, context: OptimizerContext) -> OptimizerContext:
         raise NotImplementedError(
             "Visit method must be implemented in OptimizationStrategy classes."

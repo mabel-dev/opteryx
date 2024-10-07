@@ -107,6 +107,12 @@ extensions = [
         extra_compile_args=COMPILE_FLAGS + ["-std=c++17"],
     ),
     Extension(
+        name="opteryx.compiled.functions.functions",
+        sources=["opteryx/compiled/functions/functions.pyx"],
+        include_dirs=include_dirs,
+        extra_compile_args=COMPILE_FLAGS,
+    ),
+    Extension(
         name="opteryx.compiled.structures.node",
         sources=["opteryx/compiled/structures/node.pyx"],
         extra_compile_args=COMPILE_FLAGS,

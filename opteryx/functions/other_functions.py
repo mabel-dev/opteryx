@@ -29,26 +29,6 @@ def list_contains(array, item):
     return item in set(array)
 
 
-def list_contains_any(array: numpy.ndarray, items: numpy.ndarray) -> numpy.ndarray:
-    """
-    Check if any element in each sub-array of 'array' is present in 'items'.
-
-    Parameters:
-        array (numpy.ndarray): A 1D array where each element is an iterable (e.g., list, set).
-        items (numpy.ndarray): An array of items to check against each sub-array in 'array'.
-
-    Returns:
-        numpy.ndarray: A boolean array where each element indicates whether any item
-                       from 'items' is found in the corresponding sub-array of 'array'.
-    """
-    items_set = set(items[0])
-    res = numpy.empty(array.size, dtype=bool)
-    for i, test_set in enumerate(array):
-        # Using not to correctly capture overlap (isdisjoint is True when no common elements)
-        res[i] = bool(set(test_set) & items_set) if test_set is not None else False
-    return res
-
-
 def list_contains_all(array, items):
     """
     does array contain all of the items in items
@@ -162,13 +142,15 @@ def null_if(col1, col2):
 
 
 def case_when(conditions, values):
+    n_rows = len(conditions[0])
+    n_conditions = len(conditions)
     res = []
-    cons = list(zip(*conditions))
-    vals = zip(*values)
-    for idx, val_set in enumerate(vals):
-        offset = next((i for i, j in enumerate(cons[idx]) if j), None)
-        if offset is not None:
-            res.append(val_set[offset])
+
+    for idx in range(n_rows):
+        for cond_idx in range(n_conditions):
+            if conditions[cond_idx][idx]:
+                res.append(values[cond_idx][idx])
+                break
         else:
             res.append(None)
     return res

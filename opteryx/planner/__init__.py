@@ -194,7 +194,7 @@ def query_planner(
         statistics.time_planning_binder += time.monotonic_ns() - start
 
         start = time.monotonic_ns()
-        optimized_plan = do_cost_based_optimizer(bound_plan)
+        optimized_plan = do_cost_based_optimizer(bound_plan, statistics)
         statistics.time_planning_optimizer += time.monotonic_ns() - start
 
         # before we write the new optimizer and execution engine, convert to a V1 plan

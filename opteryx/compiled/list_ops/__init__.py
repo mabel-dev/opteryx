@@ -10,3 +10,4 @@ from .cython_list_ops import cython_anyop_neq
 from .cython_list_ops import cython_arrow_op
 from .cython_list_ops import cython_get_element_op
 from .cython_list_ops import cython_long_arrow_op
+from .cython_list_ops import list_contains_any

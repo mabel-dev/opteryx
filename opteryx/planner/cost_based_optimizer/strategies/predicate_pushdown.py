@@ -62,7 +62,7 @@ class PredicatePushdownStrategy(OptimizationStrategy):
         ):
             # Handle predicates specific to node types
             context = self._handle_predicates(node, context)
-
+            self.statistics.optimization_predicate_pushdown += 1
             context.optimized_plan.add_node(context.node_id, LogicalPlanNode(**node.properties))
             if context.last_nid:
                 context.optimized_plan.add_edge(context.node_id, context.last_nid)
@@ -71,6 +71,7 @@ class PredicatePushdownStrategy(OptimizationStrategy):
             # don't push filters past limits
 
             for predicate in context.collected_predicates:
+                self.statistics.optimization_predicate_pushdown += 1
                 context.optimized_plan.insert_node_after(
                     random_string(), predicate, context.node_id
                 )
@@ -116,6 +117,7 @@ class PredicatePushdownStrategy(OptimizationStrategy):
 
             if node.on:
                 new_predicates, node.on = _inner(node.on)
+                self.statistics.optimization_predicate_pushdown_into_join += 1
                 context.collected_predicates.extend(
                     LogicalPlanNode(
                         LogicalPlanStepType.Filter,
@@ -144,6 +146,7 @@ class PredicatePushdownStrategy(OptimizationStrategy):
                             for i in identifiers
                         ):
                             for predicate in context.collected_predicates:
+                                self.statistics.optimization_predicate_pushdown += 1
                                 context.optimized_plan.insert_node_after(
                                     predicate.nid, predicate, context.node_id
                                 )
@@ -152,6 +155,7 @@ class PredicatePushdownStrategy(OptimizationStrategy):
                     # dump all the predicates
                     # IMPROVE: push past SEMI and ANTI joins
                     for predicate in context.collected_predicates:
+                        self.statistics.optimization_predicate_pushdown += 1
                         context.optimized_plan.insert_node_after(
                             predicate.nid, predicate, context.node_id
                         )
@@ -189,11 +193,13 @@ class PredicatePushdownStrategy(OptimizationStrategy):
                             else:
                                 new_values = list(new_values)
                             node.filters = set(filters + new_values)
+                            self.statistics.optimization_predicate_pushdown_cross_join_unnest += 1
 
                         elif (
                             query_columns == (known_columns)
                             or node.unnest_target.identity in query_columns
                         ):
+                            self.statistics.optimization_predicate_pushdown += 1
                             context.optimized_plan.insert_node_after(
                                 predicate.nid, predicate, context.node_id
                             )
@@ -213,6 +219,7 @@ class PredicatePushdownStrategy(OptimizationStrategy):
                         ):
                             node.type = "inner"
                             node.on = _add_condition(node.on, predicate.condition)
+                            self.statistics.optimization_predicate_pushdown_cross_join_to_inner_join += 1
                         else:
                             remaining_predicates.append(predicate)
 
@@ -232,11 +239,13 @@ class PredicatePushdownStrategy(OptimizationStrategy):
                             and set(node.right_relation_names + node.left_relation_names)
                             == set(predicate.relations)
                         ):
+                            self.statistics.optimization_predicate_pushdown_add_to_inner_join += 1
                             node.condition = _add_condition(node.condition, predicate)
                         else:
                             remaining_predicates.append(predicate)
                     context.collected_predicates = remaining_predicates
 
+                self.statistics.optimization_predicate_pushdown += 1
                 context.optimized_plan.add_node(context.node_id, node)
 
             if node.on is None and node.type == ("inner"):
@@ -251,6 +260,7 @@ class PredicatePushdownStrategy(OptimizationStrategy):
         for predicate in context.collected_predicates:
             for nid in predicate.plan_path:
                 if nid in context.optimized_plan:
+                    self.statistics.optimization_predicate_pushdown_unplaced += 1
                     context.optimized_plan.insert_node_before(predicate.nid, predicate, nid)
                     break
         return context.optimized_plan
@@ -277,6 +287,7 @@ class PredicatePushdownStrategy(OptimizationStrategy):
                             node.predicates = []
                         node.predicates.append(predicate.condition)
                         continue
+                self.statistics.optimization_predicate_pushdown += 1
                 context.optimized_plan.insert_node_after(predicate.nid, predicate, context.node_id)
                 continue
             remaining_predicates.append(predicate)

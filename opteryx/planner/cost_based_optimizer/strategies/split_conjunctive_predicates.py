@@ -54,6 +54,8 @@ class SplitConjunctivePredicatesStrategy(OptimizationStrategy):
         """
         if node.node_type == LogicalPlanStepType.Filter:
             split_predicates = _inner_split(node.condition)
+            if len(split_predicates) > 1:
+                self.statistics.optimization_split_conjunctions += len(split_predicates) - 1
             new_nodes = []
             for predicate in split_predicates:
                 new_node = LogicalPlanNode(node_type=LogicalPlanStepType.Filter)

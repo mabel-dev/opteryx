@@ -81,6 +81,7 @@ class ProjectionPushdownStrategy(OptimizationStrategy):
             node.columns = node_columns
 
         context.optimized_plan.add_node(context.node_id, LogicalPlanNode(**node.properties))
+        self.statistics.optimization_projection_pushdown += 1
         if context.parent_nid:
             context.optimized_plan.add_edge(context.node_id, context.parent_nid)
 

@@ -226,16 +226,7 @@ def parquet_decoder(
     Returns:
         Tuple containing number of rows, number of columns, and the table or schema.
     """
-    # we need to work out if we have a selection which may force us
-    # fetching columns just for filtering
-    dnf_filter, processed_selection = (
-        PredicatePushable.to_dnf(selection) if selection else (None, None)
-    )
-
-    # try to avoid turning a memoryview buffer into bytes, it's quite slow
-    stream: BinaryIO = (
-        MemoryViewStream(buffer) if isinstance(buffer, memoryview) else io.BytesIO(buffer)
-    )
+    stream = pyarrow.BufferReader(buffer)
 
     # Open the parquet file only once
     parquet_file = parquet.ParquetFile(stream)
@@ -243,6 +234,12 @@ def parquet_decoder(
     # Return just the schema if that's all that's needed
     if just_schema:
         return convert_arrow_schema_to_orso_schema(parquet_file.schema_arrow)
+
+    # we need to work out if we have a selection which may force us
+    # fetching columns just for filtering
+    dnf_filter, processed_selection = (
+        PredicatePushable.to_dnf(selection) if selection else (None, None)
+    )
 
     if projection == [] and selection is None:
         # Create a boolean array with True values, one for each column in the Parquet file
@@ -272,6 +269,7 @@ def parquet_decoder(
         pre_buffer=False,
         filters=dnf_filter,
         use_threads=False,
+        use_pandas_metadata=False,
     )
 
     # Any filters we couldn't push to PyArrow to read we run here

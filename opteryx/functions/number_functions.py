@@ -10,7 +10,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import random
 from typing import List
 
 import numpy
@@ -35,14 +34,23 @@ def random_normal(size):
     return rng.standard_normal(size)
 
 
-def random_string(width):
+def random_string(items):
     # this is roughly twice as fast the the previous implementation
     # a tuple is slightly faster than a string, don't use a list
-    width = int(width)
-    # fmt:off
-    alphabet = ('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '_', '/')
-    # ftm:on
-    return "".join([alphabet[random.getrandbits(6)] for i in range(width)])
+    if isinstance(items, int):
+        row_count = items
+        width = 16
+    elif len(items) > 0:
+        row_count = len(items)
+        width = items[0]
+    else:
+        return []
+
+    import pyarrow
+
+    from opteryx.compiled.functions import generate_random_strings
+
+    return pyarrow.array(generate_random_strings(row_count, width))
 
 
 def safe_power(base_array, exponent_array):
@@ -75,26 +83,32 @@ def safe_power(base_array, exponent_array):
     return result
 
 
-def ceiling(values, scales=[0]) -> List:
+def ceiling(values, scales=None) -> List:
     """
     Performs a 'ceiling' with a scale factor
     """
-    if len(scales) == 0:
+    if scales is None:
+        scale = 0
+    elif len(scales) == 0:
         return []
-    scale = scales[0]
+    else:
+        scale = scales[0]
     if scale == 0:
         return numpy.ceil(values)
     scale = 10**scale
     return numpy.ceil(values * scale) / scale
 
 
-def floor(values, scales=[0]) -> List:
+def floor(values, scales=None) -> List:
     """
     Performs a 'ceiling' with a scale factor
     """
-    if len(scales) == 0:
+    if scales is None:
+        scale = 0
+    elif len(scales) == 0:
         return []
-    scale = scales[0]
+    else:
+        scale = scales[0]
     if scale == 0:
         return numpy.floor(values)
     scale = 10**scale
