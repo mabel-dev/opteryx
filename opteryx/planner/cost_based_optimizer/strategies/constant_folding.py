@@ -32,6 +32,7 @@ from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import evaluate
 from opteryx.managers.expression import get_all_nodes_of_type
 from opteryx.models import Node
+from opteryx.models import QueryStatistics
 from opteryx.planner import build_literal_node
 from opteryx.planner.logical_planner import LogicalPlan
 from opteryx.planner.logical_planner import LogicalPlanNode
@@ -42,15 +43,15 @@ from .optimization_strategy import OptimizationStrategy
 from .optimization_strategy import OptimizerContext
 
 
-def fold_constants(root: Node) -> Node:
+def fold_constants(root: Node, statistics: QueryStatistics) -> Node:
     if root.node_type == NodeType.LITERAL:
         # if we're already a literal (constant), we can't fold
         return root
 
     if root.node_type in {NodeType.COMPARISON_OPERATOR, NodeType.BINARY_OPERATOR}:
         # if we have a binary expression, try to fold each side
-        root.left = fold_constants(root.left)
-        root.right = fold_constants(root.right)
+        root.left = fold_constants(root.left, statistics)
+        root.right = fold_constants(root.right, statistics)
 
         # some expressions we can simplify to x or 0.
         if root.node_type == NodeType.BINARY_OPERATOR:
@@ -62,6 +63,7 @@ def fold_constants(root: Node) -> Node:
             ):
                 # 0 * anything = 0
                 root.left.schema_column = root.schema_column
+                statistics.optimization_constant_fold_reduce += 1
                 return root.left  # 0
             if (
                 root.value == "Multiply"
@@ -71,6 +73,7 @@ def fold_constants(root: Node) -> Node:
             ):
                 # anything * 0 = 0
                 root.right.schema_column = root.schema_column
+                statistics.optimization_constant_fold_reduce += 1
                 return root.right  # 0
             if (
                 root.value == "Multiply"
@@ -80,6 +83,7 @@ def fold_constants(root: Node) -> Node:
             ):
                 # 1 * anything = anything
                 root.right.query_column = root.query_column
+                statistics.optimization_constant_fold_reduce += 1
                 return root.right  # anything
             if (
                 root.value == "Multiply"
@@ -89,6 +93,7 @@ def fold_constants(root: Node) -> Node:
             ):
                 # anything * 1 = anything
                 root.left.query_column = root.query_column
+                statistics.optimization_constant_fold_reduce += 1
                 return root.left  # anything
             if (
                 root.value in "Plus"
@@ -98,6 +103,7 @@ def fold_constants(root: Node) -> Node:
             ):
                 # 0 + anything = anything
                 root.right.query_column = root.query_column
+                statistics.optimization_constant_fold_reduce += 1
                 return root.right  # anything
             if (
                 root.value in ("Plus", "Minus")
@@ -107,6 +113,7 @@ def fold_constants(root: Node) -> Node:
             ):
                 # anything +/- 0 = anything
                 root.left.query_column = root.query_column
+                statistics.optimization_constant_fold_reduce += 1
                 return root.left  # anything
             if (
                 root.value == "Divide"
@@ -116,6 +123,7 @@ def fold_constants(root: Node) -> Node:
             ):
                 # anything / 1 = anything
                 root.left.schema_column = root.schema_column
+                statistics.optimization_constant_fold_reduce += 1
                 return root.left  # anything
             if (
                 root.value == "Divide"
@@ -125,13 +133,14 @@ def fold_constants(root: Node) -> Node:
             ):
                 # anything / itself = 1 (0 is an exception)
                 node = build_literal_node(1, root, OrsoTypes.INTEGER)
+                statistics.optimization_constant_fold_reduce += 1
                 node.schema_column = root.schema_column
                 return node
 
     if root.node_type in {NodeType.AND, NodeType.OR, NodeType.XOR}:
         # try to fold each side of logical operators
-        root.left = fold_constants(root.left)
-        root.right = fold_constants(root.right)
+        root.left = fold_constants(root.left, statistics)
+        root.right = fold_constants(root.right, statistics)
 
         # If we have a logical expression and one side is a constant,
         # we can simplify further
@@ -143,6 +152,7 @@ def fold_constants(root: Node) -> Node:
             ):
                 # True OR anything is True
                 root.left.schema_column = root.schema_column
+                statistics.optimization_constant_fold_boolean_reduce += 1
                 return root.left
             if (
                 root.right.node_type == NodeType.LITERAL
@@ -151,6 +161,7 @@ def fold_constants(root: Node) -> Node:
             ):
                 # anything OR True is True
                 root.right.schema_column = root.schema_column
+                statistics.optimization_constant_fold_boolean_reduce += 1
                 return root.right
             if (
                 root.left.node_type == NodeType.LITERAL
@@ -159,6 +170,7 @@ def fold_constants(root: Node) -> Node:
             ):
                 # False OR anything is anything
                 root.right.schema_column = root.schema_column
+                statistics.optimization_constant_fold_boolean_reduce += 1
                 return root.right
             if (
                 root.right.node_type == NodeType.LITERAL
@@ -167,6 +179,7 @@ def fold_constants(root: Node) -> Node:
             ):
                 # anything OR False is anything
                 root.left.schema_column = root.schema_column
+                statistics.optimization_constant_fold_boolean_reduce += 1
                 return root.left
 
         elif root.node_type == NodeType.AND:
@@ -177,6 +190,7 @@ def fold_constants(root: Node) -> Node:
             ):
                 # False AND anything is False
                 root.left.schema_column = root.schema_column
+                statistics.optimization_constant_fold_boolean_reduce += 1
                 return root.left
             if (
                 root.right.node_type == NodeType.LITERAL
@@ -185,6 +199,7 @@ def fold_constants(root: Node) -> Node:
             ):
                 # anything AND False is False
                 root.right.schema_column = root.schema_column
+                statistics.optimization_constant_fold_boolean_reduce += 1
                 return root.right
             if (
                 root.left.node_type == NodeType.LITERAL
@@ -193,6 +208,7 @@ def fold_constants(root: Node) -> Node:
             ):
                 # True AND anything is anything
                 root.right.schema_column = root.schema_column
+                statistics.optimization_constant_fold_boolean_reduce += 1
                 return root.right
             if (
                 root.right.node_type == NodeType.LITERAL
@@ -201,6 +217,7 @@ def fold_constants(root: Node) -> Node:
             ):
                 # anything AND True is anything
                 root.left.schema_column = root.schema_column
+                statistics.optimization_constant_fold_boolean_reduce += 1
                 return root.left
 
         return root
@@ -217,6 +234,7 @@ def fold_constants(root: Node) -> Node:
         table = no_table_data.read()
         try:
             result = evaluate(root, table)[0]
+            statistics.optimization_constant_fold_expression += 1
             return build_literal_node(result, root, root.schema_column.type)
         except (ValueError, TypeError, KeyError) as err:  # nosec
             if not err:
@@ -237,14 +255,14 @@ class ConstantFoldingStrategy(OptimizationStrategy):
 
         # fold constants when referenced in filter clauses (WHERE/HAVING)
         if node.node_type == LogicalPlanStepType.Filter:
-            node.condition = fold_constants(node.condition)
+            node.condition = fold_constants(node.condition, self.statistics)
             if node.condition.node_type == NodeType.LITERAL and node.condition.value:
                 context.optimized_plan.remove_node(context.node_id, heal=True)
             else:
                 context.optimized_plan[context.node_id] = node
         # fold constants when referenced in the SELECT clause
         if node.node_type == LogicalPlanStepType.Project:
-            node.columns = [fold_constants(c) for c in node.columns]
+            node.columns = [fold_constants(c, self.statistics) for c in node.columns]
             context.optimized_plan[context.node_id] = node
 
         return context

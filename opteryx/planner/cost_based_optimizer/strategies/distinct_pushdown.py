@@ -62,6 +62,7 @@ class DistinctPushdownStrategy(OptimizationStrategy):
             node.distinct = True
             context.optimized_plan[context.node_id] = node
             for distict_node in context.collected_distincts:
+                self.statistics.optimization_distinct_pushdown_into_cross_join_unnest += 1
                 context.optimized_plan.remove_node(distict_node.nid, heal=True)
             context.collected_distincts.clear()
             return context

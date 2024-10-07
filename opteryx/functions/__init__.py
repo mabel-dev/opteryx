@@ -26,6 +26,7 @@ from pyarrow import compute
 
 import opteryx
 from opteryx.compiled.list_ops import array_encode_utf8 as to_blob
+from opteryx.compiled.list_ops import list_contains_any
 from opteryx.exceptions import FunctionNotFoundError
 from opteryx.exceptions import IncorrectTypeError
 from opteryx.functions import date_functions
@@ -406,7 +407,7 @@ FUNCTIONS = {
     "RANDOM": number_functions.random_number,
     "RAND": number_functions.random_number,
     "NORMAL": number_functions.random_normal,
-    "RANDOM_STRING": _iterate_single_parameter(number_functions.random_string),
+    "RANDOM_STRING": number_functions.random_string,
     "BASE64_ENCODE": _iterate_single_parameter(string_functions.get_base64_encode),
     "BASE64_DECODE": _iterate_single_parameter(string_functions.get_base64_decode),
     "BASE85_ENCODE": _iterate_single_parameter(string_functions.get_base85_encode),
@@ -419,8 +420,8 @@ FUNCTIONS = {
     "GET_STRING": _get_string,
     "LIST_CONTAINS": _iterate_double_parameter(other_functions.list_contains),
     "ARRAY_CONTAINS": _iterate_double_parameter(other_functions.list_contains),
-    "LIST_CONTAINS_ANY": other_functions.list_contains_any,
-    "ARRAY_CONTAINS_ANY": other_functions.list_contains_any,
+    "LIST_CONTAINS_ANY": list_contains_any, 
+    "ARRAY_CONTAINS_ANY": list_contains_any, 
     "LIST_CONTAINS_ALL": _iterate_double_parameter(other_functions.list_contains_all),
     "ARRAY_CONTAINS_ALL": _iterate_double_parameter(other_functions.list_contains_all),
     "SEARCH": other_functions.search,
@@ -504,6 +505,7 @@ def apply_function(function: str = None, *parameters):
         "IIF",
         "COALESCE",
         "SUBSTRING",
+        "CASE",
     ):
         morsel_size = len(parameters[0])
         null_positions = numpy.zeros(morsel_size, dtype=numpy.bool_)

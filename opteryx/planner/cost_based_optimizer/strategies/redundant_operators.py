@@ -49,10 +49,12 @@ class RedundantOperationsStrategy(OptimizationStrategy):
                     my_columns = {c.schema_column.identity for c in node.columns}
                     if provider_columns == my_columns:
                         context.optimized_plan.remove_node(context.node_id, heal=True)
+                        self.statistics.optimization_remove_redundant_operators_project += 1
 
         # Subqueries are useful for planning but not needed for execution
         if node.node_type == LogicalPlanStepType.Subquery:
             context.optimized_plan.remove_node(context.node_id, heal=True)
+            self.statistics.optimization_remove_redundant_operators_subquery += 1
 
         return context
 

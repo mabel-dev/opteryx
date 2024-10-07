@@ -19,6 +19,7 @@ Goal: Preposition for following actions
 
 from opteryx.managers.expression import NodeType
 from opteryx.models import Node
+from opteryx.models import QueryStatistics
 from opteryx.planner.logical_planner import LogicalPlan
 from opteryx.planner.logical_planner import LogicalPlanNode
 from opteryx.planner.logical_planner import LogicalPlanStepType
@@ -69,7 +70,7 @@ class BooleanSimplificationStrategy(OptimizationStrategy):  # pragma: no cover
 
         if node.node_type == LogicalPlanStepType.Filter:
             # do the work
-            node.condition = update_expression_tree(node.condition)
+            node.condition = update_expression_tree(node.condition, self.statistics)
             context.optimized_plan[context.node_id] = node
 
         return context
@@ -79,10 +80,10 @@ class BooleanSimplificationStrategy(OptimizationStrategy):  # pragma: no cover
         return plan
 
 
-def update_expression_tree(node):
+def update_expression_tree(node: LogicalPlanNode, statistics: QueryStatistics):
     # break out of nests
     if node.node_type == NodeType.NESTED:
-        return update_expression_tree(node.centre)
+        return update_expression_tree(node.centre, statistics)
 
     # handle rules relating to NOTs
     if node.node_type == NodeType.NOT:
@@ -97,24 +98,29 @@ def update_expression_tree(node):
             # rewrite to (not A) and (not B)
             a_side = Node(NodeType.NOT, centre=centre_node.left)
             b_side = Node(NodeType.NOT, centre=centre_node.right)
-            return update_expression_tree(Node(NodeType.AND, left=a_side, right=b_side))
+            statistics.optimization_boolean_rewrite_demorgan += 1
+            return update_expression_tree(Node(NodeType.AND, left=a_side, right=b_side), statistics)
 
         # NOT(A = B) => A != B
         if centre_node.value in INVERSIONS:
             centre_node.value = INVERSIONS[centre_node.value]
-            return update_expression_tree(centre_node)
+            statistics.optimization_boolean_rewrite_inversion += 1
+            return update_expression_tree(centre_node, statistics)
 
         # NOT(NOT(A)) => A
         if centre_node.node_type == NodeType.NOT:
-            return update_expression_tree(centre_node.centre)
+            statistics.optimization_boolean_rewrite_double_not += 1
+            return update_expression_tree(centre_node.centre, statistics)
 
     # traverse the expression tree
-    node.left = None if node.left is None else update_expression_tree(node.left)
-    node.centre = None if node.centre is None else update_expression_tree(node.centre)
-    node.right = None if node.right is None else update_expression_tree(node.right)
+    node.left = None if node.left is None else update_expression_tree(node.left, statistics)
+    node.centre = None if node.centre is None else update_expression_tree(node.centre, statistics)
+    node.right = None if node.right is None else update_expression_tree(node.right, statistics)
     if node.parameters:
         node.parameters = [
-            parameter if not isinstance(parameter, Node) else update_expression_tree(parameter)
+            parameter
+            if not isinstance(parameter, Node)
+            else update_expression_tree(parameter, statistics)
             for parameter in node.parameters
         ]
 

@@ -93,7 +93,6 @@ def _cross_join_unnest_column(
             if len(column_data) == 0:
                 continue
             left_block = left_block.filter(valid_offsets)
-
             # Set column_type if it hasn't been determined already
             if column_type is None:
                 column_type = column_data.type.value_type
@@ -104,14 +103,13 @@ def _cross_join_unnest_column(
                     column_data.to_numpy(False)
                 )
             else:
-                statistics.optimization_push_filters_into_cross_join_unnest = 1
                 indices, new_column_data = build_filtered_rows_indices_and_column(
                     column_data.to_numpy(False), conditions
                 )
 
             if single_column and distinct and indices.size > 0:
                 # if the unnest target is the only field in the SELECT and we're DISTINCTING
-                statistics.optimization_push_distinct_into_cross_join_unnest = 1
+                indices = numpy.array(indices, dtype=numpy.int32)
                 new_column_data, indices, hash_set = list_distinct(
                     new_column_data, indices, hash_set
                 )
@@ -153,6 +151,7 @@ def _cross_join_unnest_column(
                         new_column_data_chunk = new_column_data[start_block:end_block]
 
                         # Create a new block using the chunk of indices
+                        indices_chunk = numpy.array(indices_chunk, dtype=numpy.int32)
                         new_block = left_block.take(indices_chunk)
                         new_block = pyarrow.Table.from_batches(
                             [new_block], schema=left_morsel.schema

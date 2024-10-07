@@ -30,6 +30,7 @@ from opteryx.managers.expression import ExpressionColumn
 from opteryx.managers.expression import NodeType
 from opteryx.managers.expression import format_expression
 from opteryx.models import Node
+from opteryx.models import QueryStatistics
 from opteryx.planner.binder.operator_map import determine_type
 from opteryx.planner.logical_planner import LogicalPlan
 from opteryx.planner.logical_planner import LogicalPlanNode
@@ -186,21 +187,23 @@ dispatcher: Dict[str, Callable] = {
 
 
 # Dispatcher conditions
-def _rewrite_predicate(predicate):
+def _rewrite_predicate(predicate, statistics: QueryStatistics):
     if predicate.node_type not in {NodeType.BINARY_OPERATOR, NodeType.COMPARISON_OPERATOR}:
         # after rewrites, some filters aren't actually predicates
         return predicate
 
     if predicate.node_type in {NodeType.AND, NodeType.OR, NodeType.XOR}:
-        predicate.left = _rewrite_predicate(predicate.left)
-        predicate.right = _rewrite_predicate(predicate.right)
+        predicate.left = _rewrite_predicate(predicate.left, statistics)
+        predicate.right = _rewrite_predicate(predicate.right, statistics)
 
     if predicate.value in {"Like", "ILike", "NotLike", "NotILike"}:
         if "%%" in predicate.right.value:
+            statistics.optimization_predicate_rewriter_remove_adjacent_wildcards += 1
             predicate = dispatcher["remove_adjacent_wildcards"](predicate)
 
     if predicate.value in {"Like", "NotLike"}:
         if "%" not in predicate.right.value and "_" not in predicate.right.value:
+            statistics.optimization_predicate_rewriter_remove_redundant_like += 1
             predicate.value = LIKE_REWRITES[predicate.value]
 
     if predicate.value in {"Like", "ILike"}:
@@ -209,22 +212,27 @@ def _rewrite_predicate(predicate):
         ):
             if predicate.right.node_type == NodeType.LITERAL:
                 if predicate.right.value[-1] == "%" and predicate.right.value.count("%") == 1:
+                    statistics.optimization_predicate_rewriter_like_to_starts_with += 1
                     return dispatcher["rewrite_to_starts_with"](predicate)
                 if predicate.right.value[0] == "%" and predicate.right.value.count("%") == 1:
+                    statistics.optimization_predicate_rewriter_like_to_ends_with += 1
                     return dispatcher["rewrite_to_ends_with"](predicate)
                 if (
                     predicate.right.value[0] == "%"
                     and predicate.right.value[-1] == "%"
                     and predicate.right.value.count("%") == 2
                 ):
+                    statistics.optimization_predicate_rewriter_like_to_search += 1
                     return dispatcher["rewrite_to_search"](predicate)
 
     if predicate.value == "AnyOpEq":
         if predicate.right.node_type == NodeType.LITERAL:
+            statistics.optimization_predicate_rewriter_any_to_inlist += 1
             predicate.value = "InList"
 
     if predicate.value in IN_REWRITES:
         if predicate.right.node_type == NodeType.LITERAL and len(predicate.right.value) == 1:
+            statistics.optimization_predicate_rewriter_in_to_equals += 1
             return dispatcher["rewrite_in_to_eq"](predicate)
 
     if (
@@ -235,6 +243,7 @@ def _rewrite_predicate(predicate):
             determine_type(predicate.left) == OrsoTypes.INTERVAL
             and determine_type(predicate.right) == OrsoTypes.INTERVAL
         ):
+            statistics.optimization_predicate_rewriter_date_ += 1
             predicate = dispatcher["reorder_interval_calc"](predicate)
 
     return predicate
@@ -246,13 +255,13 @@ class PredicateRewriteStrategy(OptimizationStrategy):
             context.optimized_plan = context.pre_optimized_tree.copy()  # type: ignore
 
         if node.node_type == LogicalPlanStepType.Filter:
-            node.condition = _rewrite_predicate(node.condition)
+            node.condition = _rewrite_predicate(node.condition, self.statistics)
             context.optimized_plan[context.node_id] = node
 
         if node.node_type == LogicalPlanStepType.Project:
             new_columns = []
             for column in node.columns:
-                new_column = _rewrite_predicate(column)
+                new_column = _rewrite_predicate(column, self.statistics)
                 new_columns.append(new_column)
             node.columns = new_columns
 

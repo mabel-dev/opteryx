@@ -48,6 +48,7 @@ class OperatorFusionStrategy(OptimizationStrategy):
                     new_node.order_by = node.order_by
                     context.optimized_plan[next_node_id] = new_node
                     context.optimized_plan.remove_node(context.node_id, heal=True)
+                    self.statistics.optimization_fuse_operators_heap_sort += 1
 
         return context
 

@@ -186,14 +186,15 @@ class AsyncReaderNode(ReaderNode):
             blob_name, reference = item
 
             decoder = get_decoder(blob_name)
-            # This pool is being used by async processes in another thread, using
-            # zero copy versions occassionally results in data getting corrupted
-            # due to a read-after-free type error
-            blob_bytes = self.pool.read_and_release(reference, zero_copy=False)
+
             try:
-                start = time.monotonic_ns()
                 # the sync readers include the decode time as part of the read time
                 try:
+                    # This pool is being used by async processes in another thread, using
+                    # zero copy versions occassionally results in data getting corrupted
+                    # due to a read-after-free type error
+                    start = time.monotonic_ns()
+                    blob_bytes = self.pool.read_and_release(reference, zero_copy=False)
                     decoded = decoder(
                         blob_bytes, projection=self.columns, selection=self.predicates
                     )

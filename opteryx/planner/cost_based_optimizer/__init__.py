@@ -64,6 +64,7 @@ This module aims to enhance query performance through systematic and incremental
 """
 
 from opteryx.config import DISABLE_OPTIMIZER
+from opteryx.models import QueryStatistics
 from opteryx.planner.cost_based_optimizer.strategies import *
 from opteryx.planner.logical_planner import LogicalPlan
 
@@ -73,22 +74,22 @@ __all__ = "do_cost_based_optimizer"
 
 
 class CostBasedOptimizerVisitor:
-    def __init__(self):
+    def __init__(self, statistics: QueryStatistics):
         """
         Initialize the CostBasedOptimizerVisitor with a list of optimization strategies.
         Each strategy encapsulates a specific optimization rule.
         """
         self.strategies = [
-            ConstantFoldingStrategy(),
-            BooleanSimplificationStrategy(),
-            SplitConjunctivePredicatesStrategy(),
-            PredicateRewriteStrategy(),
-            PredicatePushdownStrategy(),
-            ProjectionPushdownStrategy(),
-            DistinctPushdownStrategy(),
-            OperatorFusionStrategy(),
-            RedundantOperationsStrategy(),
-            ConstantFoldingStrategy(),
+            ConstantFoldingStrategy(statistics),
+            BooleanSimplificationStrategy(statistics),
+            SplitConjunctivePredicatesStrategy(statistics),
+            PredicateRewriteStrategy(statistics),
+            PredicatePushdownStrategy(statistics),
+            ProjectionPushdownStrategy(statistics),
+            DistinctPushdownStrategy(statistics),
+            OperatorFusionStrategy(statistics),
+            RedundantOperationsStrategy(statistics),
+            ConstantFoldingStrategy(statistics),
         ]
 
     def traverse(self, plan: LogicalPlan, strategy) -> LogicalPlan:
@@ -138,18 +139,21 @@ class CostBasedOptimizerVisitor:
         return current_plan
 
 
-def do_cost_based_optimizer(plan: LogicalPlan) -> LogicalPlan:
+def do_cost_based_optimizer(plan: LogicalPlan, statistics: QueryStatistics) -> LogicalPlan:
     """
     Perform cost-based optimization on the given logical plan.
 
     Parameters:
         plan (LogicalPlan): The logical plan to optimize.
+        statistics (QueryStatistics)
 
     Returns:
         LogicalPlan: The optimized logical plan.
     """
     if DISABLE_OPTIMIZER:
-        print("[OPTERYX] The optimizer has been disabled, 'DISABLE_OPTIMIZER' variable is TRUE.")
+        message = "[OPTERYX] The optimizer has been disabled, 'DISABLE_OPTIMIZER' variable is TRUE."
+        print(message)
+        statistics.add_message(message)
         return plan
-    optimizer = CostBasedOptimizerVisitor()
+    optimizer = CostBasedOptimizerVisitor(statistics)
     return optimizer.optimize(plan)
