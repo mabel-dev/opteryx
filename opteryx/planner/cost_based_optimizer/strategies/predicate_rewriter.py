@@ -44,15 +44,6 @@ LIKE_REWRITES = {"Like": "Eq", "NotLike": "NotEq"}
 LITERALS_TO_THE_RIGHT = {"Plus": "Minus", "Minus": "Plus"}
 
 
-def _add_condition(existing_condition, new_condition):
-    if not existing_condition:
-        return new_condition
-    _and = Node(node_type=NodeType.AND)
-    _and.left = new_condition
-    _and.right = existing_condition
-    return _and
-
-
 def remove_adjacent_wildcards(predicate):
     """
     Remove adjacent wildcards from LIKE/ILIKE/NotLike/NotILike conditions.
@@ -62,63 +53,6 @@ def remove_adjacent_wildcards(predicate):
     """
     if "%%" in predicate.right.value:
         predicate.right.value = re.sub(r"%+", "%", predicate.right.value)
-    return predicate
-
-
-def rewrite_to_starts_with(predicate):
-    """
-    Rewrite LIKE/ILIKE conditions with a single trailing wildcard to STARTS_WITH function.
-
-    This optimization converts patterns like 'abc%' to a STARTS_WITH function, which can be
-    more efficiently processed by the underlying engine compared to a generic LIKE pattern.
-    """
-    ignore_case = predicate.value == "ILike"
-    predicate.right.value = predicate.right.value[:-1]
-    predicate.node_type = NodeType.FUNCTION
-    predicate.value = "STARTS_WITH"
-    predicate.parameters = [
-        predicate.left,
-        predicate.right,
-        Node(node_type=NodeType.LITERAL, type=OrsoTypes.BOOLEAN, value=ignore_case),
-    ]
-    return predicate
-
-
-def rewrite_to_ends_with(predicate):
-    """
-    Rewrite LIKE/ILIKE conditions with a single leading wildcard to ENDS_WITH function.
-
-    This optimization converts patterns like '%abc' to an ENDS_WITH function, which can be
-    more efficiently processed by the underlying engine compared to a generic LIKE pattern.
-    """
-    ignore_case = predicate.value == "ILike"
-    predicate.right.value = predicate.right.value[1:]
-    predicate.node_type = NodeType.FUNCTION
-    predicate.value = "ENDS_WITH"
-    predicate.parameters = [
-        predicate.left,
-        predicate.right,
-        Node(node_type=NodeType.LITERAL, type=OrsoTypes.BOOLEAN, value=ignore_case),
-    ]
-    return predicate
-
-
-def rewrite_to_search(predicate):
-    """
-    Rewrite LIKE/ILIKE conditions with leading and trailing wildcards to SEARCH function.
-
-    This optimization converts patterns like '%abc%' to a SEARCH function, which can be
-    more efficiently processed by the underlying engine compared to a generic LIKE pattern.
-    """
-    ignore_case = predicate.value == "ILike"
-    predicate.right.value = predicate.right.value[1:-1]
-    predicate.node_type = NodeType.FUNCTION
-    predicate.value = "SEARCH"
-    predicate.parameters = [
-        predicate.left,
-        predicate.right,
-        Node(node_type=NodeType.LITERAL, type=OrsoTypes.BOOLEAN, value=ignore_case),
-    ]
     return predicate
 
 
@@ -178,9 +112,6 @@ def reorder_interval_calc(predicate):
 # Define dispatcher conditions and actions
 dispatcher: Dict[str, Callable] = {
     "remove_adjacent_wildcards": remove_adjacent_wildcards,
-    "rewrite_to_starts_with": rewrite_to_starts_with,
-    "rewrite_to_ends_with": rewrite_to_ends_with,
-    "rewrite_to_search": rewrite_to_search,
     "rewrite_in_to_eq": rewrite_in_to_eq,
     "reorder_interval_calc": reorder_interval_calc,
 }
@@ -205,25 +136,6 @@ def _rewrite_predicate(predicate, statistics: QueryStatistics):
         if "%" not in predicate.right.value and "_" not in predicate.right.value:
             statistics.optimization_predicate_rewriter_remove_redundant_like += 1
             predicate.value = LIKE_REWRITES[predicate.value]
-
-    if predicate.value in {"Like", "ILike"}:
-        if predicate.left.source_connector and predicate.left.source_connector.isdisjoint(
-            {"Sql", "Cql"}
-        ):
-            if predicate.right.node_type == NodeType.LITERAL:
-                if predicate.right.value[-1] == "%" and predicate.right.value.count("%") == 1:
-                    statistics.optimization_predicate_rewriter_like_to_starts_with += 1
-                    return dispatcher["rewrite_to_starts_with"](predicate)
-                if predicate.right.value[0] == "%" and predicate.right.value.count("%") == 1:
-                    statistics.optimization_predicate_rewriter_like_to_ends_with += 1
-                    return dispatcher["rewrite_to_ends_with"](predicate)
-                if (
-                    predicate.right.value[0] == "%"
-                    and predicate.right.value[-1] == "%"
-                    and predicate.right.value.count("%") == 2
-                ):
-                    statistics.optimization_predicate_rewriter_like_to_search += 1
-                    return dispatcher["rewrite_to_search"](predicate)
 
     if predicate.value == "AnyOpEq":
         if predicate.right.node_type == NodeType.LITERAL:
