@@ -8,7 +8,6 @@ import cython
 import numpy
 cimport numpy as cnp
 from cython import Py_ssize_t
-from cython.parallel import prange
 from numpy cimport int64_t, ndarray
 from cpython.unicode cimport PyUnicode_AsUTF8String
 
@@ -266,41 +265,32 @@ cpdef cnp.ndarray cython_get_element_op(cnp.ndarray[object, ndim=1] array, int k
     return result
 
 
+@cython.boundscheck(False)
+@cython.wraparound(False)
 cpdef cnp.ndarray array_encode_utf8(cnp.ndarray inp):
     """
-    utf-8 encode all elements of a 1d ndarray of "object" dtype.
-    A new ndarray of bytes objects is returned.
-
-    This converts about 5 million short strings (twitter user names) per second,
-    and 3 million tweets per second. Raw python is many times slower 
-
-    Parameters:
-        inp: list or ndarray
-            The input array to encode.
-    
-    Returns:
-        numpy.ndarray
-            A new ndarray with utf-8 encoded bytes objects.
+    Parallel UTF-8 encode all elements of a 1D ndarray of "object" dtype.
     """
-    cdef Py_ssize_t i, n = inp.shape[0]
-    cdef object[:] inp_view = inp  # Create a memory view for faster access
+    cdef Py_ssize_t n = inp.shape[0]
+    cdef cnp.ndarray out = numpy.empty(n, dtype=object)
+    cdef object[:] inp_view = inp
+    cdef object[:] out_view = out
 
-    # Iterate and encode
     for i in range(n):
-        inp_view[i] = PyUnicode_AsUTF8String(inp_view[i])
+        out_view[i] = PyUnicode_AsUTF8String(inp_view[i])
 
-    return inp
+    return out
 
 
-cpdef cnp.ndarray list_contains_any(cnp.ndarray array, cnp.ndarray items):
+cpdef cnp.ndarray[cnp.uint8_t, ndim=1] list_contains_any(cnp.ndarray array, cnp.ndarray items):
     """
     Cython optimized version that works with object arrays.
     """
     cdef set items_set = set(items[0])
     cdef Py_ssize_t size = array.size
-    cdef cnp.ndarray res = numpy.zeros(size, dtype=numpy.bool_)
+    cdef cnp.ndarray[cnp.uint8_t, ndim=1] res = numpy.zeros(size, dtype=numpy.uint8)
     cdef Py_ssize_t i
-    cdef object test_set, el
+    cdef cnp.ndarray test_set
 
     for i in range(size):
         test_set = array[i]

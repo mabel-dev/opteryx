@@ -141,21 +141,6 @@ def null_if(col1, col2):
     return [None if a == b else a for a, b in zip(col1, col2)]
 
 
-def case_when(conditions, values):
-    n_rows = len(conditions[0])
-    n_conditions = len(conditions)
-    res = []
-
-    for idx in range(n_rows):
-        for cond_idx in range(n_conditions):
-            if conditions[cond_idx][idx]:
-                res.append(values[cond_idx][idx])
-                break
-        else:
-            res.append(None)
-    return res
-
-
 def cosine_similarity(arr, val):
     """
     ad hoc cosine similarity function, slow.
