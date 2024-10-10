@@ -60,6 +60,7 @@ Exception
 
 from typing import Any
 from typing import Optional
+from typing import Union
 
 
 # ======================== Begin Codebase Errors ========================
@@ -228,7 +229,7 @@ class VariableNotFoundError(SqlError):
 class AmbiguousIdentifierError(SqlError):
     """Exception raised for ambiguous identifier references."""
 
-    def __init__(self, identifier: Optional[str] = None, message: Optional[str] = None):
+    def __init__(self, identifier: Union[str, list, None] = None, message: Optional[str] = None):
         self.identifier = identifier
         if message is None:
             message = f"Identifier reference '{identifier}' is ambiguous; Try adding the databaset name as a prefix e.g. 'dataset.{identifier}'."

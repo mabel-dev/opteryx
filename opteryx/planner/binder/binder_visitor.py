@@ -942,7 +942,7 @@ class BinderVisitor:
         # Extract the column names to check for duplicates
         column_names = [n.schema_column.name for n in node.columns]
         seen = set()
-        duplicates = [name for name in column_names if name in seen or seen.add(name)]
+        duplicates = [name for name in column_names if name in seen or seen.add(name)]  # type: ignore
 
         # Now you can check if there are any duplicates and take action accordingly
         if duplicates:

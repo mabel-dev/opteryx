@@ -1,4 +1,4 @@
-# Comparisons with BLOB and String Literal
+-- Comparisons with BLOB and String Literal
 SELECT BLOB('apple') = 'apple';
 SELECT 'apple' = BLOB('apple');
 SELECT BLOB('apple') > 'banana';
@@ -14,7 +14,7 @@ SELECT BLOB('apple') >= 'banana';
 SELECT 'banana' >= BLOB('apple');
 SELECT BLOB('apple') NOT LIKE 'a%ple';
 
-# Comparisons with BLOB and b'' Literal
+-- Comparisons with BLOB and b'' Literal
 SELECT BLOB('apple') = b'apple';
 SELECT b'apple' = BLOB('apple');
 SELECT BLOB('apple') > b'banana';
@@ -30,7 +30,7 @@ SELECT BLOB('apple') >= b'banana';
 SELECT b'banana' >= BLOB('apple');
 SELECT BLOB('apple') NOT LIKE b'a%ple';
 
-# Comparisons with b'' Literal and String Literal
+-- Comparisons with b'' Literal and String Literal
 SELECT b'apple' = 'apple';
 SELECT 'apple' = b'apple';
 SELECT b'apple' > 'banana';
@@ -46,7 +46,7 @@ SELECT b'apple' >= 'banana';
 SELECT 'banana' >= b'apple';
 SELECT b'apple' NOT LIKE 'a%ple';
 
-# Comparisons between b'' Literals
+-- Comparisons between b'' Literals
 SELECT b'apple' = b'banana';
 SELECT b'apple' > b'banana';
 SELECT b'banana' = b'apple';
@@ -57,7 +57,7 @@ SELECT b'apple' <= b'banana';
 SELECT b'apple' >= b'banana';
 SELECT b'apple' NOT LIKE b'a%ple';
 
-# Comparisons between BLOBs
+-- Comparisons between BLOBs
 SELECT BLOB('apple') = BLOB('banana');
 SELECT BLOB('apple') > BLOB('banana');
 SELECT BLOB('banana') = BLOB('apple');
@@ -68,21 +68,21 @@ SELECT BLOB('apple') <= BLOB('banana');
 SELECT BLOB('apple') >= BLOB('banana');
 SELECT BLOB('apple') NOT LIKE BLOB('a%ple');
 
-# Explicit Type Casting 
+-- Explicit Type Casting 
 SELECT CAST(BLOB('apple') AS VARCHAR) = 'apple';
 SELECT 'apple' = CAST(BLOB('apple') AS VARCHAR);
 SELECT CAST(BLOB('apple') AS BLOB) = b'apple';
 
-# Case Sensitivity
+-- Case Sensitivity
 SELECT BLOB('apple') ILIKE 'a%ple';
 SELECT b'apple' ILIKE b'a%ple';
 
-# RegEx
+-- RegEx
 SELECT BLOB('apple') RLIKE 'a%ple';
 SELECT b'apple' RLIKE b'a%ple';
 
 
-# INTEGER Comparisons
+-- INTEGER Comparisons
 SELECT 42 = 42;        -- True
 SELECT 42 != 43;       -- True
 SELECT 42 > 41;        -- True
@@ -90,7 +90,7 @@ SELECT 42 >= 42;       -- True
 SELECT 42 < 43;        -- True
 SELECT 42 <= 42;       -- True
 
-# INTEGER Comparisons with Different Values
+-- INTEGER Comparisons with Different Values
 SELECT 42 = 43;        -- False
 SELECT 42 != 42;       -- False
 SELECT 42 > 43;        -- False
@@ -98,7 +98,7 @@ SELECT 42 >= 43;       -- False
 SELECT 42 < 42;        -- False
 SELECT 42 <= 41;       -- False
 
-# DOUBLE Comparisons
+-- DOUBLE Comparisons
 SELECT 42.0 = 42.0;    -- True
 SELECT 42.0 != 43.0;   -- True
 SELECT 42.0 > 41.0;    -- True
@@ -106,7 +106,7 @@ SELECT 42.0 >= 42.0;   -- True
 SELECT 42.0 < 43.0;    -- True
 SELECT 42.0 <= 42.0;   -- True
 
-# DOUBLE Comparisons with Different Values
+-- DOUBLE Comparisons with Different Values
 SELECT 42.0 = 43.0;    -- False
 SELECT 42.0 != 42.0;   -- False
 SELECT 42.0 > 43.0;    -- False
@@ -114,7 +114,7 @@ SELECT 42.0 >= 43.0;   -- False
 SELECT 42.0 < 42.0;    -- False
 SELECT 42.0 <= 41.0;   -- False
 
-# INTEGER and DOUBLE Comparisons
+-- INTEGER and DOUBLE Comparisons
 SELECT 42 = 42.0;      -- True
 SELECT 42.0 = 42;      -- True
 SELECT 42 != 42.0;     -- False
@@ -122,14 +122,14 @@ SELECT 42.0 != 42;     -- False
 SELECT 42 > 41.0;      -- True
 SELECT 42.0 < 43;      -- True
 
-# Edge Case Comparisons
+-- Edge Case Comparisons
 SELECT 0 = 0.0;        -- True
 SELECT -1 = -1.0;      -- True
 SELECT 42 < 42.0001;   -- True
 SELECT 42.0 > 41.9999; -- True
 SELECT 42.0 < 42.0001; -- True
 
-# Arithmetic Operations with Comparisons
+-- Arithmetic Operations with Comparisons
 SELECT 21 * 2 = 42;    -- True
 SELECT 21.0 * 2 = 42.0; -- True
 SELECT 21 + 21 = 42;   -- True
@@ -137,48 +137,48 @@ SELECT 42 / 2 = 21;    -- True
 SELECT 42 / 2.0 = 21.0; -- True
 SELECT 43 / 2.0 = 21.5; -- True
 
-# Arithmetic Operations with Type Mixing (Addition)
+-- Arithmetic Operations with Type Mixing (Addition)
 SELECT 21 + 21 = 42; -- True
 SELECT 21 + 21.0 = 42.0; -- True
 SELECT 21 + 21::DECIMAL = 42; -- True
 SELECT 21.0 + 21 = 42.0; -- True
 SELECT 21.0 + 21.0 = 42.0; -- True
-# SELECT 21.0 + 21::DECIMAL = 42.0; -- True
+-- SELECT 21.0 + 21::DECIMAL = 42.0; -- True
 SELECT 21::DECIMAL + 21 = 42; -- True
-# SELECT 21::DECIMAL + 21.0 = 42.0; -- True
+-- SELECT 21::DECIMAL + 21.0 = 42.0; -- True
 SELECT 21::DECIMAL + 21::DECIMAL = 42; -- True
 
-# Arithmetic Operations with Type Mixing (Subtraction)
+-- Arithmetic Operations with Type Mixing (Subtraction)
 SELECT 42 - 21 = 21; -- True
 SELECT 42 - 21.0 = 21.0; -- True
 SELECT 42 - 21::DECIMAL = 21; -- True
 SELECT 42.0 - 21 = 21.0; -- True
 SELECT 42.0 - 21.0 = 21.0; -- True
-# SELECT 42.0 - 21::DECIMAL = 21.0; -- True
+-- SELECT 42.0 - 21::DECIMAL = 21.0; -- True
 SELECT 42::DECIMAL - 21 = 21; -- True
-# SELECT 42::DECIMAL - 21.0 = 21.0; -- True
+-- SELECT 42::DECIMAL - 21.0 = 21.0; -- True
 SELECT 42::DECIMAL - 21::DECIMAL = 21; -- True
 
-# Arithmetic Operations with Type Mixing (Multiplication)
+-- Arithmetic Operations with Type Mixing (Multiplication)
 SELECT 21 * 2 = 42; -- True
 SELECT 21 * 2.0 = 42.0; -- True
 SELECT 21 * 2::DECIMAL = 42; -- True
 SELECT 21.0 * 2 = 42.0; -- True
 SELECT 21.0 * 2.0 = 42.0; -- True
-# SELECT 21.0 * 2::DECIMAL = 42.0; -- True
+-- SELECT 21.0 * 2::DECIMAL = 42.0; -- True
 SELECT 21::DECIMAL * 2 = 42; -- True
-# SELECT 21::DECIMAL * 2.0 = 42.0; -- True
+-- SELECT 21::DECIMAL * 2.0 = 42.0; -- True
 SELECT 21::DECIMAL * 2::DECIMAL = 42; -- True
 
-# Arithmetic Operations with Type Mixing (Division)
+-- Arithmetic Operations with Type Mixing (Division)
 SELECT 42 / 2 = 21; -- True
 SELECT 42 / 2.0 = 21.0; -- True
 SELECT 42 / 2::DECIMAL = 21; -- True
 SELECT 42.0 / 2 = 21.0; -- True
 SELECT 42.0 / 2.0 = 21.0; -- True
-# SELECT 42.0 / 2::DECIMAL = 21.0; -- True
+-- SELECT 42.0 / 2::DECIMAL = 21.0; -- True
 SELECT 42::DECIMAL / 2 = 21; -- True
-# SELECT 42::DECIMAL / 2.0 = 21.0; -- True
+-- SELECT 42::DECIMAL / 2.0 = 21.0; -- True
 SELECT 42::DECIMAL / 2::DECIMAL = 21; -- True
 
 SELECT * FROM $astronauts WHERE birth_date - current_time > INTERVAL '1' DAY;
@@ -189,15 +189,135 @@ SELECT * FROM $astronauts WHERE birth_date - INTERVAL '1' DAY < current_time;
 SELECT * FROM $astronauts WHERE current_time - INTERVAL '1' DAY > birth_date;
 SELECT * FROM $astronauts WHERE (birth_date + INTERVAL '1' DAY) - current_time > INTERVAL '1' DAY;
 SELECT * FROM $astronauts WHERE (current_time + INTERVAL '1' DAY) - birth_date > INTERVAL '1' DAY;
-# SELECT * FROM $astronauts WHERE (birth_date - current_time) + INTERVAL '1' DAY > INTERVAL '1' DAY;
-# SELECT * FROM $astronauts WHERE (current_time - birth_date) + INTERVAL '1' DAY > INTERVAL '1' DAY;
+-- SELECT * FROM $astronauts WHERE (birth_date - current_time) + INTERVAL '1' DAY > INTERVAL '1' DAY;
+-- SELECT * FROM $astronauts WHERE (current_time - birth_date) + INTERVAL '1' DAY > INTERVAL '1' DAY;
 SELECT * FROM $astronauts WHERE birth_date + INTERVAL '1' DAY > INTERVAL '1' DAY - current_time;
 SELECT * FROM $astronauts WHERE (current_time + INTERVAL '1' DAY) - birth_date > INTERVAL '1' DAY;
-# SELECT * FROM $astronauts WHERE (birth_date - current_time) + INTERVAL '1' DAY > INTERVAL '1' DAY;
-# SELECT * FROM $astronauts WHERE (current_time - birth_date) + INTERVAL '1' DAY > INTERVAL '1' DAY;
+-- SELECT * FROM $astronauts WHERE (birth_date - current_time) + INTERVAL '1' DAY > INTERVAL '1' DAY;
+-- SELECT * FROM $astronauts WHERE (current_time - birth_date) + INTERVAL '1' DAY > INTERVAL '1' DAY;
 SELECT * FROM $astronauts WHERE current_time + INTERVAL '1' DAY = birth_date;
 SELECT * FROM $astronauts WHERE birth_date + INTERVAL '1' DAY = current_time;
 SELECT * FROM $astronauts WHERE current_time - INTERVAL '1' DAY = birth_date;
 SELECT * FROM $astronauts WHERE birth_date - INTERVAL '1' DAY = current_time;
 SELECT * FROM $astronauts WHERE INTERVAL '1' DAY + current_time = birth_date;
 SELECT * FROM $astronauts WHERE INTERVAL '1' DAY + birth_date = current_time;
+
+
+-- NULL Handling
+SELECT BLOB('apple') = NULL;
+SELECT BLOB('apple') != NULL;
+SELECT NULL = BLOB('apple');
+SELECT BLOB('apple') IS NULL;
+SELECT BLOB('apple') IS NOT NULL;
+SELECT NULL LIKE BLOB('a%ple');
+
+-- Character Case Sensitivity
+SELECT BLOB('Apple') = 'apple';
+SELECT b'Apple' ILIKE b'aPpLe';
+SELECT BLOB('apple') = BLOB('APPLE');
+SELECT b'Apple' = BLOB('APPLE');
+SELECT BLOB('apple') ILIKE BLOB('aPPLE');
+
+-- Type Casting with Other Data Types
+SELECT CAST(BLOB('42') AS INTEGER) = 42;
+SELECT CAST(BLOB('42.0') AS DOUBLE) = 42.0;
+-- SELECT CAST(BLOB('21.5') AS DECIMAL) = 21.5;
+SELECT CAST(BLOB('0.0') AS DOUBLE) = 0.0;
+SELECT CAST(BLOB('apple') AS VARCHAR) = 'apple';
+
+-- Complex Expressions Involving BLOBs
+SELECT LENGTH(BLOB('apple')) = 5;
+-- SELECT LOWER(BLOB('APPLE')) = 'apple';
+SELECT SUBSTRING(BLOB('apple pie'), 1, 5) = 'apple';
+
+-- Non-ASCII Characters in BLOB Comparisons
+SELECT BLOB('café') = 'café';
+SELECT BLOB('façade') LIKE 'faça%';
+SELECT BLOB('mañana') = 'mañana';
+SELECT BLOB('niño') != 'nino';
+SELECT BLOB('jalapeño') ILIKE 'jala%ño';
+
+-- Whitespace Handling
+SELECT BLOB(' apple ') = 'apple';
+SELECT BLOB('apple ') LIKE 'apple%';
+SELECT BLOB('  apple') = 'apple';
+SELECT BLOB('apple') = ' apple ';
+SELECT BLOB('apple') LIKE ' a%ple ';
+
+-- Integer and Double Edge Case Handling
+SELECT 0 = 0.0;
+SELECT -1 = -1.0;
+SELECT 42 < 42.0001;
+SELECT 42.0 > 41.9999;
+SELECT -0 = 0;
+
+-- Comparisons with Interval Arithmetic
+SELECT * FROM $astronauts WHERE birth_date - current_time > INTERVAL '1' DAY;
+SELECT * FROM $astronauts WHERE birth_date + INTERVAL '1' DAY < current_time;
+SELECT * FROM $astronauts WHERE current_time - INTERVAL '1' DAY = birth_date;
+SELECT * FROM $astronauts WHERE INTERVAL '1' DAY + current_time = birth_date;
+
+-- Explicit Type Casting to Various Types
+SELECT CAST(BLOB('42') AS INTEGER) = 42;
+SELECT CAST(BLOB('42.0') AS DOUBLE) = 42.0;
+-- SELECT CAST(BLOB('21.5') AS DECIMAL) = 21.5;
+SELECT CAST(BLOB('true') AS BOOLEAN) = TRUE;
+-- SELECT CAST(BLOB('2024-10-09') AS DATE) = DATE '2024-10-09';
+-- SELECT CAST(BLOB('12:00:00') AS TIME) = TIME '12:00:00';
+-- SELECT CAST(BLOB('2024-10-09 12:00:00') AS TIMESTAMP) = TIMESTAMP '2024-10-09 12:00:00';
+
+-- Type Equivalence Checks Across Different Types (Using CAST)
+SELECT CAST(BLOB('42') AS INTEGER) = CAST('42' AS INTEGER);
+SELECT CAST(BLOB('42.0') AS DOUBLE) = CAST(42.0 AS DOUBLE);
+SELECT CAST(BLOB('apple') AS VARCHAR) = 'apple';
+-- SELECT CAST(BLOB('2024-10-09') AS DATE) = CAST('2024-10-09' AS DATE);
+
+-- Explicit Type Casting from Non-BLOB Types to BLOBs
+SELECT CAST('apple' AS BLOB) = BLOB('apple');
+SELECT CAST(b'apple' AS BLOB) = BLOB('apple');
+SELECT CAST(42 AS BLOB) = BLOB('42');
+SELECT CAST(42.0 AS BLOB) = BLOB('42.0');
+SELECT CAST(TRUE AS BLOB) = BLOB('true');
+
+-- Type Comparison Using CAST with Edge Cases
+SELECT CAST(BLOB('42.000') AS DECIMAL) = 42.0;
+SELECT CAST(BLOB('') AS VARCHAR) IS NULL; -- Empty string casted to BLOB and then back
+SELECT CAST(BLOB('  ') AS VARCHAR) = ' '; -- Single whitespace versus multiple whitespace
+
+-- Comparisons After Type Casting
+SELECT CAST(BLOB('42') AS INTEGER) > 41;
+SELECT CAST(BLOB('21.5') AS DOUBLE) < 22.0;
+SELECT CAST(BLOB('apple') AS VARCHAR) LIKE 'app%';
+-- SELECT CAST(BLOB('2024-10-09') AS DATE) < CURRENT_DATE;
+
+-- Mixed Type Equivalency Tests with Explicit Casts
+-- SELECT CAST(BLOB('42') AS INTEGER) = CAST('42.0' AS DECIMAL);
+SELECT CAST(BLOB('42.0') AS DOUBLE) = CAST('42' AS INTEGER);
+SELECT CAST(BLOB('42.0') AS DOUBLE) != CAST('42' AS INTEGER);
+
+-- Type Conversion Error Checks
+-- These should verify that casting invalid types produces expected errors or NULL results
+SELECT TRY_CAST(BLOB('apple') AS INTEGER); -- Expecting an error or NULL
+SELECT TRY_CAST(BLOB('42.5') AS INTEGER);  -- Expecting an error or truncation behavior
+SELECT TRY_CAST(BLOB('true') AS INTEGER);  -- Expecting an error
+
+-- Special Cases with Escaped or Non-Printable Characters
+SELECT CAST(BLOB('\x00') AS VARCHAR) = ''; -- Null byte casting
+SELECT CAST(BLOB('hello\nworld') AS VARCHAR) = 'hello\nworld'; -- Handling newlines
+SELECT CAST(BLOB('tab\tcharacter') AS VARCHAR) = 'tab\tcharacter';
+
+-- Comparing Different Length Encodings After Explicit Casts
+SELECT LENGTH(CAST(BLOB('apple') AS VARCHAR)) = 5;
+SELECT LENGTH(CAST(BLOB('longer string') AS VARCHAR)) = 13;
+-- SELECT CHAR_LENGTH(CAST(BLOB('multibyte café') AS VARCHAR)) = 12;
+-- SELECT OCTET_LENGTH(CAST(BLOB('café') AS VARCHAR)) = 5; -- Assuming UTF-8 encoding
+
+-- Length Comparisons of Different Encoded BLOBs
+SELECT LENGTH(BLOB('apple')) = 5;
+SELECT LENGTH(BLOB('apple ')) > 5; -- Trailing whitespace length check
+SELECT LENGTH(BLOB('café')) = 4; -- Considering UTF-8 versus byte-length
+
+-- Pattern Matching with Explicit Casts
+SELECT CAST(BLOB('apple pie') AS VARCHAR) LIKE '%pie';
+SELECT CAST(BLOB('apple') AS VARCHAR) NOT LIKE '%apple%';
+SELECT CAST(BLOB('hello world') AS VARCHAR) RLIKE 'hello.*world';

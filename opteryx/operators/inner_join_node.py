@@ -58,8 +58,8 @@ def inner_join_with_preprocessed_left_side(left_relation, right_relation, join_c
     """
     from collections import deque
 
-    left_indexes = deque()
-    right_indexes = deque()
+    left_indexes: deque = deque()
+    right_indexes: deque = deque()
 
     right_hash = hash_join_map(right_relation, join_columns)
 
