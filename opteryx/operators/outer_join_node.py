@@ -57,8 +57,8 @@ def left_join(left_relation, right_relation, left_columns: List[str], right_colu
 
     from opteryx.compiled.structures.hash_table import hash_join_map
 
-    left_indexes = deque()
-    right_indexes = deque()
+    left_indexes: deque = deque()
+    right_indexes: deque = deque()
 
     right_relation = pyarrow.concat_tables(right_relation.execute(), promote_options="none")
 

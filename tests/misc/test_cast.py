@@ -118,6 +118,48 @@ CAST_TESTS = [
     ("DATE", "21-02-2021", None),  # Invalid format
     ("DATE", None, None),
     ("DATE", "", None),
+
+
+    # Additional test cases for BOOLEAN
+    ("BOOLEAN", "tRuE", True),  # Case insensitivity
+    ("BOOLEAN", "FaLsE", False),  # Case insensitivity
+    ("BOOLEAN", 2, None),  # Invalid integer value
+    ("BOOLEAN", -1, None),  # Invalid negative value
+
+    # Additional test cases for DOUBLE
+    ("DOUBLE", "3,14", None),  # Comma instead of a dot
+    ("DOUBLE", "  123.45  ", 123.45),  # Leading and trailing spaces
+    ("DOUBLE", "+Infinity", float('inf')),  # Explicit positive infinity
+    #("DOUBLE", "NaN", float("NaN")),  # Not-a-Number case handling
+
+    # Additional test cases for INTEGER
+    ("INTEGER", "+123", 123),  # Positive sign
+    ("INTEGER", "  456  ", 456),  # Leading and trailing spaces
+    ("INTEGER", "-0", 0),  # Negative zero handling
+
+    # Additional test cases for DECIMAL
+    ("DECIMAL", "3.14 ", decimal.Decimal("3.14")),  # Trailing spaces
+    ("DECIMAL", "0.0000000000000000001", decimal.Decimal("0.0000000000000000001")),  # Very small decimal
+    ("DECIMAL", "-0.0", decimal.Decimal("0.0")),  # Negative zero as decimal
+
+    # Additional test cases for VARCHAR
+    ("VARCHAR", "None", "None"),  # String "None"
+    ("VARCHAR", "  leading and trailing spaces  ", "  leading and trailing spaces  "),  # Spaces retained
+    ("VARCHAR", "\nnewline", "\nnewline"),  # Newline character in string
+    ("VARCHAR", "\ttabbed", "\ttabbed"),  # Tab character in string
+
+    # Additional test cases for TIMESTAMP
+    ("TIMESTAMP", "2021-02-21T12:00:00Z", datetime.datetime(2021, 2, 21, 12, 0, 0)),  # UTC suffix ignored
+    ("TIMESTAMP", "2021-02-21 12:00:00", datetime.datetime(2021, 2, 21, 12, 0, 0)),  # Space instead of T
+    ("TIMESTAMP", "2021-02-21T12:00:00+01:00", datetime.datetime(2021, 2, 21, 12, 0, 0)),  # Timezone ignored
+    ("TIMESTAMP", "2021-02-21T12:00", datetime.datetime(2021, 2, 21, 12, 0, 0)),
+    ("TIMESTAMP", "2021-02-21T12", None),
+
+    # Additional test cases for DATE
+    ("DATE", "2021-02-21 ", None),  # Trailing space
+    ("DATE", "0001-01-01", datetime.date(1, 1, 1)),  # Very early date
+    ("DATE", "9999-12-31", datetime.date(9999, 12, 31)),  # Very late date
+    ("DATE", "2021.02.21", None),  # Dots instead of hyphens
 ]
 
 @pytest.mark.parametrize("type_name, input, expected", CAST_TESTS)

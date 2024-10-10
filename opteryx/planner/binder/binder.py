@@ -32,6 +32,7 @@ from opteryx.functions import DEPRECATED_FUNCTIONS
 from opteryx.functions import fixed_value_function
 from opteryx.managers.expression import NodeType
 from opteryx.models import Node
+from opteryx.planner.binder.binding_context import BindingContext
 from opteryx.planner.binder.operator_map import determine_type
 
 
@@ -208,7 +209,7 @@ def traversive_recursive_bind(node: Node, context: Any) -> Tuple[Node, Any]:
     return node, context
 
 
-def inner_binder(node: Node, context: any) -> Tuple[Node, Any]:
+def inner_binder(node: Node, context: BindingContext) -> Tuple[Node, Any]:
     """
     Note, this is a tree within a tree. This function represents a single step in the execution
     plan (associated with the relational algebra) which may itself be an evaluation plan

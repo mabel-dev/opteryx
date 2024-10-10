@@ -1,5 +1,6 @@
 import fnmatch
 from typing import Dict
+from typing import Iterable
 from typing import List
 
 import orjson
@@ -34,7 +35,7 @@ def load_permissions() -> List[Dict]:
 PERMISSIONS: List[Dict] = load_permissions()
 
 
-def can_read_table(roles: List[str], table: str, action: str = "READ") -> bool:
+def can_read_table(roles: Iterable[str], table: str, action: str = "READ") -> bool:
     """
     Check if any of the provided roles have READ permission for the specified table.
 

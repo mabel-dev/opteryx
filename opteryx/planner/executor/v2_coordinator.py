@@ -1,6 +1,6 @@
 import os
 import sys
-import threading as threading
+import threading
 from functools import wraps
 from queue import Empty
 from queue import Queue
@@ -72,7 +72,9 @@ SENTINEL = object()  # Unique sentinel value to signal completion of input
 PROFILE_LOCATION = config.PROFILE_LOCATION
 
 
-def query_planner(operation: str, parameters: Union[Iterable, Dict, None], connection, qid: str):
+def query_planner(
+    operation: str, parameters: Union[Iterable, Dict, None], connection, qid: str, statistics
+):
     import orjson
 
     from opteryx import Connection
@@ -135,7 +137,7 @@ def query_planner(operation: str, parameters: Union[Iterable, Dict, None], conne
             # common_table_expressions=ctes,
         )
 
-        optimized_plan = do_cost_based_optimizer(bound_plan)
+        optimized_plan = do_cost_based_optimizer(bound_plan, statistics)
 
         # before we write the new optimizer and execution engine, convert to a V1 plan
         query_properties = QueryProperties(qid=qid, variables=conn.context.variables)
@@ -228,7 +230,7 @@ class PlanExecutor:
 
 @monitor()
 def push_engine(query):
-    plan = next(query_planner(query, [], None, "executor"))
+    plan = next(query_planner(query, [], None, "executor"))  # type: ignore
 
     executor = PlanExecutor(plan, plan.get_entry_points(), 4)
 

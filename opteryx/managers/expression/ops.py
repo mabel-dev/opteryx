@@ -179,7 +179,8 @@ def _inner_filter_operations(arr, operator, value):
 
         # Don't warn on rule SIM118, the object isn't actually a dictionary
         return pyarrow.array(
-            [element in simdjson.Parser().parse(doc).keys() for doc in arr], type=pyarrow.bool_()
-        )  # type:ignore
+            [element in simdjson.Parser().parse(doc).keys() for doc in arr],
+            type=pyarrow.bool_(),  # type:ignore
+        )
 
     raise NotImplementedError(f"Operator {operator} is not implemented!")  # pragma: no cover

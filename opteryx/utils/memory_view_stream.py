@@ -101,8 +101,8 @@ class MemoryViewStream(BinaryIO):
     def truncate(self, pos: int = None):  # pragma: no cover
         raise io.UnsupportedOperation()
 
-    def write(self, buffer: bytes = None):  # pragma: no cover
+    def write(self, buffer: bytes, /) -> int:  # pragma: no cover
         raise io.UnsupportedOperation()
 
-    def writelines(self, buffer: Iterable[bytes] = None):  # pragma: no cover
+    def writelines(self, buffer: Iterable[bytes], /) -> None:  # pragma: no cover
         raise io.UnsupportedOperation()

@@ -38,7 +38,7 @@ def get_tests(test_type):
     for suite in suites:
         with open(suite, mode="r") as test_file:
             yield from [
-                line for line in test_file.read().splitlines() if len(line) > 0 and line[0] != "#"
+                line for line in test_file.read().splitlines() if len(line) > 0 and not line.startswith(("#", "--"))
             ]
 
 
