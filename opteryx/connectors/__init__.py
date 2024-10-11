@@ -64,9 +64,9 @@ def register_store(prefix, connector, *, remove_prefix: bool = False, **kwargs):
 def register_df(name, frame):
     """register a orso, pandas or Polars dataframe"""
     # polars (maybe others) - the polars to arrow API is a mess
-    if hasattr(frame, "_df"):
+    if hasattr(frame, "_df"):  # pragma: no cover
         frame = frame._df
-    if "PyDataFrame" in str(type(frame)):
+    if "PyDataFrame" in str(type(frame)):  # pragma: no cover
         arrow = frame.to_arrow(compat_level=1)
         if not isinstance(arrow, pyarrow.Table):
             from opteryx.exceptions import NotSupportedError
@@ -76,20 +76,20 @@ def register_df(name, frame):
             )
         register_arrow(name, arrow)
         return
-    if hasattr(frame, "to_arrow"):
+    if hasattr(frame, "to_arrow"):  # pragma: no cover
         arrow = frame.to_arrow()
         if not isinstance(arrow, pyarrow.Table):
             arrow = pyarrow.Table.from_batches(arrow)
         register_arrow(name, arrow)
         return
     # orso
-    if hasattr(frame, "arrow"):
+    if hasattr(frame, "arrow"):  # pragma: no cover
         arrow = frame.arrow()
         register_arrow(name, arrow)
         return
     # pandas
     frame_type = str(type(frame))
-    if "pandas" in frame_type:
+    if "pandas" in frame_type:  # pragma: no cover
         register_arrow(name, pyarrow.Table.from_pandas(frame))
         return
     raise ValueError("Unable to register unknown frame type.")

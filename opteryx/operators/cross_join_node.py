@@ -73,7 +73,6 @@ def _cross_join_unnest_column(
     if source.node_type != NodeType.IDENTIFIER:
         raise NotImplementedError("Can only CROSS JOIN UNNEST on a column")
 
-    column_type = None
     batch_size: int = INTERNAL_BATCH_SIZE
     at_least_once = False
     single_column_collector = []
@@ -93,9 +92,6 @@ def _cross_join_unnest_column(
             if len(column_data) == 0:
                 continue
             left_block = left_block.filter(valid_offsets)
-            # Set column_type if it hasn't been determined already
-            if column_type is None:
-                column_type = column_data.type.value_type
 
             # Build indices and new column data
             if conditions is None:

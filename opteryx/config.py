@@ -99,10 +99,6 @@ def parse_yaml(yaml_str: str) -> dict:
                     if not isinstance(result[list_key], dict):
                         result[list_key] = {}
                     result[list_key][key.strip()] = line_value(value.strip())
-            else:
-                if isinstance(result[list_key][0], tuple):
-                    result[list_key] = dict(result[list_key])
-                in_list = False
         if not in_list:
             key, value = line.split(":", 1)
             if not value.split():

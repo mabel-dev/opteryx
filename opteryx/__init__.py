@@ -261,10 +261,10 @@ try:  # pragma: no cover
                 store_history=True,
             )
 
-    ip = get_ipython()
-    if ip:
-        ip.register_magics(OpteryxMagics)
-except Exception as err:  # nosec
+    ipython = get_ipython()
+    if ipython:
+        ipython.register_magics(OpteryxMagics)
+except (ImportError, ValueError, TypeError) as err:  # pragma: no cover
     pass
 
 # Enable all warnings, including DeprecationWarning

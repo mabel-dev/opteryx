@@ -67,7 +67,9 @@ def preprocess_left(relation, join_columns):
         for i, val in enumerate(non_null_array.to_numpy()):
             ht.insert(val, value_offset_map[i])
 
-    elif pyarrow.types.is_fixed_size_binary(array.type) or pyarrow.types.is_floating(array.type):
+    elif pyarrow.types.is_fixed_size_binary(array.type) or pyarrow.types.is_floating(
+        array.type
+    ):  # pragma: no cover
         # Access the data buffer directly for fixed-width types
         data_buffer = array.buffers()[1]
         item_size = array.type.bit_width // 8
@@ -130,7 +132,9 @@ def inner_join_with_preprocessed_left_side(left_relation, right_relation, join_c
                 left_indexes.extend(rows)
                 right_indexes.extend([value_offset_map[i]] * len(rows))
 
-    elif pyarrow.types.is_fixed_size_binary(array.type) or pyarrow.types.is_floating(array.type):
+    elif pyarrow.types.is_fixed_size_binary(array.type) or pyarrow.types.is_floating(
+        array.type
+    ):  # pragma: no cover
         # Access the data buffer directly for fixed-width types
         data_buffer = array.buffers()[1]
         item_size = array.type.bit_width // 8

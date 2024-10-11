@@ -27,6 +27,29 @@ STATEMENTS = [
     ("SELECT obliquityToOrbit, meanTemperature, surfacePressure FROM sqlite.planets;", 3),
     ("SELECT numberOfMoons, name FROM sqlite.planets;", 2),
 
+    # Test basic projection pushdown from subquery with SELECT *
+    ("SELECT id FROM (SELECT * FROM sqlite.planets) AS sub;", 1),
+    ("SELECT name FROM (SELECT * FROM sqlite.planets) AS sub;", 1),
+    ("SELECT id, name FROM (SELECT * FROM sqlite.planets) AS sub;", 2),
+
+    # Test nested subqueries to ensure projection pushdown still works
+    ("SELECT id FROM (SELECT * FROM (SELECT * FROM sqlite.planets) AS sub1) AS sub2;", 1),
+    ("SELECT name FROM (SELECT id, name, mass FROM (SELECT * FROM sqlite.planets) AS sub1) AS sub2;", 1),
+    ("SELECT id, mass FROM (SELECT * FROM (SELECT * FROM sqlite.planets) AS sub1 ) AS sub2;", 2),
+
+    # Test with aggregation functions to ensure only required columns are read
+    ("SELECT MAX(gravity) FROM (SELECT * FROM sqlite.planets) AS sub;", 1),
+    ("SELECT MIN(diameter), AVG(density) FROM (SELECT * FROM sqlite.planets) AS sub;", 2),
+    ("SELECT COUNT(*), MAX(name) FROM (SELECT * FROM sqlite.planets) AS sub;", 1),
+
+    # Test projection pushdown with column renaming in the subquery
+    ("SELECT planet_id FROM (SELECT id AS planet_id, name FROM sqlite.planets) AS sub;", 1),
+    ("SELECT planet_name FROM (SELECT id, name AS planet_name FROM sqlite.planets) AS sub;", 1),
+
+    # Test cases where the subquery already projects fewer columns than available in the table
+    ("SELECT id FROM (SELECT id, name FROM sqlite.planets) AS sub;", 1),
+    ("SELECT name FROM (SELECT id, name FROM sqlite.planets) AS sub;", 1),
+    ("SELECT id, name FROM (SELECT id, name, mass FROM sqlite.planets) AS sub;", 2),
 ]
 
 @pytest.mark.parametrize("query, expected_columns", STATEMENTS)
