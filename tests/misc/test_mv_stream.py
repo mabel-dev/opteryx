@@ -87,9 +87,9 @@ def test_unsupported_operations():
         stream.readlines()
     with pytest.raises(io.UnsupportedOperation):
         stream.truncate()
-    with pytest.raises(io.UnsupportedOperation):
+    with pytest.raises(TypeError):
         stream.write()
-    with pytest.raises(io.UnsupportedOperation):
+    with pytest.raises(TypeError):
         stream.writelines()
     with pytest.raises(io.UnsupportedOperation):
         stream.flush()
