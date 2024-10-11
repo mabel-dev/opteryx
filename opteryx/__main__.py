@@ -143,7 +143,7 @@ def main(
     # tidy up the statement
     sql = clean_statement(remove_comments(sql))
 
-    if cycles > 1:
+    if cycles > 1:  # pragma: no cover
         # this is useful for benchmarking
         print("[", end="")
         for i in range(cycles):

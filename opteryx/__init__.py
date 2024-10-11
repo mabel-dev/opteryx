@@ -248,7 +248,7 @@ if config.ENABLE_RESOURCE_LOGGING:  # pragma: no cover
 
 
 # if we're running in a notebook, register a magick
-try:
+try:  # pragma: no cover
     from IPython import get_ipython
     from IPython.core.magic import Magics, magics_class, cell_magic
 

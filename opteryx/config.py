@@ -15,6 +15,7 @@ import typing
 from os import environ
 from pathlib import Path
 from typing import Optional
+from typing import Union
 
 import psutil
 
@@ -24,7 +25,7 @@ _config_values: dict = {}
 _OPTERYX_DEBUG = environ.get("OPTERYX_DEBUG") is not None
 
 
-def memory_allocation_calculation(allocation) -> int:
+def memory_allocation_calculation(allocation: Union[float, int]) -> int:
     """
     Configure the memory allocation for the database based on the input.
     If the allocation is between 0 and 1, it's treated as a percentage of the total system memory.
@@ -41,15 +42,23 @@ def memory_allocation_calculation(allocation) -> int:
     if 0 < allocation < 1:  # Treat as a percentage
         return int(total_memory * allocation)
     elif allocation >= 1:  # Treat as an absolute value in MB
-        return int(allocation)
+        return int(allocation * 1024 * 1024)
     else:
         raise ValueError("Invalid memory allocation value. Must be a positive number.")
 
 
-def parse_yaml(yaml_str):
-    ## Based on an algorithm from ChatGPT
+def parse_yaml(yaml_str: str) -> dict:
+    """
+    Parse a simple YAML string into a dictionary.
 
-    def line_value(value):
+    Parameters:
+        yaml_str (str): YAML string to parse.
+
+    Returns:
+        dict: Parsed YAML content as a dictionary.
+    """
+
+    def line_value(value: str) -> typing.Any:
         value = value.strip()
         if value.isdigit():
             value = int(value)
@@ -119,7 +128,17 @@ except Exception as exception:  # pragma: no cover # it doesn't matter why - jus
         )
 
 
-def get(key, default=None):
+def get(key: str, default: Optional[typing.Any] = None) -> Optional[typing.Any]:
+    """
+    Retrieve a configuration value.
+
+    Parameters:
+        key (str): The key to look up.
+        default (Optional[Any]): The default value if the key is not found.
+
+    Returns:
+        Optional[Any]: The configuration value.
+    """
     value = environ.get(key)
     if value is None:
         value = _config_values.get(key, default)
