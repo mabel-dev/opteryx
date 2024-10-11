@@ -64,6 +64,12 @@ def test_byte_strings():
     assert arrow.num_rows == 9, cur.rowcount
     assert arrow.shape == (9, 20)
 
+def test_register_errors():
+    from opteryx import register_store
+    from opteryx.connectors import DiskConnector
+    
+    with pytest.raises(ValueError):
+        register_store(prefix="prefix", connector=DiskConnector(dataset="", statistics=None))
 
 if __name__ == "__main__":  # pragma: no cover
     from tests.tools import run_tests

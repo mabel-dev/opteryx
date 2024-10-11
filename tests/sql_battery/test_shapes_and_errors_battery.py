@@ -1719,6 +1719,44 @@ STATEMENTS = [
 
         ("SELECT name FROM (SELECT MD5(name) AS hash, name FROM $planets) AS S", 9, 1, None),
 
+        # Edge Case with Empty Joins
+        ("SELECT * FROM $planets LEFT JOIN (SELECT id FROM $satellites WHERE planetId < 0) AS S ON $planets.id = S.id", 9, 21, None),
+        # Handling NULL Comparisons in WHERE Clause
+        ("SELECT * FROM $planets WHERE id IS NOT NULL AND id < NULL", 0, 20, None),
+        # Edge Case with Temporal Filtering and Subqueries
+        ("SELECT * FROM (SELECT * FROM $planets FOR '2024-10-01' WHERE id > 5) AS S WHERE id < 10", 4, 20, None),
+        # Function Filtering with Aggregate Functions
+        ("SELECT MAX(density), COUNT(*) FROM $planets WHERE LENGTH(name) > 4 GROUP BY orbitalVelocity", 8, 2, None),
+        # Complex Nested Subqueries
+        ("SELECT * FROM (SELECT name FROM (SELECT name FROM $planets WHERE LENGTH(name) > 3) AS T1) AS T2", 9, 1, None),
+        # Test for Zero-Length String Comparison
+        ("SELECT * FROM $satellites WHERE name = ''", 0, 8, None),
+        # Cross Joining with Non-Matching Conditions
+        ("SELECT P.name, S.name FROM $planets AS P CROSS JOIN $satellites AS S WHERE P.id = S.id AND P.name LIKE '%X%'", 0, 2, None),
+        # Edge Case with LIKE and NULL Handling
+        ("SELECT * FROM $planets WHERE name NOT LIKE '%a%' OR name IS NULL", 5, 20, None),
+        # Complex GROUP BY with Multiple Expressions
+        ("SELECT COUNT(*), LENGTH(name), ROUND(density, 2) FROM $planets GROUP BY LENGTH(name), ROUND(density, 2)", 9, 3, None),
+        # Distinct Filtering with Aggregate Functions
+        ("SELECT DISTINCT MAX(density) FROM $planets WHERE orbitalInclination > 1 GROUP BY numberOfMoons", 6, 1, None),
+        # Edge Case with Temporal Filters Using Special Date Functions
+        ("SELECT * FROM $planets FOR '2024-10-01' WHERE DATE(NOW()) > '2024-10-01'", 9, 20, None),
+        # Ordering with NULLs First and Last
+        ("SELECT * FROM $planets ORDER BY lengthOfDay NULLS LAST", 9, 20, None),
+        # Multi-Level Subquery with Different Alias Names
+        ("SELECT * FROM (SELECT * FROM (SELECT * FROM $planets WHERE id > 5) AS SQ1) AS SQ2 WHERE id < 10", 4, 20, None),
+        # Edge Case Testing Subscripts on Arrays with NULL Values
+        ("SELECT name[0] FROM $planets WHERE id IS NULL", 0, 1, None),
+        # Testing Intervals with Arithmetic Expressions
+        ("SELECT * FROM $planets WHERE TIMESTAMP '2024-10-01' + INTERVAL '2' DAY > CURRENT_TIME", 0, 20, None),
+        # Edge Case with JSON-Like Filtering
+        ("SELECT * FROM $astronauts WHERE birth_place->>'city' = 'New York'", 0, 19, None),
+        # Ordering on Computed Columns with Aliases
+        ("SELECT name, LENGTH(name) AS len FROM $planets ORDER BY len DESC", 9, 2, None),
+        # Aggregate Functions with HAVING Clause
+        ("SELECT name, COUNT(*) AS count FROM $satellites GROUP BY name HAVING count > 1", 0, 2, None),
+
+
         # ****************************************************************************************
 
         # These are queries which have been found to return the wrong result or not run correctly

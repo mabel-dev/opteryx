@@ -18,24 +18,19 @@ cpdef tuple build_rows_indices_and_column(cnp.ndarray column_data):
     cdef cnp.int32_t[::1] offsets = np.empty(row_count + 1, dtype=np.int32)
     cdef Py_ssize_t i
     cdef Py_ssize_t total_size = 0
-    cdef cnp.dtype element_dtype = None
+    cdef cnp.dtype element_dtype = column_data[0].dtype
+
+    if not isinstance(column_data[0], np.ndarray):
+        raise TypeError("UNNEST requires an ARRAY column.")
 
     # Calculate lengths and total_size
     for i in range(row_count):
-        if column_data[i] is None:
-            lengths[i] = 0
-        else:
-            lengths[i] = column_data[i].shape[0]
-            if element_dtype is None:
-                element_dtype = column_data[i].dtype
+        lengths[i] = column_data[i].shape[0]
         total_size += lengths[i]
     
     # Early exit if total_size is zero
     if total_size == 0:
         return (np.array([], dtype=np.int32), np.array([], dtype=object))
-
-    if element_dtype is None:
-        element_dtype = np.object_
 
     # Compute offsets for efficient slicing
     offsets[0] = 0

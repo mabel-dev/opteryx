@@ -131,6 +131,8 @@ class AsyncReaderNode(ReaderNode):
                 orso_schema_cols.append(col)
         orso_schema.columns = orso_schema_cols
 
+        self.statistics.columns_read = len(orso_schema.columns)
+
         blob_names = reader.partition_scheme.get_blobs_in_partition(
             start_date=reader.start_date,
             end_date=reader.end_date,
@@ -231,11 +233,8 @@ class AsyncReaderNode(ReaderNode):
         # Ensure the thread is closed
         read_thread.join()
 
-        if morsel:
-            self.statistics.columns_read += morsel.num_columns
-        else:
+        if morsel is None:
             self.statistics.empty_datasets += 1
-            self.statistics.columns_read = len(orso_schema.columns)
             arrow_schema = convert_orso_schema_to_arrow_schema(orso_schema, use_identities=True)
             yield pyarrow.Table.from_arrays(
                 [pyarrow.array([]) for _ in arrow_schema], schema=arrow_schema
