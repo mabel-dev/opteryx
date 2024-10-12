@@ -56,22 +56,21 @@ def inner_join_with_preprocessed_left_side(left_relation, right_relation, join_c
     Returns:
         A tuple containing lists of matching row indices from the left and right relations.
     """
-    from collections import deque
-
-    left_indexes: deque = deque()
-    right_indexes: deque = deque()
+    left_indexes = []
+    right_indexes = []
 
     right_hash = hash_join_map(right_relation, join_columns)
 
     for h, right_rows in right_hash.hash_table.items():
         left_rows = hash_table.get(h)
-        if left_rows:
-            for l in left_rows:
-                for r in right_rows:
-                    left_indexes.append(l)
-                    right_indexes.append(r)
+        if left_rows is None:
+            continue
+        for l in left_rows:
+            for r in right_rows:
+                left_indexes.append(l)
+                right_indexes.append(r)
 
-    return align_tables(right_relation, left_relation, list(right_indexes), list(left_indexes))
+    return align_tables(right_relation, left_relation, right_indexes, left_indexes)
 
 
 class InnerJoinNode(BasePlanNode):
