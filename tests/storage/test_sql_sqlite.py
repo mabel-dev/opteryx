@@ -128,9 +128,9 @@ def test_sql_battery(statement, rows, columns, exception):
         assert (
             exception is None
         ), f"Exception {exception} not raised but expected\n{format_sql(statement)}"
-    except AssertionError as err:
+    except AssertionError as err:  # pragma: no cover
         raise Exception(err) from err
-    except Exception as err:
+    except Exception as err:  # pragma: no cover
         if type(err) != exception:
             raise Exception(
                 f"{format_sql(statement)}\nQuery failed with error {type(err)} but error {exception} was expected"

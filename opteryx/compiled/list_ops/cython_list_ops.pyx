@@ -17,7 +17,7 @@ cnp.import_array()
 cpdef cnp.ndarray[cnp.npy_bool, ndim=1] cython_allop_eq(object literal, cnp.ndarray arr):
     cdef:
         Py_ssize_t i, j
-        cnp.ndarray[cnp.npy_bool, ndim=1] result = numpy.full(arr.shape[0], False, dtype=bool)
+        cnp.ndarray[cnp.npy_bool, ndim=1] result = numpy.zeros(arr.shape[0], dtype=bool)
         cnp.ndarray row
 
     for i in range(arr.shape[0]):
@@ -42,7 +42,7 @@ cpdef cnp.ndarray[cnp.npy_bool, ndim=1] cython_allop_eq(object literal, cnp.ndar
 cpdef cnp.ndarray[cnp.npy_bool, ndim=1] cython_allop_neq(object literal, cnp.ndarray arr):
     cdef:
         Py_ssize_t i, j
-        cnp.ndarray[cnp.npy_bool, ndim=1] result = numpy.full(arr.shape[0], True, dtype=bool)
+        cnp.ndarray[cnp.npy_bool, ndim=1] result = numpy.ones(arr.shape[0], dtype=bool)
         cnp.ndarray row
 
     for i in range(arr.shape[0]):
@@ -62,12 +62,12 @@ cpdef cnp.ndarray[cnp.npy_bool, ndim=1] cython_anyop_eq(object literal, cnp.ndar
     cdef:
         cdef Py_ssize_t i, j
         cdef Py_ssize_t num_rows = arr.shape[0]
-        cnp.ndarray[cnp.npy_bool, ndim=1] result = numpy.full(num_rows, False, dtype=bool)
+        cnp.ndarray[cnp.npy_bool, ndim=1] result = numpy.zeros(num_rows, dtype=bool)
         cnp.ndarray row
 
     for i in range(num_rows):
         row = arr[i]
-        if row is not None:
+        if row is not None and row.shape[0] > 0:
             for j in range(row.shape[0]):
                 if row[j] == literal:
                     result[i] = True
@@ -102,7 +102,7 @@ cpdef cnp.ndarray[cnp.npy_bool, ndim=1] cython_anyop_neq(object literal, cnp.nda
 cpdef cnp.ndarray[cnp.npy_bool, ndim=1] cython_anyop_gt(object literal, cnp.ndarray arr):
     cdef:
         Py_ssize_t i, j
-        cnp.ndarray[cnp.npy_bool, ndim=1] result = numpy.full(arr.shape[0], False, dtype=bool)
+        cnp.ndarray[cnp.npy_bool, ndim=1] result = numpy.zeros(arr.shape[0], dtype=bool)
         cnp.ndarray row
 
     for i in range(arr.shape[0]):
@@ -119,7 +119,7 @@ cpdef cnp.ndarray[cnp.npy_bool, ndim=1] cython_anyop_gt(object literal, cnp.ndar
 cpdef cnp.ndarray[cnp.npy_bool, ndim=1] cython_anyop_lt(object literal, cnp.ndarray arr):
     cdef:
         Py_ssize_t i, j
-        cnp.ndarray[cnp.npy_bool, ndim=1] result = numpy.full(arr.shape[0], False, dtype=bool)
+        cnp.ndarray[cnp.npy_bool, ndim=1] result = numpy.zeros(arr.shape[0], dtype=bool)
         cnp.ndarray row
 
     for i in range(arr.shape[0]):
@@ -136,7 +136,7 @@ cpdef cnp.ndarray[cnp.npy_bool, ndim=1] cython_anyop_lt(object literal, cnp.ndar
 cpdef cnp.ndarray[cnp.npy_bool, ndim=1] cython_anyop_lte(object literal, cnp.ndarray arr):
     cdef:
         Py_ssize_t i, j
-        cnp.ndarray[cnp.npy_bool, ndim=1] result = numpy.full(arr.shape[0], False, dtype=bool)
+        cnp.ndarray[cnp.npy_bool, ndim=1] result = numpy.zeros(arr.shape[0], dtype=bool)
         cnp.ndarray row
 
     for i in range(arr.shape[0]):
@@ -153,7 +153,7 @@ cpdef cnp.ndarray[cnp.npy_bool, ndim=1] cython_anyop_lte(object literal, cnp.nda
 cpdef cnp.ndarray[cnp.npy_bool, ndim=1] cython_anyop_gte(object literal, cnp.ndarray arr):
     cdef:
         Py_ssize_t i, j
-        cnp.ndarray[cnp.npy_bool, ndim=1] result = numpy.full(arr.shape[0], False, dtype=bool)
+        cnp.ndarray[cnp.npy_bool, ndim=1] result = numpy.zeros(arr.shape[0], dtype=bool)
         cnp.ndarray row
 
     for i in range(arr.shape[0]):

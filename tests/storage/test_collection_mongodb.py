@@ -18,7 +18,7 @@ MONGO_CONNECTION = os.environ.get("MONGODB_CONNECTION")
 MONGO_DATABASE = os.environ.get("MONGODB_DATABASE")
 
 
-def populate_mongo():
+def populate_mongo():  # pragma: no cover
     import pymongo  # type:ignore
 
     myclient = pymongo.MongoClient(MONGO_CONNECTION)

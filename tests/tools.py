@@ -101,7 +101,7 @@ def manual():  # pragma: no cover
     return os.environ.get("MANUAL_TEST") is not None
 
 
-def is_version(version: str) -> bool:
+def is_version(version: str) -> bool:  # pragma: no cover
     """
     Check if the current Python version matches the specified version.
 
@@ -143,7 +143,7 @@ def skip(func):  # pragma: no cover
     return wrapper
 
 
-def skip_if(is_true: bool = True):
+def skip_if(is_true: bool = True):  # pragma: no cover
     """
     Decorator to conditionally skip the execution of a test function based on a condition.
 
@@ -179,7 +179,7 @@ def skip_if(is_true: bool = True):
     return decorate
 
 
-def download_file(url: str, path: str):
+def download_file(url: str, path: str):  # pragma: no cover
     """
     Download a file from a given URL and save it to a specified path.
 
@@ -198,7 +198,7 @@ def download_file(url: str, path: str):
     print(f"Saved downloaded contents to {path}")
 
 
-def character_width(symbol: str) -> int:
+def character_width(symbol: str) -> int:  # pragma: no cover
     """
     Determine the display width of a character based on its Unicode East Asian Width property.
 
@@ -213,7 +213,7 @@ def character_width(symbol: str) -> int:
     return 2 if unicodedata.east_asian_width(symbol) in ("F", "N", "W") else 1
 
 
-def trunc_printable(value: str, width: int, full_line: bool = True) -> str:
+def trunc_printable(value: str, width: int, full_line: bool = True) -> str:  # pragma: no cover
     """
     Truncate a string to fit within a specified width, accounting for character widths.
 
@@ -254,7 +254,7 @@ def trunc_printable(value: str, width: int, full_line: bool = True) -> str:
     return line
 
 
-def run_tests():
+def run_tests():  # pragma: no cover
     """
     Discover and run test functions defined in the calling module. Test functions should be named starting with 'test_'.
 
@@ -597,7 +597,7 @@ INSERT INTO struct_tests VALUES
 """
 
 
-def create_duck_db():
+def create_duck_db():  # pragma: no cover
     """
     The DuckDB file format isn't stable, so ust create it anew each time and
     bypass the need to track versions.

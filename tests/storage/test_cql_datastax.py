@@ -43,7 +43,7 @@ test_cases = [
 
 
 # skip to reduce billing
-@skip_if(is_arm() or is_windows() or is_mac() or is_version("3.10"))
+@skip_if(is_arm() or is_windows() or is_mac() or not is_version("3.10"))
 @pytest.mark.parametrize(
     "query, expected_rowcount, expected_columncount, expected_stats", test_cases
 )
