@@ -1718,6 +1718,7 @@ STATEMENTS = [
         ("SHOW CREATE TABLE mission_reports", 1, 1, UnsupportedSyntaxError),
 
         ("SELECT name FROM (SELECT MD5(name) AS hash, name FROM $planets) AS S", 9, 1, None),
+        ("SELECT SLEEP(1)", 1, 1, UnsupportedSyntaxError),
 
         # Edge Case with Empty Joins
         ("SELECT * FROM $planets LEFT JOIN (SELECT id FROM $satellites WHERE planetId < 0) AS S ON $planets.id = S.id", 9, 21, None),

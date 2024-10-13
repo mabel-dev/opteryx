@@ -298,7 +298,7 @@ def evaluate(expression: Node, table: Table):
 
 def get_all_nodes_of_type(root, select_nodes):
     """
-    Walk a expression tree collecting all the nodes of a specified type.
+    Walk an expression tree collecting all nodes of a specified type.
     """
     if root is None:
         return []
@@ -306,19 +306,22 @@ def get_all_nodes_of_type(root, select_nodes):
         root = [root]
 
     identifiers = []
-    for node in root:
+    stack = list(root)
+
+    while stack:
+        node = stack.pop()
         if node.node_type in select_nodes:
             identifiers.append(node)
-        if node.left:
-            identifiers.extend(get_all_nodes_of_type(node.left, select_nodes))
-        if node.centre:
-            identifiers.extend(get_all_nodes_of_type(node.centre, select_nodes))
-        if node.right:
-            identifiers.extend(get_all_nodes_of_type(node.right, select_nodes))
         if node.parameters:
-            for parameter in node.parameters:
-                if isinstance(parameter, (Node, LogicalColumn)):
-                    identifiers.extend(get_all_nodes_of_type(parameter, select_nodes))
+            stack.extend(
+                param for param in node.parameters if isinstance(param, (Node, LogicalColumn))
+            )
+        if node.right:
+            stack.append(node.right)
+        if node.centre:
+            stack.append(node.centre)
+        if node.left:
+            stack.append(node.left)
 
     return identifiers
 

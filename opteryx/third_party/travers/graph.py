@@ -63,7 +63,7 @@ class Graph(object):
 
     """
 
-    __slots__ = ("_nodes", "_edges")
+    __slots__ = ("_nodes", "_edges", "_cached_edges")
 
     def __init__(self):
         """
@@ -71,6 +71,7 @@ class Graph(object):
         """
         self._nodes = {}
         self._edges = {}
+        self._cached_edges = None
 
     def __bool__(self) -> bool:
         return len(self._nodes) != 0 or len(self._edges) != 0
@@ -127,6 +128,7 @@ class Graph(object):
             existing_edges.append(edge_to_add)
 
         self._edges[source] = tuple(existing_edges)
+        self._cached_edges = None
 
     def add_node(self, nid: str, node):
         """
@@ -163,8 +165,13 @@ class Graph(object):
         Returns:
             Generator of Tuples of (Source, Target and Relationship)
         """
-        for source, records in self._edges.items():
-            yield from ((source, target, relationship) for target, relationship in records)
+        if self._cached_edges is None:
+            self._cached_edges = [
+                (source, target, relationship)
+                for source, records in self._edges.items()
+                for target, relationship in records
+            ]
+        return self._cached_edges
 
     def breadth_first_search(
         self, source: str, depth: int = 100, reverse: bool = False
@@ -384,6 +391,8 @@ class Graph(object):
                 for in_nid in in_coming:
                     self.add_edge(in_nid[0], out_nid[1], in_nid[1])  # type:ignore
 
+            self._cached_edges = None
+
     def remove_edge(self, source, target, relationship):
         """
         Remove an edge from the graph.
@@ -401,6 +410,8 @@ class Graph(object):
             self._edges[source] = tuple(working_set)
             if not self._edges[source]:  # If no edges left for the source
                 del self._edges[source]
+
+        self._cached_edges = None
 
     def insert_node_before(self, nid, node, before_nid):
         """rewrite the plan putting the new node before a given node"""

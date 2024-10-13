@@ -16,6 +16,7 @@ These are a set of functions that can be applied to data.
 
 import datetime
 import decimal
+import time
 
 import numpy
 import orjson
@@ -317,6 +318,11 @@ def select_values(boolean_arrays, value_arrays):
     return result
 
 
+def sleep(x):
+    time.sleep(x[0] / 1000)  # Sleep for x[0] milliseconds
+    return x[0]
+
+
 DEPRECATED_FUNCTIONS = {
     "LIST": "ARRAY_AGG",  # deprecated, remove 0.19.0
     "MAXIMUM": "MAX",  # deprecated, remove 0.19.0
@@ -339,6 +345,7 @@ FUNCTIONS = {
     "CONNECTION_ID": lambda x: None, # *
     "DATABASE": lambda x: None, # *
     "USER": lambda x: None, # *
+    # DEBUG: "SLEEP": lambda x: [sleep(x)], # SLEEP is only available in 'debug' mode
 
     # TYPE CONVERSION
     "TIMESTAMP": lambda x: compute.cast(x, pyarrow.timestamp("us")),
