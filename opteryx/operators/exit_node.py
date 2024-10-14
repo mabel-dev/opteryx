@@ -68,6 +68,7 @@ class ExitNode(BasePlanNode):
     def execute(self) -> Generator:
         start = time.monotonic_ns()
         morsels = self._producers[0]  # type:ignore
+        at_least_one = False
 
         final_columns = []
         final_names = []
@@ -110,4 +111,10 @@ class ExitNode(BasePlanNode):
 
             self.statistics.time_exiting += time.monotonic_ns() - start
             yield morsel
+            at_least_one = True
             start = time.monotonic_ns()
+
+        if not at_least_one:
+            from orso import DataFrame
+
+            yield DataFrame(schema=final_names).arrow()

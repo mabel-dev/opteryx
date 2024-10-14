@@ -31,7 +31,7 @@ def random_value(t):
     return random_int() / 1000
 
 
-def generate_condition(columns):
+def generate_condition(table, columns):
     where_column = columns[random.choice(range(len(columns)))]
     while where_column.type in (OrsoTypes.ARRAY, OrsoTypes.STRUCT):
         where_column = columns[random.choice(range(len(columns)))]
@@ -48,10 +48,10 @@ def generate_condition(columns):
     else:
         where_operator = random.choice(["=", "!=", "<", "<=", ">", ">="])
         where_value = f"{str(random_value(where_column.type))}"
-    return f"{where_column.name} {where_operator} {where_value}"
+    return f"{table}.{where_column.name} {where_operator} {where_value}"
 
 def generate_random_sql_join(columns1, table1, columns2, table2) -> str:
-    join_type = random.choice(["INNER JOIN", "LEFT JOIN", "RIGHT JOIN", "FULL OUTER JOIN"])
+    join_type = random.choice(["JOIN", "INNER JOIN", "LEFT JOIN", "RIGHT JOIN", "FULL OUTER JOIN"])
 
     last_value = -1
     this_value = random.random()
@@ -75,7 +75,29 @@ def generate_random_sql_join(columns1, table1, columns2, table2) -> str:
         selected_columns = ["*"]
     select_clause = "SELECT " + ", ".join(selected_columns)
     
-    query = f"{select_clause} FROM {table1} {join_type} {table2} ON {join_condition}"
+    where_clause = "--"
+    # Generate a WHERE clause with 70% chance
+    if random.random() < 0.3:
+        if where_clause == "--":
+            where_clause = " WHERE "
+        where_clause += generate_condition(table1, columns1)
+        # add an abitrary number of additional conditions
+        while random.random() < 0.1:
+            linking_condition = random.choice(["AND", "OR", "AND NOT"])
+            where_clause += f" {linking_condition} {generate_condition(table1, columns1)}"
+    
+    if random.random() < 0.3:
+        if where_clause == "--":
+            where_clause = " WHERE "
+        else:
+            where_clause += f' {random.choice(["AND", "OR", "AND NOT"])} '
+        where_clause += generate_condition(table2, columns2)
+        # add an abitrary number of additional conditions
+        while random.random() < 0.1:
+            linking_condition = random.choice(["AND", "OR", "AND NOT"])
+            where_clause += f" {linking_condition} {generate_condition(table2, columns2)}"
+
+    query = f"{select_clause} FROM {table1} {join_type} {table2} ON {join_condition} {where_clause}"
     
     return query
 

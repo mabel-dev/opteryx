@@ -89,12 +89,11 @@ def generate_random_sql_select(columns, table):
     # Generate a WHERE clause with 70% chance
     if random.random() < 0.7:
         where_clause = generate_condition(columns)
-        select_clause = f"{select_clause} WHERE {where_clause}"
         # add an abitrary number of additional conditions
         while random.random() < 0.3:
             linking_condition = random.choice(["AND", "OR", "AND NOT"])
-            where_clause = generate_condition(columns)
-            select_clause = f"{select_clause} {linking_condition} {where_clause}"
+            where_clause += f" {linking_condition} {generate_condition(columns)} "
+        select_clause = f"{select_clause} WHERE {where_clause}"
     # Add GROUP BY clause with 40% chance
     if agg_column and random.random() < 0.4:
         column_list = [c.name for c in column_list]
