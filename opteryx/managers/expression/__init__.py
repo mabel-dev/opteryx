@@ -193,8 +193,8 @@ def _inner_evaluate(root: Node, table: Table):
         # if it's a literal value, return it once for every value in the table
         literal_type = root.type
         if literal_type == OrsoTypes.ARRAY:
-            # this isn't as fast as .full - but lists and strings are problematic
-            return numpy.array([root.value] * table.num_rows)
+            # creating ARRAY columns is expensive, so we don't create one full length
+            return numpy.array([root.value])
         if literal_type == OrsoTypes.VARCHAR:
             return numpy.array([root.value] * table.num_rows, dtype=numpy.unicode_)
         if literal_type == OrsoTypes.BLOB:

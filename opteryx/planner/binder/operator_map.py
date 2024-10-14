@@ -18,6 +18,7 @@ class OperatorMapType(NamedTuple):
 
 # fmt: off
 OPERATOR_MAP: Dict[Tuple[OrsoTypes, OrsoTypes, str], OperatorMapType] = {
+    (OrsoTypes.ARRAY, OrsoTypes.ARRAY, "AtArrow"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
     (OrsoTypes.BLOB, OrsoTypes.VARCHAR, "Eq"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
     (OrsoTypes.BLOB, OrsoTypes.VARCHAR, "NotEq"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),
     (OrsoTypes.BLOB, OrsoTypes.VARCHAR, "Gt"): OperatorMapType(OrsoTypes.BOOLEAN, None, 100.0),

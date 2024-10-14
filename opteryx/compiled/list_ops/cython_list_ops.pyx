@@ -287,16 +287,16 @@ cpdef cnp.ndarray[cnp.uint8_t, ndim=1] list_contains_any(cnp.ndarray array, cnp.
     Cython optimized version that works with object arrays.
     """
     cdef set items_set = set(items[0])
-    cdef Py_ssize_t size = array.size
+    cdef Py_ssize_t size = array.shape[0]
     cdef cnp.ndarray[cnp.uint8_t, ndim=1] res = numpy.zeros(size, dtype=numpy.uint8)
     cdef Py_ssize_t i
     cdef cnp.ndarray test_set
 
     for i in range(size):
         test_set = array[i]
-        if test_set is not None:
+        if not(test_set is None or test_set.shape[0] == 0):
             for el in test_set:
                 if el in items_set:
-                    res[i] = True
+                    res[i] = 1
                     break
     return res

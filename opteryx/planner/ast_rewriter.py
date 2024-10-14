@@ -215,7 +215,12 @@ def rewrite_json_accessors(node: Dict[str, Any]) -> Dict[str, Any]:
     if not isinstance(node, dict):
         return node
 
-    if "BinaryOp" in node and node["BinaryOp"].get("op") in ("Arrow", "LongArrow", "AtQuestion"):
+    if "BinaryOp" in node and node["BinaryOp"].get("op") in (
+        "Arrow",
+        "LongArrow",
+        "AtQuestion",
+        "AtArrow",
+    ):
         document = node["BinaryOp"]["left"]
         accessor = node["BinaryOp"]["op"]
         right_node = node["BinaryOp"]["right"]
