@@ -60,6 +60,7 @@ def get_mismatched_condition_column_types(node: Node, relaxed: bool = False) -> 
             "Arrow",
             "LongArrow",
             "AtQuestion",
+            "AtArrow",
         ) or node.value.startswith(("AllOp", "AnyOp")):
             return None  # Some ops are meant to have different types
         left_type = node.left.schema_column.type if node.left.schema_column else None

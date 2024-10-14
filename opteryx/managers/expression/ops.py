@@ -34,6 +34,7 @@ def filter_operations(arr, left_type, operator, value, right_type):
         "AnyOpLtEq",
         "AllOpEq",
         "AllOpNotEq",
+        "AtArrow",
     ):
         # compressing ARRAY columns is VERY SLOW
         morsel_size = len(arr)
@@ -182,5 +183,10 @@ def _inner_filter_operations(arr, operator, value):
             [element in simdjson.Parser().parse(doc).keys() for doc in arr],
             type=pyarrow.bool_(),  # type:ignore
         )
+
+    if operator == "AtArrow":
+        from opteryx.compiled.list_ops import list_contains_any
+
+        return list_contains_any(arr, value)
 
     raise NotImplementedError(f"Operator {operator} is not implemented!")  # pragma: no cover

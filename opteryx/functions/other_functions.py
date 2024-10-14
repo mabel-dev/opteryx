@@ -35,7 +35,8 @@ def list_contains_all(array, items):
     """
     if array is None:
         return False
-    return set(array).issuperset(items)
+    required_items = set(items[0])  # Convert items[0] to a set once for efficient lookups
+    return [None if a is None else set(a).issuperset(required_items) for a in array]
 
 
 def search(array, item, ignore_case: Optional[List[bool]] = None):
@@ -198,6 +199,7 @@ def cosine_similarity(arr, val):
 def jsonb_object_keys(arr):
     if len(arr) == 0:
         return []
+    result = []
     if isinstance(arr[0], dict):
         result = [[str(key) for key in row] for row in arr]
     if isinstance(arr[0], (str, bytes)):
