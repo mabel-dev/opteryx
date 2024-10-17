@@ -95,7 +95,7 @@ def normalize_morsel(schema: RelationSchema, morsel: pyarrow.Table) -> pyarrow.T
     # add columns we don't have, populate with nulls but try to get the correct type
     for column in schema.columns:
         if column.identity not in target_column_names:
-            null_column = pyarrow.array([None] * morsel.num_rows)
+            null_column = pyarrow.array([None] * morsel.num_rows, type=column.arrow_field.type)
             field = pyarrow.field(name=column.identity, type=column.arrow_field.type)
             morsel = morsel.append_column(field, null_column)
 
