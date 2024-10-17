@@ -66,8 +66,8 @@ def struct_to_jsonb(table: pyarrow.Table) -> pyarrow.Table:
 
 
 def normalize_morsel(schema: RelationSchema, morsel: pyarrow.Table) -> pyarrow.Table:
-    if len(schema.columns) == 0:
-        one_column = pyarrow.array([1] * morsel.num_rows, type=pyarrow.int8())
+    if len(schema.columns) == 0 and morsel.column_names != ["*"]:
+        one_column = pyarrow.array([True] * morsel.num_rows, type=pyarrow.bool_())
         morsel = morsel.append_column("*", one_column)
         return morsel.select(["*"])
 
