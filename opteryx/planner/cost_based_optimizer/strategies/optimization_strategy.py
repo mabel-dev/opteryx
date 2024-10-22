@@ -34,7 +34,10 @@ class OptimizerContext:
         """We collect column identities so we can push column selection as close to the read as possible, including off to remote systems"""
 
         self.collected_distincts: list = []
-        """We collect distincts to try to eliminate records earlier"""
+        """We collect distincts to try to eliminate rows earlier"""
+
+        self.collected_limits: list = []
+        """We collect limits to to to eliminate rows earlier"""
 
 
 class OptimizationStrategy:

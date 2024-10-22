@@ -18,7 +18,8 @@ STATEMENTS = [
         ("SELECT * FROM $planets WHERE NOT id != 4", "optimization_boolean_rewrite_inversion"),
         ("SELECT * FROM $planets WHERE id = 4 + 4", "optimization_constant_fold_expression"),
         ("SELECT * FROM $planets WHERE id * 0 = 1", "optimization_constant_fold_reduce"),
-
+        ("SELECT id ^ 1 = 1 FROM $planets LIMIT 10", "optimization_limit_pushdown"),
+        ("SELECT name FROM $astronauts WHERE name = 'Neil A. Armstrong'", "optimization_predicate_pushdown")
     ]
 # fmt:on
 

@@ -10,6 +10,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+Optimization Rule - Projection Pushdown
+
+Type: Heuristic
+Goal: Limit columns which need to be moved around
+
+We bind from the the scans, exposing the available columns to each operator
+as we make our way to the top of the plan (usually the SELECT). The projection
+pushdown is done as part of the optimizers, but isn't quite like the other
+optimizations; this is collecting used column information as it goes from the
+top of the plan down to the selects. The other optimizations tend to move or
+remove operations, or update what a step does, this is just collecting and
+updating the used columns.
+"""
+
 from typing import Set
 
 from opteryx.managers.expression import NodeType
@@ -81,7 +96,6 @@ class ProjectionPushdownStrategy(OptimizationStrategy):
             node.columns = node_columns
 
         context.optimized_plan.add_node(context.node_id, LogicalPlanNode(**node.properties))
-        self.statistics.optimization_projection_pushdown += 1
         if context.parent_nid:
             context.optimized_plan.add_edge(context.node_id, context.parent_nid)
 

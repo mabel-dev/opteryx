@@ -11,7 +11,10 @@
 # limitations under the License.
 
 """
-PREDICATE REWRITER
+Optimization Rule - Predicate rewriter
+
+Type: Heuristic
+Goal: Chose more efficient predicate evaluations
 
 We rewrite some conditions to a more optimal form; for example if doing a
 LIKE comparison and the pattern contains no wildcards, we rewrite to be an

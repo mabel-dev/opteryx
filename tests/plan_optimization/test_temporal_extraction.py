@@ -101,6 +101,16 @@ STATEMENTS = [
         ("SELECT * FROM $planets FOR YESTERDAY WHERE id IN (SELECT * FROM $planets);", [('$planets', YESTERDAY, YESTERDAY.replace(hour=23, minute=59)), ('$planets', None, None)]),
         ("SELECT * FROM $planets WHERE id IN (SELECT * FROM $planets FOR YESTERDAY);", [('$planets', None, None), ('$planets', YESTERDAY, YESTERDAY.replace(hour=23, minute=59))]),
         ("SELECT * FROM $planets WHERE id IN (SELECT * FROM $planets);", [('$planets', None, None), ('$planets', None, None)]),
+        # FROM in functions
+        ("SELECT EXTRACT(YEAR FROM birth_date) FROM $astronauts", [("$astronauts", None, None)]),
+        ("SELECT SUBSTRING(name FROM 1 FOR 1) FROM $astronauts", [("$astronauts", None, None)]),
+        ("SELECT EXTRACT(YEAR FROM CURRENT_TIME)", []),
+        ("SELECT SUBSTRING('name' FROM 1 FOR 1)", []),
+        ("SELECT EXTRACT(YEAR FROM birth_date) FROM $astronauts FOR TODAY", [("$astronauts", THIS_MORNING, TONIGHT)]),
+        ("SELECT SUBSTRING(name FROM 1 FOR 1) FROM $astronauts FOR TODAY", [("$astronauts", THIS_MORNING, TONIGHT)]),
+        ("SELECT TRIM ( 'foo' FROM 'foo' )", []),
+        ("SELECT TRIM ( 'MVEJSONP' FROM name ) FROM $planets", [("$planets", None, None)]),
+        ("SELECT TRIM ( 'MVEJSONP' FROM name ) FROM $planets FOR TODAY", [("$planets", THIS_MORNING, TONIGHT)]),
     ]
 # fmt:on
 

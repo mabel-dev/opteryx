@@ -10,6 +10,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+Optimization Rule - Split Conjections
+
+Type: Heuristic
+Goal: Break filters into units which are easier to handle
+"""
+
 from orso.tools import random_string
 
 from opteryx.managers.expression import NodeType
