@@ -88,6 +88,7 @@ class CostBasedOptimizerVisitor:
             ProjectionPushdownStrategy(statistics),
             DistinctPushdownStrategy(statistics),
             OperatorFusionStrategy(statistics),
+            LimitPushdownStrategy(statistics),
             RedundantOperationsStrategy(statistics),
             ConstantFoldingStrategy(statistics),
         ]

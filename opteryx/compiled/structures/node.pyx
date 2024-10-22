@@ -1,4 +1,10 @@
 # cython: language_level=3
+# cython: nonecheck=False
+# cython: cdivision=True
+# cython: initializedcheck=False
+# cython: infer_types=True
+# cython: wraparound=True
+# cython: boundscheck=False
 
 """
 Node Module

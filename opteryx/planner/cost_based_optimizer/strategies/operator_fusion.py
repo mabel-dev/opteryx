@@ -11,6 +11,11 @@
 # limitations under the License.
 
 """
+Optimization Rule - Operator Fusion
+
+Type: Heuristic
+Goal: Chose more efficient physical implementations.
+
 Some operators can be fused to be faster.
 
 'Fused' opertors are when physical operations perform multiple logical operations.

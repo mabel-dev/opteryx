@@ -70,7 +70,7 @@ from typing import Tuple
 from opteryx.exceptions import InvalidTemporalRangeFilterError
 from opteryx.utils import dates
 
-COLLECT_RELATION = [
+COLLECT_RELATION = {
     r"FROM",
     r"INNER\sJOIN",
     r"CROSS\sJOIN",
@@ -87,11 +87,11 @@ COLLECT_RELATION = [
     r"JOIN",
     r"CREATE\sTABLE",
     r"ANALYZE\sTABLE",
-]
+}
 
-COLLECT_TEMPORAL = [r"FOR"]
+COLLECT_TEMPORAL = {r"FOR"}
 
-STOP_COLLECTING = [
+STOP_COLLECTING = {
     r"GROUP\sBY",
     r"HAVING",
     r"LIKE",
@@ -107,32 +107,35 @@ STOP_COLLECTING = [
     r";",
     r",",
     r"UNION",
-]
+}
 
-COLLECT_ALIAS = [r"AS"]
+COLLECT_ALIAS = {r"AS"}
 
-BOUNDARIES = [r"(", r")"]
+BOUNDARIES = {r"(", r")"}
+
+FOR_DATE_CLAUSES = {
+    r"DATES\sIN\s\w+",
+    r"DATES\sBETWEEN\s[^\r\n\t\f\v]AND\s[^\r\n\t\f\v]",
+    r"DATES\sSINCE\s\w+",
+}
+
+FUNCTIONS_WITH_FROM_SYNTAX = {"EXTRACT", "SUBSTRING", "TRIM"}
 
 SQL_PARTS = (
-    COLLECT_RELATION
-    + COLLECT_TEMPORAL
-    + STOP_COLLECTING
-    + COLLECT_ALIAS
-    + [
-        r"DATES\sIN\s\w+",
-        r"DATES\sBETWEEN\s[^\r\n\t\f\v]AND\s[^\r\n\t\f\v]",
-        r"DATES\sSINCE\s\w+",
-    ]
+    COLLECT_RELATION.union(COLLECT_TEMPORAL)
+    .union(STOP_COLLECTING)
+    .union(COLLECT_ALIAS)
+    .union(FOR_DATE_CLAUSES)
 )
 
 COMBINE_WHITESPACE_REGEX = re.compile(r"\r\n\t\f\v+")
 
 # states for the collection algorithm
 WAITING: int = 1
-RELATION: int = 4
-TEMPORAL: int = 16
-ALIAS: int = 64
-FUNCTION_RELATION: int = 128
+RELATION: int = 2
+TEMPORAL: int = 4
+ALIAS: int = 8
+FUNCTION_RELATION: int = 16
 
 
 def sql_parts(string):
@@ -259,6 +262,9 @@ def _temporal_extration_state_machine(
     #
     # We're essentially using a bit mask to record state and transitions.
 
+    in_special_function = False
+    special_function_brackets = 0
+
     state = WAITING
     relation = ""
     temporal = ""
@@ -270,29 +276,37 @@ def _temporal_extration_state_machine(
         transition = [state]
         comparable_part = part.upper().replace(" ", r"\s")
 
+        if comparable_part in FUNCTIONS_WITH_FROM_SYNTAX:
+            in_special_function = True
+            special_function_brackets = open_count
+
         # work out what our current state is
-        if comparable_part in BOUNDARIES:
+        elif comparable_part in BOUNDARIES:
+            if comparable_part == "(":
+                open_count += 1
+            if comparable_part == ")":
+                open_count -= 1
             if relation == "":
                 state = WAITING
             else:
                 # function relations, like FAKE(234,234) need the items between the
                 # brackets be be consumed
                 state = FUNCTION_RELATION
-                if comparable_part == "(":
-                    open_count += 1
-                if comparable_part == ")":
-                    open_count -= 1
-        if comparable_part in STOP_COLLECTING:
-            if state == FUNCTION_RELATION and open_count > 0:
-                pass
-            else:
-                state = WAITING
-        if comparable_part in COLLECT_RELATION:
-            state = RELATION
-        if comparable_part in COLLECT_TEMPORAL:
-            state = TEMPORAL
-        if comparable_part in COLLECT_ALIAS:
-            state = ALIAS
+        elif in_special_function and open_count == special_function_brackets:
+            in_special_function = False
+
+        if not in_special_function:
+            if comparable_part in STOP_COLLECTING:
+                if state == FUNCTION_RELATION and open_count > 0:
+                    pass
+                else:
+                    state = WAITING
+            if comparable_part in COLLECT_RELATION:
+                state = RELATION
+            if comparable_part in COLLECT_TEMPORAL:
+                state = TEMPORAL
+            if comparable_part in COLLECT_ALIAS:
+                state = ALIAS
         transition.append(state)
 
         # based on what the state was and what it is now, do something

@@ -11,6 +11,11 @@
 # limitations under the License.
 
 """
+Optimization Rule - Remove Redundant Operators
+
+Type: Heuristic
+Goal: Remove steps which don't affect the result
+
 This optimization runs toward the end of the set, it removes operators which
 were useful during planning and optimization.
 
