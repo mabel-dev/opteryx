@@ -1758,6 +1758,12 @@ STATEMENTS = [
         ("SELECT jsonb_object_keys(VARCHAR(birth_place)) FROM testdata.astronauts", 357, 1, None),
         ("SELECT jsonb_object_keys(BLOB(birth_place)) FROM testdata.astronauts", 357, 1, None),
 
+        ("SELECT VARCHAR(SUBSTRING(BLOB(birth_date) FROM -4)) FROM $astronauts", 357, 1, None),
+        ("SELECT SUBSTRING(BLOB(birth_date) FROM -4) FROM $astronauts", 357, 1, None),
+        ("SELECT SUBSTRING(name FROM 4) FROM $astronauts", 357, 1, None),
+        ("SELECT SUBSTRING(name FROM 1 FOR 1) FROM $astronauts", 357, 1, None),
+        ("SELECT SUBSTRING(name FROM -1 FOR 1) FROM $astronauts", 357, 1, None),
+
         # Edge Case with Empty Joins
         ("SELECT * FROM $planets LEFT JOIN (SELECT id FROM $satellites WHERE planetId < 0) AS S ON $planets.id = S.id", 9, 21, None),
         # Handling NULL Comparisons in WHERE Clause

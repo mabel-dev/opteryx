@@ -136,7 +136,10 @@ class LogicalPlanNode(Node):
                 predicates = ""
                 if self.predicates:
                     predicates = " (" + " AND ".join(map(format_expression, self.predicates)) + ")"
-                return f"READ ({self.relation}{alias}{date_range}{' WITH(' + ','.join(self.hints) + ')' if self.hints else ''}){columns}{predicates}"
+                limit = ""
+                if self.limit:
+                    limit = f" LIMIT {self.limit}"
+                return f"READ ({self.relation}{alias}{date_range}{' WITH(' + ','.join(self.hints) + ')' if self.hints else ''}){columns}{predicates}{limit}"
             if node_type == LogicalPlanStepType.Set:
                 return f"SET ({self.variable} TO {self.value.value})"
             if node_type == LogicalPlanStepType.Show:

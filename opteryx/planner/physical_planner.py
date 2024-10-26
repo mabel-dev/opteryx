@@ -10,23 +10,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-This is a temporary step, which takes logical plans from the V2 planner
-and converts them to modified-V1 physical plans.
-
-This should look different when the operators are rewritten for the
-Gen 2 execution engine (a later piece of work)
-"""
 
 from orso.schema import OrsoTypes
 
-from opteryx import operators
+from opteryx import operatorsv2 as operators
 from opteryx.exceptions import UnsupportedSyntaxError
 from opteryx.models import PhysicalPlan
 from opteryx.planner.logical_planner import LogicalPlanStepType
 
 
-def create_legacy_physical_plan(logical_plan, query_properties) -> PhysicalPlan:
+def create_physical_plan(logical_plan, query_properties) -> PhysicalPlan:
     plan = PhysicalPlan()
 
     for nid, logical_node in logical_plan.nodes(data=True):
@@ -81,7 +74,7 @@ def create_legacy_physical_plan(logical_plan, query_properties) -> PhysicalPlan:
             if connector and hasattr(connector, "async_read_blob"):
                 node = operators.AsyncReaderNode(query_properties, **node_config)
             else:
-                node = operators.ReaderNode(query_properties, **node_config)
+                node = operators.ReaderNode(properties=query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Set:
             node = operators.SetVariableNode(query_properties, **node_config)
         elif node_type == LogicalPlanStepType.Show:

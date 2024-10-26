@@ -19,6 +19,7 @@ Goal: Reduce Rows
 We try to push the limit to the other side of PROJECTS
 """
 
+from opteryx.connectors.capabilities import LimitPushable
 from opteryx.planner.logical_planner import LogicalPlan
 from opteryx.planner.logical_planner import LogicalPlanNode
 from opteryx.planner.logical_planner import LogicalPlanStepType
@@ -37,12 +38,18 @@ class LimitPushdownStrategy(OptimizationStrategy):
             context.collected_limits.append(node)
             return context
 
-        if node.node_type in (
+        if node.node_type.Scan and LimitPushable in node.connector.__class__.mro():
+            for limit_node in context.collected_limits:
+                if node.relation in limit_node.all_relations:
+                    self.statistics.optimization_limit_pushdown += 1
+                    context.optimized_plan.remove_node(limit_node.nid, heal=True)
+                    node.limit = limit_node.limit
+                    context.optimized_plan[context.node_id] = node
+        elif node.node_type in (
             LogicalPlanStepType.Join,
             LogicalPlanStepType.Scan,
             LogicalPlanStepType.AggregateAndGroup,
             LogicalPlanStepType.Aggregate,
-            LogicalPlanStepType.Subquery,
             LogicalPlanStepType.Union,
             LogicalPlanStepType.Filter,
         ):

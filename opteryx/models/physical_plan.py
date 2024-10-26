@@ -29,18 +29,25 @@ from typing import Union
 
 import pyarrow
 
+from opteryx import EOS
+from opteryx import config
 from opteryx.constants import ResultType
 from opteryx.exceptions import InvalidInternalStateError
 from opteryx.third_party.travers import Graph
 
 
-class ExecutionTree(Graph):
+class PhysicalPlan(Graph):
     """
     The execution tree is defined separately to the planner to simplify the
     complex code which is the planner from the tree that describes the plan.
     """
 
-    def execute(
+    def execute(self) -> Generator[Tuple[Union[pyarrow.Table, Any], ResultType], None, None]:
+        if config.EXPERIMENTAL_EXECUTION_ENGINE:
+            return self.push_executor()
+        return self.legacy_executor()
+
+    def legacy_executor(
         self,
     ) -> Generator[Tuple[Union[pyarrow.Table, Any], ResultType], None, None]:
         """
@@ -170,3 +177,47 @@ class ExecutionTree(Graph):
         table = pyarrow.Table.from_pylist(plan)
 
         yield table
+
+    def push_executor(self):
+        pump_nodes = self.get_entry_points()
+        for pump_node in pump_nodes:
+            pump_instance = self[pump_node]
+            for morsel in pump_instance(None):
+                yield from self.process_node(pump_node, morsel)
+
+    def process_node(self, nid, morsel):
+        from opteryx.operatorsv2 import ReaderNode
+
+        node = self[nid]
+
+        if isinstance(node, ReaderNode):
+            children = [t for s, t, r in self.outgoing_edges(nid)]
+            for child in children:
+                results = self.process_node(child, morsel)
+                yield from results
+        else:
+            results = node(morsel)
+            if results is None:
+                return None
+            if not isinstance(results, list):
+                results = [results]
+            if morsel == EOS and not any(r == EOS for r in results):
+                results.append(EOS)
+            for result in results:
+                if result is not None:
+                    children = [t for s, t, r in self.outgoing_edges(nid)]
+                    for child in children:
+                        yield from self.process_node(child, result)
+                    if len(children) == 0:
+                        yield result, ResultType.TABULAR
+
+    def sensors(self):
+        readings = {}
+        for nid in self.nodes():
+            node = self[nid]
+            readings[node.identity] = node.sensors()
+        return readings
+
+    def __del__(self):
+        pass
+#        print(self.sensors())

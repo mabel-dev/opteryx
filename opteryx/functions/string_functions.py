@@ -263,11 +263,17 @@ def substring(
     if len(arr) == 0:
         return [[]]
 
+    if hasattr(arr, "to_numpy"):
+        arr = arr.to_numpy(zero_copy_only=False)
+
     def _inner(val, _from, _for):
+        if _from is None:
+            _from = 0
         if _from > 0:
             _from -= 1
         _for = int(_for) if _for and _for == _for else None  # nosec
         if _for is None:
+            print(val, _from)
             return val[_from:]
         return val[_from : _for + _from]
 

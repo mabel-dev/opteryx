@@ -27,9 +27,10 @@ import pyarrow
 from orso.schema import RelationSchema
 from orso.schema import convert_orso_schema_to_arrow_schema
 
+from opteryx import EOS
 from opteryx.models import QueryProperties
-from opteryx.operators import BasePlanNode
-from opteryx.operators import OperatorType
+
+from . import BasePlanNode
 
 
 def struct_to_jsonb(table: pyarrow.Table) -> pyarrow.Table:
@@ -132,10 +133,9 @@ def merge_schemas(
 
 
 class ReaderNode(BasePlanNode):
-    operator_type = OperatorType.PRODUCER
-
     def __init__(self, properties: QueryProperties, **parameters):
-        super().__init__(properties=properties, **parameters)
+        BasePlanNode.__init__(self, properties=properties, **parameters)
+
         self.start_date = parameters.get("start_date")
         self.end_date = parameters.get("end_date")
         self.hints = parameters.get("hints", [])
@@ -186,12 +186,8 @@ class ReaderNode(BasePlanNode):
             f"{' WITH(' + ','.join(self.parameters.get('hints')) + ')' if self.parameters.get('hints') else ''})"
         )
 
-    def execute(self) -> Generator:
+    def execute(self, morsel) -> Generator:
         """Perform this step, time how long is spent doing work"""
-
-        self.statistics.blobs_read += 0
-        self.statistics.rows_read += 0
-        self.statistics.bytes_processed += 0
 
         morsel = None
         orso_schema = self.schema
@@ -216,11 +212,13 @@ class ReaderNode(BasePlanNode):
 
             self.statistics.time_reading_blobs += time.monotonic_ns() - start_clock
             self.statistics.blobs_read += 1
-            self.statistics.rows_read += morsel.num_rows
-            self.statistics.bytes_processed += morsel.nbytes
+            self.records_out += morsel.num_rows
+            self.bytes_out += morsel.nbytes
             yield morsel
             start_clock = time.monotonic_ns()
         if morsel:
             self.statistics.columns_read += morsel.num_columns
         else:
             self.statistics.columns_read += len(orso_schema.columns)
+
+        yield EOS

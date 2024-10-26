@@ -38,6 +38,9 @@ import pyarrow
 # Set Decimal precision to 28 globally
 getcontext().prec = 28
 
+# end-of-stream marker
+EOS = object()
+
 
 def is_mac() -> bool:  # pragma: no cover
     """
